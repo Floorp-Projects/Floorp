@@ -22,6 +22,7 @@ import org.json.JSONObject;
 import org.mozilla.gecko.Actions;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.BrowserLocaleManager;
+import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.db.BrowserContract;
@@ -30,6 +31,8 @@ import org.mozilla.gecko.distribution.ReferrerDescriptor;
 import org.mozilla.gecko.distribution.ReferrerReceiver;
 import org.mozilla.gecko.preferences.DistroSharedPrefsImport;
 import org.mozilla.gecko.preferences.GeckoPreferences;
+import org.mozilla.gecko.util.BundleEventListener;
+import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.ThreadUtils;
 
@@ -59,11 +62,15 @@ import android.util.Log;
  *     extensions/
  *       distribution.test@mozilla.org.xpi
  */
-public class testDistribution extends ContentProviderTest {
+public class testDistribution extends ContentProviderTest implements BundleEventListener {
     private static final String CLASS_REFERRER_RECEIVER = "org.mozilla.gecko.distribution.ReferrerReceiver";
     private static final String ACTION_INSTALL_REFERRER = "com.android.vending.INSTALL_REFERRER";
     private static final int WAIT_TIMEOUT_MSEC = 10000;
     public static final String LOGTAG = "GeckoTestDistribution";
+
+    public static final String ADDON_MESSAGE = "Distribution:AddonEnabled";
+    private boolean  mAddonEnabled;
+    private Object mAddonSignal;
 
     public static class TestableDistribution extends Distribution {
         @Override
@@ -127,6 +134,17 @@ public class testDistribution extends ContentProviderTest {
         mAsserter.dumpLog("Background task completed. Proceeding.");
     }
 
+    @Override // BundleEventListener
+    public void handleMessage(final String event, final GeckoBundle message,
+                              final EventCallback callback) {
+        if (ADDON_MESSAGE.equals(event)) {
+            mAddonEnabled = true;
+            synchronized (mAddonSignal) {
+                mAddonSignal.notify();
+            }
+        }
+    }
+
     public void testDistribution() throws Exception {
         mActivity = getActivity();
 
@@ -139,6 +157,13 @@ public class testDistribution extends ContentProviderTest {
         // Pre-clear distribution pref, run basic preferences and en-US localized preferences Tests
         clearDistributionPref();
         clearDistributionFromDataData();
+
+        // The extension contained in the distribution starts up
+        // asynchronously.  Set up a listener for the message it broadcasts
+        // early so we don't miss it.
+        mAddonEnabled = false;
+        mAddonSignal = new Object();
+        EventDispatcher.getInstance().registerGeckoThreadListener(this, ADDON_MESSAGE);
 
         setTestLocale("en-US");
         try {
@@ -385,16 +410,18 @@ public class testDistribution extends ContentProviderTest {
     }
 
     private void checkAddon() {
-        /* Bug 1511211
-        try {
-            final String[] prefNames = { "distribution.test.addonEnabled" };
-            final JSONArray preferences = getPrefs(prefNames);
-            final JSONObject pref = (JSONObject) preferences.get(0);
-            mAsserter.is(pref.getBoolean("value"), true, "check distribution add-on is enabled");
-        } catch (JSONException e) {
-            mAsserter.ok(false, "exception getting preferences", e.toString());
+        if (!mAddonEnabled) {
+            mAsserter.dumpLog("Waiting for AddonEnabled event");
+            synchronized (mAddonSignal) {
+                try {
+                    mAddonSignal.wait();
+                } catch (InterruptedException e) {
+                    mAsserter.ok(false, "InterruptedException waiting for AddonEnabled event", e.toString());
+                }
+            }
         }
-        */
+        mAsserter.ok(mAddonEnabled, "Not enabled.",
+                     "Distribution extension is not enabled");
     }
 
     private JSONArray getPrefs(String[] prefNames) throws JSONException {

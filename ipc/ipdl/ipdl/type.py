@@ -346,7 +346,7 @@ class ProtocolType(IPDLType):
 
 
 class ActorType(IPDLType):
-    def __init__(self, protocol, nullable=0):
+    def __init__(self, protocol, nullable=False):
         self.protocol = protocol
         self.nullable = nullable
 

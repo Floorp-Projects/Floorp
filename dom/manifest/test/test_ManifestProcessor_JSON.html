@@ -14,8 +14,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1079453
  * JSON parsing/processing tests
  * https://w3c.github.io/manifest/#processing
  **/
-'use strict';
-var invalidJson = ['', ` \t \n ${whiteSpace} `, '{', '{[[}'];
+"use strict";
+var invalidJson = ["", ` \t \n ${whiteSpace} `, "{", "{[[}"];
 invalidJson.forEach((testString) => {
   var expected = `Expect to recover from invalid JSON: ${testString}`;
   data.jsonText = testString;

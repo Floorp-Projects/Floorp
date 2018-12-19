@@ -267,7 +267,7 @@ void VRDisplayClient::FireGamepadEvents() {
          sizeof(VRControllerState) * kVRControllerMaxCount);
 }
 
-VRHMDSensorState VRDisplayClient::GetSensorState() {
+const VRHMDSensorState& VRDisplayClient::GetSensorState() const {
   return mDisplayInfo.GetSensorState();
 }
 

@@ -14,19 +14,19 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1258899
  * dir member
  * https://w3c.github.io/manifest/#dir-member
  **/
-'use strict';
-//Type checks
+"use strict";
+// Type checks
 typeTests.forEach((type) => {
   var expected = `Expect non - string dir to default to "auto".`;
   data.jsonText = JSON.stringify({
-    dir: type
+    dir: type,
   });
   var result = processor.process(data);
-  is(result.dir, 'auto', expected);
+  is(result.dir, "auto", expected);
 });
 
-/*Test valid values*/
-var validDirs = ['ltr', 'rtl', 'auto']
+/* Test valid values*/
+var validDirs = ["ltr", "rtl", "auto"];
 validDirs.forEach((dir) => {
   var expected = `Expect dir value to be ${dir}.`;
   data.jsonText = JSON.stringify({dir});
@@ -34,24 +34,24 @@ validDirs.forEach((dir) => {
   is(result.dir, dir, expected);
 });
 
-//trim tests
+// trim tests
 validDirs.forEach((dir) => {
   var expected = `Expect trimmed dir to be returned.`;
   var expandeddir =  seperators + lineTerminators + dir + lineTerminators + seperators;
   data.jsonText = JSON.stringify({
-    dir: expandeddir
+    dir: expandeddir,
   });
   var result = processor.process(data);
   is(result.dir, dir, expected);
 });
 
-//Unknown/Invalid directions
-var invalidDirs = ['LTR', 'RtL', `fooo${whiteSpace}rtl`, '', 'bar baz, some value', 'ltr rtl auto', 'AuTo'];
+// Unknown/Invalid directions
+var invalidDirs = ["LTR", "RtL", `fooo${whiteSpace}rtl`, "", "bar baz, some value", "ltr rtl auto", "AuTo"];
 invalidDirs.forEach((dir) => {
   var expected = `Expect default dir "auto" to be returned: '${dir}'`;
   data.jsonText = JSON.stringify({dir});
   var result = processor.process(data);
-  is(result.dir, 'auto', expected);
+  is(result.dir, "auto", expected);
 });
   </script>
 </head>

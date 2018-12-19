@@ -1,297 +1,270 @@
---- ./dist/Fluent.jsm	2018-10-19 08:40:36.557032837 -0600
-+++ /home/zbraniecki/projects/mozilla-unified/intl/l10n/Fluent.jsm	2018-10-19 21:22:35.174315857 -0600
-@@ -16,7 +16,7 @@
+diff --git a/intl/l10n/DOMLocalization.jsm b/intl/l10n/DOMLocalization.jsm
+--- a/intl/l10n/DOMLocalization.jsm
++++ b/intl/l10n/DOMLocalization.jsm
+@@ -15,12 +15,13 @@
+  * limitations under the License.
   */
  
+-/* fluent-dom@fa25466f (October 12, 2018) */
++
++/* fluent-dom@0.4.0 */
  
--/* fluent-dom@0.4.0 */
-+/* fluent@fa25466f (October 12, 2018) */
+-const { Localization } =
+-  ChromeUtils.import("resource://gre/modules/Localization.jsm", {});
+-const { Services } =
+-  ChromeUtils.import("resource://gre/modules/Services.jsm", {});
++import Localization from '../../fluent-dom/src/localization.js';
++
++/* eslint no-console: ["error", {allow: ["warn"]}] */
++/* global console */
  
- /* global Intl */
+ // Match the opening angle bracket (<) in HTML tags, and HTML entities like
+ // &amp;, &#0038;, &#x0026;.
+@@ -38,7 +39,7 @@ const TEXT_LEVEL_ELEMENTS = {
+   "http://www.w3.org/1999/xhtml": [
+     "em", "strong", "small", "s", "cite", "q", "dfn", "abbr", "data",
+     "time", "code", "var", "samp", "kbd", "sub", "sup", "i", "b", "u",
+-    "mark", "bdi", "bdo", "span", "br", "wbr",
++    "mark", "bdi", "bdo", "span", "br", "wbr"
+   ],
+ };
  
-@@ -139,7 +139,53 @@
-   return unwrapped;
+@@ -56,17 +57,16 @@ const LOCALIZABLE_ATTRIBUTES = {
+     track: ["label"],
+     img: ["alt"],
+     textarea: ["placeholder"],
+-    th: ["abbr"],
++    th: ["abbr"]
+   },
+   "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul": {
+     global: [
+-      "accesskey", "aria-label", "aria-valuetext", "aria-moz-hint", "label",
+-      "title", "tooltiptext"],
+-    description: ["value"],
++      "accesskey", "aria-label", "aria-valuetext", "aria-moz-hint", "label"
++    ],
+     key: ["key", "keycode"],
+-    label: ["value"],
+     textbox: ["placeholder"],
+-  },
++    toolbarbutton: ["tooltiptext"],
++  }
+ };
+ 
+ 
+@@ -96,7 +96,6 @@ function translateElement(element, trans
+       const templateElement = element.ownerDocument.createElementNS(
+         "http://www.w3.org/1999/xhtml", "template"
+       );
+-      // eslint-disable-next-line no-unsanitized/property
+       templateElement.innerHTML = value;
+       overlayChildNodes(templateElement.content, element);
+     }
+@@ -350,46 +349,6 @@ function shallowPopulateUsing(fromElemen
+   return toElement;
  }
  
--/* global Intl */
-+/**
-+ * @overview
-+ *
-+ * The role of the Fluent resolver is to format a translation object to an
-+ * instance of `FluentType` or an array of instances.
-+ *
-+ * Translations can contain references to other messages or variables,
-+ * conditional logic in form of select expressions, traits which describe their
-+ * grammatical features, and can use Fluent builtins which make use of the
-+ * `Intl` formatters to format numbers, dates, lists and more into the
-+ * bundle's language. See the documentation of the Fluent syntax for more
-+ * information.
-+ *
-+ * In case of errors the resolver will try to salvage as much of the
-+ * translation as possible.  In rare situations where the resolver didn't know
-+ * how to recover from an error it will return an instance of `FluentNone`.
-+ *
-+ * `MessageReference`, `VariantExpression`, `AttributeExpression` and
-+ * `SelectExpression` resolve to raw Runtime Entries objects and the result of
-+ * the resolution needs to be passed into `Type` to get their real value.
-+ * This is useful for composing expressions.  Consider:
-+ *
-+ *     brand-name[nominative]
-+ *
-+ * which is a `VariantExpression` with properties `id: MessageReference` and
-+ * `key: Keyword`.  If `MessageReference` was resolved eagerly, it would
-+ * instantly resolve to the value of the `brand-name` message.  Instead, we
-+ * want to get the message object and look for its `nominative` variant.
-+ *
-+ * All other expressions (except for `FunctionReference` which is only used in
-+ * `CallExpression`) resolve to an instance of `FluentType`.  The caller should
-+ * use the `toString` method to convert the instance to a native value.
-+ *
-+ *
-+ * All functions in this file pass around a special object called `env`.
-+ * This object stores a set of elements used by all resolve functions:
-+ *
-+ *  * {FluentBundle} bundle
-+ *      bundle for which the given resolution is happening
-+ *  * {Object} args
-+ *      list of developer provided arguments that can be used
-+ *  * {Array} errors
-+ *      list of errors collected while resolving
-+ *  * {WeakSet} dirty
-+ *      Set of patterns already encountered during this resolution.
-+ *      This is used to prevent cyclic resolutions.
-+ */
+-/**
+- * Sanitizes a translation before passing them to Node.localize API.
+- *
+- * It returns `false` if the translation contains DOM Overlays and should
+- * not go into Node.localize.
+- *
+- * Note: There's a third item of work that JS DOM Overlays do - removal
+- * of attributes from the previous translation.
+- * This is not trivial to implement for Node.localize scenario, so
+- * at the moment it is not supported.
+- *
+- * @param {{
+- *          localName: string,
+- *          namespaceURI: string,
+- *          type: string || null
+- *          l10nId: string,
+- *          l10nArgs: Array<Object> || null,
+- *          l10nAttrs: string ||null,
+- *        }}                                     l10nItems
+- * @param {{value: string, attrs: Object}} translations
+- * @returns boolean
+- * @private
+- */
+-function sanitizeTranslationForNodeLocalize(l10nItem, translation) {
+-  if (reOverlay.test(translation.value)) {
+-    return false;
+-  }
+-
+-  if (translation.attributes) {
+-    const explicitlyAllowed = l10nItem.l10nAttrs === null ? null :
+-      l10nItem.l10nAttrs.split(",").map(i => i.trim());
+-    for (const [j, {name}] of translation.attributes.entries()) {
+-      if (!isAttrNameLocalizable(name, l10nItem, explicitlyAllowed)) {
+-        translation.attributes.splice(j, 1);
+-      }
+-    }
+-  }
+-  return true;
+-}
+-
+ const L10NID_ATTR_NAME = "data-l10n-id";
+ const L10NARGS_ATTR_NAME = "data-l10n-args";
  
- // Prevent expansion of too long placeables.
- const MAX_PLACEABLE_LENGTH = 2500;
-@@ -1319,14 +1365,6 @@
+@@ -427,12 +386,12 @@ class DOMLocalization extends Localizati
+       characterData: false,
+       childList: true,
+       subtree: true,
+-      attributeFilter: [L10NID_ATTR_NAME, L10NARGS_ATTR_NAME],
++      attributeFilter: [L10NID_ATTR_NAME, L10NARGS_ATTR_NAME]
+     };
+   }
+ 
+-  onChange(eager = false) {
+-    super.onChange(eager);
++  onChange() {
++    super.onChange();
+     this.translateRoots();
+   }
+ 
+@@ -497,7 +456,7 @@ class DOMLocalization extends Localizati
+   getAttributes(element) {
+     return {
+       id: element.getAttribute(L10NID_ATTR_NAME),
+-      args: JSON.parse(element.getAttribute(L10NARGS_ATTR_NAME) || null),
++      args: JSON.parse(element.getAttribute(L10NARGS_ATTR_NAME) || null)
+     };
+   }
+ 
+@@ -519,17 +478,18 @@ class DOMLocalization extends Localizati
+     }
+ 
+     if (this.windowElement) {
+-      if (this.windowElement !== newRoot.ownerGlobal) {
++      if (this.windowElement !== newRoot.ownerDocument.defaultView) {
+         throw new Error(`Cannot connect a root:
+           DOMLocalization already has a root from a different window.`);
+       }
+     } else {
+-      this.windowElement = newRoot.ownerGlobal;
++      this.windowElement = newRoot.ownerDocument.defaultView;
+       this.mutationObserver = new this.windowElement.MutationObserver(
+         mutations => this.translateMutations(mutations)
+       );
+     }
+ 
++
+     this.roots.add(newRoot);
+     this.mutationObserver.observe(newRoot, this.observerConfig);
+   }
+@@ -572,20 +532,7 @@ class DOMLocalization extends Localizati
+   translateRoots() {
+     const roots = Array.from(this.roots);
+     return Promise.all(
+-      roots.map(async root => {
+-        // We want to first retranslate the UI, and
+-        // then (potentially) flip the directionality.
+-        //
+-        // This means that the DOM alternations and directionality
+-        // are set in the same microtask.
+-        await this.translateFragment(root);
+-        let primaryLocale = Services.locale.appLocaleAsBCP47;
+-        let direction = Services.locale.isAppLocaleRTL ? "rtl" : "ltr";
+-        root.setAttribute("lang", primaryLocale);
+-        root.setAttribute(root.namespaceURI ===
+-          "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+-          ? "localedir" : "dir", direction);
+-      })
++      roots.map(root => this.translateFragment(root))
+     );
+   }
+ 
+@@ -652,10 +599,7 @@ class DOMLocalization extends Localizati
+     if (this.pendingElements.size > 0) {
+       if (this.pendingrAF === null) {
+         this.pendingrAF = this.windowElement.requestAnimationFrame(() => {
+-          // We need to filter for elements that lost their l10n-id while
+-          // waiting for the animation frame.
+-          this.translateElements(Array.from(this.pendingElements)
+-            .filter(elem => elem.hasAttribute("data-l10n-id")));
++          this.translateElements(Array.from(this.pendingElements));
+           this.pendingElements.clear();
+           this.pendingrAF = null;
+         });
+@@ -677,63 +621,6 @@ class DOMLocalization extends Localizati
+    * @returns {Promise}
+    */
+   translateFragment(frag) {
+-    if (frag.localize) {
+-      // This is a temporary fast-path offered by Gecko to workaround performance
+-      // issues coming from Fluent and XBL+Stylo performing unnecesary
+-      // operations during startup.
+-      // For details see bug 1441037, bug 1442262, and bug 1363862.
+-
+-      // A sparse array which will store translations separated out from
+-      // all translations that is needed for DOM Overlay.
+-      const overlayTranslations = [];
+-
+-      const getTranslationsForItems = async l10nItems => {
+-        const keys = l10nItems.map(
+-          l10nItem => ({id: l10nItem.l10nId, args: l10nItem.l10nArgs}));
+-        const translations = await this.formatMessages(keys);
+-
+-        // Here we want to separate out elements that require DOM Overlays.
+-        // Those elements will have to be translated using our JS
+-        // implementation, while everything else is going to use the fast-path.
+-        for (const [i, translation] of translations.entries()) {
+-          if (translation === undefined) {
+-            continue;
+-          }
+-
+-          const hasOnlyText =
+-            sanitizeTranslationForNodeLocalize(l10nItems[i], translation);
+-          if (!hasOnlyText) {
+-            // Removing from translations to make Node.localize skip it.
+-            // We will translate it below using JS DOM Overlays.
+-            overlayTranslations[i] = translations[i];
+-            translations[i] = undefined;
+-          }
+-        }
+-
+-        // We pause translation observing here because Node.localize
+-        // will translate the whole DOM next, using the `translations`.
+-        //
+-        // The observer will be resumed after DOM Overlays are localized
+-        // in the next microtask.
+-        this.pauseObserving();
+-        return translations;
+-      };
+-
+-      return frag.localize(getTranslationsForItems.bind(this))
+-        .then(untranslatedElements => {
+-          for (let i = 0; i < overlayTranslations.length; i++) {
+-            if (overlayTranslations[i] !== undefined &&
+-                untranslatedElements[i] !== undefined) {
+-              translateElement(untranslatedElements[i], overlayTranslations[i]);
+-            }
+-          }
+-          this.resumeObserving();
+-        })
+-        .catch(e => {
+-          this.resumeObserving();
+-          throw e;
+-        });
+-    }
+     return this.translateElements(this.getTranslatables(frag));
+   }
+ 
+@@ -808,10 +695,42 @@ class DOMLocalization extends Localizati
+   getKeysForElement(element) {
+     return {
+       id: element.getAttribute(L10NID_ATTR_NAME),
+-      args: JSON.parse(element.getAttribute(L10NARGS_ATTR_NAME) || null),
++      args: JSON.parse(element.getAttribute(L10NARGS_ATTR_NAME) || null)
+     };
    }
  }
  
--/*
-- * @module fluent
-- * @overview
-- *
-- * `fluent` is a JavaScript implementation of Project Fluent, a localization
-- * framework designed to unleash the expressive power of the natural language.
-- *
-- */
--
- this.FluentBundle = FluentBundle;
--this.EXPORTED_SYMBOLS = ["FluentBundle"];
-+this.FluentResource = FluentResource;
-+var EXPORTED_SYMBOLS = ["FluentBundle", "FluentResource"];
---- ./dist/Localization.jsm	2018-10-19 08:40:36.773712561 -0600
-+++ /home/zbraniecki/projects/mozilla-unified/intl/l10n/Localization.jsm	2018-10-19 21:20:57.295233460 -0600
-@@ -16,27 +16,34 @@
-  */
- 
- 
--/* fluent-dom@0.4.0 */
-+/* fluent-dom@fa25466f (October 12, 2018) */
+-this.DOMLocalization = DOMLocalization;
+-var EXPORTED_SYMBOLS = ["DOMLocalization"];
++/* global L10nRegistry, Services */
 +
-+/* eslint no-console: ["error", { allow: ["warn", "error"] }] */
-+/* global console */
-+
-+const { L10nRegistry } = ChromeUtils.import("resource://gre/modules/L10nRegistry.jsm", {});
-+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
-+const { AppConstants } = ChromeUtils.import("resource://gre/modules/AppConstants.jsm", {});
- 
- /*
-  * Base CachedIterable class.
-  */
- class CachedIterable extends Array {
--    /**
--     * Create a `CachedIterable` instance from an iterable or, if another
--     * instance of `CachedIterable` is passed, return it without any
--     * modifications.
--     *
--     * @param {Iterable} iterable
--     * @returns {CachedIterable}
--     */
--    static from(iterable) {
--        if (iterable instanceof this) {
--            return iterable;
--        }
--
--        return new this(iterable);
-+  /**
-+   * Create a `CachedIterable` instance from an iterable or, if another
-+   * instance of `CachedIterable` is passed, return it without any
-+   * modifications.
-+   *
-+   * @param {Iterable} iterable
-+   * @returns {CachedIterable}
-+   */
-+  static from(iterable) {
-+    if (iterable instanceof this) {
-+      return iterable;
-     }
-+
-+    return new this(iterable);
-+  }
- }
- 
- /*
-@@ -46,88 +53,100 @@
-  * iterable.
-  */
- class CachedAsyncIterable extends CachedIterable {
--    /**
--     * Create an `CachedAsyncIterable` instance.
--     *
--     * @param {Iterable} iterable
--     * @returns {CachedAsyncIterable}
--     */
--    constructor(iterable) {
--        super();
--
--        if (Symbol.asyncIterator in Object(iterable)) {
--            this.iterator = iterable[Symbol.asyncIterator]();
--        } else if (Symbol.iterator in Object(iterable)) {
--            this.iterator = iterable[Symbol.iterator]();
--        } else {
--            throw new TypeError("Argument must implement the iteration protocol.");
--        }
--    }
-+  /**
-+   * Create an `CachedAsyncIterable` instance.
-+   *
-+   * @param {Iterable} iterable
-+   * @returns {CachedAsyncIterable}
-+   */
-+  constructor(iterable) {
-+    super();
- 
--    /**
--     * Synchronous iterator over the cached elements.
--     *
--     * Return a generator object implementing the iterator protocol over the
--     * cached elements of the original (async or sync) iterable.
--     */
--    [Symbol.iterator]() {
--        const cached = this;
--        let cur = 0;
--
--        return {
--            next() {
--                if (cached.length === cur) {
--                    return {value: undefined, done: true};
--                }
--                return cached[cur++];
--            }
--        };
-+    if (Symbol.asyncIterator in Object(iterable)) {
-+      this.iterator = iterable[Symbol.asyncIterator]();
-+    } else if (Symbol.iterator in Object(iterable)) {
-+      this.iterator = iterable[Symbol.iterator]();
-+    } else {
-+      throw new TypeError("Argument must implement the iteration protocol.");
-     }
-+  }
- 
--    /**
--     * Asynchronous iterator caching the yielded elements.
--     *
--     * Elements yielded by the original iterable will be cached and available
--     * synchronously. Returns an async generator object implementing the
--     * iterator protocol over the elements of the original (async or sync)
--     * iterable.
--     */
--    [Symbol.asyncIterator]() {
--        const cached = this;
--        let cur = 0;
--
--        return {
--            async next() {
--                if (cached.length <= cur) {
--                    cached.push(await cached.iterator.next());
--                }
--                return cached[cur++];
--            }
--        };
--    }
-+  /**
-+   * Synchronous iterator over the cached elements.
-+   *
-+   * Return a generator object implementing the iterator protocol over the
-+   * cached elements of the original (async or sync) iterable.
-+   */
-+  [Symbol.iterator]() {
-+    const cached = this;
-+    let cur = 0;
-+
-+    return {
-+      next() {
-+        if (cached.length === cur) {
-+          return {value: undefined, done: true};
-+        }
-+        return cached[cur++];
-+      }
-+    };
-+  }
- 
--    /**
--     * This method allows user to consume the next element from the iterator
--     * into the cache.
--     *
--     * @param {number} count - number of elements to consume
--     */
--    async touchNext(count = 1) {
--        let idx = 0;
--        while (idx++ < count) {
--            const last = this[this.length - 1];
--            if (last && last.done) {
--                break;
--            }
--            this.push(await this.iterator.next());
-+  /**
-+   * Asynchronous iterator caching the yielded elements.
-+   *
-+   * Elements yielded by the original iterable will be cached and available
-+   * synchronously. Returns an async generator object implementing the
-+   * iterator protocol over the elements of the original (async or sync)
-+   * iterable.
-+   */
-+  [Symbol.asyncIterator]() {
-+    const cached = this;
-+    let cur = 0;
-+
-+    return {
-+      async next() {
-+        if (cached.length <= cur) {
-+          cached.push(await cached.iterator.next());
-         }
--        // Return the last cached {value, done} object to allow the calling
--        // code to decide if it needs to call touchNext again.
--        return this[this.length - 1];
-+        return cached[cur++];
-+      }
-+    };
-+  }
-+
-+  /**
-+   * This method allows user to consume the next element from the iterator
-+   * into the cache.
-+   *
-+   * @param {number} count - number of elements to consume
-+   */
-+  async touchNext(count = 1) {
-+    let idx = 0;
-+    while (idx++ < count) {
-+      const last = this[this.length - 1];
-+      if (last && last.done) {
-+        break;
-+      }
-+      this.push(await this.iterator.next());
-     }
-+    // Return the last cached {value, done} object to allow the calling
-+    // code to decide if it needs to call touchNext again.
-+    return this[this.length - 1];
-+  }
- }
- 
--/* eslint no-console: ["error", { allow: ["warn", "error"] }] */
 +/**
 + * The default localization strategy for Gecko. It comabines locales
 + * available in L10nRegistry, with locales requested by the user to
@@ -302,435 +275,1240 @@
 + * be localized into a different language - for example DevTools.
 + */
 +function defaultGenerateBundles(resourceIds) {
-+  const appLocales = Services.locale.appLocalesAsBCP47;
-+  return L10nRegistry.generateContexts(appLocales, resourceIds);
++  const requestedLocales = Services.locale.getRequestedLocales();
++  const availableLocales = L10nRegistry.getAvailableLocales();
++  const defaultLocale = Services.locale.defaultLocale;
++  const locales = Services.locale.negotiateLanguages(
++    requestedLocales, availableLocales, defaultLocale,
++  );
++  return L10nRegistry.generateContexts(locales, resourceIds);
 +}
++
++
++class GeckoDOMLocalization extends DOMLocalization {
++  constructor(
++    windowElement,
++    resourceIds,
++    generateBundles = defaultGenerateBundles
++  ) {
++    super(windowElement, resourceIds, generateBundles);
++  }
++}
++
++this.DOMLocalization = GeckoDOMLocalization;
++this.EXPORTED_SYMBOLS = ["DOMLocalization"];
+diff --git a/intl/l10n/Fluent.jsm b/intl/l10n/Fluent.jsm
+--- a/intl/l10n/Fluent.jsm
++++ b/intl/l10n/Fluent.jsm
+@@ -16,7 +16,7 @@
+  */
+ 
+ 
+-/* fluent@0.10.0 */
++/* fluent-dom@0.4.0 */
+ 
+ /* global Intl */
+ 
+@@ -139,53 +139,7 @@ function values(opts) {
+   return unwrapped;
+ }
+ 
+-/**
+- * @overview
+- *
+- * The role of the Fluent resolver is to format a translation object to an
+- * instance of `FluentType` or an array of instances.
+- *
+- * Translations can contain references to other messages or variables,
+- * conditional logic in form of select expressions, traits which describe their
+- * grammatical features, and can use Fluent builtins which make use of the
+- * `Intl` formatters to format numbers, dates, lists and more into the
+- * bundle's language. See the documentation of the Fluent syntax for more
+- * information.
+- *
+- * In case of errors the resolver will try to salvage as much of the
+- * translation as possible.  In rare situations where the resolver didn't know
+- * how to recover from an error it will return an instance of `FluentNone`.
+- *
+- * `MessageReference`, `VariantExpression`, `AttributeExpression` and
+- * `SelectExpression` resolve to raw Runtime Entries objects and the result of
+- * the resolution needs to be passed into `Type` to get their real value.
+- * This is useful for composing expressions.  Consider:
+- *
+- *     brand-name[nominative]
+- *
+- * which is a `VariantExpression` with properties `id: MessageReference` and
+- * `key: Keyword`.  If `MessageReference` was resolved eagerly, it would
+- * instantly resolve to the value of the `brand-name` message.  Instead, we
+- * want to get the message object and look for its `nominative` variant.
+- *
+- * All other expressions (except for `FunctionReference` which is only used in
+- * `CallExpression`) resolve to an instance of `FluentType`.  The caller should
+- * use the `toString` method to convert the instance to a native value.
+- *
+- *
+- * All functions in this file pass around a special object called `env`.
+- * This object stores a set of elements used by all resolve functions:
+- *
+- *  * {FluentBundle} bundle
+- *      bundle for which the given resolution is happening
+- *  * {Object} args
+- *      list of developer provided arguments that can be used
+- *  * {Array} errors
+- *      list of errors collected while resolving
+- *  * {WeakSet} dirty
+- *      Set of patterns already encountered during this resolution.
+- *      This is used to prevent cyclic resolutions.
+- */
++/* global Intl */
+ 
+ // Prevent expansion of too long placeables.
+ const MAX_PLACEABLE_LENGTH = 2500;
+@@ -514,7 +468,7 @@ function Pattern(env, ptn) {
+  */
+ function resolve(bundle, args, message, errors = []) {
+   const env = {
+-    bundle, args, errors, dirty: new WeakSet(),
++    bundle, args, errors, dirty: new WeakSet()
+   };
+   return Type(env, message).toString(bundle);
+ }
+@@ -1064,7 +1018,7 @@ class FluentBundle {
+   constructor(locales, {
+     functions = {},
+     useIsolating = true,
+-    transform = v => v,
++    transform = v => v
+   } = {}) {
+     this.locales = Array.isArray(locales) ? locales : [locales];
+ 
+@@ -1235,6 +1189,14 @@ class FluentBundle {
+   }
+ }
+ 
++/*
++ * @module fluent
++ * @overview
++ *
++ * `fluent` is a JavaScript implementation of Project Fluent, a localization
++ * framework designed to unleash the expressive power of the natural language.
++ *
++ */
++
+ this.FluentBundle = FluentBundle;
+-this.FluentResource = FluentResource;
+-var EXPORTED_SYMBOLS = ["FluentBundle", "FluentResource"];
++this.EXPORTED_SYMBOLS = ["FluentBundle"];
+diff --git a/intl/l10n/Localization.jsm b/intl/l10n/Localization.jsm
+--- a/intl/l10n/Localization.jsm
++++ b/intl/l10n/Localization.jsm
+@@ -16,34 +16,27 @@
+  */
+ 
+ 
+-/* fluent-dom@fa25466f (October 12, 2018) */
+-
+-/* eslint no-console: ["error", { allow: ["warn", "error"] }] */
+-/* global console */
+-
+-const { L10nRegistry } = ChromeUtils.import("resource://gre/modules/L10nRegistry.jsm", {});
+-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
+-const { AppConstants } = ChromeUtils.import("resource://gre/modules/AppConstants.jsm", {});
++/* fluent-dom@0.4.0 */
+ 
+ /*
+  * Base CachedIterable class.
+  */
+ class CachedIterable extends Array {
+-  /**
+-   * Create a `CachedIterable` instance from an iterable or, if another
+-   * instance of `CachedIterable` is passed, return it without any
+-   * modifications.
+-   *
+-   * @param {Iterable} iterable
+-   * @returns {CachedIterable}
+-   */
+-  static from(iterable) {
+-    if (iterable instanceof this) {
+-      return iterable;
++    /**
++     * Create a `CachedIterable` instance from an iterable or, if another
++     * instance of `CachedIterable` is passed, return it without any
++     * modifications.
++     *
++     * @param {Iterable} iterable
++     * @returns {CachedIterable}
++     */
++    static from(iterable) {
++        if (iterable instanceof this) {
++            return iterable;
++        }
++
++        return new this(iterable);
+     }
+-
+-    return new this(iterable);
+-  }
+ }
+ 
+ /*
+@@ -53,80 +46,88 @@ class CachedIterable extends Array {
+  * iterable.
+  */
+ class CachedAsyncIterable extends CachedIterable {
+-  /**
+-   * Create an `CachedAsyncIterable` instance.
+-   *
+-   * @param {Iterable} iterable
+-   * @returns {CachedAsyncIterable}
+-   */
+-  constructor(iterable) {
+-    super();
++    /**
++     * Create an `CachedAsyncIterable` instance.
++     *
++     * @param {Iterable} iterable
++     * @returns {CachedAsyncIterable}
++     */
++    constructor(iterable) {
++        super();
++
++        if (Symbol.asyncIterator in Object(iterable)) {
++            this.iterator = iterable[Symbol.asyncIterator]();
++        } else if (Symbol.iterator in Object(iterable)) {
++            this.iterator = iterable[Symbol.iterator]();
++        } else {
++            throw new TypeError("Argument must implement the iteration protocol.");
++        }
++    }
+ 
+-    if (Symbol.asyncIterator in Object(iterable)) {
+-      this.iterator = iterable[Symbol.asyncIterator]();
+-    } else if (Symbol.iterator in Object(iterable)) {
+-      this.iterator = iterable[Symbol.iterator]();
+-    } else {
+-      throw new TypeError("Argument must implement the iteration protocol.");
+-    }
+-  }
++    /**
++     * Synchronous iterator over the cached elements.
++     *
++     * Return a generator object implementing the iterator protocol over the
++     * cached elements of the original (async or sync) iterable.
++     */
++    [Symbol.iterator]() {
++        const cached = this;
++        let cur = 0;
+ 
+-  /**
+-   * Asynchronous iterator caching the yielded elements.
+-   *
+-   * Elements yielded by the original iterable will be cached and available
+-   * synchronously. Returns an async generator object implementing the
+-   * iterator protocol over the elements of the original (async or sync)
+-   * iterable.
+-   */
+-  [Symbol.asyncIterator]() {
+-    const cached = this;
+-    let cur = 0;
++        return {
++            next() {
++                if (cached.length === cur) {
++                    return {value: undefined, done: true};
++                }
++                return cached[cur++];
++            }
++        };
++    }
+ 
+-    return {
+-      async next() {
+-        if (cached.length <= cur) {
+-          cached.push(cached.iterator.next());
+-        }
+-        return cached[cur++];
+-      },
+-    };
+-  }
++    /**
++     * Asynchronous iterator caching the yielded elements.
++     *
++     * Elements yielded by the original iterable will be cached and available
++     * synchronously. Returns an async generator object implementing the
++     * iterator protocol over the elements of the original (async or sync)
++     * iterable.
++     */
++    [Symbol.asyncIterator]() {
++        const cached = this;
++        let cur = 0;
+ 
+-  /**
+-   * This method allows user to consume the next element from the iterator
+-   * into the cache.
+-   *
+-   * @param {number} count - number of elements to consume
+-   */
+-  async touchNext(count = 1) {
+-    let idx = 0;
+-    while (idx++ < count) {
+-      const last = this[this.length - 1];
+-      if (last && (await last).done) {
+-        break;
+-      }
+-      this.push(this.iterator.next());
++        return {
++            async next() {
++                if (cached.length <= cur) {
++                    cached.push(await cached.iterator.next());
++                }
++                return cached[cur++];
++            }
++        };
+     }
+-    // Return the last cached {value, done} object to allow the calling
+-    // code to decide if it needs to call touchNext again.
+-    return this[this.length - 1];
+-  }
++
++    /**
++     * This method allows user to consume the next element from the iterator
++     * into the cache.
++     *
++     * @param {number} count - number of elements to consume
++     */
++    async touchNext(count = 1) {
++        let idx = 0;
++        while (idx++ < count) {
++            const last = this[this.length - 1];
++            if (last && last.done) {
++                break;
++            }
++            this.push(await this.iterator.next());
++        }
++        // Return the last cached {value, done} object to allow the calling
++        // code to decide if it needs to call touchNext again.
++        return this[this.length - 1];
++    }
+ }
+ 
+-/**
+- * The default localization strategy for Gecko. It comabines locales
+- * available in L10nRegistry, with locales requested by the user to
+- * generate the iterator over FluentBundles.
+- *
+- * In the future, we may want to allow certain modules to override this
+- * with a different negotitation strategy to allow for the module to
+- * be localized into a different language - for example DevTools.
+- */
+-function defaultGenerateBundles(resourceIds) {
+-  const appLocales = Services.locale.appLocalesAsBCP47;
+-  return L10nRegistry.generateBundles(appLocales, resourceIds);
+-}
++/* eslint no-console: ["error", { allow: ["warn", "error"] }] */
  
  /**
   * The `Localization` class is a central high-level API for vanilla
-@@ -143,16 +162,21 @@
+@@ -142,21 +143,16 @@ class Localization {
     *
     * @returns {Localization}
     */
--  constructor(resourceIds = [], generateBundles) {
-+  constructor(resourceIds = [], generateBundles = defaultGenerateBundles) {
+-  constructor(resourceIds = [], generateBundles = defaultGenerateBundles) {
++  constructor(resourceIds = [], generateBundles) {
      this.resourceIds = resourceIds;
      this.generateBundles = generateBundles;
      this.bundles = CachedAsyncIterable.from(
        this.generateBundles(this.resourceIds));
    }
  
--  addResourceIds(resourceIds) {
-+  /**
-+   * @param {Array<String>} resourceIds - List of resource IDs
-+   * @param {bool}                eager - whether the I/O for new context should
-+   *                                      begin eagerly
-+   */
-+  addResourceIds(resourceIds, eager = false) {
+-  /**
+-   * @param {Array<String>} resourceIds - List of resource IDs
+-   * @param {bool}                eager - whether the I/O for new context should
+-   *                                      begin eagerly
+-   */
+-  addResourceIds(resourceIds, eager = false) {
++  addResourceIds(resourceIds) {
      this.resourceIds.push(...resourceIds);
--    this.onChange();
-+    this.onChange(eager);
+-    this.onChange(eager);
++    this.onChange();
      return this.resourceIds.length;
    }
  
-@@ -184,9 +208,12 @@
+@@ -188,12 +184,9 @@ class Localization {
          break;
        }
  
--      if (typeof console !== "undefined") {
-+      if (AppConstants.NIGHTLY_BUILD || Cu.isInAutomation) {
+-      if (AppConstants.NIGHTLY_BUILD || Cu.isInAutomation) {
++      if (typeof console !== "undefined") {
          const locale = bundle.locales[0];
          const ids = Array.from(missingIds).join(", ");
-+        if (Cu.isInAutomation) {
-+          throw new Error(`Missing translations in ${locale}: ${ids}`);
-+        }
+-        if (Cu.isInAutomation) {
+-          throw new Error(`Missing translations in ${locale}: ${ids}`);
+-        }
          console.warn(`Missing translations in ${locale}: ${ids}`);
        }
      }
-@@ -274,21 +301,64 @@
+@@ -281,64 +274,21 @@ class Localization {
      return val;
    }
  
--  handleEvent() {
--    this.onChange();
-+  /**
-+   * Register weak observers on events that will trigger cache invalidation
-+   */
-+  registerObservers() {
-+    Services.obs.addObserver(this, "intl:app-locales-changed", true);
-+    Services.prefs.addObserver("intl.l10n.pseudo", this, true);
-+  }
-+
-+  /**
-+   * Default observer handler method.
-+   *
-+   * @param {String} subject
-+   * @param {String} topic
-+   * @param {Object} data
-+   */
-+  observe(subject, topic, data) {
-+    switch (topic) {
-+      case "intl:app-locales-changed":
-+        this.onChange();
-+        break;
-+      case "nsPref:changed":
-+        switch (data) {
-+          case "intl.l10n.pseudo":
-+            this.onChange();
-+        }
-+        break;
-+      default:
-+        break;
-+    }
+-  /**
+-   * Register weak observers on events that will trigger cache invalidation
+-   */
+-  registerObservers() {
+-    Services.obs.addObserver(this, "intl:app-locales-changed", true);
+-    Services.prefs.addObserver("intl.l10n.pseudo", this, true);
+-  }
+-
+-  /**
+-   * Default observer handler method.
+-   *
+-   * @param {String} subject
+-   * @param {String} topic
+-   * @param {Object} data
+-   */
+-  observe(subject, topic, data) {
+-    switch (topic) {
+-      case "intl:app-locales-changed":
+-        this.onChange();
+-        break;
+-      case "nsPref:changed":
+-        switch (data) {
+-          case "intl.l10n.pseudo":
+-            this.onChange();
+-        }
+-        break;
+-      default:
+-        break;
+-    }
++  handleEvent() {
++    this.onChange();
    }
  
    /**
     * This method should be called when there's a reason to believe
     * that language negotiation or available resources changed.
-+   *
-+   * @param {bool} eager - whether the I/O for new context should begin eagerly
+-   *
+-   * @param {bool} eager - whether the I/O for new context should begin eagerly
     */
--  onChange() {
-+  onChange(eager = false) {
+-  onChange(eager = false) {
++  onChange() {
      this.bundles = CachedAsyncIterable.from(
        this.generateBundles(this.resourceIds));
--    this.bundles.touchNext(2);
-+    if (eager) {
-+      // If the first app locale is the same as last fallback
-+      // it means that we have all resources in this locale, and
-+      // we want to eagerly fetch just that one.
-+      // Otherwise, we're in a scenario where the first locale may
-+      // be partial and we want to eagerly fetch a fallback as well.
-+      const appLocale = Services.locale.appLocaleAsBCP47;
-+      const lastFallback = Services.locale.lastFallbackLocale;
-+      const prefetchCount = appLocale === lastFallback ? 1 : 2;
-+      this.bundles.touchNext(prefetchCount);
-+    }
+-    if (eager) {
+-      // If the first app locale is the same as last fallback
+-      // it means that we have all resources in this locale, and
+-      // we want to eagerly fetch just that one.
+-      // Otherwise, we're in a scenario where the first locale may
+-      // be partial and we want to eagerly fetch a fallback as well.
+-      const appLocale = Services.locale.appLocaleAsBCP47;
+-      const lastFallback = Services.locale.lastFallbackLocale;
+-      const prefetchCount = appLocale === lastFallback ? 1 : 2;
+-      this.bundles.touchNext(prefetchCount);
+-    }
++    this.bundles.touchNext(2);
    }
  }
  
-+Localization.prototype.QueryInterface = ChromeUtils.generateQI([
-+  Ci.nsISupportsWeakReference
-+]);
-+
+-Localization.prototype.QueryInterface = ChromeUtils.generateQI([
+-  Ci.nsISupportsWeakReference,
+-]);
+-
  /**
   * Format the value of a message into a string.
   *
-@@ -380,7 +450,7 @@
+@@ -430,7 +380,7 @@ function messageFromBundle(bundle, error
   * See `Localization.formatWithFallback` for more info on how this is used.
   *
   * @param {Function}       method
-- * @param {FluentBundle} bundle
-+ * @param {FluentBundle}   bundle
+- * @param {FluentBundle}   bundle
++ * @param {FluentBundle} bundle
   * @param {Array<string>}  keys
   * @param {{Array<{value: string, attributes: Object}>}} translations
   *
-@@ -408,44 +478,5 @@
+@@ -458,5 +408,44 @@ function keysFromBundle(method, bundle, 
    return missingIds;
  }
  
--/* global Components */
--/* eslint no-unused-vars: 0 */
--
--const Cu = Components.utils;
--const Cc = Components.classes;
--const Ci = Components.interfaces;
--
--const { L10nRegistry } =
--  Cu.import("resource://gre/modules/L10nRegistry.jsm", {});
--const ObserverService =
--  Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
--const { Services } =
--  Cu.import("resource://gre/modules/Services.jsm", {});
--
--/**
-- * The default localization strategy for Gecko. It comabines locales
-- * available in L10nRegistry, with locales requested by the user to
-- * generate the iterator over FluentBundles.
-- *
-- * In the future, we may want to allow certain modules to override this
-- * with a different negotitation strategy to allow for the module to
-- * be localized into a different language - for example DevTools.
-- */
--function defaultGenerateBundles(resourceIds) {
--  const requestedLocales = Services.locale.getRequestedLocales();
--  const availableLocales = L10nRegistry.getAvailableLocales();
--  const defaultLocale = Services.locale.defaultLocale;
--  const locales = Services.locale.negotiateLanguages(
--    requestedLocales, availableLocales, defaultLocale,
--  );
--  return L10nRegistry.generateContexts(locales, resourceIds);
--}
--
--class GeckoLocalization extends Localization {
--  constructor(resourceIds, generateBundles = defaultGenerateBundles) {
--    super(resourceIds, generateBundles);
--  }
--}
--
--this.Localization = GeckoLocalization;
--this.EXPORTED_SYMBOLS = ["Localization"];
-+this.Localization = Localization;
-+var EXPORTED_SYMBOLS = ["Localization"];
---- ./dist/DOMLocalization.jsm	2018-10-19 08:40:37.000392886 -0600
-+++ /home/zbraniecki/projects/mozilla-unified/intl/l10n/DOMLocalization.jsm	2018-10-19 21:38:25.963726161 -0600
-@@ -15,13 +15,12 @@
-  * limitations under the License.
-  */
- 
-+/* fluent-dom@fa25466f (October 12, 2018) */
- 
--/* fluent-dom@0.4.0 */
--
--import Localization from '../../fluent-dom/src/localization.js';
--
--/* eslint no-console: ["error", {allow: ["warn"]}] */
--/* global console */
-+const { Localization } =
-+  ChromeUtils.import("resource://gre/modules/Localization.jsm", {});
-+const { Services } =
-+  ChromeUtils.import("resource://gre/modules/Services.jsm", {});
- 
- // Match the opening angle bracket (<) in HTML tags, and HTML entities like
- // &amp;, &#0038;, &#x0026;.
-@@ -61,11 +60,12 @@
-   },
-   "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul": {
-     global: [
--      "accesskey", "aria-label", "aria-valuetext", "aria-moz-hint", "label"
--    ],
-+      "accesskey", "aria-label", "aria-valuetext", "aria-moz-hint", "label",
-+      "title", "tooltiptext"],
-+    description: ["value"],
-     key: ["key", "keycode"],
-+    label: ["value"],
-     textbox: ["placeholder"],
--    toolbarbutton: ["tooltiptext"],
-   }
- };
- 
-@@ -96,6 +96,7 @@
-       const templateElement = element.ownerDocument.createElementNS(
-         "http://www.w3.org/1999/xhtml", "template"
-       );
-+      // eslint-disable-next-line no-unsanitized/property
-       templateElement.innerHTML = value;
-       overlayChildNodes(templateElement.content, element);
-     }
-@@ -349,6 +350,46 @@
-   return toElement;
- }
- 
-+/**
-+ * Sanitizes a translation before passing them to Node.localize API.
-+ *
-+ * It returns `false` if the translation contains DOM Overlays and should
-+ * not go into Node.localize.
-+ *
-+ * Note: There's a third item of work that JS DOM Overlays do - removal
-+ * of attributes from the previous translation.
-+ * This is not trivial to implement for Node.localize scenario, so
-+ * at the moment it is not supported.
-+ *
-+ * @param {{
-+ *          localName: string,
-+ *          namespaceURI: string,
-+ *          type: string || null
-+ *          l10nId: string,
-+ *          l10nArgs: Array<Object> || null,
-+ *          l10nAttrs: string ||null,
-+ *        }}                                     l10nItems
-+ * @param {{value: string, attrs: Object}} translations
-+ * @returns boolean
-+ * @private
-+ */
-+function sanitizeTranslationForNodeLocalize(l10nItem, translation) {
-+  if (reOverlay.test(translation.value)) {
-+    return false;
-+  }
+-this.Localization = Localization;
+-var EXPORTED_SYMBOLS = ["Localization"];
++/* global Components */
++/* eslint no-unused-vars: 0 */
 +
-+  if (translation.attributes) {
-+    const explicitlyAllowed = l10nItem.l10nAttrs === null ? null :
-+      l10nItem.l10nAttrs.split(",").map(i => i.trim());
-+    for (const [j, {name}] of translation.attributes.entries()) {
-+      if (!isAttrNameLocalizable(name, l10nItem, explicitlyAllowed)) {
-+        translation.attributes.splice(j, 1);
-+      }
-+    }
-+  }
-+  return true;
++const Cu = Components.utils;
++const Cc = Components.classes;
++const Ci = Components.interfaces;
++
++const { L10nRegistry } =
++  Cu.import("resource://gre/modules/L10nRegistry.jsm", {});
++const ObserverService =
++  Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
++const { Services } =
++  Cu.import("resource://gre/modules/Services.jsm", {});
++
++/**
++ * The default localization strategy for Gecko. It comabines locales
++ * available in L10nRegistry, with locales requested by the user to
++ * generate the iterator over FluentBundles.
++ *
++ * In the future, we may want to allow certain modules to override this
++ * with a different negotitation strategy to allow for the module to
++ * be localized into a different language - for example DevTools.
++ */
++function defaultGenerateBundles(resourceIds) {
++  const requestedLocales = Services.locale.getRequestedLocales();
++  const availableLocales = L10nRegistry.getAvailableLocales();
++  const defaultLocale = Services.locale.defaultLocale;
++  const locales = Services.locale.negotiateLanguages(
++    requestedLocales, availableLocales, defaultLocale,
++  );
++  return L10nRegistry.generateContexts(locales, resourceIds);
 +}
 +
- const L10NID_ATTR_NAME = "data-l10n-id";
- const L10NARGS_ATTR_NAME = "data-l10n-args";
- 
-@@ -390,8 +431,8 @@
-     };
-   }
- 
--  onChange() {
--    super.onChange();
-+  onChange(eager = false) {
-+    super.onChange(eager);
-     this.translateRoots();
-   }
- 
-@@ -478,18 +519,17 @@
-     }
- 
-     if (this.windowElement) {
--      if (this.windowElement !== newRoot.ownerDocument.defaultView) {
-+      if (this.windowElement !== newRoot.ownerGlobal) {
-         throw new Error(`Cannot connect a root:
-           DOMLocalization already has a root from a different window.`);
-       }
-     } else {
--      this.windowElement = newRoot.ownerDocument.defaultView;
-+      this.windowElement = newRoot.ownerGlobal;
-       this.mutationObserver = new this.windowElement.MutationObserver(
-         mutations => this.translateMutations(mutations)
-       );
-     }
- 
--
-     this.roots.add(newRoot);
-     this.mutationObserver.observe(newRoot, this.observerConfig);
-   }
-@@ -532,7 +572,20 @@
-   translateRoots() {
-     const roots = Array.from(this.roots);
-     return Promise.all(
--      roots.map(root => this.translateFragment(root))
-+      roots.map(async root => {
-+        // We want to first retranslate the UI, and
-+        // then (potentially) flip the directionality.
-+        //
-+        // This means that the DOM alternations and directionality
-+        // are set in the same microtask.
-+        await this.translateFragment(root);
-+        let primaryLocale = Services.locale.appLocaleAsBCP47;
-+        let direction = Services.locale.isAppLocaleRTL ? "rtl" : "ltr";
-+        root.setAttribute("lang", primaryLocale);
-+        root.setAttribute(root.namespaceURI ===
-+          "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-+          ? "localedir" : "dir", direction);
-+      })
-     );
-   }
- 
-@@ -599,7 +652,10 @@
-     if (this.pendingElements.size > 0) {
-       if (this.pendingrAF === null) {
-         this.pendingrAF = this.windowElement.requestAnimationFrame(() => {
--          this.translateElements(Array.from(this.pendingElements));
-+          // We need to filter for elements that lost their l10n-id while
-+          // waiting for the animation frame.
-+          this.translateElements(Array.from(this.pendingElements)
-+            .filter(elem => elem.hasAttribute("data-l10n-id")));
-           this.pendingElements.clear();
-           this.pendingrAF = null;
-         });
-@@ -621,6 +677,63 @@
-    * @returns {Promise}
-    */
-   translateFragment(frag) {
-+    if (frag.localize) {
-+      // This is a temporary fast-path offered by Gecko to workaround performance
-+      // issues coming from Fluent and XBL+Stylo performing unnecesary
-+      // operations during startup.
-+      // For details see bug 1441037, bug 1442262, and bug 1363862.
++class GeckoLocalization extends Localization {
++  constructor(resourceIds, generateBundles = defaultGenerateBundles) {
++    super(resourceIds, generateBundles);
++  }
++}
 +
-+      // A sparse array which will store translations separated out from
-+      // all translations that is needed for DOM Overlay.
-+      const overlayTranslations = [];
-+
-+      const getTranslationsForItems = async l10nItems => {
-+        const keys = l10nItems.map(
-+          l10nItem => ({id: l10nItem.l10nId, args: l10nItem.l10nArgs}));
-+        const translations = await this.formatMessages(keys);
-+
-+        // Here we want to separate out elements that require DOM Overlays.
-+        // Those elements will have to be translated using our JS
-+        // implementation, while everything else is going to use the fast-path.
-+        for (const [i, translation] of translations.entries()) {
-+          if (translation === undefined) {
-+            continue;
-+          }
-+
-+          const hasOnlyText =
-+            sanitizeTranslationForNodeLocalize(l10nItems[i], translation);
-+          if (!hasOnlyText) {
-+            // Removing from translations to make Node.localize skip it.
-+            // We will translate it below using JS DOM Overlays.
-+            overlayTranslations[i] = translations[i];
-+            translations[i] = undefined;
-+          }
-+        }
-+
-+        // We pause translation observing here because Node.localize
-+        // will translate the whole DOM next, using the `translations`.
-+        //
-+        // The observer will be resumed after DOM Overlays are localized
-+        // in the next microtask.
-+        this.pauseObserving();
-+        return translations;
-+      };
-+
-+      return frag.localize(getTranslationsForItems.bind(this))
-+        .then(untranslatedElements => {
-+          for (let i = 0; i < overlayTranslations.length; i++) {
-+            if (overlayTranslations[i] !== undefined &&
-+                untranslatedElements[i] !== undefined) {
-+              translateElement(untranslatedElements[i], overlayTranslations[i]);
-+            }
-+          }
-+          this.resumeObserving();
-+        })
-+        .catch(e => {
-+          this.resumeObserving();
-+          throw e;
-+        });
-+    }
-     return this.translateElements(this.getTranslatables(frag));
-   }
- 
-@@ -700,37 +813,5 @@
-   }
- }
- 
--/* global L10nRegistry, Services */
--
--/**
-- * The default localization strategy for Gecko. It comabines locales
-- * available in L10nRegistry, with locales requested by the user to
-- * generate the iterator over FluentBundles.
-- *
-- * In the future, we may want to allow certain modules to override this
-- * with a different negotitation strategy to allow for the module to
-- * be localized into a different language - for example DevTools.
-- */
--function defaultGenerateBundles(resourceIds) {
--  const requestedLocales = Services.locale.getRequestedLocales();
--  const availableLocales = L10nRegistry.getAvailableLocales();
--  const defaultLocale = Services.locale.defaultLocale;
--  const locales = Services.locale.negotiateLanguages(
--    requestedLocales, availableLocales, defaultLocale,
--  );
--  return L10nRegistry.generateContexts(locales, resourceIds);
--}
--
--
--class GeckoDOMLocalization extends DOMLocalization {
--  constructor(
--    windowElement,
--    resourceIds,
--    generateBundles = defaultGenerateBundles
--  ) {
--    super(windowElement, resourceIds, generateBundles);
--  }
--}
--
--this.DOMLocalization = GeckoDOMLocalization;
--this.EXPORTED_SYMBOLS = ["DOMLocalization"];
-+this.DOMLocalization = DOMLocalization;
-+var EXPORTED_SYMBOLS = ["DOMLocalization"];
++this.Localization = GeckoLocalization;
++this.EXPORTED_SYMBOLS = ["Localization"];
+diff --git a/intl/l10n/fluent.js.patch b/intl/l10n/fluent.js.patch
+--- a/intl/l10n/fluent.js.patch
++++ b/intl/l10n/fluent.js.patch
+@@ -1,736 +0,0 @@
+---- ./dist/Fluent.jsm	2018-10-19 08:40:36.557032837 -0600
+-+++ /home/zbraniecki/projects/mozilla-unified/intl/l10n/Fluent.jsm	2018-10-19 21:22:35.174315857 -0600
+-@@ -16,7 +16,7 @@
+-  */
+- 
+- 
+--/* fluent-dom@0.4.0 */
+-+/* fluent@fa25466f (October 12, 2018) */
+- 
+- /* global Intl */
+- 
+-@@ -139,7 +139,53 @@
+-   return unwrapped;
+- }
+- 
+--/* global Intl */
+-+/**
+-+ * @overview
+-+ *
+-+ * The role of the Fluent resolver is to format a translation object to an
+-+ * instance of `FluentType` or an array of instances.
+-+ *
+-+ * Translations can contain references to other messages or variables,
+-+ * conditional logic in form of select expressions, traits which describe their
+-+ * grammatical features, and can use Fluent builtins which make use of the
+-+ * `Intl` formatters to format numbers, dates, lists and more into the
+-+ * bundle's language. See the documentation of the Fluent syntax for more
+-+ * information.
+-+ *
+-+ * In case of errors the resolver will try to salvage as much of the
+-+ * translation as possible.  In rare situations where the resolver didn't know
+-+ * how to recover from an error it will return an instance of `FluentNone`.
+-+ *
+-+ * `MessageReference`, `VariantExpression`, `AttributeExpression` and
+-+ * `SelectExpression` resolve to raw Runtime Entries objects and the result of
+-+ * the resolution needs to be passed into `Type` to get their real value.
+-+ * This is useful for composing expressions.  Consider:
+-+ *
+-+ *     brand-name[nominative]
+-+ *
+-+ * which is a `VariantExpression` with properties `id: MessageReference` and
+-+ * `key: Keyword`.  If `MessageReference` was resolved eagerly, it would
+-+ * instantly resolve to the value of the `brand-name` message.  Instead, we
+-+ * want to get the message object and look for its `nominative` variant.
+-+ *
+-+ * All other expressions (except for `FunctionReference` which is only used in
+-+ * `CallExpression`) resolve to an instance of `FluentType`.  The caller should
+-+ * use the `toString` method to convert the instance to a native value.
+-+ *
+-+ *
+-+ * All functions in this file pass around a special object called `env`.
+-+ * This object stores a set of elements used by all resolve functions:
+-+ *
+-+ *  * {FluentBundle} bundle
+-+ *      bundle for which the given resolution is happening
+-+ *  * {Object} args
+-+ *      list of developer provided arguments that can be used
+-+ *  * {Array} errors
+-+ *      list of errors collected while resolving
+-+ *  * {WeakSet} dirty
+-+ *      Set of patterns already encountered during this resolution.
+-+ *      This is used to prevent cyclic resolutions.
+-+ */
+- 
+- // Prevent expansion of too long placeables.
+- const MAX_PLACEABLE_LENGTH = 2500;
+-@@ -1319,14 +1365,6 @@
+-   }
+- }
+- 
+--/*
+-- * @module fluent
+-- * @overview
+-- *
+-- * `fluent` is a JavaScript implementation of Project Fluent, a localization
+-- * framework designed to unleash the expressive power of the natural language.
+-- *
+-- */
+--
+- this.FluentBundle = FluentBundle;
+--this.EXPORTED_SYMBOLS = ["FluentBundle"];
+-+this.FluentResource = FluentResource;
+-+var EXPORTED_SYMBOLS = ["FluentBundle", "FluentResource"];
+---- ./dist/Localization.jsm	2018-10-19 08:40:36.773712561 -0600
+-+++ /home/zbraniecki/projects/mozilla-unified/intl/l10n/Localization.jsm	2018-10-19 21:20:57.295233460 -0600
+-@@ -16,27 +16,34 @@
+-  */
+- 
+- 
+--/* fluent-dom@0.4.0 */
+-+/* fluent-dom@fa25466f (October 12, 2018) */
+-+
+-+/* eslint no-console: ["error", { allow: ["warn", "error"] }] */
+-+/* global console */
+-+
+-+const { L10nRegistry } = ChromeUtils.import("resource://gre/modules/L10nRegistry.jsm", {});
+-+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
+-+const { AppConstants } = ChromeUtils.import("resource://gre/modules/AppConstants.jsm", {});
+- 
+- /*
+-  * Base CachedIterable class.
+-  */
+- class CachedIterable extends Array {
+--    /**
+--     * Create a `CachedIterable` instance from an iterable or, if another
+--     * instance of `CachedIterable` is passed, return it without any
+--     * modifications.
+--     *
+--     * @param {Iterable} iterable
+--     * @returns {CachedIterable}
+--     */
+--    static from(iterable) {
+--        if (iterable instanceof this) {
+--            return iterable;
+--        }
+--
+--        return new this(iterable);
+-+  /**
+-+   * Create a `CachedIterable` instance from an iterable or, if another
+-+   * instance of `CachedIterable` is passed, return it without any
+-+   * modifications.
+-+   *
+-+   * @param {Iterable} iterable
+-+   * @returns {CachedIterable}
+-+   */
+-+  static from(iterable) {
+-+    if (iterable instanceof this) {
+-+      return iterable;
+-     }
+-+
+-+    return new this(iterable);
+-+  }
+- }
+- 
+- /*
+-@@ -46,88 +53,100 @@
+-  * iterable.
+-  */
+- class CachedAsyncIterable extends CachedIterable {
+--    /**
+--     * Create an `CachedAsyncIterable` instance.
+--     *
+--     * @param {Iterable} iterable
+--     * @returns {CachedAsyncIterable}
+--     */
+--    constructor(iterable) {
+--        super();
+--
+--        if (Symbol.asyncIterator in Object(iterable)) {
+--            this.iterator = iterable[Symbol.asyncIterator]();
+--        } else if (Symbol.iterator in Object(iterable)) {
+--            this.iterator = iterable[Symbol.iterator]();
+--        } else {
+--            throw new TypeError("Argument must implement the iteration protocol.");
+--        }
+--    }
+-+  /**
+-+   * Create an `CachedAsyncIterable` instance.
+-+   *
+-+   * @param {Iterable} iterable
+-+   * @returns {CachedAsyncIterable}
+-+   */
+-+  constructor(iterable) {
+-+    super();
+- 
+--    /**
+--     * Synchronous iterator over the cached elements.
+--     *
+--     * Return a generator object implementing the iterator protocol over the
+--     * cached elements of the original (async or sync) iterable.
+--     */
+--    [Symbol.iterator]() {
+--        const cached = this;
+--        let cur = 0;
+--
+--        return {
+--            next() {
+--                if (cached.length === cur) {
+--                    return {value: undefined, done: true};
+--                }
+--                return cached[cur++];
+--            }
+--        };
+-+    if (Symbol.asyncIterator in Object(iterable)) {
+-+      this.iterator = iterable[Symbol.asyncIterator]();
+-+    } else if (Symbol.iterator in Object(iterable)) {
+-+      this.iterator = iterable[Symbol.iterator]();
+-+    } else {
+-+      throw new TypeError("Argument must implement the iteration protocol.");
+-     }
+-+  }
+- 
+--    /**
+--     * Asynchronous iterator caching the yielded elements.
+--     *
+--     * Elements yielded by the original iterable will be cached and available
+--     * synchronously. Returns an async generator object implementing the
+--     * iterator protocol over the elements of the original (async or sync)
+--     * iterable.
+--     */
+--    [Symbol.asyncIterator]() {
+--        const cached = this;
+--        let cur = 0;
+--
+--        return {
+--            async next() {
+--                if (cached.length <= cur) {
+--                    cached.push(await cached.iterator.next());
+--                }
+--                return cached[cur++];
+--            }
+--        };
+--    }
+-+  /**
+-+   * Synchronous iterator over the cached elements.
+-+   *
+-+   * Return a generator object implementing the iterator protocol over the
+-+   * cached elements of the original (async or sync) iterable.
+-+   */
+-+  [Symbol.iterator]() {
+-+    const cached = this;
+-+    let cur = 0;
+-+
+-+    return {
+-+      next() {
+-+        if (cached.length === cur) {
+-+          return {value: undefined, done: true};
+-+        }
+-+        return cached[cur++];
+-+      }
+-+    };
+-+  }
+- 
+--    /**
+--     * This method allows user to consume the next element from the iterator
+--     * into the cache.
+--     *
+--     * @param {number} count - number of elements to consume
+--     */
+--    async touchNext(count = 1) {
+--        let idx = 0;
+--        while (idx++ < count) {
+--            const last = this[this.length - 1];
+--            if (last && last.done) {
+--                break;
+--            }
+--            this.push(await this.iterator.next());
+-+  /**
+-+   * Asynchronous iterator caching the yielded elements.
+-+   *
+-+   * Elements yielded by the original iterable will be cached and available
+-+   * synchronously. Returns an async generator object implementing the
+-+   * iterator protocol over the elements of the original (async or sync)
+-+   * iterable.
+-+   */
+-+  [Symbol.asyncIterator]() {
+-+    const cached = this;
+-+    let cur = 0;
+-+
+-+    return {
+-+      async next() {
+-+        if (cached.length <= cur) {
+-+          cached.push(await cached.iterator.next());
+-         }
+--        // Return the last cached {value, done} object to allow the calling
+--        // code to decide if it needs to call touchNext again.
+--        return this[this.length - 1];
+-+        return cached[cur++];
+-+      }
+-+    };
+-+  }
+-+
+-+  /**
+-+   * This method allows user to consume the next element from the iterator
+-+   * into the cache.
+-+   *
+-+   * @param {number} count - number of elements to consume
+-+   */
+-+  async touchNext(count = 1) {
+-+    let idx = 0;
+-+    while (idx++ < count) {
+-+      const last = this[this.length - 1];
+-+      if (last && last.done) {
+-+        break;
+-+      }
+-+      this.push(await this.iterator.next());
+-     }
+-+    // Return the last cached {value, done} object to allow the calling
+-+    // code to decide if it needs to call touchNext again.
+-+    return this[this.length - 1];
+-+  }
+- }
+- 
+--/* eslint no-console: ["error", { allow: ["warn", "error"] }] */
+-+/**
+-+ * The default localization strategy for Gecko. It comabines locales
+-+ * available in L10nRegistry, with locales requested by the user to
+-+ * generate the iterator over FluentBundles.
+-+ *
+-+ * In the future, we may want to allow certain modules to override this
+-+ * with a different negotitation strategy to allow for the module to
+-+ * be localized into a different language - for example DevTools.
+-+ */
+-+function defaultGenerateBundles(resourceIds) {
+-+  const appLocales = Services.locale.appLocalesAsBCP47;
+-+  return L10nRegistry.generateContexts(appLocales, resourceIds);
+-+}
+- 
+- /**
+-  * The `Localization` class is a central high-level API for vanilla
+-@@ -143,16 +162,21 @@
+-    *
+-    * @returns {Localization}
+-    */
+--  constructor(resourceIds = [], generateBundles) {
+-+  constructor(resourceIds = [], generateBundles = defaultGenerateBundles) {
+-     this.resourceIds = resourceIds;
+-     this.generateBundles = generateBundles;
+-     this.bundles = CachedAsyncIterable.from(
+-       this.generateBundles(this.resourceIds));
+-   }
+- 
+--  addResourceIds(resourceIds) {
+-+  /**
+-+   * @param {Array<String>} resourceIds - List of resource IDs
+-+   * @param {bool}                eager - whether the I/O for new context should
+-+   *                                      begin eagerly
+-+   */
+-+  addResourceIds(resourceIds, eager = false) {
+-     this.resourceIds.push(...resourceIds);
+--    this.onChange();
+-+    this.onChange(eager);
+-     return this.resourceIds.length;
+-   }
+- 
+-@@ -184,9 +208,12 @@
+-         break;
+-       }
+- 
+--      if (typeof console !== "undefined") {
+-+      if (AppConstants.NIGHTLY_BUILD || Cu.isInAutomation) {
+-         const locale = bundle.locales[0];
+-         const ids = Array.from(missingIds).join(", ");
+-+        if (Cu.isInAutomation) {
+-+          throw new Error(`Missing translations in ${locale}: ${ids}`);
+-+        }
+-         console.warn(`Missing translations in ${locale}: ${ids}`);
+-       }
+-     }
+-@@ -274,21 +301,64 @@
+-     return val;
+-   }
+- 
+--  handleEvent() {
+--    this.onChange();
+-+  /**
+-+   * Register weak observers on events that will trigger cache invalidation
+-+   */
+-+  registerObservers() {
+-+    Services.obs.addObserver(this, "intl:app-locales-changed", true);
+-+    Services.prefs.addObserver("intl.l10n.pseudo", this, true);
+-+  }
+-+
+-+  /**
+-+   * Default observer handler method.
+-+   *
+-+   * @param {String} subject
+-+   * @param {String} topic
+-+   * @param {Object} data
+-+   */
+-+  observe(subject, topic, data) {
+-+    switch (topic) {
+-+      case "intl:app-locales-changed":
+-+        this.onChange();
+-+        break;
+-+      case "nsPref:changed":
+-+        switch (data) {
+-+          case "intl.l10n.pseudo":
+-+            this.onChange();
+-+        }
+-+        break;
+-+      default:
+-+        break;
+-+    }
+-   }
+- 
+-   /**
+-    * This method should be called when there's a reason to believe
+-    * that language negotiation or available resources changed.
+-+   *
+-+   * @param {bool} eager - whether the I/O for new context should begin eagerly
+-    */
+--  onChange() {
+-+  onChange(eager = false) {
+-     this.bundles = CachedAsyncIterable.from(
+-       this.generateBundles(this.resourceIds));
+--    this.bundles.touchNext(2);
+-+    if (eager) {
+-+      // If the first app locale is the same as last fallback
+-+      // it means that we have all resources in this locale, and
+-+      // we want to eagerly fetch just that one.
+-+      // Otherwise, we're in a scenario where the first locale may
+-+      // be partial and we want to eagerly fetch a fallback as well.
+-+      const appLocale = Services.locale.appLocaleAsBCP47;
+-+      const lastFallback = Services.locale.lastFallbackLocale;
+-+      const prefetchCount = appLocale === lastFallback ? 1 : 2;
+-+      this.bundles.touchNext(prefetchCount);
+-+    }
+-   }
+- }
+- 
+-+Localization.prototype.QueryInterface = ChromeUtils.generateQI([
+-+  Ci.nsISupportsWeakReference
+-+]);
+-+
+- /**
+-  * Format the value of a message into a string.
+-  *
+-@@ -380,7 +450,7 @@
+-  * See `Localization.formatWithFallback` for more info on how this is used.
+-  *
+-  * @param {Function}       method
+-- * @param {FluentBundle} bundle
+-+ * @param {FluentBundle}   bundle
+-  * @param {Array<string>}  keys
+-  * @param {{Array<{value: string, attributes: Object}>}} translations
+-  *
+-@@ -408,44 +478,5 @@
+-   return missingIds;
+- }
+- 
+--/* global Components */
+--/* eslint no-unused-vars: 0 */
+--
+--const Cu = Components.utils;
+--const Cc = Components.classes;
+--const Ci = Components.interfaces;
+--
+--const { L10nRegistry } =
+--  Cu.import("resource://gre/modules/L10nRegistry.jsm", {});
+--const ObserverService =
+--  Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
+--const { Services } =
+--  Cu.import("resource://gre/modules/Services.jsm", {});
+--
+--/**
+-- * The default localization strategy for Gecko. It comabines locales
+-- * available in L10nRegistry, with locales requested by the user to
+-- * generate the iterator over FluentBundles.
+-- *
+-- * In the future, we may want to allow certain modules to override this
+-- * with a different negotitation strategy to allow for the module to
+-- * be localized into a different language - for example DevTools.
+-- */
+--function defaultGenerateBundles(resourceIds) {
+--  const requestedLocales = Services.locale.getRequestedLocales();
+--  const availableLocales = L10nRegistry.getAvailableLocales();
+--  const defaultLocale = Services.locale.defaultLocale;
+--  const locales = Services.locale.negotiateLanguages(
+--    requestedLocales, availableLocales, defaultLocale,
+--  );
+--  return L10nRegistry.generateContexts(locales, resourceIds);
+--}
+--
+--class GeckoLocalization extends Localization {
+--  constructor(resourceIds, generateBundles = defaultGenerateBundles) {
+--    super(resourceIds, generateBundles);
+--  }
+--}
+--
+--this.Localization = GeckoLocalization;
+--this.EXPORTED_SYMBOLS = ["Localization"];
+-+this.Localization = Localization;
+-+var EXPORTED_SYMBOLS = ["Localization"];
+---- ./dist/DOMLocalization.jsm	2018-10-19 08:40:37.000392886 -0600
+-+++ /home/zbraniecki/projects/mozilla-unified/intl/l10n/DOMLocalization.jsm	2018-10-19 21:38:25.963726161 -0600
+-@@ -15,13 +15,12 @@
+-  * limitations under the License.
+-  */
+- 
+-+/* fluent-dom@fa25466f (October 12, 2018) */
+- 
+--/* fluent-dom@0.4.0 */
+--
+--import Localization from '../../fluent-dom/src/localization.js';
+--
+--/* eslint no-console: ["error", {allow: ["warn"]}] */
+--/* global console */
+-+const { Localization } =
+-+  ChromeUtils.import("resource://gre/modules/Localization.jsm", {});
+-+const { Services } =
+-+  ChromeUtils.import("resource://gre/modules/Services.jsm", {});
+- 
+- // Match the opening angle bracket (<) in HTML tags, and HTML entities like
+- // &amp;, &#0038;, &#x0026;.
+-@@ -61,11 +60,12 @@
+-   },
+-   "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul": {
+-     global: [
+--      "accesskey", "aria-label", "aria-valuetext", "aria-moz-hint", "label"
+--    ],
+-+      "accesskey", "aria-label", "aria-valuetext", "aria-moz-hint", "label",
+-+      "title", "tooltiptext"],
+-+    description: ["value"],
+-     key: ["key", "keycode"],
+-+    label: ["value"],
+-     textbox: ["placeholder"],
+--    toolbarbutton: ["tooltiptext"],
+-   }
+- };
+- 
+-@@ -96,6 +96,7 @@
+-       const templateElement = element.ownerDocument.createElementNS(
+-         "http://www.w3.org/1999/xhtml", "template"
+-       );
+-+      // eslint-disable-next-line no-unsanitized/property
+-       templateElement.innerHTML = value;
+-       overlayChildNodes(templateElement.content, element);
+-     }
+-@@ -349,6 +350,46 @@
+-   return toElement;
+- }
+- 
+-+/**
+-+ * Sanitizes a translation before passing them to Node.localize API.
+-+ *
+-+ * It returns `false` if the translation contains DOM Overlays and should
+-+ * not go into Node.localize.
+-+ *
+-+ * Note: There's a third item of work that JS DOM Overlays do - removal
+-+ * of attributes from the previous translation.
+-+ * This is not trivial to implement for Node.localize scenario, so
+-+ * at the moment it is not supported.
+-+ *
+-+ * @param {{
+-+ *          localName: string,
+-+ *          namespaceURI: string,
+-+ *          type: string || null
+-+ *          l10nId: string,
+-+ *          l10nArgs: Array<Object> || null,
+-+ *          l10nAttrs: string ||null,
+-+ *        }}                                     l10nItems
+-+ * @param {{value: string, attrs: Object}} translations
+-+ * @returns boolean
+-+ * @private
+-+ */
+-+function sanitizeTranslationForNodeLocalize(l10nItem, translation) {
+-+  if (reOverlay.test(translation.value)) {
+-+    return false;
+-+  }
+-+
+-+  if (translation.attributes) {
+-+    const explicitlyAllowed = l10nItem.l10nAttrs === null ? null :
+-+      l10nItem.l10nAttrs.split(",").map(i => i.trim());
+-+    for (const [j, {name}] of translation.attributes.entries()) {
+-+      if (!isAttrNameLocalizable(name, l10nItem, explicitlyAllowed)) {
+-+        translation.attributes.splice(j, 1);
+-+      }
+-+    }
+-+  }
+-+  return true;
+-+}
+-+
+- const L10NID_ATTR_NAME = "data-l10n-id";
+- const L10NARGS_ATTR_NAME = "data-l10n-args";
+- 
+-@@ -390,8 +431,8 @@
+-     };
+-   }
+- 
+--  onChange() {
+--    super.onChange();
+-+  onChange(eager = false) {
+-+    super.onChange(eager);
+-     this.translateRoots();
+-   }
+- 
+-@@ -478,18 +519,17 @@
+-     }
+- 
+-     if (this.windowElement) {
+--      if (this.windowElement !== newRoot.ownerDocument.defaultView) {
+-+      if (this.windowElement !== newRoot.ownerGlobal) {
+-         throw new Error(`Cannot connect a root:
+-           DOMLocalization already has a root from a different window.`);
+-       }
+-     } else {
+--      this.windowElement = newRoot.ownerDocument.defaultView;
+-+      this.windowElement = newRoot.ownerGlobal;
+-       this.mutationObserver = new this.windowElement.MutationObserver(
+-         mutations => this.translateMutations(mutations)
+-       );
+-     }
+- 
+--
+-     this.roots.add(newRoot);
+-     this.mutationObserver.observe(newRoot, this.observerConfig);
+-   }
+-@@ -532,7 +572,20 @@
+-   translateRoots() {
+-     const roots = Array.from(this.roots);
+-     return Promise.all(
+--      roots.map(root => this.translateFragment(root))
+-+      roots.map(async root => {
+-+        // We want to first retranslate the UI, and
+-+        // then (potentially) flip the directionality.
+-+        //
+-+        // This means that the DOM alternations and directionality
+-+        // are set in the same microtask.
+-+        await this.translateFragment(root);
+-+        let primaryLocale = Services.locale.appLocaleAsBCP47;
+-+        let direction = Services.locale.isAppLocaleRTL ? "rtl" : "ltr";
+-+        root.setAttribute("lang", primaryLocale);
+-+        root.setAttribute(root.namespaceURI ===
+-+          "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+-+          ? "localedir" : "dir", direction);
+-+      })
+-     );
+-   }
+- 
+-@@ -599,7 +652,10 @@
+-     if (this.pendingElements.size > 0) {
+-       if (this.pendingrAF === null) {
+-         this.pendingrAF = this.windowElement.requestAnimationFrame(() => {
+--          this.translateElements(Array.from(this.pendingElements));
+-+          // We need to filter for elements that lost their l10n-id while
+-+          // waiting for the animation frame.
+-+          this.translateElements(Array.from(this.pendingElements)
+-+            .filter(elem => elem.hasAttribute("data-l10n-id")));
+-           this.pendingElements.clear();
+-           this.pendingrAF = null;
+-         });
+-@@ -621,6 +677,63 @@
+-    * @returns {Promise}
+-    */
+-   translateFragment(frag) {
+-+    if (frag.localize) {
+-+      // This is a temporary fast-path offered by Gecko to workaround performance
+-+      // issues coming from Fluent and XBL+Stylo performing unnecesary
+-+      // operations during startup.
+-+      // For details see bug 1441037, bug 1442262, and bug 1363862.
+-+
+-+      // A sparse array which will store translations separated out from
+-+      // all translations that is needed for DOM Overlay.
+-+      const overlayTranslations = [];
+-+
+-+      const getTranslationsForItems = async l10nItems => {
+-+        const keys = l10nItems.map(
+-+          l10nItem => ({id: l10nItem.l10nId, args: l10nItem.l10nArgs}));
+-+        const translations = await this.formatMessages(keys);
+-+
+-+        // Here we want to separate out elements that require DOM Overlays.
+-+        // Those elements will have to be translated using our JS
+-+        // implementation, while everything else is going to use the fast-path.
+-+        for (const [i, translation] of translations.entries()) {
+-+          if (translation === undefined) {
+-+            continue;
+-+          }
+-+
+-+          const hasOnlyText =
+-+            sanitizeTranslationForNodeLocalize(l10nItems[i], translation);
+-+          if (!hasOnlyText) {
+-+            // Removing from translations to make Node.localize skip it.
+-+            // We will translate it below using JS DOM Overlays.
+-+            overlayTranslations[i] = translations[i];
+-+            translations[i] = undefined;
+-+          }
+-+        }
+-+
+-+        // We pause translation observing here because Node.localize
+-+        // will translate the whole DOM next, using the `translations`.
+-+        //
+-+        // The observer will be resumed after DOM Overlays are localized
+-+        // in the next microtask.
+-+        this.pauseObserving();
+-+        return translations;
+-+      };
+-+
+-+      return frag.localize(getTranslationsForItems.bind(this))
+-+        .then(untranslatedElements => {
+-+          for (let i = 0; i < overlayTranslations.length; i++) {
+-+            if (overlayTranslations[i] !== undefined &&
+-+                untranslatedElements[i] !== undefined) {
+-+              translateElement(untranslatedElements[i], overlayTranslations[i]);
+-+            }
+-+          }
+-+          this.resumeObserving();
+-+        })
+-+        .catch(e => {
+-+          this.resumeObserving();
+-+          throw e;
+-+        });
+-+    }
+-     return this.translateElements(this.getTranslatables(frag));
+-   }
+- 
+-@@ -700,37 +813,5 @@
+-   }
+- }
+- 
+--/* global L10nRegistry, Services */
+--
+--/**
+-- * The default localization strategy for Gecko. It comabines locales
+-- * available in L10nRegistry, with locales requested by the user to
+-- * generate the iterator over FluentBundles.
+-- *
+-- * In the future, we may want to allow certain modules to override this
+-- * with a different negotitation strategy to allow for the module to
+-- * be localized into a different language - for example DevTools.
+-- */
+--function defaultGenerateBundles(resourceIds) {
+--  const requestedLocales = Services.locale.getRequestedLocales();
+--  const availableLocales = L10nRegistry.getAvailableLocales();
+--  const defaultLocale = Services.locale.defaultLocale;
+--  const locales = Services.locale.negotiateLanguages(
+--    requestedLocales, availableLocales, defaultLocale,
+--  );
+--  return L10nRegistry.generateContexts(locales, resourceIds);
+--}
+--
+--
+--class GeckoDOMLocalization extends DOMLocalization {
+--  constructor(
+--    windowElement,
+--    resourceIds,
+--    generateBundles = defaultGenerateBundles
+--  ) {
+--    super(windowElement, resourceIds, generateBundles);
+--  }
+--}
+--
+--this.DOMLocalization = GeckoDOMLocalization;
+--this.EXPORTED_SYMBOLS = ["DOMLocalization"];
+-+this.DOMLocalization = DOMLocalization;
+-+var EXPORTED_SYMBOLS = ["DOMLocalization"];

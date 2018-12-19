@@ -36,7 +36,7 @@ class VRDisplayPuppet : public VRDisplayLocal {
   void ZeroSensor() override;
 
  protected:
-  virtual VRHMDSensorState GetSensorState() override;
+  virtual VRHMDSensorState& GetSensorState() override;
   virtual void StartPresentation() override;
   virtual void StopPresentation() override;
 #if defined(XP_WIN)

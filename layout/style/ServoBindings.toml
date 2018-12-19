@@ -391,6 +391,7 @@ cbindgen-types = [
     { gecko = "StyleComputedTimingFunction", servo = "values::computed::easing::TimingFunction" },
     { gecko = "StyleDisplay", servo = "values::specified::Display" },
     { gecko = "StyleDisplayMode", servo = "gecko::media_features::DisplayMode" },
+    { gecko = "StyleExtremumLength", servo = "values::computed::length::ExtremumLength" },
     { gecko = "StyleFillRule", servo = "values::generics::basic_shape::FillRule" },
     { gecko = "StyleFontDisplay", servo = "font_face::FontDisplay" },
     { gecko = "StyleFontFaceSourceListComponent", servo = "font_face::FontFaceSourceListComponent" },

@@ -8,6 +8,8 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import logging
 import re
+import os
+import taskcluster_urls
 
 from .util import (
     create_tasks,
@@ -153,7 +155,9 @@ def create_interactive_action(parameters, graph_config, input, task_group_id, ta
             return
 
         info = {
-            'url': 'https://tools.taskcluster.net/tasks/{}/connect'.format(taskId),
+            'url': taskcluster_urls.ui(
+                os.environ['TASKCLUSTER_ROOT_URL'],
+                'tasks/{}/connect'.format(taskId)),
             'label': label,
             'revision': parameters['head_rev'],
             'repo': parameters['head_repository'],

@@ -99,7 +99,7 @@ void VRDisplayExternal::ExpireNavigationTransition() {
   }
 }
 
-VRHMDSensorState VRDisplayExternal::GetSensorState() {
+VRHMDSensorState& VRDisplayExternal::GetSensorState() {
   return mLastSensorState;
 }
 

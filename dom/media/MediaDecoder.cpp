@@ -974,6 +974,14 @@ void MediaDecoder::UpdateVideoDecodeMode() {
     return;
   }
 
+  // Seeking is required when leaving suspend mode.
+  if (!mMediaSeekable) {
+    LOG("UpdateVideoDecodeMode(), set Normal because the media is not "
+        "seekable");
+    mDecoderStateMachine->SetVideoDecodeMode(VideoDecodeMode::Normal);
+    return;
+  }
+
   // If mHasSuspendTaint is set, never suspend the video decoder.
   if (mHasSuspendTaint) {
     LOG("UpdateVideoDecodeMode(), set Normal because the element has been "

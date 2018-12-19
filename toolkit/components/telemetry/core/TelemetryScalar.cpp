@@ -27,7 +27,6 @@
 #include "nsPrintfCString.h"
 #include "nsThreadUtils.h"
 #include "nsVariant.h"
-#include "TelemetryCommon.h"
 #include "TelemetryScalarData.h"
 
 using mozilla::Nothing;
@@ -55,6 +54,7 @@ using mozilla::Telemetry::Common::IsInDataset;
 using mozilla::Telemetry::Common::IsValidIdentifierString;
 using mozilla::Telemetry::Common::LogToBrowserConsole;
 using mozilla::Telemetry::Common::RecordedProcessType;
+using mozilla::Telemetry::Common::StringHashSet;
 using mozilla::Telemetry::Common::SupportedProduct;
 
 namespace TelemetryIPCAccumulator = mozilla::TelemetryIPCAccumulator;
@@ -3680,6 +3680,29 @@ void TelemetryScalar::AddDynamicScalarDefinitions(
     StaticMutexAutoLock locker(gTelemetryScalarsMutex);
     internal_RegisterScalars(locker, dynamicStubs);
   }
+}
+
+nsresult TelemetryScalar::GetAllStores(StringHashSet& set) {
+  // Static stores
+  for (uint32_t storeIdx : gScalarStoresTable) {
+    const char* name = &gScalarsStringTable[storeIdx];
+    nsAutoCString store;
+    store.AssignASCII(name);
+    if (!set.PutEntry(store)) {
+      return NS_ERROR_FAILURE;
+    }
+  }
+
+  // Dynamic stores
+  for (auto& ptr : *gDynamicStoreNames) {
+    nsAutoCString store;
+    ptr->ToUTF8String(store);
+    if (!set.PutEntry(store)) {
+      return NS_ERROR_FAILURE;
+    }
+  }
+
+  return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////

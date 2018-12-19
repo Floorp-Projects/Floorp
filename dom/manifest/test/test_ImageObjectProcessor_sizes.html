@@ -14,47 +14,47 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1079453
  * Image object's sizes member
  * https://w3c.github.io/manifest/#sizes-member
  **/
-'use strict';
+"use strict";
 var validSizes = [{
-  test: '16x16',
-  expect: ['16x16']
+  test: "16x16",
+  expect: ["16x16"],
 }, {
-  test: 'hello 16x16 16x16',
-  expect: ['16x16']
+  test: "hello 16x16 16x16",
+  expect: ["16x16"],
 }, {
-  test: '32x32 16 48x48 12',
-  expect: ['32x32', '48x48']
+  test: "32x32 16 48x48 12",
+  expect: ["32x32", "48x48"],
 }, {
   test: `${whiteSpace}128x128${whiteSpace}512x512 8192x8192 32768x32768${whiteSpace}`,
-  expect: ['128x128', '512x512', '8192x8192', '32768x32768']
+  expect: ["128x128", "512x512", "8192x8192", "32768x32768"],
 }, {
-  test: 'any',
-  expect: ['any']
+  test: "any",
+  expect: ["any"],
 }, {
-  test: 'Any',
-  expect: ['Any']
+  test: "Any",
+  expect: ["Any"],
 }, {
-  test: '16x32',
-  expect: ['16x32']
+  test: "16x32",
+  expect: ["16x32"],
 }, {
-  test: '17x33',
-  expect: ['17x33']
+  test: "17x33",
+  expect: ["17x33"],
 }, {
-  test: '32x32 32x32',
-  expect: ['32x32']
+  test: "32x32 32x32",
+  expect: ["32x32"],
 }, {
-  test: '32X32',
-  expect: ['32X32']
+  test: "32X32",
+  expect: ["32X32"],
 }, {
-  test: 'any 32x32',
-  expect: ['any', '32x32']
+  test: "any 32x32",
+  expect: ["any", "32x32"],
 }];
 
 var testIcon = {
   icons: [{
-    src: 'test',
-    sizes: undefined
-  }]
+    src: "test",
+    sizes: undefined,
+  }],
 };
 
 validSizes.forEach(({test, expect}) => {
@@ -66,16 +66,9 @@ validSizes.forEach(({test, expect}) => {
   is(sizes, expect.join(" "), expected);
 });
 
-var testIcon = {
-  icons: [{
-    src: 'test',
-    sizes: undefined
-  }]
-};
-
-var invalidSizes = ['invalid', '', ' ', '16 x 16', '32', '21', '16xx16', '16 x x 6'];
+var invalidSizes = ["invalid", "", " ", "16 x 16", "32", "21", "16xx16", "16 x x 6"];
 invalidSizes.forEach((invalidSize) => {
-  var expected = 'Expect invalid sizes to return undefined.';
+  var expected = "Expect invalid sizes to return undefined.";
   testIcon.icons[0].sizes = invalidSize;
   data.jsonText = JSON.stringify(testIcon);
   var result = processor.process(data);

@@ -6,19 +6,6 @@
 # find and create .mozconfig files and to generate targets.
 .NOTPARALLEL:
 
-generated_resources := \
-  AndroidManifest.xml \
-  res/raw/suggestedsites.json \
-  res/values/strings.xml \
-  $(NULL)
-
-generated_files := \
-  AndroidManifest.xml \
-  generated/preprocessed/org/mozilla/gecko/AdjustConstants.java \
-  generated/preprocessed/org/mozilla/gecko/AppConstants.java \
-  generated/preprocessed/org/mozilla/gecko/MmaConstants.java \
-  $(NULL)
-
 include $(topsrcdir)/config/AB_rCD.mk
 
 chrome-%:: AB_CD=$*
@@ -29,37 +16,3 @@ chrome-%::
 	  AB_CD=$*
 
 include $(topsrcdir)/config/rules.mk
-
-# This target is only used by IDE integrations. It rebuilds resources
-# that end up in omni.ja using the equivalent of |mach build faster|,
-# does most of the packaging step, and then updates omni.ja in
-# place. If you're not using an IDE, you should be using |mach build
-# mobile/android && mach package|.
-$(ABS_DIST)/fennec/$(OMNIJAR_NAME): FORCE
-	$(REPORT_BUILD)
-	$(MAKE) -C ../../../faster
-	$(MAKE) -C ../installer stage-package
-	$(MKDIR) -p $(@D)
-	rsync --update $(DIST)/fennec/$(notdir $(OMNIJAR_NAME)) $@
-	$(RM) $(DIST)/fennec/$(notdir $(OMNIJAR_NAME))
-
-ifndef MOZILLA_OFFICIAL
-# Targets built very early during a Gradle build.  In automation,
-# these are built before Gradle is invoked, and gradle-targets is not
-# made at all.  This is required to avoid building gradle-targets with
-# AB_CD=multi during multi-l10n builds.
-gradle-targets: $(generated_resources) $(generated_files)
-
-# Local developers update omni.ja during their builds.  There's a
-# chicken-and-egg problem here.
-gradle-omnijar: $(abspath $(DIST)/fennec/$(OMNIJAR_NAME))
-else
-# In automation, omni.ja is built only during packaging.
-gradle-omnijar:
-
-gradle-targets:
-endif
-
-.PHONY: gradle-targets gradle-omnijar
-
-export:: android_apks

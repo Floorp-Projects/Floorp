@@ -458,6 +458,8 @@ interface nsIXPCComponents_Utils : nsISupports
      *
      * Enables Xray vision for same-compartment access for the compartment
      * indicated by |vscope|. All outgoing wrappers are recomputed.
+     *
+     * This must not be called on chrome (system-principal) scopes.
      */
     [implicit_jscontext]
     void setWantXrays(in jsval vscope);

@@ -62,7 +62,10 @@ class CxxCodeGen(CodePrinter, Visitor):
         elif t.ptrconstptr:
             ts += '* const*'
 
-        ts += '&' * t.ref
+        if t.ref:
+            ts += '&'
+        elif t.rvalref:
+            ts += '&&'
 
         self.write(ts)
 

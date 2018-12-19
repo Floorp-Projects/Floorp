@@ -23,6 +23,7 @@ from mach.decorators import (
 
 import mozinfo
 
+
 def setup_awsy_argument_parser():
     from marionette_harness.runtests import MarionetteArguments
     from mozlog.structured import commandline
@@ -135,10 +136,13 @@ class MachCommands(MachCommandBase):
             except Exception as exc:
                 troubleshoot = ''
                 if mozinfo.os == 'win':
-                    troubleshoot = ' Try using --web-root to specify a directory closer to the drive root.'
+                    troubleshoot = ' Try using --web-root to specify a ' \
+                                   'directory closer to the drive root.'
 
-                self.log(logging.ERROR, 'awsy', {'directory': page_load_test_dir, 'exception': exc},
-                    'Failed to unzip `tp5n.zip` into `{directory}` with `{exception}`.' + troubleshoot)
+                self.log(logging.ERROR, 'awsy',
+                         {'directory': page_load_test_dir, 'exception': exc},
+                         'Failed to unzip `tp5n.zip` into '
+                         '`{directory}` with `{exception}`.' + troubleshoot)
                 raise exc
 
         # If '--preferences' was not specified supply our default set.
@@ -156,13 +160,12 @@ class MachCommands(MachCommandBase):
             if mozinfo.os == 'win':
                 kwargs['pref'] = 'security.sandbox.content.level:0'
                 self.log(logging.WARNING, 'awsy', {},
-                    'Forcing \'security.sandbox.content.level\' = 0 because DMD is enabled.')
+                         'Forcing \'security.sandbox.content.level\' = 0 because DMD is enabled.')
             elif mozinfo.os == 'mac':
                 # On mac binary is in MacOS and dmd.py is in Resources, ie:
                 #   Name.app/Contents/MacOS/libdmd.dylib
                 #   Name.app/Contents/Resources/dmd.py
                 bin_dir = os.path.join(bin_dir, "../Resources/")
-
 
             # Also add the bin dir to the python path so we can use dmd.py
             if bin_dir not in sys.path:
@@ -183,9 +186,9 @@ class MachCommands(MachCommandBase):
             return 0
 
     @Command('awsy-test', category='testing',
-        description='Run Are We Slim Yet (AWSY) memory usage testing using marionette.',
-        parser=setup_awsy_argument_parser,
-    )
+             description='Run Are We Slim Yet (AWSY) memory usage testing using marionette.',
+             parser=setup_awsy_argument_parser,
+             )
     @CommandArgumentGroup('AWSY')
     @CommandArgument('--web-root', group='AWSY', action='store', type=str,
                      dest='webRootDir',

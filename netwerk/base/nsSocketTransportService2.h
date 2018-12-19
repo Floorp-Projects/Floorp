@@ -114,9 +114,7 @@ class nsSocketTransportService final : public nsPISocketTransportService,
   // Returns true if keepalives are enabled in prefs.
   bool IsKeepaliveEnabled() { return mKeepaliveEnabledPref; }
 
-  bool IsTelemetryEnabledAndNotSleepPhase() {
-    return mTelemetryEnabledPref && !mSleepPhase;
-  }
+  bool IsTelemetryEnabledAndNotSleepPhase();
   PRIntervalTime MaxTimeForPrClosePref() { return mMaxTimeForPrClosePref; }
 
   bool IsEsniEnabled() {
@@ -260,7 +258,6 @@ class nsSocketTransportService final : public nsPISocketTransportService,
 
   Atomic<bool> mServingPendingQueue;
   Atomic<int32_t, Relaxed> mMaxTimePerPollIter;
-  Atomic<bool, Relaxed> mTelemetryEnabledPref;
   Atomic<PRIntervalTime, Relaxed> mMaxTimeForPrClosePref;
   // Timestamp of the last network link change event, tracked
   // also on child processes.

@@ -3740,7 +3740,9 @@ var gCSSProperties = {
     /* computed value tests for height test more with display:block */
     prerequisites: { "display": "block" },
     other_values: [ "15px", "3em", "15%",
-      "-moz-max-content", "-moz-min-content", "-moz-fit-content", "-moz-available",
+      "max-content", "min-content", "-moz-fit-content", "-moz-available",
+      // these two keywords are the aliases of above first two.
+      "-moz-max-content", "-moz-min-content",
       "calc(2px)",
       "calc(50%)",
       "calc(3*25px)",
@@ -3993,7 +3995,9 @@ var gCSSProperties = {
     prerequisites: { "display": "block" },
     initial_values: [ "none" ],
     other_values: [ "30px", "50%", "0",
-      "-moz-max-content", "-moz-min-content", "-moz-fit-content", "-moz-available",
+      "max-content", "min-content", "-moz-fit-content", "-moz-available",
+      // these two keywords are the aliases of above first two.
+      "-moz-max-content", "-moz-min-content",
       "calc(2px)",
       "calc(-2px)",
       "calc(0px)",
@@ -4015,7 +4019,9 @@ var gCSSProperties = {
       // these four keywords compute to the initial value only when the
       // writing mode is vertical, and we're testing with a horizontal
       // writing mode
-      "-moz-max-content", "-moz-min-content", "-moz-fit-content", "-moz-available",
+      "max-content", "min-content", "-moz-fit-content", "-moz-available",
+      // these two keywords are the aliases of above first two.
+      "-moz-max-content", "-moz-min-content",
       "calc(2px)",
       "calc(-2px)",
       "calc(0px)",
@@ -4034,7 +4040,9 @@ var gCSSProperties = {
     prerequisites: { "display": "block" },
     initial_values: [ "auto", "0", "calc(0em)", "calc(-2px)" ],
     other_values: [ "30px", "50%",
-      "-moz-max-content", "-moz-min-content", "-moz-fit-content", "-moz-available",
+      "max-content", "min-content", "-moz-fit-content", "-moz-available",
+      // these two keywords are the aliases of above first two.
+      "-moz-max-content", "-moz-min-content",
       "calc(-1%)",
       "calc(2px)",
       "calc(50%)",
@@ -4055,7 +4063,9 @@ var gCSSProperties = {
       // these four keywords compute to the initial value only when the
       // writing mode is vertical, and we're testing with a horizontal
       // writing mode
-      "-moz-max-content", "-moz-min-content", "-moz-fit-content", "-moz-available",
+      "max-content", "min-content", "-moz-fit-content", "-moz-available",
+      // these two keywords are the aliases of above first two.
+      "-moz-max-content", "-moz-min-content",
       "calc(-1%)",
       "calc(2px)",
       "calc(50%)",
@@ -4738,7 +4748,9 @@ var gCSSProperties = {
       // these three keywords compute to the initial value only when the
       // writing mode is vertical, and we're testing with a horizontal
       // writing mode
-      "-moz-max-content", "-moz-min-content", "-moz-fit-content",
+      "max-content", "min-content", "-moz-fit-content",
+      // these two keywords are the aliases of above first two.
+      "-moz-max-content", "-moz-min-content",
       // whether -moz-available computes to the initial value depends on
       // the container size, and for the container size we're testing
       // with, it does
@@ -5537,11 +5549,11 @@ var gCSSProperties = {
       "2 auto",
       "auto 4",
       "auto 5.6 7.8",
-      "-moz-max-content",
-      "1 -moz-max-content",
-      "1 2 -moz-max-content",
-      "-moz-max-content 1",
-      "-moz-max-content 1 2",
+      "max-content",
+      "1 max-content",
+      "1 2 max-content",
+      "max-content 1",
+      "max-content 1 2",
       "-0"
     ],
     invalid_values: [
@@ -5566,7 +5578,10 @@ var gCSSProperties = {
         // a reusable array defined at the top of this file?)
     other_values: [
       "content",
-      "15px", "3em", "15%", "-moz-max-content", "-moz-min-content", "-moz-fit-content", "-moz-available",
+      "15px", "3em", "15%",
+      "max-content", "min-content",
+      "-moz-max-content", "-moz-min-content",
+      "-moz-fit-content", "-moz-available",
       // valid calc() values
       "calc(-2px)",
       "calc(2px)",
@@ -5922,13 +5937,16 @@ var gCSSProperties = {
     initial_values: [ "auto" ],
     prerequisites: { "display": "block" },
     other_values: [ "15px", "3em", "15%",
+      // These keywords are treated as initial value.
+      "max-content", "min-content", "-moz-fit-content", "-moz-available",
+      "-moz-max-content", "-moz-min-content",
       "calc(2px)",
       "calc(50%)",
       "calc(3*25px)",
       "calc(25px*3)",
       "calc(3*25px + 50%)",
     ],
-    invalid_values: [ "none", "-moz-max-content", "-moz-min-content", "-moz-fit-content", "-moz-available" ],
+    invalid_values: [ "none" ],
   },
   "border-block-end-color": {
     domProp: "borderBlockEndColor",
@@ -6101,7 +6119,9 @@ var gCSSProperties = {
       // these three keywords compute to the initial value only when the
       // writing mode is vertical, and we're testing with a horizontal
       // writing mode
-      "-moz-max-content", "-moz-min-content", "-moz-fit-content",
+      "max-content", "min-content", "-moz-fit-content",
+      // these two keywords are the aliases of above first two.
+      "-moz-max-content", "-moz-min-content",
       // whether -moz-available computes to the initial value depends on
       // the container size, and for the container size we're testing
       // with, it does
@@ -6175,13 +6195,16 @@ var gCSSProperties = {
     prerequisites: { "display": "block" },
     initial_values: [ "none" ],
     other_values: [ "30px", "50%",
+      // These keywords are treated as initial value.
+      "max-content", "min-content", "-moz-fit-content", "-moz-available",
+      "-moz-max-content", "-moz-min-content",
       "calc(2px)",
       "calc(50%)",
       "calc(3*25px)",
       "calc(25px*3)",
       "calc(3*25px + 50%)",
     ],
-    invalid_values: [ "auto", "5", "-moz-max-content", "-moz-min-content", "-moz-fit-content", "-moz-available" ]
+    invalid_values: [ "auto", "5" ]
   },
   "max-inline-size": {
     domProp: "maxInlineSize",
@@ -6195,7 +6218,9 @@ var gCSSProperties = {
       // these four keywords compute to the initial value only when the
       // writing mode is vertical, and we're testing with a horizontal
       // writing mode
-      "-moz-max-content", "-moz-min-content", "-moz-fit-content", "-moz-available",
+      "max-content", "min-content", "-moz-fit-content", "-moz-available",
+      // these two keywords are the aliases of above first two.
+      "-moz-max-content", "-moz-min-content",
       "calc(2px)",
       "calc(50%)",
       "calc(3*25px)",
@@ -6213,6 +6238,9 @@ var gCSSProperties = {
     prerequisites: { "display": "block" },
     initial_values: [ "auto", "0", "calc(0em)", "calc(-2px)" ],
     other_values: [ "30px", "50%",
+      // These keywords are treated as initial value.
+      "max-content", "min-content", "-moz-fit-content", "-moz-available",
+      "-moz-max-content", "-moz-min-content",
       "calc(-1%)",
       "calc(2px)",
       "calc(50%)",
@@ -6220,7 +6248,7 @@ var gCSSProperties = {
       "calc(25px*3)",
       "calc(3*25px + 50%)",
     ],
-    invalid_values: [ "none", "5", "-moz-max-content", "-moz-min-content", "-moz-fit-content", "-moz-available" ]
+    invalid_values: [ "none", "5" ]
   },
   "min-inline-size": {
     domProp: "minInlineSize",
@@ -6234,7 +6262,9 @@ var gCSSProperties = {
       // these four keywords compute to the initial value only when the
       // writing mode is vertical, and we're testing with a horizontal
       // writing mode
-      "-moz-max-content", "-moz-min-content", "-moz-fit-content", "-moz-available",
+      "max-content", "min-content", "-moz-fit-content", "-moz-available",
+      // these two keywords are the aliases of above first two.
+      "-moz-max-content", "-moz-min-content",
       "calc(-1%)",
       "calc(2px)",
       "calc(50%)",
