@@ -526,21 +526,19 @@ bool mozJSSubScriptLoader::ReadScript(nsIURI* uri, JSContext* cx,
 
 NS_IMETHODIMP
 mozJSSubScriptLoader::LoadSubScript(const nsAString& url, HandleValue target,
-                                    const nsAString& charset, JSContext* cx,
-                                    MutableHandleValue retval) {
+                                    JSContext* cx, MutableHandleValue retval) {
   /*
-   * Loads a local url and evals it into the current cx
-   * Synchronous (an async version would be cool too.)
+   * Loads a local url, referring to UTF-8-encoded data, and evals it into the
+   * current cx.  Synchronous (an async version would be cool too.)
    *   url: The url to load.  Must be local so that it can be loaded
    *        synchronously.
    *   targetObj: Optional object to eval the script onto (defaults to context
    *              global)
-   *   charset: Optional character set to use for reading
    *   returns: Whatever jsval the script pointed to by the url returns.
    * Should ONLY (O N L Y !) be called from JavaScript code.
    */
   LoadSubScriptOptions options(cx);
-  options.charset = charset;
+  options.charset.AssignLiteral("UTF-8");
   options.target = target.isObject() ? &target.toObject() : nullptr;
   return DoLoadSubScriptWithOptions(url, options, cx, retval);
 }

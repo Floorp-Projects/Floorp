@@ -33,16 +33,16 @@ add_task(async function() {
       output: "a\u0000",
     }, {
       input: "%30%FF",
-      output: "0\uFFFD", // 0�
+      output: "0�",
     }, {
       input: "%C3%A0",
-      output: "\u00E0", // à
+      output: "à",
     }, {
       input: "%E2%9D%A4",
-      output: "\u2764", // ❤
+      output: "❤",
     }, {
       input: "%F0%9F%9A%80",
-      output: "\uD83D\uDE80", // 🚀
+      output: "🚀",
     },
   ];
 

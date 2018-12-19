@@ -384,7 +384,7 @@ class ProxyScriptContext extends BaseContext {
     Schemas.exportLazyGetter(this.sandbox, "browser", () => this.browserObj);
 
     try {
-      Services.scriptloader.loadSubScript(this.url, this.sandbox, "UTF-8");
+      Services.scriptloader.loadSubScript(this.url, this.sandbox);
     } catch (error) {
       this.extension.emit("proxy-error", {
         message: this.normalizeError(error).message,

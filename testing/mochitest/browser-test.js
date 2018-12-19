@@ -439,10 +439,10 @@ function Tester(aTests, structuredLogger, aCallback) {
       configurable: true,
       writable: true,
       value: {
-        loadSubScript: (url, obj, charset) => {
+        loadSubScript: (url, obj) => {
           let before = Object.keys(window);
           try {
-            return this._scriptLoader.loadSubScript(url, obj, charset);
+            return this._scriptLoader.loadSubScript(url, obj);
           } finally {
             for (let property of Object.keys(window)) {
               if (!before.includes(property) && !this._globalProperties.includes(property)) {
