@@ -22,6 +22,7 @@ onmessage = function(e) {
   SimpleTest.finish();
 };
 
+// eslint-disable-next-line no-useless-concat
 var url = "data:text/html,<script>" + document.getElementById("dataURL").textContent + "</" + "script>";
 
 var ifr = document.createElement("iframe");
