@@ -712,10 +712,6 @@ class ADBDevice(ADBCommand):
             self._logger.debug("Check chown -R: {}".format(e))
         self._logger.info("Native chown -R support: {}".format(self._chown_R))
 
-        # Do we have pidof?
-        self._have_pidof = self.shell_bool("type pidof", timeout=timeout)
-        self._logger.info("Native pidof support: {}".format(self._have_pidof))
-
         try:
             cleared = self.shell_bool('logcat -P ""', timeout=timeout)
         except ADBError:
@@ -727,6 +723,15 @@ class ADBDevice(ADBCommand):
         self.enforcing = 'Permissive'
         self.version = int(self.shell_output("getprop ro.build.version.sdk",
                                              timeout=timeout))
+
+        # Do we have pidof?
+        if self.version >= version_codes.N:
+            self._have_pidof = self.shell_bool("type pidof", timeout=timeout)
+        else:
+            # unexpected pidof behavior observed on Android 6 in bug 1514363
+            self._have_pidof = False
+        self._logger.info("Native pidof support: {}".format(self._have_pidof))
+
         # Beginning in Android 8.1 /data/anr/traces.txt no longer contains
         # a single file traces.txt but instead will contain individual files
         # for each stack.
