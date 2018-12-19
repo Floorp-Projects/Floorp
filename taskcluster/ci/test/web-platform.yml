@@ -5,6 +5,10 @@ job-defaults:
         by-test-platform:
             linux64/debug: both
             default: false
+    virtualization:
+        by-test-platform:
+            windows10-64-qr/.*: virtual-with-gpu
+            default: virtual
     mozharness:
         script: web_platform_tests.py
         config:
