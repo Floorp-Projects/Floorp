@@ -35,6 +35,8 @@
 #include "nsClassHashtable.h"
 #include "nsTArray.h"
 
+#include "mozilla/Components.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/Omnijar.h"
 #include "mozilla/Attributes.h"
 
@@ -53,8 +55,9 @@ struct PRThread;
 extern const mozilla::Module kXPCOMModule;
 
 namespace {
+class EntryWrapper;
 class MutexLock;
-}
+}  // namespace
 
 namespace mozilla {
 namespace xpcom {
@@ -147,14 +150,18 @@ class nsComponentManagerImpl final : public nsIComponentManager,
 
   already_AddRefed<nsIFactory> LoadFactory(nsFactoryEntry* aEntry);
 
-  nsFactoryEntry* GetFactoryEntry(const char* aContractID,
-                                  uint32_t aContractIDLen);
-  nsFactoryEntry* GetFactoryEntry(const nsCID& aClass);
-
   nsDataHashtable<nsIDPointerHashKey, nsFactoryEntry*> mFactories;
   nsDataHashtable<nsCStringHashKey, nsFactoryEntry*> mContractIDs;
 
   SafeMutex mLock;
+
+  mozilla::Maybe<EntryWrapper> LookupByCID(const nsID& aCID);
+  mozilla::Maybe<EntryWrapper> LookupByCID(const MutexLock&, const nsID& aCID);
+
+  mozilla::Maybe<EntryWrapper> LookupByContractID(
+      const nsACString& aContractID);
+  mozilla::Maybe<EntryWrapper> LookupByContractID(
+      const MutexLock&, const nsACString& aContractID);
 
   static void InitializeStaticModules();
   static void InitializeModuleLocations();
@@ -276,7 +283,7 @@ class nsComponentManagerImpl final : public nsIComponentManager,
  private:
   ~nsComponentManagerImpl();
 
-  nsresult GetServiceLocked(MutexLock& aLock, nsFactoryEntry& aEntry,
+  nsresult GetServiceLocked(MutexLock& aLock, EntryWrapper& aEntry,
                             const nsIID& aIID, void** aResult);
 };
 
@@ -294,6 +301,9 @@ struct nsFactoryEntry {
   ~nsFactoryEntry();
 
   already_AddRefed<nsIFactory> GetFactory();
+
+  nsresult CreateInstance(nsISupports* aOuter, const nsIID& aIID,
+                          void** aResult);
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf);
 
