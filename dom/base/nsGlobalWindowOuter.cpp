@@ -7274,7 +7274,12 @@ mozilla::dom::TabGroup* nsPIDOMWindowOuter::TabGroup() {
   window->InitWasOffline();
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (obs) {
-    obs->AddObserver(window, PERM_CHANGE_NOTIFICATION, true);
+    // Delay calling AddObserver until we hit the event loop, in case we may be
+    // in the middle of modifying the observer list somehow.
+    NS_DispatchToMainThread(
+        NS_NewRunnableFunction("PermChangeDelayRunnable", [obs, window] {
+          obs->AddObserver(window, PERM_CHANGE_NOTIFICATION, true);
+        }));
   }
   nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
   if (prefBranch) {
