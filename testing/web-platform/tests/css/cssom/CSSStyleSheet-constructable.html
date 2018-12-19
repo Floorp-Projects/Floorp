@@ -466,5 +466,50 @@ promise_test(() => {
     assert_equals(reason.name, "NotAllowedError");
   });
 }, 'CSSStyleSheet.replace returns rejected promise on failed imports');
+
+test(() => {
+  const span = document.createElement("span");
+  thirdSection.appendChild(span);
+  const shadowDiv = attachShadowDiv(span);
+  const sheet = new CSSStyleSheet();
+  span.shadowRoot.adoptedStyleSheets = [sheet];
+
+  const newSpan = span.cloneNode(true);
+  assert_equals(newSpan.shadowRoot, null);
+}, 'Cloning a shadow host will not clone shadow root, and also adoptedStyleSheets');
+
+test(() => {
+  const span = document.createElement("span");
+  thirdSection.appendChild(span);
+  const shadowDiv = attachShadowDiv(span);
+  const sheet = new CSSStyleSheet();
+  span.shadowRoot.adoptedStyleSheets = [sheet];
+
+  const iframe = document.createElement("iframe");
+  document.body.appendChild(iframe);
+  const newSpan = iframe.contentDocument.importNode(span, true);
+  iframe.contentDocument.body.appendChild(newSpan);
+  assert_equals(newSpan.shadowRoot, null);
+}, 'Importing a shadow host will not copy shadow root, and also adoptedStyleSheets');
+
+test(() => {
+  const span = document.createElement("span");
+  thirdSection.appendChild(span);
+  const shadowDiv = attachShadowDiv(span);
+  const sheet = new CSSStyleSheet();
+  sheet.replaceSync("* { color: red; }");
+  span.shadowRoot.adoptedStyleSheets = [sheet];
+  assert_equals(getComputedStyle(shadowDiv).color, "rgb(255, 0, 0)");
+
+  const iframe = document.createElement("iframe");
+  document.body.appendChild(iframe);
+  iframe.contentDocument.adoptNode(span);
+  iframe.contentDocument.body.appendChild(span);
+  assert_not_equals(span.shadowRoot, null);
+  assert_equals(span.shadowRoot.adoptedStyleSheets.length, 1);
+  assert_equals(span.shadowRoot.adoptedStyleSheets[0], sheet);
+  assert_equals(getComputedStyle(shadowDiv).color, "rgb(0, 0, 0)");
+}, 'Adopting a shadow host will move adoptedStyleSheets but it is not applied');
+
 </script>
 
