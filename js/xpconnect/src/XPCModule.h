@@ -22,13 +22,16 @@
 
 #define MOZJSSUBSCRIPTLOADER_CONTRACTID "@mozilla.org/moz/jssubscript-loader;1"
 
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsJSID)
 NS_GENERIC_FACTORY_CONSTRUCTOR(mozJSSubScriptLoader)
 
+NS_DEFINE_NAMED_CID(NS_JS_ID_CID);
 NS_DEFINE_NAMED_CID(MOZ_JSSUBSCRIPTLOADER_CID);
 
-#define XPCONNECT_CIDENTRIES                    \
-  {&kMOZ_JSSUBSCRIPTLOADER_CID, false, nullptr, \
-   mozJSSubScriptLoaderConstructor},
+#define XPCONNECT_CIDENTRIES                           \
+  {&kNS_JS_ID_CID, false, nullptr, nsJSIDConstructor}, \
+      {&kMOZ_JSSUBSCRIPTLOADER_CID, false, nullptr,    \
+       mozJSSubScriptLoaderConstructor},
 
 #define XPCONNECT_CONTRACTS \
   {MOZJSSUBSCRIPTLOADER_CONTRACTID, &kMOZ_JSSUBSCRIPTLOADER_CID},

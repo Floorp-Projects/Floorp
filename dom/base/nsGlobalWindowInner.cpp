@@ -4480,8 +4480,7 @@ nsGlobalWindowInner::GetInterface(const nsIID& aIID, void** aSink) {
   return rv;
 }
 
-void nsGlobalWindowInner::GetInterface(JSContext* aCx,
-                                       JS::Handle<JS::Value> aIID,
+void nsGlobalWindowInner::GetInterface(JSContext* aCx, nsIJSID* aIID,
                                        JS::MutableHandle<JS::Value> aRetval,
                                        ErrorResult& aError) {
   dom::GetInterface(aCx, this, aIID, aRetval, aError);

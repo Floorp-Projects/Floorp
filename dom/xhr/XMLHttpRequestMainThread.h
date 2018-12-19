@@ -58,6 +58,7 @@
 
 class nsIJARChannel;
 class nsILoadGroup;
+class nsIJSID;
 
 namespace mozilla {
 namespace dom {
@@ -396,7 +397,7 @@ class XMLHttpRequestMainThread final : public XMLHttpRequest,
   virtual nsIChannel* GetChannel() const override { return mChannel; }
 
   // We need a GetInterface callable from JS for chrome JS
-  virtual void GetInterface(JSContext* aCx, JS::Handle<JS::Value> aIID,
+  virtual void GetInterface(JSContext* aCx, nsIJSID* aIID,
                             JS::MutableHandle<JS::Value> aRetval,
                             ErrorResult& aRv) override;
 

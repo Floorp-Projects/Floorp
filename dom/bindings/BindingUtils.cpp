@@ -1231,12 +1231,18 @@ bool QueryInterface(JSContext* cx, unsigned argc, JS::Value* vp) {
     return Throw(cx, NS_ERROR_XPC_NOT_ENOUGH_ARGS);
   }
 
-  Maybe<nsIID> iid = xpc::JSValue2ID(cx, args[0]);
-  if (!iid) {
+  if (!args[0].isObject()) {
     return Throw(cx, NS_ERROR_XPC_BAD_CONVERT_JS);
   }
 
-  if (iid->Equals(NS_GET_IID(nsIClassInfo))) {
+  nsCOMPtr<nsIJSID> iid;
+  obj = &args[0].toObject();
+  if (NS_FAILED(UnwrapArg<nsIJSID>(cx, obj, getter_AddRefs(iid)))) {
+    return Throw(cx, NS_ERROR_XPC_BAD_CONVERT_JS);
+  }
+  MOZ_ASSERT(iid);
+
+  if (iid->GetID()->Equals(NS_GET_IID(nsIClassInfo))) {
     nsresult rv;
     nsCOMPtr<nsIClassInfo> ci = do_QueryInterface(native, &rv);
     if (NS_FAILED(rv)) {
@@ -1247,7 +1253,7 @@ bool QueryInterface(JSContext* cx, unsigned argc, JS::Value* vp) {
   }
 
   nsCOMPtr<nsISupports> unused;
-  nsresult rv = native->QueryInterface(*iid, getter_AddRefs(unused));
+  nsresult rv = native->QueryInterface(*iid->GetID(), getter_AddRefs(unused));
   if (NS_FAILED(rv)) {
     return Throw(cx, rv);
   }
@@ -1257,14 +1263,10 @@ bool QueryInterface(JSContext* cx, unsigned argc, JS::Value* vp) {
 }
 
 void GetInterfaceImpl(JSContext* aCx, nsIInterfaceRequestor* aRequestor,
-                      nsWrapperCache* aCache, JS::Handle<JS::Value> aIID,
+                      nsWrapperCache* aCache, nsIJSID* aIID,
                       JS::MutableHandle<JS::Value> aRetval,
                       ErrorResult& aError) {
-  Maybe<nsIID> iid = xpc::JSValue2ID(aCx, aIID);
-  if (!iid) {
-    aError.Throw(NS_ERROR_XPC_BAD_CONVERT_JS);
-    return;
-  }
+  const nsID* iid = aIID->GetID();
 
   RefPtr<nsISupports> result;
   aError = aRequestor->GetInterface(*iid, getter_AddRefs(result));
@@ -1272,7 +1274,7 @@ void GetInterfaceImpl(JSContext* aCx, nsIInterfaceRequestor* aRequestor,
     return;
   }
 
-  if (!WrapObject(aCx, result, iid.ptr(), aRetval)) {
+  if (!WrapObject(aCx, result, iid, aRetval)) {
     aError.Throw(NS_ERROR_FAILURE);
   }
 }

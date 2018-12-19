@@ -2729,8 +2729,7 @@ NS_IMETHODIMP nsJSArgArray::IndexOf(uint32_t startIndex, nsISupports* element,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsJSArgArray::ScriptedEnumerate(const nsIID& aElemIID,
-                                              uint8_t aArgc,
+NS_IMETHODIMP nsJSArgArray::ScriptedEnumerate(nsIJSIID* aElemIID, uint8_t aArgc,
                                               nsISimpleEnumerator** aResult) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

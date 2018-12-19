@@ -20,9 +20,20 @@ interface nsIFile;
 interface nsILoadContext;
 interface nsIPersistentProperties;
 interface nsIURI;
+interface nsIJSCID;
+interface nsIJSIID;
 interface nsIPrincipal;
 interface nsIStackFrame;
 webidl Element;
+
+/**
+* interface of Components.interfacesByID
+* (interesting stuff only reflected into JavaScript)
+*/
+[scriptable, builtinclass, uuid(f235ef76-9919-478b-aa0f-282d994ddf76)]
+interface nsIXPCComponents_InterfacesByID : nsISupports
+{
+};
 
 /**
 * interface of Components.interfaces
@@ -39,6 +50,17 @@ interface nsIXPCComponents_Interfaces : nsISupports
 */
 [scriptable, builtinclass, uuid(978ff520-d26c-11d2-9842-006008962422)]
 interface nsIXPCComponents_Classes : nsISupports
+{
+  // Make it so that |cid| gets mapped to |idString|.
+  void initialize(in nsIJSCID cid, in string idString);
+};
+
+/**
+* interface of Components.classesByID
+* (interesting stuff only reflected into JavaScript)
+*/
+[scriptable, builtinclass, uuid(336a9590-4d19-11d3-9893-006008962422)]
+interface nsIXPCComponents_ClassesByID : nsISupports
 {
 };
 
@@ -76,6 +98,18 @@ interface nsIXPCComponents_Exception : nsISupports
 [scriptable, builtinclass, uuid(88655640-e028-11d3-8f5d-0010a4e73d9a)]
 interface nsIXPCComponents_Constructor : nsISupports
 {
+};
+
+/**
+* interface of object returned by Components.Constructor
+* (additional interesting stuff only reflected into JavaScript)
+*/
+[scriptable, builtinclass, uuid(c814ca20-e0dc-11d3-8f5f-0010a4e73d9a)]
+interface nsIXPCConstructor : nsISupports
+{
+    readonly attribute nsIJSCID classID;
+    readonly attribute nsIJSIID interfaceID;
+    readonly attribute string   initializer;
 };
 
 /**
@@ -736,6 +770,7 @@ interface nsIXPCComponents_Utils : nsISupports
 interface nsIXPCComponentsBase : nsISupports
 {
     readonly attribute nsIXPCComponents_Interfaces      interfaces;
+    readonly attribute nsIXPCComponents_InterfacesByID  interfacesByID;
     readonly attribute nsIXPCComponents_Results         results;
 
     boolean isSuccessCode(in nsresult result);
@@ -746,6 +781,7 @@ interface nsIXPCComponentsBase : nsISupports
 interface nsIXPCComponents : nsIXPCComponentsBase
 {
     readonly attribute nsIXPCComponents_Classes         classes;
+    readonly attribute nsIXPCComponents_ClassesByID     classesByID;
     // Will return null if there is no JS stack right now.
     readonly attribute nsIStackFrame                    stack;
     readonly attribute nsIComponentManager              manager;

@@ -72,6 +72,13 @@ function run_test() {
   var interfaces = foo.getInterfaces({});
   Assert.equal(interfaces, Ci.nsIClassInfo.number);
 
+  // try to create a component by CID
+  const cid = "{6b933fe6-6eba-4622-ac86-e4f654f1b474}";
+  Assert.ok(cid in Components.classesByID);
+  foo = Components.classesByID[cid]
+                  .createInstance(Ci.nsIClassInfo);
+  Assert.ok(foo.contractID == contractID + "1");
+
   // try to create another component which doesn't directly implement QI
   Assert.ok((contractID + "2") in Cc);
   var bar = Cc[contractID + "2"]

@@ -24,6 +24,9 @@ add_task(async function test_generateQI() {
   ChromeUtils.generateQI([])(Ci.nsISupports);
 
   // Test failure scenarios.
+  Assert.throws(() => ChromeUtils.generateQI(["toString"]),
+                e => e.result == Cr.NS_ERROR_INVALID_ARG);
+
   Assert.throws(() => checkQI([], Ci.nsIPropertyBag),
                 e => e.result == Cr.NS_ERROR_NO_INTERFACE);
 });

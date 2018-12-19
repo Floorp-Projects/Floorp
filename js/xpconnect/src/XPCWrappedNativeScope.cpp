@@ -367,9 +367,6 @@ XPCWrappedNativeScope::~XPCWrappedNativeScope() {
   }
 
   JSContext* cx = dom::danger::GetJSContext();
-  mIDProto.finalize(cx);
-  mIIDProto.finalize(cx);
-  mCIDProto.finalize(cx);
   mGlobalJSObject.finalize(cx);
 }
 
