@@ -162,7 +162,14 @@ public class TestRunnerActivity extends Activity {
         if (sRuntime == null) {
             final GeckoRuntimeSettings.Builder runtimeSettingsBuilder =
                 new GeckoRuntimeSettings.Builder();
-            runtimeSettingsBuilder.arguments(new String[] { "-purgecaches" });
+
+            // Mochitest and reftest encounter rounding errors if we have a
+            // a window.devicePixelRation like 3.625, so simplify that here.
+            runtimeSettingsBuilder
+                    .arguments(new String[] { "-purgecaches" })
+                    .displayDpiOverride(160)
+                    .displayDensityOverride(1.0f);
+
             final Bundle extras = intent.getExtras();
             if (extras != null) {
                 runtimeSettingsBuilder.extras(extras);
