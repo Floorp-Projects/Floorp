@@ -98,7 +98,7 @@ window.gActivityStreamStrings = {
   "firstrun_title": "Leve o Firefox consigo",
   "firstrun_content": "Obtenha os seus marcadores, histórico, palavras-passe e outras definições em todos os seus dispositivos.",
   "firstrun_learn_more_link": "Saber mais acerca do Contas Firefox",
-  "firstrun_form_header": "Introduza o seu e-mail",
+  "firstrun_form_header": "Introduza o seu email",
   "firstrun_form_sub_header": "para continuar para o Firefox Sync.",
   "firstrun_email_input_placeholder": "Email",
   "firstrun_invalid_input": "Email válido requerido",
@@ -108,5 +108,5 @@ window.gActivityStreamStrings = {
   "firstrun_continue_to_login": "Continuar",
   "firstrun_skip_login": "Saltar este passo",
   "context_menu_title": "Abrir menu",
-  "pocket_learn_more": "Saber mais"
+  "pocket_learn_more": "Saiba mais"
 };

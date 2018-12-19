@@ -1,5 +1,5 @@
 import {INITIAL_STATE, insertPinned, reducers} from "common/Reducers.jsm";
-const {TopSites, App, Snippets, Prefs, Dialog, Sections, Pocket} = reducers;
+const {TopSites, App, Snippets, Prefs, Dialog, Sections, Pocket, Layout} = reducers;
 import {actionTypes as at} from "common/Actions.jsm";
 
 describe("Reducers", () => {
@@ -653,6 +653,15 @@ describe("Reducers", () => {
       assert.equal(state.pocketCta.ctaText, data.cta_text);
       assert.equal(state.pocketCta.ctaUrl, data.cta_url);
       assert.equal(state.pocketCta.useCta, data.use_cta);
+    });
+  });
+  describe("Layout", () => {
+    it("should return INITIAL_STATE by default", () => {
+      assert.equal(Layout(undefined, {type: "some_action"}), INITIAL_STATE.Layout);
+    });
+    it("should set layout data with layout.type CONTENT_LAYOUT", () => {
+      const state = Layout(undefined, {type: at.CONTENT_LAYOUT, data: ["test"]});
+      assert.equal(state[0], "test");
     });
   });
 });
