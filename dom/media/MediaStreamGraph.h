@@ -149,8 +149,7 @@ class AudioDataListener : public AudioDataListenerInterface {
  * These methods are called with the media graph monitor held, so
  * reentry into general media graph methods is not possible.
  * You should do something non-blocking and non-reentrant (e.g. dispatch an
- * event) and return. DispatchFromMainThreadAfterNextStreamStateUpdate
- * would be a good choice.
+ * event) and return. NS_DispatchToCurrentThread would be a good choice.
  * The listener is allowed to synchronously remove itself from the stream, but
  * not add or remove any other listeners.
  */
@@ -1286,7 +1285,7 @@ class MediaStreamGraph {
   /**
    * Media graph thread only.
    * Dispatches a runnable that will run on the main thread after all
-   * main-thread stream state has been next updated.
+   * main-thread stream state has been updated, i.e., during stable state.
    *
    * Should only be called during MediaStreamTrackListener callbacks or during
    * ProcessedMediaStream::ProcessInput().
@@ -1294,8 +1293,7 @@ class MediaStreamGraph {
    * Note that if called during shutdown the runnable will be ignored and
    * released on main thread.
    */
-  void DispatchToMainThreadAfterStreamStateUpdate(
-      already_AddRefed<nsIRunnable> aRunnable);
+  void DispatchToMainThreadStableState(already_AddRefed<nsIRunnable> aRunnable);
 
   /**
    * Returns graph sample rate in Hz.

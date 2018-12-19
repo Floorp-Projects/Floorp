@@ -77,7 +77,7 @@ class OutputStreamDriver::TrackListener : public MediaStreamTrackListener {
   void NotifyEnded() override {
     Forget();
 
-    mSourceStream->Graph()->DispatchToMainThreadAfterStreamStateUpdate(
+    mSourceStream->Graph()->DispatchToMainThreadStableState(
         NS_NewRunnableFunction(
             "OutputStreamDriver::TrackListener::RemoveTrackListener",
             [self = RefPtr<TrackListener>(this), this]() {

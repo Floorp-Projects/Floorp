@@ -2353,8 +2353,7 @@ void MediaStream::RunAfterPendingUpdates(
     Message(MediaStream* aStream, already_AddRefed<nsIRunnable> aRunnable)
         : ControlMessage(aStream), mRunnable(aRunnable) {}
     void Run() override {
-      mStream->Graph()->DispatchToMainThreadAfterStreamStateUpdate(
-          mRunnable.forget());
+      mStream->Graph()->DispatchToMainThreadStableState(mRunnable.forget());
     }
     void RunDuringShutdown() override {
       // Don't run mRunnable now as it may call AppendMessage() which would
@@ -3025,8 +3024,7 @@ RefPtr<GenericPromise> MediaInputPort::BlockSourceTrackId(
     void Run() override {
       mPort->BlockSourceTrackIdImpl(mTrackId, mBlockingMode);
       if (mRunnable) {
-        mStream->Graph()->DispatchToMainThreadAfterStreamStateUpdate(
-            mRunnable.forget());
+        mStream->Graph()->DispatchToMainThreadStableState(mRunnable.forget());
       }
     }
     void RunDuringShutdown() override { Run(); }
@@ -3816,7 +3814,7 @@ already_AddRefed<MediaInputPort> MediaStreamGraphImpl::ConnectToCaptureStream(
   return nullptr;
 }
 
-void MediaStreamGraph::DispatchToMainThreadAfterStreamStateUpdate(
+void MediaStreamGraph::DispatchToMainThreadStableState(
     already_AddRefed<nsIRunnable> aRunnable) {
   AssertOnGraphThreadOrNotRunning();
   *static_cast<MediaStreamGraphImpl*>(this)

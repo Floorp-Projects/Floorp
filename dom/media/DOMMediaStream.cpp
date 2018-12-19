@@ -345,7 +345,7 @@ already_AddRefed<Promise> DOMMediaStream::CountUnderlyingStreams(
     void Run() override {
       uint32_t streams =
           mGraph->mStreams.Length() + mGraph->mSuspendedStreams.Length();
-      mGraph->DispatchToMainThreadAfterStreamStateUpdate(NS_NewRunnableFunction(
+      mGraph->DispatchToMainThreadStableState(NS_NewRunnableFunction(
           "DOMMediaStream::CountUnderlyingStreams (stable state)",
           [promise = std::move(mPromise), streams]() mutable {
             NS_DispatchToMainThread(NS_NewRunnableFunction(
