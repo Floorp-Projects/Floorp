@@ -737,12 +737,16 @@ JS_FRIEND_API bool js::CheckGrayMarkingState(JSRuntime* rt) {
   return tracer.check(session);
 }
 
-static Zone* GetCellZone(Cell* cell) {
+static Zone* GetCellZoneFromAnyThread(Cell* cell) {
   if (cell->is<JSObject>()) {
-    return cell->as<JSObject>()->zone();
+    return cell->as<JSObject>()->zoneFromAnyThread();
   }
 
-  return cell->asTenured().zone();
+  if (cell->is<JSString>()) {
+    return cell->as<JSString>()->zoneFromAnyThread();
+  }
+
+  return cell->asTenured().zoneFromAnyThread();
 }
 
 static JSObject* MaybeGetDelegate(Cell* cell) {
@@ -757,17 +761,18 @@ static JSObject* MaybeGetDelegate(Cell* cell) {
 bool js::gc::CheckWeakMapEntryMarking(const WeakMapBase* map, Cell* key,
                                       Cell* value) {
   DebugOnly<Zone*> zone = map->zone();
+  MOZ_ASSERT(CurrentThreadCanAccessZone(zone));
   MOZ_ASSERT(zone->isGCMarking());
 
   JSObject* object = map->memberOf;
   MOZ_ASSERT_IF(object, object->zone() == zone);
 
   // Debugger weak maps can have keys in different zones.
-  Zone* keyZone = GetCellZone(key);
+  Zone* keyZone = GetCellZoneFromAnyThread(key);
   MOZ_ASSERT_IF(!map->allowKeysInOtherZones(),
                 keyZone == zone || keyZone->isAtomsZone());
 
-  Zone* valueZone = GetCellZone(value);
+  Zone* valueZone = GetCellZoneFromAnyThread(value);
   MOZ_ASSERT(valueZone == zone || valueZone->isAtomsZone());
 
   CellColor mapColor = map->markColor == MarkColor::Black ? CellColor::Black
