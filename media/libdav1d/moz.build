@@ -112,7 +112,7 @@ EXPORTS.dav1d.src += [
     '../../third_party/dav1d/src/wedge.h',
 ]
 
-# common BITDEPTH 8, 10
+# common BITDEPTH 8, 16
 relative_path = '../../third_party/dav1d/src/'
 bitdepth_basenames = [
     'cdef_apply_tmpl.c',
@@ -130,14 +130,14 @@ bitdepth_basenames = [
 ]
 
 GENERATED_FILES += [
-    '10bd_%s' % p for p in bitdepth_basenames
+    '16bd_%s' % p for p in bitdepth_basenames
 ]
 
 for f in bitdepth_basenames:
-    a = GENERATED_FILES['10bd_%s' % f]
+    a = GENERATED_FILES['16bd_%s' % f]
     a.script = 'generate_source.py:add_define'
     a.inputs = [relative_path + f]
-    a.flags = ['BITDEPTH', '10']
+    a.flags = ['BITDEPTH', '16']
 
 GENERATED_FILES += [
     '8bd_%s' % p for p in bitdepth_basenames
