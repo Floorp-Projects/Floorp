@@ -15,7 +15,7 @@
 
 #define ARCH_X86_64 1
 
-#define CONFIG_10BPC 1
+#define CONFIG_16BPC 1
 
 #define CONFIG_8BPC 1
 
