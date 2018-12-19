@@ -2456,6 +2456,10 @@ class nsIDocument : public nsINode,
    */
   void AddSuspendedChannelEventQueue(mozilla::net::ChannelEventQueue* aQueue);
 
+  void SetHasDelayedRefreshEvent() {
+    mHasDelayedRefreshEvent = true;
+  }
+
   /**
    * Increment https://html.spec.whatwg.org/#ignore-destructive-writes-counter
    */
@@ -3920,6 +3924,10 @@ class nsIDocument : public nsINode,
 
  protected:
 #endif
+
+  // Whether an event triggered by the refresh driver was delayed because this
+  // document has suppressed events.
+  bool mHasDelayedRefreshEvent : 1;
 
   uint8_t mPendingFullscreenRequests;
 
