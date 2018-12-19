@@ -388,6 +388,85 @@ class nsDocShell final : public nsDocLoader,
    */
   mozilla::dom::BrowsingContext* GetBrowsingContext() const;
 
+  /**
+   * Loads the given URI. This method is identical to nsIDocShell::loadURI(...)
+   * except that its parameter list is broken out instead of being packaged
+   * inside of an nsIDocShellLoadInfo object...
+   *
+   * @param aURI                 - The URI to load.
+   * @param aOriginalURI         - The URI to set as the originalURI on the channel
+   *                               that does the load. If null, aURI will be set as
+   *                               the originalURI.
+   * @param aResultPrincipalURI  - The URI to be set to loadInfo.resultPrincipalURI
+   *                               When Nothing, there will be no change
+   *                               When Some, the principal URI will overwrite even
+   *                               with a null value.
+   * @param aKeepResultPrincipalURIIfSet - If a refresh is caused by
+   *                                       http-equiv="refresh" we want to set
+   *                                       aResultPrincipalURI, but we do not want
+   *                                       to overwrite the channel's
+   *                                       ResultPrincipalURI, if it has already
+   *                                       been set on the channel by a protocol
+   *                                       handler.
+   * @param aLoadReplace         - If set LOAD_REPLACE flag will be set on the
+   *                               channel. aOriginalURI is null, this argument is
+   *                               ignored.
+   * @param aIsFromProcessingFrameAttributes
+   *                             - If this is a load triggered by changing frame
+   *                               attributes.
+   * @param aReferrer            - Referring URI
+   * @param aReferrerPolicy      - Referrer policy
+   * @param aTriggeringPrincipal - A non-null principal that initiated that load.
+   *                               Please note that this is the principal that is
+   *                               used for security checks. If the argument aURI
+   *                               is provided by the web, then please do not pass
+   *                               a SystemPrincipal as the triggeringPrincipal.
+   * @param aPrincipalToInherit  - Principal to be inherited for that load. If this
+   *                               argument is null then principalToInherit is
+   *                               computed as follows:
+   *                               a) If INTERNAL_LOAD_FLAGS_INHERIT_PRINCIPAL, and
+   *                                  aLoadType is not LOAD_NORMAL_EXTERNAL, and the
+   *                                  URI would normally inherit a principal, then
+   *                                  principalToInherit is set to the current
+   *                                  document's principal, or parent document if
+   *                                  there is not a current document.
+   *                               b) If principalToInherit is still null (e.g. if
+   *                                  some of the conditions of (a) were not satisfied),
+   *                                  then no inheritance of any sort will happen: the
+   *                                  load will just get a principal based on the URI
+   *                                  being loaded.
+   * @param aFlags               - Any of the load flags defined within above.
+   * @param aWindowTarget        - Window target for the load.
+   * @param aTypeHint            - A hint as to the content-type of the resulting
+   *                               data.  May be null or empty if no hint.
+   * @param aFileName            - Non-null when the link should be downloaded as
+   *                               the given filename.
+   * @param aPostDataStream      - Post data stream (if POSTing)
+   * @param aHeadersStream       - Stream containing "extra" request headers...
+   * @param aLoadFlags           - Flags to modify load behaviour. Flags are defined
+   *                               in nsIWebNavigation.
+   * @param aSHEntry             - Active Session History entry (if loading from SH)
+   * @param aSrcdoc                When INTERNAL_LOAD_FLAGS_IS_SRCDOC is set, the
+   *                               contents of this parameter will be loaded instead
+   *                               of aURI.
+   * @param aSourceDocShell      - The source browsing context for the navigation.
+   * @param aBaseURI             - The base URI to be used for the load.  Set in
+   *                               srcdoc loads as it cannot otherwise be inferred
+   *                               in certain situations such as view-source.
+   */
+  nsresult InternalLoad(
+      nsIURI* aURI, nsIURI* aOriginalURI,
+      mozilla::Maybe<nsCOMPtr<nsIURI>> const& aResultPrincipalURI,
+      bool aKeepResultPrincipalURIIfSet, bool aLoadReplace,
+      bool aIsFromProcessingFrameAttributes, nsIURI* aReferrer,
+      uint32_t aReferrerPolicy, nsIPrincipal* aTriggeringPrincipal,
+      nsIPrincipal* aPrincipalToInherit, uint32_t aFlags,
+      const nsAString& aWindowTarget, const nsACString& aTypeHint,
+      const nsAString& aFileName, nsIInputStream* aPostData,
+      nsIInputStream* aHeadersData, uint32_t aLoadType, nsISHEntry* aSHEntry,
+      bool aFirstParty, const nsAString& aSrcdoc, nsIDocShell* aSourceDocShell,
+      nsIURI* aBaseURI, nsIDocShell** aDocShell, nsIRequest** aRequest);
+
  private:  // member functions
   friend class nsDSURIContentListener;
   friend class FramingChecker;
