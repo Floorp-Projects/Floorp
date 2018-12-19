@@ -18,6 +18,12 @@ class nsISHEntry;
 class nsIURI;
 class nsIDocShell;
 class OriginAttibutes;
+namespace mozilla {
+namespace dom {
+class DocShellLoadStateInit;
+}
+}
+
 
 /**
  * nsDocShellLoadState contains setup information used in a nsIDocShell::loadURI
@@ -28,6 +34,7 @@ class nsDocShellLoadState final {
   NS_INLINE_DECL_REFCOUNTING(nsDocShellLoadState);
 
   explicit nsDocShellLoadState(nsIURI* aURI);
+  explicit nsDocShellLoadState(mozilla::dom::DocShellLoadStateInit& aLoadState);
 
   // Getters and Setters
 
@@ -172,7 +179,7 @@ class nsDocShellLoadState final {
   void SetIsFromProcessingFrameAttributes() {
     mIsFromProcessingFrameAttributes = true;
   }
-  bool GetIsFromProcessingFrameAttributes() {
+  bool GetIsFromProcessingFrameAttributes() const {
     return mIsFromProcessingFrameAttributes;
   }
 
@@ -182,6 +189,7 @@ class nsDocShellLoadState final {
   // nsDocShell::InternalLoad.
   void CalculateLoadURIFlags();
 
+  mozilla::dom::DocShellLoadStateInit Serialize();
  protected:
   // Destructor can't be defaulted or inlined, as header doesn't have all type
   // includes it needs to do so.

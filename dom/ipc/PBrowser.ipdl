@@ -88,7 +88,6 @@ using mozilla::FontRange from "ipc/nsGUIEventIPC.h";
 using mozilla::a11y::IAccessibleHolder from "mozilla/a11y/IPCTypes.h";
 using mozilla::OriginAttributes from "mozilla/ipc/BackgroundUtils.h";
 using mozilla::dom::BrowsingContextId from "mozilla/dom/ipc/IdType.h";
-using refcounted class nsIURI from "mozilla/ipc/URIUtils.h";
 
 namespace mozilla {
 namespace dom {
