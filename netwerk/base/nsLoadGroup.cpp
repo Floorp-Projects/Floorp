@@ -83,7 +83,7 @@ static void RescheduleRequest(nsIRequest *aRequest, int32_t delta) {
   if (p) p->AdjustPriority(delta);
 }
 
-nsLoadGroup::nsLoadGroup(nsISupports *outer)
+nsLoadGroup::nsLoadGroup()
     : mForegroundCount(0),
       mLoadFlags(LOAD_NORMAL),
       mDefaultLoadFlags(0),
@@ -94,7 +94,6 @@ nsLoadGroup::nsLoadGroup(nsISupports *outer)
       mDefaultLoadIsTimed(false),
       mTimedRequests(0),
       mCachedRequests(0) {
-  NS_INIT_AGGREGATED(outer);
   LOG(("LOADGROUP [%p]: Created.\n", this));
 }
 
@@ -114,14 +113,12 @@ nsLoadGroup::~nsLoadGroup() {
 ////////////////////////////////////////////////////////////////////////////////
 // nsISupports methods:
 
-NS_IMPL_AGGREGATED(nsLoadGroup)
-NS_INTERFACE_MAP_BEGIN_AGGREGATED(nsLoadGroup)
-  NS_INTERFACE_MAP_ENTRY(nsILoadGroup)
-  NS_INTERFACE_MAP_ENTRY(nsILoadGroupChild)
-  NS_INTERFACE_MAP_ENTRY(nsIRequest)
-  NS_INTERFACE_MAP_ENTRY(nsISupportsPriority)
-  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
-NS_INTERFACE_MAP_END
+NS_IMPL_ISUPPORTS(nsLoadGroup,
+                  nsILoadGroup,
+                  nsILoadGroupChild,
+                  nsIRequest,
+                  nsISupportsPriority,
+                  nsISupportsWeakReference)
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsIRequest methods:

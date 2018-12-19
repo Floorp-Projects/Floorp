@@ -8,7 +8,6 @@
 
 #include "nsILoadGroup.h"
 #include "nsILoadGroupChild.h"
-#include "nsAgg.h"
 #include "nsCOMPtr.h"
 #include "nsWeakReference.h"
 #include "nsISupportsPriority.h"
@@ -27,7 +26,7 @@ class nsLoadGroup : public nsILoadGroup,
                     public nsISupportsPriority,
                     public nsSupportsWeakReference {
  public:
-  NS_DECL_AGGREGATED
+  NS_DECL_ISUPPORTS
 
   ////////////////////////////////////////////////////////////////////////////
   // nsIRequest methods:
@@ -48,12 +47,13 @@ class nsLoadGroup : public nsILoadGroup,
   ////////////////////////////////////////////////////////////////////////////
   // nsLoadGroup methods:
 
-  explicit nsLoadGroup(nsISupports* outer);
-  virtual ~nsLoadGroup();
+  nsLoadGroup();
 
   nsresult Init();
 
  protected:
+  virtual ~nsLoadGroup();
+
   nsresult MergeLoadFlags(nsIRequest* aRequest, nsLoadFlags& flags);
   nsresult MergeDefaultLoadFlags(nsIRequest* aRequest, nsLoadFlags& flags);
 
