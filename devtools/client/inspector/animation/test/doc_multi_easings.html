@@ -92,6 +92,30 @@
         { color: "lime" },
       ]
     );
+
+    createAnimation(
+      "jump-start",
+      [
+        { opacity: 1, easing: "steps(2, jump-start)" },
+        { opacity: 0 },
+      ],
+    );
+
+    createAnimation(
+      "jump-end",
+      [
+        { opacity: 1, easing: "steps(2, jump-end)" },
+        { opacity: 0 },
+      ],
+    );
+
+    createAnimation(
+      "jump-both",
+      [
+        { opacity: 1, easing: "steps(3, jump-both)" },
+        { opacity: 0 },
+      ],
+    );
     </script>
   </body>
 </html>
