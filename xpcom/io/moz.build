@@ -61,6 +61,10 @@ else:
 
 XPIDL_MODULE = 'xpcom_io'
 
+XPCOM_MANIFESTS += [
+    'components.conf',
+]
+
 EXPORTS += [
     'FileDescriptorFile.h',
     'nsAnonymousTemporaryFile.h',
