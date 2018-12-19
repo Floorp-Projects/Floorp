@@ -367,8 +367,7 @@ function dead_test(finish) {
   addMessageListener("cpows:dead_done", finish);
 }
 
-function localStorage_test(finish)
-{
+function localStorage_test(finish) {
   // This test exits because a synchronous message can be sent from the parent
   // while localStorage is synchronously blocking the main thread in the child
   // which can result in deadlock.  When unsafe CPOWS go away:
@@ -387,6 +386,6 @@ function localStorage_test(finish)
   addMessageListener("cpows:localStorage_done", finish);
 
   for (let i = 0; i < 3; i++) {
-    try { let l = content.localStorage.length; } catch (ex) {}
+    try { content.localStorage.setItem("foo", "bar"); } catch (ex) {}
   }
 }
