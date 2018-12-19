@@ -104,6 +104,20 @@ class SessionUseCasesTest {
     }
 
     @Test
+    fun exitFullscreen() {
+        val engineSession = mock(EngineSession::class.java)
+        val session = mock(Session::class.java)
+        `when`(sessionManager.getOrCreateEngineSession(session)).thenReturn(engineSession)
+
+        useCases.exitFullscreen.invoke(session)
+        verify(engineSession).exitFullScreenMode()
+
+        `when`(sessionManager.getOrCreateEngineSession(selectedSession)).thenReturn(selectedEngineSession)
+        useCases.exitFullscreen.invoke()
+        verify(selectedEngineSession).exitFullScreenMode()
+    }
+
+    @Test
     fun clearData() {
         val engineSession = mock(EngineSession::class.java)
         val session = mock(Session::class.java)

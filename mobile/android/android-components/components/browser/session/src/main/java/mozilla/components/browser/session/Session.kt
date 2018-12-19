@@ -263,7 +263,7 @@ class Session(
      * Exits fullscreen mode if it's in that state.
      */
     var fullScreenMode: Boolean by Delegates.observable(false) { _, old, new ->
-        notifyObservers(old, new) { notifyObservers { onFullScreenChanged(this@Session, fullScreenMode) } }
+        notifyObservers(old, new) { onFullScreenChanged(this@Session, new) }
     }
 
     /**

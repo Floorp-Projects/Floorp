@@ -106,6 +106,14 @@ class SessionUseCases(
         }
     }
 
+    class ExitFullScreenUseCase internal constructor(
+        private val sessionManager: SessionManager
+    ) {
+        fun invoke(session: Session = sessionManager.selectedSessionOrThrow) {
+            sessionManager.getOrCreateEngineSession(session).exitFullScreenMode()
+        }
+    }
+
     class ClearDataUseCase internal constructor(
         private val sessionManager: SessionManager
     ) {
@@ -124,5 +132,6 @@ class SessionUseCases(
     val goBack: GoBackUseCase by lazy { GoBackUseCase(sessionManager) }
     val goForward: GoForwardUseCase by lazy { GoForwardUseCase(sessionManager) }
     val requestDesktopSite: RequestDesktopSiteUseCase by lazy { RequestDesktopSiteUseCase(sessionManager) }
+    val exitFullscreen: ExitFullScreenUseCase by lazy { ExitFullScreenUseCase(sessionManager) }
     val clearData: ClearDataUseCase by lazy { ClearDataUseCase(sessionManager) }
 }

@@ -17,8 +17,16 @@ permalink: /changelog/
   * Mozilla App Services (FxA: 0.12.1, Sync Logins: 0.12.1, Places: 0.12.1)
   * Third Party Libs (Sentry: 1.7.14, Okhttp: 3.12.0)
 
+* **browser-session**
+  * Added a use case for exiting fullscreen mode.
+  ```kotlin
+  val sessionUseCases = SessionUseCases(sessionManager)
+  if (isFullScreenMode) {
+    sessionUseCases.exitFullscreen.invoke()
+  }
+  ```
 * **feature-customtabs**
- * Added support for opening speculative connections for a likely future navigation to a URL (`mayLaunchUrl`)
+  * Added support for opening speculative connections for a likely future navigation to a URL (`mayLaunchUrl`)
 
 # 0.35.1
 
@@ -51,10 +59,10 @@ permalink: /changelog/
 
 * **feature-customtabs**
   * Added support for warming up the browser process asynchronously.
-  * ⚠️ **This is a breaking change** 
+  * ⚠️ **This is a breaking change**
   * `CustomTabsService` has been renamed to `AbstractCustomTabsService` and is now an abstract class in order to allow apps to inject the `Engine` they are using. An app that wants to support custom tabs will need to create its own class and reference it in the manifest:
 
-  ```Kotlin
+  ```kotlin
   class CustomTabsService : AbstractCustomTabsService() {
     override val engine: Engine by lazy { components.engine }
   }
@@ -65,14 +73,14 @@ permalink: /changelog/
 
 * **support-ktx**
   New extension function `toDate` that converts a string to a Date object from a formatter input.
-  ```Kotlin
+  ```kotlin
        val date = "2019-11-28".toDate("yyyy-MM-dd")
   ```
 
 * **concept-engine**, **engine-gecko-beta**, **engine-gecko-nightly**:
   * Add setting to enable testing mode which is used in engine-gecko to set `FULL_ACCESSIBILITY_TREE` to `true`. This allows access to the full DOM tree for testing purposes.
 
-  ```Kotlin
+  ```kotlin
   // Turn testing mode on by default when the engine is created
   val engine = GeckoEngine(runtime, DefaultSettings(testingModeEnabled=true))
 
