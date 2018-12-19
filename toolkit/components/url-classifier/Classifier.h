@@ -194,6 +194,9 @@ class Classifier {
   nsresult ApplyUpdatesForeground(nsresult aBackgroundRv,
                                   const nsACString& aFailedTableName);
 
+  // Used by worker thread and update thread to abort current operation.
+  bool ShouldAbort() const;
+
   // Root dir of the Local profile.
   nsCOMPtr<nsIFile> mCacheDirectory;
   // Main directory where to store the databases.
@@ -217,7 +220,11 @@ class Classifier {
   // The copy of mLookupCaches for update only.
   LookupCacheArray mNewLookupCaches;
 
+  // True when Reset() is called.
   bool mUpdateInterrupted;
+
+  // True once CLose() has been called
+  bool mIsClosed;
 
   nsCOMPtr<nsIThread> mUpdateThread;  // For async update.
 
@@ -226,8 +233,6 @@ class Classifier {
   // be accessed in CopyInUseDirForUpdate().
   // It will be initialized right before update on the worker thread.
   nsCOMPtr<nsIFile> mRootStoreDirectoryForUpdate;
-
-  bool mIsClosed;  // true once Close() has been called
 };
 
 }  // namespace safebrowsing

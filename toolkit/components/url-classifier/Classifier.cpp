@@ -174,7 +174,7 @@ nsresult Classifier::SetupPathNames() {
 }
 
 nsresult Classifier::CreateStoreDirectory() {
-  if (mIsClosed) {
+  if (ShouldAbort()) {
     return NS_OK;  // nothing to do, the classifier is done
   }
 
@@ -236,10 +236,8 @@ nsresult Classifier::Open(nsIFile& aCacheDirectory) {
 }
 
 void Classifier::Close() {
-  // Close will be called by PreShutdown, set |mUpdateInterrupted| here
-  // to abort an ongoing update if possible. It is important to note that
+  // Close will be called by PreShutdown, so it is important to note that
   // things put here should not affect an ongoing update thread.
-  mUpdateInterrupted = true;
   mIsClosed = true;
   DropStores();
 }
@@ -754,7 +752,7 @@ nsresult Classifier::ApplyUpdatesBackground(TableUpdateArray& aUpdates,
 
   nsresult rv;
 
-  // Check point 1: Copying files takes time so we check |mUpdateInterrupted|
+  // Check point 1: Copying files takes time so we check ShouldAbort()
   //                inside CopyInUseDirForUpdate().
   rv = CopyInUseDirForUpdate();  // i.e. mUpdatingDirectory will be setup.
   if (NS_FAILED(rv)) {
@@ -775,7 +773,7 @@ nsresult Classifier::ApplyUpdatesBackground(TableUpdateArray& aUpdates,
     nsAutoCString updateTable(update->TableName());
 
     // Check point 2: Processing downloaded data takes time.
-    if (mUpdateInterrupted) {
+    if (ShouldAbort()) {
       LOG(("Update is interrupted. Stop building new tables."));
       return NS_OK;
     }
@@ -805,7 +803,7 @@ nsresult Classifier::ApplyUpdatesBackground(TableUpdateArray& aUpdates,
 
 nsresult Classifier::ApplyUpdatesForeground(
     nsresult aBackgroundRv, const nsACString& aFailedTableName) {
-  if (mUpdateInterrupted) {
+  if (ShouldAbort()) {
     LOG(("Update is interrupted! Just remove update intermediaries."));
     RemoveUpdateIntermediaries();
     return NS_OK;
@@ -858,7 +856,7 @@ void Classifier::DropStores() {
 }
 
 nsresult Classifier::RegenActiveTables() {
-  if (mIsClosed) {
+  if (ShouldAbort()) {
     return NS_OK;  // nothing to do, the classifier is done
   }
 
@@ -1038,7 +1036,7 @@ nsresult Classifier::DumpFailedUpdate() {
 
 /**
  * This function copies the files one by one to the destination folder.
- * Before copying a file, it checks |mUpdateInterrupted| and returns
+ * Before copying a file, it checks ::ShouldAbort and returns
  * NS_ERROR_ABORT if the flag is set.
  */
 nsresult Classifier::CopyDirectoryInterruptible(nsCOMPtr<nsIFile>& aDestDir,
@@ -1051,7 +1049,7 @@ nsresult Classifier::CopyDirectoryInterruptible(nsCOMPtr<nsIFile>& aDestDir,
   nsCOMPtr<nsIFile> source;
   while (NS_SUCCEEDED(rv = entries->GetNextFile(getter_AddRefs(source))) &&
          source) {
-    if (mUpdateInterrupted) {
+    if (ShouldAbort()) {
       LOG(("Update is interrupted. Aborting the directory copy"));
       return NS_ERROR_ABORT;
     }
@@ -1095,6 +1093,9 @@ nsresult Classifier::CopyDirectoryInterruptible(nsCOMPtr<nsIFile>& aDestDir,
 
 nsresult Classifier::CopyInUseDirForUpdate() {
   LOG(("Copy in-use directory content for update."));
+  if (ShouldAbort()) {
+    return NS_ERROR_UC_UPDATE_SHUTDOWNING;
+  }
 
   // We copy everything from in-use directory to a temporary directory
   // for updating.
@@ -1186,7 +1187,7 @@ nsCString Classifier::GetProvider(const nsACString& aTableName) {
  */
 nsresult Classifier::UpdateHashStore(TableUpdateArray& aUpdates,
                                      const nsACString& aTable) {
-  if (nsUrlClassifierDBService::ShutdownHasStarted()) {
+  if (ShouldAbort()) {
     return NS_ERROR_UC_UPDATE_SHUTDOWNING;
   }
 
@@ -1288,7 +1289,7 @@ nsresult Classifier::UpdateTableV4(TableUpdateArray& aUpdates,
                                    const nsACString& aTable) {
   MOZ_ASSERT(!NS_IsMainThread(),
              "UpdateTableV4 must be called on the classifier worker thread.");
-  if (nsUrlClassifierDBService::ShutdownHasStarted()) {
+  if (ShouldAbort()) {
     return NS_ERROR_UC_UPDATE_SHUTDOWNING;
   }
 
@@ -1437,7 +1438,7 @@ RefPtr<LookupCache> Classifier::GetLookupCache(const nsACString& aTable,
   }
 
   // We don't want to create lookupcache when shutdown is already happening.
-  if (nsUrlClassifierDBService::ShutdownHasStarted()) {
+  if (ShouldAbort()) {
     return nullptr;
   }
 
@@ -1611,6 +1612,11 @@ nsresult Classifier::LoadMetadata(nsIFile* aDirectory, nsACString& aResult) {
   }
 
   return rv;
+}
+
+bool Classifier::ShouldAbort() const {
+  return mIsClosed || nsUrlClassifierDBService::ShutdownHasStarted() ||
+         (mUpdateInterrupted && (NS_GetCurrentThread() == mUpdateThread));
 }
 
 }  // namespace safebrowsing
