@@ -17,6 +17,7 @@ loader.lazyRequireGetter(this, "isAfterPseudoElement", "devtools/shared/layout/u
 loader.lazyRequireGetter(this, "isAnonymous", "devtools/shared/layout/utils", true);
 loader.lazyRequireGetter(this, "isBeforePseudoElement", "devtools/shared/layout/utils", true);
 loader.lazyRequireGetter(this, "isDirectShadowHostChild", "devtools/shared/layout/utils", true);
+loader.lazyRequireGetter(this, "isNativeAnonymous", "devtools/shared/layout/utils", true);
 loader.lazyRequireGetter(this, "isShadowHost", "devtools/shared/layout/utils", true);
 loader.lazyRequireGetter(this, "isShadowRoot", "devtools/shared/layout/utils", true);
 loader.lazyRequireGetter(this, "isTemplateElement", "devtools/shared/layout/utils", true);
@@ -735,6 +736,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     // developers.
     const isUAWidget = shadowHost && node.rawNode.openOrClosedShadowRoot.isUAWidget();
     const hideShadowRoot = isUAWidget && !this.showUserAgentShadowRoots;
+    const showNativeAnonymousChildren = isUAWidget && this.showUserAgentShadowRoots;
 
     const templateElement = isTemplateElement(node.rawNode);
     if (templateElement) {
@@ -865,12 +867,31 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
         ...(hasBefore ? [first] : []),
         // shadow host direct children
         ...nodes,
+        // native anonymous content for UA widgets
+        ...(showNativeAnonymousChildren ?
+          this.getNativeAnonymousChildren(node.rawNode) : []),
         // ::after
         ...(hasAfter ? [last] : []),
       ];
     }
 
     return { hasFirst, hasLast, nodes };
+  },
+
+  getNativeAnonymousChildren: function(rawNode) {
+    // Get an anonymous walker and start on the first child.
+    const walker = this.getDocumentWalker(rawNode);
+    let node = walker.firstChild();
+
+    const nodes = [];
+    while (node) {
+      // We only want native anonymous content here.
+      if (isNativeAnonymous(node)) {
+        nodes.push(node);
+      }
+      node = walker.nextSibling();
+    }
+    return nodes;
   },
 
   /**
