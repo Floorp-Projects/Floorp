@@ -279,6 +279,10 @@ var LightweightThemeManager = {
    * xpi packaged theme).
    */
   async _updateOneTheme(theme, isCurrent) {
+    if (!theme.updateURL) {
+      return theme;
+    }
+
     let req = new ServiceRequest();
 
     req.mozBackgroundRequest = true;
@@ -364,7 +368,7 @@ var LightweightThemeManager = {
 
     let selectedID = _prefs.getStringPref("selectedThemeID", DEFAULT_THEME_ID);
     let newThemes = await Promise.all(allThemes.map(
-      t => this._updateOneTheme(t, t.id == selectedID)));
+      t => this._updateOneTheme(t, t.id == selectedID).catch(err => {})));
     newThemes = newThemes.filter(t => t);
     _prefs.setStringPref("usedThemes", JSON.stringify(newThemes));
   },
