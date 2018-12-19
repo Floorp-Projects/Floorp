@@ -526,3 +526,8 @@ taskcluster/ci/diffoscope/kind.yml for your needs.
 addon
 -----
 Tasks used to build/package add-ons.
+
+webrender
+---------
+Tasks used to do testing of WebRender standalone (without gecko). The
+WebRender code lives in gfx/wr and has its own testing infrastructure.
