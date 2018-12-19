@@ -142,6 +142,7 @@ tasks:
           - project:mobile:android-components:releng:beetmover:bucket:maven-snapshot-staging
           - queue:create-task:highest:scriptworker-prov-v1/mobile-beetmover-dev
           - queue:create-task:highest:aws-provisioner-v1/gecko-focus
+          - queue:create-task:highest:aws-provisioner-v1/github-worker
           - queue:scheduler-id:${scheduler_id}
         payload:
           maxRunTime: 600
