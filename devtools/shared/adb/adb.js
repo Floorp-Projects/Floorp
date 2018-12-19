@@ -91,8 +91,10 @@ class Adb extends EventEmitter {
     }
   }
 
-  _onDeviceConnected(deviceId) {
-    this._devices.set(deviceId, new AdbDevice(deviceId));
+  async _onDeviceConnected(deviceId) {
+    const adbDevice = new AdbDevice(deviceId);
+    await adbDevice.initialize();
+    this._devices.set(deviceId, adbDevice);
     this.updateRuntimes();
   }
 
@@ -102,9 +104,8 @@ class Adb extends EventEmitter {
   }
 
   async _getDeviceRuntimes(device) {
-    const model = await device.getModel();
     const socketPaths = await device.getRuntimeSocketPaths();
-    return [...socketPaths].map(socketPath => new AdbRuntime(device, model, socketPath));
+    return [...socketPaths].map(socketPath => new AdbRuntime(device, socketPath));
   }
 }
 

@@ -8,11 +8,10 @@ const { RuntimeTypes } = require("devtools/client/webide/modules/runtime-types")
 const { prepareTCPConnection } = require("devtools/shared/adb/commands/index");
 
 class AdbRuntime {
-  constructor(adbDevice, model, socketPath) {
+  constructor(adbDevice, socketPath) {
     this.type = RuntimeTypes.USB;
 
     this._adbDevice = adbDevice;
-    this._model = model;
     this._socketPath = socketPath;
   }
 
@@ -21,7 +20,7 @@ class AdbRuntime {
   }
 
   get deviceName() {
-    return this._model || this._adbDevice.id;
+    return this._adbDevice.name;
   }
 
   get shortName() {
@@ -29,7 +28,7 @@ class AdbRuntime {
   }
 
   get name() {
-    return `Firefox ${this._channel()} on Android (${this.deviceName})`;
+    return `${this.shortName} on Android (${this.deviceName})`;
   }
 
   connect(connection) {
