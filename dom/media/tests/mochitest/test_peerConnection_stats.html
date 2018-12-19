@@ -394,8 +394,8 @@ var pedanticChecks = report => {
         }
 
         // droppedFrames
-        ok(stat.droppedFrames >= 0,
-          stat.type + ".droppedFrames is not negative. value="
+        ok(stat.droppedFrames >= 0 && stat.droppedFrames < 100000,
+          stat.type + ".droppedFrames is a sane number. value="
           + stat.droppedFrames);
 
         // framesEncoded
