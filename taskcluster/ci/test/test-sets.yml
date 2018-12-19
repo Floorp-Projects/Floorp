@@ -229,9 +229,6 @@ windows-tests:
     - test-verify
     - test-verify-gpu
     - test-verify-wpt
-    - web-platform-tests
-    - web-platform-tests-reftests
-    - web-platform-tests-wdspec
     - xpcshell
 
 windows-talos:

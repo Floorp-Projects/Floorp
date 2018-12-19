@@ -31,7 +31,7 @@ class VRDisplayExternal : public VRDisplayHost {
   void ZeroSensor() override;
 
  protected:
-  VRHMDSensorState GetSensorState() override;
+  VRHMDSensorState& GetSensorState() override;
   void StartPresentation() override;
   void StopPresentation() override;
   void StartVRNavigation() override;

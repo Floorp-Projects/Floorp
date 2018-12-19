@@ -10,6 +10,7 @@
 #include "mozilla/TelemetryProcessEnums.h"
 #include "mozilla/TelemetryScalarEnums.h"
 #include "nsTArray.h"
+#include "TelemetryCommon.h"
 
 // This module is internal to Telemetry. It encapsulates Telemetry's
 // scalar accumulation and storage logic. It should only be used by
@@ -103,6 +104,12 @@ void GetDynamicScalarDefinitions(
     nsTArray<mozilla::Telemetry::DynamicScalarDefinition>&);
 void AddDynamicScalarDefinitions(
     const nsTArray<mozilla::Telemetry::DynamicScalarDefinition>&);
+
+/**
+ * Append the list of registered stores to the given set.
+ * This includes dynamic stores.
+ */
+nsresult GetAllStores(mozilla::Telemetry::Common::StringHashSet& set);
 
 // They are responsible for updating in-memory probes with the data persisted
 // on the disk and vice-versa.

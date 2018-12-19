@@ -14,11 +14,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1195018
  * theme_color member
  * https://w3c.github.io/manifest/#theme_color-member
  **/
-'use strict';
+"use strict";
 
 typeTests.forEach(type => {
   data.jsonText = JSON.stringify({
-    theme_color: type
+    theme_color: type,
   });
   var result = processor.process(data);
 
@@ -26,52 +26,52 @@ typeTests.forEach(type => {
 });
 
 var validThemeColors = [
-  'maroon',
-  '#f00',
-  '#ff0000',
-  'rgb(255,0,0)',
-  'rgb(255,0,0,1)',
-  'rgb(255,0,0,1.0)',
-  'rgb(255,0,0,100%)',
-  'rgb(255 0 0)',
-  'rgb(255 0 0 / 1)',
-  'rgb(255 0 0 / 1.0)',
-  'rgb(255 0 0 / 100%)',
-  'rgb(100%, 0%, 0%)',
-  'rgb(100%, 0%, 0%, 1)',
-  'rgb(100%, 0%, 0%, 1.0)',
-  'rgb(100%, 0%, 0%, 100%)',
-  'rgb(100% 0% 0%)',
-  'rgb(100% 0% 0% / 1)',
-  'rgb(100%, 0%, 0%, 1.0)',
-  'rgb(100%, 0%, 0%, 100%)',
-  'rgb(300,0,0)',
-  'rgb(300 0 0)',
-  'rgb(255,-10,0)',
-  'rgb(110%, 0%, 0%)',
-  'rgba(255,0,0)',
-  'rgba(255,0,0,1)',
-  'rgba(255 0 0 / 1)',
-  'rgba(100%,0%,0%,1)',
-  'rgba(0,0,255,0.5)',
-  'rgba(100%, 50%, 0%, 0.1)',
-  'hsl(120, 100%, 50%)',
-  'hsl(120 100% 50%)',
-  'hsl(120, 100%, 50%, 1.0)',
-  'hsl(120 100% 50% / 1.0)',
-  'hsla(120, 100%, 50%)',
-  'hsla(120 100% 50%)',
-  'hsla(120, 100%, 50%, 1.0)',
-  'hsla(120 100% 50% / 1.0)',
-  'hsl(120deg, 100%, 50%)',
-  'hsl(133.33333333grad, 100%, 50%)',
-  'hsl(2.0943951024rad, 100%, 50%)',
-  'hsl(0.3333333333turn, 100%, 50%)',
+  "maroon",
+  "#f00",
+  "#ff0000",
+  "rgb(255,0,0)",
+  "rgb(255,0,0,1)",
+  "rgb(255,0,0,1.0)",
+  "rgb(255,0,0,100%)",
+  "rgb(255 0 0)",
+  "rgb(255 0 0 / 1)",
+  "rgb(255 0 0 / 1.0)",
+  "rgb(255 0 0 / 100%)",
+  "rgb(100%, 0%, 0%)",
+  "rgb(100%, 0%, 0%, 1)",
+  "rgb(100%, 0%, 0%, 1.0)",
+  "rgb(100%, 0%, 0%, 100%)",
+  "rgb(100% 0% 0%)",
+  "rgb(100% 0% 0% / 1)",
+  "rgb(100%, 0%, 0%, 1.0)",
+  "rgb(100%, 0%, 0%, 100%)",
+  "rgb(300,0,0)",
+  "rgb(300 0 0)",
+  "rgb(255,-10,0)",
+  "rgb(110%, 0%, 0%)",
+  "rgba(255,0,0)",
+  "rgba(255,0,0,1)",
+  "rgba(255 0 0 / 1)",
+  "rgba(100%,0%,0%,1)",
+  "rgba(0,0,255,0.5)",
+  "rgba(100%, 50%, 0%, 0.1)",
+  "hsl(120, 100%, 50%)",
+  "hsl(120 100% 50%)",
+  "hsl(120, 100%, 50%, 1.0)",
+  "hsl(120 100% 50% / 1.0)",
+  "hsla(120, 100%, 50%)",
+  "hsla(120 100% 50%)",
+  "hsla(120, 100%, 50%, 1.0)",
+  "hsla(120 100% 50% / 1.0)",
+  "hsl(120deg, 100%, 50%)",
+  "hsl(133.33333333grad, 100%, 50%)",
+  "hsl(2.0943951024rad, 100%, 50%)",
+  "hsl(0.3333333333turn, 100%, 50%)",
 ];
 
 validThemeColors.forEach(theme_color => {
   data.jsonText = JSON.stringify({
-    theme_color: theme_color
+    theme_color,
   });
   var result = processor.process(data);
 
@@ -79,25 +79,25 @@ validThemeColors.forEach(theme_color => {
 });
 
 var invalidThemeColors = [
-  'marooon',
-  'f000000',
-  '#ff00000',
-  'rgb(100, 0%, 0%)',
-  'rgb(255,0)',
-  'rbg(255,-10,0)',
-  'rgb(110, 0%, 0%)',
-  '(255,0,0) }',
-  'rgba(255)',
-  ' rgb(100%,0%,0%) }',
-  'hsl(120, 100%, 50)',
-  'hsl(120, 100%, 50.0)',
-  'hsl 120, 100%, 50%',
-  'hsla{120, 100%, 50%, 1}',
-]
+  "marooon",
+  "f000000",
+  "#ff00000",
+  "rgb(100, 0%, 0%)",
+  "rgb(255,0)",
+  "rbg(255,-10,0)",
+  "rgb(110, 0%, 0%)",
+  "(255,0,0) }",
+  "rgba(255)",
+  " rgb(100%,0%,0%) }",
+  "hsl(120, 100%, 50)",
+  "hsl(120, 100%, 50.0)",
+  "hsl 120, 100%, 50%",
+  "hsla{120, 100%, 50%, 1}",
+];
 
 invalidThemeColors.forEach(theme_color => {
   data.jsonText = JSON.stringify({
-    theme_color: theme_color
+    theme_color,
   });
   var result = processor.process(data);
 
@@ -108,7 +108,7 @@ invalidThemeColors.forEach(theme_color => {
 validThemeColors.forEach(theme_color => {
   var expandedThemeColor = `${seperators}${lineTerminators}${theme_color}${lineTerminators}${seperators}`;
   data.jsonText = JSON.stringify({
-    theme_color: expandedThemeColor
+    theme_color: expandedThemeColor,
   });
   var result = processor.process(data);
 

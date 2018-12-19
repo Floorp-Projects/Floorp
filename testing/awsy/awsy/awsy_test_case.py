@@ -25,6 +25,7 @@ if AWSY_PATH not in sys.path:
 from awsy import ITERATIONS, PER_TAB_PAUSE, SETTLE_WAIT_TIME, MAX_TABS
 from awsy import process_perf_data
 
+
 class AwsyTestCase(MarionetteTestCase):
     """
     Base test case for AWSY tests.
@@ -73,8 +74,10 @@ class AwsyTestCase(MarionetteTestCase):
         self._maxTabs = self.testvars.get("maxTabs", MAX_TABS)
         self._dmd = self.testvars.get("dmd", False)
 
-        self.logger.info("areweslimyet run by %d pages, %d iterations, %d perTabPause, %d settleWaitTime"
-                         % (self._pages_to_load, self._iterations, self._perTabPause, self._settleWaitTime))
+        self.logger.info("areweslimyet run by %d pages, %d iterations,"
+                         " %d perTabPause, %d settleWaitTime"
+                         % (self._pages_to_load, self._iterations,
+                            self._perTabPause, self._settleWaitTime))
         self.reset_state()
 
     def tearDown(self):
@@ -91,7 +94,7 @@ class AwsyTestCase(MarionetteTestCase):
             with open(perf_file, 'w') as fp:
                 json.dump(perf_blob, fp, indent=2)
             self.logger.info("Perfherder data written to %s" % perf_file)
-        except:
+        except Exception:
             raise
         finally:
             # Make sure we cleanup and upload any existing files even if there
@@ -153,7 +156,9 @@ class AwsyTestCase(MarionetteTestCase):
             Cu.import("resource://gre/modules/Services.jsm");
             Services.obs.notifyObservers(null, "child-mmu-request", null);
 
-            let memMgrSvc = Cc["@mozilla.org/memory-reporter-manager;1"].getService(Ci.nsIMemoryReporterManager);
+            let memMgrSvc =
+            Cc["@mozilla.org/memory-reporter-manager;1"].getService(
+            Ci.nsIMemoryReporterManager);
             memMgrSvc.minimizeMemoryUsage(() => {resolve("gc done!");});
             """
         result = None
@@ -164,7 +169,7 @@ class AwsyTestCase(MarionetteTestCase):
             self.logger.error("GC JavaScript error: %s" % e)
         except ScriptTimeoutException:
             self.logger.error("GC timed out")
-        except:
+        except Exception:
             self.logger.error("Unexpected error: %s" % sys.exc_info()[0])
         else:
             self.logger.info(result)
@@ -194,7 +199,9 @@ class AwsyTestCase(MarionetteTestCase):
 
         checkpoint_script = r"""
             let [resolve] = arguments;
-            let dumper = Cc["@mozilla.org/memory-info-dumper;1"].getService(Ci.nsIMemoryInfoDumper);
+            let dumper =
+            Cc["@mozilla.org/memory-info-dumper;1"].getService(
+            Ci.nsIMemoryInfoDumper);
             dumper.dumpMemoryReportsToNamedFile(
                 "%s",
                 () => resolve("memory report done!"),
@@ -207,12 +214,12 @@ class AwsyTestCase(MarionetteTestCase):
             finished = self.marionette.execute_async_script(
                 checkpoint_script, script_timeout=60000)
             if finished:
-              checkpoint = checkpoint_path
+                checkpoint = checkpoint_path
         except JavascriptException, e:
             self.logger.error("Checkpoint JavaScript error: %s" % e)
         except ScriptTimeoutException:
             self.logger.error("Memory report timed out")
-        except:
+        except Exception:
             self.logger.error("Unexpected error: %s" % sys.exc_info()[0])
         else:
             self.logger.info("checkpoint created, stored in %s" % checkpoint_path)
@@ -247,7 +254,9 @@ class AwsyTestCase(MarionetteTestCase):
         # and for the memory report:
         #   unified-memory-report-<checkpoint>-<iteration>.json.gz
         dmd_script = r"""
-            let dumper = Cc["@mozilla.org/memory-info-dumper;1"].getService(Ci.nsIMemoryInfoDumper);
+            let dumper =
+            Cc["@mozilla.org/memory-info-dumper;1"].getService(
+            Ci.nsIMemoryInfoDumper);
             dumper.dumpMemoryInfoToTempDir(
                 "%s",
                 /* anonymize = */ false,
@@ -278,7 +287,7 @@ class AwsyTestCase(MarionetteTestCase):
             self.logger.error("DMD JavaScript error: %s" % e)
         except ScriptTimeoutException:
             self.logger.error("DMD timed out")
-        except:
+        except Exception:
             self.logger.error("Unexpected error: %s" % sys.exc_info()[0])
         else:
             self.logger.info("DMD started, prefixed with %s" % ident)

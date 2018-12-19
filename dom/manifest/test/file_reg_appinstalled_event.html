@@ -7,7 +7,7 @@ window.addEventListener("appinstalled", () => {
     .innerHTML = "event received!";
   // Send a custom event back to the browser
   // to acknowledge that we got this
-  const detail = { result: true }
+  const detail = { result: true };
   const ev = new CustomEvent("dom.manifest.onappinstalled", { detail });
   document.dispatchEvent(ev);
 });

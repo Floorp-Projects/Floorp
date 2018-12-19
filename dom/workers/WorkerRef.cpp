@@ -89,8 +89,8 @@ void WorkerRef::Notify() {
     return;
   }
 
-  std::function<void()> callback = mCallback;
-  mCallback = nullptr;
+  std::function<void()> callback = std::move(mCallback);
+  MOZ_ASSERT(!mCallback);
 
   callback();
 }
@@ -99,7 +99,7 @@ void WorkerRef::Notify() {
 // WeakWorkerRef
 
 /* static */ already_AddRefed<WeakWorkerRef> WeakWorkerRef::Create(
-    WorkerPrivate* aWorkerPrivate, const std::function<void()>& aCallback) {
+    WorkerPrivate* aWorkerPrivate, std::function<void()>&& aCallback) {
   MOZ_ASSERT(aWorkerPrivate);
   aWorkerPrivate->AssertIsOnWorkerThread();
 
@@ -113,7 +113,7 @@ void WorkerRef::Notify() {
   }
 
   ref->mHolder = std::move(holder);
-  ref->mCallback = aCallback;
+  ref->mCallback = std::move(aCallback);
 
   return ref.forget();
 }
@@ -144,7 +144,7 @@ WorkerPrivate* WeakWorkerRef::GetUnsafePrivate() const {
 
 /* static */ already_AddRefed<StrongWorkerRef> StrongWorkerRef::Create(
     WorkerPrivate* aWorkerPrivate, const char* aName,
-    const std::function<void()>& aCallback) {
+    std::function<void()>&& aCallback) {
   MOZ_ASSERT(aWorkerPrivate);
   MOZ_ASSERT(aName);
 
@@ -158,7 +158,7 @@ WorkerPrivate* WeakWorkerRef::GetUnsafePrivate() const {
   }
 
   ref->mHolder = std::move(holder);
-  ref->mCallback = aCallback;
+  ref->mCallback = std::move(aCallback);
 
   return ref.forget();
 }

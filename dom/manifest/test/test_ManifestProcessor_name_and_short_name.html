@@ -16,16 +16,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1079453
  * https://w3c.github.io/manifest/#short_name-member
  **/
 
-'use strict';
+"use strict";
 
 var trimNamesTests = [
   `${seperators}pass${seperators}`,
   `${lineTerminators}pass${lineTerminators}`,
   `${whiteSpace}pass${whiteSpace}`,
-  //BOM
-  `\uFEFFpass\uFEFF`
+  // BOM
+  `\uFEFFpass\uFEFF`,
 ];
-var props = ['name', 'short_name'];
+var props = ["name", "short_name"];
 
 props.forEach((prop) => {
   trimNamesTests.forEach((trimmableString) => {
@@ -34,7 +34,7 @@ props.forEach((prop) => {
     obj[prop] = trimmableString;
     data.jsonText = JSON.stringify(obj);
     var result = processor.process(data);
-    is(result[prop], 'pass', assetion);
+    is(result[prop], "pass", assetion);
   });
 });
 
@@ -56,13 +56,13 @@ props.forEach((prop) => {
  * acceptable names - including long names
  */
 var acceptableNames = [
-  'pass',
+  "pass",
   `pass pass pass pass pass pass pass pass pass pass pass pass pass pass
    pass pass pass pass pass pass pass pass pass pass pass pass pass pass
    pass pass pass pass pass pass pass pass pass pass pass pass pass pass
    pass pass pass pass pass pass pass pass pass pass pass pass`,
-  'これは許容できる名前です',
-  'ນີ້ແມ່ນຊື່ທີ່ຍອມຮັບໄດ້'
+  "これは許容できる名前です",
+  "ນີ້ແມ່ນຊື່ທີ່ຍອມຮັບໄດ້",
 ];
 
 props.forEach((prop) => {

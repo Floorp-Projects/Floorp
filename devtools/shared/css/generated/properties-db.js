@@ -2093,6 +2093,8 @@ exports.CSS_PROPERTIES = {
       "content",
       "inherit",
       "initial",
+      "max-content",
+      "min-content",
       "unset"
     ]
   },
@@ -2111,6 +2113,8 @@ exports.CSS_PROPERTIES = {
       "content",
       "inherit",
       "initial",
+      "max-content",
+      "min-content",
       "unset"
     ]
   },
@@ -3624,6 +3628,8 @@ exports.CSS_PROPERTIES = {
       "auto",
       "inherit",
       "initial",
+      "max-content",
+      "min-content",
       "unset"
     ]
   },
@@ -5464,6 +5470,8 @@ exports.CSS_PROPERTIES = {
       "content",
       "inherit",
       "initial",
+      "max-content",
+      "min-content",
       "unset"
     ]
   },
@@ -5482,6 +5490,8 @@ exports.CSS_PROPERTIES = {
       "content",
       "inherit",
       "initial",
+      "max-content",
+      "min-content",
       "unset"
     ]
   },
@@ -6347,6 +6357,8 @@ exports.CSS_PROPERTIES = {
       "auto",
       "inherit",
       "initial",
+      "max-content",
+      "min-content",
       "unset"
     ]
   },
@@ -6427,6 +6439,8 @@ exports.CSS_PROPERTIES = {
       "auto",
       "inherit",
       "initial",
+      "max-content",
+      "min-content",
       "unset"
     ]
   },
@@ -7264,6 +7278,8 @@ exports.CSS_PROPERTIES = {
       "-moz-min-content",
       "inherit",
       "initial",
+      "max-content",
+      "min-content",
       "none",
       "unset"
     ]
@@ -7281,6 +7297,8 @@ exports.CSS_PROPERTIES = {
       "-moz-min-content",
       "inherit",
       "initial",
+      "max-content",
+      "min-content",
       "none",
       "unset"
     ]
@@ -7298,6 +7316,8 @@ exports.CSS_PROPERTIES = {
       "-moz-min-content",
       "inherit",
       "initial",
+      "max-content",
+      "min-content",
       "none",
       "unset"
     ]
@@ -7315,6 +7335,8 @@ exports.CSS_PROPERTIES = {
       "-moz-min-content",
       "inherit",
       "initial",
+      "max-content",
+      "min-content",
       "none",
       "unset"
     ]
@@ -7333,6 +7355,8 @@ exports.CSS_PROPERTIES = {
       "auto",
       "inherit",
       "initial",
+      "max-content",
+      "min-content",
       "unset"
     ]
   },
@@ -7350,6 +7374,8 @@ exports.CSS_PROPERTIES = {
       "auto",
       "inherit",
       "initial",
+      "max-content",
+      "min-content",
       "unset"
     ]
   },
@@ -7367,6 +7393,8 @@ exports.CSS_PROPERTIES = {
       "auto",
       "inherit",
       "initial",
+      "max-content",
+      "min-content",
       "unset"
     ]
   },
@@ -7384,6 +7412,8 @@ exports.CSS_PROPERTIES = {
       "auto",
       "inherit",
       "initial",
+      "max-content",
+      "min-content",
       "unset"
     ]
   },
@@ -9198,6 +9228,8 @@ exports.CSS_PROPERTIES = {
       "auto",
       "inherit",
       "initial",
+      "max-content",
+      "min-content",
       "unset"
     ]
   },

@@ -11,11 +11,14 @@
 #include "mozilla/TelemetryProcessEnums.h"
 #include "nsIScriptError.h"
 #include "nsTHashtable.h"
+#include "nsHashKeys.h"
 #include "nsXULAppAPI.h"
 
 namespace mozilla {
 namespace Telemetry {
 namespace Common {
+
+typedef nsTHashtable<nsCStringHashKey> StringHashSet;
 
 enum class RecordedProcessType : uint8_t {
   Main = (1 << GeckoProcessType_Default),  // Also known as "parent process"

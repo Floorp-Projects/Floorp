@@ -928,7 +928,7 @@ html|*.pointerlockfswarning {
   top: 0; left: 50%;
   transform: translate(-50%, -100%);
   box-sizing: border-box;
-  width: -moz-max-content;
+  width: max-content;
   max-width: 95%;
   pointer-events: none;
 }
