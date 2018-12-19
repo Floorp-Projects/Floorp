@@ -3447,8 +3447,8 @@ already_AddRefed<nsIEventTarget> ContentChild::GetSpecificMessageEventTarget(
 }
 
 void ContentChild::OnChannelReceivedMessage(const Message& aMsg) {
-  if (aMsg.is_sync()) {
-    LSObject::CancelSyncLoop();
+  if (aMsg.is_sync() && !aMsg.is_reply()) {
+    LSObject::OnSyncMessageReceived();
   }
 
 #ifdef NIGHTLY_BUILD
@@ -3467,12 +3467,21 @@ PContentChild::Result ContentChild::OnMessageReceived(const Message& aMsg) {
 
   return PContentChild::OnMessageReceived(aMsg);
 }
+#endif
 
 PContentChild::Result ContentChild::OnMessageReceived(const Message& aMsg,
                                                       Message*& aReply) {
-  return PContentChild::OnMessageReceived(aMsg, aReply);
+  Result result = PContentChild::OnMessageReceived(aMsg, aReply);
+
+  if (aMsg.is_sync()) {
+    // OnMessageReceived shouldn't be called for sync replies.
+    MOZ_ASSERT(!aMsg.is_reply());
+
+    LSObject::OnSyncMessageHandled();
+  }
+
+  return result;
 }
-#endif
 
 }  // namespace dom
 
