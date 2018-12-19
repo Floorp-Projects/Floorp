@@ -4928,8 +4928,6 @@ static bool BinParse(JSContext* cx, unsigned argc, Value* vp) {
 
   // Extract argument 2: Options.
 
-  bool useMultipart = true;
-
   if (args.length() >= 2) {
     if (!args[1].isObject()) {
       const char* typeName = InformalValueTypeName(args[1]);
@@ -4944,20 +4942,14 @@ static bool BinParse(JSContext* cx, unsigned argc, Value* vp) {
       return false;
     }
 
-    if (optionFormat.isUndefined()) {
-      // By default, `useMultipart` is `true`.
-      useMultipart = true;
-    } else if (optionFormat.isString()) {
+    if (!optionFormat.isUndefined()) {
       RootedLinearString linearFormat(
           cx, optionFormat.toString()->ensureLinear(cx));
       if (!linearFormat) {
         return false;
       }
-      if (StringEqualsAscii(linearFormat, "multipart")) {
-        useMultipart = true;
-      } else if (StringEqualsAscii(linearFormat, "simple")) {
-        useMultipart = false;
-      } else {
+      // Currently not used, reserved for future.
+      if (!StringEqualsAscii(linearFormat, "multipart")) {
         UniqueChars printable = JS_EncodeStringToUTF8(cx, linearFormat);
         if (!printable) {
           return false;
@@ -4965,8 +4957,7 @@ static bool BinParse(JSContext* cx, unsigned argc, Value* vp) {
 
         JS_ReportErrorUTF8(
             cx,
-            "Unknown value for option `format`, expected 'multipart' or "
-            "'simple', got %s",
+            "Unknown value for option `format`, expected 'multipart', got %s",
             printable.get());
         return false;
       }
@@ -4993,9 +4984,7 @@ static bool BinParse(JSContext* cx, unsigned argc, Value* vp) {
   Directives directives(false);
   GlobalSharedContext globalsc(cx, ScopeKind::Global, directives, false);
 
-  auto parseFunc = useMultipart
-                       ? ParseBinASTData<frontend::BinTokenReaderMultipart>
-                       : ParseBinASTData<frontend::BinTokenReaderTester>;
+  auto parseFunc = ParseBinASTData<frontend::BinTokenReaderMultipart>;
   if (!parseFunc(cx, buf_data, buf_length, &globalsc, usedNames, options,
                  sourceObj)) {
     return false;

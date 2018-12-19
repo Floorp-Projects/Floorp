@@ -21,7 +21,6 @@
 #include "frontend/BinASTParserBase.h"
 #include "frontend/BinToken.h"
 #include "frontend/BinTokenReaderMultipart.h"
-#include "frontend/BinTokenReaderTester.h"
 #include "frontend/FullParseHandler.h"
 #include "frontend/ParseContext.h"
 #include "frontend/ParseNode.h"
@@ -319,7 +318,6 @@ class BinParseContext : public ParseContext {
 };
 
 extern template class BinASTParserPerTokenizer<BinTokenReaderMultipart>;
-extern template class BinASTParserPerTokenizer<BinTokenReaderTester>;
 
 }  // namespace frontend
 }  // namespace js
