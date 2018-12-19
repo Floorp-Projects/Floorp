@@ -114,6 +114,17 @@ const clearLocalStorage = async function(options) {
       {message: "Firefox does not support clearing localStorage with 'since'."});
   }
 
+  // The legacy LocalStorage implementation that will eventually be removed
+  // depends on this observer notification.  Some other subsystems like
+  // Reporting headers depend on this too.
+  if (options.hostnames) {
+    for (let hostname of options.hostnames) {
+      Services.obs.notifyObservers(null, "extension:purge-localStorage", hostname);
+    }
+  } else {
+    Services.obs.notifyObservers(null, "extension:purge-localStorage");
+  }
+
   if (Services.lsm.nextGenLocalStorageEnabled) {
     // Ideally we could reuse the logic in Sanitizer.jsm or nsIClearDataService,
     // but this API exposes an ability to wipe data at a much finger granularity
@@ -151,14 +162,6 @@ const clearLocalStorage = async function(options) {
     });
 
     return Promise.all(promises);
-  }
-
-  if (options.hostnames) {
-    for (let hostname of options.hostnames) {
-      Services.obs.notifyObservers(null, "extension:purge-localStorage", hostname);
-    }
-  } else {
-    Services.obs.notifyObservers(null, "extension:purge-localStorage");
   }
 };
 

@@ -96,19 +96,30 @@ class LSObject final : public Storage {
    * case we want ActorsParent to know our event-target and this is better than
    * trying to tunnel the pointer through IPC.
    */
-  static already_AddRefed<nsIEventTarget> GetSyncLoopEventTarget();
+  static already_AddRefed<nsISerialEventTarget> GetSyncLoopEventTarget();
 
   /**
    * Helper invoked by ContentChild::OnChannelReceivedMessage when a sync IPC
-   * message is received.  This will be invoked on the IPC I/O thread and it's
-   * necessary to unblock the main thread when this happens to avoid the
-   * potential for browser deadlock.  This should only occur in (ugly) testing
-   * scenarios where CPOWs are in use.
+   * message is received.  This will be invoked on the IPC I/O thread and it
+   * will set the gPendingSyncMessage flag to true.  It will also force the sync
+   * loop (if it's active) to check the gPendingSyncMessage flag which will
+   * result in premature finish of the loop.
    *
-   * Cancellation will result in the underlying LSRequest being explicitly
+   * This is necessary to unblock the main thread when a sync IPC message is
+   * received to avoid the potential for browser deadlock.  This should only
+   * occur in (ugly) testing scenarios where CPOWs are in use.
+   *
+   * Aborted sync loop will result in the underlying LSRequest being explicitly
    * canceled, resulting in the parent sending an NS_ERROR_FAILURE result.
    */
-  static void CancelSyncLoop();
+  static void OnSyncMessageReceived();
+
+  /*
+   * Helper invoked by ContentChild::OnMessageReceived when a sync IPC message
+   * has been handled.  This will be invoked on the main thread and it will
+   * set the gPendingSyncMessage flag to false.
+   */
+  static void OnSyncMessageHandled();
 
   void AssertIsOnOwningThread() const { NS_ASSERT_OWNINGTHREAD(LSObject); }
 

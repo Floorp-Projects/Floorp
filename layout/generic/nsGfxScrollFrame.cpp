@@ -4845,9 +4845,9 @@ void ScrollFrameHelper::CurPosAttributeChanged(nsIContent* aContent,
 
 /* ============= Scroll events ========== */
 
-ScrollFrameHelper::ScrollEvent::ScrollEvent(ScrollFrameHelper* aHelper)
+ScrollFrameHelper::ScrollEvent::ScrollEvent(ScrollFrameHelper* aHelper, bool aDelayed)
     : Runnable("ScrollFrameHelper::ScrollEvent"), mHelper(aHelper) {
-  mHelper->mOuter->PresContext()->RefreshDriver()->PostScrollEvent(this);
+  mHelper->mOuter->PresContext()->RefreshDriver()->PostScrollEvent(this, aDelayed);
 }
 
 NS_IMETHODIMP
@@ -4883,6 +4883,16 @@ void ScrollFrameHelper::FireScrollEvent() {
   mScrollEvent->Revoke();
   mScrollEvent = nullptr;
 
+  // If event handling is suppressed, keep posting the scroll event to the
+  // refresh driver until it is unsuppressed. The event is marked as delayed so
+  // that the refresh driver does not continue ticking.
+  if (content->GetComposedDoc() &&
+      content->GetComposedDoc()->EventHandlingSuppressed()) {
+    content->GetComposedDoc()->SetHasDelayedRefreshEvent();
+    PostScrollEvent(/* aDelayed = */ true);
+    return;
+  }
+
   ActiveLayerTracker::SetCurrentScrollHandlerFrame(mOuter);
   WidgetGUIEvent event(true, eScroll, nullptr);
   nsEventStatus status = nsEventStatus_eIgnore;
@@ -4904,13 +4914,13 @@ void ScrollFrameHelper::FireScrollEvent() {
   ActiveLayerTracker::SetCurrentScrollHandlerFrame(nullptr);
 }
 
-void ScrollFrameHelper::PostScrollEvent() {
+void ScrollFrameHelper::PostScrollEvent(bool aDelayed) {
   if (mScrollEvent) {
     return;
   }
 
   // The ScrollEvent constructor registers itself with the refresh driver.
-  mScrollEvent = new ScrollEvent(this);
+  mScrollEvent = new ScrollEvent(this, aDelayed);
 }
 
 NS_IMETHODIMP
