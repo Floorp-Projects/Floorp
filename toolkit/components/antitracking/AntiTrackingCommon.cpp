@@ -928,8 +928,8 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
     // The result of this assertion depends on whether IsThirdPartyWindow
     // succeeds, because otherwise IsThirdPartyWindowOrChannel artificially
     // fails.
-    MOZ_ASSERT(nsContentUtils::IsThirdPartyWindowOrChannel(
-                   aWindow, nullptr, aURI) == NS_SUCCEEDED(rv));
+    MOZ_ASSERT_IF(NS_SUCCEEDED(rv), nsContentUtils::IsThirdPartyWindowOrChannel(
+                                        aWindow, nullptr, aURI) == thirdParty);
   }
 #endif
 

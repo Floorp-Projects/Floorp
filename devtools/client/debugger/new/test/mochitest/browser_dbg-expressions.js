@@ -9,11 +9,6 @@
  * 4. expanding properties when not paused
  */
 
-const expressionSelectors = {
-  plusIcon: ".watch-expressions-pane button.plus",
-  input: "input.input-expression"
-};
-
 function getLabel(dbg, index) {
   return findElement(dbg, "expressionNode", index).innerText;
 }
@@ -30,31 +25,6 @@ function assertEmptyValue(dbg, index) {
   }
 
   is(value, null);
-}
-
-async function addExpression(dbg, input) {
-  info("Adding an expression");
-
-  const plusIcon = findElementWithSelector(dbg, expressionSelectors.plusIcon);
-  if (plusIcon) {
-    plusIcon.click();
-  }
-  findElementWithSelector(dbg, expressionSelectors.input).focus();
-  type(dbg, input);
-  pressKey(dbg, "Enter");
-
-  await waitForDispatch(dbg, "EVALUATE_EXPRESSION");
-}
-
-async function editExpression(dbg, input) {
-  info("Updating the expression");
-  dblClickElement(dbg, "expressionNode", 1);
-  // Position cursor reliably at the end of the text.
-  pressKey(dbg, "End");
-  type(dbg, input);
-  const evaluated = waitForDispatch(dbg, "EVALUATE_EXPRESSIONS");
-  pressKey(dbg, "Enter");
-  await evaluated;
 }
 
 add_task(async function() {
