@@ -728,10 +728,10 @@ class ContentChild final : public PContentChild,
 
 #ifdef NIGHTLY_BUILD
   virtual PContentChild::Result OnMessageReceived(const Message& aMsg) override;
+#endif
 
   virtual PContentChild::Result OnMessageReceived(const Message& aMsg,
                                                   Message*& aReply) override;
-#endif
 
   InfallibleTArray<nsAutoPtr<AlertObserver>> mAlertObservers;
   RefPtr<ConsoleListener> mConsoleListener;
