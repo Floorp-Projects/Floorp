@@ -12,8 +12,8 @@
 <script type="application/javascript">
 
 function runTest() {
-  x = new BroadcastChannel('foo');
-  y = new BroadcastChannel('foo');
+  x = new BroadcastChannel("foo");
+  y = new BroadcastChannel("foo");
 
   function func(e) {
     is(e.target, y, "The target is !x");
@@ -26,7 +26,7 @@ function runTest() {
   x.onmessage = func;
   y.onmessage = func;
 
-  x.postMessage('foo');
+  x.postMessage("foo");
 }
 
 SimpleTest.waitForExplicitFinish();

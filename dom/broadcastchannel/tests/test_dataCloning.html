@@ -14,10 +14,10 @@
 
 let c = new BroadcastChannel("foo");
 
-try  {
+try {
   c.postMessage(Symbol());
   ok(false, "This should throw!");
-} catch(e) {
+} catch (e) {
   ok(true, "This should throw!");
   is(e.name, "DataCloneError", "Correct DataCloneError exception thrown");
 }
