@@ -33,32 +33,44 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#if ARCH_X86_64 && defined(_WIN32)
+/* setjmp/longjmp on 64-bit Windows will try to use SEH to unwind the stack,
+ * which doesn't work for assembly functions without unwind information. */
+#include <windows.h>
+#define checkasm_context CONTEXT
+#define checkasm_save_context() RtlCaptureContext(&checkasm_context_buf)
+#define checkasm_load_context() RtlRestoreContext(&checkasm_context_buf, NULL)
+#else
+#include <setjmp.h>
+#define checkasm_context jmp_buf
+#define checkasm_save_context() setjmp(checkasm_context_buf)
+#define checkasm_load_context() longjmp(checkasm_context_buf, 1)
+#endif
+
 #include "include/common/attributes.h"
 #include "include/common/intops.h"
 
-void checkasm_check_cdef_8bpc(void);
-void checkasm_check_cdef_10bpc(void);
+int xor128_rand(void);
+#define rnd xor128_rand
 
-void checkasm_check_ipred_8bpc(void);
-void checkasm_check_ipred_10bpc(void);
+#define decl_check_bitfns(name) \
+name##_8bpc(void); \
+name##_16bpc(void)
 
-void checkasm_check_itx_8bpc(void);
-void checkasm_check_itx_10bpc(void);
-
-void checkasm_check_loopfilter_8bpc(void);
-void checkasm_check_loopfilter_10bpc(void);
-
-void checkasm_check_looprestoration_8bpc(void);
-void checkasm_check_looprestoration_10bpc(void);
-
-void checkasm_check_mc_8bpc(void);
-void checkasm_check_mc_10bpc(void);
+decl_check_bitfns(void checkasm_check_cdef);
+decl_check_bitfns(void checkasm_check_ipred);
+decl_check_bitfns(void checkasm_check_itx);
+decl_check_bitfns(void checkasm_check_loopfilter);
+decl_check_bitfns(void checkasm_check_looprestoration);
+decl_check_bitfns(void checkasm_check_mc);
 
 void *checkasm_check_func(void *func, const char *name, ...);
 int checkasm_bench_func(void);
 void checkasm_fail_func(const char *msg, ...);
 void checkasm_update_bench(int iterations, uint64_t cycles);
 void checkasm_report(const char *name, ...);
+void checkasm_set_signal_handler_state(int enabled);
+extern checkasm_context checkasm_context_buf;
 
 /* float compare utilities */
 int float_near_ulp(float a, float b, unsigned max_ulp);
@@ -83,7 +95,9 @@ static void *func_ref, *func_new;
  * the remaining arguments are the function parameters. Naming parameters
  * is optional. */
 #define declare_func(ret, ...)\
-    declare_new(ret, __VA_ARGS__) typedef ret func_type(__VA_ARGS__)
+    declare_new(ret, __VA_ARGS__)\
+    typedef ret func_type(__VA_ARGS__);\
+    checkasm_save_context()
 
 /* Indicate that the current test has failed */
 #define fail() checkasm_fail_func("%s:%d", __FILE__, __LINE__)
@@ -92,7 +106,10 @@ static void *func_ref, *func_new;
 #define report checkasm_report
 
 /* Call the reference function */
-#define call_ref(...) ((func_type *)func_ref)(__VA_ARGS__)
+#define call_ref(...)\
+    (checkasm_set_signal_handler_state(1),\
+     ((func_type *)func_ref)(__VA_ARGS__));\
+    checkasm_set_signal_handler_state(0)
 
 #if HAVE_ASM
 #if ARCH_X86
@@ -160,14 +177,19 @@ void checkasm_stack_clobber(uint64_t clobber, ...);
     (void *)checkasm_checked_call;
 #define CLOB (UINT64_C(0xdeadbeefdeadbeef))
 #define call_new(...)\
-    (checkasm_stack_clobber(CLOB, CLOB, CLOB, CLOB, CLOB, CLOB, CLOB,\
+    (checkasm_set_signal_handler_state(1),\
+     checkasm_stack_clobber(CLOB, CLOB, CLOB, CLOB, CLOB, CLOB, CLOB,\
                             CLOB, CLOB, CLOB, CLOB, CLOB, CLOB, CLOB,\
                             CLOB, CLOB, CLOB, CLOB, CLOB, CLOB, CLOB),\
-     checked_call(func_new, 0, 0, 0, 0, 0, __VA_ARGS__))
+     checked_call(func_new, 0, 0, 0, 0, 0, __VA_ARGS__));\
+    checkasm_set_signal_handler_state(0)
 #elif ARCH_X86_32
 #define declare_new(ret, ...)\
     ret (*checked_call)(void *, __VA_ARGS__) = (void *)checkasm_checked_call;
-#define call_new(...) checked_call(func_new, __VA_ARGS__)
+#define call_new(...)\
+    (checkasm_set_signal_handler_state(1),\
+     checked_call(func_new, __VA_ARGS__));\
+    checkasm_set_signal_handler_state(0)
 #elif ARCH_ARM
 /* Use a dummy argument, to offset the real parameters by 2, not only 1.
  * This makes sure that potential 8-byte-alignment of parameters is kept
@@ -176,7 +198,10 @@ void checkasm_checked_call_vfp(void *func, int dummy, ...);
 #define declare_new(ret, ...)\
     ret (*checked_call)(void *, int dummy, __VA_ARGS__) =\
     (void *)checkasm_checked_call_vfp;
-#define call_new(...) checked_call(func_new, 0, __VA_ARGS__)
+#define call_new(...)\
+    (checkasm_set_signal_handler_state(1),\
+     checked_call(func_new, 0, __VA_ARGS__));\
+    checkasm_set_signal_handler_state(0)
 #elif ARCH_AARCH64 && !defined(__APPLE__)
 void checkasm_stack_clobber(uint64_t clobber, ...);
 #define declare_new(ret, ...)\
@@ -185,19 +210,27 @@ void checkasm_stack_clobber(uint64_t clobber, ...);
     (void *)checkasm_checked_call;
 #define CLOB (UINT64_C(0xdeadbeefdeadbeef))
 #define call_new(...)\
-    (checkasm_stack_clobber(CLOB, CLOB, CLOB, CLOB, CLOB, CLOB,\
+    (checkasm_set_signal_handler_state(1),\
+     checkasm_stack_clobber(CLOB, CLOB, CLOB, CLOB, CLOB, CLOB,\
                             CLOB, CLOB, CLOB, CLOB, CLOB, CLOB,\
                             CLOB, CLOB, CLOB, CLOB, CLOB, CLOB,\
                             CLOB, CLOB, CLOB, CLOB, CLOB),\
-     checked_call(func_new, 0, 0, 0, 0, 0, 0, 0, __VA_ARGS__))
+     checked_call(func_new, 0, 0, 0, 0, 0, 0, 0, __VA_ARGS__));\
+    checkasm_set_signal_handler_state(0)
 #else
 #define declare_new(ret, ...)
-#define call_new(...) ((func_type *)func_new)(__VA_ARGS__)
+#define call_new(...)\
+    (checkasm_set_signal_handler_state(1),\
+     ((func_type *)func_new)(__VA_ARGS__));\
+    checkasm_set_signal_handler_state(0)
 #endif
 #else /* HAVE_ASM */
 #define declare_new(ret, ...)
 /* Call the function */
-#define call_new(...) ((func_type *)func_new)(__VA_ARGS__)
+#define call_new(...)\
+    (checkasm_set_signal_handler_state(1),\
+     ((func_type *)func_new)(__VA_ARGS__));\
+    checkasm_set_signal_handler_state(0)
 #endif /* HAVE_ASM */
 
 /* Benchmark the function */
@@ -205,6 +238,7 @@ void checkasm_stack_clobber(uint64_t clobber, ...);
 #define bench_new(...)\
     do {\
         if (checkasm_bench_func()) {\
+            checkasm_set_signal_handler_state(1);\
             func_type *tfunc = func_new;\
             uint64_t tsum = 0;\
             int ti, tcount = 0;\
@@ -220,6 +254,7 @@ void checkasm_stack_clobber(uint64_t clobber, ...);
                     tcount++;\
                 }\
             }\
+            checkasm_set_signal_handler_state(0);\
             checkasm_update_bench(tcount, tsum);\
         }\
     } while (0)

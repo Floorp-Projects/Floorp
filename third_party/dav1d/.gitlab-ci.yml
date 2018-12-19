@@ -123,6 +123,7 @@ test-debian:
         - meson build --buildtype release -Dtestdata_tests=true
         - ninja -C build
         - cd build && time meson test -v
+    dependencies: []
 
 test-debian-asan:
     image: registry.videolan.org:5000/dav1d-debian-unstable:20181114201132
@@ -144,6 +145,7 @@ test-debian-asan:
         - meson build --buildtype debugoptimized -Dtestdata_tests=true -Db_sanitize=address -Dbuild_asm=false
         - ninja -C build
         - cd build && time meson test -v --setup=sanitizer
+    dependencies: []
 
 test-debian-msan:
     image: registry.videolan.org:5000/dav1d-debian-unstable:20181114201132
@@ -165,6 +167,7 @@ test-debian-msan:
         - env CC=clang meson build --buildtype debugoptimized -Dtestdata_tests=true -Db_sanitize=memory -Db_lundef=false -Dbuild_asm=false
         - ninja -C build
         - cd build && time meson test -v --setup=sanitizer
+    dependencies: []
 
 test-debian-ubsan:
     image: registry.videolan.org:5000/dav1d-debian-unstable:20181114201132
@@ -186,3 +189,4 @@ test-debian-ubsan:
         - env CC=clang meson build --buildtype debugoptimized -Dtestdata_tests=true -Db_sanitize=undefined -Db_lundef=false -Dbuild_asm=false
         - ninja -C build
         - cd build && time meson test -v --setup=sanitizer
+    dependencies: []

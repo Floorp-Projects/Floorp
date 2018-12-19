@@ -23,7 +23,7 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 project('dav1d', ['c'],
-    version: '0.0.1',
+    version: '0.1.1',
     default_options: ['c_std=c99',
                       'warning_level=2',
                       'buildtype=release',
@@ -55,7 +55,7 @@ dav1d_inc_dirs = include_directories(['.', 'include', 'include/dav1d'])
 
 # Bitdepth option
 dav1d_bitdepths = get_option('bitdepths')
-foreach bitdepth : ['8', '10']
+foreach bitdepth : ['8', '16']
     cdata.set10('CONFIG_@0@BPC'.format(bitdepth), dav1d_bitdepths.contains(bitdepth))
 endforeach
 
@@ -230,6 +230,23 @@ if (is_asm_enabled and
 '''
     have_as_func = cc.compiles(as_func_code)
     cdata.set10('HAVE_AS_FUNC', have_as_func)
+
+    # fedora package build infrastructure uses a gcc specs file to enable
+    # '-fPIE' by default. The chosen way only adds '-fPIE' to the C compiler
+    # with integrated preprocessor. It is not added to the standalone
+    # preprocessor or the preprocessing stage of '.S' files. So we have to
+    # compile code to check if we have to define PIC for the arm asm to
+    # avoid absolute relocations when building for example checkasm.
+    check_pic_code = '''
+#if defined(PIC)
+#error "PIC already defined"
+#elif !(defined(__PIC__) || defined(__pic__))
+#error "no pic"
+#endif
+'''
+    if cc.compiles(check_pic_code)
+        cdata.set('PIC', '3')
+    endif
 endif
 
 if host_machine.cpu_family().startswith('x86')

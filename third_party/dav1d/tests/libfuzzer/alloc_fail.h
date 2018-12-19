@@ -1,6 +1,6 @@
 /*
  * Copyright © 2018, VideoLAN and dav1d authors
- * Copyright © 2018, Two Orioles, LLC
+ * Copyright © 2018, Janne Grunau
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,12 +25,11 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __DAV1D_SRC_FILM_GRAIN_H__
-#define __DAV1D_SRC_FILM_GRAIN_H__
+#ifndef DAV1D_TESTS_LIBFUZZER_ALLOC_FAIL_H
+#define DAV1D_TESTS_LIBFUZZER_ALLOC_FAIL_H
 
-#include "dav1d/dav1d.h"
+#include <dav1d/common.h>
 
-bitfn_decls(void dav1d_apply_grain, Dav1dPicture *const out,
-                                    const Dav1dPicture *const in);
+DAV1D_API void dav1d_setup_alloc_fail(unsigned seed, unsigned probability);
 
-#endif /* __DAV1D_SRC_FILM_GRAIN_H__ */
+#endif /* DAV1D_TESTS_LIBFUZZER_ALLOC_FAIL_H */

@@ -3567,7 +3567,7 @@ ALIGN function_align
 .w4_loop:
     movd                xm0, [dstq+dsq*0]
     pinsrd              xm0, [dstq+dsq*1], 1
-    movq                xm2, [maskq+hq*2]
+    movd                xm2, [maskq+hq*2]
     movq                xm1, [tmpq]
     add                tmpq, 4*2
     pshufb              xm2, xm3

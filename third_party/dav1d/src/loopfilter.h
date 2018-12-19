@@ -39,7 +39,7 @@
 #define decl_loopfilter_sb_fn(name) \
 void (name)(pixel *dst, ptrdiff_t stride, const uint32_t *mask, \
             const uint8_t (*lvl)[4], ptrdiff_t lvl_stride, \
-            const Av1FilterLUT *lut, int w)
+            const Av1FilterLUT *lut, int w HIGHBD_DECL_SUFFIX)
 typedef decl_loopfilter_sb_fn(*loopfilter_sb_fn);
 
 typedef struct Dav1dLoopFilterDSPContext {
@@ -52,10 +52,7 @@ typedef struct Dav1dLoopFilterDSPContext {
     loopfilter_sb_fn loop_filter_sb[2][2];
 } Dav1dLoopFilterDSPContext;
 
-void dav1d_loop_filter_dsp_init_8bpc(Dav1dLoopFilterDSPContext *c);
-void dav1d_loop_filter_dsp_init_10bpc(Dav1dLoopFilterDSPContext *c);
-
-void dav1d_loop_filter_dsp_init_x86_8bpc(Dav1dLoopFilterDSPContext *c);
-void dav1d_loop_filter_dsp_init_x86_10bpc(Dav1dLoopFilterDSPContext *c);
+bitfn_decls(void dav1d_loop_filter_dsp_init, Dav1dLoopFilterDSPContext *c);
+bitfn_decls(void dav1d_loop_filter_dsp_init_x86, Dav1dLoopFilterDSPContext *c);
 
 #endif /* __DAV1D_SRC_LOOPFILTER_H__ */

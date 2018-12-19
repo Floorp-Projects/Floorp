@@ -43,7 +43,8 @@
  */
 #define decl_angular_ipred_fn(name) \
 void (name)(pixel *dst, ptrdiff_t stride, const pixel *topleft, \
-            int width, int height, int angle, int max_width, int max_height)
+            int width, int height, int angle, int max_width, int max_height \
+            HIGHBD_DECL_SUFFIX)
 typedef decl_angular_ipred_fn(*angular_ipred_fn);
 
 /*
@@ -63,7 +64,8 @@ typedef decl_cfl_ac_fn(*cfl_ac_fn);
  */
 #define decl_cfl_pred_fn(name) \
 void (name)(pixel *dst, ptrdiff_t stride, const pixel *topleft, \
-            int width, int height, const int16_t *ac, int alpha)
+            int width, int height, const int16_t *ac, int alpha \
+            HIGHBD_DECL_SUFFIX)
 typedef decl_cfl_pred_fn(*cfl_pred_fn);
 
 /*
@@ -86,10 +88,7 @@ typedef struct Dav1dIntraPredDSPContext {
     pal_pred_fn pal_pred;
 } Dav1dIntraPredDSPContext;
 
-void dav1d_intra_pred_dsp_init_8bpc(Dav1dIntraPredDSPContext *c);
-void dav1d_intra_pred_dsp_init_10bpc(Dav1dIntraPredDSPContext *c);
-
-void dav1d_intra_pred_dsp_init_x86_8bpc(Dav1dIntraPredDSPContext *c);
-void dav1d_intra_pred_dsp_init_x86_10bpc(Dav1dIntraPredDSPContext *c);
+bitfn_decls(void dav1d_intra_pred_dsp_init, Dav1dIntraPredDSPContext *c);
+bitfn_decls(void dav1d_intra_pred_dsp_init_x86, Dav1dIntraPredDSPContext *c);
 
 #endif /* __DAV1D_SRC_IPRED_H__ */
