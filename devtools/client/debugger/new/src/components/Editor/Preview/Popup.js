@@ -34,6 +34,7 @@ import "./Popup.css";
 
 import type { EditorRange } from "../../../utils/editor/types";
 import type { Coords } from "../../shared/Popover";
+import type { Grip } from "../../../types";
 
 type PopupValue = Object | null;
 type Props = {
@@ -49,7 +50,8 @@ type Props = {
   editorRef: ?HTMLDivElement,
   selectSourceURL: (string, Object) => void,
   openLink: string => void,
-  extra: Object
+  extra: Object,
+  openElementInInspector: (grip: Grip) => void
 };
 
 type State = {
@@ -268,7 +270,7 @@ export class Popup extends Component<Props, State> {
   }
 
   renderObjectInspector(roots: Array<Object>) {
-    const { openLink } = this.props;
+    const { openLink, openElementInInspector } = this.props;
 
     return (
       <ObjectInspector
@@ -278,6 +280,8 @@ export class Popup extends Component<Props, State> {
         focusable={false}
         openLink={openLink}
         createObjectClient={grip => createObjectClient(grip)}
+        onDOMNodeClick={grip => openElementInInspector(grip)}
+        onInspectIconClick={grip => openElementInInspector(grip)}
       />
     );
   }
@@ -344,7 +348,8 @@ export class Popup extends Component<Props, State> {
 }
 
 const mapStateToProps = state => ({
-  popupObjectProperties: getAllPopupObjectProperties(state)
+  popupObjectProperties: getAllPopupObjectProperties(state),
+  openElementInInspector: actions.openElementInInspectorCommand
 });
 
 const {

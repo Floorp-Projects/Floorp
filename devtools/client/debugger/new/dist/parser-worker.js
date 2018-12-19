@@ -1341,12 +1341,17 @@ function getFunctionParameterNames(path) {
 /* eslint-disable complexity */
 function extractSymbol(path, symbols) {
   if ((0, _helpers.isFunction)(path)) {
+    const name = (0, _getFunctionName2.default)(path.node, path.parent);
     symbols.functions.push({
-      name: (0, _getFunctionName2.default)(path.node, path.parent),
+      name,
       klass: (0, _inferClassName.inferClassName)(path),
       location: path.node.loc,
       parameterNames: getFunctionParameterNames(path),
-      identifier: path.node.id
+      identifier: path.node.id,
+      // indicates the occurence of the function in a file
+      // e.g { name: foo, ... index: 4 } is the 4th foo function
+      // in the file
+      index: symbols.functions.filter(f => f.name === name).length
     });
   }
 

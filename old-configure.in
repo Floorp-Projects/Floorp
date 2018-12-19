@@ -828,6 +828,9 @@ case "$target" in
         if test -z "$MOZ_ASAN"; then
             CFLAGS="$CFLAGS -Gw"
             CXXFLAGS="$CXXFLAGS -Gw"
+        else
+            # String tail merging doesn't play nice with ASan's ODR checker.
+            LDFLAGS="$LDFLAGS -opt:nolldtailmerge"
         fi
         # khuey says we can safely ignore MSVC warning C4251
         # MSVC warning C4244 (implicit type conversion may lose data) warns

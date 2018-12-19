@@ -133,7 +133,11 @@ export function createBreakpoint(
     originalText
   } = overrides;
 
-  const defaultASTLocation = { name: undefined, offset: location };
+  const defaultASTLocation = {
+    name: undefined,
+    offset: location,
+    index: 0
+  };
   const properties = {
     id,
     condition: condition || null,
@@ -186,10 +190,20 @@ export function createPendingBreakpoint(bp: Breakpoint) {
   };
 }
 
-export function sortBreakpoints(breakpoints: FormattedBreakpoint[]) {
+export function sortFormattedBreakpoints(breakpoints: FormattedBreakpoint[]) {
+  return _sortBreakpoints(breakpoints, "selectedLocation");
+}
+
+export function sortBreakpoints(breakpoints: Breakpoint[]) {
+  return _sortBreakpoints(breakpoints, "location");
+}
+
+function _sortBreakpoints(breakpoints: Array<Object>, property: string) {
   return sortBy(breakpoints, [
-    "selectedLocation.line",
-    ({ selectedLocation }) =>
-      selectedLocation.column === undefined || selectedLocation.column
+    // Priority: line number, undefined column, column number
+    `${property}.line`,
+    bp => {
+      return bp[property].column === undefined || bp[property].column;
+    }
   ]);
 }

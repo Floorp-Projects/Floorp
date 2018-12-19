@@ -27,11 +27,12 @@ function getSelectedFrameId(state, frames) {
     return selectedFrame && selectedFrame.id;
   }
 
-  const selectedFrame =  frames.find(frame =>
-    !getSource(state, frame.location.sourceId).isBlackBoxed
-  )
+  const selectedFrame = frames.find(frame => {
+    const source = getSource(state, frame.location.sourceId);
+    return source && !source.isBlackBoxed;
+  });
 
-  return selectedFrame && selectedFrame.id
+  return selectedFrame && selectedFrame.id;
 }
 
 export function updateFrameLocation(frame: Frame, sourceMaps: any) {
@@ -169,7 +170,7 @@ export function mapFrames() {
     mappedFrames = await expandFrames(mappedFrames, sourceMaps, getState);
     mappedFrames = mapDisplayNames(mappedFrames, getState);
 
-    const selectedFrameId = getSelectedFrameId(getState(), mappedFrames)
+    const selectedFrameId = getSelectedFrameId(getState(), mappedFrames);
     dispatch({
       type: "MAP_FRAMES",
       frames: mappedFrames,

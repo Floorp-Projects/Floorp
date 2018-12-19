@@ -14,7 +14,7 @@ import { resume, rewind } from "./commands";
 
 import type { ThunkArgs } from "../types";
 
-export function continueToHere(line: number) {
+export function continueToHere(line: number, column?: number) {
   return async function({ dispatch, getState }: ThunkArgs) {
     const selectedSource = getSelectedSource(getState());
     const selectedFrame = getSelectedFrame(getState());
@@ -34,7 +34,7 @@ export function continueToHere(line: number) {
     await dispatch(
       addHiddenBreakpoint({
         line,
-        column: undefined,
+        column: column,
         sourceId: selectedSource.id
       })
     );
