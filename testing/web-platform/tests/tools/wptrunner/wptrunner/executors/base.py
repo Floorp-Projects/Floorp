@@ -522,7 +522,7 @@ class CallbackHandler(object):
         return callback(url, payload)
 
     def process_complete(self, url, payload):
-        rv = [strip_server(url)] + payload
+        rv = [url] + payload
         return True, rv
 
     def process_action(self, url, payload):

@@ -14,9 +14,7 @@ __wptrunner__ = {"product": "edge",
                  "browser_kwargs": "browser_kwargs",
                  "executor_kwargs": "executor_kwargs",
                  "env_extras": "env_extras",
-                 "env_options": "env_options",
-                 "timeout_multiplier": "get_timeout_multiplier"}
-
+                 "env_options": "env_options"}
 
 def get_timeout_multiplier(test_type, run_info_data, **kwargs):
     if kwargs["timeout_multiplier"] is not None:
@@ -25,10 +23,8 @@ def get_timeout_multiplier(test_type, run_info_data, **kwargs):
         return 10
     return 1
 
-
 def check_args(**kwargs):
     require_arg(kwargs, "webdriver_binary")
-
 
 def browser_kwargs(test_type, run_info_data, config, **kwargs):
     return {"webdriver_binary": kwargs["webdriver_binary"],
@@ -36,7 +32,6 @@ def browser_kwargs(test_type, run_info_data, config, **kwargs):
             "timeout_multiplier": get_timeout_multiplier(test_type,
                                                          run_info_data,
                                                          **kwargs)}
-
 
 def executor_kwargs(test_type, server_config, cache_manager, run_info_data,
                     **kwargs):
@@ -47,18 +42,13 @@ def executor_kwargs(test_type, server_config, cache_manager, run_info_data,
                                                                    run_info_data,
                                                                    **kwargs)
     executor_kwargs["capabilities"] = {}
-    if test_type == "testharness":
-        executor_kwargs["capabilities"]["pageLoadStrategy"] = "eager"
     return executor_kwargs
-
 
 def env_extras(**kwargs):
     return []
 
-
 def env_options():
     return {"supports_debugger": False}
-
 
 class EdgeBrowser(Browser):
     used_ports = set()
