@@ -21,8 +21,9 @@ use gpu_types::{BorderInstance, ImageSource, UvRectKind};
 use internal_types::{CacheTextureId, FastHashMap, LayerIndex, SavedTargetIndex};
 #[cfg(feature = "pathfinder")]
 use pathfinder_partitioner::mesh::Mesh;
-use prim_store::{PictureIndex, LineDecorationCacheKey};
+use prim_store::PictureIndex;
 use prim_store::image::ImageCacheKey;
+use prim_store::line_dec::LineDecorationCacheKey;
 #[cfg(feature = "debugger")]
 use print_tree::{PrintTreePrinter};
 use render_backend::FrameId;
