@@ -241,8 +241,7 @@ void ConvolverNodeEngine::ProcessBlock(AudioNodeStream* aStream,
         aStream->ScheduleCheckForInactive();
         RefPtr<PlayingRefChanged> refchanged =
             new PlayingRefChanged(aStream, PlayingRefChanged::RELEASE);
-        aStream->Graph()->DispatchToMainThreadAfterStreamStateUpdate(
-            refchanged.forget());
+        aStream->Graph()->DispatchToMainThreadStableState(refchanged.forget());
       }
       aOutput->SetNull(WEBAUDIO_BLOCK_SIZE);
       return;
@@ -251,8 +250,7 @@ void ConvolverNodeEngine::ProcessBlock(AudioNodeStream* aStream,
     if (mRemainingLeftOutput <= 0) {
       RefPtr<PlayingRefChanged> refchanged =
           new PlayingRefChanged(aStream, PlayingRefChanged::ADDREF);
-      aStream->Graph()->DispatchToMainThreadAfterStreamStateUpdate(
-          refchanged.forget());
+      aStream->Graph()->DispatchToMainThreadStableState(refchanged.forget());
     }
 
     // Use mVolume as a flag to detect whether AllocateReverbInput() gets
