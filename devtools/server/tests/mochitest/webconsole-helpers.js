@@ -37,12 +37,9 @@ if (!DebuggerServer.initialized) {
 async function attachURL(url) {
   const tab = await addTab(url);
   const target = await TargetFactory.forTab(tab);
-  const { client } = target;
-  const { consoleActor } = target.form;
-  const [, consoleClient] = await client.attachConsole(consoleActor, []);
-
+  await target.attach();
   return {
-    consoleClient,
+    consoleClient: target.activeConsole,
   };
 }
 

@@ -29,3 +29,4 @@ platform(linux,mac) == perspective-clip-1.yaml perspective-clip-1.png
 platform(linux,mac) fuzzy(1,2) == perspective-shadow.yaml perspective-shadow.png
 == complex-preserve-3d.yaml blank.yaml
 platform(linux,mac) fuzzy(9,348) == perspective-border-radius.yaml perspective-border-radius.png
+== snapped-preserve-3d.yaml snapped-preserve-3d-ref.yaml

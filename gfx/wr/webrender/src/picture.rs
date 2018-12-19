@@ -31,7 +31,7 @@ use scene::{FilterOpHelpers, SceneProperties};
 use scene_builder::DocumentResources;
 use smallvec::SmallVec;
 use surface::{SurfaceDescriptor, TransformKey};
-use std::{mem, ops};
+use std::{mem, u16};
 use texture_cache::{Eviction, TextureCacheHandle};
 use tiling::RenderTargetKind;
 use util::{TransformedRectKind, MatrixHelpers, MaxRect, RectHelpers};
@@ -449,7 +449,14 @@ impl TileCache {
             .unmap(&world_tile_rect)
             .expect("bug: unable to get local tile size");
         self.local_tile_size = local_tile_rect.size;
-        self.local_origin = pic_rect.origin;
+
+        // Round the local reference point down to a whole number. This ensures
+        // that the bounding rect of the tile corresponds to a pixel boundary, and
+        // the content is offset by a fractional amount inside the surface itself.
+        // This means that when drawing the tile it's fine to use a simple 0-1
+        // UV mapping, instead of trying to determine a fractional UV rect that
+        // is slightly inside the allocated tile surface.
+        self.local_origin = pic_rect.origin.floor();
 
         // Walk the transforms and see if we need to rebuild the primitive
         // dependencies for each tile.
@@ -703,25 +710,7 @@ impl TileCache {
         // been marked invisible, we exclude it here. Otherwise, we may end up
         // with a primitive that is outside the bounding rect of the calculated
         // picture rect (which takes the cluster visibility into account).
-        // TODO(gw): It turns out that we have ended up having only a single
-        //           cluster per primitive rather than a range. In future,
-        //           we should tidy this up to take advantage of this!
-        let mut in_visible_cluster = false;
-        for ci in prim_instance.cluster_range.start .. prim_instance.cluster_range.end {
-            // Map from the cluster range index to a cluster index
-            let cluster_index = prim_list.prim_cluster_map[ci as usize];
-
-            // Get the cluster and see if is visible
-            let cluster = &prim_list.clusters[cluster_index.0 as usize];
-            in_visible_cluster |= cluster.is_visible;
-
-            // As soon as a primitive is in a visible cluster, it's considered
-            // visible and we don't need to consult other clusters.
-            if cluster.is_visible {
-                break;
-            }
-        }
-        if !in_visible_cluster {
+        if !prim_list.clusters[prim_instance.cluster_index.0 as usize].is_visible {
             return;
         }
 
@@ -894,10 +883,23 @@ impl TileCache {
                     }
                 }
 
+                // For the primitive origin, store the local origin relative to
+                // the local origin of the containing picture. This ensures that
+                // a tile with primitives in the same coordinate system as the
+                // container picture itself, but different offsets relative to
+                // the containing picture are correctly invalidated. It does this
+                // while still maintaining the property of keeping the same hash
+                // for different display lists where the local origin is different
+                // but the primitives themselves are at the same relative position.
+                let origin = PointKey {
+                    x: prim_rect.origin.x - self.local_origin.x,
+                    y: prim_rect.origin.y - self.local_origin.y,
+                };
+
                 // Update the tile descriptor, used for tile comparison during scene swaps.
                 tile.descriptor.prims.push(PrimitiveDescriptor {
                     prim_uid: prim_instance.uid(),
-                    origin: prim_instance.prim_origin.into(),
+                    origin,
                     first_clip: tile.descriptor.clip_uids.len() as u16,
                     clip_count: clip_chain_uids.len() as u16,
                 });
@@ -1324,7 +1326,12 @@ impl PrimitiveCluster {
 #[derive(Debug, Copy, Clone)]
 pub struct PrimitiveClusterIndex(pub u32);
 
-pub type ClusterRange = ops::Range<u32>;
+#[derive(Debug, Copy, Clone)]
+pub struct ClusterIndex(pub u16);
+
+impl ClusterIndex {
+    pub const INVALID: ClusterIndex = ClusterIndex(u16::MAX);
+}
 
 /// A list of pictures, stored by the PrimitiveList to enable a
 /// fast traversal of just the pictures.
@@ -1342,10 +1349,6 @@ pub struct PrimitiveList {
     pub pictures: PictureList,
     /// List of primitives grouped into clusters.
     pub clusters: SmallVec<[PrimitiveCluster; 4]>,
-    /// This maps from the cluster_range in a primitive
-    /// instance to a set of cluster(s) that the
-    /// primitive instance belongs to.
-    pub prim_cluster_map: Vec<PrimitiveClusterIndex>,
 }
 
 impl PrimitiveList {
@@ -1358,7 +1361,6 @@ impl PrimitiveList {
             prim_instances: Vec::new(),
             pictures: SmallVec::new(),
             clusters: SmallVec::new(),
-            prim_cluster_map: Vec::new(),
         }
     }
 
@@ -1373,7 +1375,6 @@ impl PrimitiveList {
         let mut pictures = SmallVec::new();
         let mut clusters_map = FastHashMap::default();
         let mut clusters: SmallVec<[PrimitiveCluster; 4]> = SmallVec::new();
-        let mut prim_cluster_map = Vec::new();
 
         // Walk the list of primitive instances and extract any that
         // are pictures.
@@ -1459,27 +1460,13 @@ impl PrimitiveList {
                 cluster.bounding_rect = cluster.bounding_rect.union(&culling_rect);
             }
 
-            // Define a range of clusters that this primitive belongs to. For now, this
-            // seems like overkill, since a primitive only ever belongs to one cluster.
-            // However, in the future the clusters will include spatial information. It
-            // will often be the case that a primitive may overlap more than one cluster,
-            // and belong to several.
-            let start = prim_cluster_map.len() as u32;
-            let cluster_range = ClusterRange {
-                start,
-                end: start + 1,
-            };
-
-            // Store the cluster index in the map, and the range in the instance.
-            prim_cluster_map.push(PrimitiveClusterIndex(cluster_index as u32));
-            prim_instance.cluster_range = cluster_range;
+            prim_instance.cluster_index = ClusterIndex(cluster_index as u16);
         }
 
         PrimitiveList {
             prim_instances,
             pictures,
             clusters,
-            prim_cluster_map,
         }
     }
 }
@@ -2454,6 +2441,7 @@ impl PicturePrimitive {
                         &transform,
                         &device_rect,
                         frame_context.device_pixel_scale,
+                        true,
                     );
 
                     let picture_task = RenderTask::new_picture(
@@ -2493,6 +2481,7 @@ impl PicturePrimitive {
                         &transform,
                         &device_rect,
                         frame_context.device_pixel_scale,
+                        true,
                     );
 
                     // TODO(gw): Probably worth changing the render task caching API
@@ -2568,6 +2557,7 @@ impl PicturePrimitive {
                     &transform,
                     &device_rect,
                     frame_context.device_pixel_scale,
+                    true,
                 );
 
                 let mut picture_task = RenderTask::new_picture(
@@ -2634,6 +2624,7 @@ impl PicturePrimitive {
                     &transform,
                     &clipped,
                     frame_context.device_pixel_scale,
+                    true,
                 );
 
                 let picture_task = RenderTask::new_picture(
@@ -2673,6 +2664,7 @@ impl PicturePrimitive {
                     &transform,
                     &clipped,
                     frame_context.device_pixel_scale,
+                    true,
                 );
 
                 let picture_task = RenderTask::new_picture(
@@ -2692,11 +2684,19 @@ impl PicturePrimitive {
                 PictureSurface::RenderTask(render_task_id)
             }
             PictureCompositeMode::Blit => {
+                // The SplitComposite shader used for 3d contexts doesn't snap
+                // to pixels, so we shouldn't snap our uv coordinates either.
+                let supports_snapping = match self.context_3d {
+                    Picture3DContext::In{ .. } => false,
+                    _ => true,
+                };
+
                 let uv_rect_kind = calculate_uv_rect_kind(
                     &pic_rect,
                     &transform,
                     &clipped,
                     frame_context.device_pixel_scale,
+                    supports_snapping,
                 );
 
                 let picture_task = RenderTask::new_picture(
@@ -2729,6 +2729,7 @@ fn calculate_screen_uv(
     transform: &PictureToRasterTransform,
     rendered_rect: &DeviceRect,
     device_pixel_scale: DevicePixelScale,
+    supports_snapping: bool,
 ) -> DevicePoint {
     let raster_pos = match transform.transform_point2d(local_pos) {
         Some(pos) => pos,
@@ -2746,7 +2747,7 @@ fn calculate_screen_uv(
     let mut device_pos = raster_pos * raster_to_device_space;
 
     // Apply snapping for axis-aligned scroll nodes, as per prim_shared.glsl.
-    if transform.transform_kind() == TransformedRectKind::AxisAligned {
+    if transform.transform_kind() == TransformedRectKind::AxisAligned && supports_snapping {
         device_pos.x = (device_pos.x + 0.5).floor();
         device_pos.y = (device_pos.y + 0.5).floor();
     }
@@ -2764,6 +2765,7 @@ fn calculate_uv_rect_kind(
     transform: &PictureToRasterTransform,
     rendered_rect: &DeviceIntRect,
     device_pixel_scale: DevicePixelScale,
+    supports_snapping: bool,
 ) -> UvRectKind {
     let rendered_rect = rendered_rect.to_f32();
 
@@ -2772,6 +2774,7 @@ fn calculate_uv_rect_kind(
         transform,
         &rendered_rect,
         device_pixel_scale,
+        supports_snapping,
     );
 
     let top_right = calculate_screen_uv(
@@ -2779,6 +2782,7 @@ fn calculate_uv_rect_kind(
         transform,
         &rendered_rect,
         device_pixel_scale,
+        supports_snapping,
     );
 
     let bottom_left = calculate_screen_uv(
@@ -2786,6 +2790,7 @@ fn calculate_uv_rect_kind(
         transform,
         &rendered_rect,
         device_pixel_scale,
+        supports_snapping,
     );
 
     let bottom_right = calculate_screen_uv(
@@ -2793,6 +2798,7 @@ fn calculate_uv_rect_kind(
         transform,
         &rendered_rect,
         device_pixel_scale,
+        supports_snapping,
     );
 
     UvRectKind::Quad {

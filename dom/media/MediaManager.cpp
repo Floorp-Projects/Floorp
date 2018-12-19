@@ -1149,10 +1149,10 @@ class GetUserMediaStreamRunnable : public Runnable {
             LOG("Returning success for getUserMedia()");
             mHolder.Resolve(RefPtr<DOMMediaStream>(mStream), __func__);
           });
-      // DispatchToMainThreadAfterStreamStateUpdate will make the runnable run
+      // DispatchToMainThreadStableState will make the runnable run
       // in stable state. But since the runnable runs JS we need to make a
       // double dispatch.
-      mGraph->DispatchToMainThreadAfterStreamStateUpdate(NS_NewRunnableFunction(
+      mGraph->DispatchToMainThreadStableState(NS_NewRunnableFunction(
           "TracksCreatedListener::NotifyOutput Stable State Notifier",
           [graph = mGraph, r = std::move(r)]() mutable {
             graph->Dispatch(r.forget());

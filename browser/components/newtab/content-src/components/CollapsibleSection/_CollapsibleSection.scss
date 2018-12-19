@@ -17,6 +17,20 @@
     }
 
     .click-target-container {
+      // Center "How it works" for "mobile" viewport
+      @media (max-width: $break-point-medium - 1) {
+        display: block;
+
+        .learn-more-link-wrapper {
+          display: block;
+          text-align: center;
+
+          .learn-more-link {
+            margin-inline-start: 0;
+          }
+        }
+      }
+
       vertical-align: top;
 
       .click-target {
@@ -128,4 +142,12 @@
       overflow: hidden;
     }
   }
+
+  // Hide first story card for the medium breakpoint to prevent orphaned third story
+  &[data-section-id='topstories'] .card-outer:first-child {
+    @media (min-width: $break-point-medium) and (max-width: $break-point-large - 1) {
+      display: none;
+    }
+  }
 }
+
