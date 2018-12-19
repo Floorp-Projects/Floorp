@@ -107,7 +107,7 @@ class nsDocShellLoadState final {
 
   void SetSendReferrer(bool aSendReferrer);
 
-  uint32_t ReferrerPolicy() const;
+  mozilla::net::ReferrerPolicy ReferrerPolicy() const;
 
   void SetReferrerPolicy(mozilla::net::ReferrerPolicy aReferrerPolicy);
 
@@ -138,6 +138,12 @@ class nsDocShellLoadState final {
 
   void SetLoadFlags(uint32_t aFlags);
 
+  void SetLoadFlag(uint32_t aFlag);
+
+  void UnsetLoadFlag(uint32_t aFlag);
+
+  bool HasLoadFlags(uint32_t aFlag);
+
   bool FirstParty() const;
 
   void SetFirstParty(bool aFirstParty);
@@ -149,10 +155,6 @@ class nsDocShellLoadState final {
   const nsString& FileName() const;
 
   void SetFileName(const nsAString& aFileName);
-
-  uint32_t DocShellInternalLoadFlags() const;
-
-  void SetDocShellInternalLoadFlags(uint32_t aFlags);
 
   // Give the type of DocShell we're loading into (chrome/content/etc) and
   // origin attributes for the URI we're loading, figure out if we should
@@ -178,7 +180,7 @@ class nsDocShellLoadState final {
   // flags needs to be set based on other values in nsDocShellLoadState. This
   // function calculates those flags, before the LoadState is passed to
   // nsDocShell::InternalLoad.
-  void CalculateDocShellInternalLoadFlags();
+  void CalculateLoadURIFlags();
 
  protected:
   // Destructor can't be defaulted or inlined, as header doesn't have all type
@@ -192,25 +194,37 @@ class nsDocShellLoadState final {
   // The URI we are navigating to. Will not be null once set.
   nsCOMPtr<nsIURI> mURI;
 
-  // The originalURI to be passed to nsIDocShell.internalLoad. May be null.
+  // The URI to set as the originalURI on the channel that does the load. If
+  // null, aURI will be set as the originalURI.
   nsCOMPtr<nsIURI> mOriginalURI;
 
-  // Result principal URL from nsILoadInfo, may be null. Valid only if
-  // mResultPrincipalURIIsSome is true (has the same meaning as isSome() on
-  // mozilla::Maybe.)
+  // The URI to be set to loadInfo.resultPrincipalURI
+  // - When Nothing, there will be no change
+  // - When Some, the principal URI will overwrite even
+  //   with a null value.
+  //
+  // Valid only if mResultPrincipalURIIsSome is true (has the same meaning as
+  // isSome() on mozilla::Maybe.)
   nsCOMPtr<nsIURI> mResultPrincipalURI;
   bool mResultPrincipalURIIsSome;
 
   // The principal of the load, that is, the entity responsible for causing the
   // load to occur. In most cases the referrer and the triggeringPrincipal's URI
   // will be identical.
+  //
+  // Please note that this is the principal that is used for security checks. If
+  // the argument aURI is provided by the web, then please do not pass a
+  // SystemPrincipal as the triggeringPrincipal.
   nsCOMPtr<nsIPrincipal> mTriggeringPrincipal;
 
-  // if http-equiv="refresh" cause reload we do not want to replace
-  // ResultPrinicpalURI if it was already set.
+  // If a refresh is caused by http-equiv="refresh" we want to set
+  // aResultPrincipalURI, but we do not want to overwrite the channel's
+  // ResultPrincipalURI, if it has already been set on the channel by a protocol
+  // handler.
   bool mKeepResultPrincipalURIIfSet;
 
-  // loadReplace flag to be passed to nsIDocShell.internalLoad.
+  // If set LOAD_REPLACE flag will be set on the channel. If aOriginalURI is
+  // null, this argument is ignored.
   bool mLoadReplace;
 
   // If this attribute is true and no triggeringPrincipal is specified,
@@ -226,8 +240,13 @@ class nsDocShellLoadState final {
 
   // Principal we're inheriting. If null, this means the principal should be
   // inherited from the current document. If set to NullPrincipal, the channel
-  // will fill in principal information later in the load. See internal function
-  // comments for more info.
+  // will fill in principal information later in the load. See internal comments
+  // of SetupInheritingPrincipal for more info.
+  //
+  // When passed to InternalLoad, If this argument is null then
+  // principalToInherit is computed differently. See nsDocShell::InternalLoad
+  // for more comments.
+
   nsCOMPtr<nsIPrincipal> mPrincipalToInherit;
 
   // If this attribute is true, then a top-level navigation
@@ -250,21 +269,17 @@ class nsDocShellLoadState final {
   // constants
   uint32_t mLoadType;
 
-  // SHEntry for this page
+  // Active Session History entry (if loading from SH)
   nsCOMPtr<nsISHEntry> mSHEntry;
 
   // Target for load, like _content, _blank etc.
   nsString mTarget;
 
-  // Post data
+  // Post data stream (if POSTing)
   nsCOMPtr<nsIInputStream> mPostDataStream;
 
   // Additional Headers
   nsCOMPtr<nsIInputStream> mHeadersStream;
-
-  // True if the docshell has been created to load an iframe where the srcdoc
-  // attribute has been set. Set when srcdocData is specified.
-  bool mIsSrcdocLoad;
 
   // When set, the load will be interpreted as a srcdoc load, where contents of
   // this string will be loaded instead of the URI. Setting srcdocData sets
@@ -278,7 +293,7 @@ class nsDocShellLoadState final {
   // as this information isn't embedded in the load's URI.
   nsCOMPtr<nsIURI> mBaseURI;
 
-  // Set of Load Flags, taken from nsDocShellLoadTypes.h
+  // Set of Load Flags, taken from nsDocShellLoadTypes.h and nsIWebNavigation
   uint32_t mLoadFlags;
 
   // Is this a First Party Load?
@@ -293,11 +308,6 @@ class nsDocShellLoadState final {
   // specified, but link should still trigger a download. If not a download,
   // mFileName.IsVoid() should return true.
   nsString mFileName;
-
-  // LoadFlags calculated in nsDocShell::LoadURI and passed to
-  // nsDocShell::InternalLoad, taken from the INTERNAL_LOAD consts in
-  // nsIDocShell.idl
-  uint32_t mDocShellInternalLoadFlags;
 
   // This will be true if this load is triggered by attribute changes.
   // See nsILoadInfo.isFromProcessingFrameAttributes
