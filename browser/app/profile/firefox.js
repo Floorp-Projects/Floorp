@@ -1512,10 +1512,7 @@ pref("network.cookie.cookieBehavior", 4 /* BEHAVIOR_REJECT_TRACKER */);
 
 pref("browser.contentblocking.allowlist.storage.enabled", true);
 
-#ifdef NIGHTLY_BUILD
-// Enable the Storage Access API in Nightly
 pref("dom.storage_access.enabled", true);
-#endif
 
 pref("dom.storage_access.auto_grants", true);
 pref("dom.storage_access.max_concurrent_auto_grants", 5);
