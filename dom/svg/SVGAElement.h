@@ -52,7 +52,7 @@ class SVGAElement final : public SVGAElementBase, public Link {
                               bool aNullParent = true) override;
   NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const override;
   virtual int32_t TabIndexDefault() override;
-  virtual bool IsSVGFocusable(bool* aIsFocusable, int32_t* aTabIndex) override;
+  bool IsFocusableInternal(int32_t* aTabIndex, bool aWithMouse) override;
   virtual bool IsLink(nsIURI** aURI) const override;
   virtual void GetLinkTarget(nsAString& aTarget) override;
   virtual already_AddRefed<nsIURI> GetHrefURI() const override;
