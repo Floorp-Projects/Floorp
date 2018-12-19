@@ -9,7 +9,6 @@ include protocol PInProcess;
 
 include DOMTypes;
 
-using refcounted class nsIURI from "mozilla/ipc/URIUtils.h";
 
 namespace mozilla {
 namespace dom {
