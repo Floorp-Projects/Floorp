@@ -12,6 +12,7 @@ transforms:
 
 kind-dependencies:
    - fetch
+   - toolchain
 
 jobs-from:
    - cram.yml
