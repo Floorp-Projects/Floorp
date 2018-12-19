@@ -16,7 +16,7 @@ function addUSBRuntimesObserver(listener) {
 exports.addUSBRuntimesObserver = addUSBRuntimesObserver;
 
 function getUSBRuntimes() {
-  return adb.getRuntimes().filter(r => !r.isUnknown());
+  return adb.getRuntimes();
 }
 exports.getUSBRuntimes = getUSBRuntimes;
 
