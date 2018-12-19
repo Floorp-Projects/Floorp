@@ -161,7 +161,7 @@ void DecodedStreamTrackListener::NotifyOutput(MediaStreamGraph* aGraph,
 }
 
 void DecodedStreamTrackListener::NotifyEnded() {
-  mStream->Graph()->DispatchToMainThreadAfterStreamStateUpdate(
+  mStream->Graph()->DispatchToMainThreadStableState(
       NewRunnableMethod<mozilla::TrackID>(
           "DecodedStreamGraphListener::DoNotifyTrackEnded", mGraphListener,
           &DecodedStreamGraphListener::DoNotifyTrackEnded, mTrackID));

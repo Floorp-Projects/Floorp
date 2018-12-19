@@ -189,11 +189,19 @@ html|button {
   margin-right: 4px;
 }
 
-*|button::-moz-focus-inner {
+html|button::-moz-focus-inner,
+html|select::-moz-focus-inner,
+html|input[type="color"]::-moz-focus-inner {
   border: none;
 }
 
-*|button:-moz-focusring {
+*|button:-moz-focusring,
+html|select:-moz-focusring,
+html|input[type="color"]:-moz-focusring,
+xul|menulist:-moz-focusring,
+html|input[type="number"]:-moz-focusring::-moz-number-spin-up,
+html|input[type="number"]:-moz-focusring::-moz-number-spin-down {
+  outline: none;
   box-shadow: 0 0 0 1px var(--in-content-border-active) inset,
     0 0 0 1px var(--in-content-border-active),
     0 0 0 4px var(--in-content-border-active-shadow);

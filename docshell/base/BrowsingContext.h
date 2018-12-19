@@ -8,7 +8,6 @@
 #define mozilla_dom_BrowsingContext_h
 
 #include "mozilla/LinkedList.h"
-#include "mozilla/Maybe.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/WeakPtr.h"
 #include "nsCOMPtr.h"
@@ -25,14 +24,23 @@ class LogModule;
 
 namespace dom {
 
+class BrowsingContext;
 class ContentParent;
+
+// List of top-level or auxiliary BrowsingContexts
+class BrowsingContextGroup : public nsTArray<WeakPtr<BrowsingContext>> {
+ public:
+  NS_INLINE_DECL_REFCOUNTING(BrowsingContextGroup)
+ private:
+  ~BrowsingContextGroup() {}
+};
 
 // BrowsingContext, in this context, is the cross process replicated
 // environment in which information about documents is stored. In
 // particular the tree structure of nested browsing contexts is
 // represented by the tree of BrowsingContexts.
 //
-// The tree of BrowsingContexts in created in step with its
+// The tree of BrowsingContexts is created in step with its
 // corresponding nsDocShell, and when nsDocShells are connected
 // through a parent/child relationship, so are BrowsingContexts. The
 // major difference is that BrowsingContexts are replicated (synced)
@@ -119,7 +127,7 @@ class BrowsingContext : public nsWrapperCache,
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(BrowsingContext)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(BrowsingContext)
 
-  using Children = AutoCleanLinkedList<RefPtr<BrowsingContext>>;
+  using Children = nsTArray<RefPtr<BrowsingContext>>;
 
  protected:
   virtual ~BrowsingContext();
@@ -134,7 +142,8 @@ class BrowsingContext : public nsWrapperCache,
   // Unique id identifying BrowsingContext
   const uint64_t mBrowsingContextId;
 
-  WeakPtr<BrowsingContext> mParent;
+  RefPtr<BrowsingContextGroup> mBrowsingContextGroup;
+  RefPtr<BrowsingContext> mParent;
   Children mChildren;
   WeakPtr<BrowsingContext> mOpener;
   nsCOMPtr<nsIDocShell> mDocShell;

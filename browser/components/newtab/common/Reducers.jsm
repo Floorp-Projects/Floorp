@@ -47,6 +47,7 @@ const INITIAL_STATE = {
     pocketCta: {},
     waitingForSpoc: true,
   },
+  Layout: [],
 };
 
 function App(prevState = INITIAL_STATE.App, action) {
@@ -429,10 +430,19 @@ function Pocket(prevState = INITIAL_STATE.Pocket, action) {
   }
 }
 
+function Layout(prevState = INITIAL_STATE.Layout, action) {
+  switch (action.type) {
+    case at.CONTENT_LAYOUT:
+      return action.data;
+    default:
+      return prevState;
+  }
+}
+
 this.INITIAL_STATE = INITIAL_STATE;
 this.TOP_SITES_DEFAULT_ROWS = TOP_SITES_DEFAULT_ROWS;
 this.TOP_SITES_MAX_SITES_PER_ROW = TOP_SITES_MAX_SITES_PER_ROW;
 
-this.reducers = {TopSites, App, ASRouter, Snippets, Prefs, Dialog, Sections, Pocket};
+this.reducers = {TopSites, App, ASRouter, Snippets, Prefs, Dialog, Sections, Pocket, Layout};
 
 const EXPORTED_SYMBOLS = ["reducers", "INITIAL_STATE", "insertPinned", "TOP_SITES_DEFAULT_ROWS", "TOP_SITES_MAX_SITES_PER_ROW"];

@@ -27,7 +27,7 @@ export class _StartupOverlay extends React.PureComponent {
       try {
         this.didFetch = true;
         const fxaParams = "entrypoint=activity-stream-firstrun&utm_source=activity-stream&utm_campaign=firstrun&form_type=email";
-        const response = await fetch(`${this.props.fxa_endpoint}/metrics-flow?${fxaParams}`);
+        const response = await fetch(`${this.props.fxa_endpoint}/metrics-flow?${fxaParams}`, {credentials: "omit"});
         if (response.status === 200) {
           const {flowId, flowBeginTime} = await response.json();
           this.setState({flowId, flowBeginTime});

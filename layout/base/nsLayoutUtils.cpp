@@ -522,11 +522,12 @@ void nsLayoutUtils::UnionChildOverflow(nsIFrame* aFrame,
                                        nsOverflowAreas& aOverflowAreas,
                                        FrameChildListIDs aSkipChildLists) {
   // Iterate over all children except pop-ups.
-  FrameChildListIDs skip =
-      aSkipChildLists | nsIFrame::kSelectPopupList | nsIFrame::kPopupList;
+  FrameChildListIDs skip(aSkipChildLists);
+  skip += {nsIFrame::kSelectPopupList, nsIFrame::kPopupList};
+
   for (nsIFrame::ChildListIterator childLists(aFrame); !childLists.IsDone();
        childLists.Next()) {
-    if (skip.Contains(childLists.CurrentID())) {
+    if (skip.contains(childLists.CurrentID())) {
       continue;
     }
 
@@ -6168,18 +6169,18 @@ static nscoord CalculateBlockContentBEnd(WritingMode aWM,
   // calculation is intended to affect layout.
   LogicalSize overflowSize(aWM, aFrame->GetScrollableOverflowRect().Size());
   if (overflowSize.BSize(aWM) > contentBEnd) {
-    nsIFrame::ChildListIDs skip(nsIFrame::kOverflowList |
-                                nsIFrame::kExcessOverflowContainersList |
-                                nsIFrame::kOverflowOutOfFlowList);
+    nsIFrame::ChildListIDs skip = {nsIFrame::kOverflowList,
+                                   nsIFrame::kExcessOverflowContainersList,
+                                   nsIFrame::kOverflowOutOfFlowList};
     nsBlockFrame* blockFrame = GetAsBlock(aFrame);
     if (blockFrame) {
       contentBEnd =
           std::max(contentBEnd, CalculateBlockContentBEnd(aWM, blockFrame));
-      skip |= nsIFrame::kPrincipalList;
+      skip += nsIFrame::kPrincipalList;
     }
     nsIFrame::ChildListIterator lists(aFrame);
     for (; !lists.IsDone(); lists.Next()) {
-      if (!skip.Contains(lists.CurrentID())) {
+      if (!skip.contains(lists.CurrentID())) {
         nsFrameList::Enumerator childFrames(lists.CurrentList());
         for (; !childFrames.AtEnd(); childFrames.Next()) {
           nsIFrame* child = childFrames.get();
