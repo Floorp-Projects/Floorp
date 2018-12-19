@@ -6043,7 +6043,7 @@ nsRect ScrollFrameHelper::GetUnsnappedScrolledRectInternal(
 }
 
 nsMargin ScrollFrameHelper::GetActualScrollbarSizes() const {
-  nsRect r = mOuter->GetPaddingRect() - mOuter->GetPosition();
+  nsRect r = mOuter->GetPaddingRectRelativeToSelf();
 
   return nsMargin(mScrollPort.y - r.y, r.XMost() - mScrollPort.XMost(),
                   r.YMost() - mScrollPort.YMost(), mScrollPort.x - r.x);
