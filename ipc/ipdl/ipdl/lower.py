@@ -1220,9 +1220,7 @@ class Protocol(ipdl.ast.Protocol):
             return ExprCall(ExprSelect(actorThis, '->', 'Id'))
         return ExprCall(ExprVar('Id'))
 
-    def stateVar(self, actorThis=None):
-        if actorThis is not None:
-            return ExprSelect(actorThis, '->', 'mLivenessState')
+    def stateVar(self):
         return ExprVar('mLivenessState')
 
     def fqStateType(self):
