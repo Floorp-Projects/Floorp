@@ -1803,7 +1803,6 @@ MOZ_ARG_HEADER(Application)
 ENABLE_SYSTEM_EXTENSION_DIRS=1
 MOZ_BRANDING_DIRECTORY=
 MOZ_OFFICIAL_BRANDING=
-MOZ_FEEDS=1
 MOZ_AUTH_EXTENSION=1
 if test "$MOZ_IOS"; then
    MOZ_AUTH_EXTENSION=
@@ -2974,21 +2973,6 @@ dnl ========================================================
 MOZ_ARG_HEADER(Individual module options)
 
 dnl ========================================================
-dnl = Disable feed handling components
-dnl ========================================================
-MOZ_ARG_DISABLE_BOOL(feeds,
-[  --disable-feeds         Disable feed handling and processing components],
-    MOZ_FEEDS=,
-    MOZ_FEEDS=1 )
-if test -n "$MOZ_FEEDS"; then
-    AC_DEFINE(MOZ_FEEDS)
-else
-    if test "$MOZ_BUILD_APP" = "browser"; then
-        AC_MSG_ERROR([Cannot build Firefox with --disable-feeds.])
-    fi
-fi
-
-dnl ========================================================
 dnl Check for sqlite
 dnl ========================================================
 
@@ -3783,7 +3767,6 @@ AC_SUBST(WARNINGS_AS_ERRORS)
 AC_SUBST_LIST(WARNINGS_CFLAGS)
 AC_SUBST_SET(MOZ_EXTENSIONS)
 AC_SUBST(MOZ_TOOLKIT_SEARCH)
-AC_SUBST(MOZ_FEEDS)
 
 AC_SUBST(MOZ_UNIVERSALCHARDET)
 AC_SUBST(MOZ_SPELLCHECK)
