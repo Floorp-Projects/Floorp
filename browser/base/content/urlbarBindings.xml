@@ -333,14 +333,12 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             }
           }
 
-          if (!this.popup.disableKeyNavigation) {
-            if (!aNoDefer && this._shouldDeferKeyEvent(aEvent)) {
-              this._deferKeyEvent(aEvent, "onKeyPress");
-              return false;
-            }
-            if (this.popup.popupOpen && this.popup.handleKeyPress(aEvent)) {
-              return true;
-            }
+          if (!aNoDefer && this._shouldDeferKeyEvent(aEvent)) {
+            this._deferKeyEvent(aEvent, "onKeyPress");
+            return false;
+          }
+          if (this.popup.popupOpen && this.popup.handleKeyPress(aEvent)) {
+            return true;
           }
           return this.handleKeyPress(aEvent);
         ]]></body>
