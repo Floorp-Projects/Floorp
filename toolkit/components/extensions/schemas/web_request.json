@@ -59,12 +59,14 @@
       {
         "id": "OnBeforeRequestOptions",
         "type": "string",
-        "enum": ["blocking", "requestBody"]
+        "enum": ["blocking", "requestBody"],
+        "postprocess": "webRequestBlockingPermissionRequired"
       },
       {
         "id": "OnBeforeSendHeadersOptions",
         "type": "string",
-        "enum": ["requestHeaders", "blocking"]
+        "enum": ["requestHeaders", "blocking"],
+        "postprocess": "webRequestBlockingPermissionRequired"
       },
       {
         "id": "OnSendHeadersOptions",
@@ -74,12 +76,14 @@
       {
         "id": "OnHeadersReceivedOptions",
         "type": "string",
-        "enum": ["blocking", "responseHeaders"]
+        "enum": ["blocking", "responseHeaders"],
+        "postprocess": "webRequestBlockingPermissionRequired"
       },
       {
         "id": "OnAuthRequiredOptions",
         "type": "string",
-        "enum": ["responseHeaders", "blocking", "asyncBlocking"]
+        "enum": ["responseHeaders", "blocking", "asyncBlocking"],
+        "postprocess": "webRequestBlockingPermissionRequired"
       },
       {
         "id": "OnResponseStartedOptions",
