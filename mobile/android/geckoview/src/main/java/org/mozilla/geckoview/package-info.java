@@ -43,5 +43,6 @@
  *     <li>{@link android.Manifest.permission#RECORD_AUDIO}</li>
  * </ul>
  *
+ * For a detailed change log of the API see: <a href="./doc-files/CHANGELOG">CHANGELOG</a>.
  */
 package org.mozilla.geckoview;
