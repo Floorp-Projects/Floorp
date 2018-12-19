@@ -203,7 +203,7 @@ typedef struct Dav1dSequenceHeader {
     int num_units_in_tick;
     int time_scale;
     int equal_picture_interval;
-    int num_ticks_per_picture;
+    unsigned num_ticks_per_picture;
     int decoder_model_info_present;
     int encoder_decoder_buffer_delay_length;
     int num_units_in_decoding_tick;

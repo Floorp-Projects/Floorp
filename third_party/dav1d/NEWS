@@ -1,4 +1,18 @@
-Changes for 0.0.1:
-------------------
+Changes for 0.1.1 'Gazelle':
+----------------------------
 
-Initial release
+ - Fix installation of includes
+ - Rewrite inverse transforms to avoid overflows
+ - More AVX-2 assembly
+
+
+Changes for 0.1.0 'Gazelle':
+----------------------------
+
+Initial release of dav1d, the fast and small AV1 decoder.
+ - Support for all features of the AV1 bitstream
+ - Support for all bitdepth, 8, 10 and 12bits
+ - Support for all chroma subsamplings 4:2:0, 4:2:2, 4:4:4 *and* grayscale
+ - Full acceleration for AVX-2 64bits processors, making it the fastest decoder
+ - Partial acceleration for SSSE3 processors
+ - Partial acceleration for NEON processors

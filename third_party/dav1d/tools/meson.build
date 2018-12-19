@@ -36,6 +36,7 @@ dav1d_sources = files(
     'dav1d.c',
     'dav1d_cli_parse.c',
     'input/input.c',
+    'input/annexb.c',
     'input/ivf.c',
     'output/md5.c',
     'output/null.c',

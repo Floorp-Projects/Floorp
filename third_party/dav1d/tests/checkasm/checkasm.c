@@ -44,6 +44,7 @@ static unsigned get_seed(void) {
 }
 #else
 #include <unistd.h>
+#include <signal.h>
 #include <sys/time.h>
 #define COLOR_RED    1
 #define COLOR_GREEN  2
@@ -69,13 +70,13 @@ static const struct {
     { "looprestoration_8bpc", checkasm_check_looprestoration_8bpc },
     { "mc_8bpc", checkasm_check_mc_8bpc },
 #endif
-#if CONFIG_10BPC
-    { "cdef_10bpc", checkasm_check_cdef_10bpc },
-    { "ipred_10bpc", checkasm_check_ipred_10bpc },
-    { "itx_10bpc", checkasm_check_itx_10bpc },
-    { "loopfilter_10bpc", checkasm_check_loopfilter_10bpc },
-    { "looprestoration_10bpc", checkasm_check_looprestoration_10bpc },
-    { "mc_10bpc", checkasm_check_mc_10bpc },
+#if CONFIG_16BPC
+    { "cdef_16bpc", checkasm_check_cdef_16bpc },
+    { "ipred_16bpc", checkasm_check_ipred_16bpc },
+    { "itx_16bpc", checkasm_check_itx_16bpc },
+    { "loopfilter_16bpc", checkasm_check_loopfilter_16bpc },
+    { "looprestoration_16bpc", checkasm_check_looprestoration_16bpc },
+    { "mc_16bpc", checkasm_check_mc_16bpc },
 #endif
     { 0 }
 };
@@ -141,6 +142,33 @@ typedef union {
     float f;
     uint32_t i;
 } intfloat;
+
+static uint32_t xs_state[4];
+
+static void xor128_srand(unsigned int seed) {
+    xs_state[0] = seed;
+    xs_state[1] = ( seed & 0xffff0000) | (~seed & 0x0000ffff);
+    xs_state[2] = (~seed & 0xffff0000) | ( seed & 0x0000ffff);
+    xs_state[3] = ~seed;
+}
+
+// xor128 from Marsaglia, George (July 2003). "Xorshift RNGs".
+//             Journal of Statistical Software. 8 (14).
+//             doi:10.18637/jss.v008.i14.
+int xor128_rand(void) {
+    const uint32_t x = xs_state[0];
+    const uint32_t t = x ^ (x << 11);
+
+    xs_state[0] = xs_state[1];
+    xs_state[1] = xs_state[2];
+    xs_state[2] = xs_state[3];
+    uint32_t w = xs_state[3];
+
+    w = (w ^ (w >> 19)) ^ (t ^ (t >> 8));
+    xs_state[3] = w;
+
+    return w >> 1;
+}
 
 static int is_negative(const intfloat u) {
     return u.i >> 31;
@@ -400,6 +428,44 @@ static CheckasmFunc *get_func(CheckasmFunc **root, const char *const name) {
     return f;
 }
 
+checkasm_context checkasm_context_buf;
+
+/* Crash handling: attempt to catch crashes and handle them
+ * gracefully instead of just aborting abruptly. */
+#ifdef _WIN32
+static LONG NTAPI signal_handler(EXCEPTION_POINTERS *const e) {
+    switch (e->ExceptionRecord->ExceptionCode) {
+    case EXCEPTION_FLT_DIVIDE_BY_ZERO:
+    case EXCEPTION_INT_DIVIDE_BY_ZERO:
+        checkasm_fail_func("fatal arithmetic error");
+        break;
+    case EXCEPTION_ILLEGAL_INSTRUCTION:
+    case EXCEPTION_PRIV_INSTRUCTION:
+        checkasm_fail_func("illegal instruction");
+        break;
+    case EXCEPTION_ACCESS_VIOLATION:
+    case EXCEPTION_ARRAY_BOUNDS_EXCEEDED:
+    case EXCEPTION_DATATYPE_MISALIGNMENT:
+    case EXCEPTION_IN_PAGE_ERROR:
+    case EXCEPTION_STACK_OVERFLOW:
+        checkasm_fail_func("segmentation fault");
+        break;
+    default:
+        return EXCEPTION_CONTINUE_SEARCH;
+    }
+    checkasm_load_context();
+    return EXCEPTION_CONTINUE_EXECUTION; /* never reached, but shuts up gcc */
+}
+#else
+static void signal_handler(const int s) {
+    checkasm_set_signal_handler_state(0);
+    checkasm_fail_func(s == SIGFPE ? "fatal arithmetic error" :
+                       s == SIGILL ? "illegal instruction" :
+                                     "segmentation fault");
+    checkasm_load_context();
+}
+#endif
+
 /* Perform tests and benchmarks for the specified
  * cpu flag if supported by the host */
 static void check_cpu_flag(const char *const name, unsigned flag) {
@@ -414,7 +480,7 @@ static void check_cpu_flag(const char *const name, unsigned flag) {
         for (int i = 0; tests[i].func; i++) {
             if (state.test_name && strcmp(tests[i].name, state.test_name))
                 continue;
-            srand(state.seed);
+            xor128_srand(state.seed);
             state.current_test_name = tests[i].name;
             tests[i].func();
         }
@@ -528,7 +594,7 @@ void *checkasm_check_func(void *const func, const char *const name, ...) {
     v->ok = 1;
     v->cpu = state.cpu_flag;
     state.current_func_ver = v;
-    srand(state.seed);
+    xor128_srand(state.seed);
 
     if (state.cpu_flag)
         state.num_checked++;
@@ -604,4 +670,18 @@ void checkasm_report(const char *const name, ...) {
         if (length > max_length)
             max_length = length;
     }
+}
+
+void checkasm_set_signal_handler_state(const int enabled) {
+#ifdef _WIN32
+    if (enabled)
+        AddVectoredExceptionHandler(0, signal_handler);
+    else
+        RemoveVectoredExceptionHandler(signal_handler);
+#else
+    void (*const handler)(int) = enabled ? signal_handler : SIG_DFL;
+    signal(SIGFPE,  handler);
+    signal(SIGILL,  handler);
+    signal(SIGSEGV, handler);
+#endif
 }

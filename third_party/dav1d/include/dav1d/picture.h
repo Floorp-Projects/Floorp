@@ -75,6 +75,9 @@ typedef struct Dav1dPicAllocator {
      * pixel width/height multiple of 128 pixels.
      * data[1] and data[2] must share the same stride[1].
      *
+     * This function will be called on the main thread (the thread which calls
+     * dav1d_get_picture()).
+     *
      * @param  pic The picture to allocate the buffer for. The callback needs to
      *             fill the picture data[0], data[1], data[2], stride[0] and
      *             stride[1].
@@ -88,6 +91,11 @@ typedef struct Dav1dPicAllocator {
     int (*alloc_picture_callback)(Dav1dPicture *pic, void *cookie);
     /**
      * Release the picture buffer.
+     *
+     * If frame threading is used, this function may be called by the main
+     * thread (the thread which calls dav1d_get_picture()) or any of the frame
+     * threads and thus must be thread-safe. If frame threading is not used,
+     * this function will only be called on the main thread.
      *
      * @param pic    The picture that was filled by alloc_picture_callback().
      * @param cookie Custom pointer passed to all calls.

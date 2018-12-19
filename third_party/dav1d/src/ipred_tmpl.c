@@ -39,10 +39,10 @@
 
 static NOINLINE void
 splat_dc(pixel *dst, const ptrdiff_t stride,
-         const int width, const int height, const unsigned dc)
+         const int width, const int height, const int dc HIGHBD_DECL_SUFFIX)
 {
-    assert(dc <= (1 << BITDEPTH) - 1);
 #if BITDEPTH == 8
+    assert(dc <= 0xff);
     if (width > 4) {
         const uint64_t dcN = dc * 0x0101010101010101ULL;
         for (int y = 0; y < height; y++) {
@@ -59,6 +59,7 @@ splat_dc(pixel *dst, const ptrdiff_t stride,
         }
     }
 #else
+    assert(dc <= bitdepth_max);
     const uint64_t dcN = dc * 0x0001000100010001ULL;
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x += sizeof(dcN) >> 1)
@@ -70,8 +71,8 @@ splat_dc(pixel *dst, const ptrdiff_t stride,
 
 static NOINLINE void
 cfl_pred(pixel *dst, const ptrdiff_t stride,
-         const int width, const int height, const unsigned dc,
-         const int16_t *ac, const int alpha)
+         const int width, const int height, const int dc,
+         const int16_t *ac, const int alpha HIGHBD_DECL_SUFFIX)
 {
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
@@ -93,17 +94,21 @@ static unsigned dc_gen_top(const pixel *const topleft, const int width) {
 static void ipred_dc_top_c(pixel *dst, const ptrdiff_t stride,
                            const pixel *const topleft,
                            const int width, const int height, const int a,
-                           const int max_width, const int max_height)
+                           const int max_width, const int max_height
+                           HIGHBD_DECL_SUFFIX)
 {
-    splat_dc(dst, stride, width, height, dc_gen_top(topleft, width));
+    splat_dc(dst, stride, width, height, dc_gen_top(topleft, width)
+             HIGHBD_TAIL_SUFFIX);
 }
 
 static void ipred_cfl_top_c(pixel *dst, const ptrdiff_t stride,
                             const pixel *const topleft,
                             const int width, const int height,
-                            const int16_t *ac, const int alpha)
+                            const int16_t *ac, const int alpha
+                            HIGHBD_DECL_SUFFIX)
 {
-    cfl_pred(dst, stride, width, height, dc_gen_top(topleft, width), ac, alpha);
+    cfl_pred(dst, stride, width, height, dc_gen_top(topleft, width), ac, alpha
+             HIGHBD_TAIL_SUFFIX);
 }
 
 static unsigned dc_gen_left(const pixel *const topleft, const int height) {
@@ -116,18 +121,21 @@ static unsigned dc_gen_left(const pixel *const topleft, const int height) {
 static void ipred_dc_left_c(pixel *dst, const ptrdiff_t stride,
                             const pixel *const topleft,
                             const int width, const int height, const int a,
-                            const int max_width, const int max_height)
+                            const int max_width, const int max_height
+                            HIGHBD_DECL_SUFFIX)
 {
-    splat_dc(dst, stride, width, height, dc_gen_left(topleft, height));
+    splat_dc(dst, stride, width, height, dc_gen_left(topleft, height)
+             HIGHBD_TAIL_SUFFIX);
 }
 
 static void ipred_cfl_left_c(pixel *dst, const ptrdiff_t stride,
                              const pixel *const topleft,
                              const int width, const int height,
-                             const int16_t *ac, const int alpha)
+                             const int16_t *ac, const int alpha
+                             HIGHBD_DECL_SUFFIX)
 {
     unsigned dc = dc_gen_left(topleft, height);
-    cfl_pred(dst, stride, width, height, dc, ac, alpha);
+    cfl_pred(dst, stride, width, height, dc, ac, alpha HIGHBD_TAIL_SUFFIX);
 }
 
 #if BITDEPTH == 8
@@ -161,18 +169,21 @@ static unsigned dc_gen(const pixel *const topleft,
 static void ipred_dc_c(pixel *dst, const ptrdiff_t stride,
                        const pixel *const topleft,
                        const int width, const int height, const int a,
-                       const int max_width, const int max_height)
+                       const int max_width, const int max_height
+                       HIGHBD_DECL_SUFFIX)
 {
-    splat_dc(dst, stride, width, height, dc_gen(topleft, width, height));
+    splat_dc(dst, stride, width, height, dc_gen(topleft, width, height)
+             HIGHBD_TAIL_SUFFIX);
 }
 
 static void ipred_cfl_c(pixel *dst, const ptrdiff_t stride,
                         const pixel *const topleft,
                         const int width, const int height,
-                        const int16_t *ac, const int alpha)
+                        const int16_t *ac, const int alpha
+                        HIGHBD_DECL_SUFFIX)
 {
     unsigned dc = dc_gen(topleft, width, height);
-    cfl_pred(dst, stride, width, height, dc, ac, alpha);
+    cfl_pred(dst, stride, width, height, dc, ac, alpha HIGHBD_TAIL_SUFFIX);
 }
 
 #undef MULTIPLIER_1x2
@@ -182,23 +193,36 @@ static void ipred_cfl_c(pixel *dst, const ptrdiff_t stride,
 static void ipred_dc_128_c(pixel *dst, const ptrdiff_t stride,
                            const pixel *const topleft,
                            const int width, const int height, const int a,
-                           const int max_width, const int max_height)
+                           const int max_width, const int max_height
+                           HIGHBD_DECL_SUFFIX)
 {
-    splat_dc(dst, stride, width, height, 1 << (BITDEPTH - 1));
+#if BITDEPTH == 16
+    const int dc = (bitdepth_max + 1) >> 1;
+#else
+    const int dc = 128;
+#endif
+    splat_dc(dst, stride, width, height, dc HIGHBD_TAIL_SUFFIX);
 }
 
 static void ipred_cfl_128_c(pixel *dst, const ptrdiff_t stride,
                             const pixel *const topleft,
                             const int width, const int height,
-                            const int16_t *ac, const int alpha)
+                            const int16_t *ac, const int alpha
+                            HIGHBD_DECL_SUFFIX)
 {
-    cfl_pred(dst, stride, width, height, 1 << (BITDEPTH - 1), ac, alpha);
+#if BITDEPTH == 16
+    const int dc = (bitdepth_max + 1) >> 1;
+#else
+    const int dc = 128;
+#endif
+    cfl_pred(dst, stride, width, height, dc, ac, alpha HIGHBD_TAIL_SUFFIX);
 }
 
 static void ipred_v_c(pixel *dst, const ptrdiff_t stride,
                       const pixel *const topleft,
                       const int width, const int height, const int a,
-                      const int max_width, const int max_height)
+                      const int max_width, const int max_height
+                      HIGHBD_DECL_SUFFIX)
 {
     for (int y = 0; y < height; y++) {
         pixel_copy(dst, topleft + 1, width);
@@ -209,7 +233,8 @@ static void ipred_v_c(pixel *dst, const ptrdiff_t stride,
 static void ipred_h_c(pixel *dst, const ptrdiff_t stride,
                       const pixel *const topleft,
                       const int width, const int height, const int a,
-                      const int max_width, const int max_height)
+                      const int max_width, const int max_height
+                      HIGHBD_DECL_SUFFIX)
 {
     for (int y = 0; y < height; y++) {
         pixel_set(dst, topleft[-(1 + y)], width);
@@ -220,7 +245,8 @@ static void ipred_h_c(pixel *dst, const ptrdiff_t stride,
 static void ipred_paeth_c(pixel *dst, const ptrdiff_t stride,
                           const pixel *const tl_ptr,
                           const int width, const int height, const int a,
-                          const int max_width, const int max_height)
+                          const int max_width, const int max_height
+                          HIGHBD_DECL_SUFFIX)
 {
     const int topleft = tl_ptr[0];
     for (int y = 0; y < height; y++) {
@@ -242,7 +268,8 @@ static void ipred_paeth_c(pixel *dst, const ptrdiff_t stride,
 static void ipred_smooth_c(pixel *dst, const ptrdiff_t stride,
                            const pixel *const topleft,
                            const int width, const int height, const int a,
-                           const int max_width, const int max_height)
+                           const int max_width, const int max_height
+                           HIGHBD_DECL_SUFFIX)
 {
     const uint8_t *const weights_hor = &dav1d_sm_weights[width];
     const uint8_t *const weights_ver = &dav1d_sm_weights[height];
@@ -263,7 +290,8 @@ static void ipred_smooth_c(pixel *dst, const ptrdiff_t stride,
 static void ipred_smooth_v_c(pixel *dst, const ptrdiff_t stride,
                              const pixel *const topleft,
                              const int width, const int height, const int a,
-                             const int max_width, const int max_height)
+                             const int max_width, const int max_height
+                             HIGHBD_DECL_SUFFIX)
 {
     const uint8_t *const weights_ver = &dav1d_sm_weights[height];
     const int bottom = topleft[-height];
@@ -281,7 +309,8 @@ static void ipred_smooth_v_c(pixel *dst, const ptrdiff_t stride,
 static void ipred_smooth_h_c(pixel *dst, const ptrdiff_t stride,
                              const pixel *const topleft,
                              const int width, const int height, const int a,
-                             const int max_width, const int max_height)
+                             const int max_width, const int max_height
+                             HIGHBD_DECL_SUFFIX)
 {
     const uint8_t *const weights_hor = &dav1d_sm_weights[width];
     const int right = topleft[width];
@@ -367,7 +396,8 @@ static int get_upsample(const int blk_wh, const unsigned d, const int type) {
 }
 
 static void upsample_edge(pixel *const out, const int hsz,
-                          const pixel *const in, const int from, const int to)
+                          const pixel *const in, const int from, const int to
+                          HIGHBD_DECL_SUFFIX)
 {
     static const int8_t kernel[4] = { -1, 9, 9, -1 };
     int i;
@@ -385,23 +415,25 @@ static void upsample_edge(pixel *const out, const int hsz,
 static void ipred_z1_c(pixel *dst, const ptrdiff_t stride,
                        const pixel *const topleft_in,
                        const int width, const int height, int angle,
-                       const int max_width, const int max_height)
+                       const int max_width, const int max_height
+                       HIGHBD_DECL_SUFFIX)
 {
     const int is_sm = (angle >> 9) & 0x1;
     const int enable_intra_edge_filter = angle >> 10;
     angle &= 511;
     assert(angle < 90);
-    const int dx = dav1d_dr_intra_derivative[angle];
+    int dx = dav1d_dr_intra_derivative[angle];
     pixel top_out[(64 + 64) * 2];
     const pixel *top;
     int max_base_x;
     const int upsample_above = enable_intra_edge_filter ?
         get_upsample(width + height, 90 - angle, is_sm) : 0;
     if (upsample_above) {
-        upsample_edge(top_out, width + height,
-                      &topleft_in[1], -1, width + imin(width, height));
+        upsample_edge(top_out, width + height, &topleft_in[1], -1,
+                      width + imin(width, height) HIGHBD_TAIL_SUFFIX);
         top = top_out;
         max_base_x = 2 * (width + height) - 2;
+        dx <<= 1;
     } else {
         const int filter_strength = enable_intra_edge_filter ?
             get_filter_strength(width + height, 90 - angle, is_sm) : 0;
@@ -416,15 +448,13 @@ static void ipred_z1_c(pixel *dst, const ptrdiff_t stride,
             max_base_x = width + imin(width, height) - 1;
         }
     }
-    const int frac_bits = 6 - upsample_above;
-    const int base_inc = 1 << upsample_above;
+    const int base_inc = 1 + upsample_above;
     for (int y = 0, xpos = dx; y < height;
          y++, dst += PXSTRIDE(stride), xpos += dx)
     {
-        int base = xpos >> frac_bits;
-        const int frac = ((xpos << upsample_above) & 0x3F) >> 1;
+        const int frac = (xpos >> 1) & 0x1F;
 
-        for (int x = 0; x < width; x++, base += base_inc) {
+        for (int x = 0, base = xpos >> 6; x < width; x++, base += base_inc) {
             if (base < max_base_x) {
                 const int v = top[base] * (32 - frac) + top[base + 1] * frac;
                 dst[x] = iclip_pixel((v + 16) >> 5);
@@ -439,14 +469,15 @@ static void ipred_z1_c(pixel *dst, const ptrdiff_t stride,
 static void ipred_z2_c(pixel *dst, const ptrdiff_t stride,
                        const pixel *const topleft_in,
                        const int width, const int height, int angle,
-                       const int max_width, const int max_height)
+                       const int max_width, const int max_height
+                       HIGHBD_DECL_SUFFIX)
 {
     const int is_sm = (angle >> 9) & 0x1;
     const int enable_intra_edge_filter = angle >> 10;
     angle &= 511;
     assert(angle > 90 && angle < 180);
-    const int dy = dav1d_dr_intra_derivative[angle - 90];
-    const int dx = dav1d_dr_intra_derivative[180 - angle];
+    int dy = dav1d_dr_intra_derivative[angle - 90];
+    int dx = dav1d_dr_intra_derivative[180 - angle];
     const int upsample_left = enable_intra_edge_filter ?
         get_upsample(width + height, 180 - angle, is_sm) : 0;
     const int upsample_above = enable_intra_edge_filter ?
@@ -455,7 +486,9 @@ static void ipred_z2_c(pixel *dst, const ptrdiff_t stride,
     pixel *const topleft = &edge[height * 2];
 
     if (upsample_above) {
-        upsample_edge(topleft, width + 1, topleft_in, 0, width + 1);
+        upsample_edge(topleft, width + 1, topleft_in, 0, width + 1
+                      HIGHBD_TAIL_SUFFIX);
+        dx <<= 1;
     } else {
         const int filter_strength = enable_intra_edge_filter ?
             get_filter_strength(width + height, angle - 90, is_sm) : 0;
@@ -469,7 +502,9 @@ static void ipred_z2_c(pixel *dst, const ptrdiff_t stride,
         }
     }
     if (upsample_left) {
-        upsample_edge(edge, height + 1, &topleft_in[-height], 0, height + 1);
+        upsample_edge(edge, height + 1, &topleft_in[-height], 0, height + 1
+                      HIGHBD_TAIL_SUFFIX);
+        dy <<= 1;
     } else {
         const int filter_strength = enable_intra_edge_filter ?
             get_filter_strength(width + height, 180 - angle, is_sm) : 0;
@@ -484,18 +519,17 @@ static void ipred_z2_c(pixel *dst, const ptrdiff_t stride,
     }
     *topleft = *topleft_in;
 
-    const int min_base_x = -(1 << upsample_above);
-    const int frac_bits_y = 6 - upsample_left, frac_bits_x = 6 - upsample_above;
-    const int base_inc_x = 1 << upsample_above;
-    const pixel *const left = &topleft[-(1 << upsample_left)];
-    const pixel *const top = &topleft[1 << upsample_above];
+    const int min_base_x = -(1 + upsample_above);
+    const int base_inc_x = 1 + upsample_above;
+    const pixel *const left = &topleft[-(1 + upsample_left)];
+    const pixel *const top = &topleft[1 + upsample_above];
     for (int y = 0, xpos = -dx; y < height;
          y++, xpos -= dx, dst += PXSTRIDE(stride))
     {
-        int base_x = xpos >> frac_bits_x;
-        const int frac_x = ((xpos * (1 << upsample_above)) & 0x3F) >> 1;
+        int base_x = xpos >> 6;
+        const int frac_x = (xpos >> 1) & 0x1F;
 
-        for (int x = 0, ypos = (y << 6) - dy; x < width;
+        for (int x = 0, ypos = (y << (6 + upsample_left)) - dy; x < width;
              x++, base_x += base_inc_x, ypos -= dy)
         {
             int v;
@@ -503,9 +537,9 @@ static void ipred_z2_c(pixel *dst, const ptrdiff_t stride,
             if (base_x >= min_base_x) {
                 v = top[base_x] * (32 - frac_x) + top[base_x + 1] * frac_x;
             } else {
-                const int base_y = ypos >> frac_bits_y;
-                assert(base_y >= -(1 << upsample_left));
-                const int frac_y = ((ypos * (1 << upsample_left)) & 0x3F) >> 1;
+                const int base_y = ypos >> 6;
+                assert(base_y >= -(1 + upsample_left));
+                const int frac_y = (ypos >> 1) & 0x1F;
                 v = left[-base_y] * (32 - frac_y) + left[-(base_y + 1)] * frac_y;
             }
             dst[x] = iclip_pixel((v + 16) >> 5);
@@ -516,13 +550,14 @@ static void ipred_z2_c(pixel *dst, const ptrdiff_t stride,
 static void ipred_z3_c(pixel *dst, const ptrdiff_t stride,
                        const pixel *const topleft_in,
                        const int width, const int height, int angle,
-                       const int max_width, const int max_height)
+                       const int max_width, const int max_height
+                       HIGHBD_DECL_SUFFIX)
 {
     const int is_sm = (angle >> 9) & 0x1;
     const int enable_intra_edge_filter = angle >> 10;
     angle &= 511;
     assert(angle > 180);
-    const int dy = dav1d_dr_intra_derivative[270 - angle];
+    int dy = dav1d_dr_intra_derivative[270 - angle];
     pixel left_out[(64 + 64) * 2];
     const pixel *left;
     int max_base_y;
@@ -531,9 +566,11 @@ static void ipred_z3_c(pixel *dst, const ptrdiff_t stride,
     if (upsample_left) {
         upsample_edge(left_out, width + height,
                       &topleft_in[-(width + height)],
-                      imax(width - height, 0), width + height + 1);
+                      imax(width - height, 0), width + height + 1
+                      HIGHBD_TAIL_SUFFIX);
         left = &left_out[2 * (width + height) - 2];
         max_base_y = 2 * (width + height) - 2;
+        dy <<= 1;
     } else {
         const int filter_strength = enable_intra_edge_filter ?
             get_filter_strength(width + height, angle - 180, is_sm) : 0;
@@ -550,13 +587,11 @@ static void ipred_z3_c(pixel *dst, const ptrdiff_t stride,
             max_base_y = height + imin(width, height) - 1;
         }
     }
-    const int frac_bits = 6 - upsample_left;
-    const int base_inc = 1 << upsample_left;
+    const int base_inc = 1 + upsample_left;
     for (int x = 0, ypos = dy; x < width; x++, ypos += dy) {
-        int base = ypos >> frac_bits;
-        const int frac = ((ypos << upsample_left) & 0x3F) >> 1;
+        const int frac = (ypos >> 1) & 0x1F;
 
-        for (int y = 0; y < height; y++, base += base_inc) {
+        for (int y = 0, base = ypos >> 6; y < height; y++, base += base_inc) {
             if (base < max_base_y) {
                 const int v = left[-base] * (32 - frac) +
                               left[-(base + 1)] * frac;
@@ -575,7 +610,8 @@ static void ipred_z3_c(pixel *dst, const ptrdiff_t stride,
 static void ipred_filter_c(pixel *dst, const ptrdiff_t stride,
                            const pixel *const topleft_in,
                            const int width, const int height, int filt_idx,
-                           const int max_width, const int max_height)
+                           const int max_width, const int max_height
+                           HIGHBD_DECL_SUFFIX)
 {
     filt_idx &= 511;
     assert(filt_idx < 5);
