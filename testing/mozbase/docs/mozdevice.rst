@@ -60,10 +60,12 @@ Informational methods
 .. automethod:: ADBDevice.get_logcat
 .. automethod:: ADBDevice.get_prop
 .. automethod:: ADBDevice.get_state
+.. automethod:: ADBDevice.get_top_activity
 
 System control methods
 ++++++++++++++++++++++
 .. automethod:: ADBDevice.is_device_ready
+.. automethod:: ADBDevice.power_on
 .. automethod:: ADBDevice.reboot
 
 File management methods
@@ -90,31 +92,16 @@ Process management methods
 .. automethod:: ADBDevice.pkill
 .. automethod:: ADBDevice.process_exist
 
-ADBAndroid
-``````````
-.. autoclass:: ADBAndroid
-
-Informational methods
-+++++++++++++++++++++
-.. automethod:: ADBAndroid.get_battery_percentage
-.. automethod:: ADBAndroid.get_top_activity
-
-System control methods
-++++++++++++++++++++++
-.. automethod:: ADBAndroid.is_device_ready
-.. automethod:: ADBAndroid.power_on
-.. automethod:: ADBAndroid.reboot
-
 Application management methods
 ++++++++++++++++++++++++++++++
-.. automethod:: ADBAndroid.install_app
-.. automethod:: ADBAndroid.is_app_installed
-.. automethod:: ADBAndroid.launch_application
-.. automethod:: ADBAndroid.launch_fennec
-.. automethod:: ADBAndroid.launch_geckoview_example
-.. automethod:: ADBAndroid.stop_application
-.. automethod:: ADBAndroid.uninstall_app
-.. automethod:: ADBAndroid.update_app
+.. automethod:: ADBDevice.install_app
+.. automethod:: ADBDevice.is_app_installed
+.. automethod:: ADBDevice.launch_application
+.. automethod:: ADBDevice.launch_fennec
+.. automethod:: ADBDevice.launch_geckoview_example
+.. automethod:: ADBDevice.stop_application
+.. automethod:: ADBDevice.uninstall_app
+.. automethod:: ADBDevice.update_app
 
 ADBProcess
 ``````````

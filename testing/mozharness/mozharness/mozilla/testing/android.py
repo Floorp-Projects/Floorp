@@ -59,9 +59,9 @@ class AndroidMixin(object):
         if not self._device and self.adb_path:
             try:
                 import mozdevice
-                self._device = mozdevice.ADBAndroid(adb=self.adb_path,
-                                                    device=self.device_serial,
-                                                    verbose=True)
+                self._device = mozdevice.ADBDevice(adb=self.adb_path,
+                                                   device=self.device_serial,
+                                                   verbose=True)
                 self.info("New mozdevice with adb=%s, device=%s" %
                           (self.adb_path, self.device_serial))
             except AttributeError:
