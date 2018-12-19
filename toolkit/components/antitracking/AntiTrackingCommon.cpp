@@ -19,7 +19,6 @@
 #include "nsCookiePermission.h"
 #include "nsICookieService.h"
 #include "nsIDocShell.h"
-#include "nsIEffectiveTLDService.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsIIOService.h"
 #include "nsIParentChannel.h"
@@ -369,32 +368,6 @@ already_AddRefed<nsPIDOMWindowOuter> GetTopWindow(nsPIDOMWindowInner* aWindow) {
   }
 
   return pwin.forget();
-}
-
-bool CompareBaseDomains(nsIURI* aTrackingURI, nsIURI* aParentPrincipalBaseURI) {
-  nsCOMPtr<nsIEffectiveTLDService> eTLDService =
-      services::GetEffectiveTLDService();
-  if (NS_WARN_IF(!eTLDService)) {
-    LOG(("Failed to get the TLD service"));
-    return false;
-  }
-
-  nsAutoCString trackingBaseDomain;
-  nsAutoCString parentPrincipalBaseDomain;
-  nsresult rv = eTLDService->GetBaseDomain(aTrackingURI, 0, trackingBaseDomain);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    LOG(("Can't get the base domain from tracking URI"));
-    return false;
-  }
-  rv = eTLDService->GetBaseDomain(aParentPrincipalBaseURI, 0,
-                                  parentPrincipalBaseDomain);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    LOG(("Can't get the base domain from parent principal"));
-    return false;
-  }
-
-  return trackingBaseDomain.Equals(parentPrincipalBaseDomain,
-                                   nsCaseInsensitiveCStringComparator());
 }
 
 class TemporaryAccessGrantObserver final : public nsIObserver {
@@ -945,14 +918,6 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
   }
   Unused << parentPrincipal->GetURI(getter_AddRefs(parentPrincipalURI));
 
-  if (CompareBaseDomains(trackingURI, parentPrincipalURI)) {
-    LOG(
-        ("Grant access across the same eTLD+1 because same domain trackers "
-         "are considered part of the same organization"));
-
-    return true;
-  }
-
   nsAutoString origin;
   nsresult rv = nsContentUtils::GetUTFOrigin(aURI, origin);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -1209,14 +1174,6 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
   rv = aChannel->GetURI(getter_AddRefs(trackingURI));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     LOG(("Failed to get the channel URI"));
-    return true;
-  }
-
-  if (CompareBaseDomains(trackingURI, parentPrincipalURI)) {
-    LOG(
-        ("Grant access across the same eTLD+1 because same domain trackers "
-         "are considered part of the same organization"));
-
     return true;
   }
 
