@@ -115,10 +115,10 @@ void DetailsFrame::AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
 }
 
 bool DetailsFrame::HasMainSummaryFrame(nsIFrame* aSummaryFrame) {
-  const ChildListIDs flowLists(kPrincipalList | kOverflowList);
+  const ChildListIDs flowLists = {kPrincipalList, kOverflowList};
   for (nsIFrame* frag = this; frag; frag = frag->GetNextInFlow()) {
     for (ChildListIterator lists(frag); !lists.IsDone(); lists.Next()) {
-      if (!flowLists.Contains(lists.CurrentID())) {
+      if (!flowLists.contains(lists.CurrentID())) {
         continue;
       }
       for (nsIFrame* child : lists.CurrentList()) {

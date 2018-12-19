@@ -19,8 +19,8 @@ FrameChildListIterator::FrameChildListIterator(const nsIFrame* aFrame)
   FrameChildListIDs ids;
   uint32_t count = mLists.Length();
   for (uint32_t i = 0; i < count; ++i) {
-    NS_ASSERTION(!ids.Contains(mLists[i].mID), "Duplicate item found!");
-    ids |= mLists[i].mID;
+    NS_ASSERTION(!ids.contains(mLists[i].mID), "Duplicate item found!");
+    ids += mLists[i].mID;
   }
 #endif
 }

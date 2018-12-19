@@ -7,6 +7,7 @@
 #ifndef FrameChildList_h_
 #define FrameChildList_h_
 
+#include "mozilla/EnumSet.h"
 #include "nsFrameList.h"
 #include "nsTArray.h"
 
@@ -21,35 +22,7 @@ namespace layout {
 extern const char* ChildListName(FrameChildListID aListID);
 #endif
 
-class FrameChildListIDs {
-  friend class FrameChildListIterator;
-
- public:
-  FrameChildListIDs() : mIDs(0) {}
-  FrameChildListIDs(const FrameChildListIDs& aOther) : mIDs(aOther.mIDs) {}
-  MOZ_IMPLICIT FrameChildListIDs(FrameChildListID aListID) : mIDs(aListID) {}
-
-  FrameChildListIDs operator|(FrameChildListIDs aOther) const {
-    return FrameChildListIDs(mIDs | aOther.mIDs);
-  }
-  FrameChildListIDs& operator|=(FrameChildListIDs aOther) {
-    mIDs |= aOther.mIDs;
-    return *this;
-  }
-  bool operator==(FrameChildListIDs aOther) const {
-    return mIDs == aOther.mIDs;
-  }
-  bool operator!=(const FrameChildListIDs& aOther) const {
-    return !(*this == aOther);
-  }
-  bool Contains(FrameChildListIDs aOther) const {
-    return (mIDs & aOther.mIDs) == aOther.mIDs;
-  }
-
- protected:
-  explicit FrameChildListIDs(uint32_t aIDs) : mIDs(aIDs) {}
-  uint32_t mIDs;
-};
+using FrameChildListIDs = EnumSet<FrameChildListID>;
 
 class FrameChildList {
  public:
@@ -96,19 +69,6 @@ class MOZ_STACK_CLASS FrameChildListIterator
  protected:
   AutoTArray<FrameChildList, 4> mLists;
 };
-
-inline mozilla::layout::FrameChildListIDs operator|(
-    mozilla::layout::FrameChildListID aLeftOp,
-    mozilla::layout::FrameChildListID aRightOp) {
-  return mozilla::layout::FrameChildListIDs(aLeftOp) |
-         mozilla::layout::FrameChildListIDs(aRightOp);
-}
-
-inline mozilla::layout::FrameChildListIDs operator|(
-    mozilla::layout::FrameChildListID aLeftOp,
-    const mozilla::layout::FrameChildListIDs& aRightOp) {
-  return mozilla::layout::FrameChildListIDs(aLeftOp) | aRightOp;
-}
 
 }  // namespace layout
 }  // namespace mozilla
