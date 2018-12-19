@@ -1171,51 +1171,38 @@ already_AddRefed<nsISupports> CustomElementRegistry::CallGetCustomInterface(
     Element* aElement, const nsIID& aIID) {
   MOZ_ASSERT(aElement);
 
-  if (!nsContentUtils::IsChromeDoc(aElement->OwnerDoc())) {
-    return nullptr;
+  if (nsContentUtils::IsChromeDoc(aElement->OwnerDoc())) {
+    CustomElementDefinition* definition =
+        aElement->GetCustomElementDefinition();
+    if (definition && definition->mCallbacks &&
+        definition->mCallbacks->mGetCustomInterfaceCallback.WasPassed() &&
+        definition->mLocalName == aElement->NodeInfo()->NameAtom()) {
+      LifecycleGetCustomInterfaceCallback* func =
+          definition->mCallbacks->mGetCustomInterfaceCallback.Value();
+      JS::Rooted<JSObject*> customInterface(RootingCx());
+
+      nsCOMPtr<nsIJSID> iid = nsJSID::NewID(aIID);
+      func->Call(aElement, iid, &customInterface);
+      JS::Rooted<JSObject*> funcGlobal(RootingCx(),
+                                       func->CallbackGlobalOrNull());
+      if (customInterface && funcGlobal) {
+        AutoJSAPI jsapi;
+        if (jsapi.Init(funcGlobal)) {
+          nsIXPConnect* xpConnect = nsContentUtils::XPConnect();
+          JSContext* cx = jsapi.cx();
+
+          nsCOMPtr<nsISupports> wrapper;
+          nsresult rv = xpConnect->WrapJSAggregatedToNative(
+              aElement, cx, customInterface, aIID, getter_AddRefs(wrapper));
+          if (NS_SUCCEEDED(rv)) {
+            return wrapper.forget();
+          }
+        }
+      }
+    }
   }
 
-  // Try to get our GetCustomInterfaceCallback callback.
-  CustomElementDefinition* definition = aElement->GetCustomElementDefinition();
-  if (!definition || !definition->mCallbacks ||
-      !definition->mCallbacks->mGetCustomInterfaceCallback.WasPassed() ||
-      (definition->mLocalName != aElement->NodeInfo()->NameAtom())) {
-    return nullptr;
-  }
-  LifecycleGetCustomInterfaceCallback* func =
-      definition->mCallbacks->mGetCustomInterfaceCallback.Value();
-
-  // Initialize a AutoJSAPI to enter the compartment of the callback.
-  AutoJSAPI jsapi;
-  JS::RootedObject funcGlobal(RootingCx(), func->CallbackGlobalOrNull());
-  if (!funcGlobal || !jsapi.Init(funcGlobal)) {
-    return nullptr;
-  }
-
-  // Grab our JSContext.
-  JSContext* cx = jsapi.cx();
-
-  // Convert our IID to a JSValue to call our callback.
-  JS::RootedValue jsiid(cx);
-  if (!xpc::ID2JSValue(cx, aIID, &jsiid)) {
-    return nullptr;
-  }
-
-  JS::RootedObject customInterface(cx);
-  func->Call(aElement, jsiid, &customInterface);
-  if (!customInterface) {
-    return nullptr;
-  }
-
-  // Wrap our JSObject into a nsISupports through XPConnect
-  nsCOMPtr<nsISupports> wrapper;
-  nsresult rv = nsContentUtils::XPConnect()->WrapJSAggregatedToNative(
-      aElement, cx, customInterface, aIID, getter_AddRefs(wrapper));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return nullptr;
-  }
-
-  return wrapper.forget();
+  return nullptr;
 }
 
 //-----------------------------------------------------

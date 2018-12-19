@@ -180,7 +180,7 @@ class XMLHttpRequestWorker final : public XMLHttpRequest {
     MOZ_CRASH("This method should not be called.");
   }
 
-  virtual void GetInterface(JSContext* aCx, JS::Handle<JS::Value> aIID,
+  virtual void GetInterface(JSContext* aCx, nsIJSID* aIID,
                             JS::MutableHandle<JS::Value> aRetval,
                             ErrorResult& aRv) override {
     aRv.Throw(NS_ERROR_FAILURE);

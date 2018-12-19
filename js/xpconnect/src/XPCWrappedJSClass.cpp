@@ -164,9 +164,10 @@ JSObject* nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(JSContext* cx,
   js::AssertSameCompartment(scope, jsobjArg);
 
   RootedObject jsobj(cx, jsobjArg);
-  RootedValue arg(cx);
+  JSObject* id;
   RootedValue retval(cx);
   RootedObject retObj(cx);
+  bool success = false;
   RootedValue fun(cx);
 
   // In bug 503926, we added a security check to make sure that we don't
@@ -212,49 +213,56 @@ JSObject* nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(JSContext* cx,
     return nullptr;
   }
 
-  if (!xpc::ID2JSValue(cx, aIID, &arg)) {
-    return nullptr;
-  }
+  if ((id = xpc_NewIDObject(cx, scope, aIID))) {
+    // Throwing NS_NOINTERFACE is the prescribed way to fail QI from JS. It
+    // is not an exception that is ever worth reporting, but we don't want
+    // to eat all exceptions either.
 
-  // Throwing NS_NOINTERFACE is the prescribed way to fail QI from JS. It is
-  // not an exception that is ever worth reporting, but we don't want to eat
-  // all exceptions either.
-
-  bool success =
-      JS_CallFunctionValue(cx, jsobj, fun, HandleValueArray(arg), &retval);
-  if (!success && JS_IsExceptionPending(cx)) {
-    RootedValue jsexception(cx, NullValue());
-
-    if (JS_GetPendingException(cx, &jsexception)) {
-      if (jsexception.isObject()) {
-        // XPConnect may have constructed an object to represent a
-        // C++ QI failure. See if that is the case.
-        JS::Rooted<JSObject*> exceptionObj(cx, &jsexception.toObject());
-        Exception* e = nullptr;
-        UNWRAP_OBJECT(Exception, &exceptionObj, e);
-
-        if (e && e->GetResult() == NS_NOINTERFACE) {
-          JS_ClearPendingException(cx);
-        }
-      } else if (jsexception.isNumber()) {
-        nsresult rv;
-        // JS often throws an nsresult.
-        if (jsexception.isDouble())
-          // Visual Studio 9 doesn't allow casting directly from
-          // a double to an enumeration type, contrary to
-          // 5.2.9(10) of C++11, so add an intermediate cast.
-          rv = (nsresult)(uint32_t)(jsexception.toDouble());
-        else
-          rv = (nsresult)(jsexception.toInt32());
-
-        if (rv == NS_NOINTERFACE) JS_ClearPendingException(cx);
-      }
+    {
+      RootedValue arg(cx, JS::ObjectValue(*id));
+      success =
+          JS_CallFunctionValue(cx, jsobj, fun, HandleValueArray(arg), &retval);
     }
-  } else if (!success) {
-    NS_WARNING("QI hook ran OOMed - this is probably a bug!");
-  }
 
-  if (success) success = JS_ValueToObject(cx, retval, &retObj);
+    if (!success && JS_IsExceptionPending(cx)) {
+      RootedValue jsexception(cx, NullValue());
+
+      if (JS_GetPendingException(cx, &jsexception)) {
+        if (jsexception.isObject()) {
+          // XPConnect may have constructed an object to represent a
+          // C++ QI failure. See if that is the case.
+          JS::Rooted<JSObject*> exceptionObj(cx, &jsexception.toObject());
+          Exception* e = nullptr;
+          UNWRAP_OBJECT(Exception, &exceptionObj, e);
+
+          if (e && e->GetResult() == NS_NOINTERFACE) {
+            JS_ClearPendingException(cx);
+          }
+        } else if (jsexception.isNumber()) {
+          nsresult rv;
+          // JS often throws an nsresult.
+          if (jsexception.isDouble()) {
+            // Visual Studio 9 doesn't allow casting directly from
+            // a double to an enumeration type, contrary to
+            // 5.2.9(10) of C++11, so add an intermediate cast.
+            rv = (nsresult)(uint32_t)(jsexception.toDouble());
+          } else {
+            rv = (nsresult)(jsexception.toInt32());
+          }
+
+          if (rv == NS_NOINTERFACE) {
+            JS_ClearPendingException(cx);
+          }
+        }
+      }
+    } else if (!success) {
+      NS_WARNING("QI hook ran OOMed - this is probably a bug!");
+    }
+
+    if (success) {
+      success = JS_ValueToObject(cx, retval, &retObj);
+    }
+  }
 
   return success ? retObj.get() : nullptr;
 }

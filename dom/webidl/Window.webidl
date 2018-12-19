@@ -19,6 +19,7 @@
  * https://wicg.github.io/visual-viewport/#the-visualviewport-interface
  */
 
+interface IID;
 interface nsIBrowserDOMWindow;
 interface XULControllers;
 interface nsIDOMWindowUtils;
@@ -339,7 +340,7 @@ partial interface Window {
    NonEnumerable, Replaceable, Throws, NeedsCallerType]
   readonly attribute object? content;
 
-  [Throws, ChromeOnly] any getInterface(any iid);
+  [Throws, ChromeOnly] any getInterface(IID iid);
 
   /**
    * Same as nsIDOMWindow.windowRoot, useful for event listener targeting.

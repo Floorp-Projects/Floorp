@@ -11,6 +11,7 @@ XPIDL_SOURCES += [
     'xpccomponents.idl',
     'xpcIJSGetFactory.idl',
     'xpcIJSWeakReference.idl',
+    'xpcjsid.idl',
 ]
 
 XPIDL_MODULE = 'xpconnect'

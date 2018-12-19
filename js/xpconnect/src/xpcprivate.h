@@ -120,6 +120,7 @@
 #include "XPCForwards.h"
 #include "XPCLog.h"
 #include "xpccomponents.h"
+#include "xpcjsid.h"
 #include "prenv.h"
 #include "prcvar.h"
 #include "nsString.h"
@@ -410,9 +411,6 @@ class XPCJSContext final : public mozilla::CycleCollectedJSContext,
     IDX_ISINSTANCE,
     IDX_INFINITY,
     IDX_NAN,
-    IDX_CLASS_ID,
-    IDX_INTERFACE_ID,
-    IDX_INITIALIZER,
     IDX_TOTAL_COUNT  // just a count of the above
   };
 
@@ -865,15 +863,6 @@ class XPCWrappedNativeScope final {
     if (mXrayExpandos.initialized()) {
       mXrayExpandos.trace(trc);
     }
-    if (mIDProto) {
-      mIDProto.trace(trc, "XPCWrappedNativeScope::mIDProto");
-    }
-    if (mIIDProto) {
-      mIIDProto.trace(trc, "XPCWrappedNativeScope::mIIDProto");
-    }
-    if (mCIDProto) {
-      mCIDProto.trace(trc, "XPCWrappedNativeScope::mCIDProto");
-    }
   }
 
   static void SuspectAllWrappers(nsCycleCollectionNoteRootCallback& cb);
@@ -927,11 +916,6 @@ class XPCWrappedNativeScope final {
   bool AllowContentXBLScope();
   bool UseContentXBLScope() { return mUseContentXBLScope; }
   void ClearContentXBLScope() { mContentXBLScope = nullptr; }
-
-  // ID Object prototype caches.
-  JS::ObjectPtr mIDProto;
-  JS::ObjectPtr mIIDProto;
-  JS::ObjectPtr mCIDProto;
 
  protected:
   virtual ~XPCWrappedNativeScope();
@@ -2051,6 +2035,99 @@ class nsXPCException {
 };
 
 /***************************************************************************/
+/*
+ * nsJSID implements nsIJSID. It is also used by nsJSIID and nsJSCID as a
+ * member (as a hidden implementaion detail) to which they delegate many calls.
+ */
+
+// Initialization is done on demand, and calling the destructor below is always
+// safe.
+extern void xpc_DestroyJSxIDClassObjects();
+
+class nsJSID final : public nsIJSID {
+ public:
+  NS_DEFINE_STATIC_CID_ACCESSOR(NS_JS_ID_CID)
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIJSID
+
+  void InitWithName(const nsID& id, const char* nameString);
+  void SetName(const char* name);
+  void SetNameToNoString() {
+    MOZ_ASSERT(!mName, "name already set");
+    mName = const_cast<char*>(gNoString);
+  }
+  bool NameIsSet() const { return nullptr != mName; }
+  const nsID& ID() const { return mID; }
+  bool IsValid() const { return !mID.Equals(GetInvalidIID()); }
+
+  static already_AddRefed<nsJSID> NewID(const char* str);
+  static already_AddRefed<nsJSID> NewID(const nsID& id);
+
+  nsJSID();
+
+  void Reset();
+  const nsID& GetInvalidIID() const;
+
+ protected:
+  virtual ~nsJSID();
+  static const char gNoString[];
+  nsID mID;
+  char* mNumber;
+  char* mName;
+};
+
+// nsJSIID
+
+class nsJSIID : public nsIJSIID, public nsIXPCScriptable {
+ public:
+  NS_DECL_ISUPPORTS
+
+  // we manually delegate these to nsJSID
+  NS_DECL_NSIJSID
+
+  // we implement the rest...
+  NS_DECL_NSIJSIID
+  NS_DECL_NSIXPCSCRIPTABLE
+
+  static already_AddRefed<nsJSIID> NewID(const nsXPTInterfaceInfo* aInfo);
+
+  explicit nsJSIID(const nsXPTInterfaceInfo* aInfo);
+  nsJSIID() = delete;
+
+ private:
+  virtual ~nsJSIID();
+
+  const nsXPTInterfaceInfo* mInfo;
+};
+
+// nsJSCID
+
+class nsJSCID : public nsIJSCID, public nsIXPCScriptable {
+ public:
+  NS_DECL_ISUPPORTS
+
+  // we manually delegate these to nsJSID
+  NS_DECL_NSIJSID
+
+  // we implement the rest...
+  NS_DECL_NSIJSCID
+  NS_DECL_NSIXPCSCRIPTABLE
+
+  static already_AddRefed<nsJSCID> NewID(const char* str);
+
+  nsJSCID();
+
+ private:
+  virtual ~nsJSCID();
+
+  void ResolveName();
+
+ private:
+  RefPtr<nsJSID> mDetails;
+};
+
+/***************************************************************************/
 // 'Components' object implementations. nsXPCComponentsBase has the
 // less-privileged stuff that we're willing to expose to XBL.
 
@@ -2074,6 +2151,7 @@ class nsXPCComponentsBase : public nsIXPCComponentsBase {
 
   // Unprivileged members from nsIXPCComponentsBase.
   RefPtr<nsXPCComponents_Interfaces> mInterfaces;
+  RefPtr<nsXPCComponents_InterfacesByID> mInterfacesByID;
   RefPtr<nsXPCComponents_Results> mResults;
 
   friend class XPCWrappedNativeScope;
@@ -2092,6 +2170,7 @@ class nsXPCComponents : public nsXPCComponentsBase, public nsIXPCComponents {
 
   // Privileged members added by nsIXPCComponents.
   RefPtr<nsXPCComponents_Classes> mClasses;
+  RefPtr<nsXPCComponents_ClassesByID> mClassesByID;
   RefPtr<nsXPCComponents_ID> mID;
   RefPtr<nsXPCComponents_Exception> mException;
   RefPtr<nsXPCComponents_Constructor> mConstructor;
@@ -2099,6 +2178,15 @@ class nsXPCComponents : public nsXPCComponentsBase, public nsIXPCComponents {
 
   friend class XPCWrappedNativeScope;
 };
+
+/***************************************************************************/
+
+extern JSObject* xpc_NewIDObject(JSContext* cx, JS::HandleObject scope,
+                                 const nsID& aID);
+
+extern const nsID* xpc_JSObjectToID(JSContext* cx, JSObject* obj);
+
+extern bool xpc_JSObjectIsID(JSContext* cx, JSObject* obj);
 
 /******************************************************************************
  * Handles pre/post script processing.

@@ -293,7 +293,7 @@ var Sanitizer = {
   },
 
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIObserver,
+    Ci.nsiObserver,
     Ci.nsISupportsWeakReference,
   ]),
 

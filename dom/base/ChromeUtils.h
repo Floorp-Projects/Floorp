@@ -107,9 +107,9 @@ class ChromeUtils {
       GlobalObject& aGlobal, const nsAString& aUrl,
       const dom::CompileScriptOptionsDictionary& aOptions, ErrorResult& aRv);
 
-  static MozQueryInterface* GenerateQI(const GlobalObject& global,
-                                       const Sequence<JS::Value>& interfaces,
-                                       ErrorResult& aRv);
+  static MozQueryInterface* GenerateQI(
+      const GlobalObject& global, const Sequence<OwningStringOrIID>& interfaces,
+      ErrorResult& aRv);
 
   static void WaiveXrays(GlobalObject& aGlobal, JS::HandleValue aVal,
                          JS::MutableHandleValue aRetval, ErrorResult& aRv);

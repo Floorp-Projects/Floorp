@@ -112,12 +112,12 @@ var updateAppInfo = function(options) {
   currentAppInfo = newAppInfo(options);
 
   let id = Components.ID("{fbfae60b-64a4-44ef-a911-08ceb70b9f31}");
-  let contractid = "@mozilla.org/xre/app-info;1";
+  let cid = "@mozilla.org/xre/app-info;1";
   let registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
 
   // Unregister an existing factory if one exists.
   try {
-    let existing = Components.manager.getClassObjectByContractID(contractid, Ci.nsIFactory);
+    let existing = Components.manager.getClassObjectByContractID(cid, Ci.nsIFactory);
     registrar.unregisterFactory(id, existing);
   } catch (ex) {}
 
@@ -131,5 +131,10 @@ var updateAppInfo = function(options) {
     },
   };
 
-  registrar.registerFactory(id, "XULAppInfo", contractid, factory);
+  registrar.registerFactory(id, "XULAppInfo", cid, factory);
+
+  // Ensure that Cc actually maps cid to the new shim AppInfo. This is
+  // needed when JSM global sharing is enabled, because some prior
+  // code may already have looked up |Cc[cid]|.
+  Cc.initialize(Cc[cid], cid);
 };

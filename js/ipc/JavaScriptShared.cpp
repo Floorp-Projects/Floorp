@@ -173,9 +173,9 @@ bool JavaScriptShared::toVariant(JSContext* cx, JS::HandleValue from,
         return true;
       }
 
-      Maybe<nsID> id = xpc::JSValue2ID(cx, from);
-      if (id) {
+      if (xpc_JSObjectIsID(cx, obj)) {
         JSIID iid;
+        const nsID* id = xpc_JSObjectToID(cx, obj);
         ConvertID(*id, &iid);
         *to = iid;
         return true;
@@ -278,7 +278,14 @@ bool JavaScriptShared::fromVariant(JSContext* cx, const JSVariant& from,
       nsID iid;
       const JSIID& id = from.get_JSIID();
       ConvertID(id, &iid);
-      return xpc::ID2JSValue(cx, iid, to);
+
+      RootedObject global(cx, JS::CurrentGlobalOrNull(cx));
+      JSObject* obj = xpc_NewIDObject(cx, global, iid);
+      if (!obj) {
+        return false;
+      }
+      to.set(ObjectValue(*obj));
+      return true;
     }
 
     default:

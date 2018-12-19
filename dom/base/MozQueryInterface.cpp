@@ -6,13 +6,13 @@
 
 #include "ChromeUtils.h"
 #include "MozQueryInterface.h"
-#include "nsIException.h"
 
 #include <string.h>
 
 #include "jsapi.h"
 
 #include "xpcpublic.h"
+#include "xpcjsid.h"
 
 namespace mozilla {
 namespace dom {
@@ -29,35 +29,58 @@ static int CompareIIDs(const nsIID& aA, const nsIID& aB) {
 
 /* static */
 MozQueryInterface* ChromeUtils::GenerateQI(
-    const GlobalObject& aGlobal, const Sequence<JS::Value>& aInterfaces,
+    const GlobalObject& aGlobal, const Sequence<OwningStringOrIID>& aInterfaces,
     ErrorResult& aRv) {
   JSContext* cx = aGlobal.Context();
+  JS::RootedObject xpcIfaces(cx);
 
   nsTArray<nsIID> ifaces;
 
-  JS::RootedValue iface(cx);
-  for (uint32_t idx = 0; idx < aInterfaces.Length(); ++idx) {
-    iface = aInterfaces[idx];
-
-    // Handle ID objects
-    if (Maybe<nsID> id = xpc::JSValue2ID(cx, iface)) {
-      ifaces.AppendElement(*id);
+  JS::RootedValue val(cx);
+  for (auto& iface : aInterfaces) {
+    if (iface.IsIID()) {
+      ifaces.AppendElement(*iface.GetAsIID()->GetID());
       continue;
     }
 
-    // Accept string valued names
-    if (iface.isString()) {
-      JS::UniqueChars name = JS_EncodeStringToLatin1(cx, iface.toString());
-
-      const nsXPTInterfaceInfo* iinfo = nsXPTInterfaceInfo::ByName(name.get());
-      if (iinfo) {
-        ifaces.AppendElement(iinfo->IID());
-        continue;
+    // If we have a string value, we need to look up the interface name. The
+    // simplest and most efficient way to do this is to just grab the "Ci"
+    // object from the global scope.
+    if (!xpcIfaces) {
+      JS::RootedObject global(cx, aGlobal.Get());
+      if (!JS_GetProperty(cx, global, "Ci", &val)) {
+        aRv.NoteJSContextException(cx);
+        return nullptr;
       }
+      if (!val.isObject()) {
+        aRv.Throw(NS_ERROR_UNEXPECTED);
+        return nullptr;
+      }
+      xpcIfaces = &val.toObject();
     }
 
-    // NOTE: We ignore unknown interfaces here because in some cases we try to
-    // pass them in to support multiple platforms.
+    auto& name = iface.GetAsString();
+    if (!JS_GetUCProperty(cx, xpcIfaces, name.get(), name.Length(), &val)) {
+      aRv.NoteJSContextException(cx);
+      return nullptr;
+    }
+
+    if (val.isNullOrUndefined()) {
+      continue;
+    }
+    if (!val.isObject()) {
+      aRv.Throw(NS_ERROR_INVALID_ARG);
+      return nullptr;
+    }
+
+    nsCOMPtr<nsISupports> base =
+        xpc::UnwrapReflectorToISupports(&val.toObject());
+    nsCOMPtr<nsIJSID> iid = do_QueryInterface(base);
+    if (!iid) {
+      aRv.Throw(NS_ERROR_INVALID_ARG);
+      return nullptr;
+    }
+    ifaces.AppendElement(*iid->GetID());
   }
 
   MOZ_ASSERT(!ifaces.Contains(NS_GET_IID(nsISupports), CompareIIDs));
@@ -73,14 +96,13 @@ bool MozQueryInterface::QueriesTo(const nsIID& aIID) const {
 }
 
 void MozQueryInterface::LegacyCall(JSContext* cx, JS::Handle<JS::Value> thisv,
-                                   JS::Handle<JS::Value> aIID,
+                                   nsIJSID* aIID,
                                    JS::MutableHandle<JS::Value> aResult,
                                    ErrorResult& aRv) const {
-  Maybe<nsID> id = xpc::JSValue2ID(cx, aIID);
-  if (id && QueriesTo(*id)) {
-    aResult.set(thisv);
-  } else {
+  if (!QueriesTo(*aIID->GetID())) {
     aRv.Throw(NS_ERROR_NO_INTERFACE);
+  } else {
+    aResult.set(thisv);
   }
 }
 

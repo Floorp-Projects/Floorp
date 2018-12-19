@@ -383,15 +383,24 @@ bool WrapperOwner::DOMQI(JSContext* cx, JS::HandleObject proxy,
                          JS::CallArgs& args) {
   // Someone's calling us, handle nsISupports specially to avoid unnecessary
   // CPOW traffic.
-  if (Maybe<nsID> id = xpc::JSValue2ID(cx, args[0])) {
-    if (id->Equals(NS_GET_IID(nsISupports))) {
-      args.rval().set(args.thisv());
-      return true;
-    }
+  HandleValue id = args[0];
+  if (id.isObject()) {
+    RootedObject idobj(cx, &id.toObject());
+    nsCOMPtr<nsIJSID> jsid;
 
-    // Webidl-implemented DOM objects never have nsIClassInfo.
-    if (id->Equals(NS_GET_IID(nsIClassInfo))) {
-      return Throw(cx, NS_ERROR_NO_INTERFACE);
+    nsresult rv = UnwrapArg<nsIJSID>(cx, idobj, getter_AddRefs(jsid));
+    if (NS_SUCCEEDED(rv)) {
+      MOZ_ASSERT(jsid, "bad wrapJS");
+      const nsID* idptr = jsid->GetID();
+      if (idptr->Equals(NS_GET_IID(nsISupports))) {
+        args.rval().set(args.thisv());
+        return true;
+      }
+
+      // Webidl-implemented DOM objects never have nsIClassInfo.
+      if (idptr->Equals(NS_GET_IID(nsIClassInfo))) {
+        return Throw(cx, NS_ERROR_NO_INTERFACE);
+      }
     }
   }
 

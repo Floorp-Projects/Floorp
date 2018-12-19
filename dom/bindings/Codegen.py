@@ -2288,9 +2288,10 @@ class MethodDefiner(PropertyDefiner):
                     raise TypeError("Legacy QueryInterface member shouldn't be static")
                 signatures = m.signatures()
 
-                if (len(signatures) > 1 or len(signatures[0][1]) > 1 or
-                    not signatures[0][1][0].type.isAny()):
-                    raise TypeError("There should be only one QueryInterface method with 1 argument of type any")
+                def argTypeIsIID(arg):
+                    return arg.type.inner.isExternal() and arg.type.inner.identifier.name == 'IID'
+                if len(signatures) > 1 or len(signatures[0][1]) > 1 or not argTypeIsIID(signatures[0][1][0]):
+                    raise TypeError("There should be only one QueryInterface method with 1 argument of type IID")
 
                 # Make sure to not stick QueryInterface on abstract interfaces.
                 if (not self.descriptor.interface.hasInterfacePrototypeObject() or

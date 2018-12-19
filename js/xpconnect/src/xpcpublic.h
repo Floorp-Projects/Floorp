@@ -32,7 +32,6 @@
 class nsGlobalWindowInner;
 class nsIPrincipal;
 class nsIHandleReportCallback;
-struct nsXPTInterfaceInfo;
 
 namespace mozilla {
 namespace dom {
@@ -681,41 +680,6 @@ void YieldCooperativeContext();
 
 // Please see JS_ResumeCooperativeContext in jsapi.h.
 void ResumeCooperativeContext();
-
-/**
- * Extract the native nsID object from a JS ID, IfaceID, ClassID, or ContractID
- * value.
- *
- * Returns 'Nothing()' if 'aVal' does is not one of the supported ID types.
- */
-mozilla::Maybe<nsID> JSValue2ID(JSContext* aCx, JS::HandleValue aVal);
-
-/**
- * Reflect an ID into JS
- */
-bool ID2JSValue(JSContext* aCx, const nsID& aId, JS::MutableHandleValue aVal);
-
-/**
- * Reflect an IfaceID into JS
- *
- * This object will expose constants from the selected interface, and support
- * 'instanceof', in addition to the other methods available on JS ID objects.
- *
- * Use 'xpc::JSValue2ID' to unwrap JS::Values created with this function.
- */
-bool IfaceID2JSValue(JSContext* aCx, const nsXPTInterfaceInfo& aInfo,
-                     JS::MutableHandleValue aVal);
-
-/**
- * Reflect a ContractID into JS
- *
- * This object will expose 'getService' and 'createInstance' methods in addition
- * to the other methods available on nsID objects.
- *
- * Use 'xpc::JSValue2ID' to unwrap JS::Values created with this function.
- */
-bool ContractID2JSValue(JSContext* aCx, JSString* aContract,
-                        JS::MutableHandleValue aVal);
 
 }  // namespace xpc
 
