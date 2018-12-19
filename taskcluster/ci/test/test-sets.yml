@@ -196,6 +196,7 @@ windows-qr-tests:
     - mochitest-webgl2-core
     - mochitest-webgl2-ext
     - reftest
+    - web-platform-tests-reftests
 
 ccov-code-coverage-tests:
     - test-coverage
