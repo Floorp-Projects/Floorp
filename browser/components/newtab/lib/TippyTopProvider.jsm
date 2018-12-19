@@ -29,7 +29,7 @@ this.TippyTopProvider = class TippyTopProvider {
   async init() {
     // Load the Tippy Top sites from the json manifest.
     try {
-      for (const site of await (await fetch(TIPPYTOP_JSON_PATH)).json()) {
+      for (const site of await (await fetch(TIPPYTOP_JSON_PATH, {credentials: "omit"})).json()) {
         // The tippy top manifest can have a url property (string) or a
         // urls property (array of strings)
         for (const url of site.url ? [site.url] : site.urls || []) {
