@@ -205,6 +205,11 @@ about-debugging-worker-status =
 about-debugging-worker-scope =
   .label = Scope
 
+# Displayed for service workers in runtime pages, to label the push service endpoint (url)
+# of a worker
+about-debugging-worker-push-service =
+  .label = Push Service
+
 # Displayed for runtime info in runtime pages.
 # { $name } is brand name such as "Firefox Nightly"
 # { $version } is version such as "64.0a1"

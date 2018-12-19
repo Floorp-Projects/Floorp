@@ -200,6 +200,20 @@ function requestWorkers() {
         sharedWorkers,
       } = await clientWrapper.listWorkers();
 
+      for (const serviceWorker of serviceWorkers) {
+        const { registrationActor } = serviceWorker;
+        if (!registrationActor) {
+          continue;
+        }
+
+        const { subscription } = await clientWrapper.request({
+          to: registrationActor,
+          type: "getPushSubscription",
+        });
+
+        serviceWorker.subscription = subscription;
+      }
+
       dispatch({
         type: REQUEST_WORKERS_SUCCESS,
         otherWorkers,
