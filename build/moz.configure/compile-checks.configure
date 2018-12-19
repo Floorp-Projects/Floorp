@@ -44,7 +44,8 @@ def try_compile(includes=None, body='', language='C++', flags=None, check_msg=No
 # - `when` is a depends function that if present will make performing the check
 #   conditional on the value of that function.
 @template
-def check_header(header, language='C++', flags=None, includes=None, when=None):
+def check_header(header, language='C++', flags=None, includes=None, when=None,
+                 onerror=lambda: None):
     if when is None:
         when = always
 
@@ -55,7 +56,7 @@ def check_header(header, language='C++', flags=None, includes=None, when=None):
     includes.append(header)
 
     have_header = try_compile(includes=includes, language=language, flags=flags,
-                              check_msg='for %s' % header, when=when)
+                              check_msg='for %s' % header, when=when, onerror=onerror)
     header_var = 'HAVE_%s' % (header.upper()
                                     .replace('-', '_')
                                     .replace('/', '_')
