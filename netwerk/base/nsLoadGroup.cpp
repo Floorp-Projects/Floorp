@@ -117,7 +117,6 @@ nsLoadGroup::~nsLoadGroup() {
 NS_IMPL_AGGREGATED(nsLoadGroup)
 NS_INTERFACE_MAP_BEGIN_AGGREGATED(nsLoadGroup)
   NS_INTERFACE_MAP_ENTRY(nsILoadGroup)
-  NS_INTERFACE_MAP_ENTRY(nsPILoadGroupInternal)
   NS_INTERFACE_MAP_ENTRY(nsILoadGroupChild)
   NS_INTERFACE_MAP_ENTRY(nsIRequest)
   NS_INTERFACE_MAP_ENTRY(nsISupportsPriority)
@@ -689,18 +688,6 @@ nsLoadGroup::GetRootLoadGroup(nsILoadGroup **aRootLoadGroup) {
 
   // finally just return this
   NS_ADDREF(*aRootLoadGroup = this);
-  return NS_OK;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// nsPILoadGroupInternal methods:
-
-NS_IMETHODIMP
-nsLoadGroup::OnEndPageLoad(nsIChannel *aDefaultChannel) {
-  LOG(("nsLoadGroup::OnEndPageLoad this=%p default-request=%p", this,
-       aDefaultChannel));
-
-  // for the moment, nothing to do here.
   return NS_OK;
 }
 

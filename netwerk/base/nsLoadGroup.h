@@ -8,7 +8,6 @@
 
 #include "nsILoadGroup.h"
 #include "nsILoadGroupChild.h"
-#include "nsPILoadGroupInternal.h"
 #include "nsAgg.h"
 #include "nsCOMPtr.h"
 #include "nsWeakReference.h"
@@ -26,8 +25,7 @@ namespace net {
 class nsLoadGroup : public nsILoadGroup,
                     public nsILoadGroupChild,
                     public nsISupportsPriority,
-                    public nsSupportsWeakReference,
-                    public nsPILoadGroupInternal {
+                    public nsSupportsWeakReference {
  public:
   NS_DECL_AGGREGATED
 
@@ -38,7 +36,6 @@ class nsLoadGroup : public nsILoadGroup,
   ////////////////////////////////////////////////////////////////////////////
   // nsILoadGroup methods:
   NS_DECL_NSILOADGROUP
-  NS_DECL_NSPILOADGROUPINTERNAL
 
   ////////////////////////////////////////////////////////////////////////////
   // nsILoadGroupChild methods:
