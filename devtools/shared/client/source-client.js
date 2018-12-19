@@ -90,6 +90,24 @@ SourceClient.prototype = {
     });
   },
 
+  getBreakpointPositions: function(query) {
+    const packet = {
+      to: this._form.actor,
+      type: "getBreakpointPositions",
+      query,
+    };
+    return this._client.request(packet);
+  },
+
+  getBreakpointPositionsCompressed: function(query) {
+    const packet = {
+      to: this._form.actor,
+      type: "getBreakpointPositionsCompressed",
+      query,
+    };
+    return this._client.request(packet);
+  },
+
   /**
    * Get a long string grip for this SourceClient's source.
    */
