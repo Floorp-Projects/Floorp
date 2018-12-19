@@ -1883,9 +1883,9 @@ class JitFrameIter {
 
   JS::Realm* realm() const;
 
-  // Returns the return address of the frame above this one (that is, the
-  // return address that returns back to the current frame).
-  uint8_t* returnAddressToFp() const;
+  // Returns the address of the next instruction that will execute in this
+  // frame, once control returns to this frame.
+  uint8_t* resumePCinCurrentFrame() const;
 
   // Operations which have an effect only on JIT frames.
   void skipNonScriptedJSFrames();
