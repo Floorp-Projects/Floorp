@@ -51,9 +51,12 @@ void InternalHeaders::Append(const nsACString& aName, const nsACString& aValue,
     return;
   }
 
+  nsAutoCString name(aName);
+  ReuseExistingNameIfExists(name);
+
   SetListDirty();
 
-  mList.AppendElement(Entry(lowerName, trimValue));
+  mList.AppendElement(Entry(name, trimValue));
 }
 
 void InternalHeaders::Delete(const nsACString& aName, ErrorResult& aRv) {
@@ -68,7 +71,7 @@ void InternalHeaders::Delete(const nsACString& aName, ErrorResult& aRv) {
 
   // remove in reverse order to minimize copying
   for (int32_t i = mList.Length() - 1; i >= 0; --i) {
-    if (lowerName == mList[i].mName) {
+    if (mList[i].mName.EqualsIgnoreCase(lowerName.get())) {
       mList.RemoveElementAt(i);
     }
   }
@@ -87,7 +90,7 @@ void InternalHeaders::Get(const nsACString& aName, nsACString& aValue,
   bool firstValueFound = false;
 
   for (uint32_t i = 0; i < mList.Length(); ++i) {
-    if (lowerName == mList[i].mName) {
+    if (mList[i].mName.EqualsIgnoreCase(lowerName.get())) {
       if (firstValueFound) {
         aValue += delimiter;
       }
@@ -112,7 +115,7 @@ void InternalHeaders::GetFirst(const nsACString& aName, nsACString& aValue,
   }
 
   for (uint32_t i = 0; i < mList.Length(); ++i) {
-    if (lowerName == mList[i].mName) {
+    if (mList[i].mName.EqualsIgnoreCase(lowerName.get())) {
       aValue = mList[i].mValue;
       return;
     }
@@ -131,7 +134,7 @@ bool InternalHeaders::Has(const nsACString& aName, ErrorResult& aRv) const {
   }
 
   for (uint32_t i = 0; i < mList.Length(); ++i) {
-    if (lowerName == mList[i].mName) {
+    if (mList[i].mName.EqualsIgnoreCase(lowerName.get())) {
       return true;
     }
   }
@@ -155,7 +158,7 @@ void InternalHeaders::Set(const nsACString& aName, const nsACString& aValue,
 
   // remove in reverse order to minimize copying
   for (int32_t i = mList.Length() - 1; i >= 0; --i) {
-    if (lowerName == mList[i].mName) {
+    if (mList[i].mName.EqualsIgnoreCase(lowerName.get())) {
       firstIndex = std::min(firstIndex, i);
       mList.RemoveElementAt(i);
     }
@@ -163,10 +166,10 @@ void InternalHeaders::Set(const nsACString& aName, const nsACString& aValue,
 
   if (firstIndex < INT32_MAX) {
     Entry* entry = mList.InsertElementAt(firstIndex);
-    entry->mName = lowerName;
+    entry->mName = aName;
     entry->mValue = trimValue;
   } else {
-    mList.AppendElement(Entry(lowerName, trimValue));
+    mList.AppendElement(Entry(aName, trimValue));
   }
 }
 
@@ -184,7 +187,7 @@ void InternalHeaders::SetGuard(HeadersGuardEnum aGuard, ErrorResult& aRv) {
 InternalHeaders::~InternalHeaders() {}
 
 // static
-bool InternalHeaders::IsSimpleHeader(const nsACString& aName,
+bool InternalHeaders::IsSimpleHeader(const nsCString& aName,
                                      const nsACString& aValue) {
   if (aValue.Length() > 128) {
     return false;
@@ -192,22 +195,23 @@ bool InternalHeaders::IsSimpleHeader(const nsACString& aName,
   // Note, we must allow a null content-type value here to support
   // get("content-type"), but the IsInvalidValue() check will prevent null
   // from being set or appended.
-  return (aName.EqualsLiteral("accept") &&
+  return (aName.EqualsIgnoreCase("accept") &&
           nsContentUtils::IsAllowedNonCorsAccept(aValue)) ||
-         (aName.EqualsLiteral("accept-language") &&
+         (aName.EqualsIgnoreCase("accept-language") &&
           nsContentUtils::IsAllowedNonCorsLanguage(aValue)) ||
-         (aName.EqualsLiteral("content-language") &&
+         (aName.EqualsIgnoreCase("content-language") &&
           nsContentUtils::IsAllowedNonCorsLanguage(aValue)) ||
-         (aName.EqualsLiteral("content-type") &&
+         (aName.EqualsIgnoreCase("content-type") &&
           nsContentUtils::IsAllowedNonCorsContentType(aValue));
 }
 
 // static
-bool InternalHeaders::IsRevalidationHeader(const nsACString& aName) {
-  return aName.EqualsLiteral("if-modified-since") ||
-         aName.EqualsLiteral("if-none-match") ||
-         aName.EqualsLiteral("if-unmodified-since") ||
-         aName.EqualsLiteral("if-match") || aName.EqualsLiteral("if-range");
+bool InternalHeaders::IsRevalidationHeader(const nsCString& aName) {
+  return aName.EqualsIgnoreCase("if-modified-since") ||
+         aName.EqualsIgnoreCase("if-none-match") ||
+         aName.EqualsIgnoreCase("if-unmodified-since") ||
+         aName.EqualsIgnoreCase("if-match") ||
+         aName.EqualsIgnoreCase("if-range");
 }
 
 // static
@@ -240,24 +244,24 @@ bool InternalHeaders::IsImmutable(ErrorResult& aRv) const {
   return false;
 }
 
-bool InternalHeaders::IsForbiddenRequestHeader(const nsACString& aName) const {
+bool InternalHeaders::IsForbiddenRequestHeader(const nsCString& aName) const {
   return mGuard == HeadersGuardEnum::Request &&
          nsContentUtils::IsForbiddenRequestHeader(aName);
 }
 
 bool InternalHeaders::IsForbiddenRequestNoCorsHeader(
-    const nsACString& aName) const {
+    const nsCString& aName) const {
   return mGuard == HeadersGuardEnum::Request_no_cors &&
          !IsSimpleHeader(aName, EmptyCString());
 }
 
 bool InternalHeaders::IsForbiddenRequestNoCorsHeader(
-    const nsACString& aName, const nsACString& aValue) const {
+    const nsCString& aName, const nsACString& aValue) const {
   return mGuard == HeadersGuardEnum::Request_no_cors &&
          !IsSimpleHeader(aName, aValue);
 }
 
-bool InternalHeaders::IsForbiddenResponseHeader(const nsACString& aName) const {
+bool InternalHeaders::IsForbiddenResponseHeader(const nsCString& aName) const {
   return mGuard == HeadersGuardEnum::Response &&
          nsContentUtils::IsForbiddenResponseHeader(aName);
 }
@@ -399,12 +403,12 @@ already_AddRefed<InternalHeaders> InternalHeaders::CORSHeaders(
   nsCaseInsensitiveCStringArrayComparator comp;
   for (uint32_t i = 0; i < aHeaders->mList.Length(); ++i) {
     const Entry& entry = aHeaders->mList[i];
-    if (entry.mName.EqualsASCII("cache-control") ||
-        entry.mName.EqualsASCII("content-language") ||
-        entry.mName.EqualsASCII("content-type") ||
-        entry.mName.EqualsASCII("expires") ||
-        entry.mName.EqualsASCII("last-modified") ||
-        entry.mName.EqualsASCII("pragma") ||
+    if (entry.mName.EqualsIgnoreCase("cache-control") ||
+        entry.mName.EqualsIgnoreCase("content-language") ||
+        entry.mName.EqualsIgnoreCase("content-type") ||
+        entry.mName.EqualsIgnoreCase("expires") ||
+        entry.mName.EqualsIgnoreCase("last-modified") ||
+        entry.mName.EqualsIgnoreCase("pragma") ||
         exposeNamesArray.Contains(entry.mName, comp)) {
       cors->Append(entry.mName, entry.mValue, result);
       MOZ_ASSERT(!result.Failed());
@@ -454,7 +458,7 @@ void InternalHeaders::MaybeSortList() {
   for (const Entry& entry : mList) {
     bool found = false;
     for (Entry& sortedEntry : mSortedList) {
-      if (sortedEntry.mName == entry.mName) {
+      if (sortedEntry.mName.EqualsIgnoreCase(entry.mName.get())) {
         sortedEntry.mValue += ", ";
         sortedEntry.mValue += entry.mValue;
         found = true;
@@ -463,7 +467,9 @@ void InternalHeaders::MaybeSortList() {
     }
 
     if (!found) {
-      mSortedList.InsertElementSorted(entry, comparator);
+      Entry newEntry = entry;
+      ToLowerCase(newEntry.mName);
+      mSortedList.InsertElementSorted(newEntry, comparator);
     }
   }
 }
@@ -471,6 +477,15 @@ void InternalHeaders::MaybeSortList() {
 void InternalHeaders::SetListDirty() {
   mSortedList.Clear();
   mListDirty = true;
+}
+
+void InternalHeaders::ReuseExistingNameIfExists(nsCString& aName) const {
+  for (const Entry& entry : mList) {
+    if (entry.mName.EqualsIgnoreCase(aName.get())) {
+      aName = entry.mName;
+      break;
+    }
+  }
 }
 
 }  // namespace dom

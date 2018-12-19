@@ -1349,7 +1349,7 @@ nsresult QueryCache(mozIStorageConnection* aConn, CacheId aCacheId,
       "FROM entries "
       "LEFT OUTER JOIN response_headers ON "
       "entries.id=response_headers.entry_id "
-      "AND response_headers.name='vary' "
+      "AND response_headers.name='vary' COLLATE NOCASE "
       "WHERE entries.cache_id=:cache_id "
       "AND entries.request_url_no_query_hash=:url_no_query_hash ");
 
@@ -1469,7 +1469,8 @@ nsresult MatchByVaryHeader(mozIStorageConnection* aConn,
   nsCOMPtr<mozIStorageStatement> state;
   nsresult rv = aConn->CreateStatement(
       NS_LITERAL_CSTRING("SELECT value FROM response_headers "
-                         "WHERE name='vary' AND entry_id=:entry_id;"),
+                         "WHERE name='vary' COLLATE NOCASE "
+                         "AND entry_id=:entry_id;"),
       getter_AddRefs(state));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
