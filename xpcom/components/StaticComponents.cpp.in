@@ -1,0 +1,228 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "StaticComponents.h"
+
+#include "mozilla/PerfectHash.h"
+#include "mozilla/ResultExtensions.h"
+#include "mozilla/StaticPtr.h"
+#include "nsCOMPtr.h"
+#include "nsComponentManager.h"
+#include "nsIFactory.h"
+#include "nsISupports.h"
+#include "nsString.h"
+
+// Cleanup pollution from zipstruct.h
+#undef UNSUPPORTED
+
+// Public includes
+//# @includes@
+
+// Relative includes
+//# @relative_includes@
+
+//# @decls@
+
+namespace mozilla {
+namespace xpcom {
+
+namespace {
+// Template helpers for constructor function sanity checks.
+template <typename T>
+struct RemoveAlreadyAddRefed {
+  using Type = T;
+};
+
+template <typename T>
+struct RemoveAlreadyAddRefed<already_AddRefed<T>> {
+  using Type = T;
+};
+}  // anonymous namespace
+
+
+uint8_t gInvalidContracts[kContractCount / 8 + 1];
+
+static StaticRefPtr<nsISupports> gServiceInstances[kStaticModuleCount];
+
+uint8_t gInitCalled[kModuleInitCount / 8 + 1];
+
+static const char gStrings[] =
+//# @strings@
+  "";
+
+const StaticCategory gStaticCategories[kStaticCategoryCount] = {
+//# @categories@
+};
+const StaticCategoryEntry gStaticCategoryEntries[] = {
+//# @category_entries@
+};
+
+/**
+ * Returns a nsCString corresponding to the given entry in the `gStrings` string
+ * table. The resulting nsCString points directly to static storage, and does
+ * not incur any memory allocation overhead.
+ */
+static inline nsCString GetString(const StringOffset& aOffset) {
+  const char* str = &gStrings[aOffset.mOffset];
+  nsCString result;
+  result.AssignLiteral(str, strlen(str));
+  return result;
+}
+
+nsCString ContractEntry::ContractID() const {
+  return GetString(mContractID);
+}
+
+bool ContractEntry::Matches(const nsACString& aContractID) const {
+  return aContractID == ContractID() && Module().Active();
+}
+
+
+//# @module_cid_table@
+
+//# @module_contract_id_table@
+
+static inline bool CalledInit(size_t aIdx) {
+  return GetBit(gInitCalled, aIdx);
+}
+
+static nsresult CallInitFunc(size_t aIdx) {
+  if (CalledInit(aIdx)) {
+    return NS_OK;
+  }
+
+  nsresult rv = NS_OK;
+  switch (aIdx) {
+//# @init_funcs@
+  }
+
+  SetBit(gInitCalled, aIdx);
+
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
+  return rv;
+}
+
+static void CallUnloadFuncs() {
+//# @unload_funcs@
+}
+
+static nsresult CreateInstanceImpl(ModuleID aID, nsISupports* aOuter,
+                                   const nsIID& aIID, void** aResult) {
+  if (aOuter) {
+    return NS_ERROR_NO_AGGREGATION;
+  }
+
+  // The full set of constructors for all static modules.
+  // This switch statement will be compiled to a relative address jump table
+  // with no runtime relocations and a single indirect jump.
+  switch (aID) {
+//# @constructors@
+  }
+
+  MOZ_ASSERT_UNREACHABLE("Constructor didn't return");
+  return NS_ERROR_FAILURE;
+}
+
+
+namespace {
+
+class StaticModuleFactory final : public nsIFactory {
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIFACTORY
+
+  explicit StaticModuleFactory(ModuleID aID) : mID(aID) {}
+
+private:
+  ~StaticModuleFactory() = default;
+
+  const ModuleID mID;
+};
+
+NS_IMPL_ISUPPORTS(StaticModuleFactory, nsIFactory)
+
+NS_IMETHODIMP StaticModuleFactory::CreateInstance(nsISupports* aOuter,
+                                                  const nsIID& aIID,
+                                                  void** aResult) {
+  return CreateInstanceImpl(mID, aOuter, aIID, aResult);
+}
+
+NS_IMETHODIMP StaticModuleFactory::LockFactory(bool aLock) {
+  MOZ_CRASH("LockFactory is no longer a thing");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+}  // anonymous namespace
+
+
+already_AddRefed<nsIFactory> StaticModule::GetFactory() const {
+  return do_AddRef(new StaticModuleFactory(ID()));
+}
+
+bool StaticModule::Active() const {
+  return FastProcessSelectorMatches(mProcessSelector);
+}
+
+nsresult StaticModule::CreateInstance(nsISupports* aOuter, const nsIID& aIID,
+                                      void** aResult) const {
+  return CreateInstanceImpl(ID(), aOuter, aIID, aResult);
+}
+
+
+nsISupports* StaticModule::ServiceInstance() const {
+  return gServiceInstances[Idx()];
+}
+
+void StaticModule::SetServiceInstance(
+    already_AddRefed<nsISupports> aInst) const {
+  gServiceInstances[Idx()] = aInst;
+}
+
+
+nsCString StaticCategoryEntry::Entry() const {
+  return GetString(mEntry);
+}
+nsCString StaticCategoryEntry::Value() const {
+  return GetString(mValue);
+}
+bool StaticCategoryEntry::Active() const {
+  return FastProcessSelectorMatches(mProcessSelector);
+}
+
+nsCString StaticCategory::Name() const {
+  return GetString(mName);
+}
+
+
+/* static */ const StaticModule* StaticComponents::LookupByCID(
+    const nsID& aCID) {
+  return ModuleByCID(aCID);
+}
+
+/* static */ const StaticModule* StaticComponents::LookupByContractID(
+    const nsACString& aContractID) {
+  if (const ContractEntry* entry = LookupContractID(aContractID)) {
+    if (!entry->Invalid()) {
+      return &entry->Module();
+    }
+  }
+  return nullptr;
+}
+
+/* static */ bool StaticComponents::InvalidateContractID(
+    const nsACString& aContractID, bool aInvalid) {
+  if (const ContractEntry* entry = LookupContractID(aContractID)) {
+    entry->SetInvalid(aInvalid);
+    return true;
+  }
+  return false;
+}
+
+/* static */ void StaticComponents::Shutdown() {
+  CallUnloadFuncs();
+}
+
+}  // namespace xpcom
+}  // namespace mozilla
