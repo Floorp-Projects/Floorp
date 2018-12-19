@@ -12,7 +12,7 @@
   <binding id="autocomplete"
            extends="chrome://global/content/bindings/textbox.xml#textbox">
     <content sizetopopup="pref">
-      <children includes="image|deck|stack|box"/>
+      <children includes="image|box"/>
 
       <xul:moz-input-box anonid="moz-input-box" flex="1">
         <children/>
@@ -23,8 +23,6 @@
       <children includes="hbox"/>
 
       <xul:popupset anonid="popupset" class="autocomplete-result-popupset"/>
-
-      <children includes="toolbarbutton"/>
     </content>
 
     <implementation implements="nsIAutoCompleteInput, nsIDOMXULMenuListElement">
