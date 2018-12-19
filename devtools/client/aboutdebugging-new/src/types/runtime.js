@@ -48,12 +48,14 @@ const usbRuntimeConnectionParameter = {
 
 const runtimeExtra = {
   // parameter to connect to debugger server
+  // unavailable on unknown runtimes
   connectionParameters: PropTypes.oneOfType([
     PropTypes.shape(networkRuntimeConnectionParameter),
     PropTypes.shape(usbRuntimeConnectionParameter),
-  ]).isRequired,
+  ]),
 
-  // device name, only available on USB devices
+  // device name
+  // unavailable on this-firefox and network-location runtimes
   deviceName: PropTypes.string,
 };
 
@@ -61,15 +63,20 @@ const runtime = {
   // unique id for the runtime
   id: PropTypes.string.isRequired,
 
-  // available after the connection to the runtime is established
-  runtimeDetails: PropTypes.shape(runtimeDetails),
-
   // object containing non standard properties that depend on the runtime type,
   // unavailable on this-firefox runtime
   extra: PropTypes.shape(runtimeExtra),
 
+  // unknown runtimes are placeholders for devices where the runtime has not been started
+  // yet. For instance an ADB device connected without a compatible runtime running.
+  isUnknown: PropTypes.bool.isRequired,
+
   // display name of the runtime
   name: PropTypes.string.isRequired,
+
+  // available after the connection to the runtime is established
+  // unavailable on disconnected runtimes
+  runtimeDetails: PropTypes.shape(runtimeDetails),
 
   // runtime type, for instance "network", "usb" ...
   type: PropTypes.string.isRequired,

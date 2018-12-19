@@ -35,6 +35,7 @@ function RuntimesState() {
     selectedRuntimeId: null,
     thisFirefoxRuntimes: [{
       id: RUNTIMES.THIS_FIREFOX,
+      isUnknown: false,
       name: "This Firefox",
       type: RUNTIMES.THIS_FIREFOX,
     }],
@@ -93,6 +94,7 @@ function runtimesReducer(state = RuntimesState(), action) {
           extra: {
             connectionParameters: { host, port: parseInt(port, 10) },
           },
+          isUnknown: false,
           name: location,
           type: RUNTIMES.NETWORK,
         };
@@ -116,18 +118,23 @@ function runtimesReducer(state = RuntimesState(), action) {
     case USB_RUNTIMES_UPDATED: {
       const { runtimes } = action;
       const usbRuntimes = runtimes.map(runtime => {
+        // Retrieve runtimeDetails from existing runtimes.
         const existingRuntime = findRuntimeById(runtime.id, state);
-        const existingRuntimeDetails = existingRuntime ?
-          existingRuntime.runtimeDetails : null;
+        const runtimeDetails = existingRuntime ? existingRuntime.runtimeDetails : null;
+
+        // Set connectionParameters only for known runtimes.
+        const socketPath = runtime._socketPath;
+        const connectionParameters = runtime.isUnknown() ? null : { socketPath };
 
         return {
           id: runtime.id,
           extra: {
-            connectionParameters: { socketPath: runtime._socketPath },
+            connectionParameters,
             deviceName: runtime.deviceName,
           },
+          isUnknown: runtime.isUnknown(),
           name: runtime.shortName,
-          runtimeDetails: existingRuntimeDetails,
+          runtimeDetails,
           type: RUNTIMES.USB,
         };
       });
