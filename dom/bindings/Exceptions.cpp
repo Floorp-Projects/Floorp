@@ -10,7 +10,6 @@
 #include "js/TypeDecls.h"
 #include "jsapi.h"
 #include "js/SavedFrameAPI.h"
-#include "xpcpublic.h"
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/DOMException.h"
@@ -198,7 +197,7 @@ already_AddRefed<nsIStackFrame> GetCurrentJSStack(int32_t aMaxDepth) {
 
 namespace exceptions {
 
-class JSStackFrame final : public nsIStackFrame, public xpc::JSStackFrameBase {
+class JSStackFrame : public nsIStackFrame {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(JSStackFrame)
@@ -209,12 +208,6 @@ class JSStackFrame final : public nsIStackFrame, public xpc::JSStackFrameBase {
 
  private:
   virtual ~JSStackFrame();
-
-  void Clear() override { mStack = nullptr; }
-
-  // Remove this frame from the per-realm list of live frames,
-  // and clear out the stack pointer.
-  void UnregisterAndClear();
 
   JS::Heap<JSObject*> mStack;
   nsString mFormattedStack;
@@ -253,29 +246,15 @@ JSStackFrame::JSStackFrame(JS::Handle<JSObject*> aStack)
   MOZ_ASSERT(JS::IsUnwrappedSavedFrame(mStack));
 
   mozilla::HoldJSObjects(this);
-
-  xpc::RegisterJSStackFrame(js::GetNonCCWObjectRealm(aStack), this);
 }
 
-JSStackFrame::~JSStackFrame() {
-  UnregisterAndClear();
-  mozilla::DropJSObjects(this);
-}
-
-void JSStackFrame::UnregisterAndClear() {
-  if (!mStack) {
-    return;
-  }
-
-  xpc::UnregisterJSStackFrame(js::GetNonCCWObjectRealm(mStack), this);
-  Clear();
-}
+JSStackFrame::~JSStackFrame() { mozilla::DropJSObjects(this); }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(JSStackFrame)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(JSStackFrame)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mCaller)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mAsyncCaller)
-  tmp->UnregisterAndClear();
+  tmp->mStack = nullptr;
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(JSStackFrame)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCaller)

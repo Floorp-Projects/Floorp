@@ -382,51 +382,6 @@ static bool PrincipalImmuneToScriptPolicy(nsIPrincipal* aPrincipal) {
   return false;
 }
 
-void RealmPrivate::RegisterStackFrame(JSStackFrameBase* aFrame) {
-  mJSStackFrames.PutEntry(aFrame);
-}
-
-void RealmPrivate::UnregisterStackFrame(JSStackFrameBase* aFrame) {
-  mJSStackFrames.RemoveEntry(aFrame);
-}
-
-void RealmPrivate::NukeJSStackFrames() {
-  for (auto iter = mJSStackFrames.Iter(); !iter.Done(); iter.Next()) {
-    iter.Get()->GetKey()->Clear();
-  }
-
-  mJSStackFrames.Clear();
-}
-
-void xpc::RegisterJSStackFrame(JS::Realm* aRealm,
-                               JSStackFrameBase* aStackFrame) {
-  RealmPrivate* realmPrivate = RealmPrivate::Get(aRealm);
-  if (!realmPrivate) {
-    return;
-  }
-
-  realmPrivate->RegisterStackFrame(aStackFrame);
-}
-
-void xpc::UnregisterJSStackFrame(JS::Realm* aRealm,
-                                 JSStackFrameBase* aStackFrame) {
-  RealmPrivate* realmPrivate = RealmPrivate::Get(aRealm);
-  if (!realmPrivate) {
-    return;
-  }
-
-  realmPrivate->UnregisterStackFrame(aStackFrame);
-}
-
-void xpc::NukeJSStackFrames(JS::Realm* aRealm) {
-  RealmPrivate* realmPrivate = RealmPrivate::Get(aRealm);
-  if (!realmPrivate) {
-    return;
-  }
-
-  realmPrivate->NukeJSStackFrames();
-}
-
 Scriptability::Scriptability(JS::Realm* realm)
     : mScriptBlocks(0),
       mDocShellAllowsScript(true),
