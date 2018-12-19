@@ -10,7 +10,7 @@ const { FrontClassWithSpec, registerFront } = require("devtools/shared/protocol"
 /**
  * Usage example of the reflow front:
  *
- * let front = new ReflowFront(toolbox.target.client, toolbox.target.form);
+ * let front = await target.getFront("reflow");
  * front.on("reflows", this._onReflows);
  * front.start();
  * // now wait for events to come

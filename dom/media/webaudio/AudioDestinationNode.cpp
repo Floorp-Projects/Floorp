@@ -252,9 +252,8 @@ class DestinationNodeEngine final : public AudioNodeEngine {
         }
       };
 
-      aStream->Graph()->DispatchToMainThreadAfterStreamStateUpdate(
-          NS_NewRunnableFunction("dom::WebAudioAudibleStateChangedRunnable",
-                                 r));
+      aStream->Graph()->DispatchToMainThreadStableState(NS_NewRunnableFunction(
+          "dom::WebAudioAudibleStateChangedRunnable", r));
     }
 
     if (isInputAudible) {

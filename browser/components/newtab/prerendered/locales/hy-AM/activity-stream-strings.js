@@ -2,7 +2,7 @@
 window.gActivityStreamStrings = {
   "newtab_page_title": "Նոր ներդիր",
   "header_top_sites": "Լավագույն կայքեր",
-  "header_highlights": "Գունանշում",
+  "header_highlights": "Գունանշումներ",
   "header_recommended_by": "Առաջարկվում է {provider}",
   "context_menu_button_sr": "Բաց կոնտեքստի ընտրացանկը {title}-ի համար",
   "section_context_menu_button_sr": "Open the section context menu",
@@ -17,7 +17,7 @@ window.gActivityStreamStrings = {
   "menu_action_open_private_window": "Բացել Նոր Գաղտնի դիտարկմամբ",
   "menu_action_dismiss": "Բաց թողնել",
   "menu_action_delete": "Ջնջել Պատմությունից",
-  "menu_action_pin": "Pin",
+  "menu_action_pin": "Ամրացնել",
   "menu_action_unpin": "Ապամրացնել",
   "confirm_history_delete_p1": "Վստահ եք, որ ցանկանում եք ջնջել այս էջի ամեն մի օրինակ ձեր պատմությունից?",
   "confirm_history_delete_notice_p2": "Այս գործողությունը չի կարող վերացվել.",

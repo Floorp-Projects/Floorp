@@ -18,3 +18,4 @@ class CallWatcherFront extends protocol.FrontClassWithSpec(callWatcherSpec) {
   }
 }
 exports.CallWatcherFront = CallWatcherFront;
+protocol.registerFront(CallWatcherFront);
