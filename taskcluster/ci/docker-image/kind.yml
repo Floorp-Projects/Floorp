@@ -150,3 +150,6 @@ jobs:
     symbol: I(pip)
   firefox-snap:
     symbol: I(snap)
+  webrender:
+    symbol: I(webrender)
+    parent: debian9-base
