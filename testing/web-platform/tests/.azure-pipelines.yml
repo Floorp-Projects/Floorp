@@ -69,12 +69,17 @@ jobs:
   - template: tools/ci/azure/install_safari.yml
   - template: tools/ci/azure/update_hosts.yml
   - template: tools/ci/azure/update_manifest.yml
-  - script: no_proxy='*' ./wpt run --yes --no-manifest-update --manifest MANIFEST.json --metadata infrastructure/metadata/ --channel dev chrome infrastructure/
+  - script: no_proxy='*' ./wpt run --yes --no-manifest-update --manifest MANIFEST.json --metadata infrastructure/metadata/ --log-tbpl $(Build.ArtifactStagingDirectory)/chrome.tbpl.log --log-tbpl-level info --channel dev chrome infrastructure/
     displayName: 'Run tests (Chrome Dev)'
-  - script: no_proxy='*' ./wpt run --yes --no-manifest-update --manifest MANIFEST.json --metadata infrastructure/metadata/ --channel nightly firefox infrastructure/
+  - script: no_proxy='*' ./wpt run --yes --no-manifest-update --manifest MANIFEST.json --metadata infrastructure/metadata/ --log-tbpl $(Build.ArtifactStagingDirectory)/firefox.tbpl.log --log-tbpl-level info --channel nightly firefox infrastructure/
     displayName: 'Run tests (Firefox Nightly)'
-  - script: no_proxy='*' ./wpt run --yes --no-manifest-update --manifest MANIFEST.json --metadata infrastructure/metadata/ --channel preview safari infrastructure/
+  - script: no_proxy='*' ./wpt run --yes --no-manifest-update --manifest MANIFEST.json --metadata infrastructure/metadata/ --log-tbpl $(Build.ArtifactStagingDirectory)/safari.tbpl.log --log-tbpl-level info --channel preview safari infrastructure/
     displayName: 'Run tests (Safari Technology Preview)'
+  - task: PublishBuildArtifacts@1
+    displayName: 'Publish results'
+    inputs:
+      artifactName: 'infrastructure'
+    condition: succeededOrFailed()
 
 - job: tools_unittest_macOS
   displayName: 'tools/ unittests (macOS)'
