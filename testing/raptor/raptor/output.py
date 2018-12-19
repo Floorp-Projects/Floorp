@@ -21,12 +21,14 @@ LOG = get_proxy_logger(component="raptor-output")
 class Output(object):
     """class for raptor output"""
 
-    def __init__(self, results):
+    def __init__(self, results, supporting_data):
         """
         - results : list of RaptorTestResult instances
         """
         self.results = results
         self.summarized_results = {}
+        self.supporting_data = supporting_data
+        self.summarized_supporting_data = []
 
     def summarize(self):
         suites = []
@@ -138,6 +140,85 @@ class Output(object):
                 suite['value'] = self.construct_summary(vals, testname=test.name)
 
         self.summarized_results = test_results
+
+    def summarize_supporting_data(self):
+        '''
+        Supporting data was gathered outside of the main raptor test; it will be kept
+        separate from the main raptor test results. Summarize it appropriately.
+
+        supporting_data = {'type': 'data-type',
+                           'test': 'raptor-test-ran-when-data-was-gathered',
+                           'unit': 'unit that the values are in',
+                           'values': {
+                               'name': value,
+                               'nameN': valueN}}
+
+        More specifically, power data will look like this:
+
+        supporting_data = {'type': 'power',
+                           'test': 'raptor-speedometer-geckoview',
+                           'unit': 'mAh',
+                           'values': {
+                               'cpu': cpu,
+                               'wifi': wifi,
+                               'screen': screen,
+                               'proportional': proportional}}
+
+        We want to treat each value as a 'subtest'; and for the overall aggregated
+        test result we will add all of these subtest values togther.
+        '''
+        if self.supporting_data is None:
+            return
+
+        self.summarized_supporting_data = []
+
+        for data_set in self.supporting_data:
+
+            suites = []
+            test_results = {
+                'framework': {
+                    'name': 'raptor',
+                },
+                'suites': suites,
+            }
+
+            data_type = data_set['type']
+            LOG.info("summarizing %s data" % data_type)
+
+            # suite name will be name of the actual raptor test that ran, plus the type of
+            # supporting data i.e. 'raptor-speedometer-geckoview-power'
+            vals = []
+            subtests = []
+            suite = {
+                'name': data_set['test'] + "-" + data_set['type'],
+                'type': data_set['type'],
+                'subtests': subtests,
+                'lowerIsBetter': True,
+                'unit': data_set['unit'],
+                'alertThreshold': 2.0
+            }
+
+            suites.append(suite)
+
+            # each supporting data measurement becomes a subtest, with the measurement type
+            # used for the subtest name. i.e. 'raptor-speedometer-geckoview-power-cpu'
+            # the overall 'suite' value for supporting data will be the sum of all measurements
+            for measurement_name, value in data_set['values'].iteritems():
+                new_subtest = {}
+                new_subtest['name'] = data_set['test'] + "-" + data_type + "-" + measurement_name
+                new_subtest['value'] = value
+                new_subtest['lowerIsBetter'] = True
+                new_subtest['alertThreshold'] = 2.0
+                new_subtest['unit'] = data_set['unit']
+                subtests.append(new_subtest)
+                vals.append([new_subtest['value'], new_subtest['name']])
+
+            if len(subtests) > 1:
+                suite['value'] = self.construct_summary(vals, testname="supporting_data")
+
+            self.summarized_supporting_data.append(test_results)
+
+        return
 
     def parseSpeedometerOutput(self, test):
         # each benchmark 'index' becomes a subtest; each pagecycle / iteration
@@ -492,16 +573,59 @@ class Output(object):
             for result in self.summarized_results:
                 f.write("%s\n" % result)
 
-        # the output that treeherder expects to find
+        # when gecko_profiling, we don't want results ingested by Perfherder
         extra_opts = self.summarized_results['suites'][0].get('extraOptions', [])
         if 'gecko_profile' not in extra_opts:
-            LOG.info("PERFHERDER_DATA: %s" % json.dumps(self.summarized_results))
+            # if we have supporting data i.e. power, we ONLY want those measurements
+            # dumped out. TODO: Bug 1515406 - Add option to output both supplementary
+            # data (i.e. power) and the regular Raptor test result
+            # Both are already available as separate PERFHERDER_DATA json blobs
+            if len(self.summarized_supporting_data) == 0:
+                LOG.info("PERFHERDER_DATA: %s" % json.dumps(self.summarized_results))
+            else:
+                LOG.info("supporting data measurements exist - only posting those to perfherder")
         else:
             LOG.info("gecko profiling enabled - not posting results for perfherder")
+
         json.dump(self.summarized_results, open(results_path, 'w'), indent=2,
                   sort_keys=True)
-
         LOG.info("results can also be found locally at: %s" % results_path)
+
+        return True
+
+    def output_supporting_data(self):
+        '''
+        Supporting data was gathered outside of the main raptor test; it has already
+        been summarized, now output it appropriately.
+
+        We want to output supporting data in a completely separate perfherder json blob and
+        in a corresponding file artifact. This way supporting data can be ingested as it's own
+        test suite in perfherder and alerted upon if desired. Kept outside of the test results
+        from the actual Raptor test that was ran when the supporting data was gathered.
+        '''
+        if len(self.summarized_supporting_data) == 0:
+            LOG.error("error: no summarized supporting data found!")
+            return False
+
+        for next_data_set in self.summarized_supporting_data:
+            data_type = next_data_set['suites'][0]['type']
+
+            if os.environ['MOZ_UPLOAD_DIR']:
+                # i.e. testing/mozharness/build/raptor.json locally; in production it will
+                # be at /tasks/task_*/build/ (where it will be picked up by mozharness later
+                # and made into a tc artifact accessible in treeherder as perfherder-data.json)
+                results_path = os.path.join(os.path.dirname(os.environ['MOZ_UPLOAD_DIR']),
+                                            'raptor-%s.json' % data_type)
+            else:
+                results_path = os.path.join(os.getcwd(), 'raptor-%s.json' % data_type)
+
+            # dump data to raptor-data.json artifact
+            json.dump(next_data_set, open(results_path, 'w'), indent=2, sort_keys=True)
+
+            # the output that treeherder expects to find
+            LOG.info("PERFHERDER_DATA: %s" % json.dumps(next_data_set))
+            LOG.info("%s results can also be found locally at: %s" % (data_type, results_path))
+
         return True
 
     @classmethod
@@ -630,6 +754,11 @@ class Output(object):
         results = [i for i, j in val_list]
         return round(filter.geometric_mean(results), 2)
 
+    @classmethod
+    def supporting_data_total(cls, val_list):
+        results = [i for i, j in val_list]
+        return sum(results)
+
     def construct_summary(self, vals, testname):
         if testname.startswith('raptor-v8_7'):
             return self.v8_Metric(vals)
@@ -653,6 +782,8 @@ class Output(object):
             return self.wasm_misc_score(vals)
         elif testname.startswith('raptor-wasm-godot'):
             return self.wasm_godot_score(vals)
+        elif testname.startswith('supporting_data'):
+            return self.supporting_data_total(vals)
         elif len(vals) > 1:
             return round(filter.geometric_mean([i for i, j in vals]), 2)
         else:
