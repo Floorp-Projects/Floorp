@@ -2441,6 +2441,7 @@ impl PicturePrimitive {
                         &transform,
                         &device_rect,
                         frame_context.device_pixel_scale,
+                        true,
                     );
 
                     let picture_task = RenderTask::new_picture(
@@ -2480,6 +2481,7 @@ impl PicturePrimitive {
                         &transform,
                         &device_rect,
                         frame_context.device_pixel_scale,
+                        true,
                     );
 
                     // TODO(gw): Probably worth changing the render task caching API
@@ -2555,6 +2557,7 @@ impl PicturePrimitive {
                     &transform,
                     &device_rect,
                     frame_context.device_pixel_scale,
+                    true,
                 );
 
                 let mut picture_task = RenderTask::new_picture(
@@ -2621,6 +2624,7 @@ impl PicturePrimitive {
                     &transform,
                     &clipped,
                     frame_context.device_pixel_scale,
+                    true,
                 );
 
                 let picture_task = RenderTask::new_picture(
@@ -2660,6 +2664,7 @@ impl PicturePrimitive {
                     &transform,
                     &clipped,
                     frame_context.device_pixel_scale,
+                    true,
                 );
 
                 let picture_task = RenderTask::new_picture(
@@ -2679,11 +2684,19 @@ impl PicturePrimitive {
                 PictureSurface::RenderTask(render_task_id)
             }
             PictureCompositeMode::Blit => {
+                // The SplitComposite shader used for 3d contexts doesn't snap
+                // to pixels, so we shouldn't snap our uv coordinates either.
+                let supports_snapping = match self.context_3d {
+                    Picture3DContext::In{ .. } => false,
+                    _ => true,
+                };
+
                 let uv_rect_kind = calculate_uv_rect_kind(
                     &pic_rect,
                     &transform,
                     &clipped,
                     frame_context.device_pixel_scale,
+                    supports_snapping,
                 );
 
                 let picture_task = RenderTask::new_picture(
@@ -2716,6 +2729,7 @@ fn calculate_screen_uv(
     transform: &PictureToRasterTransform,
     rendered_rect: &DeviceRect,
     device_pixel_scale: DevicePixelScale,
+    supports_snapping: bool,
 ) -> DevicePoint {
     let raster_pos = match transform.transform_point2d(local_pos) {
         Some(pos) => pos,
@@ -2733,7 +2747,7 @@ fn calculate_screen_uv(
     let mut device_pos = raster_pos * raster_to_device_space;
 
     // Apply snapping for axis-aligned scroll nodes, as per prim_shared.glsl.
-    if transform.transform_kind() == TransformedRectKind::AxisAligned {
+    if transform.transform_kind() == TransformedRectKind::AxisAligned && supports_snapping {
         device_pos.x = (device_pos.x + 0.5).floor();
         device_pos.y = (device_pos.y + 0.5).floor();
     }
@@ -2751,6 +2765,7 @@ fn calculate_uv_rect_kind(
     transform: &PictureToRasterTransform,
     rendered_rect: &DeviceIntRect,
     device_pixel_scale: DevicePixelScale,
+    supports_snapping: bool,
 ) -> UvRectKind {
     let rendered_rect = rendered_rect.to_f32();
 
@@ -2759,6 +2774,7 @@ fn calculate_uv_rect_kind(
         transform,
         &rendered_rect,
         device_pixel_scale,
+        supports_snapping,
     );
 
     let top_right = calculate_screen_uv(
@@ -2766,6 +2782,7 @@ fn calculate_uv_rect_kind(
         transform,
         &rendered_rect,
         device_pixel_scale,
+        supports_snapping,
     );
 
     let bottom_left = calculate_screen_uv(
@@ -2773,6 +2790,7 @@ fn calculate_uv_rect_kind(
         transform,
         &rendered_rect,
         device_pixel_scale,
+        supports_snapping,
     );
 
     let bottom_right = calculate_screen_uv(
@@ -2780,6 +2798,7 @@ fn calculate_uv_rect_kind(
         transform,
         &rendered_rect,
         device_pixel_scale,
+        supports_snapping,
     );
 
     UvRectKind::Quad {
