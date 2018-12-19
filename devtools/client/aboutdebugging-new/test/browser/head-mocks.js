@@ -113,12 +113,13 @@ class Mocks {
    * @param {String} id
    *        The id of the runtime.
    * @param {Object} optional object used to create the fake runtime & device
-   *        - deviceName: {String} Device name
-   *        - shortName: {String} Short name for the device
-   *        - name: {String} Application name, for instance "Firefox"
    *        - channel: {String} Release channel, for instance "release", "nightly"
-   *        - version: {String} Version, for instance "63.0a"
+   *        - deviceName: {String} Device name
+   *        - isUnknown: {Function} should return a boolean, true for unknown runtimes
+   *        - name: {String} Application name, for instance "Firefox"
+   *        - shortName: {String} Short name for the device
    *        - socketPath: {String} (should only be used for connecting, so not here)
+   *        - version: {String} Version, for instance "63.0a"
    * @return {Object} Returns the mock client created for this runtime so that methods
    * can be overridden on it.
    */
@@ -128,6 +129,7 @@ class Mocks {
       id: id,
       _socketPath: runtimeInfo.socketPath || "test/path",
       deviceName: runtimeInfo.deviceName || "test device name",
+      isUnknown: runtimeInfo.isUnknown || (() => false),
       shortName: runtimeInfo.shortName || "testshort",
     });
 
@@ -135,8 +137,8 @@ class Mocks {
     const mockUsbClient = createClientMock();
     mockUsbClient.getDeviceDescription = () => {
       return {
-        name: runtimeInfo.name || "TestBrand",
         channel: runtimeInfo.channel || "release",
+        name: runtimeInfo.name || "TestBrand",
         version: runtimeInfo.version || "1.0",
       };
     };
