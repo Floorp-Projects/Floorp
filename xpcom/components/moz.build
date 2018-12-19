@@ -29,6 +29,10 @@ EXPORTS.mozilla += [
     'ModuleUtils.h',
 ]
 
+XPCOM_MANIFESTS += [
+    'components.conf',
+]
+
 if CONFIG['COMPILE_ENVIRONMENT']:
     EXPORTS.mozilla += [
         '!Components.h',
