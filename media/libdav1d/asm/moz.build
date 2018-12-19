@@ -53,7 +53,9 @@ if CONFIG['CPU_ARCH'] in ('x86', 'x86_64'):
         '../../../third_party/dav1d/src/x86/cdef.asm',
         '../../../third_party/dav1d/src/x86/cpuid.asm',
         '../../../third_party/dav1d/src/x86/ipred.asm',
+        '../../../third_party/dav1d/src/x86/ipred_ssse3.asm',
         '../../../third_party/dav1d/src/x86/itx.asm',
+        '../../../third_party/dav1d/src/x86/itx_ssse3.asm',
         '../../../third_party/dav1d/src/x86/loopfilter.asm',
         '../../../third_party/dav1d/src/x86/looprestoration.asm',
         '../../../third_party/dav1d/src/x86/mc.asm',
@@ -72,18 +74,18 @@ if CONFIG['CPU_ARCH'] in ('x86', 'x86_64'):
     ]
 
     GENERATED_FILES += [
-        '10bd_%s' % p for p in bitdepth_basenames
+        '16bd_%s' % p for p in bitdepth_basenames
     ]
 
     SOURCES += [
-        '!10bd_%s' % p for p in bitdepth_basenames
+        '!16bd_%s' % p for p in bitdepth_basenames
     ]
 
     for f in bitdepth_basenames:
-        a = GENERATED_FILES['10bd_%s' % f]
+        a = GENERATED_FILES['16bd_%s' % f]
         a.script = '../generate_source.py:add_define'
         a.inputs = [relative_path + f]
-        a.flags = ['BITDEPTH', '10']
+        a.flags = ['BITDEPTH', '16']
 
     GENERATED_FILES += [
         '8bd_%s' % p for p in bitdepth_basenames
@@ -124,18 +126,18 @@ elif CONFIG['CPU_ARCH'] == 'arm' or CONFIG['CPU_ARCH'] == 'aarch64':
         ]
 
     GENERATED_FILES += [
-        '10bd_%s' % p for p in bitdepth_basenames
+        '16bd_%s' % p for p in bitdepth_basenames
     ]
 
     SOURCES += [
-        '!10bd_%s' % p for p in bitdepth_basenames
+        '!16bd_%s' % p for p in bitdepth_basenames
     ]
 
     for f in bitdepth_basenames:
-        a = GENERATED_FILES['10bd_%s' % f]
+        a = GENERATED_FILES['16bd_%s' % f]
         a.script = '../generate_source.py:add_define'
         a.inputs = [relative_path + f]
-        a.flags = ['BITDEPTH', '10']
+        a.flags = ['BITDEPTH', '16']
 
     GENERATED_FILES += [
         '8bd_%s' % p for p in bitdepth_basenames
