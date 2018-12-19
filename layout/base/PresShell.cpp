@@ -2030,6 +2030,18 @@ void PresShell::FireResizeEvent() {
     return;
   }
 
+  // If event handling is suppressed, repost the resize event to the refresh
+  // driver. The event is marked as delayed so that the refresh driver does not
+  // continue ticking.
+  if (mDocument->EventHandlingSuppressed()) {
+    if (MOZ_LIKELY(!mDocument->GetBFCacheEntry())) {
+      mDocument->SetHasDelayedRefreshEvent();
+      mPresContext->RefreshDriver()->AddResizeEventFlushObserver
+          (this, /* aDelayed = */ true);
+    }
+    return;
+  }
+
   mResizeEventPending = false;
 
   // Send resize event from here.

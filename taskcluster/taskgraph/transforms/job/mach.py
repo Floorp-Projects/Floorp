@@ -8,17 +8,14 @@ Support for running mach tasks (via run-task)
 from __future__ import absolute_import, print_function, unicode_literals
 
 from taskgraph.transforms.job import run_job_using, configure_taskdesc_for_run
-from taskgraph.util.schema import (
-    Schema,
-    taskref_or_string,
-)
+from taskgraph.util.schema import Schema
 from voluptuous import Required, Optional, Any
 
 mach_schema = Schema({
     Required('using'): 'mach',
 
     # The mach command (omitting `./mach`) to run
-    Required('mach'): taskref_or_string,
+    Required('mach'): basestring,
 
     # The sparse checkout profile to use. Value is the filename relative to the
     # directory where sparse profiles are defined (build/sparse-profiles/).
@@ -44,16 +41,8 @@ defaults = {
 def configure_mach(config, job, taskdesc):
     run = job['run']
 
-    command_prefix = 'cd $GECKO_PATH && ./mach '
-    mach = run['mach']
-    if isinstance(mach, dict):
-        ref, pattern = next(iter(mach.items()))
-        command = {ref: command_prefix + pattern}
-    else:
-        command = command_prefix + mach
-
     # defer to the run_task implementation
-    run['command'] = command
+    run['command'] = 'cd $GECKO_PATH && ./mach {mach}'.format(**run)
     run['using'] = 'run-task'
     del run['mach']
     configure_taskdesc_for_run(config, job, taskdesc, job['worker']['implementation'])
