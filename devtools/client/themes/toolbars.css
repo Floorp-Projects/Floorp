@@ -221,6 +221,10 @@ splitter.devtools-horizontal-splitter,
   -moz-context-properties: fill;
 }
 
+html[dir="rtl"] .devtools-dropdown-button {
+  background-position: left center !important;
+}
+
 .devtools-dropdown-button:not(:hover) {
   background-color: transparent;
 }
