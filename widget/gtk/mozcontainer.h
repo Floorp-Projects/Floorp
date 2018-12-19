@@ -96,8 +96,6 @@ struct wl_egl_window *moz_container_get_wl_egl_window(MozContainer *container);
 
 gboolean moz_container_has_wl_egl_window(MozContainer *container);
 gboolean moz_container_surface_needs_clear(MozContainer *container);
-void moz_container_scale_changed(MozContainer *container,
-                                 GtkAllocation *aAllocation);
 #endif
 
 #endif /* __MOZ_CONTAINER_H__ */
