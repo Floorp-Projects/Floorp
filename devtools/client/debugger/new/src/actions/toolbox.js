@@ -8,7 +8,7 @@ const { isDevelopment } = require("devtools-environment");
 const { getSelectedFrameId } = require("../selectors");
 
 import type { ThunkArgs } from "./types";
-import type { Worker } from "../types";
+import type { Worker, Grip } from "../types";
 
 /**
  * @memberof actions/toolbox
@@ -45,5 +45,15 @@ export function evaluateInConsole(inputString: string) {
       `console.log("${inputString}"); console.log(${inputString})`,
       { frameId }
     );
+  };
+}
+
+export function openElementInInspectorCommand(grip: Grip) {
+  return async ({ openElementInInspector }: ThunkArgs) => {
+    if (isDevelopment()) {
+      alert(`Opening node in Inspector: ${grip.class}`);
+    } else {
+      return openElementInInspector(grip);
+    }
   };
 }
