@@ -1,0 +1,92 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test MediaRecorder Record gUM video with Timeslice, and playback of mixed memory and file blobs</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="gUM_support.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="text/javascript">
+function unexpected({name}) {
+  ok(false, `${name} unexpectedly fired`);
+}
+
+(async _ => {
+  SimpleTest.waitForExplicitFinish();
+  let blobUrl = null;
+  try {
+    // This is the memory limit per blob. If a blob is larger than this,
+    // MediaRecorder will put it in a file. We tell MediaRecorder to issue 10
+    // blobs per second (i.e., timeslice of 100ms) with a video bps of ten times
+    // the blob limit. That should make the blob size hover around this limit,
+    // causing us to go both under and over.
+    const memoryLimit = 3000;
+    await SpecialPowers.pushPrefEnv({set: [
+      ["media.recorder.max_memory", memoryLimit],
+    ]});
+    let hasMemoryBlob = false;
+    let hasFileBlob = false;
+    // We always use fake devices since the loopback ones don't make enough
+    // pixels change per frame to make the encoded frames large enough.
+    await pushGetUserMediaTestPrefs({fakeAudio: true, fakeVideo: true});
+    const stream = await navigator.mediaDevices.getUserMedia(
+      {audio: true, video: true});
+    const blobs = [];
+
+    mediaRecorder = new MediaRecorder(
+      stream, {videoBitsPerSecond: memoryLimit * 8 * 10});
+    is(mediaRecorder.stream, stream,
+       "Media recorder stream = element stream at the start of recording");
+    mediaRecorder.start(100);
+    mediaRecorder.addEventListener("warning", unexpected);
+    mediaRecorder.addEventListener("error", unexpected);
+    mediaRecorder.addEventListener("stop", unexpected);
+    mediaRecorder.addEventListener("dataavailable", ({data, type}) => {
+      const isMemoryBlob = data.size < memoryLimit;
+      const isFileBlob = data.size >= memoryLimit;
+      if (!hasMemoryBlob) {
+        hasMemoryBlob = isMemoryBlob;
+      }
+      if (!hasFileBlob) {
+        hasFileBlob = isFileBlob;
+      }
+      info(`dataavailable fired, size=${data.size}, ` +
+           `memory=${isMemoryBlob}, file=${isFileBlob}`);
+      blobs.push(data);
+
+      // We'll stop recording when we have both a memory and a file blob
+      if (hasMemoryBlob && hasFileBlob && mediaRecorder.state == "recording") {
+        info("Stopping recording");
+        mediaRecorder.removeEventListener("stop", unexpected);
+        mediaRecorder.stop();
+      }
+    });
+
+    await new Promise(r => mediaRecorder.onstop = r);
+
+    const video = document.createElement("video");
+    const blob = new Blob(blobs);
+    blobUrl = URL.createObjectURL(blob);
+    video.src = blobUrl;
+    info(`Starting playback. Blob-size=${blob.size}`);
+    video.play();
+
+    await Promise.race([
+      new Promise(res => video.onended = res),
+      new Promise((_, rej) => video.onerror = _ => rej(video.error.message)),
+    ]);
+  } catch (e) {
+    ok(false, e);
+  } finally {
+    if (blobUrl) {
+      URL.revokeObjectURL(blobUrl);
+    }
+    SimpleTest.finish();
+  }
+})();
+</script>
+</pre>
+</body>
+</html>
