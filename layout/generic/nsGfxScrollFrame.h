@@ -97,7 +97,7 @@ class ScrollFrameHelper : public nsIReflowCallback {
    */
   void CurPosAttributeChanged(nsIContent* aChild, bool aDoScroll = true);
 
-  void PostScrollEvent();
+  void PostScrollEvent(bool aDelayed = false);
   void FireScrollEvent();
   void PostScrolledAreaEvent();
   void FireScrolledAreaEvent();
@@ -127,7 +127,7 @@ class ScrollFrameHelper : public nsIReflowCallback {
   class ScrollEvent : public Runnable {
    public:
     NS_DECL_NSIRUNNABLE
-    explicit ScrollEvent(ScrollFrameHelper* aHelper);
+    explicit ScrollEvent(ScrollFrameHelper* aHelper, bool aDelayed);
     void Revoke() { mHelper = nullptr; }
 
    private:
