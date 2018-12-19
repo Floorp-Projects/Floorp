@@ -113,7 +113,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAtomicFileOutputStream)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSafeFileOutputStream)
 
 typedef mozilla::net::nsLoadGroup nsLoadGroup;
-NS_GENERIC_AGGREGATED_CONSTRUCTOR_INIT(nsLoadGroup, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsLoadGroup, Init)
 
 #include "ArrayBufferInputStream.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR(ArrayBufferInputStream)
