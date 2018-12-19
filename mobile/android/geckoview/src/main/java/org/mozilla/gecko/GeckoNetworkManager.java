@@ -390,7 +390,7 @@ public class GeckoNetworkManager extends BroadcastReceiver implements BundleEven
         }
 
         try {
-            WifiManager mgr = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
+            WifiManager mgr = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
             if (mgr == null) {
                 return 0;
             }
