@@ -40,9 +40,18 @@ var gSanitizePromptDialog = {
     if (this.selectedTimespan === Sanitizer.TIMESPAN_EVERYTHING) {
       this.prepareWarning();
       this.warningBox.hidden = false;
-      window.document.l10n.setAttributes(window.document.documentElement, "dialog-title-everything");
-    } else
+      document.l10n.setAttributes(document.documentElement, "dialog-title-everything");
+      let warningDesc = document.getElementById("sanitizeEverythingWarning");
+      // Ensure we've translated and sized the warning.
+      document.mozSubdialogReady =
+        document.l10n.translateFragment(warningDesc).then(() => {
+          // And then ensure we've run layout.
+          let rootWin = window.docShell.rootTreeItem.QueryInterface(Ci.nsIDocShell).domWindow;
+          return rootWin.promiseDocumentFlushed(() => {});
+        });
+    } else {
       this.warningBox.hidden = true;
+    }
   },
 
   selectByTimespan() {
@@ -60,7 +69,7 @@ var gSanitizePromptDialog = {
         warningBox.hidden = false;
         window.resizeBy(0, warningBox.boxObject.height);
       }
-      window.document.l10n.setAttributes(window.document.documentElement, "dialog-title-everything");
+      document.l10n.setAttributes(document.documentElement, "dialog-title-everything");
       return;
     }
 
@@ -69,7 +78,7 @@ var gSanitizePromptDialog = {
       window.resizeBy(0, -warningBox.boxObject.height);
       warningBox.hidden = true;
     }
-    window.document.l10n.setAttributes(window.document.documentElement, "dialog-title");
+    document.l10n.setAttributes(document.documentElement, "dialog-title");
   },
 
   sanitize() {
