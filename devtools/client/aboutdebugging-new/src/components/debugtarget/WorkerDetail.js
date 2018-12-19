@@ -65,7 +65,12 @@ class WorkerDetail extends PureComponent {
         {
           slug: "push-service",
           label: "Push Service",
-          pushServiceEndpoint,
+          value: dom.span(
+            {
+              className: "js-worker-push-service-value",
+            },
+            pushServiceEndpoint,
+          ),
         }
       ),
     );
