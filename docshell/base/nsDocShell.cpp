@@ -149,7 +149,6 @@
 
 #include "nsCommandManager.h"
 #include "nsPIDOMWindow.h"
-#include "nsPILoadGroupInternal.h"
 #include "nsPIWindowRoot.h"
 
 #include "IHistory.h"
@@ -6682,11 +6681,6 @@ nsresult nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
     if (NS_SUCCEEDED(rv) && !channelCreationTime.IsNull()) {
       Telemetry::AccumulateTimeDelta(Telemetry::TOTAL_CONTENT_PAGE_LOAD_TIME,
                                      channelCreationTime);
-      nsCOMPtr<nsPILoadGroupInternal> internalLoadGroup =
-          do_QueryInterface(mLoadGroup);
-      if (internalLoadGroup) {
-        internalLoadGroup->OnEndPageLoad(aChannel);
-      }
     }
   }
 

@@ -838,6 +838,15 @@ FetchDriver::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext) {
 
     response = new InternalResponse(responseStatus, statusText);
 
+    UniquePtr<mozilla::ipc::PrincipalInfo> principalInfo(
+        new mozilla::ipc::PrincipalInfo());
+    nsresult rv = PrincipalToPrincipalInfo(mPrincipal, principalInfo.get());
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    response->SetPrincipalInfo(std::move(principalInfo));
+
     response->Headers()->FillResponseHeaders(httpChannel);
 
     // If Content-Encoding or Transfer-Encoding headers are set, then the actual
@@ -1374,11 +1383,23 @@ void FetchDriver::SetController(
 void FetchDriver::SetRequestHeaders(nsIHttpChannel* aChannel) const {
   MOZ_ASSERT(aChannel);
 
+  // nsIHttpChannel has a set of pre-configured headers (Accept,
+  // Accept-Languages, ...) and we don't want to merge the Request's headers
+  // with them. This array is used to know if the current header has been aleady
+  // set, if yes, we ask necko to merge it with the previous one, otherwise, we
+  // don't want the merge.
+  nsTArray<nsCString> headersSet;
+
   AutoTArray<InternalHeaders::Entry, 5> headers;
   mRequest->Headers()->GetEntries(headers);
   bool hasAccept = false;
   for (uint32_t i = 0; i < headers.Length(); ++i) {
-    if (!hasAccept && headers[i].mName.EqualsLiteral("accept")) {
+    bool alreadySet = headersSet.Contains(headers[i].mName);
+    if (!alreadySet) {
+      headersSet.AppendElement(headers[i].mName);
+    }
+
+    if (!hasAccept && headers[i].mName.EqualsIgnoreCase("accept")) {
       hasAccept = true;
     }
     if (headers[i].mValue.IsEmpty()) {
@@ -1387,7 +1408,7 @@ void FetchDriver::SetRequestHeaders(nsIHttpChannel* aChannel) const {
       MOZ_ASSERT(NS_SUCCEEDED(rv));
     } else {
       DebugOnly<nsresult> rv = aChannel->SetRequestHeader(
-          headers[i].mName, headers[i].mValue, false /* merge */);
+          headers[i].mName, headers[i].mValue, alreadySet /* merge */);
       MOZ_ASSERT(NS_SUCCEEDED(rv));
     }
   }
