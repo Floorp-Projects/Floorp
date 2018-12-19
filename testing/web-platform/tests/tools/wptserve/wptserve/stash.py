@@ -6,28 +6,22 @@ import threading
 from multiprocessing.managers import AcquirerProxy, BaseManager, DictProxy
 from six import text_type
 
-
 class ServerDictManager(BaseManager):
     shared_data = {}
 
-
 def _get_shared():
     return ServerDictManager.shared_data
-
 
 ServerDictManager.register("get_dict",
                            callable=_get_shared,
                            proxytype=DictProxy)
 ServerDictManager.register('Lock', threading.Lock, AcquirerProxy)
 
-
 class ClientDictManager(BaseManager):
     pass
 
-
 ClientDictManager.register("get_dict")
 ClientDictManager.register("Lock")
-
 
 class StashServer(object):
     def __init__(self, address=None, authkey=None):
@@ -43,7 +37,6 @@ class StashServer(object):
         if self.manager is not None:
             self.manager.shutdown()
 
-
 def load_env_config():
     address, authkey = json.loads(os.environ["WPT_STASH_CONFIG"])
     if isinstance(address, list):
@@ -53,11 +46,9 @@ def load_env_config():
     authkey = base64.b64decode(authkey)
     return address, authkey
 
-
 def store_env_config(address, authkey):
     authkey = base64.b64encode(authkey)
     os.environ["WPT_STASH_CONFIG"] = json.dumps((address, authkey.decode("ascii")))
-
 
 def start_server(address=None, authkey=None):
     if isinstance(authkey, text_type):
@@ -83,7 +74,6 @@ class LockWrapper(object):
 
     def __exit__(self, *args, **kwargs):
         self.release()
-
 
 #TODO: Consider expiring values after some fixed time for long-running
 #servers
@@ -182,7 +172,6 @@ class Stash(object):
                 pass
 
         return value
-
 
 class StashError(Exception):
     pass

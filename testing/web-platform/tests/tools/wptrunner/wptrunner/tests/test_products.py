@@ -46,7 +46,6 @@ def test_server_start_config(product):
 
     with mock.patch.object(environment.serve, "start") as start:
         with environment.TestEnvironment(test_paths,
-                                         1,
                                          False,
                                          None,
                                          env_options,
