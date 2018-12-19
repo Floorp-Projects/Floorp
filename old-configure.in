@@ -1810,7 +1810,6 @@ if test "$MOZ_IOS"; then
 fi
 VPX_USE_YASM=
 VPX_ASFLAGS=
-VPX_AS_CONVERSION=
 LIBJPEG_TURBO_AS=
 LIBJPEG_TURBO_ASFLAGS=
 MOZ_PREF_EXTENSIONS=1
@@ -2284,7 +2283,6 @@ if test -z "$MOZ_SYSTEM_LIBVPX"; then
         dnl These flags are a lie; they're just used to enable the requisite
         dnl opcodes; actual arch detection is done at runtime.
         VPX_ASFLAGS="-march=armv7-a -mfpu=neon"
-        VPX_AS_CONVERSION='$(PERL) $(topsrcdir)/media/libvpx/libvpx/build/make/ads2gas.pl'
         dnl Building with -mfpu=neon requires either the "softfp" or the
         dnl "hardfp" ABI. Depending on the compiler's default target, and the
         dnl CFLAGS, the default ABI might be neither, in which case it is the
@@ -4139,7 +4137,6 @@ AC_SUBST(MOZ_FFVPX_FLACONLY)
 AC_SUBST_LIST(FFVPX_ASFLAGS)
 AC_SUBST(VPX_USE_YASM)
 AC_SUBST_LIST(VPX_ASFLAGS)
-AC_SUBST(VPX_AS_CONVERSION)
 AC_SUBST(LIBJPEG_TURBO_USE_YASM)
 AC_SUBST_LIST(LIBJPEG_TURBO_ASFLAGS)
 AC_SUBST(MOZ_LIBAV_FFT)
