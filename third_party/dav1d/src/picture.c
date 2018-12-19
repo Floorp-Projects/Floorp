@@ -133,6 +133,7 @@ static int picture_alloc_with_edges(Dav1dPicture *const p,
 
     if (!(p->ref = dav1d_ref_wrap(p->data[0], free_buffer, pic_ctx))) {
         p_allocator->release_picture_callback(p, p_allocator->cookie);
+        free(pic_ctx);
         fprintf(stderr, "Failed to wrap picture: %s\n", strerror(errno));
         return -ENOMEM;
     }

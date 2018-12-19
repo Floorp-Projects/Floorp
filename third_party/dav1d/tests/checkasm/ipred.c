@@ -70,7 +70,8 @@ static void check_intra_pred(Dav1dIntraPredDSPContext *const c) {
     pixel *const topleft = topleft_buf + 128;
 
     declare_func(void, pixel *dst, ptrdiff_t stride, const pixel *topleft,
-                 int width, int height, int angle, int max_width, int max_height);
+                 int width, int height, int angle, int max_width, int max_height
+                 HIGHBD_DECL_SUFFIX);
 
     for (int mode = 0; mode < N_IMPL_INTRA_PRED_MODES; mode++)
         for (int w = 4; w <= (mode == FILTER_PRED ? 32 : 64); w <<= 1)
@@ -84,20 +85,30 @@ static void check_intra_pred(Dav1dIntraPredDSPContext *const c) {
 
                     int a = 0;
                     if (mode >= Z1_PRED && mode <= Z3_PRED) /* angle */
-                        a = 90 * (mode - Z1_PRED) + z_angles[rand() % 27];
+                        a = (90 * (mode - Z1_PRED) + z_angles[rnd() % 27]) |
+                            (rnd() & 0x600);
                     else if (mode == FILTER_PRED) /* filter_idx */
-                        a = (rand() % 5) | (rand() & ~511);
+                        a = (rnd() % 5) | (rnd() & ~511);
+
+#if BITDEPTH == 16
+                    const int bitdepth_max = rnd() & 1 ? 0x3ff : 0xfff;
+#else
+                    const int bitdepth_max = 0xff;
+#endif
 
                     for (int i = -h * 2; i <= w * 2; i++)
-                        topleft[i] = rand() & ((1 << BITDEPTH) - 1);
+                        topleft[i] = rnd() & bitdepth_max;
 
-                    const int maxw = 1 + (rand() % 128), maxh = 1 + (rand() % 128);
-                    call_ref(c_dst, stride, topleft, w, h, a, maxw, maxh);
-                    call_new(a_dst, stride, topleft, w, h, a, maxw, maxh);
+                    const int maxw = 1 + (rnd() % 128), maxh = 1 + (rnd() % 128);
+                    call_ref(c_dst, stride, topleft, w, h, a, maxw, maxh
+                             HIGHBD_TAIL_SUFFIX);
+                    call_new(a_dst, stride, topleft, w, h, a, maxw, maxh
+                             HIGHBD_TAIL_SUFFIX);
                     if (memcmp(c_dst, a_dst, w * h * sizeof(*c_dst)))
                         fail();
 
-                    bench_new(a_dst, stride, topleft, w, h, a, 128, 128);
+                    bench_new(a_dst, stride, topleft, w, h, a, 128, 128
+                              HIGHBD_TAIL_SUFFIX);
                 }
             }
     report("intra_pred");
@@ -120,17 +131,23 @@ static void check_cfl_ac(Dav1dIntraPredDSPContext *const c) {
             {
                 for (int h = imax(w / 4, 4); h <= imin(w * 4, (32 >> ss_ver)); h <<= 1) {
                     const ptrdiff_t stride = 32 * sizeof(pixel);
-                    const int w_pad = rand() & ((w >> 2) - 1);
-                    const int h_pad = rand() & ((h >> 2) - 1);
+                    for (int w_pad = (w >> 2) - 1; w_pad >= 0; w_pad--) {
+                        for (int h_pad = (h >> 2) - 1; h_pad >= 0; h_pad--) {
+#if BITDEPTH == 16
+                            const int bitdepth_max = rnd() & 1 ? 0x3ff : 0xfff;
+#else
+                            const int bitdepth_max = 0xff;
+#endif
+                            for (int y = 0; y < (h << ss_ver); y++)
+                                for (int x = 0; x < (w << ss_hor); x++)
+                                    luma[y * 32 + x] = rnd() & bitdepth_max;
 
-                    for (int y = 0; y < (h << ss_ver); y++)
-                        for (int x = 0; x < (w << ss_hor); x++)
-                            luma[y * 32 + x] = rand() & ((1 << BITDEPTH) - 1);
-
-                    call_ref(c_dst, luma, stride, w_pad, h_pad, w, h);
-                    call_new(a_dst, luma, stride, w_pad, h_pad, w, h);
-                    if (memcmp(c_dst, a_dst, w * h * sizeof(*c_dst)))
-                        fail();
+                            call_ref(c_dst, luma, stride, w_pad, h_pad, w, h);
+                            call_new(a_dst, luma, stride, w_pad, h_pad, w, h);
+                            if (memcmp(c_dst, a_dst, w * h * sizeof(*c_dst)))
+                                fail();
+                        }
+                    }
 
                     bench_new(a_dst, luma, stride, 0, 0, w, h);
                 }
@@ -147,7 +164,8 @@ static void check_cfl_pred(Dav1dIntraPredDSPContext *const c) {
     pixel *const topleft = topleft_buf + 128;
 
     declare_func(void, pixel *dst, ptrdiff_t stride, const pixel *topleft,
-                 int width, int height, const int16_t *ac, int alpha);
+                 int width, int height, const int16_t *ac, int alpha
+                 HIGHBD_DECL_SUFFIX);
 
     for (int mode = 0; mode <= DC_128_PRED; mode += 1 + 2 * !mode)
         for (int w = 4; w <= 32; w <<= 1)
@@ -156,26 +174,35 @@ static void check_cfl_pred(Dav1dIntraPredDSPContext *const c) {
             {
                 for (int h = imax(w / 4, 4); h <= imin(w * 4, 32); h <<= 1)
                 {
+#if BITDEPTH == 16
+                    const int bitdepth_max = rnd() & 1 ? 0x3ff : 0xfff;
+#else
+                    const int bitdepth_max = 0xff;
+#endif
+
                     const ptrdiff_t stride = w * sizeof(pixel);
 
-                    int alpha = ((rand() & 15) + 1) * (1 - (rand() & 2));
+                    int alpha = ((rnd() & 15) + 1) * (1 - (rnd() & 2));
 
                     for (int i = -h * 2; i <= w * 2; i++)
-                        topleft[i] = rand() & ((1 << BITDEPTH) - 1);
+                        topleft[i] = rnd() & bitdepth_max;
 
                     int luma_avg = w * h >> 1;
                     for (int i = 0; i < w * h; i++)
-                        luma_avg += ac[i] = rand() & ((1 << BITDEPTH) - 1) << 3;
+                        luma_avg += ac[i] = rnd() & (bitdepth_max << 3);
                     luma_avg /= w * h;
                     for (int i = 0; i < w * h; i++)
                         ac[i] -= luma_avg;
 
-                    call_ref(c_dst, stride, topleft, w, h, ac, alpha);
-                    call_new(a_dst, stride, topleft, w, h, ac, alpha);
+                    call_ref(c_dst, stride, topleft, w, h, ac, alpha
+                             HIGHBD_TAIL_SUFFIX);
+                    call_new(a_dst, stride, topleft, w, h, ac, alpha
+                             HIGHBD_TAIL_SUFFIX);
                     if (memcmp(c_dst, a_dst, w * h * sizeof(*c_dst)))
                         fail();
 
-                    bench_new(a_dst, stride, topleft, w, h, ac, alpha);
+                    bench_new(a_dst, stride, topleft, w, h, ac, alpha
+                              HIGHBD_TAIL_SUFFIX);
                 }
             }
     report("cfl_pred");
@@ -194,13 +221,18 @@ static void check_pal_pred(Dav1dIntraPredDSPContext *const c) {
         if (check_func(c->pal_pred, "pal_pred_w%d_%dbpc", w, BITDEPTH))
             for (int h = imax(w / 4, 4); h <= imin(w * 4, 64); h <<= 1)
             {
+#if BITDEPTH == 16
+                const int bitdepth_max = rnd() & 1 ? 0x3ff : 0xfff;
+#else
+                const int bitdepth_max = 0xff;
+#endif
                 const ptrdiff_t stride = w * sizeof(pixel);
 
                 for (int i = 0; i < 8; i++)
-                    pal[i] = rand() & ((1 << BITDEPTH) - 1);
+                    pal[i] = rnd() & bitdepth_max;
 
                 for (int i = 0; i < w * h; i++)
-                    idx[i] = rand() & 7;
+                    idx[i] = rnd() & 7;
 
                 call_ref(c_dst, stride, pal, idx, w, h);
                 call_new(a_dst, stride, pal, idx, w, h);

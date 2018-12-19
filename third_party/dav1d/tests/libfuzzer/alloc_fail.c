@@ -1,6 +1,6 @@
 /*
  * Copyright © 2018, VideoLAN and dav1d authors
- * Copyright © 2018, Two Orioles, LLC
+ * Copyright © 2018, Janne Grunau
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,12 +25,41 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __DAV1D_SRC_FILM_GRAIN_H__
-#define __DAV1D_SRC_FILM_GRAIN_H__
+#include "config.h"
 
-#include "dav1d/dav1d.h"
+#include <stddef.h>
+#include <stdlib.h>
+#include <errno.h>
 
-bitfn_decls(void dav1d_apply_grain, Dav1dPicture *const out,
-                                    const Dav1dPicture *const in);
+#include "alloc_fail.h"
 
-#endif /* __DAV1D_SRC_FILM_GRAIN_H__ */
+static int fail_probability;
+
+void dav1d_setup_alloc_fail(unsigned seed, unsigned probability) {
+    srand(seed);
+
+    while (probability >= RAND_MAX)
+        probability >>= 1;
+
+    fail_probability = probability;
+}
+
+void * __wrap_malloc(size_t);
+
+void * __wrap_malloc(size_t sz) {
+    if (rand() < fail_probability)
+        return NULL;
+    return malloc(sz);
+}
+
+#if defined(HAVE_POSIX_MEMALIGN)
+int __wrap_posix_memalign(void **memptr, size_t alignment, size_t size);
+
+int __wrap_posix_memalign(void **memptr, size_t alignment, size_t size) {
+    if (rand() < fail_probability)
+        return ENOMEM;
+    return posix_memalign(memptr, alignment, size);
+}
+#else
+#error "HAVE_POSIX_MEMALIGN required"
+#endif
