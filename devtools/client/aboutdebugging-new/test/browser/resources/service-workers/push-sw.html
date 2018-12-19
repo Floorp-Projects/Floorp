@@ -9,22 +9,29 @@
 
 "use strict";
 
-window.pushServiceWorkerRegistration = (async function() {
+let registration;
+
+const registerServiceWorker = async function() {
   await new Promise(resolve => {
     const perm = { type: "desktop-notification", allow: true, context: document };
     SpecialPowers.pushPermissions([perm], resolve);
   });
 
   try {
-    const registration = navigator.serviceWorker.register("push-sw.js");
+    registration = await navigator.serviceWorker.register("push-sw.js");
     dump("Push service worker registered\n");
-    return registration;
   } catch (e) {
     dump("Push service worker not registered: " + e + "\n");
   }
+};
 
-  return null;
-})();
+// Helper called from head-serviceworker.js to unregister the service worker.
+window.getRegistration = function() {
+  return registration;
+};
+
+// Register the service worker.
+registerServiceWorker();
 
 </script>
 </body>

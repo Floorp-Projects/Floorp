@@ -27,14 +27,9 @@ add_task(async function() {
   await onTabMessage(swTab, "sw-claimed");
 
   info("Wait until the service worker appears and is running");
-  await waitUntil(() => {
-    const target = findDebugTargetByText(SERVICE_WORKER, document);
-    const status = target && target.querySelector(".js-worker-status");
-    return status && status.textContent === "Running";
-  });
+  const targetElement = await waitForServiceWorkerRunning(SERVICE_WORKER, document);
 
   // Retrieve the Push button for the worker.
-  const targetElement = findDebugTargetByText(SERVICE_WORKER, document);
   const pushButton = targetElement.querySelector(".js-push-button");
   ok(pushButton, "Found its push button");
 
@@ -44,7 +39,7 @@ add_task(async function() {
   await onPushNotification;
 
   info("Unregister the service worker");
-  await unregisterServiceWorker(swTab, "pushServiceWorkerRegistration");
+  await unregisterServiceWorker(swTab);
 
   info("Wait until the service worker disappears from about:debugging");
   await waitUntil(() => !findDebugTargetByText(SERVICE_WORKER, document));
