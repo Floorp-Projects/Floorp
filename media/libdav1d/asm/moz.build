@@ -1,0 +1,164 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# ASM enabled
+
+ASFLAGS += [
+    '-I%s/third_party/dav1d/src/' % TOPSRCDIR,
+]
+
+LOCAL_INCLUDES += [
+    '/third_party/dav1d/',
+    '/third_party/dav1d/include/',
+    '/third_party/dav1d/src/',
+]
+
+CFLAGS += [
+    # find the config.h file.
+    '-I%s/dist/include/dav1d/' % TOPOBJDIR,
+]
+
+if CONFIG['CC_TYPE'] == 'clang':
+    CFLAGS += ['-mstack-alignment=32']
+elif CONFIG['CC_TYPE'] == 'gcc':
+    CFLAGS += ['-mpreferred-stack-boundary=5']
+
+# Attaching config.asm file
+if CONFIG['CPU_ARCH'] == 'x86':
+    ASFLAGS += ['-I%s/media/libdav1d/asm/x86_32/' % TOPSRCDIR]
+    SOURCES += ['x86_32/config.asm']
+
+if CONFIG['CPU_ARCH'] == 'x86_64':
+    if CONFIG['OS_TARGET'] == 'Darwin':
+        ASFLAGS += ['-I%s/media/libdav1d/asm/x86_64/osx/' % TOPSRCDIR]
+        SOURCES += ['x86_64/osx/config.asm']
+    else:
+        ASFLAGS += ['-I%s/media/libdav1d/asm/x86_64/' % TOPSRCDIR]
+        SOURCES += ['x86_64/config.asm']
+
+if CONFIG['CPU_ARCH'] in ('x86', 'x86_64'):
+    SOURCES += [
+        '../../../third_party/dav1d/src/x86/cpu.c',
+    ]
+
+    EXPORTS.dav1d += [
+        '../../../third_party/dav1d/src/x86/cpu.h',
+    ]
+
+    # ASM source files
+    SOURCES += [
+        '../../../third_party/dav1d/src/x86/cdef.asm',
+        '../../../third_party/dav1d/src/x86/cpuid.asm',
+        '../../../third_party/dav1d/src/x86/ipred.asm',
+        '../../../third_party/dav1d/src/x86/itx.asm',
+        '../../../third_party/dav1d/src/x86/loopfilter.asm',
+        '../../../third_party/dav1d/src/x86/looprestoration.asm',
+        '../../../third_party/dav1d/src/x86/mc.asm',
+        '../../../third_party/dav1d/src/x86/mc_ssse3.asm',
+    ]
+
+    # BITDEPTH
+    relative_path = '../../../third_party/dav1d/src/x86/'
+    bitdepth_basenames = [
+        'cdef_init_tmpl.c',
+        'ipred_init_tmpl.c',
+        'itx_init_tmpl.c',
+        'loopfilter_init_tmpl.c',
+        'looprestoration_init_tmpl.c',
+        'mc_init_tmpl.c',
+    ]
+
+    GENERATED_FILES += [
+        '10bd_%s' % p for p in bitdepth_basenames
+    ]
+
+    SOURCES += [
+        '!10bd_%s' % p for p in bitdepth_basenames
+    ]
+
+    for f in bitdepth_basenames:
+        a = GENERATED_FILES['10bd_%s' % f]
+        a.script = '../generate_source.py:add_define'
+        a.inputs = [relative_path + f]
+        a.flags = ['BITDEPTH', '10']
+
+    GENERATED_FILES += [
+        '8bd_%s' % p for p in bitdepth_basenames
+    ]
+
+    SOURCES += [
+        '!8bd_%s' % p for p in bitdepth_basenames
+    ]
+
+    for f in bitdepth_basenames:
+        a = GENERATED_FILES['8bd_%s' % f]
+        a.script = '../generate_source.py:add_define'
+        a.inputs = [relative_path + f]
+        a.flags = ['BITDEPTH', '8']
+elif CONFIG['CPU_ARCH'] == 'arm' or CONFIG['CPU_ARCH'] == 'aarch64':
+    SOURCES += [
+        '../../../third_party/dav1d/src/arm/cpu.c',
+    ]
+    EXPORTS += [
+        '../../../third_party/dav1d/src/arm/cpu.h',
+    ]
+
+    # BITDEPTH c file
+    relative_path = '../../../third_party/dav1d/src/arm/'
+    bitdepth_basenames = [
+        'looprestoration_init_tmpl.c',
+        'mc_init_tmpl.c',
+    ]
+
+    if CONFIG['CPU_ARCH'] == 'aarch64':
+        bitdepth_basenames += [
+            '64/looprestoration.',
+            '64/mc.S',
+        ]
+    elif CONFIG['CPU_ARCH'] == 'arm':
+        bitdepth_basenames += [
+            '32/mc.S',
+        ]
+
+    GENERATED_FILES += [
+        '10bd_%s' % p for p in bitdepth_basenames
+    ]
+
+    SOURCES += [
+        '!10bd_%s' % p for p in bitdepth_basenames
+    ]
+
+    for f in bitdepth_basenames:
+        a = GENERATED_FILES['10bd_%s' % f]
+        a.script = '../generate_source.py:add_define'
+        a.inputs = [relative_path + f]
+        a.flags = ['BITDEPTH', '10']
+
+    GENERATED_FILES += [
+        '8bd_%s' % p for p in bitdepth_basenames
+    ]
+
+    SOURCES += [
+        '!8bd_%s' % p for p in bitdepth_basenames
+    ]
+
+    for f in bitdepth_basenames:
+        a = GENERATED_FILES['8bd_%s' % f]
+        a.script = '../generate_source.py:add_define'
+        a.inputs = [relative_path + f]
+        a.flags = ['BITDEPTH', '8']
+
+    # BITDEPTH .S files
+    if CONFIG['CPU_ARCH'] == 'aarch64':
+        SOURCES += ['../../../third_party/dav1d/src/arm/64/mc.S']
+    elif CONFIG['CPU_ARCH'] == 'arm':
+        SOURCES += ['../../../third_party/dav1d/src/arm/32/mc.S']
+
+USE_NASM = True
+
+FINAL_LIBRARY = 'gkmedias'
+
+DisableCompilerWarnings()

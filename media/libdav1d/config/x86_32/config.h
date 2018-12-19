@@ -19,7 +19,7 @@
 
 #define CONFIG_8BPC 1
 
-#define HAVE_ASM 0
+#define HAVE_ASM 1
 
 #define HAVE_POSIX_MEMALIGN 1
 
