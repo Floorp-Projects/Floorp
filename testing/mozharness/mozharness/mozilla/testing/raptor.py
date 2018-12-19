@@ -485,8 +485,7 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
             self.exception("Error while validating PERFHERDER_DATA")
             self.info(str(e))
 
-    def _artifact_perf_data(self, dest):
-        src = os.path.join(self.query_abs_dirs()['abs_work_dir'], 'raptor.json')
+    def _artifact_perf_data(self, src, dest):
         if not os.path.isdir(os.path.dirname(dest)):
             # create upload dir if it doesn't already exist
             self.info("creating dir: %s" % os.path.dirname(dest))
@@ -596,7 +595,11 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
                 self.info("copying raptor results to upload dir:")
                 dest = os.path.join(env['MOZ_UPLOAD_DIR'], 'perfherder-data.json')
                 self.info(str(dest))
-                self._artifact_perf_data(dest)
+                src = os.path.join(self.query_abs_dirs()['abs_work_dir'], 'raptor.json')
+                self._artifact_perf_data(src, dest)
+                if self.power_test:
+                    src = os.path.join(self.query_abs_dirs()['abs_work_dir'], 'raptor-power.json')
+                    self._artifact_perf_data(src, dest)
 
 
 class RaptorOutputParser(OutputParser):
