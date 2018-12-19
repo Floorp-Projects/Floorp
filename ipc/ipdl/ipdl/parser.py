@@ -43,7 +43,7 @@ class Parser:
     parseStack = []
     parsed = {}
 
-    def __init__(self, type, name, debug=0):
+    def __init__(self, type, name, debug=False):
         assert type and name
         self.type = type
         self.debug = debug
@@ -675,13 +675,13 @@ def p_BasicType(p):
     if not isinstance(p[1], TypeSpec):
         assert (len(p[1]) == 2) or (len(p[1]) == 3)
         if 2 == len(p[1]):
-            # p[1] is CxxID. isunique = 0
-            p[1] = p[1] + (0,)
+            # p[1] is CxxID. isunique = False
+            p[1] = p[1] + (False,)
         loc, id, isunique = p[1]
         p[1] = TypeSpec(loc, QualifiedId(loc, id))
         p[1].uniqueptr = isunique
     if 4 == len(p):
-        p[1].array = 1
+        p[1].array = True
     p[0] = p[1]
 
 
@@ -733,7 +733,7 @@ def p_CxxTemplateInst(p):
 
 def p_CxxUniquePtrInst(p):
     """CxxUniquePtrInst : UNIQUEPTR '<' ID '>'"""
-    p[0] = (locFromTok(p, 1), str(p[3]), 1)
+    p[0] = (locFromTok(p, 1), str(p[3]), True)
 
 
 def p_error(t):

@@ -82,20 +82,20 @@ if __name__ == '__main__':
     oksuite = unittest.TestSuite()
     errorsuite = unittest.TestSuite()
 
-    oktests, errortests = 0, 0
+    oktests, errortests = False, False
     for arg in sys.argv[3:]:
         if errortests:
             errorsuite.addTest(ErrorTestCase(ipdlargv + ['-I', errordir],
                                              arg))
         elif oktests:
             if 'ERRORTESTS' == arg:
-                errortests = 1
+                errortests = True
                 continue
             oksuite.addTest(OkTestCase(ipdlargv + ['-I', okdir],
                                        arg))
         else:
             if 'OKTESTS' == arg:
-                oktests = 1
+                oktests = True
                 continue
             ipdlargv.append(arg)
 

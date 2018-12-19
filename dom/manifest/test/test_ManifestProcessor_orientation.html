@@ -14,34 +14,34 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1079453
  * orientation member
  * https://w3c.github.io/manifest/#orientation-member
  **/
-'use strict';
+"use strict";
 
 typeTests.forEach((type) => {
   var expected = `Expect non-string orientation to be empty string : ${typeof type}.`;
   data.jsonText = JSON.stringify({
-    orientation: type
+    orientation: type,
   });
   var result = processor.process(data);
   is(result.orientation, undefined, expected);
 });
 
 var validOrientations = [
-  'any',
-  'natural',
-  'landscape',
-  'portrait',
-  'portrait-primary',
-  'portrait-secondary',
-  'landscape-primary',
-  'landscape-secondary',
-  'aNy',
-  'NaTuRal',
-  'LANDsCAPE',
-  'PORTRAIT',
-  'portrait-PRIMARY',
-  'portrait-SECONDARY',
-  'LANDSCAPE-primary',
-  'LANDSCAPE-secondary',
+  "any",
+  "natural",
+  "landscape",
+  "portrait",
+  "portrait-primary",
+  "portrait-secondary",
+  "landscape-primary",
+  "landscape-secondary",
+  "aNy",
+  "NaTuRal",
+  "LANDsCAPE",
+  "PORTRAIT",
+  "portrait-PRIMARY",
+  "portrait-SECONDARY",
+  "LANDSCAPE-primary",
+  "LANDSCAPE-secondary",
 ];
 
 validOrientations.forEach((orientation) => {
@@ -52,17 +52,17 @@ validOrientations.forEach((orientation) => {
 });
 
 var invalidOrientations = [
-  'all',
-  'ANYMany',
-  'NaTuRalle',
-  'portrait-primary portrait-secondary',
-  'portrait-primary,portrait-secondary',
-  'any-natural',
-  'portrait-landscape',
-  'primary-portrait',
-  'secondary-portrait',
-  'landscape-landscape',
-  'secondary-primary'
+  "all",
+  "ANYMany",
+  "NaTuRalle",
+  "portrait-primary portrait-secondary",
+  "portrait-primary,portrait-secondary",
+  "any-natural",
+  "portrait-landscape",
+  "primary-portrait",
+  "secondary-portrait",
+  "landscape-landscape",
+  "secondary-primary",
 ];
 
 invalidOrientations.forEach((orientation) => {
@@ -72,12 +72,12 @@ invalidOrientations.forEach((orientation) => {
   is(result.orientation, undefined, expected);
 });
 
-//Trim tests
+// Trim tests
 validOrientations.forEach((orientation) => {
   var expected = `Expect trimmed orientation to be returned.`;
   var expandedOrientation = `${seperators}${lineTerminators}${orientation}${lineTerminators}${seperators}`;
   data.jsonText = JSON.stringify({
-    orientation: expandedOrientation
+    orientation: expandedOrientation,
   });
   var result = processor.process(data);
   is(result.orientation, orientation.toLowerCase(), expected);

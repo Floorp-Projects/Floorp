@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <style>
+    rect { fill: green; stroke: green; stroke-width: 20px; }
+  </style>
+  <rect x="10" y="10" width="80" height="80"/>
+</svg>

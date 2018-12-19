@@ -6459,6 +6459,25 @@ nsWindow::CSDSupportLevel nsWindow::GetSystemCSDSupportLevel() {
     return sCSDSupportLevel;
   }
 
+  // Allow MOZ_GTK_TITLEBAR_DECORATION to override our heuristics
+  const char *decorationOverride = getenv("MOZ_GTK_TITLEBAR_DECORATION");
+  if (decorationOverride) {
+    if (strcmp(decorationOverride, "none") == 0) {
+      sCSDSupportLevel = CSD_SUPPORT_NONE;
+    } else if (strcmp(decorationOverride, "client") == 0) {
+      sCSDSupportLevel = CSD_SUPPORT_CLIENT;
+    } else if (strcmp(decorationOverride, "system") == 0) {
+      sCSDSupportLevel = CSD_SUPPORT_SYSTEM;
+    }
+    return sCSDSupportLevel;
+  }
+
+  // We use CSD titlebar mode on Wayland only
+  if (!GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
+    sCSDSupportLevel = CSD_SUPPORT_CLIENT;
+    return sCSDSupportLevel;
+  }
+
   const char *currentDesktop = getenv("XDG_CURRENT_DESKTOP");
   if (currentDesktop) {
     // GNOME Flashback (fallback)
@@ -6507,12 +6526,6 @@ nsWindow::CSDSupportLevel nsWindow::GetSystemCSDSupportLevel() {
     sCSDSupportLevel = CSD_SUPPORT_NONE;
   }
 
-  // We don't support CSD_SUPPORT_SYSTEM on Wayland
-  if (!GDK_IS_X11_DISPLAY(gdk_display_get_default()) &&
-      sCSDSupportLevel == CSD_SUPPORT_SYSTEM) {
-    sCSDSupportLevel = CSD_SUPPORT_CLIENT;
-  }
-
   // GTK_CSD forces CSD mode - use also CSD because window manager
   // decorations does not work with CSD.
   // We check GTK_CSD as well as gtk_window_should_use_csd() does.
@@ -6520,18 +6533,6 @@ nsWindow::CSDSupportLevel nsWindow::GetSystemCSDSupportLevel() {
     const char *csdOverride = getenv("GTK_CSD");
     if (csdOverride && g_strcmp0(csdOverride, "1") == 0) {
       sCSDSupportLevel = CSD_SUPPORT_CLIENT;
-    }
-  }
-
-  // Allow MOZ_GTK_TITLEBAR_DECORATION to override our heuristics
-  const char *decorationOverride = getenv("MOZ_GTK_TITLEBAR_DECORATION");
-  if (decorationOverride) {
-    if (strcmp(decorationOverride, "none") == 0) {
-      sCSDSupportLevel = CSD_SUPPORT_NONE;
-    } else if (strcmp(decorationOverride, "client") == 0) {
-      sCSDSupportLevel = CSD_SUPPORT_CLIENT;
-    } else if (strcmp(decorationOverride, "system") == 0) {
-      sCSDSupportLevel = CSD_SUPPORT_SYSTEM;
     }
   }
 

@@ -91,8 +91,13 @@
 # the x86 registry keys (e.g. the uninstall registry key).
 #ifdef HAVE_64BIT_BUILD
 !define HAVE_64BIT_BUILD
+#ifdef _ARM64_
+!define ARCH "AArch64"
+!define MinSupportedVer "Microsoft Windows 10 for ARM"
+#else
 !define ARCH "x64"
 !define MinSupportedVer "Microsoft Windows 7 x64"
+#endif
 #else
 !define MinSupportedVer "Microsoft Windows 7"
 !define ARCH "x86"
