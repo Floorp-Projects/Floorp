@@ -849,6 +849,50 @@ main {
     opacity: 1;
     transform: translateY(0); } }
 
+.sections-list.layout {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  grid-column-gap: 10px;
+  grid-row-gap: 10px; }
+  .sections-list.layout .column {
+    border: 1px solid #000; }
+  .sections-list.layout .column-12 {
+    grid-column-start: auto;
+    grid-column-end: span 12; }
+  .sections-list.layout .column-11 {
+    grid-column-start: auto;
+    grid-column-end: span 11; }
+  .sections-list.layout .column-10 {
+    grid-column-start: auto;
+    grid-column-end: span 10; }
+  .sections-list.layout .column-9 {
+    grid-column-start: auto;
+    grid-column-end: span 9; }
+  .sections-list.layout .column-8 {
+    grid-column-start: auto;
+    grid-column-end: span 8; }
+  .sections-list.layout .column-7 {
+    grid-column-start: auto;
+    grid-column-end: span 7; }
+  .sections-list.layout .column-6 {
+    grid-column-start: auto;
+    grid-column-end: span 6; }
+  .sections-list.layout .column-5 {
+    grid-column-start: auto;
+    grid-column-end: span 5; }
+  .sections-list.layout .column-4 {
+    grid-column-start: auto;
+    grid-column-end: span 4; }
+  .sections-list.layout .column-3 {
+    grid-column-start: auto;
+    grid-column-end: span 3; }
+  .sections-list.layout .column-2 {
+    grid-column-start: auto;
+    grid-column-end: span 2; }
+  .sections-list.layout .column-1 {
+    grid-column-start: auto;
+    grid-column-end: span 1; }
+
 .sections-list .section-list {
   display: grid;
   grid-gap: 32px;
@@ -921,6 +965,27 @@ main {
     .top-stories-bottom-container a.more-recommendations {
       font-weight: normal;
       font-size: 13px; }
+  @media (max-width: 865px) {
+    .top-stories-bottom-container .wrapper-topics,
+    .top-stories-bottom-container .wrapper-cta + .wrapper-more-recommendations {
+      display: none; } }
+  @media (max-width: 609px) {
+    .top-stories-bottom-container .wrapper-cta {
+      text-align: center; }
+      .top-stories-bottom-container .wrapper-cta .pocket-logged-in-cta {
+        display: block;
+        margin-inline-end: 0; }
+        .top-stories-bottom-container .wrapper-cta .pocket-logged-in-cta .pocket-cta-button {
+          max-width: none;
+          display: block;
+          margin-inline-end: 0;
+          margin: 5px 0 10px; }
+    .top-stories-bottom-container .wrapper-more-recommendations {
+      width: 100%; }
+      .top-stories-bottom-container .wrapper-more-recommendations .more-recommendations {
+        justify-content: center; }
+        .top-stories-bottom-container .wrapper-more-recommendations .more-recommendations::after {
+          display: none; } }
 
 @media (min-width: 1122px) {
   .sections-list .normal-cards .section-list {
@@ -1474,6 +1539,14 @@ main {
       vertical-align: middle; }
     .collapsible-section .section-title .click-target-container {
       vertical-align: top; }
+      @media (max-width: 609px) {
+        .collapsible-section .section-title .click-target-container {
+          display: block; }
+          .collapsible-section .section-title .click-target-container .learn-more-link-wrapper {
+            display: block;
+            text-align: center; }
+            .collapsible-section .section-title .click-target-container .learn-more-link-wrapper .learn-more-link {
+              margin-inline-start: 0; } }
       .collapsible-section .section-title .click-target-container .click-target {
         cursor: pointer;
         white-space: nowrap; }
@@ -1535,6 +1608,9 @@ main {
   .collapsible-section.collapsed .section-body {
     max-height: 0;
     overflow: hidden; }
+  @media (min-width: 610px) and (max-width: 865px) {
+    .collapsible-section[data-section-id='topstories'] .card-outer:first-child {
+      display: none; } }
 
 .asrouter-admin {
   max-width: 996px;
@@ -1609,8 +1685,10 @@ main {
 .pocket-logged-in-cta {
   font-size: 13px;
   margin-inline-end: 20px;
-  display: inline-block; }
+  display: flex;
+  align-items: flex-start; }
   .pocket-logged-in-cta .pocket-cta-button {
+    white-space: nowrap;
     background: #0060DF;
     letter-spacing: -0.34px;
     color: #FFF;
@@ -2062,6 +2140,7 @@ main {
     font-size: 12px;
     color: var(--newtab-text-secondary-color);
     margin-top: 10px;
+    display: flex;
     flex: 0 0 100%; }
   .SubmitFormSnippet .innerWrapper {
     max-width: 670px;
@@ -2248,6 +2327,7 @@ main {
     .EOYSnippetForm input[type='radio']:not(:checked):focus + .donation-amount {
       border: 1px dotted var(--newtab-link-primary-color); }
   .EOYSnippetForm .monthly-checkbox-container {
+    display: flex;
     width: 100%; }
   .EOYSnippetForm .donation-form-url {
     margin-inline-start: 18px;

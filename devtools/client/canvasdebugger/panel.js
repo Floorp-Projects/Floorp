@@ -30,7 +30,7 @@ CanvasDebuggerPanel.prototype = {
   open: async function() {
     this.panelWin.gToolbox = this._toolbox;
     this.panelWin.gTarget = this.target;
-    this.panelWin.gFront = new CanvasFront(this.target.client, this.target.form);
+    this.panelWin.gFront = await this.target.getFront("canvas");
 
     await this.panelWin.startupCanvasDebugger();
 

@@ -31,7 +31,7 @@ window.gActivityStreamStrings = {
   "menu_action_open_file": "Otevřít soubor",
   "menu_action_copy_download_link": "Kopírovat stahovaný odkaz",
   "menu_action_go_to_download_page": "Přejít na stránku stahování",
-  "menu_action_remove_download": "Odebrat z historie",
+  "menu_action_remove_download": "Odstranit z historie",
   "search_button": "Vyhledat",
   "search_header": "Vyhledat pomocí {search_engine_name}",
   "search_web_placeholder": "Vyhledat na webu",
@@ -91,7 +91,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Nastavení sekce",
   "section_menu_action_manage_webext": "Správa rozšíření",
   "section_menu_action_add_topsite": "Přidat mezi top stránky",
-  "section_menu_action_add_search_engine": "Přidat vyhledávací modul",
+  "section_menu_action_add_search_engine": "Přidat vyhledávač",
   "section_menu_action_move_up": "Posunout nahoru",
   "section_menu_action_move_down": "Posunout dolů",
   "section_menu_action_privacy_notice": "Zásady ochrany osobních údajů",
@@ -104,9 +104,8 @@ window.gActivityStreamStrings = {
   "firstrun_invalid_input": "Je požadován platný e-mail",
   "firstrun_extra_legal_links": "Pokračováním souhlasíte s {terms} a {privacy}.",
   "firstrun_terms_of_service": "Podmínkami používání služby",
-  "firstrun_privacy_notice": "Zásadami ochrany soukromí",
+  "firstrun_privacy_notice": "Zásadami ochrany osobních údajů",
   "firstrun_continue_to_login": "Pokračovat",
   "firstrun_skip_login": "Přeskočit tento krok",
-  "context_menu_title": "Otevře nabídku",
-  "pocket_learn_more": "Zjistit více"
+  "context_menu_title": "Otevře nabídku"
 };

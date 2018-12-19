@@ -107,6 +107,5 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Pribatutasun-oharra",
   "firstrun_continue_to_login": "Jarraitu",
   "firstrun_skip_login": "Saltatu urrats hau",
-  "context_menu_title": "Open menu",
-  "pocket_learn_more": "Argibide gehiago"
+  "context_menu_title": "Ireki menua"
 };

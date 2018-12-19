@@ -9,9 +9,21 @@ ChromeUtils.import("resource://gre/modules/addons/AddonRepository.jsm");
 
 async function getAddonName() {
   try {
-    const {content} = await AttributionCode.getAttrDataAsync();
-    if (!content) {
+    let {content, source} = await AttributionCode.getAttrDataAsync();
+    if (!content || source !== "addons.mozilla.org") {
       return null;
+    }
+    // Attribution data can be double encoded
+    while (content.includes("%")) {
+      try {
+        const result = decodeURIComponent(content);
+        if (result === content) {
+          break;
+        }
+        content = result;
+      } catch (e) {
+        break;
+      }
     }
     const addons = await AddonRepository.getAddonsByIDs([content]);
     return addons[0].name;

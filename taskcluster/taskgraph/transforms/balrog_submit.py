@@ -17,12 +17,17 @@ from taskgraph.util.scriptworker import (
     get_balrog_server_scope, get_worker_type_for_scope
 )
 from taskgraph.transforms.task import task_description_schema
-from voluptuous import Optional
+from voluptuous import Any, Required, Optional
 
 
 # Voluptuous uses marker objects as dictionary *keys*, but they are not
 # comparable, so we cast all of the keys back to regular strings
 task_description_schema = {str(k): v for k, v in task_description_schema.schema.iteritems()}
+
+# shortcut for a string where task references are allowed
+taskref_or_string = Any(
+    basestring,
+    {Required('task-reference'): basestring})
 
 balrog_description_schema = schema.extend({
     # unique label to describe this balrog task, defaults to balrog-{dep.label}

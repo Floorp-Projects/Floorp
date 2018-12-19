@@ -24,6 +24,17 @@ job-defaults:
     snapshot: 20171210T214726Z
 
 jobs:
+  deb7-sqlite3:
+    description: "SQLite backport for Debian wheezy"
+    treeherder:
+      symbol: Deb7(sqlite3)
+    run:
+      using: debian-package
+      dsc:
+        url: http://snapshot.debian.org/archive/debian/20171003T220520Z/pool/main/s/sqlite3/sqlite3_3.16.2-5.dsc
+        sha256: 21a2d432ace9ecf50ca5d64580af78d4414a0cfcc8b8a4f15222e11cf105da09
+      patch: sqlite3-wheezy.diff
+
   deb7-python:
     description: "Python backport for Debian wheezy"
     treeherder:

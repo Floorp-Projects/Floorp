@@ -102,7 +102,7 @@ window.gActivityStreamStrings = {
   "firstrun_form_sub_header": "pentru a continua la Firefox Sync.",
   "firstrun_email_input_placeholder": "E-mail",
   "firstrun_invalid_input": "Necesită o adresă de e-mail validă",
-  "firstrun_extra_legal_links": "Continuând, ești de acord cu {terms} și {privacy}.",
+  "firstrun_extra_legal_links": "Prin continuare, agreezi {terms} și {privacy}.",
   "firstrun_terms_of_service": "Termenii de utilizare a serviciului",
   "firstrun_privacy_notice": "Politica de confidențialitate",
   "firstrun_continue_to_login": "Continuă",
