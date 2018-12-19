@@ -23,5 +23,6 @@ dictionary TestInterfaceJSDictionary {
   any anyMember;
   (object or DOMString) objectOrStringMember;
   sequence<any> anySequenceMember;
+  record<DOMString, object> objectRecordMember;
 };
 

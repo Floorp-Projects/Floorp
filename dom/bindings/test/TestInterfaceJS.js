@@ -39,7 +39,7 @@ TestInterfaceJS.prototype = {
   pingPongObjectOrString: function(objectOrString) { return objectOrString; },
   pingPongDictionary: function(dict) { return dict; },
   pingPongDictionaryOrLong: function(dictOrLong) { return dictOrLong.anyMember || dictOrLong; },
-  pingPongMap: function(map) { return JSON.stringify(map); },
+  pingPongRecord: function(rec) { return JSON.stringify(rec); },
   objectSequenceLength: function(seq) { return seq.length; },
   anySequenceLength: function(seq) { return seq.length; },
 
