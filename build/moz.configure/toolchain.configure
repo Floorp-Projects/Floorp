@@ -1599,8 +1599,6 @@ def security_hardening_cflags(hardening_flag, asan, optimize, c_compiler, target
 
     flags = []
     js_flags = []
-    ldflags = []
-    js_ldflags = []
 
     # FORTIFY_SOURCE ------------------------------------
     # If hardening is explicitly enabled, or not explicitly disabled
@@ -1623,14 +1621,6 @@ def security_hardening_cflags(hardening_flag, asan, optimize, c_compiler, target
             if target.os != 'WINNT' or c_compiler == 'gcc':
                 flags.append("-fstack-protector-strong")
 
-        if c_compiler.type == 'clang-cl':
-            flags.append("-guard:cf")
-            js_flags.append("-guard:cf")
-            # nolongjmp is needed because clang doesn't emit the CFG tables of
-            # setjmp return addresses https://bugs.llvm.org/show_bug.cgi?id=40057
-            ldflags.append("-guard:cf,nolongjmp")
-            js_ldflags.append("-guard:cf,nolongjmp")
-
     # If ASAN _is_ on, undefine FOTIFY_SOURCE just to be safe
     if asan:
         flags.append("-U_FORTIFY_SOURCE")
@@ -1646,16 +1636,12 @@ def security_hardening_cflags(hardening_flag, asan, optimize, c_compiler, target
 
     return namespace(
         flags=flags,
-        ldflags=ldflags,
         js_flags=js_flags,
-        js_ldflags=js_ldflags,
     )
 
 
 add_old_configure_assignment('MOZ_HARDENING_CFLAGS', security_hardening_cflags.flags)
-add_old_configure_assignment('MOZ_HARDENING_LDFLAGS', security_hardening_cflags.ldflags)
 add_old_configure_assignment('MOZ_HARDENING_CFLAGS_JS', security_hardening_cflags.js_flags)
-add_old_configure_assignment('MOZ_HARDENING_LDFLAGS_JS', security_hardening_cflags.js_ldflags)
 
 # Code Coverage
 # ==============================================================
