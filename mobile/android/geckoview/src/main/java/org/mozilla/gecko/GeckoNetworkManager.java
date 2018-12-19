@@ -15,6 +15,7 @@ import org.mozilla.gecko.util.NetworkUtils.ConnectionSubType;
 import org.mozilla.gecko.util.NetworkUtils.ConnectionType;
 import org.mozilla.gecko.util.NetworkUtils.NetworkStatus;
 
+import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -394,7 +395,7 @@ public class GeckoNetworkManager extends BroadcastReceiver implements BundleEven
                 return 0;
             }
 
-            DhcpInfo d = mgr.getDhcpInfo();
+            @SuppressLint("MissingPermission") DhcpInfo d = mgr.getDhcpInfo();
             if (d == null) {
                 return 0;
             }
@@ -409,6 +410,7 @@ public class GeckoNetworkManager extends BroadcastReceiver implements BundleEven
         }
     }
 
+    @SuppressLint("MissingPermission")
     @Override // BundleEventListener
     /**
      * Handles native messages, not part of the state machine flow.
@@ -450,7 +452,7 @@ public class GeckoNetworkManager extends BroadcastReceiver implements BundleEven
             return;
         }
 
-        final WifiInfo info = mgr.getConnectionInfo();
+        @SuppressLint("MissingPermission") final WifiInfo info = mgr.getConnectionInfo();
         if (info == null) {
             callback.sendError("Cannot get connection info");
             return;

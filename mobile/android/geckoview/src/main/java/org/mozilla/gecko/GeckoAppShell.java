@@ -1108,6 +1108,7 @@ public class GeckoAppShell
         }
     }
 
+    @SuppressLint("MissingPermission")
     @WrapForJNI(calledFrom = "gecko")
     private static void vibrate(long milliseconds) {
         sVibrationEndTime = System.nanoTime() + milliseconds * 1000000;
@@ -1119,6 +1120,7 @@ public class GeckoAppShell
         }
     }
 
+    @SuppressLint("MissingPermission")
     @WrapForJNI(calledFrom = "gecko")
     private static void vibrate(long[] pattern, int repeat) {
         // If pattern.length is odd, the last element in the pattern is a
@@ -1138,6 +1140,7 @@ public class GeckoAppShell
         }
     }
 
+    @SuppressLint("MissingPermission")
     @WrapForJNI(calledFrom = "gecko")
     private static void cancelVibrate() {
         sVibrationMaybePlaying = false;
