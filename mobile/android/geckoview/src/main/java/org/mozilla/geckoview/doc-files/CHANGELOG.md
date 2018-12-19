@@ -1,4 +1,10 @@
-# v65
+---
+layout: geckoview
+---
+
+<h1> GeckoView API Changelog. </h1>
+
+## v65
 - Moved `CompositorController`, `DynamicToolbarAnimator`,
   `OverscrollEdgeEffect`, `PanZoomController` from `org.mozilla.gecko.gfx` to
   `org.mozilla.geckoview`
