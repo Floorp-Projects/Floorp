@@ -25,8 +25,6 @@ implementation "org.mozilla.components:service-firefox-accounts:{latest-version}
 
 ### Start coding
 
-> This tutorial is for version 0.15 of the FxA client.
-
 First you need some OAuth information. Generate a `client_id`, `redirectUrl` and find out the scopes for your application.
 See Firefox Account documentation for that.
 

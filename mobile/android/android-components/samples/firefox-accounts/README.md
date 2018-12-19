@@ -27,7 +27,7 @@ To restore an account from an existing state in shared preferences:
 ```kotlin
 // Inside a `launch` or `async` block:
 getSharedPreferences(FXA_STATE_PREFS_KEY, Context.MODE_PRIVATE).getString(FXA_STATE_KEY, "").let {
-	FirefoxAccount.fromJSONString(it).await()
+	FirefoxAccount.fromJSONString(it)
 }
 ```
 

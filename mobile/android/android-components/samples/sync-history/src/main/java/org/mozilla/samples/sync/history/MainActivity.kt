@@ -11,12 +11,10 @@ import android.view.View
 import android.widget.TextView
 import kotlinx.android.synthetic.main.activity_main.historySyncStatus
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.storage.sync.PlacesHistoryStorage
 import mozilla.components.browser.storage.sync.SyncAuthInfo
 import mozilla.components.concept.storage.SyncError
@@ -30,7 +28,7 @@ import kotlin.coroutines.CoroutineContext
 
 class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener, CoroutineScope {
 
-    private lateinit var whenAccount: Deferred<FirefoxAccount>
+    private lateinit var account: FirefoxAccount
     private val scopes: Array<String> = arrayOf("profile", "https://identity.mozilla.com/apps/oldsync")
 
     private val historyStoreName = "placesHistory"
@@ -63,19 +61,11 @@ class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener,
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         job = Job()
-
-        whenAccount = async {
-            getAuthenticatedAccount()?.let {
-                val profile = it.getProfile(true).await()
-                displayProfile(profile)
-                return@async it
-            }
-            FirefoxAccount(Config.release(CLIENT_ID, REDIRECT_URL))
-        }
+        account = initAccount()
 
         findViewById<View>(R.id.buttonSignIn).setOnClickListener {
             launch {
-                val url = whenAccount.await().beginOAuthFlow(scopes, true).await()
+                val url = account.beginOAuthFlow(scopes, true).await()
                 openWebView(url)
             }
         }
@@ -117,9 +107,21 @@ class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener,
         }
     }
 
+    private fun initAccount(): FirefoxAccount {
+        getAuthenticatedAccount()?.let {
+            launch {
+                val profile = it.getProfile(true).await()
+                displayProfile(profile)
+            }
+            return it
+        }
+
+        return FirefoxAccount(Config.release(CLIENT_ID, REDIRECT_URL))
+    }
+
     override fun onDestroy() {
         super.onDestroy()
-        runBlocking { whenAccount.await().close() }
+        account.close()
         job.cancel()
     }
 
@@ -149,7 +151,6 @@ class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener,
 
     private fun displayAndPersistProfile(code: String, state: String) {
         launch {
-            val account = whenAccount.await()
             account.completeOAuthFlow(code, state).await()
             val profile = account.getProfile().await()
             displayProfile(profile)

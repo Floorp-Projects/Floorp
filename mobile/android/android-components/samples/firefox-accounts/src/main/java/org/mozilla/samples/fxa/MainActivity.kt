@@ -14,12 +14,9 @@ import android.content.Intent
 import android.widget.CheckBox
 import android.widget.TextView
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import mozilla.components.service.fxa.FirefoxAccount
 import mozilla.components.service.fxa.FxaException
 import mozilla.components.service.fxa.Config
@@ -28,7 +25,7 @@ import kotlin.coroutines.CoroutineContext
 
 open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener, CoroutineScope {
 
-    private lateinit var whenAccount: Deferred<FirefoxAccount>
+    private lateinit var account: FirefoxAccount
     private var scopesWithoutKeys: Array<String> = arrayOf("profile")
     private var scopesWithKeys: Array<String> = arrayOf("profile", "https://identity.mozilla.com/apps/oldsync")
     private var scopes: Array<String> = scopesWithoutKeys
@@ -51,34 +48,18 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         job = Job()
-
-        whenAccount = async {
-            getAuthenticatedAccount()?.let {
-                val profile = it.getProfile(true).await()
-                displayProfile(profile)
-                return@async it
-            }
-            intent.extras?.getString("pairingUrl")?.let { pairingUrl ->
-                val config = Config(CONFIG_URL_PAIRING, CLIENT_ID, REDIRECT_URL)
-                val acct = FirefoxAccount(config)
-                val url = acct.beginPairingFlow(pairingUrl, scopes).await()
-                openWebView(url)
-                return@async acct
-            }
-            val config = Config(CONFIG_URL, CLIENT_ID, REDIRECT_URL)
-            return@async FirefoxAccount(config)
-        }
+        account = initAccount()
 
         findViewById<View>(R.id.buttonCustomTabs).setOnClickListener {
             launch {
-                val url = whenAccount.await().beginOAuthFlow(scopes, wantsKeys).await()
+                val url = account.beginOAuthFlow(scopes, wantsKeys).await()
                 openTab(url)
             }
         }
 
         findViewById<View>(R.id.buttonWebView).setOnClickListener {
             launch {
-                val url = whenAccount.await().beginOAuthFlow(scopes, wantsKeys).await()
+                val url = account.beginOAuthFlow(scopes, wantsKeys).await()
                 openWebView(url)
             }
         }
@@ -100,9 +81,32 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
         }
     }
 
+    private fun initAccount(): FirefoxAccount {
+        getAuthenticatedAccount()?.let {
+            launch {
+                val profile = it.getProfile(true).await()
+                displayProfile(profile)
+            }
+            return it
+        }
+
+        intent.extras?.getString("pairingUrl")?.let { pairingUrl ->
+            val config = Config(CONFIG_URL_PAIRING, CLIENT_ID, REDIRECT_URL)
+            val acct = FirefoxAccount(config)
+            launch {
+                val url = acct.beginPairingFlow(pairingUrl, scopes).await()
+                openWebView(url)
+            }
+            return acct
+        }
+
+        val config = Config(CONFIG_URL, CLIENT_ID, REDIRECT_URL)
+        return FirefoxAccount(config)
+    }
+
     override fun onDestroy() {
         super.onDestroy()
-        runBlocking { whenAccount.await().close() }
+        account.close()
         job.cancel()
     }
 
@@ -155,7 +159,6 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
 
     private fun displayAndPersistProfile(code: String, state: String) {
         launch {
-            val account = whenAccount.await()
             account.completeOAuthFlow(code, state).await()
             val profile = account.getProfile().await()
             displayProfile(profile)
