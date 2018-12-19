@@ -47,7 +47,7 @@ export class SubmitFormSnippet extends React.PureComponent {
       {url: this.refs.form.action, formData: new FormData(this.refs.form)};
 
     try {
-      const fetchRequest = new Request(url, {body: formData, method: "POST"});
+      const fetchRequest = new Request(url, {body: formData, method: "POST", credentials: "omit"});
       const response = await fetch(fetchRequest);
       json = await response.json();
     } catch (err) {

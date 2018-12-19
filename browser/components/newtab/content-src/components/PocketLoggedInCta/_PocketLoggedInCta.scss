@@ -3,9 +3,11 @@
   $min-button-height: 18px;
   font-size: 13px;
   margin-inline-end: 20px;
-  display: inline-block;
+  display: flex;
+  align-items: flex-start;
 
   .pocket-cta-button {
+    white-space: nowrap;
     background: $blue-60;
     letter-spacing: -0.34px;
     color: $white;
