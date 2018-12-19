@@ -56,6 +56,7 @@ class RaptorRunner(MozbuildObject):
         self.python_interp = sys.executable
         self.raptor_args = raptor_args
         self.host = kwargs['host']
+        self.power_test = kwargs['power_test']
         self.is_release_build = kwargs['is_release_build']
 
     def setup_benchmarks(self):
@@ -133,6 +134,7 @@ class RaptorRunner(MozbuildObject):
                 'win64': 'python3_x64.manifest',
             },
             'host': self.host,
+            'power_test': self.power_test,
             'is_release_build': self.is_release_build,
         }
 
@@ -177,6 +179,7 @@ class MachRaptor(MachCommandBase):
 
         if conditions.is_android(build_obj) or kwargs['app'] == 'geckoview':
             from mozrunner.devices.android_device import verify_android_device
+            from mozdevice import ADBAndroid, ADBHost
             if not verify_android_device(build_obj, install=True, app=kwargs['binary']):
                 return 1
 
@@ -187,7 +190,28 @@ class MachRaptor(MachCommandBase):
         raptor = self._spawn(RaptorRunner)
 
         try:
+            if kwargs['app'] == 'geckoview' and kwargs['power_test']:
+                device = ADBAndroid(verbose=True)
+                adbhost = ADBHost(verbose=True)
+                device_serial = "%s:5555" % device.get_ip_address()
+                device.command_output(["tcpip", "5555"])
+                raw_input("Please disconnect your device from USB then press ENTER...")
+                adbhost.command_output(["connect", device_serial])
+                while len(adbhost.devices()) > 1:
+                    raw_input("You must disconnect your device from USB before continuing.")
+                # must reset the environment DEVICE_SERIAL which was set during
+                # verify_android_device to match our new tcpip value.
+                os.environ["DEVICE_SERIAL"] = device_serial
             return raptor.run_test(sys.argv[2:], kwargs)
         except Exception as e:
             print(str(e))
             return 1
+        finally:
+            try:
+                if kwargs['app'] == 'geckoview' and kwargs['power_test']:
+                    raw_input("Connect device via usb and press ENTER...")
+                    device = ADBAndroid(device=device_serial, verbose=True)
+                    device.command_output(["usb"])
+                    adbhost.command_output(["disconnect", device_serial])
+            except Exception:
+                adbhost.command_output(["kill-server"])
