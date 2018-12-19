@@ -36,6 +36,20 @@ about-debugging-sidebar-item-connect-button = Connect
 # successfully connecting to them. Temporary UI, do not localize.
 about-debugging-sidebar-item-connected-label = Connected
 
+# Text displayed in sidebar items for remote devices where a compatible runtime (eg
+# Firefox) has not been detected yet. Typically, Android phones connected via USB with
+# USB debugging enabled, but where Firefox is not started.
+about-debugging-sidebar-runtime-item-waiting-for-runtime = Waiting for runtime…
+
+# Title for runtime sidebar items that are related to a specific device (USB, WiFi).
+about-debugging-sidebar-runtime-item-name =
+  .title = { $displayName } ({ $deviceName })
+# Title for runtime sidebar items where we cannot get device information (network
+# locations).
+about-debugging-sidebar-runtime-item-name-no-device =
+  .title = { $displayName }
+
+
 # Temporary text displayed in a sidebar button to refresh USB devices. Temporary
 # UI, do not localize.
 about-debugging-refresh-usb-devices-button = Refresh devices

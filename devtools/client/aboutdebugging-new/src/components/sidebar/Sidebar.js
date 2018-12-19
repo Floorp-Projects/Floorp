@@ -103,6 +103,7 @@ class Sidebar extends PureComponent {
         key: keyId,
         isConnected: runtimeHasDetails,
         isSelected,
+        isUnknown: runtime.isUnknown,
         name: runtime.name,
         runtimeId: runtime.id,
       });
