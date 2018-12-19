@@ -613,6 +613,9 @@ async function startIncognitoMonitorExtension(failOnIncognitoEvent = true) {
       browser.test.assertEq(window.incognito, expectIncognito, `windows.onRemoved ${window.id}: monitor extension got expected incognito value`);
     });
     browser.windows.onFocusChanged.addListener(async (windowId) => {
+      if (windowId == browser.windows.WINDOW_ID_NONE) {
+        return;
+      }
       // onFocusChanged will also fire for blur so check actual window.incognito value.
       let window;
       try {
