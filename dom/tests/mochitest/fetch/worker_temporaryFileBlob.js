@@ -17,5 +17,9 @@ function next() {
 }
 
 onmessage = function(e) {
-  test_basic();
+  if (e == 'xhr') {
+    test_xhr_basic();
+  } else {
+    test_fetch_basic();
+  }
 }
