@@ -3244,6 +3244,21 @@ nsresult nsFocusManager::GetNextTabbableContent(
       }
 
       frame = iterStartContent->GetPrimaryFrame();
+      // Host without frame, enter its scope.
+      if (!frame && iterStartContent->GetShadowRoot()) {
+        int32_t tabIndex = HostOrSlotTabIndexValue(iterStartContent);
+        if (tabIndex >= 0 &&
+            (aIgnoreTabIndex || aCurrentTabIndex == tabIndex)) {
+          nsIContent* contentToFocus = GetNextTabbableContentInScope(
+              iterStartContent, iterStartContent, aOriginalStartContent,
+              aForward, aForward ? 1 : 0, aIgnoreTabIndex,
+              aForDocumentNavigation, true /* aSkipOwner */);
+          if (contentToFocus) {
+            NS_ADDREF(*aResultContent = contentToFocus);
+            return NS_OK;
+          }
+        }
+      }
       // we've already skipped over the initial focused content, so we
       // don't want to traverse frames.
       getNextFrame = false;
