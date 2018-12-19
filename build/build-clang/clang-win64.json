@@ -1,26 +1,22 @@
 {
-    "llvm_revision": "342383",
+    "llvm_revision": "348970",
     "stages": "3",
     "build_libcxx": false,
     "build_type": "Release",
     "assertions": false,
-    "llvm_repo": "https://llvm.org/svn/llvm-project/llvm/tags/RELEASE_700/final",
-    "clang_repo": "https://llvm.org/svn/llvm-project/cfe/tags/RELEASE_700/final",
-    "lld_repo": "https://llvm.org/svn/llvm-project/lld/tags/RELEASE_700/final",
-    "compiler_repo": "https://llvm.org/svn/llvm-project/compiler-rt/tags/RELEASE_700/final",
-    "libcxx_repo": "https://llvm.org/svn/llvm-project/libcxx/tags/RELEASE_700/final",
+    "llvm_repo": "https://llvm.org/svn/llvm-project/llvm/trunk",
+    "clang_repo": "https://llvm.org/svn/llvm-project/cfe/trunk",
+    "lld_repo": "https://llvm.org/svn/llvm-project/lld/trunk",
+    "compiler_repo": "https://llvm.org/svn/llvm-project/compiler-rt/trunk",
+    "libcxx_repo": "https://llvm.org/svn/llvm-project/libcxx/trunk",
     "python_path": "c:/mozilla-build/python/python.exe",
     "cc": "cl.exe",
     "cxx": "cl.exe",
     "ml": "ml64.exe",
     "patches": [
       "workaround-issue38586.patch",
-      "r342649-hotpatch-8-byte-nops.patch",
       "r342652-unpoison-thread-stacks.patch",
-      "r343123-pin-asan-dll.patch",
-      "aarch64-vastart-checking.patch",
       "downgrade-mangling-error.patch",
-      "r346300-compiler-rt-windows-mmap.patch",
       "loosen-msvc-detection.patch"
     ]
 }

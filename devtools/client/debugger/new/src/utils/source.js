@@ -436,16 +436,16 @@ export function getSourceClassnames(
     return defaultClassName;
   }
 
-  if (sourceMetaData && sourceMetaData.framework) {
-    return sourceMetaData.framework.toLowerCase();
-  }
-
   if (isPretty(source)) {
     return "prettyPrint";
   }
 
   if (source.isBlackBoxed) {
     return "blackBox";
+  }
+
+  if (sourceMetaData && sourceMetaData.framework) {
+    return sourceMetaData.framework.toLowerCase();
   }
 
   return sourceTypes[getFileExtension(source)] || defaultClassName;

@@ -350,7 +350,11 @@ class Editor extends PureComponent<Props, State> {
 
     const { setContextMenu } = this.props;
     const target: Element = (event.target: any);
-    if (target.classList.contains("CodeMirror-linenumber")) {
+
+    if (
+      target.classList.contains("CodeMirror-linenumber") ||
+      target.getAttribute("id") === "columnmarker"
+    ) {
       return setContextMenu("Gutter", event);
     }
 
