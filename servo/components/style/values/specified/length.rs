@@ -1264,17 +1264,6 @@ impl Parse for MozLength {
 }
 
 impl MozLength {
-    /// Parses, without quirks, and disallowing ExtremumLength values.
-    ///
-    /// Used for logical props in the block direction.
-    pub fn parse_disallow_keyword<'i, 't>(
-        context: &ParserContext,
-        input: &mut Parser<'i, 't>,
-    ) -> Result<Self, ParseError<'i>> {
-        let length = LengthOrPercentageOrAuto::parse_non_negative(context, input)?;
-        Ok(GenericMozLength::LengthOrPercentageOrAuto(length))
-    }
-
     /// Parses, with quirks.
     pub fn parse_quirky<'i, 't>(
         context: &ParserContext,
@@ -1316,17 +1305,6 @@ impl Parse for MaxLength {
 }
 
 impl MaxLength {
-    /// Parses, without quirks, and disallowing ExtremumLength values.
-    ///
-    /// Used for logical props in the block direction.
-    pub fn parse_disallow_keyword<'i, 't>(
-        context: &ParserContext,
-        input: &mut Parser<'i, 't>,
-    ) -> Result<Self, ParseError<'i>> {
-        let length = LengthOrPercentageOrNone::parse_non_negative(context, input)?;
-        Ok(GenericMaxLength::LengthOrPercentageOrNone(length))
-    }
-
     /// Parses, with quirks.
     pub fn parse_quirky<'i, 't>(
         context: &ParserContext,

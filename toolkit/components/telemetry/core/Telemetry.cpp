@@ -106,6 +106,7 @@ using mozilla::Telemetry::TelemetryIOInterposeObserver;
 using Telemetry::Common::AutoHashtable;
 using Telemetry::Common::GetCurrentProduct;
 using Telemetry::Common::SetCurrentProduct;
+using Telemetry::Common::StringHashSet;
 using Telemetry::Common::SupportedProduct;
 using Telemetry::Common::ToJSString;
 
@@ -1767,6 +1768,44 @@ TelemetryImpl::GatherMemory(JSContext* aCx, Promise** aResult) {
       [promise]() { promise->MaybeResolve(JS::UndefinedHandleValue); });
 
   promise.forget(aResult);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TelemetryImpl::GetAllStores(JSContext* aCx, JS::MutableHandleValue aResult) {
+  StringHashSet stores;
+  nsresult rv;
+
+  rv = TelemetryHistogram::GetAllStores(stores);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  rv = TelemetryScalar::GetAllStores(stores);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  JS::AutoValueVector allStores(aCx);
+  if (!allStores.reserve(stores.Count())) {
+    return NS_ERROR_FAILURE;
+  }
+
+  for (auto iter = stores.Iter(); !iter.Done(); iter.Next()) {
+    auto& value = iter.Get()->GetKey();
+    JS::RootedValue store(aCx);
+
+    store.setString(ToJSString(aCx, value));
+    if (!allStores.append(store)) {
+      return NS_ERROR_FAILURE;
+    }
+  }
+
+  JS::Rooted<JSObject*> rarray(aCx, JS_NewArrayObject(aCx, allStores));
+  if (rarray == nullptr) {
+    return NS_ERROR_FAILURE;
+  }
+  aResult.setObject(*rarray);
+
   return NS_OK;
 }
 

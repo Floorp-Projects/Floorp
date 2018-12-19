@@ -353,3 +353,7 @@ body[dir="rtl"] .copy-node {
 #raw-ping-data {
   font-size: 15px;
 }
+
+.clearfix {
+  clear: both;
+}

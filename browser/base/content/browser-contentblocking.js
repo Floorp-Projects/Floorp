@@ -429,8 +429,8 @@ var ThirdPartyCookies = {
         }
         // blocked tells us whether the resource was actually blocked
         // (which it may not be in case of an exception).
-        if (this.isBlocking(state) && blocked) {
-          info.isAllowed = false;
+        if (this.isBlocking(state)) {
+          info.isAllowed = !blocked;
         }
       }
 

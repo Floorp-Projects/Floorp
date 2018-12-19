@@ -24,12 +24,11 @@ job-template:
         docker-image: {in-tree: "lint"}
         max-run-time: 900
         env:
-            ARTIFACT_TASKID: {"task-reference": "<build>"}
             # {level} gets replaced in the upload_symbols transform
             SYMBOL_SECRET: "project/releng/gecko/build/level-{level}/gecko-symbol-upload"
     run:
         using: mach
-        mach: python toolkit/crashreporter/tools/upload_symbols.py https://queue.taskcluster.net/v1/task/${ARTIFACT_TASKID}/artifacts/public/build/target.crashreporter-symbols-full.zip
+        mach: {artifact-reference: "python toolkit/crashreporter/tools/upload_symbols.py <build/public/build/target.crashreporter-symbols-full.zip>"}
         sparse-profile: upload-symbols
     optimization:
         only-if-dependencies-run: null
