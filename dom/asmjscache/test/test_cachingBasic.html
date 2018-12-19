@@ -29,8 +29,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=929236
   code += "finishedEvalAsync(f);";
   ok(code.length > 100000, "code is long enough to definitely hit the cache");
 
-  function evalAsync(code) {
-    var blob = new Blob([code], {type: "application/javascript"});
+  function evalAsync(codeInner) {
+    var blob = new Blob([codeInner], {type: "application/javascript"});
     var script = document.createElement("script");
     script.src = URL.createObjectURL(blob);
     document.body.appendChild(script);
