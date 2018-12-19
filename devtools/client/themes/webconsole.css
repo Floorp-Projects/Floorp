@@ -522,22 +522,6 @@ a.learn-more-link.webconsole-learn-more-link {
     font-style: normal;
 }
 
-/* Open DOMNode in inspector button */
-.open-inspector {
-  background: url("chrome://devtools/skin/images/vview-open-inspector.png") no-repeat 0 0;
-  padding-inline-start: 16px;
-  margin-inline-start: 5px;
-  cursor: pointer;
-}
-
-.open-inspector:hover {
-  filter: var(--theme-icon-checked-filter);
-}
-
-.open-inspector:active {
-  filter: var(--theme-icon-checked-filter) brightness(0.9);
-}
-
 /*
   This element contains the different toolbars in the console
     - primary, containing the clear messages button and the text search input.
