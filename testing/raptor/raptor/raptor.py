@@ -46,6 +46,7 @@ from manifest import get_raptor_test_list
 from playback import get_playback
 from results import RaptorResultsHandler
 from gecko_profile import GeckoProfile
+from power import init_geckoview_power_test, finish_geckoview_power_test
 
 
 class Raptor(object):
@@ -53,7 +54,8 @@ class Raptor(object):
 
     def __init__(self, app, binary, run_local=False, obj_path=None,
                  gecko_profile=False, gecko_profile_interval=None, gecko_profile_entries=None,
-                 symbols_path=None, host=None, is_release_build=False, debug_mode=False):
+                 symbols_path=None, host=None, power_test=False, is_release_build=False,
+                 debug_mode=False):
         self.config = {}
         self.config['app'] = app
         self.config['binary'] = binary
@@ -66,6 +68,7 @@ class Raptor(object):
         self.config['gecko_profile_entries'] = gecko_profile_entries
         self.config['symbols_path'] = symbols_path
         self.config['host'] = host
+        self.config['power_test'] = power_test
         self.config['is_release_build'] = is_release_build
         self.raptor_venv = os.path.join(os.getcwd(), 'raptor-venv')
         self.log = get_default_logger(component='raptor-main')
@@ -114,6 +117,8 @@ class Raptor(object):
             self.log.info("creating android device handler using mozdevice")
             self.device = ADBDevice(verbose=True)
             self.device.clear_logcat()
+            if self.config['power_test']:
+                init_geckoview_power_test(self)
         else:
             # create the desktop browser runner
             self.log.info("creating browser runner using mozrunner")
@@ -290,6 +295,8 @@ class Raptor(object):
                                             fail_if_running=False)
             except Exception:
                 self.log.error("Exception launching %s" % self.config['binary'])
+                if self.config['power_test']:
+                    finish_geckoview_power_test(self)
                 raise
             self.control_server.device = self.device
             self.control_server.app_name = self.config['binary']
@@ -375,12 +382,15 @@ class Raptor(object):
                         self.control_server.wait_for_quit()
                         break
         finally:
-            if self.config['app'] != "geckoview":
+            if self.config['app'] == "geckoview":
+                # TODO: if on geckoview is there some cleanup here i.e. check for crashes?
+                if self.config['power_test']:
+                    finish_geckoview_power_test(self)
+            else:
                 try:
                     self.runner.check_for_crashes()
                 except NotImplementedError:  # not implemented for Chrome
                     pass
-            # TODO: if on geckoview is there some cleanup here i.e. check for crashes?
 
         if self.playback is not None:
             self.playback.stop()
@@ -543,6 +553,7 @@ def main(args=sys.argv[1:]):
                     gecko_profile_entries=args.gecko_profile_entries,
                     symbols_path=args.symbols_path,
                     host=args.host,
+                    power_test=args.power_test,
                     is_release_build=args.is_release_build,
                     debug_mode=args.debug_mode)
 
