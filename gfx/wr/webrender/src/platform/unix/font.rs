@@ -369,6 +369,20 @@ impl FontContext {
         }
     }
 
+    fn pad_bounding_box(&self, font: &FontInstance, cbox: &mut FT_BBox) {
+        // Apply extra pixel of padding for subpixel AA, due to the filter.
+        if font.render_mode == FontRenderMode::Subpixel {
+            let padding = (self.lcd_extra_pixels * 64) as FT_Pos;
+            if font.flags.contains(FontInstanceFlags::LCD_VERTICAL) {
+                cbox.yMin -= padding;
+                cbox.yMax += padding;
+            } else {
+                cbox.xMin -= padding;
+                cbox.xMax += padding;
+            }
+        }
+    }
+
     // Get the bounding box for a glyph, accounting for sub-pixel positioning.
     fn get_bounding_box(
         &self,
@@ -389,17 +403,7 @@ impl FontContext {
             }
         }
 
-        // Apply extra pixel of padding for subpixel AA, due to the filter.
-        if font.render_mode == FontRenderMode::Subpixel {
-            let padding = (self.lcd_extra_pixels * 64) as FT_Pos;
-            if font.flags.contains(FontInstanceFlags::LCD_VERTICAL) {
-                cbox.yMin -= padding;
-                cbox.yMax += padding;
-            } else {
-                cbox.xMin -= padding;
-                cbox.xMax += padding;
-            }
-        }
+        self.pad_bounding_box(font, &mut cbox);
 
         // Offset the bounding box by subpixel positioning.
         // Convert to 26.6 fixed point format for FT.
@@ -572,6 +576,7 @@ impl FontContext {
             let outline = &(*slot).outline;
             let mut cbox: FT_BBox = mem::uninitialized();
             FT_Outline_Get_CBox(outline, &mut cbox);
+            self.pad_bounding_box(font, &mut cbox);
             FT_Outline_Translate(
                 outline,
                 dx - ((cbox.xMin + dx) & !63),
