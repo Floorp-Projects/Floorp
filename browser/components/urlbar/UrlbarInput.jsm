@@ -97,15 +97,17 @@ class UrlbarInput {
     });
 
     this.addEventListener("input", this);
+    this.addEventListener("mousedown", this);
     this.inputField.addEventListener("blur", this);
     this.inputField.addEventListener("focus", this);
-    this.inputField.addEventListener("mousedown", this);
     this.inputField.addEventListener("mouseover", this);
     this.inputField.addEventListener("overflow", this);
     this.inputField.addEventListener("underflow", this);
     this.inputField.addEventListener("scrollend", this);
     this.inputField.addEventListener("select", this);
     this.inputField.addEventListener("keydown", this);
+    this.view.panel.addEventListener("popupshowing", this);
+    this.view.panel.addEventListener("popuphidden", this);
 
     this.inputField.controllers.insertControllerAt(0, new CopyCutController(this));
   }
@@ -650,11 +652,22 @@ class UrlbarInput {
   }
 
   _on_mousedown(event) {
-    if (event.button == 0 &&
+    if (event.originalTarget == this.inputField &&
+        event.button == 0 &&
         event.detail == 2 &&
         UrlbarPrefs.get("doubleClickSelectsAll")) {
       this.editor.selectAll();
       event.preventDefault();
+      return;
+    }
+
+    if (event.originalTarget.classList.contains("urlbar-history-dropmarker") &&
+        event.button == 0) {
+      if (this.view.isOpen) {
+        this.view.close();
+      } else {
+        this.startQuery();
+      }
     }
   }
 
@@ -731,6 +744,14 @@ class UrlbarInput {
 
   _on_keydown(event) {
     this.controller.handleKeyNavigation(event);
+  }
+
+  _on_popupshowing() {
+    this.setAttribute("open", "true");
+  }
+
+  _on_popuphidden() {
+    this.removeAttribute("open");
   }
 }
 
