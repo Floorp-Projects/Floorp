@@ -1,8 +1,8 @@
 onmessage = function(evt) {
   if (evt.data != 0) {
     var worker = new Worker("broadcastchannel_worker.js");
-    worker.onmessage = function(evt) {
-      postMessage(evt.data);
+    worker.onmessage = function(event) {
+      postMessage(event.data);
     };
     worker.postMessage(evt.data - 1);
     return;

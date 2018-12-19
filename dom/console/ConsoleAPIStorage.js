@@ -85,7 +85,7 @@ ConsoleAPIStorageService.prototype = {
 
     let result = [];
 
-    for (let [id, events] of _consoleStorage) {
+    for (let [, events] of _consoleStorage) {
       result.push.apply(result, events);
     }
 
