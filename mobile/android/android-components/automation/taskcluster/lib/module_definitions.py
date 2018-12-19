@@ -34,4 +34,4 @@ def get_version_from_gradle():
     if exit_code is not 0:
         print("Gradle command returned error: {}".format(exit_code))
 
-    return output.split(' ', 1)[1]
+    return output.split(' ', 1)[1].rstrip()
