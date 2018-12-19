@@ -83,19 +83,17 @@ static void RescheduleRequest(nsIRequest *aRequest, int32_t delta) {
   if (p) p->AdjustPriority(delta);
 }
 
-nsLoadGroup::nsLoadGroup(nsISupports *outer)
+nsLoadGroup::nsLoadGroup()
     : mForegroundCount(0),
       mLoadFlags(LOAD_NORMAL),
       mDefaultLoadFlags(0),
+      mPriority(PRIORITY_NORMAL),
       mRequests(&sRequestHashOps, sizeof(RequestMapEntry)),
       mStatus(NS_OK),
-      mPriority(PRIORITY_NORMAL),
       mIsCanceling(false),
       mDefaultLoadIsTimed(false),
       mTimedRequests(0),
-      mCachedRequests(0),
-      mTimedNonCachedRequestsUntilOnEndPageLoad(0) {
-  NS_INIT_AGGREGATED(outer);
+      mCachedRequests(0) {
   LOG(("LOADGROUP [%p]: Created.\n", this));
 }
 
@@ -115,15 +113,12 @@ nsLoadGroup::~nsLoadGroup() {
 ////////////////////////////////////////////////////////////////////////////////
 // nsISupports methods:
 
-NS_IMPL_AGGREGATED(nsLoadGroup)
-NS_INTERFACE_MAP_BEGIN_AGGREGATED(nsLoadGroup)
-  NS_INTERFACE_MAP_ENTRY(nsILoadGroup)
-  NS_INTERFACE_MAP_ENTRY(nsPILoadGroupInternal)
-  NS_INTERFACE_MAP_ENTRY(nsILoadGroupChild)
-  NS_INTERFACE_MAP_ENTRY(nsIRequest)
-  NS_INTERFACE_MAP_ENTRY(nsISupportsPriority)
-  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
-NS_INTERFACE_MAP_END
+NS_IMPL_ISUPPORTS(nsLoadGroup,
+                  nsILoadGroup,
+                  nsILoadGroupChild,
+                  nsIRequest,
+                  nsISupportsPriority,
+                  nsISupportsWeakReference)
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsIRequest methods:
@@ -538,8 +533,6 @@ nsLoadGroup::RemoveRequest(nsIRequest *request, nsISupports *ctxt,
       rv = timedChannel->GetCacheReadStart(&timeStamp);
       if (NS_SUCCEEDED(rv) && !timeStamp.IsNull()) {
         ++mCachedRequests;
-      } else {
-        mTimedNonCachedRequestsUntilOnEndPageLoad++;
       }
 
       rv = timedChannel->GetAsyncOpen(&timeStamp);
@@ -692,18 +685,6 @@ nsLoadGroup::GetRootLoadGroup(nsILoadGroup **aRootLoadGroup) {
 
   // finally just return this
   NS_ADDREF(*aRootLoadGroup = this);
-  return NS_OK;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// nsPILoadGroupInternal methods:
-
-NS_IMETHODIMP
-nsLoadGroup::OnEndPageLoad(nsIChannel *aDefaultChannel) {
-  LOG(("nsLoadGroup::OnEndPageLoad this=%p default-request=%p", this,
-       aDefaultChannel));
-
-  // for the moment, nothing to do here.
   return NS_OK;
 }
 

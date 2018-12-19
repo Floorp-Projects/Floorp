@@ -8,8 +8,6 @@
 
 #include "nsILoadGroup.h"
 #include "nsILoadGroupChild.h"
-#include "nsPILoadGroupInternal.h"
-#include "nsAgg.h"
 #include "nsCOMPtr.h"
 #include "nsWeakReference.h"
 #include "nsISupportsPriority.h"
@@ -26,10 +24,9 @@ namespace net {
 class nsLoadGroup : public nsILoadGroup,
                     public nsILoadGroupChild,
                     public nsISupportsPriority,
-                    public nsSupportsWeakReference,
-                    public nsPILoadGroupInternal {
+                    public nsSupportsWeakReference {
  public:
-  NS_DECL_AGGREGATED
+  NS_DECL_ISUPPORTS
 
   ////////////////////////////////////////////////////////////////////////////
   // nsIRequest methods:
@@ -38,7 +35,6 @@ class nsLoadGroup : public nsILoadGroup,
   ////////////////////////////////////////////////////////////////////////////
   // nsILoadGroup methods:
   NS_DECL_NSILOADGROUP
-  NS_DECL_NSPILOADGROUPINTERNAL
 
   ////////////////////////////////////////////////////////////////////////////
   // nsILoadGroupChild methods:
@@ -51,12 +47,13 @@ class nsLoadGroup : public nsILoadGroup,
   ////////////////////////////////////////////////////////////////////////////
   // nsLoadGroup methods:
 
-  explicit nsLoadGroup(nsISupports* outer);
-  virtual ~nsLoadGroup();
+  nsLoadGroup();
 
   nsresult Init();
 
  protected:
+  virtual ~nsLoadGroup();
+
   nsresult MergeLoadFlags(nsIRequest* aRequest, nsLoadFlags& flags);
   nsresult MergeDefaultLoadFlags(nsIRequest* aRequest, nsLoadFlags& flags);
 
@@ -69,6 +66,7 @@ class nsLoadGroup : public nsILoadGroup,
   uint32_t mForegroundCount;
   uint32_t mLoadFlags;
   uint32_t mDefaultLoadFlags;
+  int32_t mPriority;
 
   nsCOMPtr<nsILoadGroup> mLoadGroup;  // load groups can contain load groups
   nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
@@ -82,17 +80,13 @@ class nsLoadGroup : public nsILoadGroup,
   nsWeakPtr mParentLoadGroup;
 
   nsresult mStatus;
-  int32_t mPriority;
   bool mIsCanceling;
+  bool mDefaultLoadIsTimed;
 
   /* Telemetry */
   mozilla::TimeStamp mDefaultRequestCreationTime;
-  bool mDefaultLoadIsTimed;
   uint32_t mTimedRequests;
   uint32_t mCachedRequests;
-
-  /* For nsPILoadGroupInternal */
-  uint32_t mTimedNonCachedRequestsUntilOnEndPageLoad;
 
   nsCString mUserAgentOverrideCache;
 };
