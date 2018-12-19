@@ -758,6 +758,8 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
       }
     }
 
+    const useNonAnonymousWalker = shadowRoot || shadowHost || isUnslottedHostChild;
+
     // We're going to create a few document walkers with the same filter,
     // make it easier.
     const getFilteredWalker = documentWalkerNode => {
@@ -767,7 +769,6 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
       // in case this one is incompatible with the walker's filter function.
       const skipTo = SKIP_TO_SIBLING;
 
-      const useNonAnonymousWalker = shadowRoot || shadowHost || isUnslottedHostChild;
       if (useNonAnonymousWalker) {
         // Do not use an anonymous walker for :
         // - shadow roots: if the host element has an ::after pseudo element, a walker on
@@ -806,10 +807,13 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
         start = firstChild;
       }
 
-      // A shadow root is not included in the children returned by the walker, so we can
-      // not use it as start node. However it will be displayed as the first node, so
-      // we use firstChild as a fallback.
-      if (isShadowRoot(start)) {
+      // If we are using a non anonymous walker, we cannot start on:
+      // - a shadow root
+      // - a native anonymous node
+      if (
+        useNonAnonymousWalker &&
+        (isShadowRoot(start) || isNativeAnonymous(start))
+      ) {
         start = firstChild;
       }
 
