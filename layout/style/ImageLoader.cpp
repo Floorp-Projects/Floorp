@@ -532,7 +532,7 @@ static void InvalidateImages(nsIFrame* aFrame) {
   }
 }
 
-void ImageLoader::DoRedraw(FrameSet* aFrameSet, bool aForcePaint) {
+void ImageLoader::RequestPaintIfNeeded(FrameSet* aFrameSet, bool aForcePaint) {
   NS_ASSERTION(aFrameSet, "Must have a frame set");
   NS_ASSERTION(mDocument, "Should have returned earlier!");
 
@@ -730,7 +730,7 @@ nsresult ImageLoader::OnFrameComplete(imgIRequest* aRequest) {
   // Since we just finished decoding a frame, we always want to paint, in case
   // we're now able to paint an image that we couldn't paint before (and hence
   // that we don't have retained data for).
-  DoRedraw(frameSet, /* aForcePaint = */ true);
+  RequestPaintIfNeeded(frameSet, /* aForcePaint = */ true);
 
   return NS_OK;
 }
@@ -745,7 +745,7 @@ nsresult ImageLoader::OnFrameUpdate(imgIRequest* aRequest) {
     return NS_OK;
   }
 
-  DoRedraw(frameSet, /* aForcePaint = */ false);
+  RequestPaintIfNeeded(frameSet, /* aForcePaint = */ false);
 
   return NS_OK;
 }

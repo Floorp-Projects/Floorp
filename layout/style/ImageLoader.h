@@ -140,7 +140,7 @@ class ImageLoader final : public imgINotificationObserver {
 
   nsPresContext* GetPresContext();
 
-  void DoRedraw(FrameSet* aFrameSet, bool aForcePaint);
+  void RequestPaintIfNeeded(FrameSet* aFrameSet, bool aForcePaint);
   void UnblockOnloadIfNeeded(nsIFrame* aFrame, imgIRequest* aRequest);
   void RequestReflowIfNeeded(FrameSet* aFrameSet, imgIRequest* aRequest);
   void RequestReflowOnFrame(FrameWithFlags* aFwf, imgIRequest* aRequest);
