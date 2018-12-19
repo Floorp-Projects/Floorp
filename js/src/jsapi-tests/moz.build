@@ -157,7 +157,6 @@ if CONFIG['JS_BUILD_BINAST'] and CONFIG['JS_STANDALONE'] and not CONFIG['FUZZING
     # token reader and hence affect the correctness of the tests.
     UNIFIED_SOURCES += [
         'testBinASTReader.cpp',
-        'testBinTokenReaderTester.cpp'
     ]
 
 
