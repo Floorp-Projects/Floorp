@@ -1593,6 +1593,12 @@ impl PrimitiveInstance {
         }
     }
 
+    // Reset any pre-frame state for this primitive.
+    pub fn reset(&mut self) {
+        self.bounding_rect = None;
+        self.clip_task_index = ClipTaskIndex::INVALID;
+    }
+
     #[cfg(debug_assertions)]
     pub fn is_chased(&self) -> bool {
         PRIM_CHASE_ID.load(Ordering::SeqCst) == self.id.0
@@ -2386,7 +2392,7 @@ impl PrimitiveStore {
         scratch: &mut PrimitiveScratchBuffer,
     ) {
         for (plane_split_anchor, prim_instance) in prim_list.prim_instances.iter_mut().enumerate() {
-            prim_instance.bounding_rect = None;
+            prim_instance.reset();
 
             if prim_instance.is_chased() {
                 #[cfg(debug_assertions)]
@@ -3356,9 +3362,6 @@ impl PrimitiveInstance {
         if self.is_chased() {
             println!("\tupdating clip task with pic rect {:?}", clip_chain.pic_clip_rect);
         }
-
-        // Reset clips from previous frames since we may clip differently each frame.
-        self.clip_task_index = ClipTaskIndex::INVALID;
 
         self.build_segments_if_needed(
             prim_local_rect,
