@@ -22,7 +22,7 @@ from mochitest_options import MochitestArgumentParser
 
 from manifestparser import TestManifest
 from manifestparser.filters import chunk_by_slice
-from mozdevice import ADBAndroid, ADBTimeoutError
+from mozdevice import ADBDevice, ADBTimeoutError
 from mozprofile.cli import parse_key_value, parse_preferences
 import mozfile
 import mozinfo
@@ -48,10 +48,10 @@ class RobocopTestRunner(MochitestDesktop):
         verbose = False
         if options.log_tbpl_level == 'debug' or options.log_mach_level == 'debug':
             verbose = True
-        self.device = ADBAndroid(adb=options.adbPath or 'adb',
-                                 device=options.deviceSerial,
-                                 test_root=options.remoteTestRoot,
-                                 verbose=verbose)
+        self.device = ADBDevice(adb=options.adbPath or 'adb',
+                                device=options.deviceSerial,
+                                test_root=options.remoteTestRoot,
+                                verbose=verbose)
 
         # Check that Firefox is installed
         expected = options.app.split('/')[-1]
