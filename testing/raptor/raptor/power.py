@@ -72,6 +72,24 @@ def finish_geckoview_power_test(raptor):
                 if match:
                     proportional = match.group(1)
                 break
-    raptor.log.info('uid: %s, cpu: %s, wifi: %s, screen: %s, proportional: %s' %
+    raptor.log.info('power data for uid: %s, cpu: %s, wifi: %s, screen: %s, proportional: %s' %
                     (uid, cpu, wifi, screen, proportional))
+
+    # send power data directly to the control server results handler;
+    # so it can be formatted and output for perfherder ingestion
+
+    power_data = {'type': 'power',
+                  'test': 'raptor-speedometer-geckoview',
+                  'unit': 'mAh',
+                  'values': {
+                      'cpu': float(cpu),
+                      'wifi': float(wifi),
+                      'screen': float(screen),
+                      'proportional': float(proportional)}}
+
+    raptor.log.info("submitting power data via control server directly")
+    raptor.control_server.submit_supporting_data(power_data)
+
+    # generate power bugreport zip
+    raptor.log.info("generating power bugreport zip")
     raptor.device.command_output(["bugreport", upload_dir])
