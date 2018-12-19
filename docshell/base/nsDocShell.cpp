@@ -8704,8 +8704,7 @@ bool nsDocShell::JustStartedNetworkLoad() {
   return mDocumentRequest && mDocumentRequest != GetCurrentDocChannel();
 }
 
-NS_IMETHODIMP
-nsDocShell::InternalLoad(
+nsresult nsDocShell::InternalLoad(
     nsIURI* aURI, nsIURI* aOriginalURI,
     Maybe<nsCOMPtr<nsIURI>> const& aResultPrincipalURI,
     bool aKeepResultPrincipalURIIfSet, bool aLoadReplace,
@@ -8885,9 +8884,9 @@ nsDocShell::InternalLoad(
 
   nsCOMPtr<nsIPrincipal> principalToInherit = aPrincipalToInherit;
   //
-  // Get a principal from the current document if necessary.  Note that we only
-  // do this for URIs that inherit a security context and local file URIs;
-  // in particular we do NOT do this for about:blank.  This way, random
+  // Get a principal from the current document if necessary.  Note that we
+  // only do this for URIs that inherit a security context and local file
+  // URIs; in particular we do NOT do this for about:blank.  This way, random
   // about:blank loads that have no principal (which basically means they were
   // done by someone from chrome manually messing with our nsIWebNavigation
   // or by C++ setting document.location) don't get a funky principal.  If
@@ -8966,8 +8965,8 @@ nsDocShell::InternalLoad(
       // If we are a noopener load, we just hand the whole thing over to our
       // window.
       if (aFlags & INTERNAL_LOAD_FLAGS_NO_OPENER) {
-        // Various asserts that we know to hold because NO_OPENER loads can only
-        // happen for links.
+        // Various asserts that we know to hold because NO_OPENER loads can
+        // only happen for links.
         MOZ_ASSERT(!aLoadReplace);
         MOZ_ASSERT(aPrincipalToInherit == aTriggeringPrincipal);
         MOZ_ASSERT((aFlags & ~INTERNAL_LOAD_FLAGS_IS_USER_TRIGGERED) ==
@@ -8986,8 +8985,8 @@ nsDocShell::InternalLoad(
 
         RefPtr<nsDocShellLoadState> loadState = new nsDocShellLoadState();
 
-        // Set up our loadinfo so it will do the load as much like we would have
-        // as possible.
+        // Set up our loadinfo so it will do the load as much like we would
+        // have as possible.
         loadState->SetReferrer(aReferrer);
         loadState->SetReferrerPolicy(
             (mozilla::net::ReferrerPolicy)aReferrerPolicy);
@@ -9000,8 +8999,8 @@ nsDocShell::InternalLoad(
         loadState->SetTriggeringPrincipal(aTriggeringPrincipal);
         loadState->SetInheritPrincipal(aFlags &
                                        INTERNAL_LOAD_FLAGS_INHERIT_PRINCIPAL);
-        // Explicit principal because we do not want any guesses as to what the
-        // principal to inherit is: it should be aTriggeringPrincipal.
+        // Explicit principal because we do not want any guesses as to what
+        // the principal to inherit is: it should be aTriggeringPrincipal.
         loadState->SetPrincipalIsExplicit(true);
         loadState->SetLoadType(LOAD_LINK);
         loadState->SetForceAllowDataURI(
@@ -9043,7 +9042,8 @@ nsDocShell::InternalLoad(
     // window target name from to prevent recursive retargeting!
     //
     if (NS_SUCCEEDED(rv) && targetDocShell) {
-      rv = targetDocShell->InternalLoad(
+      nsDocShell* docShell = nsDocShell::Cast(targetDocShell);
+      rv = docShell->InternalLoad(
           aURI, aOriginalURI, aResultPrincipalURI, aKeepResultPrincipalURIIfSet,
           aLoadReplace, aIsFromProcessingFrameAttributes, aReferrer,
           aReferrerPolicy, aTriggeringPrincipal, principalToInherit, aFlags,
@@ -9795,9 +9795,9 @@ nsresult nsDocShell::DoURILoad(
     nsIURI* aBaseURI, nsContentPolicyType aContentPolicyType) {
   // Double-check that we're still around to load this URI.
   if (mIsBeingDestroyed) {
-    // Return NS_OK despite not doing anything to avoid throwing exceptions from
-    // nsLocation::SetHref if the unload handler of the existing page tears us
-    // down.
+    // Return NS_OK despite not doing anything to avoid throwing exceptions
+    // from nsLocation::SetHref if the unload handler of the existing page
+    // tears us down.
     return NS_OK;
   }
 
@@ -9853,8 +9853,8 @@ nsresult nsDocShell::DoURILoad(
   // * Top-level load: In this case, loadingNode is null, but loadingWindow
   //   is our mScriptGlobal. We pass null for loadingPrincipal in this case.
   // * Subframe load: loadingWindow is null, but loadingNode is the frame
-  //   element for the load. loadingPrincipal is the NodePrincipal of the frame
-  //   element.
+  //   element for the load. loadingPrincipal is the NodePrincipal of the
+  //   frame element.
   nsCOMPtr<nsINode> loadingNode;
   nsCOMPtr<nsPIDOMWindowOuter> loadingWindow;
   nsCOMPtr<nsIPrincipal> loadingPrincipal;
@@ -9977,8 +9977,8 @@ nsresult nsDocShell::DoURILoad(
 
   OriginAttributes attrs;
 
-  // Inherit origin attributes from aPrincipalToInherit if inheritAttrs is true.
-  // Otherwise we just use the origin attributes from docshell.
+  // Inherit origin attributes from aPrincipalToInherit if inheritAttrs is
+  // true. Otherwise we just use the origin attributes from docshell.
   if (inheritAttrs) {
     MOZ_ASSERT(aPrincipalToInherit, "We should have aPrincipalToInherit here.");
     attrs = aPrincipalToInherit->OriginAttributesRef();
@@ -10439,8 +10439,9 @@ nsresult nsDocShell::DoChannelLoad(nsIChannel* aChannel,
       MOZ_FALLTHROUGH;
 
     case LOAD_RELOAD_CHARSET_CHANGE: {
-      // Use SetAllowStaleCacheContent (not LOAD_FROM_CACHE flag) since we only
-      // want to force cache load for this channel, not the whole loadGroup.
+      // Use SetAllowStaleCacheContent (not LOAD_FROM_CACHE flag) since we
+      // only want to force cache load for this channel, not the whole
+      // loadGroup.
       nsCOMPtr<nsICacheInfoChannel> cachingChannel =
           do_QueryInterface(aChannel);
       if (cachingChannel) {
@@ -10831,8 +10832,8 @@ bool nsDocShell::OnNewURI(nsIURI* aURI, nsIChannel* aChannel,
   }
 
   // Clear subframe history on refresh.
-  // XXX: history.go(0) won't go this path as aLoadType is LOAD_HISTORY in this
-  // case. One should re-validate after bug 1331865 fixed.
+  // XXX: history.go(0) won't go this path as aLoadType is LOAD_HISTORY in
+  // this case. One should re-validate after bug 1331865 fixed.
   if (aLoadType == LOAD_REFRESH) {
     ClearFrameHistory(mLSHE);
     ClearFrameHistory(mOSHE);
@@ -10865,9 +10866,10 @@ bool nsDocShell::OnNewURI(nsIURI* aURI, nsIChannel* aChannel,
   }
 
 #ifdef MOZ_GECKO_PROFILER
-  // We register the page load only if the load updates the history and it's not
-  // a refresh. This also registers the iframes in shift-reload case, but it's
-  // reasonable to register since we are updating the historyId in that case.
+  // We register the page load only if the load updates the history and it's
+  // not a refresh. This also registers the iframes in shift-reload case, but
+  // it's reasonable to register since we are updating the historyId in that
+  // case.
   if (updateSHistory) {
     uint32_t id = 0;
     nsAutoCString spec;
@@ -11708,8 +11710,8 @@ nsresult nsDocShell::PersistLayoutHistoryState() {
     if (shell) {
       rv = shell->CaptureHistoryState(getter_AddRefs(layoutState));
     } else if (scrollRestorationIsManual) {
-      // Even if we don't have layout anymore, we may want to reset the current
-      // scroll state in layout history.
+      // Even if we don't have layout anymore, we may want to reset the
+      // current scroll state in layout history.
       GetLayoutHistoryState(getter_AddRefs(layoutState));
     }
 
@@ -12503,11 +12505,12 @@ class OnLinkClickEvent : public Runnable {
   NS_IMETHOD Run() override {
     nsAutoPopupStatePusher popupStatePusher(mPopupState);
 
-    // We need to set up an AutoJSAPI here for the following reason: When we do
-    // OnLinkClickSync we'll eventually end up in nsGlobalWindow::OpenInternal
-    // which only does popup blocking if !LegacyIsCallerChromeOrNativeCode().
-    // So we need to fake things so that we don't look like native code as far
-    // as LegacyIsCallerNativeCode() is concerned.
+    // We need to set up an AutoJSAPI here for the following reason: When we
+    // do OnLinkClickSync we'll eventually end up in
+    // nsGlobalWindow::OpenInternal which only does popup blocking if
+    // !LegacyIsCallerChromeOrNativeCode(). So we need to fake things so that
+    // we don't look like native code as far as LegacyIsCallerNativeCode() is
+    // concerned.
     AutoJSAPI jsapi;
     if (mIsTrusted || jsapi.Init(mContent->OwnerDoc()->GetScopeObject())) {
       mHandler->OnLinkClickSync(mContent, mURI, mTargetSpec, mFileName,
@@ -12657,8 +12660,9 @@ nsDocShell::OnLinkClickSync(nsIContent* aContent, nsIURI* aURI,
       nsAutoCString scheme;
       aURI->GetScheme(scheme);
       if (!scheme.IsEmpty()) {
-        // if the URL scheme does not correspond to an exposed protocol, then we
-        // need to hand this link click over to the external protocol handler.
+        // if the URL scheme does not correspond to an exposed protocol, then
+        // we need to hand this link click over to the external protocol
+        // handler.
         bool isExposed;
         nsresult rv =
             extProtService->IsExposedProtocol(scheme.get(), &isExposed);
@@ -12685,9 +12689,9 @@ nsDocShell::OnLinkClickSync(nsIContent* aContent, nsIURI* aURI,
     bool targetBlank = aTargetSpec.LowerCaseEqualsLiteral("_blank");
     bool explicitOpenerSet = false;
 
-    // The opener behaviour follows a hierarchy, such that if a higher priority
-    // behaviour is specified, it always takes priority. That priority is
-    // currently: norefrerer > noopener > opener > default
+    // The opener behaviour follows a hierarchy, such that if a higher
+    // priority behaviour is specified, it always takes priority. That
+    // priority is currently: norefrerer > noopener > opener > default
 
     while (tok.hasMoreTokens()) {
       const nsAString& token = tok.nextToken();
@@ -12768,8 +12772,8 @@ nsDocShell::OnLinkClickSync(nsIContent* aContent, nsIURI* aURI,
     CopyUTF8toUTF16(type, typeHint);
   }
 
-  // Link click (or form submission) can be triggered inside an onload handler,
-  // and we don't want to add history entry in this case.
+  // Link click (or form submission) can be triggered inside an onload
+  // handler, and we don't want to add history entry in this case.
   bool inOnLoadHandler = false;
   GetIsExecutingOnLoadHandler(&inOnLoadHandler);
   uint32_t loadType = inOnLoadHandler ? LOAD_NORMAL_REPLACE : LOAD_LINK;
@@ -13351,15 +13355,15 @@ nsDocShell::GetIsOnlyToplevelInTabGroup(bool* aResult) {
   nsPIDOMWindowOuter* outer = GetWindow();
   MOZ_ASSERT(outer);
 
-  // If we are not toplevel then we are not the only toplevel window in the tab
-  // group.
+  // If we are not toplevel then we are not the only toplevel window in the
+  // tab group.
   if (outer->GetScriptableParentOrNull()) {
     *aResult = false;
     return NS_OK;
   }
 
-  // If we have any other toplevel windows in our tab group, then we are not the
-  // only toplevel window in the tab group.
+  // If we have any other toplevel windows in our tab group, then we are not
+  // the only toplevel window in the tab group.
   nsTArray<nsPIDOMWindowOuter*> toplevelWindows =
       outer->TabGroup()->GetTopLevelWindows();
   if (toplevelWindows.Length() > 1) {
@@ -13408,8 +13412,8 @@ nsDocShell::GetDisplayMode(DisplayMode* aDisplayMode) {
 
 NS_IMETHODIMP
 nsDocShell::SetDisplayMode(DisplayMode aDisplayMode) {
-  // We don't have a way to verify this coming from Javascript, so this check is
-  // still needed.
+  // We don't have a way to verify this coming from Javascript, so this check
+  // is still needed.
   if (!(aDisplayMode == nsIDocShell::DISPLAY_MODE_BROWSER ||
         aDisplayMode == nsIDocShell::DISPLAY_MODE_STANDALONE ||
         aDisplayMode == nsIDocShell::DISPLAY_MODE_FULLSCREEN ||
