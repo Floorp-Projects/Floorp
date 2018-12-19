@@ -10,6 +10,7 @@ import copy
 import json
 import mozdebug
 import os
+import pipes
 import random
 import re
 import shutil
@@ -285,6 +286,9 @@ class XPCShellTestThread(Thread):
         changedEnv = (set("%s=%s" % i for i in self.env.iteritems())
                       - set("%s=%s" % i for i in os.environ.iteritems()))
         self.log.info("%s | environment: %s" % (name, list(changedEnv)))
+        shell_command_tokens = [pipes.quote(tok) for tok in list(changedEnv) + completeCmd]
+        self.log.info("%s | as shell command: (cd %s; %s)" %
+                      (name, pipes.quote(testdir), ' '.join(shell_command_tokens)))
 
     def killTimeout(self, proc):
         if proc is not None and hasattr(proc, "pid"):
