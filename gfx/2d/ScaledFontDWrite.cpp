@@ -344,6 +344,72 @@ static bool GetDWriteFamilyName(const RefPtr<IDWriteFontFamily>& aFamily,
   return GetDWriteName(names, aOutName);
 }
 
+static void GetFontFileNames(RefPtr<IDWriteFontFace> aFontFace,
+                             std::vector<WCHAR>& aFamilyName,
+                             std::vector<WCHAR>& aFileNames) {
+  MOZ_ASSERT(aFamilyName.size() >= 1 && aFamilyName.back() == 0);
+
+  UINT32 numFiles;
+  HRESULT hr = aFontFace->GetFiles(&numFiles, nullptr);
+  if (FAILED(hr)) {
+    gfxCriticalNote << "Failed getting file count for font \"" << &aFamilyName[0] << "\"";
+    return;
+  } else if (!numFiles) {
+    gfxCriticalNote << "No files found for font \"" << &aFamilyName[0] << "\"";
+    return;
+  }
+  std::vector<RefPtr<IDWriteFontFile>> files;
+  files.resize(numFiles);
+  hr = aFontFace->GetFiles(&numFiles, getter_AddRefs(files[0]));
+  if (FAILED(hr)) {
+    gfxCriticalNote << "Failed getting files for font \"" << &aFamilyName[0] << "\"";
+    return;
+  }
+
+  for(auto& file : files) {
+    const void* key;
+    UINT32 keySize;
+    hr = file->GetReferenceKey(&key, &keySize);
+    if (FAILED(hr)) {
+      gfxCriticalNote << "Failed getting file ref key for font \"" << &aFamilyName[0] << "\"";
+      return;
+    }
+    RefPtr<IDWriteFontFileLoader> loader;
+    hr = file->GetLoader(getter_AddRefs(loader));
+    if (FAILED(hr)) {
+      gfxCriticalNote << "Failed getting file loader for font \"" << &aFamilyName[0] << "\"";
+      return;
+    }
+    RefPtr<IDWriteLocalFontFileLoader> localLoader;
+    loader->QueryInterface(__uuidof(IDWriteLocalFontFileLoader), (void**)getter_AddRefs(localLoader));
+    if (!localLoader) {
+      gfxCriticalNote << "Failed querying loader interface for font \"" << &aFamilyName[0] << "\"";
+      return;
+    }
+    UINT32 pathLen;
+    hr = localLoader->GetFilePathLengthFromKey(key, keySize, &pathLen);
+    if (FAILED(hr)) {
+      gfxCriticalNote << "Failed getting path length for font \"" << &aFamilyName[0] << "\"";
+      return;
+    }
+    size_t offset = aFileNames.size();
+    aFileNames.resize(offset + pathLen + 1);
+    hr = localLoader->GetFilePathFromKey(key, keySize, &aFileNames[offset], pathLen + 1);
+    if (FAILED(hr)) {
+      aFileNames.resize(offset);
+      gfxCriticalNote << "Failed getting path for font \"" << &aFamilyName[0] << "\"";
+      return;
+    }
+    MOZ_ASSERT(aFileNames.back() == 0);
+    DWORD attribs = GetFileAttributesW(&aFileNames[offset]);
+    if (attribs == INVALID_FILE_ATTRIBUTES) {
+      gfxCriticalNote << "sending font family \"" << &aFamilyName[0]
+                      << "\" with invalid file \"" << &aFileNames[offset]
+                      << "\"";
+    }
+  }
+}
+
 bool UnscaledFontDWrite::GetWRFontDescriptor(WRFontDescriptorOutput aCb,
                                              void* aBaton) {
   if (!mFont) {
@@ -386,54 +452,7 @@ bool UnscaledFontDWrite::GetWRFontDescriptor(WRFontDescriptorOutput aCb,
   }
 
   // FIXME: Debugging kluge for bug 1455848. Remove once debugged!
-  UINT32 numFiles;
-  hr = mFontFace->GetFiles(&numFiles, nullptr);
-  if (FAILED(hr) || !numFiles) {
-    return false;
-  }
-  std::vector<RefPtr<IDWriteFontFile>> files;
-  files.resize(numFiles);
-  hr = mFontFace->GetFiles(&numFiles, getter_AddRefs(files[0]));
-  if (FAILED(hr)) {
-    return false;
-  }
-  MOZ_ASSERT(familyName.size() >= 1 && familyName.back() == 0);
-  for(auto& file : files) {
-    const void* key;
-    UINT32 keySize;
-    hr = file->GetReferenceKey(&key, &keySize);
-    if (FAILED(hr)) {
-      return false;
-    }
-    RefPtr<IDWriteFontFileLoader> loader;
-    hr = file->GetLoader(getter_AddRefs(loader));
-    if (FAILED(hr)) {
-      return false;
-    }
-    RefPtr<IDWriteLocalFontFileLoader> localLoader;
-    loader->QueryInterface(__uuidof(IDWriteLocalFontFileLoader), (void**)getter_AddRefs(localLoader));
-    if (!localLoader) {
-      return false;
-    }
-    UINT32 pathLen;
-    hr = localLoader->GetFilePathLengthFromKey(key, keySize, &pathLen);
-    if (FAILED(hr)) {
-      return false;
-    }
-    size_t offset = familyName.size();
-    familyName.resize(offset + pathLen + 1);
-    hr = localLoader->GetFilePathFromKey(key, keySize, &familyName[offset], pathLen + 1);
-    if (FAILED(hr)) {
-      return false;
-    }
-    MOZ_ASSERT(familyName.back() == 0);
-    DWORD attribs = GetFileAttributesW(&familyName[offset]);
-    if (attribs == INVALID_FILE_ATTRIBUTES) {
-      gfxCriticalNote << "sending font family \"" << &familyName[0]
-                      << "\" with invalid file \"" << &familyName[offset]
-                      << "\"";
-    }
-  }
+  GetFontFileNames(mFontFace, familyName, familyName);
 
   // The style information that identifies the font can be encoded easily in
   // less than 32 bits. Since the index is needed for font descriptors, only

@@ -79,7 +79,7 @@ export default class Group extends Component<Props, State> {
     );
   }
 
-  toggleFrames = event => {
+  toggleFrames = (event: SyntheticMouseEvent<HTMLElement>) => {
     event.stopPropagation();
     this.setState(prevState => ({ expanded: !prevState.expanded }));
   };
