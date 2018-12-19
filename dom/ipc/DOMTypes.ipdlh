@@ -28,7 +28,7 @@ using hal::ScreenOrientation from "mozilla/HalScreenConfiguration.h";
 using mozilla::gfx::SurfaceFormat from "mozilla/gfx/Types.h";
 using refcounted class nsIPrincipal from "mozilla/dom/PermissionMessageUtils.h";
 using mozilla::dom::BrowsingContextId from "mozilla/dom/ipc/IdType.h";
-
+using refcounted class nsIURI from "mozilla/ipc/URIUtils.h";
 
 namespace mozilla {
 namespace dom {
@@ -185,12 +185,47 @@ struct PerformanceInfo
   CategoryDispatch[] items;
 };
 
+
 struct WindowGlobalInit
 {
   nsIPrincipal principal;
   BrowsingContextId browsingContextId;
   uint64_t innerWindowId;
   uint64_t outerWindowId;
+};
+
+struct DocShellLoadStateInit
+{
+  nsIURI Referrer;
+  nsIURI URI;
+  nsIURI OriginalURI;
+  nsIURI ResultPrincipalURI;
+  bool ResultPrincipalURIIsSome;
+  nsIPrincipal TriggeringPrincipal;
+  bool KeepResultPrincipalURIIfSet;
+  bool LoadReplace;
+  bool InheritPrincipal;
+  bool PrincipalIsExplicit;
+  nsIPrincipal PrincipalToInherit;
+  bool ForceAllowDataURI;
+  bool OriginalFrameSrc;
+  bool SendReferrer;
+  uint32_t ReferrerPolicy;
+  uint32_t LoadType;
+  nsString Target;
+  nsIURI BaseURI;
+  uint32_t LoadFlags;
+  bool FirstParty;
+  nsCString TypeHint;
+  nsString FileName;
+  bool IsFromProcessingFrameAttributes;
+  // Fields missing due to lack of need or serialization
+  // nsCOMPtr<nsISHEntry> mSHEntry;
+  // nsCOMPtr<nsIDocShell> mSourceDocShell;
+  // bool mIsSrcDocLoad; // useless without sourcedocshell
+  // nsString mSrcdocData; // useless without sourcedocshell
+  // nsIInputStream PostDataStream; // will be used after IPC transaction
+  // nsIInputStream HeadersStream; // will be used after IPC transaction
 };
 
 } // namespace dom

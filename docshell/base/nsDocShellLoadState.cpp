@@ -13,6 +13,8 @@
 #include "mozilla/OriginAttributes.h"
 #include "mozilla/NullPrincipal.h"
 
+#include "mozilla/dom/PContent.h"
+
 nsDocShellLoadState::nsDocShellLoadState(nsIURI* aURI)
     : mURI(aURI),
       mResultPrincipalURIIsSome(false),
@@ -33,6 +35,33 @@ nsDocShellLoadState::nsDocShellLoadState(nsIURI* aURI)
       mFileName(VoidString()),
       mIsFromProcessingFrameAttributes(false) {
   MOZ_ASSERT(aURI, "Cannot create a LoadState with a null URI!");
+}
+
+nsDocShellLoadState::nsDocShellLoadState(DocShellLoadStateInit& aLoadState)
+{
+  MOZ_ASSERT(aLoadState.URI(), "Cannot create a LoadState with a null URI!");
+  mResultPrincipalURIIsSome = aLoadState.ResultPrincipalURIIsSome();
+  mKeepResultPrincipalURIIfSet = aLoadState.KeepResultPrincipalURIIfSet();
+  mLoadReplace = aLoadState.LoadReplace();
+  mInheritPrincipal = aLoadState.InheritPrincipal();
+  mPrincipalIsExplicit = aLoadState.PrincipalIsExplicit();
+  mForceAllowDataURI = aLoadState.ForceAllowDataURI();
+  mOriginalFrameSrc = aLoadState.OriginalFrameSrc();
+  mSendReferrer = aLoadState.SendReferrer();
+  mReferrerPolicy = (mozilla::net::ReferrerPolicy)aLoadState.ReferrerPolicy();
+  mLoadType = aLoadState.LoadType();
+  mTarget = aLoadState.Target();
+  mLoadFlags = aLoadState.LoadFlags();
+  mFirstParty = aLoadState.FirstParty();
+  mTypeHint = aLoadState.TypeHint();
+  mFileName = aLoadState.FileName();
+  mIsFromProcessingFrameAttributes = aLoadState.IsFromProcessingFrameAttributes();
+  mReferrer = aLoadState.Referrer();
+  mURI = aLoadState.URI();
+  mOriginalURI = aLoadState.OriginalURI();
+  mBaseURI = aLoadState.BaseURI();
+  mTriggeringPrincipal = aLoadState.TriggeringPrincipal();
+  mPrincipalToInherit = aLoadState.PrincipalToInherit();
 }
 
 nsDocShellLoadState::~nsDocShellLoadState() {}
@@ -384,4 +413,31 @@ void nsDocShellLoadState::CalculateLoadURIFlags() {
   if (mOriginalFrameSrc) {
     mLoadFlags |= nsDocShell::INTERNAL_LOAD_FLAGS_ORIGINAL_FRAME_SRC;
   }
+}
+
+DocShellLoadStateInit nsDocShellLoadState::Serialize() {
+  DocShellLoadStateInit loadState;
+  loadState.ResultPrincipalURIIsSome() = mResultPrincipalURIIsSome;
+  loadState.KeepResultPrincipalURIIfSet() = mKeepResultPrincipalURIIfSet;
+  loadState.LoadReplace() = mLoadReplace;
+  loadState.InheritPrincipal() = mInheritPrincipal;
+  loadState.PrincipalIsExplicit() = mPrincipalIsExplicit;
+  loadState.ForceAllowDataURI() = mForceAllowDataURI;
+  loadState.OriginalFrameSrc() = mOriginalFrameSrc;
+  loadState.SendReferrer() = mSendReferrer;
+  loadState.ReferrerPolicy() = mReferrerPolicy;
+  loadState.LoadType() = mLoadType;
+  loadState.Target() = mTarget;
+  loadState.LoadFlags() = mLoadFlags;
+  loadState.FirstParty() = mFirstParty;
+  loadState.TypeHint() = mTypeHint;
+  loadState.FileName() = mFileName;
+  loadState.IsFromProcessingFrameAttributes() = mIsFromProcessingFrameAttributes;
+  loadState.Referrer() = mReferrer;
+  loadState.URI() = mURI;
+  loadState.OriginalURI() = mOriginalURI;
+  loadState.BaseURI() = mBaseURI;
+  loadState.TriggeringPrincipal() = mTriggeringPrincipal;
+  loadState.PrincipalToInherit() = mPrincipalToInherit;
+  return loadState;
 }
