@@ -16,6 +16,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Log: "resource://gre/modules/Log.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   UrlbarMatch: "resource:///modules/UrlbarMatch.jsm",
+  UrlbarProvider: "resource:///modules/UrlbarUtils.jsm",
   UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
@@ -26,8 +27,9 @@ XPCOMUtils.defineLazyGetter(this, "logger",
 /**
  * Class used to create the provider.
  */
-class ProviderOpenTabs {
+class ProviderOpenTabs extends UrlbarProvider {
   constructor() {
+    super();
     // Maps the open tabs by userContextId.
     this.openTabs = new Map();
     // Maps the running queries by queryContext.
