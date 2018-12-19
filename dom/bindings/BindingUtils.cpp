@@ -2151,10 +2151,7 @@ void ReparentWrapper(JSContext* aCx, JS::Handle<JSObject*> aObjArg,
 
   JSAutoRealm oldAr(aCx, oldParent);
 
-  JS::Compartment* oldCompartment = js::GetObjectCompartment(oldParent);
-  JS::Compartment* newCompartment = js::GetObjectCompartment(newParent);
-  if (oldCompartment == newCompartment) {
-    MOZ_ASSERT(oldParent == newParent);
+  if (oldParent == newParent) {
     return;
   }
 
