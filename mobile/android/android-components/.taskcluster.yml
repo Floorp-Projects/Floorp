@@ -158,7 +158,7 @@ tasks:
             - --login
             - -cx
             - >-
-              git fetch ${repository} ${head_branch}
+              git fetch ${repository} ${event.release.target_commitish}
               && git config advice.detachedHead false
               && git checkout ${event.release.tag_name}
               && ./gradlew --no-daemon --version
