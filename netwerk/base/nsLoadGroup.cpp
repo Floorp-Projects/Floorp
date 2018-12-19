@@ -93,8 +93,7 @@ nsLoadGroup::nsLoadGroup(nsISupports *outer)
       mIsCanceling(false),
       mDefaultLoadIsTimed(false),
       mTimedRequests(0),
-      mCachedRequests(0),
-      mTimedNonCachedRequestsUntilOnEndPageLoad(0) {
+      mCachedRequests(0) {
   NS_INIT_AGGREGATED(outer);
   LOG(("LOADGROUP [%p]: Created.\n", this));
 }
@@ -538,8 +537,6 @@ nsLoadGroup::RemoveRequest(nsIRequest *request, nsISupports *ctxt,
       rv = timedChannel->GetCacheReadStart(&timeStamp);
       if (NS_SUCCEEDED(rv) && !timeStamp.IsNull()) {
         ++mCachedRequests;
-      } else {
-        mTimedNonCachedRequestsUntilOnEndPageLoad++;
       }
 
       rv = timedChannel->GetAsyncOpen(&timeStamp);
