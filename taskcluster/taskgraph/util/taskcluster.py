@@ -34,9 +34,9 @@ def get_session():
     return session
 
 
-def _do_request(url, **kwargs):
+def _do_request(url, force_get=False, **kwargs):
     session = get_session()
-    if kwargs:
+    if kwargs and not force_get:
         response = session.post(url, **kwargs)
     else:
         response = session.get(url, stream=True)
@@ -257,7 +257,7 @@ def list_task_group(task_group_id):
     while True:
         url = liburls.api(os.environ['TASKCLUSTER_ROOT_URL'], 'queue', 'v1',
                           'task-group/{}/list'.format(task_group_id))
-        resp = _do_request(url, params=params).json()
+        resp = _do_request(url, force_get=True, params=params).json()
         for task in [t['status'] for t in resp['tasks']]:
             if task['state'] in ['running', 'pending', 'unscheduled']:
                 yield task['taskId']
