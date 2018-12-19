@@ -234,10 +234,3 @@ OptimizationSchema = voluptuous.Any(
     # are unnecessary if the parent tasks are not run)
     {'only-if-dependencies-run': None}
 )
-
-# shortcut for a string where task references are allowed
-taskref_or_string = voluptuous.Any(
-    basestring,
-    {voluptuous.Required('task-reference'): basestring},
-    {voluptuous.Required('artifact-reference'): basestring},
-)
