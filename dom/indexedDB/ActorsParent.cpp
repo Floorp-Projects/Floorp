@@ -6423,12 +6423,12 @@ class MutableFile : public BackgroundMutableFileParentBase {
   ~MutableFile() override;
 
   PBackgroundFileHandleParent* AllocPBackgroundFileHandleParent(
-      const FileMode& aMode) override;
+      const FileMode& aMode) final;
 
   mozilla::ipc::IPCResult RecvPBackgroundFileHandleConstructor(
-      PBackgroundFileHandleParent* aActor, const FileMode& aMode) override;
+      PBackgroundFileHandleParent* aActor, const FileMode& aMode) final;
 
-  mozilla::ipc::IPCResult RecvGetFileId(int64_t* aFileId) override;
+  mozilla::ipc::IPCResult RecvGetFileId(int64_t* aFileId) final;
 };
 
 class FactoryOp : public DatabaseOperationBase,
@@ -6617,7 +6617,7 @@ class FactoryOp : public DatabaseOperationBase,
   // IPDL methods.
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  mozilla::ipc::IPCResult RecvPermissionRetry() override;
+  mozilla::ipc::IPCResult RecvPermissionRetry() final;
 
   virtual void SendBlockedNotification() = 0;
 
@@ -7115,7 +7115,7 @@ class NormalTransactionOp : public TransactionDatabaseOperationBase,
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
   mozilla::ipc::IPCResult RecvContinue(
-      const PreprocessResponse& aResponse) override;
+      const PreprocessResponse& aResponse) final;
 };
 
 class ObjectStoreAddOrPutRequestOp final : public NormalTransactionOp {
