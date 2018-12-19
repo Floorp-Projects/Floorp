@@ -662,7 +662,6 @@ nsDocShell::LoadURI(nsDocShellLoadState* aLoadState) {
   MOZ_ASSERT(
       (aLoadState->LoadFlags() & INTERNAL_LOAD_FLAGS_LOADURI_SETUP_FLAGS) == 0,
       "Should not have these flags set");
-  MOZ_ASSERT(aLoadState->URI(), "Should have a valid URI to load");
 
   if (!aLoadState->TriggeringPrincipal()) {
 #ifndef ANDROID
@@ -8651,7 +8650,7 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
   MOZ_LOG(
       gDocShellLeakLog, LogLevel::Debug,
       ("DOCSHELL %p InternalLoad %s\n", this,
-       aLoadState->URI() ? aLoadState->URI()->GetSpecOrDefault().get() : ""));
+      aLoadState->URI()->GetSpecOrDefault().get()));
 
   // Initialize aDocShell/aRequest
   if (aDocShell) {
@@ -8659,10 +8658,6 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
   }
   if (aRequest) {
     *aRequest = nullptr;
-  }
-
-  if (!aLoadState->URI()) {
-    return NS_ERROR_NULL_POINTER;
   }
 
   NS_ENSURE_TRUE(IsValidLoadType(aLoadState->LoadType()), NS_ERROR_INVALID_ARG);
@@ -8815,8 +8810,7 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
   const bool isDocumentAuxSandboxed =
       doc && (doc->GetSandboxFlags() & SANDBOXED_AUXILIARY_NAVIGATION);
 
-  if (aLoadState->URI() && mLoadURIDelegate &&
-      aLoadState->LoadType() != LOAD_ERROR_PAGE &&
+  if (mLoadURIDelegate && aLoadState->LoadType() != LOAD_ERROR_PAGE &&
       (!targetDocShell || targetDocShell == static_cast<nsIDocShell*>(this))) {
     // Dispatch only load requests for the current or a new window to the
     // delegate, e.g., to allow for GeckoView apps to handle the load event
@@ -8866,9 +8860,8 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
 
       nsCOMPtr<nsPIDOMWindowOuter> newWin;
       nsAutoCString spec;
-      if (aLoadState->URI()) {
-        aLoadState->URI()->GetSpec(spec);
-      }
+      aLoadState->URI()->GetSpec(spec);
+
       // If we are a noopener load, we just hand the whole thing over to our
       // window.
       if (aLoadState->HasLoadFlags(INTERNAL_LOAD_FLAGS_NO_OPENER)) {
