@@ -4,14 +4,16 @@
 
 use api::{BorderRadius, BorderSide, BorderStyle, ColorF, ColorU, DeviceRect, DeviceSize};
 use api::{LayoutSideOffsets, LayoutSizeAu, LayoutPrimitiveInfo, LayoutToDeviceScale};
-use api::{DeviceVector2D, DevicePoint, LayoutRect, LayoutSize, NormalBorder, DeviceIntSize};
+use api::{DeviceVector2D, DevicePoint, LayoutRect, LayoutSize, DeviceIntSize};
 use api::{AuHelpers, LayoutPoint, RepeatMode, TexelRect};
+use api::NormalBorder as ApiNormalBorder;
 use ellipse::Ellipse;
 use euclid::vec2;
 use display_list_flattener::DisplayListFlattener;
 use gpu_types::{BorderInstance, BorderSegment, BrushFlags};
 use prim_store::{BorderSegmentInfo, BrushSegment, NinePatchDescriptor};
-use prim_store::{EdgeAaSegmentMask, ScrollNodeAndClipChain, PrimitiveKeyKind};
+use prim_store::{EdgeAaSegmentMask, ScrollNodeAndClipChain};
+use prim_store::borders::NormalBorderPrim;
 use util::{lerp, RectHelpers};
 
 // Using 2048 as the maximum radius in device space before which we
@@ -129,8 +131,8 @@ impl NormalBorderAu {
     }
 }
 
-impl From<NormalBorder> for NormalBorderAu {
-    fn from(border: NormalBorder) -> Self {
+impl From<ApiNormalBorder> for NormalBorderAu {
+    fn from(border: ApiNormalBorder) -> Self {
         NormalBorderAu {
             left: border.left.into(),
             right: border.right.into(),
@@ -142,9 +144,9 @@ impl From<NormalBorder> for NormalBorderAu {
     }
 }
 
-impl From<NormalBorderAu> for NormalBorder {
+impl From<NormalBorderAu> for ApiNormalBorder {
     fn from(border: NormalBorderAu) -> Self {
-        NormalBorder {
+        ApiNormalBorder {
             left: border.left.into(),
             right: border.right.into(),
             top: border.top.into(),
@@ -218,7 +220,7 @@ impl<'a> DisplayListFlattener<'a> {
     pub fn add_normal_border(
         &mut self,
         info: &LayoutPrimitiveInfo,
-        border: &NormalBorder,
+        border: &ApiNormalBorder,
         widths: LayoutSideOffsets,
         clip_and_scroll: ScrollNodeAndClipChain,
     ) {
@@ -229,7 +231,7 @@ impl<'a> DisplayListFlattener<'a> {
             clip_and_scroll,
             info,
             Vec::new(),
-            PrimitiveKeyKind::NormalBorder {
+            NormalBorderPrim {
                 border: border.into(),
                 widths: widths.to_au(),
             },
@@ -650,7 +652,7 @@ fn get_edge_info(
 /// cache keys for a given CSS border.
 pub fn create_border_segments(
     size: LayoutSize,
-    border: &NormalBorder,
+    border: &ApiNormalBorder,
     widths: &LayoutSideOffsets,
     border_segments: &mut Vec<BorderSegmentInfo>,
     brush_segments: &mut Vec<BrushSegment>,
@@ -1096,7 +1098,7 @@ fn add_edge_segment(
 pub fn build_border_instances(
     cache_key: &BorderSegmentCacheKey,
     cache_size: DeviceIntSize,
-    border: &NormalBorder,
+    border: &ApiNormalBorder,
     scale: LayoutToDeviceScale,
 ) -> Vec<BorderInstance> {
     let mut instances = Vec::new();

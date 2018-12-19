@@ -172,7 +172,7 @@ def _lookupListener(idexpr):
     return ExprCall(ExprVar('Lookup'), args=[idexpr])
 
 
-def _makeForwardDeclForQClass(clsname, quals, cls=1, struct=0):
+def _makeForwardDeclForQClass(clsname, quals, cls=True, struct=False):
     fd = ForwardDecl(clsname, cls=cls, struct=struct)
     if 0 == len(quals):
         return fd
@@ -262,7 +262,7 @@ def _uniqueptr(T):
     return Type('UniquePtr', T=T)
 
 
-def _tuple(types, const=False, ref=0):
+def _tuple(types, const=False, ref=False):
     return Type('Tuple', T=types, const=const, ref=ref)
 
 
@@ -292,11 +292,11 @@ def _makeResolver(returns, side):
     return TypeFunction([Decl(resolvetype, '')])
 
 
-def _cxxArrayType(basetype, const=False, ref=0):
+def _cxxArrayType(basetype, const=False, ref=False):
     return Type('nsTArray', T=basetype, const=const, ref=ref, hasimplicitcopyctor=False)
 
 
-def _cxxManagedContainerType(basetype, const=False, ref=0):
+def _cxxManagedContainerType(basetype, const=False, ref=False):
     return Type('ManagedContainer', T=basetype,
                 const=const, ref=ref, hasimplicitcopyctor=False)
 
@@ -520,13 +520,13 @@ class _ConvertToCxxType(TypeVisitor):
     def visitStateType(self, st): assert 0
 
 
-def _cxxBareType(ipdltype, side, fq=0):
+def _cxxBareType(ipdltype, side, fq=False):
     return ipdltype.accept(_ConvertToCxxType(side, fq))
 
 
 def _cxxRefType(ipdltype, side):
     t = _cxxBareType(ipdltype, side)
-    t.ref = 1
+    t.ref = True
     return t
 
 
@@ -535,19 +535,19 @@ def _cxxConstRefType(ipdltype, side):
     if ipdltype.isIPDL() and ipdltype.isActor():
         return t
     if ipdltype.isIPDL() and ipdltype.isShmem():
-        t.ref = 1
+        t.ref = True
         return t
     if ipdltype.isIPDL() and ipdltype.isByteBuf():
-        t.ref = 1
+        t.ref = True
         return t
     if ipdltype.isIPDL() and ipdltype.isArray():
         # Keep same constness as inner type.
         inner = _cxxConstRefType(ipdltype.basetype, side)
         t.const = inner.const or not inner.ref
-        t.ref = 1
+        t.ref = True
         return t
     if ipdltype.isCxx() and ipdltype.isMoveonly():
-        t.ref = 1
+        t.ref = True
         return t
     if ipdltype.isCxx() and ipdltype.isRefcounted():
         # Use T* instead of const RefPtr<T>&
@@ -555,10 +555,10 @@ def _cxxConstRefType(ipdltype, side):
         t.ptr = True
         return t
     if ipdltype.isUniquePtr():
-        t.ref = 1
+        t.ref = True
         return t
     t.const = True
-    t.ref = 1
+    t.ref = True
     return t
 
 
@@ -582,7 +582,7 @@ def _cxxTypeCanMove(ipdltype):
 def _cxxMoveRefType(ipdltype, side):
     t = _cxxBareType(ipdltype, side)
     if _cxxTypeNeedsMove(ipdltype):
-        t.ref = 2
+        t.rvalref = True
         return t
     return _cxxConstRefType(ipdltype, side)
 
@@ -590,7 +590,7 @@ def _cxxMoveRefType(ipdltype, side):
 def _cxxForceMoveRefType(ipdltype, side):
     assert _cxxTypeCanMove(ipdltype)
     t = _cxxBareType(ipdltype, side)
-    t.ref = 2
+    t.rvalref = True
     return t
 
 
@@ -636,7 +636,6 @@ info needed by later passes, along with a basic name for the decl."""
     def __init__(self, ipdltype, name):
         self.ipdltype = ipdltype
         self.name = name
-        self.idnum = 0
 
     def isCopyable(self):
         return not _cxxTypeNeedsMove(self.ipdltype)
@@ -649,7 +648,7 @@ info needed by later passes, along with a basic name for the decl."""
             return self.var()
         return ExprMove(self.var())
 
-    def bareType(self, side, fq=0):
+    def bareType(self, side, fq=False):
         """Return this decl's unqualified C++ type."""
         return _cxxBareType(self.ipdltype, side, fq=fq)
 
@@ -716,7 +715,7 @@ class _CompoundTypeComponent(_HybridDecl):
     # @override the following methods to pass |self.side| instead of
     # forcing the caller to remember which side we're declared to
     # represent.
-    def bareType(self, side=None, fq=0):
+    def bareType(self, side=None, fq=False):
         return _HybridDecl.bareType(self, self.side, fq=fq)
 
     def refType(self, side=None):
@@ -771,11 +770,11 @@ class _StructField(_CompoundTypeComponent):
         # sigh, gross hack
         refexpr = self.refExpr(thisexpr)
         if 'Shmem' == self.ipdltype.name():
-            refexpr = ExprCast(refexpr, Type('Shmem', ref=1), const=True)
+            refexpr = ExprCast(refexpr, Type('Shmem', ref=True), const=True)
         if 'ByteBuf' == self.ipdltype.name():
-            refexpr = ExprCast(refexpr, Type('ByteBuf', ref=1), const=True)
+            refexpr = ExprCast(refexpr, Type('ByteBuf', ref=True), const=True)
         if 'FileDescriptor' == self.ipdltype.name():
-            refexpr = ExprCast(refexpr, Type('FileDescriptor', ref=1), const=True)
+            refexpr = ExprCast(refexpr, Type('FileDescriptor', ref=True), const=True)
         return refexpr
 
     def argVar(self):
@@ -914,10 +913,10 @@ IPDL union type."""
     def ptrToInternalType(self):
         t = self.ptrToType()
         if self.recursive:
-            t.ref = 1
+            t.ref = True
         return t
 
-    def defaultValue(self, fq=0):
+    def defaultValue(self, fq=False):
         # Use the default constructor for any class that does not have an
         # implicit copy constructor.
         if not self.bareType().hasimplicitcopyctor:
@@ -932,11 +931,11 @@ IPDL union type."""
         v = ExprDeref(self.callGetConstPtr())
         # sigh
         if 'ByteBuf' == self.ipdltype.name():
-            v = ExprCast(v, Type('ByteBuf', ref=1), const=True)
+            v = ExprCast(v, Type('ByteBuf', ref=True), const=True)
         if 'Shmem' == self.ipdltype.name():
-            v = ExprCast(v, Type('Shmem', ref=1), const=True)
+            v = ExprCast(v, Type('Shmem', ref=True), const=True)
         if 'FileDescriptor' == self.ipdltype.name():
-            v = ExprCast(v, Type('FileDescriptor', ref=1), const=True)
+            v = ExprCast(v, Type('FileDescriptor', ref=True), const=True)
         return v
 
 # --------------------------------------------------
@@ -1009,7 +1008,7 @@ class MessageDecl(ipdl.ast.MessageDecl):
         return self.params[0]
 
     def makeCxxParams(self, paramsems='in', returnsems='out',
-                      side=None, implicit=1):
+                      side=None, implicit=True):
         """Return a list of C++ decls per the spec'd configuration.
 |params| and |returns| is the C++ semantics of those: 'in', 'out', or None."""
 
@@ -1024,7 +1023,7 @@ class MessageDecl(ipdl.ast.MessageDecl):
                 assert 0
 
         def makeResolverDecl(returns):
-            return Decl(Type(self.resolverName(), ref=2), 'aResolve')
+            return Decl(Type(self.resolverName(), rvalref=True), 'aResolve')
 
         def makeCallbackResolveDecl(returns):
             if len(returns) > 1:
@@ -1032,11 +1031,11 @@ class MessageDecl(ipdl.ast.MessageDecl):
             else:
                 resolvetype = returns[0].bareType(side)
 
-            return Decl(Type("mozilla::ipc::ResolveCallback", T=resolvetype, ref=2),
+            return Decl(Type("mozilla::ipc::ResolveCallback", T=resolvetype, rvalref=True),
                         'aResolve')
 
         def makeCallbackRejectDecl(returns):
-            return Decl(Type("mozilla::ipc::RejectCallback", ref=2), 'aReject')
+            return Decl(Type("mozilla::ipc::RejectCallback", rvalref=True), 'aReject')
 
         cxxparams = []
         if paramsems is not None:
@@ -1058,7 +1057,7 @@ class MessageDecl(ipdl.ast.MessageDecl):
         return cxxparams
 
     def makeCxxArgs(self, paramsems='in', retsems='out', retcallsems='out',
-                    implicit=1):
+                    implicit=True):
         assert not retcallsems or retsems  # retcallsems => returnsems
         cxxargs = []
 
@@ -1260,7 +1259,7 @@ class Protocol(ipdl.ast.Protocol):
         assert self.decl.type.isManagerOf(actortype)
         return ExprVar('mManaged' + _actorName(actortype.name(), side))
 
-    def managedVarType(self, actortype, side, const=False, ref=0):
+    def managedVarType(self, actortype, side, const=False, ref=False):
         assert self.decl.type.isManagerOf(actortype)
         return _cxxManagedContainerType(Type(_actorName(actortype.name(), side)),
                                         const=const, ref=ref)
@@ -1340,12 +1339,12 @@ with some new IPDL/C++ nodes that are tuned for C++ codegen."""
 
     def visitStructDecl(self, sd):
         if not isinstance(sd, StructDecl):
-            sd.decl.special = 0
+            sd.decl.special = False
             newfields = []
             for f in sd.fields:
                 ftype = f.decl.type
                 if _hasVisibleActor(ftype):
-                    sd.decl.special = 1
+                    sd.decl.special = True
                     # if ftype has a visible actor, we need both
                     # |ActorParent| and |ActorChild| fields
                     newfields.append(_StructField(ftype, f.name, sd,
@@ -1361,11 +1360,11 @@ with some new IPDL/C++ nodes that are tuned for C++ codegen."""
             self.typedefSet.add(Typedef(Type(sd.fqClassName()), sd.name))
 
     def visitUnionDecl(self, ud):
-        ud.decl.special = 0
+        ud.decl.special = False
         newcomponents = []
         for ctype in ud.decl.type.components:
             if _hasVisibleActor(ctype):
-                ud.decl.special = 1
+                ud.decl.special = True
                 # if ctype has a visible actor, we need both
                 # |ActorParent| and |ActorChild| union members
                 newcomponents.append(_UnionMember(ctype, ud, side='parent'))
@@ -1632,8 +1631,8 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
     # Generate code for PFoo::CreateEndpoints.
     def genEndpointFunc(self):
         p = self.protocol.decl.type
-        tparent = _cxxBareType(ActorType(p), 'Parent', fq=1)
-        tchild = _cxxBareType(ActorType(p), 'Child', fq=1)
+        tparent = _cxxBareType(ActorType(p), 'Parent', fq=True)
+        tchild = _cxxBareType(ActorType(p), 'Child', fq=True)
         methodvar = ExprVar('CreateEndpoints')
         rettype = Type.NSRESULT
         parentpidvar = ExprVar('aParentDestPid')
@@ -1795,7 +1794,7 @@ class _ParamTraits():
 
         block.addstmts([
             StmtExpr(cls.write(var, msgvar, actor)),
-            Whitespace('// Sentinel = ' + repr(sentinelKey) + '\n', indent=1),
+            Whitespace('// Sentinel = ' + repr(sentinelKey) + '\n', indent=True),
             StmtExpr(ExprCall(ExprSelect(msgvar, '->', 'WriteSentinel'),
                               args=[ExprLiteral.Int(hashfunc(sentinelKey))]))
         ])
@@ -1825,7 +1824,7 @@ class _ParamTraits():
         # Read the sentinel
         assert sentinelKey
         block.addstmt(Whitespace('// Sentinel = ' + repr(sentinelKey) + '\n',
-                                 indent=1))
+                                 indent=True))
         read = ExprCall(ExprSelect(msgvar, '->', 'ReadSentinel'),
                         args=[itervar, ExprLiteral.Int(hashfunc(sentinelKey))])
         ifsentinel = StmtIf(ExprNot(read))
@@ -1864,7 +1863,7 @@ class _ParamTraits():
         iprotocoltype = Type('mozilla::ipc::IProtocol', ptr=True)
 
         # static void Write(Message*, const T&);
-        intype = Type('paramType', ref=1, const=constin)
+        intype = Type('paramType', ref=True, const=constin)
         writemthd = MethodDefn(
             MethodDecl('Write',
                        params=[Decl(Type('IPC::Message', ptr=True),
@@ -1907,7 +1906,7 @@ class _ParamTraits():
         """Generates pickling for IPDL actors. This is a |nullable| deserializer.
         Write and read callers will perform nullability validation."""
 
-        cxxtype = _cxxBareType(actortype, side, fq=1)
+        cxxtype = _cxxBareType(actortype, side, fq=True)
         idvar = ExprVar('id')
 
         # void Write(..) impl
@@ -2063,9 +2062,9 @@ class _ParamTraits():
                                                          StmtReturn.FALSE])))
                 c = c.other
             tmpvar = ExprVar('tmp')
-            ct = c.bareType(fq=1)
+            ct = c.bareType(fq=True)
             readcase.addstmts([
-                StmtDecl(Decl(ct, tmpvar.name), init=c.defaultValue(fq=1)),
+                StmtDecl(Decl(ct, tmpvar.name), init=c.defaultValue(fq=True)),
                 StmtExpr(ExprAssn(ExprDeref(cls.var), tmpvar)),
                 cls._checkedRead(c.ipdltype,
                                  ExprAddrOf(ExprCall(ExprSelect(cls.var, '->',
@@ -2198,12 +2197,12 @@ def _generateCxxStruct(sd):
     forwarddeclstmts = gettypedeps.forwardDeclStmts
     fulldecltypes = gettypedeps.fullDeclTypes
 
-    struct = Class(sd.name, final=1)
+    struct = Class(sd.name, final=True)
     struct.addstmts([Label.PRIVATE]
                     + usingTypedefs
                     + [Whitespace.NL, Label.PUBLIC])
 
-    constreftype = Type(sd.name, const=True, ref=1)
+    constreftype = Type(sd.name, const=True, ref=True)
 
     def fieldsAsParamList():
         return [Decl(f.inType(), f.argVar().name) for f in sd.fields]
@@ -2328,11 +2327,11 @@ def _generateCxxUnion(ud):
     #  - [type&] get_[type]()
     #  - [const type&] get_[type]() const
     #
-    cls = Class(ud.name, final=1)
+    cls = Class(ud.name, final=True)
     # const Union&, i.e., Union type with inparam semantics
-    inClsType = Type(ud.name, const=True, ref=1)
-    refClsType = Type(ud.name, ref=1)
-    rvalueRefClsType = Type(ud.name, ref=2)
+    inClsType = Type(ud.name, const=True, ref=True)
+    refClsType = Type(ud.name, ref=True)
+    rvalueRefClsType = Type(ud.name, rvalref=True)
     typetype = Type('Type')
     valuetype = Type('Value')
     mtypevar = ExprVar('mType')
@@ -3070,7 +3069,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         if hasAsyncReturns:
             self.cls.addstmts([
                 Label.PUBLIC,
-                Whitespace('', indent=1),
+                Whitespace('', indent=True),
                 ExprCall(ExprVar('MOZ_DECLARE_WEAKREFERENCE_TYPENAME'),
                          [ExprVar(self.clsname)]),
                 Whitespace.NL
@@ -3150,7 +3149,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
             self.cls.addstmt(StmtDecl(MethodDecl(
                 _allocMethod(managed, self.side).name,
-                params=md.makeCxxParams(side=self.side, implicit=0),
+                params=md.makeCxxParams(side=self.side, implicit=False),
                 ret=actortype, methodspec=MethodSpec.PURE)))
 
             self.cls.addstmt(StmtDecl(MethodDecl(
@@ -3269,7 +3268,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             arrvar = ExprVar('aArr')
             meth = MethodDefn(MethodDecl(
                 p.managedMethod(managed, self.side).name,
-                params=[Decl(_cxxArrayType(p.managedCxxType(managed, self.side), ref=1),
+                params=[Decl(_cxxArrayType(p.managedCxxType(managed, self.side), ref=True),
                               arrvar.name)],
                 const=True))
             meth.addstmt(StmtExpr(
@@ -3280,7 +3279,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             refmeth = MethodDefn(MethodDecl(
                 p.managedMethod(managed, self.side).name,
                 params=[],
-                ret=p.managedVarType(managed, self.side, const=True, ref=1),
+                ret=p.managedVarType(managed, self.side, const=True, ref=True),
                 const=True))
             refmeth.addstmt(StmtReturn(p.managedVar(managed, self.side)))
 
@@ -3332,10 +3331,10 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         if 1 or ptype.isManager():
             self.cls.addstmts(self.implementManagerIface())
 
-        def makeHandlerMethod(name, switch, hasReply, dispatches=0):
-            params = [Decl(Type('Message', const=True, ref=1), msgvar.name)]
+        def makeHandlerMethod(name, switch, hasReply, dispatches=False):
+            params = [Decl(Type('Message', const=True, ref=True), msgvar.name)]
             if hasReply:
-                params.append(Decl(Type('Message', ref=1, ptr=True),
+                params.append(Decl(Type('Message', ref=True, ptr=True),
                                    replyvar.name))
 
             method = MethodDefn(MethodDecl(name, methodspec=MethodSpec.OVERRIDE,
@@ -3401,17 +3400,17 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         dispatches = (ptype.isToplevel() and ptype.isManager())
         self.cls.addstmts([
             makeHandlerMethod('OnMessageReceived', self.asyncSwitch,
-                              hasReply=0, dispatches=dispatches),
+                              hasReply=False, dispatches=dispatches),
             Whitespace.NL
         ])
         self.cls.addstmts([
             makeHandlerMethod('OnMessageReceived', self.syncSwitch,
-                              hasReply=1, dispatches=dispatches),
+                              hasReply=True, dispatches=dispatches),
             Whitespace.NL
         ])
         self.cls.addstmts([
             makeHandlerMethod('OnCallReceived', self.interruptSwitch,
-                              hasReply=1, dispatches=dispatches),
+                              hasReply=True, dispatches=dispatches),
             Whitespace.NL
         ])
 
@@ -3487,7 +3486,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
         if ptype.isManaged():
             destroysubtree.addstmt(
-                Whitespace('// Unregister from our manager.\n', indent=1))
+                Whitespace('// Unregister from our manager.\n', indent=True))
             destroysubtree.addstmts(self.unregisterActor())
             destroysubtree.addstmt(Whitespace.NL)
 
@@ -3514,7 +3513,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             foreachdestroy = StmtRangedFor(kidvar, kidsvar)
 
             foreachdestroy.addstmt(
-                Whitespace('// Guarding against a child removing a sibling from the list during the iteration.\n', indent=1))  # NOQA: E501
+                Whitespace('// Guarding against a child removing a sibling from the list during the iteration.\n', indent=True))  # NOQA: E501
             ifhas = StmtIf(_callHasManagedActor(managedVar, kidvar))
             ifhas.addifstmt(StmtExpr(ExprCall(
                 ExprSelect(kidvar, '->', destroysubtreevar.name),
@@ -3525,12 +3524,12 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             block.addstmts([
                 Whitespace(
                     '// Recursively shutting down %s kids\n' % (managed.name()),
-                    indent=1),
+                    indent=True),
                 StmtDecl(
                     Decl(_cxxArrayType(p.managedCxxType(managed, self.side)), kidsvar.name)),
                 Whitespace(
                     '// Accumulate kids into a stable structure to iterate over\n',
-                    indent=1),
+                    indent=True),
                 StmtExpr(ExprCall(p.managedMethod(managed, self.side),
                                   args=[kidsvar])),
                 foreachdestroy,
@@ -3545,14 +3544,14 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                                                   '->',
                                                   'RejectPendingResponsesForActor')
         destroysubtree.addstmts([Whitespace('// Reject owning pending responses.\n',
-                                            indent=1),
+                                            indent=True),
                                  StmtExpr(ExprCall(rejectPendingResponsesMethod,
                                                    args=[ExprVar('this')])),
                                  Whitespace.NL
                                  ])
 
         destroysubtree.addstmts([Whitespace('// Finally, destroy "us".\n',
-                                            indent=1),
+                                            indent=True),
                                  StmtExpr(ExprCall(_destroyMethod(),
                                                    args=[whyvar]))
                                  ])
@@ -3578,7 +3577,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             block.addstmts([
                 Whitespace(
                     '// Recursively deleting %s kids\n' % (managed.name()),
-                    indent=1),
+                    indent=True),
                 foreachrecurse,
                 Whitespace.NL,
                 foreachdealloc,
@@ -3669,7 +3668,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                     # Use a temporary variable here so all the assertion expressions
                     # in the _abortIfFalse call below are textually identical; the
                     # linker can then merge the strings from the assertion macro(s).
-                    StmtDecl(Decl(Type('auto', ref=1), containervar.name),
+                    StmtDecl(Decl(Type('auto', ref=True), containervar.name),
                              manageearray),
                     _abortIfFalse(
                         _callHasManagedActor(containervar, actorvar),
@@ -4176,7 +4175,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             + self.transition(md, errorfn=errfnRecv)
             + [StmtDecl(Decl(r.bareType(self.side), r.var().name))
                 for r in md.returns]
-            + self.invokeRecvHandler(md, implicit=0)
+            + self.invokeRecvHandler(md, implicit=False)
             + [Whitespace.NL]
             + saveIdStmts
             + self.makeReply(md, errfnRecv, routingId=idvar)
@@ -4268,7 +4267,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                        failifsendok])
         if len(md.returns) > 1:
             resolvedecl = Decl(_tuple([p.moveType(self.side) for p in md.returns],
-                                      const=True, ref=1),
+                                      const=True, ref=True),
                                'aParam')
             destructexpr = ExprCall(ExprVar('Tie'),
                                     args=[p.var() for p in md.returns])
@@ -4584,7 +4583,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             resolvetype = _tuple([d.bareType(self.side) for d in md.returns])
         else:
             resolvetype = md.returns[0].bareType(self.side)
-        resolvetype.ref = 2
+        resolvetype.rvalref = True
 
         resolvefn = ExprLambda([retpromise],
                                [Decl(resolvetype, "aValue")])
@@ -4595,7 +4594,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         ])
 
         rejecttype = _ResponseRejectReason.Type()
-        rejecttype.ref = 2
+        rejecttype.rvalref = True
         rejectfn = ExprLambda([retpromise],
                               [Decl(rejecttype, "aReason")])
         rejectfn.addstmts([
@@ -4614,7 +4613,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         return ExprCall(
             _allocMethod(md.decl.type.constructedType(), side),
             args=md.makeCxxArgs(retsems=retsems, retcallsems='out',
-                                implicit=0))
+                                implicit=False))
 
     def callActorDestroy(self, actorexpr, why=_DestroyReason.Deletion):
         return ExprCall(ExprSelect(actorexpr, '->', 'DestroySubtree'),
@@ -4638,7 +4637,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
     def callDeallocSubtree(self, md, actorexpr):
         return ExprCall(ExprSelect(actorexpr, '->', 'DeallocSubtree'))
 
-    def invokeRecvHandler(self, md, implicit=1):
+    def invokeRecvHandler(self, md, implicit=True):
         retsems = 'in'
         if md.decl.type.isAsync() and md.returns:
             retsems = 'resolver'
@@ -4649,7 +4648,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                                          implicit=implicit))))
         failif.addifstmts([
             _protocolErrorBreakpoint('Handler returned error code!'),
-            Whitespace('// Error handled in mozilla::ipc::IPCResult\n', indent=1),
+            Whitespace('// Error handled in mozilla::ipc::IPCResult\n', indent=True),
             StmtReturn(_Result.ProcessingError)
         ])
         return [failif]
@@ -4788,7 +4787,7 @@ def _splitMethodDefn(md, cls):
     saveddecl = deepcopy(md.decl)
     md.decl.cls = cls
     md.decl.methodspec = MethodSpec.NONE
-    md.decl.warn_unused = 0
+    md.decl.warn_unused = False
     md.decl.only_for_definition = True
     for param in md.decl.params:
         if isinstance(param, Param):

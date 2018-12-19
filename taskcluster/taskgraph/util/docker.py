@@ -208,6 +208,7 @@ def stream_context_tar(topsrcdir, context_dir, out_file, prefix, args=None):
     object."""
     archive_files = {}
     replace = []
+    content = []
 
     context_dir = os.path.join(topsrcdir, context_dir)
 
@@ -219,7 +220,6 @@ def stream_context_tar(topsrcdir, context_dir, out_file, prefix, args=None):
             archive_files[archive_path] = source_path
 
     # Parse Dockerfile for special syntax of extra files to include.
-    content = []
     with open(os.path.join(context_dir, 'Dockerfile'), 'rb') as fh:
         for line in fh:
             if line.startswith('# %ARG'):

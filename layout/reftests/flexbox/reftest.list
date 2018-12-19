@@ -1,7 +1,7 @@
 # NOTE: Most of our flexbox tests have moved to the w3c-css reftest directory.
 # The tests that remain in *this* directory are still here because either:
 #   a) They (or one of their closely-related tests) use some moz-prefixed
-#      feature, e.g. MozReftestInvalidate or -moz-max-content.
+#      feature, e.g. MozReftestInvalidate.
 # ...or...
 #   b) They test a feature that has known bugs (e.g. bug 874713)
 #

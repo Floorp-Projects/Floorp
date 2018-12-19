@@ -21,7 +21,7 @@ use internal_types::FastHashSet;
 use plane_split::{Clipper, Polygon, Splitter};
 use prim_store::{PictureIndex, PrimitiveInstance, SpaceMapper, VisibleFace, PrimitiveInstanceKind};
 use prim_store::{get_raster_rects, CoordinateSpaceMapping, PointKey};
-use prim_store::{OpacityBindingStorage, PrimitiveTemplateKind, ImageInstanceStorage, OpacityBindingIndex, SizeKey};
+use prim_store::{OpacityBindingStorage, ImageInstanceStorage, OpacityBindingIndex, SizeKey};
 use print_tree::PrintTreePrinter;
 use render_backend::FrameResources;
 use render_task::{ClearMode, RenderTask, RenderTaskCacheEntryHandle, TileBlit};
@@ -784,7 +784,7 @@ impl TileCache {
 
         // Some primitives can not be cached (e.g. external video images)
         let is_cacheable = prim_instance.is_cacheable(
-            &resources.prim_data_store,
+            &resources,
             resource_cache,
         );
 
@@ -809,7 +809,7 @@ impl TileCache {
                 }
             }
             PrimitiveInstanceKind::Image { data_handle, image_instance_index, .. } => {
-                let prim_data = &resources.prim_data_store[data_handle];
+                let image_data = &resources.image_data_store[data_handle].kind;
                 let image_instance = &image_instances[image_instance_index];
                 let opacity_binding_index = image_instance.opacity_binding_index;
 
@@ -822,25 +822,11 @@ impl TileCache {
                     }
                 }
 
-                match prim_data.kind {
-                    PrimitiveTemplateKind::Image { key, .. } => {
-                        image_keys.push(key);
-                    }
-                    _ => {
-                        unreachable!();
-                    }
-                }
+                image_keys.push(image_data.key);
             }
             PrimitiveInstanceKind::YuvImage { data_handle, .. } => {
-                let prim_data = &resources.prim_data_store[data_handle];
-                match prim_data.kind {
-                    PrimitiveTemplateKind::YuvImage { ref yuv_key, .. } => {
-                        image_keys.extend_from_slice(yuv_key);
-                    }
-                    _ => {
-                        unreachable!();
-                    }
-                }
+                let yuv_image_data = &resources.yuv_image_data_store[data_handle].kind;
+                image_keys.extend_from_slice(&yuv_image_data.yuv_key);
             }
             PrimitiveInstanceKind::TextRun { .. } |
             PrimitiveInstanceKind::LineDecoration { .. } |
@@ -1407,22 +1393,30 @@ impl PrimitiveList {
             let prim_data = match prim_instance.kind {
                 PrimitiveInstanceKind::Picture { data_handle, .. } |
                 PrimitiveInstanceKind::LineDecoration { data_handle, .. } |
-                PrimitiveInstanceKind::NormalBorder { data_handle, .. } |
-                PrimitiveInstanceKind::ImageBorder { data_handle, .. } |
                 PrimitiveInstanceKind::Rectangle { data_handle, .. } |
-                PrimitiveInstanceKind::YuvImage { data_handle, .. } |
-                PrimitiveInstanceKind::Image { data_handle, .. } |
                 PrimitiveInstanceKind::Clear { data_handle, .. } => {
                     &resources.prim_interner[data_handle]
                 }
+                PrimitiveInstanceKind::Image { data_handle, .. } => {
+                    &resources.image_interner[data_handle]
+                }
+                PrimitiveInstanceKind::ImageBorder { data_handle, .. } => {
+                    &resources.image_border_interner[data_handle]
+                }
                 PrimitiveInstanceKind::LinearGradient { data_handle, .. } => {
                     &resources.linear_grad_interner[data_handle]
+                }
+                PrimitiveInstanceKind::NormalBorder { data_handle, .. } => {
+                    &resources.normal_border_interner[data_handle]
                 }
                 PrimitiveInstanceKind::RadialGradient { data_handle, ..} => {
                     &resources.radial_grad_interner[data_handle]
                 }
                 PrimitiveInstanceKind::TextRun { data_handle, .. } => {
                     &resources.text_run_interner[data_handle]
+                }
+                PrimitiveInstanceKind::YuvImage { data_handle, .. } => {
+                    &resources.yuv_image_interner[data_handle]
                 }
             };
 

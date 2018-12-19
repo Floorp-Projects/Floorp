@@ -6358,11 +6358,7 @@ end:
         ${LogMsg} "OS Name    : Unable to detect"
       ${EndIf}
 
-      !ifdef HAVE_64BIT_BUILD
-        ${LogMsg} "Target CPU : x64"
-      !else
-        ${LogMsg} "Target CPU : x86"
-      !endif
+      ${LogMsg} "Target CPU : ${ARCH}"
 
       Pop $9
       Pop $R0

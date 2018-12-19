@@ -14,6 +14,7 @@ if AWSY_PATH not in sys.path:
 from awsy import process_perf_data, webservers
 from awsy.awsy_test_case import AwsyTestCase
 
+
 class TestMemoryUsage(AwsyTestCase):
     """Provides a test that collects memory usage at various checkpoints:
       - "Start" - Just after startup
@@ -47,7 +48,7 @@ class TestMemoryUsage(AwsyTestCase):
         tp5n_manifest = self.testvars.get("pageManifest", default_tp5n_manifest)
         with open(tp5n_manifest) as fp:
             urls = fp.readlines()
-        urls = map(lambda x:x.replace('localhost', 'localhost:{}'), urls)
+        urls = map(lambda x: x.replace('localhost', 'localhost:{}'), urls)
 
         # We haven't set self._urls yet, so this value might be zero if
         # 'entities' wasn't specified.
@@ -62,8 +63,10 @@ class TestMemoryUsage(AwsyTestCase):
         for url, server in zip(urls, self._webservers.servers):
             self._urls.append(url.strip().format(server.port))
 
-        self.logger.info("areweslimyet run by %d pages, %d iterations, %d perTabPause, %d settleWaitTime"
-                         % (self._pages_to_load, self._iterations, self._perTabPause, self._settleWaitTime))
+        self.logger.info("areweslimyet run by %d pages, %d iterations,"
+                         " %d perTabPause, %d settleWaitTime"
+                         % (self._pages_to_load, self._iterations,
+                            self._perTabPause, self._settleWaitTime))
         self.logger.info("done setting up!")
 
     def tearDown(self):
@@ -98,11 +101,12 @@ class TestMemoryUsage(AwsyTestCase):
             self.logger.error("gBrowser.removePreloadedBrowser() JavaScript error: %s" % e)
         except ScriptTimeoutException:
             self.logger.error("gBrowser.removePreloadedBrowser() timed out")
-        except:
-            self.logger.error("gBrowser.removePreloadedBrowser() Unexpected error: %s" % sys.exc_info()[0])
+        except Exception:
+            self.logger.error(
+                "gBrowser.removePreloadedBrowser() Unexpected error: %s" % sys.exc_info()[0])
         else:
             if result:
-              self.logger.info(result)
+                self.logger.info(result)
 
     def test_open_tabs(self):
         """Marionette test entry that returns an array of checkoint arrays.

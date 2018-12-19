@@ -108,7 +108,7 @@ class WeakWorkerRef final : public WorkerRef {
  public:
   static already_AddRefed<WeakWorkerRef> Create(
       WorkerPrivate* aWorkerPrivate,
-      const std::function<void()>& aCallback = nullptr);
+      std::function<void()>&& aCallback = nullptr);
 
   WorkerPrivate* GetPrivate() const;
 
@@ -127,7 +127,7 @@ class StrongWorkerRef final : public WorkerRef {
  public:
   static already_AddRefed<StrongWorkerRef> Create(
       WorkerPrivate* aWorkerPrivate, const char* aName,
-      const std::function<void()>& aCallback = nullptr);
+      std::function<void()>&& aCallback = nullptr);
 
   WorkerPrivate* Private() const;
 

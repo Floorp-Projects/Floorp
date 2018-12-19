@@ -24,7 +24,6 @@
 #include "nsHashKeys.h"
 #include "nsITelemetry.h"
 #include "nsPrintfCString.h"
-#include "TelemetryCommon.h"
 #include "TelemetryHistogramNameMap.h"
 #include "TelemetryScalar.h"
 
@@ -49,6 +48,7 @@ using mozilla::Telemetry::Common::IsExpiredVersion;
 using mozilla::Telemetry::Common::IsInDataset;
 using mozilla::Telemetry::Common::LogToBrowserConsole;
 using mozilla::Telemetry::Common::RecordedProcessType;
+using mozilla::Telemetry::Common::StringHashSet;
 using mozilla::Telemetry::Common::SupportedProduct;
 using mozilla::Telemetry::Common::ToJSString;
 
@@ -2686,6 +2686,18 @@ void TelemetryHistogram::AccumulateChildKeyed(
                                   aAccumulations[i].mKey,
                                   aAccumulations[i].mSample);
   }
+}
+
+nsresult TelemetryHistogram::GetAllStores(StringHashSet& set) {
+  for (uint32_t storeIdx : gHistogramStoresTable) {
+    const char* name = &gHistogramStringTable[storeIdx];
+    nsAutoCString store;
+    store.AssignASCII(name);
+    if (!set.PutEntry(store)) {
+      return NS_ERROR_FAILURE;
+    }
+  }
+  return NS_OK;
 }
 
 nsresult TelemetryHistogram::GetHistogramById(

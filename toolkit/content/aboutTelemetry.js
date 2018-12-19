@@ -378,6 +378,45 @@ var PingPicker = {
       return;
     }
 
+    let stores = Telemetry.getAllStores();
+    let getData = {
+      "histograms": Telemetry.getSnapshotForHistograms,
+      "keyedHistograms": Telemetry.getSnapshotForKeyedHistograms,
+      "scalars": Telemetry.getSnapshotForScalars,
+      "keyedScalars": Telemetry.getSnapshotForKeyedScalars,
+    };
+
+    let data = {};
+    for (const [name, fn] of Object.entries(getData)) {
+      for (const store of stores) {
+        if (!data[store]) {
+          data[store] = {};
+        }
+        let measurement = fn(store, /* clear */ false, /* filterTest */ true);
+        let processes = Object.keys(measurement);
+
+        for (const process of processes) {
+          if (!data[store][process]) {
+            data[store][process] = {};
+          }
+
+          data[store][process][name] = measurement[process];
+        }
+      }
+    }
+    ping.payload.stores = data;
+
+    // Delete the unused data from the payload of the current ping.
+    // It's included in the above `stores` attribute.
+    for (const data of Object.values(ping.payload.processes)) {
+      delete data.scalars;
+      delete data.keyedScalars;
+      delete data.histograms;
+      delete data.keyedHistograms;
+    }
+    delete ping.payload.histograms;
+    delete ping.payload.keyedHistograms;
+
     // augment ping payload with event telemetry
     let eventSnapshot = Telemetry.snapshotEvents(Telemetry.DATASET_RELEASE_CHANNEL_OPTIN, false);
     for (let process of Object.keys(eventSnapshot)) {
@@ -1637,26 +1676,62 @@ var Scalars = {
     let processesSelect = document.getElementById("processes");
     let selectedProcess = processesSelect.selectedOptions.item(0).getAttribute("value");
 
-    if (!aPayload.processes ||
-        !selectedProcess ||
-        !(selectedProcess in aPayload.processes)) {
+    if (!selectedProcess) {
       return;
     }
 
-    let scalars = aPayload.processes[selectedProcess].scalars || {};
-    let hasData = Array.from(processesSelect.options).some((option) => {
-      let value = option.getAttribute("value");
-      let sclrs = aPayload.processes[value].scalars;
-      return sclrs && Object.keys(sclrs).length > 0;
-    });
-    setHasData("scalars-section", hasData);
-    if (Object.keys(scalars).length > 0) {
-      const headings = [
-        "namesHeader",
-        "valuesHeader",
-      ].map(h => bundle.GetStringFromName(h));
-      const table = GenericTable.render(explodeObject(scalars), headings);
-      scalarsSection.appendChild(table);
+    let payload = aPayload.stores;
+    if (payload) { // Check for stores in the current ping data first
+      let hasData = false;
+      for (const store of Object.keys(payload)) {
+        if (!(selectedProcess in payload[store])) {
+          continue;
+        }
+
+        let scalars = payload[store][selectedProcess].scalars || {};
+        hasData = hasData || Array.from(processesSelect.options).some((option) => {
+          let value = option.getAttribute("value");
+          let sclrs = payload[store][value] && payload[store][value].scalars;
+          return sclrs && Object.keys(sclrs).length > 0;
+        });
+        if (Object.keys(scalars).length > 0) {
+          const headings = [
+            "namesHeader",
+            "valuesHeader",
+          ].map(h => bundle.GetStringFromName(h));
+
+          let s = GenericSubsection.renderSubsectionHeader(store, true, "scalars-section");
+          let table = GenericTable.render(explodeObject(scalars), headings);
+          let caption = document.createElement("caption");
+          caption.textContent = store;
+          table.appendChild(caption);
+          s.appendChild(table);
+          scalarsSection.appendChild(s);
+        }
+      }
+      setHasData("scalars-section", hasData);
+    } else { // Handle archived pings
+      if (!aPayload.processes ||
+        !(selectedProcess in aPayload.processes)) {
+        return;
+      }
+
+      let scalars = aPayload.processes[selectedProcess].scalars || {};
+      let hasData = Array.from(processesSelect.options).some((option) => {
+        let value = option.getAttribute("value");
+        let sclrs = aPayload.processes[value].scalars;
+        return sclrs && Object.keys(sclrs).length > 0;
+      });
+
+      setHasData("scalars-section", hasData);
+      if (Object.keys(scalars).length > 0) {
+        const headings = [
+          "namesHeader",
+          "valuesHeader",
+        ].map(h => bundle.GetStringFromName(h));
+        const table = GenericTable.render(explodeObject(scalars), headings);
+        scalarsSection.appendChild(table);
+      }
     }
   },
 };
@@ -1673,40 +1748,91 @@ var KeyedScalars = {
     let processesSelect = document.getElementById("processes");
     let selectedProcess = processesSelect.selectedOptions.item(0).getAttribute("value");
 
-    if (!aPayload.processes ||
-        !selectedProcess ||
+    if (!selectedProcess) {
+      return;
+    }
+
+    let payload = aPayload.stores;
+    if (payload) { // Check for stores in the current ping data first
+      let hasData = false;
+      for (const store of Object.keys(payload)) {
+        if (!(selectedProcess in payload[store])) {
+          continue;
+        }
+
+        let keyedScalars = payload[store][selectedProcess].keyedScalars || {};
+        hasData = hasData || Array.from(processesSelect.options).some((option) => {
+          let value = option.getAttribute("value");
+          let keyedS = payload[store][value] && payload[store][value].keyedScalars;
+          return keyedS && Object.keys(keyedS).length > 0;
+        });
+        if (!Object.keys(keyedScalars).length > 0) {
+          continue;
+        }
+
+        let s = GenericSubsection.renderSubsectionHeader(store, true, "keyed-scalars-section");
+        let heading = document.createElement("h2");
+        heading.textContent = store;
+        s.appendChild(heading);
+
+        const headings = [
+          "namesHeader",
+          "valuesHeader",
+        ].map(h => bundle.GetStringFromName(h));
+        for (let scalar in keyedScalars) {
+          // Add the name of the scalar.
+          let container = document.createElement("div");
+          container.classList.add("keyed-scalar");
+          container.id = scalar;
+          let scalarNameSection = document.createElement("p");
+          scalarNameSection.classList.add("keyed-title");
+          scalarNameSection.appendChild(document.createTextNode(scalar));
+          container.appendChild(scalarNameSection);
+          // Populate the section with the key-value pairs from the scalar.
+          const table = GenericTable.render(explodeObject(keyedScalars[scalar]), headings);
+          container.appendChild(table);
+          s.appendChild(container);
+        }
+
+        scalarsSection.appendChild(s);
+      }
+      setHasData("keyed-scalars-section", hasData);
+    } else { // Handle archived pings
+      if (!aPayload.processes ||
         !(selectedProcess in aPayload.processes)) {
-      return;
-    }
+        return;
+      }
 
-    let keyedScalars = aPayload.processes[selectedProcess].keyedScalars || {};
-    let hasData = Array.from(processesSelect.options).some((option) => {
-      let value = option.getAttribute("value");
-      let keyedS = aPayload.processes[value].keyedScalars;
-      return keyedS && Object.keys(keyedS).length > 0;
-    });
-    setHasData("keyed-scalars-section", hasData);
-    if (!Object.keys(keyedScalars).length > 0) {
-      return;
-    }
+      let keyedScalars = aPayload.processes[selectedProcess].keyedScalars || {};
+      let hasData = Array.from(processesSelect.options).some((option) => {
+        let value = option.getAttribute("value");
+        let keyedS = aPayload.processes[value].keyedScalars;
+        return keyedS && Object.keys(keyedS).length > 0;
+      });
 
-    const headings = [
-      "namesHeader",
-      "valuesHeader",
-    ].map(h => bundle.GetStringFromName(h));
-    for (let scalar in keyedScalars) {
-      // Add the name of the scalar.
-      let container = document.createElement("div");
-      container.classList.add("keyed-scalar");
-      container.id = scalar;
-      let scalarNameSection = document.createElement("p");
-      scalarNameSection.classList.add("keyed-title");
-      scalarNameSection.appendChild(document.createTextNode(scalar));
-      container.appendChild(scalarNameSection);
-      // Populate the section with the key-value pairs from the scalar.
-      const table = GenericTable.render(explodeObject(keyedScalars[scalar]), headings);
-      container.appendChild(table);
-      scalarsSection.appendChild(container);
+      setHasData("keyed-scalars-section", hasData);
+      if (!Object.keys(keyedScalars).length > 0) {
+        return;
+      }
+
+      const headings = [
+        "namesHeader",
+        "valuesHeader",
+      ].map(h => bundle.GetStringFromName(h));
+      for (let scalar in keyedScalars) {
+        // Add the name of the scalar.
+        let container = document.createElement("div");
+        container.classList.add("keyed-scalar");
+        container.id = scalar;
+        let scalarNameSection = document.createElement("p");
+        scalarNameSection.classList.add("keyed-title");
+        scalarNameSection.appendChild(document.createTextNode(scalar));
+        container.appendChild(scalarNameSection);
+        // Populate the section with the key-value pairs from the scalar.
+        const table = GenericTable.render(explodeObject(keyedScalars[scalar]), headings);
+        container.appendChild(table);
+        scalarsSection.appendChild(container);
+      }
     }
   },
 };
@@ -2112,26 +2238,59 @@ var HistogramSection = {
     let hgramsOption = hgramsSelect.selectedOptions.item(0);
     let hgramsProcess = hgramsOption.getAttribute("value");
 
-    if (hgramsProcess === "parent") {
-      histograms = aPayload.histograms;
-    } else if ("processes" in aPayload && hgramsProcess in aPayload.processes &&
-               "histograms" in aPayload.processes[hgramsProcess]) {
-      histograms = aPayload.processes[hgramsProcess].histograms;
-    }
+    let payload = aPayload.stores;
+    if (payload) { // Check for stores in the current ping data first
+      let hasData = false;
+      for (const store of Object.keys(payload)) {
+        if (store in payload && hgramsProcess in payload[store] &&
+          "histograms" in payload[store][hgramsProcess]) {
+          histograms = payload[store][hgramsProcess].histograms;
+        }
 
-    let hasData = Array.from(hgramsSelect.options).some((option) => {
-      let value = option.getAttribute("value");
-      if (value == "parent") {
-        return Object.keys(aPayload.histograms).length > 0;
+        hasData = hasData || Array.from(hgramsSelect.options).some((option) => {
+          let value = option.getAttribute("value");
+          let histos = payload[store][value].histograms;
+          return histos && Object.keys(histos).length > 0;
+        });
+
+        if (Object.keys(histograms).length > 0) {
+          let s = GenericSubsection.renderSubsectionHeader(store, true, "histograms-section");
+          let heading = document.createElement("h2");
+          heading.textContent = store;
+          s.appendChild(heading);
+          for (let [name, hgram] of Object.entries(histograms)) {
+            Histogram.render(s, name, hgram, {unpacked: true});
+          }
+          hgramDiv.appendChild(s);
+          let separator = document.createElement("div");
+          separator.classList.add("clearfix");
+          hgramDiv.appendChild(separator);
+        }
       }
-      let histos = aPayload.processes[value].histograms;
-      return histos && Object.keys(histos).length > 0;
-    });
-    setHasData("histograms-section", hasData);
 
-    if (Object.keys(histograms).length > 0) {
-      for (let [name, hgram] of Object.entries(histograms)) {
-        Histogram.render(hgramDiv, name, hgram, {unpacked: true});
+      setHasData("histograms-section", hasData);
+    } else { // Handle archived pings
+      if (hgramsProcess === "parent") {
+        histograms = aPayload.histograms;
+      } else if ("processes" in aPayload && hgramsProcess in aPayload.processes &&
+        "histograms" in aPayload.processes[hgramsProcess]) {
+        histograms = aPayload.processes[hgramsProcess].histograms;
+      }
+
+      let hasData = Array.from(hgramsSelect.options).some((option) => {
+        let value = option.getAttribute("value");
+        if (value == "parent") {
+          return Object.keys(aPayload.histograms).length > 0;
+        }
+        let histos = aPayload.processes[value].histograms;
+        return histos && Object.keys(histos).length > 0;
+      });
+      setHasData("histograms-section", hasData);
+
+      if (Object.keys(histograms).length > 0) {
+        for (let [name, hgram] of Object.entries(histograms)) {
+          Histogram.render(hgramDiv, name, hgram, {unpacked: true});
+        }
       }
     }
   },
@@ -2146,26 +2305,60 @@ var KeyedHistogramSection = {
     let keyedHgramsSelect = document.getElementById("processes");
     let keyedHgramsOption = keyedHgramsSelect.selectedOptions.item(0);
     let keyedHgramsProcess = keyedHgramsOption.getAttribute("value");
-    if (keyedHgramsProcess === "parent") {
-      keyedHistograms = aPayload.keyedHistograms;
-    } else if ("processes" in aPayload && keyedHgramsProcess in aPayload.processes &&
-               "keyedHistograms" in aPayload.processes[keyedHgramsProcess]) {
-      keyedHistograms = aPayload.processes[keyedHgramsProcess].keyedHistograms;
-    }
 
-    let hasData = Array.from(keyedHgramsSelect.options).some((option) => {
-      let value = option.getAttribute("value");
-      if (value == "parent") {
-        return Object.keys(aPayload.keyedHistograms).length > 0;
+    let payload = aPayload.stores;
+    if (payload) { // Check for stores in the current ping data first
+      let hasData = false;
+      for (const store of Object.keys(payload)) {
+        if (store in payload && keyedHgramsProcess in payload[store] &&
+          "keyedHistograms" in payload[store][keyedHgramsProcess]) {
+          keyedHistograms = payload[store][keyedHgramsProcess].keyedHistograms;
+        }
+
+        hasData = hasData || Array.from(keyedHgramsSelect.options).some((option) => {
+          let value = option.getAttribute("value");
+          let keyedHistos = payload[store][value].keyedHistograms;
+          return keyedHistos && Object.keys(keyedHistos).length > 0;
+        });
+
+        if (Object.keys(keyedHistograms).length > 0) {
+          let s = GenericSubsection.renderSubsectionHeader(store, true, "keyed-histograms-section");
+          let heading = document.createElement("h2");
+          heading.textContent = store;
+          s.appendChild(heading);
+          for (let [id, keyed] of Object.entries(keyedHistograms)) {
+            KeyedHistogram.render(s, id, keyed, {unpacked: true});
+          }
+          keyedDiv.appendChild(s);
+          let separator = document.createElement("div");
+          separator.classList.add("clearfix");
+          keyedDiv.appendChild(separator);
+        }
       }
-      let keyedHistos = aPayload.processes[value].keyedHistograms;
-      return keyedHistos && Object.keys(keyedHistos).length > 0;
-    });
-    setHasData("keyed-histograms-section", hasData);
-    if (Object.keys(keyedHistograms).length > 0) {
-      for (let [id, keyed] of Object.entries(keyedHistograms)) {
-        if (Object.keys(keyed).length > 0) {
-          KeyedHistogram.render(keyedDiv, id, keyed, {unpacked: true});
+
+      setHasData("keyed-histograms-section", hasData);
+    } else { // Handle archived pings
+      if (keyedHgramsProcess === "parent") {
+        keyedHistograms = aPayload.keyedHistograms;
+      } else if ("processes" in aPayload && keyedHgramsProcess in aPayload.processes &&
+        "keyedHistograms" in aPayload.processes[keyedHgramsProcess]) {
+        keyedHistograms = aPayload.processes[keyedHgramsProcess].keyedHistograms;
+      }
+
+      let hasData = Array.from(keyedHgramsSelect.options).some((option) => {
+        let value = option.getAttribute("value");
+        if (value == "parent") {
+          return Object.keys(aPayload.keyedHistograms).length > 0;
+        }
+        let keyedHistos = aPayload.processes[value].keyedHistograms;
+        return keyedHistos && Object.keys(keyedHistos).length > 0;
+      });
+      setHasData("keyed-histograms-section", hasData);
+      if (Object.keys(keyedHistograms).length > 0) {
+        for (let [id, keyed] of Object.entries(keyedHistograms)) {
+          if (Object.keys(keyed).length > 0) {
+            KeyedHistogram.render(keyedDiv, id, keyed, {unpacked: true});
+          }
         }
       }
     }

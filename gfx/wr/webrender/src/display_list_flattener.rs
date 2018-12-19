@@ -26,7 +26,9 @@ use prim_store::{PrimitiveInstance, PrimitiveKeyKind, PictureCompositeKey};
 use prim_store::{PrimitiveKey, PrimitiveSceneData, PrimitiveInstanceKind, NinePatchDescriptor};
 use prim_store::{PrimitiveStore, PrimitiveStoreStats, LineDecorationCacheKey};
 use prim_store::{ScrollNodeAndClipChain, PictureIndex, register_prim_chase_id, get_line_decoration_sizes};
+use prim_store::borders::{ImageBorder, NormalBorderPrim};
 use prim_store::gradient::{GradientStopKey, LinearGradient, RadialGradient, RadialGradientParams};
+use prim_store::image::{Image, YuvImage};
 use prim_store::text_run::TextRun;
 use render_backend::{DocumentView};
 use resource_cache::{FontInstanceMap, ImageRequest};
@@ -1820,7 +1822,12 @@ impl<'a> DisplayListFlattener<'a> {
 
                     for item in &items {
                         match item {
-                            // TODO(djg): ugh. de-duplicate this code.
+                            ShadowItem::Image(ref pending_image) => {
+                                self.add_shadow_prim(&pending_shadow, pending_image, &mut prims)
+                            }
+                            ShadowItem::NormalBorder(ref pending_border) => {
+                                self.add_shadow_prim(&pending_shadow, pending_border, &mut prims)
+                            }
                             ShadowItem::Primitive(ref pending_primitive) => {
                                 self.add_shadow_prim(&pending_shadow, pending_primitive, &mut prims)
                             }
@@ -1896,6 +1903,12 @@ impl<'a> DisplayListFlattener<'a> {
                         // picture on to the shadow stack, to avoid infinite recursion!
                         self.add_primitive_to_draw_list(shadow_prim_instance);
                     }
+                }
+                ShadowItem::Image(pending_image) => {
+                    self.add_shadow_prim_to_draw_list(pending_image)
+                },
+                ShadowItem::NormalBorder(pending_border) => {
+                    self.add_shadow_prim_to_draw_list(pending_border)
                 }
                 ShadowItem::Primitive(pending_primitive) => {
                     self.add_shadow_prim_to_draw_list(pending_primitive)
@@ -2109,7 +2122,7 @@ impl<'a> DisplayListFlattener<'a> {
 
                 match border.source {
                     NinePatchBorderSource::Image(image_key) => {
-                        let prim = PrimitiveKeyKind::ImageBorder {
+                        let prim = ImageBorder {
                             request: ImageRequest {
                                 key: image_key,
                                 rendering: ImageRendering::Auto,
@@ -2118,7 +2131,7 @@ impl<'a> DisplayListFlattener<'a> {
                             nine_patch,
                         };
 
-                        self.add_primitive(
+                        self.add_nonshadowable_primitive(
                             clip_and_scroll,
                             info,
                             Vec::new(),
@@ -2415,7 +2428,7 @@ impl<'a> DisplayListFlattener<'a> {
             clip_and_scroll,
             &info,
             Vec::new(),
-            PrimitiveKeyKind::Image {
+            Image {
                 key: image_key,
                 tile_spacing: tile_spacing.into(),
                 stretch_size: stretch_size.into(),
@@ -2443,11 +2456,11 @@ impl<'a> DisplayListFlattener<'a> {
             YuvData::InterleavedYCbCr(plane_0) => [plane_0, ImageKey::DUMMY, ImageKey::DUMMY],
         };
 
-        self.add_primitive(
+        self.add_nonshadowable_primitive(
             clip_and_scroll,
             info,
             Vec::new(),
-            PrimitiveKeyKind::YuvImage {
+            YuvImage {
                 color_depth,
                 yuv_key,
                 format,
@@ -2669,8 +2682,22 @@ pub struct PendingShadow {
 
 pub enum ShadowItem {
     Shadow(PendingShadow),
+    Image(PendingPrimitive<Image>),
+    NormalBorder(PendingPrimitive<NormalBorderPrim>),
     Primitive(PendingPrimitive<PrimitiveKeyKind>),
     TextRun(PendingPrimitive<TextRun>),
+}
+
+impl From<PendingPrimitive<Image>> for ShadowItem {
+    fn from(image: PendingPrimitive<Image>) -> Self {
+        ShadowItem::Image(image)
+    }
+}
+
+impl From<PendingPrimitive<NormalBorderPrim>> for ShadowItem {
+    fn from(border: PendingPrimitive<NormalBorderPrim>) -> Self {
+        ShadowItem::NormalBorder(border)
+    }
 }
 
 impl From<PendingPrimitive<PrimitiveKeyKind>> for ShadowItem {

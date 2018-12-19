@@ -50,9 +50,13 @@ def REMOVED(cls):
 @CommandProvider
 class MachCommands(MachCommandBase):
     def _root_url(self, artifactdir=None, objdir=None):
+        """Generate a publicly-accessible URL for the tasks's artifacts, or an objdir path"""
         if 'TASK_ID' in os.environ and 'RUN_ID' in os.environ:
-            return 'https://queue.taskcluster.net/v1/task/{}/runs/{}/artifacts/{}'.format(
-                os.environ['TASK_ID'], os.environ['RUN_ID'], artifactdir)
+            import taskcluster_urls
+            return taskcluster_urls.api(
+                os.environ['TASKCLUSTER_ROOT_URL'],
+                'queue', 'v1', 'task/{}/runs/{}/artifacts/{}'.format(
+                    os.environ['TASK_ID'], os.environ['RUN_ID'], artifactdir))
         else:
             return os.path.join(self.topobjdir, objdir)
 

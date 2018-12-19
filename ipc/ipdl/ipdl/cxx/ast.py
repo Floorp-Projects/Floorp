@@ -237,7 +237,7 @@ class Node:
 class Whitespace(Node):
     # yes, this is silly.  but we need to stick comments in the
     # generated code without resorting to more serious hacks
-    def __init__(self, ws, indent=0):
+    def __init__(self, ws, indent=False):
         Node.__init__(self)
         self.ws = ws
         self.indent = indent
@@ -312,7 +312,7 @@ class Namespace(Block):
 class Type(Node):
     def __init__(self, name, const=False,
                  ptr=False, ptrconst=False, ptrptr=False, ptrconstptr=False,
-                 ref=0,
+                 ref=False, rvalref=False,
                  hasimplicitcopyctor=True,
                  T=None,
                  inner=None):
@@ -327,11 +327,10 @@ of pointer types that can be be constructed.
   ptrconst       => T* const
   ptrptr         => T**
   ptrconstptr    => T* const*
+  ref            => T&
+  rvalref        => T&&
 
 Any type, naked or pointer, can be const (const T) or ref (T&).
-
-ref is an integer, indicating how many "levels" of references exist. So ref=2
-indicates T&&.
 """
         assert isinstance(name, str)
         assert isinstance(const, bool)
@@ -339,6 +338,8 @@ indicates T&&.
         assert isinstance(ptrconst, bool)
         assert isinstance(ptrptr, bool)
         assert isinstance(ptrconstptr, bool)
+        assert isinstance(ref, bool)
+        assert isinstance(rvalref, bool)
         assert not isinstance(T, str)
 
         Node.__init__(self)
@@ -349,6 +350,7 @@ indicates T&&.
         self.ptrptr = ptrptr
         self.ptrconstptr = ptrconstptr
         self.ref = ref
+        self.rvalref = rvalref
         self.hasimplicitcopyctor = hasimplicitcopyctor
         self.T = T
         self.inner = inner
@@ -360,7 +362,7 @@ indicates T&&.
                     const=self.const,
                     ptr=self.ptr, ptrconst=self.ptrconst,
                     ptrptr=self.ptrptr, ptrconstptr=self.ptrconstptr,
-                    ref=self.ref,
+                    ref=self.ref, rvalref=self.rvalref,
                     T=copy.deepcopy(self.T, memo),
                     inner=copy.deepcopy(self.inner, memo))
 
@@ -440,8 +442,9 @@ class Using(Node):
 
 
 class ForwardDecl(Node):
-    def __init__(self, pqname, cls=0, struct=0):
-        assert (not cls and struct) or (cls and not struct)
+    def __init__(self, pqname, cls=False, struct=False):
+        # Exactly one of cls and struct must be set
+        assert cls ^ struct
 
         self.pqname = pqname
         self.cls = cls
@@ -479,8 +482,8 @@ class Param(Decl):
 
 class Class(Block):
     def __init__(self, name, inherits=[],
-                 interface=0, abstract=0, final=0,
-                 specializes=None, struct=0):
+                 interface=False, abstract=False, final=False,
+                 specializes=None, struct=False):
         assert not (interface and abstract)
         assert not (abstract and final)
         assert not (interface and final)
@@ -515,10 +518,8 @@ class FriendClassDecl(Node):
 def make_enum(name, members_str):
     members_list = members_str.split()
     members_dict = {}
-    member_value = 1
-    for member in members_list:
+    for member_value, member in enumerate(members_list, start=1):
         members_dict[member] = member_value
-        member_value += 1
     return type(name, (), members_dict)
 
 
@@ -527,7 +528,7 @@ MethodSpec = make_enum('MethodSpec', 'NONE VIRTUAL PURE OVERRIDE STATIC')
 
 class MethodDecl(Node):
     def __init__(self, name, params=[], ret=Type('void'),
-                 methodspec=MethodSpec.NONE, const=False, warn_unused=0,
+                 methodspec=MethodSpec.NONE, const=False, warn_unused=False,
                  force_inline=False, typeop=None, T=None, cls=None):
         assert not (name and typeop)
         assert name is None or isinstance(name, str)
@@ -536,6 +537,7 @@ class MethodDecl(Node):
             assert not isinstance(decl, str)
         assert not isinstance(T, int)
         assert isinstance(const, bool)
+        assert isinstance(warn_unused, bool)
         assert isinstance(force_inline, bool)
 
         if typeop is not None:
@@ -576,7 +578,7 @@ class MethodDefn(Block):
 
 class FunctionDecl(MethodDecl):
     def __init__(self, name, params=[], ret=Type('void'),
-                 methodspec=MethodSpec.NONE, warn_unused=0,
+                 methodspec=MethodSpec.NONE, warn_unused=False,
                  force_inline=False, T=None):
         assert methodspec == MethodSpec.NONE or methodspec == MethodSpec.STATIC
         MethodDecl.__init__(self, name, params=params, ret=ret,
@@ -766,7 +768,7 @@ class ExprMove(ExprCall):
 class ExprNew(Node):
     # XXX taking some poetic license ...
     def __init__(self, ctype, args=[], newargs=None):
-        assert not (ctype.const or ctype.ref)
+        assert not (ctype.const or ctype.ref or ctype.rvalref)
 
         Node.__init__(self)
         self.ctype = ctype

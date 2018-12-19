@@ -326,9 +326,9 @@ class TypeSpec(Node):
     def __init__(self, loc, spec):
         Node.__init__(self, loc)
         self.spec = spec                # QualifiedId
-        self.array = 0                  # bool
-        self.nullable = 0               # bool
-        self.uniqueptr = 0              # bool
+        self.array = False              # bool
+        self.nullable = False           # bool
+        self.uniqueptr = False          # bool
 
     def basename(self):
         return self.spec.baseid
