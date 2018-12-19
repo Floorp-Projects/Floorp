@@ -21,8 +21,11 @@
 
 #define HAVE_ASM 1
 
-#define HAVE_ALIGNED_MALLOC 1
+#define HAVE_POSIX_MEMALIGN 1
 
 #define HAVE_UNISTD_H 1
 
+#define PREFIX 1
+
 #define STACK_ALIGNMENT 32
+

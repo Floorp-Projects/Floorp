@@ -24,6 +24,12 @@ elif CONFIG['CPU_ARCH'] == 'x86_64':
     if CONFIG['MOZ_ASAN'] and CONFIG['OS_TARGET'] == 'WINNT':
         LOCAL_INCLUDES += ['/media/libdav1d/config/x86_64/win_asan/']
         EXPORTS.dav1d += ['config/x86_64/win_asan/config.h']
+    elif CONFIG['OS_TARGET'] == 'Darwin':
+        LOCAL_INCLUDES += ['/media/libdav1d/config/x86_64/osx/']
+        EXPORTS.dav1d += ['config/x86_64/osx/config.h']
+    elif CONFIG['OS_TARGET'] == 'Android':
+        LOCAL_INCLUDES += ['/media/libdav1d/config/x86_64/android/']
+        EXPORTS.dav1d += ['config/x86_64/android/config.h']
     else:
         LOCAL_INCLUDES += ['/media/libdav1d/config/x86_64/']
         EXPORTS.dav1d += ['config/x86_64/config.h']
@@ -46,6 +52,18 @@ SOURCES += [
     '../../third_party/dav1d/src/lib.c',
     '../../third_party/dav1d/src/thread_task.c',
 ]
+
+# Enable ASM for Linux and OSX for now
+if CONFIG['OS_TARGET'] in ('Linux', 'Darwin', 'WINNT'):
+    DIRS += ['asm']
+    if CONFIG['CC_TYPE'] == 'clang':
+        CFLAGS += ['-mstack-alignment=32']
+        SOURCES['../../third_party/dav1d/src/lib.c'].flags += ['-mstackrealign']
+        SOURCES['../../third_party/dav1d/src/thread_task.c'].flags += ['-mstackrealign']
+    elif CONFIG['CC_TYPE'] == 'gcc':
+        CFLAGS += ['-mpreferred-stack-boundary=5']
+        SOURCES['../../third_party/dav1d/src/lib.c'].flags += ['-mincoming-stack-boundary=4']
+        SOURCES['../../third_party/dav1d/src/thread_task.c'].flags += ['-mincoming-stack-boundary=4']
 
 # common sources
 SOURCES += [
