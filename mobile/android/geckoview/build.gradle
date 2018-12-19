@@ -496,6 +496,6 @@ apply plugin: 'org.mozilla.apilint'
 apiLint {
     // TODO: Change this to `org` after hiding org.mozilla.gecko
     packageFilter = 'org.mozilla.geckoview'
-    changelogFileName = 'CHANGELOG.md'
+    changelogFileName = 'src/main/java/org/mozilla/geckoview/doc-files/CHANGELOG.md'
     lintFilters = ['GV']
 }
