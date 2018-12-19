@@ -64,6 +64,7 @@ class nsIDocShellTreeOwner;
 class nsIDOMWindowUtils;
 class nsIScrollableFrame;
 class nsIControllers;
+class nsIJSID;
 class nsIScriptContext;
 class nsIScriptTimeoutHandler;
 class nsITabChild;

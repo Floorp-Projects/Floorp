@@ -1,0 +1,47 @@
+/* -*- Mode: IDL; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[ptr] native const_nsID_ptr(const nsID);
+
+[builtinclass, scriptable, uuid(62883d14-4146-4039-94f5-a5e1e1a51a15)]
+interface nsIJSID : nsISupports
+{
+    readonly attribute string  name;
+    readonly attribute string  number;
+    readonly attribute boolean valid;
+
+    boolean equals(in nsIJSID other);
+    string toString();
+
+    [noscript] void initialize(in string idString);
+
+    // returns a pointer to the internal nsID. this pointer is only valid
+    // while the nsIJSID object remains alive!
+    [notxpcom] const_nsID_ptr getID();
+};
+
+[builtinclass, scriptable, uuid(e76ec564-a080-4705-8609-384c755ec91e)]
+interface nsIJSIID : nsIJSID
+{
+};
+
+[builtinclass, scriptable, uuid(bf5eb086-9eaa-4694-aec3-fe4aac6119bd)]
+interface nsIJSCID : nsIJSID
+{
+    [implicit_jscontext,optional_argc] jsval createInstance([optional] in jsval iid);
+    [implicit_jscontext,optional_argc] jsval getService([optional] in jsval iid);
+};
+
+/* this goes into the C++ header verbatim. */
+%{ C++
+/********************************************************/
+// {F24A14F0-4FA1-11d3-9894-006008962422}
+#define NS_JS_ID_CID  \
+{ 0xf24a14f0, 0x4fa1, 0x11d3, \
+    { 0x98, 0x94, 0x0, 0x60, 0x8, 0x96, 0x24, 0x22 } }
+%}
+

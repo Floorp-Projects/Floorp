@@ -6,10 +6,10 @@
 
 /* Wrapper object for reflecting native xpcom objects into JavaScript. */
 
-#if(__GNUC__ && __linux__ && __PPC64__ && _LITTLE_ENDIAN)
+#if (__GNUC__ && __linux__ && __PPC64__ && _LITTLE_ENDIAN)
 // Stack protection generates incorrect code currently with gcc on ppc64le
 // (bug 1512162).
-#define MOZ_GCC_STACK_PROTECTOR_DISABLED 1 // removed at end of file
+#define MOZ_GCC_STACK_PROTECTOR_DISABLED 1  // removed at end of file
 #pragma GCC push_options
 #pragma GCC optimize("no-stack-protector")
 #endif
@@ -1388,15 +1388,14 @@ bool CallMethodHelper::QueryInterfaceFastPath() {
     return false;
   }
 
-  JS::RootedValue iidarg(mCallContext, mArgv[0]);
-  Maybe<nsID> iid = xpc::JSValue2ID(mCallContext, iidarg);
+  const nsID* iid = xpc_JSObjectToID(mCallContext, &mArgv[0].toObject());
   if (!iid) {
     ThrowBadParam(NS_ERROR_XPC_BAD_CONVERT_JS, 0, mCallContext);
     return false;
   }
 
   nsISupports* qiresult = nullptr;
-  mInvokeResult = mCallee->QueryInterface(iid.ref(), (void**)&qiresult);
+  mInvokeResult = mCallee->QueryInterface(*iid, (void**)&qiresult);
 
   if (NS_FAILED(mInvokeResult)) {
     ThrowBadResult(mInvokeResult, mCallContext);
@@ -1406,7 +1405,7 @@ bool CallMethodHelper::QueryInterfaceFastPath() {
   RootedValue v(mCallContext, NullValue());
   nsresult err;
   bool success = XPCConvert::NativeData2JS(
-      &v, &qiresult, {nsXPTType::T_INTERFACE_IS}, iid.ptr(), 0, &err);
+      &v, &qiresult, {nsXPTType::T_INTERFACE_IS}, iid, 0, &err);
   NS_IF_RELEASE(qiresult);
 
   if (!success) {
@@ -1522,17 +1521,6 @@ bool CallMethodHelper::ConvertIndependentParam(uint8_t i) {
   // to do that.
   if (!paramInfo.IsIn()) {
     return true;
-  }
-
-  // Some types usually don't support default values, but we want to handle
-  // the default value if IsOptional is true.
-  if (i >= mArgc) {
-    MOZ_ASSERT(paramInfo.IsOptional(), "missing non-optional argument!");
-    if (type.Tag() == nsXPTType::T_IID) {
-      // NOTE: 'const nsIID&' is supported, so it must be allocated.
-      dp->val.p = new nsIID();
-      return true;
-    }
   }
 
   // We're definitely some variety of 'in' now, so there's something to

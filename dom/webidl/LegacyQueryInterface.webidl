@@ -5,6 +5,7 @@
  */
 
 interface nsISupports;
+interface IID;
 
 [NoInterfaceObject,
  // Need Exposed here, because this is a mixin onto things like Event
@@ -13,7 +14,7 @@ interface nsISupports;
 interface LegacyQueryInterface {
   // Legacy QueryInterface, only exposed to chrome code on the main thread.
   [Exposed=Window, ChromeOnly]
-  nsISupports QueryInterface(any iid);
+  nsISupports QueryInterface(IID iid);
 };
 
 DOMParser implements LegacyQueryInterface;

@@ -5,6 +5,7 @@
 
 #include "nsISupports.idl"
 
+interface nsIJSIID;
 interface nsISimpleEnumerator;
 
 /**
@@ -47,7 +48,7 @@ interface nsIArray : nsISupports
      * Retrieve a specific element of the array, and QueryInterface it
      * to the specified interface. null is a valid result for
      * this method, but exceptions are thrown in other circumstances
-     *
+     * 
      * @param index position of element
      * @param uuid the IID of the requested interface
      * @param result the object, QI'd to the requested interface
@@ -61,14 +62,14 @@ interface nsIArray : nsISupports
     void queryElementAt(in unsigned long index,
                         in nsIIDRef uuid,
                         [iid_is(uuid), retval] out nsQIResult result);
-
+    
     /**
      * indexOf()
-     *
+     * 
      * Get the position of a specific element. Note that since null is
      * a valid input, exceptions are used to indicate that an element
      * is not found.
-     *
+     * 
      * @param startIndex The initial element to search in the array
      *                   To start at the beginning, use 0 as the
      *                   startIndex
@@ -88,7 +89,7 @@ interface nsIArray : nsISupports
      *         to detect errors), or NS_ERROR_OUT_OF_MEMORY if out of memory.
      */
     [binaryname(ScriptedEnumerate), optional_argc]
-    nsISimpleEnumerator enumerate([optional] in nsIIDRef aElemIID);
+    nsISimpleEnumerator enumerate([optional] in nsIJSIID aElemIID);
 
     [noscript]
     nsISimpleEnumerator enumerateImpl(in nsIDRef aElemIID);

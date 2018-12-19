@@ -17,7 +17,7 @@
 [ChromeOnly, Exposed=Window]
 interface MozQueryInterface {
   [Throws]
-  legacycaller any (any aIID);
+  legacycaller any (IID aIID);
 };
 
 /**
@@ -215,14 +215,17 @@ partial namespace ChromeUtils {
    * JavaScript, acts as an ordinary QueryInterface function call, and when
    * called from XPConnect, circumvents JSAPI entirely.
    *
-   * The list of interfaces may include a mix of JS ID objects and interface
-   * name strings.
+   * The list of interfaces may include a mix of nsIJSID objects and interface
+   * name strings. Strings for nonexistent interface names are silently
+   * ignored, as long as they don't refer to any non-IID property of the Ci
+   * global. Any non-IID value is implicitly coerced to a string, and treated
+   * as an interface name.
    *
    * nsISupports is implicitly supported, and must not be included in the
    * interface list.
    */
   [Affects=Nothing, NewObject, Throws]
-  MozQueryInterface generateQI(sequence<any> interfaces);
+  MozQueryInterface generateQI(sequence<(DOMString or IID)> interfaces);
 
   /**
    * Waive Xray on a given value. Identity op for primitives.

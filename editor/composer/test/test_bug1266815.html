@@ -8,8 +8,6 @@
 <body>
 <p id="display"></p>
 <script type="text/javascript">
-// XXX(nika): Why are we using SpecialPowers here? If we're a chrome mochitest
-// can't we avoid using the SpecialPowers wrappers?
 const Cc = SpecialPowers.Cc;
 const Ci = SpecialPowers.Ci;
 const Cu = SpecialPowers.Cu;
@@ -40,7 +38,7 @@ var helperAppDlgPromise = new Promise(function(resolve) {
       registrar.unregisterFactory(MOCK_HELPERAPP_DIALOG_CID,
                                   mockHelperAppService);
     },
-    QueryInterface: ChromeUtils.generateQI(["nsIHelperAppLauncherDialog"]),
+    QueryInterface: ChromeUtils.generateQI([Ci.nsIHelperAppLauncherDialog]),
   };
 
   mockHelperAppService = XPCOMUtils._getFactory(HelperAppLauncherDialog);

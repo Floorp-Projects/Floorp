@@ -194,7 +194,7 @@ bool XPCArrayHomogenizer::GetTypeForArray(JSContext* cx, HandleObject array,
 
       if (isArray) {
         type = tArr;
-      } else if (xpc::JSValue2ID(cx, val)) {
+      } else if (xpc_JSObjectIsID(cx, jsobj)) {
         type = tID;
       } else {
         type = tISup;
@@ -303,15 +303,19 @@ bool XPCVariant::InitializeData(JSContext* cx) {
     MOZ_ASSERT(mData.u.wstr.mWStringValue[length] == '\0');
     return true;
   }
-  if (Maybe<nsID> id = xpc::JSValue2ID(cx, val)) {
-    mData.SetFromID(id.ref());
-    return true;
-  }
 
   // leaving only JSObject...
   MOZ_ASSERT(val.isObject(), "invalid type of jsval!");
 
   RootedObject jsobj(cx, &val.toObject());
+
+  // Let's see if it is a xpcJSID.
+
+  const nsID* id = xpc_JSObjectToID(cx, jsobj);
+  if (id) {
+    mData.SetFromID(*id);
+    return true;
+  }
 
   // Let's see if it is a js array object.
 
