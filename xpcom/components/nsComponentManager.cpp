@@ -10,6 +10,8 @@
 #include "nspr.h"
 #include "nsCRT.h"  // for atoll
 
+#include "StaticComponents.h"
+
 #include "nsCategoryManager.h"
 #include "nsCOMPtr.h"
 #include "nsComponentManager.h"
@@ -53,6 +55,7 @@
 #include "mozilla/ScopeExit.h"
 #include "mozilla/URLPreloader.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/Variant.h"
 #include "nsDataHashtable.h"
 
 #include <new>  // for placement new
@@ -157,11 +160,89 @@ bool FastProcessSelectorMatches(ProcessSelector aSelector) {
 }  // namespace xpcom
 }  // namespace mozilla
 
+namespace {
+
+/**
+ * A wrapper simple wrapper class, which can hold either a dynamic
+ * nsFactoryEntry instance, or a static StaticModule entry, and transparently
+ * forwards method calls to the wrapped object.
+ *
+ * This allows the same code to work with either static or dynamic modules
+ * without caring about the difference.
+ */
+class MOZ_STACK_CLASS EntryWrapper final {
+ public:
+  explicit EntryWrapper(nsFactoryEntry* aEntry) : mEntry(aEntry) {}
+
+  explicit EntryWrapper(const StaticModule* aEntry) : mEntry(aEntry) {}
+
+#define MATCH(type, ifFactory, ifStatic)                \
+  struct Matcher {                                      \
+    type match(nsFactoryEntry* entry) { ifFactory; }    \
+    type match(const StaticModule* entry) { ifStatic; } \
+  };                                                    \
+  return mEntry.match((Matcher()))
+
+  const nsID& CID() {
+    MATCH(const nsID&, return *entry->mCIDEntry->cid, return entry->CID());
+  }
+
+  already_AddRefed<nsIFactory> GetFactory() {
+    MATCH(already_AddRefed<nsIFactory>, return entry->GetFactory(),
+          return entry->GetFactory());
+  }
+
+  /**
+   * Creates an instance of the underlying component. This should be used in
+   * preference to GetFactory()->CreateInstance() where appropriate, since it
+   * side-steps the necessity of creating a nsIFactory instance for static
+   * modules.
+   */
+  nsresult CreateInstance(nsISupports* aOuter, const nsIID& aIID,
+                          void** aResult) {
+    if (mEntry.is<nsFactoryEntry*>()) {
+      return mEntry.as<nsFactoryEntry*>()->CreateInstance(aOuter, aIID,
+                                                          aResult);
+    }
+    return mEntry.as<const StaticModule*>()->CreateInstance(aOuter, aIID,
+                                                            aResult);
+  }
+
+  /**
+   * Returns the cached service instance for this entry, if any. This should
+   * only be accessed while mLock is held.
+   */
+  nsISupports* ServiceInstance() {
+    MATCH(nsISupports*, return entry->mServiceObject,
+          return entry->ServiceInstance());
+  }
+  void SetServiceInstance(already_AddRefed<nsISupports> aInst) {
+    if (mEntry.is<nsFactoryEntry*>()) {
+      mEntry.as<nsFactoryEntry*>()->mServiceObject = aInst;
+    } else {
+      return mEntry.as<const StaticModule*>()->SetServiceInstance(
+          std::move(aInst));
+    }
+  }
+
+  /**
+   * Returns the description string for the module this entry belongs to. For
+   * static entries, always returns "<unknown module>".
+   */
+  nsCString ModuleDescription() {
+    MATCH(nsCString,
+          return entry->mModule ? entry->mModule->Description()
+                                : NS_LITERAL_CSTRING("<unknown module>"),
+          return NS_LITERAL_CSTRING("<unknown module>"));
+  }
+
+ private:
+  Variant<nsFactoryEntry*, const StaticModule*> mEntry;
+};
+
 // GetService and a few other functions need to exit their mutex mid-function
 // without reentering it later in the block. This class supports that
 // style of early-exit that MutexAutoUnlock doesn't.
-
-namespace {
 
 class MOZ_STACK_CLASS MutexLock {
  public:
@@ -244,7 +325,7 @@ nsresult nsComponentManagerImpl::Create(nsISupports* aOuter, REFNSIID aIID,
   return gComponentManager->QueryInterface(aIID, aResult);
 }
 
-static const int CONTRACTID_HASHTABLE_INITIAL_LENGTH = 1024;
+static const int CONTRACTID_HASHTABLE_INITIAL_LENGTH = 512;
 
 nsComponentManagerImpl::nsComponentManagerImpl()
     : mFactories(CONTRACTID_HASHTABLE_INITIAL_LENGTH),
@@ -398,6 +479,15 @@ nsresult nsComponentManagerImpl::Init() {
     RegisterModule((*sExtraStaticModules)[i]);
   }
 
+  auto* catMan = nsCategoryManager::GetSingleton();
+  for (const auto& cat : gStaticCategories) {
+    for (const auto& entry : cat) {
+      if (entry.Active()) {
+        catMan->AddCategoryEntry(cat.Name(), entry.Entry(), entry.Value());
+      }
+    }
+  }
+
   bool loadChromeManifests;
   switch (XRE_GetProcessType()) {
     // We are going to assume that only a select few (see below) process types
@@ -494,6 +584,10 @@ nsresult nsComponentManagerImpl::Init() {
           ("nsComponentManager: Initialized."));
 
   mStatus = NORMAL;
+
+  MOZ_ASSERT(!XRE_IsContentProcess() ||
+                 mFactories.Count() > CONTRACTID_HASHTABLE_INITIAL_LENGTH / 3,
+             "Initial component hashtable size is too large");
 
   return NS_OK;
 }
@@ -705,17 +799,11 @@ void nsComponentManagerImpl::ManifestComponent(ManifestProcessingContext& aCx,
   fl.GetURIString(hash);
 
   MutexLock lock(mLock);
-  nsFactoryEntry* f = mFactories.Get(&cid);
-  if (f) {
+  if (Maybe<EntryWrapper> f = LookupByCID(lock, cid)) {
     char idstr[NSID_LENGTH];
     cid.ToProvidedString(idstr);
 
-    nsCString existing;
-    if (f->mModule) {
-      existing = f->mModule->Description();
-    } else {
-      existing = "<unknown module>";
-    }
+    nsCString existing(f->ModuleDescription());
 
     lock.Unlock();
 
@@ -855,6 +943,8 @@ nsresult nsComponentManagerImpl::Shutdown(void) {
   mKnownModules.Clear();
   mKnownStaticModules.Clear();
 
+  StaticComponents::Shutdown();
+
   delete sExtraStaticModules;
   delete sModuleLocations;
 
@@ -891,20 +981,46 @@ nsresult nsComponentManagerImpl::GetInterface(const nsIID& aUuid,
   return QueryInterface(aUuid, aResult);
 }
 
-nsFactoryEntry* nsComponentManagerImpl::GetFactoryEntry(
-    const char* aContractID, uint32_t aContractIDLen) {
-  SafeMutexAutoLock lock(mLock);
-  return mContractIDs.Get(nsDependentCString(aContractID, aContractIDLen));
+Maybe<EntryWrapper> nsComponentManagerImpl::LookupByCID(const nsID& aCID) {
+  return LookupByCID(MutexLock(mLock), aCID);
 }
 
-nsFactoryEntry* nsComponentManagerImpl::GetFactoryEntry(const nsCID& aClass) {
-  SafeMutexAutoLock lock(mLock);
-  return mFactories.Get(&aClass);
+Maybe<EntryWrapper> nsComponentManagerImpl::LookupByCID(const MutexLock&,
+                                                        const nsID& aCID) {
+  if (const StaticModule* module = StaticComponents::LookupByCID(aCID)) {
+    return Some(EntryWrapper(module));
+  }
+  if (nsFactoryEntry* entry = mFactories.Get(&aCID)) {
+    return Some(EntryWrapper(entry));
+  }
+  return Nothing();
+}
+
+Maybe<EntryWrapper> nsComponentManagerImpl::LookupByContractID(
+    const nsACString& aContractID) {
+  return LookupByContractID(MutexLock(mLock), aContractID);
+}
+
+Maybe<EntryWrapper> nsComponentManagerImpl::LookupByContractID(
+    const MutexLock&, const nsACString& aContractID) {
+  if (const StaticModule* module =
+          StaticComponents::LookupByContractID(aContractID)) {
+    return Some(EntryWrapper(module));
+  }
+  if (nsFactoryEntry* entry = mContractIDs.Get(aContractID)) {
+    // UnregisterFactory might have left a stale nsFactoryEntry in
+    // mContractIDs, so we should check to see whether this entry has
+    // anything useful.
+    if (entry->mModule || entry->mFactory || entry->mServiceObject) {
+      return Some(EntryWrapper(entry));
+    }
+  }
+  return Nothing();
 }
 
 already_AddRefed<nsIFactory> nsComponentManagerImpl::FindFactory(
     const nsCID& aClass) {
-  nsFactoryEntry* e = GetFactoryEntry(aClass);
+  Maybe<EntryWrapper> e = LookupByCID(aClass);
   if (!e) {
     return nullptr;
   }
@@ -914,7 +1030,8 @@ already_AddRefed<nsIFactory> nsComponentManagerImpl::FindFactory(
 
 already_AddRefed<nsIFactory> nsComponentManagerImpl::FindFactory(
     const char* aContractID, uint32_t aContractIDLen) {
-  nsFactoryEntry* entry = GetFactoryEntry(aContractID, aContractIDLen);
+  Maybe<EntryWrapper> entry =
+      LookupByContractID(nsDependentCString(aContractID, aContractIDLen));
   if (!entry) {
     return nullptr;
   }
@@ -1017,16 +1134,16 @@ nsComponentManagerImpl::CreateInstance(const nsCID& aClass,
   }
   *aResult = nullptr;
 
-  nsFactoryEntry* entry = GetFactoryEntry(aClass);
+  Maybe<EntryWrapper> entry = LookupByCID(aClass);
 
   if (!entry) {
     return NS_ERROR_FACTORY_NOT_REGISTERED;
   }
 
 #ifdef SHOW_CI_ON_EXISTING_SERVICE
-  if (entry->mServiceObject) {
-    char cid[NSID_LENGTH];
-    aClass.ToProvidedString(cid);
+  char cid[NSID_LENGTH];
+  aClass.ToProvidedString(cid);
+  if (entry->ServiceInstance()) {
     nsAutoCString message;
     message =
         NS_LITERAL_CSTRING("You are calling CreateInstance \"") +
@@ -1102,14 +1219,15 @@ nsComponentManagerImpl::CreateInstanceByContractID(const char* aContractID,
   }
   *aResult = nullptr;
 
-  nsFactoryEntry* entry = GetFactoryEntry(aContractID, strlen(aContractID));
+  Maybe<EntryWrapper> entry =
+      LookupByContractID(nsDependentCString(aContractID));
 
   if (!entry) {
     return NS_ERROR_FACTORY_NOT_REGISTERED;
   }
 
 #ifdef SHOW_CI_ON_EXISTING_SERVICE
-  if (entry->mServiceObject) {
+  if (entry->ServiceInstance()) {
     nsAutoCString message;
     message =
         NS_LITERAL_CSTRING("You are calling CreateInstance \"") +
@@ -1155,6 +1273,10 @@ nsresult nsComponentManagerImpl::FreeServices() {
     entry->mServiceObject = nullptr;
   }
 
+  for (const auto& module : gStaticModules) {
+    module.SetServiceInstance(nullptr);
+  }
+
   return NS_OK;
 }
 
@@ -1196,12 +1318,12 @@ PRThread* nsComponentManagerImpl::GetPendingServiceThread(
 }
 
 nsresult nsComponentManagerImpl::GetServiceLocked(MutexLock& aLock,
-                                                  nsFactoryEntry& aEntry,
+                                                  EntryWrapper& aEntry,
                                                   const nsIID& aIID,
                                                   void** aResult) {
-  if (aEntry.mServiceObject) {
+  if (auto* service = aEntry.ServiceInstance()) {
     aLock.Unlock();
-    return aEntry.mServiceObject->QueryInterface(aIID, aResult);
+    return service->QueryInterface(aIID, aResult);
   }
 
   PRThread* currentPRThread = PR_GetCurrentThread();
@@ -1211,7 +1333,7 @@ nsresult nsComponentManagerImpl::GetServiceLocked(MutexLock& aLock,
   nsIThread* currentThread = nullptr;
 
   PRThread* pendingPRThread;
-  while ((pendingPRThread = GetPendingServiceThread(*aEntry.mCIDEntry->cid))) {
+  while ((pendingPRThread = GetPendingServiceThread(aEntry.CID()))) {
     if (pendingPRThread == currentPRThread) {
       NS_ERROR("Recursive GetService!");
       return NS_ERROR_NOT_AVAILABLE;
@@ -1241,13 +1363,13 @@ nsresult nsComponentManagerImpl::GetServiceLocked(MutexLock& aLock,
 
   // It's still possible that the other thread failed to create the
   // service so we're not guaranteed to have an entry or service yet.
-  if (aEntry.mServiceObject) {
+  if (auto* service = aEntry.ServiceInstance()) {
     aLock.Unlock();
-    return aEntry.mServiceObject->QueryInterface(aIID, aResult);
+    return service->QueryInterface(aIID, aResult);
   }
 
   DebugOnly<PendingServiceInfo*> newInfo =
-      AddPendingService(*aEntry.mCIDEntry->cid, currentPRThread);
+      AddPendingService(aEntry.CID(), currentPRThread);
   NS_ASSERTION(newInfo, "Failed to add info to the array!");
 
   // We need to not be holding the service manager's lock while calling
@@ -1267,8 +1389,7 @@ nsresult nsComponentManagerImpl::GetServiceLocked(MutexLock& aLock,
   nsresult rv;
   {
     SafeMutexAutoUnlock unlock(mLock);
-    rv = CreateInstance(*aEntry.mCIDEntry->cid, nullptr, aIID,
-                        getter_AddRefs(service));
+    rv = aEntry.CreateInstance(nullptr, aIID, getter_AddRefs(service));
   }
   if (NS_SUCCEEDED(rv) && !service) {
     NS_ERROR("Factory did not return an object but returned success");
@@ -1276,22 +1397,23 @@ nsresult nsComponentManagerImpl::GetServiceLocked(MutexLock& aLock,
   }
 
 #ifdef DEBUG
-  pendingPRThread = GetPendingServiceThread(*aEntry.mCIDEntry->cid);
+  pendingPRThread = GetPendingServiceThread(aEntry.CID());
   MOZ_ASSERT(pendingPRThread == currentPRThread,
              "Pending service array has been changed!");
 #endif
-  RemovePendingService(*aEntry.mCIDEntry->cid);
+  RemovePendingService(aEntry.CID());
 
   if (NS_FAILED(rv)) {
     return rv;
   }
 
-  NS_ASSERTION(!aEntry.mServiceObject, "Created two instances of a service!");
+  NS_ASSERTION(!aEntry.ServiceInstance(),
+               "Created two instances of a service!");
 
-  aEntry.mServiceObject = service.forget();
+  aEntry.SetServiceInstance(service.forget());
 
   aLock.Unlock();
-  *aResult = do_AddRef(aEntry.mServiceObject).take();
+  *aResult = do_AddRef(aEntry.ServiceInstance()).take();
   return NS_OK;
 }
 
@@ -1317,7 +1439,7 @@ nsComponentManagerImpl::GetService(const nsCID& aClass, const nsIID& aIID,
 
   MutexLock lock(mLock);
 
-  nsFactoryEntry* entry = mFactories.Get(&aClass);
+  Maybe<EntryWrapper> entry = LookupByCID(lock, aClass);
   if (!entry) {
     return NS_ERROR_FACTORY_NOT_REGISTERED;
   }
@@ -1349,23 +1471,18 @@ nsComponentManagerImpl::IsServiceInstantiated(const nsCID& aClass,
     return NS_ERROR_UNEXPECTED;
   }
 
-  nsresult rv = NS_OK;
-  nsFactoryEntry* entry;
-
-  {
-    SafeMutexAutoLock lock(mLock);
-    entry = mFactories.Get(&aClass);
+  if (Maybe<EntryWrapper> entry = LookupByCID(aClass)) {
+    if (auto* service = entry->ServiceInstance()) {
+      nsCOMPtr<nsISupports> instance;
+      nsresult rv = service->QueryInterface(
+          aIID, getter_AddRefs(instance));
+      *aResult = (instance != nullptr);
+      return rv;
+    }
   }
 
-  if (entry && entry->mServiceObject) {
-    nsCOMPtr<nsISupports> service;
-    rv = entry->mServiceObject->QueryInterface(aIID, getter_AddRefs(service));
-    *aResult = (service != nullptr);
-  } else {
-    *aResult = false;
-  }
-
-  return rv;
+  *aResult = false;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1390,21 +1507,19 @@ nsComponentManagerImpl::IsServiceInstantiatedByContractID(
     return NS_ERROR_UNEXPECTED;
   }
 
-  nsresult rv = NS_OK;
-  nsFactoryEntry* entry;
-  {
-    SafeMutexAutoLock lock(mLock);
-    entry = mContractIDs.Get(nsDependentCString(aContractID));
+  if (Maybe<EntryWrapper> entry =
+          LookupByContractID(nsDependentCString(aContractID))) {
+    if (auto* service = entry->ServiceInstance()) {
+      nsCOMPtr<nsISupports> instance;
+      nsresult rv = service->QueryInterface(
+          aIID, getter_AddRefs(instance));
+      *aResult = (instance != nullptr);
+      return rv;
+    }
   }
 
-  if (entry && entry->mServiceObject) {
-    nsCOMPtr<nsISupports> service;
-    rv = entry->mServiceObject->QueryInterface(aIID, getter_AddRefs(service));
-    *aResult = (service != nullptr);
-  } else {
-    *aResult = false;
-  }
-  return rv;
+  *aResult = false;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1429,7 +1544,8 @@ nsComponentManagerImpl::GetServiceByContractID(const char* aContractID,
 
   MutexLock lock(mLock);
 
-  nsFactoryEntry* entry = mContractIDs.Get(nsDependentCString(aContractID));
+  Maybe<EntryWrapper> entry =
+      LookupByContractID(lock, nsDependentCString(aContractID));
   if (!entry) {
     return NS_ERROR_FACTORY_NOT_REGISTERED;
   }
@@ -1450,12 +1566,22 @@ nsComponentManagerImpl::RegisterFactory(const nsCID& aClass, const char* aName,
 
     SafeMutexAutoLock lock(mLock);
     nsFactoryEntry* oldf = mFactories.Get(&aClass);
-    if (!oldf) {
-      return NS_ERROR_FACTORY_NOT_REGISTERED;
+    if (oldf) {
+      mContractIDs.Put(nsDependentCString(aContractID), oldf);
+      return NS_OK;
     }
 
-    mContractIDs.Put(nsDependentCString(aContractID), oldf);
-    return NS_OK;
+    if (StaticComponents::LookupByCID(aClass)) {
+      // If this is the CID of a static module, just reset the invalid bit of
+      // the static entry for this contract ID, and assume it points to the
+      // correct class.
+      nsDependentCString contractID(aContractID);
+      if (StaticComponents::InvalidateContractID(contractID, false)) {
+        mContractIDs.Remove(contractID);
+        return NS_OK;
+      }
+    }
+    return NS_ERROR_FACTORY_NOT_REGISTERED;
   }
 
   nsAutoPtr<nsFactoryEntry> f(new nsFactoryEntry(aClass, aFactory));
@@ -1464,8 +1590,16 @@ nsComponentManagerImpl::RegisterFactory(const nsCID& aClass, const char* aName,
   if (auto entry = mFactories.LookupForAdd(f->mCIDEntry->cid)) {
     return NS_ERROR_FACTORY_EXISTS;
   } else {
+    if (StaticComponents::LookupByCID(*f->mCIDEntry->cid)) {
+      entry.OrRemove();
+      return NS_ERROR_FACTORY_EXISTS;
+    }
     if (aContractID) {
-      mContractIDs.Put(nsDependentCString(aContractID), f);
+      nsDependentCString contractID(aContractID);
+      mContractIDs.Put(contractID, f);
+      // We allow dynamically-registered contract IDs to override static
+      // entries, so invalidate any static entry for this contract ID.
+      StaticComponents::InvalidateContractID(contractID);
     }
     entry.OrInsert([&f]() { return f.forget(); });
   }
@@ -1486,6 +1620,7 @@ nsComponentManagerImpl::UnregisterFactory(const nsCID& aClass,
     auto entry = mFactories.Lookup(&aClass);
     nsFactoryEntry* f = entry ? entry.Data() : nullptr;
     if (!f || f->mFactory != aFactory) {
+      // Note: We do not support unregistering static factories.
       return NS_ERROR_FACTORY_NOT_REGISTERED;
     }
 
@@ -1530,7 +1665,7 @@ nsComponentManagerImpl::UnregisterFactoryLocation(const nsCID& aCID,
 
 NS_IMETHODIMP
 nsComponentManagerImpl::IsCIDRegistered(const nsCID& aClass, bool* aResult) {
-  *aResult = (nullptr != GetFactoryEntry(aClass));
+  *aResult = LookupByCID(aClass).isSome();
   return NS_OK;
 }
 
@@ -1541,29 +1676,30 @@ nsComponentManagerImpl::IsContractIDRegistered(const char* aClass,
     return NS_ERROR_INVALID_ARG;
   }
 
-  nsFactoryEntry* entry = GetFactoryEntry(aClass, strlen(aClass));
+  Maybe<EntryWrapper> entry = LookupByContractID(nsDependentCString(aClass));
 
-  if (entry) {
-    // UnregisterFactory might have left a stale nsFactoryEntry in
-    // mContractIDs, so we should check to see whether this entry has
-    // anything useful.
-    *aResult = (bool(entry->mModule) || bool(entry->mFactory) ||
-                bool(entry->mServiceObject));
-  } else {
-    *aResult = false;
-  }
+  *aResult = entry.isSome();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsComponentManagerImpl::EnumerateCIDs(nsISimpleEnumerator** aEnumerator) {
   nsCOMArray<nsISupports> array;
-  for (auto iter = mFactories.Iter(); !iter.Done(); iter.Next()) {
-    const nsID* id = iter.Key();
+  auto appendEntry = [&](const nsID& aCID) {
     nsCOMPtr<nsISupportsID> wrapper = new nsSupportsID();
-    wrapper->SetData(id);
+    wrapper->SetData(&aCID);
     array.AppendObject(wrapper);
+  };
+
+  for (auto iter = mFactories.Iter(); !iter.Done(); iter.Next()) {
+    appendEntry(*iter.Key());
   }
+  for (const auto& module : gStaticModules) {
+    if (module.Active()) {
+      appendEntry(module.CID());
+    }
+  }
+
   return NS_NewArrayEnumerator(aEnumerator, array);
 }
 
@@ -1574,6 +1710,12 @@ nsComponentManagerImpl::EnumerateContractIDs(
   for (auto iter = mContractIDs.Iter(); !iter.Done(); iter.Next()) {
     const nsACString& contract = iter.Key();
     array->AppendElement(contract);
+  }
+
+  for (const auto& entry : gContractEntries) {
+    if (!entry.Invalid()) {
+      array->AppendElement(entry.ContractID());
+    }
   }
 
   nsCOMPtr<nsIUTF8StringEnumerator> e;
@@ -1595,11 +1737,12 @@ NS_IMETHODIMP
 nsComponentManagerImpl::ContractIDToCID(const char* aContractID,
                                         nsCID** aResult) {
   {
-    SafeMutexAutoLock lock(mLock);
-    nsFactoryEntry* entry = mContractIDs.Get(nsDependentCString(aContractID));
+    MutexLock lock(mLock);
+    Maybe<EntryWrapper> entry =
+        LookupByContractID(lock, nsDependentCString(aContractID));
     if (entry) {
       *aResult = (nsCID*)moz_xmalloc(sizeof(nsCID));
-      **aResult = *entry->mCIDEntry->cid;
+      **aResult = entry->CID();
       return NS_OK;
     }
   }
@@ -1720,6 +1863,13 @@ already_AddRefed<nsIFactory> nsFactoryEntry::GetFactory() {
   }
   nsCOMPtr<nsIFactory> factory = mFactory;
   return factory.forget();
+}
+
+nsresult nsFactoryEntry::CreateInstance(nsISupports* aOuter, const nsIID& aIID,
+                                        void** aResult) {
+  nsCOMPtr<nsIFactory> factory = GetFactory();
+  NS_ENSURE_TRUE(factory, NS_ERROR_FAILURE);
+  return factory->CreateInstance(aOuter, aIID, aResult);
 }
 
 size_t nsFactoryEntry::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) {
