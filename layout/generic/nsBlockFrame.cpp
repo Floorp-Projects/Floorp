@@ -6717,12 +6717,16 @@ void nsBlockFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
   //   If the box is a block container, then it establishes a new block
   //   formatting context.
   // (http://dev.w3.org/csswg/css-writing-modes/#block-flow)
+  //
   // If the box has contain: paint or contain:layout (or contain:strict),
   // then it should also establish a formatting context.
+  //
+  // Per spec, a column-span always establishes a new block formatting context.
   if (StyleDisplay()->mDisplay == mozilla::StyleDisplay::FlowRoot ||
       (GetParent() && StyleVisibility()->mWritingMode !=
                           GetParent()->StyleVisibility()->mWritingMode) ||
-      StyleDisplay()->IsContainPaint() || StyleDisplay()->IsContainLayout()) {
+      StyleDisplay()->IsContainPaint() || StyleDisplay()->IsContainLayout() ||
+      (StaticPrefs::layout_css_column_span_enabled() && IsColumnSpan())) {
     AddStateBits(NS_BLOCK_FORMATTING_CONTEXT_STATE_BITS);
   }
 

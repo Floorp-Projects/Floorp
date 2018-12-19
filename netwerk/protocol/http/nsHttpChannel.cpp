@@ -2133,7 +2133,7 @@ nsresult nsHttpChannel::ProcessResponse() {
                           mConnectionInfo->EndToEndSSL());
   }
 
-  if (gHttpHandler->IsTelemetryEnabled()) {
+  if (Telemetry::CanRecordPrereleaseData()) {
     // how often do we see something like Alt-Svc: "443:quic,p=1"
     nsAutoCString alt_service;
     Unused << mResponseHead->GetHeader(nsHttp::Alternate_Service, alt_service);
@@ -2502,7 +2502,7 @@ nsresult nsHttpChannel::ContinueProcessResponse2(nsresult rv) {
     }
   }
 
-  if (gHttpHandler->IsTelemetryEnabled()) {
+  if (Telemetry::CanRecordPrereleaseData()) {
     CacheDisposition cacheDisposition;
     if (!mDidReval) {
       cacheDisposition = kCacheMissed;

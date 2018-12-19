@@ -16,18 +16,19 @@ CHECKPOINTS = [
     {
         'name': "After tabs open [+30s, forced GC]",
         'path': "memory-report-TabsOpenForceGC-4.json.gz",
-        'name_filter': 'Web Content', # We only want the content process
-        'median': True, # We want the median from all content processes
+        'name_filter': 'Web Content',  # We only want the content process
+        'median': True,  # We want the median from all content processes
     },
 ]
 
 # A description of each perfherder suite and the path to its values.
 PERF_SUITES = [
-    { 'name': "Base Content Resident Unique Memory", 'node': "resident-unique" },
-    { 'name': "Base Content Heap Unclassified", 'node': "explicit/heap-unclassified" },
-    { 'name': "Base Content JS", 'node': "js-main-runtime/" },
-    { 'name': "Base Content Explicit", 'node': "explicit/" },
+    {'name': "Base Content Resident Unique Memory", 'node': "resident-unique"},
+    {'name': "Base Content Heap Unclassified", 'node': "explicit/heap-unclassified"},
+    {'name': "Base Content JS", 'node': "js-main-runtime/"},
+    {'name': "Base Content Explicit", 'node': "explicit/"},
 ]
+
 
 class TestMemoryUsage(AwsyTestCase):
     """
@@ -56,8 +57,12 @@ class TestMemoryUsage(AwsyTestCase):
         process_count = self.marionette.get_pref('dom.ipc.processCount')
         self._urls = ['about:blank'] * process_count
 
-        self.logger.info("areweslimyet run by %d pages, %d iterations, %d perTabPause, %d settleWaitTime, %d content processes"
-                         % (self._pages_to_load, self._iterations, self._perTabPause, self._settleWaitTime, process_count))
+        self.logger.info("areweslimyet run by %d pages, "
+                         "%d iterations, %d perTabPause, %d settleWaitTime, "
+                         "%d content processes"
+                         % (self._pages_to_load, self._iterations,
+                            self._perTabPause, self._settleWaitTime,
+                            process_count))
         self.logger.info("done setting up!")
 
     def tearDown(self):

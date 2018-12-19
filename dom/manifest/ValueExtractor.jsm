@@ -5,13 +5,8 @@
  * Helper functions extract values from manifest members
  * and reports conformance violations.
  */
-/*globals Components*/
-'use strict';
-const {
-  classes: Cc,
-  interfaces: Ci,
-  utils: Cu
-} = Components;
+/* globals Components*/
+"use strict";
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -35,9 +30,9 @@ ValueExtractor.prototype = {
     const value = object[property];
     const isArray = Array.isArray(value);
     // We need to special-case "array", as it's not a JS primitive.
-    const type = (isArray) ? 'array' : typeof value;
+    const type = (isArray) ? "array" : typeof value;
     if (type !== expectedType) {
-      if (type !== 'undefined') {
+      if (type !== "undefined") {
         this.console.warn(this.domBundle.formatStringFromName("ManifestInvalidType",
                                                               [objectName, property, expectedType],
                                                               3));
@@ -45,7 +40,7 @@ ValueExtractor.prototype = {
       return undefined;
     }
     // Trim string and returned undefined if the empty string.
-    const shouldTrim = expectedType === 'string' && value && trim;
+    const shouldTrim = expectedType === "string" && value && trim;
     if (shouldTrim) {
       return value.trim() || undefined;
     }
@@ -62,6 +57,6 @@ ValueExtractor.prototype = {
                                                             2));
     }
     return color;
-  }
+  },
 };
-var EXPORTED_SYMBOLS = ['ValueExtractor']; // jshint ignore:line
+var EXPORTED_SYMBOLS = ["ValueExtractor"]; // jshint ignore:line

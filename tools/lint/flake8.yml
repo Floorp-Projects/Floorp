@@ -29,7 +29,9 @@ flake8:
         - security/
         - security/manager
         - taskcluster
+        - testing/awsy
         - testing/firefox-ui
+        - testing/geckodriver
         - testing/mach_commands.py
         - testing/marionette/client
         - testing/marionette/harness

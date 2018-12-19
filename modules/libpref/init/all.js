@@ -1603,11 +1603,6 @@ pref("logging.config.clear_on_startup", true);
 // prevents necko connecting to ports 1-5 unless the protocol
 // overrides.
 
-// Allow necko to do A/B testing. Will generally only happen if
-// telemetry is also enabled as otherwise there is no way to report
-// the results
-pref("network.allow-experiments", true);
-
 // Allow the network changed event to get sent when a network topology or
 // setup change is noticed while running.
 pref("network.notify.changed", true);

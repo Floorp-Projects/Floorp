@@ -3,9 +3,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 /* globals Components, Task, PromiseMessage */
 "use strict";
-const {
-  utils: Cu
-} = Components;
+
 ChromeUtils.import("resource://gre/modules/PromiseMessage.jsm");
 
 var ManifestFinder = {// jshint ignore:line
@@ -36,7 +34,7 @@ var ManifestFinder = {// jshint ignore:line
       const mm = aBrowser.messageManager;
       const reply = await PromiseMessage.send(mm, msgKey);
       return reply.data.result;
-    }
+    },
 };
 
 function isXULBrowser(aBrowser) {
@@ -61,5 +59,5 @@ function checkForManifest(aWindow) {
 }
 
 var EXPORTED_SYMBOLS = [// jshint ignore:line
-  "ManifestFinder"
+  "ManifestFinder",
 ];

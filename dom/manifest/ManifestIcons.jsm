@@ -1,11 +1,5 @@
 "use strict";
 
-const {
-  utils: Cu,
-  classes: Cc,
-  interfaces: Ci
-} = Components;
-
 ChromeUtils.import("resource://gre/modules/PromiseMessage.jsm");
 
 var ManifestIcons = {
@@ -22,8 +16,8 @@ var ManifestIcons = {
   },
 
   async contentFetchIcon(aWindow, manifest, iconSize) {
-    return await getIcon(aWindow, toIconArray(manifest.icons), iconSize);
-  }
+    return getIcon(aWindow, toIconArray(manifest.icons), iconSize);
+  },
 };
 
 function parseIconSize(size) {

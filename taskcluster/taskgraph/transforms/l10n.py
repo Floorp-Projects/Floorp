@@ -18,6 +18,7 @@ from taskgraph.transforms.base import (
 from taskgraph.util.schema import (
     optionally_keyed_by,
     resolve_keyed_by,
+    taskref_or_string,
 )
 from taskgraph.util.attributes import copy_attributes_from_dependent_job
 from taskgraph.util.taskcluster import get_artifact_prefix
@@ -34,11 +35,6 @@ from voluptuous import (
 def _by_platform(arg):
     return optionally_keyed_by('build-platform', arg)
 
-
-# shortcut for a string where task references are allowed
-taskref_or_string = Any(
-    basestring,
-    {Required('task-reference'): basestring})
 
 # Voluptuous uses marker objects as dictionary *keys*, but they are not
 # comparable, so we cast all of the keys back to regular strings

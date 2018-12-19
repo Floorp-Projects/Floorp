@@ -13,6 +13,8 @@
         // Rust language support.
         "rust-lang.rust",
         // CSS support for HTML documents.
-        "ecmel.vscode-html-css"
+        "ecmel.vscode-html-css",
+        // IDL language support
+        "mythmon.idl"
     ]
 }

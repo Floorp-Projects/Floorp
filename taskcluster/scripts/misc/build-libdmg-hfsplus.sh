@@ -31,9 +31,16 @@ make -j$(getconf _NPROCESSORS_ONLN)
 strip dmg/dmg hfs/hfsplus
 cp dmg/dmg hfs/hfsplus $STAGE
 
+# duplicate the functionality of taskcluster-lib-urls, but in bash..
+if [ "$TASKCLUSTER_ROOT_URL" = "https://taskcluster.net" ]; then
+    queue_base='https://queue.taskcluster.net/v1'
+else
+    queue_base="$TASKCLUSTER_ROOT_URL/api/queue/v1"
+fi
+
 cat >$STAGE/README<<EOF
 Built from ${LIBDMG_REPOSITORY} rev `git rev-parse ${LIBDMG_REV}`.
 Source is available as a taskcluster artifact:
-https://queue.taskcluster.net/v1/task/$TASK_ID/artifacts/public/libdmg-hfsplus.tar.xz
+$queue_base/task/$TASK_ID/artifacts/public/libdmg-hfsplus.tar.xz
 EOF
 tar cf - -C $WORKSPACE `basename $STAGE` | xz > $UPLOAD_DIR/dmg.tar.xz

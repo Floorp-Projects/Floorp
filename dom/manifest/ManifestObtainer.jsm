@@ -23,18 +23,11 @@
  *
  * exported ManifestObtainer
  */
-/*globals Components, Task, PromiseMessage, XPCOMUtils, ManifestProcessor, BrowserUtils*/
+/* globals Components, Task, PromiseMessage, XPCOMUtils, ManifestProcessor, BrowserUtils*/
 "use strict";
-const {
-  utils: Cu,
-  classes: Cc,
-  interfaces: Ci
-} = Components;
+
 ChromeUtils.import("resource://gre/modules/PromiseMessage.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/ManifestProcessor.jsm");
-ChromeUtils.defineModuleGetter(this, "BrowserUtils",  // jshint ignore:line
-  "resource://gre/modules/BrowserUtils.jsm");
 
 var ManifestObtainer = { // jshint ignore:line
   /**
@@ -72,7 +65,7 @@ var ManifestObtainer = { // jshint ignore:line
       throw err;
     }
     return manifest;
-  }
+  },
 };
 
 function toError(aErrorClone) {
@@ -115,7 +108,7 @@ const processResponse = async function(aResp, aContentWindow) {
   const args = {
     jsonText: text,
     manifestURL: aResp.url,
-    docURL: aContentWindow.location.href
+    docURL: aContentWindow.location.href,
   };
   const manifest = ManifestProcessor.process(args);
   return manifest;
@@ -139,7 +132,7 @@ const fetchManifest = async function(aWindow) {
   // Throws on malformed URLs
   const manifestURL = new aWindow.URL(elem.href, elem.baseURI);
   const reqInit = {
-    mode: "cors"
+    mode: "cors",
   };
   if (elem.crossOrigin === "use-credentials") {
     reqInit.credentials = "include";

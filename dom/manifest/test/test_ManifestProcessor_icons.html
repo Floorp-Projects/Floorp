@@ -15,15 +15,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1079453
  * https://w3c.github.io/manifest/#icons-member
  **/
 
-'use strict';
+"use strict";
 
 typeTests.forEach((type) => {
   var expected = `Expect non-array icons to be empty array: ${typeof type}.`;
   data.jsonText = JSON.stringify({
-    icons: type
+    icons: type,
   });
   var result = processor.process(data);
-  var y = SpecialPowers.unwrap(result.icons);
+  SpecialPowers.unwrap(result.icons);
   is(result.icons.length, 0, expected);
 });
   </script>

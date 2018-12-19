@@ -182,7 +182,7 @@ class MachCommands(MachCommandBase):
 
         import taskgraph.decision
         try:
-            self.setup_logging()
+            self.setup()
             return taskgraph.decision.taskgraph_decision(options)
         except Exception:
             traceback.print_exc()
@@ -221,7 +221,7 @@ class MachCommands(MachCommandBase):
         from the hooks service on a regular basis."""
         import taskgraph.cron
         try:
-            self.setup_logging()
+            self.setup()
             return taskgraph.cron.taskgraph_cron(options)
         except Exception:
             traceback.print_exc()
@@ -234,7 +234,7 @@ class MachCommands(MachCommandBase):
     def action_callback(self, **options):
         import taskgraph.actions
         try:
-            self.setup_logging()
+            self.setup()
 
             # the target task for this action (or null if it's a group action)
             task_id = json.loads(os.environ.get('ACTION_TASK_ID', 'null'))
@@ -287,7 +287,8 @@ class MachCommands(MachCommandBase):
                     raise Exception("unknown filename {}".format(filename))
 
         try:
-            self.setup_logging()
+            self.setup()
+
             task_id = options['task_id']
 
             if options['input']:
@@ -312,7 +313,7 @@ class MachCommands(MachCommandBase):
             traceback.print_exc()
             sys.exit(1)
 
-    def setup_logging(self, quiet=False, verbose=True):
+    def setup(self, quiet=False, verbose=True):
         """
         Set up Python logging for all loggers, sending results to stderr (so
         that command output can be redirected easily) and adding the typical
@@ -332,15 +333,20 @@ class MachCommands(MachCommandBase):
         # all of the taskgraph logging is unstructured logging
         self.log_manager.enable_unstructured()
 
+        # Ensure that TASKCLUSTER_ROOT_URL is set
+        import taskgraph
+        taskgraph.set_root_url_env()
+
     def show_taskgraph(self, graph_attr, options):
         import taskgraph.parameters
         import taskgraph.generator
         import taskgraph
+
         if options['fast']:
             taskgraph.fast = True
 
         try:
-            self.setup_logging(quiet=options['quiet'], verbose=options['verbose'])
+            self.setup(quiet=options['quiet'], verbose=options['verbose'])
             parameters = taskgraph.parameters.load_parameters_file(options['parameters'])
             parameters.check()
 
@@ -365,7 +371,7 @@ class MachCommands(MachCommandBase):
 
     def show_taskgraph_json(self, taskgraph):
         print(json.dumps(taskgraph.to_json(),
-              sort_keys=True, indent=2, separators=(',', ': ')))
+                         sort_keys=True, indent=2, separators=(',', ': ')))
 
     def get_filtered_taskgraph(self, taskgraph, tasksregex):
         from taskgraph.graph import Graph
@@ -399,7 +405,7 @@ class MachCommands(MachCommandBase):
         import taskgraph.actions
 
         try:
-            self.setup_logging(quiet=options['quiet'], verbose=options['verbose'])
+            self.setup(quiet=options['quiet'], verbose=options['verbose'])
             parameters = taskgraph.parameters.load_parameters_file(options['parameters'])
             parameters.check()
 
