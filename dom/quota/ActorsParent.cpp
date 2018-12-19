@@ -989,7 +989,7 @@ class QuotaUsageRequestBase : public NormalOriginOperationBase,
   // IPDL methods.
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  mozilla::ipc::IPCResult RecvCancel() override;
+  mozilla::ipc::IPCResult RecvCancel() final;
 };
 
 class GetUsageOp final : public QuotaUsageRequestBase {

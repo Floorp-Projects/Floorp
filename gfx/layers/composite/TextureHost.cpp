@@ -86,7 +86,7 @@ class TextureParent : public ParentActor<PTextureParent> {
   void NotifyNotUsed(uint64_t aTransactionId);
 
   virtual mozilla::ipc::IPCResult RecvRecycleTexture(
-      const TextureFlags& aTextureFlags) override;
+      const TextureFlags& aTextureFlags) final;
 
   TextureHost* GetTextureHost() { return mTextureHost; }
 
