@@ -14,10 +14,10 @@
 var c = new BroadcastChannel("foo");
 c.close();
 
-try  {
+try {
   c.postMessage("bar");
   ok(false, "This should throw!");
-} catch(e) {
+} catch (e) {
   ok(true, "This should throw!");
   is(e.name, "InvalidStateError", "Correct invalid-state exception thrown");
 }

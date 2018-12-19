@@ -1,4 +1,4 @@
-function f1() { "use asm"; function g() {} return g }
+function f1() { "use asm"; function g() {} return g; }
 if (this.jsFuns) {
     ok(jsFuns.isAsmJSModule(f1), "f1 is an asm.js module");
     ok(jsFuns.isAsmJSFunction(f1()), "f1.g is an asm.js function");
@@ -10,8 +10,8 @@ function f2(stdlib, foreign, buffer) {
     function main(n) {
         n = n|0;
         var i = 0, sum = 0;
-        for (; (i|0) < (n|0); i=(i+1)|0)
-            sum = (sum + (i32[(i<<2)>>2]|0))|0;
+        for (; (i|0) < (n|0); i=(i + 1)|0)
+            sum = (sum + (i32[(i << 2) >> 2]|0))|0;
         return sum|0;
     }
     return main;
@@ -41,7 +41,7 @@ function f3(stdlib, foreign, buffer) {
     function main() {
         var i = 0, sum = 0;
         while (1) {
-            for (i = 0; (i|0) < 1000; i=(i+1)|0)
+            for (i = 0; (i|0) < 1000; i=(i + 1)|0)
                 sum = (sum + i)|0;
             if (done(sum|0)|0)
                 break;
@@ -58,7 +58,7 @@ function done(sum) {
     lastSum = sum;
     return (Date.now() - begin) > 3000;
 }
-var f3Main = f3(this, {done:done}, i32.buffer);
+var f3Main = f3(this, {done}, i32.buffer);
 if (this.jsFuns)
     ok(jsFuns.isAsmJSFunction(f3Main), "f3.main is an asm.js function");
 

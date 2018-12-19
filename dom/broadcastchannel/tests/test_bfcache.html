@@ -39,7 +39,7 @@
     if (counter == 0) {
       ok(!e.persisted, "test page should have been persisted initially");
 
-      bc = new testWin.BroadcastChannel('a');
+      bc = new testWin.BroadcastChannel("a");
 
       SimpleTest.executeSoon(function() {
         info("New location: " + testUrl2);

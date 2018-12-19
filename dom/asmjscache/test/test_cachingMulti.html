@@ -45,8 +45,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=944821
   }
 
   function evalAsync(code) {
-    var blob = new Blob([code], {type:"application/javascript"});
-    var script = document.createElement('script');
+    var blob = new Blob([code], {type: "application/javascript"});
+    var script = document.createElement("script");
     script.src = URL.createObjectURL(blob);
     document.body.appendChild(script);
   }
@@ -55,13 +55,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=944821
   function finishedEvalAsync() {
     finishedCount++;
 
-    if (finishedCount < 1 || finishedCount > 2*N) {
+    if (finishedCount < 1 || finishedCount > 2 * N) {
       throw "Huh?!";
     } else if (finishedCount == N) {
       assertCacheHit = true;
       for (var i = 0; i < N; i++)
         evalAsync(codes[i]);
-    } else if (finishedCount == 2*N) {
+    } else if (finishedCount == 2 * N) {
       SimpleTest.finish();
     }
   }

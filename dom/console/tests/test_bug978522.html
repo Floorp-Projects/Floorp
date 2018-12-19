@@ -13,16 +13,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=978522
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=978522">Mozilla Bug 978522</a>
 <script type="application/javascript">
 
-  console.log('%s', {
-    toString: function() {
-      console.log('%s', {
-        toString: function() {
-          ok(true, "Still alive \\o/");
-          SimpleTest.finish();
-          return "hello world";
-        }
-      });
-    }
+  console.log("%s", {
+    toString() {
+    console.log("%s", {
+      toString() {
+      ok(true, "Still alive \\o/");
+      SimpleTest.finish();
+      return "hello world";
+    },
+    });
+  },
   });
 
   SimpleTest.waitForExplicitFinish();
