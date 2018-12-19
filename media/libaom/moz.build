@@ -61,14 +61,7 @@ elif CONFIG['CPU_ARCH'] == 'arm':
     LOCAL_INCLUDES += [ '/media/libaom/config/linux/arm/' ]
     EXPORTS.aom += [ 'config/linux/arm/config/aom_config.h' ]
 
-    arm_asm_files = files['ARM_SOURCES']
-
-    if CONFIG['VPX_AS_CONVERSION']:
-        SOURCES += sorted([
-            "!%s.S" % f if f.endswith('.asm') else f for f in arm_asm_files
-        ])
-    else:
-        SOURCES += sorted(arm_asm_files)
+    SOURCES += files['ARM_SOURCES']
 
     for f in SOURCES:
         if f.endswith('neon.c'):
