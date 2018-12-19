@@ -395,6 +395,77 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
     return lines;
   },
 
+  getBreakpointPositions(query) {
+    const {
+      start: {
+        line: startLine = 0,
+        column: startColumn = 0,
+      } = {},
+      end: {
+        line: endLine = Infinity,
+        column: endColumn = Infinity,
+      } = {},
+    } = query || {};
+
+    let scripts;
+    if (Number.isFinite(endLine)) {
+      const found = new Set();
+      for (let line = startLine; line <= endLine; line++) {
+        for (const script of this._findDebuggeeScripts({ line })) {
+          found.add(script);
+        }
+      }
+      scripts = Array.from(found);
+    } else {
+      scripts = this._findDebuggeeScripts();
+    }
+
+    const positions = [];
+    for (const script of scripts) {
+      const offsets = script.getAllColumnOffsets();
+      for (const { lineNumber, columnNumber } of offsets) {
+        if (
+          lineNumber < startLine ||
+          (lineNumber === startLine && columnNumber < startColumn) ||
+          lineNumber > endLine ||
+          (lineNumber === endLine && columnNumber > endColumn)
+        ) {
+          continue;
+        }
+
+        positions.push({
+          line: lineNumber,
+          column: columnNumber,
+        });
+      }
+    }
+
+    return positions
+      // Sort the items by location.
+      .sort((a, b) => {
+        const lineDiff = a.line - b.line;
+        return lineDiff === 0 ? a.column - b.column : lineDiff;
+      })
+      // Filter out duplicate locations since they are useless in this context.
+      .filter((item, i, arr) => (
+        i === 0 ||
+        item.line !== arr[i - 1].line ||
+        item.column !== arr[i - 1].column
+      ));
+  },
+
+  getBreakpointPositionsCompressed(query) {
+    const items = this.getBreakpointPositions(query);
+    const compressed = {};
+    for (const { line, column } of items) {
+      if (!compressed[line]) {
+        compressed[line] = [];
+      }
+      compressed[line].push(column);
+    }
+    return compressed;
+  },
+
   /**
    * Handler for the "source" packet.
    */
