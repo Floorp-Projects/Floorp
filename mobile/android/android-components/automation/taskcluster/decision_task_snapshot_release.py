@@ -53,7 +53,7 @@ def generate_build_task(info):
                  ' && ./gradlew --no-daemon clean ' +
                  "-Psnapshot " +
                  " ".join(["{}:{}".format(module_name, gradle_task) for gradle_task in ['assemble', 'test', 'lint']])  +
-                 " uploadArchives zipMavenArtifacts")
+                 " uploadArchives zipMavenArtifacts"),
         features={
             "chainOfTrust": True,
             "taskclusterProxy": True
