@@ -19,7 +19,7 @@
 #include "mozilla/Vector.h"
 
 #include "frontend/BinSource-macros.h"
-#include "frontend/BinTokenReaderTester.h"
+#include "frontend/BinTokenReaderMultipart.h"
 #include "frontend/FullParseHandler.h"
 #include "frontend/ParseNode.h"
 #include "frontend/Parser.h"
@@ -4965,7 +4965,6 @@ BinASTParser<Tok>::parseOptionalVariableDeclarationOrExpression() {
 // This ensures that the symbols are built, without having to export all our
 // code (and its baggage of #include and macros) in the header.
 template class BinASTParser<BinTokenReaderMultipart>;
-template class BinASTParser<BinTokenReaderTester>;
 
 }  // namespace frontend
 }  // namespace js

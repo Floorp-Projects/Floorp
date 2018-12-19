@@ -61,10 +61,9 @@ SOURCES += [
 ]
 
 if CONFIG['JS_BUILD_BINAST']:
-    # Using SOURCES, as UNIFIED_SOURCES causes mysterious bugs on 32-bit platforms.
-    # These parts of BinAST are designed only to test evolutions of the
-    # specification.
-    SOURCES += ['BinTokenReaderTester.cpp']
+    # Using SOURCES, as UNIFIED_SOURCES causes mysterious bugs on 32-bit
+    # platforms.
+
     # These parts of BinAST should eventually move to release.
     SOURCES += [
         'BinASTParser.cpp',

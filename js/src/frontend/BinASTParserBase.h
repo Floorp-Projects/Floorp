@@ -10,8 +10,6 @@
 #include <stddef.h>
 
 #include "ds/LifoAlloc.h"
-#include "frontend/BinTokenReaderMultipart.h"
-#include "frontend/BinTokenReaderTester.h"
 #include "frontend/FullParseHandler.h"
 #include "frontend/ParseContext.h"
 #include "frontend/ParseNode.h"
