@@ -76,9 +76,12 @@ export class Outline extends Component<Props, State> {
     if (!selectedSource) {
       return;
     }
-    const selectedSourceId = selectedSource.id;
-    const startLine = location.start.line;
-    selectLocation({ sourceId: selectedSourceId, line: startLine });
+
+    selectLocation({
+      sourceId: selectedSource.id,
+      line: location.start.line,
+      column: location.start.column
+    });
   }
 
   onContextMenu(event: SyntheticEvent<HTMLElement>, func: SymbolDeclaration) {

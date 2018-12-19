@@ -112,7 +112,7 @@ export function getColumnBreakpoints(pausePoints, breakpoints, viewport) {
 
     return {
       location,
-      enabled: !!foundBreakpoint,
+      enabled: !!foundBreakpoint && !foundBreakpoint.disabled,
       condition: foundBreakpoint ? foundBreakpoint.condition : null
     };
   });
