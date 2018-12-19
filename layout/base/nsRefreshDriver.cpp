@@ -1144,9 +1144,13 @@ void nsRefreshDriver::RemoveTimerAdjustmentObserver(
   mTimerAdjustmentObservers.RemoveElement(aObserver);
 }
 
-void nsRefreshDriver::PostScrollEvent(mozilla::Runnable* aScrollEvent) {
-  mScrollEvents.AppendElement(aScrollEvent);
-  EnsureTimerStarted();
+void nsRefreshDriver::PostScrollEvent(mozilla::Runnable* aScrollEvent, bool aDelayed) {
+  if (aDelayed) {
+    mDelayedScrollEvents.AppendElement(aScrollEvent);
+  } else {
+    mScrollEvents.AppendElement(aScrollEvent);
+    EnsureTimerStarted();
+  }
 }
 
 void nsRefreshDriver::DispatchScrollEvents() {
@@ -1208,6 +1212,21 @@ void nsRefreshDriver::NotifyDOMContentLoaded() {
   } else {
     mNotifyDOMContentFlushed = true;
   }
+}
+
+void nsRefreshDriver::RunDelayedEventsSoon() {
+  // Place entries for delayed events into their corresponding normal list,
+  // and schedule a refresh. When these delayed events run, if their document
+  // still has events suppressed then they will be readded to the delayed
+  // events list.
+
+  mScrollEvents.AppendElements(mDelayedScrollEvents);
+  mDelayedScrollEvents.Clear();
+
+  mResizeEventFlushObservers.AppendElements(mDelayedResizeEventFlushObservers);
+  mDelayedResizeEventFlushObservers.Clear();
+
+  EnsureTimerStarted();
 }
 
 void nsRefreshDriver::EnsureTimerStarted(EnsureTimerStartedFlags aFlags) {
