@@ -589,12 +589,7 @@ function assertContainerHasText(container, expectedText) {
  *             subchild2
  *           child2
  *             subchild3!slotted`
- *           child3!ignore-children
  *        Each sub level should be indented by 2 spaces.
- *        Each line contains text expected to match with the text of the corresponding
- *        node in the markup view. Some suffixes are supported:
- *        - !slotted -> indicates that the line corresponds to the slotted version
- *        - !ignore-children -> the node might have children but do not assert them
  * @param {String} selector
  *        A CSS selector that will uniquely match the "root" element from the tree
  * @param {Inspector} inspector
@@ -617,21 +612,13 @@ async function _checkMarkupViewNode(treeNode, container, inspector) {
   info("Checking [" + path + "]");
   info("Checking node: " + node);
 
-  const ignoreChildren = node.includes("!ignore-children");
   const slotted = node.includes("!slotted");
-
-  // Remove optional suffixes.
-  const nodeText = node.replace("!slotted", "")
-                       .replace("!ignore-children", "");
-
-  assertContainerHasText(container, nodeText);
-
   if (slotted) {
+    const nodeName = node.replace("!slotted", "");
+    assertContainerHasText(container, nodeName);
     assertContainerSlotted(container);
-  }
-
-  if (ignoreChildren) {
-    return;
+  } else {
+    assertContainerHasText(container, node);
   }
 
   if (!children.length) {
