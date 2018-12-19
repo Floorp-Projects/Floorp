@@ -204,6 +204,10 @@ void Simulator::set_trace_parameters(int parameters) {
 
 
 void Simulator::set_instruction_stats(bool value) {
+  if (instrumentation_ == nullptr) {
+    return;
+  }
+
   if (value != instruction_stats_) {
     if (value) {
       decoder_->AppendVisitor(instrumentation_);

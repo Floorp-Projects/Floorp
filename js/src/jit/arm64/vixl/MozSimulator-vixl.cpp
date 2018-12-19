@@ -137,10 +137,12 @@ void Simulator::init(Decoder* decoder, FILE* stream) {
   set_sp(tos);
 
   // Set the sample period to 10, as the VIXL examples and tests are short.
-  instrumentation_ = js_new<Instrument>("vixl_stats.csv", 10);
-  if (!instrumentation_) {
-    oom_ = true;
-    return;
+  if (getenv("VIXL_STATS")) {
+    instrumentation_ = js_new<Instrument>("vixl_stats.csv", 10);
+    if (!instrumentation_) {
+      oom_ = true;
+      return;
+    }
   }
 
   // Print a warning about exclusive-access instructions, but only the first
