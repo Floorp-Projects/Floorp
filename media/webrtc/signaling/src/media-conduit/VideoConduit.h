@@ -366,7 +366,7 @@ class WebrtcVideoConduit
    private:
     uint32_t mDroppedFrames = 0;
     uint32_t mFramesEncoded = 0;
-    int32_t mFramesDeliveredToEncoder;
+    int32_t mFramesDeliveredToEncoder = 0;
 
     bool mSsrcFound = false;
     uint32_t mJitterMs = 0;
