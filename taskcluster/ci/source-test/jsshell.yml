@@ -14,7 +14,7 @@ job-defaults:
                             JSSHELL: /home/cltbld/fetches/js
                         v8:
                             SHELL: /bin/bash
-                            JSSHELL: /home/cltbld/fetches/d8/release/d8
+                            JSSHELL: /home/cltbld/fetches/d8/d8
                 max-run-time: 1800
     treeherder:
         kind: test
@@ -30,8 +30,8 @@ job-defaults:
     fetches:
         build:
             - target.jsshell.zip
-        toolchain:
-            - linux64-custom-v8
+        fetch:
+            - d8
 
 bench-ares6:
     description: Ares6 JavaScript shell benchmark suite

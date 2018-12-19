@@ -1,3 +1,11 @@
+d8:
+  description: V8 debug shell
+  fetch:
+    type: static-url
+    url: https://github.com/mozilla/perf-automation/releases/download/d8-6.7.17/d8-6.7.17.zip
+    sha256: 0aa1c4e630de78373185fc1c0fa34bc87826f63fd4cbb664668891d6f6a6b24e
+    size: 20578358
+
 octane:
   description: Octane benchmark
   fetch:
