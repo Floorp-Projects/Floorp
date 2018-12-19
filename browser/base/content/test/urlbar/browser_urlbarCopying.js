@@ -5,14 +5,6 @@ const trimPref = "browser.urlbar.trimURLs";
 const phishyUserPassPref = "network.http.phishy-userpass-length";
 const decodeURLpref = "browser.urlbar.decodeURLsOnCopy";
 
-function toUnicode(input) {
-  let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
-                    .createInstance(Ci.nsIScriptableUnicodeConverter);
-  converter.charset = "UTF-8";
-
-  return converter.ConvertToUnicode(input);
-}
-
 function test() {
 
   let tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
@@ -139,16 +131,16 @@ var tests = [
   },
   { // Note: it seems BrowserTestUtils.loadURI fails for unicode domains
     loadURL: "http://sub2.xn--lt-uia.mochi.test:8888/foo",
-    expectedURL: toUnicode("sub2.ält.mochi.test:8888/foo"),
-    copyExpected: toUnicode("http://sub2.ält.mochi.test:8888/foo"),
+    expectedURL: "sub2.ält.mochi.test:8888/foo",
+    copyExpected: "http://sub2.ält.mochi.test:8888/foo",
   },
   {
-    copyVal: toUnicode("s<ub2.ält.mochi.test:8888/f>oo"),
-    copyExpected: toUnicode("ub2.ält.mochi.test:8888/f"),
+    copyVal: "s<ub2.ält.mochi.test:8888/f>oo",
+    copyExpected: "ub2.ält.mochi.test:8888/f",
   },
   {
-    copyVal: toUnicode("<sub2.ält.mochi.test:8888/f>oo"),
-    copyExpected: toUnicode("http://sub2.ält.mochi.test:8888/f"),
+    copyVal: "<sub2.ält.mochi.test:8888/f>oo",
+    copyExpected: "http://sub2.ält.mochi.test:8888/f",
   },
 
   {
@@ -171,7 +163,7 @@ var tests = [
   },
   {
     loadURL: "http://example.com/a%E3%80%80test",
-    expectedURL: toUnicode("example.com/a　test"),
+    expectedURL: "example.com/a\u{3000}test",
     copyExpected: "http://example.com/a%E3%80%80test",
   },
   {
@@ -217,12 +209,12 @@ var tests = [
   {
     setup() { Services.prefs.setBoolPref(decodeURLpref, true); },
     loadURL: "http://example.com/%D0%B1%D0%B8%D0%BE%D0%B3%D1%80%D0%B0%D1%84%D0%B8%D1%8F",
-    expectedURL: toUnicode("example.com/биография"),
-    copyExpected: toUnicode("http://example.com/биография"),
+    expectedURL: "example.com/биография",
+    copyExpected: "http://example.com/биография",
   },
   {
-    copyVal: toUnicode("<example.com/би>ография"),
-    copyExpected: toUnicode("http://example.com/би"),
+    copyVal: "<example.com/би>ография",
+    copyExpected: "http://example.com/би",
   },
 ];
 

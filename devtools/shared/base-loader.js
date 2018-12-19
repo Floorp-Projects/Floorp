@@ -182,7 +182,7 @@ function load(loader, module) {
 
   const originalExports = module.exports;
   try {
-    Services.scriptloader.loadSubScript(module.uri, sandbox, "UTF-8");
+    Services.scriptloader.loadSubScript(module.uri, sandbox);
   } catch (error) {
     // loadSubScript sometime throws string errors, which includes no stack.
     // At least provide the current stack by re-throwing a real Error object.
