@@ -43,7 +43,7 @@ WasmFrameIter::WasmFrameIter(JitActivation* activation, wasm::Frame* fp)
       unwoundIonFrameType_(jit::FrameType(-1)),
       unwind_(Unwind::False),
       unwoundAddressOfReturnAddress_(nullptr),
-      returnAddressToFp_(nullptr) {
+      resumePCinCurrentFrame_(nullptr) {
   MOZ_ASSERT(fp_);
 
   // When the stack is captured during a trap (viz., to create the .stack
@@ -110,7 +110,7 @@ void WasmFrameIter::operator++() {
 void WasmFrameIter::popFrame() {
   Frame* prevFP = fp_;
   fp_ = prevFP->callerFP;
-  returnAddressToFp_ = (uint8_t*)prevFP->returnAddress;
+  resumePCinCurrentFrame_ = (uint8_t*)prevFP->returnAddress;
 
   if (uintptr_t(fp_) & ExitOrJitEntryFPTag) {
     // We just unwound a frame pointer which has the low bit set,
@@ -307,9 +307,9 @@ jit::FrameType WasmFrameIter::unwoundIonFrameType() const {
   return unwoundIonFrameType_;
 }
 
-uint8_t* WasmFrameIter::returnAddressToFp() const {
-  if (returnAddressToFp_) {
-    return returnAddressToFp_;
+uint8_t* WasmFrameIter::resumePCinCurrentFrame() const {
+  if (resumePCinCurrentFrame_) {
+    return resumePCinCurrentFrame_;
   }
   MOZ_ASSERT(activation_->isWasmTrapping());
   // The next instruction is the instruction following the trap instruction.
