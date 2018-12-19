@@ -1377,7 +1377,7 @@ static bool DisplayListIsNonBlank(nsDisplayList* aList) {
       case DisplayItemType::TYPE_SOLID_COLOR:
       case DisplayItemType::TYPE_BACKGROUND:
       case DisplayItemType::TYPE_BACKGROUND_COLOR:
-        if (i->Frame()->IsCanvasFrame()) {
+        if (i->Frame()->IsCanvasFrame() || i->Frame()->IsViewportFrame()) {
           continue;
         }
         return true;
