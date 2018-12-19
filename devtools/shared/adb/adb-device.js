@@ -15,13 +15,13 @@ class AdbDevice {
     this.id = id;
   }
 
-  async getModel() {
-    if (this._model) {
-      return this._model;
-    }
+  async initialize() {
     const model = await shell("getprop ro.product.model");
-    this._model = model.trim();
-    return this._model;
+    this.model = model.trim();
+  }
+
+  get name() {
+    return this.model || this.id;
   }
 
   // This method is not using any information from the instance, but in theory getting
