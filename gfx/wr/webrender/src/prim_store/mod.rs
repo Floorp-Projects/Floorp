@@ -657,8 +657,8 @@ impl From<LayoutVector2D> for VectorKey {
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 #[derive(Debug, Clone, PartialEq)]
 pub struct PointKey {
-    x: f32,
-    y: f32,
+    pub x: f32,
+    pub y: f32,
 }
 
 impl Eq for PointKey {}

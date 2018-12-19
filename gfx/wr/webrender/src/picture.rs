@@ -449,7 +449,14 @@ impl TileCache {
             .unmap(&world_tile_rect)
             .expect("bug: unable to get local tile size");
         self.local_tile_size = local_tile_rect.size;
-        self.local_origin = pic_rect.origin;
+
+        // Round the local reference point down to a whole number. This ensures
+        // that the bounding rect of the tile corresponds to a pixel boundary, and
+        // the content is offset by a fractional amount inside the surface itself.
+        // This means that when drawing the tile it's fine to use a simple 0-1
+        // UV mapping, instead of trying to determine a fractional UV rect that
+        // is slightly inside the allocated tile surface.
+        self.local_origin = pic_rect.origin.floor();
 
         // Walk the transforms and see if we need to rebuild the primitive
         // dependencies for each tile.
@@ -894,10 +901,23 @@ impl TileCache {
                     }
                 }
 
+                // For the primitive origin, store the local origin relative to
+                // the local origin of the containing picture. This ensures that
+                // a tile with primitives in the same coordinate system as the
+                // container picture itself, but different offsets relative to
+                // the containing picture are correctly invalidated. It does this
+                // while still maintaining the property of keeping the same hash
+                // for different display lists where the local origin is different
+                // but the primitives themselves are at the same relative position.
+                let origin = PointKey {
+                    x: prim_rect.origin.x - self.local_origin.x,
+                    y: prim_rect.origin.y - self.local_origin.y,
+                };
+
                 // Update the tile descriptor, used for tile comparison during scene swaps.
                 tile.descriptor.prims.push(PrimitiveDescriptor {
                     prim_uid: prim_instance.uid(),
-                    origin: prim_instance.prim_origin.into(),
+                    origin,
                     first_clip: tile.descriptor.clip_uids.len() as u16,
                     clip_count: clip_chain_uids.len() as u16,
                 });
