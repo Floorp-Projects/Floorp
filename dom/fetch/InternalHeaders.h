@@ -125,17 +125,17 @@ class InternalHeaders final {
   static bool IsInvalidName(const nsACString& aName, ErrorResult& aRv);
   static bool IsInvalidValue(const nsACString& aValue, ErrorResult& aRv);
   bool IsImmutable(ErrorResult& aRv) const;
-  bool IsForbiddenRequestHeader(const nsACString& aName) const;
-  bool IsForbiddenRequestNoCorsHeader(const nsACString& aName) const;
-  bool IsForbiddenRequestNoCorsHeader(const nsACString& aName,
+  bool IsForbiddenRequestHeader(const nsCString& aName) const;
+  bool IsForbiddenRequestNoCorsHeader(const nsCString& aName) const;
+  bool IsForbiddenRequestNoCorsHeader(const nsCString& aName,
                                       const nsACString& aValue) const;
-  bool IsForbiddenResponseHeader(const nsACString& aName) const;
+  bool IsForbiddenResponseHeader(const nsCString& aName) const;
 
-  bool IsInvalidMutableHeader(const nsACString& aName, ErrorResult& aRv) const {
+  bool IsInvalidMutableHeader(const nsCString& aName, ErrorResult& aRv) const {
     return IsInvalidMutableHeader(aName, EmptyCString(), aRv);
   }
 
-  bool IsInvalidMutableHeader(const nsACString& aName, const nsACString& aValue,
+  bool IsInvalidMutableHeader(const nsCString& aName, const nsACString& aValue,
                               ErrorResult& aRv) const {
     return IsInvalidName(aName, aRv) || IsInvalidValue(aValue, aRv) ||
            IsImmutable(aRv) || IsForbiddenRequestHeader(aName) ||
@@ -143,9 +143,13 @@ class InternalHeaders final {
            IsForbiddenResponseHeader(aName);
   }
 
-  static bool IsSimpleHeader(const nsACString& aName, const nsACString& aValue);
+  // This method updates the passed name to match the capitalization of a header
+  // with the same name (ignoring case, per the spec).
+  void ReuseExistingNameIfExists(nsCString& aName) const;
 
-  static bool IsRevalidationHeader(const nsACString& aName);
+  static bool IsSimpleHeader(const nsCString& aName, const nsACString& aValue);
+
+  static bool IsRevalidationHeader(const nsCString& aName);
 
   void MaybeSortList();
   void SetListDirty();
