@@ -838,6 +838,15 @@ FetchDriver::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext) {
 
     response = new InternalResponse(responseStatus, statusText);
 
+    UniquePtr<mozilla::ipc::PrincipalInfo> principalInfo(
+        new mozilla::ipc::PrincipalInfo());
+    nsresult rv = PrincipalToPrincipalInfo(mPrincipal, principalInfo.get());
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    response->SetPrincipalInfo(std::move(principalInfo));
+
     response->Headers()->FillResponseHeaders(httpChannel);
 
     // If Content-Encoding or Transfer-Encoding headers are set, then the actual
