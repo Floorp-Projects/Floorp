@@ -25,6 +25,15 @@ function WebConsoleClient(debuggerClient, response) {
   this._client = debuggerClient;
   this._longStrings = {};
   this.traits = response.traits || {};
+
+  /**
+   * Tells if the window.console object of the remote web page is the native
+   * object or not.
+   * @private
+   * @type boolean
+   */
+  this.hasNativeConsoleAPI = response.nativeConsoleAPI;
+
   this.events = [];
   this._networkRequests = new Map();
 

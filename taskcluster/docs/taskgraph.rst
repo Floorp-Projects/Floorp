@@ -176,11 +176,6 @@ using simple parameterized values, as follows:
     Multiple labels may be substituted in a single string, and ``<<>`` can be
     used to escape a literal ``<``.
 
-``{"artifact-reference": "..<dep-name/artifact/name>.."}``
-    Similar to a ``task-reference``, but this substitutes a URL to the queue's
-    ``getLatestArtifact`` API method (for which a GET will redirect to the
-    artifact itself).
-
 .. _taskgraph-graph-config:
 
 Graph Configuration

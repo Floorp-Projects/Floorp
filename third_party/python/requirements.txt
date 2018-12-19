@@ -100,10 +100,6 @@ six==1.10.0 \
 slugid==1.0.7 \
     --hash=sha256:6dab3c7eef0bb423fb54cb7752e0f466ddd0ee495b78b763be60e8a27f69e779 \
     # via taskcluster
-taskcluster-urls==11.0.0 \
-    --hash=sha256:18dcaa9c2412d34ff6c78faca33f0dd8f2384e3f00a98d5832c62d6d664741f0 \
-    --hash=sha256:2aceab7cf5b1948bc197f2e5e50c371aa48181ccd490b8bada00f1e3baf0c5cc \
-    --hash=sha256:74bd2110b5daaebcec5e1d287bf137b61cb8cf6b2d8f5f2b74183e32bc4e7c87
 taskcluster==4.0.1 \
     --hash=sha256:27256511044346ac71a495d3c636f2add95c102b9b09f90d6fb1ea3e9949d311 \
     --hash=sha256:99dd90bc1c566968868c8b07ede32f8e031cbccd52c7195a61e802679d461447 \

@@ -124,7 +124,7 @@ add_task(async function testSidebarSetObjectValueGrip() {
 
   const evalResult = await inspectedWindowFront.eval(fakeExtCallerInfo, expression, {
     evalResultAsGrip: true,
-    toolboxConsoleActorID: toolbox.target.form.consoleActor,
+    toolboxConsoleActorID: toolbox.target.activeConsole.actor,
   });
 
   sidebar.setObjectValueGrip(evalResult.valueGrip, "Expected Root Title");

@@ -264,3 +264,84 @@ pub extern "C" fn install_rust_oom_hook() {
     #[cfg(feature = "oom_with_hook")]
     oom_hook::install();
 }
+
+#[cfg(feature = "moz_memory")]
+mod moz_memory {
+    use std::alloc::{GlobalAlloc, Layout};
+    use std::os::raw::c_void;
+
+    extern "C" {
+        fn malloc(size: usize) -> *mut c_void;
+
+        fn free(ptr: *mut c_void);
+
+        fn calloc(nmemb: usize, size: usize) -> *mut c_void;
+
+        fn realloc(ptr: *mut c_void, size: usize) -> *mut c_void;
+
+        #[cfg(windows)]
+        fn _aligned_malloc(size: usize, align: usize) -> *mut c_void;
+
+        #[cfg(not(windows))]
+        fn memalign(align: usize, size: usize) -> *mut c_void;
+    }
+
+    #[cfg(windows)]
+    unsafe fn memalign(align: usize, size: usize) -> *mut c_void {
+        _aligned_malloc(size, align)
+    }
+
+    pub struct GeckoAlloc;
+
+    #[inline(always)]
+    fn need_memalign(layout: Layout) -> bool {
+        // mozjemalloc guarantees a minimum alignment of 16 for all sizes, except
+        // for size classes below 16 (4 and 8).
+        layout.align() > layout.size() || layout.align() > 16
+    }
+
+    unsafe impl GlobalAlloc for GeckoAlloc {
+        unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
+            if need_memalign(layout) {
+                memalign(layout.align(), layout.size()) as *mut u8
+            } else {
+                malloc(layout.size()) as *mut u8
+            }
+        }
+
+        unsafe fn dealloc(&self, ptr: *mut u8, _layout: Layout) {
+            free(ptr as *mut c_void)
+        }
+
+        unsafe fn alloc_zeroed(&self, layout: Layout) -> *mut u8 {
+            if need_memalign(layout) {
+                let ptr = self.alloc(layout);
+                if !ptr.is_null() {
+                    std::ptr::write_bytes(ptr, 0, layout.size());
+                }
+                ptr
+            } else {
+                calloc(1, layout.size()) as *mut u8
+            }
+        }
+
+        unsafe fn realloc(&self, ptr: *mut u8, layout: Layout, new_size: usize) -> *mut u8 {
+            let new_layout = Layout::from_size_align_unchecked(new_size, layout.align());
+            if need_memalign(new_layout) {
+                let new_ptr = self.alloc(new_layout);
+                if !new_ptr.is_null() {
+                    let size = std::cmp::min(layout.size(), new_size);
+                    std::ptr::copy_nonoverlapping(ptr, new_ptr, size);
+                    self.dealloc(ptr, layout);
+                }
+                new_ptr
+            } else {
+                realloc(ptr as *mut c_void, new_size) as *mut u8
+            }
+        }
+    }
+}
+
+#[cfg(feature = "moz_memory")]
+#[global_allocator]
+static A: moz_memory::GeckoAlloc = moz_memory::GeckoAlloc;

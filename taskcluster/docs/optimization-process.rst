@@ -70,6 +70,6 @@ label. At this phase, the edges in the task graph diverge from the
 ``task.dependencies`` attributes, as the latter may contain dependencies
 outside of the taskgraph (for replacement tasks).
 
-As a side-effect, this phase also expands all ``{"task-reference": ".."}`` and
-``{"artifact-reference": ".."}`` objects within the task definitions.
+As a side-effect, this phase also expands all ``{"task-reference": ".."}``
+objects within the task definitions.
 

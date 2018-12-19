@@ -26,7 +26,7 @@ use gpu_types::BrushFlags;
 use image::{Repetition};
 use intern;
 use picture::{PictureCompositeMode, PicturePrimitive, PictureUpdateState, TileCacheUpdateState};
-use picture::{ClusterRange, PrimitiveList, SurfaceIndex, SurfaceInfo, RetainedTiles, RasterConfig};
+use picture::{ClusterIndex, PrimitiveList, SurfaceIndex, SurfaceInfo, RetainedTiles, RasterConfig};
 use prim_store::borders::{ImageBorderDataHandle, NormalBorderDataHandle};
 use prim_store::gradient::{LinearGradientDataHandle, RadialGradientDataHandle};
 use prim_store::image::{ImageDataHandle, ImageInstance, VisibleImageTile, YuvImageDataHandle};
@@ -309,7 +309,7 @@ pub struct DeferredResolve {
 }
 
 #[derive(Debug, Copy, Clone, PartialEq)]
-pub struct ClipTaskIndex(pub u32);
+pub struct ClipTaskIndex(pub u16);
 
 impl ClipTaskIndex {
     pub const INVALID: ClipTaskIndex = ClipTaskIndex(0);
@@ -657,8 +657,8 @@ impl From<LayoutVector2D> for VectorKey {
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 #[derive(Debug, Clone, PartialEq)]
 pub struct PointKey {
-    x: f32,
-    y: f32,
+    pub x: f32,
+    pub y: f32,
 }
 
 impl Eq for PointKey {}
@@ -1558,14 +1558,16 @@ pub struct PrimitiveInstance {
     /// a list of clip task ids (one per segment).
     pub clip_task_index: ClipTaskIndex,
 
+    /// The cluster that this primitive belongs to. This is used
+    /// for quickly culling out groups of primitives during the
+    /// initial picture traversal pass.
+    pub cluster_index: ClusterIndex,
+
     /// ID of the clip chain that this primitive is clipped by.
     pub clip_chain_id: ClipChainId,
 
     /// ID of the spatial node that this primitive is positioned by.
     pub spatial_node_index: SpatialNodeIndex,
-
-    /// A range of clusters that this primitive instance belongs to.
-    pub cluster_range: ClusterRange,
 }
 
 impl PrimitiveInstance {
@@ -1587,7 +1589,7 @@ impl PrimitiveInstance {
             clip_task_index: ClipTaskIndex::INVALID,
             clip_chain_id,
             spatial_node_index,
-            cluster_range: ClusterRange { start: 0, end: 0 },
+            cluster_index: ClusterIndex::INVALID,
         }
     }
 
@@ -2392,40 +2394,8 @@ impl PrimitiveStore {
                     prim_instance.id, pic_context.pipeline_id);
             }
 
-            // Run through the list of cluster(s) this primitive belongs
-            // to. As soon as we find one visible cluster that this
-            // primitive belongs to, then the primitive itself can be
-            // considered visible.
-            // TODO(gw): Initially, primitive clusters are only used
-            //           to group primitives by backface visibility and
-            //           whether a spatial node is invertible or not.
-            //           In the near future, clusters will also act as
-            //           a simple spatial hash for grouping.
-            // TODO(gw): For now, walk the primitive list and check if
-            //           it is visible in any clusters, as this is a
-            //           simple way to retain correct render order. In
-            //           the future, it might make sense to invert this
-            //           and have the cluster visibility pass produce
-            //           an index buffer / set of primitive instances
-            //           that we sort into render order.
-            let mut in_visible_cluster = false;
-            for ci in prim_instance.cluster_range.start .. prim_instance.cluster_range.end {
-                // Map from the cluster range index to a cluster index
-                let cluster_index = prim_list.prim_cluster_map[ci as usize];
-
-                // Get the cluster and see if is visible
-                let cluster = &prim_list.clusters[cluster_index.0 as usize];
-                in_visible_cluster |= cluster.is_visible;
-
-                // As soon as a primitive is in a visible cluster, it's considered
-                // visible and we don't need to consult other clusters.
-                if cluster.is_visible {
-                    break;
-                }
-            }
-
-            // If the primitive wasn't in any visible clusters, it can be skipped.
-            if !in_visible_cluster {
+            // Get the cluster and see if is visible
+            if !prim_list.clusters[prim_instance.cluster_index.0 as usize].is_visible {
                 continue;
             }
 
@@ -3556,7 +3526,7 @@ fn test_struct_sizes() {
     //     test expectations and move on.
     // (b) You made a structure larger. This is not necessarily a problem, but should only
     //     be done with care, and after checking if talos performance regresses badly.
-    assert_eq!(mem::size_of::<PrimitiveInstance>(), 128, "PrimitiveInstance size changed");
+    assert_eq!(mem::size_of::<PrimitiveInstance>(), 120, "PrimitiveInstance size changed");
     assert_eq!(mem::size_of::<PrimitiveInstanceKind>(), 40, "PrimitiveInstanceKind size changed");
     assert_eq!(mem::size_of::<PrimitiveTemplate>(), 96, "PrimitiveTemplate size changed");
     assert_eq!(mem::size_of::<PrimitiveTemplateKind>(), 36, "PrimitiveTemplateKind size changed");

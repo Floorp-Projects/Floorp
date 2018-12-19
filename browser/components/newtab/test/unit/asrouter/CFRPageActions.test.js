@@ -84,7 +84,7 @@ describe("CFRPageActions", () => {
     globals = new GlobalOverrider();
     globals.set({
       Localization: class {},
-      promiseDocumentFlushed: Promise.resolve(),
+      promiseDocumentFlushed: sandbox.stub().callsFake(fn => Promise.resolve(fn())),
       PopupNotifications: {
         show: sandbox.stub(),
         remove: sandbox.stub(),
@@ -131,11 +131,9 @@ describe("CFRPageActions", () => {
       });
       it("should wait for the document layout to flush", async () => {
         sandbox.spy(pageAction.label, "getClientRects");
-        const promiseGetterStub = sandbox.stub().resolves();
-        sandbox.stub(global, "promiseDocumentFlushed").get(promiseGetterStub);
         await pageAction.show(fakeRecommendation);
-        assert.calledOnce(promiseGetterStub);
-        assert.callOrder(promiseGetterStub, pageAction.label.getClientRects);
+        assert.calledOnce(global.promiseDocumentFlushed);
+        assert.callOrder(global.promiseDocumentFlushed, pageAction.label.getClientRects);
       });
       it("should set the CSS variable --cfr-label-width correctly", async () => {
         await pageAction.show(fakeRecommendation);

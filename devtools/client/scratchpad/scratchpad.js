@@ -1960,16 +1960,12 @@ ScratchpadTab.prototype = {
           message: Scratchpad.strings.GetStringFromName("connectionTimeout"),
         });
       }, REMOTE_TIMEOUT);
-
-      const target = await this._attach(subject);
-      const consoleActor = target.form.consoleActor;
-      const client = target.client;
       try {
-        const [, webConsoleClient] = await client.attachConsole(consoleActor, []);
+        const target = await this._attach(subject);
         clearTimeout(connectTimer);
         resolve({
-          webConsoleClient,
-          debuggerClient: client,
+          webConsoleClient: target.activeConsole,
+          debuggerClient: target.client,
         });
       } catch (error) {
         reportError("attachConsole", error);

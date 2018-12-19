@@ -38,6 +38,7 @@ jobs:
       - deb7-python3.5
       - deb7-python3-defaults
       - deb7-python-zstandard
+      - deb7-sqlite3
       - deb7-xz-utils
   toolchain-build:
     symbol: I(toolchain)
