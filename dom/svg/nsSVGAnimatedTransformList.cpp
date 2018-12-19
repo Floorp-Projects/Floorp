@@ -16,9 +16,10 @@
 #include "SVGContentUtils.h"
 #include "SVGTransformListSMILType.h"
 
-namespace mozilla {
+using namespace mozilla::dom;
+using namespace mozilla::dom::SVGTransform_Binding;
 
-using namespace dom;
+namespace mozilla {
 
 nsresult nsSVGAnimatedTransformList::SetBaseValueString(
     const nsAString& aValue, nsSVGElement* aSVGElement) {
