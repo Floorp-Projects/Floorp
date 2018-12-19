@@ -25,7 +25,7 @@ async function useBroadcastChannel(contentWindow) {
 
   let bc = new contentWindow.BroadcastChannel(name);
   let outer = new BroadcastChannel(name);
-  outer.postMessage('foo');
+  outer.postMessage("foo");
 
   await new Promise(resolve => {
     bc.onmessage = e => {

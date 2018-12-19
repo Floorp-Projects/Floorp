@@ -12,11 +12,11 @@
 <script type="application/javascript">
 
 function runTest() {
-  addEventListener('message', receiveMessage, false);
+  addEventListener("message", receiveMessage, false);
   function receiveMessage(evt) {
-    if (evt.data.status == 'OK') {
+    if (evt.data.status == "OK") {
       ok(true, evt.data.message);
-    } else if (evt.data.status == 'KO') {
+    } else if (evt.data.status == "KO") {
       ok(false, evt.data.message);
     } else {
       ok(false, "Unknown message");
@@ -27,26 +27,26 @@ function runTest() {
 
   var bc = new BroadcastChannel("foobar");
   ok(bc, "BroadcastChannel can be created");
-  is(bc.name, 'foobar', "BroadcastChannel.name is foobar");
+  is(bc.name, "foobar", "BroadcastChannel.name is foobar");
 
   ok("postMessage" in bc, "BroadcastChannel has postMessage() method");
 
   bc.onmessage = function(evt) {
     ok(evt instanceof MessageEvent, "This is a MessageEvent");
     is(evt.target, bc, "MessageEvent.target is bc");
-    is(evt.target.name, 'foobar', "MessageEvent.target.name is foobar");
+    is(evt.target.name, "foobar", "MessageEvent.target.name is foobar");
     is(evt.target.name, bc.name, "MessageEvent.target.name == bc.name");
-    ok(evt.origin.indexOf('http://mochi.test:8888') == 0, "MessageEvent.origin is correct");
+    ok(evt.origin.indexOf("http://mochi.test:8888") == 0, "MessageEvent.origin is correct");
     is(evt.data, "Hello world from the iframe!", "The message from the iframe has been received!");
     SimpleTest.finish();
-  }
+  };
 
   var div = document.getElementById("content");
   ok(div, "Parent exists");
 
   var ifr = document.createElement("iframe");
   ifr.addEventListener("load", iframeLoaded);
-  ifr.setAttribute('src', "iframe_broadcastchannel.html");
+  ifr.setAttribute("src", "iframe_broadcastchannel.html");
   div.appendChild(ifr);
 
   function iframeLoaded() {

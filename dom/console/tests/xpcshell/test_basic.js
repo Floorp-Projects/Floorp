@@ -12,7 +12,7 @@ add_task(async function() {
     }
 
     consoleListener.prototype  = {
-      observe: function(aSubject, aTopic, aData) {
+      observe(aSubject, aTopic, aData) {
         let obj = aSubject.wrappedJSObject;
         Assert.ok(obj.arguments[0] === 42, "Message received!");
         Assert.ok(obj.ID === "jsm", "The ID is JSM");
@@ -20,7 +20,7 @@ add_task(async function() {
 
         Services.obs.removeObserver(this, "console-api-log-event");
         resolve();
-      }
+      },
     };
 
     new consoleListener();

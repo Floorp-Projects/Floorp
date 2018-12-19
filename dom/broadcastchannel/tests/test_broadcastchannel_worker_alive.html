@@ -22,7 +22,7 @@ Tests of DOM BroadcastChannel in workers
 
 function runTests() {
   var id = 0;
-  (new BroadcastChannel('foobar')).onmessage = function(event) {
+  (new BroadcastChannel("foobar")).onmessage = function(event) {
     info("MSG: " + event.data);
 
     if (event.data == "READY") {
