@@ -55,8 +55,7 @@ async function assertTelemetry(expectedHistograms, expectedScalars) {
     await TestUtils.waitForCondition(() => {
       scalars = Services.telemetry.getSnapshotForKeyedScalars(
         "main", false).parent || {};
-      return Object.getOwnPropertyNames(expectedScalars)[0] in
-        scalars;
+      return Object.getOwnPropertyNames(expectedScalars).every(scalar => scalar in scalars);
     }, "should have the expected keyed scalars");
   }
 
