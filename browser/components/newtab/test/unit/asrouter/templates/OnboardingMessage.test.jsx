@@ -48,4 +48,28 @@ describe("OnboardingMessage", () => {
     // FXA_1 doesn't have content - so filter it out
     messages.filter(msg => msg.content).forEach(msg => assert.jsonSchema(msg.content, schema));
   });
+  it("should decode the content field (double decoding)", async () => {
+    const fakeContent = "foo%2540bar.org";
+    globals.set("AttributionCode", {getAttrDataAsync: sandbox.stub().resolves({content: fakeContent, source: "addons.mozilla.org"})});
+    globals.set("AddonRepository", {getAddonsByIDs: ([content]) => [{name: content}]});
+
+    const [returnToAMOMsg] = (await OnboardingMessageProvider.getUntranslatedMessages()).filter(({id}) => id === "RETURN_TO_AMO_1");
+    assert.propertyVal(returnToAMOMsg.content.text.args, "addon-name", "foo@bar.org");
+  });
+  it("should catch any decoding exceptions", async () => {
+    const fakeContent = "foo%bar.org";
+    globals.set("AttributionCode", {getAttrDataAsync: sandbox.stub().resolves({content: fakeContent, source: "addons.mozilla.org"})});
+    globals.set("AddonRepository", {getAddonsByIDs: ([content]) => [{name: content}]});
+
+    const [returnToAMOMsg] = (await OnboardingMessageProvider.getUntranslatedMessages()).filter(({id}) => id === "RETURN_TO_AMO_1");
+    assert.propertyVal(returnToAMOMsg.content.text.args, "addon-name", fakeContent);
+  });
+  it("should ignore attribution from sources other than mozilla.org", async () => {
+    const fakeContent = "foo%bar.org";
+    globals.set("AttributionCode", {getAttrDataAsync: sandbox.stub().resolves({content: fakeContent, source: "addons.allizom.org"})});
+    globals.set("AddonRepository", {getAddonsByIDs: ([content]) => [{name: content}]});
+
+    const [returnToAMOMsg] = (await OnboardingMessageProvider.getUntranslatedMessages()).filter(({id}) => id === "RETURN_TO_AMO_1");
+    assert.propertyVal(returnToAMOMsg.content.text.args, "addon-name", null);
+  });
 });

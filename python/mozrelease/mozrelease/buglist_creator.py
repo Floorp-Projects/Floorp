@@ -218,7 +218,6 @@ Task group: [{task_group_id}](https://tools.taskcluster.net/groups/{task_group_i
 
     notify_options = {}
     if 'TASKCLUSTER_PROXY_URL' in os.environ:
-        # Until bug 1460015 is finished, use the old baseUrl style of proxy URL
         base_url = os.environ['TASKCLUSTER_PROXY_URL'].rstrip('/')
         notify_options['baseUrl'] = '{}/notify/v1'.format(base_url)
     notify = Notify(notify_options)

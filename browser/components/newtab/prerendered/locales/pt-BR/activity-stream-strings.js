@@ -78,7 +78,7 @@ window.gActivityStreamStrings = {
   "pocket_how_it_works": "Como funciona",
   "pocket_cta_button": "Adicionar o Pocket",
   "pocket_cta_text": "Salve as histórias que você gosta no Pocket e abasteça sua mente com leituras fascinantes.",
-  "highlights_empty_state": "Comece a navegar e nós mostraremos aqui alguns ótimos artigos, vídeos e outras páginas que você favoritou ou visitou recentemente.",
+  "highlights_empty_state": "Comece a navegar e mostraremos aqui alguns ótimos artigos, vídeos e outras páginas que você favoritou ou visitou recentemente.",
   "topstories_empty_state": "Você já viu tudo. Volte mais tarde para mais histórias do {provider}. Não consegue esperar? Escolha um assunto popular para encontrar mais grandes histórias através da web.",
   "manual_migration_explanation2": "Experimente o Firefox com os favoritos, histórico e senhas salvas em outro navegador.",
   "manual_migration_cancel_button": "Não, obrigado",

@@ -96,6 +96,8 @@ $wrapper-max-width-widest: $grid-unit * 8 + $base-gutter * 7 + $section-horizont
 // layout issues when the scrollbar is visible. 16px is wide enough to cover all
 // OSes and keeps it simpler than a per-OS value.
 $scrollbar-width: 16px;
+
+// Breakpoints
 $break-point-medium: $wrapper-max-width-medium + $base-gutter * 2 + $scrollbar-width;
 $break-point-large: $wrapper-max-width-large + $base-gutter * 2 + $scrollbar-width;
 $break-point-widest: $wrapper-max-width-widest + $base-gutter * 2 + $scrollbar-width;

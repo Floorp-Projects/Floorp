@@ -96,7 +96,7 @@ class MediaStreamTrack::MSGListener : public MediaStreamTrackListener {
   void NotifyPrincipalHandleChanged(
       MediaStreamGraph* aGraph,
       const PrincipalHandle& aNewPrincipalHandle) override {
-    mGraph->DispatchToMainThreadAfterStreamStateUpdate(
+    mGraph->DispatchToMainThreadStableState(
         NewRunnableMethod<StoreCopyPassByConstLRef<PrincipalHandle>>(
             "dom::MediaStreamTrack::MSGListener::"
             "DoNotifyPrincipalHandleChanged",
@@ -108,7 +108,7 @@ class MediaStreamTrack::MSGListener : public MediaStreamTrackListener {
     // `mTrack` is a WeakPtr and must be destroyed on main thread.
     // We dispatch ourselves to main thread here in case the MediaStreamGraph
     // is holding the last reference to us.
-    mGraph->DispatchToMainThreadAfterStreamStateUpdate(
+    mGraph->DispatchToMainThreadStableState(
         NS_NewRunnableFunction("MediaStreamTrack::MSGListener::mTrackReleaser",
                                [self = RefPtr<MSGListener>(this)]() {}));
   }
@@ -126,7 +126,7 @@ class MediaStreamTrack::MSGListener : public MediaStreamTrackListener {
   }
 
   void NotifyEnded() override {
-    mGraph->DispatchToMainThreadAfterStreamStateUpdate(
+    mGraph->DispatchToMainThreadStableState(
         NewRunnableMethod("MediaStreamTrack::MSGListener::DoNotifyEnded", this,
                           &MSGListener::DoNotifyEnded));
   }

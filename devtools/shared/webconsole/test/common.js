@@ -15,6 +15,7 @@ const {DebuggerServer} = require("devtools/server/main");
 const {DebuggerClient} = require("devtools/shared/client/debugger-client");
 const ObjectClient = require("devtools/shared/client/object-client");
 const Services = require("Services");
+const {TargetFactory} = require("devtools/client/framework/target");
 
 function initCommon() {
   // Services.prefs.setBoolPref("devtools.debugger.log", true);
@@ -64,41 +65,49 @@ var _attachConsole = async function(
 
     // Fetch the console actor out of the expected target
     // ParentProcessTarget / WorkerTarget / FrameTarget
-    let consoleActor, worker;
+    let target, worker;
     if (!attachToTab) {
       const front = await client.mainRoot.getMainProcess();
-      await front.attach();
-      consoleActor = front.targetForm.consoleActor;
+      target = await TargetFactory.forRemoteTab({
+        client,
+        activeTab: front,
+        chrome: true,
+      });
     } else {
       const targetFront = await client.mainRoot.getTab();
-      await targetFront.attach();
+      target = await TargetFactory.forRemoteTab({
+        client,
+        activeTab: targetFront,
+      });
       if (attachToWorker) {
         const workerName = "console-test-worker.js#" + new Date().getTime();
         worker = new Worker(workerName);
         await waitForMessage(worker);
 
-        const { workers } = await targetFront.listWorkers();
+        const { workers } = await target.activeTab.listWorkers();
         const workerTargetFront = workers.filter(w => w.url == workerName)[0];
         if (!workerTargetFront) {
           console.error("listWorkers failed. Unable to find the worker actor\n");
           return null;
         }
-        await workerTargetFront.attach();
-        await workerTargetFront.attachThread({});
-        consoleActor = workerTargetFront.targetForm.consoleActor;
-      } else {
-        consoleActor = targetFront.targetForm.consoleActor;
+        target = await TargetFactory.forRemoteTab({
+          client,
+          activeTab: workerTargetFront,
+        });
       }
     }
 
-    // Instantiate the WebConsoleClient
-    const [ response, webConsoleClient ] = await client.attachConsole(consoleActor,
-      listeners);
+    // Attach the Target in order to instantiate the console client
+    await target.attach();
+    const webConsoleClient = target.activeConsole;
+    // By default the console isn't listening for anything,
+    // request listeners from here
+    const response = await webConsoleClient.startListeners(listeners);
     return {
       state: {
         dbgClient: client,
         client: webConsoleClient,
-        actor: consoleActor,
+        actor: webConsoleClient.actor,
         // Keep a strong reference to the Worker to avoid it being
         // GCd during the test (bug 1237492).
         // eslint-disable-next-line camelcase

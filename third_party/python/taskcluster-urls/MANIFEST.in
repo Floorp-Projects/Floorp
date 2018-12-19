@@ -1,4 +1,0 @@
-include LICENSE
-global-exclude *.py[co]
-include specification.yml
-include package.json

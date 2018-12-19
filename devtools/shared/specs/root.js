@@ -5,9 +5,6 @@
 
 const { types, generateActorSpec, RetVal, Arg, Option } = require("devtools/shared/protocol");
 
-types.addDictType("root.getWindow", {
-  window: "json",
-});
 types.addDictType("root.listWorkers", {
   workers: "array:workerTarget",
 });
@@ -52,7 +49,9 @@ const rootSpecPrototype = {
       request: {
         outerWindowID: Option(0, "number"),
       },
-      response: RetVal("root.getWindow"),
+      response: {
+        window: RetVal("browsingContextTarget"),
+      },
     },
 
     listAddons: {

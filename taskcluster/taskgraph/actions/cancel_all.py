@@ -10,13 +10,31 @@ import concurrent.futures as futures
 import logging
 import os
 
-from taskgraph.util.taskcluster import list_task_group, cancel_task
+from taskgraph.util.taskcluster import get_session, cancel_task
 from .registry import register_callback_action
 
 # the maximum number of parallel cancelTask calls to make
 CONCURRENCY = 50
 
+base_url = 'https://queue.taskcluster.net/v1/{}'
+
 logger = logging.getLogger(__name__)
+
+
+def list_group(task_group_id, session):
+    params = {}
+    while True:
+        url = base_url.format('task-group/{}/list'.format(task_group_id))
+        response = session.get(url, stream=True, params=params)
+        response.raise_for_status()
+        response = response.json()
+        for task in [t['status'] for t in response['tasks']]:
+            if task['state'] in ['running', 'pending', 'unscheduled']:
+                yield task['taskId']
+        if response.get('continuationToken'):
+            params = {'continuationToken': response.get('continuationToken')}
+        else:
+            break
 
 
 @register_callback_action(
@@ -33,11 +51,12 @@ logger = logging.getLogger(__name__)
     context=[]
 )
 def cancel_all_action(parameters, graph_config, input, task_group_id, task_id, task):
+    session = get_session()
     own_task_id = os.environ.get('TASK_ID', '')
     with futures.ThreadPoolExecutor(CONCURRENCY) as e:
         cancels_jobs = [
             e.submit(cancel_task, t, use_proxy=True)
-            for t in list_task_group(task_group_id) if t != own_task_id
+            for t in list_group(task_group_id, session) if t != own_task_id
         ]
         for job in cancels_jobs:
             job.result()

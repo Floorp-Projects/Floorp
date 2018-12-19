@@ -211,7 +211,7 @@ const globalImportContext = typeof Window === "undefined" ? BACKGROUND_PROCESS :
 // }
 const actionTypes = {};
 
-for (const type of ["ADDONS_INFO_REQUEST", "ADDONS_INFO_RESPONSE", "ARCHIVE_FROM_POCKET", "AS_ROUTER_INITIALIZED", "AS_ROUTER_PREF_CHANGED", "AS_ROUTER_TELEMETRY_USER_EVENT", "BLOCK_URL", "BOOKMARK_URL", "COPY_DOWNLOAD_LINK", "DELETE_BOOKMARK_BY_ID", "DELETE_FROM_POCKET", "DELETE_HISTORY_URL", "DIALOG_CANCEL", "DIALOG_OPEN", "DOWNLOAD_CHANGED", "FILL_SEARCH_TERM", "INIT", "MIGRATION_CANCEL", "MIGRATION_COMPLETED", "MIGRATION_START", "NEW_TAB_INIT", "NEW_TAB_INITIAL_STATE", "NEW_TAB_LOAD", "NEW_TAB_REHYDRATED", "NEW_TAB_STATE_REQUEST", "NEW_TAB_UNLOAD", "OPEN_DOWNLOAD_FILE", "OPEN_LINK", "OPEN_NEW_WINDOW", "OPEN_PRIVATE_WINDOW", "OPEN_WEBEXT_SETTINGS", "PAGE_PRERENDERED", "PLACES_BOOKMARK_ADDED", "PLACES_BOOKMARK_REMOVED", "PLACES_HISTORY_CLEARED", "PLACES_LINKS_CHANGED", "PLACES_LINK_BLOCKED", "PLACES_LINK_DELETED", "PLACES_SAVED_TO_POCKET", "POCKET_CTA", "POCKET_LOGGED_IN", "POCKET_WAITING_FOR_SPOC", "PREFS_INITIAL_VALUES", "PREF_CHANGED", "PREVIEW_REQUEST", "PREVIEW_REQUEST_CANCEL", "PREVIEW_RESPONSE", "REMOVE_DOWNLOAD_FILE", "RICH_ICON_MISSING", "SAVE_SESSION_PERF_DATA", "SAVE_TO_POCKET", "SCREENSHOT_UPDATED", "SECTION_DEREGISTER", "SECTION_DISABLE", "SECTION_ENABLE", "SECTION_MOVE", "SECTION_OPTIONS_CHANGED", "SECTION_REGISTER", "SECTION_UPDATE", "SECTION_UPDATE_CARD", "SETTINGS_CLOSE", "SETTINGS_OPEN", "SET_PREF", "SHOW_DOWNLOAD_FILE", "SHOW_FIREFOX_ACCOUNTS", "SKIPPED_SIGNIN", "SNIPPETS_BLOCKLIST_CLEARED", "SNIPPETS_BLOCKLIST_UPDATED", "SNIPPETS_DATA", "SNIPPETS_PREVIEW_MODE", "SNIPPETS_RESET", "SNIPPET_BLOCKED", "SUBMIT_EMAIL", "SYSTEM_TICK", "TELEMETRY_IMPRESSION_STATS", "TELEMETRY_PERFORMANCE_EVENT", "TELEMETRY_UNDESIRED_EVENT", "TELEMETRY_USER_EVENT", "TOP_SITES_CANCEL_EDIT", "TOP_SITES_CLOSE_SEARCH_SHORTCUTS_MODAL", "TOP_SITES_EDIT", "TOP_SITES_INSERT", "TOP_SITES_OPEN_SEARCH_SHORTCUTS_MODAL", "TOP_SITES_PIN", "TOP_SITES_PREFS_UPDATED", "TOP_SITES_UNPIN", "TOP_SITES_UPDATED", "TOTAL_BOOKMARKS_REQUEST", "TOTAL_BOOKMARKS_RESPONSE", "UNINIT", "UPDATE_PINNED_SEARCH_SHORTCUTS", "UPDATE_SEARCH_SHORTCUTS", "UPDATE_SECTION_PREFS", "WEBEXT_CLICK", "WEBEXT_DISMISS"]) {
+for (const type of ["ADDONS_INFO_REQUEST", "ADDONS_INFO_RESPONSE", "ARCHIVE_FROM_POCKET", "AS_ROUTER_INITIALIZED", "AS_ROUTER_PREF_CHANGED", "AS_ROUTER_TELEMETRY_USER_EVENT", "BLOCK_URL", "BOOKMARK_URL", "CONTENT_LAYOUT", "COPY_DOWNLOAD_LINK", "DELETE_BOOKMARK_BY_ID", "DELETE_FROM_POCKET", "DELETE_HISTORY_URL", "DIALOG_CANCEL", "DIALOG_OPEN", "DOWNLOAD_CHANGED", "FILL_SEARCH_TERM", "INIT", "MIGRATION_CANCEL", "MIGRATION_COMPLETED", "MIGRATION_START", "NEW_TAB_INIT", "NEW_TAB_INITIAL_STATE", "NEW_TAB_LOAD", "NEW_TAB_REHYDRATED", "NEW_TAB_STATE_REQUEST", "NEW_TAB_UNLOAD", "OPEN_DOWNLOAD_FILE", "OPEN_LINK", "OPEN_NEW_WINDOW", "OPEN_PRIVATE_WINDOW", "OPEN_WEBEXT_SETTINGS", "PAGE_PRERENDERED", "PLACES_BOOKMARK_ADDED", "PLACES_BOOKMARK_REMOVED", "PLACES_HISTORY_CLEARED", "PLACES_LINKS_CHANGED", "PLACES_LINK_BLOCKED", "PLACES_LINK_DELETED", "PLACES_SAVED_TO_POCKET", "POCKET_CTA", "POCKET_LOGGED_IN", "POCKET_WAITING_FOR_SPOC", "PREFS_INITIAL_VALUES", "PREF_CHANGED", "PREVIEW_REQUEST", "PREVIEW_REQUEST_CANCEL", "PREVIEW_RESPONSE", "REMOVE_DOWNLOAD_FILE", "RICH_ICON_MISSING", "SAVE_SESSION_PERF_DATA", "SAVE_TO_POCKET", "SCREENSHOT_UPDATED", "SECTION_DEREGISTER", "SECTION_DISABLE", "SECTION_ENABLE", "SECTION_MOVE", "SECTION_OPTIONS_CHANGED", "SECTION_REGISTER", "SECTION_UPDATE", "SECTION_UPDATE_CARD", "SETTINGS_CLOSE", "SETTINGS_OPEN", "SET_PREF", "SHOW_DOWNLOAD_FILE", "SHOW_FIREFOX_ACCOUNTS", "SKIPPED_SIGNIN", "SNIPPETS_BLOCKLIST_CLEARED", "SNIPPETS_BLOCKLIST_UPDATED", "SNIPPETS_DATA", "SNIPPETS_PREVIEW_MODE", "SNIPPETS_RESET", "SNIPPET_BLOCKED", "SUBMIT_EMAIL", "SYSTEM_TICK", "TELEMETRY_IMPRESSION_STATS", "TELEMETRY_PERFORMANCE_EVENT", "TELEMETRY_UNDESIRED_EVENT", "TELEMETRY_USER_EVENT", "TOP_SITES_CANCEL_EDIT", "TOP_SITES_CLOSE_SEARCH_SHORTCUTS_MODAL", "TOP_SITES_EDIT", "TOP_SITES_INSERT", "TOP_SITES_OPEN_SEARCH_SHORTCUTS_MODAL", "TOP_SITES_PIN", "TOP_SITES_PREFS_UPDATED", "TOP_SITES_UNPIN", "TOP_SITES_UPDATED", "TOTAL_BOOKMARKS_REQUEST", "TOTAL_BOOKMARKS_RESPONSE", "UNINIT", "UPDATE_PINNED_SEARCH_SHORTCUTS", "UPDATE_SEARCH_SHORTCUTS", "UPDATE_SECTION_PREFS", "WEBEXT_CLICK", "WEBEXT_DISMISS"]) {
   actionTypes[type] = type;
 }
 
@@ -2017,7 +2017,7 @@ class _StartupOverlay extends react__WEBPACK_IMPORTED_MODULE_3___default.a.PureC
         try {
           _this.didFetch = true;
           const fxaParams = "entrypoint=activity-stream-firstrun&utm_source=activity-stream&utm_campaign=firstrun&form_type=email";
-          const response = yield fetch(`${_this.props.fxa_endpoint}/metrics-flow?${fxaParams}`);
+          const response = yield fetch(`${_this.props.fxa_endpoint}/metrics-flow?${fxaParams}`, { credentials: "omit" });
           if (response.status === 200) {
             const { flowId, flowBeginTime } = yield response.json();
             _this.setState({ flowId, flowBeginTime });
@@ -3942,15 +3942,19 @@ class Section extends react__WEBPACK_IMPORTED_MODULE_8___default.a.PureComponent
         id === "topstories" && react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(
           "div",
           { className: "top-stories-bottom-container" },
-          react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(
+          shouldShowTopics && react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(
             "div",
-            null,
-            shouldShowTopics && react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(content_src_components_Topics_Topics__WEBPACK_IMPORTED_MODULE_9__["Topics"], { topics: this.props.topics }),
-            shouldShowPocketCta && react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(content_src_components_PocketLoggedInCta_PocketLoggedInCta__WEBPACK_IMPORTED_MODULE_7__["PocketLoggedInCta"], null)
+            { className: "wrapper-topics" },
+            react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(content_src_components_Topics_Topics__WEBPACK_IMPORTED_MODULE_9__["Topics"], { topics: this.props.topics })
+          ),
+          shouldShowPocketCta && react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(
+            "div",
+            { className: "wrapper-cta" },
+            react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(content_src_components_PocketLoggedInCta_PocketLoggedInCta__WEBPACK_IMPORTED_MODULE_7__["PocketLoggedInCta"], null)
           ),
           react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(
             "div",
-            null,
+            { className: "wrapper-more-recommendations" },
             shouldShowReadMore && react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(content_src_components_MoreRecommendations_MoreRecommendations__WEBPACK_IMPORTED_MODULE_6__["MoreRecommendations"], { read_more_endpoint: read_more_endpoint })
           )
         )
@@ -3995,7 +3999,30 @@ class _Sections extends react__WEBPACK_IMPORTED_MODULE_8___default.a.PureCompone
     return sections;
   }
 
+  renderLayout() {
+    return react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(
+      "div",
+      { className: "sections-list layout" },
+      this.props.Layout.map((section, sectionIndex) => react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(
+        "div",
+        { key: `section-${sectionIndex}`, className: `column column-${section.width}` },
+        section.components.map((component, componentIndex) => react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(
+          "div",
+          { key: `component-${componentIndex}` },
+          react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(
+            "div",
+            null,
+            component.type
+          )
+        ))
+      ))
+    );
+  }
+
   render() {
+    if (this.props.Layout && this.props.Layout.length) {
+      return this.renderLayout();
+    }
     return react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(
       "div",
       { className: "sections-list" },
@@ -4004,7 +4031,7 @@ class _Sections extends react__WEBPACK_IMPORTED_MODULE_8___default.a.PureCompone
   }
 }
 
-const Sections = Object(react_redux__WEBPACK_IMPORTED_MODULE_5__["connect"])(state => ({ Sections: state.Sections, Prefs: state.Prefs }))(_Sections);
+const Sections = Object(react_redux__WEBPACK_IMPORTED_MODULE_5__["connect"])(state => ({ Sections: state.Sections, Prefs: state.Prefs, Layout: state.Layout }))(_Sections);
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1)))
 
 /***/ }),
@@ -4510,6 +4537,7 @@ class _CollapsibleSection extends react__WEBPACK_IMPORTED_MODULE_3___default.a.P
     this.onMenuButtonMouseLeave = this.onMenuButtonMouseLeave.bind(this);
     this.onMenuUpdate = this.onMenuUpdate.bind(this);
     this.state = { enableAnimation: true, isAnimating: false, menuButtonHover: false, showContextMenu: false };
+    this.setContextMenuButtonRef = this.setContextMenuButtonRef.bind(this);
   }
 
   componentWillMount() {
@@ -4527,8 +4555,19 @@ class _CollapsibleSection extends react__WEBPACK_IMPORTED_MODULE_3___default.a.P
     }
   }
 
+  setContextMenuButtonRef(element) {
+    this.contextMenuButtonRef = element;
+  }
+
+  componentDidMount() {
+    this.contextMenuButtonRef.addEventListener("mouseenter", this.onMenuButtonMouseEnter);
+    this.contextMenuButtonRef.addEventListener("mouseleave", this.onMenuButtonMouseLeave);
+  }
+
   componentWillUnmount() {
     this.props.document.removeEventListener(VISIBILITY_CHANGE_EVENT, this.enableOrDisableAnimation);
+    this.contextMenuButtonRef.removeEventListener("mouseenter", this.onMenuButtonMouseEnter);
+    this.contextMenuButtonRef.removeEventListener("mouseleave", this.onMenuButtonMouseLeave);
   }
 
   enableOrDisableAnimation() {
@@ -4647,7 +4686,7 @@ class _CollapsibleSection extends react__WEBPACK_IMPORTED_MODULE_3___default.a.P
             ),
             react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(
               "span",
-              null,
+              { className: "learn-more-link-wrapper" },
               learnMore && react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(
                 "span",
                 { className: "learn-more-link" },
@@ -4669,8 +4708,7 @@ class _CollapsibleSection extends react__WEBPACK_IMPORTED_MODULE_3___default.a.P
               className: "context-menu-button icon",
               title: this.props.intl.formatMessage({ id: "context_menu_title" }),
               onClick: this.onMenuButtonClick,
-              onMouseEnter: this.onMenuButtonMouseEnter,
-              onMouseLeave: this.onMenuButtonMouseLeave },
+              ref: this.setContextMenuButtonRef },
             react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(
               "span",
               { className: "sr-only" },
@@ -6755,7 +6793,7 @@ class SubmitFormSnippet_SubmitFormSnippet extends external_React_default.a.PureC
       const { url, formData } = _this.props.processFormData ? _this.props.processFormData(_this.refs.mainInput, _this.props) : { url: _this.refs.form.action, formData: new FormData(_this.refs.form) };
 
       try {
-        const fetchRequest = new Request(url, { body: formData, method: "POST" });
+        const fetchRequest = new Request(url, { body: formData, method: "POST", credentials: "omit" });
         const response = yield fetch(fetchRequest);
         json = yield response.json();
       } catch (err) {
@@ -9840,7 +9878,8 @@ const INITIAL_STATE = {
     isUserLoggedIn: null,
     pocketCta: {},
     waitingForSpoc: true
-  }
+  },
+  Layout: []
 };
 
 
@@ -10224,7 +10263,16 @@ function Pocket(prevState = INITIAL_STATE.Pocket, action) {
   }
 }
 
-var reducers = { TopSites, App, ASRouter, Snippets, Prefs, Dialog, Sections, Pocket };
+function Layout(prevState = INITIAL_STATE.Layout, action) {
+  switch (action.type) {
+    case Actions["actionTypes"].CONTENT_LAYOUT:
+      return action.data;
+    default:
+      return prevState;
+  }
+}
+
+var reducers = { TopSites, App, ASRouter, Snippets, Prefs, Dialog, Sections, Pocket, Layout };
 
 /***/ }),
 /* 56 */

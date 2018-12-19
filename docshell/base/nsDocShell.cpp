@@ -7434,14 +7434,6 @@ nsDocShell::BeginRestore(nsIContentViewer* aContentViewer, bool aTop) {
     }
   }
 
-  // When re-attaching browsing context, a mozbrowser docshell will be
-  // considered as top level, but its browsing context will have a
-  // parent.
-  MOZ_DIAGNOSTIC_ASSERT(
-      (aTop && !mBrowsingContext->GetParent()) ||
-      ((!aTop || GetIsMozBrowser()) && mBrowsingContext->GetParent()));
-  mBrowsingContext->Attach();
-
   if (!aTop) {
     // This point corresponds to us having gotten OnStartRequest or
     // STATE_START, so do the same thing that CreateContentViewer does at
@@ -7957,6 +7949,13 @@ nsresult nsDocShell::RestoreFromHistory() {
     // the child inherits our state. Among other things, this means that the
     // child inherits our mIsActive mPrivateBrowsingId, which is what we want.
     AddChild(childItem);
+
+    // TODO(farre): This results in sending an IPC message to
+    // re-attach the 'BrowsingContext' to the 'ContentParent'. We
+    // would much rather do this in bulk. See Bug 1410260.
+    RefPtr<BrowsingContext> childContext =
+        nsDocShell::Cast(childShell)->GetBrowsingContext();
+    childContext->Attach();
 
     childShell->SetAllowPlugins(allowPlugins);
     childShell->SetAllowJavascript(allowJavascript);
