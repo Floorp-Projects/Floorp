@@ -1278,3 +1278,79 @@ with only_when(compile_environment):
                      (lambda t: t.kernel == 'WINNT'))
     wine = check_prog('WINE', ['wine'], when=depends(target, host)
                       (lambda t, h: t.kernel == 'WINNT' and h.kernel == 'Linux'))
+
+
+# VPX
+# ===
+
+with only_when(compile_environment):
+    option('--with-system-libvpx',
+           help='Use system libvpx (located with pkgconfig)')
+
+    with only_when('--with-system-libvpx'):
+        vpx = pkg_check_modules('MOZ_LIBVPX', 'vpx >= 1.5.0')
+
+        check_header('vpx/vpx_decoder.h', flags=vpx.cflags, onerror=lambda: die(
+            "Couldn't find vpx/vpx_decoder.h, which is required to build "
+            "with system libvpx. Use --without-system-libvpx to build "
+            "with in-tree libvpx."))
+
+        check_symbol('vpx_codec_dec_init_ver', flags=vpx.libs, onerror=lambda: die(
+            "--with-system-libvpx requested but symbol vpx_codec_dec_init_ver "
+            "not found"
+        ))
+
+        set_config('MOZ_SYSTEM_LIBVPX', True)
+
+
+    @depends('--with-system-libvpx', target, yasm_version, gnu_as)
+    def in_tree_vpx(system_libvpx, target, yasm_version, gnu_as):
+        if system_libvpx:
+            return
+
+        use_yasm = (target.cpu in ('x86', 'x86_64')) or None
+        arm_asm = (target.cpu == 'arm' and gnu_as) or None
+
+        if use_yasm:
+            if not yasm_version:
+                die('Yasm is required to build on this architecture.')
+            if target.kernel == 'WINNT' and yasm_version < '1.1':
+                die('Yasm 1.1 or greater is required to build libvpx for Windows.')
+
+        return namespace(arm_asm=arm_asm, use_yasm=use_yasm)
+
+
+    # Building with -mfpu=neon requires either the "softfp" or the
+    # "hardfp" ABI. Depending on the compiler's default target, and the
+    # CFLAGS, the default ABI might be neither, in which case it is the
+    # "softfloat" ABI.
+    # The "softfloat" ABI is binary-compatible with the "softfp" ABI, so
+    # we can safely mix code built with both ABIs. So, if we detect
+    # that compiling uses the "softfloat" ABI, force the use of the
+    # "softfp" ABI instead.
+    # Confusingly, the __SOFTFP__ preprocessor variable indicates the
+    # "softfloat" ABI, not the "softfp" ABI.
+    # Note: VPX_ASFLAGS is also used in CFLAGS.
+    softfp = cxx_compiler.try_compile(body='''
+        #ifndef __SOFTFP__
+        #error "compiler target supports -mfpu=neon, so we don't have to add extra flags"
+        #endif''', when=in_tree_vpx.arm_asm)
+
+
+    @depends(in_tree_vpx, softfp, target)
+    def vpx_as_flags(vpx, softfp, target):
+        flags = []
+        if vpx and vpx.arm_asm:
+            # These flags are a lie; they're just used to enable the requisite
+            # opcodes; actual arch detection is done at runtime.
+            flags = ['-march=armv7-a', '-mfpu=neon']
+            if softfp:
+                flags.append('-mfloat-abi=softfp')
+        elif vpx and vpx.use_yasm and target.os != 'WINNT' and target.cpu != 'x86_64':
+            flags = ['-DPIC']
+        return flags
+
+
+    set_config('VPX_USE_YASM', in_tree_vpx.use_yasm)
+    set_config('VPX_ASFLAGS', vpx_as_flags)
+    add_old_configure_assignment('VPX_ASFLAGS', vpx_as_flags)

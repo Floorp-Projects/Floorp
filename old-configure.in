@@ -1808,8 +1808,6 @@ MOZ_AUTH_EXTENSION=1
 if test "$MOZ_IOS"; then
    MOZ_AUTH_EXTENSION=
 fi
-VPX_USE_YASM=
-VPX_ASFLAGS=
 LIBJPEG_TURBO_AS=
 LIBJPEG_TURBO_ASFLAGS=
 MOZ_PREF_EXTENSIONS=1
@@ -2215,113 +2213,6 @@ if test -n "$MOZ_APPLEMEDIA"; then
     [AC_MSG_ERROR([MacOS X 10.9 SDK or later is required])])
 fi
 fi # COMPILE_ENVIRONMENT
-
-dnl system libvpx Support
-dnl ========================================================
-MOZ_ARG_WITH_BOOL(system-libvpx,
-[  --with-system-libvpx    Use system libvpx (located with pkgconfig)],
-    MOZ_SYSTEM_LIBVPX=1)
-
-MOZ_LIBVPX_CFLAGS=
-MOZ_LIBVPX_LIBS=
-
-_SAVE_CFLAGS=$CFLAGS
-_SAVE_LIBS=$LIBS
-if test -n "$MOZ_SYSTEM_LIBVPX"; then
-    dnl ============================
-    dnl === libvpx Version check ===
-    dnl ============================
-    dnl Check to see if we have a system libvpx package.
-    PKG_CHECK_MODULES(MOZ_LIBVPX, vpx >= 1.5.0)
-
-    CFLAGS="$CFLAGS $MOZ_LIBVPX_CFLAGS"
-    LIBS="$LIBS $MOZ_LIBVPX_LIBS"
-
-    MOZ_CHECK_HEADER([vpx/vpx_decoder.h], [],
-     [AC_MSG_ERROR([Couldn't find vpx/vpx_decoder.h which is required for build with system libvpx. Use --without-system-libvpx to build with in-tree libvpx.])])
-
-    AC_CHECK_LIB(vpx, vpx_codec_dec_init_ver, [],
-     [AC_MSG_ERROR([--with-system-libvpx requested but symbol vpx_codec_dec_init_ver not found])])
-fi
-CFLAGS=$_SAVE_CFLAGS
-LIBS=$_SAVE_LIBS
-
-AC_SUBST(MOZ_SYSTEM_LIBVPX)
-AC_SUBST_LIST(MOZ_LIBVPX_CFLAGS)
-AC_SUBST_LIST(MOZ_LIBVPX_LIBS)
-
-if test -z "$MOZ_SYSTEM_LIBVPX"; then
-
-    dnl Detect if we can use an assembler to compile optimized assembly for libvpx.
-    dnl We currently require yasm on all x86 platforms and require yasm 1.1.0 on Win32.
-    dnl We currently require gcc on all arm platforms.
-
-    dnl See if we have assembly on this platform.
-    case "$OS_ARCH:$CPU_ARCH" in
-    Darwin:x86)
-      VPX_USE_YASM=1
-    ;;
-    Darwin:x86_64)
-      VPX_USE_YASM=1
-    ;;
-    WINNT:x86_64)
-      VPX_USE_YASM=1
-    ;;
-    WINNT:x86)
-      dnl Check for yasm 1.1 or greater.
-      if test -n "$COMPILE_ENVIRONMENT" -a -z "$YASM"; then
-        AC_MSG_ERROR([yasm 1.1 or greater is required to build libvpx on Win32, but it appears not to be installed.  Install it (included in MozillaBuild 1.5.1 and newer) or configure with --disable-webm (which disables the WebM video format). See https://developer.mozilla.org/en/YASM for more details.])
-      elif test -n "$COMPILE_ENVIRONMENT" -a "$_YASM_MAJOR_VERSION" -lt "1" -o \( "$_YASM_MAJOR_VERSION" -eq "1" -a "$_YASM_MINOR_VERSION" -lt "1" \) ; then
-        AC_MSG_ERROR([yasm 1.1 or greater is required to build libvpx on Win32, but you appear to have version $_YASM_MAJOR_VERSION.$_YASM_MINOR_VERSION.  Upgrade to the newest version (included in MozillaBuild 1.5.1 and newer) or configure with --disable-webm (which disables the WebM video format). See https://developer.mozilla.org/en/YASM for more details.])
-      else
-        VPX_USE_YASM=1
-        dnl The encoder needs obj_int_extract to get asm offsets.
-      fi # COMPILE_ENVIRONMENT and others
-    ;;
-    *:arm*)
-      if test -n "$GNU_AS" ; then
-        dnl These flags are a lie; they're just used to enable the requisite
-        dnl opcodes; actual arch detection is done at runtime.
-        VPX_ASFLAGS="-march=armv7-a -mfpu=neon"
-        dnl Building with -mfpu=neon requires either the "softfp" or the
-        dnl "hardfp" ABI. Depending on the compiler's default target, and the
-        dnl CFLAGS, the default ABI might be neither, in which case it is the
-        dnl "softfloat" ABI.
-        dnl The "softfloat" ABI is binary-compatible with the "softfp" ABI, so
-        dnl we can safely mix code built with both ABIs. So, if we detect
-        dnl that compiling uses the "softfloat" ABI, force the use of the
-        dnl "softfp" ABI instead.
-        dnl Confusingly, the __SOFTFP__ preprocessor variable indicates the
-        dnl "softfloat" ABI, not the "softfp" ABI.
-        dnl Note: VPX_ASFLAGS is also used in CFLAGS.
-        AC_TRY_COMPILE([],
-          [#ifndef __SOFTFP__
-           #error "compiler target supports -mfpu=neon, so we don't have to add extra flags"
-           #endif],
-           VPX_ASFLAGS="$VPX_ASFLAGS -mfloat-abi=softfp"
-           )
-      fi
-    ;;
-    *:x86)
-      if $CC -E -dM -</dev/null | grep -q __ELF__; then
-        VPX_USE_YASM=1
-      fi
-    ;;
-    *:x86_64)
-      if $CC -E -dM -</dev/null | grep -q __ELF__; then
-        VPX_USE_YASM=1
-      fi
-    ;;
-    esac
-
-    if test -n "$COMPILE_ENVIRONMENT" -a -n "$VPX_USE_YASM" -a -z "$YASM"; then
-      AC_MSG_ERROR([yasm is a required build tool for this architecture when webm is enabled. You may either install yasm or --disable-webm (which disables the WebM video format). See https://developer.mozilla.org/en/YASM for more details.])
-    fi # COMPILE_ENVIRONMENT and others
-
-    if test -n "$VPX_USE_YASM" && test "$OS_ARCH:$CPU_ARCH" != "WINNT:x86_64"; then
-      VPX_ASFLAGS="-DPIC"
-    fi
-fi
 
 dnl ========================================================
 dnl = Handle dependent MEDIA defines
@@ -4135,8 +4026,6 @@ AC_SUBST(WIN32_GUI_EXE_LDFLAGS)
 AC_SUBST(MOZ_FFVPX)
 AC_SUBST(MOZ_FFVPX_FLACONLY)
 AC_SUBST_LIST(FFVPX_ASFLAGS)
-AC_SUBST(VPX_USE_YASM)
-AC_SUBST_LIST(VPX_ASFLAGS)
 AC_SUBST(LIBJPEG_TURBO_USE_YASM)
 AC_SUBST_LIST(LIBJPEG_TURBO_ASFLAGS)
 AC_SUBST(MOZ_LIBAV_FFT)
