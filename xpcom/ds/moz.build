@@ -38,6 +38,10 @@ if CONFIG['OS_ARCH'] == 'WINNT':
 
 XPIDL_MODULE = 'xpcom_ds'
 
+XPCOM_MANIFESTS += [
+    'components.conf',
+]
+
 EXPORTS += [
     '!nsGkAtomConsts.h',
     '!nsGkAtomList.h',
