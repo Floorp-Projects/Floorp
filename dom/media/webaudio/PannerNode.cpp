@@ -205,7 +205,7 @@ class PannerNodeEngine final : public AudioNodeEngine {
           RefPtr<PlayingRefChangeHandler> refchanged =
               new PlayingRefChangeHandler(aStream,
                                           PlayingRefChangeHandler::RELEASE);
-          aStream->Graph()->DispatchToMainThreadAfterStreamStateUpdate(
+          aStream->Graph()->DispatchToMainThreadStableState(
               refchanged.forget());
         }
         aOutput->SetNull(WEBAUDIO_BLOCK_SIZE);
@@ -217,8 +217,7 @@ class PannerNodeEngine final : public AudioNodeEngine {
         RefPtr<PlayingRefChangeHandler> refchanged =
             new PlayingRefChangeHandler(aStream,
                                         PlayingRefChangeHandler::ADDREF);
-        aStream->Graph()->DispatchToMainThreadAfterStreamStateUpdate(
-            refchanged.forget());
+        aStream->Graph()->DispatchToMainThreadStableState(refchanged.forget());
       }
       mLeftOverData = mHRTFPanner->maxTailFrames();
     }
