@@ -14,25 +14,25 @@ from telemetry_harness.ping_filters import (
 class TestSearchCounts(TelemetryTestCase):
     """Test for SEARCH_COUNTS across sessions."""
 
-    def get_current_search_engine(self):
-        """Retrieve the identifier of the current search engine."""
+    def get_default_search_engine(self):
+        """Retrieve the identifier of the default search engine."""
 
         script = """\
         let searchService = Components.classes[
                 "@mozilla.org/browser/search-service;1"]
             .getService(Components.interfaces.nsIBrowserSearchService);
-        return searchService.currentEngine.identifier;
+        return searchService.defaultEngine.identifier;
         """
 
         return self.marionette.execute_script(textwrap.dedent(script))
 
     def setUp(self):
-        """Set up the test case and store the identifier of the current
+        """Set up the test case and store the identifier of the default
         search engine, which is required for reading SEARCH_COUNTS from
         keyed histograms in pings.
         """
         super(TestSearchCounts, self).setUp()
-        self.search_engine = self.get_current_search_engine()
+        self.search_engine = self.get_default_search_engine()
 
     def search(self, text):
         """Perform a search via the browser's location bar."""
