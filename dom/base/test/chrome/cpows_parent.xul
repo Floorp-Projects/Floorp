@@ -447,6 +447,11 @@
       }, 0);
     }
 
+    function recvLocalStorage(msg) {
+      msg.objects.f();
+      msg.target.messageManager.sendAsyncMessage("cpows:localStorage_done");
+    }
+
     function run_tests(type) {
       info("Running tests: " + type);
       var node = document.getElementById('cpowbrowser_' + type);
@@ -489,10 +494,17 @@
       mm.addMessageListener("cpows:unsafe", recvUnsafe);
       mm.addMessageListener("cpows:safe", recvSafe);
       mm.addMessageListener("cpows:dead", recvDead);
+      mm.addMessageListener("cpows:localStorage", recvLocalStorage);
       mm.loadFrameScript("chrome://mochitests/content/chrome/dom/base/test/chrome/cpows_child.js", true);
     }
 
-    function start() {
+    async function start() {
+      ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
+
+      let browser = document.getElementById("cpowbrowser_remote");
+      BrowserTestUtils.loadURI(browser, "http://mochi.test:8888/tests/dom/base/test/chrome/cpows_child.html");
+      await BrowserTestUtils.browserLoaded(browser);
+
       run_tests('remote');
     }
 
