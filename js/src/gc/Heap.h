@@ -230,19 +230,19 @@ class Arena {
    */
   size_t allocKind : 8;
 
- public:
+ private:
   /*
    * When recursive marking uses too much stack we delay marking of
    * arenas and link them into a list for later processing. This
    * uses the following fields.
    */
-  size_t hasDelayedMarking : 1;
-  size_t auxNextLink : JS_BITS_PER_WORD - 8 - 1;
-  static_assert(ArenaShift >= 8 + 1,
-                "Arena::auxNextLink packing assumes that ArenaShift has "
-                "enough bits to cover allocKind and hasDelayedMarking.");
+  size_t onDelayedMarkingList_ : 1;
+  size_t hasDelayedMarking_ : 1;
+  size_t nextDelayedMarkingArena_ : JS_BITS_PER_WORD - 8 - 1 - 1;
+  static_assert(ArenaShift >= 8 + 1 + 1,
+                "Arena::nextDelayedMarkingArena_ packing assumes that ArenaShift has "
+                "enough bits to cover allocKind and delayed marking state.");
 
- private:
   union {
     /*
      * For arenas in zones other than the atoms zone, if non-null, points
@@ -287,8 +287,9 @@ class Arena {
     firstFreeSpan.initAsEmpty();
     zone = nullptr;
     allocKind = size_t(AllocKind::LIMIT);
-    hasDelayedMarking = 0;
-    auxNextLink = 0;
+    onDelayedMarkingList_ = 0;
+    hasDelayedMarking_ = 0;
+    nextDelayedMarkingArena_ = 0;
     bufferedCells_ = nullptr;
   }
 
@@ -387,24 +388,48 @@ class Arena {
     return tailOffset % thingSize == 0;
   }
 
-  Arena* getNextDelayedMarking() const {
-    MOZ_ASSERT(hasDelayedMarking);
-    return reinterpret_cast<Arena*>(auxNextLink << ArenaShift);
+  bool onDelayedMarkingList() const {
+    return onDelayedMarkingList_;
   }
 
-  void setNextDelayedMarking(Arena* arena) {
+  Arena* getNextDelayedMarking() const {
+    MOZ_ASSERT(onDelayedMarkingList_);
+    return reinterpret_cast<Arena*>(nextDelayedMarkingArena_ << ArenaShift);
+  }
+
+  void setNextDelayedMarkingArena(Arena* arena) {
     MOZ_ASSERT(!(uintptr_t(arena) & ArenaMask));
-    MOZ_ASSERT(!auxNextLink && !hasDelayedMarking);
-    hasDelayedMarking = 1;
+    MOZ_ASSERT(!onDelayedMarkingList_);
+    MOZ_ASSERT(!hasDelayedMarking_);
+    MOZ_ASSERT(!nextDelayedMarkingArena_);
+    onDelayedMarkingList_ = 1;
+    hasDelayedMarking_ = 1;
     if (arena) {
-      auxNextLink = arena->address() >> ArenaShift;
+      nextDelayedMarkingArena_ = arena->address() >> ArenaShift;
     }
   }
 
-  void unsetDelayedMarking() {
-    MOZ_ASSERT(hasDelayedMarking);
-    hasDelayedMarking = 0;
-    auxNextLink = 0;
+  void updateNextDelayedMarkingArena(Arena* arena) {
+    MOZ_ASSERT(!(uintptr_t(arena) & ArenaMask));
+    MOZ_ASSERT(onDelayedMarkingList_);
+    nextDelayedMarkingArena_ = arena ? arena->address() >> ArenaShift : 0;
+  }
+
+  bool hasDelayedMarking() const {
+    MOZ_ASSERT(onDelayedMarkingList_);
+    return hasDelayedMarking_;
+  }
+
+  void setHasDelayedMarking(bool value) {
+    MOZ_ASSERT(onDelayedMarkingList_);
+    hasDelayedMarking_ = value;
+  }
+
+  void clearDelayedMarkingState() {
+    MOZ_ASSERT(onDelayedMarkingList_);
+    onDelayedMarkingList_ = 0;
+    hasDelayedMarking_ = 0;
+    nextDelayedMarkingArena_ = 0;
   }
 
   inline ArenaCellSet*& bufferedCells();
