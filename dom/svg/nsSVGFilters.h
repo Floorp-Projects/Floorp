@@ -171,22 +171,25 @@ class SVGFEUnstyledElement : public SVGFEUnstyledElementBase {
                                          nsAtom* aAttribute) const = 0;
 };
 
+namespace mozilla {
+namespace dom {
+
 //------------------------------------------------------------
 
-typedef nsSVGFE nsSVGFELightingElementBase;
+typedef nsSVGFE SVGFELightingElementBase;
 
-class nsSVGFELightingElement : public nsSVGFELightingElementBase {
+class SVGFELightingElement : public SVGFELightingElementBase {
  protected:
-  explicit nsSVGFELightingElement(
+  explicit SVGFELightingElement(
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
-      : nsSVGFELightingElementBase(std::move(aNodeInfo)) {}
+      : SVGFELightingElementBase(std::move(aNodeInfo)) {}
 
-  virtual ~nsSVGFELightingElement() {}
+  virtual ~SVGFELightingElement() {}
 
  public:
   // interfaces:
-  NS_INLINE_DECL_REFCOUNTING_INHERITED(nsSVGFELightingElement,
-                                       nsSVGFELightingElementBase)
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(SVGFELightingElement,
+                                       SVGFELightingElementBase)
 
   virtual bool AttributeAffectsRendering(int32_t aNameSpaceID,
                                          nsAtom* aAttribute) const override;
@@ -231,9 +234,6 @@ class nsSVGFELightingElement : public nsSVGFELightingElementBase {
   nsSVGString mStringAttributes[2];
   static StringInfo sStringInfo[2];
 };
-
-namespace mozilla {
-namespace dom {
 
 typedef SVGFEUnstyledElement SVGFELightElementBase;
 
