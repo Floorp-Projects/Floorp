@@ -31,8 +31,8 @@ NS_INTERFACE_MAP_BEGIN(CSSPageRuleDeclaration)
   if (aIID.Equals(NS_GET_IID(nsCycleCollectionISupports)) ||
       aIID.Equals(NS_GET_IID(nsXPCOMCycleCollectionParticipant))) {
     return Rule()->QueryInterface(aIID, aInstancePtr);
-  } else
-    NS_IMPL_QUERY_TAIL_INHERITING(nsDOMCSSDeclaration)
+  }
+NS_INTERFACE_MAP_END_INHERITING(nsDOMCSSDeclaration)
 
   NS_IMPL_ADDREF_USING_AGGREGATOR(CSSPageRuleDeclaration, Rule())
   NS_IMPL_RELEASE_USING_AGGREGATOR(CSSPageRuleDeclaration, Rule())
