@@ -191,7 +191,7 @@ nsresult XPCWrappedNative::WrapNewGlobal(xpcObjectHelper& nativeHelper,
   if (!global) {
     return NS_ERROR_FAILURE;
   }
-  XPCWrappedNativeScope* scope = RealmPrivate::Get(global)->scope;
+  XPCWrappedNativeScope* scope = CompartmentPrivate::Get(global)->scope;
 
   // Immediately enter the global's realm, so that everything else we
   // create ends up there.
@@ -350,7 +350,7 @@ nsresult XPCWrappedNative::GetNewOrUsed(xpcObjectHelper& helper,
                      getter_AddRefs(scrWrapper));
   }
 
-  RootedObject parent(cx, Scope->GetGlobalJSObject());
+  RootedObject parent(cx, Scope->GetGlobalForWrappedNatives());
 
   mozilla::Maybe<JSAutoRealm> ar;
 

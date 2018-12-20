@@ -1007,6 +1007,19 @@ JS_PUBLIC_API bool gc::RealmNeedsSweep(JS::Realm* realm) {
   return realm->globalIsAboutToBeFinalized();
 }
 
+JS_PUBLIC_API bool gc::AllRealmsNeedSweep(JS::Compartment* comp) {
+  MOZ_ASSERT(comp);
+  if (!comp->zone()->isGCSweeping()) {
+    return false;
+  }
+  for (Realm* r : comp->realms()) {
+    if (!gc::RealmNeedsSweep(r)) {
+      return false;
+    }
+  }
+  return true;
+}
+
 JS_PUBLIC_API JS::Realm* JS::GetCurrentRealmOrNull(JSContext* cx) {
   return cx->realm();
 }

@@ -3136,15 +3136,11 @@ bool CreateGlobalOptionsWithXPConnect::PostCreateGlobal(
       JS::GetRealmPrincipals(js::GetNonCCWObjectRealm(aGlobal));
   nsIPrincipal* principal = nsJSPrincipals::get(principals);
 
-  // We create the SiteIdentifier here instead of in the XPCWrappedNativeScope
-  // constructor because this is fallible.
   SiteIdentifier site;
   nsresult rv = BasePrincipal::Cast(principal)->GetSiteIdentifier(site);
   NS_ENSURE_SUCCESS(rv, false);
 
-  // Invoking the XPCWrappedNativeScope constructor automatically hooks it
-  // up to the realm of aGlobal.
-  (void)new XPCWrappedNativeScope(aCx, aGlobal, site);
+  xpc::RealmPrivate::Init(aGlobal, site);
   return true;
 }
 
