@@ -24,6 +24,9 @@ class SmartTrace extends Component {
       sourceMapService: PropTypes.object,
       initialRenderDelay: PropTypes.number,
       onSourceMapResultDebounceDelay: PropTypes.number,
+      // Function that will be called when the SmartTrace is ready, i.e. once it was
+      // rendered.
+      onReady: PropTypes.func,
     };
   }
 
@@ -83,6 +86,12 @@ class SmartTrace extends Component {
     }
   }
 
+  componentDidMount() {
+    if (this.props.onReady && this.state.ready) {
+      this.props.onReady();
+    }
+  }
+
   shouldComponentUpdate(_, nextState) {
     if (this.state.ready === false && nextState.ready === true) {
       return true;
@@ -93,6 +102,12 @@ class SmartTrace extends Component {
     }
 
     return false;
+  }
+
+  componentDidUpdate(_, previousState) {
+    if (this.props.onReady && !previousState.ready && this.state.ready) {
+      this.props.onReady();
+    }
   }
 
   componentWillUnmount() {
