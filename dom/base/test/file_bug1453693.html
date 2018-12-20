@@ -244,6 +244,19 @@
         var shadowInput2 = sr0.getElementById("shadowInput2");
         shadowInput2.onfocus = focusLogger;
 
+        var host1 = document.createElement("div");
+        host1.id = "host";
+        host1.tabIndex = 0;
+        host1.setAttribute("style", "display: contents; border: 1px solid black;");
+        document.body.appendChild(host1);
+
+        var sr1 = host1.attachShadow({mode: "open"});
+        sr1.innerHTML = "<input id='shadowInput1'><input id='shadowInput2'>";
+        var shadowInput3 = sr1.getElementById("shadowInput1");
+        shadowInput3.onfocus = focusLogger;
+        var shadowInput4 = sr1.getElementById("shadowInput2");
+        shadowInput4.onfocus = focusLogger;
+
         document.body.offsetLeft;
 
         synthesizeKey("KEY_Tab");
@@ -252,15 +265,28 @@
         synthesizeKey("KEY_Tab");
         opener.is(lastFocusTarget, shadowInput2, "Should have focused input element. (2)");
 
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, shadowInput3, "Should have focused input element. (3)");
+
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, shadowInput4, "Should have focused input element. (4)");
+
         // Backwards
         synthesizeKey("KEY_Tab", {shiftKey: true});
-        opener.is(lastFocusTarget, shadowInput1, "Should have focused input element. (3)");
+        opener.is(lastFocusTarget, shadowInput3, "Should have focused input element. (5)");
+
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(lastFocusTarget, shadowInput2, "Should have focused input element. (6)");
+
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(lastFocusTarget, shadowInput1, "Should have focused input element. (7)");
 
         // Back to beginning, outside of Shadow DOM.
         synthesizeKey("KEY_Tab", {shiftKey: true});
         opener.is(document.activeElement, document.body.firstChild, "body's first child should have focus. (2)");
 
         host.remove();
+        host1.remove();
       }
 
       function testTabbingThroughLightDOMShadowDOMLightDOM() {
