@@ -55,18 +55,6 @@ const TEST_DATA = [
     ],
   },
   {
-    targetClass: "delay-negative",
-    expectedIterationPathList: [
-      [
-        { x: 0, y: 0 },
-        { x: 0, y: 50 },
-        { x: 250000, y: 75 },
-        { x: 500000, y: 100 },
-        { x: 500000, y: 0 },
-      ],
-    ],
-  },
-  {
     targetClass: "easing-step",
     expectedIterationPathList: [
       [
@@ -127,8 +115,6 @@ const TEST_DATA = [
     expectedForwardsPath: [
       { x: 1500000, y: 0 },
       { x: 1500000, y: 100 },
-      { x: 2000000, y: 100 },
-      { x: 2000000, y: 0 },
     ],
   },
   {
@@ -146,9 +132,6 @@ const TEST_DATA = [
         { x: 1000000, y: 0 },
         { x: 1250000, y: 25 },
         { x: 1500000, y: 50 },
-        { x: 1750000, y: 75 },
-        { x: 2000000, y: 100 },
-        { x: 2000000, y: 0 },
       ],
     ],
     isInfinity: true,
@@ -169,8 +152,6 @@ const TEST_DATA = [
         { x: 1000000, y: 100 },
         { x: 1250000, y: 75 },
         { x: 1500000, y: 50 },
-        { x: 1750000, y: 25 },
-        { x: 2000000, y: 0 },
       ],
     ],
     isInfinity: true,
@@ -190,9 +171,6 @@ const TEST_DATA = [
         { x: 1000000, y: 0 },
         { x: 1250000, y: 25 },
         { x: 1500000, y: 50 },
-        { x: 1750000, y: 75 },
-        { x: 2000000, y: 100 },
-        { x: 2000000, y: 0 },
       ],
     ],
     isInfinity: true,
@@ -213,8 +191,6 @@ const TEST_DATA = [
         { x: 1000000, y: 100 },
         { x: 1250000, y: 75 },
         { x: 1500000, y: 50 },
-        { x: 1750000, y: 25 },
-        { x: 2000000, y: 0 },
       ],
     ],
     isInfinity: true,
@@ -270,8 +246,8 @@ const TEST_DATA = [
     expectedForwardsPath: [
       { x: 1000000, y: 0 },
       { x: 1000000, y: 100 },
-      { x: 2000000, y: 100 },
-      { x: 2000000, y: 0 },
+      { x: 1500000, y: 100 },
+      { x: 1500000, y: 0 },
     ],
   },
   {
@@ -316,8 +292,8 @@ const TEST_DATA = [
     expectedForwardsPath: [
       { x: 1000000, y: 0 },
       { x: 1000000, y: 100 },
-      { x: 2000000, y: 100 },
-      { x: 2000000, y: 0 },
+      { x: 1500000, y: 100 },
+      { x: 1500000, y: 0 },
     ],
   },
   {
