@@ -2011,14 +2011,15 @@ void CompositorBridgeParent::DidComposite(const VsyncId& aId,
   }
 }
 
-void CompositorBridgeParent::NotifyDidSceneBuild() {
+void CompositorBridgeParent::NotifyDidSceneBuild(
+    RefPtr<wr::WebRenderPipelineInfo> aInfo) {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   if (mPaused) {
     return;
   }
 
   if (mWrBridge) {
-    mWrBridge->NotifyDidSceneBuild();
+    mWrBridge->NotifyDidSceneBuild(aInfo);
   } else {
     mCompositorScheduler->ScheduleComposition();
   }

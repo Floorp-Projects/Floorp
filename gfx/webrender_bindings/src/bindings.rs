@@ -542,7 +542,8 @@ extern "C" {
     fn wr_notifier_nop_frame_done(window_id: WrWindowId);
     fn wr_notifier_external_event(window_id: WrWindowId,
                                   raw_event: usize);
-    fn wr_finished_scene_build(window_id: WrWindowId);
+    fn wr_schedule_render(window_id: WrWindowId);
+    fn wr_finished_scene_build(window_id: WrWindowId, pipeline_info: WrPipelineInfo);
 
     fn wr_transaction_notification_notified(handler: usize, when: Checkpoint);
 }
@@ -683,11 +684,11 @@ pub struct WrPipelineEpoch {
     epoch: WrEpoch,
 }
 
-impl From<(WrPipelineId, WrEpoch)> for WrPipelineEpoch {
-    fn from(tuple: (WrPipelineId, WrEpoch)) -> WrPipelineEpoch {
+impl<'a> From<(&'a WrPipelineId, &'a WrEpoch)> for WrPipelineEpoch {
+    fn from(tuple: (&WrPipelineId, &WrEpoch)) -> WrPipelineEpoch {
         WrPipelineEpoch {
-            pipeline_id: tuple.0,
-            epoch: tuple.1
+            pipeline_id: *tuple.0,
+            epoch: *tuple.1
         }
     }
 }
@@ -709,10 +710,10 @@ pub struct WrPipelineInfo {
 }
 
 impl WrPipelineInfo {
-    fn new(info: PipelineInfo) -> Self {
+    fn new(info: &PipelineInfo) -> Self {
         WrPipelineInfo {
-            epochs: FfiVec::from_vec(info.epochs.into_iter().map(WrPipelineEpoch::from).collect()),
-            removed_pipelines: FfiVec::from_vec(info.removed_pipelines),
+            epochs: FfiVec::from_vec(info.epochs.iter().map(WrPipelineEpoch::from).collect()),
+            removed_pipelines: FfiVec::from_vec(info.removed_pipelines.clone()),
         }
     }
 }
@@ -720,7 +721,7 @@ impl WrPipelineInfo {
 #[no_mangle]
 pub unsafe extern "C" fn wr_renderer_flush_pipeline_info(renderer: &mut Renderer) -> WrPipelineInfo {
     let info = renderer.flush_pipeline_info();
-    WrPipelineInfo::new(info)
+    WrPipelineInfo::new(&info)
 }
 
 /// cbindgen:postfix=WR_DESTRUCTOR_SAFE_FUNC
@@ -783,21 +784,22 @@ impl SceneBuilderHooks for APZCallbacks {
     }
 
     fn post_scene_swap(&self, info: PipelineInfo, sceneswap_time: u64) {
-        let info = WrPipelineInfo::new(info);
         unsafe {
+            let info = WrPipelineInfo::new(&info);
             record_telemetry_time(TelemetryProbe::SceneSwapTime, sceneswap_time);
             apz_post_scene_swap(self.window_id, info);
         }
+        let info = WrPipelineInfo::new(&info);
 
         // After a scene swap we should schedule a render for the next vsync,
         // otherwise there's no guarantee that the new scene will get rendered
         // anytime soon
-        unsafe { wr_finished_scene_build(self.window_id) }
+        unsafe { wr_finished_scene_build(self.window_id, info) }
         unsafe { gecko_profiler_end_marker(b"SceneBuilding\0".as_ptr() as *const c_char); }
     }
 
     fn post_resource_update(&self) {
-        unsafe { wr_finished_scene_build(self.window_id) }
+        unsafe { wr_schedule_render(self.window_id) }
         unsafe { gecko_profiler_end_marker(b"SceneBuilding\0".as_ptr() as *const c_char); }
     }
 
