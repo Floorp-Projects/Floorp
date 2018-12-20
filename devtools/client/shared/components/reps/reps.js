@@ -3681,7 +3681,7 @@ function getClosestNonBucketNode(item) {
   return getClosestNonBucketNode(parent);
 }
 
-function getParentGripValue(item) {
+function getNonPrototypeParentGripValue(item) {
   const parentNode = getParent(item);
   if (!parentNode) {
     return null;
@@ -3690,6 +3690,10 @@ function getParentGripValue(item) {
   const parentGripNode = getClosestGripNode(parentNode);
   if (!parentGripNode) {
     return null;
+  }
+
+  if (getType(parentGripNode) === NODE_TYPES.PROTOTYPE) {
+    return getNonPrototypeParentGripValue(parentGripNode);
   }
 
   return getValue(parentGripNode);
@@ -3705,7 +3709,7 @@ module.exports = {
   getClosestGripNode,
   getClosestNonBucketNode,
   getParent,
-  getParentGripValue,
+  getNonPrototypeParentGripValue,
   getNumericalPropertiesCount,
   getValue,
   makeNodesForEntries,
@@ -6964,7 +6968,7 @@ const {
   nodeIsLongString,
   nodeHasFullText,
   nodeHasGetter,
-  getParentGripValue
+  getNonPrototypeParentGripValue
 } = Utils.node;
 
 class ObjectInspectorItem extends Component {
@@ -7038,7 +7042,7 @@ class ObjectInspectorItem extends Component {
       }
 
       if (nodeHasGetter(item)) {
-        const parentGrip = getParentGripValue(item);
+        const parentGrip = getNonPrototypeParentGripValue(item);
         if (parentGrip) {
           Object.assign(repProps, {
             onInvokeGetterButtonClick: () => this.props.invokeGetter(item, parentGrip, item.name)
