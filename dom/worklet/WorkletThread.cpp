@@ -174,16 +174,21 @@ class WorkletThread::PrimaryRunnable final : public Runnable {
         mWorkletThread(aWorkletThread) {
     MOZ_ASSERT(aWorkletThread);
     MOZ_ASSERT(NS_IsMainThread());
+
+    mParentRuntime =
+        JS_GetParentRuntime(CycleCollectedJSContext::Get()->Context());
+    MOZ_ASSERT(mParentRuntime);
   }
 
   NS_IMETHOD
   Run() override {
-    mWorkletThread->RunEventLoop();
+    mWorkletThread->RunEventLoop(mParentRuntime);
     return NS_OK;
   }
 
  private:
   RefPtr<WorkletThread> mWorkletThread;
+  JSRuntime* mParentRuntime;
 };
 
 // This is the last runnable to be dispatched. It calls the TerminateInternal()
@@ -266,14 +271,12 @@ WorkletThread::DelayedDispatch(already_AddRefed<nsIRunnable>, uint32_t aFlags) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* static */ void WorkletThread::EnsureCycleCollectedJSContext(
-    JSRuntime* aParentRuntime) {
-  if (CycleCollectedJSContext* ccjscx = CycleCollectedJSContext::Get()) {
-    MOZ_ASSERT(ccjscx->GetAsWorkletJSContext());
-    return;
-  }
+void WorkletThread::RunEventLoop(JSRuntime* aParentRuntime) {
+  MOZ_ASSERT(!NS_IsMainThread());
 
-  WorkletJSContext* context = new WorkletJSContext();
+  PR_SetCurrentThreadName("worklet");
+
+  auto context = MakeUnique<WorkletJSContext>();
   nsresult rv = context->Initialize(aParentRuntime);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     // TODO: error propagation
@@ -294,18 +297,10 @@ WorkletThread::DelayedDispatch(already_AddRefed<nsIRunnable>, uint32_t aFlags) {
     // TODO: error propagation
     return;
   }
-}
-
-void WorkletThread::RunEventLoop() {
-  MOZ_ASSERT(!NS_IsMainThread());
-
-  PR_SetCurrentThreadName("worklet");
 
   while (!mExitLoop) {
     MOZ_ALWAYS_TRUE(NS_ProcessNextEvent(this, /* wait: */ true));
   }
-
-  DeleteCycleCollectedJSContext();
 }
 
 void WorkletThread::Terminate() {
@@ -333,17 +328,6 @@ void WorkletThread::TerminateInternal() {
   nsCOMPtr<nsIRunnable> runnable = NewRunnableMethod(
       "WorkletThread::Shutdown", this, &WorkletThread::Shutdown);
   NS_DispatchToMainThread(runnable);
-}
-
-/* static */ void WorkletThread::DeleteCycleCollectedJSContext() {
-  CycleCollectedJSContext* ccjscx = CycleCollectedJSContext::Get();
-  if (!ccjscx) {
-    return;
-  }
-
-  WorkletJSContext* workletjscx = ccjscx->GetAsWorkletJSContext();
-  MOZ_ASSERT(workletjscx);
-  delete workletjscx;
 }
 
 /* static */ bool WorkletThread::IsOnWorkletThread() {
