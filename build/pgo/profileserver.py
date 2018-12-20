@@ -91,6 +91,9 @@ if __name__ == '__main__':
                     env['PATH'] = '%s;%s' % (vcdir, env['PATH'])
                     break
 
+        # Add MOZ_OBJDIR to the env so that cygprofile.cpp can use it.
+        env["MOZ_OBJDIR"] = build.topobjdir
+
         # Run Firefox a first time to initialize its profile
         runner = FirefoxRunner(profile=profile,
                                binary=binary,
