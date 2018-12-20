@@ -39,11 +39,15 @@ window.onload = function() {
       },
     ];
 
+    let onReadyCount = 0;
     const props = {
       stacktrace,
       initialRenderDelay: 2000,
       onViewSourceInDebugger: () => {},
       onViewSourceInScratchpad: () => {},
+      onReady: () => {
+        onReadyCount++;
+      },
       // A mock source map service.
       sourceMapService: {
 	      subscribe: function (url, line, column, callback) {
@@ -79,6 +83,8 @@ window.onload = function() {
       location: "original.js:22",
       tooltip: "View source in Debugger → https://bugzilla.mozilla.org/original.js:22",
     });
+
+    is(onReadyCount, 1, "onReady was called once");
   });
 
   add_task(async function testSlowSourcemapService() {
@@ -99,12 +105,16 @@ window.onload = function() {
 
     const sourcemapTimeout = 2000;
     const initialRenderDelay = 300;
+    let onReadyCount = 0;
 
     const props = {
       stacktrace,
       initialRenderDelay,
       onViewSourceInDebugger: () => {},
       onViewSourceInScratchpad: () => {},
+      onReady: () => {
+        onReadyCount++;
+      },
       // A mock source map service.
       sourceMapService: {
 	      subscribe: function (url, line, column, callback) {
@@ -123,6 +133,7 @@ window.onload = function() {
 
     let traceEl = ReactDOM.findDOMNode(trace);
     ok(!traceEl, "Nothing was rendered at first");
+    is(onReadyCount, 0, "onReady isn't called if SmartTrace isn't rendered");
 
     info("Wait for the initial delay to be over");
     await new Promise(res => setTimeout(res, initialRenderDelay));
@@ -149,6 +160,8 @@ window.onload = function() {
       tooltip: "View source in Debugger → http://myfile.com/bundle.js:2",
     });
 
+    is(onReadyCount, 1, "onReady was called once");
+
     info("Check the the sourcemapped version is rendered after the sourcemapTimeout");
     await waitFor(() => !!traceEl.querySelector(".group"));
 
@@ -158,6 +171,8 @@ window.onload = function() {
     const groups = Array.from(traceEl.querySelectorAll(".group"));
     is(groups.length, 1, "SmartTrace has a group");
     is(groups[0].textContent, "last2React", "A collapsed React group is displayed");
+
+    is(onReadyCount, 1, "onReady was only called once");
   });
 
   add_task(async function testFlakySourcemapService() {
@@ -184,6 +199,7 @@ window.onload = function() {
 
     const initialRenderDelay = 300;
     const onSourceMapResultDebounceDelay = 50;
+    let onReadyCount = 0;
 
     const props = {
       stacktrace,
@@ -191,6 +207,9 @@ window.onload = function() {
       onSourceMapResultDebounceDelay,
       onViewSourceInDebugger: () => {},
       onViewSourceInScratchpad: () => {},
+      onReady: () => {
+        onReadyCount++;
+      },
       // A mock source map service.
       sourceMapService: {
 	      subscribe: function (url, line, column, callback) {
@@ -212,6 +231,7 @@ window.onload = function() {
 
     let traceEl = ReactDOM.findDOMNode(trace);
     ok(!traceEl, "Nothing was rendered at first");
+    is(onReadyCount, 0, "onReady isn't called if SmartTrace isn't rendered");
 
     info("Wait for the initial delay + debounce to be over");
     await waitFor(() => {
@@ -224,7 +244,7 @@ window.onload = function() {
 
     let frameEls = Array.from(traceEl.querySelectorAll(".frame"));
     ok(frameEls, "Rendered SmartTrace has frames");
-    is(frameEls.length, 3, "SmartTrace has 2 frames");
+    is(frameEls.length, 3, "SmartTrace has 3 frames");
 
     info("Check that the original frames are displayed even if there's no sourcemap " +
       "response for some frames");
@@ -248,6 +268,8 @@ window.onload = function() {
       location: "file-3.js:33",
       tooltip: "View source in Debugger → http://myfile.com/file-3.js:33",
     });
+
+    is(onReadyCount, 1, "onReady was only called once");
   });
 
 };
