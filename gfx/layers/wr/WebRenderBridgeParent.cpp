@@ -1848,7 +1848,9 @@ void WebRenderBridgeParent::NotifySceneBuiltForEpoch(
   }
 }
 
-void WebRenderBridgeParent::NotifyDidSceneBuild() {
+void WebRenderBridgeParent::NotifyDidSceneBuild(
+    RefPtr<wr::WebRenderPipelineInfo> aInfo) {
+  MOZ_ASSERT(IsRootWebRenderBridgeParent());
   if (!mCompositorScheduler) {
     return;
   }
@@ -1859,13 +1861,39 @@ void WebRenderBridgeParent::NotifyDidSceneBuild() {
   // we missed), and we're within the threshold ms of the last vsync, then
   // kick of a late composite.
   TimeStamp lastVsync = mCompositorScheduler->GetLastVsyncTime();
-  if (mMostRecentComposite && mMostRecentComposite < lastVsync &&
-      ((TimeStamp::Now() - lastVsync).ToMilliseconds() <
+  VsyncId lastVsyncId = mCompositorScheduler->GetLastVsyncId();
+  if (lastVsyncId == VsyncId() || !mMostRecentComposite ||
+      mMostRecentComposite >= lastVsync ||
+      ((TimeStamp::Now() - lastVsync).ToMilliseconds() >
        gfxPrefs::WebRenderLateSceneBuildThreshold())) {
-    CompositeToTarget(mCompositorScheduler->GetLastVsyncId(), nullptr, nullptr);
-  } else {
     mCompositorScheduler->ScheduleComposition();
+    return;
   }
+
+  // Look through all the pipelines contained within the built scene
+  // and check which vsync they initiated from.
+  auto info = aInfo->Raw();
+  for (uintptr_t i = 0; i < info.epochs.length; i++) {
+    auto epoch = info.epochs.data[i];
+
+    WebRenderBridgeParent* wrBridge = this;
+    if (!(epoch.pipeline_id == PipelineId())) {
+      wrBridge = mAsyncImageManager->GetWrBridge(epoch.pipeline_id);
+    }
+
+    if (wrBridge) {
+      VsyncId startId = wrBridge->GetVsyncIdForEpoch(epoch.epoch);
+      // If any of the pipelines started building on the current vsync (i.e
+      // we did all of display list building and scene building within the
+      // threshold), then don't do an early composite.
+      if (startId == lastVsyncId) {
+        mCompositorScheduler->ScheduleComposition();
+        return;
+      }
+    }
+  }
+
+  CompositeToTarget(mCompositorScheduler->GetLastVsyncId(), nullptr, nullptr);
 }
 
 TransactionId WebRenderBridgeParent::FlushTransactionIdsForEpoch(
