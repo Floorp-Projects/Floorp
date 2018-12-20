@@ -1625,6 +1625,8 @@ uintptr_t wr_dump_display_list(WrState *aState,
                                const uintptr_t *aEnd)
 WR_FUNC;
 
+extern void wr_finished_scene_build(WrWindowId aWindowId);
+
 extern bool wr_moz2d_render_cb(ByteSlice aBlob,
                                int32_t aWidth,
                                int32_t aHeight,

@@ -1815,6 +1815,7 @@ void WebRenderBridgeParent::MaybeGenerateFrame(VsyncId aId,
   fastTxn.GenerateFrame();
 
   mApi->SendTransaction(fastTxn);
+  mMostRecentComposite = TimeStamp::Now();
 }
 
 void WebRenderBridgeParent::HoldPendingTransactionId(
@@ -1844,6 +1845,26 @@ void WebRenderBridgeParent::NotifySceneBuiltForEpoch(
       id.mSceneBuiltTime = aEndTime;
       break;
     }
+  }
+}
+
+void WebRenderBridgeParent::NotifyDidSceneBuild() {
+  if (!mCompositorScheduler) {
+    return;
+  }
+
+  mAsyncImageManager->SetWillGenerateFrame();
+
+  // If the scheduler has a composite more recent than our last composite (which
+  // we missed), and we're within the threshold ms of the last vsync, then
+  // kick of a late composite.
+  TimeStamp lastVsync = mCompositorScheduler->GetLastVsyncTime();
+  if (mMostRecentComposite && mMostRecentComposite < lastVsync &&
+      ((TimeStamp::Now() - lastVsync).ToMilliseconds() <
+       gfxPrefs::WebRenderLateSceneBuildThreshold())) {
+    CompositeToTarget(mCompositorScheduler->GetLastVsyncId(), nullptr, nullptr);
+  } else {
+    mCompositorScheduler->ScheduleComposition();
   }
 }
 

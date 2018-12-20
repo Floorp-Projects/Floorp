@@ -2011,6 +2011,19 @@ void CompositorBridgeParent::DidComposite(const VsyncId& aId,
   }
 }
 
+void CompositorBridgeParent::NotifyDidSceneBuild() {
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
+  if (mPaused) {
+    return;
+  }
+
+  if (mWrBridge) {
+    mWrBridge->NotifyDidSceneBuild();
+  } else {
+    mCompositorScheduler->ScheduleComposition();
+  }
+}
+
 void CompositorBridgeParent::NotifyPipelineRendered(
     const wr::PipelineId& aPipelineId, const wr::Epoch& aEpoch,
     const VsyncId& aCompositeStartId, TimeStamp& aCompositeStart,
