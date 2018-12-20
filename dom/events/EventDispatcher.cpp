@@ -330,6 +330,10 @@ class EventTargetChainItem {
     if (aVisitor.mEvent->PropagationStopped()) {
       return;
     }
+    if (aVisitor.mEvent->mFlags.mOnlySystemGroupDispatch &&
+        !aVisitor.mEvent->mFlags.mInSystemGroup) {
+      return;
+    }
     if (aVisitor.mEvent->mFlags.mOnlySystemGroupDispatchInContent &&
         !aVisitor.mEvent->mFlags.mInSystemGroup && !IsCurrentTargetChrome()) {
       return;
