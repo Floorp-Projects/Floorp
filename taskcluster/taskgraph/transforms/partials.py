@@ -7,7 +7,7 @@ Transform the partials task into an actual task description.
 from __future__ import absolute_import, print_function, unicode_literals
 
 from taskgraph.transforms.base import TransformSequence
-from taskgraph.util.attributes import copy_attributes_from_dependent_jobf
+from taskgraph.util.attributes import copy_attributes_from_dependent_job
 from taskgraph.util.partials import get_balrog_platform_name, get_builds
 from taskgraph.util.taskcluster import get_artifact_prefix
 from taskgraph.util.platforms import architecture
