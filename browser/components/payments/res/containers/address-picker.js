@@ -6,6 +6,7 @@ import AddressForm from "./address-form.js";
 import AddressOption from "../components/address-option.js";
 import RichPicker from "./rich-picker.js";
 import paymentRequest from "../paymentRequest.js";
+import HandleEventMixin from "../mixins/HandleEventMixin.js";
 
 /**
  * <address-picker></address-picker>
@@ -13,7 +14,7 @@ import paymentRequest from "../paymentRequest.js";
  * <address-option> listening to savedAddresses & tempAddresses.
  */
 
-export default class AddressPicker extends RichPicker {
+export default class AddressPicker extends HandleEventMixin(RichPicker) {
   static get pickerAttributes() {
     return [
       "address-fields",
@@ -195,18 +196,6 @@ export default class AddressPicker extends RichPicker {
     return Object.values(merchantFieldErrors).find(msg => {
       return typeof(msg) == "string" && msg.length;
     }) || "";
-  }
-
-  handleEvent(event) {
-    switch (event.type) {
-      case "change": {
-        this.onChange(event);
-        break;
-      }
-      case "click": {
-        this.onClick(event);
-      }
-    }
   }
 
   onChange(event) {
