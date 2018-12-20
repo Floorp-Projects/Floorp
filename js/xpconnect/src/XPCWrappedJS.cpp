@@ -68,10 +68,6 @@ bool nsXPCWrappedJS::CanSkip() {
   if (obj && JS::ObjectIsMarkedGray(obj)) {
     return false;
   }
-  JSObject* global = GetJSObjectGlobalPreserveColor();
-  if (global && JS::ObjectIsMarkedGray(global)) {
-    return false;
-  }
 
   // For non-root wrappers, check if the root wrapper will be
   // added to the CC graph.
@@ -133,8 +129,6 @@ NS_CYCLE_COLLECTION_CLASSNAME(nsXPCWrappedJS)::TraverseNative(
     MOZ_ASSERT(refcnt > 1);
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mJSObj");
     cb.NoteJSChild(JS::GCCellPtr(tmp->GetJSObjectPreserveColor()));
-    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mJSObjGlobal");
-    cb.NoteJSChild(JS::GCCellPtr(tmp->GetJSObjectGlobalPreserveColor()));
   }
 
   if (tmp->IsRootWrapper()) {
@@ -307,7 +301,6 @@ nsXPCWrappedJS::DeleteCycleCollectable(void) { delete this; }
 void nsXPCWrappedJS::TraceJS(JSTracer* trc) {
   MOZ_ASSERT(mRefCnt >= 2 && IsValid(), "must be strongly referenced");
   JS::TraceEdge(trc, &mJSObj, "nsXPCWrappedJS::mJSObj");
-  JS::TraceEdge(trc, &mJSObjGlobal, "nsXPCWrappedJS::mJSObjGlobal");
 }
 
 NS_IMETHODIMP
@@ -321,7 +314,14 @@ nsXPCWrappedJS::GetWeakReference(nsIWeakReference** aInstancePtr) {
 
 JSObject* nsXPCWrappedJS::GetJSObject() { return mJSObj; }
 
-JSObject* nsXPCWrappedJS::GetJSObjectGlobal() { return mJSObjGlobal; }
+JSObject* nsXPCWrappedJS::GetJSObjectGlobal() {
+  JSObject* obj = mJSObj;
+  if (js::IsCrossCompartmentWrapper(obj)) {
+    JS::Compartment* comp = js::GetObjectCompartment(obj);
+    return js::GetFirstGlobalInCompartment(comp);
+  }
+  return JS::GetNonCCWObjectGlobal(obj);
+}
 
 // static
 nsresult nsXPCWrappedJS::GetNewOrUsed(JSContext* cx, JS::HandleObject jsObj,
@@ -376,18 +376,14 @@ nsresult nsXPCWrappedJS::GetNewOrUsed(JSContext* cx, JS::HandleObject jsObj,
       return NS_ERROR_FAILURE;
     }
 
-    // Note: rootJSObj is never a CCW because GetRootJSObject unwraps. We
-    // also rely on this in nsXPCWrappedJS::UpdateObjectPointerAfterGC.
-    RootedObject global(cx, JS::GetNonCCWObjectGlobal(rootJSObj));
-    root = new nsXPCWrappedJS(cx, rootJSObj, global, rootClasp, nullptr, &rv);
+    root = new nsXPCWrappedJS(cx, rootJSObj, rootClasp, nullptr, &rv);
     if (NS_FAILED(rv)) {
       return rv;
     }
   }
 
-  RootedObject global(cx, JS::CurrentGlobalOrNull(cx));
   RefPtr<nsXPCWrappedJS> wrapper =
-      new nsXPCWrappedJS(cx, jsObj, global, clasp, root, &rv);
+      new nsXPCWrappedJS(cx, jsObj, clasp, root, &rv);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -396,18 +392,12 @@ nsresult nsXPCWrappedJS::GetNewOrUsed(JSContext* cx, JS::HandleObject jsObj,
 }
 
 nsXPCWrappedJS::nsXPCWrappedJS(JSContext* cx, JSObject* aJSObj,
-                               JSObject* aJSObjGlobal,
                                nsXPCWrappedJSClass* aClass,
                                nsXPCWrappedJS* root, nsresult* rv)
     : mJSObj(aJSObj),
-      mJSObjGlobal(aJSObjGlobal),
       mClass(aClass),
       mRoot(root ? root : this),
       mNext(nullptr) {
-  MOZ_ASSERT(JS_IsGlobalObject(aJSObjGlobal));
-  MOZ_RELEASE_ASSERT(js::GetObjectCompartment(aJSObj) ==
-                     js::GetObjectCompartment(aJSObjGlobal));
-
   *rv = InitStub(GetClass()->GetIID());
   // Continue even in the failure case, so that our refcounting/Destroy
   // behavior works correctly.
@@ -518,7 +508,6 @@ void nsXPCWrappedJS::Unlink() {
     }
 
     mJSObj = nullptr;
-    mJSObjGlobal = nullptr;
   }
 
   if (IsRootWrapper()) {
@@ -647,7 +636,6 @@ void nsXPCWrappedJS::SystemIsBeingShutDown() {
   // if we are not currently running an incremental GC.
   MOZ_ASSERT(!IsIncrementalGCInProgress(xpc_GetSafeJSContext()));
   *mJSObj.unsafeGet() = nullptr;
-  *mJSObjGlobal.unsafeGet() = nullptr;
 
   // Notify other wrappers in the chain.
   if (mNext) {

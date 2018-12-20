@@ -1163,6 +1163,12 @@ JS_FRIEND_API JS::Realm* js::GetAnyRealmInZone(JS::Zone* zone) {
   return realm.get();
 }
 
+JS_FRIEND_API JSObject* js::GetFirstGlobalInCompartment(JS::Compartment* comp) {
+  JSObject* global = comp->firstRealm()->maybeGlobal();
+  MOZ_ASSERT(global);
+  return global;
+}
+
 void JS::ObjectPtr::finalize(JSRuntime* rt) {
   if (IsIncrementalBarrierNeeded(rt->mainContextFromOwnThread())) {
     IncrementalPreWriteBarrier(value);

@@ -1753,10 +1753,6 @@ class nsXPCWrappedJS final : protected nsAutoXPTCStub,
    */
   JSObject* GetJSObjectPreserveColor() const { return mJSObj.unbarrieredGet(); }
 
-  JSObject* GetJSObjectGlobalPreserveColor() const {
-    return mJSObjGlobal.unbarrieredGet();
-  }
-
   // Returns true if the wrapper chain contains references to multiple
   // compartments. If the wrapper chain contains references to multiple
   // compartments, then it must be registered on the XPCJSContext. Otherwise,
@@ -1792,11 +1788,6 @@ class nsXPCWrappedJS final : protected nsAutoXPTCStub,
   void UpdateObjectPointerAfterGC() {
     MOZ_ASSERT(IsRootWrapper());
     JS_UpdateWeakPointerAfterGC(&mJSObj);
-    JS_UpdateWeakPointerAfterGC(&mJSObjGlobal);
-    // Note: this is a root wrapper, so mJSObj is never a CCW. Therefore,
-    // if mJSObj is still alive, mJSObjGlobal must also still be alive,
-    // because marking a JSObject will also mark its global.
-    MOZ_ASSERT_IF(mJSObj, mJSObjGlobal);
   }
 
   bool IsAggregatedToNative() const { return mRoot->mOuter != nullptr; }
@@ -1819,9 +1810,8 @@ class nsXPCWrappedJS final : protected nsAutoXPTCStub,
 
  protected:
   nsXPCWrappedJS() = delete;
-  nsXPCWrappedJS(JSContext* cx, JSObject* aJSObj, JSObject* aJSObjGlobal,
-                 nsXPCWrappedJSClass* aClass, nsXPCWrappedJS* root,
-                 nsresult* rv);
+  nsXPCWrappedJS(JSContext* cx, JSObject* aJSObj, nsXPCWrappedJSClass* aClass,
+                 nsXPCWrappedJS* root, nsresult* rv);
 
   bool CanSkip();
   void Destroy();
@@ -1833,13 +1823,6 @@ class nsXPCWrappedJS final : protected nsAutoXPTCStub,
   }
 
   JS::Heap<JSObject*> mJSObj;
-  // A global object that must be same-compartment with mJSObj. This is the
-  // global/realm we enter when making calls into JS. Note that we cannot
-  // simply use mJSObj's global here because mJSObj might be a
-  // cross-compartment wrapper and CCWs are not associated with a single
-  // global. After removing in-content XBL, we no longer need this field
-  // because we can then assert against CCWs. See bug 1480121.
-  JS::Heap<JSObject*> mJSObjGlobal;
   RefPtr<nsXPCWrappedJSClass> mClass;
   nsXPCWrappedJS* mRoot;  // If mRoot != this, it is an owning pointer.
   nsXPCWrappedJS* mNext;
