@@ -242,7 +242,7 @@ class SessionLifecycleTest : BaseSessionTest() {
         // Enable navigation notifications on the new, closed session.
         var onLocationCount = 0
         sessionRule.session.navigationDelegate = object : Callbacks.NavigationDelegate {
-            override fun onLocationChange(session: GeckoSession, url: String) {
+            override fun onLocationChange(session: GeckoSession, url: String?) {
                 onLocationCount++
             }
         }
@@ -393,15 +393,15 @@ class SessionLifecycleTest : BaseSessionTest() {
     @Test fun restoreInstanceState_sameClosedSession() {
         val view = testRestoreInstanceState(mainSession, mainSession)
         assertThat("View session is unchanged", view.session, equalTo(mainSession))
-        assertThat("View session is closed", view.session.isOpen, equalTo(false))
+        assertThat("View session is closed", view.session!!.isOpen, equalTo(false))
     }
 
     @Test fun restoreInstanceState_sameOpenSession() {
         // We should keep the session open when restoring the same open session.
         val view = testRestoreInstanceState(mainSession, mainSession)
         assertThat("View session is unchanged", view.session, equalTo(mainSession))
-        assertThat("View session is open", view.session.isOpen, equalTo(true))
-        view.session.reload()
+        assertThat("View session is open", view.session!!.isOpen, equalTo(true))
+        view.session!!.reload()
         sessionRule.waitForPageStop()
     }
 

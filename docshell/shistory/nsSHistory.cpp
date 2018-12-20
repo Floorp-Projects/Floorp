@@ -1487,8 +1487,9 @@ nsresult nsSHistory::InitiateLoad(nsISHEntry* aFrameEntry,
   nsCOMPtr<nsIURI> newURI = aFrameEntry->GetURI();
   loadState->SetURI(newURI);
   loadState->SetLoadFlags(nsIWebNavigation::LOAD_FLAGS_NONE);
-  // TODO fix principal here in Bug 1508642
-  loadState->SetTriggeringPrincipal(nsContentUtils::GetSystemPrincipal());
+  nsCOMPtr<nsIPrincipal> triggeringPrincipal =
+      aFrameEntry->GetTriggeringPrincipal();
+  loadState->SetTriggeringPrincipal(triggeringPrincipal);
   loadState->SetFirstParty(false);
 
   // Time to initiate a document load

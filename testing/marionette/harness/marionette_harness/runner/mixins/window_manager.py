@@ -6,11 +6,13 @@ from __future__ import absolute_import
 
 import sys
 
-from marionette_driver import Wait
+from marionette_driver import By, Wait
 from six import reraise
 
 
 class WindowManagerMixin(object):
+
+    _menu_item_new_tab = (By.ID, "menu_newNavigatorTab")
 
     def setUp(self):
         super(WindowManagerMixin, self).setUp()
@@ -58,18 +60,15 @@ class WindowManagerMixin(object):
 
         self.marionette.switch_to_window(self.start_window)
 
-    def open_tab(self, callback=None, focus=False):
+    def open_tab(self, trigger="menu"):
         current_tabs = self.marionette.window_handles
 
         try:
-            if callable(callback):
-                callback()
-            else:
-                result = self.marionette.open(type="tab", focus=focus)
-                if result["type"] != "tab":
-                    raise Exception(
-                        "Newly opened browsing context is of type {} and not tab.".format(
-                            result["type"]))
+            if callable(trigger):
+                trigger()
+            elif trigger == 'menu':
+                with self.marionette.using_context("chrome"):
+                    self.marionette.find_element(*self._menu_item_new_tab).click()
         except Exception:
             exc, val, tb = sys.exc_info()
             reraise(exc, 'Failed to trigger opening a new tab: {}'.format(val), tb)
@@ -83,9 +82,8 @@ class WindowManagerMixin(object):
 
             return new_tab
 
-    def open_window(self, callback=None, focus=False):
+    def open_window(self, trigger=None):
         current_windows = self.marionette.chrome_window_handles
-        current_tabs = self.marionette.window_handles
 
         def loaded(handle):
             with self.marionette.using_context("chrome"):
@@ -97,14 +95,11 @@ class WindowManagerMixin(object):
                 """, script_args=[handle])
 
         try:
-            if callable(callback):
-                callback()
+            if callable(trigger):
+                trigger()
             else:
-                result = self.marionette.open(type="window", focus=focus)
-                if result["type"] != "window":
-                    raise Exception(
-                        "Newly opened browsing context is of type {} and not window.".format(
-                            result["type"]))
+                with self.marionette.using_context("chrome"):
+                    self.marionette.execute_script("OpenBrowserWindow();")
         except Exception:
             exc, val, tb = sys.exc_info()
             reraise(exc, 'Failed to trigger opening a new window: {}'.format(val), tb)
@@ -121,16 +116,9 @@ class WindowManagerMixin(object):
                 lambda _: loaded(new_window),
                 message="Window with handle '{}'' did not finish loading".format(new_window))
 
-            # Bug 1507771 - Return the correct handle based on the currently selected context
-            # as long as "WebDriver:NewWindow" is not handled separtely in chrome context
-            context = self.marionette._send_message("Marionette:GetContext", key="value")
-            if context == "chrome":
-                return new_window
-            elif context == "content":
-                [new_tab] = list(set(self.marionette.window_handles) - set(current_tabs))
-                return new_tab
+            return new_window
 
-    def open_chrome_window(self, url, focus=False):
+    def open_chrome_window(self, url):
         """Open a new chrome window with the specified chrome URL.
 
         Can be replaced with "WebDriver:NewWindow" once the command
@@ -178,5 +166,4 @@ class WindowManagerMixin(object):
                   })();
                 """, script_args=(url,))
 
-        with self.marionette.using_context("chrome"):
-            return self.open_window(callback=open_with_js, focus=focus)
+        return self.open_window(trigger=open_with_js)

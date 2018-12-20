@@ -67,6 +67,7 @@ class ConsoleOutput extends Component {
   constructor(props) {
     super(props);
     this.onContextMenu = this.onContextMenu.bind(this);
+    this.maybeScrollToBottom = this.maybeScrollToBottom.bind(this);
   }
 
   componentDidMount() {
@@ -125,7 +126,11 @@ class ConsoleOutput extends Component {
   }
 
   componentDidUpdate() {
-    if (this.shouldScrollBottom) {
+    this.maybeScrollToBottom();
+  }
+
+  maybeScrollToBottom() {
+    if (this.outputNode && this.shouldScrollBottom) {
       scrollToBottom(this.outputNode);
     }
   }
@@ -177,6 +182,7 @@ class ConsoleOutput extends Component {
       pausedExecutionPoint,
       getMessage: () => messages.get(messageId),
       isPaused: pausedMessage && pausedMessage.id == messageId,
+      maybeScrollToBottom: this.maybeScrollToBottom,
     }));
 
     return (

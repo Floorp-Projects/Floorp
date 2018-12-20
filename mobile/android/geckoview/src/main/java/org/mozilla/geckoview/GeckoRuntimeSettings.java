@@ -501,7 +501,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
      *
      * @return The Gecko process arguments.
      */
-    public String[] getArguments() {
+    public @NonNull String[] getArguments() {
         return mArgs;
     }
 
@@ -510,7 +510,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
      *
      * @return The Gecko intent extras.
      */
-    public Bundle getExtras() {
+    public @NonNull Bundle getExtras() {
         return mExtras;
     }
 
@@ -593,7 +593,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
      *
      * @return Returns a positive number. Will return null if not set.
      */
-    public Float getDisplayDensityOverride() {
+    public @Nullable Float getDisplayDensityOverride() {
         if (mDisplayDensityOverride > 0.0f) {
             return mDisplayDensityOverride;
         }
@@ -605,14 +605,14 @@ public final class GeckoRuntimeSettings implements Parcelable {
      *
      * @return Returns a positive number. Will return null if not set.
      */
-    public Integer getDisplayDpiOverride() {
+    public @Nullable Integer getDisplayDpiOverride() {
         if (mDisplayDpiOverride > 0) {
             return mDisplayDpiOverride;
         }
         return null;
     }
 
-    public Class<? extends Service> getCrashHandler() {
+    public @Nullable Class<? extends Service> getCrashHandler() {
         return mCrashHandler;
     }
 
@@ -622,7 +622,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
      * @return Returns a Rect containing the dimensions to use for the window size.
      * Will return null if not set.
      */
-    public Rect getScreenSizeOverride() {
+    public @Nullable Rect getScreenSizeOverride() {
         if ((mScreenWidthOverride > 0) && (mScreenHeightOverride > 0)) {
             return new Rect(0, 0, mScreenWidthOverride, mScreenHeightOverride);
         }
@@ -634,7 +634,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
      *
      * @return A list of locale codes in Gecko format ("en" or "en-US").
      */
-    public String[] getLocales() {
+    public @Nullable String[] getLocales() {
         return mRequestedLocales;
     }
 
@@ -643,7 +643,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
      *
      * @param requestedLocales An ordered list of locales in Gecko format ("en-US").
      */
-    public void setLocales(String[] requestedLocales) {
+    public void setLocales(@Nullable String[] requestedLocales) {
         mRequestedLocales = requestedLocales;
         flushLocales();
     }
@@ -877,7 +877,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
     }
 
     // AIDL code may call readFromParcel even though it's not part of Parcelable.
-    public void readFromParcel(final Parcel source) {
+    public void readFromParcel(final @NonNull Parcel source) {
         mUseContentProcess = ParcelableUtils.readBoolean(source);
         mArgs = source.createStringArray();
         mExtras.readFromParcel(source);

@@ -46,7 +46,7 @@ class ContentDelegateTest : BaseSessionTest() {
 
         sessionRule.waitUntilCalled(object : Callbacks.ContentDelegate {
             @AssertCalled(count = 2)
-            override fun onTitleChange(session: GeckoSession, title: String) {
+            override fun onTitleChange(session: GeckoSession, title: String?) {
                 assertThat("Title should match", title,
                            equalTo(forEachCall("Title1", "Title2")))
             }
@@ -187,7 +187,7 @@ class ContentDelegateTest : BaseSessionTest() {
 
         sessionRule.forCallbacksDuringWait(object : Callbacks.NavigationDelegate {
             @AssertCalled
-            override fun onLocationChange(session: GeckoSession, url: String) {
+            override fun onLocationChange(session: GeckoSession, url: String?) {
                 assertThat("URI should match", url, equalTo(startUri))
             }
         })

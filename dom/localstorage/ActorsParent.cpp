@@ -1964,9 +1964,9 @@ class LSRequestBase : public DatastoreOperationBase,
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
  private:
-  mozilla::ipc::IPCResult RecvCancel() override;
+  mozilla::ipc::IPCResult RecvCancel() final;
 
-  mozilla::ipc::IPCResult RecvFinish() override;
+  mozilla::ipc::IPCResult RecvFinish() final;
 };
 
 class PrepareDatastoreOp : public LSRequestBase, public OpenDirectoryListener {

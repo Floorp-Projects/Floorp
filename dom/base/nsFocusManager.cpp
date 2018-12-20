@@ -3008,9 +3008,9 @@ nsIContent* nsFocusManager::GetNextTabbableContentInScope(
   // is non-negative
   bool skipOwner = aSkipOwner || !aOwner->GetShadowRoot();
   if (!skipOwner && (aForward && aOwner == aStartContent)) {
-    int32_t tabIndex = 0;
-    aOwner->IsFocusable(&tabIndex);
-    if (tabIndex >= 0) {
+    int32_t tabIndex = -1;
+    nsIFrame* frame = aOwner->GetPrimaryFrame();
+    if (frame && frame->IsFocusable(&tabIndex, false) && tabIndex >= 0) {
       return aOwner;
     }
   }
@@ -3112,9 +3112,9 @@ nsIContent* nsFocusManager::GetNextTabbableContentInScope(
   // Return shadow host at last for backward navigation if its tabindex
   // is non-negative
   if (!skipOwner && !aForward) {
-    int32_t tabIndex = 0;
-    aOwner->IsFocusable(&tabIndex);
-    if (tabIndex >= 0) {
+    int32_t tabIndex = -1;
+    nsIFrame* frame = aOwner->GetPrimaryFrame();
+    if (frame && frame->IsFocusable(&tabIndex, false) && tabIndex >= 0) {
       return aOwner;
     }
   }
@@ -3226,59 +3226,82 @@ nsresult nsFocusManager::GetNextTabbableContent(
 
   bool getNextFrame = true;
   nsCOMPtr<nsIContent> iterStartContent = aStartContent;
+  // Iterate tab index to find corresponding contents
   while (1) {
-    nsIFrame* startFrame = iterStartContent->GetPrimaryFrame();
+    nsIFrame* frame = iterStartContent->GetPrimaryFrame();
     // if there is no frame, look for another content node that has a frame
-    if (!startFrame) {
+    while (!frame) {
       // if the root content doesn't have a frame, just return
-      if (iterStartContent == aRootContent) return NS_OK;
+      if (iterStartContent == aRootContent) {
+        return NS_OK;
+      }
 
       // look for the next or previous content node in tree order
       iterStartContent = aForward ? iterStartContent->GetNextNode()
                                   : iterStartContent->GetPreviousContent();
+      if (!iterStartContent) {
+        break;
+      }
+
+      frame = iterStartContent->GetPrimaryFrame();
+      // Host without frame, enter its scope.
+      if (!frame && iterStartContent->GetShadowRoot()) {
+        int32_t tabIndex = HostOrSlotTabIndexValue(iterStartContent);
+        if (tabIndex >= 0 &&
+            (aIgnoreTabIndex || aCurrentTabIndex == tabIndex)) {
+          nsIContent* contentToFocus = GetNextTabbableContentInScope(
+              iterStartContent, iterStartContent, aOriginalStartContent,
+              aForward, aForward ? 1 : 0, aIgnoreTabIndex,
+              aForDocumentNavigation, true /* aSkipOwner */);
+          if (contentToFocus) {
+            NS_ADDREF(*aResultContent = contentToFocus);
+            return NS_OK;
+          }
+        }
+      }
       // we've already skipped over the initial focused content, so we
       // don't want to traverse frames.
       getNextFrame = false;
-      if (iterStartContent) continue;
-
-      // otherwise, as a last attempt, just look at the root content
-      iterStartContent = aRootContent;
-      continue;
     }
 
-    // For tab navigation, pass false for aSkipPopupChecks so that we don't
-    // iterate into or out of a popup. For document naviation pass true to
-    // ignore these boundaries.
     nsCOMPtr<nsIFrameEnumerator> frameTraversal;
-    nsresult rv = NS_NewFrameTraversal(
-        getter_AddRefs(frameTraversal), presContext, startFrame, ePreOrder,
-        false,                  // aVisual
-        false,                  // aLockInScrollView
-        true,                   // aFollowOOFs
-        aForDocumentNavigation  // aSkipPopupChecks
-    );
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (frame) {
+      // For tab navigation, pass false for aSkipPopupChecks so that we don't
+      // iterate into or out of a popup. For document naviation pass true to
+      // ignore these boundaries.
+      nsresult rv = NS_NewFrameTraversal(
+          getter_AddRefs(frameTraversal), presContext, frame, ePreOrder,
+          false,                  // aVisual
+          false,                  // aLockInScrollView
+          true,                   // aFollowOOFs
+          aForDocumentNavigation  // aSkipPopupChecks
+      );
+      NS_ENSURE_SUCCESS(rv, rv);
 
-    if (iterStartContent == aRootContent) {
-      if (!aForward) {
-        frameTraversal->Last();
-      } else if (aRootContent->IsFocusable()) {
-        frameTraversal->Next();
+      if (iterStartContent == aRootContent) {
+        if (!aForward) {
+          frameTraversal->Last();
+        } else if (aRootContent->IsFocusable()) {
+          frameTraversal->Next();
+        }
+        frame = static_cast<nsIFrame*>(frameTraversal->CurrentItem());
+      } else if (getNextFrame &&
+                 (!iterStartContent ||
+                  !iterStartContent->IsHTMLElement(nsGkAtoms::area))) {
+        // Need to do special check in case we're in an imagemap which has
+        // multiple content nodes per frame, so don't skip over the starting
+        // frame.
+        if (aForward) {
+          frameTraversal->Next();
+        } else {
+          frameTraversal->Prev();
+        }
+
+        frame = static_cast<nsIFrame*>(frameTraversal->CurrentItem());
       }
-    } else if (getNextFrame &&
-               (!iterStartContent ||
-                !iterStartContent->IsHTMLElement(nsGkAtoms::area))) {
-      // Need to do special check in case we're in an imagemap which has
-      // multiple content nodes per frame, so don't skip over the starting
-      // frame.
-      if (aForward)
-        frameTraversal->Next();
-      else
-        frameTraversal->Prev();
     }
 
-    // Walk frames to find something tabbable matching mCurrentTabIndex
-    nsIFrame* frame = static_cast<nsIFrame*>(frameTraversal->CurrentItem());
+    // Walk frames to find something tabbable matching aCurrentTabIndex
     while (frame) {
       // Try to find the topmost Shadow DOM host, since we want to
       // skip Shadow DOM in frame traversal.
@@ -3339,9 +3362,9 @@ nsresult nsFocusManager::GetNextTabbableContent(
             // and root content, so that we only find content within the panel.
             // Note also that we pass false for aForDocumentNavigation since we
             // want to locate the first content, not the first document.
-            rv = GetNextTabbableContent(aPresShell, currentContent, nullptr,
-                                        currentContent, true, 1, false, false,
-                                        aResultContent);
+            nsresult rv = GetNextTabbableContent(
+                aPresShell, currentContent, nullptr, currentContent, true, 1,
+                false, false, aResultContent);
             if (NS_SUCCEEDED(rv) && *aResultContent) {
               return rv;
             }

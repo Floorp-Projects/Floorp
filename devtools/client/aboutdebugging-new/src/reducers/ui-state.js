@@ -7,6 +7,7 @@
 const {
   ADB_ADDON_STATUS_UPDATED,
   DEBUG_TARGET_COLLAPSIBILITY_UPDATED,
+  MULTI_E10S_UPDATED,
   NETWORK_LOCATIONS_UPDATED,
   PAGE_SELECTED,
   TEMPORARY_EXTENSION_INSTALL_FAILURE,
@@ -16,10 +17,12 @@ const {
 } = require("../constants");
 
 function UiState(locations = [], debugTargetCollapsibilities = {},
-                 networkEnabled = false, wifiEnabled = false, showSystemAddons = false) {
+                 networkEnabled = false, wifiEnabled = false,
+                 showSystemAddons = false, isMultiE10s = false) {
   return {
     adbAddonStatus: null,
     debugTargetCollapsibilities,
+    isMultiE10s,
     isScanningUsb: false,
     networkEnabled,
     networkLocations: locations,
@@ -43,6 +46,11 @@ function uiReducer(state = UiState(), action) {
       const debugTargetCollapsibilities = new Map(state.debugTargetCollapsibilities);
       debugTargetCollapsibilities.set(key, isCollapsed);
       return Object.assign({}, state, { debugTargetCollapsibilities });
+    }
+
+    case MULTI_E10S_UPDATED: {
+      const { isMultiE10s } = action;
+      return Object.assign({}, state, { isMultiE10s });
     }
 
     case NETWORK_LOCATIONS_UPDATED: {

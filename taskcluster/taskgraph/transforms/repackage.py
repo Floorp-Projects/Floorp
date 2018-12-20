@@ -60,7 +60,8 @@ packaging_description_schema = schema.extend({
     Optional('shipping-product'): job_description_schema['shipping-product'],
     Optional('shipping-phase'): job_description_schema['shipping-phase'],
 
-    Required('package-formats'): optionally_keyed_by('build-platform', 'project', [basestring]),
+    Required('package-formats'): optionally_keyed_by(
+        'build-platform', 'release-type', [basestring]),
 
     # All l10n jobs use mozharness
     Required('mozharness'): {
@@ -89,8 +90,10 @@ packaging_description_schema = schema.extend({
 #   directory.
 PACKAGE_FORMATS = {
     'mar': {
-        'args': ['mar',
-                 '--arch', '{architecture}'],
+        'args': [
+            'mar',
+            '--arch', '{architecture}',
+        ],
         'inputs': {
             'input': 'target{archive_format}',
             'mar': 'mar{executable_extension}',
@@ -98,7 +101,10 @@ PACKAGE_FORMATS = {
         'output': "target.complete.mar",
     },
     'mar-bz2': {
-        'args': ['mar', "--format", "bz2"],
+        'args': [
+            'mar', "--format", "bz2",
+            '--arch', '{architecture}',
+        ],
         'inputs': {
             'input': 'target{archive_format}',
             'mar': 'mar{executable_extension}',
@@ -179,8 +185,10 @@ def handle_keyed_by(config, jobs):
         for field in fields:
             resolve_keyed_by(
                 item=job, field=field,
-                project=config.params['project'],
                 item_name="?",
+                **{
+                    'release-type': config.params['release_type'],
+                }
             )
         yield job
 
