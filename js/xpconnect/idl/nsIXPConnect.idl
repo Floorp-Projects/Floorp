@@ -71,7 +71,11 @@ interface nsIXPConnectWrappedJS : nsIXPConnectJSObjectHolder
     readonly attribute InterfaceInfoPtr InterfaceInfo;
     readonly attribute nsIIDPtr         InterfaceIID;
 
-    // Match the GetJSObject() signature.
+    // Returns the global object for our JS object. If this object is a
+    // cross-compartment wrapper, returns the compartment's first global.
+    // The global we return is guaranteed to be same-compartment with the
+    // object.
+    // Note: this matches the GetJSObject() signature.
     [notxpcom, nostdcall] JSObjectPtr GetJSObjectGlobal();
 
     void debugDump(in short depth);
