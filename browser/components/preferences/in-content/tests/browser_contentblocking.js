@@ -232,7 +232,7 @@ add_task(async function testContentBlockingCustomCategory() {
 
   // Changing the NCB_PREF should necessarily set CAT_PREF to "custom"
   Services.prefs.setIntPref(NCB_PREF, Ci.nsICookieService.BEHAVIOR_ACCEPT);
-  await TestUtils.waitForCondition(() => Services.prefs.prefHasUserValue(NCB_PREF));
+  await TestUtils.waitForCondition(() => !Services.prefs.prefHasUserValue(NCB_PREF));
   is(Services.prefs.getStringPref(CAT_PREF), "custom", `${CAT_PREF} has been set to custom`);
 
   gBrowser.removeCurrentTab();
