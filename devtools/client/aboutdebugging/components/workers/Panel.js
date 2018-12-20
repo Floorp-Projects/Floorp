@@ -11,6 +11,11 @@ const { Component, createFactory } = require("devtools/client/shared/vendor/reac
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const Services = require("Services");
+const {
+  addMultiE10sListener,
+  isMultiE10s,
+  removeMultiE10sListener,
+} = require("devtools/client/shared/multi-e10s-helper");
 
 const PanelHeader = createFactory(require("../PanelHeader"));
 const TargetList = createFactory(require("../TargetList"));
@@ -30,8 +35,6 @@ const Strings = Services.strings.createBundle(
 const WorkerIcon = "chrome://devtools/skin/images/debugging-workers.svg";
 const MORE_INFO_URL = "https://developer.mozilla.org/en-US/docs/Tools/about%3Adebugging" +
                       "#Service_workers_not_compatible";
-const PROCESS_COUNT_PREF = "dom.ipc.processCount";
-const MULTI_OPTOUT_PREF = "dom.ipc.multiOptOut";
 
 class WorkersPanel extends Component {
   static get propTypes() {
@@ -66,20 +69,7 @@ class WorkersPanel extends Component {
     client.mainRoot.on("processListChanged", this.updateWorkers);
     client.addListener("registration-changed", this.updateWorkers);
 
-    // Some notes about these observers:
-    // - nsIPrefBranch.addObserver observes prefixes. In reality, watching
-    //   PROCESS_COUNT_PREF watches two separate prefs:
-    //   dom.ipc.processCount *and* dom.ipc.processCount.web. Because these
-    //   are the two ways that we control the number of content processes,
-    //   that works perfectly fine.
-    // - The user might opt in or out of multi by setting the multi opt out
-    //   pref. That affects whether we need to show our warning, so we need to
-    //   update our state when that pref changes.
-    // - In all cases, we don't have to manually check which pref changed to
-    //   what. The platform code in nsIXULRuntime.maxWebProcessCount does all
-    //   of that for us.
-    Services.prefs.addObserver(PROCESS_COUNT_PREF, this.updateMultiE10S);
-    Services.prefs.addObserver(MULTI_OPTOUT_PREF, this.updateMultiE10S);
+    addMultiE10sListener(this.updateMultiE10S);
 
     this.updateMultiE10S();
     this.updateWorkers();
@@ -95,8 +85,7 @@ class WorkersPanel extends Component {
     }
     client.removeListener("registration-changed", this.updateWorkers);
 
-    Services.prefs.removeObserver(PROCESS_COUNT_PREF, this.updateMultiE10S);
-    Services.prefs.removeObserver(MULTI_OPTOUT_PREF, this.updateMultiE10S);
+    removeMultiE10sListener(this.updateMultiE10S);
   }
 
   get initialState() {
@@ -106,7 +95,7 @@ class WorkersPanel extends Component {
         shared: [],
         other: [],
       },
-      processCount: 1,
+      isMultiE10S: isMultiE10s(),
 
       // List of ContentProcessTargetFront registered from componentWillMount
       // from which we listen for worker list changes
@@ -115,10 +104,7 @@ class WorkersPanel extends Component {
   }
 
   updateMultiE10S() {
-    // We watch the pref but set the state based on
-    // nsIXULRuntime.maxWebProcessCount.
-    const processCount = Services.appinfo.maxWebProcessCount;
-    this.setState({ processCount });
+    this.setState({ isMultiE10S: isMultiE10s() });
   }
 
   updateWorkers() {
@@ -175,10 +161,7 @@ class WorkersPanel extends Component {
 
   render() {
     const { client, id } = this.props;
-    const { workers, processCount } = this.state;
-
-    const isE10S = Services.appinfo.browserTabsRemoteAutostart;
-    const isMultiE10S = isE10S && processCount > 1;
+    const { workers, isMultiE10S } = this.state;
 
     return dom.div(
       {

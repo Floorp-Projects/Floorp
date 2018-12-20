@@ -317,7 +317,7 @@ public final class GeckoRuntime implements Parcelable {
      * @param delegate an implementation of {@link GeckoRuntime.Delegate}.
      */
     @UiThread
-    public void setDelegate(final Delegate delegate) {
+    public void setDelegate(final @Nullable Delegate delegate) {
         ThreadUtils.assertOnUiThread();
         mDelegate = delegate;
     }
@@ -333,7 +333,7 @@ public final class GeckoRuntime implements Parcelable {
     }
 
     @AnyThread
-    public GeckoRuntimeSettings getSettings() {
+    public @Nullable GeckoRuntimeSettings getSettings() {
         return mSettings;
     }
 
@@ -352,7 +352,7 @@ public final class GeckoRuntime implements Parcelable {
      * @return The telemetry object.
      */
     @UiThread
-    public RuntimeTelemetry getTelemetry() {
+    public @NonNull RuntimeTelemetry getTelemetry() {
         ThreadUtils.assertOnUiThread();
 
         if (mTelemetry == null) {
@@ -369,7 +369,7 @@ public final class GeckoRuntime implements Parcelable {
      * @return Profile directory
      */
     @UiThread
-    public File getProfileDir() {
+    public @Nullable File getProfileDir() {
         ThreadUtils.assertOnUiThread();
         return GeckoThread.getActiveProfile().getDir();
     }
@@ -408,7 +408,7 @@ public final class GeckoRuntime implements Parcelable {
 
     // AIDL code may call readFromParcel even though it's not part of Parcelable.
     @AnyThread
-    public void readFromParcel(final Parcel source) {
+    public void readFromParcel(final @NonNull Parcel source) {
         mSettings = source.readParcelable(getClass().getClassLoader());
     }
 

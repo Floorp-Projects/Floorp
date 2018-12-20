@@ -53,9 +53,9 @@ class TimingPath extends PureComponent {
     // This section is only useful in cases where iterationStart has decimals.
     // e.g.
     // if { iterationStart: 0.25, iterations: 3 }, firstSectionCount is 0.75.
-    const firstSectionCount = iterationStart % 1 === 0
-                            ? 0
-                            : Math.min(iterationCount, 1) - iterationStart % 1;
+    const firstSectionCount =
+      iterationStart % 1 === 0 ? 0 : Math.min(1 - iterationStart % 1, iterationCount);
+
     if (firstSectionCount) {
       this.renderFirstIteration(pathList, state,
                                 mainIterationStartTime, firstSectionCount, helper);

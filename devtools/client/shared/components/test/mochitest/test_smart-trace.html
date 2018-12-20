@@ -40,10 +40,15 @@ window.onload = function() {
       },
     ];
 
+    let onReadyCount = 0;
+
     const props = {
       stacktrace,
       onViewSourceInDebugger: () => {},
       onViewSourceInScratchpad: () => {},
+      onReady: () => {
+        onReadyCount++;
+      }
     };
 
     const trace = ReactDOM.render(SmartTrace(props), window.document.body);
@@ -70,6 +75,8 @@ window.onload = function() {
       location: "http://myfile.com/loadee.js:10",
       tooltip: "View source in Debugger → http://myfile.com/loadee.js:10",
     });
+
+    is(onReadyCount, 1, "onReady was called once");
   });
 };
 </script>

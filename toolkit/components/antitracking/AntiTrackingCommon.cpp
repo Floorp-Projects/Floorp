@@ -473,13 +473,11 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(
         ("Disabled by network.cookie.cookieBehavior pref (%d), bailing out "
          "early",
          StaticPrefs::network_cookie_cookieBehavior()));
-    return StorageAccessGrantPromise::CreateAndResolve(eAllowOnAnySite,
-                                                       __func__);
+    return StorageAccessGrantPromise::CreateAndResolve(true, __func__);
   }
 
   if (CheckContentBlockingAllowList(aParentWindow)) {
-    return StorageAccessGrantPromise::CreateAndResolve(eAllowOnAnySite,
-                                                       __func__);
+    return StorageAccessGrantPromise::CreateAndResolve(true, __func__);
   }
 
   nsCOMPtr<nsIPrincipal> topLevelStoragePrincipal;
@@ -914,6 +912,7 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
           nsGlobalWindowInner::Cast(aWindow), getter_AddRefs(parentPrincipal),
           trackingOrigin, getter_AddRefs(trackingURI), nullptr)) {
     LOG(("Failed to obtain the parent principal and the tracking origin"));
+    *aRejectedReason = nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER;
     return false;
   }
   Unused << parentPrincipal->GetURI(getter_AddRefs(parentPrincipalURI));
@@ -1152,6 +1151,7 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
     // window.
     if (loadInfo->GetTopLevelPrincipal()) {
       LOG(("Parent window is the top-level window, bail out early"));
+      *aRejectedReason = nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER;
       return false;
     }
 
