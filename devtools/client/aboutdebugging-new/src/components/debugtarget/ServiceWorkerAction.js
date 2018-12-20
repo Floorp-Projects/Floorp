@@ -7,6 +7,7 @@
 const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const { connect } = require("devtools/client/shared/vendor/react-redux");
 
 const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 
@@ -24,6 +25,8 @@ class ServiceWorkerAction extends PureComponent {
       dispatch: PropTypes.func.isRequired,
       // Provided by wrapping the component with FluentReact.withLocalization.
       getString: PropTypes.func.isRequired,
+      // Provided by redux state
+      isMultiE10s: PropTypes.bool.isRequired,
       target: Types.debugTarget.isRequired,
     };
   }
@@ -39,13 +42,14 @@ class ServiceWorkerAction extends PureComponent {
   }
 
   _renderAction() {
-    const { dispatch, target } = this.props;
+    const { dispatch, isMultiE10s, target } = this.props;
     const { isActive, isRunning } = target.details;
 
     if (!isRunning) {
       const startLabel = this.props.getString("about-debugging-worker-action-start");
       return this._renderButton({
         className: "default-button",
+        disabled: isMultiE10s,
         label: startLabel,
         onClick: this.start.bind(this),
       });
@@ -53,24 +57,26 @@ class ServiceWorkerAction extends PureComponent {
 
     if (!isActive) {
       // Only debug button is available if the service worker is not active.
-      return InspectAction({ dispatch, target });
+      return InspectAction({ disabled: isMultiE10s, dispatch, target });
     }
 
     const pushLabel = this.props.getString("about-debugging-worker-action-push");
     return [
       this._renderButton({
         className: "default-button js-push-button",
+        disabled: isMultiE10s,
         label: pushLabel,
         onClick: this.push.bind(this),
       }),
-      InspectAction({ dispatch, target }),
+      InspectAction({ disabled: isMultiE10s, dispatch, target }),
     ];
   }
 
-  _renderButton({ className, label, onClick }) {
+  _renderButton({ className, disabled, label, onClick }) {
     return dom.button(
       {
         className,
+        disabled,
         onClick: e => onClick(),
       },
       label,
@@ -87,4 +93,11 @@ class ServiceWorkerAction extends PureComponent {
   }
 }
 
-module.exports = FluentReact.withLocalization(ServiceWorkerAction);
+const mapStateToProps = state => {
+  return {
+    isMultiE10s: state.ui.isMultiE10s,
+  };
+};
+
+module.exports = FluentReact.withLocalization(
+  connect(mapStateToProps)(ServiceWorkerAction));
