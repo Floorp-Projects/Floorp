@@ -473,13 +473,11 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(
         ("Disabled by network.cookie.cookieBehavior pref (%d), bailing out "
          "early",
          StaticPrefs::network_cookie_cookieBehavior()));
-    return StorageAccessGrantPromise::CreateAndResolve(eAllowOnAnySite,
-                                                       __func__);
+    return StorageAccessGrantPromise::CreateAndResolve(true, __func__);
   }
 
   if (CheckContentBlockingAllowList(aParentWindow)) {
-    return StorageAccessGrantPromise::CreateAndResolve(eAllowOnAnySite,
-                                                       __func__);
+    return StorageAccessGrantPromise::CreateAndResolve(true, __func__);
   }
 
   nsCOMPtr<nsIPrincipal> topLevelStoragePrincipal;
