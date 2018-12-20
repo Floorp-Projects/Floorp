@@ -214,6 +214,7 @@ var OperatorCode;
     OperatorCode[OperatorCode["i64_extend16_s"] = 195] = "i64_extend16_s";
     OperatorCode[OperatorCode["i64_extend32_s"] = 196] = "i64_extend32_s";
     OperatorCode[OperatorCode["prefix_0xfc"] = 252] = "prefix_0xfc";
+    OperatorCode[OperatorCode["prefix_0xfd"] = 253] = "prefix_0xfd";
     OperatorCode[OperatorCode["prefix_0xfe"] = 254] = "prefix_0xfe";
     OperatorCode[OperatorCode["i32_trunc_s_sat_f32"] = 64512] = "i32_trunc_s_sat_f32";
     OperatorCode[OperatorCode["i32_trunc_u_sat_f32"] = 64513] = "i32_trunc_u_sat_f32";
@@ -289,6 +290,146 @@ var OperatorCode;
     OperatorCode[OperatorCode["i64_atomic_rmw8_u_cmpxchg"] = 65100] = "i64_atomic_rmw8_u_cmpxchg";
     OperatorCode[OperatorCode["i64_atomic_rmw16_u_cmpxchg"] = 65101] = "i64_atomic_rmw16_u_cmpxchg";
     OperatorCode[OperatorCode["i64_atomic_rmw32_u_cmpxchg"] = 65102] = "i64_atomic_rmw32_u_cmpxchg";
+    OperatorCode[OperatorCode["v128_load"] = 64768] = "v128_load";
+    OperatorCode[OperatorCode["v128_store"] = 64769] = "v128_store";
+    OperatorCode[OperatorCode["v128_const"] = 64770] = "v128_const";
+    OperatorCode[OperatorCode["v8x16_shuffle"] = 64771] = "v8x16_shuffle";
+    OperatorCode[OperatorCode["i8x16_splat"] = 64772] = "i8x16_splat";
+    OperatorCode[OperatorCode["i8x16_extract_lane_s"] = 64773] = "i8x16_extract_lane_s";
+    OperatorCode[OperatorCode["i8x16_extract_lane_u"] = 64774] = "i8x16_extract_lane_u";
+    OperatorCode[OperatorCode["i8x16_replace_lane"] = 64775] = "i8x16_replace_lane";
+    OperatorCode[OperatorCode["i16x8_splat"] = 64776] = "i16x8_splat";
+    OperatorCode[OperatorCode["i16x8_extract_lane_s"] = 64777] = "i16x8_extract_lane_s";
+    OperatorCode[OperatorCode["i16x8_extract_lane_u"] = 64778] = "i16x8_extract_lane_u";
+    OperatorCode[OperatorCode["i16x8_replace_lane"] = 64779] = "i16x8_replace_lane";
+    OperatorCode[OperatorCode["i32x4_splat"] = 64780] = "i32x4_splat";
+    OperatorCode[OperatorCode["i32x4_extract_lane"] = 64781] = "i32x4_extract_lane";
+    OperatorCode[OperatorCode["i32x4_replace_lane"] = 64782] = "i32x4_replace_lane";
+    OperatorCode[OperatorCode["i64x2_splat"] = 64783] = "i64x2_splat";
+    OperatorCode[OperatorCode["i64x2_extract_lane"] = 64784] = "i64x2_extract_lane";
+    OperatorCode[OperatorCode["i64x2_replace_lane"] = 64785] = "i64x2_replace_lane";
+    OperatorCode[OperatorCode["f32x4_splat"] = 64786] = "f32x4_splat";
+    OperatorCode[OperatorCode["f32x4_extract_lane"] = 64787] = "f32x4_extract_lane";
+    OperatorCode[OperatorCode["f32x4_replace_lane"] = 64788] = "f32x4_replace_lane";
+    OperatorCode[OperatorCode["f64x2_splat"] = 64789] = "f64x2_splat";
+    OperatorCode[OperatorCode["f64x2_extract_lane"] = 64790] = "f64x2_extract_lane";
+    OperatorCode[OperatorCode["f64x2_replace_lane"] = 64791] = "f64x2_replace_lane";
+    OperatorCode[OperatorCode["i8x16_eq"] = 64792] = "i8x16_eq";
+    OperatorCode[OperatorCode["i8x16_ne"] = 64793] = "i8x16_ne";
+    OperatorCode[OperatorCode["i8x16_lt_s"] = 64794] = "i8x16_lt_s";
+    OperatorCode[OperatorCode["i8x16_lt_u"] = 64795] = "i8x16_lt_u";
+    OperatorCode[OperatorCode["i8x16_gt_s"] = 64796] = "i8x16_gt_s";
+    OperatorCode[OperatorCode["i8x16_gt_u"] = 64797] = "i8x16_gt_u";
+    OperatorCode[OperatorCode["i8x16_le_s"] = 64798] = "i8x16_le_s";
+    OperatorCode[OperatorCode["i8x16_le_u"] = 64799] = "i8x16_le_u";
+    OperatorCode[OperatorCode["i8x16_ge_s"] = 64800] = "i8x16_ge_s";
+    OperatorCode[OperatorCode["i8x16_ge_u"] = 64801] = "i8x16_ge_u";
+    OperatorCode[OperatorCode["i16x8_eq"] = 64802] = "i16x8_eq";
+    OperatorCode[OperatorCode["i16x8_ne"] = 64803] = "i16x8_ne";
+    OperatorCode[OperatorCode["i16x8_lt_s"] = 64804] = "i16x8_lt_s";
+    OperatorCode[OperatorCode["i16x8_lt_u"] = 64805] = "i16x8_lt_u";
+    OperatorCode[OperatorCode["i16x8_gt_s"] = 64806] = "i16x8_gt_s";
+    OperatorCode[OperatorCode["i16x8_gt_u"] = 64807] = "i16x8_gt_u";
+    OperatorCode[OperatorCode["i16x8_le_s"] = 64808] = "i16x8_le_s";
+    OperatorCode[OperatorCode["i16x8_le_u"] = 64809] = "i16x8_le_u";
+    OperatorCode[OperatorCode["i16x8_ge_s"] = 64810] = "i16x8_ge_s";
+    OperatorCode[OperatorCode["i16x8_ge_u"] = 64811] = "i16x8_ge_u";
+    OperatorCode[OperatorCode["i32x4_eq"] = 64812] = "i32x4_eq";
+    OperatorCode[OperatorCode["i32x4_ne"] = 64813] = "i32x4_ne";
+    OperatorCode[OperatorCode["i32x4_lt_s"] = 64814] = "i32x4_lt_s";
+    OperatorCode[OperatorCode["i32x4_lt_u"] = 64815] = "i32x4_lt_u";
+    OperatorCode[OperatorCode["i32x4_gt_s"] = 64816] = "i32x4_gt_s";
+    OperatorCode[OperatorCode["i32x4_gt_u"] = 64817] = "i32x4_gt_u";
+    OperatorCode[OperatorCode["i32x4_le_s"] = 64818] = "i32x4_le_s";
+    OperatorCode[OperatorCode["i32x4_le_u"] = 64819] = "i32x4_le_u";
+    OperatorCode[OperatorCode["i32x4_ge_s"] = 64820] = "i32x4_ge_s";
+    OperatorCode[OperatorCode["i32x4_ge_u"] = 64821] = "i32x4_ge_u";
+    OperatorCode[OperatorCode["f32x4_eq"] = 64832] = "f32x4_eq";
+    OperatorCode[OperatorCode["f32x4_ne"] = 64833] = "f32x4_ne";
+    OperatorCode[OperatorCode["f32x4_lt"] = 64834] = "f32x4_lt";
+    OperatorCode[OperatorCode["f32x4_gt"] = 64835] = "f32x4_gt";
+    OperatorCode[OperatorCode["f32x4_le"] = 64836] = "f32x4_le";
+    OperatorCode[OperatorCode["f32x4_ge"] = 64837] = "f32x4_ge";
+    OperatorCode[OperatorCode["f64x2_eq"] = 64838] = "f64x2_eq";
+    OperatorCode[OperatorCode["f64x2_ne"] = 64839] = "f64x2_ne";
+    OperatorCode[OperatorCode["f64x2_lt"] = 64840] = "f64x2_lt";
+    OperatorCode[OperatorCode["f64x2_gt"] = 64841] = "f64x2_gt";
+    OperatorCode[OperatorCode["f64x2_le"] = 64842] = "f64x2_le";
+    OperatorCode[OperatorCode["f64x2_ge"] = 64843] = "f64x2_ge";
+    OperatorCode[OperatorCode["v128_not"] = 64844] = "v128_not";
+    OperatorCode[OperatorCode["v128_and"] = 64845] = "v128_and";
+    OperatorCode[OperatorCode["v128_or"] = 64846] = "v128_or";
+    OperatorCode[OperatorCode["v128_xor"] = 64847] = "v128_xor";
+    OperatorCode[OperatorCode["v128_bitselect"] = 64848] = "v128_bitselect";
+    OperatorCode[OperatorCode["i8x16_neg"] = 64849] = "i8x16_neg";
+    OperatorCode[OperatorCode["i8x16_any_true"] = 64850] = "i8x16_any_true";
+    OperatorCode[OperatorCode["i8x16_all_true"] = 64851] = "i8x16_all_true";
+    OperatorCode[OperatorCode["i8x16_shl"] = 64852] = "i8x16_shl";
+    OperatorCode[OperatorCode["i8x16_shr_s"] = 64853] = "i8x16_shr_s";
+    OperatorCode[OperatorCode["i8x16_shr_u"] = 64854] = "i8x16_shr_u";
+    OperatorCode[OperatorCode["i8x16_add"] = 64855] = "i8x16_add";
+    OperatorCode[OperatorCode["i8x16_add_saturate_s"] = 64856] = "i8x16_add_saturate_s";
+    OperatorCode[OperatorCode["i8x16_add_saturate_u"] = 64857] = "i8x16_add_saturate_u";
+    OperatorCode[OperatorCode["i8x16_sub"] = 64858] = "i8x16_sub";
+    OperatorCode[OperatorCode["i8x16_sub_saturate_s"] = 64859] = "i8x16_sub_saturate_s";
+    OperatorCode[OperatorCode["i8x16_sub_saturate_u"] = 64860] = "i8x16_sub_saturate_u";
+    OperatorCode[OperatorCode["i8x16_mul"] = 64861] = "i8x16_mul";
+    OperatorCode[OperatorCode["i16x8_neg"] = 64866] = "i16x8_neg";
+    OperatorCode[OperatorCode["i16x8_any_true"] = 64867] = "i16x8_any_true";
+    OperatorCode[OperatorCode["i16x8_all_true"] = 64868] = "i16x8_all_true";
+    OperatorCode[OperatorCode["i16x8_shl"] = 64869] = "i16x8_shl";
+    OperatorCode[OperatorCode["i16x8_shr_s"] = 64870] = "i16x8_shr_s";
+    OperatorCode[OperatorCode["i16x8_shr_u"] = 64871] = "i16x8_shr_u";
+    OperatorCode[OperatorCode["i16x8_add"] = 64872] = "i16x8_add";
+    OperatorCode[OperatorCode["i16x8_add_saturate_s"] = 64873] = "i16x8_add_saturate_s";
+    OperatorCode[OperatorCode["i16x8_add_saturate_u"] = 64874] = "i16x8_add_saturate_u";
+    OperatorCode[OperatorCode["i16x8_sub"] = 64875] = "i16x8_sub";
+    OperatorCode[OperatorCode["i16x8_sub_saturate_s"] = 64876] = "i16x8_sub_saturate_s";
+    OperatorCode[OperatorCode["i16x8_sub_saturate_u"] = 64877] = "i16x8_sub_saturate_u";
+    OperatorCode[OperatorCode["i16x8_mul"] = 64878] = "i16x8_mul";
+    OperatorCode[OperatorCode["i32x4_neg"] = 64883] = "i32x4_neg";
+    OperatorCode[OperatorCode["i32x4_any_true"] = 64884] = "i32x4_any_true";
+    OperatorCode[OperatorCode["i32x4_all_true"] = 64885] = "i32x4_all_true";
+    OperatorCode[OperatorCode["i32x4_shl"] = 64886] = "i32x4_shl";
+    OperatorCode[OperatorCode["i32x4_shr_s"] = 64887] = "i32x4_shr_s";
+    OperatorCode[OperatorCode["i32x4_shr_u"] = 64888] = "i32x4_shr_u";
+    OperatorCode[OperatorCode["i32x4_add"] = 64889] = "i32x4_add";
+    OperatorCode[OperatorCode["i32x4_sub"] = 64892] = "i32x4_sub";
+    OperatorCode[OperatorCode["i32x4_mul"] = 64895] = "i32x4_mul";
+    OperatorCode[OperatorCode["i64x2_neg"] = 64900] = "i64x2_neg";
+    OperatorCode[OperatorCode["i64x2_any_true"] = 64901] = "i64x2_any_true";
+    OperatorCode[OperatorCode["i64x2_all_true"] = 64902] = "i64x2_all_true";
+    OperatorCode[OperatorCode["i64x2_shl"] = 64903] = "i64x2_shl";
+    OperatorCode[OperatorCode["i64x2_shr_s"] = 64904] = "i64x2_shr_s";
+    OperatorCode[OperatorCode["i64x2_shr_u"] = 64905] = "i64x2_shr_u";
+    OperatorCode[OperatorCode["i64x2_add"] = 64906] = "i64x2_add";
+    OperatorCode[OperatorCode["i64x2_sub"] = 64909] = "i64x2_sub";
+    OperatorCode[OperatorCode["f32x4_abs"] = 64917] = "f32x4_abs";
+    OperatorCode[OperatorCode["f32x4_neg"] = 64918] = "f32x4_neg";
+    OperatorCode[OperatorCode["f32x4_sqrt"] = 64919] = "f32x4_sqrt";
+    OperatorCode[OperatorCode["f32x4_add"] = 64922] = "f32x4_add";
+    OperatorCode[OperatorCode["f32x4_sub"] = 64923] = "f32x4_sub";
+    OperatorCode[OperatorCode["f32x4_mul"] = 64924] = "f32x4_mul";
+    OperatorCode[OperatorCode["f32x4_div"] = 64925] = "f32x4_div";
+    OperatorCode[OperatorCode["f32x4_min"] = 64926] = "f32x4_min";
+    OperatorCode[OperatorCode["f32x4_max"] = 64927] = "f32x4_max";
+    OperatorCode[OperatorCode["f64x2_abs"] = 64928] = "f64x2_abs";
+    OperatorCode[OperatorCode["f64x2_neg"] = 64929] = "f64x2_neg";
+    OperatorCode[OperatorCode["f64x2_sqrt"] = 64930] = "f64x2_sqrt";
+    OperatorCode[OperatorCode["f64x2_add"] = 64933] = "f64x2_add";
+    OperatorCode[OperatorCode["f64x2_sub"] = 64934] = "f64x2_sub";
+    OperatorCode[OperatorCode["f64x2_mul"] = 64935] = "f64x2_mul";
+    OperatorCode[OperatorCode["f64x2_div"] = 64936] = "f64x2_div";
+    OperatorCode[OperatorCode["f64x2_min"] = 64937] = "f64x2_min";
+    OperatorCode[OperatorCode["f64x2_max"] = 64938] = "f64x2_max";
+    OperatorCode[OperatorCode["i32x4_trunc_s_f32x4_sat"] = 64939] = "i32x4_trunc_s_f32x4_sat";
+    OperatorCode[OperatorCode["i32x4_trunc_u_f32x4_sat"] = 64940] = "i32x4_trunc_u_f32x4_sat";
+    OperatorCode[OperatorCode["i64x2_trunc_s_f64x2_sat"] = 64941] = "i64x2_trunc_s_f64x2_sat";
+    OperatorCode[OperatorCode["i64x2_trunc_u_f64x2_sat"] = 64942] = "i64x2_trunc_u_f64x2_sat";
+    OperatorCode[OperatorCode["f32x4_convert_s_i32x4"] = 64943] = "f32x4_convert_s_i32x4";
+    OperatorCode[OperatorCode["f32x4_convert_u_i32x4"] = 64944] = "f32x4_convert_u_i32x4";
+    OperatorCode[OperatorCode["f64x2_convert_s_i64x2"] = 64945] = "f64x2_convert_s_i64x2";
+    OperatorCode[OperatorCode["f64x2_convert_u_i64x2"] = 64946] = "f64x2_convert_u_i64x2";
 })(OperatorCode = exports.OperatorCode || (exports.OperatorCode = {}));
 ;
 exports.OperatorCodeNames = [
@@ -296,6 +437,9 @@ exports.OperatorCodeNames = [
 ];
 ["i32.trunc_s:sat/f32", "i32.trunc_u:sat/f32", "i32.trunc_s:sat/f64", "i32.trunc_u:sat/f64", "i64.trunc_s:sat/f32", "i64.trunc_u:sat/f32", "i64.trunc_s:sat/f64", "i64.trunc_u:sat/f64"].forEach(function (s, i) {
     exports.OperatorCodeNames[0xfc00 | i] = s;
+});
+["v128.load", "v128.store", "v128.const", "v8x16.shuffle", "i8x16.splat", "i8x16.extract_lane_s", "i8x16.extract_lane_u", "i8x16.replace_lane", "i16x8.splat", "i16x8.extract_lane_s", "i16x8.extract_lane_u", "i16x8.replace_lane", "i32x4.splat", "i32x4.extract_lane", "i32x4.replace_lane", "i64x2.splat", "i64x2.extract_lane", "i64x2.replace_lane", "f32x4.splat", "f32x4.extract_lane", "f32x4.replace_lane", "f64x2.splat", "f64x2.extract_lane", "f64x2.replace_lane", "i8x16.eq", "i8x16.ne", "i8x16.lt_s", "i8x16.lt_u", "i8x16.gt_s", "i8x16.gt_u", "i8x16.le_s", "i8x16.le_u", "i8x16.ge_s", "i8x16.ge_u", "i16x8.eq", "i16x8.ne", "i16x8.lt_s", "i16x8.lt_u", "i16x8.gt_s", "i16x8.gt_u", "i16x8.le_s", "i16x8.le_u", "i16x8.ge_s", "i16x8.ge_u", "i32x4.eq", "i32x4.ne", "i32x4.lt_s", "i32x4.lt_u", "i32x4.gt_s", "i32x4.gt_u", "i32x4.le_s", "i32x4.le_u", "i32x4.ge_s", "i32x4.ge_u", undefined, null, null, null, null, null, null, null, null, null, "f32x4.eq", "f32x4.ne", "f32x4.lt", "f32x4.gt", "f32x4.le", "f32x4.ge", "f64x2.eq", "f64x2.ne", "f64x2.lt", "f64x2.gt", "f64x2.le", "f64x2.ge", "v128.not", "v128.and", "v128.or", "v128.xor", "v128.bitselect", "i8x16.neg", "i8x16.any_true", "i8x16.all_true", "i8x16.shl", "i8x16.shr_s", "i8x16.shr_u", "i8x16.add", "i8x16.add_saturate_s", "i8x16.add_saturate_u", "i8x16.sub", "i8x16.sub_saturate_s", "i8x16.sub_saturate_u", "i8x16.mul", null, null, null, null, "i16x8.neg", "i16x8.any_true", "i16x8.all_true", "i16x8.shl", "i16x8.shr_s", "i16x8.shr_u", "i16x8.add", "i16x8.add_saturate_s", "i16x8.add_saturate_u", "i16x8.sub", "i16x8.sub_saturate_s", "i16x8.sub_saturate_u", "i16x8.mul", null, null, null, null, "i32x4.neg", "i32x4.any_true", "i32x4.all_true", "i32x4.shl", "i32x4.shr_s", "i32x4.shr_u", "i32x4.add", null, null, "i32x4.sub", null, null, "i32x4.mul", null, null, null, null, "i64x2.neg", "i64x2.any_true", "i64x2.all_true", "i64x2.shl", "i64x2.shr_s", "i64x2.shr_u", "i64x2.add", null, null, "i64x2.sub", null, null, null, null, null, null, null, "f32x4.abs", "f32x4.neg", "f32x4.sqrt", null, null, "f32x4.add", "f32x4.sub", "f32x4.mul", "f32x4.div", "f32x4.min", "f32x4.max", "f64x2.abs", "f64x2.neg", "f64x2.sqrt", null, null, "f64x2.add", "f64x2.sub", "f64x2.mul", "f64x2.div", "f64x2.min", "f64x2.max", "i32x4.trunc_s/f32x4:sat", "i32x4.trunc_u/f32x4:sat", "i64x2.trunc_s/f64x2:sat", "i64x2.trunc_u/f64x2:sat", "f32x4.convert_s/i32x4", "f32x4.convert_u/i32x4", "f64x2.convert_s/i64x2", "f64x2.convert_u/i64x2"].forEach(function (s, i) {
+    exports.OperatorCodeNames[0xfd00 | i] = s;
 });
 ["atomic.wake", "i32.atomic.wait", "i64.atomic.wait", undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, "i32.atomic.load", "i64.atomic.load", "i32.atomic.load8_u", "i32.atomic.load16_u", "i64.atomic.load8_u", "i64.atomic.load16_u", "i64.atomic.load32_u", "i32.atomic.store", "i64.atomic.store", "i32.atomic.store8", "i32.atomic.store16", "i64.atomic.store8", "i64.atomic.store16", "i64.atomic.store32", "i32.atomic.rmw.add", "i64.atomic.rmw.add", "i32.atomic.rmw8_u.add", "i32.atomic.rmw16_u.add", "i64.atomic.rmw8_u.add", "i64.atomic.rmw16_u.add", "i64.atomic.rmw32_u.add", "i32.atomic.rmw.sub", "i64.atomic.rmw.sub", "i32.atomic.rmw8_u.sub", "i32.atomic.rmw16_u.sub", "i64.atomic.rmw8_u.sub", "i64.atomic.rmw16_u.sub", "i64.atomic.rmw32_u.sub", "i32.atomic.rmw.and", "i64.atomic.rmw.and", "i32.atomic.rmw8_u.and", "i32.atomic.rmw16_u.and", "i64.atomic.rmw8_u.and", "i64.atomic.rmw16_u.and", "i64.atomic.rmw32_u.and", "i32.atomic.rmw.or", "i64.atomic.rmw.or", "i32.atomic.rmw8_u.or", "i32.atomic.rmw16_u.or", "i64.atomic.rmw8_u.or", "i64.atomic.rmw16_u.or", "i64.atomic.rmw32_u.or", "i32.atomic.rmw.xor", "i64.atomic.rmw.xor", "i32.atomic.rmw8_u.xor", "i32.atomic.rmw16_u.xor", "i64.atomic.rmw8_u.xor", "i64.atomic.rmw16_u.xor", "i64.atomic.rmw32_u.xor", "i32.atomic.rmw.xchg", "i64.atomic.rmw.xchg", "i32.atomic.rmw8_u.xchg", "i32.atomic.rmw16_u.xchg", "i64.atomic.rmw8_u.xchg", "i64.atomic.rmw16_u.xchg", "i64.atomic.rmw32_u.xchg", "i32.atomic.rmw.cmpxchg", "i64.atomic.rmw.cmpxchg", "i32.atomic.rmw8_u.cmpxchg", "i32.atomic.rmw16_u.cmpxchg", "i64.atomic.rmw8_u.cmpxchg", "i64.atomic.rmw16_u.cmpxchg", "i64.atomic.rmw32_u.cmpxchg"].forEach(function (s, i) {
     exports.OperatorCodeNames[0xfe00 | i] = s;
@@ -313,6 +457,7 @@ var Type;
     Type[Type["i64"] = -2] = "i64";
     Type[Type["f32"] = -3] = "f32";
     Type[Type["f64"] = -4] = "f64";
+    Type[Type["v128"] = -5] = "v128";
     Type[Type["anyfunc"] = -16] = "anyfunc";
     Type[Type["func"] = -32] = "func";
     Type[Type["empty_block_type"] = -64] = "empty_block_type";
@@ -864,6 +1009,10 @@ var BinaryReader = /** @class */ (function () {
         var offset = this.readVarUint32() >>> 0;
         return { flags: flags, offset: offset };
     };
+    BinaryReader.prototype.readLineIndex = function (max) {
+        var index = this.readUint8();
+        return index;
+    };
     BinaryReader.prototype.readNameMap = function () {
         var count = this.readVarUint32();
         var result = [];
@@ -1059,7 +1208,189 @@ var BinaryReader = /** @class */ (function () {
         this.result = { code: code,
             blockType: undefined, brDepth: undefined, brTable: undefined,
             funcIndex: undefined, typeIndex: undefined, localIndex: undefined,
-            globalIndex: undefined, memoryAddress: undefined, literal: undefined };
+            globalIndex: undefined, memoryAddress: undefined, literal: undefined,
+            lines: undefined, lineIndex: undefined, };
+        return true;
+    };
+    BinaryReader.prototype.readCodeOperator_0xfd = function () {
+        var MAX_CODE_OPERATOR_0XFD_SIZE = 17;
+        var pos = this._pos;
+        if (!this._eof && pos + MAX_CODE_OPERATOR_0XFD_SIZE > this._length) {
+            return false;
+        }
+        var code = this._data[this._pos++] | 0xfd00;
+        var memoryAddress;
+        var literal;
+        var lineIndex;
+        var lines;
+        switch (code) {
+            case 64768 /* v128_load */:
+            case 64769 /* v128_store */:
+                memoryAddress = this.readMemoryImmediate();
+                break;
+            case 64770 /* v128_const */:
+                literal = this.readBytes(16);
+                break;
+            case 64771 /* v8x16_shuffle */:
+                lines = new Uint8Array(16);
+                for (var i = 0; i < lines.length; i++)
+                    lines[i] = this.readLineIndex(32);
+                break;
+            case 64773 /* i8x16_extract_lane_s */:
+            case 64774 /* i8x16_extract_lane_u */:
+            case 64775 /* i8x16_replace_lane */:
+                lineIndex = this.readLineIndex(16);
+                break;
+            case 64777 /* i16x8_extract_lane_s */:
+            case 64778 /* i16x8_extract_lane_u */:
+            case 64779 /* i16x8_replace_lane */:
+                lineIndex = this.readLineIndex(8);
+                break;
+            case 64781 /* i32x4_extract_lane */:
+            case 64782 /* i32x4_replace_lane */:
+            case 64787 /* f32x4_extract_lane */:
+            case 64788 /* f32x4_replace_lane */:
+                lineIndex = this.readLineIndex(4);
+                break;
+            case 64784 /* i64x2_extract_lane */:
+            case 64785 /* i64x2_replace_lane */:
+            case 64790 /* f64x2_extract_lane */:
+            case 64791 /* f64x2_replace_lane */:
+                lineIndex = this.readLineIndex(2);
+                break;
+            case 64772 /* i8x16_splat */:
+            case 64776 /* i16x8_splat */:
+            case 64780 /* i32x4_splat */:
+            case 64783 /* i64x2_splat */:
+            case 64786 /* f32x4_splat */:
+            case 64789 /* f64x2_splat */:
+            case 64792 /* i8x16_eq */:
+            case 64793 /* i8x16_ne */:
+            case 64794 /* i8x16_lt_s */:
+            case 64795 /* i8x16_lt_u */:
+            case 64796 /* i8x16_gt_s */:
+            case 64797 /* i8x16_gt_u */:
+            case 64798 /* i8x16_le_s */:
+            case 64799 /* i8x16_le_u */:
+            case 64800 /* i8x16_ge_s */:
+            case 64801 /* i8x16_ge_u */:
+            case 64802 /* i16x8_eq */:
+            case 64803 /* i16x8_ne */:
+            case 64804 /* i16x8_lt_s */:
+            case 64805 /* i16x8_lt_u */:
+            case 64806 /* i16x8_gt_s */:
+            case 64807 /* i16x8_gt_u */:
+            case 64808 /* i16x8_le_s */:
+            case 64809 /* i16x8_le_u */:
+            case 64810 /* i16x8_ge_s */:
+            case 64811 /* i16x8_ge_u */:
+            case 64812 /* i32x4_eq */:
+            case 64813 /* i32x4_ne */:
+            case 64814 /* i32x4_lt_s */:
+            case 64815 /* i32x4_lt_u */:
+            case 64816 /* i32x4_gt_s */:
+            case 64817 /* i32x4_gt_u */:
+            case 64818 /* i32x4_le_s */:
+            case 64819 /* i32x4_le_u */:
+            case 64820 /* i32x4_ge_s */:
+            case 64821 /* i32x4_ge_u */:
+            case 64832 /* f32x4_eq */:
+            case 64833 /* f32x4_ne */:
+            case 64834 /* f32x4_lt */:
+            case 64835 /* f32x4_gt */:
+            case 64836 /* f32x4_le */:
+            case 64837 /* f32x4_ge */:
+            case 64838 /* f64x2_eq */:
+            case 64839 /* f64x2_ne */:
+            case 64840 /* f64x2_lt */:
+            case 64841 /* f64x2_gt */:
+            case 64842 /* f64x2_le */:
+            case 64843 /* f64x2_ge */:
+            case 64844 /* v128_not */:
+            case 64845 /* v128_and */:
+            case 64846 /* v128_or */:
+            case 64847 /* v128_xor */:
+            case 64848 /* v128_bitselect */:
+            case 64849 /* i8x16_neg */:
+            case 64850 /* i8x16_any_true */:
+            case 64851 /* i8x16_all_true */:
+            case 64852 /* i8x16_shl */:
+            case 64853 /* i8x16_shr_s */:
+            case 64854 /* i8x16_shr_u */:
+            case 64855 /* i8x16_add */:
+            case 64856 /* i8x16_add_saturate_s */:
+            case 64857 /* i8x16_add_saturate_u */:
+            case 64858 /* i8x16_sub */:
+            case 64859 /* i8x16_sub_saturate_s */:
+            case 64860 /* i8x16_sub_saturate_u */:
+            case 64861 /* i8x16_mul */:
+            case 64866 /* i16x8_neg */:
+            case 64867 /* i16x8_any_true */:
+            case 64868 /* i16x8_all_true */:
+            case 64869 /* i16x8_shl */:
+            case 64870 /* i16x8_shr_s */:
+            case 64871 /* i16x8_shr_u */:
+            case 64872 /* i16x8_add */:
+            case 64873 /* i16x8_add_saturate_s */:
+            case 64874 /* i16x8_add_saturate_u */:
+            case 64875 /* i16x8_sub */:
+            case 64876 /* i16x8_sub_saturate_s */:
+            case 64877 /* i16x8_sub_saturate_u */:
+            case 64878 /* i16x8_mul */:
+            case 64883 /* i32x4_neg */:
+            case 64884 /* i32x4_any_true */:
+            case 64885 /* i32x4_all_true */:
+            case 64886 /* i32x4_shl */:
+            case 64887 /* i32x4_shr_s */:
+            case 64888 /* i32x4_shr_u */:
+            case 64889 /* i32x4_add */:
+            case 64892 /* i32x4_sub */:
+            case 64895 /* i32x4_mul */:
+            case 64900 /* i64x2_neg */:
+            case 64901 /* i64x2_any_true */:
+            case 64902 /* i64x2_all_true */:
+            case 64903 /* i64x2_shl */:
+            case 64904 /* i64x2_shr_s */:
+            case 64905 /* i64x2_shr_u */:
+            case 64906 /* i64x2_add */:
+            case 64909 /* i64x2_sub */:
+            case 64917 /* f32x4_abs */:
+            case 64918 /* f32x4_neg */:
+            case 64919 /* f32x4_sqrt */:
+            case 64922 /* f32x4_add */:
+            case 64923 /* f32x4_sub */:
+            case 64924 /* f32x4_mul */:
+            case 64925 /* f32x4_div */:
+            case 64926 /* f32x4_min */:
+            case 64927 /* f32x4_max */:
+            case 64928 /* f64x2_abs */:
+            case 64929 /* f64x2_neg */:
+            case 64930 /* f64x2_sqrt */:
+            case 64933 /* f64x2_add */:
+            case 64934 /* f64x2_sub */:
+            case 64935 /* f64x2_mul */:
+            case 64936 /* f64x2_div */:
+            case 64937 /* f64x2_min */:
+            case 64938 /* f64x2_max */:
+            case 64939 /* i32x4_trunc_s_f32x4_sat */:
+            case 64940 /* i32x4_trunc_u_f32x4_sat */:
+            case 64941 /* i64x2_trunc_s_f64x2_sat */:
+            case 64942 /* i64x2_trunc_u_f64x2_sat */:
+            case 64943 /* f32x4_convert_s_i32x4 */:
+            case 64944 /* f32x4_convert_u_i32x4 */:
+            case 64945 /* f64x2_convert_s_i64x2 */:
+            case 64946 /* f64x2_convert_u_i64x2 */:
+                break;
+            default:
+                this.error = new Error("Unknown operator: " + code);
+                this.state = -1 /* ERROR */;
+                return true;
+        }
+        this.result = { code: code,
+            blockType: undefined, brDepth: undefined, brTable: undefined,
+            funcIndex: undefined, typeIndex: undefined, localIndex: undefined,
+            globalIndex: undefined, memoryAddress: memoryAddress, literal: literal,
+            lines: lines, lineIndex: lineIndex, };
         return true;
     };
     BinaryReader.prototype.readCodeOperator_0xfe = function () {
@@ -1147,7 +1478,8 @@ var BinaryReader = /** @class */ (function () {
         this.result = { code: code,
             blockType: undefined, brDepth: undefined, brTable: undefined,
             funcIndex: undefined, typeIndex: undefined, localIndex: undefined,
-            globalIndex: undefined, memoryAddress: memoryAddress, literal: undefined };
+            globalIndex: undefined, memoryAddress: memoryAddress, literal: undefined,
+            lines: undefined, lineIndex: undefined, };
         return true;
     };
     BinaryReader.prototype.readCodeOperator = function () {
@@ -1257,6 +1589,12 @@ var BinaryReader = /** @class */ (function () {
                 break;
             case 252 /* prefix_0xfc */:
                 if (this.readCodeOperator_0xfc()) {
+                    return true;
+                }
+                this._pos = pos;
+                return false;
+            case 253 /* prefix_0xfd */:
+                if (this.readCodeOperator_0xfd()) {
                     return true;
                 }
                 this._pos = pos;
@@ -1411,7 +1749,8 @@ var BinaryReader = /** @class */ (function () {
         this.result = { code: code,
             blockType: blockType, brDepth: brDepth, brTable: brTable,
             funcIndex: funcIndex, typeIndex: typeIndex, localIndex: localIndex,
-            globalIndex: globalIndex, memoryAddress: memoryAddress, literal: literal };
+            globalIndex: globalIndex, memoryAddress: memoryAddress, literal: literal,
+            lines: undefined, lineIndex: undefined, };
         return true;
     };
     BinaryReader.prototype.readFunctionBody = function () {
