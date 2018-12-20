@@ -820,7 +820,7 @@ var gDownloadingPage = {
       this._pauseButton.setAttribute("tooltiptext",
                                      gUpdates.getAUSString("pauseButtonResume"));
       this._pauseButton.setAttribute("paused", "true");
-      var p = u.selectedPatch.QueryInterface(Ci.nsIPropertyBag);
+      var p = u.selectedPatch.QueryInterface(Ci.nsIWritablePropertyBag);
       var status = p.getProperty("status");
       if (status) {
         let pausedStatus = gUpdates.getAUSString("downloadPausedStatus", [status]);
