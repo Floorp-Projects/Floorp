@@ -19,6 +19,7 @@ const { div } = dom;
 
 const markerWidth = 7;
 const imgResource = "resource://devtools/client/debugger/new/images";
+const imgChrome = "chrome://devtools/skin/images";
 const shouldLog = false;
 
 function classname(name, bools) {
@@ -47,6 +48,9 @@ function CommandButton({ img, className, onClick }) {
     play: "resume",
   };
 
+  const filename = images[img];
+  const path = filename == "next" ? imgChrome : imgResource;
+
   return dom.div(
     {
       className: `command-button ${className}`,
@@ -55,7 +59,7 @@ function CommandButton({ img, className, onClick }) {
     dom.img({
       className: `btn ${img}`,
       style: {
-        maskImage: `url("${imgResource}/${images[img]}.svg")`,
+        maskImage: `url("${path}/${filename}.svg")`,
       },
     })
   );
