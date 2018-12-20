@@ -350,6 +350,7 @@ class SearchBar extends Component<Props, State> {
           count={count}
           placeholder={L10N.getStr("sourceSearch.search.placeholder2")}
           summaryMsg={this.buildSummaryMsg()}
+          isLoading={false}
           onChange={this.onChange}
           onFocus={this.onFocus}
           onBlur={this.onBlur}

@@ -387,6 +387,7 @@ export class QuickOpenModal extends Component<Props, State> {
           placeholder={L10N.getStr("sourceSearch.search2")}
           summaryMsg={this.getSummaryMessage()}
           showErrorEmoji={this.shouldShowErrorEmoji()}
+          isLoading={false}
           onChange={this.onChange}
           onKeyDown={this.onKeyDown}
           handleClose={this.closeModal}
