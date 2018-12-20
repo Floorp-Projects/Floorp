@@ -66,6 +66,7 @@ CompositorVsyncScheduler::CompositorVsyncScheduler(
     widget::CompositorWidget* aWidget)
     : mVsyncSchedulerOwner(aVsyncSchedulerOwner),
       mLastCompose(TimeStamp::Now()),
+      mLastVsync(TimeStamp::Now()),
       mIsObservingVsync(false),
       mVsyncNotificationsSkipped(0),
       mWidget(aWidget),
@@ -200,6 +201,9 @@ void CompositorVsyncScheduler::Composite(VsyncId aId,
     mCurrentCompositeTask = nullptr;
   }
 
+  mLastVsync = aVsyncTimestamp;
+  mLastVsyncId = aId;
+
   if (!mAsapScheduling) {
     // Some early exit conditions if we're not in ASAP mode
     if (aVsyncTimestamp < mLastCompose) {
@@ -314,6 +318,16 @@ void CompositorVsyncScheduler::ScheduleTask(
 const TimeStamp& CompositorVsyncScheduler::GetLastComposeTime() const {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   return mLastCompose;
+}
+
+const TimeStamp& CompositorVsyncScheduler::GetLastVsyncTime() const {
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
+  return mLastVsync;
+}
+
+const VsyncId& CompositorVsyncScheduler::GetLastVsyncId() const {
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
+  return mLastVsyncId;
 }
 
 void CompositorVsyncScheduler::UpdateLastComposeTime() {

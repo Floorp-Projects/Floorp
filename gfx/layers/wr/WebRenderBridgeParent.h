@@ -225,6 +225,8 @@ class WebRenderBridgeParent final : public PWebRenderBridgeParent,
    */
   void ScheduleForcedGenerateFrame();
 
+  void NotifyDidSceneBuild();
+
   wr::Epoch UpdateWebRender(
       CompositorVsyncScheduler* aScheduler, wr::WebRenderAPI* aApi,
       AsyncImagePipelineManager* aImageMgr,
@@ -393,6 +395,7 @@ class WebRenderBridgeParent final : public PWebRenderBridgeParent,
   wr::IdNamespace mIdNamespace;
 
   VsyncId mSkippedCompositeId;
+  TimeStamp mMostRecentComposite;
 
   bool mPaused;
   bool mDestroyed;
