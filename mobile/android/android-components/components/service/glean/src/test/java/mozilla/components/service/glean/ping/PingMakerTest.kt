@@ -19,6 +19,7 @@ import org.junit.Assert.assertTrue
 import org.junit.runner.RunWith
 import org.mockito.Mockito.mock
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 
@@ -27,6 +28,7 @@ class PingMakerTest {
     private val mockApplicationContext = mock(Context::class.java)
 
     @Test
+    @Config(minSdk = 21)
     fun `"ping_info" must contain a non-empty start_time and end_time`() {
         val maker = PingMaker(StorageEngineManager(storageEngines = mapOf(
                 "engine2" to MockStorageEngine(JSONObject())
@@ -47,7 +49,7 @@ class PingMakerTest {
         DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse(pingInfo.getString("end_time"))
         OffsetDateTime.parse(pingInfo.getString("start_time"))
         assertTrue(OffsetDateTime.parse(pingInfo.getString("start_time"))
-            >= OffsetDateTime.parse(pingInfo.getString("end_time")))
+            <= OffsetDateTime.parse(pingInfo.getString("end_time")))
     }
 
     @Test

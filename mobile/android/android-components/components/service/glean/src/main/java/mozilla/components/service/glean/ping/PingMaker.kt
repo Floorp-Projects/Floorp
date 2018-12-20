@@ -12,6 +12,7 @@ import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.org.json.mergeWith
 import org.json.JSONException
 import org.json.JSONObject
+import java.lang.StringBuilder
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -29,8 +30,18 @@ internal class PingMaker(
      * @return a string containing the date and time.
      */
     private fun getISOTimeString(): String {
-        val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mmXXX", Locale.US)
-        return dateFormat.format(Date())
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mmZ", Locale.US)
+        val timeString = StringBuilder(dateFormat.format(Date()))
+
+        // Due to limitations of SDK version 21, there isn't a way to properly output the time
+        // offset with a ':' character:
+        // 2018-12-19T12:36-0600    --  This is what we get
+        // 2018-12-19T12:36-06:00   -- This is what GCP will expect
+        //
+        // In order to satisfy time offset requirements of GCP, we manually insert the ":"
+        timeString.insert(timeString.length - 2, ":")
+
+        return timeString.toString()
     }
 
     /**

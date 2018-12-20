@@ -21,12 +21,30 @@ The following fields are always included in the `ping_info` section, for every p
 | `client_id` | UUID |  A UUID identifying a profile and allowing user-oriented correlation of data |
 | `seq` | Counter | A running counter of the number of times pings of this type have been sent |
 | `experiments` | Object | A dictionary of [active experiments](#the-experiments-object) |
-| `start_time` | Datetime | The time of the start of collection of the data in the ping |
-| `end_time` | Datetime | The time of the end of collection of the data in the ping. This is also the time this ping was generated and is likely well before ping transmission time |
+| `start_time` | Datetime | The time of the start of collection of the data in the ping | See [note](#a-note-about-time-formats) |
+| `end_time` | Datetime | The time of the end of collection of the data in the ping. This is also the time this ping was generated and is likely well before ping transmission time | See [note](#a-note-about-time-formats) |
 | `profile_age` | Datetime | TBD |
 
 All the metrics surviving application restarts (e.g. `client_id`, `seq`, ...) are removed once the
 application using glean is uninstalled.
+
+### A note about time formats
+Time formats are used and expected in ISO 8601 format.  Due to the minimum Android SDK version 21
+not having direct support of outputting or parsing these formats, there was difficulty in finding
+a way to output these formats with the `:` character properly encoded in the timezone offset.  So
+we get the following:
+
+```
+2018-12-19T12:36-0600
+```
+
+We require the following to comply with certain back-end services:
+
+```
+2018-12-19T12:36-06:00
+```
+
+Which is why the `:` is manually inserted in order to comply with the format and requirements.
 
 ### The `experiments` object
 This object contains experiments keyed by the experiment `id`. Each listed experiment contains the
