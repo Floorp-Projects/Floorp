@@ -314,6 +314,7 @@ export class ProjectSearch extends Component<Props, State> {
   }
 
   renderInput() {
+    const { status } = this.props;
     return (
       <SearchInput
         query={this.state.inputValue}
@@ -322,6 +323,7 @@ export class ProjectSearch extends Component<Props, State> {
         size="big"
         showErrorEmoji={this.shouldShowErrorEmoji()}
         summaryMsg={this.renderSummary()}
+        isLoading={status === statusType.fetching}
         onChange={this.inputOnChange}
         onFocus={() => this.setState({ inputFocused: true })}
         onBlur={() => this.setState({ inputFocused: false })}
