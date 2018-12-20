@@ -8,7 +8,11 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#if defined(_MSC_VER) && !defined(__clang__)
+#include <arm64_neon.h>
+#else
 #include <arm_neon.h>
+#endif
 #include <stdlib.h>
 
 #include "rtc_base/checks.h"
@@ -37,7 +41,7 @@ int16_t WebRtcSpl_MaxAbsValueW16Neon(const int16_t* vector, size_t length) {
     p_start += 8;
   }
 
-#ifdef WEBRTC_ARCH_ARM64
+#if defined(WEBRTC_ARCH_ARM64) && (!defined(_MSC_VER) || defined(__clang__))
   maximum = (int)vmaxvq_u16(max_qv);
 #else
   uint16x4_t max_dv;
@@ -97,7 +101,7 @@ int32_t WebRtcSpl_MaxAbsValueW32Neon(const int32_t* vector, size_t length) {
   }
 
   uint32x4_t max32x4 = vmaxq_u32(max32x4_0, max32x4_1);
-#if defined(WEBRTC_ARCH_ARM64)
+#if defined(WEBRTC_ARCH_ARM64) && (!defined(_MSC_VER) || defined(__clang__))
   maximum = vmaxvq_u32(max32x4);
 #else
   uint32x2_t max32x2 = vmax_u32(vget_low_u32(max32x4), vget_high_u32(max32x4));
@@ -140,7 +144,7 @@ int16_t WebRtcSpl_MaxValueW16Neon(const int16_t* vector, size_t length) {
     p_start += 8;
   }
 
-#if defined(WEBRTC_ARCH_ARM64)
+#if defined(WEBRTC_ARCH_ARM64) && (!defined(_MSC_VER) || defined(__clang__))
   maximum = vmaxvq_s16(max16x8);
 #else
   int16x4_t max16x4 = vmax_s16(vget_low_s16(max16x8), vget_high_s16(max16x8));
@@ -183,7 +187,7 @@ int32_t WebRtcSpl_MaxValueW32Neon(const int32_t* vector, size_t length) {
   }
 
   int32x4_t max32x4 = vmaxq_s32(max32x4_0, max32x4_1);
-#if defined(WEBRTC_ARCH_ARM64)
+#if defined(WEBRTC_ARCH_ARM64) && (!defined(_MSC_VER) || defined(__clang__))
   maximum = vmaxvq_s32(max32x4);
 #else
   int32x2_t max32x2 = vmax_s32(vget_low_s32(max32x4), vget_high_s32(max32x4));
@@ -220,7 +224,7 @@ int16_t WebRtcSpl_MinValueW16Neon(const int16_t* vector, size_t length) {
     p_start += 8;
   }
 
-#if defined(WEBRTC_ARCH_ARM64)
+#if defined(WEBRTC_ARCH_ARM64) && (!defined(_MSC_VER) || defined(__clang__))
   minimum = vminvq_s16(min16x8);
 #else
   int16x4_t min16x4 = vmin_s16(vget_low_s16(min16x8), vget_high_s16(min16x8));
@@ -263,7 +267,7 @@ int32_t WebRtcSpl_MinValueW32Neon(const int32_t* vector, size_t length) {
   }
 
   int32x4_t min32x4 = vminq_s32(min32x4_0, min32x4_1);
-#if defined(WEBRTC_ARCH_ARM64)
+#if defined(WEBRTC_ARCH_ARM64) && (!defined(_MSC_VER) || defined(__clang__))
   minimum = vminvq_s32(min32x4);
 #else
   int32x2_t min32x2 = vmin_s32(vget_low_s32(min32x4), vget_high_s32(min32x4));

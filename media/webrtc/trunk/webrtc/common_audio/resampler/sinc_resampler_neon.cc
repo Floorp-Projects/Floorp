@@ -13,7 +13,11 @@
 
 #include "common_audio/resampler/sinc_resampler.h"
 
+#if defined(_MSC_VER) && !defined(__clang__)
+#include <arm64_neon.h>
+#else
 #include <arm_neon.h>
+#endif
 
 namespace webrtc {
 
