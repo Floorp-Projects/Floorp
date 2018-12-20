@@ -312,6 +312,8 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
 
   void SetIsBackgroundVideoDecodingAllowed(bool aAllowed);
 
+  bool IsVideoDecodingSuspended() const;
+
   /******
    * The following methods must only be called on the main
    * thread.
@@ -577,6 +579,9 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
   MediaEventListener mOnWaitingForKey;
   MediaEventListener mOnDecodeWarning;
   MediaEventListener mOnNextFrameStatus;
+
+  // True if we have suspended video decoding.
+  bool mIsVideoDecodingSuspended = false;
 
  protected:
   // PlaybackRate and pitch preservation status we should start at.
