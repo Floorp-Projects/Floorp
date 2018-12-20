@@ -7,7 +7,7 @@ function createFileWithData(fileData) {
 
   var testFile = dirSvc.get("ProfD", Ci.nsIFile);
   testFile.append("fileAPItestfile");
-  testFile.createUnique(Ci.nsIFile.FILE_TYPE, 0o600);
+  testFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o600);
 
   var outStream = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(Ci.nsIFileOutputStream);
   outStream.init(testFile, 0x02 | 0x08 | 0x20, // write, create, truncate
