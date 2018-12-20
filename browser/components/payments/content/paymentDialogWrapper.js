@@ -400,6 +400,17 @@ var paymentDialogWrapper = {
     return savedBasicCards;
   },
 
+  fetchTempPaymentCards() {
+    let creditCards = this.temporaryStore.creditCards.getAll();
+    for (let card of Object.values(creditCards)) {
+      // Ensure each card has a methodName property.
+      if (!card.methodName) {
+        card.methodName = "basic-card";
+      }
+    }
+    return creditCards;
+  },
+
   async onAutofillStorageChange() {
     let [savedAddresses, savedBasicCards] =
       await Promise.all([this.fetchSavedAddresses(), this.fetchSavedPaymentCards()]);
@@ -521,7 +532,7 @@ var paymentDialogWrapper = {
       savedAddresses,
       tempAddresses: this.temporaryStore.addresses.getAll(),
       savedBasicCards,
-      tempBasicCards: this.temporaryStore.creditCards.getAll(),
+      tempBasicCards: this.fetchTempPaymentCards(),
       isPrivate,
     });
   },
@@ -719,7 +730,7 @@ var paymentDialogWrapper = {
         // there will be no formautofill-storage-changed event to update state
         // so add updated collection here
         Object.assign(responseMessage.stateChange, {
-          tempBasicCards: this.temporaryStore.creditCards.getAll(),
+          tempBasicCards: this.fetchTempPaymentCards(),
         });
       }
     } catch (ex) {
