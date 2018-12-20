@@ -9,24 +9,30 @@
   <script type="application/javascript" src="/tests/SimpleTest/paint_listener.js"></script>
   <script type="application/javascript">
 
-function scrollPage() {
-  var transformEnd = function() {
-    SpecialPowers.Services.obs.removeObserver(transformEnd, "APZ:TransformEnd", false);
-    dump("Transform complete; flushing repaints...\n");
-    flushApzRepaints(checkScroll);
-  };
-  SpecialPowers.Services.obs.addObserver(transformEnd, "APZ:TransformEnd");
+function* test(testDriver) {
+  // This listener will trigger the test to continue once APZ is done with
+  // processing the scroll.
+  SpecialPowers.Services.obs.addObserver(testDriver, "APZ:TransformEnd");
 
   synthesizeNativeTouchDrag(document.body, 10, 100, 0, -50);
   dump("Finished native drag, waiting for transform-end observer...\n");
-}
 
-function checkScroll() {
+  // Wait for the APZ:TransformEnd to be fired after touch events are processed.
+  yield true;
+
+  // We get here once the APZ:TransformEnd has fired, so we don't need that
+  // observer any more.
+  SpecialPowers.Services.obs.removeObserver(testDriver, "APZ:TransformEnd", false);
+
+  // Flush state.
+  yield flushApzRepaints(testDriver);
+
   is(window.scrollY, 50, "check that the window scrolled");
-  subtestDone();
 }
 
-waitUntilApzStable().then(scrollPage);
+waitUntilApzStable()
+.then(runContinuation(test))
+.then(subtestDone);
 
   </script>
 </head>
