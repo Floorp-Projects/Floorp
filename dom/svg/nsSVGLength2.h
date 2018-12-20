@@ -89,8 +89,8 @@ class nsSVGLength2 {
   typedef mozilla::dom::SVGViewportElement SVGViewportElement;
 
  public:
-  void Init(uint8_t aCtxType = SVGContentUtils::XY, uint8_t aAttrEnum = 0xff,
-            float aValue = 0,
+  void Init(uint8_t aCtxType = mozilla::SVGContentUtils::XY,
+            uint8_t aAttrEnum = 0xff, float aValue = 0,
             uint8_t aUnitType =
                 mozilla::dom::SVGLength_Binding::SVG_LENGTHTYPE_NUMBER) {
     mAnimVal = mBaseVal = aValue;
