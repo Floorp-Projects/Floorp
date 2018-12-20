@@ -34,10 +34,11 @@ class EditAutofillForm {
     if (!record.guid) {
       // Reset the dirty value flag and validity state.
       this._elements.form.reset();
-    }
-
-    for (let field of this._elements.form.elements) {
-      this.updatePopulatedState(field);
+    } else {
+      for (let field of this._elements.form.elements) {
+        this.updatePopulatedState(field);
+        this.updateCustomValidity(field);
+      }
     }
   }
 
@@ -126,6 +127,13 @@ class EditAutofillForm {
     }
     span.toggleAttribute("field-populated", !!field.value.trim());
   }
+
+  /**
+   * Run custom validity routines specific to the field and type of form.
+   *
+   * @param {DOMElement} field The field that will be validated.
+   */
+  updateCustomValidity(field) {}
 }
 
 class EditAddress extends EditAutofillForm {
@@ -456,8 +464,8 @@ class EditCreditCard extends EditAutofillForm {
       billingAddressRow: this._elements.form.querySelector(".billingAddressRow"),
     });
 
-    this.loadRecord(record, addresses);
     this.attachEventListeners();
+    this.loadRecord(record, addresses);
   }
 
   loadRecord(record, addresses, preserveFieldValues) {
@@ -473,11 +481,6 @@ class EditCreditCard extends EditAutofillForm {
       // Re-generating the years will reset the selected option.
       this.generateYears();
       super.loadRecord(record);
-
-      // Resetting the form in the super.loadRecord won't clear custom validity
-      // state so reset it here. Since the cc-number field is disabled upon editing
-      // we don't need to recaclulate its validity here.
-      this._elements.ccNumber.setCustomValidity("");
     }
   }
 
@@ -574,22 +577,6 @@ class EditCreditCard extends EditAutofillForm {
     super.attachEventListeners();
   }
 
-  handleChange(event) {
-    super.handleChange(event);
-
-    if (event.target != this._elements.ccNumber) {
-      return;
-    }
-
-    let ccNumberField = this._elements.ccNumber;
-
-    // Mark the cc-number field as invalid if the number is empty or invalid.
-    if (!this.isCCNumber(ccNumberField.value)) {
-      let invalidCardNumberString = this._elements.invalidCardNumberStringElement.textContent;
-      ccNumberField.setCustomValidity(invalidCardNumberString || " ");
-    }
-  }
-
   handleInput(event) {
     // Clear the error message if cc-number is valid
     if (event.target == this._elements.ccNumber &&
@@ -597,5 +584,16 @@ class EditCreditCard extends EditAutofillForm {
       this._elements.ccNumber.setCustomValidity("");
     }
     super.handleInput(event);
+  }
+
+  updateCustomValidity(field) {
+    super.updateCustomValidity(field);
+
+    // Mark the cc-number field as invalid if the number is empty or invalid.
+    if (field == this._elements.ccNumber &&
+        !this.isCCNumber(field.value)) {
+      let invalidCardNumberString = this._elements.invalidCardNumberStringElement.textContent;
+      field.setCustomValidity(invalidCardNumberString || " ");
+    }
   }
 }
