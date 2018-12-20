@@ -7,9 +7,18 @@
   <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
   <script type="application/javascript" src="apz_test_utils.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
   <script type="application/javascript">
 
 function* test(testDriver) {
+  let scrEvt = new EventCounter(window, "scroll");
+  let visScrEvt = new EventCounter(window.visualViewport, "scroll");
+  // Our internal visual viewport events aren't restricted to the visual view-
+  // port itself, so we can listen on the window itself, however the event
+  // listener needs to be in the system group.
+  let visScrEvtInternal = new EventCounter(window, "mozvisualscroll",
+                                           { mozSystemGroup: true });
+
   // This listener will trigger the test to continue once APZ is done with
   // processing the scroll.
   SpecialPowers.Services.obs.addObserver(testDriver, "APZ:TransformEnd");
@@ -25,9 +34,33 @@ function* test(testDriver) {
   SpecialPowers.Services.obs.removeObserver(testDriver, "APZ:TransformEnd", false);
 
   // Flush state.
-  yield flushApzRepaints(testDriver);
+  yield waitForApzFlushedRepaints(testDriver);
 
   is(window.scrollY, 50, "check that the window scrolled");
+
+  // Check we've got the expected events.
+  // This page is using "width=device-width; initial-scale=1.0" and we haven't
+  // pinch-zoomed any further, so layout and visual viewports have the same
+  // size and will scroll together. Therefore we should be getting layout
+  // viewport "scroll" events as well.
+  scrEvt.unregister();
+  ok(scrEvt.count > 0, "Got some layout viewport scroll events");
+  // This one is a bit tricky: Visual viewport "scroll" events are supposed to
+  // fire only when the relative offset between layout and visual viewport
+  // changes. Even when they're both scrolling together, we may update their
+  // positions independently, though, leading to some jitter in the offset and
+  // triggering the event after all.
+  // At least for the case here, where both viewports are the same size and we
+  // have a freshly loaded page, we should however be able to keep the offset at
+  // a constant zero and therefore not cause any visual viewport scroll events
+  // to fire.
+  visScrEvt.unregister();
+  is(visScrEvt.count, 0, "Got no visual viewport scroll events");
+  visScrEvtInternal.unregister();
+  // Our internal visual viewport scroll event on the other hand only cares
+  // about the absolute offset of the visual viewport and should therefore
+  // definitively fire.
+  todo(visScrEvtInternal.count > 0, "Got some mozvisualscroll events");
 }
 
 waitUntilApzStable()
