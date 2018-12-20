@@ -156,7 +156,7 @@ public final class GeckoSessionSettings implements Parcelable {
         mBundle.putInt(DISPLAY_MODE.name, DISPLAY_MODE_BROWSER);
     }
 
-    public void setBoolean(final Key<Boolean> key, final boolean value) {
+    public void setBoolean(final @NonNull Key<Boolean> key, final boolean value) {
         synchronized (mBundle) {
             if (valueChangedLocked(key, value)) {
                 mBundle.putBoolean(key.name, value);
@@ -165,13 +165,13 @@ public final class GeckoSessionSettings implements Parcelable {
         }
     }
 
-    public boolean getBoolean(final Key<Boolean> key) {
+    public boolean getBoolean(final @NonNull Key<Boolean> key) {
         synchronized (mBundle) {
             return mBundle.getBoolean(key.name);
         }
     }
 
-    public void setInt(final Key<Integer> key, final int value) {
+    public void setInt(final @NonNull Key<Integer> key, final int value) {
         synchronized (mBundle) {
             if (valueChangedLocked(key, value)) {
                 mBundle.putInt(key.name, value);
@@ -180,13 +180,13 @@ public final class GeckoSessionSettings implements Parcelable {
         }
     }
 
-    public int getInt(final Key<Integer> key) {
+    public int getInt(final @NonNull Key<Integer> key) {
         synchronized (mBundle) {
             return mBundle.getInt(key.name);
         }
     }
 
-    public void setString(final Key<String> key, final String value) {
+    public void setString(final @NonNull Key<String> key, final @Nullable String value) {
         synchronized (mBundle) {
             if (valueChangedLocked(key, value)) {
                 mBundle.putString(key.name, value);
@@ -195,7 +195,7 @@ public final class GeckoSessionSettings implements Parcelable {
         }
     }
 
-    public String getString(final Key<String> key) {
+    public String getString(final @NonNull Key<String> key) {
         synchronized (mBundle) {
             return mBundle.getString(key.name);
         }
@@ -244,12 +244,12 @@ public final class GeckoSessionSettings implements Parcelable {
     }
 
     @Override // Parcelable
-    public void writeToParcel(Parcel out, int flags) {
+    public void writeToParcel(@NonNull Parcel out, int flags) {
         mBundle.writeToParcel(out, flags);
     }
 
     // AIDL code may call readFromParcel even though it's not part of Parcelable.
-    public void readFromParcel(final Parcel source) {
+    public void readFromParcel(final @NonNull Parcel source) {
         mBundle.readFromParcel(source);
     }
 

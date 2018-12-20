@@ -4,6 +4,9 @@ layout: geckoview
 
 <h1> GeckoView API Changelog. </h1>
 
+## v66
+- Added `@NonNull` or `@Nullable` to all APIs.
+
 ## v65
 - Moved `CompositorController`, `DynamicToolbarAnimator`,
   `OverscrollEdgeEffect`, `PanZoomController` from `org.mozilla.gecko.gfx` to
@@ -36,4 +39,4 @@ layout: geckoview
 - Update `CrashReporter.sendCrashReport()` to return the crash ID as a
   GeckoResult<String>.
 
-[api-version]: bb945ae930ebf055f11821c685a6691faa7e5a3a
+[api-version]: cdbaa3fa639126d2d45a0cd8e9508f95a9e98e33

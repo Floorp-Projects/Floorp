@@ -666,7 +666,7 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "MediaStreamTrack", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "MerchantValidationEvent", insecureContext: false, desktop: true, nightly: true, linux: false},
+    {name: "MerchantValidationEvent", insecureContext: false, desktop: true, nightly: true, linux: false, disabled: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "MessageChannel", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
@@ -748,15 +748,15 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "Path2D", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "PaymentAddress", insecureContext: false, desktop: true, nightly: true, linux: false},
+    {name: "PaymentAddress", insecureContext: false, desktop: true, nightly: true, linux: false, disabled: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "PaymentMethodChangeEvent", insecureContext: false, desktop: true, nightly: true, linux: false},
+    {name: "PaymentMethodChangeEvent", insecureContext: false, desktop: true, nightly: true, linux: false, disabled: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "PaymentRequest", insecureContext: false, desktop: true, nightly: true, linux: false},
+    {name: "PaymentRequest", insecureContext: false, desktop: true, nightly: true, linux: false, disabled: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "PaymentRequestUpdateEvent", insecureContext: false, desktop: true, nightly: true, linux: false},
+    {name: "PaymentRequestUpdateEvent", insecureContext: false, desktop: true, nightly: true, linux: false, disabled: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "PaymentResponse", insecureContext: false, desktop: true, nightly: true, linux: false},
+    {name: "PaymentResponse", insecureContext: false, desktop: true, nightly: true, linux: false, disabled: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "Performance", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!

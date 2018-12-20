@@ -222,7 +222,8 @@ with only_when(target_is_osx):
     # MacOS SDK
     # =========
 
-    option('--with-macos-sdk', nargs=1, help='Location of platform SDK to use')
+    option('--with-macos-sdk', env='MACOS_SDK_DIR', nargs=1,
+           help='Location of platform SDK to use')
 
     @depends_if('--with-macos-sdk')
     @imports(_from='os.path', _import='isdir')
@@ -237,7 +238,8 @@ with only_when(target_is_osx):
     set_config('MACOS_SDK_DIR', macos_sdk)
 
     with only_when(cross_compiling):
-        option('--with-macos-private-frameworks', nargs=1,
+        option('--with-macos-private-frameworks',
+               env="MACOS_PRIVATE_FRAMEWORKS_DIR", nargs=1,
                help='Location of private frameworks to use')
 
         @depends_if('--with-macos-private-frameworks')

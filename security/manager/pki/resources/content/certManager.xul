@@ -13,7 +13,7 @@
         data-l10n-id="certmgr-title"
         onload="LoadCerts();"
         buttons="accept"
-        style="width: 63em; height: 32em;"
+        style="width: 40em; height: 32em;"
         persist="screenX screenY width height">
 
   <linkset>

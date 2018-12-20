@@ -242,7 +242,7 @@ public class GeckoView extends FrameLayout {
         }
     }
 
-    public GeckoSession releaseSession() {
+    public @Nullable GeckoSession releaseSession() {
         ThreadUtils.assertOnUiThread();
 
         if (mSession == null) {
@@ -371,21 +371,21 @@ public class GeckoView extends FrameLayout {
     }
 
     @AnyThread
-    public GeckoSession getSession() {
+    public @Nullable GeckoSession getSession() {
         return mSession;
     }
 
     @AnyThread
-    public EventDispatcher getEventDispatcher() {
+    public @NonNull EventDispatcher getEventDispatcher() {
         return mSession.getEventDispatcher();
     }
 
-    public PanZoomController getPanZoomController() {
+    public @NonNull PanZoomController getPanZoomController() {
         ThreadUtils.assertOnUiThread();
         return mSession.getPanZoomController();
     }
 
-    public DynamicToolbarAnimator getDynamicToolbarAnimator() {
+    public @NonNull DynamicToolbarAnimator getDynamicToolbarAnimator() {
         ThreadUtils.assertOnUiThread();
         return mSession.getDynamicToolbarAnimator();
     }
