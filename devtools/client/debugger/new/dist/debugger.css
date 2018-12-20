@@ -1787,6 +1787,11 @@ html .toggle-button.end.vertical svg {
   margin-right: 5px;
 }
 
+.sources-list .tree .focused img:not(.vue):not(.angular),
+.sources-list .managed-tree .tree .node.focused img.blackBox {
+  background: #ffffff;
+}
+
 .sources-list .tree .label .suffix {
   font-style: italic;
   font-size: 0.9em;
@@ -2213,7 +2218,6 @@ menuseparator {
   mask-size: 100%;
   display: inline-block;
   margin-inline-end: 5px;
-  border: 0;
 }
 
 .source-icon,
