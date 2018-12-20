@@ -457,7 +457,8 @@ class WidgetEvent : public WidgetEventTime {
         mFlags.mBubbles = true;
         break;
       default:
-        if (mMessage == eResize || mMessage == eEditorInput) {
+        if (mMessage == eResize || mMessage == eMozVisualResize ||
+            mMessage == eMozVisualScroll || mMessage == eEditorInput) {
           mFlags.mCancelable = false;
         } else {
           mFlags.mCancelable = true;

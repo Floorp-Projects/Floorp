@@ -176,7 +176,7 @@ static ScreenMargin ScrollFrame(nsIContent* aContent,
       if (nsCOMPtr<nsIPresShell> shell = GetPresShell(aContent)) {
         shell->SetVisualViewportOffset(
             CSSPoint::ToAppUnits(aRequest.GetScrollOffset()),
-            shell->GetVisualViewportOffsetRelativeToLayoutViewport());
+            shell->GetLayoutViewportOffset());
       }
     }
   }
