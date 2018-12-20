@@ -103,7 +103,7 @@ class JSJitFrameIter {
  protected:
   uint8_t* current_;
   FrameType type_;
-  uint8_t* returnAddressToFp_;
+  uint8_t* resumePCinCurrentFrame_;
   size_t frameSize_;
 
  private:
@@ -123,8 +123,8 @@ class JSJitFrameIter {
 
   // Used only by DebugModeOSRVolatileJitFrameIter.
   void exchangeReturnAddressIfMatch(uint8_t* oldAddr, uint8_t* newAddr) {
-    if (returnAddressToFp_ == oldAddr) {
-      returnAddressToFp_ = newAddr;
+    if (resumePCinCurrentFrame_ == oldAddr) {
+      resumePCinCurrentFrame_ = newAddr;
     }
   }
 
@@ -183,9 +183,9 @@ class JSJitFrameIter {
   void baselineScriptAndPc(JSScript** scriptRes, jsbytecode** pcRes) const;
   Value* actualArgs() const;
 
-  // Returns the return address of the frame above this one (that is, the
-  // return address that returns back to the current frame).
-  uint8_t* returnAddressToFp() const { return returnAddressToFp_; }
+  // Returns the address of the next instruction that will execute in this
+  // frame, once control returns to this frame.
+  uint8_t* resumePCinCurrentFrame() const { return resumePCinCurrentFrame_; }
 
   // Previous frame information extracted from the current frame.
   inline size_t prevFrameLocalSize() const;
@@ -270,7 +270,7 @@ class JitcodeGlobalTable;
 class JSJitProfilingFrameIterator {
   uint8_t* fp_;
   FrameType type_;
-  void* returnAddressToFp_;
+  void* resumePCinCurrentFrame_;
 
   inline JitFrameLayout* framePtr();
   inline JSScript* frameScript();
@@ -299,9 +299,9 @@ class JSJitProfilingFrameIterator {
     MOZ_ASSERT(!done());
     return type_;
   }
-  void* returnAddressToFp() const {
+  void* resumePCinCurrentFrame() const {
     MOZ_ASSERT(!done());
-    return returnAddressToFp_;
+    return resumePCinCurrentFrame_;
   }
 };
 

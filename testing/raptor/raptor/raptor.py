@@ -13,7 +13,7 @@ import time
 
 import mozinfo
 
-from mozdevice import ADBAndroid
+from mozdevice import ADBDevice
 from mozlog import commandline, get_default_logger
 from mozprofile import create_profile
 from mozrunner import runners
@@ -112,7 +112,7 @@ class Raptor(object):
         if self.config['app'] == "geckoview":
             # create the android device handler; it gets initiated and sets up adb etc
             self.log.info("creating android device handler using mozdevice")
-            self.device = ADBAndroid(verbose=True)
+            self.device = ADBDevice(verbose=True)
             self.device.clear_logcat()
         else:
             # create the desktop browser runner

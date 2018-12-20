@@ -1189,12 +1189,12 @@ static void CheckForOutdatedParent(nsINode* aParent, nsINode* aNode,
 
     if (JS::GetNonCCWObjectGlobal(existingObj) != global->GetGlobalJSObject()) {
       JSAutoRealm ar(cx, existingObj);
-      ReparentWrapper(cx, existingObj, aError);
+      UpdateReflectorGlobal(cx, existingObj, aError);
     }
   }
 }
 
-static nsresult ReparentWrappersInSubtree(nsIContent* aRoot) {
+static nsresult UpdateGlobalsInSubtree(nsIContent* aRoot) {
   MOZ_ASSERT(ShouldUseXBLScope(aRoot));
   // Start off with no global so we don't fire any error events on failure.
   AutoJSAPI jsapi;
@@ -1207,7 +1207,7 @@ static nsresult ReparentWrappersInSubtree(nsIContent* aRoot) {
   for (nsIContent* cur = aRoot; cur; cur = cur->GetNextNode(aRoot)) {
     if ((reflector = cur->GetWrapper())) {
       JSAutoRealm ar(cx, reflector);
-      ReparentWrapper(cx, reflector, rv);
+      UpdateReflectorGlobal(cx, reflector, rv);
       rv.WouldReportJSException();
       if (rv.Failed()) {
         // We _could_ consider BlastSubtreeToPieces here, but it's not really
@@ -1279,7 +1279,7 @@ nsresult nsINode::InsertChildBefore(nsIContent* aKid,
   if (NS_SUCCEEDED(rv) && !wasInXBLScope && ShouldUseXBLScope(aKid)) {
     MOZ_ASSERT(ShouldUseXBLScope(this),
                "Why does the kid need to use an XBL scope?");
-    rv = ReparentWrappersInSubtree(aKid);
+    rv = UpdateGlobalsInSubtree(aKid);
   }
   if (NS_FAILED(rv)) {
     DisconnectChild(aKid);
