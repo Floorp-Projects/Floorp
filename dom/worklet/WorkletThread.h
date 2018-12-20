@@ -25,6 +25,12 @@ class WorkletThread final : public nsThread, public nsIObserver {
 
   static already_AddRefed<WorkletThread> Create();
 
+  // Threads that call EnsureCycleCollectedJSContext must call
+  // DeleteCycleCollectedJSContext::Get() before terminating.  Clients of
+  // Create() do not need to do this as Terminate() will ensure this happens.
+  static void EnsureCycleCollectedJSContext(JSRuntime* aParentRuntime);
+  static void DeleteCycleCollectedJSContext();
+
   static bool IsOnWorkletThread();
 
   static void AssertIsOnWorkletThread();
@@ -37,7 +43,7 @@ class WorkletThread final : public nsThread, public nsIObserver {
   WorkletThread();
   ~WorkletThread();
 
-  void RunEventLoop(JSRuntime* aParentRuntime);
+  void RunEventLoop();
   class PrimaryRunnable;
 
   void TerminateInternal();
