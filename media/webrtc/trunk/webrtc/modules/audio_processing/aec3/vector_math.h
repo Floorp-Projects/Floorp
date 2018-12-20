@@ -13,7 +13,11 @@
 
 #include "typedefs.h"  // NOLINT(build/include)
 #if defined(WEBRTC_HAS_NEON)
+#if defined(_MSC_VER) && !defined(__clang__)
+#include <arm64_neon.h>
+#else
 #include <arm_neon.h>
+#endif
 #endif
 #if defined(WEBRTC_ARCH_X86_FAMILY)
 #include <emmintrin.h>
