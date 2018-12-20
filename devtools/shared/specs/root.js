@@ -55,7 +55,9 @@ const rootSpecPrototype = {
     },
 
     listAddons: {
-      request: {},
+      request: {
+        iconDataURL: Option(0, "boolean"),
+      },
       response: {
         addons: RetVal("array:addonTarget"),
       },

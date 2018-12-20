@@ -30,7 +30,7 @@
   });
 
 // Disable the C++ 2a warning. See bug #1509926
-#if defined(__clang__)
+#if defined(__clang__) && (__clang_major__ >= 6)
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wc++2a-compat"
 #endif
@@ -2345,6 +2345,6 @@ CONVERSION_BENCH(PerfUTF8toUTF16VIThousand, CopyUTF8toUTF16, mViThousandUtf8,
 
 }  // namespace TestStrings
 
-#if defined(__clang__)
+#if defined(__clang__) && (__clang_major__ >= 6)
 #pragma clang diagnostic pop
 #endif

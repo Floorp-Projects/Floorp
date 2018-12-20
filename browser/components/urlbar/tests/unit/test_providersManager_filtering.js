@@ -117,41 +117,61 @@ add_task(async function test_filter_sources() {
                     UrlbarUtils.MATCH_SOURCE.HISTORY,
                     { url: "http://mozilla.org/foo/" }),
   ];
-  UrlbarProvidersManager.registerProvider({
-    name: "GoodProvider",
-    type: UrlbarUtils.PROVIDER_TYPE.PROFILE,
-    sources: [
-      UrlbarUtils.MATCH_SOURCE.TABS,
-      UrlbarUtils.MATCH_SOURCE.HISTORY,
-    ],
+  /**
+   * A test provider that should be invoked.
+   */
+  class TestProvider extends UrlbarProvider {
+    get name() {
+      return "GoodProvider";
+    }
+    get type() {
+      return UrlbarUtils.PROVIDER_TYPE.PROFILE;
+    }
+    get sources() {
+      return [
+        UrlbarUtils.MATCH_SOURCE.TABS,
+        UrlbarUtils.MATCH_SOURCE.HISTORY,
+      ];
+    }
     async startQuery(context, add) {
       Assert.ok(true, "expected provider was invoked");
       for (const match of goodMatches) {
         add(this, match);
       }
-    },
-    cancelQuery(context) {},
-  });
+    }
+    cancelQuery(context) {}
+  }
+  UrlbarProvidersManager.registerProvider(new TestProvider());
 
   let badMatches = [
     new UrlbarMatch(UrlbarUtils.MATCH_TYPE.URL,
                     UrlbarUtils.MATCH_SOURCE.BOOKMARKS,
                     { url: "http://mozilla.org/foo/" }),
   ];
-  UrlbarProvidersManager.registerProvider({
-    name: "BadProvider",
-    type: UrlbarUtils.PROVIDER_TYPE.PROFILE,
-    sources: [
-      UrlbarUtils.MATCH_SOURCE.BOOKMARKS,
-    ],
+
+  /**
+   * A test provider that should not be invoked.
+   */
+  class NoInvokeProvider extends UrlbarProvider {
+    get name() {
+      return "BadProvider";
+    }
+    get type() {
+      return UrlbarUtils.PROVIDER_TYPE.PROFILE;
+    }
+    get sources() {
+      return [UrlbarUtils.MATCH_SOURCE.BOOKMARKS];
+    }
     async startQuery(context, add) {
       Assert.ok(false, "Provider should no be invoked");
       for (const match of badMatches) {
         add(this, match);
       }
-    },
-    cancelQuery(context) {},
-  });
+    }
+    cancelQuery(context) {}
+  }
+
+  UrlbarProvidersManager.registerProvider(new NoInvokeProvider());
 
   let context = createContext(undefined, {
     sources: [UrlbarUtils.MATCH_SOURCE.TABS],

@@ -157,7 +157,9 @@ function requestExtensions() {
     const clientWrapper = getCurrentClient(getState().runtimes);
 
     try {
-      const addons = await clientWrapper.listAddons();
+      const isIconDataURLRequired = runtime.type !== RUNTIMES.THIS_FIREFOX;
+      const addons =
+        await clientWrapper.listAddons({ iconDataURL: isIconDataURLRequired });
       let extensions = addons.filter(a => a.debuggable);
 
       // Filter out system addons unless the dedicated preference is set to true.
@@ -199,6 +201,20 @@ function requestWorkers() {
         serviceWorkers,
         sharedWorkers,
       } = await clientWrapper.listWorkers();
+
+      for (const serviceWorker of serviceWorkers) {
+        const { registrationActor } = serviceWorker;
+        if (!registrationActor) {
+          continue;
+        }
+
+        const { subscription } = await clientWrapper.request({
+          to: registrationActor,
+          type: "getPushSubscription",
+        });
+
+        serviceWorker.subscription = subscription;
+      }
 
       dispatch({
         type: REQUEST_WORKERS_SUCCESS,

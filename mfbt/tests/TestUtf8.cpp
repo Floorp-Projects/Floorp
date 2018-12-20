@@ -21,7 +21,7 @@ using mozilla::IsValidUtf8;
 using mozilla::Utf8Unit;
 
 // Disable the C++ 2a warning. See bug #1509926
-#if defined(__clang__)
+#if defined(__clang__) && (__clang_major__ >= 6)
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wc++2a-compat"
 #endif
@@ -742,6 +742,6 @@ int main() {
   return 0;
 }
 
-#if defined(__clang__)
+#if defined(__clang__) && (__clang_major__ >= 6)
 #pragma clang diagnostic pop
 #endif

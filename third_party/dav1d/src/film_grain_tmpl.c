@@ -51,7 +51,11 @@ enum {
     SUB_GRAIN_HEIGHT = 38,
     SUB_GRAIN_OFFSET = 6,
     BLOCK_SIZE = 32,
-    SCALING_SIZE = 1 << BITDEPTH,
+#if BITDEPTH == 8
+    SCALING_SIZE = 256
+#else
+    SCALING_SIZE = 4096
+#endif
 };
 
 static inline int get_random_number(const int bits, unsigned *state) {
@@ -66,18 +70,14 @@ static inline int round2(const int x, const int shift) {
     return (x + ((1 << shift) >> 1)) >> shift;
 }
 
-enum {
-    GRAIN_CENTER = 128 << (BITDEPTH - 8),
-    GRAIN_MIN = -GRAIN_CENTER,
-    GRAIN_MAX = (256 << (BITDEPTH - 8)) - 1 - GRAIN_CENTER,
-};
-
 static void generate_grain_y(const Dav1dPicture *const in,
                              entry buf[GRAIN_HEIGHT][GRAIN_WIDTH])
 {
     const Dav1dFilmGrainData *data = &in->frame_hdr->film_grain.data;
     unsigned seed = data->seed;
-    const int shift = 12 - BITDEPTH + data->grain_scale_shift;
+    const int shift = 12 - in->p.bpc + data->grain_scale_shift;
+    const int grain_ctr = 128 << (in->p.bpc - 8);
+    const int grain_min = -grain_ctr, grain_max = grain_ctr - 1;
 
     for (int y = 0; y < GRAIN_HEIGHT; y++) {
         for (int x = 0; x < GRAIN_WIDTH; x++) {
@@ -102,7 +102,7 @@ static void generate_grain_y(const Dav1dPicture *const in,
             }
 
             int grain = buf[y][x] + round2(sum, data->ar_coeff_shift);
-            buf[y][x] = iclip(grain, GRAIN_MIN, GRAIN_MAX);
+            buf[y][x] = iclip(grain, grain_min, grain_max);
         }
     }
 }
@@ -113,7 +113,9 @@ static void generate_grain_uv(const Dav1dPicture *const in, int uv,
 {
     const Dav1dFilmGrainData *data = &in->frame_hdr->film_grain.data;
     unsigned seed = data->seed ^ (uv ? 0x49d8 : 0xb524);
-    const int shift = 12 - BITDEPTH + data->grain_scale_shift;
+    const int shift = 12 - in->p.bpc + data->grain_scale_shift;
+    const int grain_ctr = 128 << (in->p.bpc - 8);
+    const int grain_min = -grain_ctr, grain_max = grain_ctr - 1;
 
     const int subx = in->p.layout != DAV1D_PIXEL_LAYOUT_I444;
     const int suby = in->p.layout == DAV1D_PIXEL_LAYOUT_I420;
@@ -160,15 +162,17 @@ static void generate_grain_uv(const Dav1dPicture *const in, int uv,
             }
 
             const int grain = buf[y][x] + round2(sum, data->ar_coeff_shift);
-            buf[y][x] = iclip(grain, GRAIN_MIN, GRAIN_MAX);
+            buf[y][x] = iclip(grain, grain_min, grain_max);
         }
     }
 }
 
-static void generate_scaling(const uint8_t points[][2], int num,
+static void generate_scaling(const int bitdepth,
+                             const uint8_t points[][2], int num,
                              uint8_t scaling[SCALING_SIZE])
 {
-    const int shift_x = BITDEPTH - 8;
+    const int shift_x = bitdepth - 8;
+    const int scaling_size = 1 << bitdepth;
 
     // Fill up the preceding entries with the initial value
     for (int i = 0; i < points[0][0] << shift_x; i++)
@@ -190,7 +194,7 @@ static void generate_scaling(const uint8_t points[][2], int num,
     }
 
     // Fill up the remaining entries with the final value
-    for (int i = points[num - 1][0] << shift_x; i < SCALING_SIZE; i++)
+    for (int i = points[num - 1][0] << shift_x; i < scaling_size; i++)
         scaling[i] = points[num - 1][1];
 }
 
@@ -213,14 +217,17 @@ static void apply_to_row_y(Dav1dPicture *const out, const Dav1dPicture *const in
 {
     const Dav1dFilmGrainData *const data = &out->frame_hdr->film_grain.data;
     const int rows = 1 + (data->overlap_flag && row_num > 0);
+    const int bitdepth_min_8 = in->p.bpc - 8;
+    const int grain_ctr = 128 << bitdepth_min_8;
+    const int grain_min = -grain_ctr, grain_max = grain_ctr - 1;
 
     int min_value, max_value;
     if (data->clip_to_restricted_range) {
-        min_value = 16 << (BITDEPTH - 8);
-        max_value = 235 << (BITDEPTH - 8);
+        min_value = 16 << bitdepth_min_8;
+        max_value = 235 << bitdepth_min_8;
     } else {
         min_value = 0;
-        max_value = (1 << BITDEPTH) - 1;
+        max_value = (1U << in->p.bpc) - 1;
     }
 
     // seed[0] contains the current row, seed[1] contains the previous
@@ -255,8 +262,8 @@ static void apply_to_row_y(Dav1dPicture *const out, const Dav1dPicture *const in
             offsets[0][i] = get_random_number(8, &seed[i]);
 
         // x/y block offsets to compensate for overlapped regions
-        const int ystart = data->overlap_flag && row_num ? 2 : 0;
-        const int xstart = data->overlap_flag && bx      ? 2 : 0;
+        const int ystart = data->overlap_flag && row_num ? imin(2, bh) : 0;
+        const int xstart = data->overlap_flag && bx      ? imin(2, bw) : 0;
 
         static const int w[2][2] = { { 27, 17 }, { 17, 27 } };
 
@@ -278,7 +285,7 @@ static void apply_to_row_y(Dav1dPicture *const out, const Dav1dPicture *const in
                 int grain = sample_lut(grain_lut, offsets, 0, 0, 0, 0, x, y);
                 int old   = sample_lut(grain_lut, offsets, 0, 0, 1, 0, x, y);
                 grain = round2(old * w[x][0] + grain * w[x][1], 5);
-                grain = iclip(grain, GRAIN_MIN, GRAIN_MAX);
+                grain = iclip(grain, grain_min, grain_max);
                 add_noise_y(x, y, grain);
             }
         }
@@ -289,7 +296,7 @@ static void apply_to_row_y(Dav1dPicture *const out, const Dav1dPicture *const in
                 int grain = sample_lut(grain_lut, offsets, 0, 0, 0, 0, x, y);
                 int old   = sample_lut(grain_lut, offsets, 0, 0, 0, 1, x, y);
                 grain = round2(old * w[y][0] + grain * w[y][1], 5);
-                grain = iclip(grain, GRAIN_MIN, GRAIN_MAX);
+                grain = iclip(grain, grain_min, grain_max);
                 add_noise_y(x, y, grain);
             }
 
@@ -299,17 +306,17 @@ static void apply_to_row_y(Dav1dPicture *const out, const Dav1dPicture *const in
                 int top = sample_lut(grain_lut, offsets, 0, 0, 0, 1, x, y);
                 int old = sample_lut(grain_lut, offsets, 0, 0, 1, 1, x, y);
                 top = round2(old * w[x][0] + top * w[x][1], 5);
-                top = iclip(top, GRAIN_MIN, GRAIN_MAX);
+                top = iclip(top, grain_min, grain_max);
 
                 // Blend the current pixel with the left block
                 int grain = sample_lut(grain_lut, offsets, 0, 0, 0, 0, x, y);
                 old = sample_lut(grain_lut, offsets, 0, 0, 1, 0, x, y);
                 grain = round2(old * w[x][0] + grain * w[x][1], 5);
-                grain = iclip(grain, GRAIN_MIN, GRAIN_MAX);
+                grain = iclip(grain, grain_min, grain_max);
 
                 // Mix the row rows together and apply grain
                 grain = round2(top * w[y][0] + grain * w[y][1], 5);
-                grain = iclip(grain, GRAIN_MIN, GRAIN_MAX);
+                grain = iclip(grain, grain_min, grain_max);
                 add_noise_y(x, y, grain);
             }
         }
@@ -322,18 +329,22 @@ static void apply_to_row_uv(Dav1dPicture *const out, const Dav1dPicture *const i
 {
     const Dav1dFilmGrainData *const data = &out->frame_hdr->film_grain.data;
     const int rows = 1 + (data->overlap_flag && row_num > 0);
+    const int bitdepth_max = (1 << in->p.bpc) - 1;
+    const int bitdepth_min_8 = in->p.bpc - 8;
+    const int grain_ctr = 128 << bitdepth_min_8;
+    const int grain_min = -grain_ctr, grain_max = grain_ctr - 1;
 
     int min_value, max_value;
     if (data->clip_to_restricted_range) {
-        min_value = 16 << (BITDEPTH - 8);
+        min_value = 16 << bitdepth_min_8;
         if (out->seq_hdr->mtrx == DAV1D_MC_IDENTITY) {
-            max_value = 235 << (BITDEPTH - 8);
+            max_value = 235 << bitdepth_min_8;
         } else {
-            max_value = 240 << (BITDEPTH - 8);
+            max_value = 240 << bitdepth_min_8;
         }
     } else {
         min_value = 0;
-        max_value = (1 << BITDEPTH) - 1;
+        max_value = bitdepth_max;
     }
 
     const int sx = in->p.layout != DAV1D_PIXEL_LAYOUT_I444;
@@ -373,8 +384,8 @@ static void apply_to_row_uv(Dav1dPicture *const out, const Dav1dPicture *const i
             offsets[0][i] = get_random_number(8, &seed[i]);
 
         // x/y block offsets to compensate for overlapped regions
-        const int ystart = data->overlap_flag && row_num ? (2 >> sy) : 0;
-        const int xstart = data->overlap_flag && bx      ? (2 >> sx) : 0;
+        const int ystart = data->overlap_flag && row_num ? imin(2 >> sy, bh) : 0;
+        const int xstart = data->overlap_flag && bx      ? imin(2 >> sx, bw) : 0;
 
         static const int w[2 /* sub */][2 /* off */][2] = {
             { { 27, 17 }, { 17, 27 } },
@@ -396,7 +407,7 @@ static void apply_to_row_uv(Dav1dPicture *const out, const Dav1dPicture *const i
                 int combined = avg * data->uv_luma_mult[uv] +                   \
                                *src * data->uv_mult[uv];                        \
                 val = iclip_pixel( (combined >> 6) +                            \
-                                   (data->uv_offset[uv] * (1 << (BITDEPTH - 8))) );   \
+                                   (data->uv_offset[uv] * (1 << bitdepth_min_8)) );   \
             }                                                                   \
                                                                                 \
             int noise = round2(scaling[ val ] * (grain), data->scaling_shift);  \
@@ -414,7 +425,7 @@ static void apply_to_row_uv(Dav1dPicture *const out, const Dav1dPicture *const i
                 int grain = sample_lut(grain_lut, offsets, sx, sy, 0, 0, x, y);
                 int old   = sample_lut(grain_lut, offsets, sx, sy, 1, 0, x, y);
                 grain = (old * w[sx][x][0] + grain * w[sx][x][1] + 16) >> 5;
-                grain = iclip(grain, GRAIN_MIN, GRAIN_MAX);
+                grain = iclip(grain, grain_min, grain_max);
                 add_noise_uv(x, y, grain);
             }
         }
@@ -425,7 +436,7 @@ static void apply_to_row_uv(Dav1dPicture *const out, const Dav1dPicture *const i
                 int grain = sample_lut(grain_lut, offsets, sx, sy, 0, 0, x, y);
                 int old   = sample_lut(grain_lut, offsets, sx, sy, 0, 1, x, y);
                 grain = (old * w[sy][y][0] + grain * w[sy][y][1] + 16) >> 5;
-                grain = iclip(grain, GRAIN_MIN, GRAIN_MAX);
+                grain = iclip(grain, grain_min, grain_max);
                 add_noise_uv(x, y, grain);
             }
 
@@ -435,17 +446,17 @@ static void apply_to_row_uv(Dav1dPicture *const out, const Dav1dPicture *const i
                 int top = sample_lut(grain_lut, offsets, sx, sy, 0, 1, x, y);
                 int old = sample_lut(grain_lut, offsets, sx, sy, 1, 1, x, y);
                 top = (old * w[sx][x][0] + top * w[sx][x][1] + 16) >> 5;
-                top = iclip(top, GRAIN_MIN, GRAIN_MAX);
+                top = iclip(top, grain_min, grain_max);
 
                 // Blend the current pixel with the left block
                 int grain = sample_lut(grain_lut, offsets, sx, sy, 0, 0, x, y);
                 old = sample_lut(grain_lut, offsets, sx, sy, 1, 0, x, y);
                 grain = (old * w[sx][x][0] + grain * w[sx][x][1] + 16) >> 5;
-                grain = iclip(grain, GRAIN_MIN, GRAIN_MAX);
+                grain = iclip(grain, grain_min, grain_max);
 
                 // Mix the row rows together and apply to image
                 grain = (top * w[sy][y][0] + grain * w[sy][y][1] + 16) >> 5;
-                grain = iclip(grain, GRAIN_MIN, GRAIN_MAX);
+                grain = iclip(grain, grain_min, grain_max);
                 add_noise_uv(x, y, grain);
             }
         }
@@ -469,28 +480,11 @@ void bitfn(dav1d_apply_grain)(Dav1dPicture *const out,
 
     // Generate scaling LUTs as needed
     if (data->num_y_points)
-        generate_scaling(data->y_points, data->num_y_points, scaling[0]);
+        generate_scaling(in->p.bpc, data->y_points, data->num_y_points, scaling[0]);
     if (data->num_uv_points[0])
-        generate_scaling(data->uv_points[0], data->num_uv_points[0], scaling[1]);
+        generate_scaling(in->p.bpc, data->uv_points[0], data->num_uv_points[0], scaling[1]);
     if (data->num_uv_points[1])
-        generate_scaling(data->uv_points[1], data->num_uv_points[1], scaling[2]);
-
-    // Synthesize grain for the affected planes
-    int rows = (out->p.h + 31) >> 5;
-    for (int row = 0; row < rows; row++) {
-        if (data->num_y_points)
-            apply_to_row_y(out, in, grain_lut[0], scaling[0], row);
-
-        if (data->chroma_scaling_from_luma) {
-            apply_to_row_uv(out, in, grain_lut[1], scaling[0], 0, row);
-            apply_to_row_uv(out, in, grain_lut[2], scaling[0], 1, row);
-        } else {
-            if (data->num_uv_points[0])
-                apply_to_row_uv(out, in, grain_lut[1], scaling[1], 0, row);
-            if (data->num_uv_points[1])
-                apply_to_row_uv(out, in, grain_lut[2], scaling[2], 1, row);
-        }
-    }
+        generate_scaling(in->p.bpc, data->uv_points[1], data->num_uv_points[1], scaling[2]);
 
     // Copy over the non-modified planes
     // TODO: eliminate in favor of per-plane refs
@@ -507,6 +501,23 @@ void bitfn(dav1d_apply_grain)(Dav1dPicture *const out,
                 memcpy(out->data[1+i], in->data[1+i],
                        (out->p.h >> suby) * out->stride[1]);
             }
+        }
+    }
+
+    // Synthesize grain for the affected planes
+    int rows = (out->p.h + 31) >> 5;
+    for (int row = 0; row < rows; row++) {
+        if (data->num_y_points)
+            apply_to_row_y(out, in, grain_lut[0], scaling[0], row);
+
+        if (data->chroma_scaling_from_luma) {
+            apply_to_row_uv(out, in, grain_lut[1], scaling[0], 0, row);
+            apply_to_row_uv(out, in, grain_lut[2], scaling[0], 1, row);
+        } else {
+            if (data->num_uv_points[0])
+                apply_to_row_uv(out, in, grain_lut[1], scaling[1], 0, row);
+            if (data->num_uv_points[1])
+                apply_to_row_uv(out, in, grain_lut[2], scaling[2], 1, row);
         }
     }
 }

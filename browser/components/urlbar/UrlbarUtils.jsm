@@ -9,7 +9,12 @@
  * helper functions that are useful to all components of the urlbar.
  */
 
-var EXPORTED_SYMBOLS = ["UrlbarUtils"];
+var EXPORTED_SYMBOLS = [
+  "QueryContext",
+  "UrlbarMuxer",
+  "UrlbarProvider",
+  "UrlbarUtils",
+];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -225,3 +230,143 @@ var UrlbarUtils = {
     }, []);
   },
 };
+
+/**
+ * QueryContext defines a user's autocomplete input from within the Address Bar.
+ * It supplements it with details of how the search results should be obtained
+ * and what they consist of.
+ */
+class QueryContext {
+  /**
+   * Constructs the QueryContext instance.
+   *
+   * @param {object} options
+   *   The initial options for QueryContext.
+   * @param {string} options.searchString
+   *   The string the user entered in autocomplete. Could be the empty string
+   *   in the case of the user opening the popup via the mouse.
+   * @param {number} options.lastKey
+   *   The last key the user entered (as a key code). Could be null if the search
+   *   was started via the mouse.
+   * @param {boolean} options.isPrivate
+   *   Set to true if this query was started from a private browsing window.
+   * @param {number} options.maxResults
+   *   The maximum number of results that will be displayed for this query.
+   * @param {boolean} [options.autoFill]
+   *   Whether or not to include autofill results. Optional, as this is normally
+   *   set by the UrlbarController.
+   */
+  constructor(options = {}) {
+    this._checkRequiredOptions(options, [
+      "searchString",
+      "lastKey",
+      "maxResults",
+      "isPrivate",
+    ]);
+
+    if (isNaN(parseInt(options.maxResults))) {
+      throw new Error(`Invalid maxResults property provided to QueryContext`);
+    }
+
+    if (options.providers &&
+        (!Array.isArray(options.providers) || !options.providers.length)) {
+      throw new Error(`Invalid providers list`);
+    }
+
+    if (options.sources &&
+        (!Array.isArray(options.sources) || !options.sources.length)) {
+      throw new Error(`Invalid sources list`);
+    }
+
+    this.autoFill = !!options.autoFill;
+  }
+
+  /**
+   * Checks the required options, saving them as it goes.
+   *
+   * @param {object} options The options object to check.
+   * @param {array} optionNames The names of the options to check for.
+   * @throws {Error} Throws if there is a missing option.
+   */
+  _checkRequiredOptions(options, optionNames) {
+    for (let optionName of optionNames) {
+      if (!(optionName in options)) {
+        throw new Error(`Missing or empty ${optionName} provided to QueryContext`);
+      }
+      this[optionName] = options[optionName];
+    }
+  }
+}
+
+/**
+ * Base class for a muxer.
+ * The muxer scope is to sort a given list of matches.
+ */
+class UrlbarMuxer {
+  /**
+   * Unique name for the muxer, used by the context to sort matches.
+   * Not using a unique name will cause the newest registration to win.
+   * @abstract
+   */
+  get name() {
+    return "UrlbarMuxerBase";
+  }
+  /**
+   * Sorts queryContext matches in-place.
+   * @param {object} queryContext the context to sort matches for.
+   * @abstract
+   */
+  sort(queryContext) {
+    throw new Error("Trying to access the base class, must be overridden");
+  }
+}
+
+/**
+ * Base class for a provider.
+ * The provider scope is to query a datasource and return matches from it.
+ */
+class UrlbarProvider {
+  /**
+   * Unique name for the provider, used by the context to filter on providers.
+   * Not using a unique name will cause the newest registration to win.
+   * @abstract
+   */
+  get name() {
+    return "UrlbarProviderBase";
+  }
+  /**
+   * The type of the provider, must be one of UrlbarUtils.PROVIDER_TYPE.
+   * @abstract
+   */
+  get type() {
+    throw new Error("Trying to access the base class, must be overridden");
+  }
+  /**
+   * List of UrlbarUtils.MATCH_SOURCE, representing the data sources used by
+   * the provider.
+   * @abstract
+   */
+  get sources() {
+    throw new Error("Trying to access the base class, must be overridden");
+  }
+  /**
+   * Starts querying.
+   * @param {object} queryContext The query context object
+   * @param {function} addCallback Callback invoked by the provider to add a new
+   *        match. A UrlbarMatch should be passed to it.
+   * @note Extended classes should return a Promise resolved when the provider
+   *       is done searching AND returning matches.
+   * @abstract
+   */
+  startQuery(queryContext, addCallback) {
+    throw new Error("Trying to access the base class, must be overridden");
+  }
+  /**
+   * Cancels a running query,
+   * @param {object} queryContext the QueryContext object to cancel query for.
+   * @abstract
+   */
+  cancelQuery(queryContext) {
+    throw new Error("Trying to access the base class, must be overridden");
+  }
+}

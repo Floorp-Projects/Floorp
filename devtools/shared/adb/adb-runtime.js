@@ -8,11 +8,10 @@ const { RuntimeTypes } = require("devtools/client/webide/modules/runtime-types")
 const { prepareTCPConnection } = require("devtools/shared/adb/commands/index");
 
 class AdbRuntime {
-  constructor(adbDevice, model, socketPath) {
+  constructor(adbDevice, socketPath) {
     this.type = RuntimeTypes.USB;
 
     this._adbDevice = adbDevice;
-    this._model = model;
     this._socketPath = socketPath;
   }
 
@@ -20,8 +19,12 @@ class AdbRuntime {
     return this._adbDevice.id + "|" + this._socketPath;
   }
 
+  get deviceId() {
+    return this._adbDevice.id;
+  }
+
   get deviceName() {
-    return this._model || this._adbDevice.id;
+    return this._adbDevice.name;
   }
 
   get shortName() {
@@ -29,15 +32,19 @@ class AdbRuntime {
   }
 
   get name() {
-    return `Firefox ${this._channel()} on Android (${this.deviceName})`;
+    return `${this.shortName} on Android (${this.deviceName})`;
   }
 
   connect(connection) {
-    return prepareTCPConnection(this._socketPath).then(port => {
+    return prepareTCPConnection(this.deviceId, this._socketPath).then(port => {
       connection.host = "localhost";
       connection.port = port;
       connection.connect();
     });
+  }
+
+  isUnknown() {
+    return false;
   }
 
   _channel() {
@@ -69,5 +76,32 @@ class AdbRuntime {
       this._socketPath.split("/")[3];
   }
 }
-
 exports.AdbRuntime = AdbRuntime;
+
+/**
+ * UnknownAdbRuntime instance will be used to represent devices which have USB debugging
+ * enabled but where Firefox (or another debuggable gecko-based runtime) is either not
+ * started or not ready for USB debugging.
+ */
+class UnknownAdbRuntime extends AdbRuntime {
+  constructor(adbDevice) {
+    super(adbDevice);
+  }
+
+  get id() {
+    return this._adbDevice.id;
+  }
+
+  get shortName() {
+    return "Unknown runtime";
+  }
+
+  connect(connection) {
+    throw new Error("Cannot connect on unknown runtime");
+  }
+
+  isUnknown() {
+    return true;
+  }
+}
+exports.UnknownAdbRuntime = UnknownAdbRuntime;

@@ -1,5 +1,9 @@
 %include build/sparse-profiles/mach
 
+# In order to decide which docker images to build, we need all the
+# files that docker images depend on as well
+%include build/sparse-profiles/docker-image
+
 [include]
 # These files are read as part of generating the taskgraph.
 path:browser/locales/l10n-changesets.json
@@ -49,3 +53,6 @@ glob:**/*.gradle
 # for action-task building
 path:.taskcluster.yml
 path:.cron.yml
+
+# for the wrench-deps toolchain task
+path:gfx/wr/Cargo.lock

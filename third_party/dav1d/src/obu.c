@@ -84,8 +84,12 @@ static int parse_seq_hdr(Dav1dContext *const c, GetBits *const gb,
             hdr->num_units_in_tick = dav1d_get_bits(gb, 32);
             hdr->time_scale = dav1d_get_bits(gb, 32);
             hdr->equal_picture_interval = dav1d_get_bits(gb, 1);
-            if (hdr->equal_picture_interval)
-                hdr->num_ticks_per_picture = dav1d_get_vlc(gb) + 1;
+            if (hdr->equal_picture_interval) {
+                unsigned num_ticks_per_picture = dav1d_get_vlc(gb);
+                if (num_ticks_per_picture == 0xFFFFFFFFU)
+                    goto error;
+                hdr->num_ticks_per_picture = num_ticks_per_picture + 1;
+            }
 
             hdr->decoder_model_info_present = dav1d_get_bits(gb, 1);
             if (hdr->decoder_model_info_present) {
@@ -1229,7 +1233,6 @@ int dav1d_parse_obus(Dav1dContext *const c, Dav1dData *const in, int global) {
         if (!ref) return -ENOMEM;
         Dav1dSequenceHeader *seq_hdr = ref->data;
         memset(seq_hdr, 0, sizeof(*seq_hdr));
-        c->frame_hdr = NULL;
         if ((res = parse_seq_hdr(c, &gb, seq_hdr)) < 0) {
             dav1d_ref_dec(&ref);
             return res;
@@ -1241,14 +1244,16 @@ int dav1d_parse_obus(Dav1dContext *const c, Dav1dData *const in, int global) {
         // If we have read a sequence header which is different from
         // the old one, this is a new video sequence and can't use any
         // previous state. Free that state.
-        if (c->seq_hdr && memcmp(seq_hdr, c->seq_hdr, sizeof(*seq_hdr))) {
+        if (!c->seq_hdr)
+            c->frame_hdr = NULL;
+        else if (memcmp(seq_hdr, c->seq_hdr, sizeof(*seq_hdr))) {
+            c->frame_hdr = NULL;
             for (int i = 0; i < 8; i++) {
                 if (c->refs[i].p.p.data[0])
                     dav1d_thread_picture_unref(&c->refs[i].p);
                 dav1d_ref_dec(&c->refs[i].segmap);
                 dav1d_ref_dec(&c->refs[i].refmvs);
-                if (c->cdf[i].cdf)
-                    dav1d_cdf_thread_unref(&c->cdf[i]);
+                dav1d_cdf_thread_unref(&c->cdf[i]);
             }
         }
         dav1d_ref_dec(&c->seq_hdr_ref);
@@ -1384,14 +1389,14 @@ int dav1d_parse_obus(Dav1dContext *const c, Dav1dData *const in, int global) {
             if (c->refs[c->frame_hdr->existing_frame_idx].p.p.frame_hdr->frame_type == DAV1D_FRAME_TYPE_KEY) {
                 const int r = c->frame_hdr->existing_frame_idx;
                 for (int i = 0; i < 8; i++) {
-                    if (i == c->frame_hdr->existing_frame_idx) continue;
+                    if (i == r) continue;
 
                     if (c->refs[i].p.p.data[0])
                         dav1d_thread_picture_unref(&c->refs[i].p);
                     dav1d_thread_picture_ref(&c->refs[i].p, &c->refs[r].p);
 
-                    if (c->cdf[i].cdf) dav1d_cdf_thread_unref(&c->cdf[i]);
-                    dav1d_init_states(&c->cdf[i], c->refs[r].p.p.frame_hdr->quant.yac);
+                    dav1d_cdf_thread_unref(&c->cdf[i]);
+                    dav1d_cdf_thread_ref(&c->cdf[i], &c->cdf[r]);
 
                     dav1d_ref_dec(&c->refs[i].segmap);
                     c->refs[i].segmap = c->refs[r].segmap;

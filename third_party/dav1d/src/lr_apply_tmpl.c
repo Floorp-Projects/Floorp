@@ -76,7 +76,7 @@ static void backup_lpf(const Dav1dFrameContext *const f,
         while (row + stripe_h <= row_h) {
             f->dsp->mc.resize(dst, dst_stride, src, src_stride,
                               dst_w, src_w, 4, f->resize_step[ss_hor],
-                              f->resize_start[ss_hor]);
+                              f->resize_start[ss_hor] HIGHBD_CALL_SUFFIX);
             row += stripe_h; // unmodified stripe_h for the 1st stripe
             stripe_h = 64 >> ss_ver;
             src += stripe_h * PXSTRIDE(src_stride);
@@ -180,11 +180,11 @@ static void lr_stripe(const Dav1dFrameContext *const f, pixel *p,
         }
         if (lr->type == DAV1D_RESTORATION_WIENER) {
             dsp->lr.wiener(p, p_stride, left, lpf, lpf_stride, unit_w, stripe_h,
-                           filterh, filterv, edges);
+                           filterh, filterv, edges HIGHBD_CALL_SUFFIX);
         } else {
             assert(lr->type == DAV1D_RESTORATION_SGRPROJ);
             dsp->lr.selfguided(p, p_stride, left, lpf, lpf_stride, unit_w, stripe_h,
-                               lr->sgr_idx, lr->sgr_weights, edges);
+                               lr->sgr_idx, lr->sgr_weights, edges HIGHBD_CALL_SUFFIX);
         }
 
         left += stripe_h;

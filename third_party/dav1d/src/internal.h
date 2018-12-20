@@ -119,6 +119,7 @@ struct Dav1dContext {
     int operating_point;
     unsigned operating_point_idc;
     int all_layers;
+    int drain;
 };
 
 struct Dav1dFrameContext {
@@ -175,6 +176,7 @@ struct Dav1dFrameContext {
     int a_sz /* w*tile_rows */;
     AV1_COMMON *libaom_cm; // FIXME
     uint8_t jnt_weights[7][7];
+    int bitdepth_max;
 
     struct {
         struct thread_data td;
@@ -277,7 +279,7 @@ struct Dav1dTileContext {
         uint8_t *pal_idx;
         int16_t *ac;
         pixel *interintra, *lap;
-        coef *compinter;
+        int16_t *compinter;
     } scratch;
     ALIGN(uint8_t scratch_seg_mask[128 * 128], 32);
 

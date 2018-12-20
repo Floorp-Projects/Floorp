@@ -17,7 +17,7 @@ from taskgraph.util.schema import (
     resolve_keyed_by,
 )
 from taskgraph.util.taskcluster import get_artifact_prefix
-from taskgraph.util.platforms import archive_format, executable_extension
+from taskgraph.util.platforms import archive_format, executable_extension, architecture
 from taskgraph.util.workertypes import worker_type_implementation
 from taskgraph.transforms.job import job_description_schema
 from voluptuous import Required, Optional
@@ -84,7 +84,8 @@ packaging_description_schema = schema.extend({
 #   directory.
 PACKAGE_FORMATS = {
     'mar': {
-        'args': ['mar'],
+        'args': ['mar',
+                 '--arch', '{architecture}'],
         'inputs': {
             'input': 'target{archive_format}',
             'mar': 'mar{executable_extension}',
@@ -103,7 +104,7 @@ PACKAGE_FORMATS = {
         'args': ['msi', '--wsx', '{wsx-stub}',
                  '--version', '{version_display}',
                  '--locale', '{_locale}',
-                 '--arch', '{_arch}',
+                 '--arch', '{architecture}',
                  '--candle', '{fetch-dir}/candle.exe',
                  '--light', '{fetch-dir}/light.exe'],
         'inputs': {
@@ -258,14 +259,13 @@ def make_job_description(config, jobs):
         if use_stub and not repackage_signing_task:
             # if repackage_signing_task doesn't exists, generate the stub installer
             package_formats += ['installer-stub']
-        _fetch_subst_arch = 'x86' if 'win32' in build_platform else 'x64'
         for format in package_formats:
             command = copy.deepcopy(PACKAGE_FORMATS[format])
             substs = {
                 'archive_format': archive_format(build_platform),
                 'executable_extension': executable_extension(build_platform),
                 '_locale': _fetch_subst_locale,
-                '_arch': _fetch_subst_arch,
+                'architecture': architecture(build_platform),
                 'version_display': config.params['version'],
             }
             # Allow us to replace args a well, but specifying things expanded in mozharness

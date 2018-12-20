@@ -13368,7 +13368,8 @@ class CGDictionary(CGThing):
             trace = CGGeneric('JS::UnsafeTraceRoot(trc, %s, "%s");\n' %
                               ("&"+memberData, memberName))
         elif (type.isSequence() or type.isDictionary() or
-              type.isSpiderMonkeyInterface() or type.isUnion()):
+              type.isSpiderMonkeyInterface() or type.isUnion() or
+               type.isRecord()):
             if type.nullable():
                 memberNullable = memberData
                 memberData = "%s.Value()" % memberData
@@ -13378,16 +13379,13 @@ class CGDictionary(CGThing):
                 trace = CGGeneric('%s.TraceDictionary(trc);\n' % memberData)
             elif type.isUnion():
                 trace = CGGeneric('%s.TraceUnion(trc);\n' % memberData)
+            elif type.isRecord():
+                trace = CGGeneric('TraceRecord(trc, %s);\n' % memberData)
             else:
                 assert type.isSpiderMonkeyInterface()
                 trace = CGGeneric('%s.TraceSelf(trc);\n' % memberData)
             if type.nullable():
                 trace = CGIfWrapper(trace, "!%s.IsNull()" % memberNullable)
-        elif type.isRecord():
-            # If you implement this, add a record<DOMString, object> to
-            # TestInterfaceJSDictionary and test it in test_bug1036214.html
-            # to make sure we end up with the correct security properties.
-            assert False
         else:
             assert False  # unknown type
 

@@ -43,10 +43,13 @@ add_task(async function test_muxer() {
       },
     },
   });
-  let muxer = {
+  /**
+   * A test muxer.
+   */
+  class TestMuxer extends UrlbarMuxer {
     get name() {
       return "TestMuxer";
-    },
+    }
     sort(queryContext) {
       queryContext.results.sort((a, b) => {
         if (b.source == UrlbarUtils.MATCH_SOURCE.TABS) {
@@ -57,8 +60,10 @@ add_task(async function test_muxer() {
         }
         return a.source == UrlbarUtils.MATCH_SOURCE.BOOKMARKS ? -1 : 1;
       });
-    },
-  };
+    }
+  }
+  let muxer = new TestMuxer();
+
   UrlbarProvidersManager.registerMuxer(muxer);
   context.muxer = "TestMuxer";
 

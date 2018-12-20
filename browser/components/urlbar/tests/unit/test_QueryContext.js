@@ -3,9 +3,6 @@
 
 "use strict";
 
-ChromeUtils.defineModuleGetter(this, "QueryContext",
-  "resource:///modules/UrlbarController.jsm");
-
 add_task(function test_constructor() {
   Assert.throws(() => new QueryContext(),
     /Missing or empty searchString provided to QueryContext/,

@@ -12,37 +12,37 @@
 <script type="application/javascript">
 
 var tests = [
- 'hello world',
+ "hello world",
  123,
  null,
  true,
  new Date(),
- [ 1, 'test', true, new Date() ],
+ [ 1, "test", true, new Date() ],
  { a: true, b:  null, c: new Date(), d: [ true, false, {} ] },
- new Blob([123], { type: 'plain/text' })
+ new Blob([123], { type: "plain/text" }),
 ];
 
 var currentTest = null;
 
 function getType(a) {
   if (a === null || a === undefined)
-    return 'null';
+    return "null";
 
   if (Array.isArray(a))
-    return 'array';
+    return "array";
 
-  if (typeof a == 'object')
-    return 'object';
+  if (typeof a == "object")
+    return "object";
 
-  return 'primitive';
+  return "primitive";
 }
 
 function compare(a, b) {
-  is (getType(a), getType(b), 'Type matches');
+  is(getType(a), getType(b), "Type matches");
 
   var type = getType(a);
-  if (type == 'array') {
-    is (a.length, b.length, 'Array.length matches');
+  if (type == "array") {
+    is(a.length, b.length, "Array.length matches");
     for (var i = 0; i < a.length; ++i) {
       compare(a[i], b[i]);
     }
@@ -50,27 +50,27 @@ function compare(a, b) {
     return;
   }
 
-  if (type == 'object') {
-    ok (a !== b, 'They should not match');
+  if (type == "object") {
+    ok(a !== b, "They should not match");
 
     var aProps = [];
-    for (var p in a) aProps.push(p);
+    for (let p in a) aProps.push(p);
 
     var bProps = [];
-    for (var p in b) bProps.push(p);
+    for (let p in b) bProps.push(p);
 
-    is (aProps.length, bProps.length, 'Props match');
-    is (aProps.sort().toSource(), bProps.sort().toSource(), 'Props match - using toSource()');
+    is(aProps.length, bProps.length, "Props match");
+    is(aProps.sort().toSource(), bProps.sort().toSource(), "Props match - using toSource()");
 
-    for (var p in a) {
+    for (let p in a) {
       compare(a[p], b[p]);
     }
 
     return;
   }
 
-  if (type != 'null') {
-    is (a.toSource(), b.toSource(), 'Matching using toSource()');
+  if (type != "null") {
+    is(a.toSource(), b.toSource(), "Matching using toSource()");
   }
 }
 
@@ -86,7 +86,7 @@ function runTest() {
     compare(event.data, currentTest);
     ++count;
     next();
-  }
+  };
 
   var bc2 = new BroadcastChannel("foobar");
   ok(bc2, "BroadcastChannel can be created");
@@ -101,7 +101,7 @@ function runTest() {
     compare(event.data, currentTest);
     ++count;
     next();
-  }
+  };
 
   function next() {
     if (count < 2) {

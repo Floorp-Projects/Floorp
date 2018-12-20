@@ -528,6 +528,15 @@ def target_tasks_nightly_win64(full_task_graph, parameters, graph_config):
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t, parameters)]
 
 
+@_target_task('nightly_win64_aarch64')
+def target_tasks_nightly_win64_aarch64(full_task_graph, parameters, graph_config):
+    """Select the set of tasks required for a nightly build of win32 and win64.
+    The nightly build process involves a pipeline of builds, signing,
+    and, eventually, uploading the tasks to balrog."""
+    filter = make_nightly_filter({'win64-aarch64-msvc-nightly'})
+    return [l for l, t in full_task_graph.tasks.iteritems() if filter(t, parameters)]
+
+
 @_target_task('nightly_asan')
 def target_tasks_nightly_asan(full_task_graph, parameters, graph_config):
     """Select the set of tasks required for a nightly build of asan. The
@@ -545,6 +554,7 @@ def target_tasks_nightly_desktop(full_task_graph, parameters, graph_config):
     return list(
         set(target_tasks_nightly_win32(full_task_graph, parameters, graph_config))
         | set(target_tasks_nightly_win64(full_task_graph, parameters, graph_config))
+        | set(target_tasks_nightly_win64_aarch64(full_task_graph, parameters, graph_config))
         | set(target_tasks_nightly_macosx(full_task_graph, parameters, graph_config))
         | set(target_tasks_nightly_linux(full_task_graph, parameters, graph_config))
         | set(target_tasks_nightly_asan(full_task_graph, parameters, graph_config))

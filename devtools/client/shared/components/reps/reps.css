@@ -245,10 +245,13 @@ button.open-accessibility-inspector,
 button.open-inspector {
   mask: url("resource://devtools/client/shared/components/reps/images/open-inspector.svg") no-repeat;
   display: inline-block;
+  vertical-align: top;
+  height: 15px;
+  width: 15px;
+  margin: 0 4px;
+  padding: 0;
+  border: none;
   background-color: var(--comment-node-color);
-  height: 16px;
-  margin-left: 0.25em;
-  vertical-align: middle;
   cursor: pointer;
 }
 

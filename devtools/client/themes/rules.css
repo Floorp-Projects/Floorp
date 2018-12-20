@@ -9,6 +9,9 @@
   --rule-header-background-color: var(--theme-toolbar-background);
   --rule-flex-toggle-color: var(--grey-90);
   --rule-shape-toggle-color: var(--grey-90);
+  --rule-target-button-color: var(--grey-40);
+  --rule-target-button-hover-color: var(--grey-50);
+  --rule-target-button-active-color: var(--blue-50);
 }
 
 :root.theme-dark {
@@ -17,6 +20,9 @@
   --rule-header-background-color: #222225;
   --rule-flex-toggle-color: var(--grey-10);
   --rule-shape-toggle-color: var(--grey-10);
+  --rule-target-button-color: var(--grey-45);
+  --rule-target-button-hover-color: var(--grey-30);
+  --rule-target-button-active-color: var(--blue-30);
 }
 
 /* Rule View Tabpanel */
@@ -574,20 +580,29 @@
 }
 
 .ruleview-selectorhighlighter {
-  background: url("chrome://devtools/skin/images/vview-open-inspector.png") no-repeat 0 0;
-  padding-left: 16px;
+  display: inline-block;
+  vertical-align: top;
+  width: 15px;
+  height: 15px;
   margin-left: 5px;
+  background: url("chrome://devtools/skin/images/open-inspector.svg") no-repeat 0 0;
+  background-size: contain;
   cursor: pointer;
+  -moz-context-properties: fill;
+  fill: var(--rule-target-button-color);
 }
 
 .ruleview-selectorhighlighter:hover {
-  filter: var(--theme-icon-checked-filter);
+  fill: var(--rule-target-button-hover-color);
+}
+
+.ruleview-selectorhighlighter:active,
+.ruleview-selectorhighlighter.highlighted {
+  fill: var(--rule-target-button-active-color);
 }
 
 .ruleview-flex.active,
 .ruleview-grid.active,
-.ruleview-selectorhighlighter:active,
-.ruleview-selectorhighlighter.highlighted,
 .ruleview-shapeswatch.active {
   filter: var(--theme-icon-checked-filter) brightness(0.9);
 }

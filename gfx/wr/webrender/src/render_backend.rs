@@ -36,6 +36,8 @@ use prim_store::{PrimitiveInstanceKind, PrimTemplateCommonData};
 use prim_store::borders::{ImageBorderDataStore, NormalBorderDataStore};
 use prim_store::gradient::{LinearGradientDataStore, RadialGradientDataStore};
 use prim_store::image::{ImageDataStore, YuvImageDataStore};
+use prim_store::line_dec::LineDecorationDataStore;
+use prim_store::picture::PictureDataStore;
 use prim_store::text_run::TextRunDataStore;
 use profiler::{BackendProfileCounters, IpcProfileCounters, ResourceProfileCounters};
 use record::ApiRecordingReceiver;
@@ -209,8 +211,10 @@ pub struct FrameResources {
     pub prim_data_store: PrimitiveDataStore,
     pub image_data_store: ImageDataStore,
     pub image_border_data_store: ImageBorderDataStore,
+    pub line_decoration_data_store: LineDecorationDataStore,
     pub linear_grad_data_store: LinearGradientDataStore,
     pub normal_border_data_store: NormalBorderDataStore,
+    pub picture_data_store: PictureDataStore,
     pub radial_grad_data_store: RadialGradientDataStore,
     pub text_run_data_store: TextRunDataStore,
     pub yuv_image_data_store: YuvImageDataStore,
@@ -222,8 +226,6 @@ impl FrameResources {
         prim_inst: &PrimitiveInstance
     ) -> &PrimTemplateCommonData {
         match prim_inst.kind {
-            PrimitiveInstanceKind::Picture { data_handle, .. } |
-            PrimitiveInstanceKind::LineDecoration { data_handle, .. } |
             PrimitiveInstanceKind::Rectangle { data_handle, .. } |
             PrimitiveInstanceKind::Clear { data_handle, .. } => {
                 let prim_data = &self.prim_data_store[data_handle];
@@ -237,6 +239,10 @@ impl FrameResources {
                 let prim_data = &self.image_border_data_store[data_handle];
                 &prim_data.common
             }
+            PrimitiveInstanceKind::LineDecoration { data_handle, .. } => {
+                let prim_data = &self.line_decoration_data_store[data_handle];
+                &prim_data.common
+            }
             PrimitiveInstanceKind::LinearGradient { data_handle, .. } => {
                 let prim_data = &self.linear_grad_data_store[data_handle];
                 &prim_data.common
@@ -245,7 +251,11 @@ impl FrameResources {
                 let prim_data = &self.normal_border_data_store[data_handle];
                 &prim_data.common
             }
-            PrimitiveInstanceKind::RadialGradient { data_handle, .. } =>{
+            PrimitiveInstanceKind::Picture { data_handle, .. } => {
+                let prim_data = &self.picture_data_store[data_handle];
+                &prim_data.common
+            }
+            PrimitiveInstanceKind::RadialGradient { data_handle, .. } => {
                 let prim_data = &self.radial_grad_data_store[data_handle];
                 &prim_data.common
             }
@@ -1247,6 +1257,10 @@ impl RenderBackend {
                 updates.image_border_updates,
                 &mut profile_counters.intern.image_borders,
             );
+            doc.resources.line_decoration_data_store.apply_updates(
+                updates.line_decoration_updates,
+                &mut profile_counters.intern.line_decs,
+            );
             doc.resources.linear_grad_data_store.apply_updates(
                 updates.linear_grad_updates,
                 &mut profile_counters.intern.linear_gradients,
@@ -1254,6 +1268,10 @@ impl RenderBackend {
             doc.resources.normal_border_data_store.apply_updates(
                 updates.normal_border_updates,
                 &mut profile_counters.intern.normal_borders,
+            );
+            doc.resources.picture_data_store.apply_updates(
+                updates.picture_updates,
+                &mut profile_counters.intern.pictures,
             );
             doc.resources.radial_grad_data_store.apply_updates(
                 updates.radial_grad_updates,

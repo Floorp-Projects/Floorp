@@ -545,45 +545,41 @@ async function startIncognitoMonitorExtension(failOnIncognitoEvent = true) {
     // valid tabs in "seen" so we can at least validate tabs that we have "seen"
     // during onRemoved.  This means that the monitor extension must be started
     // prior to creating any tabs that will be removed.
-    let seen = new Set();
-    function testTab(tab, eventName) {
-      browser.test.assertEq(tab.incognito, expectIncognito, `${eventName} ${tab.id}: monitor extension got expected incognito value`);
-      seen.add(tab.id);
+
+    // Map<tabId -> tab>
+    let seenTabs = new Map();
+    function getTabById(tabId) {
+      return seenTabs.has(tabId) ? seenTabs.get(tabId) : browser.tabs.get(tabId);
+    }
+
+    async function testTab(tabOrId, eventName) {
+      let tab = tabOrId;
+      if (typeof tabOrId == "number") {
+        let tabId = tabOrId;
+        try {
+          tab = await getTabById(tabId);
+        } catch (e) {
+          browser.test.fail(`tabs.${eventName} for id ${tabOrId} unexpected failure ${e}\n`);
+          return;
+        }
+      }
+      browser.test.assertEq(tab.incognito, expectIncognito, `tabs.${eventName} ${tab.id}: monitor extension got expected incognito value`);
+      seenTabs.set(tab.id, tab);
     }
     async function testTabInfo(tabInfo, eventName) {
-      try {
-        if (typeof tabInfo == "number") {
-          testTab(await browser.tabs.get(tabInfo), eventName);
-          return;
-        } else if (typeof tabInfo == "object") {
-          if (tabInfo.id !== undefined) {
-            testTab(tabInfo, eventName);
-            return;
-          } else if (tabInfo.tab !== undefined) {
-            testTab(tabInfo.tab, eventName);
-            return;
-          } else if (tabInfo.tabIds !== undefined) {
-            for (let tabId of tabInfo.tabIds) {
-              testTab(await browser.tabs.get(tabId), eventName);
-            }
-            return;
-          } else if (tabInfo.tabId !== undefined) {
-            testTab(await browser.tabs.get(tabInfo.tabId), eventName);
-            return;
-          }
+      if (typeof tabInfo == "number") {
+        await testTab(tabInfo, eventName);
+      } else if (typeof tabInfo == "object") {
+        if (tabInfo.id !== undefined) {
+          await testTab(tabInfo, eventName);
+        } else if (tabInfo.tab !== undefined) {
+          await testTab(tabInfo.tab, eventName);
+        } else if (tabInfo.tabIds !== undefined) {
+          await Promise.all(tabInfo.tabIds.map(tabId => testTab(tabId, eventName)));
+        } else if (tabInfo.tabId !== undefined) {
+          await testTab(tabInfo.tabId, eventName);
         }
-      } catch (e) {
-        // tabInfo in onRemoved is tabId.
-        if (/Invalid tab ID/.test(e.message) && seen.has(tabInfo)) {
-          // This will happen on a window close or tab remove sometimes, async
-          // events fired may happen after the tab is removed.  Just log it, we've
-          // already tested that the tab is ok for this extension to see it.
-          browser.test.log(`${eventName} received late ${e}`);
-          return;
-        }
-        browser.test.log(`${eventName} exception ${e}`);
       }
-      browser.test.fail(`monitor extension got unknown tabInfo ${typeof tabInfo} ${JSON.stringify(tabInfo)}`);
     }
     let tabEvents = ["onUpdated", "onCreated", "onAttached", "onDetached",
                      "onRemoved", "onMoved", "onZoomChange",
@@ -592,25 +588,44 @@ async function startIncognitoMonitorExtension(failOnIncognitoEvent = true) {
       browser.tabs[eventName].addListener(async details => { await testTabInfo(details, eventName); });
     }
     browser.tabs.onReplaced.addListener(async (addedTabId, removedTabId) => {
-      await testTabInfo(addedTabId, "onReplaced");
-      await testTabInfo(removedTabId, "onReplaced");
+      await testTabInfo(addedTabId, "onReplaced (addedTabId)");
+      await testTabInfo(removedTabId, "onReplaced (removedTabId)");
     });
+
+    // Map<windowId -> window>
+    let seenWindows = new Map();
+    function getWindowById(windowId) {
+      return seenWindows.has(windowId) ? seenWindows.get(windowId) : browser.windows.get(windowId);
+    }
+
     browser.windows.onCreated.addListener(window => {
-      browser.test.assertEq(window.incognito, expectIncognito, `monitor extension got expected incognito value`);
+      browser.test.assertEq(window.incognito, expectIncognito, `windows.onCreated monitor extension got expected incognito value`);
+      seenWindows.set(window.id, window);
     });
     browser.windows.onRemoved.addListener(async (windowId) => {
+      let window;
       try {
-        let window = await browser.windows.get(windowId);
-        browser.test.assertEq(window.incognito, expectIncognito, `monitor extension got expected incognito value`);
+        window = await getWindowById(windowId);
       } catch (e) {
-        // Window removal at end of tests can get here after window is gone.
-        browser.test.log(`onRemoved received late ${e}`);
+        browser.test.fail(`windows.onCreated for id ${windowId} unexpected failure ${e}\n`);
+        return;
       }
+      browser.test.assertEq(window.incognito, expectIncognito, `windows.onRemoved ${window.id}: monitor extension got expected incognito value`);
     });
     browser.windows.onFocusChanged.addListener(async (windowId) => {
+      if (windowId == browser.windows.WINDOW_ID_NONE) {
+        return;
+      }
       // onFocusChanged will also fire for blur so check actual window.incognito value.
-      let window = await browser.windows.get(windowId);
-      browser.test.assertEq(window.incognito, expectIncognito, `monitor extesion got unexpected window onFocusChanged event`);
+      let window;
+      try {
+        window = await getWindowById(windowId);
+      } catch (e) {
+        browser.test.fail(`windows.onFocusChanged for id ${windowId} unexpected failure ${e}\n`);
+        return;
+      }
+      browser.test.assertEq(window.incognito, expectIncognito, `windows.onFocusChanged ${window.id}: monitor extesion got expected incognito value`);
+      seenWindows.set(window.id, window);
     });
   }
 

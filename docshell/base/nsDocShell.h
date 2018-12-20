@@ -388,6 +388,14 @@ class nsDocShell final : public nsDocLoader,
    */
   mozilla::dom::BrowsingContext* GetBrowsingContext() const;
 
+  /**
+   * Loads the given URI. See comments on nsDocShellLoadState members for more
+   * information on information used. aDocShell and aRequest come from
+   * onLinkClickSync, which is triggered during form submission.
+   */
+  nsresult InternalLoad(nsDocShellLoadState* aLoadState,
+                        nsIDocShell** aDocShell, nsIRequest** aRequest);
+
  private:  // member functions
   friend class nsDSURIContentListener;
   friend class FramingChecker;

@@ -32,9 +32,9 @@
 #include "src/levels.h"
 #include "src/cdef.h"
 
-static void init_tmp(pixel *buf, int n) {
+static void init_tmp(pixel *buf, int n, const int bitdepth_max) {
     while (n--)
-        *buf++ = rand() & ((1 << BITDEPTH) - 1);
+        *buf++ = rnd() & bitdepth_max;
 }
 
 static void check_cdef_filter(const cdef_fn fn, const int w, const int h,
@@ -48,11 +48,7 @@ static void check_cdef_filter(const cdef_fn fn, const int w, const int h,
 
     declare_func(void, pixel *dst, ptrdiff_t dst_stride, const pixel (*left)[2],
                  pixel *const top[2], int pri_strength, int sec_strength,
-                 int dir, int damping, enum CdefEdgeFlags edges);
-
-    init_tmp(src, 10 * 16 + 8);
-    init_tmp(top, 16 * 2 + 8);
-    init_tmp((pixel *) left,8 * 2);
+                 int dir, int damping, enum CdefEdgeFlags edges HIGHBD_DECL_SUFFIX);
 
     if (check_func(fn, "%s_%dbpc", name, BITDEPTH)) {
         for (int dir = 0; dir < 8; dir++) {
@@ -60,21 +56,35 @@ static void check_cdef_filter(const cdef_fn fn, const int w, const int h,
                 memcpy(a_src, src, (10 * 16 + 8) * sizeof(pixel));
                 memcpy(c_src, src, (10 * 16 + 8) * sizeof(pixel));
 
-                const int lvl = 1 + (rand() % 62);
-                const int damping = 3 + (rand() & 3);
-                const int pri_strength = (lvl >> 2) << (BITDEPTH - 8);
+#if BITDEPTH == 16
+                const int bitdepth_max = rnd() & 1 ? 0x3ff : 0xfff;
+#else
+                const int bitdepth_max = 0xff;
+#endif
+                const int bitdepth_min_8 = bitdepth_from_max(bitdepth_max) - 8;
+                init_tmp(src, 10 * 16 + 8, bitdepth_max);
+                init_tmp(top, 16 * 2 + 8, bitdepth_max);
+                init_tmp((pixel *) left,8 * 2, bitdepth_max);
+
+                const int lvl = 1 + (rnd() % 62);
+                const int damping = 3 + (rnd() & 3) + bitdepth_min_8;
+                const int pri_strength = (lvl >> 2) << bitdepth_min_8;
                 int sec_strength = lvl & 3;
                 sec_strength += sec_strength == 3;
+                sec_strength <<= bitdepth_min_8;
                 call_ref(c_src_ptr, 16 * sizeof(pixel), left,
                          (pixel *[2]) { top_ptr, top_ptr + 16 },
-                         pri_strength, sec_strength, dir, damping, edges);
+                         pri_strength, sec_strength, dir, damping, edges
+                         HIGHBD_TAIL_SUFFIX);
                 call_new(a_src_ptr, 16 * sizeof(pixel), left,
                          (pixel *[2]) { top_ptr, top_ptr + 16 },
-                         pri_strength, sec_strength, dir, damping, edges);
+                         pri_strength, sec_strength, dir, damping, edges
+                         HIGHBD_TAIL_SUFFIX);
                 if (memcmp(a_src, c_src, (10 * 16 + 8) * sizeof(pixel))) fail();
                 bench_new(a_src_ptr, 16 * sizeof(pixel), left,
                           (pixel *[2]) { top_ptr, top_ptr + 16 },
-                          pri_strength, sec_strength, dir, damping, edges);
+                          pri_strength, sec_strength, dir, damping, edges
+                          HIGHBD_TAIL_SUFFIX);
             }
         }
     }
@@ -84,17 +94,22 @@ static void check_cdef_filter(const cdef_fn fn, const int w, const int h,
 static void check_cdef_direction(const cdef_dir_fn fn) {
     ALIGN_STK_32(pixel, src, 8 * 8,);
 
-    declare_func(int, pixel *src, ptrdiff_t dst_stride, unsigned *var);
-
-    init_tmp(src, 64);
+    declare_func(int, pixel *src, ptrdiff_t dst_stride, unsigned *var
+                 HIGHBD_DECL_SUFFIX);
 
     if (check_func(fn, "cdef_dir_%dbpc", BITDEPTH)) {
         unsigned c_var, a_var;
+#if BITDEPTH == 16
+        const int bitdepth_max = rnd() & 1 ? 0x3ff : 0xfff;
+#else
+        const int bitdepth_max = 0xff;
+#endif
+        init_tmp(src, 64, bitdepth_max);
 
-        const int c_dir = call_ref(src, 8 * sizeof(pixel), &c_var);
-        const int a_dir = call_new(src, 8 * sizeof(pixel), &a_var);
+        const int c_dir = call_ref(src, 8 * sizeof(pixel), &c_var HIGHBD_TAIL_SUFFIX);
+        const int a_dir = call_new(src, 8 * sizeof(pixel), &a_var HIGHBD_TAIL_SUFFIX);
         if (c_var != a_var || c_dir != a_dir) fail();
-        bench_new(src, 8 * sizeof(pixel), &a_var);
+        bench_new(src, 8 * sizeof(pixel), &a_var HIGHBD_TAIL_SUFFIX);
     }
     report("cdef_dir");
 }

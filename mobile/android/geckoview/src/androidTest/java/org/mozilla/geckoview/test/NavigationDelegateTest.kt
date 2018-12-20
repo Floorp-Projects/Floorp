@@ -179,14 +179,14 @@ class NavigationDelegateTest : BaseSessionTest() {
 
         sessionRule.waitUntilCalled(
                 object : Callbacks.TrackingProtectionDelegate {
-            @AssertCalled(count = 1)
+            @AssertCalled(count = 3)
             override fun onTrackerBlocked(session: GeckoSession, uri: String,
                                           categories: Int) {
                 assertThat("Category should be set",
                            categories,
                            equalTo(category))
                 assertThat("URI should not be null", uri, notNullValue())
-                assertThat("URI should match", uri, endsWith("trackertest.org/tracker.js"))
+                assertThat("URI should match", uri, endsWith("tracker.js"))
             }
         })
 

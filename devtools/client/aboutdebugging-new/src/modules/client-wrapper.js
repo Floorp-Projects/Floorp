@@ -102,8 +102,8 @@ class ClientWrapper {
     return this.client.mainRoot.listTabs(options);
   }
 
-  async listAddons() {
-    return this.client.mainRoot.listAddons();
+  async listAddons(options) {
+    return this.client.mainRoot.listAddons(options);
   }
 
   async getAddon({ id }) {

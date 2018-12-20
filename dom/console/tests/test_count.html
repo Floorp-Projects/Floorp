@@ -18,7 +18,7 @@ function ConsoleListener() {
 ConsoleListener.prototype = {
   observe(aSubject, aTopic, aData) {
     let obj = aSubject.wrappedJSObject;
-    if (obj.arguments[0] != 'test') {
+    if (obj.arguments[0] != "test") {
       return;
     }
 

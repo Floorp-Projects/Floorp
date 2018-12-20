@@ -43,6 +43,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1036214
     var obj2 = { foo: "baz" };
     var myDict = { anyMember: 42, objectMember: { answer: 42 }, objectOrStringMember: { answer: "anobject" },
                    anySequenceMember: [{}, 1, "thirdinsequence"],
+                   objectRecordMember: { key: { answer: "fortytwo" } },
                    innerDictionary: { innerObject: { answer: "rabbithole" } } };
     var t = new TestInterfaceJS(any, obj, myDict);
     is(Object.getPrototypeOf(t), TestInterfaceJS.prototype, "Prototype setup works correctly");
@@ -50,6 +51,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1036214
     is(t.objectArg, obj, "objectArg is correct");
     is(t.getDictionaryArg().anyMember, 42, "dictionaryArg looks correct");
     is(t.getDictionaryArg().objectMember.answer, 42, "dictionaryArg looks correct");
+    is(t.getDictionaryArg().objectRecordMember["key"].answer, "fortytwo", "dictionaryArg looks correct");
+    is(t.getDictionaryArg().objectRecordMember.key.answer, "fortytwo", "dictionaryArg looks correct");
     t.anyAttr = 2;
     is(t.anyAttr, 2, "ping-pong any attribute works");
     t.objAttr = obj2;
@@ -57,6 +60,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1036214
     t.setDictionaryAttr(myDict);
     is(t.getDictionaryAttr().anyMember, 42, "ping-pong dictionary works");
     is(t.getDictionaryAttr().objectMember.answer, 42, "ping-pong dictionary works");
+    is(t.getDictionaryAttr().objectRecordMember["key"].answer, "fortytwo", "ping-pong dictionary works");
+    is(t.getDictionaryAttr().objectRecordMember.key.answer, "fortytwo", "ping-pong dictionary works");
 
     is(any, t.pingPongAny(any), "ping-pong works with any");
     is(obj, t.pingPongObject(obj), "ping-pong works with obj");
@@ -66,10 +71,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1036214
     is(t.pingPongDictionary(myDict).objectMember.answer, 42, "ping pong works with dict");
     is(t.pingPongDictionary(myDict).objectOrStringMember.answer, "anobject", "ping pong works with dict");
     is(t.pingPongDictionary(myDict).anySequenceMember[2], "thirdinsequence", "ping pong works with dict");
+    is(t.pingPongDictionary(myDict).objectRecordMember["key"].answer, "fortytwo", "ping pong works with dict");
+    is(t.pingPongDictionary(myDict).objectRecordMember.key.answer, "fortytwo", "ping pong works with dict");
     is(t.pingPongDictionary(myDict).innerDictionary.innerObject.answer, "rabbithole", "ping pong works with layered dicts");
     is(t.pingPongDictionaryOrLong({anyMember: 42}), 42, "ping pong (dict or long) works with dict");
     is(t.pingPongDictionaryOrLong(42), 42, "ping pong (dict or long) works with long");
-    ok(/canary/.test(t.pingPongMap({ someVal: 42, someOtherVal: "canary" })), "ping pong works with record");
+    ok(/canary/.test(t.pingPongRecord({ someVal: 42, someOtherVal: "canary" })), "ping pong works with record");
     is(t.objectSequenceLength([{}, {}, {}]), 3, "ping pong works with object sequence");
     is(t.anySequenceLength([42, 'string', {}, undefined]), 4, "ping pong works with any sequence");
 
@@ -97,9 +104,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1036214
       checkThrows(() => t.pingPongDictionary({ objectMember: xoObj }), "dictionary pingpong object");
       checkThrows(() => t.pingPongDictionary({ anyMember: xoObj, objectMember: xoObj }), "dictionary pingpong both");
       checkThrows(() => t.pingPongDictionary({ objectOrStringMember: xoObj }), "dictionary pingpong objectorstring");
+      checkThrows(() => t.pingPongDictionary({ objectRecordMember: { key: xoObj } }), "dictionary pingpong record of object");
       checkThrows(() => t.pingPongDictionaryOrLong({ objectMember: xoObj }), "unionable dictionary");
       checkThrows(() => t.pingPongDictionaryOrLong({ anyMember: xoObj }), "unionable dictionary");
-      checkThrows(() => t.pingPongMap({ someMember: 42, someOtherMember: {}, crossOriginMember: xoObj }), "record");
+      checkThrows(() => t.pingPongRecord({ someMember: 42, someOtherMember: {}, crossOriginMember: xoObj }), "record");
       checkThrows(() => t.objectSequenceLength([{}, {}, xoObj, {}]), "object sequence");
       checkThrows(() => t.anySequenceLength([42, 'someString', xoObj, {}]), "any sequence");
     });

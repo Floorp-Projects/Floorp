@@ -55,7 +55,7 @@ elif CONFIG['CPU_ARCH'] == 'arm':
 
     arm_asm_files = files['ARM_SOURCES']
 
-    if CONFIG['VPX_AS_CONVERSION']:
+    if CONFIG['GNU_AS']:
         SOURCES += sorted([
             "!%s.S" % f if f.endswith('.asm') else f for f in arm_asm_files
         ])
