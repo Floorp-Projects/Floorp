@@ -7,7 +7,6 @@
 #include <MediaStreamGraphImpl.h>
 #include "mozilla/dom/AudioContext.h"
 #include "mozilla/dom/AudioDeviceInfo.h"
-#include "mozilla/dom/WorkletThread.h"
 #include "mozilla/SharedThreadPool.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Unused.h"
@@ -308,7 +307,6 @@ void ThreadedDriver::RunThread() {
     if (!stillProcessing) {
       // Enter shutdown mode. The stable-state handler will detect this
       // and complete shutdown if the graph does not get restarted.
-      dom::WorkletThread::DeleteCycleCollectedJSContext();
       GraphImpl()->SignalMainThreadCleanup();
       break;
     }
