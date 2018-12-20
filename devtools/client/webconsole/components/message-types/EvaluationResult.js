@@ -19,7 +19,6 @@ EvaluationResult.propTypes = {
   message: PropTypes.object.isRequired,
   timestampsVisible: PropTypes.bool.isRequired,
   serviceContainer: PropTypes.object,
-  maybeScrollToBottom: PropTypes.func,
 };
 
 function EvaluationResult(props) {
@@ -28,7 +27,6 @@ function EvaluationResult(props) {
     message,
     serviceContainer,
     timestampsVisible,
-    maybeScrollToBottom,
   } = props;
 
   const {
@@ -65,7 +63,6 @@ function EvaluationResult(props) {
       escapeWhitespace: false,
       type,
       helperType,
-      maybeScrollToBottom,
     });
   }
 
@@ -86,7 +83,6 @@ function EvaluationResult(props) {
     parameters,
     notes,
     timestampsVisible,
-    maybeScrollToBottom,
   });
 }
 
