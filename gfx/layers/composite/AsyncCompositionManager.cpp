@@ -188,14 +188,12 @@ void AsyncCompositionManager::ComputeRotation() {
   }
 }
 
-#ifdef DEBUG
 static void GetBaseTransform(Layer* aLayer, Matrix4x4* aTransform) {
   // Start with the animated transform if there is one
   *aTransform = (aLayer->AsHostLayer()->GetShadowTransformSetByAnimation()
                      ? aLayer->GetLocalTransform()
                      : aLayer->GetTransform());
 }
-#endif
 
 static void TransformClipRect(
     Layer* aLayer, const ParentLayerToParentLayerMatrix4x4& aTransform) {
@@ -277,7 +275,6 @@ static void TranslateShadowLayer(
   }
 }
 
-#ifdef DEBUG
 static void AccumulateLayerTransforms(Layer* aLayer, Layer* aAncestor,
                                       Matrix4x4& aMatrix) {
   // Accumulate the transforms between this layer and the subtree root layer.
@@ -287,7 +284,6 @@ static void AccumulateLayerTransforms(Layer* aLayer, Layer* aAncestor,
     aMatrix *= transform;
   }
 }
-#endif
 
 static LayerPoint GetLayerFixedMarginsOffset(
     Layer* aLayer, const ScreenMargin& aFixedLayerMargins) {
@@ -405,12 +401,6 @@ void AsyncCompositionManager::AlignFixedAndStickyLayers(
     const LayerToParentLayerMatrix4x4& aPreviousTransformForRoot,
     const LayerToParentLayerMatrix4x4& aCurrentTransformForRoot,
     const ScreenMargin& aFixedLayerMargins, ClipPartsCache* aClipPartsCache) {
-  // We're going to be inverting |aCurrentTransformForRoot|.
-  // If it's singular, there's nothing we can do.
-  if (aCurrentTransformForRoot.IsSingular()) {
-    return;
-  }
-
   Layer* layer = aStartTraversalAt;
   bool needsAsyncTransformUnapplied = false;
   if (Maybe<ScrollableLayerGuid::ViewID> fixedTo = IsFixedOrSticky(layer)) {
@@ -436,18 +426,35 @@ void AsyncCompositionManager::AlignFixedAndStickyLayers(
   // Insert a translation so that the position of the anchor point is the same
   // before and after the change to the transform of aTransformedSubtreeRoot.
 
-  // A transform creates a containing block for fixed-position descendants,
-  // so there shouldn't be a transform in between the fixed layer and
-  // the subtree root layer.
-#ifdef DEBUG
+  // Accumulate the transforms between this layer and the subtree root layer.
   Matrix4x4 ancestorTransform;
   if (layer != aTransformedSubtreeRoot) {
     AccumulateLayerTransforms(layer->GetParent(), aTransformedSubtreeRoot,
                               ancestorTransform);
   }
   ancestorTransform.NudgeToIntegersFixedEpsilon();
-  MOZ_ASSERT(ancestorTransform.IsIdentity());
-#endif
+
+  // A transform creates a containing block for fixed-position descendants,
+  // so there shouldn't be a transform in between the fixed layer and
+  // the subtree root layer.
+  if (layer->GetIsFixedPosition()) {
+    MOZ_ASSERT(ancestorTransform.IsIdentity());
+  }
+
+  // Calculate the cumulative transforms between the subtree root with the
+  // old transform and the current transform.
+  // For coordinate purposes, we'll treat the subtree root layer as the
+  // "parent" layer, even though it could be a farther ancestor.
+  auto oldCumulativeTransform = ViewAs<LayerToParentLayerMatrix4x4>(
+      ancestorTransform * aPreviousTransformForRoot.ToUnknownMatrix());
+  auto newCumulativeTransform = ViewAs<LayerToParentLayerMatrix4x4>(
+      ancestorTransform * aCurrentTransformForRoot.ToUnknownMatrix());
+
+  // We're going to be inverting |newCumulativeTransform|. If it's singular,
+  // there's nothing we can do.
+  if (newCumulativeTransform.IsSingular()) {
+    return;
+  }
 
   // Since we create container layers for fixed layers, there shouldn't
   // a local CSS or OMTA transform on the fixed layer, either (any local
@@ -478,9 +485,9 @@ void AsyncCompositionManager::AlignFixedAndStickyLayers(
   // subtree root space, and then the inverse of the new transform
   // to bring it back to layer space.
   ParentLayerPoint offsetAnchorInSubtreeRootSpace =
-      aPreviousTransformForRoot.TransformPoint(offsetAnchor);
+      oldCumulativeTransform.TransformPoint(offsetAnchor);
   LayerPoint transformedAnchor =
-      aCurrentTransformForRoot.Inverse().TransformPoint(
+      newCumulativeTransform.Inverse().TransformPoint(
           offsetAnchorInSubtreeRootSpace);
 
   // We want to translate the layer by the difference between
@@ -533,7 +540,7 @@ void AsyncCompositionManager::AlignFixedAndStickyLayers(
     // would produce |unconsumedTranslation|.
     LayerPoint newTransformedAnchor = unconsumedTranslation + anchor;
     ParentLayerPoint newTransformedAnchorInSubtreeRootSpace =
-        aPreviousTransformForRoot.TransformPoint(newTransformedAnchor);
+        oldCumulativeTransform.TransformPoint(newTransformedAnchor);
     LayerToParentLayerMatrix4x4 newTransform = aPreviousTransformForRoot;
     newTransform.PostTranslate(newTransformedAnchorInSubtreeRootSpace -
                                offsetAnchorInSubtreeRootSpace);
