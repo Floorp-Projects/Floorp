@@ -542,7 +542,7 @@ extern "C" {
     fn wr_notifier_nop_frame_done(window_id: WrWindowId);
     fn wr_notifier_external_event(window_id: WrWindowId,
                                   raw_event: usize);
-    fn wr_schedule_render(window_id: WrWindowId);
+    fn wr_finished_scene_build(window_id: WrWindowId);
 
     fn wr_transaction_notification_notified(handler: usize, when: Checkpoint);
 }
@@ -792,12 +792,12 @@ impl SceneBuilderHooks for APZCallbacks {
         // After a scene swap we should schedule a render for the next vsync,
         // otherwise there's no guarantee that the new scene will get rendered
         // anytime soon
-        unsafe { wr_schedule_render(self.window_id) }
+        unsafe { wr_finished_scene_build(self.window_id) }
         unsafe { gecko_profiler_end_marker(b"SceneBuilding\0".as_ptr() as *const c_char); }
     }
 
     fn post_resource_update(&self) {
-        unsafe { wr_schedule_render(self.window_id) }
+        unsafe { wr_finished_scene_build(self.window_id) }
         unsafe { gecko_profiler_end_marker(b"SceneBuilding\0".as_ptr() as *const c_char); }
     }
 
