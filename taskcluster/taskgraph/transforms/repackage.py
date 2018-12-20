@@ -90,8 +90,10 @@ packaging_description_schema = schema.extend({
 #   directory.
 PACKAGE_FORMATS = {
     'mar': {
-        'args': ['mar',
-                 '--arch', '{architecture}'],
+        'args': [
+            'mar',
+            '--arch', '{architecture}',
+        ],
         'inputs': {
             'input': 'target{archive_format}',
             'mar': 'mar{executable_extension}',
@@ -99,7 +101,10 @@ PACKAGE_FORMATS = {
         'output': "target.complete.mar",
     },
     'mar-bz2': {
-        'args': ['mar', "--format", "bz2"],
+        'args': [
+            'mar', "--format", "bz2",
+            '--arch', '{architecture}',
+        ],
         'inputs': {
             'input': 'target{archive_format}',
             'mar': 'mar{executable_extension}',
