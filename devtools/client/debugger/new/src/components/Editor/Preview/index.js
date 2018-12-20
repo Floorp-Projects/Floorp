@@ -23,10 +23,10 @@ type Props = {
   selectedSource: Source,
   preview: PreviewType,
   isPaused: Boolean,
-  clearPreview: () => void,
-  setPopupObjectProperties: Object => void,
-  addExpression: (string, ?Object) => void,
-  updatePreview: (any, any, any) => void
+  clearPreview: typeof actions.clearPreview,
+  setPopupObjectProperties: typeof actions.setPopupObjectProperties,
+  addExpression: typeof actions.addExpression,
+  updatePreview: typeof actions.updatePreview
 };
 
 type State = {

@@ -43,8 +43,8 @@ type Props = {
   setExpanded: (TreeNode, boolean, boolean) => void,
   focusItem: TreeNode => void,
   selectItem: TreeNode => void,
-  clearProjectDirectoryRoot: () => void,
-  setProjectDirectoryRoot: string => void
+  clearProjectDirectoryRoot: typeof actions.clearProjectDirectoryRoot,
+  setProjectDirectoryRoot: typeof actions.setProjectDirectoryRoot
 };
 
 type State = {};

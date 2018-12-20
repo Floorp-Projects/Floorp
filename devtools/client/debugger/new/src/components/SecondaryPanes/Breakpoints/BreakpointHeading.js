@@ -22,7 +22,7 @@ type Props = {
   sources: Source[],
   source: Source,
   hasSiblingOfSameName: boolean,
-  selectSource: string => void
+  selectSource: typeof actions.selectSource
 };
 
 class BreakpointHeading extends PureComponent<Props> {
