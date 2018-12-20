@@ -27,16 +27,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1443914
   gScript.addMessageListener("test-fail", testFailHandler);
   gScript.addMessageListener("test-pass", testPassHandler);
 
-  async function requestChromeAction(action, params) {
-    await new Promise(resolve => {
-      gScript.addMessageListener(`${action}-complete`, function completeListener() {
-        gScript.removeMessageListener(`${action}-complete`, completeListener);
-        resolve();
-      });
-      gScript.sendAsyncMessage(action, params);
-    });
-  }
-
   let shippingOptions = [{
     id: "NormalShipping",
     label: "NormalShipping",
@@ -56,102 +46,101 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1443914
   }]
 
   // testing function main body
-  async function testShippingOptionsTemplate(initDetails,
-                                             optionUpdateDetails,
-                                             testName,
-                                             expectedRequestOption,
-                                             expectedOptionChangeOption,
-                                             expectedResponseOption) {
-    info(testName);
-    const expectedResults = {testName: testName,
-                             requestResult: expectedRequestOption,
+  function testShippingOptionsTemplate(initDetails,
+				       optionUpdateDetails,
+                                       expectedRequestOption,
+				       expectedOptionChangeOption,
+				       expectedResponseOption) {
+    const expectedResults = {requestResult: expectedRequestOption,
                              changeOptionResult: expectedOptionChangeOption,
                              responseResult: expectedResponseOption,};
-    await requestChromeAction("set-expected-results", expectedResults);
-    info("expected results setup finish");
-    return new Promise(async (resolve) => {
+    gScript.sendAsyncMessage("set-expected-results", expectedResults);
+    return new Promise((resolve, reject) => {
       const request = new PaymentRequest(defaultMethods, initDetails, defaultOptions);
       const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(true);
       is(request.shippingOption, expectedRequestOption,
-         `${testName}: request.shippingOption should be ${expectedRequestOption} after created.`);
+         "request.shippingOption should be " + expectedRequestOption +
+	 " after created, but got " + request.shippingOption + ".");
       if (optionUpdateDetails) {
-        request.addEventListener("shippingoptionchange", event => {
-          is(request.shippingOption, expectedOptionChangeOption,
-             `${testName}: request.shippingOption should be ${expectedOptionChangeOption} in shippingoptionchange event`);
+	request.addEventListener("shippingoptionchange", event => {
+	  is(request.shippingOption, expectedOptionChangeOption,
+             "request.shippingOption should be " + expectedOptionChangeOption +
+	     " in shippingoptionchange event, but got " + request.shippingOption + ".");
           event.updateWith(optionUpdateDetails);
-        });
+	});
       }
-      try {
-        const response = await request.show();
+      request.show().then(response => {
         is(response.shippingOption, expectedResponseOption,
-           `${testName}: response.shippingOption should be ${expectedResponseOption}.`);
-        await response.complete("success");
-      } catch (error) {
-        ok(false, `${testName}: unexpected error '${error.name}'.`);
-      }
-      await handler.destruct();
-      resolve();
+	"response.shippingOption should be " + expectedResponseOption +
+	 ", but got " + response.shippingOption + ".");
+	response.complete("success").then(() => {
+	  resolve();
+	}).catch(error => {
+	  ok(false, "Unexpected error: " + error.name);
+	  resolve();
+	})
+      }, response => {
+      }).catch(error => {
+        ok(false, "Unexpected error: " + error.name);
+	resolve();
+      }).finally(handler.destruct);
     });
   }
 
   // test no selected shipping option in default
-  async function testNoSelectedShippingOptions() {
+  function testNoSelectedShippingOptions() {
     return testShippingOptionsTemplate(defaultDetails,   // initial details
-                                       null,             // update details for optionchange
-                                       "testNoSelectedShippingOptions", // test name
-                                       null,             // expected request.shippintOption after create
-                                       null,             // expected request.shippingOption after optionchange
-                                       null);            // expected response.shippingOption
+				       null,             // update details for optionchange
+				       null,             // expected request.shippintOption after create
+				       null,             // expected request.shippingOption after optionchange
+				       null);            // expected response.shippingOption
   }
 
   // test select one shipping option in default
-  async function testSelectedOneShippingOption() {
+  function testSelectedOneShippingOption() {
     let details = Object.assign({}, defaultDetails);
     details.shippingOptions = shippingOptions;
     details.shippingOptions[0].selected = true;
     details.shippingOptions[1].selected = false;
     const expectedOption = details.shippingOptions[0].id;
     return testShippingOptionsTemplate(details,          // initial details
-                                       null,             // update details for optionchange
-                                       "testSelectedOneShippingOption", // test name
-                                       expectedOption,   // expected request.shippintOption after create
-                                       null,             // expected request.shippingOption after optionchange
-                                       expectedOption);  // expected response.shippingOption
+				       null,             // update details for optionchange
+				       expectedOption,   // expected request.shippintOption after create
+				       null,             // expected request.shippingOption after optionchange
+				       expectedOption);  // expected response.shippingOption
   }
 
   // test select multiple shipping options in default
-  async function testMultiSelectedShippingOptions() {
+  function testMultiSelectedShippingOptions() {
     let details = Object.assign({}, defaultDetails);
     details.shippingOptions = shippingOptions;
     details.shippingOptions[0].selected = true;
     details.shippingOptions[1].selected = true;
     const expectedOption = details.shippingOptions[1].id;
     return testShippingOptionsTemplate(details,          // initial details
-                                       null,             // update details for optionchange
-                                       "testMultiSelectedShippingOptions", // test name
-                                       expectedOption,   // expected request.shippintOption after create
-                                       null,             // expected request.shippingOption after optionchange
-                                       expectedOption);  // expected response.shippingOption
+				       null,             // update details for optionchange
+				       expectedOption,   // expected request.shippintOption after create
+				       null,             // expected request.shippingOption after optionchange
+				       expectedOption);  // expected response.shippingOption
   }
 
   // test no selected shipping option in default, but selected by user
-  async function testSelectedByUser() {
+  function testSelectedByUser() {
     let updateDetails = Object.assign({}, defaultDetails);
     updateDetails.shippingOptions = shippingOptions;
     updateDetails.shippingOptions[0].selected = true;
     updateDetails.shippingOptions[1].selected = false;
     const expectedOption = updateDetails.shippingOptions[0].id;
     return testShippingOptionsTemplate(defaultDetails,   // initial details
-                                       updateDetails,    // update details for optionchange
-                                       "testSelectedByUser", // test name
-                                       null,             // expected request.shippintOption after create
-                                       expectedOption,   // expected request.shippingOption after optionchange
-                                       expectedOption);  // expected response.shippingOption
+				       updateDetails,    // update details for optionchange
+				       null,             // expected request.shippintOption after create
+				       expectedOption,   // expected request.shippingOption after optionchange
+				       expectedOption);  // expected response.shippingOption
   }
 
   // test no selected shipping option in default, but selected by user then updated
   // by merchant to the other.
-  async function testUpdateSelectedByMerchant() {
+  function testUpdateSelectedByMerchant() {
     let updateDetails = Object.assign({}, defaultDetails);
     updateDetails.shippingOptions = shippingOptions;
     updateDetails.shippingOptions[0].selected = false;
@@ -159,59 +148,25 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1443914
     const expectedOption = updateDetails.shippingOptions[0].id;
     const expectedResponse = updateDetails.shippingOptions[1].id;
     return testShippingOptionsTemplate(defaultDetails,   // initial details
-                                       updateDetails,    // update details for optionchange
-                                       "testUpdateSelectedByMerchant", // test name
-                                       null,             // expected request.shippintOption after create
-                                       expectedOption,   // expected request.shippingOption after optionchange
-                                       expectedResponse);// expected response.shippingOption
+				       updateDetails,    // update details for optionchange
+				       null,             // expected request.shippintOption after create
+				       expectedOption,   // expected request.shippingOption after optionchange
+				       expectedResponse);// expected response.shippingOption
   }
 
   // test update shipping options to null
-  async function testUpdateShippingOptionsToNull() {
+  function testUpdateShippingOptionsToNull() {
     let updateDetails = Object.assign({}, defaultDetails);
     delete updateDetails.shippingOptions;
     const expectedOption = defaultDetails.shippingOptions[0].id;
     return testShippingOptionsTemplate(defaultDetails,   // initial details
-                                       updateDetails,    // update details for optionchange
-                                       "testUpdateShippingOptionsToNull", // test name
-                                       null,             // expected request.shippintOption after create
-                                       expectedOption,   // expected request.shippingOption after optionchange
-                                       null);            // expected response.shippingOption
+				       updateDetails,    // update details for optionchange
+				       null,             // expected request.shippintOption after create
+				       expectedOption,   // expected request.shippingOption after optionchange
+				       null);            // expected response.shippingOption
   }
 
-  async function testUpdateWithSelectedShippingOption() {
-    let initDetails = Object.assign({}, defaultDetails);
-    initDetails.shippingOptions = shippingOptions;
-    const expectedOption = initDetails.shippingOptions[1].id;
-    const expectedResults = {testName: "testUpdateWithSelectedShippingOption",
-                             requestResult: expectedOption,
-                             changeOptionResult: expectedOption,
-                             responseResult: expectedOption};
-    await requestChromeAction("set-expected-results", expectedResults);
-    return new Promise(async (resolve) => {
-      const request = new PaymentRequest(defaultMethods, initDetails, defaultOptions);
-      request.addEventListener("shippingoptionchange", async (event) => {
-        ok(false, "Expected no event emitted, but got one.");
-        try {
-          request.abort();
-        } catch (error) {
-          ok(false, `Unexpected error '${error.name}' while aborting PaymentRequest.`);
-        }
-        resolve();
-      });
-      const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(true);
-      try {
-        const response = await request.show();
-        await response.complete();
-      } catch (error) {
-        ok(false, `Unexpected error '${error.name}' while aborting PaymentRequest.`);
-      }
-      await handler.destruct();
-      resolve();
-    });
-  }
-
-  async function teardown() {
+  function teardown() {
     gScript.addMessageListener("teardown-complete", function teardownCompleteHandler() {
       gScript.removeMessageListener("teardown-complete", teardownCompleteHandler);
       gScript.removeMessageListener("test-fail", testFailHandler);
@@ -222,20 +177,18 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1443914
     gScript.sendAsyncMessage("teardown");
   }
 
-  async function runTests() {
-    try {
-      await testNoSelectedShippingOptions()
-      await testSelectedOneShippingOption();
-      await testMultiSelectedShippingOptions();
-      await testSelectedByUser();
-      await testUpdateSelectedByMerchant();
-      await testUpdateShippingOptionsToNull();
-      await testUpdateWithSelectedShippingOption();
-      await teardown();
-    } catch(e) {
-      ok(false, `test_shippingOpions.html: Unexpected error: ${e.name}`);
+  function runTests() {
+    testNoSelectedShippingOptions()
+    .then(testSelectedOneShippingOption)
+    .then(testMultiSelectedShippingOptions)
+    .then(testSelectedByUser)
+    .then(testUpdateSelectedByMerchant)
+    .then(testUpdateShippingOptionsToNull)
+    .then(teardown)
+    .catch( e => {
+      ok(false, "Unexpected error: " + e.name);
       SimpleTest.finish();
-    }
+    });
   }
 
   window.addEventListener('load', function() {
