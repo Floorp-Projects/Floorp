@@ -144,21 +144,20 @@ def mock_shell_bool(monkeypatch):
 
 @pytest.fixture(autouse=True)
 def mock_adb_object():
-    """Patches the __init__ method call when instantiating ADBAndroid.
+    """Patches the __init__ method call when instantiating ADBDevice.
 
-    This is the key to test abstract methods implemented in ADBDevice.
-    ADBAndroid normally requires instantiated objects including but not
-    limited to ADBDevice in order to execute its commands.
+    ADBDevice normally requires instantiated objects in order to execute
+    its commands.
 
     With a pytest-mock patch, we are able to mock the initialization of
-    the ADBAndroid object. By yielding the instantiated mock object,
+    the ADBDevice object. By yielding the instantiated mock object,
     unit tests can be run that call methods that require an instantiated
     object.
 
-    :yields: ADBAndroid - mock instance of ADBAndroid object
+    :yields: ADBDevice - mock instance of ADBDevice object
     """
-    with patch.object(mozdevice.ADBAndroid, '__init__', lambda self: None):
-        yield mozdevice.ADBAndroid()
+    with patch.object(mozdevice.ADBDevice, '__init__', lambda self: None):
+        yield mozdevice.ADBDevice()
 
 
 @pytest.fixture
@@ -166,7 +165,7 @@ def redirect_stdout_and_assert():
     """Redirects the stdout pipe temporarily to a StringIO stream.
 
     This is useful to assert on methods that do not return
-    a value, such as most ADBAndroid methods.
+    a value, such as most ADBDevice methods.
 
     The original stdout pipe is preserved throughout the process.
 

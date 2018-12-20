@@ -19,7 +19,7 @@ import urlparse
 import urllib2
 from distutils.spawn import find_executable
 
-from mozdevice import ADBHost, ADBAndroid
+from mozdevice import ADBHost, ADBDevice
 from mozprocess import ProcessHandler
 
 EMULATOR_HOME_DIR = os.path.join(os.path.expanduser('~'), '.mozbuild', 'android-device')
@@ -98,7 +98,7 @@ def _get_device(substs, device_serial=None):
         adb_path = _find_sdk_exe(substs, 'adb', False)
         if not adb_path:
             adb_path = 'adb'
-        device = ADBAndroid(adb=adb_path, verbose=verbose_logging, device=device_serial)
+        device = ADBDevice(adb=adb_path, verbose=verbose_logging, device=device_serial)
         devices[device_serial] = device
     return device
 

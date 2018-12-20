@@ -6,6 +6,8 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import unittest
 import datetime
+import mock
+import os
 
 from mozunit import main
 from taskgraph.util.parameterization import (
@@ -86,6 +88,47 @@ class TestTaskRefs(unittest.TestCase):
             "task 'subject' has no dependency named 'no-such'",
             lambda: resolve_task_references('subject', {'task-reference': '<no-such>'}, {})
         )
+
+
+class TestArtifactRefs(unittest.TestCase):
+
+    def do(self, input, output):
+        taskid_for_edge_name = {'edge%d' % n: 'tid%d' % n for n in range(1, 4)}
+        with mock.patch.dict(os.environ, {'TASKCLUSTER_ROOT_URL': 'https://tc-tests.localhost'}):
+            self.assertEqual(resolve_task_references('subject', input, taskid_for_edge_name),
+                             output)
+
+    def test_in_list(self):
+        "resolve_task_references resolves artifact references in a list"
+        self.do(
+            {'in-a-list': [
+                'stuff', {'artifact-reference': '<edge1/public/foo/bar>'}]},
+            {'in-a-list': [
+                'stuff', 'https://tc-tests.localhost/api/queue/v1'
+                '/task/tid1/artifacts/public/foo/bar']})
+
+    def test_in_dict(self):
+        "resolve_task_references resolves artifact references in a dict"
+        self.do(
+            {'in-a-dict':
+                {'stuff': {'artifact-reference': '<edge2/public/bar/foo>'}}},
+            {'in-a-dict':
+                {'stuff': 'https://tc-tests.localhost/api/queue/v1'
+                    '/task/tid2/artifacts/public/bar/foo'}})
+
+    def test_in_string(self):
+        "resolve_task_references resolves artifact references embedded in a string"
+        self.do(
+            {'stuff': {'artifact-reference': '<edge1/public/filename> and <edge2/public/bar>'}},
+            {'stuff': 'https://tc-tests.localhost/api/queue/v1'
+                '/task/tid1/artifacts/public/filename and '
+                'https://tc-tests.localhost/api/queue/v1/task/tid2/artifacts/public/bar'})
+
+    def test_invalid(self):
+        "resolve_task_references ignores badly-formatted artifact references"
+        for inv in ['<edge1>', 'edge1/foo>', '<edge1>/foo', '<edge1>foo']:
+            resolved = resolve_task_references('subject', {'artifact-reference': inv}, {})
+            self.assertEqual(resolved, inv)
 
 
 if __name__ == '__main__':

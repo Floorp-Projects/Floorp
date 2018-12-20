@@ -86,7 +86,7 @@ class UAWidgetsChild extends ActorChild {
       Object.create(null) : Cu.getUAWidgetScope(aElement.nodePrincipal);
 
     if (!sandbox[widgetName]) {
-      Services.scriptloader.loadSubScript(uri, sandbox, "UTF-8");
+      Services.scriptloader.loadSubScript(uri, sandbox);
     }
 
     let widget = new sandbox[widgetName](shadowRoot);

@@ -22,7 +22,7 @@ from taskgraph.util.platforms import archive_format, executable_extension
 from taskgraph.util.workertypes import worker_type_implementation
 from taskgraph.transforms.task import task_description_schema
 from taskgraph.transforms.repackage import PACKAGE_FORMATS
-from voluptuous import Any, Required, Optional
+from voluptuous import Required, Optional
 
 # Voluptuous uses marker objects as dictionary *keys*, but they are not
 # comparable, so we cast all of the keys back to regular strings
@@ -32,11 +32,6 @@ task_description_schema = {str(k): v for k, v in task_description_schema.schema.
 def _by_platform(arg):
     return optionally_keyed_by('build-platform', arg)
 
-
-# shortcut for a string where task references are allowed
-taskref_or_string = Any(
-    basestring,
-    {Required('task-reference'): basestring})
 
 packaging_description_schema = schema.extend({
     # depname is used in taskref's to identify the taskID of the signed things
