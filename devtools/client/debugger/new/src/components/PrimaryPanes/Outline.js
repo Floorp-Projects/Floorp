@@ -38,9 +38,9 @@ type Props = {
   alphabetizeOutline: boolean,
   onAlphabetizeClick: Function,
   selectedLocation: any,
-  selectLocation: ({ sourceId: string, line: number }) => void,
   getFunctionText: Function,
-  flashLineRange: Function
+  selectLocation: typeof actions.selectLocation,
+  flashLineRange: typeof actions.flashLineRange
 };
 
 type State = {
@@ -274,7 +274,6 @@ export default connect(
   mapStateToProps,
   {
     selectLocation: actions.selectLocation,
-    getFunctionText: actions.getFunctionText,
     flashLineRange: actions.flashLineRange
   }
 )(Outline);
