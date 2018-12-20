@@ -26,6 +26,7 @@ import {
 } from "../../selectors";
 
 import { prefs } from "../../utils/prefs";
+import sourceQueue from "../../utils/source-queue";
 
 import type { Source, SourceId } from "../../types";
 import type { Action, ThunkArgs } from "../types";
@@ -46,20 +47,24 @@ function createOriginalSource(
   };
 }
 
-function loadSourceMaps(sources) {
-  return async function({ dispatch, sourceMaps }: ThunkArgs) {
+function loadSourceMaps(sources: Source[]) {
+  return async function({
+    dispatch,
+    sourceMaps
+  }: ThunkArgs): Promise<Promise<Source>[]> {
     if (!prefs.clientSourceMapsEnabled) {
-      return;
+      return [];
     }
 
-    let originalSources = await Promise.all(
-      sources.map(({ id }) => dispatch(loadSourceMap(id)))
+    return flatten(
+      await Promise.all(
+        sources.map(async ({ id }) => {
+          const originalSources = await dispatch(loadSourceMap(id));
+          sourceQueue.queueSources(originalSources);
+          return originalSources;
+        })
+      )
     );
-
-    originalSources = flatten(originalSources).filter(Boolean);
-    if (originalSources.length > 0) {
-      await dispatch(newSources(originalSources));
-    }
   };
 }
 
@@ -68,11 +73,15 @@ function loadSourceMaps(sources) {
  * @static
  */
 function loadSourceMap(sourceId: SourceId) {
-  return async function({ dispatch, getState, sourceMaps }: ThunkArgs) {
+  return async function({
+    dispatch,
+    getState,
+    sourceMaps
+  }: ThunkArgs): Promise<Source[]> {
     const source = getSource(getState(), sourceId);
 
     if (!source || isOriginal(source) || !source.sourceMapURL) {
-      return;
+      return [];
     }
 
     let urls = null;
@@ -97,7 +106,7 @@ function loadSourceMap(sourceId: SourceId) {
           source: (({ ...currentSource, sourceMapURL: "" }: any): Source)
         }: Action)
       );
-      return;
+      return [];
     }
 
     return urls.map(url => createOriginalSource(url, source, sourceMaps));
@@ -197,7 +206,7 @@ export function newSources(sources: Source[]) {
 
     dispatch(({ type: "ADD_SOURCES", sources: sources }: Action));
 
-    await dispatch(loadSourceMaps(sources));
+    dispatch(loadSourceMaps(sources));
 
     for (const source of sources) {
       dispatch(checkSelectedSource(source.id));
