@@ -532,6 +532,12 @@ SizeOfDataIfCDataObject(mozilla::MallocSizeOf mallocSizeOf, JSObject* obj);
 // Note: this returns nullptr iff |zone| is the atoms zone.
 extern JS_FRIEND_API JS::Realm* GetAnyRealmInZone(JS::Zone* zone);
 
+// Returns the first realm's global in a compartment. Note: this is not
+// guaranteed to always be the same realm because individual realms can be
+// collected by the GC.
+extern JS_FRIEND_API JSObject* GetFirstGlobalInCompartment(
+    JS::Compartment* comp);
+
 /*
  * Shadow declarations of JS internal structures, for access by inline access
  * functions below. Do not use these structures in any other way. When adding
