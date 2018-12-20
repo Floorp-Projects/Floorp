@@ -1630,6 +1630,10 @@ void HTMLMediaElement::SetVisible(bool aVisible) {
   }
 }
 
+bool HTMLMediaElement::IsVideoDecodingSuspended() const {
+  return mDecoder && mDecoder->IsVideoDecodingSuspended();
+}
+
 already_AddRefed<layers::Image> HTMLMediaElement::GetCurrentImage() {
   MarkAsTainted();
 
