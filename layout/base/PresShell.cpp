@@ -10042,13 +10042,15 @@ void nsIPresShell::SetVisualViewportSize(nscoord aWidth, nscoord aHeight) {
   }
 }
 
-void nsIPresShell::SetVisualViewportOffset(const nsPoint& aScrollOffset,
-                                           const nsPoint& aPrevRelativeOffset) {
+void nsIPresShell::SetVisualViewportOffset(
+    const nsPoint& aScrollOffset, const nsPoint& aPrevLayoutScrollPos) {
   if (mVisualViewportOffset != aScrollOffset) {
+    nsPoint prevOffset = mVisualViewportOffset;
     mVisualViewportOffset = aScrollOffset;
 
     if (auto* window = nsGlobalWindowInner::Cast(mDocument->GetInnerWindow())) {
-      window->VisualViewport()->PostScrollEvent(aPrevRelativeOffset);
+      window->VisualViewport()->PostScrollEvent(prevOffset,
+                                                aPrevLayoutScrollPos);
     }
   }
 }

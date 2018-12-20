@@ -33,9 +33,11 @@ class VisualViewport final : public mozilla::DOMEventTargetHelper {
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
+  void GetEventTargetParent(EventChainPreVisitor& aVisitor) override;
 
   void PostResizeEvent();
-  void PostScrollEvent(const nsPoint& aPrevRelativeOffset);
+  void PostScrollEvent(const nsPoint& aPrevVisualOffset,
+                       const nsPoint& aPrevLayoutOffset);
 
   // These two events are modelled after the ScrollEvent class in
   // nsGfxScrollFrame.h.
@@ -55,9 +57,11 @@ class VisualViewport final : public mozilla::DOMEventTargetHelper {
     NS_DECL_NSIRUNNABLE
     VisualViewportScrollEvent(VisualViewport* aViewport,
                               nsPresContext* aPresContext,
-                              const nsPoint& aPrevRelativeOffset);
+                              const nsPoint& aPrevVisualOffset,
+                              const nsPoint& aPrevLayoutOffset);
     void Revoke() { mViewport = nullptr; }
-    nsPoint PrevRelativeOffset() const { return mPrevRelativeOffset; }
+    nsPoint PrevVisualOffset() const { return mPrevVisualOffset; }
+    nsPoint PrevLayoutOffset() const { return mPrevLayoutOffset; }
 
    private:
     VisualViewport* mViewport;
@@ -70,7 +74,8 @@ class VisualViewport final : public mozilla::DOMEventTargetHelper {
     // Hopefully, at this point both visual and layout viewport positions have
     // been updated, so that we're able to tell whether the relative offset did
     // in fact change or not.
-    const nsPoint mPrevRelativeOffset;
+    const nsPoint mPrevVisualOffset;
+    const nsPoint mPrevLayoutOffset;
   };
 
  private:
