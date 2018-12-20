@@ -1043,8 +1043,6 @@ module.exports = {
 "use strict";
 
 
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
@@ -1114,13 +1112,17 @@ function arrayIterator(props, array, max) {
     let item;
 
     try {
-      item = ItemRep(_extends({}, props, config, {
+      item = ItemRep({
+        ...props,
+        ...config,
         object: array[i]
-      }));
+      });
     } catch (exc) {
-      item = ItemRep(_extends({}, props, config, {
+      item = ItemRep({
+        ...props,
+        ...config,
         object: exc
-      }));
+      });
     }
     items.push(item);
   }
@@ -1148,10 +1150,11 @@ function ItemRep(props) {
   const { Rep } = __webpack_require__(3647);
 
   const { object, delim, mode } = props;
-  return span({}, Rep(_extends({}, props, {
+  return span({}, Rep({
+    ...props,
     object: object,
     mode: mode
-  })), delim);
+  }), delim);
 }
 
 function getLength(object) {
@@ -1182,8 +1185,6 @@ module.exports = {
 
 "use strict";
 
-
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -1239,17 +1240,18 @@ function PropRep(props) {
     }
     key = span({ className: "nodeName" }, name);
   } else {
-    key = Rep(_extends({}, props, {
+    key = Rep({
+      ...props,
       className: "nodeName",
       object: name,
       mode: mode || MODE.TINY,
       defaultRep: Grip
-    }));
+    });
   }
 
   return [key, span({
     className: "objectEqual"
-  }, equal), Rep(_extends({}, props))];
+  }, equal), Rep({ ...props })];
 }
 
 // Exports from this module
@@ -1296,8 +1298,6 @@ module.exports = {
 
 "use strict";
 
-
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -1426,7 +1426,7 @@ function propIterator(props, object, max) {
   const propertiesLength = getPropertiesLength(object);
 
   if (object.preview && object.preview.safeGetterValues) {
-    properties = _extends({}, properties, object.preview.safeGetterValues);
+    properties = { ...properties, ...object.preview.safeGetterValues };
   }
 
   let indexes = getPropIndexes(properties, max, isInterestingProp);
@@ -1451,7 +1451,8 @@ function propIterator(props, object, max) {
     const length = max - indexes.length;
 
     const symbolsProps = ownSymbols.slice(0, length).map(symbolItem => {
-      return PropRep(_extends({}, props, {
+      return PropRep({
+        ...props,
         mode: MODE.TINY,
         name: symbolItem,
         object: symbolItem.descriptor.value,
@@ -1459,7 +1460,7 @@ function propIterator(props, object, max) {
         defaultRep: Grip,
         title: null,
         suppressQuotes
-      }));
+      });
     });
 
     propsArray.push(...symbolsProps);
@@ -1501,7 +1502,8 @@ function getProps(componentProps, properties, indexes, suppressQuotes) {
     const name = propertiesKeys[i];
     const value = getPropValue(properties[name]);
 
-    return PropRep(_extends({}, componentProps, {
+    return PropRep({
+      ...componentProps,
       mode: MODE.TINY,
       name,
       object: value,
@@ -1509,7 +1511,7 @@ function getProps(componentProps, properties, indexes, suppressQuotes) {
       defaultRep: Grip,
       title: null,
       suppressQuotes
-    }));
+    });
   });
 }
 
@@ -1602,8 +1604,6 @@ module.exports = Grip;
 "use strict";
 
 
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
@@ -1631,11 +1631,12 @@ function shouldRenderRootsInReps(roots) {
 }
 
 function renderRep(item, props) {
-  return Rep(_extends({}, props, {
+  return Rep({
+    ...props,
     object: node.getValue(item),
     mode: props.mode || MODE.TINY,
     defaultRep: Grip
-  }));
+  });
 }
 
 module.exports = {
@@ -2082,8 +2083,6 @@ module.exports = {
 "use strict";
 
 
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
@@ -2257,12 +2256,13 @@ function arrayIterator(props, grip, max) {
     }
 
     if (res.length < max) {
-      res.push(Rep(_extends({}, props, {
+      res.push(Rep({
+        ...props,
         object,
         mode: MODE.TINY,
         // Do not propagate title to array items reps
         title: undefined
-      })));
+      }));
     }
 
     return res;
@@ -2565,8 +2565,6 @@ module.exports = {
 "use strict";
 
 
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
@@ -2599,13 +2597,14 @@ function GripMapEntry(props) {
 
   return span({
     className: "objectBox objectBox-map-entry"
-  }, PropRep(_extends({}, props, {
+  }, PropRep({
+    ...props,
     name: key,
     object: value,
     equal: " \u2192 ",
     title: null,
     suppressQuotes: false
-  })));
+  }));
 }
 
 function supportsObject(grip, noGrip = false) {
@@ -2751,8 +2750,6 @@ module.exports = {
 "use strict";
 
 
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
@@ -2825,7 +2822,7 @@ function mergeResponses(responses) {
 
   for (const response of responses) {
     if (response.hasOwnProperty("ownProperties")) {
-      data.ownProperties = _extends({}, data.ownProperties, response.ownProperties);
+      data.ownProperties = { ...data.ownProperties, ...response.ownProperties };
     }
 
     if (response.ownSymbols && response.ownSymbols.length > 0) {
@@ -2903,8 +2900,6 @@ module.exports = {
 
 "use strict";
 
-
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -3388,7 +3383,7 @@ function makeNodesForProperties(objProps, parent) {
 
   const parentValue = getValue(parent);
 
-  const allProperties = _extends({}, ownProperties, safeGetterValues);
+  const allProperties = { ...ownProperties, ...safeGetterValues };
 
   // Ignore properties that are neither non-concrete nor getters/setters.
   const propertiesNames = sortProperties(Object.keys(allProperties)).filter(name => {
@@ -3539,9 +3534,10 @@ function getEvaluatedItem(item, evaluations) {
     return item;
   }
 
-  return _extends({}, item, {
+  return {
+    ...item,
     contents: evaluations.get(item.path)
-  });
+  };
 }
 
 function getChildrenWithEvaluations(options) {
@@ -4753,8 +4749,6 @@ module.exports = {
 "use strict";
 
 
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
@@ -4837,13 +4831,14 @@ function propIterator(props, object, max) {
   const propertiesNames = Object.keys(object);
 
   const pushPropRep = (name, value) => {
-    elements.push(PropRep(_extends({}, props, {
+    elements.push(PropRep({
+      ...props,
       key: name,
       mode: MODE.TINY,
       name,
       object: value,
       equal: ": "
-    })));
+    }));
     propertiesNumber++;
 
     if (propertiesNumber < propertiesNames.length) {
@@ -5051,8 +5046,6 @@ module.exports = {
 "use strict";
 
 
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
@@ -5080,11 +5073,12 @@ function Accessor(props) {
     const { Rep, Grip } = __webpack_require__(3647);
     return span({
       className: "objectBox objectBox-accessor objectTitle"
-    }, Rep(_extends({}, props, {
+    }, Rep({
+      ...props,
       object: evaluation.getterValue,
       mode: props.mode || MODE.TINY,
       defaultRep: Grip
-    })));
+    }));
   }
 
   if (hasGetter(object) && onInvokeGetterButtonClick) {
@@ -5381,8 +5375,6 @@ module.exports = {
 "use strict";
 
 
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
@@ -5409,14 +5401,17 @@ Event.propTypes = {
 };
 
 function Event(props) {
-  const gripProps = _extends({}, props, {
+  const gripProps = {
+    ...props,
     title: getTitle(props),
-    object: _extends({}, props.object, {
-      preview: _extends({}, props.object.preview, {
+    object: {
+      ...props.object,
+      preview: {
+        ...props.object.preview,
         ownProperties: {}
-      })
-    })
-  });
+      }
+    }
+  };
 
   if (gripProps.object.preview.target) {
     Object.assign(gripProps.object.preview.ownProperties, {
@@ -5487,8 +5482,6 @@ module.exports = {
 "use strict";
 
 
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
@@ -5557,13 +5550,14 @@ function getProps(props, promiseState) {
 
   return keys.reduce((res, key, i) => {
     const object = promiseState[key];
-    res = res.concat(PropRep(_extends({}, props, {
+    res = res.concat(PropRep({
+      ...props,
       mode: MODE.TINY,
       name: `<${key}>`,
       object,
       equal: ": ",
       suppressQuotes: true
-    })));
+    }));
 
     // Interleave commas between elements
     if (i !== keys.length - 1) {
@@ -6414,8 +6408,6 @@ module.exports = {
 "use strict";
 
 
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
 function initialState() {
   return {
     expandedPaths: new Set(),
@@ -6431,7 +6423,7 @@ function initialState() {
 function reducer(state = initialState(), action = {}) {
   const { type, data } = action;
 
-  const cloneState = overrides => _extends({}, state, overrides);
+  const cloneState = overrides => ({ ...state, ...overrides });
 
   if (type === "NODE_EXPAND") {
     return cloneState({
@@ -6463,12 +6455,6 @@ function reducer(state = initialState(), action = {}) {
         getterValue: data.result && data.result.value && (data.result.value.return || data.result.value.throw)
       })
     });
-  }
-
-  // NOTE: we clear the state on resume because otherwise the scopes pane 
-  // would be out of date. Bug 1514760 
-  if (type === "RESUME" || type == "NAVIGATE") {
-    return initialState();
   }
 
   return state;
@@ -6655,8 +6641,6 @@ module.exports = {
 
 "use strict";
 
-
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 var _devtoolsComponents = __webpack_require__(3669);
 
@@ -6891,14 +6875,15 @@ class ObjectInspector extends Component {
       onCollapse: item => this.setExpanded(item, false),
       onFocus: focusable ? this.focusItem : null,
 
-      renderItem: (item, depth, focused, arrow, expanded) => ObjectInspectorItem(_extends({}, this.props, {
+      renderItem: (item, depth, focused, arrow, expanded) => ObjectInspectorItem({
+        ...this.props,
         item,
         depth,
         focused,
         arrow,
         expanded,
         setExpanded: this.setExpanded
-      }))
+      })
     });
   }
 }
@@ -6936,8 +6921,6 @@ module.exports = props => {
 
 "use strict";
 
-
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 var _devtoolsServices = __webpack_require__(22);
 
@@ -7032,14 +7015,15 @@ class ObjectInspectorItem extends Component {
 
     if (nodeIsFunction(item) && !nodeIsGetter(item) && !nodeIsSetter(item) && (mode === MODE.TINY || !mode)) {
       return {
-        label: Utils.renderRep(item, _extends({}, this.props, {
+        label: Utils.renderRep(item, {
+          ...this.props,
           functionName: label
-        }))
+        })
       };
     }
 
     if (nodeHasProperties(item) || nodeHasAccessors(item) || nodeIsMapEntry(item) || nodeIsLongString(item) || isPrimitive) {
-      const repProps = _extends({}, this.props);
+      const repProps = { ...this.props };
       if (depth > 0) {
         repProps.mode = mode === MODE.LONG ? MODE.SHORT : MODE.TINY;
       }
