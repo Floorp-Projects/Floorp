@@ -1325,7 +1325,14 @@ impl<'a> DisplayListFlattener<'a> {
                 parent_sc,
                 self.clip_scroll_tree,
             ) {
-                parent_sc.primitives.extend(stacking_context.primitives);
+                // If the parent context primitives list is empty, it's faster
+                // to assign the storage of the popped context instead of paying
+                // the copying cost for extend.
+                if parent_sc.primitives.is_empty() {
+                    parent_sc.primitives = stacking_context.primitives;
+                } else {
+                    parent_sc.primitives.extend(stacking_context.primitives);
+                }
                 return;
             }
         }
