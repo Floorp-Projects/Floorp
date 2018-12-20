@@ -1665,7 +1665,7 @@ class Marionette(object):
             return value
 
     def execute_script(self, script, script_args=(), new_sandbox=True,
-                       sandbox="default"):
+                       sandbox="default", script_timeout=None):
         """Executes a synchronous JavaScript script, and returns the
         result (or None if the script does return a value).
 
@@ -1735,13 +1735,14 @@ class Marionette(object):
                 "args": args,
                 "newSandbox": new_sandbox,
                 "sandbox": sandbox,
+                "scriptTimeout": script_timeout,
                 "line": int(frame[1]),
                 "filename": filename}
         rv = self._send_message("WebDriver:ExecuteScript", body, key="value")
         return self._from_json(rv)
 
     def execute_async_script(self, script, script_args=(), new_sandbox=True,
-                             sandbox="default"):
+                             sandbox="default", script_timeout=None):
         """Executes an asynchronous JavaScript script, and returns the
         result (or None if the script does return a value).
 
@@ -1781,6 +1782,7 @@ class Marionette(object):
                 "args": args,
                 "newSandbox": new_sandbox,
                 "sandbox": sandbox,
+                "scriptTimeout": script_timeout,
                 "line": int(frame[1]),
                 "filename": filename}
 
