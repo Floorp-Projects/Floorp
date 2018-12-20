@@ -1656,28 +1656,35 @@ nsresult WinUtils::WriteBitmap(nsIFile* aFile, SourceSurface* surface) {
   int32_t height = dataSurface->GetSize().height;
   int32_t bytesPerPixel = 4 * sizeof(uint8_t);
   uint32_t bytesPerRow = bytesPerPixel * width;
+  bool hasAlpha = surface->GetFormat() == SurfaceFormat::B8G8R8A8;
 
   // initialize these bitmap structs which we will later
   // serialize directly to the head of the bitmap file
-  BITMAPINFOHEADER bmi;
-  bmi.biSize = sizeof(BITMAPINFOHEADER);
-  bmi.biWidth = width;
-  bmi.biHeight = height;
-  bmi.biPlanes = 1;
-  bmi.biBitCount = (WORD)bytesPerPixel * 8;
-  bmi.biCompression = BI_RGB;
-  bmi.biSizeImage = bytesPerRow * height;
-  bmi.biXPelsPerMeter = 0;
-  bmi.biYPelsPerMeter = 0;
-  bmi.biClrUsed = 0;
-  bmi.biClrImportant = 0;
+  BITMAPV4HEADER bmi;
+  memset(&bmi, 0, sizeof(BITMAPV4HEADER));
+  bmi.bV4Size = sizeof(BITMAPV4HEADER);
+  bmi.bV4Width = width;
+  bmi.bV4Height = height;
+  bmi.bV4Planes = 1;
+  bmi.bV4BitCount = (WORD)bytesPerPixel * 8;
+  bmi.bV4V4Compression = hasAlpha ? BI_BITFIELDS : BI_RGB;
+  bmi.bV4SizeImage = bytesPerRow * height;
+  bmi.bV4CSType = LCS_sRGB;
+  if (hasAlpha) {
+    bmi.bV4RedMask = 0x00FF0000;
+    bmi.bV4GreenMask = 0x0000FF00;
+    bmi.bV4BlueMask = 0x000000FF;
+    bmi.bV4AlphaMask = 0xFF000000;
+  }
 
   BITMAPFILEHEADER bf;
+  DWORD colormask[3];
   bf.bfType = 0x4D42;  // 'BM'
   bf.bfReserved1 = 0;
   bf.bfReserved2 = 0;
-  bf.bfOffBits = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);
-  bf.bfSize = bf.bfOffBits + bmi.biSizeImage;
+  bf.bfOffBits = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPV4HEADER) +
+                 (hasAlpha ? sizeof(colormask) : 0);
+  bf.bfSize = bf.bfOffBits + bmi.bV4SizeImage;
 
   // get a file output stream
   nsCOMPtr<nsIOutputStream> stream;
@@ -1695,21 +1702,31 @@ nsresult WinUtils::WriteBitmap(nsIFile* aFile, SourceSurface* surface) {
     uint32_t written;
     stream->Write((const char*)&bf, sizeof(BITMAPFILEHEADER), &written);
     if (written == sizeof(BITMAPFILEHEADER)) {
-      stream->Write((const char*)&bmi, sizeof(BITMAPINFOHEADER), &written);
-      if (written == sizeof(BITMAPINFOHEADER)) {
-        // write out the image data backwards because the desktop won't
-        // show bitmaps with negative heights for top-to-bottom
-        uint32_t i = map.mStride * height;
-        do {
-          i -= map.mStride;
-          stream->Write(((const char*)map.mData) + i, bytesPerRow, &written);
-          if (written == bytesPerRow) {
-            rv = NS_OK;
-          } else {
-            rv = NS_ERROR_FAILURE;
-            break;
-          }
-        } while (i != 0);
+      stream->Write((const char*)&bmi, sizeof(BITMAPV4HEADER), &written);
+      if (written == sizeof(BITMAPV4HEADER)) {
+        if (hasAlpha) {
+          // color mask
+          colormask[0] = 0x00FF0000;
+          colormask[1] = 0x0000FF00;
+          colormask[2] = 0x000000FF;
+
+          stream->Write((const char*)colormask, sizeof(colormask), &written);
+        }
+        if (!hasAlpha || written == sizeof(colormask)) {
+          // write out the image data backwards because the desktop won't
+          // show bitmaps with negative heights for top-to-bottom
+          uint32_t i = map.mStride * height;
+          do {
+            i -= map.mStride;
+            stream->Write(((const char*)map.mData) + i, bytesPerRow, &written);
+            if (written == bytesPerRow) {
+              rv = NS_OK;
+            } else {
+              rv = NS_ERROR_FAILURE;
+              break;
+            }
+          } while (i != 0);
+        }
       }
     }
 

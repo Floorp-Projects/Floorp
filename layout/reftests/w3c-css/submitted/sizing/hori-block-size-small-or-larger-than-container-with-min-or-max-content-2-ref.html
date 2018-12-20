@@ -9,22 +9,23 @@
   <link rel="stylesheet" type="text/css" href="support/ahem.css">
   <meta name="flags" content="ahem">
   <style>
+    html,body {
+      margin: 0;
+    }
+
     .outer * {
       border: 2px solid lime;
-      padding: 5px;
-      font-size: 15px;
-      line-height: 1;
     }
 
     .container {
-      width: 160px;
+      width: 80px;
       border-color: blue;
       display: inline-block;
       vertical-align: top;
 
       font-family: Ahem;
-      font-size: 15px;
-      line-height: 21px;
+      font-size: 8px;
+      line-height: 13px;
     }
 
     .too-small {
@@ -32,7 +33,7 @@
     }
 
     .too-big {
-      height: 150px;
+      height: 100px;
     }
   </style>
 </head>
@@ -47,8 +48,8 @@
     <div class="too-small">10px<br>container: min-content.</div>
   </div>
   <div class="container">
-    <div class="too-big">150px<br>container: min-content.</div>
-    <div class="too-big">150px<br>container: min-content.</div>
+    <div class="too-big">100px<br>container: min-content.</div>
+    <div class="too-big">100px<br>container: min-content.</div>
   </div>
 
   <div class="container">
@@ -60,8 +61,8 @@
     <div class="too-small">10px<br>container: max-content.</div>
   </div>
   <div class="container">
-    <div class="too-big">150px<br>container: max-content.</div>
-    <div class="too-big">150px<br>container: max-content.</div>
+    <div class="too-big">100px<br>container: max-content.</div>
+    <div class="too-big">100px<br>container: max-content.</div>
   </div>
 </div>
 
@@ -81,12 +82,12 @@
   </div>
 
   <div class="container">
-    <div class="too-big">150px<br>container max-size: min-content.</div>
-    <div class="too-big">150px<br>container max-size: min-content.</div>
+    <div class="too-big">100px<br>container max-size: min-content.</div>
+    <div class="too-big">100px<br>container max-size: min-content.</div>
   </div>
   <div class="container">
-    <div class="too-big">150px<br>container max-size: max-content.</div>
-    <div class="too-big">150px<br>container max-size: max-content.</div>
+    <div class="too-big">100px<br>container max-size: max-content.</div>
+    <div class="too-big">100px<br>container max-size: max-content.</div>
   </div>
 </div>
 </body>

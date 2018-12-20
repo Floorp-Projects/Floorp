@@ -9,23 +9,25 @@
   <link rel="stylesheet" type="text/css" href="support/ahem.css">
   <meta name="flags" content="ahem">
   <style>
+    html,body {
+      margin: 0;
+    }
+
     .container {
       width: 200px;
       height: 120px;
       border-color: blue;
       border: 2px solid blue;
-      padding: 5px;
       writing-mode: vertical-lr;
     }
 
     .container > * {
       border: 2px solid lime;
-      padding: 5px;
       font-size: 15px;
 
       font-family: Ahem;
-      font-size: 15px;
-      line-height: 21px;
+      font-size: 10px;
+      line-height: 15px;
     }
 
     .too-small {
@@ -33,39 +35,43 @@
     }
 
     .too-big {
-      width: 150px;
+      width: 120px;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div>width: min-content<br>on this box.</div>
-    <div>width: max-content<br>on this box.</div>
+  <div style="display: inline-block;">
+    <div class="container">
+      <div>width: min-content<br>on this box.</div>
+      <div>width: max-content<br>on this box.</div>
+    </div>
+
+    <div class="container">
+      <div class="too-small">min-width: min-content<br>on this box.</div>
+      <div class="too-small">min-width: max-content<br>on this box.</div>
+    </div>
+
+    <div class="container">
+      <div class="too-big">max-width: min-content<br>on this box.</div>
+      <div class="too-big">max-width: max-content<br>on this box.</div>
+    </div>
   </div>
 
-  <div class="container">
-    <div class="too-small">min-width: min-content<br>on this box.</div>
-    <div class="too-small">min-width: max-content<br>on this box.</div>
-  </div>
+  <div style="display: inline-block;">
+    <div class="container">
+      <div>block: min-content<br>on this box.</div>
+      <div>block: max-content<br>on this box.</div>
+    </div>
 
-  <div class="container">
-    <div class="too-big">max-width: min-content<br>on this box.</div>
-    <div class="too-big">max-width: max-content<br>on this box.</div>
-  </div>
+    <div class="container">
+      <div class="too-small">min-block: min-content<br>on this box.</div>
+      <div class="too-small">min-block: max-content<br>on this box.</div>
+    </div>
 
-  <div class="container">
-    <div>block: min-content<br>on this box.</div>
-    <div>block: max-content<br>on this box.</div>
-  </div>
-
-  <div class="container">
-    <div class="too-small">min-block: min-content<br>on this box.</div>
-    <div class="too-small">min-block: max-content<br>on this box.</div>
-  </div>
-
-  <div class="container">
-    <div class="too-big">max-block: min-content<br>on this box.</div>
-    <div class="too-big">max-block: max-content<br>on this box.</div>
+    <div class="container">
+      <div class="too-big">max-block: min-content<br>on this box.</div>
+      <div class="too-big">max-block: max-content<br>on this box.</div>
+    </div>
   </div>
 </body>
 </html>

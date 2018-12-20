@@ -96,7 +96,7 @@ struct WalkStackData {
 
 CRITICAL_SECTION gDbgHelpCS;
 
-#ifdef _M_AMD64
+#if defined(_M_AMD64) || defined(_M_ARM64)
 // Because various Win64 APIs acquire function-table locks, we need a way of
 // preventing stack walking while those APIs are being called. Otherwise, the
 // stack walker may suspend a thread holding such a lock, and deadlock when the
@@ -146,7 +146,7 @@ MFBT_API void UnregisterJitCodeRegion(uint8_t* aStart, size_t aSize) {
   sJitCodeRegionSize = 0;
 }
 
-#endif  // _M_AMD64
+#endif  // _M_AMD64 || _M_ARM64
 
 // Routine to print an error message to standard error.
 static void PrintError(const char* aPrefix) {
@@ -189,7 +189,7 @@ static void WalkStackMain64(struct WalkStackData* aData) {
     context = aData->context;
   }
 
-#if defined(_M_IX86) || defined(_M_IA64) || defined(_M_ARM64)
+#if defined(_M_IX86) || defined(_M_IA64)
   // Setup initial stack frame to walk from.
   STACKFRAME64 frame64;
   memset(&frame64, 0, sizeof(frame64));
@@ -201,10 +201,6 @@ static void WalkStackMain64(struct WalkStackData* aData) {
   frame64.AddrPC.Offset = context->StIIP;
   frame64.AddrStack.Offset = context->SP;
   frame64.AddrFrame.Offset = context->RsBSP;
-#elif defined _M_ARM64
-  frame64.AddrPC.Offset = context->Pc;
-  frame64.AddrStack.Offset = context->Sp;
-  frame64.AddrFrame.Offset = context->Fp;
 #endif
   frame64.AddrPC.Mode = AddrModeFlat;
   frame64.AddrStack.Mode = AddrModeFlat;
@@ -212,7 +208,7 @@ static void WalkStackMain64(struct WalkStackData* aData) {
   frame64.AddrReturn.Mode = AddrModeFlat;
 #endif
 
-#ifdef _M_AMD64
+#if defined(_M_AMD64) || defined(_M_ARM64)
   // If there are any active suppressions, then at least one thread (we don't
   // know which) is holding a lock that can deadlock RtlVirtualUnwind. Since
   // that thread may be the one that we're trying to unwind, we can't proceed.
@@ -228,7 +224,7 @@ static void WalkStackMain64(struct WalkStackData* aData) {
   }
 #endif
 
-#ifdef _M_AMD64
+#if defined(_M_AMD64) || defined(_M_ARM64)
   bool firstFrame = true;
 #endif
 
@@ -240,7 +236,7 @@ static void WalkStackMain64(struct WalkStackData* aData) {
     DWORD64 addr;
     DWORD64 spaddr;
 
-#if defined(_M_IX86) || defined(_M_IA64) || defined(_M_ARM64)
+#if defined(_M_IX86) || defined(_M_IA64)
     // 32-bit frame unwinding.
     // Debug routines are not threadsafe, so grab the lock.
     EnterCriticalSection(&gDbgHelpCS);
@@ -249,8 +245,6 @@ static void WalkStackMain64(struct WalkStackData* aData) {
         IMAGE_FILE_MACHINE_IA64,
 #elif defined _M_IX86
         IMAGE_FILE_MACHINE_I386,
-#elif defined _M_ARM64
-        IMAGE_FILE_MACHINE_ARM64,
 #endif
         aData->process, aData->thread, &frame64, context, nullptr,
         SymFunctionTableAccess64,  // function table access routine
@@ -273,11 +267,18 @@ static void WalkStackMain64(struct WalkStackData* aData) {
       break;
     }
 
-#elif defined(_M_AMD64)
+#elif defined(_M_AMD64) || defined(_M_ARM64)
+
+#if defined(_M_AMD64)
+    auto currentInstr = context->Rip;
+#elif defined(_M_ARM64)
+    auto currentInstr = context->Pc;
+#endif
+
     // If we reach a frame in JIT code, we don't have enough information to
     // unwind, so we have to give up.
-    if (sJitCodeRegionStart && (uint8_t*)context->Rip >= sJitCodeRegionStart &&
-        (uint8_t*)context->Rip < sJitCodeRegionStart + sJitCodeRegionSize) {
+    if (sJitCodeRegionStart && (uint8_t*)currentInstr >= sJitCodeRegionStart &&
+        (uint8_t*)currentInstr < sJitCodeRegionStart + sJitCodeRegionSize) {
       break;
     }
 
@@ -285,8 +286,8 @@ static void WalkStackMain64(struct WalkStackData* aData) {
     // unwind data, so their JIT unwind callback just throws up its hands and
     // terminates the process.
     if (sMsMpegJitCodeRegionStart &&
-        (uint8_t*)context->Rip >= sMsMpegJitCodeRegionStart &&
-        (uint8_t*)context->Rip <
+        (uint8_t*)currentInstr >= sMsMpegJitCodeRegionStart &&
+        (uint8_t*)currentInstr <
             sMsMpegJitCodeRegionStart + sMsMpegJitCodeRegionSize) {
       break;
     }
@@ -295,25 +296,35 @@ static void WalkStackMain64(struct WalkStackData* aData) {
     // Try to look up unwind metadata for the current function.
     ULONG64 imageBase;
     PRUNTIME_FUNCTION runtimeFunction =
-        RtlLookupFunctionEntry(context->Rip, &imageBase, NULL);
+        RtlLookupFunctionEntry(currentInstr, &imageBase, NULL);
 
     if (runtimeFunction) {
       PVOID dummyHandlerData;
       ULONG64 dummyEstablisherFrame;
-      RtlVirtualUnwind(UNW_FLAG_NHANDLER, imageBase, context->Rip,
+      RtlVirtualUnwind(UNW_FLAG_NHANDLER, imageBase, currentInstr,
                        runtimeFunction, context, &dummyHandlerData,
                        &dummyEstablisherFrame, nullptr);
     } else if (firstFrame) {
       // Leaf functions can be unwound by hand.
+#if defined(_M_AMD64)
       context->Rip = *reinterpret_cast<DWORD64*>(context->Rsp);
       context->Rsp += sizeof(void*);
+#elif defined(_M_ARM64)
+      context->Pc = *reinterpret_cast<DWORD64*>(context->Sp);
+      context->Sp += sizeof(void*);
+#endif
     } else {
       // Something went wrong.
       break;
     }
 
+#if defined(_M_AMD64)
     addr = context->Rip;
     spaddr = context->Rsp;
+#elif defined(_M_ARM64)
+    addr = context->Pc;
+    spaddr = context->Sp;
+#endif
     firstFrame = false;
 #else
 #error "unknown platform"

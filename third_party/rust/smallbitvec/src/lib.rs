@@ -186,6 +186,18 @@ fn buffer_len(cap: usize) -> usize {
     (cap + bits_per_storage() - 1) / bits_per_storage()
 }
 
+/// A typed representation of a `SmallBitVec`'s internal storage.
+///
+/// The layout of the data inside both enum variants is a private implementation detail.
+pub enum InternalStorage {
+    /// The internal representation of a `SmallBitVec` that has not spilled to a
+    /// heap allocation.
+    Inline(usize),
+
+    /// The contents of the heap allocation of a spilled `SmallBitVec`.
+    Spilled(Box<[usize]>),
+}
+
 impl SmallBitVec {
     /// Create an empty vector.
     #[inline]
@@ -468,6 +480,8 @@ impl SmallBitVec {
     }
 
     /// Returns true if all the bits in the vec are set to zero/false.
+    ///
+    /// On an empty vector, returns true.
     #[inline]
     pub fn all_false(&self) -> bool {
         let mut len = self.len();
@@ -498,6 +512,8 @@ impl SmallBitVec {
     }
 
     /// Returns true if all the bits in the vec are set to one/true.
+    ///
+    /// On an empty vector, returns true.
     #[inline]
     pub fn all_true(&self) -> bool {
         let mut len = self.len();
@@ -524,6 +540,42 @@ impl SmallBitVec {
                 }
             }
             true
+        }
+    }
+
+    /// Shorten the vector, keeping the first `len` elements and dropping the rest.
+    ///
+    /// If `len` is greater than or equal to the vector's current length, this has no
+    /// effect.
+    ///
+    /// This does not re-allocate.
+    pub fn truncate(&mut self, len: usize) {
+        unsafe {
+            if len < self.len() {
+                self.set_len(len);
+            }
+        }
+    }
+
+    /// Resizes the vector so that its length is equal to `len`.
+    ///
+    /// If `len` is less than the current length, the vector simply truncated.
+    ///
+    /// If `len` is greater than the current length, `value` is appended to the
+    /// vector until its length equals `len`.
+    pub fn resize(&mut self, len: usize, value: bool) {
+        let old_len = self.len();
+
+        if len > old_len {
+            unsafe {
+                self.reallocate(len);
+                self.set_len(len);
+                for i in old_len..len {
+                    self.set(i, value);
+                }
+            }
+        } else {
+            self.truncate(len);
         }
     }
 
@@ -572,6 +624,66 @@ impl SmallBitVec {
             Some((self.data & !HEAP_FLAG) as *const Storage)
         } else {
             None
+        }
+    }
+
+    /// Converts this `SmallBitVec` into its internal representation.
+    ///
+    /// The layout of the data inside both enum variants is a private implementation detail.
+    #[inline]
+    pub fn into_storage(self) -> InternalStorage {
+        if self.is_heap() {
+            let alloc_len = header_len() + self.header().buffer_len;
+            let ptr = self.header_raw() as *mut Storage;
+            let slice = unsafe { Box::from_raw(slice::from_raw_parts_mut(ptr, alloc_len)) };
+            forget(self);
+            InternalStorage::Spilled(slice)
+        } else {
+            InternalStorage::Inline(self.data)
+        }
+    }
+
+    /// Creates a `SmallBitVec` directly from the internal storage of another
+    /// `SmallBitVec`.
+    ///
+    /// # Safety
+    ///
+    /// This is highly unsafe.  `storage` needs to have been previously generated
+    /// via `SmallBitVec::into_storage` (at least, it's highly likely to be
+    /// incorrect if it wasn't.)  Violating this may cause problems like corrupting the
+    /// allocator's internal data structures.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use smallbitvec::{InternalStorage, SmallBitVec};
+    ///
+    /// fn main() {
+    ///     let v = SmallBitVec::from_elem(200, false);
+    ///
+    ///     // Get the internal representation of the SmallBitVec.
+    ///     // unless we transfer its ownership somewhere else.
+    ///     let storage = v.into_storage();
+    ///
+    ///     /// Make a copy of the SmallBitVec's data.
+    ///     let cloned_storage = match storage {
+    ///         InternalStorage::Spilled(vs) => InternalStorage::Spilled(vs.clone()),
+    ///         inline => inline,
+    ///     };
+    ///
+    ///     /// Create a new SmallBitVec from the coped storage.
+    ///     let v = unsafe { SmallBitVec::from_storage(cloned_storage) };
+    /// }
+    /// ```
+    pub unsafe fn from_storage(storage: InternalStorage) -> SmallBitVec {
+        match storage {
+            InternalStorage::Inline(data) => SmallBitVec { data },
+            InternalStorage::Spilled(vs) => {
+                let ptr = Box::into_raw(vs);
+                SmallBitVec {
+                    data: (ptr as *mut usize as usize) | HEAP_FLAG,
+                }
+            }
         }
     }
 
