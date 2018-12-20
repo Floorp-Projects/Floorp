@@ -290,20 +290,6 @@ void AudioNodeStream::SetPassThrough(bool aPassThrough) {
   GraphImpl()->AppendMessage(MakeUnique<Message>(this, aPassThrough));
 }
 
-void AudioNodeStream::SendRunnable(already_AddRefed<nsIRunnable> aRunnable) {
-  class Message final : public ControlMessage {
-   public:
-    Message(MediaStream* aStream, already_AddRefed<nsIRunnable> aRunnable)
-        : ControlMessage(aStream), mRunnable(aRunnable) {}
-    void Run() override { mRunnable->Run(); }
-
-   private:
-    nsCOMPtr<nsIRunnable> mRunnable;
-  };
-
-  GraphImpl()->AppendMessage(MakeUnique<Message>(this, std::move(aRunnable)));
-}
-
 void AudioNodeStream::SetChannelMixingParametersImpl(
     uint32_t aNumberOfChannels, ChannelCountMode aChannelCountMode,
     ChannelInterpretation aChannelInterpretation) {
