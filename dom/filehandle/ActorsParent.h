@@ -159,11 +159,11 @@ class BackgroundMutableFileParentBase : public PBackgroundMutableFileParent {
       PBackgroundFileHandleParent* aActor, const FileMode& aMode) override;
 
   virtual bool DeallocPBackgroundFileHandleParent(
-      PBackgroundFileHandleParent* aActor) override;
+      PBackgroundFileHandleParent* aActor) final;
 
-  virtual mozilla::ipc::IPCResult RecvDeleteMe() override;
+  mozilla::ipc::IPCResult RecvDeleteMe() final;
 
-  virtual mozilla::ipc::IPCResult RecvGetFileId(int64_t* aFileId) override;
+  mozilla::ipc::IPCResult RecvGetFileId(int64_t* aFileId) override;
 };
 
 }  // namespace dom

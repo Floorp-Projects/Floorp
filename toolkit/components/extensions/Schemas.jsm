@@ -233,6 +233,14 @@ const POSTPROCESSORS = {
 
     return canvas.toDataURL("image/png");
   },
+  webRequestBlockingPermissionRequired(string, context) {
+    if (string === "blocking" && !context.hasPermission("webRequestBlocking")) {
+      throw new context.cloneScope.Error("Using webRequest.addListener with the " +
+                                         "blocking option requires the 'webRequestBlocking' permission.");
+    }
+
+    return string;
+  },
 };
 
 // Parses a regular expression, with support for the Python extended
