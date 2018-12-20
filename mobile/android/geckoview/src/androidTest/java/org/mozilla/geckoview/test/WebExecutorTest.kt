@@ -79,7 +79,7 @@ class WebExecutorTest {
     }
 
     private fun fetch(request: WebRequest, @GeckoWebExecutor.FetchFlags flags: Int): WebResponse {
-        return executor.fetch(request, flags).poll(env.defaultTimeoutMillis)
+        return executor.fetch(request, flags).poll(env.defaultTimeoutMillis)!!
     }
 
     fun String.toDirectByteBuffer(): ByteBuffer {
@@ -211,7 +211,7 @@ class WebExecutorTest {
 
     @Test
     fun testResolveV4() {
-        val addresses = executor.resolve("localhost").poll()
+        val addresses = executor.resolve("localhost").poll()!!
         assertThat("Addresses should not be null",
                 addresses, notNullValue())
         assertThat("First address should be loopback",
@@ -223,7 +223,7 @@ class WebExecutorTest {
     @Test
     @SdkSuppress(minSdkVersion = Build.VERSION_CODES.LOLLIPOP)
     fun testResolveV6() {
-        val addresses = executor.resolve("ip6-localhost").poll()
+        val addresses = executor.resolve("ip6-localhost").poll()!!
         assertThat("Addresses should not be null",
                 addresses, notNullValue())
         assertThat("First address should be loopback",

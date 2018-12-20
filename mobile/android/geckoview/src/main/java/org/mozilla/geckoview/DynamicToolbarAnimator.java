@@ -9,6 +9,8 @@ import org.mozilla.gecko.util.ThreadUtils;
 
 import android.graphics.Bitmap;
 import android.support.annotation.AnyThread;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.UiThread;
 import android.util.Log;
 
@@ -38,7 +40,7 @@ public final class DynamicToolbarAnimator {
 
     public interface ToolbarChromeProxy {
         @UiThread
-        public Bitmap getBitmapOfToolbarChrome();
+        public @Nullable Bitmap getBitmapOfToolbarChrome();
         @UiThread
         public boolean isToolbarChromeVisible();
         @UiThread
@@ -57,12 +59,12 @@ public final class DynamicToolbarAnimator {
         mCompositor = aTarget.mCompositor;
     }
 
-    public ToolbarChromeProxy getToolbarChromeProxy() {
+    public @Nullable ToolbarChromeProxy getToolbarChromeProxy() {
         ThreadUtils.assertOnUiThread();
         return mToolbarChromeProxy;
     }
 
-    public void setToolbarChromeProxy(ToolbarChromeProxy aToolbarChromeProxy) {
+    public void setToolbarChromeProxy(@Nullable ToolbarChromeProxy aToolbarChromeProxy) {
         ThreadUtils.assertOnUiThread();
         mToolbarChromeProxy = aToolbarChromeProxy;
     }
@@ -98,13 +100,13 @@ public final class DynamicToolbarAnimator {
         return !mPinFlags.isEmpty();
     }
 
-    public boolean isPinnedBy(PinReason reason) {
+    public boolean isPinnedBy(@NonNull PinReason reason) {
         ThreadUtils.assertOnUiThread();
 
         return mPinFlags.contains(reason);
     }
 
-    public void setPinned(final boolean pinned, final PinReason reason) {
+    public void setPinned(final boolean pinned, final @NonNull PinReason reason) {
         ThreadUtils.assertOnUiThread();
 
         if (pinned != mPinFlags.contains(reason) && mCompositor.isReady()) {

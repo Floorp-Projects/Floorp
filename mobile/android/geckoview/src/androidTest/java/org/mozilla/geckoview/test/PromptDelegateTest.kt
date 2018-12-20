@@ -27,7 +27,8 @@ class PromptDelegateTest : BaseSessionTest() {
 
         sessionRule.waitUntilCalled(object : Callbacks.PromptDelegate {
             @AssertCalled(count = 1)
-            override fun onPopupRequest(session: GeckoSession, targetUri: String): GeckoResult<AllowOrDeny>? {
+            override fun onPopupRequest(session: GeckoSession, targetUri: String?)
+                    : GeckoResult<AllowOrDeny>? {
                 assertThat("Session should not be null", session, notNullValue())
                 assertThat("URL should not be null", targetUri, notNullValue())
                 assertThat("URL should match", targetUri, endsWith(HELLO_HTML_PATH))
@@ -42,7 +43,8 @@ class PromptDelegateTest : BaseSessionTest() {
 
         sessionRule.delegateDuringNextWait(object : Callbacks.PromptDelegate, Callbacks.NavigationDelegate {
             @AssertCalled(count = 1)
-            override fun onPopupRequest(session: GeckoSession, targetUri: String): GeckoResult<AllowOrDeny>? {
+            override fun onPopupRequest(session: GeckoSession, targetUri: String?)
+                    : GeckoResult<AllowOrDeny>? {
                 assertThat("Session should not be null", session, notNullValue())
                 assertThat("URL should not be null", targetUri, notNullValue())
                 assertThat("URL should match", targetUri, endsWith(HELLO_HTML_PATH))
@@ -69,7 +71,8 @@ class PromptDelegateTest : BaseSessionTest() {
 
         sessionRule.delegateDuringNextWait(object : Callbacks.PromptDelegate, Callbacks.NavigationDelegate {
             @AssertCalled(count = 1)
-            override fun onPopupRequest(session: GeckoSession, targetUri: String): GeckoResult<AllowOrDeny>? {
+            override fun onPopupRequest(session: GeckoSession, targetUri: String?)
+                    : GeckoResult<AllowOrDeny>? {
                 assertThat("Session should not be null", session, notNullValue())
                 assertThat("URL should not be null", targetUri, notNullValue())
                 assertThat("URL should match", targetUri, endsWith(HELLO_HTML_PATH))
