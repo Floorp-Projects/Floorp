@@ -87,7 +87,7 @@ function check_test_pt02() {
 
   Assert.equal(gUpdateCount, 1,
                "the update count" + MSG_SHOULD_EQUAL);
-  let bestUpdate = gAUS.selectUpdate(gUpdates, gUpdateCount).QueryInterface(Ci.nsIPropertyBag);
+  let bestUpdate = gAUS.selectUpdate(gUpdates, gUpdateCount).QueryInterface(Ci.nsIWritablePropertyBag);
   Assert.equal(bestUpdate.type, "minor",
                "the update type attribute" + MSG_SHOULD_EQUAL);
   Assert.equal(bestUpdate.name, "Minor Test",
