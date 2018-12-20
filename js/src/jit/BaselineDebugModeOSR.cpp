@@ -172,7 +172,7 @@ static bool CollectJitStackScripts(JSContext* cx,
                 baselineFrame->getDebugModeOSRInfo()) {
           // If patching a previously patched yet unpopped frame, we can
           // use the BaselineDebugModeOSRInfo on the frame directly to
-          // patch. Indeed, we cannot use frame.returnAddressToFp(), as
+          // patch. Indeed, we cannot use frame.resumePCinCurrentFrame(), as
           // it points into the debug mode OSR handler and cannot be
           // used to look up a corresponding RetAddrEntry.
           //
@@ -190,7 +190,7 @@ static bool CollectJitStackScripts(JSContext* cx,
           }
         } else {
           // The frame must be settled on a pc with a RetAddrEntry.
-          uint8_t* retAddr = frame.returnAddressToFp();
+          uint8_t* retAddr = frame.resumePCinCurrentFrame();
           RetAddrEntry& retAddrEntry =
               script->baselineScript()->retAddrEntryFromReturnAddress(retAddr);
           if (!entries.append(DebugModeOSREntry(script, retAddrEntry))) {

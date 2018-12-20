@@ -2123,8 +2123,8 @@ bool DictionaryBase::AppendJSONToString(const char16_t* aJSONData,
   return true;
 }
 
-void ReparentWrapper(JSContext* aCx, JS::Handle<JSObject*> aObjArg,
-                     ErrorResult& aError) {
+void UpdateReflectorGlobal(JSContext* aCx, JS::Handle<JSObject*> aObjArg,
+                           ErrorResult& aError) {
   js::AssertSameCompartment(aCx, aObjArg);
 
   aError.MightThrowJSException();
@@ -2139,22 +2139,20 @@ void ReparentWrapper(JSContext* aCx, JS::Handle<JSObject*> aObjArg,
   }
 
   JS::Rooted<JSObject*> aObj(aCx, aObjArg);
+  MOZ_ASSERT(IsDOMObject(aObj));
+
   const DOMJSClass* domClass = GetDOMClass(aObj);
 
-  // DOM things are always parented to globals.
-  JS::Rooted<JSObject*> oldParent(aCx, JS::GetNonCCWObjectGlobal(aObj));
-  MOZ_ASSERT(JS_IsGlobalObject(oldParent));
+  JS::Rooted<JSObject*> oldGlobal(aCx, JS::GetNonCCWObjectGlobal(aObj));
+  MOZ_ASSERT(JS_IsGlobalObject(oldGlobal));
 
-  JS::Rooted<JSObject*> newParent(aCx,
+  JS::Rooted<JSObject*> newGlobal(aCx,
                                   domClass->mGetAssociatedGlobal(aCx, aObj));
-  MOZ_ASSERT(JS_IsGlobalObject(newParent));
+  MOZ_ASSERT(JS_IsGlobalObject(newGlobal));
 
-  JSAutoRealm oldAr(aCx, oldParent);
+  JSAutoRealm oldAr(aCx, oldGlobal);
 
-  JS::Compartment* oldCompartment = js::GetObjectCompartment(oldParent);
-  JS::Compartment* newCompartment = js::GetObjectCompartment(newParent);
-  if (oldCompartment == newCompartment) {
-    MOZ_ASSERT(oldParent == newParent);
+  if (oldGlobal == newGlobal) {
     return;
   }
 
@@ -2169,7 +2167,7 @@ void ReparentWrapper(JSContext* aCx, JS::Handle<JSObject*> aObjArg,
     expandoObject = DOMProxyHandler::GetAndClearExpandoObject(aObj);
   }
 
-  JSAutoRealm newAr(aCx, newParent);
+  JSAutoRealm newAr(aCx, newGlobal);
 
   // First we clone the reflector. We get a copy of its properties and clone its
   // expando chain.

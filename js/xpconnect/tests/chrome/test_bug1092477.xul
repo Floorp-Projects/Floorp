@@ -29,7 +29,7 @@ try {
 catch (e) {
     exn = String(e);
 }
-var msg = "loadSubscript should throw an exception for trying to load a non-existent script"
+var msg = "loadSubScript should throw an exception for trying to load a non-existent script"
 is(exn, "Error opening input stream (invalid filename?): " + url, msg);
   ]]></script>
 </window>

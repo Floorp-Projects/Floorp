@@ -921,7 +921,7 @@ static void TraceIonJSFrame(JSTracer* trc, const JSJitFrameIter& frame) {
   TraceThisAndArguments(trc, frame, frame.jsFrame());
 
   const SafepointIndex* si =
-      ionScript->getSafepointIndex(frame.returnAddressToFp());
+      ionScript->getSafepointIndex(frame.resumePCinCurrentFrame());
 
   SafepointReader safepoint(ionScript, si);
 
@@ -1027,7 +1027,7 @@ static void UpdateIonJSFrameForMinorGC(JSRuntime* rt,
   Nursery& nursery = rt->gc.nursery();
 
   const SafepointIndex* si =
-      ionScript->getSafepointIndex(frame.returnAddressToFp());
+      ionScript->getSafepointIndex(frame.resumePCinCurrentFrame());
   SafepointReader safepoint(ionScript, si);
 
   LiveGeneralRegisterSet slotsRegs = safepoint.slotsOrElementsSpills();
@@ -1338,7 +1338,7 @@ static void TraceJitActivation(JSTracer* trc, JitActivation* activation) {
       highestByteVisitedInPrevWasmFrame = 0; /* "unknown" */
     } else {
       MOZ_ASSERT(frames.isWasm());
-      uint8_t* nextPC = frames.returnAddressToFp();
+      uint8_t* nextPC = frames.resumePCinCurrentFrame();
       MOZ_ASSERT(nextPC != 0);
       wasm::WasmFrameIter& wasmFrameIter = frames.asWasm();
       wasm::Instance* instance = wasmFrameIter.instance();
@@ -1406,7 +1406,7 @@ void GetPcScript(JSContext* cx, JSScript** scriptRes, jsbytecode** pcRes) {
     // since we do not return to the frame that threw the exception.
     if (!it.frame().isBaselineJS() ||
         !it.frame().baselineFrame()->hasOverridePc()) {
-      retAddr = it.frame().returnAddressToFp();
+      retAddr = it.frame().resumePCinCurrentFrame();
       MOZ_ASSERT(retAddr);
     } else {
       retAddr = nullptr;

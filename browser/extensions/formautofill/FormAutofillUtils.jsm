@@ -396,7 +396,7 @@ this.FormAutofillUtils = {
   },
 
   loadDataFromScript(url, sandbox = {}) {
-    Services.scriptloader.loadSubScript(url, sandbox, "utf-8");
+    Services.scriptloader.loadSubScript(url, sandbox);
     return sandbox;
   },
 

@@ -46,7 +46,7 @@ src = ns.NetUtil.asyncFetch.toSource();
 isnot(src.indexOf("return"), -1, "subscript of a subscript should have source");
 
 ns = {};
-Services.scriptloader.loadSubScript(resolvedBase + "utf8_subscript.js", ns, "UTF-8");
+Services.scriptloader.loadSubScript(resolvedBase + "utf8_subscript.js", ns);
 src = ns.f.toSource();
 isnot(src.indexOf("return 42;"), -1, "encoded subscript should have correct source");
 

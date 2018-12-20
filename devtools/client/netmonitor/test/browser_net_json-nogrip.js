@@ -30,9 +30,8 @@ add_task(async function() {
   const values = tabpanel
     .querySelectorAll("tr:not(.tree-section) .treeValueCell .objectBox");
 
-  // Verify that an object is rendered: `obj: {…}`
   is(labels[0].textContent, "obj", "The first json property name is correct.");
-  is(values[0].textContent, "{\u2026}", "The first json property value is correct.");
+  is(values[0].textContent, "{…}", "The first json property value is correct.");
 
   await teardown(monitor);
 });
