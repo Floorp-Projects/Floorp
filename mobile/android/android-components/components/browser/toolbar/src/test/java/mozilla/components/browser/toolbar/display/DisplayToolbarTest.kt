@@ -492,15 +492,17 @@ class DisplayToolbarTest {
         val urlView = extractUrlView(displayToolbar)
         val reloadView = extractActionView(displayToolbar, "Reload")!!
         val readerView = extractActionView(displayToolbar, "Reader Mode")!!
+        val iconView = extractIconView(displayToolbar)
 
         assertTrue(view.measuredWidth > 0)
 
-        assertEquals(view.measuredWidth, urlView.measuredWidth + reloadView.measuredWidth + readerView.measuredWidth)
+        assertEquals(urlView.measuredWidth + reloadView.measuredWidth + readerView.measuredWidth + iconView.measuredWidth,
+            view.measuredWidth)
         assertEquals(200, view.measuredHeight)
     }
 
     @Test
-    fun `url box position is enclosing url and page actions`() {
+    fun `url box position is enclosing icon, url and page actions`() {
         val toolbar = mock(BrowserToolbar::class.java)
         val displayToolbar = DisplayToolbar(RuntimeEnvironment.application, toolbar)
 
@@ -519,18 +521,24 @@ class DisplayToolbarTest {
         val urlView = extractUrlView(displayToolbar)
         val reloadView = extractActionView(displayToolbar, "Reload")!!
         val readerView = extractActionView(displayToolbar, "Reader Mode")!!
+        val iconView = extractIconView(displayToolbar)
 
         val viewRect = Rect(view.left, view.top, view.right, view.bottom)
         val urlViewRect = Rect(urlView.left, urlView.top, urlView.right, urlView.bottom)
         val reloadViewRect = Rect(reloadView.left, reloadView.top, reloadView.right, reloadView.bottom)
         val readerViewRect = Rect(readerView.left, readerView.top, readerView.right, readerView.bottom)
+        val iconViewRect = Rect(iconView.left, iconView.top, iconView.right, iconView.bottom)
 
         assertTrue(viewRect.width() > 0)
         assertTrue(viewRect.height() > 0)
         assertTrue(viewRect.contains(urlViewRect))
         assertTrue(viewRect.contains(reloadViewRect))
         assertTrue(viewRect.contains(readerViewRect))
-        assertEquals(urlViewRect.width() + reloadViewRect.width() + readerViewRect.width(), viewRect.width())
+        assertTrue(viewRect.contains(iconViewRect))
+        assertEquals(iconViewRect.width() + urlViewRect.width() + reloadViewRect.width() + readerViewRect.width(), viewRect.width())
+
+        assertEquals(view.measuredWidth, viewRect.width())
+        assertEquals(1024, viewRect.width())
     }
 
     @Test

@@ -267,6 +267,7 @@ internal class DisplayToolbar(
         setMeasuredDimension(width, height)
 
         // The icon and menu fill the whole height and have a square shape
+        val iconSize = height
         val squareSpec = MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY)
         iconView.measure(squareSpec, squareSpec)
         menuView.measure(squareSpec, squareSpec)
@@ -278,7 +279,7 @@ internal class DisplayToolbar(
 
         // The url uses whatever space is left. Subtract the icon and (optionally) the menu
         val menuWidth = if (menuView.isVisible()) height else 0
-        val urlWidth = width - browserActionsWidth - pageActionsWidth
+        val urlWidth = width - iconSize - browserActionsWidth - pageActionsWidth
                 - menuWidth - navigationActionsWidth - 2 * urlBoxMargin
         val urlWidthSpec = MeasureSpec.makeMeasureSpec(urlWidth, MeasureSpec.EXACTLY)
         urlView.measure(urlWidthSpec, fixedHeightSpec)
@@ -288,7 +289,10 @@ internal class DisplayToolbar(
         progressView.measure(widthMeasureSpec, progressHeightSpec)
 
         urlBoxView?.let {
-            val urlBoxWidthSpec = MeasureSpec.makeMeasureSpec(urlWidth + pageActionsWidth, MeasureSpec.EXACTLY)
+            val urlBoxWidthSpec = MeasureSpec.makeMeasureSpec(
+                iconSize + urlWidth + pageActionsWidth - 2 * urlBoxMargin,
+                MeasureSpec.EXACTLY
+            )
             it.measure(urlBoxWidthSpec, fixedHeightSpec)
         }
     }
@@ -406,9 +410,12 @@ internal class DisplayToolbar(
 
         progressView.layout(0, measuredHeight - progressView.measuredHeight, measuredWidth, measuredHeight)
 
-        // The URL box view (if exists) is positioned behind the url and page actions:
+        // The URL box view (if exists) is positioned behind the icon, the url and page actions:
 
-        urlBoxView?.layout(urlLeft, 0, urlRight + pageActionsWidth, measuredHeight)
+        urlBoxView?.let { view ->
+            val urlBoxLeft = navigationActionsWidth + urlBoxMargin
+            view.layout(urlBoxLeft, 0, urlBoxLeft + view.measuredWidth, measuredHeight)
+        }
     }
 
     companion object {
