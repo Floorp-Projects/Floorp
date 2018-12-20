@@ -146,12 +146,12 @@ class ServerPlayback:
         for candidate_flow in flows:
             candidate_match = self._match(candidate_flow.request, request)
             ctx.log.debug("  score={} url={}".format(candidate_match, candidate_flow.request.url))
-            if candidate_match > match:
+            if candidate_match >= match:
                 match = candidate_match
                 flow = candidate_flow
         ctx.log.info("For request {} best match {} with score=={}".format(request.url,
                      flow.request.url, match))
-        return candidate_flow
+        return flow
 
     def configure(self, options, updated):
         self.options = options

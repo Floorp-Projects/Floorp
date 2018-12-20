@@ -8,6 +8,7 @@ package org.mozilla.geckoview;
 
 import android.support.annotation.AnyThread;
 import android.support.annotation.IntDef;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.UiThread;
 import android.util.Log;
@@ -291,7 +292,7 @@ public class MediaElement {
          *                   One of the {@link #MEDIA_STATE_PLAY MEDIA_STATE_*} flags.
          */
         @UiThread
-        void onPlaybackStateChange(MediaElement mediaElement, @MediaStateFlags int mediaState);
+        void onPlaybackStateChange(@NonNull MediaElement mediaElement, @MediaStateFlags int mediaState);
 
         /**
          * The readiness state of the media has changed.
@@ -301,7 +302,7 @@ public class MediaElement {
          *                   One of the {@link #MEDIA_READY_STATE_HAVE_NOTHING MEDIA_READY_STATE_*} flags.
          */
         @UiThread
-        void onReadyStateChange(MediaElement mediaElement, @ReadyStateFlags int readyState);
+        void onReadyStateChange(@NonNull MediaElement mediaElement, @ReadyStateFlags int readyState);
 
         /**
          * The media metadata has loaded or changed.
@@ -310,7 +311,7 @@ public class MediaElement {
          * @param metaData The MetaData values of the media.
          */
         @UiThread
-        void onMetadataChange(MediaElement mediaElement, Metadata metaData);
+        void onMetadataChange(@NonNull MediaElement mediaElement, @NonNull Metadata metaData);
 
         /**
          * Indicates that a loading operation is in progress for the media.
@@ -319,7 +320,8 @@ public class MediaElement {
          * @param progressInfo Information about the load progress and buffered ranges.
          */
         @UiThread
-        void onLoadProgress(MediaElement mediaElement, LoadProgressInfo progressInfo);
+        void onLoadProgress(@NonNull MediaElement mediaElement,
+                            @NonNull LoadProgressInfo progressInfo);
 
         /**
          * The media audio volume has changed.
@@ -329,7 +331,7 @@ public class MediaElement {
          * @param muted True if the media is muted.
          */
         @UiThread
-        void onVolumeChange(MediaElement mediaElement, double volume, boolean muted);
+        void onVolumeChange(@NonNull MediaElement mediaElement, double volume, boolean muted);
 
         /**
          * The current playback time has changed. This event is usually dispatched every 250ms.
@@ -338,7 +340,7 @@ public class MediaElement {
          * @param time The current playback time in seconds.
          */
         @UiThread
-        void onTimeChange(MediaElement mediaElement, double time);
+        void onTimeChange(@NonNull MediaElement mediaElement, double time);
 
         /**
          * The media playback speed has changed.
@@ -347,7 +349,7 @@ public class MediaElement {
          * @param rate The current playback rate. A value of 1.0 indicates normal speed.
          */
         @UiThread
-        void onPlaybackRateChange(MediaElement mediaElement, double rate);
+        void onPlaybackRateChange(@NonNull MediaElement mediaElement, double rate);
 
         /**
          * A media element has entered or exited fullscreen mode.
@@ -356,7 +358,7 @@ public class MediaElement {
          * @param fullscreen True if the media has entered full screen mode.
          */
         @UiThread
-        void onFullscreenChange(MediaElement mediaElement, boolean fullscreen);
+        void onFullscreenChange(@NonNull MediaElement mediaElement, boolean fullscreen);
 
         /**
          * An error has occurred.
@@ -366,7 +368,7 @@ public class MediaElement {
          *                  One of the {@link #MEDIA_ERROR_NETWORK_NO_SOURCE MEDIA_ERROR_*} flags.
          */
         @UiThread
-        void onError(MediaElement mediaElement, @MediaErrorFlags int errorCode);
+        void onError(@NonNull MediaElement mediaElement, @MediaErrorFlags int errorCode);
     }
 
     /* package */ long getVideoId() {

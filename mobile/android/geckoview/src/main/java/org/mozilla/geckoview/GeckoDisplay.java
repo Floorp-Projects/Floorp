@@ -6,6 +6,7 @@
 
 package org.mozilla.geckoview;
 
+import android.support.annotation.NonNull;
 import android.support.annotation.UiThread;
 import android.view.Surface;
 
@@ -36,7 +37,7 @@ public class GeckoDisplay {
      * @param height New height of the Surface. Can not be negative.
      */
     @UiThread
-    public void surfaceChanged(Surface surface, int width, int height) {
+    public void surfaceChanged(@NonNull Surface surface, int width, int height) {
         surfaceChanged(surface, 0, 0, width, height);
     }
 
@@ -56,7 +57,7 @@ public class GeckoDisplay {
      * @throws IllegalArgumentException if left or top are negative.
      */
     @UiThread
-    public void surfaceChanged(Surface surface, int left, int top, int width, int height) {
+    public void surfaceChanged(@NonNull Surface surface, int left, int top, int width, int height) {
         ThreadUtils.assertOnUiThread();
 
         if ((left < 0) || (top < 0)) {

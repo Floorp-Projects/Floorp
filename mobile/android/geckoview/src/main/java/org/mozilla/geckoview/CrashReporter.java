@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.AnyThread;
+import android.support.annotation.NonNull;
 import android.util.Log;
 
 import java.io.BufferedReader;
@@ -71,7 +72,9 @@ public class CrashReporter {
      * @see GeckoRuntime#ACTION_CRASHED
      */
     @AnyThread
-    public static GeckoResult<String> sendCrashReport(Context context, Intent intent, String appName)
+    public static GeckoResult<String> sendCrashReport(@NonNull Context context,
+                                                      @NonNull Intent intent,
+                                                      @NonNull String appName)
             throws IOException, URISyntaxException {
         return sendCrashReport(context, intent.getExtras(), appName);
     }
@@ -94,7 +97,9 @@ public class CrashReporter {
      * @see GeckoRuntime#ACTION_CRASHED
      */
     @AnyThread
-    public static GeckoResult<String> sendCrashReport(Context context, Bundle intentExtras, String appName)
+    public static @NonNull GeckoResult<String> sendCrashReport(@NonNull Context context,
+                                                               @NonNull Bundle intentExtras,
+                                                               @NonNull String appName)
             throws IOException, URISyntaxException {
         final File dumpFile = new File(intentExtras.getString(GeckoRuntime.EXTRA_MINIDUMP_PATH));
         final File extrasFile = new File(intentExtras.getString(GeckoRuntime.EXTRA_EXTRAS_PATH));
@@ -123,8 +128,12 @@ public class CrashReporter {
      * @see GeckoRuntime#ACTION_CRASHED
      */
     @AnyThread
-    public static GeckoResult<String> sendCrashReport(Context context, File minidumpFile, File extrasFile,
-                                       boolean success, String appName) throws IOException, URISyntaxException {
+    public static @NonNull GeckoResult<String> sendCrashReport(@NonNull Context context,
+                                                               @NonNull File minidumpFile,
+                                                               @NonNull File extrasFile,
+                                                               boolean success,
+                                                               @NonNull String appName)
+            throws IOException, URISyntaxException {
         // Compute the minidump hash and generate the stack traces
         computeMinidumpHash(extrasFile, minidumpFile);
 
@@ -150,9 +159,12 @@ public class CrashReporter {
      * @see GeckoRuntime#ACTION_CRASHED
      */
     @AnyThread
-    public static GeckoResult<String> sendCrashReport(Context context, File minidumpFile,
-                                       Map<String, String> extras, boolean success,
-                                       String appName) throws IOException, URISyntaxException {
+    public static @NonNull GeckoResult<String> sendCrashReport(@NonNull Context context,
+                                                               @NonNull File minidumpFile,
+                                                               @NonNull Map<String, String> extras,
+                                                               boolean success,
+                                                               @NonNull String appName)
+            throws IOException, URISyntaxException {
         Log.d(LOGTAG, "Sending crash report: " + minidumpFile.getPath());
 
         String spec = extras.get(SERVER_URL_KEY);

@@ -56,9 +56,8 @@ job-template:
                     - repackage/base.py
                     - repackage/win64_signed.py
     package-formats:
-        by-project:
-            # Build bz2 mar's on try to excerise the code
-            (mozilla-esr60|try):
+        by-release-type:
+            esr60:
                 by-build-platform:
                     linux.*: [mar, mar-bz2]
                     linux4\b.*: [mar, mar-bz2]

@@ -874,7 +874,7 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
     @NullDelegate(GeckoSession.NavigationDelegate::class)
     fun delegateDuringNextWait_throwOnNullDelegate() {
         sessionRule.session.delegateDuringNextWait(object : Callbacks.NavigationDelegate {
-            override fun onLocationChange(session: GeckoSession, url: String) {
+            override fun onLocationChange(session: GeckoSession, url: String?) {
             }
         })
     }
@@ -1337,7 +1337,8 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
     @Test(expected = UiThreadUtils.TimeoutException::class)
     fun evaluateJS_canTimeout() {
         sessionRule.session.delegateUntilTestEnd(object : Callbacks.PromptDelegate {
-            override fun onAlert(session: GeckoSession, title: String, msg: String, callback: GeckoSession.PromptDelegate.AlertCallback) {
+            override fun onAlert(session: GeckoSession, title: String?, msg: String?,
+                                 callback: GeckoSession.PromptDelegate.AlertCallback) {
                 // Do nothing for the alert, so it hangs forever.
             }
         })
@@ -1494,7 +1495,8 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
 
         sessionRule.session.forCallbacksDuringWait(object : Callbacks.PromptDelegate {
             @AssertCalled(count = 1)
-            override fun onAlert(session: GeckoSession, title: String, msg: String, callback: GeckoSession.PromptDelegate.AlertCallback) {
+            override fun onAlert(session: GeckoSession, title: String?, msg: String?,
+                                 callback: GeckoSession.PromptDelegate.AlertCallback) {
             }
         })
     }
@@ -1510,7 +1512,8 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
     @Test fun waitForJS_delegateDuringWait() {
         var count = 0
         sessionRule.session.delegateDuringNextWait(object : Callbacks.PromptDelegate {
-            override fun onAlert(session: GeckoSession, title: String, msg: String, callback: GeckoSession.PromptDelegate.AlertCallback) {
+            override fun onAlert(session: GeckoSession, title: String?, msg: String?,
+                                 callback: GeckoSession.PromptDelegate.AlertCallback) {
                 count++
                 callback.dismiss()
             }

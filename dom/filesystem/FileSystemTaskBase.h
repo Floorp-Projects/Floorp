@@ -154,7 +154,7 @@ class FileSystemTaskChildBase : public PFileSystemRequestChild {
 
   // Overrides PFileSystemRequestChild
   virtual mozilla::ipc::IPCResult Recv__delete__(
-      const FileSystemResponseValue& value) override;
+      const FileSystemResponseValue& value) final;
 
   nsresult mErrorValue;
   RefPtr<FileSystemBase> mFileSystem;

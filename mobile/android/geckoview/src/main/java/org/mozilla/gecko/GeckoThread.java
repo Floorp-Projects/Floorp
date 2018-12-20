@@ -330,11 +330,11 @@ public class GeckoThread extends Thread {
     }
 
     @RobocopTarget
-    public static GeckoProfile getActiveProfile() {
+    public static @Nullable GeckoProfile getActiveProfile() {
         return INSTANCE.getProfile();
     }
 
-    public synchronized GeckoProfile getProfile() {
+    public synchronized @Nullable GeckoProfile getProfile() {
         if (!mInitialized) {
             return null;
         }
