@@ -803,7 +803,8 @@ StringRep.propTypes = {
   member: PropTypes.object,
   object: PropTypes.object.isRequired,
   openLink: PropTypes.func,
-  className: PropTypes.string
+  className: PropTypes.string,
+  title: PropTypes.string
 };
 
 function StringRep(props) {
@@ -815,7 +816,8 @@ function StringRep(props) {
     useQuotes = true,
     escapeWhitespace = true,
     member,
-    openLink
+    openLink,
+    title
   } = props;
 
   let text = object;
@@ -844,7 +846,8 @@ function StringRep(props) {
   const config = getElementConfig({
     className,
     style,
-    actor: object.actor
+    actor: object.actor,
+    title
   });
 
   if (!isLong) {
@@ -884,12 +887,16 @@ function formatText(opts, text) {
 }
 
 function getElementConfig(opts) {
-  const { className, style, actor } = opts;
+  const { className, style, actor, title } = opts;
 
   const config = {};
 
   if (actor) {
     config["data-link-actor-id"] = actor;
+  }
+
+  if (title) {
+    config.title = title;
   }
 
   const classNames = ["objectBox", "objectBox-string"];
@@ -5165,7 +5172,7 @@ function Attribute(props) {
   return span({
     "data-link-actor-id": object.actor,
     className: "objectBox-Attr"
-  }, span({ className: "attrName" }, getTitle(object)), span({ className: "attrEqual" }, "="), StringRep({ className: "attrValue", object: value }));
+  }, span({ className: "attrName" }, getTitle(object)), span({ className: "attrEqual" }, "="), StringRep({ className: "attrValue", object: value, title: value }));
 }
 
 function getTitle(grip) {
@@ -5792,12 +5799,14 @@ const PropTypes = __webpack_require__(3642);
 
 // Utils
 const { isGrip, wrapRender } = __webpack_require__(3644);
-const { rep: StringRep } = __webpack_require__(3648);
+const { rep: StringRep, isLongString } = __webpack_require__(3648);
 const { MODE } = __webpack_require__(3645);
 const nodeConstants = __webpack_require__(3659);
 
 const dom = __webpack_require__(3643);
 const { span } = dom;
+
+const MAX_ATTRIBUTE_LENGTH = 50;
 
 /**
  * Renders DOM element node.
@@ -5908,7 +5917,18 @@ function getElements(grip, mode) {
   }
   const attributeElements = attributeKeys.reduce((arr, name, i, keys) => {
     const value = attributes[name];
-    const attribute = span({}, span({ className: "attrName" }, name), span({ className: "attrEqual" }, "="), StringRep({ className: "attrValue", object: value }));
+
+    let title = isLongString(value) ? value.initial : value;
+    if (title.length < MAX_ATTRIBUTE_LENGTH) {
+      title = null;
+    }
+
+    const attribute = span({}, span({ className: "attrName" }, name), span({ className: "attrEqual" }, "="), StringRep({
+      className: "attrValue",
+      object: value,
+      cropLimit: MAX_ATTRIBUTE_LENGTH,
+      title
+    }));
 
     return arr.concat([" ", attribute]);
   }, []);
@@ -5927,7 +5947,8 @@ function supportsObject(object, noGrip = false) {
 // Exports from this module
 module.exports = {
   rep: wrapRender(ElementNode),
-  supportsObject
+  supportsObject,
+  MAX_ATTRIBUTE_LENGTH
 };
 
 /***/ }),
