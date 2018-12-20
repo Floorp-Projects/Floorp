@@ -103,16 +103,30 @@ typealias RequestFailedException = mozilla.appservices.logins.RequestFailedExcep
 interface AsyncLoginsStorage : AutoCloseable {
     /** Locks the logins storage.
      *
-     * @throws MismatchedLockException if we're already locked
+     * @rejectsWith [MismatchedLockException] if we're already locked
      */
     fun lock(): Deferred<Unit>
 
     /** Unlocks the logins storage using the provided key.
      *
-     * @throws InvalidKeyException if the encryption key is wrong, or the db is corrupt
-     * @throws MismatchedLockException if we're already unlocked
+     * @rejectsWith [InvalidKeyException] if the encryption key is wrong, or the db is corrupt
+     * @rejectsWith [MismatchedLockException] if we're already unlocked
+     * @rejectsWith [LoginsStorageException] if the storage is locked, and on unexpected
+     *              errors (IO failure, rust panics, etc)
      */
     fun unlock(encryptionKey: String): Deferred<Unit>
+
+    /**
+     * Unlock (open) the database, using a byte string as the key.
+     * This is equivalent to calling unlock() after hex-encoding the bytes (lower
+     * case hexadecimal characters are used).
+     *
+     * @rejectsWith [InvalidKeyException] if the encryption key is wrong, or the db is corrupt
+     * @rejectsWith [MismatchedLockException] if the database is already unlocked
+     * @rejectsWith [LoginsStorageException] if the storage is locked, and on unexpected
+     *              errors (IO failure, rust panics, etc)
+     */
+    fun unlock(encryptionKey: ByteArray): Deferred<Unit>
 
     /** Returns `true` if the storage is locked, false otherwise. */
     fun isLocked(): Boolean
@@ -120,25 +134,36 @@ interface AsyncLoginsStorage : AutoCloseable {
     /**
      * Synchronizes the logins storage layer with a remote layer.
      *
-     * @throws SyncAuthInvalidException if authentication needs to be refreshed
-     * @throws RequestFailedException if there was a network error during connection.
+     * @rejectsWith [SyncAuthInvalidException] if authentication needs to be refreshed
+     * @rejectsWith [RequestFailedException] if there was a network error during connection.
+     * @rejectsWith [LoginsStorageException] if the storage is locked, and on unexpected
+     *              errors (IO failure, rust panics, etc)
      */
     fun sync(syncInfo: SyncUnlockInfo): Deferred<Unit>
 
     /**
-     * Deletes all locally stored login sync metadata.
-     */
-    fun reset(): Deferred<Unit>
-
-    /**
-     * Deletes all locally stored login data. It is unlikely you need to use this.
+     * Delete all login records. These deletions will be synced to the server on the next call to sync.
+     *
+     * @rejectsWith [LoginsStorageException] if the storage is locked, and on unexpected
+     *              errors (IO failure, rust panics, etc)
      */
     fun wipe(): Deferred<Unit>
+
+    /**
+     * Clear out all local state, bringing us back to the state before the first write (or sync).
+     *
+     * @rejectsWith [LoginsStorageException] if the storage is locked, and on unexpected
+     *              errors (IO failure, rust panics, etc)
+     */
+    fun wipeLocal(): Deferred<Unit>
 
     /**
      * Deletes the password with the given ID.
      *
      * Resolves to true if the deletion did anything.
+     *
+     * @rejectsWith [LoginsStorageException] if the storage is locked, and on unexpected
+     *              errors (IO failure, rust panics, etc)
      */
     fun delete(id: String): Deferred<Boolean>
 
@@ -146,18 +171,26 @@ interface AsyncLoginsStorage : AutoCloseable {
      * Fetches a password from the underlying storage layer by ID.
      *
      * Resolves to `null` if the record does not exist.
+     *
+     * @rejectsWith [LoginsStorageException] if the storage is locked, and on unexpected
+     *              errors (IO failure, rust panics, etc)
      */
     fun get(id: String): Deferred<ServerPassword?>
 
     /**
      * Marks the login with the given ID as `in-use`.
      *
-     * @throws [NoSuchRecordException] if the login does not exist.
+     * @rejectsWith [NoSuchRecordException] if the login does not exist.
+     * @rejectsWith [LoginsStorageException] if the storage is locked, and on unexpected
+     *              errors (IO failure, rust panics, etc)
      */
     fun touch(id: String): Deferred<Unit>
 
     /**
      * Fetches the full list of passwords from the underlying storage layer.
+     *
+     * @rejectsWith [LoginsStorageException] if the storage is locked, and on unexpected
+     *              errors (IO failure, rust panics, etc)
      */
     fun list(): Deferred<List<ServerPassword>>
 
@@ -179,8 +212,10 @@ interface AsyncLoginsStorage : AutoCloseable {
      * is invalid (missing password, hostname, or doesn't have exactly
      * one of formSubmitURL and httpRealm).
      *
-     * @throws [IdCollisionException] if a nonempty id is provided, and
-     * @throws [InvalidRecordException] if the record is invalid.
+     * @rejectsWith [IdCollisionException] if a nonempty id is provided, and
+     * @rejectsWith [InvalidRecordException] if the record is invalid.
+     * @rejectsWith [LoginsStorageException] if the storage is locked, and on unexpected
+     *              errors (IO failure, rust panics, etc)
      */
     fun add(login: ServerPassword): Deferred<String>
 
@@ -196,10 +231,36 @@ interface AsyncLoginsStorage : AutoCloseable {
      * fields (`timesUsed`, `timeCreated`, `timeLastUsed`, and
      * `timePasswordChanged`).
      *
-     * @throws [NoSuchRecordException] if the login does not exist.
-     * @throws [InvalidRecordException] if the update would create an invalid record.
+     * @rejectsWith [NoSuchRecordException] if the login does not exist.
+     * @rejectsWith [InvalidRecordException] if the update would create an invalid record.
+     * @rejectsWith [LoginsStorageException] if the storage is locked, and on unexpected
+     *              errors (IO failure, rust panics, etc)
      */
     fun update(login: ServerPassword): Deferred<Unit>
+
+    /**
+     * Equivalent to `unlock(encryptionKey)`, but does not throw in the case
+     * that the database is already unlocked.
+     *
+     * @rejectsWith [InvalidKeyException] if the encryption key is wrong, or the db is corrupt
+     * @rejectsWith [LoginsStorageException] if there was some other error opening the database
+     */
+    fun ensureUnlocked(encryptionKey: String): Deferred<Unit>
+
+    /**
+     * Equivalent to `unlock(encryptionKey)`, but does not throw in the case
+     * that the database is already unlocked.
+     *
+     * @rejectsWith [InvalidKeyException] if the encryption key is wrong, or the db is corrupt
+     * @rejectsWith [LoginsStorageException] if there was some other error opening the database
+     */
+    fun ensureUnlocked(encryptionKey: ByteArray): Deferred<Unit>
+
+    /**
+     * Equivalent to `lock()`, but does not throw in the case that
+     * the database is already unlocked. Never rejects.
+     */
+    fun ensureLocked(): Deferred<Unit>
 }
 
 /**
@@ -218,6 +279,26 @@ open class AsyncLoginsStorageAdapter<T : LoginsStorage>(private val wrapped: T) 
         return scope.async { wrapped.unlock(encryptionKey) }
     }
 
+    override fun unlock(encryptionKey: ByteArray): Deferred<Unit> {
+        return scope.async { wrapped.unlock(encryptionKey) }
+    }
+
+    override fun ensureLocked(): Deferred<Unit> {
+        return scope.async { wrapped.ensureLocked() }
+    }
+
+    override fun ensureUnlocked(encryptionKey: String): Deferred<Unit> {
+        return scope.async { wrapped.ensureUnlocked(encryptionKey) }
+    }
+
+    override fun ensureUnlocked(encryptionKey: ByteArray): Deferred<Unit> {
+        return scope.async { wrapped.ensureUnlocked(encryptionKey) }
+    }
+
+    override fun wipeLocal(): Deferred<Unit> {
+        return scope.async { wrapped.wipeLocal() }
+    }
+
     override fun isLocked(): Boolean {
         return wrapped.isLocked()
     }
@@ -226,10 +307,6 @@ open class AsyncLoginsStorageAdapter<T : LoginsStorage>(private val wrapped: T) 
         return scope.async {
             wrapped.sync(syncInfo)
         }
-    }
-
-    override fun reset(): Deferred<Unit> {
-        return scope.async { wrapped.reset() }
     }
 
     override fun wipe(): Deferred<Unit> {
@@ -311,24 +388,13 @@ data class SyncableLoginsStore(
      * @throws [InvalidKeyException] if the provided [key] isn't valid.
      */
     suspend fun <T> withUnlocked(block: suspend (AsyncLoginsStorage) -> T): T {
-        // Instead of synchronizing on 'store' let's be optimistic and just swallow mismatched locks.
 
-        if (store.isLocked()) {
-            try {
-                store.unlock(key().await()).await()
-            } catch (e: MismatchedLockException) {
-                // Oh well, it's already unlocked!
-            }
-        }
+        store.ensureUnlocked(key().await()).await()
 
         try {
             return block(store)
         } finally {
-            try {
-                store.lock().await()
-            } catch (e: MismatchedLockException) {
-                // Oh well, it's already locked!
-            }
+            store.ensureLocked().await()
         }
     }
 }

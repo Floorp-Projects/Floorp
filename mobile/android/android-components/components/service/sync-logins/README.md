@@ -161,6 +161,12 @@ Currently there is no way to change the key, once set (see https://github.com/mo
 
 Part is in this tree, but most is in https://github.com/mozilla/application-services. Specifically, there are two pieces not present in this repository, an [android-specific piece written in Kotlin](https://github.com/mozilla/application-services/tree/master/logins-sql/tree/master/logins-api/android), and a [cross-platform piece written in Rust](https://github.com/mozilla/application-services/tree/master/logins-sql).
 
+### What's the difference between `wipe` and `wipeLocal`?
+
+- `wipe` deletes all records, but remembers that it has deleted them. The next time we sync, we'll delete the remote versions of the deleted records too (e.g. if you wipe, then another client uploads a record, and then you sync, the other clients record will not be deleted).
+- `wipeLocal` deletes all local data from the database, bringing us back to the state prior to the first local write (or sync). That is, it returns it to an empty database.
+- Previous versions of this library offered a third variant, `reset`, which deletes last sync timestamps, and what the database believes is stored remotely. This is almost never what you want, and so it was removed, we mention it only to assist when updating this library.
+
 ## License
 
     This Source Code Form is subject to the terms of the Mozilla Public
