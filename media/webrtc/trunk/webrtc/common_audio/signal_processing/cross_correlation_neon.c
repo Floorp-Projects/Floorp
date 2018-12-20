@@ -55,7 +55,7 @@ static inline void DotProductWithScaleNeon(int32_t* cross_correlation,
   }
 
   sum0 = vaddq_s64(sum0, sum1);
-#if defined(WEBRTC_ARCH_ARM64)
+#if defined(WEBRTC_ARCH_ARM64) && (!defined(_MSC_VER) || defined(__clang__))
   int64_t sum2 = vaddvq_s64(sum0);
   *cross_correlation = (int32_t)((sum2 + sum_res) >> scaling);
 #else
