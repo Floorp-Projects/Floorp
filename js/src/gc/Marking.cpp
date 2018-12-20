@@ -2367,7 +2367,8 @@ GCMarker::GCMarker(JSRuntime* rt)
       stack(),
       grayPosition(0),
       color(MarkColor::Black),
-      unmarkedArenaStackTop(nullptr)
+      delayedMarkingList(nullptr),
+      delayedMarkingWorkAdded(false)
 #ifdef DEBUG
       ,
       markLaterArenas(0),
@@ -2387,7 +2388,7 @@ void GCMarker::start() {
   color = MarkColor::Black;
   linearWeakMarkingDisabled_ = false;
 
-  MOZ_ASSERT(!unmarkedArenaStackTop);
+  MOZ_ASSERT(!delayedMarkingList);
   MOZ_ASSERT(markLaterArenas == 0);
 }
 
@@ -2398,7 +2399,7 @@ void GCMarker::stop() {
   MOZ_ASSERT(started);
   started = false;
 
-  MOZ_ASSERT(!unmarkedArenaStackTop);
+  MOZ_ASSERT(!delayedMarkingList);
   MOZ_ASSERT(markLaterArenas == 0);
 #endif
 
@@ -2412,23 +2413,35 @@ void GCMarker::stop() {
   }
 }
 
+template <typename F>
+inline void GCMarker::forEachDelayedMarkingArena(F&& f)
+{
+  Arena* arena = delayedMarkingList;
+  Arena* next;
+  while (arena) {
+    next = arena->getNextDelayedMarking();
+    f(arena);
+    arena = next;
+  }
+}
+
 void GCMarker::reset() {
   color = MarkColor::Black;
 
   stack.clear();
   MOZ_ASSERT(isMarkStackEmpty());
 
-  while (unmarkedArenaStackTop) {
-    Arena* arena = unmarkedArenaStackTop;
-    MOZ_ASSERT(arena->hasDelayedMarking);
-    MOZ_ASSERT(markLaterArenas);
-    unmarkedArenaStackTop = arena->getNextDelayedMarking();
-    arena->unsetDelayedMarking();
-
+  forEachDelayedMarkingArena(
+    [&](Arena* arena) {
+      MOZ_ASSERT(arena->onDelayedMarkingList());
+      arena->clearDelayedMarkingState();
 #ifdef DEBUG
-    markLaterArenas--;
+      MOZ_ASSERT(markLaterArenas);
+      markLaterArenas--;
 #endif
-  }
+    });
+  delayedMarkingList = nullptr;
+
   MOZ_ASSERT(isDrained());
   MOZ_ASSERT(!markLaterArenas);
 }
@@ -2531,6 +2544,28 @@ void GCMarker::leaveWeakMarkingMode() {
   }
 }
 
+void GCMarker::delayMarkingChildren(Cell* cell) {
+  delayMarkingArena(cell->asTenured().arena());
+}
+
+void GCMarker::delayMarkingArena(Arena* arena) {
+  if (arena->onDelayedMarkingList()) {
+    // The arena is already on the delayed marking list, so just set a flag to
+    // ensure it gets processed again.
+    if (!arena->hasDelayedMarking()) {
+      arena->setHasDelayedMarking(true);
+      delayedMarkingWorkAdded = true;
+    }
+    return;
+  }
+  arena->setNextDelayedMarkingArena(delayedMarkingList);
+  delayedMarkingList = arena;
+  delayedMarkingWorkAdded = true;
+#ifdef DEBUG
+  markLaterArenas++;
+#endif
+}
+
 void GCMarker::markDelayedChildren(Arena* arena, MarkColor color) {
   JS::TraceKind kind = MapAllocToTraceKind(arena->getAllocKind());
   MOZ_ASSERT_IF(color == MarkColor::Gray, TraceKindParticipatesInCC(kind));
@@ -2550,48 +2585,37 @@ static inline bool ArenaCanHaveGrayThings(Arena* arena) {
 }
 
 /*
- * Process arenas from |unmarkedArenaStackTop| and move them to
- * |*output| (if non-null) marking the unmarked children of marked
- * cells of color |color| if |shouldMarkArena| returns true. If
- * |shouldYield|, return early if the |budget| is exceeded.
+ * Process arenas from |delayedMarkingList| by marking the unmarked children of
+ * marked cells of color |color|. If |shouldYield|, return early if the |budget|
+ * is exceeded.
  *
- * This is called twice, first to mark gray children and then to mark
- * black children.
+ * This is called twice, first to mark gray children and then to mark black
+ * children.
  */
-bool GCMarker::processDelayedMarkingList(Arena** outputList, MarkColor color,
-                                         bool shouldYield,
+bool GCMarker::processDelayedMarkingList(MarkColor color, bool shouldYield,
                                          SliceBudget& budget) {
-  // If marking gets delayed at the same arena again, we must repeat marking
-  // of its things. Therefore we pop arena from the stack and clear its
-  // hasDelayedMarking flag before we begin the marking.
+  // Marking delayed children may add more arenas to the list, including arenas
+  // we are currently or have previously processed. Handle this by setting a
+  // flag on arenas we think we've processed which is cleared if they are
+  // re-added. Iterate the list until the flag is set on all arenas.
 
-  while (unmarkedArenaStackTop) {
-    Arena* arena = unmarkedArenaStackTop;
-    unmarkedArenaStackTop = arena->getNextDelayedMarking();
-
-    arena->unsetDelayedMarking();
-
-#ifdef DEBUG
-    MOZ_ASSERT(markLaterArenas);
-    if (!outputList) {
-      markLaterArenas--;
-    }
-#endif
-
-    if (color == MarkColor::Black ||
-        (color == MarkColor::Gray && ArenaCanHaveGrayThings(arena))) {
+  do {
+    delayedMarkingWorkAdded = false;
+    for (Arena* arena = delayedMarkingList;
+         arena;
+         arena = arena->getNextDelayedMarking()) {
+      if (!arena->hasDelayedMarking() ||
+          (color == MarkColor::Gray && !ArenaCanHaveGrayThings(arena))) {
+        continue;
+      }
+      arena->setHasDelayedMarking(false);
       markDelayedChildren(arena, color);
       budget.step(150);
       if (shouldYield && budget.isOverBudget()) {
         return false;
       }
     }
-
-    if (outputList) {
-      arena->setNextDelayedMarking(*outputList);
-      *outputList = arena;
-    }
-  }
+  } while (delayedMarkingWorkAdded);
 
   return true;
 }
@@ -2604,42 +2628,72 @@ bool GCMarker::markAllDelayedChildren(SliceBudget& budget) {
   gcstats::AutoPhase ap(gc.stats(), gc.state() == State::Mark,
                         gcstats::PhaseKind::MARK_DELAYED);
 
-  // We don't know which mark color we were using when an arena was
-  // pushed onto the list so we mark children of marked things both
-  // colors in two passes over the list. Gray marking must be done
-  // first as gray entries always sit before black entries on the
-  // mark stack.
+  // We have a list of arenas containing marked cells with unmarked children
+  // where we ran out of stack space during marking.
   //
-  // In order to guarantee progress here, the fist pass (gray
-  // marking) is done non-incrementally. We can't remove anything
-  // from the list until the second pass so if we yield during the
-  // first pass we will have to restart and process all the arenas
-  // over again. If there are enough arenas we may never finish
-  // during our timeslice. Disallowing yield during the first pass
-  // ensures that the list will at least shrink by one arena every
-  // time.
+  // Both black and gray cells in these arenas may have unmarked children, and
+  // we must mark gray children first as gray entries always sit before black
+  // entries on the mark stack. Therefore the list is processed in two stages.
+  //
+  // In order to guarantee progress here, the fist pass (gray marking) is done
+  // non-incrementally. We can't remove anything from the list until the second
+  // pass so if we yield during the first pass we will have to restart and
+  // process all the arenas over again. If there are enough arenas we may never
+  // finish during our timeslice. Disallowing yield during the first pass
+  // ensures that the list will at least shrink by one arena every time.
 
-  MOZ_ASSERT(unmarkedArenaStackTop);
+  MOZ_ASSERT(delayedMarkingList);
 
-  Arena* processedList = nullptr;
   bool finished;
-  finished = processDelayedMarkingList(&processedList, MarkColor::Gray,
+  finished = processDelayedMarkingList(MarkColor::Gray,
                                        false, /* don't yield */
                                        budget);
   MOZ_ASSERT(finished);
 
-  unmarkedArenaStackTop = processedList;
-  finished = processDelayedMarkingList(nullptr, MarkColor::Black,
+  forEachDelayedMarkingArena(
+    [&](Arena* arena) {
+      MOZ_ASSERT(!arena->hasDelayedMarking());
+      arena->setHasDelayedMarking(true);
+    });
+
+  finished = processDelayedMarkingList(MarkColor::Black,
                                        true, /* yield if over budget */
                                        budget);
+
+  // Rebuild the list, removing processed arenas.
+  Arena* listTail = nullptr;
+  forEachDelayedMarkingArena(
+    [&](Arena* arena) {
+      if (!arena->hasDelayedMarking()) {
+        arena->clearDelayedMarkingState();
+#ifdef DEBUG
+        MOZ_ASSERT(markLaterArenas);
+        markLaterArenas--;
+#endif
+        return;
+      }
+
+      appendToDelayedMarkingList(&listTail, arena);
+    });
+  appendToDelayedMarkingList(&listTail, nullptr);
+
   if (!finished) {
     return false;
   }
 
-  MOZ_ASSERT(!unmarkedArenaStackTop);
+  MOZ_ASSERT(!delayedMarkingList);
   MOZ_ASSERT(!markLaterArenas);
 
   return true;
+}
+
+inline void GCMarker::appendToDelayedMarkingList(Arena** listTail, Arena* arena) {
+  if (*listTail) {
+    (*listTail)->updateNextDelayedMarkingArena(arena);
+  } else {
+    delayedMarkingList = arena;
+  }
+  *listTail = arena;
 }
 
 template <typename T>
