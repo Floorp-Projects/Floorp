@@ -11,6 +11,7 @@ import org.mozilla.gecko.util.ThreadUtils;
 
 import android.graphics.Rect;
 import android.os.SystemClock;
+import android.support.annotation.NonNull;
 import android.support.annotation.UiThread;
 import android.util.Log;
 import android.util.Pair;
@@ -185,7 +186,7 @@ public class PanZoomController extends JNIObject {
      * @param event MotionEvent to process.
      * @return True if the event was handled.
      */
-    public boolean onTouchEvent(final MotionEvent event) {
+    public boolean onTouchEvent(final @NonNull MotionEvent event) {
         ThreadUtils.assertOnUiThread();
         return handleMotionEvent(event);
     }
@@ -198,7 +199,7 @@ public class PanZoomController extends JNIObject {
      * @param event MotionEvent to process.
      * @return True if the event was handled.
      */
-    public boolean onMouseEvent(final MotionEvent event) {
+    public boolean onMouseEvent(final @NonNull MotionEvent event) {
         ThreadUtils.assertOnUiThread();
 
         if (event.getToolType(0) == MotionEvent.TOOL_TYPE_MOUSE) {
@@ -220,7 +221,7 @@ public class PanZoomController extends JNIObject {
      * @param event MotionEvent to process.
      * @return True if the event was handled.
      */
-    public boolean onMotionEvent(MotionEvent event) {
+    public boolean onMotionEvent(@NonNull MotionEvent event) {
         ThreadUtils.assertOnUiThread();
 
         final int action = event.getActionMasked();
