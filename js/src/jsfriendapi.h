@@ -183,6 +183,11 @@ extern JS_FRIEND_API JSPrincipals* JS_DeprecatedGetCompartmentPrincipals(
 extern JS_FRIEND_API JSPrincipals* JS_GetScriptPrincipals(JSScript* script);
 
 namespace js {
+
+// Release-assert the compartment contains exactly one realm.
+extern JS_FRIEND_API void AssertCompartmentHasSingleRealm(
+    JS::Compartment* comp);
+
 extern JS_FRIEND_API JS::Realm* GetScriptRealm(JSScript* script);
 } /* namespace js */
 
@@ -487,7 +492,8 @@ extern JS_FRIEND_API bool AreGCGrayBitsValid(JSRuntime* rt);
 
 extern JS_FRIEND_API bool ZoneGlobalsAreAllGray(JS::Zone* zone);
 
-extern JS_FRIEND_API bool IsObjectZoneSweepingOrCompacting(JSObject* obj);
+extern JS_FRIEND_API bool IsCompartmentZoneSweepingOrCompacting(
+    JS::Compartment* comp);
 
 typedef void (*GCThingCallback)(void* closure, JS::GCCellPtr thing);
 
@@ -525,6 +531,12 @@ SizeOfDataIfCDataObject(mozilla::MallocSizeOf mallocSizeOf, JSObject* obj);
 
 // Note: this returns nullptr iff |zone| is the atoms zone.
 extern JS_FRIEND_API JS::Realm* GetAnyRealmInZone(JS::Zone* zone);
+
+// Returns the first realm's global in a compartment. Note: this is not
+// guaranteed to always be the same realm because individual realms can be
+// collected by the GC.
+extern JS_FRIEND_API JSObject* GetFirstGlobalInCompartment(
+    JS::Compartment* comp);
 
 /*
  * Shadow declarations of JS internal structures, for access by inline access
