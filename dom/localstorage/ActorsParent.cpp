@@ -4330,6 +4330,9 @@ bool Datastore::UpdateUsage(int64_t aDelta) {
 
   // Check internal LocalStorage origin limit.
   int64_t newUsage = mUsage + aDelta;
+
+  MOZ_ASSERT(newUsage >= 0);
+
   if (newUsage > gOriginLimitKB * 1024) {
     return false;
   }
@@ -5625,7 +5628,8 @@ nsresult PrepareDatastoreOp::DatabaseWork() {
 
   if (alreadyExisted) {
     MOZ_ASSERT(gUsages);
-    MOZ_ASSERT(gUsages->Get(mOrigin, &mUsage));
+    DebugOnly<bool> hasUsage = gUsages->Get(mOrigin, &mUsage);
+    MOZ_ASSERT(hasUsage);
   } else {
     MOZ_ASSERT(mUsage == 0);
     InitUsageForOrigin(mOrigin, mUsage);
@@ -6911,6 +6915,8 @@ nsresult QuotaClient::InitOrigin(PersistenceType aPersistenceType,
       return rv;
     }
 
+    MOZ_ASSERT(usage >= 0);
+
     InitUsageForOrigin(aOrigin, usage);
 
     aUsageInfo->AppendToDatabaseUsage(uint64_t(usage));
@@ -6988,6 +6994,7 @@ nsresult QuotaClient::GetUsageForOrigin(PersistenceType aPersistenceType,
   if (gUsages) {
     int64_t usage;
     if (gUsages->Get(aOrigin, &usage)) {
+      MOZ_ASSERT(usage >= 0);
       aUsageInfo->AppendToDatabaseUsage(usage);
     }
   }
