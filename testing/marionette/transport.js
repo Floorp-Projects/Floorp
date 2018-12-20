@@ -10,17 +10,14 @@ const CC = Components.Constructor;
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/EventEmitter.jsm");
-const {
-  StreamUtils,
-} = ChromeUtils.import("chrome://marionette/content/stream-utils.js", {});
-const {
-  BulkPacket,
-  JSONPacket,
-  Packet,
-} = ChromeUtils.import("chrome://marionette/content/packets.js", {});
-const {
-  executeSoon,
-} = ChromeUtils.import("chrome://marionette/content/sync.js", {});
+const {StreamUtils} =
+    ChromeUtils.import("chrome://marionette/content/stream-utils.js", {});
+const {Packet, JSONPacket, BulkPacket} =
+    ChromeUtils.import("chrome://marionette/content/packets.js", {});
+
+const executeSoon = function(func) {
+  Services.tm.dispatchToMainThread(func);
+};
 
 const flags = {wantVerbose: false, wantLogging: false};
 
