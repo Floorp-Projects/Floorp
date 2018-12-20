@@ -50,7 +50,6 @@ NSPR_MINVER=4.9.2
 
 dnl Set the minimum version of toolkit libs used by mozilla
 dnl ========================================================
-WINDRES_VERSION=2.14.90
 W32API_VERSION=3.14
 
 dnl Set various checks
@@ -111,7 +110,6 @@ else
     MOZ_PATH_PROGS(AS, $AS as, $CC)
     AC_CHECK_PROGS(AR, ar, :)
     AC_CHECK_PROGS(STRIP, strip, :)
-    AC_CHECK_PROGS(WINDRES, windres, :)
     if test -z "$HOST_CC"; then
         HOST_CC='$(CC)'
     fi
@@ -240,25 +238,6 @@ case "$target" in
         AC_MSG_RESULT([$res])
         if test "$res" != "yes"; then
             AC_MSG_ERROR([w32api version $W32API_VERSION or higher required.])
-        fi
-        # Check windres version
-        AC_MSG_CHECKING([for windres version >= $WINDRES_VERSION])
-        _WINDRES_VERSION=`${WINDRES} --version 2>&1 | grep -i windres 2>/dev/null | $AWK '{ print $3 }'`
-        AC_MSG_RESULT([$_WINDRES_VERSION])
-        _WINDRES_MAJOR_VERSION=`echo $_WINDRES_VERSION | $AWK -F\. '{ print $1 }'`
-        _WINDRES_MINOR_VERSION=`echo $_WINDRES_VERSION | $AWK -F\. '{ print $2 }'`
-        _WINDRES_RELEASE_VERSION=`echo $_WINDRES_VERSION | $AWK -F\. '{ print $3 }'`
-        WINDRES_MAJOR_VERSION=`echo $WINDRES_VERSION | $AWK -F\. '{ print $1 }'`
-        WINDRES_MINOR_VERSION=`echo $WINDRES_VERSION | $AWK -F\. '{ print $2 }'`
-        WINDRES_RELEASE_VERSION=`echo $WINDRES_VERSION | $AWK -F\. '{ print $3 }'`
-        if test "$_WINDRES_MAJOR_VERSION" -lt "$WINDRES_MAJOR_VERSION" -o \
-                "$_WINDRES_MAJOR_VERSION" -eq "$WINDRES_MAJOR_VERSION" -a \
-                "$_WINDRES_MINOR_VERSION" -lt "$WINDRES_MINOR_VERSION" -o \
-                "$_WINDRES_MAJOR_VERSION" -eq "$WINDRES_MAJOR_VERSION" -a \
-                "$_WINDRES_MINOR_VERSION" -eq "$WINDRES_MINOR_VERSION" -a \
-                "$_WINDRES_RELEASE_VERSION" -lt "$WINDRES_RELEASE_VERSION"
-        then
-            AC_MSG_ERROR([windres version $WINDRES_VERSION or higher is required to build.])
         fi
     fi # !GNU_CC
 
@@ -599,7 +578,6 @@ case "$target" in
 *-mingw*)
     DSO_CFLAGS=
     DSO_PIC_CFLAGS=
-    RC=rc.exe
     if test -n "$GNU_CC" -o -n "$CLANG_CC"; then
         CC="$CC -mwindows"
         CXX="$CXX -mwindows"
@@ -607,7 +585,6 @@ case "$target" in
         CFLAGS="$CFLAGS -mms-bitfields"
         CXXFLAGS="$CXXFLAGS -mms-bitfields"
         DSO_LDOPTS='-shared'
-        RC='$(WINDRES)'
         # Use temp file for windres (bug 213281)
         RCFLAGS='-O coff --use-temp-file'
         # mingw doesn't require kernel32, user32, and advapi32 explicitly
@@ -1641,7 +1618,6 @@ AC_SUBST(AR_FLAGS)
 AC_SUBST(AR_EXTRACT)
 AC_SUBST(NM)
 AC_SUBST_LIST(ASFLAGS)
-AC_SUBST(RC)
 AC_SUBST(RCFLAGS)
 AC_SUBST(WINDRES)
 AC_SUBST(IMPLIB)
