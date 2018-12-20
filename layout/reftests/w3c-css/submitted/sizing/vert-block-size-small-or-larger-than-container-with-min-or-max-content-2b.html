@@ -12,26 +12,28 @@
   <link rel="stylesheet" type="text/css" href="support/ahem.css">
   <link rel="stylesheet" type="text/css" href="support/min-content-max-content.css">
   <style>
+    html,body {
+      margin: 0;
+    }
+
     .outer {
       writing-mode: vertical-lr;
+      display: inline-block;
     }
 
     .outer * {
       border: 2px solid lime;
-      padding: 5px;
-      font-size: 15px;
-      line-height: 1;
       display: inline-block;
     }
 
     .container {
-      height: 160px;
+      height: 80px;
       border-color: blue;
       vertical-align: bottom;
 
       font-family: Ahem;
-      font-size: 15px;
-      line-height: 21px;
+      font-size: 8px;
+      line-height: 13px;
     }
 
     .too-small {
@@ -39,7 +41,7 @@
     }
 
     .too-big {
-      block-size: 150px;
+      block-size: 100px;
     }
   </style>
 </head>
@@ -54,8 +56,8 @@
     <div class="too-small">10px<br>container: min-content.</div>
   </div>
   <div class="container block-min-content">
-    <div class="too-big">150px<br>container: min-content.</div>
-    <div class="too-big">150px<br>container: min-content.</div>
+    <div class="too-big">100px<br>container: min-content.</div>
+    <div class="too-big">100px<br>container: min-content.</div>
   </div>
 
   <div class="container block-max-content">
@@ -67,8 +69,8 @@
     <div class="too-small">10px<br>container: max-content.</div>
   </div>
   <div class="container block-max-content">
-    <div class="too-big">150px<br>container: max-content.</div>
-    <div class="too-big">150px<br>container: max-content.</div>
+    <div class="too-big">100px<br>container: max-content.</div>
+    <div class="too-big">100px<br>container: max-content.</div>
   </div>
 </div>
 
@@ -89,13 +91,13 @@
   </div>
 
   <div class="container max-block-min-content">
-    <div class="too-big">150px<br>container max-size: min-content.</div>
-    <div class="too-big">150px<br>container max-size: min-content.</div>
+    <div class="too-big">100px<br>container max-size: min-content.</div>
+    <div class="too-big">100px<br>container max-size: min-content.</div>
   </div>
 
   <div class="container max-block-max-content">
-    <div class="too-big">150px<br>container max-size: max-content.</div>
-    <div class="too-big">150px<br>container max-size: max-content.</div>
+    <div class="too-big">100px<br>container max-size: max-content.</div>
+    <div class="too-big">100px<br>container max-size: max-content.</div>
   </div>
 </div>
 </body>
