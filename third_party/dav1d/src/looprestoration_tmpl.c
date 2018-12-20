@@ -136,7 +136,7 @@ static void wiener_c(pixel *p, const ptrdiff_t p_stride,
                      const pixel *lpf, const ptrdiff_t lpf_stride,
                      const int w, const int h,
                      const int16_t filterh[7], const int16_t filterv[7],
-                     const enum LrEdgeFlags edges)
+                     const enum LrEdgeFlags edges HIGHBD_DECL_SUFFIX)
 {
     // Wiener filtering is applied to a maximum stripe height of 64 + 3 pixels
     // of padding above and below
@@ -150,12 +150,13 @@ static void wiener_c(pixel *p, const ptrdiff_t p_stride,
     uint16_t hor[70 /*(64 + 3 + 3)*/ * REST_UNIT_STRIDE];
     uint16_t *hor_ptr = hor;
 
-    const int round_bits_h = 3 + (BITDEPTH == 12) * 2;
+    const int bitdepth = bitdepth_from_max(bitdepth_max);
+    const int round_bits_h = 3 + (bitdepth == 12) * 2;
     const int rounding_off_h = 1 << (round_bits_h - 1);
-    const int clip_limit = 1 << ((BITDEPTH) + 1 + 7 - round_bits_h);
+    const int clip_limit = 1 << (bitdepth + 1 + 7 - round_bits_h);
     for (int j = 0; j < h + 6; j++) {
         for (int i = 0; i < w; i++) {
-            int sum = (tmp_ptr[i + 3] << 7) + (1 << (BITDEPTH + 6));
+            int sum = (tmp_ptr[i + 3] << 7) + (1 << (bitdepth + 6));
 
             for (int k = 0; k < 7; k++) {
                 sum += tmp_ptr[i + k] * filterh[k];
@@ -168,9 +169,9 @@ static void wiener_c(pixel *p, const ptrdiff_t p_stride,
         hor_ptr += REST_UNIT_STRIDE;
     }
 
-    const int round_bits_v = 11 - (BITDEPTH == 12) * 2;
+    const int round_bits_v = 11 - (bitdepth == 12) * 2;
     const int rounding_off_v = 1 << (round_bits_v - 1);
-    const int round_offset = 1 << (BITDEPTH + (round_bits_v - 1));
+    const int round_offset = 1 << (bitdepth + (round_bits_v - 1));
     for (int i = 0; i < w; i++) {
         for (int j = 0; j < h; j++) {
             int sum = (hor[(j + 3) * REST_UNIT_STRIDE + i] << 7) - round_offset;
@@ -408,9 +409,10 @@ static void boxsum5sqr(int32_t *dst, const pixel *const src, const int w,
     }
 }
 
-static void selfguided_filter(int16_t *dst, const pixel *src,
+static void selfguided_filter(coef *dst, const pixel *src,
                               const ptrdiff_t src_stride, const int w,
-                              const int h, const int n, const int s)
+                              const int h, const int n, const int s
+                              HIGHBD_DECL_SUFFIX)
 {
     const int sgr_one_by_x = n == 25 ? 164 : 455;
 
@@ -431,22 +433,23 @@ static void selfguided_filter(int16_t *dst, const pixel *src,
         boxsum3(B_, src, w + 6, h + 6);
         boxsum3sqr(A_, src, w + 6, h + 6);
     }
+    const int bitdepth_min_8 = bitdepth_from_max(bitdepth_max) - 8;
 
     int32_t *AA = A - REST_UNIT_STRIDE;
     coef *BB = B - REST_UNIT_STRIDE;
     for (int j = -1; j < h + 1; j+= step) {
         for (int i = -1; i < w + 1; i++) {
             const int a =
-                (AA[i] + (1 << (2 * (BITDEPTH - 8)) >> 1)) >> (2 * (BITDEPTH - 8));
+                (AA[i] + ((1 << (2 * bitdepth_min_8)) >> 1)) >> (2 * bitdepth_min_8);
             const int b =
-                (BB[i] + (1 << (BITDEPTH - 8) >> 1)) >> (BITDEPTH - 8);
+                (BB[i] + ((1 << bitdepth_min_8) >> 1)) >> bitdepth_min_8;
 
             const unsigned p = imax(a * n - b * b, 0);
             const unsigned z = (p * s + (1 << 19)) >> 20;
 
             const int x = dav1d_sgr_x_by_xplus1[imin(z, 255)];
             // This is where we invert A and B, so that B is of size coef.
-            AA[i] = (((1 << 8) - x) * BB[i] * sgr_one_by_x + (1 << 11)) >> 12;
+            AA[i] = (((1U << 8) - x) * BB[i] * sgr_one_by_x + (1 << 11)) >> 12;
             BB[i] = x;
         }
         AA += step * REST_UNIT_STRIDE;
@@ -512,7 +515,8 @@ static void selfguided_c(pixel *p, const ptrdiff_t p_stride,
                          const pixel (*const left)[4],
                          const pixel *lpf, const ptrdiff_t lpf_stride,
                          const int w, const int h, const int sgr_idx,
-                         const int16_t sgr_w[2], const enum LrEdgeFlags edges)
+                         const int16_t sgr_w[2], const enum LrEdgeFlags edges
+                         HIGHBD_DECL_SUFFIX)
 {
     // Selfguided filter is applied to a maximum stripe height of 64 + 3 pixels
     // of padding above and below
@@ -522,12 +526,12 @@ static void selfguided_c(pixel *p, const ptrdiff_t p_stride,
 
     // Selfguided filter outputs to a maximum stripe height of 64 and a
     // maximum restoration width of 384 (256 * 1.5)
-    int16_t dst[64 * 384];
+    coef dst[64 * 384];
 
     // both r1 and r0 can't be zero
     if (!dav1d_sgr_params[sgr_idx][0]) {
         const int s1 = dav1d_sgr_params[sgr_idx][3];
-        selfguided_filter(dst, tmp, REST_UNIT_STRIDE, w, h, 9, s1);
+        selfguided_filter(dst, tmp, REST_UNIT_STRIDE, w, h, 9, s1 HIGHBD_TAIL_SUFFIX);
         const int w1 = (1 << 7) - sgr_w[1];
         for (int j = 0; j < h; j++) {
             for (int i = 0; i < w; i++) {
@@ -539,7 +543,7 @@ static void selfguided_c(pixel *p, const ptrdiff_t p_stride,
         }
     } else if (!dav1d_sgr_params[sgr_idx][1]) {
         const int s0 = dav1d_sgr_params[sgr_idx][2];
-        selfguided_filter(dst, tmp, REST_UNIT_STRIDE, w, h, 25, s0);
+        selfguided_filter(dst, tmp, REST_UNIT_STRIDE, w, h, 25, s0 HIGHBD_TAIL_SUFFIX);
         const int w0 = sgr_w[0];
         for (int j = 0; j < h; j++) {
             for (int i = 0; i < w; i++) {
@@ -550,13 +554,13 @@ static void selfguided_c(pixel *p, const ptrdiff_t p_stride,
             p += PXSTRIDE(p_stride);
         }
     } else {
-        int16_t dst1[64 * 384];
+        coef dst1[64 * 384];
         const int s0 = dav1d_sgr_params[sgr_idx][2];
         const int s1 = dav1d_sgr_params[sgr_idx][3];
         const int w0 = sgr_w[0];
         const int w1 = (1 << 7) - w0 - sgr_w[1];
-        selfguided_filter(dst, tmp, REST_UNIT_STRIDE, w, h, 25, s0);
-        selfguided_filter(dst1, tmp, REST_UNIT_STRIDE, w, h, 9, s1);
+        selfguided_filter(dst, tmp, REST_UNIT_STRIDE, w, h, 25, s0 HIGHBD_TAIL_SUFFIX);
+        selfguided_filter(dst1, tmp, REST_UNIT_STRIDE, w, h, 9, s1 HIGHBD_TAIL_SUFFIX);
         for (int j = 0; j < h; j++) {
             for (int i = 0; i < w; i++) {
                 const int u = (p[i] << 4);

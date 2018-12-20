@@ -777,70 +777,40 @@ static const CdfModeContext av1_default_cdf = {
     },
 };
 
-static const CdfMvContext default_mv_cdf = {
-    .comp = {
-        { /* mv vertical component */
-            .classes = {
-                AOM_CDF11(28672, 30976, 31858, 32320, 32551, 32656, 32740,
-                          32757, 32762, 32767)
-            }, .class0 = {
-                AOM_CDF2(216 * 128)
-            }, .classN = {
-                { AOM_CDF2(128 * 136) },
-                { AOM_CDF2(128 * 140) },
-                { AOM_CDF2(128 * 148) },
-                { AOM_CDF2(128 * 160) },
-                { AOM_CDF2(128 * 176) },
-                { AOM_CDF2(128 * 192) },
-                { AOM_CDF2(128 * 224) },
-                { AOM_CDF2(128 * 234) },
-                { AOM_CDF2(128 * 234) },
-                { AOM_CDF2(128 * 240) }
-            }, .class0_fp = {
-                { AOM_CDF4(16384, 24576, 26624) },
-                { AOM_CDF4(12288, 21248, 24128) }
-            }, .classN_fp = {
-                AOM_CDF4(8192, 17408, 21248)
-            }, .class0_hp = {
-                AOM_CDF2(160 * 128)
-            }, .classN_hp = {
-                AOM_CDF2(128 * 128)
-            }, .sign = {
-                AOM_CDF2(128 * 128)
-            }
-        }, { /* mv horizontal component */
-            .classes = {
-                AOM_CDF11(28672, 30976, 31858, 32320, 32551, 32656, 32740,
-                          32757, 32762, 32767)
-            }, .class0 = {
-                AOM_CDF2(216 * 128)
-            }, .classN = {
-                { AOM_CDF2(128 * 136) },
-                { AOM_CDF2(128 * 140) },
-                { AOM_CDF2(128 * 148) },
-                { AOM_CDF2(128 * 160) },
-                { AOM_CDF2(128 * 176) },
-                { AOM_CDF2(128 * 192) },
-                { AOM_CDF2(128 * 224) },
-                { AOM_CDF2(128 * 234) },
-                { AOM_CDF2(128 * 234) },
-                { AOM_CDF2(128 * 240) }
-            }, .class0_fp = {
-                { AOM_CDF4(16384, 24576, 26624) },
-                { AOM_CDF4(12288, 21248, 24128) }
-            }, .classN_fp = {
-                AOM_CDF4(8192, 17408, 21248)
-            }, .class0_hp = {
-                AOM_CDF2(160 * 128)
-            }, .classN_hp = {
-                AOM_CDF2(128 * 128)
-            }, .sign = {
-                AOM_CDF2(128 * 128)
-            },
-        }
-    }, .joint = {
-        AOM_CDF4(4096, 11264, 19328)
+static const CdfMvComponent default_mv_component_cdf = {
+    .classes = {
+        AOM_CDF11(28672, 30976, 31858, 32320, 32551, 32656, 32740,
+                  32757, 32762, 32767)
+    }, .class0 = {
+        AOM_CDF2(216 * 128)
+    }, .classN = {
+        { AOM_CDF2(128 * 136) },
+        { AOM_CDF2(128 * 140) },
+        { AOM_CDF2(128 * 148) },
+        { AOM_CDF2(128 * 160) },
+        { AOM_CDF2(128 * 176) },
+        { AOM_CDF2(128 * 192) },
+        { AOM_CDF2(128 * 224) },
+        { AOM_CDF2(128 * 234) },
+        { AOM_CDF2(128 * 234) },
+        { AOM_CDF2(128 * 240) }
+    }, .class0_fp = {
+        { AOM_CDF4(16384, 24576, 26624) },
+        { AOM_CDF4(12288, 21248, 24128) }
+    }, .classN_fp = {
+        AOM_CDF4(8192, 17408, 21248)
+    }, .class0_hp = {
+        AOM_CDF2(160 * 128)
+    }, .classN_hp = {
+        AOM_CDF2(128 * 128)
+    }, .sign = {
+        AOM_CDF2(128 * 128)
     }
+};
+
+
+static const uint16_t default_mv_joint_cdf[N_MV_JOINTS + 1] = {
+    AOM_CDF4(4096, 11264, 19328)
 };
 
 static const uint16_t default_kf_y_mode_cdf[5][5][N_INTRA_PRED_MODES + 1] = {
@@ -4041,40 +4011,9 @@ static const CdfCoefContext av1_default_coef_cdf[4] = {
     }
 };
 
-static inline int get_qcat_idx(int q) {
-    if (q <= 20) return 0;
-    if (q <= 60) return 1;
-    if (q <= 120) return 2;
-    return 3;
-}
-
-static CdfThreadContext cdf_init[4] = {
-    [0] = { .cdf = NULL },
-    [1] = { .cdf = NULL },
-    [2] = { .cdf = NULL },
-    [3] = { .cdf = NULL },
-};
-
-void dav1d_init_states(CdfThreadContext *const cdf, const int qidx) {
-    const int qcat = get_qcat_idx(qidx);
-    if (cdf_init[qcat].cdf) {
-        dav1d_cdf_thread_ref(cdf, &cdf_init[qcat]);
-        return;
-    }
-
-    dav1d_cdf_thread_alloc(&cdf_init[qcat], NULL);
-    cdf_init[qcat].cdf->m = av1_default_cdf;
-    memcpy(cdf_init[qcat].cdf->kfym, default_kf_y_mode_cdf,
-           sizeof(default_kf_y_mode_cdf));
-    cdf_init[qcat].cdf->coef = av1_default_coef_cdf[qcat];
-    cdf_init[qcat].cdf->mv = default_mv_cdf;
-    cdf_init[qcat].cdf->dmv = default_mv_cdf;
-    dav1d_cdf_thread_ref(cdf, &cdf_init[qcat]);
-}
-
-void dav1d_update_tile_cdf(const Dav1dFrameHeader *const hdr,
-                           CdfContext *const dst,
-                           const CdfContext *const src)
+void dav1d_cdf_thread_update(const Dav1dFrameHeader *const hdr,
+                             CdfContext *const dst,
+                             const CdfContext *const src)
 {
     int i, j, k, l;
 
@@ -4211,28 +4150,58 @@ void dav1d_update_tile_cdf(const Dav1dFrameHeader *const hdr,
 /*
  * CDF threading wrappers.
  */
-void dav1d_cdf_thread_alloc(CdfThreadContext *const cdf,
+static inline int get_qcat_idx(int q) {
+    if (q <= 20) return 0;
+    if (q <= 60) return 1;
+    if (q <= 120) return 2;
+    return 3;
+}
+
+void dav1d_cdf_thread_init_static(CdfThreadContext *const cdf, const int qidx) {
+    cdf->ref = NULL;
+    cdf->data.qcat = get_qcat_idx(qidx);
+}
+
+void dav1d_cdf_thread_copy(CdfContext *const dst, const CdfThreadContext *const src) {
+    if (src->ref) {
+        memcpy(dst, src->data.cdf, sizeof(*dst));
+    } else {
+        dst->m = av1_default_cdf;
+        memcpy(dst->kfym, default_kf_y_mode_cdf, sizeof(default_kf_y_mode_cdf));
+        dst->coef = av1_default_coef_cdf[src->data.qcat];
+        memcpy(dst->mv.joint, default_mv_joint_cdf, sizeof(default_mv_joint_cdf));
+        memcpy(dst->dmv.joint, default_mv_joint_cdf, sizeof(default_mv_joint_cdf));
+        dst->mv.comp[0] = dst->mv.comp[1] = dst->dmv.comp[0] = dst->dmv.comp[1] =
+            default_mv_component_cdf;
+    }
+}
+
+int dav1d_cdf_thread_alloc(CdfThreadContext *const cdf,
                             struct thread_data *const t)
 {
     cdf->ref = dav1d_ref_create(sizeof(CdfContext) +
                                 (t != NULL) * sizeof(atomic_uint));
-    cdf->cdf = cdf->ref->data;
+    if (!cdf->ref) return -ENOMEM;
+    cdf->data.cdf = cdf->ref->data;
     if (t) {
-        cdf->progress = (atomic_uint *) &cdf->cdf[1];
+        cdf->progress = (atomic_uint *) &cdf->data.cdf[1];
         atomic_init(cdf->progress, 0);
         cdf->t = t;
     }
+    return 0;
 }
 
 void dav1d_cdf_thread_ref(CdfThreadContext *const dst,
                           CdfThreadContext *const src)
 {
-    dav1d_ref_inc(src->ref);
     *dst = *src;
+    if (src->ref)
+        dav1d_ref_inc(src->ref);
 }
 
 void dav1d_cdf_thread_unref(CdfThreadContext *const cdf) {
-    dav1d_ref_dec(&cdf->ref);
+    if (cdf->ref)
+        dav1d_ref_dec(&cdf->ref);
     memset(cdf, 0, sizeof(*cdf));
 }
 

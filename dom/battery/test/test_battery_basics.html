@@ -20,10 +20,10 @@ SimpleTest.waitForExplicitFinish();
 ok("getBattery" in navigator, "navigator.getBattery should exist");
 ok(!("battery" in navigator), "navigator.battery should not exist");
 
-navigator.getBattery().then(function (battery) {
+navigator.getBattery().then(function(battery) {
   ok(battery.level >= 0.0 && battery.level <= 1.0, "Battery level " + battery.level + " should be in the range [0.0, 1.0]");
 
-  SpecialPowers.pushPrefEnv({"set": [["dom.battery.test.default", true]]}, function () {
+  SpecialPowers.pushPrefEnv({"set": [["dom.battery.test.default", true]]}, function() {
     ok(battery.charging, "Battery should be charging by default");
     is(battery.chargingTime, 0, "Battery chargingTime " + battery.chargingTime + " should be zero by default");
     is(battery.dischargingTime, Infinity, "Battery dischargingTime should be Infinity by default");

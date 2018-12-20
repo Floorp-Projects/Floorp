@@ -46,7 +46,8 @@ static void NOINLINE
 inv_txfm_add_c(pixel *dst, const ptrdiff_t stride,
                coef *const coeff, const int eob,
                const int w, const int h, const int shift1, const int shift2,
-               const itx_1d_fn first_1d_fn, const itx_1d_fn second_1d_fn)
+               const itx_1d_fn first_1d_fn, const itx_1d_fn second_1d_fn
+               HIGHBD_DECL_SUFFIX)
 {
     int i, j;
     const ptrdiff_t sh = imin(h, 32), sw = imin(w, 32);
@@ -54,8 +55,9 @@ inv_txfm_add_c(pixel *dst, const ptrdiff_t stride,
     // Maximum value for h and w is 64
     coef tmp[4096 /* w * h */], out[64 /* h */], in_mem[64 /* w */];
     const int is_rect2 = w * 2 == h || h * 2 == w;
-    const int row_clip_max = (1 << (BITDEPTH + 8 - 1)) - 1;
-    const int col_clip_max = (1 << (imax(BITDEPTH + 6, 16) - 1)) -1;
+    const int bitdepth = bitdepth_from_max(bitdepth_max);
+    const int row_clip_max = (1 << (bitdepth + 8 - 1)) - 1;
+    const int col_clip_max = (1 << (imax(bitdepth + 6, 16) - 1)) -1;
     const int col_clip_min = -col_clip_max - 1;
 
     if (w != sw) memset(&in_mem[sw], 0, (w - sw) * sizeof(*in_mem));
@@ -93,10 +95,12 @@ static void \
 inv_txfm_add_##type1##_##type2##_##w##x##h##_c(pixel *dst, \
                                                const ptrdiff_t stride, \
                                                coef *const coeff, \
-                                               const int eob) \
+                                               const int eob \
+                                               HIGHBD_DECL_SUFFIX) \
 { \
     inv_txfm_add_c(dst, stride, coeff, eob, w, h, shift1, shift2, \
-                   inv_##type1##w##_1d, inv_##type2##h##_1d); \
+                   inv_##type1##w##_1d, inv_##type2##h##_1d \
+                   HIGHBD_TAIL_SUFFIX); \
 }
 
 #define inv_txfm_fn64(w, h, shift1, shift2) \
@@ -147,9 +151,11 @@ inv_txfm_fn64(64, 32, 1, 4)
 inv_txfm_fn64(64, 64, 2, 4)
 
 static void inv_txfm_add_wht_wht_4x4_c(pixel *dst, const ptrdiff_t stride,
-                                       coef *const coeff, const int eob)
+                                       coef *const coeff, const int eob
+                                       HIGHBD_DECL_SUFFIX)
 {
-    const int col_clip_max = (1 << (imax(BITDEPTH + 6, 16) - 1)) -1;
+    const int bitdepth = bitdepth_from_max(bitdepth_max);
+    const int col_clip_max = (1 << (imax(bitdepth + 6, 16) - 1)) -1;
     const int col_clip_min = -col_clip_max - 1;
     coef tmp[4 * 4], out[4];
 

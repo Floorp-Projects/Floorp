@@ -245,6 +245,7 @@ def register_callback_action(name, title, symbol, description, order=10000,
 
                 rv.update({
                     'kind': 'hook',
+                    'actionPerm': actionPerm,
                     'hookGroupId': 'project-{}'.format(trustDomain),
                     'hookId': 'in-tree-action-{}-{}/{}'.format(level, actionPerm, tcyml_hash),
                     'hookPayload': {

@@ -34,6 +34,9 @@
 #if !defined(BITDEPTH)
 typedef void pixel;
 typedef void coef;
+#define HIGHBD_DECL_SUFFIX /* nothing */
+#define HIGHBD_CALL_SUFFIX /* nothing */
+#define HIGHBD_TAIL_SUFFIX /* nothing */
 #elif BITDEPTH == 8
 typedef uint8_t pixel;
 typedef int16_t coef;
@@ -41,28 +44,37 @@ typedef int16_t coef;
 #define pixel_set memset
 #define iclip_pixel iclip_u8
 #define PIX_HEX_FMT "%02x"
-#define bytefn(x) x##_8bpc
 #define bitfn(x) x##_8bpc
 #define PXSTRIDE(x) x
-#elif BITDEPTH == 10 || BITDEPTH == 12
+#define highbd_only(x)
+#define HIGHBD_DECL_SUFFIX /* nothing */
+#define HIGHBD_CALL_SUFFIX /* nothing */
+#define HIGHBD_TAIL_SUFFIX /* nothing */
+#define bitdepth_from_max(x) 8
+#elif BITDEPTH == 16
 typedef uint16_t pixel;
 typedef int32_t coef;
 #define pixel_copy(a, b, c) memcpy(a, b, (c) << 1)
-#define iclip_pixel(x) iclip(x, 0, ((1 << BITDEPTH) - 1))
 static inline void pixel_set(pixel *const dst, const int val, const int num) {
     for (int n = 0; n < num; n++)
         dst[n] = val;
 }
 #define PIX_HEX_FMT "%03x"
-#define bytefn(x) x##_16bpc
-#if BITDEPTH == 10
-#define bitfn(x) x##_10bpc
-#else
-#define bitfn(x) x##_12bpc
-#endif
+#define iclip_pixel(x) iclip(x, 0, bitdepth_max)
+#define HIGHBD_DECL_SUFFIX , const int bitdepth_max
+#define HIGHBD_CALL_SUFFIX , f->bitdepth_max
+#define HIGHBD_TAIL_SUFFIX , bitdepth_max
+#define bitdepth_from_max(bitdepth_max) (32 - clz(bitdepth_max))
+#define bitfn(x) x##_16bpc
 #define PXSTRIDE(x) (x >> 1)
+#define highbd_only(x) x
 #else
 #error invalid value for bitdepth
 #endif
+#define bytefn(x) bitfn(x)
+
+#define bitfn_decls(name, ...) \
+name##_8bpc(__VA_ARGS__); \
+name##_16bpc(__VA_ARGS__)
 
 #endif /* __DAV1D_COMMON_BITDEPTH_H__ */

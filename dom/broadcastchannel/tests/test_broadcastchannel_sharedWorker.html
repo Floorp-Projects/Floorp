@@ -23,12 +23,12 @@ Tests of DOM BroadcastChannel in SharedWorkers
 function runTests() {
   var worker = new SharedWorker("broadcastchannel_sharedWorker.js");
 
-  var bc = new BroadcastChannel('foobar');
+  var bc = new BroadcastChannel("foobar");
 
   worker.port.onmessage = function(event) {
     if (event.data == "READY") {
       ok(true, "SharedWorker is ready!");
-      bc.postMessage('hello world from the window');
+      bc.postMessage("hello world from the window");
     } else {
       ok(false, "Something wrong happened");
     }
@@ -38,9 +38,9 @@ function runTests() {
     is("hello world from the worker", event.data, "The message matches!");
     bc.close();
     SimpleTest.finish();
-  }
+  };
 
-  worker.port.postMessage('go');
+  worker.port.postMessage("go");
 }
 
 SimpleTest.waitForExplicitFinish();

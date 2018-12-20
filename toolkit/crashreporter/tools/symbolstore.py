@@ -459,20 +459,14 @@ class Dumper:
         self.generated_files = generated_files or {}
         self.s3_bucket = s3_bucket
         self.file_mapping = file_mapping or {}
-        # Add a static mapping for Rust sources.
-        target_os = buildconfig.substs['OS_ARCH']
-        rust_srcdir = None
-        if target_os == 'WINNT':
-            rust_srcdir = 'C:/projects/rust/'
-        elif target_os == 'Darwin':
-            rust_srcdir = '/Users/travis/build/rust-lang/rust/'
-        elif target_os == 'Linux':
-            rust_srcdir = '/checkout/'
-        if rust_srcdir is not None:
-            self.srcdirs.append(rust_srcdir)
-            Dumper.srcdirRepoInfo[rust_srcdir] = GitRepoInfo(rust_srcdir,
-                                                             buildconfig.substs['RUSTC_COMMIT'],
-                                                             'https://github.com/rust-lang/rust/')
+        # Add a static mapping for Rust sources. Since Rust 1.30 official Rust builds map
+        # source paths to start with "/rust/<sha>/".
+        rust_sha = buildconfig.substs['RUSTC_COMMIT']
+        rust_srcdir = '/rustc/' + rust_sha
+        self.srcdirs.append(rust_srcdir)
+        Dumper.srcdirRepoInfo[rust_srcdir] = GitRepoInfo(rust_srcdir,
+                                                         rust_sha,
+                                                         'https://github.com/rust-lang/rust/')
 
     # subclasses override this
     def ShouldProcess(self, file):

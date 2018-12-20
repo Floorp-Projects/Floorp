@@ -124,7 +124,7 @@ int dav1d_open(Dav1dContext **const c_out,
             t->f = f;
             t->cf = dav1d_alloc_aligned(32 * 32 * sizeof(int32_t), 32);
             if (!t->cf) goto error;
-            t->scratch.mem = dav1d_alloc_aligned(128 * 128 * 8, 32);
+            t->scratch.mem = dav1d_alloc_aligned(128 * 128 * 4, 32);
             if (!t->scratch.mem) goto error;
             memset(t->cf, 0, 32 * 32 * sizeof(int32_t));
             t->emu_edge =
@@ -157,11 +157,21 @@ int dav1d_open(Dav1dContext **const c_out,
 error:
     if (c) {
         if (c->fc) {
-            for (unsigned n = 0; n < c->n_fc; n++)
-                if (c->fc[n].tc)
+            for (unsigned n = 0; n < c->n_fc; n++) {
+                if (c->fc[n].tc) {
+                    for (int m = 0; m < s->n_tile_threads; m++) {
+                        Dav1dTileContext *const t = &c->fc[n].tc[m];
+                        dav1d_free_aligned(t->cf);
+                        dav1d_free_aligned(t->scratch.mem);
+                        dav1d_free_aligned(t->emu_edge);
+                    }
                     dav1d_free_aligned(c->fc[n].tc);
+                }
+                if (c->fc[n].libaom_cm) av1_free_ref_mv_common(c->fc[n].libaom_cm);
+            }
             dav1d_free_aligned(c->fc);
         }
+        if (c->n_fc > 1) free(c->frame_thread.out_delayed);
         dav1d_freep_aligned(c_out);
     }
     fprintf(stderr, "Failed to allocate memory: %s\n", strerror(errno));
@@ -222,6 +232,8 @@ int dav1d_send_data(Dav1dContext *const c, Dav1dData *const in)
     validate_input_or_ret(in != NULL, -EINVAL);
     validate_input_or_ret(in->data == NULL || in->sz, -EINVAL);
 
+    c->drain = 0;
+
     if (c->in.data)
         return -EAGAIN;
     dav1d_data_move_ref(&c->in, in);
@@ -236,15 +248,6 @@ static int output_image(Dav1dContext *const c, Dav1dPicture *const out,
     int has_grain = fgdata->num_y_points || fgdata->num_uv_points[0] ||
                     fgdata->num_uv_points[1];
 
-    // skip lower spatial layers
-    if (c->operating_point_idc && !c->all_layers) {
-        const int max_spatial_id = ulog2(c->operating_point_idc >> 8);
-        if (max_spatial_id > in->frame_hdr->spatial_id) {
-            dav1d_picture_unref(in);
-            return 0;
-        }
-    }
-
     // If there is nothing to be done, skip the allocation/copy
     if (!c->apply_grain || !has_grain) {
         dav1d_picture_move_ref(out, in);
@@ -253,8 +256,11 @@ static int output_image(Dav1dContext *const c, Dav1dPicture *const out,
 
     // Apply film grain to a new copy of the image to avoid corrupting refs
     int res = dav1d_picture_alloc_copy(out, in->p.w, in);
-    if (res < 0)
+    if (res < 0) {
+        dav1d_picture_unref(in);
+        dav1d_picture_unref(out);
         return res;
+    }
 
     switch (out->p.bpc) {
 #if CONFIG_8BPC
@@ -262,9 +268,10 @@ static int output_image(Dav1dContext *const c, Dav1dPicture *const out,
         dav1d_apply_grain_8bpc(out, in);
         break;
 #endif
-#if CONFIG_10BPC
+#if CONFIG_16BPC
     case 10:
-        dav1d_apply_grain_10bpc(out, in);
+    case 12:
+        dav1d_apply_grain_16bpc(out, in);
         break;
 #endif
     default:
@@ -275,6 +282,51 @@ static int output_image(Dav1dContext *const c, Dav1dPicture *const out,
     return 0;
 }
 
+static int output_picture_ready(Dav1dContext *const c) {
+
+    if (!c->out.data[0]) return 0;
+
+    // skip lower spatial layers
+    if (c->operating_point_idc && !c->all_layers) {
+        const int max_spatial_id = ulog2(c->operating_point_idc >> 8);
+        if (max_spatial_id > c->out.frame_hdr->spatial_id) {
+            dav1d_picture_unref(&c->out);
+            return 0;
+        }
+    }
+
+    return 1;
+}
+
+static int drain_picture(Dav1dContext *const c, Dav1dPicture *const out) {
+    unsigned drain_count = 0;
+    do {
+        const unsigned next = c->frame_thread.next;
+        Dav1dFrameContext *const f = &c->fc[next];
+        pthread_mutex_lock(&f->frame_thread.td.lock);
+        while (f->n_tile_data > 0)
+            pthread_cond_wait(&f->frame_thread.td.cond,
+                              &f->frame_thread.td.lock);
+        pthread_mutex_unlock(&f->frame_thread.td.lock);
+        Dav1dThreadPicture *const out_delayed =
+            &c->frame_thread.out_delayed[next];
+        if (++c->frame_thread.next == c->n_fc)
+            c->frame_thread.next = 0;
+        if (out_delayed->p.data[0]) {
+            const unsigned progress =
+                atomic_load_explicit(&out_delayed->progress[1],
+                                     memory_order_relaxed);
+            if (out_delayed->visible && progress != FRAME_ERROR)
+                dav1d_picture_ref(&c->out, &out_delayed->p);
+            dav1d_thread_picture_unref(out_delayed);
+            if (output_picture_ready(c))
+                return output_image(c, out, &c->out);
+        }
+    } while (++drain_count < c->n_fc);
+
+    return -EAGAIN;
+}
+
 int dav1d_get_picture(Dav1dContext *const c, Dav1dPicture *const out)
 {
     int res;
@@ -282,60 +334,43 @@ int dav1d_get_picture(Dav1dContext *const c, Dav1dPicture *const out)
     validate_input_or_ret(c != NULL, -EINVAL);
     validate_input_or_ret(out != NULL, -EINVAL);
 
+    const int drain = c->drain;
+    c->drain = 1;
+
     Dav1dData *const in = &c->in;
     if (!in->data) {
         if (c->n_fc == 1) return -EAGAIN;
-
-        // flush
-        unsigned flush_count = 0;
-        do {
-            const unsigned next = c->frame_thread.next;
-            Dav1dFrameContext *const f = &c->fc[next];
-
-            pthread_mutex_lock(&f->frame_thread.td.lock);
-            while (f->n_tile_data > 0)
-                pthread_cond_wait(&f->frame_thread.td.cond,
-                                  &f->frame_thread.td.lock);
-            pthread_mutex_unlock(&f->frame_thread.td.lock);
-            Dav1dThreadPicture *const out_delayed =
-                &c->frame_thread.out_delayed[next];
-            if (++c->frame_thread.next == c->n_fc)
-                c->frame_thread.next = 0;
-            if (out_delayed->p.data[0]) {
-                const unsigned progress = atomic_load_explicit(&out_delayed->progress[1],
-                                                               memory_order_relaxed);
-                if (out_delayed->visible && progress != FRAME_ERROR)
-                    dav1d_picture_ref(&c->out, &out_delayed->p);
-                dav1d_thread_picture_unref(out_delayed);
-                if (c->out.data[0])
-                    return output_image(c, out, &c->out);
-            }
-        } while (++flush_count < c->n_fc);
-        return -EAGAIN;
+        return drain_picture(c, out);
     }
 
     while (in->sz > 0) {
-        if ((res = dav1d_parse_obus(c, in, 0)) < 0) {
+        res = dav1d_parse_obus(c, in, 0);
+        if (res < 0) {
             dav1d_data_unref(in);
-            return res;
+        } else {
+            assert((size_t)res <= in->sz);
+            in->sz -= res;
+            in->data += res;
+            if (!in->sz) dav1d_data_unref(in);
         }
-
-        assert((size_t)res <= in->sz);
-        in->sz -= res;
-        in->data += res;
-        if (!in->sz) dav1d_data_unref(in);
-        if (c->out.data[0])
+        if (output_picture_ready(c))
             break;
+        if (res < 0)
+            return res;
     }
 
-    if (c->out.data[0])
+    if (output_picture_ready(c))
         return output_image(c, out, &c->out);
+
+    if (c->n_fc > 1 && drain)
+        return drain_picture(c, out);
 
     return -EAGAIN;
 }
 
 void dav1d_flush(Dav1dContext *const c) {
     dav1d_data_unref(&c->in);
+    c->drain = 0;
 
     if (c->n_fc == 1) return;
 
@@ -364,8 +399,7 @@ void dav1d_flush(Dav1dContext *const c) {
             dav1d_thread_picture_unref(&c->refs[i].p);
         dav1d_ref_dec(&c->refs[i].segmap);
         dav1d_ref_dec(&c->refs[i].refmvs);
-        if (c->cdf[i].cdf)
-            dav1d_cdf_thread_unref(&c->cdf[i]);
+        dav1d_cdf_thread_unref(&c->cdf[i]);
     }
     c->frame_hdr = NULL;
     c->seq_hdr = NULL;
@@ -458,8 +492,7 @@ void dav1d_close(Dav1dContext **const c_out) {
     for (int n = 0; n < c->n_tile_data; n++)
         dav1d_data_unref(&c->tile[n].data);
     for (int n = 0; n < 8; n++) {
-        if (c->cdf[n].cdf)
-            dav1d_cdf_thread_unref(&c->cdf[n]);
+        dav1d_cdf_thread_unref(&c->cdf[n]);
         if (c->refs[n].p.p.data[0])
             dav1d_thread_picture_unref(&c->refs[n].p);
         dav1d_ref_dec(&c->refs[n].refmvs);
