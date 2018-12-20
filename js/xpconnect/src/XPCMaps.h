@@ -503,7 +503,8 @@ class JSObject2JSObjectMap {
     if (!mTable.add(p, key, value)) {
       return nullptr;
     }
-    MOZ_ASSERT(xpc::RealmPrivate::Get(key)->scope->mWaiverWrapperMap == this);
+    MOZ_ASSERT(xpc::CompartmentPrivate::Get(key)->scope->mWaiverWrapperMap ==
+               this);
     return value;
   }
 

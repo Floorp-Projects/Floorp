@@ -3,7 +3,7 @@
 
 #include "mozilla/Types.h"
 
-#ifdef _M_AMD64
+#if defined(_M_AMD64) || defined(_M_ARM64)
 /**
  * Allow stack walkers to work around the egregious win64 dynamic lookup table
  * list API by locking around SuspendThread to avoid deadlock.

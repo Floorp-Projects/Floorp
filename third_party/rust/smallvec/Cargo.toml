@@ -12,10 +12,10 @@
 
 [package]
 name = "smallvec"
-version = "0.6.5"
+version = "0.6.6"
 authors = ["Simon Sapin <simon.sapin@exyr.org>"]
 description = "'Small vector' optimization: store up to a small number of items on the stack"
-documentation = "http://doc.servo.org/smallvec/"
+documentation = "https://doc.servo.org/smallvec/"
 readme = "README.md"
 keywords = ["small", "vec", "vector", "stack", "no_std"]
 categories = ["data-structures"]
@@ -36,5 +36,6 @@ version = "1.0.1"
 
 [features]
 default = ["std"]
+specialization = []
 std = []
 union = []

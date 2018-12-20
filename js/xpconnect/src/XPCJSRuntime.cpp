@@ -183,9 +183,11 @@ class AsyncFreeSnowWhite : public Runnable {
 namespace xpc {
 
 CompartmentPrivate::CompartmentPrivate(JS::Compartment* c,
+                                       XPCWrappedNativeScope* scope,
                                        mozilla::BasePrincipal* origin,
                                        const SiteIdentifier& site)
     : originInfo(origin, site),
+      scope(scope),
       wantXrays(false),
       allowWaivers(true),
       isWebExtensionContentScript(false),
@@ -214,8 +216,36 @@ void CompartmentPrivate::SystemIsBeingShutDown() {
   }
 }
 
-RealmPrivate::RealmPrivate(JS::Realm* realm)
-    : scriptability(realm), scope(nullptr) {}
+RealmPrivate::RealmPrivate(JS::Realm* realm) : scriptability(realm) {}
+
+/* static */ void RealmPrivate::Init(HandleObject aGlobal,
+                                     const SiteIdentifier& aSite) {
+  MOZ_ASSERT(aGlobal);
+  DebugOnly<const js::Class*> clasp = js::GetObjectClass(aGlobal);
+  MOZ_ASSERT(clasp->flags &
+                 (JSCLASS_PRIVATE_IS_NSISUPPORTS | JSCLASS_HAS_PRIVATE) ||
+             dom::IsDOMClass(clasp));
+
+  Realm* realm = GetObjectRealmOrNull(aGlobal);
+
+  // Create the realm private.
+  RealmPrivate* realmPriv = new RealmPrivate(realm);
+  MOZ_ASSERT(!GetRealmPrivate(realm));
+  SetRealmPrivate(realm, realmPriv);
+
+  nsIPrincipal* principal = GetRealmPrincipal(realm);
+  Compartment* c = js::GetObjectCompartment(aGlobal);
+
+  // Create the compartment private if needed.
+  if (CompartmentPrivate* priv = CompartmentPrivate::Get(c)) {
+    MOZ_ASSERT(priv->originInfo.IsSameOrigin(principal));
+  } else {
+    auto* scope = new XPCWrappedNativeScope(c, aGlobal);
+    priv =
+        new CompartmentPrivate(c, scope, BasePrincipal::Cast(principal), aSite);
+    JS_SetCompartmentPrivate(c, priv);
+  }
+}
 
 static bool TryParseLocationURICandidate(
     const nsACString& uristr, RealmPrivate::LocationHint aLocationHint,
@@ -558,8 +588,8 @@ bool EnableUniversalXPConnect(JSContext* cx) {
   // The Components object normally isn't defined for unprivileged web content,
   // but we define it when UniversalXPConnect is enabled to support legacy
   // tests.
-  Realm* realm = GetCurrentRealmOrNull(cx);
-  XPCWrappedNativeScope* scope = RealmPrivate::Get(realm)->scope;
+  Compartment* comp = js::GetContextCompartment(cx);
+  XPCWrappedNativeScope* scope = CompartmentPrivate::Get(comp)->scope;
   if (!scope) {
     return true;
   }
@@ -2318,7 +2348,7 @@ void JSReporter::CollectReports(WindowPaths* windowPaths,
       xpcrt->GetMultiCompartmentWrappedJSMap()->SizeOfWrappedJS(JSMallocSizeOf);
 
   XPCWrappedNativeScope::ScopeSizeInfo sizeInfo(JSMallocSizeOf);
-  XPCWrappedNativeScope::AddSizeOfAllScopesIncludingThis(&sizeInfo);
+  XPCWrappedNativeScope::AddSizeOfAllScopesIncludingThis(cx, &sizeInfo);
 
   mozJSComponentLoader* loader = mozJSComponentLoader::Get();
   size_t jsComponentLoaderSize =
