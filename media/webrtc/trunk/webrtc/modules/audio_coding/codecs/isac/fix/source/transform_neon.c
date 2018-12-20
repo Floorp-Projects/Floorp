@@ -8,7 +8,11 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#if defined(_MSC_VER) && !defined(__clang__)
+#include <arm64_neon.h>
+#else
 #include <arm_neon.h>
+#endif
 
 #include "modules/audio_coding/codecs/isac/fix/source/codec.h"
 #include "modules/audio_coding/codecs/isac/fix/source/fft.h"
@@ -51,7 +55,7 @@ static inline int32_t ComplexMulAndFindMaxNeon(int16_t* inre1Q9,
     int32x4_t tmp1 = vmull_s16(vget_low_s16(tmpr), vget_low_s16(inre2));
     tmp0 = vmlal_s16(tmp0, vget_low_s16(tmpi), vget_low_s16(inre2));
     tmp1 = vmlsl_s16(tmp1, vget_low_s16(tmpi), vget_low_s16(inre1));
-#if defined(WEBRTC_ARCH_ARM64)
+#if defined(WEBRTC_ARCH_ARM64) && (!defined(_MSC_VER) || defined(__clang__))
     int32x4_t tmp2 = vmull_high_s16(tmpr, inre1);
     int32x4_t tmp3 = vmull_high_s16(tmpr, inre2);
     tmp2 = vmlal_high_s16(tmp2, tmpi, inre2);
@@ -90,7 +94,7 @@ static inline int32_t ComplexMulAndFindMaxNeon(int16_t* inre1Q9,
   }
 
   max_r = vmaxq_u32(max_r, max_i);
-#if defined(WEBRTC_ARCH_ARM64)
+#if defined(WEBRTC_ARCH_ARM64) && (!defined(_MSC_VER) || defined(__clang__))
   uint32_t maximum = vmaxvq_u32(max_r);
 #else
   uint32x2_t max32x2_r = vmax_u32(vget_low_u32(max_r), vget_high_u32(max_r));
@@ -331,7 +335,7 @@ static inline int32_t TransformAndFindMaxNeon(int16_t* inre,
   }
 
   max_r = vmaxq_u32(max_r, max_i);
-#if defined(WEBRTC_ARCH_ARM64)
+#if defined(WEBRTC_ARCH_ARM64) && (!defined(_MSC_VER) || defined(__clang__))
   uint32_t maximum = vmaxvq_u32(max_r);
 #else
   uint32x2_t max32x2_r = vmax_u32(vget_low_u32(max_r), vget_high_u32(max_r));
