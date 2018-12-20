@@ -308,16 +308,26 @@ class JS_PUBLIC_API Dispatchable {
 };
 
 /**
- * DispatchToEventLoopCallback may be called from any thread, being passed the
- * same 'closure' passed to InitDispatchToEventLoop() and Dispatchable from the
- * same JSRuntime. If the embedding returns 'true', the embedding must call
- * Dispatchable::run() on an active JSContext thread for the same JSRuntime on
- * which 'closure' was registered. If DispatchToEventLoopCallback returns
- * 'false', SpiderMonkey will assume a shutdown of the JSRuntime is in progress.
- * This contract implies that, by the time the final JSContext is destroyed in
- * the JSRuntime, the embedding must have (1) run all Dispatchables for which
- * DispatchToEventLoopCallback returned true, (2) already started returning
- * false from calls to DispatchToEventLoopCallback.
+ * Callback to dispatch a JS::Dispatchable to a JSContext's thread's event loop.
+ *
+ * The DispatchToEventLoopCallback set on a particular JSContext must accept
+ * JS::Dispatchable instances and arrange for their `run` methods to be called
+ * eventually on the JSContext's thread. This is used for cross-thread dispatch,
+ * so the callback itself must be safe to call from any thread.
+ *
+ * If the callback returns `true`, it must eventually run the given
+ * Dispatchable; otherwise, SpiderMonkey may leak memory or hang.
+ *
+ * The callback may return `false` to indicate that the JSContext's thread is
+ * shutting down and is no longer accepting runnables. Shutting down is a
+ * one-way transition: once the callback has rejected a runnable, it must reject
+ * all subsequently submitted runnables as well.
+ *
+ * To establish a DispatchToEventLoopCallback, the embedding may either call
+ * InitDispatchToEventLoop to provide its own, or call js::UseInternalJobQueues
+ * to select a default implementation built into SpiderMonkey. This latter
+ * depends on the embedding to call js::RunJobs on the JavaScript thread to
+ * process queued Dispatchables at appropriate times.
  */
 
 typedef bool (*DispatchToEventLoopCallback)(void* closure,
