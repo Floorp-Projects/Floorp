@@ -55,7 +55,8 @@ void (name)(pixel *dst, ptrdiff_t dst_stride, \
             const_left_pixel_row left, \
             const pixel *lpf, ptrdiff_t lpf_stride, \
             int w, int h, const int16_t filterh[7], \
-            const int16_t filterv[7], enum LrEdgeFlags edges)
+            const int16_t filterv[7], enum LrEdgeFlags edges \
+            HIGHBD_DECL_SUFFIX)
 typedef decl_wiener_filter_fn(*wienerfilter_fn);
 
 #define decl_selfguided_filter_fn(name) \
@@ -63,7 +64,7 @@ void (name)(pixel *dst, ptrdiff_t dst_stride, \
             const_left_pixel_row left, \
             const pixel *lpf, ptrdiff_t lpf_stride, \
             int w, int h, int sgr_idx, const int16_t sgr_w[2], \
-            const enum LrEdgeFlags edges)
+            const enum LrEdgeFlags edges HIGHBD_DECL_SUFFIX)
 typedef decl_selfguided_filter_fn(*selfguided_fn);
 
 typedef struct Dav1dLoopRestorationDSPContext {
@@ -71,12 +72,8 @@ typedef struct Dav1dLoopRestorationDSPContext {
     selfguided_fn selfguided;
 } Dav1dLoopRestorationDSPContext;
 
-void dav1d_loop_restoration_dsp_init_8bpc(Dav1dLoopRestorationDSPContext *c);
-void dav1d_loop_restoration_dsp_init_10bpc(Dav1dLoopRestorationDSPContext *c);
-
-void dav1d_loop_restoration_dsp_init_arm_8bpc(Dav1dLoopRestorationDSPContext *c);
-void dav1d_loop_restoration_dsp_init_arm_10bpc(Dav1dLoopRestorationDSPContext *c);
-void dav1d_loop_restoration_dsp_init_x86_8bpc(Dav1dLoopRestorationDSPContext *c);
-void dav1d_loop_restoration_dsp_init_x86_10bpc(Dav1dLoopRestorationDSPContext *c);
+bitfn_decls(void dav1d_loop_restoration_dsp_init, Dav1dLoopRestorationDSPContext *c);
+bitfn_decls(void dav1d_loop_restoration_dsp_init_arm, Dav1dLoopRestorationDSPContext *c);
+bitfn_decls(void dav1d_loop_restoration_dsp_init_x86, Dav1dLoopRestorationDSPContext *c);
 
 #endif /* __DAV1D_SRC_LOOPRESTORATION_H__ */

@@ -10,7 +10,7 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
-  QueryContext: "resource:///modules/UrlbarController.jsm",
+  QueryContext: "resource:///modules/UrlbarUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
   UrlbarController: "resource:///modules/UrlbarController.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
@@ -97,15 +97,17 @@ class UrlbarInput {
     });
 
     this.addEventListener("input", this);
+    this.addEventListener("mousedown", this);
     this.inputField.addEventListener("blur", this);
     this.inputField.addEventListener("focus", this);
-    this.inputField.addEventListener("mousedown", this);
     this.inputField.addEventListener("mouseover", this);
     this.inputField.addEventListener("overflow", this);
     this.inputField.addEventListener("underflow", this);
     this.inputField.addEventListener("scrollend", this);
     this.inputField.addEventListener("select", this);
     this.inputField.addEventListener("keydown", this);
+    this.view.panel.addEventListener("popupshowing", this);
+    this.view.panel.addEventListener("popuphidden", this);
 
     this.inputField.controllers.insertControllerAt(0, new CopyCutController(this));
   }
@@ -399,7 +401,13 @@ class UrlbarInput {
       if (input && this._overflowing) {
         let side = input.scrollLeft &&
                    input.scrollLeft == input.scrollLeftMax ? "start" : "end";
-        this.setAttribute("textoverflow", side);
+        this.window.requestAnimationFrame(() => {
+          // And check once again, since we might have stopped overflowing
+          // since the promiseDocumentFlushed callback fired.
+          if (this._overflowing) {
+            this.setAttribute("textoverflow", side);
+          }
+        });
       }
     });
   }
@@ -650,11 +658,22 @@ class UrlbarInput {
   }
 
   _on_mousedown(event) {
-    if (event.button == 0 &&
+    if (event.originalTarget == this.inputField &&
+        event.button == 0 &&
         event.detail == 2 &&
         UrlbarPrefs.get("doubleClickSelectsAll")) {
       this.editor.selectAll();
       event.preventDefault();
+      return;
+    }
+
+    if (event.originalTarget.classList.contains("urlbar-history-dropmarker") &&
+        event.button == 0) {
+      if (this.view.isOpen) {
+        this.view.close();
+      } else {
+        this.startQuery();
+      }
     }
   }
 
@@ -731,6 +750,14 @@ class UrlbarInput {
 
   _on_keydown(event) {
     this.controller.handleKeyNavigation(event);
+  }
+
+  _on_popupshowing() {
+    this.setAttribute("open", "true");
+  }
+
+  _on_popuphidden() {
+    this.removeAttribute("open");
   }
 }
 

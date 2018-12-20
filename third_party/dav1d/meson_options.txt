@@ -2,7 +2,7 @@
 
 option('bitdepths',
     type: 'array',
-    choices: ['8', '10'],
+    choices: ['8', '16'],
     description: 'Enable only specified bitdepths')
 
 option('build_asm',

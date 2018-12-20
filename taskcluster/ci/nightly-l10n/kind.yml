@@ -28,6 +28,7 @@ only-for-build-platforms:
     - macosx64-nightly/opt
     - win32-nightly/opt
     - win64-nightly/opt
+    - win64-aarch64-msvc-nightly/opt
     - linux64-devedition-nightly/opt
     - linux-devedition-nightly/opt
     - macosx64-devedition-nightly/opt
@@ -84,6 +85,7 @@ job-template:
             win32-devedition-nightly: internal
             win64-nightly: internal
             win64-devedition-nightly: internal
+            win64-aarch64-msvc-nightly: internal
     index:
         type: nightly-l10n
         product:
@@ -98,6 +100,7 @@ job-template:
                 macosx64-nightly: macosx64-opt
                 win32-nightly: win32-opt
                 win64-nightly: win64-opt
+                win64-aarch64-msvc-nightly: win64-aarch64-msvc-opt
                 linux-devedition-nightly: linux-devedition-opt
                 linux64-devedition-nightly: linux64-devedition-opt
                 macosx64-devedition-nightly: macosx64-devedition-opt
@@ -122,6 +125,7 @@ job-template:
                 macosx64-nightly: osx-cross/opt
                 win32-nightly: windows2012-32/opt
                 win64-nightly: windows2012-64/opt
+                win64-aarch64-msvc-nightly: windows2012-aarch64/opt
                 linux64-devedition-nightly: linux64-devedition/opt
                 linux-devedition-nightly: linux32-devedition/opt
                 macosx64-devedition-nightly: osx-cross-devedition/opt
@@ -181,7 +185,7 @@ job-template:
                     - single_locale/tc_common.py
                     - single_locale/tc_win32.py
                     - taskcluster_nightly.py
-                win64-nightly:
+                win64(|-aarch64-msvc)-nightly:
                     - single_locale/{project}.py
                     - single_locale/win64.py
                     - single_locale/tc_common.py

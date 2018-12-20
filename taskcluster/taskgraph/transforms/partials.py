@@ -7,9 +7,10 @@ Transform the partials task into an actual task description.
 from __future__ import absolute_import, print_function, unicode_literals
 
 from taskgraph.transforms.base import TransformSequence
-from taskgraph.util.attributes import copy_attributes_from_dependent_job
+from taskgraph.util.attributes import copy_attributes_from_dependent_jobf
 from taskgraph.util.partials import get_balrog_platform_name, get_builds
 from taskgraph.util.taskcluster import get_artifact_prefix
+from taskgraph.util.platforms import architecture
 
 import logging
 logger = logging.getLogger(__name__)
@@ -130,6 +131,7 @@ def make_task_description(config, jobs):
                 'SHA384_SIGNING_CERT': 'nightly_sha384',
                 'DATADOG_API_SECRET':
                     'project/releng/gecko/build/level-{}/datadog-api-key'.format(level),
+                'EXTRA_PARAMS': '--arch={}'.format(architecture(attributes['build_platform'])),
             }
         }
         if mar_channel_id:

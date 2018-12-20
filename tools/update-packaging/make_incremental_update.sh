@@ -172,7 +172,7 @@ for ((i=0; $i<$num_oldfiles; i=$i+1)); do
       if [[ -n $MAR_OLD_FORMAT ]]; then
         $BZIP2 -cz9 "$newdir/$f" > "$workdir/$f"
       else
-        $XZ --compress --x86 --lzma2 --format=xz --check=crc64 --force --stdout "$newdir/$f" > "$workdir/$f"
+        $XZ --compress $BCJ_OPTIONS --lzma2 --format=xz --check=crc64 --force --stdout "$newdir/$f" > "$workdir/$f"
       fi
       copy_perm "$newdir/$f" "$workdir/$f"
       make_add_if_not_instruction "$f" "$updatemanifestv3"
@@ -186,7 +186,7 @@ for ((i=0; $i<$num_oldfiles; i=$i+1)); do
       if [[ -n $MAR_OLD_FORMAT ]]; then
         $BZIP2 -cz9 "$newdir/$f" > "$workdir/$f"
       else
-        $XZ --compress --x86 --lzma2 --format=xz --check=crc64 --force --stdout "$newdir/$f" > "$workdir/$f"
+        $XZ --compress $BCJ_OPTIONS --lzma2 --format=xz --check=crc64 --force --stdout "$newdir/$f" > "$workdir/$f"
       fi
       copy_perm "$newdir/$f" "$workdir/$f"
       make_add_instruction "$f" "$updatemanifestv2" "$updatemanifestv3" 1
@@ -218,7 +218,7 @@ for ((i=0; $i<$num_oldfiles; i=$i+1)); do
         if [[ -n $MAR_OLD_FORMAT ]]; then
           $BZIP2 -z9 "$workdir/$f.patch"
         else
-          $XZ --compress --x86 --lzma2 --format=xz --check=crc64 --force "$workdir/$f.patch"
+          $XZ --compress $BCJ_OPTIONS --lzma2 --format=xz --check=crc64 --force "$workdir/$f.patch"
         fi
       else
         # if service enabled then check patch existence for retrieval
@@ -237,7 +237,7 @@ for ((i=0; $i<$num_oldfiles; i=$i+1)); do
           else
             # if not found already - compute it and cache it for future use
             $MBSDIFF "$olddir/$f" "$newdir/$f" "$workdir/$f.patch"
-            $XZ --compress --x86 --lzma2 --format=xz --check=crc64 --force "$workdir/$f.patch"
+            $XZ --compress $BCJ_OPTIONS --lzma2 --format=xz --check=crc64 --force "$workdir/$f.patch"
             $MBSDIFF_HOOK -u "$olddir/$f" "$newdir/$f" "$workdir/$f.patch.xz"
           fi
         fi
@@ -245,7 +245,7 @@ for ((i=0; $i<$num_oldfiles; i=$i+1)); do
       if [[ -n $MAR_OLD_FORMAT ]]; then
         $BZIP2 -cz9 "$newdir/$f" > "$workdir/$f"
       else
-        $XZ --compress --x86 --lzma2 --format=xz --check=crc64 --force --stdout "$newdir/$f" > "$workdir/$f"
+        $XZ --compress $BCJ_OPTIONS --lzma2 --format=xz --check=crc64 --force --stdout "$newdir/$f" > "$workdir/$f"
       fi
       copy_perm "$newdir/$f" "$workdir/$f"
       if [[ -n $MAR_OLD_FORMAT ]]; then
@@ -296,7 +296,7 @@ for ((i=0; $i<$num_newfiles; i=$i+1)); do
   if [[ -n $MAR_OLD_FORMAT ]]; then
     $BZIP2 -cz9 "$newdir/$f" > "$workdir/$f"
   else
-    $XZ --compress --x86 --lzma2 --format=xz --check=crc64 --force --stdout "$newdir/$f" > "$workdir/$f"
+    $XZ --compress $BCJ_OPTIONS --lzma2 --format=xz --check=crc64 --force --stdout "$newdir/$f" > "$workdir/$f"
   fi
   copy_perm "$newdir/$f" "$workdir/$f"
 
@@ -342,8 +342,8 @@ if [[ -n $MAR_OLD_FORMAT ]]; then
   $BZIP2 -z9 "$updatemanifestv2" && mv -f "$updatemanifestv2.bz2" "$updatemanifestv2"
   $BZIP2 -z9 "$updatemanifestv3" && mv -f "$updatemanifestv3.bz2" "$updatemanifestv3"
 else
-  $XZ --compress --x86 --lzma2 --format=xz --check=crc64 --force "$updatemanifestv2" && mv -f "$updatemanifestv2.xz" "$updatemanifestv2"
-  $XZ --compress --x86 --lzma2 --format=xz --check=crc64 --force "$updatemanifestv3" && mv -f "$updatemanifestv3.xz" "$updatemanifestv3"
+  $XZ --compress $BCJ_OPTIONS --lzma2 --format=xz --check=crc64 --force "$updatemanifestv2" && mv -f "$updatemanifestv2.xz" "$updatemanifestv2"
+  $XZ --compress $BCJ_OPTIONS --lzma2 --format=xz --check=crc64 --force "$updatemanifestv3" && mv -f "$updatemanifestv3.xz" "$updatemanifestv3"
 fi
 
 mar_command="$MAR"

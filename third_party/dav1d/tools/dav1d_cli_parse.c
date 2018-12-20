@@ -39,11 +39,12 @@
 #endif
 
 #include "dav1d_cli_parse.h"
+#include "src/cpu.h"
 
 static const char short_opts[] = "i:o:vql:s:";
 
 enum {
-    ARG_DEMUXER,
+    ARG_DEMUXER = 256,
     ARG_MUXER,
     ARG_FRAME_THREADS,
     ARG_TILE_THREADS,
@@ -51,6 +52,7 @@ enum {
     ARG_FILM_GRAIN,
     ARG_OPPOINT,
     ARG_ALL_LAYERS,
+    ARG_CPU_MASK,
 };
 
 static const struct option long_opts[] = {
@@ -68,8 +70,18 @@ static const struct option long_opts[] = {
     { "filmgrain",      1, NULL, ARG_FILM_GRAIN },
     { "oppoint",        1, NULL, ARG_OPPOINT },
     { "alllayers",      1, NULL, ARG_ALL_LAYERS },
+    { "cpumask",        1, NULL, ARG_CPU_MASK },
     { NULL,             0, NULL, 0 },
 };
+
+#if ARCH_AARCH64 || ARCH_ARM
+#define ALLOWED_CPU_MASKS " or 'neon'"
+#elif ARCH_X86
+#define ALLOWED_CPU_MASKS \
+    ", 'sse2', 'ssse3', 'sse41', 'avx2' or 'avx512'"
+#else
+#define ALLOWED_CPU_MASKS "not yet implemented for this architecture"
+#endif
 
 static void usage(const char *const app, const char *const reason, ...) {
     if (reason) {
@@ -84,7 +96,7 @@ static void usage(const char *const app, const char *const reason, ...) {
     fprintf(stderr, "Supported options:\n"
             " --input/-i  $file:   input file\n"
             " --output/-o $file:   output file\n"
-            " --demuxer $name:     force demuxer type (must be 'ivf'; default: detect from extension)\n"
+            " --demuxer $name:     force demuxer type ('ivf' or 'annexb'; default: detect from extension)\n"
             " --muxer $name:       force muxer type ('md5', 'yuv', 'yuv4mpeg2' or 'null'; default: detect from extension)\n"
             " --quiet/-q:          disable status messages\n"
             " --limit/-l $num:     stop decoding after $num frames\n"
@@ -95,7 +107,8 @@ static void usage(const char *const app, const char *const reason, ...) {
             " --filmgrain          enable film grain application (default: 1, except if muxer is md5)\n"
             " --oppoint $num:      select an operating point of a scalable AV1 bitstream (0 - 32)\n"
             " --alllayers $num:    output all spatial layers of a scalable AV1 bitstream (default: 1)\n"
-            " --verify $md5:       verify decoded md5. implies --muxer md5, no output\n");
+            " --verify $md5:       verify decoded md5. implies --muxer md5, no output\n"
+            " --cpumask $mask:     restrict permitted CPU instruction sets (0" ALLOWED_CPU_MASKS "; default: -1)\n");
     exit(1);
 }
 
@@ -121,8 +134,75 @@ static void error(const char *const app, const char *const optarg,
 
 static unsigned parse_unsigned(char *optarg, const int option, const char *app) {
     char *end;
-    const double res = strtoul(optarg, &end, 0);
+    const unsigned res = strtoul(optarg, &end, 0);
     if (*end || end == optarg) error(app, optarg, option, "an integer");
+    return res;
+}
+
+typedef struct EnumParseTable {
+    const char *str;
+    const int val;
+} EnumParseTable;
+
+#if ARCH_X86
+enum CpuMask {
+    X86_CPU_MASK_SSE    = DAV1D_X86_CPU_FLAG_SSE,
+    X86_CPU_MASK_SSE2   = DAV1D_X86_CPU_FLAG_SSE2   | X86_CPU_MASK_SSE,
+    X86_CPU_MASK_SSE3   = DAV1D_X86_CPU_FLAG_SSE3   | X86_CPU_MASK_SSE2,
+    X86_CPU_MASK_SSSE3  = DAV1D_X86_CPU_FLAG_SSSE3  | X86_CPU_MASK_SSE3,
+    X86_CPU_MASK_SSE41  = DAV1D_X86_CPU_FLAG_SSE41  | X86_CPU_MASK_SSSE3,
+    X86_CPU_MASK_SSE42  = DAV1D_X86_CPU_FLAG_SSE42  | X86_CPU_MASK_SSE41,
+    X86_CPU_MASK_AVX    = DAV1D_X86_CPU_FLAG_AVX    | X86_CPU_MASK_SSE42,
+    X86_CPU_MASK_AVX2   = DAV1D_X86_CPU_FLAG_AVX2   | X86_CPU_MASK_AVX,
+    X86_CPU_MASK_AVX512 = DAV1D_X86_CPU_FLAG_AVX512 | X86_CPU_MASK_AVX2,
+};
+#endif
+
+static const EnumParseTable cpu_mask_tbl[] = {
+#if ARCH_AARCH64 || ARCH_ARM
+    { "neon", DAV1D_ARM_CPU_FLAG_NEON },
+#elif ARCH_X86
+    { "sse2",   X86_CPU_MASK_SSE },
+    { "ssse3",  X86_CPU_MASK_SSSE3 },
+    { "sse41",  X86_CPU_MASK_SSE41 },
+    { "avx2",   X86_CPU_MASK_AVX2 },
+    { "avx512", X86_CPU_MASK_AVX512 },
+#endif
+    { 0 },
+};
+
+static unsigned parse_enum(char *optarg, const EnumParseTable *const tbl,
+                           const int option, const char *app)
+{
+    char str[1024];
+
+    strcpy(str, "any of ");
+    for (int n = 0; tbl[n].str; n++) {
+        if (!strcmp(tbl[n].str, optarg))
+            return tbl[n].val;
+
+        if (n) {
+            if (!tbl[n + 1].str)
+                strcat(str, " or ");
+            else
+                strcat(str, ", ");
+        }
+        strcat(str, tbl[n].str);
+    }
+
+    char *end;
+    unsigned res;
+    if (!strncmp(optarg, "0x", 2)) {
+        res = strtoul(&optarg[2], &end, 16);
+    } else {
+        res = strtoul(optarg, &end, 0);
+    }
+
+    if (*end || end == optarg) {
+        strcat(str, ", a hexadecimal (starting with 0x), or an integer");
+        error(app, optarg, option, str);
+    }
+
     return res;
 }
 
@@ -185,6 +265,10 @@ void parse(const int argc, char *const *const argv,
         case 'v':
             fprintf(stderr, "%s\n", dav1d_version());
             exit(0);
+        case ARG_CPU_MASK:
+            dav1d_set_cpu_flags_mask(parse_enum(optarg, cpu_mask_tbl,
+                                                ARG_CPU_MASK, argv[0]));
+            break;
         default:
             usage(argv[0], NULL);
         }

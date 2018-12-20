@@ -97,7 +97,8 @@ cdef_filter_block_c(pixel *dst, const ptrdiff_t dst_stride,
                     const pixel (*left)[2], /*const*/ pixel *const top[2],
                     const int w, const int h, const int pri_strength,
                     const int sec_strength, const int dir,
-                    const int damping, const enum CdefEdgeFlags edges)
+                    const int damping, const enum CdefEdgeFlags edges
+                    HIGHBD_DECL_SUFFIX)
 {
     static const int8_t cdef_directions[8 /* dir */][2 /* pass */] = {
         { -1 * 12 + 1, -2 * 12 + 2 },
@@ -115,7 +116,8 @@ cdef_filter_block_c(pixel *dst, const ptrdiff_t dst_stride,
     assert((w == 4 || w == 8) && (h == 4 || h == 8));
     uint16_t tmp_buf[144];  // 12*12 is the maximum value of tmp_stride * (h + 4)
     uint16_t *tmp = tmp_buf + 2 * tmp_stride + 2;
-    const uint8_t *const pri_taps = cdef_pri_taps[(pri_strength >> (BITDEPTH - 8)) & 1];
+    const int bitdepth_min_8 = bitdepth_from_max(bitdepth_max) - 8;
+    const uint8_t *const pri_taps = cdef_pri_taps[(pri_strength >> bitdepth_min_8) & 1];
 
     padding(tmp, tmp_stride, dst, dst_stride, left, top, w, h, edges);
 
@@ -170,10 +172,11 @@ static void cdef_filter_block_##w##x##h##_c(pixel *const dst, \
                                             const int sec_strength, \
                                             const int dir, \
                                             const int damping, \
-                                            const enum CdefEdgeFlags edges) \
+                                            const enum CdefEdgeFlags edges \
+                                            HIGHBD_DECL_SUFFIX) \
 { \
     cdef_filter_block_c(dst, stride, left, top, w, h, pri_strength, sec_strength, \
-                        dir, damping, edges); \
+                        dir, damping, edges HIGHBD_TAIL_SUFFIX); \
 }
 
 cdef_fn(4, 4);
@@ -181,15 +184,16 @@ cdef_fn(4, 8);
 cdef_fn(8, 8);
 
 static int cdef_find_dir_c(const pixel *img, const ptrdiff_t stride,
-                           unsigned *const var)
+                           unsigned *const var HIGHBD_DECL_SUFFIX)
 {
+    const int bitdepth_min_8 = bitdepth_from_max(bitdepth_max) - 8;
     int partial_sum_hv[2][8] = { { 0 } };
     int partial_sum_diag[2][15] = { { 0 } };
     int partial_sum_alt[4][11] = { { 0 } };
 
     for (int y = 0; y < 8; y++) {
         for (int x = 0; x < 8; x++) {
-            const int px = (img[x] >> (BITDEPTH - 8)) - 128;
+            const int px = (img[x] >> bitdepth_min_8) - 128;
 
             partial_sum_diag[0][     y       +  x      ] += px;
             partial_sum_alt [0][     y       + (x >> 1)] += px;

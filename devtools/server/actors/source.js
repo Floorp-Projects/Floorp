@@ -213,6 +213,25 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
     }
   },
 
+  _findDebuggeeScripts(query = null) {
+    query = { ...query };
+    assert(
+      !("url" in query) && !("source" in query),
+      "Debuggee source and URL are set automatically"
+    );
+
+    // For most cases, we have a real source to query for. The
+    // only time we don't is for HTML pages. In that case we want
+    // to query for scripts in an HTML page based on its URL, as
+    // there could be several sources within an HTML page.
+    if (this.source) {
+      query.source = this.source;
+    } else {
+      query.url = this.url;
+    }
+    return this.dbg.findScripts(query);
+  },
+
   _mapSourceToAddon: function() {
     let nsuri;
     try {
@@ -363,7 +382,7 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
    */
   getExecutableLines: async function() {
     const offsetsLines = new Set();
-    for (const s of this.dbg.findScripts({ source: this.source })) {
+    for (const s of this._findDebuggeeScripts()) {
       for (const offset of s.getAllColumnOffsets()) {
         offsetsLines.add(offset.lineNumber);
       }
@@ -374,6 +393,77 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
       return a - b;
     });
     return lines;
+  },
+
+  getBreakpointPositions(query) {
+    const {
+      start: {
+        line: startLine = 0,
+        column: startColumn = 0,
+      } = {},
+      end: {
+        line: endLine = Infinity,
+        column: endColumn = Infinity,
+      } = {},
+    } = query || {};
+
+    let scripts;
+    if (Number.isFinite(endLine)) {
+      const found = new Set();
+      for (let line = startLine; line <= endLine; line++) {
+        for (const script of this._findDebuggeeScripts({ line })) {
+          found.add(script);
+        }
+      }
+      scripts = Array.from(found);
+    } else {
+      scripts = this._findDebuggeeScripts();
+    }
+
+    const positions = [];
+    for (const script of scripts) {
+      const offsets = script.getAllColumnOffsets();
+      for (const { lineNumber, columnNumber } of offsets) {
+        if (
+          lineNumber < startLine ||
+          (lineNumber === startLine && columnNumber < startColumn) ||
+          lineNumber > endLine ||
+          (lineNumber === endLine && columnNumber > endColumn)
+        ) {
+          continue;
+        }
+
+        positions.push({
+          line: lineNumber,
+          column: columnNumber,
+        });
+      }
+    }
+
+    return positions
+      // Sort the items by location.
+      .sort((a, b) => {
+        const lineDiff = a.line - b.line;
+        return lineDiff === 0 ? a.column - b.column : lineDiff;
+      })
+      // Filter out duplicate locations since they are useless in this context.
+      .filter((item, i, arr) => (
+        i === 0 ||
+        item.line !== arr[i - 1].line ||
+        item.column !== arr[i - 1].column
+      ));
+  },
+
+  getBreakpointPositionsCompressed(query) {
+    const items = this.getBreakpointPositions(query);
+    const compressed = {};
+    for (const { line, column } of items) {
+      if (!compressed[line]) {
+        compressed[line] = [];
+      }
+      compressed[line].push(column);
+    }
+    return compressed;
   },
 
   /**
@@ -551,17 +641,7 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
     if (!this._setBreakpointAtGeneratedLocation(actor, generatedLocation) &&
         !noSliding &&
         !isWasm) {
-      const query = { line: generatedLine };
-      // For most cases, we have a real source to query for. The
-      // only time we don't is for HTML pages. In that case we want
-      // to query for scripts in an HTML page based on its URL, as
-      // there could be several sources within an HTML page.
-      if (this.source) {
-        query.source = this.source;
-      } else {
-        query.url = this.url;
-      }
-      const scripts = this.dbg.findScripts(query);
+      const scripts = this._findDebuggeeScripts({ line: generatedLine });
 
       // Never do breakpoint sliding for column breakpoints.
       // Additionally, never do breakpoint sliding if no scripts
@@ -672,13 +752,9 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
 
     // Find all scripts that match the given source actor and line
     // number.
-    const query = { line: generatedLine };
-    if (generatedSourceActor.source) {
-      query.source = generatedSourceActor.source;
-    } else {
-      query.url = generatedSourceActor.url;
-    }
-    let scripts = this.dbg.findScripts(query);
+    let scripts = generatedSourceActor._findDebuggeeScripts(
+      { line: generatedLine }
+    );
 
     scripts = scripts.filter((script) => !actor.hasScript(script));
 

@@ -34,4 +34,4 @@ rev_target = vcs_tag(command: [
 )
 
 # Install include/dav1d headers
-install_subdir('dav1d', install_dir: 'include')
+install_subdir('dav1d', install_dir: get_option('includedir'))

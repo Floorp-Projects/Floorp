@@ -27,6 +27,7 @@ class SidebarRuntimeItem extends PureComponent {
       icon: PropTypes.string.isRequired,
       isConnected: PropTypes.bool.isRequired,
       isSelected: PropTypes.bool.isRequired,
+      isUnknown: PropTypes.bool.isRequired,
       name: PropTypes.string.isRequired,
       runtimeId: PropTypes.string.isRequired,
     };
@@ -50,36 +51,45 @@ class SidebarRuntimeItem extends PureComponent {
     );
   }
 
-  renderNameWithDevice(name, device) {
-    return dom.span(
-      {
-        className: "ellipsis-text",
-        title: `${name} (${device})`,
-      },
-      `${name}`,
-      dom.br({}),
-      device
-    );
-  }
+  renderName() {
+    const { deviceName, getString, isUnknown, name } = this.props;
 
-  renderName(name) {
-    return dom.span(
+    const displayName = isUnknown ?
+      getString("about-debugging-sidebar-runtime-item-waiting-for-runtime") : name;
+
+    const titleLocalizationId = deviceName ?
+      "about-debugging-sidebar-runtime-item-name" :
+      "about-debugging-sidebar-runtime-item-name-no-device";
+
+    return Localized(
       {
-        className: "ellipsis-text",
-        title: name,
+        id: titleLocalizationId,
+        attrs: { title: true },
+        $deviceName: deviceName,
+        $displayName: displayName,
       },
-      `${name}`
+      dom.span(
+        {
+          className: "ellipsis-text",
+          title: titleLocalizationId,
+        },
+        displayName,
+        // If a deviceName is available, display it on a separate line.
+        ...(deviceName ? [
+          dom.br({}),
+          deviceName,
+        ] : []),
+      )
     );
   }
 
   render() {
     const {
-      deviceName,
       getString,
       icon,
       isConnected,
       isSelected,
-      name,
+      isUnknown,
       runtimeId,
     } = this.props;
 
@@ -104,8 +114,8 @@ class SidebarRuntimeItem extends PureComponent {
             title: connectionStatus,
           }
         ),
-        deviceName ? this.renderNameWithDevice(name, deviceName) : this.renderName(name),
-        !isConnected ? this.renderConnectButton() : null
+        this.renderName(),
+        !isUnknown && !isConnected ? this.renderConnectButton() : null
       )
     );
   }

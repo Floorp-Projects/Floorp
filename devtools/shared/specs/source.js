@@ -3,13 +3,42 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {Arg, RetVal, generateActorSpec} = require("devtools/shared/protocol");
+const {Arg, RetVal, generateActorSpec, types} = require("devtools/shared/protocol");
+
+types.addDictType("sourceposition", {
+  line: "number",
+  column: "number",
+});
+types.addDictType("nullablesourceposition", {
+  line: "nullable:number",
+  column: "nullable:number",
+});
+types.addDictType("breakpointquery", {
+  start: "nullable:nullablesourceposition",
+  end: "nullable:nullablesourceposition",
+});
 
 const sourceSpec = generateActorSpec({
   typeName: "source",
 
   methods: {
     getExecutableLines: { response: { lines: RetVal("json") } },
+    getBreakpointPositions: {
+      request: {
+        query: Arg(0, "nullable:breakpointquery"),
+      },
+      response: {
+        positions: RetVal("array:sourceposition"),
+      },
+    },
+    getBreakpointPositionsCompressed: {
+      request: {
+        query: Arg(0, "nullable:breakpointquery"),
+      },
+      response: {
+        positions: RetVal("json"),
+      },
+    },
     onSource: {
       request: { type: "source" },
       response: RetVal("json"),

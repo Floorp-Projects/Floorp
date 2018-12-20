@@ -24,14 +24,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=944821
   // so that we can hit the asm.js cache.
 
   var code = "function f() { 'use asm';\n";
-  for (var i = 0; i < 5000; i++)
+  for (let i = 0; i < 5000; i++)
     code += "function g" + i + "() { return " + i + "}\n";
   ok(code.length > 100000, "code is long enough to definitely hit the cache");
 
   const N = 4;
 
   var codes = [];
-  for (var i = 0; i < N; i++) {
+  for (let i = 0; i < N; i++) {
     var code2 = code;
     code2 += "return g" + i + ";\n";
     code2 += "}\n";
@@ -44,9 +44,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=944821
     codes.push(code2);
   }
 
-  function evalAsync(code) {
-    var blob = new Blob([code], {type:"application/javascript"});
-    var script = document.createElement('script');
+  function evalAsync(codeInner) {
+    var blob = new Blob([codeInner], {type: "application/javascript"});
+    var script = document.createElement("script");
     script.src = URL.createObjectURL(blob);
     document.body.appendChild(script);
   }
@@ -55,19 +55,19 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=944821
   function finishedEvalAsync() {
     finishedCount++;
 
-    if (finishedCount < 1 || finishedCount > 2*N) {
+    if (finishedCount < 1 || finishedCount > 2 * N) {
       throw "Huh?!";
     } else if (finishedCount == N) {
       assertCacheHit = true;
-      for (var i = 0; i < N; i++)
+      for (let i = 0; i < N; i++)
         evalAsync(codes[i]);
-    } else if (finishedCount == 2*N) {
+    } else if (finishedCount == 2 * N) {
       SimpleTest.finish();
     }
   }
 
   function runTest() {
-      for (var i = 0; i < N; i++)
+      for (let i = 0; i < N; i++)
         evalAsync(codes[i]);
 
       SimpleTest.waitForExplicitFinish();

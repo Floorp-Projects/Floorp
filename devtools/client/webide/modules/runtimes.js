@@ -209,7 +209,7 @@ var UsbScanner = {
     return adb.updateRuntimes();
   },
   listRuntimes() {
-    return adb.getRuntimes();
+    return adb.getRuntimes().filter(r => !r.isUnknown());
   },
   _emitUpdated() {
     this.emit("runtime-list-updated");

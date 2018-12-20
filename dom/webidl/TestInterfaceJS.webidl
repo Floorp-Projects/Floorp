@@ -25,7 +25,7 @@ interface TestInterfaceJS : EventTarget {
   any pingPongObjectOrString((object or DOMString) objOrString);
   TestInterfaceJSDictionary pingPongDictionary(optional TestInterfaceJSDictionary dict);
   long pingPongDictionaryOrLong(optional (TestInterfaceJSUnionableDictionary or long) dictOrLong);
-  DOMString pingPongMap(record<DOMString, any> map);
+  DOMString pingPongRecord(record<DOMString, any> rec);
   long objectSequenceLength(sequence<object> seq);
   long anySequenceLength(sequence<any> seq);
 

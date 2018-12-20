@@ -13,31 +13,8 @@ LOCAL_INCLUDES += [
     '/third_party/dav1d/src',
 ]
 
-if CONFIG['CPU_ARCH'] == 'x86':
-    if CONFIG['OS_TARGET'] == 'Android':
-        LOCAL_INCLUDES += ['/media/libdav1d/config/x86_32/android/']
-        EXPORTS.dav1d += ['config/x86_32/android/config.h']
-    else:
-        LOCAL_INCLUDES += ['/media/libdav1d/config/x86_32/']
-        EXPORTS.dav1d += ['config/x86_32/config.h']
-elif CONFIG['CPU_ARCH'] == 'x86_64':
-    if CONFIG['MOZ_ASAN'] and CONFIG['OS_TARGET'] == 'WINNT':
-        LOCAL_INCLUDES += ['/media/libdav1d/config/x86_64/win_asan/']
-        EXPORTS.dav1d += ['config/x86_64/win_asan/config.h']
-    else:
-        LOCAL_INCLUDES += ['/media/libdav1d/config/x86_64/']
-        EXPORTS.dav1d += ['config/x86_64/config.h']
-elif CONFIG['CPU_ARCH'] == 'arm':
-    LOCAL_INCLUDES += ['/media/libdav1d/config/arm/']
-    EXPORTS.dav1d += ['config/arm/config.h']
-elif CONFIG['CPU_ARCH'] == 'aarch64':
-    LOCAL_INCLUDES += ['/media/libdav1d/config/aarch64/']
-    EXPORTS.dav1d += ['config/aarch64/config.h']
-else:
-    LOCAL_INCLUDES += ['/media/libdav1d/config/other/']
-    EXPORTS.dav1d += ['config/other/config.h']
-
 EXPORTS.dav1d += [
+    'config.h',
     'version.h',
 ]
 
@@ -46,6 +23,18 @@ SOURCES += [
     '../../third_party/dav1d/src/lib.c',
     '../../third_party/dav1d/src/thread_task.c',
 ]
+
+# Enable ASM on Linux for now.
+if CONFIG['OS_TARGET'] == 'Linux' and CONFIG['CPU_ARCH'] == 'x86_64':
+    DIRS += ['asm']
+    if CONFIG['CC_TYPE'] == 'clang':
+        CFLAGS += ['-mstack-alignment=32']
+        SOURCES['../../third_party/dav1d/src/lib.c'].flags += ['-mstackrealign']
+        SOURCES['../../third_party/dav1d/src/thread_task.c'].flags += ['-mstackrealign']
+    elif CONFIG['CC_TYPE'] == 'gcc':
+        CFLAGS += ['-mpreferred-stack-boundary=5']
+        SOURCES['../../third_party/dav1d/src/lib.c'].flags += ['-mincoming-stack-boundary=4']
+        SOURCES['../../third_party/dav1d/src/thread_task.c'].flags += ['-mincoming-stack-boundary=4']
 
 # common sources
 SOURCES += [
@@ -94,7 +83,7 @@ EXPORTS.dav1d.src += [
     '../../third_party/dav1d/src/wedge.h',
 ]
 
-# common BITDEPTH 8, 10
+# common BITDEPTH 8, 16
 relative_path = '../../third_party/dav1d/src/'
 bitdepth_basenames = [
     'cdef_apply_tmpl.c',
@@ -112,14 +101,14 @@ bitdepth_basenames = [
 ]
 
 GENERATED_FILES += [
-    '10bd_%s' % p for p in bitdepth_basenames
+    '16bd_%s' % p for p in bitdepth_basenames
 ]
 
 for f in bitdepth_basenames:
-    a = GENERATED_FILES['10bd_%s' % f]
+    a = GENERATED_FILES['16bd_%s' % f]
     a.script = 'generate_source.py:add_define'
     a.inputs = [relative_path + f]
-    a.flags = ['BITDEPTH', '10']
+    a.flags = ['BITDEPTH', '16']
 
 GENERATED_FILES += [
     '8bd_%s' % p for p in bitdepth_basenames

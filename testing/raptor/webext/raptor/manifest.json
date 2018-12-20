@@ -17,6 +17,7 @@
                   "*://*.apple.com/*",
                   "*://*.amazon.com/*",
                   "*://*.bing.com/*",
+                  "*://*.ebay.com/*",
                   "*://*.facebook.com/*",
                   "*://*.google.com/*",
                   "*://*.imdb.com/*",
