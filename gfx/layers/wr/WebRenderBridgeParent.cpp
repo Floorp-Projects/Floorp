@@ -1702,7 +1702,7 @@ bool WebRenderBridgeParent::SampleAnimations(
 void WebRenderBridgeParent::CompositeIfNeeded() {
   if (mSkippedComposite) {
     mSkippedComposite = false;
-    CompositeToTarget(VsyncId(), nullptr, nullptr);
+    CompositeToTarget(mSkippedCompositeId, nullptr, nullptr);
   }
 }
 
@@ -1726,7 +1726,13 @@ void WebRenderBridgeParent::CompositeToTarget(VsyncId aId,
   if (mSkippedComposite ||
       wr::RenderThread::Get()->TooManyPendingFrames(mApi->GetId())) {
     // Render thread is busy, try next time.
-    mSkippedComposite = true;
+    if (!mSkippedComposite) {
+      // Only record the vsync id for the first skipped composite,
+      // since this matches what we do for compressing messages
+      // in CompositorVsyncScheduler::PostCompositeTask.
+      mSkippedComposite = true;
+      mSkippedCompositeId = aId;
+    }
     mPreviousFrameTimeStamp = TimeStamp();
 
     // Record that we skipped presenting a frame for
