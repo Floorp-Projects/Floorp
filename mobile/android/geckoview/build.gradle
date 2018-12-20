@@ -276,6 +276,16 @@ android.libraryVariants.all { variant ->
         from javadoc.destinationDir
     }
 
+    // This task is used by `mach android geckoview-docs`.
+    task("javadocCopyJar${name.capitalize()}", type: Copy) {
+        from(javadocJar.destinationDir) {
+            include 'geckoview-*-javadoc.jar'
+            rename { _ -> 'geckoview-javadoc.jar' }
+        }
+        into javadocJar.destinationDir
+        dependsOn javadocJar
+    }
+
     def sourcesJar = task("sourcesJar${name.capitalize()}", type: Jar) {
         classifier 'sources'
         description = "Generate Javadoc for build variant $name"
