@@ -297,6 +297,13 @@ function init() {
       sectionButton.click();
     }
   }
+
+  window.addEventListener("hashchange", function() {
+   if (location.hash) {
+      let sectionButton = document.getElementById("category-" + location.hash.substring(1));
+      sectionButton.click();
+    }
+  });
 }
 
 function show(button) {
