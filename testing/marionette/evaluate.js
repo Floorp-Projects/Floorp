@@ -434,6 +434,7 @@ sandbox.create = function(win, principal = null, opts = {}) {
     sandboxPrototype: win,
     wantComponents: true,
     wantXrays: true,
+    wantGlobalProperties: ["ChromeUtils"],
   }, opts);
   return new Cu.Sandbox(p, opts);
 };
