@@ -388,11 +388,12 @@ class TestExecuteChrome(WindowManagerMixin, TestExecuteContent):
             self.close_all_windows()
 
     def test_async_script_timeout(self):
+        self.marionette.timeout.script = 0.1
         with self.assertRaises(errors.ScriptTimeoutException):
             self.marionette.execute_async_script("""
-                var cb = arguments[arguments.length - 1];
-                setTimeout(function() { cb() }, 2500);
-                """, script_timeout=100)
+                const [cb] = arguments;
+                setTimeout(() => cb(), 2500);
+                """)
 
     def test_lasting_side_effects(self):
         pass
