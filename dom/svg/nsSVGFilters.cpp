@@ -372,21 +372,18 @@ namespace dom {
 
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFEFuncAElement)
 
-}  // namespace dom
-}  // namespace mozilla
-
 //--------------------------------------------------------------------
 //
-nsSVGElement::NumberInfo nsSVGFELightingElement::sNumberInfo[4] = {
+nsSVGElement::NumberInfo SVGFELightingElement::sNumberInfo[4] = {
     {nsGkAtoms::surfaceScale, 1, false},
     {nsGkAtoms::diffuseConstant, 1, false},
     {nsGkAtoms::specularConstant, 1, false},
     {nsGkAtoms::specularExponent, 1, false}};
 
-nsSVGElement::NumberPairInfo nsSVGFELightingElement::sNumberPairInfo[1] = {
+nsSVGElement::NumberPairInfo SVGFELightingElement::sNumberPairInfo[1] = {
     {nsGkAtoms::kernelUnitLength, 0, 0}};
 
-nsSVGElement::StringInfo nsSVGFELightingElement::sStringInfo[2] = {
+nsSVGElement::StringInfo SVGFELightingElement::sStringInfo[2] = {
     {nsGkAtoms::result, kNameSpaceID_None, true},
     {nsGkAtoms::in, kNameSpaceID_None, true}};
 
@@ -394,20 +391,20 @@ nsSVGElement::StringInfo nsSVGFELightingElement::sStringInfo[2] = {
 // Implementation
 
 NS_IMETHODIMP_(bool)
-nsSVGFELightingElement::IsAttributeMapped(const nsAtom* name) const {
+SVGFELightingElement::IsAttributeMapped(const nsAtom* name) const {
   static const MappedAttributeEntry* const map[] = {sColorMap,
                                                     sLightingEffectsMap};
 
   return FindAttributeDependence(name, map) ||
-         nsSVGFELightingElementBase::IsAttributeMapped(name);
+         SVGFELightingElementBase::IsAttributeMapped(name);
 }
 
-void nsSVGFELightingElement::GetSourceImageNames(
+void SVGFELightingElement::GetSourceImageNames(
     nsTArray<nsSVGStringInfo>& aSources) {
   aSources.AppendElement(nsSVGStringInfo(&mStringAttributes[IN1], this));
 }
 
-LightType nsSVGFELightingElement::ComputeLightAttributes(
+LightType SVGFELightingElement::ComputeLightAttributes(
     nsSVGFilterInstance* aInstance, nsTArray<float>& aFloatAttributes) {
   // find specified light
   for (nsCOMPtr<nsIContent> child = nsINode::GetFirstChild(); child;
@@ -423,7 +420,7 @@ LightType nsSVGFELightingElement::ComputeLightAttributes(
   return LightType::None;
 }
 
-bool nsSVGFELightingElement::AddLightingAttributes(
+bool SVGFELightingElement::AddLightingAttributes(
     mozilla::gfx::DiffuseLightingAttributes* aAttributes,
     nsSVGFilterInstance* aInstance) {
   nsIFrame* frame = GetPrimaryFrame();
@@ -454,10 +451,10 @@ bool nsSVGFELightingElement::AddLightingAttributes(
   return true;
 }
 
-bool nsSVGFELightingElement::AttributeAffectsRendering(
-    int32_t aNameSpaceID, nsAtom* aAttribute) const {
-  return nsSVGFELightingElementBase::AttributeAffectsRendering(aNameSpaceID,
-                                                               aAttribute) ||
+bool SVGFELightingElement::AttributeAffectsRendering(int32_t aNameSpaceID,
+                                                     nsAtom* aAttribute) const {
+  return SVGFELightingElementBase::AttributeAffectsRendering(aNameSpaceID,
+                                                             aAttribute) ||
          (aNameSpaceID == kNameSpaceID_None &&
           (aAttribute == nsGkAtoms::in ||
            aAttribute == nsGkAtoms::surfaceScale ||
@@ -467,18 +464,21 @@ bool nsSVGFELightingElement::AttributeAffectsRendering(
 //----------------------------------------------------------------------
 // nsSVGElement methods
 
-nsSVGElement::NumberAttributesInfo nsSVGFELightingElement::GetNumberInfo() {
+nsSVGElement::NumberAttributesInfo SVGFELightingElement::GetNumberInfo() {
   return NumberAttributesInfo(mNumberAttributes, sNumberInfo,
                               ArrayLength(sNumberInfo));
 }
 
 nsSVGElement::NumberPairAttributesInfo
-nsSVGFELightingElement::GetNumberPairInfo() {
+SVGFELightingElement::GetNumberPairInfo() {
   return NumberPairAttributesInfo(mNumberPairAttributes, sNumberPairInfo,
                                   ArrayLength(sNumberPairInfo));
 }
 
-nsSVGElement::StringAttributesInfo nsSVGFELightingElement::GetStringInfo() {
+nsSVGElement::StringAttributesInfo SVGFELightingElement::GetStringInfo() {
   return StringAttributesInfo(mStringAttributes, sStringInfo,
                               ArrayLength(sStringInfo));
 }
+
+}  // namespace dom
+}  // namespace mozilla
