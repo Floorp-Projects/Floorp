@@ -129,7 +129,6 @@ function checkPaymentMethodErrors(testName, errors) {
 const DummyUIService = {
   testName: "",
   rejectRetry: false,
-  emptyErrors: false,
   showPayment(requestId) {
     acceptPayment(requestId, "show");
   },
@@ -144,32 +143,13 @@ const DummyUIService = {
   },
   updatePayment(requestId) {
     const payment = paymentSrv.getPaymentRequestById(requestId);
-    if (!DummyUIService.emptyErrors) {
-      if (payment.paymentDetails.error !== "error") {
-        emitTestFail("Expect 'error' on details.error, but got '" +
-                     payment.paymentDetails.error + "'");
-      }
-      checkAddressErrors(this.testName, payment.paymentDetails.shippingAddressErrors)
-      checkPayerErrors(this.testName, payment.paymentDetails.payerErrors);
-      checkPaymentMethodErrors(this.testName, payment.paymentDetails.paymentMethodErrors);
-    } else {
-      if (payment.paymentDetails.error) {
-        emitTestFail(`${this.testName}: Expect null on details.error, but got
-                     '${payment.paymentDetails.error}'`);
-      }
-      if (payment.paymentDetails.payer) {
-        emitTestFail(`${this.testName}: Expect null on details.payer, but got
-                     '${payment.paymentDetails.payer}'`);
-      }
-      if (payment.paymentDetails.shippingAddressErrors) {
-        emitTestFail(`${this.testName}: Expect null on details.shippingAddressErrors,
-                     but got '${payment.paymentDetails.shippingAddressErrors}'`);
-      }
-      if (payment.paymentDetails.paymentMethod) {
-        emitTestFail(`${this.testName}: Expect null on details.paymentMethod, but
-                     got '${payment.paymentDetails.paymentMethod}'`);
-      }
+    if (payment.paymentDetails.error !== "error") {
+      emitTestFail("Expect 'error' on details.error, but got '" +
+                   payment.paymentDetails.error + "'");
     }
+    checkAddressErrors(this.testName, payment.paymentDetails.shippingAddressErrors)
+    checkPayerErrors(this.testName, payment.paymentDetails.payerErrors);
+    checkPaymentMethodErrors(this.testName, payment.paymentDetails.paymentMethodErrors);
     if (this.rejectRetry) {
       rejectPayment(requestId);
     } else {
@@ -184,11 +164,6 @@ paymentSrv.setTestingUIService(DummyUIService.QueryInterface(Ci.nsIPaymentUIServ
 
 addMessageListener("start-test", function(testName) {
   DummyUIService.testName = testName;
-  if (testName === "testRetryWithEmptyErrors") {
-    DummyUIService.emptyErrors = true;
-  } else {
-    DummyUIService.emptyErrors = false;
-  }
   sendAsyncMessage("start-test-complete");
 });
 
