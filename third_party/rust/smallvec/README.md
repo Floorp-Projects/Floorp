@@ -1,7 +1,7 @@
 rust-smallvec
 =============
 
-[Documentation](http://docs.rs/smallvec/)
+[Documentation](https://docs.rs/smallvec/)
 
 [Release notes](https://github.com/servo/rust-smallvec/releases)
 
