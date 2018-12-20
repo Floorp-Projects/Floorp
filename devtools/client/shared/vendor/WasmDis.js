@@ -31,6 +31,7 @@ function typeToString(type) {
         case -2 /* i64 */: return 'i64';
         case -3 /* f32 */: return 'f32';
         case -4 /* f64 */: return 'f64';
+        case -5 /* v128 */: return 'v128';
         case -16 /* anyfunc */: return 'anyfunc';
         default: throw new Error('Unexpected type');
     }
@@ -72,9 +73,20 @@ function formatFloat64(n) {
         return '-nan';
     return (data2 < 0 ? '-' : '+') + 'nan:0x' + payload.toString(16);
 }
+function formatI32Array(bytes, count) {
+    var dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+    var result = [];
+    for (var i = 0; i < count; i++)
+        result.push("0x" + formatHex(dv.getInt32(i << 2, true), 8));
+    return result.join(' ');
+}
 function memoryAddressToString(address, code) {
     var defaultAlignFlags;
     switch (code) {
+        case 64768 /* v128_load */:
+        case 64769 /* v128_store */:
+            defaultAlignFlags = 4;
+            break;
         case 41 /* i64_load */:
         case 55 /* i64_store */:
         case 43 /* f64_load */:
@@ -189,7 +201,7 @@ function limitsToString(limits) {
 }
 var paddingCache = ['0', '00', '000'];
 function formatHex(n, width) {
-    var s = n.toString(16).toUpperCase();
+    var s = (n >>> 0).toString(16).toUpperCase();
     if (width === undefined || s.length >= width)
         return s;
     var paddingIndex = width - s.length - 1;
@@ -618,6 +630,8 @@ var WasmDisassembler = /** @class */ (function () {
             case 65100 /* i64_atomic_rmw8_u_cmpxchg */:
             case 65101 /* i64_atomic_rmw16_u_cmpxchg */:
             case 65102 /* i64_atomic_rmw32_u_cmpxchg */:
+            case 64768 /* v128_load */:
+            case 64769 /* v128_store */:
                 var memoryAddress = memoryAddressToString(operator.memoryAddress, operator.code);
                 if (memoryAddress !== null) {
                     this.appendBuffer(' ');
@@ -638,6 +652,28 @@ var WasmDisassembler = /** @class */ (function () {
                 break;
             case 68 /* f64_const */:
                 this.appendBuffer(" " + formatFloat64(operator.literal));
+                break;
+            case 64770 /* v128_const */:
+                this.appendBuffer(" i32 " + formatI32Array(operator.literal, 4));
+                break;
+            case 64771 /* v8x16_shuffle */:
+                this.appendBuffer(" " + formatI32Array(operator.lines, 4));
+                break;
+            case 64773 /* i8x16_extract_lane_s */:
+            case 64774 /* i8x16_extract_lane_u */:
+            case 64775 /* i8x16_replace_lane */:
+            case 64777 /* i16x8_extract_lane_s */:
+            case 64778 /* i16x8_extract_lane_u */:
+            case 64779 /* i16x8_replace_lane */:
+            case 64781 /* i32x4_extract_lane */:
+            case 64782 /* i32x4_replace_lane */:
+            case 64787 /* f32x4_extract_lane */:
+            case 64788 /* f32x4_replace_lane */:
+            case 64784 /* i64x2_extract_lane */:
+            case 64785 /* i64x2_replace_lane */:
+            case 64790 /* f64x2_extract_lane */:
+            case 64791 /* f64x2_replace_lane */:
+                this.appendBuffer(" " + operator.lineIndex);
                 break;
         }
     };
