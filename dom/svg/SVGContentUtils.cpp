@@ -34,10 +34,11 @@
 #include "SVGPathData.h"
 #include "SVGPathElement.h"
 
-using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::dom::SVGPreserveAspectRatio_Binding;
 using namespace mozilla::gfx;
+
+namespace mozilla {
 
 SVGSVGElement* SVGContentUtils::GetOuterSVGElement(nsSVGElement* aSVGElement) {
   Element* element = nullptr;
@@ -803,3 +804,5 @@ bool SVGContentUtils::ShapeTypeHasNoCorners(const nsIContent* aContent) {
   return aContent &&
          aContent->IsAnyOfSVGElements(nsGkAtoms::circle, nsGkAtoms::ellipse);
 }
+
+}  // namespace mozilla
