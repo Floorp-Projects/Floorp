@@ -1144,6 +1144,23 @@ void nsRefreshDriver::RemoveTimerAdjustmentObserver(
   mTimerAdjustmentObservers.RemoveElement(aObserver);
 }
 
+void nsRefreshDriver::PostVisualViewportResizeEvent(
+    VVPResizeEvent* aResizeEvent) {
+  mVisualViewportResizeEvents.AppendElement(aResizeEvent);
+  EnsureTimerStarted();
+}
+
+void nsRefreshDriver::DispatchVisualViewportResizeEvents() {
+  // We're taking a hint from scroll events and only dispatch the current set
+  // of queued resize events. If additional events are posted in response to
+  // the current events being dispatched, we'll dispatch them on the next tick.
+  VisualViewportResizeEventArray events;
+  events.SwapElements(mVisualViewportResizeEvents);
+  for (auto& event : events) {
+    event->Run();
+  }
+}
+
 void nsRefreshDriver::PostScrollEvent(mozilla::Runnable* aScrollEvent, bool aDelayed) {
   if (aDelayed) {
     mDelayedScrollEvents.AppendElement(aScrollEvent);
@@ -1160,6 +1177,24 @@ void nsRefreshDriver::DispatchScrollEvents() {
   // first. (Newly posted scroll events will be dispatched on the next tick.)
   ScrollEventArray events;
   events.SwapElements(mScrollEvents);
+  for (auto& event : events) {
+    event->Run();
+  }
+}
+
+void nsRefreshDriver::PostVisualViewportScrollEvent(
+    VVPScrollEvent* aScrollEvent) {
+  mVisualViewportScrollEvents.AppendElement(aScrollEvent);
+  EnsureTimerStarted();
+}
+
+void nsRefreshDriver::DispatchVisualViewportScrollEvents() {
+  // Scroll events are one-shot, so after running them we can drop them.
+  // However, dispatching a scroll event can potentially cause more scroll
+  // events to be posted, so we move the initial set into a temporary array
+  // first. (Newly posted scroll events will be dispatched on the next tick.)
+  VisualViewportScrollEventArray events;
+  events.SwapElements(mVisualViewportScrollEvents);
   for (auto& event : events) {
     event->Run();
   }
@@ -1734,6 +1769,7 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime) {
     }
     shell->FireResizeEvent();
   }
+  DispatchVisualViewportResizeEvents();
 
   /*
    * The timer holds a reference to |this| while calling |Notify|.
@@ -1757,6 +1793,7 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime) {
       // This is the FlushType::Style case.
 
       DispatchScrollEvents();
+      DispatchVisualViewportScrollEvents();
       DispatchAnimationEvents();
       RunFullscreenSteps();
       RunFrameRequestCallbacks(aNowTime);

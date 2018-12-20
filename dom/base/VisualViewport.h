@@ -34,6 +34,33 @@ class VisualViewport final : public mozilla::DOMEventTargetHelper {
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
 
+  void PostResizeEvent();
+  void PostScrollEvent();
+
+  // These two events are modelled after the ScrollEvent class in
+  // nsGfxScrollFrame.h.
+  class VisualViewportResizeEvent : public Runnable {
+   public:
+    NS_DECL_NSIRUNNABLE
+    VisualViewportResizeEvent(VisualViewport* aViewport,
+                              nsPresContext* aPresContext);
+    void Revoke() { mViewport = nullptr; }
+
+   private:
+    VisualViewport* mViewport;
+  };
+
+  class VisualViewportScrollEvent : public Runnable {
+   public:
+    NS_DECL_NSIRUNNABLE
+    VisualViewportScrollEvent(VisualViewport* aViewport,
+                              nsPresContext* aPresContext);
+    void Revoke() { mViewport = nullptr; }
+
+   private:
+    VisualViewport* mViewport;
+  };
+
  private:
   virtual ~VisualViewport();
 
@@ -41,6 +68,13 @@ class VisualViewport final : public mozilla::DOMEventTargetHelper {
   CSSPoint VisualViewportOffset() const;
   CSSPoint LayoutViewportOffset() const;
   nsIPresShell* GetPresShell() const;
+  nsPresContext* GetPresContext() const;
+
+  void FireResizeEvent();
+  void FireScrollEvent();
+
+  RefPtr<VisualViewportResizeEvent> mResizeEvent;
+  RefPtr<VisualViewportScrollEvent> mScrollEvent;
 };
 
 }  // namespace dom
