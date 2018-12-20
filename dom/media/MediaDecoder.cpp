@@ -434,9 +434,11 @@ void MediaDecoder::OnPlaybackEvent(MediaPlaybackEvent&& aEvent) {
       break;
     case MediaPlaybackEvent::EnterVideoSuspend:
       GetOwner()->DispatchAsyncEvent(NS_LITERAL_STRING("mozentervideosuspend"));
+      mIsVideoDecodingSuspended = true;
       break;
     case MediaPlaybackEvent::ExitVideoSuspend:
       GetOwner()->DispatchAsyncEvent(NS_LITERAL_STRING("mozexitvideosuspend"));
+      mIsVideoDecodingSuspended = false;
       break;
     case MediaPlaybackEvent::StartVideoSuspendTimer:
       GetOwner()->DispatchAsyncEvent(
@@ -457,6 +459,10 @@ void MediaDecoder::OnPlaybackEvent(MediaPlaybackEvent&& aEvent) {
     default:
       break;
   }
+}
+
+bool MediaDecoder::IsVideoDecodingSuspended() const {
+  return mIsVideoDecodingSuspended;
 }
 
 void MediaDecoder::OnPlaybackErrorEvent(const MediaResult& aError) {
