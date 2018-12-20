@@ -243,23 +243,4 @@ add_task(async function test_execution_order() {
     Assert.equal(result[i], i,
       "Callbacks and Promises should have run in the expected order.");
   }
-
-  await cleanTheDOM();
-});
-
-/**
- * Tests that modifying the DOM within a promiseDocumentFlushed callback
- * will result in the Promise being rejected.
- */
-add_task(async function test_reject_on_modification() {
-  dirtyStyleAndLayout(1);
-  assertFlushesRequired();
-
-  let promise = window.promiseDocumentFlushed(() => {
-    dirtyStyleAndLayout(2);
-  });
-
-  await Assert.rejects(promise, /NoModificationAllowedError/);
-
-  await cleanTheDOM();
 });
