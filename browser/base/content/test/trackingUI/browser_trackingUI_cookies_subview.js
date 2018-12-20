@@ -6,6 +6,7 @@
 "use strict";
 
 const COOKIE_PAGE = "http://not-tracking.example.com/browser/browser/base/content/test/trackingUI/cookiePage.html";
+const CONTAINER_PAGE = "http://not-tracking.example.com/browser/browser/base/content/test/trackingUI/containerPage.html";
 
 const TPC_PREF = "network.cookie.cookieBehavior";
 
@@ -238,6 +239,38 @@ add_task(async function testCookiesSubViewAllowedHeuristic() {
     await ContentTask.spawn(browser, {}, function() {
       content.postMessage("window-close", "*");
     });
+  });
+
+  Services.prefs.clearUserPref(TPC_PREF);
+});
+
+add_task(async function testCookiesSubViewBlockedDoublyNested() {
+  Services.prefs.setIntPref(TPC_PREF, Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER);
+
+  await BrowserTestUtils.withNewTab(CONTAINER_PAGE, async function(browser) {
+    await openIdentityPopup();
+
+    let categoryItem =
+      document.getElementById("identity-popup-content-blocking-category-cookies");
+    ok(BrowserTestUtils.is_visible(categoryItem), "TP category item is visible");
+    let cookiesView = document.getElementById("identity-popup-cookiesView");
+    let viewShown = BrowserTestUtils.waitForEvent(cookiesView, "ViewShown");
+    categoryItem.click();
+    await viewShown;
+
+    ok(true, "Cookies view was shown");
+
+    let listItems = cookiesView.querySelectorAll(".identity-popup-content-blocking-list-item");
+    is(listItems.length, 1, "We have 1 cookie in the list");
+
+    let listItem = listItems[0];
+    let label = listItem.querySelector(".identity-popup-content-blocking-list-host-label");
+    is(label.value, "http://trackertest.org", "Has an item for trackertest.org");
+    ok(BrowserTestUtils.is_visible(listItem), "List item is visible");
+    ok(!listItem.classList.contains("allowed"), "Indicates whether the cookie was blocked or allowed");
+
+    let button = listItem.querySelector(".identity-popup-permission-remove-button");
+    ok(!button, "Permission remove button doesn't exist");
   });
 
   Services.prefs.clearUserPref(TPC_PREF);
