@@ -650,9 +650,9 @@ button:focus {
   min-width: 0;
 }
 
-/* 
-  Prevents horizontal scrollbar from displaying when 
-  right pane collapsed (#7505) 
+/*
+  Prevents horizontal scrollbar from displaying when
+  right pane collapsed (#7505)
 */
 .split-box > .splitter:last-child {
   display: none;
