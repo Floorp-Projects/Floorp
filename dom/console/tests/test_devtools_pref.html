@@ -20,9 +20,9 @@ function consoleListener(expected) {
           SpecialPowers.removeObserver(observer, "console-api-log-event");
           SpecialPowers.removeObserver(observer, "console-api-profiler");
           done(messages);
-          return;
+
         }
-      }
+      },
     };
     SpecialPowers.addObserver(observer, "console-api-log-event");
     SpecialPowers.addObserver(observer, "console-api-profiler");
@@ -30,7 +30,7 @@ function consoleListener(expected) {
 }
 
 SimpleTest.waitForExplicitFinish();
-(async function () {
+(async function() {
   var onMessages = consoleListener(4);
 
   await SpecialPowers.pushPrefEnv({set: [["devtools.enabled", false]]});

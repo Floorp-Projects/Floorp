@@ -44,7 +44,8 @@ def try_compile(includes=None, body='', language='C++', flags=None, check_msg=No
 # - `when` is a depends function that if present will make performing the check
 #   conditional on the value of that function.
 @template
-def check_header(header, language='C++', flags=None, includes=None, when=None):
+def check_header(header, language='C++', flags=None, includes=None, when=None,
+                 onerror=lambda: None):
     if when is None:
         when = always
 
@@ -55,7 +56,7 @@ def check_header(header, language='C++', flags=None, includes=None, when=None):
     includes.append(header)
 
     have_header = try_compile(includes=includes, language=language, flags=flags,
-                              check_msg='for %s' % header, when=when)
+                              check_msg='for %s' % header, when=when, onerror=onerror)
     header_var = 'HAVE_%s' % (header.upper()
                                     .replace('-', '_')
                                     .replace('/', '_')
@@ -76,6 +77,37 @@ def check_headers(*headers, **kwargs):
     for header in headers:
         checks.append(check_header(header, **kwargs))
     return checks
+
+
+# Checks for the presence of the given symbol on the target system by compiling
+# a test program. The return value of the template is a check function
+# returning True if the symbol can be found, and None if it is not.
+@template
+def check_symbol(symbol, language='C', flags=None, when=None, onerror=lambda: None):
+    if when is None:
+        when = always
+
+    compiler = {
+        'C': c_compiler,
+        'C++': cxx_compiler,
+    }[language]
+
+    # Stolen from autoconf 2.13 ; might be irrelevant now, but it doesn't hurt to
+    # keep using a char return type.
+    comment = [
+        '/* Override any gcc2 internal prototype to avoid an error.  */',
+        '/* We use char because int might match the return type of a gcc2',
+        '    builtin and then its argument prototype would still apply.  */',
+    ]
+
+    return compiler.try_run(
+        header=comment + ['char %s();' % symbol],
+        body='%s();' % symbol,
+        flags=flags,
+        check_msg='for %s' % symbol,
+        when=when,
+        onerror=onerror,
+    )
 
 
 # Determine whether to add a given flag to the given lists of flags for C or

@@ -15,18 +15,18 @@ ok("BroadcastChannel" in window, "BroadcastChannel exists");
 
 var bc = new BroadcastChannel("foobar");
 ok(bc, "BroadcastChannel can be created");
-is(bc.name, 'foobar', "BroadcastChannel.name is foobar");
+is(bc.name, "foobar", "BroadcastChannel.name is foobar");
 
 ok("postMessage" in bc, "BroadcastChannel has postMessage() method");
 
 bc.onmessage = function(evt) {
-  ok(evt instanceof MessageEvent, 'evt is a MessageEvent');
-  is(evt.target, bc, 'MessageEvent.target is bc');
-  is(evt.target.name, 'foobar', 'MessageEvent.target.name is foobar');
-  is(evt.target.name, bc.name, 'MessageEvent.target.name is bc.name');
+  ok(evt instanceof MessageEvent, "evt is a MessageEvent");
+  is(evt.target, bc, "MessageEvent.target is bc");
+  is(evt.target.name, "foobar", "MessageEvent.target.name is foobar");
+  is(evt.target.name, bc.name, "MessageEvent.target.name is bc.name");
   is(evt.data, "Hello world from the window!", "Message received from the window");
   bc.postMessage("Hello world from the iframe!");
-}
+};
 
   </script>
 </body>

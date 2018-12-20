@@ -306,6 +306,10 @@ void HTMLTrackElement::LoadResource(RefPtr<WebVTTListener>&& aWebVTTListener) {
   nsCOMPtr<nsIRunnable> runnable = NS_NewRunnableFunction(
       "dom::HTMLTrackElement::LoadResource",
       [ self = RefPtr<HTMLTrackElement>(this), uri, secFlags ]() {
+        if (!self->mListener) {
+          // Shutdown got called, abort.
+          return;
+        }
         nsCOMPtr<nsIChannel> channel;
         nsCOMPtr<nsILoadGroup> loadGroup =
             self->OwnerDoc()->GetDocumentLoadGroup();

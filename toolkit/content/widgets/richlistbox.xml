@@ -693,17 +693,6 @@
         </body>
       </method>
 
-      <property name="disableKeyNavigation"
-                onget="return this.hasAttribute('disableKeyNavigation');">
-        <setter>
-          if (val)
-            this.setAttribute("disableKeyNavigation", "true");
-          else
-            this.removeAttribute("disableKeyNavigation");
-          return val;
-        </setter>
-      </property>
-
       <property name="suppressOnSelect"
                 onget="return this.getAttribute('suppressonselect') == 'true';"
                 onset="this.setAttribute('suppressonselect', val);"/>
@@ -899,8 +888,7 @@
 
       <handler event="keypress" phase="target">
         <![CDATA[
-          if (this.disableKeyNavigation || !event.charCode ||
-              event.altKey || event.ctrlKey || event.metaKey)
+          if (!event.charCode || event.altKey || event.ctrlKey || event.metaKey)
             return;
 
           if (event.timeStamp - this._lastKeyTime > 1000)

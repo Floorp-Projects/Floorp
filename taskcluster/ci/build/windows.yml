@@ -134,6 +134,42 @@ win64/debug:
         - win64-sccache
         - win64-node
 
+win64-fuzzing/debug:
+    description: "Win64 Fuzzing Debug"
+    index:
+        product: firefox
+        job-name: win64-fuzzing-debug
+    attributes:
+        enable-full-crashsymbols: true
+    treeherder:
+        platform: windows2012-64/debug
+        symbol: Bf
+        tier: 1
+    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+    worker:
+        max-run-time: 7200
+        env:
+            PERFHERDER_EXTRA_OPTIONS: fuzzing
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/releng.manifest"
+    run:
+        using: mozharness
+        options: [append-env-variables-from-configs]
+        script: mozharness/scripts/fx_desktop_build.py
+        config:
+            - builds/releng_base_firefox.py
+            - builds/taskcluster_base_windows.py
+            - builds/taskcluster_base_win64.py
+            - builds/taskcluster_sub_win64/debug.py
+        mozconfig-variant: debug-fuzzing
+    run-on-projects: ['trunk', 'try']
+    toolchains:
+        - win64-clang-cl
+        - win64-rust
+        - win64-rust-size
+        - win64-cbindgen
+        - win64-sccache
+        - win64-node
+
 win64-plain/debug:
     description: "Win64 Debug Plain"
     index:
@@ -774,6 +810,40 @@ win64-asan-reporter-nightly/opt:
             stage_platform: win64-asan-reporter
         mozconfig-variant: nightly-asan-reporter
     run-on-projects: ['mozilla-central']
+    toolchains:
+        - win64-clang-cl
+        - win64-rust
+        - win64-rust-size
+        - win64-cbindgen
+        - win64-sccache
+        - win64-node
+
+win64-asan-fuzzing/opt:
+    description: "Win64 Fuzzing Opt ASAN"
+    index:
+        product: firefox
+        job-name: win64-fuzzing-asan-opt
+    treeherder:
+        platform: windows2012-64/asan
+        symbol: Bof
+    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+    worker:
+        max-run-time: 7200
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/releng.manifest"
+            PERFHERDER_EXTRA_OPTIONS: fuzzing-asan
+    run:
+        using: mozharness
+        options: [append-env-variables-from-configs]
+        script: mozharness/scripts/fx_desktop_build.py
+        config:
+            - builds/releng_base_firefox.py
+            - builds/taskcluster_base_windows.py
+            - builds/taskcluster_base_win64.py
+        extra-config:
+            stage_platform: win64-fuzzing-asan
+        mozconfig-variant: nightly-fuzzing-asan
+    run-on-projects: ['trunk', 'try']
     toolchains:
         - win64-clang-cl
         - win64-rust

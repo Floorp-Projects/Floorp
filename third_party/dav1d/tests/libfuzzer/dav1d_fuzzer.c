@@ -36,6 +36,20 @@
 #include "src/cpu.h"
 #include "dav1d_fuzzer.h"
 
+#ifdef DAV1D_ALLOC_FAIL
+
+#include <stdlib.h>
+
+#include "alloc_fail.h"
+
+static unsigned djb_xor(const uint8_t * c, size_t len) {
+    unsigned hash = 5381;
+    for(size_t i = 0; i < len; i++)
+        hash = hash * 33 ^ c[i];
+    return hash;
+}
+#endif
+
 static unsigned r32le(const uint8_t *const p) {
     return ((uint32_t)p[3] << 24U) | (p[2] << 16U) | (p[1] << 8U) | p[0];
 }
@@ -74,12 +88,25 @@ int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 #endif
 
     if (size < 32) goto end;
+#ifdef DAV1D_ALLOC_FAIL
+    unsigned h = djb_xor(ptr, 32);
+    unsigned seed = h;
+    unsigned probability = h > (RAND_MAX >> 5) ? RAND_MAX >> 5 : h;
+    int n_frame_threads = (h & 0xf) + 1;
+    int n_tile_threads = ((h >> 4) & 0x7) + 1;
+    if (n_frame_threads > 5) n_frame_threads = 1;
+    if (n_tile_threads > 3) n_tile_threads = 1;
+#endif
     ptr += 32; // skip ivf header
 
     dav1d_default_settings(&settings);
 
 #ifdef DAV1D_MT_FUZZING
     settings.n_frame_threads = settings.n_tile_threads = 2;
+#elif defined(DAV1D_ALLOC_FAIL)
+    settings.n_frame_threads = n_frame_threads;
+    settings.n_tile_threads = n_tile_threads;
+    dav1d_setup_alloc_fail(seed, probability);
 #else
     settings.n_frame_threads = settings.n_tile_threads = 1;
 #endif

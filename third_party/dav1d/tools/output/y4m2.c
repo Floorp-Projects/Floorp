@@ -59,11 +59,11 @@ static int y4m2_open(Y4m2OutputContext *const c, const char *const file,
 }
 
 static int write_header(Y4m2OutputContext *const c, const Dav1dPicture *const p) {
-    static const char *const ss_names[][2] = {
-        [DAV1D_PIXEL_LAYOUT_I400] = { "mono", "mono10" },
-        [DAV1D_PIXEL_LAYOUT_I420] = { NULL, "420p10" },
-        [DAV1D_PIXEL_LAYOUT_I422] = { "422", "422p10" },
-        [DAV1D_PIXEL_LAYOUT_I444] = { "444", "444p10" }
+    static const char *const ss_names[][3] = {
+        [DAV1D_PIXEL_LAYOUT_I400] = { "mono", "mono10", "mono12" },
+        [DAV1D_PIXEL_LAYOUT_I420] = { NULL,   "420p10", "420p12" },
+        [DAV1D_PIXEL_LAYOUT_I422] = { "422",  "422p10", "422p12" },
+        [DAV1D_PIXEL_LAYOUT_I444] = { "444",  "444p10", "444p12" }
     };
 
     static const char *const chr_names_8bpc_i420[] = {
@@ -75,7 +75,7 @@ static int write_header(Y4m2OutputContext *const c, const Dav1dPicture *const p)
     const char *const ss_name =
         p->p.layout == DAV1D_PIXEL_LAYOUT_I420 && p->p.bpc == 8 ?
         chr_names_8bpc_i420[p->seq_hdr->chr > 2 ? DAV1D_CHR_UNKNOWN : p->seq_hdr->chr] :
-        ss_names[p->p.layout][p->p.bpc > 8];
+        ss_names[p->p.layout][p->seq_hdr->hbd];
 
     fprintf(c->f, "YUV4MPEG2 W%d H%d F%d:%d Ip C%s\n",
             p->p.w, p->p.h, c->fps[0], c->fps[1], ss_name);
