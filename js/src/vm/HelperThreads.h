@@ -519,10 +519,22 @@ void CancelOffThreadWasmTier2Generator();
  * If helper threads are available, call execute() then dispatchResolve() on the
  * given task in a helper thread. If no helper threads are available, the given
  * task is executed and resolved synchronously.
+ *
+ * This function takes ownership of task unconditionally; if it fails, task is
+ * deleted.
  */
 bool StartOffThreadPromiseHelperTask(JSContext* cx,
                                      UniquePtr<PromiseHelperTask> task);
 
+/*
+ * Like the JSContext-accepting version, but only safe to use when helper
+ * threads are available, so we can be sure we'll never need to fall back on
+ * synchronous execution.
+ *
+ * This function can be called from any thread, but takes ownership of the task
+ * only on success. On OOM, it is the caller's responsibility to arrange for the
+ * task to be cleaned up properly.
+ */
 bool StartOffThreadPromiseHelperTask(PromiseHelperTask* task);
 
 /*
@@ -838,8 +850,13 @@ class SourceCompressionTask {
 };
 
 // A PromiseHelperTask is an OffThreadPromiseTask that executes a single job on
-// a helper thread. Derived classes do their helper-thread work by implementing
-// execute().
+// a helper thread. Call js::StartOffThreadPromiseHelperTask to submit a
+// PromiseHelperTask for execution.
+//
+// Concrete subclasses must implement execute and OffThreadPromiseTask::resolve.
+// The helper thread will call execute() to do the main work. Then, the thread
+// of the JSContext used to create the PromiseHelperTask will call resolve() to
+// resolve promise according to those results.
 struct PromiseHelperTask : OffThreadPromiseTask {
   PromiseHelperTask(JSContext* cx, Handle<PromiseObject*> promise)
       : OffThreadPromiseTask(cx, promise) {}
