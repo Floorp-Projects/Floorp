@@ -1648,7 +1648,7 @@ class nsIPresShell : public nsStubDocumentObserver {
   }
 
   void SetVisualViewportOffset(const nsPoint& aScrollOffset,
-                               const nsPoint& aPrevRelativeOffset);
+                               const nsPoint& aPrevLayoutScrollPos);
 
   nsPoint GetVisualViewportOffset() const { return mVisualViewportOffset; }
 

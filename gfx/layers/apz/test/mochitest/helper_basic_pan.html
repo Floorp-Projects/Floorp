@@ -60,7 +60,7 @@ function* test(testDriver) {
   // Our internal visual viewport scroll event on the other hand only cares
   // about the absolute offset of the visual viewport and should therefore
   // definitively fire.
-  todo(visScrEvtInternal.count > 0, "Got some mozvisualscroll events");
+  ok(visScrEvtInternal.count > 0, "Got some mozvisualscroll events");
 }
 
 waitUntilApzStable()

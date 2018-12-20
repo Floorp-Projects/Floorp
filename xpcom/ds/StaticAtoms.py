@@ -1881,6 +1881,10 @@ STATIC_ATOMS = [
     # MediaDevices device change event
     Atom("ondevicechange", "ondevicechange"),
 
+    # Internal Visual Viewport events
+    Atom("onmozvisualresize", "onmozvisualresize"),
+    Atom("onmozvisualscroll", "onmozvisualscroll"),
+
     # WebExtensions
     Atom("moz_extension", "moz-extension"),
     Atom("all_urlsPermission", "<all_urls>"),
