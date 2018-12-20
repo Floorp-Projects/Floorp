@@ -10,6 +10,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "1288c8581a61"
@@ -25,6 +27,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "ee017826c764"
@@ -40,6 +44,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "176758dc0404"
@@ -55,6 +61,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "f977189458e8"
@@ -70,6 +78,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "3dbdcee3bcb4"
@@ -85,6 +95,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "bacffc44932f"
@@ -100,6 +112,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "04d0238aa109"
@@ -115,6 +129,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "82fa9d5cf056"
@@ -130,6 +146,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "8d7ee9295c26"
@@ -145,6 +163,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "66578a5dfeb4"
@@ -160,6 +180,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "af187b7cf806"
@@ -175,6 +197,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "4c84e6b476d0"
@@ -190,6 +214,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "21e026bb1d16"
@@ -205,6 +231,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "8139cb49980a"
@@ -220,6 +248,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "02bd0e2d3787"
@@ -235,6 +265,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "51a7c8b874c1"
@@ -250,6 +282,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "3bfd013b1ceb"
@@ -265,6 +299,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "12e0e313d870"
@@ -280,6 +316,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "97d7508b9ad0"
@@ -295,6 +333,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "5ff6b72d4eb3"
@@ -310,6 +350,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "a0cafda9e66d"
@@ -325,6 +367,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "164f6df0401d"
@@ -340,6 +384,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "b0af6ff6cdee"
@@ -355,6 +401,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "140a00ff1eeb"
@@ -370,6 +418,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "a41600419ca2"
@@ -385,6 +435,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "02c5bd9b4983"
@@ -400,6 +452,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "6e47ffd20faa"
@@ -415,6 +469,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "88b683834702"
@@ -430,6 +486,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "366a1e9e824b"
@@ -445,6 +503,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "ff408c4941b4"
@@ -460,6 +520,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "300498d2241e"
@@ -475,6 +537,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "358026497c96"
@@ -490,6 +554,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "2c9ed79a0267"
@@ -505,6 +571,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "1f1d48a0ab51"
@@ -520,6 +588,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "a668758721d1"
@@ -535,6 +605,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "c94938a03a11"
@@ -550,6 +622,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "9fa66a4965e2"
@@ -565,6 +639,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "660e3cbeafb2"
@@ -580,6 +656,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "4ccd61f4c0b6"
@@ -595,9 +673,11 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
-        "revision": "4abaa967b8fa"
+        "revision": "a05c5956f362"
     },
     "gu-IN": {
         "platforms": [
@@ -610,6 +690,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "169a20611eaf"
@@ -625,6 +707,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "8090c896da6a"
@@ -640,6 +724,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "a886e2b55636"
@@ -655,6 +741,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "2e0d584e40e6"
@@ -670,6 +758,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "ffb8761411ab"
@@ -685,6 +775,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "a72304eb79cd"
@@ -700,6 +792,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "6f231310c387"
@@ -715,6 +809,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "5f5054b26e44"
@@ -730,6 +826,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "8bb719b8f610"
@@ -745,6 +843,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "722f7e4407cb"
@@ -760,6 +860,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "a540a9ef6f7d"
@@ -773,6 +875,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "a251b0ebf0f5"
@@ -795,6 +899,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "b163b591155d"
@@ -810,6 +916,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "1e49cf275e20"
@@ -825,6 +933,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "1753bd996be6"
@@ -840,6 +950,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "d370ee14d69a"
@@ -855,6 +967,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "a50efe49b812"
@@ -870,6 +984,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "cd42b1a8e2c6"
@@ -885,6 +1001,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "3874059fe759"
@@ -900,6 +1018,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "fea187e48826"
@@ -915,6 +1035,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "f2900720480a"
@@ -930,6 +1052,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "0de2b15a802b"
@@ -945,6 +1069,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "ac9e99cf502c"
@@ -960,6 +1086,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "b5fa5aebe743"
@@ -975,6 +1103,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "69f8bd0a8e45"
@@ -990,6 +1120,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "ece98a7db640"
@@ -1005,6 +1137,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "7c268a285120"
@@ -1020,6 +1154,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "eb418e8ac0e7"
@@ -1035,6 +1171,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "aa2c4ef3a9b5"
@@ -1050,6 +1188,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "67032622764b"
@@ -1065,6 +1205,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "d5bc879f7342"
@@ -1080,6 +1222,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "f320ffba562f"
@@ -1095,6 +1239,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "dbab575b226b"
@@ -1110,6 +1256,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "3efba5088d22"
@@ -1125,6 +1273,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "d2808ddc4d28"
@@ -1140,6 +1290,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "d07460adfc59"
@@ -1155,6 +1307,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "6dda4af2be59"
@@ -1170,6 +1324,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "818f2166780c"
@@ -1185,6 +1341,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "65cd0b989304"
@@ -1200,6 +1358,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "49be174d9b2b"
@@ -1215,6 +1375,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "71b1579bd44b"
@@ -1230,6 +1392,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "3700d19313af"
@@ -1245,6 +1409,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "8f38d4cfae38"
@@ -1260,6 +1426,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "3f040d09b821"
@@ -1275,6 +1443,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "eb89ac62c33f"
@@ -1290,6 +1460,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "3637e53ff2a3"
@@ -1305,6 +1477,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "510e45669256"
@@ -1320,6 +1494,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "43314ac1f31b"
@@ -1335,6 +1511,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "0aafb1c19d9e"
@@ -1350,6 +1528,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "5af090d1c37b"
@@ -1365,6 +1545,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "5104a5f93e3d"
@@ -1380,6 +1562,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "6314faf891a9"
@@ -1395,6 +1579,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "cf5b8d1c23fd"
@@ -1410,6 +1596,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "a36b000cfbb4"
@@ -1425,6 +1613,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "9667d32db7c2"
@@ -1440,6 +1630,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "549aec227c97"
@@ -1455,6 +1647,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "3f94b9419530"
@@ -1470,6 +1664,8 @@
             "win32",
             "win32-devedition",
             "win64",
+            "win64-aarch64-msvc",
+            "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
         "revision": "b3bbd96ccd0f"
