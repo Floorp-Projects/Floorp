@@ -35,8 +35,11 @@ class ExecutionRunnable final : public Runnable {
         mWorkletImpl(aWorkletImpl),
         mScriptBuffer(std::move(aScriptBuffer)),
         mScriptLength(aScriptLength),
+        mParentRuntime(
+            JS_GetParentRuntime(CycleCollectedJSContext::Get()->Context())),
         mResult(NS_ERROR_FAILURE) {
     MOZ_ASSERT(NS_IsMainThread());
+    MOZ_ASSERT(mParentRuntime);
   }
 
   NS_IMETHOD
@@ -51,6 +54,7 @@ class ExecutionRunnable final : public Runnable {
   RefPtr<WorkletImpl> mWorkletImpl;
   JS::UniqueTwoByteChars mScriptBuffer;
   size_t mScriptLength;
+  JSRuntime* mParentRuntime;
   nsresult mResult;
 };
 
@@ -320,18 +324,20 @@ NS_IMPL_ISUPPORTS(WorkletFetchHandler, nsIStreamLoaderObserver)
 
 NS_IMETHODIMP
 ExecutionRunnable::Run() {
-  if (WorkletThread::IsOnWorkletThread()) {
+  // WorkletThread::IsOnWorkletThread() cannot be used here because it depends
+  // on a WorkletJSContext having been created for this thread.  That does not
+  // happen until the first time RunOnWorkletThread() is called.
+  if (!NS_IsMainThread()) {
     RunOnWorkletThread();
     return NS_DispatchToMainThread(this);
   }
 
-  MOZ_ASSERT(NS_IsMainThread());
   RunOnMainThread();
   return NS_OK;
 }
 
 void ExecutionRunnable::RunOnWorkletThread() {
-  WorkletThread::AssertIsOnWorkletThread();
+  WorkletThread::EnsureCycleCollectedJSContext(mParentRuntime);
 
   AutoJSAPI jsapi;
   jsapi.Init();
