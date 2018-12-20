@@ -452,7 +452,7 @@ public class GeckoResult<T> {
      * @throws Throwable The {@link Throwable} contained in this result, if any.
      * @throws IllegalThreadStateException if this method is called on a thread that has a {@link Looper}.
      */
-    public synchronized T poll() throws Throwable {
+    public synchronized @Nullable T poll() throws Throwable {
         if (Looper.myLooper() != null) {
             throw new IllegalThreadStateException("Cannot poll indefinitely from thread with Looper");
         }
@@ -477,7 +477,7 @@ public class GeckoResult<T> {
      * @throws TimeoutException if we wait more than timeoutMillis before the result
      *                          is completed.
      */
-    public synchronized T poll(long timeoutMillis) throws Throwable {
+    public synchronized @Nullable T poll(long timeoutMillis) throws Throwable {
         final long start = SystemClock.uptimeMillis();
         long remaining = timeoutMillis;
         while (!mComplete && remaining > 0) {
@@ -508,7 +508,7 @@ public class GeckoResult<T> {
      * @throws IllegalStateException If the result is already completed.
      */
     @WrapForJNI
-    public synchronized void complete(final T value) {
+    public synchronized void complete(final @Nullable T value) {
         if (mComplete) {
             throw new IllegalStateException("result is already complete");
         }

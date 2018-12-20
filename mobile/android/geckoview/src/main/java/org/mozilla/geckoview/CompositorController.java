@@ -10,6 +10,7 @@ import org.mozilla.gecko.util.ThreadUtils;
 
 import android.graphics.Color;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.UiThread;
 
 import java.nio.IntBuffer;
@@ -22,7 +23,7 @@ public final class CompositorController {
 
     public interface GetPixelsCallback {
         @UiThread
-        void onPixelsResult(int width, int height, IntBuffer pixels);
+        void onPixelsResult(int width, int height, @Nullable IntBuffer pixels);
     }
 
     private List<Runnable> mDrawCallbacks;
@@ -147,7 +148,7 @@ public final class CompositorController {
      *
      * @return Current first paint callback or null if not set.
      */
-    public Runnable getFirstPaintCallback() {
+    public @Nullable Runnable getFirstPaintCallback() {
         ThreadUtils.assertOnUiThread();
         return mFirstPaintCallback;
     }
@@ -157,7 +158,7 @@ public final class CompositorController {
      *
      * @param callback First paint callback.
      */
-    public void setFirstPaintCallback(final Runnable callback) {
+    public void setFirstPaintCallback(final @Nullable Runnable callback) {
         ThreadUtils.assertOnUiThread();
         mFirstPaintCallback = callback;
     }

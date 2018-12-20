@@ -19,6 +19,8 @@ import android.graphics.Matrix;
 import android.graphics.Rect;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.UiThread;
 import android.util.Log;
 import android.util.SparseArray;
@@ -494,7 +496,7 @@ public class SessionAccessibility {
       *
       * @return View instance.
       */
-    public View getView() {
+    public @Nullable View getView() {
         ThreadUtils.assertOnUiThread();
 
         return mView;
@@ -506,7 +508,7 @@ public class SessionAccessibility {
       * @param view View instance.
       */
     @UiThread
-    public void setView(final View view) {
+    public void setView(final @Nullable View view) {
         ThreadUtils.assertOnUiThread();
 
         if (mView != null) {
@@ -619,7 +621,7 @@ public class SessionAccessibility {
         private static native void toggleNativeAccessibility(boolean enable);
     }
 
-    public boolean onMotionEvent(final MotionEvent event) {
+    public boolean onMotionEvent(final @NonNull MotionEvent event) {
         ThreadUtils.assertOnUiThread();
 
         if (!Settings.isTouchExplorationEnabled()) {
