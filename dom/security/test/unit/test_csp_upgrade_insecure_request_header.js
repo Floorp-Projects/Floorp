@@ -35,9 +35,9 @@ var tests = [
     contentType: Ci.nsIContentPolicy.TYPE_SUBDOCUMENT,
   },
   {
-    description: "should not set request header for TYPE_IMG",
+    description: "should not set request header for TYPE_IMAGE",
     expectingHeader: false,
-    contentType: Ci.nsIContentPolicy.TYPE_IMG,
+    contentType: Ci.nsIContentPolicy.TYPE_IMAGE,
   },
 ];
 
