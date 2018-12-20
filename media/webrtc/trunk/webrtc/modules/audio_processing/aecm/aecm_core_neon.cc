@@ -23,7 +23,7 @@
 // generating script and makefile, to replace these C functions.
 
 static inline void AddLanes(uint32_t* ptr, uint32x4_t v) {
-#if defined(WEBRTC_ARCH_ARM64)
+#if defined(WEBRTC_ARCH_ARM64) && (!defined(_MSC_VER) || defined(__clang__))
   *(ptr) = vaddvq_u32(v);
 #else
   uint32x2_t tmp_v;
