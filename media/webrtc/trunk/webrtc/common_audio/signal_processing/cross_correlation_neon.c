@@ -10,7 +10,11 @@
 
 #include "common_audio/signal_processing/include/signal_processing_library.h"
 
+#if defined(_MSC_VER) && !defined(__clang__)
+#include <arm64_neon.h>
+#else
 #include <arm_neon.h>
+#endif
 
 static inline void DotProductWithScaleNeon(int32_t* cross_correlation,
                                            const int16_t* vector1,
