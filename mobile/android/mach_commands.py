@@ -501,17 +501,13 @@ class MachCommands(MachCommandBase):
     @CommandArgument('--upload-message', metavar='MSG',
                      default='GeckoView docs upload',
                      help='Use the specified message for commits.')
-    @CommandArgument('--variant', default='debug',
-                     help='Gradle variant used to generate javadoc.')
     def android_geckoview_docs(self, archive, upload, upload_branch,
-                               upload_message, variant):
+                               upload_message):
 
-        def capitalize(s):
-            # Can't use str.capitalize because it lower cases trailing letters.
-            return (s[0].upper() + s[1:]) if s else ''
+        tasks = (self.substs['GRADLE_ANDROID_GECKOVIEW_DOCS_ARCHIVE_TASKS'] if archive or upload
+                 else self.substs['GRADLE_ANDROID_GECKOVIEW_DOCS_TASKS'])
 
-        task = 'geckoview:javadoc' + ('Jar' if archive or upload else '') + capitalize(variant)
-        ret = self.gradle([task], verbose=True)
+        ret = self.gradle(tasks, verbose=True)
         if ret or not upload:
             return ret
 
