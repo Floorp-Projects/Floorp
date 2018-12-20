@@ -8,12 +8,15 @@ const { XPCOMUtils } = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm
 const paymentSrv = Cc["@mozilla.org/dom/payments/payment-request-service;1"].getService(Ci.nsIPaymentRequestService);
 
 function emitTestFail(message) {
-  sendAsyncMessage("test-fail", `${DummyUIService.testName}: ${message}`);
+  sendAsyncMessage("test-fail", message);
 }
 function emitTestPass(message) {
-  sendAsyncMessage("test-pass", `${DummyUIService.testName}: ${message}`);
+  sendAsyncMessage("test-pass", message);
 }
 
+let expectedRequestOption = null;
+let expectedUpdatedOption = null;
+let changeShippingOption = null;
 
 function showResponse(requestId) {
   const showResponseData = Cc["@mozilla.org/dom/payments/general-response-data;1"].
@@ -33,15 +36,15 @@ function showResponse(requestId) {
 
 function showRequest(requestId) {
   let request = paymentSrv.getPaymentRequestById(requestId);
-  const message = "request.shippingOption should be " + DummyUIService.expectedRequestOption +
+  const message = "request.shippingOption should be " + expectedRequestOption +
                   " when calling show(), but got " + request.shippingOption + ".";
-  if (request.shippingOption != DummyUIService.expectedRequestOption) {
+  if (request.shippingOption != expectedRequestOption) {
     emitTestFail(message);
   } else {
     emitTestPass(message);
   }
-  if (DummyUIService.changeShippingOption) {
-    paymentSrv.changeShippingOption(requestId, DummyUIService.changeShippingOption);
+  if (changeShippingOption) {
+    paymentSrv.changeShippingOption(requestId, changeShippingOption);
   } else {
     showResponse(requestId);
   }
@@ -49,9 +52,9 @@ function showRequest(requestId) {
 
 function updateRequest(requestId) {
   let request = paymentSrv.getPaymentRequestById(requestId);
-  const message = "request.shippingOption should be " + DummyUIService.expectedUpdatedOption +
+  const message = "request.shippingOption should be " + expectedUpdatedOption +
                   " when calling updateWith(), but got " + request.shippingOption + ".";
-  if (request.shippingOption != DummyUIService.expectedUpdatedOption) {
+  if (request.shippingOption != expectedUpdatedOption) {
     emitTestFail(message);
   } else {
     emitTestPass(message);
@@ -59,11 +62,7 @@ function updateRequest(requestId) {
   showResponse(requestId);
 }
 
-const DummyUIService = {
-  testName: "",
-  expectedRequestOption: null,
-  expectedUpdatedOption: null,
-  changeShippingOption: null,
+const TestingUIService = {
   showPayment: showRequest,
   abortPayment: function(requestId) {
   },
@@ -80,14 +79,12 @@ const DummyUIService = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsIPaymentUIService]),
 };
 
-paymentSrv.setTestingUIService(DummyUIService.QueryInterface(Ci.nsIPaymentUIService));
+paymentSrv.setTestingUIService(TestingUIService.QueryInterface(Ci.nsIPaymentUIService));
 
 addMessageListener("set-expected-results", function(results) {
-  DummyUIService.testName = results.testName;
-  DummyUIService.expectedRequestOption = results.requestResult;
-  DummyUIService.expectedUpdatedOption = results.responseResult;
-  DummyUIService.changeShippingOption = results.changeOptionResult;
-  sendAsyncMessage("set-expected-results-complete");
+  expectedRequestOption = results.requestResult;
+  expectedUpdatedOption = results.responseResult;
+  changeShippingOption = results.changeOptionResult;
 });
 
 addMessageListener("teardown", function() {
