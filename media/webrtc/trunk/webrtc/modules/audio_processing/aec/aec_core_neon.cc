@@ -103,7 +103,8 @@ static float32x4_t vdivq_f32(float32x4_t a, float32x4_t b) {
   // a/b = a*(1/b)
   return vmulq_f32(a, x);
 }
-
+#endif
+#if !defined(WEBRTC_ARCH_ARM64) || (defined(_MSC_VER) && !defined(__clang__))
 static float32x4_t vsqrtq_f32(float32x4_t s) {
   int i;
   float32x4_t x = vrsqrteq_f32(s);
