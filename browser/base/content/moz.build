@@ -37,6 +37,9 @@ with Files("test/forms/**"):
 with Files("test/historySwipeAnimation/**"):
     BUG_COMPONENT = ("Core", "Widget: Cocoa")
 
+with Files("test/keyboard/**"):
+    BUG_COMPONENT = ("Firefox", "Keyboard Navigation")
+
 with Files("test/pageinfo/**"):
     BUG_COMPONENT = ("Firefox", "Page Info Window")
 
