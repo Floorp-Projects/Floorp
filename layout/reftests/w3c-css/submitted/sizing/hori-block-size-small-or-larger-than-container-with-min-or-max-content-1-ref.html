@@ -9,11 +9,14 @@
   <link rel="stylesheet" type="text/css" href="support/ahem.css">
   <meta name="flags" content="ahem">
   <style>
+    html, body {
+      margin: 0;
+    }
+
     .container {
       width: 120px;
       height: 200px;
       border: 2px solid blue;
-      padding: 5px;
       display: inline-block;
       vertical-align: top;
     }
@@ -24,8 +27,8 @@
       display: inline-block;
 
       font-family: Ahem;
-      font-size: 15px;
-      line-height: 21px;
+      font-size: 10px;
+      line-height: 15px;
     }
 
     .too-small {
@@ -33,39 +36,43 @@
     }
 
     .too-big {
-      height: 150px;
+      height: 120px;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div>height: min-content<br>on this box.</div>
-    <div>height: max-content<br>on this box.</div>
+  <div>
+    <div class="container">
+      <div>height: min-content<br>on this box.</div>
+      <div>height: max-content<br>on this box.</div>
+    </div>
+
+    <div class="container">
+      <div class="too-small">min-height: min-content<br>on this box.</div>
+      <div class="too-small">min-height: max-content<br>on this box.</div>
+    </div>
+
+    <div class="container">
+      <div class="too-big">max-height: min-content<br>on this box.</div>
+      <div class="too-big">max-height: max-content<br>on this box.</div>
+    </div>
   </div>
 
-  <div class="container">
-    <div class="too-small">min-height: min-content<br>on this box.</div>
-    <div class="too-small">min-height: max-content<br>on this box.</div>
-  </div>
+  <div>
+    <div class="container">
+      <div>block: min-content<br>on this box.</div>
+      <div>block: max-content<br>on this box.</div>
+    </div>
 
-  <div class="container">
-    <div class="too-big">max-height: min-content<br>on this box.</div>
-    <div class="too-big">max-height: max-content<br>on this box.</div>
-  </div>
+    <div class="container">
+      <div class="too-small">min-block: min-content<br>on this box.</div>
+      <div class="too-small">min-block: max-content<br>on this box.</div>
+    </div>
 
-  <div class="container">
-    <div>block: min-content<br>on this box.</div>
-    <div>block: max-content<br>on this box.</div>
-  </div>
-
-  <div class="container">
-    <div class="too-small">min-block: min-content<br>on this box.</div>
-    <div class="too-small">min-block: max-content<br>on this box.</div>
-  </div>
-
-  <div class="container">
-    <div class="too-big">max-block: min-content<br>on this box.</div>
-    <div class="too-big">max-block: max-content<br>on this box.</div>
+    <div class="container">
+      <div class="too-big">max-block: min-content<br>on this box.</div>
+      <div class="too-big">max-block: max-content<br>on this box.</div>
+    </div>
   </div>
 </body>
 </html>
