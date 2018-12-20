@@ -49,3 +49,9 @@ fuzzy-if(webrender&&gtkWidget,79-79,138-138) == stepUp.html 75pct-common-ref.htm
 == range-vrl-orient-vertical.html range-orient-vertical-rtl.html
 
 skip-if(Android) == range-border-background.html range-border-background-ref.html # Android doesn't have a native theme for -webkit-appearance:range
+
+# Other range-percent-intrinsic-size-*.html tests lives in
+# testing/web-platform/tests/css/css-sizing/.  Vertical layout with
+# -webkit-appearance:none isn't supported in other UAs so this test
+# is an internal reftest for now.
+== range-percent-intrinsic-size-2b.html range-percent-intrinsic-size-2b-ref.html
