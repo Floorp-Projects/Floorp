@@ -10,6 +10,7 @@ import classnames from "classnames";
 import { showMenu } from "devtools-contextmenu";
 
 import SourceIcon from "../shared/SourceIcon";
+import AccessibleImage from "../shared/AccessibleImage";
 import Svg from "../shared/Svg";
 
 import {
@@ -57,12 +58,12 @@ class SourceTreeItem extends Component<Props, State> {
     } else if (item.path === "ng://") {
       return <Svg name="angular" />;
     } else if (item.path.startsWith("moz-extension://") && depth === 0) {
-      return <img className="extension" />;
+      return <AccessibleImage className="extension" />;
     }
 
     if (depth === 0 && projectRoot === "") {
       return (
-        <img
+        <AccessibleImage
           className={classnames("domain", {
             debuggee: debuggeeUrl && debuggeeUrl.includes(item.name)
           })}
@@ -71,7 +72,7 @@ class SourceTreeItem extends Component<Props, State> {
     }
 
     if (isDirectory(item)) {
-      return <img className="folder" />;
+      return <AccessibleImage className="folder" />;
     }
 
     if (source) {
@@ -150,7 +151,7 @@ class SourceTreeItem extends Component<Props, State> {
   renderItemArrow() {
     const { item, expanded } = this.props;
     return isDirectory(item) ? (
-      <img className={classnames("arrow", { expanded })} />
+      <AccessibleImage className={classnames("arrow", { expanded })} />
     ) : (
       <i className="no-arrow" />
     );

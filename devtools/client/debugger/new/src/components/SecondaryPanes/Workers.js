@@ -12,6 +12,7 @@ import actions from "../../actions";
 import { getWorkers } from "../../selectors";
 import { basename } from "../../utils/path";
 import type { Worker } from "../../types";
+import AccessibleImage from "../shared/AccessibleImage";
 
 export class Workers extends PureComponent {
   props: {
@@ -27,7 +28,7 @@ export class Workers extends PureComponent {
         key={worker.actor}
         onClick={() => openWorkerToolbox(worker)}
       >
-        <img className="domain" />
+        <AccessibleImage className="domain" />
         {basename(worker.url)}
       </div>
     ));

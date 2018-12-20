@@ -8,6 +8,8 @@ import React, { PureComponent } from "react";
 
 import { connect } from "react-redux";
 
+import AccessibleImage from "./AccessibleImage";
+
 import { getSourceClassnames } from "../../utils/source";
 import { getFramework } from "../../utils/tabs";
 import { getSourceMetaData, getTabs } from "../../selectors";
@@ -37,7 +39,7 @@ class SourceIcon extends PureComponent<Props> {
       return null;
     }
 
-    return <img className={`source-icon ${iconClass}`} />;
+    return <AccessibleImage className={`source-icon ${iconClass}`} />;
   }
 }
 

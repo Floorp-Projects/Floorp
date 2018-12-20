@@ -218,72 +218,72 @@ html[dir="rtl"] .tree-node button.arrow {
   width: 15px;
 }
 
-img.domain,
-img.folder {
+.img.domain,
+.img.folder {
   width: 15px;
   height: 15px;
 }
 
-img.extension {
+.img.extension {
   width: 13px;
   height: 13px;
   margin-inline-start: 2px;
 }
 
-img.result-item-icon {
+.img.result-item-icon {
   height: 18px;
   width: 18px;
 }
 
-img.domain {
+.img.domain {
   mask: url("resource://devtools/client/debugger/new/images/domain.svg") no-repeat;
 }
 
-img.folder {
+.img.folder {
   mask: url("resource://devtools/client/debugger/new/images/folder.svg") no-repeat;
 }
 
-img.coffeescript {
+.img.coffeescript {
   mask: url("resource://devtools/client/debugger/new/images/coffeescript.svg") no-repeat;
 }
 
-img.javascript {
+.img.javascript {
   mask: url("resource://devtools/client/debugger/new/images/javascript.svg") no-repeat;
 }
 
-img.tab {
+.img.tab {
   mask: url("resource://devtools/client/debugger/new/images/tab.svg") no-repeat;
 }
 
-img.react {
+.img.react {
   mask: url("resource://devtools/client/debugger/new/images/react.svg") no-repeat;
 }
 
-img.typescript {
+.img.typescript {
   mask: url("resource://devtools/client/debugger/new/images/typescript.svg") no-repeat;
 }
 
-img.extension {
+.img.extension {
   mask: url("resource://devtools/client/debugger/new/images/extension.svg") no-repeat;
 }
 
-img.file {
+.img.file {
   mask: url("resource://devtools/client/debugger/new/images/file.svg") no-repeat;
   width: 13px;
   height: 13px;
 }
 
-img.domain,
-img.folder,
-img.file,
-.sources-list img.source-icon,
-img.extension {
+.img.domain,
+.img.folder,
+.img.file,
+.sources-list .img.source-icon,
+.img.extension {
   mask-size: 100%;
   margin-inline-end: 5px;
   display: inline-block;
 }
 
-img.result-item-icon {
+.img.result-item-icon {
   mask-size: 100%;
   margin-inline-end: 15px;
   margin-inline-start: 5px;
@@ -296,7 +296,7 @@ img.result-item-icon {
   margin-inline-end: 5px;
 }
 
-img.arrow {
+.img.arrow {
   mask: url("resource://devtools/client/debugger/new/images/arrow.svg");
   margin-inline-end: 5px;
   margin-top: 3px;
@@ -311,11 +311,11 @@ img.arrow {
   transition: transform 0.18s ease;
 }
 
-html[dir="ltr"] img.arrow {
+html[dir="ltr"] .img.arrow {
   transform: rotate(-90deg);
 }
 
-html[dir="rtl"] img.arrow {
+html[dir="rtl"] .img.arrow {
   transform: rotate(90deg);
 }
 

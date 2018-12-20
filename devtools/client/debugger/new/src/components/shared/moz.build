@@ -8,6 +8,7 @@ DIRS += [
 ]
 
 DebuggerModules(
+    'AccessibleImage.js',
     'Accordion.js',
     'Badge.js',
     'BracketArrow.js',
