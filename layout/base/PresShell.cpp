@@ -10054,9 +10054,13 @@ void nsIPresShell::SetVisualViewportOffset(const nsPoint& aScrollOffset,
 }
 
 nsPoint nsIPresShell::GetVisualViewportOffsetRelativeToLayoutViewport() const {
+  return GetVisualViewportOffset() - GetLayoutViewportOffset();
+}
+
+nsPoint nsIPresShell::GetLayoutViewportOffset() const {
   nsPoint result;
   if (nsIScrollableFrame* sf = GetRootScrollFrameAsScrollable()) {
-    result = GetVisualViewportOffset() - sf->GetScrollPosition();
+    result = sf->GetScrollPosition();
   }
   return result;
 }

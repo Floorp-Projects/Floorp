@@ -87,12 +87,8 @@ CSSPoint VisualViewport::VisualViewportOffset() const {
 CSSPoint VisualViewport::LayoutViewportOffset() const {
   CSSPoint offset = CSSPoint(0, 0);
 
-  nsIPresShell* presShell = GetPresShell();
-  if (presShell) {
-    nsIScrollableFrame* sf = presShell->GetRootScrollFrameAsScrollable();
-    if (sf) {
-      offset = CSSPoint::FromAppUnits(sf->GetScrollPosition());
-    }
+  if (nsIPresShell* presShell = GetPresShell()) {
+    offset = CSSPoint::FromAppUnits(presShell->GetLayoutViewportOffset());
   }
   return offset;
 }
