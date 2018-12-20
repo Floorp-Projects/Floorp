@@ -392,6 +392,8 @@ class WebRenderBridgeParent final : public PWebRenderBridgeParent,
   wr::Epoch mWrEpoch;
   wr::IdNamespace mIdNamespace;
 
+  VsyncId mSkippedCompositeId;
+
   bool mPaused;
   bool mDestroyed;
   bool mReceivedDisplayList;
