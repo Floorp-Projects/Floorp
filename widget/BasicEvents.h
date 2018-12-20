@@ -131,6 +131,9 @@ struct BaseEventFlags {
   // listener is added to chrome node, so, don't set this to true for the
   // events which are fired a lot of times like eMouseMove.
   bool mOnlySystemGroupDispatchInContent : 1;
+  // If mOnlySystemGroupDispatch is true, the event will be dispatched only to
+  // event listeners added in the system group.
+  bool mOnlySystemGroupDispatch : 1;
   // The event's action will be handled by APZ. The main thread should not
   // perform its associated action.
   bool mHandledByAPZ : 1;
