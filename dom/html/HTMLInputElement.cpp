@@ -4339,10 +4339,6 @@ nsresult HTMLInputElement::BindToTree(Document* aDocument, nsIContent* aParent,
       // initaiated by a user interaction.
       mUseUrgentStartForChannel = EventStateManager::IsHandlingUserInput();
 
-      // FIXME: Bug 660963 it would be nice if we could just have
-      // ClearBrokenState update our state and do it fast...
-      ClearBrokenState();
-      RemoveStatesSilently(NS_EVENT_STATE_BROKEN);
       nsContentUtils::AddScriptRunner(
           NewRunnableMethod("dom::HTMLInputElement::MaybeLoadImage", this,
                             &HTMLInputElement::MaybeLoadImage));
