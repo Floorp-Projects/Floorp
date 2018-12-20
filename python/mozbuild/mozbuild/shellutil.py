@@ -41,7 +41,7 @@ ESCAPED_NEWLINES_RE = re.compile(r'\\\n')
 
 # This regexp contains the same characters as all those listed in
 # UNQUOTED_TOKENS_RE. Please keep in sync.
-SHELL_QUOTE_RE = re.compile(r'[\\\t\r\n \'\"#<>&|`(){}$;\*\?]')
+SHELL_QUOTE_RE = re.compile(r'[\\\t\r\n \'\"#<>&|`~(){}$;\*\?]')
 
 
 class MetaCharacterException(Exception):
@@ -184,7 +184,7 @@ def _quote(s):
         return '%d' % s
 
     # Empty strings need to be quoted to have any significance
-    if s and not SHELL_QUOTE_RE.search(s) and not s.startswith('~'):
+    if s and not SHELL_QUOTE_RE.search(s):
         return s
 
     # Single quoted strings can contain any characters unescaped except the
