@@ -31,7 +31,7 @@ artifact.
 .. code-block:: json
 
     {
-       "to_mar": "https://tc.net/api/queue/v1/task/EWtBFqVuT-WqG3tGLxWhmA/artifacts/public/build/ach/target.complete.mar",
+       "to_mar": "https://queue.taskcluster.net/v1/task/EWtBFqVuT-WqG3tGLxWhmA/artifacts/public/build/ach/target.complete.mar",
        "product": "Firefox",
        "dest_mar": "target-60.0b8.partial.mar",
        "locale": "ach",
