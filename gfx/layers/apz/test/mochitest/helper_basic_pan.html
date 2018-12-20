@@ -55,7 +55,7 @@ function* test(testDriver) {
   // a constant zero and therefore not cause any visual viewport scroll events
   // to fire.
   visScrEvt.unregister();
-  todo_is(visScrEvt.count, 0, "Got no visual viewport scroll events");
+  is(visScrEvt.count, 0, "Got no visual viewport scroll events");
   visScrEvtInternal.unregister();
   // Our internal visual viewport scroll event on the other hand only cares
   // about the absolute offset of the visual viewport and should therefore

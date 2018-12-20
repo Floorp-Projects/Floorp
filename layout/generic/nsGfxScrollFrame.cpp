@@ -74,6 +74,7 @@
 #include "mozilla/layers/LayerTransactionChild.h"
 #include "mozilla/layers/ScrollLinkedEffectDetector.h"
 #include "mozilla/Unused.h"
+#include "VisualViewport.h"
 #include "LayersLogging.h"  // for Stringify
 #include <algorithm>
 #include <cstdlib>  // for std::abs(int/long)
@@ -2675,6 +2676,9 @@ void ScrollFrameHelper::ScrollToImpl(nsPoint aPt, const nsRect& aRange,
   if (dist.x >= horzAllowance || dist.y >= vertAllowance) {
     needFrameVisibilityUpdate = true;
   }
+  nsPoint prevVVRelativeOffset =
+      presContext->PresShell()
+          ->GetVisualViewportOffsetRelativeToLayoutViewport();
 
   // notify the listeners.
   for (uint32_t i = 0; i < mListeners.Length(); i++) {
@@ -2736,7 +2740,7 @@ void ScrollFrameHelper::ScrollToImpl(nsPoint aPt, const nsRect& aRange,
     // offset (e.g. by using nsIDOMWindowUtils.getVisualViewportOffset()
     // in chrome JS code) before it's updated by the next APZ repaint,
     // we could get incorrect results.
-    presContext->PresShell()->SetVisualViewportOffset(pt);
+    presContext->PresShell()->SetVisualViewportOffset(pt, prevVVRelativeOffset);
   }
 
   ScrollVisual();
@@ -2856,6 +2860,15 @@ void ScrollFrameHelper::ScrollToImpl(nsPoint aPt, const nsRect& aRange,
       nsPresContext::InteractionType::eScrollInteraction, TimeStamp::Now());
 
   PostScrollEvent();
+  // If this is a viewport scroll, this could affect the relative offset
+  // between layout and visual viewport, so we might have to fire a visual
+  // viewport scroll event as well.
+  if (mIsRoot) {
+    if (auto* window = nsGlobalWindowInner::Cast(
+            mOuter->PresContext()->Document()->GetInnerWindow())) {
+      window->VisualViewport()->PostScrollEvent(prevVVRelativeOffset);
+    }
+  }
 
   // notify the listeners.
   for (uint32_t i = 0; i < mListeners.Length(); i++) {

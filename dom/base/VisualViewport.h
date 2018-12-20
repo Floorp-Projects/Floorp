@@ -35,7 +35,7 @@ class VisualViewport final : public mozilla::DOMEventTargetHelper {
                                JS::Handle<JSObject*> aGivenProto) override;
 
   void PostResizeEvent();
-  void PostScrollEvent();
+  void PostScrollEvent(const nsPoint& aPrevRelativeOffset);
 
   // These two events are modelled after the ScrollEvent class in
   // nsGfxScrollFrame.h.
@@ -54,11 +54,23 @@ class VisualViewport final : public mozilla::DOMEventTargetHelper {
    public:
     NS_DECL_NSIRUNNABLE
     VisualViewportScrollEvent(VisualViewport* aViewport,
-                              nsPresContext* aPresContext);
+                              nsPresContext* aPresContext,
+                              const nsPoint& aPrevRelativeOffset);
     void Revoke() { mViewport = nullptr; }
+    nsPoint PrevRelativeOffset() const { return mPrevRelativeOffset; }
 
    private:
     VisualViewport* mViewport;
+    // The VisualViewport "scroll" event is supposed to be fired only when the
+    // *relative* offset between visual and layout viewport changes. The two
+    // viewports are updated independently from each other, though, so the only
+    // thing we can do is note the fact that one of the inputs into the relative
+    // visual viewport offset changed and then check the offset again at the
+    // next refresh driver tick, just before the event is going to fire.
+    // Hopefully, at this point both visual and layout viewport positions have
+    // been updated, so that we're able to tell whether the relative offset did
+    // in fact change or not.
+    const nsPoint mPrevRelativeOffset;
   };
 
  private:

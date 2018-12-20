@@ -7,6 +7,7 @@
 #include "VisualViewport.h"
 
 #include "mozilla/EventDispatcher.h"
+#include "mozilla/ToString.h"
 #include "nsIScrollableFrame.h"
 #include "nsIDocShell.h"
 #include "nsPresContext.h"
@@ -175,23 +176,27 @@ void VisualViewport::FireResizeEvent() {
 
 /* ================= Scroll event handling ================= */
 
-void VisualViewport::PostScrollEvent() {
-  VVP_LOG("%p: PostScrollEvent\n", this);
+void VisualViewport::PostScrollEvent(const nsPoint& aPrevRelativeOffset) {
+  VVP_LOG("%p: PostScrollEvent, prevRelativeOffset %s\n", this,
+          ToString(aPrevRelativeOffset).c_str());
   if (mScrollEvent) {
     return;
   }
 
   // The event constructor will register itself with the refresh driver.
   if (nsPresContext* presContext = GetPresContext()) {
-    mScrollEvent = new VisualViewportScrollEvent(this, presContext);
+    mScrollEvent =
+        new VisualViewportScrollEvent(this, presContext, aPrevRelativeOffset);
     VVP_LOG("%p: PostScrollEvent, created new event\n", this);
   }
 }
 
 VisualViewport::VisualViewportScrollEvent::VisualViewportScrollEvent(
-    VisualViewport* aViewport, nsPresContext* aPresContext)
+    VisualViewport* aViewport, nsPresContext* aPresContext,
+    const nsPoint& aPrevRelativeOffset)
     : Runnable("VisualViewport::VisualViewportScrollEvent"),
-      mViewport(aViewport) {
+      mViewport(aViewport),
+      mPrevRelativeOffset(aPrevRelativeOffset) {
   aPresContext->RefreshDriver()->PostVisualViewportScrollEvent(this);
 }
 
@@ -205,12 +210,28 @@ VisualViewport::VisualViewportScrollEvent::Run() {
 
 void VisualViewport::FireScrollEvent() {
   MOZ_ASSERT(mScrollEvent);
+  nsPoint prevRelativeOffset = mScrollEvent->PrevRelativeOffset();
   mScrollEvent->Revoke();
   mScrollEvent = nullptr;
 
-  VVP_LOG("%p, FireScrollEvent, fire VisualViewport scroll\n", this);
-  WidgetGUIEvent event(true, eScroll, nullptr);
-  event.mFlags.mBubbles = false;
-  event.mFlags.mCancelable = false;
-  EventDispatcher::Dispatch(this, GetPresContext(), &event);
+  nsIPresShell* presShell = GetPresShell();
+  // Check whether the relative visual viewport offset actually changed - maybe
+  // both visual and layout viewport scrolled together and there was no change
+  // after all.
+  if (presShell) {
+    nsPoint curRelativeOffset =
+        presShell->GetVisualViewportOffsetRelativeToLayoutViewport();
+    VVP_LOG(
+        "%p: FireScrollEvent, curRelativeOffset %s, "
+        "prevRelativeOffset %s\n",
+        this, ToString(curRelativeOffset).c_str(),
+        ToString(prevRelativeOffset).c_str());
+    if (curRelativeOffset != prevRelativeOffset) {
+      VVP_LOG("%p, FireScrollEvent, fire VisualViewport scroll\n", this);
+      WidgetGUIEvent event(true, eScroll, nullptr);
+      event.mFlags.mBubbles = false;
+      event.mFlags.mCancelable = false;
+      EventDispatcher::Dispatch(this, GetPresContext(), &event);
+    }
+  }
 }
