@@ -64,6 +64,8 @@ pref(permissions.default.image,2) HTTP == bug1196784-with-srcset.html bug1196784
 # Test video with rotation information can be rotated.
 == bug1228601-video-rotation-90.html bug1228601-video-rotated-ref.html
 
+== bug1512297.html bug1512297-ref.html
+
 # Test that dynamically setting body margin attributes updates style appropriately
 == body-topmargin-dynamic.html body-topmargin-ref.html
 
