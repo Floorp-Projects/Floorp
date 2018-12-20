@@ -2160,3 +2160,14 @@ def make_shared_library(target, compiler):
 
 set_config('MKSHLIB', make_shared_library.mkshlib)
 set_config('MKCSHLIB', make_shared_library.mkcshlib)
+
+
+@depends(c_compiler, toolchain_prefix, when=target_is_windows)
+def rc_names(c_compiler, toolchain_prefix):
+    if c_compiler.type in ('gcc', 'clang'):
+        return tuple('%s%s' % (p, 'windres')
+                     for p in ('',) + (toolchain_prefix or ()))
+    return ('rc',)
+
+
+check_prog('RC', rc_names, paths=sdk_bin_path)
