@@ -209,7 +209,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1435161
     const payRequest = new PaymentRequest(defaultMethods, defaultDetails, options);
     ok(payRequest, testName + ": failed to create PaymentRequest.");
     if (!payRequest) {
-      await requestChromeAction("finish-test");
+      requestChromeAction("finish-test");
       return;
     }
     const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(true);
@@ -226,10 +226,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1435161
     }
     try {
       await payResponse.retry();
-    } catch(err) {
-      ok(false, unexpectedErrMsg(testName,  err.name, "retrying"));
+      ok(false, `${testName}: Unexpected success when retry the PaymentResponse.`);
       await requestChromeAction("finish-test");
       return;
+    } catch(err) {
+      is(err.name,
+         "AbortError",
+         expectedErrMsg(testName, "AbortError", err.name, "retrying"));
     }
     try {
       await payResponse.complete("success");
