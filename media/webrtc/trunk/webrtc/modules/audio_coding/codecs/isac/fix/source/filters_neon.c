@@ -8,7 +8,11 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#if defined(_MSC_VER) && !defined(__clang__)
+#include <arm64_neon.h>
+#else
 #include <arm_neon.h>
+#endif
 
 #include "rtc_base/checks.h"
 #include "modules/audio_coding/codecs/isac/fix/source/codec.h"
@@ -44,7 +48,7 @@ int WebRtcIsacfix_AutocorrNeon(int32_t* __restrict r,
     x_start += 4;
   }
 
-#ifdef WEBRTC_ARCH_ARM64
+#if defined(WEBRTC_ARCH_ARM64) && (!defined(_MSC_VER) || defined(__clang__))
   prod = vaddvq_s64(tmpb_v);
 #else
   prod = vget_lane_s64(vadd_s64(vget_low_s64(tmpb_v), vget_high_s64(tmpb_v)),
@@ -90,7 +94,7 @@ int WebRtcIsacfix_AutocorrNeon(int32_t* __restrict r,
         x_start += 4;
         y_start += 4;
     }
-#ifdef WEBRTC_ARCH_ARM64
+#if defined(WEBRTC_ARCH_ARM64) && (!defined(_MSC_VER) || defined(__clang__))
     prod = vaddvq_s64(tmpb_v);
 #else
     prod = vget_lane_s64(vadd_s64(vget_low_s64(tmpb_v), vget_high_s64(tmpb_v)),
