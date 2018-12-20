@@ -9,7 +9,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.attributes import copy_attributes_from_dependent_job
 from taskgraph.util.partials import get_balrog_platform_name, get_builds
-from taskgraph.util.taskcluster import get_artifact_prefix
+from taskgraph.util.taskcluster import get_taskcluster_artifact_prefix, get_artifact_prefix
 from taskgraph.util.platforms import architecture
 
 import logging
@@ -77,20 +77,19 @@ def make_task_description(config, jobs):
         if not builds:
             continue
 
+        dep_task_ref = '<{}>'.format(dependent_kind)
+
         extra = {'funsize': {'partials': list()}}
         update_number = 1
-
-        locale_suffix = ''
-        if locale:
-            locale_suffix = '{}/'.format(locale)
-        artifact_path = "<{}/{}/{}target.complete.mar>".format(
-            dependent_kind, get_artifact_prefix(dep_job), locale_suffix,
+        artifact_path = "{}{}".format(
+            get_taskcluster_artifact_prefix(dep_job, dep_task_ref, locale=locale),
+            'target.complete.mar'
         )
         for build in sorted(builds):
             partial_info = {
                 'locale': build_locale,
                 'from_mar': builds[build]['mar_url'],
-                'to_mar': {'artifact-reference': artifact_path},
+                'to_mar': {'task-reference': artifact_path},
                 'platform': get_balrog_platform_name(dep_th_platform),
                 'branch': config.params['project'],
                 'update_number': update_number,

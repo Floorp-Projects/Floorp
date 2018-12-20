@@ -95,15 +95,6 @@ BLOCKLIST_DIFF_ARTIFACT="${ARTIFACTS_DIR}/${BLOCKLIST_DIFF_ARTIFACT:-"blocklist.
 REMOTE_SETTINGS_DIFF_ARTIFACT="${ARTIFACTS_DIR}/${REMOTE_SETTINGS_DIFF_ARTIFACT:-"remote-settings.diff"}"
 SUFFIX_LIST_DIFF_ARTIFACT="${ARTIFACTS_DIR}/${SUFFIX_LIST_DIFF_ARTIFACT:-"effective_tld_names.diff"}"
 
-# duplicate the functionality of taskcluster-lib-urls, but in bash..
-if [ "$TASKCLUSTER_ROOT_URL" = "https://taskcluster.net" ]; then
-    queue_base='https://queue.taskcluster.net/v1'
-    index_base='https://index.taskcluster.net/v1'
-else
-    queue_base="$TASKCLUSTER_ROOT_URL/api/queue/v1"
-    index_base="$TASKCLUSTER_ROOT_URL/api/index/v1"
-fi
-
 # Get the current in-tree version for a code branch.
 function get_version {
   VERSION_REPO=$1
@@ -155,11 +146,11 @@ function download_shared_artifacts_from_tc {
 
   # Download everything we need to run js with xpcshell
   echo "INFO: Downloading all the necessary pieces from the taskcluster index..."
-  TASKID_URL="$index_base/task/gecko.v2.${REPODIR}.latest.${PRODUCT}.linux64-opt"
+  TASKID_URL="https://index.taskcluster.net/v1/task/gecko.v2.${REPODIR}.latest.${PRODUCT}.linux64-opt"
   if [ "${USE_MC}" == "true" ]; then
-    TASKID_URL="$index_base/task/gecko.v2.mozilla-central.latest.${PRODUCT}.linux64-opt"
+    TASKID_URL="https://index.taskcluster.net/v1/task/gecko.v2.mozilla-central.latest.${PRODUCT}.linux64-opt"
   fi
-  ${WGET} -O ${TASKID_FILE} "${TASKID_URL}"
+  ${WGET} -O ${TASKID_FILE} ${TASKID_URL}
   INDEX_TASK_ID="$($JQ -r '.taskId' ${TASKID_FILE})"
   if [ -z "${INDEX_TASK_ID}" ]; then
     echo "Failed to look up taskId at ${TASKID_URL}"
@@ -169,16 +160,16 @@ function download_shared_artifacts_from_tc {
   fi
 
   TASKSTATUS_FILE="taskstatus.json"
-  STATUS_URL="$queue_base/task/${INDEX_TASK_ID}/status"
+  STATUS_URL="https://queue.taskcluster.net/v1/task/${INDEX_TASK_ID}/status"
   ${WGET} -O "${TASKSTATUS_FILE}" "${STATUS_URL}"
   LAST_RUN_INDEX=$(($(jq '.status.runs | length' ${TASKSTATUS_FILE}) - 1))
   echo "INFO: Examining run number ${LAST_RUN_INDEX}"
 
-  BROWSER_ARCHIVE_URL="$queue_base/task/${INDEX_TASK_ID}/runs/${LAST_RUN_INDEX}/artifacts/public/build/${BROWSER_ARCHIVE}"
+  BROWSER_ARCHIVE_URL="https://queue.taskcluster.net/v1/task/${INDEX_TASK_ID}/runs/${LAST_RUN_INDEX}/artifacts/public/build/${BROWSER_ARCHIVE}"
   echo "INFO: ${WGET} ${BROWSER_ARCHIVE_URL}"
   ${WGET} "${BROWSER_ARCHIVE_URL}"
 
-  TESTS_ARCHIVE_URL="$queue_base/task/${INDEX_TASK_ID}/runs/${LAST_RUN_INDEX}/artifacts/public/build/${TESTS_ARCHIVE}"
+  TESTS_ARCHIVE_URL="https://queue.taskcluster.net/v1/task/${INDEX_TASK_ID}/runs/${LAST_RUN_INDEX}/artifacts/public/build/${TESTS_ARCHIVE}"
   echo "INFO: ${WGET} ${TESTS_ARCHIVE_URL}"
   ${WGET} "${TESTS_ARCHIVE_URL}"
 }

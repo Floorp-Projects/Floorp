@@ -46,8 +46,6 @@ from mozbuild.backend import (
     backends,
 )
 
-import taskgraph
-
 
 BUILD_WHAT_HELP = '''
 What to build. Can be a top-level make target or a relative directory. If
@@ -1259,7 +1257,6 @@ class PackageFrontend(MachCommandBase):
         help='Skip all local caches to force re-fetching remote artifacts.',
         default=False)
     def artifact_install(self, source=None, skip_cache=False, tree=None, job=None, verbose=False):
-        taskgraph.set_root_url_env()
         self._set_log_level(verbose)
         artifacts = self._make_artifacts(tree=tree, job=job, skip_cache=skip_cache)
 

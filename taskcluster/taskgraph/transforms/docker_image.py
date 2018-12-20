@@ -111,8 +111,6 @@ def fill_template(config, tasks):
         if parent:
             args['DOCKER_IMAGE_PARENT'] = '{}:{}'.format(parent, context_hashes[parent])
 
-        args['TASKCLUSTER_ROOT_URL'] = os.environ['TASKCLUSTER_ROOT_URL']
-
         if not taskgraph.fast:
             context_path = os.path.join('taskcluster', 'docker', definition)
             context_hash = generate_context_hash(
