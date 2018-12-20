@@ -1,6 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 /* import-globals-from ../../../shared/test/shared-head.js */
+/* import-globals-from head.js */
 
 "use strict";
 
@@ -37,6 +38,16 @@ function onTabMessage(tab, message) {
   });
 }
 
+async function waitForServiceWorkerRunning(workerText, document) {
+  await waitUntil(() => {
+    const target = findDebugTargetByText(workerText, document);
+    const status = target && target.querySelector(".js-worker-status");
+    return status && status.textContent === "Running";
+  });
+
+  return findDebugTargetByText(workerText, document);
+}
+
 /**
  * Helper to listen once on a message sent using postMessage from the provided tab.
  *
@@ -56,18 +67,18 @@ function forwardServiceWorkerMessage(tab) {
 }
 
 /**
- * Unregister the service worker from the content page
+ * Unregister the service worker from the content page. The content page should define
+ * `getRegistration` to allow this helper to retrieve the service worker registration that
+ * should be unregistered.
  *
  * @param {Tab} tab
  *        The tab on which the service worker should be removed.
- * @param {String} reference
- *        The reference to the service worker registration promise created on the content
- *        window.
  */
-async function unregisterServiceWorker(tab, reference) {
-  await ContentTask.spawn(tab.linkedBrowser, reference, async function(_reference) {
-    // Retrieve the registration promise created in the html page
-    const registration = await content.wrappedJSObject[_reference];
-    await registration.unregister();
+async function unregisterServiceWorker(tab) {
+  return ContentTask.spawn(tab.linkedBrowser, {}, function() {
+    const win = content.wrappedJSObject;
+    // Check that the content page defines getRegistration.
+    is(typeof win.getRegistration, "function", "getRegistration is a valid function");
+    win.getRegistration().unregister();
   });
 }

@@ -45,7 +45,14 @@ function toComponentData(workers, isServiceWorker) {
     // Here `worker` is the worker object created by RootFront.listAllWorkers
     const type = DEBUG_TARGETS.WORKER;
     const icon = "chrome://devtools/skin/images/debugging-workers.svg";
-    let { fetch, name, registrationActor, scope, workerTargetFront } = worker;
+    let { fetch } = worker;
+    const {
+      name,
+      registrationActor,
+      scope,
+      subscription,
+      workerTargetFront,
+    } = worker;
 
     // For registering service workers, workerTargetFront will not be available.
     // The only valid identifier we can use at that point is the actorID for the
@@ -54,6 +61,7 @@ function toComponentData(workers, isServiceWorker) {
 
     let isActive = false;
     let isRunning = false;
+    let pushServiceEndpoint = null;
     let status = null;
 
     if (isServiceWorker) {
@@ -62,6 +70,7 @@ function toComponentData(workers, isServiceWorker) {
       isActive = worker.active;
       isRunning = !!worker.workerTargetFront;
       status = getServiceWorkerStatus(isActive, isRunning);
+      pushServiceEndpoint = subscription ? subscription.endpoint : null;
     }
 
     return {
@@ -69,6 +78,7 @@ function toComponentData(workers, isServiceWorker) {
         fetch,
         isActive,
         isRunning,
+        pushServiceEndpoint,
         registrationActor,
         scope,
         status,

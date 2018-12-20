@@ -138,10 +138,6 @@ class Visitor:
     def visitExprCast(self, ec):
         ec.expr.accept(self)
 
-    def visitExprIndex(self, ei):
-        ei.arr.accept(self)
-        ei.idx.accept(self)
-
     def visitExprSelect(self, es):
         es.obj.accept(self)
 
@@ -168,9 +164,6 @@ class Visitor:
 
     def visitExprMemberInit(self, minit):
         self.visitExprCall(minit)
-
-    def visitExprSizeof(self, es):
-        self.visitExprCall(es)
 
     def visitExprLambda(self, l):
         self.visitBlock(l)
@@ -311,7 +304,7 @@ class Namespace(Block):
 
 class Type(Node):
     def __init__(self, name, const=False,
-                 ptr=False, ptrconst=False, ptrptr=False, ptrconstptr=False,
+                 ptr=False, ptrptr=False, ptrconstptr=False,
                  ref=False, rvalref=False,
                  hasimplicitcopyctor=True,
                  T=None,
@@ -324,7 +317,6 @@ To avoid getting fancy with recursive types, we limit the kinds
 of pointer types that can be be constructed.
 
   ptr            => T*
-  ptrconst       => T* const
   ptrptr         => T**
   ptrconstptr    => T* const*
   ref            => T&
@@ -335,7 +327,6 @@ Any type, naked or pointer, can be const (const T) or ref (T&).
         assert isinstance(name, str)
         assert isinstance(const, bool)
         assert isinstance(ptr, bool)
-        assert isinstance(ptrconst, bool)
         assert isinstance(ptrptr, bool)
         assert isinstance(ptrconstptr, bool)
         assert isinstance(ref, bool)
@@ -346,7 +337,6 @@ Any type, naked or pointer, can be const (const T) or ref (T&).
         self.name = name
         self.const = const
         self.ptr = ptr
-        self.ptrconst = ptrconst
         self.ptrptr = ptrptr
         self.ptrconstptr = ptrconstptr
         self.ref = ref
@@ -360,7 +350,7 @@ Any type, naked or pointer, can be const (const T) or ref (T&).
     def __deepcopy__(self, memo):
         return Type(self.name,
                     const=self.const,
-                    ptr=self.ptr, ptrconst=self.ptrconst,
+                    ptr=self.ptr,
                     ptrptr=self.ptrptr, ptrconstptr=self.ptrconstptr,
                     ref=self.ref, rvalref=self.rvalref,
                     T=copy.deepcopy(self.T, memo),
@@ -592,7 +582,7 @@ class FunctionDefn(MethodDefn):
 
 
 class ConstructorDecl(MethodDecl):
-    def __init__(self, name, params=[], explicit=0, force_inline=False):
+    def __init__(self, name, params=[], explicit=False, force_inline=False):
         MethodDecl.__init__(self, name, params=params, ret=None,
                             force_inline=force_inline)
         self.explicit = explicit
@@ -652,9 +642,6 @@ class ExprLiteral(Node):
 
     @staticmethod
     def String(s): return ExprLiteral('"' + s + '"', 's')
-
-    @staticmethod
-    def WString(s): return ExprLiteral('L"' + s + '"', 's')
 
     def __str__(self):
         return ('%' + self.type) % (self.value)
@@ -718,13 +705,6 @@ class ExprConditional(Node):
         self.elsee = elsee
 
 
-class ExprIndex(Node):
-    def __init__(self, arr, idx):
-        Node.__init__(self)
-        self.arr = arr
-        self.idx = idx
-
-
 class ExprSelect(Node):
     def __init__(self, obj, op, field):
         assert obj and op and field
@@ -785,11 +765,6 @@ class ExprDelete(Node):
 class ExprMemberInit(ExprCall):
     def __init__(self, member, args=[]):
         ExprCall.__init__(self, member, args)
-
-
-class ExprSizeof(ExprCall):
-    def __init__(self, t):
-        ExprCall.__init__(self, ExprVar('sizeof'), [t])
 
 
 class ExprLambda(Block):
@@ -905,10 +880,6 @@ class StmtSwitch(Block):
                          or isinstance(block.stmts[-1], StmtReturn))))
         self.addstmt(case)
         self.addstmt(block)
-        self.nr_cases += 1
-
-    def addfallthrough(self, case):
-        self.addstmt(case)
         self.nr_cases += 1
 
 

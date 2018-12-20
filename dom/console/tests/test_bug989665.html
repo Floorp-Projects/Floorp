@@ -13,7 +13,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=989665
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=989665">Mozilla Bug 989665</a>
 <script type="application/javascript">
 
-w = new Worker("data:text/javascript;charset=UTF-8, console.log('%s', {toString: function() { throw 3 }}); ");
+let w = new Worker("data:text/javascript;charset=UTF-8, console.log('%s', {toString: function() { throw 3 }}); ");
 ok(true, "This test should not crash.");
 
 </script>

@@ -17,10 +17,10 @@
 SimpleTest.waitForExplicitFinish();
 
 /** Test for Battery API **/
-navigator.getBattery().then(function (battery) {
+navigator.getBattery().then(function(battery) {
   ok(battery.level >= 0.0 && battery.level <= 1.0, "Battery level " + battery.level + " should be in the range [0.0, 1.0]");
 
-  SpecialPowers.pushPrefEnv({"set": [["dom.battery.test.charging", true]]}, function () {
+  SpecialPowers.pushPrefEnv({"set": [["dom.battery.test.charging", true]]}, function() {
     is(battery.charging, true, "Battery should be charging");
     ok(battery.chargingTime >= 0, "Battery chargingTime " + battery.chargingTime + " should be nonnegative when charging");
     is(battery.dischargingTime, Infinity, "Battery dischargingTime should be Infinity when charging");

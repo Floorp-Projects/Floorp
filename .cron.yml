@@ -54,6 +54,15 @@ jobs:
           - mozilla-central
       when: []  # never (hook only)
 
+    - name: nightly-desktop-win64-aarch64
+      job:
+          type: decision-task
+          treeherder-symbol: Nd-win64-aarch64
+          target-tasks-method: nightly_win64_aarch64
+      run-on-projects:
+          - mozilla-central
+      when: []  # never (hook only)
+
     - name: nightly-android
       job:
           type: decision-task

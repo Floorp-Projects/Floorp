@@ -12,8 +12,7 @@ if (commonFile) {
 }
 
 // Put any other stuff relative to this test folder below.
-
-ChromeUtils.import("resource:///modules/UrlbarController.jsm");
+ChromeUtils.import("resource:///modules/UrlbarUtils.jsm");
 XPCOMUtils.defineLazyModuleGetters(this, {
   PlacesTestUtils: "resource://testing-common/PlacesTestUtils.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
@@ -24,7 +23,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   UrlbarProviderOpenTabs: "resource:///modules/UrlbarProviderOpenTabs.jsm",
   UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.jsm",
   UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.jsm",
-  UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
 
 // ================================================
@@ -82,38 +80,51 @@ function promiseControllerNotification(controller, notification, expected = true
 }
 
 /**
+ * A basic test provider, returning all the provided matches.
+ */
+class TestProvider extends UrlbarProvider {
+  constructor(matches, cancelCallback) {
+    super();
+    this._name = "TestProvider" + Math.floor(Math.random() * 100000);
+    this._cancel = cancelCallback;
+    this._matches = matches;
+  }
+  get name() {
+    return this._name;
+  }
+  get type() {
+    return UrlbarUtils.PROVIDER_TYPE.PROFILE;
+  }
+  get sources() {
+    return this._matches.map(r => r.source);
+  }
+  async startQuery(context, add) {
+    Assert.ok(context, "context is passed-in");
+    Assert.equal(typeof add, "function", "add is a callback");
+    this._context = context;
+    for (const match of this._matches) {
+      add(this, match);
+    }
+  }
+  cancelQuery(context) {
+    Assert.equal(this._context, context, "context is the same");
+    if (this._cancelCallback) {
+      this._cancelCallback();
+    }
+  }
+}
+
+/**
  * Helper function to clear the existing providers and register a basic provider
  * that returns only the results given.
  *
- * @param {array} results The results for the provider to return.
+ * @param {array} matches The matches for the provider to return.
  * @param {function} [cancelCallback] Optional, called when the query provider
  *                                    receives a cancel instruction.
  * @returns {string} name of the registered provider
  */
-function registerBasicTestProvider(results, cancelCallback) {
-  let name = "TestProvider" + Math.floor(Math.random() * 100000);
-  UrlbarProvidersManager.registerProvider({
-    name,
-    get type() {
-      return UrlbarUtils.PROVIDER_TYPE.PROFILE;
-    },
-    get sources() {
-      return results.map(r => r.source);
-    },
-    async startQuery(context, add) {
-      Assert.ok(context, "context is passed-in");
-      Assert.equal(typeof add, "function", "add is a callback");
-      this._context = context;
-      for (const result of results) {
-        add(this, result);
-      }
-    },
-    cancelQuery(context) {
-      Assert.equal(this._context, context, "context is the same");
-      if (cancelCallback) {
-        cancelCallback();
-      }
-    },
-  });
-  return name;
+function registerBasicTestProvider(matches, cancelCallback) {
+  let provider = new TestProvider(matches, cancelCallback);
+  UrlbarProvidersManager.registerProvider(provider);
+  return provider.name;
 }

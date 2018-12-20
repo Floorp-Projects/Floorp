@@ -8,7 +8,7 @@ const EventEmitter = require("devtools/shared/event-emitter");
 const { adbProcess } = require("devtools/shared/adb/adb-process");
 const { adbAddon } = require("devtools/shared/adb/adb-addon");
 const AdbDevice = require("devtools/shared/adb/adb-device");
-const { AdbRuntime } = require("devtools/shared/adb/adb-runtime");
+const { AdbRuntime, UnknownAdbRuntime } = require("devtools/shared/adb/adb-runtime");
 const { TrackDevicesCommand } = require("devtools/shared/adb/commands/track-devices");
 
 class Adb extends EventEmitter {
@@ -91,8 +91,10 @@ class Adb extends EventEmitter {
     }
   }
 
-  _onDeviceConnected(deviceId) {
-    this._devices.set(deviceId, new AdbDevice(deviceId));
+  async _onDeviceConnected(deviceId) {
+    const adbDevice = new AdbDevice(deviceId);
+    await adbDevice.initialize();
+    this._devices.set(deviceId, adbDevice);
     this.updateRuntimes();
   }
 
@@ -102,9 +104,11 @@ class Adb extends EventEmitter {
   }
 
   async _getDeviceRuntimes(device) {
-    const model = await device.getModel();
-    const socketPaths = await device.getRuntimeSocketPaths();
-    return [...socketPaths].map(socketPath => new AdbRuntime(device, model, socketPath));
+    const socketPaths = [...await device.getRuntimeSocketPaths()];
+    if (socketPaths.length === 0) {
+      return [new UnknownAdbRuntime(device)];
+    }
+    return socketPaths.map(socketPath => new AdbRuntime(device, socketPath));
   }
 }
 

@@ -31,11 +31,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=854209
       script.src = "http://mochi.test:8888/tests/dom/asmjscache/test/file_slow.js";
       document.body.appendChild(script);
 
-      var w = new Worker('http://mochi.test:8888/tests/dom/asmjscache/test/file_slow.js');
+      var w = new Worker("http://mochi.test:8888/tests/dom/asmjscache/test/file_slow.js");
       w.onmessage = function(e) {
           ok(e.data === "ok", "Worker asm.js tests");
           complete();
-      }
+      };
 
       SimpleTest.waitForExplicitFinish();
   }

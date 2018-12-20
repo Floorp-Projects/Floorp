@@ -14,9 +14,19 @@ from application_ini import get_application_ini_value
 from mozbuild.util import ensureParentDir
 
 
-def repackage_mar(topsrcdir, package, mar, output, mar_format='lzma'):
+_BCJ_OPTIONS = {
+    'x86': ['--x86'],
+    'x86_64': ['--x86'],
+    'aarch64': [],
+}
+
+
+def repackage_mar(topsrcdir, package, mar, output, mar_format='lzma', arch=None):
     if not zipfile.is_zipfile(package) and not tarfile.is_tarfile(package):
         raise Exception("Package file %s is not a valid .zip or .tar file." % package)
+    if arch and arch not in _BCJ_OPTIONS:
+        raise Exception("Unknown architecture {}, available architectures: {}".format(
+            arch, _BCJ_OPTIONS.keys()))
 
     ensureParentDir(output)
     tmpdir = tempfile.mkdtemp()
@@ -47,6 +57,8 @@ def repackage_mar(topsrcdir, package, mar, output, mar_format='lzma'):
         env = os.environ.copy()
         env['MOZ_FULL_PRODUCT_VERSION'] = get_application_ini_value(tmpdir, 'App', 'Version')
         env['MAR'] = mozpath.normpath(mar)
+        if arch:
+            env['BCJ_OPTIONS'] = ' '.join(_BCJ_OPTIONS[arch])
         if mar_format == 'bz2':
             env['MAR_OLD_FORMAT'] = '1'
         # The Windows build systems have xz installed but it isn't in the path

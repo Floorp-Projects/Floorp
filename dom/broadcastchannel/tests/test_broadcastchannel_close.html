@@ -12,11 +12,11 @@
 <script type="application/javascript">
 
 function runTest() {
-  var receiver = new BroadcastChannel('foo');
-  var sequence = [ '2', 'done' ];
+  var receiver = new BroadcastChannel("foo");
+  var sequence = [ "2", "done" ];
   receiver.onmessage = function(e) {
     if (!sequence.length) {
-      ok (false, 'No more data is expected');
+      ok(false, "No more data is expected");
       return;
     }
 
@@ -28,29 +28,29 @@ function runTest() {
         SimpleTest.finish();
       });
     }
-  }
+  };
 
-  var x = new BroadcastChannel('foo');
+  var x = new BroadcastChannel("foo");
   x.close();
   try {
-    x.postMessage('1');
+    x.postMessage("1");
     ok(false, "PostMessage should throw if called after a close().");
-  } catch(e) {
+  } catch (e) {
     ok(true, "PostMessage should throw if called after a close().");
   }
 
-  var y = new BroadcastChannel('foo');
-  y.postMessage('2');
+  var y = new BroadcastChannel("foo");
+  y.postMessage("2");
   y.close();
   try {
-    y.postMessage('3');
+    y.postMessage("3");
     ok(false, "PostMessage should throw if called after a close().");
-  } catch(e) {
+  } catch (e) {
     ok(true, "PostMessage should throw if called after a close().");
   }
 
-  var z = new BroadcastChannel('foo');
-  z.postMessage('done');
+  var z = new BroadcastChannel("foo");
+  z.postMessage("done");
 }
 
 SimpleTest.waitForExplicitFinish();

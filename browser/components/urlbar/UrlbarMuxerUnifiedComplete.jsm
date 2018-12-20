@@ -14,6 +14,7 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetters(this, {
   Log: "resource://gre/modules/Log.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
+  UrlbarMuxer: "resource:///modules/UrlbarUtils.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
 
@@ -33,9 +34,9 @@ const MATCH_TYPE_TO_GROUP = new Map([
  * Class used to create a muxer.
  * The muxer receives and sorts matches in a QueryContext.
  */
-class MuxerUnifiedComplete {
+class MuxerUnifiedComplete extends UrlbarMuxer {
   constructor() {
-    // Nothing.
+    super();
   }
 
   get name() {
