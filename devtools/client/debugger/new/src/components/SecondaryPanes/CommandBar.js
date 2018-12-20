@@ -20,6 +20,7 @@ import {
 import { formatKeyShortcut } from "../../utils/text";
 import actions from "../../actions";
 import { debugBtn } from "../shared/Button/CommandBarButton";
+import AccessibleImage from "../shared/AccessibleImage";
 import "./CommandBar.css";
 
 import { appinfo } from "devtools-services";
@@ -273,7 +274,7 @@ class CommandBar extends Component<Props> {
         title={L10N.getStr("skipPausingTooltip")}
         onClick={toggleSkipPausing}
       >
-        <img className="skipPausing" />
+        <AccessibleImage className="skipPausing" />
       </button>
     );
   }

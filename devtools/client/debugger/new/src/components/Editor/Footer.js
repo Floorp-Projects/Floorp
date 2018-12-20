@@ -26,6 +26,7 @@ import { getGeneratedSource } from "../../reducers/sources";
 import { shouldShowFooter, shouldShowPrettyPrint } from "../../utils/editor";
 
 import { PaneToggleButton } from "../shared/Button";
+import AccessibleImage from "../shared/AccessibleImage";
 
 import type { Source } from "../../types";
 
@@ -99,7 +100,7 @@ class SourceFooter extends PureComponent<Props, State> {
         title={tooltip}
         aria-label={tooltip}
       >
-        <img className={type} />
+        <AccessibleImage className={type} />
       </button>
     );
   }
@@ -128,7 +129,7 @@ class SourceFooter extends PureComponent<Props, State> {
         title={tooltip}
         aria-label={tooltip}
       >
-        <img className="blackBox" />
+        <AccessibleImage className="blackBox" />
       </button>
     );
   }
