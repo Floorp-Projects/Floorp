@@ -560,6 +560,9 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   // For use by mochitests. Enabling pref "media.test.video-suspend"
   bool HasSuspendTaint() const;
 
+  // For use by mochitests.
+  bool IsVideoDecodingSuspended() const;
+
   // Synchronously, return the next video frame and mark the element unable to
   // participate in decode suspending.
   //
