@@ -1777,10 +1777,6 @@ html .toggle-button.end.vertical svg {
   margin-right: 5px;
 }
 
-.sources-list .tree .focused img.arrow {
-  background-color: white;
-}
-
 .sources-list .tree .label .suffix {
   font-style: italic;
   font-size: 0.9em;
@@ -1908,20 +1904,12 @@ html .toggle-button.end.vertical svg {
   margin-top: 2px;
 }
 
-.sources-list .managed-tree .tree .node.focused img {
-  background-color: white;
-}
-
 .theme-dark .sources-list .managed-tree .tree .node:not(.focused) img.blackBox {
   background-color: var(--theme-comment);
 }
 
 .theme-dark .sources-list .managed-tree .tree .node img.blackBox {
   background-color: var(--theme-body-color);
-}
-
-.theme-dark .sources-list .managed-tree .tree .node.focused img.blackBox {
-  background-color: white;
 }
 
 /*
@@ -2215,6 +2203,7 @@ menuseparator {
   mask-size: 100%;
   display: inline-block;
   margin-inline-end: 5px;
+  border: 0;
 }
 
 .source-icon,
