@@ -24,6 +24,7 @@
 #include "nsHashKeys.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/dom/VisualViewport.h"
 #include "mozilla/layers/TransactionIdAllocator.h"
 #include "mozilla/VsyncDispatcher.h"
 
@@ -92,6 +93,10 @@ class nsAPostRefreshObserver {
 class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
                               public nsARefreshObserver {
   using TransactionId = mozilla::layers::TransactionId;
+  using VVPResizeEvent =
+      mozilla::dom::VisualViewport::VisualViewportResizeEvent;
+  using VVPScrollEvent =
+      mozilla::dom::VisualViewport::VisualViewportScrollEvent;
 
  public:
   explicit nsRefreshDriver(nsPresContext* aPresContext);
@@ -146,8 +151,14 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
   void AddTimerAdjustmentObserver(nsATimerAdjustmentObserver* aObserver);
   void RemoveTimerAdjustmentObserver(nsATimerAdjustmentObserver* aObserver);
 
+  void PostVisualViewportResizeEvent(VVPResizeEvent* aResizeEvent);
+  void DispatchVisualViewportResizeEvents();
+
   void PostScrollEvent(mozilla::Runnable* aScrollEvent, bool aDelayed = false);
   void DispatchScrollEvents();
+
+  void PostVisualViewportScrollEvent(VVPScrollEvent* aScrollEvent);
+  void DispatchVisualViewportScrollEvents();
 
   /**
    * Add an observer that will be called after each refresh. The caller
@@ -411,7 +422,9 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
 
  private:
   typedef nsTObserverArray<nsARefreshObserver*> ObserverArray;
+  typedef nsTArray<RefPtr<VVPResizeEvent>> VisualViewportResizeEventArray;
   typedef nsTArray<RefPtr<mozilla::Runnable>> ScrollEventArray;
+  typedef nsTArray<RefPtr<VVPScrollEvent>> VisualViewportScrollEventArray;
   typedef nsTHashtable<nsISupportsHashKey> RequestTable;
   struct ImageStartData {
     ImageStartData() {}
@@ -533,7 +546,9 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
   RequestTable mRequests;
   ImageStartTable mStartTable;
   AutoTArray<nsCOMPtr<nsIRunnable>, 16> mEarlyRunners;
+  VisualViewportResizeEventArray mVisualViewportResizeEvents;
   ScrollEventArray mScrollEvents;
+  VisualViewportScrollEventArray mVisualViewportScrollEvents;
 
   // Scroll events on documents that might have events suppressed.
   ScrollEventArray mDelayedScrollEvents;

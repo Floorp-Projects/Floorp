@@ -58,7 +58,7 @@ function* test(testDriver) {
   // Check we've got the expected events.
   // Pinch-zooming the page should fire visual viewport resize events:
   visResEvt.unregister();
-  todo(visResEvt.count > 0, "Got some visual viewport resize events");
+  ok(visResEvt.count > 0, "Got some visual viewport resize events");
   visResEvtInternal.unregister();
   todo(visResEvtInternal.count > 0, "Got some mozvisualresize events");
 
@@ -67,7 +67,7 @@ function* test(testDriver) {
   // This is true both relative to the page (mozvisualscroll), as well as
   // relative to the layout viewport (visual viewport "scroll" event).
   visScrEvt.unregister();
-  todo(visScrEvt.count > 0, "Got some visual viewport scroll events");
+  ok(visScrEvt.count > 0, "Got some visual viewport scroll events");
   visScrEvtInternal.unregister();
   todo(visScrEvtInternal.count > 0, "Got some mozvisualscroll events");
 
