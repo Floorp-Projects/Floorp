@@ -31,6 +31,7 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 #![cfg_attr(not(feature = "std"), feature(alloc))]
 #![cfg_attr(feature = "union", feature(untagged_unions))]
+#![cfg_attr(feature = "specialization", feature(specialization))]
 #![deny(missing_docs)]
 
 
@@ -682,7 +683,7 @@ impl<A: Array> SmallVec<A> {
         }
     }
 
-    /// Reserve the minumum capacity for `additional` more elements to be inserted.
+    /// Reserve the minimum capacity for `additional` more elements to be inserted.
     ///
     /// Panics if the new capacity overflows `usize`.
     pub fn reserve_exact(&mut self, additional: usize) {
@@ -939,6 +940,86 @@ impl<A: Array> SmallVec<A> {
     {
         self.dedup_by(|a, b| key(a) == key(b));
     }
+
+    /// Creates a `SmallVec` directly from the raw components of another
+    /// `SmallVec`.
+    ///
+    /// # Safety
+    ///
+    /// This is highly unsafe, due to the number of invariants that aren't
+    /// checked:
+    ///
+    /// * `ptr` needs to have been previously allocated via `SmallVec` for its
+    ///   spilled storage (at least, it's highly likely to be incorrect if it
+    ///   wasn't).
+    /// * `ptr`'s `A::Item` type needs to be the same size and alignment that
+    ///   it was allocated with
+    /// * `length` needs to be less than or equal to `capacity`.
+    /// * `capacity` needs to be the capacity that the pointer was allocated
+    ///   with.
+    ///
+    /// Violating these may cause problems like corrupting the allocator's
+    /// internal data structures.
+    ///
+    /// Additionally, `capacity` must be greater than the amount of inline
+    /// storage `A` has; that is, the new `SmallVec` must need to spill over
+    /// into heap allocated storage. This condition is asserted against.
+    ///
+    /// The ownership of `ptr` is effectively transferred to the
+    /// `SmallVec` which may then deallocate, reallocate or change the
+    /// contents of memory pointed to by the pointer at will. Ensure
+    /// that nothing else uses the pointer after calling this
+    /// function.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # #[macro_use] extern crate smallvec;
+    /// # use smallvec::SmallVec;
+    /// use std::mem;
+    /// use std::ptr;
+    ///
+    /// fn main() {
+    ///     let mut v: SmallVec<[_; 1]> = smallvec![1, 2, 3];
+    ///
+    ///     // Pull out the important parts of `v`.
+    ///     let p = v.as_mut_ptr();
+    ///     let len = v.len();
+    ///     let cap = v.capacity();
+    ///     let spilled = v.spilled();
+    ///
+    ///     unsafe {
+    ///         // Forget all about `v`. The heap allocation that stored the
+    ///         // three values won't be deallocated.
+    ///         mem::forget(v);
+    ///
+    ///         // Overwrite memory with [4, 5, 6].
+    ///         //
+    ///         // This is only safe if `spilled` is true! Otherwise, we are
+    ///         // writing into the old `SmallVec`'s inline storage on the
+    ///         // stack.
+    ///         assert!(spilled);
+    ///         for i in 0..len as isize {
+    ///             ptr::write(p.offset(i), 4 + i);
+    ///         }
+    ///
+    ///         // Put everything back together into a SmallVec with a different
+    ///         // amount of inline storage, but which is still less than `cap`.
+    ///         let rebuilt = SmallVec::<[_; 2]>::from_raw_parts(p, len, cap);
+    ///         assert_eq!(&*rebuilt, &[4, 5, 6]);
+    ///     }
+    /// }
+    pub unsafe fn from_raw_parts(
+        ptr: *mut A::Item,
+        length: usize,
+        capacity: usize,
+    ) -> SmallVec<A> {
+        assert!(capacity > A::size());
+        SmallVec {
+            capacity,
+            data: SmallVecData::from_heap(ptr, length),
+        }
+    }
 }
 
 impl<A: Array> SmallVec<A> where A::Item: Copy {
@@ -958,10 +1039,10 @@ impl<A: Array> SmallVec<A> where A::Item: Copy {
             }
         } else {
             let mut b = slice.to_vec();
-            let ptr = b.as_mut_ptr();
+            let (ptr, cap) = (b.as_mut_ptr(), b.capacity());
             mem::forget(b);
             SmallVec {
-                capacity: len,
+                capacity: cap,
                 data: SmallVecData::from_heap(ptr, len),
             }
         }
@@ -1156,10 +1237,39 @@ where A::Item: Deserialize<'de>,
     }
 }
 
+
+#[cfg(feature = "specialization")]
+trait SpecFrom<A: Array, S> {
+    fn spec_from(slice: S) -> SmallVec<A>;
+}
+
+#[cfg(feature = "specialization")]
+impl<'a, A: Array> SpecFrom<A, &'a [A::Item]> for SmallVec<A> where A::Item: Clone {
+    #[inline]
+    default fn spec_from(slice: &'a [A::Item]) -> SmallVec<A> {
+        slice.into_iter().cloned().collect()
+    }
+}
+
+#[cfg(feature = "specialization")]
+impl<'a, A: Array> SpecFrom<A, &'a [A::Item]> for SmallVec<A> where A::Item: Copy {
+    #[inline]
+    fn spec_from(slice: &'a [A::Item]) -> SmallVec<A> {
+        SmallVec::from_slice(slice)
+    }
+}
+
 impl<'a, A: Array> From<&'a [A::Item]> for SmallVec<A> where A::Item: Clone {
+    #[cfg(not(feature = "specialization"))]
     #[inline]
     fn from(slice: &'a [A::Item]) -> SmallVec<A> {
         slice.into_iter().cloned().collect()
+    }
+
+    #[cfg(feature = "specialization")]
+    #[inline]
+    fn from(slice: &'a [A::Item]) -> SmallVec<A> {
+        SmallVec::spec_from(slice)
     }
 }
 
