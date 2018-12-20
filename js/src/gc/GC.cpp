@@ -565,7 +565,7 @@ inline size_t Arena::finalize(FreeOp* fop, AllocKind thingKind,
   MOZ_ASSERT(allocated());
   MOZ_ASSERT(thingKind == getAllocKind());
   MOZ_ASSERT(thingSize == getThingSize());
-  MOZ_ASSERT(!hasDelayedMarking);
+  MOZ_ASSERT(!onDelayedMarkingList_);
 
   uint_fast16_t firstThing = firstThingOffset(thingKind);
   uint_fast16_t firstThingOrSuccessorOfLastMarkedThing = firstThing;
@@ -828,7 +828,7 @@ void Chunk::recycleArena(Arena* arena, SortedArenaList& dest,
 
 void Chunk::releaseArena(JSRuntime* rt, Arena* arena, const AutoLockGC& lock) {
   MOZ_ASSERT(arena->allocated());
-  MOZ_ASSERT(!arena->hasDelayedMarking);
+  MOZ_ASSERT(!arena->onDelayedMarkingList());
 
   arena->release(lock);
   addArenaToFreeList(rt, arena);
@@ -2061,23 +2061,6 @@ void MemoryCounter::recordTrigger(TriggerKind trigger) {
   triggered_ = trigger;
 }
 
-void GCMarker::delayMarkingArena(Arena* arena) {
-  if (arena->hasDelayedMarking) {
-    /* Arena already scheduled to be marked later */
-    return;
-  }
-  arena->setNextDelayedMarking(unmarkedArenaStackTop);
-  unmarkedArenaStackTop = arena;
-#ifdef DEBUG
-  markLaterArenas++;
-#endif
-}
-
-void GCMarker::delayMarkingChildren(const void* thing) {
-  const TenuredCell* cell = TenuredCell::fromPointer(thing);
-  delayMarkingArena(cell->arena());
-}
-
 /* Compacting GC */
 
 bool GCRuntime::shouldCompact() {
@@ -2283,7 +2266,7 @@ static void RelocateCell(Zone* zone, TenuredCell* src, AllocKind thingKind,
 
 static void RelocateArena(Arena* arena, SliceBudget& sliceBudget) {
   MOZ_ASSERT(arena->allocated());
-  MOZ_ASSERT(!arena->hasDelayedMarking);
+  MOZ_ASSERT(!arena->onDelayedMarkingList());
   MOZ_ASSERT(arena->bufferedCells()->isEmpty());
 
   Zone* zone = arena->zone;
