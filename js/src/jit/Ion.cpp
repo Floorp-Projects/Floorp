@@ -2669,7 +2669,7 @@ static void InvalidateActivation(FreeOp* fop,
                 frame.script()->maybeForwardedFilename(),
                 frame.script()->lineno(), frame.script()->column(),
                 frame.maybeCallee(), (JSScript*)frame.script(),
-                frame.returnAddressToFp());
+                frame.resumePCinCurrentFrame());
         break;
       }
       case FrameType::BaselineStub:
@@ -2768,10 +2768,10 @@ static void InvalidateActivation(FreeOp* fop,
     // construction.
     AutoWritableJitCode awjc(ionCode);
     const SafepointIndex* si =
-        ionScript->getSafepointIndex(frame.returnAddressToFp());
-    CodeLocationLabel dataLabelToMunge(frame.returnAddressToFp());
+        ionScript->getSafepointIndex(frame.resumePCinCurrentFrame());
+    CodeLocationLabel dataLabelToMunge(frame.resumePCinCurrentFrame());
     ptrdiff_t delta = ionScript->invalidateEpilogueDataOffset() -
-                      (frame.returnAddressToFp() - ionCode->raw());
+                      (frame.resumePCinCurrentFrame() - ionCode->raw());
     Assembler::PatchWrite_Imm32(dataLabelToMunge, Imm32(delta));
 
     CodeLocationLabel osiPatchPoint =

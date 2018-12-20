@@ -2326,10 +2326,16 @@ const nsAString& NonNullHelper(const binding_detail::FakeString& aArg) {
   return aArg;
 }
 
-// Reparent the wrapper of aObj to whatever its native now thinks its
-// parent should be.
-void ReparentWrapper(JSContext* aCx, JS::Handle<JSObject*> aObj,
-                     ErrorResult& aError);
+// Given a DOM reflector aObj, give its underlying DOM object a reflector in
+// whatever global that underlying DOM object now thinks it should be in.  If
+// this is in a different compartment from aObj, aObj will become a
+// cross-compatment wrapper for the new object.  Otherwise, aObj will become the
+// new object (via a brain transplant).  If the new global is the same as the
+// old global, we just keep using the same object.
+//
+// On entry to this method, aCx and aObj must be same-compartment.
+void UpdateReflectorGlobal(JSContext* aCx, JS::Handle<JSObject*> aObj,
+                           ErrorResult& aError);
 
 /**
  * Used to implement the Symbol.hasInstance property of an interface object.

@@ -51,9 +51,6 @@ add_task(async function() {
     dbg,
     ".outline-list__element .function-signature"
   );
-  is(
-    firstAlphaFunction.innerText.replace("λ", ""),
-    "doEval()",
-    "Alphabetized first function is correct"
-  );
+  is(firstAlphaFunction.innerText, "doEval()",
+     "Alphabetized first function is correct");
 });

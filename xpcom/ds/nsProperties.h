@@ -10,7 +10,6 @@
 #include "nsIProperties.h"
 #include "nsInterfaceHashtable.h"
 #include "nsHashKeys.h"
-#include "nsAgg.h"
 #include "mozilla/Attributes.h"
 
 typedef nsInterfaceHashtable<nsCharPtrHashKey, nsISupports>
@@ -18,11 +17,13 @@ typedef nsInterfaceHashtable<nsCharPtrHashKey, nsISupports>
 
 class nsProperties final : public nsIProperties, public nsProperties_HashBase {
  public:
-  NS_DECL_AGGREGATED
+  NS_DECL_ISUPPORTS
   NS_DECL_NSIPROPERTIES
 
-  nsProperties() { NS_INIT_AGGREGATED(nullptr); }
-  ~nsProperties() {}
+  nsProperties() = default;
+
+ private:
+  ~nsProperties() = default;
 };
 
 #endif /* nsProperties_h___ */

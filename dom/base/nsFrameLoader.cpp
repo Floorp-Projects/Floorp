@@ -1740,7 +1740,7 @@ void nsFrameLoader::SetOwnerContent(Element* aContent) {
   if (wrapper) {
     JSAutoRealm ar(jsapi.cx(), wrapper);
     IgnoredErrorResult rv;
-    ReparentWrapper(jsapi.cx(), wrapper, rv);
+    UpdateReflectorGlobal(jsapi.cx(), wrapper, rv);
     Unused << NS_WARN_IF(rv.Failed());
   }
 

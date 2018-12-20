@@ -152,10 +152,6 @@
 
 /* DownloadsSubview styles: */
 
-.subviewbutton.download {
-  -moz-binding: url("chrome://browser/content/downloads/download.xml#download-subview-toolbarbutton");
-}
-
 /* Hide all status labels by default and selectively display one at a time,
    depending on the state of the Download. */
 .subviewbutton.download > .toolbarbutton-text > .status-text,
@@ -170,18 +166,18 @@
 .subviewbutton.download:not(:hover) > .toolbarbutton-text > .status-full,
 /* When a Download is hovered when the file doesn't exist and cannot be retried,
    keep showing the full status message. */
-.subviewbutton.download:hover:-moz-any(:not([openLabel]),:not([exists])):not([retryLabel]) > .toolbarbutton-text > .status-full,
+.subviewbutton.download:hover:-moz-any(:not([canShow]),:not([exists])):not([canRetry]) > .toolbarbutton-text > .status-full,
 /* When a Download is hovered and the it can be retried, but the action button
    is _not_ hovered, keep showing the full status message. */
-.subviewbutton.download:hover[retryLabel]:not(.downloadHoveringButton) > .toolbarbutton-text > .status-full,
+.subviewbutton.download:hover[canRetry]:not(.downloadHoveringButton) > .toolbarbutton-text > .status-full,
 /* When a Download is hovered and the file can be opened, but the action button
    is _not_ hovered, show the 'Open File' status label. */
-.subviewbutton.download:hover[openLabel][exists]:not(.downloadHoveringButton) > .toolbarbutton-text > .status-open,
+.subviewbutton.download:hover[canShow][exists]:not(.downloadHoveringButton) > .toolbarbutton-text > .status-open,
 /* When a Download is hovered - its action button explicitly - and it can be
    retried, show the 'Retry Download' label. */
-.subviewbutton.download:hover[retryLabel].downloadHoveringButton > .toolbarbutton-text > .status-retry,
+.subviewbutton.download:hover[canRetry].downloadHoveringButton > .toolbarbutton-text > .status-retry,
 /* When a Download is hovered - its action button explicitly - and the file can
    be shown in the OS's shell, show the 'Open Containing Folder' label. */
-.subviewbutton.download:hover[openLabel][exists].downloadHoveringButton > .toolbarbutton-text > .status-show {
+.subviewbutton.download:hover[canShow][exists].downloadHoveringButton > .toolbarbutton-text > .status-show {
   display: inline;
 }

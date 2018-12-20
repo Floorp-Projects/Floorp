@@ -13,7 +13,7 @@ import traceback
 import urllib2
 from contextlib import closing
 
-from mozdevice import ADBAndroid, ADBTimeoutError
+from mozdevice import ADBDevice, ADBTimeoutError
 import mozinfo
 from automation import Automation
 from remoteautomation import RemoteAutomation, fennecLogcatFilters
@@ -149,10 +149,10 @@ class RemoteReftest(RefTest):
         if options.log_tbpl_level == 'debug' or options.log_mach_level == 'debug':
             verbose = True
             print "set verbose!"
-        self.device = ADBAndroid(adb=options.adb_path or 'adb',
-                                 device=options.deviceSerial,
-                                 test_root=options.remoteTestRoot,
-                                 verbose=verbose)
+        self.device = ADBDevice(adb=options.adb_path or 'adb',
+                                device=options.deviceSerial,
+                                test_root=options.remoteTestRoot,
+                                verbose=verbose)
         if options.remoteTestRoot is None:
             options.remoteTestRoot = posixpath.join(self.device.test_root, "reftest")
         options.remoteProfile = posixpath.join(options.remoteTestRoot, "profile")

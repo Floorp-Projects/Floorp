@@ -1090,7 +1090,7 @@ this.FormAutofillHeuristics = {
 XPCOMUtils.defineLazyGetter(this.FormAutofillHeuristics, "RULES", () => {
   let sandbox = {};
   const HEURISTICS_REGEXP = "chrome://formautofill/content/heuristicsRegexp.js";
-  Services.scriptloader.loadSubScript(HEURISTICS_REGEXP, sandbox, "utf-8");
+  Services.scriptloader.loadSubScript(HEURISTICS_REGEXP, sandbox);
   return sandbox.HeuristicsRegExp.RULES;
 });
 
