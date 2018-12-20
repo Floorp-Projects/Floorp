@@ -27,7 +27,7 @@ const {
 type Props = {
   selectedFrame: Frame,
   popupObjectProperties: Object,
-  setPopupObjectProperties: (Object, Object) => void,
+  setPopupObjectProperties: typeof actions.setPopupObjectProperties,
   openElementInInspector: (grip: Grip) => void
 };
 

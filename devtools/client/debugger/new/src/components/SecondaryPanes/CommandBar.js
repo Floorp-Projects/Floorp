@@ -79,17 +79,17 @@ type Props = {
   horizontal: boolean,
   canRewind: boolean,
   skipPausing: boolean,
-  resume: () => void,
-  stepIn: () => void,
-  stepOut: () => void,
-  stepOver: () => void,
-  breakOnNext: () => void,
-  rewind: () => void,
-  reverseStepIn: () => void,
-  reverseStepOut: () => void,
-  reverseStepOver: () => void,
-  pauseOnExceptions: (boolean, boolean) => void,
-  toggleSkipPausing: () => void
+  resume: typeof actions.resume,
+  stepIn: typeof actions.stepIn,
+  stepOut: typeof actions.stepOut,
+  stepOver: typeof actions.stepOver,
+  breakOnNext: typeof actions.breakOnNext,
+  rewind: typeof actions.rewind,
+  reverseStepIn: typeof actions.reverseStepIn,
+  reverseStepOut: typeof actions.reverseStepOut,
+  reverseStepOver: typeof actions.reverseStepOver,
+  pauseOnExceptions: typeof actions.pauseOnExceptions,
+  toggleSkipPausing: typeof actions.toggleSkipPausing
 };
 
 class CommandBar extends Component<Props> {

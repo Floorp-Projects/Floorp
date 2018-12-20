@@ -32,11 +32,11 @@ type Props = {
   horizontal: boolean,
   startPanelCollapsed: boolean,
   endPanelCollapsed: boolean,
-  moveTab: (string, number) => void,
-  closeTab: string => void,
-  togglePaneCollapse: () => void,
-  showSource: string => void,
-  selectSource: string => void
+  moveTab: typeof actions.moveTab,
+  closeTab: typeof actions.closeTab,
+  togglePaneCollapse: typeof actions.togglePaneCollapse,
+  showSource: typeof actions.showSource,
+  selectSource: typeof actions.selectSource
 };
 
 type State = {

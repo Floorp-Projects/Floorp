@@ -34,12 +34,9 @@ import "./Popup.css";
 
 import type { EditorRange } from "../../../utils/editor/types";
 import type { Coords } from "../../shared/Popover";
-import type { Grip } from "../../../types";
 
 type PopupValue = Object | null;
 type Props = {
-  setPopupObjectProperties: (Object, Object) => void,
-  addExpression: (string, ?Object) => void,
   popupObjectProperties: Object,
   popoverPos: Object,
   value: PopupValue,
@@ -48,10 +45,12 @@ type Props = {
   range: EditorRange,
   editor: any,
   editorRef: ?HTMLDivElement,
-  selectSourceURL: (string, Object) => void,
-  openLink: string => void,
   extra: Object,
-  openElementInInspector: (grip: Grip) => void
+  setPopupObjectProperties: typeof actions.setPopupObjectProperties,
+  addExpression: typeof actions.addExpression,
+  selectSourceURL: typeof actions.selectSourceURL,
+  openLink: typeof actions.openLink,
+  openElementInInspector: typeof actions.openElementInInspectorCommand
 };
 
 type State = {
@@ -355,7 +354,6 @@ const mapStateToProps = state => ({
 const {
   addExpression,
   selectSourceURL,
-  selectLocation,
   setPopupObjectProperties,
   openLink
 } = actions;
@@ -363,7 +361,6 @@ const {
 const mapDispatchToProps = {
   addExpression,
   selectSourceURL,
-  selectLocation,
   setPopupObjectProperties,
   openLink
 };

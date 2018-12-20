@@ -43,10 +43,10 @@ type Props = {
   endPanelCollapsed: boolean,
   editor: Object,
   horizontal: boolean,
-  togglePrettyPrint: string => void,
-  toggleBlackBox: Object => void,
-  jumpToMappedLocation: (Source: any) => void,
-  togglePaneCollapse: () => void
+  togglePrettyPrint: typeof actions.togglePrettyPrint,
+  toggleBlackBox: typeof actions.toggleBlackBox,
+  jumpToMappedLocation: typeof actions.jumpToMappedLocation,
+  togglePaneCollapse: typeof actions.togglePaneCollapse
 };
 
 type State = {
