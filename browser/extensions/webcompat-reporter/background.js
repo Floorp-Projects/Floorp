@@ -98,6 +98,8 @@ async function openWebCompatTab(compatInfo) {
   const {details} = compatInfo;
   const params = {
     url: `${compatInfo.url}`,
+    utm_source: "desktop-reporter",
+    utm_campaign: "report-site-issue-button",
     src: "desktop-reporter",
     details,
     label: [],
