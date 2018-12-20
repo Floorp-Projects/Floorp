@@ -11,7 +11,11 @@
 #include "modules/audio_processing/aec3/adaptive_fir_filter.h"
 
 #if defined(WEBRTC_HAS_NEON)
+#if defined(_MSC_VER) && !defined(__clang__)
+#include <arm64_neon.h>
+#else
 #include <arm_neon.h>
+#endif
 #endif
 #include "typedefs.h"  // NOLINT(build/include)
 #if defined(WEBRTC_ARCH_X86_FAMILY)
