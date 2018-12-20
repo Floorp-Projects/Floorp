@@ -11,7 +11,6 @@ config = {
          '--upload', 'mozilla/geckoview',
          '--upload-branch', 'gh-pages/javadoc/{project}',
          '--upload-message', 'Update {project} javadoc to rev {revision}',
-         '--variant', 'withGeckoBinariesRelease',
         ],
     ],
     'artifact_flag_build_variant_in_try': None, # There's no artifact equivalent.
