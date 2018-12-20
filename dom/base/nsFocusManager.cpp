@@ -3008,9 +3008,9 @@ nsIContent* nsFocusManager::GetNextTabbableContentInScope(
   // is non-negative
   bool skipOwner = aSkipOwner || !aOwner->GetShadowRoot();
   if (!skipOwner && (aForward && aOwner == aStartContent)) {
-    int32_t tabIndex = 0;
-    aOwner->IsFocusable(&tabIndex);
-    if (tabIndex >= 0) {
+    int32_t tabIndex = -1;
+    nsIFrame* frame = aOwner->GetPrimaryFrame();
+    if (frame && frame->IsFocusable(&tabIndex, false) && tabIndex >= 0) {
       return aOwner;
     }
   }
@@ -3112,9 +3112,9 @@ nsIContent* nsFocusManager::GetNextTabbableContentInScope(
   // Return shadow host at last for backward navigation if its tabindex
   // is non-negative
   if (!skipOwner && !aForward) {
-    int32_t tabIndex = 0;
-    aOwner->IsFocusable(&tabIndex);
-    if (tabIndex >= 0) {
+    int32_t tabIndex = -1;
+    nsIFrame* frame = aOwner->GetPrimaryFrame();
+    if (frame && frame->IsFocusable(&tabIndex, false) && tabIndex >= 0) {
       return aOwner;
     }
   }
