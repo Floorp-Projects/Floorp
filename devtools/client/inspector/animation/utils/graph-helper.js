@@ -216,20 +216,14 @@ function getPreferredDurationResolution(keyframes) {
  *         Preferred threshold.
  */
 function getPreferredProgressThreshold(state, keyframes) {
-  let threshold = DEFAULT_MIN_PROGRESS_THRESHOLD;
-  let stepsOrFrames;
-
-  if ((stepsOrFrames = getStepsOrFramesCount(state.easing))) {
-    threshold = Math.min(threshold, (1 / (stepsOrFrames + 1)));
-  }
+  const steps = getStepsCount(state.easing);
+  const threshold = Math.min(DEFAULT_MIN_PROGRESS_THRESHOLD, (1 / (steps + 1)));
 
   if (!keyframes) {
     return threshold;
   }
 
-  threshold = Math.min(threshold, getPreferredProgressThresholdByKeyframes(keyframes));
-
-  return threshold;
+  return Math.min(threshold, getPreferredProgressThresholdByKeyframes(keyframes));
 }
 
 /**
@@ -242,7 +236,6 @@ function getPreferredProgressThreshold(state, keyframes) {
  */
 function getPreferredProgressThresholdByKeyframes(keyframes) {
   let threshold = DEFAULT_MIN_PROGRESS_THRESHOLD;
-  let stepsOrFrames;
 
   for (let i = 0; i < keyframes.length - 1; i++) {
     const keyframe = keyframes[i];
@@ -251,20 +244,21 @@ function getPreferredProgressThresholdByKeyframes(keyframes) {
       continue;
     }
 
-    if ((stepsOrFrames = getStepsOrFramesCount(keyframe.easing))) {
+    const steps = getStepsCount(keyframe.easing);
+
+    if (steps) {
       const nextKeyframe = keyframes[i + 1];
       threshold =
-        Math.min(threshold,
-                 1 / (stepsOrFrames + 1) * (nextKeyframe.offset - keyframe.offset));
+        Math.min(threshold, 1 / (steps + 1) * (nextKeyframe.offset - keyframe.offset));
     }
   }
 
   return threshold;
 }
 
-function getStepsOrFramesCount(easing) {
-  const stepsOrFramesFunction = easing.match(/(steps|frames)\((\d+)/);
-  return stepsOrFramesFunction ? parseInt(stepsOrFramesFunction[2], 10) : 0;
+function getStepsCount(easing) {
+  const stepsFunction = easing.match(/(steps)\((\d+)/);
+  return stepsFunction ? parseInt(stepsFunction[2], 10) : 0;
 }
 
 function mapSegmentsToPlaybackRate(segments, endTime, playbackRate) {

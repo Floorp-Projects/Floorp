@@ -69,7 +69,7 @@ class WorkletImpl {
   virtual JSObject* WrapWorklet(JSContext* aCx, dom::Worklet* aWorklet,
                                 JS::Handle<JSObject*> aGivenProto);
 
-  nsresult SendControlMessage(already_AddRefed<nsIRunnable> aRunnable);
+  virtual nsresult SendControlMessage(already_AddRefed<nsIRunnable> aRunnable);
 
   void NotifyWorkletFinished();
 

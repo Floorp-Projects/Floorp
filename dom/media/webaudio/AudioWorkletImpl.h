@@ -27,6 +27,8 @@ class AudioWorkletImpl final : public WorkletImpl {
   JSObject* WrapWorklet(JSContext* aCx, dom::Worklet* aWorklet,
                         JS::Handle<JSObject*> aGivenProto) override;
 
+  nsresult SendControlMessage(already_AddRefed<nsIRunnable> aRunnable) override;
+
  protected:
   // Execution thread only.
   already_AddRefed<dom::WorkletGlobalScope> ConstructGlobalScope() override;

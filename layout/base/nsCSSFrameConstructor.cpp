@@ -11439,15 +11439,15 @@ bool nsCSSFrameConstructor::WipeContainingBlock(
   }
 
   // Situation #6 is a column hierarchy that's getting new children.
-  if (aFrame->HasAnyStateBits(NS_FRAME_HAS_MULTI_COLUMN_ANCESTOR)) {
-    if (aFrame->IsColumnSetWrapperFrame()) {
-      // Reframe the multi-column container whenever elements insert/append
-      // into it.
-      TRACE("Multi-column");
-      RecreateFramesForContent(aFrame->GetContent(), InsertionKind::Async);
-      return true;
-    }
+  if (aFrame->IsColumnSetWrapperFrame()) {
+    // Reframe the multi-column container whenever elements insert/append
+    // into it.
+    TRACE("Multi-column");
+    RecreateFramesForContent(aFrame->GetContent(), InsertionKind::Async);
+    return true;
+  }
 
+  if (aFrame->HasAnyStateBits(NS_FRAME_HAS_MULTI_COLUMN_ANCESTOR)) {
     bool anyColumnSpanItems = false;
     for (FCItemIterator iter(aItems); !iter.IsDone(); iter.Next()) {
       if (iter.item().mComputedStyle->StyleColumn()->IsColumnSpanStyle()) {

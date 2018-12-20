@@ -194,6 +194,67 @@ const TEST_DATA = [
       },
     ],
   },
+  {
+    targetClass: "jump-start",
+    properties: [
+      {
+        name: "opacity",
+        expectedHints: [
+          {
+            hint: "steps(2, jump-start)",
+            path: [
+              { x: 0, y: 50 },
+              { x: 499, y: 50 },
+              { x: 500, y: 0 },
+              { x: 1000, y: 0 },
+            ],
+          },
+        ],
+      },
+    ],
+  },
+  {
+    targetClass: "jump-end",
+    properties: [
+      {
+        name: "opacity",
+        expectedHints: [
+          {
+            hint: "steps(2)",
+            path: [
+              { x: 0, y: 100 },
+              { x: 499, y: 100 },
+              { x: 500, y: 50 },
+              { x: 999, y: 50 },
+              { x: 1000, y: 0 },
+            ],
+          },
+        ],
+      },
+    ],
+  },
+  {
+    targetClass: "jump-both",
+    properties: [
+      {
+        name: "opacity",
+        expectedHints: [
+          {
+            hint: "steps(3, jump-both)",
+            path: [
+              { x: 0, y: 75 },
+              { x: 330, y: 75 },
+              { x: 340, y: 50 },
+              { x: 660, y: 50 },
+              { x: 670, y: 25 },
+              { x: 999, y: 25 },
+              { x: 1000, y: 0 },
+            ],
+          },
+        ],
+      },
+    ],
+  },
 ];
 
 // Prevent test timeout's on windows code coverage: Bug 1470757

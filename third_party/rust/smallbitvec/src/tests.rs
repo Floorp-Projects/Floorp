@@ -311,3 +311,55 @@ fn eq() {
     assert_ne!(sbvec![true; 400], sbvec![true; 401]);
     assert_ne!(sbvec![false; 401], sbvec![false; 400]);
 }
+
+#[test]
+fn truncate_inline() {
+    let mut v = sbvec![false, true, false, false, true];
+    v.truncate(10);
+    assert_eq!(v.len(), 5);
+    v.truncate(3);
+    assert_eq!(v, sbvec![false, true, false]);
+    v.truncate(0);
+    assert_eq!(v, sbvec![]);
+}
+
+#[test]
+fn truncate_large() {
+    let mut v = SmallBitVec::from_elem(256, false);
+    v.set(2, true);
+    v.set(100, true);
+    v.set(255, true);
+    v.truncate(500);
+    assert_eq!(v.len(), 256);
+    v.truncate(150);
+    assert_eq!(v.len(), 150);
+    assert_eq!(v.get(0).unwrap(), false);
+    assert_eq!(v.get(99).unwrap(), false);
+    assert_eq!(v.get(100).unwrap(), true);
+    assert_eq!(v.get(101).unwrap(), false);
+    assert_eq!(v.get(149).unwrap(), false);
+    v.truncate(5);
+    assert_eq!(v.len(), 5);
+    assert_eq!(v, sbvec![false, false, true, false, false]);
+}
+
+#[test]
+fn resize() {
+    let mut v = sbvec![false, true, false, false, true];
+    v.resize(3, false);
+    assert_eq!(v, sbvec![false, true, false]);
+    v.resize(8, true);
+    assert_eq!(v, sbvec![false, true, false, true, true, true, true, true]);
+    v.resize(100, false);
+    assert_eq!(v.len(), 100);
+    assert_eq!(v.get(0).unwrap(), false);
+    assert_eq!(v.get(1).unwrap(), true);
+    assert_eq!(v.get(2).unwrap(), false);
+    assert_eq!(v.get(3).unwrap(), true);
+    assert_eq!(v.get(4).unwrap(), true);
+    assert_eq!(v.get(7).unwrap(), true);
+    assert_eq!(v.get(8).unwrap(), false);
+    assert_eq!(v.get(9).unwrap(), false);
+    assert_eq!(v.get(98).unwrap(), false);
+    assert_eq!(v.get(99).unwrap(), false);
+}

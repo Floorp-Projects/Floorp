@@ -478,7 +478,8 @@ class JS::Compartment {
   // multiple realms, each with some cross-compartment wrappers potentially
   // keeping the realm alive longer than necessary, we always allocate CCWs in
   // the first realm.
-  Realm* realmForNewCCW() const { return realms_[0]; }
+  Realm* firstRealm() const { return realms_[0]; }
+  Realm* realmForNewCCW() const { return firstRealm(); }
 
   void assertNoCrossCompartmentWrappers() {
     MOZ_ASSERT(crossCompartmentWrappers.empty());

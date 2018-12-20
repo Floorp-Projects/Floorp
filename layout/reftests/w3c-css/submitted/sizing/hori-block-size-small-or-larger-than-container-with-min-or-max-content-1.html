@@ -12,23 +12,25 @@
   <link rel="stylesheet" type="text/css" href="support/ahem.css">
   <link rel="stylesheet" type="text/css" href="support/min-content-max-content.css">
   <style>
+    html, body {
+      margin: 0;
+    }
+
     .container {
       width: 120px;
       height: 200px;
       border: 2px solid blue;
-      padding: 5px;
       display: inline-block;
       vertical-align: top;
     }
 
     .container > * {
       border: 2px solid lime;
-      padding: 5px;
       display: inline-block;
 
       font-family: Ahem;
-      font-size: 15px;
-      line-height: 21px;
+      font-size: 10px;
+      line-height: 15px;
     }
 
     .too-small {
@@ -36,54 +38,58 @@
     }
 
     .too-big {
-      height: 150px;
+      height: 120px;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="height-min-content">height: min-content<br>on this box.</div>
-    <div class="height-max-content">height: max-content<br>on this box.</div>
-  </div>
+  <div>
+    <div class="container">
+      <div class="height-min-content">height: min-content<br>on this box.</div>
+      <div class="height-max-content">height: max-content<br>on this box.</div>
+    </div>
 
-  <div class="container">
-    <div class="too-small min-height-min-content">
-      min-height: min-content<br>on this box.
+    <div class="container">
+      <div class="too-small min-height-min-content">
+        min-height: min-content<br>on this box.
+      </div>
+      <div class="too-small min-height-max-content">
+        min-height: max-content<br>on this box.
+      </div>
     </div>
-    <div class="too-small min-height-max-content">
-      min-height: max-content<br>on this box.
-    </div>
-  </div>
 
-  <div class="container">
-    <div class="too-big max-height-min-content">
-      max-height: min-content<br>on this box.
-    </div>
-    <div class="too-big max-height-max-content">
-      max-height: max-content<br>on this box.
-    </div>
-  </div>
-
-  <div class="container">
-    <div class="block-min-content">block: min-content<br>on this box.</div>
-    <div class="block-max-content">block: max-content<br>on this box.</div>
-  </div>
-
-  <div class="container">
-    <div class="too-small min-block-min-content">
-      min-block: min-content<br>on this box.
-    </div>
-    <div class="too-small min-block-max-content">
-      min-block: max-content<br>on this box.
+    <div class="container">
+      <div class="too-big max-height-min-content">
+        max-height: min-content<br>on this box.
+      </div>
+      <div class="too-big max-height-max-content">
+        max-height: max-content<br>on this box.
+      </div>
     </div>
   </div>
 
-  <div class="container">
-    <div class="too-big max-block-min-content">
-      max-block: min-content<br>on this box.
+  <div>
+    <div class="container">
+      <div class="block-min-content">block: min-content<br>on this box.</div>
+      <div class="block-max-content">block: max-content<br>on this box.</div>
     </div>
-    <div class="too-big max-block-max-content">
-      max-block: max-content<br>on this box.
+
+    <div class="container">
+      <div class="too-small min-block-min-content">
+        min-block: min-content<br>on this box.
+      </div>
+      <div class="too-small min-block-max-content">
+        min-block: max-content<br>on this box.
+      </div>
+    </div>
+
+    <div class="container">
+      <div class="too-big max-block-min-content">
+        max-block: min-content<br>on this box.
+      </div>
+      <div class="too-big max-block-max-content">
+        max-block: max-content<br>on this box.
+      </div>
     </div>
   </div>
 </body>
