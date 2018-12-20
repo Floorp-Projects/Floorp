@@ -32,7 +32,7 @@ function setupEvents(dependencies: Dependencies) {
   threadClient = dependencies.threadClient;
   actions = dependencies.actions;
   supportsWasm = dependencies.supportsWasm;
-  sourceQueue.initialize({ actions, supportsWasm, createSource });
+  sourceQueue.initialize(actions);
 
   if (threadClient) {
     Object.keys(clientEvents).forEach(eventName => {
@@ -98,7 +98,7 @@ function resumed(_: "resumed", packet: ResumedPacket) {
 }
 
 function newSource(_: "newSource", { source }: SourcePacket) {
-  sourceQueue.queue(source);
+  sourceQueue.queue(createSource(source, { supportsWasm }));
 }
 
 function workerListChanged() {
