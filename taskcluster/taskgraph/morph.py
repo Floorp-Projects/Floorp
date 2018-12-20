@@ -11,11 +11,10 @@ locally, so they should be limited to changes that do not modify the meaning of
 the graph.
 """
 
-# Note that the translation of `{'task-reference': '..'}` and
-# `artifact-reference` are handled in the optimization phase (since
-# optimization involves dealing with taskIds directly).  Similarly,
-# `{'relative-datestamp': '..'}` is handled at the last possible moment during
-# task creation.
+# Note that the translation of `{'task-reference': '..'}` is handled in the
+# optimization phase (since optimization involves dealing with taskIds
+# directly).  Similarly, `{'relative-datestamp': '..'}` is handled at the last
+# possible moment during task creation.
 
 from __future__ import absolute_import, print_function, unicode_literals
 

@@ -9,6 +9,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.schema import resolve_keyed_by
+from taskgraph.util.taskcluster import get_taskcluster_artifact_prefix
 
 transforms = TransformSequence()
 
@@ -23,14 +24,16 @@ def add_command(config, tasks):
         for upstream in task.get("dependencies", {}).keys():
             if 'update-verify-config' in upstream:
                 final_verify_configs.append(
-                    "<{}/public/build/update-verify.cfg>".format(upstream),
+                    "{}update-verify.cfg".format(
+                        get_taskcluster_artifact_prefix(task, "<{}>".format(upstream))
+                    )
                 )
         task['run'] = {
             'using': 'run-task',
             'command': {
-                'artifact-reference': 'cd /builds/worker/checkouts/gecko && '
-                                      'tools/update-verify/release/final-verification.sh '
-                                      + ' '.join(final_verify_configs),
+                'task-reference': 'cd /builds/worker/checkouts/gecko && '
+                                  'tools/update-verify/release/final-verification.sh '
+                                  + ' '.join(final_verify_configs),
             },
             'sparse-profile': 'update-verify',
         }
