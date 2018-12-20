@@ -401,7 +401,13 @@ class UrlbarInput {
       if (input && this._overflowing) {
         let side = input.scrollLeft &&
                    input.scrollLeft == input.scrollLeftMax ? "start" : "end";
-        this.setAttribute("textoverflow", side);
+        this.window.requestAnimationFrame(() => {
+          // And check once again, since we might have stopped overflowing
+          // since the promiseDocumentFlushed callback fired.
+          if (this._overflowing) {
+            this.setAttribute("textoverflow", side);
+          }
+        });
       }
     });
   }

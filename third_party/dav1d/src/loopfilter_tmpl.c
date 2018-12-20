@@ -36,12 +36,14 @@
 
 static NOINLINE void
 loop_filter(pixel *dst, int E, int I, int H,
-            const ptrdiff_t stridea, const ptrdiff_t strideb, const int wd)
+            const ptrdiff_t stridea, const ptrdiff_t strideb, const int wd
+            HIGHBD_DECL_SUFFIX)
 {
-    const int F = 1 << (BITDEPTH - 8);
-    E <<= BITDEPTH - 8;
-    I <<= BITDEPTH - 8;
-    H <<= BITDEPTH - 8;
+    const int bitdepth_min_8 = bitdepth_from_max(bitdepth_max) - 8;
+    const int F = 1 << bitdepth_min_8;
+    E <<= bitdepth_min_8;
+    I <<= bitdepth_min_8;
+    H <<= bitdepth_min_8;
 
     for (int i = 0; i < 4; i++, dst += stridea) {
         int p6, p5, p4, p3, p2;
@@ -128,23 +130,23 @@ loop_filter(pixel *dst, int E, int I, int H,
         } else {
             const int hev = abs(p1 - p0) > H || abs(q1 - q0) > H;
 
-#define iclip_diff(v) iclip(v, -128 * (1 << (BITDEPTH - 8)), \
-                                128 * (1 << (BITDEPTH - 8)) - 1)
+#define iclip_diff(v) iclip(v, -128 * (1 << bitdepth_min_8), \
+                                128 * (1 << bitdepth_min_8) - 1)
 
             if (hev) {
                 int f = iclip_diff(p1 - q1), f1, f2;
                 f = iclip_diff(3 * (q0 - p0) + f);
 
-                f1 = imin(f + 4, (128 << (BITDEPTH - 8)) - 1) >> 3;
-                f2 = imin(f + 3, (128 << (BITDEPTH - 8)) - 1) >> 3;
+                f1 = imin(f + 4, (128 << bitdepth_min_8) - 1) >> 3;
+                f2 = imin(f + 3, (128 << bitdepth_min_8) - 1) >> 3;
 
                 dst[strideb * -1] = iclip_pixel(p0 + f2);
                 dst[strideb * +0] = iclip_pixel(q0 - f1);
             } else {
                 int f = iclip_diff(3 * (q0 - p0)), f1, f2;
 
-                f1 = imin(f + 4, (128 << (BITDEPTH - 8)) - 1) >> 3;
-                f2 = imin(f + 3, (128 << (BITDEPTH - 8)) - 1) >> 3;
+                f1 = imin(f + 4, (128 << bitdepth_min_8) - 1) >> 3;
+                f2 = imin(f + 3, (128 << bitdepth_min_8) - 1) >> 3;
 
                 dst[strideb * -1] = iclip_pixel(p0 + f2);
                 dst[strideb * +0] = iclip_pixel(q0 - f1);
@@ -161,7 +163,8 @@ loop_filter(pixel *dst, int E, int I, int H,
 static void loop_filter_h_sb128y_c(pixel *dst, const ptrdiff_t stride,
                                    const uint32_t *const vmask,
                                    const uint8_t (*l)[4], ptrdiff_t b4_stride,
-                                   const Av1FilterLUT *lut, const int h)
+                                   const Av1FilterLUT *lut, const int h
+                                   HIGHBD_DECL_SUFFIX)
 {
     const unsigned vm = vmask[0] | vmask[1] | vmask[2];
     for (unsigned y = 1; vm & ~(y - 1);
@@ -173,7 +176,8 @@ static void loop_filter_h_sb128y_c(pixel *dst, const ptrdiff_t stride,
             const int H = L >> 4;
             const int E = lut->e[L], I = lut->i[L];
             const int idx = (vmask[2] & y) ? 2 : !!(vmask[1] & y);
-            loop_filter(dst, E, I, H, PXSTRIDE(stride), 1, 4 << idx);
+            loop_filter(dst, E, I, H, PXSTRIDE(stride), 1, 4 << idx
+                        HIGHBD_TAIL_SUFFIX);
         }
     }
 }
@@ -181,7 +185,8 @@ static void loop_filter_h_sb128y_c(pixel *dst, const ptrdiff_t stride,
 static void loop_filter_v_sb128y_c(pixel *dst, const ptrdiff_t stride,
                                    const uint32_t *const vmask,
                                    const uint8_t (*l)[4], ptrdiff_t b4_stride,
-                                   const Av1FilterLUT *lut, const int w)
+                                   const Av1FilterLUT *lut, const int w
+                                   HIGHBD_DECL_SUFFIX)
 {
     const unsigned vm = vmask[0] | vmask[1] | vmask[2];
     for (unsigned x = 1; vm & ~(x - 1); x <<= 1, dst += 4, l++) {
@@ -191,7 +196,8 @@ static void loop_filter_v_sb128y_c(pixel *dst, const ptrdiff_t stride,
             const int H = L >> 4;
             const int E = lut->e[L], I = lut->i[L];
             const int idx = (vmask[2] & x) ? 2 : !!(vmask[1] & x);
-            loop_filter(dst, E, I, H, 1, PXSTRIDE(stride), 4 << idx);
+            loop_filter(dst, E, I, H, 1, PXSTRIDE(stride), 4 << idx
+                        HIGHBD_TAIL_SUFFIX);
         }
     }
 }
@@ -199,7 +205,8 @@ static void loop_filter_v_sb128y_c(pixel *dst, const ptrdiff_t stride,
 static void loop_filter_h_sb128uv_c(pixel *dst, const ptrdiff_t stride,
                                     const uint32_t *const vmask,
                                     const uint8_t (*l)[4], ptrdiff_t b4_stride,
-                                    const Av1FilterLUT *lut, const int h)
+                                    const Av1FilterLUT *lut, const int h
+                                    HIGHBD_DECL_SUFFIX)
 {
     const unsigned vm = vmask[0] | vmask[1];
     for (unsigned y = 1; vm & ~(y - 1);
@@ -211,7 +218,8 @@ static void loop_filter_h_sb128uv_c(pixel *dst, const ptrdiff_t stride,
             const int H = L >> 4;
             const int E = lut->e[L], I = lut->i[L];
             const int idx = !!(vmask[1] & y);
-            loop_filter(dst, E, I, H, PXSTRIDE(stride), 1, 4 + 2 * idx);
+            loop_filter(dst, E, I, H, PXSTRIDE(stride), 1, 4 + 2 * idx
+                        HIGHBD_TAIL_SUFFIX);
         }
     }
 }
@@ -219,7 +227,8 @@ static void loop_filter_h_sb128uv_c(pixel *dst, const ptrdiff_t stride,
 static void loop_filter_v_sb128uv_c(pixel *dst, const ptrdiff_t stride,
                                     const uint32_t *const vmask,
                                     const uint8_t (*l)[4], ptrdiff_t b4_stride,
-                                    const Av1FilterLUT *lut, const int w)
+                                    const Av1FilterLUT *lut, const int w
+                                    HIGHBD_DECL_SUFFIX)
 {
     const unsigned vm = vmask[0] | vmask[1];
     for (unsigned x = 1; vm & ~(x - 1); x <<= 1, dst += 4, l++) {
@@ -229,7 +238,8 @@ static void loop_filter_v_sb128uv_c(pixel *dst, const ptrdiff_t stride,
             const int H = L >> 4;
             const int E = lut->e[L], I = lut->i[L];
             const int idx = !!(vmask[1] & x);
-            loop_filter(dst, E, I, H, 1, PXSTRIDE(stride), 4 + 2 * idx);
+            loop_filter(dst, E, I, H, 1, PXSTRIDE(stride), 4 + 2 * idx
+                        HIGHBD_TAIL_SUFFIX);
         }
     }
 }

@@ -8,12 +8,12 @@
 <div id="container"></div>
   <script type="application/javascript">
 
-  var ifr = document.createElement('iframe');
-  ifr.setAttribute('mozbrowser', true);
-  ifr.src = 'http://mochi.test:8888/tests/dom/broadcastchannel/tests/iframe_mozbrowser2.html';
-  ifr.onload = function() { alert('DONE'); }
+  var ifr = document.createElement("iframe");
+  ifr.setAttribute("mozbrowser", true);
+  ifr.src = "http://mochi.test:8888/tests/dom/broadcastchannel/tests/iframe_mozbrowser2.html";
+  ifr.onload = function() { alert("DONE"); };
 
-  var domParent = document.getElementById('container');
+  var domParent = document.getElementById("container");
   domParent.appendChild(ifr);
 
   </script>

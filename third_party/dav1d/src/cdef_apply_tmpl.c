@@ -83,12 +83,13 @@ void bytefn(dav1d_cdef_brow)(Dav1dFrameContext *const f,
                              const Av1Filter *const lflvl,
                              const int by_start, const int by_end)
 {
+    const int bitdepth_min_8 = BITDEPTH == 8 ? 0 : f->cur.p.bpc - 8;
     const Dav1dDSPContext *const dsp = f->dsp;
     enum CdefEdgeFlags edges = HAVE_BOTTOM | (by_start > 0 ? HAVE_TOP : 0);
     pixel *ptrs[3] = { p[0], p[1], p[2] };
     const int sbsz = 16;
     const int sb64w = f->sb128w << 1;
-    const int damping = f->frame_hdr->cdef.damping + BITDEPTH - 8;
+    const int damping = f->frame_hdr->cdef.damping + bitdepth_min_8;
     const enum Dav1dPixelLayout layout = f->cur.p.layout;
     const int uv_idx = DAV1D_PIXEL_LAYOUT_I444 - layout;
     const int has_chroma = layout != DAV1D_PIXEL_LAYOUT_I400;
@@ -156,17 +157,17 @@ void bytefn(dav1d_cdef_brow)(Dav1dFrameContext *const f,
                 }
 
                 // the actual filter
-                const int y_pri_lvl = (y_lvl >> 2) << (BITDEPTH - 8);
+                const int y_pri_lvl = (y_lvl >> 2) << bitdepth_min_8;
                 int y_sec_lvl = y_lvl & 3;
                 y_sec_lvl += y_sec_lvl == 3;
-                y_sec_lvl <<= BITDEPTH - 8;
-                const int uv_pri_lvl = (uv_lvl >> 2) << (BITDEPTH - 8);
+                y_sec_lvl <<= bitdepth_min_8;
+                const int uv_pri_lvl = (uv_lvl >> 2) << bitdepth_min_8;
                 int uv_sec_lvl = uv_lvl & 3;
                 uv_sec_lvl += uv_sec_lvl == 3;
-                uv_sec_lvl <<= BITDEPTH - 8;
+                uv_sec_lvl <<= bitdepth_min_8;
                 unsigned variance;
                 const int dir = dsp->cdef.dir(bptrs[0], f->cur.stride[0],
-                                              &variance);
+                                              &variance HIGHBD_CALL_SUFFIX);
                 if (y_lvl) {
                     dsp->cdef.fb[0](bptrs[0], f->cur.stride[0], lr_bak[bit][0],
                                     (pixel *const [2]) {
@@ -175,7 +176,7 @@ void bytefn(dav1d_cdef_brow)(Dav1dFrameContext *const f,
                                     },
                                     adjust_strength(y_pri_lvl, variance),
                                     y_sec_lvl, y_pri_lvl ? dir : 0,
-                                    damping, edges);
+                                    damping, edges HIGHBD_CALL_SUFFIX);
                 }
                 if (uv_lvl && has_chroma) {
                     const int uvdir =
@@ -190,7 +191,7 @@ void bytefn(dav1d_cdef_brow)(Dav1dFrameContext *const f,
                                              },
                                              uv_pri_lvl, uv_sec_lvl,
                                              uv_pri_lvl ? uvdir : 0,
-                                             damping - 1, edges);
+                                             damping - 1, edges HIGHBD_CALL_SUFFIX);
                     }
                 }
 

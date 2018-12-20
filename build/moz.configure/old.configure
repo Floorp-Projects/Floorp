@@ -253,7 +253,6 @@ def old_configure_options(*options):
     '--with-system-icu',
     '--with-system-jpeg',
     '--with-system-libevent',
-    '--with-system-libvpx',
     '--with-system-nspr',
     '--with-system-nss',
     '--with-system-png',

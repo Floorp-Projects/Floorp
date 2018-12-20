@@ -15,10 +15,10 @@ function consoleListener() {
 
 var order = 0;
 consoleListener.prototype  = {
-  observe: function(aSubject, aTopic, aData) {
+  observe(aSubject, aTopic, aData) {
     if (aTopic == "console-api-log-event") {
       var obj = aSubject.wrappedJSObject;
-      if (order+1 == parseInt(obj.arguments[0])) {
+      if (order + 1 == parseInt(obj.arguments[0])) {
         ok(true, "Message received: " + obj.arguments[0]);
         order++;
       }
@@ -26,16 +26,16 @@ consoleListener.prototype  = {
       if (order == 3) {
         SpecialPowers.removeObserver(this, "console-api-log-event");
         SimpleTest.finish();
-        return;
+
       }
     }
-  }
-}
+  },
+};
 
 var cl = new consoleListener();
 SimpleTest.waitForExplicitFinish();
 
-[1,2,3].forEach(console.log);
+[1, 2, 3].forEach(console.log);
 
   </script>
 </body>

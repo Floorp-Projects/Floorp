@@ -1,4 +1,5 @@
-function f1() { "use asm"; function g() {} return g }
+/* globals jsFuns:false, complete:false */
+function f1() { "use asm"; function g() {} return g; }
 if (this.jsFuns) {
     ok(jsFuns.isAsmJSModule(f1), "f1 is an asm.js module");
     ok(jsFuns.isAsmJSFunction(f1()), "f1.g is an asm.js function");
@@ -10,8 +11,8 @@ function f2(stdlib, foreign, buffer) {
     function main(n) {
         n = n|0;
         var i = 0, sum = 0;
-        for (; (i|0) < (n|0); i=(i+1)|0)
-            sum = (sum + (i32[(i<<2)>>2]|0))|0;
+        for (; (i|0) < (n|0); i=(i + 1)|0)
+            sum = (sum + (i32[(i << 2) >> 2]|0))|0;
         return sum|0;
     }
     return main;
@@ -19,7 +20,7 @@ function f2(stdlib, foreign, buffer) {
 if (this.jsFuns)
     ok(jsFuns.isAsmJSModule(f2), "f2 is an asm.js module");
 var i32 = new Int32Array(16384); // Smallest allowed buffer size is 64KBy
-for (var i = 0; i < i32.length; i++)
+for (let i = 0; i < i32.length; i++)
     i32[i] = i;
 var f2Main = f2(this, null, i32.buffer);
 if (this.jsFuns)
@@ -34,31 +35,35 @@ if (f2Main(i32.length) !== sum)
 if (f2Main(i32.length + 100) !== sum)
     throw "f2.main(" + i32.length + ")";
 
+/* eslint-disable no-unused-vars,no-shadow */
 function f3(stdlib, foreign, buffer) {
     "use asm";
-    var done = foreign.done;
+    var doneFunc = foreign.done;
     var i32 = new stdlib.Int32Array(buffer);
     function main() {
-        var i = 0, sum = 0;
+        var i = 0;
+        var total = 0;
         while (1) {
-            for (i = 0; (i|0) < 1000; i=(i+1)|0)
-                sum = (sum + i)|0;
-            if (done(sum|0)|0)
+            for (i = 0; (i|0) < 1000; i=(i + 1)|0)
+                total = (total + i)|0;
+            if (doneFunc(total|0)|0)
                 break;
         }
-        return sum|0;
+        return total|0;
     }
     return main;
 }
+/* eslint-enable no-unused-vars,no-shadow */
+
 var begin;
 var lastSum;
-function done(sum) {
-    if (sum !== ((lastSum + 499500)|0))
-        throw "bad sum: " + sum + ", " + lastSum + ", " + ((lastSum + 499500)|0);
-    lastSum = sum;
+function done(sumInner) {
+    if (sumInner !== ((lastSum + 499500)|0))
+        throw "bad sum: " + sumInner + ", " + lastSum + ", " + ((lastSum + 499500)|0);
+    lastSum = sumInner;
     return (Date.now() - begin) > 3000;
 }
-var f3Main = f3(this, {done:done}, i32.buffer);
+var f3Main = f3(this, {done}, i32.buffer);
 if (this.jsFuns)
     ok(jsFuns.isAsmJSFunction(f3Main), "f3.main is an asm.js function");
 

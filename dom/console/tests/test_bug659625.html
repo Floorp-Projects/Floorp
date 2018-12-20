@@ -22,7 +22,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=659625
       "Only one event remains in consoleAPIStorage");
     ok(storage.getEvents()[0].level === "clear",
       "Remaining event has level 'clear'");
-  }
+  };
 
   storage.clearEvents();
   ok(storage.getEvents().length === 0,
@@ -69,21 +69,21 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=659625
   }
   clearAndCheckStorage();
 
-  console.group("group-label")
+  console.group("group-label");
   console.log("group-log");
   ok(storage.getEvents().length === 3,
     "2 new console events registered for group + log");
   clearAndCheckStorage();
 
-  console.groupCollapsed("group-collapsed")
+  console.groupCollapsed("group-collapsed");
   console.log("group-collapsed-log");
   ok(storage.getEvents().length === 3,
     "2 new console events registered for groupCollapsed + log");
   clearAndCheckStorage();
 
-  console.group("closed-group-label")
+  console.group("closed-group-label");
   console.log("group-log");
-  console.groupEnd()
+  console.groupEnd();
   ok(storage.getEvents().length === 4,
     "3 new console events registered for group/groupEnd");
   clearAndCheckStorage();

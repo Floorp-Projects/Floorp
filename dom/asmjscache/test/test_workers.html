@@ -28,7 +28,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=941830
       var workerCode = asmjsCode;
       workerCode += "if (f()() !== 42) postMessage('fail'); else postMessage('ok');";
       workerCode = 'var code = "' + workerCode + '"; eval(code); eval(code)';
-      var workerBlob = new Blob([workerCode], {type:"application/javascript"});
+      var workerBlob = new Blob([workerCode], {type: "application/javascript"});
 
       var mainCode = asmjsCode;
       mainCode += "ok(jsFuns.isAsmJSModuleLoadedFromCache(f), 'f is a cache hit')\n";
@@ -36,7 +36,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=941830
       mainCode += "ok(jsFuns.isAsmJSFunction(g42), 'g42 is an asm.js function');\n";
       mainCode += "ok(g42() === 42, 'g42 returns the correct result');\n";
       mainCode += "SimpleTest.finish();\n";
-      var mainBlob = new Blob([mainCode], {type:"application/javascript"});
+      var mainBlob = new Blob([mainCode], {type: "application/javascript"});
 
       var w = new Worker(URL.createObjectURL(workerBlob));
 
@@ -51,14 +51,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=941830
               ok(e.data === "ok", "Received second message");
               received = 2;
 
-              var script = document.createElement('script');
+              var script = document.createElement("script");
               script.src = URL.createObjectURL(mainBlob);
               document.body.appendChild(script);
               break;
             default:
               throw "Huh?";
           }
-      }
+      };
 
       SimpleTest.waitForExplicitFinish();
   }
