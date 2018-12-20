@@ -1057,6 +1057,7 @@ panelview .toolbarbutton-1 {
 
 panelview .toolbarbutton-1@buttonStateHover@,
 toolbarbutton.subviewbutton@buttonStateHover@,
+.navigable.subviewbutton@buttonStateHover@,
 menu.subviewbutton@menuStateHover@,
 menuitem.subviewbutton@menuStateHover@,
 .widget-overflow-list .toolbarbutton-1@buttonStateHover@,
@@ -1067,6 +1068,7 @@ menuitem.subviewbutton@menuStateHover@,
 
 panelview .toolbarbutton-1@buttonStateActive@,
 toolbarbutton.subviewbutton@buttonStateActive@,
+.navigable.subviewbutton@buttonStateActive@,
 menu.subviewbutton@menuStateActive@,
 menuitem.subviewbutton@menuStateActive@,
 .widget-overflow-list .toolbarbutton-1@buttonStateActive@,
@@ -1608,19 +1610,19 @@ toolbarpaletteitem[place="menu-panel"] > .subviewbutton-nav::after {
   padding: 4px;
 }
 
-.subviewbutton.download[retryLabel] > .action-button {
+.subviewbutton.download[canRetry] > .action-button {
   list-style-image: url("chrome://browser/skin/reload.svg");
 }
 
-.subviewbutton.download:not([openLabel]):not([retryLabel]) > .action-button {
+.subviewbutton.download:not([canShow]):not([canRetry]) > .action-button {
   fill: currentColor;
   fill-opacity: 0.4;
 }
 
-.subviewbutton.download:-moz-any([openLabel],[retryLabel]) > .action-button@buttonStateHover@ {
+.subviewbutton.download:-moz-any([canShow],[canRetry]) > .action-button@buttonStateHover@ {
   background-color: var(--arrowpanel-dimmed-further);
 }
 
-.subviewbutton.download:-moz-any([openLabel],[retryLabel]) > .action-button@buttonStateActive@ {
+.subviewbutton.download:-moz-any([canShow],[canRetry]) > .action-button@buttonStateActive@ {
   background-color: var(--arrowpanel-dimmed-even-further);
 }

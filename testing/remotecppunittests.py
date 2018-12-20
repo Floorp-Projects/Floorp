@@ -14,7 +14,7 @@ import mozfile
 import mozinfo
 import mozlog
 import posixpath
-from mozdevice import ADBAndroid, ADBProcessError, ADBTimeoutError
+from mozdevice import ADBDevice, ADBProcessError, ADBTimeoutError
 
 try:
     from mozbuild.base import MozbuildObject
@@ -28,9 +28,9 @@ class RemoteCPPUnitTests(cppunittests.CPPUnitTests):
     def __init__(self, options, progs):
         cppunittests.CPPUnitTests.__init__(self)
         self.options = options
-        self.device = ADBAndroid(adb=options.adb_path or 'adb',
-                                 device=options.device_serial,
-                                 test_root=options.remote_test_root)
+        self.device = ADBDevice(adb=options.adb_path or 'adb',
+                                device=options.device_serial,
+                                test_root=options.remote_test_root)
         self.remote_test_root = posixpath.join(self.device.test_root, "cppunittests")
         self.remote_bin_dir = posixpath.join(self.remote_test_root, "b")
         self.remote_tmp_dir = posixpath.join(self.remote_test_root, "tmp")

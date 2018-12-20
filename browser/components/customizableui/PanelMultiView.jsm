@@ -1397,7 +1397,7 @@ var PanelView = class extends AssociatedToNode {
     }
 
     let navigableElements = Array.from(this.node.querySelectorAll(
-      ":-moz-any(button,toolbarbutton,menulist,.text-link):not([disabled])"));
+      ":-moz-any(button,toolbarbutton,menulist,.text-link,.navigable):not([disabled])"));
     return this.__navigableElements = navigableElements.filter(element => {
       // Set the "tabindex" attribute to make sure the element is focusable.
       if (!element.hasAttribute("tabindex")) {

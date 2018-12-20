@@ -1449,7 +1449,7 @@ already_AddRefed<nsIDocument> nsHTMLDocument::Open(
     JS::Rooted<JSObject*> wrapper(cx, GetWrapper());
     if (oldScope && newScope != oldScope && wrapper) {
       JSAutoRealm ar(cx, wrapper);
-      mozilla::dom::ReparentWrapper(cx, wrapper, aError);
+      UpdateReflectorGlobal(cx, wrapper, aError);
       if (aError.Failed()) {
         return nullptr;
       }
@@ -1460,7 +1460,7 @@ already_AddRefed<nsIDocument> nsHTMLDocument::Open(
         JS::Rooted<JSObject*> contentsOwnerWrapper(
             cx, mTemplateContentsOwner->GetWrapper());
         if (contentsOwnerWrapper) {
-          mozilla::dom::ReparentWrapper(cx, contentsOwnerWrapper, aError);
+          UpdateReflectorGlobal(cx, contentsOwnerWrapper, aError);
           if (aError.Failed()) {
             return nullptr;
           }

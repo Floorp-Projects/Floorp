@@ -13,5 +13,6 @@ redo==2.0.2
 requests==2.9.1
 six==1.10.0
 taskcluster==4.0.1
+taskcluster-urls==11.0.0
 virtualenv==15.2.0
 voluptuous==0.11.5

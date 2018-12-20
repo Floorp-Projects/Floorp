@@ -73,7 +73,7 @@ def dump_device_screen(device, log, prefix='mozilla-test-fail-screenshot_'):
     specified by the MOZ_UPLOAD_DIR environment variable. Cloned from
     mozscreenshot.dump_screen.
 
-    :param device: Reference to an ADBAndroid object which provides the
+    :param device: Reference to an ADBDevice object which provides the
         interface to interact with Android devices.
     :param log: Reference to logger.
     """

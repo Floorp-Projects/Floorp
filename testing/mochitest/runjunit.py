@@ -15,7 +15,7 @@ import mozcrash
 import mozinfo
 import mozlog
 import moznetwork
-from mozdevice import ADBAndroid, ADBError
+from mozdevice import ADBDevice, ADBError
 from mozprofile import Profile, DEFAULT_PORTS
 from mozprofile.permissions import ServerLocations
 from runtests import MochitestDesktop, update_mozinfo
@@ -43,10 +43,10 @@ class JUnitTestRunner(MochitestDesktop):
         verbose = False
         if options.log_tbpl_level == 'debug' or options.log_mach_level == 'debug':
             verbose = True
-        self.device = ADBAndroid(adb=options.adbPath or 'adb',
-                                 device=options.deviceSerial,
-                                 test_root=options.remoteTestRoot,
-                                 verbose=verbose)
+        self.device = ADBDevice(adb=options.adbPath or 'adb',
+                                device=options.deviceSerial,
+                                test_root=options.remoteTestRoot,
+                                verbose=verbose)
         self.options = options
         self.log.debug("options=%s" % vars(options))
         update_mozinfo()
