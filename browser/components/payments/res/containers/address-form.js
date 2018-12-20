@@ -100,6 +100,7 @@ export default class AddressForm extends
       }, record, {
         DEFAULT_REGION: PaymentDialogUtils.DEFAULT_REGION,
         getFormFormat: PaymentDialogUtils.getFormFormat,
+        findAddressSelectOption: PaymentDialogUtils.findAddressSelectOption,
         countries: PaymentDialogUtils.countries,
       });
 
