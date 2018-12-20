@@ -336,7 +336,18 @@ var StarUI = {
   },
 
   showConfirmation() {
-    LibraryUI.triggerLibraryAnimation("bookmark");
+    let animationTriggered = LibraryUI.triggerLibraryAnimation("bookmark");
+
+    // Show the "Saved to Library!" hint in addition to the library button
+    // animation for the first three times, or when the animation was skipped
+    // e.g. because the library button has been customized away.
+    const HINT_COUNT_PREF =
+      "browser.bookmarks.editDialog.confirmationHintShowCount";
+    const HINT_COUNT = Services.prefs.getIntPref(HINT_COUNT_PREF, 0);
+    if (animationTriggered && HINT_COUNT >= 3) {
+      return;
+    }
+    Services.prefs.setIntPref(HINT_COUNT_PREF, HINT_COUNT + 1);
 
     let anchor;
     if (window.toolbar.visible) {
@@ -1079,6 +1090,9 @@ var PlacesToolbarHelper = {
  * Handles the Library button in the toolbar.
  */
 var LibraryUI = {
+  /**
+   * @returns true if the animation could be triggered, false otherwise.
+   */
   triggerLibraryAnimation(animation) {
     if (!this.hasOwnProperty("COSMETIC_ANIMATIONS_ENABLED")) {
       XPCOMUtils.defineLazyPreferenceGetter(this, "COSMETIC_ANIMATIONS_ENABLED",
@@ -1092,7 +1106,7 @@ var LibraryUI = {
         !libraryButton.closest("#nav-bar") ||
         !window.toolbar.visible ||
         !this.COSMETIC_ANIMATIONS_ENABLED) {
-      return;
+      return false;
     }
 
     let animatableBox = document.getElementById("library-animatable-box");
@@ -1119,6 +1133,8 @@ var LibraryUI = {
     animatableBox.addEventListener("animationend", this._libraryButtonAnimationEndListeners[animation]);
 
     window.addEventListener("resize", this._onWindowResize);
+
+    return true;
   },
 
   _libraryButtonAnimationEndListeners: {},
