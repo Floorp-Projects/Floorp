@@ -209,7 +209,8 @@ function testEscapeStringPosix() {
   is(CurlUtils.escapeStringPosix(controlChars), "$'\\x07 \\x09 \\x0c \\x1b'",
     "Control characters should be escaped.");
 
-  const extendedAsciiChars = "æ ø ü ß ö é";
+  // æ ø ü ß ö é
+  const extendedAsciiChars = "\xc3\xa6 \xc3\xb8 \xc3\xbc \xc3\x9f \xc3\xb6 \xc3\xa9";
   is(CurlUtils.escapeStringPosix(extendedAsciiChars),
     "$'\\xc3\\xa6 \\xc3\\xb8 \\xc3\\xbc \\xc3\\x9f \\xc3\\xb6 \\xc3\\xa9'",
     "Character codes outside of the decimal range 32 - 126 should be escaped.");

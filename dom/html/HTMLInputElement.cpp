@@ -675,7 +675,6 @@ nsresult HTMLInputElement::InitColorPicker() {
   }
 
   if (IsPopupBlocked()) {
-    win->FirePopupBlockedEvent(doc, nullptr, EmptyString(), EmptyString());
     return NS_OK;
   }
 
@@ -721,7 +720,6 @@ nsresult HTMLInputElement::InitFilePicker(FilePickerType aType) {
   }
 
   if (IsPopupBlocked()) {
-    win->FirePopupBlockedEvent(doc, nullptr, EmptyString(), EmptyString());
     return NS_OK;
   }
 

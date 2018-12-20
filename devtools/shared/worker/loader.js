@@ -480,7 +480,7 @@ var {
                  .getService(Ci.mozIJSSubScriptLoader);
 
     const loadSubScript = function(url, sandbox) {
-      subScriptLoader.loadSubScript(url, sandbox, "UTF-8");
+      subScriptLoader.loadSubScript(url, sandbox);
     };
 
     const reportError = Cu.reportError;

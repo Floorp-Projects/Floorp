@@ -16,7 +16,7 @@ import runxpcshelltests as xpcshell
 import tempfile
 from zipfile import ZipFile
 
-from mozdevice import ADBAndroid, ADBDevice, ADBTimeoutError
+from mozdevice import ADBDevice, ADBTimeoutError
 import mozfile
 import mozinfo
 from mozlog import commandline
@@ -243,10 +243,10 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         verbose = False
         if options['log_tbpl_level'] == 'debug' or options['log_mach_level'] == 'debug':
             verbose = True
-        self.device = ADBAndroid(adb=options['adbPath'] or 'adb',
-                                 device=options['deviceSerial'],
-                                 test_root=options['remoteTestRoot'],
-                                 verbose=verbose)
+        self.device = ADBDevice(adb=options['adbPath'] or 'adb',
+                                device=options['deviceSerial'],
+                                test_root=options['remoteTestRoot'],
+                                verbose=verbose)
         self.remoteTestRoot = posixpath.join(self.device.test_root, "xpc")
         # Add Android version (SDK level) to mozinfo so that manifest entries
         # can be conditional on android_version.

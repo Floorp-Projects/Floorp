@@ -59,13 +59,11 @@ function checkDialogContents(win, notBefore, notAfter) {
   Assert.equal(win.document.getElementById("hostname").textContent,
                `${TEST_HOSTNAME}:${TEST_PORT}`,
                "Actual and expected hostname and port should be equal");
-  // “ and ” don't seem to work when embedded in the following literals, which
-  // is why escape codes are used instead.
   Assert.equal(win.document.getElementById("organization").textContent,
-               `Organization: \u201C${TEST_ORG}\u201D`,
+               `Organization: “${TEST_ORG}”`,
                "Actual and expected organization should be equal");
   Assert.equal(win.document.getElementById("issuer").textContent,
-               `Issued Under: \u201C${TEST_ISSUER_ORG}\u201D`,
+               `Issued Under: “${TEST_ISSUER_ORG}”`,
                "Actual and expected issuer organization should be equal");
 
   Assert.equal(win.document.getElementById("nicknames").label,

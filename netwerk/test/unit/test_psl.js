@@ -13,7 +13,7 @@ function run_test()
   var scriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
                        .getService(Ci.mozIJSSubScriptLoader);
   var srvScope = {};
-  scriptLoader.loadSubScript(uri.spec, srvScope, "utf-8");
+  scriptLoader.loadSubScript(uri.spec, srvScope);
 }
 
 function checkPublicSuffix(host, expectedSuffix)

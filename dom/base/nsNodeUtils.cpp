@@ -516,7 +516,7 @@ already_AddRefed<nsINode> nsNodeUtils::CloneAndAdopt(
       if ((wrapper = aNode->GetWrapper())) {
         MOZ_ASSERT(IsDOMObject(wrapper));
         JSAutoRealm ar(cx, wrapper);
-        ReparentWrapper(cx, wrapper, aError);
+        UpdateReflectorGlobal(cx, wrapper, aError);
         if (aError.Failed()) {
           if (wasRegistered) {
             aNode->OwnerDoc()->UnregisterActivityObserver(aNode->AsElement());

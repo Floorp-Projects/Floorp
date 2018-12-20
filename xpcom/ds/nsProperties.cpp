@@ -8,10 +8,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-NS_IMPL_AGGREGATED(nsProperties)
-NS_INTERFACE_MAP_BEGIN_AGGREGATED(nsProperties)
-  NS_INTERFACE_MAP_ENTRY(nsIProperties)
-NS_INTERFACE_MAP_END
+NS_IMPL_ISUPPORTS(nsProperties, nsIProperties)
 
 NS_IMETHODIMP
 nsProperties::Get(const char* prop, const nsIID& uuid, void** result) {
