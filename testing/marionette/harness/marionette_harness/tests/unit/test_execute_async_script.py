@@ -24,6 +24,10 @@ class TestExecuteAsyncContent(MarionetteTestCase):
     def test_execute_async_timeout(self):
         self.assertRaises(ScriptTimeoutException, self.marionette.execute_async_script, "var x = 1;")
 
+    def test_execute_async_unique_timeout(self):
+        self.assertEqual(2, self.marionette.execute_async_script("setTimeout(() => arguments[0](2), 2000);", script_timeout=5000))
+        self.assertRaises(ScriptTimeoutException, self.marionette.execute_async_script, "setTimeout(() => arguments[0](3), 2000);")
+
     def test_no_timeout(self):
         self.marionette.timeout.script = 10
         self.assertTrue(self.marionette.execute_async_script("""

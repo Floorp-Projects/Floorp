@@ -73,9 +73,6 @@ class Places(BaseLib):
 
     def restore_default_bookmarks(self):
         """Restore the default bookmarks for the current profile."""
-        original_timeout = self.marionette.timeout.script
-        self.marionette.timeout.script = 10
-
         retval = self.marionette.execute_async_script("""
           let [resolve] = arguments;
           Components.utils.import("resource://gre/modules/BookmarkHTMLUtils.jsm");
@@ -88,9 +85,7 @@ class Places(BaseLib):
           BookmarkHTMLUtils.importFromURL(defaultBookmarks, { replace: true })
                            .then(() => resolve(true))
                            .catch(() => resolve(false));
-        """)
-
-        self.marionette.timeout.script = original_timeout
+        """, script_timeout=10000)
 
         if not retval:
             raise MarionetteException("Restore Default Bookmarks failed")
@@ -118,9 +113,6 @@ class Places(BaseLib):
 
     def remove_all_history(self):
         """Remove all history items."""
-        original_timeout = self.marionette.timeout.script
-        self.marionette.timeout.script = 10
-
         retval = self.marionette.execute_async_script("""
             let [resolve] = arguments;
             Components.utils.import("resource://gre/modules/PlacesUtils.jsm");
@@ -128,9 +120,7 @@ class Places(BaseLib):
             PlacesUtils.history.clear()
                        .then(() => resolve(true))
                        .catch(() => resolve(false));
-        """)
-
-        self.marionette.timeout.script = original_timeout
+        """, script_timeout=10000)
 
         if not retval:
             raise MarionetteException("Removing all history failed")
