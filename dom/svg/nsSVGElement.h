@@ -157,7 +157,7 @@ class nsSVGElement : public nsSVGElementBase  // nsIContent
    */
   virtual gfxMatrix PrependLocalTransformsTo(
       const gfxMatrix& aMatrix,
-      SVGTransformTypes aWhich = eAllTransforms) const;
+      mozilla::SVGTransformTypes aWhich = mozilla::eAllTransforms) const;
 
   // Setter for to set the current <animateMotion> transformation
   // Only visible for nsSVGGraphicElement, so it's a no-op here, and that

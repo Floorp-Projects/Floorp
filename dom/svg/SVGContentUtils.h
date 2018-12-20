@@ -36,8 +36,6 @@ class SVGSVGElement;
 class SVGViewportElement;
 }  // namespace dom
 
-}  // namespace mozilla
-
 #define SVG_ZERO_LENGTH_PATH_FIX_FACTOR 512
 
 /**
@@ -75,20 +73,15 @@ enum SVGTransformTypes {
  */
 class SVGContentUtils {
  public:
-  typedef mozilla::ComputedStyle ComputedStyle;
   typedef mozilla::gfx::Float Float;
   typedef mozilla::gfx::Matrix Matrix;
   typedef mozilla::gfx::Rect Rect;
   typedef mozilla::gfx::StrokeOptions StrokeOptions;
-  typedef mozilla::SVGAnimatedPreserveAspectRatio
-      SVGAnimatedPreserveAspectRatio;
-  typedef mozilla::SVGPreserveAspectRatio SVGPreserveAspectRatio;
 
   /*
    * Get the outer SVG element of an nsIContent
    */
-  static mozilla::dom::SVGSVGElement* GetOuterSVGElement(
-      nsSVGElement* aSVGElement);
+  static dom::SVGSVGElement* GetOuterSVGElement(nsSVGElement* aSVGElement);
 
   /**
    * Activates the animation element aContent as a result of navigation to the
@@ -343,5 +336,7 @@ class SVGContentUtils {
    */
   static bool ShapeTypeHasNoCorners(const nsIContent* aContent);
 };
+
+}  // namespace mozilla
 
 #endif

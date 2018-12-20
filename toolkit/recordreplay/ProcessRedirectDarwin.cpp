@@ -159,6 +159,36 @@ void ReplayInvokeCallback(size_t aCallbackId) {
 // Middleman Call Helpers
 ///////////////////////////////////////////////////////////////////////////////
 
+// List of the Objective C classes which messages might be sent to directly.
+static const char* gStaticClassNames[] = {
+  // Standard classes.
+  "NSAutoreleasePool",
+  "NSBezierPath",
+  "NSButtonCell",
+  "NSColor",
+  "NSComboBoxCell",
+  "NSDictionary",
+  "NSGraphicsContext",
+  "NSFont",
+  "NSFontManager",
+  "NSLevelIndicatorCell",
+  "NSNumber",
+  "NSPopUpButtonCell",
+  "NSProgressBarCell",
+  "NSString",
+  "NSWindow",
+
+  // Gecko defined classes.
+  "CellDrawView",
+  "CheckboxCell",
+  "RadioButtonCell",
+  "SearchFieldCellWithFocusRing",
+  "ToolbarSearchFieldCellWithFocusRing",
+};
+
+// Objective C classes for each of the above class names.
+static Class* gStaticClasses;
+
 // Inputs that originate from static data in the replaying process itself
 // rather than from previous middleman calls.
 enum class ObjCInputKind {
@@ -173,6 +203,22 @@ struct CFConstantString {
   char* mData;
   size_t mLength;
 };
+
+static Class gCFConstantStringClass;
+
+static void
+InitializeStaticClasses()
+{
+  gStaticClasses = new Class[ArrayLength(gStaticClassNames)];
+
+  for (size_t i = 0; i < ArrayLength(gStaticClassNames); i++) {
+    gStaticClasses[i] = objc_lookUpClass(gStaticClassNames[i]);
+    MOZ_RELEASE_ASSERT(gStaticClasses[i]);
+  }
+
+  gCFConstantStringClass = objc_lookUpClass("__NSCFConstantString");
+  MOZ_RELEASE_ASSERT(gCFConstantStringClass);
+}
 
 // Capture an Objective C or CoreFoundation input to a call, which may come
 // either from another middleman call, or from static data in the replaying
@@ -190,37 +236,10 @@ static void MM_ObjCInput(MiddlemanCallContext& aCx, id* aThingPtr) {
   if (aCx.mPhase == MiddlemanCallPhase::ReplayInput) {
     // Try to determine where this object came from.
 
-    // List of the Objective C classes which messages might be sent to directly.
-    static const char* gStaticClasses[] = {
-        // Standard classes.
-        "NSAutoreleasePool",
-        "NSBezierPath",
-        "NSButtonCell",
-        "NSColor",
-        "NSComboBoxCell",
-        "NSDictionary",
-        "NSGraphicsContext",
-        "NSFont",
-        "NSFontManager",
-        "NSLevelIndicatorCell",
-        "NSNumber",
-        "NSPopUpButtonCell",
-        "NSProgressBarCell",
-        "NSString",
-        "NSWindow",
-
-        // Gecko defined classes.
-        "CellDrawView",
-        "CheckboxCell",
-        "RadioButtonCell",
-        "SearchFieldCellWithFocusRing",
-        "ToolbarSearchFieldCellWithFocusRing",
-    };
-
     // Watch for messages sent to particular classes.
-    for (const char* className : gStaticClasses) {
-      Class cls = objc_lookUpClass(className);
-      if (cls == (Class)*aThingPtr) {
+    for (size_t i = 0; i < ArrayLength(gStaticClassNames); i++) {
+      if (gStaticClasses[i] == (Class)*aThingPtr) {
+        const char* className = gStaticClassNames[i];
         aCx.WriteInputScalar((size_t)ObjCInputKind::StaticClass);
         size_t len = strlen(className) + 1;
         aCx.WriteInputScalar(len);
@@ -237,7 +256,7 @@ static void MM_ObjCInput(MiddlemanCallContext& aCx, id* aThingPtr) {
     // paint, instead of crashing.
     if (MemoryRangeIsTracked(*aThingPtr, sizeof(CFConstantString))) {
       CFConstantString* str = (CFConstantString*)*aThingPtr;
-      if (str->mClass == objc_lookUpClass("__NSCFConstantString") &&
+      if (str->mClass == gCFConstantStringClass &&
           str->mLength <= 4096 &&  // Sanity check.
           MemoryRangeIsTracked(str->mData, str->mLength)) {
         InfallibleVector<UniChar> buffer;
@@ -2653,6 +2672,8 @@ void EarlyInitializeRedirections() {
   // Bind the gOriginal functions to their redirections' base addresses until we
   // finish installing redirections.
   LateInitializeRedirections();
+
+  InitializeStaticClasses();
 }
 
 void LateInitializeRedirections() {

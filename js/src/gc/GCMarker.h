@@ -55,8 +55,8 @@ using WeakKeyTable =
  *
  * To implement such delayed marking of the children with minimal overhead for
  * the normal case of sufficient stack, we link arenas into a list using
- * Arena::setNextDelayedMarking(). The head of the list is stored in
- * GCMarker::unmarkedArenaStackTop. GCMarker::delayMarkingChildren() adds arenas
+ * Arena::setNextDelayedMarkingArena(). The head of the list is stored in
+ * GCMarker::delayedMarkingList. GCMarker::delayMarkingChildren() adds arenas
  * to the list as necessary while markAllDelayedChildren() pops the arenas from
  * the stack until it is empty.
  */
@@ -294,14 +294,14 @@ class GCMarker : public JSTracer {
   }
 
   void delayMarkingArena(gc::Arena* arena);
-  void delayMarkingChildren(const void* thing);
+  void delayMarkingChildren(gc::Cell* cell);
   void markDelayedChildren(gc::Arena* arena, gc::MarkColor color);
   MOZ_MUST_USE bool markAllDelayedChildren(SliceBudget& budget);
-  bool processDelayedMarkingList(gc::Arena** outputList, gc::MarkColor color,
-                                 bool shouldYield, SliceBudget& budget);
-  bool hasDelayedChildren() const { return !!unmarkedArenaStackTop; }
+  bool processDelayedMarkingList(gc::MarkColor color, bool shouldYield,
+                                 SliceBudget& budget);
+  bool hasDelayedChildren() const { return !!delayedMarkingList; }
 
-  bool isDrained() { return isMarkStackEmpty() && !unmarkedArenaStackTop; }
+  bool isDrained() { return isMarkStackEmpty() && !delayedMarkingList; }
 
   MOZ_MUST_USE bool markUntilBudgetExhausted(SliceBudget& budget);
 
@@ -384,6 +384,11 @@ class GCMarker : public JSTracer {
 
   inline void processMarkStackTop(SliceBudget& budget);
 
+  void appendToDelayedMarkingList(gc::Arena** listTail, gc::Arena* arena);
+
+  template <typename F>
+  void forEachDelayedMarkingArena(F&& f);
+
   /* The mark stack. Pointers in this stack are "gray" in the GC sense. */
   gc::MarkStack stack;
 
@@ -394,7 +399,10 @@ class GCMarker : public JSTracer {
   MainThreadData<gc::MarkColor> color;
 
   /* Pointer to the top of the stack of arenas we are delaying marking on. */
-  MainThreadData<js::gc::Arena*> unmarkedArenaStackTop;
+  MainThreadData<js::gc::Arena*> delayedMarkingList;
+
+  /* Whether more work has been added to the delayed marking list. */
+  MainThreadData<bool> delayedMarkingWorkAdded;
 
   /*
    * If the weakKeys table OOMs, disable the linear algorithm and fall back
