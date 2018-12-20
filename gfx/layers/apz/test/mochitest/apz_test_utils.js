@@ -282,6 +282,8 @@ function runSubtestsSeriallyInFreshWindows(aSubtests) {
           // called with at most 2 arguments.
           return SimpleTest.ok.apply(SimpleTest, arguments);
         };
+        w.todo_is = function(a, b, msg)  { return todo_is(a, b, aFile + " | " + msg); };
+        w.todo = function(cond, msg) { return todo(cond, aFile + " | " + msg); };
         if (test.onload) {
           w.addEventListener('load', function(e) { test.onload(w); }, { once: true });
         }
