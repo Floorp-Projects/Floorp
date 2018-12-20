@@ -24,7 +24,6 @@ ConsoleApiCall.propTypes = {
   open: PropTypes.bool,
   serviceContainer: PropTypes.object.isRequired,
   timestampsVisible: PropTypes.bool.isRequired,
-  maybeScrollToBottom: PropTypes.func,
 };
 
 ConsoleApiCall.defaultProps = {
@@ -42,7 +41,6 @@ function ConsoleApiCall(props) {
     repeat,
     pausedExecutionPoint,
     isPaused,
-    maybeScrollToBottom,
   } = props;
   const {
     id: messageId,
@@ -68,7 +66,6 @@ function ConsoleApiCall(props) {
     userProvidedStyles,
     serviceContainer,
     type,
-    maybeScrollToBottom,
   };
 
   if (type === "trace") {
@@ -140,7 +137,6 @@ function ConsoleApiCall(props) {
     timeStamp,
     timestampsVisible,
     parameters,
-    maybeScrollToBottom,
   });
 }
 
@@ -154,7 +150,6 @@ function formatReps(options = {}) {
     serviceContainer,
     userProvidedStyles,
     type,
-    maybeScrollToBottom,
   } = options;
 
   return (
@@ -171,7 +166,6 @@ function formatReps(options = {}) {
         loadedObjectProperties,
         loadedObjectEntries,
         type,
-        maybeScrollToBottom,
       }))
       // Interleave spaces.
       .reduce((arr, v, i) => {
