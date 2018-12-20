@@ -1405,10 +1405,10 @@ void RuntimeService::UnregisterWorker(WorkerPrivate* aWorkerPrivate) {
                                    aWorkerPrivate->CreationTimeStamp());
   }
 
-  if (aWorkerPrivate->IsSharedWorker()) {
-    AssertIsOnMainThread();
-    aWorkerPrivate->GetRemoteWorkerController()->CloseWorkerOnMainThread();
-  }
+  // NB: For Shared Workers we used to call ShutdownOnMainThread on the
+  // RemoteWorkerController; however, that was redundant because
+  // RemoteWorkerChild uses a WeakWorkerRef which notifies at about the
+  // same time as us calling into the code here and would race with us.
 
   if (parent) {
     parent->RemoveChildWorker(aWorkerPrivate);
