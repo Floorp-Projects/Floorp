@@ -599,7 +599,9 @@ int32_t DesktopCaptureImpl::StartCapture(
     const VideoCaptureCapability& capability) {
   _requestedCapability = capability;
 #if defined(_WIN32)
-  uint32_t maxFPSNeeded = 1000 / _requestedCapability.maxFPS;
+  uint32_t maxFPSNeeded = _requestedCapability.maxFPS > 0
+                              ? 1000 / _requestedCapability.maxFPS
+                              : 1000;
   capturer_thread_->RequestCallbackTimer(maxFPSNeeded);
 #endif
 
@@ -670,7 +672,9 @@ void DesktopCaptureImpl::process() {
       ((uint32_t)(rtc::TimeNanos() - startProcessTime)) /
       rtc::kNumNanosecsPerMillisec;
   // Use at most x% CPU or limit framerate
-  const uint32_t maxFPSNeeded = 1000 / _requestedCapability.maxFPS;
+  const uint32_t maxFPSNeeded = _requestedCapability.maxFPS > 0
+                                    ? 1000 / _requestedCapability.maxFPS
+                                    : 1000;
   const float sleepTimeFactor = (100.0f / kMaxDesktopCaptureCpuUsage) - 1.0f;
   const uint32_t sleepTime = sleepTimeFactor * processTime;
   time_event_->Wait(std::max<uint32_t>(maxFPSNeeded, sleepTime));
