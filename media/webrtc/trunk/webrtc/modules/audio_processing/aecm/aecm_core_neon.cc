@@ -10,7 +10,11 @@
 
 #include "modules/audio_processing/aecm/aecm_core.h"
 
+#if defined(_MSC_VER) && !defined(__clang__)
+#include <arm64_neon.h>
+#else
 #include <arm_neon.h>
+#endif
 
 #include "common_audio/signal_processing/include/real_fft.h"
 #include "rtc_base/checks.h"
@@ -19,7 +23,7 @@
 // generating script and makefile, to replace these C functions.
 
 static inline void AddLanes(uint32_t* ptr, uint32x4_t v) {
-#if defined(WEBRTC_ARCH_ARM64)
+#if defined(WEBRTC_ARCH_ARM64) && (!defined(_MSC_VER) || defined(__clang__))
   *(ptr) = vaddvq_u32(v);
 #else
   uint32x2_t tmp_v;
