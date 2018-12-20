@@ -20,7 +20,7 @@ addMessageListener("file.open", function (e) {
               .QueryInterface(Ci.nsIProperties)
               .get('TmpD', Ci.nsIFile)
   tmpFile.append('foo.txt');
-  tmpFile.createUnique(Ci.nsIFile.FILE_TYPE, 0o600);
+  tmpFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o600);
 
   writeFile("hello world", "file.opened");
 });
