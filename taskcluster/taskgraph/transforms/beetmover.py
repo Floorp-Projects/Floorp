@@ -7,7 +7,7 @@ Transform the beetmover task into an actual task description.
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-from voluptuous import Optional, Required
+from voluptuous import Any, Optional, Required
 
 from taskgraph.loader.single_dep import schema
 from taskgraph.transforms.base import TransformSequence
@@ -118,6 +118,11 @@ UPSTREAM_SOURCE_ARTIFACTS = [
 task_description_schema = {str(k): v for k, v in task_description_schema.schema.iteritems()}
 
 transforms = TransformSequence()
+
+# shortcut for a string where task references are allowed
+taskref_or_string = Any(
+    basestring,
+    {Required('task-reference'): basestring})
 
 beetmover_description_schema = schema.extend({
     # depname is used in taskref's to identify the taskID of the unsigned things
