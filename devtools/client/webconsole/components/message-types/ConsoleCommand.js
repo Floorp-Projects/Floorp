@@ -17,6 +17,7 @@ ConsoleCommand.propTypes = {
   message: PropTypes.object.isRequired,
   timestampsVisible: PropTypes.bool.isRequired,
   serviceContainer: PropTypes.object,
+  maybeScrollToBottom: PropTypes.func,
 };
 
 /**
@@ -27,6 +28,7 @@ function ConsoleCommand(props) {
     message,
     timestampsVisible,
     serviceContainer,
+    maybeScrollToBottom,
   } = props;
 
   const {
@@ -51,6 +53,7 @@ function ConsoleCommand(props) {
     indent,
     timeStamp,
     timestampsVisible,
+    maybeScrollToBottom,
   });
 }
 

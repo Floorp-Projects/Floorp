@@ -36,6 +36,7 @@ GripMessageBody.propTypes = {
   escapeWhitespace: PropTypes.bool,
   type: PropTypes.string,
   helperType: PropTypes.string,
+  maybeScrollToBottom: PropTypes.func,
 };
 
 GripMessageBody.defaultProps = {
@@ -51,6 +52,7 @@ function GripMessageBody(props) {
     escapeWhitespace,
     mode = MODE.LONG,
     dispatch,
+    maybeScrollToBottom,
   } = props;
 
   let styleObject;
@@ -61,6 +63,7 @@ function GripMessageBody(props) {
   const objectInspectorProps = {
     autoExpandDepth: shouldAutoExpandObjectInspector(props) ? 1 : 0,
     mode,
+    maybeScrollToBottom,
     // TODO: we disable focus since the tabbing trail is a bit weird in the output (e.g.
     // location links are not focused). Let's remove the property below when we found and
     // fixed the issue (See Bug 1456060).

@@ -70,6 +70,7 @@ class Message extends Component {
         frame: PropTypes.any,
       })),
       isPaused: PropTypes.bool,
+      maybeScrollToBottom: PropTypes.func,
     };
   }
 
@@ -210,6 +211,7 @@ class Message extends Component {
           onViewSourceInScratchpad: serviceContainer.onViewSourceInScratchpad
             || serviceContainer.onViewSource,
           onViewSource: serviceContainer.onViewSource,
+          onReady: this.props.maybeScrollToBottom,
           sourceMapService: serviceContainer.sourceMapService,
         }),
       );
