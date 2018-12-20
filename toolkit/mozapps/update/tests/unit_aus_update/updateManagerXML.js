@@ -67,7 +67,7 @@ function run_test() {
                "the update manager updateCount attribute" + MSG_SHOULD_EQUAL);
 
   debugDump("checking the activeUpdate properties");
-  let update = gUpdateManager.getUpdateAt(0).QueryInterface(Ci.nsIPropertyBag);
+  let update = gUpdateManager.getUpdateAt(0).QueryInterface(Ci.nsIWritablePropertyBag);
   Assert.equal(update.state, STATE_SUCCEEDED,
                "the update state attribute" + MSG_SHOULD_EQUAL);
   Assert.equal(update.type, "major",
@@ -117,7 +117,7 @@ function run_test() {
                "the update patch state attribute" + MSG_SHOULD_EQUAL);
 
   debugDump("checking the first update properties");
-  update = gUpdateManager.getUpdateAt(1).QueryInterface(Ci.nsIPropertyBag);
+  update = gUpdateManager.getUpdateAt(1).QueryInterface(Ci.nsIWritablePropertyBag);
   Assert.equal(update.state, STATE_FAILED,
                "the update state attribute" + MSG_SHOULD_EQUAL);
   Assert.equal(update.name, "Existing",
