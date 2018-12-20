@@ -1,4 +1,4 @@
-// |jit-test| allow-overrecursed
+// |jit-test| slow; allow-overrecursed
 
 (function f(x) {
     f(x - 1);

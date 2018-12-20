@@ -253,8 +253,7 @@ class TestScreenCaptureChrome(WindowManagerMixin, ScreenCaptureTestCase):
 
         chrome_document_element = self.document_element
         with self.marionette.using_context('content'):
-            self.assertRaisesRegexp(NoSuchElementException,
-                                    "Web element reference not seen before",
+            self.assertRaisesRegexp(NoSuchElementException, "Web element reference not seen before",
                                     self.marionette.screenshot,
                                     highlights=[chrome_document_element])
 
@@ -275,9 +274,10 @@ class TestScreenCaptureContent(WindowManagerMixin, ScreenCaptureTestCase):
             return [document.body.scrollWidth, document.body.scrollHeight]
             """))
 
+    @skip_if_mobile("Needs application independent method to open a new tab")
     def test_capture_tab_already_closed(self):
-        new_tab = self.open_tab()
-        self.marionette.switch_to_window(new_tab)
+        tab = self.open_tab()
+        self.marionette.switch_to_window(tab)
         self.marionette.close()
 
         self.assertRaises(NoSuchWindowException, self.marionette.screenshot)

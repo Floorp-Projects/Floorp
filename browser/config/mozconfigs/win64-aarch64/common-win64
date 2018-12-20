@@ -3,8 +3,5 @@
 ac_add_options --target=aarch64-windows-mingw32
 ac_add_options --host=x86_64-pc-mingw32
 
-# WebRTC is busted in various ways.
-ac_add_options --disable-webrtc
-
 # Accessibility doesn't work.
 ac_add_options --disable-accessibility
