@@ -26,6 +26,7 @@ import {
 import Svg from "./shared/Svg";
 import ManagedTree from "./shared/ManagedTree";
 import SearchInput from "./shared/SearchInput";
+import AccessibleImage from "./shared/AccessibleImage";
 
 import type { List } from "immutable";
 import type { SourceLocation } from "../types";
@@ -238,7 +239,7 @@ export class ProjectSearch extends Component<Props, State> {
         key={file.sourceId}
       >
         <Svg name="arrow" className={classnames({ expanded })} />
-        <img className="file" />
+        <AccessibleImage className="file" />
         <span className="file-path">{getRelativePath(file.filepath)}</span>
         <span className="matches-summary">{matches}</span>
       </div>

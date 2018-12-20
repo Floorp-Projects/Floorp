@@ -1047,72 +1047,72 @@ menuseparator {
   width: 15px;
 }
 
-img.domain,
-img.folder {
+.img.domain,
+.img.folder {
   width: 15px;
   height: 15px;
 }
 
-img.extension {
+.img.extension {
   width: 13px;
   height: 13px;
   margin-inline-start: 2px;
 }
 
-img.result-item-icon {
+.img.result-item-icon {
   height: 18px;
   width: 18px;
 }
 
-img.domain {
+.img.domain {
   mask: url("resource://devtools/client/debugger/new/images/domain.svg") no-repeat;
 }
 
-img.folder {
+.img.folder {
   mask: url("resource://devtools/client/debugger/new/images/folder.svg") no-repeat;
 }
 
-img.coffeescript {
+.img.coffeescript {
   mask: url("resource://devtools/client/debugger/new/images/coffeescript.svg") no-repeat;
 }
 
-img.javascript {
+.img.javascript {
   mask: url("resource://devtools/client/debugger/new/images/javascript.svg") no-repeat;
 }
 
-img.tab {
+.img.tab {
   mask: url("resource://devtools/client/debugger/new/images/tab.svg") no-repeat;
 }
 
-img.react {
+.img.react {
   mask: url("resource://devtools/client/debugger/new/images/react.svg") no-repeat;
 }
 
-img.typescript {
+.img.typescript {
   mask: url("resource://devtools/client/debugger/new/images/typescript.svg") no-repeat;
 }
 
-img.extension {
+.img.extension {
   mask: url("resource://devtools/client/debugger/new/images/extension.svg") no-repeat;
 }
 
-img.file {
+.img.file {
   mask: url("resource://devtools/client/debugger/new/images/file.svg") no-repeat;
   width: 13px;
   height: 13px;
 }
 
-img.domain,
-img.folder,
-img.file,
-.sources-list img.source-icon,
-img.extension {
+.img.domain,
+.img.folder,
+.img.file,
+.sources-list .img.source-icon,
+.img.extension {
   mask-size: 100%;
   margin-inline-end: 5px;
   display: inline-block;
 }
 
-img.result-item-icon {
+.img.result-item-icon {
   mask-size: 100%;
   margin-inline-end: 15px;
   margin-inline-start: 5px;
@@ -1125,7 +1125,7 @@ img.result-item-icon {
   margin-inline-end: 5px;
 }
 
-img.arrow {
+.img.arrow {
   mask: url("resource://devtools/client/debugger/new/images/arrow.svg");
   margin-inline-end: 5px;
   margin-top: 3px;
@@ -1140,11 +1140,11 @@ img.arrow {
   transition: transform 0.18s ease;
 }
 
-html[dir="ltr"] img.arrow {
+html[dir="ltr"] .img.arrow {
   transform: rotate(-90deg);
 }
 
-html[dir="rtl"] img.arrow {
+html[dir="rtl"] .img.arrow {
   transform: rotate(90deg);
 }
 
@@ -1257,6 +1257,13 @@ html[dir="rtl"] .managed-tree .tree .node > div {
 .managed-tree .tree-node button {
   position: fixed;
 }
+.img {
+  /* default height an width which will likely be overrode */
+  width: 12px;
+  height: 12px;
+  /* makes span appear like an image */
+  display: inline-block;
+}
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
@@ -1284,7 +1291,7 @@ html[dir="rtl"] .managed-tree .tree .node > div {
   margin-top: 0;
 }
 
-.close-btn:hover img.close {
+.close-btn:hover .img.close {
   background-color: white;
 }
 
@@ -1296,7 +1303,7 @@ html[dir="rtl"] .managed-tree .tree .node > div {
   background-color: var(--theme-selection-background);
 }
 
-.close-btn:focus img.close {
+.close-btn:focus .img.close {
   background-color: white;
 }
 
@@ -1776,7 +1783,7 @@ html .toggle-button.end.vertical svg {
   width: 100%;
 }
 
-.sources-list .tree img.arrow {
+.sources-list .tree .img.arrow {
   margin-right: 5px;
 }
 
@@ -1790,7 +1797,7 @@ html .toggle-button.end.vertical svg {
   color: inherit;
 }
 
-.sources-list .tree img.arrow.expanded {
+.sources-list .tree .img.arrow.expanded {
   transform: rotate(0deg);
 }
 
@@ -1895,7 +1902,7 @@ html .toggle-button.end.vertical svg {
   overflow: auto;
 }
 
-.sources-list .managed-tree .tree .node img.blackBox {
+.sources-list .managed-tree .tree .node .img.blackBox {
   mask: url("resource://devtools/client/debugger/new/images/blackBox.svg") no-repeat;
   mask-size: 100%;
   background-color: var(--theme-highlight-blue);
@@ -1907,11 +1914,11 @@ html .toggle-button.end.vertical svg {
   margin-top: 2px;
 }
 
-.theme-dark .sources-list .managed-tree .tree .node:not(.focused) img.blackBox {
+.theme-dark .sources-list .managed-tree .tree .node:not(.focused) .img.blackBox {
   background-color: var(--theme-comment);
 }
 
-.theme-dark .sources-list .managed-tree .tree .node img.blackBox {
+.theme-dark .sources-list .managed-tree .tree .node .img.blackBox {
   background-color: var(--theme-body-color);
 }
 
@@ -2283,7 +2290,7 @@ menuseparator {
   padding: 6px;
 }
 
-.source-footer > .commands > .action img {
+.source-footer > .commands > .action .img {
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -2308,21 +2315,21 @@ menuseparator {
   margin: 0 4px;
 }
 
-.source-footer > .commands > .action > img.prettyPrint {
+.source-footer > .commands > .action > .img.prettyPrint {
   mask: url("resource://devtools/client/debugger/new/images/prettyPrint.svg") no-repeat;
   height: 16px;
   width: 16px;
   background: var(--theme-body-color);
 }
 
-.source-footer > .commands > .action > img.blackBox {
+.source-footer > .commands > .action > .img.blackBox {
   mask: url("resource://devtools/client/debugger/new/images/blackBox.svg") no-repeat;
   height: 16px;
   width: 16px;
   background: var(--theme-body-color);
 }
 
-.source-footer > .commands > .blackboxed > img.blackBox {
+.source-footer > .commands > .blackboxed > .img.blackBox {
   background: var(--theme-highlight-blue);
 }
 
@@ -2413,7 +2420,7 @@ menuseparator {
   border-radius: 3px;
 }
 
-.search-bottom-bar .search-modifiers button.close-btn.big img {
+.search-bottom-bar .search-modifiers button.close-btn.big .img {
   width: 12px;
   height: 12px;
 }
@@ -3800,59 +3807,59 @@ html[dir="rtl"] .command-bar {
   background-color: var(--theme-toolbar-background);
 }
 
-img.pause,
-img.stepOver,
-img.stepIn,
-img.stepOut,
-img.resume,
-img.rewind,
-img.reverseStepOver,
-img.reverseStepIn,
-img.reverseStepOut,
-img.replay-previous,
-img.replay-next,
-img.resume,
-img.shortcuts,
-img.skipPausing {
+.img.pause,
+.img.stepOver,
+.img.stepIn,
+.img.stepOut,
+.img.resume,
+.img.rewind,
+.img.reverseStepOver,
+.img.reverseStepIn,
+.img.reverseStepOut,
+.img.replay-previous,
+.img.replay-next,
+.img.resume,
+.img.shortcuts,
+.img.skipPausing {
   background-color: var(--theme-body-color);
 }
 
-.command-bar img.pause {
+.command-bar .img.pause {
   mask: url("resource://devtools/client/debugger/new/images/pause.svg") no-repeat;
 }
 
-.command-bar img.stepOver {
+.command-bar .img.stepOver {
   mask: url("resource://devtools/client/debugger/new/images/stepOver.svg") no-repeat;
 }
 
-.command-bar img.stepIn {
+.command-bar .img.stepIn {
   mask: url("resource://devtools/client/debugger/new/images/stepIn.svg") no-repeat;
 }
 
-.command-bar img.stepOut {
+.command-bar .img.stepOut {
   mask: url("resource://devtools/client/debugger/new/images/stepOut.svg") no-repeat;
 }
 
-.command-bar img.resume {
+.command-bar .img.resume {
   mask: url("resource://devtools/client/debugger/new/images/resume.svg") no-repeat;
 }
 
-.command-bar img.rewind {
+.command-bar .img.rewind {
   mask: url("resource://devtools/client/debugger/new/images/resume.svg") no-repeat;
   transform: scaleX(-1);
 }
 
-.command-bar img.reverseStepOver {
+.command-bar .img.reverseStepOver {
   mask: url("resource://devtools/client/debugger/new/images/stepOver.svg") no-repeat;
   transform: scaleX(-1);
 }
 
-.command-bar img.reverseStepIn {
+.command-bar .img.reverseStepIn {
   mask: url("resource://devtools/client/debugger/new/images/stepIn.svg") no-repeat;
   transform: scaleX(-1);
 }
 
-.command-bar img.reverseStepOut {
+.command-bar .img.reverseStepOut {
   mask: url("resource://devtools/client/debugger/new/images/stepOut.svg") no-repeat;
   transform: scaleX(-1);
 }
@@ -3861,7 +3868,7 @@ img.skipPausing {
   flex-grow: 1;
 }
 
-.command-bar img.shortcuts {
+.command-bar .img.shortcuts {
   mask: url("resource://devtools/client/debugger/new/images/help.svg") no-repeat;
   mask-size: contain;
 }
@@ -4328,7 +4335,7 @@ html .welcomebox .toggle-button-end.collapsed {
   margin-inline-end: 0;
 }
 
-.source-tab img.prettyPrint,
+.source-tab .img.prettyPrint,
 .source-tab .source-icon.blackBox {
   height: 12px;
   width: 12px;
@@ -4339,7 +4346,7 @@ html .welcomebox .toggle-button-end.collapsed {
   fill: var(--theme-textbox-box-shadow);
 }
 
-.source-tab img.react {
+.source-tab .img.react {
   mask: url("resource://devtools/client/debugger/new/images/react.svg") no-repeat;
   mask-size: 100%;
   height: 14px;
@@ -4366,7 +4373,7 @@ img.moreTabs {
   margin-left: 6px;
 }
 
-html[dir="rtl"] img.moreTabs {
+html[dir="rtl"] .img.moreTabs {
   transform: rotate(180deg);
   margin-right: 6px;
 }
@@ -4567,7 +4574,7 @@ html[dir="rtl"] .dropdown {
   mask-position: 2px 4px;
 }
 
-.result-list li img.result-item-icon {
+.result-list li .img.result-item-icon {
   width: 16px;
   height: 16px;
 }
