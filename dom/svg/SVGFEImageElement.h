@@ -18,7 +18,7 @@ nsresult NS_NewSVGFEImageElement(
 namespace mozilla {
 namespace dom {
 
-typedef nsSVGFE SVGFEImageElementBase;
+typedef SVGFE SVGFEImageElementBase;
 
 class SVGFEImageElement final : public SVGFEImageElementBase,
                                 public nsImageLoadingContent {

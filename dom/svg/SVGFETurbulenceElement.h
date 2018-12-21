@@ -19,7 +19,7 @@ nsresult NS_NewSVGFETurbulenceElement(
 namespace mozilla {
 namespace dom {
 
-typedef nsSVGFE SVGFETurbulenceElementBase;
+typedef SVGFE SVGFETurbulenceElementBase;
 
 class SVGFETurbulenceElement : public SVGFETurbulenceElementBase {
   friend nsresult(::NS_NewSVGFETurbulenceElement(

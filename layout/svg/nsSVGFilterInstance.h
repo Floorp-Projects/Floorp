@@ -69,6 +69,7 @@ class nsSVGFilterInstance {
   typedef mozilla::gfx::IntRect IntRect;
   typedef mozilla::gfx::SourceSurface SourceSurface;
   typedef mozilla::gfx::FilterPrimitiveDescription FilterPrimitiveDescription;
+  typedef mozilla::dom::SVGFE SVGFE;
   typedef mozilla::dom::UserSpaceMetrics UserSpaceMetrics;
 
  public:
@@ -139,7 +140,7 @@ class nsSVGFilterInstance {
    * Computes the filter primitive subregion for the given primitive.
    */
   IntRect ComputeFilterPrimitiveSubregion(
-      nsSVGFE* aFilterElement,
+      SVGFE* aFilterElement,
       const nsTArray<FilterPrimitiveDescription>& aPrimitiveDescrs,
       const nsTArray<int32_t>& aInputIndices);
 
@@ -184,7 +185,7 @@ class nsSVGFilterInstance {
    * FilterPrimitiveDescription representing "another-primitive".
    */
   nsresult GetSourceIndices(
-      nsSVGFE* aPrimitiveElement,
+      SVGFE* aPrimitiveElement,
       nsTArray<FilterPrimitiveDescription>& aPrimitiveDescrs,
       const nsDataHashtable<nsStringHashKey, int32_t>& aImageTable,
       nsTArray<int32_t>& aSourceIndices);

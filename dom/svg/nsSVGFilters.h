@@ -28,7 +28,10 @@ struct nsSVGStringInfo {
   mozilla::dom::SVGElement* mElement;
 };
 
-typedef mozilla::dom::SVGElement nsSVGFEBase;
+namespace mozilla {
+namespace dom {
+
+typedef SVGElement SVGFEBase;
 
 #define NS_SVG_FE_CID                                \
   {                                                  \
@@ -42,8 +45,8 @@ typedef mozilla::dom::SVGElement nsSVGFEBase;
  * Children of those elements e.g. feMergeNode
  * derive from SVGFEUnstyledElement instead
  */
-class nsSVGFE : public nsSVGFEBase {
-  friend class nsSVGFilterInstance;
+class SVGFE : public SVGFEBase {
+  friend class ::nsSVGFilterInstance;
 
  protected:
   typedef mozilla::gfx::SourceSurface SourceSurface;
@@ -52,9 +55,9 @@ class nsSVGFE : public nsSVGFEBase {
   typedef mozilla::gfx::ColorSpace ColorSpace;
   typedef mozilla::gfx::FilterPrimitiveDescription FilterPrimitiveDescription;
 
-  explicit nsSVGFE(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
-      : nsSVGFEBase(std::move(aNodeInfo)) {}
-  virtual ~nsSVGFE() {}
+  explicit SVGFE(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+      : SVGFEBase(std::move(aNodeInfo)) {}
+  virtual ~SVGFE() {}
 
  public:
   typedef mozilla::gfx::PrimitiveAttributes PrimitiveAttributes;
@@ -152,9 +155,9 @@ class nsSVGFE : public nsSVGFEBase {
   static LengthInfo sLengthInfo[4];
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(nsSVGFE, NS_SVG_FE_CID)
+NS_DEFINE_STATIC_IID_ACCESSOR(SVGFE, NS_SVG_FE_CID)
 
-typedef mozilla::dom::SVGElement SVGFEUnstyledElementBase;
+typedef SVGElement SVGFEUnstyledElementBase;
 
 class SVGFEUnstyledElement : public SVGFEUnstyledElementBase {
  protected:
@@ -172,12 +175,9 @@ class SVGFEUnstyledElement : public SVGFEUnstyledElementBase {
                                          nsAtom* aAttribute) const = 0;
 };
 
-namespace mozilla {
-namespace dom {
-
 //------------------------------------------------------------
 
-typedef nsSVGFE SVGFELightingElementBase;
+typedef SVGFE SVGFELightingElementBase;
 
 class SVGFELightingElement : public SVGFELightingElementBase {
  protected:
