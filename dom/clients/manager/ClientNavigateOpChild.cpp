@@ -218,13 +218,12 @@ RefPtr<ClientOpPromise> ClientNavigateOpChild::DoNavigate(
                                             __func__);
   }
 
-  RefPtr<nsDocShellLoadState> loadState = new nsDocShellLoadState();
+  RefPtr<nsDocShellLoadState> loadState = new nsDocShellLoadState(url);
 
   loadState->SetTriggeringPrincipal(principal);
   loadState->SetReferrerPolicy(doc->GetReferrerPolicy());
   loadState->SetLoadType(LOAD_STOP_CONTENT);
   loadState->SetSourceDocShell(docShell);
-  loadState->SetURI(url);
   loadState->SetLoadFlags(nsIWebNavigation::LOAD_FLAGS_NONE);
   loadState->SetFirstParty(true);
   rv = docShell->LoadURI(loadState);

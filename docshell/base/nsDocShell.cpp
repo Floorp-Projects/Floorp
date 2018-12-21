@@ -3974,7 +3974,7 @@ nsDocShell::LoadURIWithOptions(const nsAString& aURI, uint32_t aLoadFlags,
   uint32_t extraFlags = (aLoadFlags & EXTRA_LOAD_FLAGS);
   aLoadFlags &= ~EXTRA_LOAD_FLAGS;
 
-  RefPtr<nsDocShellLoadState> loadState = new nsDocShellLoadState();
+  RefPtr<nsDocShellLoadState> loadState = new nsDocShellLoadState(uri);
 
   /*
    * If the user "Disables Protection on This Page", we have to make sure to
@@ -3987,7 +3987,6 @@ nsDocShell::LoadURIWithOptions(const nsAString& aURI, uint32_t aLoadFlags,
     loadState->SetLoadType(MAKE_LOAD_TYPE(LOAD_NORMAL, aLoadFlags));
   }
 
-  loadState->SetURI(uri);
   loadState->SetLoadFlags(extraFlags);
   loadState->SetFirstParty(true);
   loadState->SetPostDataStream(postStream);
@@ -4573,8 +4572,7 @@ nsresult nsDocShell::LoadErrorPage(nsIURI* aErrorURI, nsIURI* aFailedURI,
     mLSHE->AbandonBFCacheEntry();
   }
 
-  RefPtr<nsDocShellLoadState> loadState = new nsDocShellLoadState();
-  loadState->SetURI(aErrorURI);
+  RefPtr<nsDocShellLoadState> loadState = new nsDocShellLoadState(aErrorURI);
   loadState->SetTriggeringPrincipal(nsContentUtils::GetSystemPrincipal());
   loadState->SetLoadType(LOAD_ERROR_PAGE);
   loadState->SetFirstParty(true);
@@ -4671,8 +4669,7 @@ nsDocShell::Reload(uint32_t aReloadFlags) {
     Maybe<nsCOMPtr<nsIURI>> emplacedResultPrincipalURI;
     emplacedResultPrincipalURI.emplace(std::move(resultPrincipalURI));
 
-    RefPtr<nsDocShellLoadState> loadState = new nsDocShellLoadState();
-    loadState->SetURI(currentURI);
+    RefPtr<nsDocShellLoadState> loadState = new nsDocShellLoadState(currentURI);
     loadState->SetOriginalURI(originalURI);
     loadState->SetMaybeResultPrincipalURI(emplacedResultPrincipalURI);
     loadState->SetLoadReplace(loadReplace);
@@ -5874,7 +5871,7 @@ nsDocShell::ForceRefreshURI(nsIURI* aURI, nsIPrincipal* aPrincipal,
                             int32_t aDelay, bool aMetaRefresh) {
   NS_ENSURE_ARG(aURI);
 
-  RefPtr<nsDocShellLoadState> loadState = new nsDocShellLoadState();
+  RefPtr<nsDocShellLoadState> loadState = new nsDocShellLoadState(aURI);
 
   /* We do need to pass in a referrer, but we don't want it to
    * be sent to the server.
@@ -5929,7 +5926,6 @@ nsDocShell::ForceRefreshURI(nsIURI* aURI, nsIPrincipal* aPrincipal,
     loadState->SetLoadType(LOAD_REFRESH);
   }
 
-  loadState->SetURI(aURI);
   loadState->SetLoadFlags(
       nsIWebNavigation::LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL);
   loadState->SetFirstParty(true);
@@ -8899,7 +8895,8 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
         MOZ_ASSERT(
             aLoadState->FirstParty());  // Windowwatcher will assume this.
 
-        RefPtr<nsDocShellLoadState> loadState = new nsDocShellLoadState();
+        RefPtr<nsDocShellLoadState> loadState =
+            new nsDocShellLoadState(aLoadState->URI());
 
         // Set up our loadinfo so it will do the load as much like we would have
         // as possible.
@@ -11637,8 +11634,7 @@ nsresult nsDocShell::LoadHistoryEntry(nsISHEntry* aEntry, uint32_t aLoadType) {
   Maybe<nsCOMPtr<nsIURI>> emplacedResultPrincipalURI;
   emplacedResultPrincipalURI.emplace(std::move(resultPrincipalURI));
 
-  RefPtr<nsDocShellLoadState> loadState = new nsDocShellLoadState();
-  loadState->SetURI(uri);
+  RefPtr<nsDocShellLoadState> loadState = new nsDocShellLoadState(uri);
   loadState->SetOriginalURI(originalURI);
   loadState->SetMaybeResultPrincipalURI(emplacedResultPrincipalURI);
   loadState->SetLoadReplace(loadReplace);
@@ -12755,8 +12751,7 @@ nsDocShell::OnLinkClickSync(nsIContent* aContent, nsIURI* aURI,
     flags |= INTERNAL_LOAD_FLAGS_IS_USER_TRIGGERED;
   }
 
-  RefPtr<nsDocShellLoadState> loadState = new nsDocShellLoadState();
-  loadState->SetURI(aURI);
+  RefPtr<nsDocShellLoadState> loadState = new nsDocShellLoadState(aURI);
   loadState->SetReferrer(referer);
   loadState->SetReferrerPolicy((mozilla::net::ReferrerPolicy)refererPolicy);
   loadState->SetTriggeringPrincipal(triggeringPrincipal);
