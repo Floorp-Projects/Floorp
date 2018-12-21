@@ -496,8 +496,8 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
   /**
    * Handler for the "blackbox" packet.
    */
-  blackbox: function() {
-    this.threadActor.sources.blackBox(this.url);
+  blackbox: function(range) {
+    this.threadActor.sources.blackBox(this.url, range);
     if (this.threadActor.state == "paused"
         && this.threadActor.youngestFrame
         && this.threadActor.youngestFrame.script.url == this.url) {
@@ -509,8 +509,8 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
   /**
    * Handler for the "unblackbox" packet.
    */
-  unblackbox: function() {
-    this.threadActor.sources.unblackBox(this.url);
+  unblackbox: function(range) {
+    this.threadActor.sources.unblackBox(this.url, range);
   },
 
   /**
