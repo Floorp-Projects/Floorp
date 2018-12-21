@@ -12,6 +12,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   NetUtil: "resource://gre/modules/NetUtil.jsm",
   Services: "resource://gre/modules/Services.jsm",
   PerTestCoverageUtils: "resource://testing-common/PerTestCoverageUtils.jsm",
+  ServiceWorkerCleanUp: "resource://gre/modules/ServiceWorkerCleanUp.jsm",
 });
 
 this.SpecialPowersError = function(aMsg) {
@@ -642,6 +643,20 @@ SpecialPowersObserverAPI.prototype = {
           this._sendReply(aMessage, "SPExtensionMessage", {id, type: "extensionUnloaded", args: []});
         };
         extension.shutdown().then(done, done);
+        return undefined;
+      }
+
+      case "SPRemoveAllServiceWorkers": {
+        ServiceWorkerCleanUp.removeAll().then(() => {
+          this._sendReply(aMessage, "SPServiceWorkerCleanupComplete", { id: aMessage.data.id });
+        });
+        return undefined;
+      }
+
+      case "SPRemoveServiceWorkerDataForExampleDomain": {
+        ServiceWorkerCleanUp.removeFromHost("example.com").then(() => {
+          this._sendReply(aMessage, "SPServiceWorkerCleanupComplete", { id: aMessage.data.id });
+        });
         return undefined;
       }
 

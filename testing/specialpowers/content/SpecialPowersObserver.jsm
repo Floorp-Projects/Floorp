@@ -79,6 +79,8 @@ SpecialPowersObserver.prototype._loadFrameScript = function() {
     this._messageManager.addMessageListener("SPRequestDumpCoverageCounters", this);
     this._messageManager.addMessageListener("SPRequestResetCoverageCounters", this);
     this._messageManager.addMessageListener("SPCheckServiceWorkers", this);
+    this._messageManager.addMessageListener("SPRemoveAllServiceWorkers", this);
+    this._messageManager.addMessageListener("SPRemoveServiceWorkerDataForExampleDomain", this);
 
     this._messageManager.loadFrameScript(CHILD_LOGGER_SCRIPT, true);
     this._messageManager.loadFrameScript(CHILD_SCRIPT_API, true);
@@ -172,6 +174,8 @@ SpecialPowersObserver.prototype.uninit = function() {
     this._messageManager.removeMessageListener("SPRequestDumpCoverageCounters", this);
     this._messageManager.removeMessageListener("SPRequestResetCoverageCounters", this);
     this._messageManager.removeMessageListener("SPCheckServiceWorkers", this);
+    this._messageManager.removeMessageListener("SPRemoveAllServiceWorkers", this);
+    this._messageManager.removeMessageListener("SPRemoveServiceWorkerDataForExampleDomain", this);
 
     this._messageManager.removeDelayedFrameScript(CHILD_LOGGER_SCRIPT);
     this._messageManager.removeDelayedFrameScript(CHILD_SCRIPT_API);
