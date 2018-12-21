@@ -225,6 +225,6 @@ JitCompileOptions::JitCompileOptions(JSContext* cx) {
       cx->runtime()->geckoProfiler().slowAssertionsEnabled();
   offThreadCompilationAvailable_ = OffThreadCompilationAvailable(cx);
 #ifdef ENABLE_WASM_GC
-  wasmGcEnabled_ = cx->options().wasmGc();
+  wasmGcEnabled_ = wasm::HasGcSupport(cx);
 #endif
 }

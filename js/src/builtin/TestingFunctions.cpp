@@ -670,23 +670,9 @@ static bool WasmBulkMemSupported(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-static bool TestGCEnabled(JSContext* cx) {
-#ifdef ENABLE_WASM_GC
-  bool isSupported = cx->options().wasmBaseline() && cx->options().wasmGc();
-#ifdef ENABLE_WASM_CRANELIFT
-  if (cx->options().wasmForceCranelift()) {
-    isSupported = false;
-  }
-#endif
-  return isSupported;
-#else
-  return false;
-#endif
-}
-
 static bool WasmGcEnabled(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  args.rval().setBoolean(TestGCEnabled(cx));
+  args.rval().setBoolean(wasm::HasGcSupport(cx));
   return true;
 }
 
@@ -695,7 +681,7 @@ static bool WasmGeneralizedTables(JSContext* cx, unsigned argc, Value* vp) {
 #ifdef ENABLE_WASM_GENERALIZED_TABLES
   // Generalized tables depend on anyref, though not currently on (ref T)
   // types nor on structures or other GC-proposal features.
-  bool isSupported = TestGCEnabled(cx);
+  bool isSupported = wasm::HasGcSupport(cx);
 #else
   bool isSupported = false;
 #endif
