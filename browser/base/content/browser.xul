@@ -336,6 +336,7 @@ xmlns="http://www.w3.org/1999/xhtml"
                   oncommand="StarUI.onShowForNewBookmarksCheckboxCommand();"/>
       </vbox>
       <hbox id="editBookmarkPanelBottomButtons"
+            class="panel-footer"
             style="min-width: &editBookmark.panel.width;;">
 #ifndef XP_UNIX
         <button id="editBookmarkPanelDoneButton"
