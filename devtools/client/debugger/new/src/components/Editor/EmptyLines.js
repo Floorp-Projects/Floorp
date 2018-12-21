@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-import { connect } from "react-redux";
+import { connect } from "../../utils/connect";
 import { Component } from "react";
 import { getSelectedSource, getEmptyLines } from "../../selectors";
 import type { Source } from "../../types";

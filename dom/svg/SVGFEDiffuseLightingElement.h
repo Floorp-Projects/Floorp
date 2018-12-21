@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_SVGFEDiffuseLightingElement_h
 #define mozilla_dom_SVGFEDiffuseLightingElement_h
 
-#include "nsSVGFilters.h"
+#include "SVGFilters.h"
 
 nsresult NS_NewSVGFEDiffuseLightingElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);

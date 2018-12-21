@@ -5,7 +5,7 @@
 // @flow
 
 import React, { Component } from "react";
-import { connect } from "react-redux";
+import { connect } from "../../../utils/connect";
 import PropTypes from "prop-types";
 
 import type { Frame, Why } from "../../../types";
@@ -22,7 +22,6 @@ import { copyToTheClipboard } from "../../../utils/clipboard";
 import {
   getFrameworkGroupingState,
   getSelectedFrame,
-  isPaused as getIsPaused,
   getCallStackFrames,
   getPauseReason
 } from "../../../selectors";
@@ -214,8 +213,7 @@ const mapStateToProps = state => ({
   frames: getCallStackFrames(state),
   why: getPauseReason(state),
   frameworkGroupingOn: getFrameworkGroupingState(state),
-  selectedFrame: getSelectedFrame(state),
-  pause: getIsPaused(state)
+  selectedFrame: getSelectedFrame(state)
 });
 
 export default connect(

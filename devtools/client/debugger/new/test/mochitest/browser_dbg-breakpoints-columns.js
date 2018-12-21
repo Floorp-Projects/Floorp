@@ -60,13 +60,13 @@ add_task(async function() {
 
   // Create a breakpoint at 15:undefined
   await addBreakpoint(dbg, "simple1", 15);
-  
+
   // Wait for column breakpoint markers
   await waitForElementWithSelector(dbg, ".column-breakpoint");
 
   let columnBreakpointMarkers = getColumnBreakpointElements(dbg);
   ok(
-    columnBreakpointMarkers.length === 2, 
+    columnBreakpointMarkers.length === 2,
       "2 column breakpoint markers display"
   );
 
@@ -89,7 +89,7 @@ add_task(async function() {
 
   // Ensure column breakpoint is yellow
   await waitForElementWithSelector(dbg, ".column-breakpoint.has-condition");
-  
+
   // Remove the breakpoint from 15:undefined via the secondary pane context menu
   removeBreakpointViaContext(dbg, 3);
 

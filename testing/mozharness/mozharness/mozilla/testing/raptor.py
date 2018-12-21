@@ -125,12 +125,15 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
         }],
         [["--host"], {
             "dest": "host",
-            "help": "Hostname from which to serve urls (default: 127.0.0.1).",
+            "help": "Hostname from which to serve urls (default: 127.0.0.1). "
+                    "The value HOST_IP will cause the value of host to be "
+                    "to be loaded from the environment variable HOST_IP.",
         }],
         [["--power-test"], {
             "dest": "power_test",
-            "help": "Use Raptor to measure power usage. Currently supported only when "
-                    "--host specified for geckoview.",
+            "help": "Use Raptor to measure power usage. Currently only supported for Geckoview. "
+                    "The host ip address must be specified either via the --host command line "
+                    "argument.",
         }],
         [["--debug-mode"], {
             "dest": "debug_mode",
@@ -201,6 +204,8 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
         self.gecko_profile_entries = self.config.get('gecko_profile_entries')
         self.test_packages_url = self.config.get('test_packages_url')
         self.host = self.config.get('host')
+        if self.host == 'HOST_IP':
+            self.host = os.environ['HOST_IP']
         self.power_test = self.config.get('power_test')
         self.is_release_build = self.config.get('is_release_build')
         self.debug_mode = self.config.get('debug_mode', False)
@@ -345,6 +350,8 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
         if self.config.get('obj_path', None) is not None:
             kw_options['obj-path'] = self.config['obj_path']
         kw_options.update(kw)
+        if self.host:
+            kw_options['host'] = self.host
         # configure profiling options
         options.extend(self.query_gecko_profile_options())
         # extra arguments
@@ -468,9 +475,12 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
         # late import is required, because install is done in create_virtualenv
         import jsonschema
 
-        if len(parser.found_perf_data) != 1:
-            self.critical("PERFHERDER_DATA was seen %d times, expected 1."
-                          % len(parser.found_perf_data))
+        expected_perfherder = 1
+        if self.config.get('power_test', None):
+            expected_perfherder += 1
+        if len(parser.found_perf_data) != expected_perfherder:
+            self.critical("PERFHERDER_DATA was seen %d times, expected %d."
+                          % (len(parser.found_perf_data), expected_perfherder))
             return
 
         schema_path = os.path.join(external_tools_path,

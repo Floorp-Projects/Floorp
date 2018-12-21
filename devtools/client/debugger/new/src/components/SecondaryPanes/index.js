@@ -5,7 +5,7 @@
 // @flow
 
 import React, { Component } from "react";
-import { connect } from "react-redux";
+import { connect } from "../../utils/connect";
 import { List } from "immutable";
 
 import actions from "../../actions";
@@ -18,8 +18,7 @@ import {
   getIsWaitingOnBreak,
   getShouldPauseOnExceptions,
   getShouldPauseOnCaughtExceptions,
-  getWorkers,
-  getExtra
+  getWorkers
 } from "../../selectors";
 
 import Svg from "../shared/Svg";
@@ -33,7 +32,6 @@ import Workers from "./Workers";
 import Accordion from "../shared/Accordion";
 import CommandBar from "./CommandBar";
 import UtilsBar from "./UtilsBar";
-import FrameworkComponent from "./FrameworkComponent";
 import XHRBreakpoints from "./XHRBreakpoints";
 
 import Scopes from "./Scopes";
@@ -72,7 +70,6 @@ type State = {
 
 type Props = {
   expressions: List<Expression>,
-  extra: Object,
   hasFrames: boolean,
   horizontal: boolean,
   breakpoints: Object,
@@ -216,22 +213,6 @@ class SecondaryPanes extends Component<Props, State> {
     };
   }
 
-  getComponentItem() {
-    const {
-      extra: { react }
-    } = this.props;
-
-    return {
-      header: react.displayName,
-      className: "component-pane",
-      component: <FrameworkComponent />,
-      opened: prefs.componentVisible,
-      onToggle: opened => {
-        prefs.componentVisible = opened;
-      }
-    };
-  }
-
   getWatchItem(): AccordionPaneItem {
     return {
       header: L10N.getStr("watchExpressions.header"),
@@ -318,7 +299,7 @@ class SecondaryPanes extends Component<Props, State> {
   }
 
   getStartItems() {
-    const { extra, workers } = this.props;
+    const { workers } = this.props;
 
     const items: Array<AccordionPaneItem> = [];
     if (this.props.horizontal) {
@@ -335,10 +316,6 @@ class SecondaryPanes extends Component<Props, State> {
       items.push(this.getCallStackItem());
 
       if (this.props.horizontal) {
-        if (features.componentPane && extra && extra.react) {
-          items.push(this.getComponentItem());
-        }
-
         items.push(this.getScopeItem());
       }
     }
@@ -355,7 +332,7 @@ class SecondaryPanes extends Component<Props, State> {
   }
 
   getEndItems() {
-    const { extra, workers } = this.props;
+    const { workers } = this.props;
 
     let items: Array<AccordionPaneItem> = [];
 
@@ -368,10 +345,6 @@ class SecondaryPanes extends Component<Props, State> {
     }
 
     items.push(this.getWatchItem());
-
-    if (features.componentPane && extra && extra.react) {
-      items.push(this.getComponentItem());
-    }
 
     if (this.props.hasFrames) {
       items = [...items, this.getScopeItem()];
@@ -427,7 +400,6 @@ class SecondaryPanes extends Component<Props, State> {
 
 const mapStateToProps = state => ({
   expressions: getExpressions(state),
-  extra: getExtra(state),
   hasFrames: !!getTopFrame(state),
   breakpoints: getBreakpointsList(state),
   breakpointsDisabled: getBreakpointsDisabled(state),

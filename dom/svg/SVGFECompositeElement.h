@@ -8,7 +8,7 @@
 #define mozilla_dom_SVGFECompositeElement_h
 
 #include "nsSVGEnum.h"
-#include "nsSVGFilters.h"
+#include "SVGFilters.h"
 #include "nsSVGNumber2.h"
 
 nsresult NS_NewSVGFECompositeElement(
@@ -41,8 +41,7 @@ class SVGFECompositeElement : public SVGFECompositeElementBase {
   virtual nsSVGString& GetResultImageName() override {
     return mStringAttributes[RESULT];
   }
-  virtual void GetSourceImageNames(
-      nsTArray<nsSVGStringInfo>& aSources) override;
+  virtual void GetSourceImageNames(nsTArray<SVGStringInfo>& aSources) override;
 
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 

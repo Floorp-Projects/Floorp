@@ -8,7 +8,7 @@
 #define mozilla_dom_SVGFETurbulenceElement_h
 
 #include "nsSVGEnum.h"
-#include "nsSVGFilters.h"
+#include "SVGFilters.h"
 #include "nsSVGNumber2.h"
 #include "nsSVGInteger.h"
 #include "nsSVGString.h"

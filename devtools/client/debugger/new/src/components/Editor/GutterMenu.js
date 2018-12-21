@@ -4,7 +4,7 @@
 
 import { Component } from "react";
 import { showMenu } from "devtools-contextmenu";
-import { connect } from "react-redux";
+import { connect } from "../../utils/connect";
 import { lineAtHeight } from "../../utils/editor";
 import {
   getContextMenu,

@@ -26,6 +26,47 @@ def init_geckoview_power_test(raptor):
         output.write(raptor.device.shell_output("dumpsys battery"))
 
 
+# The batterystats output for Estimated power use differs
+# for Android 7 and Android 8 and later.
+#
+# Android 7
+# Estimated power use (mAh):
+#   Capacity: 2100, Computed drain: 625, actual drain: 1197-1218
+#   Unaccounted: 572 ( )
+#   Uid u0a78: 329 ( cpu=329 )
+#   Screen: 190
+#   Cell standby: 87.6 ( radio=87.6 )
+#   Idle: 4.10
+#   Uid 1000: 1.82 ( cpu=0.537 sensor=1.28 )
+#   Wifi: 0.800 ( cpu=0.310 wifi=0.490 )
+# Android 8
+# Estimated power use (mAh):
+#   Capacity: 2700, Computed drain: 145, actual drain: 135-162
+#   Screen: 68.2 Excluded from smearing
+#   Uid u0a208: 61.7 ( cpu=60.5 wifi=1.28 ) Including smearing: 141 ( screen=67.7 proportional=9. )
+#   Cell standby: 2.49 ( radio=2.49 ) Excluded from smearing
+#   Idle: 1.63 Excluded from smearing
+#   Bluetooth: 0.527 ( cpu=0.00319 bt=0.524 ) Including smearing: 0.574 ( proportional=... )
+#   Wifi: 0.423 ( cpu=0.343 wifi=0.0800 ) Including smearing: 0.461 ( proportional=0.0375 )
+#
+# For Android 8 the cpu, wifi, screen and proportional values from the
+# Uid line for the app. If the test does not run long enough it
+# appears that the screen value from the Uid will be missing but the
+# standalone Screen value is available.
+#
+# For Android 7 only the cpu value is available from the Uid line. We
+# can use the Screen and Wifi values for Android 7 from the Screen
+# and Wifi lines which may include contributions from the system or
+# other apps however it should be useful for spotting changes in power
+# usage.
+#
+# If the energy values from Uid line for Android 8 are available they
+# will be used. If for any reason that the screen or wifi power is
+# missing, the values from the Screen and Wifi lines will be used.
+#
+# If only the cpu energy value is available, then it will be used
+# along with the values from the Screen and Wifi lines.
+
 def finish_geckoview_power_test(raptor):
     upload_dir = os.getenv('MOZ_UPLOAD_DIR')
     if not upload_dir:
@@ -47,31 +88,69 @@ def finish_geckoview_power_test(raptor):
         batterystats = raptor.device.shell_output("dumpsys batterystats")
         output.write(batterystats)
     raptor.device._verbose = verbose
+    estimated_power = False
     uid = None
-    cpu = wifi = smearing = screen = proportional = 0
-    r_uid = re.compile(r'proc=([^:]+):"%s"' % raptor.config['binary'])
+    total = cpu = wifi = smearing = screen = proportional = 0
+    full_screen = 0
+    full_wifi = 0
+    re_uid = re.compile(r'proc=([^:]+):"%s"' % raptor.config['binary'])
+    re_estimated_power = re.compile(r'\s+Estimated power use [(]mAh[)]')
+    re_proportional = re.compile(r'proportional=([\d.]+)')
+    re_screen = re.compile(r'screen=([\d.]+)')
+    re_full_screen = re.compile(r'\s+Screen:\s+([\d.]+)')
+    re_full_wifi = re.compile(r'\s+Wifi:\s+([\d.]+)')
+    re_power = None
     batterystats = batterystats.split('\n')
     for line in batterystats:
         if uid is None:
-            match = r_uid.search(line)
+            # The proc line containing the uid and app name appears
+            # before the Estimated power line.
+            match = re_uid.search(line)
             if match:
                 uid = match.group(1)
-                r_power = re.compile(
-                    r'\s+Uid %s:\s+[\d.]+ [(] cpu=([\d.]+) wifi=([\d.]+) [)] '
-                    r'Including smearing: ([\d.]+)' % uid)
-        else:
-            match = r_power.match(line)
+                re_power = re.compile(
+                    r'\s+Uid %s:\s+([\d.]+) ([(] cpu=([\d.]+) wifi=([\d.]+) [)] '
+                    r'Including smearing: ([\d.]+))?' % uid)
+                continue
+        if not estimated_power:
+            # Do not attempt to parse data until we have seen
+            # Estimated Power in the output.
+            match = re_estimated_power.match(line)
             if match:
-                (cpu, wifi, smearing) = match.groups()
-                r_screen = re.compile(r'screen=([\d.]+)')
-                match = r_screen.search(line)
-                if match:
-                    screen = match.group(1)
-                r_proportional = re.compile(r'proportional=([\d.]+)')
-                match = r_proportional.search(line)
-                if match:
-                    proportional = match.group(1)
-                break
+                estimated_power = True
+            continue
+        if full_screen == 0:
+            match = re_full_screen.match(line)
+            if match:
+                full_screen = match.group(1)
+                continue
+        if full_wifi == 0:
+            match = re_full_wifi.match(line)
+            if match:
+                full_wifi = match.group(1)
+                continue
+        if re_power:
+            match = re_power.match(line)
+            if match:
+                (total, android8, cpu, wifi, smearing) = match.groups()
+                if android8:
+                    # android8 is not None only if the Uid line
+                    # contained values for cpu and wifi which is
+                    # true only for Android 8+.
+                    match = re_screen.search(line)
+                    if match:
+                        screen = match.group(1)
+                    match = re_proportional.search(line)
+                    if match:
+                        proportional = match.group(1)
+        if full_screen and full_wifi and (cpu and wifi and smearing or total):
+            # Stop parsing batterystats once we have a full set of data.
+            break
+
+    cpu = total if cpu is None else cpu
+    screen = full_screen if screen == 0 else screen
+    wifi = full_wifi if wifi is None else wifi
+
     raptor.log.info('power data for uid: %s, cpu: %s, wifi: %s, screen: %s, proportional: %s' %
                     (uid, cpu, wifi, screen, proportional))
 

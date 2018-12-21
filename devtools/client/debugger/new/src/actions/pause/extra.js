@@ -4,7 +4,12 @@
 
 // @flow
 
-import { inComponent, getSelectedFrame } from "../../selectors";
+import {
+  getCurrentThread,
+  getSource,
+  inComponent,
+  getSelectedFrame
+} from "../../selectors";
 import { isImmutablePreview } from "../../utils/preview";
 
 import type { ThunkArgs } from "../types";
@@ -77,6 +82,7 @@ export function fetchExtra() {
     const extra = await dispatch(getExtra("this;", frame.this));
     dispatch({
       type: "ADD_EXTRA",
+      thread: getCurrentThread(getState()),
       extra: extra
     });
   };
@@ -89,8 +95,16 @@ export function getExtra(expression: string, result: Object) {
       return {};
     }
 
+    const source = getSource(getState(), selectedFrame.location.sourceId);
+    if (!source) {
+      return {};
+    }
+
     const extra = await getExtraProps(getState, expression, result, expr =>
-      client.evaluateInFrame(expr, selectedFrame.id)
+      client.evaluateInFrame(expr, {
+        frameId: selectedFrame.id,
+        thread: source.thread
+      })
     );
 
     return extra;

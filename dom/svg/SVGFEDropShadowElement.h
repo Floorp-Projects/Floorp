@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_SVGFEDropShadowElement_h
 #define mozilla_dom_SVGFEDropShadowElement_h
 
-#include "nsSVGFilters.h"
+#include "SVGFilters.h"
 #include "nsSVGNumber2.h"
 #include "nsSVGNumberPair.h"
 #include "nsSVGString.h"
@@ -42,8 +42,7 @@ class SVGFEDropShadowElement : public SVGFEDropShadowElementBase {
   virtual nsSVGString& GetResultImageName() override {
     return mStringAttributes[RESULT];
   }
-  virtual void GetSourceImageNames(
-      nsTArray<nsSVGStringInfo>& aSources) override;
+  virtual void GetSourceImageNames(nsTArray<SVGStringInfo>& aSources) override;
 
   // nsIContent interface
   NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const override;

@@ -11,4 +11,5 @@ DebuggerModules(
     'commands.js',
     'create.js',
     'events.js',
+    'workers.js',
 )

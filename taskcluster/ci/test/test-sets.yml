@@ -408,3 +408,9 @@ android-hw-arm7-raptor:
 
 android-hw-aarch64-raptor:
     - raptor-speedometer-geckoview
+
+android-hw-arm7-raptor-power:
+    - raptor-speedometer-geckoview-power
+
+android-hw-aarch64-raptor-power:
+    - raptor-speedometer-geckoview-power

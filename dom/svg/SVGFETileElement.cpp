@@ -33,9 +33,8 @@ already_AddRefed<SVGAnimatedString> SVGFETileElement::In1() {
   return mStringAttributes[IN1].ToDOMAnimatedString(this);
 }
 
-void SVGFETileElement::GetSourceImageNames(
-    nsTArray<nsSVGStringInfo>& aSources) {
-  aSources.AppendElement(nsSVGStringInfo(&mStringAttributes[IN1], this));
+void SVGFETileElement::GetSourceImageNames(nsTArray<SVGStringInfo>& aSources) {
+  aSources.AppendElement(SVGStringInfo(&mStringAttributes[IN1], this));
 }
 
 //----------------------------------------------------------------------

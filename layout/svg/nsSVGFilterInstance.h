@@ -9,7 +9,7 @@
 
 #include "gfxMatrix.h"
 #include "gfxRect.h"
-#include "nsSVGFilters.h"
+#include "SVGFilters.h"
 #include "nsSVGNumber2.h"
 #include "nsSVGNumberPair.h"
 #include "nsTArray.h"

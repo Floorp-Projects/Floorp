@@ -9,7 +9,7 @@
 
 #include "nsSVGBoolean.h"
 #include "nsSVGEnum.h"
-#include "nsSVGFilters.h"
+#include "SVGFilters.h"
 #include "nsSVGInteger.h"
 #include "nsSVGIntegerPair.h"
 #include "nsSVGNumber2.h"
@@ -49,8 +49,7 @@ class SVGFEConvolveMatrixElement : public SVGFEConvolveMatrixElementBase {
   virtual nsSVGString& GetResultImageName() override {
     return mStringAttributes[RESULT];
   }
-  virtual void GetSourceImageNames(
-      nsTArray<nsSVGStringInfo>& aSources) override;
+  virtual void GetSourceImageNames(nsTArray<SVGStringInfo>& aSources) override;
 
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 

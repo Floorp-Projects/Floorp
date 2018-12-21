@@ -21,7 +21,7 @@ type SourcesList = Source[];
 export function getHiddenTabs(
   sourceTabs: SourcesList,
   sourceTabEls: Array<any>
-) {
+): SourcesList {
   sourceTabEls = [].slice.call(sourceTabEls);
   function getTopOffset() {
     const topOffsets = sourceTabEls.map(t => t.getBoundingClientRect().top);

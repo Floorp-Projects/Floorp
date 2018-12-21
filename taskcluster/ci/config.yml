@@ -32,6 +32,8 @@ treeherder:
         'Rap-Prof-e10s': 'Raptor performance tests on Firefox with Gecko Profiling'
         'Rap-C': 'Raptor performance tests on Google Chrome'
         'Rap-C-e10s': 'Raptor performance tests on Google Chrome with e10s'
+        'Rap-P': 'Raptor power tests on Firefox'
+        'Rap-P-e10s': 'Raptor power tests on Firefox with e10s'
         'T': 'Talos performance tests'
         'Tsd': 'Talos performance tests with Stylo disabled'
         'Tss': 'Talos performance tests with Stylo sequential'
