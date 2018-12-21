@@ -7,8 +7,9 @@
 #ifndef __NS_SVGDATAPARSER_H__
 #define __NS_SVGDATAPARSER_H__
 
+#include <cctype>
 #include "mozilla/RangedPtr.h"
-#include "nsString.h"
+#include "nsStringFwd.h"
 
 namespace mozilla {
 
