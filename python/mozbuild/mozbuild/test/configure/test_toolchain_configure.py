@@ -1606,7 +1606,7 @@ class RustTest(BaseConfigureTest):
 
         # Trick the sandbox into not running the target compiler check
         dep = sandbox._depends[sandbox['c_compiler']]
-        getattr(sandbox, '__value_for_depends')[(dep, False)] = \
+        getattr(sandbox, '__value_for_depends')[(dep,)] = \
             CompilerResult(type=compiler_type)
         return sandbox._value_for(sandbox['rust_target_triple'])
 
