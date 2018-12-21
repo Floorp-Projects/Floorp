@@ -64,12 +64,20 @@ def support_vcs_checkout(config, job, taskdesc, sparse=False):
     This can only be used with ``run-task`` tasks, as the cache name is
     reserved for ``run-task`` tasks.
     """
-    is_win = job['worker']['os'] == 'windows'
+    worker = job['worker']
+    is_mac = worker['os'] == 'macosx'
+    is_win = worker['os'] == 'windows'
+    is_linux = worker['os'] == 'linux'
+    assert is_mac or is_win or is_linux
 
     if is_win:
         checkoutdir = './build'
         geckodir = '{}/src'.format(checkoutdir)
         hgstore = 'y:/hg-shared'
+    elif is_mac:
+        checkoutdir = './checkouts'
+        geckodir = '{}/gecko'.format(checkoutdir)
+        hgstore = '{}/hg-shared'.format(checkoutdir)
     else:
         checkoutdir = '{workdir}/checkouts'.format(**job['run'])
         geckodir = '{}/gecko'.format(checkoutdir)
@@ -78,7 +86,7 @@ def support_vcs_checkout(config, job, taskdesc, sparse=False):
     level = config.params['level']
     # native-engine and generic-worker do not support caches (yet), so we just
     # do a full clone every time :(
-    if job['worker']['implementation'] in ('docker-worker', 'docker-engine'):
+    if worker['implementation'] in ('docker-worker', 'docker-engine'):
         name = 'level-%s-checkouts' % level
 
         # comm-central checkouts need their own cache, because clobber won't
