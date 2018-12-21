@@ -23,6 +23,7 @@ StackingContextHelper::StackingContextHelper()
 
 StackingContextHelper::StackingContextHelper(
     const StackingContextHelper& aParentSC, const ActiveScrolledRoot* aAsr,
+    nsIFrame* aContainerFrame, nsDisplayItem* aContainerItem,
     wr::DisplayListBuilder& aBuilder, const nsTArray<wr::WrFilterOp>& aFilters,
     const LayoutDeviceRect& aBounds, const gfx::Matrix4x4* aBoundTransform,
     const wr::WrAnimationProperty* aAnimation, const float* aOpacityPtr,
@@ -42,7 +43,13 @@ StackingContextHelper::StackingContextHelper(
   if (aBoundTransform && aBoundTransform->CanDraw2D(&transform2d) &&
       !aPerspectivePtr && !aParentSC.mIsPreserve3D) {
     mInheritedTransform = transform2d * aParentSC.mInheritedTransform;
-    mScale = mInheritedTransform.ScaleFactors(true);
+
+    int32_t apd = aContainerFrame->PresContext()->AppUnitsPerDevPixel();
+    nsRect r = LayoutDevicePixel::ToAppUnits(aBounds, apd);
+    mScale = FrameLayerBuilder::ChooseScale(aContainerFrame, aContainerItem, r,
+                                            1.f, 1.f, mInheritedTransform,
+                                            /* aCanDraw2D = */ true);
+
     if (aAnimated) {
       mSnappingSurfaceTransform =
           gfx::Matrix::Scaling(mScale.width, mScale.height);
