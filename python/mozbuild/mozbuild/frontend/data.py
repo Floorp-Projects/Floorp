@@ -1174,6 +1174,7 @@ class GeneratedFile(ContextDerived):
             '.rs',
             'node.stub', # To avoid VPATH issues with installing node files: https://bugzilla.mozilla.org/show_bug.cgi?id=1461714#c55
             'android_apks', # We need to compile Java to generate JNI wrappers for native code compilation to consume.
+            '.profdata',
         )
         self.required_for_compile = [f for f in self.outputs if f.endswith(suffixes) or 'stl_wrappers/' in f]
 
