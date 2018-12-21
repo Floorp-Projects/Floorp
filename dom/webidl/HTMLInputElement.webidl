@@ -182,6 +182,12 @@ partial interface HTMLInputElement {
   boolean mozIsTextField(boolean aExcludePassword);
 
   [ChromeOnly]
+  readonly attribute boolean hasBeenTypePassword;
+
+  [ChromeOnly]
+  attribute DOMString previewValue;
+
+  [ChromeOnly]
   // This function will return null if @autocomplete is not defined for the
   // current @type
   AutocompleteInfo? getAutocompleteInfo();
@@ -280,9 +286,4 @@ partial interface HTMLInputElement {
   [Pref="dom.forms.datetime", Func="IsChromeOrXBLOrUAWidget",
    BinaryName="getStepBaseAsDouble"]
   double getStepBase();
-};
-
-partial interface HTMLInputElement {
-  [ChromeOnly]
-  attribute DOMString previewValue;
 };

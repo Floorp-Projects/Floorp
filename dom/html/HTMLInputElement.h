@@ -847,6 +847,8 @@ class HTMLInputElement final : public nsGenericHTMLFormElementWithState,
    */
   bool IsRequired() const { return State().HasState(NS_EVENT_STATE_REQUIRED); }
 
+  bool HasBeenTypePassword() { return mHasBeenTypePassword; }
+
  protected:
   virtual ~HTMLInputElement();
 
@@ -1551,6 +1553,7 @@ class HTMLInputElement final : public nsGenericHTMLFormElementWithState,
   bool mPickerRunning : 1;
   bool mSelectionCached : 1;
   bool mIsPreviewEnabled : 1;
+  bool mHasBeenTypePassword : 1;
   bool mHasPatternAttribute : 1;
 
  private:
