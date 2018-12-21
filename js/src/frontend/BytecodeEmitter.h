@@ -774,8 +774,8 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   }
 
   template <typename InnerEmitter>
-  MOZ_MUST_USE bool wrapWithDestructuringIteratorCloseTryNote(
-      int32_t iterDepth, InnerEmitter emitter);
+  MOZ_MUST_USE bool wrapWithDestructuringTryNote(int32_t iterDepth,
+                                                 InnerEmitter emitter);
 
   // Check if the value on top of the stack is "undefined". If so, replace
   // that value on the stack with the value defined by |defaultExpr|.

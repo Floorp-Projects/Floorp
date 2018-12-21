@@ -1265,9 +1265,9 @@ jsbytecode* js::UnwindEnvironmentToTryPc(JSScript* script,
   if (tn->kind == JSTRY_CATCH || tn->kind == JSTRY_FINALLY) {
     pc -= JSOP_TRY_LENGTH;
     MOZ_ASSERT(*pc == JSOP_TRY);
-  } else if (tn->kind == JSTRY_DESTRUCTURING_ITERCLOSE) {
-    pc -= JSOP_TRY_DESTRUCTURING_ITERCLOSE_LENGTH;
-    MOZ_ASSERT(*pc == JSOP_TRY_DESTRUCTURING_ITERCLOSE);
+  } else if (tn->kind == JSTRY_DESTRUCTURING) {
+    pc -= JSOP_TRY_DESTRUCTURING_LENGTH;
+    MOZ_ASSERT(*pc == JSOP_TRY_DESTRUCTURING);
   }
   return pc;
 }
@@ -1416,7 +1416,7 @@ static HandleErrorContinuation ProcessTryNotes(JSContext* cx,
         break;
       }
 
-      case JSTRY_DESTRUCTURING_ITERCLOSE: {
+      case JSTRY_DESTRUCTURING: {
         // See note above.
         if (inForOfIterClose) {
           break;
@@ -2215,7 +2215,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     /* Various 1-byte no-ops. */
     CASE(JSOP_NOP)
     CASE(JSOP_NOP_DESTRUCTURING)
-    CASE(JSOP_TRY_DESTRUCTURING_ITERCLOSE)
+    CASE(JSOP_TRY_DESTRUCTURING)
     CASE(JSOP_UNUSED151)
     CASE(JSOP_CONDSWITCH) {
       MOZ_ASSERT(CodeSpec[*REGS.pc].length == 1);
