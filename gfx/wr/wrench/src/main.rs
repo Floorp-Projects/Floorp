@@ -565,6 +565,7 @@ fn render<'a>(
     wrench.update(dim);
     thing.do_frame(wrench);
 
+    let mut debug_flags = DebugFlags::empty();
     let mut body = |wrench: &mut Wrench, global_event: winit::Event| {
         let mut do_frame = false;
         let mut do_render = false;
@@ -597,36 +598,39 @@ fn render<'a>(
                         return winit::ControlFlow::Break;
                     }
                     VirtualKeyCode::P => {
-                        wrench.renderer.toggle_debug_flags(DebugFlags::PROFILER_DBG);
+                        debug_flags.toggle(DebugFlags::PROFILER_DBG);
+                        wrench.api.send_debug_cmd(DebugCommand::SetFlags(debug_flags));
                         do_render = true;
                     }
                     VirtualKeyCode::O => {
-                        wrench.renderer.toggle_debug_flags(DebugFlags::RENDER_TARGET_DBG);
+                        debug_flags.toggle(DebugFlags::RENDER_TARGET_DBG);
+                        wrench.api.send_debug_cmd(DebugCommand::SetFlags(debug_flags));
                         do_render = true;
                     }
                     VirtualKeyCode::I => {
-                        wrench.renderer.toggle_debug_flags(DebugFlags::TEXTURE_CACHE_DBG);
+                        debug_flags.toggle(DebugFlags::TEXTURE_CACHE_DBG);
+                        wrench.api.send_debug_cmd(DebugCommand::SetFlags(debug_flags));
                         do_render = true;
                     }
                     VirtualKeyCode::S => {
-                        wrench.renderer.toggle_debug_flags(DebugFlags::COMPACT_PROFILER);
+                        debug_flags.toggle(DebugFlags::COMPACT_PROFILER);
+                        wrench.api.send_debug_cmd(DebugCommand::SetFlags(debug_flags));
                         do_render = true;
                     }
                     VirtualKeyCode::Q => {
-                        wrench.renderer.toggle_debug_flags(
-                            DebugFlags::GPU_TIME_QUERIES | DebugFlags::GPU_SAMPLE_QUERIES
-                        );
+                        debug_flags.toggle(DebugFlags::GPU_TIME_QUERIES | DebugFlags::GPU_SAMPLE_QUERIES);
+                        wrench.api.send_debug_cmd(DebugCommand::SetFlags(debug_flags));
                         do_render = true;
                     }
                     VirtualKeyCode::V => {
-                        wrench.renderer.toggle_debug_flags(DebugFlags::SHOW_OVERDRAW);
+                        debug_flags.toggle(DebugFlags::SHOW_OVERDRAW);
+                        wrench.api.send_debug_cmd(DebugCommand::SetFlags(debug_flags));
                         do_render = true;
                     }
                     VirtualKeyCode::G => {
-                        // go through the API so that we reach the render backend
-                        wrench.api.send_debug_cmd(DebugCommand::EnableGpuCacheDebug(
-                            !wrench.renderer.get_debug_flags().contains(webrender::DebugFlags::GPU_CACHE_DBG)
-                        ));
+                        debug_flags.toggle(DebugFlags::GPU_CACHE_DBG);
+                        wrench.api.send_debug_cmd(DebugCommand::SetFlags(debug_flags));
+
                         // force scene rebuild to see the full set of used GPU cache entries
                         let mut txn = Transaction::new();
                         txn.set_root_pipeline(wrench.root_pipeline_id);
