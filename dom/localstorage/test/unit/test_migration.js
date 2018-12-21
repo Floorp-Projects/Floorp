@@ -3,8 +3,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-async function testSteps()
-{
+async function testSteps() {
   const principalInfos = [
     { url: "http://localhost", attrs: {} },
     { url: "http://www.mozilla.org", attrs: {} },
@@ -23,7 +22,7 @@ async function testSteps()
 
   const data = {
     key: "foo",
-    value: "bar"
+    value: "bar",
   };
 
   function verifyData(clearedOrigins) {
@@ -116,7 +115,7 @@ async function testSteps()
       }
 
       default: {
-        throw("Unknown type: " + type);
+        throw ("Unknown type: " + type);
       }
     }
 

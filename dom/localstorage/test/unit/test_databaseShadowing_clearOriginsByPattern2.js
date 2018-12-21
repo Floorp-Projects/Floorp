@@ -5,8 +5,7 @@
 
 loadSubscript("databaseShadowing-shared.js");
 
-async function testSteps()
-{
+async function testSteps() {
   // The shadow database was prepared in
   // test_databaseShadowing_clearOriginsByPattern1.js
 
@@ -16,5 +15,5 @@ async function testSteps()
     return;
   }
 
-  verifyData([4,5,6]);
+  verifyData([4, 5, 6]);
 }

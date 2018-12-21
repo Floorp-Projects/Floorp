@@ -5,8 +5,7 @@
 
 loadSubscript("databaseShadowing-shared.js");
 
-async function testSteps()
-{
+async function testSteps() {
   enableNextGenLocalStorage();
 
   storeData();
@@ -16,7 +15,7 @@ async function testSteps()
   let request = clearOriginsByPattern(JSON.stringify({ userContextId: 15 }));
   await requestFinished(request);
 
-  verifyData([4,5,6]);
+  verifyData([4, 5, 6]);
 
   // Wait for all database connections to close.
   request = reset();

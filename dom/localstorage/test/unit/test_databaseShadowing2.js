@@ -5,8 +5,7 @@
 
 loadSubscript("databaseShadowing-shared.js");
 
-async function testSteps()
-{
+async function testSteps() {
   // The shadow database was prepared in test_databaseShadowing1.js
 
   disableNextGenLocalStorage();
