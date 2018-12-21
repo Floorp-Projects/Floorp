@@ -51,8 +51,6 @@ config = {
         }
     ],
 
-    "download_minidump_stackwalk": True,
-
     # this would normally be in "exes", but "exes" is clobbered by remove_executables
     "geckodriver": os.path.join("%(abs_test_bin_dir)s", "geckodriver.exe"),
 

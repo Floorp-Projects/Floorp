@@ -33,7 +33,6 @@ config = {
         "setup-mitmproxy",
         "run-tests",
     ],
-    "download_minidump_stackwalk": True,
     "minidump_stackwalk_path": MINIDUMP_STACKWALK_PATH,
     "minidump_tooltool_manifest_path": TOOLTOOL_MANIFEST_PATH,
     "tooltool_cache": "/builds/worker/tooltool-cache",
