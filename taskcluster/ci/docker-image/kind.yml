@@ -46,6 +46,9 @@ jobs:
     packages:
       - deb7-cmake
       - deb7-ninja
+  custom-v8:
+    symbol: I(custom-v8)
+    parent: debian9-base
   debian7-amd64-build-base:
     symbol: I(deb7-bb)
     parent: debian7-base
