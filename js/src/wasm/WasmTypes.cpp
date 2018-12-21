@@ -18,6 +18,7 @@
 
 #include "wasm/WasmTypes.h"
 
+#include "js/Printf.h"
 #include "vm/ArrayBufferObject.h"
 #include "wasm/WasmBaselineCompile.h"
 #include "wasm/WasmInstance.h"
@@ -856,4 +857,25 @@ bool TlsData::isInterrupted() const {
 void TlsData::resetInterrupt(JSContext* cx) {
   interrupt = false;
   stackLimit = cx->stackLimitForJitCode(JS::StackForUntrustedScript);
+}
+
+void wasm::Log(JSContext* cx, const char* fmt, ...) {
+  MOZ_ASSERT(!cx->isExceptionPending());
+
+  if (!cx->options().wasmVerbose()) {
+    return;
+  }
+
+  va_list args;
+  va_start(args, fmt);
+
+  if (UniqueChars chars = JS_vsmprintf(fmt, args)) {
+    JS_ReportErrorFlagsAndNumberASCII(cx, JSREPORT_WARNING, GetErrorMessage,
+                                      nullptr, JSMSG_WASM_VERBOSE, chars.get());
+    if (cx->isExceptionPending()) {
+      cx->clearPendingException();
+    }
+  }
+
+  va_end(args);
 }

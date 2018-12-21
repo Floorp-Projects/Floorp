@@ -1062,6 +1062,8 @@ static bool ReportCompileWarnings(JSContext* cx,
                                               Value* vp) {
   CallArgs callArgs = CallArgsFromVp(argc, vp);
 
+  Log(cx, "sync new Module() started");
+
   if (!ThrowIfNotConstructing(cx, callArgs, "Module")) {
     return false;
   }
@@ -1111,6 +1113,8 @@ static bool ReportCompileWarnings(JSContext* cx,
   if (!moduleObj) {
     return false;
   }
+
+  Log(cx, "sync new Module() succeded");
 
   callArgs.rval().setObject(*moduleObj);
   return true;
@@ -1317,6 +1321,8 @@ static bool Instantiate(JSContext* cx, const Module& module,
                                                 Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
+  Log(cx, "sync new Instance() started");
+
   if (!ThrowIfNotConstructing(cx, args, "Instance")) {
     return false;
   }
@@ -1341,6 +1347,8 @@ static bool Instantiate(JSContext* cx, const Module& module,
   if (!Instantiate(cx, *module, importObj, &instanceObj)) {
     return false;
   }
+
+  Log(cx, "sync new Instance() succeeded");
 
   args.rval().setObject(*instanceObj);
   return true;
@@ -2725,7 +2733,8 @@ static bool Reject(JSContext* cx, const CompileArgs& args,
 
 static bool Resolve(JSContext* cx, const Module& module,
                     Handle<PromiseObject*> promise, bool instantiate,
-                    HandleObject importObj, const UniqueCharsVector& warnings) {
+                    HandleObject importObj, const UniqueCharsVector& warnings,
+                    const char* methodSuffix = "") {
   if (!ReportCompileWarnings(cx, warnings)) {
     return false;
   }
@@ -2768,6 +2777,9 @@ static bool Resolve(JSContext* cx, const Module& module,
   if (!PromiseObject::resolve(cx, promise, resolutionValue)) {
     return RejectWithPendingException(cx, promise);
   }
+
+  Log(cx, "async %s%s() succeeded", (instantiate ? "instantiate" : "compile"),
+      methodSuffix);
 
   return true;
 }
@@ -2850,6 +2862,8 @@ static bool WebAssembly_compile(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
+  Log(cx, "async compile() started");
+
   Rooted<PromiseObject*> promise(cx, PromiseObject::createSkippingExecutor(cx));
   if (!promise) {
     return false;
@@ -2897,6 +2911,8 @@ static bool WebAssembly_instantiate(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
+  Log(cx, "async instantiate() started");
+
   Rooted<PromiseObject*> promise(cx, PromiseObject::createSkippingExecutor(cx));
   if (!promise) {
     return false;
@@ -2921,6 +2937,8 @@ static bool WebAssembly_instantiate(JSContext* cx, unsigned argc, Value* vp) {
     if (!PromiseObject::resolve(cx, promise, resolutionValue)) {
       return false;
     }
+
+    Log(cx, "async instantiate() succeeded");
   } else {
     auto task = cx->make_unique<CompileBufferTask>(cx, promise, importObj);
     if (!task || !task->init(cx, "WebAssembly.instantiate")) {
@@ -2958,6 +2976,11 @@ static bool WebAssembly_validate(JSContext* cx, unsigned argc, Value* vp) {
   if (!validated && !error) {
     ReportOutOfMemory(cx);
     return false;
+  }
+
+  if (error) {
+    MOZ_ASSERT(!validated);
+    Log(cx, "validate() failed with: %s", error.get());
   }
 
   callArgs.rval().setBoolean(validated);
@@ -3252,8 +3275,8 @@ class CompileStreamTask : public PromiseHelperTask, public JS::StreamConsumer {
 
     if (module_) {
       MOZ_ASSERT(!streamFailed_ && !streamError_ && !compileError_);
-      return Resolve(cx, *module_, promise, instantiate_, importObj_,
-                     warnings_);
+      return Resolve(cx, *module_, promise, instantiate_, importObj_, warnings_,
+                     "Streaming");
     }
 
     if (streamError_) {
@@ -3464,6 +3487,8 @@ static bool WebAssembly_compileStreaming(JSContext* cx, unsigned argc,
     return false;
   }
 
+  Log(cx, "async compileStreaming() started");
+
   Rooted<PromiseObject*> promise(cx, PromiseObject::createSkippingExecutor(cx));
   if (!promise) {
     return false;
@@ -3484,6 +3509,8 @@ static bool WebAssembly_instantiateStreaming(JSContext* cx, unsigned argc,
   if (!EnsureStreamSupport(cx)) {
     return false;
   }
+
+  Log(cx, "async instantiateStreaming() started");
 
   Rooted<PromiseObject*> promise(cx, PromiseObject::createSkippingExecutor(cx));
   if (!promise) {
