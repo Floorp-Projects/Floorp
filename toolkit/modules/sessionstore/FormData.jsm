@@ -161,9 +161,9 @@ var FormDataInternal = {
         continue;
       }
 
-      // We do not want to collect credit card numbers.
+      // We do not want to collect credit card numbers or past/current password fields.
       if (ChromeUtils.getClassName(node) === "HTMLInputElement") {
-        if (CreditCard.isValidNumber(node.value)) {
+        if (CreditCard.isValidNumber(node.value) || node.hasBeenTypePassword) {
           continue;
         }
       }
