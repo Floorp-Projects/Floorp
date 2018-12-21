@@ -56,6 +56,9 @@ class Raptor(object):
                  gecko_profile=False, gecko_profile_interval=None, gecko_profile_entries=None,
                  symbols_path=None, host=None, power_test=False, is_release_build=False,
                  debug_mode=False):
+        # Override the magic --host HOST_IP with the value of the environment variable.
+        if host == 'HOST_IP':
+            host = os.environ['HOST_IP']
         self.config = {}
         self.config['app'] = app
         self.config['binary'] = binary
