@@ -5,7 +5,7 @@
 // @flow
 
 import type { ThunkArgs } from "../types";
-import { getSkipPausing } from "../../selectors";
+import { getSkipPausing, getCurrentThread } from "../../selectors";
 
 /**
  * @memberof actions/pause
@@ -13,8 +13,9 @@ import { getSkipPausing } from "../../selectors";
  */
 export function toggleSkipPausing() {
   return async ({ dispatch, client, getState, sourceMaps }: ThunkArgs) => {
+    const thread = getCurrentThread(getState());
     const skipPausing = !getSkipPausing(getState());
-    await client.setSkipPausing(skipPausing);
-    dispatch({ type: "TOGGLE_SKIP_PAUSING", skipPausing });
+    await client.setSkipPausing(thread, skipPausing);
+    dispatch({ type: "TOGGLE_SKIP_PAUSING", thread, skipPausing });
   };
 }

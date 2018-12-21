@@ -5,7 +5,7 @@
 // @flow
 
 import { isGeneratedId } from "devtools-source-map";
-import { createSelector } from "reselect";
+import { createSelector } from "../utils/createSelector";
 import { uniqBy } from "lodash";
 
 import { getBreakpointsList } from "../reducers/breakpoints";
@@ -46,7 +46,7 @@ function isVisible(breakpoint, selectedSource) {
 
 /*
  * Finds the breakpoints, which appear in the selected source.
-  */
+ */
 export const getVisibleBreakpoints = createSelector(
   getSelectedSource,
   getBreakpointsList,
@@ -63,7 +63,7 @@ export const getVisibleBreakpoints = createSelector(
 
 /*
  * Finds the first breakpoint per line, which appear in the selected source.
-  */
+ */
 export const getFirstVisibleBreakpoints = createSelector(
   getVisibleBreakpoints,
   breakpoints => {

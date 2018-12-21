@@ -5,7 +5,7 @@
 // @flow
 
 import React, { Component } from "react";
-import { connect } from "react-redux";
+import { connect } from "../../../utils/connect";
 
 import Reps from "devtools-reps";
 const {
@@ -17,7 +17,7 @@ const {
 const { ObjectInspector, utils } = objectInspector;
 
 const {
-  node: { createNode, getChildren, getValue, nodeIsPrimitive, NODE_TYPES },
+  node: { createNode, getChildren, getValue, nodeIsPrimitive },
   loadProperties: { loadItemProperties }
 } = utils;
 
@@ -25,7 +25,6 @@ import actions from "../../../actions";
 import { getAllPopupObjectProperties } from "../../../selectors";
 import Popover from "../../shared/Popover";
 import PreviewFunction from "../../shared/PreviewFunction";
-import { isReactComponent, isImmutablePreview } from "../../../utils/preview";
 
 import Svg from "../../shared/Svg";
 import { createObjectClient } from "../../../client/firefox";
@@ -45,7 +44,6 @@ type Props = {
   range: EditorRange,
   editor: any,
   editorRef: ?HTMLDivElement,
-  extra: Object,
   setPopupObjectProperties: typeof actions.setPopupObjectProperties,
   addExpression: typeof actions.addExpression,
   selectSourceURL: typeof actions.selectSourceURL,
@@ -129,17 +127,12 @@ export class Popup extends Component<Props, State> {
   };
 
   getRoot() {
-    const { expression, value, extra } = this.props;
-
-    let rootValue = value;
-    if (extra.immutable) {
-      rootValue = extra.immutable.entries;
-    }
+    const { expression, value } = this.props;
 
     return createNode({
       name: expression,
       path: expression,
-      contents: { value: rootValue }
+      contents: { value }
     });
   }
 
@@ -223,25 +216,15 @@ export class Popup extends Component<Props, State> {
   }
 
   renderObjectPreview() {
-    const { extra, value } = this.props;
     const root = this.getRoot();
 
     if (nodeIsPrimitive(root)) {
       return null;
     }
 
-    let roots = this.getChildren();
+    const roots = this.getChildren();
     if (!Array.isArray(roots) || roots.length === 0) {
       return null;
-    }
-
-    let header = null;
-    if (extra.immutable && isImmutablePreview(value)) {
-      header = this.renderImmutable(extra.immutable);
-      roots = roots.filter(r => r.type != NODE_TYPES.PROTOTYPE);
-    } else if (extra.react && isReactComponent(this.getObjectProperties())) {
-      header = this.renderReact(extra.react);
-      roots = roots.filter(r => ["state", "props"].includes(r.name));
     }
 
     return (
@@ -249,7 +232,6 @@ export class Popup extends Component<Props, State> {
         className="preview-popup"
         style={{ maxHeight: this.calculateMaxHeight() }}
       >
-        {header}
         {this.renderObjectInspector(roots)}
       </div>
     );

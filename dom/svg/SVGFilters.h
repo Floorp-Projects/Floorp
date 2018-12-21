@@ -19,17 +19,16 @@
 class nsSVGFilterInstance;
 class nsSVGNumberPair;
 
-struct nsSVGStringInfo {
-  nsSVGStringInfo(const nsSVGString* aString,
-                  mozilla::dom::SVGElement* aElement)
+namespace mozilla {
+namespace dom {
+
+struct SVGStringInfo {
+  SVGStringInfo(const nsSVGString* aString, SVGElement* aElement)
       : mString(aString), mElement(aElement) {}
 
   const nsSVGString* mString;
-  mozilla::dom::SVGElement* mElement;
+  SVGElement* mElement;
 };
-
-namespace mozilla {
-namespace dom {
 
 typedef SVGElement SVGFEBase;
 
@@ -100,7 +99,7 @@ class SVGFE : public SVGFEBase {
   virtual nsSVGString& GetResultImageName() = 0;
   // Return a list of all image names used as sources. Default is to
   // return no sources.
-  virtual void GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources);
+  virtual void GetSourceImageNames(nsTArray<SVGStringInfo>& aSources);
 
   virtual FilterPrimitiveDescription GetPrimitiveDescription(
       nsSVGFilterInstance* aInstance, const IntRect& aFilterSubregion,
@@ -197,8 +196,7 @@ class SVGFELightingElement : public SVGFELightingElementBase {
   virtual nsSVGString& GetResultImageName() override {
     return mStringAttributes[RESULT];
   }
-  virtual void GetSourceImageNames(
-      nsTArray<nsSVGStringInfo>& aSources) override;
+  virtual void GetSourceImageNames(nsTArray<SVGStringInfo>& aSources) override;
   NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const override;
 
  protected:

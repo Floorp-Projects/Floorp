@@ -19,7 +19,7 @@
 #include "SVGNumberList.h"
 #include "SVGAnimatedNumberList.h"
 #include "DOMSVGAnimatedNumberList.h"
-#include "nsSVGFilters.h"
+#include "SVGFilters.h"
 #include "nsLayoutUtils.h"
 #include "nsSVGUtils.h"
 #include "mozilla/ComputedStyle.h"
@@ -75,7 +75,7 @@ NS_INTERFACE_MAP_END_INHERITING(SVGFEBase)
 //----------------------------------------------------------------------
 // Implementation
 
-void SVGFE::GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources) {}
+void SVGFE::GetSourceImageNames(nsTArray<SVGStringInfo>& aSources) {}
 
 bool SVGFE::OutputIsTainted(const nsTArray<bool>& aInputsAreTainted,
                             nsIPrincipal* aReferencePrincipal) {
@@ -398,8 +398,8 @@ SVGFELightingElement::IsAttributeMapped(const nsAtom* name) const {
 }
 
 void SVGFELightingElement::GetSourceImageNames(
-    nsTArray<nsSVGStringInfo>& aSources) {
-  aSources.AppendElement(nsSVGStringInfo(&mStringAttributes[IN1], this));
+    nsTArray<SVGStringInfo>& aSources) {
+  aSources.AppendElement(SVGStringInfo(&mStringAttributes[IN1], this));
 }
 
 LightType SVGFELightingElement::ComputeLightAttributes(

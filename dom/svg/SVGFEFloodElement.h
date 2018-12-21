@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_SVGFEFloodElement_h
 #define mozilla_dom_SVGFEFloodElement_h
 
-#include "nsSVGFilters.h"
+#include "SVGFilters.h"
 
 nsresult NS_NewSVGFEFloodElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);

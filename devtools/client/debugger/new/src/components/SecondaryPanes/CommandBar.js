@@ -8,7 +8,7 @@
 import PropTypes from "prop-types";
 import React, { Component } from "react";
 
-import { connect } from "react-redux";
+import { connect } from "../../utils/connect";
 import classnames from "classnames";
 import { features } from "../../utils/prefs";
 import {

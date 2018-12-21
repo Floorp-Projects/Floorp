@@ -4,7 +4,7 @@
 
 // @flow
 import React, { Component } from "react";
-import { connect } from "react-redux";
+import { connect } from "../../utils/connect";
 import classnames from "classnames";
 import { features } from "../../utils/prefs";
 import { objectInspector } from "devtools-reps";
@@ -164,6 +164,7 @@ class Expressions extends Component<Props, State> {
   hideInput = () => {
     this.setState({ focused: false });
     this.props.onExpressionAdded();
+    this.props.clearExpressionError();
   };
 
   onFocus = () => {

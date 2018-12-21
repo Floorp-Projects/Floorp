@@ -473,7 +473,10 @@ class ScriptPreloader : public nsIObserver,
   nsCString mContentStartupFinishedTopic;
 
   nsCOMPtr<nsIFile> mProfD;
-  nsCOMPtr<nsIThread> mSaveThread;
+  // Note: We use a RefPtr rather than an nsCOMPtr here because the
+  // AssertNoQueryNeeded checks done by getter_AddRefs happen at a time that
+  // violate data access invariants.
+  RefPtr<nsIThread> mSaveThread;
   nsCOMPtr<nsITimer> mSaveTimer;
 
   // The mmapped cache data from this session's cache file.
