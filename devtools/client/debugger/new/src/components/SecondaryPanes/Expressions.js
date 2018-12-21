@@ -164,6 +164,7 @@ class Expressions extends Component<Props, State> {
   hideInput = () => {
     this.setState({ focused: false });
     this.props.onExpressionAdded();
+    this.props.clearExpressionError();
   };
 
   onFocus = () => {
