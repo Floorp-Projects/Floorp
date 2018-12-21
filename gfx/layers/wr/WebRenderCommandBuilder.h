@@ -81,7 +81,7 @@ class WebRenderCommandBuilder {
                  const LayoutDeviceRect& aRect, const LayoutDeviceRect& aClip);
 
   Maybe<wr::WrImageMask> BuildWrMaskImage(
-      nsDisplayItem* aItem, wr::DisplayListBuilder& aBuilder,
+      nsDisplayMasksAndClipPaths* aMaskItem, wr::DisplayListBuilder& aBuilder,
       wr::IpcResourceUpdateQueue& aResources, const StackingContextHelper& aSc,
       nsDisplayListBuilder* aDisplayListBuilder,
       const LayoutDeviceRect& aBounds);

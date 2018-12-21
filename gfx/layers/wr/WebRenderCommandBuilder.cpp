@@ -1896,13 +1896,6 @@ static bool PaintItemByDrawTarget(nsDisplayItem* aItem, gfx::DrawTarget* aDT,
   MOZ_ASSERT(context);
 
   switch (aItem->GetType()) {
-    case DisplayItemType::TYPE_MASK:
-      context->SetMatrix(context->CurrentMatrix()
-                             .PreScale(aScale.width, aScale.height)
-                             .PreTranslate(-aOffset.x, -aOffset.y));
-      static_cast<nsDisplayMasksAndClipPaths*>(aItem)->PaintMask(
-          aDisplayListBuilder, context, &isInvalidated);
-      break;
     case DisplayItemType::TYPE_SVG_WRAPPER: {
       // XXX Why doesn't this need the scaling applied?
       context->SetMatrix(
@@ -1914,7 +1907,12 @@ static bool PaintItemByDrawTarget(nsDisplayItem* aItem, gfx::DrawTarget* aDT,
           });
       break;
     }
-
+    case DisplayItemType::TYPE_MASK: {
+      // We could handle this case with the same code as TYPE_FILTER, but it
+      // would be good to know what situations trigger it.
+      MOZ_RELEASE_ASSERT(0);
+      break;
+    }
     case DisplayItemType::TYPE_FILTER: {
       context->SetMatrix(context->CurrentMatrix()
                              .PreScale(aScale.width, aScale.height)
@@ -2189,21 +2187,152 @@ WebRenderCommandBuilder::GenerateFallbackData(
   return fallbackData.forget();
 }
 
+class WebRenderMaskData : public WebRenderUserData {
+ public:
+  explicit WebRenderMaskData(WebRenderLayerManager* aWRManager,
+                             nsDisplayItem* aItem)
+      : WebRenderUserData(aWRManager, aItem),
+        mMaskStyle(nsStyleImageLayers::LayerType::Mask) {
+    MOZ_COUNT_CTOR(WebRenderMaskData);
+  }
+  virtual ~WebRenderMaskData() {
+    MOZ_COUNT_DTOR(WebRenderMaskData);
+    ClearImageKey();
+  }
+
+  void ClearImageKey() {
+    if (mBlobKey) {
+      mWRManager->AddBlobImageKeyForDiscard(mBlobKey.value());
+    }
+    mBlobKey.reset();
+  }
+
+  virtual UserDataType GetType() override { return UserDataType::eMask; }
+  static UserDataType Type() { return UserDataType::eMask; }
+
+  Maybe<wr::BlobImageKey> mBlobKey;
+  std::vector<RefPtr<gfx::ScaledFont>> mFonts;
+  std::vector<RefPtr<gfx::SourceSurface>> mExternalSurfaces;
+  LayerIntRect mItemRect;
+  nsPoint mMaskOffset;
+  nsStyleImageLayers mMaskStyle;
+  gfx::Size mScale;
+};
+
 Maybe<wr::WrImageMask> WebRenderCommandBuilder::BuildWrMaskImage(
-    nsDisplayItem* aItem, wr::DisplayListBuilder& aBuilder,
+    nsDisplayMasksAndClipPaths* aMaskItem, wr::DisplayListBuilder& aBuilder,
     wr::IpcResourceUpdateQueue& aResources, const StackingContextHelper& aSc,
     nsDisplayListBuilder* aDisplayListBuilder,
     const LayoutDeviceRect& aBounds) {
-  LayoutDeviceRect imageRect;
-  RefPtr<WebRenderFallbackData> fallbackData = GenerateFallbackData(
-      aItem, aBuilder, aResources, aSc, aDisplayListBuilder, imageRect);
-  if (!fallbackData) {
+  RefPtr<WebRenderMaskData> maskData =
+      CreateOrRecycleWebRenderUserData<WebRenderMaskData>(aMaskItem);
+
+  if (!maskData) {
     return Nothing();
   }
 
+
+  bool snap;
+  nsRect bounds = aMaskItem->GetBounds(aDisplayListBuilder, &snap);
+  if (bounds.IsEmpty()) {
+    return Nothing();
+  }
+
+  const int32_t appUnitsPerDevPixel =
+      aMaskItem->Frame()->PresContext()->AppUnitsPerDevPixel();
+
+  Size scale = aSc.GetInheritedScale();
+  Size oldScale = maskData->mScale;
+  // This scale determination should probably be done using
+  // ChooseScaleAndSetTransform but for now we just fake it.
+  // We tolerate slight changes in scale so that we don't, for example,
+  // rerasterize on MotionMark
+  bool sameScale = FuzzyEqual(scale.width, oldScale.width, 1e-6f) &&
+                   FuzzyEqual(scale.height, oldScale.height, 1e-6f);
+
+  LayerIntRect itemRect =
+      LayerIntRect::FromUnknownRect(bounds.ScaleToOutsidePixels(
+          scale.width, scale.height, appUnitsPerDevPixel));
+
+  LayoutDeviceToLayerScale2D layerScale(scale.width, scale.height);
+  LayoutDeviceRect imageRect = LayerRect(itemRect) / layerScale;
+
+  nsPoint maskOffset = aMaskItem->ToReferenceFrame() - bounds.TopLeft();
+
+  nsRect dirtyRect;
+  if (aMaskItem->IsInvalid(dirtyRect) ||
+      !itemRect.IsEqualInterior(maskData->mItemRect) ||
+      !(aMaskItem->Frame()->StyleSVGReset()->mMask == maskData->mMaskStyle) ||
+      maskOffset != maskData->mMaskOffset || !sameScale) {
+
+    IntSize size = itemRect.Size().ToUnknownSize();
+
+    std::vector<RefPtr<ScaledFont>> fonts;
+    RefPtr<WebRenderDrawEventRecorder> recorder =
+        MakeAndAddRef<WebRenderDrawEventRecorder>([&](
+            MemStream& aStream, std::vector<RefPtr<ScaledFont>>& aScaledFonts) {
+          size_t count = aScaledFonts.size();
+          aStream.write((const char*)&count, sizeof(count));
+
+          for (auto& scaled : aScaledFonts) {
+            BlobFont font = {mManager->WrBridge()->GetFontKeyForScaledFont(
+                                 scaled, &aResources),
+                             scaled};
+            aStream.write((const char*)&font, sizeof(font));
+          }
+
+          fonts = std::move(aScaledFonts);
+        });
+
+    RefPtr<DrawTarget> dummyDt = Factory::CreateDrawTarget(
+        BackendType::SKIA, IntSize(1, 1), SurfaceFormat::A8);
+    RefPtr<DrawTarget> dt =
+        Factory::CreateRecordingDrawTarget(recorder, dummyDt, size);
+
+    RefPtr<gfxContext> context = gfxContext::CreateOrNull(dt);
+    MOZ_ASSERT(context);
+
+    context->SetMatrix(context->CurrentMatrix()
+                           .PreTranslate(-itemRect.x, -itemRect.y)
+                           .PreScale(scale.width, scale.height));
+
+    bool maskPainted = false;
+    bool paintFinished =
+        aMaskItem->PaintMask(aDisplayListBuilder, context, &maskPainted);
+    if (!maskPainted) {
+      return Nothing();
+    }
+
+    recorder->FlushItem(IntRect(0, 0, size.width, size.height));
+    TakeExternalSurfaces(recorder, maskData->mExternalSurfaces, mManager,
+                         aResources);
+    recorder->Finish();
+
+    Range<uint8_t> bytes((uint8_t*)recorder->mOutputStream.mData,
+                         recorder->mOutputStream.mLength);
+    wr::BlobImageKey key =
+        wr::BlobImageKey{mManager->WrBridge()->GetNextImageKey()};
+    wr::ImageDescriptor descriptor(size, 0, dt->GetFormat(),
+                                   wr::OpacityType::HasAlphaChannel);
+    if (!aResources.AddBlobImage(key, descriptor,
+                                 bytes)) {  // visible area: ImageIntRect(0, 0,
+                                            // size.width, size.height)
+      return Nothing();
+    }
+    maskData->ClearImageKey();
+    maskData->mBlobKey = Some(key);
+    maskData->mFonts = fonts;
+    if (paintFinished) {
+      maskData->mItemRect = itemRect;
+      maskData->mMaskOffset = maskOffset;
+      maskData->mScale = scale;
+      maskData->mMaskStyle = aMaskItem->Frame()->StyleSVGReset()->mMask;
+    }
+  }
+
   wr::WrImageMask imageMask;
-  imageMask.image = fallbackData->GetImageKey().value();
-  imageMask.rect = wr::ToRoundedLayoutRect(imageRect);
+  imageMask.image = wr::AsImageKey(maskData->mBlobKey.value());
+  imageMask.rect = wr::ToLayoutRect(imageRect);
   imageMask.repeat = false;
   return Some(imageMask);
 }
