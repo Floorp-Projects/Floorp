@@ -24,8 +24,7 @@ class VRThread;
 
 static const int kNumOpenVRHaptics = 1;
 
-enum OpenVRHand : int8_t
-{
+enum OpenVRHand : int8_t {
   Left = 0,
   Right = 1,
   Total = 2,
@@ -33,9 +32,54 @@ enum OpenVRHand : int8_t
   None = -1
 };
 
-class OpenVRSession : public VRSession
-{
-public:
+struct ControllerAction {
+  nsCString name;
+  nsCString type;
+  vr::VRActionHandle_t handle = vr::k_ulInvalidActionHandle;
+
+  ControllerAction() = default;
+
+  ControllerAction(const char* aName, const char* aType)
+      : name(aName), type(aType) {}
+};
+
+struct ControllerInfo {
+  vr::VRInputValueHandle_t mSource = vr::k_ulInvalidInputValueHandle;
+
+  ControllerAction mActionPose;
+  ControllerAction mActionHaptic;
+
+  ControllerAction mActionTrackpad_Analog;
+  ControllerAction mActionTrackpad_Pressed;
+  ControllerAction mActionTrackpad_Touched;
+
+  ControllerAction mActionTrigger_Value;
+
+  ControllerAction mActionGrip_Pressed;
+  ControllerAction mActionGrip_Touched;
+  ControllerAction mActionMenu_Pressed;
+  ControllerAction mActionMenu_Touched;
+  ControllerAction mActionSystem_Pressed;
+  ControllerAction mActionSystem_Touched;
+
+  // --- Knuckles
+  ControllerAction mActionA_Pressed;
+  ControllerAction mActionA_Touched;
+  ControllerAction mActionB_Pressed;
+  ControllerAction mActionB_Touched;
+
+  ControllerAction mActionThumbstick_Analog;
+  ControllerAction mActionThumbstick_Pressed;
+  ControllerAction mActionThumbstick_Touched;
+
+  ControllerAction mActionFingerIndex_Value;
+  ControllerAction mActionFingerMiddle_Value;
+  ControllerAction mActionFingerRing_Value;
+  ControllerAction mActionFingerPinky_Value;
+};
+
+class OpenVRSession : public VRSession {
+ public:
   OpenVRSession();
   virtual ~OpenVRSession();
 
@@ -50,7 +94,7 @@ public:
   void StopVibrateHaptic(uint32_t aControllerIdx) override;
   void StopAllHaptics() override;
 
-protected:
+ protected:
 #if defined(XP_WIN)
   bool SubmitFrame(const mozilla::gfx::VRLayer_Stereo_Immersive& aLayer,
                    ID3D11Texture2D* aTexture) override;
@@ -59,14 +103,16 @@ protected:
                    const VRLayerTextureHandle& aTexture) override;
 #endif
 
-private:
+ private:
   // OpenVR State
   ::vr::IVRSystem* mVRSystem = nullptr;
   ::vr::IVRChaperone* mVRChaperone = nullptr;
   ::vr::IVRCompositor* mVRCompositor = nullptr;
-  ::vr::TrackedDeviceIndex_t mControllerDeviceIndexObsolete[kVRControllerMaxCount];
+  ::vr::TrackedDeviceIndex_t
+      mControllerDeviceIndexObsolete[kVRControllerMaxCount];
   ::vr::VRActionSetHandle_t mActionsetFirefox = vr::k_ulInvalidActionSetHandle;
   OpenVRHand mControllerDeviceIndex[kVRControllerMaxCount];
+  ControllerInfo mControllerHand[OpenVRHand::Total];
   float mHapticPulseRemaining[kVRControllerMaxCount][kNumOpenVRHaptics];
   float mHapticPulseIntensity[kVRControllerMaxCount][kNumOpenVRHaptics];
   bool mIsWindowsMR;
