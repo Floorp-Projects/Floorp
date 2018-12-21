@@ -11,6 +11,7 @@ let sandbox;
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetters(this, {
+  PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
   QueryContext: "resource:///modules/UrlbarUtils.jsm",
   UrlbarController: "resource:///modules/UrlbarController.jsm",
