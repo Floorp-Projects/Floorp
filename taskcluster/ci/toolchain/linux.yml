@@ -881,6 +881,27 @@ linux64-mingw-fxc2-x86:
     toolchains:
         - linux64-clang-trunk-mingw-x86
 
+linux64-custom-v8:
+    description: "Custom v8 build"
+    treeherder:
+        kind: build
+        platform: toolchains/opt
+        symbol: TL(custom-v8)
+        tier: 1
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        docker-image: {in-tree: custom-v8}
+        max-run-time: 3600
+    run:
+        using: toolchain-script
+        script: build-custom-v8.sh
+        arguments: [
+            d8.zip,
+            is_debug=false,
+            target_cpu="x64"
+        ]
+        toolchain-artifact: public/build/d8.zip
+
 wrench-deps:
     description: "Downloads all the crates needed for building wrench"
     treeherder:
