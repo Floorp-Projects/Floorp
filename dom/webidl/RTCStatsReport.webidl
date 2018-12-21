@@ -11,8 +11,6 @@
 enum RTCStatsType {
   "inbound-rtp",
   "outbound-rtp",
-  "remote-inbound-rtp",
-  "remote-outbound-rtp",
   "csrc",
   "session",
   "track",
@@ -32,8 +30,8 @@ dictionary RTCRtpStreamStats : RTCStats {
   unsigned long ssrc;
   DOMString mediaType;
   DOMString kind;
-  DOMString remoteId; // See Bug 1515716
-  DOMString localId;  // See Bug 1515716
+  DOMString remoteId;
+  boolean isRemote = false;
   DOMString mediaTrackId;
   DOMString transportId;
   DOMString codecId;
@@ -62,7 +60,6 @@ dictionary RTCInboundRTPStreamStats : RTCRtpStreamStats {
   unsigned long discardedPackets;
   unsigned long framesDecoded;
 };
-
 
 dictionary RTCOutboundRTPStreamStats : RTCRtpStreamStats {
   unsigned long packetsSent;

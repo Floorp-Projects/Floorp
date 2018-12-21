@@ -90,13 +90,15 @@ function checkTrackStats(pc, track, outbound) {
   return pc.getStats(track).then(stats => {
     ok(pc.hasStat(stats, {
       type: outbound ? "outbound-rtp" : "inbound-rtp",
-      kind: audio ? "audio" : "video"
+      isRemote: false,
+      mediaType: audio ? "audio" : "video"
     }), msg + " - found expected stats");
     ok(!pc.hasStat(stats, {
       type: outbound ? "inbound-rtp" : "outbound-rtp",
+      isRemote: false
     }), msg + " - did not find extra stats with wrong direction");
     ok(!pc.hasStat(stats, {
-      kind: audio ? "video" : "audio"
+      mediaType: audio ? "video" : "audio"
     }), msg + " - did not find extra stats with wrong media type");
   });
 }

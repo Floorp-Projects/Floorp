@@ -290,21 +290,62 @@ class RTCStatsReport {
     return this.__DOM_IMPL__.__set(aKey, aObj);
   }
 
+
+  // We warn on iteration over isRemote:true entries, which is set
+  // to break in Firefox 66.
+  //
   // Must be called after our webidl sandwich is made.
 
-  makeStatsPublic() {
-    for(const key in this._report) {
-      const value = this._report[key];
-      if (value.type == "local-candidate" || value.type == "remote-candidate") {
-        delete value.transportId;
+  makeStatsPublic(warnRemoteNullable) {
+    for (let key in this._report) {
+      let internal = Cu.cloneInto(this._report[key], this._win);
+      if (internal.type == "local-candidate" || internal.type == "remote-candidate") {
+        // RTCIceCandidateStats transportId is ChromeOnly, don't copy it
+        delete internal.transportId;
       }
-      this.setInternal(key, Cu.cloneInto(value, this._win));
+      if (warnRemoteNullable.warn) {
+        let entry = Cu.createObjectIn(this._win);
+        let stat = internal;
+        for (let key in stat) {
+          Object.defineProperty(entry, key, {
+            enumerable: true, configurable: false,
+            get: Cu.exportFunction(function() {
+              // Warn on remote stat access other than the recommended approach of
+              //
+              // for (let stat of stats.values()) {
+              //   switch (stat.type) {
+              //     case "outbound-rtp": {
+              //       if (stat.isRemote) continue;
+              //       let rtcp = stats.get(stat.remoteId);
+              //
+              if (warnRemoteNullable.warn && stat.isRemote &&
+                  key != "type" &&
+                  key != "isRemote") {
+                // id is first prop, a sign of JSON.stringify(), cancel warnings.
+                if (key != "id") {
+                  warnRemoteNullable.warn(key);
+                }
+                warnRemoteNullable.warn = null;
+              }
+              return stat[key];
+            }, entry),
+          });
+        }
+        Cu.unwaiveXrays(entry)._isRemote = stat.isRemote;
+        internal = entry;
+      }
+      this.setInternal(key, internal);
     }
   }
 
   get mozPcid() { return this._pcid; }
 
   __onget(key, stat) {
+    if (stat && stat._isRemote &&
+        this._pc._warnDeprecatedStatsRemoteAccessNullable.warn) {
+      // Proper stats.get(localStat.remoteId) access detected. Null warning.
+      this._pc._warnDeprecatedStatsRemoteAccessNullable.warn = null;
+    }
     return stat;
   }
 }
@@ -312,6 +353,13 @@ setupPrototype(RTCStatsReport, {
   classID: PC_STATS_CID,
   contractID: PC_STATS_CONTRACT,
   QueryInterface: ChromeUtils.generateQI([]),
+  _specToLegacyFieldMapping: {
+        "inbound-rtp": "inboundrtp",
+        "outbound-rtp": "outboundrtp",
+        "candidate-pair": "candidatepair",
+        "local-candidate": "localcandidate",
+        "remote-candidate": "remotecandidate",
+  },
 });
 
 // This is its own class so that it does not need to be exposed to the client.
@@ -1813,7 +1861,7 @@ class PeerConnectionObserver {
     let pc = this._dompc;
     let chromeobj = new RTCStatsReport(pc, dict);
     let webidlobj = pc._win.RTCStatsReport._create(pc._win, chromeobj);
-    chromeobj.makeStatsPublic();
+    chromeobj.makeStatsPublic(pc._warnDeprecatedStatsRemoteAccessNullable);
     pc._onGetStatsSuccess(webidlobj);
   }
 
