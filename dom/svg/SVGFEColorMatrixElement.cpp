@@ -11,7 +11,7 @@
 
 #define NUM_ENTRIES_IN_4x5_MATRIX 20
 
-NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(FEColorMatrix)
+NS_IMPL_NS_NEW_SVG_ELEMENT(FEColorMatrix)
 
 using namespace mozilla::gfx;
 

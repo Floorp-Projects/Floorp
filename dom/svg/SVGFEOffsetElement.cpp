@@ -8,7 +8,7 @@
 #include "mozilla/dom/SVGFEOffsetElementBinding.h"
 #include "nsSVGFilterInstance.h"
 
-NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(FEOffset)
+NS_IMPL_NS_NEW_SVG_ELEMENT(FEOffset)
 
 using namespace mozilla::gfx;
 

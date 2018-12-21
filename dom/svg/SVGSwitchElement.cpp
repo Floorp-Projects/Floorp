@@ -13,7 +13,7 @@
 
 class nsIFrame;
 
-NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(Switch)
+NS_IMPL_NS_NEW_SVG_ELEMENT(Switch)
 
 namespace mozilla {
 namespace dom {

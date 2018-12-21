@@ -8,7 +8,7 @@
 #include "mozilla/dom/SVGFEMergeElementBinding.h"
 #include "mozilla/dom/SVGFEMergeNodeElement.h"
 
-NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(FEMerge)
+NS_IMPL_NS_NEW_SVG_ELEMENT(FEMerge)
 
 using namespace mozilla::gfx;
 

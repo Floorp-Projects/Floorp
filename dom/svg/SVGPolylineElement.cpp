@@ -11,7 +11,7 @@
 using namespace mozilla;
 using namespace mozilla::gfx;
 
-NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(Polyline)
+NS_IMPL_NS_NEW_SVG_ELEMENT(Polyline)
 
 namespace mozilla {
 namespace dom {

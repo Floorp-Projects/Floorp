@@ -320,7 +320,7 @@ SVGComponentTransferFunctionElement::GetNumberInfo() {
 }  // namespace dom
 }  // namespace mozilla
 
-NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(FEFuncR)
+NS_IMPL_NS_NEW_SVG_ELEMENT(FEFuncR)
 
 namespace mozilla {
 namespace dom {
@@ -335,7 +335,7 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFEFuncRElement)
 }  // namespace dom
 }  // namespace mozilla
 
-NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(FEFuncG)
+NS_IMPL_NS_NEW_SVG_ELEMENT(FEFuncG)
 
 namespace mozilla {
 namespace dom {
@@ -350,7 +350,7 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFEFuncGElement)
 }  // namespace dom
 }  // namespace mozilla
 
-NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(FEFuncB)
+NS_IMPL_NS_NEW_SVG_ELEMENT(FEFuncB)
 
 namespace mozilla {
 namespace dom {
@@ -365,7 +365,7 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFEFuncBElement)
 }  // namespace dom
 }  // namespace mozilla
 
-NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(FEFuncA)
+NS_IMPL_NS_NEW_SVG_ELEMENT(FEFuncA)
 
 namespace mozilla {
 namespace dom {

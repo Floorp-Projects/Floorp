@@ -22,7 +22,7 @@
 #include "nsSVGUseFrame.h"
 #include "mozilla/net/ReferrerPolicy.h"
 
-NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(Use)
+NS_IMPL_NS_NEW_SVG_ELEMENT(Use)
 
 namespace mozilla {
 namespace dom {

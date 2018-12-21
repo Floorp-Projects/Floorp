@@ -10,7 +10,7 @@
 #include "mozilla/dom/SVGCircleElementBinding.h"
 #include "mozilla/dom/SVGLengthBinding.h"
 
-NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(Circle)
+NS_IMPL_NS_NEW_SVG_ELEMENT(Circle)
 
 using namespace mozilla::gfx;
 

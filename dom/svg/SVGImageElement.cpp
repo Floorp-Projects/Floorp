@@ -18,7 +18,7 @@
 #include "mozilla/dom/SVGLengthBinding.h"
 #include "nsContentUtils.h"
 
-NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(Image)
+NS_IMPL_NS_NEW_SVG_ELEMENT(Image)
 
 using namespace mozilla::gfx;
 

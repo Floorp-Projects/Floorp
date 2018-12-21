@@ -8,7 +8,7 @@
 #include "mozilla/dom/SVGFEDistantLightElementBinding.h"
 #include "nsSVGFilterInstance.h"
 
-NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(FEDistantLight)
+NS_IMPL_NS_NEW_SVG_ELEMENT(FEDistantLight)
 
 using namespace mozilla::gfx;
 

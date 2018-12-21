@@ -21,7 +21,7 @@
 using namespace mozilla::gfx;
 using namespace mozilla::dom::SVGMarkerElement_Binding;
 
-NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(Marker)
+NS_IMPL_NS_NEW_SVG_ELEMENT(Marker)
 
 namespace mozilla {
 namespace dom {

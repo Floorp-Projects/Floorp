@@ -13,7 +13,7 @@
 #include "mozilla/dom/SVGMaskElementBinding.h"
 #include "mozilla/dom/SVGUnitTypesBinding.h"
 
-NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(Mask)
+NS_IMPL_NS_NEW_SVG_ELEMENT(Mask)
 
 namespace mozilla {
 namespace dom {
