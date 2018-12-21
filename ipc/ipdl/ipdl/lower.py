@@ -2928,17 +2928,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         traitsdecl, traitsdefn = _ParamTraits.actorPickling(actortype, self.side)
 
         self.hdrfile.addthings(
-            ([
-                traitsdecl,
-                Whitespace.NL,
-                CppDirective('if', '0')])
-            + _GenerateSkeletonImpl(
-                _actorName(self.protocol.name, self.side)[1:],
-                self.protocol.namespaces).fromclass(self.cls)
-            + ([
-                CppDirective('endif', '// if 0'),
-                Whitespace.NL])
-            + _includeGuardEnd(hf))
+            [traitsdecl, Whitespace.NL] + _includeGuardEnd(hf)
+        )
 
         # make the .cpp file
         cf.addthings([
@@ -4796,75 +4787,3 @@ def _splitMethodDefn(md, cls):
 def _splitFuncDeclDefn(fun):
     assert not fun.decl.force_inline
     return StmtDecl(fun.decl), fun
-
-
-# XXX this is tantalizingly similar to _splitClassDeclDefn, but just
-# different enough that I don't see the need to define
-# _GenerateSkeleton in terms of that
-class _GenerateSkeletonImpl(Visitor):
-    def __init__(self, name, namespaces):
-        self.name = name
-        self.cls = None
-        self.namespaces = namespaces
-        self.methodimpls = Block()
-
-    def fromclass(self, cls):
-        cls.accept(self)
-
-        nsclass = _putInNamespaces(self.cls, self.namespaces)
-        nsmethodimpls = _putInNamespaces(self.methodimpls, self.namespaces)
-
-        return [
-            Whitespace('''
-//-----------------------------------------------------------------------------
-// Skeleton implementation of abstract actor class
-
-'''),
-            Whitespace('// Header file contents\n'),
-            nsclass,
-            Whitespace.NL,
-            Whitespace('\n// C++ file contents\n'),
-            nsmethodimpls
-        ]
-
-    def visitClass(self, cls):
-        self.cls = Class(self.name, inherits=[Inherit(Type(cls.name))])
-        Visitor.visitClass(self, cls)
-
-    def visitMethodDecl(self, md):
-        if md.methodspec != MethodSpec.PURE:
-            return
-        decl = deepcopy(md)
-        decl.methodspec = MethodSpec.OVERRIDE
-        impl = MethodDefn(MethodDecl(self.implname(md.name),
-                                     params=md.params,
-                                     ret=md.ret))
-        if md.ret.ptr:
-            impl.addstmt(StmtReturn(ExprLiteral.ZERO))
-        elif md.ret == Type.BOOL:
-            impl.addstmt(StmtReturn(ExprVar('false')))
-
-        self.cls.addstmts([StmtDecl(decl), Whitespace.NL])
-        self.addmethodimpl(impl)
-
-    def visitConstructorDecl(self, cd):
-        self.cls.addstmt(StmtDecl(ConstructorDecl(self.name)))
-        ctor = ConstructorDefn(ConstructorDecl(self.implname(self.name)))
-        ctor.addstmt(StmtExpr(ExprCall(ExprVar('MOZ_COUNT_CTOR'),
-                                       [ExprVar(self.name)])))
-        self.addmethodimpl(ctor)
-
-    def visitDestructorDecl(self, dd):
-        self.cls.addstmt(
-            StmtDecl(DestructorDecl(self.name, methodspec=MethodSpec.VIRTUAL)))
-        # FIXME/cjones: hack!
-        dtor = DestructorDefn(ConstructorDecl(self.implname('~' + self.name)))
-        dtor.addstmt(StmtExpr(ExprCall(ExprVar('MOZ_COUNT_DTOR'),
-                                       [ExprVar(self.name)])))
-        self.addmethodimpl(dtor)
-
-    def addmethodimpl(self, impl):
-        self.methodimpls.addstmts([impl, Whitespace.NL])
-
-    def implname(self, method):
-        return self.name + '::' + method
