@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+<head>
+ <meta charset="UTF-8">
+ <title>Hello World</title>
+ <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+</head>
+<body>
+  <script>
+    document.write("<a href='" + document.location.href.replace(/^https/, "http") + "' id='mylink'>Click me</a>");
+  </script>
+</body>
+</html>
