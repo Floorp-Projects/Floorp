@@ -29,9 +29,6 @@ LOCAL_INCLUDES += [
 # Don't use STL wrappers here (i.e. wrapped <new>); they require mozalloc
 DisableStlWrapping()
 
-# Force to build a static library only
-NO_EXPAND_LIBS = True
-
 DIST_INSTALL = True
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk3':
