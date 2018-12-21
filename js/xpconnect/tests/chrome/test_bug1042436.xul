@@ -27,17 +27,23 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1042436
 
 
   SimpleTest.expectConsoleMessages(function() {
-      nonXrayableObj.someExpandoProperty;
-      nonXrayableObj.someOtherExpandoProperty;
+      // Create sandboxes in fresh compartments, because the warning state is
+      // stored per compartment.
+      var chromeSb1 = Cu.Sandbox(this, {freshCompartment: true});
+      chromeSb1.nonXrayableObj = nonXrayableObj;
+      Cu.evalInSandbox(`
+        nonXrayableObj.someExpandoProperty;
+        nonXrayableObj.someOtherExpandoProperty;
+      `, chromeSb1);
 
-      var chromeSb = Cu.Sandbox(this);
+      var chromeSb2 = Cu.Sandbox(this, {freshCompartment: true});
       var contentObjWithGetter = contentSb.eval('({ get getterProp() {return 42;}, valueProp: 42 })');
       is(contentObjWithGetter.wrappedJSObject.getterProp, 42, "Getter prop set up correctly");
       is(contentObjWithGetter.getterProp, undefined, "Xrays work right");
       is(contentObjWithGetter.valueProp, 42, "Getter prop set up correctly");
-      chromeSb.contentObjWithGetter = contentObjWithGetter;
+      chromeSb2.contentObjWithGetter = contentObjWithGetter;
       Cu.evalInSandbox('contentObjWithGetter.getterProp; contentObjWithGetter.valueProp; contentObjWithGetter.getterProp;',
-                       chromeSb, "1.7", "http://phony.example.com/file.js", 99);
+                       chromeSb2, "1.7", "http://phony.example.com/file.js", 99);
   },
   [{ errorMessage: /property "someExpandoProperty" \(reason: object is not safely Xrayable/, sourceName: /test_bug1042436/, isWarning: true },
    { errorMessage: /property "getterProp" \(reason: property has accessor/, sourceName: /phony/, lineNumber: 99, isWarning: true } ],
