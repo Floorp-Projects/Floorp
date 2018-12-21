@@ -15,7 +15,7 @@
 #include "nsPoint.h"
 #include "nsRect.h"
 #include "nsSize.h"
-#include "nsSVGFilters.h"
+#include "SVGFilters.h"
 #include "nsSVGNumber2.h"
 #include "nsSVGNumberPair.h"
 #include "nsTArray.h"

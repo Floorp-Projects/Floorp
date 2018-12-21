@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_SVGFEImageElement_h
 #define mozilla_dom_SVGFEImageElement_h
 
-#include "nsSVGFilters.h"
+#include "SVGFilters.h"
 #include "SVGAnimatedPreserveAspectRatio.h"
 
 class SVGFEImageFrame;

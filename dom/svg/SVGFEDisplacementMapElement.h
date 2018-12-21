@@ -8,7 +8,7 @@
 #define mozilla_dom_SVGFEDisplacementMapElement_h
 
 #include "nsSVGEnum.h"
-#include "nsSVGFilters.h"
+#include "SVGFilters.h"
 
 nsresult NS_NewSVGFEDisplacementMapElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
@@ -39,8 +39,7 @@ class SVGFEDisplacementMapElement : public SVGFEDisplacementMapElementBase {
   virtual nsSVGString& GetResultImageName() override {
     return mStringAttributes[RESULT];
   }
-  virtual void GetSourceImageNames(
-      nsTArray<nsSVGStringInfo>& aSources) override;
+  virtual void GetSourceImageNames(nsTArray<SVGStringInfo>& aSources) override;
 
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 

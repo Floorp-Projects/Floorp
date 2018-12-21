@@ -105,9 +105,9 @@ bool SVGFEDisplacementMapElement::AttributeAffectsRendering(
 }
 
 void SVGFEDisplacementMapElement::GetSourceImageNames(
-    nsTArray<nsSVGStringInfo>& aSources) {
-  aSources.AppendElement(nsSVGStringInfo(&mStringAttributes[IN1], this));
-  aSources.AppendElement(nsSVGStringInfo(&mStringAttributes[IN2], this));
+    nsTArray<SVGStringInfo>& aSources) {
+  aSources.AppendElement(SVGStringInfo(&mStringAttributes[IN1], this));
+  aSources.AppendElement(SVGStringInfo(&mStringAttributes[IN2], this));
 }
 
 //----------------------------------------------------------------------
