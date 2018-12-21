@@ -28,6 +28,8 @@ class VisualViewport final : public mozilla::DOMEventTargetHelper {
   double Width() const;
   double Height() const;
   double Scale() const;
+  IMPL_EVENT_HANDLER(resize)
+  IMPL_EVENT_HANDLER(scroll)
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
