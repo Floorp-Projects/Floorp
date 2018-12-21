@@ -22,6 +22,7 @@ import Outline from "./Outline";
 import SourcesTree from "./SourcesTree";
 
 import type { SourcesMap } from "../../reducers/types";
+import type { SelectedPrimaryPaneTabType } from "../../reducers/ui";
 
 type State = {
   alphabetizeOutline: boolean
@@ -32,9 +33,9 @@ type Props = {
   sources: SourcesMap,
   horizontal: boolean,
   sourceSearchOn: boolean,
-  setPrimaryPaneTab: string => void,
-  setActiveSearch: string => void,
-  closeActiveSearch: () => void
+  setPrimaryPaneTab: typeof actions.setPrimaryPaneTab,
+  setActiveSearch: typeof actions.setActiveSearch,
+  closeActiveSearch: typeof actions.closeActiveSearch
 };
 
 class PrimaryPanes extends Component<Props, State> {
@@ -46,7 +47,7 @@ class PrimaryPanes extends Component<Props, State> {
     };
   }
 
-  showPane = (selectedPane: string) => {
+  showPane = (selectedPane: SelectedPrimaryPaneTabType) => {
     this.props.setPrimaryPaneTab(selectedPane);
   };
 

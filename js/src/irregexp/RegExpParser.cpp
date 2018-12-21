@@ -31,18 +31,22 @@
 #include "irregexp/RegExpParser.h"
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/Casting.h"
 #include "mozilla/Move.h"
+#include "mozilla/Range.h"
 
 #include "frontend/TokenStream.h"
 #include "gc/GC.h"
 #include "irregexp/RegExpCharacters.h"
 #include "util/StringBuffer.h"
+#include "util/Text.h"
 #include "util/Unicode.h"
 #include "vm/ErrorReporting.h"
 
 using namespace js;
 using namespace js::irregexp;
 
+using mozilla::AssertedCast;
 using mozilla::PointerRangeSize;
 
 // ----------------------------------------------------------------------------
@@ -258,6 +262,18 @@ RegExpParser<CharT>::RegExpParser(frontend::TokenStreamAnyChars& ts, LifoAlloc* 
     Advance();
 }
 
+static size_t ComputeColumn(const Latin1Char* begin, const Latin1Char* end) {
+  return PointerRangeSize(begin, end);
+}
+
+static size_t ComputeColumn(const char16_t* begin, const char16_t* end) {
+#if JS_COLUMN_DIMENSION_IS_CODE_POINTS
+  return unicode::CountCodePoints(begin, end);
+#else
+  return PointerRangeSize(begin, end);
+#endif
+}
+
 template <typename CharT>
 void
 RegExpParser<CharT>::SyntaxError(unsigned errorNumber, ...)
@@ -269,7 +285,13 @@ RegExpParser<CharT>::SyntaxError(unsigned errorNumber, ...)
     // a line of context based on the expression source.
     uint32_t location = ts.currentToken().pos.begin;
     if (ts.fillExceptingContext(&err, location)) {
-        ts.lineAndColumnAt(location, &err.lineNumber, &err.columnNumber);
+      // Line breaks are not significant in pattern text in the same way as
+      // in source text, so act as though pattern text is a single line, then
+      // compute a column based on "code point" count (treating a lone
+      // surrogate as a "code point" in UTF-16).  Gak.
+      err.lineNumber = 1;
+      err.columnNumber =
+          AssertedCast<uint32_t>(ComputeColumn(start_, next_pos_ - 1));
     }
 
     // For most error reporting, the line of context derives from the token

@@ -1062,6 +1062,8 @@ static bool ReportCompileWarnings(JSContext* cx,
                                               Value* vp) {
   CallArgs callArgs = CallArgsFromVp(argc, vp);
 
+  Log(cx, "sync new Module() started");
+
   if (!ThrowIfNotConstructing(cx, callArgs, "Module")) {
     return false;
   }
@@ -1111,6 +1113,8 @@ static bool ReportCompileWarnings(JSContext* cx,
   if (!moduleObj) {
     return false;
   }
+
+  Log(cx, "sync new Module() succeded");
 
   callArgs.rval().setObject(*moduleObj);
   return true;
@@ -1317,6 +1321,8 @@ static bool Instantiate(JSContext* cx, const Module& module,
                                                 Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
+  Log(cx, "sync new Instance() started");
+
   if (!ThrowIfNotConstructing(cx, args, "Instance")) {
     return false;
   }
@@ -1341,6 +1347,8 @@ static bool Instantiate(JSContext* cx, const Module& module,
   if (!Instantiate(cx, *module, importObj, &instanceObj)) {
     return false;
   }
+
+  Log(cx, "sync new Instance() succeeded");
 
   args.rval().setObject(*instanceObj);
   return true;
@@ -2725,7 +2733,8 @@ static bool Reject(JSContext* cx, const CompileArgs& args,
 
 static bool Resolve(JSContext* cx, const Module& module,
                     Handle<PromiseObject*> promise, bool instantiate,
-                    HandleObject importObj, const UniqueCharsVector& warnings) {
+                    HandleObject importObj, const UniqueCharsVector& warnings,
+                    const char* methodSuffix = "") {
   if (!ReportCompileWarnings(cx, warnings)) {
     return false;
   }
@@ -2768,6 +2777,9 @@ static bool Resolve(JSContext* cx, const Module& module,
   if (!PromiseObject::resolve(cx, promise, resolutionValue)) {
     return RejectWithPendingException(cx, promise);
   }
+
+  Log(cx, "async %s%s() succeeded", (instantiate ? "instantiate" : "compile"),
+      methodSuffix);
 
   return true;
 }
@@ -2850,6 +2862,8 @@ static bool WebAssembly_compile(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
+  Log(cx, "async compile() started");
+
   Rooted<PromiseObject*> promise(cx, PromiseObject::createSkippingExecutor(cx));
   if (!promise) {
     return false;
@@ -2897,6 +2911,8 @@ static bool WebAssembly_instantiate(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
+  Log(cx, "async instantiate() started");
+
   Rooted<PromiseObject*> promise(cx, PromiseObject::createSkippingExecutor(cx));
   if (!promise) {
     return false;
@@ -2921,6 +2937,8 @@ static bool WebAssembly_instantiate(JSContext* cx, unsigned argc, Value* vp) {
     if (!PromiseObject::resolve(cx, promise, resolutionValue)) {
       return false;
     }
+
+    Log(cx, "async instantiate() succeeded");
   } else {
     auto task = cx->make_unique<CompileBufferTask>(cx, promise, importObj);
     if (!task || !task->init(cx, "WebAssembly.instantiate")) {
@@ -2958,6 +2976,11 @@ static bool WebAssembly_validate(JSContext* cx, unsigned argc, Value* vp) {
   if (!validated && !error) {
     ReportOutOfMemory(cx);
     return false;
+  }
+
+  if (error) {
+    MOZ_ASSERT(!validated);
+    Log(cx, "validate() failed with: %s", error.get());
   }
 
   callArgs.rval().setBoolean(validated);
@@ -3001,31 +3024,42 @@ static bool RejectWithStreamErrorNumber(JSContext* cx, size_t errorCode,
 }
 
 class CompileStreamTask : public PromiseHelperTask, public JS::StreamConsumer {
+  // The stream progresses monotonically through these states; the helper
+  // thread wait()s for streamState_ to reach Closed.
   enum StreamState { Env, Code, Tail, Closed };
-  typedef ExclusiveWaitableData<StreamState> ExclusiveStreamState;
+  ExclusiveWaitableData<StreamState> streamState_;
 
   // Immutable:
-  const MutableCompileArgs compileArgs_;  // immutable during streaming
   const bool instantiate_;
   const PersistentRootedObject importObj_;
 
-  // Mutated on a stream thread (consumeChunk(), streamEnd(), streamError()):
-  ExclusiveStreamState streamState_;
-  Bytes envBytes_;            // immutable after Env state
-  SectionRange codeSection_;  // immutable after Env state
-  Bytes codeBytes_;           // not resized after Env state
+  // Immutable after noteResponseURLs() which is called at most once before
+  // first call on stream thread:
+  const MutableCompileArgs compileArgs_;
+
+  // Immutable after Env state:
+  Bytes envBytes_;
+  SectionRange codeSection_;
+
+  // The code section vector is resized once during the Env state and filled
+  // in chunk by chunk during the Code state, updating the end-pointer after
+  // each chunk:
+  Bytes codeBytes_;
   uint8_t* codeBytesEnd_;
   ExclusiveBytesPtr exclusiveCodeBytesEnd_;
-  Bytes tailBytes_;  // immutable after Tail state
-  ExclusiveStreamEndData exclusiveStreamEnd_;
-  Maybe<size_t> streamError_;
-  Atomic<bool> streamFailed_;
-  Tier2Listener tier2Listener_;
 
-  // Mutated on helper thread (execute()):
+  // Immutable after Tail state:
+  Bytes tailBytes_;
+  ExclusiveStreamEndData exclusiveStreamEnd_;
+
+  // Written once before Closed state and read in Closed state on main thread:
   SharedModule module_;
+  Maybe<size_t> streamError_;
   UniqueChars compileError_;
   UniqueCharsVector warnings_;
+
+  // Set on stream thread and read racily on helper thread to abort compilation:
+  Atomic<bool> streamFailed_;
 
   // Called on some thread before consumeChunk(), streamEnd(), streamError()):
 
@@ -3178,14 +3212,16 @@ class CompileStreamTask : public PromiseHelperTask, public JS::StreamConsumer {
         return;
       }
       case Code:
-      case Tail: {
-        auto streamEnd = exclusiveStreamEnd_.lock();
-        MOZ_ASSERT(!streamEnd->reached);
-        streamEnd->reached = true;
-        streamEnd->tailBytes = &tailBytes_;
-        streamEnd->tier2Listener = tier2Listener;
-        streamEnd.notify_one();
-      }
+      case Tail:
+        // Unlock exclusiveStreamEnd_ before locking streamState_.
+        {
+          auto streamEnd = exclusiveStreamEnd_.lock();
+          MOZ_ASSERT(!streamEnd->reached);
+          streamEnd->reached = true;
+          streamEnd->tailBytes = &tailBytes_;
+          streamEnd->tier2Listener = tier2Listener;
+          streamEnd.notify_one();
+        }
         setClosedAndDestroyAfterHelperThreadStarted();
         return;
       case Closed:
@@ -3236,13 +3272,18 @@ class CompileStreamTask : public PromiseHelperTask, public JS::StreamConsumer {
 
   bool resolve(JSContext* cx, Handle<PromiseObject*> promise) override {
     MOZ_ASSERT(streamState_.lock() == Closed);
-    MOZ_ASSERT_IF(module_, !streamFailed_ && !streamError_ && !compileError_);
-    return module_
-               ? Resolve(cx, *module_, promise, instantiate_, importObj_,
-                         warnings_)
-               : streamError_
-                     ? RejectWithStreamErrorNumber(cx, *streamError_, promise)
-                     : Reject(cx, *compileArgs_, promise, compileError_);
+
+    if (module_) {
+      MOZ_ASSERT(!streamFailed_ && !streamError_ && !compileError_);
+      return Resolve(cx, *module_, promise, instantiate_, importObj_, warnings_,
+                     "Streaming");
+    }
+
+    if (streamError_) {
+      return RejectWithStreamErrorNumber(cx, *streamError_, promise);
+    }
+
+    return Reject(cx, *compileArgs_, promise, compileError_);
   }
 
  public:
@@ -3250,10 +3291,10 @@ class CompileStreamTask : public PromiseHelperTask, public JS::StreamConsumer {
                     CompileArgs& compileArgs, bool instantiate,
                     HandleObject importObj)
       : PromiseHelperTask(cx, promise),
-        compileArgs_(&compileArgs),
+        streamState_(mutexid::WasmStreamStatus, Env),
         instantiate_(instantiate),
         importObj_(cx, importObj),
-        streamState_(mutexid::WasmStreamStatus, Env),
+        compileArgs_(&compileArgs),
         codeSection_{},
         codeBytesEnd_(nullptr),
         exclusiveCodeBytesEnd_(mutexid::WasmCodeBytesEnd, nullptr),
@@ -3446,6 +3487,8 @@ static bool WebAssembly_compileStreaming(JSContext* cx, unsigned argc,
     return false;
   }
 
+  Log(cx, "async compileStreaming() started");
+
   Rooted<PromiseObject*> promise(cx, PromiseObject::createSkippingExecutor(cx));
   if (!promise) {
     return false;
@@ -3466,6 +3509,8 @@ static bool WebAssembly_instantiateStreaming(JSContext* cx, unsigned argc,
   if (!EnsureStreamSupport(cx)) {
     return false;
   }
+
+  Log(cx, "async instantiateStreaming() started");
 
   Rooted<PromiseObject*> promise(cx, PromiseObject::createSkippingExecutor(cx));
   if (!promise) {

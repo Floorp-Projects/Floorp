@@ -6,6 +6,8 @@
 import React, { Component } from "react";
 import classnames from "classnames";
 
+import AccessibleImage from "./AccessibleImage";
+
 import "./ResultList.css";
 
 type Props = {
@@ -51,7 +53,7 @@ export default class ResultList extends Component<Props> {
       <li {...props}>
         {item.icon && (
           <div>
-            <img className={item.icon} />
+            <AccessibleImage className={item.icon} />
           </div>
         )}
         <div id={`${item.id}-title`} className="title">
