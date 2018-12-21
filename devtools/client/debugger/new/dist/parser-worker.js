@@ -1015,6 +1015,9 @@ exports.getMemberExpression = getMemberExpression;
 exports.getVariables = getVariables;
 exports.getPatternIdentifiers = getPatternIdentifiers;
 exports.isTopLevel = isTopLevel;
+exports.nodeHasSameLocation = nodeHasSameLocation;
+exports.sameLocation = sameLocation;
+exports.getFunctionParameterNames = getFunctionParameterNames;
 
 var _types = __webpack_require__(2268);
 
@@ -1057,7 +1060,7 @@ function getObjectExpressionValue(node) {
     return value.name;
   }
 
-  if (t.isCallExpression(value)) {
+  if (t.isCallExpression(value) || t.isFunctionExpression(value)) {
     return "";
   }
   const code = (0, _generator2.default)(value).code;
@@ -1176,6 +1179,38 @@ function getIdentifiers(items) {
 // if the node is top-level, then it shoul only have one body.
 function isTopLevel(ancestors) {
   return ancestors.filter(ancestor => ancestor.key == "body").length == 1;
+}
+
+function nodeHasSameLocation(a, b) {
+  return sameLocation(a.location, b.location);
+}
+
+function sameLocation(a, b) {
+  return a.start.line == b.start.line && a.start.column == b.start.column && a.end.line == b.end.line && a.end.column == b.end.column;
+}
+
+function getFunctionParameterNames(path) {
+  if (path.node.params != null) {
+    return path.node.params.map(param => {
+      if (param.type !== "AssignmentPattern") {
+        return param.name;
+      }
+
+      // Parameter with default value
+      if (param.left.type === "Identifier" && param.right.type === "Identifier") {
+        return `${param.left.name} = ${param.right.name}`;
+      } else if (param.left.type === "Identifier" && param.right.type === "StringLiteral") {
+        return `${param.left.name} = ${param.right.value}`;
+      } else if (param.left.type === "Identifier" && param.right.type === "ObjectExpression") {
+        return `${param.left.name} = {}`;
+      } else if (param.left.type === "Identifier" && param.right.type === "ArrayExpression") {
+        return `${param.left.name} = []`;
+      } else if (param.left.type === "Identifier" && param.right.type === "NullLiteral") {
+        return `${param.left.name} = null`;
+      }
+    });
+  }
+  return [];
 }
 
 /***/ }),
@@ -1313,28 +1348,15 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
 
 let symbolDeclarations = new Map();
 
-function getFunctionParameterNames(path) {
-  if (path.node.params != null) {
-    return path.node.params.map(param => {
-      if (param.type !== "AssignmentPattern") {
-        return param.name;
-      }
-
-      // Parameter with default value
-      if (param.left.type === "Identifier" && param.right.type === "Identifier") {
-        return `${param.left.name} = ${param.right.name}`;
-      } else if (param.left.type === "Identifier" && param.right.type === "StringLiteral") {
-        return `${param.left.name} = ${param.right.value}`;
-      } else if (param.left.type === "Identifier" && param.right.type === "ObjectExpression") {
-        return `${param.left.name} = {}`;
-      } else if (param.left.type === "Identifier" && param.right.type === "ArrayExpression") {
-        return `${param.left.name} = []`;
-      } else if (param.left.type === "Identifier" && param.right.type === "NullLiteral") {
-        return `${param.left.name} = null`;
-      }
-    });
+function getUniqueIdentifiers(identifiers) {
+  const newIdentifiers = [];
+  for (const newId of identifiers) {
+    if (!newIdentifiers.find(id => (0, _helpers.nodeHasSameLocation)(id, newId))) {
+      newIdentifiers.push(newId);
+    }
   }
-  return [];
+
+  return newIdentifiers;
 }
 
 /* eslint-disable complexity */
@@ -1345,7 +1367,7 @@ function extractSymbol(path, symbols) {
       name,
       klass: (0, _inferClassName.inferClassName)(path),
       location: path.node.loc,
-      parameterNames: getFunctionParameterNames(path),
+      parameterNames: (0, _helpers.getFunctionParameterNames)(path),
       identifier: path.node.id,
       // indicates the occurence of the function in a file
       // e.g { name: foo, ... index: 4 } is the 4th foo function
@@ -1442,7 +1464,7 @@ function extractSymbol(path, symbols) {
     });
   }
 
-  if (t.isIdentifier(path) && !t.isGenericTypeAnnotation(path.parent) && !t.isObjectProperty(path.parent) && !t.isArrayPattern(path.parent)) {
+  if (t.isIdentifier(path) && !t.isGenericTypeAnnotation(path.parent)) {
     let { start, end } = path.node.loc;
 
     // We want to include function params, but exclude the function name
@@ -1520,6 +1542,7 @@ function extractSymbols(sourceId) {
 
   // comments are extracted separately from the AST
   symbols.comments = (0, _helpers.getComments)(ast);
+  symbols.identifiers = getUniqueIdentifiers(symbols.identifiers);
 
   return symbols;
 }
@@ -23057,6 +23080,13 @@ function mapOriginalExpression(expression, mappings) {
 
   t.traverse(ast, (node, ancestors) => {
     if (!t.isIdentifier(node) && !t.isThisExpression(node)) {
+      return;
+    }
+
+    const ancestor = ancestors[ancestors.length - 1];
+    // Shorthand properties can have a key and value with `node.loc.start` value
+    // and we only want to replace the value.
+    if (t.isObjectProperty(ancestor.node) && ancestor.key !== "value") {
       return;
     }
 

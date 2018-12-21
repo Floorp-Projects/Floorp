@@ -13,7 +13,7 @@ import { isOriginal } from "../utils/source";
 import { get } from "lodash";
 import type { Frame, Source } from "../types";
 import type { SourcesMap } from "../reducers/sources";
-import { createSelector } from "reselect";
+import { createSelector } from "../utils/createSelector";
 
 function getLocation(frame, isGeneratedSource) {
   return isGeneratedSource

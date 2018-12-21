@@ -14,7 +14,7 @@ import {
 import { isLoaded } from "../../utils/source";
 import { isException } from "../../utils/pause";
 import { getIndentation } from "../../utils/indentation";
-import { connect } from "react-redux";
+import { connect } from "../../utils/connect";
 import {
   getVisibleSelectedFrame,
   getPauseReason,

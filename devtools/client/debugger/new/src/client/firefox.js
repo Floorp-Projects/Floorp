@@ -58,6 +58,7 @@ export async function onConnect(connection: any, actions: Object): Object {
   const traits = tabTarget.activeTab ? tabTarget.activeTab.traits : null;
   await actions.connect(
     tabTarget.url,
+    threadClient.actor,
     traits && traits.canRewind
   );
   await actions.newSources(sources);
@@ -66,7 +67,7 @@ export async function onConnect(connection: any, actions: Object): Object {
   // paused state.
   const pausedPacket = threadClient.getLastPausePacket();
   if (pausedPacket) {
-    clientEvents.paused("paused", pausedPacket);
+    clientEvents.paused(threadClient, "paused", pausedPacket);
   }
 
   return { bpClients };

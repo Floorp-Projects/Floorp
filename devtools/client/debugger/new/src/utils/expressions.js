@@ -17,7 +17,7 @@ export function sanitizeInput(input: string) {
  * evaluated.
  *
  * NOTE: we add line after the expression to protect against comments.
-*/
+ */
 export function wrapExpression(input: string) {
   return correctIndentation(`
     try {

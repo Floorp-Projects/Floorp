@@ -86,10 +86,9 @@ bool SVGFEBlendElement::AttributeAffectsRendering(int32_t aNameSpaceID,
            aAttribute == nsGkAtoms::mode));
 }
 
-void SVGFEBlendElement::GetSourceImageNames(
-    nsTArray<nsSVGStringInfo>& aSources) {
-  aSources.AppendElement(nsSVGStringInfo(&mStringAttributes[IN1], this));
-  aSources.AppendElement(nsSVGStringInfo(&mStringAttributes[IN2], this));
+void SVGFEBlendElement::GetSourceImageNames(nsTArray<SVGStringInfo>& aSources) {
+  aSources.AppendElement(SVGStringInfo(&mStringAttributes[IN1], this));
+  aSources.AppendElement(SVGStringInfo(&mStringAttributes[IN2], this));
 }
 
 //----------------------------------------------------------------------

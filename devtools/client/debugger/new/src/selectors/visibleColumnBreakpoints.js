@@ -3,7 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import { groupBy, get, sortedUniqBy } from "lodash";
-import { createSelector } from "reselect";
+import { createSelector } from "../utils/createSelector";
 
 import { getViewport } from "../selectors";
 import { getVisibleBreakpoints } from "./visibleBreakpoints";

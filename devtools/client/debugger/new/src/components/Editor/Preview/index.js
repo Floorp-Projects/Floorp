@@ -5,7 +5,7 @@
 // @flow
 
 import React, { PureComponent } from "react";
-import { connect } from "react-redux";
+import { connect } from "../../../utils/connect";
 
 import Popup from "./Popup";
 
@@ -22,7 +22,7 @@ type Props = {
   editorRef: ?HTMLDivElement,
   selectedSource: Source,
   preview: PreviewType,
-  isPaused: Boolean,
+  isPaused: boolean,
   clearPreview: typeof actions.clearPreview,
   setPopupObjectProperties: typeof actions.setPopupObjectProperties,
   addExpression: typeof actions.addExpression,
@@ -148,7 +148,7 @@ class Preview extends PureComponent<Props, State> {
       return null;
     }
 
-    const { result, expression, location, cursorPos, extra } = preview;
+    const { result, expression, location, cursorPos } = preview;
     const value = result;
     if (typeof value == "undefined" || value.optimizedOut) {
       return null;
@@ -164,7 +164,6 @@ class Preview extends PureComponent<Props, State> {
         range={editorRange}
         expression={expression}
         popoverPos={cursorPos}
-        extra={extra}
         onClose={this.onClose}
       />
     );

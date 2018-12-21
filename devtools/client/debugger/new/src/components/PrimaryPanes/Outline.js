@@ -6,7 +6,7 @@
 
 import React, { Component } from "react";
 import { showMenu } from "devtools-contextmenu";
-import { connect } from "react-redux";
+import { connect } from "../../utils/connect";
 import { score as fuzzaldrinScore } from "fuzzaldrin-plus";
 
 import { copyToTheClipboard } from "../../utils/clipboard";

@@ -19,7 +19,6 @@ import {
 } from "../selectors";
 
 import { getMappedExpression } from "./expressions";
-import { getExtra } from "./pause";
 
 import type { Action, ThunkArgs } from "./types";
 import type { Position } from "../types";
@@ -100,24 +99,21 @@ export function setPreview(
           return;
         }
 
-        const { result } = await client.evaluateInFrame(
-          expression,
-          selectedFrame.id
-        );
+        const { result } = await client.evaluateInFrame(expression, {
+          frameId: selectedFrame.id,
+          thread: source.thread
+        });
 
         if (result === undefined) {
           return;
         }
-
-        const extra = await dispatch(getExtra(expression, result));
 
         return {
           expression,
           result,
           location,
           tokenPos,
-          cursorPos,
-          extra
+          cursorPos
         };
       })()
     });

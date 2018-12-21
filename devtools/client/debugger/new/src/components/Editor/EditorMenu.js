@@ -3,7 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import { Component } from "react";
-import { connect } from "react-redux";
+import { connect } from "../../utils/connect";
 import { showMenu } from "devtools-contextmenu";
 import { isOriginalId } from "devtools-source-map";
 
