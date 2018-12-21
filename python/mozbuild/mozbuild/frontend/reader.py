@@ -394,6 +394,11 @@ class TemplateFunction(object):
         code = func.func_code
         firstlineno = code.co_firstlineno
         lines = sandbox._current_source.splitlines(True)
+        if lines:
+            # Older versions of python 2.7 had a buggy inspect.getblock() that
+            # would ignore the last line if it didn't terminate with a newline.
+            if not lines[-1].endswith('\n'):
+                lines[-1] += '\n'
         lines = inspect.getblock(lines[firstlineno - 1:])
 
         # The code lines we get out of inspect.getsourcelines look like
