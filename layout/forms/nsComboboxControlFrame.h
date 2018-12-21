@@ -125,7 +125,7 @@ class nsComboboxControlFrame final : public nsBlockFrame,
    * and FireOnChange() will be called.
    * @param aOn true if got focus, false if lost focus.
    * @param aRepaint if true then force repaint (NOTE: we always force repaint
-   * currently)
+   *        currently)
    * @note This method might destroy |this|.
    */
   MOZ_CAN_RUN_SCRIPT_BOUNDARY

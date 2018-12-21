@@ -54,18 +54,18 @@
 /**
  * New rules of reflow:
  * 1. you get a WillReflow() followed by a Reflow() followed by a DidReflow() in
- * order (no separate pass over the tree)
+ *    order (no separate pass over the tree)
  * 2. it's the parent frame's responsibility to size/position the child's view
- * (not the child frame's responsibility as it is today) during reflow (and
- * before sending the DidReflow() notification)
+ *    (not the child frame's responsibility as it is today) during reflow (and
+ *    before sending the DidReflow() notification)
  * 3. positioning of child frames (and their views) is done on the way down the
- * tree, and sizing of child frames (and their views) on the way back up
+ *    tree, and sizing of child frames (and their views) on the way back up
  * 4. if you move a frame (outside of the reflow process, or after reflowing
- * it), then you must make sure that its view (or its child frame's views) are
- * re-positioned as well. It's reasonable to not position the view until after
- * all reflowing the entire line, for example, but the frame should still be
- * positioned and sized (and the view sized) during the reflow (i.e., before
- * sending the DidReflow() notification)
+ *    it), then you must make sure that its view (or its child frame's views)
+ *    are re-positioned as well. It's reasonable to not position the view until
+ *    after all reflowing the entire line, for example, but the frame should
+ *    still be positioned and sized (and the view sized) during the reflow
+ *    (i.e., before sending the DidReflow() notification)
  * 5. the view system handles moving of widgets, i.e., it's not our problem
  */
 
@@ -4384,8 +4384,9 @@ class nsIFrame : public nsQueryFrame {
   /**
    * Search for the first paragraph boundary before or after the given position
    * @param  aPos See description in nsFrameSelection.h. The following fields
-   * are used by this method: Input: mDirection Output: mResultContent,
-   * mContentOffset
+   *              are used by this method:
+   *              Input: mDirection
+   *              Output: mResultContent, mContentOffset
    */
   nsresult PeekOffsetParagraph(nsPeekOffsetStruct* aPos);
 
