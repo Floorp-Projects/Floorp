@@ -15,7 +15,7 @@ nsresult NS_NewSVGFEBlendElement(
 namespace mozilla {
 namespace dom {
 
-typedef nsSVGFE SVGFEBlendElementBase;
+typedef SVGFE SVGFEBlendElementBase;
 
 class SVGFEBlendElement : public SVGFEBlendElementBase {
   friend nsresult(::NS_NewSVGFEBlendElement(

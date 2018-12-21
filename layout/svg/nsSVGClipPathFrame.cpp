@@ -216,7 +216,7 @@ void nsSVGClipPathFrame::PaintFrameIntoMask(nsIFrame* aFrame,
   nsIContent* childContent = child->GetContent();
   if (childContent->IsSVGElement()) {
     toChildsUserSpace =
-        static_cast<const nsSVGElement*>(childContent)
+        static_cast<const SVGElement*>(childContent)
             ->PrependLocalTransformsTo(mMatrixForChildren, eUserSpaceToParent);
   }
 
@@ -298,7 +298,7 @@ bool nsSVGClipPathFrame::PointIsInsideClipPath(nsIFrame* aClippedFrame,
     if (SVGFrame) {
       gfxPoint pointForChild = point;
       gfxMatrix m =
-          static_cast<nsSVGElement*>(kid->GetContent())
+          static_cast<SVGElement*>(kid->GetContent())
               ->PrependLocalTransformsTo(gfxMatrix(), eUserSpaceToParent);
       if (!m.IsIdentity()) {
         if (!m.Invert()) {
@@ -453,7 +453,7 @@ SVGBBox nsSVGClipPathFrame::GetBBoxForClipPathFrame(const SVGBBox& aBBox,
   nsIContent* node = GetContent()->GetFirstChild();
   SVGBBox unionBBox, tmpBBox;
   for (; node; node = node->GetNextSibling()) {
-    nsSVGElement* svgNode = static_cast<nsSVGElement*>(node);
+    SVGElement* svgNode = static_cast<SVGElement*>(node);
     nsIFrame* frame = svgNode->GetPrimaryFrame();
     if (frame) {
       nsSVGDisplayableFrame* svg = do_QueryFrame(frame);

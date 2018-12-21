@@ -212,10 +212,10 @@ gfxRect nsSVGFilterInstance::UserSpaceToFilterSpace(
 }
 
 IntRect nsSVGFilterInstance::ComputeFilterPrimitiveSubregion(
-    nsSVGFE* aFilterElement,
+    SVGFE* aFilterElement,
     const nsTArray<FilterPrimitiveDescription>& aPrimitiveDescrs,
     const nsTArray<int32_t>& aInputIndices) {
-  nsSVGFE* fE = aFilterElement;
+  SVGFE* fE = aFilterElement;
 
   IntRect defaultFilterSubregion(0, 0, 0, 0);
   if (fE->SubregionIsUnionOfRegions()) {
@@ -234,17 +234,17 @@ IntRect nsSVGFilterInstance::ComputeFilterPrimitiveSubregion(
   }
 
   gfxRect feArea = nsSVGUtils::GetRelativeRect(
-      mPrimitiveUnits, &fE->mLengthAttributes[nsSVGFE::ATTR_X], mTargetBBox,
+      mPrimitiveUnits, &fE->mLengthAttributes[SVGFE::ATTR_X], mTargetBBox,
       mMetrics);
   Rect region = ToRect(UserSpaceToFilterSpace(feArea));
 
-  if (!fE->mLengthAttributes[nsSVGFE::ATTR_X].IsExplicitlySet())
+  if (!fE->mLengthAttributes[SVGFE::ATTR_X].IsExplicitlySet())
     region.x = defaultFilterSubregion.X();
-  if (!fE->mLengthAttributes[nsSVGFE::ATTR_Y].IsExplicitlySet())
+  if (!fE->mLengthAttributes[SVGFE::ATTR_Y].IsExplicitlySet())
     region.y = defaultFilterSubregion.Y();
-  if (!fE->mLengthAttributes[nsSVGFE::ATTR_WIDTH].IsExplicitlySet())
+  if (!fE->mLengthAttributes[SVGFE::ATTR_WIDTH].IsExplicitlySet())
     region.width = defaultFilterSubregion.Width();
-  if (!fE->mLengthAttributes[nsSVGFE::ATTR_HEIGHT].IsExplicitlySet())
+  if (!fE->mLengthAttributes[SVGFE::ATTR_HEIGHT].IsExplicitlySet())
     region.height = defaultFilterSubregion.Height();
 
   // We currently require filter primitive subregions to be pixel-aligned.
@@ -315,7 +315,7 @@ int32_t nsSVGFilterInstance::GetOrCreateSourceAlphaIndex(
 }
 
 nsresult nsSVGFilterInstance::GetSourceIndices(
-    nsSVGFE* aPrimitiveElement,
+    SVGFE* aPrimitiveElement,
     nsTArray<FilterPrimitiveDescription>& aPrimitiveDescrs,
     const nsDataHashtable<nsStringHashKey, int32_t>& aImageTable,
     nsTArray<int32_t>& aSourceIndices) {
@@ -366,11 +366,11 @@ nsresult nsSVGFilterInstance::BuildPrimitives(
   }
 
   // Get the filter primitive elements.
-  nsTArray<RefPtr<nsSVGFE>> primitives;
+  nsTArray<RefPtr<SVGFE>> primitives;
   for (nsIContent* child = mFilterElement->nsINode::GetFirstChild(); child;
        child = child->GetNextSibling()) {
-    RefPtr<nsSVGFE> primitive;
-    CallQueryInterface(child, (nsSVGFE**)getter_AddRefs(primitive));
+    RefPtr<SVGFE> primitive;
+    CallQueryInterface(child, (SVGFE**)getter_AddRefs(primitive));
     if (primitive) {
       primitives.AppendElement(primitive);
     }
@@ -384,7 +384,7 @@ nsresult nsSVGFilterInstance::BuildPrimitives(
 
   for (uint32_t primitiveElementIndex = 0;
        primitiveElementIndex < primitives.Length(); ++primitiveElementIndex) {
-    nsSVGFE* filter = primitives[primitiveElementIndex];
+    SVGFE* filter = primitives[primitiveElementIndex];
 
     AutoTArray<int32_t, 2> sourceIndices;
     nsresult rv =

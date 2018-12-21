@@ -13,7 +13,7 @@
 #include "nsWrapperCache.h"
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/ErrorResult.h"
-#include "nsSVGElement.h"
+#include "mozilla/dom/SVGElement.h"
 
 namespace mozilla {
 
@@ -88,11 +88,11 @@ class DOMSVGPreserveAspectRatio final : public nsISupports,
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMSVGPreserveAspectRatio)
 
   DOMSVGPreserveAspectRatio(SVGAnimatedPreserveAspectRatio* aVal,
-                            nsSVGElement* aSVGElement, bool aIsBaseValue)
+                            SVGElement* aSVGElement, bool aIsBaseValue)
       : mVal(aVal), mSVGElement(aSVGElement), mIsBaseValue(aIsBaseValue) {}
 
   // WebIDL
-  nsSVGElement* GetParentObject() const { return mSVGElement; }
+  SVGElement* GetParentObject() const { return mSVGElement; }
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
 
@@ -106,7 +106,7 @@ class DOMSVGPreserveAspectRatio final : public nsISupports,
 
   SVGAnimatedPreserveAspectRatio*
       mVal;  // kept alive because it belongs to mSVGElement
-  RefPtr<nsSVGElement> mSVGElement;
+  RefPtr<SVGElement> mSVGElement;
   const bool mIsBaseValue;
 };
 

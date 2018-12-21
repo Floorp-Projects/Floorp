@@ -8,7 +8,7 @@
 #include "mozilla/dom/SVGFEBlendElementBinding.h"
 #include "nsSVGUtils.h"
 
-NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(FEBlend)
+NS_IMPL_NS_NEW_SVG_ELEMENT(FEBlend)
 
 using namespace mozilla::gfx;
 
@@ -39,10 +39,10 @@ nsSVGEnumMapping SVGFEBlendElement::sModeMap[] = {
     {nsGkAtoms::luminosity, SVG_FEBLEND_MODE_LUMINOSITY},
     {nullptr, 0}};
 
-nsSVGElement::EnumInfo SVGFEBlendElement::sEnumInfo[1] = {
+SVGElement::EnumInfo SVGFEBlendElement::sEnumInfo[1] = {
     {nsGkAtoms::mode, sModeMap, SVG_FEBLEND_MODE_NORMAL}};
 
-nsSVGElement::StringInfo SVGFEBlendElement::sStringInfo[3] = {
+SVGElement::StringInfo SVGFEBlendElement::sStringInfo[3] = {
     {nsGkAtoms::result, kNameSpaceID_None, true},
     {nsGkAtoms::in, kNameSpaceID_None, true},
     {nsGkAtoms::in2, kNameSpaceID_None, true}};
@@ -93,13 +93,13 @@ void SVGFEBlendElement::GetSourceImageNames(
 }
 
 //----------------------------------------------------------------------
-// nsSVGElement methods
+// SVGElement methods
 
-nsSVGElement::EnumAttributesInfo SVGFEBlendElement::GetEnumInfo() {
+SVGElement::EnumAttributesInfo SVGFEBlendElement::GetEnumInfo() {
   return EnumAttributesInfo(mEnumAttributes, sEnumInfo, ArrayLength(sEnumInfo));
 }
 
-nsSVGElement::StringAttributesInfo SVGFEBlendElement::GetStringInfo() {
+SVGElement::StringAttributesInfo SVGFEBlendElement::GetStringInfo() {
   return StringAttributesInfo(mStringAttributes, sStringInfo,
                               ArrayLength(sStringInfo));
 }

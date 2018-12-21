@@ -13,7 +13,7 @@
 #include "nsSVGLength2.h"
 #include "nsSVGViewBox.h"
 #include "SVGAnimatedPreserveAspectRatio.h"
-#include "nsSVGElement.h"
+#include "SVGElement.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/SVGAnimatedEnumeration.h"
 #include "mozilla/dom/SVGMarkerElementBinding.h"
@@ -36,7 +36,7 @@ class nsSVGOrientType {
       : mAnimVal(SVGMarkerElement_Binding::SVG_MARKER_ORIENT_ANGLE),
         mBaseVal(SVGMarkerElement_Binding::SVG_MARKER_ORIENT_ANGLE) {}
 
-  nsresult SetBaseValue(uint16_t aValue, nsSVGElement* aSVGElement);
+  nsresult SetBaseValue(uint16_t aValue, SVGElement* aSVGElement);
 
   // XXX FIXME like https://bugzilla.mozilla.org/show_bug.cgi?id=545550 but
   // without adding an mIsAnimated member...?
@@ -59,14 +59,14 @@ class nsSVGOrientType {
   uint16_t GetAnimValueInternal() const { return mAnimVal; }
 
   already_AddRefed<SVGAnimatedEnumeration> ToDOMAnimatedEnum(
-      nsSVGElement* aSVGElement);
+      SVGElement* aSVGElement);
 
  private:
   nsSVGEnumValue mAnimVal;
   nsSVGEnumValue mBaseVal;
 
   struct DOMAnimatedEnum final : public SVGAnimatedEnumeration {
-    DOMAnimatedEnum(nsSVGOrientType* aVal, nsSVGElement* aSVGElement)
+    DOMAnimatedEnum(nsSVGOrientType* aVal, SVGElement* aSVGElement)
         : SVGAnimatedEnumeration(aSVGElement), mVal(aVal) {}
 
     nsSVGOrientType* mVal;  // kept alive because it belongs to content
@@ -80,7 +80,7 @@ class nsSVGOrientType {
   };
 };
 
-typedef nsSVGElement SVGMarkerElementBase;
+typedef SVGElement SVGMarkerElementBase;
 
 class SVGMarkerElement : public SVGMarkerElementBase {
   friend class ::nsSVGMarkerFrame;

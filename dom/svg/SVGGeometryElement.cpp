@@ -19,8 +19,8 @@ using namespace mozilla;
 using namespace mozilla::gfx;
 using namespace mozilla::dom;
 
-nsSVGElement::NumberInfo SVGGeometryElement::sNumberInfo = {
-    nsGkAtoms::pathLength, 0, false};
+SVGElement::NumberInfo SVGGeometryElement::sNumberInfo = {nsGkAtoms::pathLength,
+                                                          0, false};
 
 //----------------------------------------------------------------------
 // Implementation
@@ -29,7 +29,7 @@ SVGGeometryElement::SVGGeometryElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
     : SVGGeometryElementBase(std::move(aNodeInfo)) {}
 
-nsSVGElement::NumberAttributesInfo SVGGeometryElement::GetNumberInfo() {
+SVGElement::NumberAttributesInfo SVGGeometryElement::GetNumberInfo() {
   return NumberAttributesInfo(&mPathLength, &sNumberInfo, 1);
 }
 

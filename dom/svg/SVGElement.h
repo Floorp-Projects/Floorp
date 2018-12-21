@@ -8,7 +8,7 @@
 #define __NS_SVGELEMENT_H__
 
 /*
-  nsSVGElement is the base class for all SVG content elements.
+  SVGElement is the base class for all SVG content elements.
   It implements all the common DOM interfaces and handles attributes.
 */
 
@@ -38,14 +38,13 @@ class nsSVGNumberPair;
 class nsSVGString;
 class nsSVGViewBox;
 
+struct nsSVGEnumMapping;
+
+nsresult NS_NewSVGElement(mozilla::dom::Element** aResult,
+                          already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
+
 namespace mozilla {
 class DeclarationBlock;
-
-namespace dom {
-class SVGSVGElement;
-class SVGViewportElement;
-
-}  // namespace dom
 
 class SVGAnimatedNumberList;
 class SVGNumberList;
@@ -58,21 +57,21 @@ class nsSVGAnimatedTransformList;
 class SVGStringList;
 class DOMSVGStringList;
 
-}  // namespace mozilla
+namespace dom {
+class SVGSVGElement;
+class SVGViewportElement;
 
-struct nsSVGEnumMapping;
+typedef nsStyledElement SVGElementBase;
 
-typedef nsStyledElement nsSVGElementBase;
-
-class nsSVGElement : public nsSVGElementBase  // nsIContent
+class SVGElement : public SVGElementBase  // nsIContent
 {
  protected:
-  explicit nsSVGElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
-  friend nsresult NS_NewSVGElement(
-      mozilla::dom::Element** aResult,
-      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
+  explicit SVGElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
+  friend nsresult(
+      ::NS_NewSVGElement(mozilla::dom::Element** aResult,
+                         already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
   nsresult Init();
-  virtual ~nsSVGElement();
+  virtual ~SVGElement();
 
  public:
   virtual nsresult Clone(mozilla::dom::NodeInfo*,
@@ -90,7 +89,7 @@ class nsSVGElement : public nsSVGElementBase  // nsIContent
   typedef mozilla::SVGStringList SVGStringList;
 
   // nsISupports
-  NS_INLINE_DECL_REFCOUNTING_INHERITED(nsSVGElement, nsSVGElementBase)
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(SVGElement, SVGElementBase)
 
   void DidAnimateClass();
 
@@ -125,7 +124,7 @@ class nsSVGElement : public nsSVGElementBase  // nsIContent
   static const MappedAttributeEntry sLightingEffectsMap[];
   static const MappedAttributeEntry sMaskMap[];
 
-  NS_IMPL_FROMNODE(nsSVGElement, kNameSpaceID_SVG)
+  NS_IMPL_FROMNODE(SVGElement, kNameSpaceID_SVG)
 
   // Gets the element that establishes the rectangular viewport against which
   // we should resolve percentage lengths (our "coordinate context"). Returns
@@ -157,7 +156,7 @@ class nsSVGElement : public nsSVGElementBase  // nsIContent
    */
   virtual gfxMatrix PrependLocalTransformsTo(
       const gfxMatrix& aMatrix,
-      mozilla::SVGTransformTypes aWhich = mozilla::eAllTransforms) const;
+      SVGTransformTypes aWhich = eAllTransforms) const;
 
   // Setter for to set the current <animateMotion> transformation
   // Only visible for nsSVGGraphicElement, so it's a no-op here, and that
@@ -301,7 +300,7 @@ class nsSVGElement : public nsSVGElementBase  // nsIContent
 
   // WebIDL
   mozilla::dom::SVGSVGElement* GetOwnerSVGElement();
-  nsSVGElement* GetViewportElement();
+  SVGElement* GetViewportElement();
   already_AddRefed<mozilla::dom::SVGAnimatedString> ClassName();
 
   void UpdateContentDeclarationBlock();
@@ -315,7 +314,7 @@ class nsSVGElement : public nsSVGElementBase  // nsIContent
   // by SVG elements.
   // This is because we're not currently passing the correct value for aValue to
   // BeforeSetAttr since it would involve allocating extra SVG value types.
-  // See the comment in nsSVGElement::WillChangeValue.
+  // See the comment in SVGElement::WillChangeValue.
   nsresult BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
                          const nsAttrValueOrString* aValue, bool aNotify) final;
   virtual nsresult AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
@@ -479,7 +478,7 @@ class nsSVGElement : public nsSVGElementBase  // nsIContent
     void Reset(uint8_t aAttrEnum);
   };
 
-  friend class nsSVGEnum;
+  friend class ::nsSVGEnum;
 
   struct EnumInfo {
     nsStaticAtom* const mName;
@@ -620,25 +619,7 @@ class nsSVGElement : public nsSVGElementBase  // nsIContent
 /**
  * A macro to implement the NS_NewSVGXXXElement() functions.
  */
-#define NS_IMPL_NS_NEW_SVG_ELEMENT(_elementName)                \
-  nsresult NS_NewSVG##_elementName##Element(                    \
-      nsIContent** aResult,                                     \
-      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo) {   \
-    RefPtr<nsSVG##_elementName##Element> it =                   \
-        new nsSVG##_elementName##Element(std::move(aNodeInfo)); \
-                                                                \
-    nsresult rv = it->Init();                                   \
-                                                                \
-    if (NS_FAILED(rv)) {                                        \
-      return rv;                                                \
-    }                                                           \
-                                                                \
-    it.forget(aResult);                                         \
-                                                                \
-    return rv;                                                  \
-  }
-
-#define NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(_elementName)                 \
+#define NS_IMPL_NS_NEW_SVG_ELEMENT(_elementName)                            \
   nsresult NS_NewSVG##_elementName##Element(                                \
       nsIContent** aResult,                                                 \
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo) {               \
@@ -656,7 +637,7 @@ class nsSVGElement : public nsSVGElementBase  // nsIContent
     return rv;                                                              \
   }
 
-#define NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT_CHECK_PARSER(_elementName)   \
+#define NS_IMPL_NS_NEW_SVG_ELEMENT_CHECK_PARSER(_elementName)              \
   nsresult NS_NewSVG##_elementName##Element(                               \
       nsIContent** aResult,                                                \
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,                \
@@ -696,5 +677,8 @@ class nsSVGElement : public nsSVGElementBase  // nsIContent
   NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(_val)                           \
     NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER                   \
   NS_IMPL_CYCLE_COLLECTION_TRACE_END
+
+}  // namespace dom
+}  // namespace mozilla
 
 #endif  // __NS_SVGELEMENT_H__

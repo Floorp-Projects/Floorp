@@ -1748,7 +1748,8 @@ static bool DoTypeUpdateFallback(JSContext* cx, BaselineFrame* frame,
         addType = false;
       }
     } else {
-      MOZ_ASSERT(type == ReferenceType::TYPE_OBJECT);
+      MOZ_ASSERT(type == ReferenceType::TYPE_OBJECT ||
+                 type == ReferenceType::TYPE_WASM_ANYREF);
 
       // Ignore null values being written here. Null is included
       // implicitly in type information for this property. Note that

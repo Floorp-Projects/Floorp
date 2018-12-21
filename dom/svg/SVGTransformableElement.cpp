@@ -40,13 +40,13 @@ SVGTransformableElement::IsAttributeMapped(const nsAtom* name) const {
                                                     sGraphicsMap};
 
   return FindAttributeDependence(name, map) ||
-         nsSVGElement::IsAttributeMapped(name);
+         SVGElement::IsAttributeMapped(name);
 }
 
 nsChangeHint SVGTransformableElement::GetAttributeChangeHint(
     const nsAtom* aAttribute, int32_t aModType) const {
   nsChangeHint retval =
-      nsSVGElement::GetAttributeChangeHint(aAttribute, aModType);
+      SVGElement::GetAttributeChangeHint(aAttribute, aModType);
   if (aAttribute == nsGkAtoms::transform ||
       aAttribute == nsGkAtoms::mozAnimateMotionDummyAttr) {
     nsIFrame* frame =
@@ -89,7 +89,7 @@ bool SVGTransformableElement::IsEventAttributeNameInternal(nsAtom* aName) {
 }
 
 //----------------------------------------------------------------------
-// nsSVGElement overrides
+// SVGElement overrides
 
 gfxMatrix SVGTransformableElement::PrependLocalTransformsTo(
     const gfxMatrix& aMatrix, SVGTransformTypes aWhich) const {
@@ -146,11 +146,11 @@ nsSVGAnimatedTransformList* SVGTransformableElement::GetAnimatedTransformList(
   return mTransforms;
 }
 
-nsSVGElement* SVGTransformableElement::GetNearestViewportElement() {
+SVGElement* SVGTransformableElement::GetNearestViewportElement() {
   return SVGContentUtils::GetNearestViewportElement(this);
 }
 
-nsSVGElement* SVGTransformableElement::GetFarthestViewportElement() {
+SVGElement* SVGTransformableElement::GetFarthestViewportElement() {
   return SVGContentUtils::GetOuterSVGElement(this);
 }
 

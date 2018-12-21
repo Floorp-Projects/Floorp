@@ -11,7 +11,7 @@
 #include "nsError.h"
 #include "nsISMILAttr.h"
 #include "nsMathUtils.h"
-#include "nsSVGElement.h"
+#include "SVGElement.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/SVGAnimatedNumber.h"
 #include "mozilla/FloatingPoint.h"
@@ -27,6 +27,8 @@ class SVGAnimationElement;
 
 class nsSVGNumberPair {
  public:
+  typedef mozilla::dom::SVGElement SVGElement;
+
   enum PairIndex { eFirst, eSecond };
 
   void Init(uint8_t aAttrEnum = 0xff, float aValue1 = 0, float aValue2 = 0) {
@@ -37,16 +39,15 @@ class nsSVGNumberPair {
     mIsBaseSet = false;
   }
 
-  nsresult SetBaseValueString(const nsAString& aValue,
-                              nsSVGElement* aSVGElement);
+  nsresult SetBaseValueString(const nsAString& aValue, SVGElement* aSVGElement);
   void GetBaseValueString(nsAString& aValue) const;
 
-  void SetBaseValue(float aValue, PairIndex aIndex, nsSVGElement* aSVGElement);
-  void SetBaseValues(float aValue1, float aValue2, nsSVGElement* aSVGElement);
+  void SetBaseValue(float aValue, PairIndex aIndex, SVGElement* aSVGElement);
+  void SetBaseValues(float aValue1, float aValue2, SVGElement* aSVGElement);
   float GetBaseValue(PairIndex aIndex) const {
     return mBaseVal[aIndex == eFirst ? 0 : 1];
   }
-  void SetAnimValue(const float aValue[2], nsSVGElement* aSVGElement);
+  void SetAnimValue(const float aValue[2], SVGElement* aSVGElement);
   float GetAnimValue(PairIndex aIndex) const {
     return mAnimVal[aIndex == eFirst ? 0 : 1];
   }
@@ -59,8 +60,8 @@ class nsSVGNumberPair {
   bool IsExplicitlySet() const { return mIsAnimated || mIsBaseSet; }
 
   already_AddRefed<mozilla::dom::SVGAnimatedNumber> ToDOMAnimatedNumber(
-      PairIndex aIndex, nsSVGElement* aSVGElement);
-  mozilla::UniquePtr<nsISMILAttr> ToSMILAttr(nsSVGElement* aSVGElement);
+      PairIndex aIndex, SVGElement* aSVGElement);
+  mozilla::UniquePtr<nsISMILAttr> ToSMILAttr(SVGElement* aSVGElement);
 
  private:
   float mAnimVal[2];
@@ -72,7 +73,7 @@ class nsSVGNumberPair {
  public:
   struct DOMAnimatedNumber final : public mozilla::dom::SVGAnimatedNumber {
     DOMAnimatedNumber(nsSVGNumberPair* aVal, PairIndex aIndex,
-                      nsSVGElement* aSVGElement)
+                      SVGElement* aSVGElement)
         : mozilla::dom::SVGAnimatedNumber(aSVGElement),
           mVal(aVal),
           mIndex(aIndex) {}
@@ -97,14 +98,14 @@ class nsSVGNumberPair {
 
   struct SMILNumberPair : public nsISMILAttr {
    public:
-    SMILNumberPair(nsSVGNumberPair* aVal, nsSVGElement* aSVGElement)
+    SMILNumberPair(nsSVGNumberPair* aVal, SVGElement* aSVGElement)
         : mVal(aVal), mSVGElement(aSVGElement) {}
 
     // These will stay alive because a nsISMILAttr only lives as long
     // as the Compositing step, and DOM elements don't get a chance to
     // die during that.
     nsSVGNumberPair* mVal;
-    nsSVGElement* mSVGElement;
+    SVGElement* mSVGElement;
 
     // nsISMILAttr methods
     virtual nsresult ValueFromString(

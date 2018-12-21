@@ -10,7 +10,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsError.h"
 #include "nsISMILAttr.h"
-#include "nsSVGElement.h"
+#include "SVGElement.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/SVGAnimatedEnumeration.h"
 #include "mozilla/UniquePtr.h"
@@ -33,6 +33,8 @@ struct nsSVGEnumMapping {
 
 class nsSVGEnum {
  public:
+  typedef mozilla::dom::SVGElement SVGElement;
+
   void Init(uint8_t aAttrEnum, uint16_t aValue) {
     mAnimVal = mBaseVal = uint8_t(aValue);
     mAttrEnum = aAttrEnum;
@@ -40,19 +42,19 @@ class nsSVGEnum {
     mIsBaseSet = false;
   }
 
-  nsresult SetBaseValueAtom(const nsAtom* aValue, nsSVGElement* aSVGElement);
-  nsAtom* GetBaseValueAtom(nsSVGElement* aSVGElement);
-  nsresult SetBaseValue(uint16_t aValue, nsSVGElement* aSVGElement);
+  nsresult SetBaseValueAtom(const nsAtom* aValue, SVGElement* aSVGElement);
+  nsAtom* GetBaseValueAtom(SVGElement* aSVGElement);
+  nsresult SetBaseValue(uint16_t aValue, SVGElement* aSVGElement);
   uint16_t GetBaseValue() const { return mBaseVal; }
 
-  void SetAnimValue(uint16_t aValue, nsSVGElement* aSVGElement);
+  void SetAnimValue(uint16_t aValue, SVGElement* aSVGElement);
   uint16_t GetAnimValue() const { return mAnimVal; }
   bool IsExplicitlySet() const { return mIsAnimated || mIsBaseSet; }
 
   already_AddRefed<mozilla::dom::SVGAnimatedEnumeration> ToDOMAnimatedEnum(
-      nsSVGElement* aSVGElement);
+      SVGElement* aSVGElement);
 
-  mozilla::UniquePtr<nsISMILAttr> ToSMILAttr(nsSVGElement* aSVGElement);
+  mozilla::UniquePtr<nsISMILAttr> ToSMILAttr(SVGElement* aSVGElement);
 
  private:
   nsSVGEnumValue mAnimVal;
@@ -61,11 +63,11 @@ class nsSVGEnum {
   bool mIsAnimated;
   bool mIsBaseSet;
 
-  const nsSVGEnumMapping* GetMapping(nsSVGElement* aSVGElement);
+  const nsSVGEnumMapping* GetMapping(SVGElement* aSVGElement);
 
  public:
   struct DOMAnimatedEnum final : public mozilla::dom::SVGAnimatedEnumeration {
-    DOMAnimatedEnum(nsSVGEnum* aVal, nsSVGElement* aSVGElement)
+    DOMAnimatedEnum(nsSVGEnum* aVal, SVGElement* aSVGElement)
         : mozilla::dom::SVGAnimatedEnumeration(aSVGElement), mVal(aVal) {}
     virtual ~DOMAnimatedEnum();
 
@@ -88,14 +90,14 @@ class nsSVGEnum {
 
   struct SMILEnum : public nsISMILAttr {
    public:
-    SMILEnum(nsSVGEnum* aVal, nsSVGElement* aSVGElement)
+    SMILEnum(nsSVGEnum* aVal, SVGElement* aSVGElement)
         : mVal(aVal), mSVGElement(aSVGElement) {}
 
     // These will stay alive because a nsISMILAttr only lives as long
     // as the Compositing step, and DOM elements don't get a chance to
     // die during that.
     nsSVGEnum* mVal;
-    nsSVGElement* mSVGElement;
+    SVGElement* mSVGElement;
 
     // nsISMILAttr methods
     virtual nsresult ValueFromString(

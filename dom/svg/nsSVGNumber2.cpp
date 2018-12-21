@@ -42,7 +42,7 @@ static bool GetValueFromString(const nsAString& aString,
 }
 
 nsresult nsSVGNumber2::SetBaseValueString(const nsAString& aValueAsString,
-                                          nsSVGElement* aSVGElement) {
+                                          SVGElement* aSVGElement) {
   float val;
 
   if (!GetValueFromString(aValueAsString,
@@ -60,7 +60,7 @@ nsresult nsSVGNumber2::SetBaseValueString(const nsAString& aValueAsString,
   }
 
   // We don't need to call DidChange* here - we're only called by
-  // nsSVGElement::ParseAttribute under Element::SetAttr,
+  // SVGElement::ParseAttribute under Element::SetAttr,
   // which takes care of notifying.
   return NS_OK;
 }
@@ -70,7 +70,7 @@ void nsSVGNumber2::GetBaseValueString(nsAString& aValueAsString) {
   aValueAsString.AppendFloat(mBaseVal);
 }
 
-void nsSVGNumber2::SetBaseValue(float aValue, nsSVGElement* aSVGElement) {
+void nsSVGNumber2::SetBaseValue(float aValue, SVGElement* aSVGElement) {
   if (mIsBaseSet && aValue == mBaseVal) {
     return;
   }
@@ -85,7 +85,7 @@ void nsSVGNumber2::SetBaseValue(float aValue, nsSVGElement* aSVGElement) {
   aSVGElement->DidChangeNumber(mAttrEnum);
 }
 
-void nsSVGNumber2::SetAnimValue(float aValue, nsSVGElement* aSVGElement) {
+void nsSVGNumber2::SetAnimValue(float aValue, SVGElement* aSVGElement) {
   if (mIsAnimated && aValue == mAnimVal) {
     return;
   }
@@ -95,7 +95,7 @@ void nsSVGNumber2::SetAnimValue(float aValue, nsSVGElement* aSVGElement) {
 }
 
 already_AddRefed<SVGAnimatedNumber> nsSVGNumber2::ToDOMAnimatedNumber(
-    nsSVGElement* aSVGElement) {
+    SVGElement* aSVGElement) {
   RefPtr<DOMAnimatedNumber> domAnimatedNumber =
       sSVGAnimatedNumberTearoffTable.GetTearoff(this);
   if (!domAnimatedNumber) {
@@ -110,7 +110,7 @@ nsSVGNumber2::DOMAnimatedNumber::~DOMAnimatedNumber() {
   sSVGAnimatedNumberTearoffTable.RemoveTearoff(mVal);
 }
 
-UniquePtr<nsISMILAttr> nsSVGNumber2::ToSMILAttr(nsSVGElement* aSVGElement) {
+UniquePtr<nsISMILAttr> nsSVGNumber2::ToSMILAttr(SVGElement* aSVGElement) {
   return MakeUnique<SMILNumber>(this, aSVGElement);
 }
 

@@ -22,7 +22,7 @@ using namespace mozilla::dom::SVGTransform_Binding;
 namespace mozilla {
 
 nsresult nsSVGAnimatedTransformList::SetBaseValueString(
-    const nsAString& aValue, nsSVGElement* aSVGElement) {
+    const nsAString& aValue, SVGElement* aSVGElement) {
   SVGTransformList newBaseValue;
   nsresult rv = newBaseValue.SetValueFromString(aValue);
   if (NS_FAILED(rv)) {
@@ -33,7 +33,7 @@ nsresult nsSVGAnimatedTransformList::SetBaseValueString(
 }
 
 nsresult nsSVGAnimatedTransformList::SetBaseValue(
-    const SVGTransformList& aValue, nsSVGElement* aSVGElement) {
+    const SVGTransformList& aValue, SVGElement* aSVGElement) {
   SVGAnimatedTransformList* domWrapper =
       SVGAnimatedTransformList::GetDOMWrapperIfExists(this);
   if (domWrapper) {
@@ -49,7 +49,7 @@ nsresult nsSVGAnimatedTransformList::SetBaseValue(
   bool hadTransform = HasTransform();
 
   // We don't need to call DidChange* here - we're only called by
-  // nsSVGElement::ParseAttribute under Element::SetAttr,
+  // SVGElement::ParseAttribute under Element::SetAttr,
   // which takes care of notifying.
 
   nsresult rv = mBaseVal.CopyFrom(aValue);
@@ -82,7 +82,7 @@ void nsSVGAnimatedTransformList::ClearBaseValue() {
 }
 
 nsresult nsSVGAnimatedTransformList::SetAnimValue(
-    const SVGTransformList& aValue, nsSVGElement* aElement) {
+    const SVGTransformList& aValue, SVGElement* aElement) {
   bool prevSet = HasTransform() || aElement->GetAnimateMotionTransform();
   SVGAnimatedTransformList* domWrapper =
       SVGAnimatedTransformList::GetDOMWrapperIfExists(this);
@@ -125,7 +125,7 @@ nsresult nsSVGAnimatedTransformList::SetAnimValue(
   return NS_OK;
 }
 
-void nsSVGAnimatedTransformList::ClearAnimValue(nsSVGElement* aElement) {
+void nsSVGAnimatedTransformList::ClearAnimValue(SVGElement* aElement) {
   SVGAnimatedTransformList* domWrapper =
       SVGAnimatedTransformList::GetDOMWrapperIfExists(this);
   if (domWrapper) {
@@ -153,7 +153,7 @@ bool nsSVGAnimatedTransformList::IsExplicitlySet() const {
   // There are three ways an animated list can become set:
   // 1) Markup -- we set mIsAttrSet to true on any successful call to
   //    SetBaseValueString and clear it on ClearBaseValue (as called by
-  //    nsSVGElement::UnsetAttr or a failed nsSVGElement::ParseAttribute)
+  //    SVGElement::UnsetAttr or a failed SVGElement::ParseAttribute)
   // 2) DOM call -- simply fetching the baseVal doesn't mean the transform value
   //    has been set. It is set if that baseVal has one or more transforms in
   //    the list.
@@ -162,7 +162,7 @@ bool nsSVGAnimatedTransformList::IsExplicitlySet() const {
 }
 
 UniquePtr<nsISMILAttr> nsSVGAnimatedTransformList::ToSMILAttr(
-    nsSVGElement* aSVGElement) {
+    SVGElement* aSVGElement) {
   return MakeUnique<SMILAnimatedTransformList>(this, aSVGElement);
 }
 

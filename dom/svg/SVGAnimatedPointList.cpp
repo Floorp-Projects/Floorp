@@ -8,7 +8,7 @@
 
 #include "DOMSVGPointList.h"
 #include "mozilla/Move.h"
-#include "nsSVGElement.h"
+#include "SVGElement.h"
 #include "nsSVGAttrTearoffTable.h"
 #include "nsSMILValue.h"
 #include "SVGPointListSMILType.h"
@@ -49,7 +49,7 @@ nsresult SVGAnimatedPointList::SetBaseValueString(const nsAString &aValue) {
   // Only now may we modify mBaseVal!
 
   // We don't need to call DidChange* here - we're only called by
-  // nsSVGElement::ParseAttribute under Element::SetAttr,
+  // SVGElement::ParseAttribute under Element::SetAttr,
   // which takes care of notifying.
 
   nsresult rv2 = mBaseVal.CopyFrom(newBaseValue);
@@ -89,7 +89,7 @@ void SVGAnimatedPointList::ClearBaseValue() {
 }
 
 nsresult SVGAnimatedPointList::SetAnimValue(const SVGPointList &aNewAnimValue,
-                                            nsSVGElement *aElement) {
+                                            SVGElement *aElement) {
   // Note that a new animation may totally change the number of items in the
   // animVal list, either replacing what was essentially a mirror of the
   // baseVal list, or else replacing and overriding an existing animation.
@@ -124,7 +124,7 @@ nsresult SVGAnimatedPointList::SetAnimValue(const SVGPointList &aNewAnimValue,
   return NS_OK;
 }
 
-void SVGAnimatedPointList::ClearAnimValue(nsSVGElement *aElement) {
+void SVGAnimatedPointList::ClearAnimValue(SVGElement *aElement) {
   // We must send these notifications *before* changing mAnimVal! (See above.)
 
   DOMSVGPointList *domWrapper =
@@ -139,8 +139,7 @@ void SVGAnimatedPointList::ClearAnimValue(nsSVGElement *aElement) {
   aElement->DidAnimatePointList();
 }
 
-UniquePtr<nsISMILAttr> SVGAnimatedPointList::ToSMILAttr(
-    nsSVGElement *aElement) {
+UniquePtr<nsISMILAttr> SVGAnimatedPointList::ToSMILAttr(SVGElement *aElement) {
   return MakeUnique<SMILAnimatedPointList>(this, aElement);
 }
 

@@ -1374,8 +1374,10 @@ static bool DecodeStructType(Decoder& d, ModuleEnvironment* env,
         offset = layout.addScalar(Scalar::Float64);
         break;
       case ValType::Ref:
-      case ValType::AnyRef:
         offset = layout.addReference(ReferenceType::TYPE_OBJECT);
+        break;
+      case ValType::AnyRef:
+        offset = layout.addReference(ReferenceType::TYPE_WASM_ANYREF);
         break;
       default:
         MOZ_CRASH("Unknown type");
@@ -1996,7 +1998,11 @@ static bool DecodeInitializerExpression(Decoder& d, ModuleEnvironment* env,
         return d.fail(
             "type mismatch: initializer type and expected type don't match");
       }
-      *init = InitExpr(LitVal(expected, nullptr));
+      if (expected == ValType::AnyRef) {
+        *init = InitExpr(LitVal(AnyRef::null()));
+      } else {
+        *init = InitExpr(LitVal(expected, nullptr));
+      }
       break;
     }
     case uint16_t(Op::GetGlobal): {

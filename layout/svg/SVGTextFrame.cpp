@@ -2795,8 +2795,8 @@ void SVGTextDrawPathCallbacks::StrokeGeometry() {
           MOZ_ASSERT(false, "Our nsTextFrame's parent's content should be SVG");
           return;
         }
-        nsSVGElement* svgOwner =
-            static_cast<nsSVGElement*>(mFrame->GetParent()->GetContent());
+        SVGElement* svgOwner =
+            static_cast<SVGElement*>(mFrame->GetParent()->GetContent());
 
         // Apply any stroke-specific transform
         gfxMatrix outerSVGToUser;
@@ -4247,7 +4247,7 @@ bool SVGTextFrame::ResolvePositionsForNode(nsIContent* aContent,
     MOZ_ASSERT(aContent->IsSVGElement());
 
     // We have a text content element that can have x/y/dx/dy/rotate attributes.
-    nsSVGElement* element = static_cast<nsSVGElement*>(aContent);
+    SVGElement* element = static_cast<SVGElement*>(aContent);
 
     // Get x, y, dx, dy.
     SVGUserUnitList x, y, dx, dy;
@@ -5006,7 +5006,7 @@ bool SVGTextFrame::ShouldRenderAsPath(nsTextFrame* aFrame,
 
   // Text has a stroke.
   if (style->HasStroke() &&
-      SVGContentUtils::CoordToFloat(static_cast<nsSVGElement*>(GetContent()),
+      SVGContentUtils::CoordToFloat(static_cast<SVGElement*>(GetContent()),
                                     style->mStrokeWidth) > 0) {
     return true;
   }

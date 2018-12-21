@@ -16,7 +16,7 @@
 #include "nsSVGUtils.h"
 #include "SVGObserverUtils.h"
 
-NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(Filter)
+NS_IMPL_NS_NEW_SVG_ELEMENT(Filter)
 
 namespace mozilla {
 namespace dom {
@@ -28,7 +28,7 @@ JSObject* SVGFilterElement::WrapNode(JSContext* aCx,
   return SVGFilterElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-nsSVGElement::LengthInfo SVGFilterElement::sLengthInfo[4] = {
+SVGElement::LengthInfo SVGFilterElement::sLengthInfo[4] = {
     {nsGkAtoms::x, -10, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE,
      SVGContentUtils::X},
     {nsGkAtoms::y, -10, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE,
@@ -39,12 +39,12 @@ nsSVGElement::LengthInfo SVGFilterElement::sLengthInfo[4] = {
      SVGContentUtils::Y},
 };
 
-nsSVGElement::EnumInfo SVGFilterElement::sEnumInfo[2] = {
+SVGElement::EnumInfo SVGFilterElement::sEnumInfo[2] = {
     {nsGkAtoms::filterUnits, sSVGUnitTypesMap, SVG_UNIT_TYPE_OBJECTBOUNDINGBOX},
     {nsGkAtoms::primitiveUnits, sSVGUnitTypesMap,
      SVG_UNIT_TYPE_USERSPACEONUSE}};
 
-nsSVGElement::StringInfo SVGFilterElement::sStringInfo[2] = {
+SVGElement::StringInfo SVGFilterElement::sStringInfo[2] = {
     {nsGkAtoms::href, kNameSpaceID_None, true},
     {nsGkAtoms::href, kNameSpaceID_XLink, true}};
 
@@ -108,7 +108,7 @@ SVGFilterElement::IsAttributeMapped(const nsAtom* name) const {
 }
 
 //----------------------------------------------------------------------
-// nsSVGElement methods
+// SVGElement methods
 
 /* virtual */ bool SVGFilterElement::HasValidDimensions() const {
   return (!mLengthAttributes[ATTR_WIDTH].IsExplicitlySet() ||
@@ -117,16 +117,16 @@ SVGFilterElement::IsAttributeMapped(const nsAtom* name) const {
           mLengthAttributes[ATTR_HEIGHT].GetAnimValInSpecifiedUnits() > 0);
 }
 
-nsSVGElement::LengthAttributesInfo SVGFilterElement::GetLengthInfo() {
+SVGElement::LengthAttributesInfo SVGFilterElement::GetLengthInfo() {
   return LengthAttributesInfo(mLengthAttributes, sLengthInfo,
                               ArrayLength(sLengthInfo));
 }
 
-nsSVGElement::EnumAttributesInfo SVGFilterElement::GetEnumInfo() {
+SVGElement::EnumAttributesInfo SVGFilterElement::GetEnumInfo() {
   return EnumAttributesInfo(mEnumAttributes, sEnumInfo, ArrayLength(sEnumInfo));
 }
 
-nsSVGElement::StringAttributesInfo SVGFilterElement::GetStringInfo() {
+SVGElement::StringAttributesInfo SVGFilterElement::GetStringInfo() {
   return StringAttributesInfo(mStringAttributes, sStringInfo,
                               ArrayLength(sStringInfo));
 }

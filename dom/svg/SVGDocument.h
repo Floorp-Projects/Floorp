@@ -10,14 +10,13 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/XMLDocument.h"
 
-class nsSVGElement;
-
 namespace mozilla {
 
 class SVGContextPaint;
 
 namespace dom {
 
+class SVGElement;
 class SVGForeignObjectElement;
 
 class SVGDocument final : public XMLDocument {

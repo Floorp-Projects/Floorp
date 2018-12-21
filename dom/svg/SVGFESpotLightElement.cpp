@@ -8,7 +8,7 @@
 #include "mozilla/dom/SVGFESpotLightElementBinding.h"
 #include "nsSVGFilterInstance.h"
 
-NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(FESpotLight)
+NS_IMPL_NS_NEW_SVG_ELEMENT(FESpotLight)
 
 using namespace mozilla::gfx;
 
@@ -20,7 +20,7 @@ JSObject* SVGFESpotLightElement::WrapNode(JSContext* aCx,
   return SVGFESpotLightElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-nsSVGElement::NumberInfo SVGFESpotLightElement::sNumberInfo[8] = {
+SVGElement::NumberInfo SVGFESpotLightElement::sNumberInfo[8] = {
     {nsGkAtoms::x, 0, false},
     {nsGkAtoms::y, 0, false},
     {nsGkAtoms::z, 0, false},
@@ -104,9 +104,9 @@ already_AddRefed<SVGAnimatedNumber> SVGFESpotLightElement::LimitingConeAngle() {
 }
 
 //----------------------------------------------------------------------
-// nsSVGElement methods
+// SVGElement methods
 
-nsSVGElement::NumberAttributesInfo SVGFESpotLightElement::GetNumberInfo() {
+SVGElement::NumberAttributesInfo SVGFESpotLightElement::GetNumberInfo() {
   return NumberAttributesInfo(mNumberAttributes, sNumberInfo,
                               ArrayLength(sNumberInfo));
 }

@@ -12,7 +12,7 @@
 #include "nsIContent.h"
 #include "nsINode.h"
 #include "nsIWeakReferenceUtils.h"
-#include "nsSVGElement.h"
+#include "SVGElement.h"
 #include "nsTArray.h"
 #include "SVGLength.h"
 #include "mozilla/dom/SVGLengthBinding.h"
@@ -160,21 +160,21 @@ class SVGLengthListAndInfo : public SVGLengthList {
   SVGLengthListAndInfo()
       : mElement(nullptr), mAxis(0), mCanZeroPadList(false) {}
 
-  SVGLengthListAndInfo(nsSVGElement* aElement, uint8_t aAxis,
+  SVGLengthListAndInfo(dom::SVGElement* aElement, uint8_t aAxis,
                        bool aCanZeroPadList)
       : mElement(do_GetWeakReference(static_cast<nsINode*>(aElement))),
         mAxis(aAxis),
         mCanZeroPadList(aCanZeroPadList) {}
 
-  void SetInfo(nsSVGElement* aElement, uint8_t aAxis, bool aCanZeroPadList) {
+  void SetInfo(dom::SVGElement* aElement, uint8_t aAxis, bool aCanZeroPadList) {
     mElement = do_GetWeakReference(static_cast<nsINode*>(aElement));
     mAxis = aAxis;
     mCanZeroPadList = aCanZeroPadList;
   }
 
-  nsSVGElement* Element() const {
+  dom::SVGElement* Element() const {
     nsCOMPtr<nsIContent> e = do_QueryReferent(mElement);
-    return static_cast<nsSVGElement*>(e.get());
+    return static_cast<dom::SVGElement*>(e.get());
   }
 
   /**
@@ -287,7 +287,8 @@ class MOZ_STACK_CLASS SVGUserUnitList {
  public:
   SVGUserUnitList() : mList(nullptr), mElement(nullptr), mAxis(0) {}
 
-  void Init(const SVGLengthList* aList, nsSVGElement* aElement, uint8_t aAxis) {
+  void Init(const SVGLengthList* aList, dom::SVGElement* aElement,
+            uint8_t aAxis) {
     mList = aList;
     mElement = aElement;
     mAxis = aAxis;
@@ -312,7 +313,7 @@ class MOZ_STACK_CLASS SVGUserUnitList {
 
  private:
   const SVGLengthList* mList;
-  nsSVGElement* mElement;
+  dom::SVGElement* mElement;
   uint8_t mAxis;
 };
 
