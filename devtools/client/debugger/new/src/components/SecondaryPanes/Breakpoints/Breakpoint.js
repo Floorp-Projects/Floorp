@@ -5,7 +5,7 @@
 // @flow
 
 import React, { PureComponent } from "react";
-import { connect } from "react-redux";
+import { connect } from "../../../utils/connect";
 import { createSelector } from "reselect";
 import classnames from "classnames";
 
@@ -28,8 +28,7 @@ import type {
   SourceLocation
 } from "../../../types";
 
-type FormattedFrame = {
-  ...Frame,
+type FormattedFrame = Frame & {
   selectedLocation: SourceLocation
 };
 
@@ -43,7 +42,7 @@ type Props = {
   breakpoint: FormattedBreakpoint,
   breakpoints: BreakpointType[],
   source: Source,
-  frame: ?FormattedFrame,
+  frame: FormattedFrame,
   enableBreakpoint: typeof actions.enableBreakpoint,
   removeBreakpoint: typeof actions.removeBreakpoint,
   removeBreakpoints: typeof actions.removeBreakpoints,
@@ -176,7 +175,7 @@ class Breakpoint extends PureComponent<Props> {
 const getFormattedFrame = createSelector(
   getSelectedSource,
   getSelectedFrame,
-  (selectedSource: Source, frame: Frame) => {
+  (selectedSource: Source, frame: Frame): ?FormattedFrame => {
     if (!frame) {
       return null;
     }

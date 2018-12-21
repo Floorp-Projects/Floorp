@@ -13,7 +13,7 @@ import makeRecord from "../utils/makeRecord";
 import { List, Map } from "immutable";
 import { omit, zip } from "lodash";
 
-import { createSelector } from "reselect";
+import { createSelector } from "../utils/createSelector";
 import { prefs } from "../utils/prefs";
 
 import type { Expression } from "../types";
@@ -27,14 +27,12 @@ export type ExpressionState = {
   currentAutocompleteInput: string | null
 };
 
-export const createExpressionState = makeRecord(
-  ({
-    expressions: List(restoreExpressions()),
-    expressionError: false,
-    autocompleteMatches: Map({}),
-    currentAutocompleteInput: null
-  }: ExpressionState)
-);
+export const createExpressionState: () => Record<ExpressionState> = makeRecord({
+  expressions: List(restoreExpressions()),
+  expressionError: false,
+  autocompleteMatches: Map({}),
+  currentAutocompleteInput: null
+});
 
 function update(
   state: Record<ExpressionState> = createExpressionState(),

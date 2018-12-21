@@ -5,7 +5,7 @@
 // @flow
 
 import React, { PureComponent } from "react";
-import { connect } from "react-redux";
+import { connect } from "../../../utils/connect";
 
 import Popup from "./Popup";
 
@@ -22,7 +22,7 @@ type Props = {
   editorRef: ?HTMLDivElement,
   selectedSource: Source,
   preview: PreviewType,
-  isPaused: Boolean,
+  isPaused: boolean,
   clearPreview: typeof actions.clearPreview,
   setPopupObjectProperties: typeof actions.setPopupObjectProperties,
   addExpression: typeof actions.addExpression,
