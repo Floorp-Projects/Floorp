@@ -151,7 +151,7 @@ const MESSAGES = () => ([
       scene1_title_icon: TEST_ICON_16,
 
       scene2_button_label: "Send",
-      scene2_disclaimer_html: "The intended recipient of the email must have consented. <privacyLink>Learn more.</privacyLink>",
+      scene2_disclaimer_html: "The intended recipient of the email must have consented. <privacyLink>Learn more</privacyLink>.",
       scene2_dismiss_button_text: "Dismiss",
       scene2_icon: TEST_ICON,
       scene2_input_placeholder: "Your email address or phone number",
