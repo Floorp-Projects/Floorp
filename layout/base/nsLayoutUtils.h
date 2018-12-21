@@ -801,25 +801,25 @@ class nsLayoutUtils {
   static mozilla::LayoutDeviceIntPoint WidgetToWidgetOffset(
       nsIWidget* aFromWidget, nsIWidget* aToWidget);
 
-  enum FrameForPointFlags {
+  enum class FrameForPointOption {
     /**
      * When set, paint suppression is ignored, so we'll return non-root page
      * elements even if paint suppression is stopping them from painting.
      */
-    IGNORE_PAINT_SUPPRESSION = 0x01,
+    IgnorePaintSuppression = 1,
     /**
      * When set, clipping due to the root scroll frame (and any other viewport-
      * related clipping) is ignored.
      */
-    IGNORE_ROOT_SCROLL_FRAME = 0x02,
+    IgnoreRootScrollFrame,
     /**
      * When set, return only content in the same document as aFrame.
      */
-    IGNORE_CROSS_DOC = 0x04,
+    IgnoreCrossDoc,
     /**
      * When set, return only content that is actually visible.
      */
-    ONLY_VISIBLE = 0x08
+    OnlyVisible,
   };
 
   /**
@@ -827,10 +827,10 @@ class nsLayoutUtils {
    * frame under the point aPt that receives a mouse event at that location,
    * or nullptr if there is no such frame.
    * @param aPt the point, relative to the frame origin
-   * @param aFlags some combination of FrameForPointFlags
+   * @param aFlags some combination of FrameForPointOption.
    */
   static nsIFrame* GetFrameForPoint(nsIFrame* aFrame, nsPoint aPt,
-                                    uint32_t aFlags = 0);
+                                    mozilla::EnumSet<FrameForPointOption> = {});
 
   /**
    * Given aFrame, the root frame of a stacking context, find all descendant
@@ -838,11 +838,11 @@ class nsLayoutUtils {
    * or nullptr if there is no such frame.
    * @param aRect the rect, relative to the frame origin
    * @param aOutFrames an array to add all the frames found
-   * @param aFlags some combination of FrameForPointFlags
+   * @param aFlags some combination of FrameForPointOption.
    */
   static nsresult GetFramesForArea(nsIFrame* aFrame, const nsRect& aRect,
                                    nsTArray<nsIFrame*>& aOutFrames,
-                                   uint32_t aFlags = 0);
+                                   mozilla::EnumSet<FrameForPointOption> = {});
 
   /**
    * Transform aRect relative to aFrame up to the coordinate system of
