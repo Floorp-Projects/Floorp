@@ -90,7 +90,7 @@
     <button type="submit">Submit</button>
   </form>
 
-  <!-- password field (type changed after pageload) -->
+  <!-- password field (type toggled to password and back after pageload) -->
   <form id="form14" onsubmit="return checkSubmit(14)">
     <input type="text" name="test1">
     <button type="submit">Submit</button>
@@ -312,6 +312,8 @@ function startTest() {
   $_(13, "test1").value = "dontSaveThis";
   $_(14, "test1").type  = "password";
   $_(14, "test1").value = "dontSaveThis";
+  // Set it back to type=text to simulate a password visibility toggle.
+  $_(14, "test1").type  = "text";
 
   let testData = ccNumbers.valid16;
   for (let i = 0; i != testData.length; i++) {
