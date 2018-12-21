@@ -5,6 +5,7 @@
 // @flow
 
 import * as firefox from "./firefox";
+import * as chrome from "./chrome";
 
 import { prefs, asyncStore } from "../utils/prefs";
 import { setupHelper } from "../utils/dbg";
@@ -46,6 +47,13 @@ async function loadInitialState() {
   return { pendingBreakpoints, tabs, breakpoints };
 }
 
+function getClient(connection: any) {
+  const {
+    tab: { clientType }
+  } = connection;
+  return clientType == "firefox" ? firefox : chrome;
+}
+
 export async function onConnect(
   connection: Object,
   { services, toolboxActions }: Object
@@ -55,8 +63,11 @@ export async function onConnect(
     return;
   }
 
-  const commands = firefox.clientCommands;
+  const client = getClient(connection);
+  const commands = client.clientCommands;
+
   const initialState = await loadInitialState();
+
   const { store, actions, selectors } = bootstrapStore(
     commands,
     {
@@ -67,7 +78,8 @@ export async function onConnect(
   );
 
   const workers = bootstrapWorkers();
-  await firefox.onConnect(connection, actions);
+  await client.onConnect(connection, actions);
+
   await loadFromPrefs(actions);
   syncXHRBreakpoints();
   setupHelper({
@@ -76,7 +88,7 @@ export async function onConnect(
     selectors,
     workers: { ...workers, ...services },
     connection,
-    client: firefox.clientCommands
+    client: client.clientCommands
   });
 
   bootstrapApp(store);
