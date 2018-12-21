@@ -193,7 +193,7 @@ nsresult MediaEngineTabVideoSource::Deallocate(
   return NS_OK;
 }
 
-nsresult MediaEngineTabVideoSource::SetTrack(
+void MediaEngineTabVideoSource::SetTrack(
     const RefPtr<const AllocationHandle>& aHandle,
     const RefPtr<SourceMediaStream>& aStream, TrackID aTrackID,
     const mozilla::PrincipalHandle& aPrincipal) {
@@ -207,7 +207,6 @@ nsresult MediaEngineTabVideoSource::SetTrack(
   mStream = aStream;
   mTrackID = aTrackID;
   mStream->AddTrack(mTrackID, new VideoSegment());
-  return NS_OK;
 }
 
 nsresult MediaEngineTabVideoSource::Start(
