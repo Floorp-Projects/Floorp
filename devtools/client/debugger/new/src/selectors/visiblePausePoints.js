@@ -4,7 +4,6 @@
 
 import { getSelectedSource } from "../reducers/sources";
 import { getPausePoints } from "../reducers/ast";
-import { convertToList } from "../utils/pause/pausePoints";
 
 export function getVisiblePausePoints(state) {
   const source = getSelectedSource(state);
@@ -12,6 +11,5 @@ export function getVisiblePausePoints(state) {
     return null;
   }
 
-  const pausePoints = getPausePoints(state, source.id);
-  return convertToList(pausePoints);
+  return getPausePoints(state, source.id);
 }
