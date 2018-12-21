@@ -26,12 +26,11 @@ import {
 import Svg from "./shared/Svg";
 import ManagedTree from "./shared/ManagedTree";
 import SearchInput from "./shared/SearchInput";
+import AccessibleImage from "./shared/AccessibleImage";
 
 import type { List } from "immutable";
-import type { SourceLocation } from "../types";
 import type { ActiveSearchType } from "../reducers/types";
 import type { StatusType } from "../reducers/project-text-search";
-type Editor = ?Object;
 
 import "./ProjectSearch.css";
 
@@ -65,17 +64,12 @@ type Props = {
   results: List<Result>,
   status: StatusType,
   activeSearch: ActiveSearchType,
-  closeProjectSearch: () => void,
-  searchSources: (query: string) => void,
-  clearSearch: () => void,
-  selectSpecificLocation: (location: SourceLocation, tabIndex?: string) => void,
-  setActiveSearch: (activeSearch?: ActiveSearchType) => void,
-  doSearchForHighlight: (
-    query: string,
-    editor: Editor,
-    line: number,
-    column: number
-  ) => void
+  closeProjectSearch: typeof actions.closeProjectSearch,
+  searchSources: typeof actions.searchSources,
+  clearSearch: typeof actions.clearSearch,
+  selectSpecificLocation: typeof actions.selectSpecificLocation,
+  setActiveSearch: typeof actions.setActiveSearch,
+  doSearchForHighlight: typeof actions.doSearchForHighlight
 };
 
 function getFilePath(item: Item, index?: number) {
@@ -238,7 +232,7 @@ export class ProjectSearch extends Component<Props, State> {
         key={file.sourceId}
       >
         <Svg name="arrow" className={classnames({ expanded })} />
-        <img className="file" />
+        <AccessibleImage className="file" />
         <span className="file-path">{getRelativePath(file.filepath)}</span>
         <span className="matches-summary">{matches}</span>
       </div>
@@ -314,6 +308,7 @@ export class ProjectSearch extends Component<Props, State> {
   }
 
   renderInput() {
+    const { status } = this.props;
     return (
       <SearchInput
         query={this.state.inputValue}
@@ -322,12 +317,16 @@ export class ProjectSearch extends Component<Props, State> {
         size="big"
         showErrorEmoji={this.shouldShowErrorEmoji()}
         summaryMsg={this.renderSummary()}
+        isLoading={status === statusType.fetching}
         onChange={this.inputOnChange}
         onFocus={() => this.setState({ inputFocused: true })}
         onBlur={() => this.setState({ inputFocused: false })}
         onKeyDown={this.onKeyDown}
         onHistoryScroll={this.onHistoryScroll}
-        handleClose={this.props.closeProjectSearch}
+        handleClose={
+          // TODO - This function doesn't quite match the signature.
+          (this.props.closeProjectSearch: any)
+        }
         ref="searchInput"
       />
     );

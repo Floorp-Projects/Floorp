@@ -65,6 +65,20 @@ void likeFunction(sqlite3_context *aCtx, int aArgc, sqlite3_value **aArgv);
 void levenshteinDistanceFunction(sqlite3_context *aCtx, int aArgc,
                                  sqlite3_value **aArgv);
 
+/**
+ * An alternative string length function that uses XPCOM string classes for
+ * string length calculation.
+ *
+ * @param aCtx
+ *        The sqlite_context that this function is being called on.
+ * @param aArgc
+ *        The number of arguments the function is being called with.
+ * @param aArgv
+ *        An array of the arguments the functions is being called with.
+ */
+void utf16LengthFunction(sqlite3_context *aCtx, int aArgc,
+                         sqlite3_value **aArgv);
+
 }  // namespace storage
 }  // namespace mozilla
 

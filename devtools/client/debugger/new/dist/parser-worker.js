@@ -773,11 +773,6 @@ module.exports = overArg;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; /* This Source Code Form is subject to the terms of the Mozilla Public
-                                                                                                                                                                                                                                                                   * License, v. 2.0. If a copy of the MPL was not distributed with this
-                                                                                                                                                                                                                                                                   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
 exports.parse = parse;
 exports.parseConsoleScript = parseConsoleScript;
 exports.parseScript = parseScript;
@@ -808,12 +803,15 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-let ASTs = new Map();
+let ASTs = new Map(); /* This Source Code Form is subject to the terms of the Mozilla Public
+                       * License, v. 2.0. If a copy of the MPL was not distributed with this
+                       * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 function _parse(code, opts) {
-  return babelParser.parse(code, _extends({}, opts, {
+  return babelParser.parse(code, {
+    ...opts,
     tokens: true
-  }));
+  });
 }
 
 const sourceOptions = {
@@ -853,9 +851,10 @@ function htmlParser({ source, line }) {
 
 const VUE_COMPONENT_START = /^\s*</;
 function vueParser({ source, line }) {
-  return parse(source, _extends({
-    startLine: line
-  }, sourceOptions.original));
+  return parse(source, {
+    startLine: line,
+    ...sourceOptions.original
+  });
 }
 function parseVueScript(code) {
   if (typeof code !== "string") {
@@ -881,11 +880,11 @@ function parseVueScript(code) {
 }
 
 function parseConsoleScript(text, opts) {
-  return _parse(text, _extends({
-    plugins: ["objectRestSpread"]
-  }, opts, {
+  return _parse(text, {
+    plugins: ["objectRestSpread"],
+    ...opts,
     allowAwaitOutsideFunction: true
-  }));
+  });
 }
 
 function parseScript(text, opts) {
@@ -914,9 +913,10 @@ function getAst(sourceId) {
     const options = sourceOptions[type];
     ast = parse(source.text, options);
   } else if (contentType && contentType.match(/typescript/)) {
-    const options = _extends({}, sourceOptions.original, {
+    const options = {
+      ...sourceOptions.original,
       plugins: [...sourceOptions.original.plugins.filter(p => p !== "flow" && p !== "decorators" && p !== "decorators2" && (p !== "jsx" || contentType.match(/typescript-jsx/))), "decorators-legacy", "typescript"]
-    });
+    };
     ast = parse(source.text, options);
   }
 
@@ -1282,11 +1282,6 @@ function nodeContainsPosition(node, position) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; /* This Source Code Form is subject to the terms of the Mozilla Public
-                                                                                                                                                                                                                                                                   * License, v. 2.0. If a copy of the MPL was not distributed with this
-                                                                                                                                                                                                                                                                   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
 exports.clearSymbols = clearSymbols;
 exports.getSymbols = getSymbols;
 
@@ -1311,6 +1306,10 @@ var _getFunctionName2 = _interopRequireDefault(_getFunctionName);
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 let symbolDeclarations = new Map();
 
@@ -1461,7 +1460,7 @@ function extractSymbol(path, symbols) {
 
     if (path.node.typeAnnotation) {
       const column = path.node.typeAnnotation.loc.start.column;
-      end = _extends({}, end, { column });
+      end = { ...end, column };
     }
 
     symbols.identifiers.push({
@@ -1992,10 +1991,6 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; /* This Source Code Form is subject to the terms of the Mozilla Public
-                                                                                                                                                                                                                                                                   * License, v. 2.0. If a copy of the MPL was not distributed with this
-                                                                                                                                                                                                                                                                   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
 var _get = __webpack_require__(67);
 
 var _get2 = _interopRequireDefault(_get);
@@ -2014,6 +2009,10 @@ var _getSymbols = __webpack_require__(1457);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
 function findSymbols(source) {
   const { functions, comments } = (0, _getSymbols.getSymbols)(source);
   return { functions, comments };
@@ -2026,7 +2025,7 @@ function findSymbols(source) {
  */
 
 function getLocation(func) {
-  const location = _extends({}, func.location);
+  const location = { ...func.location };
 
   // if the function has an identifier, start the block after it so the
   // identifier is included in the "scope" of its parent
@@ -2130,11 +2129,6 @@ exports.default = findOutOfScopeLocations;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; /* This Source Code Form is subject to the terms of the Mozilla Public
-                                                                                                                                                                                                                                                                   * License, v. 2.0. If a copy of the MPL was not distributed with this
-                                                                                                                                                                                                                                                                   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
 exports.getNextStep = getNextStep;
 
 var _types = __webpack_require__(2268);
@@ -2162,7 +2156,9 @@ function getNextStep(sourceId, pausedPosition) {
   }
 
   return _getNextStep(currentStatement, sourceId, pausedPosition);
-}
+} /* This Source Code Form is subject to the terms of the Mozilla Public
+   * License, v. 2.0. If a copy of the MPL was not distributed with this
+   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 function getSteppableExpression(sourceId, pausedPosition) {
   const closestPath = (0, _closest.getClosestPath)(sourceId, pausedPosition);
@@ -2181,9 +2177,10 @@ function getSteppableExpression(sourceId, pausedPosition) {
 function _getNextStep(statement, sourceId, position) {
   const nextStatement = statement.getSibling(1);
   if (nextStatement) {
-    return _extends({}, nextStatement.node.loc.start, {
+    return {
+      ...nextStatement.node.loc.start,
       sourceId: sourceId
-    });
+    };
   }
 
   return null;

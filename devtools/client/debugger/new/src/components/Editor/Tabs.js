@@ -20,6 +20,7 @@ import "./Tabs.css";
 import Tab from "./Tab";
 import { PaneToggleButton } from "../shared/Button";
 import Dropdown from "../shared/Dropdown";
+import AccessibleImage from "../shared/AccessibleImage";
 
 import type { Source } from "../../types";
 
@@ -31,11 +32,11 @@ type Props = {
   horizontal: boolean,
   startPanelCollapsed: boolean,
   endPanelCollapsed: boolean,
-  moveTab: (string, number) => void,
-  closeTab: string => void,
-  togglePaneCollapse: () => void,
-  showSource: string => void,
-  selectSource: string => void
+  moveTab: typeof actions.moveTab,
+  closeTab: typeof actions.closeTab,
+  togglePaneCollapse: typeof actions.togglePaneCollapse,
+  showSource: typeof actions.showSource,
+  selectSource: typeof actions.selectSource
 };
 
 type State = {
@@ -134,7 +135,9 @@ class Tabs extends PureComponent<Props, State> {
     const onClick = () => selectSource(source.id);
     return (
       <li key={source.id} onClick={onClick}>
-        <img className={`dropdown-icon ${this.getIconClass(source)}`} />
+        <AccessibleImage
+          className={`dropdown-icon ${this.getIconClass(source)}`}
+        />
         {filename}
       </li>
     );
@@ -162,7 +165,7 @@ class Tabs extends PureComponent<Props, State> {
     }
 
     const Panel = <ul>{hiddenTabs.map(this.renderDropdownSource)}</ul>;
-    const icon = <img className="moreTabs" />;
+    const icon = <AccessibleImage className="moreTabs" />;
 
     return <Dropdown panel={Panel} icon={icon} />;
   }

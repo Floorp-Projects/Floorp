@@ -45,12 +45,12 @@ type Props = {
   selectedSource: Source,
   source: Source,
   activeSearch: string,
-  selectSource: string => void,
-  closeTab: Source => void,
-  closeTabs: (List<string>) => void,
-  togglePrettyPrint: string => void,
-  showSource: string => void,
-  hasSiblingOfSameName: boolean
+  hasSiblingOfSameName: boolean,
+  selectSource: typeof actions.selectSource,
+  closeTab: typeof actions.closeTab,
+  closeTabs: typeof actions.closeTabs,
+  togglePrettyPrint: typeof actions.togglePrettyPrint,
+  showSource: typeof actions.showSource
 };
 
 class Tab extends PureComponent<Props> {

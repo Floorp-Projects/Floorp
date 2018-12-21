@@ -238,6 +238,9 @@ int registerFunctions(sqlite3 *aDB) {
 
       {"levenshteinDistance", 2, SQLITE_UTF16, 0, levenshteinDistanceFunction},
       {"levenshteinDistance", 2, SQLITE_UTF8, 0, levenshteinDistanceFunction},
+
+      {"utf16Length", 1, SQLITE_UTF16, 0, utf16LengthFunction},
+      {"utf16Length", 1, SQLITE_UTF8, 0, utf16LengthFunction},
   };
 
   int rv = SQLITE_OK;
@@ -337,6 +340,19 @@ void levenshteinDistanceFunction(sqlite3_context *aCtx, int aArgc,
   } else {
     ::sqlite3_result_error(aCtx, "User function returned error code", -1);
   }
+}
+
+void utf16LengthFunction(sqlite3_context *aCtx, int aArgc,
+                         sqlite3_value **aArgv) {
+  NS_ASSERTION(1 == aArgc, "Invalid number of arguments!");
+
+  nsDependentString data(
+      static_cast<const char16_t *>(::sqlite3_value_text16(aArgv[0])));
+
+  int len = data.Length();
+
+  // Set the result.
+  ::sqlite3_result_int(aCtx, len);
 }
 
 }  // namespace storage

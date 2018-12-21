@@ -82,11 +82,11 @@ type Props = {
   shouldPauseOnExceptions: boolean,
   shouldPauseOnCaughtExceptions: boolean,
   workers: WorkersList,
-  toggleAllBreakpoints: Function,
-  toggleShortcutsModal: Function,
-  evaluateExpressions: Function,
-  pauseOnExceptions: (boolean, boolean) => void,
-  breakOnNext: () => void
+  toggleShortcutsModal: () => void,
+  toggleAllBreakpoints: typeof actions.toggleAllBreakpoints,
+  evaluateExpressions: typeof actions.evaluateExpressions,
+  pauseOnExceptions: typeof actions.pauseOnExceptions,
+  breakOnNext: typeof actions.breakOnNext
 };
 
 class SecondaryPanes extends Component<Props, State> {
@@ -442,7 +442,6 @@ export default connect(
   mapStateToProps,
   {
     toggleAllBreakpoints: actions.toggleAllBreakpoints,
-    toggleShortcutsModal: actions.toggleShortcutsModal,
     evaluateExpressions: actions.evaluateExpressions,
     pauseOnExceptions: actions.pauseOnExceptions,
     breakOnNext: actions.breakOnNext
