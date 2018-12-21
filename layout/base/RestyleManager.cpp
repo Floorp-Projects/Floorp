@@ -773,6 +773,10 @@ static bool RecomputePosition(nsIFrame* aFrame) {
       }
     }
 
+    if (aFrame->IsInScrollAnchorChain()) {
+      ScrollAnchorContainer* container = ScrollAnchorContainer::FindFor(aFrame);
+      container->ApplyAdjustments();
+    }
     return true;
   }
 
@@ -878,6 +882,10 @@ static bool RecomputePosition(nsIFrame* aFrame) {
                     reflowInput.ComputedPhysicalMargin().top);
     aFrame->SetPosition(pos);
 
+    if (aFrame->IsInScrollAnchorChain()) {
+      ScrollAnchorContainer* container = ScrollAnchorContainer::FindFor(aFrame);
+      container->ApplyAdjustments();
+    }
     return true;
   }
 

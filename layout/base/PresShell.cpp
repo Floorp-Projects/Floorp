@@ -8619,6 +8619,10 @@ bool PresShell::DoReflow(nsIFrame* target, bool aInterruptible,
                                          nsContainerFrame::SET_ASYNC);
 
   target->DidReflow(mPresContext, nullptr);
+  if (target->IsInScrollAnchorChain()) {
+    ScrollAnchorContainer* container = ScrollAnchorContainer::FindFor(target);
+    container->ApplyAdjustments();
+  }
   if (isRoot && size.BSize(wm) == NS_UNCONSTRAINEDSIZE) {
     mPresContext->SetVisibleArea(boundsRelativeToTarget);
   }

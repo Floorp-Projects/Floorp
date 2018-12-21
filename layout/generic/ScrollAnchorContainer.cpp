@@ -20,7 +20,8 @@ ScrollAnchorContainer::ScrollAnchorContainer(ScrollFrameHelper* aScrollFrame)
     : mScrollFrame(aScrollFrame),
       mAnchorNode(nullptr),
       mLastAnchorPos(0, 0),
-      mAnchorNodeIsDirty(true) {}
+      mAnchorNodeIsDirty(true),
+      mApplyingAnchorAdjustment(false) {}
 
 ScrollAnchorContainer::~ScrollAnchorContainer() {}
 
@@ -181,7 +182,17 @@ void ScrollAnchorContainer::SelectAnchor() {
   mAnchorNodeIsDirty = false;
 }
 
-void ScrollAnchorContainer::UserScrolled() { InvalidateAnchor(); }
+void ScrollAnchorContainer::UserScrolled() {
+  if (mApplyingAnchorAdjustment) {
+    return;
+  }
+  InvalidateAnchor();
+}
+
+void ScrollAnchorContainer::SuppressAdjustments() {
+  ANCHOR_LOG("Received a scroll anchor suppression for %p.\n", this);
+  mSuppressAnchorAdjustment = true;
+}
 
 void ScrollAnchorContainer::InvalidateAnchor() {
   if (!StaticPrefs::layout_css_scroll_anchoring_enabled()) {
@@ -206,6 +217,63 @@ void ScrollAnchorContainer::Destroy() {
   mAnchorNode = nullptr;
   mAnchorNodeIsDirty = false;
   mLastAnchorPos = nsPoint();
+}
+
+void ScrollAnchorContainer::ApplyAdjustments() {
+  if (!mAnchorNode || mAnchorNodeIsDirty) {
+    mSuppressAnchorAdjustment = false;
+    ANCHOR_LOG("Ignoring post-reflow (anchor=%p, dirty=%d, container=%p).\n",
+               mAnchorNode, mAnchorNodeIsDirty, this);
+    return;
+  }
+
+  nsPoint current =
+      FindScrollAnchoringBoundingRect(Frame(), mAnchorNode).TopLeft();
+  nsPoint adjustment = current - mLastAnchorPos;
+  nsIntPoint adjustmentDevicePixels =
+      adjustment.ToNearestPixels(Frame()->PresContext()->AppUnitsPerDevPixel());
+
+  ANCHOR_LOG("Anchor has moved from [%d, %d] to [%d, %d].\n", mLastAnchorPos.x,
+             mLastAnchorPos.y, current.x, current.y);
+
+  WritingMode writingMode = Frame()->GetWritingMode();
+
+  // The specification only allows for anchor adjustments in the block
+  // dimension, so remove the other component.
+  if (writingMode.IsVertical()) {
+    adjustmentDevicePixels.y = 0;
+  } else {
+    adjustmentDevicePixels.x = 0;
+  }
+
+  if (adjustmentDevicePixels == nsIntPoint()) {
+    ANCHOR_LOG("Ignoring zero delta anchor adjustment for %p.\n", this);
+    mSuppressAnchorAdjustment = false;
+    return;
+  }
+
+  if (mSuppressAnchorAdjustment) {
+    ANCHOR_LOG("Applying anchor adjustment suppression for %p.\n", this);
+    mSuppressAnchorAdjustment = false;
+    InvalidateAnchor();
+    return;
+  }
+
+  ANCHOR_LOG("Applying anchor adjustment of (%d %d) for %p and anchor %p.\n",
+             adjustment.x, adjustment.y, this, mAnchorNode);
+
+  MOZ_ASSERT(!mApplyingAnchorAdjustment);
+  // We should use AutoRestore here, but that doesn't work with bitfields
+  mApplyingAnchorAdjustment = true;
+  mScrollFrame->ScrollBy(
+      adjustmentDevicePixels, nsIScrollableFrame::DEVICE_PIXELS,
+      nsIScrollableFrame::INSTANT, nullptr, nsGkAtoms::relative);
+  mApplyingAnchorAdjustment = false;
+
+  // The anchor position may not be in the same relative position after
+  // adjustment. Update ourselves so we have consistent state.
+  mLastAnchorPos =
+      FindScrollAnchoringBoundingRect(Frame(), mAnchorNode).TopLeft();
 }
 
 ScrollAnchorContainer::ExamineResult

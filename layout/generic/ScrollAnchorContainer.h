@@ -66,6 +66,12 @@ class ScrollAnchorContainer final {
   void UserScrolled();
 
   /**
+   * Notify the scroll anchor container that a reflow has happened and it
+   * should query its anchor to see if a scroll adjustment needs to occur.
+   */
+  void ApplyAdjustments();
+
+  /**
    * Notify this scroll anchor container that its anchor node should be
    * invalidated and recomputed at the next available opportunity.
    */
@@ -127,6 +133,8 @@ class ScrollAnchorContainer final {
 
   // True if we should recalculate our anchor node at the next chance
   bool mAnchorNodeIsDirty : 1;
+  // True if we are applying a scroll anchor adjustment
+  bool mApplyingAnchorAdjustment : 1;
 };
 
 }  // namespace layout
