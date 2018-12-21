@@ -328,6 +328,77 @@ Element* DocumentOrShadowRoot::ElementFromPointHelper(
   return elementArray.SafeElementAt(0);
 }
 
+nsresult DocumentOrShadowRoot::NodesFromRectHelper(
+    float aX, float aY, float aTopSize, float aRightSize, float aBottomSize,
+    float aLeftSize, bool aIgnoreRootScrollFrame, bool aFlushLayout,
+    nsINodeList** aReturn) {
+  MOZ_ASSERT(AsNode().IsDocument());
+  NS_ENSURE_ARG_POINTER(aReturn);
+
+  nsIDocument* doc = AsNode().AsDocument();
+  nsSimpleContentList* elements = new nsSimpleContentList(doc);
+  NS_ADDREF(elements);
+  *aReturn = elements;
+
+  // Following the same behavior of elementFromPoint,
+  // we don't return anything if either coord is negative
+  if (!aIgnoreRootScrollFrame && (aX < 0 || aY < 0)) return NS_OK;
+
+  nscoord x = nsPresContext::CSSPixelsToAppUnits(aX - aLeftSize);
+  nscoord y = nsPresContext::CSSPixelsToAppUnits(aY - aTopSize);
+  nscoord w = nsPresContext::CSSPixelsToAppUnits(aLeftSize + aRightSize) + 1;
+  nscoord h = nsPresContext::CSSPixelsToAppUnits(aTopSize + aBottomSize) + 1;
+
+  nsRect rect(x, y, w, h);
+
+  // Make sure the layout information we get is up-to-date, and
+  // ensure we get a root frame (for everything but XUL)
+  if (aFlushLayout) {
+    doc->FlushPendingNotifications(FlushType::Layout);
+  }
+
+  nsIPresShell* ps = doc->GetShell();
+  NS_ENSURE_STATE(ps);
+  nsIFrame* rootFrame = ps->GetRootFrame();
+
+  // XUL docs, unlike HTML, have no frame tree until everything's done loading
+  if (!rootFrame)
+    return NS_OK;  // return nothing to premature XUL callers as a reminder to
+                   // wait
+
+  EnumSet<FrameForPointOption> options = {
+      FrameForPointOption::IgnorePaintSuppression,
+      FrameForPointOption::IgnoreCrossDoc};
+
+  if (aIgnoreRootScrollFrame) {
+    options += FrameForPointOption::IgnoreRootScrollFrame;
+  }
+
+  AutoTArray<nsIFrame*, 8> outFrames;
+  nsLayoutUtils::GetFramesForArea(rootFrame, rect, outFrames, options);
+
+  // Used to filter out repeated elements in sequence.
+  nsIContent* lastAdded = nullptr;
+
+  for (uint32_t i = 0; i < outFrames.Length(); i++) {
+    nsIContent* node = doc->GetContentInThisDocument(outFrames[i]);
+
+    if (node && !node->IsElement() && !node->IsText()) {
+      // We have a node that isn't an element or a text node,
+      // use its parent content instead.
+      // FIXME(emilio): How can this possibly be? We only create frames for
+      // elements and text!
+      node = node->GetParent();
+    }
+    if (node && node != lastAdded) {
+      elements->AppendElement(node);
+      lastAdded = node;
+    }
+  }
+
+  return NS_OK;
+}
+
 Element* DocumentOrShadowRoot::AddIDTargetObserver(nsAtom* aID,
                                                    IDTargetObserver aObserver,
                                                    void* aData,
