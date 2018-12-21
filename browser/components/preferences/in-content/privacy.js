@@ -481,13 +481,12 @@ var gPrivacyPane = {
     this.readBlockCookies();
 
     let link = document.getElementById("contentBlockingLearnMore");
-    let url = Services.urlFormatter.formatURLPref("app.support.baseURL") + "tracking-protection";
-    link.setAttribute("href", url);
+    let contentBlockingUrl = Services.urlFormatter.formatURLPref("app.support.baseURL") + "content-blocking";
+    link.setAttribute("href", contentBlockingUrl);
 
     let warningLinks = document.getElementsByClassName("content-blocking-warning-learn-how");
     for (let warningLink of warningLinks) {
-      let warningUrl = Services.urlFormatter.formatURLPref("app.support.baseURL") + "content-blocking";
-      warningLink.setAttribute("href", warningUrl);
+      warningLink.setAttribute("href", contentBlockingUrl);
     }
   },
 
