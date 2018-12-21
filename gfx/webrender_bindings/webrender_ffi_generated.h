@@ -540,6 +540,8 @@ struct MemoryReport {
   uintptr_t images;
   uintptr_t rasterized_blobs;
   uintptr_t shader_cache;
+  uintptr_t data_stores;
+  uintptr_t interners;
   uintptr_t gpu_cache_textures;
   uintptr_t vertex_data_textures;
   uintptr_t render_target_textures;
@@ -558,6 +560,8 @@ struct MemoryReport {
            images == aOther.images &&
            rasterized_blobs == aOther.rasterized_blobs &&
            shader_cache == aOther.shader_cache &&
+           data_stores == aOther.data_stores &&
+           interners == aOther.interners &&
            gpu_cache_textures == aOther.gpu_cache_textures &&
            vertex_data_textures == aOther.vertex_data_textures &&
            render_target_textures == aOther.render_target_textures &&
@@ -1992,6 +1996,7 @@ bool wr_window_new(WrWindowId aWindowId,
                    WrShaders *aShaders,
                    WrThreadPool *aThreadPool,
                    VoidPtrToSizeFn aSizeOfOp,
+                   VoidPtrToSizeFn aEnclosingSizeOfOp,
                    DocumentHandle **aOutHandle,
                    Renderer **aOutRenderer,
                    int32_t *aOutMaxTextureSize)

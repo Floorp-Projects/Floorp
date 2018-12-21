@@ -848,6 +848,9 @@ pub struct MemoryReport {
     pub images: usize,
     pub rasterized_blobs: usize,
     pub shader_cache: usize,
+    pub data_stores: usize,
+    pub interners: usize,
+
     //
     // GPU memory.
     //
@@ -871,6 +874,8 @@ impl ::std::ops::AddAssign for MemoryReport {
         self.images += other.images;
         self.rasterized_blobs += other.rasterized_blobs;
         self.shader_cache += other.shader_cache;
+        self.data_stores += other.data_stores;
+        self.interners += other.interners;
         self.gpu_cache_textures += other.gpu_cache_textures;
         self.vertex_data_textures += other.vertex_data_textures;
         self.render_target_textures += other.render_target_textures;
