@@ -1121,6 +1121,12 @@ void nsHTMLScrollFrame::Reflow(nsPresContext* aPresContext,
   mHelper.PostOverflowEvent();
 }
 
+void nsHTMLScrollFrame::DidReflow(nsPresContext* aPresContext,
+                                  const ReflowInput* aReflowInput) {
+  nsContainerFrame::DidReflow(aPresContext, aReflowInput);
+  mHelper.mAnchor.ApplyAdjustments();
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 #ifdef DEBUG_FRAME_DUMP

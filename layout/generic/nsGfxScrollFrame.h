@@ -765,6 +765,8 @@ class nsHTMLScrollFrame : public nsContainerFrame,
   virtual void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
                       const ReflowInput& aReflowInput,
                       nsReflowStatus& aStatus) override;
+  virtual void DidReflow(nsPresContext* aPresContext,
+                         const ReflowInput* aReflowInput) override;
 
   virtual bool ComputeCustomOverflow(nsOverflowAreas& aOverflowAreas) override {
     return mHelper.ComputeCustomOverflow(aOverflowAreas);
