@@ -212,10 +212,10 @@ bool SVGSVGElement::AnimationsPaused() {
   return root && root->IsPausedByType(nsSMILTimeContainer::PAUSE_SCRIPT);
 }
 
-float SVGSVGElement::GetCurrentTime() {
+float SVGSVGElement::GetCurrentTimeAsFloat() {
   nsSMILTimeContainer* root = GetTimedDocumentRoot();
   if (root) {
-    double fCurrentTimeMs = double(root->GetCurrentTime());
+    double fCurrentTimeMs = double(root->GetCurrentTimeAsSMILTime());
     return (float)(fCurrentTimeMs / PR_MSEC_PER_SEC);
   } else {
     return 0.f;

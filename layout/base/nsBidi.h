@@ -34,8 +34,8 @@ class nsBidi {
    * @param aText is a pointer to the single-paragraph text that the
    *      Bidi algorithm will be performed on
    *      (step (P1) of the algorithm is performed externally).
-   *      <strong>The text must be (at least) <code>aLength</code>
-   * long.</strong>
+   *      <strong>The text must be (at least) <code>aLength</code> long.
+   *      </strong>
    *
    * @param aLength is the length of the text; if <code>aLength==-1</code> then
    *      the text must be zero-terminated.

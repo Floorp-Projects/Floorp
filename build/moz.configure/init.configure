@@ -1086,7 +1086,7 @@ def milestone(build_env, build_project, _):
             'browser/config/version_display.txt',
         ]
     for f in ('version.txt', 'version_display.txt'):
-        f = os.path.join(build_project, f)
+        f = os.path.join(build_project, 'config', f)
         if not os.path.exists(os.path.join(build_env.topsrcdir, f)):
             break
         paths.append(f)

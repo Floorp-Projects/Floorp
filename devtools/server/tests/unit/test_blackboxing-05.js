@@ -69,23 +69,21 @@ function test_black_box() {
 }
 
 function test_black_box_exception() {
-  gThreadClient.getSources(function({error, sources}) {
+  gThreadClient.getSources(async function({error, sources}) {
     Assert.ok(!error, "Should not get an error: " + error);
     const sourceClient = gThreadClient.source(
       sources.filter(s => s.url == BLACK_BOXED_URL)[0]
     );
 
-    sourceClient.blackBox(function({error}) {
-      Assert.ok(!error, "Should not get an error: " + error);
-      gThreadClient.pauseOnExceptions(true);
+    await blackBox(sourceClient);
+    gThreadClient.pauseOnExceptions(true);
 
-      gClient.addOneTimeListener("paused", function(event, packet) {
-        Assert.equal(packet.frame.where.source.url, SOURCE_URL,
-                     "We shouldn't pause while in the black boxed source.");
-        finishClient(gClient);
-      });
-
-      gThreadClient.resume();
+    gClient.addOneTimeListener("paused", function(event, packet) {
+      Assert.equal(packet.frame.where.source.url, SOURCE_URL,
+                   "We shouldn't pause while in the black boxed source.");
+      finishClient(gClient);
     });
+
+    gThreadClient.resume();
   });
 }

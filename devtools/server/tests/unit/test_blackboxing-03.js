@@ -71,37 +71,33 @@ function test_black_box() {
 }
 
 function test_black_box_dbg_statement() {
-  gThreadClient.getSources(function({error, sources}) {
+  gThreadClient.getSources(async function({error, sources}) {
     Assert.ok(!error, "Should not get an error: " + error);
     const sourceClient = gThreadClient.source(
       sources.filter(s => s.url == BLACK_BOXED_URL)[0]
     );
 
-    sourceClient.blackBox(function({error}) {
-      Assert.ok(!error, "Should not get an error: " + error);
-
-      gClient.addOneTimeListener("paused", function(event, packet) {
-        Assert.equal(packet.why.type, "breakpoint",
-                     "We should pass over the debugger statement.");
-        gBpClient.remove(function({error}) {
-          Assert.ok(!error, "Should not get an error: " + error);
-          gThreadClient.resume(test_unblack_box_dbg_statement.bind(null, sourceClient));
-        });
-      });
-      gDebuggee.runTest();
-    });
-  });
-}
-
-function test_unblack_box_dbg_statement(sourceClient) {
-  sourceClient.unblackBox(function({error}) {
-    Assert.ok(!error, "Should not get an error: " + error);
+    await blackBox(sourceClient);
 
     gClient.addOneTimeListener("paused", function(event, packet) {
-      Assert.equal(packet.why.type, "debuggerStatement",
-                   "We should stop at the debugger statement again");
-      finishClient(gClient);
+      Assert.equal(packet.why.type, "breakpoint",
+                   "We should pass over the debugger statement.");
+      gBpClient.remove(function({error}) {
+        Assert.ok(!error, "Should not get an error: " + error);
+        gThreadClient.resume(test_unblack_box_dbg_statement.bind(null, sourceClient));
+      });
     });
     gDebuggee.runTest();
   });
+}
+
+async function test_unblack_box_dbg_statement(sourceClient) {
+  await unBlackBox(sourceClient);
+
+  gClient.addOneTimeListener("paused", function(event, packet) {
+    Assert.equal(packet.why.type, "debuggerStatement",
+                 "We should stop at the debugger statement again");
+    finishClient(gClient);
+  });
+  gDebuggee.runTest();
 }

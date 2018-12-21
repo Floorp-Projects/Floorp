@@ -160,6 +160,8 @@ async function openWebCompatTab(compatInfo, usePrivateTab) {
   const {details} = compatInfo;
   const params = {
     url: `${compatInfo.url}`,
+    utm_source: "mobile-reporter",
+    utm_campaign: "report-site-issue-button",
     src: "mobile-reporter",
     details,
     label: [],

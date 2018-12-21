@@ -278,8 +278,7 @@ add_task(async function test_editInvalidCreditCardNumber() {
     is(win.document.querySelector("#cc-number").value,
        INVALID_CREDIT_CARD_NUMBER,
        "cc-number field should be showing invalid credit card number");
-    ok(win.document.querySelector("#save").disabled,
-       "save button should be disabled due to invalid credit card number");
+    is(win.document.querySelector("#cc-number").checkValidity(), false, "cc-number is invalid");
     win.document.querySelector("#cancel").click();
   }, {
     record: creditCards[0],

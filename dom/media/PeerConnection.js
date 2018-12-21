@@ -41,9 +41,7 @@ const PC_COREQUEST_CID = Components.ID("{74b2122d-65a8-4824-aa9e-3d664cb75dc2}")
 const PC_DTMF_SENDER_CID = Components.ID("{3610C242-654E-11E6-8EC0-6D1BE389A607}");
 
 const TELEMETRY_PC_CONNECTED = "webrtc.peerconnection.connected";
-const TELEMETRY_PC_CALLBACK_GETSTATS = "webrtc.peerconnection.legacy_callback_stats_used";
 const TELEMETRY_PC_PROMISE_GETSTATS = "webrtc.peerconnection.promise_stats_used";
-const TELEMETRY_PC_PROMISE_AND_CALLBACK_GETSTATS = "webrtc.peerconnection.promise_and_callback_stats_used";
 function logMsg(msg, file, line, flag, winID) {
   let scriptErrorClass = Cc["@mozilla.org/scripterror;1"];
   let scriptError = scriptErrorClass.createInstance(Ci.nsIScriptError);
@@ -292,92 +290,21 @@ class RTCStatsReport {
     return this.__DOM_IMPL__.__set(aKey, aObj);
   }
 
-  // TODO: Remove legacy API eventually
-  // see Bug 1328194
-  //
-  // Since maplike is recent, we still also make the stats available as legacy
-  // enumerable read-only properties directly on our content-facing object.
-  //
-  // In addition, we warn on iteration over isRemote:true entries, which is set
-  // to break in Firefox 66.
-  //
   // Must be called after our webidl sandwich is made.
 
-  makeStatsPublic(warnNullable, warnRemoteNullable, isLegacy) {
-    let legacyProps = {};
-    for (let key in this._report) {
-      const underlying = this._report[key];
-      // Add legacy names for renamed stats
-      if (underlying.type == "local-candidate" || underlying.type == "remote-candidate") {
-            // RTCIceCandidateStats transportId is ChromeOnly, don't copy it
-            delete underlying.transportId;
-            if (isLegacy) {
-              // Copy stat.address to the legacy field name
-              underlying.ipAddress = underlying.address;
-              // Callback stats are frozen to have legacy names
-              delete underlying.address;
-            }
+  makeStatsPublic() {
+    for (const key in this._report) {
+      const value = this._report[key];
+      if (value.type == "local-candidate" || value.type == "remote-candidate") {
+        delete value.transportId;
       }
-
-      let internal = Cu.cloneInto(this._report[key], this._win);
-      if (isLegacy) {
-        internal.type = this._specToLegacyFieldMapping[internal.type] || internal.type;
-      } else if (warnRemoteNullable.warn) {
-        let entry = Cu.createObjectIn(this._win);
-        let stat = internal;
-        for (let key in stat) {
-          Object.defineProperty(entry, key, {
-            enumerable: true, configurable: false,
-            get: Cu.exportFunction(function() {
-              // Warn on remote stat access other than the recommended approach of
-              //
-              // for (let stat of stats.values()) {
-              //   switch (stat.type) {
-              //     case "outbound-rtp": {
-              //       if (stat.isRemote) continue;
-              //       let rtcp = stats.get(stat.remoteId);
-              //
-              if (warnRemoteNullable.warn && stat.isRemote &&
-                  key != "type" &&
-                  key != "isRemote") {
-                // id is first prop, a sign of JSON.stringify(), cancel warnings.
-                if (key != "id") {
-                  warnRemoteNullable.warn(key);
-                }
-                warnRemoteNullable.warn = null;
-              }
-              return stat[key];
-            }, entry),
-          });
-        }
-        Cu.unwaiveXrays(entry)._isRemote = stat.isRemote;
-        internal = entry;
-      }
-      this.setInternal(key, internal);
-      let value = Cu.cloneInto(this._report[key], this._win);
-      value.type = this._specToLegacyFieldMapping[value.type] || value.type;
-      legacyProps[key] = {
-        enumerable: true, configurable: false,
-        get: Cu.exportFunction(function() {
-          if (warnNullable.warn) {
-            warnNullable.warn();
-            warnNullable.warn = null;
-          }
-          return value;
-        }, this.__DOM_IMPL__.wrappedJSObject),
-      };
+      this.setInternal(key, Cu.cloneInto(value, this._win));
     }
-    Object.defineProperties(this.__DOM_IMPL__.wrappedJSObject, legacyProps);
   }
 
   get mozPcid() { return this._pcid; }
 
   __onget(key, stat) {
-    if (stat && stat._isRemote &&
-        this._pc._warnDeprecatedStatsRemoteAccessNullable.warn) {
-      // Proper stats.get(localStat.remoteId) access detected. Null warning.
-      this._pc._warnDeprecatedStatsRemoteAccessNullable.warn = null;
-    }
     return stat;
   }
 }
@@ -385,33 +312,14 @@ setupPrototype(RTCStatsReport, {
   classID: PC_STATS_CID,
   contractID: PC_STATS_CONTRACT,
   QueryInterface: ChromeUtils.generateQI([]),
-  _specToLegacyFieldMapping: {
-        "inbound-rtp": "inboundrtp",
-        "outbound-rtp": "outboundrtp",
-        "candidate-pair": "candidatepair",
-        "local-candidate": "localcandidate",
-        "remote-candidate": "remotecandidate",
-  },
 });
 
 // This is its own class so that it does not need to be exposed to the client.
 class PeerConnectionTelemetry {
   // Record which style(s) of invocation for getStats are used
-  recordPromiseAndCallbackGetStats(isCallback) {
-    if (!this._hasCallbackStatsBeenUsed && isCallback) {
-      this._hasCallbackStatsBeenUsed = true;
-      Services.telemetry.scalarAdd(TELEMETRY_PC_CALLBACK_GETSTATS, 1);
-    }
-    if (!this._hasPromiseStatsBeenUsed && !isCallback) {
-      this._hasPromiseStatsBeenUsed = true;
-      Services.telemetry.scalarAdd(TELEMETRY_PC_PROMISE_GETSTATS, 1);
-    }
-    if (this._hasCallbackStatsBeenUsed && this._hasPromiseStatsBeenUsed) {
-      Services.telemetry.scalarAdd(
-        TELEMETRY_PC_PROMISE_AND_CALLBACK_GETSTATS, 1);
-      // Everything that can be recorded has been at this point.
-      this.recordPromiseAndCallbackGetStats = () => {};
-    }
+  recordGetStats() {
+    Services.telemetry.scalarAdd(TELEMETRY_PC_PROMISE_GETSTATS, 1);
+    this.recordGetStats = () => {};
   }
   // ICE connection state enters connected or completed.
   recordConnected() {
@@ -461,9 +369,6 @@ class RTCPeerConnection {
     this._iceGatheredRelayCandidates = false;
     // Stored webrtc timing information
     this._storedRtpSourceReferenceTime = null;
-    // TODO: Remove legacy API eventually
-    // see Bug 1328194
-    this._onGetStatsIsLegacy = false;
     // Stores cached RTP sources state
     this._rtpSourceCache = new RTCRtpSourceCache();
     // Records telemetry
@@ -535,15 +440,6 @@ class RTCPeerConnection {
 
     this.__DOM_IMPL__._innerObject = this;
     this._observer = new this._win.PeerConnectionObserver(this.__DOM_IMPL__);
-
-    // Warn just once per PeerConnection about deprecated getStats usage.
-    this._warnDeprecatedStatsAccessNullable = { warn: () =>
-      this.logWarning("non-maplike pc.getStats access is deprecated, and will be removed in Firefox 66! " +
-                      "See http://w3c.github.io/webrtc-pc/#getstats-example for usage.") };
-
-    this._warnDeprecatedStatsCallbacksNullable = { warn: () =>
-      this.logWarning("Callback-based pc.getStats is deprecated, and will be removed in Firefox 66! Use promise-version! " +
-                      "See http://w3c.github.io/webrtc-pc/#getstats-example for usage.") };
 
     this._warnDeprecatedStatsRemoteAccessNullable = { warn: (key) =>
       this.logWarning(`Detected soon-to-break getStats() use with key="${key}"! stat.isRemote goes away in Firefox 66, but won't warn there!\
@@ -1632,23 +1528,16 @@ class RTCPeerConnection {
   }
 
   getStats(selector, onSucc, onErr) {
-    let isLegacy = (typeof onSucc) == "function";
     if (this._iceConnectionState === "completed" ||
         this._iceConnectionState === "connected") {
-      this._pcTelemetry.recordPromiseAndCallbackGetStats(isLegacy);
+      this._pcTelemetry.recordGetStats();
     }
-    if (isLegacy &&
-        this._warnDeprecatedStatsCallbacksNullable.warn) {
-      this._warnDeprecatedStatsCallbacksNullable.warn();
-      this._warnDeprecatedStatsCallbacksNullable.warn = null;
-    }
-    return this._auto(onSucc, onErr, () => this._getStats(selector, isLegacy));
+    return this._auto(onSucc, onErr, () => this._getStats(selector));
   }
 
-  async _getStats(selector, isLegacy) {
+  async _getStats(selector) {
     // getStats is allowed even in closed state.
     return this._chain(() => new Promise((resolve, reject) => {
-      this._onGetStatsIsLegacy = isLegacy;
       this._onGetStatsSuccess = resolve;
       this._onGetStatsFailure = reject;
       this._impl.getStats(selector);
@@ -1924,9 +1813,7 @@ class PeerConnectionObserver {
     let pc = this._dompc;
     let chromeobj = new RTCStatsReport(pc, dict);
     let webidlobj = pc._win.RTCStatsReport._create(pc._win, chromeobj);
-    chromeobj.makeStatsPublic(pc._warnDeprecatedStatsAccessNullable,
-                              pc._warnDeprecatedStatsRemoteAccessNullable,
-                              pc._onGetStatsIsLegacy);
+    chromeobj.makeStatsPublic();
     pc._onGetStatsSuccess(webidlobj);
   }
 

@@ -793,8 +793,8 @@ void nsComboboxControlFrame::Reflow(nsPresContext* aPresContext,
     return;
   }
 
-  // Make sure the displayed text is the same as the selected option, bug
-  // 297389.
+  // Make sure the displayed text is the same as the selected option,
+  // bug 297389.
   if (!mDroppedDown) {
     mDisplayedIndex = mListControlFrame->GetSelectedIndex();
   }

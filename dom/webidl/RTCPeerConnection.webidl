@@ -197,7 +197,4 @@ partial interface RTCPeerConnection {
   Promise<void> addIceCandidate (RTCIceCandidate candidate,
                                  VoidFunction successCallback,
                                  RTCPeerConnectionErrorCallback failureCallback);
-  Promise<void> getStats (MediaStreamTrack? selector,
-                          RTCStatsCallback successCallback,
-                          RTCPeerConnectionErrorCallback failureCallback);
 };

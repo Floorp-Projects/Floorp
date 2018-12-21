@@ -949,8 +949,8 @@ nscoord nsGrid::GetRowFlex(int32_t aIndex, bool aIsHorizontal) {
     // affect us. We need to do this for this case:
     // <grid>
     //   <rows>
-    //     <rows> // this is not flexible. So our children should not be
-    //     flexible
+    //     <rows> // this is not flexible.
+    //            // So our children should not be flexible
     //        <row flex="1"/>
     //        <row flex="1"/>
     //     </rows>

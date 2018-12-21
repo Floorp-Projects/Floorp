@@ -930,7 +930,8 @@ static void StoreLongTermICEStatisticsImpl_m(nsresult result,
     for (decltype(array.Length()) i = 0; i < array.Length(); i++) {
       auto& s = array[i];
       bool isVideo = (s.mId.Value().Find("video") != -1);
-      if (!isVideo || s.mIsRemote) {
+      bool isRemote = s.mType.Value() == dom::RTCStatsType::Remote_outbound_rtp;
+      if (!isVideo || isRemote) {
         continue;
       }
       if (s.mBitrateMean.WasPassed()) {
@@ -964,7 +965,8 @@ static void StoreLongTermICEStatisticsImpl_m(nsresult result,
     for (decltype(array.Length()) i = 0; i < array.Length(); i++) {
       auto& s = array[i];
       bool isVideo = (s.mId.Value().Find("video") != -1);
-      if (!isVideo || s.mIsRemote) {
+      bool isRemote = s.mType.Value() == dom::RTCStatsType::Remote_inbound_rtp;
+      if (!isVideo || isRemote) {
         continue;
       }
       if (s.mBitrateMean.WasPassed()) {

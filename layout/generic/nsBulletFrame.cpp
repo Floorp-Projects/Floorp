@@ -289,7 +289,7 @@ class BulletRenderer final {
   LayoutDeviceRect mPathRect;
 
   // mColor indicate the color of list-style. Both text and path type would use
-  // this memeber.
+  // this member.
   nscolor mColor;
 
   // mPath record the path of the list-style for later drawing.

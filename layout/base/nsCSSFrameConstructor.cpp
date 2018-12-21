@@ -4232,15 +4232,15 @@ void nsCSSFrameConstructor::FinishBuildingScrollFrame(
  * scrollbars.
  *
  * @param aContent the content node of the child to wrap.
-
+ *
  * @param aScrolledFrame The frame of the content to wrap. This should not be
  * Initialized. This method will initialize it with a scrolled pseudo and no
  * nsIContent. The content will be attached to the scrollframe returned.
-
+ *
  * @param aContentStyle the style that has already been resolved for the content
  * being passed in.
  *
- * @param aParentFrame The parent to attach the scroll frame to
+ * @param aParentFrame   The parent to attach the scroll frame to
  *
  * @param aNewFrame The new scrollframe or gfx scrollframe that we create. It
  * will contain the scrolled frame you passed in. (returned) If this is not

@@ -209,6 +209,7 @@ CONFIGS = defaultdict(lambda: {
         'defines': {},
         'non_global_defines': [],
         'substs': {
+            'CC_TYPE': 'clang',
             'COMPILE_ENVIRONMENT': '1',
             'LIB_SUFFIX': 'a',
             'BIN_SUFFIX': '.exe',
