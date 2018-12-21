@@ -75,7 +75,7 @@ uint32_t wasm::ObservedCPUFeatures() {
 CompileArgs::CompileArgs(JSContext* cx, ScriptedCaller&& scriptedCaller)
     : scriptedCaller(std::move(scriptedCaller)) {
 #ifdef ENABLE_WASM_GC
-  bool gcEnabled = cx->options().wasmGc();
+  bool gcEnabled = HasGcSupport(cx);
 #else
   bool gcEnabled = false;
 #endif
