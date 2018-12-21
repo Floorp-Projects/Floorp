@@ -11,7 +11,7 @@
 #include "nsError.h"
 #include "SVGAnimatedInteger.h"
 #include "nsISMILAttr.h"
-#include "nsSVGElement.h"
+#include "SVGElement.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/UniquePtr.h"
 
@@ -25,6 +25,8 @@ class SVGAnimationElement;
 
 class nsSVGInteger {
  public:
+  typedef mozilla::dom::SVGElement SVGElement;
+
   void Init(uint8_t aAttrEnum = 0xff, int32_t aValue = 0) {
     mAnimVal = mBaseVal = aValue;
     mAttrEnum = aAttrEnum;
@@ -32,14 +34,13 @@ class nsSVGInteger {
     mIsBaseSet = false;
   }
 
-  nsresult SetBaseValueString(const nsAString& aValue,
-                              nsSVGElement* aSVGElement);
+  nsresult SetBaseValueString(const nsAString& aValue, SVGElement* aSVGElement);
   void GetBaseValueString(nsAString& aValue);
 
-  void SetBaseValue(int32_t aValue, nsSVGElement* aSVGElement);
+  void SetBaseValue(int32_t aValue, SVGElement* aSVGElement);
   int32_t GetBaseValue() const { return mBaseVal; }
 
-  void SetAnimValue(int aValue, nsSVGElement* aSVGElement);
+  void SetAnimValue(int aValue, SVGElement* aSVGElement);
   int GetAnimValue() const { return mAnimVal; }
 
   // Returns true if the animated value of this integer has been explicitly
@@ -50,8 +51,8 @@ class nsSVGInteger {
   bool IsExplicitlySet() const { return mIsAnimated || mIsBaseSet; }
 
   already_AddRefed<mozilla::dom::SVGAnimatedInteger> ToDOMAnimatedInteger(
-      nsSVGElement* aSVGElement);
-  mozilla::UniquePtr<nsISMILAttr> ToSMILAttr(nsSVGElement* aSVGElement);
+      SVGElement* aSVGElement);
+  mozilla::UniquePtr<nsISMILAttr> ToSMILAttr(SVGElement* aSVGElement);
 
  private:
   int32_t mAnimVal;
@@ -62,7 +63,7 @@ class nsSVGInteger {
 
  public:
   struct DOMAnimatedInteger final : public mozilla::dom::SVGAnimatedInteger {
-    DOMAnimatedInteger(nsSVGInteger* aVal, nsSVGElement* aSVGElement)
+    DOMAnimatedInteger(nsSVGInteger* aVal, SVGElement* aSVGElement)
         : mozilla::dom::SVGAnimatedInteger(aSVGElement), mVal(aVal) {}
     virtual ~DOMAnimatedInteger();
 
@@ -83,14 +84,14 @@ class nsSVGInteger {
 
   struct SMILInteger : public nsISMILAttr {
    public:
-    SMILInteger(nsSVGInteger* aVal, nsSVGElement* aSVGElement)
+    SMILInteger(nsSVGInteger* aVal, SVGElement* aSVGElement)
         : mVal(aVal), mSVGElement(aSVGElement) {}
 
     // These will stay alive because a nsISMILAttr only lives as long
     // as the Compositing step, and DOM elements don't get a chance to
     // die during that.
     nsSVGInteger* mVal;
-    nsSVGElement* mSVGElement;
+    SVGElement* mSVGElement;
 
     // nsISMILAttr methods
     virtual nsresult ValueFromString(

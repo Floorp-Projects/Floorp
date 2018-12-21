@@ -12,7 +12,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
 #include "nsWrapperCache.h"
-#include "nsSVGElement.h"
+#include "SVGElement.h"
 
 class nsSVGViewBox;
 
@@ -24,9 +24,9 @@ class SVGAnimatedRect final : public nsWrapperCache {
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(SVGAnimatedRect)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(SVGAnimatedRect)
 
-  SVGAnimatedRect(nsSVGViewBox* aVal, nsSVGElement* aSVGElement);
+  SVGAnimatedRect(nsSVGViewBox* aVal, SVGElement* aSVGElement);
 
-  nsSVGElement* GetParentObject() const { return mSVGElement; }
+  SVGElement* GetParentObject() const { return mSVGElement; }
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
@@ -39,7 +39,7 @@ class SVGAnimatedRect final : public nsWrapperCache {
   virtual ~SVGAnimatedRect();
 
   nsSVGViewBox* mVal;  // kept alive because it belongs to content
-  RefPtr<nsSVGElement> mSVGElement;
+  RefPtr<SVGElement> mSVGElement;
 };
 
 }  // namespace dom

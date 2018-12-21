@@ -108,7 +108,7 @@ static void GetValueString(nsAString& aValueAsString, float aValue,
 }
 
 void nsSVGAngle::SetBaseValueInSpecifiedUnits(float aValue,
-                                              nsSVGElement* aSVGElement) {
+                                              SVGElement* aSVGElement) {
   if (mBaseVal == aValue) {
     return;
   }
@@ -124,7 +124,7 @@ void nsSVGAngle::SetBaseValueInSpecifiedUnits(float aValue,
 }
 
 nsresult nsSVGAngle::ConvertToSpecifiedUnits(uint16_t unitType,
-                                             nsSVGElement* aSVGElement) {
+                                             SVGElement* aSVGElement) {
   if (!IsValidUnitType(unitType)) return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 
   if (mBaseValUnit == uint8_t(unitType)) return NS_OK;
@@ -148,7 +148,7 @@ nsresult nsSVGAngle::ConvertToSpecifiedUnits(uint16_t unitType,
 
 nsresult nsSVGAngle::NewValueSpecifiedUnits(uint16_t unitType,
                                             float valueInSpecifiedUnits,
-                                            nsSVGElement* aSVGElement) {
+                                            SVGElement* aSVGElement) {
   NS_ENSURE_FINITE(valueInSpecifiedUnits, NS_ERROR_ILLEGAL_VALUE);
 
   if (!IsValidUnitType(unitType)) return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
@@ -174,7 +174,7 @@ nsresult nsSVGAngle::NewValueSpecifiedUnits(uint16_t unitType,
   return NS_OK;
 }
 
-already_AddRefed<SVGAngle> nsSVGAngle::ToDOMBaseVal(nsSVGElement* aSVGElement) {
+already_AddRefed<SVGAngle> nsSVGAngle::ToDOMBaseVal(SVGElement* aSVGElement) {
   RefPtr<SVGAngle> domBaseVal = sBaseSVGAngleTearoffTable.GetTearoff(this);
   if (!domBaseVal) {
     domBaseVal = new SVGAngle(this, aSVGElement, SVGAngle::BaseValue);
@@ -184,7 +184,7 @@ already_AddRefed<SVGAngle> nsSVGAngle::ToDOMBaseVal(nsSVGElement* aSVGElement) {
   return domBaseVal.forget();
 }
 
-already_AddRefed<SVGAngle> nsSVGAngle::ToDOMAnimVal(nsSVGElement* aSVGElement) {
+already_AddRefed<SVGAngle> nsSVGAngle::ToDOMAnimVal(SVGElement* aSVGElement) {
   RefPtr<SVGAngle> domAnimVal = sAnimSVGAngleTearoffTable.GetTearoff(this);
   if (!domAnimVal) {
     domAnimVal = new SVGAngle(this, aSVGElement, SVGAngle::AnimValue);
@@ -207,7 +207,7 @@ SVGAngle::~SVGAngle() {
 /* Implementation */
 
 nsresult nsSVGAngle::SetBaseValueString(const nsAString& aValueAsString,
-                                        nsSVGElement* aSVGElement,
+                                        SVGElement* aSVGElement,
                                         bool aDoSetAttr) {
   float value;
   uint16_t unitType;
@@ -247,7 +247,7 @@ void nsSVGAngle::GetAnimValueString(nsAString& aValueAsString) const {
 }
 
 void nsSVGAngle::SetBaseValue(float aValue, uint8_t aUnit,
-                              nsSVGElement* aSVGElement, bool aDoSetAttr) {
+                              SVGElement* aSVGElement, bool aDoSetAttr) {
   float valueInSpecifiedUnits = aValue / GetDegreesPerUnit(aUnit);
   if (aUnit == mBaseValUnit && mBaseVal == valueInSpecifiedUnits) {
     return;
@@ -270,7 +270,7 @@ void nsSVGAngle::SetBaseValue(float aValue, uint8_t aUnit,
 }
 
 void nsSVGAngle::SetAnimValue(float aValue, uint8_t aUnit,
-                              nsSVGElement* aSVGElement) {
+                              SVGElement* aSVGElement) {
   if (mIsAnimated && mAnimVal == aValue && mAnimValUnit == aUnit) {
     return;
   }
@@ -281,7 +281,7 @@ void nsSVGAngle::SetAnimValue(float aValue, uint8_t aUnit,
 }
 
 already_AddRefed<SVGAnimatedAngle> nsSVGAngle::ToDOMAnimatedAngle(
-    nsSVGElement* aSVGElement) {
+    SVGElement* aSVGElement) {
   RefPtr<SVGAnimatedAngle> domAnimatedAngle =
       sSVGAnimatedAngleTearoffTable.GetTearoff(this);
   if (!domAnimatedAngle) {
@@ -296,7 +296,7 @@ SVGAnimatedAngle::~SVGAnimatedAngle() {
   sSVGAnimatedAngleTearoffTable.RemoveTearoff(mVal);
 }
 
-UniquePtr<nsISMILAttr> nsSVGAngle::ToSMILAttr(nsSVGElement* aSVGElement) {
+UniquePtr<nsISMILAttr> nsSVGAngle::ToSMILAttr(SVGElement* aSVGElement) {
   if (aSVGElement->NodeInfo()->Equals(nsGkAtoms::marker, kNameSpaceID_SVG)) {
     SVGMarkerElement* marker = static_cast<SVGMarkerElement*>(aSVGElement);
     return MakeUnique<SMILOrient>(marker->GetOrientType(), this, aSVGElement);

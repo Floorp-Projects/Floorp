@@ -199,7 +199,7 @@ nsSVGMarkerFrame::AutoMarkerReferencer::AutoMarkerReferencer(
   mFrame->mMarkedFrame = aMarkedFrame;
 
   SVGViewportElement* ctx =
-      static_cast<nsSVGElement*>(aMarkedFrame->GetContent())->GetCtx();
+      static_cast<SVGElement*>(aMarkedFrame->GetContent())->GetCtx();
   mFrame->SetParentCoordCtxProvider(ctx);
 }
 

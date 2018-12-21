@@ -83,7 +83,7 @@
 #ifdef MOZ_XUL
 #include "nsXULElement.h"
 #endif /* MOZ_XUL */
-#include "nsSVGElement.h"
+#include "SVGElement.h"
 #include "nsFrameSelection.h"
 #ifdef DEBUG
 #include "nsRange.h"
@@ -213,7 +213,7 @@ nsAtom* nsIContent::DoGetID() const {
 
 const nsAttrValue* Element::GetSVGAnimatedClass() const {
   MOZ_ASSERT(MayHaveClass() && IsSVGElement(), "Unexpected call");
-  return static_cast<const nsSVGElement*>(this)->GetAnimatedClassName();
+  return static_cast<const SVGElement*>(this)->GetAnimatedClassName();
 }
 
 NS_IMETHODIMP

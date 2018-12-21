@@ -47,7 +47,7 @@ already_AddRefed<DOMSVGTransformList> SVGAnimatedTransformList::AnimVal() {
 
 /* static */ already_AddRefed<SVGAnimatedTransformList>
 SVGAnimatedTransformList::GetDOMWrapper(nsSVGAnimatedTransformList* aList,
-                                        nsSVGElement* aElement) {
+                                        SVGElement* aElement) {
   RefPtr<SVGAnimatedTransformList> wrapper =
       sSVGAnimatedTransformListTearoffTable.GetTearoff(aList);
   if (!wrapper) {

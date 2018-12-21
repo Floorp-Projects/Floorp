@@ -8,7 +8,7 @@
 
 #include "DOMSVGAnimatedNumberList.h"
 #include "mozilla/Move.h"
-#include "nsSVGElement.h"
+#include "SVGElement.h"
 #include "nsSVGAttrTearoffTable.h"
 #include "nsSMILValue.h"
 #include "SVGNumberListSMILType.h"
@@ -34,7 +34,7 @@ nsresult SVGAnimatedNumberList::SetBaseValueString(const nsAString &aValue) {
   }
 
   // We don't need to call DidChange* here - we're only called by
-  // nsSVGElement::ParseAttribute under Element::SetAttr,
+  // SVGElement::ParseAttribute under Element::SetAttr,
   // which takes care of notifying.
 
   mIsBaseSet = true;
@@ -60,7 +60,7 @@ void SVGAnimatedNumberList::ClearBaseValue(uint32_t aAttrEnum) {
 }
 
 nsresult SVGAnimatedNumberList::SetAnimValue(const SVGNumberList &aNewAnimValue,
-                                             nsSVGElement *aElement,
+                                             SVGElement *aElement,
                                              uint32_t aAttrEnum) {
   DOMSVGAnimatedNumberList *domWrapper =
       DOMSVGAnimatedNumberList::GetDOMWrapperIfExists(this);
@@ -97,7 +97,7 @@ nsresult SVGAnimatedNumberList::SetAnimValue(const SVGNumberList &aNewAnimValue,
   return NS_OK;
 }
 
-void SVGAnimatedNumberList::ClearAnimValue(nsSVGElement *aElement,
+void SVGAnimatedNumberList::ClearAnimValue(SVGElement *aElement,
                                            uint32_t aAttrEnum) {
   DOMSVGAnimatedNumberList *domWrapper =
       DOMSVGAnimatedNumberList::GetDOMWrapperIfExists(this);
@@ -114,7 +114,7 @@ void SVGAnimatedNumberList::ClearAnimValue(nsSVGElement *aElement,
 }
 
 UniquePtr<nsISMILAttr> SVGAnimatedNumberList::ToSMILAttr(
-    nsSVGElement *aSVGElement, uint8_t aAttrEnum) {
+    SVGElement *aSVGElement, uint8_t aAttrEnum) {
   return MakeUnique<SMILAnimatedNumberList>(this, aSVGElement, aAttrEnum);
 }
 

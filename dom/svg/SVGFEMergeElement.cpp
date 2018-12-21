@@ -20,7 +20,7 @@ JSObject* SVGFEMergeElement::WrapNode(JSContext* aCx,
   return SVGFEMergeElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-nsSVGElement::StringInfo SVGFEMergeElement::sStringInfo[1] = {
+SVGElement::StringInfo SVGFEMergeElement::sStringInfo[1] = {
     {nsGkAtoms::result, kNameSpaceID_None, true}};
 
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFEMergeElement)
@@ -44,9 +44,9 @@ void SVGFEMergeElement::GetSourceImageNames(
 }
 
 //----------------------------------------------------------------------
-// nsSVGElement methods
+// SVGElement methods
 
-nsSVGElement::StringAttributesInfo SVGFEMergeElement::GetStringInfo() {
+SVGElement::StringAttributesInfo SVGFEMergeElement::GetStringInfo() {
   return StringAttributesInfo(mStringAttributes, sStringInfo,
                               ArrayLength(sStringInfo));
 }

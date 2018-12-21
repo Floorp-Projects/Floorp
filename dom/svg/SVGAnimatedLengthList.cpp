@@ -8,7 +8,7 @@
 
 #include "DOMSVGAnimatedLengthList.h"
 #include "mozilla/Move.h"
-#include "nsSVGElement.h"
+#include "SVGElement.h"
 #include "nsSVGAttrTearoffTable.h"
 #include "nsSMILValue.h"
 #include "SVGLengthListSMILType.h"
@@ -37,7 +37,7 @@ nsresult SVGAnimatedLengthList::SetBaseValueString(const nsAString &aValue) {
   }
 
   // We don't need to call DidChange* here - we're only called by
-  // nsSVGElement::ParseAttribute under Element::SetAttr,
+  // SVGElement::ParseAttribute under Element::SetAttr,
   // which takes care of notifying.
 
   rv = mBaseVal.CopyFrom(newBaseValue);
@@ -61,7 +61,7 @@ void SVGAnimatedLengthList::ClearBaseValue(uint32_t aAttrEnum) {
 }
 
 nsresult SVGAnimatedLengthList::SetAnimValue(const SVGLengthList &aNewAnimValue,
-                                             nsSVGElement *aElement,
+                                             SVGElement *aElement,
                                              uint32_t aAttrEnum) {
   DOMSVGAnimatedLengthList *domWrapper =
       DOMSVGAnimatedLengthList::GetDOMWrapperIfExists(this);
@@ -98,7 +98,7 @@ nsresult SVGAnimatedLengthList::SetAnimValue(const SVGLengthList &aNewAnimValue,
   return NS_OK;
 }
 
-void SVGAnimatedLengthList::ClearAnimValue(nsSVGElement *aElement,
+void SVGAnimatedLengthList::ClearAnimValue(SVGElement *aElement,
                                            uint32_t aAttrEnum) {
   DOMSVGAnimatedLengthList *domWrapper =
       DOMSVGAnimatedLengthList::GetDOMWrapperIfExists(this);
@@ -115,7 +115,7 @@ void SVGAnimatedLengthList::ClearAnimValue(nsSVGElement *aElement,
 }
 
 UniquePtr<nsISMILAttr> SVGAnimatedLengthList::ToSMILAttr(
-    nsSVGElement *aSVGElement, uint8_t aAttrEnum, uint8_t aAxis,
+    SVGElement *aSVGElement, uint8_t aAttrEnum, uint8_t aAxis,
     bool aCanZeroPadList) {
   return MakeUnique<SMILAnimatedLengthList>(this, aSVGElement, aAttrEnum, aAxis,
                                             aCanZeroPadList);

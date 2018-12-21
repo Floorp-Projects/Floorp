@@ -8,7 +8,7 @@
 #define mozilla_dom_SVGAnimatedLength_h
 
 #include "mozilla/Attributes.h"
-#include "nsSVGElement.h"
+#include "SVGElement.h"
 
 class nsSVGLength2;
 
@@ -23,11 +23,11 @@ class SVGAnimatedLength final : public nsWrapperCache {
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(SVGAnimatedLength)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(SVGAnimatedLength)
 
-  SVGAnimatedLength(nsSVGLength2* aVal, nsSVGElement* aSVGElement)
+  SVGAnimatedLength(nsSVGLength2* aVal, SVGElement* aSVGElement)
       : mVal(aVal), mSVGElement(aSVGElement) {}
 
   // WebIDL
-  nsSVGElement* GetParentObject() { return mSVGElement; }
+  SVGElement* GetParentObject() { return mSVGElement; }
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
   already_AddRefed<DOMSVGLength> BaseVal();
@@ -37,7 +37,7 @@ class SVGAnimatedLength final : public nsWrapperCache {
   ~SVGAnimatedLength();
 
   nsSVGLength2* mVal;  // kept alive because it belongs to content
-  RefPtr<nsSVGElement> mSVGElement;
+  RefPtr<SVGElement> mSVGElement;
 };
 
 }  // namespace dom

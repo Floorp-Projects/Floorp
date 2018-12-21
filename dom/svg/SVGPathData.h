@@ -16,7 +16,7 @@
 #include "mozilla/gfx/Types.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/RefPtr.h"
-#include "nsSVGElement.h"
+#include "SVGElement.h"
 #include "nsTArray.h"
 
 #include <string.h>
@@ -231,16 +231,16 @@ class SVGPathData {
  */
 class SVGPathDataAndInfo final : public SVGPathData {
  public:
-  explicit SVGPathDataAndInfo(nsSVGElement* aElement = nullptr)
+  explicit SVGPathDataAndInfo(dom::SVGElement* aElement = nullptr)
       : mElement(do_GetWeakReference(static_cast<nsINode*>(aElement))) {}
 
-  void SetElement(nsSVGElement* aElement) {
+  void SetElement(dom::SVGElement* aElement) {
     mElement = do_GetWeakReference(static_cast<nsINode*>(aElement));
   }
 
-  nsSVGElement* Element() const {
+  dom::SVGElement* Element() const {
     nsCOMPtr<nsIContent> e = do_QueryReferent(mElement);
-    return static_cast<nsSVGElement*>(e.get());
+    return static_cast<dom::SVGElement*>(e.get());
   }
 
   nsresult CopyFrom(const SVGPathDataAndInfo& rhs) {

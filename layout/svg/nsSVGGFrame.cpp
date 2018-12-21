@@ -31,7 +31,7 @@ NS_IMPL_FRAMEARENA_HELPERS(nsSVGGFrame)
 void nsSVGGFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
                        nsIFrame* aPrevInFlow) {
   NS_ASSERTION(aContent->IsSVGElement() &&
-                   static_cast<nsSVGElement*>(aContent)->IsTransformable(),
+                   static_cast<SVGElement*>(aContent)->IsTransformable(),
                "The element doesn't support nsIDOMSVGTransformable");
 
   nsSVGDisplayContainerFrame::Init(aContent, aParent, aPrevInFlow);

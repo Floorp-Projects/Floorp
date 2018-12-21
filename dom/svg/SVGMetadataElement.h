@@ -8,15 +8,15 @@
 #define mozilla_dom_SVGMetadataElement_h
 
 #include "mozilla/Attributes.h"
-#include "nsSVGElement.h"
+#include "SVGElement.h"
 
 nsresult NS_NewSVGMetadataElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
-typedef nsSVGElement SVGMetadataElementBase;
-
 namespace mozilla {
 namespace dom {
+
+typedef SVGElement SVGMetadataElementBase;
 
 class SVGMetadataElement final : public SVGMetadataElementBase {
  protected:
