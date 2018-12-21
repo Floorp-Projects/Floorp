@@ -63,13 +63,13 @@ type Props = {
   endPanelCollapsed: boolean,
   activeSearch: string,
   quickOpenEnabled: boolean,
-  setActiveSearch: string => void,
-  closeActiveSearch: () => void,
-  closeProjectSearch: () => void,
-  openQuickOpen: (query?: string) => void,
-  closeQuickOpen: () => void,
-  setOrientation: OrientationType => void,
-  canRewind: boolean
+  canRewind: boolean,
+  setActiveSearch: typeof actions.setActiveSearch,
+  closeActiveSearch: typeof actions.closeActiveSearch,
+  closeProjectSearch: typeof actions.closeProjectSearch,
+  openQuickOpen: typeof actions.openQuickOpen,
+  closeQuickOpen: typeof actions.closeQuickOpen,
+  setOrientation: typeof actions.setOrientation
 };
 
 type State = {

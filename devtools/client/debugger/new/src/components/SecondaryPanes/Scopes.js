@@ -19,7 +19,7 @@ import {
 import { getScopes } from "../../utils/pause/scopes";
 
 import { objectInspector } from "devtools-reps";
-import type { Pause, Why, Grip } from "../../types";
+import type { Pause, Why } from "../../types";
 import type { NamedValue } from "../../utils/pause/scopes/types";
 
 import "./Scopes.css";
@@ -33,8 +33,8 @@ type Props = {
   originalFrameScopes: Object | null,
   isLoading: boolean,
   why: Why,
-  openLink: string => void,
-  openElementInInspector: (grip: Grip) => void
+  openLink: typeof actions.openLink,
+  openElementInInspector: typeof actions.openElementInInspectorCommand
 };
 
 type State = {

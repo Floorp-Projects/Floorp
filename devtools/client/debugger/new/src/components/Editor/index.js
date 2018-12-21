@@ -85,17 +85,17 @@ export type Props = {
   symbols: SymbolDeclarations,
 
   // Actions
-  openConditionalPanel: (?SourceLocation) => void,
-  closeConditionalPanel: void => void,
-  setContextMenu: (string, any) => void,
-  continueToHere: number => void,
-  toggleBreakpoint: number => void,
-  toggleBreakpointsAtLine: number => void,
-  addOrToggleDisabledBreakpoint: number => void,
-  jumpToMappedLocation: any => void,
-  traverseResults: (boolean, Object) => void,
-  updateViewport: void => void,
-  closeTab: Source => void
+  openConditionalPanel: typeof actions.openConditionalPanel,
+  closeConditionalPanel: typeof actions.closeConditionalPanel,
+  setContextMenu: typeof actions.setContextMenu,
+  continueToHere: typeof actions.continueToHere,
+  toggleBreakpoint: typeof actions.toggleBreakpoint,
+  toggleBreakpointsAtLine: typeof actions.toggleBreakpointsAtLine,
+  addOrToggleDisabledBreakpoint: typeof actions.addOrToggleDisabledBreakpoint,
+  jumpToMappedLocation: typeof actions.jumpToMappedLocation,
+  traverseResults: typeof actions.traverseResults,
+  updateViewport: typeof actions.updateViewport,
+  closeTab: typeof actions.closeTab
 };
 
 type State = {

@@ -492,6 +492,7 @@ static bool wasmForceCranelift = false;
 #ifdef ENABLE_WASM_GC
 static bool enableWasmGc = false;
 #endif
+static bool enableWasmVerbose = false;
 static bool enableTestWasmAwaitTier2 = false;
 static bool enableAsyncStacks = false;
 static bool enableStreams = false;
@@ -10089,6 +10090,7 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
   enableWasmGc = enableWasmGc && !wasmForceCranelift;
 #endif
 #endif
+  enableWasmVerbose = op.getBoolOption("wasm-verbose");
   enableTestWasmAwaitTier2 = op.getBoolOption("test-wasm-await-tier2");
   enableAsyncStacks = !op.getBoolOption("no-async-stacks");
   enableStreams = !op.getBoolOption("no-streams");
@@ -10109,6 +10111,7 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
 #ifdef ENABLE_WASM_GC
       .setWasmGc(enableWasmGc)
 #endif
+      .setWasmVerbose(enableWasmVerbose)
       .setTestWasmAwaitTier2(enableTestWasmAwaitTier2)
       .setNativeRegExp(enableNativeRegExp)
       .setAsyncStack(enableAsyncStacks);
@@ -10435,6 +10438,7 @@ static void SetWorkerContextOptions(JSContext* cx) {
 #ifdef ENABLE_WASM_GC
       .setWasmGc(enableWasmGc)
 #endif
+      .setWasmVerbose(enableWasmVerbose)
       .setTestWasmAwaitTier2(enableTestWasmAwaitTier2)
       .setNativeRegExp(enableNativeRegExp);
 
@@ -10723,9 +10727,11 @@ int main(int argc, char** argv, char** envp) {
       || !op.addBoolOption('\0', "wasm-force-cranelift",
                            "Enable wasm Cranelift compiler")
 #endif
-      || !op.addBoolOption('\0', "test-wasm-await-tier2",
-                           "Forcibly activate tiering and block "
-                           "instantiation on completion of tier2")
+      || !op.addBoolOption('\0', "wasm-verbose",
+                           "Enable WebAssembly verbose logging") ||
+      !op.addBoolOption('\0', "test-wasm-await-tier2",
+                        "Forcibly activate tiering and block "
+                        "instantiation on completion of tier2")
 #ifdef ENABLE_WASM_GC
       || !op.addBoolOption('\0', "wasm-gc", "Enable wasm GC features")
 #else

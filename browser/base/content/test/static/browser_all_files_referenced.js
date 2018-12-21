@@ -176,6 +176,7 @@ var whitelist = [
    isFromDevTools: true},
   {file: "chrome://devtools/skin/images/aboutdebugging-firefox-release.svg",
    isFromDevTools: true},
+  {file: "chrome://devtools/skin/images/next.svg", isFromDevTools: true},
 ];
 
 whitelist = new Set(whitelist.filter(item =>

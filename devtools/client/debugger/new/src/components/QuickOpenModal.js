@@ -35,7 +35,7 @@ import type {
   QuickOpenResult
 } from "../utils/quick-open";
 
-import type { SourceLocation, Source } from "../types";
+import type { Source } from "../types";
 import type { QuickOpenType } from "../reducers/quick-open";
 import type { Tab } from "../reducers/tabs";
 
@@ -51,10 +51,10 @@ type Props = {
   symbolsLoading: boolean,
   tabs: Tab[],
   shortcutsModalEnabled: boolean,
-  selectSpecificLocation: SourceLocation => void,
-  setQuickOpenQuery: (query: string) => void,
-  highlightLineRange: ({ start: number, end: number }) => void,
-  closeQuickOpen: () => void,
+  selectSpecificLocation: typeof actions.selectSpecificLocation,
+  setQuickOpenQuery: typeof actions.setQuickOpenQuery,
+  highlightLineRange: typeof actions.highlightLineRange,
+  closeQuickOpen: typeof actions.closeQuickOpen,
   toggleShortcutsModal: () => void
 };
 
@@ -387,6 +387,7 @@ export class QuickOpenModal extends Component<Props, State> {
           placeholder={L10N.getStr("sourceSearch.search2")}
           summaryMsg={this.getSummaryMessage()}
           showErrorEmoji={this.shouldShowErrorEmoji()}
+          isLoading={false}
           onChange={this.onChange}
           onKeyDown={this.onKeyDown}
           handleClose={this.closeModal}
@@ -433,11 +434,9 @@ function mapStateToProps(state) {
 export default connect(
   mapStateToProps,
   {
-    shortcutsModalEnabled: actions.shortcutsModalEnabled,
     selectSpecificLocation: actions.selectSpecificLocation,
     setQuickOpenQuery: actions.setQuickOpenQuery,
     highlightLineRange: actions.highlightLineRange,
-    closeQuickOpen: actions.closeQuickOpen,
-    toggleShortcutsModal: actions.toggleShortcutsModal
+    closeQuickOpen: actions.closeQuickOpen
   }
 )(QuickOpenModal);

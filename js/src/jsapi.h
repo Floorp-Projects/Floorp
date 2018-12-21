@@ -466,6 +466,7 @@ class JS_PUBLIC_API ContextOptions {
         ion_(true),
         asmJS_(true),
         wasm_(true),
+        wasmVerbose_(false),
         wasmBaseline_(true),
         wasmIon_(true),
 #ifdef ENABLE_WASM_CRANELIFT
@@ -530,23 +531,21 @@ class JS_PUBLIC_API ContextOptions {
     return *this;
   }
 
+  bool wasmVerbose() const { return wasmVerbose_; }
+  ContextOptions& setWasmVerbose(bool flag) {
+    wasmVerbose_ = flag;
+    return *this;
+  }
+
   bool wasmBaseline() const { return wasmBaseline_; }
   ContextOptions& setWasmBaseline(bool flag) {
     wasmBaseline_ = flag;
-    return *this;
-  }
-  ContextOptions& toggleWasmBaseline() {
-    wasmBaseline_ = !wasmBaseline_;
     return *this;
   }
 
   bool wasmIon() const { return wasmIon_; }
   ContextOptions& setWasmIon(bool flag) {
     wasmIon_ = flag;
-    return *this;
-  }
-  ContextOptions& toggleWasmIon() {
-    wasmIon_ = !wasmIon_;
     return *this;
   }
 
@@ -556,19 +555,11 @@ class JS_PUBLIC_API ContextOptions {
     wasmForceCranelift_ = flag;
     return *this;
   }
-  ContextOptions& toggleWasmForceCranelift() {
-    wasmForceCranelift_ = !wasmForceCranelift_;
-    return *this;
-  }
 #endif
 
   bool testWasmAwaitTier2() const { return testWasmAwaitTier2_; }
   ContextOptions& setTestWasmAwaitTier2(bool flag) {
     testWasmAwaitTier2_ = flag;
-    return *this;
-  }
-  ContextOptions& toggleTestWasmAwaitTier2() {
-    testWasmAwaitTier2_ = !testWasmAwaitTier2_;
     return *this;
   }
 
@@ -674,6 +665,7 @@ class JS_PUBLIC_API ContextOptions {
   bool ion_ : 1;
   bool asmJS_ : 1;
   bool wasm_ : 1;
+  bool wasmVerbose_ : 1;
   bool wasmBaseline_ : 1;
   bool wasmIon_ : 1;
 #ifdef ENABLE_WASM_CRANELIFT

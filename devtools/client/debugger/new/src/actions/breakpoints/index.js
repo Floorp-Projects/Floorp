@@ -156,10 +156,11 @@ export function toggleBreakpoints(
   breakpoints: Breakpoint[]
 ) {
   return async ({ dispatch }: ThunkArgs) => {
-    const promises = breakpoints.map(breakpoint =>
-      shouldDisableBreakpoints
-        ? dispatch(disableBreakpoint(breakpoint.location))
-        : dispatch(enableBreakpoint(breakpoint.location))
+    const promises = breakpoints.map(
+      breakpoint =>
+        shouldDisableBreakpoints
+          ? dispatch(disableBreakpoint(breakpoint.location))
+          : dispatch(enableBreakpoint(breakpoint.location))
     );
 
     await Promise.all(promises);
@@ -374,7 +375,7 @@ export function toggleDisabledBreakpoint(line: number, column?: number) {
   };
 }
 
-export function enableXHRBreakpoint(index: number, bp: XHRBreakpoint) {
+export function enableXHRBreakpoint(index: number, bp?: XHRBreakpoint) {
   return ({ dispatch, getState, client }: ThunkArgs) => {
     const xhrBreakpoints = getXHRBreakpoints(getState());
     const breakpoint = bp || xhrBreakpoints[index];
@@ -392,7 +393,7 @@ export function enableXHRBreakpoint(index: number, bp: XHRBreakpoint) {
   };
 }
 
-export function disableXHRBreakpoint(index: number, bp: XHRBreakpoint) {
+export function disableXHRBreakpoint(index: number, bp?: XHRBreakpoint) {
   return ({ dispatch, getState, client }: ThunkArgs) => {
     const xhrBreakpoints = getXHRBreakpoints(getState());
     const breakpoint = bp || xhrBreakpoints[index];
