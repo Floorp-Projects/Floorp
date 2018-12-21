@@ -7,7 +7,7 @@ object Config {
 
     // This version number should follow semantic versioning (MAJOR.MINOR.PATCH).
     // See https://semver.org/
-    const val componentsVersion = "0.35.1"
+    const val componentsVersion = "0.36.0"
 
     // Maven group ID used for all components
     const val componentsGroupId = "org.mozilla.components"
