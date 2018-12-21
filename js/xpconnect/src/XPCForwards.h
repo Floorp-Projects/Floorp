@@ -53,6 +53,4 @@ class nsXPCComponents_Utils;
 
 class AutoMarkingPtr;
 
-class xpcProperty;
-
 #endif /* xpcforwards_h___ */
