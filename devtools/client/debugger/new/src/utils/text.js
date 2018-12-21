@@ -35,8 +35,8 @@ export function formatKeyShortcut(shortcut: string): string {
       .replace(/Alt\+/g, "\u2325 ");
   }
   return shortcut
-    .replace(/CommandOrControl\+|CmdOrCtrl\+/g, `${L10N.getStr("ctrl")} `)
-    .replace(/Shift\+/g, "Shift ");
+    .replace(/CommandOrControl\+|CmdOrCtrl\+/g, `${L10N.getStr("ctrl")}+`)
+    .replace(/Shift\+/g, "Shift+");
 }
 
 /**
