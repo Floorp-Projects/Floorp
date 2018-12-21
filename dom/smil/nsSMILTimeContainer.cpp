@@ -95,7 +95,7 @@ void nsSMILTimeContainer::Resume(uint32_t aType) {
   }
 }
 
-nsSMILTime nsSMILTimeContainer::GetCurrentTime() const {
+nsSMILTime nsSMILTimeContainer::GetCurrentTimeAsSMILTime() const {
   // The following behaviour is consistent with:
   // http://www.w3.org/2003/01/REC-SVG11-20030114-errata
   //  #getCurrentTime_setCurrentTime_undefined_before_document_timeline_begin
@@ -139,7 +139,7 @@ void nsSMILTimeContainer::SetCurrentTime(nsSMILTime aSeekTo) {
 }
 
 nsSMILTime nsSMILTimeContainer::GetParentTime() const {
-  if (mParent) return mParent->GetCurrentTime();
+  if (mParent) return mParent->GetCurrentTimeAsSMILTime();
 
   return 0L;
 }

@@ -297,7 +297,7 @@ nsresult nsSMILTimedElement::BeginElementAt(double aOffsetSeconds) {
   nsSMILTimeContainer* container = GetTimeContainer();
   if (!container) return NS_ERROR_FAILURE;
 
-  nsSMILTime currentTime = container->GetCurrentTime();
+  nsSMILTime currentTime = container->GetCurrentTimeAsSMILTime();
   return AddInstanceTimeFromCurrentTime(currentTime, aOffsetSeconds, true);
 }
 
@@ -305,7 +305,7 @@ nsresult nsSMILTimedElement::EndElementAt(double aOffsetSeconds) {
   nsSMILTimeContainer* container = GetTimeContainer();
   if (!container) return NS_ERROR_FAILURE;
 
-  nsSMILTime currentTime = container->GetCurrentTime();
+  nsSMILTime currentTime = container->GetCurrentTimeAsSMILTime();
   return AddInstanceTimeFromCurrentTime(currentTime, aOffsetSeconds, false);
 }
 

@@ -302,7 +302,7 @@ void nsSMILTimeValueSpec::HandleEvent(Event* aEvent) {
     return;
   }
 
-  nsSMILTime currentTime = container->GetCurrentTime();
+  nsSMILTime currentTime = container->GetCurrentTimeAsSMILTime();
   nsSMILTimeValue newTime(currentTime);
   if (!ApplyOffset(newTime)) {
     NS_WARNING("New time generated from event overflows nsSMILTime, ignoring");
