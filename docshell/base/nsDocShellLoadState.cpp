@@ -13,8 +13,9 @@
 #include "mozilla/OriginAttributes.h"
 #include "mozilla/NullPrincipal.h"
 
-nsDocShellLoadState::nsDocShellLoadState()
-    : mResultPrincipalURIIsSome(false),
+nsDocShellLoadState::nsDocShellLoadState(nsIURI* aURI)
+    : mURI(aURI),
+      mResultPrincipalURIIsSome(false),
       mKeepResultPrincipalURIIfSet(false),
       mLoadReplace(false),
       mInheritPrincipal(false),
@@ -30,7 +31,9 @@ nsDocShellLoadState::nsDocShellLoadState()
       mFirstParty(false),
       mTypeHint(VoidCString()),
       mFileName(VoidString()),
-      mIsFromProcessingFrameAttributes(false) {}
+      mIsFromProcessingFrameAttributes(false) {
+  MOZ_ASSERT(aURI, "Cannot create a LoadState with a null URI!");
+}
 
 nsDocShellLoadState::~nsDocShellLoadState() {}
 

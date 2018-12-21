@@ -27,7 +27,7 @@ class nsDocShellLoadState final {
  public:
   NS_INLINE_DECL_REFCOUNTING(nsDocShellLoadState);
 
-  nsDocShellLoadState();
+  explicit nsDocShellLoadState(nsIURI* aURI);
 
   // Getters and Setters
 
