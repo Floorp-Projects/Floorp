@@ -6,6 +6,7 @@ package mozilla.components.service.glean
 
 import android.arch.lifecycle.ProcessLifecycleOwner
 import android.content.Context
+import android.os.Build
 import android.support.annotation.VisibleForTesting
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -22,6 +23,7 @@ import mozilla.components.service.glean.scheduler.GleanLifecycleObserver
 import mozilla.components.service.glean.storages.ExperimentsStorageEngine
 import mozilla.components.service.glean.storages.StorageEngineManager
 import mozilla.components.service.glean.metrics.Baseline
+import mozilla.components.service.glean.utils.StringUtils
 import mozilla.components.support.base.log.logger.Logger
 import java.io.File
 
@@ -182,6 +184,26 @@ open class GleanInternalAPI {
 
         // Set the OS type
         Baseline.os.set("Android")
+
+        // Set the OS version
+        // https://developer.android.com/reference/android/os/Build.VERSION
+        Baseline.osVersion.set(Build.VERSION.SDK_INT.toString())
+
+        // Set the device string
+        // https://developer.android.com/reference/android/os/Build
+        // We limit the device descriptor to 32 characters because it can get long. We give fewer
+        // characters to the manufacturer because we're less likely to have manufacturers with
+        // similar names than we are for a manufacturer to have two devices with the similar names
+        // (e.g. Galaxy S6 vs. Galaxy Note 6).
+        @Suppress("MagicNumber")
+        Baseline.device.set(
+            StringUtils.safeSubstring(Build.MANUFACTURER, 0, 12) +
+            '-' +
+            StringUtils.safeSubstring(Build.MODEL, 0, 19)
+        )
+
+        // Set the CPU architecture
+        Baseline.architecture.set(Build.SUPPORTED_ABIS[0])
     }
 
     /**

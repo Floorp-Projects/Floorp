@@ -8,19 +8,23 @@ baseline:
   ## TODO: Some metrics are commented out below until we implement them as part
   ## of 1497894 and its dependent bugs
 
-  # sessions:
-  #   type: counter 
-  #   description: |
-  #     The number of foreground sessions since the last ping upload.
-  #   bugs:
-  #     - 1497894
-  #   notification_emails:
-  #     - telemetry-client-dev@mozilla.com
+  sessions:
+    type: counter
+    description: |
+      The number of foreground sessions since the last ping upload.
+    send_in_pings:
+      - baseline
+    bugs:
+      - 1497894
+    notification_emails:
+      - telemetry-client-dev@mozilla.com
 
   # durations:
   #   type: timespan
   #   description: |
   #     The combined duration of all the foreground sessions since the last upload.
+  #   send_in_pings:
+  #     - baseline
   #   bugs:
   #     - 1497894
   #   notification_emails:
@@ -29,6 +33,8 @@ baseline:
   os:
     type: string
     lifetime: application
+    send_in_pings:
+      - baseline
     description: |
       The name of the operating system.
     bugs:
@@ -36,40 +42,48 @@ baseline:
     notification_emails:
       - telemetry-client-dev@mozilla.com
 
-  # os_version:
-  #   type: string
-  #   lifetime: application
-  #   description: |
-  #     The version of the operating system.
-  #   bugs:
-  #     - 1497894
-  #   notification_emails:
-  #     - telemetry-client-dev@mozilla.com
+  os_version:
+    type: string
+    lifetime: application
+    send_in_pings:
+      - baseline
+    description: |
+      The version of the operating system.
+    bugs:
+      - 1497894
+    notification_emails:
+      - telemetry-client-dev@mozilla.com
 
-  # device:
-  #   type: string
-  #   lifetime: application
-  #   description: |
-  #     The manufacturer and model of the device.
-  #   bugs:
-  #     - 1497894
-  #   notification_emails:
-  #     - telemetry-client-dev@mozilla.com
+  device:
+    type: string
+    lifetime: application
+    send_in_pings:
+      - baseline
+    description: |
+      The manufacturer and model of the device.
+    bugs:
+      - 1497894
+    notification_emails:
+      - telemetry-client-dev@mozilla.com
 
-  # architecture:
-  #   type: string
-  #   lifetime: application
-  #   description: |
-  #     The architecture of the device, (e.g. "arm", "x86").
-  #   bugs:
-  #     - 1497894
-  #   notification_emails:
-  #     - telemetry-client-dev@mozilla.com
+  architecture:
+    type: string
+    lifetime: application
+    send_in_pings:
+      - baseline
+    description: |
+      The architecture of the device, (e.g. "arm", "x86").
+    bugs:
+      - 1497894
+    notification_emails:
+      - telemetry-client-dev@mozilla.com
 
   # timezone:
   #   type: number
   #   description: |
   #     The timezone of the device, in offset from UTC.
+  #   send_in_pings:
+  #     - baseline
   #   bugs:
   #     - 1497894
   #   notification_emails:

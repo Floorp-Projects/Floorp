@@ -12,6 +12,7 @@ import mozilla.components.service.glean.net.HttpPingUploader
 import mozilla.components.service.glean.storages.EventsStorageEngine
 import mozilla.components.service.glean.storages.ExperimentsStorageEngine
 import mozilla.components.service.glean.storages.StringsStorageEngine
+import mozilla.components.service.glean.metrics.Baseline
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.json.JSONObject
@@ -189,6 +190,7 @@ class GleanTest {
 
         try {
             click.record("buttonA")
+            Baseline.sessions.add()
 
             Glean.handleEvent(Glean.PingEvent.Background)
 
@@ -202,6 +204,30 @@ class GleanTest {
             val eventsJson = JSONObject(requests["events"])
             checkPingSchema(eventsJson)
             assertEquals(1, eventsJson.getJSONArray("events")!!.length())
+
+            val baselineJson = JSONObject(requests["baseline"])
+            checkPingSchema(baselineJson)
+
+            val expectedBaselineStringMetrics = arrayOf(
+                "baseline.os",
+                "baseline.os_version",
+                "baseline.device",
+                "baseline.architecture"
+            )
+            val baselineStringMetrics = baselineJson.getJSONObject("metrics")!!.getJSONObject("string")!!
+            assertEquals(expectedBaselineStringMetrics.size, baselineStringMetrics.length())
+            for (metric in expectedBaselineStringMetrics) {
+                assertNotNull(baselineStringMetrics.get(metric))
+            }
+
+            val expectedBaselineCounterMetrics = arrayOf(
+                "baseline.sessions"
+            )
+            val baselineCounterMetrics = baselineJson.getJSONObject("metrics")!!.getJSONObject("counter")!!
+            assertEquals(expectedBaselineCounterMetrics.size, baselineCounterMetrics.length())
+            for (metric in expectedBaselineCounterMetrics) {
+                assertNotNull(baselineCounterMetrics.get(metric))
+            }
         } finally {
             Glean.httpPingUploader = realClient
             server.shutdown()
