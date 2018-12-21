@@ -579,14 +579,16 @@ nsresult MediaEngineWebRTCMicrophoneSource::Start(
 
   RefPtr<MediaEngineWebRTCMicrophoneSource> that = this;
   RefPtr<MediaStreamGraphImpl> gripGraph = mStream->GraphImpl();
-  NS_DispatchToMainThread(media::NewRunnableFrom(
-      [that, graph = std::move(gripGraph), deviceID]() mutable {
+  NS_DispatchToMainThread(
+      media::NewRunnableFrom([that, graph = std::move(gripGraph), deviceID,
+                              stream = mStream, track = mTrackID]() mutable {
         if (graph) {
           graph->AppendMessage(MakeUnique<StartStopMessage>(
               that->mInputProcessing, StartStopMessage::Start));
         }
 
-        that->mStream->OpenAudioInput(deviceID, that->mInputProcessing);
+        stream->OpenAudioInput(deviceID, that->mInputProcessing);
+        stream->SetPullingEnabled(track, true);
 
         return NS_OK;
       }));
@@ -614,8 +616,9 @@ nsresult MediaEngineWebRTCMicrophoneSource::Stop(
 
   RefPtr<MediaEngineWebRTCMicrophoneSource> that = this;
   RefPtr<MediaStreamGraphImpl> gripGraph = mStream->GraphImpl();
-  NS_DispatchToMainThread(media::NewRunnableFrom(
-      [that, graph = std::move(gripGraph), stream = mStream]() mutable {
+  NS_DispatchToMainThread(
+      media::NewRunnableFrom([that, graph = std::move(gripGraph),
+                              stream = mStream, track = mTrackID]() mutable {
         if (graph) {
           graph->AppendMessage(MakeUnique<StartStopMessage>(
               that->mInputProcessing, StartStopMessage::Stop));
@@ -624,6 +627,7 @@ nsresult MediaEngineWebRTCMicrophoneSource::Stop(
         CubebUtils::AudioDeviceID deviceID = that->mDeviceInfo->DeviceID();
         Maybe<CubebUtils::AudioDeviceID> id = Some(deviceID);
         stream->CloseAudioInput(id, that->mInputProcessing);
+        stream->SetPullingEnabled(track, false);
 
         return NS_OK;
       }));
