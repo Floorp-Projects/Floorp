@@ -185,7 +185,6 @@ dom/flex/**
 dom/grid/**
 dom/html/**
 dom/jsurl/**
-dom/localstorage/**
 dom/media/test/**
 dom/media/tests/**
 dom/media/webaudio/**

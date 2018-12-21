@@ -109,6 +109,7 @@ import static org.mozilla.gecko.Tabs.INTENT_EXTRA_TAB_ID;
 import static org.mozilla.gecko.Tabs.INVALID_TAB_ID;
 import static org.mozilla.gecko.mma.MmaDelegate.DOWNLOAD_MEDIA_SAVED_IMAGE;
 import static org.mozilla.gecko.mma.MmaDelegate.READER_AVAILABLE;
+import static org.mozilla.gecko.util.JavaUtil.getBundleSizeInBytes;
 
 public abstract class GeckoApp extends GeckoActivity
                                implements AnchoredPopup.OnVisibilityChangeListener,
@@ -156,6 +157,11 @@ public abstract class GeckoApp extends GeckoActivity
 
     public static final String SAVED_STATE_IN_BACKGROUND   = "inBackground";
     public static final String SAVED_STATE_PRIVATE_SESSION = "privateSession";
+    /**
+     * Speculative value for the maximum size the Activity Bundle can have in the hope to avoid
+     * TransactionTooLarge exceptions.
+     */
+    protected static final int MAX_BUNDLE_SIZE_BYTES = 300_000;
 
     // Delay before running one-time "cleanup" tasks that may be needed
     // after a version upgrade.
@@ -635,6 +641,11 @@ public abstract class GeckoApp extends GeckoActivity
                 } catch (final InterruptedException e) { }
             }
             outState.putString(SAVED_STATE_PRIVATE_SESSION, mPrivateBrowsingSession);
+
+            // Make sure we are not bloating the Bundle which can result in TransactionTooLargeException
+            if (getBundleSizeInBytes(outState) > MAX_BUNDLE_SIZE_BYTES) {
+                outState.remove(SAVED_STATE_PRIVATE_SESSION);
+            }
         }
 
         outState.putBoolean(SAVED_STATE_IN_BACKGROUND, isApplicationInBackground());

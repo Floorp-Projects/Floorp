@@ -3,9 +3,8 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-async function testSteps()
-{
-  const principal = getPrincipal("http://example.com")
+async function testSteps() {
+  const principal = getPrincipal("http://example.com");
 
   const dataFile =
     getRelativeFile("storage/default/http+++example.com/ls/data.sqlite");
@@ -93,7 +92,7 @@ async function testSteps()
     }
 
     let usage = await readUsageFromUsageFile();
-    ok (usage == data.usage, "Correct usage");
+    ok(usage == data.usage, "Correct usage");
   }
 
   async function clearTestOrigin() {
