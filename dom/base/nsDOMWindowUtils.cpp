@@ -1153,9 +1153,18 @@ nsDOMWindowUtils::NodesFromRect(float aX, float aY, float aTopSize,
   nsCOMPtr<nsIDocument> doc = GetDocument();
   NS_ENSURE_STATE(doc);
 
-  return doc->NodesFromRectHelper(aX, aY, aTopSize, aRightSize, aBottomSize,
-                                  aLeftSize, aIgnoreRootScrollFrame,
-                                  aFlushLayout, aReturn);
+  nsSimpleContentList* list = new nsSimpleContentList(doc);
+  NS_ADDREF(list);
+  *aReturn = list;
+
+  AutoTArray<RefPtr<nsINode>, 8> nodes;
+  doc->NodesFromRect(aX, aY, aTopSize, aRightSize, aBottomSize, aLeftSize,
+                     aIgnoreRootScrollFrame, aFlushLayout, nodes);
+  list->SetCapacity(nodes.Length());
+  for (auto& node : nodes) {
+    list->AppendElement(node->AsContent());
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
