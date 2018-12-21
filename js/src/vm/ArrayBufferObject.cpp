@@ -768,12 +768,14 @@ static bool CreateBuffer(
   RawbufT* buffer = RawbufT::Allocate(initialSize, maxSize);
   if (!buffer) {
 #ifdef WASM_HUGE_MEMORY
+    wasm::Log(cx, "huge Memory allocation failed");
     ReportOutOfMemory(cx);
     return false;
 #else
     // If we fail, and have a maxSize, try to reserve the biggest chunk in
     // the range [initialSize, maxSize) using log backoff.
     if (!maxSize) {
+      wasm::Log(cx, "new Memory({initial=%u bytes}) failed", initialSize);
       ReportOutOfMemory(cx);
       return false;
     }
@@ -789,6 +791,7 @@ static bool CreateBuffer(
     }
 
     if (!buffer) {
+      wasm::Log(cx, "new Memory({initial=%u bytes}) failed", initialSize);
       ReportOutOfMemory(cx);
       return false;
     }
@@ -824,6 +827,22 @@ static bool CreateBuffer(
     }
   } else {
     allocatedSinceLastTrigger = 0;
+  }
+
+  if (maxSize) {
+#ifdef WASM_HUGE_MEMORY
+    wasm::Log(cx, "new Memory({initial:%u bytes, maximum:%u bytes}) succeeded",
+              unsigned(initialSize), unsigned(*maxSize));
+#else
+    wasm::Log(cx,
+              "new Memory({initial:%u bytes, maximum:%u bytes}) succeeded "
+              "with internal maximum of %u",
+              unsigned(initialSize), unsigned(*maxSize),
+              unsigned(object->wasmMaxSize().value()));
+#endif
+  } else {
+    wasm::Log(cx, "new Memory({initial:%u bytes}) succeeded",
+              unsigned(initialSize));
   }
 
   return true;
