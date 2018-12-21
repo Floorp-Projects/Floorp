@@ -7,7 +7,7 @@
 import PropTypes from "prop-types";
 import React, { PureComponent } from "react";
 import ReactDOM from "react-dom";
-import { connect } from "react-redux";
+import { connect } from "../../utils/connect";
 import classnames from "classnames";
 import { debounce } from "lodash";
 

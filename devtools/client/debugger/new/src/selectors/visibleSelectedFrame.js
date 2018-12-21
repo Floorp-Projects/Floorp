@@ -7,7 +7,7 @@
 import { getSelectedLocation } from "../reducers/sources";
 import { getSelectedFrame } from "../reducers/pause";
 import { isOriginalId } from "devtools-source-map";
-import { createSelector } from "reselect";
+import { createSelector } from "../utils/createSelector";
 
 import type { Frame, SourceLocation } from "../types";
 
