@@ -98,11 +98,14 @@ var AttributionCode = {
           let referrer = attributionSvc.getReferrerUrl(appPath);
           let params = new URL(referrer).searchParams;
           for (let key of ATTR_CODE_KEYS) {
-            let utm_key = `utm_${key}`;
-            if (params.has(utm_key)) {
-              let value = params.get(utm_key);
-              if (value && ATTR_CODE_VALUE_REGEX.test(value)) {
-                gCachedAttrData[key] = value;
+            // We support the key prefixed with utm_ or not, but intentionally
+            // choose non-utm params over utm params.
+            for (let paramKey of [`utm_${key}`, key]) {
+              if (params.has(paramKey)) {
+                let value = params.get(paramKey);
+                if (value && ATTR_CODE_VALUE_REGEX.test(value)) {
+                  gCachedAttrData[key] = value;
+                }
               }
             }
           }
