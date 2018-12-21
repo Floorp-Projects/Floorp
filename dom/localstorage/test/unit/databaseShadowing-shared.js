@@ -1,3 +1,5 @@
+/* import-globals-from head.js */
+
 const principalInfos = [
   { url: "http://example.com", attrs: {} },
 
