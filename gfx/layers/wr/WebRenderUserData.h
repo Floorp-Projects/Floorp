@@ -73,6 +73,7 @@ class WebRenderUserData {
     eAnimation,
     eCanvas,
     eGroup,
+    eMask,
   };
 
   virtual UserDataType GetType() = 0;
