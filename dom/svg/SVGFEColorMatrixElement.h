@@ -17,7 +17,7 @@ nsresult NS_NewSVGFEColorMatrixElement(
 namespace mozilla {
 namespace dom {
 
-typedef nsSVGFE SVGFEColorMatrixElementBase;
+typedef SVGFE SVGFEColorMatrixElementBase;
 
 class SVGFEColorMatrixElement : public SVGFEColorMatrixElementBase {
   friend nsresult(::NS_NewSVGFEColorMatrixElement(
