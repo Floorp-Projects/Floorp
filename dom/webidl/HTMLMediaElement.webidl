@@ -211,6 +211,7 @@ partial interface HTMLMediaElement {
  * - HasSuspendTaint() is for querying that the element's decoder cannot suspend
  *   video decoding because it has been tainted by an operation, such as
  *   drawImage().
+ * - isVisible is a boolean value which indicate whether media element is visible.
  * - isVideoDecodingSuspended() is used to know whether video decoding has suspended.
  */
 partial interface HTMLMediaElement {
@@ -219,6 +220,9 @@ partial interface HTMLMediaElement {
 
   [Pref="media.test.video-suspend"]
   boolean hasSuspendTaint();
+
+  [ChromeOnly]
+  readonly attribute boolean isVisible;
 
   [ChromeOnly]
   readonly attribute boolean isVideoDecodingSuspended;
