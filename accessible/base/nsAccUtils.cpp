@@ -439,3 +439,69 @@ bool nsAccUtils::PersistentPropertiesToArray(nsIPersistentProperties* aProps,
 
   return true;
 }
+
+bool nsAccUtils::IsARIALive(const Accessible* aAccessible) {
+  // Get computed aria-live property based on the closest container with the
+  // attribute. Inner nodes override outer nodes within the same
+  // document, but nodes in outer documents override nodes in inner documents.
+  // This should be the same as the container-live attribute, but we don't need
+  // the other container-* attributes, so we can't use the same function.
+  nsAutoString live;
+  nsIContent* startContent = aAccessible->GetContent();
+  while (startContent) {
+    nsIDocument* doc = startContent->GetComposedDoc();
+    if (!doc) {
+      break;
+    }
+
+    dom::Element* aTopEl = doc->GetRootElement();
+    nsIContent* ancestor = startContent;
+    while (ancestor) {
+      nsAutoString docLive;
+      const nsRoleMapEntry* role = nullptr;
+      if (ancestor->IsElement()) {
+        role = aria::GetRoleMap(ancestor->AsElement());
+      }
+      if (HasDefinedARIAToken(ancestor, nsGkAtoms::aria_live)) {
+        ancestor->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::aria_live,
+                                       docLive);
+      } else if (role) {
+        GetLiveAttrValue(role->liveAttRule, docLive);
+      }
+      if (!docLive.IsEmpty()) {
+        live = docLive;
+        break;
+      }
+
+      if (ancestor == aTopEl) {
+        break;
+      }
+
+      ancestor = ancestor->GetParent();
+      if (!ancestor) {
+        ancestor = aTopEl;  // Use <body>/<frameset>
+      }
+    }
+
+    // Allow ARIA live region markup from outer documents to override.
+    nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem = doc->GetDocShell();
+    if (!docShellTreeItem) {
+      break;
+    }
+
+    nsCOMPtr<nsIDocShellTreeItem> sameTypeParent;
+    docShellTreeItem->GetSameTypeParent(getter_AddRefs(sameTypeParent));
+    if (!sameTypeParent || sameTypeParent == docShellTreeItem) {
+      break;
+    }
+
+    nsIDocument* parentDoc = doc->GetParentDocument();
+    if (!parentDoc) {
+      break;
+    }
+
+    startContent = parentDoc->FindContentForSubDocument(doc);
+  }
+
+  return !live.IsEmpty() && !live.EqualsLiteral("off");
+}
