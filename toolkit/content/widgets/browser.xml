@@ -762,16 +762,6 @@
         </body>
       </method>
 
-      <method name="notifyAudibleAutoplayMediaOccurred">
-        <body>
-          <![CDATA[
-            let event = document.createEvent("Events");
-            event.initEvent("AudibleAutoplayMediaOccurred", true, false);
-            this.dispatchEvent(event);
-          ]]>
-        </body>
-      </method>
-
       <method name="notifyGloballyAutoplayBlocked">
         <body>
           <![CDATA[
@@ -1121,7 +1111,6 @@
             this.messageManager.addMessageListener("AudioPlayback:ActiveMediaBlockStart", this);
             this.messageManager.addMessageListener("AudioPlayback:ActiveMediaBlockStop", this);
             this.messageManager.addMessageListener("UnselectedTabHover:Toggle", this);
-            this.messageManager.addMessageListener("AudibleAutoplayMediaOccurred", this);
             this.messageManager.addMessageListener("GloballyAutoplayBlocked", this);
 
             if (this.hasAttribute("selectmenulist")) {
@@ -1263,9 +1252,6 @@
               this._shouldSendUnselectedTabHover = data.enable ?
                 ++this._unselectedTabHoverMessageListenerCount > 0 :
                 --this._unselectedTabHoverMessageListenerCount == 0;
-              break;
-            case "AudibleAutoplayMediaOccurred":
-              this.notifyAudibleAutoplayMediaOccurred();
               break;
             case "GloballyAutoplayBlocked":
               this.notifyGloballyAutoplayBlocked();
