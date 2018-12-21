@@ -5,6 +5,7 @@
 use api::{AsyncBlobImageRasterizer, BlobImageRequest, BlobImageParams, BlobImageResult};
 use api::{DocumentId, PipelineId, ApiMsg, FrameMsg, ResourceUpdate, ExternalEvent, Epoch};
 use api::{BuiltDisplayList, ColorF, LayoutSize, NotificationRequest, Checkpoint, IdNamespace};
+use api::{MemoryReport, VoidPtrToSizeFn};
 use api::channel::MsgSender;
 #[cfg(feature = "capture")]
 use capture::CaptureConfig;
@@ -168,6 +169,7 @@ pub enum SceneBuilderRequest {
     SimulateLongSceneBuild(u32),
     SimulateLongLowPrioritySceneBuild(u32),
     Stop,
+    ReportMemory(MemoryReport, ::api::channel::MsgSender<MemoryReport>),
     #[cfg(feature = "capture")]
     SaveScene(CaptureConfig),
     #[cfg(feature = "replay")]
@@ -212,6 +214,22 @@ pub struct DocumentResources {
     pub radial_grad_interner: RadialGradientDataInterner,
     pub text_run_interner: TextRunDataInterner,
     pub yuv_image_interner: YuvImageDataInterner,
+}
+
+impl DocumentResources {
+    /// Reports CPU heap memory used by the interners.
+    fn report_memory(
+        &self,
+        op: VoidPtrToSizeFn,
+        eop: VoidPtrToSizeFn,
+        r: &mut MemoryReport,
+    ) {
+        r.interners += self.clip_interner.malloc_size_of(op, eop);
+        r.interners += self.prim_interner.malloc_size_of(op, eop);
+        r.interners += self.linear_grad_interner.malloc_size_of(op, eop);
+        r.interners += self.radial_grad_interner.malloc_size_of(op, eop);
+        r.interners += self.text_run_interner.malloc_size_of(op, eop);
+    }
 }
 
 // Access to `DocumentResources` interners by `Internable`
@@ -275,6 +293,8 @@ pub struct SceneBuilder {
     config: FrameBuilderConfig,
     hooks: Option<Box<SceneBuilderHooks + Send>>,
     simulate_slow_ms: u32,
+    size_of_op: Option<VoidPtrToSizeFn>,
+    enclosing_size_of_op: Option<VoidPtrToSizeFn>,
 }
 
 impl SceneBuilder {
@@ -282,6 +302,8 @@ impl SceneBuilder {
         config: FrameBuilderConfig,
         api_tx: MsgSender<ApiMsg>,
         hooks: Option<Box<SceneBuilderHooks + Send>>,
+        size_of_op: Option<VoidPtrToSizeFn>,
+        enclosing_size_of_op: Option<VoidPtrToSizeFn>,
     ) -> (Self, Sender<SceneBuilderRequest>, Receiver<SceneBuilderResult>) {
         let (in_tx, in_rx) = channel();
         let (out_tx, out_rx) = channel();
@@ -293,6 +315,8 @@ impl SceneBuilder {
                 api_tx,
                 config,
                 hooks,
+                size_of_op,
+                enclosing_size_of_op,
                 simulate_slow_ms: 0,
             },
             in_tx,
@@ -351,6 +375,10 @@ impl SceneBuilder {
                     // We don't need to send a WakeUp to api_tx because we only
                     // get the Stop when the RenderBackend loop is exiting.
                     break;
+                }
+                Ok(SceneBuilderRequest::ReportMemory(mut report, tx)) => {
+                    report += self.report_memory();
+                    tx.send(report).unwrap();
                 }
                 Ok(SceneBuilderRequest::SimulateLongSceneBuild(time_ms)) => {
                     self.simulate_slow_ms = time_ms
@@ -732,6 +760,18 @@ impl SceneBuilder {
                 hooks.post_empty_scene_build();
             }
         }
+    }
+
+    /// Reports CPU heap memory used by the SceneBuilder.
+    fn report_memory(&self) -> MemoryReport {
+        let op = self.size_of_op.unwrap();
+        let eop = self.enclosing_size_of_op.unwrap();
+        let mut report = MemoryReport::default();
+        for doc in self.documents.values() {
+            doc.resources.report_memory(op, eop, &mut report);
+        }
+
+        report
     }
 }
 

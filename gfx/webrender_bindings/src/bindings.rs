@@ -996,6 +996,7 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
                                 shaders: Option<&mut WrShaders>,
                                 thread_pool: *mut WrThreadPool,
                                 size_of_op: VoidPtrToSizeFn,
+                                enclosing_size_of_op: VoidPtrToSizeFn,
                                 out_handle: &mut *mut DocumentHandle,
                                 out_renderer: &mut *mut Renderer,
                                 out_max_texture_size: *mut i32)
@@ -1051,6 +1052,7 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
         workers: Some(workers.clone()),
         thread_listener: Some(Box::new(GeckoProfilerThreadListener::new())),
         size_of_op: Some(size_of_op),
+        enclosing_size_of_op: Some(enclosing_size_of_op),
         cached_programs,
         resource_override_path: unsafe {
             let override_charptr = gfx_wr_resource_path_override();

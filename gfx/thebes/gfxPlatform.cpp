@@ -707,6 +707,8 @@ WebRenderMemoryReporter::CollectReports(nsIHandleReportCallback* aHandleReport,
         helper.Report(aReport.rasterized_blobs,
                       "resource-cache/rasterized-blobs");
         helper.Report(aReport.shader_cache, "shader-cache");
+        helper.Report(aReport.data_stores, "interning/data-stores");
+        helper.Report(aReport.interners, "interning/interners");
 
         // GPU Memory.
         helper.ReportTexture(aReport.gpu_cache_textures, "gpu-cache");
