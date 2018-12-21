@@ -106,8 +106,6 @@ dnl ========================================================
 dnl Checks for compilers.
 dnl ========================================================
 
-AR_FLAGS='crs $@'
-
 if test "$COMPILE_ENVIRONMENT"; then
 
 if test "$target" != "$host"; then
@@ -122,7 +120,6 @@ else
     AC_PROG_CXX
     AC_PROG_RANLIB
     MOZ_PATH_PROGS(AS, $AS as, $CC)
-    AC_CHECK_PROGS(AR, ar, :)
     AC_CHECK_PROGS(STRIP, strip, :)
     AC_CHECK_PROGS(OTOOL, otool, :)
 fi
@@ -730,16 +727,6 @@ case "$target" in
         fi
     else
         TARGET_COMPILER_ABI=msvc
-        case "$LINKER" in
-        *lld*)
-            AR='llvm-lib'
-            AR_FLAGS='-llvmlibthin -out:$@'
-            ;;
-        *)
-            AR='lib'
-            AR_FLAGS='-NOLOGO -OUT:$@'
-            ;;
-        esac
         RANLIB='echo not_ranlib'
         STRIP='echo not_strip'
         PKG_SKIP_STRIP=1
@@ -3609,8 +3596,6 @@ dnl = Maintainer debug option (no --enable equivalent)
 dnl =
 dnl ========================================================
 
-AC_SUBST(AR)
-AC_SUBST(AR_FLAGS)
 AC_SUBST(NM)
 AC_SUBST_LIST(ASFLAGS)
 AC_SUBST(RCFLAGS)
@@ -4167,12 +4152,10 @@ unset MOZ_BUILD_APP
 export DIST
 export MOZ_LINKER
 export ZLIB_IN_MOZGLUE
-export AR
 export RANLIB
 export CPP
 export CC
 export CXX
-export ARFLAGS
 export CPPFLAGS
 export CFLAGS
 export CXXFLAGS
