@@ -1557,6 +1557,12 @@ VARCACHE_PREF(
   RelaxedAtomicUint32, 1000
 )
 
+VARCACHE_PREF(
+  "media.test.video-suspend",
+   MediaTestVideoSuspend,
+  RelaxedAtomicBool, false
+)
+
 //---------------------------------------------------------------------------
 // Network prefs
 //---------------------------------------------------------------------------
