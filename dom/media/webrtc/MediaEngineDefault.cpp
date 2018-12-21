@@ -160,7 +160,7 @@ static void ReleaseFrame(layers::PlanarYCbCrData& aData) {
   free(aData.mYChannel);
 }
 
-void MediaEngineDefaultVideoSource::SetTrack(
+nsresult MediaEngineDefaultVideoSource::SetTrack(
     const RefPtr<const AllocationHandle>& aHandle,
     const RefPtr<SourceMediaStream>& aStream, TrackID aTrackID,
     const PrincipalHandle& aPrincipal) {
@@ -177,6 +177,7 @@ void MediaEngineDefaultVideoSource::SetTrack(
   }
   aStream->AddTrack(aTrackID, new VideoSegment(),
                     SourceMediaStream::ADDTRACK_QUEUED);
+  return NS_OK;
 }
 
 nsresult MediaEngineDefaultVideoSource::Start(
@@ -423,7 +424,7 @@ nsresult MediaEngineDefaultAudioSource::Deallocate(
   return NS_OK;
 }
 
-void MediaEngineDefaultAudioSource::SetTrack(
+nsresult MediaEngineDefaultAudioSource::SetTrack(
     const RefPtr<const AllocationHandle>& aHandle,
     const RefPtr<SourceMediaStream>& aStream, TrackID aTrackID,
     const PrincipalHandle& aPrincipal) {
@@ -438,6 +439,7 @@ void MediaEngineDefaultAudioSource::SetTrack(
   mTrackID = aTrackID;
   aStream->AddAudioTrack(aTrackID, aStream->GraphRate(), new AudioSegment(),
                          SourceMediaStream::ADDTRACK_QUEUED);
+  return NS_OK;
 }
 
 nsresult MediaEngineDefaultAudioSource::Start(
@@ -454,16 +456,8 @@ nsresult MediaEngineDefaultAudioSource::Start(
     mSineGenerator = new SineWaveGenerator(mStream->GraphRate(), mFreq);
   }
 
-  {
-    MutexAutoLock lock(mMutex);
-    mState = kStarted;
-  }
-
-  NS_DispatchToMainThread(
-      NS_NewRunnableFunction(__func__, [stream = mStream, track = mTrackID]() {
-        stream->SetPullingEnabled(track, true);
-      }));
-
+  MutexAutoLock lock(mMutex);
+  mState = kStarted;
   return NS_OK;
 }
 
@@ -477,15 +471,8 @@ nsresult MediaEngineDefaultAudioSource::Stop(
 
   MOZ_ASSERT(mState == kStarted);
 
-  {
-    MutexAutoLock lock(mMutex);
-    mState = kStopped;
-  }
-
-  NS_DispatchToMainThread(
-      NS_NewRunnableFunction(__func__, [stream = mStream, track = mTrackID]() {
-        stream->SetPullingEnabled(track, false);
-      }));
+  MutexAutoLock lock(mMutex);
+  mState = kStopped;
   return NS_OK;
 }
 
