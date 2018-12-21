@@ -6,10 +6,12 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import os
 
+from StringIO import StringIO
 from buildconfig import topsrcdir
 from common import BaseConfigureTest
 from mozunit import MockedOpen, main
 from mozbuild.configure.options import InvalidOptionError
+from mozbuild.configure.util import Version
 
 
 class TestToolkitMozConfigure(BaseConfigureTest):
@@ -39,6 +41,64 @@ class TestToolkitMozConfigure(BaseConfigureTest):
 
     def test_developer_options_release(self):
         self.test_developer_options('42.0')
+
+    def test_valid_yasm_version(self):
+        out = StringIO()
+        sandbox = self.get_sandbox({}, {}, out=out)
+        func = sandbox._depends[sandbox['valid_yasm_version']]._func
+
+        # Missing yasm is not an error when nothing requires it.
+        func(None, False, False)
+
+        # Any version of yasm works when nothing requires it.
+        func(Version('1.0'), False, False)
+
+        # Any version of yasm works when something requires any version.
+        func(Version('1.0'), True, False)
+        func(Version('1.0'), True, True)
+        func(Version('1.0'), False, True)
+
+        # A version of yasm greater than any requirement works.
+        func(Version('1.5'), Version('1.0'), True)
+        func(Version('1.5'), True, Version('1.0'))
+        func(Version('1.5'), Version('1.1'), Version('1.0'))
+
+        out.truncate(0)
+        with self.assertRaises(SystemExit):
+            func(None, Version('1.0'), False)
+
+        self.assertEqual(
+            out.getvalue(),
+            'ERROR: Yasm is required to build with vpx, but you do not appear to have Yasm installed.\n'
+        )
+
+        out.truncate(0)
+        with self.assertRaises(SystemExit):
+            func(None, Version('1.0'), Version('1.0'))
+
+        self.assertEqual(
+            out.getvalue(),
+            'ERROR: Yasm is required to build with jpeg and vpx, but you do not appear to have Yasm installed.\n'
+        )
+
+        out.truncate(0)
+        with self.assertRaises(SystemExit):
+            func(Version('1.0'), Version('1.1'), Version('1.0'))
+
+        self.assertEqual(
+            out.getvalue(),
+            'ERROR: Yasm version 1.1 or greater is required to build with vpx.\n'
+        )
+
+        out.truncate(0)
+        with self.assertRaises(SystemExit):
+            func(Version('1.0'), True, Version('1.0.1'))
+
+        self.assertEqual(
+            out.getvalue(),
+            'ERROR: Yasm version 1.0.1 or greater is required to build with jpeg.\n'
+        )
+
 
 if __name__ == '__main__':
     main()
