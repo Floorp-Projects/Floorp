@@ -80,7 +80,7 @@ typedef nsClassHashtable<nsCStringHashKey, ArchivedOriginInfo>
  ******************************************************************************/
 
 // Major schema version. Bump for almost everything.
-const uint32_t kMajorSchemaVersion = 1;
+const uint32_t kMajorSchemaVersion = 2;
 
 // Minor schema version. Should almost always be 0 (maybe bump on release
 // branches if we have to).
@@ -211,14 +211,12 @@ void AssertIsOnConnectionThread();
  * SQLite functions
  ******************************************************************************/
 
-#if 0
 int32_t
 MakeSchemaVersion(uint32_t aMajorSchemaVersion,
                   uint32_t aMinorSchemaVersion)
 {
   return int32_t((aMajorSchemaVersion << 4) + aMinorSchemaVersion);
 }
-#endif
 
 nsCString GetArchivedOriginHashKey(const nsACString& aOriginSuffix,
                                    const nsACString& aOriginNoSuffix) {
@@ -233,6 +231,7 @@ nsresult CreateTables(mozIStorageConnection* aConnection) {
   nsresult rv = aConnection->ExecuteSimpleSQL(
       NS_LITERAL_CSTRING("CREATE TABLE database"
                          "( origin TEXT NOT NULL"
+                         ", usage INTEGER NOT NULL DEFAULT 0"
                          ", last_vacuum_time INTEGER NOT NULL DEFAULT 0"
                          ", last_analyze_time INTEGER NOT NULL DEFAULT 0"
                          ", last_vacuum_size INTEGER NOT NULL DEFAULT 0"
@@ -261,21 +260,33 @@ nsresult CreateTables(mozIStorageConnection* aConnection) {
   return NS_OK;
 }
 
-#if 0
 nsresult
 UpgradeSchemaFrom1_0To2_0(mozIStorageConnection* aConnection)
 {
   AssertIsOnIOThread();
   MOZ_ASSERT(aConnection);
 
-  nsresult rv = aConnection->SetSchemaVersion(MakeSchemaVersion(2, 0));
+  nsresult rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+      "ALTER TABLE database ADD COLUMN usage INTEGER NOT NULL DEFAULT 0;"));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+      "UPDATE database "
+      "SET usage = (SELECT total(utf16Length(key) + utf16Length(value)) "
+      "FROM data);"));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = aConnection->SetSchemaVersion(MakeSchemaVersion(2, 0));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   return NS_OK;
 }
-#endif
 
 nsresult SetDefaultPragmas(mozIStorageConnection* aConnection) {
   MOZ_ASSERT(!NS_IsMainThread());
@@ -410,22 +421,18 @@ nsresult CreateStorageConnection(nsIFile* aDBFile, const nsACString& aOrigin,
       }
     } else {
       // This logic needs to change next time we change the schema!
-      static_assert(kSQLiteSchemaVersion == int32_t((1 << 4) + 0),
+      static_assert(kSQLiteSchemaVersion == int32_t((2 << 4) + 0),
                     "Upgrade function needed due to schema version increase.");
 
       while (schemaVersion != kSQLiteSchemaVersion) {
-#if 0
         if (schemaVersion == MakeSchemaVersion(1, 0)) {
           rv = UpgradeSchemaFrom1_0To2_0(connection);
         } else {
-#endif
-        LS_WARNING(
-            "Unable to open LocalStorage database, no upgrade path is "
-            "available!");
-        return NS_ERROR_FAILURE;
-#if 0
+          LS_WARNING(
+              "Unable to open LocalStorage database, no upgrade path is "
+              "available!");
+          return NS_ERROR_FAILURE;
         }
-#endif
 
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
@@ -982,9 +989,10 @@ class WriteOptimizer final {
 
   nsAutoPtr<WriteInfo> mClearInfo;
   nsClassHashtable<nsStringHashKey, WriteInfo> mWriteInfos;
+  int64_t mTotalDelta;
 
  public:
-  WriteOptimizer() {}
+  WriteOptimizer() : mTotalDelta(0) {}
 
   WriteOptimizer(WriteOptimizer&& aWriteOptimizer)
       : mClearInfo(std::move(aWriteOptimizer.mClearInfo)) {
@@ -992,15 +1000,19 @@ class WriteOptimizer final {
     MOZ_ASSERT(&aWriteOptimizer != this);
 
     mWriteInfos.SwapElements(aWriteOptimizer.mWriteInfos);
+    mTotalDelta = aWriteOptimizer.mTotalDelta;
+    aWriteOptimizer.mTotalDelta = 0;
   }
 
-  void AddItem(const nsString& aKey, const nsString& aValue);
+  void AddItem(const nsString& aKey, const nsString& aValue,
+               int64_t aDelta = 0);
 
-  void UpdateItem(const nsString& aKey, const nsString& aValue);
+  void UpdateItem(const nsString& aKey, const nsString& aValue,
+                  int64_t aDelta = 0);
 
-  void RemoveItem(const nsString& aKey);
+  void RemoveItem(const nsString& aKey, int64_t aDelta = 0);
 
-  void Clear();
+  void Clear(int64_t aDelta = 0);
 
   bool HasWrites() const {
     AssertIsOnBackgroundThread();
@@ -1010,7 +1022,8 @@ class WriteOptimizer final {
 
   void ApplyWrites(nsTArray<LSItemInfo>& aOrderedItems);
 
-  nsresult PerformWrites(Connection* aConnection, bool aShadowWrites);
+  nsresult PerformWrites(Connection* aConnection, bool aShadowWrites,
+                         int64_t& aOutUsage);
 };
 
 /**
@@ -1231,6 +1244,8 @@ class Connection final {
     return mArchivedOriginScope;
   }
 
+  const nsCString& Origin() const { return mOrigin; }
+
   //////////////////////////////////////////////////////////////////////////////
   // Methods which can only be called on the owning thread.
 
@@ -1242,13 +1257,13 @@ class Connection final {
   // connection thread.
   void Close(nsIRunnable* aCallback);
 
-  void AddItem(const nsString& aKey, const nsString& aValue);
+  void AddItem(const nsString& aKey, const nsString& aValue, int64_t aDelta);
 
-  void UpdateItem(const nsString& aKey, const nsString& aValue);
+  void UpdateItem(const nsString& aKey, const nsString& aValue, int64_t aDelta);
 
-  void RemoveItem(const nsString& aKey);
+  void RemoveItem(const nsString& aKey, int64_t aDelta);
 
-  void Clear();
+  void Clear(int64_t aDelta);
 
   void BeginUpdateBatch();
 
@@ -2672,7 +2687,8 @@ nsresult GetUsage(mozIStorageConnection* aConnection,
   nsCOMPtr<mozIStorageStatement> stmt;
   if (aArchivedOriginScope) {
     rv = aConnection->CreateStatement(
-        NS_LITERAL_CSTRING("SELECT sum(length(key) + length(value)) "
+        NS_LITERAL_CSTRING("SELECT "
+                           "total(utf16Length(key) + utf16Length(value)) "
                            "FROM webappsstore2 "
                            "WHERE originKey = :originKey "
                            "AND originAttributes = :originAttributes;"),
@@ -2684,8 +2700,8 @@ nsresult GetUsage(mozIStorageConnection* aConnection,
     rv = aArchivedOriginScope->BindToStatement(stmt);
   } else {
     rv = aConnection->CreateStatement(
-        NS_LITERAL_CSTRING("SELECT sum(length(key) + length(value)) "
-                           "FROM data"),
+        NS_LITERAL_CSTRING("SELECT usage "
+                           "FROM database"),
         getter_AddRefs(stmt));
   }
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -3031,7 +3047,8 @@ already_AddRefed<mozilla::dom::quota::Client> CreateQuotaClient() {
  * WriteOptimizer
  ******************************************************************************/
 
-void WriteOptimizer::AddItem(const nsString& aKey, const nsString& aValue) {
+void WriteOptimizer::AddItem(const nsString& aKey, const nsString& aValue,
+                             int64_t aDelta) {
   AssertIsOnBackgroundThread();
 
   WriteInfo* existingWriteInfo;
@@ -3043,9 +3060,12 @@ void WriteOptimizer::AddItem(const nsString& aKey, const nsString& aValue) {
     newWriteInfo = new AddItemInfo(aKey, aValue);
   }
   mWriteInfos.Put(aKey, newWriteInfo.forget());
+
+  mTotalDelta += aDelta;
 }
 
-void WriteOptimizer::UpdateItem(const nsString& aKey, const nsString& aValue) {
+void WriteOptimizer::UpdateItem(const nsString& aKey, const nsString& aValue,
+                                int64_t aDelta) {
   AssertIsOnBackgroundThread();
 
   WriteInfo* existingWriteInfo;
@@ -3057,23 +3077,26 @@ void WriteOptimizer::UpdateItem(const nsString& aKey, const nsString& aValue) {
     newWriteInfo = new UpdateItemInfo(aKey, aValue);
   }
   mWriteInfos.Put(aKey, newWriteInfo.forget());
+
+  mTotalDelta += aDelta;
 }
 
-void WriteOptimizer::RemoveItem(const nsString& aKey) {
+void WriteOptimizer::RemoveItem(const nsString& aKey, int64_t aDelta) {
   AssertIsOnBackgroundThread();
 
   WriteInfo* existingWriteInfo;
   if (mWriteInfos.Get(aKey, &existingWriteInfo) &&
       existingWriteInfo->GetType() == WriteInfo::AddItem) {
     mWriteInfos.Remove(aKey);
-    return;
+  } else {
+    nsAutoPtr<WriteInfo> newWriteInfo(new RemoveItemInfo(aKey));
+    mWriteInfos.Put(aKey, newWriteInfo.forget());
   }
 
-  nsAutoPtr<WriteInfo> newWriteInfo(new RemoveItemInfo(aKey));
-  mWriteInfos.Put(aKey, newWriteInfo.forget());
+  mTotalDelta += aDelta;
 }
 
-void WriteOptimizer::Clear() {
+void WriteOptimizer::Clear(int64_t aDelta) {
   AssertIsOnBackgroundThread();
 
   mWriteInfos.Clear();
@@ -3081,6 +3104,8 @@ void WriteOptimizer::Clear() {
   if (!mClearInfo) {
     mClearInfo = new ClearInfo();
   }
+
+  mTotalDelta += aDelta;
 }
 
 void WriteOptimizer::ApplyWrites(nsTArray<LSItemInfo>& aOrderedItems) {
@@ -3135,7 +3160,7 @@ void WriteOptimizer::ApplyWrites(nsTArray<LSItemInfo>& aOrderedItems) {
 }
 
 nsresult WriteOptimizer::PerformWrites(Connection* aConnection,
-                                       bool aShadowWrites) {
+                                       bool aShadowWrites, int64_t& aOutUsage) {
   AssertIsOnConnectionThread();
   MOZ_ASSERT(aConnection);
 
@@ -3155,6 +3180,50 @@ nsresult WriteOptimizer::PerformWrites(Connection* aConnection,
     }
   }
 
+  Connection::CachedStatement stmt;
+  rv = aConnection->GetCachedStatement(
+      NS_LITERAL_CSTRING("UPDATE database "
+                         "SET usage = usage + :delta"),
+      &stmt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("delta"), mTotalDelta);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = stmt->Execute();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = aConnection->GetCachedStatement(
+      NS_LITERAL_CSTRING("SELECT usage "
+                         "FROM database"),
+      &stmt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  bool hasResult;
+  rv = stmt->ExecuteStep(&hasResult);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (NS_WARN_IF(!hasResult)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  int64_t usage;
+  rv = stmt->GetInt64(0, &usage);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  aOutUsage = usage;
   return NS_OK;
 }
 
@@ -3478,32 +3547,34 @@ void Connection::Close(nsIRunnable* aCallback) {
   Dispatch(op);
 }
 
-void Connection::AddItem(const nsString& aKey, const nsString& aValue) {
+void Connection::AddItem(const nsString& aKey, const nsString& aValue,
+                         int64_t aDelta) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mInUpdateBatch);
 
-  mWriteOptimizer.AddItem(aKey, aValue);
+  mWriteOptimizer.AddItem(aKey, aValue, aDelta);
 }
 
-void Connection::UpdateItem(const nsString& aKey, const nsString& aValue) {
+void Connection::UpdateItem(const nsString& aKey, const nsString& aValue,
+                            int64_t aDelta) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mInUpdateBatch);
 
-  mWriteOptimizer.UpdateItem(aKey, aValue);
+  mWriteOptimizer.UpdateItem(aKey, aValue, aDelta);
 }
 
-void Connection::RemoveItem(const nsString& aKey) {
+void Connection::RemoveItem(const nsString& aKey, int64_t aDelta) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mInUpdateBatch);
 
-  mWriteOptimizer.RemoveItem(aKey);
+  mWriteOptimizer.RemoveItem(aKey, aDelta);
 }
 
-void Connection::Clear() {
+void Connection::Clear(int64_t aDelta) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mInUpdateBatch);
 
-  mWriteOptimizer.Clear();
+  mWriteOptimizer.Clear(aDelta);
 }
 
 void Connection::BeginUpdateBatch() {
@@ -3716,7 +3787,8 @@ nsresult Connection::FlushOp::DoDatastoreWork() {
     return rv;
   }
 
-  rv = mWriteOptimizer.PerformWrites(mConnection, mShadowWrites);
+  int64_t usage;
+  rv = mWriteOptimizer.PerformWrites(mConnection, mShadowWrites, usage);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -3736,7 +3808,20 @@ nsresult Connection::FlushOp::DoDatastoreWork() {
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
+
+    shadowDatabaseLock.reset();
   }
+
+  RefPtr<Runnable> runnable = NS_NewRunnableFunction(
+      "dom::localstorage::UpdateUsageRunnable",
+      [origin = mConnection->Origin(), usage]() {
+        MOZ_ASSERT(gUsages);
+        MOZ_ASSERT(gUsages->Contains(origin));
+        gUsages->Put(origin, usage);
+      });
+
+  MOZ_ALWAYS_SUCCEEDS(
+      quotaManager->IOThread()->Dispatch(runnable, NS_DISPATCH_NORMAL));
 
   return NS_OK;
 }
@@ -4127,11 +4212,13 @@ void Datastore::SetItem(Database* aDatabase, const nsString& aDocumentURI,
 
     mValues.Put(aKey, aValue);
 
+    int64_t sizeOfItem;
+
     if (isNewItem) {
       mWriteOptimizer.AddItem(aKey, aValue);
 
       int64_t sizeOfKey = static_cast<int64_t>(aKey.Length());
-      int64_t sizeOfItem = sizeOfKey + static_cast<int64_t>(aValue.Length());
+      sizeOfItem = sizeOfKey + static_cast<int64_t>(aValue.Length());
 
       mUpdateBatchUsage += sizeOfItem;
 
@@ -4140,19 +4227,19 @@ void Datastore::SetItem(Database* aDatabase, const nsString& aDocumentURI,
     } else {
       mWriteOptimizer.UpdateItem(aKey, aValue);
 
-      int64_t delta = static_cast<int64_t>(aValue.Length()) -
-                      static_cast<int64_t>(oldValue.Length());
+      sizeOfItem = static_cast<int64_t>(aValue.Length()) -
+                   static_cast<int64_t>(oldValue.Length());
 
-      mUpdateBatchUsage += delta;
+      mUpdateBatchUsage += sizeOfItem;
 
-      mSizeOfItems += delta;
+      mSizeOfItems += sizeOfItem;
     }
 
     if (IsPersistent()) {
       if (oldValue.IsVoid()) {
-        mConnection->AddItem(aKey, aValue);
+        mConnection->AddItem(aKey, aValue, sizeOfItem);
       } else {
-        mConnection->UpdateItem(aKey, aValue);
+        mConnection->UpdateItem(aKey, aValue, sizeOfItem);
       }
     }
   }
@@ -4186,7 +4273,7 @@ void Datastore::RemoveItem(Database* aDatabase, const nsString& aDocumentURI,
     mSizeOfItems -= sizeOfItem;
 
     if (IsPersistent()) {
-      mConnection->RemoveItem(aKey);
+      mConnection->RemoveItem(aKey, -sizeOfItem);
     }
   }
 
@@ -4200,13 +4287,13 @@ void Datastore::Clear(Database* aDatabase, const nsString& aDocumentURI) {
   MOZ_ASSERT(mInUpdateBatch);
 
   if (mValues.Count()) {
-    int64_t updateBatchUsage = mUpdateBatchUsage;
+    int64_t sizeOfItems = 0;
     for (auto iter = mValues.ConstIter(); !iter.Done(); iter.Next()) {
       const nsAString& key = iter.Key();
       const nsAString& value = iter.Data();
 
-      updateBatchUsage -= (static_cast<int64_t>(key.Length()) +
-                           static_cast<int64_t>(value.Length()));
+      sizeOfItems += (static_cast<int64_t>(key.Length()) +
+                      static_cast<int64_t>(value.Length()));
 
       NotifySnapshots(aDatabase, key, value, /* aAffectsOrder */ true);
     }
@@ -4215,13 +4302,13 @@ void Datastore::Clear(Database* aDatabase, const nsString& aDocumentURI) {
 
     mWriteOptimizer.Clear();
 
-    mUpdateBatchUsage = updateBatchUsage;
+    mUpdateBatchUsage -= sizeOfItems;
 
     mSizeOfKeys = 0;
     mSizeOfItems = 0;
 
     if (IsPersistent()) {
-      mConnection->Clear();
+      mConnection->Clear(-sizeOfItems);
     }
   }
 
@@ -4347,23 +4434,7 @@ bool Datastore::UpdateUsage(int64_t aDelta) {
   }
 
   // Quota checks passed, set new usage.
-
   mUsage = newUsage;
-
-  if (IsPersistent()) {
-    RefPtr<Runnable> runnable = NS_NewRunnableFunction(
-        "Datastore::UpdateUsage", [origin = mOrigin, newUsage]() {
-          MOZ_ASSERT(gUsages);
-          MOZ_ASSERT(gUsages->Contains(origin));
-          gUsages->Put(origin, newUsage);
-        });
-
-    QuotaManager* quotaManager = QuotaManager::Get();
-    MOZ_ASSERT(quotaManager);
-
-    MOZ_ALWAYS_SUCCEEDS(
-        quotaManager->IOThread()->Dispatch(runnable, NS_DISPATCH_NORMAL));
-  }
 
   return true;
 }
@@ -5691,6 +5762,23 @@ nsresult PrepareDatastoreOp::DatabaseWork() {
     }
 
     rv = mArchivedOriginScope->BindToStatement(stmt);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = stmt->Execute();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = connection->CreateStatement(
+        NS_LITERAL_CSTRING("UPDATE database SET usage = :usage;"),
+        getter_AddRefs(stmt));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("usage"), newUsage);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
