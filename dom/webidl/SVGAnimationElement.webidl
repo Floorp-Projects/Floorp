@@ -16,6 +16,7 @@ interface SVGAnimationElement : SVGElement {
 
   [Throws]
   float getStartTime();
+  [BinaryName="getCurrentTimeAsFloat"]
   float getCurrentTime();
   [Throws]
   float getSimpleDuration();

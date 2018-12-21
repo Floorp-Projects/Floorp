@@ -38,9 +38,6 @@
 #include "SurfaceCache.h"
 #include "nsDocument.h"
 
-// undef the GetCurrentTime macro defined in WinBase.h from the MS Platform SDK
-#undef GetCurrentTime
-
 namespace mozilla {
 
 using namespace dom;
@@ -766,8 +763,8 @@ VectorImage::GetFrameInternal(const IntSize& aSize,
   // cannot cache.
   SVGDrawingParameters params(
       nullptr, decodeSize, aSize, ImageRegion::Create(decodeSize),
-      SamplingFilter::POINT, aSVGContext, mSVGDocumentWrapper->GetCurrentTime(),
-      aFlags, 1.0);
+      SamplingFilter::POINT, aSVGContext,
+      mSVGDocumentWrapper->GetCurrentTimeAsFloat(), aFlags, 1.0);
 
   bool didCache;  // Was the surface put into the cache?
   bool contextPaint = aSVGContext && aSVGContext->GetContextPaint();
@@ -948,7 +945,7 @@ VectorImage::Draw(gfxContext* aContext, const nsIntSize& aSize,
 
   float animTime = (aWhichFrame == FRAME_FIRST)
                        ? 0.0f
-                       : mSVGDocumentWrapper->GetCurrentTime();
+                       : mSVGDocumentWrapper->GetCurrentTimeAsFloat();
 
   Maybe<SVGImageContext> newSVGContext;
   bool contextPaint =
@@ -1314,8 +1311,9 @@ VectorImage::ResetAnimation() {
 NS_IMETHODIMP_(float)
 VectorImage::GetFrameIndex(uint32_t aWhichFrame) {
   MOZ_ASSERT(aWhichFrame <= FRAME_MAX_VALUE, "Invalid argument");
-  return aWhichFrame == FRAME_FIRST ? 0.0f
-                                    : mSVGDocumentWrapper->GetCurrentTime();
+  return aWhichFrame == FRAME_FIRST
+             ? 0.0f
+             : mSVGDocumentWrapper->GetCurrentTimeAsFloat();
 }
 
 //------------------------------------------------------------------------------

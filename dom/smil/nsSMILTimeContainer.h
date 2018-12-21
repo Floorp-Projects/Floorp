@@ -83,7 +83,7 @@ class nsSMILTimeContainer {
    * Return the time elapsed since this time container's begin time (expressed
    * in parent time) minus any accumulated offset from pausing.
    */
-  nsSMILTime GetCurrentTime() const;
+  nsSMILTime GetCurrentTimeAsSMILTime() const;
 
   /*
    * Seek the document timeline to the specified time.

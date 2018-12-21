@@ -31,9 +31,6 @@
 #include "nsDocument.h"
 #include "mozilla/dom/ImageTracker.h"
 
-// undef the GetCurrentTime macro defined in WinBase.h from the MS Platform SDK
-#undef GetCurrentTime
-
 namespace mozilla {
 
 using namespace dom;
@@ -166,14 +163,14 @@ void SVGDocumentWrapper::ResetAnimation() {
   svgElem->SetCurrentTime(0.0f);
 }
 
-float SVGDocumentWrapper::GetCurrentTime() {
+float SVGDocumentWrapper::GetCurrentTimeAsFloat() {
   SVGSVGElement* svgElem = GetRootSVGElem();
-  return svgElem ? svgElem->GetCurrentTime() : 0.0f;
+  return svgElem ? svgElem->GetCurrentTimeAsFloat() : 0.0f;
 }
 
 void SVGDocumentWrapper::SetCurrentTime(float aTime) {
   SVGSVGElement* svgElem = GetRootSVGElem();
-  if (svgElem && svgElem->GetCurrentTime() != aTime) {
+  if (svgElem && svgElem->GetCurrentTimeAsFloat() != aTime) {
     svgElem->SetCurrentTime(aTime);
   }
 }
