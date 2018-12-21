@@ -17,7 +17,6 @@
 #endif
 
 namespace mozilla {
-namespace dom {
 
 using base::Thread;
 using media::TimeUnit;
@@ -280,5 +279,4 @@ bool VideoDecoderParent::OnManagerThread() {
   return mParent->OnManagerThread();
 }
 
-}  // namespace dom
 }  // namespace mozilla

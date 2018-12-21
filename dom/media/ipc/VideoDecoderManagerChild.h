@@ -3,17 +3,16 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-#ifndef include_dom_ipc_VideoDecoderManagerChild_h
-#define include_dom_ipc_VideoDecoderManagerChild_h
+#ifndef include_ipc_VideoDecoderManagerChild_h
+#define include_ipc_VideoDecoderManagerChild_h
 
 #include "mozilla/RefPtr.h"
-#include "mozilla/dom/PVideoDecoderManagerChild.h"
+#include "mozilla/PVideoDecoderManagerChild.h"
 
 namespace mozilla {
 namespace gfx {
 class SourceSurface;
 }
-namespace dom {
 
 class VideoDecoderManagerChild final : public PVideoDecoderManagerChild,
                                        public mozilla::ipc::IShmemAllocator {
@@ -93,7 +92,6 @@ class VideoDecoderManagerChild final : public PVideoDecoderManagerChild,
   bool mCanSend;
 };
 
-}  // namespace dom
 }  // namespace mozilla
 
-#endif  // include_dom_ipc_VideoDecoderManagerChild_h
+#endif  // include_ipc_VideoDecoderManagerChild_h

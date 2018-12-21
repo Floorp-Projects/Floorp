@@ -25,12 +25,12 @@ EXPORTS.mozilla += [
     'RemoteDecoderManagerParent.h',
     'RemoteDecoderModule.h',
     'RemoteMediaDataDecoder.h',
+    'VideoDecoderManagerChild.h',
+    'VideoDecoderManagerParent.h',
 ]
 
 EXPORTS.mozilla.dom += [
     'MediaIPCUtils.h',
-    'VideoDecoderManagerChild.h',
-    'VideoDecoderManagerParent.h',
 ]
 
 SOURCES += [

@@ -10,6 +10,7 @@
 #include "mozilla/Poison.h"
 #include "mozilla/RemoteDecoderManagerChild.h"
 #include "mozilla/SharedThreadPool.h"
+#include "mozilla/VideoDecoderManagerChild.h"
 #include "mozilla/XPCOM.h"
 #include "nsXULAppAPI.h"
 
@@ -22,7 +23,6 @@
 
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
-#include "mozilla/dom/VideoDecoderManagerChild.h"
 
 #include "prlink.h"
 
@@ -815,7 +815,7 @@ nsresult ShutdownXPCOM(nsIServiceManager* aServMgr) {
     // are triggered by the NS_XPCOM_SHUTDOWN_OBSERVER_ID notification.
     NS_ProcessPendingEvents(thread);
     gfxPlatform::ShutdownLayersIPC();
-    mozilla::dom::VideoDecoderManagerChild::Shutdown();
+    mozilla::VideoDecoderManagerChild::Shutdown();
     mozilla::RemoteDecoderManagerChild::Shutdown();
 
     mozilla::scache::StartupCache::DeleteSingleton();
