@@ -114,7 +114,7 @@ class LintSandbox(ConfigureSandbox):
         return self._need_help_dependency(obj)
 
     @memoize
-    def _value_for_depends(self, obj, need_help_dependency=False):
+    def _value_for_depends(self, obj):
         with_help = self._help_option in obj.dependencies
         if with_help:
             for arg in obj.dependencies:
@@ -123,18 +123,16 @@ class LintSandbox(ConfigureSandbox):
                         "`%s` depends on '--help' and `%s`. "
                         "`%s` must depend on '--help'"
                         % (obj.name, arg.name, arg.name))
-        elif ((self._help or need_help_dependency) and
-              self._missing_help_dependency(obj)):
+        elif self._missing_help_dependency(obj):
             raise ConfigureError("Missing @depends for `%s`: '--help'" %
                                  obj.name)
-        return super(LintSandbox, self)._value_for_depends(
-            obj, need_help_dependency)
+        return super(LintSandbox, self)._value_for_depends(obj)
 
     def option_impl(self, *args, **kwargs):
         result = super(LintSandbox, self).option_impl(*args, **kwargs)
         when = self._conditions.get(result)
         if when:
-            self._value_for(when, need_help_dependency=True)
+            self._value_for(when)
 
         self._check_option(result, *args, **kwargs)
 
