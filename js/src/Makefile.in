@@ -20,16 +20,6 @@ USE_HOST_CXX = 1
 
 include $(topsrcdir)/config/rules.mk
 
-# Help ensure that the number of OOM errors in SpiderMonkey doesn't increase.
-# If the number of OOM errors changes, update the number below. We intend this
-# number to go down over time, by fixing OOMs.
-check-ooms:
-	$(wildcard $(RUN_TEST_PROGRAM)) $(PYTHON) -u $(topsrcdir)/config/find_OOM_errors.py --regression 125
-
-ifeq ($(MOZ_DEBUG),1)
-#check:: check-ooms
-endif
-
 ifdef MOZ_VALGRIND
 ifndef MOZ_ASAN
 JITTEST_VALGRIND_FLAG = --valgrind
