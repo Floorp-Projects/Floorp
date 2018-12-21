@@ -18,7 +18,6 @@ config = {
     ],
     "avds_dir": "/builds/worker/workspace/build/.android",
     "binary_path": "/tmp",
-    "download_minidump_stackwalk": True,
     "geckodriver": "%(abs_test_bin_dir)s/geckodriver",
     "hostutils_manifest_path": "testing/config/tooltool-manifests/linux64/hostutils.manifest",
     "log_tbpl_level": "info",

@@ -6,6 +6,5 @@ config = {
     'developer_mode': True,
 
     # mozcrash support
-    'download_minidump_stackwalk': True,
     'download_symbols': 'ondemand',
 }

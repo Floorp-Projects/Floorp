@@ -23,6 +23,5 @@ config = {
     },
 
     # mozcrash support
-    'download_minidump_stackwalk': True,
     'download_symbols': 'ondemand',
 }
