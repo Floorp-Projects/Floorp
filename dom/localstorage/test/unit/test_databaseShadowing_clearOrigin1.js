@@ -3,10 +3,10 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+/* import-globals-from databaseShadowing-shared.js */
 loadSubscript("databaseShadowing-shared.js");
 
-async function testSteps()
-{
+async function testSteps() {
   enableNextGenLocalStorage();
 
   storeData();

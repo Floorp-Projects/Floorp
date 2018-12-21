@@ -255,6 +255,12 @@ class nsAccUtils {
 
   static bool PersistentPropertiesToArray(nsIPersistentProperties* aProps,
                                           nsTArray<Attribute>* aAttributes);
+
+  /**
+   * Return true if the given accessible is within an ARIA live region; i.e.
+   * the container-live attribute would be something other than "off" or empty.
+   */
+  static bool IsARIALive(const Accessible* aAccessible);
 };
 
 }  // namespace a11y

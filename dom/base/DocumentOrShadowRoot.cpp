@@ -194,47 +194,53 @@ Element* DocumentOrShadowRoot::GetFullscreenElement() {
   return nullptr;
 }
 
-Element* DocumentOrShadowRoot::ElementFromPoint(float aX, float aY) {
-  return ElementFromPointHelper(aX, aY, false, true);
+namespace {
+
+using FrameForPointOption = nsLayoutUtils::FrameForPointOption;
+
+// Whether only one node or multiple nodes is requested.
+enum class Multiple {
+  No,
+  Yes,
+};
+
+// Whether we should flush layout or not.
+enum class FlushLayout {
+  No,
+  Yes,
+};
+
+template <typename NodeOrElement>
+NodeOrElement* CastTo(nsIContent* aContent);
+
+template <>
+Element* CastTo<Element>(nsIContent* aContent) {
+  return aContent->AsElement();
 }
 
-void DocumentOrShadowRoot::ElementsFromPoint(
-    float aX, float aY, nsTArray<RefPtr<Element>>& aElements) {
-  ElementsFromPointHelper(aX, aY, nsIDocument::FLUSH_LAYOUT, aElements);
+template <>
+nsINode* CastTo<nsINode>(nsIContent* aContent) {
+  return aContent;
 }
 
-Element* DocumentOrShadowRoot::ElementFromPointHelper(
-    float aX, float aY, bool aIgnoreRootScrollFrame, bool aFlushLayout) {
-  AutoTArray<RefPtr<Element>, 1> elementArray;
-  ElementsFromPointHelper(
-      aX, aY,
-      ((aIgnoreRootScrollFrame ? nsIDocument::IGNORE_ROOT_SCROLL_FRAME : 0) |
-       (aFlushLayout ? nsIDocument::FLUSH_LAYOUT : 0) |
-       nsIDocument::IS_ELEMENT_FROM_POINT),
-      elementArray);
-  if (elementArray.IsEmpty()) {
-    return nullptr;
-  }
-  return elementArray[0];
-}
+template <typename NodeOrElement>
+static void QueryNodesFromRect(DocumentOrShadowRoot& aRoot, const nsRect& aRect,
+                               EnumSet<FrameForPointOption> aOptions,
+                               FlushLayout aShouldFlushLayout,
+                               Multiple aMultiple,
+                               nsTArray<RefPtr<NodeOrElement>>& aNodes) {
+  static_assert(std::is_same<nsINode, NodeOrElement>::value ||
+                    std::is_same<Element, NodeOrElement>::value,
+                "Should returning nodes or elements");
 
-void DocumentOrShadowRoot::ElementsFromPointHelper(
-    float aX, float aY, uint32_t aFlags,
-    nsTArray<RefPtr<mozilla::dom::Element>>& aElements) {
-  // As per the the spec, we return null if either coord is negative
-  if (!(aFlags & nsIDocument::IGNORE_ROOT_SCROLL_FRAME) && (aX < 0 || aY < 0)) {
-    return;
-  }
+  constexpr bool returningElements =
+      std::is_same<Element, NodeOrElement>::value;
 
-  nscoord x = nsPresContext::CSSPixelsToAppUnits(aX);
-  nscoord y = nsPresContext::CSSPixelsToAppUnits(aY);
-  nsPoint pt(x, y);
-
-  nsCOMPtr<nsIDocument> doc = AsNode().OwnerDoc();
+  nsCOMPtr<nsIDocument> doc = aRoot.AsNode().OwnerDoc();
 
   // Make sure the layout information we get is up-to-date, and
   // ensure we get a root frame (for everything but XUL)
-  if (aFlags & nsIDocument::FLUSH_LAYOUT) {
+  if (aShouldFlushLayout == FlushLayout::Yes) {
     doc->FlushPendingNotifications(FlushType::Layout);
   }
 
@@ -242,68 +248,128 @@ void DocumentOrShadowRoot::ElementsFromPointHelper(
   if (!ps) {
     return;
   }
-  nsIFrame* rootFrame = ps->GetRootFrame();
 
+  nsIFrame* rootFrame = ps->GetRootFrame();
   // XUL docs, unlike HTML, have no frame tree until everything's done loading
   if (!rootFrame) {
     return;  // return null to premature XUL callers as a reminder to wait
   }
 
-  nsTArray<nsIFrame*> outFrames;
-  // Emulate what GetFrameAtPoint does, since we want all the frames under our
-  // point.
-  nsLayoutUtils::GetFramesForArea(
-      rootFrame, nsRect(pt, nsSize(1, 1)), outFrames,
-      nsLayoutUtils::IGNORE_PAINT_SUPPRESSION |
-          nsLayoutUtils::IGNORE_CROSS_DOC |
-          ((aFlags & nsIDocument::IGNORE_ROOT_SCROLL_FRAME)
-               ? nsLayoutUtils::IGNORE_ROOT_SCROLL_FRAME
-               : 0));
+  aOptions += FrameForPointOption::IgnorePaintSuppression;
+  aOptions += FrameForPointOption::IgnoreCrossDoc;
 
-  // Dunno when this would ever happen, as we should at least have a root frame
-  // under us?
-  if (outFrames.IsEmpty()) {
-    return;
-  }
+  AutoTArray<nsIFrame*, 8> frames;
+  nsLayoutUtils::GetFramesForArea(rootFrame, aRect, frames, aOptions);
 
-  // Used to filter out repeated elements in sequence.
-  nsIContent* lastAdded = nullptr;
+  for (nsIFrame* frame : frames) {
+    nsIContent* content = doc->GetContentInThisDocument(frame);
+    if (!content) {
+      continue;
+    }
 
-  for (uint32_t i = 0; i < outFrames.Length(); i++) {
-    nsIContent* node = doc->GetContentInThisDocument(outFrames[i]);
-
-    if (!node || !node->IsElement()) {
+    if (returningElements && !content->IsElement()) {
       // If this helper is called via ElementsFromPoint, we need to make sure
       // our frame is an element. Otherwise return whatever the top frame is
       // even if it isn't the top-painted element.
       // SVG 'text' element's SVGTextFrame doesn't respond to hit-testing, so
-      // if 'node' is a child of such an element then we need to manually defer
-      // to the parent here.
-      if (!(aFlags & nsIDocument::IS_ELEMENT_FROM_POINT) &&
-          !nsSVGUtils::IsInSVGTextSubtree(outFrames[i])) {
+      // if 'content' is a child of such an element then we need to manually
+      // defer to the parent here.
+      if (aMultiple == Multiple::Yes &&
+          !nsSVGUtils::IsInSVGTextSubtree(frame)) {
         continue;
       }
-      node = node->GetParent();
-      if (ShadowRoot* shadow = ShadowRoot::FromNodeOrNull(node)) {
-        node = shadow->Host();
+
+      content = content->GetParent();
+      if (ShadowRoot* shadow = ShadowRoot::FromNodeOrNull(content)) {
+        content = shadow->Host();
       }
     }
 
     // XXXsmaug There is plenty of unspec'ed behavior here
     //         https://github.com/w3c/webcomponents/issues/735
     //         https://github.com/w3c/webcomponents/issues/736
-    node = Retarget(node);
+    content = aRoot.Retarget(content);
 
-    if (node && node != lastAdded) {
-      aElements.AppendElement(node->AsElement());
-      lastAdded = node;
-      // If this helper is called via ElementFromPoint, just return the first
-      // element we find.
-      if (aFlags & nsIDocument::IS_ELEMENT_FROM_POINT) {
+    if (content && content != aNodes.SafeLastElement(nullptr)) {
+      aNodes.AppendElement(CastTo<NodeOrElement>(content));
+      if (aMultiple == Multiple::No) {
         return;
       }
     }
   }
+}
+
+template <typename NodeOrElement>
+static void QueryNodesFromPoint(DocumentOrShadowRoot& aRoot, float aX, float aY,
+                                EnumSet<FrameForPointOption> aOptions,
+                                FlushLayout aShouldFlushLayout,
+                                Multiple aMultiple,
+                                nsTArray<RefPtr<NodeOrElement>>& aNodes) {
+  // As per the spec, we return null if either coord is negative.
+  if (!aOptions.contains(FrameForPointOption::IgnoreRootScrollFrame) &&
+      (aX < 0 || aY < 0)) {
+    return;
+  }
+
+  nscoord x = nsPresContext::CSSPixelsToAppUnits(aX);
+  nscoord y = nsPresContext::CSSPixelsToAppUnits(aY);
+  nsPoint pt(x, y);
+  QueryNodesFromRect(aRoot, nsRect(pt, nsSize(1, 1)), aOptions,
+                     aShouldFlushLayout, aMultiple, aNodes);
+}
+
+}  // namespace
+
+Element* DocumentOrShadowRoot::ElementFromPoint(float aX, float aY) {
+  return ElementFromPointHelper(aX, aY, false, true);
+}
+
+void DocumentOrShadowRoot::ElementsFromPoint(
+    float aX, float aY, nsTArray<RefPtr<Element>>& aElements) {
+  QueryNodesFromPoint(*this, aX, aY, {}, FlushLayout::Yes, Multiple::Yes,
+                      aElements);
+}
+
+Element* DocumentOrShadowRoot::ElementFromPointHelper(
+    float aX, float aY, bool aIgnoreRootScrollFrame, bool aFlushLayout) {
+  EnumSet<FrameForPointOption> options;
+  if (aIgnoreRootScrollFrame) {
+    options += FrameForPointOption::IgnoreRootScrollFrame;
+  }
+
+  auto flush = aFlushLayout ? FlushLayout::Yes : FlushLayout::No;
+
+  AutoTArray<RefPtr<Element>, 1> elements;
+  QueryNodesFromPoint(*this, aX, aY, options, flush, Multiple::No, elements);
+  return elements.SafeElementAt(0);
+}
+
+void DocumentOrShadowRoot::NodesFromRect(float aX, float aY, float aTopSize,
+                                         float aRightSize, float aBottomSize,
+                                         float aLeftSize,
+                                         bool aIgnoreRootScrollFrame,
+                                         bool aFlushLayout,
+                                         nsTArray<RefPtr<nsINode>>& aReturn) {
+  // Following the same behavior of elementFromPoint,
+  // we don't return anything if either coord is negative
+  if (!aIgnoreRootScrollFrame && (aX < 0 || aY < 0)) {
+    return;
+  }
+
+  nscoord x = nsPresContext::CSSPixelsToAppUnits(aX - aLeftSize);
+  nscoord y = nsPresContext::CSSPixelsToAppUnits(aY - aTopSize);
+  nscoord w = nsPresContext::CSSPixelsToAppUnits(aLeftSize + aRightSize) + 1;
+  nscoord h = nsPresContext::CSSPixelsToAppUnits(aTopSize + aBottomSize) + 1;
+
+  nsRect rect(x, y, w, h);
+
+  EnumSet<FrameForPointOption> options;
+  if (aIgnoreRootScrollFrame) {
+    options += FrameForPointOption::IgnoreRootScrollFrame;
+  }
+
+  auto flush = aFlushLayout ? FlushLayout::Yes : FlushLayout::No;
+  QueryNodesFromRect(*this, rect, options, flush, Multiple::Yes, aReturn);
 }
 
 Element* DocumentOrShadowRoot::AddIDTargetObserver(nsAtom* aID,

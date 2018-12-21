@@ -103,7 +103,7 @@ void DocAccessibleWrap::CacheViewportCallback(nsITimer* aTimer,
 
   nsLayoutUtils::GetFramesForArea(
       presShell->GetRootFrame(), scrollPort, frames,
-      nsLayoutUtils::FrameForPointFlags::ONLY_VISIBLE);
+      nsLayoutUtils::FrameForPointOption::OnlyVisible);
   AccessibleHashtable inViewAccs;
   for (size_t i = 0; i < frames.Length(); i++) {
     nsIContent* content = frames.ElementAt(i)->GetContent();

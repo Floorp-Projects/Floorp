@@ -3,8 +3,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-async function testSteps()
-{
+async function testSteps() {
   const url = "http://example.com";
 
   const items = [
@@ -17,11 +16,10 @@ async function testSteps()
     { key: "key7", value: "value7" },
     { key: "key8", value: "value8" },
     { key: "key9", value: "value9" },
-    { key: "key10", value: "value10" }
+    { key: "key10", value: "value10" },
   ];
 
-  function getPartialPrefill()
-  {
+  function getPartialPrefill() {
     let size = 0;
     for (let i = 0; i < items.length / 2; i++) {
       let item = items[i];

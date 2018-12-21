@@ -3,28 +3,27 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+// Tests are expected to define testSteps.
+/* globals testSteps */
+
 const NS_ERROR_DOM_QUOTA_EXCEEDED_ERR = 22;
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-function is(a, b, msg)
-{
+function is(a, b, msg) {
   Assert.equal(a, b, msg);
 }
 
-function ok(cond, msg)
-{
+function ok(cond, msg) {
   Assert.ok(!!cond, msg);
 }
 
-function run_test()
-{
+function run_test() {
   runTest();
-};
+}
 
 if (!this.runTest) {
-  this.runTest = function()
-  {
+  this.runTest = function() {
     do_get_profile();
 
     enableTesting();
@@ -41,120 +40,100 @@ if (!this.runTest) {
     // Since we defined run_test, we must invoke run_next_test() to start the
     // async test.
     run_next_test();
-  }
+  };
 }
 
-function returnToEventLoop()
-{
+function returnToEventLoop() {
   return new Promise(function(resolve) {
     executeSoon(resolve);
   });
 }
 
-function enableTesting()
-{
+function enableTesting() {
   Services.prefs.setBoolPref("dom.storage.testing", true);
   Services.prefs.setBoolPref("dom.quotaManager.testing", true);
 }
 
-function resetTesting()
-{
+function resetTesting() {
   Services.prefs.clearUserPref("dom.quotaManager.testing");
   Services.prefs.clearUserPref("dom.storage.testing");
 }
 
-function setGlobalLimit(globalLimit)
-{
+function setGlobalLimit(globalLimit) {
   Services.prefs.setIntPref("dom.quotaManager.temporaryStorage.fixedLimit",
                             globalLimit);
 }
 
-function resetGlobalLimit()
-{
+function resetGlobalLimit() {
   Services.prefs.clearUserPref("dom.quotaManager.temporaryStorage.fixedLimit");
 }
 
-function setOriginLimit(originLimit)
-{
+function setOriginLimit(originLimit) {
   Services.prefs.setIntPref("dom.storage.default_quota", originLimit);
 }
 
-function resetOriginLimit()
-{
+function resetOriginLimit() {
   Services.prefs.clearUserPref("dom.storage.default_quota");
 }
 
-function init()
-{
+function init() {
   let request = Services.qms.init();
 
   return request;
 }
 
-function initOrigin(principal, persistence)
-{
+function initOrigin(principal, persistence) {
   let request = Services.qms.initStoragesForPrincipal(principal, persistence);
 
   return request;
 }
 
-function getOriginUsage(principal)
-{
+function getOriginUsage(principal) {
   let request = Services.qms.getUsageForPrincipal(principal, function() { });
 
   return request;
 }
 
-function clear()
-{
+function clear() {
   let request = Services.qms.clear();
 
   return request;
 }
 
-function clearOriginsByPattern(pattern)
-{
+function clearOriginsByPattern(pattern) {
   let request = Services.qms.clearStoragesForOriginAttributesPattern(pattern);
 
   return request;
 }
 
-function clearOriginsByPrefix(principal, persistence)
-{
+function clearOriginsByPrefix(principal, persistence) {
   let request =
     Services.qms.clearStoragesForPrincipal(principal, persistence, null, true);
 
   return request;
 }
 
-function clearOrigin(principal, persistence)
-{
+function clearOrigin(principal, persistence) {
   let request = Services.qms.clearStoragesForPrincipal(principal, persistence);
 
   return request;
 }
 
-function reset()
-{
+function reset() {
   let request = Services.qms.reset();
 
   return request;
 }
 
-function resetOrigin(principal)
-{
+function resetOrigin(principal) {
   let request =
     Services.qms.resetStoragesForPrincipal(principal, "default", "ls");
 
   return request;
 }
 
-function installPackage(packageName)
-{
-  let directoryService = Cc["@mozilla.org/file/directory_service;1"]
-                         .getService(Ci.nsIProperties);
-
-  let currentDir = directoryService.get("CurWorkD", Ci.nsIFile);
+function installPackage(packageName) {
+  let currentDir = Services.dirsvc.get("CurWorkD", Ci.nsIFile);
 
   let packageFile = currentDir.clone();
   packageFile.append(packageName + ".zip");
@@ -185,7 +164,7 @@ function installPackage(packageName)
                     .createInstance(Ci.nsIFileOutputStream);
       ostream.init(file, -1, parseInt("0644", 8), 0);
 
-      let bostream = Cc['@mozilla.org/network/buffered-output-stream;1']
+      let bostream = Cc["@mozilla.org/network/buffered-output-stream;1"]
                      .createInstance(Ci.nsIBufferedOutputStream);
       bostream.init(ostream, 32768);
 
@@ -199,12 +178,8 @@ function installPackage(packageName)
   zipReader.close();
 }
 
-function getProfileDir()
-{
-  let directoryService =
-    Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
-
-  return directoryService.get("ProfD", Ci.nsIFile);
+function getProfileDir() {
+  return Services.dirsvc.get("ProfD", Ci.nsIFile);
 }
 
 // Given a "/"-delimited path relative to the profile directory,
@@ -212,12 +187,11 @@ function getProfileDir()
 // for the existence of the file or parent directories.
 // It is safe even on Windows where the directory separator is not "/",
 // but make sure you're not passing in a "\"-delimited path.
-function getRelativeFile(relativePath)
-{
+function getRelativeFile(relativePath) {
   let profileDir = getProfileDir();
 
   let file = profileDir.clone();
-  relativePath.split('/').forEach(function(component) {
+  relativePath.split("/").forEach(function(component) {
     file.append(component);
   });
 
@@ -241,8 +215,7 @@ function repeatChar(count, ch) {
   return result + result.substring(0, count - result.length);
 }
 
-function getPrincipal(url, attrs)
-{
+function getPrincipal(url, attrs) {
   let uri = Services.io.newURI(url);
   if (!attrs) {
     attrs = {};
@@ -250,13 +223,11 @@ function getPrincipal(url, attrs)
   return Services.scriptSecurityManager.createCodebasePrincipal(uri, attrs);
 }
 
-function getCurrentPrincipal()
-{
+function getCurrentPrincipal() {
   return Cc["@mozilla.org/systemprincipal;1"].createInstance(Ci.nsIPrincipal);
 }
 
-function getLocalStorage(principal)
-{
+function getLocalStorage(principal) {
   if (!principal) {
     principal = getCurrentPrincipal();
   }
@@ -266,18 +237,17 @@ function getLocalStorage(principal)
 
 function requestFinished(request) {
   return new Promise(function(resolve, reject) {
-    request.callback = function(request) {
-      if (request.resultCode == Cr.NS_OK) {
-        resolve(request.result);
+    request.callback = function(requestInner) {
+      if (requestInner.resultCode == Cr.NS_OK) {
+        resolve(requestInner.result);
       } else {
-        reject(request.resultCode);
+        reject(requestInner.resultCode);
       }
-    }
+    };
   });
 }
 
-function loadSubscript(path)
-{
+function loadSubscript(path) {
   let file = do_get_file(path, false);
   let uri = Services.io.newFileURI(file);
   Services.scriptloader.loadSubScript(uri.spec);

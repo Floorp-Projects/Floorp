@@ -17,6 +17,7 @@ class nsContentList;
 class nsCycleCollectionTraversalCallback;
 class nsIDocument;
 class nsINode;
+class nsINodeList;
 class nsIRadioVisitor;
 class nsWindowSizes;
 
@@ -114,15 +115,11 @@ class DocumentOrShadowRoot {
   Element* ElementFromPointHelper(float aX, float aY,
                                   bool aIgnoreRootScrollFrame,
                                   bool aFlushLayout);
-  enum ElementsFromPointFlags {
-    IGNORE_ROOT_SCROLL_FRAME = 1,
-    FLUSH_LAYOUT = 2,
-    IS_ELEMENT_FROM_POINT = 4
-  };
 
-  void ElementsFromPointHelper(
-      float aX, float aY, uint32_t aFlags,
-      nsTArray<RefPtr<mozilla::dom::Element>>& aElements);
+  void NodesFromRect(float aX, float aY, float aTopSize, float aRightSize,
+                     float aBottomSize, float aLeftSize,
+                     bool aIgnoreRootScrollFrame, bool aFlushLayout,
+                     nsTArray<RefPtr<nsINode>>&);
 
   /**
    * This gets fired when the element that an id refers to changes.
@@ -199,6 +196,8 @@ class DocumentOrShadowRoot {
   nsRadioGroupStruct* GetRadioGroup(const nsAString& aName) const;
   nsRadioGroupStruct* GetOrCreateRadioGroup(const nsAString& aName);
 
+  nsIContent* Retarget(nsIContent* aContent) const;
+
  protected:
   // Returns the reference to the sheet, if found in mStyleSheets.
   already_AddRefed<StyleSheet> RemoveSheet(StyleSheet& aSheet);
@@ -207,8 +206,6 @@ class DocumentOrShadowRoot {
   void AddSizeOfExcludingThis(nsWindowSizes&) const;
   void AddSizeOfOwnedSheetArrayExcludingThis(
       nsWindowSizes&, const nsTArray<RefPtr<StyleSheet>>&) const;
-
-  nsIContent* Retarget(nsIContent* aContent) const;
 
   /**
    * If focused element's subtree root is this document or shadow root, return
