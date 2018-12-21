@@ -64,12 +64,7 @@ class ProviderUnifiedComplete extends UrlbarProvider {
    */
   get sources() {
     return [
-      UrlbarUtils.MATCH_SOURCE.BOOKMARKS,
-      UrlbarUtils.MATCH_SOURCE.HISTORY,
-      UrlbarUtils.MATCH_SOURCE.SEARCH,
       UrlbarUtils.MATCH_SOURCE.TABS,
-      UrlbarUtils.MATCH_SOURCE.OTHER_LOCAL,
-      UrlbarUtils.MATCH_SOURCE.OTHER_NETWORK,
     ];
   }
 
@@ -93,9 +88,6 @@ class ProviderUnifiedComplete extends UrlbarProvider {
     //  * "user-context-id:#": the userContextId to use.
     let params = ["enable-actions"];
     params.push(`max-results:${queryContext.maxResults}`);
-    // This is necessary because we insert matches one by one, thus we don't
-    // want UnifiedComplete to reuse results.
-    params.push(`insert-method:${UrlbarUtils.INSERTMETHOD.APPEND}`);
     if (queryContext.isPrivate) {
       params.push("private-window");
       if (!PrivateBrowsingUtils.permanentPrivateBrowsing) {
@@ -112,7 +104,7 @@ class ProviderUnifiedComplete extends UrlbarProvider {
         onSearchResult(_, result) {
           let {done, matches} = convertResultToMatches(queryContext, result, urls);
           for (let match of matches) {
-            addCallback(UrlbarProviderUnifiedComplete, match);
+            addCallback(this, match);
           }
           if (done) {
             resolve();
@@ -258,17 +250,6 @@ function makeUrlbarMatch(tokens, info) {
             icon: [info.icon, false],
           })
         );
-      case "switchtab":
-        return new UrlbarMatch(
-          UrlbarUtils.MATCH_TYPE.TAB_SWITCH,
-          UrlbarUtils.MATCH_SOURCE.TABS,
-          ...UrlbarMatch.payloadAndSimpleHighlights(tokens, {
-            url: [action.params.url, true],
-            title: [info.comment, true],
-            device: [action.params.deviceName, true],
-            icon: [info.icon, false],
-          })
-        );
       case "visiturl":
         return new UrlbarMatch(
           UrlbarUtils.MATCH_TYPE.URL,
@@ -280,7 +261,7 @@ function makeUrlbarMatch(tokens, info) {
           })
         );
       default:
-        Cu.reportError(`Unexpected action type: ${action.type}`);
+        Cu.reportError("Unexpected action type");
         return null;
     }
   }
