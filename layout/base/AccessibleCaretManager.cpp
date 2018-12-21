@@ -496,16 +496,20 @@ nsresult AccessibleCaretManager::SelectWordOrShortcut(const nsPoint& aPoint) {
   }
 
   // Find the frame under point.
-  uint32_t flags =
-      nsLayoutUtils::IGNORE_PAINT_SUPPRESSION | nsLayoutUtils::IGNORE_CROSS_DOC;
+  EnumSet<nsLayoutUtils::FrameForPointOption> options = {
+      nsLayoutUtils::FrameForPointOption::IgnorePaintSuppression,
+      nsLayoutUtils::FrameForPointOption::IgnoreCrossDoc};
 #ifdef MOZ_WIDGET_ANDROID
-  // On Android, we need IGNORE_ROOT_SCROLL_FRAME for correct hit testing
-  // when zoomed in or out.
-  flags = nsLayoutUtils::IGNORE_ROOT_SCROLL_FRAME;
+  // On Android, we need IgnoreRootScrollFrame for correct hit testing when
+  // zoomed in or out.
+  //
+  // FIXME(emilio): But do we really want to override the other two flags?
+  options = nsLayoutUtils::FrameForPointOption::IgnoreRootScrollFrame;
 #endif
+
   AutoWeakFrame ptFrame =
-      nsLayoutUtils::GetFrameForPoint(rootFrame, aPoint, flags);
-  if (!ptFrame.IsAlive()) {
+      nsLayoutUtils::GetFrameForPoint(rootFrame, aPoint, options);
+  if (!ptFrame.GetFrame()) {
     return NS_ERROR_FAILURE;
   }
 
@@ -1086,10 +1090,10 @@ nsresult AccessibleCaretManager::DragCaretInternal(const nsPoint& aPoint) {
       nsPoint(aPoint.x, aPoint.y + mOffsetYToCaretLogicalPosition));
 
   // Find out which content we point to
-  nsIFrame* ptFrame =
-      nsLayoutUtils::GetFrameForPoint(rootFrame, point,
-                                      nsLayoutUtils::IGNORE_PAINT_SUPPRESSION |
-                                          nsLayoutUtils::IGNORE_CROSS_DOC);
+  nsIFrame* ptFrame = nsLayoutUtils::GetFrameForPoint(
+      rootFrame, point,
+      {nsLayoutUtils::FrameForPointOption::IgnorePaintSuppression,
+       nsLayoutUtils::FrameForPointOption::IgnoreCrossDoc});
   if (!ptFrame) {
     return NS_ERROR_FAILURE;
   }

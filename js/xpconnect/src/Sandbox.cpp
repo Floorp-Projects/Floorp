@@ -515,6 +515,13 @@ class SandboxProxyHandler : public js::Wrapper {
       JS::AutoIdVector& props) const override;
   virtual JSObject* enumerate(JSContext* cx,
                               JS::Handle<JSObject*> proxy) const override;
+
+ private:
+  // Implements the custom getPropertyDescriptor behavior. If the getOwn
+  // argument is true we only look for "own" properties.
+  bool getPropertyDescriptorImpl(
+      JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
+      bool getOwn, JS::MutableHandle<JS::PropertyDescriptor> desc) const;
 };
 
 static const SandboxProxyHandler sandboxProxyHandler;
@@ -668,14 +675,21 @@ static bool IsMaybeWrappedDOMConstructor(JSObject* obj) {
   return dom::IsDOMConstructor(obj);
 }
 
-bool SandboxProxyHandler::getPropertyDescriptor(
+bool SandboxProxyHandler::getPropertyDescriptorImpl(
     JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
-    JS::MutableHandle<PropertyDescriptor> desc) const {
+    bool getOwn, JS::MutableHandle<PropertyDescriptor> desc) const {
   JS::RootedObject obj(cx, wrappedObject(proxy));
 
   MOZ_ASSERT(js::GetObjectCompartment(obj) == js::GetObjectCompartment(proxy));
-  if (!JS_GetPropertyDescriptorById(cx, obj, id, desc)) {
-    return false;
+
+  if (getOwn) {
+    if (!JS_GetOwnPropertyDescriptorById(cx, obj, id, desc)) {
+      return false;
+    }
+  } else {
+    if (!JS_GetPropertyDescriptorById(cx, obj, id, desc)) {
+      return false;
+    }
   }
 
   if (!desc.object()) {
@@ -707,18 +721,16 @@ bool SandboxProxyHandler::getPropertyDescriptor(
   return true;
 }
 
+bool SandboxProxyHandler::getPropertyDescriptor(
+    JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
+    JS::MutableHandle<PropertyDescriptor> desc) const {
+  return getPropertyDescriptorImpl(cx, proxy, id, /* getOwn = */ false, desc);
+}
+
 bool SandboxProxyHandler::getOwnPropertyDescriptor(
     JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
     JS::MutableHandle<PropertyDescriptor> desc) const {
-  if (!getPropertyDescriptor(cx, proxy, id, desc)) {
-    return false;
-  }
-
-  if (desc.object() != wrappedObject(proxy)) {
-    desc.object().set(nullptr);
-  }
-
-  return true;
+  return getPropertyDescriptorImpl(cx, proxy, id, /* getOwn = */ true, desc);
 }
 
 /*

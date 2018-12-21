@@ -3394,72 +3394,6 @@ Element* nsIDocument::GetCurrentScript() {
   return el;
 }
 
-nsresult nsIDocument::NodesFromRectHelper(float aX, float aY, float aTopSize,
-                                          float aRightSize, float aBottomSize,
-                                          float aLeftSize,
-                                          bool aIgnoreRootScrollFrame,
-                                          bool aFlushLayout,
-                                          nsINodeList** aReturn) {
-  NS_ENSURE_ARG_POINTER(aReturn);
-
-  nsSimpleContentList* elements = new nsSimpleContentList(this);
-  NS_ADDREF(elements);
-  *aReturn = elements;
-
-  // Following the same behavior of elementFromPoint,
-  // we don't return anything if either coord is negative
-  if (!aIgnoreRootScrollFrame && (aX < 0 || aY < 0)) return NS_OK;
-
-  nscoord x = nsPresContext::CSSPixelsToAppUnits(aX - aLeftSize);
-  nscoord y = nsPresContext::CSSPixelsToAppUnits(aY - aTopSize);
-  nscoord w = nsPresContext::CSSPixelsToAppUnits(aLeftSize + aRightSize) + 1;
-  nscoord h = nsPresContext::CSSPixelsToAppUnits(aTopSize + aBottomSize) + 1;
-
-  nsRect rect(x, y, w, h);
-
-  // Make sure the layout information we get is up-to-date, and
-  // ensure we get a root frame (for everything but XUL)
-  if (aFlushLayout) {
-    FlushPendingNotifications(FlushType::Layout);
-  }
-
-  nsIPresShell* ps = GetShell();
-  NS_ENSURE_STATE(ps);
-  nsIFrame* rootFrame = ps->GetRootFrame();
-
-  // XUL docs, unlike HTML, have no frame tree until everything's done loading
-  if (!rootFrame)
-    return NS_OK;  // return nothing to premature XUL callers as a reminder to
-                   // wait
-
-  AutoTArray<nsIFrame*, 8> outFrames;
-  nsLayoutUtils::GetFramesForArea(
-      rootFrame, rect, outFrames,
-      nsLayoutUtils::IGNORE_PAINT_SUPPRESSION |
-          nsLayoutUtils::IGNORE_CROSS_DOC |
-          (aIgnoreRootScrollFrame ? nsLayoutUtils::IGNORE_ROOT_SCROLL_FRAME
-                                  : 0));
-
-  // Used to filter out repeated elements in sequence.
-  nsIContent* lastAdded = nullptr;
-
-  for (uint32_t i = 0; i < outFrames.Length(); i++) {
-    nsIContent* node = GetContentInThisDocument(outFrames[i]);
-
-    if (node && !node->IsElement() && !node->IsText()) {
-      // We have a node that isn't an element or a text node,
-      // use its parent content instead.
-      node = node->GetParent();
-    }
-    if (node && node != lastAdded) {
-      elements->AppendElement(node);
-      lastAdded = node;
-    }
-  }
-
-  return NS_OK;
-}
-
 void nsIDocument::ReleaseCapture() const {
   // only release the capture if the caller can access it. This prevents a
   // page from stopping a scrollbar grab for example.
@@ -9253,6 +9187,8 @@ already_AddRefed<TouchList> nsIDocument::CreateTouchList(
 
 already_AddRefed<nsDOMCaretPosition> nsIDocument::CaretPositionFromPoint(
     float aX, float aY) {
+  using FrameForPointOption = nsLayoutUtils::FrameForPointOption;
+
   nscoord x = nsPresContext::CSSPixelsToAppUnits(aX);
   nscoord y = nsPresContext::CSSPixelsToAppUnits(aY);
   nsPoint pt(x, y);
@@ -9271,10 +9207,10 @@ already_AddRefed<nsDOMCaretPosition> nsIDocument::CaretPositionFromPoint(
     return nullptr;
   }
 
-  nsIFrame* ptFrame =
-      nsLayoutUtils::GetFrameForPoint(rootFrame, pt,
-                                      nsLayoutUtils::IGNORE_PAINT_SUPPRESSION |
-                                          nsLayoutUtils::IGNORE_CROSS_DOC);
+  nsIFrame* ptFrame = nsLayoutUtils::GetFrameForPoint(
+      rootFrame, pt,
+      {FrameForPointOption::IgnorePaintSuppression,
+       FrameForPointOption::IgnoreCrossDoc});
   if (!ptFrame) {
     return nullptr;
   }

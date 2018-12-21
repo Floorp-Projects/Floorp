@@ -1,3 +1,5 @@
+/* import-globals-from head.js */
+
 const principalInfos = [
   { url: "http://example.com", attrs: {} },
 
@@ -11,22 +13,19 @@ const principalInfos = [
   { url: "https://pattern.test", attrs: { userContextId: 15 } },
 ];
 
-function enableNextGenLocalStorage()
-{
+function enableNextGenLocalStorage() {
   info("Setting pref");
 
   Services.prefs.setBoolPref("dom.storage.next_gen", true);
 }
 
-function disableNextGenLocalStorage()
-{
+function disableNextGenLocalStorage() {
   info("Setting pref");
 
   Services.prefs.setBoolPref("dom.storage.next_gen", false);
 }
 
-function storeData()
-{
+function storeData() {
   for (let i = 0; i < principalInfos.length; i++) {
     let principalInfo = principalInfos[i];
     let principal = getPrincipal(principalInfo.url, principalInfo.attrs);
@@ -49,8 +48,7 @@ function storeData()
   }
 }
 
-function exportShadowDatabase(name)
-{
+function exportShadowDatabase(name) {
   info("Verifying shadow database");
 
   let profileDir = Services.dirsvc.get("ProfD", Ci.nsIFile);
@@ -66,8 +64,7 @@ function exportShadowDatabase(name)
   shadowDatabase.copyTo(currentDir, name);
 }
 
-function importShadowDatabase(name)
-{
+function importShadowDatabase(name) {
   info("Verifying shadow database");
 
   let currentDir = Services.dirsvc.get("CurWorkD", Ci.nsIFile);
@@ -87,8 +84,7 @@ function importShadowDatabase(name)
   return true;
 }
 
-function verifyData(clearedOrigins)
-{
+function verifyData(clearedOrigins) {
   for (let i = 0; i < principalInfos.length; i++) {
     let principalInfo = principalInfos[i];
     let principal = getPrincipal(principalInfo.url, principalInfo.attrs);
