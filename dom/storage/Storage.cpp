@@ -44,7 +44,7 @@ bool Storage::CanUseStorage(nsIPrincipal& aSubjectPrincipal) {
   }
 
   nsContentUtils::StorageAccess access =
-      nsContentUtils::StorageAllowedForWindow(GetParentObject());
+      nsContentUtils::StorageAllowedForPrincipal(Principal());
 
   if (access <= nsContentUtils::StorageAccess::eDeny) {
     return false;
