@@ -157,20 +157,8 @@ export class ProjectSearch extends Component<Props, State> {
     );
   };
 
-  getResults = (): Result[] => {
-    const { results } = this.props;
-    return results
-      .toJS()
-      .map(result => ({
-        type: "RESULT",
-        ...result,
-        matches: result.matches.map(m => ({ type: "MATCH", ...m }))
-      }))
-      .filter(result => result.filepath && result.matches.length > 0);
-  };
-
   getResultCount = () =>
-    this.getResults().reduce((count, file) => count + file.matches.length, 0);
+    this.props.results.reduce((count, file) => count + file.matches.length, 0);
 
   onKeyDown = (e: SyntheticKeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Escape") {
@@ -271,8 +259,7 @@ export class ProjectSearch extends Component<Props, State> {
   };
 
   renderResults = () => {
-    const results = this.getResults();
-    const { status } = this.props;
+    const { status, results } = this.props;
     if (!this.props.query) {
       return;
     }
