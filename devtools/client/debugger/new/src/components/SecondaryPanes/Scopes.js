@@ -4,7 +4,7 @@
 
 // @flow
 import React, { PureComponent } from "react";
-import { connect } from "react-redux";
+import { connect } from "../../utils/connect";
 import actions from "../../actions";
 import { createObjectClient } from "../../client/firefox";
 
@@ -19,7 +19,8 @@ import {
 import { getScopes } from "../../utils/pause/scopes";
 
 import { objectInspector } from "devtools-reps";
-import type { Pause, Why } from "../../types";
+
+import type { Why } from "../../types";
 import type { NamedValue } from "../../utils/pause/scopes/types";
 
 import "./Scopes.css";
@@ -27,7 +28,7 @@ import "./Scopes.css";
 const { ObjectInspector } = objectInspector;
 
 type Props = {
-  isPaused: Pause,
+  isPaused: boolean,
   selectedFrame: Object,
   generatedFrameScopes: Object,
   originalFrameScopes: Object | null,

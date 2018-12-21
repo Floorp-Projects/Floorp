@@ -42,6 +42,7 @@ export const setSelectedLocation = (
   location: SourceLocation
 ) => ({
   type: "SET_SELECTED_LOCATION",
+  thread: source.thread,
   source,
   location
 });

@@ -10,6 +10,7 @@ DIRS += [
 DebuggerModules(
     'Breakpoint.js',
     'BreakpointHeading.js',
+    'BreakpointHeadingsContextMenu.js',
     'BreakpointsContextMenu.js',
     'ExceptionOption.js',
     'index.js',
