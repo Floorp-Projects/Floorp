@@ -739,10 +739,6 @@ html|input.urlbar-input {
   transition: none;
 }
 
-#DateTimePickerPanel[active="true"] {
-  -moz-binding: url("chrome://global/content/bindings/datetimepopup.xml#datetime-popup");
-}
-
 #urlbar[pageproxystate=invalid] > #page-action-buttons > .urlbar-page-action,
 #identity-box.chromeUI ~ #page-action-buttons > .urlbar-page-action:not(#star-button-box),
 .urlbar-history-dropmarker[usertyping],
