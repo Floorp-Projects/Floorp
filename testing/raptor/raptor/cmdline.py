@@ -21,11 +21,13 @@ def create_parser(mach_interface=False):
     add_arg('-b', '--binary', dest='binary',
             help="path to the browser executable that we are testing")
     add_arg('--host', dest='host',
-            help="Hostname from which to serve urls, defaults to 127.0.0.1.",
+            help="Hostname from which to serve urls, defaults to 127.0.0.1. "
+            "The value HOST_IP will cause the value of host to be "
+            "loaded from the environment variable HOST_IP.",
             default='127.0.0.1')
     add_arg('--power-test', dest="power_test", action="store_true",
-            help="Use Raptor to measure power usage. Currently supported only when "
-            "--host specified for geckoview.")
+            help="Use Raptor to measure power usage. Currently supported for Geckoview. "
+            "The host ip address must be specified via the --host command line argument.")
     add_arg('--is-release-build', dest="is_release_build", default=False,
             action='store_true',
             help="Whether the build is a release build which requires work arounds "
@@ -91,6 +93,8 @@ def verify_options(parser, args):
 def parse_args(argv=None):
     parser = create_parser()
     args = parser.parse_args(argv)
+    if args.host == 'HOST_IP':
+        args.host = os.environ['HOST_IP']
     verify_options(parser, args)
     return args
 
