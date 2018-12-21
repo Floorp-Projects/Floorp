@@ -253,12 +253,13 @@ function filterTokens(tokens) {
       type: UrlbarTokenizer.TYPE.TEXT,
     };
     let restrictionType = CHAR_TO_TYPE_MAP.get(token);
+    let firstRestriction = foundRestriction.length > 0 ? foundRestriction[0] : null;
     if (tokens.length > 1 &&
         restrictionType &&
-        foundRestriction.length == 0 ||
+        !firstRestriction ||
         (foundRestriction.length == 1 &&
-         (combinables.has(foundRestriction[0]) && !combinables.has(restrictionType)) ||
-         (!combinables.has(foundRestriction[0]) && combinables.has(restrictionType)))) {
+         (combinables.has(firstRestriction) && !combinables.has(restrictionType)) ||
+         (!combinables.has(firstRestriction) && combinables.has(restrictionType)))) {
       tokenObj.type = restrictionType;
       foundRestriction.push(restrictionType);
     } else if (UrlbarTokenizer.looksLikeOrigin(token)) {

@@ -80,12 +80,16 @@ class UrlbarController {
    * @param {QueryContext} queryContext The query details.
    */
   async startQuery(queryContext) {
+    // Cancel any running query.
+    if (this._lastQueryContext) {
+      this.cancelQuery(this._lastQueryContext);
+    }
+    this._lastQueryContext = queryContext;
+
     queryContext.autoFill = UrlbarPrefs.get("autoFill");
 
     this._notify("onQueryStarted", queryContext);
-
     await this.manager.startQuery(queryContext, this);
-
     this._notify("onQueryFinished", queryContext);
   }
 
@@ -96,8 +100,10 @@ class UrlbarController {
    * @param {QueryContext} queryContext The query details.
    */
   cancelQuery(queryContext) {
+    if (queryContext === this._lastQueryContext) {
+      delete this._lastQueryContext;
+    }
     this.manager.cancelQuery(queryContext);
-
     this._notify("onQueryCancelled", queryContext);
   }
 
