@@ -10,13 +10,6 @@ ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
 
 class AutoplayChild extends ActorChild {
   handleEvent(event) {
-    if (event.type == "AudibleAutoplayMediaOccurred") {
-      this.mm.sendAsyncMessage("AudibleAutoplayMediaOccurred");
-      return;
-    }
-    if (event.type == "GloballyAutoplayBlocked") {
-      this.mm.sendAsyncMessage("GloballyAutoplayBlocked");
-      return;
-    }
+    this.mm.sendAsyncMessage("GloballyAutoplayBlocked");
   }
 }
