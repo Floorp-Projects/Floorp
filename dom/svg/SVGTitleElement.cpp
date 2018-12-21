@@ -7,7 +7,7 @@
 #include "mozilla/dom/SVGTitleElement.h"
 #include "mozilla/dom/SVGTitleElementBinding.h"
 
-NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(Title)
+NS_IMPL_NS_NEW_SVG_ELEMENT(Title)
 
 namespace mozilla {
 namespace dom {

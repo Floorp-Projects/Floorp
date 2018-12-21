@@ -9,7 +9,7 @@
 #include "nsIFrame.h"
 #include "nsSVGFilterInstance.h"
 
-NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(FEDropShadow)
+NS_IMPL_NS_NEW_SVG_ELEMENT(FEDropShadow)
 
 using namespace mozilla::gfx;
 

@@ -12,7 +12,7 @@
 #include "nsGkAtoms.h"
 #include "nsError.h"
 
-NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(TextPath)
+NS_IMPL_NS_NEW_SVG_ELEMENT(TextPath)
 
 namespace mozilla {
 namespace dom {

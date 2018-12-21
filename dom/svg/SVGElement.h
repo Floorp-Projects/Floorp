@@ -619,25 +619,7 @@ class SVGElement : public SVGElementBase  // nsIContent
 /**
  * A macro to implement the NS_NewSVGXXXElement() functions.
  */
-#define NS_IMPL_NS_NEW_SVG_ELEMENT(_elementName)                \
-  nsresult NS_NewSVG##_elementName##Element(                    \
-      nsIContent** aResult,                                     \
-      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo) {   \
-    RefPtr<nsSVG##_elementName##Element> it =                   \
-        new nsSVG##_elementName##Element(std::move(aNodeInfo)); \
-                                                                \
-    nsresult rv = it->Init();                                   \
-                                                                \
-    if (NS_FAILED(rv)) {                                        \
-      return rv;                                                \
-    }                                                           \
-                                                                \
-    it.forget(aResult);                                         \
-                                                                \
-    return rv;                                                  \
-  }
-
-#define NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(_elementName)                 \
+#define NS_IMPL_NS_NEW_SVG_ELEMENT(_elementName)                            \
   nsresult NS_NewSVG##_elementName##Element(                                \
       nsIContent** aResult,                                                 \
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo) {               \
@@ -655,7 +637,7 @@ class SVGElement : public SVGElementBase  // nsIContent
     return rv;                                                              \
   }
 
-#define NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT_CHECK_PARSER(_elementName)   \
+#define NS_IMPL_NS_NEW_SVG_ELEMENT_CHECK_PARSER(_elementName)              \
   nsresult NS_NewSVG##_elementName##Element(                               \
       nsIContent** aResult,                                                \
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,                \

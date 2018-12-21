@@ -14,7 +14,7 @@
 #include "mozilla/dom/SVGPatternElementBinding.h"
 #include "mozilla/dom/SVGUnitTypesBinding.h"
 
-NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(Pattern)
+NS_IMPL_NS_NEW_SVG_ELEMENT(Pattern)
 
 namespace mozilla {
 namespace dom {

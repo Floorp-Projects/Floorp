@@ -9,7 +9,7 @@
 #include "mozilla/dom/SVGLineElementBinding.h"
 #include "mozilla/gfx/2D.h"
 
-NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(Line)
+NS_IMPL_NS_NEW_SVG_ELEMENT(Line)
 
 using namespace mozilla::gfx;
 

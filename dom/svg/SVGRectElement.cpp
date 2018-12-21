@@ -14,7 +14,7 @@
 #include "mozilla/gfx/PathHelpers.h"
 #include <algorithm>
 
-NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(Rect)
+NS_IMPL_NS_NEW_SVG_ELEMENT(Rect)
 
 using namespace mozilla::gfx;
 

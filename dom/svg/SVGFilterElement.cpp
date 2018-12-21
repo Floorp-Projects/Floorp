@@ -16,7 +16,7 @@
 #include "nsSVGUtils.h"
 #include "SVGObserverUtils.h"
 
-NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(Filter)
+NS_IMPL_NS_NEW_SVG_ELEMENT(Filter)
 
 namespace mozilla {
 namespace dom {

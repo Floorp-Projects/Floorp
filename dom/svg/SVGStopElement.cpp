@@ -7,7 +7,7 @@
 #include "mozilla/dom/SVGStopElement.h"
 #include "mozilla/dom/SVGStopElementBinding.h"
 
-NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(Stop)
+NS_IMPL_NS_NEW_SVG_ELEMENT(Stop)
 
 namespace mozilla {
 namespace dom {

@@ -9,7 +9,7 @@
 #include "nsContentUtils.h"
 #include "mozilla/dom/SVGStyleElementBinding.h"
 
-NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(Style)
+NS_IMPL_NS_NEW_SVG_ELEMENT(Style)
 
 namespace mozilla {
 namespace dom {

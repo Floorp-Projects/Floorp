@@ -14,7 +14,7 @@
 #include "mozilla/dom/SVGMPathElementBinding.h"
 #include "nsIURI.h"
 
-NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(MPath)
+NS_IMPL_NS_NEW_SVG_ELEMENT(MPath)
 
 namespace mozilla {
 namespace dom {

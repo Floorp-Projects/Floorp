@@ -11,7 +11,7 @@
 #include "nsColor.h"
 #include "nsIFrame.h"
 
-NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(FEFlood)
+NS_IMPL_NS_NEW_SVG_ELEMENT(FEFlood)
 
 using namespace mozilla::gfx;
 

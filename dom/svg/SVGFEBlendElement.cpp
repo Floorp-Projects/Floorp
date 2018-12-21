@@ -8,7 +8,7 @@
 #include "mozilla/dom/SVGFEBlendElementBinding.h"
 #include "nsSVGUtils.h"
 
-NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(FEBlend)
+NS_IMPL_NS_NEW_SVG_ELEMENT(FEBlend)
 
 using namespace mozilla::gfx;
 
