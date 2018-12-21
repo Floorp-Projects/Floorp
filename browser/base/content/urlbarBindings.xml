@@ -1165,9 +1165,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
               let event = document.createEvent("UIEvents");
               event.initUIEvent("input", true, false, window, 0);
-              urlbar.dispatchEvent(event);
-
-              SetPageProxyState("invalid");
+              urlbar.inputField.dispatchEvent(event);
             }
 
             Cc["@mozilla.org/widget/clipboardhelper;1"]
@@ -1684,7 +1682,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
           let event = document.createEvent("Events");
           event.initEvent("input", true, true);
-          this.dispatchEvent(event);
+          this.inputField.dispatchEvent(event);
 
           // handleText() ignores the value if it's the same as the previous
           // value, but we want consecutive searches with the same value to be
@@ -1700,14 +1698,11 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
       <method name="typeRestrictToken">
         <parameter name="char"/>
         <body><![CDATA[
-          for (let c of [char, " "]) {
-            let code = c.charCodeAt(0);
-            gURLBar.inputField.dispatchEvent(new KeyboardEvent("keypress", {
-              keyCode: code,
-              charCode: code,
-              bubbles: true,
-            }));
-          }
+          this.inputField.value = char + " ";
+
+          let event = this.document.createEvent("UIEvents");
+          event.initUIEvent("input", true, false, window, 0);
+          this.inputField.dispatchEvent(event);
         ]]></body>
       </method>
 

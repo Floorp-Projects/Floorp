@@ -96,10 +96,10 @@ class UrlbarInput {
       return new UrlbarValueFormatter(this);
     });
 
-    this.addEventListener("input", this);
     this.addEventListener("mousedown", this);
     this.inputField.addEventListener("blur", this);
     this.inputField.addEventListener("focus", this);
+    this.inputField.addEventListener("input", this);
     this.inputField.addEventListener("mouseover", this);
     this.inputField.addEventListener("overflow", this);
     this.inputField.addEventListener("underflow", this);
@@ -347,6 +347,14 @@ class UrlbarInput {
       providers: ["UnifiedComplete"],
       muxer: "UnifiedComplete",
     }));
+  }
+
+  typeRestrictToken(char) {
+    this.inputField.value = char + " ";
+
+    let event = this.document.createEvent("UIEvents");
+    event.initUIEvent("input", true, false, this.window, 0);
+    this.inputField.dispatchEvent(event);
   }
 
   // Getters and Setters below.
@@ -792,10 +800,8 @@ class CopyCutController {
       urlbar.selectionStart = urlbar.selectionEnd = start;
 
       let event = urlbar.document.createEvent("UIEvents");
-      event.initUIEvent("input", true, false, this.window, 0);
-      urlbar.textbox.dispatchEvent(event);
-
-      urlbar.window.SetPageProxyState("invalid");
+      event.initUIEvent("input", true, false, urlbar.window, 0);
+      urlbar.inputField.dispatchEvent(event);
     }
 
     ClipboardHelper.copyString(val);
