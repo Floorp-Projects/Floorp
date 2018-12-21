@@ -14,7 +14,6 @@ let currentWork;
 async function dispatchNewSources() {
   const sources = queuedSources;
   queuedSources = [];
-
   currentWork = await newSources(sources);
 }
 

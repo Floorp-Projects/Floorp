@@ -17,7 +17,8 @@ import {
   getXHRBreakpoints,
   getSelectedSource,
   getBreakpointAtLocation,
-  getBreakpointsAtLine
+  getBreakpointsAtLine,
+  getBreakpointsForSource
 } from "../../selectors";
 import { assertBreakpoint, createXHRBreakpoint } from "../../utils/breakpoint";
 import {
@@ -32,7 +33,12 @@ import { isEmptyLineInSource } from "../../reducers/ast";
 // this will need to be changed so that addCLientBreakpoint is removed
 
 import type { ThunkArgs, Action } from "../types";
-import type { Breakpoint, SourceLocation, XHRBreakpoint } from "../../types";
+import type {
+  Breakpoint,
+  Source,
+  SourceLocation,
+  XHRBreakpoint
+} from "../../types";
 
 import { recordEvent } from "../../utils/telemetry";
 
@@ -101,6 +107,40 @@ export function disableBreakpoint(location: SourceLocation) {
         breakpoint: newBreakpoint
       }: Action)
     );
+  };
+}
+
+/**
+ * Disable all breakpoints in a source
+ *
+ * @memberof actions/breakpoints
+ * @static
+ */
+export function disableBreakpointsInSource(source: Source) {
+  return async ({ dispatch, getState, client }: ThunkArgs) => {
+    const breakpoints = getBreakpointsForSource(getState(), source.id);
+    for (const breakpoint of breakpoints) {
+      if (!breakpoint.disabled) {
+        dispatch(disableBreakpoint(breakpoint.generatedLocation));
+      }
+    }
+  };
+}
+
+/**
+ * Enable all breakpoints in a source
+ *
+ * @memberof actions/breakpoints
+ * @static
+ */
+export function enableBreakpointsInSource(source: Source) {
+  return async ({ dispatch, getState, client }: ThunkArgs) => {
+    const breakpoints = getBreakpointsForSource(getState(), source.id);
+    for (const breakpoint of breakpoints) {
+      if (breakpoint.disabled) {
+        dispatch(enableBreakpoint(breakpoint.generatedLocation));
+      }
+    }
   };
 }
 
@@ -193,6 +233,21 @@ export function removeBreakpoints(breakpoints: Breakpoint[]) {
     return Promise.all(
       breakpoints.map(bp => dispatch(removeBreakpoint(bp.location)))
     );
+  };
+}
+
+/**
+ * Removes all breakpoints in a source
+ *
+ * @memberof actions/breakpoints
+ * @static
+ */
+export function removeBreakpointsInSource(source: Source) {
+  return async ({ dispatch, getState, client }: ThunkArgs) => {
+    const breakpoints = getBreakpointsForSource(getState(), source.id);
+    for (const breakpoint of breakpoints) {
+      dispatch(removeBreakpoint(breakpoint.generatedLocation));
+    }
   };
 }
 

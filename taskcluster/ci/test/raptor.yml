@@ -331,6 +331,24 @@ raptor-speedometer-geckoview:
             - --app=geckoview
             - --binary=org.mozilla.geckoview_example
 
+raptor-speedometer-geckoview-power:
+    description: "Raptor Speedometer Power on Geckoview"
+    try-name: raptor-speedometer-geckoview-power
+    treeherder-symbol: Rap-P(sp)
+    target: geckoview_example.apk
+    run-on-projects:
+        by-test-platform:
+            android-hw.*: ['try']
+    max-run-time: 1800
+    mozharness:
+        extra-options:
+            - --test=raptor-speedometer
+            - --app=geckoview
+            - --binary=org.mozilla.geckoview_example
+            - --power-test
+            - --page-cycles 5
+            - --host HOST_IP
+
 raptor-speedometer-chrome:
     description: "Raptor Speedometer on Chrome"
     try-name: raptor-speedometer-chrome

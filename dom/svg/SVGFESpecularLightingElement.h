@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_SVGFESpecularLightingElement_h
 #define mozilla_dom_SVGFESpecularLightingElement_h
 
-#include "nsSVGFilters.h"
+#include "SVGFilters.h"
 
 nsresult NS_NewSVGFESpecularLightingElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);

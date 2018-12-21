@@ -4,7 +4,7 @@
 
 // @flow
 
-import { getSource } from "../../selectors";
+import { getCurrentThread, getSource } from "../../selectors";
 import { loadSourceText } from "../sources/loadSourceText";
 import { PROMISE } from "../utils/middleware/promise";
 
@@ -28,6 +28,7 @@ export function mapScopes(scopes: Promise<Scope>, frame: Frame) {
 
     await dispatch({
       type: "MAP_SCOPES",
+      thread: getCurrentThread(getState()),
       frame,
       [PROMISE]: (async function() {
         if (

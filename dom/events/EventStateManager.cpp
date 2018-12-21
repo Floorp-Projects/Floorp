@@ -2952,7 +2952,9 @@ nsresult EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
   // Most of the events we handle below require a frame.
   // Add special cases here.
   if (!mCurrentTarget && aEvent->mMessage != eMouseUp &&
-      aEvent->mMessage != eMouseDown) {
+      aEvent->mMessage != eMouseDown &&
+      aEvent->mMessage != eDragEnter &&
+      aEvent->mMessage != eDragOver) {
     return NS_OK;
   }
 

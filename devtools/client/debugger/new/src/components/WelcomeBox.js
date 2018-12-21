@@ -5,7 +5,7 @@
 // @flow
 import React, { Component } from "react";
 
-import { connect } from "react-redux";
+import { connect } from "../utils/connect";
 
 import actions from "../actions";
 import { getPaneCollapse } from "../selectors";

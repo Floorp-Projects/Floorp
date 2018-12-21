@@ -10,17 +10,12 @@
  * @module reducers/project-text-search
  */
 
-import * as I from "immutable";
-import makeRecord from "../utils/makeRecord";
-
 import type { Action } from "../actions/types";
-import type { Record } from "../utils/makeRecord";
-import type { List } from "immutable";
 
 export type Search = {
-  id: string,
-  filepath: string,
-  matches: I.List<any>
+  +sourceId: string,
+  +filepath: string,
+  +matches: any[]
 };
 export type StatusType = "INITIAL" | "FETCHING" | "DONE" | "ERROR";
 export const statusType = {
@@ -30,77 +25,75 @@ export const statusType = {
   error: "ERROR"
 };
 
-export type ResultRecord = Record<Search>;
-export type ResultList = List<ResultRecord>;
+export type ResultList = Search[];
 export type ProjectTextSearchState = {
-  query: string,
-  results: ResultList,
-  status: string
+  +query: string,
+  +results: ResultList,
+  +status: string
 };
 
-export function initialProjectTextSearchState(): Record<
-  ProjectTextSearchState
-> {
-  return makeRecord(
-    ({
-      query: "",
-      results: I.List(),
-      status: statusType.initial
-    }: ProjectTextSearchState)
-  )();
+export function initialProjectTextSearchState(): ProjectTextSearchState {
+  return {
+    query: "",
+    results: [],
+    status: statusType.initial
+  };
 }
 
 function update(
-  state: Record<ProjectTextSearchState> = initialProjectTextSearchState(),
+  state: ProjectTextSearchState = initialProjectTextSearchState(),
   action: Action
-): Record<ProjectTextSearchState> {
+): ProjectTextSearchState {
   switch (action.type) {
     case "ADD_QUERY":
-      const actionCopy = action;
-      return state.update("query", value => actionCopy.query);
+      return { ...state, query: action.query };
 
     case "CLEAR_QUERY":
-      return state.merge({
+      return {
+        ...state,
         query: "",
         status: statusType.initial
-      });
+      };
 
     case "ADD_SEARCH_RESULT":
-      const results = state.get("results");
-      return state.merge({ results: results.push(action.result) });
+      const results = state.results;
+      if (action.result.matches.length === 0) {
+        return state;
+      }
+
+      const result = {
+        type: "RESULT",
+        ...action.result,
+        matches: action.result.matches.map(m => ({ type: "MATCH", ...m }))
+      };
+      return { ...state, results: [...results, result] };
 
     case "UPDATE_STATUS":
-      return state.merge({ status: action.status });
+      return { ...state, status: action.status };
 
     case "CLEAR_SEARCH_RESULTS":
-      return state.merge({
-        results: state.get("results").clear()
-      });
+      return { ...state, results: [] };
 
     case "CLEAR_SEARCH":
     case "CLOSE_PROJECT_SEARCH":
     case "NAVIGATE":
-      return state.merge({
-        query: "",
-        results: state.get("results").clear(),
-        status: statusType.initial
-      });
+      return initialProjectTextSearchState();
   }
   return state;
 }
 
-type OuterState = { projectTextSearch: Record<ProjectTextSearchState> };
+type OuterState = { projectTextSearch: ProjectTextSearchState };
 
 export function getTextSearchResults(state: OuterState) {
-  return state.projectTextSearch.get("results");
+  return state.projectTextSearch.results;
 }
 
 export function getTextSearchStatus(state: OuterState) {
-  return state.projectTextSearch.get("status");
+  return state.projectTextSearch.status;
 }
 
 export function getTextSearchQuery(state: OuterState) {
-  return state.projectTextSearch.get("query");
+  return state.projectTextSearch.query;
 }
 
 export default update;

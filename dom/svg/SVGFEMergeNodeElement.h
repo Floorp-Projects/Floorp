@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_SVGFEMergeNodeElement_h
 #define mozilla_dom_SVGFEMergeNodeElement_h
 
-#include "nsSVGFilters.h"
+#include "SVGFilters.h"
 
 nsresult NS_NewSVGFEMergeNodeElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);

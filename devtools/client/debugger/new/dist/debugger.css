@@ -1787,8 +1787,8 @@ html .toggle-button.end.vertical svg {
   margin-right: 5px;
 }
 
-.sources-list .tree .focused img:not(.vue):not(.angular),
-.sources-list .managed-tree .tree .node.focused img.blackBox {
+.sources-list .tree .focused .img:not(.vue):not(.angular),
+.sources-list .managed-tree .tree .node.focused .img.blackBox {
   background: #ffffff;
 }
 
@@ -1917,10 +1917,6 @@ html .toggle-button.end.vertical svg {
   margin-inline-end: 6px;
   margin-inline-start: 1px;
   margin-top: 2px;
-}
-
-.theme-dark .sources-list .managed-tree .tree .node:not(.focused) .img.blackBox {
-  background-color: var(--theme-comment);
 }
 
 .theme-dark .sources-list .managed-tree .tree .node .img.blackBox {
@@ -3699,6 +3695,10 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
 
 .worker-list .worker:hover {
   background-color: var(--search-overlays-semitransparent);
+}
+
+.worker-list .worker.selected {
+  background-color: var(--tab-line-selected-color);
 }
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this

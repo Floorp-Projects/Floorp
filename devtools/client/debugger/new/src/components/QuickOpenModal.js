@@ -4,7 +4,7 @@
 
 // @flow
 import React, { Component } from "react";
-import { connect } from "react-redux";
+import { connect } from "../utils/connect";
 import fuzzyAldrin from "fuzzaldrin-plus";
 import { basename } from "../utils/path";
 

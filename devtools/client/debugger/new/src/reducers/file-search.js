@@ -46,17 +46,15 @@ const emptySearchResults = Object.freeze({
   count: 0
 });
 
-export const createFileSearchState = makeRecord(
-  ({
-    query: "",
-    searchResults: emptySearchResults,
-    modifiers: makeRecord({
-      caseSensitive: prefs.fileSearchCaseSensitive,
-      wholeWord: prefs.fileSearchWholeWord,
-      regexMatch: prefs.fileSearchRegexMatch
-    })()
-  }: FileSearchState)
-);
+export const createFileSearchState: () => Record<FileSearchState> = makeRecord({
+  query: "",
+  searchResults: emptySearchResults,
+  modifiers: makeRecord({
+    caseSensitive: prefs.fileSearchCaseSensitive,
+    wholeWord: prefs.fileSearchWholeWord,
+    regexMatch: prefs.fileSearchRegexMatch
+  })()
+});
 
 function update(
   state: Record<FileSearchState> = createFileSearchState(),

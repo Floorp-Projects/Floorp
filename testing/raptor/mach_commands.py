@@ -55,6 +55,8 @@ class RaptorRunner(MozbuildObject):
                                             'raptor-venv')
         self.python_interp = sys.executable
         self.raptor_args = raptor_args
+        if kwargs.get('host', None) == 'HOST_IP':
+            kwargs['host'] = os.environ['HOST_IP']
         self.host = kwargs['host']
         self.power_test = kwargs['power_test']
         self.is_release_build = kwargs['is_release_build']
@@ -204,7 +206,7 @@ class MachRaptor(MachCommandBase):
                 os.environ["DEVICE_SERIAL"] = device_serial
             return raptor.run_test(sys.argv[2:], kwargs)
         except Exception as e:
-            print(str(e))
+            print(repr(e))
             return 1
         finally:
             try:

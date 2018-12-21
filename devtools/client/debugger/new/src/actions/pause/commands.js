@@ -5,7 +5,12 @@
 
 // @flow
 
-import { isPaused, getSource, getTopFrame } from "../../selectors";
+import {
+  isPaused,
+  getCurrentThread,
+  getSource,
+  getTopFrame
+} from "../../selectors";
 import { PROMISE } from "../utils/middleware/promise";
 import { getNextStep } from "../../workers/parser";
 import { addHiddenBreakpoint } from "../breakpoints";
@@ -16,6 +21,15 @@ import type { Source } from "../../types";
 import type { ThunkArgs } from "../types";
 import type { Command } from "../../reducers/types";
 
+export function selectThread(thread: string) {
+  return async ({ dispatch, client }: ThunkArgs) => {
+    return dispatch({
+      type: "SELECT_THREAD",
+      thread
+    });
+  };
+}
+
 /**
  * Debugger commands like stepOver, stepIn, stepUp
  *
@@ -24,11 +38,13 @@ import type { Command } from "../../reducers/types";
  * @static
  */
 export function command(type: Command) {
-  return async ({ dispatch, client }: ThunkArgs) => {
+  return async ({ dispatch, getState, client }: ThunkArgs) => {
+    const thread = getCurrentThread(getState());
     return dispatch({
       type: "COMMAND",
       command: type,
-      [PROMISE]: client[type]()
+      thread,
+      [PROMISE]: client[type](thread)
     });
   };
 }
