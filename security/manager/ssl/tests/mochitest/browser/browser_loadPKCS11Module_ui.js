@@ -197,7 +197,13 @@ add_task(async function testAddModuleFailure() {
   gMockPromptService.expectedText = "Unable to add module";
   gMockPromptService.expectedWindow = win;
 
+  // The exception we throw in addModule is first reported as an uncaught
+  // exception by XPConnect before an exception is propagated to the actual
+  // caller.
+  expectUncaughtException(true);
+
   testAddModuleHelper(win, true);
+  expectUncaughtException(false);
   // If adding a module fails, the dialog will not close. As such, we have to
   // close the window ourselves.
   await BrowserTestUtils.closeWindow(win);
