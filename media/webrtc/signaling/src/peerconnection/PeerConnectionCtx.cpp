@@ -207,12 +207,11 @@ void PeerConnectionCtx::DeliverStats(RTCStatsQuery& aQuery) {
   if (report->mInboundRTPStreamStats.WasPassed()) {
     // Then, look for the things we want telemetry on
     for (auto& s : report->mInboundRTPStreamStats.Value()) {
-      bool isRemote = s.mType.Value() == dom::RTCStatsType::Remote_inbound_rtp;
       bool isAudio = (s.mId.Value().Find("audio") != -1);
       if (s.mPacketsLost.WasPassed() && s.mPacketsReceived.WasPassed() &&
           (s.mPacketsLost.Value() + s.mPacketsReceived.Value()) != 0) {
         HistogramID id;
-        if (isRemote) {
+        if (s.mIsRemote) {
           id = isAudio ? WEBRTC_AUDIO_QUALITY_OUTBOUND_PACKETLOSS_RATE
                        : WEBRTC_VIDEO_QUALITY_OUTBOUND_PACKETLOSS_RATE;
         } else {
@@ -226,7 +225,7 @@ void PeerConnectionCtx::DeliverStats(RTCStatsQuery& aQuery) {
       }
       if (s.mJitter.WasPassed()) {
         HistogramID id;
-        if (isRemote) {
+        if (s.mIsRemote) {
           id = isAudio ? WEBRTC_AUDIO_QUALITY_OUTBOUND_JITTER
                        : WEBRTC_VIDEO_QUALITY_OUTBOUND_JITTER;
         } else {
@@ -236,7 +235,7 @@ void PeerConnectionCtx::DeliverStats(RTCStatsQuery& aQuery) {
         Accumulate(id, s.mJitter.Value());
       }
       if (s.mRoundTripTime.WasPassed()) {
-        MOZ_ASSERT(isRemote);
+        MOZ_ASSERT(s.mIsRemote);
         HistogramID id = isAudio ? WEBRTC_AUDIO_QUALITY_OUTBOUND_RTT
                                  : WEBRTC_VIDEO_QUALITY_OUTBOUND_RTT;
         Accumulate(id, s.mRoundTripTime.Value());
@@ -254,7 +253,7 @@ void PeerConnectionCtx::DeliverStats(RTCStatsQuery& aQuery) {
             // range. Small deltas could cause errors due to division
             if (delta_ms > 500 && delta_ms < 60000) {
               HistogramID id;
-              if (isRemote) {
+              if (s.mIsRemote) {
                 id = isAudio ? WEBRTC_AUDIO_QUALITY_OUTBOUND_BANDWIDTH_KBITS
                              : WEBRTC_VIDEO_QUALITY_OUTBOUND_BANDWIDTH_KBITS;
               } else {

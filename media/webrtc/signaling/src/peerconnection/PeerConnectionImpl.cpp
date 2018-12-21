@@ -2818,13 +2818,14 @@ RefPtr<RTCStatsQueryPromise> PeerConnectionImpl::ExecuteStatsQuery_s(
             // TODO Bug 1496533 - use reception time not query time
             s.mTimestamp.Construct(query->now);
             s.mId.Construct(remoteId);
-            s.mType.Construct(RTCStatsType::Remote_inbound_rtp);
+            s.mType.Construct(RTCStatsType::Inbound_rtp);
             ssrc.apply([&s](uint32_t aSsrc) { s.mSsrc.Construct(aSsrc); });
             s.mMediaType.Construct(
                 kind);  // mediaType is the old name for kind.
             s.mKind.Construct(kind);
             s.mJitter.Construct(double(jitterMs) / 1000);
-            s.mLocalId.Construct(localId);
+            s.mRemoteId.Construct(localId);
+            s.mIsRemote = true;
             s.mPacketsReceived.Construct(packetsReceived);
             s.mBytesReceived.Construct(bytesReceived);
             s.mPacketsLost.Construct(packetsLost);
@@ -2846,6 +2847,7 @@ RefPtr<RTCStatsQueryPromise> PeerConnectionImpl::ExecuteStatsQuery_s(
           s.mMediaType.Construct(kind);  // mediaType is the old name for kind.
           s.mKind.Construct(kind);
           s.mRemoteId.Construct(remoteId);
+          s.mIsRemote = false;
           s.mPacketsSent.Construct(mp.RtpPacketsSent());
           s.mBytesSent.Construct(mp.RtpBytesSent());
 
@@ -2902,12 +2904,13 @@ RefPtr<RTCStatsQueryPromise> PeerConnectionImpl::ExecuteStatsQuery_s(
             // TODO Bug 1496533 - use reception time not query time
             s.mTimestamp.Construct(query->now);
             s.mId.Construct(remoteId);
-            s.mType.Construct(RTCStatsType::Remote_outbound_rtp);
+            s.mType.Construct(RTCStatsType::Outbound_rtp);
             ssrc.apply([&s](uint32_t aSsrc) { s.mSsrc.Construct(aSsrc); });
             s.mMediaType.Construct(
                 kind);  // mediaType is the old name for kind.
             s.mKind.Construct(kind);
-            s.mLocalId.Construct(localId);
+            s.mRemoteId.Construct(localId);
+            s.mIsRemote = true;
             s.mPacketsSent.Construct(packetsSent);
             s.mBytesSent.Construct(bytesSent);
             query->report->mOutboundRTPStreamStats.Value().AppendElement(
@@ -2930,6 +2933,7 @@ RefPtr<RTCStatsQueryPromise> PeerConnectionImpl::ExecuteStatsQuery_s(
         if (remoteId.Length()) {
           s.mRemoteId.Construct(remoteId);
         }
+        s.mIsRemote = false;
         s.mPacketsReceived.Construct(mp.RtpPacketsReceived());
         s.mBytesReceived.Construct(mp.RtpBytesReceived());
 
