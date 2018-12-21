@@ -194,35 +194,28 @@ Element* DocumentOrShadowRoot::GetFullscreenElement() {
   return nullptr;
 }
 
-Element* DocumentOrShadowRoot::ElementFromPoint(float aX, float aY) {
-  return ElementFromPointHelper(aX, aY, false, true);
-}
+namespace {
 
-void DocumentOrShadowRoot::ElementsFromPoint(
-    float aX, float aY, nsTArray<RefPtr<Element>>& aElements) {
-  ElementsFromPointHelper(aX, aY, nsIDocument::FLUSH_LAYOUT, aElements);
-}
+enum class FromPointRequestKind {
+  Element,
+  Elements,
+};
 
-Element* DocumentOrShadowRoot::ElementFromPointHelper(
-    float aX, float aY, bool aIgnoreRootScrollFrame, bool aFlushLayout) {
-  AutoTArray<RefPtr<Element>, 1> elementArray;
-  ElementsFromPointHelper(
-      aX, aY,
-      ((aIgnoreRootScrollFrame ? nsIDocument::IGNORE_ROOT_SCROLL_FRAME : 0) |
-       (aFlushLayout ? nsIDocument::FLUSH_LAYOUT : 0) |
-       nsIDocument::IS_ELEMENT_FROM_POINT),
-      elementArray);
-  if (elementArray.IsEmpty()) {
-    return nullptr;
-  }
-  return elementArray[0];
-}
+enum class FlushLayout {
+  No,
+  Yes,
+};
 
-void DocumentOrShadowRoot::ElementsFromPointHelper(
-    float aX, float aY, uint32_t aFlags,
+using FrameForPointOption = nsLayoutUtils::FrameForPointOption;
+
+static void ElementsFromPointHelper(
+    DocumentOrShadowRoot& aRoot, float aX, float aY,
+    EnumSet<FrameForPointOption> aOptions, FlushLayout aShouldFlushLayout,
+    FromPointRequestKind aRequestKind,
     nsTArray<RefPtr<mozilla::dom::Element>>& aElements) {
-  // As per the the spec, we return null if either coord is negative
-  if (!(aFlags & nsIDocument::IGNORE_ROOT_SCROLL_FRAME) && (aX < 0 || aY < 0)) {
+  // As per the spec, we return null if either coord is negative
+  if (!aOptions.contains(FrameForPointOption::IgnoreRootScrollFrame) &&
+      (aX < 0 || aY < 0)) {
     return;
   }
 
@@ -230,11 +223,11 @@ void DocumentOrShadowRoot::ElementsFromPointHelper(
   nscoord y = nsPresContext::CSSPixelsToAppUnits(aY);
   nsPoint pt(x, y);
 
-  nsCOMPtr<nsIDocument> doc = AsNode().OwnerDoc();
+  nsCOMPtr<nsIDocument> doc = aRoot.AsNode().OwnerDoc();
 
   // Make sure the layout information we get is up-to-date, and
   // ensure we get a root frame (for everything but XUL)
-  if (aFlags & nsIDocument::FLUSH_LAYOUT) {
+  if (aShouldFlushLayout == FlushLayout::Yes) {
     doc->FlushPendingNotifications(FlushType::Layout);
   }
 
@@ -242,23 +235,22 @@ void DocumentOrShadowRoot::ElementsFromPointHelper(
   if (!ps) {
     return;
   }
-  nsIFrame* rootFrame = ps->GetRootFrame();
 
+  nsIFrame* rootFrame = ps->GetRootFrame();
   // XUL docs, unlike HTML, have no frame tree until everything's done loading
   if (!rootFrame) {
     return;  // return null to premature XUL callers as a reminder to wait
   }
 
   nsTArray<nsIFrame*> outFrames;
+
+  aOptions += FrameForPointOption::IgnorePaintSuppression;
+  aOptions += FrameForPointOption::IgnoreCrossDoc;
+
   // Emulate what GetFrameAtPoint does, since we want all the frames under our
   // point.
-  nsLayoutUtils::GetFramesForArea(
-      rootFrame, nsRect(pt, nsSize(1, 1)), outFrames,
-      nsLayoutUtils::IGNORE_PAINT_SUPPRESSION |
-          nsLayoutUtils::IGNORE_CROSS_DOC |
-          ((aFlags & nsIDocument::IGNORE_ROOT_SCROLL_FRAME)
-               ? nsLayoutUtils::IGNORE_ROOT_SCROLL_FRAME
-               : 0));
+  nsLayoutUtils::GetFramesForArea(rootFrame, nsRect(pt, nsSize(1, 1)),
+                                  outFrames, aOptions);
 
   // Dunno when this would ever happen, as we should at least have a root frame
   // under us?
@@ -279,10 +271,11 @@ void DocumentOrShadowRoot::ElementsFromPointHelper(
       // SVG 'text' element's SVGTextFrame doesn't respond to hit-testing, so
       // if 'node' is a child of such an element then we need to manually defer
       // to the parent here.
-      if (!(aFlags & nsIDocument::IS_ELEMENT_FROM_POINT) &&
+      if (aRequestKind != FromPointRequestKind::Element &&
           !nsSVGUtils::IsInSVGTextSubtree(outFrames[i])) {
         continue;
       }
+
       node = node->GetParent();
       if (ShadowRoot* shadow = ShadowRoot::FromNodeOrNull(node)) {
         node = shadow->Host();
@@ -292,18 +285,47 @@ void DocumentOrShadowRoot::ElementsFromPointHelper(
     // XXXsmaug There is plenty of unspec'ed behavior here
     //         https://github.com/w3c/webcomponents/issues/735
     //         https://github.com/w3c/webcomponents/issues/736
-    node = Retarget(node);
+    node = aRoot.Retarget(node);
 
     if (node && node != lastAdded) {
       aElements.AppendElement(node->AsElement());
       lastAdded = node;
       // If this helper is called via ElementFromPoint, just return the first
       // element we find.
-      if (aFlags & nsIDocument::IS_ELEMENT_FROM_POINT) {
+      if (aRequestKind == FromPointRequestKind::Element) {
         return;
       }
     }
   }
+}
+
+}  // namespace
+
+Element* DocumentOrShadowRoot::ElementFromPoint(float aX, float aY) {
+  return ElementFromPointHelper(aX, aY, false, true);
+}
+
+void DocumentOrShadowRoot::ElementsFromPoint(
+    float aX, float aY, nsTArray<RefPtr<Element>>& aElements) {
+  ElementsFromPointHelper(*this, aX, aY, {}, FlushLayout::Yes,
+                          FromPointRequestKind::Elements, aElements);
+}
+
+Element* DocumentOrShadowRoot::ElementFromPointHelper(
+    float aX, float aY, bool aIgnoreRootScrollFrame, bool aFlushLayout) {
+  AutoTArray<RefPtr<Element>, 1> elementArray;
+
+  EnumSet<FrameForPointOption> options;
+  if (aIgnoreRootScrollFrame) {
+    options += FrameForPointOption::IgnoreRootScrollFrame;
+  }
+
+  auto flush = aFlushLayout ? FlushLayout::Yes : FlushLayout::No;
+
+  ElementsFromPointHelper(*this, aX, aY, options, flush,
+                          FromPointRequestKind::Element, elementArray);
+
+  return elementArray.SafeElementAt(0);
 }
 
 Element* DocumentOrShadowRoot::AddIDTargetObserver(nsAtom* aID,

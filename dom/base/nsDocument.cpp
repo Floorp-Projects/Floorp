@@ -3394,6 +3394,13 @@ Element* nsIDocument::GetCurrentScript() {
   return el;
 }
 
+namespace {
+
+using FrameForPointOption = nsLayoutUtils::FrameForPointOption;
+
+}
+
+// FIXME(emilio): Unify with DocumentOrShadowRoot stuff.
 nsresult nsIDocument::NodesFromRectHelper(float aX, float aY, float aTopSize,
                                           float aRightSize, float aBottomSize,
                                           float aLeftSize,
@@ -3432,13 +3439,16 @@ nsresult nsIDocument::NodesFromRectHelper(float aX, float aY, float aTopSize,
     return NS_OK;  // return nothing to premature XUL callers as a reminder to
                    // wait
 
+  EnumSet<FrameForPointOption> options = {
+      FrameForPointOption::IgnorePaintSuppression,
+      FrameForPointOption::IgnoreCrossDoc};
+
+  if (aIgnoreRootScrollFrame) {
+    options += FrameForPointOption::IgnoreRootScrollFrame;
+  }
+
   AutoTArray<nsIFrame*, 8> outFrames;
-  nsLayoutUtils::GetFramesForArea(
-      rootFrame, rect, outFrames,
-      nsLayoutUtils::IGNORE_PAINT_SUPPRESSION |
-          nsLayoutUtils::IGNORE_CROSS_DOC |
-          (aIgnoreRootScrollFrame ? nsLayoutUtils::IGNORE_ROOT_SCROLL_FRAME
-                                  : 0));
+  nsLayoutUtils::GetFramesForArea(rootFrame, rect, outFrames, options);
 
   // Used to filter out repeated elements in sequence.
   nsIContent* lastAdded = nullptr;
@@ -3449,6 +3459,8 @@ nsresult nsIDocument::NodesFromRectHelper(float aX, float aY, float aTopSize,
     if (node && !node->IsElement() && !node->IsText()) {
       // We have a node that isn't an element or a text node,
       // use its parent content instead.
+      // FIXME(emilio): How can this possibly be? We only create frames for
+      // elements and text!
       node = node->GetParent();
     }
     if (node && node != lastAdded) {
@@ -9271,10 +9283,10 @@ already_AddRefed<nsDOMCaretPosition> nsIDocument::CaretPositionFromPoint(
     return nullptr;
   }
 
-  nsIFrame* ptFrame =
-      nsLayoutUtils::GetFrameForPoint(rootFrame, pt,
-                                      nsLayoutUtils::IGNORE_PAINT_SUPPRESSION |
-                                          nsLayoutUtils::IGNORE_CROSS_DOC);
+  nsIFrame* ptFrame = nsLayoutUtils::GetFrameForPoint(
+      rootFrame, pt,
+      {FrameForPointOption::IgnorePaintSuppression,
+       FrameForPointOption::IgnoreCrossDoc});
   if (!ptFrame) {
     return nullptr;
   }
