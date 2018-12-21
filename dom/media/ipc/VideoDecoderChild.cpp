@@ -13,7 +13,6 @@
 #include "GPUVideoImage.h"
 
 namespace mozilla {
-namespace dom {
 
 using base::Thread;
 using namespace ipc;
@@ -127,7 +126,7 @@ void VideoDecoderChild::ActorDestroy(ActorDestroyReason aWhy) {
     // it'll be safe for MediaFormatReader to recreate decoders
     RefPtr<VideoDecoderChild> ref = this;
     GetManager()->RunWhenRecreated(
-        NS_NewRunnableFunction("dom::VideoDecoderChild::ActorDestroy", [=]() {
+        NS_NewRunnableFunction("VideoDecoderChild::ActorDestroy", [=]() {
           MediaResult error(NS_ERROR_DOM_MEDIA_NEED_NEW_DECODER);
           error.SetGPUCrashTimeStamp(ref->mGPUCrashTime);
           if (ref->mInitialized) {
@@ -326,5 +325,4 @@ VideoDecoderManagerChild* VideoDecoderChild::GetManager() {
   return static_cast<VideoDecoderManagerChild*>(Manager());
 }
 
-}  // namespace dom
 }  // namespace mozilla

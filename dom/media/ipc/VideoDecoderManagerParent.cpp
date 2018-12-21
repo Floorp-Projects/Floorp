@@ -30,8 +30,6 @@ extern const nsCString GetFoundD3D11BlacklistedDLL();
 extern const nsCString GetFoundD3D9BlacklistedDLL();
 #endif  // XP_WIN
 
-namespace dom {
-
 using namespace ipc;
 using namespace layers;
 using namespace gfx;
@@ -58,7 +56,7 @@ class VideoDecoderManagerThreadHolder {
  private:
   ~VideoDecoderManagerThreadHolder() {
     NS_DispatchToMainThread(
-        NS_NewRunnableFunction("dom::VideoDecoderManagerThreadHolder::~"
+        NS_NewRunnableFunction("VideoDecoderManagerThreadHolder::~"
                                "VideoDecoderManagerThreadHolder",
                                []() -> void {
                                  sVideoDecoderManagerThread->Shutdown();
@@ -116,7 +114,7 @@ void VideoDecoderManagerParent::StartupThreads() {
       NS_DISPATCH_NORMAL);
 #endif
   sVideoDecoderManagerThread->Dispatch(
-      NS_NewRunnableFunction("dom::VideoDecoderManagerParent::StartupThreads",
+      NS_NewRunnableFunction("VideoDecoderManagerParent::StartupThreads",
                              []() { layers::VideoBridgeChild::Startup(); }),
       NS_DISPATCH_NORMAL);
 
@@ -140,9 +138,9 @@ void VideoDecoderManagerParent::ShutdownThreads() {
 
 void VideoDecoderManagerParent::ShutdownVideoBridge() {
   if (sVideoDecoderManagerThread) {
-    RefPtr<Runnable> task = NS_NewRunnableFunction(
-        "dom::VideoDecoderManagerParent::ShutdownVideoBridge",
-        []() { VideoBridgeChild::Shutdown(); });
+    RefPtr<Runnable> task =
+        NS_NewRunnableFunction("VideoDecoderManagerParent::ShutdownVideoBridge",
+                               []() { VideoBridgeChild::Shutdown(); });
     SyncRunnable::DispatchToThread(sVideoDecoderManagerThread, task);
   }
 }
@@ -166,7 +164,7 @@ bool VideoDecoderManagerParent::CreateForContent(
 
   RefPtr<Runnable> task =
       NewRunnableMethod<Endpoint<PVideoDecoderManagerParent>&&>(
-          "dom::VideoDecoderManagerParent::Open", parent,
+          "VideoDecoderManagerParent::Open", parent,
           &VideoDecoderManagerParent::Open, std::move(aEndpoint));
   sVideoDecoderManagerThread->Dispatch(task.forget(), NS_DISPATCH_NORMAL);
   return true;
@@ -279,5 +277,4 @@ VideoDecoderManagerParent::RecvDeallocateSurfaceDescriptorGPUVideo(
   return IPC_OK();
 }
 
-}  // namespace dom
 }  // namespace mozilla

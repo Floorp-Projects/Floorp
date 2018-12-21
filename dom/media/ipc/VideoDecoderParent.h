@@ -3,19 +3,18 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-#ifndef include_dom_ipc_VideoDecoderParent_h
-#define include_dom_ipc_VideoDecoderParent_h
+#ifndef include_ipc_VideoDecoderParent_h
+#define include_ipc_VideoDecoderParent_h
 
 #include "ImageContainer.h"
 #include "MediaData.h"
 #include "PlatformDecoderModule.h"
 #include "VideoDecoderManagerParent.h"
 #include "mozilla/MozPromise.h"
-#include "mozilla/dom/PVideoDecoderParent.h"
+#include "mozilla/PVideoDecoderParent.h"
 #include "mozilla/layers/TextureForwarder.h"
 
 namespace mozilla {
-namespace dom {
 
 class KnowsCompositorVideo;
 
@@ -62,7 +61,6 @@ class VideoDecoderParent final : public PVideoDecoderParent {
   bool mDestroyed;
 };
 
-}  // namespace dom
 }  // namespace mozilla
 
-#endif  // include_dom_ipc_VideoDecoderParent_h
+#endif  // include_ipc_VideoDecoderParent_h

@@ -3,16 +3,15 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-#ifndef include_dom_ipc_VideoDecoderChild_h
-#define include_dom_ipc_VideoDecoderChild_h
+#ifndef include_ipc_VideoDecoderChild_h
+#define include_ipc_VideoDecoderChild_h
 
 #include "MediaResult.h"
 #include "PlatformDecoderModule.h"
-#include "mozilla/dom/PVideoDecoderChild.h"
+#include "mozilla/PVideoDecoderChild.h"
 #include "IRemoteDecoderChild.h"
 
 namespace mozilla {
-namespace dom {
 
 class RemoteVideoDecoder;
 class RemoteDecoderModule;
@@ -88,7 +87,6 @@ class VideoDecoderChild final : public PVideoDecoderChild,
   TimeStamp mGPUCrashTime;
 };
 
-}  // namespace dom
 }  // namespace mozilla
 
-#endif  // include_dom_ipc_VideoDecoderChild_h
+#endif  // include_ipc_VideoDecoderChild_h
