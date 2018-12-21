@@ -2792,7 +2792,7 @@ bool wasm::Validate(JSContext* cx, const ShareableBytes& bytecode,
 
 #ifdef ENABLE_WASM_GC
   HasGcTypes gcTypesConfigured =
-      cx->options().wasmGc() ? HasGcTypes::True : HasGcTypes::False;
+      HasGcSupport(cx) ? HasGcTypes::True : HasGcTypes::False;
 #else
   HasGcTypes gcTypesConfigured = HasGcTypes::False;
 #endif
