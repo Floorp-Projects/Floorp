@@ -2961,20 +2961,20 @@ struct AutoNestedPaintCount {
 
 #endif
 
-nsIFrame* nsLayoutUtils::GetFrameForPoint(nsIFrame* aFrame, nsPoint aPt,
-                                          uint32_t aFlags) {
+nsIFrame* nsLayoutUtils::GetFrameForPoint(
+    nsIFrame* aFrame, nsPoint aPt, EnumSet<FrameForPointOption> aOptions) {
   AUTO_PROFILER_LABEL("nsLayoutUtils::GetFrameForPoint", LAYOUT);
 
   nsresult rv;
   AutoTArray<nsIFrame*, 8> outFrames;
-  rv = GetFramesForArea(aFrame, nsRect(aPt, nsSize(1, 1)), outFrames, aFlags);
+  rv = GetFramesForArea(aFrame, nsRect(aPt, nsSize(1, 1)), outFrames, aOptions);
   NS_ENSURE_SUCCESS(rv, nullptr);
   return outFrames.Length() ? outFrames.ElementAt(0) : nullptr;
 }
 
-nsresult nsLayoutUtils::GetFramesForArea(nsIFrame* aFrame, const nsRect& aRect,
-                                         nsTArray<nsIFrame*>& aOutFrames,
-                                         uint32_t aFlags) {
+nsresult nsLayoutUtils::GetFramesForArea(
+    nsIFrame* aFrame, const nsRect& aRect, nsTArray<nsIFrame*>& aOutFrames,
+    EnumSet<FrameForPointOption> aOptions) {
   AUTO_PROFILER_LABEL("nsLayoutUtils::GetFramesForArea", LAYOUT);
 
   nsDisplayListBuilder builder(aFrame, nsDisplayListBuilderMode::EVENT_DELIVERY,
@@ -2982,21 +2982,21 @@ nsresult nsLayoutUtils::GetFramesForArea(nsIFrame* aFrame, const nsRect& aRect,
   builder.BeginFrame();
   nsDisplayList list;
 
-  if (aFlags & IGNORE_PAINT_SUPPRESSION) {
+  if (aOptions.contains(FrameForPointOption::IgnorePaintSuppression)) {
     builder.IgnorePaintSuppression();
   }
-
-  if (aFlags & IGNORE_ROOT_SCROLL_FRAME) {
+  if (aOptions.contains(FrameForPointOption::IgnoreRootScrollFrame)) {
     nsIFrame* rootScrollFrame = aFrame->PresShell()->GetRootScrollFrame();
     if (rootScrollFrame) {
       builder.SetIgnoreScrollFrame(rootScrollFrame);
     }
   }
-  if (aFlags & IGNORE_CROSS_DOC) {
+  if (aOptions.contains(FrameForPointOption::IgnoreCrossDoc)) {
     builder.SetDescendIntoSubdocuments(false);
   }
 
-  builder.SetHitTestIsForVisibility(aFlags & ONLY_VISIBLE);
+  builder.SetHitTestIsForVisibility(
+      aOptions.contains(FrameForPointOption::OnlyVisible));
 
   builder.EnterPresShell(aFrame);
 

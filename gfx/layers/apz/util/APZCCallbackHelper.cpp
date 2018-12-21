@@ -637,6 +637,10 @@ static nsIFrame* UpdateRootFrameForTouchTargetDocument(nsIFrame* aRootFrame) {
   return aRootFrame;
 }
 
+namespace {
+
+using FrameForPointOption = nsLayoutUtils::FrameForPointOption;
+
 // Determine the scrollable target frame for the given point and add it to
 // the target list. If the frame doesn't have a displayport, set one.
 // Return whether or not a displayport was set.
@@ -648,15 +652,16 @@ static bool PrepareForSetTargetAPZCNotification(
                            ScrollableLayerGuid::NULL_SCROLL_ID);
   nsPoint point = nsLayoutUtils::GetEventCoordinatesRelativeTo(
       aWidget, aRefPoint, aRootFrame);
-  uint32_t flags = 0;
+  EnumSet<FrameForPointOption> options;
   if (gfxPrefs::APZAllowZooming()) {
-    // If zooming is enabled, we need IGNORE_ROOT_SCROLL_FRAME for correct
+    // If zooming is enabled, we need IgnoreRootScrollFrame for correct
     // hit testing. Otherwise, don't use it because it interferes with
     // hit testing for some purposes such as scrollbar dragging (this will
     // need to be fixed before enabling zooming by default on desktop).
-    flags = nsLayoutUtils::IGNORE_ROOT_SCROLL_FRAME;
+    options += FrameForPointOption::IgnoreRootScrollFrame;
   }
-  nsIFrame* target = nsLayoutUtils::GetFrameForPoint(aRootFrame, point, flags);
+  nsIFrame* target =
+      nsLayoutUtils::GetFrameForPoint(aRootFrame, point, options);
   nsIScrollableFrame* scrollAncestor =
       target ? nsLayoutUtils::GetAsyncScrollableAncestorFrame(target)
              : aRootFrame->PresShell()->GetRootScrollFrameAsScrollable();
@@ -736,6 +741,8 @@ static void SendLayersDependentApzcTargetConfirmation(
 
   shadow->SendSetConfirmedTargetAPZC(aInputBlockId, aTargets);
 }
+
+}  // namespace
 
 DisplayportSetListener::DisplayportSetListener(
     nsIWidget* aWidget, nsIPresShell* aPresShell, const uint64_t& aInputBlockId,
