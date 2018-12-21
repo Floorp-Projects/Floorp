@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script>
+      // Add an unload listener to bypass bfcache.
+      window.addEventListner("unload", _ => _);
+    </script>
+  </head>
+  <body>
+    <input id="un" />
+    <input id="pw1" type="password" />
+    <input id="pw2" />
+    <a id="navigate" href="?navigated">Navigate</a>
+    <a id="back" href="javascript:history.back()">Back</a>
+  </body>
+</html>
