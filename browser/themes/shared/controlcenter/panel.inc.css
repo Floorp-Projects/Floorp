@@ -313,26 +313,10 @@
   margin-top: 1em;
 }
 
-.identity-popup-footer {
-  background-color: var(--arrowpanel-dimmed);
-}
-
 .identity-popup-footer > button {
-  -moz-appearance: none;
   margin: 0;
   border-top: 1px solid var(--panel-separator-color);
   padding: 8px 20px;
-  /* !important overrides :hover and :active colors from button.css: */
-  color: inherit !important;
-}
-
-.identity-popup-footer > button:hover,
-.identity-popup-footer > button:focus {
-  background-color: var(--arrowpanel-dimmed);
-}
-
-.identity-popup-footer > button:hover:active {
-  background-color: var(--arrowpanel-dimmed-further);
 }
 
 #identity-popup-content-verifier ~ description {
@@ -360,19 +344,6 @@ description#identity-popup-content-verifier,
 
 #identity-popup-breakageReportView-footer > button {
   flex: 1;
-}
-
-#identity-popup-breakageReportView-footer > button[default] {
-  color: white;
-  background-color: #0996f8;
-}
-
-#identity-popup-breakageReportView-footer > button[default]:hover {
-  background-color: #0675d3;
-}
-
-#identity-popup-breakageReportView-footer > button[default]:hover:active {
-  background-color: #0568ba;
 }
 
 #identity-popup-breakageReportView-heading,

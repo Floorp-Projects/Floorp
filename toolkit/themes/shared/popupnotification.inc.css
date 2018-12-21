@@ -41,7 +41,6 @@
 }
 
 .popup-notification-button-container {
-  background-color: var(--arrowpanel-dimmed);
   display: flex;
 }
 
@@ -59,48 +58,21 @@
 
 .popup-notification-button {
   flex: 1;
-  -moz-appearance: none;
-  color: inherit;
   margin: 0;
   min-width: 0;
   min-height: 41px;
   border-top: 1px solid var(--panel-separator-color);
 }
 
-.popup-notification-button:hover:not([disabled]) {
-  background-color: var(--arrowpanel-dimmed);
-  color: inherit; /* override button.css on Linux */
-}
-
 .popup-notification-button:hover:active:not([disabled]) {
-  background-color: var(--arrowpanel-dimmed-further);
-  color: inherit; /* override button.css on Mac */
   box-shadow: 0 1px 0 hsla(210,4%,10%,.05) inset;
 }
 
-.popup-notification-button[disabled] {
-  background-color: var(--arrowpanel-dimmed-further);
-  color: var(--panel-disabled-color);
-}
-
-.popup-notification-button[default]:not([alone]) {
+.popup-notification-primary-button:not([alone]) {
   flex: 0 50%;
 }
 
-.popup-notification-button[default][highlight="true"]:not([disabled]) {
-  background-color: #0996f8;
-  color: white;
-}
-
-.popup-notification-button[default][highlight="true"]:hover:not([disabled]) {
-  background-color: #0675d3;
-}
-
-.popup-notification-button[default][highlight="true"]:hover:active:not([disabled]) {
-  background-color: #0568ba;
-}
-
-.popup-notification-button[anonid="secondarybutton"][hidden="true"] ~ .popup-notification-button[default] {
+.popup-notification-secondary-button[hidden="true"] ~ .popup-notification-primary-button {
   flex: 1;
 }
 

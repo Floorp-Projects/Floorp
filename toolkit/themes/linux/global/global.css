@@ -12,6 +12,8 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
+%include ../../shared/global.inc.css
+
 /* ::::: XBL bindings ::::: */
 
 menulist > menupopup {
@@ -288,6 +290,3 @@ popupnotificationcontent {
   background-image: url("chrome://global/skin/icons/autoscroll-horizontal.svg");
 }
 
-/* :::::: Close button icons ::::: */
-
-%include ../../shared/close-icon.inc.css
