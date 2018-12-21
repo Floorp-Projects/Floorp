@@ -1088,7 +1088,8 @@ def check_for_midl(target, compile_environment):
         return True
 
 
-midl = check_prog('MIDL', midl_names, when=check_for_midl, allow_missing=True)
+midl = check_prog('MIDL', midl_names, when=check_for_midl, allow_missing=True,
+                  paths=sdk_bin_path)
 
 
 @depends(c_compiler, target, when=depends(midl, target)(lambda m, t: m and t.kernel == 'WINNT'))
@@ -1275,7 +1276,8 @@ set_config('MOZ_LAYOUT_DEBUGGER', depends_if('--enable-layout-debugger')(lambda 
 
 with only_when(compile_environment):
     fxc = check_prog('FXC', ('fxc.exe', 'fxc2.exe'), when=depends(target)
-                     (lambda t: t.kernel == 'WINNT'))
+                     (lambda t: t.kernel == 'WINNT'),
+                     paths=sdk_bin_path)
     wine = check_prog('WINE', ['wine'], when=depends(target, host)
                       (lambda t, h: t.kernel == 'WINNT' and h.kernel == 'Linux'))
 
