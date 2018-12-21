@@ -10,8 +10,11 @@ import type {
   PausedPacket,
   FramesResponse,
   FramePacket,
-  SourcePayload
+  SourcePayload,
+  ThreadClient
 } from "./types";
+
+import { clientCommands } from "./commands";
 
 export function createFrame(frame: FramePacket): ?Frame {
   if (!frame) {
@@ -41,11 +44,13 @@ export function createFrame(frame: FramePacket): ?Frame {
 }
 
 export function createSource(
+  thread: string,
   source: SourcePayload,
   { supportsWasm }: { supportsWasm: boolean }
 ): Source {
   const createdSource = {
     id: source.actor,
+    thread,
     url: source.url,
     relativeUrl: source.url,
     isPrettyPrinted: false,
@@ -54,12 +59,14 @@ export function createSource(
     isBlackBoxed: false,
     loadedState: "unloaded"
   };
+  clientCommands.registerSource(createdSource);
   return Object.assign(createdSource, {
     isWasm: supportsWasm && source.introductionType === "wasm"
   });
 }
 
 export function createPause(
+  thread: string,
   packet: PausedPacket,
   response: FramesResponse
 ): any {
@@ -68,6 +75,7 @@ export function createPause(
 
   return {
     ...packet,
+    thread,
     frame: createFrame(frame),
     frames: response.frames.map(createFrame)
   };
@@ -90,5 +98,14 @@ export function createBreakpointLocation(
     sourceUrl: actualLocation.source.url,
     line: actualLocation.line,
     column: actualLocation.column
+  };
+}
+
+export function createWorker(actor: string, threadClient: ThreadClient) {
+  return {
+    actor,
+    url: threadClient.url,
+    // Ci.nsIWorkerDebugger.TYPE_DEDICATED
+    type: 0
   };
 }

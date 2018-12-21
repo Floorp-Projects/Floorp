@@ -4,7 +4,7 @@
 
 // @flow
 
-import { getPopupObjectProperties } from "../../selectors";
+import { getCurrentThread, getPopupObjectProperties } from "../../selectors";
 import type { ThunkArgs } from "../types";
 
 /**
@@ -19,8 +19,10 @@ export function setPopupObjectProperties(object: any, properties: Object) {
       return;
     }
 
+    const thread = getCurrentThread(getState());
     dispatch({
       type: "SET_POPUP_OBJECT_PROPERTIES",
+      thread,
       objectId,
       properties
     });

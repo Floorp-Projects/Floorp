@@ -38,7 +38,7 @@ async function getOriginalSourceForFrame(state, frame: Frame) {
  */
 export function paused(pauseInfo: Pause) {
   return async function({ dispatch, getState, client, sourceMaps }: ThunkArgs) {
-    const { frames, why, loadedObjects } = pauseInfo;
+    const { thread, frames, why, loadedObjects } = pauseInfo;
     const topFrame = frames.length > 0 ? frames[0] : null;
 
     // NOTE: do not step when leaving a frame or paused at a debugger statement
@@ -57,6 +57,7 @@ export function paused(pauseInfo: Pause) {
 
     dispatch({
       type: "PAUSED",
+      thread,
       why,
       frames,
       selectedFrameId: topFrame ? topFrame.id : undefined,

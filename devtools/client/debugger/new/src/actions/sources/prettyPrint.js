@@ -37,6 +37,7 @@ export function createPrettySource(sourceId: string) {
       url,
       relativeUrl: url,
       id,
+      thread: "",
       isBlackBoxed: false,
       isPrettyPrinted: true,
       isWasm: false,

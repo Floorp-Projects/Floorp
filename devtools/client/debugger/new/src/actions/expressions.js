@@ -5,6 +5,7 @@
 // @flow
 
 import {
+  getCurrentThread,
   getExpression,
   getExpressions,
   getSelectedFrame,
@@ -117,7 +118,11 @@ export function evaluateExpressions() {
     const expressions = getExpressions(getState()).toJS();
     const inputs = expressions.map(({ input }) => input);
     const frameId = getSelectedFrameId(getState());
-    const results = await client.evaluateExpressions(inputs, frameId);
+    const thread = getCurrentThread(getState());
+    const results = await client.evaluateExpressions(inputs, {
+      frameId,
+      thread
+    });
     dispatch({ type: "EVALUATE_EXPRESSIONS", inputs, results });
   };
 }
@@ -147,11 +152,16 @@ function evaluateExpression(expression: Expression) {
     }
 
     const frameId = getSelectedFrameId(getState());
+    const thread = getCurrentThread(getState());
 
     return dispatch({
       type: "EVALUATE_EXPRESSION",
+      thread,
       input: expression.input,
-      [PROMISE]: client.evaluateInFrame(wrapExpression(input), frameId)
+      [PROMISE]: client.evaluateInFrame(wrapExpression(input), {
+        frameId,
+        thread
+      })
     });
   };
 }
