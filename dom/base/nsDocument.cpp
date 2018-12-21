@@ -11772,12 +11772,6 @@ void nsIDocument::SetDocTreeHadAudibleMedia() {
     return;
   }
 
-  if (!topLevelDoc->mDocTreeHadAudibleMedia) {
-    RefPtr<AsyncEventDispatcher> asyncDispatcher = new AsyncEventDispatcher(
-        topLevelDoc, NS_LITERAL_STRING("AudibleAutoplayMediaOccurred"),
-        CanBubble::eYes, ChromeOnlyDispatch::eYes);
-    asyncDispatcher->PostDOMEvent();
-  }
   topLevelDoc->mDocTreeHadAudibleMedia = true;
 }
 
