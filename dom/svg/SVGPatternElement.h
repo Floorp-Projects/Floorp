@@ -11,7 +11,7 @@
 #include "nsSVGEnum.h"
 #include "nsSVGLength2.h"
 #include "nsSVGString.h"
-#include "nsSVGElement.h"
+#include "SVGElement.h"
 #include "nsSVGViewBox.h"
 #include "SVGAnimatedPreserveAspectRatio.h"
 #include "nsSVGAnimatedTransformList.h"
@@ -25,7 +25,7 @@ namespace mozilla {
 namespace dom {
 class SVGAnimatedTransformList;
 
-typedef nsSVGElement SVGPatternElementBase;
+typedef SVGElement SVGPatternElementBase;
 
 class SVGPatternElement final : public SVGPatternElementBase {
   friend class ::nsSVGPatternFrame;

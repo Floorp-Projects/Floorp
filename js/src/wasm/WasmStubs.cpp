@@ -1306,8 +1306,9 @@ static bool GenerateImportInterpExit(MacroAssembler& masm, const FuncImport& fi,
       masm.loadDouble(argv, ReturnDoubleReg);
       break;
     case ExprType::Ref:
+      MOZ_CRASH("No Ref support here yet");
     case ExprType::AnyRef:
-      masm.call(SymbolicAddress::CallImport_Ref);
+      masm.call(SymbolicAddress::CallImport_AnyRef);
       masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, throwLabel);
       masm.loadPtr(argv, ReturnReg);
       break;

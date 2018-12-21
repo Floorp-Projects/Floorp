@@ -17,7 +17,7 @@ nsresult NS_NewSVGFECompositeElement(
 namespace mozilla {
 namespace dom {
 
-typedef nsSVGFE SVGFECompositeElementBase;
+typedef SVGFE SVGFECompositeElementBase;
 
 class SVGFECompositeElement : public SVGFECompositeElementBase {
   friend nsresult(::NS_NewSVGFECompositeElement(

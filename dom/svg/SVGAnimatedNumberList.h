@@ -14,12 +14,12 @@
 #include "SVGNumberList.h"
 
 class nsSMILValue;
-class nsSVGElement;
 
 namespace mozilla {
 
 namespace dom {
 class SVGAnimationElement;
+class SVGElement;
 }  // namespace dom
 
 /**
@@ -61,10 +61,10 @@ class SVGAnimatedNumberList {
     return mAnimVal ? *mAnimVal : mBaseVal;
   }
 
-  nsresult SetAnimValue(const SVGNumberList& aValue, nsSVGElement* aElement,
+  nsresult SetAnimValue(const SVGNumberList& aValue, dom::SVGElement* aElement,
                         uint32_t aAttrEnum);
 
-  void ClearAnimValue(nsSVGElement* aElement, uint32_t aAttrEnum);
+  void ClearAnimValue(dom::SVGElement* aElement, uint32_t aAttrEnum);
 
   // Returns true if the animated value of this list has been explicitly
   // set (either by animation, or by taking on the base value which has been
@@ -75,7 +75,7 @@ class SVGAnimatedNumberList {
 
   bool IsAnimating() const { return !!mAnimVal; }
 
-  UniquePtr<nsISMILAttr> ToSMILAttr(nsSVGElement* aSVGElement,
+  UniquePtr<nsISMILAttr> ToSMILAttr(dom::SVGElement* aSVGElement,
                                     uint8_t aAttrEnum);
 
  private:
@@ -91,14 +91,14 @@ class SVGAnimatedNumberList {
   struct SMILAnimatedNumberList : public nsISMILAttr {
    public:
     SMILAnimatedNumberList(SVGAnimatedNumberList* aVal,
-                           nsSVGElement* aSVGElement, uint8_t aAttrEnum)
+                           dom::SVGElement* aSVGElement, uint8_t aAttrEnum)
         : mVal(aVal), mElement(aSVGElement), mAttrEnum(aAttrEnum) {}
 
     // These will stay alive because a nsISMILAttr only lives as long
     // as the Compositing step, and DOM elements don't get a chance to
     // die during that.
     SVGAnimatedNumberList* mVal;
-    nsSVGElement* mElement;
+    dom::SVGElement* mElement;
     uint8_t mAttrEnum;
 
     // nsISMILAttr methods

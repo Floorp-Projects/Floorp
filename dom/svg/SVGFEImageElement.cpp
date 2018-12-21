@@ -20,7 +20,7 @@
 #include "imgIContainer.h"
 #include "gfx2DGlue.h"
 
-NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(FEImage)
+NS_IMPL_NS_NEW_SVG_ELEMENT(FEImage)
 
 using namespace mozilla::gfx;
 
@@ -32,7 +32,7 @@ JSObject* SVGFEImageElement::WrapNode(JSContext* aCx,
   return SVGFEImageElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-nsSVGElement::StringInfo SVGFEImageElement::sStringInfo[3] = {
+SVGElement::StringInfo SVGFEImageElement::sStringInfo[3] = {
     {nsGkAtoms::result, kNameSpaceID_None, true},
     {nsGkAtoms::href, kNameSpaceID_None, true},
     {nsGkAtoms::href, kNameSpaceID_XLink, true}};
@@ -282,7 +282,7 @@ bool SVGFEImageElement::OutputIsTainted(const nsTArray<bool>& aInputsAreTainted,
 }
 
 //----------------------------------------------------------------------
-// nsSVGElement methods
+// SVGElement methods
 
 already_AddRefed<DOMSVGAnimatedPreserveAspectRatio>
 SVGFEImageElement::PreserveAspectRatio() {
@@ -293,7 +293,7 @@ SVGAnimatedPreserveAspectRatio* SVGFEImageElement::GetPreserveAspectRatio() {
   return &mPreserveAspectRatio;
 }
 
-nsSVGElement::StringAttributesInfo SVGFEImageElement::GetStringInfo() {
+SVGElement::StringAttributesInfo SVGFEImageElement::GetStringInfo() {
   return StringAttributesInfo(mStringAttributes, sStringInfo,
                               ArrayLength(sStringInfo));
 }

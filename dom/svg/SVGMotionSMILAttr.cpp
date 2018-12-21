@@ -11,7 +11,7 @@
 #include "mozilla/dom/SVGAnimationElement.h"
 #include "nsSMILValue.h"
 #include "nsDebug.h"
-#include "nsSVGElement.h"
+#include "SVGElement.h"
 #include "gfx2DGlue.h"
 
 namespace mozilla {

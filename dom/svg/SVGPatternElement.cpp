@@ -14,7 +14,7 @@
 #include "mozilla/dom/SVGPatternElementBinding.h"
 #include "mozilla/dom/SVGUnitTypesBinding.h"
 
-NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(Pattern)
+NS_IMPL_NS_NEW_SVG_ELEMENT(Pattern)
 
 namespace mozilla {
 namespace dom {
@@ -28,7 +28,7 @@ JSObject* SVGPatternElement::WrapNode(JSContext* aCx,
 
 //--------------------- Patterns ------------------------
 
-nsSVGElement::LengthInfo SVGPatternElement::sLengthInfo[4] = {
+SVGElement::LengthInfo SVGPatternElement::sLengthInfo[4] = {
     {nsGkAtoms::x, 0, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE,
      SVGContentUtils::X},
     {nsGkAtoms::y, 0, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE,
@@ -39,13 +39,13 @@ nsSVGElement::LengthInfo SVGPatternElement::sLengthInfo[4] = {
      SVGContentUtils::Y},
 };
 
-nsSVGElement::EnumInfo SVGPatternElement::sEnumInfo[2] = {
+SVGElement::EnumInfo SVGPatternElement::sEnumInfo[2] = {
     {nsGkAtoms::patternUnits, sSVGUnitTypesMap,
      SVG_UNIT_TYPE_OBJECTBOUNDINGBOX},
     {nsGkAtoms::patternContentUnits, sSVGUnitTypesMap,
      SVG_UNIT_TYPE_USERSPACEONUSE}};
 
-nsSVGElement::StringInfo SVGPatternElement::sStringInfo[2] = {
+SVGElement::StringInfo SVGPatternElement::sStringInfo[2] = {
     {nsGkAtoms::href, kNameSpaceID_None, true},
     {nsGkAtoms::href, kNameSpaceID_XLink, true}};
 
@@ -135,7 +135,7 @@ SVGPatternElement::IsAttributeMapped(const nsAtom* name) const {
 }
 
 //----------------------------------------------------------------------
-// nsSVGElement methods
+// SVGElement methods
 
 nsSVGAnimatedTransformList* SVGPatternElement::GetAnimatedTransformList(
     uint32_t aFlags) {
@@ -152,12 +152,12 @@ nsSVGAnimatedTransformList* SVGPatternElement::GetAnimatedTransformList(
          mLengthAttributes[ATTR_HEIGHT].GetAnimValInSpecifiedUnits() > 0;
 }
 
-nsSVGElement::LengthAttributesInfo SVGPatternElement::GetLengthInfo() {
+SVGElement::LengthAttributesInfo SVGPatternElement::GetLengthInfo() {
   return LengthAttributesInfo(mLengthAttributes, sLengthInfo,
                               ArrayLength(sLengthInfo));
 }
 
-nsSVGElement::EnumAttributesInfo SVGPatternElement::GetEnumInfo() {
+SVGElement::EnumAttributesInfo SVGPatternElement::GetEnumInfo() {
   return EnumAttributesInfo(mEnumAttributes, sEnumInfo, ArrayLength(sEnumInfo));
 }
 
@@ -167,7 +167,7 @@ SVGAnimatedPreserveAspectRatio* SVGPatternElement::GetPreserveAspectRatio() {
   return &mPreserveAspectRatio;
 }
 
-nsSVGElement::StringAttributesInfo SVGPatternElement::GetStringInfo() {
+SVGElement::StringAttributesInfo SVGPatternElement::GetStringInfo() {
   return StringAttributesInfo(mStringAttributes, sStringInfo,
                               ArrayLength(sStringInfo));
 }

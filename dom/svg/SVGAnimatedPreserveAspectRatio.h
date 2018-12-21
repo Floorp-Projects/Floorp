@@ -10,7 +10,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsError.h"
 #include "nsISMILAttr.h"
-#include "nsSVGElement.h"
+#include "SVGElement.h"
 #include "SVGPreserveAspectRatio.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/UniquePtr.h"
@@ -36,12 +36,12 @@ class SVGAnimatedPreserveAspectRatio final {
   }
 
   nsresult SetBaseValueString(const nsAString& aValue,
-                              nsSVGElement* aSVGElement, bool aDoSetAttr);
+                              dom::SVGElement* aSVGElement, bool aDoSetAttr);
   void GetBaseValueString(nsAString& aValue) const;
 
   void SetBaseValue(const SVGPreserveAspectRatio& aValue,
-                    nsSVGElement* aSVGElement);
-  nsresult SetBaseAlign(uint16_t aAlign, nsSVGElement* aSVGElement) {
+                    dom::SVGElement* aSVGElement);
+  nsresult SetBaseAlign(uint16_t aAlign, dom::SVGElement* aSVGElement) {
     if (aAlign < SVG_ALIGN_MIN_VALID || aAlign > SVG_ALIGN_MAX_VALID) {
       return NS_ERROR_FAILURE;
     }
@@ -50,7 +50,7 @@ class SVGAnimatedPreserveAspectRatio final {
     return NS_OK;
   }
   nsresult SetBaseMeetOrSlice(uint16_t aMeetOrSlice,
-                              nsSVGElement* aSVGElement) {
+                              dom::SVGElement* aSVGElement) {
     if (aMeetOrSlice < SVG_MEETORSLICE_MIN_VALID ||
         aMeetOrSlice > SVG_MEETORSLICE_MAX_VALID) {
       return NS_ERROR_FAILURE;
@@ -59,7 +59,7 @@ class SVGAnimatedPreserveAspectRatio final {
                  aSVGElement);
     return NS_OK;
   }
-  void SetAnimValue(uint64_t aPackedValue, nsSVGElement* aSVGElement);
+  void SetAnimValue(uint64_t aPackedValue, dom::SVGElement* aSVGElement);
 
   const SVGPreserveAspectRatio& GetBaseValue() const { return mBaseVal; }
   const SVGPreserveAspectRatio& GetAnimValue() const { return mAnimVal; }
@@ -67,8 +67,8 @@ class SVGAnimatedPreserveAspectRatio final {
   bool IsExplicitlySet() const { return mIsAnimated || mIsBaseSet; }
 
   already_AddRefed<mozilla::dom::DOMSVGAnimatedPreserveAspectRatio>
-  ToDOMAnimatedPreserveAspectRatio(nsSVGElement* aSVGElement);
-  UniquePtr<nsISMILAttr> ToSMILAttr(nsSVGElement* aSVGElement);
+  ToDOMAnimatedPreserveAspectRatio(dom::SVGElement* aSVGElement);
+  UniquePtr<nsISMILAttr> ToSMILAttr(dom::SVGElement* aSVGElement);
 
  private:
   SVGPreserveAspectRatio mAnimVal;
@@ -80,14 +80,14 @@ class SVGAnimatedPreserveAspectRatio final {
   struct SMILPreserveAspectRatio final : public nsISMILAttr {
    public:
     SMILPreserveAspectRatio(SVGAnimatedPreserveAspectRatio* aVal,
-                            nsSVGElement* aSVGElement)
+                            dom::SVGElement* aSVGElement)
         : mVal(aVal), mSVGElement(aSVGElement) {}
 
     // These will stay alive because a nsISMILAttr only lives as long
     // as the Compositing step, and DOM elements don't get a chance to
     // die during that.
     SVGAnimatedPreserveAspectRatio* mVal;
-    nsSVGElement* mSVGElement;
+    dom::SVGElement* mSVGElement;
 
     // nsISMILAttr methods
     virtual nsresult ValueFromString(
@@ -109,11 +109,11 @@ class DOMSVGAnimatedPreserveAspectRatio final : public nsISupports,
       DOMSVGAnimatedPreserveAspectRatio)
 
   DOMSVGAnimatedPreserveAspectRatio(SVGAnimatedPreserveAspectRatio* aVal,
-                                    nsSVGElement* aSVGElement)
+                                    dom::SVGElement* aSVGElement)
       : mVal(aVal), mSVGElement(aSVGElement) {}
 
   // WebIDL
-  nsSVGElement* GetParentObject() const { return mSVGElement; }
+  dom::SVGElement* GetParentObject() const { return mSVGElement; }
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
 
@@ -124,7 +124,7 @@ class DOMSVGAnimatedPreserveAspectRatio final : public nsISupports,
  protected:
   // kept alive because it belongs to content:
   SVGAnimatedPreserveAspectRatio* mVal;
-  RefPtr<nsSVGElement> mSVGElement;
+  RefPtr<dom::SVGElement> mSVGElement;
 };
 
 }  // namespace dom

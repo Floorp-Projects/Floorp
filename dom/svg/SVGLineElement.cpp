@@ -9,7 +9,7 @@
 #include "mozilla/dom/SVGLineElementBinding.h"
 #include "mozilla/gfx/2D.h"
 
-NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(Line)
+NS_IMPL_NS_NEW_SVG_ELEMENT(Line)
 
 using namespace mozilla::gfx;
 
@@ -21,7 +21,7 @@ JSObject* SVGLineElement::WrapNode(JSContext* aCx,
   return SVGLineElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-nsSVGElement::LengthInfo SVGLineElement::sLengthInfo[4] = {
+SVGElement::LengthInfo SVGLineElement::sLengthInfo[4] = {
     {nsGkAtoms::x1, 0, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER,
      SVGContentUtils::X},
     {nsGkAtoms::y1, 0, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER,
@@ -89,9 +89,9 @@ SVGLineElement::IsAttributeMapped(const nsAtom* name) const {
 }
 
 //----------------------------------------------------------------------
-// nsSVGElement methods
+// SVGElement methods
 
-nsSVGElement::LengthAttributesInfo SVGLineElement::GetLengthInfo() {
+SVGElement::LengthAttributesInfo SVGLineElement::GetLengthInfo() {
   return LengthAttributesInfo(mLengthAttributes, sLengthInfo,
                               ArrayLength(sLengthInfo));
 }

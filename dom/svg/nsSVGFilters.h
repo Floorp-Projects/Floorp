@@ -11,7 +11,7 @@
 #include "nsImageLoadingContent.h"
 #include "nsSVGLength2.h"
 #include "nsSVGString.h"
-#include "nsSVGElement.h"
+#include "SVGElement.h"
 #include "nsSVGNumber2.h"
 #include "nsSVGNumberPair.h"
 #include "FilterSupport.h"
@@ -20,14 +20,18 @@ class nsSVGFilterInstance;
 class nsSVGNumberPair;
 
 struct nsSVGStringInfo {
-  nsSVGStringInfo(const nsSVGString* aString, nsSVGElement* aElement)
+  nsSVGStringInfo(const nsSVGString* aString,
+                  mozilla::dom::SVGElement* aElement)
       : mString(aString), mElement(aElement) {}
 
   const nsSVGString* mString;
-  nsSVGElement* mElement;
+  mozilla::dom::SVGElement* mElement;
 };
 
-typedef nsSVGElement nsSVGFEBase;
+namespace mozilla {
+namespace dom {
+
+typedef SVGElement SVGFEBase;
 
 #define NS_SVG_FE_CID                                \
   {                                                  \
@@ -41,8 +45,8 @@ typedef nsSVGElement nsSVGFEBase;
  * Children of those elements e.g. feMergeNode
  * derive from SVGFEUnstyledElement instead
  */
-class nsSVGFE : public nsSVGFEBase {
-  friend class nsSVGFilterInstance;
+class SVGFE : public SVGFEBase {
+  friend class ::nsSVGFilterInstance;
 
  protected:
   typedef mozilla::gfx::SourceSurface SourceSurface;
@@ -51,9 +55,9 @@ class nsSVGFE : public nsSVGFEBase {
   typedef mozilla::gfx::ColorSpace ColorSpace;
   typedef mozilla::gfx::FilterPrimitiveDescription FilterPrimitiveDescription;
 
-  explicit nsSVGFE(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
-      : nsSVGFEBase(std::move(aNodeInfo)) {}
-  virtual ~nsSVGFE() {}
+  explicit SVGFE(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+      : SVGFEBase(std::move(aNodeInfo)) {}
+  virtual ~SVGFE() {}
 
  public:
   typedef mozilla::gfx::PrimitiveAttributes PrimitiveAttributes;
@@ -83,7 +87,7 @@ class nsSVGFE : public nsSVGFEBase {
   // nsIContent interface
   NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const override;
 
-  // nsSVGElement interface
+  // SVGElement interface
   virtual nsresult Clone(mozilla::dom::NodeInfo*,
                          nsINode** aResult) const override = 0;
 
@@ -140,7 +144,7 @@ class nsSVGFE : public nsSVGFEBase {
 
   bool StyleIsSetToSRGB();
 
-  // nsSVGElement specializations:
+  // SVGElement specializations:
   virtual LengthAttributesInfo GetLengthInfo() override;
 
   Size GetKernelUnitLength(nsSVGFilterInstance* aInstance,
@@ -151,9 +155,9 @@ class nsSVGFE : public nsSVGFEBase {
   static LengthInfo sLengthInfo[4];
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(nsSVGFE, NS_SVG_FE_CID)
+NS_DEFINE_STATIC_IID_ACCESSOR(SVGFE, NS_SVG_FE_CID)
 
-typedef nsSVGElement SVGFEUnstyledElementBase;
+typedef SVGElement SVGFEUnstyledElementBase;
 
 class SVGFEUnstyledElement : public SVGFEUnstyledElementBase {
  protected:
@@ -171,12 +175,9 @@ class SVGFEUnstyledElement : public SVGFEUnstyledElementBase {
                                          nsAtom* aAttribute) const = 0;
 };
 
-namespace mozilla {
-namespace dom {
-
 //------------------------------------------------------------
 
-typedef nsSVGFE SVGFELightingElementBase;
+typedef SVGFE SVGFELightingElementBase;
 
 class SVGFELightingElement : public SVGFELightingElementBase {
  protected:

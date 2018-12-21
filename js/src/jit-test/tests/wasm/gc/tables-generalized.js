@@ -154,14 +154,8 @@ assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
     // observe the boxing.
     tbl.set(1, 42);
     let y = tbl.get(1);
-    assertEq(typeof y, "object");
-    assertEq(y instanceof Number, true);
-    assertEq(y + 0, 42);
-
-    // Temporary semantics is to throw on undefined
-    assertErrorMessage(() => tbl.set(0, undefined),
-                       TypeError,
-                       /can't convert undefined to object/);
+    assertEq(typeof y, "number");
+    assertEq(y, 42);
 }
 
 function dummy() { return 37 }
