@@ -4,12 +4,11 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += [
-    'chrome',
-    'firefox',
+
 ]
 
 DebuggerModules(
-    'chrome.js',
-    'firefox.js',
-    'index.js',
+    'commands.js',
+    'create.js',
+    'events.js',
 )
