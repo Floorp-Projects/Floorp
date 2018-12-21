@@ -382,7 +382,6 @@ dnl ========================================================
 CFLAGS="$CFLAGS $MOZ_HARDENING_CFLAGS"
 CPPFLAGS="$CPPFLAGS $MOZ_HARDENING_CFLAGS"
 CXXFLAGS="$CXXFLAGS $MOZ_HARDENING_CFLAGS"
-LDFLAGS="$LDFLAGS $MOZ_HARDENING_LDFLAGS"
 
 dnl ========================================================
 dnl GNU specific defaults
@@ -805,9 +804,6 @@ case "$target" in
         if test -z "$MOZ_ASAN"; then
             CFLAGS="$CFLAGS -Gw"
             CXXFLAGS="$CXXFLAGS -Gw"
-        else
-            # String tail merging doesn't play nice with ASan's ODR checker.
-            LDFLAGS="$LDFLAGS -opt:nolldtailmerge"
         fi
         # khuey says we can safely ignore MSVC warning C4251
         # MSVC warning C4244 (implicit type conversion may lose data) warns

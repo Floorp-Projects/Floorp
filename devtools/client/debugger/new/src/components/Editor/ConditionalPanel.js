@@ -22,8 +22,8 @@ type Props = {
   setBreakpointCondition: Function,
   location: SourceLocation,
   editor: Object,
-  openConditionalPanel: () => void,
-  closeConditionalPanel: () => void
+  openConditionalPanel: typeof actions.openConditionalPanel,
+  closeConditionalPanel: typeof actions.closeConditionalPanel
 };
 
 export class ConditionalPanel extends PureComponent<Props> {

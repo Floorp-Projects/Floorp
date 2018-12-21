@@ -26,7 +26,6 @@ import { scrollList } from "../../utils/result-list";
 import classnames from "classnames";
 
 import type { Source } from "../../types";
-import type { ActiveSearchType } from "../../reducers/ui";
 import type { Modifiers, SearchResults } from "../../reducers/file-search";
 
 import SearchInput from "../shared/SearchInput";
@@ -56,21 +55,20 @@ type State = {
 };
 
 type Props = {
-  editor?: SourceEditor,
+  editor: SourceEditor,
   selectedSource?: Source,
   searchOn: boolean,
   searchResults: SearchResults,
   modifiers: Modifiers,
   query: string,
-  toggleFileSearchModifier: string => any,
-  setFileSearchQuery: string => any,
-  setActiveSearch: (?ActiveSearchType) => any,
-  closeFileSearch: SourceEditor => void,
-  doSearch: (string, SourceEditor) => void,
-  traverseResults: (boolean, SourceEditor) => void,
-  updateSearchResults: ({ count: number, index?: number }) => any,
   showClose?: boolean,
-  size?: string
+  size?: string,
+  toggleFileSearchModifier: typeof actions.toggleFileSearchModifier,
+  setFileSearchQuery: typeof actions.setFileSearchQuery,
+  setActiveSearch: typeof actions.setActiveSearch,
+  closeFileSearch: typeof actions.closeFileSearch,
+  doSearch: typeof actions.doSearch,
+  traverseResults: typeof actions.traverseResults
 };
 
 class SearchBar extends Component<Props, State> {
@@ -177,18 +175,6 @@ class SearchBar extends Component<Props, State> {
     }
 
     this.props.doSearch(query, this.props.editor);
-  };
-
-  updateSearchResults = (characterIndex, line, matches) => {
-    const matchIndex = matches.findIndex(
-      elm => elm.line === line && elm.ch === characterIndex
-    );
-    this.props.updateSearchResults({
-      matches,
-      matchIndex,
-      count: matches.length,
-      index: characterIndex
-    });
   };
 
   traverseResults = (e: SyntheticEvent<HTMLElement>, rev: boolean) => {
@@ -350,6 +336,7 @@ class SearchBar extends Component<Props, State> {
           count={count}
           placeholder={L10N.getStr("sourceSearch.search.placeholder2")}
           summaryMsg={this.buildSummaryMsg()}
+          isLoading={false}
           onChange={this.onChange}
           onFocus={this.onFocus}
           onBlur={this.onBlur}
@@ -389,7 +376,6 @@ export default connect(
     setActiveSearch: actions.setActiveSearch,
     closeFileSearch: actions.closeFileSearch,
     doSearch: actions.doSearch,
-    traverseResults: actions.traverseResults,
-    updateSearchResults: actions.updateSearchResults
+    traverseResults: actions.traverseResults
   }
 )(SearchBar);

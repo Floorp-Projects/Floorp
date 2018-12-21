@@ -733,6 +733,10 @@ class TokenStreamAnyChars : public TokenStreamShared {
   // This class maps a sourceUnits offset (which is 0-indexed) to a line
   // number (which is 1-indexed) and an offset (which is 0-indexed) in
   // code *units* (not code points, not bytes) into the line.
+  //
+  // If you need a column number (i.e. an offset in code *points*),
+  // GeneralTokenStreamChars<Unit> contains functions that consult this and
+  // use Unit-specific source text to determine the correct column.
   class SourceCoords {
     // For a given buffer holding source code, |lineStartOffsets_| has one
     // element per line of source code, plus one sentinel element.  Each
@@ -771,9 +775,6 @@ class TokenStreamAnyChars : public TokenStreamShared {
     /** The line number on which the source text begins. */
     uint32_t initialLineNum_;
 
-    /** The column number at which the source text begins. */
-    uint32_t initialColumn_;
-
     /**
      * The index corresponding to the last offset lookup -- used so that if
      * offset lookups proceed in increasing order, and and the offset appears
@@ -797,26 +798,9 @@ class TokenStreamAnyChars : public TokenStreamShared {
       return lineNum - initialLineNum_;
     }
 
-    uint32_t lineOffsetFromIndexAndOffset(uint32_t index,
-                                          uint32_t offset) const {
-      uint32_t lineStartOffset = lineStartOffsets_[index];
-      MOZ_RELEASE_ASSERT(offset >= lineStartOffset);
-      return offset - lineStartOffset;
-    }
-
-    // This function is BAD because it's lies in the presence of multi-unit
-    // code points -- unlike lineOffsetFromIndexAndOffset that doesn't
-    // promise a column number.  This name segregates the initial-line
-    // column adjustment and the false "column" sense to a function that
-    // will be removed later in this patch stack.
-    uint32_t columnFromIndexAndOffset(uint32_t index, uint32_t offset) const {
-      uint32_t lineOffset = lineOffsetFromIndexAndOffset(index, offset);
-      return (index == 0 ? initialColumn_ : 0) + lineOffset;
-    }
-
    public:
     SourceCoords(JSContext* cx, uint32_t initialLineNumber,
-                 uint32_t initialColumnNumber, uint32_t initialOffset);
+                 uint32_t initialOffset);
 
     MOZ_MUST_USE bool add(uint32_t lineNum, uint32_t lineStartOffset);
     MOZ_MUST_USE bool fill(const SourceCoords& other);
@@ -862,6 +846,10 @@ class TokenStreamAnyChars : public TokenStreamShared {
       bool isFirstLine() const { return index == 0; }
 
       bool isSameLine(LineToken other) const { return index == other.index; }
+
+      void assertConsistentOffset(uint32_t offset) const {
+        MOZ_ASSERT(offset_ == offset);
+      }
     };
 
     /**
@@ -881,23 +869,9 @@ class TokenStreamAnyChars : public TokenStreamShared {
       return lineNumberFromIndex(lineToken.index);
     }
 
-    /**
-     * Compute the offset *in code units* of |offset| from the start of the
-     * line containing it, plus any contribution from |initialColumnNumber|
-     * passed to the |SourceCoords| constructor.
-     *
-     * This is only really a "column".  A subsequent patch in this stack
-     * removes it, computing a multi-unit-aware column number elsewhere in
-     * Unit-sensitive manner.
-     */
-    uint32_t columnIndex(LineToken lineToken, uint32_t offset) const {
-      MOZ_ASSERT(lineToken.offset_ == offset, "use a consistent token");
-
-      uint32_t lineStartOffset = lineStartOffsets_[lineToken.index];
-      MOZ_RELEASE_ASSERT(offset >= lineStartOffset);
-
-      uint32_t relative = offset - lineStartOffset;
-      return (lineToken.isFirstLine() ? initialColumn_ : 0) + relative;
+    /** Return the offset of the start of the line for |lineToken|. */
+    uint32_t lineStart(LineToken lineToken) const {
+      return lineStartOffsets_[lineToken.index];
     }
   };
 
@@ -915,16 +889,8 @@ class TokenStreamAnyChars : public TokenStreamShared {
     return srcCoords.lineNumber(lineToken);
   }
 
-  uint32_t columnIndex(LineToken lineToken, uint32_t offset) const {
-    return srcCoords.columnIndex(lineToken, offset);
-  }
-
-  // A helper function if you want an offset's line *and* "column" info.
-  void lineAndColumnAt(uint32_t offset, uint32_t* lineNum,
-                       uint32_t* column) const {
-    LineToken token = srcCoords.lineToken(offset);
-    *lineNum = srcCoords.lineNumber(token);
-    *column = srcCoords.columnIndex(token, offset);
+  uint32_t lineStart(LineToken lineToken) const {
+    return srcCoords.lineStart(lineToken);
   }
 
   /**
@@ -1904,10 +1870,18 @@ class TokenStart {
   uint32_t offset() const { return startOffset_; }
 };
 
+// Column numbers *ought* be in terms of counts of code points, but in the past
+// we counted code units.  Set this to 0 to keep returning counts of code units
+// (even for UTF-8, which is clearly wrong, but we don't ship UTF-8 yet so this
+// is fine until we can fix users that depend on code-unit counting).
+#define JS_COLUMN_DIMENSION_IS_CODE_POINTS 0
+
 template <typename Unit, class AnyCharsAccess>
 class GeneralTokenStreamChars : public SpecializedTokenStreamCharsBase<Unit> {
   using CharsBase = TokenStreamCharsBase<Unit>;
   using SpecializedCharsBase = SpecializedTokenStreamCharsBase<Unit>;
+
+  using LineToken = TokenStreamAnyChars::LineToken;
 
  private:
   Token* newTokenInternal(TokenKind kind, TokenStart start, TokenKind* out);
@@ -1968,10 +1942,9 @@ class GeneralTokenStreamChars : public SpecializedTokenStreamCharsBase<Unit> {
     return static_cast<TokenStreamSpecific*>(this);
   }
 
+  uint32_t computeColumn(LineToken lineToken, uint32_t offset) const;
   void computeLineAndColumn(uint32_t offset, uint32_t* line,
-                            uint32_t* column) const {
-    anyCharsAccess().lineAndColumnAt(offset, line, column);
-  }
+                            uint32_t* column) const;
 
   /**
    * Fill in |err| completely, except for line-of-context information.
@@ -2440,6 +2413,7 @@ class MOZ_STACK_CLASS TokenStreamSpecific
   using CharsBase::fillCharBufferFromSourceNormalizingAsciiLineBreaks;
   using CharsBase::matchCodeUnit;
   using CharsBase::matchLineTerminator;
+  using GeneralCharsBase::computeColumn;
   using GeneralCharsBase::fillExceptingContext;
   using GeneralCharsBase::getCodeUnit;
   using GeneralCharsBase::getFullAsciiCodePoint;
@@ -2501,7 +2475,7 @@ class MOZ_STACK_CLASS TokenStreamSpecific
 
   void lineAndColumnAt(size_t offset, uint32_t* line,
                        uint32_t* column) const final {
-    anyCharsAccess().lineAndColumnAt(offset, line, column);
+    computeLineAndColumn(offset, line, column);
   }
 
   void currentLineAndColumn(uint32_t* line, uint32_t* column) const final {
@@ -2521,9 +2495,7 @@ class MOZ_STACK_CLASS TokenStreamSpecific
   }
 
   uint32_t columnAt(size_t offset) const final {
-    const TokenStreamAnyChars& anyChars = anyCharsAccess();
-    auto lineToken = anyChars.lineToken(offset);
-    return anyChars.columnIndex(lineToken, offset);
+    return computeColumn(anyCharsAccess().lineToken(offset), offset);
   }
 
   bool hasTokenizationStarted() const final;

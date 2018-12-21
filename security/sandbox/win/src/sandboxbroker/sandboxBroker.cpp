@@ -235,10 +235,16 @@ bool SandboxBroker::LaunchApp(const wchar_t* aPath, const wchar_t* aArguments,
     key.AppendInt(static_cast<uint32_t>(last_error), 16);
 
     // Only accumulate for each combination once per session.
-    if (!sLaunchErrors->Contains(key)) {
+    if (sLaunchErrors) {
+      if (!sLaunchErrors->Contains(key)) {
+        Telemetry::Accumulate(Telemetry::SANDBOX_FAILED_LAUNCH_KEYED, key,
+                              result);
+        sLaunchErrors->PutEntry(key);
+      }
+    } else {
+      // If sLaunchErrors not created yet then always accumulate.
       Telemetry::Accumulate(Telemetry::SANDBOX_FAILED_LAUNCH_KEYED, key,
                             result);
-      sLaunchErrors->PutEntry(key);
     }
 
     LOG_E(

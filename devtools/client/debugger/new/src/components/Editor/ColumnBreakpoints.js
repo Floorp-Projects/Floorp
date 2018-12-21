@@ -20,7 +20,8 @@ class ColumnBreakpoints extends Component {
   props: {
     editor: Object,
     selectedSource: Source,
-    columnBreakpoints: ColumnBreakpointType[]
+    columnBreakpoints: ColumnBreakpointType[],
+    toggleBreakpoint: (number, ?number) => void
   };
 
   render() {

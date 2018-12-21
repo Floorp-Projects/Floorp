@@ -127,7 +127,7 @@ export function togglePaneCollapse(
 export function highlightLineRange(location: {
   start: number,
   end: number,
-  sourceId: number
+  sourceId: string
 }) {
   return {
     type: "HIGHLIGHT_LINES",
@@ -138,7 +138,7 @@ export function highlightLineRange(location: {
 export function flashLineRange(location: {
   start: number,
   end: number,
-  sourceId: number
+  sourceId: string
 }) {
   return ({ dispatch }: ThunkArgs) => {
     dispatch(highlightLineRange(location));
