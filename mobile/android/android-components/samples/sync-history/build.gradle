@@ -10,7 +10,7 @@ android {
     compileSdkVersion Config.compileSdkVersion
 
     defaultConfig {
-        applicationId "org.mozilla.samples.fxa"
+        applicationId "org.mozilla.samples.history"
         minSdkVersion Config.minSdkVersion
         targetSdkVersion Config.targetSdkVersion
         versionCode 1
@@ -42,9 +42,4 @@ dependencies {
     implementation project(':feature-sync')
 
     implementation Dependencies.support_constraintlayout
-
-    implementation Dependencies.kotlin_stdlib
-    implementation Dependencies.kotlin_coroutines
-
-    implementation Dependencies.support_appcompat
 }

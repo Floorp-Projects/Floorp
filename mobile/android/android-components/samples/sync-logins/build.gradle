@@ -42,7 +42,6 @@ dependencies {
     implementation project(':service-sync-logins')
 
     implementation Dependencies.kotlin_stdlib
-    implementation Dependencies.kotlin_coroutines
 
     implementation Dependencies.support_appcompat
     implementation Dependencies.support_customtabs

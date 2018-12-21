@@ -22,11 +22,11 @@ android {
 }
 
 dependencies {
-    implementation project(':concept-storage')
+    // This dependency is part of this module's public API.
+    api project(':concept-storage')
     implementation project(':support-utils')
 
     implementation Dependencies.kotlin_stdlib
-    implementation Dependencies.kotlin_coroutines
 
     testImplementation Dependencies.testing_junit
     testImplementation Dependencies.testing_robolectric

@@ -37,7 +37,6 @@ dependencies {
     implementation project(':support-ktx')
 
     implementation Dependencies.kotlin_stdlib
-    implementation Dependencies.kotlin_coroutines
 
     testImplementation project(':support-test')
     testImplementation project(':browser-storage-memory')

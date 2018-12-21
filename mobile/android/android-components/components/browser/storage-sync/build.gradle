@@ -24,13 +24,13 @@ android {
 }
 
 dependencies {
+    // These dependencies are part of this module's public API.
     api Dependencies.mozilla_places
+    api project(':concept-storage')
 
-    implementation project(':concept-storage')
     implementation project(':support-utils')
 
     implementation Dependencies.kotlin_stdlib
-    implementation Dependencies.kotlin_coroutines
 
     testImplementation project(':support-test')
 

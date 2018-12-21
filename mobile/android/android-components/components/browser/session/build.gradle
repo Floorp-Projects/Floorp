@@ -33,7 +33,7 @@ dependencies {
     implementation Dependencies.arch_lifecycle
 
     // We expose this as API because we are using Observable in our public API and do not want every
-    // consumer to have to manually import "utils".
+    // consumer to have to manually import "support-base".
     api project(':support-base')
 
     testImplementation project(':support-test')

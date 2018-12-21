@@ -158,7 +158,6 @@ dependencies {
     implementation Dependencies.support_design
 
     implementation Dependencies.kotlin_stdlib
-    implementation Dependencies.kotlin_coroutines
 
     implementation Dependencies.support_appcompat
     implementation Dependencies.support_constraintlayout

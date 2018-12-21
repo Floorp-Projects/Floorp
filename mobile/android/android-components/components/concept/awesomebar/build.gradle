@@ -27,7 +27,5 @@ dependencies {
     implementation Dependencies.kotlin_stdlib
 }
 
-archivesBaseName = "concept-awesomebar"
-
 apply from: '../../../publish.gradle'
 ext.configurePublish(Config.componentsGroupId, archivesBaseName, gradle.componentDescriptions[archivesBaseName])

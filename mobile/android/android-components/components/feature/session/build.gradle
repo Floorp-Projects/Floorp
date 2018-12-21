@@ -36,8 +36,6 @@ dependencies {
     testImplementation Dependencies.testing_robolectric
     testImplementation Dependencies.testing_mockito
 
-    testImplementation Dependencies.kotlin_coroutines
-
     testImplementation Dependencies.support_customtabs
 }
 
