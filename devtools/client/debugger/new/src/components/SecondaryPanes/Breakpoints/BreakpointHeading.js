@@ -12,20 +12,32 @@ import {
   getSourceQueryString,
   getFileURL
 } from "../../../utils/source";
-import { getHasSiblingOfSameName } from "../../../selectors";
+import {
+  getHasSiblingOfSameName,
+  getBreakpointsForSource
+} from "../../../selectors";
 
 import SourceIcon from "../../shared/SourceIcon";
 
-import type { Source } from "../../../types";
+import type { Source, Breakpoint } from "../../../types";
+import showContextMenu from "./BreakpointHeadingsContextMenu";
 
 type Props = {
   sources: Source[],
   source: Source,
   hasSiblingOfSameName: boolean,
+  breakpointsForSource: Breakpoint[],
+  disableBreakpointsInSource: typeof actions.disableBreakpointsInSource,
+  enableBreakpointsInSource: typeof actions.enableBreakpointsInSource,
+  removeBreakpointsInSource: typeof actions.removeBreakpointsInSource,
   selectSource: typeof actions.selectSource
 };
 
 class BreakpointHeading extends PureComponent<Props> {
+  onContextMenu = e => {
+    showContextMenu({ ...this.props, contextMenuEvent: e });
+  };
+
   render() {
     const { sources, source, hasSiblingOfSameName, selectSource } = this.props;
 
@@ -37,6 +49,7 @@ class BreakpointHeading extends PureComponent<Props> {
         className="breakpoint-heading"
         title={getFileURL(source, false)}
         onClick={() => selectSource(source.id)}
+        onContextMenu={this.onContextMenu}
       >
         <SourceIcon
           source={source}
@@ -52,10 +65,16 @@ class BreakpointHeading extends PureComponent<Props> {
 }
 
 const mapStateToProps = (state, { source }) => ({
-  hasSiblingOfSameName: getHasSiblingOfSameName(state, source)
+  hasSiblingOfSameName: getHasSiblingOfSameName(state, source),
+  breakpointsForSource: getBreakpointsForSource(state, source.id)
 });
 
 export default connect(
   mapStateToProps,
-  { selectSource: actions.selectSource }
+  {
+    selectSource: actions.selectSource,
+    enableBreakpointsInSource: actions.enableBreakpointsInSource,
+    disableBreakpointsInSource: actions.disableBreakpointsInSource,
+    removeBreakpointsInSource: actions.removeBreakpointsInSource
+  }
 )(BreakpointHeading);
