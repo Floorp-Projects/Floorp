@@ -246,15 +246,10 @@ using namespace webrtc::videocapturemodule;
   }
 
   _captureChanging = YES;
-  dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^(void) {
-    [self stopCaptureInBackground];
-  });
-  return YES;
-}
-
-- (void)stopCaptureInBackground {
   [_captureSession stopRunning];
   [self signalCaptureChangeEnd];
+
+  return YES;
 }
 
 - (BOOL)changeCaptureInputByUniqueId:(NSString*)uniqueId {
