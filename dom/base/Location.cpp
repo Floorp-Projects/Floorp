@@ -146,7 +146,7 @@ already_AddRefed<nsDocShellLoadState> Location::CheckURL(
   }
 
   // Create load info
-  RefPtr<nsDocShellLoadState> loadState = new nsDocShellLoadState();
+  RefPtr<nsDocShellLoadState> loadState = new nsDocShellLoadState(aURI);
 
   loadState->SetTriggeringPrincipal(triggeringPrincipal);
 
@@ -221,7 +221,6 @@ void Location::SetURI(nsIURI* aURI, nsIPrincipal& aSubjectPrincipal,
       loadState->SetSourceDocShell(sourceWindow->GetDocShell());
     }
 
-    loadState->SetURI(aURI);
     loadState->SetLoadFlags(nsIWebNavigation::LOAD_FLAGS_NONE);
     loadState->SetFirstParty(true);
 
