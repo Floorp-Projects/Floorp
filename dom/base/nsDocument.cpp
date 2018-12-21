@@ -12724,7 +12724,7 @@ already_AddRefed<mozilla::dom::Promise> nsIDocument::RequestStorageAccess(
   // Step 5. If the sub frame is not sandboxed, skip to step 7.
   // Step 6. If the sub frame doesn't have the token
   //         "allow-storage-access-by-user-activation", reject.
-  if (mSandboxFlags & SANDBOXED_STORAGE_ACCESS) {
+  if (StorageAccessSandboxed()) {
     promise->MaybeRejectWithUndefined();
     return promise.forget();
   }
@@ -12930,4 +12930,9 @@ void nsIDocument::ReportShadowDOMUsage() {
   }
 
   mHasReportedShadowDOMUsage = true;
+}
+
+bool nsIDocument::StorageAccessSandboxed() const {
+  return StaticPrefs::dom_storage_access_enabled() &&
+         (GetSandboxFlags() & SANDBOXED_STORAGE_ACCESS) != 0;
 }

@@ -468,6 +468,13 @@ VARCACHE_PREF(
 )
 #undef PREF_VALUE
 
+// Storage-access API.
+VARCACHE_PREF(
+  "dom.storage_access.enabled",
+   dom_storage_access_enabled,
+  bool, false
+)
+
 //---------------------------------------------------------------------------
 // Clear-Site-Data prefs
 //---------------------------------------------------------------------------
