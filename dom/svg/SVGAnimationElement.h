@@ -73,7 +73,7 @@ class SVGAnimationElement : public SVGAnimationElementBase, public SVGTests {
   // WebIDL
   nsSVGElement* GetTargetElement();
   float GetStartTime(ErrorResult& rv);
-  float GetCurrentTime();
+  float GetCurrentTimeAsFloat();
   float GetSimpleDuration(ErrorResult& rv);
   void BeginElement(ErrorResult& rv) { BeginElementAt(0.f, rv); }
   void BeginElementAt(float offset, ErrorResult& rv);

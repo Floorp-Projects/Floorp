@@ -40,6 +40,7 @@ interface SVGSVGElement : SVGGraphicsElement {
   void pauseAnimations();
   void unpauseAnimations();
   boolean animationsPaused();
+  [BinaryName="getCurrentTimeAsFloat"]
   float getCurrentTime();
   void setCurrentTime(float seconds);
   // NodeList getIntersectionList(SVGRect rect, SVGElement referenceElement);
