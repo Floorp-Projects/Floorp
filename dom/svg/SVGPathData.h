@@ -21,11 +21,11 @@
 
 #include <string.h>
 
-class nsSVGPathDataParser;  // IWYU pragma: keep
-
 struct nsSVGMark;
 
 namespace mozilla {
+
+class SVGPathDataParser;  // IWYU pragma: keep
 
 /**
  * ATTENTION! WARNING! WATCH OUT!!
@@ -77,8 +77,8 @@ class SVGPathData {
   friend class SVGAnimatedPathSegList;
   friend class DOMSVGPathSegList;
   friend class DOMSVGPathSeg;
-  friend class ::nsSVGPathDataParser;
-  // nsSVGPathDataParser will not keep wrappers in sync, so consumers
+  friend class SVGPathDataParser;
+  // SVGPathDataParser will not keep wrappers in sync, so consumers
   // are responsible for that!
 
   typedef gfx::DrawTarget DrawTarget;
