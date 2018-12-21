@@ -251,8 +251,8 @@ class CommonBackend(BuildBackend):
                     no_pgo_objs.append(o)
 
         def expand(lib, recurse_objs, system_libs):
-            if isinstance(lib, StaticLibrary):
-                if lib.no_expand_lib:
+            if isinstance(lib, (HostLibrary, StaticLibrary)):
+                if not isinstance(lib, HostLibrary) and lib.no_expand_lib:
                     static_libs.append(lib)
                     recurse_objs = False
                 elif recurse_objs:
@@ -274,11 +274,11 @@ class CommonBackend(BuildBackend):
 
         add_objs(input_bin)
 
-        system_libs = not isinstance(input_bin, StaticLibrary)
+        system_libs = not isinstance(input_bin, (HostLibrary, StaticLibrary))
         for lib in input_bin.linked_libraries:
             if isinstance(lib, RustLibrary):
                 continue
-            elif isinstance(lib, StaticLibrary):
+            elif isinstance(lib, (HostLibrary, StaticLibrary)):
                 expand(lib, True, system_libs)
             elif isinstance(lib, SharedLibrary):
                 if lib not in seen_libs:
@@ -293,10 +293,20 @@ class CommonBackend(BuildBackend):
         return (objs, sorted(seen_pgo_gen_only_objs), no_pgo_objs, \
                 shared_libs, os_libs, static_libs)
 
-    def _make_list_file(self, objdir, objs, name):
+    def _make_list_file(self, kind, objdir, objs, name):
         if not objs:
             return None
-        list_style = self.environment.substs.get('EXPAND_LIBS_LIST_STYLE')
+        if kind == 'target':
+            list_style = self.environment.substs.get('EXPAND_LIBS_LIST_STYLE')
+        else:
+            # The host compiler is not necessarily the same kind as the target
+            # compiler, so we can't be sure EXPAND_LIBS_LIST_STYLE is the right
+            # style to use ; however, all compilers support the `list` type, so
+            # use that. That doesn't cause any practical problem because where
+            # it really matters to use something else than `list` is when
+            # linking tons of objects (because of command line argument limits),
+            # which only really happens for libxul.
+            list_style = 'list'
         list_file_path = mozpath.join(objdir, name)
         objs = [os.path.relpath(o, objdir) for o in objs]
         if list_style == 'linkerscript':
