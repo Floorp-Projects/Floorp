@@ -1738,7 +1738,6 @@ void RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList) {
   }
 
   aChangeList.Clear();
-  FlushOverflowChangedTracker();
 }
 
 /* static */ uint64_t RestyleManager::GetAnimationGenerationForFrame(
@@ -3005,6 +3004,8 @@ void RestyleManager::DoProcessPendingRestyles(ServoTraversalFlags aFlags) {
   }
 
   doc->ClearServoRestyleRoot();
+
+  FlushOverflowChangedTracker();
 
   ClearSnapshots();
   styleSet->AssertTreeIsClean();
