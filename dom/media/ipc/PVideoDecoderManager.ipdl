@@ -13,7 +13,6 @@ using mozilla::CreateDecoderParams::Option from "PlatformDecoderModule.h";
 using mozilla::CreateDecoderParams::OptionSet from "PlatformDecoderModule.h";
 
 namespace mozilla {
-namespace dom {
 
 sync protocol PVideoDecoderManager
 {
@@ -36,5 +35,4 @@ parent:
   async DeallocateSurfaceDescriptorGPUVideo(SurfaceDescriptorGPUVideo sd);
 };
 
-} // namespace dom
 } // namespace mozilla

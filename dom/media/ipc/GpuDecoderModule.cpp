@@ -8,16 +8,14 @@
 #include "base/thread.h"
 #include "mozilla/layers/SynchronousTask.h"
 #include "mozilla/StaticPrefs.h"
-
-#include "RemoteMediaDataDecoder.h"
 #include "VideoDecoderChild.h"
 #include "VideoDecoderManagerChild.h"
+
+#include "RemoteMediaDataDecoder.h"
 
 namespace mozilla {
 
 using base::Thread;
-using dom::VideoDecoderChild;
-using dom::VideoDecoderManagerChild;
 using namespace ipc;
 using namespace layers;
 using namespace gfx;

@@ -28,7 +28,7 @@ class GPUVideoImage final : public Image {
   friend class gl::GLBlitHelper;
 
  public:
-  GPUVideoImage(dom::VideoDecoderManagerChild* aManager,
+  GPUVideoImage(VideoDecoderManagerChild* aManager,
                 const SurfaceDescriptorGPUVideo& aSD, const gfx::IntSize& aSize)
       : Image(nullptr, ImageFormat::GPU_VIDEO), mSize(aSize) {
     // Create the TextureClient immediately since the GPUVideoTextureData

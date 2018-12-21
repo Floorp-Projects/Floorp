@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "GPUVideoTextureHost.h"
-#include "mozilla/dom/VideoDecoderManagerParent.h"
+#include "mozilla/VideoDecoderManagerParent.h"
 #include "ImageContainer.h"
 #include "mozilla/layers/VideoBridgeParent.h"
 

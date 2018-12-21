@@ -13,14 +13,13 @@ namespace mozilla {
 namespace gfx {
 class SourceSurface;
 }
-namespace dom {
 class VideoDecoderManagerChild;
-}
+
 namespace layers {
 
 class GPUVideoTextureData : public TextureData {
  public:
-  GPUVideoTextureData(dom::VideoDecoderManagerChild* aManager,
+  GPUVideoTextureData(VideoDecoderManagerChild* aManager,
                       const SurfaceDescriptorGPUVideo& aSD,
                       const gfx::IntSize& aSize);
   ~GPUVideoTextureData();
@@ -42,7 +41,7 @@ class GPUVideoTextureData : public TextureData {
   virtual GPUVideoTextureData* AsGPUVideoTextureData() override { return this; }
 
  protected:
-  RefPtr<dom::VideoDecoderManagerChild> mManager;
+  RefPtr<VideoDecoderManagerChild> mManager;
   SurfaceDescriptorGPUVideo mSD;
   gfx::IntSize mSize;
 
