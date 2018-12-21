@@ -87,7 +87,6 @@ dnl ========================================================
 dnl Checks for compilers.
 dnl ========================================================
 
-dnl AR_FLAGS set here so HOST_AR_FLAGS can be set correctly (see bug 538269)
 AR_FLAGS='crs $@'
 
 if test "$COMPILE_ENVIRONMENT"; then
@@ -115,15 +114,6 @@ else
     fi
     if test -z "$HOST_CXX"; then
         HOST_CXX='$(CXX)'
-    fi
-    if test -z "$HOST_RANLIB"; then
-        HOST_RANLIB='$(RANLIB)'
-    fi
-    if test -z "$HOST_AR"; then
-        HOST_AR='$(AR)'
-    fi
-    if test -z "$HOST_AR_FLAGS"; then
-        HOST_AR_FLAGS='$(AR_FLAGS)'
     fi
 fi
 
@@ -449,10 +439,7 @@ dnl ========================================================
 case "$host" in
 *mingw*)
     if test -n "$_WIN32_MSVC"; then
-        HOST_AR=lib
-        HOST_AR_FLAGS='-NOLOGO -OUT:$@'
         HOST_CFLAGS="$HOST_CFLAGS -nologo"
-        HOST_RANLIB='echo ranlib'
     else
         HOST_CFLAGS="$HOST_CFLAGS -mwindows"
     fi
@@ -1697,9 +1684,6 @@ AC_SUBST_LIST(HOST_CPPFLAGS)
 AC_SUBST_LIST(HOST_CXXFLAGS)
 AC_SUBST(HOST_LDFLAGS)
 AC_SUBST_LIST(HOST_OPTIMIZE_FLAGS)
-AC_SUBST(HOST_AR)
-AC_SUBST(HOST_AR_FLAGS)
-AC_SUBST(HOST_RANLIB)
 AC_SUBST(HOST_BIN_SUFFIX)
 
 AC_SUBST(TARGET_XPCOM_ABI)
