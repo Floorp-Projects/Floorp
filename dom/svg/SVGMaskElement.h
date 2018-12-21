@@ -9,7 +9,7 @@
 
 #include "nsSVGEnum.h"
 #include "nsSVGLength2.h"
-#include "nsSVGElement.h"
+#include "SVGElement.h"
 
 class nsSVGMaskFrame;
 
@@ -21,7 +21,7 @@ namespace dom {
 
 //--------------------- Masks ------------------------
 
-typedef nsSVGElement SVGMaskElementBase;
+typedef SVGElement SVGMaskElementBase;
 
 class SVGMaskElement final : public SVGMaskElementBase {
   friend class ::nsSVGMaskFrame;

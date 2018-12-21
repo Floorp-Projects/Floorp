@@ -9,7 +9,7 @@
 #include "nsSVGUtils.h"
 #include "nsSVGFilterInstance.h"
 
-NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(FESpecularLighting)
+NS_IMPL_NS_NEW_SVG_ELEMENT(FESpecularLighting)
 
 using namespace mozilla::gfx;
 
@@ -58,7 +58,7 @@ SVGFESpecularLightingElement::KernelUnitLengthY() {
 }
 
 //----------------------------------------------------------------------
-// nsSVGElement methods
+// SVGElement methods
 
 FilterPrimitiveDescription
 SVGFESpecularLightingElement::GetPrimitiveDescription(

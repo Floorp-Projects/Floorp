@@ -25,7 +25,7 @@
 #include "nsSVGUtils.h"
 #include "SVGAngle.h"
 
-NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT_CHECK_PARSER(SVG)
+NS_IMPL_NS_NEW_SVG_ELEMENT_CHECK_PARSER(SVG)
 
 using namespace mozilla::gfx;
 
@@ -40,7 +40,7 @@ nsSVGEnumMapping SVGSVGElement::sZoomAndPanMap[] = {
     {nsGkAtoms::magnify, SVG_ZOOMANDPAN_MAGNIFY},
     {nullptr, 0}};
 
-nsSVGElement::EnumInfo SVGSVGElement::sEnumInfo[1] = {
+SVGElement::EnumInfo SVGSVGElement::sEnumInfo[1] = {
     {nsGkAtoms::zoomAndPan, sZoomAndPanMap, SVG_ZOOMANDPAN_MAGNIFY}};
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(DOMSVGTranslatePoint, nsISVGPoint, mElement)
@@ -375,7 +375,7 @@ nsSMILTimeContainer* SVGSVGElement::GetTimedDocumentRoot() {
   return nullptr;
 }
 //----------------------------------------------------------------------
-// nsSVGElement
+// SVGElement
 nsresult SVGSVGElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                                    nsIContent* aBindingParent) {
   nsSMILAnimationController* smilController = nullptr;
@@ -522,7 +522,7 @@ void SVGSVGElement::InvalidateTransformNotifyFrame() {
   }
 }
 
-nsSVGElement::EnumAttributesInfo SVGSVGElement::GetEnumInfo() {
+SVGElement::EnumAttributesInfo SVGSVGElement::GetEnumInfo() {
   return EnumAttributesInfo(mEnumAttributes, sEnumInfo, ArrayLength(sEnumInfo));
 }
 

@@ -114,7 +114,7 @@ already_AddRefed<SourceSurface> nsSVGMaskFrame::GetMaskForMaskedFrame(
     }
     gfxMatrix m = mMatrixForChildren;
     if (kid->GetContent()->IsSVGElement()) {
-      m = static_cast<nsSVGElement*>(kid->GetContent())
+      m = static_cast<SVGElement*>(kid->GetContent())
               ->PrependLocalTransformsTo(m, eUserSpaceToParent);
     }
     nsSVGUtils::PaintFrameWithEffects(kid, *tmpCtx, m, aParams.imgParams);

@@ -8,15 +8,15 @@
 #define mozilla_dom_SVGTitleElement_h
 
 #include "mozilla/Attributes.h"
-#include "nsSVGElement.h"
+#include "SVGElement.h"
 #include "nsStubMutationObserver.h"
-
-typedef nsSVGElement SVGTitleElementBase;
 
 nsresult NS_NewSVGTitleElement(
     nsIContent **aResult, already_AddRefed<mozilla::dom::NodeInfo> &&aNodeInfo);
 namespace mozilla {
 namespace dom {
+
+typedef SVGElement SVGTitleElementBase;
 
 class SVGTitleElement final : public SVGTitleElementBase,
                               public nsStubMutationObserver {

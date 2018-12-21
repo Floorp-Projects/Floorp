@@ -113,7 +113,6 @@ class nsPresContext;
 class nsRange;
 class nsSimpleContentList;
 class nsSMILAnimationController;
-class nsSVGElement;
 class nsTextNode;
 class nsUnblockOnloadEvent;
 class nsWindowSizes;
@@ -189,6 +188,7 @@ class Selection;
 class ServiceWorkerDescriptor;
 class StyleSheetList;
 class SVGDocument;
+class SVGElement;
 class SVGSVGElement;
 class SVGUseElement;
 class Touch;
@@ -447,6 +447,7 @@ class nsIDocument : public nsINode,
   typedef mozilla::FullscreenRequest FullscreenRequest;
   typedef mozilla::net::ReferrerPolicy ReferrerPolicyEnum;
   typedef mozilla::dom::Element Element;
+  typedef mozilla::dom::SVGElement SVGElement;
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOCUMENT_IID)
 
@@ -1253,13 +1254,13 @@ class nsIDocument : public nsINode,
    * These are weak pointers, please manually unschedule them when an element
    * is removed.
    */
-  void ScheduleSVGForPresAttrEvaluation(nsSVGElement* aSVG) {
+  void ScheduleSVGForPresAttrEvaluation(SVGElement* aSVG) {
     mLazySVGPresElements.PutEntry(aSVG);
   }
 
   // Unschedule an element scheduled by ScheduleFrameRequestCallback (e.g. for
   // when it is destroyed)
-  void UnscheduleSVGForPresAttrEvaluation(nsSVGElement* aSVG) {
+  void UnscheduleSVGForPresAttrEvaluation(SVGElement* aSVG) {
     mLazySVGPresElements.RemoveEntry(aSVG);
   }
 
@@ -4302,7 +4303,7 @@ class nsIDocument : public nsINode,
   // We lazily calculate declaration blocks for SVG elements with mapped
   // attributes in Servo mode. This list contains all elements which need lazy
   // resolution.
-  nsTHashtable<nsPtrHashKey<nsSVGElement>> mLazySVGPresElements;
+  nsTHashtable<nsPtrHashKey<SVGElement>> mLazySVGPresElements;
 
   // Restyle root for servo's style system.
   //

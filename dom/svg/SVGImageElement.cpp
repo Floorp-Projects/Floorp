@@ -18,7 +18,7 @@
 #include "mozilla/dom/SVGLengthBinding.h"
 #include "nsContentUtils.h"
 
-NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(Image)
+NS_IMPL_NS_NEW_SVG_ELEMENT(Image)
 
 using namespace mozilla::gfx;
 
@@ -30,7 +30,7 @@ JSObject* SVGImageElement::WrapNode(JSContext* aCx,
   return SVGImageElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-nsSVGElement::LengthInfo SVGImageElement::sLengthInfo[4] = {
+SVGElement::LengthInfo SVGImageElement::sLengthInfo[4] = {
     {nsGkAtoms::x, 0, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER,
      SVGContentUtils::X},
     {nsGkAtoms::y, 0, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER,
@@ -41,7 +41,7 @@ nsSVGElement::LengthInfo SVGImageElement::sLengthInfo[4] = {
      SVGContentUtils::Y},
 };
 
-nsSVGElement::StringInfo SVGImageElement::sStringInfo[2] = {
+SVGElement::StringInfo SVGImageElement::sStringInfo[2] = {
     {nsGkAtoms::href, kNameSpaceID_None, true},
     {nsGkAtoms::href, kNameSpaceID_XLink, true}};
 
@@ -265,7 +265,7 @@ already_AddRefed<Path> SVGImageElement::BuildPath(PathBuilder* aBuilder) {
 }
 
 //----------------------------------------------------------------------
-// nsSVGElement methods
+// SVGElement methods
 
 /* virtual */ bool SVGImageElement::HasValidDimensions() const {
   return mLengthAttributes[ATTR_WIDTH].IsExplicitlySet() &&
@@ -274,7 +274,7 @@ already_AddRefed<Path> SVGImageElement::BuildPath(PathBuilder* aBuilder) {
          mLengthAttributes[ATTR_HEIGHT].GetAnimValInSpecifiedUnits() > 0;
 }
 
-nsSVGElement::LengthAttributesInfo SVGImageElement::GetLengthInfo() {
+SVGElement::LengthAttributesInfo SVGImageElement::GetLengthInfo() {
   return LengthAttributesInfo(mLengthAttributes, sLengthInfo,
                               ArrayLength(sLengthInfo));
 }
@@ -283,7 +283,7 @@ SVGAnimatedPreserveAspectRatio* SVGImageElement::GetPreserveAspectRatio() {
   return &mPreserveAspectRatio;
 }
 
-nsSVGElement::StringAttributesInfo SVGImageElement::GetStringInfo() {
+SVGElement::StringAttributesInfo SVGImageElement::GetStringInfo() {
   return StringAttributesInfo(mStringAttributes, sStringInfo,
                               ArrayLength(sStringInfo));
 }

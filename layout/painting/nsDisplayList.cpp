@@ -24,6 +24,7 @@
 #include "mozilla/dom/Selection.h"
 #include "mozilla/dom/ServiceWorkerRegistrar.h"
 #include "mozilla/dom/ServiceWorkerRegistration.h"
+#include "mozilla/dom/SVGElement.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/layers/PLayerTransaction.h"
 #include "mozilla/ShapeUtils.h"
@@ -53,7 +54,6 @@
 #include "nsImageFrame.h"
 #include "nsSubDocumentFrame.h"
 #include "SVGObserverUtils.h"
-#include "nsSVGElement.h"
 #include "nsSVGClipPathFrame.h"
 #include "GeckoProfiler.h"
 #include "nsViewManager.h"
@@ -8563,7 +8563,7 @@ bool nsDisplayEffectsBase::ValidateSVGFrame() {
       NS_ASSERTION(false, "why?");
       return false;
     }
-    if (!static_cast<const nsSVGElement*>(content)->HasValidDimensions()) {
+    if (!static_cast<const SVGElement*>(content)->HasValidDimensions()) {
       return false;  // The SVG spec says not to draw filters for this
     }
   }

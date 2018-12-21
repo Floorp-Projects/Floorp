@@ -23,7 +23,7 @@
 #include "nsWindowSizes.h"
 #include "SVGContentUtils.h"
 
-NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(Path)
+NS_IMPL_NS_NEW_SVG_ELEMENT(Path)
 
 using namespace mozilla::gfx;
 
@@ -215,7 +215,7 @@ already_AddRefed<DOMSVGPathSegList> SVGPathElement::AnimatedPathSegList() {
 }
 
 //----------------------------------------------------------------------
-// nsSVGElement methods
+// SVGElement methods
 
 /* virtual */ bool SVGPathElement::HasValidDimensions() const {
   return !mD.GetAnimValue().IsEmpty();

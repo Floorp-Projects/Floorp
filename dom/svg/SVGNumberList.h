@@ -12,7 +12,7 @@
 #include "nsIContent.h"
 #include "nsINode.h"
 #include "nsIWeakReferenceUtils.h"
-#include "nsSVGElement.h"
+#include "SVGElement.h"
 #include "nsTArray.h"
 
 namespace mozilla {
@@ -131,16 +131,16 @@ class SVGNumberListAndInfo : public SVGNumberList {
  public:
   SVGNumberListAndInfo() : mElement(nullptr) {}
 
-  explicit SVGNumberListAndInfo(nsSVGElement* aElement)
+  explicit SVGNumberListAndInfo(dom::SVGElement* aElement)
       : mElement(do_GetWeakReference(static_cast<nsINode*>(aElement))) {}
 
-  void SetInfo(nsSVGElement* aElement) {
+  void SetInfo(dom::SVGElement* aElement) {
     mElement = do_GetWeakReference(static_cast<nsINode*>(aElement));
   }
 
-  nsSVGElement* Element() const {
+  dom::SVGElement* Element() const {
     nsCOMPtr<nsIContent> e = do_QueryReferent(mElement);
-    return static_cast<nsSVGElement*>(e.get());
+    return static_cast<dom::SVGElement*>(e.get());
   }
 
   nsresult CopyFrom(const SVGNumberListAndInfo& rhs) {

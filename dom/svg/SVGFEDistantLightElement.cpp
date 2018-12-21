@@ -8,7 +8,7 @@
 #include "mozilla/dom/SVGFEDistantLightElementBinding.h"
 #include "nsSVGFilterInstance.h"
 
-NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(FEDistantLight)
+NS_IMPL_NS_NEW_SVG_ELEMENT(FEDistantLight)
 
 using namespace mozilla::gfx;
 
@@ -20,7 +20,7 @@ JSObject* SVGFEDistantLightElement::WrapNode(
   return SVGFEDistantLightElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-nsSVGElement::NumberInfo SVGFEDistantLightElement::sNumberInfo[2] = {
+SVGElement::NumberInfo SVGFEDistantLightElement::sNumberInfo[2] = {
     {nsGkAtoms::azimuth, 0, false}, {nsGkAtoms::elevation, 0, false}};
 
 //----------------------------------------------------------------------
@@ -58,9 +58,9 @@ already_AddRefed<SVGAnimatedNumber> SVGFEDistantLightElement::Elevation() {
 }
 
 //----------------------------------------------------------------------
-// nsSVGElement methods
+// SVGElement methods
 
-nsSVGElement::NumberAttributesInfo SVGFEDistantLightElement::GetNumberInfo() {
+SVGElement::NumberAttributesInfo SVGFEDistantLightElement::GetNumberInfo() {
   return NumberAttributesInfo(mNumberAttributes, sNumberInfo,
                               ArrayLength(sNumberInfo));
 }

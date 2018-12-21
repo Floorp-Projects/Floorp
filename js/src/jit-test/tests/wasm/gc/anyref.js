@@ -146,7 +146,7 @@ exports = wasmEvalText(`(module
     )
 )`).exports;
 
-assertErrorMessage(() => exports.is_null(undefined), TypeError, "can't convert undefined to object");
+assertEq(exports.is_null(undefined), 0);
 assertEq(exports.is_null(null), 1);
 assertEq(exports.is_null({}), 0);
 assertEq(exports.is_null("hi"), 0);
@@ -421,10 +421,6 @@ assertEq(exports.count_g(), 1);
 // Globals.
 
 // Anyref globals in wasm modules.
-
-assertErrorMessage(() => wasmEvalText(`(module (gc_feature_opt_in 2) (global (import "glob" "anyref") anyref))`, { glob: { anyref: 42 } }),
-    WebAssembly.LinkError,
-    /import object field 'anyref' is not a Object-or-null/);
 
 assertErrorMessage(() => wasmEvalText(`(module (gc_feature_opt_in 2) (global (import "glob" "anyref") anyref))`, { glob: { anyref: new WebAssembly.Global({ value: 'i32' }, 42) } }),
     WebAssembly.LinkError,

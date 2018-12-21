@@ -9,7 +9,7 @@
 
 #include "nsWrapperCache.h"
 
-#include "nsSVGElement.h"
+#include "SVGElement.h"
 
 namespace mozilla {
 namespace dom {
@@ -19,7 +19,7 @@ class SVGAnimatedEnumeration : public nsISupports, public nsWrapperCache {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(SVGAnimatedEnumeration)
 
-  nsSVGElement* GetParentObject() const { return mSVGElement; }
+  SVGElement* GetParentObject() const { return mSVGElement; }
 
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) final;
 
@@ -28,11 +28,11 @@ class SVGAnimatedEnumeration : public nsISupports, public nsWrapperCache {
   virtual uint16_t AnimVal() = 0;
 
  protected:
-  explicit SVGAnimatedEnumeration(nsSVGElement* aSVGElement)
+  explicit SVGAnimatedEnumeration(SVGElement* aSVGElement)
       : mSVGElement(aSVGElement) {}
   virtual ~SVGAnimatedEnumeration(){};
 
-  RefPtr<nsSVGElement> mSVGElement;
+  RefPtr<SVGElement> mSVGElement;
 };
 
 }  // namespace dom

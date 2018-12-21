@@ -35,8 +35,8 @@ SVGAnimatedStringTearoffTable() {
 
 /* Implementation */
 
-void nsSVGString::SetBaseValue(const nsAString& aValue,
-                               nsSVGElement* aSVGElement, bool aDoSetAttr) {
+void nsSVGString::SetBaseValue(const nsAString& aValue, SVGElement* aSVGElement,
+                               bool aDoSetAttr) {
   NS_ASSERTION(aSVGElement, "Null element passed to SetBaseValue");
 
   mIsBaseSet = true;
@@ -51,7 +51,7 @@ void nsSVGString::SetBaseValue(const nsAString& aValue,
 }
 
 void nsSVGString::GetAnimValue(nsAString& aResult,
-                               const nsSVGElement* aSVGElement) const {
+                               const SVGElement* aSVGElement) const {
   if (mAnimVal) {
     aResult = *mAnimVal;
     return;
@@ -61,7 +61,7 @@ void nsSVGString::GetAnimValue(nsAString& aResult,
 }
 
 void nsSVGString::SetAnimValue(const nsAString& aValue,
-                               nsSVGElement* aSVGElement) {
+                               SVGElement* aSVGElement) {
   if (aSVGElement->IsStringAnimatable(mAttrEnum)) {
     if (mAnimVal && mAnimVal->Equals(aValue)) {
       return;
@@ -75,7 +75,7 @@ void nsSVGString::SetAnimValue(const nsAString& aValue,
 }
 
 already_AddRefed<SVGAnimatedString> nsSVGString::ToDOMAnimatedString(
-    nsSVGElement* aSVGElement) {
+    SVGElement* aSVGElement) {
   RefPtr<DOMAnimatedString> domAnimatedString =
       SVGAnimatedStringTearoffTable().GetTearoff(this);
   if (!domAnimatedString) {
@@ -90,7 +90,7 @@ nsSVGString::DOMAnimatedString::~DOMAnimatedString() {
   SVGAnimatedStringTearoffTable().RemoveTearoff(mVal);
 }
 
-UniquePtr<nsISMILAttr> nsSVGString::ToSMILAttr(nsSVGElement* aSVGElement) {
+UniquePtr<nsISMILAttr> nsSVGString::ToSMILAttr(SVGElement* aSVGElement) {
   return MakeUnique<SMILString>(this, aSVGElement);
 }
 

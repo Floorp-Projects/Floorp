@@ -7,7 +7,7 @@
 #include "mozilla/dom/SVGFECompositeElement.h"
 #include "mozilla/dom/SVGFECompositeElementBinding.h"
 
-NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(FEComposite)
+NS_IMPL_NS_NEW_SVG_ELEMENT(FEComposite)
 
 using namespace mozilla::gfx;
 
@@ -19,7 +19,7 @@ JSObject* SVGFECompositeElement::WrapNode(JSContext* aCx,
   return SVGFECompositeElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-nsSVGElement::NumberInfo SVGFECompositeElement::sNumberInfo[4] = {
+SVGElement::NumberInfo SVGFECompositeElement::sNumberInfo[4] = {
     {nsGkAtoms::k1, 0, false},
     {nsGkAtoms::k2, 0, false},
     {nsGkAtoms::k3, 0, false},
@@ -34,10 +34,10 @@ nsSVGEnumMapping SVGFECompositeElement::sOperatorMap[] = {
     {nsGkAtoms::arithmetic, SVG_FECOMPOSITE_OPERATOR_ARITHMETIC},
     {nullptr, 0}};
 
-nsSVGElement::EnumInfo SVGFECompositeElement::sEnumInfo[1] = {
+SVGElement::EnumInfo SVGFECompositeElement::sEnumInfo[1] = {
     {nsGkAtoms::_operator, sOperatorMap, SVG_FECOMPOSITE_OPERATOR_OVER}};
 
-nsSVGElement::StringInfo SVGFECompositeElement::sStringInfo[3] = {
+SVGElement::StringInfo SVGFECompositeElement::sStringInfo[3] = {
     {nsGkAtoms::result, kNameSpaceID_None, true},
     {nsGkAtoms::in, kNameSpaceID_None, true},
     {nsGkAtoms::in2, kNameSpaceID_None, true}};
@@ -117,18 +117,18 @@ void SVGFECompositeElement::GetSourceImageNames(
 }
 
 //----------------------------------------------------------------------
-// nsSVGElement methods
+// SVGElement methods
 
-nsSVGElement::NumberAttributesInfo SVGFECompositeElement::GetNumberInfo() {
+SVGElement::NumberAttributesInfo SVGFECompositeElement::GetNumberInfo() {
   return NumberAttributesInfo(mNumberAttributes, sNumberInfo,
                               ArrayLength(sNumberInfo));
 }
 
-nsSVGElement::EnumAttributesInfo SVGFECompositeElement::GetEnumInfo() {
+SVGElement::EnumAttributesInfo SVGFECompositeElement::GetEnumInfo() {
   return EnumAttributesInfo(mEnumAttributes, sEnumInfo, ArrayLength(sEnumInfo));
 }
 
-nsSVGElement::StringAttributesInfo SVGFECompositeElement::GetStringInfo() {
+SVGElement::StringAttributesInfo SVGFECompositeElement::GetStringInfo() {
   return StringAttributesInfo(mStringAttributes, sStringInfo,
                               ArrayLength(sStringInfo));
 }

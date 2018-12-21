@@ -231,7 +231,7 @@ nsIFrame* nsSVGViewportFrame::GetFrameForPoint(const gfxPoint& aPoint) {
 
   if (StyleDisplay()->IsScrollableOverflow()) {
     Rect clip;
-    static_cast<nsSVGElement*>(GetContent())
+    static_cast<SVGElement*>(GetContent())
         ->GetAnimatedLengthValues(&clip.x, &clip.y, &clip.width, &clip.height,
                                   nullptr);
     if (!clip.Contains(ToPoint(aPoint))) {

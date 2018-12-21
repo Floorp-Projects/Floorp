@@ -9,27 +9,29 @@
 
 #include "nsAutoPtr.h"
 #include "nsError.h"
-#include "nsSVGElement.h"
+#include "SVGElement.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/SVGAnimatedString.h"
 #include "mozilla/UniquePtr.h"
 
 class nsSVGString {
  public:
+  typedef mozilla::dom::SVGElement SVGElement;
+
   void Init(uint8_t aAttrEnum) {
     mAnimVal = nullptr;
     mAttrEnum = aAttrEnum;
     mIsBaseSet = false;
   }
 
-  void SetBaseValue(const nsAString& aValue, nsSVGElement* aSVGElement,
+  void SetBaseValue(const nsAString& aValue, SVGElement* aSVGElement,
                     bool aDoSetAttr);
-  void GetBaseValue(nsAString& aValue, const nsSVGElement* aSVGElement) const {
+  void GetBaseValue(nsAString& aValue, const SVGElement* aSVGElement) const {
     aSVGElement->GetStringBaseValue(mAttrEnum, aValue);
   }
 
-  void SetAnimValue(const nsAString& aValue, nsSVGElement* aSVGElement);
-  void GetAnimValue(nsAString& aValue, const nsSVGElement* aSVGElement) const;
+  void SetAnimValue(const nsAString& aValue, SVGElement* aSVGElement);
+  void GetAnimValue(nsAString& aValue, const SVGElement* aSVGElement) const;
 
   // Returns true if the animated value of this string has been explicitly
   // set (either by animation, or by taking on the base value which has been
@@ -39,9 +41,9 @@ class nsSVGString {
   bool IsExplicitlySet() const { return !!mAnimVal || mIsBaseSet; }
 
   already_AddRefed<mozilla::dom::SVGAnimatedString> ToDOMAnimatedString(
-      nsSVGElement* aSVGElement);
+      SVGElement* aSVGElement);
 
-  mozilla::UniquePtr<nsISMILAttr> ToSMILAttr(nsSVGElement* aSVGElement);
+  mozilla::UniquePtr<nsISMILAttr> ToSMILAttr(SVGElement* aSVGElement);
 
  private:
   nsAutoPtr<nsString> mAnimVal;
@@ -53,7 +55,7 @@ class nsSVGString {
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
     NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMAnimatedString)
 
-    DOMAnimatedString(nsSVGString* aVal, nsSVGElement* aSVGElement)
+    DOMAnimatedString(nsSVGString* aVal, SVGElement* aSVGElement)
         : mozilla::dom::SVGAnimatedString(aSVGElement), mVal(aVal) {}
 
     nsSVGString* mVal;  // kept alive because it belongs to content
@@ -76,14 +78,14 @@ class nsSVGString {
   };
   struct SMILString : public nsISMILAttr {
    public:
-    SMILString(nsSVGString* aVal, nsSVGElement* aSVGElement)
+    SMILString(nsSVGString* aVal, SVGElement* aSVGElement)
         : mVal(aVal), mSVGElement(aSVGElement) {}
 
     // These will stay alive because a nsISMILAttr only lives as long
     // as the Compositing step, and DOM elements don't get a chance to
     // die during that.
     nsSVGString* mVal;
-    nsSVGElement* mSVGElement;
+    SVGElement* mSVGElement;
 
     // nsISMILAttr methods
     virtual nsresult ValueFromString(

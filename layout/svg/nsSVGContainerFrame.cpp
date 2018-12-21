@@ -12,7 +12,7 @@
 #include "mozilla/RestyleManager.h"
 #include "nsCSSFrameConstructor.h"
 #include "SVGObserverUtils.h"
-#include "nsSVGElement.h"
+#include "SVGElement.h"
 #include "nsSVGUtils.h"
 #include "nsSVGAnimatedTransformList.h"
 #include "SVGTextFrame.h"
@@ -133,7 +133,7 @@ void nsSVGDisplayContainerFrame::BuildDisplayList(
     nsDisplayListBuilder* aBuilder, const nsDisplayListSet& aLists) {
   // mContent could be a XUL element so check for an SVG element before casting
   if (mContent->IsSVGElement() &&
-      !static_cast<const nsSVGElement*>(GetContent())->HasValidDimensions()) {
+      !static_cast<const SVGElement*>(GetContent())->HasValidDimensions()) {
     return;
   }
   DisplayOutline(aBuilder, aLists);
@@ -208,7 +208,7 @@ bool nsSVGDisplayContainerFrame::IsSVGTransformed(
 
   // mContent could be a XUL element so check for an SVG element before casting
   if (mContent->IsSVGElement()) {
-    nsSVGElement* content = static_cast<nsSVGElement*>(GetContent());
+    SVGElement* content = static_cast<SVGElement*>(GetContent());
     nsSVGAnimatedTransformList* transformList =
         content->GetAnimatedTransformList();
     if ((transformList && transformList->HasTransform()) ||
@@ -242,7 +242,7 @@ void nsSVGDisplayContainerFrame::PaintSVG(gfxContext& aContext,
 
   gfxMatrix matrix = aTransform;
   if (GetContent()->IsSVGElement()) {  // must check before cast
-    matrix = static_cast<const nsSVGElement*>(GetContent())
+    matrix = static_cast<const SVGElement*>(GetContent())
                  ->PrependLocalTransformsTo(matrix, eChildToUserSpace);
     if (matrix.IsSingular()) {
       return;
@@ -255,7 +255,7 @@ void nsSVGDisplayContainerFrame::PaintSVG(gfxContext& aContext,
     // include the transform to the passed frame's user space, so add it:
     const nsIContent* content = kid->GetContent();
     if (content->IsSVGElement()) {  // must check before cast
-      const nsSVGElement* element = static_cast<const nsSVGElement*>(content);
+      const SVGElement* element = static_cast<const SVGElement*>(content);
       if (!element->HasValidDimensions()) {
         continue;  // nothing to paint for kid
       }
@@ -385,12 +385,11 @@ SVGBBox nsSVGDisplayContainerFrame::GetBBoxContribution(
     // content could be a XUL element so check for an SVG element before casting
     if (svgKid &&
         (!content->IsSVGElement() ||
-         static_cast<const nsSVGElement*>(content)->HasValidDimensions())) {
+         static_cast<const SVGElement*>(content)->HasValidDimensions())) {
       gfxMatrix transform = gfx::ThebesMatrix(aToBBoxUserspace);
       if (content->IsSVGElement()) {
-        transform =
-            static_cast<nsSVGElement*>(content)->PrependLocalTransformsTo(
-                transform);
+        transform = static_cast<SVGElement*>(content)->PrependLocalTransformsTo(
+            transform);
       }
       // We need to include zero width/height vertical/horizontal lines, so we
       // have to use UnionEdges.
@@ -409,7 +408,7 @@ gfxMatrix nsSVGDisplayContainerFrame::GetCanvasTM() {
 
     nsSVGContainerFrame* parent =
         static_cast<nsSVGContainerFrame*>(GetParent());
-    nsSVGElement* content = static_cast<nsSVGElement*>(GetContent());
+    SVGElement* content = static_cast<SVGElement*>(GetContent());
 
     gfxMatrix tm = content->PrependLocalTransformsTo(parent->GetCanvasTM());
 

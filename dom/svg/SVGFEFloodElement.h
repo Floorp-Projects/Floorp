@@ -15,7 +15,7 @@ nsresult NS_NewSVGFEFloodElement(
 namespace mozilla {
 namespace dom {
 
-typedef nsSVGFE SVGFEFloodElementBase;
+typedef SVGFE SVGFEFloodElementBase;
 
 class SVGFEFloodElement : public SVGFEFloodElementBase {
   friend nsresult(::NS_NewSVGFEFloodElement(

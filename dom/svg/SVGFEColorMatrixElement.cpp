@@ -11,7 +11,7 @@
 
 #define NUM_ENTRIES_IN_4x5_MATRIX 20
 
-NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(FEColorMatrix)
+NS_IMPL_NS_NEW_SVG_ELEMENT(FEColorMatrix)
 
 using namespace mozilla::gfx;
 
@@ -30,14 +30,14 @@ nsSVGEnumMapping SVGFEColorMatrixElement::sTypeMap[] = {
     {nsGkAtoms::luminanceToAlpha, SVG_FECOLORMATRIX_TYPE_LUMINANCE_TO_ALPHA},
     {nullptr, 0}};
 
-nsSVGElement::EnumInfo SVGFEColorMatrixElement::sEnumInfo[1] = {
+SVGElement::EnumInfo SVGFEColorMatrixElement::sEnumInfo[1] = {
     {nsGkAtoms::type, sTypeMap, SVG_FECOLORMATRIX_TYPE_MATRIX}};
 
-nsSVGElement::StringInfo SVGFEColorMatrixElement::sStringInfo[2] = {
+SVGElement::StringInfo SVGFEColorMatrixElement::sStringInfo[2] = {
     {nsGkAtoms::result, kNameSpaceID_None, true},
     {nsGkAtoms::in, kNameSpaceID_None, true}};
 
-nsSVGElement::NumberListInfo SVGFEColorMatrixElement::sNumberListInfo[1] = {
+SVGElement::NumberListInfo SVGFEColorMatrixElement::sNumberListInfo[1] = {
     {nsGkAtoms::values}};
 
 //----------------------------------------------------------------------
@@ -107,18 +107,18 @@ bool SVGFEColorMatrixElement::AttributeAffectsRendering(
 }
 
 //----------------------------------------------------------------------
-// nsSVGElement methods
+// SVGElement methods
 
-nsSVGElement::EnumAttributesInfo SVGFEColorMatrixElement::GetEnumInfo() {
+SVGElement::EnumAttributesInfo SVGFEColorMatrixElement::GetEnumInfo() {
   return EnumAttributesInfo(mEnumAttributes, sEnumInfo, ArrayLength(sEnumInfo));
 }
 
-nsSVGElement::StringAttributesInfo SVGFEColorMatrixElement::GetStringInfo() {
+SVGElement::StringAttributesInfo SVGFEColorMatrixElement::GetStringInfo() {
   return StringAttributesInfo(mStringAttributes, sStringInfo,
                               ArrayLength(sStringInfo));
 }
 
-nsSVGElement::NumberListAttributesInfo
+SVGElement::NumberListAttributesInfo
 SVGFEColorMatrixElement::GetNumberListInfo() {
   return NumberListAttributesInfo(mNumberListAttributes, sNumberListInfo,
                                   ArrayLength(sNumberListInfo));

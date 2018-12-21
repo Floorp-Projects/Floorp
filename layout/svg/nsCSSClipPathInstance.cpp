@@ -17,7 +17,7 @@
 #include "nsCSSRendering.h"
 #include "nsIFrame.h"
 #include "nsLayoutUtils.h"
-#include "nsSVGElement.h"
+#include "SVGElement.h"
 #include "nsSVGUtils.h"
 #include "nsSVGViewBox.h"
 
