@@ -31,8 +31,6 @@ ChromeUtils.defineModuleGetter(this, "NetUtil",
                                "resource://gre/modules/NetUtil.jsm");
 ChromeUtils.defineModuleGetter(this, "AppConstants",
                                "resource://gre/modules/AppConstants.jsm");
-ChromeUtils.defineModuleGetter(this, "ServiceWorkerCleanUp",
-                               "resource://gre/modules/ServiceWorkerCleanUp.jsm");
 
 ChromeUtils.defineModuleGetter(this, "PerTestCoverageUtils",
   "resource://testing-common/PerTestCoverageUtils.jsm");
@@ -1977,11 +1975,11 @@ SpecialPowersAPI.prototype = {
   },
 
   removeAllServiceWorkerData() {
-    return wrapIfUnwrapped(ServiceWorkerCleanUp.removeAll());
+    return wrapIfUnwrapped(this._removeServiceWorkerData("SPRemoveAllServiceWorkers"));
   },
 
   removeServiceWorkerDataForExampleDomain() {
-    return wrapIfUnwrapped(ServiceWorkerCleanUp.removeFromHost("example.com"));
+    return wrapIfUnwrapped(this._removeServiceWorkerData("SPRemoveServiceWorkerDataForExampleDomain"));
   },
 
   cleanUpSTSData(origin, flags) {
