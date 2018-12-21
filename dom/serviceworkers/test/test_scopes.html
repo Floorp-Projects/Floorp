@@ -66,7 +66,39 @@
 
   function testScopes() {
     return new Promise(function(resolve, reject) {
-      var getScope = navigator.serviceWorker.getScopeForUrl.bind(navigator.serviceWorker);
+      function chromeScriptSource() {
+        let swm = Cc["@mozilla.org/serviceworkers/manager;1"]
+                    .getService(Ci.nsIServiceWorkerManager);
+        let secMan = Cc["@mozilla.org/scriptsecuritymanager;1"]
+                       .getService(Ci.nsIScriptSecurityManager);
+        addMessageListener("getScope", (msg) => {
+          let principal = secMan.createCodebasePrincipalFromOrigin(msg.principal);
+          try {
+            return { scope: swm.getScopeForUrl(principal, msg.path) };
+          } catch (e) {
+            return { exception: e.message };
+          }
+        });
+      }
+
+      let getScope;
+      let parent_intercept_enabled =
+        SpecialPowers.getBoolPref("dom.serviceWorkers.parent_intercept");
+
+      if (parent_intercept_enabled) {
+        let chromeScript = SpecialPowers.loadChromeScript(chromeScriptSource);
+        let docPrincipal = SpecialPowers.wrap(document).nodePrincipal.URI.spec;
+
+        getScope = (path) => {
+          let rv = chromeScript.sendSyncMessage("getScope", { principal: docPrincipal, path })[0][0];
+          if (rv.exception)
+            throw rv.exception;
+          return rv.scope;
+        };
+      } else {
+        getScope = navigator.serviceWorker.getScopeForUrl.bind(navigator.serviceWorker);
+      }
+
       var base = new URL(".", document.baseURI);
 
       function p(s) {
@@ -82,13 +114,13 @@
         }
       }
 
-      ok(getScope(p("sub.html")) === p("sub"), "Scope should match");
-      ok(getScope(p("sub/dir.html")) === p("sub/dir.html"), "Scope should match");
-      ok(getScope(p("sub/dir")) === p("sub/dir"), "Scope should match");
-      ok(getScope(p("sub/dir/foo")) === p("sub/dir/"), "Scope should match");
-      ok(getScope(p("sub/dir/afoo")) === p("sub/dir/a"), "Scope should match");
-      ok(getScope(p("star*wars")) === p("star*"), "Scope should match");
-      ok(getScope(p("scope/some_file.html")) === p("scope/"), "Scope should match");
+      is(getScope(p("sub.html")), p("sub"), "Scope should match");
+      is(getScope(p("sub/dir.html")), p("sub/dir.html"), "Scope should match");
+      is(getScope(p("sub/dir")), p("sub/dir"), "Scope should match");
+      is(getScope(p("sub/dir/foo")), p("sub/dir/"), "Scope should match");
+      is(getScope(p("sub/dir/afoo")), p("sub/dir/a"), "Scope should match");
+      is(getScope(p("star*wars")), p("star*"), "Scope should match");
+      is(getScope(p("scope/some_file.html")), p("scope/"), "Scope should match");
       fail("index.html");
       fail("sua.html");
       fail("star/a.html");
