@@ -25,7 +25,6 @@ config = {
         "setup-mitmproxy",
         "run-tests",
     ],
-    "download_minidump_stackwalk": True,
     "tooltool_cache": os.path.join('c:\\', 'build', 'tooltool_cache'),
     "minidump_stackwalk_path": "win32-minidump_stackwalk.exe",
     "minidump_tooltool_manifest_path": "config/tooltool-manifests/win32/releng.manifest",

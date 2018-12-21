@@ -17,7 +17,6 @@ config = {
         'install',
         'run-tests',
     ],
-    "download_minidump_stackwalk": True,
     "download_symbols": "ondemand",
     "suite_definitions": {
         "marionette_desktop": {

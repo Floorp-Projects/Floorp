@@ -11,6 +11,5 @@ config = {
         'hg': os.path.join(os.environ['PROGRAMFILES'], 'Mercurial', 'hg')
     },
 
-    "download_minidump_stackwalk": True,
     "download_symbols": "ondemand",
 }
