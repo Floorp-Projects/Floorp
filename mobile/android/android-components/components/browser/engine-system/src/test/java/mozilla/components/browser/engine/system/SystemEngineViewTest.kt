@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.engine.system
 
+import android.content.Context
 import android.graphics.Bitmap
 import android.net.Uri
 import android.net.http.SslCertificate
@@ -17,8 +18,10 @@ import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.ValueCallback
+import android.webkit.WebChromeClient.FileChooserParams.MODE_OPEN_MULTIPLE
 import android.webkit.WebViewClient
 import android.webkit.WebView.HitTestResult
+import androidx.test.core.app.ApplicationProvider
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.engine.system.matcher.UrlMatcher
 import mozilla.components.browser.errorpages.ErrorType
@@ -27,6 +30,7 @@ import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.history.HistoryTrackingDelegate
 import mozilla.components.concept.engine.permission.PermissionRequest
+import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.request.RequestInterceptor
 import mozilla.components.concept.engine.window.WindowRequest
 import mozilla.components.support.test.eq
@@ -970,5 +974,62 @@ class SystemEngineViewTest {
 
         engineView.currentWebView.webChromeClient.onCloseWindow(mock(WebView::class.java))
         assertNotNull(closeWindowRequest)
+    }
+
+    @Test
+    fun `Calling onShowFileChooser must provide a FilePicker PromptRequest`() {
+        val engineSession = SystemEngineSession()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val engineView = SystemEngineView(context)
+        var onSingleFileSelectedWasCalled = false
+        var onMultipleFilesSelectedWasCalled = false
+        var onDismissWasCalled = false
+        var request: PromptRequest? = null
+
+        val callback = ValueCallback<Array<Uri>> {
+
+            if (it == null) {
+                onDismissWasCalled = true
+            } else {
+                if (it.size == 1) {
+                    onSingleFileSelectedWasCalled = true
+                } else {
+                    onMultipleFilesSelectedWasCalled = true
+                }
+            }
+        }
+
+        engineSession.register(object : EngineSession.Observer {
+            override fun onPromptRequest(promptRequest: PromptRequest) {
+                request = promptRequest
+            }
+        })
+
+        engineView.render(engineSession)
+
+        val mockFileChooserParams = mock<WebChromeClient.FileChooserParams>()
+
+        doReturn(MODE_OPEN_MULTIPLE).`when`(mockFileChooserParams).mode
+
+        engineView.currentWebView.webChromeClient!!.onShowFileChooser(null, callback, mockFileChooserParams)
+
+        val filePickerRequest = request as PromptRequest.File
+        assertTrue(request is PromptRequest.File)
+
+        filePickerRequest.onSingleFileSelected(mock(), mock())
+        assertTrue(onSingleFileSelectedWasCalled)
+
+        filePickerRequest.onMultipleFilesSelected(mock(), arrayOf(mock(), mock()))
+        assertTrue(onMultipleFilesSelectedWasCalled)
+
+        filePickerRequest.onDismiss()
+        assertTrue(onDismissWasCalled)
+
+        assertTrue(filePickerRequest.mimeTypes.isEmpty())
+        assertTrue(filePickerRequest.isMultipleFilesSelection)
+
+        doReturn(arrayOf("")).`when`(mockFileChooserParams).acceptTypes
+        engineView.currentWebView.webChromeClient!!.onShowFileChooser(null, callback, mockFileChooserParams)
+        assertTrue(filePickerRequest.mimeTypes.isEmpty())
     }
 }

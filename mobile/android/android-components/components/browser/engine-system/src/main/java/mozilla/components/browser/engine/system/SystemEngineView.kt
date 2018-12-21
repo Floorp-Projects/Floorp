@@ -21,6 +21,7 @@ import android.webkit.PermissionRequest
 import android.webkit.SslErrorHandler
 import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
+import android.webkit.WebChromeClient.FileChooserParams.MODE_OPEN_MULTIPLE
 import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
@@ -42,6 +43,7 @@ import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.concept.engine.HitResult
+import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.request.RequestInterceptor.InterceptionResponse
 import mozilla.components.support.ktx.android.content.isOSOnLowMemory
 import mozilla.components.support.utils.DownloadUtils
@@ -320,6 +322,47 @@ class SystemEngineView @JvmOverloads constructor(
 
         override fun onPermissionRequest(request: PermissionRequest) {
             session?.internalNotifyObservers { onContentPermissionRequest(SystemPermissionRequest(request)) }
+        }
+
+        override fun onShowFileChooser(
+            webView: WebView?,
+            filePathCallback: ValueCallback<Array<Uri>>?,
+            fileChooserParams: FileChooserParams?
+        ): Boolean {
+
+            var mimeTypes = fileChooserParams?.acceptTypes ?: arrayOf()
+
+            if (mimeTypes.isNotEmpty() && mimeTypes.first().isNullOrEmpty()) {
+                mimeTypes = arrayOf()
+            }
+
+            val isMultipleFilesSelection = fileChooserParams?.mode == MODE_OPEN_MULTIPLE
+
+            val onSelectMultiple: (Context, Array<Uri>) -> Unit = { _, uris ->
+                filePathCallback?.onReceiveValue(uris)
+            }
+
+            val onSelectSingle: (Context, Uri) -> Unit = { _, uri ->
+                filePathCallback?.onReceiveValue(arrayOf(uri))
+            }
+
+            val onDismiss: () -> Unit = {
+                filePathCallback?.onReceiveValue(null)
+            }
+
+            session?.notifyObservers {
+                onPromptRequest(
+                    PromptRequest.File(
+                        mimeTypes,
+                        isMultipleFilesSelection,
+                        onSelectSingle,
+                        onSelectMultiple,
+                        onDismiss
+                    )
+                )
+            }
+
+            return true
         }
 
         override fun onCreateWindow(
