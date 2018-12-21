@@ -7,10 +7,11 @@
 import { workerUtils } from "devtools-utils";
 const { WorkerDispatcher } = workerUtils;
 
-import type { AstLocation, AstPosition, PausePoints } from "./types";
+import type { AstLocation, AstPosition } from "./types";
 import type { SourceLocation, Source, SourceId } from "../../types";
 import type { SourceScope } from "./getScopes/visitor";
 import type { SymbolDeclarations } from "./getSymbols";
+import type { PausePointsMap } from "../../reducers/types";
 
 const dispatcher = new WorkerDispatcher();
 export const start = (url: string, win: any = window) =>
@@ -79,8 +80,9 @@ export const mapExpression = async (
 export const getFramework = async (sourceId: string): Promise<?string> =>
   dispatcher.invoke("getFramework", sourceId);
 
-export const getPausePoints = async (sourceId: string): Promise<PausePoints> =>
-  dispatcher.invoke("getPausePoints", sourceId);
+export const getPausePoints = async (
+  sourceId: string
+): Promise<PausePointsMap> => dispatcher.invoke("getPausePoints", sourceId);
 
 export type {
   SourceScope,
@@ -96,7 +98,7 @@ export type {
   AstLocation,
   AstPosition,
   PausePoint,
-  PausePoints
+  PausePointsMap
 } from "./types";
 
 export type {

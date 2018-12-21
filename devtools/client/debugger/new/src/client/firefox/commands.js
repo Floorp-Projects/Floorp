@@ -25,7 +25,7 @@ import type {
   BPClients
 } from "./types";
 
-import type { PausePoints } from "../../workers/parser";
+import type { PausePointsMap } from "../../workers/parser";
 
 import { makePendingLocationId } from "../../utils/breakpoint";
 
@@ -361,7 +361,7 @@ function disablePrettyPrint(sourceId: SourceId): Promise<*> {
   return sourceClient.disablePrettyPrint();
 }
 
-async function setPausePoints(sourceId: SourceId, pausePoints: PausePoints) {
+async function setPausePoints(sourceId: SourceId, pausePoints: PausePointsMap) {
   return sendPacket({ to: sourceId, type: "setPausePoints", pausePoints });
 }
 

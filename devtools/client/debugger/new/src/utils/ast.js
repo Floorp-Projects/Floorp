@@ -5,18 +5,16 @@
 // @flow
 
 import { xor, range } from "lodash";
-import { convertToList } from "./pause/pausePoints";
-
 import type { SourceLocation, Position } from "../types";
 import type { Symbols } from "../reducers/ast";
 
 import type {
   AstPosition,
   AstLocation,
-  PausePoints,
   FunctionDeclaration,
   ClassDeclaration
 } from "../workers/parser";
+import type { PausePoints } from "../reducers/types";
 
 export function findBestMatchExpression(symbols: Symbols, tokenPos: Position) {
   if (symbols.loading) {
@@ -51,9 +49,7 @@ export function findEmptyLines(
     return [];
   }
 
-  const pausePointsList = convertToList(pausePoints);
-
-  const breakpoints = pausePointsList.filter(point => point.types.break);
+  const breakpoints = pausePoints.filter(point => point.types.break);
   const breakpointLines = breakpoints.map(point => point.location.line);
 
   if (!sourceText || breakpointLines.length == 0) {
