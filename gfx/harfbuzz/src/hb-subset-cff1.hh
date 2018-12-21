@@ -1,5 +1,5 @@
 /*
- * Copyright © 2009  Red Hat, Inc.
+ * Copyright © 2018 Adobe Inc.
  *
  *  This is part of HarfBuzz, a text shaping library.
  *
@@ -21,39 +21,18 @@
  * ON AN "AS IS" BASIS, AND THE COPYRIGHT HOLDER HAS NO OBLIGATION TO
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
  *
- * Red Hat Author(s): Behdad Esfahbod
+ * Adobe Author(s): Michiharu Ariza
  */
 
-#ifndef HB_OT_H_IN
-#error "Include <hb-ot.h> instead."
-#endif
+#ifndef HB_SUBSET_CFF1_HH
+#define HB_SUBSET_CFF1_HH
 
-#ifndef HB_OT_TAG_H
-#define HB_OT_TAG_H
+#include "hb.hh"
 
-#include "hb.h"
+#include "hb-subset-plan.hh"
 
-HB_BEGIN_DECLS
+HB_INTERNAL bool
+hb_subset_cff1 (hb_subset_plan_t *plan,
+	       hb_blob_t	**cff_prime /* OUT */);
 
-
-#define HB_OT_TAG_DEFAULT_SCRIPT	HB_TAG ('D', 'F', 'L', 'T')
-#define HB_OT_TAG_DEFAULT_LANGUAGE	HB_TAG ('d', 'f', 'l', 't')
-
-HB_EXTERN void
-hb_ot_tags_from_script (hb_script_t  script,
-			hb_tag_t    *script_tag_1,
-			hb_tag_t    *script_tag_2);
-
-HB_EXTERN hb_script_t
-hb_ot_tag_to_script (hb_tag_t tag);
-
-HB_EXTERN hb_tag_t
-hb_ot_tag_from_language (hb_language_t language);
-
-HB_EXTERN hb_language_t
-hb_ot_tag_to_language (hb_tag_t tag);
-
-
-HB_END_DECLS
-
-#endif /* HB_OT_TAG_H */
+#endif /* HB_SUBSET_CFF1_HH */
