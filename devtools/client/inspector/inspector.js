@@ -881,11 +881,6 @@ Inspector.prototype = {
           this.browserRequire("devtools/client/inspector/layout/layout");
         panel = new LayoutView(this, this.panelWin);
         break;
-      case "newruleview":
-        const RulesView =
-          this.browserRequire("devtools/client/inspector/rules/new-rules");
-        panel = new RulesView(this, this.panelWin);
-        break;
       case "ruleview":
         const {RuleViewTool} = require("devtools/client/inspector/rules/rules");
         panel = new RuleViewTool(this, this.panelWin);
@@ -963,13 +958,6 @@ Inspector.prototype = {
       sidebarPanels.splice(2, 0, {
         id: "changesview",
         title: INSPECTOR_L10N.getStr("inspector.sidebar.changesViewTitle"),
-      });
-    }
-
-    if (Services.prefs.getBoolPref("devtools.inspector.new-rulesview.enabled")) {
-      sidebarPanels.push({
-        id: "newruleview",
-        title: INSPECTOR_L10N.getStr("inspector.sidebar.ruleViewTitle"),
       });
     }
 
