@@ -38,7 +38,7 @@ $(foreach var,$1,$(call print_var,$(var)))
 endef
 
 showtargs:
-ifneq (,$(filter $(PROGRAM) $(HOST_PROGRAM) $(SIMPLE_PROGRAMS) $(HOST_LIBRARY) $(LIBRARY) $(SHARED_LIBRARY),$(TARGETS)))
+ifneq (,$(filter $(PROGRAM) $(HOST_PROGRAM) $(SIMPLE_PROGRAMS) $(LIBRARY) $(SHARED_LIBRARY),$(TARGETS)))
 	@echo --------------------------------------------------------------------------------
 	$(call print_vars,\
 		PROGRAM \
@@ -112,7 +112,6 @@ showhost:
 		HOST_PROGRAM \
 		HOST_OBJS \
 		HOST_PROGOBJS \
-		HOST_LIBRARY \
 	)
 
 INCLUDED_DEBUGMAKE_MK = 1
