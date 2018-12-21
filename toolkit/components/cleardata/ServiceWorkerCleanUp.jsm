@@ -5,10 +5,15 @@
 "use strict";
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "serviceWorkerManager",
                                    "@mozilla.org/serviceworkers/manager;1",
                                    "nsIServiceWorkerManager");
+
+if (Services.appinfo.processType === Services.appinfo.PROCESS_TYPE_CONTENT) {
+  throw "ServiceWorkerCleanUp.jsm can only be used in the parent process";
+}
 
 this.EXPORTED_SYMBOLS = ["ServiceWorkerCleanUp"];
 
