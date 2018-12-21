@@ -32,7 +32,10 @@ from .mozconfig import (
     MozconfigLoader,
 )
 from .pythonutil import find_python3_executable
-from .util import memoized_property
+from .util import (
+    memoize,
+    memoized_property,
+)
 from .virtualenv import VirtualenvManager
 
 
@@ -211,6 +214,12 @@ class MozbuildObject(ProcessExecutionMixin):
 
         return self._virtualenv_manager
 
+    @staticmethod
+    @memoize
+    def get_mozconfig(topsrcdir, path):
+        loader = MozconfigLoader(topsrcdir)
+        return loader.read_mozconfig(path=path)
+
     @property
     def mozconfig(self):
         """Returns information about the current mozconfig file.
@@ -218,8 +227,7 @@ class MozbuildObject(ProcessExecutionMixin):
         This a dict as returned by MozconfigLoader.read_mozconfig()
         """
         if not isinstance(self._mozconfig, dict):
-            loader = MozconfigLoader(self.topsrcdir)
-            self._mozconfig = loader.read_mozconfig(path=self._mozconfig)
+            self._mozconfig = self.get_mozconfig(self.topsrcdir, self._mozconfig)
 
         return self._mozconfig
 
