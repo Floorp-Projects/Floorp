@@ -89,8 +89,8 @@ class nsTableRowFrame : public nsContainerFrame {
    * Cells are resized in nsTableFrame::BalanceColumnWidths and
    * nsTableFrame::ShrinkWrapChildren
    *
-   * @param aDesiredSize width set to width of the sum of the cells, height set
-   * to height of cells with rowspan=1.
+   * @param aDesiredSize width set to width of the sum of the cells,
+   *                     height set to height of cells with rowspan=1.
    *
    * @see nsIFrame::Reflow
    * @see nsTableFrame::BalanceColumnWidths
@@ -296,8 +296,8 @@ class nsTableRowFrame : public nsContainerFrame {
   // cell if mHasFixedBSize is set
   nscoord mStyleFixedBSize;
 
-  // max-ascent and max-descent amongst all cells that have 'vertical-align:
-  // baseline'
+  // max-ascent and max-descent amongst all cells that have
+  // 'vertical-align: baseline'
   nscoord mMaxCellAscent;   // does include cells with rowspan > 1
   nscoord mMaxCellDescent;  // does *not* include cells with rowspan > 1
 
