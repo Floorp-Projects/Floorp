@@ -79,8 +79,7 @@ DOMSVGAnimatedPreserveAspectRatio::AnimVal() {
 }
 
 nsresult SVGAnimatedPreserveAspectRatio::SetBaseValueString(
-    const nsAString& aValueAsString, nsSVGElement* aSVGElement,
-    bool aDoSetAttr) {
+    const nsAString& aValueAsString, SVGElement* aSVGElement, bool aDoSetAttr) {
   SVGPreserveAspectRatio val;
   nsresult res = SVGPreserveAspectRatio::FromString(aValueAsString, &val);
   if (NS_FAILED(res)) {
@@ -113,7 +112,7 @@ void SVGAnimatedPreserveAspectRatio::GetBaseValueString(
 }
 
 void SVGAnimatedPreserveAspectRatio::SetBaseValue(
-    const SVGPreserveAspectRatio& aValue, nsSVGElement* aSVGElement) {
+    const SVGPreserveAspectRatio& aValue, SVGElement* aSVGElement) {
   if (mIsBaseSet && mBaseVal == aValue) {
     return;
   }
@@ -141,7 +140,7 @@ static uint64_t PackPreserveAspectRatio(const SVGPreserveAspectRatio& par) {
 }
 
 void SVGAnimatedPreserveAspectRatio::SetAnimValue(uint64_t aPackedValue,
-                                                  nsSVGElement* aSVGElement) {
+                                                  SVGElement* aSVGElement) {
   if (mIsAnimated && PackPreserveAspectRatio(mAnimVal) == aPackedValue) {
     return;
   }
@@ -153,7 +152,7 @@ void SVGAnimatedPreserveAspectRatio::SetAnimValue(uint64_t aPackedValue,
 
 already_AddRefed<DOMSVGAnimatedPreserveAspectRatio>
 SVGAnimatedPreserveAspectRatio::ToDOMAnimatedPreserveAspectRatio(
-    nsSVGElement* aSVGElement) {
+    SVGElement* aSVGElement) {
   RefPtr<DOMSVGAnimatedPreserveAspectRatio> domAnimatedPAspectRatio =
       sSVGAnimatedPAspectRatioTearoffTable.GetTearoff(this);
   if (!domAnimatedPAspectRatio) {
@@ -170,7 +169,7 @@ DOMSVGAnimatedPreserveAspectRatio::~DOMSVGAnimatedPreserveAspectRatio() {
 }
 
 UniquePtr<nsISMILAttr> SVGAnimatedPreserveAspectRatio::ToSMILAttr(
-    nsSVGElement* aSVGElement) {
+    SVGElement* aSVGElement) {
   return MakeUnique<SMILPreserveAspectRatio>(this, aSVGElement);
 }
 

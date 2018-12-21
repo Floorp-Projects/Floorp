@@ -9438,7 +9438,7 @@ static nsRect ComputeSVGReferenceRect(nsIFrame* aFrame,
     }
     case StyleGeometryBox::ViewBox: {
       nsIContent* content = aFrame->GetContent();
-      nsSVGElement* element = static_cast<nsSVGElement*>(content);
+      SVGElement* element = static_cast<SVGElement*>(content);
       SVGViewportElement* svgElement = element->GetCtx();
       MOZ_ASSERT(svgElement);
 

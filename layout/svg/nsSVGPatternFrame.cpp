@@ -359,7 +359,7 @@ already_AddRefed<SourceSurface> nsSVGPatternFrame::PaintPattern(
       }
       gfxMatrix tm = *(patternWithChildren->mCTM);
       if (kid->GetContent()->IsSVGElement()) {
-        tm = static_cast<nsSVGElement *>(kid->GetContent())
+        tm = static_cast<SVGElement *>(kid->GetContent())
                  ->PrependLocalTransformsTo(tm, eUserSpaceToParent);
       }
 
@@ -626,7 +626,7 @@ gfxMatrix nsSVGPatternFrame::ConstructCTM(const nsSVGViewBox &aViewBox,
     scaleY = callerBBox.Height();
   } else {
     if (targetContent->IsSVGElement()) {
-      ctx = static_cast<nsSVGElement *>(targetContent)->GetCtx();
+      ctx = static_cast<SVGElement *>(targetContent)->GetCtx();
     }
     scaleX = scaleY = MaxExpansion(callerCTM);
   }

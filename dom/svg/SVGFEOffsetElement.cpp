@@ -8,7 +8,7 @@
 #include "mozilla/dom/SVGFEOffsetElementBinding.h"
 #include "nsSVGFilterInstance.h"
 
-NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(FEOffset)
+NS_IMPL_NS_NEW_SVG_ELEMENT(FEOffset)
 
 using namespace mozilla::gfx;
 
@@ -20,10 +20,10 @@ JSObject* SVGFEOffsetElement::WrapNode(JSContext* aCx,
   return SVGFEOffsetElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-nsSVGElement::NumberInfo SVGFEOffsetElement::sNumberInfo[2] = {
+SVGElement::NumberInfo SVGFEOffsetElement::sNumberInfo[2] = {
     {nsGkAtoms::dx, 0, false}, {nsGkAtoms::dy, 0, false}};
 
-nsSVGElement::StringInfo SVGFEOffsetElement::sStringInfo[2] = {
+SVGElement::StringInfo SVGFEOffsetElement::sStringInfo[2] = {
     {nsGkAtoms::result, kNameSpaceID_None, true},
     {nsGkAtoms::in, kNameSpaceID_None, true}};
 
@@ -74,14 +74,14 @@ void SVGFEOffsetElement::GetSourceImageNames(
 }
 
 //----------------------------------------------------------------------
-// nsSVGElement methods
+// SVGElement methods
 
-nsSVGElement::NumberAttributesInfo SVGFEOffsetElement::GetNumberInfo() {
+SVGElement::NumberAttributesInfo SVGFEOffsetElement::GetNumberInfo() {
   return NumberAttributesInfo(mNumberAttributes, sNumberInfo,
                               ArrayLength(sNumberInfo));
 }
 
-nsSVGElement::StringAttributesInfo SVGFEOffsetElement::GetStringInfo() {
+SVGElement::StringAttributesInfo SVGFEOffsetElement::GetStringInfo() {
   return StringAttributesInfo(mStringAttributes, sStringInfo,
                               ArrayLength(sStringInfo));
 }

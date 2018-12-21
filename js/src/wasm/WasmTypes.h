@@ -525,6 +525,102 @@ static inline const char* ToCString(ValType type) {
   return ToCString(ExprType(type));
 }
 
+// An AnyRef is a boxed value that can represent any wasm reference type and any
+// host type that the host system allows to flow into and out of wasm
+// transparently.  It is a pointer-sized datum that has the same representation
+// as all its subtypes (funcref, eqref, (ref T), et al) due to the non-coercive
+// subtyping of the wasm type system.  Its current representation is a plain
+// JSObject*, and the private JSObject subtype WasmValueBox is used to box
+// non-object JS values.
+//
+// The C++/wasm boundary always uses a 'void*' type to express AnyRef values, to
+// emphasize the pointer-ness of the value.  The C++ code must transform the
+// void* into an AnyRef by calling AnyRef::fromCompiledCode(), and transform an
+// AnyRef into a void* by calling AnyRef::toCompiledCode().  Once in C++, we use
+// AnyRef everywhere.  A JS Value is transformed into an AnyRef by calling
+// AnyRef::box(), and the AnyRef is transformed into a JS Value by calling
+// AnyRef::unbox().
+//
+// NOTE that AnyRef values may point to GC'd storage and as such need to be
+// rooted if they are kept live in boxed form across code that may cause GC!
+// Use RootedAnyRef / HandleAnyRef / MutableHandleAnyRef where necessary.
+//
+// The lowest bits of the pointer value are used for tagging, to allow for some
+// representation optimizations and to distinguish various types.
+
+// For version 0, we simply equate AnyRef and JSObject* (this means that there
+// are technically no tags at all yet).  We use a simple boxing scheme that
+// wraps a JS value that is not already JSObject in a distinguishable JSObject
+// that holds the value, see WasmTypes.cpp for details.
+
+class AnyRef {
+  JSObject* value_;
+
+  explicit AnyRef(JSObject* p) : value_(p) {
+    MOZ_ASSERT(((uintptr_t)p & 0x03) == 0);
+  }
+
+ public:
+  // Given a void* that comes from compiled wasm code, turn it into AnyRef.
+  static AnyRef fromCompiledCode(void* p) {
+    return AnyRef((JSObject*)p);
+  }
+
+  // Given a JSObject* that comes from JS, turn it into AnyRef.
+  static AnyRef fromJSObject(JSObject* p) {
+    return AnyRef(p);
+  }
+
+  // Generate an AnyRef null pointer.
+  static AnyRef null() {
+    return AnyRef(nullptr);
+  }
+
+  bool isNull() {
+    return value_ == nullptr;
+  }
+
+  void* forCompiledCode() const {
+    return value_;
+  }
+
+  JSObject* asJSObject() {
+    return value_;
+  }
+
+  JSObject** asJSObjectAddress() {
+    return &value_;
+  }
+
+  void trace(JSTracer* trc);
+
+  // Tags (to be developed further)
+  static constexpr uintptr_t AnyRefTagMask = 1;
+  static constexpr uintptr_t AnyRefObjTag = 0;
+};
+
+typedef Rooted<AnyRef> RootedAnyRef;
+typedef Handle<AnyRef> HandleAnyRef;
+typedef MutableHandle<AnyRef> MutableHandleAnyRef;
+
+// TODO/AnyRef-boxing: With boxed immediates and strings, these will be defined
+// as MOZ_CRASH or similar so that we can find all locations that need to be
+// fixed.
+
+#define ASSERT_ANYREF_IS_JSOBJECT (void)(0)
+#define STATIC_ASSERT_ANYREF_IS_JSOBJECT static_assert(1, "AnyRef is JSObject")
+
+// Given any JS value, box it as an AnyRef and store it in *result.  Returns
+// false on OOM.
+
+bool BoxAnyRef(JSContext* cx, HandleValue val, MutableHandleAnyRef result);
+
+// Given any AnyRef, unbox it as a JS Value.  If it is a reference to a wasm
+// object it will be reflected as a JSObject* representing some TypedObject
+// instance.
+
+Value UnboxAnyRef(AnyRef val);
+
 // Code can be compiled either with the Baseline compiler or the Ion compiler,
 // and tier-variant data are tagged with the Tier value.
 //
@@ -597,11 +693,13 @@ class LitVal {
  protected:
   ValType type_;
   union U {
+    U() : i32_(0) {}
     uint32_t i32_;
     uint64_t i64_;
     float f32_;
     double f64_;
-    JSObject* ptr_;
+    JSObject* ref_;             // Note, this breaks an abstraction boundary
+    AnyRef anyref_;
   } u;
 
  public:
@@ -613,12 +711,17 @@ class LitVal {
   explicit LitVal(float f32) : type_(ValType::F32) { u.f32_ = f32; }
   explicit LitVal(double f64) : type_(ValType::F64) { u.f64_ = f64; }
 
-  explicit LitVal(ValType refType, JSObject* ptr) : type_(refType) {
-    MOZ_ASSERT(refType.isReference());
-    MOZ_ASSERT(refType != ValType::NullRef);
-    MOZ_ASSERT(ptr == nullptr,
+  explicit LitVal(AnyRef any) : type_(ValType::AnyRef) {
+    MOZ_ASSERT(any.isNull(),
                "use Val for non-nullptr ref types to get tracing");
-    u.ptr_ = ptr;
+    u.anyref_ = any;
+  }
+
+  explicit LitVal(ValType refType, JSObject* ref) : type_(refType) {
+    MOZ_ASSERT(refType.isRef());
+    MOZ_ASSERT(ref == nullptr,
+               "use Val for non-nullptr ref types to get tracing");
+    u.ref_ = ref;
   }
 
   ValType type() const { return type_; }
@@ -640,13 +743,15 @@ class LitVal {
     MOZ_ASSERT(type_ == ValType::F64);
     return u.f64_;
   }
-  JSObject* ptr() const {
-    MOZ_ASSERT(type_.isReference());
-    return u.ptr_;
+  JSObject* ref() const {
+    MOZ_ASSERT(type_.isRef());
+    return u.ref_;
+  }
+  AnyRef anyref() const {
+    MOZ_ASSERT(type_ == ValType::AnyRef);
+    return u.anyref_;
   }
 };
-
-typedef Vector<LitVal, 0, SystemAllocPolicy> LitValVector;
 
 // A Val is a LitVal that can contain pointers to JSObjects, thanks to their
 // trace implementation. Since a Val is able to store a pointer to a JSObject,
@@ -662,10 +767,12 @@ class MOZ_NON_PARAM Val : public LitVal {
   explicit Val(uint64_t i64) : LitVal(i64) {}
   explicit Val(float f32) : LitVal(f32) {}
   explicit Val(double f64) : LitVal(f64) {}
-  explicit Val(ValType type, JSObject* obj) : LitVal(type, nullptr) {
-    u.ptr_ = obj;
+  explicit Val(AnyRef val) : LitVal(AnyRef::null()) {
+    u.anyref_ = val;
   }
-  void writePayload(uint8_t* dst) const;
+  explicit Val(ValType type, JSObject* obj) : LitVal(type, (JSObject*)nullptr) {
+    u.ref_ = obj;
+  }
   void trace(JSTracer* trc);
 };
 
@@ -1956,7 +2063,7 @@ enum class SymbolicAddress {
   CallImport_I32,
   CallImport_I64,
   CallImport_F64,
-  CallImport_Ref,
+  CallImport_AnyRef,
   CoerceInPlace_ToInt32,
   CoerceInPlace_ToNumber,
   CoerceInPlace_JitEntry,
@@ -2411,6 +2518,7 @@ class DebugFrame {
     int32_t resultI32_;
     int64_t resultI64_;
     intptr_t resultRef_;
+    AnyRef resultAnyRef_;
     float resultF32_;
     double resultF64_;
   };

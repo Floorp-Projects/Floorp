@@ -15,7 +15,7 @@ nsresult NS_NewSVGFEMergeElement(
 namespace mozilla {
 namespace dom {
 
-typedef nsSVGFE SVGFEMergeElementBase;
+typedef SVGFE SVGFEMergeElementBase;
 
 class SVGFEMergeElement : public SVGFEMergeElementBase {
   friend nsresult(::NS_NewSVGFEMergeElement(

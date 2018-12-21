@@ -10,7 +10,7 @@
 #include "nsSVGUtils.h"
 #include "mozilla/gfx/2D.h"
 
-NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(FEComponentTransfer)
+NS_IMPL_NS_NEW_SVG_ELEMENT(FEComponentTransfer)
 
 using namespace mozilla::gfx;
 ;
@@ -23,7 +23,7 @@ JSObject* SVGFEComponentTransferElement::WrapNode(
   return SVGFEComponentTransferElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-nsSVGElement::StringInfo SVGFEComponentTransferElement::sStringInfo[2] = {
+SVGElement::StringInfo SVGFEComponentTransferElement::sStringInfo[2] = {
     {nsGkAtoms::result, kNameSpaceID_None, true},
     {nsGkAtoms::in, kNameSpaceID_None, true}};
 
@@ -37,9 +37,9 @@ already_AddRefed<SVGAnimatedString> SVGFEComponentTransferElement::In1() {
 }
 
 //----------------------------------------------------------------------
-// nsSVGElement methods
+// SVGElement methods
 
-nsSVGElement::StringAttributesInfo
+SVGElement::StringAttributesInfo
 SVGFEComponentTransferElement::GetStringInfo() {
   return StringAttributesInfo(mStringAttributes, sStringInfo,
                               ArrayLength(sStringInfo));

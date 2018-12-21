@@ -7,7 +7,7 @@
 #include "nsISVGPoint.h"
 #include "DOMSVGPointList.h"
 #include "SVGPoint.h"
-#include "nsSVGElement.h"
+#include "SVGElement.h"
 #include "nsError.h"
 #include "mozilla/dom/SVGPointBinding.h"
 

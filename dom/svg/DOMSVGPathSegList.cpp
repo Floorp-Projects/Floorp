@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsSVGElement.h"
+#include "SVGElement.h"
 #include "DOMSVGPathSegList.h"
 #include "DOMSVGPathSeg.h"
 #include "nsError.h"
@@ -75,7 +75,7 @@ class MOZ_RAII AutoChangePathSegListNotifier {
 };
 
 /* static */ already_AddRefed<DOMSVGPathSegList>
-DOMSVGPathSegList::GetDOMWrapper(void* aList, nsSVGElement* aElement,
+DOMSVGPathSegList::GetDOMWrapper(void* aList, SVGElement* aElement,
                                  bool aIsAnimValList) {
   RefPtr<DOMSVGPathSegList> wrapper =
       SVGPathSegListTearoffTable().GetTearoff(aList);

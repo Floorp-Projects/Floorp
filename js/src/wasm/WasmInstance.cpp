@@ -131,11 +131,12 @@ bool Instance::callImport(JSContext* cx, uint32_t funcImportIndex,
       case ValType::F64:
         args[i].set(JS::CanonicalizedDoubleValue(*(double*)&argv[i]));
         break;
-      case ValType::Ref:
       case ValType::AnyRef: {
-        args[i].set(ObjectOrNullValue(*(JSObject**)&argv[i]));
+        args[i].set(UnboxAnyRef(AnyRef::fromCompiledCode(*(void**)&argv[i])));
         break;
       }
+      case ValType::Ref:
+        MOZ_CRASH("temporarily unsupported Ref type in callImport");
       case ValType::I64:
         MOZ_CRASH("unhandled type in callImport");
       case ValType::NullRef:
@@ -288,29 +289,20 @@ Instance::callImport_f64(Instance* instance, int32_t funcImportIndex,
   return ToNumber(cx, rval, (double*)argv);
 }
 
-static bool ToRef(JSContext* cx, HandleValue val, void* addr) {
-  if (val.isNull()) {
-    *(JSObject**)addr = nullptr;
-    return true;
-  }
-
-  JSObject* obj = ToObject(cx, val);
-  if (!obj) {
-    return false;
-  }
-  *(JSObject**)addr = obj;
-  return true;
-}
-
 /* static */ int32_t /* 0 to signal trap; 1 to signal OK */
-Instance::callImport_ref(Instance* instance, int32_t funcImportIndex,
-                         int32_t argc, uint64_t* argv) {
+Instance::callImport_anyref(Instance* instance, int32_t funcImportIndex,
+                            int32_t argc, uint64_t* argv) {
   JSContext* cx = TlsContext.get();
   RootedValue rval(cx);
   if (!instance->callImport(cx, funcImportIndex, argc, argv, &rval)) {
     return false;
   }
-  return ToRef(cx, rval, argv);
+  RootedAnyRef result(cx, AnyRef::null());
+  if (!BoxAnyRef(cx, rval, &result)) {
+    return false;
+  }
+  *(void**)argv = result.get().forCompiledCode();
+  return true;
 }
 
 /* static */ uint32_t /* infallible */
@@ -714,22 +706,22 @@ Instance::tableInit(Instance* instance, uint32_t dstOffset, uint32_t srcOffset,
   return -1;
 }
 
-/* static */ void* /* (void*)-1 to signal trap; other pointer value for ok */
+/* static */ void* /* nullptr to signal trap; pointer to table location otherwise */
 Instance::tableGet(Instance* instance, uint32_t index, uint32_t tableIndex) {
   const Table& table = *instance->tables()[tableIndex];
   MOZ_RELEASE_ASSERT(table.kind() == TableKind::AnyRef);
   if (index >= table.length()) {
     JS_ReportErrorNumberASCII(TlsContext.get(), GetErrorMessage, nullptr,
                               JSMSG_WASM_TABLE_OUT_OF_BOUNDS);
-    return (void*)-1;
+    return nullptr;
   }
-  return table.getAnyRef(index);
+  return const_cast<void*>(table.getAnyRefLocForCompiledCode(index));
 }
 
 /* static */ uint32_t /* infallible */
 Instance::tableGrow(Instance* instance, uint32_t delta, void* initValue,
                     uint32_t tableIndex) {
-  RootedObject obj(TlsContext.get(), (JSObject*)initValue);
+  RootedAnyRef obj(TlsContext.get(), AnyRef::fromCompiledCode(initValue));
   Table& table = *instance->tables()[tableIndex];
   MOZ_RELEASE_ASSERT(table.kind() == TableKind::AnyRef);
 
@@ -752,7 +744,7 @@ Instance::tableSet(Instance* instance, uint32_t index, void* value,
                               JSMSG_WASM_TABLE_OUT_OF_BOUNDS);
     return -1;
   }
-  table.setAnyRef(index, (JSObject*)value);
+  table.setAnyRef(index, AnyRef::fromCompiledCode(value));
   return 0;
 }
 
@@ -795,6 +787,10 @@ Instance::structNarrow(Instance* instance, uint32_t mustUnboxAnyref,
 
   void* nonnullPtr = maybeNullPtr;
   if (mustUnboxAnyref) {
+    // TODO/AnyRef-boxing: With boxed immediates and strings, unboxing
+    // AnyRef is not a no-op.
+    ASSERT_ANYREF_IS_JSOBJECT;
+
     Rooted<NativeObject*> no(cx, static_cast<NativeObject*>(nonnullPtr));
     if (!no->is<TypedObject>()) {
       return nullptr;
@@ -843,6 +839,75 @@ Instance::structNarrow(Instance* instance, uint32_t mustUnboxAnyref,
   }
 
   return nonnullPtr;
+}
+
+// Note, dst must point into nonmoveable storage that is not in the nursery,
+// this matters for the write barriers.  Furthermore, for pointer types the
+// current value of *dst must be null so that only a post-barrier is required.
+//
+// Regarding the destination not being in the nursery, we have these cases.
+// Either the written location is in the global data section in the
+// WasmInstanceObject, or the Cell of a WasmGlobalObject:
+//
+// - WasmInstanceObjects are always tenured and u.ref_/anyref_ may point to a
+//   nursery object, so we need a post-barrier since the global data of an
+//   instance is effectively a field of the WasmInstanceObject.
+//
+// - WasmGlobalObjects are always tenured, and they have a Cell field, so a
+//   post-barrier may be needed for the same reason as above.
+
+void CopyValPostBarriered(uint8_t* dst, const Val& src) {
+  switch (src.type().code()) {
+    case ValType::I32: {
+      int32_t x = src.i32();
+      memcpy(dst, &x, sizeof(x));
+      break;
+    }
+    case ValType::F32: {
+      float x = src.f32();
+      memcpy(dst, &x, sizeof(x));
+      break;
+    }
+    case ValType::I64: {
+      int64_t x = src.i64();
+      memcpy(dst, &x, sizeof(x));
+      break;
+    }
+    case ValType::F64: {
+      double x = src.f64();
+      memcpy(dst, &x, sizeof(x));
+      break;
+    }
+    case ValType::AnyRef: {
+      // TODO/AnyRef-boxing: With boxed immediates and strings, the write
+      // barrier is going to have to be more complicated.
+      ASSERT_ANYREF_IS_JSOBJECT;
+      MOZ_ASSERT(*(void**)dst == nullptr,
+                 "should be null so no need for a pre-barrier");
+      AnyRef x = src.anyref();
+      memcpy(dst, x.asJSObjectAddress(), sizeof(x));
+      if (!x.isNull()) {
+        JSObject::writeBarrierPost((JSObject**)dst, nullptr, x.asJSObject());
+      }
+      break;
+    }
+    case ValType::Ref: {
+      MOZ_ASSERT(*(JSObject**)dst == nullptr,
+                 "should be null so no need for a pre-barrier");
+      JSObject* x = src.ref();
+      memcpy(dst, &x, sizeof(x));
+      if (x) {
+        JSObject::writeBarrierPost((JSObject**)dst, nullptr, x);
+      }
+      break;
+    }
+    case ValType::NullRef: {
+      break;
+    }
+    default: {
+      MOZ_CRASH("unexpected Val type");
+    }
+  }
 }
 
 Instance::Instance(JSContext* cx, Handle<WasmInstanceObject*> object,
@@ -936,7 +1001,7 @@ Instance::Instance(JSContext* cx, Handle<WasmInstanceObject*> object,
         if (global.isIndirect()) {
           *(void**)globalAddr = globalObjs[imported]->cell();
         } else {
-          globalImportValues[imported].get().writePayload(globalAddr);
+          CopyValPostBarriered(globalAddr, globalImportValues[imported].get());
         }
         break;
       }
@@ -947,7 +1012,7 @@ Instance::Instance(JSContext* cx, Handle<WasmInstanceObject*> object,
             if (global.isIndirect()) {
               *(void**)globalAddr = globalObjs[i]->cell();
             } else {
-              Val(init.val()).writePayload(globalAddr);
+              CopyValPostBarriered(globalAddr, Val(init.val()));
             }
             break;
           }
@@ -963,9 +1028,9 @@ Instance::Instance(JSContext* cx, Handle<WasmInstanceObject*> object,
             if (global.isIndirect()) {
               void* address = globalObjs[i]->cell();
               *(void**)globalAddr = address;
-              dest.get().writePayload((uint8_t*)address);
+              CopyValPostBarriered((uint8_t*)address, dest.get());
             } else {
-              dest.get().writePayload(globalAddr);
+              CopyValPostBarriered(globalAddr, dest.get());
             }
             break;
           }
@@ -1165,6 +1230,10 @@ uintptr_t Instance::traceFrame(JSTracer* trc, const wasm::WasmFrameIter& wfi,
       continue;
     }
 
+    // TODO/AnyRef-boxing: With boxed immediates and strings, the value may
+    // not be a traceable JSObject*.
+    ASSERT_ANYREF_IS_JSOBJECT;
+
     // This assertion seems at least moderately effective in detecting
     // discrepancies or misalignments between the map and reality.
     MOZ_ASSERT(js::gc::IsCellPointerValidOrNull((const void*)stackWords[i]));
@@ -1179,6 +1248,10 @@ uintptr_t Instance::traceFrame(JSTracer* trc, const wasm::WasmFrameIter& wfi,
   if (map->hasRefTypedDebugFrame) {
     DebugFrame* debugFrame = DebugFrame::from(frame);
     char* debugFrameP = (char*)debugFrame;
+
+    // TODO/AnyRef-boxing: With boxed immediates and strings, the value may
+    // not be a traceable JSObject*.
+    ASSERT_ANYREF_IS_JSOBJECT;
 
     char* resultRefP = debugFrameP + DebugFrame::offsetOfResults();
     if (*(intptr_t*)resultRefP) {
@@ -1266,10 +1339,13 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args) {
         }
         break;
       case ValType::Ref:
+        MOZ_CRASH("temporarily unsupported Ref type in callExport");
       case ValType::AnyRef: {
-        if (!ToRef(cx, v, &exportArgs[i])) {
+        RootedAnyRef ar(cx, AnyRef::null());
+        if (!BoxAnyRef(cx, v, &ar)) {
           return false;
         }
+        *(void**)&exportArgs[i] = ar.get().forCompiledCode();
         break;
       }
       case ValType::NullRef: {
@@ -1310,8 +1386,6 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args) {
 
   void* retAddr = &exportArgs[0];
 
-  bool expectsObject = false;
-  JSObject* retObj = nullptr;
   switch (func.funcType().ret().code()) {
     case ExprType::Void:
       args.rval().set(UndefinedValue());
@@ -1328,20 +1402,14 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args) {
       args.rval().set(NumberValue(*(double*)retAddr));
       break;
     case ExprType::Ref:
+      MOZ_CRASH("temporarily unsupported Ref type in callExport");
     case ExprType::AnyRef:
-      retObj = *(JSObject**)retAddr;
-      expectsObject = true;
+      args.rval().set(UnboxAnyRef(AnyRef::fromCompiledCode(*(void**)retAddr)));
       break;
     case ExprType::NullRef:
       MOZ_CRASH("NullRef not expressible");
     case ExprType::Limit:
       MOZ_CRASH("Limit");
-  }
-
-  if (expectsObject) {
-    args.rval().set(ObjectOrNullValue(retObj));
-  } else if (retObj) {
-    args.rval().set(ObjectValue(*retObj));
   }
 
   return true;

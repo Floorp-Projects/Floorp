@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsSVGElement.h"
+#include "SVGElement.h"
 #include "DOMSVGLengthList.h"
 #include "DOMSVGLength.h"
 #include "nsError.h"

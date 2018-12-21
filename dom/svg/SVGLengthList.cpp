@@ -8,7 +8,7 @@
 #include "nsCharSeparatedTokenizer.h"
 #include "nsError.h"
 #include "nsString.h"
-#include "nsSVGElement.h"
+#include "SVGElement.h"
 #include "SVGAnimatedLengthList.h"
 #include "SVGContentUtils.h"
 #include "SVGLength.h"

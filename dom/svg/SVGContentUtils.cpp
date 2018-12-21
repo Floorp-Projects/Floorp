@@ -40,7 +40,7 @@ using namespace mozilla::gfx;
 
 namespace mozilla {
 
-SVGSVGElement* SVGContentUtils::GetOuterSVGElement(nsSVGElement* aSVGElement) {
+SVGSVGElement* SVGContentUtils::GetOuterSVGElement(SVGElement* aSVGElement) {
   Element* element = nullptr;
   Element* ancestor = aSVGElement->GetParentElementCrossingShadowRoot();
 
@@ -70,7 +70,7 @@ enum DashState {
 };
 
 static DashState GetStrokeDashData(
-    SVGContentUtils::AutoStrokeOptions* aStrokeOptions, nsSVGElement* aElement,
+    SVGContentUtils::AutoStrokeOptions* aStrokeOptions, SVGElement* aElement,
     const nsStyleSVG* aStyleSVG, SVGContextPaint* aContextPaint) {
   size_t dashArrayLength;
   Float totalLengthOfDashes = 0.0, totalLengthOfGaps = 0.0;
@@ -165,7 +165,7 @@ static DashState GetStrokeDashData(
 }
 
 void SVGContentUtils::GetStrokeOptions(AutoStrokeOptions* aStrokeOptions,
-                                       nsSVGElement* aElement,
+                                       SVGElement* aElement,
                                        ComputedStyle* aComputedStyle,
                                        SVGContextPaint* aContextPaint,
                                        StrokeOptionFlags aFlags) {
@@ -237,7 +237,7 @@ void SVGContentUtils::GetStrokeOptions(AutoStrokeOptions* aStrokeOptions,
   }
 }
 
-Float SVGContentUtils::GetStrokeWidth(nsSVGElement* aElement,
+Float SVGContentUtils::GetStrokeWidth(SVGElement* aElement,
                                       ComputedStyle* aComputedStyle,
                                       SVGContextPaint* aContextPaint) {
   RefPtr<ComputedStyle> computedStyle;
@@ -378,16 +378,16 @@ SVGViewportElement* SVGContentUtils::GetNearestViewportElement(
   return nullptr;
 }
 
-static gfx::Matrix GetCTMInternal(nsSVGElement* aElement, bool aScreenCTM,
+static gfx::Matrix GetCTMInternal(SVGElement* aElement, bool aScreenCTM,
                                   bool aHaveRecursed) {
   gfxMatrix matrix = aElement->PrependLocalTransformsTo(
       gfxMatrix(), aHaveRecursed ? eAllTransforms : eUserSpaceToParent);
-  nsSVGElement* element = aElement;
+  SVGElement* element = aElement;
   nsIContent* ancestor = aElement->GetFlattenedTreeParent();
 
   while (ancestor && ancestor->IsSVGElement() &&
          !ancestor->IsSVGElement(nsGkAtoms::foreignObject)) {
-    element = static_cast<nsSVGElement*>(ancestor);
+    element = static_cast<SVGElement*>(ancestor);
     matrix *= element->PrependLocalTransformsTo(gfxMatrix());  // i.e. *A*ppend
     if (!aScreenCTM && SVGContentUtils::EstablishesViewport(element)) {
       if (!element->NodeInfo()->Equals(nsGkAtoms::svg, kNameSpaceID_SVG) &&
@@ -422,7 +422,7 @@ static gfx::Matrix GetCTMInternal(nsSVGElement* aElement, bool aScreenCTM,
   }
   if (ancestor->IsSVGElement()) {
     return gfx::ToMatrix(matrix) *
-           GetCTMInternal(static_cast<nsSVGElement*>(ancestor), true, true);
+           GetCTMInternal(static_cast<SVGElement*>(ancestor), true, true);
   }
 
   // XXX this does not take into account CSS transform, or that the non-SVG
@@ -445,7 +445,7 @@ static gfx::Matrix GetCTMInternal(nsSVGElement* aElement, bool aScreenCTM,
   return ToMatrix(matrix).PostTranslate(x, y);
 }
 
-gfx::Matrix SVGContentUtils::GetCTM(nsSVGElement* aElement, bool aScreenCTM) {
+gfx::Matrix SVGContentUtils::GetCTM(SVGElement* aElement, bool aScreenCTM) {
   return GetCTMInternal(aElement, aScreenCTM, false);
 }
 
@@ -763,7 +763,7 @@ bool SVGContentUtils::ParseInteger(const nsAString& aString, int32_t& aValue) {
   return ParseInteger(iter, end, aValue) && iter == end;
 }
 
-float SVGContentUtils::CoordToFloat(nsSVGElement* aContent,
+float SVGContentUtils::CoordToFloat(SVGElement* aContent,
                                     const nsStyleCoord& aCoord) {
   switch (aCoord.GetUnit()) {
     case eStyleUnit_Factor:

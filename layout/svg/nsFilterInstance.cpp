@@ -49,7 +49,7 @@ FilterDescription nsFilterInstance::GetFilterDescription(
 
 static UniquePtr<UserSpaceMetrics> UserSpaceMetricsForFrame(nsIFrame* aFrame) {
   if (aFrame->GetContent()->IsSVGElement()) {
-    nsSVGElement* element = static_cast<nsSVGElement*>(aFrame->GetContent());
+    SVGElement* element = static_cast<SVGElement*>(aFrame->GetContent());
     return MakeUnique<SVGElementMetrics>(element);
   }
   return MakeUnique<NonSVGFrameUserSpaceMetrics>(aFrame);

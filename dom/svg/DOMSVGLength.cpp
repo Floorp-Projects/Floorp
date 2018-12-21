@@ -9,7 +9,7 @@
 #include "DOMSVGAnimatedLengthList.h"
 #include "SVGLength.h"
 #include "SVGAnimatedLengthList.h"
-#include "nsSVGElement.h"
+#include "SVGElement.h"
 #include "nsSVGLength2.h"
 #include "nsError.h"
 #include "nsMathUtils.h"
@@ -116,7 +116,7 @@ DOMSVGLength::DOMSVGLength()
       mValue(0.0f),
       mVal(nullptr) {}
 
-DOMSVGLength::DOMSVGLength(nsSVGLength2* aVal, nsSVGElement* aSVGElement,
+DOMSVGLength::DOMSVGLength(nsSVGLength2* aVal, SVGElement* aSVGElement,
                            bool aAnimVal)
     : mList(nullptr),
       mListIndex(0),
@@ -148,8 +148,9 @@ void DOMSVGLength::CleanupWeakRefs() {
 
 DOMSVGLength::~DOMSVGLength() { CleanupWeakRefs(); }
 
-already_AddRefed<DOMSVGLength> DOMSVGLength::GetTearOff(
-    nsSVGLength2* aVal, nsSVGElement* aSVGElement, bool aAnimVal) {
+already_AddRefed<DOMSVGLength> DOMSVGLength::GetTearOff(nsSVGLength2* aVal,
+                                                        SVGElement* aSVGElement,
+                                                        bool aAnimVal) {
   auto& table =
       aAnimVal ? sAnimSVGLengthTearOffTable : sBaseSVGLengthTearOffTable;
   RefPtr<DOMSVGLength> domLength = table.GetTearoff(aVal);

@@ -8,7 +8,7 @@
 #include "nsSVGAttrTearoffTable.h"
 #include "nsSVGEnum.h"
 #include "nsAtom.h"
-#include "nsSVGElement.h"
+#include "SVGElement.h"
 #include "nsSMILValue.h"
 #include "SMILEnumType.h"
 
@@ -18,8 +18,8 @@ using namespace mozilla::dom;
 static nsSVGAttrTearoffTable<nsSVGEnum, nsSVGEnum::DOMAnimatedEnum>
     sSVGAnimatedEnumTearoffTable;
 
-const nsSVGEnumMapping* nsSVGEnum::GetMapping(nsSVGElement* aSVGElement) {
-  nsSVGElement::EnumAttributesInfo info = aSVGElement->GetEnumInfo();
+const nsSVGEnumMapping* nsSVGEnum::GetMapping(SVGElement* aSVGElement) {
+  SVGElement::EnumAttributesInfo info = aSVGElement->GetEnumInfo();
 
   NS_ASSERTION(info.mEnumCount > 0 && mAttrEnum < info.mEnumCount,
                "mapping request for a non-attrib enum");
@@ -28,7 +28,7 @@ const nsSVGEnumMapping* nsSVGEnum::GetMapping(nsSVGElement* aSVGElement) {
 }
 
 nsresult nsSVGEnum::SetBaseValueAtom(const nsAtom* aValue,
-                                     nsSVGElement* aSVGElement) {
+                                     SVGElement* aSVGElement) {
   const nsSVGEnumMapping* mapping = GetMapping(aSVGElement);
 
   while (mapping && mapping->mKey) {
@@ -42,7 +42,7 @@ nsresult nsSVGEnum::SetBaseValueAtom(const nsAtom* aValue,
           aSVGElement->AnimationNeedsResample();
         }
         // We don't need to call DidChange* here - we're only called by
-        // nsSVGElement::ParseAttribute under Element::SetAttr,
+        // SVGElement::ParseAttribute under Element::SetAttr,
         // which takes care of notifying.
       }
       return NS_OK;
@@ -53,7 +53,7 @@ nsresult nsSVGEnum::SetBaseValueAtom(const nsAtom* aValue,
   return NS_ERROR_DOM_TYPE_ERR;
 }
 
-nsAtom* nsSVGEnum::GetBaseValueAtom(nsSVGElement* aSVGElement) {
+nsAtom* nsSVGEnum::GetBaseValueAtom(SVGElement* aSVGElement) {
   const nsSVGEnumMapping* mapping = GetMapping(aSVGElement);
 
   while (mapping && mapping->mKey) {
@@ -66,7 +66,7 @@ nsAtom* nsSVGEnum::GetBaseValueAtom(nsSVGElement* aSVGElement) {
   return nsGkAtoms::_empty;
 }
 
-nsresult nsSVGEnum::SetBaseValue(uint16_t aValue, nsSVGElement* aSVGElement) {
+nsresult nsSVGEnum::SetBaseValue(uint16_t aValue, SVGElement* aSVGElement) {
   const nsSVGEnumMapping* mapping = GetMapping(aSVGElement);
 
   while (mapping && mapping->mKey) {
@@ -88,7 +88,7 @@ nsresult nsSVGEnum::SetBaseValue(uint16_t aValue, nsSVGElement* aSVGElement) {
   return NS_ERROR_DOM_TYPE_ERR;
 }
 
-void nsSVGEnum::SetAnimValue(uint16_t aValue, nsSVGElement* aSVGElement) {
+void nsSVGEnum::SetAnimValue(uint16_t aValue, SVGElement* aSVGElement) {
   if (mIsAnimated && aValue == mAnimVal) {
     return;
   }
@@ -98,7 +98,7 @@ void nsSVGEnum::SetAnimValue(uint16_t aValue, nsSVGElement* aSVGElement) {
 }
 
 already_AddRefed<SVGAnimatedEnumeration> nsSVGEnum::ToDOMAnimatedEnum(
-    nsSVGElement* aSVGElement) {
+    SVGElement* aSVGElement) {
   RefPtr<DOMAnimatedEnum> domAnimatedEnum =
       sSVGAnimatedEnumTearoffTable.GetTearoff(this);
   if (!domAnimatedEnum) {
@@ -113,7 +113,7 @@ nsSVGEnum::DOMAnimatedEnum::~DOMAnimatedEnum() {
   sSVGAnimatedEnumTearoffTable.RemoveTearoff(mVal);
 }
 
-UniquePtr<nsISMILAttr> nsSVGEnum::ToSMILAttr(nsSVGElement* aSVGElement) {
+UniquePtr<nsISMILAttr> nsSVGEnum::ToSMILAttr(SVGElement* aSVGElement) {
   return MakeUnique<SMILEnum>(this, aSVGElement);
 }
 

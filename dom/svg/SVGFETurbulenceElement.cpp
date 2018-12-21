@@ -9,7 +9,7 @@
 #include "nsSVGFilterInstance.h"
 #include "nsSVGUtils.h"
 
-NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(FETurbulence)
+NS_IMPL_NS_NEW_SVG_ELEMENT(FETurbulence)
 
 using namespace mozilla::gfx;
 
@@ -27,13 +27,13 @@ JSObject* SVGFETurbulenceElement::WrapNode(JSContext* aCx,
   return SVGFETurbulenceElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-nsSVGElement::NumberInfo SVGFETurbulenceElement::sNumberInfo[1] = {
+SVGElement::NumberInfo SVGFETurbulenceElement::sNumberInfo[1] = {
     {nsGkAtoms::seed, 0, false}};
 
-nsSVGElement::NumberPairInfo SVGFETurbulenceElement::sNumberPairInfo[1] = {
+SVGElement::NumberPairInfo SVGFETurbulenceElement::sNumberPairInfo[1] = {
     {nsGkAtoms::baseFrequency, 0, 0}};
 
-nsSVGElement::IntegerInfo SVGFETurbulenceElement::sIntegerInfo[1] = {
+SVGElement::IntegerInfo SVGFETurbulenceElement::sIntegerInfo[1] = {
     {nsGkAtoms::numOctaves, 1}};
 
 nsSVGEnumMapping SVGFETurbulenceElement::sTypeMap[] = {
@@ -46,11 +46,11 @@ nsSVGEnumMapping SVGFETurbulenceElement::sStitchTilesMap[] = {
     {nsGkAtoms::noStitch, SVG_STITCHTYPE_NOSTITCH},
     {nullptr, 0}};
 
-nsSVGElement::EnumInfo SVGFETurbulenceElement::sEnumInfo[2] = {
+SVGElement::EnumInfo SVGFETurbulenceElement::sEnumInfo[2] = {
     {nsGkAtoms::type, sTypeMap, SVG_TURBULENCE_TYPE_TURBULENCE},
     {nsGkAtoms::stitchTiles, sStitchTilesMap, SVG_STITCHTYPE_NOSTITCH}};
 
-nsSVGElement::StringInfo SVGFETurbulenceElement::sStringInfo[1] = {
+SVGElement::StringInfo SVGFETurbulenceElement::sStringInfo[1] = {
     {nsGkAtoms::result, kNameSpaceID_None, true}};
 
 //----------------------------------------------------------------------
@@ -152,29 +152,29 @@ bool SVGFETurbulenceElement::AttributeAffectsRendering(
 }
 
 //----------------------------------------------------------------------
-// nsSVGElement methods
+// SVGElement methods
 
-nsSVGElement::NumberAttributesInfo SVGFETurbulenceElement::GetNumberInfo() {
+SVGElement::NumberAttributesInfo SVGFETurbulenceElement::GetNumberInfo() {
   return NumberAttributesInfo(mNumberAttributes, sNumberInfo,
                               ArrayLength(sNumberInfo));
 }
 
-nsSVGElement::NumberPairAttributesInfo
+SVGElement::NumberPairAttributesInfo
 SVGFETurbulenceElement::GetNumberPairInfo() {
   return NumberPairAttributesInfo(mNumberPairAttributes, sNumberPairInfo,
                                   ArrayLength(sNumberPairInfo));
 }
 
-nsSVGElement::IntegerAttributesInfo SVGFETurbulenceElement::GetIntegerInfo() {
+SVGElement::IntegerAttributesInfo SVGFETurbulenceElement::GetIntegerInfo() {
   return IntegerAttributesInfo(mIntegerAttributes, sIntegerInfo,
                                ArrayLength(sIntegerInfo));
 }
 
-nsSVGElement::EnumAttributesInfo SVGFETurbulenceElement::GetEnumInfo() {
+SVGElement::EnumAttributesInfo SVGFETurbulenceElement::GetEnumInfo() {
   return EnumAttributesInfo(mEnumAttributes, sEnumInfo, ArrayLength(sEnumInfo));
 }
 
-nsSVGElement::StringAttributesInfo SVGFETurbulenceElement::GetStringInfo() {
+SVGElement::StringAttributesInfo SVGFETurbulenceElement::GetStringInfo() {
   return StringAttributesInfo(mStringAttributes, sStringInfo,
                               ArrayLength(sStringInfo));
 }

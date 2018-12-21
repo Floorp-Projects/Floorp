@@ -12,7 +12,7 @@
 #include "mozilla/dom/SVGForeignObjectElementBinding.h"
 #include "mozilla/dom/SVGLengthBinding.h"
 
-NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(ForeignObject)
+NS_IMPL_NS_NEW_SVG_ELEMENT(ForeignObject)
 
 namespace mozilla {
 namespace dom {
@@ -22,7 +22,7 @@ JSObject* SVGForeignObjectElement::WrapNode(JSContext* aCx,
   return SVGForeignObjectElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-nsSVGElement::LengthInfo SVGForeignObjectElement::sLengthInfo[4] = {
+SVGElement::LengthInfo SVGForeignObjectElement::sLengthInfo[4] = {
     {nsGkAtoms::x, 0, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER,
      SVGContentUtils::X},
     {nsGkAtoms::y, 0, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER,
@@ -64,7 +64,7 @@ already_AddRefed<SVGAnimatedLength> SVGForeignObjectElement::Height() {
 }
 
 //----------------------------------------------------------------------
-// nsSVGElement methods
+// SVGElement methods
 
 /* virtual */ gfxMatrix SVGForeignObjectElement::PrependLocalTransformsTo(
     const gfxMatrix& aMatrix, SVGTransformTypes aWhich) const {
@@ -112,9 +112,9 @@ SVGForeignObjectElement::IsAttributeMapped(const nsAtom* name) const {
 }
 
 //----------------------------------------------------------------------
-// nsSVGElement methods
+// SVGElement methods
 
-nsSVGElement::LengthAttributesInfo SVGForeignObjectElement::GetLengthInfo() {
+SVGElement::LengthAttributesInfo SVGForeignObjectElement::GetLengthInfo() {
   return LengthAttributesInfo(mLengthAttributes, sLengthInfo,
                               ArrayLength(sLengthInfo));
 }
