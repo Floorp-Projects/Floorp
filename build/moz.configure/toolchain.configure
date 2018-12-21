@@ -69,6 +69,13 @@ def pgo_profile_path(path, pgo_use, profdata):
 
 set_config('PGO_PROFILE_PATH', pgo_profile_path)
 
+option('--with-pgo-jarlog',
+       help='Use the provided jarlog file when packaging during a profile-use '
+            'build',
+       nargs=1)
+
+set_config('PGO_JARLOG_PATH', depends_if('--with-pgo-jarlog')(lambda p: p))
+
 # Code optimization
 # ==============================================================
 
