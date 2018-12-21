@@ -9597,23 +9597,8 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
   aLoadState->GetMaybeResultPrincipalURI(resultPrincipalURI);
 
   nsCOMPtr<nsIRequest> req;
-  rv = DoURILoad(
-      aLoadState->URI(), aLoadState->OriginalURI(), resultPrincipalURI,
-      aLoadState->KeepResultPrincipalURIIfSet(), aLoadState->LoadReplace(),
-      aLoadState->GetIsFromProcessingFrameAttributes(), loadFromExternal,
-      aLoadState->HasLoadFlags(INTERNAL_LOAD_FLAGS_FORCE_ALLOW_DATA_URI),
-      aLoadState->HasLoadFlags(INTERNAL_LOAD_FLAGS_ORIGINAL_FRAME_SRC),
-      aLoadState->Referrer(),
-      !(aLoadState->HasLoadFlags(INTERNAL_LOAD_FLAGS_DONT_SEND_REFERRER)),
-      aLoadState->ReferrerPolicy(), aLoadState->TriggeringPrincipal(),
-      aLoadState->PrincipalToInherit(), aLoadState->TypeHint(),
-      aLoadState->FileName(), aLoadState->PostDataStream(),
-      aLoadState->HeadersStream(), aLoadState->FirstParty(), aDocShell,
-      getter_AddRefs(req),
-      aLoadState->HasLoadFlags(INTERNAL_LOAD_FLAGS_FIRST_LOAD),
-      aLoadState->HasLoadFlags(INTERNAL_LOAD_FLAGS_BYPASS_CLASSIFIER),
-      aLoadState->HasLoadFlags(INTERNAL_LOAD_FLAGS_FORCE_ALLOW_COOKIES), srcdoc,
-      aLoadState->BaseURI(), contentType);
+  rv = DoURILoad(aLoadState, loadFromExternal, aDocShell, getter_AddRefs(req),
+                 srcdoc, contentType);
   if (req && aRequest) {
     NS_ADDREF(*aRequest = req);
   }
@@ -9738,19 +9723,10 @@ static bool IsConsideredSameOriginForUIR(nsIPrincipal* aTriggeringPrincipal,
   return aTriggeringPrincipal->Equals(tmpResultPrincipal);
 }
 
-nsresult nsDocShell::DoURILoad(
-    nsIURI* aURI, nsIURI* aOriginalURI,
-    Maybe<nsCOMPtr<nsIURI>> const& aResultPrincipalURI,
-    bool aKeepResultPrincipalURIIfSet, bool aLoadReplace,
-    bool aIsFromProcessingFrameAttributes, bool aLoadFromExternal,
-    bool aForceAllowDataURI, bool aOriginalFrameSrc, nsIURI* aReferrerURI,
-    bool aSendReferrer, uint32_t aReferrerPolicy,
-    nsIPrincipal* aTriggeringPrincipal, nsIPrincipal* aPrincipalToInherit,
-    const nsACString& aTypeHint, const nsAString& aFileName,
-    nsIInputStream* aPostData, nsIInputStream* aHeadersData, bool aFirstParty,
-    nsIDocShell** aDocShell, nsIRequest** aRequest, bool aIsNewWindowTarget,
-    bool aBypassClassifier, bool aForceAllowCookies, const nsAString& aSrcdoc,
-    nsIURI* aBaseURI, nsContentPolicyType aContentPolicyType) {
+nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
+                               bool aLoadFromExternal, nsIDocShell** aDocShell,
+                               nsIRequest** aRequest, const nsAString& aSrcdoc,
+                               nsContentPolicyType aContentPolicyType) {
   // Double-check that we're still around to load this URI.
   if (mIsBeingDestroyed) {
     // Return NS_OK despite not doing anything to avoid throwing exceptions
@@ -9773,7 +9749,8 @@ nsresult nsDocShell::DoURILoad(
 
     // Only allow URLs able to return data in iframes.
     bool doesNotReturnData = false;
-    NS_URIChainHasFlags(aURI, nsIProtocolHandler::URI_DOES_NOT_RETURN_DATA,
+    NS_URIChainHasFlags(aLoadState->URI(),
+                        nsIProtocolHandler::URI_DOES_NOT_RETURN_DATA,
                         &doesNotReturnData);
     if (doesNotReturnData) {
       return NS_ERROR_UNKNOWN_PROTOCOL;
@@ -9784,7 +9761,7 @@ nsresult nsDocShell::DoURILoad(
     // timing attacks to read data from cross-origin iframes. If this widens
     // we should add a protocol flag for whether the scheme is allowed in
     // frames and use something like nsNetUtil::NS_URIChainHasFlags.
-    nsCOMPtr<nsIURI> tempURI = aURI;
+    nsCOMPtr<nsIURI> tempURI = aLoadState->URI();
     nsCOMPtr<nsINestedURI> nestedURI = do_QueryInterface(tempURI);
     while (nestedURI) {
       // view-source should always be an nsINestedURI, loop and check the
@@ -9863,30 +9840,31 @@ nsresult nsDocShell::DoURILoad(
   // Getting the right triggeringPrincipal needs to be updated and is only
   // ready for use once bug 1182569 landed. Until then, we cannot rely on
   // the triggeringPrincipal for TYPE_DOCUMENT loads.
-  MOZ_ASSERT(aTriggeringPrincipal, "Need a valid triggeringPrincipal");
+  MOZ_ASSERT(aLoadState->TriggeringPrincipal(),
+             "Need a valid triggeringPrincipal");
 
-  if (mUseStrictSecurityChecks && !aTriggeringPrincipal) {
+  if (mUseStrictSecurityChecks && !aLoadState->TriggeringPrincipal()) {
     return NS_ERROR_FAILURE;
   }
 
   bool isSandBoxed = mSandboxFlags & SANDBOXED_ORIGIN;
 
-  // We want to inherit aPrincipalToInherit when:
+  // We want to inherit aLoadState->PrincipalToInherit() when:
   // 1. ChannelShouldInheritPrincipal returns true.
-  // 2. aURI is not data: URI, or data: URI is not configured as unique opaque
-  //    origin.
+  // 2. aLoadState->URI() is not data: URI, or data: URI is not
+  //    configured as unique opaque origin.
   bool inheritAttrs = false, inheritPrincipal = false;
 
-  if (aPrincipalToInherit) {
+  if (aLoadState->PrincipalToInherit()) {
     inheritAttrs = nsContentUtils::ChannelShouldInheritPrincipal(
-        aPrincipalToInherit, aURI,
+        aLoadState->PrincipalToInherit(), aLoadState->URI(),
         true,  // aInheritForAboutBlank
         isSrcdoc);
 
     bool isData;
-    bool isURIUniqueOrigin = nsIOService::IsDataURIUniqueOpaqueOrigin() &&
-                             NS_SUCCEEDED(aURI->SchemeIs("data", &isData)) &&
-                             isData;
+    bool isURIUniqueOrigin =
+        nsIOService::IsDataURIUniqueOpaqueOrigin() &&
+        NS_SUCCEEDED(aLoadState->URI()->SchemeIs("data", &isData)) && isData;
     inheritPrincipal = inheritAttrs && !isURIUniqueOrigin;
   }
 
@@ -9894,7 +9872,7 @@ nsresult nsDocShell::DoURILoad(
   nsSecurityFlags securityFlags =
       nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL;
 
-  if (aFirstParty) {
+  if (aLoadState->FirstParty()) {
     // tag first party URL loads
     loadFlags |= nsIChannel::LOAD_INITIAL_DOCUMENT_URI;
   }
@@ -9914,17 +9892,19 @@ nsresult nsDocShell::DoURILoad(
 
   RefPtr<LoadInfo> loadInfo =
       (aContentPolicyType == nsIContentPolicy::TYPE_DOCUMENT)
-          ? new LoadInfo(loadingWindow, aTriggeringPrincipal,
+          ? new LoadInfo(loadingWindow, aLoadState->TriggeringPrincipal(),
                          topLevelLoadingContext, securityFlags)
-          : new LoadInfo(loadingPrincipal, aTriggeringPrincipal, loadingNode,
-                         securityFlags, aContentPolicyType);
+          : new LoadInfo(loadingPrincipal, aLoadState->TriggeringPrincipal(),
+                         loadingNode, securityFlags, aContentPolicyType);
 
-  if (aPrincipalToInherit) {
-    loadInfo->SetPrincipalToInherit(aPrincipalToInherit);
+  if (aLoadState->PrincipalToInherit()) {
+    loadInfo->SetPrincipalToInherit(aLoadState->PrincipalToInherit());
   }
   loadInfo->SetLoadTriggeredFromExternal(aLoadFromExternal);
-  loadInfo->SetForceAllowDataURI(aForceAllowDataURI);
-  loadInfo->SetOriginalFrameSrcLoad(aOriginalFrameSrc);
+  loadInfo->SetForceAllowDataURI(
+      aLoadState->HasLoadFlags(INTERNAL_LOAD_FLAGS_FORCE_ALLOW_DATA_URI));
+  loadInfo->SetOriginalFrameSrcLoad(
+      aLoadState->HasLoadFlags(INTERNAL_LOAD_FLAGS_ORIGINAL_FRAME_SRC));
 
   // We have to do this in case our OriginAttributes are different from the
   // OriginAttributes of the parent document. Or in case there isn't a
@@ -9935,18 +9915,19 @@ nsresult nsDocShell::DoURILoad(
 
   OriginAttributes attrs;
 
-  // Inherit origin attributes from aPrincipalToInherit if inheritAttrs is
+  // Inherit origin attributes from PrincipalToInherit if inheritAttrs is
   // true. Otherwise we just use the origin attributes from docshell.
   if (inheritAttrs) {
-    MOZ_ASSERT(aPrincipalToInherit, "We should have aPrincipalToInherit here.");
-    attrs = aPrincipalToInherit->OriginAttributesRef();
+    MOZ_ASSERT(aLoadState->PrincipalToInherit(),
+               "We should have PrincipalToInherit here.");
+    attrs = aLoadState->PrincipalToInherit()->OriginAttributesRef();
     // If firstPartyIsolation is not enabled, then PrincipalToInherit should
     // have the same origin attributes with docshell.
     MOZ_ASSERT_IF(!OriginAttributes::IsFirstPartyEnabled(),
                   attrs == GetOriginAttributes());
   } else {
     attrs = GetOriginAttributes();
-    attrs.SetFirstPartyDomain(isTopLevelDoc, aURI);
+    attrs.SetFirstPartyDomain(isTopLevelDoc, aLoadState->URI());
   }
 
   rv = loadInfo->SetOriginAttributes(attrs);
@@ -9959,16 +9940,17 @@ nsresult nsDocShell::DoURILoad(
   rv = loadInfo->SetIsDocshellReload(mLoadType & LOAD_CMD_RELOAD);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (aIsFromProcessingFrameAttributes) {
+  if (aLoadState->GetIsFromProcessingFrameAttributes()) {
     loadInfo->SetIsFromProcessingFrameAttributes();
   }
 
+  nsIURI* baseURI = aLoadState->BaseURI();
   if (!isSrcdoc) {
-    rv = NS_NewChannelInternal(getter_AddRefs(channel), aURI, loadInfo,
-                               nullptr,  // PerformanceStorage
-                               nullptr,  // loadGroup
-                               static_cast<nsIInterfaceRequestor*>(this),
-                               loadFlags);
+    rv = NS_NewChannelInternal(
+        getter_AddRefs(channel), aLoadState->URI(), loadInfo,
+        nullptr,  // PerformanceStorage
+        nullptr,  // loadGroup
+        static_cast<nsIInterfaceRequestor*>(this), loadFlags);
 
     if (NS_FAILED(rv)) {
       if (rv == NS_ERROR_UNKNOWN_PROTOCOL) {
@@ -9977,7 +9959,8 @@ nsresult nsDocShell::DoURILoad(
         // handling the load, though, so we fire a notification
         // before throwing the load away.
         bool abort = false;
-        nsresult rv2 = mContentListener->OnStartURIOpen(aURI, &abort);
+        nsresult rv2 =
+            mContentListener->OnStartURIOpen(aLoadState->URI(), &abort);
         if (NS_SUCCEEDED(rv2) && abort) {
           // Hey, they're handling the load for us!  How convenient!
           return NS_OK;
@@ -9986,34 +9969,34 @@ nsresult nsDocShell::DoURILoad(
       return rv;
     }
 
-    if (aBaseURI) {
+    if (baseURI) {
       nsCOMPtr<nsIViewSourceChannel> vsc = do_QueryInterface(channel);
       if (vsc) {
-        rv = vsc->SetBaseURI(aBaseURI);
+        rv = vsc->SetBaseURI(baseURI);
         MOZ_ASSERT(NS_SUCCEEDED(rv));
       }
     }
   } else {
     nsAutoCString scheme;
-    rv = aURI->GetScheme(scheme);
+    rv = aLoadState->URI()->GetScheme(scheme);
     NS_ENSURE_SUCCESS(rv, rv);
     bool isViewSource;
-    aURI->SchemeIs("view-source", &isViewSource);
+    aLoadState->URI()->SchemeIs("view-source", &isViewSource);
 
     if (isViewSource) {
       nsViewSourceHandler* vsh = nsViewSourceHandler::GetInstance();
       NS_ENSURE_TRUE(vsh, NS_ERROR_FAILURE);
 
-      rv = vsh->NewSrcdocChannel(aURI, aBaseURI, aSrcdoc, loadInfo,
+      rv = vsh->NewSrcdocChannel(aLoadState->URI(), baseURI, aSrcdoc, loadInfo,
                                  getter_AddRefs(channel));
     } else {
       rv = NS_NewInputStreamChannelInternal(
-          getter_AddRefs(channel), aURI, aSrcdoc,
+          getter_AddRefs(channel), aLoadState->URI(), aSrcdoc,
           NS_LITERAL_CSTRING("text/html"), loadInfo, true);
       NS_ENSURE_SUCCESS(rv, rv);
       nsCOMPtr<nsIInputStreamChannel> isc = do_QueryInterface(channel);
       MOZ_ASSERT(isc);
-      isc->SetBaseURI(aBaseURI);
+      isc->SetBaseURI(baseURI);
     }
   }
 
@@ -10022,7 +10005,7 @@ nsresult nsDocShell::DoURILoad(
   // the triggeringPrincipal is holding the CSP that potentially
   // holds upgrade-insecure-requests.
   nsCOMPtr<nsIContentSecurityPolicy> csp;
-  aTriggeringPrincipal->GetCsp(getter_AddRefs(csp));
+  aLoadState->TriggeringPrincipal()->GetCsp(getter_AddRefs(csp));
   if (csp) {
     bool upgradeInsecureRequests = false;
     csp->GetUpgradeInsecureRequests(&upgradeInsecureRequests);
@@ -10032,7 +10015,8 @@ nsresult nsDocShell::DoURILoad(
       rv = nsContentUtils::GetSecurityManager()->GetChannelResultPrincipal(
           channel, getter_AddRefs(resultPrincipal));
       NS_ENSURE_SUCCESS(rv, rv);
-      if (IsConsideredSameOriginForUIR(aTriggeringPrincipal, resultPrincipal)) {
+      if (IsConsideredSameOriginForUIR(aLoadState->TriggeringPrincipal(),
+                                       resultPrincipal)) {
         static_cast<LoadInfo*>(loadInfo.get())->SetUpgradeInsecureRequests();
       }
     }
@@ -10055,7 +10039,7 @@ nsresult nsDocShell::DoURILoad(
 
       if (secMan) {
         nsCOMPtr<nsIPrincipal> principal;
-        secMan->GetDocShellCodebasePrincipal(aURI, this,
+        secMan->GetDocShellCodebasePrincipal(aLoadState->URI(), this,
                                              getter_AddRefs(principal));
         appCacheChannel->SetChooseApplicationCache(
             NS_ShouldCheckAppCache(principal));
@@ -10069,44 +10053,49 @@ nsresult nsDocShell::DoURILoad(
     NS_ADDREF(*aRequest = channel);
   }
 
-  if (aOriginalURI) {
-    channel->SetOriginalURI(aOriginalURI);
+  if (aLoadState->OriginalURI()) {
+    channel->SetOriginalURI(aLoadState->OriginalURI());
     // The LOAD_REPLACE flag and its handling here will be removed as part
     // of bug 1319110.  For now preserve its restoration here to not break
     // any code expecting it being set specially on redirected channels.
     // If the flag has originally been set to change result of
     // NS_GetFinalChannelURI it won't have any effect and also won't cause
     // any harm.
-    if (aLoadReplace) {
+    if (aLoadState->LoadReplace()) {
       uint32_t loadFlags;
       channel->GetLoadFlags(&loadFlags);
       NS_ENSURE_SUCCESS(rv, rv);
       channel->SetLoadFlags(loadFlags | nsIChannel::LOAD_REPLACE);
     }
   } else {
-    channel->SetOriginalURI(aURI);
+    channel->SetOriginalURI(aLoadState->URI());
   }
 
   nsCOMPtr<nsIURI> rpURI;
   loadInfo->GetResultPrincipalURI(getter_AddRefs(rpURI));
-  if (aResultPrincipalURI && (!aKeepResultPrincipalURIIfSet || !rpURI)) {
+  Maybe<nsCOMPtr<nsIURI>> originalResultPrincipalURI;
+  aLoadState->GetMaybeResultPrincipalURI(originalResultPrincipalURI);
+  if (originalResultPrincipalURI &&
+      (!aLoadState->KeepResultPrincipalURIIfSet() || !rpURI)) {
     // Unconditionally override, we want the replay to be equal to what has
     // been captured.
-    loadInfo->SetResultPrincipalURI(aResultPrincipalURI.ref());
+    loadInfo->SetResultPrincipalURI(originalResultPrincipalURI.ref());
   }
 
-  if (!aTypeHint.IsVoid()) {
-    channel->SetContentType(aTypeHint);
-    mContentTypeHint = aTypeHint;
+  const nsACString& typeHint = aLoadState->TypeHint();
+  if (!typeHint.IsVoid()) {
+    channel->SetContentType(typeHint);
+    mContentTypeHint = typeHint;
   } else {
     mContentTypeHint.Truncate();
   }
 
-  if (!aFileName.IsVoid()) {
+  const nsAString& fileName = aLoadState->FileName();
+  if (!fileName.IsVoid()) {
     rv = channel->SetContentDisposition(nsIChannel::DISPOSITION_ATTACHMENT);
     NS_ENSURE_SUCCESS(rv, rv);
-    if (!aFileName.IsEmpty()) {
-      rv = channel->SetContentDispositionFilename(aFileName);
+    if (!fileName.IsEmpty()) {
+      rv = channel->SetContentDispositionFilename(fileName);
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }
@@ -10136,16 +10125,16 @@ nsresult nsDocShell::DoURILoad(
   nsCOMPtr<nsIHttpChannelInternal> httpChannelInternal(
       do_QueryInterface(channel));
   if (httpChannelInternal) {
-    if (aForceAllowCookies) {
+    if (aLoadState->HasLoadFlags(INTERNAL_LOAD_FLAGS_FORCE_ALLOW_COOKIES)) {
       rv = httpChannelInternal->SetThirdPartyFlags(
           nsIHttpChannelInternal::THIRD_PARTY_FORCE_ALLOW);
       MOZ_ASSERT(NS_SUCCEEDED(rv));
     }
-    if (aFirstParty) {
-      rv = httpChannelInternal->SetDocumentURI(aURI);
+    if (aLoadState->FirstParty()) {
+      rv = httpChannelInternal->SetDocumentURI(aLoadState->URI());
       MOZ_ASSERT(NS_SUCCEEDED(rv));
     } else {
-      rv = httpChannelInternal->SetDocumentURI(aReferrerURI);
+      rv = httpChannelInternal->SetDocumentURI(aLoadState->Referrer());
       MOZ_ASSERT(NS_SUCCEEDED(rv));
     }
     rv = httpChannelInternal->SetRedirectMode(
@@ -10158,7 +10147,7 @@ nsresult nsDocShell::DoURILoad(
     // save true referrer for those who need it (e.g. xpinstall whitelisting)
     // Currently only http and ftp channels support this.
     props->SetPropertyAsInterface(
-        NS_LITERAL_STRING("docshell.internalReferrer"), aReferrerURI);
+        NS_LITERAL_STRING("docshell.internalReferrer"), aLoadState->Referrer());
   }
 
   nsCOMPtr<nsICacheInfoChannel> cacheChannel(do_QueryInterface(channel));
@@ -10173,21 +10162,22 @@ nsresult nsDocShell::DoURILoad(
   }
 
   // figure out if we need to set the post data stream on the channel...
-  if (aPostData) {
+  if (aLoadState->PostDataStream()) {
     nsCOMPtr<nsIFormPOSTActionChannel> postChannel(do_QueryInterface(channel));
     if (postChannel) {
       // XXX it's a bit of a hack to rewind the postdata stream here but
       // it has to be done in case the post data is being reused multiple
       // times.
       nsCOMPtr<nsISeekableStream> postDataSeekable =
-          do_QueryInterface(aPostData);
+          do_QueryInterface(aLoadState->PostDataStream());
       if (postDataSeekable) {
         rv = postDataSeekable->Seek(nsISeekableStream::NS_SEEK_SET, 0);
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
       // we really need to have a content type associated with this stream!!
-      postChannel->SetUploadStream(aPostData, EmptyCString(), -1);
+      postChannel->SetUploadStream(aLoadState->PostDataStream(), EmptyCString(),
+                                   -1);
     }
 
     /* If there is a valid postdata *and* it is a History Load,
@@ -10226,13 +10216,15 @@ nsresult nsDocShell::DoURILoad(
   }
 
   if (httpChannel) {
-    if (aHeadersData) {
-      rv = AddHeadersToChannel(aHeadersData, httpChannel);
+    if (aLoadState->HeadersStream()) {
+      rv = AddHeadersToChannel(aLoadState->HeadersStream(), httpChannel);
     }
     // Set the referrer explicitly
-    if (aReferrerURI && aSendReferrer) {
+    if (aLoadState->Referrer() &&
+        !(aLoadState->HasLoadFlags(INTERNAL_LOAD_FLAGS_DONT_SEND_REFERRER))) {
       // Referrer is currenly only set for link clicks here.
-      rv = httpChannel->SetReferrerWithPolicy(aReferrerURI, aReferrerPolicy);
+      rv = httpChannel->SetReferrerWithPolicy(aLoadState->Referrer(),
+                                              aLoadState->ReferrerPolicy());
       MOZ_ASSERT(NS_SUCCEEDED(rv));
     }
   }
@@ -10243,7 +10235,7 @@ nsresult nsDocShell::DoURILoad(
     scriptChannel->SetExecutionPolicy(nsIScriptChannel::EXECUTE_NORMAL);
   }
 
-  if (aIsNewWindowTarget) {
+  if (aLoadState->HasLoadFlags(INTERNAL_LOAD_FLAGS_FIRST_LOAD)) {
     nsCOMPtr<nsIWritablePropertyBag2> props = do_QueryInterface(channel);
     if (props) {
       props->SetPropertyAsBool(NS_LITERAL_STRING("docshell.newWindowTarget"),
@@ -10275,7 +10267,9 @@ nsresult nsDocShell::DoURILoad(
     }
   }
 
-  rv = DoChannelLoad(channel, uriLoader, aBypassClassifier);
+  rv = DoChannelLoad(
+      channel, uriLoader,
+      aLoadState->HasLoadFlags(INTERNAL_LOAD_FLAGS_BYPASS_CLASSIFIER));
 
   //
   // If the channel load failed, we failed and nsIWebProgress just ain't
