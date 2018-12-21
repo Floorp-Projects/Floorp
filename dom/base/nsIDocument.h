@@ -2183,11 +2183,6 @@ class nsIDocument : public nsINode,
                                           nsAtom* aAttrName,
                                           const nsAString& aAttrValue) const;
 
-  nsresult NodesFromRectHelper(float aX, float aY, float aTopSize,
-                               float aRightSize, float aBottomSize,
-                               float aLeftSize, bool aIgnoreRootScrollFrame,
-                               bool aFlushLayout, nsINodeList** aReturn);
-
   /**
    * See FlushSkinBindings on nsBindingManager
    */

@@ -17,6 +17,7 @@ class nsContentList;
 class nsCycleCollectionTraversalCallback;
 class nsIDocument;
 class nsINode;
+class nsINodeList;
 class nsIRadioVisitor;
 class nsWindowSizes;
 
@@ -114,6 +115,11 @@ class DocumentOrShadowRoot {
   Element* ElementFromPointHelper(float aX, float aY,
                                   bool aIgnoreRootScrollFrame,
                                   bool aFlushLayout);
+
+  nsresult NodesFromRectHelper(float aX, float aY, float aTopSize,
+                               float aRightSize, float aBottomSize,
+                               float aLeftSize, bool aIgnoreRootScrollFrame,
+                               bool aFlushLayout, nsINodeList** aReturn);
 
   /**
    * This gets fired when the element that an id refers to changes.
