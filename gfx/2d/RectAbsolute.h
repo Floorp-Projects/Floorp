@@ -11,6 +11,7 @@
 #include <cstdint>
 
 #include "mozilla/Attributes.h"
+#include "Point.h"
 #include "Rect.h"
 #include "Types.h"
 
@@ -33,7 +34,7 @@ namespace gfx {
  * Do not use this class directly. Subclass it, pass that subclass as the
  * Sub parameter, and only use that subclass.
  */
-template <class T, class Sub, class Rect>
+template <class T, class Sub, class Point, class Rect>
 struct BaseRectAbsolute {
  protected:
   T left, top, right, bottom;
@@ -243,12 +244,12 @@ struct BaseRectAbsolute {
 template <class Units>
 struct IntRectAbsoluteTyped
     : public BaseRectAbsolute<int32_t, IntRectAbsoluteTyped<Units>,
-                              IntRectTyped<Units>>,
+                              IntPointTyped<Units>, IntRectTyped<Units>>,
       public Units {
   static_assert(IsPixel<Units>::value,
                 "'units' must be a coordinate system tag");
   typedef BaseRectAbsolute<int32_t, IntRectAbsoluteTyped<Units>,
-                           IntRectTyped<Units>>
+                           IntPointTyped<Units>, IntRectTyped<Units>>
       Super;
   typedef IntParam<int32_t> ToInt;
 
@@ -260,11 +261,12 @@ struct IntRectAbsoluteTyped
 template <class Units>
 struct RectAbsoluteTyped
     : public BaseRectAbsolute<Float, RectAbsoluteTyped<Units>,
-                              RectTyped<Units>>,
+                              PointTyped<Units>, RectTyped<Units>>,
       public Units {
   static_assert(IsPixel<Units>::value,
                 "'units' must be a coordinate system tag");
-  typedef BaseRectAbsolute<Float, RectAbsoluteTyped<Units>, RectTyped<Units>>
+  typedef BaseRectAbsolute<Float, RectAbsoluteTyped<Units>, PointTyped<Units>,
+                           RectTyped<Units>>
       Super;
 
   RectAbsoluteTyped() : Super() {}
