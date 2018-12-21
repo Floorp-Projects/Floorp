@@ -1526,8 +1526,10 @@ void MacroAssembler::branchTestMagic(Condition cond, const Address& valaddr,
 }
 
 void MacroAssembler::branchToComputedAddress(const BaseIndex& addr) {
-  // Not used by Rabaldr.
-  MOZ_CRASH("NYI - branchToComputedAddress");
+  vixl::UseScratchRegisterScope temps(&this->asVIXL());
+  const ARMRegister scratch64 = temps.AcquireX();
+  loadPtr(addr, scratch64.asUnsized());
+  Br(scratch64);
 }
 
 void MacroAssembler::cmp32Move32(Condition cond, Register lhs, Register rhs,
