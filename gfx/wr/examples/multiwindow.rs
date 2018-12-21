@@ -15,6 +15,7 @@ use glutin::GlContext;
 use std::fs::File;
 use std::io::Read;
 use webrender::api::*;
+use webrender::DebugFlags;
 use winit::dpi::LogicalSize;
 
 struct Notifier {
@@ -142,6 +143,7 @@ impl Window {
         let mut do_exit = false;
         let my_name = &self.name;
         let renderer = &mut self.renderer;
+        let api = &mut self.api;
 
         self.events_loop.poll_events(|global_event| match global_event {
             winit::Event::WindowEvent { event, .. } => match event {
@@ -163,8 +165,8 @@ impl Window {
                     },
                     ..
                 } => {
-                    println!("toggle flags {}", my_name);
-                    renderer.toggle_debug_flags(webrender::DebugFlags::PROFILER_DBG);
+                    println!("set flags {}", my_name);
+                    api.send_debug_cmd(DebugCommand::SetFlags(DebugFlags::PROFILER_DBG))
                 }
                 _ => {}
             }
@@ -278,7 +280,7 @@ impl Window {
         );
         txn.set_root_pipeline(self.pipeline_id);
         txn.generate_frame();
-        self.api.send_transaction(self.document_id, txn);
+        api.send_transaction(self.document_id, txn);
 
         renderer.update();
         renderer.render(framebuffer_size).unwrap();

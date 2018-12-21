@@ -17,7 +17,7 @@ use api::{IdNamespace, LayoutPoint, PipelineId, RenderNotifier, SceneMsg, Scroll
 use api::{MemoryReport, VoidPtrToSizeFn};
 use api::{ScrollLocation, ScrollNodeState, TransactionMsg, ResourceUpdate, BlobImageKey};
 use api::{NotificationRequest, Checkpoint};
-use api::channel::{MsgReceiver, Payload};
+use api::channel::{MsgReceiver, MsgSender, Payload};
 #[cfg(feature = "capture")]
 use api::CaptureBits;
 #[cfg(feature = "replay")]
@@ -1031,10 +1031,6 @@ impl RenderBackend {
                         // We don't want to forward this message to the renderer.
                         return true;
                     }
-                    DebugCommand::EnableGpuCacheDebug(enable) => {
-                        self.gpu_cache.set_debug(enable);
-                        ResultMsg::DebugCommand(option)
-                    }
                     DebugCommand::FetchDocuments => {
                         let json = self.get_docs_for_debugger();
                         ResultMsg::DebugOutput(DebugOutput::FetchDocuments(json))
@@ -1107,6 +1103,7 @@ impl RenderBackend {
                     }
                     DebugCommand::SetFlags(flags) => {
                         self.resource_cache.set_debug_flags(flags);
+                        self.gpu_cache.set_debug_flags(flags);
                         ResultMsg::DebugCommand(option)
                     }
                     _ => ResultMsg::DebugCommand(option),
@@ -1502,7 +1499,7 @@ impl RenderBackend {
         serde_json::to_string(&debug_root).unwrap()
     }
 
-    fn report_memory(&self, tx: ::api::channel::MsgSender<MemoryReport>) {
+    fn report_memory(&self, tx: MsgSender<MemoryReport>) {
         let mut report = MemoryReport::default();
         let op = self.size_of_op.unwrap();
         report.gpu_cache_metadata = self.gpu_cache.malloc_size_of(op);

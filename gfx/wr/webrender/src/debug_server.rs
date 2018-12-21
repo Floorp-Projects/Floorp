@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{ApiMsg, DebugCommand, DeviceIntSize};
+use api::{ApiMsg, DebugCommand, DebugFlags, DeviceIntSize};
 use api::channel::MsgSender;
 use print_tree::PrintTreePrinter;
 use std::sync::mpsc::{channel, Receiver};
@@ -26,6 +26,7 @@ struct Server {
     ws: ws::Sender,
     debug_tx: Sender<DebugMsg>,
     api_tx: MsgSender<ApiMsg>,
+    debug_flags: DebugFlags,
 }
 
 impl ws::Handler for Server {
@@ -46,25 +47,35 @@ impl ws::Handler for Server {
     fn on_message(&mut self, msg: ws::Message) -> ws::Result<()> {
         match msg {
             ws::Message::Text(string) => {
-                let cmd = match string.as_str() {
-                    "enable_profiler" => DebugCommand::EnableProfiler(true),
-                    "disable_profiler" => DebugCommand::EnableProfiler(false),
-                    "enable_texture_cache_debug" => DebugCommand::EnableTextureCacheDebug(true),
-                    "disable_texture_cache_debug" => DebugCommand::EnableTextureCacheDebug(false),
-                    "enable_render_target_debug" => DebugCommand::EnableRenderTargetDebug(true),
-                    "disable_render_target_debug" => DebugCommand::EnableRenderTargetDebug(false),
-                    "enable_gpu_time_queries" => DebugCommand::EnableGpuTimeQueries(true),
-                    "disable_gpu_time_queries" => DebugCommand::EnableGpuTimeQueries(false),
-                    "enable_gpu_sample_queries" => DebugCommand::EnableGpuSampleQueries(true),
-                    "disable_gpu_sample_queries" => DebugCommand::EnableGpuSampleQueries(false),
-                    "fetch_passes" => DebugCommand::FetchPasses,
-                    "fetch_screenshot" => DebugCommand::FetchScreenshot,
-                    "fetch_documents" => DebugCommand::FetchDocuments,
-                    "fetch_clip_scroll_tree" => DebugCommand::FetchClipScrollTree,
-                    "fetch_render_tasks" => DebugCommand::FetchRenderTasks,
-                    msg => {
-                        error!("unknown msg {}", msg);
-                        return Ok(());
+                // First, check for flag change commands.
+                let mut set_flags = true;
+                match string.as_str() {
+                    "enable_profiler" => self.debug_flags.insert(DebugFlags::PROFILER_DBG),
+                    "disable_profiler" => self.debug_flags.remove(DebugFlags::PROFILER_DBG),
+                    "enable_texture_cache_debug" => self.debug_flags.insert(DebugFlags::TEXTURE_CACHE_DBG),
+                    "disable_texture_cache_debug" => self.debug_flags.remove(DebugFlags::TEXTURE_CACHE_DBG),
+                    "enable_render_target_debug" => self.debug_flags.insert(DebugFlags::RENDER_TARGET_DBG),
+                    "disable_render_target_debug" => self.debug_flags.remove(DebugFlags::RENDER_TARGET_DBG),
+                    "enable_gpu_time_queries" => self.debug_flags.insert(DebugFlags::GPU_TIME_QUERIES),
+                    "disable_gpu_time_queries" => self.debug_flags.remove(DebugFlags::GPU_TIME_QUERIES),
+                    "enable_gpu_sample_queries" => self.debug_flags.insert(DebugFlags::GPU_SAMPLE_QUERIES),
+                    "disable_gpu_sample_queries" => self.debug_flags.remove(DebugFlags::GPU_SAMPLE_QUERIES),
+                    _ => set_flags = false,
+                };
+
+                let cmd = if set_flags {
+                    DebugCommand::SetFlags(self.debug_flags)
+                } else {
+                    match string.as_str() {
+                        "fetch_passes" => DebugCommand::FetchPasses,
+                        "fetch_screenshot" => DebugCommand::FetchScreenshot,
+                        "fetch_documents" => DebugCommand::FetchDocuments,
+                        "fetch_clip_scroll_tree" => DebugCommand::FetchClipScrollTree,
+                        "fetch_render_tasks" => DebugCommand::FetchRenderTasks,
+                        msg => {
+                            error!("unknown msg {}", msg);
+                            return Ok(());
+                        }
                     }
                 };
 
@@ -97,6 +108,7 @@ impl DebugServer {
                     ws: out,
                     debug_tx: debug_tx.clone(),
                     api_tx: api_tx.clone(),
+                    debug_flags: DebugFlags::empty(),
                 }
             })
             .unwrap();

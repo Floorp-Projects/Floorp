@@ -2384,33 +2384,6 @@ impl Renderer {
 
     fn handle_debug_command(&mut self, command: DebugCommand) {
         match command {
-            DebugCommand::EnableProfiler(enable) => {
-                self.set_debug_flag(DebugFlags::PROFILER_DBG, enable);
-            }
-            DebugCommand::EnableTextureCacheDebug(enable) => {
-                self.set_debug_flag(DebugFlags::TEXTURE_CACHE_DBG, enable);
-            }
-            DebugCommand::EnableRenderTargetDebug(enable) => {
-                self.set_debug_flag(DebugFlags::RENDER_TARGET_DBG, enable);
-            }
-            DebugCommand::EnableGpuCacheDebug(enable) => {
-                self.set_debug_flag(DebugFlags::GPU_CACHE_DBG, enable);
-            }
-            DebugCommand::EnableGpuTimeQueries(enable) => {
-                self.set_debug_flag(DebugFlags::GPU_TIME_QUERIES, enable);
-            }
-            DebugCommand::EnableGpuSampleQueries(enable) => {
-                self.set_debug_flag(DebugFlags::GPU_SAMPLE_QUERIES, enable);
-            }
-            DebugCommand::EnableNewFrameIndicator(enable) => {
-                self.set_debug_flag(DebugFlags::NEW_FRAME_INDICATOR, enable);
-            }
-            DebugCommand::EnableNewSceneIndicator(enable) => {
-                self.set_debug_flag(DebugFlags::NEW_SCENE_INDICATOR, enable);
-            }
-            DebugCommand::EnableShowOverdraw(enable) => {
-                self.set_debug_flag(DebugFlags::SHOW_OVERDRAW, enable);
-            }
             DebugCommand::EnableDualSourceBlending(_) => {
                 panic!("Should be handled by render backend");
             }
@@ -4255,18 +4228,6 @@ impl Renderer {
         }
 
         self.debug_flags = flags;
-    }
-
-    pub fn set_debug_flag(&mut self, flag: DebugFlags, enabled: bool) {
-        let mut new_flags = self.debug_flags;
-        new_flags.set(flag, enabled);
-        self.set_debug_flags(new_flags);
-    }
-
-    pub fn toggle_debug_flags(&mut self, toggle: DebugFlags) {
-        let mut new_flags = self.debug_flags;
-        new_flags.toggle(toggle);
-        self.set_debug_flags(new_flags);
     }
 
     pub fn save_cpu_profile(&self, filename: &str) {

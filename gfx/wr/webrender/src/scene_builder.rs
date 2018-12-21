@@ -169,7 +169,7 @@ pub enum SceneBuilderRequest {
     SimulateLongSceneBuild(u32),
     SimulateLongLowPrioritySceneBuild(u32),
     Stop,
-    ReportMemory(MemoryReport, ::api::channel::MsgSender<MemoryReport>),
+    ReportMemory(MemoryReport, MsgSender<MemoryReport>),
     #[cfg(feature = "capture")]
     SaveScene(CaptureConfig),
     #[cfg(feature = "replay")]
