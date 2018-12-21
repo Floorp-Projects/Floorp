@@ -34,7 +34,6 @@ export type Command =
 
 // Pause state associated with an individual thread.
 type ThreadPauseState = {
-  extra: ?Object,
   why: ?Why,
   isWaitingOnBreak: boolean,
   frames: ?(any[]),
@@ -97,7 +96,6 @@ const resumedPauseState = {
 
 const createInitialPauseState = () => ({
   ...resumedPauseState,
-  extra: {},
   isWaitingOnBreak: false,
   shouldPauseOnExceptions: prefs.pauseOnExceptions,
   shouldPauseOnCaughtExceptions: prefs.pauseOnCaughtExceptions,
@@ -167,10 +165,6 @@ function update(
     case "MAP_FRAMES": {
       const { selectedFrameId, frames } = action;
       return updateThreadState({ frames, selectedFrameId });
-    }
-
-    case "ADD_EXTRA": {
-      return updateThreadState({ extra: action.extra });
     }
 
     case "ADD_SCOPES": {
@@ -409,10 +403,6 @@ export function getShouldPauseOnCaughtExceptions(state: OuterState) {
 
 export function getCanRewind(state: OuterState) {
   return state.pause.canRewind;
-}
-
-export function getExtra(state: OuterState) {
-  return getCurrentPauseState(state).extra;
 }
 
 export function getFrames(state: OuterState) {
