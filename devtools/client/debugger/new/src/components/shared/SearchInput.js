@@ -48,7 +48,8 @@ type Props = {
   showErrorEmoji: boolean,
   size: string,
   summaryMsg: string,
-  showClose: boolean
+  showClose: boolean,
+  isLoading: boolean
 };
 
 type State = {
@@ -199,6 +200,13 @@ class SearchInput extends Component<Props, State> {
     return <div className="summary">{summaryMsg}</div>;
   }
 
+  renderSpinner() {
+    const { isLoading } = this.props;
+    if (isLoading) {
+      return <Svg name="loader" />;
+    }
+  }
+
   renderNav() {
     const { count, handleNext, handlePrev } = this.props;
     if ((!handleNext && !handlePrev) || (!count || count == 1)) {
@@ -258,6 +266,7 @@ class SearchInput extends Component<Props, State> {
         >
           {this.renderSvg()}
           <input {...inputProps} />
+          {this.renderSpinner()}
           {this.renderSummaryMsg()}
           {this.renderNav()}
           {showClose && (
