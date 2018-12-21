@@ -1270,7 +1270,7 @@ bool BaselineCodeGen<Handler>::emit_JSOP_NOP_DESTRUCTURING() {
 }
 
 template <typename Handler>
-bool BaselineCodeGen<Handler>::emit_JSOP_TRY_DESTRUCTURING_ITERCLOSE() {
+bool BaselineCodeGen<Handler>::emit_JSOP_TRY_DESTRUCTURING() {
   return true;
 }
 

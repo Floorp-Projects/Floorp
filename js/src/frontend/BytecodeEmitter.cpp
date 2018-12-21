@@ -2955,8 +2955,8 @@ bool BytecodeEmitter::emitIteratorCloseInScope(
 }
 
 template <typename InnerEmitter>
-bool BytecodeEmitter::wrapWithDestructuringIteratorCloseTryNote(
-    int32_t iterDepth, InnerEmitter emitter) {
+bool BytecodeEmitter::wrapWithDestructuringTryNote(int32_t iterDepth,
+                                                   InnerEmitter emitter) {
   MOZ_ASSERT(this->stackDepth >= iterDepth);
 
   // Pad a nop at the beginning of the bytecode covered by the trynote so
@@ -2964,7 +2964,7 @@ bool BytecodeEmitter::wrapWithDestructuringIteratorCloseTryNote(
   // corresponding to the pc *before* the start, in case the first bytecode
   // emitted by |emitter| is the start of an inner scope. See comment above
   // UnwindEnvironmentToTryPc.
-  if (!emit1(JSOP_TRY_DESTRUCTURING_ITERCLOSE)) {
+  if (!emit1(JSOP_TRY_DESTRUCTURING)) {
     return false;
   }
 
@@ -2974,7 +2974,7 @@ bool BytecodeEmitter::wrapWithDestructuringIteratorCloseTryNote(
   }
   ptrdiff_t end = offset();
   if (start != end) {
-    return addTryNote(JSTRY_DESTRUCTURING_ITERCLOSE, iterDepth, start, end);
+    return addTryNote(JSTRY_DESTRUCTURING, iterDepth, start, end);
   }
   return true;
 }
@@ -3201,7 +3201,7 @@ bool BytecodeEmitter::emitDestructuringOpsArray(ListNode* pattern,
     return false;
   }
 
-  // JSTRY_DESTRUCTURING_ITERCLOSE expects the iterator and the done value
+  // JSTRY_DESTRUCTURING expects the iterator and the done value
   // to be the second to top and the top of the stack, respectively.
   // IteratorClose is called upon exception only if done is false.
   int32_t tryNoteDepth = stackDepth;
@@ -3224,8 +3224,7 @@ bool BytecodeEmitter::emitDestructuringOpsArray(ListNode* pattern,
         return bce->emitDestructuringLHSRef(lhsPattern, &emitted);
         //          [stack] ... OBJ NEXT ITER DONE LREF*
       };
-      if (!wrapWithDestructuringIteratorCloseTryNote(tryNoteDepth,
-                                                     emitLHSRef)) {
+      if (!wrapWithDestructuringTryNote(tryNoteDepth, emitLHSRef)) {
         return false;
       }
     }
@@ -3320,8 +3319,7 @@ bool BytecodeEmitter::emitDestructuringOpsArray(ListNode* pattern,
         return bce->emitSetOrInitializeDestructuring(member, flav);
         //          [stack] ... OBJ NEXT ITER TRUE
       };
-      if (!wrapWithDestructuringIteratorCloseTryNote(tryNoteDepth,
-                                                     emitAssignment)) {
+      if (!wrapWithDestructuringTryNote(tryNoteDepth, emitAssignment)) {
         return false;
       }
 
@@ -3447,8 +3445,7 @@ bool BytecodeEmitter::emitDestructuringOpsArray(ListNode* pattern,
         //          [stack] ... OBJ NEXT ITER DONE LREF* VALUE
       };
 
-      if (!wrapWithDestructuringIteratorCloseTryNote(tryNoteDepth,
-                                                     emitDefault)) {
+      if (!wrapWithDestructuringTryNote(tryNoteDepth, emitDefault)) {
         return false;
       }
     }
@@ -3459,8 +3456,7 @@ bool BytecodeEmitter::emitDestructuringOpsArray(ListNode* pattern,
         //          [stack] ... OBJ NEXT ITER DONE
       };
 
-      if (!wrapWithDestructuringIteratorCloseTryNote(tryNoteDepth,
-                                                     emitAssignment)) {
+      if (!wrapWithDestructuringTryNote(tryNoteDepth, emitAssignment)) {
         return false;
       }
     } else {

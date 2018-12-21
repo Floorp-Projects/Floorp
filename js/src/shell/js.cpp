@@ -3046,8 +3046,8 @@ static const char* TryNoteName(JSTryNoteKind kind) {
       return "loop";
     case JSTRY_FOR_OF_ITERCLOSE:
       return "for-of-iterclose";
-    case JSTRY_DESTRUCTURING_ITERCLOSE:
-      return "dstr-iterclose";
+    case JSTRY_DESTRUCTURING:
+      return "destructuring";
   }
 
   MOZ_CRASH("Bad JSTryNoteKind");

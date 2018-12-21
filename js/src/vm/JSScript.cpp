@@ -4844,7 +4844,7 @@ bool JSScript::hasLoops() {
       case JSTRY_CATCH:
       case JSTRY_FINALLY:
       case JSTRY_FOR_OF_ITERCLOSE:
-      case JSTRY_DESTRUCTURING_ITERCLOSE:
+      case JSTRY_DESTRUCTURING:
         break;
       default:
         MOZ_ASSERT(false, "Add new try note type to JSScript::hasLoops");
