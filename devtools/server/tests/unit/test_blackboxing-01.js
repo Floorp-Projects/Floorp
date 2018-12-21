@@ -39,7 +39,9 @@ const testBlackBox = async function() {
 
   const { sources } = await getSources(gThreadClient);
   const sourceClient = gThreadClient.source(
-    sources.filter(s => s.url == BLACK_BOXED_URL)[0]);
+    sources.filter(s => s.url == BLACK_BOXED_URL)[0]
+  );
+
   Assert.ok(!sourceClient.isBlackBoxed,
             "By default the source is not black boxed.");
 
