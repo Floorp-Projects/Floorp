@@ -92,6 +92,7 @@ or added to the task's docker image then added to the PATH.
 EXIT_PURGE_CACHE = 72
 
 
+IS_MACOSX = sys.platform == 'darwin'
 IS_POSIX = os.name == 'posix'
 IS_WINDOWS = os.name == 'nt'
 
@@ -402,7 +403,9 @@ def vcs_checkout(source_repo, dest, store_path,
         print('revision is not specified for checkout')
         sys.exit(1)
 
-    if IS_POSIX:
+    if IS_MACOSX:
+        hg_bin = '/tools/python27-mercurial/bin/hg'
+    elif IS_POSIX:
         hg_bin = 'hg'
     elif IS_WINDOWS:
         # This is where OCC installs it in the AMIs.
@@ -411,6 +414,7 @@ def vcs_checkout(source_repo, dest, store_path,
             print('could not find Mercurial executable: %s' % hg_bin)
             sys.exit(1)
 
+    store_path = os.path.abspath(store_path)
     args = [
         hg_bin,
         'robustcheckout',

@@ -20,7 +20,7 @@ run_task_schema = Schema({
     # tend to hide their caches.  This cache is never added for level-1 jobs.
     Required('cache-dotcache'): bool,
 
-    # if true (the default), perform a checkout in {workdir}/checkouts/gecko
+    # if true (the default), perform a checkout of gecko on the worker
     Required('checkout'): bool,
 
     # The sparse checkout profile to use. Value is the filename relative to the
@@ -41,12 +41,12 @@ run_task_schema = Schema({
 })
 
 
-def common_setup(config, job, taskdesc, command, geckodir):
+def common_setup(config, job, taskdesc, command):
     run = job['run']
     if run['checkout']:
         support_vcs_checkout(config, job, taskdesc,
                              sparse=bool(run['sparse-profile']))
-        command.append('--vcs-checkout={}'.format(geckodir))
+        command.append('--vcs-checkout={}'.format(taskdesc['worker']['env']['GECKO_PATH']))
 
     if run['sparse-profile']:
         command.append('--sparse-profile=build/sparse-profiles/%s' %
@@ -73,8 +73,7 @@ def docker_worker_run_task(config, job, taskdesc):
     run = job['run']
     worker = taskdesc['worker'] = job['worker']
     command = ['/builds/worker/bin/run-task']
-    common_setup(config, job, taskdesc, command,
-                 geckodir='{workdir}/checkouts/gecko'.format(**run))
+    common_setup(config, job, taskdesc, command)
 
     if run.get('cache-dotcache'):
         worker['caches'].append({
@@ -101,8 +100,7 @@ def native_engine_run_task(config, job, taskdesc):
     run = job['run']
     worker = taskdesc['worker'] = job['worker']
     command = ['./run-task']
-    common_setup(config, job, taskdesc, command,
-                 geckodir='{workdir}/checkouts/gecko'.format(**run))
+    common_setup(config, job, taskdesc, command)
 
     worker['context'] = run_task_url(config)
 
@@ -122,15 +120,16 @@ def generic_worker_run_task(config, job, taskdesc):
     run = job['run']
     worker = taskdesc['worker'] = job['worker']
     is_win = worker['os'] == 'windows'
+    is_mac = worker['os'] == 'macosx'
 
     if is_win:
         command = ['C:/mozilla-build/python3/python3.exe', 'run-task']
-        geckodir = './build/src'
+    elif is_mac:
+        command = ['/tools/python36/bin/python3.6', 'run-task']
     else:
         command = ['./run-task']
-        geckodir = '{workdir}/checkouts/gecko'.format(**run)
 
-    common_setup(config, job, taskdesc, command, geckodir=geckodir)
+    common_setup(config, job, taskdesc, command)
 
     worker.setdefault('mounts', [])
     if run.get('cache-dotcache'):
