@@ -7294,11 +7294,11 @@ bool nsIDocument::IsSafeToFlush() const {
 }
 
 void nsIDocument::Sanitize() {
-  // Sanitize the document by resetting all password fields and any form
-  // fields with autocomplete=off to their default values.  We do this now,
-  // instead of when the presentation is restored, to offer some protection
-  // in case there is ever an exploit that allows a cached document to be
-  // accessed from a different document.
+  // Sanitize the document by resetting all (current and former) password fields
+  // and any form fields with autocomplete=off to their default values.  We do
+  // this now, instead of when the presentation is restored, to offer some
+  // protection in case there is ever an exploit that allows a cached document
+  // to be accessed from a different document.
 
   // First locate all input elements, regardless of whether they are
   // in a form, and reset the password and autocomplete=off elements.
@@ -7316,17 +7316,8 @@ void nsIDocument::Sanitize() {
         HTMLInputElement::FromNodeOrNull(nodes->Item(i));
     if (!input) continue;
 
-    bool resetValue = false;
-
     input->GetAttribute(NS_LITERAL_STRING("autocomplete"), value);
-    if (value.LowerCaseEqualsLiteral("off")) {
-      resetValue = true;
-    } else {
-      input->GetType(value);
-      if (value.LowerCaseEqualsLiteral("password")) resetValue = true;
-    }
-
-    if (resetValue) {
+    if (value.LowerCaseEqualsLiteral("off") || input->HasBeenTypePassword()) {
       input->Reset();
     }
   }
