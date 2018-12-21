@@ -35,10 +35,15 @@ defaults = {
 @run_job_using('generic-worker', 'python-test', schema=python_test_schema, defaults=defaults)
 def configure_python_test(config, job, taskdesc):
     run = job['run']
+    worker = job['worker']
+
+    if worker['os'] == 'macosx' and run['python-version'] == 3:
+        # OSX hosts can't seem to find python 3 on their own
+        run['python-version'] = '/usr/local/bin/python3'
 
     # defer to the mach implementation
     run['mach'] = 'python-test --python {python-version} --subsuite {subsuite}'.format(**run)
     run['using'] = 'mach'
     del run['python-version']
     del run['subsuite']
-    configure_taskdesc_for_run(config, job, taskdesc, job['worker']['implementation'])
+    configure_taskdesc_for_run(config, job, taskdesc, worker['implementation'])

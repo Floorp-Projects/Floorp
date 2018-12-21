@@ -265,6 +265,10 @@ FORWARDED_EVENT(load, eLoad, EventNameType_All, eBasicEventClass)
 FORWARDED_EVENT(resize, eResize, EventNameType_All, eBasicEventClass)
 FORWARDED_EVENT(scroll, eScroll, (EventNameType_HTMLXUL | EventNameType_SVGSVG),
                 eBasicEventClass)
+NON_IDL_EVENT(mozvisualresize, eMozVisualResize, EventNameType_None,
+              eBasicEventClass)
+NON_IDL_EVENT(mozvisualscroll, eMozVisualScroll, EventNameType_None,
+              eBasicEventClass)
 
 WINDOW_EVENT(afterprint, eAfterPrint,
              EventNameType_XUL | EventNameType_HTMLBodyOrFramesetOnly,

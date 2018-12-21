@@ -18,4 +18,7 @@ interface VisualViewport : EventTarget {
   readonly attribute double height;
 
   readonly attribute double scale;
+
+  attribute EventHandler onresize;
+  attribute EventHandler onscroll;
 };

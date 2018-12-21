@@ -1631,6 +1631,14 @@ void HTMLMediaElement::SetVisible(bool aVisible) {
   }
 }
 
+bool HTMLMediaElement::IsVideoDecodingSuspended() const {
+  return mDecoder && mDecoder->IsVideoDecodingSuspended();
+}
+
+bool HTMLMediaElement::IsVisible() const {
+  return mVisibilityState == Visibility::APPROXIMATELY_VISIBLE;
+}
+
 already_AddRefed<layers::Image> HTMLMediaElement::GetCurrentImage() {
   MarkAsTainted();
 
@@ -6281,6 +6289,9 @@ void HTMLMediaElement::OnVisibilityChange(Visibility aNewVisibility) {
       ("OnVisibilityChange(): %s\n", VisibilityString(aNewVisibility)));
 
   mVisibilityState = aNewVisibility;
+  if (StaticPrefs::MediaTestVideoSuspend()) {
+    DispatchAsyncEvent(NS_LITERAL_STRING("visibilitychanged"));
+  }
 
   if (!mDecoder) {
     return;

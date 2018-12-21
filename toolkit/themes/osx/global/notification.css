@@ -17,6 +17,6 @@
   color: #aa1b08;
 }
 
-.popup-notification-button[anonid="secondarybutton"]:not([hidden="true"])  ~ .popup-notification-button[default]:not([highlight="true"]) {
+.popup-notification-secondary-button:not([hidden="true"]) ~ .popup-notification-primary-button:not([default]) {
   border-inline-start: 1px solid var(--panel-separator-color);
 }
