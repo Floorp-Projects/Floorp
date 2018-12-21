@@ -762,8 +762,9 @@ void nsXPCWrappedJSClass::CleanupOutparams(const nsXPTMethodInfo* info,
 }
 
 nsresult nsXPCWrappedJSClass::CheckForException(
-    XPCCallContext& ccx, AutoEntryScript& aes, const char* aPropertyName,
-    const char* anInterfaceName, Exception* aSyntheticException) {
+    XPCCallContext& ccx, AutoEntryScript& aes, HandleObject aObj,
+    const char* aPropertyName, const char* anInterfaceName,
+    Exception* aSyntheticException) {
   JSContext* cx = ccx.GetJSContext();
   MOZ_ASSERT(cx == aes.cx());
   RefPtr<Exception> xpc_exception = aSyntheticException;
@@ -826,6 +827,10 @@ nsresult nsXPCWrappedJSClass::CheckForException(
       // just so that we can tell the JS engine to pass it back to us via the
       // error reporting callback. This is all very dumb.
       JS_SetPendingException(cx, js_exception);
+
+      // Enter the unwrapped object's realm. This is the realm that was used to
+      // enter the AutoEntryScript.
+      JSAutoRealm ar(cx, js::UncheckedUnwrap(aObj));
       aes.ReportException();
       reportable = false;
     }
@@ -968,7 +973,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
     // Throw and warn for good measure.
     JS_ReportErrorASCII(cx, "%s", str);
     NS_WARNING(str);
-    return CheckForException(ccx, aes, name, GetInterfaceName());
+    return CheckForException(ccx, aes, obj, name, GetInterfaceName());
   }
 
   RootedValue fval(cx);
@@ -1145,7 +1150,7 @@ pre_call_clean_up:
   }
 
   if (!success) {
-    return CheckForException(ccx, aes, name, GetInterfaceName(),
+    return CheckForException(ccx, aes, obj, name, GetInterfaceName(),
                              syntheticException);
   }
 

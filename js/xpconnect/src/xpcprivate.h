@@ -1664,12 +1664,15 @@ class nsXPCWrappedJSClass final : public nsIXPCWrappedJSClass {
                                             nsIVariant** aResult);
 
  private:
+  // aObj is the nsXPCWrappedJS's object. We used this as the callee (or |this|
+  // if getter or setter).
   // aSyntheticException, if not null, is the exception we should be using.
   // If null, look for an exception on the JSContext hanging off the
   // XPCCallContext.
   static nsresult CheckForException(
       XPCCallContext& ccx, mozilla::dom::AutoEntryScript& aes,
-      const char* aPropertyName, const char* anInterfaceName,
+      JS::HandleObject aObj, const char* aPropertyName,
+      const char* anInterfaceName,
       mozilla::dom::Exception* aSyntheticException = nullptr);
   virtual ~nsXPCWrappedJSClass();
 
