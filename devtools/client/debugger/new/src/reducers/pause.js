@@ -10,7 +10,7 @@
  * @module reducers/pause
  */
 
-import { createSelector } from "reselect";
+import { createSelector } from "../utils/createSelector";
 import { isGeneratedId } from "devtools-source-map";
 import { prefs } from "../utils/prefs";
 import { getSelectedSource } from "./sources";

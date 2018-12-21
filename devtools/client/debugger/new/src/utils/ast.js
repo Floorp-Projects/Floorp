@@ -43,7 +43,10 @@ export function findBestMatchExpression(symbols: Symbols, tokenPos: Position) {
     }, null);
 }
 
-export function findEmptyLines(sourceText: string, pausePoints: PausePoints) {
+export function findEmptyLines(
+  sourceText: string,
+  pausePoints: PausePoints
+): number[] {
   if (!pausePoints || !sourceText) {
     return [];
   }

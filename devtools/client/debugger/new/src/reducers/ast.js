@@ -61,18 +61,16 @@ export type ASTState = {
   sourceMetaData: SourceMetaDataMap
 };
 
-export function initialASTState() {
-  return makeRecord(
-    ({
-      symbols: I.Map(),
-      emptyLines: I.Map(),
-      outOfScopeLocations: null,
-      inScopeLines: null,
-      preview: null,
-      pausePoints: I.Map(),
-      sourceMetaData: I.Map()
-    }: ASTState)
-  )();
+export function initialASTState(): Record<ASTState> {
+  return makeRecord({
+    symbols: I.Map(),
+    emptyLines: I.Map(),
+    outOfScopeLocations: null,
+    inScopeLines: null,
+    preview: null,
+    pausePoints: I.Map(),
+    sourceMetaData: I.Map()
+  })();
 }
 
 function update(

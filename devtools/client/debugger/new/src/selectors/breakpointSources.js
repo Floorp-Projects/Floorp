@@ -5,7 +5,7 @@
 // @flow
 
 import { sortBy, uniq } from "lodash";
-import { createSelector } from "reselect";
+import { createSelector } from "../utils/createSelector";
 import {
   getSources,
   getBreakpointsList,

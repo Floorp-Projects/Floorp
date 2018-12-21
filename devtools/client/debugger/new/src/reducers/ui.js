@@ -43,21 +43,19 @@ export type UIState = {
   conditionalPanelLocation: null | SourceLocation
 };
 
-export const createUIState = makeRecord(
-  ({
-    selectedPrimaryPaneTab: "sources",
-    activeSearch: null,
-    contextMenu: {},
-    shownSource: null,
-    startPanelCollapsed: prefs.startPanelCollapsed,
-    endPanelCollapsed: prefs.endPanelCollapsed,
-    frameworkGroupingOn: prefs.frameworkGroupingOn,
-    highlightedLineRange: undefined,
-    conditionalPanelLocation: null,
-    orientation: "horizontal",
-    viewport: null
-  }: UIState)
-);
+export const createUIState: () => Record<UIState> = makeRecord({
+  selectedPrimaryPaneTab: "sources",
+  activeSearch: null,
+  contextMenu: {},
+  shownSource: null,
+  startPanelCollapsed: prefs.startPanelCollapsed,
+  endPanelCollapsed: prefs.endPanelCollapsed,
+  frameworkGroupingOn: prefs.frameworkGroupingOn,
+  highlightedLineRange: undefined,
+  conditionalPanelLocation: null,
+  orientation: "horizontal",
+  viewport: null
+});
 
 function update(
   state: Record<UIState> = createUIState(),
@@ -186,7 +184,7 @@ export function getConditionalPanelLocation(
   return state.ui.get("conditionalPanelLocation");
 }
 
-export function getOrientation(state: OuterState): boolean {
+export function getOrientation(state: OuterState): OrientationType {
   return state.ui.get("orientation");
 }
 
