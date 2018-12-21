@@ -1,0 +1,74 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test that pausing and resuming a captured media element with audio doesn't stall</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<audio id="a"></audio>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+function dumpEvent({target, type}) {
+  info(`${target.name} GOT EVENT ${type} currentTime=${target.currentTime} ` +
+       `paused=${target.paused} ended=${target.ended} ` +
+       `readyState=${target.readyState}`);
+}
+
+function wait(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+const a = document.getElementById('a');
+
+const events = ["timeupdate", "seeking", "seeked", "ended", "playing", "pause"];
+for (let ev of events) {
+  a.addEventListener(ev, dumpEvent);
+}
+
+(async _ => {
+  try {
+    SimpleTest.waitForExplicitFinish();
+    SimpleTest.requestFlakyTimeout("Timeouts for shortcutting test-timeout");
+
+    const test = getPlayableAudio(gTrackTests.filter(t => t.duration > 2));
+    if (!test) {
+      todo(false, "No playable audio");
+      return;
+    }
+
+    // Start playing and capture
+    a.src = test.name;
+    a.name = test.name;
+    const ac = new AudioContext();
+    const src = ac.createMediaElementSource(a);
+    a.play();
+    do {
+      await new Promise(r => a.ontimeupdate = r);
+    } while(a.currentTime == 0)
+
+    // Pause to trigger recreating tracks in DecodedStream
+    a.pause();
+    await new Promise(r => a.onpause = r);
+
+    // Resuming should now work. Bug 1512958 would cause a stall because the
+    // original track wasn't ended and we'd block on it.
+    // See https://bugzilla.mozilla.org/show_bug.cgi?id=1512958#c5
+    a.play();
+    await new Promise(r => a.onplaying = r);
+    a.currentTime = test.duration - 1;
+    await Promise.race([
+      new Promise(res => a.onended = res),
+      wait(30000).then(_ => Promise.reject(new Error("Timeout"))),
+    ]);
+  } catch(e) {
+    ok(false, e);
+  } finally {
+    SimpleTest.finish();
+  }
+})();
+</script>
+</pre>
+</body>
+</html>
