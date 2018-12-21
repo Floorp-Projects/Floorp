@@ -142,14 +142,7 @@ class DateTimeTestHelper {
   async openPicker(pageUrl) {
     this.tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, pageUrl);
     await BrowserTestUtils.synthesizeMouseAtCenter("input", {}, gBrowser.selectedBrowser);
-    // If dateTimePopupFrame doesn't exist yet, wait for the binding to be
-    // attached.
-    // FIXME: This has a race condition and we may miss the following events.
-    //        (bug 1423498)
-    if (!this.panel.dateTimePopupFrame) {
-      await BrowserTestUtils.waitForEvent(this.panel, "DateTimePickerBindingReady");
-    }
-    this.frame = this.panel.dateTimePopupFrame;
+    this.frame = this.panel.querySelector("#dateTimePopupFrame");
     await this.waitForPickerReady();
   }
 
@@ -207,7 +200,6 @@ class DateTimeTestHelper {
         this.panel.addEventListener("popuphidden", resolve, {once: true});
       });
       this.panel.hidePopup();
-      this.panel.closePicker();
       await pickerClosePromise;
     }
     BrowserTestUtils.removeTab(this.tab);
