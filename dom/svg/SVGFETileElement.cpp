@@ -8,7 +8,7 @@
 #include "mozilla/dom/SVGFETileElementBinding.h"
 #include "nsSVGFilterInstance.h"
 
-NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(FETile)
+NS_IMPL_NS_NEW_SVG_ELEMENT(FETile)
 
 using namespace mozilla::gfx;
 

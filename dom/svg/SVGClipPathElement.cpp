@@ -11,7 +11,7 @@
 #include "mozilla/dom/SVGUnitTypesBinding.h"
 #include "nsGkAtoms.h"
 
-NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(ClipPath)
+NS_IMPL_NS_NEW_SVG_ELEMENT(ClipPath)
 
 namespace mozilla {
 namespace dom {

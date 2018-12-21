@@ -7,7 +7,7 @@
 #include "mozilla/dom/SVGTSpanElement.h"
 #include "mozilla/dom/SVGTSpanElementBinding.h"
 
-NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(TSpan)
+NS_IMPL_NS_NEW_SVG_ELEMENT(TSpan)
 
 namespace mozilla {
 namespace dom {

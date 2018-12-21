@@ -25,7 +25,7 @@
 #include "nsSVGUtils.h"
 #include "SVGAngle.h"
 
-NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT_CHECK_PARSER(SVG)
+NS_IMPL_NS_NEW_SVG_ELEMENT_CHECK_PARSER(SVG)
 
 using namespace mozilla::gfx;
 

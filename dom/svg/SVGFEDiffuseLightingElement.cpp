@@ -9,7 +9,7 @@
 #include "nsSVGUtils.h"
 #include "nsSVGFilterInstance.h"
 
-NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(FEDiffuseLighting)
+NS_IMPL_NS_NEW_SVG_ELEMENT(FEDiffuseLighting)
 
 using namespace mozilla::gfx;
 

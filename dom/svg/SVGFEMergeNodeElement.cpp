@@ -7,7 +7,7 @@
 #include "mozilla/dom/SVGFEMergeNodeElement.h"
 #include "mozilla/dom/SVGFEMergeNodeElementBinding.h"
 
-NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(FEMergeNode)
+NS_IMPL_NS_NEW_SVG_ELEMENT(FEMergeNode)
 
 namespace mozilla {
 namespace dom {

@@ -11,7 +11,7 @@
 #include "mozilla/dom/SVGScriptElementBinding.h"
 #include "nsIScriptError.h"
 
-NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT_CHECK_PARSER(Script)
+NS_IMPL_NS_NEW_SVG_ELEMENT_CHECK_PARSER(Script)
 
 namespace mozilla {
 namespace dom {

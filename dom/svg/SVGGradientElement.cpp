@@ -17,8 +17,8 @@
 #include "nsGkAtoms.h"
 #include "SVGElement.h"
 
-NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(LinearGradient)
-NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(RadialGradient)
+NS_IMPL_NS_NEW_SVG_ELEMENT(LinearGradient)
+NS_IMPL_NS_NEW_SVG_ELEMENT(RadialGradient)
 
 namespace mozilla {
 namespace dom {

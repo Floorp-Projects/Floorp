@@ -11,7 +11,7 @@
 #include "mozilla/gfx/PathHelpers.h"
 #include "mozilla/RefPtr.h"
 
-NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(Ellipse)
+NS_IMPL_NS_NEW_SVG_ELEMENT(Ellipse)
 
 using namespace mozilla::gfx;
 

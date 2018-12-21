@@ -8,7 +8,7 @@
 #include "mozilla/dom/SVGFEMorphologyElementBinding.h"
 #include "nsSVGFilterInstance.h"
 
-NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(FEMorphology)
+NS_IMPL_NS_NEW_SVG_ELEMENT(FEMorphology)
 
 using namespace mozilla::gfx;
 

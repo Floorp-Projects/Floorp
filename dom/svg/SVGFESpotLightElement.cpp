@@ -8,7 +8,7 @@
 #include "mozilla/dom/SVGFESpotLightElementBinding.h"
 #include "nsSVGFilterInstance.h"
 
-NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(FESpotLight)
+NS_IMPL_NS_NEW_SVG_ELEMENT(FESpotLight)
 
 using namespace mozilla::gfx;
 
