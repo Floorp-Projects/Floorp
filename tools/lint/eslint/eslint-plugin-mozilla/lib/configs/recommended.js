@@ -371,6 +371,6 @@ module.exports = {
     }],
 
     // Requires or disallows a whitespace (space or tab) beginning a comment
-    "spaced-comment": "error",
+    "spaced-comment": ["error", "always", { "markers": ["#"] }],
   },
 };
