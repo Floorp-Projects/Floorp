@@ -44,13 +44,17 @@ inline uint32_t Hash (const T &v)
 
 struct hb_map_t
 {
+  HB_NO_COPY_ASSIGN (hb_map_t);
+  hb_map_t ()  { init (); }
+  ~hb_map_t () { fini (); }
+
   struct item_t
   {
     hb_codepoint_t key;
     hb_codepoint_t value;
 
-    inline bool is_unused (void) const { return key == INVALID; }
-    inline bool is_tombstone (void) const { return key != INVALID && value == INVALID; }
+    bool is_unused () const    { return key == INVALID; }
+    bool is_tombstone () const { return key != INVALID && value == INVALID; }
   };
 
   hb_object_header_t header;
@@ -61,7 +65,7 @@ struct hb_map_t
   unsigned int prime;
   item_t *items;
 
-  inline void init_shallow (void)
+  void init_shallow ()
   {
     successful = true;
     population = occupancy = 0;
@@ -69,22 +73,26 @@ struct hb_map_t
     prime = 0;
     items = nullptr;
   }
-  inline void init (void)
+  void init ()
   {
     hb_object_init (this);
     init_shallow ();
   }
-  inline void fini_shallow (void)
+  void fini_shallow ()
   {
     free (items);
+    items = nullptr;
   }
-  inline void fini (void)
+  void fini ()
   {
+    population = occupancy = 0;
     hb_object_fini (this);
     fini_shallow ();
   }
 
-  inline bool resize (void)
+  bool in_error () const { return !successful; }
+
+  bool resize ()
   {
     if (unlikely (!successful)) return false;
 
@@ -118,7 +126,7 @@ struct hb_map_t
     return true;
   }
 
-  inline void set (hb_codepoint_t key, hb_codepoint_t value)
+  void set (hb_codepoint_t key, hb_codepoint_t value)
   {
     if (unlikely (!successful)) return;
     if (unlikely (key == INVALID)) return;
@@ -143,46 +151,36 @@ struct hb_map_t
       population++;
 
   }
-  inline hb_codepoint_t get (hb_codepoint_t key) const
+  hb_codepoint_t get (hb_codepoint_t key) const
   {
     if (unlikely (!items)) return INVALID;
     unsigned int i = bucket_for (key);
     return items[i].key == key ? items[i].value : INVALID;
   }
 
-  inline void del (hb_codepoint_t key)
-  {
-    set (key, INVALID);
-  }
-  inline bool has (hb_codepoint_t key) const
-  {
-    return get (key) != INVALID;
-  }
+  void del (hb_codepoint_t key) { set (key, INVALID); }
 
-  inline hb_codepoint_t operator [] (unsigned int key) const
+  bool has (hb_codepoint_t key) const
+  { return get (key) != INVALID; }
+
+  hb_codepoint_t operator [] (unsigned int key) const
   { return get (key); }
 
-  static const hb_codepoint_t INVALID = HB_MAP_VALUE_INVALID;
+  enum { INVALID = HB_MAP_VALUE_INVALID };
 
-  inline void clear (void)
+  void clear ()
   {
     memset (items, 0xFF, ((size_t) mask + 1) * sizeof (item_t));
     population = occupancy = 0;
   }
 
-  inline bool is_empty (void) const
-  {
-    return population != 0;
-  }
+  bool is_empty () const { return population == 0; }
 
-  inline unsigned int get_population () const
-  {
-    return population;
-  }
+  unsigned int get_population () const { return population; }
 
   protected:
 
-  inline unsigned int bucket_for (hb_codepoint_t key) const
+  unsigned int bucket_for (hb_codepoint_t key) const
   {
     unsigned int i = Hash (key) % prime;
     unsigned int step = 0;
@@ -198,7 +196,7 @@ struct hb_map_t
     return tombstone == INVALID ? i : tombstone;
   }
 
-  static inline unsigned int prime_for (unsigned int shift)
+  static unsigned int prime_for (unsigned int shift)
   {
     /* Following comment and table copied from glib. */
     /* Each table size has an associated prime modulo (the first prime

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2010,2012  Google, Inc.
+ * Copyright © 2018  Google, Inc.
  *
  *  This is part of HarfBuzz, a text shaping library.
  *
@@ -24,40 +24,46 @@
  * Google Author(s): Behdad Esfahbod
  */
 
-#include "hb-ot-shape-complex.hh"
+#include "hb.hh"
+#include "hb-ot.h"
 
+#include <stdlib.h>
+#include <stdio.h>
 
-static const hb_tag_t tibetan_features[] =
+int
+main (int argc, char **argv)
 {
-  HB_TAG('a','b','v','s'),
-  HB_TAG('b','l','w','s'),
-  HB_TAG('a','b','v','m'),
-  HB_TAG('b','l','w','m'),
-  HB_TAG_NONE
-};
+  if (argc != 2) {
+    fprintf (stderr, "usage: %s font-file\n", argv[0]);
+    exit (1);
+  }
 
-static void
-collect_features_tibetan (hb_ot_shape_planner_t *plan)
-{
-  for (const hb_tag_t *script_features = tibetan_features; script_features && *script_features; script_features++)
-    plan->map.add_global_bool_feature (*script_features);
+  hb_blob_t *blob = hb_blob_create_from_file (argv[1]);
+  hb_face_t *face = hb_face_create (blob, 0 /* first face */);
+  hb_blob_destroy (blob);
+  blob = nullptr;
+
+  unsigned int count;
+  const hb_ot_name_entry_t *entries = hb_ot_name_list_names (face, &count);
+
+  for (unsigned int i = 0; i < count; i++)
+  {
+    printf ("%u	%s	",
+	    entries[i].name_id,
+	    hb_language_to_string (entries[i].language));
+
+    char buf[64];
+    unsigned int buf_size = sizeof (buf);
+    hb_ot_name_get_utf8 (face,
+			 entries[i].name_id,
+			 entries[i].language,
+			 &buf_size,
+			 buf);
+
+    printf ("%s\n", buf);
+  }
+
+  hb_face_destroy (face);
+
+  return count ? 0 : 1;
 }
-
-
-const hb_ot_complex_shaper_t _hb_ot_complex_shaper_tibetan =
-{
-  collect_features_tibetan,
-  nullptr, /* override_features */
-  nullptr, /* data_create */
-  nullptr, /* data_destroy */
-  nullptr, /* preprocess_text */
-  nullptr, /* postprocess_glyphs */
-  HB_OT_SHAPE_NORMALIZATION_MODE_DEFAULT,
-  nullptr, /* decompose */
-  nullptr, /* compose */
-  nullptr, /* setup_masks */
-  nullptr, /* disable_otl */
-  nullptr, /* reorder_marks */
-  HB_OT_SHAPE_ZERO_WIDTH_MARKS_BY_GDEF_LATE,
-  true, /* fallback_position */
-};

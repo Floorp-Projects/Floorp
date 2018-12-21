@@ -26,16 +26,23 @@
  * Google Author(s): Behdad Esfahbod
  */
 
-#define HB_SHAPER graphite2
 #include "hb-shaper-impl.hh"
 
 #include "hb-graphite2.h"
 
 #include <graphite2/Segment.h>
 
+#include "hb-ot-layout.h"
 
-HB_SHAPER_DATA_ENSURE_DEFINE(graphite2, face)
-HB_SHAPER_DATA_ENSURE_DEFINE(graphite2, font)
+
+/**
+ * SECTION:hb-graphite2
+ * @title: hb-graphite2
+ * @short_description: Graphite2 integration
+ * @include: hb-graphite2.h
+ *
+ * Functions for using HarfBuzz with the Graphite2 fonts.
+ **/
 
 
 /*
@@ -59,7 +66,7 @@ struct hb_graphite2_face_data_t
 static const void *hb_graphite2_get_table (const void *data, unsigned int tag, size_t *len)
 {
   hb_graphite2_face_data_t *face_data = (hb_graphite2_face_data_t *) data;
-  hb_graphite2_tablelist_t *tlist = face_data->tlist.get ();
+  hb_graphite2_tablelist_t *tlist = face_data->tlist;
 
   hb_blob_t *blob = nullptr;
 
@@ -82,7 +89,7 @@ static const void *hb_graphite2_get_table (const void *data, unsigned int tag, s
     p->tag = tag;
 
 retry:
-    hb_graphite2_tablelist_t *tlist = face_data->tlist.get ();
+    hb_graphite2_tablelist_t *tlist = face_data->tlist;
     p->next = tlist;
 
     if (unlikely (!face_data->tlist.cmpexch (tlist, p)))
@@ -94,6 +101,32 @@ retry:
   *len = tlen;
   return d;
 }
+
+static void hb_graphite2_release_table(const void *data, const void *table_buffer)
+{
+  hb_graphite2_face_data_t *face_data = (hb_graphite2_face_data_t *) data;
+  hb_graphite2_tablelist_t *tlist = face_data->tlist;
+
+  hb_graphite2_tablelist_t *prev = nullptr;
+  hb_graphite2_tablelist_t *curr = tlist;
+  while (curr)
+  {
+    if (hb_blob_get_data(curr->blob, nullptr) == table_buffer)
+    {
+      if (prev == nullptr)
+        face_data->tlist.cmpexch(tlist, curr->next);
+      else
+        prev->next = curr->next;
+      hb_blob_destroy(curr->blob);
+      free(curr);
+      break;
+    }
+    prev = curr;
+    curr = curr->next;
+  }
+}
+
+static gr_face_ops hb_graphite2_face_ops = { sizeof(gr_face_ops), hb_graphite2_get_table, hb_graphite2_release_table };
 
 hb_graphite2_face_data_t *
 _hb_graphite2_shaper_face_data_create (hb_face_t *face)
@@ -113,7 +146,7 @@ _hb_graphite2_shaper_face_data_create (hb_face_t *face)
     return nullptr;
 
   data->face = face;
-  data->grface = gr_make_face (data, &hb_graphite2_get_table, gr_face_preloadAll);
+  data->grface = gr_make_face_with_ops (data, &hb_graphite2_face_ops, gr_face_preloadAll);
 
   if (unlikely (!data->grface)) {
     free (data);
@@ -126,7 +159,7 @@ _hb_graphite2_shaper_face_data_create (hb_face_t *face)
 void
 _hb_graphite2_shaper_face_data_destroy (hb_graphite2_face_data_t *data)
 {
-  hb_graphite2_tablelist_t *tlist = data->tlist.get ();
+  hb_graphite2_tablelist_t *tlist = data->tlist;
 
   while (tlist)
   {
@@ -147,8 +180,8 @@ _hb_graphite2_shaper_face_data_destroy (hb_graphite2_face_data_t *data)
 gr_face *
 hb_graphite2_face_get_gr_face (hb_face_t *face)
 {
-  if (unlikely (!hb_graphite2_shaper_face_data_ensure (face))) return nullptr;
-  return HB_SHAPER_DATA_GET (face)->grface;
+  const hb_graphite2_face_data_t *data = face->data.graphite2;
+  return data ? data->grface : nullptr;
 }
 
 
@@ -169,35 +202,16 @@ _hb_graphite2_shaper_font_data_destroy (hb_graphite2_font_data_t *data HB_UNUSED
 {
 }
 
-/*
+/**
+ * hb_graphite2_font_get_gr_font:
+ *
  * Since: 0.9.10
+ * Deprecated: 1.4.2
  */
 gr_font *
-hb_graphite2_font_get_gr_font (hb_font_t *font)
+hb_graphite2_font_get_gr_font (hb_font_t *font HB_UNUSED)
 {
   return nullptr;
-}
-
-
-/*
- * shaper shape_plan data
- */
-
-struct hb_graphite2_shape_plan_data_t {};
-
-hb_graphite2_shape_plan_data_t *
-_hb_graphite2_shaper_shape_plan_data_create (hb_shape_plan_t    *shape_plan HB_UNUSED,
-					     const hb_feature_t *user_features HB_UNUSED,
-					     unsigned int        num_user_features HB_UNUSED,
-					     const int          *coords HB_UNUSED,
-					     unsigned int        num_coords HB_UNUSED)
-{
-  return (hb_graphite2_shape_plan_data_t *) HB_SHAPER_DATA_SUCCEEDED;
-}
-
-void
-_hb_graphite2_shaper_shape_plan_data_destroy (hb_graphite2_shape_plan_data_t *data HB_UNUSED)
-{
 }
 
 
@@ -215,14 +229,14 @@ struct hb_graphite2_cluster_t {
 };
 
 hb_bool_t
-_hb_graphite2_shape (hb_shape_plan_t    *shape_plan,
+_hb_graphite2_shape (hb_shape_plan_t    *shape_plan HB_UNUSED,
 		     hb_font_t          *font,
 		     hb_buffer_t        *buffer,
 		     const hb_feature_t *features,
 		     unsigned int        num_features)
 {
   hb_face_t *face = font->face;
-  gr_face *grface = HB_SHAPER_DATA_GET (face)->grface;
+  gr_face *grface = face->data.graphite2->grface;
 
   const char *lang = hb_language_to_string (hb_buffer_get_language (buffer));
   const char *lang_end = lang ? strchr (lang, '-') : nullptr;
@@ -251,11 +265,16 @@ _hb_graphite2_shape (hb_shape_plan_t    *shape_plan,
 
   /* TODO ensure_native_direction. */
 
-  hb_tag_t script_tag[2];
-  hb_ot_tags_from_script (hb_buffer_get_script (buffer), &script_tag[0], &script_tag[1]);
+  hb_tag_t script_tag[HB_OT_MAX_TAGS_PER_SCRIPT];
+  unsigned int count = HB_OT_MAX_TAGS_PER_SCRIPT;
+  hb_ot_tags_from_script_and_language (hb_buffer_get_script (buffer),
+				       HB_LANGUAGE_INVALID,
+				       &count,
+				       script_tag,
+				       nullptr, nullptr);
 
   seg = gr_make_seg (nullptr, grface,
-		     script_tag[1] == HB_TAG_NONE ? script_tag[0] : script_tag[1],
+		     count ? script_tag[count - 1] : HB_OT_TAG_DEFAULT_SCRIPT,
 		     feats,
 		     gr_utf32, chars, buffer->len,
 		     2 | (hb_buffer_get_direction (buffer) == HB_DIRECTION_RTL ? 1 : 0));
