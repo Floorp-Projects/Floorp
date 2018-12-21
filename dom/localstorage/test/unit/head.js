@@ -84,6 +84,20 @@ function resetOriginLimit()
   Services.prefs.clearUserPref("dom.storage.default_quota");
 }
 
+function init()
+{
+  let request = Services.qms.init();
+
+  return request;
+}
+
+function initOrigin(principal, persistence)
+{
+  let request = Services.qms.initStoragesForPrincipal(principal, persistence);
+
+  return request;
+}
+
 function getOriginUsage(principal)
 {
   let request = Services.qms.getUsageForPrincipal(principal, function() { });
@@ -120,10 +134,9 @@ function clearOrigin(principal, persistence)
   return request;
 }
 
-function reset(callback)
+function reset()
 {
   let request = Services.qms.reset();
-  request.callback = callback;
 
   return request;
 }
