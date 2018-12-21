@@ -4,10 +4,10 @@
 
 // @flow
 import React, { Component } from "react";
-import { connect } from "react-redux";
 import PropTypes from "prop-types";
 import classnames from "classnames";
 
+import { connect } from "../utils/connect";
 import { prefs, features } from "../utils/prefs";
 import actions from "../actions";
 import A11yIntention from "./A11yIntention";
@@ -44,6 +44,8 @@ import "./App.css";
 // $FlowIgnore
 import "devtools-launchpad/src/components/Root.css";
 
+import type { ActiveSearchType } from "../selectors";
+
 import "./shared/menu.css";
 import "./shared/reps.css";
 
@@ -61,7 +63,7 @@ type Props = {
   orientation: OrientationType,
   startPanelCollapsed: boolean,
   endPanelCollapsed: boolean,
-  activeSearch: string,
+  activeSearch: ActiveSearchType,
   quickOpenEnabled: boolean,
   canRewind: boolean,
   setActiveSearch: typeof actions.setActiveSearch,

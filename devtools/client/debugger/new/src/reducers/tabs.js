@@ -9,7 +9,7 @@
  * @module reducers/tabs
  */
 
-import { createSelector } from "reselect";
+import { createSelector } from "../utils/createSelector";
 import { isOriginalId } from "devtools-source-map";
 import move from "lodash-move";
 

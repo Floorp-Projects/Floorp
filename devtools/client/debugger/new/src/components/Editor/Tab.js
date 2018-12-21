@@ -5,7 +5,7 @@
 // @flow
 
 import React, { PureComponent } from "react";
-import { connect } from "react-redux";
+import { connect } from "../../utils/connect";
 
 import { showMenu, buildMenu } from "devtools-contextmenu";
 
@@ -35,6 +35,7 @@ import {
   getSourcesForTabs,
   getHasSiblingOfSameName
 } from "../../selectors";
+import type { ActiveSearchType } from "../../selectors";
 
 import classnames from "classnames";
 
@@ -44,7 +45,7 @@ type Props = {
   tabSources: SourcesList,
   selectedSource: Source,
   source: Source,
-  activeSearch: string,
+  activeSearch: ActiveSearchType,
   hasSiblingOfSameName: boolean,
   selectSource: typeof actions.selectSource,
   closeTab: typeof actions.closeTab,

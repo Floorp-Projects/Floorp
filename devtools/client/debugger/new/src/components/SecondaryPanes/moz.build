@@ -11,7 +11,6 @@ DIRS += [
 DebuggerModules(
     'CommandBar.js',
     'Expressions.js',
-    'FrameworkComponent.js',
     'index.js',
     'Scopes.js',
     'UtilsBar.js',

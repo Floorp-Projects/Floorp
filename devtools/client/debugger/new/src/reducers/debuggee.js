@@ -21,11 +21,9 @@ type DebuggeeState = {
   workers: WorkersList
 };
 
-export const createDebuggeeState = makeRecord(
-  ({
-    workers: List()
-  }: DebuggeeState)
-);
+export const createDebuggeeState: () => Record<DebuggeeState> = makeRecord({
+  workers: List()
+});
 
 export default function debuggee(
   state: Record<DebuggeeState> = createDebuggeeState(),

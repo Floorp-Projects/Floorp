@@ -1049,15 +1049,19 @@ def set_worker_type(config, tests):
             # now we have the right platform set the worker type accordingly
             test['worker-type'] = win_worker_type_platform[test['virtualization']]
         elif test_platform.startswith('android-hw-g5'):
-            if test['suite'] == 'raptor':
-                test['worker-type'] = 'proj-autophone/gecko-t-ap-perf-g5'
-            else:
+            if test['suite'] != 'raptor':
                 test['worker-type'] = 'proj-autophone/gecko-t-ap-unit-g5'
-        elif test_platform.startswith('android-hw-p2'):
-            if test['suite'] == 'raptor':
-                test['worker-type'] = 'proj-autophone/gecko-t-ap-perf-p2'
+            elif '--power-test' in test['mozharness']['extra-options']:
+                test['worker-type'] = 'proj-autophone/gecko-t-ap-batt-g5'
             else:
+                test['worker-type'] = 'proj-autophone/gecko-t-ap-perf-g5'
+        elif test_platform.startswith('android-hw-p2'):
+            if test['suite'] != 'raptor':
                 test['worker-type'] = 'proj-autophone/gecko-t-ap-unit-p2'
+            elif '--power-test' in test['mozharness']['extra-options']:
+                test['worker-type'] = 'proj-autophone/gecko-t-ap-batt-p2'
+            else:
+                test['worker-type'] = 'proj-autophone/gecko-t-ap-perf-p2'
         elif test_platform.startswith('android-em-7.0-x86'):
             test['worker-type'] = 'terraform-packet/gecko-t-linux'
         elif test_platform.startswith('linux') or test_platform.startswith('android'):

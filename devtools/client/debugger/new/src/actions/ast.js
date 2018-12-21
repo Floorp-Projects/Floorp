@@ -12,7 +12,7 @@ import {
   isPaused
 } from "../selectors";
 
-import { mapFrames, fetchExtra } from "./pause";
+import { mapFrames } from "./pause";
 import { updateTab } from "./tabs";
 
 import { PROMISE } from "./utils/middleware/promise";
@@ -67,7 +67,6 @@ export function setSymbols(sourceId: SourceId) {
     });
 
     if (isPaused(getState())) {
-      await dispatch(fetchExtra());
       await dispatch(mapFrames());
     }
 

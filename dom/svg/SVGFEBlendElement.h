@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_SVGFEBlendElement_h
 #define mozilla_dom_SVGFEBlendElement_h
 
-#include "nsSVGFilters.h"
+#include "SVGFilters.h"
 #include "nsSVGEnum.h"
 
 nsresult NS_NewSVGFEBlendElement(
@@ -39,8 +39,7 @@ class SVGFEBlendElement : public SVGFEBlendElementBase {
   virtual nsSVGString& GetResultImageName() override {
     return mStringAttributes[RESULT];
   }
-  virtual void GetSourceImageNames(
-      nsTArray<nsSVGStringInfo>& aSources) override;
+  virtual void GetSourceImageNames(nsTArray<SVGStringInfo>& aSources) override;
 
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 

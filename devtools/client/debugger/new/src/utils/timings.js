@@ -6,7 +6,7 @@
 
 import { zip } from "lodash";
 
-export function getAsyncTimes(name: string) {
+export function getAsyncTimes(name: string): number[] {
   return zip(
     window.performance.getEntriesByName(`${name}_start`),
     window.performance.getEntriesByName(`${name}_end`)

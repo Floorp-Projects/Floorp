@@ -198,12 +198,19 @@ export function sortBreakpoints(breakpoints: Breakpoint[]) {
   return _sortBreakpoints(breakpoints, "location");
 }
 
-function _sortBreakpoints(breakpoints: Array<Object>, property: string) {
-  return sortBy(breakpoints, [
-    // Priority: line number, undefined column, column number
-    `${property}.line`,
-    bp => {
-      return bp[property].column === undefined || bp[property].column;
-    }
-  ]);
+function _sortBreakpoints(
+  breakpoints: Array<Object>,
+  property: string
+): Array<Object> {
+  // prettier-ignore
+  return sortBy(
+    breakpoints,
+    [
+      // Priority: line number, undefined column, column number
+      `${property}.line`,
+      bp => {
+        return bp[property].column === undefined || bp[property].column;
+      }
+    ]
+  );
 }

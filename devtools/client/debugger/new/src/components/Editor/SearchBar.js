@@ -6,7 +6,7 @@
 
 import PropTypes from "prop-types";
 import React, { Component } from "react";
-import { connect } from "react-redux";
+import { connect } from "../../utils/connect";
 import { CloseButton } from "../shared/Button";
 import Svg from "../shared/Svg";
 import actions from "../../actions";

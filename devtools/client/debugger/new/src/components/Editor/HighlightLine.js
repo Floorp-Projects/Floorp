@@ -8,7 +8,7 @@ import { toEditorLine, endOperation, startOperation } from "../../utils/editor";
 import { getDocument, hasDocument } from "../../utils/editor/source-documents";
 import { isLoaded } from "../../utils/source";
 
-import { connect } from "react-redux";
+import { connect } from "../../utils/connect";
 import {
   getVisibleSelectedFrame,
   getSelectedLocation,
