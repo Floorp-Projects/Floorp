@@ -137,10 +137,10 @@ class MediaEngineSourceInterface {
    *
    * This must be called before Start for the given AllocationHandle.
    */
-  virtual nsresult SetTrack(const RefPtr<const AllocationHandle>& aHandle,
-                            const RefPtr<SourceMediaStream>& aStream,
-                            TrackID aTrackID,
-                            const PrincipalHandle& aPrincipal) = 0;
+  virtual void SetTrack(const RefPtr<const AllocationHandle>& aHandle,
+                        const RefPtr<SourceMediaStream>& aStream,
+                        TrackID aTrackID,
+                        const PrincipalHandle& aPrincipal) = 0;
 
   /**
    * Called by MediaEngine to start feeding data to the track associated with
