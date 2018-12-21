@@ -8,7 +8,7 @@
 #define mozilla_dom_SVGComponentTransferFunctionElement_h
 
 #include "nsSVGEnum.h"
-#include "nsSVGFilters.h"
+#include "SVGFilters.h"
 #include "nsSVGNumber2.h"
 #include "SVGAnimatedNumberList.h"
 

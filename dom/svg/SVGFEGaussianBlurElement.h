@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_SVGFEGaussianBlurElement_h
 #define mozilla_dom_SVGFEGaussianBlurElement_h
 
-#include "nsSVGFilters.h"
+#include "SVGFilters.h"
 #include "nsSVGNumberPair.h"
 #include "nsSVGString.h"
 
@@ -41,8 +41,7 @@ class SVGFEGaussianBlurElement : public SVGFEGaussianBlurElementBase {
   virtual nsSVGString& GetResultImageName() override {
     return mStringAttributes[RESULT];
   }
-  virtual void GetSourceImageNames(
-      nsTArray<nsSVGStringInfo>& aSources) override;
+  virtual void GetSourceImageNames(nsTArray<SVGStringInfo>& aSources) override;
 
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 

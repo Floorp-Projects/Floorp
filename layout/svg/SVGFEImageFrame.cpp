@@ -10,7 +10,7 @@
 #include "nsGkAtoms.h"
 #include "nsLiteralString.h"
 #include "SVGObserverUtils.h"
-#include "nsSVGFilters.h"
+#include "SVGFilters.h"
 #include "mozilla/dom/SVGFEImageElement.h"
 #include "mozilla/dom/MutationEventBinding.h"
 

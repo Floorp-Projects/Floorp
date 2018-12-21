@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_SVGFEComponentTransferElement_h
 #define mozilla_dom_SVGFEComponentTransferElement_h
 
-#include "nsSVGFilters.h"
+#include "SVGFilters.h"
 
 nsresult NS_NewSVGFEComponentTransferElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
@@ -39,8 +39,7 @@ class SVGFEComponentTransferElement : public SVGFEComponentTransferElementBase {
   virtual nsSVGString& GetResultImageName() override {
     return mStringAttributes[RESULT];
   }
-  virtual void GetSourceImageNames(
-      nsTArray<nsSVGStringInfo>& aSources) override;
+  virtual void GetSourceImageNames(nsTArray<SVGStringInfo>& aSources) override;
 
   // nsIContent
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;

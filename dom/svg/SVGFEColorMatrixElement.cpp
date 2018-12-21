@@ -61,8 +61,8 @@ already_AddRefed<DOMSVGAnimatedNumberList> SVGFEColorMatrixElement::Values() {
 }
 
 void SVGFEColorMatrixElement::GetSourceImageNames(
-    nsTArray<nsSVGStringInfo>& aSources) {
-  aSources.AppendElement(nsSVGStringInfo(&mStringAttributes[IN1], this));
+    nsTArray<SVGStringInfo>& aSources) {
+  aSources.AppendElement(SVGStringInfo(&mStringAttributes[IN1], this));
 }
 
 FilterPrimitiveDescription SVGFEColorMatrixElement::GetPrimitiveDescription(

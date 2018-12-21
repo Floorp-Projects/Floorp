@@ -319,7 +319,7 @@ nsresult nsSVGFilterInstance::GetSourceIndices(
     nsTArray<FilterPrimitiveDescription>& aPrimitiveDescrs,
     const nsDataHashtable<nsStringHashKey, int32_t>& aImageTable,
     nsTArray<int32_t>& aSourceIndices) {
-  AutoTArray<nsSVGStringInfo, 2> sources;
+  AutoTArray<SVGStringInfo, 2> sources;
   aPrimitiveElement->GetSourceImageNames(sources);
 
   for (uint32_t j = 0; j < sources.Length(); j++) {
