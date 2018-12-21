@@ -20,3 +20,5 @@ geckoview.jar:
   content/GeckoViewScrollChild.js
   content/GeckoViewSettingsChild.js
   content/GeckoViewSelectionActionChild.js
+
+% content branding %content/branding/
