@@ -78,8 +78,9 @@ var PlacesTestUtils = Object.freeze({
         referrer: place.referrer,
       }];
       infos.push(info);
-      if (place.transition != PlacesUtils.history.TRANSITIONS.EMBED)
+      if (!place.transition || place.transition != PlacesUtils.history.TRANSITIONS.EMBED) {
         lastStoredVisit = info;
+      }
     }
     await PlacesUtils.history.insertMany(infos);
     if (lastStoredVisit) {

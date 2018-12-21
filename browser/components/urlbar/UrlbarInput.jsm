@@ -280,7 +280,7 @@ class UrlbarInput {
           adoptIntoActiveWindow: UrlbarPrefs.get("switchTabs.adoptIntoActiveWindow"),
         };
 
-        if (this.window.switchToTabHavingURI(result.payload.url, false, loadOpts) &&
+        if (this.window.switchToTabHavingURI(Services.io.newURI(result.payload.url), false, loadOpts) &&
             prevTab.isEmpty) {
           this.window.gBrowser.removeTab(prevTab);
         }
