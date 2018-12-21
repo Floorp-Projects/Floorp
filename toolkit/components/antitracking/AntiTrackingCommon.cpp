@@ -74,7 +74,7 @@ bool GetParentPrincipalAndTrackingOrigin(
 
   nsIDocument* doc = a3rdPartyTrackingWindow->GetDocument();
   // Make sure storage access isn't disabled
-  if (doc && ((doc->GetSandboxFlags() & SANDBOXED_STORAGE_ACCESS) != 0 ||
+  if (doc && (doc->StorageAccessSandboxed() ||
               nsContentUtils::IsInPrivateBrowsing(doc))) {
     return false;
   }

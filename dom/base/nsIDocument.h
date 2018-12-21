@@ -1292,6 +1292,10 @@ class nsIDocument : public nsINode,
   //
   already_AddRefed<nsSimpleContentList> BlockedTrackingNodes() const;
 
+  // Helper method that returns true if the document has storage-access sandbox
+  // flag.
+  bool StorageAccessSandboxed() const;
+
  protected:
   friend class nsUnblockOnloadEvent;
 
