@@ -15,6 +15,7 @@
 #include <algorithm>
 
 using namespace mozilla::dom;
+using namespace mozilla::dom::SVGLength_Binding;
 
 namespace mozilla {
 
