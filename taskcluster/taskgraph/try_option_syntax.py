@@ -553,6 +553,10 @@ class TryOptionSyntax(object):
         if 'ccov' in attr('build_platform', []):
             return False
 
+        # Don't schedule android-hw tests when try option syntax is used
+        if 'android-hw' in task.label:
+            return False
+
         def match_test(try_spec, attr_name):
             run_by_default = True
             if attr('build_type') not in self.build_types:
