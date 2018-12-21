@@ -2157,3 +2157,29 @@ def rc_names(c_compiler, toolchain_prefix):
 
 
 check_prog('RC', rc_names, paths=sdk_bin_path)
+
+
+@depends(link, toolchain_prefix)
+def ar_config(link, toolchain_prefix):
+    if link:  # if LINKER is set, it's either for lld-link or link
+        if 'lld-link' in link:
+            return namespace(
+                names=('llvm-lib',),
+                flags=('-llvmlibthin', '-out:$@'),
+            )
+        else:
+            return namespace(
+                names=('lib',),
+                flags=('-NOLOGO', '-OUT:$@'),
+            )
+    return namespace(
+        names=tuple('%s%s' % (p, 'ar')
+                   for p in (toolchain_prefix or ()) + ('',)),
+        flags=('crs', '$@'),
+    )
+
+
+check_prog('AR', ar_config.names, paths=toolchain_search_path)
+
+
+set_config('AR_FLAGS', ar_config.flags)
