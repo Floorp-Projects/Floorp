@@ -46,7 +46,6 @@ import java.util.concurrent.TimeUnit
 
 @RunWith(RobolectricTestRunner::class)
 class SessionStorageTest {
-
     @Test
     fun `Restored snapshot should contain sessions of saved snapshot`() {
         val session1 = Session("http://mozilla.org", id = "session1")
@@ -399,7 +398,7 @@ class SessionStorageTest {
             selectedSessionIndex = 0
         )
 
-        saveSnapshotToDisk(file, snapshot)
+        saveSnapshotToDisk(file, SnapshotSerializer(), snapshot)
 
         verify(file).failWrite(any())
     }
@@ -409,7 +408,7 @@ class SessionStorageTest {
         val file: AtomicFile = mock()
         doThrow(FileNotFoundException::class.java).`when`(file).openRead()
 
-        val snapshot = readSnapshotFromDisk(file, engine = mock())
+        val snapshot = readSnapshotFromDisk(file, engine = mock(), serializer = SnapshotSerializer())
         assertNull(snapshot)
     }
 
@@ -421,7 +420,7 @@ class SessionStorageTest {
         stream.bufferedWriter().write("{ name: 'Foo")
         file.finishWrite(stream)
 
-        val snapshot = readSnapshotFromDisk(file, engine = mock())
+        val snapshot = readSnapshotFromDisk(file, engine = mock(), serializer = SnapshotSerializer())
         assertNull(snapshot)
     }
 

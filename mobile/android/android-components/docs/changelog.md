@@ -17,6 +17,9 @@ permalink: /changelog/
   * Mozilla App Services (FxA: 0.12.1, Sync Logins: 0.12.1, Places: 0.12.1)
   * Third Party Libs (Sentry: 1.7.14, Okhttp: 3.12.0)
 
+* **feature-session-bundling**
+  * 🆕 New component that saves the state of sessions (`SessionManager.Snapshot`) in grouped bundles (e.g. by time).
+
 # 0.36.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.35.0...v0.36.0),
