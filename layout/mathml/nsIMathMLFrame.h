@@ -130,7 +130,7 @@ class nsIMathMLFrame {
    *      and the process will feed upon itself.
    *
    * 2. Use TransmitAutomaticData() to set properties related to your
-   * descendants:
+   *    descendants:
    *    - set properties that depend on the state that you expect your
    *      descendants to have reached upon processing their own
    *      TransmitAutomaticData().
