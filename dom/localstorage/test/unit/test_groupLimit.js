@@ -3,8 +3,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-async function testSteps()
-{
+async function testSteps() {
   const groupLimitKB = 10 * 1024;
 
   const globalLimitKB = groupLimitKB * 5;
@@ -15,7 +14,7 @@ async function testSteps()
     "http://example.com",
     "http://test1.example.com",
     "https://test2.example.com",
-    "http://test3.example.com:8080"
+    "http://test3.example.com:8080",
   ];
 
   const data = {};
@@ -57,7 +56,7 @@ async function testSteps()
     try {
       storages[i].setItem("B", "");
       ok(false, "Should have thrown");
-    } catch(ex) {
+    } catch (ex) {
       ok(true, "Did throw");
       ok(ex instanceof DOMException, "Threw DOMException");
       is(ex.name, "QuotaExceededError", "Threw right DOMException");

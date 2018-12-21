@@ -5,8 +5,7 @@
 
 loadSubscript("databaseShadowing-shared.js");
 
-async function testSteps()
-{
+async function testSteps() {
   enableNextGenLocalStorage();
 
   storeData();
