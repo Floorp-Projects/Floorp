@@ -35,6 +35,12 @@ function afterLoad() {
     iframeDoc.getElementById("password").value = "123456";
     iframeDoc.getElementById("hidden").value = "gecko";
 
+    // Toggle the one field to a password type then text type like password
+    // visibility toggles on the web do.
+    iframeDoc.getElementById("passwordToggle").type = "password";
+    iframeDoc.getElementById("passwordToggle").value = "abcdef";
+    iframeDoc.getElementById("passwordToggle").type = "";
+
     SpecialPowers.wrap(iframeDoc).getElementById("file").mozSetFileArray([file]);
 
     /* Reload the page */
@@ -57,6 +63,8 @@ function afterReload() {
        "password field value forgotten");
     is(iframeDoc.getElementById("hidden").value, "gecko",
        "hidden field value preserved");
+    is(iframeDoc.getElementById("passwordToggle").value, "",
+       "former password field value not saved");
 
     // The new file object isn't ===, but it's extensionally equal:
     let newFile = iframeDoc.getElementById("file").files[0];
