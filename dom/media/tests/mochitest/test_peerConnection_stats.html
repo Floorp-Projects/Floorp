@@ -12,9 +12,9 @@
   });
 var statsExpectedByType = {
   "inbound-rtp": {
-    expected: ["id", "timestamp", "type", "ssrc", "mediaType",
+    expected: ["id", "timestamp", "type", "ssrc", "isRemote", "mediaType",
       "kind", "packetsReceived", "packetsLost", "bytesReceived", "jitter",],
-    optional: ["remoteId","nackCount",],
+    optional: ["roundTripTime", "remoteId", "nackCount",],
     localVideoOnly: ["discardedPackets", "framerateStdDev", "framerateMean",
       "bitrateMean", "bitrateStdDev", "firCount", "pliCount", "framesDecoded",],
     unimplemented: ["mediaTrackId", "transportId", "codecId",
@@ -22,38 +22,18 @@ var statsExpectedByType = {
       "sliCount", "qpSum", "packetsRepaired", "fractionLost",
       "burstPacketsLost", "burstLossCount", "burstDiscardCount",
       "gapDiscardRate", "gapLossRate",],
-    deprecated: ["mozRtt", "isRemote",],
+    deprecated: ["mozRtt"],
   },
   "outbound-rtp": {
-    expected: ["id", "timestamp", "type", "ssrc", "mediaType",
+    expected: ["id", "timestamp", "type", "ssrc", "isRemote", "mediaType",
       "kind", "packetsSent", "bytesSent", "remoteId",],
-    optional: ["nackCount",],
+    optional: ["remoteId", "nackCount",],
     localVideoOnly: ["droppedFrames", "bitrateMean", "bitrateStdDev",
       "framerateMean", "framerateStdDev", "framesEncoded", "firCount",
       "pliCount",],
     unimplemented: ["mediaTrackId", "transportId", "codecId",
       "sliCount", "qpSum", "targetBitrate",],
-    deprecated: ["isRemote",],
-  },
-  "remote-inbound-rtp": {
-    expected: ["id", "timestamp", "type", "ssrc", "mediaType",
-      "kind", "packetsReceived", "packetsLost", "bytesReceived", "jitter",
-      "localId",],
-    optional: ["roundTripTime", "nackCount",],
-    unimplemented: ["mediaTrackId", "transportId", "codecId",
-      "packetsDiscarded", "associateStatsId",
-      "sliCount", "qpSum", "packetsRepaired", "fractionLost",
-      "burstPacketsLost", "burstLossCount", "burstDiscardCount",
-      "gapDiscardRate", "gapLossRate",],
-    deprecated: ["mozRtt", "isRemote",],
-  },
-  "remote-outbound-rtp": {
-    expected: ["id", "timestamp", "type", "ssrc", "mediaType",
-      "kind", "packetsSent", "bytesSent", "localId",],
-    optional: ["nackCount",],
-    unimplemented: ["mediaTrackId", "transportId", "codecId",
-      "sliCount", "qpSum", "targetBitrate",],
-    deprecated: ["isRemote",],
+    deprecated: [],
   },
   "csrc": { skip: true },
   "codec": { skip: true },
@@ -78,23 +58,22 @@ var statsExpectedByType = {
   },
   "local-candidate": {
     expected: ["id", "timestamp", "type", "address",
-               "protocol", "port", "candidateType", "priority",],
-    optional: ["relayProtocol",],
+               "protocol", "port", "candidateType", "priority"],
+    optional: ["relayProtocol"],
     unimplemented: ["networkType", "url", "transportId"],
     deprecated: ["candidateId", "portNumber", "ipAddress", "componentId", "mozLocalTransport",
-      "transport",],
+      "transport"],
   },
   "remote-candidate": {
     expected: ["id", "timestamp", "type", "address",
-               "protocol", "port", "candidateType", "priority",],
-    optional: ["relayProtocol",],
-    unimplemented: ["networkType", "url", "transportId",],
+               "protocol", "port", "candidateType", "priority"],
+    optional: ["relayProtocol"],
+    unimplemented: ["networkType", "url", "transportId"],
     deprecated: ["candidateId", "portNumber", "ipAddress", "componentId", "mozLocalTransport",
-                 "transport",],
+                 "transport"],
   },
   "certificate": { skip: true },
 };
-
 ["in", "out"].forEach(pre => {
   let s = statsExpectedByType[pre + "bound-rtp"];
   s.optional = [...s.optional, ...s.localVideoOnly];
@@ -121,7 +100,7 @@ var checkExpectedFields = report => report.forEach(stat => {
   let allowed = [...expectations.expected, ...expectations.optional];
   Object.keys(stat).forEach(field => {
     ok(allowed.includes(field), "Stat field " + stat.type + "." + field
-      + ` is allowed. ${JSON.stringify(stat)}`);
+      + " is allowed");
   });
 
   //
@@ -179,17 +158,17 @@ var pedanticChecks = report => {
     //
     // RTCStreamStats attributes with common behavior
     //
-    // inbound-rtp, outbound-rtp, remote-inbound-rtp, remote-outbound-rtp
-    // inherit from RTCStreamStats
-    if (["inbound-rtp", "outbound-rtp",
-        "remote-inbound-rtp", "remote-outbound-rtp"].includes(stat.type)) {
-      const isRemote = stat.type.startsWith("remote-");
+    // inbound-rtp and outbound-rtp inherit from RTCStreamStats
+    if (["inbound-rtp", "outbound-rtp"].includes(stat.type)) {
       //
       // Common RTCStreamStats fields
       //
 
       // SSRC
       ok(stat.ssrc, stat.type + ".ssrc has a value");
+
+      // isRemote
+      ok(stat.isRemote !== undefined, stat.type + ".isRemote exists.");
 
       // kind
       ok(["audio", "video"].includes(stat.kind),
@@ -201,32 +180,24 @@ var pedanticChecks = report => {
 
       ok(stat.kind == stat.mediaType, "kind equals legacy mediaType");
 
-      if (isRemote) {
-        // local id
-        if (stat.localId) {
-          ok(report.has(stat.localId), "localId exists in report.");
-          is(report.get(stat.localId).ssrc, stat.ssrc,
-            "remote ssrc and local ssrc match.");
-          is(report.get(stat.localId).remoteId, stat.id,
-            "local object has remote object as it's own remote object.");
-        }
-      } else {
-        // remote id
-        if (stat.remoteId) {
-          ok(report.has(stat.remoteId), "remoteId exists in report.");
-          is(report.get(stat.remoteId).ssrc, stat.ssrc,
-            "remote ssrc and local ssrc match.");
-          is(report.get(stat.remoteId).localId, stat.id,
-            "remote object has local object as it's own local object.");
-        }
+      // remote id
+      if (stat.remoteId) {
+        ok(report.has(stat.remoteId), "remoteId exists in report.");
+        is(report.get(stat.remoteId).ssrc, stat.ssrc,
+          "remote ssrc and local ssrc match.");
+        is(report.get(stat.remoteId).remoteId, stat.id,
+          "remote object has local object as it's own remote object.");
       }
 
       // nackCount
-      if (stat.nackCount) {
+      if (!stat.inner.isRemote) {
         ok(stat.nackCount >= 0, stat.type + ".nackCount is sane.");
+      } else {
+        is(stat.nackCount, undefined, stat.type
+          + ".nackCount is only set when isRemote is false");
       }
 
-      if (!isRemote && stat.inner.kind == "video") {
+      if (!stat.inner.isRemote && stat.inner.kind == "video") {
         // firCount
         ok(stat.firCount >= 0 && stat.firCount < 100,
           stat.type + ".firCount is a sane number for a short test. value="
@@ -285,13 +256,27 @@ var pedanticChecks = report => {
       // Optional fields
       //
 
+      // roundTripTime
+      if (stat.inner.isRemote) {
+        ok(stat.roundTripTime >= 0, stat.type + ".roundTripTime is sane with" +
+          "value of:" + stat.roundTripTime);
+      } else {
+        is(stat.roundTripTime, undefined, stat.type
+          + ".roundTripTime is only set when isRemote is true");
+      }
+
       //
       // Local video only stats
       //
-      if (stat.inner.kind != "video") {
+      if (stat.inner.isRemote || stat.inner.kind != "video") {
         expectations.localVideoOnly.forEach(field => {
-         ok(stat[field] === undefined, `${stat.type} does not have field ${field}`
-              + ` when kind is not 'video'`);
+          if (stat.inner.isRemote) {
+            ok(stat[field] === undefined, stat.type + " does not have field "
+              + field + " when isRemote is true");
+          } else { // kind != video
+            ok(stat[field] === undefined, stat.type + " does not have field "
+              + field + " when kind is not 'video'");
+          }
         });
       } else {
         expectations.localVideoOnly.forEach(field => {
@@ -342,39 +327,6 @@ var pedanticChecks = report => {
           //   + stat.framerateStdDev);
         }
       }
-    } else if (stat.type == "remote-inbound-rtp") {
-      // roundTripTime
-      ok(stat.roundTripTime >= 0, stat.type + ".roundTripTime is sane with" +
-          "value of:" + stat.roundTripTime);
-      //
-      // Required fields
-      //
-
-      // packetsReceived
-      ok(stat.packetsReceived >= 0
-        && stat.packetsReceived < 10 ** 5,
-        stat.type + ".packetsReceived is a sane number for a short test. value="
-        + stat.packetsReceived);
-
-      // bytesReceived
-      ok(stat.bytesReceived >= 0
-        && stat.bytesReceived < 10 ** 9, // Not a magic number, just a guess
-        stat.type + ".bytesReceived is a sane number for a short test. value="
-        + stat.bytesReceived);
-
-      // packetsLost
-      ok(stat.packetsLost < 100,
-        stat.type + ".packetsLost is a sane number for a short test. value="
-        + stat.packetsLost);
-
-      // This should be much lower for audio, TODO: Bug 1330575
-      let expectedJitter = stat.kind == "video" ? 0.5 : 1;
-
-      // jitter
-      ok(stat.jitter < expectedJitter,
-        stat.type + ".jitter is sane number for a local only test. value="
-        + stat.jitter);
-
     } else if (stat.type == "outbound-rtp") {
       //
       // Required fields
@@ -397,10 +349,15 @@ var pedanticChecks = report => {
       //
       // Local video only stats
       //
-      if (stat.inner.kind != "video") {
+      if (stat.inner.isRemote || stat.inner.kind != "video") {
         expectations.localVideoOnly.forEach(field => {
+          if (stat.inner.isRemote) {
+            ok(stat[field] === undefined, stat.type + " does not have field "
+              + field + " when isRemote is true");
+          } else { // kind != video
             ok(stat[field] === undefined, stat.type + " does not have field "
               + field + " when kind is not 'video'");
+          }
         });
       } else {
         expectations.localVideoOnly.forEach(field => {
@@ -450,21 +407,6 @@ var pedanticChecks = report => {
           + ".framesEncoded is a sane number for a short test. value="
           + stat.framesEncoded);
       }
-    } else if (stat.type == "remote-outbound-rtp") {
-      //
-      // Required fields
-      //
-
-      // packetsSent
-      ok(stat.packetsSent > 0 && stat.packetsSent < 10000,
-        stat.type + ".packetsSent is a sane number for a short test. value="
-        + stat.packetsSent);
-
-      // bytesSent
-      ok(stat.bytesSent, stat.type + ".bytesSent has a value."
-        + " Value not expected to be sane, bug 1339104. value="
-        + stat.bytesSent);
-
     } else if (stat.type == "candidate-pair") {
       info("candidate-pair is: " + JSON.stringify(stat));
       //
@@ -605,15 +547,48 @@ var pedanticChecks = report => {
   });
 }
 
+// This MUST be run after PC_*_WAIT_FOR_MEDIA_FLOW to ensure that we have RTP
+// before checking for RTCP.
+var waitForSyncedRtcp = async pc => {
+  // Ensures that RTCP is present
+  let ensureSyncedRtcp = async () => {
+    let stats = await pc.getStats();
+    for (let [k, v] of stats) {
+      if (v.type.endsWith("bound-rtp") && !v.remoteId) {
+        throw new Error(v.id + " is missing remoteId: "
+          + JSON.stringify(v));
+      }
+      if (v.type == "inbound-rtp" && v.isRemote == true
+          && v.roundTripTime === undefined) {
+        throw new Error(v.id + " is missing roundTripTime: "
+          + JSON.stringify(v));
+      }
+    }
+    return stats;
+  }
+  const waitPeriod = 500;
+  const maxTime = 15000;
+  for (let totalTime = maxTime; totalTime > 0; totalTime -= waitPeriod) {
+    try {
+      return await ensureSyncedRtcp();
+    } catch (e) {
+      info(e);
+      await wait(waitPeriod);
+    }
+  }
+  throw new Error("Waiting for synced RTCP timed out after at least " + maxTime
+    + "ms");
+}
+
 var PC_LOCAL_TEST_LOCAL_STATS = test => {
-  return test.pcLocal.waitForSyncedRtcp().then(stats => {
+  return waitForSyncedRtcp(test.pcLocal).then(stats => {
     checkExpectedFields(stats);
     pedanticChecks(stats);
   });
 }
 
 var PC_REMOTE_TEST_REMOTE_STATS = test => {
-  return test.pcRemote.waitForSyncedRtcp().then(stats => {
+  return waitForSyncedRtcp(test.pcRemote).then(stats => {
     checkExpectedFields(stats);
     pedanticChecks(stats);
   });

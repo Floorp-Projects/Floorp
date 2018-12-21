@@ -1526,8 +1526,8 @@ PeerConnectionWrapper.prototype = {
       const dict = JSON.stringify([...stats.entries()]);
       info(`Checking for stats in  ${dict} for ${track.kind} track ${track.id}`
            + `retry number ${retries}`);
-      const rtp = [...stats.values()].find(
-          ({type}) => ["inbound-rtp", "outbound-rtp"].includes(type));
+      let rtp = [...stats.values()].find(value =>
+        !value.isRemote && value.type.endsWith("bound-rtp"));
       if (!rtp) {
         return false;
       }
@@ -1614,12 +1614,13 @@ PeerConnectionWrapper.prototype = {
     // Ensures that RTCP is present
     let ensureSyncedRtcp = async () => {
       let report = await this._pc.getStats();
-      for (const v of report.values()) {
-        if (v.type.endsWith("bound-rtp") && !(v.remoteId || v.localId)) {
-          info(`${v.id} is missing remoteId or localId: ${JSON.stringify(v)}`);
+      for(const v of [...report.values()]) {
+        if (v.type.endsWith("bound-rtp") && !v.remoteId) {
+          info(`${v.id} is missing remoteId: ${JSON.stringify(v)}`);
           return null;
         }
-        if (v.type == "remote-inbound-rtp" && v.roundTripTime === undefined) {
+        if (v.type == "inbound-rtp" && v.isRemote == true
+            && v.roundTripTime === undefined) {
           info(`${v.id} is missing roundTripTime: ${JSON.stringify(v)}`);
           return null;
         }
@@ -1739,6 +1740,17 @@ PeerConnectionWrapper.prototype = {
   },
 
   /**
+   * Check that the stats returned from the "legacy" getStats callback
+   * interface have unhyphenated names.
+   */
+  checkLegacyStatTypeNames: function(stats) {
+    let types = [];
+    stats.forEach(stat => types.push(stat.type));
+    ok(types.filter(type => type.includes("-")).length == 0,
+       "legacy getStats API is not returning stats with hyphenated types.");
+  },
+
+  /**
    * Check that stats are present by checking for known stats.
    */
   getStats : function(selector) {
@@ -1759,8 +1771,8 @@ PeerConnectionWrapper.prototype = {
     // Allow for clock drift observed on Windows 7. (Bug 979649)
     const isWin7 = navigator.userAgent.includes("Windows NT 6.1");
     const clockDriftAllowanceMs = isWin7 ? 1000 : 250;
-    const isRemote = ({type}) =>
-        ["remote-outbound-rtp", "remote-inbound-rtp"].includes(type);
+
+    // Use spec way of enumerating stats
     var counters = {};
     for (let [key, res] of stats) {
       info("Checking stats for " + key + " : " + res);
@@ -1770,7 +1782,7 @@ PeerConnectionWrapper.prototype = {
       // so there can be differences between timestamp and Date.now().
       const nowish = Date.now() + clockDriftAllowanceMs;
       const minimum = this.whenCreated - clockDriftAllowanceMs;
-      const type = isRemote(res) ? "rtcp" : "rtp";
+      const type = res.isRemote ? "rtcp" : "rtp";
       if (!twoMachines) {
         ok(res.timestamp >= minimum,
            `Valid ${type} timestamp ${res.timestamp} >= ${minimum} (
@@ -1779,7 +1791,7 @@ PeerConnectionWrapper.prototype = {
            `Valid ${type} timestamp ${res.timestamp} <= ${nowish} (
               ${res.timestamp - nowish} ms)`);
       }
-      if (isRemote(res)) {
+      if (res.isRemote) {
         continue;
       }
       counters[res.type] = (counters[res.type] || 0) + 1;
@@ -1807,10 +1819,10 @@ PeerConnectionWrapper.prototype = {
           }
           if (res.remoteId) {
             var rem = stats.get(res.remoteId);
-            ok(isRemote(rem), "Remote is rtcp");
-            ok(rem.localId == res.id, "Remote backlink match");
-            if (res.type == "outbound-rtp") {
-              ok(rem.type == "remote-inbound-rtp", "Rtcp is inbound");
+            ok(rem.isRemote, "Remote is rtcp");
+            ok(rem.remoteId == res.id, "Remote backlink match");
+            if(res.type == "outbound-rtp") {
+              ok(rem.type == "inbound-rtp", "Rtcp is inbound");
               ok(rem.packetsReceived !== undefined, "Rtcp packetsReceived");
               ok(rem.packetsLost !== undefined, "Rtcp packetsLost");
               ok(rem.bytesReceived >= rem.packetsReceived, "Rtcp bytesReceived");
@@ -1835,7 +1847,7 @@ PeerConnectionWrapper.prototype = {
                    "Rtcp rtt " + rem.roundTripTime + " < 1 min");
               }
             } else {
-              ok(rem.type == "remote-outbound-rtp", "Rtcp is outbound");
+              ok(rem.type == "outbound-rtp", "Rtcp is outbound");
               ok(rem.packetsSent !== undefined, "Rtcp packetsSent");
               // We may have received more than outdated Rtcp packetsSent
               ok(rem.bytesSent >= rem.packetsSent, "Rtcp bytesSent");
