@@ -88,36 +88,38 @@ SMAbv	= 41; # SYM_MOD_ABOVE
 SMBlw	= 42; # SYM_MOD_BELOW
 CS	= 43; # CONS_WITH_STACKER
 
+HVM	= 44; # HALANT_OR_VOWEL_MODIFIER
+
+h = H | HVM; # https://github.com/harfbuzz/harfbuzz/issues/1102
 
 # Override: Adhoc ZWJ placement. https://github.com/harfbuzz/harfbuzz/issues/542#issuecomment-353169729
-consonant_modifiers = CMAbv* CMBlw* ((ZWJ?.H.ZWJ? B | SUB) VS? CMAbv? CMBlw*)*;
+consonant_modifiers = CMAbv* CMBlw* ((ZWJ?.h.ZWJ? B | SUB) VS? CMAbv? CMBlw*)*;
 # Override: Allow two MBlw. https://github.com/harfbuzz/harfbuzz/issues/376
 medial_consonants = MPre? MAbv? MBlw?.MBlw? MPst?;
 dependent_vowels = VPre* VAbv* VBlw* VPst*;
-vowel_modifiers = VMPre* VMAbv* VMBlw* VMPst*;
+vowel_modifiers = HVM? VMPre* VMAbv* VMBlw* VMPst*;
 final_consonants = FAbv* FBlw* FPst* FM?;
+
+complex_syllable_tail =
+	consonant_modifiers
+	medial_consonants
+	dependent_vowels
+	vowel_modifiers
+	final_consonants
+;
 
 virama_terminated_cluster =
 	(R|CS)? (B | GB) VS?
 	consonant_modifiers
-	ZWJ?.H.ZWJ?
+	ZWJ?.h.ZWJ?
 ;
 standard_cluster =
 	(R|CS)? (B | GB) VS?
-	consonant_modifiers
-	medial_consonants
-	dependent_vowels
-	vowel_modifiers
-	final_consonants
+	complex_syllable_tail
 ;
-
 broken_cluster =
 	R?
-	consonant_modifiers
-	medial_consonants
-	dependent_vowels
-	vowel_modifiers
-	final_consonants
+	complex_syllable_tail
 ;
 
 number_joiner_terminated_cluster = N VS? (HN N VS?)* HN;
@@ -142,10 +144,9 @@ main := |*
 
 #define found_syllable(syllable_type) \
   HB_STMT_START { \
-    if (0) fprintf (stderr, "syllable %d..%d %s\n", last, p+1, #syllable_type); \
-    for (unsigned int i = last; i < p+1; i++) \
+    if (0) fprintf (stderr, "syllable %d..%d %s\n", ts, te, #syllable_type); \
+    for (unsigned int i = ts; i < te; i++) \
       info[i].syllable() = (syllable_serial << 4) | syllable_type; \
-    last = p+1; \
     syllable_serial++; \
     if (unlikely (syllable_serial == 16)) syllable_serial = 1; \
   } HB_STMT_END
@@ -153,7 +154,7 @@ main := |*
 static void
 find_syllables (hb_buffer_t *buffer)
 {
-  unsigned int p, pe, eof, ts HB_UNUSED, te, act;
+  unsigned int p, pe, eof, ts, te, act;
   int cs;
   hb_glyph_info_t *info = buffer->info;
   %%{
@@ -164,7 +165,6 @@ find_syllables (hb_buffer_t *buffer)
   p = 0;
   pe = eof = buffer->len;
 
-  unsigned int last = 0;
   unsigned int syllable_serial = 1;
   %%{
     write exec;

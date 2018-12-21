@@ -36,41 +36,60 @@
 
 namespace AAT {
 
+using namespace OT;
+
 
 struct Anchor
 {
-  inline bool sanitize (hb_sanitize_context_t *c) const
+  bool sanitize (hb_sanitize_context_t *c) const
   {
     TRACE_SANITIZE (this);
     return_trace (c->check_struct (this));
   }
 
+  public:
   FWORD		xCoordinate;
   FWORD		yCoordinate;
   public:
   DEFINE_SIZE_STATIC (4);
 };
 
+typedef LArrayOf<Anchor> GlyphAnchors;
+
 struct ankr
 {
-  static const hb_tag_t tableTag = HB_AAT_TAG_ankr;
+  enum { tableTag = HB_AAT_TAG_ankr };
 
-  inline bool sanitize (hb_sanitize_context_t *c) const
+  const Anchor &get_anchor (hb_codepoint_t glyph_id,
+			    unsigned int i,
+			    unsigned int num_glyphs,
+			    const char *end) const
+  {
+    const Offset<HBUINT16, false> *offset = (this+lookupTable).get_value (glyph_id, num_glyphs);
+    if (!offset)
+      return Null(Anchor);
+    const GlyphAnchors &anchors = StructAtOffset<GlyphAnchors> (&(this+anchorData), *offset);
+    /* TODO Use sanitizer; to avoid overflows and more. */
+    if (unlikely ((const char *) &anchors + anchors.get_size () > end))
+      return Null(Anchor);
+    return anchors[i];
+  }
+
+  bool sanitize (hb_sanitize_context_t *c) const
   {
     TRACE_SANITIZE (this);
     return_trace (likely (c->check_struct (this) &&
 			  version == 0 &&
-			  lookupTable.sanitize (c, this) &&
-			  anchors.sanitize (c, this)));
+			  lookupTable.sanitize (c, this)));
   }
 
   protected:
   HBUINT16	version; 	/* Version number (set to zero) */
   HBUINT16	flags;		/* Flags (currently unused; set to zero) */
-  LOffsetTo<Lookup<HBUINT16> >
+  LOffsetTo<Lookup<Offset<HBUINT16, false> >, false>
 		lookupTable;	/* Offset to the table's lookup table */
-  LOffsetTo<LArrayOf<Anchor> >
-		anchors;	/* Offset to the glyph data table */
+  LOffsetTo<HBUINT8, false>
+		anchorData;	/* Offset to the glyph data table */
 
   public:
   DEFINE_SIZE_STATIC (12);
