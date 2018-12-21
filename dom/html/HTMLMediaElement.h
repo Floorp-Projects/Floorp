@@ -563,6 +563,9 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   // For use by mochitests.
   bool IsVideoDecodingSuspended() const;
 
+  // For use by mochitests only.
+  bool IsVisible() const;
+
   // Synchronously, return the next video frame and mark the element unable to
   // participate in decode suspending.
   //

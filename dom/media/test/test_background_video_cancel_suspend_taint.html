@@ -60,7 +60,8 @@ startTest({
     let v = appendVideoToDoc(test.name, token);
     manager.started(token);
 
-    waitUntilPlaying(v)
+    waitUntilVisible(v)
+      .then(() => waitUntilPlaying(v))
       .then(() => testSuspendTimerStartedWhenHidden(v))
       .then(() => testSuspendTimerCanceledWhenTainted(v))
       .then(() => { manager.finished(token); });
