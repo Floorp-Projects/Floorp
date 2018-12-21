@@ -70,6 +70,9 @@ permalink: /changelog/
     file pickers that need access to read the selected files. Like `onActivityResult` you need to override
     `onRequestPermissionsResult` and forward its calls to `promptFeature.onRequestPermissionsResult`.
 
+* **browser-toolbar**
+  * The "urlBoxView" is now drawn behind the site security icon (in addition to the URL and the page actions)
+
 # 0.35.1
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.35.0...v0.35.1)
