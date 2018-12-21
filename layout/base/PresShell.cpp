@@ -187,6 +187,7 @@
 #include "nsBindingManager.h"
 #include "nsClassHashtable.h"
 #include "nsHashKeys.h"
+#include "VisualViewport.h"
 
 #ifdef MOZ_TASK_TRACER
 #include "GeckoTaskTracer.h"
@@ -5173,6 +5174,9 @@ nsresult PresShell::SetResolutionAndScaleTo(float aResolution,
   if (aOrigin != nsGkAtoms::apz) {
     mResolutionUpdated = true;
   }
+  if (auto* window = nsGlobalWindowInner::Cast(mDocument->GetInnerWindow())) {
+    window->VisualViewport()->PostResizeEvent();
+  }
 
   return NS_OK;
 }
@@ -10031,13 +10035,34 @@ void nsIPresShell::SetVisualViewportSize(nscoord aWidth, nscoord aHeight) {
       rootScrollFrame->MarkScrollbarsDirtyForReflow();
     }
     MarkFixedFramesForReflow(nsIPresShell::eResize);
+
+    if (auto* window = nsGlobalWindowInner::Cast(mDocument->GetInnerWindow())) {
+      window->VisualViewport()->PostResizeEvent();
+    }
+  }
+}
+
+void nsIPresShell::SetVisualViewportOffset(
+    const nsPoint& aScrollOffset, const nsPoint& aPrevLayoutScrollPos) {
+  if (mVisualViewportOffset != aScrollOffset) {
+    nsPoint prevOffset = mVisualViewportOffset;
+    mVisualViewportOffset = aScrollOffset;
+
+    if (auto* window = nsGlobalWindowInner::Cast(mDocument->GetInnerWindow())) {
+      window->VisualViewport()->PostScrollEvent(prevOffset,
+                                                aPrevLayoutScrollPos);
+    }
   }
 }
 
 nsPoint nsIPresShell::GetVisualViewportOffsetRelativeToLayoutViewport() const {
+  return GetVisualViewportOffset() - GetLayoutViewportOffset();
+}
+
+nsPoint nsIPresShell::GetLayoutViewportOffset() const {
   nsPoint result;
   if (nsIScrollableFrame* sf = GetRootScrollFrameAsScrollable()) {
-    result = GetVisualViewportOffset() - sf->GetScrollPosition();
+    result = sf->GetScrollPosition();
   }
   return result;
 }

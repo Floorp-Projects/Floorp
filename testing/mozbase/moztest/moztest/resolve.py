@@ -409,7 +409,7 @@ class TestMetadata(object):
 
         candidate_paths = set()
 
-        if any(self.is_wpt_path(path) for path in paths):
+        if flavor in (None, 'web-platform-tests') and any(self.is_wpt_path(p) for p in paths):
             self.add_wpt_manifest_data()
 
         for path in sorted(paths):

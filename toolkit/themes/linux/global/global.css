@@ -12,6 +12,8 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
+%include ../../shared/global.inc.css
+
 /* ::::: XBL bindings ::::: */
 
 menulist > menupopup {
@@ -46,14 +48,6 @@ wizard {
   background-color: -moz-Dialog;
   color: -moz-DialogText;
   font: message-box;
-}
-
-/* deprecated */
-window.dialog {
-  padding-top: 8px;
-  padding-bottom: 10px;
-  padding-inline-start: 8px;
-  padding-inline-end: 10px;
 }
 
 /* ::::: alert icons :::::*/
@@ -288,6 +282,3 @@ popupnotificationcontent {
   background-image: url("chrome://global/skin/icons/autoscroll-horizontal.svg");
 }
 
-/* :::::: Close button icons ::::: */
-
-%include ../../shared/close-icon.inc.css

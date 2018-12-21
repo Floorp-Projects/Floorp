@@ -58,7 +58,7 @@ public class SpeechSynthesisService  {
                         : sTTS.getLanguage();
                 for (Locale locale : getAvailableLanguages()) {
                     final Set<String> features = sTTS.getFeatures(locale);
-                    boolean isLocal = features.contains(TextToSpeech.Engine.KEY_FEATURE_EMBEDDED_SYNTHESIS);
+                    boolean isLocal = features != null && features.contains(TextToSpeech.Engine.KEY_FEATURE_EMBEDDED_SYNTHESIS);
                     String localeStr = locale.toString();
                     registerVoice("moz-tts:android:" + localeStr, locale.getDisplayName(), localeStr.replace("_", "-"), !isLocal, defaultLocale == locale);
                 }
