@@ -204,13 +204,15 @@ partial interface HTMLMediaElement {
 };
 
 /*
- * This is an API for simulating visibility changes to help debug and write
+ * These APIs are testing only, they are used to simulate visibility changes to help debug and write
  * tests about suspend-video-decoding.
  *
  * - SetVisible() is for simulating visibility changes.
  * - HasSuspendTaint() is for querying that the element's decoder cannot suspend
  *   video decoding because it has been tainted by an operation, such as
  *   drawImage().
+ * - isVisible is a boolean value which indicate whether media element is visible.
+ * - isVideoDecodingSuspended() is used to know whether video decoding has suspended.
  */
 partial interface HTMLMediaElement {
   [Pref="media.test.video-suspend"]
@@ -218,6 +220,12 @@ partial interface HTMLMediaElement {
 
   [Pref="media.test.video-suspend"]
   boolean hasSuspendTaint();
+
+  [ChromeOnly]
+  readonly attribute boolean isVisible;
+
+  [ChromeOnly]
+  readonly attribute boolean isVideoDecodingSuspended;
 };
 
 /* Audio Output Devices API */

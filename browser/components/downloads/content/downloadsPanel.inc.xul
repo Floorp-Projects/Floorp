@@ -135,7 +135,8 @@
                            crop="end"/>
             </vbox>
           </hbox>
-          <hbox id="downloadsFooterButtons">
+          <hbox id="downloadsFooterButtons"
+                class="panel-footer">
             <button id="downloadsHistory"
                     class="downloadsPanelFooterButton"
                     label="&downloadsHistory.label;"
@@ -158,7 +159,7 @@
         <description id="downloadsPanel-blockedSubview-details2"/>
       </vbox>
       <hbox id="downloadsPanel-blockedSubview-buttons"
-            class="downloadsPanelFooter"
+            class="panel-footer downloadsPanelFooter"
             align="stretch">
         <button id="downloadsPanel-blockedSubview-openButton"
                 class="downloadsPanelFooterButton"

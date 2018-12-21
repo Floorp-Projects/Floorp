@@ -55,6 +55,8 @@ NS_EVENT_MESSAGE(eAccessKeyNotFound)
 
 NS_EVENT_MESSAGE(eResize)
 NS_EVENT_MESSAGE(eScroll)
+NS_EVENT_MESSAGE(eMozVisualResize)
+NS_EVENT_MESSAGE(eMozVisualScroll)
 
 // Application installation
 NS_EVENT_MESSAGE(eInstall)

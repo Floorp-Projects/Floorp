@@ -7,9 +7,22 @@
   <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
   <script type="application/javascript" src="apz_test_utils.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
   <script type="application/javascript">
 
 function* test(testDriver) {
+  let visResEvt = new EventCounter(window.visualViewport, "resize");
+  let visScrEvt = new EventCounter(window.visualViewport, "scroll");
+  // Our internal visual viewport events aren't restricted to the visual view-
+  // port itself, so we can listen on the window itself, however the event
+  // listener needs to be in the system group.
+  let visResEvtInternal = new EventCounter(window, "mozvisualresize",
+                                           { mozSystemGroup: true });
+  let visScrEvtInternal = new EventCounter(window, "mozvisualscroll",
+                                           { mozSystemGroup: true });
+  let visResEvtContent = new EventCounter(window, "mozvisualresize");
+  let visScrEvtContent = new EventCounter(window, "mozvisualscroll");
+
   var initial_resolution = getResolution();
   ok(initial_resolution > 0,
       'The initial_resolution is ' + initial_resolution + ', which is some sane value');
@@ -38,9 +51,31 @@ function* test(testDriver) {
   SpecialPowers.Services.obs.removeObserver(testDriver, "APZ:TransformEnd", false);
 
   // Flush state and get the resolution we're at now
-  yield flushApzRepaints(testDriver);
+  yield waitForApzFlushedRepaints(testDriver);
   let final_resolution = getResolution();
   ok(final_resolution > initial_resolution, 'The final resolution (' + final_resolution + ') is greater after zooming in');
+
+  // Check we've got the expected events.
+  // Pinch-zooming the page should fire visual viewport resize events:
+  visResEvt.unregister();
+  ok(visResEvt.count > 0, "Got some visual viewport resize events");
+  visResEvtInternal.unregister();
+  ok(visResEvtInternal.count > 0, "Got some mozvisualresize events");
+
+  // We're pinch-zooming somewhere in the middle of the page, so the visual
+  // viewport's coordinates change, too.
+  // This is true both relative to the page (mozvisualscroll), as well as
+  // relative to the layout viewport (visual viewport "scroll" event).
+  visScrEvt.unregister();
+  ok(visScrEvt.count > 0, "Got some visual viewport scroll events");
+  visScrEvtInternal.unregister();
+  ok(visScrEvtInternal.count > 0, "Got some mozvisualscroll events");
+
+  // Our internal events shouldn't leak to normal content.
+  visResEvtContent.unregister();
+  is(visResEvtContent.count, 0, "Got no mozvisualresize events in content");
+  visScrEvtContent.unregister();
+  is(visScrEvtContent.count, 0, "Got no mozvisualscroll events in content");
 }
 
 waitUntilApzStable()

@@ -54,10 +54,10 @@
       <xul:hbox class="popup-notification-footer-container">
         <children includes="popupnotificationfooter"/>
       </xul:hbox>
-      <xul:hbox class="popup-notification-button-container">
+      <xul:hbox class="popup-notification-button-container panel-footer">
         <children includes="button"/>
         <xul:button anonid="secondarybutton"
-                    class="popup-notification-button"
+                    class="popup-notification-button popup-notification-secondary-button"
                     xbl:inherits="oncommand=secondarybuttoncommand,label=secondarybuttonlabel,accesskey=secondarybuttonaccesskey,hidden=secondarybuttonhidden"/>
         <xul:toolbarseparator xbl:inherits="hidden=dropmarkerhidden"/>
         <xul:button anonid="menubutton"
@@ -73,11 +73,10 @@
           </xul:menupopup>
         </xul:button>
         <xul:button anonid="button"
-                    class="popup-notification-button"
-                    default="true"
+                    class="popup-notification-button popup-notification-primary-button"
                     label="&defaultButton.label;"
                     accesskey="&defaultButton.accesskey;"
-                    xbl:inherits="oncommand=buttoncommand,label=buttonlabel,accesskey=buttonaccesskey,highlight=buttonhighlight,disabled=mainactiondisabled"/>
+                    xbl:inherits="oncommand=buttoncommand,label=buttonlabel,accesskey=buttonaccesskey,default=buttonhighlight,disabled=mainactiondisabled"/>
       </xul:hbox>
     </content>
     <implementation>

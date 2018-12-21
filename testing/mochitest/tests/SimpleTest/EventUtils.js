@@ -2501,3 +2501,42 @@ var PluginUtils =
     return false;
   }
 };
+
+class EventCounter {
+  constructor(aTarget, aType, aOptions = {}) {
+    this.target = aTarget;
+    this.type = aType;
+    this.options = aOptions;
+
+    this.eventCount = 0;
+    // Bug 1512817:
+    // SpecialPowers is picky and needs to be passed an explicit reference to
+    // the function to be called. To avoid having to bind "this", we therefore
+    // define the method this way, via a property.
+    this.handleEvent = (aEvent) => {
+        this.eventCount++;
+    };
+
+    if (aOptions.mozSystemGroup) {
+      SpecialPowers.addSystemEventListener(aTarget, aType,
+                                           this.handleEvent,
+                                           aOptions.capture);
+    } else {
+      aTarget.addEventListener(aType, this, aOptions);
+    }
+  }
+
+  unregister() {
+    if (this.options.mozSystemGroup) {
+      SpecialPowers.removeSystemEventListener(this.target, this.type,
+                                              this.handleEvent,
+                                              this.options.capture);
+    } else {
+      this.target.removeEventListener(this.type, this, this.options);
+    }
+  }
+
+  get count() {
+    return this.eventCount;
+  }
+}

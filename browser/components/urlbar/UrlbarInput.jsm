@@ -234,23 +234,21 @@ class UrlbarInput {
     try {
       new URL(url);
     } catch (ex) {
-      // TODO: Figure out why we need lastLocationChange here.
-      // let lastLocationChange = browser.lastLocationChange;
-      // UrlbarUtils.getShortcutOrURIAndPostData(text).then(data => {
-      //   if (where != "current" ||
-      //       browser.lastLocationChange == lastLocationChange) {
-      //     params.postData = data.postData;
-      //     params.allowInheritPrincipal = data.mayInheritPrincipal;
-      //     this._loadURL(data.url, browser, where,
-      //                   openUILinkParams);
-      //   }
-      // });
+      let browser = this.window.gBrowser.selectedBrowser;
+      let lastLocationChange = browser.lastLocationChange;
+
+      UrlbarUtils.getShortcutOrURIAndPostData(url).then(data => {
+        if (where != "current" ||
+            browser.lastLocationChange == lastLocationChange) {
+          openParams.postData = data.postData;
+          openParams.allowInheritPrincipal = data.mayInheritPrincipal;
+          this._loadURL(data.url, where, openParams);
+        }
+      });
       return;
     }
 
     this._loadURL(url, where, openParams);
-
-    this.view.close();
   }
 
   /**
@@ -560,7 +558,7 @@ class UrlbarInput {
       browser.initialPageLoadedFromURLBar = url;
     }
     try {
-      UrlbarUtils.addToUrlbarHistory(url);
+      UrlbarUtils.addToUrlbarHistory(url, this.window);
     } catch (ex) {
       // Things may go wrong when adding url to session history,
       // but don't let that interfere with the loading of the url.
@@ -602,6 +600,8 @@ class UrlbarInput {
     // TODO This should probably be handed via input.
     // Ensure the start of the URL is visible for usability reasons.
     // this.selectionStart = this.selectionEnd = 0;
+
+    this.closePopup();
   }
 
   /**
