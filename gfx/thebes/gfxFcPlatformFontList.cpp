@@ -994,7 +994,7 @@ gfxFont* gfxFontconfigFontEntry::CreateFontInstance(
       mUnscaledFontCache.Lookup(ToCharPtr(file), index);
   if (!unscaledFont) {
     unscaledFont = mFontData
-                       ? new UnscaledFontFontconfig(face)
+                       ? new UnscaledFontFontconfig(mFTFace)
                        : new UnscaledFontFontconfig(ToCharPtr(file), index);
     mUnscaledFontCache.Add(unscaledFont);
   }
