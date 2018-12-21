@@ -148,6 +148,8 @@ class MediaEngineSourceInterface {
    *
    * If this is the first AllocationHandle to start, the underlying device
    * will be started.
+   *
+   * NB: Audio sources handle the enabling of pulling themselves.
    */
   virtual nsresult Start(const RefPtr<const AllocationHandle>& aHandle) = 0;
 
@@ -196,6 +198,8 @@ class MediaEngineSourceInterface {
    *
    * Double-stopping a given allocation handle is allowed and will return NS_OK.
    * This is necessary sometimes during shutdown.
+   *
+   * NB: Audio sources handle the disabling of pulling themselves.
    */
   virtual nsresult Stop(const RefPtr<const AllocationHandle>& aHandle) = 0;
 
