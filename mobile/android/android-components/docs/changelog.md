@@ -28,6 +28,17 @@ permalink: /changelog/
 * **feature-customtabs**
   * Added support for opening speculative connections for a likely future navigation to a URL (`mayLaunchUrl`)
 
+* **feature-prompts**
+  * Added support for file picker requests.
+
+  There some requests that are not handled with dialogs, instead they are delegated to other apps
+  to perform the request, an example is a file picker request. As a result, now you have to override
+  `onActivityResult` on your `Activity` or `Fragment` and forward its calls to `promptFeature.onActivityResult`.
+
+  Additionally, there are requests that need some permission to be granted before they can be performed, like
+  file pickers that need access to read the selected files. Like `onActivityResult` you need to override
+  `onRequestPermissionsResult` and forward its calls to `promptFeature.onRequestPermissionsResult`.
+
 # 0.35.1
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.35.0...v0.35.1)
