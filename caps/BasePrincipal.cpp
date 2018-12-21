@@ -494,6 +494,22 @@ void BasePrincipal::FinishInit(const nsACString& aOriginNoSuffix,
   mOriginNoSuffix = NS_Atomize(aOriginNoSuffix);
 }
 
+void BasePrincipal::FinishInit(BasePrincipal* aOther,
+                               const OriginAttributes& aOriginAttributes) {
+  mInitialized = true;
+  mOriginAttributes = aOriginAttributes;
+
+  // First compute the origin suffix since it's infallible.
+  nsAutoCString originSuffix;
+  mOriginAttributes.CreateSuffix(originSuffix);
+  mOriginSuffix = NS_Atomize(originSuffix);
+
+  mOriginNoSuffix = aOther->mOriginNoSuffix;
+  mHasExplicitDomain = aOther->mHasExplicitDomain;
+  mCSP = aOther->mCSP;
+  mPreloadCSP = aOther->mPreloadCSP;
+}
+
 bool SiteIdentifier::Equals(const SiteIdentifier& aOther) const {
   MOZ_ASSERT(IsInitialized());
   MOZ_ASSERT(aOther.IsInitialized());

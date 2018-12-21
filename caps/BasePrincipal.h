@@ -241,10 +241,12 @@ class BasePrincipal : public nsJSPrincipals {
 
   void SetHasExplicitDomain() { mHasExplicitDomain = true; }
 
-  // This function should be called as the last step of the initialization of
-  // the principal objects.  It's typically called as the last step from the
-  // Init() method of the child classes.
+  // Either of these functions should be called as the last step of the
+  // initialization of the principal objects.  It's typically called as the
+  // last step from the Init() method of the child classes.
   void FinishInit(const nsACString& aOriginNoSuffix,
+                  const OriginAttributes& aOriginAttributes);
+  void FinishInit(BasePrincipal* aOther,
                   const OriginAttributes& aOriginAttributes);
 
   nsCOMPtr<nsIContentSecurityPolicy> mCSP;
