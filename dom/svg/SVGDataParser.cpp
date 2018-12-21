@@ -4,15 +4,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsSVGDataParser.h"
+#include "SVGDataParser.h"
 #include "nsContentUtils.h"
 #include "SVGContentUtils.h"
 
-nsSVGDataParser::nsSVGDataParser(const nsAString& aValue)
+namespace mozilla {
+
+SVGDataParser::SVGDataParser(const nsAString& aValue)
     : mIter(SVGContentUtils::GetStartRangedPtr(aValue)),
       mEnd(SVGContentUtils::GetEndRangedPtr(aValue)) {}
 
-bool nsSVGDataParser::SkipCommaWsp() {
+bool SVGDataParser::SkipCommaWsp() {
   if (!SkipWsp()) {
     // end of string
     return false;
@@ -24,7 +26,7 @@ bool nsSVGDataParser::SkipCommaWsp() {
   return SkipWsp();
 }
 
-bool nsSVGDataParser::SkipWsp() {
+bool SVGDataParser::SkipWsp() {
   while (mIter != mEnd) {
     if (!nsContentUtils::IsHTMLWhitespace(*mIter)) {
       return true;
@@ -33,3 +35,5 @@ bool nsSVGDataParser::SkipWsp() {
   }
   return false;
 }
+
+}  // namespace mozilla
