@@ -321,7 +321,6 @@ fi # COMPILE_ENVIRONMENT
 dnl ========================================================
 dnl set the defaults first
 dnl ========================================================
-AR_EXTRACT='$(AR) x'
 MOZ_USER_DIR=".mozilla"
 
 MOZ_FIX_LINK_PATHS="-Wl,-rpath-link,${DIST}/bin -Wl,-rpath-link,${prefix}/lib"
@@ -741,7 +740,6 @@ case "$target" in
             AR_FLAGS='-NOLOGO -OUT:$@'
             ;;
         esac
-        AR_EXTRACT=
         RANLIB='echo not_ranlib'
         STRIP='echo not_strip'
         PKG_SKIP_STRIP=1
@@ -3613,7 +3611,6 @@ dnl ========================================================
 
 AC_SUBST(AR)
 AC_SUBST(AR_FLAGS)
-AC_SUBST(AR_EXTRACT)
 AC_SUBST(NM)
 AC_SUBST_LIST(ASFLAGS)
 AC_SUBST(RCFLAGS)
