@@ -101,16 +101,6 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 const {DefaultMap} = ExtensionUtils;
 
 let ACTORS = {
-  AudibleAutoplay: {
-    child: {
-      module: "resource://gre/actors/AudibleAutoplayChild.jsm",
-      events: {
-        "AudibleAutoplayMediaOccurred": {},
-        "GloballyAutoplayBlocked": {},
-      },
-    },
-  },
-
   AudioPlayback: {
     child: {
       module: "resource://gre/actors/AudioPlaybackChild.jsm",
@@ -121,6 +111,16 @@ let ACTORS = {
       observers: [
         "audio-playback",
       ],
+    },
+  },
+
+  Autoplay: {
+    child: {
+      module: "resource://gre/actors/AutoplayChild.jsm",
+      events: {
+        "AudibleAutoplayMediaOccurred": {},
+        "GloballyAutoplayBlocked": {},
+      },
     },
   },
 
