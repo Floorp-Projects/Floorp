@@ -9,6 +9,8 @@
 %include shared.inc
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
+%include ../../shared/global.inc.css
+
 /* ::::: XBL bindings ::::: */
 
 menulist > menupopup {
@@ -320,6 +322,3 @@ popupnotificationcontent {
   visibility: collapse;
 }
 
-/* :::::: Close button icons ::::: */
-
-%include ../../shared/close-icon.inc.css

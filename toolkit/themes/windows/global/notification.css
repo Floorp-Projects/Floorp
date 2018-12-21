@@ -19,12 +19,12 @@
   }
 }
 
-/* Swap the default and secondary action, because Windows
- * platform conventions put the default action on the left. */
-.popup-notification-button[default] {
+/* Swap the primary and secondary action, because Windows
+ * platform conventions put the primary action on the left. */
+.popup-notification-primary-button {
   order: -1;
 }
 
-.popup-notification-button[anonid="secondarybutton"]:not([hidden="true"])  ~ .popup-notification-button[default]:not([highlight="true"]) {
+.popup-notification-secondary-button:not([hidden="true"]) ~ .popup-notification-primary-button:not([default]) {
   border-inline-end: 1px solid var(--panel-separator-color);
 }

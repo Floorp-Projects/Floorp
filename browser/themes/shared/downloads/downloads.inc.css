@@ -31,7 +31,6 @@
 }
 
 .downloadsPanelFooter {
-  background-color: var(--arrowpanel-dimmed);
   border-top: 1px solid var(--panel-separator-color);
 }
 
@@ -45,39 +44,20 @@
 }
 
 .downloadsPanelFooterButton {
-  -moz-appearance: none;
-  background-color: transparent;
-  color: inherit;
   margin: 0;
   padding: 0;
   min-width: 0;
   min-height: 40px;
-  border: none;
 }
 
 .downloadsPanelFooterButton:hover {
   outline: 1px solid var(--arrowpanel-dimmed);
-  background-color: var(--arrowpanel-dimmed);
 }
 
 .downloadsPanelFooterButton:hover:active,
 .downloadsPanelFooterButton[open="true"] {
   outline: 1px solid var(--arrowpanel-dimmed-further);
-  background-color: var(--arrowpanel-dimmed-further);
   box-shadow: 0 1px 0 hsla(210,4%,10%,.05) inset;
-}
-
-.downloadsPanelFooterButton[default] {
-  background-color: #0996f8;
-  color: white;
-}
-
-.downloadsPanelFooterButton[default]:hover {
-  background-color: #0675d3;
-}
-
-.downloadsPanelFooterButton[default]:hover:active {
-  background-color: #0568ba;
 }
 
 .downloadsPanelFooterButton > .button-box {
