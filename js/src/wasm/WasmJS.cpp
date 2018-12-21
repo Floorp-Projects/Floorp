@@ -144,16 +144,11 @@ static bool ToWebAssemblyValue(JSContext* cx, ValType targetType, HandleValue v,
       return true;
     }
     case ValType::AnyRef: {
-      if (v.isNull()) {
-        val.set(Val(targetType, nullptr));
-      } else {
-        JSObject* obj = ToObject(cx, v);
-        if (!obj) {
-          return false;
-        }
-        MOZ_ASSERT(obj->compartment() == cx->compartment());
-        val.set(Val(targetType, obj));
+      RootedAnyRef tmp(cx, AnyRef::null());
+      if (!BoxAnyRef(cx, v, &tmp)) {
+        return false;
       }
+      val.set(Val(tmp));
       return true;
     }
     case ValType::Ref:
@@ -174,10 +169,7 @@ static Value ToJSValue(const Val& val) {
     case ValType::F64:
       return DoubleValue(JS::CanonicalizeNaN(val.f64()));
     case ValType::AnyRef:
-      if (!val.ptr()) {
-        return NullValue();
-      }
-      return ObjectValue(*(JSObject*)val.ptr());
+      return UnboxAnyRef(val.anyref());
     case ValType::Ref:
     case ValType::NullRef:
     case ValType::I64:
@@ -321,7 +313,7 @@ static bool GetImports(JSContext* cx, const Module& module,
             }
           } else {
             MOZ_ASSERT(global.type().isReference());
-            if (!v.isNull() && !v.isObject()) {
+            if (!v.isNull() && !v.isObject() && global.type().isRef()) {
               return ThrowBadImportType(cx, import.field.get(),
                                         "Object-or-null");
             }
@@ -2161,7 +2153,7 @@ static bool ToTableIndex(JSContext* cx, HandleValue v, const Table& table,
       break;
     }
     case TableKind::AnyRef: {
-      args.rval().setObjectOrNull(table.getAnyRef(index));
+      args.rval().set(UnboxAnyRef(table.getAnyRef(index)));
       break;
     }
     default: { MOZ_CRASH("Unexpected table kind"); }
@@ -2224,15 +2216,11 @@ static bool ToTableIndex(JSContext* cx, HandleValue v, const Table& table,
       break;
     }
     case TableKind::AnyRef: {
-      if (args[1].isNull()) {
-        table.setNull(index);
-      } else {
-        RootedObject value(cx, ToObject(cx, args[1]));
-        if (!value) {
-          return false;
-        }
-        table.setAnyRef(index, value.get());
+      RootedAnyRef tmp(cx, AnyRef::null());
+      if (!BoxAnyRef(cx, args[1], &tmp)) {
+        return false;
       }
+      table.setAnyRef(index, tmp);
       break;
     }
     default: { MOZ_CRASH("Unexpected table kind"); }
@@ -2322,8 +2310,11 @@ const Class WasmGlobalObject::class_ = {
   }
   switch (global->type().code()) {
     case ValType::AnyRef:
-      if (global->cell()->ptr) {
-        TraceManuallyBarrieredEdge(trc, &global->cell()->ptr,
+      if (!global->cell()->anyref.isNull()) {
+        // TODO/AnyRef-boxing: With boxed immediates and strings, the write
+        // barrier is going to have to be more complicated.
+        ASSERT_ANYREF_IS_JSOBJECT;
+        TraceManuallyBarrieredEdge(trc, global->cell()->anyref.asJSObjectAddress(),
                                    "wasm anyref global");
       }
       break;
@@ -2386,13 +2377,16 @@ const Class WasmGlobalObject::class_ = {
       cell->f64 = val.f64();
       break;
     case ValType::NullRef:
-      MOZ_ASSERT(!cell->ptr, "value should be null already");
+      MOZ_ASSERT(!cell->ref, "value should be null already");
       break;
     case ValType::AnyRef:
-      MOZ_ASSERT(!cell->ptr, "no prebarriers needed");
-      cell->ptr = val.ptr();
-      if (cell->ptr) {
-        JSObject::writeBarrierPost(&cell->ptr, nullptr, cell->ptr);
+      MOZ_ASSERT(cell->anyref.isNull(), "no prebarriers needed");
+      cell->anyref = val.anyref();
+      if (!cell->anyref.isNull()) {
+        // TODO/AnyRef-boxing: With boxed immediates and strings, the write
+        // barrier is going to have to be more complicated.
+        ASSERT_ANYREF_IS_JSOBJECT;
+        JSObject::writeBarrierPost(&cell->anyref, nullptr, cell->anyref.asJSObject());
       }
       break;
     case ValType::Ref:
@@ -2493,7 +2487,7 @@ const Class WasmGlobalObject::class_ = {
       globalVal = Val(double(0.0));
       break;
     case ValType::AnyRef:
-      globalVal = Val(ValType::AnyRef, nullptr);
+      globalVal = Val(AnyRef::null());
       break;
     case ValType::Ref:
       MOZ_CRASH("Ref NYI");
@@ -2503,7 +2497,8 @@ const Class WasmGlobalObject::class_ = {
 
   // Override with non-undefined value, if provided.
   RootedValue valueVal(cx, args.get(1));
-  if (!valueVal.isUndefined()) {
+  if (!valueVal.isUndefined() ||
+      (args.length() >= 2 && globalType == ValType::AnyRef)) {
     if (!ToWebAssemblyValue(cx, globalType, valueVal, &globalVal)) {
       return false;
     }
@@ -2586,11 +2581,16 @@ static bool IsGlobal(HandleValue v) {
       cell->f64 = val.get().f64();
       break;
     case ValType::AnyRef: {
-      JSObject* prevPtr = cell->ptr;
-      JSObject::writeBarrierPre(prevPtr);
-      cell->ptr = val.get().ptr();
-      if (cell->ptr) {
-        JSObject::writeBarrierPost(&cell->ptr, prevPtr, cell->ptr);
+      AnyRef prevPtr = cell->anyref;
+      // TODO/AnyRef-boxing: With boxed immediates and strings, the write
+      // barrier is going to have to be more complicated.
+      ASSERT_ANYREF_IS_JSOBJECT;
+      JSObject::writeBarrierPre(prevPtr.asJSObject());
+      cell->anyref = val.get().anyref();
+      if (!cell->anyref.isNull()) {
+        JSObject::writeBarrierPost(cell->anyref.asJSObjectAddress(),
+                                   prevPtr.asJSObject(),
+                                   cell->anyref.asJSObject());
       }
       break;
     }
@@ -2647,7 +2647,7 @@ void WasmGlobalObject::val(MutableHandleVal outval) const {
       outval.set(Val(cell->f64));
       return;
     case ValType::AnyRef:
-      outval.set(Val(ValType::AnyRef, cell->ptr));
+      outval.set(Val(cell->anyref));
       return;
     case ValType::Ref:
       MOZ_CRASH("Ref NYI");

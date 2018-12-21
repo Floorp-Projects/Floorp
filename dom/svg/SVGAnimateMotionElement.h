@@ -39,7 +39,7 @@ class SVGAnimateMotionElement final : public SVGAnimationElement {
   virtual bool GetTargetAttributeName(int32_t* aNamespaceID,
                                       nsAtom** aLocalName) const override;
 
-  // nsSVGElement
+  // SVGElement
   virtual nsStaticAtom* GetPathDataAttrName() const override {
     return nsGkAtoms::path;
   }

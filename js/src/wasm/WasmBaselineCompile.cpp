@@ -1058,6 +1058,9 @@ void BaseLocalIter::settle() {
       case ValType::F64:
       case ValType::Ref:
       case ValType::AnyRef:
+        // TODO/AnyRef-boxing: With boxed immediates and strings, the
+        // debugger must be made aware that AnyRef != Pointer.
+        ASSERT_ANYREF_IS_JSOBJECT;
         mirType_ = ToMIRType(locals_[index_]);
         frameOffset_ = pushLocal(MIRTypeToSize(mirType_));
         break;
@@ -4090,11 +4093,14 @@ class BaseCompiler final : public BaseCompilerInterface {
           Address(masm.getStackPointer(), DebugFrame::offsetOfFuncIndex()));
       masm.storePtr(ImmWord(0), Address(masm.getStackPointer(),
                                         DebugFrame::offsetOfFlagsWord()));
-      // Zero out DebugFrame::cachedReturnJSValue_ and ::resultRef_ for
-      // safety, since it's not easy to establish whether they will always be
-      // defined before a GC.
+      // Zero out pointer values for safety, since it's not easy to establish
+      // whether they will always be defined before a GC.
+
+      // DebugFrame::resultRef_ and ::resultAnyRef_
       masm.storePtr(ImmWord(0), Address(masm.getStackPointer(),
                                         DebugFrame::offsetOfResults()));
+
+      // DebugFrame::cachedReturnJSValue_
       for (size_t i = 0; i < sizeof(js::Value) / sizeof(void*); i++) {
         masm.storePtr(ImmWord(0),
                       Address(masm.getStackPointer(),
@@ -6511,7 +6517,12 @@ class BaseCompiler final : public BaseCompilerInterface {
   }
 
   MOZ_MUST_USE bool emitBarrieredStore(const Maybe<RegPtr>& object,
-                                       RegPtr valueAddr, RegPtr value) {
+                                       RegPtr valueAddr, RegPtr value,
+                                       ValType valueType) {
+    // TODO/AnyRef-boxing: With boxed immediates and strings, the write
+    // barrier is going to have to be more complicated.
+    ASSERT_ANYREF_IS_JSOBJECT;
+
     emitPreBarrier(valueAddr);  // Preserves valueAddr
     masm.storePtr(value, Address(valueAddr, 0));
 
@@ -9100,8 +9111,10 @@ bool BaseCompiler::emitGetGlobal() {
         break;
       case ValType::Ref:
       case ValType::NullRef:
+        pushRef(intptr_t(value.ref()));
+        break;
       case ValType::AnyRef:
-        pushRef(intptr_t(value.ptr()));
+        pushRef(intptr_t(value.anyref().forCompiledCode()));
         break;
       default:
         MOZ_CRASH("Global constant type");
@@ -9207,8 +9220,8 @@ bool BaseCompiler::emitSetGlobal() {
                                      valueAddr);
       }
       RegPtr rv = popRef();
-      if (!emitBarrieredStore(Nothing(), valueAddr,
-                              rv)) {  // Consumes valueAddr
+      // emitBarrieredStore consumes valueAddr
+      if (!emitBarrieredStore(Nothing(), valueAddr, rv, global.type())) {
         return false;
       }
       freeRef(rv);
@@ -10311,19 +10324,20 @@ bool BaseCompiler::emitTableGet() {
   if (deadCode_) {
     return true;
   }
-  // get(index:u32, table:u32) -> anyref
+  // get(index:u32, table:u32) -> void*
   //
-  // Returns (void*)-1 for error, this will not be confused with a real ref
-  // value.
+  // Returns nullptr for error, otherwise a pointer to a nonmoveable memory
+  // location that holds the anyref value.
   pushI32(tableIndex);
   if (!emitInstanceCall(lineOrBytecode, SigPII_, ExprType::AnyRef,
                         SymbolicAddress::TableGet)) {
     return false;
   }
   Label noTrap;
-  masm.branchPtr(Assembler::NotEqual, ReturnReg, Imm32(-1), &noTrap);
+  masm.branchTestPtr(Assembler::NonZero, ReturnReg, ReturnReg, &noTrap);
   trap(Trap::ThrowReported);
   masm.bind(&noTrap);
+  masm.loadPtr(Address(ReturnReg, 0), ReturnReg);
 
   return true;
 }
@@ -10504,6 +10518,10 @@ bool BaseCompiler::emitStructNew() {
         }
 
         freeRef(value);
+
+        // TODO/AnyRef-boxing: With boxed immediates and strings, the write
+        // barrier is going to have to be more complicated.
+        ASSERT_ANYREF_IS_JSOBJECT;
 
         pushRef(rp);  // Save rp across the call
         RegPtr valueAddr = needRef();
@@ -10690,7 +10708,9 @@ bool BaseCompiler::emitStructSet() {
     case ValType::Ref:
     case ValType::AnyRef: {
       masm.computeEffectiveAddress(Address(rp, offs), valueAddr);
-      if (!emitBarrieredStore(Some(rp), valueAddr, rr)) {  // Consumes valueAddr
+      // emitBarrieredStore consumes valueAddr
+      if (!emitBarrieredStore(Some(rp), valueAddr, rr,
+                              structType.fields_[fieldIndex].type)) {
         return false;
       }
       freeRef(rr);

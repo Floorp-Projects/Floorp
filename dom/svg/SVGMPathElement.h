@@ -8,18 +8,18 @@
 #define mozilla_dom_SVGMPathElement_h
 
 #include "mozilla/dom/IDTracker.h"
-#include "nsSVGElement.h"
+#include "SVGElement.h"
 #include "nsStubMutationObserver.h"
 #include "nsSVGString.h"
 
 nsresult NS_NewSVGMPathElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
-typedef nsSVGElement SVGMPathElementBase;
-
 namespace mozilla {
 namespace dom {
 class SVGPathElement;
+
+typedef SVGElement SVGMPathElementBase;
 
 class SVGMPathElement final : public SVGMPathElementBase,
                               public nsStubMutationObserver {

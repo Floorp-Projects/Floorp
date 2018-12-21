@@ -11,7 +11,7 @@
 #include "mozilla/dom/SVGUnitTypesBinding.h"
 #include "nsGkAtoms.h"
 
-NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(ClipPath)
+NS_IMPL_NS_NEW_SVG_ELEMENT(ClipPath)
 
 namespace mozilla {
 namespace dom {
@@ -23,7 +23,7 @@ JSObject* SVGClipPathElement::WrapNode(JSContext* aCx,
   return SVGClipPathElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-nsSVGElement::EnumInfo SVGClipPathElement::sEnumInfo[1] = {
+SVGElement::EnumInfo SVGClipPathElement::sEnumInfo[1] = {
     {nsGkAtoms::clipPathUnits, sSVGUnitTypesMap, SVG_UNIT_TYPE_USERSPACEONUSE}};
 
 //----------------------------------------------------------------------
@@ -37,7 +37,7 @@ already_AddRefed<SVGAnimatedEnumeration> SVGClipPathElement::ClipPathUnits() {
   return mEnumAttributes[CLIPPATHUNITS].ToDOMAnimatedEnum(this);
 }
 
-nsSVGElement::EnumAttributesInfo SVGClipPathElement::GetEnumInfo() {
+SVGElement::EnumAttributesInfo SVGClipPathElement::GetEnumInfo() {
   return EnumAttributesInfo(mEnumAttributes, sEnumInfo, ArrayLength(sEnumInfo));
 }
 

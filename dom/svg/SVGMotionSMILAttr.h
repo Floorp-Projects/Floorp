@@ -14,12 +14,12 @@
 
 class nsIContent;
 class nsSMILValue;
-class nsSVGElement;
 
 namespace mozilla {
 
 namespace dom {
 class SVGAnimationElement;
+class SVGElement;
 }  // namespace dom
 
 /**
@@ -31,7 +31,7 @@ class SVGAnimationElement;
  */
 class SVGMotionSMILAttr : public nsISMILAttr {
  public:
-  explicit SVGMotionSMILAttr(nsSVGElement* aSVGElement)
+  explicit SVGMotionSMILAttr(dom::SVGElement* aSVGElement)
       : mSVGElement(aSVGElement) {}
 
   // nsISMILAttr methods
@@ -47,7 +47,7 @@ class SVGMotionSMILAttr : public nsISMILAttr {
   // Raw pointers are OK here because this SVGMotionSMILAttr is both
   // created & destroyed during a SMIL sample-step, during which time the DOM
   // isn't modified.
-  nsSVGElement* mSVGElement;
+  dom::SVGElement* mSVGElement;
 };
 
 }  // namespace mozilla

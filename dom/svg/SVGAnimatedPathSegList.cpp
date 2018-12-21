@@ -8,7 +8,7 @@
 
 #include "DOMSVGPathSegList.h"
 #include "mozilla/Move.h"
-#include "nsSVGElement.h"
+#include "SVGElement.h"
 #include "nsSVGAttrTearoffTable.h"
 #include "nsSMILValue.h"
 #include "SVGPathSegListSMILType.h"
@@ -49,7 +49,7 @@ nsresult SVGAnimatedPathSegList::SetBaseValueString(const nsAString &aValue) {
   // Only now may we modify mBaseVal!
 
   // We don't need to call DidChange* here - we're only called by
-  // nsSVGElement::ParseAttribute under Element::SetAttr,
+  // SVGElement::ParseAttribute under Element::SetAttr,
   // which takes care of notifying.
 
   nsresult rv2 = mBaseVal.CopyFrom(newBaseValue);
@@ -89,7 +89,7 @@ void SVGAnimatedPathSegList::ClearBaseValue() {
 }
 
 nsresult SVGAnimatedPathSegList::SetAnimValue(const SVGPathData &aNewAnimValue,
-                                              nsSVGElement *aElement) {
+                                              SVGElement *aElement) {
   // Note that a new animation may totally change the number of items in the
   // animVal list, either replacing what was essentially a mirror of the
   // baseVal list, or else replacing and overriding an existing animation.
@@ -121,7 +121,7 @@ nsresult SVGAnimatedPathSegList::SetAnimValue(const SVGPathData &aNewAnimValue,
   return rv;
 }
 
-void SVGAnimatedPathSegList::ClearAnimValue(nsSVGElement *aElement) {
+void SVGAnimatedPathSegList::ClearAnimValue(SVGElement *aElement) {
   // We must send these notifications *before* changing mAnimVal! (See above.)
 
   DOMSVGPathSegList *domWrapper =
@@ -141,7 +141,7 @@ bool SVGAnimatedPathSegList::IsRendered() const {
 }
 
 UniquePtr<nsISMILAttr> SVGAnimatedPathSegList::ToSMILAttr(
-    nsSVGElement *aElement) {
+    SVGElement *aElement) {
   return MakeUnique<SMILAnimatedPathSegList>(this, aElement);
 }
 

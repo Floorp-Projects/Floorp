@@ -7,7 +7,7 @@
 #include "mozilla/dom/SVGDefsElement.h"
 #include "mozilla/dom/SVGDefsElementBinding.h"
 
-NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(Defs)
+NS_IMPL_NS_NEW_SVG_ELEMENT(Defs)
 
 namespace mozilla {
 namespace dom {

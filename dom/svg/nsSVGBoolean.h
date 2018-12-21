@@ -15,35 +15,37 @@
 
 class nsAtom;
 class nsSMILValue;
-class nsSVGElement;
 
 namespace mozilla {
 namespace dom {
 class SVGAnimationElement;
 class SVGAnimatedBoolean;
+class SVGElement;
 }  // namespace dom
 }  // namespace mozilla
 
 class nsSVGBoolean {
  public:
+  typedef mozilla::dom::SVGElement SVGElement;
+
   void Init(uint8_t aAttrEnum = 0xff, bool aValue = false) {
     mAnimVal = mBaseVal = aValue;
     mAttrEnum = aAttrEnum;
     mIsAnimated = false;
   }
 
-  nsresult SetBaseValueAtom(const nsAtom* aValue, nsSVGElement* aSVGElement);
+  nsresult SetBaseValueAtom(const nsAtom* aValue, SVGElement* aSVGElement);
   nsAtom* GetBaseValueAtom() const;
 
-  void SetBaseValue(bool aValue, nsSVGElement* aSVGElement);
+  void SetBaseValue(bool aValue, SVGElement* aSVGElement);
   bool GetBaseValue() const { return mBaseVal; }
 
-  void SetAnimValue(bool aValue, nsSVGElement* aSVGElement);
+  void SetAnimValue(bool aValue, SVGElement* aSVGElement);
   bool GetAnimValue() const { return mAnimVal; }
 
   already_AddRefed<mozilla::dom::SVGAnimatedBoolean> ToDOMAnimatedBoolean(
-      nsSVGElement* aSVGElement);
-  mozilla::UniquePtr<nsISMILAttr> ToSMILAttr(nsSVGElement* aSVGElement);
+      SVGElement* aSVGElement);
+  mozilla::UniquePtr<nsISMILAttr> ToSMILAttr(SVGElement* aSVGElement);
 
  private:
   bool mAnimVal;
@@ -54,14 +56,14 @@ class nsSVGBoolean {
  public:
   struct SMILBool : public nsISMILAttr {
    public:
-    SMILBool(nsSVGBoolean* aVal, nsSVGElement* aSVGElement)
+    SMILBool(nsSVGBoolean* aVal, SVGElement* aSVGElement)
         : mVal(aVal), mSVGElement(aSVGElement) {}
 
     // These will stay alive because a nsISMILAttr only lives as long
     // as the Compositing step, and DOM elements don't get a chance to
     // die during that.
     nsSVGBoolean* mVal;
-    nsSVGElement* mSVGElement;
+    SVGElement* mSVGElement;
 
     // nsISMILAttr methods
     virtual nsresult ValueFromString(

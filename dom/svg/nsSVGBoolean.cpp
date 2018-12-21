@@ -48,7 +48,7 @@ static nsresult GetValueFromAtom(const nsAtom* aValueAsAtom, bool* aValue) {
 }
 
 nsresult nsSVGBoolean::SetBaseValueAtom(const nsAtom* aValue,
-                                        nsSVGElement* aSVGElement) {
+                                        SVGElement* aSVGElement) {
   bool val = false;
 
   nsresult rv = GetValueFromAtom(aValue, &val);
@@ -64,7 +64,7 @@ nsresult nsSVGBoolean::SetBaseValueAtom(const nsAtom* aValue,
   }
 
   // We don't need to call DidChange* here - we're only called by
-  // nsSVGElement::ParseAttribute under Element::SetAttr,
+  // SVGElement::ParseAttribute under Element::SetAttr,
   // which takes care of notifying.
   return NS_OK;
 }
@@ -73,7 +73,7 @@ nsAtom* nsSVGBoolean::GetBaseValueAtom() const {
   return mBaseVal ? nsGkAtoms::_true : nsGkAtoms::_false;
 }
 
-void nsSVGBoolean::SetBaseValue(bool aValue, nsSVGElement* aSVGElement) {
+void nsSVGBoolean::SetBaseValue(bool aValue, SVGElement* aSVGElement) {
   if (aValue == mBaseVal) {
     return;
   }
@@ -87,7 +87,7 @@ void nsSVGBoolean::SetBaseValue(bool aValue, nsSVGElement* aSVGElement) {
   aSVGElement->DidChangeBoolean(mAttrEnum);
 }
 
-void nsSVGBoolean::SetAnimValue(bool aValue, nsSVGElement* aSVGElement) {
+void nsSVGBoolean::SetAnimValue(bool aValue, SVGElement* aSVGElement) {
   if (mIsAnimated && mAnimVal == aValue) {
     return;
   }
@@ -97,7 +97,7 @@ void nsSVGBoolean::SetAnimValue(bool aValue, nsSVGElement* aSVGElement) {
 }
 
 already_AddRefed<SVGAnimatedBoolean> nsSVGBoolean::ToDOMAnimatedBoolean(
-    nsSVGElement* aSVGElement) {
+    SVGElement* aSVGElement) {
   RefPtr<SVGAnimatedBoolean> domAnimatedBoolean =
       SVGAnimatedBooleanTearoffTable().GetTearoff(this);
   if (!domAnimatedBoolean) {
@@ -112,7 +112,7 @@ SVGAnimatedBoolean::~SVGAnimatedBoolean() {
   SVGAnimatedBooleanTearoffTable().RemoveTearoff(mVal);
 }
 
-UniquePtr<nsISMILAttr> nsSVGBoolean::ToSMILAttr(nsSVGElement* aSVGElement) {
+UniquePtr<nsISMILAttr> nsSVGBoolean::ToSMILAttr(SVGElement* aSVGElement) {
   return MakeUnique<SMILBool>(this, aSVGElement);
 }
 

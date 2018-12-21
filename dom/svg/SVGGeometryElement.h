@@ -213,7 +213,7 @@ class SVGGeometryElement : public SVGGeometryElementBase {
                                                  ErrorResult& rv);
 
  protected:
-  // nsSVGElement method
+  // SVGElement method
   virtual NumberAttributesInfo GetNumberInfo() override;
 
   nsSVGNumber2 mPathLength;

@@ -15,11 +15,13 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
 
-class nsSVGElement;
-
 namespace mozilla {
 
 class DOMSVGLength;
+
+namespace dom {
+class SVGElement;
+}
 
 /**
  * Class DOMSVGLengthList
@@ -123,7 +125,7 @@ class DOMSVGLengthList final : public nsISupports, public nsWrapperCache {
   uint32_t Length() const { return NumberOfItems(); }
 
  private:
-  nsSVGElement* Element() const { return mAList->mElement; }
+  dom::SVGElement* Element() const { return mAList->mElement; }
 
   uint8_t AttrEnum() const { return mAList->mAttrEnum; }
 

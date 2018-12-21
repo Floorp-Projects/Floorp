@@ -26,27 +26,27 @@ assertEq(new WebAssembly.Global({value: "anyref"}) instanceof WebAssembly.Global
     assertErrorMessage(() => g.value = 42, TypeError, /immutable global/);
 
     g = new WebAssembly.Global({value: "anyref"}, 1337);
-    assertEq(g.value instanceof Number, true);
+    assertEq(typeof g.value, "number");
     assertEq(+g.value, 1337);
 
     g = new WebAssembly.Global({value: "anyref"}, 13.37);
-    assertEq(g.value instanceof Number, true);
+    assertEq(typeof g.value, "number");
     assertEq(+g.value, 13.37);
 
     g = new WebAssembly.Global({value: "anyref"}, "string");
-    assertEq(g.value instanceof String, true);
+    assertEq(typeof g.value, "string");
     assertEq(g.value.toString(), "string");
 
     g = new WebAssembly.Global({value: "anyref"}, true);
-    assertEq(g.value instanceof Boolean, true);
+    assertEq(typeof g.value, "boolean");
     assertEq(!!g.value, true);
 
     g = new WebAssembly.Global({value: "anyref"}, Symbol("status"));
-    assertEq(g.value instanceof Symbol, true);
+    assertEq(typeof g.value, "symbol");
     assertEq(g.value.toString(), "Symbol(status)");
 
     g = new WebAssembly.Global({value: "anyref"}, undefined);
-    assertEq(g.value, null);
+    assertEq(g.value, undefined);
 })();
 
 (function() {

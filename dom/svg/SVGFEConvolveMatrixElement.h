@@ -25,7 +25,7 @@ class DOMSVGAnimatedNumberList;
 namespace dom {
 class SVGAnimatedBoolean;
 
-typedef nsSVGFE SVGFEConvolveMatrixElementBase;
+typedef SVGFE SVGFEConvolveMatrixElementBase;
 
 class SVGFEConvolveMatrixElement : public SVGFEConvolveMatrixElementBase {
   friend nsresult(::NS_NewSVGFEConvolveMatrixElement(

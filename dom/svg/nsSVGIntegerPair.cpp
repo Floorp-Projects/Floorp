@@ -54,7 +54,7 @@ static nsresult ParseIntegerOptionalInteger(const nsAString& aValue,
 }
 
 nsresult nsSVGIntegerPair::SetBaseValueString(const nsAString& aValueAsString,
-                                              nsSVGElement* aSVGElement) {
+                                              SVGElement* aSVGElement) {
   int32_t val[2];
 
   nsresult rv = ParseIntegerOptionalInteger(aValueAsString, val);
@@ -74,7 +74,7 @@ nsresult nsSVGIntegerPair::SetBaseValueString(const nsAString& aValueAsString,
   }
 
   // We don't need to call DidChange* here - we're only called by
-  // nsSVGElement::ParseAttribute under Element::SetAttr,
+  // SVGElement::ParseAttribute under Element::SetAttr,
   // which takes care of notifying.
   return NS_OK;
 }
@@ -89,7 +89,7 @@ void nsSVGIntegerPair::GetBaseValueString(nsAString& aValueAsString) const {
 }
 
 void nsSVGIntegerPair::SetBaseValue(int32_t aValue, PairIndex aPairIndex,
-                                    nsSVGElement* aSVGElement) {
+                                    SVGElement* aSVGElement) {
   uint32_t index = (aPairIndex == eFirst ? 0 : 1);
   if (mIsBaseSet && mBaseVal[index] == aValue) {
     return;
@@ -107,7 +107,7 @@ void nsSVGIntegerPair::SetBaseValue(int32_t aValue, PairIndex aPairIndex,
 }
 
 void nsSVGIntegerPair::SetBaseValues(int32_t aValue1, int32_t aValue2,
-                                     nsSVGElement* aSVGElement) {
+                                     SVGElement* aSVGElement) {
   if (mIsBaseSet && mBaseVal[0] == aValue1 && mBaseVal[1] == aValue2) {
     return;
   }
@@ -126,7 +126,7 @@ void nsSVGIntegerPair::SetBaseValues(int32_t aValue1, int32_t aValue2,
 }
 
 void nsSVGIntegerPair::SetAnimValue(const int32_t aValue[2],
-                                    nsSVGElement* aSVGElement) {
+                                    SVGElement* aSVGElement) {
   if (mIsAnimated && mAnimVal[0] == aValue[0] && mAnimVal[1] == aValue[1]) {
     return;
   }
@@ -137,7 +137,7 @@ void nsSVGIntegerPair::SetAnimValue(const int32_t aValue[2],
 }
 
 already_AddRefed<SVGAnimatedInteger> nsSVGIntegerPair::ToDOMAnimatedInteger(
-    PairIndex aIndex, nsSVGElement* aSVGElement) {
+    PairIndex aIndex, SVGElement* aSVGElement) {
   RefPtr<DOMAnimatedInteger> domAnimatedInteger =
       aIndex == eFirst ? sSVGFirstAnimatedIntegerTearoffTable.GetTearoff(this)
                        : sSVGSecondAnimatedIntegerTearoffTable.GetTearoff(this);
@@ -162,7 +162,7 @@ nsSVGIntegerPair::DOMAnimatedInteger::~DOMAnimatedInteger() {
   }
 }
 
-UniquePtr<nsISMILAttr> nsSVGIntegerPair::ToSMILAttr(nsSVGElement* aSVGElement) {
+UniquePtr<nsISMILAttr> nsSVGIntegerPair::ToSMILAttr(SVGElement* aSVGElement) {
   return MakeUnique<SMILIntegerPair>(this, aSVGElement);
 }
 

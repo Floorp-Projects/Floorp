@@ -15,10 +15,10 @@
 #include "mozilla/dom/SVGUnitTypesBinding.h"
 #include "nsCOMPtr.h"
 #include "nsGkAtoms.h"
-#include "nsSVGElement.h"
+#include "SVGElement.h"
 
-NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(LinearGradient)
-NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(RadialGradient)
+NS_IMPL_NS_NEW_SVG_ELEMENT(LinearGradient)
+NS_IMPL_NS_NEW_SVG_ELEMENT(RadialGradient)
 
 namespace mozilla {
 namespace dom {
@@ -34,12 +34,12 @@ nsSVGEnumMapping SVGGradientElement::sSpreadMethodMap[] = {
     {nsGkAtoms::repeat, SVG_SPREADMETHOD_REPEAT},
     {nullptr, 0}};
 
-nsSVGElement::EnumInfo SVGGradientElement::sEnumInfo[2] = {
+SVGElement::EnumInfo SVGGradientElement::sEnumInfo[2] = {
     {nsGkAtoms::gradientUnits, sSVGUnitTypesMap,
      SVG_UNIT_TYPE_OBJECTBOUNDINGBOX},
     {nsGkAtoms::spreadMethod, sSpreadMethodMap, SVG_SPREADMETHOD_PAD}};
 
-nsSVGElement::StringInfo SVGGradientElement::sStringInfo[2] = {
+SVGElement::StringInfo SVGGradientElement::sStringInfo[2] = {
     {nsGkAtoms::href, kNameSpaceID_None, true},
     {nsGkAtoms::href, kNameSpaceID_XLink, true}};
 
@@ -51,13 +51,13 @@ SVGGradientElement::SVGGradientElement(
     : SVGGradientElementBase(std::move(aNodeInfo)) {}
 
 //----------------------------------------------------------------------
-// nsSVGElement methods
+// SVGElement methods
 
-nsSVGElement::EnumAttributesInfo SVGGradientElement::GetEnumInfo() {
+SVGElement::EnumAttributesInfo SVGGradientElement::GetEnumInfo() {
   return EnumAttributesInfo(mEnumAttributes, sEnumInfo, ArrayLength(sEnumInfo));
 }
 
-nsSVGElement::StringAttributesInfo SVGGradientElement::GetStringInfo() {
+SVGElement::StringAttributesInfo SVGGradientElement::GetStringInfo() {
   return StringAttributesInfo(mStringAttributes, sStringInfo,
                               ArrayLength(sStringInfo));
 }
@@ -103,7 +103,7 @@ JSObject* SVGLinearGradientElement::WrapNode(
   return SVGLinearGradientElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-nsSVGElement::LengthInfo SVGLinearGradientElement::sLengthInfo[4] = {
+SVGElement::LengthInfo SVGLinearGradientElement::sLengthInfo[4] = {
     {nsGkAtoms::x1, 0, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE,
      SVGContentUtils::X},
     {nsGkAtoms::y1, 0, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE,
@@ -145,7 +145,7 @@ already_AddRefed<SVGAnimatedLength> SVGLinearGradientElement::Y2() {
 }
 
 //----------------------------------------------------------------------
-// nsSVGElement methods
+// SVGElement methods
 
 nsSVGAnimatedTransformList* SVGGradientElement::GetAnimatedTransformList(
     uint32_t aFlags) {
@@ -155,7 +155,7 @@ nsSVGAnimatedTransformList* SVGGradientElement::GetAnimatedTransformList(
   return mGradientTransform;
 }
 
-nsSVGElement::LengthAttributesInfo SVGLinearGradientElement::GetLengthInfo() {
+SVGElement::LengthAttributesInfo SVGLinearGradientElement::GetLengthInfo() {
   return LengthAttributesInfo(mLengthAttributes, sLengthInfo,
                               ArrayLength(sLengthInfo));
 }
@@ -167,7 +167,7 @@ JSObject* SVGRadialGradientElement::WrapNode(
   return SVGRadialGradientElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-nsSVGElement::LengthInfo SVGRadialGradientElement::sLengthInfo[6] = {
+SVGElement::LengthInfo SVGRadialGradientElement::sLengthInfo[6] = {
     {nsGkAtoms::cx, 50, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE,
      SVGContentUtils::X},
     {nsGkAtoms::cy, 50, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE,
@@ -221,9 +221,9 @@ already_AddRefed<SVGAnimatedLength> SVGRadialGradientElement::Fr() {
 }
 
 //----------------------------------------------------------------------
-// nsSVGElement methods
+// SVGElement methods
 
-nsSVGElement::LengthAttributesInfo SVGRadialGradientElement::GetLengthInfo() {
+SVGElement::LengthAttributesInfo SVGRadialGradientElement::GetLengthInfo() {
   return LengthAttributesInfo(mLengthAttributes, sLengthInfo,
                               ArrayLength(sLengthInfo));
 }

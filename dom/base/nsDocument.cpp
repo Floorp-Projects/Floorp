@@ -5427,7 +5427,7 @@ already_AddRefed<Attr> nsIDocument::CreateAttributeNS(
 
 void nsIDocument::ResolveScheduledSVGPresAttrs() {
   for (auto iter = mLazySVGPresElements.Iter(); !iter.Done(); iter.Next()) {
-    nsSVGElement* svg = iter.Get()->GetKey();
+    SVGElement* svg = iter.Get()->GetKey();
     svg->UpdateContentDeclarationBlock();
   }
   mLazySVGPresElements.Clear();

@@ -6,7 +6,7 @@
 
 #include "SVGAnimatedRect.h"
 #include "mozilla/dom/SVGAnimatedRectBinding.h"
-#include "nsSVGElement.h"
+#include "SVGElement.h"
 #include "nsSVGViewBox.h"
 #include "SVGIRect.h"
 
@@ -18,7 +18,7 @@ NS_SVG_VAL_IMPL_CYCLE_COLLECTION_WRAPPERCACHED(SVGAnimatedRect, mSVGElement)
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(SVGAnimatedRect, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(SVGAnimatedRect, Release)
 
-SVGAnimatedRect::SVGAnimatedRect(nsSVGViewBox* aVal, nsSVGElement* aSVGElement)
+SVGAnimatedRect::SVGAnimatedRect(nsSVGViewBox* aVal, SVGElement* aSVGElement)
     : mVal(aVal), mSVGElement(aSVGElement) {}
 
 SVGAnimatedRect::~SVGAnimatedRect() {
