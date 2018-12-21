@@ -26,6 +26,7 @@ function SpecialPowers(window, mm) {
   this._unexpectedCrashDumpFiles = { };
   this._crashDumpDir = null;
   this._serviceWorkerRegistered = false;
+  this._serviceWorkerCleanUpRequests = new Map();
   this.DOMWindowUtils = bindDOMWindowUtils(window);
   Object.defineProperty(this, "Components", {
       configurable: true, enumerable: true, value: this.getFullComponents(),
@@ -57,11 +58,14 @@ function SpecialPowers(window, mm) {
                             "SPUnloadExtension",
                             "SPExtensionMessage",
                             "SPRequestDumpCoverageCounters",
-                            "SPRequestResetCoverageCounters"];
+                            "SPRequestResetCoverageCounters",
+                            "SPRemoveAllServiceWorkers",
+                            "SPRemoveServiceWorkerDataForExampleDomain"];
   mm.addMessageListener("SPPingService", this._messageListener);
   mm.addMessageListener("SPServiceWorkerRegistered", this._messageListener);
   mm.addMessageListener("SpecialPowers.FilesCreated", this._messageListener);
   mm.addMessageListener("SpecialPowers.FilesError", this._messageListener);
+  mm.addMessageListener("SPServiceWorkerCleanupComplete", this._messageListener);
   let self = this;
   Services.obs.addObserver(function onInnerWindowDestroyed(subject, topic, data) {
     var id = subject.QueryInterface(Ci.nsISupportsPRUint64).data;
@@ -71,6 +75,7 @@ function SpecialPowers(window, mm) {
         mm.removeMessageListener("SPPingService", self._messageListener);
         mm.removeMessageListener("SpecialPowers.FilesCreated", self._messageListener);
         mm.removeMessageListener("SpecialPowers.FilesError", self._messageListener);
+        mm.removeMessageListener("SPServiceWorkerCleanupComplete", self._messageListener);
       } catch (e) {
         // Ignore the exception which the message manager has been destroyed.
         if (e.result != Cr.NS_ERROR_ILLEGAL_VALUE) {
@@ -168,6 +173,18 @@ SpecialPowers.prototype._messageReceived = function(aMessage) {
         errorHandler(aMessage.data);
       }
       break;
+
+    case "SPServiceWorkerCleanupComplete": {
+      let id = aMessage.data.id;
+      // It's possible for us to receive requests for other SpecialPowers
+      // instances, ignore them.
+      if (this._serviceWorkerCleanUpRequests.has(id)) {
+        let resolve = this._serviceWorkerCleanUpRequests.get(id);
+        this._serviceWorkerCleanUpRequests.delete(id);
+        resolve();
+      }
+      break;
+    }
   }
 
   return true;
@@ -260,6 +277,15 @@ SpecialPowers.prototype.isServiceWorkerRegistered = function() {
   }
 
   return false;
+};
+
+SpecialPowers.prototype._removeServiceWorkerData = function(messageName) {
+  return new Promise(resolve => {
+    let id = Cc["@mozilla.org/uuid-generator;1"]
+               .getService(Ci.nsIUUIDGenerator).generateUUID().toString();
+    this._serviceWorkerCleanUpRequests.set(id, resolve);
+    this._sendAsyncMessage(messageName, { id });
+  });
 };
 
 // Attach our API to the window.
