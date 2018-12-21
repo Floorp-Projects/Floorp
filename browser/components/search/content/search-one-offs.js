@@ -558,8 +558,8 @@ class SearchOneOffs {
       // Make the top-level menu button.
       let button = document.createXULElement("toolbarbutton");
       list.appendChild(button);
-      button.classList.add("addengine-item", "badged-button");
-      button.setAttribute("class", "addengine-menu-button");
+      button.classList.add("addengine-menu-button", "addengine-item",
+                           "badged-button");
       button.setAttribute("type", "menu");
       button.setAttribute("label",
         this.bundle.GetStringFromName("cmd_addFoundEngineMenu"));
