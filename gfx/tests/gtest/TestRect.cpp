@@ -599,3 +599,36 @@ TEST(Gfx, gfxRect) {
   TestSetWH<gfxRect>();
   TestSwap<gfxRect>();
 }
+
+static void TestMoveInsideAndClamp(IntRect aSrc, IntRect aTarget,
+                                   IntRect aExpected) {
+  // Test the implementation in BaseRect (x/y/width/height representation)
+  IntRect result = aSrc.MoveInsideAndClamp(aTarget);
+  EXPECT_TRUE(result.IsEqualEdges(aExpected))
+      << "Source " << aSrc << " Target " << aTarget << " Expected " << aExpected
+      << " Actual " << result;
+
+  // Also test the implementation in RectAbsolute (left/top/right/bottom
+  // representation)
+  IntRectAbsolute absSrc = IntRectAbsolute::FromRect(aSrc);
+  IntRectAbsolute absTarget = IntRectAbsolute::FromRect(aTarget);
+  IntRectAbsolute absExpected = IntRectAbsolute::FromRect(aExpected);
+
+  IntRectAbsolute absResult = absSrc.MoveInsideAndClamp(absTarget);
+  EXPECT_TRUE(absResult.IsEqualEdges(absExpected))
+      << "AbsSource " << absSrc << " AbsTarget " << absTarget << " AbsExpected "
+      << absExpected << " AbsActual " << absResult;
+}
+
+TEST(Gfx, MoveInsideAndClamp) {
+  TestMoveInsideAndClamp(IntRect(0, 0, 10, 10), IntRect(1, -1, 10, 10),
+                         IntRect(1, -1, 10, 10));
+  TestMoveInsideAndClamp(IntRect(0, 0, 10, 10), IntRect(-1, -1, 12, 5),
+                         IntRect(0, -1, 10, 5));
+  TestMoveInsideAndClamp(IntRect(0, 0, 10, 10), IntRect(10, 11, 10, 0),
+                         IntRect(10, 11, 10, 0));
+  TestMoveInsideAndClamp(IntRect(0, 0, 10, 10), IntRect(-10, -1, 10, 0),
+                         IntRect(-10, -1, 10, 0));
+  TestMoveInsideAndClamp(IntRect(0, 0, 0, 0), IntRect(10, -10, 10, 10),
+                         IntRect(10, 0, 0, 0));
+}

@@ -239,6 +239,30 @@ struct BaseRectAbsolute {
     left = static_cast<T>(ceil(double(left) / aXScale));
     top = static_cast<T>(ceil(double(top) / aYScale));
   }
+
+  /**
+   * Translate this rectangle to be inside aRect. If it doesn't fit inside
+   * aRect then the dimensions that don't fit will be shrunk so that they
+   * do fit. The resulting rect is returned.
+   */
+  MOZ_MUST_USE Sub MoveInsideAndClamp(const Sub& aRect) const {
+    T newLeft = std::max(aRect.left, left);
+    T newTop = std::max(aRect.top, top);
+    T width = std::min(aRect.Width(), Width());
+    T height = std::min(aRect.Height(), Height());
+    Sub rect(newLeft, newTop, newLeft + width, newTop + height);
+    newLeft = std::min(rect.right, aRect.right) - width;
+    newTop = std::min(rect.bottom, aRect.bottom) - height;
+    rect.MoveBy(newLeft - rect.left, newTop - rect.top);
+    return rect;
+  }
+
+  friend std::ostream& operator<<(
+      std::ostream& stream,
+      const BaseRectAbsolute<T, Sub, Point, Rect>& aRect) {
+    return stream << '(' << aRect.left << ',' << aRect.top << ',' << aRect.right
+                  << ',' << aRect.bottom << ')';
+  }
 };
 
 template <class Units>
