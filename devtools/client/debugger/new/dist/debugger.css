@@ -3700,6 +3700,10 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
 .worker-list .worker:hover {
   background-color: var(--search-overlays-semitransparent);
 }
+
+.worker-list .worker.selected {
+  background-color: var(--tab-line-selected-color);
+}
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */

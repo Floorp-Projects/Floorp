@@ -7,6 +7,7 @@
 import { PROMISE } from "../utils/middleware/promise";
 import { recordEvent } from "../../utils/telemetry";
 import type { ThunkArgs } from "../types";
+import { getCurrentThread } from "../../selectors";
 
 /**
  *
@@ -17,7 +18,7 @@ export function pauseOnExceptions(
   shouldPauseOnExceptions: boolean,
   shouldPauseOnCaughtExceptions: boolean
 ) {
-  return ({ dispatch, client }: ThunkArgs) => {
+  return ({ dispatch, getState, client }: ThunkArgs) => {
     /* eslint-disable camelcase */
     recordEvent("pause_on_exceptions", {
       exceptions: shouldPauseOnExceptions,
@@ -26,11 +27,14 @@ export function pauseOnExceptions(
     });
     /* eslint-enable camelcase */
 
+    const thread = getCurrentThread(getState());
     return dispatch({
       type: "PAUSE_ON_EXCEPTIONS",
+      thread,
       shouldPauseOnExceptions,
       shouldPauseOnCaughtExceptions,
       [PROMISE]: client.pauseOnExceptions(
+        thread,
         shouldPauseOnExceptions,
         shouldPauseOnCaughtExceptions
       )

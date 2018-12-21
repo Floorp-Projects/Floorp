@@ -5,6 +5,7 @@
 // @flow
 
 import {
+  getCurrentThread,
   getFrames,
   getSymbols,
   getSource,
@@ -170,9 +171,11 @@ export function mapFrames() {
     mappedFrames = await expandFrames(mappedFrames, sourceMaps, getState);
     mappedFrames = mapDisplayNames(mappedFrames, getState);
 
+    const thread = getCurrentThread(getState());
     const selectedFrameId = getSelectedFrameId(getState(), mappedFrames);
     dispatch({
       type: "MAP_FRAMES",
+      thread,
       frames: mappedFrames,
       selectedFrameId
     });
