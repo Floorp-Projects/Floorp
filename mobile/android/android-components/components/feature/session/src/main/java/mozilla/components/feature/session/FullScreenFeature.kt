@@ -1,0 +1,47 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ *  License, v. 2.0. If a copy of the MPL was not distributed with this
+ *  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
+package mozilla.components.feature.session
+
+import mozilla.components.browser.session.SelectionAwareSessionObserver
+import mozilla.components.browser.session.Session
+import mozilla.components.browser.session.SessionManager
+
+/**
+ * Feature implementation for handling fullscreen mode (exiting and back button presses).
+ */
+open class FullScreenFeature(
+    private val sessionManager: SessionManager,
+    private val sessionUseCases: SessionUseCases,
+    private val sessionId: String? = null,
+    private val fullScreenChanged: (Boolean) -> Unit
+) : SelectionAwareSessionObserver(sessionManager) {
+
+    /**
+     * Starts the feature and a observer to listen for fullscreen changes.
+     */
+    fun start() {
+        val session = sessionId?.let { sessionManager.findSessionById(sessionId) }
+        session?.let { observeFixed(it) } ?: observeSelected()
+    }
+
+    override fun onFullScreenChanged(session: Session, enabled: Boolean) = fullScreenChanged(enabled)
+
+    /**
+     * To be called when the back button is pressed, so that only fullscreen mode closes.
+     *
+     * @return Returns true if the fullscreen mode was successfully exited; false if no effect was taken.
+     */
+    fun onBackPressed(): Boolean {
+        activeSession?.let {
+            if (it.fullScreenMode) {
+                sessionUseCases.exitFullscreen.invoke(it)
+                return true
+            }
+        }
+        return false
+    }
+}

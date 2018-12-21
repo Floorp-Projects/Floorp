@@ -19,10 +19,30 @@ permalink: /changelog/
 
 * **browser-session**
   * Added a use case for exiting fullscreen mode.
+
   ```kotlin
   val sessionUseCases = SessionUseCases(sessionManager)
   if (isFullScreenMode) {
     sessionUseCases.exitFullscreen.invoke()
+  }
+  ```
+
+  * We also added a `FullScreenFeature` that manages fullscreen support.
+
+  ```kotlin
+  val fullScreenFeature = FullScreenFeature(sessionManaager, sessionUseCases) { enabled ->
+    if (enabled) {
+      // Make custom views hide.
+    } else {
+      // Make custom views unhide.
+    }
+  }
+
+  override fun onBackPressed() : Boolean {
+    // Handling back presses when in fullscreen mode
+    if (fullScreenFeature.onBackPressed()) {
+      return true
+    }
   }
   ```
 * **feature-customtabs**
@@ -31,13 +51,13 @@ permalink: /changelog/
 * **feature-prompts**
   * Added support for file picker requests.
 
-  There some requests that are not handled with dialogs, instead they are delegated to other apps
-  to perform the request, an example is a file picker request. As a result, now you have to override
-  `onActivityResult` on your `Activity` or `Fragment` and forward its calls to `promptFeature.onActivityResult`.
+    There some requests that are not handled with dialogs, instead they are delegated to other apps
+    to perform the request, an example is a file picker request. As a result, now you have to override
+    `onActivityResult` on your `Activity` or `Fragment` and forward its calls to `promptFeature.onActivityResult`.
 
-  Additionally, there are requests that need some permission to be granted before they can be performed, like
-  file pickers that need access to read the selected files. Like `onActivityResult` you need to override
-  `onRequestPermissionsResult` and forward its calls to `promptFeature.onRequestPermissionsResult`.
+    Additionally, there are requests that need some permission to be granted before they can be performed, like
+    file pickers that need access to read the selected files. Like `onActivityResult` you need to override
+    `onRequestPermissionsResult` and forward its calls to `promptFeature.onRequestPermissionsResult`.
 
 # 0.35.1
 

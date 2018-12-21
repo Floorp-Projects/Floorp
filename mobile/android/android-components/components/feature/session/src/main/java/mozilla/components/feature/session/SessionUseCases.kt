@@ -109,6 +109,9 @@ class SessionUseCases(
     class ExitFullScreenUseCase internal constructor(
         private val sessionManager: SessionManager
     ) {
+        /**
+         * Exits fullscreen mode of the current session.
+         */
         fun invoke(session: Session = sessionManager.selectedSessionOrThrow) {
             sessionManager.getOrCreateEngineSession(session).exitFullScreenMode()
         }
