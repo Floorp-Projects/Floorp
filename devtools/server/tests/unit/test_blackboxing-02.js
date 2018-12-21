@@ -81,41 +81,38 @@ function test_black_box() {
 }
 
 function test_black_box_breakpoint() {
-  gThreadClient.getSources(function({error, sources}) {
+  gThreadClient.getSources(async function({error, sources}) {
     Assert.ok(!error, "Should not get an error: " + error);
     const sourceClient = gThreadClient.source(
       sources.filter(s => s.url == BLACK_BOXED_URL)[0]
     );
-    sourceClient.blackBox(function({error}) {
-      Assert.ok(!error, "Should not get an error: " + error);
 
-      gClient.addOneTimeListener("paused", function(event, packet) {
-        Assert.equal(
-          packet.why.type, "debuggerStatement",
-          "We should pass over the breakpoint since the source is black boxed.");
-        gThreadClient.resume(test_unblack_box_breakpoint.bind(null, sourceClient));
-      });
-      gDebuggee.runTest();
-    });
-  });
-}
+    await blackBox(sourceClient);
 
-function test_unblack_box_breakpoint(sourceClient) {
-  sourceClient.unblackBox(function({error}) {
-    Assert.ok(!error, "Should not get an error: " + error);
     gClient.addOneTimeListener("paused", function(event, packet) {
-      Assert.equal(packet.why.type, "breakpoint",
-                   "We should hit the breakpoint again");
-
-      // We will hit the debugger statement on resume, so do this
-      // nastiness to skip over it.
-      gClient.addOneTimeListener(
-        "paused",
-        gThreadClient.resume.bind(
-          gThreadClient,
-          finishClient.bind(null, gClient)));
-      gThreadClient.resume();
+      Assert.equal(
+        packet.why.type, "debuggerStatement",
+        "We should pass over the breakpoint since the source is black boxed.");
+      gThreadClient.resume(test_unblack_box_breakpoint.bind(null, sourceClient));
     });
     gDebuggee.runTest();
   });
+}
+
+async function test_unblack_box_breakpoint(sourceClient) {
+  await unBlackBox(sourceClient);
+  gClient.addOneTimeListener("paused", function(event, packet) {
+    Assert.equal(packet.why.type, "breakpoint",
+                 "We should hit the breakpoint again");
+
+    // We will hit the debugger statement on resume, so do this
+    // nastiness to skip over it.
+    gClient.addOneTimeListener(
+      "paused",
+      gThreadClient.resume.bind(
+        gThreadClient,
+        finishClient.bind(null, gClient)));
+    gThreadClient.resume();
+  });
+  gDebuggee.runTest();
 }

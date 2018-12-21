@@ -23,6 +23,9 @@ def create_parser(mach_interface=False):
     add_arg('--host', dest='host',
             help="Hostname from which to serve urls, defaults to 127.0.0.1.",
             default='127.0.0.1')
+    add_arg('--power-test', dest="power_test", action="store_true",
+            help="Use Raptor to measure power usage. Currently supported only when "
+            "--host specified for geckoview.")
     add_arg('--is-release-build', dest="is_release_build", default=False,
             action='store_true',
             help="Whether the build is a release build which requires work arounds "
@@ -77,6 +80,12 @@ def verify_options(parser, args):
     # if geckoProfile specified but not running on Firefox, not supported
     if args.gecko_profile is True and args.app != "firefox":
         parser.error("Gecko profiling is only supported when running raptor on Firefox!")
+
+    # if --power-test specified, must be on geckview with --host specified.
+    if args.power_test:
+        if args.app != "geckoview" or args.host in ('localhost', '127.0.0.1'):
+            parser.error("Power test is only supported when running raptor on Geckoview "
+                         "when host is specified!")
 
 
 def parse_args(argv=None):

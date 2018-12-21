@@ -78,10 +78,6 @@ runNetworkTest(function() {
     .then(() => waitUntil(() => v2.currentTime > 0))
     .then(() => ok(v2.currentTime > 0, "v2.currentTime is moving (" + v2.currentTime + ")"))
     .then(() => ok(true, "Connected."))
-    .then(() => pcall(pc1, pc1.getStats, null))
-    .then(stats => ok(Object.keys(stats).length > 0, "pc1 has stats"))
-    .then(() => pcall(pc2, pc2.getStats, null))
-    .then(stats => ok(Object.keys(stats).length > 0, "pc2 has stats"))
     .then(() => { v1.pause(); v2.pause(); })
     .catch(reason => ok(false, "unexpected failure: " + reason))
       .then(networkTestFinished);

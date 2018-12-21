@@ -13,24 +13,24 @@ add_task(async function() {
   const { inspector, flexboxInspector } = await openLayoutView();
   const { document: doc } = flexboxInspector;
 
-  info("Check that a vertical row flex item rotates to vertical-tb.");
+  info("Check that the row flex item rotated to vertical-bt.");
   let onFlexItemOutlineRendered = waitForDOM(doc,
     ".flex-outline-container .flex-outline");
-  await selectNode(".row.vertical.item", inspector);
+  await selectNode(".row.vertical-bt.item", inspector);
   let [flexOutline] = await onFlexItemOutlineRendered;
 
-  ok(flexOutline.classList.contains("vertical-tb"),
-    "Horizontal item outline orientation has been rotated to vertical-tb.");
+  ok(flexOutline.classList.contains("vertical-bt"),
+    "Row outline has been rotated to vertical-bt.");
 
-  info("Check that a vertical-rl column flex item rotates to horizontal-rl.");
+  info("Check that the column flex item rotated to horizontal-rl.");
   onFlexItemOutlineRendered = waitForDOM(doc,
     ".flex-outline-container .flex-outline");
-  await selectNode(".column.vertical.item", inspector);
+  await selectNode(".column.horizontal-rl.item", inspector);
   await waitUntil(() => {
     flexOutline =
       doc.querySelector(".flex-outline-container .flex-outline.horizontal-rl");
     return flexOutline;
   });
 
-  ok(true, "Vertical-rl item outline orientation has been rotated to horizontal-rl.");
+  ok(true, "Column outline has been rotated to horizontal-rl.");
 });

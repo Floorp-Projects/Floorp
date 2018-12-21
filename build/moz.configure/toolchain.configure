@@ -698,7 +698,7 @@ def get_vc_paths(topsrcdir):
                 'json'
             ] + args).decode(encoding, 'replace'))
 
-    for install in vswhere(['-requires', 'Microsoft.VisualStudio.Component.VC.Tools.x86.x64']):
+    for install in vswhere(['-products', '*', '-requires', 'Microsoft.VisualStudio.Component.VC.Tools.x86.x64']):
         path = install['installationPath']
         tools_version = open(os.path.join(
             path, r'VC\Auxiliary\Build\Microsoft.VCToolsVersion.default.txt'), 'rb').read().strip()
@@ -2146,3 +2146,14 @@ def make_shared_library(target, compiler):
 
 set_config('MKSHLIB', make_shared_library.mkshlib)
 set_config('MKCSHLIB', make_shared_library.mkcshlib)
+
+
+@depends(c_compiler, toolchain_prefix, when=target_is_windows)
+def rc_names(c_compiler, toolchain_prefix):
+    if c_compiler.type in ('gcc', 'clang'):
+        return tuple('%s%s' % (p, 'windres')
+                     for p in ('',) + (toolchain_prefix or ()))
+    return ('rc',)
+
+
+check_prog('RC', rc_names, paths=sdk_bin_path)

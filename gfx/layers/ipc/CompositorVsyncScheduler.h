@@ -94,6 +94,13 @@ class CompositorVsyncScheduler {
   const TimeStamp& GetLastComposeTime() const;
 
   /**
+   * Return the vsync timestamp and id of the most recently received
+   * vsync event. Must be called on the compositor thread.
+   */
+  const TimeStamp& GetLastVsyncTime() const;
+  const VsyncId& GetLastVsyncId() const;
+
+  /**
    * Update LastCompose TimeStamp to current timestamp.
    * The function is typically used when composition is handled outside the
    * CompositorVsyncScheduler.
@@ -139,6 +146,8 @@ class CompositorVsyncScheduler {
 
   CompositorVsyncSchedulerOwner* mVsyncSchedulerOwner;
   TimeStamp mLastCompose;
+  TimeStamp mLastVsync;
+  VsyncId mLastVsyncId;
 
   bool mAsapScheduling;
   bool mIsObservingVsync;

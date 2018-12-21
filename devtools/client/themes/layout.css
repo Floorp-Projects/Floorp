@@ -282,6 +282,14 @@ html[dir="rtl"] .flex-item-list .devtools-button::after {
 
 .flex-outline.vertical-tb {
   transform: translate(50%, -2em) rotate(.25turn);
+}
+
+.flex-outline.vertical-bt {
+  transform:translate(50%, 12em) rotate(0.75turn);
+}
+
+.flex-outline.vertical-tb,
+.flex-outline.vertical-bt {
   transform-origin: center left;
   flex-basis: 150px;
   margin-bottom: 120px;
@@ -323,6 +331,10 @@ html[dir="rtl"] .flex-item-list .devtools-button::after {
 
 .flex-outline.vertical-tb .flex-outline-final.clamped::after {
   transform: rotate(-.25turn);
+}
+
+.flex-outline.vertical-bt .flex-outline-final.clamped::after {
+  transform: rotate(-.75turn);
 }
 
 .flex-outline-basis {
@@ -408,6 +420,11 @@ html[dir="rtl"] .flex-item-list .devtools-button::after {
   justify-self: start;
 }
 
+.flex-outline.vertical-bt .flex-outline-point {
+  transform: rotate(180deg);
+  justify-content: end;
+}
+
 .flex-outline-point.basis,
 .flex-outline-point.basisfinal,
 .flex-outline.horizontal-rl .flex-outline-point.basis,
@@ -464,7 +481,8 @@ html[dir="rtl"] .flex-item-list .devtools-button::after {
   border-width: 0;
 }
 
-.flex-outline.vertical-tb .flex-outline-point::before {
+.flex-outline.vertical-tb .flex-outline-point::before,
+.flex-outline.vertical-bt .flex-outline-point::before {
   padding: 0;
   writing-mode: sideways-lr;
 }
@@ -481,12 +499,16 @@ html[dir="rtl"] .flex-item-list .devtools-button::after {
 }
 
 .flex-outline.horizontal-rl .flex-outline-point.min::before,
-.flex-outline.horizontal-rl .flex-outline-point.max::before {
+.flex-outline.horizontal-rl .flex-outline-point.max::before,
+.flex-outline.vertical-bt .flex-outline-point.min::before,
+.flex-outline.vertical-bt .flex-outline-point.max::before {
   bottom: -37px;
 }
 
 .flex-outline.vertical-tb .flex-outline-point.max::before,
-.flex-outline.vertical-tb .flex-outline-point.min::before {
+.flex-outline.vertical-tb .flex-outline-point.min::before,
+.flex-outline.vertical-bt .flex-outline-point.max::before,
+.flex-outline.vertical-bt .flex-outline-point.min::before {
   text-indent: -12px;
 }
 
@@ -496,7 +518,10 @@ html[dir="rtl"] .flex-item-list .devtools-button::after {
 .flex-outline.shrinking .flex-outline-point.basis::before,
 .flex-outline.horizontal-rl .flex-outline-point.basis::before,
 .flex-outline.horizontal-rl .flex-outline-point.basisfinal::before,
-.flex-outline.horizontal-rl.shrinking .flex-outline-point.final::before {
+.flex-outline.horizontal-rl.shrinking .flex-outline-point.final::before,
+.flex-outline.vertical-bt .flex-outline-point.basis::before,
+.flex-outline.vertical-bt .flex-outline-point.basisfinal::before,
+.flex-outline.vertical-bt.shrinking .flex-outline-point.final::before {
   border-width: 0 0 0 1px;
 }
 
@@ -506,7 +531,11 @@ html[dir="rtl"] .flex-item-list .devtools-button::after {
 .flex-outline-point.basisfinal::before,
 .flex-outline.horizontal-rl .flex-outline-point.final::before,
 .flex-outline.horizontal-rl .flex-outline-point.min::before,
-.flex-outline.horizontal-rl .flex-outline-point.max::before {
+.flex-outline.horizontal-rl .flex-outline-point.max::before,
+.flex-outline.vertical-bt.shrinking .flex-outline-point.basis::before,
+.flex-outline.vertical-bt .flex-outline-point.final::before,
+.flex-outline.vertical-bt .flex-outline-point.min::before,
+.flex-outline.vertical-bt .flex-outline-point.max::before {
   border-width: 0 1px 0 0;
 }
 

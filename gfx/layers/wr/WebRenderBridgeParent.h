@@ -20,6 +20,7 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/webrender/WebRenderTypes.h"
 #include "mozilla/webrender/WebRenderAPI.h"
+#include "mozilla/webrender/RenderThread.h"
 #include "nsTArrayForwardDeclare.h"
 
 namespace mozilla {
@@ -225,6 +226,8 @@ class WebRenderBridgeParent final : public PWebRenderBridgeParent,
    */
   void ScheduleForcedGenerateFrame();
 
+  void NotifyDidSceneBuild(RefPtr<wr::WebRenderPipelineInfo> aInfo);
+
   wr::Epoch UpdateWebRender(
       CompositorVsyncScheduler* aScheduler, wr::WebRenderAPI* aApi,
       AsyncImagePipelineManager* aImageMgr,
@@ -321,6 +324,15 @@ class WebRenderBridgeParent final : public PWebRenderBridgeParent,
 
   void MaybeGenerateFrame(VsyncId aId, bool aForceGenerateFrame);
 
+  VsyncId GetVsyncIdForEpoch(const wr::Epoch& aEpoch) {
+    for (auto& id : mPendingTransactionIds) {
+      if (id.mEpoch.mHandle == aEpoch.mHandle) {
+        return id.mVsyncId;
+      }
+    }
+    return VsyncId();
+  }
+
  private:
   struct PendingTransactionId {
     PendingTransactionId(const wr::Epoch& aEpoch, TransactionId aId,
@@ -391,6 +403,9 @@ class WebRenderBridgeParent final : public PWebRenderBridgeParent,
   std::queue<CompositorAnimationIdsForEpoch> mCompositorAnimationsToDelete;
   wr::Epoch mWrEpoch;
   wr::IdNamespace mIdNamespace;
+
+  VsyncId mSkippedCompositeId;
+  TimeStamp mMostRecentComposite;
 
   bool mPaused;
   bool mDestroyed;

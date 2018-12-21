@@ -18,7 +18,7 @@ async function checkFlexItemDimension(inspector, store, doc, selector, expected)
   await onUpdate;
 
   info("Check that the minimum size section shows the correct dimension.");
-  const [sectionMinRowItem] = [...doc.querySelectorAll(".flex-item-sizing .section.min")];
+  const sectionMinRowItem = doc.querySelector(".flex-item-sizing .section.min");
   const minDimension = sectionMinRowItem.querySelector(".css-property-link");
 
   ok(minDimension.textContent.includes(expected),
@@ -31,11 +31,13 @@ add_task(async function() {
   const { document: doc, store } = flexboxInspector;
 
   await checkFlexItemDimension(inspector, store, doc,
-    ".row.vertical.item", "min-height");
+    ".row.vertical-rl.item", "min-height");
   await checkFlexItemDimension(inspector, store, doc,
-    ".column.vertical.item", "min-width");
+    ".column.vertical-tb.item", "min-height");
   await checkFlexItemDimension(inspector, store, doc,
-    ".row.horizontal.item", "min-width");
+    ".row.vertical-bt.item", "min-height");
   await checkFlexItemDimension(inspector, store, doc,
-    ".column.horizontal.item", "min-height");
+    ".column.horizontal-rl.item", "min-width");
+  await checkFlexItemDimension(inspector, store, doc,
+    ".row.horizontal-lr.item", "min-width");
 });
