@@ -66,8 +66,8 @@ void SVGFEMorphologyElement::SetRadius(float rx, float ry) {
 }
 
 void SVGFEMorphologyElement::GetSourceImageNames(
-    nsTArray<nsSVGStringInfo>& aSources) {
-  aSources.AppendElement(nsSVGStringInfo(&mStringAttributes[IN1], this));
+    nsTArray<SVGStringInfo>& aSources) {
+  aSources.AppendElement(SVGStringInfo(&mStringAttributes[IN1], this));
 }
 
 #define MORPHOLOGY_EPSILON 0.0001

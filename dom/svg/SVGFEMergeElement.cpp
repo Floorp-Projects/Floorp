@@ -32,13 +32,12 @@ FilterPrimitiveDescription SVGFEMergeElement::GetPrimitiveDescription(
   return FilterPrimitiveDescription(AsVariant(MergeAttributes()));
 }
 
-void SVGFEMergeElement::GetSourceImageNames(
-    nsTArray<nsSVGStringInfo>& aSources) {
+void SVGFEMergeElement::GetSourceImageNames(nsTArray<SVGStringInfo>& aSources) {
   for (nsIContent* child = nsINode::GetFirstChild(); child;
        child = child->GetNextSibling()) {
     if (child->IsSVGElement(nsGkAtoms::feMergeNode)) {
       SVGFEMergeNodeElement* node = static_cast<SVGFEMergeNodeElement*>(child);
-      aSources.AppendElement(nsSVGStringInfo(node->GetIn1(), node));
+      aSources.AppendElement(SVGStringInfo(node->GetIn1(), node));
     }
   }
 }

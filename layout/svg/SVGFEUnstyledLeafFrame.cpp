@@ -9,7 +9,7 @@
 #include "nsFrame.h"
 #include "nsGkAtoms.h"
 #include "SVGObserverUtils.h"
-#include "nsSVGFilters.h"
+#include "SVGFilters.h"
 
 using namespace mozilla;
 

@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_SVGFEPointLightElement_h
 #define mozilla_dom_SVGFEPointLightElement_h
 
-#include "nsSVGFilters.h"
+#include "SVGFilters.h"
 #include "nsSVGNumber2.h"
 
 nsresult NS_NewSVGFEPointLightElement(
