@@ -11,6 +11,7 @@ use std::env;
 use std::path::PathBuf;
 use webrender;
 use winit;
+use webrender::DebugFlags;
 use webrender::ShaderPrecacheFlags;
 use webrender::api::*;
 
@@ -147,13 +148,14 @@ pub fn main_wrapper<E: Example>(
     println!("Device pixel ratio: {}", device_pixel_ratio);
 
     println!("Loading shaders...");
+    let mut debug_flags = DebugFlags::ECHO_DRIVER_MESSAGES | DebugFlags::TEXTURE_CACHE_DBG;
     let opts = webrender::RendererOptions {
         resource_override_path: res_path,
         precache_flags: E::PRECACHE_SHADER_FLAGS,
         device_pixel_ratio,
         clear_color: Some(ColorF::new(0.3, 0.0, 0.0, 1.0)),
         //scatter_gpu_cache_updates: false,
-        debug_flags: webrender::DebugFlags::ECHO_DRIVER_MESSAGES,
+        debug_flags,
         ..options.unwrap_or(webrender::RendererOptions::default())
     };
 
@@ -178,8 +180,6 @@ pub fn main_wrapper<E: Example>(
     if let Some(external_image_handler) = external {
         renderer.set_external_image_handler(external_image_handler);
     }
-
-    renderer.toggle_debug_flags(webrender::DebugFlags::TEXTURE_CACHE_DBG);
 
     let epoch = Epoch(0);
     let pipeline_id = PipelineId(0, 0);
@@ -211,6 +211,7 @@ pub fn main_wrapper<E: Example>(
         let mut txn = Transaction::new();
         let mut custom_event = true;
 
+        let old_flags = debug_flags;
         match global_event {
             winit::Event::WindowEvent {
                 event: winit::WindowEvent::CloseRequested,
@@ -228,22 +229,17 @@ pub fn main_wrapper<E: Example>(
                 ..
             } => match key {
                 winit::VirtualKeyCode::Escape => return winit::ControlFlow::Break,
-                winit::VirtualKeyCode::P => renderer.toggle_debug_flags(webrender::DebugFlags::PROFILER_DBG),
-                winit::VirtualKeyCode::O => renderer.toggle_debug_flags(webrender::DebugFlags::RENDER_TARGET_DBG),
-                winit::VirtualKeyCode::I => renderer.toggle_debug_flags(webrender::DebugFlags::TEXTURE_CACHE_DBG),
-                winit::VirtualKeyCode::S => renderer.toggle_debug_flags(webrender::DebugFlags::COMPACT_PROFILER),
-                winit::VirtualKeyCode::Q => renderer.toggle_debug_flags(
-                    webrender::DebugFlags::GPU_TIME_QUERIES | webrender::DebugFlags::GPU_SAMPLE_QUERIES
+                winit::VirtualKeyCode::P => debug_flags.toggle(DebugFlags::PROFILER_DBG),
+                winit::VirtualKeyCode::O => debug_flags.toggle(DebugFlags::RENDER_TARGET_DBG),
+                winit::VirtualKeyCode::I => debug_flags.toggle(DebugFlags::TEXTURE_CACHE_DBG),
+                winit::VirtualKeyCode::S => debug_flags.toggle(DebugFlags::COMPACT_PROFILER),
+                winit::VirtualKeyCode::Q => debug_flags.toggle(
+                    DebugFlags::GPU_TIME_QUERIES | DebugFlags::GPU_SAMPLE_QUERIES
                 ),
-                winit::VirtualKeyCode::F => renderer.toggle_debug_flags(
-                    webrender::DebugFlags::NEW_FRAME_INDICATOR | webrender::DebugFlags::NEW_SCENE_INDICATOR
+                winit::VirtualKeyCode::F => debug_flags.toggle(
+                    DebugFlags::NEW_FRAME_INDICATOR | DebugFlags::NEW_SCENE_INDICATOR
                 ),
-                winit::VirtualKeyCode::G => api.send_debug_cmd(
-                    // go through the API so that we reach the render backend
-                    DebugCommand::EnableGpuCacheDebug(
-                        !renderer.get_debug_flags().contains(webrender::DebugFlags::GPU_CACHE_DBG)
-                    ),
-                ),
+                winit::VirtualKeyCode::G => debug_flags.toggle(DebugFlags::GPU_CACHE_DBG),
                 winit::VirtualKeyCode::Key1 => txn.set_window_parameters(
                     framebuffer_size,
                     DeviceIntRect::new(DeviceIntPoint::zero(), framebuffer_size),
@@ -281,6 +277,10 @@ pub fn main_wrapper<E: Example>(
             ),
             _ => return winit::ControlFlow::Continue,
         };
+
+        if debug_flags != old_flags {
+            api.send_debug_cmd(DebugCommand::SetFlags(debug_flags));
+        }
 
         if custom_event {
             let mut builder = DisplayListBuilder::new(pipeline_id, layout_size);
