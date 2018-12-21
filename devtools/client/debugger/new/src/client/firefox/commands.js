@@ -31,7 +31,7 @@ import { makePendingLocationId } from "../../utils/breakpoint";
 
 import { createSource, createBreakpointLocation, createWorker } from "./create";
 import { originalToGeneratedId, isOriginalId } from "devtools-source-map";
-import { updateWorkerClients, checkServerSupportsListWorkers } from "./workers";
+import { supportsWorkers, updateWorkerClients } from "./workers";
 
 import { features } from "../../utils/prefs";
 
@@ -442,31 +442,16 @@ async function fetchWorkers(): Promise<{ workers: Worker[] }> {
     const workerNames = Object.getOwnPropertyNames(workerClients);
     return {
       workers: workerNames.map(actor =>
-        createWorker(actor, workerClients[actor])
+        createWorker(actor, workerClients[actor].url)
       )
     };
   }
 
-  // Temporary workaround for Bug 1443550
-  // XXX: Remove when FF60 for Android is no longer used or available.
-  const supportsListWorkers = await checkServerSupportsListWorkers({
-    tabTarget,
-    debuggerClient
-  });
-
-  // NOTE: The Worker and Browser Content toolboxes do not have a parent
-  // with a listWorkers function
-  // TODO: there is a listWorkers property, but it is not a function on the
-  // parent. Investigate what it is
-  if (
-    !threadClient._parent ||
-    typeof threadClient._parent.listWorkers != "function" ||
-    !supportsListWorkers
-  ) {
+  if (!supportsWorkers(tabTarget)) {
     return Promise.resolve({ workers: [] });
   }
 
-  return threadClient._parent.listWorkers();
+  return tabTarget.activeTab.listWorkers();
 }
 
 const clientCommands = {

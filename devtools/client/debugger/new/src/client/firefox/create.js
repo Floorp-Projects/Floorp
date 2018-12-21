@@ -10,8 +10,7 @@ import type {
   PausedPacket,
   FramesResponse,
   FramePacket,
-  SourcePayload,
-  ThreadClient
+  SourcePayload
 } from "./types";
 
 import { clientCommands } from "./commands";
@@ -101,10 +100,10 @@ export function createBreakpointLocation(
   };
 }
 
-export function createWorker(actor: string, threadClient: ThreadClient) {
+export function createWorker(actor: string, url: string) {
   return {
     actor,
-    url: threadClient.url,
+    url,
     // Ci.nsIWorkerDebugger.TYPE_DEDICATED
     type: 0
   };
