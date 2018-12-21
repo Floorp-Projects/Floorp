@@ -514,23 +514,6 @@ class TupBackend(CommonBackend):
         )
 
 
-    def _gen_host_library(self, backend_file):
-        objs = backend_file.host_library.objs
-        inputs = objs
-        outputs = [backend_file.host_library.name]
-        cmd = (
-            [backend_file.environment.substs['HOST_AR']] +
-            [backend_file.environment.substs['HOST_AR_FLAGS'].replace('$@', '%o')] +
-            objs
-        )
-        backend_file.rule(
-            cmd=cmd,
-            inputs=inputs,
-            outputs=outputs,
-            display='AR %o'
-        )
-
-
     def _gen_host_programs(self, backend_file):
         for p in backend_file.host_programs:
             self._gen_host_program(backend_file, p)
@@ -698,8 +681,7 @@ class TupBackend(CommonBackend):
                                     (backend_file.static_lib and backend_file.static_lib.no_expand_lib,
                                      self._gen_static_library),
                                     (backend_file.programs, self._gen_programs),
-                                    (backend_file.host_programs, self._gen_host_programs),
-                                    (backend_file.host_library, self._gen_host_library)):
+                                    (backend_file.host_programs, self._gen_host_programs)):
                 if var:
                     backend_file.export_shell()
                     backend_file.export_icecc()
