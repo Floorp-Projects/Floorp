@@ -328,21 +328,17 @@ Element* DocumentOrShadowRoot::ElementFromPointHelper(
   return elementArray.SafeElementAt(0);
 }
 
-nsresult DocumentOrShadowRoot::NodesFromRectHelper(
-    float aX, float aY, float aTopSize, float aRightSize, float aBottomSize,
-    float aLeftSize, bool aIgnoreRootScrollFrame, bool aFlushLayout,
-    nsINodeList** aReturn) {
-  MOZ_ASSERT(AsNode().IsDocument());
-  NS_ENSURE_ARG_POINTER(aReturn);
-
-  nsIDocument* doc = AsNode().AsDocument();
-  nsSimpleContentList* elements = new nsSimpleContentList(doc);
-  NS_ADDREF(elements);
-  *aReturn = elements;
-
+void DocumentOrShadowRoot::NodesFromRect(float aX, float aY, float aTopSize,
+                                         float aRightSize, float aBottomSize,
+                                         float aLeftSize,
+                                         bool aIgnoreRootScrollFrame,
+                                         bool aFlushLayout,
+                                         nsTArray<RefPtr<nsINode>>& aReturn) {
   // Following the same behavior of elementFromPoint,
   // we don't return anything if either coord is negative
-  if (!aIgnoreRootScrollFrame && (aX < 0 || aY < 0)) return NS_OK;
+  if (!aIgnoreRootScrollFrame && (aX < 0 || aY < 0)) {
+    return;
+  }
 
   nscoord x = nsPresContext::CSSPixelsToAppUnits(aX - aLeftSize);
   nscoord y = nsPresContext::CSSPixelsToAppUnits(aY - aTopSize);
@@ -351,6 +347,8 @@ nsresult DocumentOrShadowRoot::NodesFromRectHelper(
 
   nsRect rect(x, y, w, h);
 
+  nsIDocument* doc = AsNode().OwnerDoc();
+
   // Make sure the layout information we get is up-to-date, and
   // ensure we get a root frame (for everything but XUL)
   if (aFlushLayout) {
@@ -358,13 +356,16 @@ nsresult DocumentOrShadowRoot::NodesFromRectHelper(
   }
 
   nsIPresShell* ps = doc->GetShell();
-  NS_ENSURE_STATE(ps);
+  if (!ps) {
+    return;
+  }
+
   nsIFrame* rootFrame = ps->GetRootFrame();
 
   // XUL docs, unlike HTML, have no frame tree until everything's done loading
   if (!rootFrame)
-    return NS_OK;  // return nothing to premature XUL callers as a reminder to
-                   // wait
+    return;  // return nothing to premature XUL callers as a reminder to
+             // wait
 
   EnumSet<FrameForPointOption> options = {
       FrameForPointOption::IgnorePaintSuppression,
@@ -391,12 +392,10 @@ nsresult DocumentOrShadowRoot::NodesFromRectHelper(
       node = node->GetParent();
     }
     if (node && node != lastAdded) {
-      elements->AppendElement(node);
+      aReturn.AppendElement(node);
       lastAdded = node;
     }
   }
-
-  return NS_OK;
 }
 
 Element* DocumentOrShadowRoot::AddIDTargetObserver(nsAtom* aID,
