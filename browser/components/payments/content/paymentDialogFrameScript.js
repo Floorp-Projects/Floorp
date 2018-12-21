@@ -96,6 +96,10 @@ let PaymentFrameScript = {
         return Cu.cloneInto(format, waivedContent);
       },
 
+      findAddressSelectOption(selectEl, address, fieldName) {
+        return FormAutofillUtils.findAddressSelectOption(selectEl, address, fieldName);
+      },
+
       getDefaultPreferences() {
         let prefValues = Cu.cloneInto({
           saveCreditCardDefaultChecked:

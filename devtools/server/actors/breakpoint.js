@@ -146,7 +146,7 @@ const BreakpointActor = ActorClassWithSpec(breakpointSpec, {
     } = this.threadActor.sources.getFrameLocation(frame);
     const url = generatedSourceActor.url;
 
-    if (this.threadActor.sources.isBlackBoxed(url)
+    if (this.threadActor.sources.isBlackBoxed(url, generatedLine, generatedColumn)
         || this.threadActor.skipBreakpoints
         || frame.onStep) {
       return undefined;

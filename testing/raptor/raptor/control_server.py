@@ -171,6 +171,15 @@ class RaptorControlServer():
                 self.browser_proc.kill()
         self._finished = True
 
+    def submit_supporting_data(self, supporting_data):
+        '''
+        Allow the submission of supporting data i.e. power data.
+        This type of data is measured outside of the webext; so
+        we can submit directly to the control server instead of
+        doing an http post.
+        '''
+        self.results_handler.add_supporting_data(supporting_data)
+
     def stop(self):
         LOG.info("shutting down control server")
         self.server.shutdown()

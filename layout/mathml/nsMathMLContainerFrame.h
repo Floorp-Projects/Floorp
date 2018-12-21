@@ -360,8 +360,9 @@ class nsMathMLContainerFrame : public nsContainerFrame, public nsMathMLFrame {
 // 1) line-breaking
 // 2) proper inter-frame spacing
 // 3) firing of Stretch() (in which case FinalizeReflow() would have to be
-// cleaned) Issues: If/when mathml becomes a pluggable component, the separation
-// will be needed.
+//    cleaned)
+// Issues: If/when mathml becomes a pluggable component, the separation will be
+// needed.
 class nsMathMLmathBlockFrame final : public nsBlockFrame {
  public:
   NS_DECL_QUERYFRAME

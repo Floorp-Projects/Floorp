@@ -20,6 +20,7 @@ from mozbuild.configure import (
     ConfigureSandbox,
 )
 from mozbuild.util import exec_
+from mozbuild.shellutil import quote as shell_quote
 from mozpack import path as mozpath
 
 from buildconfig import topsrcdir
@@ -184,8 +185,8 @@ class TestChecksConfigure(unittest.TestCase):
             'check_prog("FOO", ("unknown", "unknown-2", "known c"))')
         self.assertEqual(status, 0)
         self.assertEqual(config, {'FOO': fake_short_path(self.KNOWN_C)})
-        self.assertEqual(out, "checking for foo... '%s'\n"
-                              % fake_short_path(self.KNOWN_C))
+        self.assertEqual(out, "checking for foo... %s\n"
+                              % shell_quote(fake_short_path(self.KNOWN_C)))
 
         config, out, status = self.get_result(
             'check_prog("FOO", ("unknown",))')
@@ -265,8 +266,8 @@ class TestChecksConfigure(unittest.TestCase):
             ['FOO=known c'])
         self.assertEqual(status, 0)
         self.assertEqual(config, {'FOO': fake_short_path(self.KNOWN_C)})
-        self.assertEqual(out, "checking for foo... '%s'\n"
-                              % fake_short_path(self.KNOWN_C))
+        self.assertEqual(out, "checking for foo... %s\n"
+                              % shell_quote(fake_short_path(self.KNOWN_C)))
 
         config, out, status = self.get_result(
             'check_prog("FOO", ("unknown", "unknown-2", "unknown 3"), '

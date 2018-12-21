@@ -766,9 +766,11 @@ function getFrames(threadClient, first, count) {
  * @param SourceClient sourceClient
  * @returns Promise
  */
-function blackBox(sourceClient) {
+async function blackBox(sourceClient, range = null) {
   dumpn("Black boxing source: " + sourceClient.actor);
-  return sourceClient.blackBox();
+  const { error, pausedInSource } = await sourceClient.blackBox(range);
+  Assert.ok(!error, "Should not get an error: " + error);
+  return {error, pausedInSource};
 }
 
 /**
@@ -777,9 +779,10 @@ function blackBox(sourceClient) {
  * @param SourceClient sourceClient
  * @returns Promise
  */
-function unBlackBox(sourceClient) {
+async function unBlackBox(sourceClient, range = null) {
   dumpn("Un-black boxing source: " + sourceClient.actor);
-  return sourceClient.unblackBox();
+  const {error} = await sourceClient.unblackBox(range);
+  Assert.ok(!error, "Should not get an error: " + error);
 }
 
 /**

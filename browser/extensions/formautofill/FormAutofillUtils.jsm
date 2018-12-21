@@ -94,7 +94,7 @@ let AddressDataLoader = {
       return null;
     }
 
-    const properties = ["languages", "sub_keys", "sub_names", "sub_lnames"];
+    const properties = ["languages", "sub_keys", "sub_isoids", "sub_names", "sub_lnames"];
     for (let key of properties) {
       if (!data[key]) {
         continue;
@@ -537,6 +537,40 @@ this.FormAutofillUtils = {
   },
 
   /**
+   * Used to populate dropdowns in the UI (e.g. FormAutofill preferences, Web Payments).
+   * Use findAddressSelectOption for matching a value to a region.
+   *
+   * @param {string[]} subKeys An array of regionCode strings
+   * @param {string[]} subIsoids An array of ISO ID strings, if provided will be preferred over the key
+   * @param {string[]} subNames An array of regionName strings
+   * @param {string[]} subLnames An array of latinised regionName strings
+   * @returns {Map?} Returns null if subKeys or subNames are not truthy.
+   *                   Otherwise, a Map will be returned mapping keys -> names.
+   */
+  buildRegionMapIfAvailable(subKeys, subIsoids, subNames, subLnames) {
+    // Not all regions have sub_keys. e.g. DE
+    if (!subKeys || !subKeys.length ||
+        (!subNames && !subLnames) ||
+        (subNames && subKeys.length != subNames.length ||
+         subLnames && subKeys.length != subLnames.length)) {
+      return null;
+    }
+
+    // Overwrite subKeys with subIsoids, when available
+    if (subIsoids && subIsoids.length && subIsoids.length == subKeys.length) {
+      for (let i = 0; i < subIsoids.length; i++) {
+        if (subIsoids[i]) {
+          subKeys[i] = subIsoids[i];
+        }
+      }
+    }
+
+    // Apply sub_lnames if sub_names does not exist
+    let names = subNames || subLnames;
+    return new Map(subKeys.map((key, index) => [key, names[index]]));
+  },
+
+  /**
    * Parse a require string and outputs an array of fields.
    * Spaces, commas, and other literals are ignored in this implementation.
    * For example, a require string "ACS" should return:
@@ -866,10 +900,11 @@ this.FormAutofillUtils = {
       addressLevel3Label: dataset.sublocality_name_type || "suburb",
       addressLevel2Label: dataset.locality_name_type || "city",
       addressLevel1Label: dataset.state_name_type || "province",
-      postalCodeLabel: dataset.zip_name_type || "postalCode",
-      fieldsOrder: this.parseAddressFormat(dataset.fmt || "%N%n%O%n%A%n%C"),
-      postalCodePattern: dataset.zip,
+      addressLevel1Options: this.buildRegionMapIfAvailable(dataset.sub_keys, dataset.sub_isoids, dataset.sub_names, dataset.sub_lnames),
       countryRequiredFields: this.parseRequireString(dataset.require || "AC"),
+      fieldsOrder: this.parseAddressFormat(dataset.fmt || "%N%n%O%n%A%n%C"),
+      postalCodeLabel: dataset.zip_name_type || "postalCode",
+      postalCodePattern: dataset.zip,
     };
   },
 

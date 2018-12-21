@@ -258,6 +258,7 @@ class nsWindow final : public nsBaseWidget {
   void OnDPIChanged(void);
   void OnCheckResize(void);
   void OnCompositedChanged(void);
+  void OnScaleChanged(GtkAllocation* aAllocation);
 
 #ifdef MOZ_X11
   Window mOldFocusWindow;

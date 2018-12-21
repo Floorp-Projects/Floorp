@@ -127,6 +127,11 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
             "dest": "host",
             "help": "Hostname from which to serve urls (default: 127.0.0.1).",
         }],
+        [["--power-test"], {
+            "dest": "power_test",
+            "help": "Use Raptor to measure power usage. Currently supported only when "
+                    "--host specified for geckoview.",
+        }],
         [["--debug-mode"], {
             "dest": "debug_mode",
             "action": "store_true",
@@ -196,6 +201,7 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
         self.gecko_profile_entries = self.config.get('gecko_profile_entries')
         self.test_packages_url = self.config.get('test_packages_url')
         self.host = self.config.get('host')
+        self.power_test = self.config.get('power_test')
         self.is_release_build = self.config.get('is_release_build')
         self.debug_mode = self.config.get('debug_mode', False)
 
@@ -352,6 +358,8 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
             options.extend(['--code-coverage'])
         if self.config.get('is_release_build', False):
             options.extend(['--is-release-build'])
+        if self.config.get('power_test', False):
+            options.extend(['--power-test'])
         for key, value in kw_options.items():
             options.extend(['--%s' % key, value])
 
@@ -477,8 +485,7 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
             self.exception("Error while validating PERFHERDER_DATA")
             self.info(str(e))
 
-    def _artifact_perf_data(self, dest):
-        src = os.path.join(self.query_abs_dirs()['abs_work_dir'], 'raptor.json')
+    def _artifact_perf_data(self, src, dest):
         if not os.path.isdir(os.path.dirname(dest)):
             # create upload dir if it doesn't already exist
             self.info("creating dir: %s" % os.path.dirname(dest))
@@ -588,7 +595,11 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
                 self.info("copying raptor results to upload dir:")
                 dest = os.path.join(env['MOZ_UPLOAD_DIR'], 'perfherder-data.json')
                 self.info(str(dest))
-                self._artifact_perf_data(dest)
+                src = os.path.join(self.query_abs_dirs()['abs_work_dir'], 'raptor.json')
+                self._artifact_perf_data(src, dest)
+                if self.power_test:
+                    src = os.path.join(self.query_abs_dirs()['abs_work_dir'], 'raptor-power.json')
+                    self._artifact_perf_data(src, dest)
 
 
 class RaptorOutputParser(OutputParser):

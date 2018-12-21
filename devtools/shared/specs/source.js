@@ -48,8 +48,13 @@ const sourceSpec = generateActorSpec({
         pausePoints: Arg(0, "json"),
       },
     },
-    blackbox: { response: { pausedInSource: RetVal("boolean") } },
-    unblackbox: {},
+    blackbox: {
+      request: { range: Arg(0, "nullable:json") },
+      response: { pausedInSource: RetVal("boolean") },
+    },
+    unblackbox: {
+      request: { range: Arg(0, "nullable:json") },
+    },
     setBreakpoint: {
       request: {
         location: {
