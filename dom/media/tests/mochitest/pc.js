@@ -1523,10 +1523,11 @@ PeerConnectionWrapper.prototype = {
   async waitForRtpFlow(track) {
     info("waitForRtpFlow("+track.id+")");
     let hasFlow = (stats, retries) => {
-      info("Checking for stats in " + JSON.stringify(stats) + " for " + track.kind
-        + " track " + track.id + ", retry number " + retries);
-      let rtp = stats.get([...Object.keys(stats)].find(key =>
-        !stats.get(key).isRemote && stats.get(key).type.endsWith("bound-rtp")));
+      const dict = JSON.stringify([...stats.entries()]);
+      info(`Checking for stats in  ${dict} for ${track.kind} track ${track.id}`
+           + `retry number ${retries}`);
+      let rtp = [...stats.values()].find(value =>
+        !value.isRemote && value.type.endsWith("bound-rtp"));
       if (!rtp) {
         return false;
       }
@@ -1613,14 +1614,14 @@ PeerConnectionWrapper.prototype = {
     // Ensures that RTCP is present
     let ensureSyncedRtcp = async () => {
       let report = await this._pc.getStats();
-      for (let [k, v] of report) {
+      for(const v of [...report.values()]) {
         if (v.type.endsWith("bound-rtp") && !v.remoteId) {
-          info(v.id + " is missing remoteId: " + JSON.stringify(v));
+          info(`${v.id} is missing remoteId: ${JSON.stringify(v)}`);
           return null;
         }
         if (v.type == "inbound-rtp" && v.isRemote == true
             && v.roundTripTime === undefined) {
-          info(v.id + " is missing roundTripTime: " + JSON.stringify(v));
+          info(`${v.id} is missing roundTripTime: ${JSON.stringify(v)}`);
           return null;
         }
       }
@@ -1736,17 +1737,6 @@ PeerConnectionWrapper.prototype = {
         return Math.abs(inputMax - outputMax) < (inputData.length * 0.02);
       });
     }
-  },
-
-  /**
-   * Get stats from the "legacy" getStats callback interface
-   */
-  getStatsLegacy : function(selector, onSuccess, onFail) {
-    let wrapper = stats => {
-      info(this + ": Got legacy stats: " + JSON.stringify(stats));
-      onSuccess(stats);
-    };
-    return this._pc.getStats(selector, wrapper, onFail);
   },
 
   /**
@@ -1871,27 +1861,6 @@ PeerConnectionWrapper.prototype = {
       }
     }
 
-    var legacyToSpecMapping = {
-      'inboundrtp':'inbound-rtp',
-      'outboundrtp':'outbound-rtp',
-      'candidatepair':'candidate-pair',
-      'localcandidate':'local-candidate',
-      'remotecandidate':'remote-candidate'
-    };
-    // Use legacy way of enumerating stats
-    var counters2 = {};
-    for (let key in stats) {
-      if (!stats.hasOwnProperty(key)) {
-        continue;
-      }
-      var res = stats[key];
-      var type = legacyToSpecMapping[res.type] || res.type;
-      if (!res.isRemote) {
-        counters2[type] = (counters2[type] || 0) + 1;
-      }
-    }
-    is(JSON.stringify(counters), JSON.stringify(counters2),
-       "Spec and legacy variant of RTCStatsReport enumeration agree");
     var nin = this._pc.getTransceivers()
       .filter(t => {
         return !t.stopped &&
