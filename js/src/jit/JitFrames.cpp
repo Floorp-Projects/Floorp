@@ -89,10 +89,9 @@ static uint32_t NumArgAndLocalSlots(const InlineFrameIterator& frame) {
 static void CloseLiveIteratorIon(JSContext* cx,
                                  const InlineFrameIterator& frame,
                                  const JSTryNote* tn) {
-  MOZ_ASSERT(tn->kind == JSTRY_FOR_IN ||
-             tn->kind == JSTRY_DESTRUCTURING_ITERCLOSE);
+  MOZ_ASSERT(tn->kind == JSTRY_FOR_IN || tn->kind == JSTRY_DESTRUCTURING);
 
-  bool isDestructuring = tn->kind == JSTRY_DESTRUCTURING_ITERCLOSE;
+  bool isDestructuring = tn->kind == JSTRY_DESTRUCTURING;
   MOZ_ASSERT_IF(!isDestructuring, tn->stackDepth > 0);
   MOZ_ASSERT_IF(isDestructuring, tn->stackDepth > 1);
 
@@ -208,7 +207,7 @@ static void HandleExceptionIon(JSContext* cx, const InlineFrameIterator& frame,
 
     switch (tn->kind) {
       case JSTRY_FOR_IN:
-      case JSTRY_DESTRUCTURING_ITERCLOSE:
+      case JSTRY_DESTRUCTURING:
         // See corresponding comment in ProcessTryNotes.
         if (inForOfIterClose) {
           break;
@@ -462,7 +461,7 @@ static bool ProcessTryNotesBaseline(JSContext* cx, const JSJitFrameIter& frame,
         break;
       }
 
-      case JSTRY_DESTRUCTURING_ITERCLOSE: {
+      case JSTRY_DESTRUCTURING: {
         // See corresponding comment in ProcessTryNotes.
         if (inForOfIterClose) {
           break;
