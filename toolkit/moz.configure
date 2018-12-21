@@ -1303,21 +1303,21 @@ with only_when(compile_environment):
         set_config('MOZ_SYSTEM_LIBVPX', True)
 
 
-    @depends('--with-system-libvpx', target, yasm_version, gnu_as)
-    def in_tree_vpx(system_libvpx, target, yasm_version, gnu_as):
+    @depends('--with-system-libvpx', target, gnu_as)
+    def in_tree_vpx(system_libvpx, target, gnu_as):
         if system_libvpx:
             return
 
         use_yasm = (target.cpu in ('x86', 'x86_64')) or None
+        need_yasm = False
         arm_asm = (target.cpu == 'arm' and gnu_as) or None
 
         if use_yasm:
-            if not yasm_version:
-                die('Yasm is required to build on this architecture.')
-            if target.kernel == 'WINNT' and yasm_version < '1.1':
-                die('Yasm 1.1 or greater is required to build libvpx for Windows.')
+            need_yasm = True
+            if target.kernel == 'WINNT':
+                need_yasm = Version('1.1')
 
-        return namespace(arm_asm=arm_asm, use_yasm=use_yasm)
+        return namespace(arm_asm=arm_asm, use_yasm=use_yasm, need_yasm=need_yasm)
 
 
     # Building with -mfpu=neon requires either the "softfp" or the
@@ -1354,3 +1354,129 @@ with only_when(compile_environment):
     set_config('VPX_USE_YASM', in_tree_vpx.use_yasm)
     set_config('VPX_ASFLAGS', vpx_as_flags)
     add_old_configure_assignment('VPX_ASFLAGS', vpx_as_flags)
+
+
+# JPEG
+# ====
+
+with only_when(compile_environment):
+    option('--with-system-jpeg', nargs='?',
+           help='Use system libjpeg (installed at given prefix)')
+
+    @depends_if('--with-system-jpeg')
+    def jpeg_flags(value):
+        if len(value):
+            return namespace(
+                cflags=('-I%s/include' % value[0],),
+                ldflags=('-L%s/lib' % value[0], '-ljpeg'),
+            )
+        return namespace(
+            ldflags=('-ljpeg',),
+        )
+
+    with only_when('--with-system-jpeg'):
+        check_symbol('jpeg_destroy_compress', flags=jpeg_flags.ldflags,
+                     onerror=lambda: die('--with-system-jpeg requested but symbol '
+                                         'jpeg_destroy_compress not found.'))
+
+        c_compiler.try_compile(
+            includes=[
+                'stdio.h',
+                'sys/types.h',
+                'jpeglib.h',
+            ],
+            body='''
+                #if JPEG_LIB_VERSION < 62
+                #error Insufficient JPEG library version
+                #endif
+            ''',
+            check_msg='for sufficient jpeg library version',
+            onerror=lambda: die('Insufficient JPEG library version for '
+                                '--with-system-jpeg (62 required)'),
+        )
+
+        c_compiler.try_compile(
+            includes=[
+                'stdio.h',
+                'sys/types.h',
+                'jpeglib.h',
+            ],
+            body='''
+                #ifndef JCS_EXTENSIONS
+                #error libjpeg-turbo JCS_EXTENSIONS required
+                #endif
+            ''',
+            check_msg='for sufficient libjpeg-turbo JCS_EXTENSIONS',
+            onerror=lambda: die('libjpeg-turbo JCS_EXTENSIONS required for '
+                                 '--with-system-jpeg'),
+        )
+
+        set_config('MOZ_JPEG_CFLAGS', jpeg_flags.cflags)
+        set_config('MOZ_JPEG_LIBS', jpeg_flags.ldflags)
+
+    @depends('--with-system-jpeg', target)
+    def in_tree_jpeg(system_jpeg, target):
+        if system_jpeg:
+            return
+
+        flags = ()
+        use_yasm = None
+        need_yasm = False
+        if target.kernel == 'Darwin':
+            if target.cpu == 'x86':
+                flags = ('-DPIC', '-DMACHO')
+            elif target.cpu == 'x86_64':
+                flags = ('-D__x86_64__', '-DPIC', '-DMACHO')
+        elif target.kernel == 'WINNT':
+            if target.cpu == 'x86':
+                flags = ('-DPIC', '-DWIN32')
+            elif target.cpu == 'x86_64':
+                flags = ('-D__x86_64__', '-DPIC', '-DWIN64', '-DMSVC')
+        elif target.cpu == 'arm':
+            flags = ('-march=armv7-a', '-mfpu=neon')
+        elif target.cpu == 'aarch64':
+            flags = ('-march=armv8-a',)
+        elif target.cpu == 'mips32':
+            flags = ('-mdspr2',)
+        elif target.cpu == 'x86':
+            flags = ('-DPIC', '-DELF')
+        elif target.cpu == 'x86_64':
+            flags = ('-D__x86_64__', '-DPIC', '-DELF')
+
+        if target.cpu in ('x86', 'x86_64'):
+            use_yasm = True
+            if target.kernel == 'Linux' and target.os == 'GNU':
+                need_yasm = Version('1.0.1')
+            else:
+                need_yasm = Version('1.1')
+
+        return namespace(flags=flags, use_yasm=use_yasm, need_yasm=need_yasm)
+
+    set_config('LIBJPEG_TURBO_USE_YASM', in_tree_jpeg.use_yasm)
+    set_config('LIBJPEG_TURBO_ASFLAGS', in_tree_jpeg.flags)
+
+
+@depends(yasm_version, in_tree_vpx.need_yasm, in_tree_jpeg.use_yasm)
+@imports(_from='__builtin__', _import='sorted')
+def valid_yasm_version(yasm_version, for_vpx, for_jpeg):
+    requires = {
+        'vpx': for_vpx,
+        'jpeg': for_jpeg,
+    }
+    requires = {k: v for (k, v) in requires.items() if v}
+    if requires and not yasm_version:
+        items = sorted(requires.keys())
+        if len(items) > 1:
+            what = ' and '.join((', '.join(items[:-1]), items[-1]))
+        else:
+            what = items[0]
+        die('Yasm is required to build with %s, but you do not appear to have '
+            'Yasm installed.' % what)
+
+    versioned = {k: v for (k, v) in requires.items() if v is not True}
+    by_version = sorted(versioned.items(), key=lambda x: x[1])
+    if by_version:
+        what, version = by_version[-1]
+        if yasm_version < version:
+            die('Yasm version %s or greater is required to build with %s.'
+                % (version, what))
