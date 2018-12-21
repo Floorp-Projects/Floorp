@@ -415,7 +415,7 @@ class TupBackend(CommonBackend):
         shared_libs = self._lib_paths(backend_file.objdir, shared_libs)
 
         list_file_name = '%s.list' % shlib.name.replace('.', '_')
-        list_file = self._make_list_file(backend_file.objdir, objs, list_file_name)
+        list_file = self._make_list_file(shlib.KIND, backend_file.objdir, objs, list_file_name)
 
         rust_linked = [l for l in backend_file.shared_lib.linked_libraries
                        if isinstance(l, RustLibrary)]
@@ -486,7 +486,7 @@ class TupBackend(CommonBackend):
             static_libs += self._lib_paths(backend_file.objdir, rust_linked)
 
         list_file_name = '%s.list' % prog.name.replace('.', '_')
-        list_file = self._make_list_file(backend_file.objdir, objs, list_file_name)
+        list_file = self._make_list_file(prog.KIND, backend_file.objdir, objs, list_file_name)
 
         if isinstance(prog, SimpleProgram):
             outputs = [prog.name]

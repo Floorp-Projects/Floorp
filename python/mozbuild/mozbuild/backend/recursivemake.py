@@ -695,7 +695,6 @@ class RecursiveMakeBackend(CommonBackend):
             self._process_linked_libraries(obj, backend_file)
 
         elif isinstance(obj, HostLibrary):
-            self._process_host_library(obj, backend_file)
             self._process_linked_libraries(obj, backend_file)
 
         elif isinstance(obj, HostSharedLibrary):
@@ -1349,9 +1348,6 @@ class RecursiveMakeBackend(CommonBackend):
         if libdef.output_category:
             self._process_non_default_target(libdef, libdef.import_name, backend_file)
 
-    def _process_host_library(self, libdef, backend_file):
-        backend_file.write('HOST_LIBRARY_NAME = %s\n' % libdef.basename)
-
     def _process_host_shared_library(self, libdef, backend_file):
         backend_file.write('HOST_SHARED_LIBRARY = %s\n' % libdef.lib_name)
 
@@ -1375,13 +1371,14 @@ class RecursiveMakeBackend(CommonBackend):
 
         objs, pgo_gen_objs, no_pgo_objs, shared_libs, os_libs, static_libs = self._expand_libs(obj)
 
-        if obj.KIND == 'target':
-            obj_target = obj.name
-            if isinstance(obj, Program):
-                obj_target = self._pretty_path(obj.output_path, backend_file)
+        obj_target = obj.name
+        if isinstance(obj, Program):
+            obj_target = self._pretty_path(obj.output_path, backend_file)
 
+        profile_gen_objs = []
+
+        if obj.KIND == 'target':
             is_unit_test = isinstance(obj, BaseProgram) and obj.is_unit_test
-            profile_gen_objs = []
 
             doing_pgo = self.environment.substs.get('MOZ_PGO')
             obj_suffix_change_needed = (self.environment.substs.get('GNU_CC') or
@@ -1397,50 +1394,50 @@ class RecursiveMakeBackend(CommonBackend):
                     profile_gen_objs += ['%s.%s' % (mozpath.splitext(o)[0], 'i_o')
                                          for o in pgo_gen_objs]
 
-            def write_obj_deps(target, objs_ref, pgo_objs_ref):
-                if pgo_objs_ref:
-                    backend_file.write('ifdef MOZ_PROFILE_GENERATE\n')
-                    backend_file.write('%s: %s\n' % (target, pgo_objs_ref))
-                    backend_file.write('else\n')
-                    backend_file.write('%s: %s\n' % (target, objs_ref))
-                    backend_file.write('endif\n')
-                else:
-                    backend_file.write('%s: %s\n' % (target, objs_ref))
+        def write_obj_deps(target, objs_ref, pgo_objs_ref):
+            if pgo_objs_ref:
+                backend_file.write('ifdef MOZ_PROFILE_GENERATE\n')
+                backend_file.write('%s: %s\n' % (target, pgo_objs_ref))
+                backend_file.write('else\n')
+                backend_file.write('%s: %s\n' % (target, objs_ref))
+                backend_file.write('endif\n')
+            else:
+                backend_file.write('%s: %s\n' % (target, objs_ref))
 
-            objs_ref = ' \\\n    '.join(os.path.relpath(o, obj.objdir)
-                                        for o in objs)
-            pgo_objs_ref = ' \\\n    '.join(os.path.relpath(o, obj.objdir)
-                                            for o in profile_gen_objs)
-            # Don't bother with a list file if we're only linking objects built
-            # in this directory or building a real static library. This
-            # accommodates clang-plugin, where we would otherwise pass an
-            # incorrect list file format to the host compiler as well as when
-            # creating an archive with AR, which doesn't understand list files.
-            if (objs == obj.objs and not isinstance(obj, StaticLibrary) or
-              isinstance(obj, StaticLibrary) and obj.no_expand_lib):
-                backend_file.write_once('%s_OBJS := %s\n' % (obj.name,
-                                                             objs_ref))
-                if profile_gen_objs:
-                    backend_file.write_once('%s_PGO_OBJS := %s\n' % (obj.name,
-                                                                     pgo_objs_ref))
-                write_obj_deps(obj_target, objs_ref, pgo_objs_ref)
-            elif not isinstance(obj, StaticLibrary):
-                list_file_path = '%s.list' % obj.name.replace('.', '_')
-                list_file_ref = self._make_list_file(obj.objdir, objs,
-                                                     list_file_path)
-                backend_file.write_once('%s_OBJS := %s\n' %
-                                        (obj.name, list_file_ref))
-                backend_file.write_once('%s: %s\n' % (obj_target, list_file_path))
-                if profile_gen_objs:
-                    pgo_list_file_path = '%s_pgo.list' % obj.name.replace('.', '_')
-                    pgo_list_file_ref = self._make_list_file(obj.objdir,
-                                                             profile_gen_objs,
-                                                             pgo_list_file_path)
-                    backend_file.write_once('%s_PGO_OBJS := %s\n' %
-                                            (obj.name, pgo_list_file_ref))
-                    backend_file.write_once('%s: %s\n' % (obj_target,
-                                                          pgo_list_file_path))
-                write_obj_deps(obj_target, objs_ref, pgo_objs_ref)
+        objs_ref = ' \\\n    '.join(os.path.relpath(o, obj.objdir)
+                                    for o in objs)
+        pgo_objs_ref = ' \\\n    '.join(os.path.relpath(o, obj.objdir)
+                                        for o in profile_gen_objs)
+        # Don't bother with a list file if we're only linking objects built
+        # in this directory or building a real static library. This
+        # accommodates clang-plugin, where we would otherwise pass an
+        # incorrect list file format to the host compiler as well as when
+        # creating an archive with AR, which doesn't understand list files.
+        if (objs == obj.objs and not isinstance(obj, (HostLibrary, StaticLibrary)) or
+          isinstance(obj, StaticLibrary) and obj.no_expand_lib):
+            backend_file.write_once('%s_OBJS := %s\n' % (obj.name,
+                                                         objs_ref))
+            if profile_gen_objs:
+                backend_file.write_once('%s_PGO_OBJS := %s\n' % (obj.name,
+                                                                 pgo_objs_ref))
+            write_obj_deps(obj_target, objs_ref, pgo_objs_ref)
+        elif not isinstance(obj, (HostLibrary, StaticLibrary)):
+            list_file_path = '%s.list' % obj.name.replace('.', '_')
+            list_file_ref = self._make_list_file(obj.KIND, obj.objdir, objs,
+                                                 list_file_path)
+            backend_file.write_once('%s_OBJS := %s\n' %
+                                    (obj.name, list_file_ref))
+            backend_file.write_once('%s: %s\n' % (obj_target, list_file_path))
+            if profile_gen_objs:
+                pgo_list_file_path = '%s_pgo.list' % obj.name.replace('.', '_')
+                pgo_list_file_ref = self._make_list_file(obj.KIND, obj.objdir,
+                                                         profile_gen_objs,
+                                                         pgo_list_file_path)
+                backend_file.write_once('%s_PGO_OBJS := %s\n' %
+                                        (obj.name, pgo_list_file_ref))
+                backend_file.write_once('%s: %s\n' % (obj_target,
+                                                      pgo_list_file_path))
+            write_obj_deps(obj_target, objs_ref, pgo_objs_ref)
 
         for lib in shared_libs:
             backend_file.write_once('SHARED_LIBS += %s\n' %
@@ -1458,7 +1455,7 @@ class RecursiveMakeBackend(CommonBackend):
             if not isinstance(lib, ExternalLibrary):
                 self._compile_graph[build_target].add(
                     self._build_target_for_obj(lib))
-            if isinstance(lib, (HostLibrary, HostRustLibrary)):
+            if isinstance(lib, HostRustLibrary):
                 backend_file.write_once('HOST_LIBS += %s\n' %
                                         pretty_relpath(lib, lib.import_name))
 
