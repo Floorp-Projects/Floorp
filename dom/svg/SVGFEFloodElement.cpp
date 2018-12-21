@@ -23,7 +23,7 @@ JSObject* SVGFEFloodElement::WrapNode(JSContext* aCx,
   return SVGFEFloodElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-nsSVGElement::StringInfo SVGFEFloodElement::sStringInfo[1] = {
+SVGElement::StringInfo SVGFEFloodElement::sStringInfo[1] = {
     {nsGkAtoms::result, kNameSpaceID_None, true}};
 
 //----------------------------------------------------------------------
@@ -60,9 +60,9 @@ SVGFEFloodElement::IsAttributeMapped(const nsAtom* name) const {
 }
 
 //----------------------------------------------------------------------
-// nsSVGElement methods
+// SVGElement methods
 
-nsSVGElement::StringAttributesInfo SVGFEFloodElement::GetStringInfo() {
+SVGElement::StringAttributesInfo SVGFEFloodElement::GetStringInfo() {
   return StringAttributesInfo(mStringAttributes, sStringInfo,
                               ArrayLength(sStringInfo));
 }

@@ -24,11 +24,11 @@ SVGTSpanElement::SVGTSpanElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
     : SVGTSpanElementBase(std::move(aNodeInfo)) {}
 
-nsSVGElement::EnumAttributesInfo SVGTSpanElement::GetEnumInfo() {
+SVGElement::EnumAttributesInfo SVGTSpanElement::GetEnumInfo() {
   return EnumAttributesInfo(mEnumAttributes, sEnumInfo, ArrayLength(sEnumInfo));
 }
 
-nsSVGElement::LengthAttributesInfo SVGTSpanElement::GetLengthInfo() {
+SVGElement::LengthAttributesInfo SVGTSpanElement::GetLengthInfo() {
   return LengthAttributesInfo(mLengthAttributes, sLengthInfo,
                               ArrayLength(sLengthInfo));
 }

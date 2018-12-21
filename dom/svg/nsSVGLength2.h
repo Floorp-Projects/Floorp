@@ -15,7 +15,7 @@
 #include "nsError.h"
 #include "nsISMILAttr.h"
 #include "nsMathUtils.h"
-#include "nsSVGElement.h"
+#include "SVGElement.h"
 #include "SVGContentUtils.h"
 #include "mozilla/gfx/Rect.h"
 
@@ -51,9 +51,10 @@ class UserSpaceMetricsWithSize : public UserSpaceMetrics {
 
 class SVGElementMetrics : public UserSpaceMetrics {
  public:
+  typedef mozilla::dom::SVGElement SVGElement;
   typedef mozilla::dom::SVGViewportElement SVGViewportElement;
 
-  explicit SVGElementMetrics(nsSVGElement* aSVGElement,
+  explicit SVGElementMetrics(SVGElement* aSVGElement,
                              SVGViewportElement* aCtx = nullptr);
 
   virtual float GetEmLength() const override;
@@ -63,7 +64,7 @@ class SVGElementMetrics : public UserSpaceMetrics {
  private:
   bool EnsureCtx() const;
 
-  nsSVGElement* mSVGElement;
+  SVGElement* mSVGElement;
   mutable SVGViewportElement* mCtx;
 };
 
@@ -86,7 +87,9 @@ class nsSVGLength2 {
   friend class mozilla::dom::SVGAnimatedLength;
   friend class mozilla::DOMSVGLength;
   typedef mozilla::dom::UserSpaceMetrics UserSpaceMetrics;
+  typedef mozilla::dom::SVGElement SVGElement;
   typedef mozilla::dom::SVGViewportElement SVGViewportElement;
+  typedef mozilla::SVGContentUtils SVGContentUtils;
 
  public:
   void Init(uint8_t aCtxType = mozilla::SVGContentUtils::XY,
@@ -110,16 +113,16 @@ class nsSVGLength2 {
     return *this;
   }
 
-  nsresult SetBaseValueString(const nsAString& aValue,
-                              nsSVGElement* aSVGElement, bool aDoSetAttr);
+  nsresult SetBaseValueString(const nsAString& aValue, SVGElement* aSVGElement,
+                              bool aDoSetAttr);
   void GetBaseValueString(nsAString& aValue) const;
   void GetAnimValueString(nsAString& aValue) const;
 
-  float GetBaseValue(nsSVGElement* aSVGElement) const {
+  float GetBaseValue(SVGElement* aSVGElement) const {
     return mBaseVal * GetPixelsPerUnit(aSVGElement, mSpecifiedUnitType);
   }
 
-  float GetAnimValue(nsSVGElement* aSVGElement) const {
+  float GetAnimValue(SVGElement* aSVGElement) const {
     return mAnimVal * GetPixelsPerUnit(aSVGElement, mSpecifiedUnitType);
   }
   float GetAnimValue(nsIFrame* aFrame) const {
@@ -154,9 +157,9 @@ class nsSVGLength2 {
   bool IsExplicitlySet() const { return mIsAnimated || mIsBaseSet; }
 
   already_AddRefed<mozilla::dom::SVGAnimatedLength> ToDOMAnimatedLength(
-      nsSVGElement* aSVGElement);
+      SVGElement* aSVGElement);
 
-  mozilla::UniquePtr<nsISMILAttr> ToSMILAttr(nsSVGElement* aSVGElement);
+  mozilla::UniquePtr<nsISMILAttr> ToSMILAttr(SVGElement* aSVGElement);
 
  private:
   float mAnimVal;
@@ -172,7 +175,7 @@ class nsSVGLength2 {
   float GetPixelsPerUnit(nsIFrame* aFrame, uint8_t aUnitType) const;
   float GetPixelsPerUnit(const UserSpaceMetrics& aMetrics,
                          uint8_t aUnitType) const;
-  float GetPixelsPerUnit(nsSVGElement* aSVGElement, uint8_t aUnitType) const;
+  float GetPixelsPerUnit(SVGElement* aSVGElement, uint8_t aUnitType) const;
   float GetPixelsPerUnit(SVGViewportElement* aCtx, uint8_t aUnitType) const;
 
   // SetBaseValue and SetAnimValue set the value in user units. This may fail
@@ -180,32 +183,30 @@ class nsSVGLength2 {
   // font-size is 0.
   // SetBaseValueInSpecifiedUnits and SetAnimValueInSpecifiedUnits do not
   // perform unit conversion and are therefore infallible.
-  nsresult SetBaseValue(float aValue, nsSVGElement* aSVGElement,
-                        bool aDoSetAttr);
-  void SetBaseValueInSpecifiedUnits(float aValue, nsSVGElement* aSVGElement,
+  nsresult SetBaseValue(float aValue, SVGElement* aSVGElement, bool aDoSetAttr);
+  void SetBaseValueInSpecifiedUnits(float aValue, SVGElement* aSVGElement,
                                     bool aDoSetAttr);
-  nsresult SetAnimValue(float aValue, nsSVGElement* aSVGElement);
-  void SetAnimValueInSpecifiedUnits(float aValue, nsSVGElement* aSVGElement);
+  nsresult SetAnimValue(float aValue, SVGElement* aSVGElement);
+  void SetAnimValueInSpecifiedUnits(float aValue, SVGElement* aSVGElement);
   nsresult NewValueSpecifiedUnits(uint16_t aUnitType, float aValue,
-                                  nsSVGElement* aSVGElement);
-  nsresult ConvertToSpecifiedUnits(uint16_t aUnitType,
-                                   nsSVGElement* aSVGElement);
+                                  SVGElement* aSVGElement);
+  nsresult ConvertToSpecifiedUnits(uint16_t aUnitType, SVGElement* aSVGElement);
   nsresult ToDOMBaseVal(mozilla::DOMSVGLength** aResult,
-                        nsSVGElement* aSVGElement);
+                        SVGElement* aSVGElement);
   nsresult ToDOMAnimVal(mozilla::DOMSVGLength** aResult,
-                        nsSVGElement* aSVGElement);
+                        SVGElement* aSVGElement);
 
  public:
   struct SMILLength : public nsISMILAttr {
    public:
-    SMILLength(nsSVGLength2* aVal, nsSVGElement* aSVGElement)
+    SMILLength(nsSVGLength2* aVal, SVGElement* aSVGElement)
         : mVal(aVal), mSVGElement(aSVGElement) {}
 
     // These will stay alive because a nsISMILAttr only lives as long
     // as the Compositing step, and DOM elements don't get a chance to
     // die during that.
     nsSVGLength2* mVal;
-    nsSVGElement* mSVGElement;
+    SVGElement* mSVGElement;
 
     // nsISMILAttr methods
     virtual nsresult ValueFromString(

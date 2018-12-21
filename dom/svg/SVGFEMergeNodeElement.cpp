@@ -17,7 +17,7 @@ JSObject* SVGFEMergeNodeElement::WrapNode(JSContext* aCx,
   return SVGFEMergeNodeElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-nsSVGElement::StringInfo SVGFEMergeNodeElement::sStringInfo[1] = {
+SVGElement::StringInfo SVGFEMergeNodeElement::sStringInfo[1] = {
     {nsGkAtoms::in, kNameSpaceID_None, true}};
 
 //----------------------------------------------------------------------
@@ -38,9 +38,9 @@ already_AddRefed<SVGAnimatedString> SVGFEMergeNodeElement::In1() {
 }
 
 //----------------------------------------------------------------------
-// nsSVGElement methods
+// SVGElement methods
 
-nsSVGElement::StringAttributesInfo SVGFEMergeNodeElement::GetStringInfo() {
+SVGElement::StringAttributesInfo SVGFEMergeNodeElement::GetStringInfo() {
   return StringAttributesInfo(mStringAttributes, sStringInfo,
                               ArrayLength(sStringInfo));
 }

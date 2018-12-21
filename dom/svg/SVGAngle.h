@@ -8,7 +8,7 @@
 #define mozilla_dom_SVGAngle_h
 
 #include "nsWrapperCache.h"
-#include "nsSVGElement.h"
+#include "SVGElement.h"
 #include "mozilla/Attributes.h"
 
 class nsSVGAngle;
@@ -23,11 +23,11 @@ class SVGAngle final : public nsWrapperCache {
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(SVGAngle)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(SVGAngle)
 
-  SVGAngle(nsSVGAngle* aVal, nsSVGElement* aSVGElement, AngleType aType)
+  SVGAngle(nsSVGAngle* aVal, SVGElement* aSVGElement, AngleType aType)
       : mVal(aVal), mSVGElement(aSVGElement), mType(aType) {}
 
   // WebIDL
-  nsSVGElement* GetParentObject() { return mSVGElement; }
+  SVGElement* GetParentObject() { return mSVGElement; }
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
   uint16_t UnitType() const;
@@ -45,7 +45,7 @@ class SVGAngle final : public nsWrapperCache {
 
   nsSVGAngle* mVal;  // if mType is CreatedValue, we own the angle.  Otherwise,
                      // the element does.
-  RefPtr<nsSVGElement> mSVGElement;
+  RefPtr<SVGElement> mSVGElement;
   AngleType mType;
 };
 

@@ -22,7 +22,7 @@ JSObject* SVGCircleElement::WrapNode(JSContext* aCx,
   return SVGCircleElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-nsSVGElement::LengthInfo SVGCircleElement::sLengthInfo[3] = {
+SVGElement::LengthInfo SVGCircleElement::sLengthInfo[3] = {
     {nsGkAtoms::cx, 0, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER,
      SVGContentUtils::X},
     {nsGkAtoms::cy, 0, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER,
@@ -57,14 +57,14 @@ already_AddRefed<SVGAnimatedLength> SVGCircleElement::R() {
 }
 
 //----------------------------------------------------------------------
-// nsSVGElement methods
+// SVGElement methods
 
 /* virtual */ bool SVGCircleElement::HasValidDimensions() const {
   return mLengthAttributes[ATTR_R].IsExplicitlySet() &&
          mLengthAttributes[ATTR_R].GetAnimValInSpecifiedUnits() > 0;
 }
 
-nsSVGElement::LengthAttributesInfo SVGCircleElement::GetLengthInfo() {
+SVGElement::LengthAttributesInfo SVGCircleElement::GetLengthInfo() {
   return LengthAttributesInfo(mLengthAttributes, sLengthInfo,
                               ArrayLength(sLengthInfo));
 }

@@ -43,7 +43,6 @@
 #include "nsString.h"
 #include "nsStyleStruct.h"
 #include "nsStyleUtil.h"
-#include "nsSVGElement.h"
 #include "nsTArray.h"
 #include "nsTransitionManager.h"
 #include "nsWindowSizes.h"
@@ -73,6 +72,7 @@
 #include "mozilla/dom/HTMLBodyElement.h"
 #include "mozilla/dom/HTMLSlotElement.h"
 #include "mozilla/dom/MediaList.h"
+#include "mozilla/dom/SVGElement.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/URLExtraData.h"
 #include "mozilla/dom/CSSMozDocumentRule.h"
@@ -383,7 +383,7 @@ Gecko_GetHTMLPresentationAttrDeclarationBlock(
     RawGeckoElementBorrowed aElement) {
   const nsMappedAttributes* attrs = aElement->GetMappedAttributes();
   if (!attrs) {
-    auto* svg = nsSVGElement::FromNodeOrNull(aElement);
+    auto* svg = SVGElement::FromNodeOrNull(aElement);
     if (svg) {
       if (auto decl = svg->GetContentDeclarationBlock()) {
         return decl->RefRawStrong();
@@ -2342,7 +2342,7 @@ bool Gecko_IsMainThread() { return NS_IsMainThread(); }
 
 const nsAttrValue* Gecko_GetSVGAnimatedClass(RawGeckoElementBorrowed aElement) {
   MOZ_ASSERT(aElement->IsSVGElement());
-  return static_cast<const nsSVGElement*>(aElement)->GetAnimatedClassName();
+  return static_cast<const SVGElement*>(aElement)->GetAnimatedClassName();
 }
 
 bool Gecko_AssertClassAttrValueIsSane(const nsAttrValue* aValue) {

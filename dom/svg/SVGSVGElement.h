@@ -144,7 +144,7 @@ class SVGSVGElement final : public SVGSVGElementBase {
   uint16_t ZoomAndPan();
   void SetZoomAndPan(uint16_t aZoomAndPan, ErrorResult& rv);
 
-  // nsSVGElement overrides
+  // SVGElement overrides
 
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent) override;

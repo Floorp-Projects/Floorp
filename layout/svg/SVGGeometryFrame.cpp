@@ -214,7 +214,7 @@ bool SVGGeometryFrame::IsSVGTransformed(
             aFromParentTransform);
   }
 
-  nsSVGElement* content = static_cast<nsSVGElement*>(GetContent());
+  SVGElement* content = static_cast<SVGElement*>(GetContent());
   nsSVGAnimatedTransformList* transformList =
       content->GetAnimatedTransformList();
   if ((transformList && transformList->HasTransform()) ||
@@ -230,7 +230,7 @@ bool SVGGeometryFrame::IsSVGTransformed(
 
 void SVGGeometryFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                         const nsDisplayListSet& aLists) {
-  if (!static_cast<const nsSVGElement*>(GetContent())->HasValidDimensions() ||
+  if (!static_cast<const SVGElement*>(GetContent())->HasValidDimensions() ||
       (!IsVisibleForPainting() && aBuilder->IsForPainting())) {
     return;
   }
@@ -731,9 +731,9 @@ void SVGGeometryFrame::Render(gfxContext* aContext, uint32_t aRenderComponents,
 
     if (strokePattern.GetPattern()) {
       SVGContentUtils::AutoStrokeOptions strokeOptions;
-      SVGContentUtils::GetStrokeOptions(
-          &strokeOptions, static_cast<nsSVGElement*>(GetContent()), Style(),
-          contextPaint);
+      SVGContentUtils::GetStrokeOptions(&strokeOptions,
+                                        static_cast<SVGElement*>(GetContent()),
+                                        Style(), contextPaint);
       // GetStrokeOptions may set the line width to zero as an optimization
       if (strokeOptions.mLineWidth <= 0) {
         return;

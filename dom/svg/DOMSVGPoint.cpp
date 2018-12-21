@@ -8,7 +8,7 @@
 #include "DOMSVGPointList.h"
 #include "SVGPoint.h"
 #include "gfx2DGlue.h"
-#include "nsSVGElement.h"
+#include "SVGElement.h"
 #include "nsError.h"
 #include "mozilla/dom/SVGMatrix.h"
 

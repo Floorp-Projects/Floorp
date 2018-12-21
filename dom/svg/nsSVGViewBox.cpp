@@ -116,7 +116,7 @@ bool nsSVGViewBox::HasRect() const {
 }
 
 void nsSVGViewBox::SetAnimValue(const nsSVGViewBoxRect& aRect,
-                                nsSVGElement* aSVGElement) {
+                                SVGElement* aSVGElement) {
   if (!mAnimVal) {
     // it's okay if allocation fails - and no point in reporting that
     mAnimVal = new nsSVGViewBoxRect(aRect);
@@ -130,7 +130,7 @@ void nsSVGViewBox::SetAnimValue(const nsSVGViewBoxRect& aRect,
 }
 
 void nsSVGViewBox::SetBaseValue(const nsSVGViewBoxRect& aRect,
-                                nsSVGElement* aSVGElement) {
+                                SVGElement* aSVGElement) {
   if (!mHasBaseVal || mBaseVal == aRect) {
     // This method is used to set a single x, y, width
     // or height value. It can't create a base value
@@ -152,7 +152,7 @@ void nsSVGViewBox::SetBaseValue(const nsSVGViewBoxRect& aRect,
 }
 
 nsresult nsSVGViewBox::SetBaseValueString(const nsAString& aValue,
-                                          nsSVGElement* aSVGElement,
+                                          SVGElement* aSVGElement,
                                           bool aDoSetAttr) {
   nsSVGViewBoxRect viewBox;
 
@@ -192,7 +192,7 @@ void nsSVGViewBox::GetBaseValueString(nsAString& aValue) const {
 }
 
 already_AddRefed<dom::SVGAnimatedRect> nsSVGViewBox::ToSVGAnimatedRect(
-    nsSVGElement* aSVGElement) {
+    SVGElement* aSVGElement) {
   RefPtr<dom::SVGAnimatedRect> domAnimatedRect =
       sSVGAnimatedRectTearoffTable.GetTearoff(this);
   if (!domAnimatedRect) {
@@ -204,7 +204,7 @@ already_AddRefed<dom::SVGAnimatedRect> nsSVGViewBox::ToSVGAnimatedRect(
 }
 
 already_AddRefed<dom::SVGIRect> nsSVGViewBox::ToDOMBaseVal(
-    nsSVGElement* aSVGElement) {
+    SVGElement* aSVGElement) {
   if (!mHasBaseVal || mBaseVal.none) {
     return nullptr;
   }
@@ -223,7 +223,7 @@ nsSVGViewBox::DOMBaseVal::~DOMBaseVal() {
 }
 
 already_AddRefed<dom::SVGIRect> nsSVGViewBox::ToDOMAnimVal(
-    nsSVGElement* aSVGElement) {
+    SVGElement* aSVGElement) {
   if ((mAnimVal && mAnimVal->none) ||
       (!mAnimVal && (!mHasBaseVal || mBaseVal.none))) {
     return nullptr;
@@ -266,7 +266,7 @@ void nsSVGViewBox::DOMBaseVal::SetHeight(float aHeight, ErrorResult& aRv) {
   mVal->SetBaseValue(rect, mSVGElement);
 }
 
-UniquePtr<nsISMILAttr> nsSVGViewBox::ToSMILAttr(nsSVGElement* aSVGElement) {
+UniquePtr<nsISMILAttr> nsSVGViewBox::ToSMILAttr(SVGElement* aSVGElement) {
   return MakeUnique<SMILViewBox>(this, aSVGElement);
 }
 

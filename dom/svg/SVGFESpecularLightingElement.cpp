@@ -58,7 +58,7 @@ SVGFESpecularLightingElement::KernelUnitLengthY() {
 }
 
 //----------------------------------------------------------------------
-// nsSVGElement methods
+// SVGElement methods
 
 FilterPrimitiveDescription
 SVGFESpecularLightingElement::GetPrimitiveDescription(

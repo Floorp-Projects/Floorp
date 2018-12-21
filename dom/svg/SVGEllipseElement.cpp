@@ -23,7 +23,7 @@ JSObject* SVGEllipseElement::WrapNode(JSContext* aCx,
   return SVGEllipseElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-nsSVGElement::LengthInfo SVGEllipseElement::sLengthInfo[4] = {
+SVGElement::LengthInfo SVGEllipseElement::sLengthInfo[4] = {
     {nsGkAtoms::cx, 0, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER,
      SVGContentUtils::X},
     {nsGkAtoms::cy, 0, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER,
@@ -66,7 +66,7 @@ already_AddRefed<SVGAnimatedLength> SVGEllipseElement::Ry() {
 }
 
 //----------------------------------------------------------------------
-// nsSVGElement methods
+// SVGElement methods
 
 /* virtual */ bool SVGEllipseElement::HasValidDimensions() const {
   return mLengthAttributes[RX].IsExplicitlySet() &&
@@ -75,7 +75,7 @@ already_AddRefed<SVGAnimatedLength> SVGEllipseElement::Ry() {
          mLengthAttributes[RY].GetAnimValInSpecifiedUnits() > 0;
 }
 
-nsSVGElement::LengthAttributesInfo SVGEllipseElement::GetLengthInfo() {
+SVGElement::LengthAttributesInfo SVGEllipseElement::GetLengthInfo() {
   return LengthAttributesInfo(mLengthAttributes, sLengthInfo,
                               ArrayLength(sLengthInfo));
 }

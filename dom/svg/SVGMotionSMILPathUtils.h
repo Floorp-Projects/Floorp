@@ -19,9 +19,11 @@
 #include "nsStringFwd.h"
 #include "nsTArray.h"
 
-class nsSVGElement;
-
 namespace mozilla {
+
+namespace dom {
+class SVGElement;
+}
 
 class SVGMotionSMILPathUtils {
   typedef mozilla::gfx::DrawTarget DrawTarget;
@@ -33,7 +35,7 @@ class SVGMotionSMILPathUtils {
   // coordinates in the <animateMotion> from/by/to/values attributes.
   class PathGenerator {
    public:
-    explicit PathGenerator(const nsSVGElement* aSVGElement)
+    explicit PathGenerator(const dom::SVGElement* aSVGElement)
         : mSVGElement(aSVGElement), mHaveReceivedCommands(false) {
       RefPtr<DrawTarget> drawTarget =
           gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget();
@@ -67,7 +69,7 @@ class SVGMotionSMILPathUtils {
     bool ParseCoordinatePair(const nsAString& aStr, float& aXVal, float& aYVal);
 
     // Member data
-    const nsSVGElement* mSVGElement;  // context for converting to user units
+    const dom::SVGElement* mSVGElement;  // context for converting to user units
     RefPtr<PathBuilder> mPathBuilder;
     bool mHaveReceivedCommands;
   };

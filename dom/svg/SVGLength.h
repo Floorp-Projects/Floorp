@@ -12,9 +12,11 @@
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/dom/SVGLengthBinding.h"
 
-class nsSVGElement;
-
 namespace mozilla {
+
+namespace dom {
+class SVGElement;
+}
 
 /**
  * This SVGLength class is currently used for SVGLength *list* attributes only.
@@ -93,7 +95,8 @@ class SVGLength {
    * If it's not possible to convert this length's value to user units, then
    * this method will return numeric_limits<float>::quiet_NaN().
    */
-  float GetValueInUserUnits(const nsSVGElement *aElement, uint8_t aAxis) const {
+  float GetValueInUserUnits(const dom::SVGElement *aElement,
+                            uint8_t aAxis) const {
     return mValue * GetUserUnitsPerUnit(aElement, aAxis);
   }
 
@@ -103,7 +106,7 @@ class SVGLength {
    * This method returns numeric_limits<float>::quiet_NaN() if it is not
    * possible to convert the value to the specified unit.
    */
-  float GetValueInSpecifiedUnit(uint8_t aUnit, const nsSVGElement *aElement,
+  float GetValueInSpecifiedUnit(uint8_t aUnit, const dom::SVGElement *aElement,
                                 uint8_t aAxis) const;
 
   bool IsPercentage() const {
@@ -122,7 +125,8 @@ class SVGLength {
    * factor between the length's current unit and user units is undefined (see
    * the comments for GetUserUnitsPerInch and GetUserUnitsPerPercent).
    */
-  float GetUserUnitsPerUnit(const nsSVGElement *aElement, uint8_t aAxis) const;
+  float GetUserUnitsPerUnit(const dom::SVGElement *aElement,
+                            uint8_t aAxis) const;
 
  private:
 #ifdef DEBUG
@@ -144,7 +148,7 @@ class SVGLength {
    * This function returns a non-negative value if the conversion factor is
    * defined, otherwise it returns numeric_limits<float>::quiet_NaN().
    */
-  static float GetUserUnitsPerPercent(const nsSVGElement *aElement,
+  static float GetUserUnitsPerPercent(const dom::SVGElement *aElement,
                                       uint8_t aAxis);
 
   float mValue;

@@ -15,12 +15,12 @@
 
 class nsAtom;
 class nsSMILValue;
-class nsSVGElement;
 
 namespace mozilla {
 
 namespace dom {
 class SVGAnimationElement;
+class SVGElement;
 class SVGTransform;
 }  // namespace dom
 
@@ -57,10 +57,10 @@ class nsSVGAnimatedTransformList {
   const SVGTransformList& GetBaseValue() const { return mBaseVal; }
 
   nsresult SetBaseValue(const SVGTransformList& aValue,
-                        nsSVGElement* aSVGElement);
+                        dom::SVGElement* aSVGElement);
 
   nsresult SetBaseValueString(const nsAString& aValue,
-                              nsSVGElement* aSVGElement);
+                              dom::SVGElement* aSVGElement);
 
   void ClearBaseValue();
 
@@ -69,9 +69,9 @@ class nsSVGAnimatedTransformList {
   }
 
   nsresult SetAnimValue(const SVGTransformList& aNewAnimValue,
-                        nsSVGElement* aElement);
+                        dom::SVGElement* aElement);
 
-  void ClearAnimValue(nsSVGElement* aElement);
+  void ClearAnimValue(dom::SVGElement* aElement);
 
   /**
    * Returns true if the corresponding transform attribute is set (or animated)
@@ -107,7 +107,7 @@ class nsSVGAnimatedTransformList {
     return mRequiresFrameReconstruction;
   }
 
-  mozilla::UniquePtr<nsISMILAttr> ToSMILAttr(nsSVGElement* aSVGElement);
+  mozilla::UniquePtr<nsISMILAttr> ToSMILAttr(dom::SVGElement* aSVGElement);
 
  private:
   // mAnimVal is a pointer to allow us to determine if we're being animated or
@@ -124,7 +124,7 @@ class nsSVGAnimatedTransformList {
   struct SMILAnimatedTransformList : public nsISMILAttr {
    public:
     SMILAnimatedTransformList(nsSVGAnimatedTransformList* aVal,
-                              nsSVGElement* aSVGElement)
+                              dom::SVGElement* aSVGElement)
         : mVal(aVal), mElement(aSVGElement) {}
 
     // nsISMILAttr methods
@@ -145,7 +145,7 @@ class nsSVGAnimatedTransformList {
     // as the Compositing step, and DOM elements don't get a chance to
     // die during that.
     nsSVGAnimatedTransformList* mVal;
-    nsSVGElement* mElement;
+    dom::SVGElement* mElement;
   };
 };
 

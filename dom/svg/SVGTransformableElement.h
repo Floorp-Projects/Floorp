@@ -10,7 +10,7 @@
 #include "mozilla/Attributes.h"
 #include "nsAutoPtr.h"
 #include "nsSVGAnimatedTransformList.h"
-#include "nsSVGElement.h"
+#include "SVGElement.h"
 #include "gfxMatrix.h"
 #include "mozilla/gfx/Matrix.h"
 
@@ -23,18 +23,18 @@ class SVGMatrix;
 class SVGIRect;
 struct SVGBoundingBoxOptions;
 
-class SVGTransformableElement : public nsSVGElement {
+class SVGTransformableElement : public SVGElement {
  public:
   explicit SVGTransformableElement(already_AddRefed<dom::NodeInfo>&& aNodeInfo)
-      : nsSVGElement(std::move(aNodeInfo)) {}
+      : SVGElement(std::move(aNodeInfo)) {}
   virtual ~SVGTransformableElement() {}
 
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override = 0;
 
   // WebIDL
   already_AddRefed<SVGAnimatedTransformList> Transform();
-  nsSVGElement* GetNearestViewportElement();
-  nsSVGElement* GetFarthestViewportElement();
+  SVGElement* GetNearestViewportElement();
+  SVGElement* GetFarthestViewportElement();
   MOZ_CAN_RUN_SCRIPT
   already_AddRefed<SVGIRect> GetBBox(const SVGBoundingBoxOptions& aOptions,
                                      ErrorResult& rv);
@@ -49,7 +49,7 @@ class SVGTransformableElement : public nsSVGElement {
   nsChangeHint GetAttributeChangeHint(const nsAtom* aAttribute,
                                       int32_t aModType) const override;
 
-  // nsSVGElement overrides
+  // SVGElement overrides
   virtual bool IsEventAttributeNameInternal(nsAtom* aName) override;
 
   virtual gfxMatrix PrependLocalTransformsTo(

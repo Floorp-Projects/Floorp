@@ -31,7 +31,7 @@ class SVGForeignObjectElement final : public SVGGraphicsElement {
                              JS::Handle<JSObject*> aGivenProto) override;
 
  public:
-  // nsSVGElement specializations:
+  // SVGElement specializations:
   virtual gfxMatrix PrependLocalTransformsTo(
       const gfxMatrix& aMatrix,
       SVGTransformTypes aWhich = eAllTransforms) const override;

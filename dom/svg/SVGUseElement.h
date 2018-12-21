@@ -62,7 +62,7 @@ class SVGUseElement final : public SVGUseElementBase,
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
   NS_DECL_NSIMUTATIONOBSERVER_NODEWILLBEDESTROYED
 
-  // nsSVGElement specializations:
+  // SVGElement specializations:
   virtual gfxMatrix PrependLocalTransformsTo(
       const gfxMatrix& aMatrix,
       SVGTransformTypes aWhich = eAllTransforms) const override;
