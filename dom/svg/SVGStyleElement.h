@@ -8,17 +8,17 @@
 #define mozilla_dom_SVGStyleElement_h
 
 #include "mozilla/Attributes.h"
-#include "nsSVGElement.h"
+#include "SVGElement.h"
 #include "nsStyleLinkElement.h"
 #include "nsStubMutationObserver.h"
 
 nsresult NS_NewSVGStyleElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
-typedef nsSVGElement SVGStyleElementBase;
-
 namespace mozilla {
 namespace dom {
+
+typedef SVGElement SVGStyleElementBase;
 
 class SVGStyleElement final : public SVGStyleElementBase,
                               public nsStyleLinkElement,

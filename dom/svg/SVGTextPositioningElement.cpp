@@ -15,22 +15,22 @@
 namespace mozilla {
 namespace dom {
 
-nsSVGElement::LengthListInfo SVGTextPositioningElement::sLengthListInfo[4] = {
+SVGElement::LengthListInfo SVGTextPositioningElement::sLengthListInfo[4] = {
     {nsGkAtoms::x, SVGContentUtils::X, false},
     {nsGkAtoms::y, SVGContentUtils::Y, false},
     {nsGkAtoms::dx, SVGContentUtils::X, true},
     {nsGkAtoms::dy, SVGContentUtils::Y, true}};
 
-nsSVGElement::LengthListAttributesInfo
+SVGElement::LengthListAttributesInfo
 SVGTextPositioningElement::GetLengthListInfo() {
   return LengthListAttributesInfo(mLengthListAttributes, sLengthListInfo,
                                   ArrayLength(sLengthListInfo));
 }
 
-nsSVGElement::NumberListInfo SVGTextPositioningElement::sNumberListInfo[1] = {
+SVGElement::NumberListInfo SVGTextPositioningElement::sNumberListInfo[1] = {
     {nsGkAtoms::rotate}};
 
-nsSVGElement::NumberListAttributesInfo
+SVGElement::NumberListAttributesInfo
 SVGTextPositioningElement::GetNumberListInfo() {
   return NumberListAttributesInfo(mNumberListAttributes, sNumberListInfo,
                                   ArrayLength(sNumberListInfo));

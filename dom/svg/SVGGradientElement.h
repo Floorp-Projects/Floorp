@@ -9,7 +9,7 @@
 
 #include "nsAutoPtr.h"
 #include "nsSVGAnimatedTransformList.h"
-#include "nsSVGElement.h"
+#include "SVGElement.h"
 #include "nsSVGLength2.h"
 #include "nsSVGEnum.h"
 #include "nsSVGString.h"
@@ -30,7 +30,7 @@ class SVGAnimatedTransformList;
 
 //--------------------- Gradients------------------------
 
-typedef nsSVGElement SVGGradientElementBase;
+typedef SVGElement SVGGradientElementBase;
 
 class SVGGradientElement : public SVGGradientElementBase {
   friend class ::nsSVGGradientFrame;

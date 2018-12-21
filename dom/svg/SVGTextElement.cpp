@@ -24,11 +24,11 @@ SVGTextElement::SVGTextElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
     : SVGTextElementBase(std::move(aNodeInfo)) {}
 
-nsSVGElement::EnumAttributesInfo SVGTextElement::GetEnumInfo() {
+SVGElement::EnumAttributesInfo SVGTextElement::GetEnumInfo() {
   return EnumAttributesInfo(mEnumAttributes, sEnumInfo, ArrayLength(sEnumInfo));
 }
 
-nsSVGElement::LengthAttributesInfo SVGTextElement::GetLengthInfo() {
+SVGElement::LengthAttributesInfo SVGTextElement::GetLengthInfo() {
   return LengthAttributesInfo(mLengthAttributes, sLengthInfo,
                               ArrayLength(sLengthInfo));
 }

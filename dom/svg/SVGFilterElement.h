@@ -8,12 +8,10 @@
 #define mozilla_dom_SVGFilterElement_h
 
 #include "nsSVGEnum.h"
-#include "nsSVGElement.h"
+#include "SVGElement.h"
 #include "nsSVGIntegerPair.h"
 #include "nsSVGLength2.h"
 #include "nsSVGString.h"
-
-typedef nsSVGElement SVGFilterElementBase;
 
 class nsSVGFilterFrame;
 class nsSVGFilterInstance;
@@ -24,6 +22,8 @@ nsresult NS_NewSVGFilterElement(
 namespace mozilla {
 namespace dom {
 class SVGAnimatedLength;
+
+typedef SVGElement SVGFilterElementBase;
 
 class SVGFilterElement : public SVGFilterElementBase {
   friend class ::nsSVGFilterFrame;

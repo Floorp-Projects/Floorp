@@ -6,7 +6,7 @@
 
 #include "mozilla/ArrayUtils.h"
 
-#include "nsSVGElement.h"
+#include "SVGElement.h"
 #include "nsGkAtoms.h"
 #include "nsSVGNumber2.h"
 #include "nsSVGNumberPair.h"
@@ -51,7 +51,7 @@ using namespace mozilla::gfx;
 
 //--------------------Filter Element Base Class-----------------------
 
-nsSVGElement::LengthInfo nsSVGFE::sLengthInfo[4] = {
+SVGElement::LengthInfo nsSVGFE::sLengthInfo[4] = {
     {nsGkAtoms::x, 0, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE,
      SVGContentUtils::X},
     {nsGkAtoms::y, 0, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE,
@@ -128,7 +128,7 @@ nsSVGFE::IsAttributeMapped(const nsAtom* name) const {
 }
 
 //----------------------------------------------------------------------
-// nsSVGElement methods
+// SVGElement methods
 
 bool nsSVGFE::StyleIsSetToSRGB() {
   nsIFrame* frame = GetPrimaryFrame();
@@ -159,7 +159,7 @@ Size nsSVGFE::GetKernelUnitLength(nsSVGFilterInstance* aInstance,
   return Size(kernelX, kernelY);
 }
 
-nsSVGElement::LengthAttributesInfo nsSVGFE::GetLengthInfo() {
+SVGElement::LengthAttributesInfo nsSVGFE::GetLengthInfo() {
   return LengthAttributesInfo(mLengthAttributes, sLengthInfo,
                               ArrayLength(sLengthInfo));
 }
@@ -167,11 +167,11 @@ nsSVGElement::LengthAttributesInfo nsSVGFE::GetLengthInfo() {
 namespace mozilla {
 namespace dom {
 
-nsSVGElement::NumberListInfo
+SVGElement::NumberListInfo
     SVGComponentTransferFunctionElement::sNumberListInfo[1] = {
         {nsGkAtoms::tableValues}};
 
-nsSVGElement::NumberInfo SVGComponentTransferFunctionElement::sNumberInfo[5] = {
+SVGElement::NumberInfo SVGComponentTransferFunctionElement::sNumberInfo[5] = {
     {nsGkAtoms::slope, 1, false},
     {nsGkAtoms::intercept, 0, false},
     {nsGkAtoms::amplitude, 1, false},
@@ -186,7 +186,7 @@ nsSVGEnumMapping SVGComponentTransferFunctionElement::sTypeMap[] = {
     {nsGkAtoms::gamma, SVG_FECOMPONENTTRANSFER_TYPE_GAMMA},
     {nullptr, 0}};
 
-nsSVGElement::EnumInfo SVGComponentTransferFunctionElement::sEnumInfo[1] = {
+SVGElement::EnumInfo SVGComponentTransferFunctionElement::sEnumInfo[1] = {
     {nsGkAtoms::type, sTypeMap, SVG_FECOMPONENTTRANSFER_TYPE_IDENTITY}};
 
 //----------------------------------------------------------------------
@@ -293,20 +293,20 @@ void SVGComponentTransferFunctionElement::ComputeAttributes(
 }
 
 //----------------------------------------------------------------------
-// nsSVGElement methods
+// SVGElement methods
 
-nsSVGElement::NumberListAttributesInfo
+SVGElement::NumberListAttributesInfo
 SVGComponentTransferFunctionElement::GetNumberListInfo() {
   return NumberListAttributesInfo(mNumberListAttributes, sNumberListInfo,
                                   ArrayLength(sNumberListInfo));
 }
 
-nsSVGElement::EnumAttributesInfo
+SVGElement::EnumAttributesInfo
 SVGComponentTransferFunctionElement::GetEnumInfo() {
   return EnumAttributesInfo(mEnumAttributes, sEnumInfo, ArrayLength(sEnumInfo));
 }
 
-nsSVGElement::NumberAttributesInfo
+SVGElement::NumberAttributesInfo
 SVGComponentTransferFunctionElement::GetNumberInfo() {
   return NumberAttributesInfo(mNumberAttributes, sNumberInfo,
                               ArrayLength(sNumberInfo));
@@ -374,16 +374,16 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFEFuncAElement)
 
 //--------------------------------------------------------------------
 //
-nsSVGElement::NumberInfo SVGFELightingElement::sNumberInfo[4] = {
+SVGElement::NumberInfo SVGFELightingElement::sNumberInfo[4] = {
     {nsGkAtoms::surfaceScale, 1, false},
     {nsGkAtoms::diffuseConstant, 1, false},
     {nsGkAtoms::specularConstant, 1, false},
     {nsGkAtoms::specularExponent, 1, false}};
 
-nsSVGElement::NumberPairInfo SVGFELightingElement::sNumberPairInfo[1] = {
+SVGElement::NumberPairInfo SVGFELightingElement::sNumberPairInfo[1] = {
     {nsGkAtoms::kernelUnitLength, 0, 0}};
 
-nsSVGElement::StringInfo SVGFELightingElement::sStringInfo[2] = {
+SVGElement::StringInfo SVGFELightingElement::sStringInfo[2] = {
     {nsGkAtoms::result, kNameSpaceID_None, true},
     {nsGkAtoms::in, kNameSpaceID_None, true}};
 
@@ -462,20 +462,19 @@ bool SVGFELightingElement::AttributeAffectsRendering(int32_t aNameSpaceID,
 }
 
 //----------------------------------------------------------------------
-// nsSVGElement methods
+// SVGElement methods
 
-nsSVGElement::NumberAttributesInfo SVGFELightingElement::GetNumberInfo() {
+SVGElement::NumberAttributesInfo SVGFELightingElement::GetNumberInfo() {
   return NumberAttributesInfo(mNumberAttributes, sNumberInfo,
                               ArrayLength(sNumberInfo));
 }
 
-nsSVGElement::NumberPairAttributesInfo
-SVGFELightingElement::GetNumberPairInfo() {
+SVGElement::NumberPairAttributesInfo SVGFELightingElement::GetNumberPairInfo() {
   return NumberPairAttributesInfo(mNumberPairAttributes, sNumberPairInfo,
                                   ArrayLength(sNumberPairInfo));
 }
 
-nsSVGElement::StringAttributesInfo SVGFELightingElement::GetStringInfo() {
+SVGElement::StringAttributesInfo SVGFELightingElement::GetStringInfo() {
   return StringAttributesInfo(mStringAttributes, sStringInfo,
                               ArrayLength(sStringInfo));
 }

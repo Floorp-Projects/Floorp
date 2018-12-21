@@ -10,7 +10,7 @@
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsSVGElement.h"
+#include "SVGElement.h"
 #include "nsWrapperCache.h"
 #include "mozilla/Attributes.h"
 
@@ -56,7 +56,7 @@ class SVGAnimatedTransformList final : public nsWrapperCache {
    * SVGAnimatedTransformList being returned.
    */
   static already_AddRefed<SVGAnimatedTransformList> GetDOMWrapper(
-      nsSVGAnimatedTransformList* aList, nsSVGElement* aElement);
+      nsSVGAnimatedTransformList* aList, SVGElement* aElement);
 
   /**
    * This method returns the SVGAnimatedTransformList wrapper for an internal
@@ -88,7 +88,7 @@ class SVGAnimatedTransformList final : public nsWrapperCache {
   bool IsAnimating() const;
 
   // WebIDL
-  nsSVGElement* GetParentObject() const { return mElement; }
+  SVGElement* GetParentObject() const { return mElement; }
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
   // These aren't weak refs because mBaseVal and mAnimVal are weak
@@ -100,7 +100,7 @@ class SVGAnimatedTransformList final : public nsWrapperCache {
    * Only our static GetDOMWrapper() factory method may create objects of our
    * type.
    */
-  explicit SVGAnimatedTransformList(nsSVGElement* aElement)
+  explicit SVGAnimatedTransformList(SVGElement* aElement)
       : mBaseVal(nullptr), mAnimVal(nullptr), mElement(aElement) {}
 
   ~SVGAnimatedTransformList();
@@ -117,7 +117,7 @@ class SVGAnimatedTransformList final : public nsWrapperCache {
 
   // Strong ref to our element to keep it alive. We hold this not only for
   // ourself, but also for our base/animVal and all of their items.
-  RefPtr<nsSVGElement> mElement;
+  RefPtr<SVGElement> mElement;
 };
 
 }  // namespace dom

@@ -20,7 +20,7 @@ JSObject* SVGFETileElement::WrapNode(JSContext* aCx,
   return SVGFETileElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-nsSVGElement::StringInfo SVGFETileElement::sStringInfo[2] = {
+SVGElement::StringInfo SVGFETileElement::sStringInfo[2] = {
     {nsGkAtoms::result, kNameSpaceID_None, true},
     {nsGkAtoms::in, kNameSpaceID_None, true}};
 
@@ -39,7 +39,7 @@ void SVGFETileElement::GetSourceImageNames(
 }
 
 //----------------------------------------------------------------------
-// nsSVGElement methods
+// SVGElement methods
 
 FilterPrimitiveDescription SVGFETileElement::GetPrimitiveDescription(
     nsSVGFilterInstance* aInstance, const IntRect& aFilterSubregion,
@@ -56,9 +56,9 @@ bool SVGFETileElement::AttributeAffectsRendering(int32_t aNameSpaceID,
 }
 
 //----------------------------------------------------------------------
-// nsSVGElement methods
+// SVGElement methods
 
-nsSVGElement::StringAttributesInfo SVGFETileElement::GetStringInfo() {
+SVGElement::StringAttributesInfo SVGFETileElement::GetStringInfo() {
   return StringAttributesInfo(mStringAttributes, sStringInfo,
                               ArrayLength(sStringInfo));
 }

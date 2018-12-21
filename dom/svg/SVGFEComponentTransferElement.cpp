@@ -23,7 +23,7 @@ JSObject* SVGFEComponentTransferElement::WrapNode(
   return SVGFEComponentTransferElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-nsSVGElement::StringInfo SVGFEComponentTransferElement::sStringInfo[2] = {
+SVGElement::StringInfo SVGFEComponentTransferElement::sStringInfo[2] = {
     {nsGkAtoms::result, kNameSpaceID_None, true},
     {nsGkAtoms::in, kNameSpaceID_None, true}};
 
@@ -37,9 +37,9 @@ already_AddRefed<SVGAnimatedString> SVGFEComponentTransferElement::In1() {
 }
 
 //----------------------------------------------------------------------
-// nsSVGElement methods
+// SVGElement methods
 
-nsSVGElement::StringAttributesInfo
+SVGElement::StringAttributesInfo
 SVGFEComponentTransferElement::GetStringInfo() {
   return StringAttributesInfo(mStringAttributes, sStringInfo,
                               ArrayLength(sStringInfo));

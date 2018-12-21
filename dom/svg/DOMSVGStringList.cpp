@@ -65,7 +65,7 @@ class MOZ_RAII AutoChangeStringListNotifier {
 };
 
 /* static */ already_AddRefed<DOMSVGStringList> DOMSVGStringList::GetDOMWrapper(
-    SVGStringList* aList, nsSVGElement* aElement,
+    SVGStringList* aList, SVGElement* aElement,
     bool aIsConditionalProcessingAttribute, uint8_t aAttrEnum) {
   RefPtr<DOMSVGStringList> wrapper =
       SVGStringListTearoffTable().GetTearoff(aList);

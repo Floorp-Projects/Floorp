@@ -15,11 +15,10 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/FloatingPoint.h"
 
-class nsSVGElement;
-
 namespace mozilla {
 
 namespace dom {
+class SVGElement;
 class SVGMatrix;
 }  // namespace dom
 
@@ -88,7 +87,7 @@ class DOMSVGPoint final : public nsISVGPoint {
   virtual DOMSVGPoint* Copy() override { return new DOMSVGPoint(this); }
 
  protected:
-  nsSVGElement* Element() { return mList->Element(); }
+  dom::SVGElement* Element() { return mList->Element(); }
 };
 
 }  // namespace mozilla

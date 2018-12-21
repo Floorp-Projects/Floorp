@@ -145,7 +145,7 @@ void nsSVGForeignObjectFrame::Reflow(nsPresContext* aPresContext,
 
 void nsSVGForeignObjectFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                                const nsDisplayListSet& aLists) {
-  if (!static_cast<const nsSVGElement*>(GetContent())->HasValidDimensions()) {
+  if (!static_cast<const SVGElement*>(GetContent())->HasValidDimensions()) {
     return;
   }
   nsDisplayList newList;
@@ -170,7 +170,7 @@ bool nsSVGForeignObjectFrame::IsSVGTransformed(
             aFromParentTransform);
   }
 
-  nsSVGElement* content = static_cast<nsSVGElement*>(GetContent());
+  SVGElement* content = static_cast<SVGElement*>(GetContent());
   nsSVGAnimatedTransformList* transformList =
       content->GetAnimatedTransformList();
   if ((transformList && transformList->HasTransform()) ||
@@ -240,7 +240,7 @@ void nsSVGForeignObjectFrame::PaintSVG(gfxContext& aContext,
 
   if (StyleDisplay()->IsScrollableOverflow()) {
     float x, y, width, height;
-    static_cast<nsSVGElement*>(GetContent())
+    static_cast<SVGElement*>(GetContent())
         ->GetAnimatedLengthValues(&x, &y, &width, &height, nullptr);
 
     gfxRect clipRect =
@@ -289,7 +289,7 @@ nsIFrame* nsSVGForeignObjectFrame::GetFrameForPoint(const gfxPoint& aPoint) {
   }
 
   float x, y, width, height;
-  static_cast<nsSVGElement*>(GetContent())
+  static_cast<SVGElement*>(GetContent())
       ->GetAnimatedLengthValues(&x, &y, &width, &height, nullptr);
 
   if (!gfxRect(x, y, width, height).Contains(aPoint) ||

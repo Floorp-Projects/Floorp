@@ -7,7 +7,7 @@
 #include "DOMSVGAnimatedLengthList.h"
 #include "DOMSVGLengthList.h"
 #include "SVGAnimatedLengthList.h"
-#include "nsSVGElement.h"
+#include "SVGElement.h"
 #include "nsCOMPtr.h"
 #include "nsSVGAttrTearoffTable.h"
 #include "mozilla/dom/SVGAnimatedLengthListBinding.h"
@@ -53,7 +53,7 @@ already_AddRefed<DOMSVGLengthList> DOMSVGAnimatedLengthList::AnimVal() {
 
 /* static */ already_AddRefed<DOMSVGAnimatedLengthList>
 DOMSVGAnimatedLengthList::GetDOMWrapper(SVGAnimatedLengthList* aList,
-                                        nsSVGElement* aElement,
+                                        dom::SVGElement* aElement,
                                         uint8_t aAttrEnum, uint8_t aAxis) {
   RefPtr<DOMSVGAnimatedLengthList> wrapper =
       SVGAnimatedLengthListTearoffTable().GetTearoff(aList);

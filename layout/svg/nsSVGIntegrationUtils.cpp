@@ -18,7 +18,7 @@
 #include "gfxContext.h"
 #include "nsSVGClipPathFrame.h"
 #include "SVGObserverUtils.h"
-#include "nsSVGElement.h"
+#include "SVGElement.h"
 #include "nsSVGFilterPaintCallback.h"
 #include "nsSVGMaskFrame.h"
 #include "nsSVGPaintServerFrame.h"
@@ -616,7 +616,7 @@ static bool ValidateSVGFrame(nsIFrame* aFrame) {
 #endif
 
     const nsIContent* content = aFrame->GetContent();
-    if (!static_cast<const nsSVGElement*>(content)->HasValidDimensions()) {
+    if (!static_cast<const SVGElement*>(content)->HasValidDimensions()) {
       // The SVG spec says not to draw _anything_
       return false;
     }

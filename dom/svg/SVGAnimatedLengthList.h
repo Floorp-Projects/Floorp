@@ -14,12 +14,12 @@
 #include "SVGLengthList.h"
 
 class nsSMILValue;
-class nsSVGElement;
 
 namespace mozilla {
 
 namespace dom {
 class SVGAnimationElement;
+class SVGElement;
 }  // namespace dom
 
 /**
@@ -61,14 +61,14 @@ class SVGAnimatedLengthList {
     return mAnimVal ? *mAnimVal : mBaseVal;
   }
 
-  nsresult SetAnimValue(const SVGLengthList& aValue, nsSVGElement* aElement,
+  nsresult SetAnimValue(const SVGLengthList& aValue, dom::SVGElement* aElement,
                         uint32_t aAttrEnum);
 
-  void ClearAnimValue(nsSVGElement* aElement, uint32_t aAttrEnum);
+  void ClearAnimValue(dom::SVGElement* aElement, uint32_t aAttrEnum);
 
   bool IsAnimating() const { return !!mAnimVal; }
 
-  UniquePtr<nsISMILAttr> ToSMILAttr(nsSVGElement* aSVGElement,
+  UniquePtr<nsISMILAttr> ToSMILAttr(dom::SVGElement* aSVGElement,
                                     uint8_t aAttrEnum, uint8_t aAxis,
                                     bool aCanZeroPadList);
 
@@ -84,7 +84,7 @@ class SVGAnimatedLengthList {
   struct SMILAnimatedLengthList : public nsISMILAttr {
    public:
     SMILAnimatedLengthList(SVGAnimatedLengthList* aVal,
-                           nsSVGElement* aSVGElement, uint8_t aAttrEnum,
+                           dom::SVGElement* aSVGElement, uint8_t aAttrEnum,
                            uint8_t aAxis, bool aCanZeroPadList)
         : mVal(aVal),
           mElement(aSVGElement),
@@ -96,7 +96,7 @@ class SVGAnimatedLengthList {
     // as the Compositing step, and DOM elements don't get a chance to
     // die during that.
     SVGAnimatedLengthList* mVal;
-    nsSVGElement* mElement;
+    dom::SVGElement* mElement;
     uint8_t mAttrEnum;
     uint8_t mAxis;
     bool mCanZeroPadList;  // See SVGLengthListAndInfo::CanZeroPadList

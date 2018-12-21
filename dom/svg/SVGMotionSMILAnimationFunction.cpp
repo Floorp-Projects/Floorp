@@ -145,7 +145,7 @@ void SVGMotionSMILAnimationFunction::RebuildPathAndVerticesFromBasicAttrs(
   }
 
   SVGMotionSMILPathUtils::PathGenerator pathGenerator(
-      static_cast<const nsSVGElement*>(aContextElem));
+      static_cast<const SVGElement*>(aContextElem));
 
   bool success = false;
   if (HasAttr(nsGkAtoms::values)) {

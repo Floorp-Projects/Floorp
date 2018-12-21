@@ -50,7 +50,7 @@ static nsresult ParseNumberOptionalNumber(const nsAString& aValue,
 }
 
 nsresult nsSVGNumberPair::SetBaseValueString(const nsAString& aValueAsString,
-                                             nsSVGElement* aSVGElement) {
+                                             SVGElement* aSVGElement) {
   float val[2];
 
   nsresult rv = ParseNumberOptionalNumber(aValueAsString, val);
@@ -69,7 +69,7 @@ nsresult nsSVGNumberPair::SetBaseValueString(const nsAString& aValueAsString,
   }
 
   // We don't need to call Will/DidChange* here - we're only called by
-  // nsSVGElement::ParseAttribute under Element::SetAttr,
+  // SVGElement::ParseAttribute under Element::SetAttr,
   // which takes care of notifying.
   return NS_OK;
 }
@@ -84,7 +84,7 @@ void nsSVGNumberPair::GetBaseValueString(nsAString& aValueAsString) const {
 }
 
 void nsSVGNumberPair::SetBaseValue(float aValue, PairIndex aPairIndex,
-                                   nsSVGElement* aSVGElement) {
+                                   SVGElement* aSVGElement) {
   uint32_t index = (aPairIndex == eFirst ? 0 : 1);
   if (mIsBaseSet && mBaseVal[index] == aValue) {
     return;
@@ -101,7 +101,7 @@ void nsSVGNumberPair::SetBaseValue(float aValue, PairIndex aPairIndex,
 }
 
 void nsSVGNumberPair::SetBaseValues(float aValue1, float aValue2,
-                                    nsSVGElement* aSVGElement) {
+                                    SVGElement* aSVGElement) {
   if (mIsBaseSet && mBaseVal[0] == aValue1 && mBaseVal[1] == aValue2) {
     return;
   }
@@ -119,7 +119,7 @@ void nsSVGNumberPair::SetBaseValues(float aValue1, float aValue2,
 }
 
 void nsSVGNumberPair::SetAnimValue(const float aValue[2],
-                                   nsSVGElement* aSVGElement) {
+                                   SVGElement* aSVGElement) {
   if (mIsAnimated && mAnimVal[0] == aValue[0] && mAnimVal[1] == aValue[1]) {
     return;
   }
@@ -130,7 +130,7 @@ void nsSVGNumberPair::SetAnimValue(const float aValue[2],
 }
 
 already_AddRefed<SVGAnimatedNumber> nsSVGNumberPair::ToDOMAnimatedNumber(
-    PairIndex aIndex, nsSVGElement* aSVGElement) {
+    PairIndex aIndex, SVGElement* aSVGElement) {
   RefPtr<DOMAnimatedNumber> domAnimatedNumber =
       aIndex == eFirst ? sSVGFirstAnimatedNumberTearoffTable.GetTearoff(this)
                        : sSVGSecondAnimatedNumberTearoffTable.GetTearoff(this);
@@ -154,7 +154,7 @@ nsSVGNumberPair::DOMAnimatedNumber::~DOMAnimatedNumber() {
   }
 }
 
-UniquePtr<nsISMILAttr> nsSVGNumberPair::ToSMILAttr(nsSVGElement* aSVGElement) {
+UniquePtr<nsISMILAttr> nsSVGNumberPair::ToSMILAttr(SVGElement* aSVGElement) {
   return MakeUnique<SMILNumberPair>(this, aSVGElement);
 }
 

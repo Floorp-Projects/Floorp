@@ -13,11 +13,13 @@
 #include "SVGPathSegUtils.h"
 #include "mozilla/dom/SVGPathSegBinding.h"
 
-class nsSVGElement;
-
 #define MOZ_SVG_LIST_INDEX_BIT_COUNT 31
 
 namespace mozilla {
+
+namespace dom {
+class SVGElement;
+}
 
 #define CHECK_ARG_COUNT_IN_SYNC(segType)                                   \
   MOZ_ASSERT(                                                              \
@@ -171,7 +173,7 @@ class DOMSVGPathSeg : public nsWrapperCache {
     }
   }
 
-  nsSVGElement* Element() { return mList->Element(); }
+  dom::SVGElement* Element() { return mList->Element(); }
 
   /**
    * Get a reference to the internal SVGPathSeg list item that this DOM wrapper

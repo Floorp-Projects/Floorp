@@ -17,7 +17,7 @@
 #include "nsString.h"
 #include "nsLiteralString.h"
 #include "mozilla/dom/Element.h"
-#include "nsSVGElement.h"
+#include "SVGElement.h"
 #include "mozilla/StyleSheet.h"
 #include "mozilla/StyleSheetInlines.h"
 

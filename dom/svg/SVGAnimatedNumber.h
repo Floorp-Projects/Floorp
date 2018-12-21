@@ -10,7 +10,7 @@
 #include "nsISupports.h"
 #include "nsWrapperCache.h"
 
-#include "nsSVGElement.h"
+#include "SVGElement.h"
 
 namespace mozilla {
 namespace dom {
@@ -20,7 +20,7 @@ class SVGAnimatedNumber : public nsISupports, public nsWrapperCache {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(SVGAnimatedNumber)
 
-  nsSVGElement* GetParentObject() const { return mSVGElement; }
+  SVGElement* GetParentObject() const { return mSVGElement; }
 
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) final;
 
@@ -29,11 +29,11 @@ class SVGAnimatedNumber : public nsISupports, public nsWrapperCache {
   virtual float AnimVal() = 0;
 
  protected:
-  explicit SVGAnimatedNumber(nsSVGElement* aSVGElement)
+  explicit SVGAnimatedNumber(SVGElement* aSVGElement)
       : mSVGElement(aSVGElement) {}
   virtual ~SVGAnimatedNumber(){};
 
-  RefPtr<nsSVGElement> mSVGElement;
+  RefPtr<SVGElement> mSVGElement;
 };
 
 }  // namespace dom

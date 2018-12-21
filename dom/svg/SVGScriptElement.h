@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_SVGScriptElement_h
 #define mozilla_dom_SVGScriptElement_h
 
-#include "nsSVGElement.h"
+#include "SVGElement.h"
 #include "nsCOMPtr.h"
 #include "nsSVGString.h"
 #include "mozilla/dom/ScriptElement.h"
@@ -21,7 +21,7 @@ nsresult NS_NewSVGScriptElement(
 namespace mozilla {
 namespace dom {
 
-typedef nsSVGElement SVGScriptElementBase;
+typedef SVGElement SVGScriptElementBase;
 
 class SVGScriptElement final : public SVGScriptElementBase,
                                public ScriptElement {

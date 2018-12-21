@@ -15,30 +15,31 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/UniquePtr.h"
 
-class nsSVGElement;
-
 namespace mozilla {
 namespace dom {
 class SVGAnimatedString;
+class SVGElement;
 }  // namespace dom
 }  // namespace mozilla
 
 class nsSVGClass {
  public:
+  typedef mozilla::dom::SVGElement SVGElement;
+
   void Init() { mAnimVal = nullptr; }
 
-  void SetBaseValue(const nsAString& aValue, nsSVGElement* aSVGElement,
+  void SetBaseValue(const nsAString& aValue, SVGElement* aSVGElement,
                     bool aDoSetAttr);
-  void GetBaseValue(nsAString& aValue, const nsSVGElement* aSVGElement) const;
+  void GetBaseValue(nsAString& aValue, const SVGElement* aSVGElement) const;
 
-  void SetAnimValue(const nsAString& aValue, nsSVGElement* aSVGElement);
-  void GetAnimValue(nsAString& aValue, const nsSVGElement* aSVGElement) const;
+  void SetAnimValue(const nsAString& aValue, SVGElement* aSVGElement);
+  void GetAnimValue(nsAString& aValue, const SVGElement* aSVGElement) const;
   bool IsAnimated() const { return !!mAnimVal; }
 
   already_AddRefed<mozilla::dom::SVGAnimatedString> ToDOMAnimatedString(
-      nsSVGElement* aSVGElement);
+      SVGElement* aSVGElement);
 
-  mozilla::UniquePtr<nsISMILAttr> ToSMILAttr(nsSVGElement* aSVGElement);
+  mozilla::UniquePtr<nsISMILAttr> ToSMILAttr(SVGElement* aSVGElement);
 
  private:
   nsAutoPtr<nsString> mAnimVal;
@@ -46,14 +47,14 @@ class nsSVGClass {
  public:
   struct SMILString : public nsISMILAttr {
    public:
-    SMILString(nsSVGClass* aVal, nsSVGElement* aSVGElement)
+    SMILString(nsSVGClass* aVal, SVGElement* aSVGElement)
         : mVal(aVal), mSVGElement(aSVGElement) {}
 
     // These will stay alive because a nsISMILAttr only lives as long
     // as the Compositing step, and DOM elements don't get a chance to
     // die during that.
     nsSVGClass* mVal;
-    nsSVGElement* mSVGElement;
+    SVGElement* mSVGElement;
 
     // nsISMILAttr methods
     virtual nsresult ValueFromString(
