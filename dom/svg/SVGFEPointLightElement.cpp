@@ -8,7 +8,7 @@
 #include "mozilla/dom/SVGFEPointLightElementBinding.h"
 #include "nsSVGFilterInstance.h"
 
-NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(FEPointLight)
+NS_IMPL_NS_NEW_SVG_ELEMENT(FEPointLight)
 
 using namespace mozilla::gfx;
 
@@ -20,7 +20,7 @@ JSObject* SVGFEPointLightElement::WrapNode(JSContext* aCx,
   return SVGFEPointLightElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-nsSVGElement::NumberInfo SVGFEPointLightElement::sNumberInfo[3] = {
+SVGElement::NumberInfo SVGFEPointLightElement::sNumberInfo[3] = {
     {nsGkAtoms::x, 0, false},
     {nsGkAtoms::y, 0, false},
     {nsGkAtoms::z, 0, false}};
@@ -67,9 +67,9 @@ already_AddRefed<SVGAnimatedNumber> SVGFEPointLightElement::Z() {
 }
 
 //----------------------------------------------------------------------
-// nsSVGElement methods
+// SVGElement methods
 
-nsSVGElement::NumberAttributesInfo SVGFEPointLightElement::GetNumberInfo() {
+SVGElement::NumberAttributesInfo SVGFEPointLightElement::GetNumberInfo() {
   return NumberAttributesInfo(mNumberAttributes, sNumberInfo,
                               ArrayLength(sNumberInfo));
 }

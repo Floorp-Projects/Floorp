@@ -7,7 +7,7 @@
 #include "mozilla/dom/SVGAnimateTransformElement.h"
 #include "mozilla/dom/SVGAnimateTransformElementBinding.h"
 
-NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(AnimateTransform)
+NS_IMPL_NS_NEW_SVG_ELEMENT(AnimateTransform)
 
 namespace mozilla {
 namespace dom {

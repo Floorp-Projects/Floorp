@@ -420,6 +420,7 @@
   MACRO(variable, variable, "variable")                                        \
   MACRO(void0, void0, "(void 0)")                                              \
   MACRO(wasm, wasm, "wasm")                                                    \
+  MACRO(WasmAnyRef, WasmAnyRef, "WasmAnyRef")                                  \
   MACRO(wasmcall, wasmcall, "wasmcall")                                        \
   MACRO(watch, watch, "watch")                                                 \
   MACRO(WeakMapConstructorInit, WeakMapConstructorInit,                        \

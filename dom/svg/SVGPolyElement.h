@@ -39,7 +39,7 @@ class SVGPolyElement : public SVGPolyElementBase {
     return nsGkAtoms::points;
   }
 
-  // nsSVGElement methods:
+  // SVGElement methods:
   virtual bool HasValidDimensions() const override;
 
   // SVGGeometryElement methods:

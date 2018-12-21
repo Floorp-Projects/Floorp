@@ -14,11 +14,13 @@
 #include "mozilla/ErrorResult.h"
 #include "nsWrapperCache.h"
 
-class nsSVGElement;
-
 #define MOZ_SVG_LIST_INDEX_BIT_COUNT 27  // supports > 134 million list items
 
 namespace mozilla {
+
+namespace dom {
+class SVGElement;
+}
 
 /**
  * Class DOMSVGNumber
@@ -117,7 +119,7 @@ class DOMSVGNumber final : public nsISupports, public nsWrapperCache {
   void SetValue(float aValue, ErrorResult& aRv);
 
  private:
-  nsSVGElement* Element() { return mList->Element(); }
+  dom::SVGElement* Element() { return mList->Element(); }
 
   uint8_t AttrEnum() const { return mAttrEnum; }
 

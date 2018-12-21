@@ -60,6 +60,9 @@ async function testSteps() {
       reader.readAsArrayBuffer(file);
     });
 
+    // Manually getting the lower 32-bits because of the lack of support for
+    // 64-bit values currently from DataView/JS (other than the BigInt support
+    // that's currently behind a flag).
     let view = new DataView(buffer, 8, 4);
     return view.getUint32();
   }

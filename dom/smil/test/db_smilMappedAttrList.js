@@ -10,7 +10,7 @@
 var gMappedAttrList =
 {
   // NOTE: The list here should match the MappedAttributeEntry arrays in
-  // nsSVGElement.cpp
+  // SVGElement.cpp
 
   // PresentationAttributes-FillStroke
   fill:              new AdditiveAttribute("fill", "XML", "rect"),

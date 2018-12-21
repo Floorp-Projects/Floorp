@@ -7,7 +7,7 @@
 #include "mozilla/dom/SVGMetadataElement.h"
 #include "mozilla/dom/SVGMetadataElementBinding.h"
 
-NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(Metadata)
+NS_IMPL_NS_NEW_SVG_ELEMENT(Metadata)
 
 namespace mozilla {
 namespace dom {

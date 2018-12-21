@@ -15,11 +15,10 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
 
-class nsSVGElement;
-
 namespace mozilla {
 
 namespace dom {
+class SVGElement;
 class SVGMatrix;
 class SVGTransform;
 }  // namespace dom
@@ -120,7 +119,7 @@ class DOMSVGTransformList final : public nsISupports, public nsWrapperCache {
   uint32_t Length() const { return NumberOfItems(); }
 
  private:
-  nsSVGElement* Element() const { return mAList->mElement; }
+  dom::SVGElement* Element() const { return mAList->mElement; }
 
   /// Used to determine if this list is the baseVal or animVal list.
   bool IsAnimValList() const {

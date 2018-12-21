@@ -9,13 +9,13 @@
 
 #include "nsSVGFilters.h"
 
-typedef nsSVGFE SVGFEComponentTransferElementBase;
-
 nsresult NS_NewSVGFEComponentTransferElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
 namespace mozilla {
 namespace dom {
+
+typedef SVGFE SVGFEComponentTransferElementBase;
 
 class SVGFEComponentTransferElement : public SVGFEComponentTransferElementBase {
   friend nsresult(::NS_NewSVGFEComponentTransferElement(
