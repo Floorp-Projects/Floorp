@@ -1766,7 +1766,7 @@ nsresult nsXPCComponents_utils_Sandbox::CallOrConstruct(
 
   if (options.metadata.isNullOrUndefined()) {
     // If the caller is running in a sandbox, inherit.
-    RootedObject callerGlobal(cx, CurrentGlobalOrNull(cx));
+    RootedObject callerGlobal(cx, JS::GetScriptedCallerGlobal(cx));
     if (IsSandbox(callerGlobal)) {
       rv = GetSandboxMetadata(cx, callerGlobal, &options.metadata);
       if (NS_WARN_IF(NS_FAILED(rv))) {

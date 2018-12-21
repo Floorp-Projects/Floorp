@@ -39,9 +39,10 @@ Module::~Module() = default;
 NS_IMETHODIMP
 Module::Call(nsIXPConnectWrappedNative* wrapper, JSContext* cx, JSObject* obj,
              const JS::CallArgs& args, bool* _retval) {
-  JS::Rooted<JSObject*> global(cx, JS::CurrentGlobalOrNull(cx));
+  JS::Rooted<JSObject*> global(cx, JS::GetScriptedCallerGlobal(cx));
   if (!global) return NS_ERROR_NOT_AVAILABLE;
 
+  JSAutoRealm ar(cx, global);
   *_retval = JS_InitReflectParse(cx, global);
   return NS_OK;
 }
