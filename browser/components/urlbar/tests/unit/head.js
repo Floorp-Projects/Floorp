@@ -14,7 +14,6 @@ if (commonFile) {
 // Put any other stuff relative to this test folder below.
 ChromeUtils.import("resource:///modules/UrlbarUtils.jsm");
 XPCOMUtils.defineLazyModuleGetters(this, {
-  HttpServer: "resource://testing-common/httpd.js",
   PlacesTestUtils: "resource://testing-common/PlacesTestUtils.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   UrlbarController: "resource:///modules/UrlbarController.jsm",
@@ -108,10 +107,7 @@ class TestProvider extends UrlbarProvider {
     }
   }
   cancelQuery(context) {
-    // If the query was created but didn't run, this_context will be undefined.
-    if (this._context) {
-      Assert.equal(this._context, context, "context is the same");
-    }
+    Assert.equal(this._context, context, "context is the same");
     if (this._cancelCallback) {
       this._cancelCallback();
     }
@@ -131,72 +127,4 @@ function registerBasicTestProvider(matches, cancelCallback) {
   let provider = new TestProvider(matches, cancelCallback);
   UrlbarProvidersManager.registerProvider(provider);
   return provider.name;
-}
-
-// Creates an HTTP server for the test.
-function makeTestServer(port = -1) {
-  let httpServer = new HttpServer();
-  httpServer.start(port);
-  registerCleanupFunction(() => httpServer.stop(() => {}));
-  return httpServer;
-}
-
-/**
- * Adds a search engine to the Search Service.
- *
- * @param {string} basename
- *        Basename for the engine.
- * @param {object} httpServer [optional] HTTP Server to use.
- * @returns {Promise} Resolved once the addition is complete.
- */
-async function addTestEngine(basename, httpServer = undefined) {
-  httpServer = httpServer || makeTestServer();
-  httpServer.registerDirectory("/", do_get_cwd());
-  let dataUrl =
-    "http://localhost:" + httpServer.identity.primaryPort + "/data/";
-
-  info("Adding engine: " + basename);
-  await new Promise(resolve => Services.search.init(resolve));
-  return new Promise(resolve => {
-    Services.obs.addObserver(function obs(subject, topic, data) {
-      let engine = subject.QueryInterface(Ci.nsISearchEngine);
-      info("Observed " + data + " for " + engine.name);
-      if (data != "engine-added" || engine.name != basename) {
-        return;
-      }
-
-      Services.obs.removeObserver(obs, "browser-search-engine-modified");
-      registerCleanupFunction(() => Services.search.removeEngine(engine));
-      resolve(engine);
-    }, "browser-search-engine-modified");
-
-    info("Adding engine from URL: " + dataUrl + basename);
-    Services.search.addEngine(dataUrl + basename, null, false);
-  });
-}
-
-/**
- * Sets up a search engine that provides some suggestions by appending strings
- * onto the search query.
- *
- * @param {function} suggestionsFn
- *        A function that returns an array of suggestion strings given a
- *        search string.  If not given, a default function is used.
- * @returns {nsISearchEngine} The new engine.
- */
-function addTestSuggestionsEngine(suggestionsFn = null) {
-  // This port number should match the number in engine-suggestions.xml.
-  let server = makeTestServer(9000);
-  server.registerPathHandler("/suggest", (req, resp) => {
-    // URL query params are x-www-form-urlencoded, which converts spaces into
-    // plus signs, so un-convert any plus signs back to spaces.
-    let searchStr = decodeURIComponent(req.queryString.replace(/\+/g, " "));
-    let suggestions =
-      suggestionsFn ? suggestionsFn(searchStr) :
-      [searchStr].concat(["foo", "bar"].map(s => searchStr + " " + s));
-    let data = [searchStr, suggestions];
-    resp.setHeader("Content-Type", "application/json", false);
-    resp.write(JSON.stringify(data));
-  });
-  return addTestEngine("engine-suggestions.xml", server);
 }

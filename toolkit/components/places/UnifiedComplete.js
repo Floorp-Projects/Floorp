@@ -47,9 +47,6 @@ const REGEXP_USER_CONTEXT_ID = /(?:^| )user-context-id:(\d+)/;
 // Regex used to match maxResults.
 const REGEXP_MAX_RESULTS = /(?:^| )max-results:(\d+)/;
 
-// Regex used to match insertMethod.
-const REGEXP_INSERT_METHOD = /(?:^| )insert-method:(\d+)/;
-
 // Regex used to match one or more whitespace.
 const REGEXP_SPACES = /\s+/;
 
@@ -631,7 +628,6 @@ function Search(searchString, searchParam, autocompleteListener,
   // We handle any leading restriction character specially, in particular for
   // a search restriction we also handle the case where there's no space before
   // the query, like "?porcupine".
-  this._leadingRestrictionToken = null;
   if (unfilteredTokens.length > 1 &&
       this._trimmedOriginalSearchString.startsWith(unfilteredTokens[0]) &&
       Object.values(UrlbarTokenizer.RESTRICT).includes(unfilteredTokens[0])) {
@@ -2630,13 +2626,8 @@ UnifiedComplete.prototype = {
     // previous one. This may leave stale matches from the previous search that
     // would not be returned by the current one, thus once the current search is
     // complete, we remove those stale matches with _cleanUpNonCurrentMatches().
-
-    // Extract the insert-method param if it exists.
-    let insertMethod = searchParam.match(REGEXP_INSERT_METHOD);
-    insertMethod = insertMethod ? parseInt(insertMethod[1])
-                                : UrlbarPrefs.get("insertMethod");
-
     let previousResult = null;
+    let insertMethod = UrlbarPrefs.get("insertMethod");
     if (this._currentSearch && insertMethod != UrlbarUtils.INSERTMETHOD.APPEND) {
       let result = this._currentSearch._result;
       // Only reuse the previous result when one of the search strings is an

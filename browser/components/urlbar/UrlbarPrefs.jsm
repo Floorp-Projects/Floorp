@@ -172,10 +172,7 @@ class Preferences {
    */
   constructor() {
     this._map = new Map();
-    this.QueryInterface = ChromeUtils.generateQI([
-      Ci.nsIObserver,
-      Ci.nsISupportsWeakReference,
-    ]);
+
     Services.prefs.addObserver(PREF_URLBAR_BRANCH, this, true);
     Services.prefs.addObserver("keyword.enabled", this, true);
   }
@@ -312,6 +309,26 @@ class Preferences {
       }
     }
     return this._readPref(pref);
+  }
+
+  /**
+   * QueryInterface
+   *
+   * @param {IID} qiIID
+   * @returns {Preferences} this
+   */
+  QueryInterface(qiIID) {
+    let supportedIIDs = [
+      Ci.nsISupports,
+      Ci.nsIObserver,
+      Ci.nsISupportsWeakReference,
+    ];
+    for (let iid of supportedIIDs) {
+      if (Ci[iid].equals(qiIID)) {
+        return this;
+      }
+    }
+    throw Cr.NS_ERROR_NO_INTERFACE;
   }
 }
 
