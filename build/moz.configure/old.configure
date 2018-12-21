@@ -251,7 +251,6 @@ def old_configure_options(*options):
     '--with-soft-float',
     '--with-system-bz2',
     '--with-system-icu',
-    '--with-system-jpeg',
     '--with-system-libevent',
     '--with-system-nspr',
     '--with-system-nss',

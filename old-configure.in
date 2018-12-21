@@ -45,7 +45,6 @@ _SUBDIR_CONFIG_ARGS="$ac_configure_args"
 
 dnl Set the version number of the libs included with mozilla
 dnl ========================================================
-MOZJPEG=62
 MOZPNG=10635
 NSPR_VERSION=4
 NSPR_MINVER=4.19
@@ -1639,51 +1638,6 @@ if test -z "$MOZ_SYSTEM_NSS"; then
    esac
 fi
 
-if test -z "$SKIP_LIBRARY_CHECKS"; then
-dnl system JPEG support
-dnl ========================================================
-MOZ_ARG_WITH_STRING(system-jpeg,
-[  --with-system-jpeg[=PFX]
-                          Use system libjpeg [installed at prefix PFX]],
-    JPEG_DIR=$withval)
-
-_SAVE_CFLAGS=$CFLAGS
-_SAVE_LDFLAGS=$LDFLAGS
-_SAVE_LIBS=$LIBS
-if test -n "${JPEG_DIR}" -a "${JPEG_DIR}" != "yes"; then
-    CFLAGS="-I${JPEG_DIR}/include $CFLAGS"
-    LDFLAGS="-L${JPEG_DIR}/lib $LDFLAGS"
-fi
-if test -z "$JPEG_DIR" -o "$JPEG_DIR" = no; then
-    MOZ_SYSTEM_JPEG=
-else
-    AC_CHECK_LIB(jpeg, jpeg_destroy_compress, [MOZ_SYSTEM_JPEG=1 MOZ_JPEG_LIBS="-ljpeg"], MOZ_SYSTEM_JPEG=)
-fi
-
-if test "$MOZ_SYSTEM_JPEG" = 1; then
-    AC_TRY_COMPILE([ #include <stdio.h>
-                     #include <sys/types.h>
-                     #include <jpeglib.h> ],
-                   [ #if JPEG_LIB_VERSION < $MOZJPEG
-                     #error "Insufficient JPEG library version ($MOZJPEG required)."
-                     #endif
-                     #ifndef JCS_EXTENSIONS
-                     #error "libjpeg-turbo JCS_EXTENSIONS required"
-                     #endif
-                     ],
-                   MOZ_SYSTEM_JPEG=1,
-                   AC_MSG_ERROR([Insufficient JPEG library version for --with-system-jpeg]))
-fi
-CFLAGS=$_SAVE_CFLAGS
-LDFLAGS=$_SAVE_LDFLAGS
-LIBS=$_SAVE_LIBS
-
-if test -n "${JPEG_DIR}" -a -d "${JPEG_DIR}" -a "$MOZ_SYSTEM_JPEG" = 1; then
-    MOZ_JPEG_CFLAGS="-I${JPEG_DIR}/include"
-    MOZ_JPEG_LIBS="-L${JPEG_DIR}/lib ${MOZ_JPEG_LIBS}"
-fi
-fi # SKIP_LIBRARY_CHECKS
-
 dnl system ZLIB support
 dnl ========================================================
 MOZ_ZLIB_CHECK([1.2.3])
@@ -1752,8 +1706,6 @@ MOZ_AUTH_EXTENSION=1
 if test "$MOZ_IOS"; then
    MOZ_AUTH_EXTENSION=
 fi
-LIBJPEG_TURBO_AS=
-LIBJPEG_TURBO_ASFLAGS=
 MOZ_PREF_EXTENSIONS=1
 MOZ_SPELLCHECK=1
 MOZ_TOOLKIT_SEARCH=1
@@ -2384,96 +2336,6 @@ if test -n "$MOZ_CRASHREPORTER"; then
       AC_DEFINE(MOZ_CRASHREPORTER_INJECTOR)
     fi
   fi
-fi
-
-dnl ========================================================
-dnl = libjpeg-turbo configuration
-dnl ========================================================
-MOZ_LIBJPEG_TURBO=
-LIBJPEG_TURBO_USE_YASM=
-if test -z "$MOZ_SYSTEM_JPEG"; then
-    MOZ_LIBJPEG_TURBO=1
-fi
-
-MOZ_ARG_DISABLE_BOOL(libjpeg_turbo,
-[ --disable-libjpeg-turbo  Disable optimized jpeg decoding routines],
-    MOZ_LIBJPEG_TURBO=,
-    MOZ_LIBJPEG_TURBO=1)
-
-if test "$MOZ_SYSTEM_JPEG" = 1 -a "$MOZ_LIBJPEG_TURBO" = 1; then
-    AC_MSG_ERROR([cannot use --with-system-jpeg with --enable-libjpeg-turbo.])
-fi
-
-dnl Detect if we can use yasm to compile libjpeg-turbo's optimized assembly
-dnl files.
-
-if test -n "$MOZ_LIBJPEG_TURBO" -a -n "$COMPILE_ENVIRONMENT"; then
-
-  dnl Do we support libjpeg-turbo on this platform?
-  case "$OS_ARCH:$CPU_ARCH" in
-  Darwin:x86)
-    LIBJPEG_TURBO_ASFLAGS="-DPIC -DMACHO"
-  ;;
-  Darwin:x86_64)
-    LIBJPEG_TURBO_ASFLAGS="-D__x86_64__ -DPIC -DMACHO"
-  ;;
-  Darwin:arm*)
-  ;;
-  WINNT:x86)
-    LIBJPEG_TURBO_ASFLAGS="-DPIC -DWIN32"
-  ;;
-  WINNT:x86_64)
-    LIBJPEG_TURBO_ASFLAGS="-D__x86_64__ -DPIC -DWIN64 -DMSVC"
-  ;;
-  WINNT:*)
-  ;;
-  *:arm)
-    LIBJPEG_TURBO_ASFLAGS="-march=armv7-a -mfpu=neon"
-  ;;
-  *:aarch64)
-    LIBJPEG_TURBO_ASFLAGS="-march=armv8-a"
-  ;;
-  *:mips32)
-    LIBJPEG_TURBO_ASFLAGS="-mdspr2"
-  ;;
-  *:x86)
-    if $CC -E -dM -</dev/null | grep -q __ELF__; then
-      LIBJPEG_TURBO_ASFLAGS="-DPIC -DELF"
-    fi
-  ;;
-  *:x86_64)
-    if $CC -E -dM -</dev/null | grep -q __ELF__; then
-      LIBJPEG_TURBO_ASFLAGS="-D__x86_64__ -DPIC -DELF"
-    fi
-  ;;
-  esac
-fi
-
-if test -n "$LIBJPEG_TURBO_ASFLAGS"; then
-  case "$CPU_ARCH" in
-dnl If we're on an x86 or x64 system which supports libjpeg-turbo's asm routines
-dnl and --disable-libjpeg-turbo wasn't passed, check for Yasm, and error out if
-dnl it doesn't exist or we have too old of a version.
-  x86_64|x86)
-    LIBJPEG_TURBO_USE_YASM=1
-
-    if test -z "$YASM" ; then
-        AC_MSG_ERROR([Yasm is required to build with libjpeg-turbo's optimized JPEG decoding routines, but you do not appear to have Yasm installed.  Either install it or configure with --disable-libjpeg-turbo to use the pure C JPEG decoder.  See https://developer.mozilla.org/en/YASM for more details.])
-    fi
-
-    dnl Check that we have the right yasm version.  We require 1.0.1 or newer
-    dnl on Linux and 1.1 or newer everywhere else.
-    if test "$OS_ARCH" = "Linux" ; then
-        if test "$_YASM_MAJOR_VERSION" -lt "1" -o \( "$_YASM_MAJOR_VERSION" -eq "1" -a "$_YASM_MINOR_VERSION" -eq "0" -a "$_YASM_RELEASE" -lt "1" \) ; then
-            AC_MSG_ERROR([Yasm 1.0.1 or greater is required to build with libjpeg-turbo's optimized JPEG decoding routines, but you appear to have version $_YASM_MAJOR_VERSION.$_YASM_MINOR_VERSION.$_YASM_RELEASE.  Upgrade to the newest version or configure with --disable-libjpeg-turbo to use the pure C JPEG decoder.  See https://developer.mozilla.org/en/YASM for more details.])
-        fi
-    else
-        if test "$_YASM_MAJOR_VERSION" -lt "1" -o \( "$_YASM_MAJOR_VERSION" -eq "1" -a "$_YASM_MINOR_VERSION" -lt "1" \) ; then
-            AC_MSG_ERROR([Yasm 1.1 or greater is required to build with libjpeg-turbo's optimized JPEG decoding routines, but you appear to have version $_YASM_MAJOR_VERSION.$_YASM_MINOR_VERSION.  Upgrade to the newest version or configure with --disable-libjpeg-turbo to use the pure C JPEG decoder.  See https://developer.mozilla.org/en/YASM for more details.])
-        fi
-    fi
-  ;;
-  esac
 fi
 
 dnl ========================================================
@@ -3894,11 +3756,8 @@ HOST_CXXFLAGS=`echo \
     $_COMPILATION_HOST_CXXFLAGS \
     $HOST_CXXFLAGS`
 
-AC_SUBST(MOZ_SYSTEM_JPEG)
 AC_SUBST(MOZ_SYSTEM_PNG)
 
-AC_SUBST_LIST(MOZ_JPEG_CFLAGS)
-AC_SUBST_LIST(MOZ_JPEG_LIBS)
 AC_SUBST_LIST(MOZ_PNG_CFLAGS)
 AC_SUBST_LIST(MOZ_PNG_LIBS)
 
@@ -3962,8 +3821,6 @@ AC_SUBST(WIN32_GUI_EXE_LDFLAGS)
 AC_SUBST(MOZ_FFVPX)
 AC_SUBST(MOZ_FFVPX_FLACONLY)
 AC_SUBST_LIST(FFVPX_ASFLAGS)
-AC_SUBST(LIBJPEG_TURBO_USE_YASM)
-AC_SUBST_LIST(LIBJPEG_TURBO_ASFLAGS)
 AC_SUBST(MOZ_LIBAV_FFT)
 AC_SUBST_LIST(LIBAV_FFT_ASFLAGS)
 AC_SUBST(MOZ_DEVTOOLS)
