@@ -221,7 +221,7 @@ a {
 }
 
 .message:hover > .icon.rewindable {
-  background-image: url(resource://devtools/client/debugger/new/images/next-circle.svg);
+  background-image: url(chrome://devtools/skin/images/next-circle.svg);
   cursor: pointer;
   transform: rotate(180deg);
 }

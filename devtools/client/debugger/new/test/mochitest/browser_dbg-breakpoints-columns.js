@@ -48,6 +48,11 @@ add_task(async function() {
   const dbg = await initDebugger("doc-scripts.html", "simple1");
   await pushPref("devtools.debugger.features.column-breakpoints", true);
 
+  if(!Services.prefs.getBoolPref("devtools.debugger.features.column-breakpoints")) {
+    ok(true, "This test only applies when column breakpoints are on");
+    return;
+  }
+
   await selectSource(dbg, "simple1");
 
   // Scroll down to desired line so that column breakpoints render

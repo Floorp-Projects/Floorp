@@ -244,24 +244,29 @@ var paymentRequest = {
 
   /**
    * @param {object} state object representing the UI state
-   * @param {string} methodID (GUID) uniquely identifying the selected payment method
+   * @param {string} selectedMethodID (GUID) uniquely identifying the selected payment method
    * @returns {object?} the applicable modifier for the payment method
    */
-  getModifierForPaymentMethod(state, methodID) {
-    let method = state.savedBasicCards[methodID] || null;
-    if (method && method.methodName !== "basic-card") {
-      throw new Error(`${method.methodName} (${methodID}) is not a supported payment method`);
+  getModifierForPaymentMethod(state, selectedMethodID) {
+    let basicCards = this.getBasicCards(state);
+    let selectedMethod = basicCards[selectedMethodID] || null;
+    if (selectedMethod && selectedMethod.methodName !== "basic-card") {
+      throw new Error(`${selectedMethod.methodName} (${selectedMethodID}) ` +
+                      `is not a supported payment method`);
     }
     let modifiers = state.request.paymentDetails.modifiers;
-    if (!modifiers || !modifiers.length) {
+    if (!selectedMethod || !modifiers || !modifiers.length) {
       return null;
     }
-    let modifier = modifiers.find(m => {
+    let appliedModifier = modifiers.find(modifier => {
       // take the first matching modifier
-      // TODO (bug 1429198): match on supportedNetworks
-      return m.supportedMethods == "basic-card";
+      if (modifier.supportedMethods && modifier.supportedMethods != selectedMethod.methodName) {
+        return false;
+      }
+      let supportedNetworks = modifier.data && modifier.data.supportedNetworks || [];
+      return supportedNetworks.length == 0 || supportedNetworks.includes(selectedMethod["cc-type"]);
     });
-    return modifier || null;
+    return appliedModifier || null;
   },
 
   /**

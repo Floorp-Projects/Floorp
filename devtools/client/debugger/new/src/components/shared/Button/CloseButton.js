@@ -4,6 +4,9 @@
 
 // @flow
 import React from "react";
+
+import AccessibleImage from "../AccessibleImage";
+
 import "./styles/CloseButton.css";
 
 type Props = {
@@ -19,7 +22,7 @@ function CloseButton({ handleClick, buttonClass, tooltip }: Props) {
       onClick={handleClick}
       title={tooltip}
     >
-      <img className="close" />
+      <AccessibleImage className="close" />
     </button>
   );
 }

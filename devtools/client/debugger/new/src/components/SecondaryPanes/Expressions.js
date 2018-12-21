@@ -22,7 +22,7 @@ import { CloseButton } from "../shared/Button";
 import { debounce } from "lodash";
 
 import type { List } from "immutable";
-import type { Expression, Grip } from "../../types";
+import type { Expression } from "../../types";
 
 import "./Expressions.css";
 
@@ -40,16 +40,16 @@ type Props = {
   expressionError: boolean,
   showInput: boolean,
   autocompleteMatches: string[],
-  autocomplete: (input: string, cursor: number) => Promise<any>,
-  clearAutocomplete: () => void,
   onExpressionAdded: () => void,
-  addExpression: (input: string) => void,
-  clearExpressionError: () => void,
-  evaluateExpressions: () => void,
-  updateExpression: (input: string, expression: Expression) => void,
-  deleteExpression: (expression: Expression) => void,
-  openLink: (url: string) => void,
-  openElementInInspector: (grip: Grip) => void
+  autocomplete: typeof actions.autocomplete,
+  clearAutocomplete: typeof actions.clearAutocomplete,
+  addExpression: typeof actions.addExpression,
+  clearExpressionError: typeof actions.clearExpressionError,
+  evaluateExpressions: typeof actions.evaluateExpressions,
+  updateExpression: typeof actions.updateExpression,
+  deleteExpression: typeof actions.deleteExpression,
+  openLink: typeof actions.openLink,
+  openElementInInspector: typeof actions.openElementInInspectorCommand
 };
 
 class Expressions extends Component<Props, State> {
@@ -371,7 +371,6 @@ export default connect(
   {
     autocomplete: actions.autocomplete,
     clearAutocomplete: actions.clearAutocomplete,
-    onExpressionAdded: actions.onExpressionAdded,
     addExpression: actions.addExpression,
     clearExpressionError: actions.clearExpressionError,
     evaluateExpressions: actions.evaluateExpressions,

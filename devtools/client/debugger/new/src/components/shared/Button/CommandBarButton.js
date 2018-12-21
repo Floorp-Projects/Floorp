@@ -6,6 +6,8 @@
 import classnames from "classnames";
 import React from "react";
 
+import AccessibleImage from "../AccessibleImage";
+
 import "./styles/CommandBarButton.css";
 
 type Props = {
@@ -31,7 +33,7 @@ export function debugBtn(
       pressed={ariaPressed}
       title={tooltip}
     >
-      <img className={type} />
+      <AccessibleImage className={type} />
     </CommandBarButton>
   );
 }

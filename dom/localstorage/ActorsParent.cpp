@@ -34,6 +34,8 @@
 #include "nsClassHashtable.h"
 #include "nsDataHashtable.h"
 #include "nsInterfaceHashtable.h"
+#include "nsIObjectInputStream.h"
+#include "nsIObjectOutputStream.h"
 #include "nsISimpleEnumerator.h"
 #include "nsNetUtil.h"
 #include "nsRefPtrHashtable.h"
@@ -80,7 +82,7 @@ typedef nsClassHashtable<nsCStringHashKey, ArchivedOriginInfo>
  ******************************************************************************/
 
 // Major schema version. Bump for almost everything.
-const uint32_t kMajorSchemaVersion = 1;
+const uint32_t kMajorSchemaVersion = 2;
 
 // Minor schema version. Should almost always be 0 (maybe bump on release
 // branches if we have to).
@@ -129,6 +131,37 @@ static_assert(kSQLiteGrowthIncrement >= 0 &&
  * The journal corresponding to DATA_FILE_NAME.  (We don't use WAL mode.)
  */
 #define JOURNAL_FILE_NAME "data.sqlite-journal"
+
+/**
+ * This file contains the current usage of the LocalStorage database as defined
+ * by the mozLength totals of all keys and values for the database, which
+ * differs from the actual size on disk.  We store this value in a separate
+ * file as a cache so that we can initialize the QuotaClient faster.
+ * In the future, this file will be eliminated and the information will be
+ * stored in PROFILE/storage.sqlite or similar QuotaManager-wide storage.
+ *
+ * The file contains a binary verification cookie (32-bits) followed by the
+ * actual usage (64-bits).
+ */
+#define USAGE_FILE_NAME "usage"
+
+/**
+ * Following a QuotaManager idiom, this journal file's existence is a marker
+ * that the usage file was in the process of being updated and is currently
+ * invalid.  This file is created prior to updating the usage file and only
+ * deleted after the usage file has been written and closed and any pending
+ * database transactions have been committed.  Note that this idiom is expected
+ * to work if Gecko crashes in the middle of a write, but is not expected to be
+ * foolproof in the face of a system crash, as we do not explicitly attempt to
+ * fsync the directory containing the journal file.
+ *
+ * If the journal file is found to exist at origin initialization time, the
+ * usage will be re-computed from the current state of DATA_FILE_NAME.
+ */
+#define USAGE_JOURNAL_FILE_NAME "usage-journal"
+
+static const uint32_t kUsageFileSize = 12;
+static const uint32_t kUsageFileCookie = 0x420a420a;
 
 /**
  * How long between the first moment we know we have data to be written on a
@@ -211,14 +244,12 @@ void AssertIsOnConnectionThread();
  * SQLite functions
  ******************************************************************************/
 
-#if 0
 int32_t
 MakeSchemaVersion(uint32_t aMajorSchemaVersion,
                   uint32_t aMinorSchemaVersion)
 {
   return int32_t((aMajorSchemaVersion << 4) + aMinorSchemaVersion);
 }
-#endif
 
 nsCString GetArchivedOriginHashKey(const nsACString& aOriginSuffix,
                                    const nsACString& aOriginNoSuffix) {
@@ -233,6 +264,7 @@ nsresult CreateTables(mozIStorageConnection* aConnection) {
   nsresult rv = aConnection->ExecuteSimpleSQL(
       NS_LITERAL_CSTRING("CREATE TABLE database"
                          "( origin TEXT NOT NULL"
+                         ", usage INTEGER NOT NULL DEFAULT 0"
                          ", last_vacuum_time INTEGER NOT NULL DEFAULT 0"
                          ", last_analyze_time INTEGER NOT NULL DEFAULT 0"
                          ", last_vacuum_size INTEGER NOT NULL DEFAULT 0"
@@ -261,21 +293,33 @@ nsresult CreateTables(mozIStorageConnection* aConnection) {
   return NS_OK;
 }
 
-#if 0
 nsresult
 UpgradeSchemaFrom1_0To2_0(mozIStorageConnection* aConnection)
 {
   AssertIsOnIOThread();
   MOZ_ASSERT(aConnection);
 
-  nsresult rv = aConnection->SetSchemaVersion(MakeSchemaVersion(2, 0));
+  nsresult rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+      "ALTER TABLE database ADD COLUMN usage INTEGER NOT NULL DEFAULT 0;"));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+      "UPDATE database "
+      "SET usage = (SELECT total(utf16Length(key) + utf16Length(value)) "
+      "FROM data);"));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = aConnection->SetSchemaVersion(MakeSchemaVersion(2, 0));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   return NS_OK;
 }
-#endif
 
 nsresult SetDefaultPragmas(mozIStorageConnection* aConnection) {
   MOZ_ASSERT(!NS_IsMainThread());
@@ -302,11 +346,18 @@ nsresult SetDefaultPragmas(mozIStorageConnection* aConnection) {
   return NS_OK;
 }
 
-nsresult CreateStorageConnection(nsIFile* aDBFile, const nsACString& aOrigin,
-                                 mozIStorageConnection** aConnection) {
+nsresult CreateStorageConnection(nsIFile* aDBFile, nsIFile* aUsageFile,
+                                 const nsACString& aOrigin,
+                                 mozIStorageConnection** aConnection,
+                                 bool* aRemovedUsageFile) {
   AssertIsOnIOThread();
   MOZ_ASSERT(aDBFile);
+  MOZ_ASSERT(aUsageFile);
   MOZ_ASSERT(aConnection);
+  MOZ_ASSERT(aRemovedUsageFile);
+
+  // aRemovedUsageFile has to be initialized even when this method fails.
+  *aRemovedUsageFile = false;
 
   nsresult rv;
 
@@ -319,6 +370,15 @@ nsresult CreateStorageConnection(nsIFile* aDBFile, const nsACString& aOrigin,
   nsCOMPtr<mozIStorageConnection> connection;
   rv = ss->OpenDatabase(aDBFile, getter_AddRefs(connection));
   if (rv == NS_ERROR_FILE_CORRUPTED) {
+    // Remove the usage file first.
+    rv = aUsageFile->Remove(false);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    // Let the caller know that the usage file has been removed.
+    *aRemovedUsageFile = true;
+
     // Nuke the database file.
     rv = aDBFile->Remove(false);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -410,22 +470,18 @@ nsresult CreateStorageConnection(nsIFile* aDBFile, const nsACString& aOrigin,
       }
     } else {
       // This logic needs to change next time we change the schema!
-      static_assert(kSQLiteSchemaVersion == int32_t((1 << 4) + 0),
+      static_assert(kSQLiteSchemaVersion == int32_t((2 << 4) + 0),
                     "Upgrade function needed due to schema version increase.");
 
       while (schemaVersion != kSQLiteSchemaVersion) {
-#if 0
         if (schemaVersion == MakeSchemaVersion(1, 0)) {
           rv = UpgradeSchemaFrom1_0To2_0(connection);
         } else {
-#endif
-        LS_WARNING(
-            "Unable to open LocalStorage database, no upgrade path is "
-            "available!");
-        return NS_ERROR_FAILURE;
-#if 0
+          LS_WARNING(
+              "Unable to open LocalStorage database, no upgrade path is "
+              "available!");
+          return NS_ERROR_FAILURE;
         }
-#endif
 
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
@@ -959,6 +1015,139 @@ nsresult DetachShadowDatabase(mozIStorageConnection* aConnection) {
   return NS_OK;
 }
 
+nsresult GetUsageFile(const nsAString& aDirectoryPath, nsIFile** aUsageFile) {
+  MOZ_ASSERT(IsOnIOThread() || IsOnConnectionThread());
+  MOZ_ASSERT(!aDirectoryPath.IsEmpty());
+  MOZ_ASSERT(aUsageFile);
+
+  nsCOMPtr<nsIFile> usageFile;
+  nsresult rv =
+    NS_NewLocalFile(aDirectoryPath, false, getter_AddRefs(usageFile));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = usageFile->Append(NS_LITERAL_STRING(USAGE_FILE_NAME));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  usageFile.forget(aUsageFile);
+  return NS_OK;
+}
+
+nsresult GetUsageJournalFile(const nsAString& aDirectoryPath,
+                             nsIFile** aUsageJournalFile) {
+  MOZ_ASSERT(IsOnIOThread() || IsOnConnectionThread());
+  MOZ_ASSERT(!aDirectoryPath.IsEmpty());
+  MOZ_ASSERT(aUsageJournalFile);
+
+  nsCOMPtr<nsIFile> usageJournalFile;
+  nsresult rv =
+    NS_NewLocalFile(aDirectoryPath, false, getter_AddRefs(usageJournalFile));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = usageJournalFile->Append(NS_LITERAL_STRING(USAGE_JOURNAL_FILE_NAME));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  usageJournalFile.forget(aUsageJournalFile);
+  return NS_OK;
+}
+
+nsresult UpdateUsageFile(nsIFile* aUsageFile, nsIFile* aUsageJournalFile,
+                         int64_t aUsage) {
+  MOZ_ASSERT(IsOnIOThread() || IsOnConnectionThread());
+  MOZ_ASSERT(aUsageFile);
+  MOZ_ASSERT(aUsageJournalFile);
+  MOZ_ASSERT(aUsage >= 0);
+
+  nsresult rv = aUsageJournalFile->Create(nsIFile::NORMAL_FILE_TYPE, 0644);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  nsCOMPtr<nsIOutputStream> stream;
+  rv = NS_NewLocalFileOutputStream(getter_AddRefs(stream), aUsageFile);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  nsCOMPtr<nsIBinaryOutputStream> binaryStream =
+      NS_NewObjectOutputStream(stream);
+
+  rv = binaryStream->Write32(kUsageFileCookie);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = binaryStream->Write64(aUsage);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = stream->Close();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+nsresult LoadUsageFile(nsIFile* aUsageFile, int64_t* aUsage) {
+  AssertIsOnIOThread();
+  MOZ_ASSERT(aUsageFile);
+  MOZ_ASSERT(aUsage);
+
+  int64_t fileSize;
+  nsresult rv = aUsageFile->GetFileSize(&fileSize);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (NS_WARN_IF(fileSize != kUsageFileSize)) {
+    return NS_ERROR_FILE_CORRUPTED;
+  }
+
+  nsCOMPtr<nsIInputStream> stream;
+  rv = NS_NewLocalFileInputStream(getter_AddRefs(stream), aUsageFile);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  nsCOMPtr<nsIInputStream> bufferedStream;
+  rv = NS_NewBufferedInputStream(getter_AddRefs(bufferedStream),
+                                 stream.forget(), 16);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  nsCOMPtr<nsIBinaryInputStream> binaryStream =
+      NS_NewObjectInputStream(bufferedStream);
+
+  uint32_t cookie;
+  rv = binaryStream->Read32(&cookie);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (NS_WARN_IF(cookie != kUsageFileCookie)) {
+    return NS_ERROR_FILE_CORRUPTED;
+  }
+
+  uint64_t usage;
+  rv = binaryStream->Read64(&usage);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  *aUsage = usage;
+  return NS_OK;
+}
+
 /*******************************************************************************
  * Non-actor class declarations
  ******************************************************************************/
@@ -982,9 +1171,10 @@ class WriteOptimizer final {
 
   nsAutoPtr<WriteInfo> mClearInfo;
   nsClassHashtable<nsStringHashKey, WriteInfo> mWriteInfos;
+  int64_t mTotalDelta;
 
  public:
-  WriteOptimizer() {}
+  WriteOptimizer() : mTotalDelta(0) {}
 
   WriteOptimizer(WriteOptimizer&& aWriteOptimizer)
       : mClearInfo(std::move(aWriteOptimizer.mClearInfo)) {
@@ -992,15 +1182,19 @@ class WriteOptimizer final {
     MOZ_ASSERT(&aWriteOptimizer != this);
 
     mWriteInfos.SwapElements(aWriteOptimizer.mWriteInfos);
+    mTotalDelta = aWriteOptimizer.mTotalDelta;
+    aWriteOptimizer.mTotalDelta = 0;
   }
 
-  void AddItem(const nsString& aKey, const nsString& aValue);
+  void AddItem(const nsString& aKey, const nsString& aValue,
+               int64_t aDelta = 0);
 
-  void UpdateItem(const nsString& aKey, const nsString& aValue);
+  void UpdateItem(const nsString& aKey, const nsString& aValue,
+                  int64_t aDelta = 0);
 
-  void RemoveItem(const nsString& aKey);
+  void RemoveItem(const nsString& aKey, int64_t aDelta = 0);
 
-  void Clear();
+  void Clear(int64_t aDelta = 0);
 
   bool HasWrites() const {
     AssertIsOnBackgroundThread();
@@ -1010,7 +1204,8 @@ class WriteOptimizer final {
 
   void ApplyWrites(nsTArray<LSItemInfo>& aOrderedItems);
 
-  nsresult PerformWrites(Connection* aConnection, bool aShadowWrites);
+  nsresult PerformWrites(Connection* aConnection, bool aShadowWrites,
+                         int64_t& aOutUsage);
 };
 
 /**
@@ -1216,7 +1411,7 @@ class Connection final {
       mCachedStatements;
   WriteOptimizer mWriteOptimizer;
   const nsCString mOrigin;
-  const nsString mFilePath;
+  const nsString mDirectoryPath;
   bool mFlushScheduled;
 #ifdef DEBUG
   bool mInUpdateBatch;
@@ -1231,6 +1426,10 @@ class Connection final {
     return mArchivedOriginScope;
   }
 
+  const nsCString& Origin() const { return mOrigin; }
+
+  const nsString& DirectoryPath() const { return mDirectoryPath; }
+
   //////////////////////////////////////////////////////////////////////////////
   // Methods which can only be called on the owning thread.
 
@@ -1242,13 +1441,13 @@ class Connection final {
   // connection thread.
   void Close(nsIRunnable* aCallback);
 
-  void AddItem(const nsString& aKey, const nsString& aValue);
+  void AddItem(const nsString& aKey, const nsString& aValue, int64_t aDelta);
 
-  void UpdateItem(const nsString& aKey, const nsString& aValue);
+  void UpdateItem(const nsString& aKey, const nsString& aValue, int64_t aDelta);
 
-  void RemoveItem(const nsString& aKey);
+  void RemoveItem(const nsString& aKey, int64_t aDelta);
 
-  void Clear();
+  void Clear(int64_t aDelta);
 
   void BeginUpdateBatch();
 
@@ -1274,7 +1473,7 @@ class Connection final {
  private:
   // Only created by ConnectionThread.
   Connection(ConnectionThread* aConnectionThread, const nsACString& aOrigin,
-             const nsAString& aFilePath,
+             const nsAString& aDirectoryPath,
              nsAutoPtr<ArchivedOriginScope>&& aArchivedOriginScope);
 
   ~Connection();
@@ -1353,7 +1552,7 @@ class ConnectionThread final {
   void AssertIsOnConnectionThread();
 
   already_AddRefed<Connection> CreateConnection(
-      const nsACString& aOrigin, const nsAString& aFilePath,
+      const nsACString& aOrigin, const nsAString& aDirectoryPath,
       nsAutoPtr<ArchivedOriginScope>&& aArchivedOriginScope);
 
   void Shutdown();
@@ -2036,6 +2235,7 @@ class PrepareDatastoreOp : public LSRequestBase, public OpenDirectoryListener {
   nsCString mGroup;
   nsCString mMainThreadOrigin;
   nsCString mOrigin;
+  nsString mDirectoryPath;
   nsString mDatabaseFilePath;
   uint32_t mPrivateBrowsingId;
   int64_t mUsage;
@@ -2590,6 +2790,14 @@ void InitUsageForOrigin(const nsACString& aOrigin, int64_t aUsage) {
   gUsages->Put(aOrigin, aUsage);
 }
 
+void UpdateUsageForOrigin(const nsACString& aOrigin, int64_t aUsage) {
+  AssertIsOnIOThread();
+  MOZ_ASSERT(gUsages);
+  MOZ_ASSERT(gUsages->Contains(aOrigin));
+
+  gUsages->Put(aOrigin, aUsage);
+}
+
 nsresult LoadArchivedOrigins() {
   AssertIsOnIOThread();
   MOZ_ASSERT(!gArchivedOrigins);
@@ -2672,7 +2880,8 @@ nsresult GetUsage(mozIStorageConnection* aConnection,
   nsCOMPtr<mozIStorageStatement> stmt;
   if (aArchivedOriginScope) {
     rv = aConnection->CreateStatement(
-        NS_LITERAL_CSTRING("SELECT sum(length(key) + length(value)) "
+        NS_LITERAL_CSTRING("SELECT "
+                           "total(utf16Length(key) + utf16Length(value)) "
                            "FROM webappsstore2 "
                            "WHERE originKey = :originKey "
                            "AND originAttributes = :originAttributes;"),
@@ -2684,8 +2893,8 @@ nsresult GetUsage(mozIStorageConnection* aConnection,
     rv = aArchivedOriginScope->BindToStatement(stmt);
   } else {
     rv = aConnection->CreateStatement(
-        NS_LITERAL_CSTRING("SELECT sum(length(key) + length(value)) "
-                           "FROM data"),
+        NS_LITERAL_CSTRING("SELECT usage "
+                           "FROM database"),
         getter_AddRefs(stmt));
   }
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -3031,7 +3240,8 @@ already_AddRefed<mozilla::dom::quota::Client> CreateQuotaClient() {
  * WriteOptimizer
  ******************************************************************************/
 
-void WriteOptimizer::AddItem(const nsString& aKey, const nsString& aValue) {
+void WriteOptimizer::AddItem(const nsString& aKey, const nsString& aValue,
+                             int64_t aDelta) {
   AssertIsOnBackgroundThread();
 
   WriteInfo* existingWriteInfo;
@@ -3043,9 +3253,12 @@ void WriteOptimizer::AddItem(const nsString& aKey, const nsString& aValue) {
     newWriteInfo = new AddItemInfo(aKey, aValue);
   }
   mWriteInfos.Put(aKey, newWriteInfo.forget());
+
+  mTotalDelta += aDelta;
 }
 
-void WriteOptimizer::UpdateItem(const nsString& aKey, const nsString& aValue) {
+void WriteOptimizer::UpdateItem(const nsString& aKey, const nsString& aValue,
+                                int64_t aDelta) {
   AssertIsOnBackgroundThread();
 
   WriteInfo* existingWriteInfo;
@@ -3057,23 +3270,26 @@ void WriteOptimizer::UpdateItem(const nsString& aKey, const nsString& aValue) {
     newWriteInfo = new UpdateItemInfo(aKey, aValue);
   }
   mWriteInfos.Put(aKey, newWriteInfo.forget());
+
+  mTotalDelta += aDelta;
 }
 
-void WriteOptimizer::RemoveItem(const nsString& aKey) {
+void WriteOptimizer::RemoveItem(const nsString& aKey, int64_t aDelta) {
   AssertIsOnBackgroundThread();
 
   WriteInfo* existingWriteInfo;
   if (mWriteInfos.Get(aKey, &existingWriteInfo) &&
       existingWriteInfo->GetType() == WriteInfo::AddItem) {
     mWriteInfos.Remove(aKey);
-    return;
+  } else {
+    nsAutoPtr<WriteInfo> newWriteInfo(new RemoveItemInfo(aKey));
+    mWriteInfos.Put(aKey, newWriteInfo.forget());
   }
 
-  nsAutoPtr<WriteInfo> newWriteInfo(new RemoveItemInfo(aKey));
-  mWriteInfos.Put(aKey, newWriteInfo.forget());
+  mTotalDelta += aDelta;
 }
 
-void WriteOptimizer::Clear() {
+void WriteOptimizer::Clear(int64_t aDelta) {
   AssertIsOnBackgroundThread();
 
   mWriteInfos.Clear();
@@ -3081,6 +3297,8 @@ void WriteOptimizer::Clear() {
   if (!mClearInfo) {
     mClearInfo = new ClearInfo();
   }
+
+  mTotalDelta += aDelta;
 }
 
 void WriteOptimizer::ApplyWrites(nsTArray<LSItemInfo>& aOrderedItems) {
@@ -3135,7 +3353,7 @@ void WriteOptimizer::ApplyWrites(nsTArray<LSItemInfo>& aOrderedItems) {
 }
 
 nsresult WriteOptimizer::PerformWrites(Connection* aConnection,
-                                       bool aShadowWrites) {
+                                       bool aShadowWrites, int64_t& aOutUsage) {
   AssertIsOnConnectionThread();
   MOZ_ASSERT(aConnection);
 
@@ -3155,6 +3373,50 @@ nsresult WriteOptimizer::PerformWrites(Connection* aConnection,
     }
   }
 
+  Connection::CachedStatement stmt;
+  rv = aConnection->GetCachedStatement(
+      NS_LITERAL_CSTRING("UPDATE database "
+                         "SET usage = usage + :delta"),
+      &stmt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("delta"), mTotalDelta);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = stmt->Execute();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = aConnection->GetCachedStatement(
+      NS_LITERAL_CSTRING("SELECT usage "
+                         "FROM database"),
+      &stmt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  bool hasResult;
+  rv = stmt->ExecuteStep(&hasResult);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (NS_WARN_IF(!hasResult)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  int64_t usage;
+  rv = stmt->GetInt64(0, &usage);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  aOutUsage = usage;
   return NS_OK;
 }
 
@@ -3427,12 +3689,13 @@ ConnectionDatastoreOperationBase::Run() {
  ******************************************************************************/
 
 Connection::Connection(ConnectionThread* aConnectionThread,
-                       const nsACString& aOrigin, const nsAString& aFilePath,
+                       const nsACString& aOrigin,
+                       const nsAString& aDirectoryPath,
                        nsAutoPtr<ArchivedOriginScope>&& aArchivedOriginScope)
     : mConnectionThread(aConnectionThread),
       mArchivedOriginScope(std::move(aArchivedOriginScope)),
       mOrigin(aOrigin),
-      mFilePath(aFilePath),
+      mDirectoryPath(aDirectoryPath),
       mFlushScheduled(false)
 #ifdef DEBUG
       ,
@@ -3441,7 +3704,7 @@ Connection::Connection(ConnectionThread* aConnectionThread,
 {
   AssertIsOnOwningThread();
   MOZ_ASSERT(!aOrigin.IsEmpty());
-  MOZ_ASSERT(!aFilePath.IsEmpty());
+  MOZ_ASSERT(!aDirectoryPath.IsEmpty());
 }
 
 Connection::~Connection() {
@@ -3478,32 +3741,34 @@ void Connection::Close(nsIRunnable* aCallback) {
   Dispatch(op);
 }
 
-void Connection::AddItem(const nsString& aKey, const nsString& aValue) {
+void Connection::AddItem(const nsString& aKey, const nsString& aValue,
+                         int64_t aDelta) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mInUpdateBatch);
 
-  mWriteOptimizer.AddItem(aKey, aValue);
+  mWriteOptimizer.AddItem(aKey, aValue, aDelta);
 }
 
-void Connection::UpdateItem(const nsString& aKey, const nsString& aValue) {
+void Connection::UpdateItem(const nsString& aKey, const nsString& aValue,
+                            int64_t aDelta) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mInUpdateBatch);
 
-  mWriteOptimizer.UpdateItem(aKey, aValue);
+  mWriteOptimizer.UpdateItem(aKey, aValue, aDelta);
 }
 
-void Connection::RemoveItem(const nsString& aKey) {
+void Connection::RemoveItem(const nsString& aKey, int64_t aDelta) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mInUpdateBatch);
 
-  mWriteOptimizer.RemoveItem(aKey);
+  mWriteOptimizer.RemoveItem(aKey, aDelta);
 }
 
-void Connection::Clear() {
+void Connection::Clear(int64_t aDelta) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mInUpdateBatch);
 
-  mWriteOptimizer.Clear();
+  mWriteOptimizer.Clear(aDelta);
 }
 
 void Connection::BeginUpdateBatch() {
@@ -3532,9 +3797,25 @@ nsresult Connection::EnsureStorageConnection() {
   AssertIsOnConnectionThread();
 
   if (!mStorageConnection) {
+    nsCOMPtr<nsIFile> file;
+    nsresult rv = NS_NewLocalFile(mDirectoryPath, false, getter_AddRefs(file));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = file->Append(NS_LITERAL_STRING(DATA_FILE_NAME));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    nsString filePath;
+    rv = file->GetPath(filePath);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
     nsCOMPtr<mozIStorageConnection> storageConnection;
-    nsresult rv =
-        GetStorageConnection(mFilePath, getter_AddRefs(storageConnection));
+    rv = GetStorageConnection(filePath, getter_AddRefs(storageConnection));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -3716,7 +3997,26 @@ nsresult Connection::FlushOp::DoDatastoreWork() {
     return rv;
   }
 
-  rv = mWriteOptimizer.PerformWrites(mConnection, mShadowWrites);
+  int64_t usage;
+  rv = mWriteOptimizer.PerformWrites(mConnection, mShadowWrites, usage);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  nsCOMPtr<nsIFile> usageFile;
+  rv = GetUsageFile(mConnection->DirectoryPath(), getter_AddRefs(usageFile));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  nsCOMPtr<nsIFile> usageJournalFile;
+  rv = GetUsageJournalFile(mConnection->DirectoryPath(),
+                           getter_AddRefs(usageJournalFile));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = UpdateUsageFile(usageFile, usageJournalFile, usage);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -3736,7 +4036,23 @@ nsresult Connection::FlushOp::DoDatastoreWork() {
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
+
+    shadowDatabaseLock.reset();
   }
+
+  rv = usageJournalFile->Remove(false);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  RefPtr<Runnable> runnable = NS_NewRunnableFunction(
+      "dom::localstorage::UpdateUsageRunnable",
+      [origin = mConnection->Origin(), usage]() {
+        UpdateUsageForOrigin(origin, usage);
+      });
+
+  MOZ_ALWAYS_SUCCEEDS(
+      quotaManager->IOThread()->Dispatch(runnable, NS_DISPATCH_NORMAL));
 
   return NS_OK;
 }
@@ -3792,14 +4108,15 @@ void ConnectionThread::AssertIsOnConnectionThread() {
 }
 
 already_AddRefed<Connection> ConnectionThread::CreateConnection(
-    const nsACString& aOrigin, const nsAString& aFilePath,
+    const nsACString& aOrigin, const nsAString& aDirectoryPath,
     nsAutoPtr<ArchivedOriginScope>&& aArchivedOriginScope) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(!aOrigin.IsEmpty());
   MOZ_ASSERT(!mConnections.GetWeak(aOrigin));
 
   RefPtr<Connection> connection =
-      new Connection(this, aOrigin, aFilePath, std::move(aArchivedOriginScope));
+      new Connection(this, aOrigin, aDirectoryPath,
+                     std::move(aArchivedOriginScope));
   mConnections.Put(aOrigin, connection);
 
   return connection.forget();
@@ -4127,11 +4444,13 @@ void Datastore::SetItem(Database* aDatabase, const nsString& aDocumentURI,
 
     mValues.Put(aKey, aValue);
 
+    int64_t sizeOfItem;
+
     if (isNewItem) {
       mWriteOptimizer.AddItem(aKey, aValue);
 
       int64_t sizeOfKey = static_cast<int64_t>(aKey.Length());
-      int64_t sizeOfItem = sizeOfKey + static_cast<int64_t>(aValue.Length());
+      sizeOfItem = sizeOfKey + static_cast<int64_t>(aValue.Length());
 
       mUpdateBatchUsage += sizeOfItem;
 
@@ -4140,19 +4459,19 @@ void Datastore::SetItem(Database* aDatabase, const nsString& aDocumentURI,
     } else {
       mWriteOptimizer.UpdateItem(aKey, aValue);
 
-      int64_t delta = static_cast<int64_t>(aValue.Length()) -
-                      static_cast<int64_t>(oldValue.Length());
+      sizeOfItem = static_cast<int64_t>(aValue.Length()) -
+                   static_cast<int64_t>(oldValue.Length());
 
-      mUpdateBatchUsage += delta;
+      mUpdateBatchUsage += sizeOfItem;
 
-      mSizeOfItems += delta;
+      mSizeOfItems += sizeOfItem;
     }
 
     if (IsPersistent()) {
       if (oldValue.IsVoid()) {
-        mConnection->AddItem(aKey, aValue);
+        mConnection->AddItem(aKey, aValue, sizeOfItem);
       } else {
-        mConnection->UpdateItem(aKey, aValue);
+        mConnection->UpdateItem(aKey, aValue, sizeOfItem);
       }
     }
   }
@@ -4186,7 +4505,7 @@ void Datastore::RemoveItem(Database* aDatabase, const nsString& aDocumentURI,
     mSizeOfItems -= sizeOfItem;
 
     if (IsPersistent()) {
-      mConnection->RemoveItem(aKey);
+      mConnection->RemoveItem(aKey, -sizeOfItem);
     }
   }
 
@@ -4200,13 +4519,13 @@ void Datastore::Clear(Database* aDatabase, const nsString& aDocumentURI) {
   MOZ_ASSERT(mInUpdateBatch);
 
   if (mValues.Count()) {
-    int64_t updateBatchUsage = mUpdateBatchUsage;
+    int64_t sizeOfItems = 0;
     for (auto iter = mValues.ConstIter(); !iter.Done(); iter.Next()) {
       const nsAString& key = iter.Key();
       const nsAString& value = iter.Data();
 
-      updateBatchUsage -= (static_cast<int64_t>(key.Length()) +
-                           static_cast<int64_t>(value.Length()));
+      sizeOfItems += (static_cast<int64_t>(key.Length()) +
+                      static_cast<int64_t>(value.Length()));
 
       NotifySnapshots(aDatabase, key, value, /* aAffectsOrder */ true);
     }
@@ -4215,13 +4534,13 @@ void Datastore::Clear(Database* aDatabase, const nsString& aDocumentURI) {
 
     mWriteOptimizer.Clear();
 
-    mUpdateBatchUsage = updateBatchUsage;
+    mUpdateBatchUsage -= sizeOfItems;
 
     mSizeOfKeys = 0;
     mSizeOfItems = 0;
 
     if (IsPersistent()) {
-      mConnection->Clear();
+      mConnection->Clear(-sizeOfItems);
     }
   }
 
@@ -4347,23 +4666,7 @@ bool Datastore::UpdateUsage(int64_t aDelta) {
   }
 
   // Quota checks passed, set new usage.
-
   mUsage = newUsage;
-
-  if (IsPersistent()) {
-    RefPtr<Runnable> runnable = NS_NewRunnableFunction(
-        "Datastore::UpdateUsage", [origin = mOrigin, newUsage]() {
-          MOZ_ASSERT(gUsages);
-          MOZ_ASSERT(gUsages->Contains(origin));
-          gUsages->Put(origin, newUsage);
-        });
-
-    QuotaManager* quotaManager = QuotaManager::Get();
-    MOZ_ASSERT(quotaManager);
-
-    MOZ_ALWAYS_SUCCEEDS(
-        quotaManager->IOThread()->Dispatch(runnable, NS_DISPATCH_NORMAL));
-  }
 
   return true;
 }
@@ -5611,6 +5914,11 @@ nsresult PrepareDatastoreOp::DatabaseWork() {
     return rv;
   }
 
+  rv = directoryEntry->GetPath(mDirectoryPath);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
   rv = directoryEntry->Append(NS_LITERAL_STRING(DATA_FILE_NAME));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -5640,9 +5948,25 @@ nsresult PrepareDatastoreOp::DatabaseWork() {
     return rv;
   }
 
+  nsCOMPtr<nsIFile> usageFile;
+  rv = GetUsageFile(mDirectoryPath, getter_AddRefs(usageFile));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
   nsCOMPtr<mozIStorageConnection> connection;
-  rv = CreateStorageConnection(directoryEntry, mOrigin,
-                               getter_AddRefs(connection));
+  bool removedUsageFile;
+
+  rv = CreateStorageConnection(directoryEntry, usageFile, mOrigin,
+                               getter_AddRefs(connection), &removedUsageFile);
+
+  // removedUsageFile must be checked before rv since we may need to reset usage
+  // even when CreateStorageConnection failed.
+  if (removedUsageFile) {
+    mUsage = 0;
+    UpdateUsageForOrigin(mOrigin, mUsage);
+  }
+
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -5691,6 +6015,23 @@ nsresult PrepareDatastoreOp::DatabaseWork() {
     }
 
     rv = mArchivedOriginScope->BindToStatement(stmt);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = stmt->Execute();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = connection->CreateStatement(
+        NS_LITERAL_CSTRING("UPDATE database SET usage = :usage;"),
+        getter_AddRefs(stmt));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("usage"), newUsage);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -5894,7 +6235,7 @@ nsresult PrepareDatastoreOp::BeginLoadData() {
   }
 
   mConnection = gConnectionThread->CreateConnection(
-      mOrigin, mDatabaseFilePath, std::move(mArchivedOriginScope));
+      mOrigin, mDirectoryPath, std::move(mArchivedOriginScope));
   MOZ_ASSERT(mConnection);
 
   // Must set this before dispatching otherwise we will race with the
@@ -6863,8 +7204,8 @@ nsresult QuotaClient::InitOrigin(PersistenceType aPersistenceType,
     return rv;
   }
 
-  bool exists;
 #ifdef DEBUG
+  bool exists;
   rv = directory->Exists(&exists);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -6872,6 +7213,69 @@ nsresult QuotaClient::InitOrigin(PersistenceType aPersistenceType,
 
   MOZ_ASSERT(exists);
 #endif
+
+  nsString directoryPath;
+  rv = directory->GetPath(directoryPath);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  nsCOMPtr<nsIFile> usageFile;
+  rv = GetUsageFile(directoryPath, getter_AddRefs(usageFile));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  bool usageFileExists;
+
+  bool isDirectory;
+  rv = usageFile->IsDirectory(&isDirectory);
+  if (rv != NS_ERROR_FILE_NOT_FOUND &&
+      rv != NS_ERROR_FILE_TARGET_DOES_NOT_EXIST) {
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    if (NS_WARN_IF(isDirectory)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    usageFileExists = true;
+  } else {
+    usageFileExists = false;
+  }
+
+  nsCOMPtr<nsIFile> usageJournalFile;
+  rv = GetUsageJournalFile(directoryPath, getter_AddRefs(usageJournalFile));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = usageJournalFile->IsDirectory(&isDirectory);
+  if (rv != NS_ERROR_FILE_NOT_FOUND &&
+      rv != NS_ERROR_FILE_TARGET_DOES_NOT_EXIST) {
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    if (NS_WARN_IF(isDirectory)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    if (usageFileExists) {
+      rv = usageFile->Remove(false);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      usageFileExists = false;
+    }
+
+    rv = usageJournalFile->Remove(false);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
 
   nsCOMPtr<nsIFile> file;
   rv = directory->Clone(getter_AddRefs(file));
@@ -6884,14 +7288,9 @@ nsresult QuotaClient::InitOrigin(PersistenceType aPersistenceType,
     return rv;
   }
 
-  rv = file->Exists(&exists);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  if (exists) {
-    bool isDirectory;
-    rv = file->IsDirectory(&isDirectory);
+  rv = file->IsDirectory(&isDirectory);
+  if (rv != NS_ERROR_FILE_NOT_FOUND &&
+      rv != NS_ERROR_FILE_TARGET_DOES_NOT_EXIST) {
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -6900,19 +7299,31 @@ nsresult QuotaClient::InitOrigin(PersistenceType aPersistenceType,
       return NS_ERROR_FAILURE;
     }
 
-    // TODO: Use a special file that contains logical size of the database.
-    //       For now, get the usage from the database.
-
-    nsCOMPtr<mozIStorageConnection> connection;
-    rv = CreateStorageConnection(file, aOrigin, getter_AddRefs(connection));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
     int64_t usage;
-    rv = GetUsage(connection, /* aArchivedOriginScope */ nullptr, &usage);
+    rv = LoadUsageFile(usageFile, &usage);
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+      nsCOMPtr<mozIStorageConnection> connection;
+      bool dummy;
+      rv = CreateStorageConnection(file, usageFile, aOrigin,
+                                   getter_AddRefs(connection), &dummy);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      rv = GetUsage(connection, /* aArchivedOriginScope */ nullptr, &usage);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      rv = UpdateUsageFile(usageFile, usageJournalFile, usage);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      rv = usageJournalFile->Remove(false);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
     }
 
     MOZ_ASSERT(usage >= 0);
@@ -6920,10 +7331,16 @@ nsresult QuotaClient::InitOrigin(PersistenceType aPersistenceType,
     InitUsageForOrigin(aOrigin, usage);
 
     aUsageInfo->AppendToDatabaseUsage(uint64_t(usage));
+  } else if (usageFileExists) {
+    rv = usageFile->Remove(false);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
   }
 
-  // Report unknown files, don't fail, just warn.
+  // Report unknown files in debug builds, but don't fail, just warn.
 
+#ifdef DEBUG
   nsCOMPtr<nsIDirectoryEnumerator> directoryEntries;
   rv = directory->GetDirectoryEntries(getter_AddRefs(directoryEntries));
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -6955,7 +7372,10 @@ nsresult QuotaClient::InitOrigin(PersistenceType aPersistenceType,
       return rv;
     }
 
-    if (leafName.EqualsLiteral(DATA_FILE_NAME)) {
+    // Don't need to check for USAGE_JOURNAL_FILE_NAME. We removed it above
+    // (if there was any).
+    if (leafName.EqualsLiteral(DATA_FILE_NAME) ||
+        leafName.EqualsLiteral(USAGE_FILE_NAME)) {
       // Don't need to check if it is a directory or file. We did that above.
       continue;
     }
@@ -6975,6 +7395,7 @@ nsresult QuotaClient::InitOrigin(PersistenceType aPersistenceType,
     LS_WARNING("Something (%s) in the directory that doesn't belong!",
                NS_ConvertUTF16toUTF8(leafName).get());
   }
+#endif
 
   return NS_OK;
 }
