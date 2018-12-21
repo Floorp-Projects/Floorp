@@ -12,7 +12,7 @@ add_task(async function() {
   );
 
   await assertPreviewTextValue(dbg, 10, 22, {
-    text: "Map\na: 2",
+    text: "size: 1",
     expression: "_this.fields;"
   });
 });
