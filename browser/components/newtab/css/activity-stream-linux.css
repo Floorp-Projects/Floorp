@@ -2059,6 +2059,7 @@ main {
     font-size: 12px;
     color: var(--newtab-text-secondary-color);
     margin-top: 10px;
+    display: flex;
     flex: 0 0 100%; }
   .SubmitFormSnippet .innerWrapper {
     max-width: 670px;
@@ -2245,6 +2246,7 @@ main {
     .EOYSnippetForm input[type='radio']:not(:checked):focus + .donation-amount {
       border: 1px dotted var(--newtab-link-primary-color); }
   .EOYSnippetForm .monthly-checkbox-container {
+    display: flex;
     width: 100%; }
   .EOYSnippetForm .donation-form-url {
     margin-inline-start: 18px;
