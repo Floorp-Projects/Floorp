@@ -9,11 +9,15 @@
 
 #include "mozilla/gfx/RectAbsolute.h"
 #include "nsCoord.h"
+#include "nsPoint.h"
 #include "nsRect.h"
 
 struct nsRectAbsolute
-    : public mozilla::gfx::BaseRectAbsolute<nscoord, nsRectAbsolute, nsRect> {
-  typedef mozilla::gfx::BaseRectAbsolute<nscoord, nsRectAbsolute, nsRect> Super;
+    : public mozilla::gfx::BaseRectAbsolute<nscoord, nsRectAbsolute, nsPoint,
+                                            nsRect> {
+  typedef mozilla::gfx::BaseRectAbsolute<nscoord, nsRectAbsolute, nsPoint,
+                                         nsRect>
+      Super;
 
   nsRectAbsolute() : Super() {}
   nsRectAbsolute(nscoord aX1, nscoord aY1, nscoord aX2, nscoord aY2)
@@ -38,13 +42,6 @@ struct nsRectAbsolute
 
   MOZ_MUST_USE nsRectAbsolute UnsafeUnion(const nsRectAbsolute& aRect) const {
     return Super::Union(aRect);
-  }
-
-  MOZ_ALWAYS_INLINE void MoveBy(const nsPoint& aPoint) {
-    left += aPoint.x;
-    right += aPoint.x;
-    top += aPoint.y;
-    bottom += aPoint.y;
   }
 
   void Inflate(const nsMargin& aMargin) {
