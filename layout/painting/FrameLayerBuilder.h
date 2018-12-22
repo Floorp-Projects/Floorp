@@ -385,6 +385,12 @@ class FrameLayerBuilder : public layers::LayerUserData {
   FrameLayerBuilder();
   ~FrameLayerBuilder() override;
 
+  static gfx::Size ChooseScale(nsIFrame* aContainerFrame,
+                               nsDisplayItem* aContainerItem,
+                               const nsRect& aVisibleRect, float aXScale,
+                               float aYScale, const gfx::Matrix& aTransform2d,
+                               bool aCanDraw2D);
+
   static void Shutdown();
 
   void Init(nsDisplayListBuilder* aBuilder, LayerManager* aManager,

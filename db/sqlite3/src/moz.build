@@ -36,7 +36,7 @@ SOURCES += [
 # Note: Be sure to update the configure.in checks when these change!
 for var in ('SQLITE_SECURE_DELETE', 'SQLITE_THREADSAFE', 'SQLITE_CORE',
             'SQLITE_ENABLE_FTS3', 'SQLITE_ENABLE_UNLOCK_NOTIFY',
-            'SQLITE_ENABLE_DBSTAT_VTAB', 'SQLITE_DBCONFIG_DEFENSIVE'):
+            'SQLITE_ENABLE_DBSTAT_VTAB'):
     DEFINES[var] = 1
 
 DEFINES['SQLITE_DEFAULT_PAGE_SIZE'] = 32768
