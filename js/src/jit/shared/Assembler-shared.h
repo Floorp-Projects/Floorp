@@ -32,7 +32,10 @@
 #define JS_SMALL_BRANCH
 #endif
 
-#if defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+#if defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64) || \
+    defined(JS_CODEGEN_ARM64)
+// JS_CODELABEL_LINKMODE gives labels additional metadata
+// describing how Bind() should patch them.
 #define JS_CODELABEL_LINKMODE
 #endif
 

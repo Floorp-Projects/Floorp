@@ -722,6 +722,7 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
   void mov(ImmPtr imm, Register dest) { movePtr(imm, dest); }
   void mov(wasm::SymbolicAddress imm, Register dest) { movePtr(imm, dest); }
   void mov(Register src, Register dest) { movePtr(src, dest); }
+  void mov(CodeLabel* label, Register dest);
 
   void move32(Imm32 imm, Register dest) {
     Mov(ARMRegister(dest, 32), (int64_t)imm.value);
@@ -2015,10 +2016,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
       Bfxil(ARMRegister(dest, 64), ARMRegister(src, 64), 0, JSVAL_TAG_SHIFT);
     }
   }
-
-  // FIXME: Should be in Assembler?
-  // FIXME: Should be const?
-  uint32_t currentOffset() const { return nextOffset().getOffset(); }
 
  protected:
   bool buildOOLFakeExitFrame(void* fakeReturnAddr) {
