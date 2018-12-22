@@ -104,7 +104,7 @@
 
 /* static */ void js::Debugger::onPromiseSettled(
     JSContext* cx, Handle<PromiseObject*> promise) {
-  if (MOZ_UNLIKELY(cx->realm()->isDebuggee())) {
+  if (MOZ_UNLIKELY(promise->realm()->isDebuggee())) {
     slowPathPromiseHook(cx, Debugger::OnPromiseSettled, promise);
   }
 }
