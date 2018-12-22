@@ -760,30 +760,72 @@ MoveOperand CodeGeneratorARM64::toMoveOperand(const LAllocation a) const {
 class js::jit::OutOfLineTableSwitch
     : public OutOfLineCodeBase<CodeGeneratorARM64> {
   MTableSwitch* mir_;
-  Vector<CodeLabel, 8, JitAllocPolicy> codeLabels_;
+  CodeLabel jumpLabel_;
 
   void accept(CodeGeneratorARM64* codegen) override {
     codegen->visitOutOfLineTableSwitch(this);
   }
 
  public:
-  OutOfLineTableSwitch(TempAllocator& alloc, MTableSwitch* mir)
-      : mir_(mir), codeLabels_(alloc) {}
+  OutOfLineTableSwitch(MTableSwitch* mir)
+      : mir_(mir) {}
 
   MTableSwitch* mir() const { return mir_; }
 
-  bool addCodeLabel(CodeLabel label) { return codeLabels_.append(label); }
-  CodeLabel codeLabel(unsigned i) { return codeLabels_[i]; }
+  CodeLabel* jumpLabel() { return &jumpLabel_; }
 };
 
 void CodeGeneratorARM64::visitOutOfLineTableSwitch(OutOfLineTableSwitch* ool) {
-  MOZ_CRASH("visitOutOfLineTableSwitch");
+  MTableSwitch* mir = ool->mir();
+
+  masm.haltingAlign(sizeof(void*));
+  masm.bind(ool->jumpLabel());
+  masm.addCodeLabel(*ool->jumpLabel());
+
+  for (size_t i = 0; i < mir->numCases(); i++) {
+    LBlock* caseblock = skipTrivialBlocks(mir->getCase(i))->lir();
+    Label* caseheader = caseblock->label();
+    uint32_t caseoffset = caseheader->offset();
+
+    // The entries of the jump table need to be absolute addresses,
+    // and thus must be patched after codegen is finished.
+    CodeLabel cl;
+    masm.writeCodePointer(&cl);
+    cl.target()->bind(caseoffset);
+    masm.addCodeLabel(cl);
+  }
 }
 
 void CodeGeneratorARM64::emitTableSwitchDispatch(MTableSwitch* mir,
-                                                 Register index_,
-                                                 Register base_) {
-  MOZ_CRASH("emitTableSwitchDispatch");
+                                                 Register index,
+                                                 Register base) {
+  Label* defaultcase = skipTrivialBlocks(mir->getDefault())->lir()->label();
+
+  // Let the lowest table entry be indexed at 0.
+  if (mir->low() != 0) {
+    masm.sub32(Imm32(mir->low()), index);
+  }
+
+  // Jump to the default case if input is out of range.
+  int32_t cases = mir->numCases();
+  masm.branch32(Assembler::AboveOrEqual, index, Imm32(cases), defaultcase);
+
+  // Because the target code has not yet been generated, we cannot know the
+  // instruction offsets for use as jump targets. Therefore we construct
+  // an OutOfLineTableSwitch that winds up holding the jump table.
+  //
+  // Because the jump table is generated as part of out-of-line code,
+  // it is generated after all the regular codegen, so the jump targets
+  // are guaranteed to exist when generating the jump table.
+  OutOfLineTableSwitch* ool = new(alloc()) OutOfLineTableSwitch(mir);
+  addOutOfLineCode(ool, mir);
+
+  // Use the index to get the address of the jump target from the table.
+  masm.mov(ool->jumpLabel(), base);
+  BaseIndex pointer(base, index, ScalePointer);
+
+  // Load the target from the jump table and branch to it.
+  masm.branchToComputedAddress(pointer);
 }
 
 void CodeGenerator::visitMathD(LMathD* math) {
