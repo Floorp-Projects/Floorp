@@ -54,7 +54,7 @@ class DocAccessibleChild : public DocAccessibleChildBase {
   bool SendTextChangeEvent(const uint64_t& aID, const nsString& aStr,
                            const int32_t& aStart, const uint32_t& aLen,
                            const bool& aIsInsert, const bool& aFromUser,
-                           const bool aDoSync = false);
+                           const bool aDoSyncCheck = true);
   bool SendSelectionEvent(const uint64_t& aID, const uint64_t& aWidgetID,
                           const uint32_t& aType);
   bool SendRoleChangedEvent(const a11y::role& aRole);
