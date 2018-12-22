@@ -4,35 +4,36 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsSVGPathDataParser.h"
+#include "SVGPathDataParser.h"
 
 #include "mozilla/gfx/Point.h"
-#include "nsSVGDataParser.h"
+#include "SVGDataParser.h"
 #include "SVGContentUtils.h"
 #include "SVGPathData.h"
 #include "SVGPathSegUtils.h"
 
-using namespace mozilla;
 using namespace mozilla::dom::SVGPathSeg_Binding;
 using namespace mozilla::gfx;
+
+namespace mozilla {
 
 static inline char16_t ToUpper(char16_t aCh) {
   return aCh >= 'a' && aCh <= 'z' ? aCh - 'a' + 'A' : aCh;
 }
 
-bool nsSVGPathDataParser::Parse() {
+bool SVGPathDataParser::Parse() {
   mPathSegList->Clear();
   return ParsePath();
 }
 
 //----------------------------------------------------------------------
 
-bool nsSVGPathDataParser::ParseCoordPair(float& aX, float& aY) {
+bool SVGPathDataParser::ParseCoordPair(float& aX, float& aY) {
   return SVGContentUtils::ParseNumber(mIter, mEnd, aX) && SkipCommaWsp() &&
          SVGContentUtils::ParseNumber(mIter, mEnd, aY);
 }
 
-bool nsSVGPathDataParser::ParseFlag(bool& aFlag) {
+bool SVGPathDataParser::ParseFlag(bool& aFlag) {
   if (mIter == mEnd || (*mIter != '0' && *mIter != '1')) {
     return false;
   }
@@ -44,7 +45,7 @@ bool nsSVGPathDataParser::ParseFlag(bool& aFlag) {
 
 //----------------------------------------------------------------------
 
-bool nsSVGPathDataParser::ParsePath() {
+bool SVGPathDataParser::ParsePath() {
   while (SkipWsp()) {
     if (!ParseSubPath()) {
       return false;
@@ -56,11 +57,11 @@ bool nsSVGPathDataParser::ParsePath() {
 
 //----------------------------------------------------------------------
 
-bool nsSVGPathDataParser::ParseSubPath() {
+bool SVGPathDataParser::ParseSubPath() {
   return ParseMoveto() && ParseSubPathElements();
 }
 
-bool nsSVGPathDataParser::ParseSubPathElements() {
+bool SVGPathDataParser::ParseSubPathElements() {
   while (SkipWsp() && !IsStartOfSubPath()) {
     char16_t commandType = ToUpper(*mIter);
 
@@ -78,8 +79,8 @@ bool nsSVGPathDataParser::ParseSubPathElements() {
   return true;
 }
 
-bool nsSVGPathDataParser::ParseSubPathElement(char16_t aCommandType,
-                                              bool aAbsCoords) {
+bool SVGPathDataParser::ParseSubPathElement(char16_t aCommandType,
+                                            bool aAbsCoords) {
   switch (aCommandType) {
     case 'Z':
       return ParseClosePath();
@@ -103,13 +104,13 @@ bool nsSVGPathDataParser::ParseSubPathElement(char16_t aCommandType,
   return false;
 }
 
-bool nsSVGPathDataParser::IsStartOfSubPath() const {
+bool SVGPathDataParser::IsStartOfSubPath() const {
   return *mIter == 'm' || *mIter == 'M';
 }
 
 //----------------------------------------------------------------------
 
-bool nsSVGPathDataParser::ParseMoveto() {
+bool SVGPathDataParser::ParseMoveto() {
   if (!IsStartOfSubPath()) {
     return false;
   }
@@ -144,13 +145,13 @@ bool nsSVGPathDataParser::ParseMoveto() {
 
 //----------------------------------------------------------------------
 
-bool nsSVGPathDataParser::ParseClosePath() {
+bool SVGPathDataParser::ParseClosePath() {
   return NS_SUCCEEDED(mPathSegList->AppendSeg(PATHSEG_CLOSEPATH));
 }
 
 //----------------------------------------------------------------------
 
-bool nsSVGPathDataParser::ParseLineto(bool aAbsCoords) {
+bool SVGPathDataParser::ParseLineto(bool aAbsCoords) {
   while (true) {
     float x, y;
     if (!ParseCoordPair(x, y)) {
@@ -172,7 +173,7 @@ bool nsSVGPathDataParser::ParseLineto(bool aAbsCoords) {
 
 //----------------------------------------------------------------------
 
-bool nsSVGPathDataParser::ParseHorizontalLineto(bool aAbsCoords) {
+bool SVGPathDataParser::ParseHorizontalLineto(bool aAbsCoords) {
   while (true) {
     float x;
     if (!SVGContentUtils::ParseNumber(mIter, mEnd, x)) {
@@ -196,7 +197,7 @@ bool nsSVGPathDataParser::ParseHorizontalLineto(bool aAbsCoords) {
 
 //----------------------------------------------------------------------
 
-bool nsSVGPathDataParser::ParseVerticalLineto(bool aAbsCoords) {
+bool SVGPathDataParser::ParseVerticalLineto(bool aAbsCoords) {
   while (true) {
     float y;
     if (!SVGContentUtils::ParseNumber(mIter, mEnd, y)) {
@@ -220,7 +221,7 @@ bool nsSVGPathDataParser::ParseVerticalLineto(bool aAbsCoords) {
 
 //----------------------------------------------------------------------
 
-bool nsSVGPathDataParser::ParseCurveto(bool aAbsCoords) {
+bool SVGPathDataParser::ParseCurveto(bool aAbsCoords) {
   while (true) {
     float x1, y1, x2, y2, x, y;
 
@@ -245,7 +246,7 @@ bool nsSVGPathDataParser::ParseCurveto(bool aAbsCoords) {
 
 //----------------------------------------------------------------------
 
-bool nsSVGPathDataParser::ParseSmoothCurveto(bool aAbsCoords) {
+bool SVGPathDataParser::ParseSmoothCurveto(bool aAbsCoords) {
   while (true) {
     float x2, y2, x, y;
     if (!(ParseCoordPair(x2, y2) && SkipCommaWsp() && ParseCoordPair(x, y))) {
@@ -269,7 +270,7 @@ bool nsSVGPathDataParser::ParseSmoothCurveto(bool aAbsCoords) {
 
 //----------------------------------------------------------------------
 
-bool nsSVGPathDataParser::ParseQuadBezierCurveto(bool aAbsCoords) {
+bool SVGPathDataParser::ParseQuadBezierCurveto(bool aAbsCoords) {
   while (true) {
     float x1, y1, x, y;
     if (!(ParseCoordPair(x1, y1) && SkipCommaWsp() && ParseCoordPair(x, y))) {
@@ -293,7 +294,7 @@ bool nsSVGPathDataParser::ParseQuadBezierCurveto(bool aAbsCoords) {
 
 //----------------------------------------------------------------------
 
-bool nsSVGPathDataParser::ParseSmoothQuadBezierCurveto(bool aAbsCoords) {
+bool SVGPathDataParser::ParseSmoothQuadBezierCurveto(bool aAbsCoords) {
   while (true) {
     float x, y;
     if (!ParseCoordPair(x, y)) {
@@ -317,7 +318,7 @@ bool nsSVGPathDataParser::ParseSmoothQuadBezierCurveto(bool aAbsCoords) {
 
 //----------------------------------------------------------------------
 
-bool nsSVGPathDataParser::ParseEllipticalArc(bool aAbsCoords) {
+bool SVGPathDataParser::ParseEllipticalArc(bool aAbsCoords) {
   while (true) {
     float r1, r2, angle, x, y;
     bool largeArcFlag, sweepFlag;
@@ -355,9 +356,9 @@ static double CalcVectorAngle(double ux, double uy, double vx, double vy) {
   return 2 * M_PI - (ta - tb);
 }
 
-nsSVGArcConverter::nsSVGArcConverter(const Point& from, const Point& to,
-                                     const Point& radii, double angle,
-                                     bool largeArcFlag, bool sweepFlag) {
+SVGArcConverter::SVGArcConverter(const Point& from, const Point& to,
+                                 const Point& radii, double angle,
+                                 bool largeArcFlag, bool sweepFlag) {
   MOZ_ASSERT(radii.x != 0.0f && radii.y != 0.0f, "Bad radii");
 
   const double radPerDeg = M_PI / 180.0;
@@ -428,7 +429,7 @@ nsSVGArcConverter::nsSVGArcConverter(const Point& from, const Point& to,
   mFrom = from;
 }
 
-bool nsSVGArcConverter::GetNextSegment(Point* cp1, Point* cp2, Point* to) {
+bool SVGArcConverter::GetNextSegment(Point* cp1, Point* cp2, Point* to) {
   if (mSegIndex == mNumSegs) {
     return false;
   }
@@ -459,3 +460,5 @@ bool nsSVGArcConverter::GetNextSegment(Point* cp1, Point* cp2, Point* to) {
 
   return true;
 }
+
+}  // namespace mozilla

@@ -14,7 +14,7 @@
 #include "mozilla/RefPtr.h"
 #include "nsError.h"
 #include "nsString.h"
-#include "nsSVGPathDataParser.h"
+#include "SVGPathDataParser.h"
 #include <stdarg.h>
 #include "nsStyleConsts.h"
 #include "SVGContentUtils.h"
@@ -83,7 +83,7 @@ nsresult SVGPathData::SetValueFromString(const nsAString& aValue) {
   // the first error. We still return any error though so that callers know if
   // there's a problem.
 
-  nsSVGPathDataParser pathParser(aValue, this);
+  SVGPathDataParser pathParser(aValue, this);
   return pathParser.Parse() ? NS_OK : NS_ERROR_DOM_SYNTAX_ERR;
 }
 
@@ -396,8 +396,8 @@ already_AddRefed<Path> SVGPathData::BuildPath(PathBuilder* aBuilder,
           if (radii.x == 0.0f || radii.y == 0.0f) {
             aBuilder->LineTo(segEnd);
           } else {
-            nsSVGArcConverter converter(segStart, segEnd, radii, mData[i + 2],
-                                        mData[i + 3] != 0, mData[i + 4] != 0);
+            SVGArcConverter converter(segStart, segEnd, radii, mData[i + 2],
+                                      mData[i + 3] != 0, mData[i + 4] != 0);
             while (converter.GetNextSegment(&cp1, &cp2, &segEnd)) {
               aBuilder->BezierTo(cp1, cp2, segEnd);
             }
@@ -646,9 +646,8 @@ already_AddRefed<Path> SVGPathData::BuildPathForMeasuring() const {
           if (radii.x == 0.0f || radii.y == 0.0f) {
             aBuilder->LineTo(scale(segEnd));
           } else {
-            nsSVGArcConverter converter(segStart, segEnd, radii, arc.angle,
-                                        arc.large_arc_flag._0,
-                                        arc.sweep_flag._0);
+            SVGArcConverter converter(segStart, segEnd, radii, arc.angle,
+                                      arc.large_arc_flag._0, arc.sweep_flag._0);
             while (converter.GetNextSegment(&cp1, &cp2, &segEnd)) {
               aBuilder->BezierTo(scale(cp1), scale(cp2), scale(segEnd));
             }

@@ -61,40 +61,42 @@ class DecodedStreamGraphListener {
       TrackID aVideoTrackID,
       MozPromiseHolder<DecodedStream::EndedPromise>&& aVideoEndedHolder,
       AbstractThread* aMainThread)
-      : mAudioTrackListener(IsTrackIDExplicit(aAudioTrackID)
+      : mMutex("DecodedStreamGraphListener::mMutex"),
+        mAudioTrackListener(IsTrackIDExplicit(aAudioTrackID)
                                 ? MakeRefPtr<DecodedStreamTrackListener>(
                                       this, aStream, aAudioTrackID)
                                 : nullptr),
-        mAudioTrackID(aAudioTrackID),
-        mAudioEndedHolder(std::move(aAudioEndedHolder)),
         mVideoTrackListener(IsTrackIDExplicit(aVideoTrackID)
                                 ? MakeRefPtr<DecodedStreamTrackListener>(
                                       this, aStream, aVideoTrackID)
                                 : nullptr),
+        mAudioTrackID(aAudioTrackID),
+        mAudioEndedHolder(std::move(aAudioEndedHolder)),
         mVideoTrackID(aVideoTrackID),
         mVideoEndedHolder(std::move(aVideoEndedHolder)),
-        mStream(aStream),
         mAbstractMainThread(aMainThread) {
-    MOZ_ASSERT(NS_IsMainThread());
     if (mAudioTrackListener) {
-      mStream->AddTrackListener(mAudioTrackListener, mAudioTrackID);
+      aStream->AddTrackListener(mAudioTrackListener, mAudioTrackID);
     } else {
       mAudioEndedHolder.ResolveIfExists(true, __func__);
     }
 
     if (mVideoTrackListener) {
-      mStream->AddTrackListener(mVideoTrackListener, mVideoTrackID);
+      aStream->AddTrackListener(mVideoTrackListener, mVideoTrackID);
     } else {
       mVideoEndedHolder.ResolveIfExists(true, __func__);
     }
   }
 
-  void NotifyOutput(TrackID aTrackID, StreamTime aCurrentTrackTime) {
+  void NotifyOutput(const RefPtr<SourceMediaStream>& aStream, TrackID aTrackID,
+                    StreamTime aCurrentTrackTime) {
     if (aTrackID != mAudioTrackID && mAudioTrackID != TRACK_NONE) {
       // Only audio playout drives the clock forward, if present.
       return;
     }
-    mOnOutput.Notify(mStream->StreamTimeToMicroseconds(aCurrentTrackTime));
+    if (aStream) {
+      mOnOutput.Notify(aStream->StreamTimeToMicroseconds(aCurrentTrackTime));
+    }
   }
 
   TrackID AudioTrackID() const { return mAudioTrackID; }
@@ -113,21 +115,16 @@ class DecodedStreamGraphListener {
   }
 
   void Forget() {
-    MOZ_ASSERT(NS_IsMainThread());
-
-    if (mAudioTrackListener && !mStream->IsDestroyed()) {
-      mStream->EndTrack(mAudioTrackID);
-      mStream->RemoveTrackListener(mAudioTrackListener, mAudioTrackID);
-    }
+    RefPtr<DecodedStreamGraphListener> self = this;
+    mAbstractMainThread->Dispatch(
+        NS_NewRunnableFunction("DecodedStreamGraphListener::Forget", [self]() {
+          MOZ_ASSERT(NS_IsMainThread());
+          self->mAudioEndedHolder.ResolveIfExists(false, __func__);
+          self->mVideoEndedHolder.ResolveIfExists(false, __func__);
+        }));
+    MutexAutoLock lock(mMutex);
     mAudioTrackListener = nullptr;
-    mAudioEndedHolder.ResolveIfExists(false, __func__);
-
-    if (mVideoTrackListener && !mStream->IsDestroyed()) {
-      mStream->EndTrack(mVideoTrackID);
-      mStream->RemoveTrackListener(mVideoTrackListener, mVideoTrackID);
-    }
     mVideoTrackListener = nullptr;
-    mVideoEndedHolder.ResolveIfExists(false, __func__);
   }
 
   MediaEventSource<int64_t>& OnOutput() { return mOnOutput; }
@@ -140,15 +137,16 @@ class DecodedStreamGraphListener {
 
   MediaEventProducer<int64_t> mOnOutput;
 
-  // Main thread only.
+  Mutex mMutex;
+  // Members below are protected by mMutex.
   RefPtr<DecodedStreamTrackListener> mAudioTrackListener;
+  RefPtr<DecodedStreamTrackListener> mVideoTrackListener;
+  // Main thread only.
   const TrackID mAudioTrackID;
   MozPromiseHolder<DecodedStream::EndedPromise> mAudioEndedHolder;
-  RefPtr<DecodedStreamTrackListener> mVideoTrackListener;
   const TrackID mVideoTrackID;
   MozPromiseHolder<DecodedStream::EndedPromise> mVideoEndedHolder;
 
-  const RefPtr<SourceMediaStream> mStream;
   const RefPtr<AbstractThread> mAbstractMainThread;
 };
 
@@ -159,7 +157,7 @@ DecodedStreamTrackListener::DecodedStreamTrackListener(
 
 void DecodedStreamTrackListener::NotifyOutput(MediaStreamGraph* aGraph,
                                               StreamTime aCurrentTrackTime) {
-  mGraphListener->NotifyOutput(mTrackID, aCurrentTrackTime);
+  mGraphListener->NotifyOutput(mStream, mTrackID, aCurrentTrackTime);
 }
 
 void DecodedStreamTrackListener::NotifyEnded() {
@@ -452,7 +450,7 @@ void DecodedStream::Shutdown() {
   mWatchManager.Shutdown();
 }
 
-void DecodedStream::DestroyData(UniquePtr<DecodedStreamData>&& aData) {
+void DecodedStream::DestroyData(UniquePtr<DecodedStreamData> aData) {
   AssertOwnerThread();
 
   if (!aData) {
@@ -461,9 +459,11 @@ void DecodedStream::DestroyData(UniquePtr<DecodedStreamData>&& aData) {
 
   mOutputListener.Disconnect();
 
-  NS_DispatchToMainThread(
-      NS_NewRunnableFunction("DecodedStream::DestroyData",
-                             [data = std::move(aData)]() { data->Forget(); }));
+  DecodedStreamData* data = aData.release();
+  data->Forget();
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction("DecodedStream::DestroyData",
+                                                   [=]() { delete data; });
+  NS_DispatchToMainThread(r.forget());
 }
 
 void DecodedStream::SetPlaying(bool aPlaying) {
