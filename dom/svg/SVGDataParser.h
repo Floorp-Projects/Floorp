@@ -10,13 +10,15 @@
 #include "mozilla/RangedPtr.h"
 #include "nsString.h"
 
+namespace mozilla {
+
 ////////////////////////////////////////////////////////////////////////
-// nsSVGDataParser: a simple base class for parsing values
+// SVGDataParser: a simple base class for parsing values
 // for path and transform values.
 //
-class nsSVGDataParser {
+class SVGDataParser {
  public:
-  explicit nsSVGDataParser(const nsAString& aValue);
+  explicit SVGDataParser(const nsAString& aValue);
 
  protected:
   static bool IsAlpha(char16_t aCh) {
@@ -33,5 +35,7 @@ class nsSVGDataParser {
   mozilla::RangedPtr<const char16_t> mIter;
   const mozilla::RangedPtr<const char16_t> mEnd;
 };
+
+}  // namespace mozilla
 
 #endif  // __NS_SVGDATAPARSER_H__

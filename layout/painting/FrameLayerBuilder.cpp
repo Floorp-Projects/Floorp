@@ -6002,6 +6002,80 @@ static nsSize ComputeDesiredDisplaySizeForAnimation(nsIFrame* aContainerFrame) {
   return presContext->GetVisibleArea().Size();
 }
 
+/* static */ Size FrameLayerBuilder::ChooseScale(nsIFrame* aContainerFrame,
+                                                 nsDisplayItem* aContainerItem,
+                                                 const nsRect& aVisibleRect,
+                                                 float aXScale, float aYScale,
+                                                 const Matrix& aTransform2d,
+                                                 bool aCanDraw2D) {
+  Size scale;
+  // XXX Should we do something for 3D transforms?
+  if (aCanDraw2D && !aContainerFrame->Combines3DTransformWithAncestors() &&
+      !aContainerFrame->HasPerspective()) {
+    // If the container's transform is animated off main thread, fix a suitable
+    // scale size for animation
+    if (aContainerItem &&
+        aContainerItem->GetType() == DisplayItemType::TYPE_TRANSFORM &&
+        EffectCompositor::HasAnimationsForCompositor(aContainerFrame,
+                                                     eCSSProperty_transform)) {
+      nsSize displaySize =
+          ComputeDesiredDisplaySizeForAnimation(aContainerFrame);
+      // compute scale using the animation on the container, taking ancestors in
+      // to account
+      nsSize scaledVisibleSize = nsSize(aVisibleRect.Width() * aXScale,
+                                        aVisibleRect.Height() * aYScale);
+      scale = nsLayoutUtils::ComputeSuitableScaleForAnimation(
+          aContainerFrame, scaledVisibleSize, displaySize);
+      // multiply by the scale inherited from ancestors--we use a uniform
+      // scale factor to prevent blurring when the layer is rotated.
+      float incomingScale = std::max(aXScale, aYScale);
+      scale.width *= incomingScale;
+      scale.height *= incomingScale;
+    } else {
+      // Scale factors are normalized to a power of 2 to reduce the number of
+      // resolution changes
+      scale = aTransform2d.ScaleFactors(true);
+      // For frames with a changing scale transform round scale factors up to
+      // nearest power-of-2 boundary so that we don't keep having to redraw
+      // the content as it scales up and down. Rounding up to nearest
+      // power-of-2 boundary ensures we never scale up, only down --- avoiding
+      // jaggies. It also ensures we never scale down by more than a factor of
+      // 2, avoiding bad downscaling quality.
+      Matrix frameTransform;
+      if (ActiveLayerTracker::IsScaleSubjectToAnimation(aContainerFrame)) {
+        scale.width = gfxUtils::ClampToScaleFactor(scale.width);
+        scale.height = gfxUtils::ClampToScaleFactor(scale.height);
+
+        // Limit animated scale factors to not grow excessively beyond the
+        // display size.
+        nsSize maxScale(4, 4);
+        if (!aVisibleRect.IsEmpty()) {
+          nsSize displaySize =
+              ComputeDesiredDisplaySizeForAnimation(aContainerFrame);
+          maxScale = Max(maxScale, displaySize / aVisibleRect.Size());
+        }
+        if (scale.width > maxScale.width) {
+          scale.width = gfxUtils::ClampToScaleFactor(maxScale.width, true);
+        }
+        if (scale.height > maxScale.height) {
+          scale.height = gfxUtils::ClampToScaleFactor(maxScale.height, true);
+        }
+      } else {
+        // XXX Do we need to move nearly-integer values to integers here?
+      }
+    }
+    // If the scale factors are too small, just use 1.0. The content is being
+    // scaled out of sight anyway.
+    if (fabs(scale.width) < 1e-8 || fabs(scale.height) < 1e-8) {
+      scale = Size(1.0, 1.0);
+    }
+  } else {
+    scale = Size(1.0, 1.0);
+  }
+
+  return scale;
+}
+
 static bool ChooseScaleAndSetTransform(
     FrameLayerBuilder* aLayerBuilder, nsDisplayListBuilder* aDisplayListBuilder,
     nsIFrame* aContainerFrame, nsDisplayItem* aContainerItem,
@@ -6053,79 +6127,17 @@ static bool ChooseScaleAndSetTransform(
   }
 
   bool canDraw2D = transform.CanDraw2D(&transform2d);
-  Size scale;
-  // XXX Should we do something for 3D transforms?
-  if (canDraw2D && !aContainerFrame->Combines3DTransformWithAncestors() &&
-      !aContainerFrame->HasPerspective()) {
-    // If the container's transform is animated off main thread, fix a suitable
-    // scale size for animation
-    if (aContainerItem &&
-        aContainerItem->GetType() == DisplayItemType::TYPE_TRANSFORM &&
-        EffectCompositor::HasAnimationsForCompositor(aContainerFrame,
-                                                     eCSSProperty_transform)) {
-      nsSize displaySize =
-          ComputeDesiredDisplaySizeForAnimation(aContainerFrame);
-      // compute scale using the animation on the container, taking ancestors in
-      // to account
-      nsSize scaledVisibleSize =
-          nsSize(aVisibleRect.Width() * aIncomingScale.mXScale,
-                 aVisibleRect.Height() * aIncomingScale.mYScale);
-      scale = nsLayoutUtils::ComputeSuitableScaleForAnimation(
-          aContainerFrame, scaledVisibleSize, displaySize);
-      // multiply by the scale inherited from ancestors--we use a uniform
-      // scale factor to prevent blurring when the layer is rotated.
-      float incomingScale =
-          std::max(aIncomingScale.mXScale, aIncomingScale.mYScale);
-      scale.width *= incomingScale;
-      scale.height *= incomingScale;
-    } else {
-      // Scale factors are normalized to a power of 2 to reduce the number of
-      // resolution changes
-      scale = transform2d.ScaleFactors(true);
-      // For frames with a changing scale transform round scale factors up to
-      // nearest power-of-2 boundary so that we don't keep having to redraw
-      // the content as it scales up and down. Rounding up to nearest
-      // power-of-2 boundary ensures we never scale up, only down --- avoiding
-      // jaggies. It also ensures we never scale down by more than a factor of
-      // 2, avoiding bad downscaling quality.
-      Matrix frameTransform;
-      if (ActiveLayerTracker::IsScaleSubjectToAnimation(aContainerFrame)) {
-        scale.width = gfxUtils::ClampToScaleFactor(scale.width);
-        scale.height = gfxUtils::ClampToScaleFactor(scale.height);
+  Size scale = FrameLayerBuilder::ChooseScale(
+      aContainerFrame, aContainerItem, aVisibleRect, aIncomingScale.mXScale,
+      aIncomingScale.mYScale, transform2d, canDraw2D);
 
-        // Limit animated scale factors to not grow excessively beyond the
-        // display size.
-        nsSize maxScale(4, 4);
-        if (!aVisibleRect.IsEmpty()) {
-          nsSize displaySize =
-              ComputeDesiredDisplaySizeForAnimation(aContainerFrame);
-          maxScale = Max(maxScale, displaySize / aVisibleRect.Size());
-        }
-        if (scale.width > maxScale.width) {
-          scale.width = gfxUtils::ClampToScaleFactor(maxScale.width, true);
-        }
-        if (scale.height > maxScale.height) {
-          scale.height = gfxUtils::ClampToScaleFactor(maxScale.height, true);
-        }
-      } else {
-        // XXX Do we need to move nearly-integer values to integers here?
-      }
-    }
-    // If the scale factors are too small, just use 1.0. The content is being
-    // scaled out of sight anyway.
-    if (fabs(scale.width) < 1e-8 || fabs(scale.height) < 1e-8) {
-      scale = Size(1.0, 1.0);
-    }
-    // If this is a transform container layer, then pre-rendering might
-    // mean we try render a layer bigger than the max texture size. If we have
-    // tiling, that's not a problem, since we'll automatically choose a tiled
-    // layer for layers of that size. If not, we need to apply clamping to
-    // prevent this.
-    if (aTransform && !gfxPrefs::LayersTilesEnabled()) {
-      RestrictScaleToMaxLayerSize(scale, aVisibleRect, aContainerFrame, aLayer);
-    }
-  } else {
-    scale = Size(1.0, 1.0);
+  // If this is a transform container layer, then pre-rendering might
+  // mean we try render a layer bigger than the max texture size. If we have
+  // tiling, that's not a problem, since we'll automatically choose a tiled
+  // layer for layers of that size. If not, we need to apply clamping to
+  // prevent this.
+  if (aTransform && !gfxPrefs::LayersTilesEnabled()) {
+    RestrictScaleToMaxLayerSize(scale, aVisibleRect, aContainerFrame, aLayer);
   }
 
   // Store the inverse of our resolution-scale on the layer
