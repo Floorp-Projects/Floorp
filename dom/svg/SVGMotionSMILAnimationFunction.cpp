@@ -13,7 +13,7 @@
 #include "nsAttrValueInlines.h"
 #include "nsSMILParserUtils.h"
 #include "nsSVGAngle.h"
-#include "nsSVGPathDataParser.h"
+#include "SVGPathDataParser.h"
 #include "SVGMotionSMILType.h"
 #include "SVGMotionSMILPathUtils.h"
 
@@ -224,7 +224,7 @@ void SVGMotionSMILAnimationFunction::RebuildPathAndVerticesFromPathAttr() {
 
   // Generate Path from |path| attr
   SVGPathData path;
-  nsSVGPathDataParser pathParser(pathSpec, &path);
+  SVGPathDataParser pathParser(pathSpec, &path);
 
   // We ignore any failure returned from Parse() since the SVG spec says to
   // accept all segments up to the first invalid token. Instead we must

@@ -30,7 +30,7 @@
 #include "mozilla/gfx/Types.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/ComputedStyle.h"
-#include "nsSVGPathDataParser.h"
+#include "SVGPathDataParser.h"
 #include "SVGPathData.h"
 #include "SVGPathElement.h"
 
@@ -787,7 +787,7 @@ float SVGContentUtils::CoordToFloat(SVGElement* aContent,
 already_AddRefed<gfx::Path> SVGContentUtils::GetPath(
     const nsAString& aPathString) {
   SVGPathData pathData;
-  nsSVGPathDataParser parser(aPathString, &pathData);
+  SVGPathDataParser parser(aPathString, &pathData);
   if (!parser.Parse()) {
     return NULL;
   }
