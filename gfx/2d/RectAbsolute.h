@@ -11,6 +11,7 @@
 #include <cstdint>
 
 #include "mozilla/Attributes.h"
+#include "Point.h"
 #include "Rect.h"
 #include "Types.h"
 
@@ -33,7 +34,7 @@ namespace gfx {
  * Do not use this class directly. Subclass it, pass that subclass as the
  * Sub parameter, and only use that subclass.
  */
-template <class T, class Sub, class Rect>
+template <class T, class Sub, class Point, class Rect>
 struct BaseRectAbsolute {
  protected:
   T left, top, right, bottom;
@@ -238,17 +239,41 @@ struct BaseRectAbsolute {
     left = static_cast<T>(ceil(double(left) / aXScale));
     top = static_cast<T>(ceil(double(top) / aYScale));
   }
+
+  /**
+   * Translate this rectangle to be inside aRect. If it doesn't fit inside
+   * aRect then the dimensions that don't fit will be shrunk so that they
+   * do fit. The resulting rect is returned.
+   */
+  MOZ_MUST_USE Sub MoveInsideAndClamp(const Sub& aRect) const {
+    T newLeft = std::max(aRect.left, left);
+    T newTop = std::max(aRect.top, top);
+    T width = std::min(aRect.Width(), Width());
+    T height = std::min(aRect.Height(), Height());
+    Sub rect(newLeft, newTop, newLeft + width, newTop + height);
+    newLeft = std::min(rect.right, aRect.right) - width;
+    newTop = std::min(rect.bottom, aRect.bottom) - height;
+    rect.MoveBy(newLeft - rect.left, newTop - rect.top);
+    return rect;
+  }
+
+  friend std::ostream& operator<<(
+      std::ostream& stream,
+      const BaseRectAbsolute<T, Sub, Point, Rect>& aRect) {
+    return stream << '(' << aRect.left << ',' << aRect.top << ',' << aRect.right
+                  << ',' << aRect.bottom << ')';
+  }
 };
 
 template <class Units>
 struct IntRectAbsoluteTyped
     : public BaseRectAbsolute<int32_t, IntRectAbsoluteTyped<Units>,
-                              IntRectTyped<Units>>,
+                              IntPointTyped<Units>, IntRectTyped<Units>>,
       public Units {
   static_assert(IsPixel<Units>::value,
                 "'units' must be a coordinate system tag");
   typedef BaseRectAbsolute<int32_t, IntRectAbsoluteTyped<Units>,
-                           IntRectTyped<Units>>
+                           IntPointTyped<Units>, IntRectTyped<Units>>
       Super;
   typedef IntParam<int32_t> ToInt;
 
@@ -260,11 +285,12 @@ struct IntRectAbsoluteTyped
 template <class Units>
 struct RectAbsoluteTyped
     : public BaseRectAbsolute<Float, RectAbsoluteTyped<Units>,
-                              RectTyped<Units>>,
+                              PointTyped<Units>, RectTyped<Units>>,
       public Units {
   static_assert(IsPixel<Units>::value,
                 "'units' must be a coordinate system tag");
-  typedef BaseRectAbsolute<Float, RectAbsoluteTyped<Units>, RectTyped<Units>>
+  typedef BaseRectAbsolute<Float, RectAbsoluteTyped<Units>, PointTyped<Units>,
+                           RectTyped<Units>>
       Super;
 
   RectAbsoluteTyped() : Super() {}

@@ -320,6 +320,12 @@ void StickyScrollContainer::GetScrollRanges(nsIFrame* aFrame,
   // Note that this doesn't necessarily solve all problems stemming from
   // comparing pre- and post-collapsing margins (TODO: find a proper solution).
   *aInner = aInner->Intersect(*aOuter);
+  if (aInner->IsEmpty()) {
+    // This might happen if aInner didn't intersect aOuter at all initially,
+    // in which case aInner is empty and outside aOuter. Make sure it doesn't
+    // extend outside aOuter.
+    *aInner = aInner->MoveInsideAndClamp(*aOuter);
+  }
 }
 
 void StickyScrollContainer::PositionContinuations(nsIFrame* aFrame) {
