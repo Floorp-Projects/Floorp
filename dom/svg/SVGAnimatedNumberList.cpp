@@ -7,11 +7,13 @@
 #include "SVGAnimatedNumberList.h"
 
 #include "DOMSVGAnimatedNumberList.h"
+#include "mozilla/dom/SVGElement.h"
 #include "mozilla/Move.h"
-#include "SVGElement.h"
 #include "nsSVGAttrTearoffTable.h"
 #include "nsSMILValue.h"
 #include "SVGNumberListSMILType.h"
+
+using namespace mozilla::dom;
 
 namespace mozilla {
 

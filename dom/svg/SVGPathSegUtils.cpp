@@ -13,6 +13,7 @@
 #include "nsTextFormatter.h"
 
 using namespace mozilla;
+using namespace mozilla::dom::SVGPathSeg_Binding;
 using namespace mozilla::gfx;
 
 static const float PATH_SEG_LENGTH_TOLERANCE = 0.0000001f;
