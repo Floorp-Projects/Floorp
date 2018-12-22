@@ -1438,8 +1438,8 @@ void WebRenderCommandBuilder::BuildWebRenderCommands(
       mZoomProp->id = AnimationHelper::GetNextCompositorAnimationsId();
     }
 
-    StackingContextHelper pageRootSc(sc, nullptr, aBuilder, aFilters,
-                                     LayoutDeviceRect(), nullptr,
+    StackingContextHelper pageRootSc(sc, nullptr, nullptr, nullptr, aBuilder,
+                                     aFilters, LayoutDeviceRect(), nullptr,
                                      mZoomProp.ptrOr(nullptr));
     if (ShouldDumpDisplayList(aDisplayListBuilder)) {
       mBuilderDumpIndex =
@@ -2009,8 +2009,6 @@ WebRenderCommandBuilder::GenerateFallbackData(
 
   gfx::Size scale = aSc.GetInheritedScale();
   gfx::Size oldScale = fallbackData->GetScale();
-  // This scale determination should probably be done using
-  // ChooseScaleAndSetTransform but for now we just fake it.
   // We tolerate slight changes in scale so that we don't, for example,
   // rerasterize on MotionMark
   bool differentScale = gfx::FuzzyEqual(scale.width, oldScale.width, 1e-6f) &&

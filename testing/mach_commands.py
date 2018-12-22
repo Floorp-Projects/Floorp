@@ -721,7 +721,7 @@ class TestInfoCommand(MachCommandBase):
                 platform = self.get_platform(record)
                 runs = record['count']
                 total_runs = total_runs + runs
-                failures = record['failures']
+                failures = record.get('failures', 0)
                 total_failures = total_failures + failures
                 rate = (float)(failures) / runs
                 if rate >= worst_rate:
