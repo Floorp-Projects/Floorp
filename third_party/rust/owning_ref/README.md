@@ -4,7 +4,7 @@ owning-ref-rs
 A library for creating references that carry their owner with them.
 
 This can sometimes be useful because Rust borrowing rules normally prevent
-moving a type that has been moved from. For example, this kind of code gets rejected:
+moving a type that has been borrowed from. For example, this kind of code gets rejected:
 
 ```rust
 fn return_owned_and_referenced<'a>() -> (Vec<u8>, &'a [u8]) {
