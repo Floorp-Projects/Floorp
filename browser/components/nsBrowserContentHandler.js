@@ -123,12 +123,12 @@ function getPostUpdateOverridePage(defaultOverridePage) {
   // history.
   if (um.activeUpdate) {
     var update = um.activeUpdate
-                   .QueryInterface(Ci.nsIPropertyBag);
+                   .QueryInterface(Ci.nsIWritablePropertyBag);
   } else {
     // If the updates.xml file is deleted then getUpdateAt will throw.
     try {
       update = um.getUpdateAt(0)
-                 .QueryInterface(Ci.nsIPropertyBag);
+                 .QueryInterface(Ci.nsIWritablePropertyBag);
     } catch (e) {
       Cu.reportError("Unable to find update: " + e);
       return defaultOverridePage;

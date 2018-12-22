@@ -262,23 +262,3 @@ popupnotificationcontent {
 
 %include ../../shared/notification-popup.inc.css
 
-/* :::::: autoscroll popup ::::: */
-
-.autoscroller {
-  border: none;
-  padding: 0;
-  background-image: url("chrome://global/skin/icons/autoscroll.svg");
-  background-size: contain;
-  background-color: transparent;
-  background-repeat: no-repeat;
-  -moz-appearance: none;
-}
-
-.autoscroller[scrolldir="NS"] {
-  background-image: url("chrome://global/skin/icons/autoscroll-vertical.svg");
-}
-
-.autoscroller[scrolldir="EW"] {
-  background-image: url("chrome://global/skin/icons/autoscroll-horizontal.svg");
-}
-
