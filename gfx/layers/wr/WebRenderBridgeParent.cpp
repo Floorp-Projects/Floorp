@@ -2001,9 +2001,18 @@ TransactionId WebRenderBridgeParent::FlushTransactionIdsForEpoch(
           Telemetry::AccumulateCategorical(
               LABELS_CONTENT_FRAME_TIME_REASON::NoVsync);
         } else if (aCompositeStartId - transactionId.mVsyncId > 1) {
+          auto fullPaintTime = transactionId.mSceneBuiltTime - transactionId.mTxnStartTime;
           // Composite started late (and maybe took too long as well)
-          Telemetry::AccumulateCategorical(
-              LABELS_CONTENT_FRAME_TIME_REASON::MissedComposite);
+          if (fullPaintTime >= TimeDuration::FromMilliseconds(20)) {
+            Telemetry::AccumulateCategorical(
+                LABELS_CONTENT_FRAME_TIME_REASON::MissedCompositeLongPaint);
+          } else if (fullPaintTime >= TimeDuration::FromMilliseconds(10)) {
+            Telemetry::AccumulateCategorical(
+                LABELS_CONTENT_FRAME_TIME_REASON::MissedCompositeMidPaint);
+          } else {
+            Telemetry::AccumulateCategorical(
+                LABELS_CONTENT_FRAME_TIME_REASON::MissedComposite);
+          }
         } else {
           // Composite start on time, but must have taken too long.
           Telemetry::AccumulateCategorical(
