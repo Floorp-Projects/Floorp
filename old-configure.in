@@ -2979,35 +2979,6 @@ then
     if test "x$ac_cv_sqlite_dbstat_vtab" = "xno"; then
         AC_MSG_ERROR([System SQLite library is not compiled with SQLITE_ENABLE_DBSTAT_VTAB.])
     fi
-
-    dnl =========================================
-    dnl === SQLITE_DBCONFIG_DEFENSIVE check ===
-    dnl =========================================
-    dnl check to see if the system SQLite package is compiled with
-    dnl SQLITE_DBCONFIG_DEFENSIVE.
-    AC_MSG_CHECKING(for SQLITE_DBCONFIG_DEFENSIVE support in system SQLite)
-    _SAVE_CFLAGS="$CFLAGS"
-    CFLAGS="$CFLAGS $SQLITE_CFLAGS"
-    _SAVE_LIBS="$LIBS"
-    LIBS="$LIBS $SQLITE_LIBS"
-    AC_CACHE_VAL(ac_cv_sqlite_dbconfig_defensive,[
-        AC_TRY_RUN([
-            #include "sqlite3.h"
-
-            int main(int argc, char **argv){
-              return !sqlite3_compileoption_used("SQLITE_DBCONFIG_DEFENSIVE");
-            }],
-            ac_cv_sqlite_dbconfig_defensive=yes,
-            ac_cv_sqlite_dbconfig_defensive=no,
-            ac_cv_sqlite_dbconfig_defensive=no
-        )
-    ])
-    AC_MSG_RESULT($ac_cv_sqlite_dbconfig_defensive)
-    CFLAGS="$_SAVE_CFLAGS"
-    LIBS="$_SAVE_LIBS"
-    if test "x$ac_cv_sqlite_dbconfig_defensive" = "xno"; then
-        AC_MSG_ERROR([System SQLite library is not compiled with SQLITE_DBCONFIG_DEFENSIVE.])
-    fi
 else
     dnl ==============================
     dnl === SQLite fdatasync check ===
