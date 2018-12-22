@@ -7,9 +7,6 @@ pref("startup.homepage_welcome_url", "");
 pref("startup.homepage_welcome_url.additional", "");
 // The time interval between checks for a new version (in seconds)
 pref("app.update.interval", 86400); // 24 hours
-// The time interval between the downloading of mar file chunks in the
-// background (in seconds)
-pref("app.update.download.backgroundInterval", 60);
 // Give the user x seconds to react before showing the big UI. default=24 hours
 pref("app.update.promptWaitTime", 86400);
 // URL user can browse to manually if for some reason all update installation

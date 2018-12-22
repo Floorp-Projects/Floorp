@@ -28,6 +28,27 @@
   height: 20px;
 }
 
+/* Autoscroll popup */
+
+.autoscroller {
+  border: none;
+  padding: 0;
+  background-image: url("chrome://global/skin/icons/autoscroll.svg");
+  background-size: contain;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  -moz-appearance: none;
+  -moz-window-shadow: none;
+}
+
+.autoscroller[scrolldir="NS"] {
+  background-image: url("chrome://global/skin/icons/autoscroll-vertical.svg");
+}
+
+.autoscroller[scrolldir="EW"] {
+  background-image: url("chrome://global/skin/icons/autoscroll-horizontal.svg");
+}
+
 /* Panel footers */
 
 .panel-footer {

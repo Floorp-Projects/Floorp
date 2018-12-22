@@ -6,6 +6,8 @@
 
 #include "mozilla/dom/SVGTests.h"
 #include "DOMSVGStringList.h"
+#include "nsIContent.h"
+#include "nsIContentInlines.h"
 #include "nsSVGFeatures.h"
 #include "mozilla/dom/SVGSwitchElement.h"
 #include "nsCharSeparatedTokenizer.h"

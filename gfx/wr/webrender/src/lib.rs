@@ -153,6 +153,8 @@ extern crate core_text;
 
 #[cfg(all(unix, not(target_os = "macos")))]
 extern crate freetype;
+#[cfg(all(unix, not(target_os = "macos")))]
+extern crate libc;
 
 #[cfg(target_os = "windows")]
 extern crate dwrote;

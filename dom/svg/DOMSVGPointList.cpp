@@ -4,7 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "SVGElement.h"
 #include "DOMSVGPointList.h"
 #include "DOMSVGPoint.h"
 #include "nsError.h"
@@ -12,8 +11,11 @@
 #include "nsCOMPtr.h"
 #include "nsSVGAttrTearoffTable.h"
 #include "nsContentUtils.h"
+#include "mozilla/dom/SVGElement.h"
 #include "mozilla/dom/SVGPointListBinding.h"
 #include <algorithm>
+
+using namespace mozilla::dom;
 
 // See the comment in this file's header.
 
