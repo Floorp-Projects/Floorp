@@ -958,27 +958,41 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
     Cmp(ARMRegister(a, 32), Operand(ARMRegister(b, 32)));
   }
   void cmp32(const Address& lhs, Imm32 rhs) {
-    cmp32(Operand(lhs.base, lhs.offset), rhs);
+    vixl::UseScratchRegisterScope temps(this);
+    const ARMRegister scratch32 = temps.AcquireW();
+    MOZ_ASSERT(scratch32.asUnsized() != lhs.base);
+    Ldr(scratch32, toMemOperand(lhs));
+    Cmp(scratch32, Operand(rhs.value));
   }
   void cmp32(const Address& lhs, Register rhs) {
-    cmp32(Operand(lhs.base, lhs.offset), rhs);
+    vixl::UseScratchRegisterScope temps(this);
+    const ARMRegister scratch32 = temps.AcquireW();
+    MOZ_ASSERT(scratch32.asUnsized() != lhs.base);
+    MOZ_ASSERT(scratch32.asUnsized() != rhs);
+    Ldr(scratch32, toMemOperand(lhs));
+    Cmp(scratch32, Operand(ARMRegister(rhs, 32)));
   }
   void cmp32(Register lhs, const Address& rhs) {
-    cmp32(lhs, Operand(rhs.base, rhs.offset));
+    vixl::UseScratchRegisterScope temps(this);
+    const ARMRegister scratch32 = temps.AcquireW();
+    MOZ_ASSERT(scratch32.asUnsized() != rhs.base);
+    MOZ_ASSERT(scratch32.asUnsized() != lhs);
+    Ldr(scratch32, toMemOperand(rhs));
+    Cmp(scratch32, Operand(ARMRegister(lhs, 32)));
   }
-  void cmp32(const Operand& lhs, Imm32 rhs) {
+  void cmp32(const vixl::Operand& lhs, Imm32 rhs) {
     vixl::UseScratchRegisterScope temps(this);
     const ARMRegister scratch32 = temps.AcquireW();
     Mov(scratch32, lhs);
     Cmp(scratch32, Operand(rhs.value));
   }
-  void cmp32(const Operand& lhs, Register rhs) {
+  void cmp32(const vixl::Operand& lhs, Register rhs) {
     vixl::UseScratchRegisterScope temps(this);
     const ARMRegister scratch32 = temps.AcquireW();
     Mov(scratch32, lhs);
     Cmp(scratch32, Operand(ARMRegister(rhs, 32)));
   }
-  void cmp32(Register lhs, const Operand& rhs) {
+  void cmp32(Register lhs, const vixl::Operand& rhs) {
     vixl::UseScratchRegisterScope temps(this);
     const ARMRegister scratch32 = temps.AcquireW();
     Mov(scratch32, rhs);
