@@ -905,9 +905,6 @@ TransactionId LayerTransactionParent::FlushTransactionId(
     // frame increases. This is effectively including the RecvUpdate work as
     // part of the 'compositing' phase for this metric, but it isn't included in
     // COMPOSITE_TIME, and *is* included in CONTENT_FULL_PAINT_TIME.
-    latencyMs = (aCompositeEnd - mRefreshStartTime).ToMilliseconds();
-    latencyNorm = latencyMs / mVsyncRate.ToMilliseconds();
-    fracLatencyNorm = lround(latencyNorm * 100.0);
     if (fracLatencyNorm < 200) {
       // Success
       Telemetry::AccumulateCategorical(
