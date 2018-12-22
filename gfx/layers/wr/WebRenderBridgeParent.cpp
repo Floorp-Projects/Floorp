@@ -1976,10 +1976,6 @@ TransactionId WebRenderBridgeParent::FlushTransactionIdsForEpoch(
 
       // Record CONTENT_FRAME_TIME_REASON.
       //
-      // This uses the refresh start time (CONTENT_FRAME_TIME uses the start of
-      // display list building), since that includes layout/style time, and 200
-      // should correlate more closely with missing a vsync.
-      //
       // Also of note is that when the root WebRenderBridgeParent decides to
       // skip a composite (due to the Renderer being busy), that won't notify
       // child WebRenderBridgeParents. That failure will show up as the
@@ -1992,9 +1988,6 @@ TransactionId WebRenderBridgeParent::FlushTransactionIdsForEpoch(
       // child pipelines contained within a render, after it finishes, but I
       // can't see how to query what child pipeline would have been rendered,
       // when we choose to not do it.
-      latencyMs = (aEndTime - transactionId.mRefreshStartTime).ToMilliseconds();
-      latencyNorm = latencyMs / mVsyncRate.ToMilliseconds();
-      fracLatencyNorm = lround(latencyNorm * 100.0);
       if (fracLatencyNorm < 200) {
         // Success
         Telemetry::AccumulateCategorical(
