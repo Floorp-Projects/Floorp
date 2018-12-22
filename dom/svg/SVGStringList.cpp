@@ -7,6 +7,7 @@
 #include "SVGStringList.h"
 #include "nsError.h"
 #include "nsCharSeparatedTokenizer.h"
+#include "nsContentUtils.h"
 #include "nsString.h"
 #include "nsWhitespaceTokenizer.h"
 #include "SVGContentUtils.h"

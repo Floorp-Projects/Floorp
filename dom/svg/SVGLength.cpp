@@ -4,19 +4,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/ArrayUtils.h"
-
 #include "SVGLength.h"
-#include "SVGElement.h"
+
+#include "mozilla/ArrayUtils.h"
+#include "mozilla/dom/SVGElement.h"
 #include "mozilla/dom/SVGSVGElement.h"
 #include "nsTextFormatter.h"
 #include "SVGContentUtils.h"
 #include <limits>
 #include <algorithm>
 
-namespace mozilla {
+using namespace mozilla::dom;
+using namespace mozilla::dom::SVGLength_Binding;
 
-using namespace mozilla;
+namespace mozilla {
 
 // Declare some helpers defined below:
 static void GetUnitString(nsAString& unit, uint16_t unitType);

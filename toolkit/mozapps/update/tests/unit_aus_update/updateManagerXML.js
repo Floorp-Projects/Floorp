@@ -12,10 +12,6 @@ function run_test() {
 
   setUpdateChannel("test_channel");
 
-  // This test expects that the app.update.download.backgroundInterval
-  // preference doesn't already exist.
-  Services.prefs.deleteBranch("app.update.download.backgroundInterval");
-
   let patchProps = {type: "partial",
                     url: "http://partial/",
                     size: "86",
@@ -35,7 +31,6 @@ function run_test() {
                      channel: "test_channel",
                      foregroundDownload: "true",
                      promptWaitTime: "345600",
-                     backgroundInterval: "300",
                      previousAppVersion: "3.0",
                      custom1: "custom1_attr=\"custom1 value\"",
                      custom2: "custom2_attr=\"custom2 value\""};
@@ -72,7 +67,7 @@ function run_test() {
                "the update manager updateCount attribute" + MSG_SHOULD_EQUAL);
 
   debugDump("checking the activeUpdate properties");
-  let update = gUpdateManager.getUpdateAt(0).QueryInterface(Ci.nsIPropertyBag);
+  let update = gUpdateManager.getUpdateAt(0).QueryInterface(Ci.nsIWritablePropertyBag);
   Assert.equal(update.state, STATE_SUCCEEDED,
                "the update state attribute" + MSG_SHOULD_EQUAL);
   Assert.equal(update.type, "major",
@@ -100,8 +95,6 @@ function run_test() {
                "the update channel attribute" + MSG_SHOULD_EQUAL);
   Assert.equal(update.promptWaitTime, "345600",
                "the update promptWaitTime attribute" + MSG_SHOULD_EQUAL);
-  Assert.equal(update.getProperty("backgroundInterval"), "300",
-               "the update backgroundInterval attribute" + MSG_SHOULD_EQUAL);
   Assert.equal(update.previousAppVersion, "3.0",
                "the update previousAppVersion attribute" + MSG_SHOULD_EQUAL);
   // Custom attributes
@@ -124,7 +117,7 @@ function run_test() {
                "the update patch state attribute" + MSG_SHOULD_EQUAL);
 
   debugDump("checking the first update properties");
-  update = gUpdateManager.getUpdateAt(1).QueryInterface(Ci.nsIPropertyBag);
+  update = gUpdateManager.getUpdateAt(1).QueryInterface(Ci.nsIWritablePropertyBag);
   Assert.equal(update.state, STATE_FAILED,
                "the update state attribute" + MSG_SHOULD_EQUAL);
   Assert.equal(update.name, "Existing",
@@ -151,9 +144,6 @@ function run_test() {
                "the update channel attribute" + MSG_SHOULD_EQUAL);
   Assert.equal(update.promptWaitTime, "691200",
                "the update promptWaitTime attribute" + MSG_SHOULD_EQUAL);
-  // The default and maximum value for backgroundInterval is 600
-  Assert.equal(update.getProperty("backgroundInterval"), "600",
-               "the update backgroundInterval attribute" + MSG_SHOULD_EQUAL);
   Assert.equal(update.previousAppVersion, null,
                "the update previousAppVersion attribute" + MSG_SHOULD_EQUAL);
   // Custom attributes

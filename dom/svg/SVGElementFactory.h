@@ -7,7 +7,13 @@
 #ifndef mozilla_dom_SVGElementFactory_h
 #define mozilla_dom_SVGElementFactory_h
 
+#include "nsError.h"
+#include "mozilla/AlreadyAddRefed.h"
+#include "mozilla/dom/FromParser.h"
+#include "mozilla/dom/NodeInfo.h"
+
 class nsAtom;
+class nsIContent;
 
 namespace mozilla {
 namespace dom {

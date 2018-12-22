@@ -2036,7 +2036,7 @@ impl PrimitiveStore {
             let clip_chain = frame_state
                 .clip_store
                 .build_clip_chain_instance(
-                    prim_instance.clip_chain_id,
+                    prim_instance,
                     local_rect,
                     prim_local_clip_rect,
                     prim_context.spatial_node_index,
@@ -3117,7 +3117,7 @@ impl PrimitiveInstance {
                 let segment_clip_chain = frame_state
                     .clip_store
                     .build_clip_chain_instance(
-                        self.clip_chain_id,
+                        self,
                         segment.local_rect.translate(&LayoutVector2D::new(prim_origin.x, prim_origin.y)),
                         prim_local_clip_rect,
                         prim_context.spatial_node_index,

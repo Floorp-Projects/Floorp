@@ -11,6 +11,7 @@
 #include "SVGAnimatedPreserveAspectRatio.h"
 #include "nsError.h"
 #include "mozilla/dom/SVGAngle.h"
+#include "mozilla/dom/SVGGeometryElement.h"
 #include "mozilla/dom/SVGLengthBinding.h"
 #include "mozilla/dom/SVGMarkerElement.h"
 #include "mozilla/dom/SVGMarkerElementBinding.h"

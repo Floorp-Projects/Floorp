@@ -1547,6 +1547,7 @@ dependencies = [
  "gleam 0.6.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "image 0.20.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "lazy_static 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "libc 0.2.42 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "mozangle 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "num-traits 0.2.4 (registry+https://github.com/rust-lang/crates.io-index)",

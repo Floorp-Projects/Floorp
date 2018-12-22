@@ -7,11 +7,13 @@
 #include "SVGAnimatedPointList.h"
 
 #include "DOMSVGPointList.h"
+#include "mozilla/dom/SVGElement.h"
 #include "mozilla/Move.h"
-#include "SVGElement.h"
 #include "nsSVGAttrTearoffTable.h"
 #include "nsSMILValue.h"
 #include "SVGPointListSMILType.h"
+
+using namespace mozilla::dom;
 
 // See the comments in this file's header!
 

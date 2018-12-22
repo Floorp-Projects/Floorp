@@ -34,9 +34,94 @@
 #include "SVGPathData.h"
 #include "SVGPathElement.h"
 
+using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::dom::SVGPreserveAspectRatio_Binding;
 using namespace mozilla::gfx;
+
+static bool ParseNumber(RangedPtr<const char16_t>& aIter,
+                        const RangedPtr<const char16_t>& aEnd, double& aValue) {
+  int32_t sign;
+  if (!SVGContentUtils::ParseOptionalSign(aIter, aEnd, sign)) {
+    return false;
+  }
+
+  // Absolute value of the integer part of the mantissa.
+  double intPart = 0.0;
+
+  bool gotDot = *aIter == '.';
+
+  if (!gotDot) {
+    if (!mozilla::IsAsciiDigit(*aIter)) {
+      return false;
+    }
+    do {
+      intPart = 10.0 * intPart + mozilla::AsciiAlphanumericToNumber(*aIter);
+      ++aIter;
+    } while (aIter != aEnd && mozilla::IsAsciiDigit(*aIter));
+
+    if (aIter != aEnd) {
+      gotDot = *aIter == '.';
+    }
+  }
+
+  // Fractional part of the mantissa.
+  double fracPart = 0.0;
+
+  if (gotDot) {
+    ++aIter;
+    if (aIter == aEnd || !mozilla::IsAsciiDigit(*aIter)) {
+      return false;
+    }
+
+    // Power of ten by which we need to divide the fraction
+    double divisor = 1.0;
+
+    do {
+      fracPart = 10.0 * fracPart + mozilla::AsciiAlphanumericToNumber(*aIter);
+      divisor *= 10.0;
+      ++aIter;
+    } while (aIter != aEnd && mozilla::IsAsciiDigit(*aIter));
+
+    fracPart /= divisor;
+  }
+
+  bool gotE = false;
+  int32_t exponent = 0;
+  int32_t expSign;
+
+  if (aIter != aEnd && (*aIter == 'e' || *aIter == 'E')) {
+    RangedPtr<const char16_t> expIter(aIter);
+
+    ++expIter;
+    if (expIter != aEnd) {
+      expSign = *expIter == '-' ? -1 : 1;
+      if (*expIter == '-' || *expIter == '+') {
+        ++expIter;
+      }
+      if (expIter != aEnd && mozilla::IsAsciiDigit(*expIter)) {
+        // At this point we're sure this is an exponent
+        // and not the start of a unit such as em or ex.
+        gotE = true;
+      }
+    }
+
+    if (gotE) {
+      aIter = expIter;
+      do {
+        exponent = 10.0 * exponent + mozilla::AsciiAlphanumericToNumber(*aIter);
+        ++aIter;
+      } while (aIter != aEnd && mozilla::IsAsciiDigit(*aIter));
+    }
+  }
+
+  // Assemble the number
+  aValue = sign * (intPart + fracPart);
+  if (gotE) {
+    aValue *= pow(10.0, expSign * exponent);
+  }
+  return true;
+}
 
 namespace mozilla {
 
@@ -587,90 +672,6 @@ gfx::Matrix SVGContentUtils::GetViewBoxTransform(
   if (aViewboxY) f += -d * aViewboxY;
 
   return gfx::Matrix(a, 0.0f, 0.0f, d, e, f);
-}
-
-static bool ParseNumber(RangedPtr<const char16_t>& aIter,
-                        const RangedPtr<const char16_t>& aEnd, double& aValue) {
-  int32_t sign;
-  if (!SVGContentUtils::ParseOptionalSign(aIter, aEnd, sign)) {
-    return false;
-  }
-
-  // Absolute value of the integer part of the mantissa.
-  double intPart = 0.0;
-
-  bool gotDot = *aIter == '.';
-
-  if (!gotDot) {
-    if (!mozilla::IsAsciiDigit(*aIter)) {
-      return false;
-    }
-    do {
-      intPart = 10.0 * intPart + mozilla::AsciiAlphanumericToNumber(*aIter);
-      ++aIter;
-    } while (aIter != aEnd && mozilla::IsAsciiDigit(*aIter));
-
-    if (aIter != aEnd) {
-      gotDot = *aIter == '.';
-    }
-  }
-
-  // Fractional part of the mantissa.
-  double fracPart = 0.0;
-
-  if (gotDot) {
-    ++aIter;
-    if (aIter == aEnd || !mozilla::IsAsciiDigit(*aIter)) {
-      return false;
-    }
-
-    // Power of ten by which we need to divide the fraction
-    double divisor = 1.0;
-
-    do {
-      fracPart = 10.0 * fracPart + mozilla::AsciiAlphanumericToNumber(*aIter);
-      divisor *= 10.0;
-      ++aIter;
-    } while (aIter != aEnd && mozilla::IsAsciiDigit(*aIter));
-
-    fracPart /= divisor;
-  }
-
-  bool gotE = false;
-  int32_t exponent = 0;
-  int32_t expSign;
-
-  if (aIter != aEnd && (*aIter == 'e' || *aIter == 'E')) {
-    RangedPtr<const char16_t> expIter(aIter);
-
-    ++expIter;
-    if (expIter != aEnd) {
-      expSign = *expIter == '-' ? -1 : 1;
-      if (*expIter == '-' || *expIter == '+') {
-        ++expIter;
-      }
-      if (expIter != aEnd && mozilla::IsAsciiDigit(*expIter)) {
-        // At this point we're sure this is an exponent
-        // and not the start of a unit such as em or ex.
-        gotE = true;
-      }
-    }
-
-    if (gotE) {
-      aIter = expIter;
-      do {
-        exponent = 10.0 * exponent + mozilla::AsciiAlphanumericToNumber(*aIter);
-        ++aIter;
-      } while (aIter != aEnd && mozilla::IsAsciiDigit(*aIter));
-    }
-  }
-
-  // Assemble the number
-  aValue = sign * (intPart + fracPart);
-  if (gotE) {
-    aValue *= pow(10.0, expSign * exponent);
-  }
-  return true;
 }
 
 template <class floatType>

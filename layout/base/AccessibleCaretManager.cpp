@@ -502,9 +502,7 @@ nsresult AccessibleCaretManager::SelectWordOrShortcut(const nsPoint& aPoint) {
 #ifdef MOZ_WIDGET_ANDROID
   // On Android, we need IgnoreRootScrollFrame for correct hit testing when
   // zoomed in or out.
-  //
-  // FIXME(emilio): But do we really want to override the other two flags?
-  options = nsLayoutUtils::FrameForPointOption::IgnoreRootScrollFrame;
+  options += nsLayoutUtils::FrameForPointOption::IgnoreRootScrollFrame;
 #endif
 
   AutoWeakFrame ptFrame =

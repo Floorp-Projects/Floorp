@@ -4,7 +4,7 @@
 
 use api::{ColorU, GlyphDimensions, FontKey, FontRenderMode};
 use api::{FontInstancePlatformOptions, FontLCDFilter, FontHinting};
-use api::{FontInstanceFlags, NativeFontHandle};
+use api::{FontInstanceFlags, FontVariation, NativeFontHandle};
 use freetype::freetype::{FT_BBox, FT_Outline_Translate, FT_Pixel_Mode, FT_Render_Mode};
 use freetype::freetype::{FT_Done_Face, FT_Error, FT_Get_Char_Index, FT_Int32};
 use freetype::freetype::{FT_Done_FreeType, FT_Library_SetLcdFilter, FT_Pos};
@@ -12,20 +12,26 @@ use freetype::freetype::{FT_F26Dot6, FT_Face, FT_Glyph_Format, FT_Long, FT_UInt}
 use freetype::freetype::{FT_GlyphSlot, FT_LcdFilter, FT_New_Face, FT_New_Memory_Face};
 use freetype::freetype::{FT_Init_FreeType, FT_Load_Glyph, FT_Render_Glyph};
 use freetype::freetype::{FT_Library, FT_Outline_Get_CBox, FT_Set_Char_Size, FT_Select_Size};
-use freetype::freetype::{FT_Fixed, FT_Matrix, FT_Set_Transform};
+use freetype::freetype::{FT_Fixed, FT_Matrix, FT_Set_Transform, FT_String, FT_ULong};
+use freetype::freetype::{FT_Err_Unimplemented_Feature};
 use freetype::freetype::{FT_LOAD_COLOR, FT_LOAD_DEFAULT, FT_LOAD_FORCE_AUTOHINT};
 use freetype::freetype::{FT_LOAD_IGNORE_GLOBAL_ADVANCE_WIDTH, FT_LOAD_NO_AUTOHINT};
 use freetype::freetype::{FT_LOAD_NO_BITMAP, FT_LOAD_NO_HINTING, FT_LOAD_VERTICAL_LAYOUT};
 use freetype::freetype::{FT_FACE_FLAG_SCALABLE, FT_FACE_FLAG_FIXED_SIZES};
+use freetype::freetype::{FT_FACE_FLAG_MULTIPLE_MASTERS};
 use freetype::succeeded;
 use glyph_rasterizer::{FontInstance, GlyphFormat, GlyphKey, GlyphRasterResult, RasterizedGlyph};
 #[cfg(feature = "pathfinder")]
 use glyph_rasterizer::NativeFontHandleWrapper;
 use internal_types::{FastHashMap, ResourceCacheError};
+#[cfg(not(target_os = "android"))]
+use libc::{dlsym, RTLD_DEFAULT};
+use libc::free;
 #[cfg(feature = "pathfinder")]
 use pathfinder_font_renderer::freetype as pf_freetype;
 use std::{cmp, mem, ptr, slice};
 use std::cmp::max;
+use std::collections::hash_map::Entry;
 use std::ffi::CString;
 use std::sync::Arc;
 
@@ -38,16 +44,141 @@ const FT_LOAD_TARGET_MONO: FT_UInt   = 2 << 16;
 const FT_LOAD_TARGET_LCD: FT_UInt    = 3 << 16;
 const FT_LOAD_TARGET_LCD_V: FT_UInt  = 4 << 16;
 
-struct Face {
-    face: FT_Face,
+#[repr(C)]
+struct FT_Var_Axis {
+    pub name: *mut FT_String,
+    pub minimum: FT_Fixed,
+    pub def: FT_Fixed,
+    pub maximum: FT_Fixed,
+    pub tag: FT_ULong,
+    pub strid: FT_UInt,
+}
+
+#[repr(C)]
+struct FT_Var_Named_Style {
+    pub coords: *mut FT_Fixed,
+    pub strid: FT_UInt,
+    pub psid: FT_UInt,
+}
+
+#[repr(C)]
+struct FT_MM_Var {
+    pub num_axis: FT_UInt,
+    pub num_designs: FT_UInt,
+    pub num_namedstyles: FT_UInt,
+    pub axis: *mut FT_Var_Axis,
+    pub namedstyle: *mut FT_Var_Named_Style,
+}
+
+#[inline]
+pub fn unimplemented(error: FT_Error) -> bool {
+    error == FT_Err_Unimplemented_Feature as FT_Error
+}
+
+// Use dlsym to check for symbols. If not available. just return an unimplemented error.
+#[cfg(not(target_os = "android"))]
+macro_rules! ft_dyn_fn {
+    ($func_name:ident($($arg_name:ident:$arg_type:ty),*) -> FT_Error) => {
+        #[allow(non_snake_case)]
+        unsafe fn $func_name($($arg_name:$arg_type),*) -> FT_Error {
+            extern "C" fn unimpl_func($(_:$arg_type),*) -> FT_Error {
+                FT_Err_Unimplemented_Feature as FT_Error
+            }
+            lazy_static! {
+                static ref func: unsafe extern "C" fn($($arg_type),*) -> FT_Error = {
+                    unsafe {
+                        let cname = CString::new(stringify!($func_name)).unwrap();
+                        let ptr = dlsym(RTLD_DEFAULT, cname.as_ptr());
+                        if !ptr.is_null() { mem::transmute(ptr) } else { unimpl_func }
+                    }
+                };
+            }
+            (*func)($($arg_name),*)
+        }
+    }
+}
+
+// On Android, just statically link in the symbols...
+#[cfg(target_os = "android")]
+macro_rules! ft_dyn_fn {
+    ($($proto:tt)+) => { extern "C" { fn $($proto)+; } }
+}
+
+ft_dyn_fn!(FT_Get_MM_Var(face: FT_Face, desc: *mut *mut FT_MM_Var) -> FT_Error);
+ft_dyn_fn!(FT_Done_MM_Var(library: FT_Library, desc: *mut FT_MM_Var) -> FT_Error);
+ft_dyn_fn!(FT_Set_Var_Design_Coordinates(face: FT_Face, num_vals: FT_UInt, vals: *mut FT_Fixed) -> FT_Error);
+
+extern "C" {
+    fn FT_GlyphSlot_Embolden(slot: FT_GlyphSlot);
+}
+
+enum FontFile {
+    Pathname(CString),
+    Data(Arc<Vec<u8>>),
+}
+
+struct FontFace {
     // Raw byte data has to live until the font is deleted, according to
     // https://www.freetype.org/freetype2/docs/reference/ft2-base_interface.html#FT_New_Memory_Face
-    _bytes: Option<Arc<Vec<u8>>>,
+    file: FontFile,
+    index: u32,
+    face: FT_Face,
+    mm_var: *mut FT_MM_Var,
+}
+
+impl Drop for FontFace {
+    fn drop(&mut self) {
+        unsafe {
+            if !self.mm_var.is_null() &&
+               unimplemented(FT_Done_MM_Var((*(*self.face).glyph).library, self.mm_var)) {
+                free(self.mm_var as _);
+            }
+
+            FT_Done_Face(self.face);
+        }
+    }
+}
+
+struct VariationFace(FT_Face);
+
+impl Drop for VariationFace {
+    fn drop(&mut self) {
+        unsafe { FT_Done_Face(self.0) };
+    }
+}
+
+fn new_ft_face(font_key: &FontKey, lib: FT_Library, file: &FontFile, index: u32) -> Option<FT_Face> {
+    unsafe {
+        let mut face: FT_Face = ptr::null_mut();
+        let result = match file {
+            FontFile::Pathname(ref cstr) => FT_New_Face(
+                lib,
+                cstr.as_ptr(),
+                index as FT_Long,
+                &mut face,
+            ),
+            FontFile::Data(ref bytes) => FT_New_Memory_Face(
+                lib,
+                bytes.as_ptr(),
+                bytes.len() as FT_Long,
+                index as FT_Long,
+                &mut face,
+            ),
+        };
+        if succeeded(result) && !face.is_null() {
+            Some(face)
+        } else {
+            warn!("WARN: webrender failed to load font");
+            debug!("font={:?}, result={:?}", font_key, result);
+            None
+        }
+    }
 }
 
 pub struct FontContext {
     lib: FT_Library,
-    faces: FastHashMap<FontKey, Face>,
+    faces: FastHashMap<FontKey, FontFace>,
+    variations: FastHashMap<(FontKey, Vec<FontVariation>), VariationFace>,
     lcd_extra_pixels: i64,
 }
 
@@ -55,10 +186,6 @@ pub struct FontContext {
 // are not concurrently accessed. In our case, everything is hidden inside
 // a given FontContext so it is safe to move the latter between threads.
 unsafe impl Send for FontContext {}
-
-extern "C" {
-    fn FT_GlyphSlot_Embolden(slot: FT_GlyphSlot);
-}
 
 fn get_skew_bounds(bottom: i32, top: i32, skew_factor: f32) -> (f32, f32) {
     let skew_min = ((bottom as f32 + 0.5) * skew_factor).floor();
@@ -165,6 +292,7 @@ impl FontContext {
             Ok(FontContext {
                 lib,
                 faces: FastHashMap::default(),
+                variations: FastHashMap::default(),
                 lcd_extra_pixels,
             })
         } else {
@@ -181,72 +309,78 @@ impl FontContext {
 
     pub fn add_raw_font(&mut self, font_key: &FontKey, bytes: Arc<Vec<u8>>, index: u32) {
         if !self.faces.contains_key(&font_key) {
-            let mut face: FT_Face = ptr::null_mut();
-            let result = unsafe {
-                FT_New_Memory_Face(
-                    self.lib,
-                    bytes.as_ptr(),
-                    bytes.len() as FT_Long,
-                    index as FT_Long,
-                    &mut face,
-                )
-            };
-            if succeeded(result) && !face.is_null() {
-                self.faces.insert(
-                    *font_key,
-                    Face {
-                        face,
-                        _bytes: Some(bytes),
-                    },
-                );
-            } else {
-                warn!("WARN: webrender failed to load font");
-                debug!("font={:?}", font_key);
+            let file = FontFile::Data(bytes);
+            if let Some(face) = new_ft_face(font_key, self.lib, &file, index) {
+                self.faces.insert(*font_key, FontFace { file, index, face, mm_var: ptr::null_mut() });
             }
         }
     }
 
     pub fn add_native_font(&mut self, font_key: &FontKey, native_font_handle: NativeFontHandle) {
         if !self.faces.contains_key(&font_key) {
-            let mut face: FT_Face = ptr::null_mut();
-            let pathname = CString::new(native_font_handle.pathname).unwrap();
-            let result = unsafe {
-                FT_New_Face(
-                    self.lib,
-                    pathname.as_ptr(),
-                    native_font_handle.index as FT_Long,
-                    &mut face,
-                )
-            };
-            if succeeded(result) && !face.is_null() {
-                self.faces.insert(
-                    *font_key,
-                    Face {
-                        face,
-                        _bytes: None,
-                    },
-                );
-            } else {
-                warn!("WARN: webrender failed to load font");
-                debug!("font={:?}, path={:?}", font_key, pathname);
+            let file = FontFile::Pathname(CString::new(native_font_handle.pathname).unwrap());
+            let index = native_font_handle.index;
+            if let Some(face) = new_ft_face(font_key, self.lib, &file, index) {
+                self.faces.insert(*font_key, FontFace { file, index, face, mm_var: ptr::null_mut() });
             }
         }
     }
 
     pub fn delete_font(&mut self, font_key: &FontKey) {
-        if let Some(face) = self.faces.remove(font_key) {
-            let result = unsafe { FT_Done_Face(face.face) };
-            assert!(succeeded(result));
+        if let Some(_) = self.faces.remove(font_key) {
+            self.variations.retain(|k, _| k.0 != *font_key);
         }
     }
 
-    pub fn delete_font_instance(&mut self, _instance: &FontInstance) {
-        // This backend does not yet support variations, so there is nothing to do here.
+    pub fn delete_font_instance(&mut self, instance: &FontInstance) {
+        // Ensure we don't keep around excessive amounts of stale variations.
+        if !instance.variations.is_empty() {
+            self.variations.remove(&(instance.font_key, instance.variations.clone()));
+        }
     }
 
-    fn load_glyph(&self, font: &FontInstance, glyph: &GlyphKey) -> Option<(FT_GlyphSlot, f32)> {
-        debug_assert!(self.faces.contains_key(&font.font_key));
-        let face = self.faces.get(&font.font_key).unwrap();
+    fn get_ft_face(&mut self, font: &FontInstance) -> Option<FT_Face> {
+        if font.variations.is_empty() {
+            return Some(self.faces.get(&font.font_key)?.face);
+        }
+        match self.variations.entry((font.font_key, font.variations.clone())) {
+            Entry::Occupied(entry) => Some(entry.get().0),
+            Entry::Vacant(entry) => unsafe {
+                let normal_face = self.faces.get_mut(&font.font_key)?;
+                if ((*normal_face.face).face_flags & (FT_FACE_FLAG_MULTIPLE_MASTERS as FT_Long)) == 0 {
+                    return Some(normal_face.face);
+                }
+                // Clone a new FT face and attempt to set the variation values on it.
+                // Leave unspecified values at the defaults.
+                let var_face = new_ft_face(&font.font_key, self.lib, &normal_face.file, normal_face.index)?;
+                if !normal_face.mm_var.is_null() ||
+                   succeeded(FT_Get_MM_Var(normal_face.face, &mut normal_face.mm_var)) {
+                    let mm_var = normal_face.mm_var;
+                    let num_axis = (*mm_var).num_axis;
+                    let mut coords: Vec<FT_Fixed> = Vec::with_capacity(num_axis as usize);
+                    for i in 0 .. num_axis {
+                        let axis = (*mm_var).axis.offset(i as isize);
+                        let mut value = (*axis).def;
+                        for var in &font.variations {
+                            if var.tag as FT_ULong == (*axis).tag {
+                                value = (var.value * 65536.0 + 0.5) as FT_Fixed;
+                                value = cmp::min(value, (*axis).maximum);
+                                value = cmp::max(value, (*axis).minimum);
+                                break;
+                            }
+                        }
+                        coords.push(value);
+                    }
+                    FT_Set_Var_Design_Coordinates(var_face, num_axis, coords.as_mut_ptr());
+                }
+                entry.insert(VariationFace(var_face));
+                Some(var_face)
+            }
+        }
+    }
+
+    fn load_glyph(&mut self, font: &FontInstance, glyph: &GlyphKey) -> Option<(FT_GlyphSlot, f32)> {
+        let face = self.get_ft_face(font)?;
 
         let mut load_flags = FT_LOAD_DEFAULT;
         let FontInstancePlatformOptions { mut hinting, .. } = font.platform_options.unwrap_or_default();
@@ -293,12 +427,12 @@ impl FontContext {
         let (x_scale, y_scale) = font.transform.compute_scale().unwrap_or((1.0, 1.0));
         let scale = font.oversized_scale_factor(x_scale, y_scale);
         let req_size = font.size.to_f64_px();
-        let face_flags = unsafe { (*face.face).face_flags };
+        let face_flags = unsafe { (*face).face_flags };
         let mut result = if (face_flags & (FT_FACE_FLAG_FIXED_SIZES as FT_Long)) != 0 &&
                             (face_flags & (FT_FACE_FLAG_SCALABLE as FT_Long)) == 0 &&
                             (load_flags & FT_LOAD_NO_BITMAP) == 0 {
-            unsafe { FT_Set_Transform(face.face, ptr::null_mut(), ptr::null_mut()) };
-            self.choose_bitmap_size(face.face, req_size * y_scale / scale)
+            unsafe { FT_Set_Transform(face, ptr::null_mut(), ptr::null_mut()) };
+            self.choose_bitmap_size(face, req_size * y_scale / scale)
         } else {
             let mut shape = font.transform.invert_scale(x_scale, y_scale);
             if font.flags.contains(FontInstanceFlags::FLIP_X) {
@@ -320,9 +454,9 @@ impl FontContext {
                 yy: (shape.scale_y * 65536.0) as FT_Fixed,
             };
             unsafe {
-                FT_Set_Transform(face.face, &mut ft_shape, ptr::null_mut());
+                FT_Set_Transform(face, &mut ft_shape, ptr::null_mut());
                 FT_Set_Char_Size(
-                    face.face,
+                    face,
                     (req_size * x_scale / scale * 64.0 + 0.5) as FT_F26Dot6,
                     (req_size * y_scale / scale * 64.0 + 0.5) as FT_F26Dot6,
                     0,
@@ -332,11 +466,11 @@ impl FontContext {
         };
 
         if succeeded(result) {
-            result = unsafe { FT_Load_Glyph(face.face, glyph.index() as FT_UInt, load_flags as FT_Int32) };
+            result = unsafe { FT_Load_Glyph(face, glyph.index() as FT_UInt, load_flags as FT_Int32) };
         };
 
         if succeeded(result) {
-            let slot = unsafe { (*face.face).glyph };
+            let slot = unsafe { (*face).glyph };
             assert!(slot != ptr::null_mut());
 
             if font.flags.contains(FontInstanceFlags::SYNTHETIC_BOLD) {
@@ -504,9 +638,9 @@ impl FontContext {
     }
 
     pub fn get_glyph_index(&mut self, font_key: FontKey, ch: char) -> Option<u32> {
-        let face = self.faces.get(&font_key).expect("Unknown font key!");
+        let face = self.faces.get(&font_key)?.face;
         unsafe {
-            let idx = FT_Get_Char_Index(face.face, ch as _);
+            let idx = FT_Get_Char_Index(face, ch as _);
             if idx != 0 {
                 Some(idx)
             } else {
@@ -823,6 +957,8 @@ impl FontContext {
 
 impl Drop for FontContext {
     fn drop(&mut self) {
+        self.variations.clear();
+        self.faces.clear();
         unsafe {
             FT_Done_FreeType(self.lib);
         }
