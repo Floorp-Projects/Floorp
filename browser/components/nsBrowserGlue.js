@@ -1865,7 +1865,7 @@ BrowserGlue.prototype = {
              getService(Ci.nsIUpdateManager);
     try {
       // If the updates.xml file is deleted then getUpdateAt will throw.
-      var update = um.getUpdateAt(0).QueryInterface(Ci.nsIPropertyBag);
+      var update = um.getUpdateAt(0).QueryInterface(Ci.nsIWritablePropertyBag);
     } catch (e) {
       // This should never happen.
       Cu.reportError("Unable to find update: " + e);

@@ -339,10 +339,7 @@ impl FontContext {
         match self.ct_fonts.entry((font_key, size, variations.to_vec())) {
             Entry::Occupied(entry) => Some((*entry.get()).clone()),
             Entry::Vacant(entry) => {
-                let cg_font = match self.cg_fonts.get(&font_key) {
-                    None => return None,
-                    Some(cg_font) => cg_font,
-                };
+                let cg_font = self.cg_fonts.get(&font_key)?;
                 let ct_font = new_ct_font_with_variations(cg_font, size.to_f64_px(), variations);
                 entry.insert(ct_font.clone());
                 Some(ct_font)
