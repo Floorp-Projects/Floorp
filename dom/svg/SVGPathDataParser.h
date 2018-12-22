@@ -9,21 +9,20 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/gfx/Point.h"
-#include "nsSVGDataParser.h"
+#include "SVGDataParser.h"
 
 namespace mozilla {
 class SVGPathData;
-}  // namespace mozilla
 
 ////////////////////////////////////////////////////////////////////////
-// nsSVGPathDataParser: a simple recursive descent parser that builds
+// SVGPathDataParser: a simple recursive descent parser that builds
 // DOMSVGPathSegs from path data strings. The grammar for path data
 // can be found in SVG CR 20001102, chapter 8.
 
-class nsSVGPathDataParser : public nsSVGDataParser {
+class SVGPathDataParser : public SVGDataParser {
  public:
-  nsSVGPathDataParser(const nsAString& aValue, mozilla::SVGPathData* aList)
-      : nsSVGDataParser(aValue), mPathSegList(aList) {
+  SVGPathDataParser(const nsAString& aValue, mozilla::SVGPathData* aList)
+      : SVGDataParser(aValue), mPathSegList(aList) {
     MOZ_ASSERT(aList, "null path data");
   }
 
@@ -54,12 +53,12 @@ class nsSVGPathDataParser : public nsSVGDataParser {
   mozilla::SVGPathData* const mPathSegList;
 };
 
-class nsSVGArcConverter {
+class SVGArcConverter {
   typedef mozilla::gfx::Point Point;
 
  public:
-  nsSVGArcConverter(const Point& from, const Point& to, const Point& radii,
-                    double angle, bool largeArcFlag, bool sweepFlag);
+  SVGArcConverter(const Point& from, const Point& to, const Point& radii,
+                  double angle, bool largeArcFlag, bool sweepFlag);
   bool GetNextSegment(Point* cp1, Point* cp2, Point* to);
 
  protected:
@@ -69,5 +68,7 @@ class nsSVGArcConverter {
   double mRx, mRy;
   Point mFrom, mC;
 };
+
+}  // namespace mozilla
 
 #endif  // __NS_SVGPATHDATAPARSER_H__

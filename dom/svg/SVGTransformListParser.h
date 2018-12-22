@@ -8,7 +8,7 @@
 #define MOZILLA_SVGTRANSFORMLISTPARSER_H__
 
 #include "mozilla/Attributes.h"
-#include "nsSVGDataParser.h"
+#include "SVGDataParser.h"
 #include "nsTArray.h"
 
 ////////////////////////////////////////////////////////////////////////
@@ -21,10 +21,10 @@ namespace mozilla {
 
 class nsSVGTransform;
 
-class SVGTransformListParser : public nsSVGDataParser {
+class SVGTransformListParser : public SVGDataParser {
  public:
   explicit SVGTransformListParser(const nsAString& aValue)
-      : nsSVGDataParser(aValue) {}
+      : SVGDataParser(aValue) {}
 
   bool Parse();
 
