@@ -197,9 +197,9 @@ bool DocAccessibleChild::SendCaretMoveEvent(
 bool DocAccessibleChild::SendTextChangeEvent(
     const uint64_t& aID, const nsString& aStr, const int32_t& aStart,
     const uint32_t& aLen, const bool& aIsInsert, const bool& aFromUser,
-    const bool aDoSync) {
+    const bool aDoSyncCheck) {
   if (IsConstructedInParentProcess()) {
-    if (aDoSync) {
+    if (aDoSyncCheck && aStr.Contains(L'\xfffc')) {
       // The AT is going to need to reenter content while the event is being
       // dispatched synchronously.
       return PDocAccessibleChild::SendSyncTextChangeEvent(
