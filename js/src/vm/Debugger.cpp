@@ -2491,12 +2491,13 @@ ResumeMode Debugger::firePromiseHook(JSContext* cx, Hook hook,
     JSContext* cx, Hook hook, Handle<PromiseObject*> promise) {
   MOZ_ASSERT(hook == OnNewPromise || hook == OnPromiseSettled);
 
-  Maybe<AutoRealm> ar;
-  if (hook == OnNewPromise) {
-    ar.emplace(cx, promise);
+  if (hook == OnPromiseSettled) {
+    // We should be in the right compartment, but for simplicity always enter
+    // the promise's realm below.
+    cx->check(promise);
   }
 
-  cx->check(promise);
+  AutoRealm ar(cx, promise);
 
   RootedValue rval(cx);
   ResumeMode resumeMode = dispatchHook(
