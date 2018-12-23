@@ -26,7 +26,7 @@ nsresult NS_NewSVGRadialGradientElement(
 namespace mozilla {
 namespace dom {
 
-class SVGAnimatedTransformList;
+class DOMSVGAnimatedTransformList;
 
 //--------------------- Gradients------------------------
 
@@ -55,7 +55,7 @@ class SVGGradientElement : public SVGGradientElementBase {
 
   // WebIDL
   already_AddRefed<SVGAnimatedEnumeration> GradientUnits();
-  already_AddRefed<SVGAnimatedTransformList> GradientTransform();
+  already_AddRefed<DOMSVGAnimatedTransformList> GradientTransform();
   already_AddRefed<SVGAnimatedEnumeration> SpreadMethod();
   already_AddRefed<SVGAnimatedString> Href();
 

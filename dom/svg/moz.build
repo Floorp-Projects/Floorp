@@ -32,7 +32,6 @@ EXPORTS.mozilla.dom += [
     'SVGAnimatedPathSegList.h',
     'SVGAnimatedRect.h',
     'SVGAnimatedString.h',
-    'SVGAnimatedTransformList.h',
     'SVGAnimateElement.h',
     'SVGAnimateMotionElement.h',
     'SVGAnimateTransformElement.h',
@@ -112,6 +111,7 @@ EXPORTS.mozilla.dom += [
 UNIFIED_SOURCES += [
     'DOMSVGAnimatedLengthList.cpp',
     'DOMSVGAnimatedNumberList.cpp',
+    'DOMSVGAnimatedTransformList.cpp',
     'DOMSVGLength.cpp',
     'DOMSVGLengthList.cpp',
     'DOMSVGNumber.cpp',
@@ -152,7 +152,6 @@ UNIFIED_SOURCES += [
     'SVGAnimatedPreserveAspectRatio.cpp',
     'SVGAnimatedRect.cpp',
     'SVGAnimatedString.cpp',
-    'SVGAnimatedTransformList.cpp',
     'SVGAnimateElement.cpp',
     'SVGAnimateMotionElement.cpp',
     'SVGAnimateTransformElement.cpp',
