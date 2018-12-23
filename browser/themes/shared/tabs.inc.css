@@ -781,10 +781,14 @@
   list-style-image: url(chrome://browser/skin/tabbrowser/tab-audio-muted.svg);
 }
 
-.undo-close-tab {
+#allTabsMenu-undoCloseTab {
   list-style-image: url(chrome://browser/skin/undo.svg);
 }
 
-.undo-close-tab > .toolbarbutton-icon:-moz-locale-dir(rtl) {
+#allTabsMenu-undoCloseTab > .toolbarbutton-icon:-moz-locale-dir(rtl) {
   transform: scaleX(-1);
+}
+
+#allTabsMenu-searchTabs {
+  list-style-image: url(chrome://browser/skin/search-glass.svg);
 }
