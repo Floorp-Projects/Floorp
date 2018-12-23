@@ -570,6 +570,12 @@ def target_tasks_searchfox(full_task_graph, parameters, graph_config):
             'searchfox-win64-searchfox/debug']
 
 
+@_target_task('customv8_update')
+def target_tasks_customv8_update(full_task_graph, parameters, graph_config):
+    """Select tasks required for building latest d8/v8 version."""
+    return ['toolchain-linux64-custom-v8']
+
+
 @_target_task('pipfile_update')
 def target_tasks_pipfile_update(full_task_graph, parameters, graph_config):
     """Select the set of tasks required to perform nightly in-tree pipfile updates

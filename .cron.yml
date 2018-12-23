@@ -99,6 +99,17 @@ jobs:
               mozilla-central: [{hour: 10, minute: 0}]
               # No default
 
+    - name: customv8-update
+      job:
+          type: decision-task
+          treeherder-symbol: customv8
+          target-tasks-method: customv8_update
+      run-on-projects:
+          - mozilla-central
+      when:
+          by-project:
+              mozilla-central: [{hour: 10, minute: 30}]
+
     - name: bouncer-check
       job:
           type: decision-task

@@ -183,7 +183,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=533596
 
       try {
         let dbg = new Debugger();
-        let sandbox = new Cu.Sandbox(this, { invisibleToDebugger: false });
+        let sandbox = new Cu.Sandbox(this, {
+          invisibleToDebugger: false,
+          freshCompartment: true,
+        });
         dbg.addDebuggee(sandbox);
         ok(true, "debugger added visible value");
       } catch(e) {
