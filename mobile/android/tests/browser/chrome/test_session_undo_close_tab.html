@@ -100,10 +100,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1499874
       tabs.push(restoredTab);
       await promiseBrowserEvent(restoredTab.browser, "DOMContentLoaded");
       closedTabs = ss.getClosedTabs(chromeWin);
-      todo(!closedTabs.find(tab => tab.tabId == id), "closed tabs collection no longer contains tab");
+      ok(!closedTabs.find(tab => tab.tabId == id), "closed tabs collection no longer contains tab");
     }
     state = ss.getClosedTabs(chromeWin);
-    todo_is(state.length, 0, "no more closed tabs should be left");
+    is(state.length, 0, "no more closed tabs should be left");
 
     cleanupTabs();
   });

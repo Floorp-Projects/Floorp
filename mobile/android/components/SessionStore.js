@@ -1310,11 +1310,15 @@ SessionStore.prototype = {
   // This function iterates through a list of tab data restoring session for each of them.
   _restoreTabs(aData) {
     let window = Services.wm.getMostRecentWindow("navigator:browser");
+    let tabIds = [];
     for (let i = 0; i < aData.tabs.length; i++) {
       let tabData = JSON.parse(aData.tabs[i]);
       let activeSHEntry = tabData.entries[tabData.index - 1];
       let selected = (i == aData.tabs.length - 1);
       let delayLoad = !selected;
+      if (tabData.tabId) {
+        tabIds.push(tabData.tabId);
+      }
 
       let params = {
         title: activeSHEntry.title,
@@ -1333,6 +1337,7 @@ SessionStore.prototype = {
         this._restoreTab(tabData, tab.browser);
       }
     }
+    this._removeClosedTabs(window, tabIds);
   },
 
   /**
@@ -1513,18 +1518,11 @@ SessionStore.prototype = {
       throw (Components.returnCode = Cr.NS_ERROR_INVALID_ARG);
     }
 
-    let closedTabs = this._windows[aWindow.__SSID].closedTabs;
-    if (!closedTabs) {
-      return null;
-    }
-
     // If the tab data is in the closedTabs array, remove it.
-    closedTabs.find(function(tabData, i) {
-      if (tabData == aCloseTabData) {
-        closedTabs.splice(i, 1);
-        return true;
-      }
-    });
+    if (aCloseTabData.tabId) {
+      let tabId = [aCloseTabData.tabId];
+      this._removeClosedTabs(aWindow, tabId);
+    }
 
     // create a new tab and bring to front
     let params = {
@@ -1541,11 +1539,32 @@ SessionStore.prototype = {
 
     this._lastClosedTabIndex = INVALID_TAB_INDEX;
 
-    if (this._notifyClosedTabs) {
-      this._sendClosedTabsToJava(aWindow);
+    return tab.browser;
+  },
+
+  _removeClosedTabs(aWindow, aTabIds) {
+    if (!aTabIds || aTabIds.length == 0) {
+      return;
     }
 
-    return tab.browser;
+    if (!aWindow || !aWindow.__SSID) {
+      return;
+    }
+
+    const window = this._windows[aWindow.__SSID];
+    let closedTabs = window.closedTabs;
+    if (!closedTabs) {
+      return;
+    }
+    const prevClosedTabCount = closedTabs.length;
+
+    closedTabs = closedTabs.filter(closedTab =>
+      !closedTab.tabId || !aTabIds.includes(closedTab.tabId));
+    window.closedTabs = closedTabs;
+
+    if (this._notifyClosedTabs && closedTabs.length != prevClosedTabCount) {
+      this._sendClosedTabsToJava(aWindow);
+    }
   },
 
   get canUndoLastCloseTab() {
