@@ -440,7 +440,3 @@ var gPermissionManager = {
     column.setAttribute("data-last-sortDirection", sortDirection);
   },
 };
-
-function initWithParams(params) {
-  gPermissionManager.init(params);
-}
