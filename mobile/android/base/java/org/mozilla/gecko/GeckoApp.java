@@ -294,6 +294,15 @@ public abstract class GeckoApp extends GeckoActivity
 
         @Override
         public void onClosedTabsRead(final JSONArray closedTabData) throws JSONException {
+            // All tabs opened in the current session (including those that will be restored through
+            // the session store) will be numbered with a tab ID ≥ 0.
+            // To avoid duplicate IDs with closed tabs read from the previous session, we therefore
+            // renumber the latter with IDs in the negative range.
+            int closedTabId = Tabs.INVALID_TAB_ID;
+            for (int i = 0; i < closedTabData.length(); i++) {
+                final JSONObject closedTab = closedTabData.getJSONObject(i);
+                closedTab.put("tabId", --closedTabId);
+            }
             windowObject.put("closedTabs", closedTabData);
         }
 
