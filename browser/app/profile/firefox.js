@@ -1506,7 +1506,7 @@ pref("media.gmp-provider.enabled", true);
 
 // Enable blocking access to storage from tracking resources only in nightly
 // and early beta. By default the value is 0: BEHAVIOR_ACCEPT
-#ifdef EARLY_BETA_OR_EARLIER
+#ifdef NIGHTLY_OR_EARLY_BETA
 pref("network.cookie.cookieBehavior", 4 /* BEHAVIOR_REJECT_TRACKER */);
 #endif
 
