@@ -1,67 +1,38 @@
+add_task(async function test_openPreferences_spotlight() {
+  for (let [arg, expectedPane, expectedHash, expectedSubcategory] of [
+    ["privacy-reports",
+     "panePrivacy", "#privacy", "reports"],
+    ["privacy-address-autofill",
+     "panePrivacy", "#privacy", "address-autofill"],
+    ["privacy-credit-card-autofill",
+     "panePrivacy", "#privacy", "credit-card-autofill"],
+    ["privacy-form-autofill",
+     "panePrivacy", "#privacy", "form-autofill"],
+    ["privacy-trackingprotection",
+     "panePrivacy", "#privacy", "trackingprotection"],
+    ["privacy-permissions-block-popups",
+     "panePrivacy", "#privacy", "permissions-block-popups"],
+  ]) {
+    if (arg == "privacy-credit-card-autofill" &&
+        !Services.prefs.getBoolPref("extensions.formautofill.creditCards.available")) {
+      continue;
+    }
 
-add_task(async function test_reports_section() {
-  let prefs = await openPreferencesViaOpenPreferencesAPI("privacy-reports", {leaveOpen: true});
-  is(prefs.selectedPane, "panePrivacy", "Privacy pane is selected by default");
-  let doc = gBrowser.contentDocument;
-  is(doc.location.hash, "#privacy", "The subcategory should be removed from the URI");
-  await TestUtils.waitForCondition(() => doc.querySelector(".spotlight"),
-    "Wait for the reports section is spotlighted.");
-  is(doc.querySelector(".spotlight").getAttribute("data-subcategory"), "reports",
-    "The reports section is spotlighted.");
-  BrowserTestUtils.removeTab(gBrowser.selectedTab);
-});
+    let prefs =
+        await openPreferencesViaOpenPreferencesAPI(arg, { leaveOpen: true });
+    is(prefs.selectedPane, expectedPane, "The right pane is selected");
+    let doc = gBrowser.contentDocument;
+    is(doc.location.hash, expectedHash,
+       "The subcategory should be removed from the URI");
+    await TestUtils.waitForCondition(() => doc.querySelector(".spotlight"),
+                                     "Wait for the spotlight");
+    is(doc.querySelector(".spotlight").getAttribute("data-subcategory"),
+       expectedSubcategory, "The right subcategory is spotlighted");
 
-add_task(async function test_address_autofill_section() {
-  let prefs = await openPreferencesViaOpenPreferencesAPI("privacy-address-autofill", {leaveOpen: true});
-  is(prefs.selectedPane, "panePrivacy", "Privacy pane is selected by default");
-  let doc = gBrowser.contentDocument;
-  is(doc.location.hash, "#privacy", "The subcategory should be removed from the URI");
-  await TestUtils.waitForCondition(() => doc.querySelector(".spotlight"),
-    "Wait for the address-autofill section is spotlighted.");
-  is(doc.querySelector(".spotlight").getAttribute("data-subcategory"), "address-autofill",
-    "The address-autofill section is spotlighted.");
-  BrowserTestUtils.removeTab(gBrowser.selectedTab);
-});
+    doc.defaultView.spotlight(null);
+    is(doc.querySelector(".spotlight"), null,
+       "The spotlighted section is cleared");
 
-add_task(async function test_credit_card_autofill_section() {
-  if (!Services.prefs.getBoolPref("extensions.formautofill.creditCards.available")) {
-    return;
+    BrowserTestUtils.removeTab(gBrowser.selectedTab);
   }
-  let prefs = await openPreferencesViaOpenPreferencesAPI("privacy-credit-card-autofill", {leaveOpen: true});
-  is(prefs.selectedPane, "panePrivacy", "Privacy pane is selected by default");
-  let doc = gBrowser.contentDocument;
-  is(doc.location.hash, "#privacy", "The subcategory should be removed from the URI");
-  await TestUtils.waitForCondition(() => doc.querySelector(".spotlight"),
-    "Wait for the credit-card-autofill section is spotlighted.");
-  is(doc.querySelector(".spotlight").getAttribute("data-subcategory"), "credit-card-autofill",
-    "The credit-card-autofill section is spotlighted.");
-  BrowserTestUtils.removeTab(gBrowser.selectedTab);
-});
-
-add_task(async function test_form_autofill_section() {
-  let prefs = await openPreferencesViaOpenPreferencesAPI("privacy-form-autofill", {leaveOpen: true});
-  is(prefs.selectedPane, "panePrivacy", "Privacy pane is selected by default");
-  let doc = gBrowser.contentDocument;
-  is(doc.location.hash, "#privacy", "The subcategory should be removed from the URI");
-  await TestUtils.waitForCondition(() => doc.querySelector(".spotlight"),
-    "Wait for the form-autofill section is spotlighted.");
-  is(doc.querySelector(".spotlight").getAttribute("data-subcategory"), "form-autofill",
-    "The form-autofill section is spotlighted.");
-  BrowserTestUtils.removeTab(gBrowser.selectedTab);
-});
-
-add_task(async function test_change_cookie_settings() {
-  let prefs = await openPreferencesViaOpenPreferencesAPI("privacy-trackingprotection", {leaveOpen: true});
-  is(prefs.selectedPane, "panePrivacy", "Privacy pane is selected by default");
-  let doc = gBrowser.contentDocument;
-  is(doc.location.hash, "#privacy", "The subcategory should be removed from the URI");
-  await TestUtils.waitForCondition(() => doc.querySelector(".spotlight"),
-    "Wait for the content-blocking section to be spotlighted.");
-  is(doc.querySelector(".spotlight").getAttribute("data-subcategory"), "trackingprotection",
-    "The tracking-protection section is spotlighted.");
-  doc.defaultView.spotlight(null);
-  is(doc.querySelector(".spotlight"), null,
-    "The spotlighted section is cleared.");
-
-  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });

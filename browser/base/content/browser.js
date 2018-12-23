@@ -828,38 +828,7 @@ var gPopupBlockerObserver = {
   },
 
   editPopupSettings() {
-    let prefillValue = "";
-    try {
-      // We use contentPrincipal rather than currentURI to get the right
-      // value in case this is a data: URI that's inherited off something else.
-      // Some principals don't have URIs, so fall back in case URI is not present.
-      let principalURI = gBrowser.contentPrincipal.URI || gBrowser.currentURI;
-      if (principalURI) {
-        // asciiHost conveniently doesn't throw.
-        if (principalURI.asciiHost) {
-          prefillValue = principalURI.prePath;
-        } else {
-          // For host-less URIs like file://, prePath would effectively allow
-          // popups everywhere on file://. Use the full spec:
-          prefillValue = principalURI.spec;
-        }
-      }
-    } catch (e) { }
-
-    var params = { blockVisible: false,
-                   sessionVisible: false,
-                   allowVisible: true,
-                   prefilledHost: prefillValue,
-                   permissionType: "popup",
-    };
-
-    var existingWindow = Services.wm.getMostRecentWindow("Browser:Permissions");
-    if (existingWindow) {
-      existingWindow.initWithParams(params);
-      existingWindow.focus();
-    } else
-      window.openDialog("chrome://browser/content/preferences/permissions.xul",
-                        "_blank", "resizable,dialog=no,centerscreen", params);
+    openPreferences("privacy-permissions-block-popups");
   },
 
   dontShowMessage() {
