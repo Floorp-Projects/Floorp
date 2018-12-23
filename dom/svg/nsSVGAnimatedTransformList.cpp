@@ -7,7 +7,7 @@
 #include "nsSVGAnimatedTransformList.h"
 
 #include "mozilla/dom/MutationEventBinding.h"
-#include "mozilla/dom/SVGAnimatedTransformList.h"
+#include "DOMSVGAnimatedTransformList.h"
 #include "mozilla/dom/SVGAnimationElement.h"
 #include "mozilla/Move.h"
 #include "nsCharSeparatedTokenizer.h"
@@ -34,8 +34,8 @@ nsresult nsSVGAnimatedTransformList::SetBaseValueString(
 
 nsresult nsSVGAnimatedTransformList::SetBaseValue(
     const SVGTransformList& aValue, SVGElement* aSVGElement) {
-  SVGAnimatedTransformList* domWrapper =
-      SVGAnimatedTransformList::GetDOMWrapperIfExists(this);
+  DOMSVGAnimatedTransformList* domWrapper =
+      DOMSVGAnimatedTransformList::GetDOMWrapperIfExists(this);
   if (domWrapper) {
     // We must send this notification *before* changing mBaseVal! If the length
     // of our baseVal is being reduced, our baseVal's DOM wrapper list may have
@@ -70,8 +70,8 @@ nsresult nsSVGAnimatedTransformList::SetBaseValue(
 void nsSVGAnimatedTransformList::ClearBaseValue() {
   mRequiresFrameReconstruction = !HasTransform();
 
-  SVGAnimatedTransformList* domWrapper =
-      SVGAnimatedTransformList::GetDOMWrapperIfExists(this);
+  DOMSVGAnimatedTransformList* domWrapper =
+      DOMSVGAnimatedTransformList::GetDOMWrapperIfExists(this);
   if (domWrapper) {
     // We must send this notification *before* changing mBaseVal! (See above.)
     domWrapper->InternalBaseValListWillChangeLengthTo(0);
@@ -84,14 +84,14 @@ void nsSVGAnimatedTransformList::ClearBaseValue() {
 nsresult nsSVGAnimatedTransformList::SetAnimValue(
     const SVGTransformList& aValue, SVGElement* aElement) {
   bool prevSet = HasTransform() || aElement->GetAnimateMotionTransform();
-  SVGAnimatedTransformList* domWrapper =
-      SVGAnimatedTransformList::GetDOMWrapperIfExists(this);
+  DOMSVGAnimatedTransformList* domWrapper =
+      DOMSVGAnimatedTransformList::GetDOMWrapperIfExists(this);
   if (domWrapper) {
     // A new animation may totally change the number of items in the animVal
     // list, replacing what was essentially a mirror of the baseVal list, or
     // else replacing and overriding an existing animation. When this happens
     // we must try and keep our animVal's DOM wrapper in sync (see the comment
-    // in SVGAnimatedTransformList::InternalBaseValListWillChangeLengthTo).
+    // in DOMSVGAnimatedTransformList::InternalBaseValListWillChangeLengthTo).
     //
     // It's not possible for us to reliably distinguish between calls to this
     // method that are setting a new sample for an existing animation, and
@@ -126,8 +126,8 @@ nsresult nsSVGAnimatedTransformList::SetAnimValue(
 }
 
 void nsSVGAnimatedTransformList::ClearAnimValue(SVGElement* aElement) {
-  SVGAnimatedTransformList* domWrapper =
-      SVGAnimatedTransformList::GetDOMWrapperIfExists(this);
+  DOMSVGAnimatedTransformList* domWrapper =
+      DOMSVGAnimatedTransformList::GetDOMWrapperIfExists(this);
   if (domWrapper) {
     // When all animation ends, animVal simply mirrors baseVal, which may have
     // a different number of items to the last active animated value. We must

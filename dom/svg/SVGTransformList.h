@@ -64,8 +64,8 @@ class SVGTransformList {
   // limited. This is to reduce the chances of someone modifying objects of
   // this type without taking the necessary steps to keep DOM wrappers in sync.
   // If you need wider access to these methods, consider adding a method to
-  // SVGAnimatedTransformList and having that class act as an intermediary so it
-  // can take care of keeping DOM wrappers in sync.
+  // DOMSVGAnimatedTransformList and having that class act as an intermediary so
+  // it can take care of keeping DOM wrappers in sync.
 
  protected:
   /**
