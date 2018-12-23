@@ -1548,31 +1548,6 @@ SessionStore.prototype = {
     return tab.browser;
   },
 
-  forgetClosedTab: function ss_forgetClosedTab(aWindow, aIndex) {
-    if (!aWindow.__SSID) {
-      throw (Components.returnCode = Cr.NS_ERROR_INVALID_ARG);
-    }
-
-    let closedTabs = this._windows[aWindow.__SSID].closedTabs;
-
-    // default to the most-recently closed tab
-    aIndex = aIndex || 0;
-    if (!(aIndex in closedTabs)) {
-      throw (Components.returnCode = Cr.NS_ERROR_INVALID_ARG);
-    }
-
-    // remove closed tab from the array
-    closedTabs.splice(aIndex, 1);
-
-    // Forget the last closed tab index if we're forgetting the last closed tab.
-    if (aIndex == 0) {
-      this._lastClosedTabIndex = INVALID_TAB_INDEX;
-    }
-    if (this._notifyClosedTabs) {
-      this._sendClosedTabsToJava(aWindow);
-    }
-  },
-
   get canUndoLastCloseTab() {
     return this._lastClosedTabIndex > INVALID_TAB_INDEX;
   },
