@@ -23142,6 +23142,7 @@ const getAllGeneratedLocations = dispatcher.task("getAllGeneratedLocations", {
   queue: true
 });
 const getOriginalLocation = dispatcher.task("getOriginalLocation");
+const getFileGeneratedRange = dispatcher.task("getFileGeneratedRange");
 const getLocationScopes = dispatcher.task("getLocationScopes");
 const getOriginalSourceText = dispatcher.task("getOriginalSourceText");
 const applySourceMap = dispatcher.task("applySourceMap");
@@ -23161,6 +23162,7 @@ module.exports = {
   getGeneratedLocation,
   getAllGeneratedLocations,
   getOriginalLocation,
+  getFileGeneratedRange,
   getLocationScopes,
   getOriginalSourceText,
   applySourceMap,
