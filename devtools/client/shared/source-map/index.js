@@ -554,7 +554,8 @@ const contentMap = {
   vue: "text/vue",
   coffee: "text/coffeescript",
   elm: "text/elm",
-  cljs: "text/x-clojure"
+  cljc: "text/x-clojure",
+  cljs: "text/x-clojurescript"
 };
 
 /**
