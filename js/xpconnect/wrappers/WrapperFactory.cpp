@@ -639,6 +639,11 @@ JSObject* TransplantObject(JSContext* cx, JS::HandleObject origobj,
     return newIdentity;
   }
 
+  // If we transplanted within a compartment, oldWaiver is still valid.
+  if (newIdentity == origobj) {
+    return newIdentity;
+  }
+
   if (!FixWaiverAfterTransplant(cx, oldWaiver, newIdentity)) {
     return nullptr;
   }
