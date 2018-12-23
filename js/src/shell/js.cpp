@@ -1036,6 +1036,24 @@ static bool DrainJobQueue(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+static bool GlobalOfFirstJobInQueue(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  if (cx->jobQueue->empty()) {
+    JS_ReportErrorASCII(cx, "Job queue is empty");
+    return false;
+  }
+
+  RootedObject job(cx, cx->jobQueue->front());
+  RootedObject global(cx, &job->nonCCWGlobal());
+  if (!cx->compartment()->wrap(cx, &global)) {
+    return false;
+  }
+
+  args.rval().setObject(*global);
+  return true;
+}
+
 static void ForwardingPromiseRejectionTrackerCallback(
     JSContext* cx, JS::HandleObject promise,
     JS::PromiseRejectionHandlingState state, void* data) {
@@ -8616,6 +8634,11 @@ JS_FN_HELP("parseBin", BinParse, 1, 0,
     JS_FN_HELP("enqueueJob", EnqueueJob, 1, 0,
 "enqueueJob(fn)",
 "  Enqueue 'fn' on the shell's job queue."),
+
+    JS_FN_HELP("globalOfFirstJobInQueue", GlobalOfFirstJobInQueue, 0, 0,
+"globalOfFirstJobInQueue()",
+"  Returns the global of the first item in the job queue. Throws an exception\n"
+"  if the queue is empty.\n"),
 
     JS_FN_HELP("drainJobQueue", DrainJobQueue, 0, 0,
 "drainJobQueue()",

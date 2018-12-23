@@ -94,7 +94,7 @@
   "import_module.jsm": ["MODULE_IMPORTED", "MODULE_URI", "SUBMODULE_IMPORTED", "same_scope", "SUBMODULE_IMPORTED_TO_SCOPE"],
   "import_sub_module.jsm": ["SUBMODULE_IMPORTED", "test_obj"],
   "InlineSpellChecker.jsm": ["InlineSpellChecker", "SpellCheckHelper"],
-  "jsdebugger.jsm": ["addDebuggerToGlobal"],
+  "jsdebugger.jsm": ["addDebuggerToGlobal", "addSandboxedDebuggerToGlobal"],
   "jsesc.js": ["jsesc"],
   "json2.js": ["JSON"],
   "keys.js": ["BulkKeyBundle", "SyncKeyBundle"],

@@ -18,13 +18,16 @@ Debugger.prototype.makeGlobalObjectReference should dereference WindowProxy
 "use strict";
 
 ChromeUtils.import("resource://gre/modules/jsdebugger.jsm");
-addDebuggerToGlobal(this);
+addSandboxedDebuggerToGlobal(this);
 
 window.onload = function() {
   SimpleTest.waitForExplicitFinish();
 
+  // Load one of our iframes over http to force it in a different compartment
+  // from the current window and the other iframe.
   const iframe = document.createElement("iframe");
-  iframe.src = "iframe1_makeGlobalObjectReference.html";
+  const baseURL = "http://mochi.test:8888/chrome/devtools/server/tests/mochitest/";
+  iframe.src = baseURL + "iframe1_makeGlobalObjectReference.html";
   iframe.onload = iframeOnLoad;
   document.body.appendChild(iframe);
 
