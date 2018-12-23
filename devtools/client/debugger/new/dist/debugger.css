@@ -1540,6 +1540,19 @@ html .toggle-button.end.vertical svg {
 .search-field .search-nav-buttons .nav-btn path {
   fill: var(--theme-comment);
 }
+
+.search-field i.loader svg {
+  animation: rotate 0.5s linear infinite;
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
