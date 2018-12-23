@@ -1663,6 +1663,10 @@ html .toggle-button.end.vertical svg {
 
 /* Focus values */
 
+.project-text-search .file-result.focused .img.file {
+  background-color: white;
+}
+
 .project-text-search .file-result.focused,
 .project-text-search .result.focused .line-value {
   background-color: var(--theme-selection-background);
