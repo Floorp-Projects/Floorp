@@ -159,7 +159,7 @@ function update(
 // https://github.com/devtools-html/debugger.html/blob/master/src/reducers/sources.js#L179-L185
 type OuterState = { ast: Record<ASTState> };
 
-export function getSymbols(state: OuterState, source?: Source): ?Symbols {
+export function getSymbols(state: OuterState, source: ?Source): ?Symbols {
   if (!source) {
     return null;
   }
@@ -177,7 +177,7 @@ export function hasSymbols(state: OuterState, source: Source): boolean {
   return !symbols.loading;
 }
 
-export function isSymbolsLoading(state: OuterState, source: Source): boolean {
+export function isSymbolsLoading(state: OuterState, source: ?Source): boolean {
   const symbols = getSymbols(state, source);
   if (!symbols) {
     return false;

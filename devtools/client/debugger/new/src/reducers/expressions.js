@@ -13,10 +13,11 @@ import makeRecord from "../utils/makeRecord";
 import { List, Map } from "immutable";
 import { omit, zip } from "lodash";
 
-import { createSelector } from "../utils/createSelector";
+import { createSelector } from "reselect";
 import { prefs } from "../utils/prefs";
 
 import type { Expression } from "../types";
+import type { Selector, State } from "../reducers/types";
 import type { Action } from "../actions/types";
 import type { Record } from "../utils/makeRecord";
 
@@ -158,38 +159,36 @@ function updateExpressionInList(
 }
 
 function deleteExpression(state: Record<ExpressionState>, input: string) {
-  const index = getExpressions({ expressions: state }).findIndex(
-    e => e.input == input
-  );
+  const index = state.expressions.findIndex(e => e.input == input);
   const newState = state.deleteIn(["expressions", index]);
   storeExpressions(newState);
   return newState;
 }
 
-type OuterState = { expressions: Record<ExpressionState> };
-
 const getExpressionsWrapper = state => state.expressions;
 
-export const getExpressions = createSelector(
+export const getExpressions: Selector<List<Expression>> = createSelector(
   getExpressionsWrapper,
   expressions => expressions.expressions
 );
 
-export const getAutocompleteMatches = createSelector(
+export const getAutocompleteMatches: Selector<
+  Map<string, List<string>>
+> = createSelector(
   getExpressionsWrapper,
   expressions => expressions.autocompleteMatches
 );
 
-export function getExpression(state: OuterState, input: string) {
+export function getExpression(state: State, input: string) {
   return getExpressions(state).find(exp => exp.input == input);
 }
 
-export function getAutocompleteMatchset(state: OuterState) {
+export function getAutocompleteMatchset(state: State) {
   const input = state.expressions.get("currentAutocompleteInput");
   return getAutocompleteMatches(state).get(input);
 }
 
-export const getExpressionError = createSelector(
+export const getExpressionError: Selector<boolean> = createSelector(
   getExpressionsWrapper,
   expressions => expressions.expressionError
 );

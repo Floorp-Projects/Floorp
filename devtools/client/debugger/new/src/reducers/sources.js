@@ -9,7 +9,7 @@
  * @module reducers/sources
  */
 
-import { createSelector } from "../utils/createSelector";
+import { createSelector } from "reselect";
 import {
   getPrettySourceURL,
   underRoot,
@@ -21,7 +21,7 @@ import { originalToGeneratedId } from "devtools-source-map";
 import { prefs } from "../utils/prefs";
 
 import type { Source, SourceId, SourceLocation } from "../types";
-import type { PendingSelectedLocation } from "./types";
+import type { PendingSelectedLocation, Selector } from "./types";
 import type { Action, DonePromiseAction } from "../actions/types";
 import type { LoadSourceAction } from "../actions/types/SourceAction";
 
@@ -345,7 +345,14 @@ export function getSourcesByURL(state: OuterState, url: string): Source[] {
   return getSourcesByUrlInSources(getSources(state), getUrls(state), url);
 }
 
-export function getGeneratedSource(state: OuterState, source: Source): Source {
+export function getGeneratedSource(
+  state: OuterState,
+  source: ?Source
+): ?Source {
+  if (!source) {
+    return null;
+  }
+
   if (isGenerated(source)) {
     return source;
   }
@@ -357,7 +364,11 @@ export function getPendingSelectedLocation(state: OuterState) {
   return state.sources.pendingSelectedLocation;
 }
 
-export function getPrettySource(state: OuterState, id: string) {
+export function getPrettySource(state: OuterState, id: ?string) {
+  if (!id) {
+    return;
+  }
+
   const source = getSource(state, id);
   if (!source) {
     return;
@@ -470,17 +481,17 @@ export function getSourceList(state: OuterState): Source[] {
   return (Object.values(getSources(state)): any);
 }
 
-export const getSourceCount = createSelector(
+export const getSourceCount: Selector<number> = createSelector(
   getSources,
   sources => Object.keys(sources).length
 );
 
-export const getSelectedLocation = createSelector(
+export const getSelectedLocation: Selector<?SourceLocation> = createSelector(
   getSourcesState,
   sources => sources.selectedLocation
 );
 
-export const getSelectedSource = createSelector(
+export const getSelectedSource: Selector<?Source> = createSelector(
   getSelectedLocation,
   getSources,
   (selectedLocation: ?SourceLocation, sources: SourcesMap): ?Source => {
