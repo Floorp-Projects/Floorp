@@ -959,6 +959,13 @@ MOZ_MUST_USE static bool EnqueuePromiseReactionJob(
   if (!IsProxy(reactionObj)) {
     MOZ_RELEASE_ASSERT(reactionObj->is<PromiseReactionRecord>());
     reaction = &reactionObj->as<PromiseReactionRecord>();
+    if (cx->realm() != reaction->realm()) {
+      // If the compartment has multiple realms, create the job in the
+      // reaction's realm. This is consistent with the code in the else-branch
+      // and avoids problems with running jobs against a dying global (Gecko
+      // drops such jobs).
+      ar.emplace(cx, reaction);
+    }
   } else {
     JSObject* unwrappedReactionObj = UncheckedUnwrap(reactionObj);
     if (JS_IsDeadWrapper(unwrappedReactionObj)) {
