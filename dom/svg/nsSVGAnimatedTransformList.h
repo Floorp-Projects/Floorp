@@ -29,13 +29,13 @@ class SVGTransform;
  *
  * This class is very different to the SVG DOM interface of the same name found
  * in the SVG specification. This is a lightweight internal class - see
- * SVGAnimatedTransformList for the heavier DOM class that wraps instances of
+ * DOMSVGAnimatedTransformList for the heavier DOM class that wraps instances of
  * this class and implements the SVG specification's SVGAnimatedTransformList
  * DOM interface.
  *
  * Except where noted otherwise, this class' methods take care of keeping the
  * appropriate DOM wrappers in sync (see the comment in
- * SVGAnimatedTransformList::InternalBaseValListWillChangeTo) so that their
+ * DOMSVGAnimatedTransformList::InternalBaseValListWillChangeTo) so that their
  * consumers don't need to concern themselves with that.
  */
 class nsSVGAnimatedTransformList {
@@ -50,7 +50,7 @@ class nsSVGAnimatedTransformList {
   /**
    * Because it's so important that mBaseVal and its DOMSVGTransformList wrapper
    * (if any) be kept in sync (see the comment in
-   * SVGAnimatedTransformList::InternalBaseValListWillChangeTo), this method
+   * DOMSVGAnimatedTransformList::InternalBaseValListWillChangeTo), this method
    * returns a const reference. Only our friend classes may get mutable
    * references to mBaseVal.
    */

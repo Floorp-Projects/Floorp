@@ -17,7 +17,7 @@
 namespace mozilla {
 namespace dom {
 
-class SVGAnimatedTransformList;
+class DOMSVGAnimatedTransformList;
 class SVGGraphicsElement;
 class SVGMatrix;
 class SVGIRect;
@@ -32,7 +32,7 @@ class SVGTransformableElement : public SVGElement {
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override = 0;
 
   // WebIDL
-  already_AddRefed<SVGAnimatedTransformList> Transform();
+  already_AddRefed<DOMSVGAnimatedTransformList> Transform();
   SVGElement* GetNearestViewportElement();
   SVGElement* GetFarthestViewportElement();
   MOZ_CAN_RUN_SCRIPT

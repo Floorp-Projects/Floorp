@@ -23,7 +23,7 @@ nsresult NS_NewSVGPatternElement(
 
 namespace mozilla {
 namespace dom {
-class SVGAnimatedTransformList;
+class DOMSVGAnimatedTransformList;
 
 typedef SVGElement SVGPatternElementBase;
 
@@ -62,7 +62,7 @@ class SVGPatternElement final : public SVGPatternElementBase {
   already_AddRefed<DOMSVGAnimatedPreserveAspectRatio> PreserveAspectRatio();
   already_AddRefed<SVGAnimatedEnumeration> PatternUnits();
   already_AddRefed<SVGAnimatedEnumeration> PatternContentUnits();
-  already_AddRefed<SVGAnimatedTransformList> PatternTransform();
+  already_AddRefed<DOMSVGAnimatedTransformList> PatternTransform();
   already_AddRefed<SVGAnimatedLength> X();
   already_AddRefed<SVGAnimatedLength> Y();
   already_AddRefed<SVGAnimatedLength> Width();

@@ -25,7 +25,7 @@
 #include "SVGGeometryElement.h"
 #include "nsSVGUtils.h"
 #include "mozilla/ArrayUtils.h"
-#include "SVGAnimatedTransformList.h"
+#include "nsSVGAnimatedTransformList.h"
 #include "SVGContentUtils.h"
 #include "SVGGraphicsElement.h"
 

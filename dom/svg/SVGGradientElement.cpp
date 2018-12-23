@@ -7,7 +7,7 @@
 #include "mozilla/dom/SVGGradientElement.h"
 
 #include "mozilla/ArrayUtils.h"
-#include "mozilla/dom/SVGAnimatedTransformList.h"
+#include "DOMSVGAnimatedTransformList.h"
 #include "mozilla/dom/SVGGradientElementBinding.h"
 #include "mozilla/dom/SVGRadialGradientElementBinding.h"
 #include "mozilla/dom/SVGLengthBinding.h"
@@ -66,11 +66,11 @@ already_AddRefed<SVGAnimatedEnumeration> SVGGradientElement::GradientUnits() {
   return mEnumAttributes[GRADIENTUNITS].ToDOMAnimatedEnum(this);
 }
 
-already_AddRefed<SVGAnimatedTransformList>
+already_AddRefed<DOMSVGAnimatedTransformList>
 SVGGradientElement::GradientTransform() {
   // We're creating a DOM wrapper, so we must tell GetAnimatedTransformList
-  // to allocate the SVGAnimatedTransformList if it hasn't already done so:
-  return SVGAnimatedTransformList::GetDOMWrapper(
+  // to allocate the DOMSVGAnimatedTransformList if it hasn't already done so:
+  return DOMSVGAnimatedTransformList::GetDOMWrapper(
       GetAnimatedTransformList(DO_ALLOCATE), this);
 }
 
