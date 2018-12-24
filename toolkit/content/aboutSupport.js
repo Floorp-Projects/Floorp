@@ -86,29 +86,32 @@ var snapshotFormatters = {
     }
 
     if (Services.policies) {
-      let policiesText = "";
+      let policiesStrId = "";
       let aboutPolicies = "about:policies";
       switch (data.policiesStatus) {
         case Services.policies.INACTIVE:
-          policiesText = await document.l10n.formatValue("policies-inactive");
+          policiesStrId = "policies-inactive";
           break;
 
         case Services.policies.ACTIVE:
-          policiesText = await document.l10n.formatValue("policies-active");
+          policiesStrId = "policies-active";
           aboutPolicies += "#active";
           break;
 
         default:
-          policiesText = await document.l10n.formatValue("policies-error");
+          policiesStrId = "policies-error";
           aboutPolicies += "#errors";
           break;
       }
 
       if (data.policiesStatus != Services.policies.INACTIVE) {
-        let activePolicies = $.new("a", policiesText, null, {href: aboutPolicies});
+        let activePolicies = $.new("a", null, null, {
+          "data-l10n-id": policiesStrId,
+          href: aboutPolicies,
+        });
         $("policies-status").appendChild(activePolicies);
       } else {
-        $("policies-status").textContent = policiesText;
+        document.l10n.setAttributes($("policies-status"), policiesStrId);
       }
     } else {
       $("policies-status-row").hidden = true;
@@ -587,16 +590,16 @@ var snapshotFormatters = {
     }
   },
 
-  async media(data) {
-    async function insertBasicInfo(key, value) {
-      async function createRow(key, value) {
-        let th = $.new("th", await document.l10n.formatValue(key), "column");
+  media(data) {
+    function insertBasicInfo(key, value) {
+      function createRow(key, value) {
+        let th = $.new("th", null, "column", {"data-l10n-id": key});
         let td = $.new("td", value);
         td.style["white-space"] = "pre-wrap";
         td.colSpan = 8;
         return $.new("tr", [th, td]);
       }
-      $.append($("media-info-tbody"), [await createRow(key, value)]);
+      $.append($("media-info-tbody"), [createRow(key, value)]);
     }
 
     function createDeviceInfoRow(device) {
@@ -679,9 +682,9 @@ var snapshotFormatters = {
     }
 
     // Basic information
-    await insertBasicInfo("audio-backend", data.currentAudioBackend);
-    await insertBasicInfo("max-audio-channels", data.currentMaxAudioChannels);
-    await insertBasicInfo("sample-rate", data.currentPreferredSampleRate);
+    insertBasicInfo("audio-backend", data.currentAudioBackend);
+    insertBasicInfo("max-audio-channels", data.currentMaxAudioChannels);
+    insertBasicInfo("sample-rate", data.currentPreferredSampleRate);
 
     // Output devices information
     insertDeviceInfo("output", data.audioOutputDevices);
@@ -709,12 +712,12 @@ var snapshotFormatters = {
     }
   },
 
-  async libraryVersions(data) {
+  libraryVersions(data) {
     let trs = [
       $.new("tr", [
         $.new("th", ""),
-        $.new("th", await document.l10n.formatValue("min-lib-versions")),
-        $.new("th", await document.l10n.formatValue("loaded-lib-versions")),
+        $.new("th", null, null, {"data-l10n-id": "min-lib-versions"}),
+        $.new("th", null, null, {"data-l10n-id": "loaded-lib-versions"}),
       ]),
     ];
     sortedArrayFromObject(data).forEach(
@@ -740,7 +743,7 @@ var snapshotFormatters = {
     $("prefs-user-js-section").className = "";
   },
 
-  async sandbox(data) {
+  sandbox(data) {
     if (!AppConstants.MOZ_SANDBOX)
       return;
 
@@ -757,7 +760,7 @@ var snapshotFormatters = {
       }
       let keyStrId = toFluentID(key);
       tbody.appendChild($.new("tr", [
-        $.new("th", await document.l10n.formatValue(keyStrId), "column"),
+        $.new("th", null, "column", {"data-l10n-id": keyStrId}),
         $.new("td", data[key]),
       ]));
     }
@@ -775,7 +778,7 @@ var snapshotFormatters = {
           $.new("td", syscall.msecAgo / 1000),
           $.new("td", syscall.pid, "integer"),
           $.new("td", syscall.tid, "integer"),
-          $.new("td", await document.l10n.formatValue("sandbox-proc-type-" + procTypeStrId)),
+          $.new("td", null, null, {"data-l10n-id": "sandbox-proc-type-" + procTypeStrId}),
           $.new("td", syscall.syscall, "integer"),
         ];
         for (let arg of syscall.args) {
