@@ -199,19 +199,20 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(StyleSheet)
 
 mozilla::dom::CSSStyleSheetParsingMode StyleSheet::ParsingModeDOM() {
-#define CHECK(X, Y)                                 \
+#define CHECK_MODE(X, Y)                            \
   static_assert(                                    \
       static_cast<int>(X) == static_cast<int>(Y),   \
       "mozilla::dom::CSSStyleSheetParsingMode and " \
       "mozilla::css::SheetParsingMode should have identical values");
 
-  CHECK(mozilla::dom::CSSStyleSheetParsingMode::Agent,
-        css::eAgentSheetFeatures);
-  CHECK(mozilla::dom::CSSStyleSheetParsingMode::User, css::eUserSheetFeatures);
-  CHECK(mozilla::dom::CSSStyleSheetParsingMode::Author,
-        css::eAuthorSheetFeatures);
+  CHECK_MODE(mozilla::dom::CSSStyleSheetParsingMode::Agent,
+             css::eAgentSheetFeatures);
+  CHECK_MODE(mozilla::dom::CSSStyleSheetParsingMode::User,
+             css::eUserSheetFeatures);
+  CHECK_MODE(mozilla::dom::CSSStyleSheetParsingMode::Author,
+             css::eAuthorSheetFeatures);
 
-#undef CHECK
+#undef CHECK_MODE
 
   return static_cast<mozilla::dom::CSSStyleSheetParsingMode>(mParsingMode);
 }
