@@ -31,13 +31,6 @@ def _compile_regex_mapping(mapping):
     return {re.compile(regex): value for regex, value in mapping.iteritems()}
 
 
-_WINDOWS_BUILD_PLATFORMS = [
-    'win64-nightly',
-    'win32-nightly',
-    'win64-devedition-nightly',
-    'win32-devedition-nightly',
-]
-
 # Until bug 1331141 is fixed, if you are adding any new artifacts here that
 # need to be transfered to S3, please be aware you also need to follow-up
 # with a beetmover patch in https://github.com/mozilla-releng/beetmoverscript/.
