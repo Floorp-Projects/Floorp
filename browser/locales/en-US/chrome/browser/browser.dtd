@@ -108,6 +108,9 @@ These items have the same accesskey but will never be visible at the same time. 
 <!ENTITY  hiddenTabs.label                   "Hidden Tabs">
 
 <!ENTITY  listAllTabs.label      "List all tabs">
+<!-- LOCALIZATION NOTE (allTabsMenu.searchTabs.label): "Search" is a verb, as
+in "Search through tabs". -->
+<!ENTITY  allTabsMenu.searchTabs.label       "Search Tabs">
 
 <!ENTITY tabCmd.label "New Tab">
 <!ENTITY tabCmd.accesskey "T">

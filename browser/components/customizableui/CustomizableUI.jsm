@@ -1520,6 +1520,9 @@ var CustomizableUIInternal = {
           log.error("Could not find the view node with id: " + aWidget.viewId +
                     ", for widget: " + aWidget.id + ".");
         }
+
+        let keyPressHandler = this.handleWidgetKeyPress.bind(this, aWidget, node);
+        node.addEventListener("keypress", keyPressHandler);
       }
       node.setAttribute("class", nodeClasses.join(" "));
 
@@ -1616,6 +1619,7 @@ var CustomizableUIInternal = {
   },
 
   handleWidgetCommand(aWidget, aNode, aEvent) {
+    // Note that aEvent can be a keypress event for widgets of type "view".
     log.debug("handleWidgetCommand");
 
     if (aWidget.onBeforeCommand) {
@@ -1670,6 +1674,15 @@ var CustomizableUIInternal = {
       // XXXunf Need to think this through more, and formalize.
       Services.obs.notifyObservers(aNode, "customizedui-widget-click", aWidget.id);
     }
+  },
+
+  handleWidgetKeyPress(aWidget, aNode, aEvent) {
+    if (aEvent.key != " " && aEvent.key != "Enter") {
+      return;
+    }
+    aEvent.stopPropagation();
+    aEvent.preventDefault();
+    this.handleWidgetCommand(aWidget, aNode, aEvent);
   },
 
   _getPanelForNode(aNode) {

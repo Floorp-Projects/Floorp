@@ -13,12 +13,15 @@
   <panelmultiview mainViewId="allTabsMenu-allTabsView" disablekeynav="true">
     <panelview id="allTabsMenu-allTabsView" class="PanelUI-subView">
       <vbox class="panel-subview-body">
-        <toolbarbutton id="allTabsUndoCloseButton"
-                       class="undo-close-tab subviewbutton subviewbutton-iconic"
+        <toolbarbutton id="allTabsMenu-undoCloseTab"
+                       class="subviewbutton subviewbutton-iconic"
                        label="&undoCloseTab.label;"
                        key="key_undoCloseTab"
                        command="History:UndoCloseTab"/>
-        <toolbarseparator id="allTabsMenu-containerTabsSeparator"/>
+        <toolbarbutton id="allTabsMenu-searchTabs"
+                       class="subviewbutton subviewbutton-iconic"
+                       oncommand="gTabsPanel.searchTabs();"
+                       label="&allTabsMenu.searchTabs.label;"/>
         <toolbarbutton id="allTabsMenu-containerTabsButton"
                        class="subviewbutton subviewbutton-nav"
                        closemenu="none"

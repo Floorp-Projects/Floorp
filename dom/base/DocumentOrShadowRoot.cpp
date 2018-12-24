@@ -330,6 +330,18 @@ void DocumentOrShadowRoot::ElementsFromPoint(
                       aElements);
 }
 
+void DocumentOrShadowRoot::NodesFromPoint(float aX, float aY,
+                                          nsTArray<RefPtr<nsINode>>& aNodes) {
+  QueryNodesFromPoint(*this, aX, aY, {}, FlushLayout::Yes, Multiple::Yes,
+                      aNodes);
+}
+
+nsINode* DocumentOrShadowRoot::NodeFromPoint(float aX, float aY) {
+  AutoTArray<RefPtr<nsINode>, 1> nodes;
+  QueryNodesFromPoint(*this, aX, aY, {}, FlushLayout::Yes, Multiple::No, nodes);
+  return nodes.SafeElementAt(0);
+}
+
 Element* DocumentOrShadowRoot::ElementFromPointHelper(
     float aX, float aY, bool aIgnoreRootScrollFrame, bool aFlushLayout) {
   EnumSet<FrameForPointOption> options;

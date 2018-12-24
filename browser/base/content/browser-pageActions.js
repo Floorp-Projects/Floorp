@@ -268,8 +268,10 @@ var BrowserPageActions = {
    * @param  panelNode (DOM node, optional)
    *         The panel to use.  This method takes a hands-off approach with
    *         regard to your panel in terms of attributes, styling, etc.
+   * @param  event (DOM event, optional)
+   *         The event which triggered this panel.
    */
-  togglePanelForAction(action, panelNode = null) {
+  togglePanelForAction(action, panelNode = null, event = null) {
     let aaPanelNode = this.activatedActionPanelNode;
     if (panelNode) {
       // Note that this particular code path will not prevent the panel from
@@ -298,8 +300,10 @@ var BrowserPageActions = {
       anchorNode.removeAttribute("open");
     }, { once: true });
 
-    PanelMultiView.openPopup(panelNode, anchorNode, "bottomcenter topright")
-                  .catch(Cu.reportError);
+    PanelMultiView.openPopup(panelNode, anchorNode, {
+      position: "bottomcenter topright",
+      triggerEvent: event,
+    }).catch(Cu.reportError);
   },
 
   _makeActivatedActionPanelForAction(action) {
@@ -460,9 +464,11 @@ var BrowserPageActions = {
     buttonNode.classList.add("urlbar-icon", "urlbar-page-action");
     buttonNode.setAttribute("actionid", action.id);
     buttonNode.setAttribute("role", "button");
-    buttonNode.addEventListener("click", event => {
+    let commandHandler = event => {
       this.doCommandForAction(action, event, buttonNode);
-    });
+    };
+    buttonNode.addEventListener("click", commandHandler);
+    buttonNode.addEventListener("keypress", commandHandler);
     return buttonNode;
   },
 
@@ -628,6 +634,12 @@ var BrowserPageActions = {
     if (event && event.type == "click" && event.button != 0) {
       return;
     }
+    if (event && event.type == "keypress") {
+      if (event.key != " " && event.key != "Enter") {
+        return;
+      }
+      event.stopPropagation();
+    }
     PageActions.logTelemetry("used", action, buttonNode);
     // If we're in the panel, open a subview inside the panel:
     // Note that we can't use this.panelNode.contains(buttonNode) here
@@ -649,7 +661,7 @@ var BrowserPageActions = {
       action.onCommand(event, buttonNode);
     }
     if (action.getWantsSubview(window) || action.wantsIframe) {
-      this.togglePanelForAction(action);
+      this.togglePanelForAction(action, null, event);
     }
   },
 

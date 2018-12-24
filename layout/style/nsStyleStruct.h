@@ -1603,7 +1603,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleVisibility {
   uint8_t mImageRendering;   // NS_STYLE_IMAGE_RENDERING_*
   uint8_t mWritingMode;      // NS_STYLE_WRITING_MODE_*
   uint8_t mTextOrientation;  // NS_STYLE_TEXT_ORIENTATION_MIXED_*
-  uint8_t mColorAdjust;      // NS_STYLE_COLOR_ADJUST_ECONOMY_*
+  mozilla::StyleColorAdjust mColorAdjust;
 
   bool IsVisible() const { return (mVisible == NS_STYLE_VISIBILITY_VISIBLE); }
 

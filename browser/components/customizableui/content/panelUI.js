@@ -275,7 +275,10 @@ const PanelUI = {
           this.toggle(aEvent);
         break;
       case "keypress":
-        this.toggle(aEvent);
+        if (aEvent.key == " " || aEvent.key == "Enter") {
+          this.toggle(aEvent);
+          aEvent.stopPropagation();
+        }
         break;
       case "MozDOMFullscreen:Entered":
       case "MozDOMFullscreen:Exited":
@@ -346,12 +349,16 @@ const PanelUI = {
       if (aEvent.type == "mousedown" && aEvent.button != 0) {
         return;
       }
+      if (aEvent.type == "keypress" && aEvent.key != " " &&
+          aEvent.key != "Enter") {
+        return;
+      }
       if (aEvent.type == "command" && aEvent.inputSource != null) {
         // Synthesize a new DOM mouse event to pass on the inputSource.
         domEvent = document.createEvent("MouseEvent");
         domEvent.initNSMouseEvent("click", true, true, null, 0, aEvent.screenX, aEvent.screenY,
                                   0, 0, false, false, false, false, 0, aEvent.target, 0, aEvent.inputSource);
-      } else if (aEvent.mozInputSource != null) {
+      } else if (aEvent.mozInputSource != null || aEvent.type == "keypress") {
         domEvent = aEvent;
       }
     }
