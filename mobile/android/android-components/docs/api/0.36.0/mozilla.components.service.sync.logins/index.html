@@ -1,0 +1,147 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>mozilla.components.service.sync.logins - android-components</title>
+<link rel="stylesheet" href="../../style.css">
+</HEAD>
+<BODY>
+<a href="../index.html">android-components</a>&nbsp;/&nbsp;<a href="./index.html">mozilla.components.service.sync.logins</a><br/>
+<br/>
+<h2>Package mozilla.components.service.sync.logins</h2>
+<h3>Types</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-async-logins-storage/index.html">AsyncLoginsStorage</a></p>
+</td>
+<td>
+<code><span class="keyword">interface </span><span class="identifier">AsyncLoginsStorage</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/java/lang/AutoCloseable.html"><span class="identifier">AutoCloseable</span></a></code>
+<p>An interface equivalent to the LoginsStorage interface, but where operations are
+asynchronous.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-async-logins-storage-adapter/index.html">AsyncLoginsStorageAdapter</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">class </span><span class="identifier">AsyncLoginsStorageAdapter</span><span class="symbol">&lt;</span><span class="identifier">T</span>&nbsp;<span class="symbol">:</span>&nbsp;<span class="identifier">LoginsStorage</span><span class="symbol">&gt;</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-async-logins-storage/index.html"><span class="identifier">AsyncLoginsStorage</span></a><span class="symbol">, </span><a href="https://developer.android.com/reference/java/lang/AutoCloseable.html"><span class="identifier">AutoCloseable</span></a></code>
+<p>A helper class to wrap a synchronous <a href="#">LoginsStorage</a> implementation and make it asynchronous.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-syncable-logins-store/index.html">SyncableLoginsStore</a></p>
+</td>
+<td>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">SyncableLoginsStore</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="../mozilla.components.concept.storage/-syncable-store/index.html"><span class="identifier">SyncableStore</span></a><span class="symbol">&lt;</span><a href="-sync-unlock-info.html"><span class="identifier">SyncUnlockInfo</span></a><span class="symbol">&gt;</span></code>
+<p>Wraps <a href="-async-logins-storage/index.html">AsyncLoginsStorage</a> instance along with a lazy encryption key.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Type Aliases</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-id-collision-exception.html">IdCollisionException</a></p>
+</td>
+<td>
+<code><span class="keyword">typealias </span><span class="identifier">IdCollisionException</span>&nbsp;<span class="symbol">=</span>&nbsp;<span class="identifier">IdCollisionException</span></code>
+<p>This is thrown if <code>add()</code> is given a record whose <code>id</code> is not blank, and
+collides with a record already known to the storage instance.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-invalid-key-exception.html">InvalidKeyException</a></p>
+</td>
+<td>
+<code><span class="keyword">typealias </span><span class="identifier">InvalidKeyException</span>&nbsp;<span class="symbol">=</span>&nbsp;<span class="identifier">InvalidKeyException</span></code>
+<p>This error is emitted in two cases:</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-invalid-record-exception.html">InvalidRecordException</a></p>
+</td>
+<td>
+<code><span class="keyword">typealias </span><span class="identifier">InvalidRecordException</span>&nbsp;<span class="symbol">=</span>&nbsp;<span class="identifier">InvalidRecordException</span></code>
+<p>This is thrown on attempts to insert or update a record so that it
+is no longer valid, where "invalid" is defined as such:</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-logins-storage-exception.html">LoginsStorageException</a></p>
+</td>
+<td>
+<code><span class="keyword">typealias </span><span class="identifier">LoginsStorageException</span>&nbsp;<span class="symbol">=</span>&nbsp;<span class="identifier">LoginsStorageException</span></code>
+<p>The base class of all errors emitted by logins storage.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-mismatched-lock-exception.html">MismatchedLockException</a></p>
+</td>
+<td>
+<code><span class="keyword">typealias </span><span class="identifier">MismatchedLockException</span>&nbsp;<span class="symbol">=</span>&nbsp;<span class="identifier">MismatchedLockException</span></code>
+<p>This is thrown if <code>lock()</code>/<code>unlock()</code> pairs don't match up.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-no-such-record-exception.html">NoSuchRecordException</a></p>
+</td>
+<td>
+<code><span class="keyword">typealias </span><span class="identifier">NoSuchRecordException</span>&nbsp;<span class="symbol">=</span>&nbsp;<span class="identifier">NoSuchRecordException</span></code>
+<p>This is thrown if <code>update()</code> is performed with a record whose ID
+does not exist.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-request-failed-exception.html">RequestFailedException</a></p>
+</td>
+<td>
+<code><span class="keyword">typealias </span><span class="identifier">RequestFailedException</span>&nbsp;<span class="symbol">=</span>&nbsp;<span class="identifier">RequestFailedException</span></code>
+<p>This error is emitted if a request to a sync server failed.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-server-password.html">ServerPassword</a></p>
+</td>
+<td>
+<code><span class="keyword">typealias </span><span class="identifier">ServerPassword</span>&nbsp;<span class="symbol">=</span>&nbsp;<span class="identifier">ServerPassword</span></code>
+<p>Raw password data that is stored by the storage implementation.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-sync-auth-invalid-exception.html">SyncAuthInvalidException</a></p>
+</td>
+<td>
+<code><span class="keyword">typealias </span><span class="identifier">SyncAuthInvalidException</span>&nbsp;<span class="symbol">=</span>&nbsp;<span class="identifier">SyncAuthInvalidException</span></code>
+<p>This indicates that the authentication information (e.g. the <a href="-sync-unlock-info.html">SyncUnlockInfo</a>)
+provided to <a href="-async-logins-storage/sync.html">AsyncLoginsStorage.sync</a> is invalid. This often indicates that it's
+stale and should be refreshed with FxA (however, care should be taken not to
+get into a loop refreshing this information).</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-sync-unlock-info.html">SyncUnlockInfo</a></p>
+</td>
+<td>
+<code><span class="keyword">typealias </span><span class="identifier">SyncUnlockInfo</span>&nbsp;<span class="symbol">=</span>&nbsp;<span class="identifier">SyncUnlockInfo</span></code>
+<p>This type contains the set of information required to successfully
+connect to the server and sync.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

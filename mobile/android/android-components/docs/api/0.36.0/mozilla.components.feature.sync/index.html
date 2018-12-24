@@ -1,0 +1,101 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>mozilla.components.feature.sync - android-components</title>
+<link rel="stylesheet" href="../../style.css">
+</HEAD>
+<BODY>
+<a href="../index.html">android-components</a>&nbsp;/&nbsp;<a href="./index.html">mozilla.components.feature.sync</a><br/>
+<br/>
+<h2>Package mozilla.components.feature.sync</h2>
+<h3>Types</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-auth-exception-type/index.html">AuthExceptionType</a></p>
+</td>
+<td>
+<code><span class="keyword">enum</span> <span class="keyword">class </span><span class="identifier">AuthExceptionType</span></code>
+<p>An auth-related exception type, for use with <a href="-auth-exception/index.html">AuthException</a>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-firefox-sync-feature/index.html">FirefoxSyncFeature</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">FirefoxSyncFeature</span><span class="symbol">&lt;</span><span class="identifier">AuthType</span><span class="symbol">&gt;</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="../mozilla.components.support.base.observer/-observable/index.html"><span class="identifier">Observable</span></a><span class="symbol">&lt;</span><a href="-sync-status-observer/index.html"><span class="identifier">SyncStatusObserver</span></a><span class="symbol">&gt;</span></code>
+<p>A feature implementation which orchestrates data synchronization of a set of <a href="../mozilla.components.concept.storage/-syncable-store/index.html">SyncableStore</a> which
+all share a common <a href="-firefox-sync-feature/index.html#AuthType">AuthType</a>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-fxa-auth-info/index.html">FxaAuthInfo</a></p>
+</td>
+<td>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">FxaAuthInfo</span></code>
+<p>A Firefox Sync friendly auth object which can be obtained from <a href="../mozilla.components.service.fxa/-firefox-account/index.html">FirefoxAccount</a>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-store-sync-status/index.html">StoreSyncStatus</a></p>
+</td>
+<td>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">StoreSyncStatus</span></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="-sync-status-observer/index.html">SyncStatusObserver</a></p>
+</td>
+<td>
+<code><span class="keyword">interface </span><span class="identifier">SyncStatusObserver</span></code>
+<p>An interface for consumers that wish to observer "sync lifecycle" events.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Exceptions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-auth-exception/index.html">AuthException</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">AuthException</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/java/lang/Exception.html"><span class="identifier">Exception</span></a></code>
+<p>An exception which may happen while obtaining auth information using <a href="../mozilla.components.service.fxa/-firefox-account/index.html">FirefoxAccount</a>.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Type Aliases</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-sync-result.html">SyncResult</a></p>
+</td>
+<td>
+<code><span class="keyword">typealias </span><span class="identifier">SyncResult</span>&nbsp;<span class="symbol">=</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/index.html"><span class="identifier">Map</span></a><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">,</span>&nbsp;<a href="-store-sync-status/index.html"><span class="identifier">StoreSyncStatus</span></a><span class="symbol">&gt;</span></code>
+<p>A set of results of running a sync operation for all configured stores.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="registry.html">registry</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">registry</span><span class="symbol">: </span><a href="../mozilla.components.support.base.observer/-observer-registry/index.html"><span class="identifier">ObserverRegistry</span></a><span class="symbol">&lt;</span><a href="-sync-status-observer/index.html"><span class="identifier">SyncStatusObserver</span></a><span class="symbol">&gt;</span></code></td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

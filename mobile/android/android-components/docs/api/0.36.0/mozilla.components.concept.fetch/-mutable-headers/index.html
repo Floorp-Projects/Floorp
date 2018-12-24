@@ -1,0 +1,105 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>MutableHeaders - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.concept.fetch</a>&nbsp;/&nbsp;<a href="./index.html">MutableHeaders</a><br/>
+<br/>
+<h1>MutableHeaders</h1>
+<code><span class="keyword">class </span><span class="identifier">MutableHeaders</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="../-headers/index.html"><span class="identifier">Headers</span></a><span class="symbol">, </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-mutable-iterable/index.html"><span class="identifier">MutableIterable</span></a><span class="symbol">&lt;</span><a href="../-header/index.html"><span class="identifier">Header</span></a><span class="symbol">&gt;</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/concept/fetch/src/main/java/mozilla/components/concept/fetch/Headers.kt#L61">(source)</a>
+<p>A collection of HTTP <a href="../-headers/index.html">Headers</a> (mutable) of a <a href="../-request/index.html">Request</a> or <a href="../-response/index.html">Response</a>.</p>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">MutableHeaders</span><span class="symbol">(</span><span class="keyword">vararg</span> <span class="identifier" id="mozilla.components.concept.fetch.MutableHeaders$<init>(kotlin.Array((kotlin.Pair((kotlin.String, )))))/pairs">pairs</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-pair/index.html"><span class="identifier">Pair</span></a><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">,</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">&gt;</span><span class="symbol">)</span></code>
+<p>A collection of HTTP <a href="../-headers/index.html">Headers</a> (mutable) of a <a href="../-request/index.html">Request</a> or <a href="../-response/index.html">Response</a>.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="size.html">size</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">size</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a></code>
+<p>Returns the number of headers (key / value combinations).</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="append.html">append</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">append</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.concept.fetch.MutableHeaders$append(kotlin.String, kotlin.String)/name">name</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.concept.fetch.MutableHeaders$append(kotlin.String, kotlin.String)/value">value</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">MutableHeaders</span></a></code>
+<p>Append a header without removing the headers already present.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="contains.html">contains</a></p>
+</td>
+<td>
+<code><span class="keyword">operator</span> <span class="keyword">fun </span><span class="identifier">contains</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.concept.fetch.MutableHeaders$contains(kotlin.String)/name">name</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Returns true if a <a href="../-header/index.html">Header</a> with the given <a href="contains.html#mozilla.components.concept.fetch.MutableHeaders$contains(kotlin.String)/name">name</a> exists.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get.html">get</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">get</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.concept.fetch.MutableHeaders$get(kotlin.Int)/index">index</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="../-header/index.html"><span class="identifier">Header</span></a></code>
+<p>Gets the <a href="../-header/index.html">Header</a> at the specified <a href="get.html#mozilla.components.concept.fetch.MutableHeaders$get(kotlin.Int)/index">index</a>.</p>
+<code><span class="keyword">fun </span><span class="identifier">get</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.concept.fetch.MutableHeaders$get(kotlin.String)/name">name</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span></code>
+<p>Returns the last value corresponding to the specified header field name. Or null if the header does not exist.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get-all.html">getAll</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">getAll</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.concept.fetch.MutableHeaders$getAll(kotlin.String)/name">name</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html"><span class="identifier">List</span></a><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">&gt;</span></code>
+<p>Returns the list of values corresponding to the specified header field name.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="iterator.html">iterator</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">iterator</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-mutable-iterator/index.html"><span class="identifier">MutableIterator</span></a><span class="symbol">&lt;</span><a href="../-header/index.html"><span class="identifier">Header</span></a><span class="symbol">&gt;</span></code>
+<p>Returns an iterator over the headers that supports removing elements during iteration.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="set.html">set</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">set</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.concept.fetch.MutableHeaders$set(kotlin.Int, mozilla.components.concept.fetch.Header)/index">index</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.concept.fetch.MutableHeaders$set(kotlin.Int, mozilla.components.concept.fetch.Header)/header">header</span><span class="symbol">:</span>&nbsp;<a href="../-header/index.html"><span class="identifier">Header</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Sets the <a href="../-header/index.html">Header</a> at the specified <a href="set.html#mozilla.components.concept.fetch.MutableHeaders$set(kotlin.Int, mozilla.components.concept.fetch.Header)/index">index</a>.</p>
+<code><span class="keyword">fun </span><span class="identifier">set</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.concept.fetch.MutableHeaders$set(kotlin.String, kotlin.String)/name">name</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.concept.fetch.MutableHeaders$set(kotlin.String, kotlin.String)/value">value</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">MutableHeaders</span></a></code>
+<p>Set the only occurrence of the header; potentially overriding an already existing header.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

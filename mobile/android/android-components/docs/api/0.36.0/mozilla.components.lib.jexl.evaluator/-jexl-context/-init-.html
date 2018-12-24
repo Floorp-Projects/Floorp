@@ -1,0 +1,35 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>JexlContext.<init> - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.lib.jexl.evaluator</a>&nbsp;/&nbsp;<a href="index.html">JexlContext</a>&nbsp;/&nbsp;<a href="./-init-.html">&lt;init&gt;</a><br/>
+<br/>
+<h1>&lt;init&gt;</h1>
+<a name="mozilla.components.lib.jexl.evaluator.JexlContext$&lt;init&gt;(kotlin.Array((kotlin.Pair((kotlin.String, mozilla.components.lib.jexl.value.JexlValue)))))"></a>
+<code><span class="identifier">JexlContext</span><span class="symbol">(</span><span class="keyword">vararg</span> <span class="identifier" id="mozilla.components.lib.jexl.evaluator.JexlContext$<init>(kotlin.Array((kotlin.Pair((kotlin.String, mozilla.components.lib.jexl.value.JexlValue)))))/pairs">pairs</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-pair/index.html"><span class="identifier">Pair</span></a><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">,</span>&nbsp;<a href="../../mozilla.components.lib.jexl.value/-jexl-value/index.html"><span class="identifier">JexlValue</span></a><span class="symbol">&gt;</span><span class="symbol">)</span></code>
+<p>Variables defined in the <a href="index.html">JexlContext</a> are available to expressions.</p>
+<p>Example context:
+
+val context = JexlContext(
+    "employees" to JexlArray(
+        JexlObject(
+            "first" to "Sterling".toJexl(),
+            "last" to "Archer".toJexl(),
+            "age" to 36.toJexl()),
+        JexlObject(
+            "first" to "Malory".toJexl(),
+            "last" to "Archer".toJexl(),
+            "age" to 75.toJexl()),
+        JexlObject(
+            "first" to "Malory".toJexl(),
+            "last" to "Archer".toJexl(),
+            "age" to 33.toJexl())
+    )
+)
+</p>
+<p>This context can be accessed in an JEXL expression like this:</p>
+</BODY>
+</HTML>

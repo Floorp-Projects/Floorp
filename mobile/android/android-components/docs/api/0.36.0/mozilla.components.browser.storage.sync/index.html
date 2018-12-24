@@ -1,0 +1,66 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>mozilla.components.browser.storage.sync - android-components</title>
+<link rel="stylesheet" href="../../style.css">
+</HEAD>
+<BODY>
+<a href="../index.html">android-components</a>&nbsp;/&nbsp;<a href="./index.html">mozilla.components.browser.storage.sync</a><br/>
+<br/>
+<h2>Package mozilla.components.browser.storage.sync</h2>
+<h3>Types</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-connection/index.html">Connection</a></p>
+</td>
+<td>
+<code><span class="keyword">interface </span><span class="identifier">Connection</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/java/io/Closeable.html"><span class="identifier">Closeable</span></a></code>
+<p>An interface which describes a <a href="https://developer.android.com/reference/java/io/Closeable.html">Closeable</a> connection that provides access to a <a href="#">PlacesAPI</a>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-places-history-storage/index.html">PlacesHistoryStorage</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">class </span><span class="identifier">PlacesHistoryStorage</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="../mozilla.components.concept.storage/-history-storage/index.html"><span class="identifier">HistoryStorage</span></a><span class="symbol">, </span><a href="../mozilla.components.concept.storage/-syncable-store/index.html"><span class="identifier">SyncableStore</span></a><span class="symbol">&lt;</span><span class="identifier">SyncAuthInfo</span><span class="symbol">&gt;</span></code>
+<p>Implementation of the <a href="../mozilla.components.concept.storage/-history-storage/index.html">HistoryStorage</a> which is backed by a Rust Places lib via <a href="#">PlacesConnection</a>.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Type Aliases</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-sync-auth-info.html">SyncAuthInfo</a></p>
+</td>
+<td>
+<code><span class="keyword">typealias </span><span class="identifier">SyncAuthInfo</span>&nbsp;<span class="symbol">=</span>&nbsp;<span class="identifier">SyncAuthInfo</span></code></td>
+</tr>
+</tbody>
+</table>
+<h3>Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-a-u-t-o-c-o-m-p-l-e-t-e_-s-o-u-r-c-e_-n-a-m-e.html">AUTOCOMPLETE_SOURCE_NAME</a></p>
+</td>
+<td>
+<code><span class="keyword">const</span> <span class="keyword">val </span><span class="identifier">AUTOCOMPLETE_SOURCE_NAME</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="-d-b_-n-a-m-e.html">DB_NAME</a></p>
+</td>
+<td>
+<code><span class="keyword">const</span> <span class="keyword">val </span><span class="identifier">DB_NAME</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code></td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

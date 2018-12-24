@@ -1,0 +1,27 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>SessionManager.restore - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.browser.session</a>&nbsp;/&nbsp;<a href="index.html">SessionManager</a>&nbsp;/&nbsp;<a href="./restore.html">restore</a><br/>
+<br/>
+<h1>restore</h1>
+<a name="mozilla.components.browser.session.SessionManager$restore(mozilla.components.browser.session.SessionManager.Snapshot)"></a>
+<code><span class="keyword">fun </span><span class="identifier">restore</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.session.SessionManager$restore(mozilla.components.browser.session.SessionManager.Snapshot)/snapshot">snapshot</span><span class="symbol">:</span>&nbsp;<a href="-snapshot/index.html"><span class="identifier">Snapshot</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/SessionManager.kt#L195">(source)</a>
+<p>Restores sessions from the provided <a href="-snapshot/index.html">Snapshot</a>.
+Notification behaviour is as follows:</p>
+<ul><li>onSessionAdded notifications will not fire,</li>
+<li>onSessionSelected notification will fire exactly once if the snapshot isn't empty,</li>
+<li>once snapshot has been restored, and appropriate session has been selected, onSessionsRestored
+notification will fire.</li>
+</ul>
+<h3>Parameters</h3>
+<p><a name="snapshot"></a>
+<code>snapshot</code> - A <a href="-snapshot/index.html">Snapshot</a> which may be produced by <a href="create-snapshot.html">createSnapshot</a>.</p>
+<h3>Exceptions</h3>
+<p><a name="IllegalArgumentException"></a>
+<code>IllegalArgumentException</code> - if an empty snapshot is passed in.</p>
+</BODY>
+</HTML>
