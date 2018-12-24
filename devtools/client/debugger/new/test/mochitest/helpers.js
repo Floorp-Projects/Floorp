@@ -405,6 +405,34 @@ function isPaused(dbg) {
   return !!isPaused(getState());
 }
 
+// Make sure the debugger is paused at a certain source ID and line.
+function assertPausedAtSourceAndLine(dbg, expectedSourceId, expectedLine) {
+  assertPaused(dbg);
+
+  const {
+    selectors: { getWorkers, getFrames },
+    getState
+  } = dbg;
+
+  const frames = getFrames(getState());
+  ok(frames.length >= 1, "Got at least one frame");
+  const { sourceId, line } = frames[0].location;
+  ok(sourceId == expectedSourceId, "Frame has correct source");
+  ok(line == expectedLine, "Frame has correct line");
+}
+
+// Get any workers associated with the debugger.
+async function getWorkers(dbg) {
+  await dbg.actions.updateWorkers();
+
+  const {
+    selectors: { getWorkers },
+    getState
+  } = dbg;
+
+  return getWorkers(getState()).toJS();
+}
+
 async function waitForLoadedScopes(dbg) {
   const scopes = await waitForElement(dbg, "scopes");
   // Since scopes auto-expand, we can assume they are loaded when there is a tree node
