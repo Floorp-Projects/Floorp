@@ -40,9 +40,7 @@ permalink: /changelog/
 
   override fun onBackPressed() : Boolean {
     // Handling back presses when in fullscreen mode
-    if (fullScreenFeature.onBackPressed()) {
-      return true
-    }
+    return fullScreenFeature.onBackPressed()
   }
   ```
 * **feature-customtabs**
