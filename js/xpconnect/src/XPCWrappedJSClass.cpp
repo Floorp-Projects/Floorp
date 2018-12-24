@@ -261,136 +261,6 @@ JSObject* nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(JSContext* cx,
 
 /***************************************************************************/
 
-static bool GetNamedPropertyAsVariantRaw(XPCCallContext& ccx,
-                                         HandleObject aJSObj, HandleId aName,
-                                         nsIVariant** aResult, nsresult* pErr) {
-  nsXPTType type = {TD_INTERFACE_TYPE};
-  RootedValue val(ccx);
-
-  return JS_GetPropertyById(ccx, aJSObj, aName, &val) &&
-         XPCConvert::JSData2Native(ccx, aResult, val, type,
-                                   &NS_GET_IID(nsIVariant), 0, pErr);
-}
-
-// static
-nsresult nsXPCWrappedJSClass::GetNamedPropertyAsVariant(XPCCallContext& ccx,
-                                                        JSObject* aJSObjArg,
-                                                        HandleObject scope,
-                                                        const nsAString& aName,
-                                                        nsIVariant** aResult) {
-  JSContext* cx = ccx.GetJSContext();
-  RootedObject aJSObj(cx, aJSObjArg);
-
-  AutoScriptEvaluate scriptEval(cx);
-  if (!scriptEval.StartEvaluating(scope)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  // Wrap the string in a Value after the AutoScriptEvaluate, so that the
-  // resulting value ends up in the correct compartment.
-  nsStringBuffer* buf;
-  RootedValue value(cx);
-  if (!XPCStringConvert::ReadableToJSVal(ccx, aName, &buf, &value)) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  if (buf) {
-    buf->AddRef();
-  }
-
-  RootedId id(cx);
-  nsresult rv = NS_OK;
-  if (!JS_ValueToId(cx, value, &id) ||
-      !GetNamedPropertyAsVariantRaw(ccx, aJSObj, id, aResult, &rv)) {
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-    return NS_ERROR_FAILURE;
-  }
-  return NS_OK;
-}
-
-/***************************************************************************/
-
-// static
-nsresult nsXPCWrappedJSClass::BuildPropertyEnumerator(
-    XPCCallContext& ccx, JSObject* aJSObjArg, HandleObject scope,
-    nsISimpleEnumerator** aEnumerate) {
-  JSContext* cx = ccx.GetJSContext();
-  RootedObject aJSObj(cx, aJSObjArg);
-
-  AutoScriptEvaluate scriptEval(cx);
-  if (!scriptEval.StartEvaluating(aJSObj)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  Rooted<IdVector> idArray(cx, IdVector(cx));
-  if (!JS_Enumerate(cx, aJSObj, &idArray)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsCOMArray<nsIProperty> propertyArray(idArray.length());
-  RootedId idName(cx);
-  for (size_t i = 0; i < idArray.length(); i++) {
-    idName = idArray[i];
-
-    nsCOMPtr<nsIVariant> value;
-    nsresult rv;
-    if (!GetNamedPropertyAsVariantRaw(ccx, aJSObj, idName,
-                                      getter_AddRefs(value), &rv)) {
-      if (NS_FAILED(rv)) {
-        return rv;
-      }
-      return NS_ERROR_FAILURE;
-    }
-
-    RootedValue jsvalName(cx);
-    if (!JS_IdToValue(cx, idName, &jsvalName)) {
-      return NS_ERROR_FAILURE;
-    }
-
-    JSString* name = ToString(cx, jsvalName);
-    if (!name) {
-      return NS_ERROR_FAILURE;
-    }
-
-    nsAutoJSString autoStr;
-    if (!autoStr.init(cx, name)) {
-      return NS_ERROR_FAILURE;
-    }
-
-    nsCOMPtr<nsIProperty> property =
-        new xpcProperty(autoStr.get(), (uint32_t)autoStr.Length(), value);
-
-    if (!propertyArray.AppendObject(property)) {
-      return NS_ERROR_FAILURE;
-    }
-  }
-
-  return NS_NewArrayEnumerator(aEnumerate, propertyArray,
-                               NS_GET_IID(nsIProperty));
-}
-
-/***************************************************************************/
-
-NS_IMPL_ISUPPORTS(xpcProperty, nsIProperty)
-
-xpcProperty::xpcProperty(const char16_t* aName, uint32_t aNameLen,
-                         nsIVariant* aValue)
-    : mName(aName, aNameLen), mValue(aValue) {}
-
-NS_IMETHODIMP xpcProperty::GetName(nsAString& aName) {
-  aName.Assign(mName);
-  return NS_OK;
-}
-
-NS_IMETHODIMP xpcProperty::GetValue(nsIVariant** aValue) {
-  nsCOMPtr<nsIVariant> rval = mValue;
-  rval.forget(aValue);
-  return NS_OK;
-}
-
-/***************************************************************************/
-
 namespace {
 
 class WrappedJSNamed final : public nsINamed {
@@ -486,20 +356,6 @@ nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
   if (aIID.Equals(NS_GET_IID(nsIXPConnectJSObjectHolder))) {
     NS_ADDREF(self);
     *aInstancePtr = (void*)static_cast<nsIXPConnectJSObjectHolder*>(self);
-    return NS_OK;
-  }
-
-  if (aIID.Equals(NS_GET_IID(nsIPropertyBag))) {
-    // We only want to expose one implementation from our aggregate.
-    nsXPCWrappedJS* root = self->GetRootWrapper();
-
-    if (!root->IsValid()) {
-      *aInstancePtr = nullptr;
-      return NS_NOINTERFACE;
-    }
-
-    NS_ADDREF(root);
-    *aInstancePtr = (void*)static_cast<nsIPropertyBag*>(root);
     return NS_OK;
   }
 
@@ -624,7 +480,7 @@ nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
     if (NS_SUCCEEDED(rv) && wrapper) {
       // We need to go through the QueryInterface logic to make
       // this return the right thing for the various 'special'
-      // interfaces; e.g.  nsIPropertyBag.
+      // interfaces; e.g.  nsISimpleEnumerator.
       rv = wrapper->QueryInterface(aIID, aInstancePtr);
       return rv;
     }
