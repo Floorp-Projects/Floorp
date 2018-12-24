@@ -122,6 +122,14 @@ ModuleEvaluator::ModuleEvaluator() {
     sysDir->GetPath(mSysDirectory);
   }
 
+  nsCOMPtr<nsIFile> winSxSDir;
+  if (NS_SUCCEEDED(NS_GetSpecialDirectory(NS_WIN_WINDOWS_DIR,
+                                          getter_AddRefs(winSxSDir)))) {
+    if (NS_SUCCEEDED(winSxSDir->Append(NS_LITERAL_STRING("WinSxS")))) {
+      winSxSDir->GetPath(mWinSxSDirectory);
+    }
+  }
+
   nsCOMPtr<nsIFile> exeDir;
   if (NS_SUCCEEDED(
           NS_GetSpecialDirectory(NS_GRE_DIR, getter_AddRefs(exeDir)))) {
@@ -211,6 +219,16 @@ Maybe<bool> ModuleEvaluator::IsModuleTrusted(
       StringBeginsWith(dllFullPath, mSysDirectory,
                        nsCaseInsensitiveStringComparator())) {
     aDllInfo.mTrustFlags |= ModuleTrustFlags::SystemDirectory;
+    score += 50;
+  }
+
+  // Is the DLL in the WinSxS directory? Some Microsoft DLLs (e.g. comctl32) are
+  // loaded from here and don't have digital signatures. So while this is not a
+  // guarantee of trustworthiness, but is at least as valid as system32.
+  if (!mWinSxSDirectory.IsEmpty() &&
+      StringBeginsWith(dllFullPath, mWinSxSDirectory,
+                       nsCaseInsensitiveStringComparator())) {
+    aDllInfo.mTrustFlags |= ModuleTrustFlags::WinSxSDirectory;
     score += 50;
   }
 
