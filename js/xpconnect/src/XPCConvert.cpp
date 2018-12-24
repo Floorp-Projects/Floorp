@@ -1141,7 +1141,7 @@ bool XPCConvert::JSObject2NativeInterface(JSContext* cx, void** dest,
 
   // We need to go through the QueryInterface logic to make this return
   // the right thing for the various 'special' interfaces; e.g.
-  // nsIPropertyBag. We must use AggregatedQueryInterface in cases where
+  // nsISimpleEnumerator. We must use AggregatedQueryInterface in cases where
   // there is an outer to avoid nasty recursion.
   rv = aOuter ? wrapper->AggregatedQueryInterface(*iid, dest)
               : wrapper->QueryInterface(*iid, dest);
