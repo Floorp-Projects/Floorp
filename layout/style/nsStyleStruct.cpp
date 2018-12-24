@@ -3486,7 +3486,7 @@ nsStyleVisibility::nsStyleVisibility(const nsPresContext* aContext)
       mImageRendering(NS_STYLE_IMAGE_RENDERING_AUTO),
       mWritingMode(NS_STYLE_WRITING_MODE_HORIZONTAL_TB),
       mTextOrientation(NS_STYLE_TEXT_ORIENTATION_MIXED),
-      mColorAdjust(NS_STYLE_COLOR_ADJUST_ECONOMY) {
+      mColorAdjust(StyleColorAdjust::Economy) {
   MOZ_COUNT_CTOR(nsStyleVisibility);
 }
 
