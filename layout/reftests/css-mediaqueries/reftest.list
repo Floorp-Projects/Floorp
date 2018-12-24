@@ -9,12 +9,6 @@ fuzzy-if(Android,0-8,0-454) == mq_print_height.xhtml mq_print-ref.xhtml # bug 11
 fuzzy-if(Android,0-8,0-454) == mq_print_orientation.xhtml mq_print_orientation-ref.xhtml
 fuzzy-if(Android,0-8,0-454) == mq_print_maxheight.xhtml mq_print-ref.xhtml
 == mq_print_maxwidth.xhtml mq_print-ref.xhtml
-== mq_overflow-block.html mq_overflow-block-ref.html
-== mq_print_overflow-block.html mq_print_overflow-block-ref.html
-# This test doesn't actually work; does the reftest-paged class not deal with iframes?
-== mq_print_iframe_overflow-block.html mq_print_iframe_overflow-block-ref.html
-== mq_overflow-inline.html mq_overflow-inline-ref.html
-== mq_print_overflow-inline.html mq_print_overflow-inline-ref.html
 
 == mq_print_maxwidth_updown.xhtml mq_print-ref.xhtml
 == mq_print_maxheight_updown.xhtml mq_print-ref.xhtml
