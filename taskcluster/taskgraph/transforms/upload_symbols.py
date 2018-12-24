@@ -79,6 +79,13 @@ def fill_template(config, tasks):
         )
         task['treeherder'] = treeherder
 
+        if dep.attributes.get('nightly'):
+            # For nightly builds, we want to run these tasks if the build is run.
+            task['run-on-projects'] = dep.attributes.get('run_on_projects')
+        else:
+            # For non nightly builds, these can be requested to upload to the try symbol sever.
+            task['run-on-projects'] = ['try']
+
         # clear out the stuff that's not part of a task description
         del task['primary-dependency']
 
