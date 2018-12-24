@@ -10,11 +10,13 @@
 #include "mozilla/Attributes.h"
 #include "nsISMILType.h"
 
-class nsSMILFloatType : public nsISMILType {
+namespace mozilla {
+
+class SMILFloatType : public nsISMILType {
  public:
   // Singleton for nsSMILValue objects to hold onto.
-  static nsSMILFloatType* Singleton() {
-    static nsSMILFloatType sSingleton;
+  static SMILFloatType* Singleton() {
+    static SMILFloatType sSingleton;
     return &sSingleton;
   }
 
@@ -38,7 +40,9 @@ class nsSMILFloatType : public nsISMILType {
 
  private:
   // Private constructor: prevent instances beyond my singleton.
-  constexpr nsSMILFloatType() {}
+  constexpr SMILFloatType() {}
 };
+
+}  // namespace mozilla
 
 #endif  // NS_SMILFLOATTYPE_H_
