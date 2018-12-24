@@ -6,3 +6,6 @@ browser.jar:
     content/browser/policies/aboutPolicies.css              (content/aboutPolicies.css)
     content/browser/policies/aboutPolicies.xhtml            (content/aboutPolicies.xhtml)
     content/browser/policies/aboutPolicies.js               (content/aboutPolicies.js)
+    content/browser/policies/policies-active.svg            (content/policies-active.svg)
+    content/browser/policies/policies-documentation.svg     (content/policies-documentation.svg)
+    content/browser/policies/policies-error.svg             (content/policies-error.svg)
