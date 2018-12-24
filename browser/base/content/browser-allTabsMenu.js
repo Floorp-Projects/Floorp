@@ -47,14 +47,12 @@ var gTabsPanel = {
 
     this.allTabsView.addEventListener("ViewShowing", (e) => {
       PanelUI._ensureShortcutsShown(this.allTabsView);
-      e.target.querySelector(".undo-close-tab").disabled =
+      document.getElementById("allTabsMenu-undoCloseTab").disabled =
           SessionStore.getClosedTabCount(window) == 0;
 
       let containersEnabled = Services.prefs.getBoolPref("privacy.userContext.enabled")
                                 && !PrivateBrowsingUtils.isWindowPrivate(window);
       document.getElementById("allTabsMenu-containerTabsButton")
-        .hidden = !containersEnabled;
-      document.getElementById("allTabsMenu-containerTabsSeparator")
         .hidden = !containersEnabled;
 
       let hasHiddenTabs = gBrowser.visibleTabs.length < gBrowser.tabs.length;
@@ -133,5 +131,10 @@ var gTabsPanel = {
       PanelUI.showSubView(this.kElements.hiddenTabsView, this.hiddenTabsButton);
     }, {once: true});
     this.showAllTabsPanel();
+  },
+
+  searchTabs() {
+    focusAndSelectUrlBar();
+    gURLBar.typeRestrictToken(UrlbarTokenizer.RESTRICT.OPENPAGE);
   },
 };
