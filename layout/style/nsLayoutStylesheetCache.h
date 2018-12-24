@@ -77,24 +77,16 @@ class nsLayoutStylesheetCache final : public nsIObserver,
   static mozilla::StaticRefPtr<nsLayoutStylesheetCache> gStyleCache;
   static mozilla::StaticRefPtr<mozilla::css::Loader> gCSSLoader;
   static mozilla::StaticRefPtr<nsIURI> gUserContentSheetURL;
+
+#define STYLE_SHEET(identifier_, url_, lazy_) \
+  RefPtr<mozilla::StyleSheet> m##identifier_##Sheet;
+#include "mozilla/UserAgentStyleSheetList.h"
+#undef STYLE_SHEET
+
   RefPtr<mozilla::StyleSheet> mChromePreferenceSheet;
-  RefPtr<mozilla::StyleSheet> mContentEditableSheet;
   RefPtr<mozilla::StyleSheet> mContentPreferenceSheet;
-  RefPtr<mozilla::StyleSheet> mCounterStylesSheet;
-  RefPtr<mozilla::StyleSheet> mDesignModeSheet;
-  RefPtr<mozilla::StyleSheet> mFormsSheet;
-  RefPtr<mozilla::StyleSheet> mHTMLSheet;
-  RefPtr<mozilla::StyleSheet> mMathMLSheet;
-  RefPtr<mozilla::StyleSheet> mMinimalXULSheet;
-  RefPtr<mozilla::StyleSheet> mNoFramesSheet;
-  RefPtr<mozilla::StyleSheet> mNoScriptSheet;
-  RefPtr<mozilla::StyleSheet> mQuirkSheet;
-  RefPtr<mozilla::StyleSheet> mSVGSheet;
-  RefPtr<mozilla::StyleSheet> mScrollbarsSheet;
-  RefPtr<mozilla::StyleSheet> mUASheet;
   RefPtr<mozilla::StyleSheet> mUserChromeSheet;
   RefPtr<mozilla::StyleSheet> mUserContentSheet;
-  RefPtr<mozilla::StyleSheet> mXULSheet;
 };
 
 #endif
