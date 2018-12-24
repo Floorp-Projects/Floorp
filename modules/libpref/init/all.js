@@ -1286,7 +1286,7 @@ pref("dom.storage.enabled", true);
 // Whether or not LSNG (Next Generation Local Storage) is enabled.
 // See bug 1510410 for enabling this on Nightly.
 #ifdef NIGHTLY_BUILD
-pref("dom.storage.next_gen", true);
+pref("dom.storage.next_gen", false);
 #else
 pref("dom.storage.next_gen", false);
 #endif

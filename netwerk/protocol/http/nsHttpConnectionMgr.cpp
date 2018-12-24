@@ -35,7 +35,7 @@
 #include "mozilla/ChaosMode.h"
 #include "mozilla/Unused.h"
 #include "nsIURI.h"
-#include "nsIPropertyBag.h"
+#include "nsIXPConnect.h"
 
 #include "mozilla/Move.h"
 #include "mozilla/Telemetry.h"
@@ -541,8 +541,7 @@ class nsCompleteUpgradeData : public ARefBase {
 nsresult nsHttpConnectionMgr::CompleteUpgrade(
     nsAHttpConnection *aConn, nsIHttpUpgradeListener *aUpgradeListener) {
   // test if aUpgradeListener is a wrapped JsObject
-  // bit of a HACK
-  nsCOMPtr<nsIPropertyBag> wrapper = do_QueryInterface(aUpgradeListener);
+  nsCOMPtr<nsIXPConnectWrappedJS> wrapper = do_QueryInterface(aUpgradeListener);
 
   bool wrapped = !!wrapper;
 

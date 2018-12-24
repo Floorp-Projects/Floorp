@@ -286,10 +286,9 @@ function init() {
 
   // Event delegation on #categories element
   let menu = document.getElementById("categories");
-  menu.addEventListener("click", function click(e) {
-    if (e.target && e.target.parentNode == menu)
-      show(e.target);
-  });
+  for (let category of menu.children) {
+    category.addEventListener("click", () => show(category));
+  }
 
   if (location.hash) {
     let sectionButton = document.getElementById("category-" + location.hash.substring(1));
@@ -323,7 +322,7 @@ function show(button) {
   button.setAttribute("selected", "true");
 
   let title = document.getElementById("sectionTitle");
-  title.textContent = button.children[0].textContent;
+  title.textContent = button.children[1].textContent;
   location.hash = category;
   restoreScrollPosition(category);
 }

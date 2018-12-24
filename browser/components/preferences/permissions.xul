@@ -9,7 +9,6 @@
 <?xml-stylesheet href="chrome://browser/skin/preferences/preferences.css" type="text/css"?>
 
 <window id="PermissionsDialog"
-        windowtype="Browser:Permissions"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         data-l10n-id="permissions-window"
         data-l10n-attrs="title, style"
