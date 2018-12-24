@@ -1,5 +1,8 @@
 /* eslint-env webextensions */
 
+ChromeUtils.defineModuleGetter(this, "Preferences",
+                               "resource://gre/modules/Preferences.jsm");
+
 const TP_PREF = "privacy.trackingprotection.enabled";
 const TP_PBM_PREF = "privacy.trackingprotection.pbmode.enabled";
 const TP_LIST_PREF = "urlclassifier.trackingTable";
@@ -207,6 +210,7 @@ add_task(async function testContentBlockingCustomCategory() {
   let strictRadioOption = doc.getElementById("strictRadio");
   let standardRadioOption = doc.getElementById("standardRadio");
   let customRadioOption = doc.getElementById("customRadio");
+  let defaults = new Preferences({defaultBranch: true});
 
   standardRadioOption.click();
   await TestUtils.waitForCondition(() => !Services.prefs.prefHasUserValue(TP_PREF));
@@ -231,7 +235,20 @@ add_task(async function testContentBlockingCustomCategory() {
   await TestUtils.waitForCondition(() => Services.prefs.getStringPref(CAT_PREF) == "strict");
 
   // Changing the NCB_PREF should necessarily set CAT_PREF to "custom"
-  Services.prefs.setIntPref(NCB_PREF, Ci.nsICookieService.BEHAVIOR_ACCEPT);
+  let defaultNCB = defaults.get(NCB_PREF);
+  let nonDefaultNCB;
+  switch (defaultNCB) {
+  case Ci.nsICookieService.BEHAVIOR_ACCEPT:
+    nonDefaultNCB = Ci.nsICookieService.BEHAVIOR_REJECT;
+    break;
+  case Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER:
+    nonDefaultNCB = Ci.nsICookieService.BEHAVIOR_ACCEPT;
+    break;
+  default:
+    ok(false, "Unexpected default value found for " + NCB_PREF + ": " + defaultNCB);
+    break;
+  }
+  Services.prefs.setIntPref(NCB_PREF, nonDefaultNCB);
   await TestUtils.waitForCondition(() => Services.prefs.prefHasUserValue(NCB_PREF));
   is(Services.prefs.getStringPref(CAT_PREF), "custom", `${CAT_PREF} has been set to custom`);
 
