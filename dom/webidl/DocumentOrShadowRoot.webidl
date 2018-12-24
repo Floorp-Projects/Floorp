@@ -12,8 +12,16 @@
 interface DocumentOrShadowRoot {
   // Not implemented yet: bug 1430308.
   // Selection? getSelection();
-  Element? elementFromPoint (float x, float y);
-  sequence<Element> elementsFromPoint (float x, float y);
+  Element? elementFromPoint(float x, float y);
+  sequence<Element> elementsFromPoint(float x, float y);
+
+  // TODO: Avoid making these ChromeOnly, see:
+  // https://github.com/w3c/csswg-drafts/issues/556
+  [ChromeOnly]
+  Node? nodeFromPoint(float x, float y);
+  [ChromeOnly]
+  sequence<Node> nodesFromPoint(float x, float y);
+
   // Not implemented yet: bug 1430307.
   // CaretPosition? caretPositionFromPoint (float x, float y);
 
