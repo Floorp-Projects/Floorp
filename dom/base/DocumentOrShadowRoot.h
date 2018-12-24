@@ -48,7 +48,7 @@ class DocumentOrShadowRoot {
 
  public:
   explicit DocumentOrShadowRoot(nsIDocument&);
-  explicit DocumentOrShadowRoot(mozilla::dom::ShadowRoot&);
+  explicit DocumentOrShadowRoot(ShadowRoot&);
 
   // Unusual argument naming is because of cycle collection macros.
   static void Traverse(DocumentOrShadowRoot* tmp,
@@ -103,8 +103,10 @@ class DocumentOrShadowRoot {
   Element* GetFullscreenElement();
 
   Element* ElementFromPoint(float aX, float aY);
-  void ElementsFromPoint(float aX, float aY,
-                         nsTArray<RefPtr<mozilla::dom::Element>>& aElements);
+  nsINode* NodeFromPoint(float aX, float aY);
+
+  void ElementsFromPoint(float aX, float aY, nsTArray<RefPtr<Element>>&);
+  void NodesFromPoint(float aX, float aY, nsTArray<RefPtr<nsINode>>&);
 
   /**
    * Helper for elementFromPoint implementation that allows
@@ -214,8 +216,8 @@ class DocumentOrShadowRoot {
    */
   Element* GetRetargetedFocusedElement();
 
-  nsTArray<RefPtr<mozilla::StyleSheet>> mStyleSheets;
-  RefPtr<mozilla::dom::StyleSheetList> mDOMStyleSheets;
+  nsTArray<RefPtr<StyleSheet>> mStyleSheets;
+  RefPtr<StyleSheetList> mDOMStyleSheets;
 
   /*
    * mIdentifierMap works as follows for IDs:

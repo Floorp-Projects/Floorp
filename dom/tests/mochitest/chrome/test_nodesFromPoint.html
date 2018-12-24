@@ -1,0 +1,119 @@
+<!doctype html>
+<meta charset="utf-8">
+<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<style>
+  div { text-align: justify; max-height: 100vh; }
+</style>
+<div id="testElement"></div>
+<script>
+
+// TODO(emilio): Upstream to WPT once there's a spec for this and our
+// implementation is not [ChromeOnly].
+
+const testElement = document.getElementById("testElement");
+
+testElement.innerHTML = "X ".repeat(5000);
+
+{
+  const rect = testElement.getBoundingClientRect();
+
+  const node =
+    document.nodeFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2);
+  is(node, testElement.firstChild, "Should return the text node");
+
+  const nodes =
+    document.nodesFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2);
+
+  const expected = [testElement.firstChild, testElement, document.body, document.documentElement];
+  is(nodes.length, expected.length, "Not the amount of expected nodes");
+
+  for (let i = 0; i < nodes.length; ++i)
+    is(nodes[i], expected[i]);
+}
+
+// Make the test slotted, and add some fallback that we'll test later as well.
+{
+  // Work around the sanitizer by building the DOM manually....
+  const slot = document.createElement("slot");
+  slot.innerHTML = "Y ".repeat(5000);
+
+  const wrapper = document.createElement("div");
+  wrapper.appendChild(slot);
+
+  testElement.attachShadow({ mode: "open" }).appendChild(wrapper);
+}
+
+{
+  const rect = testElement.getBoundingClientRect();
+
+  const node =
+    document.nodeFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2);
+  is(node, testElement.firstChild, "Should return the text node");
+
+  const nodes =
+    document.nodesFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2);
+
+  const expected = [testElement.firstChild, testElement, document.body, document.documentElement];
+  is(nodes.length, expected.length, "Not the amount of expected nodes (returned nodes in the shadow?)");
+
+  for (let i = 0; i < nodes.length; ++i)
+    is(nodes[i], expected[i]);
+}
+
+{
+  const rect = testElement.getBoundingClientRect();
+
+  const node =
+    testElement.shadowRoot.nodeFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2);
+  is(node, testElement.shadowRoot.firstChild, "Should return the div wrapping the text node");
+
+  const nodes =
+    testElement.shadowRoot.nodesFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2);
+
+  const expected = [testElement.shadowRoot.firstChild];
+  is(nodes.length, expected.length, "Not the amount of expected nodes (returned nodes outside of the shadow?)");
+
+  for (let i = 0; i < nodes.length; ++i)
+    is(nodes[i], expected[i]);
+}
+
+// Show the fallback.
+testElement.firstChild.remove();
+
+{
+  const rect = testElement.getBoundingClientRect();
+
+  const fallbackText = testElement.shadowRoot.querySelector("slot").firstChild;
+
+  const node =
+    testElement.shadowRoot.nodeFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2);
+  is(node, fallbackText, "Should return the fallback text");
+
+  const nodes =
+    testElement.shadowRoot.nodesFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2);
+
+  const expected = [fallbackText, testElement.shadowRoot.firstChild];
+  is(nodes.length, expected.length, "Not the amount of expected nodes (returned nodes outside of the shadow?)");
+
+  for (let i = 0; i < nodes.length; ++i)
+    is(nodes[i], expected[i]);
+}
+
+// Test the fallback from the document.
+{
+  const rect = testElement.getBoundingClientRect();
+
+  const node =
+    document.nodeFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2);
+  is(node, testElement, "Should return the element, since the fallback text is in the shadow");
+
+  const nodes =
+    document.nodesFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2);
+
+  const expected = [testElement, document.body, document.documentElement];
+  is(nodes.length, expected.length, "Not the amount of expected nodes (returned nodes inside of the shadow?)");
+
+  for (let i = 0; i < nodes.length; ++i)
+    is(nodes[i], expected[i]);
+}
+</script>
