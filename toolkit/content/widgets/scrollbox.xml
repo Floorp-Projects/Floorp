@@ -22,8 +22,11 @@
       <xul:toolbarbutton class="scrollbutton-up"
                          anonid="scrollbutton-up"
                          xbl:inherits="orient,collapsed=notoverflowing,disabled=scrolledtostart"
-                         onmouseover="_startScroll(-1);"
-                         onmouseout="_stopScroll();"/>
+                         onclick="_onButtonClick(event);"
+                         onmousedown="_onButtonMouseDown(event, -1);"
+                         onmouseup="_onButtonMouseUp(event);"
+                         onmouseover="_onButtonMouseOver(-1);"
+                         onmouseout="_onButtonMouseOut();"/>
       <xul:spacer class="arrowscrollbox-overflow-start-indicator"
                   xbl:inherits="collapsed=scrolledtostart"/>
       <xul:scrollbox class="arrowscrollbox-scrollbox"
@@ -37,8 +40,11 @@
       <xul:toolbarbutton class="scrollbutton-down"
                          anonid="scrollbutton-down"
                          xbl:inherits="orient,collapsed=notoverflowing,disabled=scrolledtoend"
-                         onmouseover="_startScroll(1);"
-                         onmouseout="_stopScroll();"/>
+                         onclick="_onButtonClick(event);"
+                         onmousedown="_onButtonMouseDown(event, 1);"
+                         onmouseup="_onButtonMouseUp(event);"
+                         onmouseover="_onButtonMouseOver(1);"
+                         onmouseout="_onButtonMouseOut();"/>
     </content>
 
     <implementation>
@@ -157,6 +163,39 @@
         this.orient != "vertical" &&
         document.defaultView.getComputedStyle(this._scrollbox).direction == "rtl";
       ]]></field>
+
+      <method name="_onButtonClick">
+        <parameter name="event"/>
+        <body><![CDATA[
+        ]]></body>
+      </method>
+
+      <method name="_onButtonMouseDown">
+        <parameter name="event"/>
+        <parameter name="index"/>
+        <body><![CDATA[
+        ]]></body>
+      </method>
+
+      <method name="_onButtonMouseUp">
+        <parameter name="event"/>
+        <body><![CDATA[
+        ]]></body>
+      </method>
+
+      <method name="_onButtonMouseOver">
+        <parameter name="index"/>
+        <body><![CDATA[
+          this._startScroll(index);
+        ]]></body>
+      </method>
+
+      <method name="_onButtonMouseOut">
+        <parameter name="index"/>
+        <body><![CDATA[
+          this._stopScroll();
+        ]]></body>
+      </method>
 
       <method name="_boundsWithoutFlushing">
         <parameter name="element"/>
@@ -581,34 +620,6 @@
   </binding>
 
   <binding id="arrowscrollbox-clicktoscroll" extends="chrome://global/content/bindings/scrollbox.xml#arrowscrollbox">
-    <content>
-      <xul:toolbarbutton class="scrollbutton-up"
-                         xbl:inherits="orient,collapsed=notoverflowing,disabled=scrolledtostart"
-                         anonid="scrollbutton-up"
-                         onclick="_distanceScroll(event);"
-                         onmousedown="if (event.button == 0) _startScroll(-1);"
-                         onmouseup="if (event.button == 0) _stopScroll();"
-                         onmouseover="_continueScroll(-1);"
-                         onmouseout="_pauseScroll();"/>
-      <xul:spacer class="arrowscrollbox-overflow-start-indicator"
-                  xbl:inherits="collapsed=scrolledtostart"/>
-      <xul:scrollbox class="arrowscrollbox-scrollbox"
-                     anonid="scrollbox"
-                     flex="1"
-                     xbl:inherits="orient,align,pack,dir,smoothscroll">
-        <children/>
-      </xul:scrollbox>
-      <xul:spacer class="arrowscrollbox-overflow-end-indicator"
-                  xbl:inherits="collapsed=scrolledtoend"/>
-      <xul:toolbarbutton class="scrollbutton-down"
-                         xbl:inherits="orient,collapsed=notoverflowing,disabled=scrolledtoend"
-                         anonid="scrollbutton-down"
-                         onclick="_distanceScroll(event);"
-                         onmousedown="if (event.button == 0) _startScroll(1);"
-                         onmouseup="if (event.button == 0) _stopScroll();"
-                         onmouseover="_continueScroll(1);"
-                         onmouseout="_pauseScroll();"/>
-    </content>
     <implementation>
       <constructor><![CDATA[
         this._scrollDelay =
@@ -649,6 +660,45 @@
           this.requestHandle = window.requestAnimationFrame(this.sample.bind(this));
         },
       })]]></field>
+
+      <method name="_onButtonClick">
+        <parameter name="event"/>
+        <body><![CDATA[
+          this._distanceScroll(event);
+        ]]></body>
+      </method>
+
+      <method name="_onButtonMouseDown">
+        <parameter name="event"/>
+        <parameter name="index"/>
+        <body><![CDATA[
+          if (event.button == 0) {
+            this._startScroll(index);
+          }
+        ]]></body>
+      </method>
+
+      <method name="_onButtonMouseUp">
+        <parameter name="event"/>
+        <body><![CDATA[
+          if (event.button == 0) {
+            this._stopScroll();
+          }
+        ]]></body>
+      </method>
+
+      <method name="_onButtonMouseOver">
+        <parameter name="index"/>
+        <body><![CDATA[
+          this._continueScroll(index);
+        ]]></body>
+      </method>
+
+      <method name="_onButtonMouseOut">
+        <body><![CDATA[
+          this._pauseScroll();
+        ]]></body>
+      </method>
 
       <method name="_startScroll">
         <parameter name="index"/>
