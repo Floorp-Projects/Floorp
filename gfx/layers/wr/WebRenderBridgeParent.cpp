@@ -2012,6 +2012,9 @@ TransactionId WebRenderBridgeParent::FlushTransactionIdsForEpoch(
           } else if (fullPaintTime >= TimeDuration::FromMilliseconds(10)) {
             Telemetry::AccumulateCategorical(
                 LABELS_CONTENT_FRAME_TIME_REASON::MissedCompositeMid);
+          } else if (fullPaintTime >= TimeDuration::FromMilliseconds(5)) {
+            Telemetry::AccumulateCategorical(
+                LABELS_CONTENT_FRAME_TIME_REASON::MissedCompositeLow);
           } else {
             Telemetry::AccumulateCategorical(
                 LABELS_CONTENT_FRAME_TIME_REASON::MissedComposite);
