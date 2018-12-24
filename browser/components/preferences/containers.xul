@@ -8,7 +8,6 @@
 <?xml-stylesheet href="chrome://browser/skin/preferences/containers.css" type="text/css"?>
 
 <window id="ContainersDialog"
-        windowtype="Browser:Permissions"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         data-l10n-attrs="title, style"
         onload="gContainersManager.onLoad();"

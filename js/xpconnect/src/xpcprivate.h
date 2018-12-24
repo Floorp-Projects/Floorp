@@ -130,7 +130,6 @@
 #include "nsIConsoleService.h"
 
 #include "nsVariant.h"
-#include "nsIPropertyBag.h"
 #include "nsIProperty.h"
 #include "nsCOMArray.h"
 #include "nsTArray.h"
@@ -1653,16 +1652,6 @@ class nsXPCWrappedJSClass final : public nsIXPCWrappedJSClass {
   JSObject* CallQueryInterfaceOnJSObject(JSContext* cx, JSObject* jsobj,
                                          JS::HandleObject scope, REFNSIID aIID);
 
-  static nsresult BuildPropertyEnumerator(XPCCallContext& ccx, JSObject* aJSObj,
-                                          JS::HandleObject scope,
-                                          nsISimpleEnumerator** aEnumerate);
-
-  static nsresult GetNamedPropertyAsVariant(XPCCallContext& ccx,
-                                            JSObject* aJSObj,
-                                            JS::HandleObject scope,
-                                            const nsAString& aName,
-                                            nsIVariant** aResult);
-
  private:
   // aObj is the nsXPCWrappedJS's object. We used this as the callee (or |this|
   // if getter or setter).
@@ -1717,7 +1706,6 @@ class nsXPCWrappedJSClass final : public nsIXPCWrappedJSClass {
 class nsXPCWrappedJS final : protected nsAutoXPTCStub,
                              public nsIXPConnectWrappedJSUnmarkGray,
                              public nsSupportsWeakReference,
-                             public nsIPropertyBag,
                              public XPCRootSetElem {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -1725,7 +1713,6 @@ class nsXPCWrappedJS final : protected nsAutoXPTCStub,
   NS_DECL_NSIXPCONNECTWRAPPEDJS
   NS_DECL_NSIXPCONNECTWRAPPEDJSUNMARKGRAY
   NS_DECL_NSISUPPORTSWEAKREFERENCE
-  NS_DECL_NSIPROPERTYBAG
 
   NS_DECL_CYCLE_COLLECTION_SKIPPABLE_CLASS_AMBIGUOUS(nsXPCWrappedJS,
                                                      nsIXPConnectWrappedJS)
@@ -1837,20 +1824,6 @@ class nsXPCWrappedJS final : protected nsAutoXPTCStub,
 *
 ****************************************************************************
 ***************************************************************************/
-
-class xpcProperty : public nsIProperty {
- public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIPROPERTY
-
-  xpcProperty(const char16_t* aName, uint32_t aNameLen, nsIVariant* aValue);
-
- private:
-  virtual ~xpcProperty() {}
-
-  nsString mName;
-  nsCOMPtr<nsIVariant> mValue;
-};
 
 namespace xpc {
 
