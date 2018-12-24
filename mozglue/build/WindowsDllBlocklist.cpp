@@ -30,6 +30,7 @@
 #include "UntrustedDllsHandler.h"
 #include "nsAutoPtr.h"
 #include "nsWindowsDllInterceptor.h"
+#include "mozilla/CmdLineAndEnvUtils.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/StackWalk_windows.h"
@@ -743,6 +744,39 @@ MFBT_API void DllBlocklist_Initialize(uint32_t aInitFlags) {
 #endif
 
   if (IsUntrustedDllsHandlerEnabled()) {
+#ifdef ENABLE_TESTS
+    // Check whether we are running as an xpcshell test.
+    if (mozilla::EnvHasValue("XPCSHELL_TEST_PROFILE_DIR")) {
+      // For xpcshell tests, load this untrusted DLL early enough that the
+      // untrusted module evaluator counts it as a startup module.
+      // It is located in the current directory; the full path must be specified
+      // or LoadLibrary() fails during xpcshell tests with ERROR_MOD_NOT_FOUND.
+
+      // This buffer will hold current directory + dll name
+      wchar_t dllFullPath[MAX_PATH] = {};
+      static const wchar_t kTestDllName[] = L"\\untrusted-startup-test-dll.dll";
+
+      // The amount of the buffer available to store the current directory,
+      // leaving room for the dll name.
+      static const DWORD kBufferDirLen =
+          ArrayLength(dllFullPath) - ArrayLength(kTestDllName);
+
+      DWORD ret = ::GetCurrentDirectoryW(kBufferDirLen, dllFullPath);
+      if ((ret > kBufferDirLen) || !ret) {
+        // Buffer too small or the call failed
+        printf_stderr("Unable to load %S; GetCurrentDirectoryW  failed: %lu",
+                      kTestDllName, GetLastError());
+      } else {
+        wcscat_s(dllFullPath, kTestDllName);
+        HMODULE hTestDll = ::LoadLibraryW(dllFullPath);
+        if (!hTestDll) {
+          printf_stderr("Unable to load %S; LoadLibraryW failed: %lu",
+                        kTestDllName, GetLastError());
+        }
+      }
+    }
+#endif
+
     glue::UntrustedDllsHandler::Init();
   }
 
