@@ -666,34 +666,6 @@ size_t nsXPCWrappedJS::SizeOfIncludingThis(
 /***************************************************************************/
 
 NS_IMETHODIMP
-nsXPCWrappedJS::GetEnumerator(nsISimpleEnumerator** aEnumerate) {
-  AutoJSContext cx;
-  XPCCallContext ccx(cx);
-  if (!ccx.IsValid()) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  RootedObject scope(cx, GetJSObjectGlobal());
-  return nsXPCWrappedJSClass::BuildPropertyEnumerator(ccx, GetJSObject(), scope,
-                                                      aEnumerate);
-}
-
-NS_IMETHODIMP
-nsXPCWrappedJS::GetProperty(const nsAString& name, nsIVariant** _retval) {
-  AutoJSContext cx;
-  XPCCallContext ccx(cx);
-  if (!ccx.IsValid()) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  RootedObject scope(cx, GetJSObjectGlobal());
-  return nsXPCWrappedJSClass::GetNamedPropertyAsVariant(ccx, GetJSObject(),
-                                                        scope, name, _retval);
-}
-
-/***************************************************************************/
-
-NS_IMETHODIMP
 nsXPCWrappedJS::DebugDump(int16_t depth) {
 #ifdef DEBUG
   XPC_LOG_ALWAYS(
