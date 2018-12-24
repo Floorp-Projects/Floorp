@@ -934,8 +934,10 @@ enum class StyleTextRendering : uint8_t {
 };
 
 // color-adjust
-#define NS_STYLE_COLOR_ADJUST_ECONOMY 0
-#define NS_STYLE_COLOR_ADJUST_EXACT 1
+enum class StyleColorAdjust : uint8_t {
+  Economy = 0,
+  Exact = 1,
+};
 
 // color-interpolation and color-interpolation-filters
 #define NS_STYLE_COLOR_INTERPOLATION_AUTO 0
