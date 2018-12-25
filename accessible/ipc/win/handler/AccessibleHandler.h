@@ -22,7 +22,7 @@
 #define IIDFOR(iface) __GENIID(iface)
 #define NEWEST_IA2_IID IIDFOR(NEWEST_IA2_INTERFACE)
 
-#if defined(__midl)
+#if defined(__midl) || defined(__WIDL__)
 
 import NEWEST_IA2_IDL;
 
