@@ -435,12 +435,39 @@ impl FrameBuilder {
                                                        &mut render_tasks,
                                                        texture_cache_profile);
 
+        // TODO(emilio): Now that cached render tasks know how to create these
+        // extra passes, are the special render passes needed? i.e., does
+        // anything depend on the alpha -> color ordering? If not, seems we
+        // could just ditch them.
         let mut passes = vec![
             special_render_passes.alpha_glyph_pass,
             special_render_passes.color_glyph_pass,
         ];
 
+        {
+            let passes_start = passes.len();
+            let mut required_pass_count = 0;
+            for cacheable_render_task in &render_tasks.cacheable_render_tasks {
+                render_tasks.max_depth(
+                    *cacheable_render_task,
+                    0,
+                    &mut required_pass_count,
+                );
+            }
+            for _ in 0 .. required_pass_count {
+                passes.push(RenderPass::new_off_screen(screen_size));
+            }
+            for cacheable_render_task in &render_tasks.cacheable_render_tasks {
+                render_tasks.assign_to_passes(
+                    *cacheable_render_task,
+                    required_pass_count - 1,
+                    &mut passes[passes_start..],
+                );
+            }
+        }
+
         if let Some(main_render_task_id) = main_render_task_id {
+            let passes_start = passes.len();
             let mut required_pass_count = 0;
             render_tasks.max_depth(main_render_task_id, 0, &mut required_pass_count);
             assert_ne!(required_pass_count, 0);
@@ -455,7 +482,7 @@ impl FrameBuilder {
             render_tasks.assign_to_passes(
                 main_render_task_id,
                 required_pass_count - 1,
-                &mut passes[2..],
+                &mut passes[passes_start..],
             );
         }
 
