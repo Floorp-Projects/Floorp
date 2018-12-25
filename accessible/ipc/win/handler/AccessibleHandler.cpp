@@ -8,8 +8,6 @@
 #error This code is NOT for internal Gecko use!
 #endif  // defined(MOZILLA_INTERNAL_API)
 
-#define INITGUID
-
 #include "AccessibleHandler.h"
 #include "AccessibleHandlerControl.h"
 #include "HandlerChildEnumerator.h"
