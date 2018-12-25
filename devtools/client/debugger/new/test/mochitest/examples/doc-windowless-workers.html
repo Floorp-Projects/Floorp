@@ -1,0 +1,19 @@
+<!DOCTYPE HTML>
+<html>
+
+<script>
+var worker = new Worker("simple-worker.js");
+
+var count = 0;
+function timer() {
+  var n = ++count;
+  console.log("MAIN THREAD SAYS HELLO! " + n);
+}
+
+setInterval(timer, 1000);
+</script>
+
+<body>
+Hello World!
+</body>
+</html>
