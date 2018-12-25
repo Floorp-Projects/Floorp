@@ -45,7 +45,6 @@ use std::os::raw::c_void;
 use std::path::PathBuf;
 use std::sync::{Arc, RwLock};
 use texture_cache::{TextureCache, TextureCacheHandle, Eviction};
-use tiling::SpecialRenderPasses;
 use util::drain_filter;
 
 const DEFAULT_TILE_SIZE: TileSize = 512;
@@ -1296,7 +1295,6 @@ impl ResourceCache {
         glyph_keys: &[GlyphKey],
         gpu_cache: &mut GpuCache,
         render_task_tree: &mut RenderTaskTree,
-        render_passes: &mut SpecialRenderPasses,
     ) {
         debug_assert_eq!(self.state, State::AddResources);
 
@@ -1309,7 +1307,6 @@ impl ResourceCache {
             gpu_cache,
             &mut self.cached_render_tasks,
             render_task_tree,
-            render_passes,
         );
     }
 

@@ -4,7 +4,7 @@
 
 //! Module only available when pathfinder is activated
 
-use api::{DeviceIntPoint, DeviceIntSize, DevicePixel, FontRenderMode, FontKey, FontTemplate, NativeFontHandle};
+use api::{DeviceIntPoint, DeviceIntSize, DevicePixel, FontKey, FontTemplate, NativeFontHandle};
 use euclid::{TypedPoint2D, TypedSize2D, TypedVector2D};
 use pathfinder_font_renderer;
 use pathfinder_partitioner::mesh::Mesh as PathfinderMesh;
@@ -14,7 +14,6 @@ use render_task::{RenderTask, RenderTaskTree, RenderTaskCache, RenderTaskCacheKe
 use resource_cache::CacheItem;
 use std::ops::Deref;
 use std::sync::{Arc, Mutex, MutexGuard};
-use tiling::{RenderTargetKind, SpecialRenderPasses};
 use glyph_rasterizer::AddFont;
 use internal_types::ResourceCacheError;
 use glyph_cache::{GlyphCache, GlyphCacheEntry, CachedGlyphInfo};
@@ -122,31 +121,29 @@ impl GlyphRasterizer {
         gpu_cache: &mut GpuCache,
         render_task_cache: &mut RenderTaskCache,
         render_task_tree: &mut RenderTaskTree,
-        render_passes: &mut SpecialRenderPasses)
-    -> Result<(RenderTaskCacheEntryHandle,GlyphFormat), ()>
-    {
+    ) -> Result<(RenderTaskCacheEntryHandle,GlyphFormat), ()> {
         let mut pathfinder_font_context = self.font_contexts.lock_pathfinder_context();
         let render_task_cache_key = cached_glyph_info.render_task_cache_key;
         let (glyph_origin, glyph_size) = (cached_glyph_info.origin, render_task_cache_key.size);
         let user_data = [glyph_origin.x as f32, (glyph_origin.y - glyph_size.height) as f32, scale];
-        let handle = try!(render_task_cache.request_render_task(render_task_cache_key,
-                                                                texture_cache,
-                                                                gpu_cache,
-                                                                render_task_tree,
-                                                                Some(user_data),
-                                                                false,
-                                                                |render_tasks| {
+        let handle = render_task_cache.request_render_task(render_task_cache_key,
+                                                           texture_cache,
+                                                           gpu_cache,
+                                                           render_task_tree,
+                                                           Some(user_data),
+                                                           false,
+                                                           |render_tasks| {
             // TODO(pcwalton): Non-subpixel font render mode.
-            request_render_task_from_pathfinder(glyph_key,
-                                                font,
-                                                scale,
-                                                &glyph_origin,
-                                                &glyph_size,
-                                                &mut *pathfinder_font_context,
-                                                font.render_mode,
-                                                render_tasks,
-                                                render_passes)
-        }));
+            request_render_task_from_pathfinder(
+                glyph_key,
+                font,
+                scale,
+                &glyph_origin,
+                &glyph_size,
+                &mut *pathfinder_font_context,
+                render_tasks,
+            )
+        })?;
         Ok((handle, font.get_glyph_format()))
     }
 
@@ -159,7 +156,6 @@ impl GlyphRasterizer {
         gpu_cache: &mut GpuCache,
         render_task_cache: &mut RenderTaskCache,
         render_task_tree: &mut RenderTaskTree,
-        render_passes: &mut SpecialRenderPasses,
     ) {
         debug_assert!(self.font_contexts.lock_shared_context().has_font(&font.font_key));
 
@@ -219,15 +215,16 @@ impl GlyphRasterizer {
 
             let handle = match cached_glyph_info {
                 Some(glyph_info) => {
-                    match self.request_glyph_from_pathfinder_if_necessary(glyph_key,
-                                                                          &font,
-                                                                          scale,
-                                                                          glyph_info.clone(),
-                                                                          texture_cache,
-                                                                          gpu_cache,
-                                                                          render_task_cache,
-                                                                          render_task_tree,
-                                                                          render_passes) {
+                    match self.request_glyph_from_pathfinder_if_necessary(
+                        glyph_key,
+                        &font,
+                        scale,
+                        glyph_info.clone(),
+                        texture_cache,
+                        gpu_cache,
+                        render_task_cache,
+                        render_task_tree,
+                    ) {
                         Ok(_) => GlyphCacheEntry::Cached(glyph_info),
                         Err(_) => GlyphCacheEntry::Blank,
                     }
@@ -263,16 +260,15 @@ fn compute_embolden_amount(ppem: f32) -> TypedVector2D<f32, DevicePixel> {
                        f32::min(ppem * STEM_DARKENING_FACTOR_Y, MAX_STEM_DARKENING_AMOUNT))
 }
 
-fn request_render_task_from_pathfinder(glyph_key: &GlyphKey,
-                                       font: &FontInstance,
-                                       scale: f32,
-                                       glyph_origin: &DeviceIntPoint,
-                                       glyph_size: &DeviceIntSize,
-                                       font_context: &mut PathfinderFontContext,
-                                       render_mode: FontRenderMode,
-                                       render_tasks: &mut RenderTaskTree,
-                                       render_passes: &mut SpecialRenderPasses)
-                                       -> Result<RenderTaskId, ()> {
+fn request_render_task_from_pathfinder(
+    glyph_key: &GlyphKey,
+    font: &FontInstance,
+    scale: f32,
+    glyph_origin: &DeviceIntPoint,
+    glyph_size: &DeviceIntSize,
+    font_context: &mut PathfinderFontContext,
+    render_tasks: &mut RenderTaskTree,
+) -> Result<RenderTaskId, ()> {
     let size = font.size.scale_by(scale.recip());
     let pathfinder_font_instance = pathfinder_font_renderer::FontInstance {
         font_key: font.font_key.clone(),
@@ -302,21 +298,16 @@ fn request_render_task_from_pathfinder(glyph_key: &GlyphKey,
     let embolden_amount = compute_embolden_amount(size.to_f32_px());
 
     let location = RenderTaskLocation::Dynamic(None, *glyph_size);
-    let glyph_render_task = RenderTask::new_glyph(location.clone(),
-                                                  mesh,
-                                                  &glyph_origin,
-                                                  &subpixel_offset,
-                                                  font.render_mode,
-                                                  &embolden_amount);
+    let glyph_render_task = RenderTask::new_glyph(
+        location.clone(),
+        mesh,
+        &glyph_origin,
+        &subpixel_offset,
+        font.render_mode,
+        &embolden_amount,
+    );
 
-    let root_task_id = render_tasks.add(glyph_render_task);
-    let render_pass = match render_mode {
-        FontRenderMode::Mono | FontRenderMode::Alpha => &mut render_passes.alpha_glyph_pass,
-        FontRenderMode::Subpixel => &mut render_passes.color_glyph_pass,
-    };
-    render_pass.add_render_task(root_task_id, *glyph_size, RenderTargetKind::Color, &location);
-
-    Ok(root_task_id)
+    Ok(render_tasks.add(glyph_render_task))
 }
 
 pub struct NativeFontHandleWrapper<'a>(pub &'a NativeFontHandle);

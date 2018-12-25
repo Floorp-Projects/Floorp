@@ -15,7 +15,6 @@ use prim_store::{PrimitiveStore, PrimKeyCommonData, PrimTemplateCommonData, Vect
 use render_task::{RenderTaskTree};
 use renderer::{MAX_VERTEX_TEXTURE_WIDTH};
 use resource_cache::{ResourceCache};
-use tiling::SpecialRenderPasses;
 use util::{MatrixHelpers};
 use prim_store::PrimitiveInstanceKind;
 use std::ops;
@@ -298,7 +297,6 @@ impl TextRunPrimitive {
         resource_cache: &mut ResourceCache,
         gpu_cache: &mut GpuCache,
         render_tasks: &mut RenderTaskTree,
-        special_render_passes: &mut SpecialRenderPasses,
         scratch: &mut PrimitiveScratchBuffer,
     ) {
         let cache_dirty = self.update_font_instance(
@@ -326,7 +324,6 @@ impl TextRunPrimitive {
             &scratch.glyph_keys[self.glyph_keys_range],
             gpu_cache,
             render_tasks,
-            special_render_passes,
         );
     }
 }

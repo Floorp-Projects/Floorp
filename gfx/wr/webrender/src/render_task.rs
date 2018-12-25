@@ -29,7 +29,7 @@ use print_tree::{PrintTreePrinter};
 use render_backend::FrameId;
 use resource_cache::{CacheItem, ResourceCache};
 use surface::SurfaceCacheKey;
-use std::{cmp, ops, mem, usize, f32, i32, u32};
+use std::{ops, mem, usize, f32, i32, u32};
 use texture_cache::{TextureCache, TextureCacheHandle, Eviction};
 use tiling::{RenderPass, RenderTargetIndex};
 use tiling::{RenderTargetKind};
@@ -110,38 +110,32 @@ impl RenderTaskTree {
         }
     }
 
-    pub fn max_depth(&self, id: RenderTaskId, depth: usize, max_depth: &mut usize) {
-        #[cfg(debug_assertions)]
-        debug_assert_eq!(self.frame_id, id.frame_id);
-        let depth = depth + 1;
-        *max_depth = cmp::max(*max_depth, depth);
-        let task = &self.tasks[id.index as usize];
-        for child in &task.children {
-            self.max_depth(*child, depth, max_depth);
-        }
-    }
-
+    /// Assign the render tasks from the tree rooted at `id` to the `passes`
+    /// vector, so that the passes that we depend on end up _later_ in the pass
+    /// list.
+    ///
+    /// It is the caller's responsibility to reverse the list after calling into
+    /// us so that the passes end up in the right order.
     pub fn assign_to_passes(
         &self,
         id: RenderTaskId,
         pass_index: usize,
-        passes: &mut [RenderPass],
+        screen_size: DeviceIntSize,
+        passes: &mut Vec<RenderPass>,
     ) {
+        debug_assert!(pass_index < passes.len());
         #[cfg(debug_assertions)]
         debug_assert_eq!(self.frame_id, id.frame_id);
         let task = &self.tasks[id.index as usize];
 
-        for child in &task.children {
-            self.assign_to_passes(*child, pass_index - 1, passes);
-        }
-
-        // Sanity check - can be relaxed if needed
-        match task.location {
-            RenderTaskLocation::Fixed(..) => {
-                debug_assert!(pass_index == passes.len() - 1);
+        if !task.children.is_empty() {
+            let child_index = pass_index + 1;
+            if passes.len() == child_index {
+                passes.push(RenderPass::new_off_screen(screen_size));
             }
-            RenderTaskLocation::Dynamic(..) |
-            RenderTaskLocation::TextureCache { .. } => {}
+            for child in &task.children {
+                self.assign_to_passes(*child, child_index, screen_size, passes);
+            }
         }
 
         passes[pass_index].add_render_task(
@@ -754,21 +748,22 @@ impl RenderTask {
     }
 
     #[cfg(feature = "pathfinder")]
-    pub fn new_glyph(location: RenderTaskLocation,
-                     mesh: Mesh,
-                     origin: &DeviceIntPoint,
-                     subpixel_offset: &TypedPoint2D<f32, DevicePixel>,
-                     render_mode: FontRenderMode,
-                     embolden_amount: &TypedVector2D<f32, DevicePixel>)
-                     -> Self {
+    pub fn new_glyph(
+        location: RenderTaskLocation,
+        mesh: Mesh,
+        origin: &DeviceIntPoint,
+        subpixel_offset: &TypedPoint2D<f32, DevicePixel>,
+        render_mode: FontRenderMode,
+        embolden_amount: &TypedVector2D<f32, DevicePixel>,
+    ) -> Self {
         RenderTask {
             children: vec![],
-            location: location,
+            location,
             kind: RenderTaskKind::Glyph(GlyphTask {
                 mesh: Some(mesh),
                 origin: *origin,
                 subpixel_offset: *subpixel_offset,
-                render_mode: render_mode,
+                render_mode,
                 embolden_amount: *embolden_amount,
             }),
             clear_mode: ClearMode::Transparent,
