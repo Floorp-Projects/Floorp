@@ -710,8 +710,6 @@ mod test_glyph_rasterizer {
         use texture_cache::TextureCache;
         use glyph_cache::GlyphCache;
         use gpu_cache::GpuCache;
-        use tiling::SpecialRenderPasses;
-        use api::DeviceIntSize;
         use render_task::{RenderTaskCache, RenderTaskTree};
         use profiler::TextureCacheProfileCounters;
         use api::{FontKey, FontTemplate, FontRenderMode,
@@ -735,8 +733,6 @@ mod test_glyph_rasterizer {
         let mut texture_cache = TextureCache::new_for_testing(2048, 1024);
         let mut render_task_cache = RenderTaskCache::new();
         let mut render_task_tree = RenderTaskTree::new(FrameId::INVALID);
-        let mut special_render_passes = SpecialRenderPasses::new(&DeviceIntSize::new(1366, 768));
-
         let mut font_file =
             File::open("../wrench/reftests/text/VeraBd.ttf").expect("Couldn't open font file");
         let mut font_data = vec![];
@@ -778,7 +774,6 @@ mod test_glyph_rasterizer {
                 &mut gpu_cache,
                 &mut render_task_cache,
                 &mut render_task_tree,
-                &mut special_render_passes,
             );
         }
 

@@ -2286,7 +2286,6 @@ impl PrimitiveStore {
                     //           based on the current transform?
                     let scale_factor = TypedScale::new(1.0) * frame_context.device_pixel_scale;
                     let task_size = (LayoutSize::from_au(cache_key.size) * scale_factor).ceil().to_i32();
-                    let surfaces = &mut frame_state.surfaces;
 
                     // Request a pre-rendered image task.
                     // TODO(gw): This match is a bit untidy, but it should disappear completely
@@ -2310,9 +2309,7 @@ impl PrimitiveStore {
                                 cache_key.wavy_line_thickness.to_f32_px(),
                                 LayoutSize::from_au(cache_key.size),
                             );
-                            let task_id = render_tasks.add(task);
-                            surfaces[pic_context.surface_index.0].tasks.push(task_id);
-                            task_id
+                            render_tasks.add(task)
                         }
                     ));
                 }
@@ -2343,7 +2340,6 @@ impl PrimitiveStore {
                     frame_state.resource_cache,
                     frame_state.gpu_cache,
                     frame_state.render_tasks,
-                    frame_state.special_render_passes,
                     scratch,
                 );
             }
@@ -2376,7 +2372,6 @@ impl PrimitiveStore {
                 // from the render task cache. This ensures that the render task for
                 // this segment will be available for batching later in the frame.
                 let mut handles: SmallVec<[RenderTaskCacheEntryHandle; 8]> = SmallVec::new();
-                let surfaces = &mut frame_state.surfaces;
 
                 for segment in &border_data.border_segments {
                     // Update the cache key device size based on requested scale.
@@ -2403,11 +2398,7 @@ impl PrimitiveStore {
                                 ),
                             );
 
-                            let task_id = render_tasks.add(task);
-
-                            surfaces[pic_context.surface_index.0].tasks.push(task_id);
-
-                            task_id
+                            render_tasks.add(task)
                         }
                     ));
                 }
@@ -2460,11 +2451,7 @@ impl PrimitiveStore {
 
                 // Update the template this instane references, which may refresh the GPU
                 // cache with any shared template data.
-                image_data.update(
-                    pic_context.surface_index,
-                    common_data,
-                    frame_state,
-                );
+                image_data.update(common_data, frame_state);
 
                 let image_instance = &mut self.images[*image_instance_index];
 

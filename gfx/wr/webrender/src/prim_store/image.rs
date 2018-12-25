@@ -12,7 +12,6 @@ use display_list_flattener::{AsInstanceKind, CreateShadow, IsVisible};
 use frame_builder::FrameBuildingState;
 use gpu_cache::{GpuCacheHandle, GpuDataRequest};
 use intern::{DataStore, Handle, Internable, Interner, InternDebug, UpdateList};
-use picture::SurfaceIndex;
 use prim_store::{
     EdgeAaSegmentMask, OpacityBindingIndex, PrimitiveInstanceKind,
     PrimitiveOpacity, PrimitiveSceneData, PrimKey, PrimKeyCommonData,
@@ -175,12 +174,6 @@ impl ImageData {
     /// done if the cache entry is invalid (due to first use or eviction).
     pub fn update(
         &mut self,
-        // TODO(gw): Passing in surface_index here is not ideal. The primitive template
-        //           code shouldn't depend on current surface state. This is due to a
-        //           limitation in how render task caching works. We should fix this by
-        //           allowing render task caching to assign to surfaces implicitly
-        //           during pass allocation.
-        surface_index: SurfaceIndex,
         common: &mut PrimTemplateCommonData,
         frame_state: &mut FrameBuildingState,
     ) {
@@ -248,7 +241,6 @@ impl ImageData {
                                 request,
                                 texel_rect: self.sub_rect,
                             };
-                            let surfaces = &mut frame_state.surfaces;
 
                             // Request a pre-rendered image task.
                             *handle = Some(frame_state.resource_cache.request_render_task(
@@ -284,14 +276,8 @@ impl ImageData {
                                             task_id: cache_to_target_task_id,
                                         },
                                     );
-                                    let target_to_cache_task_id = render_tasks.add(target_to_cache_task);
 
-                                    // Hook this into the render task tree at the right spot.
-                                    surfaces[surface_index.0].tasks.push(target_to_cache_task_id);
-
-                                    // Pass the image opacity, so that the cached render task
-                                    // item inherits the same opacity properties.
-                                    target_to_cache_task_id
+                                    render_tasks.add(target_to_cache_task)
                                 }
                             ));
                         }

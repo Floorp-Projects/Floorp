@@ -10,6 +10,7 @@
 #include <algorithm>  // For std::find()
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/CmdLineAndEnvUtils.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
 #include "nsCOMPtr.h"
@@ -122,6 +123,14 @@ ModuleEvaluator::ModuleEvaluator() {
     sysDir->GetPath(mSysDirectory);
   }
 
+  nsCOMPtr<nsIFile> winSxSDir;
+  if (NS_SUCCEEDED(NS_GetSpecialDirectory(NS_WIN_WINDOWS_DIR,
+                                          getter_AddRefs(winSxSDir)))) {
+    if (NS_SUCCEEDED(winSxSDir->Append(NS_LITERAL_STRING("WinSxS")))) {
+      winSxSDir->GetPath(mWinSxSDirectory);
+    }
+  }
+
   nsCOMPtr<nsIFile> exeDir;
   if (NS_SUCCEEDED(
           NS_GetSpecialDirectory(NS_GRE_DIR, getter_AddRefs(exeDir)))) {
@@ -192,13 +201,21 @@ Maybe<bool> ModuleEvaluator::IsModuleTrusted(
   }
   ToLowerCase(dllLeafLower);  // To facilitate case-insensitive searching
 
-#if ENABLE_TESTS
+  // Accumulate a trustworthiness score as the module passes through several
+  // checks. If the score ever reaches above the threshold, it's considered
+  // trusted.
   int scoreThreshold = 100;
-  // For testing, these DLLs are hardcoded to pass through all criteria checks
-  // and still result in "untrusted" status.
-  if (dllLeafLower.EqualsLiteral("mozglue.dll") ||
-      dllLeafLower.EqualsLiteral("modules-test.dll")) {
-    scoreThreshold = 99999;
+#ifdef ENABLE_TESTS
+  // Check whether we are running as an xpcshell test.
+  if (mozilla::EnvHasValue("XPCSHELL_TEST_PROFILE_DIR")) {
+    // During xpcshell tests, these DLLs are hard-coded to pass through all
+    // criteria checks and still result in "untrusted" status, so they show up
+    // in the untrusted modules ping for the test to examine.
+    // Setting the threshold very high ensures the test will cover all criteria.
+    if (dllLeafLower.EqualsLiteral("untrusted-startup-test-dll.dll") ||
+        dllLeafLower.EqualsLiteral("modules-test.dll")) {
+      scoreThreshold = 99999;
+    }
   }
 #else
   static const int scoreThreshold = 100;
@@ -211,6 +228,16 @@ Maybe<bool> ModuleEvaluator::IsModuleTrusted(
       StringBeginsWith(dllFullPath, mSysDirectory,
                        nsCaseInsensitiveStringComparator())) {
     aDllInfo.mTrustFlags |= ModuleTrustFlags::SystemDirectory;
+    score += 50;
+  }
+
+  // Is the DLL in the WinSxS directory? Some Microsoft DLLs (e.g. comctl32) are
+  // loaded from here and don't have digital signatures. So while this is not a
+  // guarantee of trustworthiness, but is at least as valid as system32.
+  if (!mWinSxSDirectory.IsEmpty() &&
+      StringBeginsWith(dllFullPath, mWinSxSDirectory,
+                       nsCaseInsensitiveStringComparator())) {
+    aDllInfo.mTrustFlags |= ModuleTrustFlags::WinSxSDirectory;
     score += 50;
   }
 

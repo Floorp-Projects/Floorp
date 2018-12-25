@@ -1,8 +1,8 @@
-use digest;
+use digest::{Input, BlockInput, FixedOutput, Reset};
 use digest::generic_array::GenericArray;
 use digest::generic_array::typenum::{U28, U32, U48, U64, U128};
-use block_buffer::BlockBuffer1024;
-use byte_tools::{write_u64v_be, write_u32_be};
+use block_buffer::BlockBuffer;
+use block_buffer::byteorder::{BE, ByteOrder};
 
 use consts::{STATE_LEN, H384, H512, H512_TRUNC_224, H512_TRUNC_256};
 
@@ -12,7 +12,7 @@ use sha512_utils::compress512;
 use sha2_asm::compress512;
 
 type BlockSize = U128;
-pub type Block = [u8; 128];
+type Block = GenericArray<u8, BlockSize>;
 
 /// A structure that represents that state of a digest computation for the
 /// SHA-2 512 family of digest functions
@@ -24,8 +24,9 @@ struct Engine512State {
 impl Engine512State {
     fn new(h: &[u64; 8]) -> Engine512State { Engine512State { h: *h } }
 
-    pub fn process_block(&mut self, data: &Block) {
-        compress512(&mut self.h, data);
+    pub fn process_block(&mut self, block: &Block) {
+        let block = unsafe { &*(block.as_ptr() as *const [u8; 128])};
+        compress512(&mut self.h, block);
     }
 }
 
@@ -33,8 +34,8 @@ impl Engine512State {
 /// contains the logic necessary to perform the final calculations.
 #[derive(Clone)]
 struct Engine512 {
-    len: (u64, u64), // TODO: replace with u128 on stabilization
-    buffer: BlockBuffer1024,
+    len: (u64, u64), // TODO: replace with u128 on MSRV bump
+    buffer: BlockBuffer<BlockSize>,
     state: Engine512State,
 }
 
@@ -57,16 +58,14 @@ impl Engine512 {
 
     fn finish(&mut self) {
         let self_state = &mut self.state;
-        let (mut hi, mut lo) = self.len;
-        // TODO: change `len_padding_u128` to use BE
-        if cfg!(target_endian = "little") {
-            hi = hi.to_be();
-            lo = lo.to_be();
-        } else {
-            hi = hi.to_le();
-            lo = lo.to_le();
-        };
-        self.buffer.len_padding_u128(hi, lo, |d| self_state.process_block(d));
+        let (hi, lo) = self.len;
+        self.buffer.len128_padding_be(hi, lo, |d| self_state.process_block(d));
+    }
+
+    fn reset(&mut self, h: &[u64; STATE_LEN]) {
+        self.len = (0, 0);
+        self.buffer.reset();
+        self.state = Engine512State::new(h);
     }
 }
 
@@ -81,27 +80,33 @@ impl Default for Sha512 {
     fn default() -> Self { Sha512 { engine: Engine512::new(&H512) } }
 }
 
-impl digest::BlockInput for Sha512 {
+impl BlockInput for Sha512 {
     type BlockSize = BlockSize;
 }
 
-impl digest::Input for Sha512 {
-    fn process(&mut self, msg: &[u8]) { self.engine.input(msg); }
+impl Input for Sha512 {
+    fn input<B: AsRef<[u8]>>(&mut self, input: B) {
+        self.engine.input(input.as_ref());
+    }
 }
 
-impl digest::FixedOutput for Sha512 {
+impl FixedOutput for Sha512 {
     type OutputSize = U64;
 
     fn fixed_result(mut self) -> GenericArray<u8, Self::OutputSize> {
         self.engine.finish();
 
         let mut out = GenericArray::default();
-        write_u64v_be(out.as_mut_slice(), &self.engine.state.h[..]);
+        BE::write_u64_into(&self.engine.state.h[..], out.as_mut_slice());
         out
     }
 }
 
-
+impl Reset for Sha512 {
+    fn reset(&mut self) {
+        self.engine.reset(&H512);
+    }
+}
 
 /// The SHA-512 hash algorithm with the SHA-384 initial hash value. The result
 /// is truncated to 384 bits.
@@ -114,27 +119,33 @@ impl Default for Sha384 {
     fn default() -> Self { Sha384 { engine: Engine512::new(&H384) } }
 }
 
-impl digest::BlockInput for Sha384 {
+impl BlockInput for Sha384 {
     type BlockSize = BlockSize;
 }
 
-impl digest::Input for Sha384 {
-    fn process(&mut self, msg: &[u8]) { self.engine.input(msg); }
+impl Input for Sha384 {
+    fn input<B: AsRef<[u8]>>(&mut self, input: B) {
+        self.engine.input(input.as_ref());
+    }
 }
 
-impl digest::FixedOutput for Sha384 {
+impl FixedOutput for Sha384 {
     type OutputSize = U48;
 
     fn fixed_result(mut self) -> GenericArray<u8, Self::OutputSize> {
         self.engine.finish();
 
         let mut out = GenericArray::default();
-        write_u64v_be(out.as_mut_slice(), &self.engine.state.h[..6]);
+        BE::write_u64_into(&self.engine.state.h[..6], out.as_mut_slice());
         out
     }
 }
 
-
+impl Reset for Sha384 {
+    fn reset(&mut self) {
+        self.engine.reset(&H384);
+    }
+}
 
 /// The SHA-512 hash algorithm with the SHA-512/256 initial hash value. The
 /// result is truncated to 256 bits.
@@ -149,23 +160,31 @@ impl Default for Sha512Trunc256 {
     }
 }
 
-impl digest::BlockInput for Sha512Trunc256 {
+impl BlockInput for Sha512Trunc256 {
     type BlockSize = BlockSize;
 }
 
-impl digest::Input for Sha512Trunc256 {
-    fn process(&mut self, msg: &[u8]) { self.engine.input(msg); }
+impl Input for Sha512Trunc256 {
+    fn input<B: AsRef<[u8]>>(&mut self, input: B) {
+        self.engine.input(input.as_ref());
+    }
 }
 
-impl digest::FixedOutput for Sha512Trunc256 {
+impl FixedOutput for Sha512Trunc256 {
     type OutputSize = U32;
 
     fn fixed_result(mut self) -> GenericArray<u8, Self::OutputSize> {
         self.engine.finish();
 
         let mut out = GenericArray::default();
-        write_u64v_be(out.as_mut_slice(), &self.engine.state.h[..4]);
+        BE::write_u64_into(&self.engine.state.h[..4], out.as_mut_slice());
         out
+    }
+}
+
+impl Reset for Sha512Trunc256 {
+    fn reset(&mut self) {
+        self.engine.reset(&H512_TRUNC_256);
     }
 }
 
@@ -182,24 +201,32 @@ impl Default for Sha512Trunc224 {
     }
 }
 
-impl digest::BlockInput for Sha512Trunc224 {
+impl BlockInput for Sha512Trunc224 {
     type BlockSize = BlockSize;
 }
 
-impl digest::Input for Sha512Trunc224 {
-    fn process(&mut self, msg: &[u8]) { self.engine.input(msg); }
+impl Input for Sha512Trunc224 {
+    fn input<B: AsRef<[u8]>>(&mut self, input: B) {
+        self.engine.input(input.as_ref());
+    }
 }
 
-impl digest::FixedOutput for Sha512Trunc224 {
+impl FixedOutput for Sha512Trunc224 {
     type OutputSize = U28;
 
     fn fixed_result(mut self) -> GenericArray<u8, Self::OutputSize> {
         self.engine.finish();
 
         let mut out = GenericArray::default();
-        write_u64v_be(&mut out[..24], &self.engine.state.h[..3]);
-        write_u32_be(&mut out[24..28], (self.engine.state.h[3] >> 32) as u32);
+        BE::write_u64_into(&self.engine.state.h[..3], &mut out[..24]);
+        BE::write_u32(&mut out[24..28], (self.engine.state.h[3] >> 32) as u32);
         out
+    }
+}
+
+impl Reset for Sha512Trunc224 {
+    fn reset(&mut self) {
+        self.engine.reset(&H512_TRUNC_224);
     }
 }
 
@@ -207,3 +234,8 @@ impl_opaque_debug!(Sha384);
 impl_opaque_debug!(Sha512);
 impl_opaque_debug!(Sha512Trunc224);
 impl_opaque_debug!(Sha512Trunc256);
+
+impl_write!(Sha384);
+impl_write!(Sha512);
+impl_write!(Sha512Trunc224);
+impl_write!(Sha512Trunc256);

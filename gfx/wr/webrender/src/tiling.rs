@@ -1159,17 +1159,3 @@ impl ScalingTask {
         instances.push(instance);
     }
 }
-
-pub struct SpecialRenderPasses {
-    pub alpha_glyph_pass: RenderPass,
-    pub color_glyph_pass: RenderPass,
-}
-
-impl SpecialRenderPasses {
-    pub fn new(screen_size: &DeviceIntSize) -> SpecialRenderPasses {
-        SpecialRenderPasses {
-            alpha_glyph_pass: RenderPass::new_off_screen(*screen_size),
-            color_glyph_pass: RenderPass::new_off_screen(*screen_size),
-        }
-    }
-}

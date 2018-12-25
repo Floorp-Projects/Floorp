@@ -88,6 +88,7 @@ This is a bitfield indicating whether various attributes apply to the module.
 * ``16`` if the module has the same location and version information as the Firefox executable
 * ``32`` if the module is located in the system directory
 * ``64`` if the module is a known keyboard layout DLL
+* ``128`` if the module is located in the Windows Side-by-side directory
 
 payload.combinedStacks
 ----------------------
