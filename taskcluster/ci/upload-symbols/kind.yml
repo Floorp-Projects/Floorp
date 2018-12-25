@@ -31,14 +31,5 @@ job-template:
         using: mach
         mach: python toolkit/crashreporter/tools/upload_symbols.py https://queue.taskcluster.net/v1/task/${ARTIFACT_TASKID}/artifacts/public/build/target.crashreporter-symbols-full.zip
         sparse-profile: upload-symbols
-    optimization:
-        only-if-dependencies-run: null
     scopes:
         - secrets:get:project/releng/gecko/build/level-{level}/gecko-symbol-upload
-    run-on-projects:
-        by-build-platform:
-            .*devedition.*: ['mozilla-beta', 'maple']
-            # Only upload symbols for nightlies on most branches.
-            .*(?<!-devedition)-nightly: ['all']
-            # Allow symbol upload for any build type on try.
-            default: ['try']
