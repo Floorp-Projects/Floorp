@@ -7,7 +7,7 @@
 #include "nsSVGNumber2.h"
 #include "mozilla/Attributes.h"
 #include "nsContentUtils.h"  // NS_ENSURE_FINITE
-#include "nsSMILFloatType.h"
+#include "SMILFloatType.h"
 #include "nsSMILValue.h"
 #include "nsSVGAttrTearoffTable.h"
 #include "SVGContentUtils.h"
@@ -126,7 +126,7 @@ nsresult nsSVGNumber2::SMILNumber::ValueFromString(
     return NS_ERROR_DOM_SYNTAX_ERR;
   }
 
-  nsSMILValue val(nsSMILFloatType::Singleton());
+  nsSMILValue val(SMILFloatType::Singleton());
   val.mU.mDouble = value;
   aValue = val;
   aPreventCachingOfSandwich = false;
@@ -135,7 +135,7 @@ nsresult nsSVGNumber2::SMILNumber::ValueFromString(
 }
 
 nsSMILValue nsSVGNumber2::SMILNumber::GetBaseValue() const {
-  nsSMILValue val(nsSMILFloatType::Singleton());
+  nsSMILValue val(SMILFloatType::Singleton());
   val.mU.mDouble = mVal->mBaseVal;
   return val;
 }
@@ -149,9 +149,9 @@ void nsSVGNumber2::SMILNumber::ClearAnimValue() {
 }
 
 nsresult nsSVGNumber2::SMILNumber::SetAnimValue(const nsSMILValue& aValue) {
-  NS_ASSERTION(aValue.mType == nsSMILFloatType::Singleton(),
+  NS_ASSERTION(aValue.mType == SMILFloatType::Singleton(),
                "Unexpected type to assign animated value");
-  if (aValue.mType == nsSMILFloatType::Singleton()) {
+  if (aValue.mType == SMILFloatType::Singleton()) {
     mVal->SetAnimValue(float(aValue.mU.mDouble), mSVGElement);
   }
   return NS_OK;
