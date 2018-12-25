@@ -1,10 +1,12 @@
-#![recursion_limit="128"]
+#![recursion_limit = "128"]
 #![no_std]
 #[macro_use]
 extern crate generic_array;
 use core::cell::Cell;
-use core::ops::Drop;
+use core::ops::{Add, Drop};
 use generic_array::GenericArray;
+use generic_array::functional::*;
+use generic_array::sequence::*;
 use generic_array::typenum::{U1, U3, U4, U97};
 
 #[test]
@@ -33,8 +35,7 @@ fn test_drop() {
 
     let drop_counter = Cell::new(0);
     {
-        let _: GenericArray<TestDrop, U3> =
-            arr![TestDrop; TestDrop(&drop_counter),
+        let _: GenericArray<TestDrop, U3> = arr![TestDrop; TestDrop(&drop_counter),
                            TestDrop(&drop_counter),
                            TestDrop(&drop_counter)];
     }
@@ -54,11 +55,6 @@ fn test_copy() {
     // if GenericArray is not copy, this should fail as a use of a moved value
     assert_eq!(test[1], 2);
     assert_eq!(test2[0], 1);
-}
-
-#[test]
-fn test_iter_flat_map() {
-    assert!((0..5).flat_map(|i| arr![i32; 2 * i, 2 * i + 1]).eq(0..10));
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -154,16 +150,138 @@ fn test_zip() {
     let a: GenericArray<_, U4> = GenericArray::generate(|i| i + 1);
     let b: GenericArray<_, U4> = GenericArray::generate(|i| i as i32 * 4);
 
-    let c = a.zip(b, |r, l| r as i32 + l);
+    // Uses reference and non-reference arguments
+    let c = (&a).zip(b, |r, l| *r as i32 + l);
 
     assert_eq!(c, arr![i32; 1, 6, 11, 16]);
 }
 
 #[test]
-fn test_from_iter() {
+#[should_panic]
+fn test_from_iter_short() {
     use core::iter::repeat;
 
     let a: GenericArray<_, U4> = repeat(11).take(3).collect();
 
     assert_eq!(a, arr![i32; 11, 11, 11, 0]);
+}
+
+#[test]
+fn test_from_iter() {
+    use core::iter::{once, repeat};
+
+    let a: GenericArray<_, U4> = repeat(11).take(3).chain(once(0)).collect();
+
+    assert_eq!(a, arr![i32; 11, 11, 11, 0]);
+}
+
+#[test]
+fn test_sizes() {
+    #![allow(dead_code)]
+    use core::mem::{size_of, size_of_val};
+
+    #[derive(Debug, Copy, Clone)]
+    #[repr(C)]
+    #[repr(packed)]
+    struct Test {
+        t: u16,
+        s: u32,
+        r: u16,
+        f: u16,
+        o: u32,
+    }
+
+    assert_eq!(size_of::<Test>(), 14);
+
+    assert_eq!(size_of_val(&arr![u8; 1, 2, 3]), size_of::<u8>() * 3);
+    assert_eq!(size_of_val(&arr![u32; 1]), size_of::<u32>() * 1);
+    assert_eq!(size_of_val(&arr![u64; 1, 2, 3, 4]), size_of::<u64>() * 4);
+
+    assert_eq!(size_of::<GenericArray<Test, U97>>(), size_of::<Test>() * 97);
+}
+
+#[test]
+fn test_append() {
+    let a = arr![i32; 1, 2, 3];
+
+    let b = a.append(4);
+
+    assert_eq!(b, arr![i32; 1, 2, 3, 4]);
+}
+
+#[test]
+fn test_prepend() {
+    let a = arr![i32; 1, 2, 3];
+
+    let b = a.prepend(4);
+
+    assert_eq!(b, arr![i32; 4, 1, 2, 3]);
+}
+
+#[test]
+fn test_pop() {
+    let a = arr![i32; 1, 2, 3, 4];
+
+    let (init, last) = a.pop_back();
+
+    assert_eq!(init, arr![i32; 1, 2, 3]);
+    assert_eq!(last, 4);
+
+    let (head, tail) = a.pop_front();
+
+    assert_eq!(head, 1);
+    assert_eq!(tail, arr![i32; 2, 3, 4]);
+}
+
+#[test]
+fn test_split() {
+    let a = arr![i32; 1, 2, 3, 4];
+
+    let (b, c) = a.split();
+
+    assert_eq!(b, arr![i32; 1]);
+    assert_eq!(c, arr![i32; 2, 3, 4]);
+
+    let (e, f) = a.split();
+
+    assert_eq!(e, arr![i32; 1, 2]);
+    assert_eq!(f, arr![i32; 3, 4]);
+}
+
+#[test]
+fn test_concat() {
+    let a = arr![i32; 1, 2];
+    let b = arr![i32; 3, 4];
+
+    let c = a.concat(b);
+
+    assert_eq!(c, arr![i32; 1, 2, 3, 4]);
+
+    let (d, e) = c.split();
+
+    assert_eq!(d, arr![i32; 1]);
+    assert_eq!(e, arr![i32; 2, 3, 4]);
+}
+
+#[test]
+fn test_fold() {
+    let a = arr![i32; 1, 2, 3, 4];
+
+    assert_eq!(10, a.fold(0, |a, x| a + x));
+}
+
+fn sum_generic<S>(s: S) -> i32
+where
+    S: FunctionalSequence<i32>,
+    S::Item: Add<i32, Output = i32>, // `+`
+    i32: Add<S::Item, Output = i32>, // reflexive
+{
+    s.fold(0, |a, x| a + x)
+}
+
+#[test]
+fn test_sum() {
+    let a = sum_generic(arr![i32; 1, 2, 3, 4]);
+
+    assert_eq!(a, 10);
 }

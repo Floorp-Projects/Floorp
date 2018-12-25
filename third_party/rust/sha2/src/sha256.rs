@@ -1,8 +1,8 @@
-use digest;
+use digest::{Input, BlockInput, FixedOutput, Reset};
 use digest::generic_array::GenericArray;
 use digest::generic_array::typenum::{U28, U32, U64};
-use block_buffer::BlockBuffer512;
-use byte_tools::write_u32v_be;
+use block_buffer::BlockBuffer;
+use block_buffer::byteorder::{BE, ByteOrder};
 
 use consts::{STATE_LEN, H224, H256};
 
@@ -12,7 +12,7 @@ use sha256_utils::compress256;
 use sha2_asm::compress256;
 
 type BlockSize = U64;
-pub type Block = [u8; 64];
+type Block = GenericArray<u8, BlockSize>;
 
 /// A structure that represents that state of a digest computation for the
 /// SHA-2 512 family of digest functions
@@ -24,8 +24,9 @@ struct Engine256State {
 impl Engine256State {
     fn new(h: &[u32; STATE_LEN]) -> Engine256State { Engine256State { h: *h } }
 
-    pub fn process_block(&mut self, data: &Block) {
-        compress256(&mut self.h, data);
+    pub fn process_block(&mut self, block: &Block) {
+        let block = unsafe { &*(block.as_ptr() as *const [u8; 64]) };
+        compress256(&mut self.h, block);
     }
 }
 
@@ -34,7 +35,7 @@ impl Engine256State {
 #[derive(Clone)]
 struct Engine256 {
     len: u64,
-    buffer: BlockBuffer512,
+    buffer: BlockBuffer<BlockSize>,
     state: Engine256State,
 }
 
@@ -57,9 +58,13 @@ impl Engine256 {
     fn finish(&mut self) {
         let self_state = &mut self.state;
         let l = self.len;
-        // TODO: replace with `len_padding_be` method
-        let l = if cfg!(target_endian = "little") { l.to_be() } else { l.to_le() };
-        self.buffer.len_padding(l, |input| self_state.process_block(input));
+        self.buffer.len64_padding::<BE, _>(l, |b| self_state.process_block(b));
+    }
+
+    fn reset(&mut self, h: &[u32; STATE_LEN]) {
+        self.len = 0;
+        self.buffer.reset();
+        self.state = Engine256State::new(h);
     }
 }
 
@@ -74,22 +79,30 @@ impl Default for Sha256 {
     fn default() -> Self { Sha256 { engine: Engine256::new(&H256) } }
 }
 
-impl digest::BlockInput for Sha256 {
+impl BlockInput for Sha256 {
     type BlockSize = BlockSize;
 }
 
-impl digest::Input for Sha256 {
-    fn process(&mut self, msg: &[u8]) { self.engine.input(msg); }
+impl Input for Sha256 {
+    fn input<B: AsRef<[u8]>>(&mut self, input: B) {
+        self.engine.input(input.as_ref());
+    }
 }
 
-impl digest::FixedOutput for Sha256 {
+impl FixedOutput for Sha256 {
     type OutputSize = U32;
 
     fn fixed_result(mut self) -> GenericArray<u8, Self::OutputSize> {
         self.engine.finish();
         let mut out = GenericArray::default();
-        write_u32v_be(out.as_mut_slice(), &self.engine.state.h);
+        BE::write_u32_into(&self.engine.state.h, out.as_mut_slice());
         out
+    }
+}
+
+impl Reset for Sha256 {
+    fn reset(&mut self) {
+        self.engine.reset(&H256);
     }
 }
 
@@ -104,24 +117,35 @@ impl Default for Sha224 {
     fn default() -> Self { Sha224 { engine: Engine256::new(&H224) } }
 }
 
-impl digest::BlockInput for Sha224 {
+impl BlockInput for Sha224 {
     type BlockSize = BlockSize;
 }
 
-impl digest::Input for Sha224 {
-    fn process(&mut self, msg: &[u8]) { self.engine.input(msg); }
+impl Input for Sha224 {
+    fn input<B: AsRef<[u8]>>(&mut self, input: B) {
+        self.engine.input(input.as_ref());
+    }
 }
 
-impl digest::FixedOutput for Sha224 {
+impl FixedOutput for Sha224 {
     type OutputSize = U28;
 
     fn fixed_result(mut self) -> GenericArray<u8, Self::OutputSize> {
         self.engine.finish();
         let mut out = GenericArray::default();
-        write_u32v_be(out.as_mut_slice(), &self.engine.state.h[..7]);
+        BE::write_u32_into(&self.engine.state.h[..7], out.as_mut_slice());
         out
+    }
+}
+
+impl Reset for Sha224 {
+    fn reset(&mut self) {
+        self.engine.reset(&H224);
     }
 }
 
 impl_opaque_debug!(Sha224);
 impl_opaque_debug!(Sha256);
+
+impl_write!(Sha224);
+impl_write!(Sha256);

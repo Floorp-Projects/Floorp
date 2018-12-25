@@ -2,8 +2,7 @@
 
 use simd::u32x4;
 use consts::{BLOCK_LEN, K32X4};
-use byte_tools::{read_u32v_be};
-use sha256::Block;
+use block_buffer::byteorder::{BE, ByteOrder};
 
 /// Not an intrinsic, but works like an unaligned load.
 #[inline]
@@ -260,8 +259,8 @@ fn sha256_digest_block_u32(state: &mut [u32; 8], block: &[u32; 16]) {
 /// implemented by any CPU (at the time of this writing), and so they are
 /// emulated in this library until the instructions become more common, and gain
 ///  support in LLVM (and GCC, etc.).
-pub fn compress256(state: &mut [u32; 8], block: &Block) {
+pub fn compress256(state: &mut [u32; 8], block: &[u8; 64]) {
     let mut block_u32 = [0u32; BLOCK_LEN];
-    read_u32v_be(&mut block_u32[..], block);
+    BE::read_u32_into(block, &mut block_u32[..]);
     sha256_digest_block_u32(state, &block_u32);
 }

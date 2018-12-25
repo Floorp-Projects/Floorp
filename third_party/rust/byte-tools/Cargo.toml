@@ -12,9 +12,9 @@
 
 [package]
 name = "byte-tools"
-version = "0.2.0"
-authors = ["The Rust-Crypto Project Developers"]
-description = "Utility functions for working with bytes"
+version = "0.3.0"
+authors = ["RustCrypto Developers"]
+description = "Bytes related utility functions"
 documentation = "https://docs.rs/byte-tools"
 keywords = ["bytes"]
 license = "MIT/Apache-2.0"

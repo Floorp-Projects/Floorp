@@ -3,6 +3,8 @@ use core::borrow::{Borrow, BorrowMut};
 use core::cmp::Ordering;
 use core::fmt::{self, Debug};
 use core::hash::{Hash, Hasher};
+use functional::*;
+use sequence::*;
 
 impl<T: Default, N> Default for GenericArray<T, N>
 where
@@ -19,7 +21,7 @@ where
     N: ArrayLength<T>,
 {
     fn clone(&self) -> GenericArray<T, N> {
-        self.map_ref(|x| x.clone())
+        self.map(|x| x.clone())
     }
 }
 

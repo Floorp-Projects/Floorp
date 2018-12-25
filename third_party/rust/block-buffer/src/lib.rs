@@ -1,144 +1,170 @@
 #![no_std]
-#[macro_use]
-extern crate arrayref;
+pub extern crate byteorder;
+pub extern crate block_padding;
+pub extern crate generic_array;
 extern crate byte_tools;
 
-use byte_tools::{zero, write_u64_le};
+use byteorder::{ByteOrder, BE};
+use byte_tools::zero;
+use block_padding::{Padding, PadError};
+use generic_array::{GenericArray, ArrayLength};
 
-mod paddings;
-
-pub use paddings::*;
-
-macro_rules! impl_buffer {
-    ($name:ident, $len:expr) => {
-
-        pub struct $name {
-            buffer: [u8; $len],
-            pos: usize,
-        }
-
-        impl Copy for $name {}
-
-        impl Clone for $name {
-            fn clone(&self) -> Self {
-                *self
-            }
-        }
-
-        impl Default for $name {
-            fn default() -> Self {
-                $name {buffer: [0; $len], pos: 0}
-            }
-        }
-
-        impl $name {
-            #[inline]
-            pub fn input<F: FnMut(&[u8; $len])>(&mut self, mut input: &[u8], mut func: F) {
-                // If there is already data in the buffer, copy as much as we can
-                // into it and process the data if the buffer becomes full.
-                if self.pos != 0 {
-                    let rem = self.remaining();
-
-                    if input.len() >= rem {
-                        let (l, r) = input.split_at(rem);
-                        input = r;
-                        self.buffer[self.pos..].copy_from_slice(l);
-                        self.pos = 0;
-                        func(&self.buffer);
-                    } else {
-                        let end = self.pos + input.len();
-                        self.buffer[self.pos..end].copy_from_slice(input);
-                        self.pos = end;
-                        return;
-                    }
-                }
-
-                // While we have at least a full buffer size chunks's worth of data,
-                // process that data without copying it into the buffer
-                while input.len() >= self.size() {
-                    let (l, r) = input.split_at(self.size());
-                    input = r;
-                    func(array_ref!(l, 0, $len));
-                }
-
-                // Copy any input data into the buffer. At this point in the method,
-                // the ammount of data left in the input vector will be less than
-                // the buffer size and the buffer will be empty.
-                self.buffer[..input.len()].copy_from_slice(input);
-                self.pos = input.len();
-            }
-
-            #[inline]
-            fn digest_pad<F>(&mut self, up_to: usize, func: &mut F)
-                where F: FnMut(&[u8; $len])
-            {
-                self.buffer[self.pos] = 0x80;
-                self.pos += 1;
-
-                zero(&mut self.buffer[self.pos..]);
-
-                if self.remaining() < up_to {
-                    func(&self.buffer);
-                    zero(&mut self.buffer[..self.pos]);
-                }
-            }
-
-            #[inline]
-            /// Will pad message with message length in big-endian format
-            pub fn len_padding<F>(&mut self, data_len: u64, mut func: F)
-                where F: FnMut(&[u8; $len])
-            {
-                self.digest_pad(8, &mut func);
-                let s = self.size();
-                write_u64_le(&mut self.buffer[s-8..], data_len);
-                func(&self.buffer);
-                self.pos = 0;
-            }
-
-            #[inline]
-            pub fn len_padding_u128<F>(&mut self, hi: u64, lo: u64, mut func: F)
-                where F: FnMut(&[u8; $len])
-            {
-                self.digest_pad(16, &mut func);
-                let s = self.size();
-                write_u64_le(&mut self.buffer[s-16..s-8], hi);
-                write_u64_le(&mut self.buffer[s-8..], lo);
-                func(&self.buffer);
-                self.pos = 0;
-            }
-
-            #[inline]
-            pub fn pad_with<P: Padding>(&mut self) -> &mut [u8; $len] {
-                P::pad(&mut self.buffer[..], self.pos);
-                self.pos = 0;
-                &mut self.buffer
-            }
-
-            #[inline]
-            pub fn size(&self) -> usize {
-                $len
-            }
-
-            #[inline]
-            pub fn position(&self) -> usize {
-                self.pos
-            }
-
-            #[inline]
-            pub fn remaining(&self) -> usize {
-                self.size() - self.pos
-            }
-        }
-    }
+/// Buffer for block processing of data
+#[derive(Clone, Default)]
+pub struct BlockBuffer<BlockSize: ArrayLength<u8>>  {
+    buffer: GenericArray<u8, BlockSize>,
+    pos: usize,
 }
 
-impl_buffer!(BlockBuffer128, 16);
-impl_buffer!(BlockBuffer256, 32);
-impl_buffer!(BlockBuffer512, 64);
-impl_buffer!(BlockBuffer1024, 128);
+#[inline(always)]
+unsafe fn cast<N: ArrayLength<u8>>(block: &[u8]) -> &GenericArray<u8, N> {
+    debug_assert_eq!(block.len(), N::to_usize());
+    &*(block.as_ptr() as *const GenericArray<u8, N>)
+}
 
-impl_buffer!(BlockBuffer576, 72);
-impl_buffer!(BlockBuffer832, 104);
-impl_buffer!(BlockBuffer1088, 136);
-impl_buffer!(BlockBuffer1152, 144);
-impl_buffer!(BlockBuffer1344, 168);
+impl<BlockSize: ArrayLength<u8>> BlockBuffer<BlockSize> {
+    /// Process data in `input` in blocks of size `BlockSize` using function `f`.
+    #[inline]
+    pub fn input<F>(&mut self, mut input: &[u8], mut f: F)
+        where F: FnMut(&GenericArray<u8, BlockSize>)
+    {
+        // If there is already data in the buffer, process it if we have
+        // enough to complete the chunk.
+        let rem = self.remaining();
+        if self.pos != 0 && input.len() >= rem {
+            let (l, r) = input.split_at(rem);
+            input = r;
+            self.buffer[self.pos..].copy_from_slice(l);
+            self.pos = 0;
+            f(&self.buffer);
+        }
+
+        // While we have at least a full buffer size chunks's worth of data,
+        // process that data without copying it into the buffer
+        while input.len() >= self.size() {
+            let (block, r) = input.split_at(self.size());
+            input = r;
+            f(unsafe { cast(block) });
+        }
+
+        // Copy any remaining data into the buffer.
+        self.buffer[self.pos..self.pos+input.len()].copy_from_slice(input);
+        self.pos += input.len();
+    }
+
+    /// Variant that doesn't flush the buffer until there's additional
+    /// data to be processed. Suitable for tweakable block ciphers
+    /// like Threefish that need to know whether a block is the *last*
+    /// data block before processing it.
+    #[inline]
+    pub fn input_lazy<F>(&mut self, mut input: &[u8], mut f: F)
+        where F: FnMut(&GenericArray<u8, BlockSize>)
+    {
+        let rem = self.remaining();
+        if self.pos != 0 && input.len() > rem {
+            let (l, r) = input.split_at(rem);
+            input = r;
+            self.buffer[self.pos..].copy_from_slice(l);
+            self.pos = 0;
+            f(&self.buffer);
+        }
+
+        while input.len() > self.size() {
+            let (block, r) = input.split_at(self.size());
+            input = r;
+            f(unsafe { cast(block) });
+        }
+
+        self.buffer[self.pos..self.pos+input.len()].copy_from_slice(input);
+        self.pos += input.len();
+    }
+
+    /// Pad buffer with `prefix` and make sure that internall buffer
+    /// has at least `up_to` free bytes. All remaining bytes get
+    /// zeroed-out.
+    #[inline]
+    fn digest_pad<F>(&mut self, up_to: usize, f: &mut F)
+        where F: FnMut(&GenericArray<u8, BlockSize>)
+    {
+        if self.pos == self.size() {
+            f(&self.buffer);
+            self.pos = 0;
+        }
+        self.buffer[self.pos] = 0x80;
+        self.pos += 1;
+
+        zero(&mut self.buffer[self.pos..]);
+
+        if self.remaining() < up_to {
+            f(&self.buffer);
+            zero(&mut self.buffer[..self.pos]);
+        }
+    }
+
+    /// Pad message with 0x80, zeros and 64-bit message length
+    /// in a byte order specified by `B`
+    #[inline]
+    pub fn len64_padding<B, F>(&mut self, data_len: u64, mut f: F)
+        where B: ByteOrder, F: FnMut(&GenericArray<u8, BlockSize>)
+    {
+        // TODO: replace `F` with `impl Trait` on MSRV bump
+        self.digest_pad(8, &mut f);
+        let s = self.size();
+        B::write_u64(&mut self.buffer[s-8..], data_len);
+        f(&self.buffer);
+        self.pos = 0;
+    }
+
+
+    /// Pad message with 0x80, zeros and 128-bit message length
+    /// in the big-endian byte order
+    #[inline]
+    pub fn len128_padding_be<F>(&mut self, hi: u64, lo: u64, mut f: F)
+        where F: FnMut(&GenericArray<u8, BlockSize>)
+    {
+        // TODO: on MSRV bump replace `F` with `impl Trait`, use `u128`, add `B`
+        self.digest_pad(16, &mut f);
+        let s = self.size();
+        BE::write_u64(&mut self.buffer[s-16..s-8], hi);
+        BE::write_u64(&mut self.buffer[s-8..], lo);
+        f(&self.buffer);
+        self.pos = 0;
+    }
+
+    /// Pad message with a given padding `P`
+    ///
+    /// Returns `PadError` if internall buffer is full, which can only happen if
+    /// `input_lazy` was used.
+    #[inline]
+    pub fn pad_with<P: Padding>(&mut self)
+        -> Result<&mut GenericArray<u8, BlockSize>, PadError>
+    {
+        P::pad_block(&mut self.buffer[..], self.pos)?;
+        self.pos = 0;
+        Ok(&mut self.buffer)
+    }
+
+    /// Return size of the internall buffer in bytes
+    #[inline]
+    pub fn size(&self) -> usize {
+        BlockSize::to_usize()
+    }
+
+    /// Return current cursor position
+    #[inline]
+    pub fn position(&self) -> usize {
+        self.pos
+    }
+
+    /// Return number of remaining bytes in the internall buffer
+    #[inline]
+    pub fn remaining(&self) -> usize {
+        self.size() - self.pos
+    }
+
+    /// Reset buffer by setting cursor position to zero
+    #[inline]
+    pub fn reset(&mut self)  {
+        self.pos = 0
+    }
+}
