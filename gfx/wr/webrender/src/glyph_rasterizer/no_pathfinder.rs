@@ -19,7 +19,6 @@ use resource_cache::CachedImageData;
 use texture_cache::{TextureCache, TextureCacheHandle, Eviction};
 use gpu_cache::GpuCache;
 use render_task::{RenderTaskTree, RenderTaskCache};
-use tiling::SpecialRenderPasses;
 use profiler::TextureCacheProfileCounters;
 use std::collections::hash_map::Entry;
 
@@ -46,7 +45,6 @@ impl GlyphRasterizer {
         gpu_cache: &mut GpuCache,
         _: &mut RenderTaskCache,
         _: &mut RenderTaskTree,
-        _: &mut SpecialRenderPasses,
     ) {
         assert!(
             self.font_contexts

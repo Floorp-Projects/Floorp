@@ -27,7 +27,6 @@ use spatial_node::SpatialNode;
 use std::{f32, mem};
 use std::sync::Arc;
 use tiling::{Frame, RenderPass, RenderPassKind, RenderTargetContext};
-use tiling::{SpecialRenderPasses};
 
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -86,7 +85,6 @@ pub struct FrameBuildingState<'a> {
     pub clip_store: &'a mut ClipStore,
     pub resource_cache: &'a mut ResourceCache,
     pub gpu_cache: &'a mut GpuCache,
-    pub special_render_passes: &'a mut SpecialRenderPasses,
     pub transforms: &'a mut TransformPalette,
     pub segment_builder: SegmentBuilder,
     pub surfaces: &'a mut Vec<SurfaceInfo>,
@@ -210,7 +208,6 @@ impl FrameBuilder {
         resource_cache: &mut ResourceCache,
         gpu_cache: &mut GpuCache,
         render_tasks: &mut RenderTaskTree,
-        special_render_passes: &mut SpecialRenderPasses,
         profile_counters: &mut FrameProfileCounters,
         device_pixel_scale: DevicePixelScale,
         scene_properties: &SceneProperties,
@@ -308,7 +305,6 @@ impl FrameBuilder {
             clip_store: &mut self.clip_store,
             resource_cache,
             gpu_cache,
-            special_render_passes,
             transforms: transform_palette,
             segment_builder: SegmentBuilder::new(),
             surfaces: pic_update_state.surfaces,
@@ -413,7 +409,6 @@ impl FrameBuilder {
         let mut surfaces = Vec::new();
 
         let screen_size = self.screen_rect.size.to_i32();
-        let mut special_render_passes = SpecialRenderPasses::new(&screen_size);
 
         let main_render_task_id = self.build_layer_screen_rects_and_cull_layers(
             clip_scroll_tree,
@@ -421,7 +416,6 @@ impl FrameBuilder {
             resource_cache,
             gpu_cache,
             &mut render_tasks,
-            &mut special_render_passes,
             &mut profile_counters,
             device_pixel_scale,
             scene_properties,
@@ -435,29 +429,34 @@ impl FrameBuilder {
                                                        &mut render_tasks,
                                                        texture_cache_profile);
 
-        let mut passes = vec![
-            special_render_passes.alpha_glyph_pass,
-            special_render_passes.color_glyph_pass,
-        ];
+        let mut passes = vec![];
+
+        // Add passes as required for our cached render tasks.
+        if !render_tasks.cacheable_render_tasks.is_empty() {
+            passes.push(RenderPass::new_off_screen(screen_size));
+            for cacheable_render_task in &render_tasks.cacheable_render_tasks {
+                render_tasks.assign_to_passes(
+                    *cacheable_render_task,
+                    0,
+                    screen_size,
+                    &mut passes,
+                );
+            }
+            passes.reverse();
+        }
 
         if let Some(main_render_task_id) = main_render_task_id {
-            let mut required_pass_count = 0;
-            render_tasks.max_depth(main_render_task_id, 0, &mut required_pass_count);
-            assert_ne!(required_pass_count, 0);
-
-            // Do the allocations now, assigning each tile's tasks to a render
-            // pass and target as required.
-            for _ in 0 .. required_pass_count - 1 {
-                passes.push(RenderPass::new_off_screen(screen_size));
-            }
+            let passes_start = passes.len();
             passes.push(RenderPass::new_main_framebuffer(screen_size));
-
             render_tasks.assign_to_passes(
                 main_render_task_id,
-                required_pass_count - 1,
-                &mut passes[2..],
+                passes_start,
+                screen_size,
+                &mut passes,
             );
+            passes[passes_start..].reverse();
         }
+
 
         let mut deferred_resolves = vec![];
         let mut has_texture_cache_tasks = false;
