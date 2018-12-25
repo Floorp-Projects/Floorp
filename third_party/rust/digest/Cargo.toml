@@ -12,21 +12,25 @@
 
 [package]
 name = "digest"
-version = "0.7.6"
+version = "0.8.0"
 authors = ["RustCrypto Developers"]
 description = "Traits for cryptographic hash functions"
 documentation = "https://docs.rs/digest"
 keywords = ["digest", "crypto", "hash"]
 categories = ["cryptography", "no-std"]
-license = "MIT/Apache-2.0"
+license = "MIT OR Apache-2.0"
 repository = "https://github.com/RustCrypto/traits"
 [package.metadata.docs.rs]
 features = ["std"]
+[dependencies.blobby]
+version = "0.1"
+optional = true
+
 [dependencies.generic-array]
-version = "0.9"
+version = "0.12"
 
 [features]
-dev = []
+dev = ["blobby"]
 std = []
 [badges.travis-ci]
 repository = "RustCrypto/traits"

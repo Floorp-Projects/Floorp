@@ -12,16 +12,25 @@
 
 [package]
 name = "block-buffer"
-version = "0.3.3"
+version = "0.7.0"
 authors = ["RustCrypto Developers"]
 description = "Fixed size buffer for block processing of data"
 documentation = "https://docs.rs/block-buffer"
-keywords = ["block", "padding", "pkcs7", "ansix923", "iso7816"]
+keywords = ["block", "buffer"]
 categories = ["cryptography", "no-std"]
 license = "MIT/Apache-2.0"
 repository = "https://github.com/RustCrypto/utils"
-[dependencies.arrayref]
-version = "0.3"
+[dependencies.block-padding]
+version = "0.1"
 
 [dependencies.byte-tools]
-version = "0.2"
+version = "0.3"
+
+[dependencies.byteorder]
+version = "1"
+default-features = false
+
+[dependencies.generic-array]
+version = "0.12"
+[badges.travis-ci]
+repository = "RustCrypto/utils"
