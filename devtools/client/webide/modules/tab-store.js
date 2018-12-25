@@ -153,8 +153,11 @@ TabStore.prototype = {
       // if you try to connect to the same tab again.  To work around this
       // issue, we force a "listTabs" request before connecting to a tab.
       await store.listTabs();
+
+      const { outerWindowID } = store._selectedTab;
+      const activeTabFront = await store._connection.client.mainRoot.getTab({ outerWindowID });
       return TargetFactory.forRemoteTab({
-        form: store._selectedTab,
+        activeTab: activeTabFront,
         client: store._connection.client,
         chrome: false,
       });
