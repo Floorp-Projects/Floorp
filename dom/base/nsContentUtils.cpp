@@ -8202,7 +8202,7 @@ bool nsContentUtils::IsThirdPartyWindowOrChannel(nsPIDOMWindowInner* aWindow,
   if (aWindow) {
     nsresult rv = thirdPartyUtil->IsThirdPartyWindow(aWindow->GetOuterWindow(),
                                                      aURI, &thirdParty);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
+    if (NS_FAILED(rv)) {
       // Ideally we would do something similar to the channel code path here,
       // but existing code depends on this behaviour.
       return false;
