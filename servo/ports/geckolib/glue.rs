@@ -148,9 +148,6 @@ use style::gecko_bindings::structs::Loader;
 use style::gecko_bindings::structs::LoaderReusableStyleSheets;
 use style::gecko_bindings::structs::MallocSizeOf as GeckoMallocSizeOf;
 use style::gecko_bindings::structs::OriginFlags;
-use style::gecko_bindings::structs::OriginFlags_Author;
-use style::gecko_bindings::structs::OriginFlags_User;
-use style::gecko_bindings::structs::OriginFlags_UserAgent;
 use style::gecko_bindings::structs::PropertyValuePair;
 use style::gecko_bindings::structs::RawGeckoGfxMatrix4x4;
 use style::gecko_bindings::structs::RawServoFontFaceRule;
@@ -1764,13 +1761,16 @@ pub extern "C" fn Servo_StyleSheet_SizeOfIncludingThis(
 #[no_mangle]
 pub extern "C" fn Servo_StyleSheet_GetOrigin(sheet: RawServoStyleSheetContentsBorrowed) -> u8 {
     let origin = match StylesheetContents::as_arc(&sheet).origin {
-        Origin::UserAgent => OriginFlags_UserAgent,
-        Origin::User => OriginFlags_User,
-        Origin::Author => OriginFlags_Author,
+        Origin::UserAgent => OriginFlags::UserAgent,
+        Origin::User => OriginFlags::User,
+        Origin::Author => OriginFlags::Author,
     };
     // We'd like to return `OriginFlags` here, but bindgen bitfield enums don't
     // work as return values with the Linux 32-bit ABI at the moment because
-    // they wrap the value in a struct, so for now just unwrap it.
+    // they wrap the value in a struct (and bindgen doesn't have support for
+    // repr(transparent), so for now just unwrap it.
+    //
+    // See https://github.com/rust-lang/rust-bindgen/issues/1474
     origin.0
 }
 
