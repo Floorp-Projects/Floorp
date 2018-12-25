@@ -40,7 +40,11 @@ def find_hg_revision_push_info(repository, revision):
 def get_hg_revision_branch(root, revision):
     """Given the parameters for a revision, find the hg_branch (aka
     relbranch) of the revision."""
-    return subprocess.check_output(['hg', 'identify', '--branch', '--rev', revision], cwd=root)
+    return subprocess.check_output([
+        'hg', 'identify',
+        '-T', '{branch}',
+        '--rev', revision,
+    ], cwd=root)
 
 
 def calculate_head_rev(root):
