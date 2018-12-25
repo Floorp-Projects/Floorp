@@ -80,6 +80,11 @@ pub struct RenderTaskAddress(pub u32);
 pub struct RenderTaskTree {
     pub tasks: Vec<RenderTask>,
     pub task_data: Vec<RenderTaskData>,
+    /// Tasks that don't have dependencies, and that may be shared between
+    /// picture tasks.
+    ///
+    /// We render these unconditionally before-rendering the rest of the tree.
+    pub cacheable_render_tasks: Vec<RenderTaskId>,
     next_saved: SavedTargetIndex,
     frame_id: FrameId,
 }
@@ -89,6 +94,7 @@ impl RenderTaskTree {
         RenderTaskTree {
             tasks: Vec::new(),
             task_data: Vec::new(),
+            cacheable_render_tasks: Vec::new(),
             next_saved: SavedTargetIndex(0),
             frame_id,
         }
@@ -135,16 +141,8 @@ impl RenderTaskTree {
                 debug_assert!(pass_index == passes.len() - 1);
             }
             RenderTaskLocation::Dynamic(..) |
-            RenderTaskLocation::TextureCache { .. } => {
-                debug_assert!(pass_index < passes.len() - 1);
-            }
+            RenderTaskLocation::TextureCache { .. } => {}
         }
-
-        let pass_index = if task.is_global_cached_task() {
-            0
-        } else {
-            pass_index
-        };
 
         passes[pass_index].add_render_task(
             id,
@@ -551,8 +549,6 @@ impl RenderTask {
         render_tasks: &mut RenderTaskTree,
         clip_data_store: &mut ClipDataStore,
     ) -> Self {
-        let mut children = Vec::new();
-
         // Step through the clip sources that make up this mask. If we find
         // any box-shadow clip sources, request that image from the render
         // task cache. This allows the blurred box-shadow rect to be cached
@@ -604,10 +600,7 @@ impl RenderTask {
                                 ClearMode::Zero,
                             );
 
-                            let root_task_id = render_tasks.add(blur_render_task);
-                            children.push(root_task_id);
-
-                            root_task_id
+                            render_tasks.add(blur_render_task)
                         }
                     ));
                 }
@@ -619,7 +612,7 @@ impl RenderTask {
 
         RenderTask::with_dynamic_location(
             outer_rect.size,
-            children,
+            vec![],
             RenderTaskKind::CacheMask(CacheMaskTask {
                 actual_rect: outer_rect,
                 clip_node_range,
@@ -977,30 +970,6 @@ impl RenderTask {
         }
     }
 
-    /// If true, draw this task in the first pass. This is useful
-    /// for simple texture cached render tasks that we want to be made
-    /// available to all subsequent render passes.
-    pub fn is_global_cached_task(&self) -> bool {
-        match self.kind {
-            RenderTaskKind::LineDecoration(..) => {
-                true
-            }
-
-            RenderTaskKind::Readback(..) |
-            RenderTaskKind::ClipRegion(..) |
-            RenderTaskKind::CacheMask(..) |
-            RenderTaskKind::VerticalBlur(..) |
-            RenderTaskKind::HorizontalBlur(..) |
-            RenderTaskKind::Glyph(..) |
-            RenderTaskKind::Scaling(..) |
-            RenderTaskKind::Border(..) |
-            RenderTaskKind::Picture(..) |
-            RenderTaskKind::Blit(..) => {
-                false
-            }
-        }
-    }
-
     // Optionally, prepare the render task for drawing. This is executed
     // after all resource cache items (textures and glyphs) have been
     // resolved and can be queried. It also allows certain render tasks
@@ -1297,21 +1266,21 @@ impl RenderTaskCache {
         is_opaque: bool,
         f: F,
     ) -> Result<RenderTaskCacheEntryHandle, ()>
-         where F: FnOnce(&mut RenderTaskTree) -> Result<RenderTaskId, ()> {
+    where
+        F: FnOnce(&mut RenderTaskTree) -> Result<RenderTaskId, ()>,
+    {
         // Get the texture cache handle for this cache key,
         // or create one.
         let cache_entries = &mut self.cache_entries;
-        let entry_handle = self.map
-                               .entry(key)
-                               .or_insert_with(|| {
-                                    let entry = RenderTaskCacheEntry {
-                                        handle: TextureCacheHandle::invalid(),
-                                        pending_render_task_id: None,
-                                        user_data,
-                                        is_opaque,
-                                    };
-                                    cache_entries.insert(entry)
-                                });
+        let entry_handle = self.map.entry(key).or_insert_with(|| {
+            let entry = RenderTaskCacheEntry {
+                handle: TextureCacheHandle::invalid(),
+                pending_render_task_id: None,
+                user_data,
+                is_opaque,
+            };
+            cache_entries.insert(entry)
+        });
         let cache_entry = cache_entries.get_mut(entry_handle);
 
         if cache_entry.pending_render_task_id.is_none() {
@@ -1319,7 +1288,8 @@ impl RenderTaskCache {
             if texture_cache.request(&cache_entry.handle, gpu_cache) {
                 // Invoke user closure to get render task chain
                 // to draw this into the texture cache.
-                let render_task_id = try!(f(render_tasks));
+                let render_task_id = f(render_tasks)?;
+                render_tasks.cacheable_render_tasks.push(render_task_id);
 
                 cache_entry.pending_render_task_id = Some(render_task_id);
                 cache_entry.user_data = user_data;
