@@ -110,8 +110,6 @@ class nsDocument : public nsIDocument {
   NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsDocument,
                                                                    nsINode)
 
-  nsresult CloneDocHelper(nsDocument* clone) const;
-
  protected:
   friend class nsNodeUtils;
 
