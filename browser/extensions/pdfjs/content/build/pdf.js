@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.1.117';
-var pdfjsBuild = '417c234c';
+var pdfjsVersion = '2.1.132';
+var pdfjsBuild = 'd3868e1b';
 
 var pdfjsSharedUtil = __w_pdfjs_require__(1);
 
@@ -5141,7 +5141,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise('GetDocRequest', {
     docId,
-    apiVersion: '2.1.117',
+    apiVersion: '2.1.132',
     source: {
       data: source.data,
       url: source.url,
@@ -5307,6 +5307,10 @@ class PDFDocumentProxy {
     return this._transport.getPageMode();
   }
 
+  getOpenActionDestination() {
+    return this._transport.getOpenActionDestination();
+  }
+
   getAttachments() {
     return this._transport.getAttachments();
   }
@@ -5390,11 +5394,15 @@ class PDFPageProxy {
     return this._pageInfo.view;
   }
 
-  getViewport(scale, rotate = this.rotate, dontFlip = false) {
+  getViewport({
+    scale,
+    rotation = this.rotate,
+    dontFlip = false
+  } = {}) {
     return new _dom_utils.PageViewport({
       viewBox: this.view,
       scale,
-      rotation: rotate,
+      rotation,
       dontFlip
     });
   }
@@ -6564,6 +6572,10 @@ class WorkerTransport {
     return this.messageHandler.sendWithPromise('GetPageMode', null);
   }
 
+  getOpenActionDestination() {
+    return this.messageHandler.sendWithPromise('getOpenActionDestination', null);
+  }
+
   getAttachments() {
     return this.messageHandler.sendWithPromise('GetAttachments', null);
   }
@@ -6860,9 +6872,9 @@ const InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-const version = '2.1.117';
+const version = '2.1.132';
 exports.version = version;
-const build = '417c234c';
+const build = 'd3868e1b';
 exports.build = build;
 
 /***/ }),
