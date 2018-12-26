@@ -714,13 +714,30 @@ xul|*.radio-label-box {
 /* List boxes */
 
 html|select[size][multiple],
+xul|listheader,
 xul|richlistbox {
   -moz-appearance: none;
-  margin-inline-start: 0;
+  margin-left: 0;
+  margin-right: 0;
   background-color: var(--in-content-box-background);
   border: 1px solid var(--in-content-box-border-color);
   border-radius: 2px;
   color: var(--in-content-text-color);
+}
+
+xul|listheader {
+  border-bottom: none;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  padding-bottom: 1px;
+  box-shadow: inset 0 -1px var(--in-content-border-color);
+}
+
+xul|listheader + xul|richlistbox {
+  margin-top: 0;
+  border-top: none;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
 }
 
 html|select[size][multiple] > html|option,
@@ -761,7 +778,6 @@ xul|richlistbox:-moz-focusring {
   border: 1px dotted var(--in-content-border-focus);
 }
 
-xul|listheader,
 xul|treecols {
   -moz-appearance: none;
   border: none;
