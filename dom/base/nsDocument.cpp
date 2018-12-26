@@ -2474,7 +2474,7 @@ bool nsIDocument::IsSynthesized() {
 }
 
 // static
-bool nsDocument::IsCallerChromeOrAddon(JSContext* aCx, JSObject* aObject) {
+bool nsIDocument::IsCallerChromeOrAddon(JSContext* aCx, JSObject* aObject) {
   nsIPrincipal* principal = nsContentUtils::SubjectPrincipal(aCx);
   return principal && (nsContentUtils::IsSystemPrincipal(principal) ||
                        principal->GetIsAddonOrExpandedAddonPrincipal());
@@ -3162,7 +3162,7 @@ void nsIDocument::InitializeLocalization(nsTArray<nsString>& aResourceIds) {
 
 DocumentL10n* nsIDocument::GetL10n() { return mDocumentL10n; }
 
-bool nsDocument::DocumentSupportsL10n(JSContext* aCx, JSObject* aObject) {
+bool nsIDocument::DocumentSupportsL10n(JSContext* aCx, JSObject* aObject) {
   nsCOMPtr<nsIPrincipal> callerPrincipal =
       nsContentUtils::SubjectPrincipal(aCx);
   return PrincipalAllowsL10n(callerPrincipal);
@@ -3241,22 +3241,22 @@ void nsIDocument::TriggerInitialDocumentTranslation() {
   }
 }
 
-bool nsDocument::IsWebAnimationsEnabled(JSContext* aCx, JSObject* /*unused*/) {
+bool nsIDocument::IsWebAnimationsEnabled(JSContext* aCx, JSObject* /*unused*/) {
   MOZ_ASSERT(NS_IsMainThread());
 
   return nsContentUtils::IsSystemCaller(aCx) ||
          nsContentUtils::AnimationsAPICoreEnabled();
 }
 
-bool nsDocument::IsWebAnimationsEnabled(CallerType aCallerType) {
+bool nsIDocument::IsWebAnimationsEnabled(CallerType aCallerType) {
   MOZ_ASSERT(NS_IsMainThread());
 
   return aCallerType == dom::CallerType::System ||
          nsContentUtils::AnimationsAPICoreEnabled();
 }
 
-bool nsDocument::IsWebAnimationsGetAnimationsEnabled(JSContext* aCx,
-                                                     JSObject* /*unused*/
+bool nsIDocument::IsWebAnimationsGetAnimationsEnabled(JSContext* aCx,
+                                                      JSObject* /*unused*/
 ) {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -3264,8 +3264,8 @@ bool nsDocument::IsWebAnimationsGetAnimationsEnabled(JSContext* aCx,
          StaticPrefs::dom_animations_api_getAnimations_enabled();
 }
 
-bool nsDocument::AreWebAnimationsImplicitKeyframesEnabled(JSContext* aCx,
-                                                          JSObject* /*unused*/
+bool nsIDocument::AreWebAnimationsImplicitKeyframesEnabled(JSContext* aCx,
+                                                           JSObject* /*unused*/
 ) {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -3273,8 +3273,8 @@ bool nsDocument::AreWebAnimationsImplicitKeyframesEnabled(JSContext* aCx,
          StaticPrefs::dom_animations_api_implicit_keyframes_enabled();
 }
 
-bool nsDocument::AreWebAnimationsTimelinesEnabled(JSContext* aCx,
-                                                  JSObject* /*unused*/
+bool nsIDocument::AreWebAnimationsTimelinesEnabled(JSContext* aCx,
+                                                   JSObject* /*unused*/
 ) {
   MOZ_ASSERT(NS_IsMainThread());
 
