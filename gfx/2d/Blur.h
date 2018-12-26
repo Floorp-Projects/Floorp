@@ -135,12 +135,10 @@ class GFX2D_API AlphaBoxBlur {
                     int32_t aTopLobe, int32_t aBottomLobe,
                     uint32_t* aIntegralImage,
                     size_t aIntegralImageStride) const;
-#ifdef BUILD_ARM_NEON
   void BoxBlur_NEON(uint8_t* aData, int32_t aLeftLobe, int32_t aRightLobe,
                     int32_t aTopLobe, int32_t aBottomLobe,
                     uint32_t* aIntegralImage,
                     size_t aIntegralImageStride) const;
-#endif
 #ifdef _MIPS_ARCH_LOONGSON3A
   void BoxBlur_LS3(uint8_t* aData, int32_t aLeftLobe, int32_t aRightLobe,
                    int32_t aTopLobe, int32_t aBottomLobe,

@@ -221,12 +221,14 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
         'QuartzSupport.mm',
     ]
 
-if CONFIG['CPU_ARCH'] == 'arm' and CONFIG['BUILD_ARM_NEON']:
+if CONFIG['CC_TYPE'] in ('clang', 'gcc') and (CONFIG['CPU_ARCH'] == 'aarch64' or CONFIG['BUILD_ARM_NEON']):
+    # MSVC cannot use arm_neon.h.
     SOURCES += [
         'BlurNEON.cpp',
         'LuminanceNEON.cpp',
         'SwizzleNEON.cpp',
     ]
+    DEFINES['USE_NEON'] = True
     SOURCES['BlurNEON.cpp'].flags += CONFIG['NEON_FLAGS']
     SOURCES['LuminanceNEON.cpp'].flags += CONFIG['NEON_FLAGS']
     SOURCES['SwizzleNEON.cpp'].flags += CONFIG['NEON_FLAGS']
