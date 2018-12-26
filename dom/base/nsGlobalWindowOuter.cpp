@@ -2059,7 +2059,7 @@ void nsGlobalWindowOuter::DispatchDOMWindowCreated() {
   }
 
   // Fire DOMWindowCreated at chrome event listeners
-  nsContentUtils::DispatchChromeEvent(mDoc, mDoc,
+  nsContentUtils::DispatchChromeEvent(mDoc, ToSupports(mDoc),
                                       NS_LITERAL_STRING("DOMWindowCreated"),
                                       CanBubble::eYes, Cancelable::eNo);
 

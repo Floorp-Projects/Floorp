@@ -950,7 +950,7 @@ void HTMLContentSink::SetDocumentCharset(NotNull<const Encoding*> aEncoding) {
   MOZ_ASSERT_UNREACHABLE("<meta charset> case doesn't occur with about:blank");
 }
 
-nsISupports* HTMLContentSink::GetTarget() { return mDocument; }
+nsISupports* HTMLContentSink::GetTarget() { return ToSupports(mDocument); }
 
 bool HTMLContentSink::IsScriptExecuting() { return IsScriptExecutingImpl(); }
 

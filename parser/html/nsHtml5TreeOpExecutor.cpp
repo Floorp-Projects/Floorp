@@ -234,7 +234,9 @@ void nsHtml5TreeOpExecutor::FlushPendingNotifications(FlushType aType) {
   }
 }
 
-nsISupports* nsHtml5TreeOpExecutor::GetTarget() { return mDocument; }
+nsISupports* nsHtml5TreeOpExecutor::GetTarget() {
+  return ToSupports(mDocument);
+}
 
 nsresult nsHtml5TreeOpExecutor::MarkAsBroken(nsresult aReason) {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");

@@ -11066,14 +11066,7 @@ nsDocShell::AddState(JS::Handle<JS::Value> aData, const nsAString& aTitle,
       }
     } else {
       // It's a file:// URI
-      nsCOMPtr<nsIScriptObjectPrincipal> docScriptObj =
-          do_QueryInterface(document);
-
-      if (!docScriptObj) {
-        return NS_ERROR_DOM_SECURITY_ERR;
-      }
-
-      nsCOMPtr<nsIPrincipal> principal = docScriptObj->GetPrincipal();
+      nsCOMPtr<nsIPrincipal> principal = document->GetPrincipal();
 
       if (!principal ||
           NS_FAILED(principal->CheckMayLoad(newURI, true, false))) {

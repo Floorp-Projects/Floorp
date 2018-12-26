@@ -545,7 +545,7 @@ void XMLDocument::EndLoad() {
     // document was loaded as pure data without any presentation
     // attached to it.
     WidgetEvent event(true, eLoad);
-    EventDispatcher::Dispatch(static_cast<nsIDocument*>(this), nullptr, &event);
+    EventDispatcher::Dispatch(ToSupports(this), nullptr, &event);
   }
 }
 
