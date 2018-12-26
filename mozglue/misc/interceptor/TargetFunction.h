@@ -682,6 +682,10 @@ class MOZ_STACK_CLASS ReadOnlyTargetFunction final {
         ::DecodePointer(reinterpret_cast<PVOID>(aEncodedPtr)));
   }
 
+  bool IsValidAtOffset(const int8_t aOffset) const {
+    return mTargetBytes->IsValidAtOffset(aOffset);
+  }
+
   uint8_t const& operator*() const {
     mTargetBytes->EnsureLimit(mOffset);
     return *(mTargetBytes->GetLocalBytes() + mOffset);
