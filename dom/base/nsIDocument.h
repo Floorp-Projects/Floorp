@@ -4384,7 +4384,7 @@ class MOZ_STACK_CLASS nsAutoSyncOperation {
   ~nsAutoSyncOperation();
 
  private:
-  nsCOMArray<nsIDocument> mDocuments;
+  nsTArray<nsCOMPtr<nsIDocument>> mDocuments;
   uint32_t mMicroTaskLevel;
 };
 
