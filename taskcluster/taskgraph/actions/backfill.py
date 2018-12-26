@@ -142,7 +142,7 @@ def backfill_action(parameters, graph_config, input, task_group_id, task_id, tas
                         verify_args.append('--gpu-required')
 
                     if 'testPath' in input:
-                        task.task['payload']['env']['MOZHARNESS_TEST_PATHS'] = json.dums({
+                        task.task['payload']['env']['MOZHARNESS_TEST_PATHS'] = json.dumps({
                             task.task['extra']['suite']['flavor']: input['testPath']
                         })
 
