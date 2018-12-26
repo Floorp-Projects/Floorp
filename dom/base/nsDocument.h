@@ -112,16 +112,10 @@ class nsDocument : public nsIDocument {
   virtual void Destroy() override;
   virtual void RemovedFromDocShell() override;
 
-  virtual void BlockOnload() override;
-  virtual void UnblockOnload(bool aFireSync) override;
-
   NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsDocument,
                                                                    nsINode)
 
   nsresult CloneDocHelper(nsDocument* clone) const;
-
-  // Only BlockOnload should call this!
-  void AsyncBlockOnload();
 
  protected:
   friend class nsNodeUtils;

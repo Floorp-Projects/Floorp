@@ -2147,14 +2147,17 @@ class nsIDocument : public nsINode,
    * UnblockOnload() or the load has been stopped altogether (by the user
    * pressing the Stop button, say).
    */
-  virtual void BlockOnload() = 0;
+  void BlockOnload();
   /**
    * @param aFireSync whether to fire onload synchronously.  If false,
    * onload will fire asynchronously after all onload blocks have been
    * removed.  It will NOT fire from inside UnblockOnload.  If true,
    * onload may fire from inside UnblockOnload.
    */
-  virtual void UnblockOnload(bool aFireSync) = 0;
+  void UnblockOnload(bool aFireSync);
+
+  // Only BlockOnload should call this!
+  void AsyncBlockOnload();
 
   void BlockDOMContentLoaded() { ++mBlockDOMContentLoaded; }
 
