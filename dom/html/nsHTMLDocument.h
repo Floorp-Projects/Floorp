@@ -7,6 +7,7 @@
 #define nsHTMLDocument_h___
 
 #include "mozilla/Attributes.h"
+#include "nsContentList.h"
 #include "nsDocument.h"
 #include "nsIHTMLDocument.h"
 #include "nsIHTMLCollection.h"
@@ -33,6 +34,8 @@ class HTMLAllCollection;
 }  // namespace mozilla
 
 class nsHTMLDocument : public nsDocument, public nsIHTMLDocument {
+  typedef mozilla::net::ReferrerPolicy ReferrerPolicy;
+
  public:
   using nsDocument::GetPlugins;
   using nsDocument::SetDocumentURI;

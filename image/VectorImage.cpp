@@ -17,6 +17,7 @@
 #include "mozilla/dom/SVGSVGElement.h"
 #include "mozilla/dom/SVGDocument.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/PendingAnimationTracker.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Tuple.h"
 #include "nsIPresShell.h"
@@ -36,7 +37,7 @@
 #include "SVGDrawingParameters.h"
 #include "nsIDOMEventListener.h"
 #include "SurfaceCache.h"
-#include "nsDocument.h"
+#include "nsIDocument.h"
 
 namespace mozilla {
 
@@ -1479,9 +1480,8 @@ void VectorImage::PropagateUseCounters(nsIDocument* aParentDocument) {
 }
 
 void VectorImage::ReportUseCounters() {
-  nsIDocument* doc = mSVGDocumentWrapper->GetDocument();
-  if (doc) {
-    static_cast<nsDocument*>(doc)->ReportUseCounters();
+  if (nsIDocument* doc = mSVGDocumentWrapper->GetDocument()) {
+    doc->ReportUseCounters();
   }
 }
 

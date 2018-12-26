@@ -9,6 +9,7 @@
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/LayerTransactionChild.h"
 #include "nsPresContext.h"
+#include "nsContentList.h"
 #include "nsError.h"
 #include "nsQueryContentEventResult.h"
 #include "nsGlobalWindow.h"
