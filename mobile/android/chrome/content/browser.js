@@ -842,7 +842,7 @@ var BrowserApp = {
     NativeWindow.contextmenus.add(stringGetter("contextmenu.viewImage"),
       NativeWindow.contextmenus.imageLocationCopyableContext,
       function(aTarget) {
-        let url = aTarget.src;
+        let url = aTarget.currentSrc || aTarget.src;
         ContentAreaUtils.urlSecurityCheck(url, aTarget.ownerDocument.nodePrincipal,
                                           Ci.nsIScriptSecurityManager.DISALLOW_SCRIPT);
 
@@ -856,7 +856,7 @@ var BrowserApp = {
       function(aTarget) {
         UITelemetry.addEvent("action.1", "contextmenu", null, "web_copy_image");
 
-        let url = aTarget.src;
+        let url = aTarget.currentSrc || aTarget.src;
         url = NativeWindow.contextmenus._stripViewSource(url);
         NativeWindow.contextmenus._copyStringToDefaultClipboard(url);
       });
@@ -866,7 +866,7 @@ var BrowserApp = {
       selector: NativeWindow.contextmenus._disableRestricted("SHARE", NativeWindow.contextmenus.imageShareableContext),
       order: NativeWindow.contextmenus.DEFAULT_HTML5_ORDER - 1, // Show above HTML5 menu items
       showAsActions: function(aTarget) {
-        let src = aTarget.src;
+        let src = aTarget.currentSrc || aTarget.src;
         src = NativeWindow.contextmenus._stripViewSource(src);
         return {
           title: src,
@@ -908,7 +908,7 @@ var BrowserApp = {
       function(aTarget) {
         UITelemetry.addEvent("action.1", "contextmenu", null, "web_background_image");
 
-        let src = aTarget.src;
+        let src = aTarget.currentSrc || aTarget.src;
         GlobalEventDispatcher.sendRequest({
           type: "Image:SetAs",
           url: src
