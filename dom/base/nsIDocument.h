@@ -518,6 +518,11 @@ class nsIDocument : public nsINode,
   // nsIScriptObjectPrincipal
   nsIPrincipal* GetPrincipal() final { return NodePrincipal(); }
 
+  // EventTarget
+  void GetEventTargetParent(mozilla::EventChainPreVisitor& aVisitor) override;
+  mozilla::EventListenerManager* GetOrCreateListenerManager() override;
+  mozilla::EventListenerManager* GetExistingListenerManager() const override;
+
   // This helper class must be set when we dispatch beforeunload and unload
   // events in order to avoid unterminate sync XHRs.
   class MOZ_RAII PageUnloadingEventTimeStamp {
