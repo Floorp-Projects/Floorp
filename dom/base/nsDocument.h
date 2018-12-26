@@ -176,9 +176,6 @@ class nsDocument : public nsIDocument {
                          NotNull<const Encoding*>& aEncoding,
                          nsHtml5TreeOpExecutor* aExecutor);
 
-  nsIContent* GetFirstBaseNodeWithHref();
-  nsresult SetFirstBaseNodeWithHref(nsIContent* node);
-
 #define NS_DOCUMENT_NOTIFY_OBSERVERS(func_, params_)                          \
   do {                                                                        \
     NS_OBSERVER_ARRAY_NOTIFY_XPCOM_OBSERVERS(mObservers, nsIDocumentObserver, \
@@ -207,8 +204,6 @@ class nsDocument : public nsIDocument {
   js::ExpandoAndGeneration mExpandoAndGeneration;
 
   friend class nsCallRequestFullscreen;
-
-  nsCOMPtr<nsIContent> mFirstBaseNodeWithHref;
 
  private:
   friend class nsUnblockOnloadEvent;
