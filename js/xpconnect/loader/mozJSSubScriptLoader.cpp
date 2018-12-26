@@ -132,6 +132,16 @@ static bool PrepareScript(nsIURI* uri, JSContext* cx, bool wantGlobalScript,
   JS::CompileOptions options(cx);
   options.setFileAndLine(uriStr, 1).setNoScriptRval(!wantReturnValue);
 
+  // This presumes that no one else might be compiling a script for this
+  // (URL, syntactic-or-not) key *not* using UTF-8.  Seeing as JS source can
+  // only be compiled as UTF-8 or UTF-16 now -- there isn't a JSAPI function to
+  // compile Latin-1 now -- this presumption seems relatively safe.
+  //
+  // This also presumes that lazy parsing is disabled, for the sake of the
+  // startup cache.  If lazy parsing is ever enabled for pertinent scripts that
+  // pass through here, we may need to disable lazy source for them.
+  options.setSourceIsLazy(true);
+
   if (wantGlobalScript) {
     return JS::CompileUtf8(cx, options, buf, len, script);
   }

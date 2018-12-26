@@ -2852,7 +2852,7 @@ static nsresult ReadSourceFromFilename(JSContext* cx, const char* filename,
   }
 
   rv = ScriptLoader::ConvertToUTF16(scriptChannel, buf.get(), rawLen,
-                                    EmptyString(), nullptr, *src, *len);
+                                    NS_LITERAL_STRING("UTF-8"), nullptr, *src, *len);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!*src) {
