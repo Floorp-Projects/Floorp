@@ -104,6 +104,7 @@ jobs:
           type: decision-task
           treeherder-symbol: customv8
           target-tasks-method: customv8_update
+          optimize-target-tasks: false
       run-on-projects:
           - mozilla-central
       when:

@@ -286,6 +286,9 @@ def get_decision_parameters(config, options):
     if 'try' in project:
         set_try_config(parameters, task_config_file)
 
+    if options.get('optimize_target_tasks') is not None:
+        parameters['optimize_target_tasks'] = options['optimize_target_tasks']
+
     result = Parameters(**parameters)
     result.check()
     return result
