@@ -16,7 +16,6 @@
 
 package org.mozilla.gecko.util;
 
-import android.annotation.SuppressLint;
 import android.content.ContentUris;
 import android.content.Context;
 import android.database.Cursor;
@@ -46,12 +45,9 @@ public class ContentUriUtils {
      * @param uri The Uri to query.
      * @author paulburke
      */
-    @SuppressLint("NewAPI")
     public static @Nullable String getOriginalFilePathFromUri(final Context context, final Uri uri) {
-        final boolean isKitKat = Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT;
-
         // DocumentProvider
-        if (isKitKat && DocumentsContract.isDocumentUri(context, uri)) {
+        if (Build.VERSION.SDK_INT >= 19 && DocumentsContract.isDocumentUri(context, uri)) {
             // ExternalStorageProvider
             if (isExternalStorageDocument(uri)) {
                 final String docId = DocumentsContract.getDocumentId(uri);
