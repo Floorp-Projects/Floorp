@@ -17,7 +17,7 @@
 #include "mozilla/dom/SVGUnitTypesBinding.h"
 #include "nsContentUtils.h"
 #include "SVGObserverUtils.h"
-#include "nsSVGAnimatedTransformList.h"
+#include "SVGAnimatedTransformList.h"
 
 // XXX Tight coupling with content classes ahead!
 
@@ -102,9 +102,9 @@ uint16_t nsSVGGradientFrame::GetSpreadMethod() {
   return GetEnumValue(dom::SVGGradientElement::SPREADMETHOD);
 }
 
-const nsSVGAnimatedTransformList* nsSVGGradientFrame::GetGradientTransformList(
+const SVGAnimatedTransformList* nsSVGGradientFrame::GetGradientTransformList(
     nsIContent* aDefault) {
-  nsSVGAnimatedTransformList* thisTransformList =
+  SVGAnimatedTransformList* thisTransformList =
       static_cast<dom::SVGGradientElement*>(GetContent())
           ->GetAnimatedTransformList();
 
@@ -148,7 +148,7 @@ gfxMatrix nsSVGGradientFrame::GetGradientTransform(
         gfxMatrix(bbox.Width(), 0, 0, bbox.Height(), bbox.X(), bbox.Y());
   }
 
-  const nsSVGAnimatedTransformList* animTransformList =
+  const SVGAnimatedTransformList* animTransformList =
       GetGradientTransformList(GetContent());
   if (!animTransformList) {
     return bboxMatrix;

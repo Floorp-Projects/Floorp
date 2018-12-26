@@ -180,7 +180,7 @@ class SVGViewportElement : public SVGGraphicsElement {
   virtual SVGAnimatedPreserveAspectRatio* GetPreserveAspectRatio() override;
 
   virtual const nsSVGViewBox& GetViewBoxInternal() const { return mViewBox; }
-  virtual nsSVGAnimatedTransformList* GetTransformInternal() const {
+  virtual SVGAnimatedTransformList* GetTransformInternal() const {
     return mTransforms;
   }
   nsSVGViewBox mViewBox;

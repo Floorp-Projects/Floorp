@@ -147,10 +147,10 @@ already_AddRefed<SVGAnimatedLength> SVGLinearGradientElement::Y2() {
 //----------------------------------------------------------------------
 // SVGElement methods
 
-nsSVGAnimatedTransformList* SVGGradientElement::GetAnimatedTransformList(
+SVGAnimatedTransformList* SVGGradientElement::GetAnimatedTransformList(
     uint32_t aFlags) {
   if (!mGradientTransform && (aFlags & DO_ALLOCATE)) {
-    mGradientTransform = new nsSVGAnimatedTransformList();
+    mGradientTransform = new SVGAnimatedTransformList();
   }
   return mGradientTransform;
 }

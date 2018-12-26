@@ -28,7 +28,7 @@ class SVGTransform;
  * The DOM wrapper class for this class is DOMSVGTransformList.
  */
 class SVGTransformList {
-  friend class nsSVGAnimatedTransformList;
+  friend class SVGAnimatedTransformList;
   friend class DOMSVGTransformList;
   friend class dom::SVGTransform;
 
