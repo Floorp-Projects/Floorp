@@ -88,7 +88,7 @@
       }
 
       @media (-moz-windows-default-theme: 0) {
-        :root {
+        :root[tabsintitlebar] {
           background-color: transparent;
           -moz-appearance: -moz-win-glass;
         }
@@ -96,7 +96,7 @@
         /* On win10, if we don't set this on the entire browser container including
          * the sidebar, if the sidebar is open the accent color bleeds through in
          * the titlebar */
-        #browser {
+        :root[tabsintitlebar] #browser {
           -moz-appearance: -moz-win-exclude-glass;
         }
       }
