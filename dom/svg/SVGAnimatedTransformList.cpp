@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsSVGAnimatedTransformList.h"
+#include "SVGAnimatedTransformList.h"
 
 #include "mozilla/dom/MutationEventBinding.h"
 #include "DOMSVGAnimatedTransformList.h"
@@ -21,8 +21,8 @@ using namespace mozilla::dom::SVGTransform_Binding;
 
 namespace mozilla {
 
-nsresult nsSVGAnimatedTransformList::SetBaseValueString(
-    const nsAString& aValue, SVGElement* aSVGElement) {
+nsresult SVGAnimatedTransformList::SetBaseValueString(const nsAString& aValue,
+                                                      SVGElement* aSVGElement) {
   SVGTransformList newBaseValue;
   nsresult rv = newBaseValue.SetValueFromString(aValue);
   if (NS_FAILED(rv)) {
@@ -32,8 +32,8 @@ nsresult nsSVGAnimatedTransformList::SetBaseValueString(
   return SetBaseValue(newBaseValue, aSVGElement);
 }
 
-nsresult nsSVGAnimatedTransformList::SetBaseValue(
-    const SVGTransformList& aValue, SVGElement* aSVGElement) {
+nsresult SVGAnimatedTransformList::SetBaseValue(const SVGTransformList& aValue,
+                                                SVGElement* aSVGElement) {
   DOMSVGAnimatedTransformList* domWrapper =
       DOMSVGAnimatedTransformList::GetDOMWrapperIfExists(this);
   if (domWrapper) {
@@ -67,7 +67,7 @@ nsresult nsSVGAnimatedTransformList::SetBaseValue(
   return rv;
 }
 
-void nsSVGAnimatedTransformList::ClearBaseValue() {
+void SVGAnimatedTransformList::ClearBaseValue() {
   mRequiresFrameReconstruction = !HasTransform();
 
   DOMSVGAnimatedTransformList* domWrapper =
@@ -81,8 +81,8 @@ void nsSVGAnimatedTransformList::ClearBaseValue() {
   // Caller notifies
 }
 
-nsresult nsSVGAnimatedTransformList::SetAnimValue(
-    const SVGTransformList& aValue, SVGElement* aElement) {
+nsresult SVGAnimatedTransformList::SetAnimValue(const SVGTransformList& aValue,
+                                                SVGElement* aElement) {
   bool prevSet = HasTransform() || aElement->GetAnimateMotionTransform();
   DOMSVGAnimatedTransformList* domWrapper =
       DOMSVGAnimatedTransformList::GetDOMWrapperIfExists(this);
@@ -125,7 +125,7 @@ nsresult nsSVGAnimatedTransformList::SetAnimValue(
   return NS_OK;
 }
 
-void nsSVGAnimatedTransformList::ClearAnimValue(SVGElement* aElement) {
+void SVGAnimatedTransformList::ClearAnimValue(SVGElement* aElement) {
   DOMSVGAnimatedTransformList* domWrapper =
       DOMSVGAnimatedTransformList::GetDOMWrapperIfExists(this);
   if (domWrapper) {
@@ -146,7 +146,7 @@ void nsSVGAnimatedTransformList::ClearAnimValue(SVGElement* aElement) {
   aElement->DidAnimateTransformList(modType);
 }
 
-bool nsSVGAnimatedTransformList::IsExplicitlySet() const {
+bool SVGAnimatedTransformList::IsExplicitlySet() const {
   // Like other methods of this name, we need to know when a transform value has
   // been explicitly set.
   //
@@ -161,12 +161,12 @@ bool nsSVGAnimatedTransformList::IsExplicitlySet() const {
   return mIsAttrSet || !mBaseVal.IsEmpty() || mAnimVal;
 }
 
-UniquePtr<nsISMILAttr> nsSVGAnimatedTransformList::ToSMILAttr(
+UniquePtr<nsISMILAttr> SVGAnimatedTransformList::ToSMILAttr(
     SVGElement* aSVGElement) {
   return MakeUnique<SMILAnimatedTransformList>(this, aSVGElement);
 }
 
-nsresult nsSVGAnimatedTransformList::SMILAnimatedTransformList::ValueFromString(
+nsresult SVGAnimatedTransformList::SMILAnimatedTransformList::ValueFromString(
     const nsAString& aStr, const dom::SVGAnimationElement* aSrcElement,
     nsSMILValue& aValue, bool& aPreventCachingOfSandwich) const {
   NS_ENSURE_TRUE(aSrcElement, NS_ERROR_FAILURE);
@@ -190,7 +190,7 @@ nsresult nsSVGAnimatedTransformList::SMILAnimatedTransformList::ValueFromString(
   return aValue.IsNull() ? NS_ERROR_FAILURE : NS_OK;
 }
 
-void nsSVGAnimatedTransformList::SMILAnimatedTransformList::ParseValue(
+void SVGAnimatedTransformList::SMILAnimatedTransformList::ParseValue(
     const nsAString& aSpec, const nsAtom* aTransformType,
     nsSMILValue& aResult) {
   MOZ_ASSERT(aResult.IsNull(), "Unexpected type for SMIL value");
@@ -240,8 +240,7 @@ void nsSVGAnimatedTransformList::SMILAnimatedTransformList::ParseValue(
   aResult = std::move(val);
 }
 
-int32_t
-nsSVGAnimatedTransformList::SMILAnimatedTransformList::ParseParameterList(
+int32_t SVGAnimatedTransformList::SMILAnimatedTransformList::ParseParameterList(
     const nsAString& aSpec, float* aVars, int32_t aNVars) {
   nsCharSeparatedTokenizerTemplate<nsContentUtils::IsHTMLWhitespace> tokenizer(
       aSpec, ',', nsCharSeparatedTokenizer::SEPARATOR_OPTIONAL);
@@ -261,8 +260,8 @@ nsSVGAnimatedTransformList::SMILAnimatedTransformList::ParseParameterList(
   return numArgsFound;
 }
 
-nsSMILValue
-nsSVGAnimatedTransformList::SMILAnimatedTransformList::GetBaseValue() const {
+nsSMILValue SVGAnimatedTransformList::SMILAnimatedTransformList::GetBaseValue()
+    const {
   // To benefit from Return Value Optimization and avoid copy constructor calls
   // due to our use of return-by-value, we must return the exact same object
   // from ALL return points. This function must only return THIS variable:
@@ -274,7 +273,7 @@ nsSVGAnimatedTransformList::SMILAnimatedTransformList::GetBaseValue() const {
   return val;
 }
 
-nsresult nsSVGAnimatedTransformList::SMILAnimatedTransformList::SetAnimValue(
+nsresult SVGAnimatedTransformList::SMILAnimatedTransformList::SetAnimValue(
     const nsSMILValue& aNewAnimValue) {
   MOZ_ASSERT(aNewAnimValue.mType == SVGTransformListSMILType::Singleton(),
              "Unexpected type to assign animated value");
@@ -286,7 +285,7 @@ nsresult nsSVGAnimatedTransformList::SMILAnimatedTransformList::SetAnimValue(
   return mVal->SetAnimValue(animVal, mElement);
 }
 
-void nsSVGAnimatedTransformList::SMILAnimatedTransformList::ClearAnimValue() {
+void SVGAnimatedTransformList::SMILAnimatedTransformList::ClearAnimValue() {
   if (mVal->mAnimVal) {
     mVal->ClearAnimValue(mElement);
   }

@@ -8,7 +8,7 @@
 #define __NS_SVGGRADIENTELEMENT_H__
 
 #include "nsAutoPtr.h"
-#include "nsSVGAnimatedTransformList.h"
+#include "SVGAnimatedTransformList.h"
 #include "SVGElement.h"
 #include "nsSVGLength2.h"
 #include "nsSVGEnum.h"
@@ -47,7 +47,7 @@ class SVGGradientElement : public SVGGradientElementBase {
   // nsIContent
   NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const override;
 
-  virtual nsSVGAnimatedTransformList* GetAnimatedTransformList(
+  virtual SVGAnimatedTransformList* GetAnimatedTransformList(
       uint32_t aFlags = 0) override;
   virtual nsStaticAtom* GetTransformListAttrName() const override {
     return nsGkAtoms::gradientTransform;
@@ -73,7 +73,7 @@ class SVGGradientElement : public SVGGradientElementBase {
   static StringInfo sStringInfo[2];
 
   // SVGGradientElement values
-  nsAutoPtr<nsSVGAnimatedTransformList> mGradientTransform;
+  nsAutoPtr<SVGAnimatedTransformList> mGradientTransform;
 };
 
 //---------------------Linear Gradients------------------------
