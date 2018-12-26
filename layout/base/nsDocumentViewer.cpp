@@ -488,18 +488,19 @@ class AutoPrintEventDispatcher {
 
  private:
   void DispatchEventToWindowTree(const nsAString& aEvent) {
-    nsCOMArray<nsIDocument> targets;
+    nsTArray<nsCOMPtr<nsIDocument>> targets;
     CollectDocuments(mTop, &targets);
-    for (int32_t i = 0; i < targets.Count(); ++i) {
-      nsIDocument* d = targets[i];
-      nsContentUtils::DispatchTrustedEvent(
-          d, d->GetWindow(), aEvent, CanBubble::eNo, Cancelable::eNo, nullptr);
+    for (nsCOMPtr<nsIDocument>& doc : targets) {
+      nsContentUtils::DispatchTrustedEvent(doc, doc->GetWindow(), aEvent,
+                                           CanBubble::eNo, Cancelable::eNo,
+                                           nullptr);
     }
   }
 
   static bool CollectDocuments(nsIDocument* aDocument, void* aData) {
     if (aDocument) {
-      static_cast<nsCOMArray<nsIDocument>*>(aData)->AppendObject(aDocument);
+      static_cast<nsTArray<nsCOMPtr<nsIDocument>>*>(aData)->AppendElement(
+          aDocument);
       aDocument->EnumerateSubDocuments(CollectDocuments, aData);
     }
     return true;
