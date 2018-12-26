@@ -217,8 +217,6 @@ Maybe<bool> ModuleEvaluator::IsModuleTrusted(
       scoreThreshold = 99999;
     }
   }
-#else
-  static const int scoreThreshold = 100;
 #endif
 
   int score = 0;
