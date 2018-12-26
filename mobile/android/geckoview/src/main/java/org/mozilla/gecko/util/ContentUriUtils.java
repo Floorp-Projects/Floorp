@@ -47,8 +47,7 @@ public class ContentUriUtils {
      * @author paulburke
      */
     @SuppressLint("NewAPI")
-    public static @Nullable String getOriginalFilePathFromUri(final Context context, final Uri uri) throws IllegalArgumentException {
-
+    public static @Nullable String getOriginalFilePathFromUri(final Context context, final Uri uri) {
         final boolean isKitKat = Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT;
 
         // DocumentProvider
@@ -159,8 +158,7 @@ public class ContentUriUtils {
      * @author paulburke
      */
     private static String getDataColumn(Context context, Uri uri, String selection,
-                                        String[] selectionArgs) throws IllegalArgumentException {
-
+                                        String[] selectionArgs) {
         final String column = "_data";
         final String[] projection = {
                 column
@@ -169,8 +167,8 @@ public class ContentUriUtils {
         try (Cursor cursor = context.getContentResolver().query(uri, projection, selection, selectionArgs,
                 null)) {
             if (cursor != null && cursor.moveToFirst()) {
-                final int column_index = cursor.getColumnIndexOrThrow(column);
-                return cursor.getString(column_index);
+                final int column_index = cursor.getColumnIndex(column);
+                return column_index >= 0 ? cursor.getString(column_index) : null;
             }
         }
         return null;
