@@ -1749,7 +1749,7 @@ RefPtr<MediaManager::MgrPromise> MediaManager::EnumerateRawDevices(
     uint64_t aWindowId, MediaSourceEnum aVideoInputType,
     MediaSourceEnum aAudioInputType, MediaSinkEnum aAudioOutputType,
     DeviceEnumerationType aVideoInputEnumType,
-    DeviceEnumerationType aAudioInputEnumType, bool aForceNoPermRequest,
+    DeviceEnumerationType aAudioInputEnumType,
     const RefPtr<MediaDeviceSetRefCnt>& aOutDevices) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aVideoInputType != MediaSourceEnum::Other ||
@@ -1856,7 +1856,7 @@ RefPtr<MediaManager::MgrPromise> MediaManager::EnumerateRawDevices(
     holder->Resolve(false, __func__);
   });
 
-  if (realDeviceRequested && aForceNoPermRequest &&
+  if (realDeviceRequested &&
       Preferences::GetBool("media.navigator.permission.device", false)) {
     // Need to ask permission to retrieve list of all devices;
     // notify frontend observer and wait for callback notification to post task.
@@ -2175,7 +2175,7 @@ void MediaManager::OnDeviceChange() {
         self->EnumerateRawDevices(
                 0, MediaSourceEnum::Camera, MediaSourceEnum::Microphone,
                 MediaSinkEnum::Speaker, DeviceEnumerationType::Normal,
-                DeviceEnumerationType::Normal, false, devices)
+                DeviceEnumerationType::Normal, devices)
             ->Then(GetCurrentThreadSerialEventTarget(), __func__,
                    [self, devices](bool) {
                      if (!MediaManager::GetIfExists()) {
@@ -2692,7 +2692,7 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
   auto devices = MakeRefPtr<MediaDeviceSetRefCnt>();
   return EnumerateDevicesImpl(windowID, videoType, audioType,
                               MediaSinkEnum::Other, videoEnumerationType,
-                              audioEnumerationType, true, devices)
+                              audioEnumerationType, devices)
       ->Then(
           GetCurrentThreadSerialEventTarget(), __func__,
           [self, windowID, c, windowListener, isChrome, devices](bool) {
@@ -2924,7 +2924,7 @@ RefPtr<MediaManager::MgrPromise> MediaManager::EnumerateDevicesImpl(
     uint64_t aWindowId, MediaSourceEnum aVideoInputType,
     MediaSourceEnum aAudioInputType, MediaSinkEnum aAudioOutputType,
     DeviceEnumerationType aVideoInputEnumType,
-    DeviceEnumerationType aAudioInputEnumType, bool aForceNoPermRequest,
+    DeviceEnumerationType aAudioInputEnumType,
     const RefPtr<MediaDeviceSetRefCnt>& aOutDevices) {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -2966,8 +2966,8 @@ RefPtr<MediaManager::MgrPromise> MediaManager::EnumerateDevicesImpl(
       ->Then(
           GetMainThreadSerialEventTarget(), __func__,
           [aWindowId, aVideoInputType, aAudioInputType, aAudioOutputType,
-           aVideoInputEnumType, aAudioInputEnumType, aForceNoPermRequest,
-           aOutDevices, originKey](const nsCString& aOriginKey) {
+           aVideoInputEnumType, aAudioInputEnumType, aOutDevices,
+           originKey](const nsCString& aOriginKey) {
             MOZ_ASSERT(NS_IsMainThread());
             originKey->Assign(aOriginKey);
             MediaManager* mgr = MediaManager::GetIfExists();
@@ -2979,8 +2979,7 @@ RefPtr<MediaManager::MgrPromise> MediaManager::EnumerateDevicesImpl(
             }
             return mgr->EnumerateRawDevices(
                 aWindowId, aVideoInputType, aAudioInputType, aAudioOutputType,
-                aVideoInputEnumType, aAudioInputEnumType, aForceNoPermRequest,
-                aOutDevices);
+                aVideoInputEnumType, aAudioInputEnumType, aOutDevices);
           },
           [](nsresult rs) {
             NS_WARNING(
@@ -3098,7 +3097,7 @@ RefPtr<MediaManager::DevicesPromise> MediaManager::EnumerateDevices(
   auto devices = MakeRefPtr<MediaDeviceSetRefCnt>();
   return EnumerateDevicesImpl(windowId, MediaSourceEnum::Camera,
                               MediaSourceEnum::Microphone, audioOutputType,
-                              videoEnumerationType, audioEnumerationType, false,
+                              videoEnumerationType, audioEnumerationType,
                               devices)
       ->Then(GetCurrentThreadSerialEventTarget(), __func__,
              [windowListener, sourceListener, devices](bool) {
@@ -3147,7 +3146,7 @@ RefPtr<SinkInfoPromise> MediaManager::GetSinkDevice(nsPIDOMWindowInner* aWindow,
   return EnumerateDevicesImpl(aWindow->WindowID(), MediaSourceEnum::Other,
                               MediaSourceEnum::Other, MediaSinkEnum::Speaker,
                               DeviceEnumerationType::Normal,
-                              DeviceEnumerationType::Normal, true, devices)
+                              DeviceEnumerationType::Normal, devices)
       ->Then(GetCurrentThreadSerialEventTarget(), __func__,
              [aDeviceId, isSecure, devices](bool) {
                for (RefPtr<MediaDevice>& device : *devices) {

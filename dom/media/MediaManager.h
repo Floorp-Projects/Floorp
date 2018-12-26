@@ -286,14 +286,14 @@ class MediaManager final : public nsIMediaManagerService,
       uint64_t aWindowId, dom::MediaSourceEnum aVideoInputType,
       dom::MediaSourceEnum aAudioInputType, MediaSinkEnum aAudioOutputType,
       DeviceEnumerationType aVideoInputEnumType,
-      DeviceEnumerationType aAudioInputEnumType, bool aForceNoPermRequest,
+      DeviceEnumerationType aAudioInputEnumType,
       const RefPtr<MediaDeviceSetRefCnt>& aOutDevices);
 
   RefPtr<MgrPromise> EnumerateDevicesImpl(
       uint64_t aWindowId, dom::MediaSourceEnum aVideoInputType,
       dom::MediaSourceEnum aAudioInputType, MediaSinkEnum aAudioOutputType,
       DeviceEnumerationType aVideoInputEnumType,
-      DeviceEnumerationType aAudioInputEnumType, bool aForceNoPermRequest,
+      DeviceEnumerationType aAudioInputEnumType,
       const RefPtr<MediaDeviceSetRefCnt>& aOutDevices);
 
   RefPtr<BadConstraintsPromise> SelectSettings(
