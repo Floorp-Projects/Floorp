@@ -140,11 +140,6 @@ class nsDocument : public nsIDocument {
   NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsDocument,
                                                                    nsINode)
 
-  void SetLoadedAsData(bool aLoadedAsData) { mLoadedAsData = aLoadedAsData; }
-  void SetLoadedAsInteractiveData(bool aLoadedAsInteractiveData) {
-    mLoadedAsInteractiveData = aLoadedAsInteractiveData;
-  }
-
   nsresult CloneDocHelper(nsDocument* clone) const;
 
   // Only BlockOnload should call this!

@@ -848,6 +848,11 @@ class nsIDocument : public nsINode,
     mIsInitialDocumentInWindow = aIsInitialDocument;
   }
 
+  void SetLoadedAsData(bool aLoadedAsData) { mLoadedAsData = aLoadedAsData; }
+  void SetLoadedAsInteractiveData(bool aLoadedAsInteractiveData) {
+    mLoadedAsInteractiveData = aLoadedAsInteractiveData;
+  }
+
   /**
    * Normally we assert if a runnable labeled with one DocGroup touches data
    * from another DocGroup. Calling IgnoreDocGroupMismatches() on a document
