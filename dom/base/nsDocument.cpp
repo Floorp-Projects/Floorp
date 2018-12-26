@@ -7607,14 +7607,14 @@ void nsIDocument::EnsureOnloadBlocker() {
   }
 }
 
-void nsDocument::AsyncBlockOnload() {
+void nsIDocument::AsyncBlockOnload() {
   while (mAsyncOnloadBlockCount) {
     --mAsyncOnloadBlockCount;
     BlockOnload();
   }
 }
 
-void nsDocument::BlockOnload() {
+void nsIDocument::BlockOnload() {
   if (mDisplayDocument) {
     mDisplayDocument->BlockOnload();
     return;
@@ -7629,8 +7629,8 @@ void nsDocument::BlockOnload() {
       ++mAsyncOnloadBlockCount;
       if (mAsyncOnloadBlockCount == 1) {
         nsContentUtils::AddScriptRunner(
-            NewRunnableMethod("nsDocument::AsyncBlockOnload", this,
-                              &nsDocument::AsyncBlockOnload));
+            NewRunnableMethod("nsIDocument::AsyncBlockOnload", this,
+                              &nsIDocument::AsyncBlockOnload));
       }
       return;
     }
@@ -7642,7 +7642,7 @@ void nsDocument::BlockOnload() {
   ++mOnloadBlockCount;
 }
 
-void nsDocument::UnblockOnload(bool aFireSync) {
+void nsIDocument::UnblockOnload(bool aFireSync) {
   if (mDisplayDocument) {
     mDisplayDocument->UnblockOnload(aFireSync);
     return;
