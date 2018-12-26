@@ -93,36 +93,16 @@ class nsOnloadBlocker final : public nsIRequest {
 
 // Base class for our document implementations.
 class nsDocument : public nsIDocument {
-  friend class nsIDocument;
-
- public:
-  typedef mozilla::dom::Element Element;
-  typedef mozilla::net::ReferrerPolicy ReferrerPolicy;
-
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-
  public:
   using mozilla::dom::DocumentOrShadowRoot::GetElementById;
   using mozilla::dom::DocumentOrShadowRoot::GetElementsByClassName;
   using mozilla::dom::DocumentOrShadowRoot::GetElementsByTagName;
   using mozilla::dom::DocumentOrShadowRoot::GetElementsByTagNameNS;
 
-  NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsDocument,
-                                                                   nsINode)
-
- protected:
-  friend class nsNodeUtils;
-
   explicit nsDocument(const char* aContentType);
   virtual ~nsDocument();
 
- public:
-
-  friend class nsCallRequestFullscreen;
-
  private:
-  friend class nsUnblockOnloadEvent;
-
   // These are not implemented and not supported.
   nsDocument(const nsDocument& aOther);
   nsDocument& operator=(const nsDocument& aOther);

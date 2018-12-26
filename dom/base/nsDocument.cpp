@@ -1625,45 +1625,31 @@ nsDocument::~nsDocument() {
   mPlugins.Clear();
 }
 
-// In practice these three are always overriden by the nsDocument version, we
-// just need them to avoid making nsIDocument::AddRef / Release ambiguous.
-//
-// We can get rid of these once we merge nsIDocument and nsDocument.
-NS_IMETHODIMP_(MozExternalRefCountType) nsIDocument::Release() {
-  MOZ_CRASH("Should never be reachable");
-}
-NS_IMETHODIMP_(MozExternalRefCountType) nsIDocument::AddRef() {
-  MOZ_CRASH("Should never be reachable");
-}
-NS_IMETHODIMP nsIDocument::QueryInterface(REFNSIID aIID, void** aInstancePtr) {
-  MOZ_CRASH("Should never be reachable");
-}
-
-NS_INTERFACE_TABLE_HEAD(nsDocument)
+NS_INTERFACE_TABLE_HEAD(nsIDocument)
   NS_WRAPPERCACHE_INTERFACE_TABLE_ENTRY
   NS_INTERFACE_TABLE_BEGIN
-    NS_INTERFACE_TABLE_ENTRY_AMBIGUOUS(nsDocument, nsISupports, nsINode)
-    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsINode)
-    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDocument)
-    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIScriptObjectPrincipal)
-    NS_INTERFACE_TABLE_ENTRY(nsDocument, mozilla::dom::EventTarget)
-    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsISupportsWeakReference)
-    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIRadioGroupContainer)
-    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIMutationObserver)
-    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIApplicationCacheContainer)
+    NS_INTERFACE_TABLE_ENTRY_AMBIGUOUS(nsIDocument, nsISupports, nsINode)
+    NS_INTERFACE_TABLE_ENTRY(nsIDocument, nsINode)
+    NS_INTERFACE_TABLE_ENTRY(nsIDocument, nsIDocument)
+    NS_INTERFACE_TABLE_ENTRY(nsIDocument, nsIScriptObjectPrincipal)
+    NS_INTERFACE_TABLE_ENTRY(nsIDocument, mozilla::dom::EventTarget)
+    NS_INTERFACE_TABLE_ENTRY(nsIDocument, nsISupportsWeakReference)
+    NS_INTERFACE_TABLE_ENTRY(nsIDocument, nsIRadioGroupContainer)
+    NS_INTERFACE_TABLE_ENTRY(nsIDocument, nsIMutationObserver)
+    NS_INTERFACE_TABLE_ENTRY(nsIDocument, nsIApplicationCacheContainer)
   NS_INTERFACE_TABLE_END
-  NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(nsDocument)
+  NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(nsIDocument)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(nsDocument)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsIDocument)
 NS_IMETHODIMP_(MozExternalRefCountType)
-nsDocument::Release() {
+nsIDocument::Release() {
   MOZ_ASSERT(0 != mRefCnt, "dup release");
-  NS_ASSERT_OWNINGTHREAD(nsDocument);
-  nsISupports* base = NS_CYCLE_COLLECTION_CLASSNAME(nsDocument)::Upcast(this);
+  NS_ASSERT_OWNINGTHREAD(nsIDocument);
+  nsISupports* base = NS_CYCLE_COLLECTION_CLASSNAME(nsIDocument)::Upcast(this);
   bool shouldDelete = false;
   nsrefcnt count = mRefCnt.decr(base, &shouldDelete);
-  NS_LOG_RELEASE(this, count, "nsDocument");
+  NS_LOG_RELEASE(this, count, "nsIDocument");
   if (count == 0) {
     if (mStackRefCnt && !mNeedsReleaseAfterStackRefCntRelease) {
       mNeedsReleaseAfterStackRefCntRelease = true;
@@ -1682,9 +1668,9 @@ nsDocument::Release() {
 }
 
 NS_IMETHODIMP_(void)
-nsDocument::DeleteCycleCollectable() { delete this; }
+nsIDocument::DeleteCycleCollectable() { delete this; }
 
-NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(nsDocument)
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(nsIDocument)
   if (Element::CanSkip(tmp, aRemovingAllowed)) {
     EventListenerManager* elm = tmp->GetExistingListenerManager();
     if (elm) {
@@ -1694,11 +1680,11 @@ NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(nsDocument)
   }
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_END
 
-NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_BEGIN(nsDocument)
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_BEGIN(nsIDocument)
   return Element::CanSkipInCC(tmp);
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_END
 
-NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_BEGIN(nsDocument)
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_BEGIN(nsIDocument)
   return Element::CanSkipThis(tmp);
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_END
 
@@ -1706,7 +1692,7 @@ static const char* kNSURIs[] = {"([none])", "(xmlns)", "(xml)", "(xhtml)",
                                 "(XLink)",  "(XSLT)",  "(XBL)", "(MathML)",
                                 "(RDF)",    "(XUL)"};
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsDocument)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsIDocument)
   if (MOZ_UNLIKELY(cb.WantDebugInfo())) {
     char name[512];
     nsAutoCString loadedAsData;
@@ -1719,14 +1705,14 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsDocument)
     nsAutoCString uri;
     if (tmp->mDocumentURI) uri = tmp->mDocumentURI->GetSpecOrDefault();
     if (nsid < ArrayLength(kNSURIs)) {
-      SprintfLiteral(name, "nsDocument %s %s %s", loadedAsData.get(),
+      SprintfLiteral(name, "nsIDocument %s %s %s", loadedAsData.get(),
                      kNSURIs[nsid], uri.get());
     } else {
-      SprintfLiteral(name, "nsDocument %s %s", loadedAsData.get(), uri.get());
+      SprintfLiteral(name, "nsIDocument %s %s", loadedAsData.get(), uri.get());
     }
     cb.DescribeRefCountedNode(tmp->mRefCnt.get(), name);
   } else {
-    NS_IMPL_CYCLE_COLLECTION_DESCRIBE(nsDocument, tmp->mRefCnt.get())
+    NS_IMPL_CYCLE_COLLECTION_DESCRIBE(nsIDocument, tmp->mRefCnt.get())
   }
 
   if (!nsINode::Traverse(tmp, cb)) {
@@ -1837,11 +1823,11 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsDocument)
   }
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsDocument)
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsIDocument)
 
-NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(nsDocument)
+NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(nsIDocument)
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsIDocument)
   tmp->mInUnlinkOrDeletion = true;
 
   // Clear out our external resources
@@ -1854,7 +1840,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
   while (tmp->HasChildren()) {
     // Hold a strong ref to the node when we remove it, because we may be
     // the last reference to it.
-    // If this code changes, change the corresponding code in nsDocument's
+    // If this code changes, change the corresponding code in nsIDocument's
     // unlink impl and ContentUnbinder::UnbindSubtree.
     nsCOMPtr<nsIContent> child = tmp->GetLastChild();
     tmp->DisconnectChild(child);
@@ -1918,7 +1904,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
 
   DocumentOrShadowRoot::Unlink(tmp);
 
-  // nsDocument has a pretty complex destructor, so we're going to
+  // nsIDocument has a pretty complex destructor, so we're going to
   // assume that *most* cycles you actually want to break somewhere
   // else, and not unlink an awful lot here.
 
@@ -2949,7 +2935,7 @@ void nsIDocument::GetLastModified(nsAString& aLastModified) const {
 }
 
 static void IncrementExpandoGeneration(nsIDocument& aDoc) {
-  ++static_cast<nsDocument&>(aDoc).mExpandoAndGeneration.generation;
+  ++aDoc.mExpandoAndGeneration.generation;
 }
 
 void nsIDocument::AddToNameTable(Element* aElement, nsAtom* aName) {
@@ -4354,10 +4340,10 @@ void nsIDocument::SetContainer(nsDocShell* aContainer) {
         "No document shell root tree item from document shell tree item!");
 
     if (sameTypeRoot == aContainer) {
-      static_cast<nsDocument*>(this)->SetIsTopLevelContentDocument(true);
+      SetIsTopLevelContentDocument(true);
     }
 
-    static_cast<nsDocument*>(this)->SetIsContentDocument(true);
+    SetIsContentDocument(true);
   }
 
   mAncestorPrincipals = aContainer->AncestorPrincipals();
