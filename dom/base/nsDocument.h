@@ -187,10 +187,6 @@ class nsDocument : public nsIDocument {
     }                                                                         \
   } while (0)
 
-#ifdef DEBUG
-  void VerifyRootContentState();
-#endif
-
   explicit nsDocument(const char* aContentType);
   virtual ~nsDocument();
 
