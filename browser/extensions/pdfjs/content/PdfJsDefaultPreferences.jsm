@@ -39,6 +39,7 @@ var PdfJsDefaultPreferences = Object.freeze({
  "renderer": "canvas",
  "renderInteractiveForms": false,
  "enablePrintAutoRotate": false,
+ "disableOpenActionDestination": true,
  "disablePageMode": false,
  "disablePageLabels": false,
  "scrollModeOnLoad": 0,

@@ -1001,7 +1001,8 @@ let PDFViewerApplication = {
         });
       });
     });
-    let pageModePromise = pdfDocument.getPageMode().catch(function () {});
+    const pageModePromise = pdfDocument.getPageMode().catch(function () {});
+    const openActionDestPromise = pdfDocument.getOpenActionDestination().catch(function () {});
     this.toolbar.setPagesCount(pdfDocument.numPages, false);
     this.secondaryToolbar.setPagesCount(pdfDocument.numPages);
     const store = this.store = new _view_history.ViewHistory(pdfDocument.fingerprint);
@@ -1039,7 +1040,15 @@ let PDFViewerApplication = {
         scrollMode: null,
         spreadMode: null
       }).catch(() => {});
-      Promise.all([storePromise, pageModePromise]).then(async ([values = {}, pageMode]) => {
+      Promise.all([storePromise, pageModePromise, openActionDestPromise]).then(async ([values = {}, pageMode, openActionDest]) => {
+        if (openActionDest && !this.initialBookmark && !_app_options.AppOptions.get('disableOpenActionDestination')) {
+          this.initialBookmark = JSON.stringify(openActionDest);
+          this.pdfHistory.push({
+            explicitDest: openActionDest,
+            pageNumber: null
+          });
+        }
+
         const initialBookmark = this.initialBookmark;
 
         const zoom = _app_options.AppOptions.get('defaultZoomValue');
@@ -3887,6 +3896,10 @@ const defaultOptions = {
     value: false,
     kind: OptionKind.VIEWER
   },
+  disableOpenActionDestination: {
+    value: true,
+    kind: OptionKind.VIEWER
+  },
   disablePageLabels: {
     value: false,
     kind: OptionKind.VIEWER
@@ -5855,7 +5868,7 @@ class PDFHistory {
   }
 
   push({
-    namedDest,
+    namedDest = null,
     explicitDest,
     pageNumber
   }) {
@@ -5863,9 +5876,17 @@ class PDFHistory {
       return;
     }
 
-    if (namedDest && typeof namedDest !== 'string' || !Array.isArray(explicitDest) || !(Number.isInteger(pageNumber) && pageNumber > 0 && pageNumber <= this.linkService.pagesCount)) {
-      console.error('PDFHistory.push: Invalid parameters.');
+    if (namedDest && typeof namedDest !== 'string') {
+      console.error('PDFHistory.push: ' + `"${namedDest}" is not a valid namedDest parameter.`);
       return;
+    } else if (!Array.isArray(explicitDest)) {
+      console.error('PDFHistory.push: ' + `"${explicitDest}" is not a valid explicitDest parameter.`);
+      return;
+    } else if (!(Number.isInteger(pageNumber) && pageNumber > 0 && pageNumber <= this.linkService.pagesCount)) {
+      if (pageNumber !== null || this._destination) {
+        console.error('PDFHistory.push: ' + `"${pageNumber}" is not a valid pageNumber parameter.`);
+        return;
+      }
     }
 
     let hash = namedDest || JSON.stringify(explicitDest);
@@ -7555,7 +7576,9 @@ class PDFThumbnailViewer {
 
     pdfDocument.getPage(1).then(firstPage => {
       let pagesCount = pdfDocument.numPages;
-      let viewport = firstPage.getViewport(1.0);
+      let viewport = firstPage.getViewport({
+        scale: 1
+      });
 
       for (let pageNum = 1; pageNum <= pagesCount; ++pageNum) {
         let thumbnail = new _pdf_thumbnail_view.PDFThumbnailView({
@@ -7773,7 +7796,10 @@ class PDFThumbnailView {
     this.pdfPage = pdfPage;
     this.pdfPageRotate = pdfPage.rotate;
     let totalRotation = (this.rotation + this.pdfPageRotate) % 360;
-    this.viewport = pdfPage.getViewport(1, totalRotation);
+    this.viewport = pdfPage.getViewport({
+      scale: 1,
+      rotation: totalRotation
+    });
     this.reset();
   }
 
@@ -8493,7 +8519,9 @@ class BaseViewer {
     this.firstPagePromise = firstPagePromise;
     firstPagePromise.then(pdfPage => {
       let scale = this.currentScale;
-      let viewport = pdfPage.getViewport(scale * _ui_utils.CSS_UNITS);
+      let viewport = pdfPage.getViewport({
+        scale: scale * _ui_utils.CSS_UNITS
+      });
 
       for (let pageNum = 1; pageNum <= pagesCount; ++pageNum) {
         let textLayerFactory = null;
@@ -9064,7 +9092,9 @@ class BaseViewer {
 
   getPagesOverview() {
     let pagesOverview = this._pages.map(function (pageView) {
-      let viewport = pageView.pdfPage.getViewport(1);
+      let viewport = pageView.pdfPage.getViewport({
+        scale: 1
+      });
       return {
         width: viewport.width,
         height: viewport.height,
@@ -9378,7 +9408,10 @@ class PDFPageView {
     this.pdfPage = pdfPage;
     this.pdfPageRotate = pdfPage.rotate;
     let totalRotation = (this.rotation + this.pdfPageRotate) % 360;
-    this.viewport = pdfPage.getViewport(this.scale * _ui_utils.CSS_UNITS, totalRotation);
+    this.viewport = pdfPage.getViewport({
+      scale: this.scale * _ui_utils.CSS_UNITS,
+      rotation: totalRotation
+    });
     this.stats = pdfPage.stats;
     this.reset();
   }
@@ -11564,6 +11597,7 @@ function getDefaultPreferences() {
       "renderer": "canvas",
       "renderInteractiveForms": false,
       "enablePrintAutoRotate": false,
+      "disableOpenActionDestination": true,
       "disablePageMode": false,
       "disablePageLabels": false,
       "scrollModeOnLoad": 0,
@@ -11717,7 +11751,10 @@ function composePage(pdfDocument, pageNumber, size, printContainer) {
       let renderContext = {
         canvasContext: ctx,
         transform: [PRINT_UNITS, 0, 0, PRINT_UNITS, 0, 0],
-        viewport: pdfPage.getViewport(1, size.rotation),
+        viewport: pdfPage.getViewport({
+          scale: 1,
+          rotation: size.rotation
+        }),
         intent: 'print'
       };
       return pdfPage.render(renderContext).promise;
