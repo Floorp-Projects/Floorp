@@ -41,7 +41,7 @@ class AnimationEffect : public nsISupports, public nsWrapperCache {
     return nullptr;
   }
 
-  nsISupports* GetParentObject() const { return mDocument; }
+  nsISupports* GetParentObject() const { return ToSupports(mDocument); }
 
   bool IsCurrent() const;
   bool IsInEffect() const;

@@ -143,7 +143,9 @@ void MediaQueryList::RecomputeMatches() {
   mMatchesValid = true;
 }
 
-nsISupports* MediaQueryList::GetParentObject() const { return mDocument; }
+nsISupports* MediaQueryList::GetParentObject() const {
+  return ToSupports(mDocument);
+}
 
 JSObject* MediaQueryList::WrapObject(JSContext* aCx,
                                      JS::Handle<JSObject*> aGivenProto) {
