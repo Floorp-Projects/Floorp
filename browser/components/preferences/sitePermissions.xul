@@ -38,17 +38,16 @@
                type="search" oncommand="gSitePermissionsManager.buildPermissionsList();"/>
     </hbox>
     <separator class="thin"/>
+    <listheader>
+      <treecol id="siteCol" data-l10n-id="permissions-site-name" flex="3" width="50"
+               onclick="gSitePermissionsManager.buildPermissionsList(event.target)"/>
+      <treecol id="statusCol" data-l10n-id="permissions-status" flex="1" width="50"
+               data-isCurrentSortCol="true"
+               onclick="gSitePermissionsManager.buildPermissionsList(event.target);"/>
+    </listheader>
     <richlistbox id="permissionsBox" flex="1" selected="false"
                  onkeypress="gSitePermissionsManager.onPermissionKeyPress(event);"
-                 onselect="gSitePermissionsManager.onPermissionSelect();">
-      <listheader>
-        <treecol id="siteCol" data-l10n-id="permissions-site-name" flex="3" width="50"
-                 onclick="gSitePermissionsManager.buildPermissionsList(event.target)"/>
-        <treecol id="statusCol" data-l10n-id="permissions-status" flex="1" width="50"
-                 data-isCurrentSortCol="true"
-                 onclick="gSitePermissionsManager.buildPermissionsList(event.target);"/>
-      </listheader>
-    </richlistbox>
+                 onselect="gSitePermissionsManager.onPermissionSelect();"/>
   </vbox>
 
   <hbox class="actionButtons" align="left" flex="1">

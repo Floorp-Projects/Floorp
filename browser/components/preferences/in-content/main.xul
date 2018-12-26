@@ -393,17 +393,16 @@
            data-l10n-id="applications-filter"
            aria-controls="handlersView"/>
 
+  <listheader equalsize="always">
+    <treecol id="typeColumn" data-l10n-id="applications-type-column" value="type"
+             persist="sortDirection"
+             flex="1" sortDirection="ascending"/>
+    <treecol id="actionColumn" data-l10n-id="applications-action-column" value="action"
+             persist="sortDirection"
+             flex="1"/>
+  </listheader>
   <richlistbox id="handlersView"
-               preference="pref.downloads.disable_button.edit_actions">
-    <listheader equalsize="always">
-        <treecol id="typeColumn" data-l10n-id="applications-type-column" value="type"
-                 persist="sortDirection"
-                 flex="1" sortDirection="ascending"/>
-        <treecol id="actionColumn" data-l10n-id="applications-action-column" value="action"
-                 persist="sortDirection"
-                 flex="1"/>
-    </listheader>
-  </richlistbox>
+               preference="pref.downloads.disable_button.edit_actions"/>
 </groupbox>
 
 
