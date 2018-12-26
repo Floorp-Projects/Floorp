@@ -6982,7 +6982,7 @@ void nsIDocument::UpdateViewportOverflowType(nscoord aScrolledWidth,
   }
 }
 
-EventListenerManager* nsDocument::GetOrCreateListenerManager() {
+EventListenerManager* nsIDocument::GetOrCreateListenerManager() {
   if (!mListenerManager) {
     mListenerManager =
         new EventListenerManager(static_cast<EventTarget*>(this));
@@ -6992,11 +6992,11 @@ EventListenerManager* nsDocument::GetOrCreateListenerManager() {
   return mListenerManager;
 }
 
-EventListenerManager* nsDocument::GetExistingListenerManager() const {
+EventListenerManager* nsIDocument::GetExistingListenerManager() const {
   return mListenerManager;
 }
 
-void nsDocument::GetEventTargetParent(EventChainPreVisitor& aVisitor) {
+void nsIDocument::GetEventTargetParent(EventChainPreVisitor& aVisitor) {
   if (mDocGroup && aVisitor.mEvent->mMessage != eVoidEvent &&
       !mIgnoreDocGroupMismatches) {
     mDocGroup->ValidateAccess();

@@ -107,12 +107,6 @@ class nsDocument : public nsIDocument {
   using mozilla::dom::DocumentOrShadowRoot::GetElementsByTagName;
   using mozilla::dom::DocumentOrShadowRoot::GetElementsByTagNameNS;
 
-  // EventTarget
-  void GetEventTargetParent(mozilla::EventChainPreVisitor& aVisitor) override;
-  virtual mozilla::EventListenerManager* GetOrCreateListenerManager() override;
-  virtual mozilla::EventListenerManager* GetExistingListenerManager()
-      const override;
-
   virtual nsresult Init();
 
   virtual void Destroy() override;
