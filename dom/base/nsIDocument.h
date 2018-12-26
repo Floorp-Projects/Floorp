@@ -605,6 +605,7 @@ class nsIDocument : public nsINode,
                  nsINode** aResult) const override {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
+  nsresult CloneDocHelper(nsIDocument* clone) const;
 
   /**
    * Signal that the document title may have changed
