@@ -28,6 +28,20 @@ class WindowsDllPatcherBase {
     // resolve redirected address from the jump target.
     if (origFn[0] == 0xeb) {
       int8_t offset = (int8_t)(origFn[1]);
+      uintptr_t abstarget = origFn.GetAddress() + 2 + offset;
+
+#if defined(_M_X64)
+      // We redirect to the target of a short jump backwards if the target
+      // is another jump (only 32-bit displacement is currently supported).
+      // This case is used by GetFileAttributesW in Win7.
+      if ((offset < 0) && (origFn.IsValidAtOffset(2 + offset))) {
+        ReadOnlyTargetFunction<MMPolicyT> redirectFn(mVMPolicy, abstarget);
+        if ((redirectFn[0] == 0xff) && (redirectFn[1] == 0x25)) {
+          return redirectFn;
+        }
+      }
+#endif
+
       if (offset <= 0) {
         // Bail out for negative offset: probably already patched by some
         // third-party code.
@@ -41,7 +55,6 @@ class WindowsDllPatcherBase {
         }
       }
 
-      uintptr_t abstarget = (origFn + 2 + offset).GetAddress();
       return EnsureTargetIsAccessible(std::move(origFn), abstarget);
     }
 

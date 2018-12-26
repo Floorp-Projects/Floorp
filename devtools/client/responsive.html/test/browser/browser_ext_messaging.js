@@ -13,7 +13,75 @@ const { PromiseTestUtils } = scopedCuImport("resource://testing-common/PromiseTe
 PromiseTestUtils.whitelistRejectionsGlobally(/Message manager disconnected/);
 PromiseTestUtils.whitelistRejectionsGlobally(/Receiving end does not exist/);
 
-add_task(async function() {
+add_task(async function test_port_kept_connected_on_switch_to_RDB() {
+  const extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      "content_scripts": [{
+        "matches": [TEST_URL],
+        "js": ["content-script.js"],
+        "run_at": "document_start",
+      }],
+    },
+    background() {
+      let currentPort;
+
+      browser.runtime.onConnect.addListener(port => {
+        currentPort = port;
+        port.onDisconnect.addListener(
+          () => browser.test.sendMessage("port-disconnected"));
+        port.onMessage.addListener(
+          msg => browser.test.sendMessage("port-message-received", msg));
+        browser.test.sendMessage("port-connected");
+      });
+
+      browser.test.onMessage.addListener(async msg => {
+        if (msg !== "test:port-message-send") {
+          browser.test.fail(`Unexpected test message received: ${msg}`);
+        }
+
+        currentPort.postMessage("ping");
+      });
+
+      browser.test.sendMessage("background:ready");
+    },
+    files: {
+      "content-script.js": function contentScript() {
+        const port = browser.runtime.connect();
+        port.onMessage.addListener(msg => port.postMessage(`${msg}-pong`));
+      },
+    },
+  });
+
+  await extension.startup();
+
+  await extension.awaitMessage("background:ready");
+
+  const tab = await addTab(TEST_URL);
+
+  await extension.awaitMessage("port-connected");
+
+  await openRDM(tab);
+
+  extension.sendMessage("test:port-message-send");
+
+  is(await extension.awaitMessage("port-message-received"), "ping-pong",
+     "Got the expected message back from the content script");
+
+  await closeRDM(tab);
+
+  extension.sendMessage("test:port-message-send");
+
+  is(await extension.awaitMessage("port-message-received"), "ping-pong",
+     "Got the expected message back from the content script");
+
+  await removeTab(tab);
+
+  await extension.awaitMessage("port-disconnected");
+
+  await extension.unload();
+});
+
+add_task(async function test_tab_sender() {
   const tab = await addTab(TEST_URL);
   await openRDM(tab);
 
