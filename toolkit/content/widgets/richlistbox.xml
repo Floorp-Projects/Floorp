@@ -15,7 +15,6 @@
   <binding id="richlistbox"
            extends="chrome://global/content/bindings/general.xml#basecontrol">
     <content>
-      <children includes="listheader"/>
       <xul:scrollbox allowevents="true" orient="vertical" anonid="main-box"
                      flex="1" style="overflow: auto;" xbl:inherits="dir,pack">
         <children/>
