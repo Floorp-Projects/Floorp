@@ -463,6 +463,17 @@ class nsIDocument : public nsINode,
 
   NS_DECL_ADDSIZEOFEXCLUDINGTHIS
 
+#define NS_DOCUMENT_NOTIFY_OBSERVERS(func_, params_)                          \
+  do {                                                                        \
+    NS_OBSERVER_ARRAY_NOTIFY_XPCOM_OBSERVERS(mObservers, nsIDocumentObserver, \
+                                             func_, params_);                 \
+    /* FIXME(emilio): Apparently we can keep observing from the BFCache? That \
+       looks bogus. */                                                        \
+    if (nsIPresShell* shell = GetObservingShell()) {                          \
+      shell->func_ params_;                                                   \
+    }                                                                         \
+  } while (0)
+
 #ifdef MOZILLA_INTERNAL_API
   nsIDocument();
 #endif
