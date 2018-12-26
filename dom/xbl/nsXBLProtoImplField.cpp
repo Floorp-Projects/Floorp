@@ -17,6 +17,7 @@
 #include "nsIURI.h"
 #include "nsXBLSerialize.h"
 #include "nsXBLPrototypeBinding.h"
+#include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/ElementBinding.h"
 #include "mozilla/dom/ScriptSettings.h"

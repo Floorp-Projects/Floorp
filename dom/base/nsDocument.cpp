@@ -43,6 +43,7 @@
 #include "nsCSSPseudoElements.h"
 #include "nsIObserver.h"
 #include "nsIBaseWindow.h"
+#include "nsILayoutHistoryState.h"
 #include "mozilla/css/Loader.h"
 #include "mozilla/css/ImageLoader.h"
 #include "nsDocShell.h"
@@ -59,6 +60,7 @@
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/FullscreenChange.h"
+#include "mozilla/PendingAnimationTracker.h"
 
 #include "mozilla/dom/Attr.h"
 #include "mozilla/dom/BindingDeclarations.h"
@@ -69,7 +71,10 @@
 #include "mozilla/dom/FramingChecker.h"
 #include "mozilla/dom/HTMLSharedElement.h"
 #include "mozilla/dom/Navigator.h"
+#include "mozilla/dom/Performance.h"
 #include "mozilla/dom/ServiceWorkerContainer.h"
+#include "mozilla/dom/ScriptLoader.h"
+#include "mozilla/dom/StyleSheetList.h"
 #include "mozilla/dom/SVGUseElement.h"
 #include "nsGenericHTMLElement.h"
 #include "mozilla/dom/CDATASection.h"
@@ -673,7 +678,17 @@ class SubDocMapEntry : public PLDHashEntryHdr {
   nsIDocument* mSubDocument;
 };
 
-// nsOnloadBlocker implementation
+class nsOnloadBlocker final : public nsIRequest {
+ public:
+  nsOnloadBlocker() {}
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIREQUEST
+
+ private:
+  ~nsOnloadBlocker() {}
+};
+
 NS_IMPL_ISUPPORTS(nsOnloadBlocker, nsIRequest)
 
 NS_IMETHODIMP
@@ -7024,6 +7039,17 @@ void nsIDocument::FlushPendingNotifications(FlushType aType) {
   mozilla::ChangesToFlush flush(aType, aType >= FlushType::Style);
   FlushPendingNotifications(flush);
 }
+
+class nsDocumentOnStack {
+ public:
+  explicit nsDocumentOnStack(nsIDocument* aDoc) : mDoc(aDoc) {
+    mDoc->IncreaseStackRefCnt();
+  }
+  ~nsDocumentOnStack() { mDoc->DecreaseStackRefCnt(); }
+
+ private:
+  nsIDocument* mDoc;
+};
 
 void nsIDocument::FlushPendingNotifications(mozilla::ChangesToFlush aFlush) {
   FlushType flushType = aFlush.mFlushType;
