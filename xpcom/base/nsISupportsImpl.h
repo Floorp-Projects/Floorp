@@ -34,6 +34,8 @@
                 " should not have a public destructor. " \
                 "Make this class's destructor non-public");
 
+inline nsISupports* ToSupports(decltype(nullptr)) { return nullptr; }
+
 inline nsISupports* ToSupports(nsISupports* aSupports) { return aSupports; }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -147,10 +149,10 @@ class nsAutoOwningThread {
  * Note: The explicit comparison to nullptr is needed to avoid warnings
  *       when _p is a nullptr itself. */
 #define NSCAP_LOG_ASSIGNMENT(_c, _p) \
-  if (_p != nullptr) NS_LogCOMPtrAddRef((_c), static_cast<nsISupports*>(_p))
+  if (_p != nullptr) NS_LogCOMPtrAddRef((_c), ToSupports(_p))
 
 #define NSCAP_LOG_RELEASE(_c, _p) \
-  if (_p) NS_LogCOMPtrRelease((_c), static_cast<nsISupports*>(_p))
+  if (_p) NS_LogCOMPtrRelease((_c), ToSupports(_p))
 
 #else /* !NS_BUILD_REFCNT_LOGGING */
 
