@@ -650,6 +650,7 @@ var BrowserApp = {
         UITelemetry.addEvent("action.1", "contextmenu", null, "web_copy_link");
 
         let url = NativeWindow.contextmenus._getLinkURL(aTarget);
+        url = NativeWindow.contextmenus._stripViewSource(url);
         NativeWindow.contextmenus._copyStringToDefaultClipboard(url);
       });
 
@@ -678,9 +679,11 @@ var BrowserApp = {
       order: NativeWindow.contextmenus.DEFAULT_HTML5_ORDER - 1, // Show above HTML5 menu items
       selector: NativeWindow.contextmenus._disableRestricted("SHARE", NativeWindow.contextmenus.linkShareableContext),
       showAsActions: function(aElement) {
+        let uri = NativeWindow.contextmenus._getLinkURL(aElement);
+        uri = NativeWindow.contextmenus._stripViewSource(uri);
         return {
           title: aElement.textContent.trim() || aElement.title.trim(),
-          uri: NativeWindow.contextmenus._getLinkURL(aElement),
+          uri,
         };
       },
       icon: "drawable://ic_menu_share",
@@ -854,6 +857,7 @@ var BrowserApp = {
         UITelemetry.addEvent("action.1", "contextmenu", null, "web_copy_image");
 
         let url = aTarget.src;
+        url = NativeWindow.contextmenus._stripViewSource(url);
         NativeWindow.contextmenus._copyStringToDefaultClipboard(url);
       });
 
@@ -863,6 +867,7 @@ var BrowserApp = {
       order: NativeWindow.contextmenus.DEFAULT_HTML5_ORDER - 1, // Show above HTML5 menu items
       showAsActions: function(aTarget) {
         let src = aTarget.src;
+        src = NativeWindow.contextmenus._stripViewSource(src);
         return {
           title: src,
           uri: src,
@@ -3233,6 +3238,11 @@ var NativeWindow = {
     _stripScheme: function(aString) {
       let index = aString.indexOf(":");
       return aString.slice(index + 1);
+    },
+
+    _stripViewSource: function(aString) {
+      // If we're in a view source tab, remove the view-source: prefix
+      return aString.replace(/^view-source:/, "");
     }
   }
 };
