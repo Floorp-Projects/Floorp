@@ -76,6 +76,49 @@
         document.getAnonymousElementByAttribute(this, "anonid", "scrollbutton-down");
       </field>
 
+      <field name="_scrollIndex">0</field>
+
+      <field name="_arrowScrollAnim"><![CDATA[({
+        scrollbox: this,
+        requestHandle: 0, /* 0 indicates there is no pending request */
+        start: function arrowSmoothScroll_start() {
+          this.lastFrameTime = window.performance.now();
+          if (!this.requestHandle)
+            this.requestHandle = window.requestAnimationFrame(this.sample.bind(this));
+        },
+        stop: function arrowSmoothScroll_stop() {
+          window.cancelAnimationFrame(this.requestHandle);
+          this.requestHandle = 0;
+        },
+        sample: function arrowSmoothScroll_handleEvent(timeStamp) {
+          const scrollIndex = this.scrollbox._scrollIndex;
+          const timePassed = timeStamp - this.lastFrameTime;
+          this.lastFrameTime = timeStamp;
+
+          const scrollDelta = 0.5 * timePassed * scrollIndex;
+          this.scrollbox.scrollByPixels(scrollDelta, true);
+          this.requestHandle = window.requestAnimationFrame(this.sample.bind(this));
+        },
+      })]]></field>
+
+      <property name="_clickToScroll" readonly="true">
+        <getter><![CDATA[
+          return this.hasAttribute("clicktoscroll");
+        ]]></getter>
+      </property>
+
+      <property name="_scrollDelay" readonly="true">
+        <getter><![CDATA[
+          if (this._clickToScroll) {
+            return this._prefBranch.getIntPref(
+                            "toolkit.scrollbox.clickToScroll.scrollDelay", 150);
+          }
+
+          // Use the same REPEAT_DELAY as "nsRepeatService.h".
+          return /Mac/.test(navigator.platform) ? 25 : 50;
+        ]]></getter>
+      </property>
+
       <field name="__prefBranch">null</field>
       <property name="_prefBranch" readonly="true">
         <getter><![CDATA[
@@ -167,6 +210,9 @@
       <method name="_onButtonClick">
         <parameter name="event"/>
         <body><![CDATA[
+          if (this._clickToScroll) {
+            this._distanceScroll(event);
+          }
         ]]></body>
       </method>
 
@@ -174,26 +220,40 @@
         <parameter name="event"/>
         <parameter name="index"/>
         <body><![CDATA[
+          if (this._clickToScroll && event.button == 0) {
+            this._startScroll(index);
+          }
         ]]></body>
       </method>
 
       <method name="_onButtonMouseUp">
         <parameter name="event"/>
         <body><![CDATA[
+          if (this._clickToScroll && event.button == 0) {
+            this._stopScroll();
+          }
         ]]></body>
       </method>
 
       <method name="_onButtonMouseOver">
         <parameter name="index"/>
         <body><![CDATA[
-          this._startScroll(index);
+          if (this._clickToScroll) {
+            this._continueScroll(index);
+          } else {
+            this._startScroll(index);
+          }
         ]]></body>
       </method>
 
       <method name="_onButtonMouseOut">
         <parameter name="index"/>
         <body><![CDATA[
-          this._stopScroll();
+          if (this._clickToScroll) {
+            this._pauseScroll();
+          } else {
+            this._stopScroll();
+          }
         ]]></body>
       </method>
 
@@ -347,19 +407,37 @@
             index *= -1;
           }
 
+          if (this._clickToScroll) {
+            this._scrollIndex = index;
+            this._mousedown = true;
+
+            if (this.smoothScroll) {
+              this._arrowScrollAnim.start();
+              return;
+            }
+          }
+
           if (!this._scrollTimer) {
             this._scrollTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
           } else {
             this._scrollTimer.cancel();
           }
 
-          let callback = () => this.scrollByPixels(this.scrollIncrement * index);
+          let callback;
+          if (this._clickToScroll) {
+            callback = () => {
+              if (!document && this._scrollTimer) {
+                this._scrollTimer.cancel();
+              }
+              this.scrollByIndex(this._scrollIndex);
+            };
+          } else {
+            callback = () => this.scrollByPixels(this.scrollIncrement * index);
+          }
 
-          // Use the same REPEAT_DELAY as "nsRepeatService.h".
-          let scrollDelay = /Mac/.test(navigator.platform) ? 25 : 50;
-
-          this._scrollTimer.initWithCallback(callback, scrollDelay,
+          this._scrollTimer.initWithCallback(callback, this._scrollDelay,
                                              Ci.nsITimer.TYPE_REPEATING_SLACK);
+
           callback();
         ]]>
         </body>
@@ -369,6 +447,88 @@
         <body><![CDATA[
           if (this._scrollTimer)
             this._scrollTimer.cancel();
+
+          if (this._clickToScroll) {
+            this._mousedown = false;
+            if (!this._scrollIndex || !this.smoothScroll)
+              return;
+
+            this.scrollByIndex(this._scrollIndex);
+            this._scrollIndex = 0;
+
+            this._arrowScrollAnim.stop();
+          }
+        ]]></body>
+      </method>
+
+      <method name="_pauseScroll">
+        <body><![CDATA[
+          if (this._mousedown) {
+            this._stopScroll();
+            this._mousedown = true;
+            document.addEventListener("mouseup", this);
+            document.addEventListener("blur", this, true);
+          }
+        ]]></body>
+      </method>
+
+      <method name="_continueScroll">
+        <parameter name="index"/>
+        <body><![CDATA[
+          if (this._mousedown)
+            this._startScroll(index);
+        ]]></body>
+      </method>
+
+      <method name="_distanceScroll">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          if (aEvent.detail < 2 || aEvent.detail > 3)
+            return;
+
+          var scrollBack = (aEvent.originalTarget == this._scrollButtonUp);
+          var scrollLeftOrUp = this._isRTLScrollbox ? !scrollBack : scrollBack;
+          var targetElement;
+
+          if (aEvent.detail == 2) {
+            // scroll by the size of the scrollbox
+            let [start, end] = this._startEndProps;
+            let x;
+            if (scrollLeftOrUp)
+              x = this.scrollClientRect[start] - this.scrollClientSize;
+            else
+              x = this.scrollClientRect[end] + this.scrollClientSize;
+            targetElement = this._elementFromPoint(x, scrollLeftOrUp ? -1 : 1);
+
+            // the next partly-hidden element will become fully visible,
+            // so don't scroll too far
+            if (targetElement)
+              targetElement = scrollBack ?
+                              targetElement.nextElementSibling :
+                              targetElement.previousElementSibling;
+          }
+
+          if (!targetElement) {
+            // scroll to the first resp. last element
+            let elements = this._getScrollableElements();
+            targetElement = scrollBack ?
+                            elements[0] :
+                            elements[elements.length - 1];
+          }
+
+          this.ensureElementIsVisible(targetElement);
+        ]]></body>
+      </method>
+
+      <method name="handleEvent">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          if (aEvent.type == "mouseup" ||
+              aEvent.type == "blur" && aEvent.target == document) {
+            this._mousedown = false;
+            document.removeEventListener("mouseup", this);
+            document.removeEventListener("blur", this, true);
+          }
         ]]></body>
       </method>
 
@@ -617,209 +777,5 @@
         this._direction = 0;
       ]]></handler>
     </handlers>
-  </binding>
-
-  <binding id="arrowscrollbox-clicktoscroll" extends="chrome://global/content/bindings/scrollbox.xml#arrowscrollbox">
-    <implementation>
-      <constructor><![CDATA[
-        this._scrollDelay =
-          this._prefBranch.getIntPref("toolkit.scrollbox.clickToScroll.scrollDelay",
-                                      this._scrollDelay);
-      ]]></constructor>
-
-      <destructor><![CDATA[
-        // Release timer to avoid reference cycles.
-        if (this._scrollTimer) {
-          this._scrollTimer.cancel();
-          this._scrollTimer = null;
-        }
-      ]]></destructor>
-
-      <field name="_scrollIndex">0</field>
-      <field name="_scrollDelay">150</field>
-
-      <field name="_arrowScrollAnim"><![CDATA[({
-        scrollbox: this,
-        requestHandle: 0, /* 0 indicates there is no pending request */
-        start: function arrowSmoothScroll_start() {
-          this.lastFrameTime = window.performance.now();
-          if (!this.requestHandle)
-            this.requestHandle = window.requestAnimationFrame(this.sample.bind(this));
-        },
-        stop: function arrowSmoothScroll_stop() {
-          window.cancelAnimationFrame(this.requestHandle);
-          this.requestHandle = 0;
-        },
-        sample: function arrowSmoothScroll_handleEvent(timeStamp) {
-          const scrollIndex = this.scrollbox._scrollIndex;
-          const timePassed = timeStamp - this.lastFrameTime;
-          this.lastFrameTime = timeStamp;
-
-          const scrollDelta = 0.5 * timePassed * scrollIndex;
-          this.scrollbox.scrollByPixels(scrollDelta, true);
-          this.requestHandle = window.requestAnimationFrame(this.sample.bind(this));
-        },
-      })]]></field>
-
-      <method name="_onButtonClick">
-        <parameter name="event"/>
-        <body><![CDATA[
-          this._distanceScroll(event);
-        ]]></body>
-      </method>
-
-      <method name="_onButtonMouseDown">
-        <parameter name="event"/>
-        <parameter name="index"/>
-        <body><![CDATA[
-          if (event.button == 0) {
-            this._startScroll(index);
-          }
-        ]]></body>
-      </method>
-
-      <method name="_onButtonMouseUp">
-        <parameter name="event"/>
-        <body><![CDATA[
-          if (event.button == 0) {
-            this._stopScroll();
-          }
-        ]]></body>
-      </method>
-
-      <method name="_onButtonMouseOver">
-        <parameter name="index"/>
-        <body><![CDATA[
-          this._continueScroll(index);
-        ]]></body>
-      </method>
-
-      <method name="_onButtonMouseOut">
-        <body><![CDATA[
-          this._pauseScroll();
-        ]]></body>
-      </method>
-
-      <method name="_startScroll">
-        <parameter name="index"/>
-        <body><![CDATA[
-          if (this._isRTLScrollbox)
-            index *= -1;
-          this._scrollIndex = index;
-          this._mousedown = true;
-
-          if (this.smoothScroll) {
-            this._arrowScrollAnim.start();
-            return;
-          }
-
-          if (!this._scrollTimer)
-            this._scrollTimer =
-              Cc["@mozilla.org/timer;1"]
-                .createInstance(Ci.nsITimer);
-          else
-            this._scrollTimer.cancel();
-
-          let callback = () => {
-            if (!document && this._scrollTimer) {
-              this._scrollTimer.cancel();
-            }
-            this.scrollByIndex(this._scrollIndex);
-          };
-
-          this._scrollTimer.initWithCallback(callback, this._scrollDelay,
-                                             this._scrollTimer.TYPE_REPEATING_SLACK);
-          callback();
-        ]]>
-        </body>
-      </method>
-
-      <method name="_stopScroll">
-        <body><![CDATA[
-          if (this._scrollTimer)
-            this._scrollTimer.cancel();
-          this._mousedown = false;
-          if (!this._scrollIndex || !this.smoothScroll)
-            return;
-
-          this.scrollByIndex(this._scrollIndex);
-          this._scrollIndex = 0;
-
-          this._arrowScrollAnim.stop();
-        ]]></body>
-      </method>
-
-      <method name="_pauseScroll">
-        <body><![CDATA[
-          if (this._mousedown) {
-            this._stopScroll();
-            this._mousedown = true;
-            document.addEventListener("mouseup", this);
-            document.addEventListener("blur", this, true);
-          }
-        ]]></body>
-      </method>
-
-      <method name="_continueScroll">
-        <parameter name="index"/>
-        <body><![CDATA[
-          if (this._mousedown)
-            this._startScroll(index);
-        ]]></body>
-      </method>
-
-      <method name="handleEvent">
-        <parameter name="aEvent"/>
-        <body><![CDATA[
-          if (aEvent.type == "mouseup" ||
-              aEvent.type == "blur" && aEvent.target == document) {
-            this._mousedown = false;
-            document.removeEventListener("mouseup", this);
-            document.removeEventListener("blur", this, true);
-          }
-        ]]></body>
-      </method>
-
-      <method name="_distanceScroll">
-        <parameter name="aEvent"/>
-        <body><![CDATA[
-          if (aEvent.detail < 2 || aEvent.detail > 3)
-            return;
-
-          var scrollBack = (aEvent.originalTarget == this._scrollButtonUp);
-          var scrollLeftOrUp = this._isRTLScrollbox ? !scrollBack : scrollBack;
-          var targetElement;
-
-          if (aEvent.detail == 2) {
-            // scroll by the size of the scrollbox
-            let [start, end] = this._startEndProps;
-            let x;
-            if (scrollLeftOrUp)
-              x = this.scrollClientRect[start] - this.scrollClientSize;
-            else
-              x = this.scrollClientRect[end] + this.scrollClientSize;
-            targetElement = this._elementFromPoint(x, scrollLeftOrUp ? -1 : 1);
-
-            // the next partly-hidden element will become fully visible,
-            // so don't scroll too far
-            if (targetElement)
-              targetElement = scrollBack ?
-                              targetElement.nextElementSibling :
-                              targetElement.previousElementSibling;
-          }
-
-          if (!targetElement) {
-            // scroll to the first resp. last element
-            let elements = this._getScrollableElements();
-            targetElement = scrollBack ?
-                            elements[0] :
-                            elements[elements.length - 1];
-          }
-
-          this.ensureElementIsVisible(targetElement);
-        ]]></body>
-      </method>
-
-    </implementation>
   </binding>
 </bindings>
