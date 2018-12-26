@@ -113,22 +113,9 @@ class nsDocument : public nsIDocument {
 
   virtual void StopDocumentLoad() override;
 
-  static bool DocumentSupportsL10n(JSContext* aCx, JSObject* aObject);
-  static bool IsWebAnimationsEnabled(JSContext* aCx, JSObject* aObject);
-  static bool IsWebAnimationsEnabled(mozilla::dom::CallerType aCallerType);
-  static bool IsWebAnimationsGetAnimationsEnabled(JSContext* aCx,
-                                                  JSObject* aObject);
-  static bool AreWebAnimationsImplicitKeyframesEnabled(JSContext* aCx,
-                                                       JSObject* aObject);
-  static bool AreWebAnimationsTimelinesEnabled(JSContext* aCx,
-                                               JSObject* aObject);
-
   virtual void EndUpdate() override;
   virtual void BeginLoad() override;
   virtual void EndLoad() override;
-
-  // Checks that the caller is either chrome or some addon.
-  static bool IsCallerChromeOrAddon(JSContext* aCx, JSObject* aObject);
 
  public:
   using mozilla::dom::DocumentOrShadowRoot::GetElementById;
