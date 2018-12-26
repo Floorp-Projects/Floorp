@@ -678,10 +678,6 @@ arrowscrollbox {
   -moz-binding: url("chrome://global/content/bindings/scrollbox.xml#arrowscrollbox");
 }
 
-arrowscrollbox[clicktoscroll="true"] {
-  -moz-binding: url("chrome://global/content/bindings/scrollbox.xml#arrowscrollbox-clicktoscroll");
-}
-
 /********** stringbundle **********/
 
 stringbundle,
