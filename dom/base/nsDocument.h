@@ -107,11 +107,6 @@ class nsDocument : public nsIDocument {
   using mozilla::dom::DocumentOrShadowRoot::GetElementsByTagName;
   using mozilla::dom::DocumentOrShadowRoot::GetElementsByTagNameNS;
 
-  virtual nsresult Init();
-
-  virtual void Destroy() override;
-  virtual void RemovedFromDocShell() override;
-
   NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsDocument,
                                                                    nsINode)
 

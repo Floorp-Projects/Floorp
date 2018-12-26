@@ -1949,7 +1949,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
   tmp->mInUnlinkOrDeletion = false;
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-nsresult nsDocument::Init() {
+nsresult nsIDocument::Init() {
   if (mCSSLoader || mStyleImageLoader || mNodeInfoManager || mScriptLoader) {
     return NS_ERROR_ALREADY_INITIALIZED;
   }
@@ -7519,7 +7519,7 @@ bool nsIDocument::CanSavePresentation(nsIRequest* aNewRequest) {
   return true;
 }
 
-void nsDocument::Destroy() {
+void nsIDocument::Destroy() {
   // The ContentViewer wants to release the document now.  So, tell our content
   // to drop any references to the document so that it can be destroyed.
   if (mIsGoingAway) return;
@@ -7554,7 +7554,7 @@ void nsDocument::Destroy() {
   mExternalResourceMap.Shutdown();
 }
 
-void nsDocument::RemovedFromDocShell() {
+void nsIDocument::RemovedFromDocShell() {
   if (mRemovedFromDocShell) return;
 
   mRemovedFromDocShell = true;

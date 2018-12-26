@@ -2118,12 +2118,14 @@ class nsIDocument : public nsINode,
    */
   virtual bool CanSavePresentation(nsIRequest* aNewRequest);
 
+  virtual nsresult Init();
+
   /**
    * Notify the document that its associated ContentViewer is being destroyed.
    * This releases circular references so that the document can go away.
    * Destroy() is only called on documents that have a content viewer.
    */
-  virtual void Destroy() = 0;
+  virtual void Destroy();
 
   /**
    * Notify the document that its associated ContentViewer is no longer
@@ -2131,7 +2133,7 @@ class nsIDocument : public nsINode,
    * be rendered in "zombie state" until the next document is ready.
    * The document should save form control state.
    */
-  virtual void RemovedFromDocShell() = 0;
+  virtual void RemovedFromDocShell();
 
   /**
    * Get the layout history state that should be used to save and restore state
