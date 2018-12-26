@@ -10935,32 +10935,63 @@ void nsIDocument::MaybeActiveMediaComponents() {
   GetWindow()->MaybeActiveMediaComponents();
 }
 
-/* virtual */ void nsIDocument::DocAddSizeOfExcludingThis(
-    nsWindowSizes& aSizes) const {
-  if (mPresShell) {
-    mPresShell->AddSizeOfIncludingThis(aSizes);
+void nsIDocument::DocAddSizeOfExcludingThis(nsWindowSizes& aWindowSizes) const {
+  nsINode::AddSizeOfExcludingThis(aWindowSizes, &aWindowSizes.mDOMOtherSize);
+
+  for (nsIContent* kid = GetFirstChild(); kid; kid = kid->GetNextSibling()) {
+    AddSizeOfNodeTree(*kid, aWindowSizes);
   }
 
-  aSizes.mPropertyTablesSize +=
-      mPropertyTable.SizeOfExcludingThis(aSizes.mState.mMallocSizeOf);
+  // IMPORTANT: for our ComputedValues measurements, we want to measure
+  // ComputedValues accessible from DOM elements before ComputedValues not
+  // accessible from DOM elements (i.e. accessible only from the frame tree).
+  //
+  // Therefore, the measurement of the nsIDocument superclass must happen after
+  // the measurement of DOM nodes (above), because nsIDocument contains the
+  // PresShell, which contains the frame tree.
+  if (mPresShell) {
+    mPresShell->AddSizeOfIncludingThis(aWindowSizes);
+  }
+
+  aWindowSizes.mPropertyTablesSize +=
+      mPropertyTable.SizeOfExcludingThis(aWindowSizes.mState.mMallocSizeOf);
 
   if (EventListenerManager* elm = GetExistingListenerManager()) {
-    aSizes.mDOMEventListenersCount += elm->ListenerCount();
+    aWindowSizes.mDOMEventListenersCount += elm->ListenerCount();
   }
 
   if (mNodeInfoManager) {
-    mNodeInfoManager->AddSizeOfIncludingThis(aSizes);
+    mNodeInfoManager->AddSizeOfIncludingThis(aWindowSizes);
   }
 
-  aSizes.mDOMMediaQueryLists +=
-      mDOMMediaQueryLists.sizeOfExcludingThis(aSizes.mState.mMallocSizeOf);
+  aWindowSizes.mDOMMediaQueryLists +=
+      mDOMMediaQueryLists.sizeOfExcludingThis(aWindowSizes.mState.mMallocSizeOf);
 
   for (const MediaQueryList* mql : mDOMMediaQueryLists) {
-    aSizes.mDOMMediaQueryLists +=
-        mql->SizeOfExcludingThis(aSizes.mState.mMallocSizeOf);
+    aWindowSizes.mDOMMediaQueryLists +=
+        mql->SizeOfExcludingThis(aWindowSizes.mState.mMallocSizeOf);
   }
 
-  mContentBlockingLog.AddSizeOfExcludingThis(aSizes);
+  mContentBlockingLog.AddSizeOfExcludingThis(aWindowSizes);
+
+  DocumentOrShadowRoot::AddSizeOfExcludingThis(aWindowSizes);
+
+  for (auto& sheetArray : mAdditionalSheets) {
+    AddSizeOfOwnedSheetArrayExcludingThis(aWindowSizes, sheetArray);
+  }
+  // Lumping in the loader with the style-sheets size is not ideal,
+  // but most of the things in there are in fact stylesheets, so it
+  // doesn't seem worthwhile to separate it out.
+  aWindowSizes.mLayoutStyleSheetsSize +=
+      CSSLoader()->SizeOfIncludingThis(aWindowSizes.mState.mMallocSizeOf);
+
+  aWindowSizes.mDOMOtherSize += mAttrStyleSheet
+                                    ? mAttrStyleSheet->DOMSizeOfIncludingThis(
+                                          aWindowSizes.mState.mMallocSizeOf)
+                                    : 0;
+
+  aWindowSizes.mDOMOtherSize += mStyledLinks.ShallowSizeOfExcludingThis(
+      aWindowSizes.mState.mMallocSizeOf);
 
   // Measurement of the following members may be added later if DMD finds it
   // is worthwhile:
@@ -10972,8 +11003,8 @@ void nsIDocument::DocAddSizeOfIncludingThis(nsWindowSizes& aWindowSizes) const {
   DocAddSizeOfExcludingThis(aWindowSizes);
 }
 
-void nsDocument::AddSizeOfExcludingThis(nsWindowSizes& aSizes,
-                                        size_t* aNodeSize) const {
+void nsIDocument::AddSizeOfExcludingThis(nsWindowSizes& aSizes,
+                                         size_t* aNodeSize) const {
   // This AddSizeOfExcludingThis() overrides the one from nsINode.  But
   // nsDocuments can only appear at the top of the DOM tree, and we use the
   // specialized DocAddSizeOfExcludingThis() in that case.  So this should never
@@ -11040,45 +11071,6 @@ void nsDocument::AddSizeOfExcludingThis(nsWindowSizes& aSizes,
        kid = kid->GetNextSibling()) {
     AddSizeOfNodeTree(*kid, aWindowSizes);
   }
-}
-
-void nsDocument::DocAddSizeOfExcludingThis(nsWindowSizes& aWindowSizes) const {
-  nsINode::AddSizeOfExcludingThis(aWindowSizes, &aWindowSizes.mDOMOtherSize);
-
-  for (nsIContent* kid = GetFirstChild(); kid; kid = kid->GetNextSibling()) {
-    AddSizeOfNodeTree(*kid, aWindowSizes);
-  }
-
-  // IMPORTANT: for our ComputedValues measurements, we want to measure
-  // ComputedValues accessible from DOM elements before ComputedValues not
-  // accessible from DOM elements (i.e. accessible only from the frame tree).
-  //
-  // Therefore, the measurement of the nsIDocument superclass must happen after
-  // the measurement of DOM nodes (above), because nsIDocument contains the
-  // PresShell, which contains the frame tree.
-  nsIDocument::DocAddSizeOfExcludingThis(aWindowSizes);
-
-  DocumentOrShadowRoot::AddSizeOfExcludingThis(aWindowSizes);
-  for (auto& sheetArray : mAdditionalSheets) {
-    AddSizeOfOwnedSheetArrayExcludingThis(aWindowSizes, sheetArray);
-  }
-  // Lumping in the loader with the style-sheets size is not ideal,
-  // but most of the things in there are in fact stylesheets, so it
-  // doesn't seem worthwhile to separate it out.
-  aWindowSizes.mLayoutStyleSheetsSize +=
-      CSSLoader()->SizeOfIncludingThis(aWindowSizes.mState.mMallocSizeOf);
-
-  aWindowSizes.mDOMOtherSize += mAttrStyleSheet
-                                    ? mAttrStyleSheet->DOMSizeOfIncludingThis(
-                                          aWindowSizes.mState.mMallocSizeOf)
-                                    : 0;
-
-  aWindowSizes.mDOMOtherSize += mStyledLinks.ShallowSizeOfExcludingThis(
-      aWindowSizes.mState.mMallocSizeOf);
-
-  // Measurement of the following members may be added later if DMD finds it
-  // is worthwhile:
-  // - many!
 }
 
 already_AddRefed<nsIDocument> nsIDocument::Constructor(

@@ -101,8 +101,6 @@ class nsDocument : public nsIDocument {
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
-  NS_DECL_ADDSIZEOFEXCLUDINGTHIS
-
   // StartDocumentLoad is pure virtual so that subclasses must override it.
   // The nsDocument StartDocumentLoad does some setup, but does NOT set
   // *aDocListener; this is the job of subclasses.
@@ -144,10 +142,6 @@ class nsDocument : public nsIDocument {
 
   // Only BlockOnload should call this!
   void AsyncBlockOnload();
-
-  virtual void DocAddSizeOfExcludingThis(
-      nsWindowSizes& aWindowSizes) const override;
-  // DocAddSizeOfIncludingThis is inherited from nsIDocument.
 
  protected:
   friend class nsNodeUtils;
