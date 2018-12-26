@@ -324,7 +324,10 @@ ProxyMessenger = {
           port.replaceMessageManager(messageManager, newMessageManager);
         }
         this.ports.delete(messageManager);
-        event.detail.addEventListener("SwapDocShells", this, {once: true});
+
+        event.detail.addEventListener("EndSwapDocShells", () => {
+          event.detail.addEventListener("SwapDocShells", this, {once: true});
+        }, {once: true});
       }
     }
   },
