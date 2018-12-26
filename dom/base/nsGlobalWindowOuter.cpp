@@ -525,7 +525,7 @@ bool nsOuterWindowProxy::defineProperty(JSContext* cx,
                                         JS::Handle<jsid> id,
                                         JS::Handle<JS::PropertyDescriptor> desc,
                                         JS::ObjectOpResult& result) const {
-  if (IsArrayIndex(GetArrayIndexFromId(cx, id))) {
+  if (IsArrayIndex(GetArrayIndexFromId(id))) {
     // Spec says to Reject whether this is a supported index or not,
     // since we have no indexed setter or indexed creator.  It is up
     // to the caller to decide whether to throw a TypeError.
@@ -619,7 +619,7 @@ bool nsOuterWindowProxy::delete_(JSContext* cx, JS::Handle<JSObject*> proxy,
     return result.failCantDeleteWindowElement();
   }
 
-  if (IsArrayIndex(GetArrayIndexFromId(cx, id))) {
+  if (IsArrayIndex(GetArrayIndexFromId(id))) {
     // Indexed, but not supported.  Spec says return true.
     return result.succeed();
   }
@@ -709,7 +709,7 @@ bool nsOuterWindowProxy::set(JSContext* cx, JS::Handle<JSObject*> proxy,
                              JS::Handle<jsid> id, JS::Handle<JS::Value> v,
                              JS::Handle<JS::Value> receiver,
                              JS::ObjectOpResult& result) const {
-  if (IsArrayIndex(GetArrayIndexFromId(cx, id))) {
+  if (IsArrayIndex(GetArrayIndexFromId(id))) {
     // Reject the set.  It's up to the caller to decide whether to throw a
     // TypeError.  If the caller is strict mode JS code, it'll throw.
     return result.failReadOnly();
@@ -773,7 +773,7 @@ bool nsOuterWindowProxy::GetSubframeWindow(JSContext* cx,
 
 already_AddRefed<nsPIDOMWindowOuter> nsOuterWindowProxy::GetSubframeWindow(
     JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id) const {
-  uint32_t index = GetArrayIndexFromId(cx, id);
+  uint32_t index = GetArrayIndexFromId(id);
   if (!IsArrayIndex(index)) {
     return nullptr;
   }
