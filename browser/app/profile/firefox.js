@@ -1469,10 +1469,13 @@ pref("media.autoplay.enabled.user-gestures-needed", true);
 pref("media.autoplay.ask-permission", false);
 // Set Firefox to block autoplay, asking for permission by default.
 pref("media.autoplay.default", 1); // 0=Allowed, 1=Blocked, 2=Prompt
+// Block WebAudio from playing automatically.
+pref("media.autoplay.block-webaudio", true);
 #else
 pref("media.autoplay.default", 0); // 0=Allowed, 1=Blocked, 2=Prompt
 pref("media.autoplay.enabled.user-gestures-needed", false);
 pref("media.autoplay.ask-permission", false);
+pref("media.autoplay.block-webaudio", false);
 #endif
 
 
