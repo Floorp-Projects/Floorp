@@ -4,11 +4,16 @@
 
 package org.mozilla.gecko.util;
 
+import android.annotation.TargetApi;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Build;
+import android.os.Environment;
+import android.os.storage.StorageVolume;
 import android.provider.MediaStore;
+import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -336,5 +341,77 @@ public class FileUtils {
 
     public static boolean isContentUri(String sUri) {
         return sUri != null && sUri.startsWith(CONTENT_SCHEME);
+    }
+
+    /**
+     * Attempts to find the root path of an external (removable) SD card.
+     *
+     * @param uuid If you know the file system UUID (as returned e.g. by
+     *             {@link StorageVolume#getUuid()}) of the storage device you're looking for, this
+     *             may be used to filter down the selection of available non-emulated storage
+     *             devices. If no storage device matching the given UUID was found, the first
+     *             non-emulated storage device will be returned.
+     * @return The root path of the storage device.
+     */
+    @TargetApi(19)
+    public static @Nullable String getExternalStoragePath(Context context, @Nullable String uuid) {
+        // Since around the time of Lollipop or Marshmallow, the common convention is for external
+        // SD cards to be mounted at /storage/<file system UUID>/, however this pattern is still not
+        // guaranteed to be 100 % reliable. Therefore we need another way of getting all potential
+        // mount points for external storage devices.
+        // StorageManager.getStorageVolumes() might possibly do the trick and be just what we need
+        // to enumerate all mount points, but it only works on API24+.
+        // So instead, we use the output of getExternalFilesDirs for this purpose, which works on
+        // API19 and up.
+        File [] externalStorages = context.getExternalFilesDirs(null);
+        String uuidDir = !TextUtils.isEmpty(uuid) ? '/' + uuid + '/' : null;
+
+        String firstNonEmulatedStorage = null;
+        String targetStorage = null;
+        for (File externalStorage : externalStorages) {
+            if (isExternalStorageEmulated(externalStorage)) {
+                // The paths returned by getExternalFilesDirs also include locations that actually
+                // sit on the internal "external" storage, so we need to filter them out again.
+                continue;
+            }
+            String storagePath = externalStorage.getAbsolutePath();
+            /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+             * NOTE: This is our big assumption in this function: That the folders returned by   *
+             * context.getExternalFilesDir() will always be located somewhere inside             *
+             * /<storage root path>/Android/<app specific directories>, so that we can retrieve  *
+             * the storage root by simply snipping off everything starting from "/Android".      *
+             * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+            storagePath = storagePath.substring(0, storagePath.indexOf("/Android"));
+            if (firstNonEmulatedStorage == null) {
+                firstNonEmulatedStorage = storagePath;
+            }
+            if (!TextUtils.isEmpty(uuidDir) && storagePath.contains(uuidDir)) {
+                targetStorage = storagePath;
+                break;
+            }
+        }
+        if (targetStorage == null) {
+            // Either no UUID to narrow down the selection was given, or else this device doesn't
+            // mount its SD cards using the file system UUID, so we just fall back to the first
+            // non-emulated storage path we found.
+            targetStorage = firstNonEmulatedStorage;
+        }
+        return targetStorage;
+    }
+
+    /**
+     * Helper method because the framework version of this function is only available from API21+.
+     *
+     * @see Environment#isExternalStorageEmulated(File)
+     */
+    public static boolean isExternalStorageEmulated(File path) {
+        if (Build.VERSION.SDK_INT >= 21) {
+            return Environment.isExternalStorageEmulated(path);
+        } else {
+            String absPath = path.getAbsolutePath();
+            // This is rather hacky, but then SD card support on older Android versions
+            // was equally messy.
+            return absPath.contains("/sdcard0") || absPath.contains("/storage/emulated");
+        }
     }
 }
