@@ -4418,6 +4418,10 @@ class nsIDocument : public nsINode,
 
   // Pres shell resolution saved before entering fullscreen mode.
   float mSavedResolution;
+
+ public:
+  // Needs to be public because the bindings code pokes at it.
+  js::ExpandoAndGeneration mExpandoAndGeneration;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocument, NS_IDOCUMENT_IID)
