@@ -2480,12 +2480,12 @@ bool nsIDocument::IsCallerChromeOrAddon(JSContext* aCx, JSObject* aObject) {
                        principal->GetIsAddonOrExpandedAddonPrincipal());
 }
 
-nsresult nsDocument::StartDocumentLoad(const char* aCommand,
-                                       nsIChannel* aChannel,
-                                       nsILoadGroup* aLoadGroup,
-                                       nsISupports* aContainer,
-                                       nsIStreamListener** aDocListener,
-                                       bool aReset, nsIContentSink* aSink) {
+nsresult nsIDocument::StartDocumentLoad(const char* aCommand,
+                                        nsIChannel* aChannel,
+                                        nsILoadGroup* aLoadGroup,
+                                        nsISupports* aContainer,
+                                        nsIStreamListener** aDocListener,
+                                        bool aReset, nsIContentSink* aSink) {
   if (MOZ_LOG_TEST(gDocumentLeakPRLog, LogLevel::Debug)) {
     nsCOMPtr<nsIURI> uri;
     aChannel->GetURI(getter_AddRefs(uri));
@@ -2883,7 +2883,7 @@ nsresult nsIDocument::InitFeaturePolicy(nsIChannel* aChannel) {
   return NS_OK;
 }
 
-void nsDocument::StopDocumentLoad() {
+void nsIDocument::StopDocumentLoad() {
   if (mParser) {
     mParserAborted = true;
     mParser->Terminate();
@@ -3589,10 +3589,10 @@ void nsIDocument::SetHeaderData(nsAtom* aHeaderField, const nsAString& aData) {
     }
   }
 }
-void nsDocument::TryChannelCharset(nsIChannel* aChannel,
-                                   int32_t& aCharsetSource,
-                                   NotNull<const Encoding*>& aEncoding,
-                                   nsHtml5TreeOpExecutor* aExecutor) {
+void nsIDocument::TryChannelCharset(nsIChannel* aChannel,
+                                    int32_t& aCharsetSource,
+                                    NotNull<const Encoding*>& aEncoding,
+                                    nsHtml5TreeOpExecutor* aExecutor) {
   if (aChannel) {
     nsAutoCString charsetVal;
     nsresult rv = aChannel->GetContentCharset(charsetVal);
@@ -4645,7 +4645,7 @@ void nsIDocument::BeginUpdate() {
   NS_DOCUMENT_NOTIFY_OBSERVERS(BeginUpdate, (this));
 }
 
-void nsDocument::EndUpdate() {
+void nsIDocument::EndUpdate() {
   NS_DOCUMENT_NOTIFY_OBSERVERS(EndUpdate, (this));
 
   nsContentUtils::RemoveScriptBlocker();
@@ -4662,7 +4662,7 @@ void nsDocument::EndUpdate() {
   }
 }
 
-void nsDocument::BeginLoad() {
+void nsIDocument::BeginLoad() {
   MOZ_ASSERT(!mDidCallBeginLoad);
   mDidCallBeginLoad = true;
 
@@ -4911,7 +4911,7 @@ static void AssertAboutPageHasCSP(nsIURI* aDocumentURI,
 }
 #endif
 
-void nsDocument::EndLoad() {
+void nsIDocument::EndLoad() {
 #if defined(DEBUG) && !defined(ANDROID)
   // only assert if nothing stopped the load on purpose
   if (!mParserAborted) {
@@ -7186,7 +7186,7 @@ bool nsIDocument::IsScriptEnabled() {
   return xpc::Scriptability::Get(globalObject->GetGlobalJSObject()).Allowed();
 }
 
-void nsDocument::RetrieveRelevantHeaders(nsIChannel* aChannel) {
+void nsIDocument::RetrieveRelevantHeaders(nsIChannel* aChannel) {
   PRTime modDate = 0;
   nsresult rv;
 

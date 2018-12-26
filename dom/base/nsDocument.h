@@ -101,20 +101,6 @@ class nsDocument : public nsIDocument {
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
-  // StartDocumentLoad is pure virtual so that subclasses must override it.
-  // The nsDocument StartDocumentLoad does some setup, but does NOT set
-  // *aDocListener; this is the job of subclasses.
-  virtual nsresult StartDocumentLoad(
-      const char* aCommand, nsIChannel* aChannel, nsILoadGroup* aLoadGroup,
-      nsISupports* aContainer, nsIStreamListener** aDocListener,
-      bool aReset = true, nsIContentSink* aContentSink = nullptr) override = 0;
-
-  virtual void StopDocumentLoad() override;
-
-  virtual void EndUpdate() override;
-  virtual void BeginLoad() override;
-  virtual void EndLoad() override;
-
  public:
   using mozilla::dom::DocumentOrShadowRoot::GetElementById;
   using mozilla::dom::DocumentOrShadowRoot::GetElementsByClassName;
@@ -145,12 +131,6 @@ class nsDocument : public nsIDocument {
 
  protected:
   friend class nsNodeUtils;
-
-  void RetrieveRelevantHeaders(nsIChannel* aChannel);
-
-  void TryChannelCharset(nsIChannel* aChannel, int32_t& aCharsetSource,
-                         NotNull<const Encoding*>& aEncoding,
-                         nsHtml5TreeOpExecutor* aExecutor);
 
 #define NS_DOCUMENT_NOTIFY_OBSERVERS(func_, params_)                          \
   do {                                                                        \
