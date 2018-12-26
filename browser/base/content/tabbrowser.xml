@@ -9,7 +9,7 @@
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
           xmlns:xbl="http://www.mozilla.org/xbl">
 
-  <binding id="tabbrowser-arrowscrollbox" extends="chrome://global/content/bindings/scrollbox.xml#arrowscrollbox-clicktoscroll">
+  <binding id="tabbrowser-arrowscrollbox" extends="chrome://global/content/bindings/scrollbox.xml#arrowscrollbox">
     <implementation>
       <!-- Override scrollbox.xml method, since our scrollbox's children are
            inherited from the binding parent -->
