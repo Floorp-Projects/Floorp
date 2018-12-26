@@ -51,14 +51,20 @@ public class ContentUriUtils {
             // ExternalStorageProvider
             if (isExternalStorageDocument(uri)) {
                 final String docId = DocumentsContract.getDocumentId(uri);
+                // The AOSP ExternalStorageProvider creates document IDs of the form
+                // "storage device ID" + ':' + "document path".
                 final String[] split = docId.split(":");
                 final String type = split[0];
+                final String docPath = split[1];
 
+                final String rootPath;
                 if ("primary".equalsIgnoreCase(type)) {
-                    return Environment.getExternalStorageDirectory() + "/" + split[1];
+                    rootPath = Environment.getExternalStorageDirectory().getAbsolutePath();
+                } else {
+                    rootPath = FileUtils.getExternalStoragePath(context, type);
                 }
-
-                // TODO handle non-primary volumes
+                return !TextUtils.isEmpty(rootPath) ?
+                        rootPath + "/" + docPath : null;
             }
             // DownloadsProvider
             else if (isDownloadsDocument(uri)) {
