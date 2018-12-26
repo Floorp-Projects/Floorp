@@ -21,6 +21,10 @@ def run_decision_task(job, params, root):
     arguments = []
     if 'target-tasks-method' in job:
         arguments.append('--target-tasks-method={}'.format(job['target-tasks-method']))
+    if job.get('optimize-target-tasks') is not None:
+        arguments.append('--optimize-target-tasks={}'.format(
+            str(job['optimize-target-tasks']).lower(),
+        ))
     return [
         make_decision_task(
             params,
