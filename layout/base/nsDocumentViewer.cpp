@@ -1086,7 +1086,7 @@ nsDocumentViewer::LoadComplete(nsresult aStatus) {
       nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
       if (os) {
         nsIPrincipal* principal = d->NodePrincipal();
-        os->NotifyObservers(d,
+        os->NotifyObservers(ToSupports(d),
                             nsContentUtils::IsSystemPrincipal(principal)
                                 ? "chrome-document-loaded"
                                 : "content-document-loaded",
@@ -2852,9 +2852,9 @@ nsDocumentViewer::SetTextZoom(float aTextZoom) {
 
   // Dispatch TextZoomChange event only if text zoom value has changed.
   if (textZoomChange) {
-    nsContentUtils::DispatchChromeEvent(
-        mDocument, static_cast<nsIDocument*>(mDocument),
-        NS_LITERAL_STRING("TextZoomChange"), CanBubble::eYes, Cancelable::eYes);
+    nsContentUtils::DispatchChromeEvent(mDocument, ToSupports(mDocument),
+                                        NS_LITERAL_STRING("TextZoomChange"),
+                                        CanBubble::eYes, Cancelable::eYes);
   }
 
   return NS_OK;
@@ -2969,9 +2969,9 @@ nsDocumentViewer::SetFullZoom(float aFullZoom) {
   // Dispatch FullZoomChange event only if fullzoom value really was been
   // changed
   if (fullZoomChange) {
-    nsContentUtils::DispatchChromeEvent(
-        mDocument, static_cast<nsIDocument*>(mDocument),
-        NS_LITERAL_STRING("FullZoomChange"), CanBubble::eYes, Cancelable::eYes);
+    nsContentUtils::DispatchChromeEvent(mDocument, ToSupports(mDocument),
+                                        NS_LITERAL_STRING("FullZoomChange"),
+                                        CanBubble::eYes, Cancelable::eYes);
   }
 
   return NS_OK;
@@ -4382,7 +4382,8 @@ nsDocumentShownDispatcher::Run() {
   nsCOMPtr<nsIObserverService> observerService =
       mozilla::services::GetObserverService();
   if (observerService) {
-    observerService->NotifyObservers(mDocument, "document-shown", nullptr);
+    observerService->NotifyObservers(ToSupports(mDocument), "document-shown",
+                                     nullptr);
   }
   return NS_OK;
 }

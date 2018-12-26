@@ -232,7 +232,7 @@ void XULContentSinkImpl::SetDocumentCharset(
 
 nsISupports* XULContentSinkImpl::GetTarget() {
   nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocument);
-  return doc;
+  return ToSupports(doc);
 }
 
 //----------------------------------------------------------------------

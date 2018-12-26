@@ -649,8 +649,7 @@ NS_IMETHODIMP nsContentTreeOwner::SetTitle(const nsAString& aTitle) {
       //
       nsCOMPtr<nsIDocShellTreeItem> dsitem;
       GetPrimaryContentShell(getter_AddRefs(dsitem));
-      nsCOMPtr<nsIScriptObjectPrincipal> doc =
-          do_QueryInterface(dsitem ? dsitem->GetDocument() : nullptr);
+      nsCOMPtr<nsIDocument> doc = dsitem ? dsitem->GetDocument() : nullptr;
       if (doc) {
         nsCOMPtr<nsIURI> uri;
         nsIPrincipal* principal = doc->GetPrincipal();

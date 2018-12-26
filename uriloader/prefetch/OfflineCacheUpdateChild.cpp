@@ -134,12 +134,8 @@ nsresult OfflineCacheUpdateChild::AssociateDocument(
   // Check that the document that requested this update was
   // previously associated with an application cache.  If not, it
   // should be associated with the new one.
-  nsCOMPtr<nsIApplicationCacheContainer> container =
-      do_QueryInterface(aDocument);
-  if (!container) return NS_OK;
-
   nsCOMPtr<nsIApplicationCache> existingCache;
-  nsresult rv = container->GetApplicationCache(getter_AddRefs(existingCache));
+  nsresult rv = aDocument->GetApplicationCache(getter_AddRefs(existingCache));
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!existingCache) {
@@ -152,7 +148,7 @@ nsresult OfflineCacheUpdateChild::AssociateDocument(
            clientID.get(), aDocument));
     }
 
-    rv = container->SetApplicationCache(aApplicationCache);
+    rv = aDocument->SetApplicationCache(aApplicationCache);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

@@ -709,7 +709,8 @@ void XMLHttpRequestMainThread::GetResponse(
         return;
       }
 
-      aRv = nsContentUtils::WrapNative(aCx, mResponseXML, aResponse);
+      aRv =
+          nsContentUtils::WrapNative(aCx, ToSupports(mResponseXML), aResponse);
       return;
     }
     case XMLHttpRequestResponseType::Json: {

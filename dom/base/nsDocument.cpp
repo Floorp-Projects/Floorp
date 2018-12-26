@@ -792,7 +792,7 @@ void nsExternalResourceMap::Traverse(
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*aCallback,
                                        "mExternalResourceMap.mMap entry"
                                        "->mDocument");
-    aCallback->NoteXPCOMChild(resource->mDocument);
+    aCallback->NoteXPCOMChild(ToSupports(resource->mDocument));
 
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*aCallback,
                                        "mExternalResourceMap.mMap entry"
@@ -899,7 +899,8 @@ nsresult nsExternalResourceMap::AddExternalResource(
 
   const nsTArray<nsCOMPtr<nsIObserver>>& obs = load->Observers();
   for (uint32_t i = 0; i < obs.Length(); ++i) {
-    obs[i]->Observe(doc, "external-resource-document-created", nullptr);
+    obs[i]->Observe(ToSupports(doc), "external-resource-document-created",
+                    nullptr);
   }
 
   return rv;
@@ -1624,6 +1625,20 @@ nsDocument::~nsDocument() {
   mPlugins.Clear();
 }
 
+// In practice these three are always overriden by the nsDocument version, we
+// just need them to avoid making nsIDocument::AddRef / Release ambiguous.
+//
+// We can get rid of these once we merge nsIDocument and nsDocument.
+NS_IMETHODIMP_(MozExternalRefCountType) nsIDocument::Release() {
+  MOZ_CRASH("Should never be reachable");
+}
+NS_IMETHODIMP_(MozExternalRefCountType) nsIDocument::AddRef() {
+  MOZ_CRASH("Should never be reachable");
+}
+NS_IMETHODIMP nsIDocument::QueryInterface(REFNSIID aIID, void** aInstancePtr) {
+  MOZ_CRASH("Should never be reachable");
+}
+
 NS_INTERFACE_TABLE_HEAD(nsDocument)
   NS_WRAPPERCACHE_INTERFACE_TABLE_ENTRY
   NS_INTERFACE_TABLE_BEGIN
@@ -1804,7 +1819,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsDocument)
       cb.NoteXPCOMChild(entry->mKey);
       NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb,
                                          "mSubDocuments entry->mSubDocument");
-      cb.NoteXPCOMChild(entry->mSubDocument);
+      cb.NoteXPCOMChild(ToSupports(entry->mSubDocument));
     }
   }
 
@@ -3008,8 +3023,6 @@ void nsIDocument::RemoveFromIdTable(Element* aElement, nsAtom* aId) {
   }
 }
 
-nsIPrincipal* nsDocument::GetPrincipal() { return NodePrincipal(); }
-
 extern bool sDisablePrefetchHTTPSPref;
 
 void nsIDocument::SetPrincipal(nsIPrincipal* aNewPrincipal) {
@@ -3096,16 +3109,14 @@ bool nsIDocument::IsScriptTracking(const nsACString& aURL) const {
 }
 
 NS_IMETHODIMP
-nsDocument::GetApplicationCache(nsIApplicationCache** aApplicationCache) {
+nsIDocument::GetApplicationCache(nsIApplicationCache** aApplicationCache) {
   NS_IF_ADDREF(*aApplicationCache = mApplicationCache);
-
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDocument::SetApplicationCache(nsIApplicationCache* aApplicationCache) {
+nsIDocument::SetApplicationCache(nsIApplicationCache* aApplicationCache) {
   mApplicationCache = aApplicationCache;
-
   return NS_OK;
 }
 
@@ -4094,7 +4105,7 @@ void nsIDocument::NotifyStyleSheetApplicableStateChanged() {
       mozilla::services::GetObserverService();
   if (observerService) {
     observerService->NotifyObservers(
-        this, "style-sheet-applicable-state-changed", nullptr);
+        ToSupports(this), "style-sheet-applicable-state-changed", nullptr);
   }
 }
 
@@ -4706,7 +4717,7 @@ void nsIDocument::DispatchContentLoadedEvents() {
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
   if (os) {
     nsIPrincipal* principal = NodePrincipal();
-    os->NotifyObservers(this,
+    os->NotifyObservers(ToSupports(this),
                         nsContentUtils::IsSystemPrincipal(principal)
                             ? "chrome-document-interactive"
                             : "content-document-interactive",
@@ -4716,7 +4727,7 @@ void nsIDocument::DispatchContentLoadedEvents() {
   // Fire a DOM event notifying listeners that this document has been
   // loaded (excluding images and other loads initiated by this
   // document).
-  nsContentUtils::DispatchTrustedEvent(this, this,
+  nsContentUtils::DispatchTrustedEvent(this, ToSupports(this),
                                        NS_LITERAL_STRING("DOMContentLoaded"),
                                        CanBubble::eYes, Cancelable::eNo);
 
@@ -4787,11 +4798,9 @@ void nsIDocument::DispatchContentLoadedEvents() {
         if (innerEvent) {
           nsEventStatus status = nsEventStatus_eIgnore;
 
-          RefPtr<nsPresContext> context = parent->GetPresContext();
-
-          if (context) {
-            EventDispatcher::Dispatch(parent, context, innerEvent, event,
-                                      &status);
+          if (RefPtr<nsPresContext> context = parent->GetPresContext()) {
+            EventDispatcher::Dispatch(ToSupports(parent), context, innerEvent,
+                                      event, &status);
           }
         }
       }
@@ -4805,7 +4814,7 @@ void nsIDocument::DispatchContentLoadedEvents() {
   Element* root = GetRootElement();
   if (root && root->HasAttr(kNameSpaceID_None, nsGkAtoms::manifest)) {
     nsContentUtils::DispatchChromeEvent(
-        this, this, NS_LITERAL_STRING("MozApplicationManifest"),
+        this, ToSupports(this), NS_LITERAL_STRING("MozApplicationManifest"),
         CanBubble::eYes, Cancelable::eYes);
   }
 
@@ -5920,7 +5929,7 @@ void nsIDocument::DoNotifyPossibleTitleChange() {
   }
 
   // Fire a DOM event for the title change.
-  nsContentUtils::DispatchChromeEvent(this, static_cast<nsIDocument*>(this),
+  nsContentUtils::DispatchChromeEvent(this, ToSupports(this),
                                       NS_LITERAL_STRING("DOMTitleChanged"),
                                       CanBubble::eYes, Cancelable::eYes);
 }
@@ -6491,7 +6500,7 @@ nsINode* nsIDocument::AdoptNode(nsINode& aAdoptedNode, ErrorResult& rv) {
       // canonical scope. But we try to pass something sane anyway.
       JSAutoRealm ar(cx, GetScopeObject()->GetGlobalJSObject());
       JS::Rooted<JS::Value> v(cx);
-      rv = nsContentUtils::WrapNative(cx, this, this, &v,
+      rv = nsContentUtils::WrapNative(cx, ToSupports(this), this, &v,
                                       /* aAllowWrapping = */ false);
       if (rv.Failed()) return nullptr;
       newScope = &v.toObject();
@@ -7823,7 +7832,7 @@ void nsIDocument::OnPageShow(bool aPersisted, EventTarget* aDispatchStartTarget,
     nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
     if (os) {
       nsIPrincipal* principal = NodePrincipal();
-      os->NotifyObservers(this,
+      os->NotifyObservers(ToSupports(this),
                           nsContentUtils::IsSystemPrincipal(principal)
                               ? "chrome-page-shown"
                               : "content-page-shown",
@@ -7920,7 +7929,7 @@ void nsIDocument::OnPageHide(bool aPersisted, EventTarget* aDispatchStartTarget,
     nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
     if (os) {
       nsIPrincipal* principal = NodePrincipal();
-      os->NotifyObservers(this,
+      os->NotifyObservers(ToSupports(this),
                           nsContentUtils::IsSystemPrincipal(principal)
                               ? "chrome-page-hidden"
                               : "content-page-hidden",
@@ -10886,7 +10895,7 @@ void nsIDocument::UpdateVisibilityState() {
   dom::VisibilityState oldState = mVisibilityState;
   mVisibilityState = ComputeVisibilityState();
   if (oldState != mVisibilityState) {
-    nsContentUtils::DispatchTrustedEvent(this, static_cast<nsIDocument*>(this),
+    nsContentUtils::DispatchTrustedEvent(this, ToSupports(this),
                                          NS_LITERAL_STRING("visibilitychange"),
                                          CanBubble::eYes, Cancelable::eNo);
     EnumerateActivityObservers(NotifyActivityChanged, nullptr);
@@ -12531,14 +12540,7 @@ bool nsIDocument::IsThirdParty() {
   }
 
   nsCOMPtr<nsIPrincipal> principal = NodePrincipal();
-  nsCOMPtr<nsIScriptObjectPrincipal> sop =
-      do_QueryInterface(parentDocument, &rv);
-  if (NS_WARN_IF(NS_FAILED(rv) || !sop)) {
-    // Failure
-    mIsThirdParty.emplace(true);
-    return mIsThirdParty.value();
-  }
-  nsCOMPtr<nsIPrincipal> parentPrincipal = sop->GetPrincipal();
+  nsCOMPtr<nsIPrincipal> parentPrincipal = parentDocument->GetPrincipal();
 
   bool principalsMatch = false;
   rv = principal->Equals(parentPrincipal, &principalsMatch);
