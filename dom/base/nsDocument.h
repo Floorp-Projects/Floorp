@@ -13,110 +13,23 @@
 
 #include "nsIDocument.h"
 
-#include "jsfriendapi.h"
-#include "nsCOMPtr.h"
-#include "nsAutoPtr.h"
-#include "nsCRT.h"
-#include "nsTArray.h"
-#include "nsIdentifierMapEntry.h"
-#include "nsStubDocumentObserver.h"
-#include "nsIScriptGlobalObject.h"
-#include "nsIContent.h"
-#include "nsIPrincipal.h"
-#include "nsIParser.h"
-#include "nsBindingManager.h"
-#include "nsRefPtrHashtable.h"
-#include "nsJSThingHashtable.h"
-#include "nsILayoutHistoryState.h"
-#include "nsIRequest.h"
-#include "nsILoadGroup.h"
-#include "nsTObserverArray.h"
-#include "nsStubMutationObserver.h"
-#include "nsIChannel.h"
-#include "nsCycleCollectionParticipant.h"
-#include "nsContentList.h"
-#include "nsGkAtoms.h"
-#include "PLDHashTable.h"
-#include "nsDOMAttributeMap.h"
-#include "imgIRequest.h"
-#include "mozilla/EventStates.h"
-#include "mozilla/MemoryReporting.h"
-#include "mozilla/PendingAnimationTracker.h"
-#include "mozilla/dom/BoxObject.h"
-#include "mozilla/dom/DOMImplementation.h"
-#include "mozilla/dom/ScriptLoader.h"
-#include "mozilla/dom/StyleSheetList.h"
-#include "nsDataHashtable.h"
-#include "mozilla/TimeStamp.h"
-#include "mozilla/Attributes.h"
-#include "CustomElementRegistry.h"
-#include "mozilla/dom/Performance.h"
-#include "mozilla/Maybe.h"
-#include "nsIURIClassifier.h"
-
 #define XML_DECLARATION_BITS_DECLARATION_EXISTS (1 << 0)
 #define XML_DECLARATION_BITS_ENCODING_EXISTS (1 << 1)
 #define XML_DECLARATION_BITS_STANDALONE_EXISTS (1 << 2)
 #define XML_DECLARATION_BITS_STANDALONE_YES (1 << 3)
 
-class nsDOMStyleSheetSetList;
-class nsDocument;
-class nsIFormControl;
-class nsOnloadBlocker;
-class nsDOMNavigationTiming;
-class nsWindowSizes;
-class nsHtml5TreeOpExecutor;
-class nsDocumentOnStack;
-class nsISecurityConsoleMessage;
-
-namespace mozilla {
-class EventChainPreVisitor;
-namespace dom {
-class ImageTracker;
-struct LifecycleCallbacks;
-class CallbackFunction;
-class DOMIntersectionObserver;
-class Performance;
-}  // namespace dom
-}  // namespace mozilla
-
-class nsOnloadBlocker final : public nsIRequest {
- public:
-  nsOnloadBlocker() {}
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIREQUEST
-
- private:
-  ~nsOnloadBlocker() {}
-};
-
 // Base class for our document implementations.
 class nsDocument : public nsIDocument {
- public:
-  using mozilla::dom::DocumentOrShadowRoot::GetElementById;
-  using mozilla::dom::DocumentOrShadowRoot::GetElementsByClassName;
-  using mozilla::dom::DocumentOrShadowRoot::GetElementsByTagName;
-  using mozilla::dom::DocumentOrShadowRoot::GetElementsByTagNameNS;
+ protected:
 
   explicit nsDocument(const char* aContentType);
   virtual ~nsDocument();
 
- private:
-  // These are not implemented and not supported.
-  nsDocument(const nsDocument& aOther);
-  nsDocument& operator=(const nsDocument& aOther);
-};
-
-class nsDocumentOnStack {
- public:
-  explicit nsDocumentOnStack(nsIDocument* aDoc) : mDoc(aDoc) {
-    mDoc->IncreaseStackRefCnt();
-  }
-  ~nsDocumentOnStack() { mDoc->DecreaseStackRefCnt(); }
+  // Don't add stuff here, add to nsIDocument instead.
 
  private:
-  nsIDocument* mDoc;
+  nsDocument(const nsDocument& aOther) = delete;
+  nsDocument& operator=(const nsDocument& aOther) = delete;
 };
 
 #endif /* nsDocument_h___ */

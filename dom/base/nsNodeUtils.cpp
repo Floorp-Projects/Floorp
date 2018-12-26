@@ -35,6 +35,7 @@
 #include "nsObjectLoadingContent.h"
 #include "nsDOMMutationObserver.h"
 #include "mozilla/dom/BindingUtils.h"
+#include "mozilla/dom/CustomElementRegistry.h"
 #include "mozilla/dom/HTMLTemplateElement.h"
 #include "mozilla/dom/ShadowRoot.h"
 
