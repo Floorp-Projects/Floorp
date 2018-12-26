@@ -26,7 +26,7 @@
 #include "nsCSSProps.h"
 #include "mozilla/EventListenerManager.h"
 #include "nsLayoutUtils.h"
-#include "nsSVGAnimatedTransformList.h"
+#include "SVGAnimatedTransformList.h"
 #include "nsSVGLength2.h"
 #include "nsSVGNumber2.h"
 #include "nsSVGNumberPair.h"
@@ -577,8 +577,8 @@ bool SVGElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
         // Check for SVGAnimatedTransformList attribute
       } else if (GetTransformListAttrName() == aAttribute) {
         // The transform attribute is being set, so we must ensure that the
-        // nsSVGAnimatedTransformList is/has been allocated:
-        nsSVGAnimatedTransformList* transformList =
+        // SVGAnimatedTransformList is/has been allocated:
+        SVGAnimatedTransformList* transformList =
             GetAnimatedTransformList(DO_ALLOCATE);
         rv = transformList->SetBaseValueString(aValue, this);
         if (NS_FAILED(rv)) {
@@ -804,7 +804,7 @@ void SVGElement::UnsetAttrInternal(int32_t aNamespaceID, nsAtom* aName,
 
     // Check if this is a transform list attribute going away
     if (GetTransformListAttrName() == aName) {
-      nsSVGAnimatedTransformList* transformList = GetAnimatedTransformList();
+      SVGAnimatedTransformList* transformList = GetAnimatedTransformList();
       if (transformList) {
         MaybeSerializeAttrBeforeRemoval(aName, aNotify);
         transformList->ClearBaseValue();

@@ -23,7 +23,7 @@
 #include "mozilla/dom/SVGPatternElement.h"
 #include "mozilla/dom/SVGUnitTypesBinding.h"
 #include "nsSVGUtils.h"
-#include "nsSVGAnimatedTransformList.h"
+#include "SVGAnimatedTransformList.h"
 #include "SVGContentUtils.h"
 
 using namespace mozilla;
@@ -436,9 +436,9 @@ uint16_t nsSVGPatternFrame::GetEnumValue(uint32_t aIndex,
                     .GetAnimValue();
 }
 
-nsSVGAnimatedTransformList *nsSVGPatternFrame::GetPatternTransformList(
+SVGAnimatedTransformList *nsSVGPatternFrame::GetPatternTransformList(
     nsIContent *aDefault) {
-  nsSVGAnimatedTransformList *thisTransformList =
+  SVGAnimatedTransformList *thisTransformList =
       static_cast<SVGPatternElement *>(GetContent())
           ->GetAnimatedTransformList();
 
@@ -462,7 +462,7 @@ nsSVGAnimatedTransformList *nsSVGPatternFrame::GetPatternTransformList(
 }
 
 gfxMatrix nsSVGPatternFrame::GetPatternTransform() {
-  nsSVGAnimatedTransformList *animTransformList =
+  SVGAnimatedTransformList *animTransformList =
       GetPatternTransformList(GetContent());
   if (!animTransformList) {
     return gfxMatrix();
