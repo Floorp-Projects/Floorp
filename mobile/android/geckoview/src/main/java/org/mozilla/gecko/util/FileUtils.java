@@ -294,10 +294,8 @@ public class FileUtils {
     }
 
     public static String resolveContentUri(final Context context, final Uri uri) {
-        String path;
-        try {
-            path = getOriginalFilePathFromUri(context, uri);
-        } catch (IllegalArgumentException ex) {
+        String path = getOriginalFilePathFromUri(context, uri);
+        if (TextUtils.isEmpty(path)) {
             // We cannot always successfully guess the original path of the file behind the
             // content:// URI, so we need a fallback. This will break local subresources and
             // relative links, but unfortunately there's nothing else we can do
