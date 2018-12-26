@@ -173,13 +173,6 @@ class nsDocument : public nsIDocument {
   virtual ~nsDocument();
 
  public:
-  // FIXME(emilio): This needs to be here instead of in nsIDocument because Rust
-  // can't represent alignas(8) values on 32-bit architectures, which would
-  // cause nsIDocument's layout to be wrong in the Rust side.
-  //
-  // This can be fixed after updating to rust 1.25 and updating bindgen to
-  // include https://github.com/rust-lang-nursery/rust-bindgen/pull/1271.
-  js::ExpandoAndGeneration mExpandoAndGeneration;
 
   friend class nsCallRequestFullscreen;
 
