@@ -20,18 +20,17 @@ class DeclarationBlock;
 namespace dom {
 class Element;
 }  // namespace dom
-}  // namespace mozilla
 
 /*
- * nsSMILCSSValueType: Represents a SMIL-animated CSS value.
+ * SMILCSSValueType: Represents a SMIL-animated CSS value.
  */
-class nsSMILCSSValueType : public nsISMILType {
+class SMILCSSValueType : public nsISMILType {
  public:
   typedef mozilla::dom::Element Element;
   typedef mozilla::AnimationValue AnimationValue;
 
   // Singleton for nsSMILValue objects to hold onto.
-  static nsSMILCSSValueType sSingleton;
+  static SMILCSSValueType sSingleton;
 
  protected:
   // nsISMILType Methods
@@ -75,7 +74,7 @@ class nsSMILCSSValueType : public nsISMILType {
    *                                  false otherwise. May be nullptr.
    *                                  Not set if the method fails.
    * @pre  aValue.IsNull()
-   * @post aValue.IsNull() || aValue.mType == nsSMILCSSValueType::sSingleton
+   * @post aValue.IsNull() || aValue.mType == SMILCSSValueType::sSingleton
    */
   static void ValueFromString(nsCSSPropertyID aPropID, Element* aTargetElement,
                               const nsAString& aString, nsSMILValue& aValue,
@@ -109,7 +108,7 @@ class nsSMILCSSValueType : public nsISMILType {
    * @param   aValue   The nsSMILValue to examine.
    * @return           The nsCSSPropertyID enum value of the property animated
    *                   by |aValue|, or eCSSProperty_UNKNOWN if the type of
-   *                   |aValue| is not nsSMILCSSValueType.
+   *                   |aValue| is not SMILCSSValueType.
    */
   static nsCSSPropertyID PropertyFromValue(const nsSMILValue& aValue);
 
@@ -120,9 +119,9 @@ class nsSMILCSSValueType : public nsISMILType {
    * There is no indication if this method fails. If a suitable zero value could
    * not be created, |aValue| is simply unmodified.
    *
-   * @param aValue        The nsSMILValue (of type nsSMILCSSValueType) to
+   * @param aValue        The nsSMILValue (of type SMILCSSValueType) to
    *                      possibly update.
-   * @param aValueToMatch A nsSMILValue (of type nsSMILCSSValueType) for which
+   * @param aValueToMatch A nsSMILValue (of type SMILCSSValueType) for which
    *                      a corresponding zero value will be created if |aValue|
    *                      is empty.
    */
@@ -131,7 +130,9 @@ class nsSMILCSSValueType : public nsISMILType {
 
  private:
   // Private constructor: prevent instances beyond my singleton.
-  constexpr nsSMILCSSValueType() {}
+  constexpr SMILCSSValueType() {}
 };
+
+}  // namespace mozilla
 
 #endif  // NS_SMILCSSVALUETYPE_H_
