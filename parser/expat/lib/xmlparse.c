@@ -795,7 +795,12 @@ gather_time_entropy(void)
   int gettimeofday_res;
 
   gettimeofday_res = gettimeofday(&tv, NULL);
+
+#if defined(NDEBUG)
+  (void)gettimeofday_res;
+#else
   assert (gettimeofday_res == 0);
+#endif /* defined(NDEBUG) */
 
   /* Microseconds time is <20 bits entropy */
   return tv.tv_usec;
