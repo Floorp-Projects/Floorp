@@ -983,9 +983,12 @@ XML_FreeContentModel(XML_Parser parser, XML_Content *model);
 
 /* Exposing the memory handling functions used in Expat */
 XMLPARSEAPI(void *)
+XML_ATTR_MALLOC
+XML_ATTR_ALLOC_SIZE(2)
 XML_MemMalloc(XML_Parser parser, size_t size);
 
 XMLPARSEAPI(void *)
+XML_ATTR_ALLOC_SIZE(3)
 XML_MemRealloc(XML_Parser parser, void *ptr, size_t size);
 
 XMLPARSEAPI(void)
