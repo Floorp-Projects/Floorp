@@ -171,8 +171,7 @@ bool nsSVGForeignObjectFrame::IsSVGTransformed(
   }
 
   SVGElement* content = static_cast<SVGElement*>(GetContent());
-  nsSVGAnimatedTransformList* transformList =
-      content->GetAnimatedTransformList();
+  SVGAnimatedTransformList* transformList = content->GetAnimatedTransformList();
   if ((transformList && transformList->HasTransform()) ||
       content->GetAnimateMotionTransform()) {
     if (aOwnTransform) {

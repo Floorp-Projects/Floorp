@@ -72,7 +72,7 @@ bool testCompile(bool nonSyntactic) {
   CHECK(CompileForNonSyntacticScope(cx, options, buf, &script));
   CHECK_EQUAL(script->hasNonSyntacticScope(), true);
 
-  CHECK(CompileLatin1ForNonSyntacticScope(cx, options, src, length, &script));
+  CHECK(CompileUtf8ForNonSyntacticScope(cx, options, src, length, &script));
   CHECK_EQUAL(script->hasNonSyntacticScope(), true);
 
   {
@@ -86,7 +86,7 @@ bool testCompile(bool nonSyntactic) {
   CHECK(Compile(cx, options, buf, &script));
   CHECK_EQUAL(script->hasNonSyntacticScope(), nonSyntactic);
 
-  CHECK(CompileLatin1(cx, options, src, length, &script));
+  CHECK(CompileUtf8(cx, options, src, length, &script));
   CHECK_EQUAL(script->hasNonSyntacticScope(), nonSyntactic);
 
   {
