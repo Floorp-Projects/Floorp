@@ -160,7 +160,7 @@ var DownloadNotifications = {
           this.showInAboutDownloads(download);
         }
       } else {
-        this.showInAboutDownloads(download);
+        ConfirmCancelPrompt.show(download);
       }
     }).catch(Cu.reportError);
   },
