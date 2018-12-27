@@ -37,15 +37,23 @@ static constexpr ARMRegister ScratchReg64 = {ScratchReg, 64};
 static constexpr Register ScratchReg2{Registers::ip1};
 static constexpr ARMRegister ScratchReg2_64 = {ScratchReg2, 64};
 
-static constexpr FloatRegister ScratchDoubleReg = {FloatRegisters::d31,
-                                                   FloatRegisters::Double};
 static constexpr FloatRegister ReturnDoubleReg = {FloatRegisters::d0,
                                                   FloatRegisters::Double};
+static constexpr FloatRegister ScratchDoubleReg = {FloatRegisters::d31,
+                                                   FloatRegisters::Double};
+struct ScratchDoubleScope : public AutoFloatRegisterScope {
+  explicit ScratchDoubleScope(MacroAssembler& masm)
+    : AutoFloatRegisterScope(masm, ScratchDoubleReg) {}
+};
 
 static constexpr FloatRegister ReturnFloat32Reg = {FloatRegisters::s0,
                                                    FloatRegisters::Single};
 static constexpr FloatRegister ScratchFloat32Reg = {FloatRegisters::s31,
                                                     FloatRegisters::Single};
+struct ScratchFloat32Scope : public AutoFloatRegisterScope {
+  explicit ScratchFloat32Scope(MacroAssembler& masm)
+    : AutoFloatRegisterScope(masm, ScratchFloat32Reg) {}
+};
 
 static constexpr Register InvalidReg{Registers::invalid_reg};
 static constexpr FloatRegister InvalidFloatReg = {FloatRegisters::invalid_fpreg,

@@ -8,9 +8,8 @@
 #define MOZILLA_SVGTRANSFORMLIST_H__
 
 #include "gfxMatrix.h"
-#include "nsDebug.h"
-#include "nsTArray.h"
 #include "nsSVGTransform.h"
+#include "nsTArray.h"
 
 namespace mozilla {
 

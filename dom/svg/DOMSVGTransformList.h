@@ -10,8 +10,8 @@
 #include "DOMSVGAnimatedTransformList.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsDebug.h"
-#include "nsTArray.h"
 #include "SVGTransformList.h"
+#include "nsTArray.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
 

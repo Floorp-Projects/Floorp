@@ -3503,4 +3503,11 @@ void DisassembleInstruction(char* buffer, size_t bufsize, const Instruction* ins
     buffer[bufsize-1] = 0;      // Just to be safe
 }
 
+char* GdbDisassembleInstruction(const Instruction* instr)
+{
+    static char buffer[1024];
+    DisassembleInstruction(buffer, sizeof(buffer), instr);
+    return buffer;
+}
+
 }  // namespace vixl

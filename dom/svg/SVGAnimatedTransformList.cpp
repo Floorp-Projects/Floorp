@@ -7,13 +7,13 @@
 #include "SVGAnimatedTransformList.h"
 
 #include "mozilla/dom/MutationEventBinding.h"
-#include "DOMSVGAnimatedTransformList.h"
 #include "mozilla/dom/SVGAnimationElement.h"
 #include "mozilla/Move.h"
 #include "nsCharSeparatedTokenizer.h"
-#include "nsSVGTransform.h"
-#include "nsSMILValue.h"
+#include "DOMSVGAnimatedTransformList.h"
 #include "SVGContentUtils.h"
+#include "nsSMILValue.h"
+#include "nsSVGTransform.h"
 #include "SVGTransformListSMILType.h"
 
 using namespace mozilla::dom;

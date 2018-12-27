@@ -10,10 +10,12 @@
 #include "mozilla/Attributes.h"
 #include "nsISMILType.h"
 
-class nsSMILNullType : public nsISMILType {
+namespace mozilla {
+
+class SMILNullType : public nsISMILType {
  public:
   // Singleton for nsSMILValue objects to hold onto.
-  static nsSMILNullType* Singleton();
+  static SMILNullType* Singleton();
 
  protected:
   // nsISMILType Methods
@@ -38,7 +40,9 @@ class nsSMILNullType : public nsISMILType {
 
  private:
   // Private constructor: prevent instances beyond my singleton.
-  constexpr nsSMILNullType() {}
+  constexpr SMILNullType() {}
 };
+
+}  // namespace mozilla
 
 #endif  // NS_SMILNULLTYPE_H_
