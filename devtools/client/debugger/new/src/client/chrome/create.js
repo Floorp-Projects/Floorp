@@ -4,7 +4,7 @@
 
 // @flow
 
-import type { SourceLocation, LoadedObject } from "../../types";
+import type { ChromeFrame, SourceLocation, LoadedObject } from "../../types";
 import type { ServerLocation } from "./types";
 
 export function fromServerLocation(
@@ -27,7 +27,7 @@ export function toServerLocation(location: SourceLocation): ServerLocation {
   };
 }
 
-export function createFrame(frame: any) {
+export function createFrame(frame: any): ChromeFrame {
   return {
     id: frame.callFrameId,
     displayName: frame.functionName,

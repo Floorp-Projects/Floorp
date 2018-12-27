@@ -265,6 +265,7 @@ const contentTypeModeMap = {
   "text/jsx": { name: "jsx" },
   "text/x-elm": { name: "elm" },
   "text/x-clojure": { name: "clojure" },
+  "text/x-clojurescript": { name: "clojure" },
   "text/wasm": { name: "text" },
   "text/html": { name: "htmlmixed" }
 };

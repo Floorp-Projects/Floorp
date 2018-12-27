@@ -32,7 +32,7 @@ void SVGTransformListSMILType::Destroy(nsSMILValue& aValue) const {
   TransformArray* params = static_cast<TransformArray*>(aValue.mU.mPtr);
   delete params;
   aValue.mU.mPtr = nullptr;
-  aValue.mType = nsSMILNullType::Singleton();
+  aValue.mType = SMILNullType::Singleton();
 }
 
 nsresult SVGTransformListSMILType::Assign(nsSMILValue& aDest,

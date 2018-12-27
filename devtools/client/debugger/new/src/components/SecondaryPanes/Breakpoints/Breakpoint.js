@@ -175,7 +175,7 @@ class Breakpoint extends PureComponent<Props> {
 const getFormattedFrame = createSelector(
   getSelectedSource,
   getSelectedFrame,
-  (selectedSource: Source, frame: Frame): ?FormattedFrame => {
+  (selectedSource: ?Source, frame: ?Frame): ?FormattedFrame => {
     if (!frame) {
       return null;
     }

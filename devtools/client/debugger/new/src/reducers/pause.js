@@ -10,15 +10,23 @@
  * @module reducers/pause
  */
 
-import { createSelector } from "../utils/createSelector";
+import { createSelector } from "reselect";
 import { isGeneratedId } from "devtools-source-map";
 import { prefs } from "../utils/prefs";
 import { getSelectedSource } from "./sources";
 
 import type { OriginalScope } from "../utils/pause/mapScopes";
 import type { Action } from "../actions/types";
-import type { State } from "./types";
-import type { Why, Scope, SourceId, FrameId, MappedLocation } from "../types";
+import type { Selector, State } from "./types";
+import type {
+  Why,
+  Scope,
+  SourceId,
+  ChromeFrame,
+  Frame,
+  FrameId,
+  MappedLocation
+} from "../types";
 
 export type Command =
   | null
@@ -340,7 +348,7 @@ function getCurrentPauseState(state: OuterState): ThreadPauseState {
   return getThreadPauseState(state.pause, state.pause.currentThread);
 }
 
-export const getAllPopupObjectProperties = createSelector(
+export const getAllPopupObjectProperties: Selector<{}> = createSelector(
   getCurrentPauseState,
   pauseWrapper => pauseWrapper.loadedObjects
 );
@@ -534,7 +542,7 @@ export function getTopFrame(state: OuterState) {
   return frames && frames[0];
 }
 
-export const getSelectedFrame = createSelector(
+export const getSelectedFrame: Selector<?Frame> = createSelector(
   getSelectedFrameId,
   getFrames,
   (selectedFrameId, frames) => {
@@ -556,7 +564,7 @@ export function getSkipPausing(state: OuterState) {
 
 // NOTE: currently only used for chrome
 export function getChromeScopes(state: OuterState) {
-  const frame = getSelectedFrame(state);
+  const frame: ?ChromeFrame = (getSelectedFrame(state): any);
   return frame ? frame.scopeChain : undefined;
 }
 

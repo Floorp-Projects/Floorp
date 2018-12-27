@@ -8,13 +8,13 @@
 #define mozilla_dom_SVGPatternElement_h
 
 #include "nsAutoPtr.h"
+#include "mozilla/dom/SVGElement.h"
+#include "SVGAnimatedPreserveAspectRatio.h"
+#include "SVGAnimatedTransformList.h"
 #include "nsSVGEnum.h"
 #include "nsSVGLength2.h"
 #include "nsSVGString.h"
-#include "SVGElement.h"
 #include "nsSVGViewBox.h"
-#include "SVGAnimatedPreserveAspectRatio.h"
-#include "SVGAnimatedTransformList.h"
 
 class nsSVGPatternFrame;
 
