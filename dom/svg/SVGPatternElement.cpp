@@ -4,15 +4,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/ArrayUtils.h"
-
-#include "nsCOMPtr.h"
-#include "nsGkAtoms.h"
-#include "DOMSVGAnimatedTransformList.h"
-#include "mozilla/dom/SVGLengthBinding.h"
 #include "mozilla/dom/SVGPatternElement.h"
+
+#include "mozilla/ArrayUtils.h"
+#include "mozilla/dom/SVGLengthBinding.h"
 #include "mozilla/dom/SVGPatternElementBinding.h"
 #include "mozilla/dom/SVGUnitTypesBinding.h"
+#include "DOMSVGAnimatedTransformList.h"
+#include "nsCOMPtr.h"
+#include "nsGkAtoms.h"
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(Pattern)
 

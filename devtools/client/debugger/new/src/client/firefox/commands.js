@@ -345,12 +345,16 @@ function prettyPrint(sourceId: SourceId, indentSize: number): Promise<*> {
   return sourceClient.prettyPrint(indentSize);
 }
 
-async function blackBox(sourceId: SourceId, isBlackBoxed: boolean): Promise<*> {
+async function blackBox(
+  sourceId: SourceId,
+  isBlackBoxed: boolean,
+  range?: Range
+): Promise<*> {
   const sourceClient = threadClient.source({ actor: sourceId });
   if (isBlackBoxed) {
-    await sourceClient.unblackBox(null);
+    await sourceClient.unblackBox(range);
   } else {
-    await sourceClient.blackBox(null);
+    await sourceClient.blackBox(range);
   }
 
   return { isBlackBoxed: !isBlackBoxed };
