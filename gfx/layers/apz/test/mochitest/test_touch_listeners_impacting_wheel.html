@@ -44,7 +44,7 @@ function takeSnapshots(e) {
   for (var i = 0; i < 10; i++) {
     SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(16);
     var snapshot = getSnapshot(rect);
-    //dump("Took snapshot " + snapshot + "\n"); // this might help with debugging
+    // dump("Took snapshot " + snapshot + "\n"); // this might help with debugging
 
     if (lastSnapshot && lastSnapshot != snapshot) {
       ok(true, "Found some different pixels in snapshot " + i + " compared to previous");

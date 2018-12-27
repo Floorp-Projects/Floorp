@@ -42,7 +42,7 @@ function chromeTouchEventCounter(operation) {
       topWin.eventCounts = { "touchstart": 0, "touchmove": 0, "touchend": 0 };
       topWin.counter = function(e) {
         topWin.eventCounts[e.type]++;
-      }
+      };
 
       topWin.addEventListener("touchstart", topWin.counter, { passive: true });
       topWin.addEventListener("touchmove", topWin.counter, { passive: true });
@@ -76,7 +76,7 @@ function chromeTouchEventCounter(operation) {
   if (typeof chromeTouchEventCounter.chromeHelper == "undefined") {
     // This is the first time chromeTouchEventCounter is being called; do initialization
     chromeTouchEventCounter.chromeHelper = SpecialPowers.loadChromeScript(chromeProcessCounter);
-    ApzCleanup.register(function() { chromeTouchEventCounter.chromeHelper.destroy() });
+    ApzCleanup.register(function() { chromeTouchEventCounter.chromeHelper.destroy(); });
   }
 
   return chromeTouchEventCounter.chromeHelper.sendSyncMessage(operation, "");

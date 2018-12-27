@@ -75,7 +75,7 @@ function test() {
   subframe.style.overflow = "auto";
   subframe.getBoundingClientRect();
 
-  waitForAllPaintsFlushed(function () {
+  waitForAllPaintsFlushed(function() {
     ScrollbarWidth = oldClientWidth - subframe.clientWidth;
     if (!ScrollbarWidth) {
       // Probably we have overlay scrollbars - abort the test.
@@ -98,7 +98,7 @@ function testScrolling(subframe) {
 
   var oldScrollTop = subframe.scrollTop;
 
-  sendWheelAndPaint(subframe, posX, posY, DefaultEvent, function () {
+  sendWheelAndPaint(subframe, posX, posY, DefaultEvent, function() {
     ok(subframe.scrollTop > oldScrollTop, "subframe should have scrolled");
     SimpleTest.finish();
   });

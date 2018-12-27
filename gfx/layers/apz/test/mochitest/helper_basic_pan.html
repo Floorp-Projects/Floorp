@@ -31,7 +31,7 @@ function* test(testDriver) {
 
   // We get here once the APZ:TransformEnd has fired, so we don't need that
   // observer any more.
-  SpecialPowers.Services.obs.removeObserver(testDriver, "APZ:TransformEnd", false);
+  SpecialPowers.Services.obs.removeObserver(testDriver, "APZ:TransformEnd");
 
   // Flush state.
   yield waitForApzFlushedRepaints(testDriver);

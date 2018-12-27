@@ -35,7 +35,7 @@ function* test(testDriver) {
   var elm = document.getElementById("outer");
 
   // Set margins on the element, to ensure it is layerized
-  utils.setDisplayPortMarginsForElement(0, 0, 0, 0, elm, /*priority*/ 1);
+  utils.setDisplayPortMarginsForElement(0, 0, 0, 0, elm, /* priority*/ 1);
   yield waitForAllPaints(function() {
     flushApzRepaints(testDriver);
   });
