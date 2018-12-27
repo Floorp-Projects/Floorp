@@ -34,9 +34,9 @@
    system headers may assume the cdecl convention.
 */
 #ifndef XMLCALL
-#if defined(XML_USE_MSC_EXTENSIONS)
+#if defined(_MSC_VER)
 #define XMLCALL __cdecl
-#elif defined(__GNUC__) && defined(__i386)
+#elif defined(__GNUC__) && defined(__i386) && !defined(__INTEL_COMPILER)
 #define XMLCALL __attribute__((cdecl))
 #else
 /* For any platform which uses this definition and supports more than
@@ -65,6 +65,9 @@
 #endif
 #endif  /* not defined XML_STATIC */
 
+#if !defined(XMLIMPORT) && defined(__GNUC__) && (__GNUC__ >= 4)
+#define XMLIMPORT __attribute__ ((visibility ("default")))
+#endif
 
 /* If we didn't define it above, define it away: */
 #ifndef XMLIMPORT
@@ -79,7 +82,10 @@ extern "C" {
 #endif
 
 #ifdef XML_UNICODE_WCHAR_T
-#define XML_UNICODE
+# define XML_UNICODE
+# if defined(__SIZEOF_WCHAR_T__) && (__SIZEOF_WCHAR_T__ != 2)
+#  error "sizeof(wchar_t) != 2; Need -fshort-wchar for both Expat and libc"
+# endif
 #endif
 
 /* BEGIN MOZILLA CHANGE (typedef XML_Char to char16_t) */
