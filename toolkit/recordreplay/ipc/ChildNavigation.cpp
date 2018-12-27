@@ -494,11 +494,7 @@ void PausedPhase::Enter(const ExecutionPoint& aPoint, bool aRewind,
     Unreachable();
   }
 
-  if (aPoint.HasPosition()) {
-    child::HitBreakpoint(aRecordingEndpoint);
-  } else {
-    child::HitCheckpoint(aPoint.mCheckpoint, aRecordingEndpoint);
-  }
+  child::HitExecutionPoint(aPoint, aRecordingEndpoint);
 }
 
 void PausedPhase::AfterCheckpoint(const CheckpointId& aCheckpoint) {
@@ -507,7 +503,7 @@ void PausedPhase::AfterCheckpoint(const CheckpointId& aCheckpoint) {
     // We just rewound here, and are now where we should pause.
     MOZ_RELEASE_ASSERT(
         mPoint == gNavigation->CheckpointExecutionPoint(aCheckpoint.mNormal));
-    child::HitCheckpoint(mPoint.mCheckpoint, mRecordingEndpoint);
+    child::HitExecutionPoint(mPoint, mRecordingEndpoint);
   } else {
     // We just saved or restored the temporary checkpoint taken while
     // processing debugger requests here.
