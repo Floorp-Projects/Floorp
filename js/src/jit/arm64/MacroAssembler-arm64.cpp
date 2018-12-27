@@ -202,7 +202,21 @@ void MacroAssemblerCompat::handleFailureWithHandlerTail(
       Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfReturnValue()),
       JSReturnOperand);
   movePtr(BaselineFrameReg, r28);
-  vixl::MacroAssembler::Pop(ARMRegister(BaselineFrameReg, 64), vixl::lr);
+  vixl::MacroAssembler::Pop(ARMRegister(BaselineFrameReg, 64));
+
+  // If profiling is enabled, then update the lastProfilingFrame to refer to
+  // caller frame before returning.
+  {
+    Label skipProfilingInstrumentation;
+    AbsoluteAddress addressOfEnabled(
+        GetJitContext()->runtime->geckoProfiler().addressOfEnabled());
+    asMasm().branch32(Assembler::Equal, addressOfEnabled, Imm32(0),
+                      &skipProfilingInstrumentation);
+    jump(profilerExitTail);
+    bind(&skipProfilingInstrumentation);
+  }
+
+  vixl::MacroAssembler::Pop(vixl::lr);
   syncStackPtr();
   vixl::MacroAssembler::Ret(vixl::lr);
 
