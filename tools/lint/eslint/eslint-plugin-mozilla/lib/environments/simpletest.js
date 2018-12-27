@@ -25,6 +25,7 @@ const simpleTestFiles = [
   "MockObjects.js",
   "SimpleTest.js",
   "WindowSnapshot.js",
+  "paint_listener.js",
 ];
 const simpleTestPath = "testing/mochitest/tests/SimpleTest";
 

@@ -20,10 +20,6 @@ docshell/test/mochitest/**
 extensions/cookie/**
 extensions/spellcheck/**
 extensions/universalchardet/**
-gfx/layers/**
-gfx/tests/browser/**
-gfx/tests/chrome/**
-gfx/tests/mochitest/**
 image/**
 layout/**
 modules/**

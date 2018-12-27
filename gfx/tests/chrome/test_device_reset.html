@@ -14,11 +14,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1274663
     <script>
       var importObj = {};
 
-      var Cc = SpecialPowers.Cc;
-      var Ci = SpecialPowers.Ci;
-
       var sysInfo = Cc["@mozilla.org/system-info;1"].getService(Ci.nsIPropertyBag2);
-      var xr = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime);
 
       var windows = SpecialPowers.Services.ww.getWindowEnumerator();
       var windowutils;

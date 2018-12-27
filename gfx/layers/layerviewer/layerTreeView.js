@@ -70,11 +70,9 @@ function parseDisplayList(lines) {
     // the content node name doesn't have a prefix, this makes the parsing easier
     rest = "content" + rest;
 
-    var fields = {};
     var nesting = 0;
     var startIndex;
     var lastSpace = -1;
-    var lastFieldStart = -1;
     for (var j = 0; j < rest.length; j++) {
       if (rest.charAt(j) == "(") {
         nesting++;
@@ -141,7 +139,10 @@ function getDataURI(str) {
 
   var ctxt = canvas.getContext("2d");
   var out = ctxt.createImageData(w, h);
-  buffer = LZ4_uncompressChunk(bytes, decoded);
+  // This is actually undefined throughout the tree and it isn't clear what it
+  // should be. Since this is only development code, leave it alone for now.
+  // eslint-disable-next-line no-undef
+  LZ4_uncompressChunk(bytes, decoded);
 
   for (var x = 0; x < w; x++) {
     for (var y = 0; y < h; y++) {
@@ -252,11 +253,11 @@ function parseLayers(layersDumpLines) {
 
     var tileMatches = line.match("(\\s*)Tile \\(x=(.*), y=(.*)\\): (.*)");
     if (tileMatches) {
-      var indentation = Math.floor(matches[1].length / 2);
+      let indentation = Math.floor(matches[1].length / 2);
       var x = tileMatches[2];
       var y = tileMatches[3];
       var dataUri = tileMatches[4];
-      var parent = objectAtIndentation[indentation - 1];
+      let parent = objectAtIndentation[indentation - 1];
       var tiles = parent.tiles || {};
 
       tiles[x] = tiles[x] || {};
@@ -269,8 +270,8 @@ function parseLayers(layersDumpLines) {
 
     var surfaceMatches = line.match("(\\s*)Surface: (.*)");
     if (surfaceMatches) {
-      var indentation = Math.floor(matches[1].length / 2);
-      var parent = objectAtIndentation[indentation - 1] || objectAtIndentation[indentation - 2];
+      let indentation = Math.floor(matches[1].length / 2);
+      let parent = objectAtIndentation[indentation - 1] || objectAtIndentation[indentation - 2];
 
       var surfaceURI = surfaceMatches[2];
       if (parent.surfaceURI != null) {
@@ -280,7 +281,7 @@ function parseLayers(layersDumpLines) {
 
       // Look for the buffer-rect offset
       var contentHostLine = layersDumpLines[i - 2].name || layersDumpLines[i - 2];
-      var matches = contentHostLine.match(LAYERS_LINE_REGEX);
+      let matches = contentHostLine.match(LAYERS_LINE_REGEX);
       if (matches) {
         var contentHostRest = matches[4];
         parent.contentHostProp = {};
@@ -298,7 +299,7 @@ function parseLayers(layersDumpLines) {
       root = layerObject;
     }
 
-    var matches = line.match(LAYERS_LINE_REGEX);
+    let matches = line.match(LAYERS_LINE_REGEX);
     if (!matches) {
       continue; // Something like a texturehost dump. Safe to ignore
     }
@@ -335,7 +336,7 @@ function parseLayers(layersDumpLines) {
       var fields = [];
       var nesting = 0;
       var startIndex;
-      for (var j = 0; j < rest.length; j++) {
+      for (let j = 0; j < rest.length; j++) {
         if (rest.charAt(j) == "[") {
           nesting++;
           if (nesting == 1) {
@@ -349,13 +350,13 @@ function parseLayers(layersDumpLines) {
         }
       }
 
-      for (var j = 0; j < fields.length; j++) {
+      for (let j = 0; j < fields.length; j++) {
         // Something like 'valid=< (x=0, y=0, w=1920, h=2218); >' or 'opaqueContent'
         var field = fields[j];
         // dump("FIELD: " + field + "\n");
         var parts = field.split("=", 2);
         var fieldName = parts[0];
-        var rest = field.substring(fieldName.length + 1);
+        rest = field.substring(fieldName.length + 1);
         if (parts.length == 1) {
           layerObject[fieldName] = "true";
           layerObject[fieldName].type = "bool";
@@ -446,7 +447,7 @@ function populateLayers(root, displayList, pane, previewParent, hasSeenRoot, con
     }
     for (var i = 0; i < displayList.children.length; i++) {
       var subDisplayItems = getDisplayItemForLayer(displayList.children[i]);
-      for (var j = 0; j < subDisplayItems.length; j++) {
+      for (let j = 0; j < subDisplayItems.length; j++) {
         items.push(subDisplayItems[j]);
       }
     }
@@ -521,7 +522,7 @@ function populateLayers(root, displayList, pane, previewParent, hasSeenRoot, con
       });
       layerViewportMatrix[4] += -clip[0];
       layerViewportMatrix[5] += -clip[1];
-      layerViewport.style.transform = "translate(-" + clip[0] + "px, -" + clip[1] + "px" + ")";
+      layerViewport.style.transform = "translate(-" + clip[0] + "px, -" + clip[1] + "px)";
     }
     if (root["shadow-transform"] || root.transform) {
       var matrix = root["shadow-transform"] || root.transform;
@@ -544,8 +545,8 @@ function populateLayers(root, displayList, pane, previewParent, hasSeenRoot, con
       previewParent.appendChild(layerViewport);
     }
     previewParent = layerViewport;
-    for (var i = 0; i < visibleRegion.length; i++) {
-      var rect2d = visibleRegion[i];
+    for (let i = 0; i < visibleRegion.length; i++) {
+      let rect2d = visibleRegion[i];
       var layerPreview = createElement("div", {
         id: root.address + "_visible_part" + i + "-" + visibleRegion.length,
         className: "layerPreview",
@@ -629,7 +630,7 @@ function populateLayers(root, displayList, pane, previewParent, hasSeenRoot, con
     }
 
     var layerDisplayItems = getDisplayItemForLayer(displayList);
-    for (var i = 0; i < layerDisplayItems.length; i++) {
+    for (let i = 0; i < layerDisplayItems.length; i++) {
       var displayItem = layerDisplayItems[i];
       var displayElem = createElement("div", {
         className: "layerObjectDescription",
@@ -666,7 +667,6 @@ function populateLayers(root, displayList, pane, previewParent, hasSeenRoot, con
             }
 
             var box = this.diPreview.getBoundingClientRect();
-            var pageBox = document.body.getBoundingClientRect();
             this.diPreview.tooltip = createElement("div", {
               className: "csstooltip",
               innerHTML: description,
@@ -687,7 +687,7 @@ function populateLayers(root, displayList, pane, previewParent, hasSeenRoot, con
         },
       });
 
-      var icon = createElement("img", {
+      icon = createElement("img", {
         style: {
           width: "12px",
           height: "12px",
@@ -699,10 +699,10 @@ function populateLayers(root, displayList, pane, previewParent, hasSeenRoot, con
       pane.appendChild(displayElem);
       // bounds doesn't adjust for within the layer. It's not a bad fallback but
       // will have the wrong offset
-      var rect2d = displayItem.layerBounds || displayItem.bounds;
+      let rect2d = displayItem.layerBounds || displayItem.bounds;
       if (rect2d) { // This doesn't place them corectly
         var appUnitsToPixels = 60 / contentScale;
-        diPreview = createElement("div", {
+        let diPreview = createElement("div", {
           id: "displayitem_" + displayItem.content + "_" + displayItem.address,
           className: "layerPreview",
           style: {
@@ -736,8 +736,6 @@ function populateLayers(root, displayList, pane, previewParent, hasSeenRoot, con
 
 // This function takes a stdout snippet and finds the frames
 function parseMultiLineDump(log) {
-  var lines = log.split("\n");
-
   var container = createElement("div", {
     style: {
       height: "100%",
@@ -874,11 +872,3 @@ function parseDump(log, displayList, compositeTitle, compositeTime) {
   populateLayers(root, displayList, layerListPane, previewDiv);
   return container;
 }
-
-function tab_showLayersDump(layersDumpLines, compositeTitle, compositeTime) {
-  var container = parseDump(layersDumpLines, compositeTitle, compositeTime);
-
-  gTabWidget.addTab("LayerTree", container);
-  gTabWidget.selectTab("LayerTree");
-}
-

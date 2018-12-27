@@ -1,3 +1,6 @@
+// ownerGlobal isn't defined in content privileged windows.
+/* eslint-disable mozilla/use-ownerGlobal */
+
 // Utilities for synthesizing of native events.
 
 function getResolution() {
@@ -265,7 +268,7 @@ function* synthesizeNativeTouchSequences(aTarget, aPositions, aObserver = null, 
   // will be the last one we make, so that we can register aObserver on it.
   var lastNonNullValue = -1;
   var yields = 0;
-  for (var i = 0; i < aPositions.length; i++) {
+  for (let i = 0; i < aPositions.length; i++) {
     if (aPositions[i] == null) {
       yields++;
       continue;
@@ -273,7 +276,7 @@ function* synthesizeNativeTouchSequences(aTarget, aPositions, aObserver = null, 
     if (aPositions[i].length != aTouchIds.length) {
       throw "aPositions[" + i + "] did not have the expected number of positions; expected " + aTouchIds.length + " touch points but found " + aPositions[i].length;
     }
-    for (var j = 0; j < aTouchIds.length; j++) {
+    for (let j = 0; j < aTouchIds.length; j++) {
       if (aPositions[i][j] != null) {
         lastNonNullValue = ((i - yields) * aTouchIds.length) + j;
       }
@@ -300,13 +303,13 @@ function* synthesizeNativeTouchSequences(aTarget, aPositions, aObserver = null, 
 
   // Iterate over the position data now, and generate the touches requested
   yields = 0;
-  for (var i = 0; i < aPositions.length; i++) {
+  for (let i = 0; i < aPositions.length; i++) {
     if (aPositions[i] == null) {
       yields++;
       yield i;
       continue;
     }
-    for (var j = 0; j < aTouchIds.length; j++) {
+    for (let j = 0; j < aTouchIds.length; j++) {
       if (aPositions[i][j] == null) {
         // null means lift the finger
         if (currentPositions[j] == null) {
@@ -333,8 +336,7 @@ function* synthesizeNativeTouchSequences(aTarget, aPositions, aObserver = null, 
 // consumed to overcome the panning threshold.
 function synthesizeNativeTouchDrag(aTarget, aX, aY, aDeltaX, aDeltaY, aObserver = null, aTouchId = 0) {
   var steps = Math.max(Math.abs(aDeltaX), Math.abs(aDeltaY));
-  var positions = new Array();
-  positions.push([{ x: aX, y: aY }]);
+  var positions = [[{ x: aX, y: aY }]];
   for (var i = 1; i < steps; i++) {
     var dx = i * (aDeltaX / steps);
     var dy = i * (aDeltaY / steps);

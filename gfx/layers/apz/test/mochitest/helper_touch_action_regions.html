@@ -30,6 +30,7 @@ function listener(callback) {
 // (in JSON string format) containing the counters.
 // The 'end' invocation tears down the listeners, and should be invoked once
 // at the end to clean up. Returns true on success, false on failure.
+/* eslint-env mozilla/frame-script */
 function chromeTouchEventCounter(operation) {
   function chromeProcessCounter() {
     addMessageListener("start", function() {
@@ -181,7 +182,7 @@ function* test(testDriver) {
   var scroller = document.getElementById("scroller");
   synthesizeNativeTouch(scroller, 10, 110, SpecialPowers.DOMWindowUtils.TOUCH_CONTACT, null, 0);
   RunAfterProcessedQueuedInputEvents(testDriver);
-  for (var i = 1; i < 10; i++) {
+  for (let i = 1; i < 10; i++) {
     synthesizeNativeTouch(scroller, 10, 110 - (i * 10), SpecialPowers.DOMWindowUtils.TOUCH_CONTACT, null, 0);
     RunAfterProcessedQueuedInputEvents(testDriver);
   }
@@ -200,7 +201,7 @@ function* test(testDriver) {
   ok(waitFor("touchstart", 1), "Touchstart processed in chrome process");
 
   // Loop through the touchmove events
-  for (var i = 1; i < 10; i++) {
+  for (let i = 1; i < 10; i++) {
     yield;
     ok(waitFor("touchmove", i), "Touchmove processed in chrome process");
 
