@@ -46,5 +46,11 @@ module.exports = {
     "rules": {
       "mozilla/reject-importGlobalProperties": "off",
     }
+  }, {
+    // TODO: Bug 1515949. Enable no-undef for gfx/
+    "files": "gfx/layers/apz/test/mochitest/**",
+    "rules": {
+      "no-undef": "off",
+    }
   }]
 };

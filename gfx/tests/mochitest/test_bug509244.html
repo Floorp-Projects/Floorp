@@ -12,7 +12,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=509244
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=509244">Mozilla Bug 509244</a>
 <p id="display">A</p>
 <div id="content" style="display: none">
-  
+
 </div>
 <pre id="test">
 <script type="application/javascript">
@@ -31,9 +31,7 @@ text.style.fontFamily = "sans-serif";
 flush();
 
 // flush cache
-var os = SpecialPowers.Cc["@mozilla.org/observer-service;1"]
-         .getService(SpecialPowers.Ci.nsIObserverService);
-os.notifyObservers(null, "memory-pressure", "heap-minimize");
+SpecialPowers.Services.obs.notifyObservers(null, "memory-pressure", "heap-minimize");
 
 // reuse font that was flushed from cache
 text.style.fontFamily = "monospace";
