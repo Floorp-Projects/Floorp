@@ -8,6 +8,9 @@
 // we really want, but we can't express in directly in WebIDL.)
 // ----------------------------------------------------------------------
 
+// getHitTestConfig() expects apz_test_native_event_utils.js to be loaded as well.
+/* import-globals-from apz_test_native_event_utils.js */
+
 function convertEntries(entries) {
   var result = {};
   for (var i = 0; i < entries.length; ++i) {
@@ -87,11 +90,11 @@ function buildApzcTree(paint) {
   // so we invent a node that is the parent of all roots.
   // This 'root' does not correspond to an APZC.
   var root = {scrollId: -1, children: []};
-  for (var scrollId in paint) {
+  for (let scrollId in paint) {
     paint[scrollId].children = [];
     paint[scrollId].scrollId = scrollId;
   }
-  for (var scrollId in paint) {
+  for (let scrollId in paint) {
     var parentNode = null;
     if ("hasNoParentWithSameLayersId" in paint[scrollId]) {
       parentNode = root;
@@ -298,7 +301,7 @@ function runSubtestsSeriallyInFreshWindows(aSubtests) {
           SimpleTest.ok(false, "Subtest URL " + subtestUrl + " does not resolve. " +
               "Be sure it's present in the support-files section of mochitest.ini.");
           reject();
-          return;
+          return undefined;
         }
         w.location = subtestUrl;
         return w;
@@ -335,6 +338,7 @@ async function waitUntilApzStable() {
 
     // Sadly this helper function cannot reuse any code from other places because
     // it must be totally self-contained to be shipped over to the parent process.
+    /* eslint-env mozilla/frame-script */
     function parentProcessFlush() {
       addMessageListener("apz-flush", function() {
         ChromeUtils.import("resource://gre/modules/Services.jsm");
@@ -481,7 +485,7 @@ function runContinuation(testFunction) {
 // The snapshot is returned in the form of a data URL.
 function getSnapshot(rect) {
   function parentProcessSnapshot() {
-    addMessageListener("snapshot", function(rect) {
+    addMessageListener("snapshot", function(parentRect) {
       ChromeUtils.import("resource://gre/modules/Services.jsm");
       var topWin = Services.wm.getMostRecentWindow("navigator:browser");
       if (!topWin) {
@@ -489,16 +493,18 @@ function getSnapshot(rect) {
       }
 
       // reposition the rect relative to the top-level browser window
-      rect = JSON.parse(rect);
-      rect.x -= topWin.mozInnerScreenX;
-      rect.y -= topWin.mozInnerScreenY;
+      parentRect = JSON.parse(parentRect);
+      parentRect.x -= topWin.mozInnerScreenX;
+      parentRect.y -= topWin.mozInnerScreenY;
 
       // take the snapshot
       var canvas = topWin.document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
-      canvas.width = rect.w;
-      canvas.height = rect.h;
+      canvas.width = parentRect.w;
+      canvas.height = parentRect.h;
       var ctx = canvas.getContext("2d");
-      ctx.drawWindow(topWin, rect.x, rect.y, rect.w, rect.h, "rgb(255,255,255)", ctx.DRAWWINDOW_DRAW_VIEW | ctx.DRAWWINDOW_USE_WIDGET_LAYERS | ctx.DRAWWINDOW_DRAW_CARET);
+      ctx.drawWindow(topWin, parentRect.x, parentRect.y, parentRect.w, parentRect.h,
+        "rgb(255,255,255)",
+        ctx.DRAWWINDOW_DRAW_VIEW | ctx.DRAWWINDOW_USE_WIDGET_LAYERS | ctx.DRAWWINDOW_DRAW_CARET);
       return canvas.toDataURL();
     });
   }

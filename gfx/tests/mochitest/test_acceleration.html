@@ -12,7 +12,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=627498
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=627498">Mozilla Bug 627498</a>
 <p id="display"></p>
 <div id="content" style="display: none">
-  
+
 </div>
 <pre id="test">
 <script type="application/javascript">
@@ -29,7 +29,7 @@ function runTest() {
   var Ci = SpecialPowers.Ci;
 
   var sysInfo = Cc["@mozilla.org/system-info;1"].getService(Ci.nsIPropertyBag2);
-  var xr = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime);
+  var xr = SpecialPowers.Services.appinfo;
 
   var windows = SpecialPowers.Services.ww.getWindowEnumerator();
   var windowutils;

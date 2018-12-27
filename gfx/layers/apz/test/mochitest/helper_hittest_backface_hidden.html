@@ -53,7 +53,7 @@ function* test(testDriver) {
 
   var subframeViewId = config.utils.getViewId(subframe);
 
-  var {hitInfo, scrollId} = hitTest(centerOf(subframe));
+  var {scrollId} = hitTest(centerOf(subframe));
 
   is(scrollId, subframeViewId,
      "hit the scroll frame behind the backface-visibility:hidden element");
