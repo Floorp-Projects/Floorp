@@ -16,8 +16,6 @@ from taskgraph.util.hg import find_hg_revision_push_info
 from taskgraph.util.taskcluster import get_artifact
 from taskgraph.util.partials import populate_release_history
 from taskgraph.util.partners import (
-    EMEFREE_BRANCHES,
-    PARTNER_BRANCHES,
     fix_partner_config,
     get_partner_config_by_url,
     get_partner_url_config,
@@ -39,7 +37,8 @@ def is_release_promotion_available(parameters):
 def get_partner_config(partner_url_config, github_token):
     partner_config = {}
     for kind, url in partner_url_config.items():
-        partner_config[kind] = get_partner_config_by_url(url, kind, github_token)
+        if url:
+            partner_config[kind] = get_partner_config_by_url(url, kind, github_token)
     return partner_config
 
 
@@ -191,8 +190,7 @@ def get_flavors(graph_config, param):
             },
             'release_enable_partners': {
                 'type': 'boolean',
-                'default': False,
-                'description': ('Toggle for creating partner repacks'),
+                'description': 'Toggle for creating partner repacks',
             },
             'release_partner_build_number': {
                 'type': 'integer',
@@ -212,14 +210,13 @@ def get_flavors(graph_config, param):
             },
             'release_partner_config': {
                 'type': 'object',
-                'description': ('Partner configuration to use for partner repacks.'),
+                'description': 'Partner configuration to use for partner repacks.',
                 'properties': {},
                 'additionalProperties': True,
             },
             'release_enable_emefree': {
                 'type': 'boolean',
-                'default': False,
-                'description': ('Toggle for creating EME-free repacks'),
+                'description': 'Toggle for creating EME-free repacks',
             },
             'required_signoffs': {
                 'type': 'array',
@@ -276,14 +273,6 @@ def release_promotion_action(parameters, graph_config, input, task_group_id, tas
     do_not_optimize = input.get(
         'do_not_optimize', promotion_config.get('do-not-optimize', [])
     )
-    release_enable_partners = input.get(
-        'release_enable_partners',
-        parameters['project'] in PARTNER_BRANCHES and product in ('firefox',)
-    )
-    release_enable_emefree = input.get(
-        'release_enable_emefree',
-        parameters['project'] in EMEFREE_BRANCHES and product in ('firefox',)
-    )
 
     # make parameters read-write
     parameters = dict(parameters)
@@ -322,28 +311,36 @@ def release_promotion_action(parameters, graph_config, input, task_group_id, tas
     if promotion_config.get('is-rc'):
         parameters['release_type'] += '-rc'
     parameters['release_eta'] = input.get('release_eta', '')
-    parameters['release_enable_partners'] = release_enable_partners
-    parameters['release_partners'] = input.get('release_partners')
-    parameters['release_enable_emefree'] = release_enable_emefree
     parameters['release_product'] = product
     # When doing staging releases on try, we still want to re-use tasks from
     # previous graphs.
     parameters['optimize_target_tasks'] = True
 
+    # Partner/EMEfree are enabled by default when get_partner_url_config() returns a non-null url
+    # The action input may override by sending False. It's an error to send True with no url found
+    partner_url_config = get_partner_url_config(parameters, graph_config)
+    release_enable_partners = partner_url_config['release-partner-repack'] is not None
+    release_enable_emefree = partner_url_config['release-eme-free-repack'] is not None
+    if input.get('release_enable_partners') is False:
+        release_enable_partners = False
+    elif input.get('release_enable_partners') is True and not release_enable_partners:
+        raise Exception("Can't enable partner repacks when no config url found")
+    if input.get('release_enable_emefree') is False:
+        release_enable_emefree = False
+    elif input.get('release_enable_emefree') is True and not release_enable_emefree:
+        raise Exception("Can't enable EMEfree when no config url found")
+    parameters['release_enable_partners'] = release_enable_partners
+    parameters['release_enable_emefree'] = release_enable_emefree
+
     partner_config = input.get('release_partner_config')
     if not partner_config and (release_enable_emefree or release_enable_partners):
-        partner_url_config = get_partner_url_config(
-            parameters, graph_config, enable_emefree=release_enable_emefree,
-            enable_partners=release_enable_partners
-        )
         github_token = get_token(parameters)
         partner_config = get_partner_config(partner_url_config, github_token)
-
-    if input.get('release_partner_build_number'):
-        parameters['release_partner_build_number'] = input['release_partner_build_number']
-
     if partner_config:
         parameters['release_partner_config'] = fix_partner_config(partner_config)
+    parameters['release_partners'] = input.get('release_partners')
+    if input.get('release_partner_build_number'):
+        parameters['release_partner_build_number'] = input['release_partner_build_number']
 
     if input['version']:
         parameters['version'] = input['version']
