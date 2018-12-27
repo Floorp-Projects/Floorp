@@ -10,8 +10,8 @@
   <script type="text/javascript">
 
 function* test(testDriver) {
-  var scrollableDiv = document.getElementById('scrollable');
-  scrollableDiv.addEventListener('scroll', () => setTimeout(testDriver, 0), {once: true});
+  var scrollableDiv = document.getElementById("scrollable");
+  scrollableDiv.addEventListener("scroll", () => setTimeout(testDriver, 0), {once: true});
 
   // Scroll down a small amount (10px). The bug in this case is that the
   // scrollthumb remains a little "above" where it's supposed to be, so if the

@@ -10,28 +10,28 @@
 
 var subtests = [
   // Sanity test to synthesize a mouse click
-  {'file': 'helper_click.html?dtc=false'},
+  {"file": "helper_click.html?dtc=false"},
   // Same as above, but with a dispatch-to-content region that exercises the
   // main-thread notification codepaths for mouse events
-  {'file': 'helper_click.html?dtc=true'},
+  {"file": "helper_click.html?dtc=true"},
   // Sanity test for click but with some mouse movement between the down and up
-  {'file': 'helper_drag_click.html'},
+  {"file": "helper_drag_click.html"},
   // Test for dragging on a fake-scrollbar element that scrolls the page
-  {'file': 'helper_drag_scroll.html'},
+  {"file": "helper_drag_scroll.html"},
   // Test for dragging the scrollbar with a fixed-pos element overlaying it
-  {'file': 'helper_bug1346632.html'},
+  {"file": "helper_bug1346632.html"},
   // Test for scrollbar-dragging on a scrollframe that's inactive
-  {'file': 'helper_bug1326290.html'},
+  {"file": "helper_bug1326290.html"},
   // Test for scrollbar-dragging on a scrollframe inside an SVGEffects
-  {'file': 'helper_bug1331693.html'},
+  {"file": "helper_bug1331693.html"},
   // Test for scrollbar-dragging on a transformed scrollframe inside a fixed-pos item
-  {'file': 'helper_bug1462961.html'},
+  {"file": "helper_bug1462961.html"},
   // Scrollbar dragging where we exercise the snapback behaviour by moving the
   // mouse away from the scrollbar during drag
-  {'file': 'helper_scrollbar_snap_bug1501062.html'},
+  {"file": "helper_scrollbar_snap_bug1501062.html"},
   // Tests for scrollbar-dragging on scrollframes inside nested transforms
-  {'file': 'helper_bug1490393.html'},
-  {'file': 'helper_bug1490393-2.html'}
+  {"file": "helper_bug1490393.html"},
+  {"file": "helper_bug1490393-2.html"}
 ];
 
 if (isApzEnabled()) {

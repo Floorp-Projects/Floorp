@@ -78,11 +78,11 @@ document.getElementById("scrollbox").addEventListener("wheel", function (e) {
 });
 
 function* test(testDriver) {
-  var content = document.getElementById('content');
+  var content = document.getElementById("content");
   for (i = 0; i < 300; i++) { // enough iterations that we would scroll to the bottom of 'content'
     yield synthesizeNativeWheelAndWaitForWheelEvent(content, 100, 150, 0, -5, testDriver);
   }
-  var scrollbox = document.getElementById('scrollbox');
+  var scrollbox = document.getElementById("scrollbox");
   is(content.scrollTop > 0, true, "We should have scrolled down somewhat");
   is(content.scrollTop < content.scrollTopMax, true, "We should not have scrolled to the bottom of the scrollframe");
   is(rotationAdjusted, true, "The rotation should have been adjusted");

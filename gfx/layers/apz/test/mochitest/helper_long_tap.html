@@ -10,7 +10,7 @@
   <script type="application/javascript">
 
 function longPressLink() {
-  synthesizeNativeTouch(document.getElementById('b'), 5, 5, SpecialPowers.DOMWindowUtils.TOUCH_CONTACT, function() {
+  synthesizeNativeTouch(document.getElementById("b"), 5, 5, SpecialPowers.DOMWindowUtils.TOUCH_CONTACT, function() {
     dump("Finished synthesizing touch-start, waiting for events...\n");
   });
 }
@@ -22,14 +22,14 @@ function recordEvent(e) {
     // by APZ, and that's what we use as the trigger to lift the finger. That then
     // triggers the contextmenu. This matches the platform convention.
     switch (eventsFired) {
-      case 0: is(e.type, 'touchstart', 'Got a touchstart'); break;
+      case 0: is(e.type, "touchstart", "Got a touchstart"); break;
       case 1:
-        is(e.type, 'mouselongtap', 'Got a mouselongtap');
-        synthesizeNativeTouch(document.getElementById('b'), 5, 5, SpecialPowers.DOMWindowUtils.TOUCH_REMOVE);
+        is(e.type, "mouselongtap", "Got a mouselongtap");
+        synthesizeNativeTouch(document.getElementById("b"), 5, 5, SpecialPowers.DOMWindowUtils.TOUCH_REMOVE);
         break;
-      case 2: is(e.type, 'touchend', 'Got a touchend'); break;
-      case 3: is(e.type, 'contextmenu', 'Got a contextmenu'); e.preventDefault(); break;
-      default: ok(false, 'Got an unexpected event of type ' + e.type); break;
+      case 2: is(e.type, "touchend", "Got a touchend"); break;
+      case 3: is(e.type, "contextmenu", "Got a contextmenu"); e.preventDefault(); break;
+      default: ok(false, "Got an unexpected event of type " + e.type); break;
     }
     eventsFired++;
 
@@ -45,15 +45,15 @@ function recordEvent(e) {
     // been detected. Since we prevent-default that, we don't get a mouselongtap
     // event at all, and instead get a touchcancel.
     switch (eventsFired) {
-      case 0: is(e.type, 'touchstart', 'Got a touchstart'); break;
-      case 1: is(e.type, 'contextmenu', 'Got a contextmenu'); e.preventDefault(); break;
-      case 2: is(e.type, 'touchcancel', 'Got a touchcancel'); break;
-      default: ok(false, 'Got an unexpected event of type ' + e.type); break;
+      case 0: is(e.type, "touchstart", "Got a touchstart"); break;
+      case 1: is(e.type, "contextmenu", "Got a contextmenu"); e.preventDefault(); break;
+      case 2: is(e.type, "touchcancel", "Got a touchcancel"); break;
+      default: ok(false, "Got an unexpected event of type " + e.type); break;
     }
     eventsFired++;
 
     if (eventsFired == 3) {
-      synthesizeNativeTouch(document.getElementById('b'), 5, 5, SpecialPowers.DOMWindowUtils.TOUCH_REMOVE, function() {
+      synthesizeNativeTouch(document.getElementById("b"), 5, 5, SpecialPowers.DOMWindowUtils.TOUCH_REMOVE, function() {
         dump("Finished synthesizing touch-end, doing an APZ flush to see if any more unexpected events come through...\n");
         flushApzRepaints(function() {
           dump("Done APZ flush, ending test...\n");
@@ -64,11 +64,11 @@ function recordEvent(e) {
   }
 }
 
-window.addEventListener('touchstart', recordEvent, { passive: true, capture: true });
-window.addEventListener('touchend', recordEvent, { passive: true, capture: true });
-window.addEventListener('touchcancel', recordEvent, true);
-window.addEventListener('contextmenu', recordEvent, true);
-SpecialPowers.addChromeEventListener('mouselongtap', recordEvent, true);
+window.addEventListener("touchstart", recordEvent, { passive: true, capture: true });
+window.addEventListener("touchend", recordEvent, { passive: true, capture: true });
+window.addEventListener("touchcancel", recordEvent, true);
+window.addEventListener("contextmenu", recordEvent, true);
+SpecialPowers.addChromeEventListener("mouselongtap", recordEvent, true);
 
 waitUntilApzStable()
 .then(longPressLink);

@@ -17,12 +17,12 @@ function scrollOuter() {
   };
   SpecialPowers.Services.obs.addObserver(transformEnd, "APZ:TransformEnd");
 
-  synthesizeNativeTouchDrag(document.getElementById('outer'), 10, 100, 0, -50);
+  synthesizeNativeTouchDrag(document.getElementById("outer"), 10, 100, 0, -50);
   dump("Finished native drag, waiting for transform-end observer...\n");
 }
 
 function checkScroll() {
-  var outerScroll = document.getElementById('outer').scrollTop;
+  var outerScroll = document.getElementById("outer").scrollTop;
   is(outerScroll, 50, "check that the div scrolled");
   subtestDone();
 }

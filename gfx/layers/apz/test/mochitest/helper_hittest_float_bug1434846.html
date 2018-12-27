@@ -38,7 +38,7 @@ function* test(testDriver) {
   var utils = getHitTestConfig().utils;
 
   hitTestScrollbar({
-    element: document.getElementById('subframe'),
+    element: document.getElementById("subframe"),
     directions: { vertical: true },
     expectedScrollId: utils.getViewId(document.scrollingElement),
     trackLocation: ScrollbarTrackLocation.START,

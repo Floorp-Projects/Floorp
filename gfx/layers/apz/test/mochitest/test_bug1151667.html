@@ -45,12 +45,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1151667
 <script type="application/javascript">
 
 function startTest() {
-  var subframe = document.getElementById('subframe');
+  var subframe = document.getElementById("subframe");
   synthesizeNativeWheelAndWaitForScrollEvent(subframe, 100, 150, 0, -10, continueTest);
 }
 
 function continueTest() {
-  var subframe = document.getElementById('subframe');
+  var subframe = document.getElementById("subframe");
   is(subframe.scrollTop > 0, true, "We should have scrolled the subframe down");
   is(document.documentElement.scrollTop, 0, "We should not have scrolled the page");
   SimpleTest.finish();

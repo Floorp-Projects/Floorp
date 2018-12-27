@@ -11,15 +11,15 @@
 var prefs = [
   // turn off smooth scrolling so that we don't have to wait for
   // APZ animations to finish before sampling the scroll offset
-  ['general.smoothScroll', false],
+  ["general.smoothScroll", false],
   // Increase the content response timeout because these tests do preventDefault
   // and we want to make sure APZ actually waits for them.
-  ['apz.content_response_timeout', 10000],
+  ["apz.content_response_timeout", 10000],
 ]
 
 var subtests = [
-  {'file': 'helper_override_root.html', 'prefs': prefs},
-  {'file': 'helper_override_subdoc.html', 'prefs': prefs},
+  {"file": "helper_override_root.html", "prefs": prefs},
+  {"file": "helper_override_subdoc.html", "prefs": prefs},
 ];
 
 if (isApzEnabled()) {

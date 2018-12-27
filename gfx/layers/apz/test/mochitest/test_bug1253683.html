@@ -22,12 +22,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1253683
 <script type="application/javascript">
 
 function* test(testDriver) {
-  var container = document.getElementById('container');
-  var no_layer = document.getElementById('no_layer');
+  var container = document.getElementById("container");
+  var no_layer = document.getElementById("no_layer");
 
   // Check initial state
   is(container.scrollTop, 0, "Initial scrollY should be 0");
-  ok(!isLayerized('no_layer'), "initially 'no_layer' should not be layerized");
+  ok(!isLayerized("no_layer"), "initially 'no_layer' should not be layerized");
 
   // Scrolling over outer1 should layerize outer1, but not inner1.
   yield moveMouseAndScrollWheelOver(no_layer, 10, 10, testDriver, true);
@@ -36,7 +36,7 @@ function* test(testDriver) {
   });
 
   ok(container.scrollTop > 0, "We should have scrolled the body");
-  ok(!isLayerized('no_layer'), "no_layer should still not be layerized");
+  ok(!isLayerized("no_layer"), "no_layer should still not be layerized");
 }
 
 if (isApzEnabled()) {

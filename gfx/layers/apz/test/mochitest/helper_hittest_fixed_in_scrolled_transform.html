@@ -68,11 +68,11 @@ function* test(testDriver) {
   var utils = config.utils;
 
   // layerize the scrollable frame
-  var subframe = document.querySelector('.subframe');
+  var subframe = document.querySelector(".subframe");
   utils.setDisplayPortForElement(0, 0, 800, 2000, subframe, 1);
   yield waitForApzFlushedRepaints(testDriver);
 
-  var target = document.querySelector('.absoluteClip');
+  var target = document.querySelector(".absoluteClip");
   checkHitResult(hitTest(centerOf(target)),
                  APZHitResultFlags.VISIBLE,
                  utils.getViewId(subframe),

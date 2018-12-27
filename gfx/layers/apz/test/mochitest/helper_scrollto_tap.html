@@ -24,7 +24,7 @@ function startTest() {
   // by ensuring the document element did not get painted.
   var utils = window.opener.SpecialPowers.getDOMWindowUtils(window);
   var elem = document.documentElement;
-  var skipping = location.search == '?true';
+  var skipping = location.search == "?true";
   utils.checkAndClearPaintedState(elem);
   window.scrollTo(0, 20);
   waitForAllPaints(function() {
@@ -38,15 +38,15 @@ function startTest() {
 }
 
 function clickButton() {
-  document.addEventListener('click', clicked);
+  document.addEventListener("click", clicked);
 
-  synthesizeNativeTap(document.getElementById('b'), 5, 5, function() {
+  synthesizeNativeTap(document.getElementById("b"), 5, 5, function() {
     dump("Finished synthesizing tap, waiting for button to be clicked...\n");
   });
 }
 
 function clicked(e) {
-  is(e.target, document.getElementById('b'), "Clicked on button, yay! (at " + e.clientX + "," + e.clientY + ")");
+  is(e.target, document.getElementById("b"), "Clicked on button, yay! (at " + e.clientX + "," + e.clientY + ")");
   subtestDone();
 }
 

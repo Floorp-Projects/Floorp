@@ -18,12 +18,12 @@ function convertEntries(entries) {
 
 function getPropertyAsRect(scrollFrames, scrollId, prop) {
   SimpleTest.ok(scrollId in scrollFrames,
-                'expected scroll frame data for scroll id ' + scrollId);
+                "expected scroll frame data for scroll id " + scrollId);
   var scrollFrameData = scrollFrames[scrollId];
-  SimpleTest.ok('displayport' in scrollFrameData,
-                'expected a ' + prop + ' for scroll id ' + scrollId);
+  SimpleTest.ok("displayport" in scrollFrameData,
+                "expected a " + prop + " for scroll id " + scrollId);
   var value = scrollFrameData[prop];
-  var pieces = value.replace(/[()\s]+/g, '').split(',');
+  var pieces = value.replace(/[()\s]+/g, "").split(",");
   SimpleTest.is(pieces.length, 4, "expected string of form (x,y,w,h)");
   return { x: parseInt(pieces[0]),
            y: parseInt(pieces[1]),
@@ -227,7 +227,7 @@ function runSubtestsSeriallyInFreshWindows(aSubtests) {
         if (w.ApzCleanup) { // guard against the subtest not loading apz_test_utils.js
           w.ApzCleanup.execute();
         }
-        if (typeof test.dp_suppression != 'undefined') {
+        if (typeof test.dp_suppression != "undefined") {
           // We modified the suppression when starting the test, so now undo that.
           SpecialPowers.getDOMWindowUtils(window).respectDisplayPortSuppression(!test.dp_suppression);
         }
@@ -261,7 +261,7 @@ function runSubtestsSeriallyInFreshWindows(aSubtests) {
 
       SimpleTest.ok(true, "Starting subtest " + test.file);
 
-      if (typeof test.dp_suppression != 'undefined') {
+      if (typeof test.dp_suppression != "undefined") {
         // Normally during a test, the displayport will get suppressed during page
         // load, and unsuppressed at a non-deterministic time during the test. The
         // unsuppression can trigger a repaint which interferes with the test, so
@@ -271,7 +271,7 @@ function runSubtestsSeriallyInFreshWindows(aSubtests) {
       }
 
       function spawnTest(aFile) {
-        w = window.open('', "_blank");
+        w = window.open("", "_blank");
         w.subtestDone = advanceSubtestExecution;
         w.isApzSubtest = true;
         w.SimpleTest = SimpleTest;
@@ -285,12 +285,12 @@ function runSubtestsSeriallyInFreshWindows(aSubtests) {
         w.todo_is = function(a, b, msg)  { return todo_is(a, b, aFile + " | " + msg); };
         w.todo = function(cond, msg) { return todo(cond, aFile + " | " + msg); };
         if (test.onload) {
-          w.addEventListener('load', function(e) { test.onload(w); }, { once: true });
+          w.addEventListener("load", function(e) { test.onload(w); }, { once: true });
         }
-        var subtestUrl = location.href.substring(0, location.href.lastIndexOf('/') + 1) + aFile;
+        var subtestUrl = location.href.substring(0, location.href.lastIndexOf("/") + 1) + aFile;
         function urlResolves(url) {
           var request = new XMLHttpRequest();
-          request.open('GET', url, false);
+          request.open("GET", url, false);
           request.send();
           return request.status !== 404;
         }
@@ -321,7 +321,7 @@ function runSubtestsSeriallyInFreshWindows(aSubtests) {
 }
 
 function pushPrefs(prefs) {
-  return SpecialPowers.pushPrefEnv({'set': prefs});
+  return SpecialPowers.pushPrefEnv({"set": prefs});
 }
 
 async function waitUntilApzStable() {
@@ -338,9 +338,9 @@ async function waitUntilApzStable() {
     function parentProcessFlush() {
       addMessageListener("apz-flush", function() {
         ChromeUtils.import("resource://gre/modules/Services.jsm");
-        var topWin = Services.wm.getMostRecentWindow('navigator:browser');
+        var topWin = Services.wm.getMostRecentWindow("navigator:browser");
         if (!topWin) {
-          topWin = Services.wm.getMostRecentWindow('navigator:geckoview');
+          topWin = Services.wm.getMostRecentWindow("navigator:geckoview");
         }
         var topUtils = topWin.windowUtils;
 
@@ -481,11 +481,11 @@ function runContinuation(testFunction) {
 // The snapshot is returned in the form of a data URL.
 function getSnapshot(rect) {
   function parentProcessSnapshot() {
-    addMessageListener('snapshot', function(rect) {
-      ChromeUtils.import('resource://gre/modules/Services.jsm');
-      var topWin = Services.wm.getMostRecentWindow('navigator:browser');
+    addMessageListener("snapshot", function(rect) {
+      ChromeUtils.import("resource://gre/modules/Services.jsm");
+      var topWin = Services.wm.getMostRecentWindow("navigator:browser");
       if (!topWin) {
-        topWin = Services.wm.getMostRecentWindow('navigator:geckoview');
+        topWin = Services.wm.getMostRecentWindow("navigator:geckoview");
       }
 
       // reposition the rect relative to the top-level browser window
@@ -498,18 +498,18 @@ function getSnapshot(rect) {
       canvas.width = rect.w;
       canvas.height = rect.h;
       var ctx = canvas.getContext("2d");
-      ctx.drawWindow(topWin, rect.x, rect.y, rect.w, rect.h, 'rgb(255,255,255)', ctx.DRAWWINDOW_DRAW_VIEW | ctx.DRAWWINDOW_USE_WIDGET_LAYERS | ctx.DRAWWINDOW_DRAW_CARET);
+      ctx.drawWindow(topWin, rect.x, rect.y, rect.w, rect.h, "rgb(255,255,255)", ctx.DRAWWINDOW_DRAW_VIEW | ctx.DRAWWINDOW_USE_WIDGET_LAYERS | ctx.DRAWWINDOW_DRAW_CARET);
       return canvas.toDataURL();
     });
   }
 
-  if (typeof getSnapshot.chromeHelper == 'undefined') {
+  if (typeof getSnapshot.chromeHelper == "undefined") {
     // This is the first time getSnapshot is being called; do initialization
     getSnapshot.chromeHelper = SpecialPowers.loadChromeScript(parentProcessSnapshot);
     ApzCleanup.register(function() { getSnapshot.chromeHelper.destroy() });
   }
 
-  return getSnapshot.chromeHelper.sendSyncMessage('snapshot', JSON.stringify(rect)).toString();
+  return getSnapshot.chromeHelper.sendSyncMessage("snapshot", JSON.stringify(rect)).toString();
 }
 
 // Takes the document's query string and parses it, assuming the query string
@@ -524,9 +524,9 @@ function getSnapshot(rect) {
 function getQueryArgs() {
   var args = {};
   if (location.search.length > 0) {
-    var params = location.search.substr(1).split('&');
+    var params = location.search.substr(1).split("&");
     for (var p of params) {
-      var [k, v] = p.split('=');
+      var [k, v] = p.split("=");
       args[k] = JSON.parse(v);
     }
   }
@@ -545,17 +545,17 @@ function getQueryArgs() {
 function injectScript(aScript, aWindow = window) {
   return function() {
     return new Promise(function(resolve, reject) {
-      var e = aWindow.document.createElement('script');
-      e.type = 'text/javascript';
+      var e = aWindow.document.createElement("script");
+      e.type = "text/javascript";
       e.onload = function() {
         resolve();
       };
       e.onerror = function() {
-        dump('Script [' + aScript + '] errored out\n');
+        dump("Script [" + aScript + "] errored out\n");
         reject();
       };
       e.src = aScript;
-      aWindow.document.getElementsByTagName('head')[0].appendChild(e);
+      aWindow.document.getElementsByTagName("head")[0].appendChild(e);
     });
   };
 }
@@ -570,8 +570,8 @@ function injectScript(aScript, aWindow = window) {
 function getHitTestConfig() {
   if (!("hitTestConfig" in window)) {
     var utils = SpecialPowers.getDOMWindowUtils(window);
-    var isWebRender = (utils.layerManagerType == 'WebRender');
-    var isWindows = (getPlatform() == 'windows');
+    var isWebRender = (utils.layerManagerType == "WebRender");
+    var isWindows = (getPlatform() == "windows");
     window.hitTestConfig = { utils, isWebRender, isWindows };
   }
   return window.hitTestConfig;
