@@ -13,18 +13,18 @@
 */
 
 #include "mozilla/Attributes.h"
+#include "mozilla/dom/DOMRect.h"
+#include "mozilla/dom/Element.h"
+#include "mozilla/gfx/MatrixFwd.h"
 #include "nsAutoPtr.h"
 #include "nsChangeHint.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsError.h"
-#include "mozilla/dom/DOMRect.h"
-#include "mozilla/dom/Element.h"
-#include "mozilla/gfx/MatrixFwd.h"
 #include "nsISupportsImpl.h"
 #include "nsStyledElement.h"
-#include "nsSVGClass.h"
 #include "SVGContentUtils.h"
+#include "nsSVGClass.h"
 #include "gfxMatrix.h"
 
 class nsSVGAngle;
