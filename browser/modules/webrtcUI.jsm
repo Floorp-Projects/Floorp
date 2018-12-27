@@ -752,6 +752,14 @@ function prompt(aBrowser, aRequest) {
             video.onloadedmetadata = function(e) {
               video.play();
             };
+          },
+          err => {
+            if (err.name == "OverconstrainedError" && err.constraint == "deviceId") {
+              // Window has disappeared since enumeration, which can happen.
+              // No preview for you.
+              return;
+            }
+            Cu.reportError(`error in preview: ${err.message} ${err.constraint}`);
           });
         };
         menupopup.addEventListener("command", menupopup._commandEventListener);

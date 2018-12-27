@@ -228,7 +228,7 @@ var gTests = [
 
     let menulist =
       document.getElementById("webRTC-selectWindow-menulist");
-    menulist.getItemAtIndex(2).doCommand();
+    menulist.getItemAtIndex(menulist.itemCount - 1).doCommand();
 
     let indicator = promiseIndicatorWindow();
     await promiseMessage("ok", () => {
