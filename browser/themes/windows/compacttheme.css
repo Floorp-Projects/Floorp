@@ -4,7 +4,7 @@
 
 %include ../shared/compacttheme.inc.css
 
-@media (-moz-windows-accent-color-in-titlebar) {
+@media (-moz-windows-default-theme) and (-moz-windows-accent-color-in-titlebar) {
   :root[tabsintitlebar]:not(:-moz-window-inactive) {
     background-color: -moz-win-accentcolor;
     color: -moz-win-accentcolortext;
