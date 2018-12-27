@@ -1029,6 +1029,7 @@ enum XML_FeatureEnum {
   XML_FEATURE_SIZEOF_XML_CHAR,
   XML_FEATURE_SIZEOF_XML_LCHAR,
   XML_FEATURE_NS,
+  XML_FEATURE_LARGE_SIZE,
   XML_FEATURE_ATTR_INFO
   /* Additional features must be added to the end of this enum. */
 };
@@ -1047,8 +1048,8 @@ XML_GetFeatureList(void);
    See http://semver.org.
 */
 #define XML_MAJOR_VERSION 2
-#define XML_MINOR_VERSION 0
-#define XML_MICRO_VERSION 0
+#define XML_MINOR_VERSION 2
+#define XML_MICRO_VERSION 1
 
 /* BEGIN MOZILLA CHANGE (Report opening tag of mismatched closing tag) */
 XMLPARSEAPI(const XML_Char*)
