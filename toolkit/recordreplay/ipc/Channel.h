@@ -11,6 +11,7 @@
 
 #include "mozilla/gfx/Types.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/UniquePtr.h"
 
 #include "File.h"
 #include "JSControl.h"
@@ -160,10 +161,13 @@ struct Message {
   }
 
  public:
-  Message* Clone() const {
-    char* res = (char*)malloc(mSize);
+  struct FreePolicy { void operator()(Message* msg) { /*free(msg);*/ } };
+  typedef UniquePtr<Message, FreePolicy> UniquePtr;
+
+  UniquePtr Clone() const {
+    Message* res = static_cast<Message*>(malloc(mSize));
     memcpy(res, this, mSize);
-    return (Message*)res;
+    return UniquePtr(res);
   }
 
   const char* TypeString() const {
@@ -439,7 +443,7 @@ class Channel {
  public:
   // Note: the handler is responsible for freeing its input message. It will be
   // called on the channel's message thread.
-  typedef std::function<void(Message*)> MessageHandler;
+  typedef std::function<void(Message::UniquePtr)> MessageHandler;
 
  private:
   // ID for this channel, unique for the middleman.
@@ -473,7 +477,7 @@ class Channel {
 
   // Block until a complete message is received from the other side of the
   // channel.
-  Message* WaitForMessage();
+  Message::UniquePtr WaitForMessage();
 
   // Main routine for the channel's thread.
   static void ThreadMain(void* aChannel);
