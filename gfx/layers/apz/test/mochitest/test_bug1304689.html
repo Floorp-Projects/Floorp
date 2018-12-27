@@ -35,10 +35,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1304689
 
 function* test(testDriver) {
   var utils = SpecialPowers.DOMWindowUtils;
-  var elm = document.getElementById('outer');
+  var elm = document.getElementById("outer");
 
   // Set margins on the element, to ensure it is layerized
-  utils.setDisplayPortMarginsForElement(0, 0, 0, 0, elm, /*priority*/ 1);
+  utils.setDisplayPortMarginsForElement(0, 0, 0, 0, elm, /* priority*/ 1);
   yield waitForAllPaints(function() {
     flushApzRepaints(testDriver);
   });
@@ -57,9 +57,9 @@ function* test(testDriver) {
 
   // Do another scroll update but also do a frame reconstruction within the same
   // tick of the refresh driver.
-  elm.classList.add('instant');
+  elm.classList.add("instant");
   elm.scrollTop = 100;
-  elm.classList.add('contentBefore');
+  elm.classList.add("contentBefore");
 
   // Now let everything settle and all the animations run out
   for (var i = 0; i < 60; i++) {

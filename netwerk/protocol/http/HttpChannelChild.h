@@ -204,6 +204,13 @@ class HttpChannelChild final : public PHttpChannelChild,
   NS_IMETHOD LogBlockedCORSRequest(const nsAString& aMessage,
                                    const nsACString& aCategory) override;
 
+  virtual mozilla::ipc::IPCResult RecvLogMimeTypeMismatch(
+      const nsCString& aMessageName, const bool& aWarning, const nsString& aURL,
+      const nsString& aContentType) override;
+  NS_IMETHOD LogMimeTypeMismatch(const nsACString& aMessageName, bool aWarning,
+                                 const nsAString& aURL,
+                                 const nsAString& aContentType) override;
+
  private:
   nsresult AsyncCallImpl(void (HttpChannelChild::*funcPtr)(),
                          nsRunnableMethod<HttpChannelChild>** retval);

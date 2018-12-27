@@ -26,7 +26,7 @@ function* test(testDriver) {
   // like. However if any bugfixes are made to that function this code might
   // need to be updated as well.
 
-  var scrollableDiv = document.getElementById('scrollable');
+  var scrollableDiv = document.getElementById("scrollable");
   var boundingClientRect = scrollableDiv.getBoundingClientRect();
   var verticalScrollbarWidth = boundingClientRect.width - scrollableDiv.clientWidth;
   if (verticalScrollbarWidth == 0) {
@@ -35,7 +35,7 @@ function* test(testDriver) {
   }
 
   // register a scroll listener for the initial drag
-  scrollableDiv.addEventListener('scroll', () => setTimeout(testDriver, 0), {once: true});
+  scrollableDiv.addEventListener("scroll", () => setTimeout(testDriver, 0), {once: true});
 
   var upArrowHeight = verticalScrollbarWidth; // assume square scrollbar buttons
   var mouseX = scrollableDiv.clientWidth + (verticalScrollbarWidth / 2);
@@ -61,7 +61,7 @@ function* test(testDriver) {
   // the mouse to. This allows us to wait for a scroll event in either case.
   // If we only triggered the snapback case then waiting for the scroll to
   // "not happen" in the other case would be more error-prone.
-  scrollableDiv.addEventListener('scroll', () => setTimeout(testDriver, 0), {once: true});
+  scrollableDiv.addEventListener("scroll", () => setTimeout(testDriver, 0), {once: true});
   // Add 2 to snapMultipler just to make sure we get far enough away from the scrollbar
   var snapBackDistance = (snapMultiplier + 2) * verticalScrollbarWidth;
   yield synthesizeNativeMouseEvent(scrollableDiv, mouseX + snapBackDistance, mouseY + 10, nativeMouseMoveEventMsg(), testDriver);
@@ -76,7 +76,7 @@ function* test(testDriver) {
 
   // Now we move the mouse back to the old position to ensure the scroll position
   // gets restored properly
-  scrollableDiv.addEventListener('scroll', () => setTimeout(testDriver, 0), {once: true});
+  scrollableDiv.addEventListener("scroll", () => setTimeout(testDriver, 0), {once: true});
   yield synthesizeNativeMouseEvent(scrollableDiv, mouseX, mouseY, nativeMouseMoveEventMsg(), testDriver);
 
   // wait here until the scroll happens

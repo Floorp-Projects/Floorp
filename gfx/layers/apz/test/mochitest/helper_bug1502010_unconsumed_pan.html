@@ -15,8 +15,8 @@
 
     function checkForTestEnd() {
         if (apzFlushed && endEventReceived) {
-            var target = document.getElementById('carousel');
-            target.removeEventListener('pointermove', moveListener);
+            var target = document.getElementById("carousel");
+            target.removeEventListener("pointermove", moveListener);
 
             ok(pointerMoveCount > 0, "Got " + pointerMoveCount + " pointermove events");
             is(document.scrollingElement.scrollTop, 0, "Document didn't y-scroll");
@@ -33,19 +33,19 @@
     }
 
     function* test(testDriver) {
-        var target = document.getElementById('carousel');
-        target.addEventListener('pointercancel', (event) => {
+        var target = document.getElementById("carousel");
+        target.addEventListener("pointercancel", (event) => {
             ok(false, "Received pointercancel, uh-oh!");
             endEventReceived = true;
             setTimeout(checkForTestEnd, 0);
         }, {once: true});
-        target.addEventListener('pointerup', () => {
+        target.addEventListener("pointerup", () => {
             ok(true, "Received pointerup");
             endEventReceived = true;
             setTimeout(checkForTestEnd, 0);
         }, {once: true});
 
-        target.addEventListener('pointermove', moveListener);
+        target.addEventListener("pointermove", moveListener);
 
         // Drag mostly horizontally but also slightly vertically. If the
         // touch-action were not respected due to a bug this might result

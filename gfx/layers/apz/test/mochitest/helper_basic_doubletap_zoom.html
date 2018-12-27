@@ -22,7 +22,7 @@ function* doubleTapOn(element, x, y, testDriver) {
 
   // We get here once the APZ:TransformEnd has fired, so we don't need that
   // observer any more.
-  SpecialPowers.Services.obs.removeObserver(testDriver, "APZ:TransformEnd", false);
+  SpecialPowers.Services.obs.removeObserver(testDriver, "APZ:TransformEnd");
 
   // Flush state so we can query an accurate resolution
   yield flushApzRepaints(testDriver);
@@ -31,19 +31,19 @@ function* doubleTapOn(element, x, y, testDriver) {
 function* test(testDriver) {
   var resolution = getResolution();
   ok(resolution > 0,
-     'The initial_resolution is ' + resolution + ', which is some sane value');
+     "The initial_resolution is " + resolution + ", which is some sane value");
 
   // Check that double-tapping once zooms in
-  yield* doubleTapOn(document.getElementById('target'), 10, 10, testDriver);
+  yield* doubleTapOn(document.getElementById("target"), 10, 10, testDriver);
   var prev_resolution = resolution;
   resolution = getResolution();
-  ok(resolution > prev_resolution, 'The first double-tap has increased the resolution to ' + resolution);
+  ok(resolution > prev_resolution, "The first double-tap has increased the resolution to " + resolution);
 
   // Check that double-tapping again on the same spot zooms out
-  yield* doubleTapOn(document.getElementById('target'), 10, 10, testDriver);
+  yield* doubleTapOn(document.getElementById("target"), 10, 10, testDriver);
   prev_resolution = resolution;
   resolution = getResolution();
-  ok(resolution < prev_resolution, 'The second double-tap has decreased the resolution to ' + resolution);
+  ok(resolution < prev_resolution, "The second double-tap has decreased the resolution to " + resolution);
 }
 
 waitUntilApzStable()

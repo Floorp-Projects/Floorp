@@ -41,15 +41,15 @@ function moveTo(mouseY, testDriver) {
 }
 
 function setupDragging(testDriver) {
-  bar = document.getElementById('scrollbar');
+  bar = document.getElementById("scrollbar");
   mouseDown = false;
 
-  bar.addEventListener('mousedown', function(e) {
+  bar.addEventListener("mousedown", function(e) {
     mouseDown = true;
     moveTo(e.clientY, testDriver);
   }, true);
 
-  bar.addEventListener('mousemove', function(e) {
+  bar.addEventListener("mousemove", function(e) {
     if (mouseDown) {
       dump("Got mousemove clientY " + e.clientY + "\n");
       moveTo(e.clientY, testDriver);
@@ -57,11 +57,11 @@ function setupDragging(testDriver) {
     }
   }, true);
 
-  bar.addEventListener('mouseup', function(e) {
+  bar.addEventListener("mouseup", function(e) {
     mouseDown = false;
   }, true);
 
-  window.addEventListener('mousemove', function(e) {
+  window.addEventListener("mousemove", function(e) {
     if (mouseDown) {
       ok(false, "The mousemove at " + e.clientY + " was not stopped by the bar listener, and is a glitchy event!");
       setTimeout(testDriver, 0);

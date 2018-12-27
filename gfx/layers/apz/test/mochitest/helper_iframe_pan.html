@@ -10,9 +10,9 @@
   <script type="application/javascript">
 
 function scrollOuter() {
-  var outer = document.getElementById('outer');
+  var outer = document.getElementById("outer");
   var transformEnd = function() {
-    SpecialPowers.Services.obs.removeObserver(transformEnd, "APZ:TransformEnd", false);
+    SpecialPowers.Services.obs.removeObserver(transformEnd, "APZ:TransformEnd");
     dump("Transform complete; flushing repaints...\n");
     flushApzRepaints(checkScroll, outer.contentWindow);
   };
@@ -23,7 +23,7 @@ function scrollOuter() {
 }
 
 function checkScroll() {
-  var outerScroll = document.getElementById('outer').contentWindow.scrollY;
+  var outerScroll = document.getElementById("outer").contentWindow.scrollY;
   if (getPlatform() == "windows") {
     // On windows, because we run this test with native event synthesization,
     // Windows can end up eating the first touchmove which can result in the

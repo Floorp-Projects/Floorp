@@ -6,7 +6,6 @@
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/Messaging.jsm");
-ChromeUtils.import("resource://gre/modules/Task.jsm");
 
 // The chrome window and friends.
 let chromeWin = Services.wm.getMostRecentWindow("navigator:browser");

@@ -8,6 +8,9 @@
 // we really want, but we can't express in directly in WebIDL.)
 // ----------------------------------------------------------------------
 
+// getHitTestConfig() expects apz_test_native_event_utils.js to be loaded as well.
+/* import-globals-from apz_test_native_event_utils.js */
+
 function convertEntries(entries) {
   var result = {};
   for (var i = 0; i < entries.length; ++i) {
@@ -18,12 +21,12 @@ function convertEntries(entries) {
 
 function getPropertyAsRect(scrollFrames, scrollId, prop) {
   SimpleTest.ok(scrollId in scrollFrames,
-                'expected scroll frame data for scroll id ' + scrollId);
+                "expected scroll frame data for scroll id " + scrollId);
   var scrollFrameData = scrollFrames[scrollId];
-  SimpleTest.ok('displayport' in scrollFrameData,
-                'expected a ' + prop + ' for scroll id ' + scrollId);
+  SimpleTest.ok("displayport" in scrollFrameData,
+                "expected a " + prop + " for scroll id " + scrollId);
   var value = scrollFrameData[prop];
-  var pieces = value.replace(/[()\s]+/g, '').split(',');
+  var pieces = value.replace(/[()\s]+/g, "").split(",");
   SimpleTest.is(pieces.length, 4, "expected string of form (x,y,w,h)");
   return { x: parseInt(pieces[0]),
            y: parseInt(pieces[1]),
@@ -87,11 +90,11 @@ function buildApzcTree(paint) {
   // so we invent a node that is the parent of all roots.
   // This 'root' does not correspond to an APZC.
   var root = {scrollId: -1, children: []};
-  for (var scrollId in paint) {
+  for (let scrollId in paint) {
     paint[scrollId].children = [];
     paint[scrollId].scrollId = scrollId;
   }
-  for (var scrollId in paint) {
+  for (let scrollId in paint) {
     var parentNode = null;
     if ("hasNoParentWithSameLayersId" in paint[scrollId]) {
       parentNode = root;
@@ -106,7 +109,7 @@ function buildApzcTree(paint) {
 // Given an APZC tree produced by buildApzcTree, return the RCD node in
 // the tree, or null if there was none.
 function findRcdNode(apzcTree) {
-  if (!!apzcTree.isRootContent) { // isRootContent will be undefined or "1"
+  if (apzcTree.isRootContent) { // isRootContent will be undefined or "1"
     return apzcTree;
   }
   for (var i = 0; i < apzcTree.children.length; i++) {
@@ -129,7 +132,7 @@ function isLayerized(elementId) {
   var paint = contentTestData.paints[seqno];
   for (var scrollId in paint) {
     if ("contentDescription" in paint[scrollId]) {
-      if (paint[scrollId]["contentDescription"].includes(elementId)) {
+      if (paint[scrollId].contentDescription.includes(elementId)) {
         return true;
       }
     }
@@ -138,7 +141,7 @@ function isLayerized(elementId) {
 }
 
 function promiseApzRepaintsFlushed(aWindow = window) {
-  return new Promise(function (resolve, reject) {
+  return new Promise(function(resolve, reject) {
     var repaintDone = function() {
       SpecialPowers.Services.obs.removeObserver(repaintDone, "apz-repaints-flushed");
       setTimeout(resolve, 0);
@@ -227,7 +230,7 @@ function runSubtestsSeriallyInFreshWindows(aSubtests) {
         if (w.ApzCleanup) { // guard against the subtest not loading apz_test_utils.js
           w.ApzCleanup.execute();
         }
-        if (typeof test.dp_suppression != 'undefined') {
+        if (typeof test.dp_suppression != "undefined") {
           // We modified the suppression when starting the test, so now undo that.
           SpecialPowers.getDOMWindowUtils(window).respectDisplayPortSuppression(!test.dp_suppression);
         }
@@ -261,7 +264,7 @@ function runSubtestsSeriallyInFreshWindows(aSubtests) {
 
       SimpleTest.ok(true, "Starting subtest " + test.file);
 
-      if (typeof test.dp_suppression != 'undefined') {
+      if (typeof test.dp_suppression != "undefined") {
         // Normally during a test, the displayport will get suppressed during page
         // load, and unsuppressed at a non-deterministic time during the test. The
         // unsuppression can trigger a repaint which interferes with the test, so
@@ -271,7 +274,7 @@ function runSubtestsSeriallyInFreshWindows(aSubtests) {
       }
 
       function spawnTest(aFile) {
-        w = window.open('', "_blank");
+        w = window.open("", "_blank");
         w.subtestDone = advanceSubtestExecution;
         w.isApzSubtest = true;
         w.SimpleTest = SimpleTest;
@@ -282,15 +285,15 @@ function runSubtestsSeriallyInFreshWindows(aSubtests) {
           // called with at most 2 arguments.
           return SimpleTest.ok.apply(SimpleTest, arguments);
         };
-        w.todo_is = function(a, b, msg)  { return todo_is(a, b, aFile + " | " + msg); };
+        w.todo_is = function(a, b, msg) { return todo_is(a, b, aFile + " | " + msg); };
         w.todo = function(cond, msg) { return todo(cond, aFile + " | " + msg); };
         if (test.onload) {
-          w.addEventListener('load', function(e) { test.onload(w); }, { once: true });
+          w.addEventListener("load", function(e) { test.onload(w); }, { once: true });
         }
-        var subtestUrl = location.href.substring(0, location.href.lastIndexOf('/') + 1) + aFile;
+        var subtestUrl = location.href.substring(0, location.href.lastIndexOf("/") + 1) + aFile;
         function urlResolves(url) {
           var request = new XMLHttpRequest();
-          request.open('GET', url, false);
+          request.open("GET", url, false);
           request.send();
           return request.status !== 404;
         }
@@ -298,7 +301,7 @@ function runSubtestsSeriallyInFreshWindows(aSubtests) {
           SimpleTest.ok(false, "Subtest URL " + subtestUrl + " does not resolve. " +
               "Be sure it's present in the support-files section of mochitest.ini.");
           reject();
-          return;
+          return undefined;
         }
         w.location = subtestUrl;
         return w;
@@ -321,7 +324,7 @@ function runSubtestsSeriallyInFreshWindows(aSubtests) {
 }
 
 function pushPrefs(prefs) {
-  return SpecialPowers.pushPrefEnv({'set': prefs});
+  return SpecialPowers.pushPrefEnv({"set": prefs});
 }
 
 async function waitUntilApzStable() {
@@ -335,12 +338,13 @@ async function waitUntilApzStable() {
 
     // Sadly this helper function cannot reuse any code from other places because
     // it must be totally self-contained to be shipped over to the parent process.
+    /* eslint-env mozilla/frame-script */
     function parentProcessFlush() {
       addMessageListener("apz-flush", function() {
         ChromeUtils.import("resource://gre/modules/Services.jsm");
-        var topWin = Services.wm.getMostRecentWindow('navigator:browser');
+        var topWin = Services.wm.getMostRecentWindow("navigator:browser");
         if (!topWin) {
-          topWin = Services.wm.getMostRecentWindow('navigator:geckoview');
+          topWin = Services.wm.getMostRecentWindow("navigator:geckoview");
         }
         var topUtils = topWin.windowUtils;
 
@@ -362,7 +366,7 @@ async function waitUntilApzStable() {
             dump("Parent process: flushing APZ repaints was a no-op, triggering callback directly...\n");
             repaintDone();
           }
-        }
+        };
 
         // Flush APZ repaints, but wait until all the pending paints have been
         // sent.
@@ -481,35 +485,37 @@ function runContinuation(testFunction) {
 // The snapshot is returned in the form of a data URL.
 function getSnapshot(rect) {
   function parentProcessSnapshot() {
-    addMessageListener('snapshot', function(rect) {
-      ChromeUtils.import('resource://gre/modules/Services.jsm');
-      var topWin = Services.wm.getMostRecentWindow('navigator:browser');
+    addMessageListener("snapshot", function(parentRect) {
+      ChromeUtils.import("resource://gre/modules/Services.jsm");
+      var topWin = Services.wm.getMostRecentWindow("navigator:browser");
       if (!topWin) {
-        topWin = Services.wm.getMostRecentWindow('navigator:geckoview');
+        topWin = Services.wm.getMostRecentWindow("navigator:geckoview");
       }
 
       // reposition the rect relative to the top-level browser window
-      rect = JSON.parse(rect);
-      rect.x -= topWin.mozInnerScreenX;
-      rect.y -= topWin.mozInnerScreenY;
+      parentRect = JSON.parse(parentRect);
+      parentRect.x -= topWin.mozInnerScreenX;
+      parentRect.y -= topWin.mozInnerScreenY;
 
       // take the snapshot
       var canvas = topWin.document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
-      canvas.width = rect.w;
-      canvas.height = rect.h;
+      canvas.width = parentRect.w;
+      canvas.height = parentRect.h;
       var ctx = canvas.getContext("2d");
-      ctx.drawWindow(topWin, rect.x, rect.y, rect.w, rect.h, 'rgb(255,255,255)', ctx.DRAWWINDOW_DRAW_VIEW | ctx.DRAWWINDOW_USE_WIDGET_LAYERS | ctx.DRAWWINDOW_DRAW_CARET);
+      ctx.drawWindow(topWin, parentRect.x, parentRect.y, parentRect.w, parentRect.h,
+        "rgb(255,255,255)",
+        ctx.DRAWWINDOW_DRAW_VIEW | ctx.DRAWWINDOW_USE_WIDGET_LAYERS | ctx.DRAWWINDOW_DRAW_CARET);
       return canvas.toDataURL();
     });
   }
 
-  if (typeof getSnapshot.chromeHelper == 'undefined') {
+  if (typeof getSnapshot.chromeHelper == "undefined") {
     // This is the first time getSnapshot is being called; do initialization
     getSnapshot.chromeHelper = SpecialPowers.loadChromeScript(parentProcessSnapshot);
-    ApzCleanup.register(function() { getSnapshot.chromeHelper.destroy() });
+    ApzCleanup.register(function() { getSnapshot.chromeHelper.destroy(); });
   }
 
-  return getSnapshot.chromeHelper.sendSyncMessage('snapshot', JSON.stringify(rect)).toString();
+  return getSnapshot.chromeHelper.sendSyncMessage("snapshot", JSON.stringify(rect)).toString();
 }
 
 // Takes the document's query string and parses it, assuming the query string
@@ -524,9 +530,9 @@ function getSnapshot(rect) {
 function getQueryArgs() {
   var args = {};
   if (location.search.length > 0) {
-    var params = location.search.substr(1).split('&');
+    var params = location.search.substr(1).split("&");
     for (var p of params) {
-      var [k, v] = p.split('=');
+      var [k, v] = p.split("=");
       args[k] = JSON.parse(v);
     }
   }
@@ -545,17 +551,17 @@ function getQueryArgs() {
 function injectScript(aScript, aWindow = window) {
   return function() {
     return new Promise(function(resolve, reject) {
-      var e = aWindow.document.createElement('script');
-      e.type = 'text/javascript';
+      var e = aWindow.document.createElement("script");
+      e.type = "text/javascript";
       e.onload = function() {
         resolve();
       };
       e.onerror = function() {
-        dump('Script [' + aScript + '] errored out\n');
+        dump("Script [" + aScript + "] errored out\n");
         reject();
       };
       e.src = aScript;
-      aWindow.document.getElementsByTagName('head')[0].appendChild(e);
+      aWindow.document.getElementsByTagName("head")[0].appendChild(e);
     });
   };
 }
@@ -570,8 +576,8 @@ function injectScript(aScript, aWindow = window) {
 function getHitTestConfig() {
   if (!("hitTestConfig" in window)) {
     var utils = SpecialPowers.getDOMWindowUtils(window);
-    var isWebRender = (utils.layerManagerType == 'WebRender');
-    var isWindows = (getPlatform() == 'windows');
+    var isWebRender = (utils.layerManagerType == "WebRender");
+    var isWindows = (getPlatform() == "windows");
     window.hitTestConfig = { utils, isWebRender, isWindows };
   }
   return window.hitTestConfig;
@@ -630,11 +636,11 @@ function checkHitResult(hitResult, expectedHitInfo, expectedScrollId, desc) {
 // Symbolic constants used by hitTestScrollbar().
 var ScrollbarTrackLocation = {
     START: 1,
-    END: 2
+    END: 2,
 };
 var LayerState = {
     ACTIVE: 1,
-    INACTIVE: 2
+    INACTIVE: 2,
 };
 
 // Perform a hit test on the scrollbar(s) of a scroll frame.
@@ -699,7 +705,7 @@ function hitTestScrollbar(params) {
         x: boundingClientRect.right - (verticalScrollbarWidth / 2),
         y: (params.trackLocation == ScrollbarTrackLocation.START)
              ? (boundingClientRect.y + scrollbarArrowButtonHeight + 5)
-             : (boundingClientRect.bottom - horizontalScrollbarHeight - scrollbarArrowButtonHeight - 5)
+             : (boundingClientRect.bottom - horizontalScrollbarHeight - scrollbarArrowButtonHeight - 5),
     };
     checkHitResult(hitTest(verticalScrollbarPoint),
                    expectedHitInfo | APZHitResultFlags.SCROLLBAR_VERTICAL,
@@ -754,7 +760,7 @@ function getPrefs(ident) {
 var ApzCleanup = {
   _cleanups: [],
 
-  register: function(func) {
+  register(func) {
     if (this._cleanups.length == 0) {
       if (!window.isApzSubtest) {
         SimpleTest.registerCleanupFunction(this.execute.bind(this));
@@ -763,7 +769,7 @@ var ApzCleanup = {
     this._cleanups.push(func);
   },
 
-  execute: function() {
+  execute() {
     while (this._cleanups.length > 0) {
       var func = this._cleanups.pop();
       try {
@@ -772,5 +778,5 @@ var ApzCleanup = {
         SimpleTest.ok(false, "Subtest cleanup function [" + func.toString() + "] threw exception [" + ex + "] on page [" + location.href + "]");
       }
     }
-  }
+  },
 };
