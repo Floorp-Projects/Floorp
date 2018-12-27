@@ -33,10 +33,8 @@ using dom::MediaTrackSettings;
 using dom::VideoFacingModeEnum;
 
 MediaEngineRemoteVideoSource::MediaEngineRemoteVideoSource(
-    int aIndex, camera::CaptureEngine aCapEngine, MediaSourceEnum aMediaSource,
-    bool aScary)
+    int aIndex, camera::CaptureEngine aCapEngine, bool aScary)
     : mCaptureIndex(aIndex),
-      mMediaSource(aMediaSource),
       mCapEngine(aCapEngine),
       mScary(aScary),
       mMutex("MediaEngineRemoteVideoSource::mMutex"),
@@ -44,11 +42,27 @@ MediaEngineRemoteVideoSource::MediaEngineRemoteVideoSource(
                            /* max_number_of_buffers */ 1),
       mSettingsUpdatedByFrame(MakeAndAddRef<media::Refcountable<AtomicBool>>()),
       mSettings(MakeAndAddRef<media::Refcountable<MediaTrackSettings>>()) {
-  MOZ_ASSERT(aMediaSource != MediaSourceEnum::Other);
   mSettings->mWidth.Construct(0);
   mSettings->mHeight.Construct(0);
   mSettings->mFrameRate.Construct(0);
   Init();
+}
+
+dom::MediaSourceEnum MediaEngineRemoteVideoSource::GetMediaSource() const {
+  switch (mCapEngine) {
+    case camera::BrowserEngine:
+      return MediaSourceEnum::Browser;
+    case camera::CameraEngine:
+      return MediaSourceEnum::Camera;
+    case camera::ScreenEngine:
+      return MediaSourceEnum::Screen;
+    case camera::AppEngine:
+      return MediaSourceEnum::Application;
+    case camera::WinEngine:
+      return MediaSourceEnum::Window;
+    default:
+      MOZ_CRASH();
+  }
 }
 
 void MediaEngineRemoteVideoSource::Init() {
@@ -297,11 +311,11 @@ nsresult MediaEngineRemoteVideoSource::Start(
   NS_DispatchToMainThread(NS_NewRunnableFunction(
       "MediaEngineRemoteVideoSource::SetLastCapability",
       [settings = mSettings, updated = mSettingsUpdatedByFrame,
-       source = mMediaSource, cap = mCapability]() mutable {
-        switch (source) {
-          case dom::MediaSourceEnum::Screen:
-          case dom::MediaSourceEnum::Window:
-          case dom::MediaSourceEnum::Application:
+       capEngine = mCapEngine, cap = mCapability]() mutable {
+        switch (capEngine) {
+          case camera::ScreenEngine:
+          case camera::WinEngine:
+          case camera::AppEngine:
             // Undo the hack where ideal and max constraints are crammed
             // together in mCapability for consumption by low-level code. We
             // don't actually know the real resolution yet, so report min(ideal,
@@ -539,10 +553,10 @@ int MediaEngineRemoteVideoSource::DeliverFrame(
                dst_max_height);
 
   // Apply scaling for screen sharing, see bug 1453269.
-  switch (mMediaSource) {
-    case MediaSourceEnum::Screen:
-    case MediaSourceEnum::Window:
-    case MediaSourceEnum::Application: {
+  switch (mCapEngine) {
+    case camera::ScreenEngine:
+    case camera::WinEngine:
+    case camera::AppEngine: {
       // scale to average of portrait and landscape
       float scale_width = (float)dst_width / (float)aProps.width();
       float scale_height = (float)dst_height / (float)aProps.height();
@@ -797,10 +811,10 @@ bool MediaEngineRemoteVideoSource::ChooseCapability(
     }
   }
 
-  switch (mMediaSource) {
-    case MediaSourceEnum::Screen:
-    case MediaSourceEnum::Window:
-    case MediaSourceEnum::Application: {
+  switch (mCapEngine) {
+    case camera::ScreenEngine:
+    case camera::WinEngine:
+    case camera::AppEngine: {
       FlattenedConstraints c(aConstraints);
       // The actual resolution to constrain around is not easy to find ahead of
       // time (and may in fact change over time), so as a hack, we push ideal
@@ -827,8 +841,7 @@ bool MediaEngineRemoteVideoSource::ChooseCapability(
     candidateSet.AppendElement(CapabilityCandidate(GetCapability(i)));
   }
 
-  if (!mHardcodedCapabilities.IsEmpty() &&
-      mMediaSource == MediaSourceEnum::Camera) {
+  if (!mHardcodedCapabilities.IsEmpty() && mCapEngine == camera::CameraEngine) {
     // We have a hardcoded capability, which means this camera didn't report
     // discrete capabilities. It might still allow a ranged capability, so we
     // add a couple of default candidates based on prefs and constraints.

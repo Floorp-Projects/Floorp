@@ -47,37 +47,12 @@ void MediaEngineWebRTC::SetFakeDeviceChangeEvents() {
 }
 
 void MediaEngineWebRTC::EnumerateVideoDevices(
-    uint64_t aWindowId, dom::MediaSourceEnum aMediaSource,
+    uint64_t aWindowId, camera::CaptureEngine aCapEngine,
     nsTArray<RefPtr<MediaDevice>>* aDevices) {
   mMutex.AssertCurrentThreadOwns();
-
-  mozilla::camera::CaptureEngine capEngine = mozilla::camera::InvalidEngine;
-
-  bool scaryKind = false;  // flag sources with cross-origin exploit potential
-
-  switch (aMediaSource) {
-    case dom::MediaSourceEnum::Window:
-      capEngine = mozilla::camera::WinEngine;
-      break;
-    case dom::MediaSourceEnum::Application:
-      capEngine = mozilla::camera::AppEngine;
-      break;
-    case dom::MediaSourceEnum::Screen:
-      capEngine = mozilla::camera::ScreenEngine;
-      scaryKind = true;
-      break;
-    case dom::MediaSourceEnum::Browser:
-      capEngine = mozilla::camera::BrowserEngine;
-      scaryKind = true;
-      break;
-    case dom::MediaSourceEnum::Camera:
-      capEngine = mozilla::camera::CameraEngine;
-      break;
-    default:
-      MOZ_CRASH("No valid video engine");
-      break;
-  }
-
+  // flag sources with cross-origin exploit potential
+  bool scaryKind = (aCapEngine == camera::ScreenEngine ||
+                    aCapEngine == camera::BrowserEngine);
   /*
    * We still enumerate every time, in case a new device was plugged in since
    * the last call. TODO: Verify that WebRTC actually does deal with hotplugging
@@ -88,7 +63,7 @@ void MediaEngineWebRTC::EnumerateVideoDevices(
    */
   int num;
   num = mozilla::camera::GetChildAndCall(
-      &mozilla::camera::CamerasChild::NumberOfCaptureDevices, capEngine);
+      &mozilla::camera::CamerasChild::NumberOfCaptureDevices, aCapEngine);
 
   for (int i = 0; i < num; i++) {
     char deviceName[MediaEngineSource::kMaxDeviceNameLength];
@@ -101,7 +76,7 @@ void MediaEngineWebRTC::EnumerateVideoDevices(
     int error;
 
     error = mozilla::camera::GetChildAndCall(
-        &mozilla::camera::CamerasChild::GetCaptureDevice, capEngine, i,
+        &mozilla::camera::CamerasChild::GetCaptureDevice, aCapEngine, i,
         deviceName, sizeof(deviceName), uniqueId, sizeof(uniqueId),
         &scarySource);
     if (error) {
@@ -113,12 +88,12 @@ void MediaEngineWebRTC::EnumerateVideoDevices(
 
     webrtc::CaptureCapability cap;
     int numCaps = mozilla::camera::GetChildAndCall(
-        &mozilla::camera::CamerasChild::NumberOfCapabilities, capEngine,
+        &mozilla::camera::CamerasChild::NumberOfCapabilities, aCapEngine,
         uniqueId);
     LOG(("Number of Capabilities %d", numCaps));
     for (int j = 0; j < numCaps; j++) {
       if (mozilla::camera::GetChildAndCall(
-              &mozilla::camera::CamerasChild::GetCaptureCapability, capEngine,
+              &mozilla::camera::CamerasChild::GetCaptureCapability, aCapEngine,
               uniqueId, j, cap) != 0) {
         break;
       }
@@ -144,7 +119,7 @@ void MediaEngineWebRTC::EnumerateVideoDevices(
       // We've already seen this shared device, just refresh and append.
       static_cast<MediaEngineRemoteVideoSource*>(vSource.get())->Refresh(i);
     } else {
-      vSource = new MediaEngineRemoteVideoSource(i, capEngine, aMediaSource,
+      vSource = new MediaEngineRemoteVideoSource(i, aCapEngine,
                                                  scaryKind || scarySource);
       devicesForThisWindow->Put(uuid, vSource);
     }
@@ -153,7 +128,7 @@ void MediaEngineWebRTC::EnumerateVideoDevices(
         NS_LITERAL_STRING("")));
   }
 
-  if (mHasTabVideoSource || dom::MediaSourceEnum::Browser == aMediaSource) {
+  if (mHasTabVideoSource || aCapEngine == camera::BrowserEngine) {
     RefPtr<MediaEngineSource> tabVideoSource = new MediaEngineTabVideoSource();
     aDevices->AppendElement(MakeRefPtr<MediaDevice>(
         tabVideoSource, tabVideoSource->GetName(),
@@ -236,11 +211,33 @@ void MediaEngineWebRTC::EnumerateDevices(
     MediaSinkEnum aMediaSink, nsTArray<RefPtr<MediaDevice>>* aDevices) {
   MOZ_ASSERT(aMediaSource != dom::MediaSourceEnum::Other ||
              aMediaSink != MediaSinkEnum::Other);
-  // We spawn threads to handle gUM runnables, so we must protect the member
-  // vars
   MutexAutoLock lock(mMutex);
   if (MediaEngineSource::IsVideo(aMediaSource)) {
-    EnumerateVideoDevices(aWindowId, aMediaSource, aDevices);
+    switch (aMediaSource) {
+      case dom::MediaSourceEnum::Window:
+        // Since the mediaSource constraint is deprecated, treat the Window
+        // value as a request for getDisplayMedia-equivalent sharing: Combine
+        // window and fullscreen into a single list of choices. The other values
+        // are still useful for testing.
+        EnumerateVideoDevices(aWindowId, camera::WinEngine, aDevices);
+        EnumerateVideoDevices(aWindowId, camera::ScreenEngine, aDevices);
+        break;
+      case dom::MediaSourceEnum::Application:
+        EnumerateVideoDevices(aWindowId, camera::AppEngine, aDevices);
+        break;
+      case dom::MediaSourceEnum::Screen:
+        EnumerateVideoDevices(aWindowId, camera::ScreenEngine, aDevices);
+        break;
+      case dom::MediaSourceEnum::Browser:
+        EnumerateVideoDevices(aWindowId, camera::BrowserEngine, aDevices);
+        break;
+      case dom::MediaSourceEnum::Camera:
+        EnumerateVideoDevices(aWindowId, camera::CameraEngine, aDevices);
+        break;
+      default:
+        MOZ_CRASH("No valid video source");
+        break;
+    }
   } else if (aMediaSource == dom::MediaSourceEnum::AudioCapture) {
     RefPtr<MediaEngineWebRTCAudioCaptureSource> audioCaptureSource =
         new MediaEngineWebRTCAudioCaptureSource(nullptr);
