@@ -59,7 +59,7 @@ class nsSMILCSSValueType : public nsISMILType {
    * string is interpreted as a value for the given property on the given
    * element.
    *
-   * On failure, this method leaves aValue.mType == nsSMILNullType::sSingleton.
+   * On failure, this method leaves aValue.mType == SMILNullType::sSingleton.
    * Otherwise, this method leaves aValue.mType == this class's singleton.
    *
    * @param       aPropID         The property for which we're parsing a value.

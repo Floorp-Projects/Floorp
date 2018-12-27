@@ -128,7 +128,7 @@ void nsSMILCSSValueType::Init(nsSMILValue& aValue) const {
 void nsSMILCSSValueType::Destroy(nsSMILValue& aValue) const {
   MOZ_ASSERT(aValue.mType == this, "Unexpected SMIL value type");
   delete static_cast<ValueWrapper*>(aValue.mU.mPtr);
-  aValue.mType = nsSMILNullType::Singleton();
+  aValue.mType = SMILNullType::Singleton();
 }
 
 nsresult nsSMILCSSValueType::Assign(nsSMILValue& aDest,
