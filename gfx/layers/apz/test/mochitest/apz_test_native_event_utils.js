@@ -15,7 +15,7 @@ function getPlatform() {
   }
   // Check for Android before Linux
   if (navigator.appVersion.includes("Android")) {
-    return "android"
+    return "android";
   }
   if (navigator.platform.indexOf("Linux") == 0) {
     return "linux";
@@ -111,7 +111,7 @@ function getBoundingClientRectRelativeToVisualViewport(aElement) {
   return rect;
 }
 
-// Several event sythesization functions below (and their helpers) take a "target" 
+// Several event sythesization functions below (and their helpers) take a "target"
 // parameter which may be either an element or a window. For such functions,
 // the target's "bounding rect" refers to the bounding client rect for an element,
 // and the window's origin for a window.
@@ -131,7 +131,7 @@ function coordinatesRelativeToScreen(aX, aY, aTarget) {
   // The device scale applies to them, but the resolution only zooms the content.
   return {
     x: (targetWindow.mozInnerScreenX + ((rect.left + aX) * resolution)) * deviceScale,
-    y: (targetWindow.mozInnerScreenY + ((rect.top + aY) * resolution)) * deviceScale
+    y: (targetWindow.mozInnerScreenY + ((rect.top + aY) * resolution)) * deviceScale,
   };
 }
 
@@ -145,7 +145,7 @@ function rectRelativeToScreen(aElement) {
     x: (targetWindow.mozInnerScreenX + rect.left) * scale,
     y: (targetWindow.mozInnerScreenY + rect.top) * scale,
     w: (rect.width * scale),
-    h: (rect.height * scale)
+    h: (rect.height * scale),
   };
 }
 
@@ -175,11 +175,11 @@ function synthesizeNativeWheel(aTarget, aX, aY, aDeltaX, aDeltaY, aObserver) {
 // synthesizeNativeWheel for details on the parameters.
 function synthesizeNativeWheelAndWaitForObserver(aElement, aX, aY, aDeltaX, aDeltaY, aCallback) {
   var observer = {
-    observe: function(aSubject, aTopic, aData) {
+    observe(aSubject, aTopic, aData) {
       if (aCallback && aTopic == "mousescrollevent") {
         setTimeout(aCallback, 0);
       }
-    }
+    },
   };
   return synthesizeNativeWheel(aElement, aX, aY, aDeltaX, aDeltaY, observer);
 }
@@ -187,7 +187,7 @@ function synthesizeNativeWheelAndWaitForObserver(aElement, aX, aY, aDeltaX, aDel
 // Synthesizes a native mousewheel event and invokes the callback once the
 // wheel event is dispatched to |aTarget|'s containing window. If the event
 // targets content in a subdocument, |aTarget| should be inside the
-// subdocument (or the subdocument's window). See synthesizeNativeWheel for 
+// subdocument (or the subdocument's window). See synthesizeNativeWheel for
 // details on the other parameters.
 function synthesizeNativeWheelAndWaitForWheelEvent(aTarget, aX, aY, aDeltaX, aDeltaY, aCallback) {
   var targetWindow = windowForTarget(aTarget);
@@ -200,7 +200,7 @@ function synthesizeNativeWheelAndWaitForWheelEvent(aTarget, aX, aY, aDeltaX, aDe
 // Synthesizes a native mousewheel event and invokes the callback once the
 // first resulting scroll event is dispatched to |aTarget|'s containing window.
 // If the event targets content in a subdocument, |aTarget| should be inside
-// the subdocument (or the subdocument's window).  See synthesizeNativeWheel 
+// the subdocument (or the subdocument's window).  See synthesizeNativeWheel
 // for details on the other parameters.
 function synthesizeNativeWheelAndWaitForScrollEvent(aTarget, aX, aY, aDeltaX, aDeltaY, aCallback) {
   var targetWindow = windowForTarget(aTarget);
@@ -223,7 +223,7 @@ function synthesizeNativeMouseMove(aTarget, aX, aY) {
 // Synthesizes a native mouse move event and invokes the callback once the
 // mouse move event is dispatched to |aTarget|'s containing window. If the event
 // targets content in a subdocument, |aTarget| should be inside the
-// subdocument (or the subdocument window). See synthesizeNativeMouseMove for 
+// subdocument (or the subdocument window). See synthesizeNativeMouseMove for
 // details on the other parameters.
 function synthesizeNativeMouseMoveAndWaitForMoveEvent(aTarget, aX, aY, aCallback) {
   var targetWindow = windowForTarget(aTarget);
@@ -425,7 +425,7 @@ function* dragVerticalScrollbar(element, testDriver, distance = 20, increment = 
   yield synthesizeNativeMouseEvent(element, mouseX, mouseY + distance, nativeMouseMoveEventMsg(), testDriver);
 
   // and return a generator to call afterwards to finish up the drag
-  return function*() {
+  return function* () {
     dump("Finishing drag of #" + element.id + "\n");
     yield synthesizeNativeMouseEvent(element, mouseX, mouseY + distance, nativeMouseUpEventMsg(), testDriver);
   };

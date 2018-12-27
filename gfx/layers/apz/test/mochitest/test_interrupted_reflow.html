@@ -628,7 +628,7 @@ function* test(testDriver) {
   utils.advanceTimeAndRefresh(0);
   // On android, and maybe non-e10s platforms generally, we need to manually
   // kick the paint to send the layer transaction to the compositor.
-  yield waitForAllPaints(function() { setTimeout(testDriver, 0) });
+  yield waitForAllPaints(function() { setTimeout(testDriver, 0); });
 
   // Read the main-thread scroll offset; although this is temporarily 0,0 that
   // temporary value is never exposed to content - instead reading this value

@@ -106,7 +106,7 @@ function buildApzcTree(paint) {
 // Given an APZC tree produced by buildApzcTree, return the RCD node in
 // the tree, or null if there was none.
 function findRcdNode(apzcTree) {
-  if (!!apzcTree.isRootContent) { // isRootContent will be undefined or "1"
+  if (apzcTree.isRootContent) { // isRootContent will be undefined or "1"
     return apzcTree;
   }
   for (var i = 0; i < apzcTree.children.length; i++) {
@@ -129,7 +129,7 @@ function isLayerized(elementId) {
   var paint = contentTestData.paints[seqno];
   for (var scrollId in paint) {
     if ("contentDescription" in paint[scrollId]) {
-      if (paint[scrollId]["contentDescription"].includes(elementId)) {
+      if (paint[scrollId].contentDescription.includes(elementId)) {
         return true;
       }
     }
@@ -138,7 +138,7 @@ function isLayerized(elementId) {
 }
 
 function promiseApzRepaintsFlushed(aWindow = window) {
-  return new Promise(function (resolve, reject) {
+  return new Promise(function(resolve, reject) {
     var repaintDone = function() {
       SpecialPowers.Services.obs.removeObserver(repaintDone, "apz-repaints-flushed");
       setTimeout(resolve, 0);
@@ -282,7 +282,7 @@ function runSubtestsSeriallyInFreshWindows(aSubtests) {
           // called with at most 2 arguments.
           return SimpleTest.ok.apply(SimpleTest, arguments);
         };
-        w.todo_is = function(a, b, msg)  { return todo_is(a, b, aFile + " | " + msg); };
+        w.todo_is = function(a, b, msg) { return todo_is(a, b, aFile + " | " + msg); };
         w.todo = function(cond, msg) { return todo(cond, aFile + " | " + msg); };
         if (test.onload) {
           w.addEventListener("load", function(e) { test.onload(w); }, { once: true });
@@ -362,7 +362,7 @@ async function waitUntilApzStable() {
             dump("Parent process: flushing APZ repaints was a no-op, triggering callback directly...\n");
             repaintDone();
           }
-        }
+        };
 
         // Flush APZ repaints, but wait until all the pending paints have been
         // sent.
@@ -506,7 +506,7 @@ function getSnapshot(rect) {
   if (typeof getSnapshot.chromeHelper == "undefined") {
     // This is the first time getSnapshot is being called; do initialization
     getSnapshot.chromeHelper = SpecialPowers.loadChromeScript(parentProcessSnapshot);
-    ApzCleanup.register(function() { getSnapshot.chromeHelper.destroy() });
+    ApzCleanup.register(function() { getSnapshot.chromeHelper.destroy(); });
   }
 
   return getSnapshot.chromeHelper.sendSyncMessage("snapshot", JSON.stringify(rect)).toString();
@@ -630,11 +630,11 @@ function checkHitResult(hitResult, expectedHitInfo, expectedScrollId, desc) {
 // Symbolic constants used by hitTestScrollbar().
 var ScrollbarTrackLocation = {
     START: 1,
-    END: 2
+    END: 2,
 };
 var LayerState = {
     ACTIVE: 1,
-    INACTIVE: 2
+    INACTIVE: 2,
 };
 
 // Perform a hit test on the scrollbar(s) of a scroll frame.
@@ -699,7 +699,7 @@ function hitTestScrollbar(params) {
         x: boundingClientRect.right - (verticalScrollbarWidth / 2),
         y: (params.trackLocation == ScrollbarTrackLocation.START)
              ? (boundingClientRect.y + scrollbarArrowButtonHeight + 5)
-             : (boundingClientRect.bottom - horizontalScrollbarHeight - scrollbarArrowButtonHeight - 5)
+             : (boundingClientRect.bottom - horizontalScrollbarHeight - scrollbarArrowButtonHeight - 5),
     };
     checkHitResult(hitTest(verticalScrollbarPoint),
                    expectedHitInfo | APZHitResultFlags.SCROLLBAR_VERTICAL,
@@ -754,7 +754,7 @@ function getPrefs(ident) {
 var ApzCleanup = {
   _cleanups: [],
 
-  register: function(func) {
+  register(func) {
     if (this._cleanups.length == 0) {
       if (!window.isApzSubtest) {
         SimpleTest.registerCleanupFunction(this.execute.bind(this));
@@ -763,7 +763,7 @@ var ApzCleanup = {
     this._cleanups.push(func);
   },
 
-  execute: function() {
+  execute() {
     while (this._cleanups.length > 0) {
       var func = this._cleanups.pop();
       try {
@@ -772,5 +772,5 @@ var ApzCleanup = {
         SimpleTest.ok(false, "Subtest cleanup function [" + func.toString() + "] threw exception [" + ex + "] on page [" + location.href + "]");
       }
     }
-  }
+  },
 };

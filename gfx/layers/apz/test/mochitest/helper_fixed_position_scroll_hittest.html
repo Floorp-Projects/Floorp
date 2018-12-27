@@ -32,7 +32,7 @@
     function* test(testDriver) {
       SpecialPowers.Services.obs.addObserver(testDriver, "APZ:TransformEnd");
       yield synthesizeNativeTouchDrag(document.body, 10, 10, -2000, 0);
-      SpecialPowers.Services.obs.removeObserver(testDriver, "APZ:TransformEnd", false);
+      SpecialPowers.Services.obs.removeObserver(testDriver, "APZ:TransformEnd");
 
       yield waitForApzFlushedRepaints(testDriver);
 
@@ -41,7 +41,7 @@
       // why and/or rewrite this test entirely.
       SpecialPowers.Services.obs.addObserver(testDriver, "mouseevent");
       yield synthesizeNativeClick(input, 10, 10, testDriver);
-      SpecialPowers.Services.obs.removeObserver(testDriver, "mouseevent", false);
+      SpecialPowers.Services.obs.removeObserver(testDriver, "mouseevent");
     }
     window.addEventListener("click", (e) => {
       is(e.target, input, "got click");

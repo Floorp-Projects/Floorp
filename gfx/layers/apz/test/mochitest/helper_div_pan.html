@@ -11,7 +11,7 @@
 
 function scrollOuter() {
   var transformEnd = function() {
-    SpecialPowers.Services.obs.removeObserver(transformEnd, "APZ:TransformEnd", false);
+    SpecialPowers.Services.obs.removeObserver(transformEnd, "APZ:TransformEnd");
     dump("Transform complete; flushing repaints...\n");
     flushApzRepaints(checkScroll);
   };

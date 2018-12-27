@@ -12,7 +12,7 @@
 function* clickButton(testDriver) {
   document.addEventListener("click", clicked);
 
-  if (getQueryArgs()["dtc"]) {
+  if (getQueryArgs().dtc) {
     // force a dispatch-to-content region on the document
     document.addEventListener("wheel", function() { /* no-op */ }, { passive: false });
     yield waitForAllPaints(function() {

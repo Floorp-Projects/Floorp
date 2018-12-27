@@ -500,7 +500,7 @@ var DefaultEvent = {
 function test() {
   var subframe = document.getElementById("subframe");
   var oldpos = new ScrollTops();
-  sendWheelAndPaint(subframe, 10, 10, DefaultEvent, function () {
+  sendWheelAndPaint(subframe, 10, 10, DefaultEvent, function() {
     var newpos = new ScrollTops();
     ok(oldpos.outerScrollTop == newpos.outerScrollTop, "viewport should not have scrolled");
     ok(oldpos.innerScrollTop != newpos.innerScrollTop, "subframe should have scrolled");
@@ -510,7 +510,7 @@ function test() {
 
 function doOuterScroll(subframe, oldpos) {
   var outer = document.getElementById("iframe-body");
-  sendWheelAndPaint(outer, 20, 5, DefaultEvent, function () {
+  sendWheelAndPaint(outer, 20, 5, DefaultEvent, function() {
     var newpos = new ScrollTops();
     ok(oldpos.outerScrollTop != newpos.outerScrollTop, "viewport should have scrolled");
     ok(oldpos.innerScrollTop == newpos.innerScrollTop, "subframe should not have scrolled");
@@ -519,7 +519,7 @@ function doOuterScroll(subframe, oldpos) {
 }
 
 function doInnerScrollAgain(subframe, oldpos) {
-  sendWheelAndPaint(subframe, 10, 10, DefaultEvent, function () {
+  sendWheelAndPaint(subframe, 10, 10, DefaultEvent, function() {
     var newpos = new ScrollTops();
     ok(oldpos.outerScrollTop == newpos.outerScrollTop, "viewport should not have scrolled");
     ok(oldpos.innerScrollTop != newpos.innerScrollTop, "subframe should have scrolled");

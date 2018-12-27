@@ -59,8 +59,7 @@ function runTest() {
   }
 
   var osName = sysInfo.getProperty("name");
-  switch(osName)
-  {
+  switch (osName) {
     case "Darwin": // Mac OS X.
       // We only enable OpenGL layers on machines that don't support QuickDraw
       // plugins. x86-64 architecture is a good proxy for this plugin support.

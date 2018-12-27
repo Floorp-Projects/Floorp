@@ -15,7 +15,7 @@ var prefs = [
   // Increase the content response timeout because these tests do preventDefault
   // and we want to make sure APZ actually waits for them.
   ["apz.content_response_timeout", 10000],
-]
+];
 
 var subtests = [
   {"file": "helper_override_root.html", "prefs": prefs},

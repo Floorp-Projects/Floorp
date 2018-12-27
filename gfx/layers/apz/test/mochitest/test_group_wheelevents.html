@@ -16,19 +16,19 @@ var prefs = [
   // because in this test we move the mouse a bunch and want to recalculate
   // the target APZC after each such movement.
   ["mousewheel.transaction.ignoremovedelay", 0],
-  ["mousewheel.transaction.timeout", 0]
-]
+  ["mousewheel.transaction.timeout", 0],
+];
 
 // For helper_scroll_over_scrollbar, we need to set a pref to force
 // layerization of the scrollbar track to reproduce the bug being fixed.
 // Otherwise, the bug only manifests with overlay scrollbars on macOS,
 // or in a XUL RCD, both of which are hard to materialize in a test.
-var scrollbar_prefs = prefs.slice();  // make a copy
+var scrollbar_prefs = prefs.slice(); // make a copy
 scrollbar_prefs.push(["layout.scrollbars.always-layerize-track", true]);
 
 // For helper_overscroll_behavior_bug1425573, we need to set the APZ content
 // response timeout to 0, so we exercise the fallback codepath.
-var timeout_prefs = prefs.slice();  // make a copy
+var timeout_prefs = prefs.slice(); // make a copy
 timeout_prefs.push(["apz.content_response_timeout", 0]);
 
 var subtests = [

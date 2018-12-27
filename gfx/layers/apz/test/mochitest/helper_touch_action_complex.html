@@ -73,36 +73,36 @@ function* test(testDriver) {
   // Test configuration_1, which contains two sibling elements that are
   // overlapping. The touch-action from the second sibling (which is on top)
   // should be used for the overlapping area.
-  yield* scrollAndCheck(1,  25,  75, 20,  0, 20,  0, "first element horizontal scroll");
-  yield* scrollAndCheck(1,  25,  75,  0, 50,  0,  0, "first element vertical scroll");
-  yield* scrollAndCheck(1,  75,  75, 50,  0,  0,  0, "overlap horizontal scroll");
-  yield* scrollAndCheck(1,  75,  75,  0, 50,  0, 50, "overlap vertical scroll");
-  yield* scrollAndCheck(1, 125,  75, 20,  0,  0,  0, "second element horizontal scroll");
-  yield* scrollAndCheck(1, 125,  75,  0, 50,  0, 50, "second element vertical scroll");
+  yield* scrollAndCheck(1, 25, 75, 20, 0, 20, 0, "first element horizontal scroll");
+  yield* scrollAndCheck(1, 25, 75, 0, 50, 0, 0, "first element vertical scroll");
+  yield* scrollAndCheck(1, 75, 75, 50, 0, 0, 0, "overlap horizontal scroll");
+  yield* scrollAndCheck(1, 75, 75, 0, 50, 0, 50, "overlap vertical scroll");
+  yield* scrollAndCheck(1, 125, 75, 20, 0, 0, 0, "second element horizontal scroll");
+  yield* scrollAndCheck(1, 125, 75, 0, 50, 0, 50, "second element vertical scroll");
 
   // Test configuration_2, which contains two overlapping elements with a
   // parent/child relationship. The parent has pan-x and the child has pan-y,
   // which means that panning on the parent should work horizontally only, and
   // on the child no panning should occur at all.
-  yield* scrollAndCheck(2, 125, 125, 50, 50,  0,  0, "child scroll");
-  yield* scrollAndCheck(2,  75,  75, 50, 50,  0,  0, "overlap scroll");
-  yield* scrollAndCheck(2,  25,  75,  0, 50,  0,  0, "parent vertical scroll");
-  yield* scrollAndCheck(2,  75,  25, 50,  0, 50,  0, "parent horizontal scroll");
+  yield* scrollAndCheck(2, 125, 125, 50, 50, 0, 0, "child scroll");
+  yield* scrollAndCheck(2, 75, 75, 50, 50, 0, 0, "overlap scroll");
+  yield* scrollAndCheck(2, 25, 75, 0, 50, 0, 0, "parent vertical scroll");
+  yield* scrollAndCheck(2, 75, 25, 50, 0, 50, 0, "parent horizontal scroll");
 
   // Test configuration_3, which is the same as configuration_2, except the child
   // has a rotation transform applied. This forces the event regions on the two
   // elements to be built separately and then get merged.
-  yield* scrollAndCheck(3, 125, 125, 50, 50,  0,  0, "child scroll");
-  yield* scrollAndCheck(3,  75,  75, 50, 50,  0,  0, "overlap scroll");
-  yield* scrollAndCheck(3,  25,  75,  0, 50,  0,  0, "parent vertical scroll");
-  yield* scrollAndCheck(3,  75,  25, 50,  0, 50,  0, "parent horizontal scroll");
+  yield* scrollAndCheck(3, 125, 125, 50, 50, 0, 0, "child scroll");
+  yield* scrollAndCheck(3, 75, 75, 50, 50, 0, 0, "overlap scroll");
+  yield* scrollAndCheck(3, 25, 75, 0, 50, 0, 0, "parent vertical scroll");
+  yield* scrollAndCheck(3, 75, 25, 50, 0, 50, 0, "parent horizontal scroll");
 
   // Test configuration_4 has two elements, one above the other, not overlapping,
   // and the second element is a child of the first. The parent has pan-x, the
   // child has pan-y, but that means panning horizontally on the parent should
   // work and panning in any direction on the child should not do anything.
-  yield* scrollAndCheck(4,  75,  75, 50, 50,  50, 0, "parent diagonal scroll");
-  yield* scrollAndCheck(4,  75, 150, 50, 50,   0, 0, "child diagonal scroll");
+  yield* scrollAndCheck(4, 75, 75, 50, 50, 50, 0, "parent diagonal scroll");
+  yield* scrollAndCheck(4, 75, 150, 50, 50, 0, 0, "child diagonal scroll");
 }
 
 waitUntilApzStable()

@@ -36,9 +36,9 @@ function parseDisplayList(lines) {
     var line = lines[i];
 
     var layerObject = {
-      line: line,
+      line,
       children: [],
-    }
+    };
     if (!root) {
       root = layerObject;
     }
@@ -87,7 +87,7 @@ function parseDisplayList(lines) {
           var name = rest.substring(lastSpace + 1, startIndex);
           var value = rest.substring(startIndex + 1, j);
 
-          var rectMatches = value.match("^(.*?),(.*?),(.*?),(.*?)$")
+          var rectMatches = value.match("^(.*?),(.*?),(.*?),(.*?)$");
           if (rectMatches) {
             layerObject[name] = [
               parseFloat(rectMatches[1]),
@@ -103,13 +103,13 @@ function parseDisplayList(lines) {
         lastSpace = j;
       }
     }
-    //dump("FIELDS: " + JSON.stringify(fields) + "\n");
+    // dump("FIELDS: " + JSON.stringify(fields) + "\n");
   }
   return root;
 }
 
-function trim(s){ 
-  return ( s || "" ).replace( /^\s+|\s+$/g, "" ); 
+function trim(s) {
+  return ( s || "" ).replace( /^\s+|\s+$/g, "" );
 }
 
 function getDataURI(str) {
@@ -291,9 +291,9 @@ function parseLayers(layersDumpLines) {
     }
 
     var layerObject = {
-      line: line,
+      line,
       children: [],
-    }
+    };
     if (!root) {
       root = layerObject;
     }
@@ -352,7 +352,7 @@ function parseLayers(layersDumpLines) {
       for (var j = 0; j < fields.length; j++) {
         // Something like 'valid=< (x=0, y=0, w=1920, h=2218); >' or 'opaqueContent'
         var field = fields[j];
-        //dump("FIELD: " + field + "\n");
+        // dump("FIELD: " + field + "\n");
         var parts = field.split("=", 2);
         var fieldName = parts[0];
         var rest = field.substring(fieldName.length + 1);
@@ -361,13 +361,13 @@ function parseLayers(layersDumpLines) {
           layerObject[fieldName].type = "bool";
           continue;
         }
-        var float = parseFloat_cleo(rest); 
+        var float = parseFloat_cleo(rest);
         if (float) {
           layerObject[fieldName] = float;
           layerObject[fieldName].type = "float";
           continue;
         }
-        var region = parseRegion(rest); 
+        var region = parseRegion(rest);
         if (region) {
           layerObject[fieldName] = region;
           layerObject[fieldName].type = "region";
@@ -412,11 +412,11 @@ function parseLayers(layersDumpLines) {
 
     // Compute screenTransformX/screenTransformY
     // TODO Fully support transforms
-    if (layerObject["shadow-transform"] && layerObject["transform"]) {
+    if (layerObject["shadow-transform"] && layerObject.transform) {
       layerObject["screen-transform"] = [layerObject["shadow-transform"][2][0], layerObject["shadow-transform"][2][1]];
       var currIndentation = indentation - 1;
       while (currIndentation >= 0) {
-        var transform = objectAtIndentation[currIndentation]["shadow-transform"] || objectAtIndentation[currIndentation]["transform"];
+        var transform = objectAtIndentation[currIndentation]["shadow-transform"] || objectAtIndentation[currIndentation].transform;
         if (transform) {
           layerObject["screen-transform"][0] += transform[2][0];
           layerObject["screen-transform"][1] += transform[2][1];
@@ -425,14 +425,14 @@ function parseLayers(layersDumpLines) {
       }
     }
 
-    //dump("Fields: " + JSON.stringify(fields) + "\n");
+    // dump("Fields: " + JSON.stringify(fields) + "\n");
   }
   root.compositeTime = layersDumpLines.compositeTime;
-  //dump("OBJECTS: " + JSON.stringify(root) + "\n");
+  // dump("OBJECTS: " + JSON.stringify(root) + "\n");
   return root;
 }
 function populateLayers(root, displayList, pane, previewParent, hasSeenRoot, contentScale, rootPreviewParent) {
-  
+
   contentScale = contentScale || 1;
   rootPreviewParent = rootPreviewParent || previewParent;
 
@@ -458,12 +458,12 @@ function populateLayers(root, displayList, pane, previewParent, hasSeenRoot, con
     style: {
       whiteSpace: "pre",
     },
-    onmouseover: function() {
+    onmouseover() {
       if (this.layerViewport) {
         this.layerViewport.classList.add("layerHover");
       }
     },
-    onmouseout: function() {
+    onmouseout() {
       if (this.layerViewport) {
         this.layerViewport.classList.remove("layerHover");
       }
@@ -478,23 +478,23 @@ function populateLayers(root, displayList, pane, previewParent, hasSeenRoot, con
       marginRight: "4px",
       cursor: "pointer",
     },
-    onclick: function() {
+    onclick() {
       if (this.layerViewport) {
         if (this.layerViewport.style.visibility == "hidden") {
           this.layerViewport.style.visibility = "";
-          this.src = "show.png"
+          this.src = "show.png";
         } else {
           this.layerViewport.style.visibility = "hidden";
-          this.src = "hide.png"
+          this.src = "hide.png";
         }
       }
-    }
+    },
   });
   elem.insertBefore(icon, elem.firstChild);
   pane.appendChild(elem);
 
-  if (root["shadow-visible"] || root["visible"]) {
-    var visibleRegion = root["shadow-visible"] || root["visible"];
+  if (root["shadow-visible"] || root.visible) {
+    var visibleRegion = root["shadow-visible"] || root.visible;
     var layerViewport = createElement("div", {
       id: root.address + "_viewport",
       style: {
@@ -505,15 +505,15 @@ function populateLayers(root, displayList, pane, previewParent, hasSeenRoot, con
     elem.layerViewport = layerViewport;
     icon.layerViewport = layerViewport;
     var layerViewportMatrix = [1, 0, 0, 1, 0, 0];
-    if (root["shadow-clip"] || root["clip"]) {
-      var clip = root["shadow-clip"] || root["clip"]
+    if (root["shadow-clip"] || root.clip) {
+      var clip = root["shadow-clip"] || root.clip;
       var clipElem = createElement("div", {
         id: root.address + "_clip",
         style: {
-          left: clip[0]+"px",
-          top: clip[1]+"px",
-          width: clip[2]+"px",
-          height: clip[3]+"px",
+          left: clip[0] + "px",
+          top: clip[1] + "px",
+          width: clip[2] + "px",
+          height: clip[3] + "px",
           position: "absolute",
           overflow: "hidden",
           pointerEvents: "none",
@@ -523,8 +523,8 @@ function populateLayers(root, displayList, pane, previewParent, hasSeenRoot, con
       layerViewportMatrix[5] += -clip[1];
       layerViewport.style.transform = "translate(-" + clip[0] + "px, -" + clip[1] + "px" + ")";
     }
-    if (root["shadow-transform"] || root["transform"]) {
-      var matrix = root["shadow-transform"] || root["transform"];
+    if (root["shadow-transform"] || root.transform) {
+      var matrix = root["shadow-transform"] || root.transform;
       layerViewportMatrix[0] = matrix[0][0];
       layerViewportMatrix[1] = matrix[0][1];
       layerViewportMatrix[2] = matrix[1][0];
@@ -535,7 +535,7 @@ function populateLayers(root, displayList, pane, previewParent, hasSeenRoot, con
     layerViewport.style.transform = "matrix(" + layerViewportMatrix[0] + "," + layerViewportMatrix[1] + "," + layerViewportMatrix[2] + "," + layerViewportMatrix[3] + "," + layerViewportMatrix[4] + "," + layerViewportMatrix[5] + ")";
     if (!hasSeenRoot) {
       hasSeenRoot = true;
-      layerViewport.style.transform = "scale(" + 1/contentScale + "," + 1/contentScale + ")";
+      layerViewport.style.transform = "scale(" + 1 / contentScale + "," + 1 / contentScale + ")";
     }
     if (clipElem) {
       previewParent.appendChild(clipElem);
@@ -616,15 +616,15 @@ function populateLayers(root, displayList, pane, previewParent, hasSeenRoot, con
         hasImg = true;
         layerPreview.style.background = "rgba(" + root.color.r + ", " + root.color.g + ", " + root.color.b + ", " + root.color.a + ")";
       }
-      
+
       if (hasImg || true) {
         layerPreview.mouseoverElem = elem;
         layerPreview.onmouseenter = function() {
           this.mouseoverElem.onmouseover();
-        }
+        };
         layerPreview.onmouseout = function() {
           this.mouseoverElem.onmouseout();
-        }
+        };
       }
     }
 
@@ -637,9 +637,9 @@ function populateLayers(root, displayList, pane, previewParent, hasSeenRoot, con
         style: {
           whiteSpace: "pre",
         },
-        displayItem: displayItem,
-        layerViewport: layerViewport,
-        onmouseover: function() {
+        displayItem,
+        layerViewport,
+        onmouseover() {
           if (this.diPreview) {
             this.diPreview.classList.add("displayHover");
 
@@ -673,13 +673,13 @@ function populateLayers(root, displayList, pane, previewParent, hasSeenRoot, con
               style: {
                 top: Math.min(box.bottom, document.documentElement.clientHeight - 150) + "px",
                 left: box.left + "px",
-              }
+              },
             });
 
             document.body.appendChild(this.diPreview.tooltip);
           }
         },
-        onmouseout: function() {
+        onmouseout() {
           if (this.diPreview) {
             this.diPreview.classList.remove("displayHover");
             document.body.removeChild(this.diPreview.tooltip);
@@ -693,7 +693,7 @@ function populateLayers(root, displayList, pane, previewParent, hasSeenRoot, con
           height: "12px",
           marginLeft: "4px",
           marginRight: "4px",
-        }
+        },
       });
       displayElem.insertBefore(icon, displayElem.firstChild);
       pane.appendChild(displayElem);
@@ -707,18 +707,18 @@ function populateLayers(root, displayList, pane, previewParent, hasSeenRoot, con
           className: "layerPreview",
           style: {
             position: "absolute",
-            left: rect2d[0]/appUnitsToPixels + "px",
-            top: rect2d[1]/appUnitsToPixels + "px",
-            width: rect2d[2]/appUnitsToPixels + "px",
-            height: rect2d[3]/appUnitsToPixels + "px",
+            left: rect2d[0] / appUnitsToPixels + "px",
+            top: rect2d[1] / appUnitsToPixels + "px",
+            width: rect2d[2] / appUnitsToPixels + "px",
+            height: rect2d[3] / appUnitsToPixels + "px",
             border: "solid 1px gray",
             pointerEvents: "auto",
           },
-          displayElem: displayElem,
-          onmouseover: function() {
+          displayElem,
+          onmouseover() {
             this.displayElem.onmouseover();
           },
-          onmouseout: function() {
+          onmouseout() {
             this.displayElem.onmouseout();
           },
         });
@@ -739,7 +739,7 @@ function parseMultiLineDump(log) {
   var lines = log.split("\n");
 
   var container = createElement("div", {
-    style: { 
+    style: {
       height: "100%",
       position: "relative",
     },
@@ -750,7 +750,7 @@ function parseMultiLineDump(log) {
   var layersRegex = "(" + layerManagerFirstLine + nextLineStartWithSpace + ")";
 
   var startLine = "Painting --- after optimization:\n";
-  var endLine = "Painting --- layer tree:"
+  var endLine = "Painting --- layer tree:";
   var displayListRegex = "(" + startLine + "(.*\n)*?" + endLine + ")";
 
   var regex = new RegExp(layersRegex + "|" + displayListRegex, "gm");
@@ -759,7 +759,7 @@ function parseMultiLineDump(log) {
   window.matches = matches;
 
   var matchList = createElement("span", {
-    style: { 
+    style: {
       height: "95%",
       width: "10%",
       position: "relative",
@@ -771,7 +771,7 @@ function parseMultiLineDump(log) {
   });
   container.appendChild(matchList);
   var contents = createElement("span", {
-    style: { 
+    style: {
       height: "95%",
       width: "88%",
       display: "inline-block",
@@ -787,7 +787,7 @@ function parseMultiLineDump(log) {
 
     if (currMatch.indexOf(startLine) == 0) {
       // Display list match
-      var matchLines = matches[i].split("\n")
+      var matchLines = matches[i].split("\n");
       lastDisplayList = parseDisplayList(matchLines);
     } else {
       // Layer tree match:
@@ -800,12 +800,12 @@ function parseMultiLineDump(log) {
         },
         href: "#",
         textContent: "LayerTree " + (frameID++),
-        onclick: function() {
+        onclick() {
           contents.innerHTML = "";
-          var matchLines = matches[i].split("\n")
+          var matchLines = matches[i].split("\n");
           var dumpDiv = parseDump(matchLines, displayList);
           contents.appendChild(dumpDiv);
-        }
+        },
       });
       matchList.appendChild(currFrameDiv);
     }
@@ -816,7 +816,7 @@ function parseMultiLineDump(log) {
 
 function parseDump(log, displayList, compositeTitle, compositeTime) {
   compositeTitle |= "";
-  compositeTime |= 0
+  compositeTime |= 0;
 
   var container = createElement("div", {
     style: {
@@ -878,7 +878,7 @@ function parseDump(log, displayList, compositeTitle, compositeTime) {
 function tab_showLayersDump(layersDumpLines, compositeTitle, compositeTime) {
   var container = parseDump(layersDumpLines, compositeTitle, compositeTime);
 
-  gTabWidget.addTab("LayerTree", container); 
+  gTabWidget.addTab("LayerTree", container);
   gTabWidget.selectTab("LayerTree");
 }
 

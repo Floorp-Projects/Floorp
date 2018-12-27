@@ -78,7 +78,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1274663
       SimpleTest.waitForExplicitFinish();
       window.addEventListener("MozAfterPaint", function paintHandle(e) {
         runCanvasTest();
-        window.removeEventListener("MozAfterPaint", paintHandle, false);
+        window.removeEventListener("MozAfterPaint", paintHandle);
       });
 
       function runCanvasTest() {

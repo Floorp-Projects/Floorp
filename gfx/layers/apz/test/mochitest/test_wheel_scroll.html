@@ -61,7 +61,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1013412
 var rotation = 0;
 var rotationAdjusted = false;
 
-var incrementForMode = function (mode) {
+var incrementForMode = function(mode) {
   switch (mode) {
     case WheelEvent.DOM_DELTA_PIXEL: return 1;
     case WheelEvent.DOM_DELTA_LINE: return 15;
@@ -70,7 +70,7 @@ var incrementForMode = function (mode) {
   return 0;
 };
 
-document.getElementById("scrollbox").addEventListener("wheel", function (e) {
+document.getElementById("scrollbox").addEventListener("wheel", function(e) {
   rotation += e.deltaY * incrementForMode(e.deltaMode) * 0.2;
   document.getElementById("circle").style.transform = "rotate(" + rotation + "deg)";
   rotationAdjusted = true;
