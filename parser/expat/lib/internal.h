@@ -79,3 +79,17 @@
 #  define UNUSED_P(p) UNUSED_ ## p
 # endif
 #endif
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
+void
+align_limit_to_full_utf8_characters(const char * from, const char ** fromLimRef);
+
+
+#ifdef __cplusplus
+}
+#endif
