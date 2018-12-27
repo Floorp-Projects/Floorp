@@ -44,7 +44,7 @@ function* test(testDriver) {
     expectedScrollId: utils.getViewId(document.scrollingElement),
     trackLocation: ScrollbarTrackLocation.START,
     expectThumb: true,
-    layerState: LayerState.INACTIVE
+    layerState: LayerState.INACTIVE,
   });
 
   // activate the scrollframe but keep the main-thread scroll position at 0.
@@ -89,7 +89,7 @@ function* test(testDriver) {
     expectedScrollId: scrollerViewId,
     trackLocation: ScrollbarTrackLocation.START,
     expectThumb: false,
-    layerState: LayerState.ACTIVE
+    layerState: LayerState.ACTIVE,
   });
   // bottom of scrollbar track (scrollthumb)
   hitTestScrollbar({
@@ -98,7 +98,7 @@ function* test(testDriver) {
     expectedScrollId: scrollerViewId,
     trackLocation: ScrollbarTrackLocation.END,
     expectThumb: true,
-    layerState: LayerState.ACTIVE
+    layerState: LayerState.ACTIVE,
   });
   // left part of scrollbar track (has scrollthumb)
   hitTestScrollbar({
@@ -107,7 +107,7 @@ function* test(testDriver) {
     expectedScrollId: scrollerViewId,
     trackLocation: ScrollbarTrackLocation.START,
     expectThumb: true,
-    layerState: LayerState.ACTIVE
+    layerState: LayerState.ACTIVE,
   });
   // right part of scrollbar track
   hitTestScrollbar({
@@ -116,7 +116,7 @@ function* test(testDriver) {
     expectedScrollId: scrollerViewId,
     trackLocation: ScrollbarTrackLocation.END,
     expectThumb: false,
-    layerState: LayerState.ACTIVE
+    layerState: LayerState.ACTIVE,
   });
 
   subtestDone();

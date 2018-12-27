@@ -29,13 +29,13 @@ let fontUsed = id => {
       range = document.createRange();
   range.selectNode(element);
   return InspectorUtils.getUsedFontFaces(range)[0].CSSFamilyName;
-}
+};
 
 // A map of the default mono, sans and serif fonts, obtained when
 // whitelisting is disabled.
-const fonts = { mono : fontUsed("mono"),
-                sans : fontUsed("sans"),
-                serif : fontUsed("serif") };
+const fonts = { mono: fontUsed("mono"),
+                sans: fontUsed("sans"),
+                serif: fontUsed("serif") };
 
 // Set the font whitelist to contain none, some, or all of the
 // default mono, sans, and serif fonts. Check that the rendering
@@ -64,7 +64,7 @@ let testFontWhitelist = async function(useMono, useSans, useSerif) {
      "Correct sans whitelisting state; got " + fontUsed("sans") + ", requested " + fonts.sans);
   is(useSerif || whitelistEmpty, fontUsed("serif") === fonts.serif,
      "Correct serif whitelisting state; got " + fontUsed("serif") + ", requested " + fonts.serif);
-}
+};
 
 // Run tests to confirm that only whitelisting fonts are present in a
 // rendered page. Try turning mono, sans, and serif off and on in

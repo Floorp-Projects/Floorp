@@ -29,7 +29,7 @@ function test() {
     lineOrPageDeltaX: 0,
     lineOrPageDeltaY: 10,
   };
-  sendWheelAndPaint(inner, 20, 30, event, function () {
+  sendWheelAndPaint(inner, 20, 30, event, function() {
     ok(container.scrollTop == containerScrollTop, "container scrollframe should not have scrolled");
     ok(outer.scrollTop > outerScrollTop, "nested scrollframe should have scrolled");
     SimpleTest.finish();

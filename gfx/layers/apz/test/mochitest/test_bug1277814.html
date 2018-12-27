@@ -51,7 +51,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1277814
         for (var scrollId in paint) {
           var scrollFrame = paint[scrollId];
           if ("contentDescription" in scrollFrame &&
-              scrollFrame["contentDescription"].includes("bug1277814-div")) {
+              scrollFrame.contentDescription.includes("bug1277814-div")) {
             foundIt = true;
           }
         }

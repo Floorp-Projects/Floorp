@@ -23,7 +23,7 @@ var prefs = [
   // APZ as a MouseInput so the hit result is recorded.
   ["test.events.async.enabled", true],
   // Turns on APZTestData logging which we use to obtain the hit test results.
-  ["apz.test.logging_enabled", true]
+  ["apz.test.logging_enabled", true],
 ];
 
 var subtests = [
@@ -35,7 +35,7 @@ var subtests = [
   {"file": "helper_hittest_backface_hidden.html", "prefs": prefs},
   {"file": "helper_hittest_touchaction.html", "prefs": prefs},
   {"file": "helper_hittest_nested_transforms_bug1459696.html", "prefs": prefs},
-  {"file": "helper_hittest_sticky_bug1478304.html", "prefs": prefs}
+  {"file": "helper_hittest_sticky_bug1478304.html", "prefs": prefs},
 ];
 
 if (isApzEnabled()) {
