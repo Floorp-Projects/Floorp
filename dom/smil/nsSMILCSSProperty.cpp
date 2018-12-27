@@ -13,7 +13,7 @@
 #include "mozilla/ServoBindings.h"
 #include "mozilla/StyleAnimationValue.h"
 #include "nsDOMCSSAttrDeclaration.h"
-#include "nsSMILCSSValueType.h"
+#include "SMILCSSValueType.h"
 #include "nsSMILValue.h"
 #include "nsCSSProps.h"
 
@@ -55,7 +55,7 @@ nsSMILValue nsSMILCSSProperty::GetBaseValue() const {
     //
     // In any case, just return a dummy value (initialized with the right
     // type, so as not to indicate failure).
-    nsSMILValue tmpVal(&nsSMILCSSValueType::sSingleton);
+    nsSMILValue tmpVal(&SMILCSSValueType::sSingleton);
     Swap(baseValue, tmpVal);
     return baseValue;
   }
@@ -68,8 +68,8 @@ nsSMILValue nsSMILCSSProperty::GetBaseValue() const {
     return baseValue;
   }
 
-  baseValue = nsSMILCSSValueType::ValueFromAnimationValue(mPropID, mElement,
-                                                          computedValue);
+  baseValue = SMILCSSValueType::ValueFromAnimationValue(mPropID, mElement,
+                                                        computedValue);
   return baseValue;
 }
 
@@ -78,8 +78,8 @@ nsresult nsSMILCSSProperty::ValueFromString(
     nsSMILValue& aValue, bool& aPreventCachingOfSandwich) const {
   NS_ENSURE_TRUE(IsPropertyAnimatable(mPropID), NS_ERROR_FAILURE);
 
-  nsSMILCSSValueType::ValueFromString(mPropID, mElement, aStr, aValue,
-                                      &aPreventCachingOfSandwich);
+  SMILCSSValueType::ValueFromString(mPropID, mElement, aStr, aValue,
+                                    &aPreventCachingOfSandwich);
 
   if (aValue.IsNull()) {
     return NS_ERROR_FAILURE;

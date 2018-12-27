@@ -16,7 +16,6 @@ EXPORTS += [
     'nsSMILAnimationFunction.h',
     'nsSMILCompositorTable.h',
     'nsSMILCSSProperty.h',
-    'nsSMILCSSValueType.h',
     'nsSMILInstanceTime.h',
     'nsSMILInterval.h',
     'nsSMILKeySpline.h',
@@ -31,6 +30,7 @@ EXPORTS += [
     'nsSMILTimeValueSpecParams.h',
     'nsSMILTypes.h',
     'nsSMILValue.h',
+    'SMILCSSValueType.h',
     'SMILNullType.h',
 ]
 
@@ -43,7 +43,6 @@ UNIFIED_SOURCES += [
     'nsSMILAnimationFunction.cpp',
     'nsSMILCompositor.cpp',
     'nsSMILCSSProperty.cpp',
-    'nsSMILCSSValueType.cpp',
     'nsSMILInstanceTime.cpp',
     'nsSMILInterval.cpp',
     'nsSMILKeySpline.cpp',
@@ -56,6 +55,7 @@ UNIFIED_SOURCES += [
     'nsSMILTimeValueSpec.cpp',
     'nsSMILValue.cpp',
     'SMILBoolType.cpp',
+    'SMILCSSValueType.cpp',
     'SMILEnumType.cpp',
     'SMILFloatType.cpp',
     'SMILIntegerType.cpp',
