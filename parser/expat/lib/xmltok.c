@@ -216,6 +216,17 @@ struct normal_encoding {
  E ## isInvalid3, \
  E ## isInvalid4
 
+#define NULL_VTABLE \
+ /* isName2 */ NULL, \
+ /* isName3 */ NULL, \
+ /* isName4 */ NULL, \
+ /* isNmstrt2 */ NULL, \
+ /* isNmstrt3 */ NULL, \
+ /* isNmstrt4 */ NULL, \
+ /* isInvalid2 */ NULL, \
+ /* isInvalid3 */ NULL, \
+ /* isInvalid4 */ NULL
+
 static int FASTCALL checkCharRefNumber(int);
 
 #include "xmltok_impl.h"
@@ -525,7 +536,7 @@ static const struct normal_encoding latin1_encoding_ns = {
 #include "asciitab.h"
 #include "latin1tab.h"
   },
-  STANDARD_VTABLE(sb_)
+  STANDARD_VTABLE(sb_) NULL_VTABLE
 };
 
 #endif
@@ -538,7 +549,7 @@ static const struct normal_encoding latin1_encoding = {
 #undef BT_COLON
 #include "latin1tab.h"
   },
-  STANDARD_VTABLE(sb_)
+  STANDARD_VTABLE(sb_) NULL_VTABLE
 };
 
 static enum XML_Convert_Result PTRCALL
@@ -563,7 +574,7 @@ static const struct normal_encoding ascii_encoding_ns = {
 #include "asciitab.h"
 /* BT_NONXML == 0 */
   },
-  STANDARD_VTABLE(sb_)
+  STANDARD_VTABLE(sb_) NULL_VTABLE
 };
 
 #endif
@@ -576,7 +587,7 @@ static const struct normal_encoding ascii_encoding = {
 #undef BT_COLON
 /* BT_NONXML == 0 */
   },
-  STANDARD_VTABLE(sb_)
+  STANDARD_VTABLE(sb_) NULL_VTABLE
 };
 
 static int PTRFASTCALL
@@ -806,7 +817,7 @@ static const struct normal_encoding little2_encoding_ns = {
 #include "asciitab.h"
 #include "latin1tab.h"
   },
-  STANDARD_VTABLE(little2_)
+  STANDARD_VTABLE(little2_) NULL_VTABLE
 };
 
 #endif
@@ -825,7 +836,7 @@ static const struct normal_encoding little2_encoding = {
 #undef BT_COLON
 #include "latin1tab.h"
   },
-  STANDARD_VTABLE(little2_)
+  STANDARD_VTABLE(little2_) NULL_VTABLE
 };
 
 #if BYTEORDER != 4321
@@ -838,7 +849,7 @@ static const struct normal_encoding internal_little2_encoding_ns = {
 #include "iasciitab.h"
 #include "latin1tab.h"
   },
-  STANDARD_VTABLE(little2_)
+  STANDARD_VTABLE(little2_) NULL_VTABLE
 };
 
 #endif
@@ -851,7 +862,7 @@ static const struct normal_encoding internal_little2_encoding = {
 #undef BT_COLON
 #include "latin1tab.h"
   },
-  STANDARD_VTABLE(little2_)
+  STANDARD_VTABLE(little2_) NULL_VTABLE
 };
 
 #endif
@@ -947,7 +958,7 @@ static const struct normal_encoding big2_encoding_ns = {
 #include "asciitab.h"
 #include "latin1tab.h"
   },
-  STANDARD_VTABLE(big2_)
+  STANDARD_VTABLE(big2_) NULL_VTABLE
 };
 
 #endif
@@ -966,7 +977,7 @@ static const struct normal_encoding big2_encoding = {
 #undef BT_COLON
 #include "latin1tab.h"
   },
-  STANDARD_VTABLE(big2_)
+  STANDARD_VTABLE(big2_) NULL_VTABLE
 };
 
 #if BYTEORDER != 1234
@@ -979,7 +990,7 @@ static const struct normal_encoding internal_big2_encoding_ns = {
 #include "iasciitab.h"
 #include "latin1tab.h"
   },
-  STANDARD_VTABLE(big2_)
+  STANDARD_VTABLE(big2_) NULL_VTABLE
 };
 
 #endif
@@ -992,7 +1003,7 @@ static const struct normal_encoding internal_big2_encoding = {
 #undef BT_COLON
 #include "latin1tab.h"
   },
-  STANDARD_VTABLE(big2_)
+  STANDARD_VTABLE(big2_) NULL_VTABLE
 };
 
 #endif
