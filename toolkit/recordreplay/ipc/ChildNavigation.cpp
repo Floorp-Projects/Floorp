@@ -15,23 +15,6 @@ namespace navigation {
 typedef js::BreakpointPosition BreakpointPosition;
 typedef js::ExecutionPoint ExecutionPoint;
 
-static void BreakpointPositionToString(const BreakpointPosition& aPos,
-                                       nsAutoCString& aStr) {
-  aStr.AppendPrintf("{ Kind: %s, Script: %d, Offset: %d, Frame: %d }",
-                    aPos.KindString(), (int)aPos.mScript, (int)aPos.mOffset,
-                    (int)aPos.mFrameIndex);
-}
-
-static void ExecutionPointToString(const ExecutionPoint& aPoint,
-                                   nsAutoCString& aStr) {
-  aStr.AppendPrintf("{ Checkpoint %d", (int)aPoint.mCheckpoint);
-  if (aPoint.HasPosition()) {
-    aStr.AppendPrintf(" Progress %llu Position ", aPoint.mProgress);
-    BreakpointPositionToString(aPoint.mPosition, aStr);
-  }
-  aStr.AppendPrintf(" }");
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 // Navigation State
 ///////////////////////////////////////////////////////////////////////////////
@@ -232,10 +215,10 @@ class ReachBreakpointPhase final : public NavigationPhase {
 
   void ToString(nsAutoCString& aStr) override {
     aStr.AppendPrintf("ReachBreakpoint: ");
-    ExecutionPointToString(mPoint, aStr);
+    mPoint.ToString(aStr);
     if (mTemporaryCheckpoint.isSome()) {
       aStr.AppendPrintf(" TemporaryCheckpoint: ");
-      ExecutionPointToString(mTemporaryCheckpoint.ref(), aStr);
+      mTemporaryCheckpoint.ref().ToString(aStr);
     }
   }
 
@@ -781,7 +764,7 @@ void ForwardPhase::PositionHit(const ExecutionPoint& aPoint) {
 
 void ForwardPhase::HitRecordingEndpoint(const ExecutionPoint& aPoint) {
   nsAutoCString str;
-  ExecutionPointToString(aPoint, str);
+  aPoint.ToString(str);
 
   gNavigation->mPausedPhase.Enter(aPoint, /* aRewind = */ false,
                                   /* aRecordingEndpoint = */ true);
