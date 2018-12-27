@@ -2120,6 +2120,10 @@ XML_GetInputContext(XML_Parser parser, int *offset, int *size)
     *size   = (int)(bufferEnd - buffer);
     return buffer;
   }
+#else
+  (void)parser;
+  (void)offset;
+  (void)size;
 #endif /* defined XML_CONTEXT_BYTES */
   return (char *) 0;
 }
@@ -5276,9 +5280,9 @@ internalEntityProcessor(XML_Parser parser,
 
 static enum XML_Error PTRCALL
 errorProcessor(XML_Parser parser,
-               const char *s,
-               const char *end,
-               const char **nextPtr)
+               const char *UNUSED_P(s),
+               const char *UNUSED_P(end),
+               const char **UNUSED_P(nextPtr))
 {
   return errorCode;
 }
