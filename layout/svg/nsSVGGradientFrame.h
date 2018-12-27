@@ -21,7 +21,7 @@ class nsIContent;
 class nsIPresShell;
 
 namespace mozilla {
-class nsSVGAnimatedTransformList;
+class SVGAnimatedTransformList;
 
 namespace dom {
 class SVGLinearGradientElement;
@@ -65,7 +65,7 @@ class nsSVGGradientFrame : public nsSVGPaintServerFrame {
   // Optionally get a stop frame (returns stop index/count)
   void GetStopFrames(nsTArray<nsIFrame*>* aStopFrames);
 
-  const mozilla::nsSVGAnimatedTransformList* GetGradientTransformList(
+  const mozilla::SVGAnimatedTransformList* GetGradientTransformList(
       nsIContent* aDefault);
   // Will be singular for gradientUnits="objectBoundingBox" with an empty bbox.
   gfxMatrix GetGradientTransform(nsIFrame* aSource,

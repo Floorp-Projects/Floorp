@@ -9,7 +9,7 @@
 
 #include "mozilla/Attributes.h"
 #include "nsAutoPtr.h"
-#include "nsSVGAnimatedTransformList.h"
+#include "SVGAnimatedTransformList.h"
 #include "SVGElement.h"
 #include "gfxMatrix.h"
 #include "mozilla/gfx/Matrix.h"
@@ -58,7 +58,7 @@ class SVGTransformableElement : public SVGElement {
   virtual const gfx::Matrix* GetAnimateMotionTransform() const override;
   virtual void SetAnimateMotionTransform(const gfx::Matrix* aMatrix) override;
 
-  virtual nsSVGAnimatedTransformList* GetAnimatedTransformList(
+  virtual SVGAnimatedTransformList* GetAnimatedTransformList(
       uint32_t aFlags = 0) override;
   virtual nsStaticAtom* GetTransformListAttrName() const override {
     return nsGkAtoms::transform;
@@ -76,9 +76,9 @@ class SVGTransformableElement : public SVGElement {
    */
   static gfxMatrix GetUserToParentTransform(
       const gfx::Matrix* aAnimateMotionTransform,
-      const nsSVGAnimatedTransformList* aTransforms);
+      const SVGAnimatedTransformList* aTransforms);
 
-  nsAutoPtr<nsSVGAnimatedTransformList> mTransforms;
+  nsAutoPtr<SVGAnimatedTransformList> mTransforms;
 
   // XXX maybe move this to property table, to save space on un-animated elems?
   nsAutoPtr<gfx::Matrix> mAnimateMotionTransform;

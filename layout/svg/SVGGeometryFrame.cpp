@@ -25,7 +25,7 @@
 #include "SVGGeometryElement.h"
 #include "nsSVGUtils.h"
 #include "mozilla/ArrayUtils.h"
-#include "nsSVGAnimatedTransformList.h"
+#include "SVGAnimatedTransformList.h"
 #include "SVGContentUtils.h"
 #include "SVGGraphicsElement.h"
 
@@ -215,8 +215,7 @@ bool SVGGeometryFrame::IsSVGTransformed(
   }
 
   SVGElement* content = static_cast<SVGElement*>(GetContent());
-  nsSVGAnimatedTransformList* transformList =
-      content->GetAnimatedTransformList();
+  SVGAnimatedTransformList* transformList = content->GetAnimatedTransformList();
   if ((transformList && transformList->HasTransform()) ||
       content->GetAnimateMotionTransform()) {
     if (aOwnTransform) {

@@ -165,7 +165,7 @@ extern jsid s_length_id;
 
 // A return value of UINT32_MAX indicates "not an array index".  Note, in
 // particular, that UINT32_MAX itself is not a valid array index in general.
-inline uint32_t GetArrayIndexFromId(JSContext* cx, JS::Handle<jsid> id) {
+inline uint32_t GetArrayIndexFromId(JS::Handle<jsid> id) {
   // Much like js::IdIsIndex, except with a fast path for "length" and another
   // fast path for starting with a lowercase ascii char.  Is that second one
   // really needed?  I guess it is because StringIsArrayIndex is out of line...

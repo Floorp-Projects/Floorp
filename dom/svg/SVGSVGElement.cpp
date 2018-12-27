@@ -423,7 +423,7 @@ void SVGSVGElement::UnbindFromTree(bool aDeep, bool aNullParent) {
   SVGGraphicsElement::UnbindFromTree(aDeep, aNullParent);
 }
 
-nsSVGAnimatedTransformList* SVGSVGElement::GetAnimatedTransformList(
+SVGAnimatedTransformList* SVGSVGElement::GetAnimatedTransformList(
     uint32_t aFlags) {
   if (!(aFlags & DO_ALLOCATE) && mSVGView && mSVGView->mTransforms) {
     return mSVGView->mTransforms;
@@ -662,7 +662,7 @@ const nsSVGViewBox& SVGSVGElement::GetViewBoxInternal() const {
   return mViewBox;
 }
 
-nsSVGAnimatedTransformList* SVGSVGElement::GetTransformInternal() const {
+SVGAnimatedTransformList* SVGSVGElement::GetTransformInternal() const {
   return (mSVGView && mSVGView->mTransforms) ? mSVGView->mTransforms
                                              : mTransforms;
 }

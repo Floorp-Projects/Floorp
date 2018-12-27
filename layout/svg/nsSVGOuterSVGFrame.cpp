@@ -714,8 +714,7 @@ bool nsSVGOuterSVGFrame::IsSVGTransformed(Matrix* aOwnTransform,
   bool foundTransform = false;
 
   SVGSVGElement* content = static_cast<SVGSVGElement*>(GetContent());
-  nsSVGAnimatedTransformList* transformList =
-      content->GetAnimatedTransformList();
+  SVGAnimatedTransformList* transformList = content->GetAnimatedTransformList();
   if ((transformList && transformList->HasTransform()) ||
       content->GetAnimateMotionTransform()) {
     if (aOwnTransform) {

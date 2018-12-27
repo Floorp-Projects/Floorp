@@ -53,7 +53,7 @@ class SVGUserUnitList;
 class SVGAnimatedPointList;
 class SVGAnimatedPathSegList;
 class SVGAnimatedPreserveAspectRatio;
-class nsSVGAnimatedTransformList;
+class SVGAnimatedTransformList;
 class SVGStringList;
 class DOMSVGStringList;
 
@@ -85,7 +85,7 @@ class SVGElement : public SVGElementBase  // nsIContent
   typedef mozilla::SVGAnimatedPathSegList SVGAnimatedPathSegList;
   typedef mozilla::SVGAnimatedPreserveAspectRatio
       SVGAnimatedPreserveAspectRatio;
-  typedef mozilla::nsSVGAnimatedTransformList nsSVGAnimatedTransformList;
+  typedef mozilla::SVGAnimatedTransformList SVGAnimatedTransformList;
   typedef mozilla::SVGStringList SVGStringList;
 
   // nsISupports
@@ -259,18 +259,18 @@ class SVGElement : public SVGElementBase  // nsIContent
     return nullptr;
   }
   /**
-   * Get the nsSVGAnimatedTransformList for this element.
+   * Get the SVGAnimatedTransformList for this element.
    *
    * Despite the fact that animated transform lists are used for a variety of
    * attributes, no SVG element uses more than one.
    *
    * It's relatively uncommon for elements to have their transform attribute
-   * set, so to save memory the nsSVGAnimatedTransformList is not allocated
+   * set, so to save memory the SVGAnimatedTransformList is not allocated
    * until the attribute is set/animated or its DOM wrapper is created. Callers
-   * that require the nsSVGAnimatedTransformList to be allocated and for this
+   * that require the SVGAnimatedTransformList to be allocated and for this
    * method to return non-null must pass the DO_ALLOCATE flag.
    */
-  virtual nsSVGAnimatedTransformList* GetAnimatedTransformList(
+  virtual SVGAnimatedTransformList* GetAnimatedTransformList(
       uint32_t aFlags = 0) {
     return nullptr;
   }

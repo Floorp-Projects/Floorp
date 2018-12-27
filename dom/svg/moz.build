@@ -20,7 +20,6 @@ EXPORTS += [
 ]
 
 EXPORTS.mozilla.dom += [
-    'nsSVGAnimatedTransformList.h',
     'SVGAElement.h',
     'SVGAngle.h',
     'SVGAnimatedAngle.h',
@@ -124,7 +123,6 @@ UNIFIED_SOURCES += [
     'DOMSVGTransformList.cpp',
     'nsISVGPoint.cpp',
     'nsSVGAngle.cpp',
-    'nsSVGAnimatedTransformList.cpp',
     'nsSVGBoolean.cpp',
     'nsSVGClass.cpp',
     'nsSVGEnum.cpp',
@@ -152,6 +150,7 @@ UNIFIED_SOURCES += [
     'SVGAnimatedPreserveAspectRatio.cpp',
     'SVGAnimatedRect.cpp',
     'SVGAnimatedString.cpp',
+    'SVGAnimatedTransformList.cpp',
     'SVGAnimateElement.cpp',
     'SVGAnimateMotionElement.cpp',
     'SVGAnimateTransformElement.cpp',

@@ -25,7 +25,7 @@ class SVGTransform;
 }  // namespace dom
 
 /**
- * Class nsSVGAnimatedTransformList
+ * Class SVGAnimatedTransformList
  *
  * This class is very different to the SVG DOM interface of the same name found
  * in the SVG specification. This is a lightweight internal class - see
@@ -38,13 +38,13 @@ class SVGTransform;
  * DOMSVGAnimatedTransformList::InternalBaseValListWillChangeTo) so that their
  * consumers don't need to concern themselves with that.
  */
-class nsSVGAnimatedTransformList {
+class SVGAnimatedTransformList {
   // friends so that they can get write access to mBaseVal
   friend class dom::SVGTransform;
   friend class DOMSVGTransformList;
 
  public:
-  nsSVGAnimatedTransformList()
+  SVGAnimatedTransformList()
       : mIsAttrSet(false), mRequiresFrameReconstruction(true) {}
 
   /**
@@ -123,7 +123,7 @@ class nsSVGAnimatedTransformList {
 
   struct SMILAnimatedTransformList : public nsISMILAttr {
    public:
-    SMILAnimatedTransformList(nsSVGAnimatedTransformList* aVal,
+    SMILAnimatedTransformList(SVGAnimatedTransformList* aVal,
                               dom::SVGElement* aSVGElement)
         : mVal(aVal), mElement(aSVGElement) {}
 
@@ -144,7 +144,7 @@ class nsSVGAnimatedTransformList {
     // These will stay alive because a nsISMILAttr only lives as long
     // as the Compositing step, and DOM elements don't get a chance to
     // die during that.
-    nsSVGAnimatedTransformList* mVal;
+    SVGAnimatedTransformList* mVal;
     dom::SVGElement* mElement;
   };
 };

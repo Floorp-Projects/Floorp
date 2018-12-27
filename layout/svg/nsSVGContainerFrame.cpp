@@ -14,7 +14,7 @@
 #include "SVGObserverUtils.h"
 #include "SVGElement.h"
 #include "nsSVGUtils.h"
-#include "nsSVGAnimatedTransformList.h"
+#include "SVGAnimatedTransformList.h"
 #include "SVGTextFrame.h"
 
 using namespace mozilla;
@@ -209,7 +209,7 @@ bool nsSVGDisplayContainerFrame::IsSVGTransformed(
   // mContent could be a XUL element so check for an SVG element before casting
   if (mContent->IsSVGElement()) {
     SVGElement* content = static_cast<SVGElement*>(GetContent());
-    nsSVGAnimatedTransformList* transformList =
+    SVGAnimatedTransformList* transformList =
         content->GetAnimatedTransformList();
     if ((transformList && transformList->HasTransform()) ||
         content->GetAnimateMotionTransform()) {

@@ -14,7 +14,7 @@
 #include "SVGElement.h"
 #include "nsSVGViewBox.h"
 #include "SVGAnimatedPreserveAspectRatio.h"
-#include "nsSVGAnimatedTransformList.h"
+#include "SVGAnimatedTransformList.h"
 
 class nsSVGPatternFrame;
 
@@ -51,7 +51,7 @@ class SVGPatternElement final : public SVGPatternElementBase {
   // nsSVGSVGElement methods:
   virtual bool HasValidDimensions() const override;
 
-  virtual mozilla::nsSVGAnimatedTransformList* GetAnimatedTransformList(
+  virtual mozilla::SVGAnimatedTransformList* GetAnimatedTransformList(
       uint32_t aFlags = 0) override;
   virtual nsStaticAtom* GetTransformListAttrName() const override {
     return nsGkAtoms::patternTransform;
@@ -84,7 +84,7 @@ class SVGPatternElement final : public SVGPatternElementBase {
   nsSVGEnum mEnumAttributes[2];
   static EnumInfo sEnumInfo[2];
 
-  nsAutoPtr<mozilla::nsSVGAnimatedTransformList> mPatternTransform;
+  nsAutoPtr<mozilla::SVGAnimatedTransformList> mPatternTransform;
 
   enum { HREF, XLINK_HREF };
   nsSVGString mStringAttributes[2];

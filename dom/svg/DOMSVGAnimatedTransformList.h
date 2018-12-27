@@ -17,7 +17,7 @@
 namespace mozilla {
 
 class DOMSVGTransformList;
-class nsSVGAnimatedTransformList;
+class SVGAnimatedTransformList;
 
 namespace dom {
 
@@ -25,7 +25,7 @@ namespace dom {
  * Class DOMSVGAnimatedTransformList
  *
  * This class is used to create the DOM tearoff objects that wrap internal
- * nsSVGAnimatedTransformList objects.
+ * SVGAnimatedTransformList objects.
  *
  * See the architecture comment in DOMSVGAnimatedLengthList.h (that's
  * LENGTH list). The comment for that class largly applies to this one too
@@ -48,25 +48,25 @@ class DOMSVGAnimatedTransformList final : public nsWrapperCache {
 
   /**
    * Factory method to create and return a DOMSVGAnimatedTransformList wrapper
-   * for a given internal nsSVGAnimatedTransformList object. The factory takes
+   * for a given internal SVGAnimatedTransformList object. The factory takes
    * care of caching the object that it returns so that the same object can be
-   * returned for the given nsSVGAnimatedTransformList each time it is
+   * returned for the given SVGAnimatedTransformList each time it is
    * requested. The cached object is only removed from the cache when it is
    * destroyed due to there being no more references to it or to any of its
    * descendant objects. If that happens, any subsequent call requesting the DOM
-   * wrapper for the nsSVGAnimatedTransformList will naturally result in a new
+   * wrapper for the SVGAnimatedTransformList will naturally result in a new
    * DOMSVGAnimatedTransformList being returned.
    */
   static already_AddRefed<DOMSVGAnimatedTransformList> GetDOMWrapper(
-      nsSVGAnimatedTransformList* aList, SVGElement* aElement);
+      SVGAnimatedTransformList* aList, SVGElement* aElement);
 
   /**
    * This method returns the DOMSVGAnimatedTransformList wrapper for an internal
-   * nsSVGAnimatedTransformList object if it currently has a wrapper. If it does
+   * SVGAnimatedTransformList object if it currently has a wrapper. If it does
    * not, then nullptr is returned.
    */
   static DOMSVGAnimatedTransformList* GetDOMWrapperIfExists(
-      nsSVGAnimatedTransformList* aList);
+      SVGAnimatedTransformList* aList);
 
   /**
    * Called by internal code to notify us when we need to sync the length of
@@ -108,8 +108,8 @@ class DOMSVGAnimatedTransformList final : public nsWrapperCache {
   ~DOMSVGAnimatedTransformList();
 
   /// Get a reference to this DOM wrapper object's internal counterpart.
-  nsSVGAnimatedTransformList& InternalAList();
-  const nsSVGAnimatedTransformList& InternalAList() const;
+  SVGAnimatedTransformList& InternalAList();
+  const SVGAnimatedTransformList& InternalAList() const;
 
   // Weak refs to our DOMSVGTransformList baseVal/animVal objects. These objects
   // are friends and take care of clearing these pointers when they die, making

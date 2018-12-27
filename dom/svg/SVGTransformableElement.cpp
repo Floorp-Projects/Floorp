@@ -138,10 +138,10 @@ void SVGTransformableElement::SetAnimateMotionTransform(
   }
 }
 
-nsSVGAnimatedTransformList* SVGTransformableElement::GetAnimatedTransformList(
+SVGAnimatedTransformList* SVGTransformableElement::GetAnimatedTransformList(
     uint32_t aFlags) {
   if (!mTransforms && (aFlags & DO_ALLOCATE)) {
-    mTransforms = new nsSVGAnimatedTransformList();
+    mTransforms = new SVGAnimatedTransformList();
   }
   return mTransforms;
 }
@@ -241,7 +241,7 @@ already_AddRefed<SVGMatrix> SVGTransformableElement::GetTransformToElement(
 
 /* static */ gfxMatrix SVGTransformableElement::GetUserToParentTransform(
     const gfx::Matrix* aAnimateMotionTransform,
-    const nsSVGAnimatedTransformList* aTransforms) {
+    const SVGAnimatedTransformList* aTransforms) {
   gfxMatrix result;
 
   if (aAnimateMotionTransform) {

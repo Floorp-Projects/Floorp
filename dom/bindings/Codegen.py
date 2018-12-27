@@ -11406,7 +11406,7 @@ class CGDOMJSProxyHandler_getOwnPropDescriptor(ClassMethod):
             }
             getIndexed = fill(
                 """
-                uint32_t index = GetArrayIndexFromId(cx, id);
+                uint32_t index = GetArrayIndexFromId(id);
                 if (IsArrayIndex(index)) {
                   $*{callGetter}
                 }
@@ -11511,7 +11511,7 @@ class CGDOMJSProxyHandler_defineProperty(ClassMethod):
         if indexedSetter:
             set += fill(
                 """
-                uint32_t index = GetArrayIndexFromId(cx, id);
+                uint32_t index = GetArrayIndexFromId(id);
                 if (IsArrayIndex(index)) {
                   *defined = true;
                   // https://heycam.github.io/webidl/#legacy-platform-object-defineownproperty
@@ -11533,7 +11533,7 @@ class CGDOMJSProxyHandler_defineProperty(ClassMethod):
             # do anything special for Xrays here.
             set += dedent(
                 """
-                if (IsArrayIndex(GetArrayIndexFromId(cx, id))) {
+                if (IsArrayIndex(GetArrayIndexFromId(id))) {
                   *defined = true;
                   return opresult.failNoIndexedSetter();
                 }
@@ -11688,7 +11688,7 @@ class CGDOMJSProxyHandler_delete(ClassMethod):
         if indexedBody is not None:
             delete += fill(
                 """
-                uint32_t index = GetArrayIndexFromId(cx, id);
+                uint32_t index = GetArrayIndexFromId(id);
                 if (IsArrayIndex(index)) {
                   bool deleteSucceeded;
                   $*{indexedBody}
@@ -11844,7 +11844,7 @@ class CGDOMJSProxyHandler_hasOwn(ClassMethod):
         if self.descriptor.supportsIndexedProperties():
             indexed = fill(
                 """
-                uint32_t index = GetArrayIndexFromId(cx, id);
+                uint32_t index = GetArrayIndexFromId(id);
                 if (IsArrayIndex(index)) {
                   bool found = false;
                   $*{presenceChecker}
@@ -11947,7 +11947,7 @@ class CGDOMJSProxyHandler_get(ClassMethod):
         if self.descriptor.supportsIndexedProperties():
             getIndexedOrExpando = fill(
                 """
-                uint32_t index = GetArrayIndexFromId(cx, id);
+                uint32_t index = GetArrayIndexFromId(id);
                 if (IsArrayIndex(index)) {
                   $*{callGetter}
                   // Even if we don't have this index, we don't forward the
@@ -12039,7 +12039,7 @@ class CGDOMJSProxyHandler_setCustom(ClassMethod):
         if indexedSetter is not None:
             setIndexed = fill(
                 """
-                uint32_t index = GetArrayIndexFromId(cx, id);
+                uint32_t index = GetArrayIndexFromId(id);
                 if (IsArrayIndex(index)) {
                   $*{callSetter}
                   *done = true;

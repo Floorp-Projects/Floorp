@@ -10,7 +10,7 @@
 #include "mozilla/dom/SVGMatrix.h"
 #include "mozilla/dom/SVGTransformBinding.h"
 #include "nsError.h"
-#include "nsSVGAnimatedTransformList.h"
+#include "SVGAnimatedTransformList.h"
 #include "nsSVGAttrTearoffTable.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/FloatingPoint.h"
@@ -282,7 +282,7 @@ void SVGTransform::RemovingFromList() {
 }
 
 nsSVGTransform& SVGTransform::InternalItem() {
-  nsSVGAnimatedTransformList* alist = Element()->GetAnimatedTransformList();
+  SVGAnimatedTransformList* alist = Element()->GetAnimatedTransformList();
   return mIsAnimValItem && alist->mAnimVal ? (*alist->mAnimVal)[mListIndex]
                                            : alist->mBaseVal[mListIndex];
 }
@@ -293,7 +293,7 @@ const nsSVGTransform& SVGTransform::InternalItem() const {
 
 #ifdef DEBUG
 bool SVGTransform::IndexIsValid() {
-  nsSVGAnimatedTransformList* alist = Element()->GetAnimatedTransformList();
+  SVGAnimatedTransformList* alist = Element()->GetAnimatedTransformList();
   return (mIsAnimValItem && mListIndex < alist->GetAnimValue().Length()) ||
          (!mIsAnimValItem && mListIndex < alist->GetBaseValue().Length());
 }

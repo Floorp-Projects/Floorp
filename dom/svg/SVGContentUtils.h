@@ -25,7 +25,7 @@ class nsStyleCoord;
 
 namespace mozilla {
 class ComputedStyle;
-class nsSVGAnimatedTransformList;
+class SVGAnimatedTransformList;
 class SVGAnimatedPreserveAspectRatio;
 class SVGContextPaint;
 class SVGPreserveAspectRatio;

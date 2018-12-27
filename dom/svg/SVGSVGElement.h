@@ -36,7 +36,7 @@ class SVGView {
   nsSVGEnum mZoomAndPan;
   nsSVGViewBox mViewBox;
   SVGAnimatedPreserveAspectRatio mPreserveAspectRatio;
-  nsAutoPtr<nsSVGAnimatedTransformList> mTransforms;
+  nsAutoPtr<SVGAnimatedTransformList> mTransforms;
 };
 
 class DOMSVGTranslatePoint final : public nsISVGPoint {
@@ -149,7 +149,7 @@ class SVGSVGElement final : public SVGSVGElementBase {
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent) override;
   virtual void UnbindFromTree(bool aDeep, bool aNullParent) override;
-  virtual nsSVGAnimatedTransformList* GetAnimatedTransformList(
+  virtual SVGAnimatedTransformList* GetAnimatedTransformList(
       uint32_t aFlags = 0) override;
 
   // SVGSVGElement methods:
@@ -220,7 +220,7 @@ class SVGSVGElement final : public SVGSVGElementBase {
   virtual float GetCurrentScale() const override { return mCurrentScale; }
 
   virtual const nsSVGViewBox& GetViewBoxInternal() const override;
-  virtual nsSVGAnimatedTransformList* GetTransformInternal() const override;
+  virtual SVGAnimatedTransformList* GetTransformInternal() const override;
 
   virtual EnumAttributesInfo GetEnumInfo() override;
 

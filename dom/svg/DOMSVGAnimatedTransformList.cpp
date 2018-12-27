@@ -6,14 +6,14 @@
 
 #include "DOMSVGAnimatedTransformList.h"
 #include "DOMSVGTransformList.h"
-#include "nsSVGAnimatedTransformList.h"
+#include "SVGAnimatedTransformList.h"
 #include "nsSVGAttrTearoffTable.h"
 #include "mozilla/dom/SVGAnimatedTransformListBinding.h"
 
 namespace mozilla {
 namespace dom {
 
-static nsSVGAttrTearoffTable<nsSVGAnimatedTransformList,
+static nsSVGAttrTearoffTable<SVGAnimatedTransformList,
                              DOMSVGAnimatedTransformList>
     sSVGAnimatedTransformListTearoffTable;
 
@@ -46,7 +46,7 @@ already_AddRefed<DOMSVGTransformList> DOMSVGAnimatedTransformList::AnimVal() {
 }
 
 /* static */ already_AddRefed<DOMSVGAnimatedTransformList>
-DOMSVGAnimatedTransformList::GetDOMWrapper(nsSVGAnimatedTransformList* aList,
+DOMSVGAnimatedTransformList::GetDOMWrapper(SVGAnimatedTransformList* aList,
                                            SVGElement* aElement) {
   RefPtr<DOMSVGAnimatedTransformList> wrapper =
       sSVGAnimatedTransformListTearoffTable.GetTearoff(aList);
@@ -59,7 +59,7 @@ DOMSVGAnimatedTransformList::GetDOMWrapper(nsSVGAnimatedTransformList* aList,
 
 /* static */ DOMSVGAnimatedTransformList*
 DOMSVGAnimatedTransformList::GetDOMWrapperIfExists(
-    nsSVGAnimatedTransformList* aList) {
+    SVGAnimatedTransformList* aList) {
   return sSVGAnimatedTransformListTearoffTable.GetTearoff(aList);
 }
 
@@ -109,11 +109,11 @@ bool DOMSVGAnimatedTransformList::IsAnimating() const {
   return InternalAList().IsAnimating();
 }
 
-nsSVGAnimatedTransformList& DOMSVGAnimatedTransformList::InternalAList() {
+SVGAnimatedTransformList& DOMSVGAnimatedTransformList::InternalAList() {
   return *mElement->GetAnimatedTransformList();
 }
 
-const nsSVGAnimatedTransformList& DOMSVGAnimatedTransformList::InternalAList()
+const SVGAnimatedTransformList& DOMSVGAnimatedTransformList::InternalAList()
     const {
   return *mElement->GetAnimatedTransformList();
 }
