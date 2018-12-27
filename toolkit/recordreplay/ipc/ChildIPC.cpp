@@ -58,26 +58,28 @@ static FileHandle gCheckpointReadFd;
 
 // Copy of the introduction message we got from the middleman. This is saved on
 // receipt and then processed during InitRecordingOrReplayingProcess.
-static IntroductionMessage* gIntroductionMessage;
+static UniquePtr<IntroductionMessage, Message::FreePolicy> gIntroductionMessage;
 
 // When recording, whether developer tools server code runs in the middleman.
 static bool gDebuggerRunsInMiddleman;
 
 // Any response received to the last MiddlemanCallRequest message.
-static MiddlemanCallResponseMessage* gCallResponseMessage;
+static UniquePtr<MiddlemanCallResponseMessage, Message::FreePolicy>
+  gCallResponseMessage;
 
 // Whether some thread has sent a MiddlemanCallRequest and is waiting for
 // gCallResponseMessage to be filled in.
 static bool gWaitingForCallResponse;
 
 // Processing routine for incoming channel messages.
-static void ChannelMessageHandler(Message* aMsg) {
+static void ChannelMessageHandler(Message::UniquePtr aMsg) {
   MOZ_RELEASE_ASSERT(MainThreadShouldPause() || aMsg->CanBeSentWhileUnpaused());
 
   switch (aMsg->mType) {
     case MessageType::Introduction: {
       MOZ_RELEASE_ASSERT(!gIntroductionMessage);
-      gIntroductionMessage = (IntroductionMessage*)aMsg->Clone();
+      gIntroductionMessage.reset(
+          static_cast<IntroductionMessage*>(aMsg.release()));
       break;
     }
     case MessageType::CreateCheckpoint: {
@@ -177,16 +179,14 @@ static void ChannelMessageHandler(Message* aMsg) {
       MonitorAutoLock lock(*gMonitor);
       MOZ_RELEASE_ASSERT(gWaitingForCallResponse);
       MOZ_RELEASE_ASSERT(!gCallResponseMessage);
-      gCallResponseMessage = (MiddlemanCallResponseMessage*)aMsg;
-      aMsg = nullptr;  // Avoid freeing the message below.
+      gCallResponseMessage.reset(
+          static_cast<MiddlemanCallResponseMessage*>(aMsg.release()));
       gMonitor->NotifyAll();
       break;
     }
     default:
       MOZ_CRASH();
   }
-
-  free(aMsg);
 }
 
 // Main routine for a thread whose sole purpose is to listen to requests from
@@ -322,7 +322,6 @@ void InitRecordingOrReplayingProcess(int* aArgc, char*** aArgv) {
     free(msg);
   }
 
-  free(gIntroductionMessage);
   gIntroductionMessage = nullptr;
 
   // Some argument manipulation code expects a null pointer at the end.
@@ -703,7 +702,6 @@ void SendMiddlemanCallRequest(const char* aInputData, size_t aInputSize,
   aOutputData->append(gCallResponseMessage->BinaryData(),
                       gCallResponseMessage->BinaryDataSize());
 
-  free(gCallResponseMessage);
   gCallResponseMessage = nullptr;
   gWaitingForCallResponse = false;
 
