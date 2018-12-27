@@ -2101,6 +2101,8 @@ XML_GetBuffer(XML_Parser parser, int len)
       bufferPtr = buffer = newBuf;
 #endif  /* not defined XML_CONTEXT_BYTES */
     }
+    eventPtr = eventEndPtr = NULL;
+    positionPtr = NULL;
   }
   return bufferEnd;
 }
@@ -3064,26 +3066,29 @@ doContent(XML_Parser parser,
       *nextPtr = end;
       return XML_ERROR_NONE;
     case XML_TOK_DATA_CHARS:
-      if (characterDataHandler) {
-        if (MUST_CONVERT(enc, s)) {
-          for (;;) {
-            ICHAR *dataPtr = (ICHAR *)dataBuf;
-            XmlConvert(enc, &s, next, &dataPtr, (ICHAR *)dataBufEnd);
-            *eventEndPP = s;
-            characterDataHandler(handlerArg, dataBuf,
-                                 (int)(dataPtr - (ICHAR *)dataBuf));
-            if (s == next)
-              break;
-            *eventPP = s;
+      {
+        XML_CharacterDataHandler charDataHandler = characterDataHandler;
+        if (charDataHandler) {
+          if (MUST_CONVERT(enc, s)) {
+            for (;;) {
+              ICHAR *dataPtr = (ICHAR *)dataBuf;
+              const enum XML_Convert_Result convert_res = XmlConvert(enc, &s, next, &dataPtr, (ICHAR *)dataBufEnd);
+              *eventEndPP = s;
+              charDataHandler(handlerArg, dataBuf,
+                              (int)(dataPtr - (ICHAR *)dataBuf));
+              if ((convert_res == XML_CONVERT_COMPLETED) || (convert_res == XML_CONVERT_INPUT_INCOMPLETE))
+                break;
+              *eventPP = s;
+            }
           }
+          else
+            charDataHandler(handlerArg,
+                            (XML_Char *)s,
+                            (int)((XML_Char *)next - (XML_Char *)s));
         }
-        else
-          characterDataHandler(handlerArg,
-                               (XML_Char *)s,
-                               (int)((XML_Char *)next - (XML_Char *)s));
+        else if (defaultHandler)
+          reportDefault(parser, enc, s, next);
       }
-      else if (defaultHandler)
-        reportDefault(parser, enc, s, next);
       break;
     case XML_TOK_PI:
       if (!reportProcessingInstruction(parser, enc, s, next))
@@ -3396,6 +3401,8 @@ storeAtts(XML_Parser parser, const ENCODING *enc,
 
         ((XML_Char *)s)[-1] = 0;  /* clear flag */
         id = (ATTRIBUTE_ID *)lookup(parser, &dtd->attributeIds, s, 0);
+        if (!id || !id->prefix)
+          return XML_ERROR_NO_MEMORY;
         b = id->prefix->binding;
         if (!b)
           return XML_ERROR_UNBOUND_PREFIX;
@@ -3463,7 +3470,7 @@ storeAtts(XML_Parser parser, const ENCODING *enc,
 
 /* BEGIN MOZILLA CHANGE (Include xmlns attributes in attributes array) */
 #if 0
-        if (!--nPrefixes)
+        if (!--nPrefixes) {
 #else
         if (!--nPrefixes && !nXMLNSDeclarations) {
 #endif
@@ -3785,26 +3792,29 @@ doCdataSection(XML_Parser parser,
         reportDefault(parser, enc, s, next);
       break;
     case XML_TOK_DATA_CHARS:
-      if (characterDataHandler) {
-        if (MUST_CONVERT(enc, s)) {
-          for (;;) {
-            ICHAR *dataPtr = (ICHAR *)dataBuf;
-            XmlConvert(enc, &s, next, &dataPtr, (ICHAR *)dataBufEnd);
-            *eventEndPP = next;
-            characterDataHandler(handlerArg, dataBuf,
-                                 (int)(dataPtr - (ICHAR *)dataBuf));
-            if (s == next)
-              break;
-            *eventPP = s;
+      {
+        XML_CharacterDataHandler charDataHandler = characterDataHandler;
+        if (charDataHandler) {
+          if (MUST_CONVERT(enc, s)) {
+            for (;;) {
+              ICHAR *dataPtr = (ICHAR *)dataBuf;
+              const enum XML_Convert_Result convert_res = XmlConvert(enc, &s, next, &dataPtr, (ICHAR *)dataBufEnd);
+              *eventEndPP = next;
+              charDataHandler(handlerArg, dataBuf,
+                              (int)(dataPtr - (ICHAR *)dataBuf));
+              if ((convert_res == XML_CONVERT_COMPLETED) || (convert_res == XML_CONVERT_INPUT_INCOMPLETE))
+                break;
+              *eventPP = s;
+            }
           }
+          else
+            charDataHandler(handlerArg,
+                            (XML_Char *)s,
+                            (int)((XML_Char *)next - (XML_Char *)s));
         }
-        else
-          characterDataHandler(handlerArg,
-                               (XML_Char *)s,
-                               (int)((XML_Char *)next - (XML_Char *)s));
+        else if (defaultHandler)
+          reportDefault(parser, enc, s, next);
       }
-      else if (defaultHandler)
-        reportDefault(parser, enc, s, next);
       break;
     case XML_TOK_INVALID:
       *eventPP = next;
@@ -5371,6 +5381,8 @@ processInternalEntity(XML_Parser parser, ENTITY *entity,
   openEntity->internalEventEndPtr = NULL;
   textStart = (char *)entity->textPtr;
   textEnd = (char *)(entity->textPtr + entity->textLen);
+  /* Set a safe default value in case 'next' does not get set */
+  next = textStart;
 
 #ifdef XML_DTD
   if (entity->is_param) {
@@ -5438,6 +5450,8 @@ internalEntityProcessor(XML_Parser parser,
   entity = openEntity->entity;
   textStart = ((char *)entity->textPtr) + entity->processed;
   textEnd = (char *)(entity->textPtr + entity->textLen);
+  /* Set a safe default value in case 'next' does not get set */
+  next = textStart;
 
 #ifdef XML_DTD
   if (entity->is_param) {
@@ -6055,6 +6069,8 @@ getAttributeId(XML_Parser parser, const ENCODING *enc,
             return NULL;
           id->prefix = (PREFIX *)lookup(parser, &dtd->prefixes, poolStart(&dtd->pool),
                                         sizeof(PREFIX));
+          if (!id->prefix)
+            return NULL;
           if (id->prefix->name == poolStart(&dtd->pool))
             poolFinish(&dtd->pool);
           else
@@ -6406,7 +6422,6 @@ dtdCopy(XML_Parser oldParser, DTD *newDtd, const DTD *oldDtd, const XML_Memory_H
       newE->defaultAtts = (DEFAULT_ATTRIBUTE *)
           ms->malloc_fcn(oldE->nDefaultAtts * sizeof(DEFAULT_ATTRIBUTE));
       if (!newE->defaultAtts) {
-        ms->free_fcn(newE);
         return 0;
       }
     }
