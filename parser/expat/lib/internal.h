@@ -71,3 +71,11 @@
 #define inline
 #endif
 #endif
+
+#ifndef UNUSED_P
+# ifdef __GNUC__
+#  define UNUSED_P(p) UNUSED_ ## p __attribute__((__unused__))
+# else
+#  define UNUSED_P(p) UNUSED_ ## p
+# endif
+#endif
