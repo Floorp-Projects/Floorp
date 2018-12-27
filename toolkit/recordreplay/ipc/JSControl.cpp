@@ -153,15 +153,20 @@ static const char gPositionProperty[] = "position";
 
 JSObject* ExecutionPoint::Encode(JSContext* aCx) const {
   RootedObject obj(aCx, JS_NewObject(aCx, nullptr));
-  RootedObject position(aCx, mPosition.Encode(aCx));
-  if (!obj || !position ||
+  if (!obj ||
       !JS_DefineProperty(aCx, obj, gCheckpointProperty, (double)mCheckpoint,
                          JSPROP_ENUMERATE) ||
       !JS_DefineProperty(aCx, obj, gProgressProperty, (double)mProgress,
-                         JSPROP_ENUMERATE) ||
-      !JS_DefineProperty(aCx, obj, gPositionProperty, position,
                          JSPROP_ENUMERATE)) {
     return nullptr;
+  }
+  if (HasPosition()) {
+    RootedObject position(aCx, mPosition.Encode(aCx));
+    if (!position ||
+        !JS_DefineProperty(aCx, obj, gPositionProperty, position,
+                           JSPROP_ENUMERATE)) {
+      return nullptr;
+    }
   }
   return obj;
 }
@@ -172,9 +177,15 @@ bool ExecutionPoint::Decode(JSContext* aCx, HandleObject aObject) {
     return false;
   }
 
-  RootedObject positionObject(aCx, NonNullObject(aCx, v));
-  return positionObject && mPosition.Decode(aCx, positionObject) &&
-         GetNumberProperty(aCx, aObject, gCheckpointProperty, &mCheckpoint) &&
+  if (v.isUndefined()) {
+    MOZ_RELEASE_ASSERT(!HasPosition());
+  } else {
+    RootedObject positionObject(aCx, NonNullObject(aCx, v));
+    if (!positionObject || !mPosition.Decode(aCx, positionObject)) {
+      return false;
+    }
+  }
+  return GetNumberProperty(aCx, aObject, gCheckpointProperty, &mCheckpoint) &&
          GetNumberProperty(aCx, aObject, gProgressProperty, &mProgress);
 }
 
