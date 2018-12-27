@@ -1599,7 +1599,7 @@ initScan(const ENCODING * const *encodingTable,
 {
   const ENCODING **encPtr;
 
-  if (ptr == end)
+  if (ptr >= end)
     return XML_TOK_NONE;
   encPtr = enc->encPtr;
   if (ptr + 1 == end) {
