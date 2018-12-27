@@ -21,8 +21,8 @@ function* test(testDriver) {
   var config = getHitTestConfig();
   var utils = config.utils;
 
-  var scroller = document.getElementById('scroller');
-  var apzaware = document.getElementById('apzaware');
+  var scroller = document.getElementById("scroller");
+  var apzaware = document.getElementById("apzaware");
 
   checkHitResult(hitTest(centerOf(scroller)),
                  APZHitResultFlags.VISIBLE | APZHitResultFlags.DISPATCH_TO_CONTENT,

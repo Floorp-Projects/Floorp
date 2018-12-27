@@ -76,12 +76,12 @@ function parseDisplayList(lines) {
     var lastSpace = -1;
     var lastFieldStart = -1;
     for (var j = 0; j < rest.length; j++) {
-      if (rest.charAt(j) == '(') {
+      if (rest.charAt(j) == "(") {
         nesting++;
         if (nesting == 1) {
           startIndex = j;
         }
-      } else if (rest.charAt(j) == ')') {
+      } else if (rest.charAt(j) == ")") {
         nesting--;
         if (nesting == 0) {
           var name = rest.substring(lastSpace + 1, startIndex);
@@ -99,7 +99,7 @@ function parseDisplayList(lines) {
             layerObject[name] = value;
           }
         }
-      } else if (nesting == 0 && rest.charAt(j) == ' ') {
+      } else if (nesting == 0 && rest.charAt(j) == " ") {
         lastSpace = j;
       }
     }
@@ -109,7 +109,7 @@ function parseDisplayList(lines) {
 }
 
 function trim(s){ 
-  return ( s || '' ).replace( /^\s+|\s+$/g, '' ); 
+  return ( s || "" ).replace( /^\s+|\s+$/g, "" ); 
 }
 
 function getDataURI(str) {
@@ -220,7 +220,7 @@ function parseLayers(layersDumpLines) {
     str = trim(str);
 
     // Something like '< (x=0, y=0, w=2842, h=158); (x=0, y=1718, w=2842, h=500); >'
-    if (str.charAt(0) != '<' || str.charAt(str.length - 1) != '>') {
+    if (str.charAt(0) != "<" || str.charAt(str.length - 1) != ">") {
       return null;
     }
 
@@ -336,12 +336,12 @@ function parseLayers(layersDumpLines) {
       var nesting = 0;
       var startIndex;
       for (var j = 0; j < rest.length; j++) {
-        if (rest.charAt(j) == '[') {
+        if (rest.charAt(j) == "[") {
           nesting++;
           if (nesting == 1) {
             startIndex = j;
           }
-        } else if (rest.charAt(j) == ']') {
+        } else if (rest.charAt(j) == "]") {
           nesting--;
           if (nesting == 0) {
             fields.push(rest.substring(startIndex + 1, j));
@@ -391,7 +391,7 @@ function parseLayers(layersDumpLines) {
           layerObject[fieldName].type = "color";
           continue;
         }
-        if (rest[0] == '{' && rest[rest.length - 1] == '}') {
+        if (rest[0] == "{" && rest[rest.length - 1] == "}") {
           var object = {};
           parseProperties(rest.substring(1, rest.length - 2).trim(), object);
           layerObject[fieldName] = object;
@@ -405,21 +405,21 @@ function parseLayers(layersDumpLines) {
     }
     parseProperties(rest, layerObject);
 
-    if (!layerObject['shadow-transform']) {
+    if (!layerObject["shadow-transform"]) {
       // No shadow transform = identify
-      layerObject['shadow-transform'] = [[1, 0], [0, 1], [0, 0]];
+      layerObject["shadow-transform"] = [[1, 0], [0, 1], [0, 0]];
     }
 
     // Compute screenTransformX/screenTransformY
     // TODO Fully support transforms
-    if (layerObject['shadow-transform'] && layerObject['transform']) {
-      layerObject['screen-transform'] = [layerObject['shadow-transform'][2][0], layerObject['shadow-transform'][2][1]];
+    if (layerObject["shadow-transform"] && layerObject["transform"]) {
+      layerObject["screen-transform"] = [layerObject["shadow-transform"][2][0], layerObject["shadow-transform"][2][1]];
       var currIndentation = indentation - 1;
       while (currIndentation >= 0) {
-        var transform = objectAtIndentation[currIndentation]['shadow-transform'] || objectAtIndentation[currIndentation]['transform'];
+        var transform = objectAtIndentation[currIndentation]["shadow-transform"] || objectAtIndentation[currIndentation]["transform"];
         if (transform) {
-          layerObject['screen-transform'][0] += transform[2][0];
-          layerObject['screen-transform'][1] += transform[2][1];
+          layerObject["screen-transform"][0] += transform[2][0];
+          layerObject["screen-transform"][1] += transform[2][1];
         }
         currIndentation--;
       }
@@ -597,9 +597,9 @@ function populateLayers(root, displayList, pane, previewParent, hasSeenRoot, con
         hasImg = true;
         var offsetX = 0;
         var offsetY = 0;
-        if (root.contentHostProp && root.contentHostProp['buffer-rect']) {
-          offsetX = root.contentHostProp['buffer-rect'][0];
-          offsetY = root.contentHostProp['buffer-rect'][1];
+        if (root.contentHostProp && root.contentHostProp["buffer-rect"]) {
+          offsetX = root.contentHostProp["buffer-rect"][0];
+          offsetY = root.contentHostProp["buffer-rect"][1];
         }
         var surfaceImgElem = createElement("img", {
           src: getDataURI(root.surfaceURI),

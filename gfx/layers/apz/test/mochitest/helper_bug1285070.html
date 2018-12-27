@@ -17,21 +17,21 @@
 
       eventsList.forEach((eventName) => {
         eventsCount[eventName] = 0;
-        document.getElementById('div1').addEventListener(eventName, (event) => {
+        document.getElementById("div1").addEventListener(eventName, (event) => {
           ++eventsCount[event.type];
           ok(true, "Received event " + event.type);
         });
       });
 
       document.addEventListener("click", (event) => {
-        is(event.target, document.getElementById('div1'), "Clicked on div (at " + event.clientX + "," + event.clientY + ")");
+        is(event.target, document.getElementById("div1"), "Clicked on div (at " + event.clientX + "," + event.clientY + ")");
         for (var key in eventsCount) {
           is(eventsCount[key], 1, "Event " + key + " should be generated once");
         }
         subtestDone();
       });
 
-      synthesizeNativeTap(document.getElementById('div1'), 100, 100);
+      synthesizeNativeTap(document.getElementById("div1"), 100, 100);
     }
 
     waitUntilApzStable().then(test);

@@ -586,7 +586,7 @@ function getAsyncScrollOffsets(aPaintsToIgnore) {
 
     ok(rcd.children.length == 1, "Root content APZC has exactly one child");
     var scroll = rcd.children[0].asyncScrollOffset;
-    var pieces = scroll.replace(/[()\s]+/g, '').split(',');
+    var pieces = scroll.replace(/[()\s]+/g, "").split(",");
     is(pieces.length, 2, "expected string of form (x,y)");
     offsets.push({ x: parseInt(pieces[0]),
                    y: parseInt(pieces[1]) });
@@ -602,7 +602,7 @@ function* test(testDriver) {
   // and discard those later.
   var framesToSkip = SpecialPowers.getDOMWindowUtils(window).getCompositorAPZTestData().paints.length;
 
-  var elm = document.getElementsByClassName('inner')[0];
+  var elm = document.getElementsByClassName("inner")[0];
   // Set a zero-margin displayport to ensure that the element is async-scrollable
   // otherwise on Fennec it is not
   utils.setDisplayPortMarginsForElement(0, 0, 0, 0, elm, 0);
@@ -624,7 +624,7 @@ function* test(testDriver) {
   // interruptible reflow. That reflow *will* be interrupted (because of the flag
   // we set above), and we should end up with a transient 0,0 scroll offset
   // being sent to the compositor.
-  elm.parentNode.classList.add('contentBefore');
+  elm.parentNode.classList.add("contentBefore");
   utils.advanceTimeAndRefresh(0);
   // On android, and maybe non-e10s platforms generally, we need to manually
   // kick the paint to send the layer transaction to the compositor.

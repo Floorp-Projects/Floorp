@@ -155,7 +155,7 @@
 <pre id="test">
 <script type="application/javascript">
 function* test(testDriver) {
-  var elm = document.getElementsByClassName('inner')[0];
+  var elm = document.getElementsByClassName("inner")[0];
   elm.scrollTop = 0;
   yield flushApzRepaints(testDriver);
 
@@ -178,11 +178,11 @@ function* test(testDriver) {
   // Register the listener that triggers the frame reconstruction
   elm.onscroll = function() {
     // Do the reconstruction
-    elm.parentNode.classList.add('contentBefore');
+    elm.parentNode.classList.add("contentBefore");
     frameReconstructionTriggered++;
     // schedule a thing to undo the changes above
     setTimeout(function() {
-      elm.parentNode.classList.remove('contentBefore');
+      elm.parentNode.classList.remove("contentBefore");
     }, 0);
   }
 

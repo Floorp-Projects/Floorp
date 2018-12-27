@@ -12,7 +12,7 @@
 var touchdownTime;
 
 function longPressLink() {
-  synthesizeNativeTouch(document.getElementById('b'), 5, 5, SpecialPowers.DOMWindowUtils.TOUCH_CONTACT, function() {
+  synthesizeNativeTouch(document.getElementById("b"), 5, 5, SpecialPowers.DOMWindowUtils.TOUCH_CONTACT, function() {
     dump("Finished synthesizing touch-start, waiting for events...\n");
   });
 }
@@ -21,7 +21,7 @@ var touchstartReceived = false;
 function recordEvent(e) {
   if (!touchstartReceived) {
     touchstartReceived = true;
-    is(e.type, 'touchstart', 'Got a touchstart');
+    is(e.type, "touchstart", "Got a touchstart");
     e.preventDefault(); // should be a no-op because it's a passive listener
     return;
   }
@@ -34,24 +34,24 @@ function recordEvent(e) {
   // not to wait for the content response, which is the desired behaviour, since
   // the touchstart listener was registered as a passive listener.
   if (getPlatform() == "windows") {
-    is(e.type, 'mouselongtap', 'Got a mouselongtap');
+    is(e.type, "mouselongtap", "Got a mouselongtap");
   } else {
-    is(e.type, 'contextmenu', 'Got a contextmenu');
+    is(e.type, "contextmenu", "Got a contextmenu");
   }
   e.preventDefault();
 
-  synthesizeNativeTouch(document.getElementById('b'), 5, 5, SpecialPowers.DOMWindowUtils.TOUCH_REMOVE, function() {
+  synthesizeNativeTouch(document.getElementById("b"), 5, 5, SpecialPowers.DOMWindowUtils.TOUCH_REMOVE, function() {
     dump("Finished synthesizing touch-end to clear state; finishing test...\n");
     subtestDone();
   });
 }
 
 // Note, not passing 'passive'.
-window.addEventListener('touchstart', recordEvent, { capture: true });
+window.addEventListener("touchstart", recordEvent, { capture: true });
 if (getPlatform() == "windows") {
-  SpecialPowers.addChromeEventListener('mouselongtap', recordEvent, true);
+  SpecialPowers.addChromeEventListener("mouselongtap", recordEvent, true);
 } else {
-  window.addEventListener('contextmenu', recordEvent, true);
+  window.addEventListener("contextmenu", recordEvent, true);
 }
 
 waitUntilApzStable()

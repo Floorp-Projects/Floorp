@@ -10,16 +10,16 @@
   <script type="application/javascript">
 
 function* test(testDriver) {
-  var v = document.getElementById('video');
-  var a = document.getElementById('audio');
-  var d = document.getElementById('div');
+  var v = document.getElementById("video");
+  var a = document.getElementById("audio");
+  var d = document.getElementById("div");
 
   document.body.ontouchstart = function(e) {
     if (e.target === v || e.target === a || e.target === d) {
-      e.target.style.display = 'none';
-      ok(true, 'Set display to none on #' + e.target.id);
+      e.target.style.display = "none";
+      ok(true, "Set display to none on #" + e.target.id);
     } else {
-      ok(false, 'Got unexpected touchstart on ' + e.target);
+      ok(false, "Got unexpected touchstart on " + e.target);
     }
     waitForAllPaints(testDriver);
   };
@@ -27,7 +27,7 @@ function* test(testDriver) {
   document.body.ontouchend = function(e) {
     if (e.target === v || e.target === a || e.target === d) {
       e.target._gotTouchend = true;
-      ok(true, 'Got touchend event on #' + e.target.id);
+      ok(true, "Got touchend event on #" + e.target.id);
     }
     testDriver();
   };
@@ -37,17 +37,17 @@ function* test(testDriver) {
   var pt = coordinatesRelativeToScreen(25, 5, v);
   yield utils.sendNativeTouchPoint(0, SpecialPowers.DOMWindowUtils.TOUCH_CONTACT, pt.x, pt.y, 1, 90, null);
   yield utils.sendNativeTouchPoint(0, SpecialPowers.DOMWindowUtils.TOUCH_REMOVE, pt.x, pt.y, 1, 90, null);
-  ok(v._gotTouchend, 'Touchend was received on video element');
+  ok(v._gotTouchend, "Touchend was received on video element");
 
   pt = coordinatesRelativeToScreen(25, 5, a);
   yield utils.sendNativeTouchPoint(0, SpecialPowers.DOMWindowUtils.TOUCH_CONTACT, pt.x, pt.y, 1, 90, null);
   yield utils.sendNativeTouchPoint(0, SpecialPowers.DOMWindowUtils.TOUCH_REMOVE, pt.x, pt.y, 1, 90, null);
-  ok(a._gotTouchend, 'Touchend was received on audio element');
+  ok(a._gotTouchend, "Touchend was received on audio element");
 
   pt = coordinatesRelativeToScreen(25, 5, d);
   yield utils.sendNativeTouchPoint(0, SpecialPowers.DOMWindowUtils.TOUCH_CONTACT, pt.x, pt.y, 1, 90, null);
   yield utils.sendNativeTouchPoint(0, SpecialPowers.DOMWindowUtils.TOUCH_REMOVE, pt.x, pt.y, 1, 90, null);
-  ok(d._gotTouchend, 'Touchend was received on div element');
+  ok(d._gotTouchend, "Touchend was received on div element");
 }
 
 waitUntilApzStable()
