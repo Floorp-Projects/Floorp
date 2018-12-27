@@ -12,7 +12,7 @@
 // Public methods
 
 nsSMILValue::nsSMILValue(const nsISMILType* aType)
-    : mType(nsSMILNullType::Singleton()) {
+    : mType(SMILNullType::Singleton()) {
   mU.mBool = false;
   if (!aType) {
     NS_ERROR("Trying to construct nsSMILValue with null mType pointer");
@@ -23,7 +23,7 @@ nsSMILValue::nsSMILValue(const nsISMILType* aType)
 }
 
 nsSMILValue::nsSMILValue(const nsSMILValue& aVal)
-    : mType(nsSMILNullType::Singleton()) {
+    : mType(SMILNullType::Singleton()) {
   InitAndCheckPostcondition(aVal.mType);
   mType->Assign(*this, aVal);
 }
@@ -47,7 +47,7 @@ nsSMILValue::nsSMILValue(nsSMILValue&& aVal)
       mType(aVal.mType) {
   // Leave aVal with a null type, so that it's safely destructible (and won't
   // mess with anything referenced by its union, which we've copied).
-  aVal.mType = nsSMILNullType::Singleton();
+  aVal.mType = SMILNullType::Singleton();
 }
 
 nsSMILValue& nsSMILValue::operator=(nsSMILValue&& aVal) {
@@ -62,7 +62,7 @@ nsSMILValue& nsSMILValue::operator=(nsSMILValue&& aVal) {
 
   // Leave aVal with a null type, so that it's safely destructible (and won't
   // mess with anything referenced by its union, which we've now copied).
-  aVal.mType = nsSMILNullType::Singleton();
+  aVal.mType = SMILNullType::Singleton();
 
   return *this;
 }

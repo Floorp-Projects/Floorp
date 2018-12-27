@@ -8,7 +8,7 @@
 #define NS_SMILVALUE_H_
 
 #include "nsISMILType.h"
-#include "nsSMILNullType.h"
+#include "SMILNullType.h"
 
 /**
  * Although objects of this type are generally only created on the stack and
@@ -21,7 +21,9 @@
  */
 class nsSMILValue {
  public:
-  nsSMILValue() : mU(), mType(nsSMILNullType::Singleton()) {}
+  typedef mozilla::SMILNullType SMILNullType;
+
+  nsSMILValue() : mU(), mType(SMILNullType::Singleton()) {}
   explicit nsSMILValue(const nsISMILType* aType);
   nsSMILValue(const nsSMILValue& aVal);
 
@@ -38,7 +40,7 @@ class nsSMILValue {
   bool operator==(const nsSMILValue& aVal) const;
   bool operator!=(const nsSMILValue& aVal) const { return !(*this == aVal); }
 
-  bool IsNull() const { return (mType == nsSMILNullType::Singleton()); }
+  bool IsNull() const { return (mType == SMILNullType::Singleton()); }
 
   nsresult Add(const nsSMILValue& aValueToAdd, uint32_t aCount = 1);
   nsresult SandwichAdd(const nsSMILValue& aValueToAdd);

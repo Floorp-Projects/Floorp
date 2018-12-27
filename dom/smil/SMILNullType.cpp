@@ -4,16 +4,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsSMILNullType.h"
+#include "SMILNullType.h"
 #include "nsSMILValue.h"
 #include "nsDebug.h"
 
-/*static*/ nsSMILNullType* nsSMILNullType::Singleton() {
-  static nsSMILNullType sSingleton;
+namespace mozilla {
+
+/*static*/ SMILNullType* SMILNullType::Singleton() {
+  static SMILNullType sSingleton;
   return &sSingleton;
 }
 
-nsresult nsSMILNullType::Assign(nsSMILValue& aDest,
+nsresult SMILNullType::Assign(nsSMILValue& aDest,
                                 const nsSMILValue& aSrc) const {
   MOZ_ASSERT(aDest.mType == aSrc.mType, "Incompatible SMIL types");
   MOZ_ASSERT(aSrc.mType == this, "Unexpected source type");
@@ -22,7 +24,7 @@ nsresult nsSMILNullType::Assign(nsSMILValue& aDest,
   return NS_OK;
 }
 
-bool nsSMILNullType::IsEqual(const nsSMILValue& aLeft,
+bool SMILNullType::IsEqual(const nsSMILValue& aLeft,
                              const nsSMILValue& aRight) const {
   MOZ_ASSERT(aLeft.mType == aRight.mType, "Incompatible SMIL types");
   MOZ_ASSERT(aLeft.mType == this, "Unexpected type for SMIL value");
@@ -30,23 +32,25 @@ bool nsSMILNullType::IsEqual(const nsSMILValue& aLeft,
   return true;  // All null-typed values are equivalent.
 }
 
-nsresult nsSMILNullType::Add(nsSMILValue& aDest, const nsSMILValue& aValueToAdd,
+nsresult SMILNullType::Add(nsSMILValue& aDest, const nsSMILValue& aValueToAdd,
                              uint32_t aCount) const {
   MOZ_ASSERT_UNREACHABLE("Adding NULL type");
   return NS_ERROR_FAILURE;
 }
 
-nsresult nsSMILNullType::ComputeDistance(const nsSMILValue& aFrom,
+nsresult SMILNullType::ComputeDistance(const nsSMILValue& aFrom,
                                          const nsSMILValue& aTo,
                                          double& aDistance) const {
   MOZ_ASSERT_UNREACHABLE("Computing distance for NULL type");
   return NS_ERROR_FAILURE;
 }
 
-nsresult nsSMILNullType::Interpolate(const nsSMILValue& aStartVal,
+nsresult SMILNullType::Interpolate(const nsSMILValue& aStartVal,
                                      const nsSMILValue& aEndVal,
                                      double aUnitDistance,
                                      nsSMILValue& aResult) const {
   MOZ_ASSERT_UNREACHABLE("Interpolating NULL type");
   return NS_ERROR_FAILURE;
 }
+
+}  // namespace mozilla
