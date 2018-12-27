@@ -138,3 +138,12 @@ def sorted_unique_list(*args):
     """Join one or more lists, and return a sorted list of unique members"""
     combined = set().union(*args)
     return sorted(combined)
+
+
+def release_level(project):
+    """
+    Whether this is a staging release or not.
+
+    :return basestring: One of "production" or "staging".
+    """
+    return 'production' if project in RELEASE_PROJECTS else 'staging'
