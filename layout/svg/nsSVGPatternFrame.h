@@ -20,8 +20,8 @@ class nsSVGViewBox;
 
 namespace mozilla {
 class SVGAnimatedPreserveAspectRatio;
+class SVGAnimatedTransformList;
 class SVGGeometryFrame;
-class nsSVGAnimatedTransformList;
 }  // namespace mozilla
 
 class nsSVGPatternFrame final : public nsSVGPaintServerFrame {
@@ -76,7 +76,7 @@ class nsSVGPatternFrame final : public nsSVGPaintServerFrame {
   uint16_t GetEnumValue(uint32_t aIndex) {
     return GetEnumValue(aIndex, mContent);
   }
-  mozilla::nsSVGAnimatedTransformList* GetPatternTransformList(
+  mozilla::SVGAnimatedTransformList* GetPatternTransformList(
       nsIContent* aDefault);
   gfxMatrix GetPatternTransform();
   const nsSVGViewBox& GetViewBox(nsIContent* aDefault);
