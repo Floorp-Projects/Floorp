@@ -52,3 +52,20 @@ export function endTruncateStr(str: any, size: number) {
 export function waitForMs(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
+
+export function downloadFile(data: string, fileName: string) {
+  const { body } = document;
+  if (!body) {
+    return;
+  }
+
+  const a = document.createElement("a");
+  body.appendChild(a);
+  a.className = "download-anchor";
+  a.href = window.URL.createObjectURL(
+    new Blob([data], { type: "text/javascript" })
+  );
+  a.setAttribute("download", fileName);
+  a.click();
+  body.removeChild(a);
+}

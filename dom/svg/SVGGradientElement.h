@@ -10,8 +10,8 @@
 #include "nsAutoPtr.h"
 #include "SVGAnimatedTransformList.h"
 #include "SVGElement.h"
-#include "nsSVGLength2.h"
 #include "nsSVGEnum.h"
+#include "nsSVGLength2.h"
 #include "nsSVGString.h"
 
 class nsSVGGradientFrame;

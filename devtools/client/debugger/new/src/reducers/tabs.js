@@ -9,7 +9,7 @@
  * @module reducers/tabs
  */
 
-import { createSelector } from "../utils/createSelector";
+import { createSelector } from "reselect";
 import { isOriginalId } from "devtools-source-map";
 import move from "lodash-move";
 
@@ -25,6 +25,7 @@ import {
 import type { Action } from "../actions/types";
 import type { SourcesState } from "./sources";
 import type { Source } from "../types";
+import type { Selector } from "./types";
 
 export type Tab = {
   url: string,
@@ -194,7 +195,7 @@ type OuterState = { tabs: TabList, sources: SourcesState };
 
 export const getTabs = (state: OuterState): TabList => state.tabs;
 
-export const getSourceTabs = createSelector(
+export const getSourceTabs: Selector<Tab[]> = createSelector(
   getTabs,
   getSources,
   getUrls,
@@ -202,7 +203,7 @@ export const getSourceTabs = createSelector(
     tabs.filter(tab => getTabWithOrWithoutUrl(tab, sources, urls))
 );
 
-export const getSourcesForTabs = createSelector(
+export const getSourcesForTabs: Selector<Source[]> = createSelector(
   getSourceTabs,
   getSources,
   getUrls,
