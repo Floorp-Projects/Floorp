@@ -68,7 +68,8 @@ class MediaEngineWebRTC : public MediaEngine {
 
  private:
   ~MediaEngineWebRTC() = default;
-  void EnumerateVideoDevices(uint64_t aWindowId, dom::MediaSourceEnum,
+  void EnumerateVideoDevices(uint64_t aWindowId,
+                             camera::CaptureEngine aCapEngine,
                              nsTArray<RefPtr<MediaDevice>>*);
   void EnumerateMicrophoneDevices(uint64_t aWindowId,
                                   nsTArray<RefPtr<MediaDevice>>*);
