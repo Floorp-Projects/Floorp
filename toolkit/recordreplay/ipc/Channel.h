@@ -76,8 +76,8 @@ namespace recordreplay {
                                                                \
   /* Add a breakpoint position to stop at. Because a single entry point is used for */ \
   /* calling into the ReplayDebugger after pausing, the set of breakpoints is simply */ \
-  /* a set of positions at which the child process should pause and send a HitBreakpoint */ \
-  /* message. */                                               \
+  /* a set of positions at which the child process should pause and send a */ \
+  /* HitExecutionPoint message. */                             \
   _Macro(AddBreakpoint)                                        \
                                                                \
   /* Clear all installed breakpoints. */                       \
@@ -126,10 +126,8 @@ namespace recordreplay {
   /* The child's graphics were repainted. */                   \
   _Macro(Paint)                                                \
                                                                \
-  /* Notify the middleman that a checkpoint or breakpoint was hit. */ \
-  /* The child will pause after sending these messages. */     \
-  _Macro(HitCheckpoint)                                        \
-  _Macro(HitBreakpoint)                                        \
+  /* Notify the middleman that the child has hit an execution point and paused. */ \
+  _Macro(HitExecutionPoint)                                    \
                                                                \
   /* Send a response to a DebuggerRequest message. */          \
   _Macro(DebuggerResponse)                                     \
@@ -381,28 +379,24 @@ struct PaintMessage : public Message {
         mHeight(aHeight) {}
 };
 
-struct HitCheckpointMessage : public Message {
-  uint32_t mCheckpointId;
+struct HitExecutionPointMessage : public Message {
+  // The point the child paused at.
+  js::ExecutionPoint mPoint;
+
+  // Whether the pause occurred due to hitting the end of the recording.
   bool mRecordingEndpoint;
 
-  // When recording, the amount of non-idle time taken to get to this
-  // checkpoint from the previous one.
+  // The amount of non-idle time taken to get to this pause from the last time
+  // the child paused.
   double mDurationMicroseconds;
 
-  HitCheckpointMessage(uint32_t aCheckpointId, bool aRecordingEndpoint,
-                       double aDurationMicroseconds)
-      : Message(MessageType::HitCheckpoint, sizeof(*this)),
-        mCheckpointId(aCheckpointId),
+  HitExecutionPointMessage(const js::ExecutionPoint& aPoint,
+                           bool aRecordingEndpoint,
+                           double aDurationMicroseconds)
+      : Message(MessageType::HitExecutionPoint, sizeof(*this)),
+        mPoint(aPoint),
         mRecordingEndpoint(aRecordingEndpoint),
         mDurationMicroseconds(aDurationMicroseconds) {}
-};
-
-struct HitBreakpointMessage : public Message {
-  bool mRecordingEndpoint;
-
-  explicit HitBreakpointMessage(bool aRecordingEndpoint)
-      : Message(MessageType::HitBreakpoint, sizeof(*this)),
-        mRecordingEndpoint(aRecordingEndpoint) {}
 };
 
 typedef EmptyMessage<MessageType::AlwaysMarkMajorCheckpoints>
