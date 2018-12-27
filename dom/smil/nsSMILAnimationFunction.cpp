@@ -9,7 +9,7 @@
 #include "mozilla/dom/SVGAnimationElement.h"
 #include "mozilla/Move.h"
 #include "nsISMILAttr.h"
-#include "nsSMILCSSValueType.h"
+#include "SMILCSSValueType.h"
 #include "nsSMILParserUtils.h"
 #include "SMILNullType.h"
 #include "nsSMILTimedElement.h"
@@ -341,7 +341,7 @@ nsresult nsSMILAnimationFunction::InterpolateResult(
   // Force discrete calcMode for visibility since StyleAnimationValue will
   // try to interpolate it using the special clamping behavior defined for
   // CSS.
-  if (nsSMILCSSValueType::PropertyFromValue(aValues[0]) ==
+  if (SMILCSSValueType::PropertyFromValue(aValues[0]) ==
       eCSSProperty_visibility) {
     calcMode = CALC_DISCRETE;
   }
@@ -425,7 +425,7 @@ nsresult nsSMILAnimationFunction::InterpolateResult(
 
       // For animation of CSS properties, normally when interpolating we perform
       // a zero-value fixup which means that empty values (values with type
-      // nsSMILCSSValueType but a null pointer value) are converted into
+      // SMILCSSValueType but a null pointer value) are converted into
       // a suitable zero value based on whatever they're being interpolated
       // with. For discrete animation, however, since we don't interpolate,
       // that never happens. In some rare cases, such as discrete non-additive
@@ -433,8 +433,8 @@ nsresult nsSMILAnimationFunction::InterpolateResult(
       // value so we need to manually perform the fixup.
       //
       // We could define a generic method for this on nsSMILValue but its faster
-      // and simpler to just special case nsSMILCSSValueType.
-      if (aResult.mType == &nsSMILCSSValueType::sSingleton) {
+      // and simpler to just special case SMILCSSValueType.
+      if (aResult.mType == &SMILCSSValueType::sSingleton) {
         // We have currently only ever encountered this case for the first
         // value of a by-animation (which has two values) and since we have no
         // way of testing other cases we just skip them (but assert if we
@@ -443,7 +443,7 @@ nsresult nsSMILAnimationFunction::InterpolateResult(
           MOZ_ASSERT(aResult.mU.mPtr, "The last value should not be empty");
         } else {
           // Base the type of the zero value on the next element in the series.
-          nsSMILCSSValueType::FinalizeValue(aResult, aValues[index + 1]);
+          SMILCSSValueType::FinalizeValue(aResult, aValues[index + 1]);
         }
       }
     }

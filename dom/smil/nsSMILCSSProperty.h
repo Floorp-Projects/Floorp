@@ -36,7 +36,7 @@ class nsSMILCSSProperty : public nsISMILAttr {
    * @param  aBaseComputedStyle  The ComputedStyle to use when getting the base
    *                             value. If this is nullptr and GetBaseValue is
    *                             called, an empty nsSMILValue initialized with
-   *                             the nsSMILCSSValueType will be returned.
+   *                             the SMILCSSValueType will be returned.
    */
   nsSMILCSSProperty(nsCSSPropertyID aPropID, mozilla::dom::Element* aElement,
                     mozilla::ComputedStyle* aBaseComputedStyle);
