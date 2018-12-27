@@ -790,6 +790,13 @@ NullHttpChannel::LogBlockedCORSRequest(const nsAString &aMessage,
 }
 
 NS_IMETHODIMP
+NullHttpChannel::LogMimeTypeMismatch(const nsACString &aMessageName,
+                                     bool aWarning, const nsAString &aURL,
+                                     const nsAString &aContentType) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 NullHttpChannel::SetReportResourceTiming(bool enabled) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

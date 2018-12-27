@@ -555,6 +555,14 @@ InterceptedHttpChannel::LogBlockedCORSRequest(const nsAString& aMessage,
 }
 
 NS_IMETHODIMP
+InterceptedHttpChannel::LogMimeTypeMismatch(const nsACString& aMessageName,
+                                            bool aWarning,
+                                            const nsAString& aURL,
+                                            const nsAString& aContentType) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 InterceptedHttpChannel::SetupFallbackChannel(const char* aFallbackKey) {
   // AppCache should not be used with service worker intercepted channels.
   // This should never be called.

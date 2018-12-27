@@ -169,6 +169,11 @@ child:
   // console.
   async LogBlockedCORSRequest(nsString message, nsCString category);
 
+  async LogMimeTypeMismatch(nsCString messageName,
+                            bool warning,
+                            nsString url,
+                            nsString contentType);
+
   async AttachStreamFilter(Endpoint<PStreamFilterParent> aEndpoint);
 
   // See ADivertableParentChannel::CancelDiversion
