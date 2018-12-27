@@ -106,7 +106,7 @@ bool BreakpointPosition::Decode(JSContext* aCx, HandleObject aObject) {
     return false;
   }
 
-  RootedString str(aCx, ToString(aCx, v));
+  RootedString str(aCx, ::ToString(aCx, v));
   for (size_t i = BreakpointPosition::Invalid + 1;
        i < BreakpointPosition::sKindCount; i++) {
     BreakpointPosition::Kind kind = (BreakpointPosition::Kind)i;
@@ -132,6 +132,13 @@ bool BreakpointPosition::Decode(JSContext* aCx, HandleObject aObject) {
   }
 
   return true;
+}
+
+void
+BreakpointPosition::ToString(nsCString& aStr) const
+{
+  aStr.AppendPrintf("{ Kind: %s, Script: %d, Offset: %d, Frame: %d }",
+                    KindString(), (int) mScript, (int) mOffset, (int) mFrameIndex);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -169,6 +176,17 @@ bool ExecutionPoint::Decode(JSContext* aCx, HandleObject aObject) {
   return positionObject && mPosition.Decode(aCx, positionObject) &&
          GetNumberProperty(aCx, aObject, gCheckpointProperty, &mCheckpoint) &&
          GetNumberProperty(aCx, aObject, gProgressProperty, &mProgress);
+}
+
+void
+ExecutionPoint::ToString(nsCString& aStr) const
+{
+  aStr.AppendPrintf("{ Checkpoint %d", (int) mCheckpoint);
+  if (HasPosition()) {
+    aStr.AppendPrintf(" Progress %llu Position ", mProgress);
+    mPosition.ToString(aStr);
+  }
+  aStr.AppendPrintf(" }");
 }
 
 ///////////////////////////////////////////////////////////////////////////////
