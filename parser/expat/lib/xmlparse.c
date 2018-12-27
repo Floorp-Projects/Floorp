@@ -5,6 +5,7 @@
 #include <stddef.h>
 #include <string.h>                     /* memset(), memcpy() */
 #include <assert.h>
+#include <limits.h>                     /* UINT_MAX */
 
 #define XML_BUILDING_EXPAT 1
 
@@ -1523,6 +1524,19 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
 /* BEGIN MOZILLA CHANGE (|result| has type XML_Status, not XML_Error) */
     enum XML_Status result;
 /* END MOZILLA CHANGE */
+    /* Detect overflow (a+b > MAX <==> b > MAX-a) */
+/* BEGIN MOZILLA CHANGE (len is signed, trying to compare it to an unsigned value) */
+#if 0
+    if (len > ((XML_Size)-1) / 2 - parseEndByteIndex) {
+#else
+    if ((XML_Size)len > ((XML_Size)-1) / 2 - parseEndByteIndex) {
+#endif
+/* END MOZILLA CHANGE */
+       errorCode = XML_ERROR_NO_MEMORY;
+       eventPtr = eventEndPtr = NULL;
+       processor = errorProcessor;
+       return XML_STATUS_ERROR;
+    }
     parseEndByteIndex += len;
     positionPtr = s;
     ps_finalBuffer = (XML_Bool)isFinal;
@@ -1565,49 +1579,22 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
     nLeftOver = s + len - end;
     if (nLeftOver) {
       if (buffer == NULL || nLeftOver > bufferLim - buffer) {
-/* BEGIN MOZILLA CHANGE (check for overflow) */
-#if 0
-        /* FIXME avoid integer overflow */
-        char *temp;
-        temp = (buffer == NULL
-                ? (char *)MALLOC(len * 2)
-                : (char *)REALLOC(buffer, len * 2));
-        if (temp == NULL) {
-          errorCode = XML_ERROR_NO_MEMORY;
-          return XML_STATUS_ERROR;
+        /* avoid _signed_ integer overflow */
+        char *temp = NULL;
+        const int bytesToAllocate = (int)((unsigned)len * 2U);
+        if (bytesToAllocate > 0) {
+          temp = (buffer == NULL
+                ? (char *)MALLOC(bytesToAllocate)
+                : (char *)REALLOC(buffer, bytesToAllocate));
         }
-        buffer = temp;
-        if (!buffer) {
+        if (temp == NULL) {
           errorCode = XML_ERROR_NO_MEMORY;
           eventPtr = eventEndPtr = NULL;
           processor = errorProcessor;
           return XML_STATUS_ERROR;
         }
-        bufferLim = buffer + len * 2;
-#else
-        char *temp;
-        int newLen = len * 2;
-        if (newLen < 0) {
-          errorCode = XML_ERROR_NO_MEMORY;
-          return XML_STATUS_ERROR;
-        }
-        temp = (buffer == NULL
-                ? (char *)MALLOC(newLen)
-                : (char *)REALLOC(buffer, newLen));
-        if (temp == NULL) {
-          errorCode = XML_ERROR_NO_MEMORY;
-          return XML_STATUS_ERROR;
-        }
         buffer = temp;
-        if (!buffer) {
-          errorCode = XML_ERROR_NO_MEMORY;
-          eventPtr = eventEndPtr = NULL;
-          processor = errorProcessor;
-          return XML_STATUS_ERROR;
-        }
-        bufferLim = buffer + newLen;
-#endif
-/* END MOZILLA CHANGE */
+        bufferLim = buffer + bytesToAllocate;
       }
       memcpy(buffer, end, nLeftOver);
     }
@@ -1702,7 +1689,8 @@ XML_GetBuffer(XML_Parser parser, int len)
   }
 
   if (len > bufferLim - bufferEnd) {
-    int neededSize = len + (int)(bufferEnd - bufferPtr);
+    /* Do not invoke signed arithmetic overflow: */
+    int neededSize = (int) ((unsigned)len + (unsigned)(bufferEnd - bufferPtr));
 /* BEGIN MOZILLA CHANGE (sanity check neededSize) */
     if (neededSize < 0) {
       errorCode = XML_ERROR_NO_MEMORY;
@@ -1736,7 +1724,8 @@ XML_GetBuffer(XML_Parser parser, int len)
       if (bufferSize == 0)
         bufferSize = INIT_BUFFER_SIZE;
       do {
-        bufferSize *= 2;
+        /* Do not invoke signed arithmetic overflow: */
+        bufferSize = (int) (2U * (unsigned) bufferSize);
 /* BEGIN MOZILLA CHANGE (prevent infinite loop on overflow) */
       } while (bufferSize < neededSize && bufferSize > 0);
 /* END MOZILLA CHANGE */
@@ -6306,6 +6295,35 @@ poolStoreString(STRING_POOL *pool, const ENCODING *enc,
   return pool->start;
 }
 
+static size_t
+poolBytesToAllocateFor(int blockSize)
+{
+  /* Unprotected math would be:
+  ** return offsetof(BLOCK, s) + blockSize * sizeof(XML_Char);
+  **
+  ** Detect overflow, avoiding _signed_ overflow undefined behavior
+  ** For a + b * c we check b * c in isolation first, so that addition of a
+  ** on top has no chance of making us accept a small non-negative number
+  */
+  const size_t stretch = sizeof(XML_Char);  /* can be 4 bytes */
+
+  if (blockSize <= 0)
+    return 0;
+
+  if (blockSize > (int)(INT_MAX / stretch))
+    return 0;
+
+  {
+    const int stretchedBlockSize = blockSize * (int)stretch;
+    const int bytesToAllocate = (int)(
+        offsetof(BLOCK, s) + (unsigned)stretchedBlockSize);
+    if (bytesToAllocate < 0)
+      return 0;
+
+    return (size_t)bytesToAllocate;
+  }
+}
+
 static XML_Bool FASTCALL
 poolGrow(STRING_POOL *pool)
 {
@@ -6333,16 +6351,22 @@ poolGrow(STRING_POOL *pool)
     }
   }
   if (pool->blocks && pool->start == pool->blocks->s) {
-    int blockSize = (int)(pool->end - pool->start)*2;
+    BLOCK *temp;
+    int blockSize = (int)((unsigned)(pool->end - pool->start)*2U);
+    size_t bytesToAllocate;
+
     if (blockSize < 0)
       return XML_FALSE;
 
-    pool->blocks = (BLOCK *)
-      pool->mem->realloc_fcn(pool->blocks,
-                             (offsetof(BLOCK, s)
-                              + blockSize * sizeof(XML_Char)));
-    if (pool->blocks == NULL)
+    bytesToAllocate = poolBytesToAllocateFor(blockSize);
+    if (bytesToAllocate == 0)
       return XML_FALSE;
+
+    temp = (BLOCK *)
+      pool->mem->realloc_fcn(pool->blocks, (unsigned)bytesToAllocate);
+    if (temp == NULL)
+      return XML_FALSE;
+    pool->blocks = temp;
     pool->blocks->size = blockSize;
     pool->ptr = pool->blocks->s + (pool->ptr - pool->start);
     pool->start = pool->blocks->s;
@@ -6351,19 +6375,26 @@ poolGrow(STRING_POOL *pool)
   else {
     BLOCK *tem;
     int blockSize = (int)(pool->end - pool->start);
+    size_t bytesToAllocate;
+
     if (blockSize < 0)
       return XML_FALSE;
 
     if (blockSize < INIT_BLOCK_SIZE)
       blockSize = INIT_BLOCK_SIZE;
-    else
+    else {
+      /* Detect overflow, avoiding _signed_ overflow undefined behavior */
+      if ((int)((unsigned)blockSize * 2U) < 0) {
+        return XML_FALSE;
+      }
       blockSize *= 2;
+    }
 
-    if (blockSize < 0)
+    bytesToAllocate = poolBytesToAllocateFor(blockSize);
+    if (bytesToAllocate == 0)
       return XML_FALSE;
 
-    tem = (BLOCK *)pool->mem->malloc_fcn(offsetof(BLOCK, s)
-                                        + blockSize * sizeof(XML_Char));
+    tem = (BLOCK *)pool->mem->malloc_fcn(bytesToAllocate);
     if (!tem)
       return XML_FALSE;
     tem->size = blockSize;
