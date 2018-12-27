@@ -12,10 +12,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withTimeoutOrNull
 import mozilla.components.service.fretboard.Fretboard
 import mozilla.components.service.fretboard.ValuesProvider
 import mozilla.components.service.fretboard.source.kinto.KintoExperimentSource
@@ -47,10 +44,6 @@ class FocusApplication : LocaleAwareApplication(), CoroutineScope {
     override val coroutineContext: CoroutineContext
         get() = job + Dispatchers.Main
 
-    companion object {
-        private const val FRETBOARD_BLOCKING_NETWORK_READ_TIMEOUT = 10000L
-    }
-
     val components: Components by lazy { Components() }
 
     var visibilityLifeCycleCallback: VisibilityLifeCycleCallback? = null
@@ -66,6 +59,7 @@ class FocusApplication : LocaleAwareApplication(), CoroutineScope {
 
         PreferenceManager.setDefaultValues(this, R.xml.settings, false)
 
+        TelemetryWrapper.init(this)
         loadExperiments()
 
         enableStrictMode()
@@ -78,7 +72,6 @@ class FocusApplication : LocaleAwareApplication(), CoroutineScope {
             registerForLocaleUpdates(this@FocusApplication)
         }
 
-        TelemetryWrapper.init(this@FocusApplication)
         AdjustHelper.setupAdjustIfNeeded(this@FocusApplication)
 
         visibilityLifeCycleCallback = VisibilityLifeCycleCallback(this@FocusApplication)
@@ -90,7 +83,7 @@ class FocusApplication : LocaleAwareApplication(), CoroutineScope {
             register(CleanupSessionObserver(this@FocusApplication))
         }
 
-        async(IO) { updateExperiments() }
+        launch(IO) { fretboard.updateExperiments() }
     }
 
     private fun loadExperiments() {
@@ -105,14 +98,8 @@ class FocusApplication : LocaleAwareApplication(), CoroutineScope {
                 }
             })
         fretboard.loadExperiments()
+        TelemetryWrapper.recordActiveExperiments(this)
         WebViewProvider.determineEngine(this@FocusApplication)
-    }
-
-    private suspend fun updateExperiments() = coroutineScope {
-        val updateExperimentsAsync = async { fretboard.updateExperiments() }
-        withTimeoutOrNull(FRETBOARD_BLOCKING_NETWORK_READ_TIMEOUT) {
-            updateExperimentsAsync.await() // then update disk and memory from the network
-        }
     }
 
     private fun enableStrictMode() {
