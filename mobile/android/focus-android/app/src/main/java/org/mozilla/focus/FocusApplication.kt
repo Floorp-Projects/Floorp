@@ -5,6 +5,7 @@
 
 package org.mozilla.focus
 
+import android.content.Context
 import android.os.StrictMode
 import android.support.v7.preference.PreferenceManager
 import kotlinx.coroutines.CoroutineScope
@@ -16,6 +17,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import mozilla.components.service.fretboard.Fretboard
+import mozilla.components.service.fretboard.ValuesProvider
 import mozilla.components.service.fretboard.source.kinto.KintoExperimentSource
 import mozilla.components.service.fretboard.storage.flatfile.FlatFileExperimentStorage
 import mozilla.components.support.base.log.Log
@@ -96,7 +98,12 @@ class FocusApplication : LocaleAwareApplication(), CoroutineScope {
         val experimentSource = KintoExperimentSource(
             EXPERIMENTS_BASE_URL, EXPERIMENTS_BUCKET_NAME, EXPERIMENTS_COLLECTION_NAME
         )
-        fretboard = Fretboard(experimentSource, FlatFileExperimentStorage(experimentsFile))
+        fretboard = Fretboard(experimentSource, FlatFileExperimentStorage(experimentsFile),
+            object : ValuesProvider() {
+                override fun getClientId(context: Context): String {
+                    return TelemetryWrapper.clientId
+                }
+            })
         fretboard.loadExperiments()
         WebViewProvider.determineEngine(this@FocusApplication)
     }

@@ -54,7 +54,6 @@ import kotlin.collections.HashSet
 object TelemetryWrapper {
     private const val TELEMETRY_APP_NAME_FOCUS = "Focus"
     private const val TELEMETRY_APP_NAME_KLAR = "Klar"
-    private const val TELEMETRY_APP_ENGINE_GECKOVIEW = "GeckoView"
     private const val LAST_MOBILE_METRICS_PINGS = "LAST_MOBILE_METRICS_PINGS"
 
     private val dateFormat = SimpleDateFormat("yyyyMMdd", Locale.US)
@@ -254,9 +253,7 @@ object TelemetryWrapper {
                     .setSettingsProvider(TelemetrySettingsProvider(context))
                     .setCollectionEnabled(telemetryEnabled)
                     .setUploadEnabled(telemetryEnabled)
-                    .setBuildId(TelemetryConfiguration(context).buildId +
-                    (if (AppConstants.isGeckoBuild)
-                        ("-$TELEMETRY_APP_ENGINE_GECKOVIEW") else ""))
+                    .setBuildId(TelemetryConfiguration(context).buildId)
 
             val serializer = JSONPingSerializer()
             val storage = FileTelemetryStorage(configuration, serializer)
@@ -285,12 +282,13 @@ object TelemetryWrapper {
                                 .apply()
                     }
                     .setDefaultSearchProvider(createDefaultSearchProvider(context)))
-
-            TelemetryWrapper.recordActiveExperiments(context)
         } finally {
             StrictMode.setThreadPolicy(threadPolicy)
         }
     }
+
+    val clientId: String
+        get() = TelemetryHolder.get().clientId
 
     private fun createDefaultSearchProvider(context: Context): DefaultSearchMeasurement.DefaultSearchEngineProvider {
         return DefaultSearchMeasurement.DefaultSearchEngineProvider {
