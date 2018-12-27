@@ -75,14 +75,13 @@
 
 .panel-footer > button:not([disabled])[default] {
   color: white !important;
-  background-color: #0996f8;
+  background-color: #0060df;
 }
 
 .panel-footer > button:not([disabled])[default]:hover {
-  background-color: #0675d3;
+  background-color: #003eaa;
 }
 
 .panel-footer > button:not([disabled])[default]:hover:active {
-  background-color: #0568ba;
+  background-color: #002275;
 }
-

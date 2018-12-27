@@ -287,6 +287,9 @@ def mozharness_on_generic_worker(config, job, taskdesc):
     if config.params.is_try():
         env['TRY_COMMIT_MSG'] = config.params['message'] or 'no commit message'
 
+    if run['comm-checkout']:
+        env['MOZ_SOURCE_CHANGESET'] = env['COMM_HEAD_REV']
+
     if not job['attributes']['build_platform'].startswith('win'):
         raise Exception(
             "Task generation for mozharness build jobs currently only supported on Windows"

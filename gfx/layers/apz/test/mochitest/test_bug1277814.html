@@ -14,8 +14,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1277814
   <script type="application/javascript">
     function* test(testDriver) {
       // Trigger the buggy scenario
-      var subframe = document.getElementById('bug1277814-div');
-      subframe.classList.add('a');
+      var subframe = document.getElementById("bug1277814-div");
+      subframe.classList.add("a");
 
       // The transform change is animated, so let's step through 1s of animation
       var utils = SpecialPowers.getDOMWindowUtils(window);
@@ -50,8 +50,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1277814
         var paint = contentTestData.paints[seqNo];
         for (var scrollId in paint) {
           var scrollFrame = paint[scrollId];
-          if ('contentDescription' in scrollFrame &&
-              scrollFrame['contentDescription'].includes('bug1277814-div')) {
+          if ("contentDescription" in scrollFrame &&
+              scrollFrame.contentDescription.includes("bug1277814-div")) {
             foundIt = true;
           }
         }

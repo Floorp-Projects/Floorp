@@ -14,8 +14,8 @@ add_task(async function test_windowlessBrowserTroubleshootCrash() {
             Services.obs.removeObserver(listener, "content-document-global-created");
             resolve();
           }
-        }
-    }
+        },
+    };
     Services.obs.addObserver(listener, "content-document-global-created");
   });
   let triggeringPrincipal = Services.scriptSecurityManager.createNullPrincipal({});

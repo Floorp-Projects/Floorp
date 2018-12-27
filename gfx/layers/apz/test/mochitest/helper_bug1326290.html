@@ -21,8 +21,8 @@
   <script type="text/javascript">
 
 function* test(testDriver) {
-  var scrollableDiv = document.getElementById('scrollable');
-  scrollableDiv.addEventListener('scroll', () => setTimeout(testDriver, 0), {once: true});
+  var scrollableDiv = document.getElementById("scrollable");
+  scrollableDiv.addEventListener("scroll", () => setTimeout(testDriver, 0), {once: true});
 
   var dragFinisher = yield* dragVerticalScrollbar(scrollableDiv, testDriver);
   if (!dragFinisher) {

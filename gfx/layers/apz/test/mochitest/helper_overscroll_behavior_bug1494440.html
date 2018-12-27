@@ -13,9 +13,8 @@
   <script type="application/javascript">
 
 function* test(testDriver) {
-  var iframe = document.getElementById('scroll');
+  var iframe = document.getElementById("scroll");
   var iframeWindow = iframe.contentWindow;
-  var iframeContent = iframeWindow.document.documentElement;
 
   // scroll the iframe to the bottom, such that a subsequent scroll on it
   // _would_ hand off to the page if overscroll-behavior allowed it

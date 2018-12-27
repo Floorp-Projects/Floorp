@@ -17,14 +17,14 @@ var touch_action_prefs = [
 
 var subtests = [
   // Simple test to exercise touch-action CSS property
-  {'file': 'helper_touch_action.html', 'prefs': touch_action_prefs},
+  {"file": "helper_touch_action.html", "prefs": touch_action_prefs},
   // More complex touch-action tests, with overlapping regions and such
-  {'file': 'helper_touch_action_complex.html', 'prefs': touch_action_prefs},
+  {"file": "helper_touch_action_complex.html", "prefs": touch_action_prefs},
   // Tests that touch-action CSS properties are handled in APZ without waiting
   // on the main-thread, when possible
-  {'file': 'helper_touch_action_regions.html', 'prefs': touch_action_prefs},
+  {"file": "helper_touch_action_regions.html", "prefs": touch_action_prefs},
   // Tests that touch-action inside zero-opacity items are respected
-  {'file': 'helper_touch_action_zero_opacity_bug1500864.html', 'prefs': touch_action_prefs},
+  {"file": "helper_touch_action_zero_opacity_bug1500864.html", "prefs": touch_action_prefs},
 
   // Add new subtests to test_group_touchevents-4.html, not this file (exceptions
   // may be made for quick-running tests that need the touch-action prefs)

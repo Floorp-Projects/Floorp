@@ -1,19 +1,24 @@
 #!/usr/bin/env python
 from argparse import ArgumentParser
 from collections import defaultdict
+import datetime
 import json
 import os
 import sys
+import time
 
 import requests
 
 here = os.path.abspath(os.path.dirname(__file__))
 
-ACTIVE_DATA_URL = "http://activedata.allizom.org/query"
+ACTIVE_DATA_URL = "https://activedata.allizom.org/query"
 PERCENTILE = 0.5 # ignore the bottom PERCENTILE*100% of numbers
 
 def query_activedata(suite, e10s, platforms=None):
     platforms = ', "build.platform":%s' % json.dumps(platforms) if platforms else ''
+
+    last_week = datetime.datetime.now() - datetime.timedelta(days=7)
+    last_week_timestamp = time.mktime(last_week.timetuple())
 
     e10s_clause = '"eq":{"run.type":"e10s"}'
     if not e10s:
@@ -28,10 +33,10 @@ def query_activedata(suite, e10s, platforms=None):
     "where":{"and":[
         {"eq":{"run.suite":"%s"%s}},
         {%s},
-        {"gt":{"run.timestamp":"{{today-week}}"}}
+        {"gt":{"run.timestamp":%s}}
     ]}
 }
-""" % (suite, platforms, e10s_clause)
+""" % (suite, platforms, e10s_clause, last_week_timestamp)
 
     response = requests.post(ACTIVE_DATA_URL,
                              data=query,
@@ -129,7 +134,11 @@ def cli(args=sys.argv[1:]):
     suite = args.suite
     if args.e10s:
         suite = '%s-e10s' % suite
-    write_runtimes(data, suite, indir=args.indir, outdir=args.outdir)
+
+    if not data:
+        print("Not creating runtimes file as no data was found")
+    else:
+        write_runtimes(data, suite, indir=args.indir, outdir=args.outdir)
 
 if __name__ == "__main__":
     sys.exit(cli())

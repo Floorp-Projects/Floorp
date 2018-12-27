@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-chrome.jar:
+geckoview.jar:
 % content branding %content/branding/ contentaccessible=yes
   content/branding/about.png                     (about.png)
   content/branding/favicon32.png                 (favicon32.png)

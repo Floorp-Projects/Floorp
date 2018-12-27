@@ -7,7 +7,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-from voluptuous import Any, Required, All
+from voluptuous import Any, Required, All, Optional
 from taskgraph.util.schema import (
     optionally_keyed_by,
     validate_schema,
@@ -36,6 +36,13 @@ cron_yml_schema = Schema({
 
             # --target-tasks-method './mach taskgraph decision' argument
             'target-tasks-method': basestring,
+
+            Optional(
+                'optimize-target-tasks',
+                description='If specified, this indicates whether the target '
+                            'tasks are eligible for optimization. Otherwise, '
+                            'the default for the project is used.',
+            ): bool,
         },
 
         # when to run it

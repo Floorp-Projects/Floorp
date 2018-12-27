@@ -10,8 +10,8 @@ import attr
 import yaml
 from mozpack import path
 
-from .util.schema import validate_schema, Schema
-from voluptuous import Required, Optional
+from .util.schema import validate_schema, Schema, optionally_keyed_by
+from voluptuous import Required, Optional, Any
 
 logger = logging.getLogger(__name__)
 
@@ -58,11 +58,13 @@ graph_config_schema = Schema({
         # Mapping of scriptworker types to scopes they accept
         Required('worker-types'): {basestring: [basestring]}
     },
-    Required('partner'): {
-        # Release config for partner repacks
-        Required('release'): {basestring: basestring},
-        # Staging config for partner repacks
-        Required('staging'): {basestring: basestring},
+    Required('partner-urls'): {
+        Required('release-partner-repack'):
+            optionally_keyed_by('release-product', 'release-level', 'release-type',
+                                Any(basestring, None)),
+        Required('release-eme-free-repack'):
+            optionally_keyed_by('release-product', 'release-level', 'release-type',
+                                Any(basestring, None)),
     },
 })
 

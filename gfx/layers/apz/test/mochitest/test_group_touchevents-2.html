@@ -19,22 +19,22 @@ var subtests = [
   // an injected touch event every 100ms, because it waits for a paint between
   // the touchstart and the touchend, so we have to use the "fake injection"
   // code instead.
-  {'file': 'helper_bug1162771.html', 'prefs': [["ui.click_hold_context_menus.delay", 10000],
+  {"file": "helper_bug1162771.html", "prefs": [["ui.click_hold_context_menus.delay", 10000],
                                                ["apz.test.fails_with_native_injection", isWindows]]},
 
   // As with the previous test, this test cannot inject touch events every 100ms
   // because it waits for a long-tap, so we have to use the "fake injection" code
   // instead.
-  {'file': 'helper_long_tap.html', 'prefs': [["apz.test.fails_with_native_injection", isWindows]]},
+  {"file": "helper_long_tap.html", "prefs": [["apz.test.fails_with_native_injection", isWindows]]},
 
   // For the following tests, we want to make sure APZ doesn't wait for a content
   // response that is never going to arrive. To detect this we set the content response
   // timeout to a day, so that the entire test times out and fails if APZ does
   // end up waiting.
-  {'file': 'helper_tap_passive.html', 'prefs': [["apz.content_response_timeout", 24 * 60 * 60 * 1000],
+  {"file": "helper_tap_passive.html", "prefs": [["apz.content_response_timeout", 24 * 60 * 60 * 1000],
                                                 ["apz.test.fails_with_native_injection", isWindows]]},
 
-  {'file': 'helper_tap_default_passive.html', 'prefs': [["apz.content_response_timeout", 24 * 60 * 60 * 1000],
+  {"file": "helper_tap_default_passive.html", "prefs": [["apz.content_response_timeout", 24 * 60 * 60 * 1000],
                                                         ["apz.test.fails_with_native_injection", isWindows],
                                                         ["dom.event.default_to_passive_touch_listeners", true]]},
 

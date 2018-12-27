@@ -28,7 +28,7 @@
 function* test(testDriver) {
   var root = document.scrollingElement;
   var scrollPos = root.scrollTop;
-  document.addEventListener('scroll', () => {
+  document.addEventListener("scroll", () => {
     ok(root.scrollTop > scrollPos, "document scrolled after dragging scrollbar");
     setTimeout(testDriver, 0);
   }, {once: true});

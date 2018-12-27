@@ -28,7 +28,7 @@ public class testJarReader extends OldBaseTest {
 
         // Test reading a file from a jar url that looks correct.
         String url = "jar:file://" + appPath + "!/" + AppConstants.OMNIJAR_NAME;
-        InputStream stream = GeckoJarReader.getStream(context, "jar:" + url + "!/chrome/chrome/content/branding/favicon32.png");
+        InputStream stream = GeckoJarReader.getStream(context, "jar:" + url + "!/chrome/geckoview/content/branding/favicon32.png");
         mAsserter.isnot(stream, null, "JarReader returned non-null for valid file in valid jar");
 
         // Test looking for an non-existent file in a jar.

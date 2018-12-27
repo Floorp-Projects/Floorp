@@ -144,7 +144,7 @@ class GeckoThreadSupport final
     specConn->SpeculativeConnect2(uri, principal, nullptr);
   }
 
-  static void WaitOnGecko() {
+  static bool WaitOnGecko(int64_t timeoutMillis) {
     struct NoOpRunnable : Runnable {
       NoOpRunnable() : Runnable("NoOpRunnable") {}
       NS_IMETHOD Run() override { return NS_OK; }
@@ -160,7 +160,8 @@ class GeckoThreadSupport final
                                 NS_DISPATCH_SYNC);
       }
     };
-    nsAppShell::SyncRunEvent(NoOpEvent());
+    return nsAppShell::SyncRunEvent(
+        NoOpEvent(), nullptr, TimeDuration::FromMilliseconds(timeoutMillis));
   }
 
   static void OnPause() {
@@ -686,8 +687,9 @@ bool nsAppShell::ProcessNextNativeEvent(bool mayWait) {
   return true;
 }
 
-void nsAppShell::SyncRunEvent(
-    Event&& event, UniquePtr<Event> (*eventFactory)(UniquePtr<Event>&&)) {
+bool nsAppShell::SyncRunEvent(
+    Event&& event, UniquePtr<Event> (*eventFactory)(UniquePtr<Event>&&),
+    const TimeDuration timeout) {
   // Perform the call on the Gecko thread in a separate lambda, and wait
   // on the monitor on the current thread.
   MOZ_ASSERT(!NS_IsMainThread());
@@ -699,19 +701,20 @@ void nsAppShell::SyncRunEvent(
 
   if (MOZ_UNLIKELY(!appShell)) {
     // Post-shutdown.
-    return;
+    return false;
   }
 
   bool finished = false;
   auto runAndNotify = [&event, &finished] {
     nsAppShell* const appShell = nsAppShell::Get();
     if (MOZ_UNLIKELY(!appShell || appShell->mSyncRunQuit)) {
-      return;
+      return false;
     }
     event.Run();
     finished = true;
     mozilla::MutexAutoLock shellLock(*sAppShellLock);
     appShell->mSyncRunFinished.NotifyAll();
+    return finished;
   };
 
   UniquePtr<Event> runAndNotifyEvent =
@@ -725,8 +728,10 @@ void nsAppShell::SyncRunEvent(
   appShell->mEventQueue.Post(std::move(runAndNotifyEvent));
 
   while (!finished && MOZ_LIKELY(sAppShell && !sAppShell->mSyncRunQuit)) {
-    appShell->mSyncRunFinished.Wait();
+    appShell->mSyncRunFinished.Wait(timeout);
   }
+
+  return finished;
 }
 
 already_AddRefed<nsIURI> nsAppShell::ResolveURI(const nsCString& aUriStr) {
