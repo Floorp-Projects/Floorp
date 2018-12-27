@@ -387,7 +387,7 @@ add_task(async function test_webRequest_frames() {
   addFrame("data:text/plain,webRequestTest_bad");
   await extension.awaitMessage("cancelled");
   addFrame("redirection.sjs");
-  addFrame("https://invalid.localhost/badrobot");
+  addFrame("https://nonresolvablehostname.invalid/badrobot");
   await extension.awaitMessage("done");
 });
 
