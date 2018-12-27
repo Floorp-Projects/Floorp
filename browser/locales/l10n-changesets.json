@@ -1515,7 +1515,7 @@
             "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
-        "revision": "0aafb1c19d9e"
+        "revision": "2f381ea2e1f3"
     },
     "th": {
         "platforms": [
@@ -1566,7 +1566,7 @@
             "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
-        "revision": "cf777de1d4c8"
+        "revision": "ff81657bea02"
     },
     "ur": {
         "platforms": [
