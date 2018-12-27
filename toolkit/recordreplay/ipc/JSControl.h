@@ -13,6 +13,7 @@
 #include "ProcessRewind.h"
 
 #include "mozilla/DefineEnum.h"
+#include "nsString.h"
 
 namespace mozilla {
 namespace recordreplay {
@@ -135,6 +136,7 @@ struct BreakpointPosition {
 
   JSObject* Encode(JSContext* aCx) const;
   bool Decode(JSContext* aCx, JS::HandleObject aObject);
+  void ToString(nsCString& aStr) const;
 };
 
 // Identification for a point in the execution of a child process where it may
@@ -182,6 +184,7 @@ struct ExecutionPoint {
 
   JSObject* Encode(JSContext* aCx) const;
   bool Decode(JSContext* aCx, JS::HandleObject aObject);
+  void ToString(nsCString& aStr) const;
 };
 
 // Buffer type used for encoding object data.
