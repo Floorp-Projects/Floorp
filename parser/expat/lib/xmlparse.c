@@ -3934,6 +3934,14 @@ entityValueInitProcessor(XML_Parser parser,
       *nextPtr = next;
       return XML_ERROR_NONE;
     }
+    /* If we get this token, we have the start of what might be a
+       normal tag, but not a declaration (i.e. it doesn't begin with
+       "<!").  In a DTD context, that isn't legal.
+    */
+    else if (tok == XML_TOK_INSTANCE_START) {
+      *nextPtr = next;
+      return XML_ERROR_SYNTAX;
+    }
     start = next;
     eventPtr = start;
   }
