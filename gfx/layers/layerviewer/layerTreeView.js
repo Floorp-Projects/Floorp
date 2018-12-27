@@ -36,9 +36,9 @@ function parseDisplayList(lines) {
     var line = lines[i];
 
     var layerObject = {
-      line: line,
+      line,
       children: [],
-    }
+    };
     if (!root) {
       root = layerObject;
     }
@@ -70,24 +70,22 @@ function parseDisplayList(lines) {
     // the content node name doesn't have a prefix, this makes the parsing easier
     rest = "content" + rest;
 
-    var fields = {};
     var nesting = 0;
     var startIndex;
     var lastSpace = -1;
-    var lastFieldStart = -1;
     for (var j = 0; j < rest.length; j++) {
-      if (rest.charAt(j) == '(') {
+      if (rest.charAt(j) == "(") {
         nesting++;
         if (nesting == 1) {
           startIndex = j;
         }
-      } else if (rest.charAt(j) == ')') {
+      } else if (rest.charAt(j) == ")") {
         nesting--;
         if (nesting == 0) {
           var name = rest.substring(lastSpace + 1, startIndex);
           var value = rest.substring(startIndex + 1, j);
 
-          var rectMatches = value.match("^(.*?),(.*?),(.*?),(.*?)$")
+          var rectMatches = value.match("^(.*?),(.*?),(.*?),(.*?)$");
           if (rectMatches) {
             layerObject[name] = [
               parseFloat(rectMatches[1]),
@@ -99,17 +97,17 @@ function parseDisplayList(lines) {
             layerObject[name] = value;
           }
         }
-      } else if (nesting == 0 && rest.charAt(j) == ' ') {
+      } else if (nesting == 0 && rest.charAt(j) == " ") {
         lastSpace = j;
       }
     }
-    //dump("FIELDS: " + JSON.stringify(fields) + "\n");
+    // dump("FIELDS: " + JSON.stringify(fields) + "\n");
   }
   return root;
 }
 
-function trim(s){ 
-  return ( s || '' ).replace( /^\s+|\s+$/g, '' ); 
+function trim(s) {
+  return ( s || "" ).replace( /^\s+|\s+$/g, "" );
 }
 
 function getDataURI(str) {
@@ -141,7 +139,10 @@ function getDataURI(str) {
 
   var ctxt = canvas.getContext("2d");
   var out = ctxt.createImageData(w, h);
-  buffer = LZ4_uncompressChunk(bytes, decoded);
+  // This is actually undefined throughout the tree and it isn't clear what it
+  // should be. Since this is only development code, leave it alone for now.
+  // eslint-disable-next-line no-undef
+  LZ4_uncompressChunk(bytes, decoded);
 
   for (var x = 0; x < w; x++) {
     for (var y = 0; y < h; y++) {
@@ -220,7 +221,7 @@ function parseLayers(layersDumpLines) {
     str = trim(str);
 
     // Something like '< (x=0, y=0, w=2842, h=158); (x=0, y=1718, w=2842, h=500); >'
-    if (str.charAt(0) != '<' || str.charAt(str.length - 1) != '>') {
+    if (str.charAt(0) != "<" || str.charAt(str.length - 1) != ">") {
       return null;
     }
 
@@ -252,11 +253,11 @@ function parseLayers(layersDumpLines) {
 
     var tileMatches = line.match("(\\s*)Tile \\(x=(.*), y=(.*)\\): (.*)");
     if (tileMatches) {
-      var indentation = Math.floor(matches[1].length / 2);
+      let indentation = Math.floor(matches[1].length / 2);
       var x = tileMatches[2];
       var y = tileMatches[3];
       var dataUri = tileMatches[4];
-      var parent = objectAtIndentation[indentation - 1];
+      let parent = objectAtIndentation[indentation - 1];
       var tiles = parent.tiles || {};
 
       tiles[x] = tiles[x] || {};
@@ -269,8 +270,8 @@ function parseLayers(layersDumpLines) {
 
     var surfaceMatches = line.match("(\\s*)Surface: (.*)");
     if (surfaceMatches) {
-      var indentation = Math.floor(matches[1].length / 2);
-      var parent = objectAtIndentation[indentation - 1] || objectAtIndentation[indentation - 2];
+      let indentation = Math.floor(matches[1].length / 2);
+      let parent = objectAtIndentation[indentation - 1] || objectAtIndentation[indentation - 2];
 
       var surfaceURI = surfaceMatches[2];
       if (parent.surfaceURI != null) {
@@ -280,7 +281,7 @@ function parseLayers(layersDumpLines) {
 
       // Look for the buffer-rect offset
       var contentHostLine = layersDumpLines[i - 2].name || layersDumpLines[i - 2];
-      var matches = contentHostLine.match(LAYERS_LINE_REGEX);
+      let matches = contentHostLine.match(LAYERS_LINE_REGEX);
       if (matches) {
         var contentHostRest = matches[4];
         parent.contentHostProp = {};
@@ -291,14 +292,14 @@ function parseLayers(layersDumpLines) {
     }
 
     var layerObject = {
-      line: line,
+      line,
       children: [],
-    }
+    };
     if (!root) {
       root = layerObject;
     }
 
-    var matches = line.match(LAYERS_LINE_REGEX);
+    let matches = line.match(LAYERS_LINE_REGEX);
     if (!matches) {
       continue; // Something like a texturehost dump. Safe to ignore
     }
@@ -335,13 +336,13 @@ function parseLayers(layersDumpLines) {
       var fields = [];
       var nesting = 0;
       var startIndex;
-      for (var j = 0; j < rest.length; j++) {
-        if (rest.charAt(j) == '[') {
+      for (let j = 0; j < rest.length; j++) {
+        if (rest.charAt(j) == "[") {
           nesting++;
           if (nesting == 1) {
             startIndex = j;
           }
-        } else if (rest.charAt(j) == ']') {
+        } else if (rest.charAt(j) == "]") {
           nesting--;
           if (nesting == 0) {
             fields.push(rest.substring(startIndex + 1, j));
@@ -349,25 +350,25 @@ function parseLayers(layersDumpLines) {
         }
       }
 
-      for (var j = 0; j < fields.length; j++) {
+      for (let j = 0; j < fields.length; j++) {
         // Something like 'valid=< (x=0, y=0, w=1920, h=2218); >' or 'opaqueContent'
         var field = fields[j];
-        //dump("FIELD: " + field + "\n");
+        // dump("FIELD: " + field + "\n");
         var parts = field.split("=", 2);
         var fieldName = parts[0];
-        var rest = field.substring(fieldName.length + 1);
+        rest = field.substring(fieldName.length + 1);
         if (parts.length == 1) {
           layerObject[fieldName] = "true";
           layerObject[fieldName].type = "bool";
           continue;
         }
-        var float = parseFloat_cleo(rest); 
+        var float = parseFloat_cleo(rest);
         if (float) {
           layerObject[fieldName] = float;
           layerObject[fieldName].type = "float";
           continue;
         }
-        var region = parseRegion(rest); 
+        var region = parseRegion(rest);
         if (region) {
           layerObject[fieldName] = region;
           layerObject[fieldName].type = "region";
@@ -391,7 +392,7 @@ function parseLayers(layersDumpLines) {
           layerObject[fieldName].type = "color";
           continue;
         }
-        if (rest[0] == '{' && rest[rest.length - 1] == '}') {
+        if (rest[0] == "{" && rest[rest.length - 1] == "}") {
           var object = {};
           parseProperties(rest.substring(1, rest.length - 2).trim(), object);
           layerObject[fieldName] = object;
@@ -405,34 +406,34 @@ function parseLayers(layersDumpLines) {
     }
     parseProperties(rest, layerObject);
 
-    if (!layerObject['shadow-transform']) {
+    if (!layerObject["shadow-transform"]) {
       // No shadow transform = identify
-      layerObject['shadow-transform'] = [[1, 0], [0, 1], [0, 0]];
+      layerObject["shadow-transform"] = [[1, 0], [0, 1], [0, 0]];
     }
 
     // Compute screenTransformX/screenTransformY
     // TODO Fully support transforms
-    if (layerObject['shadow-transform'] && layerObject['transform']) {
-      layerObject['screen-transform'] = [layerObject['shadow-transform'][2][0], layerObject['shadow-transform'][2][1]];
+    if (layerObject["shadow-transform"] && layerObject.transform) {
+      layerObject["screen-transform"] = [layerObject["shadow-transform"][2][0], layerObject["shadow-transform"][2][1]];
       var currIndentation = indentation - 1;
       while (currIndentation >= 0) {
-        var transform = objectAtIndentation[currIndentation]['shadow-transform'] || objectAtIndentation[currIndentation]['transform'];
+        var transform = objectAtIndentation[currIndentation]["shadow-transform"] || objectAtIndentation[currIndentation].transform;
         if (transform) {
-          layerObject['screen-transform'][0] += transform[2][0];
-          layerObject['screen-transform'][1] += transform[2][1];
+          layerObject["screen-transform"][0] += transform[2][0];
+          layerObject["screen-transform"][1] += transform[2][1];
         }
         currIndentation--;
       }
     }
 
-    //dump("Fields: " + JSON.stringify(fields) + "\n");
+    // dump("Fields: " + JSON.stringify(fields) + "\n");
   }
   root.compositeTime = layersDumpLines.compositeTime;
-  //dump("OBJECTS: " + JSON.stringify(root) + "\n");
+  // dump("OBJECTS: " + JSON.stringify(root) + "\n");
   return root;
 }
 function populateLayers(root, displayList, pane, previewParent, hasSeenRoot, contentScale, rootPreviewParent) {
-  
+
   contentScale = contentScale || 1;
   rootPreviewParent = rootPreviewParent || previewParent;
 
@@ -446,7 +447,7 @@ function populateLayers(root, displayList, pane, previewParent, hasSeenRoot, con
     }
     for (var i = 0; i < displayList.children.length; i++) {
       var subDisplayItems = getDisplayItemForLayer(displayList.children[i]);
-      for (var j = 0; j < subDisplayItems.length; j++) {
+      for (let j = 0; j < subDisplayItems.length; j++) {
         items.push(subDisplayItems[j]);
       }
     }
@@ -458,12 +459,12 @@ function populateLayers(root, displayList, pane, previewParent, hasSeenRoot, con
     style: {
       whiteSpace: "pre",
     },
-    onmouseover: function() {
+    onmouseover() {
       if (this.layerViewport) {
         this.layerViewport.classList.add("layerHover");
       }
     },
-    onmouseout: function() {
+    onmouseout() {
       if (this.layerViewport) {
         this.layerViewport.classList.remove("layerHover");
       }
@@ -478,23 +479,23 @@ function populateLayers(root, displayList, pane, previewParent, hasSeenRoot, con
       marginRight: "4px",
       cursor: "pointer",
     },
-    onclick: function() {
+    onclick() {
       if (this.layerViewport) {
         if (this.layerViewport.style.visibility == "hidden") {
           this.layerViewport.style.visibility = "";
-          this.src = "show.png"
+          this.src = "show.png";
         } else {
           this.layerViewport.style.visibility = "hidden";
-          this.src = "hide.png"
+          this.src = "hide.png";
         }
       }
-    }
+    },
   });
   elem.insertBefore(icon, elem.firstChild);
   pane.appendChild(elem);
 
-  if (root["shadow-visible"] || root["visible"]) {
-    var visibleRegion = root["shadow-visible"] || root["visible"];
+  if (root["shadow-visible"] || root.visible) {
+    var visibleRegion = root["shadow-visible"] || root.visible;
     var layerViewport = createElement("div", {
       id: root.address + "_viewport",
       style: {
@@ -505,15 +506,15 @@ function populateLayers(root, displayList, pane, previewParent, hasSeenRoot, con
     elem.layerViewport = layerViewport;
     icon.layerViewport = layerViewport;
     var layerViewportMatrix = [1, 0, 0, 1, 0, 0];
-    if (root["shadow-clip"] || root["clip"]) {
-      var clip = root["shadow-clip"] || root["clip"]
+    if (root["shadow-clip"] || root.clip) {
+      var clip = root["shadow-clip"] || root.clip;
       var clipElem = createElement("div", {
         id: root.address + "_clip",
         style: {
-          left: clip[0]+"px",
-          top: clip[1]+"px",
-          width: clip[2]+"px",
-          height: clip[3]+"px",
+          left: clip[0] + "px",
+          top: clip[1] + "px",
+          width: clip[2] + "px",
+          height: clip[3] + "px",
           position: "absolute",
           overflow: "hidden",
           pointerEvents: "none",
@@ -521,10 +522,10 @@ function populateLayers(root, displayList, pane, previewParent, hasSeenRoot, con
       });
       layerViewportMatrix[4] += -clip[0];
       layerViewportMatrix[5] += -clip[1];
-      layerViewport.style.transform = "translate(-" + clip[0] + "px, -" + clip[1] + "px" + ")";
+      layerViewport.style.transform = "translate(-" + clip[0] + "px, -" + clip[1] + "px)";
     }
-    if (root["shadow-transform"] || root["transform"]) {
-      var matrix = root["shadow-transform"] || root["transform"];
+    if (root["shadow-transform"] || root.transform) {
+      var matrix = root["shadow-transform"] || root.transform;
       layerViewportMatrix[0] = matrix[0][0];
       layerViewportMatrix[1] = matrix[0][1];
       layerViewportMatrix[2] = matrix[1][0];
@@ -535,7 +536,7 @@ function populateLayers(root, displayList, pane, previewParent, hasSeenRoot, con
     layerViewport.style.transform = "matrix(" + layerViewportMatrix[0] + "," + layerViewportMatrix[1] + "," + layerViewportMatrix[2] + "," + layerViewportMatrix[3] + "," + layerViewportMatrix[4] + "," + layerViewportMatrix[5] + ")";
     if (!hasSeenRoot) {
       hasSeenRoot = true;
-      layerViewport.style.transform = "scale(" + 1/contentScale + "," + 1/contentScale + ")";
+      layerViewport.style.transform = "scale(" + 1 / contentScale + "," + 1 / contentScale + ")";
     }
     if (clipElem) {
       previewParent.appendChild(clipElem);
@@ -544,8 +545,8 @@ function populateLayers(root, displayList, pane, previewParent, hasSeenRoot, con
       previewParent.appendChild(layerViewport);
     }
     previewParent = layerViewport;
-    for (var i = 0; i < visibleRegion.length; i++) {
-      var rect2d = visibleRegion[i];
+    for (let i = 0; i < visibleRegion.length; i++) {
+      let rect2d = visibleRegion[i];
       var layerPreview = createElement("div", {
         id: root.address + "_visible_part" + i + "-" + visibleRegion.length,
         className: "layerPreview",
@@ -597,9 +598,9 @@ function populateLayers(root, displayList, pane, previewParent, hasSeenRoot, con
         hasImg = true;
         var offsetX = 0;
         var offsetY = 0;
-        if (root.contentHostProp && root.contentHostProp['buffer-rect']) {
-          offsetX = root.contentHostProp['buffer-rect'][0];
-          offsetY = root.contentHostProp['buffer-rect'][1];
+        if (root.contentHostProp && root.contentHostProp["buffer-rect"]) {
+          offsetX = root.contentHostProp["buffer-rect"][0];
+          offsetY = root.contentHostProp["buffer-rect"][1];
         }
         var surfaceImgElem = createElement("img", {
           src: getDataURI(root.surfaceURI),
@@ -616,20 +617,20 @@ function populateLayers(root, displayList, pane, previewParent, hasSeenRoot, con
         hasImg = true;
         layerPreview.style.background = "rgba(" + root.color.r + ", " + root.color.g + ", " + root.color.b + ", " + root.color.a + ")";
       }
-      
+
       if (hasImg || true) {
         layerPreview.mouseoverElem = elem;
         layerPreview.onmouseenter = function() {
           this.mouseoverElem.onmouseover();
-        }
+        };
         layerPreview.onmouseout = function() {
           this.mouseoverElem.onmouseout();
-        }
+        };
       }
     }
 
     var layerDisplayItems = getDisplayItemForLayer(displayList);
-    for (var i = 0; i < layerDisplayItems.length; i++) {
+    for (let i = 0; i < layerDisplayItems.length; i++) {
       var displayItem = layerDisplayItems[i];
       var displayElem = createElement("div", {
         className: "layerObjectDescription",
@@ -637,9 +638,9 @@ function populateLayers(root, displayList, pane, previewParent, hasSeenRoot, con
         style: {
           whiteSpace: "pre",
         },
-        displayItem: displayItem,
-        layerViewport: layerViewport,
-        onmouseover: function() {
+        displayItem,
+        layerViewport,
+        onmouseover() {
           if (this.diPreview) {
             this.diPreview.classList.add("displayHover");
 
@@ -666,20 +667,19 @@ function populateLayers(root, displayList, pane, previewParent, hasSeenRoot, con
             }
 
             var box = this.diPreview.getBoundingClientRect();
-            var pageBox = document.body.getBoundingClientRect();
             this.diPreview.tooltip = createElement("div", {
               className: "csstooltip",
               innerHTML: description,
               style: {
                 top: Math.min(box.bottom, document.documentElement.clientHeight - 150) + "px",
                 left: box.left + "px",
-              }
+              },
             });
 
             document.body.appendChild(this.diPreview.tooltip);
           }
         },
-        onmouseout: function() {
+        onmouseout() {
           if (this.diPreview) {
             this.diPreview.classList.remove("displayHover");
             document.body.removeChild(this.diPreview.tooltip);
@@ -687,38 +687,38 @@ function populateLayers(root, displayList, pane, previewParent, hasSeenRoot, con
         },
       });
 
-      var icon = createElement("img", {
+      icon = createElement("img", {
         style: {
           width: "12px",
           height: "12px",
           marginLeft: "4px",
           marginRight: "4px",
-        }
+        },
       });
       displayElem.insertBefore(icon, displayElem.firstChild);
       pane.appendChild(displayElem);
       // bounds doesn't adjust for within the layer. It's not a bad fallback but
       // will have the wrong offset
-      var rect2d = displayItem.layerBounds || displayItem.bounds;
+      let rect2d = displayItem.layerBounds || displayItem.bounds;
       if (rect2d) { // This doesn't place them corectly
         var appUnitsToPixels = 60 / contentScale;
-        diPreview = createElement("div", {
+        let diPreview = createElement("div", {
           id: "displayitem_" + displayItem.content + "_" + displayItem.address,
           className: "layerPreview",
           style: {
             position: "absolute",
-            left: rect2d[0]/appUnitsToPixels + "px",
-            top: rect2d[1]/appUnitsToPixels + "px",
-            width: rect2d[2]/appUnitsToPixels + "px",
-            height: rect2d[3]/appUnitsToPixels + "px",
+            left: rect2d[0] / appUnitsToPixels + "px",
+            top: rect2d[1] / appUnitsToPixels + "px",
+            width: rect2d[2] / appUnitsToPixels + "px",
+            height: rect2d[3] / appUnitsToPixels + "px",
             border: "solid 1px gray",
             pointerEvents: "auto",
           },
-          displayElem: displayElem,
-          onmouseover: function() {
+          displayElem,
+          onmouseover() {
             this.displayElem.onmouseover();
           },
-          onmouseout: function() {
+          onmouseout() {
             this.displayElem.onmouseout();
           },
         });
@@ -736,10 +736,8 @@ function populateLayers(root, displayList, pane, previewParent, hasSeenRoot, con
 
 // This function takes a stdout snippet and finds the frames
 function parseMultiLineDump(log) {
-  var lines = log.split("\n");
-
   var container = createElement("div", {
-    style: { 
+    style: {
       height: "100%",
       position: "relative",
     },
@@ -750,7 +748,7 @@ function parseMultiLineDump(log) {
   var layersRegex = "(" + layerManagerFirstLine + nextLineStartWithSpace + ")";
 
   var startLine = "Painting --- after optimization:\n";
-  var endLine = "Painting --- layer tree:"
+  var endLine = "Painting --- layer tree:";
   var displayListRegex = "(" + startLine + "(.*\n)*?" + endLine + ")";
 
   var regex = new RegExp(layersRegex + "|" + displayListRegex, "gm");
@@ -759,7 +757,7 @@ function parseMultiLineDump(log) {
   window.matches = matches;
 
   var matchList = createElement("span", {
-    style: { 
+    style: {
       height: "95%",
       width: "10%",
       position: "relative",
@@ -771,7 +769,7 @@ function parseMultiLineDump(log) {
   });
   container.appendChild(matchList);
   var contents = createElement("span", {
-    style: { 
+    style: {
       height: "95%",
       width: "88%",
       display: "inline-block",
@@ -787,7 +785,7 @@ function parseMultiLineDump(log) {
 
     if (currMatch.indexOf(startLine) == 0) {
       // Display list match
-      var matchLines = matches[i].split("\n")
+      var matchLines = matches[i].split("\n");
       lastDisplayList = parseDisplayList(matchLines);
     } else {
       // Layer tree match:
@@ -800,12 +798,12 @@ function parseMultiLineDump(log) {
         },
         href: "#",
         textContent: "LayerTree " + (frameID++),
-        onclick: function() {
+        onclick() {
           contents.innerHTML = "";
-          var matchLines = matches[i].split("\n")
+          var matchLines = matches[i].split("\n");
           var dumpDiv = parseDump(matchLines, displayList);
           contents.appendChild(dumpDiv);
-        }
+        },
       });
       matchList.appendChild(currFrameDiv);
     }
@@ -816,7 +814,7 @@ function parseMultiLineDump(log) {
 
 function parseDump(log, displayList, compositeTitle, compositeTime) {
   compositeTitle |= "";
-  compositeTime |= 0
+  compositeTime |= 0;
 
   var container = createElement("div", {
     style: {
@@ -874,11 +872,3 @@ function parseDump(log, displayList, compositeTitle, compositeTime) {
   populateLayers(root, displayList, layerListPane, previewDiv);
   return container;
 }
-
-function tab_showLayersDump(layersDumpLines, compositeTitle, compositeTime) {
-  var container = parseDump(layersDumpLines, compositeTitle, compositeTime);
-
-  gTabWidget.addTab("LayerTree", container); 
-  gTabWidget.selectTab("LayerTree");
-}
-

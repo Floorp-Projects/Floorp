@@ -55,7 +55,11 @@ body {
   width: 100%;
 }
 
-tr:hover td {
+tbody tr {
+  transition: background cubic-bezier(.07, .95, 0, 1) 250ms;
+}
+
+tbody tr:hover {
   background-color: #d7d7db;
 }
 
@@ -72,7 +76,6 @@ th {
 
 td {
   padding: 1rem;
-  transition: background cubic-bezier(.07, .95, 0, 1) 250ms;
 }
 
 /*
@@ -86,6 +89,12 @@ td {
 .errors tr:nth-child(odd),
 tbody:nth-child(4n + 1) {
   background-color: #ededf0;
+}
+
+.active-policies tr.odd:hover,
+.errors tr:nth-child(odd):hover,
+tbody:nth-child(4n + 1):hover {
+  background-color: #d7d7db;
 }
 
 .arr_sep.odd:not(:last-child) td:not(:first-child) {

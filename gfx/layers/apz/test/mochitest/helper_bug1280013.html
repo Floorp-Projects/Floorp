@@ -38,11 +38,11 @@ function* test(testDriver) {
   is(window.scrollY, 0, "Main-thread scroll position is still at 0");
 
   // Scroll the iframe by 300px.
-  var subframe = document.getElementById('subframe');
+  var subframe = document.getElementById("subframe");
   yield synthesizeNativeTouchDrag(subframe, 10, 200, 0, -300);
 
   // Remove the observer, we don't need it any more.
-  SpecialPowers.Services.obs.removeObserver(testDriver, "APZ:TransformEnd", false);
+  SpecialPowers.Services.obs.removeObserver(testDriver, "APZ:TransformEnd");
 
   // Flush any pending paints
   yield flushApzRepaints(testDriver);
@@ -53,11 +53,11 @@ function* test(testDriver) {
   var lastPaint = convertScrollFrameData(getLastNonemptyBucket(contentPaints).scrollFrames);
   var foundIt = 0;
   for (var scrollId in lastPaint) {
-    if (('contentDescription' in lastPaint[scrollId]) &&
-        (lastPaint[scrollId]['contentDescription'].includes('tall_html'))) {
-      var dp = getPropertyAsRect(lastPaint, scrollId, 'displayport');
-      ok(dp.y <= 0, 'The displayport top should be less than or equal to zero to cover the visible part of the subframe; it is ' + dp.y);
-      ok(dp.y + dp.h >= subframe.clientHeight, 'The displayport bottom should be greater than the clientHeight; it is ' + (dp.y + dp.h));
+    if (("contentDescription" in lastPaint[scrollId]) &&
+        (lastPaint[scrollId].contentDescription.includes("tall_html"))) {
+      var dp = getPropertyAsRect(lastPaint, scrollId, "displayport");
+      ok(dp.y <= 0, "The displayport top should be less than or equal to zero to cover the visible part of the subframe; it is " + dp.y);
+      ok(dp.y + dp.h >= subframe.clientHeight, "The displayport bottom should be greater than the clientHeight; it is " + (dp.y + dp.h));
       foundIt++;
     }
   }

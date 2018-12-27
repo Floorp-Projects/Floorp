@@ -2396,5 +2396,17 @@ nsresult HttpChannelParent::LogBlockedCORSRequest(const nsAString& aMessage,
   return NS_OK;
 }
 
+nsresult HttpChannelParent::LogMimeTypeMismatch(const nsACString& aMessageName,
+                                                bool aWarning,
+                                                const nsAString& aURL,
+                                                const nsAString& aContentType) {
+  if (mIPCClosed || NS_WARN_IF(!SendLogMimeTypeMismatch(
+                        nsCString(aMessageName), aWarning, nsString(aURL),
+                        nsString(aContentType)))) {
+    return NS_ERROR_UNEXPECTED;
+  }
+  return NS_OK;
+}
+
 }  // namespace net
 }  // namespace mozilla

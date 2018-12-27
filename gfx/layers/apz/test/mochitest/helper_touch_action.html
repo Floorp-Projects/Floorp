@@ -15,9 +15,9 @@ function checkScroll(x, y, desc) {
 }
 
 function* test(testDriver) {
-  var target = document.getElementById('target');
+  var target = document.getElementById("target");
 
-  document.body.addEventListener('touchend', testDriver, { passive: true });
+  document.body.addEventListener("touchend", testDriver, { passive: true });
 
   // drag the page up to scroll down by 50px
   yield ok(synthesizeNativeTouchDrag(target, 10, 100, 0, -50),
@@ -26,7 +26,7 @@ function* test(testDriver) {
   checkScroll(0, 50, "After first vertical drag, with pan-y" );
 
   // switch style to pan-x
-  document.body.style.touchAction = 'pan-x';
+  document.body.style.touchAction = "pan-x";
   ok(true, "Waiting for pan-x to propagate...");
   yield waitForAllPaintsFlushed(function() {
     flushApzRepaints(testDriver);
@@ -52,7 +52,7 @@ function* test(testDriver) {
   checkScroll(10, 50, "After first diagonal drag, with pan-x");
 
   // switch style back to pan-y
-  document.body.style.touchAction = 'pan-y';
+  document.body.style.touchAction = "pan-y";
   ok(true, "Waiting for pan-y to propagate...");
   yield waitForAllPaintsFlushed(function() {
     flushApzRepaints(testDriver);
@@ -66,7 +66,7 @@ function* test(testDriver) {
   checkScroll(10, 10, "After second diagonal drag, with pan-y");
 
   // switch style to none
-  document.body.style.touchAction = 'none';
+  document.body.style.touchAction = "none";
   ok(true, "Waiting for none to propagate...");
   yield waitForAllPaintsFlushed(function() {
     flushApzRepaints(testDriver);
@@ -79,7 +79,7 @@ function* test(testDriver) {
   yield flushApzRepaints(testDriver);
   checkScroll(10, 10, "After third diagonal drag, with none");
 
-  document.body.style.touchAction = 'manipulation';
+  document.body.style.touchAction = "manipulation";
   ok(true, "Waiting for manipulation to propagate...");
   yield waitForAllPaintsFlushed(function() {
     flushApzRepaints(testDriver);

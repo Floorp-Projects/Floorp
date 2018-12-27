@@ -43,7 +43,7 @@
 function* test(testDriver) {
   var config = getHitTestConfig();
 
-  var subframe = document.getElementById('front');
+  var subframe = document.getElementById("front");
 
   // Set a displayport to ensure the subframe is layerized.
   // This is not required for exercising the behavior we want to test,
@@ -53,7 +53,7 @@ function* test(testDriver) {
 
   var subframeViewId = config.utils.getViewId(subframe);
 
-  var {hitInfo, scrollId} = hitTest(centerOf(subframe));
+  var {scrollId} = hitTest(centerOf(subframe));
 
   is(scrollId, subframeViewId,
      "hit the scroll frame behind the backface-visibility:hidden element");

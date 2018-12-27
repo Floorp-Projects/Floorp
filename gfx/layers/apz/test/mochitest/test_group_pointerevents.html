@@ -14,12 +14,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1285070
   let isWindows = navigator.platform.indexOf("Win") == 0;
   let enablePE = ["dom.w3c_pointer_events.enabled", true];
   var subtests = [
-    {'file': 'helper_bug1285070.html', 'prefs': [enablePE]},
-    {'file': 'helper_bug1299195.html', 'prefs': [enablePE]},
-    {'file': 'helper_bug1414336.html', 'prefs': [enablePE,
-      ["apz.test.fails_with_native_injection", isWindows]
+    {"file": "helper_bug1285070.html", "prefs": [enablePE]},
+    {"file": "helper_bug1299195.html", "prefs": [enablePE]},
+    {"file": "helper_bug1414336.html", "prefs": [enablePE,
+      ["apz.test.fails_with_native_injection", isWindows],
     ]},
-    {'file': 'helper_bug1502010_unconsumed_pan.html', 'prefs': [enablePE]}
+    {"file": "helper_bug1502010_unconsumed_pan.html", "prefs": [enablePE]},
   ];
 
   if (isApzEnabled()) {

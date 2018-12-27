@@ -28,7 +28,7 @@
  <div id="anim"></div>
 </body>
 <script>
-'use strict';
+"use strict";
 
 const utils = SpecialPowers.getDOMWindowUtils(window);
 
@@ -50,7 +50,7 @@ async function test_opacity() {
      "Element should have been moved by the offset");
 }
 
-if (utils.layerManagerType == 'WebRender') {
+if (utils.layerManagerType == "WebRender") {
   ok(true, "This test doesn't need to run on WebRender");
   subtestDone();
 } else {

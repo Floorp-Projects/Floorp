@@ -17,9 +17,9 @@
 </div>
 <script class="testbody" type="text/javascript">
 function test() {
-  var container = document.getElementById('container');
-  var outer = document.getElementById('outer');
-  var inner = document.getElementById('inner');
+  var container = document.getElementById("container");
+  var outer = document.getElementById("outer");
+  var inner = document.getElementById("inner");
   var outerScrollTop = outer.scrollTop;
   var containerScrollTop = container.scrollTop;
   var event = {
@@ -29,7 +29,7 @@ function test() {
     lineOrPageDeltaX: 0,
     lineOrPageDeltaY: 10,
   };
-  sendWheelAndPaint(inner, 20, 30, event, function () {
+  sendWheelAndPaint(inner, 20, 30, event, function() {
     ok(container.scrollTop == containerScrollTop, "container scrollframe should not have scrolled");
     ok(outer.scrollTop > outerScrollTop, "nested scrollframe should have scrolled");
     SimpleTest.finish();
@@ -38,8 +38,8 @@ function test() {
 
 SimpleTest.waitForExplicitFinish();
 
-pushPrefs([['general.smoothScroll', false],
-           ['mousewheel.transaction.timeout', 1000000]])
+pushPrefs([["general.smoothScroll", false],
+           ["mousewheel.transaction.timeout", 1000000]])
 .then(waitUntilApzStable)
 .then(test);
 
