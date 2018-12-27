@@ -908,20 +908,6 @@ uint32_t MediaDevice::GetBestFitnessDistance(
   MOZ_ASSERT(MediaManager::IsInMediaThread());
   MOZ_ASSERT(mSource);
 
-  nsString mediaSource;
-  GetMediaSource(mediaSource);
-
-  // This code is reused for audio, where the mediaSource constraint does
-  // not currently have a function, but because it defaults to "camera" in
-  // webidl, we ignore it for audio here.
-  if (!mediaSource.EqualsASCII("microphone")) {
-    for (const auto& constraint : aConstraintSets) {
-      if (constraint->mMediaSource.mIdeal.find(mediaSource) ==
-          constraint->mMediaSource.mIdeal.end()) {
-        return UINT32_MAX;
-      }
-    }
-  }
   // Forward request to underlying object to interrogate per-mode capabilities.
   // Pass in device's origin-specific id for deviceId constraint comparison.
   const nsString& id = aIsChrome ? mRawID : mID;
@@ -2487,6 +2473,32 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
       }
     }
     if (!privileged) {
+      // Only allow privileged content to explicitly pick full-screen,
+      // application or tabsharing, since these modes are still available for
+      // testing. All others get "Window" (*) sharing.
+      //
+      // *) We overload "Window" with the new default getDisplayMedia spec-
+      // mandated behavior of not influencing user-choice, which we currently
+      // implement as a list containing BOTH windows AND screen(s).
+      //
+      // Notes on why we chose "Window" as the one to overload. Two reasons:
+      //
+      // 1. It's the closest logically & behaviorally (multi-choice, no default)
+      // 2. Screen is still useful in tests (implicit default is entire screen)
+      //
+      // For UX reasons we don't want "Entire Screen" to be the first/default
+      // choice (in our code first=default). It's a "scary" source that comes
+      // with complicated warnings on-top that would be confusing as the first
+      // thing people see, and also deserves to be listed as last resort for
+      // privacy reasons.
+
+      if (videoType == MediaSourceEnum::Screen ||
+          videoType == MediaSourceEnum::Application ||
+          videoType == MediaSourceEnum::Browser) {
+        videoType = MediaSourceEnum::Window;
+        vc.mMediaSource.AssignASCII(
+            EnumToASCII(dom::MediaSourceEnumValues::strings, videoType));
+      }
       // only allow privileged content to set the window id
       if (vc.mBrowserWindow.WasPassed()) {
         vc.mBrowserWindow.Value() = -1;

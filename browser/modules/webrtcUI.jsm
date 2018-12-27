@@ -158,7 +158,7 @@ var webrtcUI = {
   updateWarningLabel(aMenuList) {
     let type = aMenuList.selectedItem.getAttribute("devicetype");
     let document = aMenuList.ownerDocument;
-    document.getElementById("webRTC-all-windows-shared").hidden = type != "Screen";
+    document.getElementById("webRTC-all-windows-shared").hidden = type != "screen";
   },
 
   // Add-ons can override stock permission behavior by doing:
@@ -625,23 +625,20 @@ function prompt(aBrowser, aRequest) {
       }
 
       function listScreenShareDevices(menupopup, devices) {
-        while (menupopup.lastChild)
+        while (menupopup.lastChild) {
           menupopup.removeChild(menupopup.lastChild);
-
-        let type = devices[0].mediaSource;
-        let typeName = type.charAt(0).toUpperCase() + type.substr(1);
-
+        }
         let label = doc.getElementById("webRTC-selectWindow-label");
-        let gumStringId = "getUserMedia.select" + typeName;
+        const gumStringId = "getUserMedia.selectWindowOrScreen";
         label.setAttribute("value",
                            stringBundle.getString(gumStringId + ".label"));
         label.setAttribute("accesskey",
                            stringBundle.getString(gumStringId + ".accesskey"));
 
-        // "Select <type>" is the default because we can't pick a
-        // 'default' window to share.
+        // "Select a Window or Screen" is the default because we can't and don't
+        // want to pick a 'default' window to share (Full screen is "scary").
         addDeviceToList(menupopup,
-                        stringBundle.getString("getUserMedia.pick" + typeName + ".label"),
+                        stringBundle.getString("getUserMedia.pickWindowOrScreen.label"),
                         "-1");
         menupopup.appendChild(doc.createXULElement("menuseparator"));
 
@@ -649,7 +646,7 @@ function prompt(aBrowser, aRequest) {
         let monitorIndex = 1;
         for (let i = 0; i < devices.length; ++i) {
           let device = devices[i];
-
+          let type = device.mediaSource;
           let name;
           // Building screen list from available screens.
           if (type == "screen") {
@@ -673,8 +670,9 @@ function prompt(aBrowser, aRequest) {
                                .replace("#2", count);
             }
           }
-          let item = addDeviceToList(menupopup, name, i, typeName);
+          let item = addDeviceToList(menupopup, name, i, type);
           item.deviceId = device.id;
+          item.mediaSource = type;
           if (device.scary)
             item.scary = true;
         }
@@ -691,6 +689,7 @@ function prompt(aBrowser, aRequest) {
             video.stream = null;
           }
 
+          let type = event.target.mediaSource;
           let deviceId = event.target.deviceId;
           if (deviceId == undefined) {
             doc.getElementById("webRTC-preview").hidden = true;
