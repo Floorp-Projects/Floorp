@@ -1045,6 +1045,18 @@ nsViewSourceChannel::LogBlockedCORSRequest(const nsAString &aMessage,
   return mHttpChannel->LogBlockedCORSRequest(aMessage, aCategory);
 }
 
+NS_IMETHODIMP
+nsViewSourceChannel::LogMimeTypeMismatch(const nsACString &aMessageName,
+                                         bool aWarning, const nsAString &aURL,
+                                         const nsAString &aContentType) {
+  if (!mHttpChannel) {
+    NS_WARNING("nsViewSourceChannel::LogMimeTypeMismatch mHttpChannel is null");
+    return NS_ERROR_UNEXPECTED;
+  }
+  return mHttpChannel->LogMimeTypeMismatch(aMessageName, aWarning, aURL,
+                                           aContentType);
+}
+
 const nsTArray<mozilla::Tuple<nsCString, nsCString>>
     &nsViewSourceChannel::PreferredAlternativeDataTypes() {
   if (mCacheInfoChannel) {
