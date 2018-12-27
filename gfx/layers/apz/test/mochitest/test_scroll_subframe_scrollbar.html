@@ -69,10 +69,10 @@ var DefaultEvent = {
 var ScrollbarWidth = 0;
 
 function test() {
-  var subframe = document.getElementById('subframe');
+  var subframe = document.getElementById("subframe");
   var oldClientWidth = subframe.clientWidth;
 
-  subframe.style.overflow = 'auto';
+  subframe.style.overflow = "auto";
   subframe.getBoundingClientRect();
 
   waitForAllPaintsFlushed(function () {
@@ -106,9 +106,9 @@ function testScrolling(subframe) {
 
 SimpleTest.waitForExplicitFinish();
 
-pushPrefs([['general.smoothScroll', false],
-           ['mousewheel.transaction.timeout', 0],
-           ['mousewheel.transaction.ignoremovedelay', 0]])
+pushPrefs([["general.smoothScroll", false],
+           ["mousewheel.transaction.timeout", 0],
+           ["mousewheel.transaction.ignoremovedelay", 0]])
 .then(waitUntilApzStable)
 .then(test);
 

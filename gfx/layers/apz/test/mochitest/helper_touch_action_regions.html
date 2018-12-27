@@ -15,7 +15,7 @@ function failure(e) {
 
 function listener(callback) {
   return function(e) {
-    ok(e.type == 'touchstart', "The touchstart event handler was triggered after snapshotting completed");
+    ok(e.type == "touchstart", "The touchstart event handler was triggered after snapshotting completed");
     setTimeout(callback, 0);
   };
 }
@@ -32,48 +32,48 @@ function listener(callback) {
 // at the end to clean up. Returns true on success, false on failure.
 function chromeTouchEventCounter(operation) {
   function chromeProcessCounter() {
-    addMessageListener('start', function() {
-      ChromeUtils.import('resource://gre/modules/Services.jsm');
-      var topWin = Services.wm.getMostRecentWindow('navigator:browser');
-      if (typeof topWin.eventCounts != 'undefined') {
-        dump('Found pre-existing eventCounts object on the top window!\n');
+    addMessageListener("start", function() {
+      ChromeUtils.import("resource://gre/modules/Services.jsm");
+      var topWin = Services.wm.getMostRecentWindow("navigator:browser");
+      if (typeof topWin.eventCounts != "undefined") {
+        dump("Found pre-existing eventCounts object on the top window!\n");
         return false;
       }
-      topWin.eventCounts = { 'touchstart': 0, 'touchmove': 0, 'touchend': 0 };
+      topWin.eventCounts = { "touchstart": 0, "touchmove": 0, "touchend": 0 };
       topWin.counter = function(e) {
         topWin.eventCounts[e.type]++;
       }
 
-      topWin.addEventListener('touchstart', topWin.counter, { passive: true });
-      topWin.addEventListener('touchmove', topWin.counter, { passive: true });
-      topWin.addEventListener('touchend', topWin.counter, { passive: true });
+      topWin.addEventListener("touchstart", topWin.counter, { passive: true });
+      topWin.addEventListener("touchmove", topWin.counter, { passive: true });
+      topWin.addEventListener("touchend", topWin.counter, { passive: true });
 
       return true;
     });
 
-    addMessageListener('report', function() {
-      ChromeUtils.import('resource://gre/modules/Services.jsm');
-      var topWin = Services.wm.getMostRecentWindow('navigator:browser');
+    addMessageListener("report", function() {
+      ChromeUtils.import("resource://gre/modules/Services.jsm");
+      var topWin = Services.wm.getMostRecentWindow("navigator:browser");
       return JSON.stringify(topWin.eventCounts);
     });
 
-    addMessageListener('end', function() {
-      ChromeUtils.import('resource://gre/modules/Services.jsm');
-      var topWin = Services.wm.getMostRecentWindow('navigator:browser');
-      if (typeof topWin.eventCounts == 'undefined') {
-        dump('The eventCounts object was not found on the top window!\n');
+    addMessageListener("end", function() {
+      ChromeUtils.import("resource://gre/modules/Services.jsm");
+      var topWin = Services.wm.getMostRecentWindow("navigator:browser");
+      if (typeof topWin.eventCounts == "undefined") {
+        dump("The eventCounts object was not found on the top window!\n");
         return false;
       }
-      topWin.removeEventListener('touchstart', topWin.counter);
-      topWin.removeEventListener('touchmove', topWin.counter);
-      topWin.removeEventListener('touchend', topWin.counter);
+      topWin.removeEventListener("touchstart", topWin.counter);
+      topWin.removeEventListener("touchmove", topWin.counter);
+      topWin.removeEventListener("touchend", topWin.counter);
       delete topWin.counter;
       delete topWin.eventCounts;
       return true;
     });
   }
 
-  if (typeof chromeTouchEventCounter.chromeHelper == 'undefined') {
+  if (typeof chromeTouchEventCounter.chromeHelper == "undefined") {
     // This is the first time chromeTouchEventCounter is being called; do initialization
     chromeTouchEventCounter.chromeHelper = SpecialPowers.loadChromeScript(chromeProcessCounter);
     ApzCleanup.register(function() { chromeTouchEventCounter.chromeHelper.destroy() });
@@ -87,7 +87,7 @@ function chromeTouchEventCounter(operation) {
 // go by without the condition being satisfied.
 function waitFor(eventType, count) {
   var start = Date.now();
-  while (JSON.parse(chromeTouchEventCounter('report'))[eventType] != count) {
+  while (JSON.parse(chromeTouchEventCounter("report"))[eventType] != count) {
     if (Date.now() - start > 10000) {
       // It's taking too long, let's abort
       return false;
@@ -104,7 +104,7 @@ function RunAfterProcessedQueuedInputEvents(aCallback) {
 function* test(testDriver) {
   // The main part of this test should run completely before the child process'
   // main-thread deals with the touch event, so check to make sure that happens.
-  document.body.addEventListener('touchstart', failure, { passive: true });
+  document.body.addEventListener("touchstart", failure, { passive: true });
 
   // What we want here is to synthesize all of the touch events (from this code in
   // the child process), and have the chrome process generate and process them,
@@ -175,10 +175,10 @@ function* test(testDriver) {
   // So, here we go...
 
   // Set up the chrome process touch listener
-  ok(chromeTouchEventCounter('start'), "Chrome touch counter registered");
+  ok(chromeTouchEventCounter("start"), "Chrome touch counter registered");
 
   // Set up the child process events and callbacks
-  var scroller = document.getElementById('scroller');
+  var scroller = document.getElementById("scroller");
   synthesizeNativeTouch(scroller, 10, 110, SpecialPowers.DOMWindowUtils.TOUCH_CONTACT, null, 0);
   RunAfterProcessedQueuedInputEvents(testDriver);
   for (var i = 1; i < 10; i++) {
@@ -197,12 +197,12 @@ function* test(testDriver) {
 
   yield; // this will tell the chrome process to synthesize the touchstart event
          // and then we wait to make sure it got processed:
-  ok(waitFor('touchstart', 1), "Touchstart processed in chrome process");
+  ok(waitFor("touchstart", 1), "Touchstart processed in chrome process");
 
   // Loop through the touchmove events
   for (var i = 1; i < 10; i++) {
     yield;
-    ok(waitFor('touchmove', i), "Touchmove processed in chrome process");
+    ok(waitFor("touchmove", i), "Touchmove processed in chrome process");
 
     // Take a snapshot after each touch move event. This forces
     // a composite each time, even we don't get a vsync in this
@@ -225,20 +225,20 @@ function* test(testDriver) {
 
   // Wait for the touchend as well, to clear all pending testDriver resumes
   yield;
-  ok(waitFor('touchend', 1), "Touchend processed in chrome process");
+  ok(waitFor("touchend", 1), "Touchend processed in chrome process");
 
   // Clean up the chrome process hooks
-  chromeTouchEventCounter('end');
+  chromeTouchEventCounter("end");
 
   // Now we are going to release our grip on the child process main thread,
   // so that all the DOM events that were queued up can be processed. We
   // register a touchstart listener to make sure this happens.
-  document.body.removeEventListener('touchstart', failure);
+  document.body.removeEventListener("touchstart", failure);
   var listenerFunc = listener(testDriver);
-  document.body.addEventListener('touchstart', listenerFunc, { passive: true });
-  dump('done registering listener, going to yield\n');
+  document.body.addEventListener("touchstart", listenerFunc, { passive: true });
+  dump("done registering listener, going to yield\n");
   yield;
-  document.body.removeEventListener('touchstart', listenerFunc);
+  document.body.removeEventListener("touchstart", listenerFunc);
 }
 
 if (SpecialPowers.isMainProcess()) {

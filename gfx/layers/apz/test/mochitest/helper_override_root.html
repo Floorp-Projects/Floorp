@@ -12,7 +12,7 @@
 // Add a non-passive listener on the document, so that we have a document-level
 // APZ-aware listener, and the entire document is put in the dispatch-to-content
 // region
-document.addEventListener('wheel', function(e) {
+document.addEventListener("wheel", function(e) {
     dump("Wheel listener running...\n");
 
     // spin for 2 seconds to give APZ time to scroll, if the event region override

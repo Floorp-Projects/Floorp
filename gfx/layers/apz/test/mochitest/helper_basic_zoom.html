@@ -25,7 +25,7 @@ function* test(testDriver) {
 
   var initial_resolution = getResolution();
   ok(initial_resolution > 0,
-      'The initial_resolution is ' + initial_resolution + ', which is some sane value');
+      "The initial_resolution is " + initial_resolution + ", which is some sane value");
 
   // This listener will trigger the test to continue once APZ is done with
   // processing the scroll.
@@ -53,7 +53,7 @@ function* test(testDriver) {
   // Flush state and get the resolution we're at now
   yield waitForApzFlushedRepaints(testDriver);
   let final_resolution = getResolution();
-  ok(final_resolution > initial_resolution, 'The final resolution (' + final_resolution + ') is greater after zooming in');
+  ok(final_resolution > initial_resolution, "The final resolution (" + final_resolution + ") is greater after zooming in");
 
   // Check we've got the expected events.
   // Pinch-zooming the page should fire visual viewport resize events:

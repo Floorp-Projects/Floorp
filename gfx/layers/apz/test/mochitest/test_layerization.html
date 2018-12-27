@@ -74,65 +74,65 @@ function asyncWrapper(testDriver) {
 
 function* test(testDriver) {
   // Initially, nothing should be layerized.
-  ok(!isLayerized('outer1'), "initially 'outer1' should not be layerized");
-  ok(!isLayerized('inner1'), "initially 'inner1' should not be layerized");
-  ok(!isLayerized('outer2'), "initially 'outer2' should not be layerized");
-  ok(!isLayerized('inner2'), "initially 'inner2' should not be layerized");
-  ok(!isLayerized('outer3'), "initially 'outer3' should not be layerized");
-  ok(!isLayerized('inner3'), "initially 'inner3' should not be layerized");
-  ok(!isLayerized('outer4'), "initially 'outer4' should not be layerized");
-  ok(!isLayerized('inner4'), "initially 'inner4' should not be layerized");
+  ok(!isLayerized("outer1"), "initially 'outer1' should not be layerized");
+  ok(!isLayerized("inner1"), "initially 'inner1' should not be layerized");
+  ok(!isLayerized("outer2"), "initially 'outer2' should not be layerized");
+  ok(!isLayerized("inner2"), "initially 'inner2' should not be layerized");
+  ok(!isLayerized("outer3"), "initially 'outer3' should not be layerized");
+  ok(!isLayerized("inner3"), "initially 'inner3' should not be layerized");
+  ok(!isLayerized("outer4"), "initially 'outer4' should not be layerized");
+  ok(!isLayerized("inner4"), "initially 'inner4' should not be layerized");
 
   // Scrolling over outer1 should layerize outer1, but not inner1.
-  yield scrollWheelOver(document.getElementById('outer1'), true, testDriver);
-  ok(isLayerized('outer1'), "scrolling 'outer1' should cause it to be layerized");
-  ok(!isLayerized('inner1'), "scrolling 'outer1' should not cause 'inner1' to be layerized");
+  yield scrollWheelOver(document.getElementById("outer1"), true, testDriver);
+  ok(isLayerized("outer1"), "scrolling 'outer1' should cause it to be layerized");
+  ok(!isLayerized("inner1"), "scrolling 'outer1' should not cause 'inner1' to be layerized");
 
   // Scrolling over inner2 should layerize both outer2 and inner2.
-  yield scrollWheelOver(document.getElementById('inner2'), true, testDriver);
-  ok(isLayerized('inner2'), "scrolling 'inner2' should cause it to be layerized");
-  ok(isLayerized('outer2'), "scrolling 'inner2' should also cause 'outer2' to be layerized");
+  yield scrollWheelOver(document.getElementById("inner2"), true, testDriver);
+  ok(isLayerized("inner2"), "scrolling 'inner2' should cause it to be layerized");
+  ok(isLayerized("outer2"), "scrolling 'inner2' should also cause 'outer2' to be layerized");
 
   // The second half of the test repeats the same checks as the first half,
   // but with an iframe as the outer scrollable frame.
 
   // Scrolling over outer3 should layerize outer3, but not inner3.
-  yield scrollWheelOver(document.getElementById('outer3').contentDocument.documentElement, true, testDriver);
-  ok(isLayerized('outer3'), "scrolling 'outer3' should cause it to be layerized");
-  ok(!isLayerized('inner3'), "scrolling 'outer3' should not cause 'inner3' to be layerized");
+  yield scrollWheelOver(document.getElementById("outer3").contentDocument.documentElement, true, testDriver);
+  ok(isLayerized("outer3"), "scrolling 'outer3' should cause it to be layerized");
+  ok(!isLayerized("inner3"), "scrolling 'outer3' should not cause 'inner3' to be layerized");
 
   // Scrolling over outer4 should layerize both outer4 and inner4.
-  yield scrollWheelOver(document.getElementById('outer4').contentDocument.getElementById('inner4'), true, testDriver);
-  ok(isLayerized('inner4'), "scrolling 'inner4' should cause it to be layerized");
-  ok(isLayerized('outer4'), "scrolling 'inner4' should also cause 'outer4' to be layerized");
+  yield scrollWheelOver(document.getElementById("outer4").contentDocument.getElementById("inner4"), true, testDriver);
+  ok(isLayerized("inner4"), "scrolling 'inner4' should cause it to be layerized");
+  ok(isLayerized("outer4"), "scrolling 'inner4' should also cause 'outer4' to be layerized");
 
   // Now we enable displayport expiry, and verify that things are still
   // layerized as they were before.
   yield SpecialPowers.pushPrefEnv({"set": [["apz.displayport_expiry_ms", DISPLAYPORT_EXPIRY]]}, testDriver);
-  ok(isLayerized('outer1'), "outer1 is still layerized after enabling expiry");
-  ok(!isLayerized('inner1'), "inner1 is still not layerized after enabling expiry");
-  ok(isLayerized('outer2'), "outer2 is still layerized after enabling expiry");
-  ok(isLayerized('inner2'), "inner2 is still layerized after enabling expiry");
-  ok(isLayerized('outer3'), "outer3 is still layerized after enabling expiry");
-  ok(!isLayerized('inner3'), "inner3 is still not layerized after enabling expiry");
-  ok(isLayerized('outer4'), "outer4 is still layerized after enabling expiry");
-  ok(isLayerized('inner4'), "inner4 is still layerized after enabling expiry");
+  ok(isLayerized("outer1"), "outer1 is still layerized after enabling expiry");
+  ok(!isLayerized("inner1"), "inner1 is still not layerized after enabling expiry");
+  ok(isLayerized("outer2"), "outer2 is still layerized after enabling expiry");
+  ok(isLayerized("inner2"), "inner2 is still layerized after enabling expiry");
+  ok(isLayerized("outer3"), "outer3 is still layerized after enabling expiry");
+  ok(!isLayerized("inner3"), "inner3 is still not layerized after enabling expiry");
+  ok(isLayerized("outer4"), "outer4 is still layerized after enabling expiry");
+  ok(isLayerized("inner4"), "inner4 is still layerized after enabling expiry");
 
   // Now we trigger a scroll on some of the things still layerized, so that
   // the displayport expiry gets triggered.
 
   // Expire displayport with scrolling on outer1
-  yield scrollWheelOver(document.getElementById('outer1'), true, testDriver);
+  yield scrollWheelOver(document.getElementById("outer1"), true, testDriver);
   yield waitForAllPaints(function() {
     flushApzRepaints(testDriver);
   });
   yield setTimeout(testDriver, DISPLAYPORT_EXPIRY);
   yield waitForAllPaints(asyncWrapper(testDriver));
-  ok(!isLayerized('outer1'), "outer1 is no longer layerized after displayport expiry");
-  ok(!isLayerized('inner1'), "inner1 is still not layerized after displayport expiry");
+  ok(!isLayerized("outer1"), "outer1 is no longer layerized after displayport expiry");
+  ok(!isLayerized("inner1"), "inner1 is still not layerized after displayport expiry");
 
   // Expire displayport with scrolling on inner2
-  yield scrollWheelOver(document.getElementById('inner2'), true, testDriver);
+  yield scrollWheelOver(document.getElementById("inner2"), true, testDriver);
   yield waitForAllPaints(function() {
     flushApzRepaints(testDriver);
   });
@@ -140,10 +140,10 @@ function* test(testDriver) {
   // both, one at a time.
   yield setTimeout(testDriver, DISPLAYPORT_EXPIRY);
   yield waitForAllPaints(asyncWrapper(testDriver));
-  ok(!isLayerized('inner2'), "inner2 is no longer layerized after displayport expiry");
+  ok(!isLayerized("inner2"), "inner2 is no longer layerized after displayport expiry");
   yield setTimeout(testDriver, DISPLAYPORT_EXPIRY);
   yield waitForAllPaints(asyncWrapper(testDriver));
-  ok(!isLayerized('outer2'), "outer2 got de-layerized with inner2");
+  ok(!isLayerized("outer2"), "outer2 got de-layerized with inner2");
 
   // Scroll on inner3. inner3 isn't layerized, and this will cause it to
   // get layerized, but it will also trigger displayport expiration for inner3
@@ -154,7 +154,7 @@ function* test(testDriver) {
   // However, if we do get a scroll event while waiting for the expiry, we need
   // to restart the expiry timer because the displayport expiry got reset. There's
   // no good way that I can think of to deterministically avoid doing this.
-  let inner3 = document.getElementById('outer3').contentDocument.getElementById('inner3');
+  let inner3 = document.getElementById("outer3").contentDocument.getElementById("inner3");
   yield scrollWheelOver(inner3, false, testDriver);
   yield waitForAllPaints(function() {
     flushApzRepaints(testDriver);
@@ -167,27 +167,27 @@ function* test(testDriver) {
     // by not updating timerId we ensure that this listener resets the timeout
     // at most once.
   };
-  inner3.addEventListener('scroll', timeoutResetter);
+  inner3.addEventListener("scroll", timeoutResetter);
   yield; // wait for the setTimeout to elapse
-  inner3.removeEventListener('scroll', timeoutResetter);
+  inner3.removeEventListener("scroll", timeoutResetter);
 
   yield waitForAllPaints(asyncWrapper(testDriver));
-  ok(!isLayerized('inner3'), "inner3 becomes unlayerized after expiry");
+  ok(!isLayerized("inner3"), "inner3 becomes unlayerized after expiry");
   yield setTimeout(testDriver, DISPLAYPORT_EXPIRY);
   yield waitForAllPaints(asyncWrapper(testDriver));
-  ok(!isLayerized('outer3'), "outer3 is no longer layerized after inner3 triggered expiry");
+  ok(!isLayerized("outer3"), "outer3 is no longer layerized after inner3 triggered expiry");
 
   // Scroll outer4 and wait for the expiry. It should NOT get expired because
   // inner4 is still layerized
-  yield scrollWheelOver(document.getElementById('outer4').contentDocument.documentElement, true, testDriver);
+  yield scrollWheelOver(document.getElementById("outer4").contentDocument.documentElement, true, testDriver);
   yield waitForAllPaints(function() {
     flushApzRepaints(testDriver);
   });
   // Wait for the expiry to elapse
   yield setTimeout(testDriver, DISPLAYPORT_EXPIRY);
   yield waitForAllPaints(asyncWrapper(testDriver));
-  ok(isLayerized('inner4'), "inner4 is still layerized because it never expired");
-  ok(isLayerized('outer4'), "outer4 is still layerized because inner4 is still layerized");
+  ok(isLayerized("inner4"), "inner4 is still layerized because it never expired");
+  ok(isLayerized("outer4"), "outer4 is still layerized because inner4 is still layerized");
 }
 
 if (isApzEnabled()) {
