@@ -2029,6 +2029,9 @@ XML_GetBuffer(XML_Parser parser, int len)
   }
 
   if (len > bufferLim - bufferEnd) {
+#ifdef XML_CONTEXT_BYTES
+    int keep;
+#endif  /* defined XML_CONTEXT_BYTES */
     /* Do not invoke signed arithmetic overflow: */
     int neededSize = (int) ((unsigned)len + (unsigned)(bufferEnd - bufferPtr));
     if (neededSize < 0) {
@@ -2036,8 +2039,7 @@ XML_GetBuffer(XML_Parser parser, int len)
       return NULL;
     }
 #ifdef XML_CONTEXT_BYTES
-    int keep = (int)(bufferPtr - buffer);
-
+    keep = (int)(bufferPtr - buffer);
     if (keep > XML_CONTEXT_BYTES)
       keep = XML_CONTEXT_BYTES;
     neededSize += keep;
@@ -2202,7 +2204,7 @@ XML_GetCurrentByteIndex(XML_Parser parser)
   if (parser == NULL)
     return -1;
   if (eventPtr)
-    return parseEndByteIndex - (parseEndPtr - eventPtr);
+    return (XML_Index)(parseEndByteIndex - (parseEndPtr - eventPtr));
 /* BEGIN MOZILLA CHANGE (fix XML_GetCurrentByteIndex) */
 #if 0
   return -1;
@@ -4379,15 +4381,17 @@ doProlog(XML_Parser parser,
 #endif /* XML_DTD */
       dtd->hasParamEntityRefs = XML_TRUE;
       if (startDoctypeDeclHandler) {
+        XML_Char *pubId;
         if (!XmlIsPublicId(enc, s, next, eventPP))
           return XML_ERROR_PUBLICID;
-        doctypePubid = poolStoreString(&tempPool, enc,
-                                       s + enc->minBytesPerChar,
-                                       next - enc->minBytesPerChar);
-        if (!doctypePubid)
+        pubId = poolStoreString(&tempPool, enc,
+                                s + enc->minBytesPerChar,
+                                next - enc->minBytesPerChar);
+        if (!pubId)
           return XML_ERROR_NO_MEMORY;
-        normalizePublicId((XML_Char *)doctypePubid);
+        normalizePublicId(pubId);
         poolFinish(&tempPool);
+        doctypePubid = pubId;
         handleDefault = XML_FALSE;
         goto alreadyChecked;
       }
