@@ -49,11 +49,12 @@
 #include "InterceptedChannel.h"
 #include "mozIThirdPartyUtil.h"
 #include "nsContentSecurityManager.h"
-#include "nsIDeprecationWarner.h"
 #include "nsICompressConvStats.h"
+#include "nsIDeprecationWarner.h"
 #include "nsIDocument.h"
 #include "nsIDOMWindowUtils.h"
 #include "nsIEventTarget.h"
+#include "nsIScriptError.h"
 #include "nsRedirectHistoryEntry.h"
 #include "nsSocketTransportService2.h"
 #include "nsStreamUtils.h"
@@ -3782,6 +3783,33 @@ HttpChannelChild::LogBlockedCORSRequest(const nsAString& aMessage,
     nsCORSListenerProxy::LogBlockedCORSRequest(innerWindowID, privateBrowsing,
                                                aMessage, aCategory);
   }
+  return NS_OK;
+}
+
+mozilla::ipc::IPCResult HttpChannelChild::RecvLogMimeTypeMismatch(
+    const nsCString& aMessageName, const bool& aWarning, const nsString& aURL,
+    const nsString& aContentType) {
+  Unused << LogMimeTypeMismatch(aMessageName, aWarning, aURL, aContentType);
+  return IPC_OK();
+}
+
+NS_IMETHODIMP
+HttpChannelChild::LogMimeTypeMismatch(const nsACString& aMessageName,
+                                      bool aWarning, const nsAString& aURL,
+                                      const nsAString& aContentType) {
+  nsCOMPtr<nsIDocument> doc;
+  if (mLoadInfo) {
+    mLoadInfo->GetLoadingDocument(getter_AddRefs(doc));
+  }
+
+  nsAutoString url(aURL);
+  nsAutoString contentType(aContentType);
+  const char16_t* params[] = { url.get(), contentType.get() };
+  nsContentUtils::ReportToConsole(
+      aWarning ? nsIScriptError::warningFlag : nsIScriptError::errorFlag,
+      NS_LITERAL_CSTRING("MIMEMISMATCH"), doc,
+      nsContentUtils::eSECURITY_PROPERTIES, nsCString(aMessageName).get(),
+      params, ArrayLength(params));
   return NS_OK;
 }
 
