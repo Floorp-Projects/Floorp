@@ -135,11 +135,11 @@ Channel::Channel(size_t aId, bool aMiddlemanRecording,
   }
 
   while (true) {
-    Message* msg = channel->WaitForMessage();
+    Message::UniquePtr msg = channel->WaitForMessage();
     if (!msg) {
       break;
     }
-    channel->mHandler(msg);
+    channel->mHandler(std::move(msg));
   }
 }
 
@@ -175,7 +175,7 @@ void Channel::SendMessage(const Message& aMsg) {
   }
 }
 
-Message* Channel::WaitForMessage() {
+Message::UniquePtr Channel::WaitForMessage() {
   if (!mMessageBuffer) {
     mMessageBuffer = (MessageBuffer*)AllocateMemory(sizeof(MessageBuffer),
                                                     MemoryKind::Generic);
@@ -216,7 +216,7 @@ Message* Channel::WaitForMessage() {
     mMessageBytes += nbytes;
   }
 
-  Message* res = ((Message*)mMessageBuffer->begin())->Clone();
+  Message::UniquePtr res = ((Message*)mMessageBuffer->begin())->Clone();
 
   // Remove the message we just received from the incoming buffer.
   size_t remaining = mMessageBytes - messageSize;

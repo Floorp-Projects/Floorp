@@ -426,9 +426,10 @@ void ChildProcessInfo::LaunchSubprocess(
   // deleting or tearing down the old one's state. This is pretty lame and it
   // would be nice if we could do something better here, especially because
   // with restarts we could create any number of channels over time.
-  mChannel = new Channel(channelId, IsRecording(), [=](Message* aMsg) {
-    ReceiveChildMessageOnMainThread(channelId, aMsg);
-  });
+  mChannel = new Channel(channelId, IsRecording(),
+                         [=](Message::UniquePtr aMsg) {
+                           ReceiveChildMessageOnMainThread(std::move(aMsg));
+                         });
 
   MOZ_RELEASE_ASSERT(IsRecording() == aRecordingProcessData.isSome());
   if (IsRecording()) {
