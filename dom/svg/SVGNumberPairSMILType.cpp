@@ -25,7 +25,7 @@ void SVGNumberPairSMILType::Destroy(nsSMILValue& aValue) const {
   MOZ_ASSERT(aValue.mType == this, "Unexpected SMIL value");
   aValue.mU.mNumberPair[0] = 0;
   aValue.mU.mNumberPair[1] = 0;
-  aValue.mType = nsSMILNullType::Singleton();
+  aValue.mType = SMILNullType::Singleton();
 }
 
 nsresult SVGNumberPairSMILType::Assign(nsSMILValue& aDest,

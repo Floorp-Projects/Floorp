@@ -11,7 +11,7 @@
 #include "nsISMILAttr.h"
 #include "nsSMILCSSValueType.h"
 #include "nsSMILParserUtils.h"
-#include "nsSMILNullType.h"
+#include "SMILNullType.h"
 #include "nsSMILTimedElement.h"
 #include "nsAttrValueInlines.h"
 #include "nsGkAtoms.h"

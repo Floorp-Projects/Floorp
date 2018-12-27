@@ -173,7 +173,7 @@ void SVGMotionSMILType::Destroy(nsSMILValue& aValue) const {
   delete arr;
 
   aValue.mU.mPtr = nullptr;
-  aValue.mType = nsSMILNullType::Singleton();
+  aValue.mType = SMILNullType::Singleton();
 }
 
 nsresult SVGMotionSMILType::Assign(nsSMILValue& aDest,
