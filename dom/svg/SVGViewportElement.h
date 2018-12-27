@@ -7,18 +7,18 @@
 #ifndef mozilla_dom_SVGViewportElement_h
 #define mozilla_dom_SVGViewportElement_h
 
+#include "mozilla/Attributes.h"
 #include "mozilla/dom/FromParser.h"
 #include "nsAutoPtr.h"
 #include "nsIContentInlines.h"
 #include "nsISVGPoint.h"
+#include "SVGAnimatedPreserveAspectRatio.h"
 #include "nsSVGEnum.h"
-#include "nsSVGLength2.h"
 #include "SVGGraphicsElement.h"
 #include "SVGImageContext.h"
-#include "nsSVGViewBox.h"
 #include "SVGPreserveAspectRatio.h"
-#include "SVGAnimatedPreserveAspectRatio.h"
-#include "mozilla/Attributes.h"
+#include "nsSVGLength2.h"
+#include "nsSVGViewBox.h"
 
 class nsSVGOuterSVGFrame;
 class nsSVGViewportFrame;

@@ -15,16 +15,16 @@
 #include "DOMSVGLength.h"
 #include "DOMSVGNumber.h"
 #include "DOMSVGPoint.h"
-#include "nsLayoutStylesheetCache.h"
-#include "nsSVGAngle.h"
 #include "nsFrameSelection.h"
+#include "nsLayoutStylesheetCache.h"
 #include "nsIFrame.h"
 #include "nsISVGSVGFrame.h"
 #include "nsSMILAnimationController.h"
 #include "nsSMILTimeContainer.h"
+#include "nsSVGAngle.h"
+#include "SVGAngle.h"
 #include "nsSVGDisplayableFrame.h"
 #include "nsSVGUtils.h"
-#include "SVGAngle.h"
 
 NS_IMPL_NS_NEW_SVG_ELEMENT_CHECK_PARSER(SVG)
 
