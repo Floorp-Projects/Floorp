@@ -229,8 +229,9 @@ var gTests = [
        "webRTC-shareScreen-notification-icon", "anchored to device icon");
     checkDeviceSelectors(false, false, true);
 
-    // Select the first screen so that we can have a stream.
-    document.getElementById("webRTC-selectWindow-menulist").getItemAtIndex(2).doCommand();
+    // Select the last screen so that we can have a stream.
+    let menulist = document.getElementById("webRTC-selectWindow-menulist");
+    menulist.getItemAtIndex(menulist.itemCount - 1).doCommand();
 
     let indicator = promiseIndicatorWindow();
     await promiseMessage("ok", () => {
@@ -282,8 +283,8 @@ var gTests = [
        "webRTC-shareScreen-notification-icon", "anchored to device icon");
     checkDeviceSelectors(false, false, true);
 
-    // Select the first screen so that we can have a stream.
-    document.getElementById("webRTC-selectWindow-menulist").getItemAtIndex(2).doCommand();
+    // Select the last screen so that we can have a stream.
+    menulist.getItemAtIndex(menulist.itemCount - 1).doCommand();
 
     await promiseMessage("ok", () => {
       PopupNotifications.panel.firstElementChild.button.click();
