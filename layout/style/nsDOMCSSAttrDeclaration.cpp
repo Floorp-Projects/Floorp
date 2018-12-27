@@ -16,7 +16,7 @@
 #include "nsIDocument.h"
 #include "nsIURI.h"
 #include "nsNodeUtils.h"
-#include "nsSMILCSSValueType.h"
+#include "SMILCSSValueType.h"
 #include "nsWrapperCacheInlines.h"
 #include "nsIFrame.h"
 #include "ActiveLayerTracker.h"
@@ -146,7 +146,7 @@ nsresult nsDOMCSSAttributeDeclaration::SetSMILValue(
   }
   mozAutoDocUpdate autoUpdate(DocToUpdate(), true);
   RefPtr<DeclarationBlock> decl = olddecl->EnsureMutable();
-  bool changed = nsSMILCSSValueType::SetPropertyValues(aValue, *decl);
+  bool changed = SMILCSSValueType::SetPropertyValues(aValue, *decl);
   if (changed) {
     // We can pass nullptr as the latter param, since this is
     // mIsSMILOverride == true case.

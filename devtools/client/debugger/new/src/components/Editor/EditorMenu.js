@@ -14,7 +14,13 @@ import {
   getSourceLocationFromMouseEvent,
   toSourceLine
 } from "../../utils/editor";
-import { isPretty, getRawSourceURL, shouldBlackbox } from "../../utils/source";
+import {
+  isPretty,
+  getRawSourceURL,
+  getFilename,
+  shouldBlackbox
+} from "../../utils/source";
+import { downloadFile } from "../../utils/utils";
 import {
   getContextMenu,
   getPrettySource,
@@ -93,6 +99,8 @@ function getMenuItems(
   const revealInTreeLabel = L10N.getStr("sourceTabs.revealInTree");
   const watchExpressionKey = L10N.getStr("expressions.accesskey");
   const watchExpressionLabel = L10N.getStr("expressions.label");
+  const downloadKey = L10N.getStr("downloadFile.accesskey");
+  const downloadLabel = L10N.getStr("downloadFile.label");
 
   // menu items
 
@@ -179,6 +187,13 @@ function getMenuItems(
     click: () => evaluateInConsole(selectionText)
   };
 
+  const downloadFileItem = {
+    id: "node-menu-download-file",
+    label: downloadLabel,
+    accesskey: downloadKey,
+    click: () => downloadFile(selectedSource.text, getFilename(selectedSource))
+  };
+
   // construct menu
   const menuItems = [
     copyToClipboardItem,
@@ -196,6 +211,8 @@ function getMenuItems(
   if (isTextSelected) {
     menuItems.push(watchExpressionItem, evaluateInConsoleItem);
   }
+
+  menuItems.push(downloadFileItem);
 
   return menuItems;
 }

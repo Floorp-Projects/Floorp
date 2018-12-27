@@ -7,11 +7,11 @@
 #ifndef SVGTransformableElement_h
 #define SVGTransformableElement_h
 
-#include "mozilla/Attributes.h"
 #include "nsAutoPtr.h"
 #include "SVGAnimatedTransformList.h"
-#include "SVGElement.h"
 #include "gfxMatrix.h"
+#include "mozilla/Attributes.h"
+#include "mozilla/dom/SVGElement.h"
 #include "mozilla/gfx/Matrix.h"
 
 namespace mozilla {

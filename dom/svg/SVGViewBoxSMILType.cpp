@@ -25,7 +25,7 @@ void SVGViewBoxSMILType::Destroy(nsSMILValue& aValue) const {
   MOZ_ASSERT(aValue.mType == this, "Unexpected SMIL value");
   delete static_cast<nsSVGViewBoxRect*>(aValue.mU.mPtr);
   aValue.mU.mPtr = nullptr;
-  aValue.mType = nsSMILNullType::Singleton();
+  aValue.mType = SMILNullType::Singleton();
 }
 
 nsresult SVGViewBoxSMILType::Assign(nsSMILValue& aDest,

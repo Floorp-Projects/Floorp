@@ -3870,7 +3870,7 @@ module.exports = "<!-- This Source Code Form is subject to the terms of the Mozi
 /***/ 350:
 /***/ (function(module, exports) {
 
-module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" viewBox=\"0 0 60 12\"><path id=\"base-path\" d=\"M53.9,0H1C0.4,0,0,0.4,0,1v10c0,0.6,0.4,1,1,1h52.9c0.6,0,1.2-0.3,1.5-0.7L60,6l-4.4-5.3C55,0.3,54.5,0,53.9,0z\"></path></svg>"
+module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" viewBox=\"0 0 60 14\"><path id=\"base-path\" d=\"M53.07.5H1.5a1 1 0 0 0-1 1v11a1 1 0 0 0 1 1h51.57a2 2 0 0 0 1.53-.7L59.3 7l-4.7-5.8a2 2 0 0 0-1.53-.7z&gt;&lt;/path&gt;&lt;/svg&gt;\">"
 
 /***/ }),
 
@@ -5043,6 +5043,10 @@ class Tree extends Component {
       // root item.
       autoExpandAll: _propTypes2.default.bool,
 
+      // Auto expand a node only if number of its children
+      // are less than autoExpandNodeChildrenLimit
+      autoExpandNodeChildrenLimit: _propTypes2.default.number,
+
       // Note: the two properties below are mutually exclusive. Only one of the
       // label properties is necessary.
       // ID of an element whose textual content serves as an accessible label
@@ -5134,7 +5138,8 @@ class Tree extends Component {
   }
 
   _autoExpand() {
-    if (!this.props.autoExpandDepth) {
+    const { autoExpandDepth, autoExpandNodeChildrenLimit } = this.props;
+    if (!autoExpandDepth) {
       return;
     }
 
@@ -5142,14 +5147,18 @@ class Tree extends Component {
     // not use the usual DFS infrastructure because we don't want to ignore
     // collapsed nodes.
     const autoExpand = (item, currentDepth) => {
-      if (currentDepth >= this.props.autoExpandDepth || this.state.seen.has(item)) {
+      if (currentDepth >= autoExpandDepth || this.state.seen.has(item)) {
+        return;
+      }
+
+      const children = this.props.getChildren(item);
+      if (autoExpandNodeChildrenLimit && children.length > autoExpandNodeChildrenLimit) {
         return;
       }
 
       this.props.onExpand(item);
       this.state.seen.add(item);
 
-      const children = this.props.getChildren(item);
       const length = children.length;
       for (let i = 0; i < length; i++) {
         autoExpand(children[i], currentDepth + 1);
@@ -7058,7 +7067,7 @@ function formatKeyShortcut(shortcut) {
 /***/ 3789:
 /***/ (function(module, exports) {
 
-module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg version=\"1.1\" id=\"loader-1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" x=\"0px\" y=\"0px\" viewBox=\"0 0 40 40\" enable-background=\"new 0 0 40 40\" xml:space=\"preserve\"><path opacity=\"0.2\" fill=\"#000\" d=\"M20.201,5.169c-8.254,0-14.946,6.692-14.946,14.946c0,8.255,6.692,14.946,14.946,14.946 s14.946-6.691,14.946-14.946C35.146,11.861,28.455,5.169,20.201,5.169z M20.201,31.749c-6.425,0-11.634-5.208-11.634-11.634 c0-6.425,5.209-11.634,11.634-11.634c6.425,0,11.633,5.209,11.633,11.634C31.834,26.541,26.626,31.749,20.201,31.749z\"></path><path fill=\"#000\" d=\"M26.013,10.047l1.654-2.866c-2.198-1.272-4.743-2.012-7.466-2.012h0v3.312h0 C22.32,8.481,24.301,9.057,26.013,10.047z\"><animateTransform attributeType=\"xml\" attributeName=\"transform\" type=\"rotate\" from=\"0 20 20\" to=\"360 20 20\" dur=\"0.5s\" repeatCount=\"indefinite\"></animateTransform></path></svg>"
+module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg version=\"1.1\" id=\"loader-1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" x=\"0px\" y=\"0px\" viewBox=\"0 0 40 40\" enable-background=\"new 0 0 40 40\" xml:space=\"preserve\"><path opacity=\"0.2\" fill=\"#000\" d=\"M20.201,5.169c-8.254,0-14.946,6.692-14.946,14.946c0,8.255,6.692,14.946,14.946,14.946 s14.946-6.691,14.946-14.946C35.146,11.861,28.455,5.169,20.201,5.169z M20.201,31.749c-6.425,0-11.634-5.208-11.634-11.634 c0-6.425,5.209-11.634,11.634-11.634c6.425,0,11.633,5.209,11.633,11.634C31.834,26.541,26.626,31.749,20.201,31.749z\"></path><path fill=\"#000\" d=\"M26.013,10.047l1.654-2.866c-2.198-1.272-4.743-2.012-7.466-2.012h0v3.312h0 C22.32,8.481,24.301,9.057,26.013,10.047z\"></path></svg>"
 
 /***/ }),
 

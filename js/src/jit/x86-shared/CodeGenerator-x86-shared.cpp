@@ -755,8 +755,8 @@ void CodeGenerator::visitPowHalfD(LPowHalfD* ins) {
   }
 
   if (!ins->mir()->operandIsNeverNegativeZero()) {
-    // Math.pow(-0, 0.5) == 0 == Math.pow(0, 0.5). Adding 0 converts any -0 to
-    // 0.
+    // Math.pow(-0, 0.5) == 0 == Math.pow(0, 0.5).
+    // Adding 0 converts any -0 to 0.
     masm.zeroDouble(scratch);
     masm.addDouble(input, scratch);
     masm.vsqrtsd(scratch, output, output);
