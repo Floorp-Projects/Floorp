@@ -558,6 +558,9 @@ struct XML_ParserStruct {
   NS_ATT *m_nsAtts;
   unsigned long m_nsAttsVersion;
   unsigned char m_nsAttsPower;
+#ifdef XML_ATTR_INFO
+  XML_AttrInfo *m_attInfo;
+#endif
   POSITION m_position;
   STRING_POOL m_tempPool;
   STRING_POOL m_temp2Pool;
@@ -669,6 +672,7 @@ struct XML_ParserStruct {
 #define nsAtts (parser->m_nsAtts)
 #define nsAttsVersion (parser->m_nsAttsVersion)
 #define nsAttsPower (parser->m_nsAttsPower)
+#define attInfo (parser->m_attInfo)
 #define tempPool (parser->m_tempPool)
 #define temp2Pool (parser->m_temp2Pool)
 #define groupConnector (parser->m_groupConnector)
@@ -939,9 +943,20 @@ parserCreate(const XML_Char *encodingName,
     FREE(parser);
     return NULL;
   }
+#ifdef XML_ATTR_INFO
+  attInfo = (XML_AttrInfo*)MALLOC(attsSize * sizeof(XML_AttrInfo));
+  if (attInfo == NULL) {
+    FREE(atts);
+    FREE(parser);
+    return NULL;
+  }
+#endif
   dataBuf = (XML_Char *)MALLOC(INIT_DATA_BUF_SIZE * sizeof(XML_Char));
   if (dataBuf == NULL) {
     FREE(atts);
+#ifdef XML_ATTR_INFO
+    FREE(attInfo);
+#endif
     FREE(parser);
     return NULL;
   }
@@ -954,6 +969,9 @@ parserCreate(const XML_Char *encodingName,
     if (_dtd == NULL) {
       FREE(dataBuf);
       FREE(atts);
+#ifdef XML_ATTR_INFO
+      FREE(attInfo);
+#endif
       FREE(parser);
       return NULL;
     }
@@ -1348,6 +1366,9 @@ XML_ParserFree(XML_Parser parser)
 #endif /* XML_DTD */
     dtdDestroy(_dtd, (XML_Bool)!parentParser, &parser->m_mem);
   FREE((void *)atts);
+#ifdef XML_ATTR_INFO
+  FREE((void *)attInfo);
+#endif
   FREE(groupConnector);
   FREE(buffer);
   FREE(dataBuf);
@@ -1431,6 +1452,16 @@ XML_GetIdAttributeIndex(XML_Parser parser)
 {
   return idAttIndex;
 }
+
+#ifdef XML_ATTR_INFO
+const XML_AttrInfo * XMLCALL
+XML_GetAttributeInfo(XML_Parser parser)
+{
+  if (parser == NULL)
+    return NULL;
+  return attInfo;
+}
+#endif
 
 void XMLCALL
 XML_SetElementHandler(XML_Parser parser,
@@ -2214,6 +2245,9 @@ XML_GetFeatureList(void)
 #ifdef XML_NS
     {XML_FEATURE_NS,               XML_L("XML_NS"), 0},
 #endif
+#ifdef XML_ATTR_INFO
+    {XML_FEATURE_ATTR_INFO,        XML_L("XML_ATTR_INFO"), 0},
+#endif
     {XML_FEATURE_END,              NULL, 0}
   };
 
@@ -2945,23 +2979,44 @@ storeAtts(XML_Parser parser, const ENCODING *enc,
   if (n + nDefaultAtts > attsSize) {
     int oldAttsSize = attsSize;
     ATTRIBUTE *temp;
+#ifdef XML_ATTR_INFO
+    XML_AttrInfo *temp2;
+#endif
     attsSize = n + nDefaultAtts + INIT_ATTS_SIZE;
     temp = (ATTRIBUTE *)REALLOC((void *)atts, attsSize * sizeof(ATTRIBUTE));
     if (temp == NULL)
       return XML_ERROR_NO_MEMORY;
     atts = temp;
+#ifdef XML_ATTR_INFO
+    temp2 = (XML_AttrInfo *)REALLOC((void *)attInfo, attsSize * sizeof(XML_AttrInfo));
+    if (temp2 == NULL)
+      return XML_ERROR_NO_MEMORY;
+    attInfo = temp2;
+#endif
     if (n > oldAttsSize)
       XmlGetAttributes(enc, attStr, n, atts);
   }
 
   appAtts = (const XML_Char **)atts;
   for (i = 0; i < n; i++) {
+    ATTRIBUTE *currAtt = &atts[i];
+#ifdef XML_ATTR_INFO
+    XML_AttrInfo *currAttInfo = &attInfo[i];
+#endif
     /* add the name and value to the attribute list */
-    ATTRIBUTE_ID *attId = getAttributeId(parser, enc, atts[i].name,
-                                         atts[i].name
-                                         + XmlNameLength(enc, atts[i].name));
+    ATTRIBUTE_ID *attId = getAttributeId(parser, enc, currAtt->name,
+                                         currAtt->name
+                                         + XmlNameLength(enc, currAtt->name));
     if (!attId)
       return XML_ERROR_NO_MEMORY;
+#ifdef XML_ATTR_INFO
+    currAttInfo->nameStart = parseEndByteIndex - (parseEndPtr - currAtt->name);
+    currAttInfo->nameEnd = currAttInfo->nameStart +
+                           XmlNameLength(enc, currAtt->name);
+    currAttInfo->valueStart = parseEndByteIndex -
+                            (parseEndPtr - currAtt->valuePtr);
+    currAttInfo->valueEnd = parseEndByteIndex - (parseEndPtr - currAtt->valueEnd);
+#endif
     /* Detect duplicate attributes by their QNames. This does not work when
        namespace processing is turned on and different prefixes for the same
        namespace are used. For this case we have a check further down.
