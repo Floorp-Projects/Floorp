@@ -1112,6 +1112,10 @@ XML_ParserReset(XML_Parser parser, const XML_Char *encodingName)
 {
   TAG *tStk;
   OPEN_INTERNAL_ENTITY *openEntityList;
+
+  if (parser == NULL)
+      return XML_FALSE;
+
   if (parentParser)
     return XML_FALSE;
   /* move tagStack to freeTagList */
@@ -1146,6 +1150,8 @@ XML_ParserReset(XML_Parser parser, const XML_Char *encodingName)
 enum XML_Status XMLCALL
 XML_SetEncoding(XML_Parser parser, const XML_Char *encodingName)
 {
+  if (parser == NULL)
+      return XML_STATUS_ERROR;
   /* Block after XML_Parse()/XML_ParseBuffer() has been called.
      XXX There's no way for the caller to determine which of the
      XXX possible error cases caused the XML_STATUS_ERROR return.
@@ -1171,52 +1177,88 @@ XML_ExternalEntityParserCreate(XML_Parser oldParser,
 {
   XML_Parser parser = oldParser;
   DTD *newDtd = NULL;
-  DTD *oldDtd = _dtd;
-  XML_StartElementHandler oldStartElementHandler = startElementHandler;
-  XML_EndElementHandler oldEndElementHandler = endElementHandler;
-  XML_CharacterDataHandler oldCharacterDataHandler = characterDataHandler;
-  XML_ProcessingInstructionHandler oldProcessingInstructionHandler
-      = processingInstructionHandler;
-  XML_CommentHandler oldCommentHandler = commentHandler;
-  XML_StartCdataSectionHandler oldStartCdataSectionHandler
-      = startCdataSectionHandler;
-  XML_EndCdataSectionHandler oldEndCdataSectionHandler
-      = endCdataSectionHandler;
-  XML_DefaultHandler oldDefaultHandler = defaultHandler;
-  XML_UnparsedEntityDeclHandler oldUnparsedEntityDeclHandler
-      = unparsedEntityDeclHandler;
-  XML_NotationDeclHandler oldNotationDeclHandler = notationDeclHandler;
-  XML_StartNamespaceDeclHandler oldStartNamespaceDeclHandler
-      = startNamespaceDeclHandler;
-  XML_EndNamespaceDeclHandler oldEndNamespaceDeclHandler
-      = endNamespaceDeclHandler;
-  XML_NotStandaloneHandler oldNotStandaloneHandler = notStandaloneHandler;
-  XML_ExternalEntityRefHandler oldExternalEntityRefHandler
-      = externalEntityRefHandler;
-  XML_SkippedEntityHandler oldSkippedEntityHandler = skippedEntityHandler;
-  XML_UnknownEncodingHandler oldUnknownEncodingHandler
-      = unknownEncodingHandler;
-  XML_ElementDeclHandler oldElementDeclHandler = elementDeclHandler;
-  XML_AttlistDeclHandler oldAttlistDeclHandler = attlistDeclHandler;
-  XML_EntityDeclHandler oldEntityDeclHandler = entityDeclHandler;
-  XML_XmlDeclHandler oldXmlDeclHandler = xmlDeclHandler;
-  ELEMENT_TYPE * oldDeclElementType = declElementType;
+  DTD *oldDtd;
+  XML_StartElementHandler oldStartElementHandler;
+  XML_EndElementHandler oldEndElementHandler;
+  XML_CharacterDataHandler oldCharacterDataHandler;
+  XML_ProcessingInstructionHandler oldProcessingInstructionHandler;
+  XML_CommentHandler oldCommentHandler;
+  XML_StartCdataSectionHandler oldStartCdataSectionHandler;
+  XML_EndCdataSectionHandler oldEndCdataSectionHandler;
+  XML_DefaultHandler oldDefaultHandler;
+  XML_UnparsedEntityDeclHandler oldUnparsedEntityDeclHandler;
+  XML_NotationDeclHandler oldNotationDeclHandler;
+  XML_StartNamespaceDeclHandler oldStartNamespaceDeclHandler;
+  XML_EndNamespaceDeclHandler oldEndNamespaceDeclHandler;
+  XML_NotStandaloneHandler oldNotStandaloneHandler;
+  XML_ExternalEntityRefHandler oldExternalEntityRefHandler;
+  XML_SkippedEntityHandler oldSkippedEntityHandler;
+  XML_UnknownEncodingHandler oldUnknownEncodingHandler;
+  XML_ElementDeclHandler oldElementDeclHandler;
+  XML_AttlistDeclHandler oldAttlistDeclHandler;
+  XML_EntityDeclHandler oldEntityDeclHandler;
+  XML_XmlDeclHandler oldXmlDeclHandler;
+  ELEMENT_TYPE * oldDeclElementType;
 
-  void *oldUserData = userData;
-  void *oldHandlerArg = handlerArg;
-  XML_Bool oldDefaultExpandInternalEntities = defaultExpandInternalEntities;
-  XML_Parser oldExternalEntityRefHandlerArg = externalEntityRefHandlerArg;
+  void *oldUserData;
+  void *oldHandlerArg;
+  XML_Bool oldDefaultExpandInternalEntities;
+  XML_Parser oldExternalEntityRefHandlerArg;
 #ifdef XML_DTD
-  enum XML_ParamEntityParsing oldParamEntityParsing = paramEntityParsing;
-  int oldInEntityValue = prologState.inEntityValue;
+  enum XML_ParamEntityParsing oldParamEntityParsing;
+  int oldInEntityValue;
 #endif
-  XML_Bool oldns_triplets = ns_triplets;
+  XML_Bool oldns_triplets;
   /* Note that the new parser shares the same hash secret as the old
      parser, so that dtdCopy and copyEntityTable can lookup values
      from hash tables associated with either parser without us having
      to worry which hash secrets each table has.
   */
-  unsigned long oldhash_secret_salt = hash_secret_salt;
+  unsigned long oldhash_secret_salt;
+
+  /* Validate the oldParser parameter before we pull everything out of it */
+  if (oldParser == NULL)
+    return NULL;
+
+  /* Stash the original parser contents on the stack */
+  oldDtd = _dtd;
+  oldStartElementHandler = startElementHandler;
+  oldEndElementHandler = endElementHandler;
+  oldCharacterDataHandler = characterDataHandler;
+  oldProcessingInstructionHandler = processingInstructionHandler;
+  oldCommentHandler = commentHandler;
+  oldStartCdataSectionHandler = startCdataSectionHandler;
+  oldEndCdataSectionHandler = endCdataSectionHandler;
+  oldDefaultHandler = defaultHandler;
+  oldUnparsedEntityDeclHandler = unparsedEntityDeclHandler;
+  oldNotationDeclHandler = notationDeclHandler;
+  oldStartNamespaceDeclHandler = startNamespaceDeclHandler;
+  oldEndNamespaceDeclHandler = endNamespaceDeclHandler;
+  oldNotStandaloneHandler = notStandaloneHandler;
+  oldExternalEntityRefHandler = externalEntityRefHandler;
+  oldSkippedEntityHandler = skippedEntityHandler;
+  oldUnknownEncodingHandler = unknownEncodingHandler;
+  oldElementDeclHandler = elementDeclHandler;
+  oldAttlistDeclHandler = attlistDeclHandler;
+  oldEntityDeclHandler = entityDeclHandler;
+  oldXmlDeclHandler = xmlDeclHandler;
+  oldDeclElementType = declElementType;
+
+  oldUserData = userData;
+  oldHandlerArg = handlerArg;
+  oldDefaultExpandInternalEntities = defaultExpandInternalEntities;
+  oldExternalEntityRefHandlerArg = externalEntityRefHandlerArg;
+#ifdef XML_DTD
+  oldParamEntityParsing = paramEntityParsing;
+  oldInEntityValue = prologState.inEntityValue;
+#endif
+  oldns_triplets = ns_triplets;
+  /* Note that the new parser shares the same hash secret as the old
+     parser, so that dtdCopy and copyEntityTable can lookup values
+     from hash tables associated with either parser without us having
+     to worry which hash secrets each table has.
+  */
+  oldhash_secret_salt = hash_secret_salt;
 
 #ifdef XML_DTD
   if (!context)
@@ -1382,7 +1424,8 @@ XML_ParserFree(XML_Parser parser)
 void XMLCALL
 XML_UseParserAsHandlerArg(XML_Parser parser)
 {
-  handlerArg = parser;
+  if (parser != NULL)
+    handlerArg = parser;
 }
 
 /* BEGIN MOZILLA CHANGE (unused API) */
@@ -1390,6 +1433,8 @@ XML_UseParserAsHandlerArg(XML_Parser parser)
 enum XML_Error XMLCALL
 XML_UseForeignDTD(XML_Parser parser, XML_Bool useDTD)
 {
+  if (parser == NULL)
+    return XML_ERROR_INVALID_ARGUMENT;
 #ifdef XML_DTD
   /* block after XML_Parse()/XML_ParseBuffer() has been called */
   if (ps_parsing == XML_PARSING || ps_parsing == XML_SUSPENDED)
@@ -1406,6 +1451,8 @@ XML_UseForeignDTD(XML_Parser parser, XML_Bool useDTD)
 void XMLCALL
 XML_SetReturnNSTriplet(XML_Parser parser, int do_nst)
 {
+  if (parser == NULL)
+    return;
   /* block after XML_Parse()/XML_ParseBuffer() has been called */
   if (ps_parsing == XML_PARSING || ps_parsing == XML_SUSPENDED)
     return;
@@ -1415,6 +1462,8 @@ XML_SetReturnNSTriplet(XML_Parser parser, int do_nst)
 void XMLCALL
 XML_SetUserData(XML_Parser parser, void *p)
 {
+  if (parser == NULL)
+    return;
   if (handlerArg == userData)
     handlerArg = userData = p;
   else
@@ -1424,6 +1473,8 @@ XML_SetUserData(XML_Parser parser, void *p)
 enum XML_Status XMLCALL
 XML_SetBase(XML_Parser parser, const XML_Char *p)
 {
+  if (parser == NULL)
+    return XML_STATUS_ERROR;
   if (p) {
     p = poolCopyString(&_dtd->pool, p);
     if (!p)
@@ -1438,18 +1489,24 @@ XML_SetBase(XML_Parser parser, const XML_Char *p)
 const XML_Char * XMLCALL
 XML_GetBase(XML_Parser parser)
 {
+  if (parser == NULL)
+    return NULL;
   return curBase;
 }
 
 int XMLCALL
 XML_GetSpecifiedAttributeCount(XML_Parser parser)
 {
+  if (parser == NULL)
+    return -1;
   return nSpecifiedAtts;
 }
 
 int XMLCALL
 XML_GetIdAttributeIndex(XML_Parser parser)
 {
+  if (parser == NULL)
+    return -1;
   return idAttIndex;
 }
 
@@ -1468,6 +1525,8 @@ XML_SetElementHandler(XML_Parser parser,
                       XML_StartElementHandler start,
                       XML_EndElementHandler end)
 {
+  if (parser == NULL)
+    return;
   startElementHandler = start;
   endElementHandler = end;
 }
@@ -1477,13 +1536,15 @@ XML_SetElementHandler(XML_Parser parser,
 void XMLCALL
 XML_SetStartElementHandler(XML_Parser parser,
                            XML_StartElementHandler start) {
-  startElementHandler = start;
+  if (parser != NULL)
+    startElementHandler = start;
 }
 
 void XMLCALL
 XML_SetEndElementHandler(XML_Parser parser,
                          XML_EndElementHandler end) {
-  endElementHandler = end;
+  if (parser != NULL)
+    endElementHandler = end;
 }
 #endif
 /* END MOZILLA CHANGE */
@@ -1492,21 +1553,24 @@ void XMLCALL
 XML_SetCharacterDataHandler(XML_Parser parser,
                             XML_CharacterDataHandler handler)
 {
-  characterDataHandler = handler;
+  if (parser != NULL)
+    characterDataHandler = handler;
 }
 
 void XMLCALL
 XML_SetProcessingInstructionHandler(XML_Parser parser,
                                     XML_ProcessingInstructionHandler handler)
 {
-  processingInstructionHandler = handler;
+  if (parser != NULL)
+    processingInstructionHandler = handler;
 }
 
 void XMLCALL
 XML_SetCommentHandler(XML_Parser parser,
                       XML_CommentHandler handler)
 {
-  commentHandler = handler;
+  if (parser != NULL)
+    commentHandler = handler;
 }
 
 void XMLCALL
@@ -1514,6 +1578,8 @@ XML_SetCdataSectionHandler(XML_Parser parser,
                            XML_StartCdataSectionHandler start,
                            XML_EndCdataSectionHandler end)
 {
+  if (parser == NULL)
+    return;
   startCdataSectionHandler = start;
   endCdataSectionHandler = end;
 }
@@ -1523,19 +1589,23 @@ XML_SetCdataSectionHandler(XML_Parser parser,
 void XMLCALL
 XML_SetStartCdataSectionHandler(XML_Parser parser,
                                 XML_StartCdataSectionHandler start) {
-  startCdataSectionHandler = start;
+  if (parser != NULL)
+    startCdataSectionHandler = start;
 }
 
 void XMLCALL
 XML_SetEndCdataSectionHandler(XML_Parser parser,
                               XML_EndCdataSectionHandler end) {
-  endCdataSectionHandler = end;
+  if (parser != NULL)
+    endCdataSectionHandler = end;
 }
 
 void XMLCALL
 XML_SetDefaultHandler(XML_Parser parser,
                       XML_DefaultHandler handler)
 {
+  if (parser == NULL)
+    return;
   defaultHandler = handler;
   defaultExpandInternalEntities = XML_FALSE;
 }
@@ -1546,6 +1616,8 @@ void XMLCALL
 XML_SetDefaultHandlerExpand(XML_Parser parser,
                             XML_DefaultHandler handler)
 {
+  if (parser == NULL)
+    return;
   defaultHandler = handler;
   defaultExpandInternalEntities = XML_TRUE;
 }
@@ -1555,6 +1627,8 @@ XML_SetDoctypeDeclHandler(XML_Parser parser,
                           XML_StartDoctypeDeclHandler start,
                           XML_EndDoctypeDeclHandler end)
 {
+  if (parser == NULL)
+    return;
   startDoctypeDeclHandler = start;
   endDoctypeDeclHandler = end;
 }
@@ -1564,13 +1638,15 @@ XML_SetDoctypeDeclHandler(XML_Parser parser,
 void XMLCALL
 XML_SetStartDoctypeDeclHandler(XML_Parser parser,
                                XML_StartDoctypeDeclHandler start) {
-  startDoctypeDeclHandler = start;
+  if (parser != NULL)
+    startDoctypeDeclHandler = start;
 }
 
 void XMLCALL
 XML_SetEndDoctypeDeclHandler(XML_Parser parser,
                              XML_EndDoctypeDeclHandler end) {
-  endDoctypeDeclHandler = end;
+  if (parser != NULL)
+    endDoctypeDeclHandler = end;
 }
 #endif
 /* END MOZILLA CHANGE */
@@ -1579,14 +1655,16 @@ void XMLCALL
 XML_SetUnparsedEntityDeclHandler(XML_Parser parser,
                                  XML_UnparsedEntityDeclHandler handler)
 {
-  unparsedEntityDeclHandler = handler;
+  if (parser != NULL)
+    unparsedEntityDeclHandler = handler;
 }
 
 void XMLCALL
 XML_SetNotationDeclHandler(XML_Parser parser,
                            XML_NotationDeclHandler handler)
 {
-  notationDeclHandler = handler;
+  if (parser != NULL)
+    notationDeclHandler = handler;
 }
 
 void XMLCALL
@@ -1594,6 +1672,8 @@ XML_SetNamespaceDeclHandler(XML_Parser parser,
                             XML_StartNamespaceDeclHandler start,
                             XML_EndNamespaceDeclHandler end)
 {
+  if (parser == NULL)
+    return;
   startNamespaceDeclHandler = start;
   endNamespaceDeclHandler = end;
 }
@@ -1604,20 +1684,23 @@ XML_SetNamespaceDeclHandler(XML_Parser parser,
 void XMLCALL
 XML_SetStartNamespaceDeclHandler(XML_Parser parser,
                                  XML_StartNamespaceDeclHandler start) {
-  startNamespaceDeclHandler = start;
+  if (parser != NULL)
+    startNamespaceDeclHandler = start;
 }
 
 void XMLCALL
 XML_SetEndNamespaceDeclHandler(XML_Parser parser,
                                XML_EndNamespaceDeclHandler end) {
-  endNamespaceDeclHandler = end;
+  if (parser != NULL)
+    endNamespaceDeclHandler = end;
 }
 
 void XMLCALL
 XML_SetNotStandaloneHandler(XML_Parser parser,
                             XML_NotStandaloneHandler handler)
 {
-  notStandaloneHandler = handler;
+  if (parser != NULL)
+    notStandaloneHandler = handler;
 }
 #endif
 /* END MOZILLA CHANGE */
@@ -1626,12 +1709,15 @@ void XMLCALL
 XML_SetExternalEntityRefHandler(XML_Parser parser,
                                 XML_ExternalEntityRefHandler handler)
 {
-  externalEntityRefHandler = handler;
+  if (parser != NULL)
+    externalEntityRefHandler = handler;
 }
 
 void XMLCALL
 XML_SetExternalEntityRefHandlerArg(XML_Parser parser, void *arg)
 {
+  if (parser == NULL)
+    return;
   if (arg)
     externalEntityRefHandlerArg = (XML_Parser)arg;
   else
@@ -1644,7 +1730,8 @@ void XMLCALL
 XML_SetSkippedEntityHandler(XML_Parser parser,
                             XML_SkippedEntityHandler handler)
 {
-  skippedEntityHandler = handler;
+  if (parser != NULL)
+    skippedEntityHandler = handler;
 }
 
 void XMLCALL
@@ -1652,6 +1739,8 @@ XML_SetUnknownEncodingHandler(XML_Parser parser,
                               XML_UnknownEncodingHandler handler,
                               void *data)
 {
+  if (parser == NULL)
+    return;
   unknownEncodingHandler = handler;
   unknownEncodingHandlerData = data;
 }
@@ -1660,21 +1749,24 @@ void XMLCALL
 XML_SetElementDeclHandler(XML_Parser parser,
                           XML_ElementDeclHandler eldecl)
 {
-  elementDeclHandler = eldecl;
+  if (parser != NULL)
+    elementDeclHandler = eldecl;
 }
 
 void XMLCALL
 XML_SetAttlistDeclHandler(XML_Parser parser,
                           XML_AttlistDeclHandler attdecl)
 {
-  attlistDeclHandler = attdecl;
+  if (parser != NULL)
+    attlistDeclHandler = attdecl;
 }
 
 void XMLCALL
 XML_SetEntityDeclHandler(XML_Parser parser,
                          XML_EntityDeclHandler handler)
 {
-  entityDeclHandler = handler;
+  if (parser != NULL)
+    entityDeclHandler = handler;
 }
 #endif
 /* END MOZILLA CHANGE */
@@ -1682,13 +1774,16 @@ XML_SetEntityDeclHandler(XML_Parser parser,
 void XMLCALL
 XML_SetXmlDeclHandler(XML_Parser parser,
                       XML_XmlDeclHandler handler) {
-  xmlDeclHandler = handler;
+  if (parser != NULL)
+    xmlDeclHandler = handler;
 }
 
 int XMLCALL
 XML_SetParamEntityParsing(XML_Parser parser,
                           enum XML_ParamEntityParsing peParsing)
 {
+  if (parser == NULL)
+    return 0;
   /* block after XML_Parse()/XML_ParseBuffer() has been called */
   if (ps_parsing == XML_PARSING || ps_parsing == XML_SUSPENDED)
     return 0;
@@ -1718,6 +1813,10 @@ XML_SetHashSalt(XML_Parser parser,
 enum XML_Status XMLCALL
 XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
 {
+  if ((parser == NULL) || (len < 0) || ((s == NULL) && (len != 0))) {
+    errorCode = XML_ERROR_INVALID_ARGUMENT;
+    return XML_STATUS_ERROR;
+  }
   switch (ps_parsing) {
   case XML_SUSPENDED:
     errorCode = XML_ERROR_SUSPENDED;
@@ -1860,6 +1959,8 @@ XML_ParseBuffer(XML_Parser parser, int len, int isFinal)
   const char *start;
   enum XML_Status result = XML_STATUS_OK;
 
+  if (parser == NULL)
+    return XML_STATUS_ERROR;
   switch (ps_parsing) {
   case XML_SUSPENDED:
     errorCode = XML_ERROR_SUSPENDED;
@@ -1913,6 +2014,8 @@ XML_ParseBuffer(XML_Parser parser, int len, int isFinal)
 void * XMLCALL
 XML_GetBuffer(XML_Parser parser, int len)
 {
+  if (parser == NULL)
+    return NULL;
   if (len < 0) {
     errorCode = XML_ERROR_NO_MEMORY;
     return NULL;
@@ -2005,6 +2108,8 @@ XML_GetBuffer(XML_Parser parser, int len)
 enum XML_Status XMLCALL
 XML_StopParser(XML_Parser parser, XML_Bool resumable)
 {
+  if (parser == NULL)
+    return XML_STATUS_ERROR;
   switch (ps_parsing) {
   case XML_SUSPENDED:
     if (resumable) {
@@ -2037,6 +2142,8 @@ XML_ResumeParser(XML_Parser parser)
 {
   enum XML_Status result = XML_STATUS_OK;
 
+  if (parser == NULL)
+    return XML_STATUS_ERROR;
   if (ps_parsing != XML_SUSPENDED) {
     errorCode = XML_ERROR_NOT_SUSPENDED;
     return XML_STATUS_ERROR;
@@ -2077,6 +2184,8 @@ XML_ResumeParser(XML_Parser parser)
 void XMLCALL
 XML_GetParsingStatus(XML_Parser parser, XML_ParsingStatus *status)
 {
+  if (parser == NULL)
+    return;
   assert(status != NULL);
   *status = parser->m_parsingStatus;
 }
@@ -2084,12 +2193,16 @@ XML_GetParsingStatus(XML_Parser parser, XML_ParsingStatus *status)
 enum XML_Error XMLCALL
 XML_GetErrorCode(XML_Parser parser)
 {
+  if (parser == NULL)
+    return XML_ERROR_INVALID_ARGUMENT;
   return errorCode;
 }
 
 XML_Index XMLCALL
 XML_GetCurrentByteIndex(XML_Parser parser)
 {
+  if (parser == NULL)
+    return -1;
   if (eventPtr)
     return parseEndByteIndex - (parseEndPtr - eventPtr);
 /* BEGIN MOZILLA CHANGE (fix XML_GetCurrentByteIndex) */
@@ -2106,6 +2219,8 @@ XML_GetCurrentByteIndex(XML_Parser parser)
 int XMLCALL
 XML_GetCurrentByteCount(XML_Parser parser)
 {
+  if (parser == NULL)
+    return 0;
   if (eventEndPtr && eventPtr)
     return (int)(eventEndPtr - eventPtr);
   return 0;
@@ -2115,9 +2230,13 @@ const char * XMLCALL
 XML_GetInputContext(XML_Parser parser, int *offset, int *size)
 {
 #ifdef XML_CONTEXT_BYTES
+  if (parser == NULL)
+    return NULL;
   if (eventPtr && buffer) {
-    *offset = (int)(eventPtr - buffer);
-    *size   = (int)(bufferEnd - buffer);
+    if (offset != NULL)
+      *offset = (int)(eventPtr - buffer);
+    if (size != NULL)
+      *size   = (int)(bufferEnd - buffer);
     return buffer;
   }
 #else
@@ -2133,6 +2252,8 @@ XML_GetInputContext(XML_Parser parser, int *offset, int *size)
 XML_Size XMLCALL
 XML_GetCurrentLineNumber(XML_Parser parser)
 {
+  if (parser == NULL)
+    return 0;
   if (eventPtr && eventPtr >= positionPtr) {
     XmlUpdatePosition(encoding, positionPtr, eventPtr, &position);
     positionPtr = eventPtr;
@@ -2143,6 +2264,8 @@ XML_GetCurrentLineNumber(XML_Parser parser)
 XML_Size XMLCALL
 XML_GetCurrentColumnNumber(XML_Parser parser)
 {
+  if (parser == NULL)
+    return 0;
   if (eventPtr && eventPtr >= positionPtr) {
     XmlUpdatePosition(encoding, positionPtr, eventPtr, &position);
     positionPtr = eventPtr;
@@ -2155,30 +2278,38 @@ XML_GetCurrentColumnNumber(XML_Parser parser)
 void XMLCALL
 XML_FreeContentModel(XML_Parser parser, XML_Content *model)
 {
-  FREE(model);
+  if (parser != NULL)
+    FREE(model);
 }
 
 void * XMLCALL
 XML_MemMalloc(XML_Parser parser, size_t size)
 {
+  if (parser == NULL)
+    return NULL;
   return MALLOC(size);
 }
 
 void * XMLCALL
 XML_MemRealloc(XML_Parser parser, void *ptr, size_t size)
 {
+  if (parser == NULL)
+    return NULL;
   return REALLOC(ptr, size);
 }
 
 void XMLCALL
 XML_MemFree(XML_Parser parser, void *ptr)
 {
-  FREE(ptr);
+  if (parser != NULL)
+    FREE(ptr);
 }
 
 void XMLCALL
 XML_DefaultCurrent(XML_Parser parser)
 {
+  if (parser == NULL)
+    return;
   if (defaultHandler) {
     if (openInternalEntities)
       reportDefault(parser,
