@@ -261,12 +261,19 @@ export class Outline extends Component<Props, State> {
 
 const mapStateToProps = state => {
   const selectedSource = getSelectedSource(state);
-  const symbols = getSymbols(state, selectedSource);
+  const symbols = selectedSource ? getSymbols(state, selectedSource) : null;
+
   return {
     symbols,
     selectedSource,
     selectedLocation: getSelectedLocation(state),
-    getFunctionText: line => findFunctionText(line, selectedSource, symbols)
+    getFunctionText: line => {
+      if (selectedSource) {
+        return findFunctionText(line, selectedSource, symbols);
+      }
+
+      return null;
+    }
   };
 };
 

@@ -20,7 +20,7 @@ void SMILIntegerType::Init(nsSMILValue& aValue) const {
 void SMILIntegerType::Destroy(nsSMILValue& aValue) const {
   MOZ_ASSERT(aValue.mType == this, "Unexpected SMIL value");
   aValue.mU.mInt = 0;
-  aValue.mType = nsSMILNullType::Singleton();
+  aValue.mType = SMILNullType::Singleton();
 }
 
 nsresult SMILIntegerType::Assign(nsSMILValue& aDest,

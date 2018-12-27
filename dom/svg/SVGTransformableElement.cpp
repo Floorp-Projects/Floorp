@@ -4,19 +4,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "SVGTransformableElement.h"
+
+#include "DOMSVGAnimatedTransformList.h"
 #include "gfx2DGlue.h"
 #include "mozilla/dom/MutationEventBinding.h"
-#include "DOMSVGAnimatedTransformList.h"
 #include "mozilla/dom/SVGGraphicsElementBinding.h"
-#include "mozilla/dom/SVGTransformableElement.h"
 #include "mozilla/dom/SVGMatrix.h"
+#include "mozilla/dom/SVGRect.h"
 #include "mozilla/dom/SVGSVGElement.h"
 #include "nsContentUtils.h"
 #include "nsIFrame.h"
-#include "nsSVGDisplayableFrame.h"
-#include "mozilla/dom/SVGRect.h"
-#include "nsSVGUtils.h"
 #include "SVGContentUtils.h"
+#include "nsSVGDisplayableFrame.h"
+#include "nsSVGUtils.h"
 
 using namespace mozilla::gfx;
 

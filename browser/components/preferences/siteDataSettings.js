@@ -169,7 +169,7 @@ let gSiteDataSettings = {
       sites.sort(sortFunc);
     }
 
-    let cols = this._list.querySelectorAll("treecol");
+    let cols = this._list.previousElementSibling.querySelectorAll("treecol");
     cols.forEach(c => {
       c.removeAttribute("sortDirection");
       c.removeAttribute("data-isCurrentSortCol");

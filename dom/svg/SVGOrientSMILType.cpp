@@ -30,7 +30,7 @@ void SVGOrientSMILType::Init(nsSMILValue& aValue) const {
 void SVGOrientSMILType::Destroy(nsSMILValue& aValue) const {
   MOZ_ASSERT(aValue.mType == this, "Unexpected SMIL value.");
   aValue.mU.mPtr = nullptr;
-  aValue.mType = nsSMILNullType::Singleton();
+  aValue.mType = SMILNullType::Singleton();
 }
 
 nsresult SVGOrientSMILType::Assign(nsSMILValue& aDest,

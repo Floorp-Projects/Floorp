@@ -9,11 +9,11 @@
 #include "mozilla/dom/SVGTransform.h"
 #include "mozilla/dom/SVGMatrix.h"
 #include "mozilla/dom/SVGTransformBinding.h"
+#include "mozilla/DebugOnly.h"
+#include "mozilla/FloatingPoint.h"
 #include "nsError.h"
 #include "SVGAnimatedTransformList.h"
 #include "nsSVGAttrTearoffTable.h"
-#include "mozilla/DebugOnly.h"
-#include "mozilla/FloatingPoint.h"
 
 namespace {
 const double kRadPerDegree = 2.0 * M_PI / 360.0;
