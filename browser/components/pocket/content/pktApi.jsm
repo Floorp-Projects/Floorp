@@ -48,6 +48,7 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["XMLHttpRequest"]);
+XPCOMUtils.defineLazyPreferenceGetter(this, "gCookieFirstPartyIsolate", "privacy.firstparty.isolate", false);
 
 var pktApi = (function() {
 
@@ -156,7 +157,11 @@ var pktApi = (function() {
     */
     function getCookiesFromPocket() {
         var cookies = {};
-        for (let cookie of Services.cookies.getCookiesFromHost(pocketSiteHost, {})) {
+        let oa = {};
+        if (gCookieFirstPartyIsolate) {
+          oa.firstPartyDomain = pocketSiteHost;
+        }
+        for (let cookie of Services.cookies.getCookiesFromHost(pocketSiteHost, oa)) {
             cookies[cookie.name] = cookie.value;
         }
         return cookies;
