@@ -1854,7 +1854,7 @@ pub extern "C" fn wr_dp_clear_save(state: &mut WrState) {
 
 #[no_mangle]
 pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
-                                              bounds: LayoutRect,
+                                              mut bounds: LayoutRect,
                                               clip_node_id: *const WrClipId,
                                               animation: *const WrAnimationProperty,
                                               opacity: *const f32,
@@ -1940,22 +1940,22 @@ pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
         None => None,
     };
 
-    let mut prim_info = LayoutPrimitiveInfo::new(bounds);
-
     *out_is_reference_frame = transform_binding.is_some() || perspective.is_some();
     if *out_is_reference_frame {
         let ref_frame_id = state.frame_builder
             .dl_builder
-            .push_reference_frame(&prim_info, transform_style, transform_binding, perspective);
+            .push_reference_frame(&bounds, transform_style, transform_binding, perspective);
         *out_reference_frame_id = pack_clip_id(ref_frame_id);
 
-        prim_info.rect.origin = LayoutPoint::zero();
-        prim_info.clip_rect.origin = LayoutPoint::zero();
+        bounds.origin = LayoutPoint::zero();
         state.frame_builder.dl_builder.push_clip_id(ref_frame_id);
     }
 
-    prim_info.is_backface_visible = is_backface_visible;
-    prim_info.tag = state.current_tag;
+    let prim_info = LayoutPrimitiveInfo {
+        is_backface_visible,
+        tag: state.current_tag,
+        .. LayoutPrimitiveInfo::new(bounds)
+    };
 
     state.frame_builder
          .dl_builder
