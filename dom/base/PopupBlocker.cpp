@@ -17,7 +17,8 @@ namespace {
 
 static char* sPopupAllowedEvents;
 
-static PopupBlocker::PopupControlState sPopupControlState = PopupBlocker::openAbused;
+static PopupBlocker::PopupControlState sPopupControlState =
+    PopupBlocker::openAbused;
 static uint32_t sPopupStatePusherCount = 0;
 
 // This token is by default set to false. When a popup/filePicker is shown, it

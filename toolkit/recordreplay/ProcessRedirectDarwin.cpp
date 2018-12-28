@@ -161,29 +161,29 @@ void ReplayInvokeCallback(size_t aCallbackId) {
 
 // List of the Objective C classes which messages might be sent to directly.
 static const char* gStaticClassNames[] = {
-  // Standard classes.
-  "NSAutoreleasePool",
-  "NSBezierPath",
-  "NSButtonCell",
-  "NSColor",
-  "NSComboBoxCell",
-  "NSDictionary",
-  "NSGraphicsContext",
-  "NSFont",
-  "NSFontManager",
-  "NSLevelIndicatorCell",
-  "NSNumber",
-  "NSPopUpButtonCell",
-  "NSProgressBarCell",
-  "NSString",
-  "NSWindow",
+    // Standard classes.
+    "NSAutoreleasePool",
+    "NSBezierPath",
+    "NSButtonCell",
+    "NSColor",
+    "NSComboBoxCell",
+    "NSDictionary",
+    "NSGraphicsContext",
+    "NSFont",
+    "NSFontManager",
+    "NSLevelIndicatorCell",
+    "NSNumber",
+    "NSPopUpButtonCell",
+    "NSProgressBarCell",
+    "NSString",
+    "NSWindow",
 
-  // Gecko defined classes.
-  "CellDrawView",
-  "CheckboxCell",
-  "RadioButtonCell",
-  "SearchFieldCellWithFocusRing",
-  "ToolbarSearchFieldCellWithFocusRing",
+    // Gecko defined classes.
+    "CellDrawView",
+    "CheckboxCell",
+    "RadioButtonCell",
+    "SearchFieldCellWithFocusRing",
+    "ToolbarSearchFieldCellWithFocusRing",
 };
 
 // Objective C classes for each of the above class names.
@@ -206,9 +206,7 @@ struct CFConstantString {
 
 static Class gCFConstantStringClass;
 
-static void
-InitializeStaticClasses()
-{
+static void InitializeStaticClasses() {
   gStaticClasses = new Class[ArrayLength(gStaticClassNames)];
 
   for (size_t i = 0; i < ArrayLength(gStaticClassNames); i++) {

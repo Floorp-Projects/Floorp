@@ -802,8 +802,7 @@ class js::jit::OutOfLineTableSwitch
   }
 
  public:
-  OutOfLineTableSwitch(MTableSwitch* mir)
-      : mir_(mir) {}
+  OutOfLineTableSwitch(MTableSwitch* mir) : mir_(mir) {}
 
   MTableSwitch* mir() const { return mir_; }
 
@@ -852,7 +851,7 @@ void CodeGeneratorARM64::emitTableSwitchDispatch(MTableSwitch* mir,
   // Because the jump table is generated as part of out-of-line code,
   // it is generated after all the regular codegen, so the jump targets
   // are guaranteed to exist when generating the jump table.
-  OutOfLineTableSwitch* ool = new(alloc()) OutOfLineTableSwitch(mir);
+  OutOfLineTableSwitch* ool = new (alloc()) OutOfLineTableSwitch(mir);
   addOutOfLineCode(ool, mir);
 
   // Use the index to get the address of the jump target from the table.

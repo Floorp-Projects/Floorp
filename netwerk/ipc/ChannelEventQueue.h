@@ -180,9 +180,9 @@ inline void ChannelEventQueue::RunOrEnqueue(ChannelEvent* aCallback,
   {
     MutexAutoLock lock(mMutex);
 
-    bool enqueue =
-        !!mForcedCount || mSuspended || mFlushing || !mEventQueue.IsEmpty() ||
-        MaybeSuspendIfEventsAreSuppressed();
+    bool enqueue = !!mForcedCount || mSuspended || mFlushing ||
+                   !mEventQueue.IsEmpty() ||
+                   MaybeSuspendIfEventsAreSuppressed();
 
     if (enqueue) {
       mEventQueue.AppendElement(std::move(event));
@@ -301,9 +301,8 @@ inline void ChannelEventQueue::MaybeFlushQueue() {
 
   {
     MutexAutoLock lock(mMutex);
-    flushQueue =
-        !mForcedCount && !mFlushing && !mSuspended && !mEventQueue.IsEmpty() &&
-        !MaybeSuspendIfEventsAreSuppressed();
+    flushQueue = !mForcedCount && !mFlushing && !mSuspended &&
+                 !mEventQueue.IsEmpty() && !MaybeSuspendIfEventsAreSuppressed();
 
     // Only one thread is allowed to run FlushQueue at a time.
     if (flushQueue) {

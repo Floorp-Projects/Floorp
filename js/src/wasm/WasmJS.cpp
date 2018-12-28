@@ -2314,7 +2314,8 @@ const Class WasmGlobalObject::class_ = {
         // TODO/AnyRef-boxing: With boxed immediates and strings, the write
         // barrier is going to have to be more complicated.
         ASSERT_ANYREF_IS_JSOBJECT;
-        TraceManuallyBarrieredEdge(trc, global->cell()->anyref.asJSObjectAddress(),
+        TraceManuallyBarrieredEdge(trc,
+                                   global->cell()->anyref.asJSObjectAddress(),
                                    "wasm anyref global");
       }
       break;
@@ -2386,7 +2387,8 @@ const Class WasmGlobalObject::class_ = {
         // TODO/AnyRef-boxing: With boxed immediates and strings, the write
         // barrier is going to have to be more complicated.
         ASSERT_ANYREF_IS_JSOBJECT;
-        JSObject::writeBarrierPost(&cell->anyref, nullptr, cell->anyref.asJSObject());
+        JSObject::writeBarrierPost(&cell->anyref, nullptr,
+                                   cell->anyref.asJSObject());
       }
       break;
     case ValType::Ref:

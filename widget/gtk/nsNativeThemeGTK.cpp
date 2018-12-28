@@ -1092,14 +1092,12 @@ bool nsNativeThemeGTK::GetExtraSizeForWidget(nsIFrame* aFrame,
   return true;
 }
 
-bool
-nsNativeThemeGTK::IsWidgetVisible(StyleAppearance aAppearance)
-{
+bool nsNativeThemeGTK::IsWidgetVisible(StyleAppearance aAppearance) {
   switch (aAppearance) {
-  case StyleAppearance::MozWindowButtonBox:
-    return false;
-  default:
-    break;
+    case StyleAppearance::MozWindowButtonBox:
+      return false;
+    default:
+      break;
   }
   return true;
 }

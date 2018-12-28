@@ -2037,8 +2037,8 @@ void PresShell::FireResizeEvent() {
   if (mDocument->EventHandlingSuppressed()) {
     if (MOZ_LIKELY(!mDocument->GetBFCacheEntry())) {
       mDocument->SetHasDelayedRefreshEvent();
-      mPresContext->RefreshDriver()->AddResizeEventFlushObserver
-          (this, /* aDelayed = */ true);
+      mPresContext->RefreshDriver()->AddResizeEventFlushObserver(
+          this, /* aDelayed = */ true);
     }
     return;
   }

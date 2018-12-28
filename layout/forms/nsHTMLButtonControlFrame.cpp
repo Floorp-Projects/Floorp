@@ -104,8 +104,7 @@ void nsHTMLButtonControlFrame::BuildDisplayList(
     rect.Deflate(border);
     nscoord radii[8];
     bool hasRadii = GetPaddingBoxBorderRadii(radii);
-    clipState.ClipContainingBlockDescendants(rect,
-                                             hasRadii ? radii : nullptr);
+    clipState.ClipContainingBlockDescendants(rect, hasRadii ? radii : nullptr);
   }
 
   BuildDisplayListForChild(aBuilder, mFrames.FirstChild(), set,

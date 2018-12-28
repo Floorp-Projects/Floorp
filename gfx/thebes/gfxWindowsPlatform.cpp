@@ -1481,11 +1481,7 @@ void gfxWindowsPlatform::EnsureDevicesInitialized() {
   }
 }
 
-bool
-gfxWindowsPlatform::DevicesInitialized() {
-
-  return mInitializedDevices;
-}
+bool gfxWindowsPlatform::DevicesInitialized() { return mInitializedDevices; }
 
 void gfxWindowsPlatform::InitializeDevices() {
   MOZ_ASSERT(NS_IsMainThread());
