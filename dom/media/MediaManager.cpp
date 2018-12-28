@@ -198,6 +198,9 @@ LazyLogModule gMediaManagerLog("MediaManager");
 
 using dom::BasicTrackSource;
 using dom::ConstrainDOMStringParameters;
+using dom::ConstrainDoubleRange;
+using dom::ConstrainLongRange;
+using dom::DisplayMediaStreamConstraints;
 using dom::File;
 using dom::GetUserMediaRequest;
 using dom::MediaSourceEnum;
@@ -2848,6 +2851,92 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
             return StreamPromise::CreateAndReject(std::move(aError), __func__);
           });
 };
+
+RefPtr<MediaManager::StreamPromise> MediaManager::GetDisplayMedia(
+    nsPIDOMWindowInner* aWindow,
+    const DisplayMediaStreamConstraints& aConstraintsPassedIn,
+    dom::CallerType aCallerType) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aWindow);
+
+  if (!IsOn(aConstraintsPassedIn.mVideo)) {
+    return StreamPromise::CreateAndReject(
+        MakeRefPtr<MediaMgrError>(MediaMgrError::Name::TypeError,
+                                  NS_LITERAL_STRING("video is required")),
+        __func__);
+  }
+
+  MediaStreamConstraints c;
+  auto& vc = c.mVideo.SetAsMediaTrackConstraints();
+
+  if (aConstraintsPassedIn.mVideo.IsMediaTrackConstraints()) {
+    vc = aConstraintsPassedIn.mVideo.GetAsMediaTrackConstraints();
+    if (vc.mAdvanced.WasPassed()) {
+      return StreamPromise::CreateAndReject(
+          MakeRefPtr<MediaMgrError>(MediaMgrError::Name::TypeError,
+                                    NS_LITERAL_STRING("advanced not allowed")),
+          __func__);
+    }
+    auto getCLR = [](const auto& aCon) -> const ConstrainLongRange& {
+      static ConstrainLongRange empty;
+      return (aCon.WasPassed() && !aCon.Value().IsLong())
+                 ? aCon.Value().GetAsConstrainLongRange()
+                 : empty;
+    };
+    auto getCDR = [](auto&& aCon) -> const ConstrainDoubleRange& {
+      static ConstrainDoubleRange empty;
+      return (aCon.WasPassed() && !aCon.Value().IsDouble())
+                 ? aCon.Value().GetAsConstrainDoubleRange()
+                 : empty;
+    };
+    const auto& w = getCLR(vc.mWidth);
+    const auto& h = getCLR(vc.mHeight);
+    const auto& f = getCDR(vc.mFrameRate);
+    if (w.mMin.WasPassed() || h.mMin.WasPassed() || f.mMin.WasPassed()) {
+      return StreamPromise::CreateAndReject(
+          MakeRefPtr<MediaMgrError>(MediaMgrError::Name::TypeError,
+                                    NS_LITERAL_STRING("min not allowed")),
+          __func__);
+    }
+    if (w.mExact.WasPassed() || h.mExact.WasPassed() || f.mExact.WasPassed()) {
+      return StreamPromise::CreateAndReject(
+          MakeRefPtr<MediaMgrError>(MediaMgrError::Name::TypeError,
+                                    NS_LITERAL_STRING("exact not allowed")),
+          __func__);
+    }
+    // As a UA optimization, we fail early without incurring a prompt, on
+    // known-to-fail constraint values that don't reveal anything about the
+    // user's system.
+    const char* badConstraint = nullptr;
+    if (w.mMax.WasPassed() && w.mMax.Value() < 1) {
+      badConstraint = "width";
+    }
+    if (h.mMax.WasPassed() && h.mMax.Value() < 1) {
+      badConstraint = "height";
+    }
+    if (f.mMax.WasPassed() && f.mMax.Value() < 1) {
+      badConstraint = "frameRate";
+    }
+    if (badConstraint) {
+      return StreamPromise::CreateAndReject(
+          MakeRefPtr<MediaMgrError>(MediaMgrError::Name::OverconstrainedError,
+                                    NS_LITERAL_STRING(""),
+                                    NS_ConvertASCIItoUTF16(badConstraint)),
+          __func__);
+    }
+  }
+  // We ask for "screen" sharing.
+  //
+  // If this is a privileged call or permission is disabled, this gives us full
+  // screen sharing by default, which is useful for internal testing.
+  //
+  // If this is a non-priviliged call, GetUserMedia() will change it to "window"
+  // for us.
+  vc.mMediaSource.AssignASCII(EnumToASCII(dom::MediaSourceEnumValues::strings,
+                                          MediaSourceEnum::Screen));
+
+  return MediaManager::GetUserMedia(aWindow, c, aCallerType);
+}
 
 /* static */ void MediaManager::AnonymizeDevices(MediaDeviceSet& aDevices,
                                                  const nsACString& aOriginKey) {
