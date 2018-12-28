@@ -6,10 +6,7 @@
 
 var EXPORTED_SYMBOLS = ["WebsiteMetadata"];
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-
 ChromeUtils.defineModuleGetter(this, "EventDispatcher", "resource://gre/modules/Messaging.jsm");
-ChromeUtils.defineModuleGetter(this, "Task", "resource://gre/modules/Task.jsm");
 
 var WebsiteMetadata = {
   /**
@@ -17,27 +14,25 @@ var WebsiteMetadata = {
    * will be sent.
    */
   parseAsynchronously: function(doc) {
-    Task.spawn(function() {
-      let metadata = getMetadata(doc, doc.location.href, {
-        image_url: metadataRules.image_url,
-        provider: metadataRules.provider,
-        description_length: metadataRules.description_length,
-      });
-
-      // No metadata was extracted, so don't bother sending it.
-      if (Object.keys(metadata).length === 0) {
-        return;
-      }
-
-      let msg = {
-        type: "Website:Metadata",
-        location: doc.location.href,
-        hasImage: metadata.image_url && metadata.image_url !== "",
-        metadata: JSON.stringify(metadata),
-      };
-
-      EventDispatcher.instance.sendRequest(msg);
+    let metadata = getMetadata(doc, doc.location.href, {
+      image_url: metadataRules.image_url,
+      provider: metadataRules.provider,
+      description_length: metadataRules.description_length,
     });
+
+    // No metadata was extracted, so don't bother sending it.
+    if (Object.keys(metadata).length === 0) {
+      return;
+    }
+
+    let msg = {
+      type: "Website:Metadata",
+      location: doc.location.href,
+      hasImage: metadata.image_url && metadata.image_url !== "",
+      metadata: JSON.stringify(metadata),
+    };
+
+    EventDispatcher.instance.sendRequest(msg);
   },
 };
 
