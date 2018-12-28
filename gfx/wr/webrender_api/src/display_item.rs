@@ -61,7 +61,7 @@ pub type ItemTag = (u64, u16);
 pub struct GenericDisplayItem<T> {
     pub item: T,
     pub clip_and_scroll: ClipAndScrollInfo,
-    pub info: LayoutPrimitiveInfo,
+    pub layout: LayoutPrimitiveInfo,
 }
 
 pub type DisplayItem = GenericDisplayItem<SpecificDisplayItem>;
@@ -72,7 +72,7 @@ pub type DisplayItem = GenericDisplayItem<SpecificDisplayItem>;
 pub struct SerializedDisplayItem<'a> {
     pub item: &'a SpecificDisplayItem,
     pub clip_and_scroll: &'a ClipAndScrollInfo,
-    pub info: &'a LayoutPrimitiveInfo,
+    pub layout: &'a LayoutPrimitiveInfo,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
