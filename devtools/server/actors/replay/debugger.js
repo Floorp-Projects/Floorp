@@ -442,6 +442,7 @@ ReplayDebugger.prototype = {
   },
 
   findScripts(query) {
+    this._ensurePaused();
     const data = this._sendRequest({
       type: "findScripts",
       query: this._convertScriptQuery(query),
@@ -658,6 +659,7 @@ ReplayDebuggerScript.prototype = {
   get source() { return this._dbg._getSource(this._data.sourceId); },
   get sourceStart() { return this._data.sourceStart; },
   get sourceLength() { return this._data.sourceLength; },
+  get format() { return this._data.format; },
 
   _forward(type, value) {
     return this._dbg._sendRequest({ type, id: this._data.id, value });
@@ -667,6 +669,7 @@ ReplayDebuggerScript.prototype = {
   getOffsetLocation(pc) { return this._forward("getOffsetLocation", pc); },
   getSuccessorOffsets(pc) { return this._forward("getSuccessorOffsets", pc); },
   getPredecessorOffsets(pc) { return this._forward("getPredecessorOffsets", pc); },
+  getAllColumnOffsets() { return this._forward("getAllColumnOffsets"); },
 
   setBreakpoint(offset, handler) {
     this._dbg._setBreakpoint(() => { handler.hit(this._dbg.getNewestFrame()); },
@@ -682,10 +685,8 @@ ReplayDebuggerScript.prototype = {
 
   get isGeneratorFunction() { NYI(); },
   get isAsyncFunction() { NYI(); },
-  get format() { NYI(); },
   getChildScripts: NYI,
   getAllOffsets: NYI,
-  getAllColumnOffsets: NYI,
   getBreakpoints: NYI,
   clearAllBreakpoints: NYI,
   isInCatchScope: NYI,
