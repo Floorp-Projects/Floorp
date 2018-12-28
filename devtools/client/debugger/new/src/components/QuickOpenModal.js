@@ -10,7 +10,7 @@ import { basename } from "../utils/path";
 
 import actions from "../actions";
 import {
-  getRelativeSources,
+  getRelativeSourcesList,
   getQuickOpenEnabled,
   getQuickOpenQuery,
   getQuickOpenType,
@@ -420,7 +420,7 @@ function mapStateToProps(state) {
 
   return {
     enabled: getQuickOpenEnabled(state),
-    sources: formatSources(getRelativeSources(state), getTabs(state)),
+    sources: formatSources(getRelativeSourcesList(state), getTabs(state)),
     selectedSource,
     symbols: formatSymbols(getSymbols(state, selectedSource)),
     symbolsLoading: isSymbolsLoading(state, selectedSource),
