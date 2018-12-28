@@ -1819,7 +1819,10 @@ void OpenVRSession::ProcessEvents(mozilla::gfx::VRSystemState& aSystemState) {
         break;
       case ::vr::EVREventType::VREvent_DriverRequestedQuit:
       case ::vr::EVREventType::VREvent_Quit:
-      case ::vr::EVREventType::VREvent_ProcessQuit:
+      // When SteamVR runtime haven't been launched before viewing VR,
+      // SteamVR will send a VREvent_ProcessQuit event. It will tell the parent
+      // process to shutdown the VR process, and we need to avoid it.
+      // case ::vr::EVREventType::VREvent_ProcessQuit:
       case ::vr::EVREventType::VREvent_QuitAcknowledged:
       case ::vr::EVREventType::VREvent_QuitAborted_UserPrompt:
         mShouldQuit = true;
