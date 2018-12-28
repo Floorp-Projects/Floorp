@@ -20,7 +20,7 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(SVGMatrix, mTransform)
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(SVGMatrix, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(SVGMatrix, Release)
 
-SVGTransform* SVGMatrix::GetParentObject() const { return mTransform; }
+DOMSVGTransform* SVGMatrix::GetParentObject() const { return mTransform; }
 
 JSObject* SVGMatrix::WrapObject(JSContext* aCx,
                                 JS::Handle<JSObject*> aGivenProto) {

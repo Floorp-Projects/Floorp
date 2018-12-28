@@ -28,18 +28,18 @@ class SVGMatrix;
 /**
  * DOM wrapper for an SVG transform. See DOMSVGLength.h.
  */
-class SVGTransform final : public nsWrapperCache {
+class DOMSVGTransform final : public nsWrapperCache {
   friend class AutoChangeTransformNotifier;
 
  public:
-  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(SVGTransform)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(SVGTransform)
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(DOMSVGTransform)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(DOMSVGTransform)
 
   /**
-   * Generic ctor for SVGTransform objects that are created for an attribute.
+   * Generic ctor for DOMSVGTransform objects that are created for an attribute.
    */
-  SVGTransform(DOMSVGTransformList* aList, uint32_t aListIndex,
-               bool aIsAnimValItem);
+  DOMSVGTransform(DOMSVGTransformList* aList, uint32_t aListIndex,
+                  bool aIsAnimValItem);
 
   /**
    * Ctors for creating the objects returned by:
@@ -48,21 +48,21 @@ class SVGTransform final : public nsWrapperCache {
    *   SVGTransformList.createSVGTransformFromMatrix(in SVGMatrix matrix)
    * which do not initially belong to an attribute.
    */
-  explicit SVGTransform();
-  explicit SVGTransform(const gfxMatrix& aMatrix);
+  explicit DOMSVGTransform();
+  explicit DOMSVGTransform(const gfxMatrix& aMatrix);
 
   /**
    * Ctor for creating an unowned copy. Used with Clone().
    */
-  explicit SVGTransform(const nsSVGTransform& aMatrix);
+  explicit DOMSVGTransform(const nsSVGTransform& aMatrix);
 
   /**
    * Create an unowned copy of an owned transform. The caller is responsible for
    * the first AddRef().
    */
-  SVGTransform* Clone() {
+  DOMSVGTransform* Clone() {
     NS_ASSERTION(mList, "unexpected caller");
-    return new SVGTransform(InternalItem());
+    return new DOMSVGTransform(InternalItem());
   }
 
   bool IsInList() const { return !!mList; }
@@ -118,7 +118,7 @@ class SVGTransform final : public nsWrapperCache {
   void SetSkewY(float angle, ErrorResult& rv);
 
  protected:
-  ~SVGTransform();
+  ~DOMSVGTransform();
 
   // Interface for SVGMatrix's use
   friend class dom::SVGMatrix;
