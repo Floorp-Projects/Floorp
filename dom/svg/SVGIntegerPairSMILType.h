@@ -8,13 +8,13 @@
 #define MOZILLA_SVGINTEGERPAIRSMILTYPE_H_
 
 #include "mozilla/Attributes.h"
-#include "nsISMILType.h"
+#include "SMILType.h"
 
 class nsSMILValue;
 
 namespace mozilla {
 
-class SVGIntegerPairSMILType : public nsISMILType {
+class SVGIntegerPairSMILType : public SMILType {
  public:
   // Singleton for nsSMILValue objects to hold onto.
   static SVGIntegerPairSMILType* Singleton() {
@@ -23,7 +23,7 @@ class SVGIntegerPairSMILType : public nsISMILType {
   }
 
  protected:
-  // nsISMILType Methods
+  // SMILType Methods
   // -------------------
   virtual void Init(nsSMILValue& aValue) const override;
   virtual void Destroy(nsSMILValue&) const override;
