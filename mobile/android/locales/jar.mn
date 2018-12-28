@@ -46,9 +46,6 @@ relativesrcdir toolkit/locales:
   locale/@AB_CD@/browser/overrides/search/search.properties        (%chrome/search/search.properties)
 # plugins
   locale/@AB_CD@/browser/overrides/plugins/pluginproblem.dtd       (%chrome/pluginproblem/pluginproblem.dtd)
-# about:support
-  locale/@AB_CD@/browser/overrides/global/aboutSupport.dtd         (%chrome/global/aboutSupport.dtd)
-  locale/@AB_CD@/browser/overrides/global/aboutSupport.properties  (%chrome/global/aboutSupport.properties)
 #about:mozilla
   locale/@AB_CD@/browser/overrides/global/mozilla.dtd                (%chrome/global/mozilla.dtd)
 #about:telemetry
@@ -80,3 +77,5 @@ relativesrcdir toolkit/locales:
 #endif
 #about:about
   toolkit                                          (%toolkit/about/*About.ftl)
+#about:support
+  toolkit                                          (%toolkit/about/*Support.ftl)
