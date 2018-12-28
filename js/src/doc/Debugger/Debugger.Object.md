@@ -335,20 +335,25 @@ These methods may throw if the referent is not a native object. Even simple
 accessors like `isExtensible` may throw if the referent is a proxy or some sort
 of exotic object like an opaque wrapper.
 
-<code>getProperty(<i>key</i>)</code>
+<code>getProperty(<i>key</i>, [<i>receiver</i>])</code>
 :   Return a [completion value][cv] with "return" being the value of the
     referent's property named <i>key</i>, or `undefined` if it has no such
-    property. All extant handler methods, breakpoints, and so on remain active
-    during the call.
+    property. <i>key</i> must be a string or symbol; <i>receiver</i> must be
+    a debuggee value. If the property is a getter, it will be evaluated with
+    <i>receiver</i> as the receiver, defaulting to the `Debugger.Object`
+    if omitted. All extant handler methods, breakpoints, and so on remain
+    active during the call.
 
-<code>setProperty(<i>key</i>, <i>value</i>)</code>
+<code>setProperty(<i>key</i>, <i>value</i>, [<i>receiver</i>])</code>
 :   Store <i>value</i> as the value of the referent's property named
-    <i>name</i>, creating the property if it does not exist. <i>Name</i>
-    must be a string; <i>value</i> must be a debuggee value. Return a
-    [completion value][cv] with "return" being a success/failure boolean,
-    or else "throw" being the exception thrown during property assignment.
-    All extant handler methods, breakpoints, and so on remain active
-    during the call.
+    <i>key</i>, creating the property if it does not exist. <i>key</i>
+    must be a string or symbol; <i>value</i> and <i>receiver</i> must be
+    debuggee values. If the property is a setter, it will be evaluated with
+    <i>receiver</i> as the receiver, defaulting to the `Debugger.Object`
+    if omitted. Return a [completion value][cv] with "return" being a
+    success/failure boolean, or else "throw" being the exception thrown
+    during property assignment. All extant handler methods, breakpoints,
+    and so on remain active during the call.
 
 <code>getOwnPropertyDescriptor(<i>key</i>)</code>
 :   Return a property descriptor for the property named <i>key</i> of the
