@@ -6,7 +6,6 @@
 
 #include "VRManager.h"
 #include "VRManagerParent.h"
-#include "VRGPUChild.h"
 #include "VRThread.h"
 #include "gfxVR.h"
 #include "mozilla/ClearOnShutdown.h"
@@ -15,7 +14,6 @@
 #include "mozilla/layers/TextureHost.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/Unused.h"
-#include "mozilla/gfx/GPUParent.h"
 
 #include "gfxPrefs.h"
 #include "gfxVR.h"
@@ -25,6 +23,7 @@
 #include "ipc/VRLayerParent.h"
 #if !defined(MOZ_WIDGET_ANDROID)
 #include "service/VRService.h"
+#include "service/VRServiceManager.h"
 #endif
 
 using namespace mozilla;
@@ -80,15 +79,11 @@ VRManager::VRManager()
   // The VR Service accesses all hardware from a separate process
   // and replaces the other VRSystemManager when enabled.
   if (!gfxPrefs::VRProcessEnabled()) {
-    mVRService = VRService::Create();
-  } else if (gfxPrefs::VRProcessEnabled() && XRE_IsGPUProcess()) {
-    gfx::GPUParent* gpu = GPUParent::GetSingleton();
-    MOZ_ASSERT(gpu);
-    Unused << gpu->SendCreateVRProcess();
+    VRServiceManager::Get().CreateService();
   }
-  if (mVRService) {
+  if (VRServiceManager::Get().IsServiceValid()) {
     mExternalManager =
-        VRSystemManagerExternal::Create(mVRService->GetAPIShmem());
+        VRSystemManagerExternal::Create(VRServiceManager::Get().GetAPIShmem());
   }
   if (mExternalManager) {
     mManagers.AppendElement(mExternalManager);
@@ -112,6 +107,11 @@ VRManager::VRManager()
 VRManager::~VRManager() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!mInitialized);
+#if !defined(MOZ_WIDGET_ANDROID)
+  if (VRServiceManager::Get().IsServiceValid()) {
+    VRServiceManager::Get().Shutdown();
+  }
+#endif
   MOZ_COUNT_DTOR(VRManager);
 }
 
@@ -123,9 +123,8 @@ void VRManager::Destroy() {
     mManagers[i]->Destroy();
   }
 #if !defined(MOZ_WIDGET_ANDROID)
-  if (mVRService) {
-    mVRService->Stop();
-    mVRService = nullptr;
+  if (VRServiceManager::Get().IsServiceValid()) {
+    VRServiceManager::Get().Shutdown();
   }
 #endif
   mInitialized = false;
@@ -138,16 +137,13 @@ void VRManager::Shutdown() {
     mManagers[i]->Shutdown();
   }
 #if !defined(MOZ_WIDGET_ANDROID)
-  if (mVRService) {
-    mVRService->Stop();
+  if (VRServiceManager::Get().IsServiceValid()) {
+    VRServiceManager::Get().Stop();
   }
-  if (gfxPrefs::VRProcessEnabled() && VRGPUChild::IsCreated()) {
-    RefPtr<Runnable> task =
-        NS_NewRunnableFunction("VRGPUChild::SendStopVRService", []() -> void {
-          VRGPUChild* vrGPUChild = VRGPUChild::Get();
-          vrGPUChild->SendStopVRService();
-        });
-
+  if (gfxPrefs::VRProcessEnabled() && mVRServiceStarted) {
+    RefPtr<Runnable> task = NS_NewRunnableFunction(
+        "VRServiceManager::ShutdownVRProcess",
+        []() -> void { VRServiceManager::Get().ShutdownVRProcess(); });
     NS_DispatchToMainThread(task.forget());
   }
 #endif
@@ -439,19 +435,12 @@ void VRManager::EnumerateVRDisplays() {
    * is in progress
    */
 #if !defined(MOZ_WIDGET_ANDROID)
-  // Tell VR process to start VR service.
   if (gfxPrefs::VRProcessEnabled() && !mVRServiceStarted) {
-    RefPtr<Runnable> task =
-        NS_NewRunnableFunction("VRGPUChild::SendStartVRService", []() -> void {
-          VRGPUChild* vrGPUChild = VRGPUChild::Get();
-          vrGPUChild->SendStartVRService();
-        });
-
-    NS_DispatchToMainThread(task.forget());
+    VRServiceManager::Get().CreateVRProcess();
     mVRServiceStarted = true;
   } else if (!gfxPrefs::VRProcessEnabled()) {
-    if (mVRService) {
-      mVRService->Start();
+    if (VRServiceManager::Get().IsServiceValid()) {
+      VRServiceManager::Get().Start();
       mVRServiceStarted = true;
     }
   }
@@ -489,9 +478,7 @@ void VRManager::RefreshVRDisplays(bool aMustDispatch) {
     EnumerateVRDisplays();
   }
 #if !defined(MOZ_WIDGET_ANDROID)
-  if (mVRService) {
-    mVRService->Refresh();
-  }
+  VRServiceManager::Get().Refresh();
 #endif
 
   /**

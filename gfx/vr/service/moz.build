@@ -15,6 +15,7 @@ if CONFIG['OS_TARGET'] != 'Android':
     UNIFIED_SOURCES += [
         'OSVRSession.cpp',
         'VRService.cpp',
+        'VRServiceManager.cpp',
         'VRSession.cpp',
     ]
     include('/ipc/chromium/chromium-config.mozbuild')
