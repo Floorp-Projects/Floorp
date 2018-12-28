@@ -31,7 +31,11 @@ window.addEventListener("load", function onload(event) {
 
 // Fluent uses lisp-case IDs so this converts
 // the SentenceCase info IDs to lisp-case.
+const FLUENT_IDENT_REGEX = /^[a-zA-Z][a-zA-Z0-9_-]*$/;
 function toFluentID(str) {
+  if (!FLUENT_IDENT_REGEX.test(str)) {
+    return null;
+  }
   return str.toString().replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase();
 }
 
@@ -106,9 +110,9 @@ var snapshotFormatters = {
 
       if (data.policiesStatus != Services.policies.INACTIVE) {
         let activePolicies = $.new("a", null, null, {
-          "data-l10n-id": policiesStrId,
           href: aboutPolicies,
         });
+        document.l10n.setAttributes(activePolicies, policiesStrId);
         $("policies-status").appendChild(activePolicies);
       } else {
         document.l10n.setAttributes($("policies-status"), policiesStrId);
@@ -239,8 +243,14 @@ var snapshotFormatters = {
 
   async graphics(data) {
     function localizedMsg(msg) {
+      if (typeof msg == "object" && msg.key) {
+        return document.l10n.formatValue(msg.key, msg.args);
+      }
       let msgId = toFluentID(msg);
-      return document.l10n.formatValue(msgId);
+      if (msgId) {
+        return document.l10n.formatValue(msgId);
+      }
+      return "";
     }
 
     // Read APZ info out of data.info, stripping it out in the process.
@@ -269,11 +279,18 @@ var snapshotFormatters = {
       let title = key[0] == "#" ? key.substr(1) : key;
       let keyStrId = toFluentID(key);
       let valueStrId = Array.isArray(value) ? null : toFluentID(value);
-      let td = $.new("td", value, null, {"data-l10n-id": valueStrId});
+      let td = $.new("td", value);
       td.style["white-space"] = "pre-wrap";
+      if (valueStrId) {
+        document.l10n.setAttributes(td, valueStrId);
+      }
 
+      let th = $.new("th", title, "column");
+      if (!key.startsWith("#")) {
+        document.l10n.setAttributes(th, keyStrId);
+      }
       return $.new("tr", [
-        $.new("th", title, "column", {"data-l10n-id": keyStrId}),
+        th,
         td,
       ]);
     }
@@ -322,9 +339,9 @@ var snapshotFormatters = {
         document.l10n.setAttributes(gpuProcessKillButton, "gpu-process-kill-button");
       }
 
-      addRow("diagnostics", "GPUProcessPid", gpuProcessPid);
+      addRow("diagnostics", "gpu-process-pid", [new Text(gpuProcessPid)]);
       if (gpuProcessKillButton) {
-        addRow("diagnostics", "GPUProcess", [gpuProcessKillButton]);
+        addRow("diagnostics", "gpu-process", [gpuProcessKillButton]);
       }
     }
 
@@ -336,7 +353,7 @@ var snapshotFormatters = {
       });
 
       document.l10n.setAttributes(gpuDeviceResetButton, "gpu-device-reset-button");
-      addRow("diagnostics", "Device Reset", [gpuDeviceResetButton]);
+      addRow("diagnostics", "gpu-device-reset", [gpuDeviceResetButton]);
     }
 
     // graphics-failures-tbody tbody
@@ -392,7 +409,7 @@ var snapshotFormatters = {
       delete data[key];
 
       if (value) {
-        addRow(where, colKey, value);
+        addRow(where, colKey, [new Text(value)]);
       }
     }
 
@@ -407,7 +424,7 @@ var snapshotFormatters = {
       let noOMTCString = await document.l10n.formatValue("main-thread-no-omtc");
       compositor = "BasicLayers (" + noOMTCString + ")";
     }
-    addRow("features", "compositing", compositor);
+    addRow("features", "compositing", [new Text(compositor)]);
     delete data.windowLayerManagerRemote;
     delete data.windowLayerManagerType;
     delete data.numTotalWindows;
@@ -449,7 +466,7 @@ var snapshotFormatters = {
       let message = data.directWriteEnabled;
       if ("directWriteVersion" in data)
         message += " (" + data.directWriteVersion + ")";
-      await addRow("features", "#DirectWrite", message);
+      await addRow("features", "#DirectWrite", [new Text(message)]);
       delete data.directWriteEnabled;
       delete data.directWriteVersion;
     }
@@ -547,7 +564,7 @@ var snapshotFormatters = {
             $.new("td", contents),
           ]));
         }
-        addRow("decisions", feature.name, [$.new("table", trs)]);
+        addRow("decisions", "#" + feature.name, [$.new("table", trs)]);
       }
     } else {
       $("graphics-decisions-tbody").style.display = "none";
@@ -593,7 +610,8 @@ var snapshotFormatters = {
   media(data) {
     function insertBasicInfo(key, value) {
       function createRow(key, value) {
-        let th = $.new("th", null, "column", {"data-l10n-id": key});
+        let th = $.new("th", null, "column");
+        document.l10n.setAttributes(th, key);
         let td = $.new("td", value);
         td.style["white-space"] = "pre-wrap";
         td.colSpan = 8;
@@ -759,8 +777,10 @@ var snapshotFormatters = {
         continue;
       }
       let keyStrId = toFluentID(key);
+      let th = $.new("th", null, "column");
+      document.l10n.setAttributes(th, keyStrId);
       tbody.appendChild($.new("tr", [
-        $.new("th", null, "column", {"data-l10n-id": keyStrId}),
+        th,
         $.new("td", data[key]),
       ]));
     }
@@ -817,11 +837,14 @@ $.new = function $_new(tag, textContentOrChildren, className, attributes) {
   }
   if (attributes) {
     if (attributes["data-l10n-id"]) {
+      let args = attributes.hasOwnProperty("data-l10n-args") ?
+        attributes["data-l10n-args"] :
+        undefined;
       document.l10n.setAttributes(elt,
                                   attributes["data-l10n-id"],
-                                  attributes["data-l10n-args"]);
+                                  args);
       delete attributes["data-l10n-id"];
-      if (attributes["data-l10n-args"]) {
+      if (args) {
         delete attributes["data-l10n-args"];
       }
     }
