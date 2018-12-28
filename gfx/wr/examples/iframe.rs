@@ -62,7 +62,7 @@ impl Example for App {
 
         let info = LayoutPrimitiveInfo::new(sub_bounds);
         let reference_frame_id = builder.push_reference_frame(
-            &info,
+            &sub_bounds,
             TransformStyle::Flat,
             Some(PropertyBinding::Binding(PropertyBindingKey::new(42), LayoutTransform::identity())),
             None,
