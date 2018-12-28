@@ -150,6 +150,16 @@ class IMContextWrapper final : public TextEventDispatcherListener {
    */
   nsDependentCSubstring GetIMName() const;
 
+  /**
+   * GetWaitingSynthesizedKeyPressHardwareKeyCode() returns hardware_keycode
+   * value of last handled GDK_KEY_PRESS event which is probable handled by
+   * IME asynchronously and we have not received synthesized GDK_KEY_PRESS
+   * event yet.
+   */
+  static guint16 GetWaitingSynthesizedKeyPressHardwareKeyCode() {
+    return sWaitingSynthesizedKeyPressHardwareKeyCode;
+  }
+
  protected:
   ~IMContextWrapper();
 
@@ -291,6 +301,8 @@ class IMContextWrapper final : public TextEventDispatcherListener {
   // OnKeyEvent() append mPostingKeyEvents when it believes that a key event
   // is posted to other IME process.
   GdkEventKeyQueue mPostingKeyEvents;
+
+  static guint16 sWaitingSynthesizedKeyPressHardwareKeyCode;
 
   struct Range {
     uint32_t mOffset;

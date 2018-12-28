@@ -237,6 +237,11 @@ class MediaManager final : public nsIMediaManagerService,
   nsresult EnumerateDevices(nsPIDOMWindowInner* aWindow,
                             dom::Promise& aPromise);
 
+  RefPtr<StreamPromise> GetDisplayMedia(
+      nsPIDOMWindowInner* aWindow,
+      const dom::DisplayMediaStreamConstraints& aConstraintsPassedIn,
+      dom::CallerType aCallerType);
+
   // Get the sink that corresponds to the given device id.
   // It is resposible to check if an application is
   // authorized to play audio through the requested device.

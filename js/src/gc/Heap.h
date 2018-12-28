@@ -239,9 +239,10 @@ class Arena {
   size_t onDelayedMarkingList_ : 1;
   size_t hasDelayedMarking_ : 1;
   size_t nextDelayedMarkingArena_ : JS_BITS_PER_WORD - 8 - 1 - 1;
-  static_assert(ArenaShift >= 8 + 1 + 1,
-                "Arena::nextDelayedMarkingArena_ packing assumes that ArenaShift has "
-                "enough bits to cover allocKind and delayed marking state.");
+  static_assert(
+      ArenaShift >= 8 + 1 + 1,
+      "Arena::nextDelayedMarkingArena_ packing assumes that ArenaShift has "
+      "enough bits to cover allocKind and delayed marking state.");
 
   union {
     /*
@@ -388,9 +389,7 @@ class Arena {
     return tailOffset % thingSize == 0;
   }
 
-  bool onDelayedMarkingList() const {
-    return onDelayedMarkingList_;
-  }
+  bool onDelayedMarkingList() const { return onDelayedMarkingList_; }
 
   Arena* getNextDelayedMarking() const {
     MOZ_ASSERT(onDelayedMarkingList_);

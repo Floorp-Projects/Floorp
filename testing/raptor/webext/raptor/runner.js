@@ -42,6 +42,7 @@ var getFNBPaint = false;
 var getFCP = false;
 var getDCF = false;
 var getTTFI = false;
+var getLoadTime = false;
 var isHeroPending = false;
 var pendingHeroes = [];
 var settings = {};
@@ -49,6 +50,7 @@ var isFNBPaintPending = false;
 var isFCPPending = false;
 var isDCFPending = false;
 var isTTFIPending = false;
+var isLoadTimePending = false;
 var isBenchmarkPending = false;
 var pageTimeout = 10000; // default pageload timeout
 var geckoProfiling = false;
@@ -147,6 +149,9 @@ function getTestSettings() {
             if (settings.measure.ttfi !== undefined) {
               getTTFI = settings.measure.ttfi;
             }
+            if (settings.measure.loadtime !== undefined) {
+              getLoadTime = settings.measure.loadtime;
+            }
           } else {
             console.log("abort: 'measure' key not found in test settings");
             cleanUp();
@@ -224,7 +229,12 @@ function waitForResult() {
   return new Promise(resolve => {
     async function checkForResult() {
       if (testType == "pageload") {
-        if (!isHeroPending && !isFNBPaintPending && !isFCPPending && !isDCFPending && !isTTFIPending) {
+        if (!isHeroPending &&
+            !isFNBPaintPending &&
+            !isFCPPending &&
+            !isDCFPending &&
+            !isTTFIPending &&
+            !isLoadTimePending) {
           cancelTimeoutAlarm("raptor-page-timeout");
           postToControlServer("status", "results received");
           if (geckoProfiling) {
@@ -320,6 +330,8 @@ async function nextCycle() {
           isDCFPending = true;
         if (getTTFI)
           isTTFIPending = true;
+        if (getLoadTime)
+          isLoadTimePending = true;
       } else if (testType == "benchmark") {
         isBenchmarkPending = true;
       }
@@ -415,6 +427,9 @@ function resultListener(request, sender, sendResponse) {
       } else if (request.type == "fcp") {
         results.measurements.fcp.push(request.value);
         isFCPPending = false;
+      } else if (request.type == "loadtime") {
+        results.measurements.loadtime.push(request.value);
+        isLoadTimePending = false;
       }
     } else if (testType == "benchmark") {
       // benchmark results received (all results for that complete benchmark run)

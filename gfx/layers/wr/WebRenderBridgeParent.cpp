@@ -717,25 +717,25 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvValidateFontDescriptor(
   remaining -= familyLength + 1;
   wchar_t* files = family + familyLength + 1;
   BOOL exists = FALSE;
-  if (RefPtr<IDWriteFontCollection> systemFonts = Factory::GetDWriteSystemFonts()) {
+  if (RefPtr<IDWriteFontCollection> systemFonts =
+          Factory::GetDWriteSystemFonts()) {
     UINT32 idx;
     systemFonts->FindFamilyName(family, &idx, &exists);
   }
   if (!remaining) {
-    gfxCriticalNote << (exists ? "found" : "MISSING")
-                    << " font family \"" << family
-                    << "\" has no files!";
+    gfxCriticalNote << (exists ? "found" : "MISSING") << " font family \""
+                    << family << "\" has no files!";
   }
   while (remaining > 0) {
     size_t fileLength = wcsnlen_s(files, remaining);
     MOZ_ASSERT(fileLength < remaining && files[fileLength] == 0);
     DWORD attribs = GetFileAttributesW(files);
     if (!exists || attribs == INVALID_FILE_ATTRIBUTES) {
-      gfxCriticalNote << (exists ? "found" : "MISSING")
-                      << " font family \"" << family
-                      << "\" has " << (attribs == INVALID_FILE_ATTRIBUTES ? "INVALID" : "valid")
-                      << " file \"" << files
-                      << "\"";
+      gfxCriticalNote << (exists ? "found" : "MISSING") << " font family \""
+                      << family << "\" has "
+                      << (attribs == INVALID_FILE_ATTRIBUTES ? "INVALID"
+                                                             : "valid")
+                      << " file \"" << files << "\"";
     }
     remaining -= fileLength + 1;
     files += fileLength + 1;

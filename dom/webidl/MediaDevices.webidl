@@ -21,4 +21,7 @@ interface MediaDevices : EventTarget {
 
   [Throws, NeedsCallerType]
   Promise<MediaStream> getUserMedia(optional MediaStreamConstraints constraints);
+
+  [SecureContext, Throws, NeedsCallerType]
+  Promise<MediaStream> getDisplayMedia(optional DisplayMediaStreamConstraints constraints);
 };

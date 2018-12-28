@@ -682,11 +682,9 @@ nsresult nsHtml5StreamParser::SniffStreamBytes(
     mMetaScanner = new nsHtml5MetaScanner(mTreeBuilder);
   }
 
-  if (mSniffingLength + aFromSegment.Length() >=
-      SNIFFING_BUFFER_SIZE) {
+  if (mSniffingLength + aFromSegment.Length() >= SNIFFING_BUFFER_SIZE) {
     // this is the last buffer
-    uint32_t countToSniffingLimit =
-        SNIFFING_BUFFER_SIZE - mSniffingLength;
+    uint32_t countToSniffingLimit = SNIFFING_BUFFER_SIZE - mSniffingLength;
     if (mMode == NORMAL || mMode == VIEW_SOURCE_HTML || mMode == LOAD_AS_DATA) {
       nsHtml5ByteReadable readable(
           aFromSegment.Elements(),
@@ -755,8 +753,7 @@ nsresult nsHtml5StreamParser::SniffStreamBytes(
   }
 
   if (!mSniffingBuffer) {
-    mSniffingBuffer = MakeUniqueFallible<uint8_t[]>(
-        SNIFFING_BUFFER_SIZE);
+    mSniffingBuffer = MakeUniqueFallible<uint8_t[]>(SNIFFING_BUFFER_SIZE);
     if (!mSniffingBuffer) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -805,8 +802,7 @@ nsresult nsHtml5StreamParser::WriteStreamBytes(
     mLastBuffer->AdvanceEnd(written);
     if (result == kOutputFull) {
       RefPtr<nsHtml5OwningUTF16Buffer> newBuf =
-          nsHtml5OwningUTF16Buffer::FalliblyCreate(
-              READ_BUFFER_SIZE);
+          nsHtml5OwningUTF16Buffer::FalliblyCreate(READ_BUFFER_SIZE);
       if (!newBuf) {
         MarkAsBroken(NS_ERROR_OUT_OF_MEMORY);
         return NS_ERROR_OUT_OF_MEMORY;
@@ -815,7 +811,8 @@ nsresult nsHtml5StreamParser::WriteStreamBytes(
     } else {
       MOZ_ASSERT(totalRead == aFromSegment.Length(),
                  "The Unicode decoder consumed the wrong number of bytes.");
-      if (mDecodingLocalFileAsUTF8 && mLocalFileBytesBuffered == LOCAL_FILE_UTF_8_BUFFER_SIZE) {
+      if (mDecodingLocalFileAsUTF8 &&
+          mLocalFileBytesBuffered == LOCAL_FILE_UTF_8_BUFFER_SIZE) {
         CommitLocalFileToUTF8();
       }
       return NS_OK;
@@ -841,8 +838,7 @@ void nsHtml5StreamParser::ReDecodeLocalFile() {
   }
 }
 
-void nsHtml5StreamParser::CommitLocalFileToUTF8()
-{
+void nsHtml5StreamParser::CommitLocalFileToUTF8() {
   MOZ_ASSERT(mDecodingLocalFileAsUTF8);
   mDecodingLocalFileAsUTF8 = false;
   mFeedChardetIfEncoding = nullptr;
@@ -955,8 +951,7 @@ nsresult nsHtml5StreamParser::OnStartRequest(nsIRequest* aRequest,
   NS_ENSURE_SUCCESS(rv, rv);
 
   RefPtr<nsHtml5OwningUTF16Buffer> newBuf =
-      nsHtml5OwningUTF16Buffer::FalliblyCreate(
-          READ_BUFFER_SIZE);
+      nsHtml5OwningUTF16Buffer::FalliblyCreate(READ_BUFFER_SIZE);
   if (!newBuf) {
     // marks this stream parser as terminated,
     // which prevents entry to code paths that
@@ -1119,8 +1114,7 @@ void nsHtml5StreamParser::DoStopRequest() {
     mLastBuffer->AdvanceEnd(written);
     if (result == kOutputFull) {
       RefPtr<nsHtml5OwningUTF16Buffer> newBuf =
-          nsHtml5OwningUTF16Buffer::FalliblyCreate(
-              READ_BUFFER_SIZE);
+          nsHtml5OwningUTF16Buffer::FalliblyCreate(READ_BUFFER_SIZE);
       if (!newBuf) {
         MarkAsBroken(NS_ERROR_OUT_OF_MEMORY);
         return;
@@ -1173,8 +1167,8 @@ nsresult nsHtml5StreamParser::OnStopRequest(nsIRequest* aRequest,
   return NS_OK;
 }
 
-void nsHtml5StreamParser::DoDataAvailableBuffer(mozilla::Buffer<uint8_t>&& aBuffer)
-{
+void nsHtml5StreamParser::DoDataAvailableBuffer(
+    mozilla::Buffer<uint8_t>&& aBuffer) {
   if (MOZ_LIKELY(!mDecodingLocalFileAsUTF8)) {
     DoDataAvailable(aBuffer);
     return;
@@ -1228,7 +1222,6 @@ void nsHtml5StreamParser::DoDataAvailableBuffer(mozilla::Buffer<uint8_t>&& aBuff
   }
 }
 
-
 void nsHtml5StreamParser::DoDataAvailable(Span<const uint8_t> aBuffer) {
   NS_ASSERTION(IsParserThread(), "Wrong thread!");
   MOZ_RELEASE_ASSERT(STREAM_BEING_READ == mStreamState,
@@ -1243,7 +1236,8 @@ void nsHtml5StreamParser::DoDataAvailable(Span<const uint8_t> aBuffer) {
   if (HasDecoder()) {
     if ((mFeedChardetIfEncoding == mEncoding) && !mDecodingLocalFileAsUTF8) {
       bool dontFeed;
-      mChardet->DoIt((const char*)aBuffer.Elements(), aBuffer.Length(), &dontFeed);
+      mChardet->DoIt((const char*)aBuffer.Elements(), aBuffer.Length(),
+                     &dontFeed);
       if (dontFeed) {
         mFeedChardetIfEncoding = nullptr;
       }

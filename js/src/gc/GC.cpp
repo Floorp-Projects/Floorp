@@ -5116,10 +5116,10 @@ void js::gc::DelayCrossCompartmentGrayMarking(JSObject* src) {
 }
 
 void GCRuntime::markIncomingCrossCompartmentPointers(MarkColor color) {
-  gcstats::AutoPhase ap(
-    stats(),
-    color == MarkColor::Black ? gcstats::PhaseKind::SWEEP_MARK_INCOMING_BLACK
-                              : gcstats::PhaseKind::SWEEP_MARK_INCOMING_GRAY);
+  gcstats::AutoPhase ap(stats(),
+                        color == MarkColor::Black
+                            ? gcstats::PhaseKind::SWEEP_MARK_INCOMING_BLACK
+                            : gcstats::PhaseKind::SWEEP_MARK_INCOMING_GRAY);
 
   bool unlinkList = color == MarkColor::Gray;
 

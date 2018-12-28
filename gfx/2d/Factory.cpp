@@ -1077,7 +1077,8 @@ void CriticalLogger::CrashAction(LogReason aReason) {
 
 #ifdef WIN32
 void LogWStr(const wchar_t* aWStr, std::stringstream& aOut) {
-  int n = WideCharToMultiByte(CP_ACP, 0, aWStr, -1, nullptr, 0, nullptr, nullptr);
+  int n =
+      WideCharToMultiByte(CP_ACP, 0, aWStr, -1, nullptr, 0, nullptr, nullptr);
   if (n > 1) {
     std::vector<char> str(n);
     WideCharToMultiByte(CP_ACP, 0, aWStr, -1, str.data(), n, nullptr, nullptr);

@@ -115,6 +115,14 @@ class MediaEngineSourceInterface {
   virtual bool GetScary() const = 0;
 
   /**
+   * Override w/a promise if source has frames, in order to potentially allow
+   * deferring success of source acquisition until first frame has arrived.
+   */
+  virtual RefPtr<GenericNonExclusivePromise> GetFirstFramePromise() const {
+    return nullptr;
+  }
+
+  /**
    * Called by MediaEngine to allocate a handle to this source.
    *
    * If this is the first registered AllocationHandle, the underlying device

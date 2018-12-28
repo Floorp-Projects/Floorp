@@ -1638,11 +1638,8 @@ void nsSocketTransportService::GetSocketConnections(
     AnalyzeConnection(data, &mIdleList[i], false);
 }
 
-bool
-nsSocketTransportService::IsTelemetryEnabledAndNotSleepPhase()
-{
-  return Telemetry::CanRecordPrereleaseData() &&
-         !mSleepPhase;
+bool nsSocketTransportService::IsTelemetryEnabledAndNotSleepPhase() {
+  return Telemetry::CanRecordPrereleaseData() && !mSleepPhase;
 }
 
 #if defined(XP_WIN)

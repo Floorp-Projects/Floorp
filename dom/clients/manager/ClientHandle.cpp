@@ -139,7 +139,6 @@ RefPtr<ClientStatePromise> ClientHandle::Focus() {
 
 RefPtr<GenericPromise> ClientHandle::PostMessage(
     StructuredCloneData& aData, const ServiceWorkerDescriptor& aSource) {
-
   if (IsShutdown()) {
     return GenericPromise::CreateAndReject(NS_ERROR_DOM_INVALID_STATE_ERR,
                                            __func__);
