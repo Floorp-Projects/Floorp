@@ -253,7 +253,6 @@ void ClientManagerService::RemoveManager(ClientManagerParent* aManager) {
 
 RefPtr<ClientOpPromise> ClientManagerService::Navigate(
     const ClientNavigateArgs& aArgs) {
-
   ClientSourceParent* source =
       FindSource(aArgs.target().id(), aArgs.target().principalInfo());
   if (!source) {

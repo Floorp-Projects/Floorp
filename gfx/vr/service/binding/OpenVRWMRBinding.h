@@ -10,10 +10,10 @@
 namespace mozilla {
 namespace gfx {
 
-struct OpenVRWMRBinding
-{
-  //OpenVRWMRBinding();
+struct OpenVRWMRBinding {
+  // OpenVRWMRBinding();
   const char* binding =
+      // clang-format off
   "{\n"
   "  \"version\" : \"0.1\", \n"
   "  \"controller_type\" : \"holographic_controller\", \n"
@@ -184,9 +184,10 @@ struct OpenVRWMRBinding
   "     }\n"
   "  }\n"
   "}";
+  // clang-format on
 };
 
-} // namespace mozilla
-} // namespace gfx
+}  // namespace gfx
+}  // namespace mozilla
 
-#endif // GFX_VR_BLINDING_OPENVRWMRBINDING_H
+#endif  // GFX_VR_BLINDING_OPENVRWMRBINDING_H

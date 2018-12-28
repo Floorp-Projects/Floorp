@@ -387,10 +387,12 @@ AsyncScriptLoader::OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
   return NS_OK;
 }
 
-nsresult mozJSSubScriptLoader::ReadScriptAsync(
-    nsIURI* uri, HandleObject targetObj, HandleObject loadScope,
-    nsIIOService* serv, bool wantReturnValue, bool cache,
-    MutableHandleValue retval) {
+nsresult mozJSSubScriptLoader::ReadScriptAsync(nsIURI* uri,
+                                               HandleObject targetObj,
+                                               HandleObject loadScope,
+                                               nsIIOService* serv,
+                                               bool wantReturnValue, bool cache,
+                                               MutableHandleValue retval) {
   nsCOMPtr<nsIGlobalObject> globalObject = xpc::NativeGlobal(targetObj);
   ErrorResult result;
 
@@ -666,10 +668,9 @@ nsresult mozJSSubScriptLoader::DoLoadSubScriptWithOptions(
     // |script| came from the cache, so don't bother writing it
     // |back there.
     cache = nullptr;
-  } else if (!ReadScript(uri, cx, targetObj,
-                         static_cast<const char*>(uriStr.get()), serv,
-                         options.wantReturnValue, useCompilationScope,
-                         &script)) {
+  } else if (!ReadScript(
+                 uri, cx, targetObj, static_cast<const char*>(uriStr.get()),
+                 serv, options.wantReturnValue, useCompilationScope, &script)) {
     return NS_OK;
   }
 

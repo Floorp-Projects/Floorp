@@ -14,7 +14,7 @@
 #include "mozilla/SSE.h"
 #endif
 
-#ifdef BUILD_ARM_NEON
+#ifdef USE_NEON
 #include "mozilla/arm.h"
 #endif
 
@@ -131,7 +131,7 @@ void Swizzle_SSE2(const uint8_t*, int32_t, uint8_t*, int32_t, IntSize);
 
 #endif
 
-#ifdef BUILD_ARM_NEON
+#ifdef USE_NEON
 /**
  * ARM NEON optimizations
  */
@@ -294,7 +294,7 @@ bool PremultiplyData(const uint8_t* aSrc, int32_t aSrcStride,
     }
 #endif
 
-#ifdef BUILD_ARM_NEON
+#ifdef USE_NEON
   if (mozilla::supports_neon()) switch (FORMAT_KEY(aSrcFormat, aDstFormat)) {
       PREMULTIPLY_NEON(SurfaceFormat::B8G8R8A8, SurfaceFormat::B8G8R8A8)
       PREMULTIPLY_NEON(SurfaceFormat::B8G8R8A8, SurfaceFormat::B8G8R8X8)
@@ -426,7 +426,7 @@ bool UnpremultiplyData(const uint8_t* aSrc, int32_t aSrcStride,
     }
 #endif
 
-#ifdef BUILD_ARM_NEON
+#ifdef USE_NEON
   if (mozilla::supports_neon()) switch (FORMAT_KEY(aSrcFormat, aDstFormat)) {
       UNPREMULTIPLY_NEON(SurfaceFormat::B8G8R8A8, SurfaceFormat::B8G8R8A8)
       UNPREMULTIPLY_NEON(SurfaceFormat::B8G8R8A8, SurfaceFormat::R8G8B8A8)
@@ -710,7 +710,7 @@ bool SwizzleData(const uint8_t* aSrc, int32_t aSrcStride,
     }
 #endif
 
-#ifdef BUILD_ARM_NEON
+#ifdef USE_NEON
   if (mozilla::supports_neon()) switch (FORMAT_KEY(aSrcFormat, aDstFormat)) {
       SWIZZLE_NEON(SurfaceFormat::B8G8R8A8, SurfaceFormat::R8G8B8A8)
       SWIZZLE_NEON(SurfaceFormat::B8G8R8X8, SurfaceFormat::R8G8B8X8)

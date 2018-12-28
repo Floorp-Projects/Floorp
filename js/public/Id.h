@@ -54,8 +54,10 @@ struct PropertyKey {
   bool operator==(const PropertyKey& rhs) const { return asBits == rhs.asBits; }
   bool operator!=(const PropertyKey& rhs) const { return asBits != rhs.asBits; }
 
-  MOZ_ALWAYS_INLINE bool isInt() const { return !!(asBits & JSID_TYPE_INT_BIT); }
-  
+  MOZ_ALWAYS_INLINE bool isInt() const {
+    return !!(asBits & JSID_TYPE_INT_BIT);
+  }
+
 } JS_HAZ_GC_POINTER;
 
 }  // namespace JS

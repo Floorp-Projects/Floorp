@@ -37,8 +37,7 @@ nsDocShellLoadState::nsDocShellLoadState(nsIURI* aURI)
   MOZ_ASSERT(aURI, "Cannot create a LoadState with a null URI!");
 }
 
-nsDocShellLoadState::nsDocShellLoadState(DocShellLoadStateInit& aLoadState)
-{
+nsDocShellLoadState::nsDocShellLoadState(DocShellLoadStateInit& aLoadState) {
   MOZ_ASSERT(aLoadState.URI(), "Cannot create a LoadState with a null URI!");
   mResultPrincipalURIIsSome = aLoadState.ResultPrincipalURIIsSome();
   mKeepResultPrincipalURIIfSet = aLoadState.KeepResultPrincipalURIIfSet();
@@ -55,7 +54,8 @@ nsDocShellLoadState::nsDocShellLoadState(DocShellLoadStateInit& aLoadState)
   mFirstParty = aLoadState.FirstParty();
   mTypeHint = aLoadState.TypeHint();
   mFileName = aLoadState.FileName();
-  mIsFromProcessingFrameAttributes = aLoadState.IsFromProcessingFrameAttributes();
+  mIsFromProcessingFrameAttributes =
+      aLoadState.IsFromProcessingFrameAttributes();
   mReferrer = aLoadState.Referrer();
   mURI = aLoadState.URI();
   mOriginalURI = aLoadState.OriginalURI();
@@ -432,7 +432,8 @@ DocShellLoadStateInit nsDocShellLoadState::Serialize() {
   loadState.FirstParty() = mFirstParty;
   loadState.TypeHint() = mTypeHint;
   loadState.FileName() = mFileName;
-  loadState.IsFromProcessingFrameAttributes() = mIsFromProcessingFrameAttributes;
+  loadState.IsFromProcessingFrameAttributes() =
+      mIsFromProcessingFrameAttributes;
   loadState.Referrer() = mReferrer;
   loadState.URI() = mURI;
   loadState.OriginalURI() = mOriginalURI;
