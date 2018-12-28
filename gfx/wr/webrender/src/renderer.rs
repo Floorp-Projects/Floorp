@@ -1602,6 +1602,8 @@ pub struct Renderer {
     /// Notification requests to be fulfilled after rendering.
     notifications: Vec<NotificationRequest>,
 
+    framebuffer_size: Option<DeviceIntSize>,
+
     #[cfg(feature = "capture")]
     read_fbo: FBOId,
     #[cfg(feature = "replay")]
@@ -2048,6 +2050,7 @@ impl Renderer {
             #[cfg(feature = "replay")]
             owned_external_images: FastHashMap::default(),
             notifications: Vec::new(),
+            framebuffer_size: None,
         };
 
         renderer.set_debug_flags(options.debug_flags);
@@ -2116,7 +2119,8 @@ impl Renderer {
                             // (in order to update the texture cache), issue
                             // a render just to off-screen targets.
                             if self.active_documents[pos].1.frame.must_be_drawn() {
-                                self.render_impl(None).ok();
+                                let framebuffer_size = self.framebuffer_size;
+                                self.render_impl(framebuffer_size).ok();
                             }
                             self.active_documents[pos].1 = doc;
                         }
@@ -2483,6 +2487,8 @@ impl Renderer {
         &mut self,
         framebuffer_size: DeviceIntSize,
     ) -> Result<RendererStats, Vec<RendererError>> {
+        self.framebuffer_size = Some(framebuffer_size);
+
         let result = self.render_impl(Some(framebuffer_size));
 
         drain_filter(
@@ -3495,19 +3501,35 @@ impl Renderer {
                     with_depth: false,
                 });
 
-                let src_rect = DeviceIntRect::new(
-                    blit.offset,
-                    blit.target.uv_rect.size.to_i32(),
+                let mut src_rect = DeviceIntRect::new(
+                    blit.src_offset,
+                    blit.size,
                 );
 
-                let dest_rect = blit.target.uv_rect.to_i32();
+                let target_rect = blit.target.uv_rect.to_i32();
+
+                let mut dest_rect = DeviceIntRect::new(
+                    DeviceIntPoint::new(
+                        blit.dest_offset.x + target_rect.origin.x,
+                        blit.dest_offset.y + target_rect.origin.y,
+                    ),
+                    blit.size,
+                );
+
+                // Modify the src/dest rects since we are blitting from the framebuffer
+                src_rect.origin.y = draw_target.dimensions().height as i32 - src_rect.size.height - src_rect.origin.y;
+                dest_rect.origin.y += dest_rect.size.height;
+                dest_rect.size.height = -dest_rect.size.height;
 
                 self.device.blit_render_target(
                     src_rect,
                     dest_rect,
                 );
             }
+
+            self.device.bind_draw_target(draw_target);
         }
+
     }
 
     fn draw_alpha_target(

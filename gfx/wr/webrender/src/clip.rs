@@ -23,7 +23,7 @@ use render_task::to_cache_size;
 use resource_cache::{ImageRequest, ResourceCache};
 use std::{cmp, u32};
 use std::os::raw::c_void;
-use util::{extract_inner_rect_safe, project_rect, ScaleOffset};
+use util::{extract_inner_rect_safe, project_rect, ScaleOffset, MaxRect};
 
 /*
 
@@ -1360,6 +1360,46 @@ impl ClipNodeCollector {
         clip_chain_id: ClipChainId,
     ) {
         self.clips.insert(clip_chain_id);
+    }
+
+    pub fn clear(
+        &mut self,
+    ) {
+        self.clips.clear();
+    }
+
+    /// Build the world clip rect for this clip node collector.
+    // NOTE: This ignores any complex clips that may be present.
+    pub fn get_world_clip_rect(
+        &self,
+        clip_store: &ClipStore,
+        clip_data_store: &ClipDataStore,
+        clip_scroll_tree: &ClipScrollTree,
+    ) -> Option<WorldRect> {
+        let mut clip_rect = WorldRect::max_rect();
+
+        let mut map_local_to_world = SpaceMapper::new(
+            ROOT_SPATIAL_NODE_INDEX,
+            WorldRect::zero(),
+        );
+
+        for clip_chain_id in &self.clips {
+            let clip_chain_node = clip_store.get_clip_chain(*clip_chain_id);
+            let clip_node = &clip_data_store[clip_chain_node.handle];
+
+            if let Some(local_rect) = clip_node.item.get_local_clip_rect(clip_chain_node.local_pos) {
+                map_local_to_world.set_target_spatial_node(
+                    clip_chain_node.spatial_node_index,
+                    clip_scroll_tree,
+                );
+
+                if let Some(world_rect) = map_local_to_world.map(&local_rect) {
+                    clip_rect = clip_rect.intersection(&world_rect)?;
+                }
+            }
+        }
+
+        Some(clip_rect)
     }
 }
 
