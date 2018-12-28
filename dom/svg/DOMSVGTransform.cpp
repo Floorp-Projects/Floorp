@@ -4,9 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "SVGTransform.h"
+#include "DOMSVGTransform.h"
 
-#include "mozilla/dom/SVGTransform.h"
 #include "mozilla/dom/SVGMatrix.h"
 #include "mozilla/dom/SVGTransformBinding.h"
 #include "mozilla/DebugOnly.h"
@@ -24,8 +23,10 @@ namespace dom {
 
 using namespace SVGTransform_Binding;
 
-static nsSVGAttrTearoffTable<SVGTransform, SVGMatrix>& SVGMatrixTearoffTable() {
-  static nsSVGAttrTearoffTable<SVGTransform, SVGMatrix> sSVGMatrixTearoffTable;
+static nsSVGAttrTearoffTable<DOMSVGTransform, SVGMatrix>&
+SVGMatrixTearoffTable() {
+  static nsSVGAttrTearoffTable<DOMSVGTransform, SVGMatrix>
+      sSVGMatrixTearoffTable;
   return sSVGMatrixTearoffTable;
 }
 
@@ -35,9 +36,9 @@ static nsSVGAttrTearoffTable<SVGTransform, SVGMatrix>& SVGMatrixTearoffTable() {
 // clear our list's weak ref to us to be safe. (The other option would be to
 // not unlink and rely on the breaking of the other edges in the cycle, as
 // NS_SVG_VAL_IMPL_CYCLE_COLLECTION does.)
-NS_IMPL_CYCLE_COLLECTION_CLASS(SVGTransform)
+NS_IMPL_CYCLE_COLLECTION_CLASS(DOMSVGTransform)
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(SVGTransform)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(DOMSVGTransform)
   // We may not belong to a list, so we must null check tmp->mList.
   if (tmp->mList) {
     tmp->mList->mItems[tmp->mListIndex] = nullptr;
@@ -46,21 +47,21 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(SVGTransform)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(SVGTransform)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(DOMSVGTransform)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mList)
   SVGMatrix* matrix = SVGMatrixTearoffTable().GetTearoff(tmp);
   CycleCollectionNoteChild(cb, matrix, "matrix");
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(SVGTransform)
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(DOMSVGTransform)
   NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(SVGTransform, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(SVGTransform, Release)
+NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(DOMSVGTransform, AddRef)
+NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(DOMSVGTransform, Release)
 
-JSObject* SVGTransform::WrapObject(JSContext* aCx,
-                                   JS::Handle<JSObject*> aGivenProto) {
+JSObject* DOMSVGTransform::WrapObject(JSContext* aCx,
+                                      JS::Handle<JSObject*> aGivenProto) {
   return SVGTransform_Binding::Wrap(aCx, this, aGivenProto);
 }
 
@@ -71,7 +72,7 @@ JSObject* SVGTransform::WrapObject(JSContext* aCx,
 class MOZ_RAII AutoChangeTransformNotifier {
  public:
   explicit AutoChangeTransformNotifier(
-      SVGTransform* aTransform MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      DOMSVGTransform* aTransform MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
       : mTransform(aTransform) {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     MOZ_ASSERT(mTransform, "Expecting non-null transform");
@@ -92,7 +93,7 @@ class MOZ_RAII AutoChangeTransformNotifier {
   }
 
  private:
-  SVGTransform* const mTransform;
+  DOMSVGTransform* const mTransform;
   nsAttrValue mEmptyOrOldValue;
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
@@ -100,8 +101,8 @@ class MOZ_RAII AutoChangeTransformNotifier {
 //----------------------------------------------------------------------
 // Ctors:
 
-SVGTransform::SVGTransform(DOMSVGTransformList* aList, uint32_t aListIndex,
-                           bool aIsAnimValItem)
+DOMSVGTransform::DOMSVGTransform(DOMSVGTransformList* aList,
+                                 uint32_t aListIndex, bool aIsAnimValItem)
     : mList(aList),
       mListIndex(aListIndex),
       mIsAnimValItem(aIsAnimValItem),
@@ -112,7 +113,7 @@ SVGTransform::SVGTransform(DOMSVGTransformList* aList, uint32_t aListIndex,
   MOZ_ASSERT(IndexIsValid(), "Bad index for DOMSVGNumber!");
 }
 
-SVGTransform::SVGTransform()
+DOMSVGTransform::DOMSVGTransform()
     : mList(nullptr),
       mListIndex(0),
       mIsAnimValItem(false),
@@ -121,19 +122,19 @@ SVGTransform::SVGTransform()
                                         // identity matrix
 {}
 
-SVGTransform::SVGTransform(const gfxMatrix& aMatrix)
+DOMSVGTransform::DOMSVGTransform(const gfxMatrix& aMatrix)
     : mList(nullptr),
       mListIndex(0),
       mIsAnimValItem(false),
       mTransform(new nsSVGTransform(aMatrix)) {}
 
-SVGTransform::SVGTransform(const nsSVGTransform& aTransform)
+DOMSVGTransform::DOMSVGTransform(const nsSVGTransform& aTransform)
     : mList(nullptr),
       mListIndex(0),
       mIsAnimValItem(false),
       mTransform(new nsSVGTransform(aTransform)) {}
 
-SVGTransform::~SVGTransform() {
+DOMSVGTransform::~DOMSVGTransform() {
   SVGMatrix* matrix = SVGMatrixTearoffTable().GetTearoff(this);
   if (matrix) {
     SVGMatrixTearoffTable().RemoveTearoff(this);
@@ -147,9 +148,9 @@ SVGTransform::~SVGTransform() {
   }
 }
 
-uint16_t SVGTransform::Type() const { return Transform().Type(); }
+uint16_t DOMSVGTransform::Type() const { return Transform().Type(); }
 
-SVGMatrix* SVGTransform::GetMatrix() {
+SVGMatrix* DOMSVGTransform::GetMatrix() {
   SVGMatrix* wrapper = SVGMatrixTearoffTable().GetTearoff(this);
   if (!wrapper) {
     NS_ADDREF(wrapper = new SVGMatrix(*this));
@@ -158,9 +159,9 @@ SVGMatrix* SVGTransform::GetMatrix() {
   return wrapper;
 }
 
-float SVGTransform::Angle() const { return Transform().Angle(); }
+float DOMSVGTransform::Angle() const { return Transform().Angle(); }
 
-void SVGTransform::SetMatrix(SVGMatrix& aMatrix, ErrorResult& rv) {
+void DOMSVGTransform::SetMatrix(SVGMatrix& aMatrix, ErrorResult& rv) {
   if (mIsAnimValItem) {
     rv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
     return;
@@ -168,7 +169,7 @@ void SVGTransform::SetMatrix(SVGMatrix& aMatrix, ErrorResult& rv) {
   SetMatrix(aMatrix.GetMatrix());
 }
 
-void SVGTransform::SetTranslate(float tx, float ty, ErrorResult& rv) {
+void DOMSVGTransform::SetTranslate(float tx, float ty, ErrorResult& rv) {
   if (mIsAnimValItem) {
     rv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
     return;
@@ -183,7 +184,7 @@ void SVGTransform::SetTranslate(float tx, float ty, ErrorResult& rv) {
   Transform().SetTranslate(tx, ty);
 }
 
-void SVGTransform::SetScale(float sx, float sy, ErrorResult& rv) {
+void DOMSVGTransform::SetScale(float sx, float sy, ErrorResult& rv) {
   if (mIsAnimValItem) {
     rv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
     return;
@@ -197,7 +198,8 @@ void SVGTransform::SetScale(float sx, float sy, ErrorResult& rv) {
   Transform().SetScale(sx, sy);
 }
 
-void SVGTransform::SetRotate(float angle, float cx, float cy, ErrorResult& rv) {
+void DOMSVGTransform::SetRotate(float angle, float cx, float cy,
+                                ErrorResult& rv) {
   if (mIsAnimValItem) {
     rv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
     return;
@@ -215,7 +217,7 @@ void SVGTransform::SetRotate(float angle, float cx, float cy, ErrorResult& rv) {
   Transform().SetRotate(angle, cx, cy);
 }
 
-void SVGTransform::SetSkewX(float angle, ErrorResult& rv) {
+void DOMSVGTransform::SetSkewX(float angle, ErrorResult& rv) {
   if (mIsAnimValItem) {
     rv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
     return;
@@ -236,7 +238,7 @@ void SVGTransform::SetSkewX(float angle, ErrorResult& rv) {
   MOZ_ASSERT(NS_SUCCEEDED(result), "SetSkewX unexpectedly failed");
 }
 
-void SVGTransform::SetSkewY(float angle, ErrorResult& rv) {
+void DOMSVGTransform::SetSkewY(float angle, ErrorResult& rv) {
   if (mIsAnimValItem) {
     rv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
     return;
@@ -260,8 +262,9 @@ void SVGTransform::SetSkewY(float angle, ErrorResult& rv) {
 //----------------------------------------------------------------------
 // List management methods:
 
-void SVGTransform::InsertingIntoList(DOMSVGTransformList* aList,
-                                     uint32_t aListIndex, bool aIsAnimValItem) {
+void DOMSVGTransform::InsertingIntoList(DOMSVGTransformList* aList,
+                                        uint32_t aListIndex,
+                                        bool aIsAnimValItem) {
   MOZ_ASSERT(!HasOwner(), "Inserting item that is already in a list");
 
   mList = aList;
@@ -272,7 +275,7 @@ void SVGTransform::InsertingIntoList(DOMSVGTransformList* aList,
   MOZ_ASSERT(IndexIsValid(), "Bad index for DOMSVGLength!");
 }
 
-void SVGTransform::RemovingFromList() {
+void DOMSVGTransform::RemovingFromList() {
   MOZ_ASSERT(!mTransform,
              "Item in list also has another non-list value associated with it");
 
@@ -281,18 +284,18 @@ void SVGTransform::RemovingFromList() {
   mIsAnimValItem = false;
 }
 
-nsSVGTransform& SVGTransform::InternalItem() {
+nsSVGTransform& DOMSVGTransform::InternalItem() {
   SVGAnimatedTransformList* alist = Element()->GetAnimatedTransformList();
   return mIsAnimValItem && alist->mAnimVal ? (*alist->mAnimVal)[mListIndex]
                                            : alist->mBaseVal[mListIndex];
 }
 
-const nsSVGTransform& SVGTransform::InternalItem() const {
-  return const_cast<SVGTransform*>(this)->InternalItem();
+const nsSVGTransform& DOMSVGTransform::InternalItem() const {
+  return const_cast<DOMSVGTransform*>(this)->InternalItem();
 }
 
 #ifdef DEBUG
-bool SVGTransform::IndexIsValid() {
+bool DOMSVGTransform::IndexIsValid() {
   SVGAnimatedTransformList* alist = Element()->GetAnimatedTransformList();
   return (mIsAnimValItem && mListIndex < alist->GetAnimValue().Length()) ||
          (!mIsAnimValItem && mListIndex < alist->GetBaseValue().Length());
@@ -302,7 +305,7 @@ bool SVGTransform::IndexIsValid() {
 //----------------------------------------------------------------------
 // Interface for SVGMatrix's use
 
-void SVGTransform::SetMatrix(const gfxMatrix& aMatrix) {
+void DOMSVGTransform::SetMatrix(const gfxMatrix& aMatrix) {
   MOZ_ASSERT(!mIsAnimValItem, "Attempting to modify read-only transform");
 
   if (Transform().Type() == SVG_TRANSFORM_MATRIX &&
