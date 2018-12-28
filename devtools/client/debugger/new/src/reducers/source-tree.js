@@ -12,12 +12,12 @@
 import type { SourceTreeAction } from "../actions/types";
 
 export type SourceTreeState = {
-  expanded: Set<string> | null
+  expanded: { [string]: Set<string> }
 };
 
 export function InitialState(): SourceTreeState {
   return {
-    expanded: null
+    expanded: {}
   };
 }
 
@@ -36,7 +36,7 @@ export default function update(
 function updateExpanded(state, action) {
   return {
     ...state,
-    expanded: new Set(action.expanded)
+    expanded: { ...state.expanded, [action.thread]: new Set(action.expanded) }
   };
 }
 
@@ -44,6 +44,6 @@ type OuterState = {
   sourceTree: SourceTreeState
 };
 
-export function getExpandedState(state: OuterState) {
-  return state.sourceTree.expanded;
+export function getExpandedState(state: OuterState, thread: string) {
+  return state.sourceTree.expanded[thread];
 }

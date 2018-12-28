@@ -39,8 +39,15 @@ export default function debuggee(
 
 export const getWorkers = (state: OuterState) => state.debuggee.workers;
 
-type OuterState = { debuggee: DebuggeeState };
+export const getWorkerDisplayName = (state: OuterState, thread: string) => {
+  let index = 1;
+  for (const { actor } of state.debuggee.workers) {
+    if (actor == thread) {
+      return `Worker #${index}`;
+    }
+    index++;
+  }
+  return "";
+};
 
-export function getWorker(state: OuterState, url: string) {
-  return getWorkers(state).find(value => url);
-}
+type OuterState = { debuggee: DebuggeeState };
