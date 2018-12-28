@@ -471,14 +471,19 @@ toolbar[brighttext] {
 
 #library-animatable-box[animate] > .toolbarbutton-animatable-image {
   min-height: 54px; /* Minimum height must be equal to the height of the SVG sprite */
+  width: 1078px;
+  animation-duration: 800ms;
+  animation-timing-function: steps(48);
+}
+
+#library-animatable-box[animate][fade] > .toolbarbutton-animatable-image {
+  animation-duration: 2s;
+  animation-timing-function: ease-out;
 }
 
 #library-animatable-box[animate="bookmark"] > .toolbarbutton-animatable-image {
   background-image: url("chrome://browser/skin/library-bookmark-animation.svg");
-  width: 1078px;
   animation-name: library-bookmark-animation;
-  animation-duration: 800ms;
-  animation-timing-function: steps(48);
   -moz-context-properties: fill, fill-opacity, stroke;
   stroke: var(--toolbarbutton-icon-fill-attention);
 }
@@ -489,8 +494,66 @@ toolbar[brighttext] {
 
 #library-animatable-box[animate="bookmark"][fade] > .toolbarbutton-animatable-image {
   animation-name: library-bookmark-fade;
-  animation-duration: 2s;
-  animation-timing-function: ease-out;
+}
+
+@keyframes library-pocket-animation {
+  from {
+    transform: translateX(0);
+    fill: inherit;
+  }
+  25% {
+    fill: inherit;
+  }
+  50% {
+    fill: #ef4056;
+  }
+  to {
+    transform: translateX(-1056px);
+    fill: #ef4056;
+  }
+}
+
+@keyframes library-pocket-animation-rtl {
+  from {
+    transform: translateX(1056px);
+    fill: inherit;
+  }
+  25% {
+    fill: inherit;
+  }
+  50% {
+    fill: #ef4056;
+  }
+  to {
+    transform: translateX(0);
+    fill: #ef4056;
+  }
+}
+
+/* We need to use an animation here instead of a transition
+   to guarantee that the animation succeeds. With transitions
+   if the starting value is already equal to the end value
+   then no transition will occur and thus no transitionend event. */
+@keyframes library-pocket-fade {
+  from {
+    fill: #ef4056;
+  }
+  to {
+    fill: inherit;
+  }
+}
+
+#library-animatable-box[animate="pocket"] > .toolbarbutton-animatable-image {
+  background-image: url("chrome://browser/skin/library-pocket-animation.svg");
+  animation-name: library-pocket-animation;
+}
+
+#library-animatable-box[animate="pocket"]:-moz-locale-dir(rtl) > .toolbarbutton-animatable-image {
+  animation-name: library-pocket-animation-rtl;
+}
+
+#library-animatable-box[animate="pocket"][fade] > .toolbarbutton-animatable-image {
+  animation-name: library-pocket-fade;
 }
 
 /* ----- BOOKMARK BUTTONS ----- */

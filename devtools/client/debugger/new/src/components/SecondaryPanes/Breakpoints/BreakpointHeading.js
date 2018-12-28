@@ -14,7 +14,8 @@ import {
 } from "../../../utils/source";
 import {
   getHasSiblingOfSameName,
-  getBreakpointsForSource
+  getBreakpointsForSource,
+  getWorkerDisplayName
 } from "../../../selectors";
 
 import SourceIcon from "../../shared/SourceIcon";
@@ -30,7 +31,8 @@ type Props = {
   disableBreakpointsInSource: typeof actions.disableBreakpointsInSource,
   enableBreakpointsInSource: typeof actions.enableBreakpointsInSource,
   removeBreakpointsInSource: typeof actions.removeBreakpointsInSource,
-  selectSource: typeof actions.selectSource
+  selectSource: typeof actions.selectSource,
+  threadName: string
 };
 
 class BreakpointHeading extends PureComponent<Props> {
@@ -39,7 +41,13 @@ class BreakpointHeading extends PureComponent<Props> {
   };
 
   render() {
-    const { sources, source, hasSiblingOfSameName, selectSource } = this.props;
+    const {
+      sources,
+      source,
+      hasSiblingOfSameName,
+      selectSource,
+      threadName
+    } = this.props;
 
     const path = getDisplayPath(source, sources);
     const query = hasSiblingOfSameName ? getSourceQueryString(source) : "";
@@ -56,7 +64,9 @@ class BreakpointHeading extends PureComponent<Props> {
           shouldHide={icon => ["file", "javascript"].includes(icon)}
         />
         <div className="filename">
-          {getTruncatedFileName(source, query)}
+          {threadName +
+            (threadName ? ": " : "") +
+            getTruncatedFileName(source, query)}
           {path && <span>{`../${path}/..`}</span>}
         </div>
       </div>
@@ -66,7 +76,8 @@ class BreakpointHeading extends PureComponent<Props> {
 
 const mapStateToProps = (state, { source }) => ({
   hasSiblingOfSameName: getHasSiblingOfSameName(state, source),
-  breakpointsForSource: getBreakpointsForSource(state, source.id)
+  breakpointsForSource: getBreakpointsForSource(state, source.id),
+  threadName: getWorkerDisplayName(state, source.thread)
 });
 
 export default connect(

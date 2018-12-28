@@ -112,7 +112,6 @@ class nsViewManager;
 class nsPresContext;
 class nsRange;
 class nsSimpleContentList;
-class nsSMILAnimationController;
 class nsTextNode;
 class nsUnblockOnloadEvent;
 class nsWindowSizes;
@@ -132,6 +131,7 @@ class FullscreenExit;
 class FullscreenRequest;
 class PendingAnimationTracker;
 class ServoStyleSet;
+class SMILAnimationController;
 template <typename>
 class OwningNonNull;
 struct URLExtraData;
@@ -2408,7 +2408,7 @@ class nsIDocument : public nsINode,
   // mAnimationController isn't yet initialized.
   //
   // If HasAnimationController is true, this is guaranteed to return non-null.
-  nsSMILAnimationController* GetAnimationController();
+  mozilla::SMILAnimationController* GetAnimationController();
 
   // Gets the tracker for animations that are waiting to start.
   // Returns nullptr if there is no pending animation tracker for this document
@@ -3646,7 +3646,7 @@ class nsIDocument : public nsINode,
   LinksToUpdateList mLinksToUpdate;
 
   // SMIL Animation Controller, lazily-initialized in GetAnimationController
-  RefPtr<nsSMILAnimationController> mAnimationController;
+  RefPtr<mozilla::SMILAnimationController> mAnimationController;
 
   // Table of element properties for this document.
   nsPropertyTable mPropertyTable;

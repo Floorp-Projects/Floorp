@@ -12,6 +12,7 @@
 #include "mozilla/dom/SVGRect.h"
 #include "mozilla/dom/SVGViewElement.h"
 #include "mozilla/EventDispatcher.h"
+#include "mozilla/SMILAnimationController.h"
 
 #include "DOMSVGLength.h"
 #include "DOMSVGNumber.h"
@@ -20,7 +21,6 @@
 #include "nsLayoutStylesheetCache.h"
 #include "nsIFrame.h"
 #include "nsISVGSVGFrame.h"
-#include "nsSMILAnimationController.h"
 #include "nsSMILTimeContainer.h"
 #include "nsSVGAngle.h"
 #include "SVGAngle.h"
@@ -283,14 +283,14 @@ already_AddRefed<SVGIRect> SVGSVGElement::CreateSVGRect() {
   return NS_NewSVGRect(this);
 }
 
-already_AddRefed<SVGTransform> SVGSVGElement::CreateSVGTransform() {
-  RefPtr<SVGTransform> transform = new SVGTransform();
+already_AddRefed<DOMSVGTransform> SVGSVGElement::CreateSVGTransform() {
+  RefPtr<DOMSVGTransform> transform = new DOMSVGTransform();
   return transform.forget();
 }
 
-already_AddRefed<SVGTransform> SVGSVGElement::CreateSVGTransformFromMatrix(
+already_AddRefed<DOMSVGTransform> SVGSVGElement::CreateSVGTransformFromMatrix(
     SVGMatrix& matrix) {
-  RefPtr<SVGTransform> transform = new SVGTransform(matrix.GetMatrix());
+  RefPtr<DOMSVGTransform> transform = new DOMSVGTransform(matrix.GetMatrix());
   return transform.forget();
 }
 
@@ -380,7 +380,7 @@ nsSMILTimeContainer* SVGSVGElement::GetTimedDocumentRoot() {
 // SVGElement
 nsresult SVGSVGElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                                    nsIContent* aBindingParent) {
-  nsSMILAnimationController* smilController = nullptr;
+  SMILAnimationController* smilController = nullptr;
 
   if (aDocument) {
     smilController = aDocument->GetAnimationController();

@@ -177,7 +177,7 @@
 #include "mozilla/Encoding.h"
 #include "nsDOMNavigationTiming.h"
 
-#include "nsSMILAnimationController.h"
+#include "mozilla/SMILAnimationController.h"
 #include "imgIContainer.h"
 #include "nsSVGUtils.h"
 
@@ -6129,14 +6129,14 @@ void nsIDocument::EnumerateExternalResources(nsSubDocEnumFunc aCallback,
   mExternalResourceMap.EnumerateResources(aCallback, aData);
 }
 
-nsSMILAnimationController* nsIDocument::GetAnimationController() {
+SMILAnimationController* nsIDocument::GetAnimationController() {
   // We create the animation controller lazily because most documents won't want
   // one and only SVG documents and the like will call this
   if (mAnimationController) return mAnimationController;
   // Refuse to create an Animation Controller for data documents.
   if (mLoadedAsData || mLoadedAsInteractiveData) return nullptr;
 
-  mAnimationController = new nsSMILAnimationController(this);
+  mAnimationController = new SMILAnimationController(this);
 
   // If there's a presContext then check the animation mode and pause if
   // necessary.

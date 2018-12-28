@@ -15,6 +15,7 @@ from .. import GECKO
 from taskgraph.util.docker import (
     generate_context_hash,
 )
+from taskgraph.util.taskcluster import get_root_url
 from taskgraph.util.schema import (
     Schema,
 )
@@ -110,6 +111,8 @@ def fill_template(config, tasks):
                                                  for p in packages)
         if parent:
             args['DOCKER_IMAGE_PARENT'] = '{}:{}'.format(parent, context_hashes[parent])
+
+        args['TASKCLUSTER_ROOT_URL'] = get_root_url()
 
         if not taskgraph.fast:
             context_path = os.path.join('taskcluster', 'docker', definition)

@@ -14,11 +14,11 @@
  *
  * Tuple of: { Animated Element, Attribute Name }
  *
- * Used in nsSMILAnimationController as hash key for mapping an animation
+ * Used in SMILAnimationController as hash key for mapping an animation
  * target to the nsSMILCompositor for that target.
  *
  * NOTE: Need a nsRefPtr for the element & attribute name, because
- * nsSMILAnimationController retain its hash table for one sample into the
+ * SMILAnimationController retain its hash table for one sample into the
  * future, and we need to make sure their target isn't deleted in that time.
  */
 

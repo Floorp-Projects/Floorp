@@ -12,7 +12,7 @@ from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.schema import (
     Schema,
 )
-from taskgraph.util.taskcluster import get_artifact_path, get_artifact_url
+from taskgraph.util.taskcluster import get_artifact_path
 from voluptuous import (
     Any,
     Optional,
@@ -64,7 +64,7 @@ def fill_template(config, tasks):
             value = task[k]
             if isinstance(value, basestring):
                 deps[k] = value
-                task_id = '<{}>'.format(k)
+                dep_name = k
                 os_hint = value
             else:
                 index = value['index-search']
@@ -82,7 +82,7 @@ def fill_template(config, tasks):
                     }
                     yield dummy_tasks[index]
                 deps[index] = 'index-search-' + index
-                task_id = '<{}>'.format(index)
+                dep_name = index
                 os_hint = index.split('.')[-1]
             if 'linux' in os_hint:
                 artifact = 'target.tar.bz2'
@@ -98,8 +98,10 @@ def fill_template(config, tasks):
             if previous_artifact is not None and previous_artifact != artifact:
                 raise Exception(
                     'Cannot compare builds from different OSes')
-            url = get_artifact_url(task_id, get_artifact_path(task, artifact))
-            urls[k] = {'task-reference': url}
+            urls[k] = {
+                'artifact-reference': '<{}/{}>'.format(
+                    dep_name, get_artifact_path(task, artifact)),
+            }
             previous_artifact = artifact
 
         taskdesc = {
