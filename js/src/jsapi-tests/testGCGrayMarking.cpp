@@ -657,7 +657,8 @@ JSObject* AllocWeakmapKeyObject() {
     return nullptr;
   }
 
-  JS::RootedObject key(cx, js::Wrapper::New(cx, delegate, &js::Wrapper::singleton));
+  JS::RootedObject key(cx,
+                       js::Wrapper::New(cx, delegate, &js::Wrapper::singleton));
 
   EvictNursery();
   return key;

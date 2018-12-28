@@ -108,20 +108,17 @@ TextureImageTextureSourceOGL::TextureImageTextureSourceOGL(
     : mGL(aCompositor->gl()),
       mCompositor(aCompositor),
       mFlags(aFlags),
-      mIterating(false)
-{
+      mIterating(false) {
   if (mCompositor) {
     mCompositor->RegisterTextureSource(this);
   }
 }
 
-TextureImageTextureSourceOGL::~TextureImageTextureSourceOGL()
-{
+TextureImageTextureSourceOGL::~TextureImageTextureSourceOGL() {
   DeallocateDeviceData();
 }
 
-void TextureImageTextureSourceOGL::DeallocateDeviceData()
-{
+void TextureImageTextureSourceOGL::DeallocateDeviceData() {
   mTexImage = nullptr;
   mGL = nullptr;
   if (mCompositor) {
@@ -208,7 +205,8 @@ void TextureImageTextureSourceOGL::SetTextureSourceProvider(
   }
   mGL = newGL;
 
-  CompositorOGL* compositor = aProvider ? aProvider->AsCompositorOGL() : nullptr;
+  CompositorOGL* compositor =
+      aProvider ? aProvider->AsCompositorOGL() : nullptr;
   if (mCompositor != compositor) {
     if (mCompositor) {
       mCompositor->UnregisterTextureSource(this);

@@ -4856,9 +4856,11 @@ void ScrollFrameHelper::CurPosAttributeChanged(nsIContent* aContent,
 
 /* ============= Scroll events ========== */
 
-ScrollFrameHelper::ScrollEvent::ScrollEvent(ScrollFrameHelper* aHelper, bool aDelayed)
+ScrollFrameHelper::ScrollEvent::ScrollEvent(ScrollFrameHelper* aHelper,
+                                            bool aDelayed)
     : Runnable("ScrollFrameHelper::ScrollEvent"), mHelper(aHelper) {
-  mHelper->mOuter->PresContext()->RefreshDriver()->PostScrollEvent(this, aDelayed);
+  mHelper->mOuter->PresContext()->RefreshDriver()->PostScrollEvent(this,
+                                                                   aDelayed);
 }
 
 NS_IMETHODIMP

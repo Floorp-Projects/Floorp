@@ -917,9 +917,9 @@ void gfxPlatform::Init() {
   gPlatform->InitAcceleration();
   gPlatform->InitWebRenderConfig();
   // When using WebRender, we defer initialization of the D3D11 devices until
-  // the (rare) cases where they're used. Note that the GPU process where WebRender
-  // runs doesn't initialize gfxPlatform and performs explicit initialization of
-  // the bits it needs.
+  // the (rare) cases where they're used. Note that the GPU process where
+  // WebRender runs doesn't initialize gfxPlatform and performs explicit
+  // initialization of the bits it needs.
   if (!gfxVars::UseWebRender()) {
     gPlatform->EnsureDevicesInitialized();
   }

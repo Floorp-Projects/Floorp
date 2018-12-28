@@ -452,7 +452,9 @@ LoginReputationService::Observe(nsISupports* aSubject, const char* aTopic,
     nsDependentString data(aData);
 
     if (data.EqualsLiteral(PREF_PP_ENABLED)) {
-      nsresult rv = StaticPrefs::browser_safebrowsing_passwords_enabled() ?  Enable() : Disable();
+      nsresult rv = StaticPrefs::browser_safebrowsing_passwords_enabled()
+                        ? Enable()
+                        : Disable();
       Unused << NS_WARN_IF(NS_FAILED(rv));
     }
   } else if (!strcmp(aTopic, "quit-application")) {

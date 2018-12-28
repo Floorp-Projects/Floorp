@@ -11,7 +11,8 @@ namespace mozilla {
 namespace gfx {
 
 struct OpenVRViveBinding {
-  const char* binding = 
+  const char* binding =
+      // clang-format off
   "{\n"
   "  \"version\" : \"0.1\", \n"
   "  \"controller_type\" : \"vive_controller\", \n"
@@ -164,9 +165,10 @@ struct OpenVRViveBinding {
   "     }\n"
   "  }\n"
   "}";
+  // clang-format on
 };
 
-} // namespace mozilla
-} // namespace gfx
+}  // namespace gfx
+}  // namespace mozilla
 
-#endif // GFX_VR_BLINDING_OPENVRVIVEBINDING_H
+#endif  // GFX_VR_BLINDING_OPENVRVIVEBINDING_H

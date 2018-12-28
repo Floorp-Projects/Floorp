@@ -169,10 +169,10 @@ void HTMLButtonElement::GetEventTargetParent(EventChainPreVisitor& aVisitor) {
   // DOMActivate that was dispatched directly, this will be set, but if we're
   // a DOMActivate dispatched from click handling, it will not be set.
   WidgetMouseEvent* mouseEvent = aVisitor.mEvent->AsMouseEvent();
-  bool outerActivateEvent = ((mouseEvent && mouseEvent->IsLeftClickEvent()) ||
-                             (aVisitor.mEvent->mMessage == eLegacyDOMActivate &&
-                              !mInInternalActivate &&
-                              aVisitor.mEvent->mOriginalTarget == this));
+  bool outerActivateEvent =
+      ((mouseEvent && mouseEvent->IsLeftClickEvent()) ||
+       (aVisitor.mEvent->mMessage == eLegacyDOMActivate &&
+        !mInInternalActivate && aVisitor.mEvent->mOriginalTarget == this));
 
   if (outerActivateEvent) {
     aVisitor.mItemFlags |= NS_OUTER_ACTIVATE_EVENT;

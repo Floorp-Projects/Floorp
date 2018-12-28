@@ -217,16 +217,12 @@ class Assembler : public vixl::Assembler {
   BufferOffset fImmPool64(ARMFPRegister dest, double value);
   BufferOffset fImmPool32(ARMFPRegister dest, float value);
 
-  uint32_t currentOffset() const {
-    return nextOffset().getOffset();
-  }
+  uint32_t currentOffset() const { return nextOffset().getOffset(); }
 
   void bind(Label* label) { bind(label, nextOffset()); }
   void bind(Label* label, BufferOffset boff);
   void bind(RepatchLabel* label);
-  void bind(CodeLabel* label) {
-    label->target()->bind(currentOffset());
-  }
+  void bind(CodeLabel* label) { label->target()->bind(currentOffset()); }
 
   bool oom() const {
     return AssemblerShared::oom() || armbuffer_.oom() ||

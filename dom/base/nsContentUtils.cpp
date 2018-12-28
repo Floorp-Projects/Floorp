@@ -2541,10 +2541,8 @@ int32_t nsContentUtils::ComparePoints(nsINode* aParent1, int32_t aOffset1,
 }
 
 // static
-nsINode*
-nsContentUtils::GetCommonAncestorUnderInteractiveContent(nsINode* aNode1,
-                                                         nsINode* aNode2)
-{
+nsINode* nsContentUtils::GetCommonAncestorUnderInteractiveContent(
+    nsINode* aNode1, nsINode* aNode2) {
   if (!aNode1 || !aNode2) {
     return nullptr;
   }

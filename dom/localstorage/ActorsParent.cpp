@@ -244,10 +244,8 @@ void AssertIsOnConnectionThread();
  * SQLite functions
  ******************************************************************************/
 
-int32_t
-MakeSchemaVersion(uint32_t aMajorSchemaVersion,
-                  uint32_t aMinorSchemaVersion)
-{
+int32_t MakeSchemaVersion(uint32_t aMajorSchemaVersion,
+                          uint32_t aMinorSchemaVersion) {
   return int32_t((aMajorSchemaVersion << 4) + aMinorSchemaVersion);
 }
 
@@ -293,9 +291,7 @@ nsresult CreateTables(mozIStorageConnection* aConnection) {
   return NS_OK;
 }
 
-nsresult
-UpgradeSchemaFrom1_0To2_0(mozIStorageConnection* aConnection)
-{
+nsresult UpgradeSchemaFrom1_0To2_0(mozIStorageConnection* aConnection) {
   AssertIsOnIOThread();
   MOZ_ASSERT(aConnection);
 
@@ -1022,7 +1018,7 @@ nsresult GetUsageFile(const nsAString& aDirectoryPath, nsIFile** aUsageFile) {
 
   nsCOMPtr<nsIFile> usageFile;
   nsresult rv =
-    NS_NewLocalFile(aDirectoryPath, false, getter_AddRefs(usageFile));
+      NS_NewLocalFile(aDirectoryPath, false, getter_AddRefs(usageFile));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1044,7 +1040,7 @@ nsresult GetUsageJournalFile(const nsAString& aDirectoryPath,
 
   nsCOMPtr<nsIFile> usageJournalFile;
   nsresult rv =
-    NS_NewLocalFile(aDirectoryPath, false, getter_AddRefs(usageJournalFile));
+      NS_NewLocalFile(aDirectoryPath, false, getter_AddRefs(usageJournalFile));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -2892,10 +2888,9 @@ nsresult GetUsage(mozIStorageConnection* aConnection,
 
     rv = aArchivedOriginScope->BindToStatement(stmt);
   } else {
-    rv = aConnection->CreateStatement(
-        NS_LITERAL_CSTRING("SELECT usage "
-                           "FROM database"),
-        getter_AddRefs(stmt));
+    rv = aConnection->CreateStatement(NS_LITERAL_CSTRING("SELECT usage "
+                                                         "FROM database"),
+                                      getter_AddRefs(stmt));
   }
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -3392,10 +3387,9 @@ nsresult WriteOptimizer::PerformWrites(Connection* aConnection,
     return rv;
   }
 
-  rv = aConnection->GetCachedStatement(
-      NS_LITERAL_CSTRING("SELECT usage "
-                         "FROM database"),
-      &stmt);
+  rv = aConnection->GetCachedStatement(NS_LITERAL_CSTRING("SELECT usage "
+                                                          "FROM database"),
+                                       &stmt);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -4045,11 +4039,11 @@ nsresult Connection::FlushOp::DoDatastoreWork() {
     return rv;
   }
 
-  RefPtr<Runnable> runnable = NS_NewRunnableFunction(
-      "dom::localstorage::UpdateUsageRunnable",
-      [origin = mConnection->Origin(), usage]() {
-        UpdateUsageForOrigin(origin, usage);
-      });
+  RefPtr<Runnable> runnable =
+      NS_NewRunnableFunction("dom::localstorage::UpdateUsageRunnable",
+                             [origin = mConnection->Origin(), usage]() {
+                               UpdateUsageForOrigin(origin, usage);
+                             });
 
   MOZ_ALWAYS_SUCCEEDS(
       quotaManager->IOThread()->Dispatch(runnable, NS_DISPATCH_NORMAL));
@@ -4114,9 +4108,8 @@ already_AddRefed<Connection> ConnectionThread::CreateConnection(
   MOZ_ASSERT(!aOrigin.IsEmpty());
   MOZ_ASSERT(!mConnections.GetWeak(aOrigin));
 
-  RefPtr<Connection> connection =
-      new Connection(this, aOrigin, aDirectoryPath,
-                     std::move(aArchivedOriginScope));
+  RefPtr<Connection> connection = new Connection(
+      this, aOrigin, aDirectoryPath, std::move(aArchivedOriginScope));
   mConnections.Put(aOrigin, connection);
 
   return connection.forget();

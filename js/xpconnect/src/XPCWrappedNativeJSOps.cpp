@@ -662,8 +662,7 @@ static const js::ClassOps XPC_WN_NoHelper_JSClassOps = {
     XPCWrappedNative::Trace,            // trace
 };
 
-const js::ClassExtension XPC_WN_JSClassExtension = {
-    WrappedNativeObjectMoved};
+const js::ClassExtension XPC_WN_JSClassExtension = {WrappedNativeObjectMoved};
 
 const js::Class XPC_WN_NoHelper_JSClass = {
     "XPCWrappedNative_NoHelper",

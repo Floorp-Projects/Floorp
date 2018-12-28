@@ -105,7 +105,7 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
   bool IsPersistentHttpsCachingEnabled() {
     return mEnablePersistentHttpsCaching;
   }
-  
+
   bool IsSpdyEnabled() { return mEnableSpdy; }
   bool IsHttp2Enabled() { return mHttp2Enabled; }
   bool EnforceHttp2TlsProfile() { return mEnforceHttp2TlsProfile; }

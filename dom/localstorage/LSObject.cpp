@@ -33,7 +33,7 @@ nsISerialEventTarget* gSyncLoopEventTarget = nullptr;
  * calls if a sync IPC message is received which could result in deadlock.
  * This is a boolean because, by definition, the parent can only send one sync
  * message to the child at a time.
-*/
+ */
 bool gPendingSyncMessage = false;
 
 /*
@@ -47,8 +47,7 @@ class NestedEventTargetWrapper final : public nsISerialEventTarget {
 
  public:
   explicit NestedEventTargetWrapper(nsISerialEventTarget* aNestedEventTarget)
-      : mNestedEventTarget(aNestedEventTarget)
-      , mDisconnected(false) {}
+      : mNestedEventTarget(aNestedEventTarget), mDisconnected(false) {}
 
  private:
   ~NestedEventTargetWrapper() {}
@@ -344,7 +343,7 @@ void LSObject::OnSyncMessageReceived() {
         NS_NewRunnableFunction("LSObject::CheckFlagRunnable", []() {});
 
     MOZ_ALWAYS_SUCCEEDS(
-      target->Dispatch(runnable.forget(), NS_DISPATCH_NORMAL));
+        target->Dispatch(runnable.forget(), NS_DISPATCH_NORMAL));
   }
 }
 
@@ -901,14 +900,16 @@ NS_IMPL_ISUPPORTS(NestedEventTargetWrapper, nsIEventTarget,
 
 NS_IMETHODIMP_(bool)
 NestedEventTargetWrapper::IsOnCurrentThreadInfallible() {
-  MOZ_CRASH("IsOnCurrentThreadInfallible should never be called on "
-            "NestedEventTargetWrapper");
+  MOZ_CRASH(
+      "IsOnCurrentThreadInfallible should never be called on "
+      "NestedEventTargetWrapper");
 }
 
 NS_IMETHODIMP
 NestedEventTargetWrapper::IsOnCurrentThread(bool* aResult) {
-  MOZ_CRASH("IsOnCurrentThread should never be called on "
-            "NestedEventTargetWrapper");
+  MOZ_CRASH(
+      "IsOnCurrentThread should never be called on "
+      "NestedEventTargetWrapper");
 }
 
 NS_IMETHODIMP
@@ -942,15 +943,17 @@ NestedEventTargetWrapper::Dispatch(already_AddRefed<nsIRunnable> aEvent,
 NS_IMETHODIMP
 NestedEventTargetWrapper::DispatchFromScript(nsIRunnable* aEvent,
                                              uint32_t aFlags) {
-  MOZ_CRASH("DispatchFromScript should never be called on "
-            "NestedEventTargetWrapper");
+  MOZ_CRASH(
+      "DispatchFromScript should never be called on "
+      "NestedEventTargetWrapper");
 }
 
 NS_IMETHODIMP
 NestedEventTargetWrapper::DelayedDispatch(already_AddRefed<nsIRunnable> aEvent,
                                           uint32_t aDelayMs) {
-  MOZ_CRASH("DelayedDispatch should never be called on "
-            "NestedEventTargetWrapper");
+  MOZ_CRASH(
+      "DelayedDispatch should never be called on "
+      "NestedEventTargetWrapper");
 }
 
 nsresult RequestHelper::StartAndReturnResponse(LSRequestResponse& aResponse) {
@@ -983,7 +986,7 @@ nsresult RequestHelper::StartAndReturnResponse(LSRequestResponse& aResponse) {
         [&] { queue->PopEventQueue(mNestedEventTarget); });
 
     mNestedEventTargetWrapper =
-      new NestedEventTargetWrapper(mNestedEventTarget);
+        new NestedEventTargetWrapper(mNestedEventTarget);
 
     nsCOMPtr<nsIEventTarget> domFileThread =
         IPCBlobInputStreamThread::GetOrCreate();

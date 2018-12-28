@@ -3149,7 +3149,8 @@ nsIContent* nsFocusManager::GetNextTabbableContentInAncestorScopes(
     owner = FindOwner(startContent);
   }
 
-  // If not found in shadow DOM, search from the top level shadow host in light DOM
+  // If not found in shadow DOM, search from the top level shadow host in light
+  // DOM
   *aStartContent = startContent;
   *aCurrentTabIndex = HostOrSlotTabIndexValue(startContent);
 
@@ -3383,7 +3384,8 @@ nsresult nsFocusManager::GetNextTabbableContent(
         bool focusableHostSlot;
         int32_t tabIndex =
             HostOrSlotTabIndexValue(currentContent, &focusableHostSlot);
-        // Host or slot itself isn't focusable or going backwards, enter its scope.
+        // Host or slot itself isn't focusable or going backwards, enter its
+        // scope.
         if ((!aForward || !focusableHostSlot) && tabIndex >= 0 &&
             (aIgnoreTabIndex || aCurrentTabIndex == tabIndex)) {
           nsIContent* contentToFocus = GetNextTabbableContentInScope(

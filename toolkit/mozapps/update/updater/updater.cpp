@@ -2968,9 +2968,9 @@ int NS_main(int argc, NS_tchar **argv) {
     }
   }
 #else
-  if (pid > 0) {
-    waitpid(pid, nullptr, 0);
-  }
+    if (pid > 0) {
+      waitpid(pid, nullptr, 0);
+    }
 #endif
 
 #ifdef XP_WIN

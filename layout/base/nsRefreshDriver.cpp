@@ -1161,7 +1161,8 @@ void nsRefreshDriver::DispatchVisualViewportResizeEvents() {
   }
 }
 
-void nsRefreshDriver::PostScrollEvent(mozilla::Runnable* aScrollEvent, bool aDelayed) {
+void nsRefreshDriver::PostScrollEvent(mozilla::Runnable* aScrollEvent,
+                                      bool aDelayed) {
   if (aDelayed) {
     mDelayedScrollEvents.AppendElement(aScrollEvent);
   } else {

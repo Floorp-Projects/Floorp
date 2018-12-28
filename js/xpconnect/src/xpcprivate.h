@@ -1276,9 +1276,7 @@ class XPCWrappedNativeProto final {
     }
   }
 
-  void TraceJS(JSTracer* trc) {
-    TraceSelf(trc);
-  }
+  void TraceJS(JSTracer* trc) { TraceSelf(trc); }
 
   void WriteBarrierPre(JSContext* cx) {
     if (JS::IsIncrementalBarrierNeeded(cx) && mJSProtoObject) {

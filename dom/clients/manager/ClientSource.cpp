@@ -619,7 +619,6 @@ RefPtr<ClientOpPromise> ClientSource::Claim(const ClientClaimArgs& aArgs) {
 
 RefPtr<ClientOpPromise> ClientSource::GetInfoAndState(
     const ClientGetInfoAndStateArgs& aArgs) {
-
   ClientState state;
   nsresult rv = SnapshotState(&state);
   if (NS_FAILED(rv)) {

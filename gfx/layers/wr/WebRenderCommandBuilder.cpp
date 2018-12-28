@@ -2229,7 +2229,6 @@ Maybe<wr::WrImageMask> WebRenderCommandBuilder::BuildWrMaskImage(
     return Nothing();
   }
 
-
   bool snap;
   nsRect bounds = aMaskItem->GetBounds(aDisplayListBuilder, &snap);
   if (bounds.IsEmpty()) {
@@ -2262,25 +2261,25 @@ Maybe<wr::WrImageMask> WebRenderCommandBuilder::BuildWrMaskImage(
       !itemRect.IsEqualInterior(maskData->mItemRect) ||
       !(aMaskItem->Frame()->StyleSVGReset()->mMask == maskData->mMaskStyle) ||
       maskOffset != maskData->mMaskOffset || !sameScale) {
-
     IntSize size = itemRect.Size().ToUnknownSize();
 
     std::vector<RefPtr<ScaledFont>> fonts;
     RefPtr<WebRenderDrawEventRecorder> recorder =
-        MakeAndAddRef<WebRenderDrawEventRecorder>([&](
-            MemStream& aStream, std::vector<RefPtr<ScaledFont>>& aScaledFonts) {
-          size_t count = aScaledFonts.size();
-          aStream.write((const char*)&count, sizeof(count));
+        MakeAndAddRef<WebRenderDrawEventRecorder>(
+            [&](MemStream& aStream,
+                std::vector<RefPtr<ScaledFont>>& aScaledFonts) {
+              size_t count = aScaledFonts.size();
+              aStream.write((const char*)&count, sizeof(count));
 
-          for (auto& scaled : aScaledFonts) {
-            BlobFont font = {mManager->WrBridge()->GetFontKeyForScaledFont(
-                                 scaled, &aResources),
-                             scaled};
-            aStream.write((const char*)&font, sizeof(font));
-          }
+              for (auto& scaled : aScaledFonts) {
+                BlobFont font = {mManager->WrBridge()->GetFontKeyForScaledFont(
+                                     scaled, &aResources),
+                                 scaled};
+                aStream.write((const char*)&font, sizeof(font));
+              }
 
-          fonts = std::move(aScaledFonts);
-        });
+              fonts = std::move(aScaledFonts);
+            });
 
     RefPtr<DrawTarget> dummyDt = Factory::CreateDrawTarget(
         BackendType::SKIA, IntSize(1, 1), SurfaceFormat::A8);

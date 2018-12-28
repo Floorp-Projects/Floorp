@@ -22,8 +22,7 @@ namespace mozilla {
 namespace dom {
 class DocShellLoadStateInit;
 }
-}
-
+}  // namespace mozilla
 
 /**
  * nsDocShellLoadState contains setup information used in a nsIDocShell::loadURI
@@ -190,6 +189,7 @@ class nsDocShellLoadState final {
   void CalculateLoadURIFlags();
 
   mozilla::dom::DocShellLoadStateInit Serialize();
+
  protected:
   // Destructor can't be defaulted or inlined, as header doesn't have all type
   // includes it needs to do so.

@@ -8647,10 +8647,9 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
   nsresult rv = NS_OK;
   mOriginalUriString.Truncate();
 
-  MOZ_LOG(
-      gDocShellLeakLog, LogLevel::Debug,
-      ("DOCSHELL %p InternalLoad %s\n", this,
-      aLoadState->URI()->GetSpecOrDefault().get()));
+  MOZ_LOG(gDocShellLeakLog, LogLevel::Debug,
+          ("DOCSHELL %p InternalLoad %s\n", this,
+           aLoadState->URI()->GetSpecOrDefault().get()));
 
   // Initialize aDocShell/aRequest
   if (aDocShell) {

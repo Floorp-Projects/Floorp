@@ -135,10 +135,10 @@ namespace dom {
 #define NS_PRE_HANDLE_BLUR_EVENT (1 << 13)
 #define NS_PRE_HANDLE_INPUT_EVENT (1 << 14)
 #define NS_IN_SUBMIT_CLICK (1 << 15)
-#define NS_CONTROL_TYPE(bits)                                             \
-  ((bits) & ~(NS_OUTER_ACTIVATE_EVENT | NS_ORIGINAL_CHECKED_VALUE |       \
-              NS_NO_CONTENT_DISPATCH |  NS_ORIGINAL_INDETERMINATE_VALUE | \
-              NS_PRE_HANDLE_BLUR_EVENT | NS_PRE_HANDLE_INPUT_EVENT |      \
+#define NS_CONTROL_TYPE(bits)                                            \
+  ((bits) & ~(NS_OUTER_ACTIVATE_EVENT | NS_ORIGINAL_CHECKED_VALUE |      \
+              NS_NO_CONTENT_DISPATCH | NS_ORIGINAL_INDETERMINATE_VALUE | \
+              NS_PRE_HANDLE_BLUR_EVENT | NS_PRE_HANDLE_INPUT_EVENT |     \
               NS_IN_SUBMIT_CLICK))
 
 // whether textfields should be selected once focused:

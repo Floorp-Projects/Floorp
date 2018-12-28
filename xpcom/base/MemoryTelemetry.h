@@ -35,7 +35,8 @@ class MemoryTelemetry final : public nsIObserver,
 
   static MemoryTelemetry& Get();
 
-  nsresult GatherReports(const std::function<void()>& aCompletionCallback = nullptr);
+  nsresult GatherReports(
+      const std::function<void()>& aCompletionCallback = nullptr);
 
   void GetUniqueSetSize(std::function<void(const int64_t&)>&& aCallback);
 
