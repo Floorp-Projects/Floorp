@@ -8,7 +8,7 @@
 #define MOZILLA_SVGPATHSEGLISTSMILTYPE_H_
 
 #include "mozilla/Attributes.h"
-#include "nsISMILType.h"
+#include "SMILType.h"
 
 class nsSMILValue;
 
@@ -19,7 +19,7 @@ namespace mozilla {
 //
 // Operations for animating an SVGPathData.
 //
-class SVGPathSegListSMILType : public nsISMILType {
+class SVGPathSegListSMILType : public SMILType {
  public:
   // Singleton for nsSMILValue objects to hold onto.
   static SVGPathSegListSMILType* Singleton() {
@@ -28,7 +28,7 @@ class SVGPathSegListSMILType : public nsISMILType {
   }
 
  protected:
-  // nsISMILType Methods
+  // SMILType Methods
   // -------------------
 
   virtual void Init(nsSMILValue& aValue) const override;

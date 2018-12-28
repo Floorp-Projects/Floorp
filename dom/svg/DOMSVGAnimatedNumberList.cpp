@@ -15,6 +15,7 @@
 // See the architecture comment in this file's header.
 
 namespace mozilla {
+namespace dom {
 
 static inline nsSVGAttrTearoffTable<SVGAnimatedNumberList,
                                     DOMSVGAnimatedNumberList>&
@@ -129,4 +130,5 @@ const SVGAnimatedNumberList& DOMSVGAnimatedNumberList::InternalAList() const {
   return *mElement->GetAnimatedNumberList(mAttrEnum);
 }
 
+}  // namespace dom
 }  // namespace mozilla

@@ -3,15 +3,25 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 // @flow
 
-import type { Action, ThunkArgs } from "./types";
+import type { Action, FocusItem, ThunkArgs } from "./types";
 
-export function setExpandedState(expanded: Set<string>) {
+export function setExpandedState(thread: string, expanded: Set<string>) {
   return ({ dispatch, getState }: ThunkArgs) => {
     dispatch(
       ({
         type: "SET_EXPANDED_STATE",
+        thread,
         expanded
       }: Action)
     );
+  };
+}
+
+export function focusItem(item: FocusItem) {
+  return ({ dispatch, getState }: ThunkArgs) => {
+    dispatch({
+      type: "SET_FOCUSED_SOURCE_ITEM",
+      item
+    });
   };
 }
