@@ -79,6 +79,18 @@ IPCResult VRParent::RecvUpdateVar(const GfxVarUpdate& aUpdate) {
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult VRParent::RecvOpenVRControllerActionPathToVR(
+    const nsCString& aPath) {
+  mOpenVRControllerAction = aPath;
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult VRParent::RecvOpenVRControllerManifestPathToVR(
+    const OpenVRControllerType& aType, const nsCString& aPath) {
+  mOpenVRControllerManifest.Put(static_cast<uint32_t>(aType), aPath);
+  return IPC_OK();
+}
+
 void VRParent::ActorDestroy(ActorDestroyReason aWhy) {
   if (AbnormalShutdown == aWhy) {
     NS_WARNING("Shutting down VR process early due to a crash!");
@@ -133,6 +145,20 @@ bool VRParent::Init(base::ProcessId aParentPid, const char* aParentBuildID,
   }
 
   return true;
+}
+
+bool VRParent::GetOpenVRControllerActionPath(nsCString* aPath) {
+  if (!mOpenVRControllerAction.IsEmpty()) {
+    *aPath = mOpenVRControllerAction;
+    return true;
+  }
+
+  return false;
+}
+
+bool VRParent::GetOpenVRControllerManifestPath(OpenVRControllerType aType,
+                                               nsCString* aPath) {
+  return mOpenVRControllerManifest.Get(static_cast<uint32_t>(aType), aPath);
 }
 
 }  // namespace gfx

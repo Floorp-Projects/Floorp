@@ -52,6 +52,13 @@ enum class VRDeviceType : uint16_t {
   NumVRDeviceTypes
 };
 
+enum class OpenVRControllerType : uint16_t {
+  Vive,
+  WMR,
+  Knuckles,
+  NumOpenVRControllerTypes
+};
+
 struct VRDisplayInfo {
   uint32_t mDisplayID;
   VRDeviceType mType;

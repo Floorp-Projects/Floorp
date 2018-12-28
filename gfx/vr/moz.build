@@ -19,6 +19,7 @@ EXPORTS += [
     'ipc/VRProcessChild.h',
     'ipc/VRProcessManager.h',
     'ipc/VRProcessParent.h',
+    'service/VRService.h',
     'VRDisplayClient.h',
     'VRDisplayHost.h',
     'VRDisplayPresentation.h',
