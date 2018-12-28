@@ -11035,10 +11035,12 @@ void nsCSSFrameConstructor::CreateIBSiblings(nsFrameConstructorState& aState,
       aSiblings.AddChild(blockFrame);
 
       if (blockKids.NotEmpty()) {
-        // Add NS_FRAME_PART_OF_IBSPLIT bit to all the wrapper frames
-        // created by CreateColumnSpanSiblings.
-        AutoRestore<nsFrameState> savedStateBits(aState.mAdditionalStateBits);
-        aState.mAdditionalStateBits |= NS_FRAME_PART_OF_IBSPLIT;
+        // Although SetFrameIsIBSplit() will add NS_FRAME_PART_OF_IBSPLIT for
+        // blockFrame later, we manually add the bit earlier here to make all
+        // the continuations of blockFrame created in
+        // CreateColumnSpanSiblings(), i.e. non-column-span wrappers, have the
+        // bit via nsFrame::Init().
+        blockFrame->AddStateBits(NS_FRAME_PART_OF_IBSPLIT);
 
         nsFrameItems columnSpanSiblings =
             CreateColumnSpanSiblings(aState, blockFrame, blockKids,
