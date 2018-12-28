@@ -14,7 +14,6 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsPIDOMWindow.h"
-#include "nsPrintfCString.h"
 #include "nsString.h"
 #include "nsXPCOMCIDInternal.h"
 #include "mozilla/Components.h"
@@ -30,41 +29,6 @@ extern const XREAppData* gAppData;
 
 static const char kProfileProperties[] =
     "chrome://mozapps/locale/profile/profileSelection.properties";
-
-/**
- * Creates a new profile with a timestamp in the name to use for profile reset.
- */
-nsresult CreateResetProfile(nsIToolkitProfileService* aProfileSvc,
-                            nsIToolkitProfile* aOldProfile,
-                            nsIToolkitProfile** aNewProfile) {
-  MOZ_ASSERT(aProfileSvc, "NULL profile service");
-
-  nsAutoCString oldProfileName;
-  aOldProfile->GetName(oldProfileName);
-
-  nsCOMPtr<nsIToolkitProfile> newProfile;
-  // Make the new profile the old profile (or "default-") + the time in seconds
-  // since epoch for uniqueness.
-  nsAutoCString newProfileName;
-  if (!oldProfileName.IsEmpty()) {
-    newProfileName.Assign(oldProfileName);
-    newProfileName.Append("-");
-  } else {
-    newProfileName.AssignLiteral("default-");
-  }
-  newProfileName.Append(nsPrintfCString("%" PRId64, PR_Now() / 1000));
-  nsresult rv =
-      aProfileSvc->CreateProfile(nullptr,  // choose a default dir for us
-                                 newProfileName, getter_AddRefs(newProfile));
-  if (NS_FAILED(rv)) return rv;
-
-  rv = aProfileSvc->Flush();
-  if (NS_FAILED(rv)) return rv;
-
-  newProfile.swap(*aNewProfile);
-
-  return NS_OK;
-}
 
 /**
  * Delete the profile directory being reset after a backup and delete the local

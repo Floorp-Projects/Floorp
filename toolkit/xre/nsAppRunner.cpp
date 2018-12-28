@@ -1958,8 +1958,6 @@ static ReturnAbortOnError ShowProfileManager(
   nsresult rv;
 
   nsCOMPtr<nsIFile> profD, profLD;
-  char16_t* profileNamePtr;
-  nsAutoCString profileName;
   bool offline = false;
 
   {
@@ -2028,12 +2026,6 @@ static ReturnAbortOnError ShowProfileManager(
 
       rv = lock->GetLocalDirectory(getter_AddRefs(profLD));
       NS_ENSURE_SUCCESS(rv, rv);
-
-      rv = ioParamBlock->GetString(0, &profileNamePtr);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      CopyUTF16toUTF8(MakeStringSpan(profileNamePtr), profileName);
-      free(profileNamePtr);
 
       lock->Unlock();
     }
@@ -2210,8 +2202,7 @@ static nsresult SelectProfile(nsIProfileLock** aResult,
 
     // If we're resetting a profile, create a new one and use it to startup.
     gResetOldProfile = profile;
-    rv = CreateResetProfile(aProfileSvc, gResetOldProfile,
-                            getter_AddRefs(profile));
+    rv = service->CreateResetProfile(getter_AddRefs(profile));
     if (NS_SUCCEEDED(rv)) {
       rv = profile->GetRootDir(getter_AddRefs(rootDir));
       NS_ENSURE_SUCCESS(rv, rv);
@@ -4139,15 +4130,15 @@ nsresult XREMain::XRE_mainRun() {
   }
 
   {
-    bool profileWasSelected = false;
+    bool profileWasDefault = false;
     if (gDoProfileReset) {
       nsCOMPtr<nsIToolkitProfile> defaultProfile;
       // This can fail if there is no default profile.
       // That shouldn't stop reset from proceeding.
-      nsresult gotSelected =
-          mProfileSvc->GetSelectedProfile(getter_AddRefs(defaultProfile));
-      if (NS_SUCCEEDED(gotSelected)) {
-        profileWasSelected = defaultProfile == gResetOldProfile;
+      nsresult gotDefault =
+          mProfileSvc->GetDefaultProfile(getter_AddRefs(defaultProfile));
+      if (NS_SUCCEEDED(gotDefault)) {
+        profileWasDefault = defaultProfile == gResetOldProfile;
       }
     }
 
@@ -4183,7 +4174,7 @@ nsresult XREMain::XRE_mainRun() {
         mProfileName.Assign(name);
         // Set the new profile as the default after we're done cleaning up the
         // old profile, iff that profile was already the default
-        if (profileWasSelected) {
+        if (profileWasDefault) {
           rv = mProfileSvc->SetDefaultProfile(newProfile);
           if (NS_FAILED(rv))
             NS_WARNING("Could not set current profile as the default");
