@@ -6,9 +6,7 @@
 "use strict";
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://services-common/utils.js");
-ChromeUtils.defineModuleGetter(this, "AddonManagerPrivate",
-                               "resource://gre/modules/AddonManager.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.defineModuleGetter(this, "BrowserUtils",
                                "resource://gre/modules/BrowserUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "PageActions",
@@ -17,13 +15,8 @@ ChromeUtils.defineModuleGetter(this, "Pocket",
                                "chrome://pocket/content/Pocket.jsm");
 ChromeUtils.defineModuleGetter(this, "ReaderMode",
                                "resource://gre/modules/ReaderMode.jsm");
-ChromeUtils.defineModuleGetter(this, "Services",
-                               "resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyGetter(this, "gPocketBundle", function() {
   return Services.strings.createBundle("chrome://pocket/locale/pocket.properties");
-});
-XPCOMUtils.defineLazyGetter(this, "gPocketStyleURI", function() {
-  return Services.io.newURI("chrome://pocket/skin/pocket.css");
 });
 
 var EXPORTED_SYMBOLS = ["SaveToPocket"];
@@ -390,11 +383,6 @@ function pktUIGetter(prop, window) {
 
 var PocketOverlay = {
   startup() {
-    let styleSheetService = Cc["@mozilla.org/content/style-sheet-service;1"]
-                              .getService(Ci.nsIStyleSheetService);
-    this._sheetType = styleSheetService.AUTHOR_SHEET;
-    this._cachedSheet = styleSheetService.preloadSheet(gPocketStyleURI,
-                                                       this._sheetType);
     Services.obs.addObserver(this, "browser-delayed-startup-finished");
     PocketReader.startup();
     PocketPageAction.init();
@@ -415,7 +403,6 @@ var PocketOverlay = {
         if (element)
           element.remove();
       }
-      this.removeStyles(window);
       // remove script getters/objects
       window.Pocket = undefined;
       window.pktApi = undefined;
@@ -435,7 +422,6 @@ var PocketOverlay = {
     if (window.hasOwnProperty("pktUI"))
       return;
     this.setWindowScripts(window);
-    this.addStyles(window);
     this.updateWindow(window);
   },
   setWindowScripts(window) {
@@ -469,17 +455,6 @@ var PocketOverlay = {
     // enable or disable reader button
     PocketReader.hidden = hidden;
   },
-
-  addStyles(win) {
-    let utils = win.windowUtils;
-    utils.addSheet(this._cachedSheet, this._sheetType);
-  },
-
-  removeStyles(win) {
-    let utils = win.windowUtils;
-    utils.removeSheet(gPocketStyleURI, this._sheetType);
-  },
-
 };
 
 // use enabled pref as a way for tests (e.g. test_contextmenu.html) to disable
@@ -498,9 +473,6 @@ function browserWindows() {
 
 var SaveToPocket = {
   init() {
-    if (AddonManagerPrivate.addonIsActive("isreaditlater@ideashower.com"))
-      return;
-
     setDefaultPrefs();
     // migrate enabled pref
     if (Services.prefs.prefHasUserValue("browser.pocket.enabled")) {
