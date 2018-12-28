@@ -306,19 +306,6 @@ var PermissionPromptPrototype = {
                                         this.browser);
 
       if (state == SitePermissions.BLOCK) {
-        // If the request is blocked by a global setting then we record
-        // a flag that lasts for the duration of the current page load
-        // to notify the user that the permission has been blocked.
-        // Currently only applies to autoplay-media
-        if (state == SitePermissions.getDefault(this.permissionKey) &&
-            SitePermissions.showGloballyBlocked(this.permissionKey)) {
-          SitePermissions.set(this.principal.URI,
-                              this.permissionKey,
-                              state,
-                              SitePermissions.SCOPE_GLOBAL,
-                              this.browser);
-        }
-
         this.cancel();
         return;
       }
@@ -340,8 +327,6 @@ var PermissionPromptPrototype = {
                                         this.browser);
 
       if (state == SitePermissions.BLOCK) {
-        // TODO: Add support for showGloballyBlocked
-
         this.cancel();
         return;
       }
