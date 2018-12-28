@@ -10,17 +10,17 @@ add_task(async function() {
   await BrowserTestUtils.withNewTab({ gBrowser, url: "about:support" }, async function(browser) {
     let keyGoogleStatus = await ContentTask.spawn(browser, null, async function() {
       let textBox = content.document.getElementById("key-google-box");
-      await ContentTaskUtils.waitForCondition(() => document.l10n.getAttributes(textBox).id,
+      await ContentTaskUtils.waitForCondition(() => content.document.l10n.getAttributes(textBox).id,
         "Google API key status loaded");
-      return document.l10n.getAttributes(textBox).id;
+      return content.document.l10n.getAttributes(textBox).id;
     });
     ok(keyGoogleStatus, "Google API key status shown");
 
     let keyMozillaStatus = await ContentTask.spawn(browser, null, async function() {
       let textBox = content.document.getElementById("key-mozilla-box");
-      await ContentTaskUtils.waitForCondition(() => document.l10n.getAttributes(textBox).id,
+      await ContentTaskUtils.waitForCondition(() => content.document.l10n.getAttributes(textBox).id,
         "Mozilla API key status loaded");
-      return document.l10n.getAttributes(textBox).id;
+      return content.document.l10n.getAttributes(textBox).id;
     });
     ok(keyMozillaStatus, "Mozilla API key status shown");
   });

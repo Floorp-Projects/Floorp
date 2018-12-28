@@ -29,12 +29,12 @@ class TestL10n(PuppeteerMixin, MarionetteTestCase):
 
     def test_dtd_entity_content(self):
         dtds = ['chrome://branding/locale/brand.dtd',
-                'chrome://global/locale/aboutSupport.dtd']
+                'chrome://global/locale/aboutRights.dtd']
 
-        value = self.l10n.localize_entity(dtds, 'aboutSupport.pageTitle')
+        value = self.l10n.localize_entity(dtds, 'rights.title')
 
         self.marionette.set_context(self.marionette.CONTEXT_CONTENT)
-        self.marionette.navigate('about:support')
+        self.marionette.navigate('about:rights')
 
         elm = self.marionette.find_element(By.TAG_NAME, 'h1')
         self.assertEqual(value, elm.text)

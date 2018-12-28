@@ -200,6 +200,10 @@ policies-inactive = { COPY("toolkit/chrome/global/aboutSupport.properties", "pol
 policies-active = { COPY("toolkit/chrome/global/aboutSupport.properties", "policies.active")}
 policies-error = { COPY("toolkit/chrome/global/aboutSupport.properties", "policies.error")}
 multi-process-windows = { $remoteWindows }/{ $totalWindows }
+blocked-driver = { COPY("toolkit/chrome/global/aboutSupport.properties", "blockedDriver")}
+blocked-gfx-card = { COPY("toolkit/chrome/global/aboutSupport.properties", "blockedGfxCard")}
+blocked-os-version = { COPY("toolkit/chrome/global/aboutSupport.properties", "blockedOSVersion")}
+blocked-mismatched-version = { COPY("toolkit/chrome/global/aboutSupport.properties", "blockedMismatchedVersion")}
 """)
 )
 
@@ -419,6 +423,16 @@ multi-process-windows = { $remoteWindows }/{ $totalWindows }
                 "touchWarning",
                 {
                     "%S": VARIABLE_REFERENCE("preferenceKey"),
+                },
+            )
+        ),
+        FTL.Message(
+            id=FTL.Identifier("try-newer-driver"),
+            value=REPLACE(
+                "toolkit/chrome/global/aboutSupport.properties",
+                "tryNewerDriver",
+                {
+                    "%S": VARIABLE_REFERENCE("driverVersion"),
                 },
             )
         ),

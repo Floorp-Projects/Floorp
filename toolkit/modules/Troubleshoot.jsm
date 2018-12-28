@@ -309,33 +309,33 @@ var dataProviders = {
 
   graphics: function graphics(done) {
     function statusMsgForFeature(feature) {
-      // We return an array because in the tryNewerDriver case we need to
+      // We return an object because in the try-newer-driver case we need to
       // include the suggested version, which the consumer likely needs to plug
-      // into a format string from a localization file.  Rather than returning
-      // a string in some cases and an array in others, return an array always.
-      let msg = [""];
+      // into a format string from a localization file. Rather than returning
+      // a string in some cases and an object in others, return an object always.
+      let msg = {key: ""};
       try {
         var status = gfxInfo.getFeatureStatus(feature);
       } catch (e) {}
       switch (status) {
       case Ci.nsIGfxInfo.FEATURE_BLOCKED_DEVICE:
       case Ci.nsIGfxInfo.FEATURE_DISCOURAGED:
-        msg = ["blockedGfxCard"];
+        msg = {key: "blocked-gfx-card"};
         break;
       case Ci.nsIGfxInfo.FEATURE_BLOCKED_OS_VERSION:
-        msg = ["blockedOSVersion"];
+        msg = {key: "blocked-os-version"};
         break;
       case Ci.nsIGfxInfo.FEATURE_BLOCKED_DRIVER_VERSION:
         try {
-          var suggestedDriverVersion =
+          var driverVersion =
             gfxInfo.getFeatureSuggestedDriverVersion(feature);
         } catch (e) {}
-        msg = suggestedDriverVersion ?
-              ["tryNewerDriver", suggestedDriverVersion] :
-              ["blockedDriver"];
+        msg = driverVersion ?
+              {key: "try-newer-driver", args: {driverVersion}} :
+              {key: "blocked-driver"};
         break;
       case Ci.nsIGfxInfo.FEATURE_BLOCKED_MISMATCHED_VERSION:
-        msg = ["blockedMismatchedVersion"];
+        msg = {key: "blocked-mismatched-version"};
         break;
       }
       return msg;

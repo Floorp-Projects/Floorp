@@ -166,6 +166,15 @@ pending-reports =
 raw-data-copied = Raw data copied to clipboard
 text-copied = Text copied to clipboard
 
+## The verb "blocked" here refers to a graphics feature such as "Direct2D" or "OpenGL layers".
+blocked-driver = Blocked for your graphics driver version.
+blocked-gfx-card = Blocked for your graphics card because of unresolved driver issues.
+blocked-os-version = Blocked for your operating system version.
+blocked-mismatched-version = Blocked for your graphics driver version mismatch between registry and DLL.
+# Variables
+# $driverVersion - The graphics driver version string
+try-newer-driver = Blocked for your graphics driver version. Try updating your graphics driver to version { $driverVersion } or newer.
+
 # "ClearType" is a proper noun and should not be translated. Feel free to leave English strings if
 # there are no good translations, these are only used in about:support
 clear-type-parameters = ClearType Parameters
@@ -175,6 +184,8 @@ hardware-h264 = Hardware H264 Decoding
 main-thread-no-omtc = main thread, no OMTC
 yes = Yes
 no = No
+unknown = Unknown
+virtual-monitor-disp = Virtual Monitor Display
 
 ## The following strings indicate if an API key has been found.
 ## In some development versions, it's expected for some API keys that they are
@@ -182,6 +193,8 @@ no = No
 found = Found
 missing = Missing
 
+gpu-process-pid = GPUProcessPid
+gpu-process = GPUProcess
 gpu-description = Description
 gpu-vendor-id = Vendor ID
 gpu-device-id = Device ID
@@ -218,6 +231,7 @@ glcontext-crash-guard = OpenGL
 
 reset-on-next-restart = Reset on Next Restart
 gpu-process-kill-button = Terminate GPU Process
+gpu-device-reset = Device Reset
 gpu-device-reset-button = Trigger Device Reset
 uses-tiling = Uses Tiling
 content-uses-tiling = Uses Tiling (Content)
