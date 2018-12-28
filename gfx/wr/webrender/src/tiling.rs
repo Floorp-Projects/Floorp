@@ -424,10 +424,12 @@ impl RenderTarget for ColorRenderTarget {
 
                     for blit in &pic_task.blits {
                         self.tile_blits.push(TileBlit {
+                            dest_offset: blit.dest_offset,
+                            size: blit.size,
                             target: blit.target.clone(),
-                            offset: DeviceIntPoint::new(
-                                blit.offset.x + target_rect.origin.x,
-                                blit.offset.y + target_rect.origin.y,
+                            src_offset: DeviceIntPoint::new(
+                                blit.src_offset.x + target_rect.origin.x,
+                                blit.src_offset.y + target_rect.origin.y,
                             ),
                         })
                     }
