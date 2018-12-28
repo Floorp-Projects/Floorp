@@ -83,6 +83,14 @@ static const RedirEntry kRedirMap[] = {
     {"library", "chrome://browser/content/aboutLibrary.xhtml",
      nsIAboutModule::URI_MUST_LOAD_IN_CHILD |
          nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT},
+    {"pocket-saved", "chrome://pocket/content/panels/saved.html",
+     nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT |
+         nsIAboutModule::URI_CAN_LOAD_IN_CHILD | nsIAboutModule::ALLOW_SCRIPT |
+         nsIAboutModule::HIDE_FROM_ABOUTABOUT},
+    {"pocket-signup", "chrome://pocket/content/panels/signup.html",
+     nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT |
+         nsIAboutModule::URI_CAN_LOAD_IN_CHILD | nsIAboutModule::ALLOW_SCRIPT |
+         nsIAboutModule::HIDE_FROM_ABOUTABOUT},
     {"preferences",
      "chrome://browser/content/preferences/in-content/preferences.xul",
      nsIAboutModule::ALLOW_SCRIPT},

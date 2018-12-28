@@ -38,8 +38,8 @@ class SVGElement;
  */
 class SVGAnimatedNumberList {
   // friends so that they can get write access to mBaseVal
-  friend class DOMSVGNumber;
-  friend class DOMSVGNumberList;
+  friend class dom::DOMSVGNumber;
+  friend class dom::DOMSVGNumberList;
 
  public:
   SVGAnimatedNumberList() : mIsBaseSet(false) {}

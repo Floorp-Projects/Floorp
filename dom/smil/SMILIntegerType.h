@@ -8,11 +8,11 @@
 #define MOZILLA_SMILINTEGERTYPE_H_
 
 #include "mozilla/Attributes.h"
-#include "nsISMILType.h"
+#include "SMILType.h"
 
 namespace mozilla {
 
-class SMILIntegerType : public nsISMILType {
+class SMILIntegerType : public SMILType {
  public:
   virtual void Init(nsSMILValue& aValue) const override;
   virtual void Destroy(nsSMILValue& aValue) const override;

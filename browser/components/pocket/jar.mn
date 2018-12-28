@@ -4,7 +4,5 @@
 
 browser.jar:
 % content pocket %content/pocket/ contentaccessible=yes
-% skin pocket classic/1.0 %skin/classic/browser/pocket/
   content/pocket/  (content/*)
-  skin/classic/browser/pocket/ (skin/*)
 

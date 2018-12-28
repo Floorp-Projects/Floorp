@@ -9,7 +9,7 @@
 #ifndef NS_SMILCSSVALUETYPE_H_
 #define NS_SMILCSSVALUETYPE_H_
 
-#include "nsISMILType.h"
+#include "SMILType.h"
 #include "nsCSSPropertyID.h"
 #include "nsStringFwd.h"
 #include "mozilla/Attributes.h"
@@ -24,7 +24,7 @@ class Element;
 /*
  * SMILCSSValueType: Represents a SMIL-animated CSS value.
  */
-class SMILCSSValueType : public nsISMILType {
+class SMILCSSValueType : public SMILType {
  public:
   typedef mozilla::dom::Element Element;
   typedef mozilla::AnimationValue AnimationValue;
@@ -33,7 +33,7 @@ class SMILCSSValueType : public nsISMILType {
   static SMILCSSValueType sSingleton;
 
  protected:
-  // nsISMILType Methods
+  // SMILType Methods
   // -------------------
   void Init(nsSMILValue& aValue) const override;
   void Destroy(nsSMILValue&) const override;

@@ -17,6 +17,7 @@
 #include "mozilla/RestyleManager.h"
 #include "mozilla/ServoStyleRuleMap.h"
 #include "mozilla/ServoTypes.h"
+#include "mozilla/SMILAnimationController.h"
 #include "mozilla/StyleAnimationValue.h"
 #include "mozilla/css/Loader.h"
 #include "mozilla/dom/AnonymousContent.h"
@@ -33,7 +34,6 @@
 #include "nsIDocumentInlines.h"
 #include "nsMediaFeatures.h"
 #include "nsPrintfCString.h"
-#include "nsSMILAnimationController.h"
 #include "nsXBLPrototypeBinding.h"
 #include "gfxUserFontSet.h"
 #include "nsBindingManager.h"
@@ -409,7 +409,7 @@ void ServoStyleSet::PreTraverse(ServoTraversalFlags aFlags, Element* aRoot) {
 
   // Process animation stuff that we should avoid doing during the parallel
   // traversal.
-  nsSMILAnimationController* smilController =
+  SMILAnimationController* smilController =
       mDocument->HasAnimationController() ? mDocument->GetAnimationController()
                                           : nullptr;
 

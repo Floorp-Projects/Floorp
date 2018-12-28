@@ -8,7 +8,7 @@
 #define MOZILLA_SVGPOINTLISTSMILTYPE_H_
 
 #include "mozilla/Attributes.h"
-#include "nsISMILType.h"
+#include "SMILType.h"
 
 class nsSMILValue;
 
@@ -19,13 +19,13 @@ namespace mozilla {
 //
 // Operations for animating an SVGPointList.
 //
-class SVGPointListSMILType : public nsISMILType {
+class SVGPointListSMILType : public SMILType {
  public:
   // Singleton for nsSMILValue objects to hold onto.
   static SVGPointListSMILType sSingleton;
 
  protected:
-  // nsISMILType Methods
+  // SMILType Methods
   // -------------------
 
   virtual void Init(nsSMILValue& aValue) const override;

@@ -231,3 +231,10 @@ OptimizationSchema = voluptuous.Any(
     # skip if SETA or skip-unless-schedules says to
     {'skip-unless-schedules-or-seta': list(schedules.ALL_COMPONENTS)},
 )
+
+# shortcut for a string where task references are allowed
+taskref_or_string = voluptuous.Any(
+    basestring,
+    {voluptuous.Required('task-reference'): basestring},
+    {voluptuous.Required('artifact-reference'): basestring},
+)

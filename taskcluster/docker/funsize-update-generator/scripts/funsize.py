@@ -35,16 +35,19 @@ log = logging.getLogger(__name__)
 ddstats = ThreadStats(namespace='releng.releases.partials')
 
 
+ROOT_URL = os.environ['TASKCLUSTER_ROOT_URL']
+QUEUE_PREFIX = ("https://queue.taskcluster.net/"
+                if ROOT_URL == 'https://taskcluster.net'
+                else ROOT_URL + '/api/queue/')
 ALLOWED_URL_PREFIXES = (
     "http://download.cdn.mozilla.net/pub/mozilla.org/firefox/nightly/",
     "http://download.cdn.mozilla.net/pub/firefox/nightly/",
     "https://mozilla-nightly-updates.s3.amazonaws.com",
-    "https://queue.taskcluster.net/",
     "http://ftp.mozilla.org/",
     "http://download.mozilla.org/",
     "https://archive.mozilla.org/",
     "http://archive.mozilla.org/",
-    "https://queue.taskcluster.net/v1/task/",
+    QUEUE_PREFIX,
 )
 STAGING_URL_PREFIXES = (
     "http://ftp.stage.mozaws.net/",

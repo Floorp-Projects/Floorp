@@ -15,7 +15,7 @@
 namespace mozilla {
 
 /*
- * The DOM wrapper class for this class is DOMSVGTransformMatrix.
+ * The DOM wrapper class for this class is DOMSVGTransform.
  */
 class nsSVGTransform {
  public:

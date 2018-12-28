@@ -6,15 +6,11 @@
 
 import { addToTree } from "./addToTree";
 import { collapseTree } from "./collapseTree";
-import { createParentMap, isSource, partIsFile } from "./utils";
+import { createParentMap } from "./utils";
 import { difference } from "lodash";
-import {
-  getDomain,
-  findNodeInContents,
-  createTreeNodeMatcher
-} from "./treeOrder";
+import { getDomain } from "./treeOrder";
 import type { SourcesMap } from "../../reducers/types";
-import type { TreeDirectory, TreeNode } from "./types";
+import type { TreeDirectory } from "./types";
 
 function newSourcesSet(newSources, prevSources) {
   const newSourceIds = difference(
@@ -25,43 +21,13 @@ function newSourcesSet(newSources, prevSources) {
   return uniqSources;
 }
 
-function findFocusedItemInTree(
-  newSourceTree: TreeDirectory,
-  focusedItem: TreeNode,
-  debuggeeHost: ?string
-): ?TreeNode {
-  const parts = focusedItem.path.split("/").filter(p => p !== "");
-  let path = "";
-
-  return parts.reduce((subTree, part, index) => {
-    if (subTree === undefined || subTree === null) {
-      return null;
-    } else if (isSource(subTree)) {
-      return subTree;
-    }
-
-    path = path ? `${path}/${part}` : part;
-    const { index: childIndex } = findNodeInContents(
-      subTree,
-      createTreeNodeMatcher(
-        part,
-        !partIsFile(index, parts, focusedItem),
-        debuggeeHost
-      )
-    );
-
-    return subTree.contents[childIndex];
-  }, newSourceTree);
-}
-
 type Params = {
   newSources: SourcesMap,
   prevSources: SourcesMap,
   uncollapsedTree: TreeDirectory,
   sourceTree: TreeDirectory,
   debuggeeUrl: string,
-  projectRoot: string,
-  focusedItem: ?TreeNode
+  projectRoot: string
 };
 
 export function updateTree({
@@ -70,8 +36,7 @@ export function updateTree({
   debuggeeUrl,
   projectRoot,
   uncollapsedTree,
-  sourceTree,
-  focusedItem
+  sourceTree
 }: Params) {
   const newSet = newSourcesSet(newSources, prevSources);
   const debuggeeHost = getDomain(debuggeeUrl);
@@ -82,18 +47,9 @@ export function updateTree({
 
   const newSourceTree = collapseTree(uncollapsedTree);
 
-  if (focusedItem) {
-    focusedItem = findFocusedItemInTree(
-      newSourceTree,
-      focusedItem,
-      debuggeeHost
-    );
-  }
-
   return {
     uncollapsedTree,
     sourceTree: newSourceTree,
-    parentMap: createParentMap(newSourceTree),
-    focusedItem
+    parentMap: createParentMap(newSourceTree)
   };
 }
