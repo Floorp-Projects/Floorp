@@ -10248,7 +10248,10 @@ static JSObject* IdVectorToArray(JSContext* cx, Handle<IdVector> ids) {
     return false;
   }
 
-  if (!DebuggerObject::getProperty(cx, object, id, args.rval())) {
+  RootedValue receiver(cx,
+                       args.length() < 2 ? ObjectValue(*object) : args.get(1));
+
+  if (!DebuggerObject::getProperty(cx, object, id, receiver, args.rval())) {
     return false;
   }
 
@@ -10266,7 +10269,11 @@ static JSObject* IdVectorToArray(JSContext* cx, Handle<IdVector> ids) {
 
   RootedValue value(cx, args.get(1));
 
-  if (!DebuggerObject::setProperty(cx, object, id, value, args.rval())) {
+  RootedValue receiver(cx,
+                       args.length() < 3 ? ObjectValue(*object) : args.get(2));
+
+  if (!DebuggerObject::setProperty(cx, object, id, value, receiver,
+                                   args.rval())) {
     return false;
   }
 
@@ -11205,38 +11212,15 @@ double DebuggerObject::promiseTimeToResolution() const {
 /* static */ bool DebuggerObject::getProperty(JSContext* cx,
                                               HandleDebuggerObject object,
                                               HandleId id,
-                                              MutableHandleValue result) {
-  RootedObject referent(cx, object->referent());
-  Debugger* dbg = object->owner();
-
-  // Enter the debuggee compartment and rewrap all input value for that
-  // compartment. (Rewrapping always takes place in the destination
-  // compartment.)
-  Maybe<AutoRealm> ar;
-  EnterDebuggeeObjectRealm(cx, ar, referent);
-  if (!cx->compartment()->wrap(cx, &referent)) {
-    return false;
-  }
-  cx->markId(id);
-
-  LeaveDebuggeeNoExecute nnx(cx);
-
-  bool ok = GetProperty(cx, referent, referent, id, result);
-
-  return dbg->receiveCompletionValue(ar, ok, result, result);
-}
-
-/* static */ bool DebuggerObject::setProperty(JSContext* cx,
-                                              HandleDebuggerObject object,
-                                              HandleId id, HandleValue value_,
+                                              HandleValue receiver_,
                                               MutableHandleValue result) {
   RootedObject referent(cx, object->referent());
   Debugger* dbg = object->owner();
 
   // Unwrap Debugger.Objects. This happens in the debugger's compartment since
   // that is where any exceptions must be reported.
-  RootedValue value(cx, value_);
-  if (!dbg->unwrapDebuggeeValue(cx, &value)) {
+  RootedValue receiver(cx, receiver_);
+  if (!dbg->unwrapDebuggeeValue(cx, &receiver)) {
     return false;
   }
 
@@ -11246,14 +11230,49 @@ double DebuggerObject::promiseTimeToResolution() const {
   Maybe<AutoRealm> ar;
   EnterDebuggeeObjectRealm(cx, ar, referent);
   if (!cx->compartment()->wrap(cx, &referent) ||
-      !cx->compartment()->wrap(cx, &value)) {
+      !cx->compartment()->wrap(cx, &receiver)) {
     return false;
   }
   cx->markId(id);
 
   LeaveDebuggeeNoExecute nnx(cx);
 
-  RootedValue receiver(cx, ObjectValue(*referent));
+  bool ok = GetProperty(cx, referent, receiver, id, result);
+
+  return dbg->receiveCompletionValue(ar, ok, result, result);
+}
+
+/* static */ bool DebuggerObject::setProperty(JSContext* cx,
+                                              HandleDebuggerObject object,
+                                              HandleId id, HandleValue value_,
+                                              HandleValue receiver_,
+                                              MutableHandleValue result) {
+  RootedObject referent(cx, object->referent());
+  Debugger* dbg = object->owner();
+
+  // Unwrap Debugger.Objects. This happens in the debugger's compartment since
+  // that is where any exceptions must be reported.
+  RootedValue value(cx, value_);
+  RootedValue receiver(cx, receiver_);
+  if (!dbg->unwrapDebuggeeValue(cx, &value) ||
+      !dbg->unwrapDebuggeeValue(cx, &receiver)) {
+    return false;
+  }
+
+  // Enter the debuggee compartment and rewrap all input value for that
+  // compartment. (Rewrapping always takes place in the destination
+  // compartment.)
+  Maybe<AutoRealm> ar;
+  EnterDebuggeeObjectRealm(cx, ar, referent);
+  if (!cx->compartment()->wrap(cx, &referent) ||
+      !cx->compartment()->wrap(cx, &value) ||
+      !cx->compartment()->wrap(cx, &receiver)) {
+    return false;
+  }
+  cx->markId(id);
+
+  LeaveDebuggeeNoExecute nnx(cx);
+
   ObjectOpResult opResult;
   bool ok = SetProperty(cx, referent, id, value, receiver, opResult);
 

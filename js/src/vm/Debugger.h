@@ -1645,10 +1645,11 @@ class DebuggerObject : public NativeObject {
                                     bool& result);
   static MOZ_MUST_USE bool getProperty(JSContext* cx,
                                        HandleDebuggerObject object, HandleId id,
+                                       HandleValue receiver,
                                        MutableHandleValue result);
   static MOZ_MUST_USE bool setProperty(JSContext* cx,
                                        HandleDebuggerObject object, HandleId id,
-                                       HandleValue value,
+                                       HandleValue value, HandleValue receiver,
                                        MutableHandleValue result);
   static MOZ_MUST_USE bool getPrototypeOf(JSContext* cx,
                                           HandleDebuggerObject object,
