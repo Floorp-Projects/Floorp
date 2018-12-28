@@ -223,16 +223,16 @@ var Reader = {
    * @return {Promise}
    * @resolves JS object representing the article, or null if no article is found.
    */
-  _getArticle: Task.async(function* (url) {
+  async _getArticle(url) {
     // First try to find a parsed article in the cache.
-    let article = yield ReaderMode.getArticleFromCache(url);
+    let article = await ReaderMode.getArticleFromCache(url);
     if (article) {
       return article;
     }
 
     // Article hasn't been found in the cache, we need to
     // download the page and parse the article out of it.
-    return yield ReaderMode.downloadAndParseDocument(url).catch(e => {
+    return ReaderMode.downloadAndParseDocument(url).catch(e => {
       if (e && e.newURL) {
         // Pass up the error so we can navigate the browser in question to the new URL:
         throw e;
@@ -240,7 +240,7 @@ var Reader = {
       Cu.reportError("Error downloading and parsing document: " + e);
       return null;
     });
-  }),
+  },
 
   _getArticleData: function(browser) {
     return new Promise((resolve, reject) => {
@@ -262,8 +262,8 @@ var Reader = {
   /**
    * Migrates old indexedDB reader mode cache to new JSON cache.
    */
-  migrateCache: Task.async(function* () {
-    let cacheDB = yield new Promise((resolve, reject) => {
+  async migrateCache() {
+    let cacheDB = await new Promise((resolve, reject) => {
       let request = window.indexedDB.open("about:reader", 1);
       request.onsuccess = event => resolve(event.target.result);
       request.onerror = event => reject(request.error);
@@ -276,7 +276,7 @@ var Reader = {
       return;
     }
 
-    let articles = yield new Promise((resolve, reject) => {
+    let articles = await new Promise((resolve, reject) => {
       let articles = [];
 
       let transaction = cacheDB.transaction(cacheDB.objectStoreNames);
@@ -296,10 +296,10 @@ var Reader = {
     });
 
     for (let article of articles) {
-      yield ReaderMode.storeArticleInCache(article);
+      await ReaderMode.storeArticleInCache(article);
     }
 
     // Delete the database.
     window.indexedDB.deleteDatabase("about:reader");
-  }),
+  },
 };

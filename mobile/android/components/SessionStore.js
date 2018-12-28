@@ -15,7 +15,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   SessionHistory: "resource://gre/modules/sessionstore/SessionHistory.jsm",
   SharedPreferences: "resource://gre/modules/SharedPreferences.jsm",
-  Task: "resource://gre/modules/Task.jsm",
   Utils: "resource://gre/modules/sessionstore/Utils.jsm",
 });
 
@@ -1634,7 +1633,7 @@ SessionStore.prototype = {
     }
   },
 
-  restoreLastSession: Task.async(function* (aSessionString) {
+  restoreLastSession(aSessionString) {
     let notifyMessage = "";
 
     try {
@@ -1645,7 +1644,7 @@ SessionStore.prototype = {
     }
 
     Services.obs.notifyObservers(null, "sessionstore-windows-restored", notifyMessage);
-  }),
+  },
 
   removeWindow: function ss_removeWindow(aWindow) {
     if (!aWindow || !aWindow.__SSID || !this._windows[aWindow.__SSID]) {
