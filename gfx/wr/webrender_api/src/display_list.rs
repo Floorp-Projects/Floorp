@@ -1249,7 +1249,7 @@ impl DisplayListBuilder {
 
     pub fn push_reference_frame(
         &mut self,
-        info: &LayoutPrimitiveInfo,
+        rect: &LayoutRect,
         transform_style: TransformStyle,
         transform: Option<PropertyBinding<LayoutTransform>>,
         perspective: Option<LayoutTransform>,
@@ -1263,7 +1263,7 @@ impl DisplayListBuilder {
                 id,
             },
         });
-        self.push_item(&item, info);
+        self.push_item(&item, &LayoutPrimitiveInfo::new(*rect));
         id
     }
 
