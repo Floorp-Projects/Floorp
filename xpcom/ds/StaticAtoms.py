@@ -926,6 +926,8 @@ STATIC_ATOMS = [
     Atom("otherwise", "otherwise"),
     Atom("output", "output"),
     Atom("overflow", "overflow"),
+    Atom("overflowBlock", "overflow-block"),
+    Atom("overflowInline", "overflow-inline"),
     Atom("overlay", "overlay"),
     Atom("p", "p"),
     Atom("pack", "pack"),
