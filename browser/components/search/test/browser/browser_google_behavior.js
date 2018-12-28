@@ -24,10 +24,10 @@ let region = Services.prefs.getCharPref("browser.search.region");
 let code = "";
 switch (region) {
   case "US":
-    code = "firefox-b-1";
+    code = "firefox-b-1-d";
     break;
   case "DE":
-    code = "firefox-b";
+    code = "firefox-b-d";
     break;
 }
 
@@ -36,7 +36,7 @@ if (code) {
   codes.context = code;
   codes.newTab = code;
   codes.submission = code;
-  codes.keyword = `${code}-ab`;
+  codes.keyword = code;
 }
 
 function promiseContentSearchReady(browser) {
