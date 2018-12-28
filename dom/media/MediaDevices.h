@@ -17,6 +17,7 @@ namespace dom {
 
 class Promise;
 struct MediaStreamConstraints;
+struct DisplayMediaStreamConstraints;
 struct MediaTrackSupportedConstraints;
 
 #define MOZILLA_DOM_MEDIADEVICES_IMPLEMENTATION_IID  \
@@ -47,6 +48,10 @@ class MediaDevices final : public DOMEventTargetHelper,
 
   already_AddRefed<Promise> EnumerateDevices(CallerType aCallerType,
                                              ErrorResult& aRv);
+
+  already_AddRefed<Promise> GetDisplayMedia(
+      const DisplayMediaStreamConstraints& aConstraints, CallerType aCallerType,
+      ErrorResult& aRv);
 
   virtual void OnDeviceChange() override;
 
