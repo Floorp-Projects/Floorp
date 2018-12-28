@@ -283,14 +283,14 @@ already_AddRefed<SVGIRect> SVGSVGElement::CreateSVGRect() {
   return NS_NewSVGRect(this);
 }
 
-already_AddRefed<SVGTransform> SVGSVGElement::CreateSVGTransform() {
-  RefPtr<SVGTransform> transform = new SVGTransform();
+already_AddRefed<DOMSVGTransform> SVGSVGElement::CreateSVGTransform() {
+  RefPtr<DOMSVGTransform> transform = new DOMSVGTransform();
   return transform.forget();
 }
 
-already_AddRefed<SVGTransform> SVGSVGElement::CreateSVGTransformFromMatrix(
+already_AddRefed<DOMSVGTransform> SVGSVGElement::CreateSVGTransformFromMatrix(
     SVGMatrix& matrix) {
-  RefPtr<SVGTransform> transform = new SVGTransform(matrix.GetMatrix());
+  RefPtr<DOMSVGTransform> transform = new DOMSVGTransform(matrix.GetMatrix());
   return transform.forget();
 }
 

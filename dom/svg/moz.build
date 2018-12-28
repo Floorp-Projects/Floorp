@@ -20,6 +20,7 @@ EXPORTS += [
 ]
 
 EXPORTS.mozilla.dom += [
+    'DOMSVGTransform.h',
     'SVGAElement.h',
     'SVGAngle.h',
     'SVGAnimatedAngle.h',
@@ -99,7 +100,6 @@ EXPORTS.mozilla.dom += [
     'SVGTextPathElement.h',
     'SVGTextPositioningElement.h',
     'SVGTitleElement.h',
-    'SVGTransform.h',
     'SVGTransformableElement.h',
     'SVGTSpanElement.h',
     'SVGUseElement.h',
@@ -120,6 +120,7 @@ UNIFIED_SOURCES += [
     'DOMSVGPoint.cpp',
     'DOMSVGPointList.cpp',
     'DOMSVGStringList.cpp',
+    'DOMSVGTransform.cpp',
     'DOMSVGTransformList.cpp',
     'nsISVGPoint.cpp',
     'nsSVGAngle.cpp',
@@ -242,7 +243,6 @@ UNIFIED_SOURCES += [
     'SVGTextPathElement.cpp',
     'SVGTextPositioningElement.cpp',
     'SVGTitleElement.cpp',
-    'SVGTransform.cpp',
     'SVGTransformableElement.cpp',
     'SVGTransformList.cpp',
     'SVGTransformListParser.cpp',
