@@ -251,7 +251,8 @@ static void ShouldWeakMappingEntryBeBlack(JSObject* aMap, JS::GCCellPtr aKey,
   }
 
   if (keyMightNeedMarking && aKey.is<JSObject>()) {
-    JSObject* kdelegate = js::UncheckedUnwrapWithoutExpose(&aKey.as<JSObject>());
+    JSObject* kdelegate =
+        js::UncheckedUnwrapWithoutExpose(&aKey.as<JSObject>());
     if (kdelegate && !JS::ObjectIsMarkedGray(kdelegate) &&
         (!aMap || !JS::ObjectIsMarkedGray(aMap))) {
       *aKeyShouldBeBlack = true;

@@ -16,7 +16,7 @@
 #include "DataSurfaceHelpers.h"
 #include "Tools.h"
 
-#ifdef BUILD_ARM_NEON
+#ifdef USE_NEON
 #include "mozilla/arm.h"
 #endif
 
@@ -660,7 +660,7 @@ void AlphaBoxBlur::Blur(uint8_t* aData) const {
                      integralImageStride);
       } else
 #endif
-#ifdef BUILD_ARM_NEON
+#ifdef USE_NEON
           if (mozilla::supports_neon()) {
         BoxBlur_NEON(aData, horizontalLobes[0][0], horizontalLobes[0][1],
                      verticalLobes[0][0], verticalLobes[0][1], integralImage,

@@ -97,7 +97,8 @@ void Val::trace(JSTracer* trc) {
       // TODO/AnyRef-boxing: With boxed immediates and strings, the write
       // barrier is going to have to be more complicated.
       ASSERT_ANYREF_IS_JSOBJECT;
-      TraceManuallyBarrieredEdge(trc, u.anyref_.asJSObjectAddress(), "wasm ref/anyref global");
+      TraceManuallyBarrieredEdge(trc, u.anyref_.asJSObjectAddress(),
+                                 "wasm ref/anyref global");
     }
   }
 }

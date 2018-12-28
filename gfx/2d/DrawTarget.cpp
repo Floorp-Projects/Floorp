@@ -14,7 +14,7 @@
 #include "BufferEdgePad.h"
 #include "BufferUnrotate.h"
 
-#ifdef BUILD_ARM_NEON
+#ifdef USE_NEON
 #include "mozilla/arm.h"
 #include "LuminanceNEON.h"
 #endif
@@ -63,7 +63,7 @@ static void ComputesRGBLuminanceMask(const uint8_t* aSourceData,
                                      int32_t aSourceStride, uint8_t* aDestData,
                                      int32_t aDestStride, const IntSize& aSize,
                                      float aOpacity) {
-#ifdef BUILD_ARM_NEON
+#ifdef USE_NEON
   if (mozilla::supports_neon()) {
     ComputesRGBLuminanceMask_NEON(aSourceData, aSourceStride, aDestData,
                                   aDestStride, aSize, aOpacity);

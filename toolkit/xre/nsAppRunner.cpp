@@ -5122,7 +5122,6 @@ extern "C" void GeckoCrashOOL(const char* aFilename, int aLine,
 extern "C" void install_rust_panic_hook();
 extern "C" void install_rust_oom_hook();
 
-
 struct InstallRustHooks {
   InstallRustHooks() {
     install_rust_panic_hook();

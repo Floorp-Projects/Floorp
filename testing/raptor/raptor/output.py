@@ -127,15 +127,16 @@ class Output(object):
                 LOG.error("output.summarize received unsupported test results type")
                 return
 
+            # for benchmarks there is generally  more than one subtest in each cycle
+            # and a benchmark-specific formula is needed to calculate the final score
+
             # for pageload tests, if there are > 1 subtests here, that means there
             # were multiple measurements captured in each single pageload; we want
             # to get the mean of those values and report 1 overall 'suite' value
             # for the page; so that each test page/URL only has 1 line output
             # on treeherder/perfherder (all replicates available in the JSON)
 
-            # for benchmarks there is generally  more than one subtest in each cycle
-            # and a benchmark-specific formula is needed to calculate the final score
-
+            # summarize results for both benchmark or pageload type tests
             if len(subtests) > 1:
                 suite['value'] = self.construct_summary(vals, testname=test.name)
 
