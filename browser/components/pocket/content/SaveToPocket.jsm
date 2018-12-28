@@ -85,46 +85,17 @@ var PocketPageAction = {
         _urlbarNodeInMarkup: true,
         onBeforePlacedInWindow(window) {
           let doc = window.document;
-
-          if (doc.getElementById("pocket-button-box")) {
-            return;
-          }
-
-          let wrapper = doc.createXULElement("hbox");
-          wrapper.id = "pocket-button-box";
-          wrapper.classList.add("urlbar-icon-wrapper", "urlbar-page-action");
-          let animatableBox = doc.createXULElement("hbox");
-          animatableBox.id = "pocket-animatable-box";
-          let animatableImage = doc.createXULElement("image");
-          animatableImage.id = "pocket-animatable-image";
-          animatableImage.setAttribute("role", "presentation");
           let tooltip =
             gPocketBundle.GetStringFromName("pocket-button.tooltiptext");
-          animatableImage.setAttribute("tooltiptext", tooltip);
-          let pocketButton = doc.createXULElement("image");
-          pocketButton.id = "pocket-button";
-          pocketButton.classList.add("urlbar-icon");
-          pocketButton.setAttribute("role", "button");
-          pocketButton.setAttribute("tooltiptext", tooltip);
-
-          wrapper.appendChild(pocketButton);
-          wrapper.appendChild(animatableBox);
-          animatableBox.appendChild(animatableImage);
-          let iconBox = doc.getElementById("page-action-buttons");
-          iconBox.appendChild(wrapper);
-          wrapper.hidden = true;
-
-          wrapper.addEventListener("click", event => {
-            let {BrowserPageActions} = wrapper.ownerGlobal;
-            BrowserPageActions.doCommandForAction(this, event, wrapper);
-          });
+          doc.getElementById("pocket-button").setAttribute("tooltiptext", tooltip);
+          doc.getElementById("pocket-button-animatable-image").setAttribute("tooltiptext", tooltip);
         },
         onIframeShowing(iframe, panel) {
           Pocket.onShownInPhotonPageActionPanel(panel, iframe);
 
           let doc = panel.ownerDocument;
           let urlbarNode = doc.getElementById("pocket-button-box");
-          if (!urlbarNode || urlbarNode.hidden) {
+          if (!urlbarNode) {
             return;
           }
 
@@ -196,7 +167,7 @@ var PocketPageAction = {
     let urlbarNode = browserWindow.document.getElementById(
       BrowserPageActions.urlbarButtonNodeIDForActionID(this.pageAction.id)
     );
-    if (!urlbarNode) {
+    if (!urlbarNode || urlbarNode.hidden) {
       return;
     }
     let browser = browserWindow.gBrowser.selectedBrowser;
@@ -218,9 +189,7 @@ var PocketPageAction = {
     for (let win of browserWindows()) {
       let doc = win.document;
       let pocketButtonBox = doc.getElementById("pocket-button-box");
-      if (pocketButtonBox) {
-        pocketButtonBox.remove();
-      }
+      pocketButtonBox.setAttribute("hidden", "true");
     }
 
     this.pageAction.remove();

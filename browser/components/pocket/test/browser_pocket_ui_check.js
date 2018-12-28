@@ -17,6 +17,8 @@ add_task(async function() {
 
   checkWindowProperties(true, ["Pocket", "pktUI", "pktUIMessaging"]);
   checkElements(true, ["pocket-button", "appMenu-library-pocket-button"]);
+  let buttonBox = document.getElementById("pocket-button-box");
+  is(buttonBox.hidden, false, "Button should not have been hidden");
 
   // check context menu exists
   info("checking content context menu");
@@ -40,8 +42,10 @@ add_task(async function() {
   await promisePocketDisabled();
 
   checkWindowProperties(false, ["Pocket", "pktUI", "pktUIMessaging"]);
-  checkElements(false, ["pocket-button", "appMenu-library-pocket-button",
+  checkElements(false, ["appMenu-library-pocket-button",
                         "context-pocket", "context-savelinktopocket"]);
+  buttonBox = document.getElementById("pocket-button-box");
+  is(buttonBox.hidden, true, "Button should have been hidden");
 
   await promisePocketReset();
 });
