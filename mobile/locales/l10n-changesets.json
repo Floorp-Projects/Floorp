@@ -393,7 +393,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "67032622764b"
+        "revision": "8dff0595a137"
     },
     "nn-NO": {
         "platforms": [
@@ -429,7 +429,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "060fb65351e6"
+        "revision": "ba5a4ebaf02c"
     },
     "pt-PT": {
         "platforms": [
@@ -519,7 +519,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "e376aa67191a"
+        "revision": "7d107870c2da"
     },
     "uk": {
         "platforms": [
