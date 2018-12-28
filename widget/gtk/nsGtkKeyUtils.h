@@ -261,6 +261,7 @@ class KeymapWrapper {
    * Auto key repeat management.
    */
   static guint sLastRepeatableHardwareKeyCode;
+  static Time sLastRepeatableKeyTime;
   enum RepeatState { NOT_PRESSED, FIRST_PRESS, REPEATING };
   static RepeatState sRepeatState;
 
