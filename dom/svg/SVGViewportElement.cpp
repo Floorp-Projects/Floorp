@@ -4,6 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/dom/SVGViewportElement.h"
+
 #include <stdint.h>
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/ContentEvents.h"
@@ -11,7 +13,6 @@
 #include "mozilla/Likely.h"
 #include "mozilla/dom/SVGLengthBinding.h"
 #include "mozilla/dom/SVGMatrix.h"
-#include "mozilla/dom/SVGViewportElement.h"
 #include "mozilla/dom/SVGViewElement.h"
 
 #include "DOMSVGLength.h"

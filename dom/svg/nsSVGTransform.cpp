@@ -4,8 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsError.h"
 #include "nsSVGTransform.h"
+
+#include "nsError.h"
 #include "nsContentUtils.h"  // for NS_ENSURE_FINITE
 #include "nsTextFormatter.h"
 
