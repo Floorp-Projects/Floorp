@@ -33,7 +33,8 @@ import {
   getSelectedSource,
   getActiveSearch,
   getSourcesForTabs,
-  getHasSiblingOfSameName
+  getHasSiblingOfSameName,
+  getWorkerDisplayName
 } from "../../selectors";
 import type { ActiveSearchType } from "../../selectors";
 
@@ -51,7 +52,8 @@ type Props = {
   closeTab: typeof actions.closeTab,
   closeTabs: typeof actions.closeTabs,
   togglePrettyPrint: typeof actions.togglePrettyPrint,
-  showSource: typeof actions.showSource
+  showSource: typeof actions.showSource,
+  threadName: string
 };
 
 class Tab extends PureComponent<Props> {
@@ -161,7 +163,8 @@ class Tab extends PureComponent<Props> {
       closeTab,
       source,
       tabSources,
-      hasSiblingOfSameName
+      hasSiblingOfSameName,
+      threadName
     } = this.props;
     const sourceId = source.id;
     const active =
@@ -188,6 +191,7 @@ class Tab extends PureComponent<Props> {
 
     const path = getDisplayPath(source, tabSources);
     const query = hasSiblingOfSameName ? getSourceQueryString(source) : "";
+    const threadNamePrefix = `${threadName}${threadName ? ": " : ""}`;
 
     return (
       <div
@@ -204,7 +208,7 @@ class Tab extends PureComponent<Props> {
           shouldHide={icon => ["file", "javascript"].includes(icon)}
         />
         <div className="filename">
-          {getTruncatedFileName(source, query)}
+          {`${threadNamePrefix}${getTruncatedFileName(source, query)}`}
           {path && <span>{`../${path}/..`}</span>}
         </div>
         <CloseButton
@@ -223,7 +227,8 @@ const mapStateToProps = (state, { source }) => {
     tabSources: getSourcesForTabs(state),
     selectedSource: selectedSource,
     activeSearch: getActiveSearch(state),
-    hasSiblingOfSameName: getHasSiblingOfSameName(state, source)
+    hasSiblingOfSameName: getHasSiblingOfSameName(state, source),
+    threadName: getWorkerDisplayName(state, source.thread)
   };
 };
 
