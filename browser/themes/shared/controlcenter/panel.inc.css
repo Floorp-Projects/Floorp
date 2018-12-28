@@ -702,6 +702,10 @@ description#identity-popup-content-verifier,
   color: var(--panel-disabled-color);
 }
 
+#identity-popup-content-blocking-content[hasException] .identity-popup-content-blocking-category-state-label {
+  visibility: hidden;
+}
+
 .identity-popup-permission-remove-button {
   -moz-appearance: none;
   margin: 0;
