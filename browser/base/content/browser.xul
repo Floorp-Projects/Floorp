@@ -1035,18 +1035,6 @@ xmlns="http://www.w3.org/1999/xhtml"
                        tooltiptext="&pageActionButton.tooltip;"
                        onmousedown="BrowserPageActions.mainButtonClicked(event);"
                        onkeypress="BrowserPageActions.mainButtonClicked(event);"/>
-                <hbox id="star-button-box"
-                      hidden="true"
-                      class="urlbar-icon-wrapper urlbar-page-action"
-                      onclick="BrowserPageActions.doCommandForAction(PageActions.actionForID('bookmark'), event, this);">
-                  <image id="star-button"
-                         class="urlbar-icon"
-                         role="button"/>
-                  <hbox id="star-button-animatable-box">
-                    <image id="star-button-animatable-image"
-                           role="presentation"/>
-                  </hbox>
-                </hbox>
                 <hbox id="pocket-button-box"
                       hidden="true"
                       class="urlbar-icon-wrapper urlbar-page-action"
@@ -1056,6 +1044,18 @@ xmlns="http://www.w3.org/1999/xhtml"
                          role="button"/>
                   <hbox id="pocket-button-animatable-box">
                     <image id="pocket-button-animatable-image"
+                           role="presentation"/>
+                  </hbox>
+                </hbox>
+                <hbox id="star-button-box"
+                      hidden="true"
+                      class="urlbar-icon-wrapper urlbar-page-action"
+                      onclick="BrowserPageActions.doCommandForAction(PageActions.actionForID('bookmark'), event, this);">
+                  <image id="star-button"
+                         class="urlbar-icon"
+                         role="button"/>
+                  <hbox id="star-button-animatable-box">
+                    <image id="star-button-animatable-image"
                            role="presentation"/>
                   </hbox>
                 </hbox>
