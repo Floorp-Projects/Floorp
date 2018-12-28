@@ -11,7 +11,6 @@ MOCHITEST_MANIFESTS += ['test/mochitest.ini']
 
 EXPORTS += [
     'nsISMILAttr.h',
-    'nsSMILAnimationController.h',
     'nsSMILAnimationFunction.h',
     'nsSMILCompositorTable.h',
     'nsSMILCSSProperty.h',
@@ -34,12 +33,15 @@ EXPORTS += [
     'SMILType.h',
 ]
 
+EXPORTS.mozilla += [
+    'SMILAnimationController.h',
+]
+
 EXPORTS.mozilla.dom += [
     'TimeEvent.h',
 ]
 
 UNIFIED_SOURCES += [
-    'nsSMILAnimationController.cpp',
     'nsSMILAnimationFunction.cpp',
     'nsSMILCompositor.cpp',
     'nsSMILCSSProperty.cpp',
@@ -54,6 +56,7 @@ UNIFIED_SOURCES += [
     'nsSMILTimeValue.cpp',
     'nsSMILTimeValueSpec.cpp',
     'nsSMILValue.cpp',
+    'SMILAnimationController.cpp',
     'SMILBoolType.cpp',
     'SMILCSSValueType.cpp',
     'SMILEnumType.cpp',

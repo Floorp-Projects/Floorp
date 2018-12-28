@@ -21,7 +21,7 @@
 #include "nsIXMLContentSink.h"
 #include "nsNetCID.h"
 #include "nsComponentManagerUtils.h"
-#include "nsSMILAnimationController.h"
+#include "mozilla/SMILAnimationController.h"
 #include "nsServiceManagerUtils.h"
 #include "mozilla/dom/SVGSVGElement.h"
 #include "SVGObserverUtils.h"
@@ -129,7 +129,7 @@ void SVGDocumentWrapper::StartAnimation() {
 
   nsIDocument* doc = mViewer->GetDocument();
   if (doc) {
-    nsSMILAnimationController* controller = doc->GetAnimationController();
+    SMILAnimationController* controller = doc->GetAnimationController();
     if (controller) {
       controller->Resume(nsSMILTimeContainer::PAUSE_IMAGE);
     }
@@ -146,7 +146,7 @@ void SVGDocumentWrapper::StopAnimation() {
 
   nsIDocument* doc = mViewer->GetDocument();
   if (doc) {
-    nsSMILAnimationController* controller = doc->GetAnimationController();
+    SMILAnimationController* controller = doc->GetAnimationController();
     if (controller) {
       controller->Pause(nsSMILTimeContainer::PAUSE_IMAGE);
     }

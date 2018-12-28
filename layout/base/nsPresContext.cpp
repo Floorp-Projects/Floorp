@@ -55,7 +55,7 @@
 #include "nsIMessageManager.h"
 #include "mozilla/dom/HTMLBodyElement.h"
 #include "mozilla/dom/MediaQueryList.h"
-#include "nsSMILAnimationController.h"
+#include "mozilla/SMILAnimationController.h"
 #include "mozilla/css/ImageLoader.h"
 #include "mozilla/dom/PBrowserParent.h"
 #include "mozilla/dom/TabChild.h"
@@ -1092,7 +1092,7 @@ void nsPresContext::SetImgAnimations(nsIContent* aParent, uint16_t aMode) {
 void nsPresContext::SetSMILAnimations(nsIDocument* aDoc, uint16_t aNewMode,
                                       uint16_t aOldMode) {
   if (aDoc->HasAnimationController()) {
-    nsSMILAnimationController* controller = aDoc->GetAnimationController();
+    SMILAnimationController* controller = aDoc->GetAnimationController();
     switch (aNewMode) {
       case imgIContainer::kNormalAnimMode:
       case imgIContainer::kLoopOnceAnimMode:

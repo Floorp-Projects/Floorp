@@ -107,7 +107,7 @@
 #include "nsThreadUtils.h"
 #include "nsStyleSheetService.h"
 #include "gfxUtils.h"
-#include "nsSMILAnimationController.h"
+#include "mozilla/SMILAnimationController.h"
 #include "SVGContentUtils.h"
 #include "SVGObserverUtils.h"
 #include "SVGFragmentIdentifier.h"
@@ -1035,7 +1035,7 @@ void PresShell::Init(nsIDocument* aDocument, nsPresContext* aPresContext,
 #endif
 
   if (mDocument->HasAnimationController()) {
-    nsSMILAnimationController* animCtrl = mDocument->GetAnimationController();
+    SMILAnimationController* animCtrl = mDocument->GetAnimationController();
     animCtrl->NotifyRefreshDriverCreated(GetPresContext()->RefreshDriver());
   }
 
