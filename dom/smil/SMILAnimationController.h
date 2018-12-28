@@ -27,10 +27,9 @@ namespace dom {
 class Element;
 class SVGAnimationElement;
 }  // namespace dom
-}  // namespace mozilla
 
 //----------------------------------------------------------------------
-// nsSMILAnimationController
+// SMILAnimationController
 //
 // The animation controller maintains the animation timer and determines the
 // sample times and sample rate for all SMIL animations in a document. There is
@@ -42,10 +41,10 @@ class SVGAnimationElement;
 // a compound document. These time containers can be paused individually or
 // here, at the document level.
 //
-class nsSMILAnimationController final : public nsSMILTimeContainer,
+class SMILAnimationController final : public nsSMILTimeContainer,
                                         public nsARefreshObserver {
  public:
-  explicit nsSMILAnimationController(nsIDocument* aDoc);
+  explicit SMILAnimationController(nsIDocument* aDoc);
 
   // Clears mDocument pointer. (Called by our nsIDocument when it's going away)
   void Disconnect();
@@ -112,7 +111,7 @@ class nsSMILAnimationController final : public nsSMILTimeContainer,
   bool PreTraverseInSubtree(mozilla::dom::Element* aRoot);
 
  protected:
-  ~nsSMILAnimationController();
+  ~SMILAnimationController();
 
   // Typedefs
   typedef nsPtrHashKey<nsSMILTimeContainer> TimeContainerPtrKey;
@@ -206,5 +205,7 @@ class nsSMILAnimationController final : public nsSMILTimeContainer,
   // removed or retargeted)
   nsAutoPtr<nsSMILCompositorTable> mLastCompositorTable;
 };
+
+}  // namespace mozilla
 
 #endif  // NS_SMILANIMATIONCONTROLLER_H_

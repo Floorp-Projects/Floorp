@@ -21,12 +21,14 @@ from taskgraph.util.attributes import TRUNK_PROJECTS
 from taskgraph.util.hash import hash_path
 from taskgraph.util.treeherder import split_symbol
 from taskgraph.transforms.base import TransformSequence
+from taskgraph.util.taskcluster import get_root_url
 from taskgraph.util.schema import (
     validate_schema,
     Schema,
     optionally_keyed_by,
     resolve_keyed_by,
     OptimizationSchema,
+    taskref_or_string,
 )
 from taskgraph.util.scriptworker import (
     BALROG_ACTIONS,
@@ -46,12 +48,6 @@ def _run_task_suffix():
     """String to append to cache names under control of run-task."""
     return hash_path(RUN_TASK)[0:20]
 
-
-# shortcut for a string where task references are allowed
-taskref_or_string = Any(
-    basestring,
-    {Required('task-reference'): basestring},
-)
 
 # A task description is a general description of a TaskCluster task
 task_description_schema = Schema({
@@ -499,6 +495,11 @@ def build_docker_worker_payload(config, task, task_def):
         else:
             raise Exception("unknown docker image type")
 
+    # propagate our TASKCLUSTER_ROOT_URL to the task; note that this will soon
+    # be provided directly by the worker, making this redundant:
+    # https://bugzilla.mozilla.org/show_bug.cgi?id=1460015
+    worker['env']['TASKCLUSTER_ROOT_URL'] = get_root_url()
+
     features = {}
 
     if worker.get('relengapi-proxy'):
@@ -530,6 +531,11 @@ def build_docker_worker_payload(config, task, task_def):
         worker['env']['SCCACHE_IDLE_TIMEOUT'] = '0'
     else:
         worker['env']['SCCACHE_DISABLE'] = '1'
+
+    # this will soon be provided directly by the worker:
+    # https://bugzilla.mozilla.org/show_bug.cgi?id=1460015
+    if features.get('taskclusterProxy'):
+        worker['env']['TASKCLUSTER_PROXY_URL'] = 'http://taskcluster'
 
     capabilities = {}
 
@@ -763,6 +769,11 @@ def build_generic_worker_payload(config, task, task_def):
 
     env = worker.get('env', {})
 
+    # propagate our TASKCLUSTER_ROOT_URL to the task; note that this will soon
+    # be provided directly by the worker, making this redundant:
+    # https://bugzilla.mozilla.org/show_bug.cgi?id=1460015
+    env['TASKCLUSTER_ROOT_URL'] = get_root_url()
+
     if task.get('needs-sccache'):
         env['USE_SCCACHE'] = '1'
         # Disable sccache idle shutdown.
@@ -817,7 +828,9 @@ def build_generic_worker_payload(config, task, task_def):
 
     if worker.get('taskcluster-proxy'):
         features['taskclusterProxy'] = True
-        worker['env']['TASKCLUSTER_PROXY_URL'] = 'http://taskcluster/'
+        # this will soon be provided directly by the worker:
+        # https://bugzilla.mozilla.org/show_bug.cgi?id=1460015
+        worker['env']['TASKCLUSTER_PROXY_URL'] = 'http://taskcluster'
 
     if worker.get('run-as-administrator', False):
         features['runAsAdministrator'] = True
@@ -1315,6 +1328,11 @@ def build_always_optimized_payload(config, task, task_def):
 })
 def build_macosx_engine_payload(config, task, task_def):
     worker = task['worker']
+
+    # propagate our TASKCLUSTER_ROOT_URL to the task; note that this will soon
+    # be provided directly by the worker, making this redundant
+    worker.setdefault('env', {})['TASKCLUSTER_ROOT_URL'] = get_root_url()
+
     artifacts = map(lambda artifact: {
         'name': artifact['name'],
         'path': artifact['path'],

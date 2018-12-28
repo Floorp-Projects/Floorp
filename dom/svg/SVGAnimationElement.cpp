@@ -8,7 +8,7 @@
 #include "mozilla/dom/SVGSVGElement.h"
 #include "mozilla/dom/ElementInlines.h"
 #include "nsSMILTimeContainer.h"
-#include "nsSMILAnimationController.h"
+#include "SMILAnimationController.h"
 #include "nsSMILAnimationFunction.h"
 #include "nsContentUtils.h"
 #include "nsIContentInlines.h"
@@ -146,7 +146,7 @@ nsresult SVGAnimationElement::BindToTree(nsIDocument* aDocument,
 
   // Add myself to the animation controller's master set of animation elements.
   if (nsIDocument* doc = GetComposedDoc()) {
-    nsSMILAnimationController* controller = doc->GetAnimationController();
+    SMILAnimationController* controller = doc->GetAnimationController();
     if (controller) {
       controller->RegisterAnimationElement(this);
     }
@@ -170,7 +170,7 @@ nsresult SVGAnimationElement::BindToTree(nsIDocument* aDocument,
 }
 
 void SVGAnimationElement::UnbindFromTree(bool aDeep, bool aNullParent) {
-  nsSMILAnimationController* controller = OwnerDoc()->GetAnimationController();
+  SMILAnimationController* controller = OwnerDoc()->GetAnimationController();
   if (controller) {
     controller->UnregisterAnimationElement(this);
   }

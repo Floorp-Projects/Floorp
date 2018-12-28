@@ -19,10 +19,10 @@ namespace mozilla {
 class AutoSVGViewHandler;
 class SVGFragmentIdentifier;
 class EventChainPreVisitor;
-class DOMSVGLength;
-class DOMSVGNumber;
 
 namespace dom {
+class DOMSVGLength;
+class DOMSVGNumber;
 class SVGAngle;
 class SVGMatrix;
 class SVGIRect;
@@ -137,8 +137,8 @@ class SVGSVGElement final : public SVGSVGElementBase {
   already_AddRefed<nsISVGPoint> CreateSVGPoint();
   already_AddRefed<SVGMatrix> CreateSVGMatrix();
   already_AddRefed<SVGIRect> CreateSVGRect();
-  already_AddRefed<SVGTransform> CreateSVGTransform();
-  already_AddRefed<SVGTransform> CreateSVGTransformFromMatrix(
+  already_AddRefed<DOMSVGTransform> CreateSVGTransform();
+  already_AddRefed<DOMSVGTransform> CreateSVGTransformFromMatrix(
       SVGMatrix& matrix);
   using nsINode::GetElementById;  // This does what we want
   uint16_t ZoomAndPan();

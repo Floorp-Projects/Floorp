@@ -73,6 +73,10 @@
   list-style-image: url(chrome://browser/skin/fullscreen-exit.svg);
 }
 
+#appMenu-library-pocket-button {
+  list-style-image: url("chrome://browser/skin/pocket.svg");
+}
+
 #appMenu-library-history-button {
   list-style-image: url(chrome://browser/skin/history.svg);
 }
