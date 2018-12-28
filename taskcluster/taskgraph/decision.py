@@ -43,70 +43,58 @@ PER_PROJECT_PARAMETERS = {
 
     'ash': {
         'target_tasks_method': 'ash_tasks',
-        'optimize_target_tasks': True,
     },
 
     'cedar': {
         'target_tasks_method': 'cedar_tasks',
-        'optimize_target_tasks': True,
     },
 
     'graphics': {
         'target_tasks_method': 'graphics_tasks',
-        'optimize_target_tasks': True,
     },
 
     'mozilla-central': {
         'target_tasks_method': 'default',
-        'optimize_target_tasks': True,
         'release_type': 'nightly',
     },
 
     'mozilla-beta': {
         'target_tasks_method': 'mozilla_beta_tasks',
-        'optimize_target_tasks': True,
         'release_type': 'beta',
     },
 
     'mozilla-release': {
         'target_tasks_method': 'mozilla_release_tasks',
-        'optimize_target_tasks': True,
         'release_type': 'release',
     },
 
     'mozilla-esr60': {
         'target_tasks_method': 'mozilla_esr60_tasks',
-        'optimize_target_tasks': True,
         'release_type': 'esr60',
     },
 
     'comm-central': {
         'target_tasks_method': 'default',
-        'optimize_target_tasks': True,
         'release_type': 'nightly',
     },
 
     'comm-beta': {
         'target_tasks_method': 'mozilla_beta_tasks',
-        'optimize_target_tasks': True,
         'release_type': 'beta',
     },
 
     'comm-esr60': {
         'target_tasks_method': 'mozilla_esr60_tasks',
-        'optimize_target_tasks': True,
         'release_type': 'release',
     },
 
     'pine': {
         'target_tasks_method': 'pine_tasks',
-        'optimize_target_tasks': True,
     },
 
     # the default parameters are used for projects that do not match above.
     'default': {
         'target_tasks_method': 'default',
-        'optimize_target_tasks': True,
     }
 }
 
@@ -224,6 +212,7 @@ def get_decision_parameters(config, options):
     parameters['filters'] = [
         'target_tasks_method',
     ]
+    parameters['optimize_target_tasks'] = True
     parameters['existing_tasks'] = {}
     parameters['do_not_optimize'] = []
     parameters['build_number'] = 1
