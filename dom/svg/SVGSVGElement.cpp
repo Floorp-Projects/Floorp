@@ -12,6 +12,7 @@
 #include "mozilla/dom/SVGRect.h"
 #include "mozilla/dom/SVGViewElement.h"
 #include "mozilla/EventDispatcher.h"
+#include "mozilla/SMILAnimationController.h"
 
 #include "DOMSVGLength.h"
 #include "DOMSVGNumber.h"
@@ -20,7 +21,6 @@
 #include "nsLayoutStylesheetCache.h"
 #include "nsIFrame.h"
 #include "nsISVGSVGFrame.h"
-#include "nsSMILAnimationController.h"
 #include "nsSMILTimeContainer.h"
 #include "nsSVGAngle.h"
 #include "SVGAngle.h"
@@ -380,7 +380,7 @@ nsSMILTimeContainer* SVGSVGElement::GetTimedDocumentRoot() {
 // SVGElement
 nsresult SVGSVGElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                                    nsIContent* aBindingParent) {
-  nsSMILAnimationController* smilController = nullptr;
+  SMILAnimationController* smilController = nullptr;
 
   if (aDocument) {
     smilController = aDocument->GetAnimationController();
