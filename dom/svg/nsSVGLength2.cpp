@@ -4,9 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/ArrayUtils.h"
-
 #include "nsSVGLength2.h"
+
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/dom/SVGAnimatedLength.h"
 #include "mozilla/dom/SVGViewportElement.h"
 #include "nsContentUtils.h"  // NS_ENSURE_FINITE
