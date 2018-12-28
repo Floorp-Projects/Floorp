@@ -23,8 +23,8 @@ class nsIFrame;
 class nsSMILValue;
 
 namespace mozilla {
-class DOMSVGLength;
 namespace dom {
+class DOMSVGLength;
 class SVGAnimatedLength;
 class SVGAnimationElement;
 class SVGViewportElement;
@@ -85,7 +85,7 @@ class NonSVGFrameUserSpaceMetrics : public UserSpaceMetricsWithSize {
 
 class nsSVGLength2 {
   friend class mozilla::dom::SVGAnimatedLength;
-  friend class mozilla::DOMSVGLength;
+  friend class mozilla::dom::DOMSVGLength;
   typedef mozilla::dom::UserSpaceMetrics UserSpaceMetrics;
   typedef mozilla::dom::SVGElement SVGElement;
   typedef mozilla::dom::SVGViewportElement SVGViewportElement;
@@ -191,9 +191,9 @@ class nsSVGLength2 {
   nsresult NewValueSpecifiedUnits(uint16_t aUnitType, float aValue,
                                   SVGElement* aSVGElement);
   nsresult ConvertToSpecifiedUnits(uint16_t aUnitType, SVGElement* aSVGElement);
-  nsresult ToDOMBaseVal(mozilla::DOMSVGLength** aResult,
+  nsresult ToDOMBaseVal(mozilla::dom::DOMSVGLength** aResult,
                         SVGElement* aSVGElement);
-  nsresult ToDOMAnimVal(mozilla::DOMSVGLength** aResult,
+  nsresult ToDOMAnimVal(mozilla::dom::DOMSVGLength** aResult,
                         SVGElement* aSVGElement);
 
  public:

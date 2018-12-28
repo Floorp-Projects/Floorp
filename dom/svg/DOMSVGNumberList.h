@@ -17,11 +17,9 @@
 
 namespace mozilla {
 
-class DOMSVGNumber;
-
 namespace dom {
+class DOMSVGNumber;
 class SVGElement;
-}
 
 /**
  * Class DOMSVGNumberList
@@ -159,6 +157,7 @@ class DOMSVGNumberList final : public nsISupports, public nsWrapperCache {
   RefPtr<DOMSVGAnimatedNumberList> mAList;
 };
 
+}  // namespace dom
 }  // namespace mozilla
 
 #endif  // MOZILLA_DOMSVGNUMBERLIST_H__

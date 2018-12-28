@@ -16,6 +16,9 @@ namespace mozilla {
 
 class SVGAnimatedLengthList;
 class SVGLengthList;
+
+namespace dom {
+
 class DOMSVGLengthList;
 
 /**
@@ -195,6 +198,7 @@ class DOMSVGAnimatedLengthList final : public nsWrapperCache {
   uint8_t mAxis;
 };
 
+}  // namespace dom
 }  // namespace mozilla
 
 #endif  // MOZILLA_DOMSVGANIMATEDLENGTHLIST_H__

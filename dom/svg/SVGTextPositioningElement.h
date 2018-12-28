@@ -13,10 +13,10 @@
 
 namespace mozilla {
 class SVGAnimatedLengthList;
-class DOMSVGAnimatedLengthList;
-class DOMSVGAnimatedNumberList;
 
 namespace dom {
+class DOMSVGAnimatedLengthList;
+class DOMSVGAnimatedNumberList;
 typedef SVGTextContentElement SVGTextPositioningElementBase;
 
 class SVGTextPositioningElement : public SVGTextPositioningElementBase {

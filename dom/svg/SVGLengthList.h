@@ -19,6 +19,11 @@
 
 namespace mozilla {
 
+namespace dom {
+class DOMSVGLength;
+class DOMSVGLengthList;
+}  // namespace dom
+
 /**
  * ATTENTION! WARNING! WATCH OUT!!
  *
@@ -29,9 +34,9 @@ namespace mozilla {
  * The DOM wrapper class for this class is DOMSVGLengthList.
  */
 class SVGLengthList {
+  friend class dom::DOMSVGLength;
+  friend class dom::DOMSVGLengthList;
   friend class SVGAnimatedLengthList;
-  friend class DOMSVGLengthList;
-  friend class DOMSVGLength;
 
  public:
   SVGLengthList() {}
