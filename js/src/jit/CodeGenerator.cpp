@@ -11648,7 +11648,7 @@ class OutOfLineSwitch : public OutOfLineCodeBase<CodeGenerator> {
       MOZ_CRASH("NYI: SwitchTableType::Inline");
 #endif
     } else {
-#if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64)
+#if defined(JS_CODEGEN_ARM)
       MOZ_CRASH("NYI: SwitchTableType::OutOfLine");
 #else
       masm.mov(start(), temp);
@@ -11683,7 +11683,7 @@ void CodeGenerator::visitOutOfLineSwitch(
     OutOfLineSwitch<tableType>* jumpTable) {
   jumpTable->setOutOfLine();
   if (tableType == SwitchTableType::OutOfLine) {
-#if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64)
+#if defined(JS_CODEGEN_ARM)
     MOZ_CRASH("NYI: SwitchTableType::OutOfLine");
 #elif defined(JS_CODEGEN_NONE)
     MOZ_CRASH();
@@ -11729,7 +11729,7 @@ void CodeGenerator::visitLoadElementFromStateV(LLoadElementFromStateV* lir) {
   Label join;
 
   // Jump to the code which is loading the element, based on its index.
-#if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64)
+#if defined(JS_CODEGEN_ARM)
   auto* jumpTable =
       new (alloc()) OutOfLineSwitch<SwitchTableType::Inline>(alloc());
 #else
@@ -11738,7 +11738,7 @@ void CodeGenerator::visitLoadElementFromStateV(LLoadElementFromStateV* lir) {
 #endif
 
   {
-#if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64)
+#if defined(JS_CODEGEN_ARM)
     // Inhibit pools within the following sequence because we are indexing into
     // a pc relative table. The region will have one instruction for ma_ldr, one
     // for breakpoint, and each table case takes one word.
