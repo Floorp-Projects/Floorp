@@ -129,6 +129,33 @@ already_AddRefed<Promise> MediaDevices::EnumerateDevices(CallerType aCallerType,
   return p.forget();
 }
 
+already_AddRefed<Promise> MediaDevices::GetDisplayMedia(
+    const DisplayMediaStreamConstraints& aConstraints, CallerType aCallerType,
+    ErrorResult& aRv) {
+  RefPtr<Promise> p = Promise::Create(GetParentObject(), aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+  RefPtr<MediaDevices> self(this);
+  MediaManager::Get()
+      ->GetDisplayMedia(GetOwner(), aConstraints, aCallerType)
+      ->Then(GetCurrentThreadSerialEventTarget(), __func__,
+             [this, self, p](RefPtr<DOMMediaStream>&& aStream) {
+               if (!GetWindowIfCurrent()) {
+                 return;  // leave promise pending after navigation.
+               }
+               p->MaybeResolve(std::move(aStream));
+             },
+             [this, self, p](RefPtr<MediaMgrError>&& error) {
+               nsPIDOMWindowInner* window = GetWindowIfCurrent();
+               if (!window) {
+                 return;  // leave promise pending after navigation.
+               }
+               p->MaybeReject(MakeRefPtr<MediaStreamError>(window, *error));
+             });
+  return p.forget();
+}
+
 NS_IMPL_ADDREF_INHERITED(MediaDevices, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(MediaDevices, DOMEventTargetHelper)
 NS_INTERFACE_MAP_BEGIN(MediaDevices)
