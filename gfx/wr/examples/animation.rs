@@ -41,10 +41,18 @@ impl App {
         color: ColorF,
         builder: &mut DisplayListBuilder,
         property_key: PropertyBindingKey<LayoutTransform>,
+        opacity_key: Option<PropertyBindingKey<f32>>,
     ) {
-        let filters = [
-            FilterOp::Opacity(PropertyBinding::Binding(self.opacity_key, self.opacity), self.opacity),
-        ];
+        let filters = match opacity_key {
+            Some(opacity_key) => {
+                vec![
+                    FilterOp::Opacity(PropertyBinding::Binding(opacity_key, self.opacity), self.opacity),
+                ]
+            }
+            None => {
+                vec![]
+            }
+        };
 
         let reference_frame_id = builder.push_reference_frame(
             &LayoutRect::new(bounds.origin, LayoutSize::zero()),
@@ -89,8 +97,8 @@ impl App {
 }
 
 impl Example for App {
-    const WIDTH: u32 = 1024;
-    const HEIGHT: u32 = 1024;
+    const WIDTH: u32 = 2048;
+    const HEIGHT: u32 = 1536;
 
     fn render(
         &mut self,
@@ -101,17 +109,19 @@ impl Example for App {
         _pipeline_id: PipelineId,
         _document_id: DocumentId,
     ) {
+        let opacity_key = self.opacity_key;
+
         let bounds = (150, 150).to(250, 250);
         let key0 = self.property_key0;
-        self.add_rounded_rect(bounds, ColorF::new(1.0, 0.0, 0.0, 0.5), builder, key0);
+        self.add_rounded_rect(bounds, ColorF::new(1.0, 0.0, 0.0, 0.5), builder, key0, Some(opacity_key));
 
         let bounds = (400, 400).to(600, 600);
         let key1 = self.property_key1;
-        self.add_rounded_rect(bounds, ColorF::new(0.0, 1.0, 0.0, 0.5), builder, key1);
+        self.add_rounded_rect(bounds, ColorF::new(0.0, 1.0, 0.0, 0.5), builder, key1, None);
 
         let bounds = (200, 500).to(350, 580);
         let key2 = self.property_key2;
-        self.add_rounded_rect(bounds, ColorF::new(0.0, 0.0, 1.0, 0.5), builder, key2);
+        self.add_rounded_rect(bounds, ColorF::new(0.0, 0.0, 1.0, 0.5), builder, key2, None);
     }
 
     fn on_event(&mut self, win_event: winit::WindowEvent, api: &RenderApi, document_id: DocumentId) -> bool {

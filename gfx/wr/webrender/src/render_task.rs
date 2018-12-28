@@ -255,7 +255,9 @@ pub struct ClipRegionTask {
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct TileBlit {
     pub target: CacheItem,
-    pub offset: DeviceIntPoint,
+    pub src_offset: DeviceIntPoint,
+    pub dest_offset: DeviceIntPoint,
+    pub size: DeviceIntSize,
 }
 
 #[derive(Debug)]

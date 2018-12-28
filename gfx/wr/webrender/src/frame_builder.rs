@@ -26,7 +26,7 @@ use segment::SegmentBuilder;
 use spatial_node::SpatialNode;
 use std::{f32, mem};
 use std::sync::Arc;
-use tiling::{Frame, RenderPass, RenderPassKind, RenderTargetContext};
+use tiling::{Frame, RenderPass, RenderPassKind, RenderTargetContext, RenderTarget};
 
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -291,14 +291,6 @@ impl FrameBuilder {
             &mut retained_tiles,
         );
 
-        // If we had any retained tiles from the last scene that were not picked
-        // up by the new frame, then just discard them eagerly.
-        // TODO(gw): Maybe it's worth keeping them around for a bit longer in
-        //           some cases?
-        for (_, handle) in retained_tiles.tiles.drain() {
-            resource_cache.texture_cache.mark_unused(&handle);
-        }
-
         let mut frame_state = FrameBuildingState {
             render_tasks,
             profile_counters,
@@ -321,6 +313,7 @@ impl FrameBuilder {
                 true,
                 &mut frame_state,
                 &frame_context,
+                screen_world_rect,
             )
             .unwrap();
 
@@ -346,6 +339,11 @@ impl FrameBuilder {
             .surfaces[ROOT_SURFACE_INDEX.0]
             .take_render_tasks();
 
+        let tile_blits = mem::replace(
+            &mut frame_state.surfaces[ROOT_SURFACE_INDEX.0].tile_blits,
+            Vec::new(),
+        );
+
         let root_render_task = RenderTask::new_picture(
             RenderTaskLocation::Fixed(self.screen_rect.to_i32()),
             self.screen_rect.size.to_f32(),
@@ -355,7 +353,7 @@ impl FrameBuilder {
             UvRectKind::Rect,
             root_spatial_node_index,
             None,
-            Vec::new(),
+            tile_blits,
         );
 
         let render_task_id = frame_state.render_tasks.add(root_render_task);
@@ -489,9 +487,14 @@ impl FrameBuilder {
                 &mut z_generator,
             );
 
-            if let RenderPassKind::OffScreen { ref texture_cache, ref color, .. } = pass.kind {
-                has_texture_cache_tasks |= !texture_cache.is_empty();
-                has_texture_cache_tasks |= color.must_be_drawn();
+            match pass.kind {
+                RenderPassKind::MainFramebuffer(ref color) => {
+                    has_texture_cache_tasks |= color.must_be_drawn();
+                }
+                RenderPassKind::OffScreen { ref texture_cache, ref color, .. } => {
+                    has_texture_cache_tasks |= !texture_cache.is_empty();
+                    has_texture_cache_tasks |= color.must_be_drawn();
+                }
             }
         }
 
