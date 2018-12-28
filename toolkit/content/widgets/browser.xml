@@ -772,6 +772,19 @@
         </body>
       </method>
 
+      <method name="notifyGloballyAutoplayBlocked">
+        <body>
+          <![CDATA[
+            let event = document.createEvent("CustomEvent");
+            event.initCustomEvent("GloballyAutoplayBlocked", true, false,
+              {
+                url: this.documentURI,
+              });
+            this.dispatchEvent(event);
+          ]]>
+        </body>
+      </method>
+
       <!--
         When the pref "media.block-autoplay-until-in-foreground" is on,
         Gecko delays starting playback of media resources in tabs until the
@@ -1109,6 +1122,7 @@
             this.messageManager.addMessageListener("AudioPlayback:ActiveMediaBlockStop", this);
             this.messageManager.addMessageListener("UnselectedTabHover:Toggle", this);
             this.messageManager.addMessageListener("AudibleAutoplayMediaOccurred", this);
+            this.messageManager.addMessageListener("GloballyAutoplayBlocked", this);
 
             if (this.hasAttribute("selectmenulist")) {
               this.messageManager.addMessageListener("Forms:ShowDropDown", this);
@@ -1252,6 +1266,9 @@
               break;
             case "AudibleAutoplayMediaOccurred":
               this.notifyAudibleAutoplayMediaOccurred();
+              break;
+            case "GloballyAutoplayBlocked":
+              this.notifyGloballyAutoplayBlocked();
               break;
             case "Forms:ShowDropDown": {
               if (!this._selectParentHelper) {
