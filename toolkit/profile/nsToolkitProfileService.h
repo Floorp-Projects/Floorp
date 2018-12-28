@@ -76,6 +76,7 @@ class nsToolkitProfileService final : public nsIToolkitProfileService {
   nsresult SelectStartupProfile(int* aArgc, char* aArgv[], bool aIsResetting,
                                 nsIFile** aRootDir, nsIFile** aLocalDir,
                                 nsIToolkitProfile** aProfile, bool* aDidCreate);
+  nsresult CreateResetProfile(nsIToolkitProfile** aNewProfile);
 
  private:
   friend class nsToolkitProfile;
@@ -91,15 +92,29 @@ class nsToolkitProfileService final : public nsIToolkitProfileService {
   void GetProfileByDir(nsIFile* aRootDir, nsIFile* aLocalDir,
                        nsIToolkitProfile** aResult);
 
+  // Tracks whether SelectStartupProfile has been called.
   bool mStartupProfileSelected;
+  // The first profile in a linked list of profiles loaded from profiles.ini.
   RefPtr<nsToolkitProfile> mFirst;
-  nsCOMPtr<nsIToolkitProfile> mChosen;
-  nsCOMPtr<nsIToolkitProfile> mDefault;
+  // The profile selected for use at startup, if it exists in profiles.ini.
+  nsCOMPtr<nsIToolkitProfile> mCurrent;
+  // The default profile used by non-dev-edition builds.
+  nsCOMPtr<nsIToolkitProfile> mNormalDefault;
+  // The profile used if mUseDevEditionProfile is true (the default on
+  // dev-edition builds).
+  nsCOMPtr<nsIToolkitProfile> mDevEditionDefault;
+  // The directory that holds profiles.ini and profile directories.
   nsCOMPtr<nsIFile> mAppData;
+  // The directory that holds the cache files for profiles.
   nsCOMPtr<nsIFile> mTempData;
+  // The location of profiles.ini.
   nsCOMPtr<nsIFile> mListFile;
+  // Whether to start with the selected profile by default.
   bool mStartWithLast;
+  // True if during startup it appeared that this is the first run.
   bool mIsFirstRun;
+  // True if the default profile is the separate dev-edition-profile.
+  bool mUseDevEditionProfile;
 
   static nsToolkitProfileService* gService;
 
