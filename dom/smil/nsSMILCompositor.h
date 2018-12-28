@@ -113,7 +113,7 @@ class nsSMILCompositor : public PLDHashEntryHdr {
   bool mForceCompositing;
 
   // Cached base value, so we can detect & force-recompose when it changes
-  // from one sample to the next. (nsSMILAnimationController moves this
+  // from one sample to the next. (SMILAnimationController moves this
   // forward from the previous sample's compositor by calling
   // StealCachedBaseValue.)
   nsSMILValue mCachedBaseValue;

@@ -1035,6 +1035,18 @@ xmlns="http://www.w3.org/1999/xhtml"
                        tooltiptext="&pageActionButton.tooltip;"
                        onmousedown="BrowserPageActions.mainButtonClicked(event);"
                        onkeypress="BrowserPageActions.mainButtonClicked(event);"/>
+                <hbox id="pocket-button-box"
+                      hidden="true"
+                      class="urlbar-icon-wrapper urlbar-page-action"
+                      onclick="BrowserPageActions.doCommandForAction(PageActions.actionForID('pocket'), event, this);">
+                  <image id="pocket-button"
+                         class="urlbar-icon"
+                         role="button"/>
+                  <hbox id="pocket-button-animatable-box">
+                    <image id="pocket-button-animatable-image"
+                           role="presentation"/>
+                  </hbox>
+                </hbox>
                 <hbox id="star-button-box"
                       hidden="true"
                       class="urlbar-icon-wrapper urlbar-page-action"
