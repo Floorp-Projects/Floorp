@@ -309,6 +309,7 @@ bool SelectionStyleProvider::sHasShutDown = false;
  ******************************************************************************/
 
 IMContextWrapper* IMContextWrapper::sLastFocusedContext = nullptr;
+guint16 IMContextWrapper::sWaitingSynthesizedKeyPressHardwareKeyCode = 0;
 bool IMContextWrapper::sUseSimpleContext;
 
 NS_IMPL_ISUPPORTS(IMContextWrapper, TextEventDispatcherListener,
@@ -981,6 +982,13 @@ KeyHandlingState IMContextWrapper::OnKeyEvent(
   mFallbackToKeyEvent = false;
   mProcessingKeyEvent = aEvent;
   gboolean isFiltered = gtk_im_context_filter_keypress(currentContext, aEvent);
+  if (aEvent->type == GDK_KEY_PRESS) {
+    if (isFiltered && maybeHandledAsynchronously) {
+      sWaitingSynthesizedKeyPressHardwareKeyCode = aEvent->hardware_keycode;
+    } else {
+      sWaitingSynthesizedKeyPressHardwareKeyCode = 0;
+    }
+  }
 
   // The caller of this shouldn't handle aEvent anymore if we've dispatched
   // composition events or modified content with other events.
@@ -1356,6 +1364,7 @@ void IMContextWrapper::Focus() {
 
   // Forget all posted key events when focus is moved since they shouldn't
   // be fired in different editor.
+  sWaitingSynthesizedKeyPressHardwareKeyCode = 0;
   mPostingKeyEvents.Clear();
 
   gtk_im_context_focus_in(currentContext);
