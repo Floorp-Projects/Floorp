@@ -48,15 +48,19 @@ function makeRandomProfileDir(name) {
  * a bit nicer to use from JS.
  */
 function selectStartupProfile(args = [], isResetting = false) {
+  let service = getProfileService();
   let rootDir = {};
   let localDir = {};
   let profile = {};
-  let didCreate = getProfileService().selectStartupProfile(["xpcshell", ...args], isResetting,
-                                                           rootDir, localDir, profile);
+  let didCreate = service.selectStartupProfile(["xpcshell", ...args], isResetting,
+                                               rootDir, localDir, profile);
 
   if (profile.value) {
     Assert.ok(rootDir.value.equals(profile.value.rootDir), "Should have matched the root dir.");
     Assert.ok(localDir.value.equals(profile.value.localDir), "Should have matched the local dir.");
+    Assert.equal(service.currentProfile, profile.value, "Should have marked the profile as the current profile.");
+  } else {
+    Assert.ok(!service.currentProfile, "Should be no current profile.");
   }
 
   return {
@@ -210,12 +214,5 @@ function checkProfileService(profileData = readProfilesIni()) {
     }
   }
 
-  let selectedProfile = null;
-  try {
-    selectedProfile = service.selectedProfile;
-  } catch (e) {
-    // GetSelectedProfile throws when there are no profiles.
-  }
-
-  Assert.equal(selectedProfile, defaultProfile, "Should have seen the right profile selected.");
+  Assert.equal(service.defaultProfile, defaultProfile, "Should have seen the right profile as default.");
 }
