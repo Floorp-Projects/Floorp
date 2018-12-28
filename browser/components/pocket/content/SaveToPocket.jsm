@@ -307,21 +307,6 @@ var PocketReader = {
 };
 
 
-function pktUIGetter(prop, window) {
-  return {
-    get() {
-      // delete any getters for properties loaded from main.js so we only load main.js once
-      delete window.pktUI;
-      delete window.pktApi;
-      delete window.pktUIMessaging;
-      Services.scriptloader.loadSubScript("chrome://pocket/content/main.js", window);
-      return window[prop];
-    },
-    configurable: true,
-    enumerable: true,
-  };
-}
-
 var PocketOverlay = {
   startup() {
     Services.obs.addObserver(this, "browser-delayed-startup-finished");
@@ -329,7 +314,7 @@ var PocketOverlay = {
     PocketPageAction.init();
     PocketContextMenu.init();
     for (let win of browserWindows()) {
-      this.onWindowOpened(win);
+      this.updateWindow(win);
     }
   },
   shutdown() {
@@ -344,11 +329,6 @@ var PocketOverlay = {
         if (element)
           element.remove();
       }
-      // remove script getters/objects
-      window.Pocket = undefined;
-      window.pktApi = undefined;
-      window.pktUI = undefined;
-      window.pktUIMessaging = undefined;
     }
 
     PocketContextMenu.shutdown();
@@ -356,23 +336,8 @@ var PocketOverlay = {
   },
   observe(subject, topic, detail) {
     if (topic == "browser-delayed-startup-finished") {
-      this.onWindowOpened(subject);
+      this.updateWindow(subject);
     }
-  },
-  onWindowOpened(window) {
-    if (window.hasOwnProperty("pktUI"))
-      return;
-    this.setWindowScripts(window);
-    this.updateWindow(window);
-  },
-  setWindowScripts(window) {
-    ChromeUtils.defineModuleGetter(window, "Pocket",
-                                   "chrome://pocket/content/Pocket.jsm");
-    // Can't use XPCOMUtils for these because the scripts try to define the variables
-    // on window, and so the defineProperty inside defineLazyGetter fails.
-    Object.defineProperty(window, "pktApi", pktUIGetter("pktApi", window));
-    Object.defineProperty(window, "pktUI", pktUIGetter("pktUI", window));
-    Object.defineProperty(window, "pktUIMessaging", pktUIGetter("pktUIMessaging", window));
   },
   // called for each window as it is opened
   updateWindow(window) {
