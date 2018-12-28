@@ -16,7 +16,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   OfflineAppCacheHelper: "resource://gre/modules/offlineAppCache.jsm",
   OS: "resource://gre/modules/osfile.jsm",
   ServiceWorkerCleanUp: "resource://gre/modules/ServiceWorkerCleanUp.jsm",
-  Task: "resource://gre/modules/Task.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetters(this, {
@@ -143,7 +142,7 @@ Sanitizer.prototype = {
 
     // Same as desktop Firefox.
     siteSettings: {
-      clear: Task.async(function* () {
+      async clear() {
         let refObj = {};
         TelemetryStopwatch.start("FX_SANITIZE_SITESETTINGS", refObj);
 
@@ -161,7 +160,7 @@ Sanitizer.prototype = {
         sss.clearAll();
 
         // Clear push subscriptions
-        yield new Promise((resolve, reject) => {
+        await new Promise((resolve, reject) => {
           let push = Cc["@mozilla.org/push/Service;1"]
                        .getService(Ci.nsIPushService);
           push.clearForDomain("*", status => {
@@ -174,7 +173,7 @@ Sanitizer.prototype = {
           });
         });
         TelemetryStopwatch.finish("FX_SANITIZE_SITESETTINGS", refObj);
-      }),
+      },
 
       get canClear() {
         return true;
@@ -326,14 +325,16 @@ Sanitizer.prototype = {
 
     // Adapted from desktop, but heavily modified - see comments below.
     downloadFiles: {
-      clear: Task.async(function* ({ startTime = 0,
-                                     deleteFiles = true,
-                                     clearUnfinishedDownloads = false } = {}) {
+      async clear({
+        startTime = 0,
+        deleteFiles = true,
+        clearUnfinishedDownloads = false,
+      } = {}) {
         let refObj = {};
         TelemetryStopwatch.start("FX_SANITIZE_DOWNLOADS", refObj);
 
-        let list = yield Downloads.getList(Downloads.ALL);
-        let downloads = yield list.getAll();
+        let list = await Downloads.getList(Downloads.ALL);
+        let downloads = await list.getAll();
         var finalizePromises = [];
 
         // Logic copied from DownloadList.removeFinished. Ideally, we would
@@ -346,7 +347,7 @@ Sanitizer.prototype = {
                download.startTime.getTime() >= startTime) {
             // Remove the download first, so that the views don't get the change
             // notifications that may occur during finalization.
-            yield list.remove(download);
+            await list.remove(download);
             // Ensure that the download is stopped and no partial data is kept.
             // This works even if the download state has changed meanwhile.  We
             // don't need to wait for the procedure to be complete before
@@ -364,10 +365,10 @@ Sanitizer.prototype = {
           }
         }
 
-        yield Promise.all(finalizePromises);
-        yield DownloadIntegration.forceSave();
+        await Promise.all(finalizePromises);
+        await DownloadIntegration.forceSave();
         TelemetryStopwatch.finish("FX_SANITIZE_DOWNLOADS", refObj);
-      }),
+      },
 
       get canClear() {
         return true;
