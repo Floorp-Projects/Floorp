@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsSMILAnimationController.h"
+#include "mozilla/SMILAnimationController.h"
 
 #include <algorithm>
 
@@ -22,16 +22,17 @@
 #include "nsSMILCSSProperty.h"
 #include "nsSMILTimedElement.h"
 
-using namespace mozilla;
 using namespace mozilla::dom;
 
+namespace mozilla {
+
 //----------------------------------------------------------------------
-// nsSMILAnimationController implementation
+// SMILAnimationController implementation
 
 //----------------------------------------------------------------------
 // ctors, dtors, factory methods
 
-nsSMILAnimationController::nsSMILAnimationController(nsIDocument* aDoc)
+SMILAnimationController::SMILAnimationController(nsIDocument* aDoc)
     : mAvgTimeBetweenSamples(0),
       mResampleNeeded(false),
       mDeferredStartSampling(false),
@@ -52,7 +53,7 @@ nsSMILAnimationController::nsSMILAnimationController(nsIDocument* aDoc)
   Begin();
 }
 
-nsSMILAnimationController::~nsSMILAnimationController() {
+SMILAnimationController::~SMILAnimationController() {
   NS_ASSERTION(mAnimationElementTable.Count() == 0,
                "Animation controller shouldn't be tracking any animation"
                " elements when it dies");
@@ -60,7 +61,7 @@ nsSMILAnimationController::~nsSMILAnimationController() {
                "Leaving stale entry in refresh driver's observer list");
 }
 
-void nsSMILAnimationController::Disconnect() {
+void SMILAnimationController::Disconnect() {
   MOZ_ASSERT(mDocument, "disconnecting when we weren't connected...?");
   MOZ_ASSERT(mRefCnt.get() == 1,
              "Expecting to disconnect when doc is sole remaining owner");
@@ -75,7 +76,7 @@ void nsSMILAnimationController::Disconnect() {
 //----------------------------------------------------------------------
 // nsSMILTimeContainer methods:
 
-void nsSMILAnimationController::Pause(uint32_t aType) {
+void SMILAnimationController::Pause(uint32_t aType) {
   nsSMILTimeContainer::Pause(aType);
 
   if (mPauseState) {
@@ -84,7 +85,7 @@ void nsSMILAnimationController::Pause(uint32_t aType) {
   }
 }
 
-void nsSMILAnimationController::Resume(uint32_t aType) {
+void SMILAnimationController::Resume(uint32_t aType) {
   bool wasPaused = (mPauseState != 0);
   // Update mCurrentSampleTime so that calls to GetParentTime--used for
   // calculating parent offsets--are accurate
@@ -98,17 +99,17 @@ void nsSMILAnimationController::Resume(uint32_t aType) {
   }
 }
 
-nsSMILTime nsSMILAnimationController::GetParentTime() const {
+nsSMILTime SMILAnimationController::GetParentTime() const {
   return (nsSMILTime)(mCurrentSampleTime - mStartTime).ToMilliseconds();
 }
 
 //----------------------------------------------------------------------
 // nsARefreshObserver methods:
-NS_IMPL_ADDREF(nsSMILAnimationController)
-NS_IMPL_RELEASE(nsSMILAnimationController)
+NS_IMPL_ADDREF(SMILAnimationController)
+NS_IMPL_RELEASE(SMILAnimationController)
 
 // nsRefreshDriver Callback function
-void nsSMILAnimationController::WillRefresh(mozilla::TimeStamp aTime) {
+void SMILAnimationController::WillRefresh(mozilla::TimeStamp aTime) {
   // Although we never expect aTime to go backwards, when we initialise the
   // animation controller, if we can't get hold of a refresh driver we
   // initialise mCurrentSampleTime to Now(). It may be possible that after
@@ -158,7 +159,7 @@ void nsSMILAnimationController::WillRefresh(mozilla::TimeStamp aTime) {
 //----------------------------------------------------------------------
 // Animation element registration methods:
 
-void nsSMILAnimationController::RegisterAnimationElement(
+void SMILAnimationController::RegisterAnimationElement(
     SVGAnimationElement* aAnimationElement) {
   mAnimationElementTable.PutEntry(aAnimationElement);
   if (mDeferredStartSampling) {
@@ -174,7 +175,7 @@ void nsSMILAnimationController::RegisterAnimationElement(
   }
 }
 
-void nsSMILAnimationController::UnregisterAnimationElement(
+void SMILAnimationController::UnregisterAnimationElement(
     SVGAnimationElement* aAnimationElement) {
   mAnimationElementTable.RemoveEntry(aAnimationElement);
 }
@@ -182,18 +183,18 @@ void nsSMILAnimationController::UnregisterAnimationElement(
 //----------------------------------------------------------------------
 // Page show/hide
 
-void nsSMILAnimationController::OnPageShow() {
+void SMILAnimationController::OnPageShow() {
   Resume(nsSMILTimeContainer::PAUSE_PAGEHIDE);
 }
 
-void nsSMILAnimationController::OnPageHide() {
+void SMILAnimationController::OnPageHide() {
   Pause(nsSMILTimeContainer::PAUSE_PAGEHIDE);
 }
 
 //----------------------------------------------------------------------
 // Cycle-collection support
 
-void nsSMILAnimationController::Traverse(
+void SMILAnimationController::Traverse(
     nsCycleCollectionTraversalCallback* aCallback) {
   // Traverse last compositor table
   if (mLastCompositorTable) {
@@ -204,19 +205,19 @@ void nsSMILAnimationController::Traverse(
   }
 }
 
-void nsSMILAnimationController::Unlink() { mLastCompositorTable = nullptr; }
+void SMILAnimationController::Unlink() { mLastCompositorTable = nullptr; }
 
 //----------------------------------------------------------------------
 // Refresh driver lifecycle related methods
 
-void nsSMILAnimationController::NotifyRefreshDriverCreated(
+void SMILAnimationController::NotifyRefreshDriverCreated(
     nsRefreshDriver* aRefreshDriver) {
   if (!mPauseState) {
     MaybeStartSampling(aRefreshDriver);
   }
 }
 
-void nsSMILAnimationController::NotifyRefreshDriverDestroying(
+void SMILAnimationController::NotifyRefreshDriverDestroying(
     nsRefreshDriver* aRefreshDriver) {
   if (!mPauseState && !mDeferredStartSampling) {
     StopSampling(aRefreshDriver);
@@ -226,7 +227,7 @@ void nsSMILAnimationController::NotifyRefreshDriverDestroying(
 //----------------------------------------------------------------------
 // Timer-related implementation helpers
 
-void nsSMILAnimationController::StartSampling(nsRefreshDriver* aRefreshDriver) {
+void SMILAnimationController::StartSampling(nsRefreshDriver* aRefreshDriver) {
   NS_ASSERTION(mPauseState == 0, "Starting sampling but controller is paused");
   NS_ASSERTION(!mDeferredStartSampling,
                "Started sampling but the deferred start flag is still set");
@@ -243,7 +244,7 @@ void nsSMILAnimationController::StartSampling(nsRefreshDriver* aRefreshDriver) {
   }
 }
 
-void nsSMILAnimationController::StopSampling(nsRefreshDriver* aRefreshDriver) {
+void SMILAnimationController::StopSampling(nsRefreshDriver* aRefreshDriver) {
   if (aRefreshDriver && mRegisteredWithRefreshDriver) {
     // NOTE: The document might already have been detached from its PresContext
     // (and RefreshDriver), which would make GetRefreshDriver() return null.
@@ -254,7 +255,7 @@ void nsSMILAnimationController::StopSampling(nsRefreshDriver* aRefreshDriver) {
   }
 }
 
-void nsSMILAnimationController::MaybeStartSampling(
+void SMILAnimationController::MaybeStartSampling(
     nsRefreshDriver* aRefreshDriver) {
   if (mDeferredStartSampling) {
     // We've received earlier 'MaybeStartSampling' calls, and we're
@@ -272,11 +273,11 @@ void nsSMILAnimationController::MaybeStartSampling(
 //----------------------------------------------------------------------
 // Sample-related methods and callbacks
 
-void nsSMILAnimationController::DoSample() {
+void SMILAnimationController::DoSample() {
   DoSample(true);  // Skip unchanged time containers
 }
 
-void nsSMILAnimationController::DoSample(bool aSkipUnchangedContainers) {
+void SMILAnimationController::DoSample(bool aSkipUnchangedContainers) {
   if (!mDocument) {
     NS_ERROR("Shouldn't be sampling after document has disconnected");
     return;
@@ -420,7 +421,7 @@ void nsSMILAnimationController::DoSample(bool aSkipUnchangedContainers) {
   NS_ASSERTION(!mResampleNeeded, "Resample dirty flag set during sample!");
 }
 
-void nsSMILAnimationController::RewindElements() {
+void SMILAnimationController::RewindElements() {
   bool rewindNeeded = false;
   for (auto iter = mChildContainerTable.Iter(); !iter.Done(); iter.Next()) {
     nsSMILTimeContainer* container = iter.Get()->GetKey();
@@ -445,7 +446,7 @@ void nsSMILAnimationController::RewindElements() {
   }
 }
 
-void nsSMILAnimationController::DoMilestoneSamples() {
+void SMILAnimationController::DoMilestoneSamples() {
   // We need to sample the timing model but because SMIL operates independently
   // of the frame-rate, we can get one sample at t=0s and the next at t=10min.
   //
@@ -537,7 +538,7 @@ void nsSMILAnimationController::DoMilestoneSamples() {
   }
 }
 
-/*static*/ void nsSMILAnimationController::SampleTimedElement(
+/*static*/ void SMILAnimationController::SampleTimedElement(
     SVGAnimationElement* aElement, TimeContainerHashtable* aActiveContainers) {
   nsSMILTimeContainer* timeContainer = aElement->GetTimeContainer();
   if (!timeContainer) return;
@@ -560,7 +561,7 @@ void nsSMILAnimationController::DoMilestoneSamples() {
   aElement->TimedElement().SampleAt(containerTime);
 }
 
-/*static*/ void nsSMILAnimationController::AddAnimationToCompositorTable(
+/*static*/ void SMILAnimationController::AddAnimationToCompositorTable(
     SVGAnimationElement* aElement, nsSMILCompositorTable* aCompositorTable,
     bool& aStyleFlushNeeded) {
   // Add a compositor to the hash table if there's not already one there
@@ -608,7 +609,7 @@ static inline bool IsTransformAttribute(int32_t aNamespaceID,
 // Helper function that, given a SVGAnimationElement, looks up its target
 // element & target attribute and populates a nsSMILTargetIdentifier
 // for this target.
-/*static*/ bool nsSMILAnimationController::GetTargetIdentifierForAnimation(
+/*static*/ bool SMILAnimationController::GetTargetIdentifierForAnimation(
     SVGAnimationElement* aAnimElem, nsSMILTargetIdentifier& aResult) {
   // Look up target (animated) element
   Element* targetElem = aAnimElem->GetTargetElementContent();
@@ -640,11 +641,11 @@ static inline bool IsTransformAttribute(int32_t aNamespaceID,
   return true;
 }
 
-bool nsSMILAnimationController::PreTraverse() {
+bool SMILAnimationController::PreTraverse() {
   return PreTraverseInSubtree(nullptr);
 }
 
-bool nsSMILAnimationController::PreTraverseInSubtree(Element* aRoot) {
+bool SMILAnimationController::PreTraverseInSubtree(Element* aRoot) {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!mMightHavePendingStyleUpdates) {
@@ -692,7 +693,7 @@ bool nsSMILAnimationController::PreTraverseInSubtree(Element* aRoot) {
 //----------------------------------------------------------------------
 // Add/remove child time containers
 
-nsresult nsSMILAnimationController::AddChild(nsSMILTimeContainer& aChild) {
+nsresult SMILAnimationController::AddChild(nsSMILTimeContainer& aChild) {
   TimeContainerPtrKey* key = mChildContainerTable.PutEntry(&aChild);
   NS_ENSURE_TRUE(key, NS_ERROR_OUT_OF_MEMORY);
 
@@ -704,7 +705,7 @@ nsresult nsSMILAnimationController::AddChild(nsSMILTimeContainer& aChild) {
   return NS_OK;
 }
 
-void nsSMILAnimationController::RemoveChild(nsSMILTimeContainer& aChild) {
+void SMILAnimationController::RemoveChild(nsSMILTimeContainer& aChild) {
   mChildContainerTable.RemoveEntry(&aChild);
 
   if (!mPauseState && mChildContainerTable.Count() == 0) {
@@ -713,7 +714,7 @@ void nsSMILAnimationController::RemoveChild(nsSMILTimeContainer& aChild) {
 }
 
 // Helper method
-nsRefreshDriver* nsSMILAnimationController::GetRefreshDriver() {
+nsRefreshDriver* SMILAnimationController::GetRefreshDriver() {
   if (!mDocument) {
     NS_ERROR("Requesting refresh driver after document has disconnected!");
     return nullptr;
@@ -723,8 +724,11 @@ nsRefreshDriver* nsSMILAnimationController::GetRefreshDriver() {
   return context ? context->RefreshDriver() : nullptr;
 }
 
-void nsSMILAnimationController::FlagDocumentNeedsFlush() {
+void SMILAnimationController::FlagDocumentNeedsFlush() {
   if (nsIPresShell* shell = mDocument->GetShell()) {
     shell->SetNeedStyleFlush();
   }
 }
+
+}  // namespace mozilla
+
