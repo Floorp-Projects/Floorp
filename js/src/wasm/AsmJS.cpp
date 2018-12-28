@@ -67,6 +67,7 @@ using JS::AutoStableStringChars;
 using JS::GenericNaN;
 using JS::SourceOwnership;
 using JS::SourceText;
+using mozilla::Abs;
 using mozilla::ArrayEqual;
 using mozilla::CeilingLog2;
 using mozilla::HashGeneric;
@@ -4649,7 +4650,7 @@ static bool IsValidIntMultiplyConstant(ModuleValidator& m, ParseNode* expr) {
   switch (lit.which()) {
     case NumLit::Fixnum:
     case NumLit::NegativeInt:
-      if (abs(lit.toInt32()) < (1 << 20)) {
+      if (Abs(lit.toInt32()) < (uint32_t(1) << 20)) {
         return true;
       }
       return false;
