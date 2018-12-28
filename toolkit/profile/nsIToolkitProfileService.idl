@@ -18,22 +18,18 @@ interface nsIToolkitProfileService : nsISupports
     readonly attribute nsISimpleEnumerator /*nsIToolkitProfile*/ profiles;
 
     /**
-     * The currently selected profile (the one used or about to be used by the
-     * browser).
+     * The profile currently in use if it is a named profile. This will return
+     * null if the current profile path doesn't match a profile in the database.
      */
-    attribute nsIToolkitProfile selectedProfile;
+    readonly attribute nsIToolkitProfile currentProfile;
 
     /**
-     * The default profile (the one used or about to be used by the
-     * browser if no other profile is specified at runtime). This is the profile
-     * marked with Default=1 in profiles.ini and is usually the same as
-     * selectedProfile, except on Developer Edition.
-     *
-     * Developer Edition uses a profile named "dev-edition-default" as the
-     * default profile (which it creates if it doesn't exist), unless a special
-     * empty file named "ignore-dev-edition-profile" is present next to
-     * profiles.ini. In that case Developer Edition behaves the same as any
-     * other build of Firefox.
+     * The default profile for this build.
+     * On startup this is the profile selected unless overridden by command line
+     * arguments or environment variables. Setting this will change the profile
+     * used by default the next time the application is started.
+     * Attempting to change the default may throw an exception on builds that do
+     * not support changing the default profile, such as developer edition.
      */
     attribute nsIToolkitProfile defaultProfile;
 

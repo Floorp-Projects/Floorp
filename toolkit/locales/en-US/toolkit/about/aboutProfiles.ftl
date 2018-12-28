@@ -31,6 +31,9 @@ profiles-remove = Remove
 profiles-set-as-default = Set as default profile
 profiles-launch-profile = Launch profile in new browser
 
+profiles-cannot-set-as-default-title = Unable to set default
+profiles-cannot-set-as-default-message = The default profile cannot be changed for { -brand-short-name }.
+
 profiles-yes = yes
 profiles-no = no
 

@@ -41,6 +41,6 @@ add_task(async () => {
   let { profile, didCreate } = selectStartupProfile();
 
   Assert.ok(!didCreate, "Should not have created a new profile.");
-  Assert.equal(profile, service.selectedProfile, "Should have returned the selected profile.");
+  Assert.equal(profile, service.defaultProfile, "Should have returned the default profile.");
   Assert.equal(profile.name, PROFILE_DEFAULT, "Should have selected the right profile");
 });
