@@ -19,7 +19,7 @@
 // local helper functions
 namespace {
 
-using mozilla::DOMSVGLength;
+using mozilla::dom::DOMSVGLength;
 
 void UpdateListIndicesFromIndex(FallibleTArray<DOMSVGLength*>& aItemsArray,
                                 uint32_t aStartingIndex) {
@@ -35,6 +35,7 @@ void UpdateListIndicesFromIndex(FallibleTArray<DOMSVGLength*>& aItemsArray,
 }  // namespace
 
 namespace mozilla {
+namespace dom {
 
 // We could use NS_IMPL_CYCLE_COLLECTION(, except that in Unlink() we need to
 // clear our DOMSVGAnimatedLengthList's weak ref to us to be safe. (The other
@@ -390,4 +391,5 @@ void DOMSVGLengthList::MaybeRemoveItemFromAnimValListAt(uint32_t aIndex) {
   UpdateListIndicesFromIndex(animVal->mItems, aIndex);
 }
 
+}  // namespace dom
 }  // namespace mozilla

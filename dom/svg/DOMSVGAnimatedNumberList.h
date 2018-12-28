@@ -15,9 +15,12 @@
 
 namespace mozilla {
 
-class DOMSVGNumberList;
 class SVGAnimatedNumberList;
 class SVGNumberList;
+
+namespace dom {
+
+class DOMSVGNumberList;
 
 /**
  * Class DOMSVGAnimatedNumberList
@@ -124,6 +127,7 @@ class DOMSVGAnimatedNumberList final : public nsISupports,
   uint8_t mAttrEnum;
 };
 
+}  // namespace dom
 }  // namespace mozilla
 
 #endif  // MOZILLA_DOMSVGANIMATEDNUMBERLIST_H__
