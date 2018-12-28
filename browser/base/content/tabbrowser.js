@@ -4772,6 +4772,19 @@ window._gBrowser = {
 
       Services.obs.notifyObservers(tab, "AudibleAutoplayMediaOccurred");
     });
+
+    this.addEventListener("GloballyAutoplayBlocked", (event) => {
+      let browser = event.originalTarget;
+      let tab = this.getTabForBrowser(browser);
+      if (!tab) {
+        return;
+      }
+
+      SitePermissions.set(event.detail.url, "autoplay-media",
+                          SitePermissions.BLOCK,
+                          SitePermissions.SCOPE_GLOBAL,
+                          browser);
+    });
   },
 
   setSuccessor(aTab, successorTab) {
