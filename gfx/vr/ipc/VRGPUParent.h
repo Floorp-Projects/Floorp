@@ -8,6 +8,7 @@
 #define GFX_VR_GPU_PARENT_H
 
 #include "mozilla/gfx/PVRGPUParent.h"
+#include "VRService.h"
 
 namespace mozilla {
 namespace gfx {
@@ -22,7 +23,7 @@ class VRGPUParent final : public PVRGPUParent {
   static RefPtr<VRGPUParent> CreateForGPU(Endpoint<PVRGPUParent>&& aEndpoint);
 
  protected:
-  ~VRGPUParent() {}
+  ~VRGPUParent() = default;
 
   void Bind(Endpoint<PVRGPUParent>&& aEndpoint);
   virtual mozilla::ipc::IPCResult RecvStartVRService() override;
@@ -35,6 +36,7 @@ class VRGPUParent final : public PVRGPUParent {
 #if !defined(MOZ_WIDGET_ANDROID)
   RefPtr<VRService> mVRService;
 #endif
+  DISALLOW_COPY_AND_ASSIGN(VRGPUParent);
 };
 
 }  // namespace gfx
