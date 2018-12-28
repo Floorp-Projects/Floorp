@@ -46,7 +46,6 @@ toolkit.jar:
   skin/classic/global/arrow/arrow-up.gif                             (arrow/arrow-up.gif)
   skin/classic/global/arrow/panelarrow-horizontal.svg                (arrow/panelarrow-horizontal.svg)
   skin/classic/global/arrow/panelarrow-vertical.svg                  (arrow/panelarrow-vertical.svg)
-  skin/classic/global/checkbox/cbox-check.gif                        (checkbox/cbox-check.gif)
   skin/classic/global/dirListing/dirListing.css                      (dirListing/dirListing.css)
   skin/classic/global/dirListing/folder.png                          (dirListing/folder.png)
   skin/classic/global/dirListing/up.png                              (dirListing/up.png)
