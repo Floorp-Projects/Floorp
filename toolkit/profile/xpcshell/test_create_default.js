@@ -4,7 +4,6 @@
 
 add_task(async () => {
   let service = getProfileService();
-
   let { profile, didCreate } = selectStartupProfile();
   checkProfileService();
 
@@ -13,7 +12,7 @@ add_task(async () => {
     Assert.equal(service.profileCount, 2, "Should be two profiles.");
   } else {
     Assert.equal(service.profileCount, 1, "Should be only one profile.");
-    Assert.equal(profile, service.selectedProfile, "Should now be the selected profile.");
+    Assert.equal(profile, service.defaultProfile, "Should now be the default profile.");
   }
   Assert.equal(profile.name, PROFILE_DEFAULT, "Should have created a new profile with the right name.");
 });
