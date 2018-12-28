@@ -230,7 +230,9 @@ static void WriteFontDescriptor(const uint8_t* aData, uint32_t aLength,
   nsTArray<uint8_t> data;
   data.AppendElements(aData, aLength);
   sink->mWrBridge->SendValidateFontDescriptor(data);
-  aLength = uint32_t(wcsnlen_s((const wchar_t*)aData, aLength / sizeof(wchar_t)) * sizeof(wchar_t));
+  aLength =
+      uint32_t(wcsnlen_s((const wchar_t*)aData, aLength / sizeof(wchar_t)) *
+               sizeof(wchar_t));
 #endif
 
   sink->mResources->AddFontDescriptor(

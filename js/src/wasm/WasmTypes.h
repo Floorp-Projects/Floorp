@@ -562,35 +562,21 @@ class AnyRef {
 
  public:
   // Given a void* that comes from compiled wasm code, turn it into AnyRef.
-  static AnyRef fromCompiledCode(void* p) {
-    return AnyRef((JSObject*)p);
-  }
+  static AnyRef fromCompiledCode(void* p) { return AnyRef((JSObject*)p); }
 
   // Given a JSObject* that comes from JS, turn it into AnyRef.
-  static AnyRef fromJSObject(JSObject* p) {
-    return AnyRef(p);
-  }
+  static AnyRef fromJSObject(JSObject* p) { return AnyRef(p); }
 
   // Generate an AnyRef null pointer.
-  static AnyRef null() {
-    return AnyRef(nullptr);
-  }
+  static AnyRef null() { return AnyRef(nullptr); }
 
-  bool isNull() {
-    return value_ == nullptr;
-  }
+  bool isNull() { return value_ == nullptr; }
 
-  void* forCompiledCode() const {
-    return value_;
-  }
+  void* forCompiledCode() const { return value_; }
 
-  JSObject* asJSObject() {
-    return value_;
-  }
+  JSObject* asJSObject() { return value_; }
 
-  JSObject** asJSObjectAddress() {
-    return &value_;
-  }
+  JSObject** asJSObjectAddress() { return &value_; }
 
   void trace(JSTracer* trc);
 
@@ -698,7 +684,7 @@ class LitVal {
     uint64_t i64_;
     float f32_;
     double f64_;
-    JSObject* ref_;             // Note, this breaks an abstraction boundary
+    JSObject* ref_;  // Note, this breaks an abstraction boundary
     AnyRef anyref_;
   } u;
 
@@ -767,9 +753,7 @@ class MOZ_NON_PARAM Val : public LitVal {
   explicit Val(uint64_t i64) : LitVal(i64) {}
   explicit Val(float f32) : LitVal(f32) {}
   explicit Val(double f64) : LitVal(f64) {}
-  explicit Val(AnyRef val) : LitVal(AnyRef::null()) {
-    u.anyref_ = val;
-  }
+  explicit Val(AnyRef val) : LitVal(AnyRef::null()) { u.anyref_ = val; }
   explicit Val(ValType type, JSObject* obj) : LitVal(type, (JSObject*)nullptr) {
     u.ref_ = obj;
   }

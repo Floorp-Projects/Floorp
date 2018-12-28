@@ -188,10 +188,12 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
   /**
    * Add / remove presshells which have pending resize event.
    */
-  void AddResizeEventFlushObserver(nsIPresShell* aShell, bool aDelayed = false) {
-    MOZ_DIAGNOSTIC_ASSERT(!mResizeEventFlushObservers.Contains(aShell) &&
-                          !mDelayedResizeEventFlushObservers.Contains(aShell),
-                          "Double-adding resize event flush observer");
+  void AddResizeEventFlushObserver(nsIPresShell* aShell,
+                                   bool aDelayed = false) {
+    MOZ_DIAGNOSTIC_ASSERT(
+        !mResizeEventFlushObservers.Contains(aShell) &&
+            !mDelayedResizeEventFlushObservers.Contains(aShell),
+        "Double-adding resize event flush observer");
     if (aDelayed) {
       mDelayedResizeEventFlushObservers.AppendElement(aShell);
     } else {

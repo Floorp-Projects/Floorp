@@ -693,8 +693,7 @@ inline void js::Nursery::endProfile(ProfileKey key) {
 }
 
 bool js::Nursery::needIdleTimeCollection() const {
-  uint32_t threshold =
-      tunables().nurseryFreeThresholdForIdleCollection();
+  uint32_t threshold = tunables().nurseryFreeThresholdForIdleCollection();
   return minorGCRequested() || freeSpace() < threshold;
 }
 
@@ -770,8 +769,8 @@ void js::Nursery::collect(JS::gcreason::Reason reason) {
   uint32_t pretenureCount = 0;
   bool shouldPretenure = tunables().attemptPretenuring() &&
                          ((validPromotionRate &&
-                          promotionRate > tunables().pretenureThreshold()) ||
-                         IsFullStoreBufferReason(reason));
+                           promotionRate > tunables().pretenureThreshold()) ||
+                          IsFullStoreBufferReason(reason));
 
   if (shouldPretenure) {
     JSContext* cx = rt->mainContextFromOwnThread();
@@ -1261,7 +1260,8 @@ gcstats::Statistics& js::Nursery::stats() const {
   return runtime()->gc.stats();
 }
 
-MOZ_ALWAYS_INLINE const js::gc::GCSchedulingTunables& js::Nursery::tunables() const {
+MOZ_ALWAYS_INLINE const js::gc::GCSchedulingTunables& js::Nursery::tunables()
+    const {
   return runtime()->gc.tunables;
 }
 

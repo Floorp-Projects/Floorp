@@ -168,8 +168,7 @@ void ChannelEventQueue::ResumeInternal() {
   }
 }
 
-bool
-ChannelEventQueue::MaybeSuspendIfEventsAreSuppressed() {
+bool ChannelEventQueue::MaybeSuspendIfEventsAreSuppressed() {
   // We only ever need to suppress events on the main thread, since this is
   // where content scripts can run.
   if (!NS_IsMainThread()) {
@@ -196,7 +195,7 @@ ChannelEventQueue::MaybeSuspendIfEventsAreSuppressed() {
   if (!mHasCheckedForXMLHttpRequest) {
     nsContentPolicyType contentType = loadInfo->InternalContentPolicyType();
     mForXMLHttpRequest =
-      (contentType == nsIContentPolicy::TYPE_INTERNAL_XMLHTTPREQUEST);
+        (contentType == nsIContentPolicy::TYPE_INTERNAL_XMLHTTPREQUEST);
     mHasCheckedForXMLHttpRequest = true;
 
     if (!mForXMLHttpRequest) {
@@ -209,8 +208,7 @@ ChannelEventQueue::MaybeSuspendIfEventsAreSuppressed() {
   // XHR events to be processed (such as a synchronous XHR).
   nsCOMPtr<nsIDocument> document;
   loadInfo->GetLoadingDocument(getter_AddRefs(document));
-  if (document &&
-      document->EventHandlingSuppressed() &&
+  if (document && document->EventHandlingSuppressed() &&
       !document->IsInSyncOperation()) {
     document->AddSuspendedChannelEventQueue(this);
     SuspendInternal();

@@ -971,8 +971,8 @@ bool js::GCMarker::mark(T* thing) {
   AssertShouldMarkInZone(thing);
   TenuredCell* cell = TenuredCell::fromPointer(thing);
 
-  MarkColor color = TypeParticipatesInCC<T>::value ? markColor()
-                                                   : MarkColor::Black;
+  MarkColor color =
+      TypeParticipatesInCC<T>::value ? markColor() : MarkColor::Black;
   markCount++;
   return cell->markIfUnmarked(color);
 }
@@ -2414,8 +2414,7 @@ void GCMarker::stop() {
 }
 
 template <typename F>
-inline void GCMarker::forEachDelayedMarkingArena(F&& f)
-{
+inline void GCMarker::forEachDelayedMarkingArena(F&& f) {
   Arena* arena = delayedMarkingList;
   Arena* next;
   while (arena) {
@@ -2431,15 +2430,14 @@ void GCMarker::reset() {
   stack.clear();
   MOZ_ASSERT(isMarkStackEmpty());
 
-  forEachDelayedMarkingArena(
-    [&](Arena* arena) {
-      MOZ_ASSERT(arena->onDelayedMarkingList());
-      arena->clearDelayedMarkingState();
+  forEachDelayedMarkingArena([&](Arena* arena) {
+    MOZ_ASSERT(arena->onDelayedMarkingList());
+    arena->clearDelayedMarkingState();
 #ifdef DEBUG
-      MOZ_ASSERT(markLaterArenas);
-      markLaterArenas--;
+    MOZ_ASSERT(markLaterArenas);
+    markLaterArenas--;
 #endif
-    });
+  });
   delayedMarkingList = nullptr;
 
   MOZ_ASSERT(isDrained());
@@ -2601,8 +2599,7 @@ bool GCMarker::processDelayedMarkingList(MarkColor color, bool shouldYield,
 
   do {
     delayedMarkingWorkAdded = false;
-    for (Arena* arena = delayedMarkingList;
-         arena;
+    for (Arena* arena = delayedMarkingList; arena;
          arena = arena->getNextDelayedMarking()) {
       if (!arena->hasDelayedMarking() ||
           (color == MarkColor::Gray && !ArenaCanHaveGrayThings(arena))) {
@@ -2645,16 +2642,14 @@ bool GCMarker::markAllDelayedChildren(SliceBudget& budget) {
   MOZ_ASSERT(delayedMarkingList);
 
   bool finished;
-  finished = processDelayedMarkingList(MarkColor::Gray,
-                                       false, /* don't yield */
+  finished = processDelayedMarkingList(MarkColor::Gray, false, /* don't yield */
                                        budget);
   MOZ_ASSERT(finished);
 
-  forEachDelayedMarkingArena(
-    [&](Arena* arena) {
-      MOZ_ASSERT(!arena->hasDelayedMarking());
-      arena->setHasDelayedMarking(true);
-    });
+  forEachDelayedMarkingArena([&](Arena* arena) {
+    MOZ_ASSERT(!arena->hasDelayedMarking());
+    arena->setHasDelayedMarking(true);
+  });
 
   finished = processDelayedMarkingList(MarkColor::Black,
                                        true, /* yield if over budget */
@@ -2662,19 +2657,18 @@ bool GCMarker::markAllDelayedChildren(SliceBudget& budget) {
 
   // Rebuild the list, removing processed arenas.
   Arena* listTail = nullptr;
-  forEachDelayedMarkingArena(
-    [&](Arena* arena) {
-      if (!arena->hasDelayedMarking()) {
-        arena->clearDelayedMarkingState();
+  forEachDelayedMarkingArena([&](Arena* arena) {
+    if (!arena->hasDelayedMarking()) {
+      arena->clearDelayedMarkingState();
 #ifdef DEBUG
-        MOZ_ASSERT(markLaterArenas);
-        markLaterArenas--;
+      MOZ_ASSERT(markLaterArenas);
+      markLaterArenas--;
 #endif
-        return;
-      }
+      return;
+    }
 
-      appendToDelayedMarkingList(&listTail, arena);
-    });
+    appendToDelayedMarkingList(&listTail, arena);
+  });
   appendToDelayedMarkingList(&listTail, nullptr);
 
   if (!finished) {
@@ -2687,7 +2681,8 @@ bool GCMarker::markAllDelayedChildren(SliceBudget& budget) {
   return true;
 }
 
-inline void GCMarker::appendToDelayedMarkingList(Arena** listTail, Arena* arena) {
+inline void GCMarker::appendToDelayedMarkingList(Arena** listTail,
+                                                 Arena* arena) {
   if (*listTail) {
     (*listTail)->updateNextDelayedMarkingArena(arena);
   } else {
@@ -3565,17 +3560,15 @@ class UnmarkGrayTracer : public JS::CallbackTracer {
 #endif
 };
 
-static bool
-IsCCTraceKindInternal(JS::TraceKind kind)
-{
-    switch (kind) {
-#define EXPAND_IS_CC_TRACE_KIND(name, _, addToCCKind)    \
-      case JS::TraceKind::name:                          \
-        return addToCCKind;
-JS_FOR_EACH_TRACEKIND(EXPAND_IS_CC_TRACE_KIND)
-      default:
-        MOZ_CRASH("Unexpected trace kind");
-    }
+static bool IsCCTraceKindInternal(JS::TraceKind kind) {
+  switch (kind) {
+#define EXPAND_IS_CC_TRACE_KIND(name, _, addToCCKind) \
+  case JS::TraceKind::name:                           \
+    return addToCCKind;
+    JS_FOR_EACH_TRACEKIND(EXPAND_IS_CC_TRACE_KIND)
+    default:
+      MOZ_CRASH("Unexpected trace kind");
+  }
 }
 
 void UnmarkGrayTracer::onChild(const JS::GCCellPtr& thing) {
