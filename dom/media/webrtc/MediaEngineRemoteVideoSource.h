@@ -63,7 +63,7 @@ enum DistanceCalculation { kFitness, kFeasibility };
  */
 class MediaEngineRemoteVideoSource : public MediaEngineSource,
                                      public camera::FrameRelay {
-  ~MediaEngineRemoteVideoSource() = default;
+  ~MediaEngineRemoteVideoSource();
 
   struct CapabilityCandidate {
     explicit CapabilityCandidate(webrtc::CaptureCapability&& aCapability,
@@ -155,6 +155,10 @@ class MediaEngineRemoteVideoSource : public MediaEngineSource,
 
   bool GetScary() const override { return mScary; }
 
+  RefPtr<GenericNonExclusivePromise> GetFirstFramePromise() const override {
+    return mFirstFramePromise;
+  }
+
  private:
   // Initialize the needed Video engine interfaces.
   void Init();
@@ -229,6 +233,8 @@ class MediaEngineRemoteVideoSource : public MediaEngineSource,
   // since we scale frames to avoid fingerprinting.
   // Members are main thread only.
   const RefPtr<media::Refcountable<dom::MediaTrackSettings>> mSettings;
+  MozPromiseHolder<GenericNonExclusivePromise> mFirstFramePromiseHolder;
+  RefPtr<GenericNonExclusivePromise> mFirstFramePromise;
 
   // The capability currently chosen by constraints of the user of this source.
   // Set under mMutex on the owning thread. Accessed under one of the two.
