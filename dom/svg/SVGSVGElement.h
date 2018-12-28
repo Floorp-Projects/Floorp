@@ -19,10 +19,10 @@ namespace mozilla {
 class AutoSVGViewHandler;
 class SVGFragmentIdentifier;
 class EventChainPreVisitor;
-class DOMSVGLength;
-class DOMSVGNumber;
 
 namespace dom {
+class DOMSVGLength;
+class DOMSVGNumber;
 class SVGAngle;
 class SVGMatrix;
 class SVGIRect;

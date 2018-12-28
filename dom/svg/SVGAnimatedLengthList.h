@@ -38,8 +38,8 @@ class SVGElement;
  */
 class SVGAnimatedLengthList {
   // friends so that they can get write access to mBaseVal
-  friend class DOMSVGLength;
-  friend class DOMSVGLengthList;
+  friend class dom::DOMSVGLength;
+  friend class dom::DOMSVGLengthList;
 
  public:
   SVGAnimatedLengthList() {}

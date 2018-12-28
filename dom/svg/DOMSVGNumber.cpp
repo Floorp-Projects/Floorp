@@ -16,6 +16,7 @@
 // See the architecture comment in DOMSVGAnimatedNumberList.h.
 
 namespace mozilla {
+namespace dom {
 
 // We could use NS_IMPL_CYCLE_COLLECTION(, except that in Unlink() we need to
 // clear our list's weak ref to us to be safe. (The other option would be to
@@ -167,7 +168,8 @@ bool DOMSVGNumber::IndexIsValid() {
 
 JSObject* DOMSVGNumber::WrapObject(JSContext* aCx,
                                    JS::Handle<JSObject*> aGivenProto) {
-  return dom::SVGNumber_Binding::Wrap(aCx, this, aGivenProto);
+  return SVGNumber_Binding::Wrap(aCx, this, aGivenProto);
 }
 
+}  // namespace dom
 }  // namespace mozilla
