@@ -160,7 +160,7 @@ var DownloadNotifications = {
           this.showInAboutDownloads(download);
         }
       } else {
-        ConfirmCancelPrompt.show(download);
+        this.showInAboutDownloads(download);
       }
     }).catch(Cu.reportError);
   },
@@ -271,19 +271,6 @@ DownloadNotification.prototype = {
     if (this.id) {
       Notifications.cancel(this.id);
       this.id = null;
-    }
-  },
-};
-
-var ConfirmCancelPrompt = {
-  show: function(download) {
-    // Open a prompt that offers a choice to cancel the download
-    let title = strings.GetStringFromName("downloadCancelPromptTitle1");
-    let message = strings.GetStringFromName("downloadCancelPromptMessage1");
-
-    if (Services.prompt.confirm(null, title, message)) {
-      download.cancel().catch(Cu.reportError);
-      download.removePartialData().catch(Cu.reportError);
     }
   },
 };
