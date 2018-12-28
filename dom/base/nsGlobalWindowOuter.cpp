@@ -1549,7 +1549,13 @@ static bool InitializeLegacyNetscapeObject(JSContext* aCx,
 }
 
 static JS::RealmCreationOptions& SelectZone(
-    nsGlobalWindowInner* aNewInner, JS::RealmCreationOptions& aOptions) {
+    nsIPrincipal* aPrincipal, nsGlobalWindowInner* aNewInner,
+    JS::RealmCreationOptions& aOptions) {
+  // Use the shared system compartment for chrome windows.
+  if (nsContentUtils::IsSystemPrincipal(aPrincipal)) {
+    return aOptions.setExistingCompartment(xpc::PrivilegedJunkScope());
+  }
+
   if (aNewInner->GetOuterWindow()) {
     nsGlobalWindowOuter* top = aNewInner->GetTopInternal();
 
@@ -1584,7 +1590,7 @@ static nsresult CreateNativeGlobalForInner(JSContext* aCx,
 
   JS::RealmOptions options;
 
-  SelectZone(aNewInner, options.creationOptions());
+  SelectZone(aPrincipal, aNewInner, options.creationOptions());
 
   options.creationOptions().setSecureContext(aIsSecureContext);
 
