@@ -212,7 +212,7 @@ class Session(
      * Tracker blocking state, true if blocking trackers is enabled, otherwise false.
      */
     var trackerBlockingEnabled: Boolean by Delegates.observable(false) { _, old, new ->
-        notifyObservers(old, new) { onTrackerBlockingEnabledChanged(this@Session, trackerBlockingEnabled) }
+        notifyObservers(old, new) { onTrackerBlockingEnabledChanged(this@Session, new) }
     }
 
     /**
@@ -221,7 +221,7 @@ class Session(
     var trackersBlocked: List<String> by Delegates.observable(emptyList()) { _, old, new ->
         notifyObservers(old, new) {
             if (new.isNotEmpty()) {
-                onTrackerBlocked(this@Session, trackersBlocked.last(), trackersBlocked)
+                onTrackerBlocked(this@Session, new.last(), new)
             }
         }
     }
@@ -232,7 +232,7 @@ class Session(
     var findResults: List<FindResult> by Delegates.observable(emptyList()) { _, old, new ->
         notifyObservers(old, new) {
             if (new.isNotEmpty()) {
-                onFindResult(this@Session, findResults.last())
+                onFindResult(this@Session, new.last())
             }
         }
     }

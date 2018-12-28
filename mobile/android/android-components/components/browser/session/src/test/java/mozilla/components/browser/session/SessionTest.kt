@@ -5,11 +5,14 @@
 package mozilla.components.browser.session
 
 import android.graphics.Bitmap
+import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.session.Session.Source
 import mozilla.components.browser.session.tab.CustomTabConfig
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.permission.PermissionRequest
-
 import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.window.WindowRequest
 import mozilla.components.support.base.observer.Consumable
@@ -27,10 +30,10 @@ import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
 import org.mockito.Mockito.reset
+import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
-import org.mockito.Mockito.spy
 
 class SessionTest {
     @Test
@@ -715,5 +718,32 @@ class SessionTest {
 
         assertTrue(closeWindowRequestExecuted)
         assertTrue(session.closeWindowRequest.isConsumed())
+    }
+
+    @Test
+    fun `handle empty blocked trackers list race conditions`() {
+        val observer = mock(Session.Observer::class.java)
+        val observer2 = mock(Session.Observer::class.java)
+
+        val session = Session("about:blank")
+        session.register(observer)
+        session.register(observer2)
+
+        runBlocking {
+            (1..3).map {
+                val def = GlobalScope.async(IO) {
+                    session.trackersBlocked = emptyList()
+                    session.trackersBlocked += "test"
+                    session.trackersBlocked = emptyList()
+                }
+                val def2 = GlobalScope.async(IO) {
+                    session.trackersBlocked = emptyList()
+                    session.trackersBlocked += "test"
+                    session.trackersBlocked = emptyList()
+                }
+                def.await()
+                def2.await()
+            }
+        }
     }
 }
