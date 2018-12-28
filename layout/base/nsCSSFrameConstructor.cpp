@@ -10760,11 +10760,6 @@ bool nsCSSFrameConstructor::MayNeedToCreateColumnSpanSiblings(
     return false;
   }
 
-  if (aBlockFrame->IsDetailsFrame()) {
-    // Not dealing with details frame for now.
-    // See Bug 1508762 to support column-span under <details> elements.
-    return false;
-  }
   // Need to actually look into the child list.
   return true;
 }
@@ -10775,7 +10770,6 @@ nsFrameItems nsCSSFrameConstructor::CreateColumnSpanSiblings(
   MOZ_ASSERT(!aPositionedFrame || aPositionedFrame->IsAbsPosContainingBlock());
 
   nsIContent* const content = aInitialBlock->GetContent();
-  ComputedStyle* const initialBlockStyle = aInitialBlock->Style();
   nsContainerFrame* const parentFrame = aInitialBlock->GetParent();
 
   aInitialBlock->SetProperty(nsIFrame::HasColumnSpanSiblings(), true);
@@ -10808,12 +10802,11 @@ nsFrameItems nsCSSFrameConstructor::CreateColumnSpanSiblings(
 
     siblings.AddChild(columnSpanWrapper);
 
-    // Grab the consecutive non-column-span kids, and reparent them into a
-    // block frame.
-    nsBlockFrame* nonColumnSpanWrapper =
-        NS_NewBlockFrame(mPresShell, initialBlockStyle);
-    InitAndRestoreFrame(aState, content, parentFrame, nonColumnSpanWrapper,
-                        false);
+    // Grab the consecutive non-column-span kids, and reparent them into a new
+    // continuation of the last non-column-span wrapper frame.
+    auto* nonColumnSpanWrapper = static_cast<nsContainerFrame*>(
+        CreateContinuingFrame(mPresShell->GetPresContext(),
+                              lastNonColumnSpanWrapper, parentFrame, false));
     nonColumnSpanWrapper->AddStateBits(NS_FRAME_HAS_MULTI_COLUMN_ANCESTOR |
                                        NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN);
 
@@ -10829,8 +10822,6 @@ nsFrameItems nsCSSFrameConstructor::CreateColumnSpanSiblings(
       }
     }
 
-    lastNonColumnSpanWrapper->SetNextContinuation(nonColumnSpanWrapper);
-    nonColumnSpanWrapper->SetPrevContinuation(lastNonColumnSpanWrapper);
     siblings.AddChild(nonColumnSpanWrapper);
 
     lastNonColumnSpanWrapper = nonColumnSpanWrapper;
