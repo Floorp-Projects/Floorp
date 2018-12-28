@@ -21,34 +21,6 @@ XPCOMUtils.defineLazyGetter(this, "gPocketBundle", function() {
 
 var EXPORTED_SYMBOLS = ["SaveToPocket"];
 
-const PREF_BRANCH = "extensions.pocket.";
-const PREFS = {
-  enabled: true, // bug 1229937, figure out ui tour support
-  api: "api.getpocket.com",
-  site: "getpocket.com",
-};
-
-function setDefaultPrefs() {
-  let branch = Services.prefs.getDefaultBranch(PREF_BRANCH);
-  for (let [key, val] of Object.entries(PREFS)) {
-    // If someone beat us to setting a default, don't overwrite it.  This can
-    // happen if distribution.ini sets the default first.
-    if (branch.getPrefType(key) != branch.PREF_INVALID)
-      continue;
-    switch (typeof val) {
-      case "boolean":
-        branch.setBoolPref(key, val);
-        break;
-      case "number":
-        branch.setIntPref(key, val);
-        break;
-      case "string":
-        branch.setCharPref(key, val);
-        break;
-    }
-  }
-}
-
 function createElementWithAttrs(document, type, attrs) {
   let element = document.createXULElement(type);
   Object.keys(attrs).forEach(function(attr) {
@@ -442,7 +414,6 @@ function browserWindows() {
 
 var SaveToPocket = {
   init() {
-    setDefaultPrefs();
     // migrate enabled pref
     if (Services.prefs.prefHasUserValue("browser.pocket.enabled")) {
       Services.prefs.setBoolPref("extensions.pocket.enabled", Services.prefs.getBoolPref("browser.pocket.enabled"));
