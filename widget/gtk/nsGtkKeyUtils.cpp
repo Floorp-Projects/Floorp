@@ -44,6 +44,7 @@ LazyLogModule gKeymapWrapperLog("KeymapWrapperWidgets");
 
 KeymapWrapper* KeymapWrapper::sInstance = nullptr;
 guint KeymapWrapper::sLastRepeatableHardwareKeyCode = 0;
+Time KeymapWrapper::sLastRepeatableKeyTime = 0;
 KeymapWrapper::RepeatState KeymapWrapper::sRepeatState =
     KeymapWrapper::NOT_PRESSED;
 
@@ -630,6 +631,15 @@ KeymapWrapper::~KeymapWrapper() {
       if (sRepeatState == NOT_PRESSED) {
         sRepeatState = FIRST_PRESS;
       } else if (sLastRepeatableHardwareKeyCode == xEvent->xkey.keycode) {
+        if (sLastRepeatableKeyTime == xEvent->xkey.time &&
+            sLastRepeatableHardwareKeyCode ==
+                IMContextWrapper::
+                    GetWaitingSynthesizedKeyPressHardwareKeyCode()) {
+          // On some environment, IM may generate duplicated KeyPress event
+          // without any special state flags.  In such case, we shouldn't
+          // treat the event as "repeated".
+          break;
+        }
         sRepeatState = REPEATING;
       } else {
         // If a different key is pressed while another key is pressed,
@@ -639,6 +649,7 @@ KeymapWrapper::~KeymapWrapper() {
         sRepeatState = FIRST_PRESS;
       }
       sLastRepeatableHardwareKeyCode = xEvent->xkey.keycode;
+      sLastRepeatableKeyTime = xEvent->xkey.time;
       break;
     }
     case KeyRelease: {
