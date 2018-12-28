@@ -12,8 +12,10 @@
 
 class nsSMILValue;
 
+namespace mozilla {
+
 //////////////////////////////////////////////////////////////////////////////
-// nsISMILType: Interface for defining the basic operations needed for animating
+// SMILType: Interface for defining the basic operations needed for animating
 // a particular kind of data (e.g. lengths, colors, transformation matrices).
 //
 // This interface is never used directly but always through an nsSMILValue that
@@ -45,11 +47,11 @@ class nsSMILValue;
 // +---------------------+---------------+-------------+------------------+
 //
 
-class nsISMILType {
+class SMILType {
   /**
    * Only give the nsSMILValue class access to this interface.
    */
-  friend class nsSMILValue;
+  friend class ::nsSMILValue;
 
  protected:
   /**
@@ -84,7 +86,7 @@ class nsISMILType {
                           const nsSMILValue& aSrc) const = 0;
 
   /**
-   * Test two nsSMILValue objects (of this nsISMILType) for equality.
+   * Test two nsSMILValue objects (of this SMILType) for equality.
    *
    * A return value of true represents a guarantee that aLeft and aRight are
    * equal. (That is, they would behave identically if passed to the methods
@@ -206,5 +208,7 @@ class nsISMILType {
                                const nsSMILValue& aEndVal, double aUnitDistance,
                                nsSMILValue& aResult) const = 0;
 };
+
+}  // namespace mozilla
 
 #endif  // NS_ISMILTYPE_H_

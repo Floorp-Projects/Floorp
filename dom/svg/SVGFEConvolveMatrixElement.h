@@ -20,9 +20,9 @@ nsresult NS_NewSVGFEConvolveMatrixElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
 namespace mozilla {
-class DOMSVGAnimatedNumberList;
 
 namespace dom {
+class DOMSVGAnimatedNumberList;
 class SVGAnimatedBoolean;
 
 typedef SVGFE SVGFEConvolveMatrixElementBase;

@@ -13,7 +13,8 @@ import {
   getMainThread,
   getCurrentThread,
   threadIsPaused,
-  getWorkers
+  getWorkers,
+  getWorkerDisplayName
 } from "../../selectors";
 import { basename } from "../../utils/path";
 import { features } from "../../utils/prefs";
@@ -45,7 +46,11 @@ export class Workers extends Component<Props> {
           onClick={() => this.props.selectThread(worker.actor)}
         >
           <img className="domain" />
-          {(worker.url ? basename(worker.url) : "Main Thread") +
+          {(worker.url
+            ? `${this.props.getWorkerDisplayName(worker.actor)}: ${basename(
+                worker.url
+              )}`
+            : "Main Thread") +
             (this.props.threadIsPaused(worker.actor) ? " PAUSED" : "")}
         </div>
       ));
@@ -81,6 +86,7 @@ export class Workers extends Component<Props> {
 
 const mapStateToProps = state => ({
   workers: getWorkers(state),
+  getWorkerDisplayName: thread => getWorkerDisplayName(state, thread),
   mainThread: getMainThread(state),
   currentThread: getCurrentThread(state),
   threadIsPaused: thread => threadIsPaused(state, thread)

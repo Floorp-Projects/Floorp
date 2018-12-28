@@ -4,14 +4,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* implementation of nsISMILType for use by <animateMotion> element */
+/* implementation of SMILType for use by <animateMotion> element */
 
 #ifndef MOZILLA_SVGMOTIONSMILTYPE_H_
 #define MOZILLA_SVGMOTIONSMILTYPE_H_
 
 #include "mozilla/gfx/2D.h"
 #include "mozilla/Attributes.h"
-#include "nsISMILType.h"
+#include "SMILType.h"
 
 class nsSMILValue;
 
@@ -27,13 +27,13 @@ enum RotateType {
 };
 
 /**
- * SVGMotionSMILType: Implements the nsISMILType interface for SMIL animations
+ * SVGMotionSMILType: Implements the SMILType interface for SMIL animations
  * from <animateMotion>.
  *
  * NOTE: Even though there's technically no "motion" attribute, we behave in
  * many ways as if there were, for simplicity.
  */
-class SVGMotionSMILType : public nsISMILType {
+class SVGMotionSMILType : public SMILType {
   typedef mozilla::gfx::Path Path;
 
  public:
@@ -41,7 +41,7 @@ class SVGMotionSMILType : public nsISMILType {
   static SVGMotionSMILType sSingleton;
 
  protected:
-  // nsISMILType Methods
+  // SMILType Methods
   // -------------------
   virtual void Init(nsSMILValue& aValue) const override;
   virtual void Destroy(nsSMILValue& aValue) const override;

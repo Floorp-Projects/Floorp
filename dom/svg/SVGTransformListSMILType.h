@@ -8,7 +8,7 @@
 #define SVGTRANSFORMLISTSMILTYPE_H_
 
 #include "mozilla/Attributes.h"
-#include "nsISMILType.h"
+#include "SMILType.h"
 #include "nsTArray.h"
 
 class nsSMILValue;
@@ -78,7 +78,7 @@ class SVGTransformSMILData;
 // we have seen above can contain 0..n elements) whilst the end-value comes from
 // the <animateTransform> and so can only hold 1 transform.
 //
-class SVGTransformListSMILType : public nsISMILType {
+class SVGTransformListSMILType : public SMILType {
  public:
   // Singleton for nsSMILValue objects to hold onto.
   static SVGTransformListSMILType* Singleton() {
@@ -87,7 +87,7 @@ class SVGTransformListSMILType : public nsISMILType {
   }
 
  protected:
-  // nsISMILType Methods
+  // SMILType Methods
   // -------------------
   virtual void Init(nsSMILValue& aValue) const override;
   virtual void Destroy(nsSMILValue& aValue) const override;

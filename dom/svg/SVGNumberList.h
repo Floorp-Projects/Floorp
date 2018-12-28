@@ -17,6 +17,11 @@
 
 namespace mozilla {
 
+namespace dom {
+class DOMSVGNumber;
+class DOMSVGNumberList;
+}  // namespace dom
+
 /**
  * ATTENTION! WARNING! WATCH OUT!!
  *
@@ -27,9 +32,9 @@ namespace mozilla {
  * The DOM wrapper class for this class is DOMSVGNumberList.
  */
 class SVGNumberList {
+  friend class dom::DOMSVGNumber;
+  friend class dom::DOMSVGNumberList;
   friend class SVGAnimatedNumberList;
-  friend class DOMSVGNumberList;
-  friend class DOMSVGNumber;
 
  public:
   SVGNumberList() {}

@@ -32,7 +32,6 @@ export function createTree({ sources, debuggeeUrl, projectRoot }: Params) {
   return {
     uncollapsedTree,
     sourceTree,
-    parentMap: createParentMap(sourceTree),
-    focusedItem: null
+    parentMap: createParentMap(sourceTree)
   };
 }
