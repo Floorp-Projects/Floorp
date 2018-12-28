@@ -8,11 +8,11 @@
 #define MOZILLA_SMILENUMTYPE_H_
 
 #include "mozilla/Attributes.h"
-#include "nsISMILType.h"
+#include "SMILType.h"
 
 namespace mozilla {
 
-class SMILEnumType : public nsISMILType {
+class SMILEnumType : public SMILType {
  public:
   // Singleton for nsSMILValue objects to hold onto.
   static SMILEnumType* Singleton() {
@@ -21,7 +21,7 @@ class SMILEnumType : public nsISMILType {
   }
 
  protected:
-  // nsISMILType Methods
+  // SMILType Methods
   // -------------------
   virtual void Init(nsSMILValue& aValue) const override;
   virtual void Destroy(nsSMILValue& aValue) const override;

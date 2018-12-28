@@ -8,19 +8,19 @@
 #define MOZILLA_SVGVIEWBOXSMILTYPE_H_
 
 #include "mozilla/Attributes.h"
-#include "nsISMILType.h"
+#include "SMILType.h"
 
 class nsSMILValue;
 
 namespace mozilla {
 
-class SVGViewBoxSMILType : public nsISMILType {
+class SVGViewBoxSMILType : public SMILType {
  public:
   // Singleton for nsSMILValue objects to hold onto.
   static SVGViewBoxSMILType sSingleton;
 
  protected:
-  // nsISMILType Methods
+  // SMILType Methods
   // -------------------
   virtual void Init(nsSMILValue& aValue) const override;
   virtual void Destroy(nsSMILValue&) const override;
