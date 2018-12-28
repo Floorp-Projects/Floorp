@@ -86,20 +86,10 @@
 }
 
 #placesToolbar > toolbarbutton[type="menu"] > .toolbarbutton-menu-dropmarker {
-  list-style-image: url(chrome://browser/skin/toolbarbutton-dropmarker.png);
+  list-style-image: url(chrome://global/skin/icons/arrow-dropdown-12.svg);
   padding: 0;
   margin-top: 1px;
   margin-inline-end: 2px;
-}
-
-@media (min-resolution: 2dppx) {
-  #placesToolbar > toolbarbutton[type="menu"] > .toolbarbutton-menu-dropmarker {
-    list-style-image: url(chrome://browser/skin/toolbarbutton-dropmarker@2x.png);
-  }
-
-  #placesToolbar > toolbarbutton[type="menu"] > .toolbarbutton-menu-dropmarker > .dropmarker-icon {
-    width: 7px;
-  }
 }
 
 #placesToolbar > toolbarbutton[disabled="true"] > .toolbarbutton-icon,
