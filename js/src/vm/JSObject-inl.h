@@ -605,8 +605,6 @@ extern NativeObject* InitClass(JSContext* cx, HandleObject obj,
 
 MOZ_ALWAYS_INLINE const char* GetObjectClassName(JSContext* cx,
                                                  HandleObject obj) {
-  cx->check(obj);
-
   if (obj->is<ProxyObject>()) {
     return Proxy::className(cx, obj);
   }
