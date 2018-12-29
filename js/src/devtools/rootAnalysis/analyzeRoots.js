@@ -790,6 +790,21 @@ function processBodies(functionName)
     if (!("DefineVariable" in functionBodies[0]))
         return;
     var suppressed = Boolean(limitedFunctions[mangled(functionName)] & LIMIT_CANNOT_GC);
+
+    // Look for the JS_EXPECT_HAZARDS annotation, and output a different
+    // message in that case that won't be counted as a hazard.
+    var annotations = new Set();
+    for (const variable of functionBodies[0].DefineVariable) {
+        if (variable.Variable.Kind == "Func" && variable.Variable.Name[0] == functionName) {
+            for (const { Name: [tag, value] } of (variable.Type.Annotation || [])) {
+                if (tag == 'annotate')
+                    annotations.add(value);
+            }
+        }
+    }
+
+    var missingExpectedHazard = annotations.has("Expect Hazards");
+
     for (var variable of functionBodies[0].DefineVariable) {
         var name;
         if (variable.Variable.Kind == "This")
@@ -817,11 +832,20 @@ function processBodies(functionName)
             var result = variableLiveAcrossGC(suppressed, variable.Variable);
             if (result) {
                 var lineText = findLocation(result.gcInfo.body, result.gcInfo.ppoint);
-                print("\nFunction '" + functionName + "'" +
-                      " has unrooted '" + name + "'" +
-                      " of type '" + typeDesc(variable.Type) + "'" +
-                      " live across GC call " + result.gcInfo.name +
-                      " at " + lineText);
+                if (annotations.has('Expect Hazards')) {
+                    print("\nThis is expected, but '" + functionName + "'" +
+                          " has unrooted '" + name + "'" +
+                          " of type '" + typeDesc(variable.Type) + "'" +
+                          " live across GC call " + result.gcInfo.name +
+                          " at " + lineText);
+                    missingExpectedHazard = false;
+                } else {
+                    print("\nFunction '" + functionName + "'" +
+                          " has unrooted '" + name + "'" +
+                          " of type '" + typeDesc(variable.Type) + "'" +
+                          " live across GC call " + result.gcInfo.name +
+                          " at " + lineText);
+                }
                 printEntryTrace(functionName, result);
             }
             result = unsafeVariableAddressTaken(suppressed, variable.Variable);
@@ -833,6 +857,20 @@ function processBodies(functionName)
                 printEntryTrace(functionName, {body:result.body, ppoint:result.ppoint});
             }
         }
+    }
+
+    if (missingExpectedHazard) {
+        const {
+            Location: [
+                { CacheString: startfile, Line: startline },
+                { CacheString: endfile, Line: endline }
+            ]
+        } = functionBodies[0];
+
+        const loc = (startfile == endfile) ? `${startfile}:${startline}-${endline}`
+              : `${startfile}:${startline}`;
+
+        print("\nFunction '" + functionName + "' expected hazard(s) but none were found at " + loc);
     }
 }
 
