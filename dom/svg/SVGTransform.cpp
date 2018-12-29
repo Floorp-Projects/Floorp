@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsSVGTransform.h"
+#include "SVGTransform.h"
 
 #include "nsError.h"
 #include "nsContentUtils.h"  // for NS_ENSURE_FINITE
@@ -18,7 +18,7 @@ namespace mozilla {
 
 using namespace dom::SVGTransform_Binding;
 
-void nsSVGTransform::GetValueAsString(nsAString& aValue) const {
+void SVGTransform::GetValueAsString(nsAString& aValue) const {
   switch (mType) {
     case SVG_TRANSFORM_TRANSLATE:
       // The spec say that if Y is not provided, it is assumed to be zero.
@@ -60,7 +60,7 @@ void nsSVGTransform::GetValueAsString(nsAString& aValue) const {
   }
 }
 
-void nsSVGTransform::SetMatrix(const gfxMatrix& aMatrix) {
+void SVGTransform::SetMatrix(const gfxMatrix& aMatrix) {
   mType = SVG_TRANSFORM_MATRIX;
   mMatrix = aMatrix;
   // We set the other members here too, since operator== requires it and
@@ -70,7 +70,7 @@ void nsSVGTransform::SetMatrix(const gfxMatrix& aMatrix) {
   mOriginY = 0.f;
 }
 
-void nsSVGTransform::SetTranslate(float aTx, float aTy) {
+void SVGTransform::SetTranslate(float aTx, float aTy) {
   mType = SVG_TRANSFORM_TRANSLATE;
   mMatrix = gfxMatrix::Translation(aTx, aTy);
   mAngle = 0.f;
@@ -78,7 +78,7 @@ void nsSVGTransform::SetTranslate(float aTx, float aTy) {
   mOriginY = 0.f;
 }
 
-void nsSVGTransform::SetScale(float aSx, float aSy) {
+void SVGTransform::SetScale(float aSx, float aSy) {
   mType = SVG_TRANSFORM_SCALE;
   mMatrix = gfxMatrix::Scaling(aSx, aSy);
   mAngle = 0.f;
@@ -86,7 +86,7 @@ void nsSVGTransform::SetScale(float aSx, float aSy) {
   mOriginY = 0.f;
 }
 
-void nsSVGTransform::SetRotate(float aAngle, float aCx, float aCy) {
+void SVGTransform::SetRotate(float aAngle, float aCx, float aCy) {
   mType = SVG_TRANSFORM_ROTATE;
   mMatrix = gfxMatrix::Translation(aCx, aCy)
                 .PreRotate(aAngle * kRadPerDegree)
@@ -96,7 +96,7 @@ void nsSVGTransform::SetRotate(float aAngle, float aCx, float aCy) {
   mOriginY = aCy;
 }
 
-nsresult nsSVGTransform::SetSkewX(float aAngle) {
+nsresult SVGTransform::SetSkewX(float aAngle) {
   double ta = tan(aAngle * kRadPerDegree);
   NS_ENSURE_FINITE(ta, NS_ERROR_RANGE_ERR);
 
@@ -109,7 +109,7 @@ nsresult nsSVGTransform::SetSkewX(float aAngle) {
   return NS_OK;
 }
 
-nsresult nsSVGTransform::SetSkewY(float aAngle) {
+nsresult SVGTransform::SetSkewY(float aAngle) {
   double ta = tan(aAngle * kRadPerDegree);
   NS_ENSURE_FINITE(ta, NS_ERROR_RANGE_ERR);
 
@@ -122,7 +122,7 @@ nsresult nsSVGTransform::SetSkewY(float aAngle) {
   return NS_OK;
 }
 
-SVGTransformSMILData::SVGTransformSMILData(const nsSVGTransform& aTransform)
+SVGTransformSMILData::SVGTransformSMILData(const SVGTransform& aTransform)
     : mTransformType(aTransform.Type()) {
   MOZ_ASSERT(mTransformType >= SVG_TRANSFORM_MATRIX &&
                  mTransformType <= SVG_TRANSFORM_SKEWY,
@@ -171,8 +171,8 @@ SVGTransformSMILData::SVGTransformSMILData(const nsSVGTransform& aTransform)
   }
 }
 
-nsSVGTransform SVGTransformSMILData::ToSVGTransform() const {
-  nsSVGTransform result;
+SVGTransform SVGTransformSMILData::ToSVGTransform() const {
+  SVGTransform result;
 
   switch (mTransformType) {
     case SVG_TRANSFORM_MATRIX:
