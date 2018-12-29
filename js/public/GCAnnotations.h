@@ -11,6 +11,8 @@
 // and functions.
 #ifdef XGILL_PLUGIN
 
+#  define JS_EXPECT_HAZARDS __attribute__((annotate("Expect Hazards")))
+
 // Mark a type as being a GC thing (eg js::gc::Cell has this annotation).
 #  define JS_HAZ_GC_THING __attribute__((annotate("GC Thing")))
 
@@ -63,6 +65,7 @@
 
 #else
 
+#  define JS_EXPECT_HAZARDS
 #  define JS_HAZ_GC_THING
 #  define JS_HAZ_GC_POINTER
 #  define JS_HAZ_ROOTED

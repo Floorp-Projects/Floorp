@@ -159,21 +159,28 @@ function check_hazards () {
     NUM_UNNECESSARY=$(grep -c '^Function.* has unnecessary root' "$1"/unnecessary.txt)
     NUM_DROPPED=$(grep -c '^Dropped CFG' "$1"/build_xgill.log)
     NUM_WRITE_HAZARDS=$(perl -lne 'print $1 if m!found (\d+)/\d+ allowed errors!' "$1"/heapWriteHazards.txt)
+    NUM_MISSING=$(grep -c '^Function.*expected hazard.*but none were found' "$1"/rootingHazards.txt)
 
     set +x
     echo "TinderboxPrint: rooting hazards<br/>$NUM_HAZARDS"
     echo "TinderboxPrint: (unsafe references to unrooted GC pointers)<br/>$NUM_UNSAFE"
     echo "TinderboxPrint: (unnecessary roots)<br/>$NUM_UNNECESSARY"
+    echo "TinderboxPrint: missing expected hazards<br/>$NUM_MISSING"
     echo "TinderboxPrint: heap write hazards<br/>$NUM_WRITE_HAZARDS"
 
     # Display errors in a way that will get picked up by the taskcluster scraper.
-    perl -le 'print "TEST-UNEXPECTED-FAIL | hazards | $ENV{NUM_HAZARDS} rooting hazards" if $ENV{NUM_HAZARDS}'
     perl -lne 'print "TEST-UNEXPECTED-FAIL | hazards | $1 $2" if /^Function.* has (unrooted .*live across GC call).* (at .*)$/' "$1"/hazards.txt
 
     exit_status=0
 
     if [ $NUM_HAZARDS -gt 0 ]; then
         echo "TEST-UNEXPECTED-FAIL | hazards | $NUM_HAZARDS rooting hazards detected" >&2
+        echo "TinderboxPrint: documentation<br/><a href='https://wiki.mozilla.org/Javascript:Hazard_Builds#Diagnosing_a_rooting_hazards_failure'>static rooting hazard analysis failures</a>, visit \"Inspect Task\" link for hazard details"
+        exit_status=1
+    fi
+
+    if [ $NUM_MISSING -gt 0 ]; then
+        echo "TEST-UNEXPECTED-FAIL | hazards | $NUM_MISSING expected hazards went undetected" >&2
         echo "TinderboxPrint: documentation<br/><a href='https://wiki.mozilla.org/Javascript:Hazard_Builds#Diagnosing_a_rooting_hazards_failure'>static rooting hazard analysis failures</a>, visit \"Inspect Task\" link for hazard details"
         exit_status=1
     fi

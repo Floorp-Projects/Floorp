@@ -17,6 +17,8 @@ args = parser.parse_args()
 
 num_hazards = 0
 num_refs = 0
+num_missing = 0
+
 try:
     with open(args.rootingHazards) as rootingHazards, \
             open(args.hazards, 'w') as hazards, \
@@ -31,6 +33,9 @@ try:
         # List of tuples (gcFunction, index of hazard) used to maintain the
         # ordering of the hazards
         hazardOrder = []
+
+        # Map from a hazardous GC function to the filename containing it.
+        fileOfFunction = {}
 
         for line in rootingHazards:
             m = re.match(r'^Time: (.*)', line)
@@ -53,7 +58,7 @@ try:
                 continue
 
             m = re.match(
-                r"^Function.*has unrooted.*of type.*live across GC call ('?)(.*?)('?) at \S+:\d+$", line)  # NOQA: E501
+                r"^Function.*has unrooted.*of type.*live across GC call ('?)(.*?)('?) at (\S+):\d+$", line)  # NOQA: E501
             if m:
                 # Function names are surrounded by single quotes. Field calls
                 # are unquoted.
@@ -62,6 +67,13 @@ try:
                 hazardOrder.append((current_gcFunction,
                                     len(hazardousGCFunctions[current_gcFunction]) - 1))
                 num_hazards += 1
+                fileOfFunction[current_gcFunction] = m.group(4)
+                continue
+
+            m = re.match(r'Function.*expected hazard.*but none were found', line)
+            if m:
+                num_missing += 1
+                print(line + "\n", file=hazards)
                 continue
 
             if current_gcFunction:
@@ -104,4 +116,4 @@ except IOError as e:
 print("Wrote %s" % args.hazards)
 print("Wrote %s" % args.extra)
 print("Wrote %s" % args.refs)
-print("Found %d hazards and %d unsafe references" % (num_hazards, num_refs))
+print("Found %d hazards %d unsafe references %d missing" % (num_hazards, num_refs, num_missing))
