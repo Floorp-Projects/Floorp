@@ -32,10 +32,12 @@ class AutoSomething {
   ~AutoSomething() { asm(""); }
 };
 
+extern Cell* getcell();
+
 extern void usevar(Cell* cell);
 
 void f() {
-  Cell* thing = nullptr;  // Live range starts here
+  Cell* thing = getcell();  // Live range starts here
 
   // When compiling with -fexceptions, there should be a hazard below. With
   // -fno-exceptions, there should not be one. We will check both.
