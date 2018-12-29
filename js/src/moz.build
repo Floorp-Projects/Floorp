@@ -113,6 +113,7 @@ EXPORTS += [
 
 EXPORTS.js += [
     '../public/AllocPolicy.h',
+    '../public/BuildId.h',
     '../public/CallArgs.h',
     '../public/CallNonGenericMethod.h',
     '../public/CharacterEncoding.h',
@@ -249,6 +250,7 @@ UNIFIED_SOURCES += [
     'vm/ArrayBufferViewObject.cpp',
     'vm/AsyncFunction.cpp',
     'vm/AsyncIteration.cpp',
+    'vm/BuildId.cpp',
     'vm/BytecodeUtil.cpp',
     'vm/Caches.cpp',
     'vm/CallNonGenericMethod.cpp',
