@@ -13,7 +13,7 @@
 #include "DOMSVGAnimatedTransformList.h"
 #include "SVGContentUtils.h"
 #include "nsSMILValue.h"
-#include "nsSVGTransform.h"
+#include "SVGTransform.h"
 #include "SVGTransformListSMILType.h"
 
 using namespace mozilla::dom;

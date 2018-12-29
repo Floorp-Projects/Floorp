@@ -35,7 +35,7 @@ nsresult SVGTransformList::CopyFrom(const SVGTransformList& rhs) {
 }
 
 nsresult SVGTransformList::CopyFrom(
-    const nsTArray<nsSVGTransform>& aTransformArray) {
+    const nsTArray<SVGTransform>& aTransformArray) {
   if (!mItems.Assign(aTransformArray, fallible)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

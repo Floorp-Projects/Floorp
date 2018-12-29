@@ -17,10 +17,10 @@ namespace mozilla {
 /*
  * The DOM wrapper class for this class is DOMSVGTransform.
  */
-class nsSVGTransform {
+class SVGTransform {
  public:
   // Default ctor initialises to matrix type with identity matrix
-  nsSVGTransform()
+  SVGTransform()
       : mMatrix()  // Initialises to identity
         ,
         mAngle(0.f),
@@ -28,14 +28,14 @@ class nsSVGTransform {
         mOriginY(0.f),
         mType(dom::SVGTransform_Binding::SVG_TRANSFORM_MATRIX) {}
 
-  explicit nsSVGTransform(const gfxMatrix& aMatrix)
+  explicit SVGTransform(const gfxMatrix& aMatrix)
       : mMatrix(aMatrix),
         mAngle(0.f),
         mOriginX(0.f),
         mOriginY(0.f),
         mType(dom::SVGTransform_Binding::SVG_TRANSFORM_MATRIX) {}
 
-  bool operator==(const nsSVGTransform& rhs) const {
+  bool operator==(const SVGTransform& rhs) const {
     return mType == rhs.mType && MatricesEqual(mMatrix, rhs.mMatrix) &&
            mAngle == rhs.mAngle && mOriginX == rhs.mOriginX &&
            mOriginY == rhs.mOriginY;
@@ -70,7 +70,7 @@ class nsSVGTransform {
 };
 
 /*
- * A slightly more light-weight version of nsSVGTransform for SMIL animation.
+ * A slightly more light-weight version of SVGTransform for SMIL animation.
  *
  * Storing the parameters in an array (rather than a matrix) also allows simpler
  * (transform type-agnostic) interpolation and addition.
@@ -124,9 +124,9 @@ class SVGTransformSMILData {
     }
   }
 
-  // Conversion to/from a fully-fledged nsSVGTransform
-  explicit SVGTransformSMILData(const nsSVGTransform& aTransform);
-  nsSVGTransform ToSVGTransform() const;
+  // Conversion to/from a fully-fledged SVGTransform
+  explicit SVGTransformSMILData(const SVGTransform& aTransform);
+  SVGTransform ToSVGTransform() const;
 
   bool operator==(const SVGTransformSMILData& aOther) const {
     if (mTransformType != aOther.mTransformType) return false;

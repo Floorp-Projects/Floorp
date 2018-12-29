@@ -13,7 +13,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsDebug.h"
 #include "nsID.h"
-#include "nsSVGTransform.h"
+#include "SVGTransform.h"
 #include "nsWrapperCache.h"
 #include "mozilla/Attributes.h"
 
@@ -54,7 +54,7 @@ class DOMSVGTransform final : public nsWrapperCache {
   /**
    * Ctor for creating an unowned copy. Used with Clone().
    */
-  explicit DOMSVGTransform(const nsSVGTransform& aMatrix);
+  explicit DOMSVGTransform(const SVGTransform& aMatrix);
 
   /**
    * Create an unowned copy of an owned transform. The caller is responsible for
@@ -101,7 +101,7 @@ class DOMSVGTransform final : public nsWrapperCache {
    */
   void RemovingFromList();
 
-  nsSVGTransform ToSVGTransform() const { return Transform(); }
+  SVGTransform ToSVGTransform() const { return Transform(); }
 
   // WebIDL
   DOMSVGTransformList* GetParentObject() const { return mList; }
@@ -130,20 +130,20 @@ class DOMSVGTransform final : public nsWrapperCache {
   SVGElement* Element() { return mList->Element(); }
 
   /**
-   * Get a reference to the internal nsSVGTransform list item that this DOM
+   * Get a reference to the internal SVGTransform list item that this DOM
    * wrapper object currently wraps.
    */
-  nsSVGTransform& InternalItem();
-  const nsSVGTransform& InternalItem() const;
+  SVGTransform& InternalItem();
+  const SVGTransform& InternalItem() const;
 
 #ifdef DEBUG
   bool IndexIsValid();
 #endif
 
-  const nsSVGTransform& Transform() const {
+  const SVGTransform& Transform() const {
     return HasOwner() ? InternalItem() : *mTransform;
   }
-  nsSVGTransform& Transform() {
+  SVGTransform& Transform() {
     return HasOwner() ? InternalItem() : *mTransform;
   }
 
@@ -155,14 +155,14 @@ class DOMSVGTransform final : public nsWrapperCache {
   uint32_t mListIndex : MOZ_SVG_LIST_INDEX_BIT_COUNT;
   uint32_t mIsAnimValItem : 1;
 
-  // Usually this class acts as a wrapper for an nsSVGTransform object which is
+  // Usually this class acts as a wrapper for an SVGTransform object which is
   // part of a list and is accessed by going via the owning Element.
   //
   // However, in some circumstances, objects of this class may not be associated
-  // with any particular list and thus, no internal nsSVGTransform object. In
-  // that case we allocate an nsSVGTransform object on the heap to store the
+  // with any particular list and thus, no internal SVGTransform object. In
+  // that case we allocate an SVGTransform object on the heap to store the
   // data.
-  nsAutoPtr<nsSVGTransform> mTransform;
+  nsAutoPtr<SVGTransform> mTransform;
 };
 
 }  // namespace dom
