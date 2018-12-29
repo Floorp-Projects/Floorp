@@ -399,7 +399,7 @@ const WHITELIST_FUNCTIONS: &'static [&'static str] = &[
     "JS_RequestInterruptCallback",
     "JS_ResolveStandardClass",
     "js::RunJobs",
-    "JS_SameValue",
+    "JS::SameValue",
     "js::SetDOMCallbacks",
     "js::SetDOMProxyInformation",
     "JS::SetEnqueuePromiseJobCallback",

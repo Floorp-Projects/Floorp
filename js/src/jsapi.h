@@ -344,19 +344,6 @@ extern JS_PUBLIC_API const char* InformalValueTypeName(const JS::Value& v);
 
 } /* namespace JS */
 
-extern JS_PUBLIC_API bool JS_StrictlyEqual(JSContext* cx,
-                                           JS::Handle<JS::Value> v1,
-                                           JS::Handle<JS::Value> v2,
-                                           bool* equal);
-
-extern JS_PUBLIC_API bool JS_LooselyEqual(JSContext* cx,
-                                          JS::Handle<JS::Value> v1,
-                                          JS::Handle<JS::Value> v2,
-                                          bool* equal);
-
-extern JS_PUBLIC_API bool JS_SameValue(JSContext* cx, JS::Handle<JS::Value> v1,
-                                       JS::Handle<JS::Value> v2, bool* same);
-
 /** True iff fun is the global eval function. */
 extern JS_PUBLIC_API bool JS_IsBuiltinEvalFunction(JSFunction* fun);
 
