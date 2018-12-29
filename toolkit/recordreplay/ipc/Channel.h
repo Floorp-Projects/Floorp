@@ -434,14 +434,6 @@ typedef BinaryMessage<MessageType::MiddlemanCallResponse>
 typedef EmptyMessage<MessageType::ResetMiddlemanCalls>
     ResetMiddlemanCallsMessage;
 
-static inline MiddlemanCallResponseMessage* ProcessMiddlemanCallMessage(
-    const MiddlemanCallRequestMessage& aMsg) {
-  InfallibleVector<char> outputData;
-  ProcessMiddlemanCall(aMsg.BinaryData(), aMsg.BinaryDataSize(), &outputData);
-  return MiddlemanCallResponseMessage::New(outputData.begin(),
-                                           outputData.length());
-}
-
 class Channel {
  public:
   // Note: the handler is responsible for freeing its input message. It will be
