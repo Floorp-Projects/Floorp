@@ -66,6 +66,15 @@ const sourceSpec = generateActorSpec({
       },
       response: RetVal("json"),
     },
+    setVirtualLog: {
+      request: {
+        location: {
+          line: Arg(0, "number"),
+          column: Arg(1, "nullable:number"),
+        },
+        text: Arg(2, "string"),
+      },
+    },
   },
 });
 
