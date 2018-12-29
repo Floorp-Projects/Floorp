@@ -19,6 +19,7 @@
 #include "js/UniquePtr.h"
 #include "util/StringBuffer.h"
 #include "vm/AsyncFunction.h"
+#include "vm/EqualityOperations.h"  // js::SameValue
 #include "vm/JSContext.h"
 #include "vm/RegExpObject.h"
 
