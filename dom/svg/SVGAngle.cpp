@@ -16,6 +16,12 @@ NS_SVG_VAL_IMPL_CYCLE_COLLECTION_WRAPPERCACHED(SVGAngle, mSVGElement)
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(SVGAngle, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(SVGAngle, Release)
 
+SVGAngle::SVGAngle(SVGElement* aSVGElement)
+    : mSVGElement(aSVGElement), mType(SVGAngle::CreatedValue) {
+  mVal = new nsSVGAngle();
+  mVal->Init();
+}
+
 JSObject* SVGAngle::WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) {
   return SVGAngle_Binding::Wrap(aCx, this, aGivenProto);
