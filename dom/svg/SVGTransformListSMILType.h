@@ -15,19 +15,19 @@ class nsSMILValue;
 
 namespace mozilla {
 
-class nsSVGTransform;
+class SVGTransform;
 class SVGTransformList;
 class SVGTransformSMILData;
 
 ////////////////////////////////////////////////////////////////////////
 // SVGTransformListSMILType
 //
-// Operations for animating an nsSVGTransformList.
+// Operations for animating an SVGTransformList.
 //
 // This class is confused somewhat by the fact that:
 // (i)  An <animateTransform> element animates an SVGTransformList
 // (ii) BUT <animateTransform> only allows the user to specify animation values
-//      for an nsSVGTransform
+//      for an SVGTransform
 //
 // This may be rectified in a future edition of SVG but for now it means that
 // the underlying value of an animation may be something of the form:
@@ -114,7 +114,7 @@ class SVGTransformListSMILType : public SMILType {
   static bool AppendTransforms(const SVGTransformList& aList,
                                nsSMILValue& aValue);
   static bool GetTransforms(const nsSMILValue& aValue,
-                            FallibleTArray<nsSVGTransform>& aTransforms);
+                            FallibleTArray<SVGTransform>& aTransforms);
 
  private:
   // Private constructor: prevent instances beyond my singleton.
