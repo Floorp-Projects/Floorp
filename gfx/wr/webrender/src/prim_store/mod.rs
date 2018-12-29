@@ -1684,29 +1684,24 @@ impl PrimitiveStore {
                 debug_assert!(state.tile_cache.is_none());
                 let mut tile_cache = pic.tile_cache.take().unwrap();
 
-                let surface_index = pic.raster_config.as_ref().unwrap().surface_index;
-                let surface = &surfaces[surface_index.0];
-
                 // If we have a tile cache for this picture, see if any of the
                 // relative transforms have changed, which means we need to
                 // re-map the dependencies of any child primitives.
-                tile_cache.update_transforms(
-                    surface.surface_spatial_node_index,
-                    surface.raster_spatial_node_index,
-                    pic.requested_raster_space,
-                    frame_context,
+                tile_cache.pre_update(
                     pic.local_rect,
+                    frame_context,
+                    resource_cache,
+                    retained_tiles,
                 );
 
-                state.tile_cache = Some((tile_cache, pic.spatial_node_index));
+                state.tile_cache = Some(tile_cache);
             }
             mem::replace(&mut pic.prim_list.pictures, SmallVec::new())
         };
 
-        if let Some((ref mut tile_cache, surface_spatial_node_index)) = state.tile_cache {
+        if let Some(ref mut tile_cache) = state.tile_cache {
             self.pictures[pic_index.0].update_prim_dependencies(
                 tile_cache,
-                surface_spatial_node_index,
                 frame_context,
                 resource_cache,
                 resources,
@@ -1733,19 +1728,20 @@ impl PrimitiveStore {
 
         let pic = &mut self.pictures[pic_index.0];
         if let Some(RasterConfig { composite_mode: PictureCompositeMode::TileCache { .. }, .. }) = pic.raster_config {
-            let mut tile_cache = state.tile_cache.take().unwrap().0;
+            let mut tile_cache = state.tile_cache.take().unwrap();
 
             // Build the dirty region(s) for this tile cache.
-            tile_cache.build_dirty_regions(
-                pic.spatial_node_index,
-                frame_context,
+            tile_cache.post_update(
                 resource_cache,
                 gpu_cache,
-                retained_tiles,
+                clip_store,
+                frame_context,
+                resources,
             );
 
             pic.tile_cache = Some(tile_cache);
         }
+
         pic.prim_list.pictures = children;
     }
 
@@ -1904,6 +1900,7 @@ impl PrimitiveStore {
                         pic_context.allow_subpixel_aa,
                         frame_state,
                         frame_context,
+                        pic_context.dirty_world_rect,
                     ) {
                         Some(info) => Some(info),
                         None => {

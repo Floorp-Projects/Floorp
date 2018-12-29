@@ -145,14 +145,6 @@ let gWhitelist = [{
     key: "PatternAttributeCompileFailure",
     type: "single-quote",
   }, {
-    file: "aboutSupport.dtd",
-    key: "aboutSupport.pageSubtitle",
-    type: "single-quote",
-  }, {
-    file: "aboutSupport.dtd",
-    key: "aboutSupport.userJSDescription",
-    type: "single-quote",
-  }, {
     file: "netError.dtd",
     key: "inadequateSecurityError.longDesc",
     type: "single-quote",

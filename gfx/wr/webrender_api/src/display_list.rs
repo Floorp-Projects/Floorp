@@ -215,7 +215,7 @@ impl<'a> BuiltDisplayListIter<'a> {
                 item: SpecificDisplayItem::PopStackingContext,
                 clip_and_scroll:
                     ClipAndScrollInfo::simple(ClipId::root_scroll_node(PipelineId::dummy())),
-                info: LayoutPrimitiveInfo::new(LayoutRect::zero()),
+                layout: LayoutPrimitiveInfo::new(LayoutRect::zero()),
             },
             cur_stops: ItemRange::default(),
             cur_glyphs: ItemRange::default(),
@@ -353,21 +353,21 @@ impl<'a, 'b> DisplayItemRef<'a, 'b> {
     }
 
     pub fn rect(&self) -> LayoutRect {
-        self.iter.cur_item.info.rect
+        self.iter.cur_item.layout.rect
     }
 
     pub fn get_layout_primitive_info(&self, offset: &LayoutVector2D) -> LayoutPrimitiveInfo {
-        let info = self.iter.cur_item.info;
+        let layout = self.iter.cur_item.layout;
         LayoutPrimitiveInfo {
-            rect: info.rect.translate(offset),
-            clip_rect: info.clip_rect.translate(offset),
-            is_backface_visible: info.is_backface_visible,
-            tag: info.tag,
+            rect: layout.rect.translate(offset),
+            clip_rect: layout.clip_rect.translate(offset),
+            is_backface_visible: layout.is_backface_visible,
+            tag: layout.tag,
         }
     }
 
     pub fn clip_rect(&self) -> &LayoutRect {
-        &self.iter.cur_item.info.clip_rect
+        &self.iter.cur_item.layout.clip_rect
     }
 
     pub fn clip_and_scroll(&self) -> ClipAndScrollInfo {
@@ -403,7 +403,7 @@ impl<'a, 'b> DisplayItemRef<'a, 'b> {
     }
 
     pub fn is_backface_visible(&self) -> bool {
-        self.iter.cur_item.info.is_backface_visible
+        self.iter.cur_item.layout.is_backface_visible
     }
 
     // Creates a new iterator where this element's iterator is, to hack around borrowck.
@@ -506,7 +506,7 @@ impl Serialize for BuiltDisplayList {
                     SpecificDisplayItem::PopCacheMarker => PopCacheMarker,
                 },
                 clip_and_scroll: display_item.clip_and_scroll,
-                info: display_item.info,
+                layout: display_item.layout,
             };
             seq.serialize_element(&serial_di)?
         }
@@ -594,7 +594,7 @@ impl<'de> Deserialize<'de> for BuiltDisplayList {
                     PopCacheMarker => SpecificDisplayItem::PopCacheMarker,
                 },
                 clip_and_scroll: complete.clip_and_scroll,
-                info: complete.info,
+                layout: complete.layout,
             };
             serialize_fast(&mut data, &item);
             // the aux data is serialized after the item, hence the temporary
@@ -969,13 +969,13 @@ impl DisplayListBuilder {
     /// NOTE: It is usually preferable to use the specialized methods to push
     /// display items. Pushing unexpected or invalid items here may
     /// result in WebRender panicking or behaving in unexpected ways.
-    pub fn push_item(&mut self, item: &SpecificDisplayItem, info: &LayoutPrimitiveInfo) {
+    pub fn push_item(&mut self, item: &SpecificDisplayItem, layout: &LayoutPrimitiveInfo) {
         serialize_fast(
             &mut self.data,
             SerializedDisplayItem {
                 item,
                 clip_and_scroll: self.clip_stack.last().unwrap(),
-                info,
+                layout,
             },
         )
     }
@@ -983,7 +983,7 @@ impl DisplayListBuilder {
     fn push_item_with_clip_scroll_info(
         &mut self,
         item: &SpecificDisplayItem,
-        info: &LayoutPrimitiveInfo,
+        layout: &LayoutPrimitiveInfo,
         clip_and_scroll: &ClipAndScrollInfo
     ) {
         serialize_fast(
@@ -991,14 +991,14 @@ impl DisplayListBuilder {
             SerializedDisplayItem {
                 item,
                 clip_and_scroll,
-                info,
+                layout,
             },
         )
     }
 
     fn push_new_empty_item(&mut self, item: &SpecificDisplayItem) {
-        let info = &LayoutPrimitiveInfo::new(LayoutRect::zero());
-        self.push_item(item, info)
+        let layout = &LayoutPrimitiveInfo::new(LayoutRect::zero());
+        self.push_item(item, layout)
     }
 
     fn push_iter_impl<I>(data: &mut Vec<u8>, iter_source: I)
@@ -1046,18 +1046,18 @@ impl DisplayListBuilder {
         Self::push_iter_impl(&mut self.data, iter);
     }
 
-    pub fn push_rect(&mut self, info: &LayoutPrimitiveInfo, color: ColorF) {
+    pub fn push_rect(&mut self, layout: &LayoutPrimitiveInfo, color: ColorF) {
         let item = SpecificDisplayItem::Rectangle(RectangleDisplayItem { color });
-        self.push_item(&item, info);
+        self.push_item(&item, layout);
     }
 
-    pub fn push_clear_rect(&mut self, info: &LayoutPrimitiveInfo) {
-        self.push_item(&SpecificDisplayItem::ClearRectangle, info);
+    pub fn push_clear_rect(&mut self, layout: &LayoutPrimitiveInfo) {
+        self.push_item(&SpecificDisplayItem::ClearRectangle, layout);
     }
 
     pub fn push_line(
         &mut self,
-        info: &LayoutPrimitiveInfo,
+        layout: &LayoutPrimitiveInfo,
         wavy_line_thickness: f32,
         orientation: LineOrientation,
         color: &ColorF,
@@ -1070,12 +1070,12 @@ impl DisplayListBuilder {
             style,
         });
 
-        self.push_item(&item, info);
+        self.push_item(&item, layout);
     }
 
     pub fn push_image(
         &mut self,
-        info: &LayoutPrimitiveInfo,
+        layout: &LayoutPrimitiveInfo,
         stretch_size: LayoutSize,
         tile_spacing: LayoutSize,
         image_rendering: ImageRendering,
@@ -1092,13 +1092,13 @@ impl DisplayListBuilder {
             color,
         });
 
-        self.push_item(&item, info);
+        self.push_item(&item, layout);
     }
 
     /// Push a yuv image. All planar data in yuv image should use the same buffer type.
     pub fn push_yuv_image(
         &mut self,
-        info: &LayoutPrimitiveInfo,
+        layout: &LayoutPrimitiveInfo,
         yuv_data: YuvData,
         color_depth: ColorDepth,
         color_space: YuvColorSpace,
@@ -1110,12 +1110,12 @@ impl DisplayListBuilder {
             color_space,
             image_rendering,
         });
-        self.push_item(&item, info);
+        self.push_item(&item, layout);
     }
 
     pub fn push_text(
         &mut self,
-        info: &LayoutPrimitiveInfo,
+        layout: &LayoutPrimitiveInfo,
         glyphs: &[GlyphInstance],
         font_key: FontInstanceKey,
         color: ColorF,
@@ -1128,7 +1128,7 @@ impl DisplayListBuilder {
         });
 
         for split_glyphs in glyphs.chunks(MAX_TEXT_RUN_LENGTH) {
-            self.push_item(&item, info);
+            self.push_item(&item, layout);
             self.push_iter(split_glyphs);
         }
     }
@@ -1165,18 +1165,18 @@ impl DisplayListBuilder {
 
     pub fn push_border(
         &mut self,
-        info: &LayoutPrimitiveInfo,
+        layout: &LayoutPrimitiveInfo,
         widths: LayoutSideOffsets,
         details: BorderDetails,
     ) {
         let item = SpecificDisplayItem::Border(BorderDisplayItem { details, widths });
 
-        self.push_item(&item, info);
+        self.push_item(&item, layout);
     }
 
     pub fn push_box_shadow(
         &mut self,
-        info: &LayoutPrimitiveInfo,
+        layout: &LayoutPrimitiveInfo,
         box_bounds: LayoutRect,
         offset: LayoutVector2D,
         color: ColorF,
@@ -1195,7 +1195,7 @@ impl DisplayListBuilder {
             clip_mode,
         });
 
-        self.push_item(&item, info);
+        self.push_item(&item, layout);
     }
 
     /// Pushes a linear gradient to be displayed.
@@ -1208,13 +1208,13 @@ impl DisplayListBuilder {
     /// is not zero spacers with the given dimensions
     /// are inserted between the tiles as seams.
     ///
-    /// The origin of the tiles is given in `info.rect.origin`.
+    /// The origin of the tiles is given in `layout.rect.origin`.
     /// If the gradient should only be displayed once limit
-    /// the `info.rect.size` to a single tile.
+    /// the `layout.rect.size` to a single tile.
     /// The gradient is only visible within the local clip.
     pub fn push_gradient(
         &mut self,
-        info: &LayoutPrimitiveInfo,
+        layout: &LayoutPrimitiveInfo,
         gradient: Gradient,
         tile_size: LayoutSize,
         tile_spacing: LayoutSize,
@@ -1225,7 +1225,7 @@ impl DisplayListBuilder {
             tile_spacing,
         });
 
-        self.push_item(&item, info);
+        self.push_item(&item, layout);
     }
 
     /// Pushes a radial gradient to be displayed.
@@ -1233,7 +1233,7 @@ impl DisplayListBuilder {
     /// See [`push_gradient`](#method.push_gradient) for explanation.
     pub fn push_radial_gradient(
         &mut self,
-        info: &LayoutPrimitiveInfo,
+        layout: &LayoutPrimitiveInfo,
         gradient: RadialGradient,
         tile_size: LayoutSize,
         tile_spacing: LayoutSize,
@@ -1244,12 +1244,12 @@ impl DisplayListBuilder {
             tile_spacing,
         });
 
-        self.push_item(&item, info);
+        self.push_item(&item, layout);
     }
 
     pub fn push_reference_frame(
         &mut self,
-        info: &LayoutPrimitiveInfo,
+        rect: &LayoutRect,
         transform_style: TransformStyle,
         transform: Option<PropertyBinding<LayoutTransform>>,
         perspective: Option<LayoutTransform>,
@@ -1263,7 +1263,7 @@ impl DisplayListBuilder {
                 id,
             },
         });
-        self.push_item(&item, info);
+        self.push_item(&item, &LayoutPrimitiveInfo::new(*rect));
         id
     }
 
@@ -1286,7 +1286,7 @@ impl DisplayListBuilder {
 
     pub fn push_stacking_context(
         &mut self,
-        info: &LayoutPrimitiveInfo,
+        layout: &LayoutPrimitiveInfo,
         clip_node_id: Option<ClipId>,
         transform_style: TransformStyle,
         mix_blend_mode: MixBlendMode,
@@ -1302,7 +1302,7 @@ impl DisplayListBuilder {
             },
         });
 
-        self.push_item(&item, info);
+        self.push_item(&item, layout);
         self.push_iter(filters);
     }
 
@@ -1461,9 +1461,9 @@ impl DisplayListBuilder {
             image_mask,
         });
 
-        let info = LayoutPrimitiveInfo::new(clip_rect);
+        let layout = LayoutPrimitiveInfo::new(clip_rect);
 
-        self.push_item_with_clip_scroll_info(&item, &info, &scrollinfo);
+        self.push_item_with_clip_scroll_info(&item, &layout, &scrollinfo);
         self.push_iter(complex_clips);
         id
     }
@@ -1485,8 +1485,8 @@ impl DisplayListBuilder {
             previously_applied_offset,
         });
 
-        let info = LayoutPrimitiveInfo::new(frame_rect);
-        self.push_item(&item, &info);
+        let layout = LayoutPrimitiveInfo::new(frame_rect);
+        self.push_item(&item, &layout);
         id
     }
 
@@ -1494,8 +1494,8 @@ impl DisplayListBuilder {
         self.clip_stack.push(ClipAndScrollInfo::simple(id));
     }
 
-    pub fn push_clip_and_scroll_info(&mut self, info: ClipAndScrollInfo) {
-        self.clip_stack.push(info);
+    pub fn push_clip_and_scroll_info(&mut self, layout: ClipAndScrollInfo) {
+        self.clip_stack.push(layout);
     }
 
     pub fn pop_clip_id(&mut self) {
@@ -1509,7 +1509,7 @@ impl DisplayListBuilder {
 
     pub fn push_iframe(
         &mut self,
-        info: &LayoutPrimitiveInfo,
+        layout: &LayoutPrimitiveInfo,
         pipeline_id: PipelineId,
         ignore_missing_pipeline: bool
     ) {
@@ -1518,11 +1518,11 @@ impl DisplayListBuilder {
             pipeline_id,
             ignore_missing_pipeline,
         });
-        self.push_item(&item, info);
+        self.push_item(&item, layout);
     }
 
-    pub fn push_shadow(&mut self, info: &LayoutPrimitiveInfo, shadow: Shadow) {
-        self.push_item(&SpecificDisplayItem::PushShadow(shadow), info);
+    pub fn push_shadow(&mut self, layout: &LayoutPrimitiveInfo, shadow: Shadow) {
+        self.push_item(&SpecificDisplayItem::PushShadow(shadow), layout);
     }
 
     pub fn pop_all_shadows(&mut self) {
