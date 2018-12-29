@@ -736,21 +736,7 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
     return success;
   },
 
-  /*
-   * Ensure the given BreakpointActor is set as breakpoint handler on all
-   * scripts that match the given location in the generated source.
-   *
-   * @param BreakpointActor actor
-   *        The BreakpointActor to be set as a breakpoint handler.
-   * @param GeneratedLocation generatedLocation
-   *        A GeneratedLocation representing the location in the generated
-   *        source for which the given BreakpointActor is to be set as a
-   *        breakpoint handler.
-   *
-   * @returns A Boolean that is true if the BreakpointActor was set as a
-   *          breakpoint handler on at least one script, and false otherwise.
-   */
-  _setBreakpointAtGeneratedLocation: function(actor, generatedLocation) {
+  _findEntryPointsForLocation: function(generatedLocation) {
     const {
       generatedSourceActor,
       generatedLine,
@@ -760,11 +746,9 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
 
     // Find all scripts that match the given source actor and line
     // number.
-    let scripts = generatedSourceActor._findDebuggeeScripts(
+    const scripts = generatedSourceActor._findDebuggeeScripts(
       { line: generatedLine }
     );
-
-    scripts = scripts.filter((script) => !actor.hasScript(script));
 
     // Find all entry points that correspond to the given location.
     const entryPoints = [];
@@ -831,12 +815,55 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
       }
     }
 
+    return entryPoints;
+  },
+
+  /*
+   * Ensure the given BreakpointActor is set as breakpoint handler on all
+   * scripts that match the given location in the generated source.
+   *
+   * @param BreakpointActor actor
+   *        The BreakpointActor to be set as a breakpoint handler.
+   * @param GeneratedLocation generatedLocation
+   *        A GeneratedLocation representing the location in the generated
+   *        source for which the given BreakpointActor is to be set as a
+   *        breakpoint handler.
+   *
+   * @returns A Boolean that is true if the BreakpointActor was set as a
+   *          breakpoint handler on at least one script, and false otherwise.
+   */
+  _setBreakpointAtGeneratedLocation: function(actor, generatedLocation) {
+    let entryPoints = this._findEntryPointsForLocation(generatedLocation);
+    entryPoints = entryPoints.filter(({script}) => !actor.hasScript(script));
+
     if (entryPoints.length === 0) {
       return false;
     }
 
     setBreakpointAtEntryPoints(actor, entryPoints);
     return true;
+  },
+
+  setVirtualLog(line, column, text) {
+    const location = new GeneratedLocation(this, line, column);
+    const entryPoints = this._findEntryPointsForLocation(location);
+
+    for (const { script, offsets } of entryPoints) {
+      for (const offset of offsets) {
+        script.replayVirtualConsoleLog(offset, text, (point, rv) => {
+          const packet = {
+            from: this.actorID,
+            type: "virtualConsoleLog",
+            url: this.url,
+            line,
+            column,
+            executionPoint: point,
+            message: "return" in rv ? "" + rv.return : "" + rv.throw,
+          };
+          this.conn.send(packet);
+        });
+      }
+    }
   },
 });
 

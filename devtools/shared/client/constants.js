@@ -37,6 +37,7 @@ const UnsolicitedNotifications = {
   "evaluationResult": "evaluationResult",
   "updatedSource": "updatedSource",
   "inspectObject": "inspectObject",
+  "virtualConsoleLog": "virtualConsoleLog",
 
   // newSource is still emitted on the ThreadActor, in addition to the
   // BrowsingContextActor we have to keep it here until ThreadClient is converted to
