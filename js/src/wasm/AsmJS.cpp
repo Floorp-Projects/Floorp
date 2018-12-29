@@ -1119,8 +1119,8 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidator {
     }
   };
 
-  typedef Vector<const Func*> ConstFuncVector;
-  typedef Vector<Func> FuncVector;
+  using ConstFuncVector = Vector<const Func*>;
+  using FuncVector = Vector<Func>;
 
   class Table {
     uint32_t sigIndex_;
@@ -1151,7 +1151,7 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidator {
     }
   };
 
-  typedef Vector<Table*> TableVector;
+  using TableVector = Vector<Table*>;
 
   class Global {
    public:
@@ -1292,7 +1292,7 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidator {
     const FuncType& funcType() const { return types_[sigIndex_].funcType(); }
 
     // Implement HashPolicy:
-    typedef const FuncType& Lookup;
+    using Lookup = const FuncType&;
     static HashNumber hash(Lookup l) { return l.hash(); }
     static bool match(HashableSig lhs, Lookup rhs) {
       return lhs.funcType() == rhs;
@@ -1322,11 +1322,11 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidator {
     }
   };
 
-  typedef HashSet<HashableSig, HashableSig> SigSet;
-  typedef HashMap<NamedSig, uint32_t, NamedSig> FuncImportMap;
-  typedef HashMap<PropertyName*, Global*> GlobalMap;
-  typedef HashMap<PropertyName*, MathBuiltin> MathNameMap;
-  typedef Vector<ArrayView> ArrayViewVector;
+  using SigSet = HashSet<HashableSig, HashableSig>;
+  using FuncImportMap = HashMap<NamedSig, uint32_t, NamedSig>;
+  using GlobalMap = HashMap<PropertyName*, Global*>;
+  using MathNameMap = HashMap<PropertyName*, MathBuiltin>;
+  using ArrayViewVector = Vector<ArrayView>;
 
   JSContext* cx_;
   AsmJSParser& parser_;
@@ -3822,8 +3822,8 @@ static bool CheckMathMinMax(FunctionValidator& f, ParseNode* callNode,
   return true;
 }
 
-typedef bool (*CheckArgType)(FunctionValidator& f, ParseNode* argNode,
-                             Type type);
+using CheckArgType = bool (*)(FunctionValidator& f, ParseNode* argNode,
+                              Type type);
 
 template <CheckArgType checkArg>
 static bool CheckCallArgs(FunctionValidator& f, ParseNode* callNode,
@@ -5915,7 +5915,8 @@ static bool CheckFunction(ModuleValidator& m) {
   // the backing LifoAlloc after parsing/compiling each function. Release the
   // parser's lifo memory after the last use of a parse node.
   AsmJSParser::Mark mark = m.parser().mark();
-  auto releaseMark = mozilla::MakeScopeExit([&] { m.parser().release(mark); });
+  auto releaseMark =
+      mozilla::MakeScopeExit([&m, &mark] { m.parser().release(mark); });
 
   CodeNode* funNode = nullptr;
   unsigned line = 0;
