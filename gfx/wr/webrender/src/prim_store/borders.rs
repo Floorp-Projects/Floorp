@@ -374,7 +374,7 @@ impl IsVisible for ImageBorder {
 }
 
 #[test]
-#[cfg(target_os = "linux")]
+#[cfg(target_pointer_width = "64")]
 fn test_struct_sizes() {
     use std::mem;
     // The sizes of these structures are critical for performance on a number of
@@ -384,9 +384,9 @@ fn test_struct_sizes() {
     // (b) You made a structure larger. This is not necessarily a problem, but should only
     //     be done with care, and after checking if talos performance regresses badly.
     assert_eq!(mem::size_of::<NormalBorderPrim>(), 84, "NormalBorderPrim size changed");
-    assert_eq!(mem::size_of::<NormalBorderTemplate>(), 240, "NormalBorderTemplate size changed");
+    assert_eq!(mem::size_of::<NormalBorderTemplate>(), 224, "NormalBorderTemplate size changed");
     assert_eq!(mem::size_of::<NormalBorderKey>(), 112, "NormalBorderKey size changed");
     assert_eq!(mem::size_of::<ImageBorder>(), 92, "ImageBorder size changed");
-    assert_eq!(mem::size_of::<ImageBorderTemplate>(), 104, "ImageBorderTemplate size changed");
+    assert_eq!(mem::size_of::<ImageBorderTemplate>(), 88, "ImageBorderTemplate size changed");
     assert_eq!(mem::size_of::<ImageBorderKey>(), 120, "ImageBorderKey size changed");
 }
