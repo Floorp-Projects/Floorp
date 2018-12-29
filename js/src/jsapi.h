@@ -3289,10 +3289,6 @@ extern JS_PUBLIC_API void JS_RequestInterruptCallbackCanWait(JSContext* cx);
 
 namespace JS {
 
-/* Vector of characters used for holding build ids. */
-
-typedef js::Vector<char, 0, js::SystemAllocPolicy> BuildIdCharVector;
-
 /**
  * The ConsumeStreamCallback is called from an active JSContext, passing a
  * StreamConsumer that wishes to consume the given host object as a stream of
@@ -3316,9 +3312,9 @@ typedef js::Vector<char, 0, js::SystemAllocPolicy> BuildIdCharVector;
  *
  * After storeOptimizedEncoding() is called, on cache hit, the embedding
  * may call consumeOptimizedEncoding() instead of consumeChunk()/streamEnd().
- * The embedding must ensure that the GetOptimizedEncodingBuildId() at the time
- * when an optimized encoding is created is the same as when it is later
- * consumed.
+ * The embedding must ensure that the GetOptimizedEncodingBuildId() (see
+ * js/BuildId.h) at the time when an optimized encoding is created is the same
+ * as when it is later consumed.
  */
 
 class OptimizedEncodingListener {
@@ -3335,9 +3331,6 @@ class OptimizedEncodingListener {
   // finished processing a streamed resource.
   virtual void storeOptimizedEncoding(const uint8_t* bytes, size_t length) = 0;
 };
-
-extern MOZ_MUST_USE JS_PUBLIC_API bool GetOptimizedEncodingBuildId(
-    BuildIdCharVector* buildId);
 
 class JS_PUBLIC_API StreamConsumer {
  protected:
@@ -4437,18 +4430,6 @@ struct AsmJSCacheOps {
 
 extern JS_PUBLIC_API void SetAsmJSCacheOps(JSContext* cx,
                                            const AsmJSCacheOps* callbacks);
-
-/**
- * Return the buildId (represented as a sequence of characters) associated with
- * the currently-executing build. If the JS engine is embedded such that a
- * single cache entry can be observed by different compiled versions of the JS
- * engine, it is critical that the buildId shall change for each new build of
- * the JS engine.
- */
-
-typedef bool (*BuildIdOp)(BuildIdCharVector* buildId);
-
-extern JS_PUBLIC_API void SetProcessBuildIdOp(BuildIdOp buildIdOp);
 
 /**
  * The WasmModule interface allows the embedding to hold a reference to the

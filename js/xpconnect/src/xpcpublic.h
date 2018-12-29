@@ -8,6 +8,7 @@
 #define xpcpublic_h
 
 #include "jsapi.h"
+#include "js/BuildId.h"  // JS::BuildIdCharVector
 #include "js/HeapAPI.h"
 #include "js/GCAPI.h"
 #include "js/Proxy.h"
