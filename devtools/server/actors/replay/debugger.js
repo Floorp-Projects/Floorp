@@ -42,6 +42,7 @@ function ReplayDebugger() {
 
   // We should have been connected to control.js by the call above.
   assert(this._control);
+  assert(this._searchControl);
 
   // Preferred direction of travel when not explicitly resumed.
   this._direction = Direction.NONE;
@@ -74,6 +75,9 @@ function ReplayDebugger() {
 
   // After we are done pausing, callback describing how to resume.
   this._resumeCallback = null;
+
+  // Information about all searches that exist.
+  this._searches = [];
 
   // Handler called when hitting the beginning/end of the recording, or when
   // a time warp target has been reached.
@@ -349,6 +353,47 @@ ReplayDebugger.prototype = {
   },
 
   /////////////////////////////////////////////////////////
+  // Search management
+  /////////////////////////////////////////////////////////
+
+  _forEachSearch(callback) {
+    for (const { position } of this._searches) {
+      callback(position);
+    }
+  },
+
+  _virtualConsoleLog(position, text, callback) {
+    this._searches.push({ position, text, callback, results: [] });
+    this._searchControl.reset();
+  },
+
+  _onSearchPause(point) {
+    for (const { position, text, callback, results } of this._searches) {
+      if (RecordReplayControl.positionSubsumes(position, point.position)) {
+        if (!results.some(existing => point.progress == existing.progress)) {
+          let evaluateResult;
+          if (text) {
+            const frameData = this._searchControl.sendRequest({
+              type: "getFrame",
+              index: NewestFrameIndex,
+            });
+            if ("index" in frameData) {
+              const rv = this._searchControl.sendRequest({
+                type: "frameEvaluate",
+                index: frameData.index,
+                text,
+              });
+              evaluateResult = this._convertCompletionValue(rv, { forSearch: true });
+            }
+          }
+          results.push(point);
+          callback(point, evaluateResult);
+        }
+      }
+    }
+  },
+
+  /////////////////////////////////////////////////////////
   // Breakpoint management
   /////////////////////////////////////////////////////////
 
@@ -485,14 +530,20 @@ ReplayDebugger.prototype = {
   // Object methods
   /////////////////////////////////////////////////////////
 
-  // Objects which |forConsole| is set are objects that were logged in console
-  // messages, and had their properties recorded so that they can be inspected
-  // without switching to a replaying child.
-  _getObject(id, forConsole) {
+  _getObject(id, options) {
+    if (options && options.forSearch) {
+      // Returning objects through searches is NYI.
+      return "<UnknownSearchObject>";
+    }
+    const forConsole = options && options.forConsole;
+
     if (id && !this._objects[id]) {
       const data = this._sendRequest({ type: "getObject", id });
       switch (data.kind) {
       case "Object":
+        // Objects which |forConsole| is set are objects that were logged in
+        // console messages, and had their properties recorded so that they can
+        // be inspected without switching to a replaying child.
         this._objects[id] = new ReplayDebuggerObject(this, data, forConsole);
         break;
       case "Environment":
@@ -509,10 +560,10 @@ ReplayDebugger.prototype = {
     return rv;
   },
 
-  _convertValue(value, forConsole) {
+  _convertValue(value, options) {
     if (isNonNullObject(value)) {
       if (value.object) {
-        return this._getObject(value.object, forConsole);
+        return this._getObject(value.object, options);
       } else if (value.special == "undefined") {
         return undefined;
       } else if (value.special == "NaN") {
@@ -526,12 +577,12 @@ ReplayDebugger.prototype = {
     return value;
   },
 
-  _convertCompletionValue(value) {
+  _convertCompletionValue(value, options) {
     if ("return" in value) {
-      return { return: this._convertValue(value.return) };
+      return { return: this._convertValue(value.return, options) };
     }
     if ("throw" in value) {
-      return { throw: this._convertValue(value.throw) };
+      return { throw: this._convertValue(value.throw, options) };
     }
     ThrowError("Unexpected completion value");
     return null; // For eslint
@@ -582,7 +633,7 @@ ReplayDebugger.prototype = {
     if (message.messageType == "ConsoleAPI" && message.arguments) {
       for (let i = 0; i < message.arguments.length; i++) {
         message.arguments[i] = this._convertValue(message.arguments[i],
-                                                  /* forConsole = */ true);
+                                                  { forConsole: true });
       }
     }
     return message;
@@ -662,6 +713,7 @@ ReplayDebuggerScript.prototype = {
   get format() { return this._data.format; },
 
   _forward(type, value) {
+    this._dbg._ensurePaused();
     return this._dbg._sendRequest({ type, id: this._data.id, value });
   },
 
@@ -681,6 +733,11 @@ ReplayDebuggerScript.prototype = {
     this._dbg._clearMatchingBreakpoints(({position, data}) => {
       return position.script == this._data.id && handler == data;
     });
+  },
+
+  replayVirtualConsoleLog(offset, text, callback) {
+    this._dbg._virtualConsoleLog({ kind: "Break", script: this._data.id, offset },
+                                 text, callback);
   },
 
   get isGeneratorFunction() { NYI(); },
