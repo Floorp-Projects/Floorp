@@ -4168,11 +4168,6 @@ JS_PUBLIC_API void JS::ShutdownAsyncTasks(JSContext* cx) {
   cx->runtime()->offThreadPromiseState.ref().shutdown(cx);
 }
 
-JS_PUBLIC_API bool JS::GetOptimizedEncodingBuildId(
-    JS::BuildIdCharVector* buildId) {
-  return wasm::GetOptimizedEncodingBuildId(buildId);
-}
-
 JS_PUBLIC_API void JS::InitConsumeStreamCallback(
     JSContext* cx, ConsumeStreamCallback consume,
     ReportStreamErrorCallback report) {
@@ -6047,10 +6042,6 @@ JS_PUBLIC_API bool JS::FinishIncrementalEncoding(JSContext* cx,
     return false;
   }
   return true;
-}
-
-JS_PUBLIC_API void JS::SetProcessBuildIdOp(JS::BuildIdOp buildIdOp) {
-  GetBuildId = buildIdOp;
 }
 
 JS_PUBLIC_API void JS::SetAsmJSCacheOps(JSContext* cx,
