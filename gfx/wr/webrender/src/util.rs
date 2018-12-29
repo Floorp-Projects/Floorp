@@ -884,3 +884,96 @@ pub fn recycle_vec<T>(vec: &mut Vec<T>) {
     }
     vec.clear();
 }
+
+/// A specialized array container for comparing equality between the current
+/// contents and the new contents, incrementally. As each item is added, the
+/// container maintains track of whether this is the same as last time items
+/// were added, or if the contents have diverged. After each reset, the memory
+/// of the vec is retained, which means that memory allocation is rare.
+#[derive(Debug)]
+pub struct ComparableVec<T> {
+    /// The items to be stored and compared
+    items: Vec<T>,
+    /// The current index to add the next item to
+    current_index: usize,
+    /// The previous length of the array
+    prev_len: usize,
+    /// Whether the contents of the vec is the same as last time.
+    is_same: bool,
+}
+
+impl<T> ComparableVec<T> where T: PartialEq + Clone + fmt::Debug {
+    /// Construct a new comparable vec
+    pub fn new() -> Self {
+        ComparableVec {
+            items: Vec::new(),
+            current_index: 0,
+            prev_len: 0,
+            is_same: false,
+        }
+    }
+
+    /// Retrieve a reference to the current items array
+    pub fn items(&self) -> &[T] {
+        &self.items[.. self.current_index]
+    }
+
+    /// Clear the contents of the vec, ready for adding new items.
+    pub fn reset(&mut self) {
+        self.items.truncate(self.current_index);
+        self.prev_len = self.current_index;
+        self.current_index = 0;
+        self.is_same = true;
+    }
+
+    /// Return the current length of the container
+    pub fn len(&self) -> usize {
+        self.current_index
+    }
+
+    /// Return true if the container has no items
+    pub fn is_empty(&self) -> bool {
+        self.current_index == 0
+    }
+
+    /// Push a number of items into the container
+    pub fn extend_from_slice(&mut self, items: &[T]) {
+        for item in items {
+            self.push(item.clone());
+        }
+    }
+
+    /// Push a single item into the container.
+    pub fn push(&mut self, item: T) {
+        // If this item extends the real length of the vec, it's clearly not
+        // the same as last time.
+        if self.current_index < self.items.len() {
+            // If the vec is currently considered equal, we need to compare
+            // the item being pushed.
+            if self.is_same {
+                let existing_item = &mut self.items[self.current_index];
+                if *existing_item != item {
+                    // Overwrite the current item with the new one and
+                    // mark the vec as different.
+                    *existing_item = item;
+                    self.is_same = false;
+                }
+            } else {
+                // The vec is already not equal, so just push the item.
+                self.items[self.current_index] = item;
+            }
+        } else {
+            // In this case, mark the vec as different and store the new item.
+            self.is_same = false;
+            self.items.push(item);
+        }
+
+        // Increment where the next item will be pushed.
+        self.current_index += 1;
+    }
+
+    /// Return true if the contents of the vec are the same as the previous time.
+    pub fn is_valid(&self) -> bool {
+        self.is_same && self.prev_len == self.current_index
+    }
+}

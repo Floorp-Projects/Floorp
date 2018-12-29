@@ -1378,7 +1378,7 @@ impl YamlFrameReader {
                 "stacking-context" => {
                     self.add_stacking_context_from_yaml(dl, wrench, item, false, &mut info)
                 }
-                "reference-frame" => self.handle_reference_frame(dl, wrench, item, &mut info),
+                "reference-frame" => self.handle_reference_frame(dl, wrench, item),
                 "shadow" => self.handle_push_shadow(dl, item, &mut info),
                 "pop-all-shadows" => self.handle_pop_all_shadows(dl),
                 _ => println!("Skipping unknown item type: {:?}", item),
@@ -1544,7 +1544,6 @@ impl YamlFrameReader {
         dl: &mut DisplayListBuilder,
         wrench: &mut Wrench,
         yaml: &Yaml,
-        info: &mut LayoutPrimitiveInfo,
     ) -> ClipId {
         let default_bounds = LayoutRect::new(LayoutPoint::zero(), wrench.window_size_f32());
         let bounds = yaml["bounds"].as_rect().unwrap_or(default_bounds);
@@ -1552,8 +1551,6 @@ impl YamlFrameReader {
             bounds.origin.x + bounds.size.width * 0.5,
             bounds.origin.y + bounds.size.height * 0.5,
         );
-
-        info.rect = bounds;
 
         let transform_style = yaml["transform-style"]
             .as_transform_style()
@@ -1580,7 +1577,7 @@ impl YamlFrameReader {
         };
 
         let reference_frame_id = dl.push_reference_frame(
-            info,
+            &bounds,
             transform_style,
             transform.into(),
             perspective,
@@ -1599,9 +1596,8 @@ impl YamlFrameReader {
         dl: &mut DisplayListBuilder,
         wrench: &mut Wrench,
         yaml: &Yaml,
-        info: &mut LayoutPrimitiveInfo,
     ) {
-        let reference_frame_id = self.push_reference_frame(dl, wrench, yaml, info);
+        let reference_frame_id = self.push_reference_frame(dl, wrench, yaml);
 
         if !yaml["items"].is_badvalue() {
             dl.push_clip_id(reference_frame_id);
@@ -1627,7 +1623,7 @@ impl YamlFrameReader {
 
         let reference_frame_id = if !yaml["transform"].is_badvalue() ||
             !yaml["perspective"].is_badvalue() {
-            let reference_frame_id = self.push_reference_frame(dl, wrench, yaml, info);
+            let reference_frame_id = self.push_reference_frame(dl, wrench, yaml);
             info.rect.origin = LayoutPoint::zero();
             info.clip_rect.origin = LayoutPoint::zero();
             Some(reference_frame_id)
