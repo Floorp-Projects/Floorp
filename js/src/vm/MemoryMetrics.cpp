@@ -864,7 +864,12 @@ JS_PUBLIC_API bool AddSizeOfTab(JSContext* cx, HandleObject obj,
 
   JS::Zone* zone = GetObjectZone(obj);
 
-  if (!rtStats.realmStatsVector.reserve(zone->compartments().length())) {
+  size_t numRealms = 0;
+  for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next()) {
+    numRealms += comp->realms().length();
+  }
+
+  if (!rtStats.realmStatsVector.reserve(numRealms)) {
     return false;
   }
 
