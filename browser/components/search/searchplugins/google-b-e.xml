@@ -9,8 +9,7 @@
 <Image width="16" height="16">resource://search-plugins/images/google.ico</Image>
 <Url type="application/x-suggestions+json" method="GET" template="https://www.google.com/complete/search?client=firefox&amp;q={searchTerms}"/>
 <Url type="text/html" method="GET" template="https://www.google.com/search" rel="searchform">
-  <MozParam name="client" condition="purpose" purpose="keyword" value="firefox-b-1-ab"/>
-  <MozParam name="client" condition="purpose" purpose="searchbar" value="firefox-b-1"/>
+  <Param name="client" value="firefox-b-e"/>
   <Param name="q" value="{searchTerms}"/>
 </Url>
 </SearchPlugin>
