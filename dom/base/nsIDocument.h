@@ -3390,10 +3390,6 @@ class nsIDocument : public nsINode,
 
   void ReportShadowDOMUsage();
 
-  // When the doc is blocked permanantly, we would dispatch event to notify
-  // front-end side to show blocking icon.
-  void MaybeNotifyAutoplayBlocked();
-
   // Sets flags for media autoplay telemetry.
   void SetDocTreeHadAudibleMedia();
   void SetDocTreeHadPlayRevoked();
