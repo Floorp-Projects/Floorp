@@ -23,8 +23,17 @@ class SVGAngle final : public nsWrapperCache {
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(SVGAngle)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(SVGAngle)
 
+  /**
+   * Generic ctor for SVGAngle objects that are created for an attribute.
+   */
   SVGAngle(nsSVGAngle* aVal, SVGElement* aSVGElement, AngleType aType)
       : mVal(aVal), mSVGElement(aSVGElement), mType(aType) {}
+
+  /**
+   * Ctor for creating the objects returned by SVGSVGElement.createSVGAngle(),
+   * which do not initially belong to an attribute.
+   */
+  explicit SVGAngle(SVGElement* aSVGElement);
 
   // WebIDL
   SVGElement* GetParentObject() { return mSVGElement; }
