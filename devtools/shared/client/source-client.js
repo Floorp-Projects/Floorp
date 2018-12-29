@@ -248,6 +248,12 @@ SourceClient.prototype = {
     });
   },
 
+  setVirtualLog: DebuggerClient.requester({
+    type: "setVirtualLog",
+    location: arg(0),
+    text: arg(1),
+  }),
+
   setPausePoints: function(pausePoints) {
     const packet = {
       to: this._form.actor,

@@ -469,6 +469,12 @@ Toolbox.prototype = {
       this._threadClient = await attachThread(this);
       await domReady;
 
+      // The web console is immediately loaded when replaying, so that the
+      // timeline will always be populated with generated messages.
+      if (this.target.isReplayEnabled()) {
+        await this.loadTool("webconsole");
+      }
+
       this.isReady = true;
 
       const framesPromise = this._listFrames();
