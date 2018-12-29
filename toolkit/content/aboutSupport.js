@@ -17,25 +17,34 @@ ChromeUtils.defineModuleGetter(this, "PlacesDBUtils",
 
 window.addEventListener("load", function onload(event) {
   try {
-  window.removeEventListener("load", onload);
-  Troubleshoot.snapshot(function(snapshot) {
-    for (let prop in snapshotFormatters)
-      snapshotFormatters[prop](snapshot[prop]);
-  });
-  populateActionBox();
-  setupEventListeners();
+    window.removeEventListener("load", onload);
+    Troubleshoot.snapshot(async function(snapshot) {
+      for (let prop in snapshotFormatters)
+        await snapshotFormatters[prop](snapshot[prop]);
+    });
+    populateActionBox();
+    setupEventListeners();
   } catch (e) {
     Cu.reportError("stack of load error for about:support: " + e + ": " + e.stack);
   }
 });
+
+// Fluent uses lisp-case IDs so this converts
+// the SentenceCase info IDs to lisp-case.
+const FLUENT_IDENT_REGEX = /^[a-zA-Z][a-zA-Z0-9_-]*$/;
+function toFluentID(str) {
+  if (!FLUENT_IDENT_REGEX.test(str)) {
+    return null;
+  }
+  return str.toString().replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase();
+}
 
 // Each property in this object corresponds to a property in Troubleshoot.jsm's
 // snapshot data.  Each function is passed its property's corresponding data,
 // and it's the function's job to update the page with it.
 var snapshotFormatters = {
 
-  application: function application(data) {
-    let strings = stringBundle();
+  async application(data) {
     $("application-box").textContent = data.name;
     $("useragent-box").textContent = data.userAgent;
     $("os-box").textContent = data.osVersion;
@@ -49,7 +58,7 @@ var snapshotFormatters = {
       $("updatechannel-box").textContent = data.updateChannel;
     $("profile-dir-box").textContent = Services.dirsvc.get("ProfD", Ci.nsIFile).path;
 
-    let statusText = strings.GetStringFromName("multiProcessStatus.unknown");
+    let statusTextId = "multi-process-status-unknown";
 
     // Whitelist of known values with string descriptions:
     switch (data.autoStartStatus) {
@@ -60,12 +69,17 @@ var snapshotFormatters = {
       case 6:
       case 7:
       case 8:
-        statusText = strings.GetStringFromName("multiProcessStatus." + data.autoStartStatus);
+        statusTextId = "multi-process-status-" + data.autoStartStatus;
         break;
     }
 
-    $("multiprocess-box").textContent = strings.formatStringFromName("multiProcessWindows",
-      [data.numRemoteWindows, data.numTotalWindows, statusText], 3);
+    document.l10n.setAttributes($("multiprocess-box-process-count"),
+                                "multi-process-windows",
+                                {
+                                  remoteWindows: data.numRemoteWindows,
+                                  totalWindows: data.numTotalWindows,
+                                });
+    document.l10n.setAttributes($("multiprocess-box-status"), statusTextId);
 
     if (data.remoteAutoStart) {
       $("contentprocesses-box").textContent = data.currentContentProcesses +
@@ -76,52 +90,52 @@ var snapshotFormatters = {
     }
 
     if (Services.policies) {
-      let policiesText = "";
+      let policiesStrId = "";
       let aboutPolicies = "about:policies";
       switch (data.policiesStatus) {
         case Services.policies.INACTIVE:
-          policiesText = strings.GetStringFromName("policies.inactive");
+          policiesStrId = "policies-inactive";
           break;
 
         case Services.policies.ACTIVE:
-          policiesText = strings.GetStringFromName("policies.active");
+          policiesStrId = "policies-active";
           aboutPolicies += "#active";
           break;
 
         default:
-          policiesText = strings.GetStringFromName("policies.error");
+          policiesStrId = "policies-error";
           aboutPolicies += "#errors";
           break;
       }
 
       if (data.policiesStatus != Services.policies.INACTIVE) {
-        let activePolicies = $.new("a", policiesText, null, {href: aboutPolicies});
+        let activePolicies = $.new("a", null, null, {
+          href: aboutPolicies,
+        });
+        document.l10n.setAttributes(activePolicies, policiesStrId);
         $("policies-status").appendChild(activePolicies);
       } else {
-        $("policies-status").textContent = policiesText;
+        document.l10n.setAttributes($("policies-status"), policiesStrId);
       }
     } else {
       $("policies-status-row").hidden = true;
     }
 
     let keyGoogleFound = data.keyGoogleFound ? "found" : "missing";
-    $("key-google-box").textContent = strings.GetStringFromName(keyGoogleFound);
+    document.l10n.setAttributes($("key-google-box"), keyGoogleFound);
 
     let keyMozillaFound = data.keyMozillaFound ? "found" : "missing";
-    $("key-mozilla-box").textContent = strings.GetStringFromName(keyMozillaFound);
+    document.l10n.setAttributes($("key-mozilla-box"), keyMozillaFound);
 
     $("safemode-box").textContent = data.safeMode;
   },
 
-  crashes: function crashes(data) {
+  crashes(data) {
     if (!AppConstants.MOZ_CRASHREPORTER)
       return;
 
-    let strings = stringBundle();
     let daysRange = Troubleshoot.kMaxCrashAge / (24 * 60 * 60 * 1000);
-    $("crashes-title").textContent =
-      PluralForm.get(daysRange, strings.GetStringFromName("crashesTitle"))
-                .replace("#1", daysRange);
+    document.l10n.setAttributes($("crashes-title"), "report-crash-for-days", { days: daysRange });
     let reportURL;
     try {
       reportURL = Services.prefs.getCharPref("breakpad.reportURL");
@@ -138,42 +152,38 @@ var snapshotFormatters = {
     $("crashes-allReports").classList.remove("no-copy");
 
     if (data.pending > 0) {
-      $("crashes-allReportsWithPending").textContent =
-        PluralForm.get(data.pending, strings.GetStringFromName("pendingReports"))
-                  .replace("#1", data.pending);
+      document.l10n.setAttributes($("crashes-allReportsWithPending"), "pending-reports", { reports: data.pending });
     }
 
     let dateNow = new Date();
     $.append($("crashes-tbody"), data.submitted.map(function(crash) {
       let date = new Date(crash.date);
       let timePassed = dateNow - date;
-      let formattedDate;
+      let formattedDateStrId;
+      let formattedDateStrArgs;
       if (timePassed >= 24 * 60 * 60 * 1000) {
         let daysPassed = Math.round(timePassed / (24 * 60 * 60 * 1000));
-        let daysPassedString = strings.GetStringFromName("crashesTimeDays");
-        formattedDate = PluralForm.get(daysPassed, daysPassedString)
-                                  .replace("#1", daysPassed);
+        formattedDateStrId = "crashes-time-days";
+        formattedDateStrArgs = { days: daysPassed };
       } else if (timePassed >= 60 * 60 * 1000) {
         let hoursPassed = Math.round(timePassed / (60 * 60 * 1000));
-        let hoursPassedString = strings.GetStringFromName("crashesTimeHours");
-        formattedDate = PluralForm.get(hoursPassed, hoursPassedString)
-                                  .replace("#1", hoursPassed);
+        formattedDateStrId = "crashes-time-hours";
+        formattedDateStrArgs = { hours: hoursPassed };
       } else {
         let minutesPassed = Math.max(Math.round(timePassed / (60 * 1000)), 1);
-        let minutesPassedString = strings.GetStringFromName("crashesTimeMinutes");
-        formattedDate = PluralForm.get(minutesPassed, minutesPassedString)
-                                  .replace("#1", minutesPassed);
+        formattedDateStrId = "crashes-time-minutes";
+        formattedDateStrArgs = { minutes: minutesPassed };
       }
       return $.new("tr", [
         $.new("td", [
           $.new("a", crash.id, null, {href: reportURL + crash.id}),
         ]),
-        $.new("td", formattedDate),
+        $.new("td", null, null, {"data-l10n-id": formattedDateStrId, "data-l10n-args": formattedDateStrArgs}),
       ]);
     }));
   },
 
-  extensions: function extensions(data) {
+  extensions(data) {
     $.append($("extensions-tbody"), data.map(function(extension) {
       return $.new("tr", [
         $.new("td", extension.name),
@@ -184,7 +194,7 @@ var snapshotFormatters = {
     }));
   },
 
-  securitySoftware: function securitySoftware(data) {
+  securitySoftware(data) {
     if (!AppConstants.isPlatformAndVersionAtLeast("win", "6.2")) {
       $("security-software-title").hidden = true;
       $("security-software-table").hidden = true;
@@ -196,7 +206,7 @@ var snapshotFormatters = {
     $("security-software-firewall").textContent = data.registeredFirewall;
   },
 
-  features: function features(data) {
+  features(data) {
     $.append($("features-tbody"), data.map(function(feature) {
       return $.new("tr", [
         $.new("td", feature.name),
@@ -206,7 +216,7 @@ var snapshotFormatters = {
     }));
   },
 
-  modifiedPreferences: function modifiedPreferences(data) {
+  modifiedPreferences(data) {
     $.append($("prefs-tbody"), sortedArrayFromObject(data).map(
       function([name, value]) {
         return $.new("tr", [
@@ -220,7 +230,7 @@ var snapshotFormatters = {
     ));
   },
 
-  lockedPreferences: function lockedPreferences(data) {
+  lockedPreferences(data) {
     $.append($("locked-prefs-tbody"), sortedArrayFromObject(data).map(
       function([name, value]) {
         return $.new("tr", [
@@ -231,31 +241,16 @@ var snapshotFormatters = {
     ));
   },
 
-  graphics: function graphics(data) {
-    let strings = stringBundle();
-
-    function localizedMsg(msgArray) {
-      let nameOrMsg = msgArray.shift();
-      if (msgArray.length) {
-        // formatStringFromName logs an NS_ASSERTION failure otherwise that says
-        // "use GetStringFromName".  Lame.
-        try {
-          return strings.formatStringFromName(nameOrMsg, msgArray,
-                                              msgArray.length);
-        } catch (err) {
-          // Throws if nameOrMsg is not a name in the bundle.  This shouldn't
-          // actually happen though, since msgArray.length > 1 => nameOrMsg is a
-          // name in the bundle, not a message, and the remaining msgArray
-          // elements are parameters.
-          return nameOrMsg;
-        }
+  async graphics(data) {
+    function localizedMsg(msg) {
+      if (typeof msg == "object" && msg.key) {
+        return document.l10n.formatValue(msg.key, msg.args);
       }
-      try {
-        return strings.GetStringFromName(nameOrMsg);
-      } catch (err) {
-        // Throws if nameOrMsg is not a name in the bundle.
+      let msgId = toFluentID(msg);
+      if (msgId) {
+        return document.l10n.formatValue(msgId);
       }
-      return nameOrMsg;
+      return "";
     }
 
     // Read APZ info out of data.info, stripping it out in the process.
@@ -270,8 +265,7 @@ var snapshotFormatters = {
 
         delete info[key];
 
-        let message = localizedMsg([type.toLowerCase() + "Enabled"]);
-        out.push(message);
+        out.push(toFluentID(type.toLowerCase() + "Enabled"));
       }
 
       return out;
@@ -282,21 +276,21 @@ var snapshotFormatters = {
     // @key      Text in the key column. Localized automatically, unless starts with "#".
     // @value    Text in the value column. Not localized.
     function buildRow(key, value) {
-      let title;
-      if (key[0] == "#") {
-        title = key.substr(1);
-      } else {
-        try {
-          title = strings.GetStringFromName(key);
-        } catch (e) {
-          title = key;
-        }
-      }
+      let title = key[0] == "#" ? key.substr(1) : key;
+      let keyStrId = toFluentID(key);
+      let valueStrId = Array.isArray(value) ? null : toFluentID(value);
       let td = $.new("td", value);
       td.style["white-space"] = "pre-wrap";
+      if (valueStrId) {
+        document.l10n.setAttributes(td, valueStrId);
+      }
 
+      let th = $.new("th", title, "column");
+      if (!key.startsWith("#")) {
+        document.l10n.setAttributes(th, keyStrId);
+      }
       return $.new("tr", [
-        $.new("th", title, "column"),
+        th,
         td,
       ]);
     }
@@ -314,7 +308,7 @@ var snapshotFormatters = {
       addRows(where, [buildRow(key, value)]);
     }
     if (data.clearTypeParameters !== undefined) {
-      addRow("diagnostics", "clearTypeParameters", data.clearTypeParameters);
+      addRow("diagnostics", "clear-type-parameters", data.clearTypeParameters);
     }
     if ("info" in data) {
       apzInfo = formatApzInfo(data.info);
@@ -342,12 +336,12 @@ var snapshotFormatters = {
           windowUtils.terminateGPUProcess();
         });
 
-        gpuProcessKillButton.textContent = strings.GetStringFromName("gpuProcessKillButton");
+        document.l10n.setAttributes(gpuProcessKillButton, "gpu-process-kill-button");
       }
 
-      addRow("diagnostics", "GPUProcessPid", gpuProcessPid);
+      addRow("diagnostics", "gpu-process-pid", [new Text(gpuProcessPid)]);
       if (gpuProcessKillButton) {
-        addRow("diagnostics", "GPUProcess", [gpuProcessKillButton]);
+        addRow("diagnostics", "gpu-process", [gpuProcessKillButton]);
       }
     }
 
@@ -358,8 +352,8 @@ var snapshotFormatters = {
         windowUtils.triggerDeviceReset();
       });
 
-      gpuDeviceResetButton.textContent = strings.GetStringFromName("gpuDeviceResetButton");
-      addRow("diagnostics", "Device Reset", [gpuDeviceResetButton]);
+      document.l10n.setAttributes(gpuDeviceResetButton, "gpu-device-reset-button");
+      addRow("diagnostics", "gpu-device-reset", [gpuDeviceResetButton]);
     }
 
     // graphics-failures-tbody tbody
@@ -399,7 +393,7 @@ var snapshotFormatters = {
     // @where        Table section to add to.
     // @key          Data key to use.
     // @colKey       The localization key to use, if different from key.
-    function addRowFromKey(where, key, colKey) {
+    async function addRowFromKey(where, key, colKey) {
       if (!(key in data))
         return;
       colKey = colKey || key;
@@ -407,7 +401,7 @@ var snapshotFormatters = {
       let value;
       let messageKey = key + "Message";
       if (messageKey in data) {
-        value = localizedMsg(data[messageKey]);
+        value = await localizedMsg(data[messageKey]);
         delete data[messageKey];
       } else {
         value = data[key];
@@ -415,7 +409,7 @@ var snapshotFormatters = {
       delete data[key];
 
       if (value) {
-        addRow(where, colKey, value);
+        addRow(where, colKey, [new Text(value)]);
       }
     }
 
@@ -427,9 +421,10 @@ var snapshotFormatters = {
         compositor += " (Advanced Layers)";
       }
     } else {
-      compositor = "BasicLayers (" + strings.GetStringFromName("mainThreadNoOMTC") + ")";
+      let noOMTCString = await document.l10n.formatValue("main-thread-no-omtc");
+      compositor = "BasicLayers (" + noOMTCString + ")";
     }
-    addRow("features", "compositing", compositor);
+    addRow("features", "compositing", [new Text(compositor)]);
     delete data.windowLayerManagerRemote;
     delete data.windowLayerManagerType;
     delete data.numTotalWindows;
@@ -439,44 +434,53 @@ var snapshotFormatters = {
 
     addRow("features", "asyncPanZoom",
            apzInfo.length
-           ? apzInfo.join("; ")
-           : localizedMsg(["apzNone"]));
-    addRowFromKey("features", "webgl1WSIInfo");
-    addRowFromKey("features", "webgl1Renderer");
-    addRowFromKey("features", "webgl1Version");
-    addRowFromKey("features", "webgl1DriverExtensions");
-    addRowFromKey("features", "webgl1Extensions");
-    addRowFromKey("features", "webgl2WSIInfo");
-    addRowFromKey("features", "webgl2Renderer");
-    addRowFromKey("features", "webgl2Version");
-    addRowFromKey("features", "webgl2DriverExtensions");
-    addRowFromKey("features", "webgl2Extensions");
-    addRowFromKey("features", "supportsHardwareH264", "hardwareH264");
-    addRowFromKey("features", "direct2DEnabled", "#Direct2D");
-    addRowFromKey("features", "usesTiling");
-    addRowFromKey("features", "contentUsesTiling");
-    addRowFromKey("features", "offMainThreadPaintEnabled");
-    addRowFromKey("features", "offMainThreadPaintWorkerCount");
+           ? (await document.l10n.formatValues(apzInfo.map(id => { return {id}; }))).join("; ")
+           : await localizedMsg("apz-none"));
+    let featureKeys = [
+      "webgl1WSIInfo",
+      "webgl1Renderer",
+      "webgl1Version",
+      "webgl1DriverExtensions",
+      "webgl1Extensions",
+      "webgl2WSIInfo",
+      "webgl2Renderer",
+      "webgl2Version",
+      "webgl2DriverExtensions",
+      "webgl2Extensions",
+      ["supportsHardwareH264", "hardware-h264"],
+      ["direct2DEnabled", "#Direct2D"],
+      "usesTiling",
+      "contentUsesTiling",
+      "offMainThreadPaintEnabled",
+      "offMainThreadPaintWorkerCount",
+    ];
+    for (let feature of featureKeys) {
+      if (Array.isArray(feature)) {
+        await addRowFromKey("features", feature[0], feature[1]);
+        continue;
+      }
+      await addRowFromKey("features", feature);
+    }
 
     if ("directWriteEnabled" in data) {
       let message = data.directWriteEnabled;
       if ("directWriteVersion" in data)
         message += " (" + data.directWriteVersion + ")";
-      addRow("features", "#DirectWrite", message);
+      await addRow("features", "#DirectWrite", [new Text(message)]);
       delete data.directWriteEnabled;
       delete data.directWriteVersion;
     }
 
     // Adapter tbodies.
     let adapterKeys = [
-      ["adapterDescription", "gpuDescription"],
-      ["adapterVendorID", "gpuVendorID"],
-      ["adapterDeviceID", "gpuDeviceID"],
-      ["driverVersion", "gpuDriverVersion"],
-      ["driverDate", "gpuDriverDate"],
-      ["adapterDrivers", "gpuDrivers"],
-      ["adapterSubsysID", "gpuSubsysID"],
-      ["adapterRAM", "gpuRAM"],
+      ["adapterDescription", "gpu-description"],
+      ["adapterVendorID", "gpu-vendor-id"],
+      ["adapterDeviceID", "gpu-device-id"],
+      ["driverVersion", "gpu-driver-version"],
+      ["driverDate", "gpu-driver-date"],
+      ["adapterDrivers", "gpu-drivers"],
+      ["adapterSubsysID", "gpu-subsys-id"],
+      ["adapterRAM", "gpu-ram"],
     ];
 
     function showGpu(id, suffix) {
@@ -501,7 +505,8 @@ var snapshotFormatters = {
       if ("isGPU2Active" in data && ((suffix == "2") != data.isGPU2Active)) {
         active = "no";
       }
-      addRow(id, "gpuActive", strings.GetStringFromName(active));
+
+      addRow(id, "gpu-active", active);
       addRows(id, trs);
     }
     showGpu("gpu-1", "");
@@ -539,16 +544,17 @@ var snapshotFormatters = {
             let m = /#BLOCKLIST_FEATURE_FAILURE_BUG_(\d+)/.exec(entry.message);
             if (m) {
               let bugSpan = $.new("span");
-              bugSpan.textContent = strings.GetStringFromName("blocklistedBug") + "; ";
+              document.l10n.setAttributes(bugSpan, "blocklisted-bug");
 
               let bugHref = $.new("a");
               bugHref.href = "https://bugzilla.mozilla.org/show_bug.cgi?id=" + m[1];
-              bugHref.textContent = strings.formatStringFromName("bugLink", [m[1]], 1);
+              document.l10n.setAttributes(bugHref, "bug-link", { bugNumber: m[1]});
 
               contents = [bugSpan, bugHref];
             } else {
-              contents = strings.formatStringFromName(
-                "unknownFailure", [entry.message.substr(1)], 1);
+              let unknownFailure = $.new("span");
+              document.l10n.setAttributes(unknownFailure, "unknown-failure", { failureCode: entry.message.substr(1) });
+              contents = [unknownFailure];
             }
           } else {
             contents = entry.status + " by " + entry.type + ": " + entry.message;
@@ -558,7 +564,7 @@ var snapshotFormatters = {
             $.new("td", contents),
           ]));
         }
-        addRow("decisions", feature.name, [$.new("table", trs)]);
+        addRow("decisions", "#" + feature.name, [$.new("table", trs)]);
       }
     } else {
       $("graphics-decisions-tbody").style.display = "none";
@@ -584,7 +590,7 @@ var snapshotFormatters = {
           resetButton.disabled = true;
         };
 
-        resetButton.textContent = strings.GetStringFromName("resetOnNextRestart");
+        document.l10n.setAttributes(resetButton, "reset-on-next-restart");
         resetButton.addEventListener("click", onClickReset);
 
         addRow("crashguards", guard.type + "CrashGuard", [resetButton]);
@@ -597,19 +603,15 @@ var snapshotFormatters = {
     // the diagnostics section.
     for (let key in data) {
       let value = data[key];
-      if (Array.isArray(value)) {
-        value = localizedMsg(value);
-      }
       addRow("diagnostics", key, value);
     }
   },
 
-  media: function media(data) {
-    let strings = stringBundle();
-
+  media(data) {
     function insertBasicInfo(key, value) {
       function createRow(key, value) {
-        let th = $.new("th", strings.GetStringFromName(key), "column");
+        let th = $.new("th", null, "column");
+        document.l10n.setAttributes(th, key);
         let td = $.new("td", value);
         td.style["white-space"] = "pre-wrap";
         td.colSpan = 8;
@@ -698,9 +700,9 @@ var snapshotFormatters = {
     }
 
     // Basic information
-    insertBasicInfo("audioBackend", data.currentAudioBackend);
-    insertBasicInfo("maxAudioChannels", data.currentMaxAudioChannels);
-    insertBasicInfo("sampleRate", data.currentPreferredSampleRate);
+    insertBasicInfo("audio-backend", data.currentAudioBackend);
+    insertBasicInfo("max-audio-channels", data.currentMaxAudioChannels);
+    insertBasicInfo("sample-rate", data.currentPreferredSampleRate);
 
     // Output devices information
     insertDeviceInfo("output", data.audioOutputDevices);
@@ -709,11 +711,11 @@ var snapshotFormatters = {
     insertDeviceInfo("input", data.audioInputDevices);
   },
 
-  javaScript: function javaScript(data) {
+  javaScript(data) {
     $("javascript-incremental-gc").textContent = data.incrementalGCEnabled;
   },
 
-  accessibility: function accessibility(data) {
+  accessibility(data) {
     $("a11y-activated").textContent = data.isActive;
     $("a11y-force-disabled").textContent = data.forceDisabled || 0;
 
@@ -728,13 +730,12 @@ var snapshotFormatters = {
     }
   },
 
-  libraryVersions: function libraryVersions(data) {
-    let strings = stringBundle();
+  libraryVersions(data) {
     let trs = [
       $.new("tr", [
         $.new("th", ""),
-        $.new("th", strings.GetStringFromName("minLibVersions")),
-        $.new("th", strings.GetStringFromName("loadedLibVersions")),
+        $.new("th", null, null, {"data-l10n-id": "min-lib-versions"}),
+        $.new("th", null, null, {"data-l10n-id": "loaded-lib-versions"}),
       ]),
     ];
     sortedArrayFromObject(data).forEach(
@@ -749,7 +750,7 @@ var snapshotFormatters = {
     $.append($("libversions-tbody"), trs);
   },
 
-  userJS: function userJS(data) {
+  userJS(data) {
     if (!data.exists)
       return;
     let userJSFile = Services.dirsvc.get("PrefD", Ci.nsIFile);
@@ -760,11 +761,10 @@ var snapshotFormatters = {
     $("prefs-user-js-section").className = "";
   },
 
-  sandbox: function sandbox(data) {
+  sandbox(data) {
     if (!AppConstants.MOZ_SANDBOX)
       return;
 
-    let strings = stringBundle();
     let tbody = $("sandbox-tbody");
     for (let key in data) {
       // Simplify the display a little in the common case.
@@ -776,8 +776,11 @@ var snapshotFormatters = {
         // Not in this table.
         continue;
       }
+      let keyStrId = toFluentID(key);
+      let th = $.new("th", null, "column");
+      document.l10n.setAttributes(th, keyStrId);
       tbody.appendChild($.new("tr", [
-        $.new("th", strings.GetStringFromName(key), "column"),
+        th,
         $.new("td", data[key]),
       ]));
     }
@@ -789,13 +792,13 @@ var snapshotFormatters = {
         if (argsHead.colSpan < syscall.args.length) {
           argsHead.colSpan = syscall.args.length;
         }
+        let procTypeStrId = toFluentID(syscall.procType);
         let cells = [
           $.new("td", syscall.index, "integer"),
           $.new("td", syscall.msecAgo / 1000),
           $.new("td", syscall.pid, "integer"),
           $.new("td", syscall.tid, "integer"),
-          $.new("td", strings.GetStringFromName("sandboxProcType." +
-                                                syscall.procType)),
+          $.new("td", null, null, {"data-l10n-id": "sandbox-proc-type-" + procTypeStrId}),
           $.new("td", syscall.syscall, "integer"),
         ];
         for (let arg of syscall.args) {
@@ -806,7 +809,7 @@ var snapshotFormatters = {
     }
   },
 
-  intl: function intl(data) {
+  intl(data) {
     $("intl-locale-requested").textContent =
       JSON.stringify(data.localeService.requested);
     $("intl-locale-available").textContent =
@@ -829,27 +832,38 @@ var $ = document.getElementById.bind(document);
 
 $.new = function $_new(tag, textContentOrChildren, className, attributes) {
   let elt = document.createElement(tag);
-  if (className)
+  if (className) {
     elt.className = className;
-  if (attributes) {
-    for (let attrName in attributes)
-      elt.setAttribute(attrName, attributes[attrName]);
   }
-  if (Array.isArray(textContentOrChildren))
+  if (attributes) {
+    if (attributes["data-l10n-id"]) {
+      let args = attributes.hasOwnProperty("data-l10n-args") ?
+        attributes["data-l10n-args"] :
+        undefined;
+      document.l10n.setAttributes(elt,
+                                  attributes["data-l10n-id"],
+                                  args);
+      delete attributes["data-l10n-id"];
+      if (args) {
+        delete attributes["data-l10n-args"];
+      }
+    }
+
+    for (let attrName in attributes) {
+      elt.setAttribute(attrName, attributes[attrName]);
+    }
+  }
+  if (Array.isArray(textContentOrChildren)) {
     this.append(elt, textContentOrChildren);
-  else
+  } else if (textContentOrChildren) {
     elt.textContent = String(textContentOrChildren);
+  }
   return elt;
 };
 
 $.append = function $_append(parent, children) {
   children.forEach(c => parent.appendChild(c));
 };
-
-function stringBundle() {
-  return Services.strings.createBundle(
-           "chrome://global/locale/aboutSupport.properties");
-}
 
 function assembleFromGraphicsFailure(i, data) {
   // Only cover the cases we have today; for example, we do not have
@@ -888,7 +902,7 @@ function copyRawDataToClipboard(button) {
   if (button)
     button.disabled = true;
   try {
-    Troubleshoot.snapshot(function(snapshot) {
+    Troubleshoot.snapshot(async function(snapshot) {
       if (button)
         button.disabled = false;
       let str = Cc["@mozilla.org/supports-string;1"].
@@ -903,8 +917,8 @@ function copyRawDataToClipboard(button) {
       if (AppConstants.platform == "android") {
         // Present a snackbar notification.
         ChromeUtils.import("resource://gre/modules/Snackbars.jsm");
-        Snackbars.show(stringBundle().GetStringFromName("rawDataCopied"),
-                       Snackbars.LENGTH_SHORT);
+        let rawDataCopiedString = await document.l10n.formatValue("raw-data-copied");
+        Snackbars.show(rawDataCopiedString, Snackbars.LENGTH_SHORT);
       }
     });
   } catch (err) {
@@ -918,7 +932,7 @@ function getLoadContext() {
   return window.docShell.QueryInterface(Ci.nsILoadContext);
 }
 
-function copyContentsToClipboard() {
+async function copyContentsToClipboard() {
   // Get the HTML and text representations for the important part of the page.
   let contentsDiv = $("contents");
   let dataHtml = contentsDiv.innerHTML;
@@ -949,8 +963,8 @@ function copyContentsToClipboard() {
   if (AppConstants.platform == "android") {
     // Present a snackbar notification.
     ChromeUtils.import("resource://gre/modules/Snackbars.jsm");
-    Snackbars.show(stringBundle().GetStringFromName("textCopied"),
-                   Snackbars.LENGTH_SHORT);
+    let textCopiedString = await document.l10n.formatValue("text-copied");
+    Snackbars.show(textCopiedString, Snackbars.LENGTH_SHORT);
   }
 }
 

@@ -210,6 +210,10 @@ exclude-multi-locale = [
     l10n = "{l}toolkit/chrome/global/aboutSupport.properties"
 
 [[paths]]
+    reference = "toolkit/locales/en-US/toolkit/about/*Support.ftl"
+    l10n = "{l}toolkit/toolkit/about/*Support.ftl"
+
+[[paths]]
     reference = "toolkit/locales/en-US/crashreporter/*.ftl"
     l10n = "{l}toolkit/crashreporter/*.ftl"
 

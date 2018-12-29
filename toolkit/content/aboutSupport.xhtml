@@ -6,15 +6,13 @@
 
 <!DOCTYPE html [
   <!ENTITY % htmlDTD PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd"> %htmlDTD;
-  <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd"> %globalDTD;
   <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd"> %brandDTD;
-  <!ENTITY % aboutSupportDTD SYSTEM "chrome://global/locale/aboutSupport.dtd"> %aboutSupportDTD;
   <!ENTITY % resetProfileDTD SYSTEM "chrome://global/locale/resetProfile.dtd"> %resetProfileDTD;
 ]>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <title>&aboutSupport.pageTitle;</title>
+    <title data-l10n-id="page-title"/>
 
     <link rel="icon" type="image/png" id="favicon"
           href="chrome://branding/content/icon32.png"/>
@@ -23,9 +21,11 @@
 
     <script type="application/javascript"
             src="chrome://global/content/aboutSupport.js"/>
+    <link rel="localization" href="branding/brand.ftl"/>
+    <link rel="localization" href="toolkit/about/aboutSupport.ftl"/>
   </head>
 
-  <body dir="&locale.dir;" class="wide-container">
+  <body class="wide-container">
 
 #ifndef ANDROID
     <div id="action-box" class="notice-box">
@@ -36,77 +36,57 @@
         </button>
       </div>
       <div id="safe-mode-box">
-        <h3>&aboutSupport.safeModeTitle;</h3>
-        <button id="restart-in-safe-mode-button">
-          &aboutSupport.restartInSafeMode.label;
-        </button>
+        <h3 data-l10n-id="safe-mode-title"/>
+        <button id="restart-in-safe-mode-button" data-l10n-id="restart-in-safe-mode-label"/>
       </div>
     </div>
 #endif
 
-    <h1>
-      &aboutSupport.pageTitle;
-    </h1>
+    <h1 data-l10n-id="page-title"/>
 
-    <div class="page-subtitle">
-        &aboutSupport.pageSubtitle;
+    <div class="page-subtitle" data-l10n-id="page-subtitle">
+      <a id="supportLink" data-l10n-name="support-link"></a>
     </div>
 
     <div>
-      <button id="copy-raw-data-to-clipboard">
-        &aboutSupport.copyRawDataToClipboard.label;
-      </button>
-      <button id="copy-to-clipboard">
-        &aboutSupport.copyTextToClipboard.label;
-      </button>
+      <button id="copy-raw-data-to-clipboard" data-l10n-id="copy-raw-data-to-clipboard-label"/>
+      <button id="copy-to-clipboard" data-l10n-id="copy-text-to-clipboard-label"/>
     </div>
 
     <div id="contents">
 
       <!-- - - - - - - - - - - - - - - - - - - - - -->
 
-      <h2 class="major-section">
-        &aboutSupport.appBasicsTitle;
-      </h2>
+      <h2 class="major-section" data-l10n-id="app-basics-title"/>
 
       <table>
         <tbody>
           <tr>
-            <th class="column">
-              &aboutSupport.appBasicsName;
-            </th>
+            <th class="column" data-l10n-id="app-basics-name"/>
 
             <td id="application-box">
             </td>
           </tr>
 
           <tr>
-            <th class="column">
-              &aboutSupport.appBasicsVersion;
-            </th>
+            <th class="column" data-l10n-id="app-basics-version"/>
 
             <td id="version-box">
             </td>
           </tr>
 
           <tr>
-            <th class="column">
-              &aboutSupport.appBasicsBuildID;
-              </th>
+            <th class="column" data-l10n-id="app-basics-build-id"/>
             <td id="buildid-box"></td>
           </tr>
 
 #ifndef ANDROID
 #ifdef MOZ_UPDATER
           <tr class="no-copy">
-            <th class="column">
-              &aboutSupport.appBasicsUpdateHistory;
-            </th>
+            <th class="column" data-l10n-id="app-basics-update-history"/>
 
             <td>
-              <button id="show-update-history-button">
-                &aboutSupport.appBasicsShowUpdateHistory;
-              </button>
+              <button id="show-update-history-button" data-l10n-id="app-basics-show-update-history"/>
             </td>
           </tr>
 #endif
@@ -114,65 +94,37 @@
 
 #ifdef MOZ_UPDATER
           <tr>
-            <th class="column">
-              &aboutSupport.appBasicsUpdateChannel;
-            </th>
+            <th class="column" data-l10n-id="app-basics-update-channel"/>
             <td id="updatechannel-box"></td>
           </tr>
 #endif
 
           <tr>
-            <th class="column">
-              &aboutSupport.appBasicsUserAgent;
-            </th>
+            <th class="column" data-l10n-id="app-basics-user-agent"/>
 
             <td id="useragent-box">
             </td>
           </tr>
 
           <tr>
-            <th class="column">
-              &aboutSupport.appBasicsOS;
-            </th>
+            <th class="column" data-l10n-id="app-basics-os"/>
 
             <td id="os-box">
             </td>
           </tr>
 
           <tr id="profile-row" class="no-copy">
-            <th class="column">
-#ifdef XP_WIN
-              &aboutSupport.appBasicsProfileDirWinMac;
-#else
-#ifdef XP_MACOSX
-              &aboutSupport.appBasicsProfileDirWinMac;
-#else
-              &aboutSupport.appBasicsProfileDir;
-#endif
-#endif
-            </th>
+            <th class="column" data-l10n-id="app-basics-profile-dir"/>
 
             <td>
-              <button id="profile-dir-button">
-#ifdef XP_WIN
-                &aboutSupport.showWin2.label;
-#else
-#ifdef XP_MACOSX
-                &aboutSupport.showMac.label;
-#else
-                &aboutSupport.showDir.label;
-#endif
-#endif
-               </button>
+              <button id="profile-dir-button" data-l10n-id="show-dir-label"/>
                <span id="profile-dir-box">
                </span>
             </td>
           </tr>
 
           <tr class="no-copy">
-            <th class="column">
-              &aboutSupport.appBasicsEnabledPlugins;
-            </th>
+            <th class="column" data-l10n-id="app-basics-enabled-plugins"/>
 
             <td>
               <a href="about:plugins">about:plugins</a>
@@ -180,9 +132,7 @@
           </tr>
 
           <tr class="no-copy">
-            <th class="column">
-              &aboutSupport.appBasicsBuildConfig;
-            </th>
+            <th class="column" data-l10n-id="app-basics-build-config"/>
 
             <td>
               <a href="about:buildconfig">about:buildconfig</a>
@@ -190,9 +140,7 @@
           </tr>
 
           <tr class="no-copy">
-            <th class="column">
-              &aboutSupport.appBasicsMemoryUse;
-            </th>
+            <th class="column" data-l10n-id="app-basics-memory-use"/>
 
             <td>
               <a href="about:memory">about:memory</a>
@@ -200,9 +148,7 @@
           </tr>
 
           <tr class="no-copy">
-            <th class="column">
-              &aboutSupport.appBasicsPerformance;
-            </th>
+            <th class="column" data-l10n-id="app-basics-performance"/>
 
             <td>
               <a href="about:performance">about:performance</a>
@@ -210,9 +156,7 @@
           </tr>
 
           <tr class="no-copy">
-            <th class="column">
-              &aboutSupport.appBasicsServiceWorkers;
-            </th>
+            <th class="column" data-l10n-id="app-basics-service-workers"/>
 
             <td>
               <a href="about:serviceworkers">about:serviceworkers</a>
@@ -220,54 +164,44 @@
           </tr>
 
           <tr>
-            <th class="column">
-              &aboutSupport.appBasicsMultiProcessSupport;
-            </th>
+            <th class="column" data-l10n-id="app-basics-multi-process-support"/>
 
             <td id="multiprocess-box">
+              <span id="multiprocess-box-process-count"/>
+              <span id="multiprocess-box-status" data-l10n-id="multi-process-status-unknown"/>
             </td>
           </tr>
 
           <tr id="contentprocesses-row">
-            <th class="column">
-              &aboutSupport.appBasicsProcessCount;
-            </th>
+            <th class="column" data-l10n-id="app-basics-process-count"/>
 
             <td id="contentprocesses-box">
             </td>
           </tr>
 
           <tr id="policies-status-row">
-            <th class="column">
-              &aboutSupport.enterprisePolicies;
-            </th>
+            <th class="column" data-l10n-id="app-basics-enterprise-policies"/>
 
             <td id="policies-status">
             </td>
           </tr>
 
           <tr>
-            <th class="column">
-              &aboutSupport.appBasicsKeyGoogle;
-            </th>
+            <th class="column" data-l10n-id="app-basics-key-google"/>
 
             <td id="key-google-box">
             </td>
           </tr>
 
           <tr>
-            <th class="column">
-              &aboutSupport.appBasicsKeyMozilla;
-            </th>
+            <th class="column" data-l10n-id="app-basics-key-mozilla"/>
 
             <td id="key-mozilla-box">
             </td>
           </tr>
 
           <tr>
-            <th class="column">
-              &aboutSupport.appBasicsSafeMode;
-            </th>
+            <th class="column" data-l10n-id="app-basics-safe-mode"/>
 
             <td id="safemode-box">
             </td>
@@ -275,9 +209,7 @@
 
 #ifndef ANDROID
           <tr class="no-copy">
-            <th class="column">
-              &aboutSupport.appBasicsProfiles;
-            </th>
+            <th class="column" data-l10n-id="app-basics-profiles"/>
 
             <td>
               <a href="about:profiles">about:profiles</a>
@@ -291,48 +223,35 @@
       <!-- - - - - - - - - - - - - - - - - - - - - -->
 #ifdef MOZ_CRASHREPORTER
 
-      <h2 class="major-section" id="crashes-title">
-        &aboutSupport.crashes.title;
-      </h2>
+      <h2 class="major-section" id="crashes-title" data-l10n-id="crashes-title"/>
 
       <table id="crashes-table">
         <thead>
           <tr>
-            <th>
-              &aboutSupport.crashes.id;
-            </th>
-            <th>
-              &aboutSupport.crashes.sendDate;
-            </th>
+            <th data-l10n-id="crashes-id"/>
+            <th data-l10n-id="crashes-send-date"/>
           </tr>
         </thead>
         <tbody id="crashes-tbody">
         </tbody>
       </table>
       <p id="crashes-allReports" class="hidden no-copy">
-        <a href="about:crashes" id="crashes-allReportsWithPending" class="block">&aboutSupport.crashes.allReports;</a>
+        <a href="about:crashes" id="crashes-allReportsWithPending"
+           class="block" data-l10n-id="crashes-all-reports"/>
       </p>
-      <p id="crashes-noConfig" class="hidden no-copy">&aboutSupport.crashes.noConfig;</p>
+      <p id="crashes-noConfig" class="hidden no-copy" data-l10n-id="crashes-no-config"/>
 
 #endif
       <!-- - - - - - - - - - - - - - - - - - - - - -->
 
-      <h2 class="major-section">
-        &aboutSupport.featuresTitle;
-      </h2>
+      <h2 class="major-section" data-l10n-id="features-title"/>
 
       <table>
         <thead>
           <tr>
-            <th>
-              &aboutSupport.featureName;
-            </th>
-            <th>
-              &aboutSupport.featureVersion;
-            </th>
-            <th>
-              &aboutSupport.featureId;
-            </th>
+            <th data-l10n-id="features-name"/>
+            <th data-l10n-id="features-version"/>
+            <th data-l10n-id="features-id"/>
           </tr>
         </thead>
         <tbody id="features-tbody">
@@ -341,25 +260,15 @@
 
       <!-- - - - - - - - - - - - - - - - - - - - - -->
 
-      <h2 class="major-section">
-        &aboutSupport.extensionsTitle;
-      </h2>
+      <h2 class="major-section" data-l10n-id="extensions-title"/>
 
       <table>
         <thead>
           <tr>
-            <th>
-              &aboutSupport.extensionName;
-            </th>
-            <th>
-              &aboutSupport.extensionVersion;
-            </th>
-            <th>
-              &aboutSupport.extensionEnabled;
-            </th>
-            <th>
-              &aboutSupport.extensionId;
-            </th>
+            <th data-l10n-id="extensions-name"/>
+            <th data-l10n-id="extensions-version"/>
+            <th data-l10n-id="extensions-enabled"/>
+            <th data-l10n-id="extensions-id"/>
           </tr>
         </thead>
         <tbody id="extensions-tbody">
@@ -368,44 +277,32 @@
 
       <!-- - - - - - - - - - - - - - - - - - - - - -->
 
-      <h2 class="major-section" id="security-software-title">
-        &aboutSupport.securitySoftwareTitle;
-      </h2>
+      <h2 class="major-section" id="security-software-title" data-l10n-id="security-software-title"/>
 
       <table id="security-software-table">
         <thead>
           <tr>
-            <th>
-              &aboutSupport.securitySoftwareType;
-            </th>
-            <th>
-              &aboutSupport.securitySoftwareName;
-            </th>
+            <th data-l10n-id="security-software-type"/>
+            <th data-l10n-id="security-software-name"/>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <th class="column">
-              &aboutSupport.securitySoftwareAntivirus;
-            </th>
+            <th class="column" data-l10n-id="security-software-antivirus"/>
 
             <td id="security-software-antivirus">
             </td>
           </tr>
 
           <tr>
-            <th class="column">
-              &aboutSupport.securitySoftwareAntiSpyware;
-            </th>
+            <th class="column" data-l10n-id="security-software-antispyware"/>
 
             <td id="security-software-antispyware">
             </td>
           </tr>
 
           <tr>
-            <th class="column">
-              &aboutSupport.securitySoftwareFirewall;
-            </th>
+            <th class="column" data-l10n-id="security-software-firewall"/>
 
             <td id="security-software-firewall">
             </td>
@@ -415,16 +312,12 @@
 
       <!-- - - - - - - - - - - - - - - - - - - - - -->
 
-      <h2 class="major-section">
-        &aboutSupport.graphicsTitle;
-      </h2>
+      <h2 class="major-section" data-l10n-id="graphics-title"/>
 
       <table>
         <tbody id="graphics-features-tbody">
           <tr>
-            <th colspan="2" class="title-column">
-              &aboutSupport.graphicsFeaturesTitle;
-            </th>
+            <th colspan="2" class="title-column" data-l10n-id="graphics-features-title"/>
           </tr>
         </tbody>
 
@@ -433,141 +326,85 @@
 
         <tbody id="graphics-gpu-1-tbody">
           <tr>
-            <th colspan="2" class="title-column">
-              &aboutSupport.graphicsGPU1Title;
-            </th>
+            <th colspan="2" class="title-column" data-l10n-id="graphics-gpu1-title"/>
           </tr>
         </tbody>
 
         <tbody id="graphics-gpu-2-tbody">
           <tr>
-            <th colspan="2" class="title-column">
-              &aboutSupport.graphicsGPU2Title;
-            </th>
+            <th colspan="2" class="title-column" data-l10n-id="graphics-gpu2-title"/>
           </tr>
         </tbody>
 
         <tbody id="graphics-diagnostics-tbody">
           <tr>
-            <th colspan="2" class="title-column">
-              &aboutSupport.graphicsDiagnosticsTitle;
-            </th>
+            <th colspan="2" class="title-column" data-l10n-id="graphics-diagnostics-title"/>
           </tr>
         </tbody>
 
         <tbody id="graphics-decisions-tbody">
           <tr>
-            <th colspan="2" class="title-column">
-              &aboutSupport.graphicsDecisionLogTitle;
-            </th>
+            <th colspan="2" class="title-column" data-l10n-id="graphics-decision-log-title"/>
           </tr>
         </tbody>
 
         <tbody id="graphics-crashguards-tbody">
           <tr>
-            <th colspan="2" class="title-column">
-              &aboutSupport.graphicsCrashGuardsTitle;
-            </th>
+            <th colspan="2" class="title-column" data-l10n-id="graphics-crash-guards-title"/>
           </tr>
         </tbody>
 
         <tbody id="graphics-workarounds-tbody">
           <tr>
-            <th colspan="2" class="title-column">
-              &aboutSupport.graphicsWorkaroundsTitle;
-            </th>
+            <th colspan="2" class="title-column" data-l10n-id="graphics-workarounds-title"/>
           </tr>
         </tbody>
 
         <tbody id="graphics-failures-tbody">
           <tr>
-            <th colspan="2" class="title-column">
-              &aboutSupport.graphicsFailureLogTitle;
-            </th>
+            <th colspan="2" class="title-column" data-l10n-id="graphics-failure-log-title"/>
           </tr>
         </tbody>
       </table>
 
       <!-- - - - - - - - - - - - - - - - - - - - - -->
 
-      <h2 class="major-section">
-        &aboutSupport.mediaTitle;
-      </h2>
+      <h2 class="major-section" data-l10n-id="media-title"/>
       <table>
         <tbody id="media-info-tbody">
         </tbody>
 
         <tbody id="media-output-devices-tbody">
           <tr>
-            <th colspan="9" class="title-column">
-              &aboutSupport.mediaOutputDevicesTitle;
-            </th>
+            <th colspan="9" class="title-column" data-l10n-id="media-output-devices-title"/>
           </tr>
           <tr>
-            <th>
-              &aboutSupport.mediaDeviceName;
-            </th>
-            <th>
-              &aboutSupport.mediaDeviceGroup;
-            </th>
-            <th>
-              &aboutSupport.mediaDeviceVendor;
-            </th>
-            <th>
-              &aboutSupport.mediaDeviceState;
-            </th>
-            <th>
-              &aboutSupport.mediaDevicePreferred;
-            </th>
-            <th>
-              &aboutSupport.mediaDeviceFormat;
-            </th>
-            <th>
-              &aboutSupport.mediaDeviceChannels;
-            </th>
-            <th>
-              &aboutSupport.mediaDeviceRate;
-            </th>
-            <th>
-              &aboutSupport.mediaDeviceLatency;
-            </th>
+            <th data-l10n-id="media-device-name"/>
+            <th data-l10n-id="media-device-group"/>
+            <th data-l10n-id="media-device-vendor"/>
+            <th data-l10n-id="media-device-state"/>
+            <th data-l10n-id="media-device-preferred"/>
+            <th data-l10n-id="media-device-format"/>
+            <th data-l10n-id="media-device-channels"/>
+            <th data-l10n-id="media-device-rate"/>
+            <th data-l10n-id="media-device-latency"/>
           </tr>
         </tbody>
 
         <tbody id="media-input-devices-tbody">
           <tr>
-            <th colspan="9" class="title-column">
-              &aboutSupport.mediaInputDevicesTitle;
-            </th>
+            <th colspan="9" class="title-column" data-l10n-id="media-input-devices-title"/>
           </tr>
           <tr>
-            <th>
-              &aboutSupport.mediaDeviceName;
-            </th>
-            <th>
-              &aboutSupport.mediaDeviceGroup;
-            </th>
-            <th>
-              &aboutSupport.mediaDeviceVendor;
-            </th>
-            <th>
-              &aboutSupport.mediaDeviceState;
-            </th>
-            <th>
-              &aboutSupport.mediaDevicePreferred;
-            </th>
-            <th>
-              &aboutSupport.mediaDeviceFormat;
-            </th>
-            <th>
-              &aboutSupport.mediaDeviceChannels;
-            </th>
-            <th>
-              &aboutSupport.mediaDeviceRate;
-            </th>
-            <th>
-              &aboutSupport.mediaDeviceLatency;
-            </th>
+            <th data-l10n-id="media-device-name"/>
+            <th data-l10n-id="media-device-group"/>
+            <th data-l10n-id="media-device-vendor"/>
+            <th data-l10n-id="media-device-state"/>
+            <th data-l10n-id="media-device-preferred"/>
+            <th data-l10n-id="media-device-format"/>
+            <th data-l10n-id="media-device-channels"/>
+            <th data-l10n-id="media-device-rate"/>
+            <th data-l10n-id="media-device-latency"/>
           </tr>
         </tbody>
 
@@ -575,19 +412,13 @@
 
       <!-- - - - - - - - - - - - - - - - - - - - - -->
 
-      <h2 class="major-section">
-        &aboutSupport.modifiedKeyPrefsTitle;
-      </h2>
+      <h2 class="major-section" data-l10n-id="modified-key-prefs-title"/>
 
       <table class="prefs-table">
         <thead class="no-copy">
-          <th class="name">
-            &aboutSupport.modifiedPrefsName;
-          </th>
+          <th class="name" data-l10n-id="modified-prefs-name"/>
 
-          <th class="value">
-            &aboutSupport.modifiedPrefsValue;
-          </th>
+          <th class="value" data-l10n-id="modified-prefs-value"/>
         </thead>
 
         <tbody id="prefs-tbody">
@@ -595,25 +426,21 @@
       </table>
 
       <section id="prefs-user-js-section" class="hidden no-copy">
-        <h3>&aboutSupport.userJSTitle;</h3>
-        <p>&aboutSupport.userJSDescription;</p>
+        <h3 data-l10n-id="user-js-title"/>
+        <p data-l10n-id="user-js-description">
+          <a id="prefs-user-js-link" data-l10n-name="user-js-link"></a>
+        </p>
       </section>
 
       <!-- - - - - - - - - - - - - - - - - - - - - -->
 
-      <h2 class="major-section">
-        &aboutSupport.lockedKeyPrefsTitle;
-      </h2>
+      <h2 class="major-section" data-l10n-id="locked-key-prefs-title"/>
 
       <table class="prefs-table">
         <thead class="no-copy">
-          <th class="name">
-            &aboutSupport.lockedPrefsName;
-          </th>
+          <th class="name" data-l10n-id="locked-prefs-name"/>
 
-          <th class="value">
-            &aboutSupport.lockedPrefsValue;
-          </th>
+          <th class="value" data-l10n-id="locked-prefs-value"/>
         </thead>
 
         <tbody id="locked-prefs-tbody">
@@ -623,20 +450,14 @@
 #ifndef ANDROID
       <!-- - - - - - - - - - - - - - - - - - - - - -->
 
-      <h2 class="major-section">
-        &aboutSupport.placeDatabaseTitle;
-      </h2>
+      <h2 class="major-section" data-l10n-id="place-database-title"/>
 
       <table>
         <tr class="no-copy">
-          <th class="column">
-            &aboutSupport.placeDatabaseIntegrity;
-          </th>
+          <th class="column" data-l10n-id="place-database-integrity"/>
 
           <td>
-            <button id="verify-place-integrity-button">
-              &aboutSupport.placeDatabaseVerifyIntegrity;
-            </button>
+            <button id="verify-place-integrity-button" data-l10n-id="place-database-verify-integrity"/>
             <pre id="verify-place-result" class="hidden no-copy"></pre>
           </td>
         </tr>
@@ -644,16 +465,12 @@
 #endif
 
       <!-- - - - - - - - - - - - - - - - - - - - - -->
-      <h2 class="major-section">
-        &aboutSupport.jsTitle;
-      </h2>
+      <h2 class="major-section" data-l10n-id="js-title"/>
 
       <table>
         <tbody>
           <tr>
-            <th class="column">
-              &aboutSupport.jsIncrementalGC;
-            </th>
+            <th class="column" data-l10n-id="js-incremental-gc"/>
 
             <td id="javascript-incremental-gc">
             </td>
@@ -662,42 +479,32 @@
       </table>
 
       <!-- - - - - - - - - - - - - - - - - - - - - -->
-      <h2 class="major-section">
-        &aboutSupport.a11yTitle;
-      </h2>
+      <h2 class="major-section" data-l10n-id="a11y-title"/>
 
       <table>
         <tbody>
           <tr>
-            <th class="column">
-              &aboutSupport.a11yActivated;
-            </th>
+            <th class="column" data-l10n-id="a11y-activated"/>
 
             <td id="a11y-activated">
             </td>
           </tr>
           <tr>
-            <th class="column">
-              &aboutSupport.a11yForceDisabled;
-            </th>
+            <th class="column" data-l10n-id="a11y-force-disabled"/>
 
             <td id="a11y-force-disabled">
             </td>
           </tr>
 #if defined(XP_WIN)
           <tr>
-            <th class="column">
-              &aboutSupport.a11yHandlerUsed;
-            </th>
+            <th class="column" data-l10n-id="a11y-handler-used"/>
 
             <td id="a11y-handler-used">
             </td>
           </tr>
 
           <tr>
-            <th class="column">
-              &aboutSupport.a11yInstantiator;
-            </th>
+            <th class="column" data-l10n-id="a11y-instantiator"/>
 
             <td id="a11y-instantiator">
             </td>
@@ -707,9 +514,7 @@
       </table>
 
       <!-- - - - - - - - - - - - - - - - - - - - - -->
-      <h2 class="major-section">
-        &aboutSupport.libraryVersionsTitle;
-      </h2>
+      <h2 class="major-section" data-l10n-id="library-version-title"/>
 
       <table>
         <tbody id="libversions-tbody">
@@ -719,9 +524,7 @@
       <!-- - - - - - - - - - - - - - - - - - - - - -->
 
 #if defined(MOZ_SANDBOX)
-      <h2 class="major-section" id="sandbox">
-	&aboutSupport.sandboxTitle;
-      </h2>
+      <h2 class="major-section" id="sandbox" data-l10n-id="sandbox-title"/>
 
       <table>
 	<tbody id="sandbox-tbody">
@@ -729,31 +532,17 @@
       </table>
 
 #if defined(XP_LINUX)
-      <h4>&aboutSupport.sandboxSyscallLogTitle;</h4>
+      <h4 data-l10n-id="sandbox-sys-call-log-title"/>
       <table>
 	<thead>
 	  <tr>
-	    <th>
-	      &aboutSupport.sandboxSyscallIndex;
-	    </th>
-	    <th>
-	      &aboutSupport.sandboxSyscallAge;
-	    </th>
-	    <th>
-	      &aboutSupport.sandboxSyscallPID;
-	    </th>
-	    <th>
-	      &aboutSupport.sandboxSyscallTID;
-	    </th>
-	    <th>
-	      &aboutSupport.sandboxSyscallProcType;
-	    </th>
-	    <th>
-	      &aboutSupport.sandboxSyscallNumber;
-	    </th>
-	    <th id="sandbox-syscalls-argshead">
-	      &aboutSupport.sandboxSyscallArgs;
-	    </th>
+	    <th data-l10n-id="sandbox-sys-call-index"/>
+	    <th data-l10n-id="sandbox-sys-call-age"/>
+	    <th data-l10n-id="sandbox-sys-call-pid"/>
+	    <th data-l10n-id="sandbox-sys-call-tid"/>
+	    <th data-l10n-id="sandbox-sys-call-proc-type"/>
+	    <th data-l10n-id="sandbox-sys-call-number"/>
+	    <th id="sandbox-syscalls-argshead" data-l10n-id="sandbox-sys-call-args"/>
 	    </tr>
 	</thead>
 	<tbody id="sandbox-syscalls-tbody">
@@ -762,70 +551,50 @@
 #endif
 #endif
 
-      <h2 class="major-section">
-        &aboutSupport.intlTitle;
-      </h2>
+      <h2 class="major-section" data-l10n-id="intl-title"/>
 
       <table>
         <tbody id="intl-localeservice-tbody">
           <tr>
-            <th colspan="2" class="title-column">
-              &aboutSupport.intlAppTitle;
-            </th>
+            <th colspan="2" class="title-column" data-l10n-id="intl-app-title"/>
           </tr>
           <tr>
-            <th class="column">
-              &aboutSupport.intlLocalesRequested;
-            </th>
+            <th class="column" data-l10n-id="intl-locales-requested"/>
             <td id="intl-locale-requested">
             </td>
           </tr>
           <tr>
-            <th class="column">
-              &aboutSupport.intlLocalesAvailable;
-            </th>
+            <th class="column" data-l10n-id="intl-locales-available"/>
             <td id="intl-locale-available">
             </td>
           </tr>
           <tr>
-            <th class="column">
-              &aboutSupport.intlLocalesSupported;
-            </th>
+            <th class="column" data-l10n-id="intl-locales-supported"/>
             <td id="intl-locale-supported">
             </td>
           </tr>
           <tr>
-            <th class="column">
-              &aboutSupport.intlRegionalPrefs;
-            </th>
+            <th class="column" data-l10n-id="intl-regional-prefs"/>
             <td id="intl-locale-regionalprefs">
             </td>
           </tr>
           <tr>
-            <th class="column">
-              &aboutSupport.intlLocalesDefault;
-            </th>
+            <th class="column" data-l10n-id="intl-locales-default"/>
             <td id="intl-locale-default">
             </td>
           </tr>
         </tbody>
         <tbody id="intl-ospreferences-tbody">
           <tr>
-            <th colspan="2" class="title-column">
-              &aboutSupport.intlOSTitle;
-            </th>
+            <th colspan="2" class="title-column" data-l10n-id="intl-os-title"/>
           </tr>
           <tr>
-            <th class="column">
-              &aboutSupport.intlOSPrefsSystemLocales;
-            </th>
+            <th class="column" data-l10n-id="intl-os-prefs-system-locales"/>
             <td id="intl-osprefs-systemlocales">
             </td>
           </tr>
           <tr>
-            <th class="column">
-              &aboutSupport.intlRegionalPrefs;
-            </th>
+            <th class="column" data-l10n-id="intl-regional-prefs"/>
             <td id="intl-osprefs-regionalprefs">
             </td>
           </tr>
