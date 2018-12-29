@@ -64,18 +64,13 @@
         </body>
       </method>
 
-      <!-- We override base-listbox here because those methods don't take dir
-           into account on listbox (which doesn't support dir yet) -->
       <method name="getNextItem">
         <parameter name="aStartItem"/>
         <parameter name="aDelta"/>
         <body>
         <![CDATA[
-          var prop = this.dir == "reverse" && this._mayReverse ?
-                                                "previousSibling" :
-                                                "nextSibling";
           while (aStartItem) {
-            aStartItem = aStartItem[prop];
+            aStartItem = aStartItem.nextSibling;
             if (aStartItem && aStartItem.localName == "richlistitem" &&
                 (!this._userSelecting || this._canUserSelect(aStartItem))) {
               --aDelta;
@@ -93,11 +88,8 @@
         <parameter name="aDelta"/>
         <body>
         <![CDATA[
-          var prop = this.dir == "reverse" && this._mayReverse ?
-                                                "nextSibling" :
-                                                "previousSibling";
           while (aStartItem) {
-            aStartItem = aStartItem[prop];
+            aStartItem = aStartItem.previousSibling;
             if (aStartItem && aStartItem.localName == "richlistitem" &&
                 (!this._userSelecting || this._canUserSelect(aStartItem))) {
               --aDelta;
@@ -580,9 +572,6 @@
           <![CDATA[
             let children = Array.from(this.children)
                                 .filter(node => node.localName == "richlistitem");
-            if (this.dir == "reverse" && this._mayReverse) {
-              children.reverse();
-            }
             return children;
           ]]>
         </getter>
@@ -623,9 +612,7 @@
                 } else {
                   // XXX hack around a bug in ensureElementIsVisible as it will
                   // scroll beyond the last element, bug 493645.
-                  var previousElement = this.dir == "reverse" ? currentItem.nextElementSibling :
-                                                                currentItem.previousElementSibling;
-                  this.ensureElementIsVisible(previousElement);
+                  this.ensureElementIsVisible(currentItem.previousElementSibling);
                 }
               }
               this._suppressOnSelect = suppressSelect;
@@ -744,10 +731,8 @@
         <![CDATA[
           if (!aEvent.defaultPrevented) {
             this._userSelecting = true;
-            this._mayReverse = true;
             this.moveByOffset(aOffset, !aEvent.ctrlKey, aEvent.shiftKey);
             this._userSelecting = false;
-            this._mayReverse = false;
             aEvent.preventDefault();
           }
         ]]>
@@ -800,7 +785,6 @@
       <field name="_incrementalString">""</field>
       <field name="_suppressOnSelect">false</field>
       <field name="_userSelecting">false</field>
-      <field name="_mayReverse">false</field>
       <field name="_selectTimeout">null</field>
       <field name="_currentItem">null</field>
       <field name="_selectionStart">null</field>
@@ -828,36 +812,28 @@
       <handler event="keypress" keycode="VK_HOME" modifiers="control shift any"
                group="system">
         <![CDATA[
-          this._mayReverse = true;
           this._moveByOffsetFromUserEvent(-this.currentIndex, event);
-          this._mayReverse = false;
         ]]>
       </handler>
 
       <handler event="keypress" keycode="VK_END" modifiers="control shift any"
                group="system">
         <![CDATA[
-          this._mayReverse = true;
           this._moveByOffsetFromUserEvent(this.getRowCount() - this.currentIndex - 1, event);
-          this._mayReverse = false;
         ]]>
       </handler>
 
       <handler event="keypress" keycode="VK_PAGE_UP" modifiers="control shift any"
                group="system">
         <![CDATA[
-          this._mayReverse = true;
           this._moveByOffsetFromUserEvent(this.scrollOnePage(-1), event);
-          this._mayReverse = false;
         ]]>
       </handler>
 
       <handler event="keypress" keycode="VK_PAGE_DOWN" modifiers="control shift any"
                group="system">
         <![CDATA[
-          this._mayReverse = true;
           this._moveByOffsetFromUserEvent(this.scrollOnePage(1), event);
-          this._mayReverse = false;
         ]]>
       </handler>
 

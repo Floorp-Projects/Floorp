@@ -325,7 +325,7 @@ function create_animate_elements(test)
 
   if (is_transform_attr(test.attr_name)) {
     // animateTransform is "special". Although it targets an
-    // nsSVGAnimatedTransformList it only takes nsSVGTransform values as
+    // SVGAnimatedTransformList it only takes SVGTransform values as
     // animation values. Therefore all the assumptions we're testing about the
     // length of lists don't apply. We simply have to test it separately.
     // This is done in test_SVGTransformListAddition.xhtml.
