@@ -109,7 +109,7 @@ for name in cfg.tests:
         exec(testcode, {'test': test, 'equal': equal})
     except subprocess.CalledProcessError:
         print("TEST-FAILED: %s" % name)
-    except StandardError:
+    except AssertionError:
         print("TEST-FAILED: %s" % name)
         raise
     else:
