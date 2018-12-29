@@ -24,27 +24,43 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=771429
       function ctor() { this.x = 1; }
       f.x = 2;
       f.g = g;
-      var s = new Cu.Sandbox(window, { sandboxPrototype: window } );
-      try {
-        is(Cu.evalInSandbox('g()', s), window,
-           "Should get window as this object of non-strict global function");
-        is(Cu.evalInSandbox('h()', s), undefined,
-           "Should get undefined as this object of strict global function");
-        is(Cu.evalInSandbox('f.x', s), 2,
-           "Should have gotten the right thing back");
-        is(Cu.evalInSandbox('f.g()', s), f,
-           "Should have the right function object");
-        is(Cu.evalInSandbox('var x = { z: 7 }; g.call(x).z', s), 7,
-           "Should not rebind calls that are already bound");
-        // And test what happens when we use the normal Function.prototype.call
-        // on g instead of whatever our proxies happen to return.
-        is(Cu.evalInSandbox('var x = { z: 7 }; Function.prototype.call.call(g, x).z', s), 7,
-           "Should not rebind calls that are already bound");
-        is(Cu.evalInSandbox('new ctor();', s).x, 1,
-           "Should get a properly constructed object out of the sandbox");
-      } catch (e) {
-        ok(false, "Should not get an exception: " + e);
+      function test(freshCompartment) {
+        var s = new Cu.Sandbox(window, {
+          sandboxPrototype: window,
+          freshCompartment: freshCompartment,
+        });
+        try {
+          is(Cu.evalInSandbox('g()', s), window,
+             "Should get window as this object of non-strict global function");
+          is(Cu.evalInSandbox('h()', s), undefined,
+             "Should get undefined as this object of strict global function");
+          is(Cu.evalInSandbox('f.x', s), 2,
+             "Should have gotten the right thing back");
+          if (freshCompartment) {
+            is(Cu.evalInSandbox('f.g()', s), f,
+               "Should have the right function object");
+          } else {
+            // In the same-compartment case we don't go through a compartment
+            // boundary so when we call f.g() we don't unwrap the "callable
+            // proxy" around f and the test above fails. We accept this slight
+            // difference in behavior and assert a weaker invariant.
+            is(Cu.evalInSandbox('f.g()', s).toString(), f.toString(),
+               "Should have the right function object");
+          }
+          is(Cu.evalInSandbox('var x = { z: 7 }; g.call(x).z', s), 7,
+             "Should not rebind calls that are already bound");
+          // And test what happens when we use the normal Function.prototype.call
+          // on g instead of whatever our proxies happen to return.
+          is(Cu.evalInSandbox('var x = { z: 7 }; Function.prototype.call.call(g, x).z', s), 7,
+             "Should not rebind calls that are already bound");
+          is(Cu.evalInSandbox('new ctor();', s).x, 1,
+             "Should get a properly constructed object out of the sandbox");
+        } catch (e) {
+          ok(false, "Should not get an exception: " + e);
+        }
       }
+      test(false);
+      test(true);
   ]]>
   </script>
 </window>
