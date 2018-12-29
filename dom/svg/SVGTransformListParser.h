@@ -19,7 +19,7 @@
 
 namespace mozilla {
 
-class nsSVGTransform;
+class SVGTransform;
 
 class SVGTransformListParser : public SVGDataParser {
  public:
@@ -28,9 +28,7 @@ class SVGTransformListParser : public SVGDataParser {
 
   bool Parse();
 
-  const nsTArray<nsSVGTransform>& GetTransformList() const {
-    return mTransforms;
-  }
+  const nsTArray<SVGTransform>& GetTransformList() const { return mTransforms; }
 
  private:
   // helpers
@@ -48,7 +46,7 @@ class SVGTransformListParser : public SVGDataParser {
   bool ParseSkewY();
   bool ParseMatrix();
 
-  FallibleTArray<nsSVGTransform> mTransforms;
+  FallibleTArray<SVGTransform> mTransforms;
 };
 
 }  // namespace mozilla

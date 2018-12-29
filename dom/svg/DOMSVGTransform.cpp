@@ -117,22 +117,22 @@ DOMSVGTransform::DOMSVGTransform()
     : mList(nullptr),
       mListIndex(0),
       mIsAnimValItem(false),
-      mTransform(new nsSVGTransform())  // Default ctor for objects not in a
-                                        // list initialises to matrix type with
-                                        // identity matrix
+      mTransform(new SVGTransform())  // Default ctor for objects not in a
+                                      // list initialises to matrix type with
+                                      // identity matrix
 {}
 
 DOMSVGTransform::DOMSVGTransform(const gfxMatrix& aMatrix)
     : mList(nullptr),
       mListIndex(0),
       mIsAnimValItem(false),
-      mTransform(new nsSVGTransform(aMatrix)) {}
+      mTransform(new SVGTransform(aMatrix)) {}
 
-DOMSVGTransform::DOMSVGTransform(const nsSVGTransform& aTransform)
+DOMSVGTransform::DOMSVGTransform(const SVGTransform& aTransform)
     : mList(nullptr),
       mListIndex(0),
       mIsAnimValItem(false),
-      mTransform(new nsSVGTransform(aTransform)) {}
+      mTransform(new SVGTransform(aTransform)) {}
 
 DOMSVGTransform::~DOMSVGTransform() {
   SVGMatrix* matrix = SVGMatrixTearoffTable().GetTearoff(this);
@@ -279,18 +279,18 @@ void DOMSVGTransform::RemovingFromList() {
   MOZ_ASSERT(!mTransform,
              "Item in list also has another non-list value associated with it");
 
-  mTransform = new nsSVGTransform(InternalItem());
+  mTransform = new SVGTransform(InternalItem());
   mList = nullptr;
   mIsAnimValItem = false;
 }
 
-nsSVGTransform& DOMSVGTransform::InternalItem() {
+SVGTransform& DOMSVGTransform::InternalItem() {
   SVGAnimatedTransformList* alist = Element()->GetAnimatedTransformList();
   return mIsAnimValItem && alist->mAnimVal ? (*alist->mAnimVal)[mListIndex]
                                            : alist->mBaseVal[mListIndex];
 }
 
-const nsSVGTransform& DOMSVGTransform::InternalItem() const {
+const SVGTransform& DOMSVGTransform::InternalItem() const {
   return const_cast<DOMSVGTransform*>(this)->InternalItem();
 }
 
@@ -309,7 +309,7 @@ void DOMSVGTransform::SetMatrix(const gfxMatrix& aMatrix) {
   MOZ_ASSERT(!mIsAnimValItem, "Attempting to modify read-only transform");
 
   if (Transform().Type() == SVG_TRANSFORM_MATRIX &&
-      nsSVGTransform::MatricesEqual(Matrixgfx(), aMatrix)) {
+      SVGTransform::MatricesEqual(Matrixgfx(), aMatrix)) {
     return;
   }
 

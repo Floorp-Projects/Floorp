@@ -29,7 +29,6 @@ class DOMSVGAnimatedPreserveAspectRatio;
 
 namespace dom {
 class SVGAnimatedRect;
-class SVGTransform;
 class SVGViewElement;
 class SVGViewportElement;
 
