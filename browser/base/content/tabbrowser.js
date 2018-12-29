@@ -4763,17 +4763,14 @@ window._gBrowser = {
       }
     });
 
-    this.addEventListener("GloballyAutoplayBlocked", (event) => {
+    this.addEventListener("AudibleAutoplayMediaOccurred", (event) => {
       let browser = event.originalTarget;
       let tab = this.getTabForBrowser(browser);
       if (!tab) {
         return;
       }
 
-      SitePermissions.set(event.detail.url, "autoplay-media",
-                          SitePermissions.BLOCK,
-                          SitePermissions.SCOPE_GLOBAL,
-                          browser);
+      Services.obs.notifyObservers(tab, "AudibleAutoplayMediaOccurred");
     });
   },
 

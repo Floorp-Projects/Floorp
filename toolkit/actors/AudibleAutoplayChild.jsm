@@ -4,12 +4,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-var EXPORTED_SYMBOLS = ["AutoplayChild"];
+var EXPORTED_SYMBOLS = ["AudibleAutoplayChild"];
 
 ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
 
-class AutoplayChild extends ActorChild {
+class AudibleAutoplayChild extends ActorChild {
   handleEvent(event) {
-    this.mm.sendAsyncMessage("GloballyAutoplayBlocked");
+    this.mm.sendAsyncMessage("AudibleAutoplayMediaOccurred");
   }
 }
