@@ -87,6 +87,7 @@
 #include "js/CompilationAndEvaluation.h"
 #include "js/CompileOptions.h"
 #include "js/Debug.h"
+#include "js/Equality.h"  // JS::SameValue
 #include "js/GCVector.h"
 #include "js/Initialization.h"
 #include "js/JSON.h"
@@ -2719,7 +2720,7 @@ static bool AssertEq(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   bool same;
-  if (!JS_SameValue(cx, args[0], args[1], &same)) {
+  if (!JS::SameValue(cx, args[0], args[1], &same)) {
     return false;
   }
   if (!same) {
