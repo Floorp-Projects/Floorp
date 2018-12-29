@@ -502,6 +502,30 @@ def fetch_artifacts():
     print_line(b'fetches', b'finished fetching artifacts\n')
 
 
+def add_vcs_arguments(parser, project, name):
+    """Adds arguments to ArgumentParser to control VCS options for a project."""
+
+    parser.add_argument('--%s-checkout' % project,
+                        help='Directory where %s checkout should be created' %
+                             name)
+    parser.add_argument('--%s-sparse-profile' % project,
+                        help='Path to sparse profile for %s checkout' % name)
+
+
+def collect_vcs_options(args, project):
+    checkout = getattr(args, '%s_checkout' % project)
+    sparse_profile = getattr(args, '%s_sparse_profile' % project)
+
+    if checkout:
+        checkout = os.path.expanduser(checkout)
+
+    return {
+        'project': project,
+        'checkout': checkout,
+        'sparse-profile': sparse_profile,
+    }
+
+
 def main(args):
     print_line(b'setup', b'run-task started in %s\n' % os.getcwd().encode('utf-8'))
     running_as_root = IS_POSIX and os.getuid() == 0
@@ -519,12 +543,10 @@ def main(args):
     parser = argparse.ArgumentParser()
     parser.add_argument('--user', default='worker', help='user to run as')
     parser.add_argument('--group', default='worker', help='group to run as')
-    parser.add_argument('--gecko-checkout',
-                        help='Directory where Gecko checkout should be created')
-    parser.add_argument('--gecko-sparse-profile',
-                        help='Path to sparse checkout profile to use')
-    parser.add_argument('--comm-checkout',
-                        help='Directory where Comm checkout should be created')
+
+    add_vcs_arguments(parser, 'gecko', 'Firefox')
+    add_vcs_arguments(parser, 'comm', 'Comm')
+
     parser.add_argument('--fetch-hgfingerprint', action='store_true',
                         help='Fetch the latest hgfingerprint from the secrets store, '
                         'using the taskclsuerProxy')
@@ -532,8 +554,6 @@ def main(args):
     args = parser.parse_args(our_args)
 
     # expand ~ in some paths
-    if args.gecko_checkout:
-        args.gecko_checkout = os.path.expanduser(args.gecko_checkout)
     if 'HG_STORE_PATH' in os.environ:
         os.environ['HG_STORE_PATH'] = os.path.expanduser(os.environ['HG_STORE_PATH'])
 
@@ -687,7 +707,9 @@ def main(args):
     # revision hash. Revision hashes have priority over symbolic revisions. We
     # disallow running tasks with symbolic revisions unless they have been
     # resolved by a checkout.
-    if args.gecko_checkout:
+    gecko_options = collect_vcs_options(args, 'gecko')
+
+    if gecko_options['checkout']:
         base_repo = os.environ.get('GECKO_BASE_REPOSITORY')
         # Some callers set the base repository to mozilla-central for historical
         # reasons. Switch to mozilla-unified because robustcheckout works best
@@ -697,13 +719,13 @@ def main(args):
 
         os.environ['GECKO_HEAD_REV'] = vcs_checkout(
             os.environ['GECKO_HEAD_REPOSITORY'],
-            args.gecko_checkout,
+            gecko_options['checkout'],
             os.environ['HG_STORE_PATH'],
             fetch_hgfingerprint=args.fetch_hgfingerprint,
             base_repo=base_repo,
             revision=os.environ.get('GECKO_HEAD_REV'),
             branch=os.environ.get('GECKO_HEAD_REF'),
-            sparse_profile=args.gecko_sparse_profile)
+            sparse_profile=gecko_options['sparse-profile'])
 
     elif not os.environ.get('GECKO_HEAD_REV') and \
             os.environ.get('GECKO_HEAD_REF'):
@@ -714,17 +736,19 @@ def main(args):
     # revision hash. Revision hashes have priority over symbolic revisions. We
     # disallow running tasks with symbolic revisions unless they have been
     # resolved by a checkout.
-    if args.comm_checkout:
+    comm_options = collect_vcs_options(args, 'comm')
+    if comm_options['checkout']:
         base_repo = os.environ.get('COMM_BASE_REPOSITORY')
 
         os.environ['COMM_HEAD_REV'] = vcs_checkout(
             os.environ['COMM_HEAD_REPOSITORY'],
-            args.comm_checkout,
+            comm_options['checkout'],
             os.environ['HG_STORE_PATH'],
             fetch_hgfingerprint=args.fetch_hgfingerprint,
             base_repo=base_repo,
             revision=os.environ.get('COMM_HEAD_REV'),
-            branch=os.environ.get('COMM_HEAD_REF'))
+            branch=os.environ.get('COMM_HEAD_REF'),
+            sparse_profile=comm_options['sparse-profile'])
 
     elif not os.environ.get('COMM_HEAD_REV') and \
             os.environ.get('COMM_HEAD_REF'):
