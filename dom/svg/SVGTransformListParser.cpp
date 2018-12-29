@@ -8,7 +8,7 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "SVGContentUtils.h"
-#include "nsSVGTransform.h"
+#include "SVGTransform.h"
 #include "nsGkAtoms.h"
 #include "nsAtom.h"
 
@@ -135,7 +135,7 @@ bool SVGTransformListParser::ParseTranslate() {
       t[1] = 0.f;
       MOZ_FALLTHROUGH;
     case 2: {
-      nsSVGTransform* transform = mTransforms.AppendElement(fallible);
+      SVGTransform* transform = mTransforms.AppendElement(fallible);
       if (!transform) {
         return false;
       }
@@ -160,7 +160,7 @@ bool SVGTransformListParser::ParseScale() {
       s[1] = s[0];
       MOZ_FALLTHROUGH;
     case 2: {
-      nsSVGTransform* transform = mTransforms.AppendElement(fallible);
+      SVGTransform* transform = mTransforms.AppendElement(fallible);
       if (!transform) {
         return false;
       }
@@ -185,7 +185,7 @@ bool SVGTransformListParser::ParseRotate() {
       r[1] = r[2] = 0.f;
       MOZ_FALLTHROUGH;
     case 3: {
-      nsSVGTransform* transform = mTransforms.AppendElement(fallible);
+      SVGTransform* transform = mTransforms.AppendElement(fallible);
       if (!transform) {
         return false;
       }
@@ -205,7 +205,7 @@ bool SVGTransformListParser::ParseSkewX() {
     return false;
   }
 
-  nsSVGTransform* transform = mTransforms.AppendElement(fallible);
+  SVGTransform* transform = mTransforms.AppendElement(fallible);
   if (!transform) {
     return false;
   }
@@ -222,7 +222,7 @@ bool SVGTransformListParser::ParseSkewY() {
     return false;
   }
 
-  nsSVGTransform* transform = mTransforms.AppendElement(fallible);
+  SVGTransform* transform = mTransforms.AppendElement(fallible);
   if (!transform) {
     return false;
   }
@@ -239,7 +239,7 @@ bool SVGTransformListParser::ParseMatrix() {
     return false;
   }
 
-  nsSVGTransform* transform = mTransforms.AppendElement(fallible);
+  SVGTransform* transform = mTransforms.AppendElement(fallible);
   if (!transform) {
     return false;
   }
