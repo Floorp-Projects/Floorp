@@ -73,7 +73,7 @@ def docker_worker_spidermonkey(config, job, taskdesc):
 
     worker['command'] = [
         '{workdir}/bin/run-task'.format(**run),
-        '--vcs-checkout', '{workdir}/workspace/build/src'.format(**run),
+        '--gecko-checkout', '{workdir}/workspace/build/src'.format(**run),
         '--',
         '/bin/bash',
         '-c',
