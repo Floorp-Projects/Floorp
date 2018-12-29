@@ -14,12 +14,6 @@
 
 %include ../../shared/global.inc.css
 
-/* ::::: XBL bindings ::::: */
-
-menulist > menupopup {
-  -moz-binding: url("chrome://global/content/bindings/popup.xml#popup-scrollbars");
-}
-
 /* ::::: Variables ::::: */
 :root {
   --arrowpanel-padding: 10px;
