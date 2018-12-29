@@ -180,7 +180,7 @@ impl IsVisible for LineDecoration {
 }
 
 #[test]
-#[cfg(target_os = "linux")]
+#[cfg(target_pointer_width = "64")]
 fn test_struct_sizes() {
     use std::mem;
     // The sizes of these structures are critical for performance on a number of
@@ -190,6 +190,6 @@ fn test_struct_sizes() {
     // (b) You made a structure larger. This is not necessarily a problem, but should only
     //     be done with care, and after checking if talos performance regresses badly.
     assert_eq!(mem::size_of::<LineDecoration>(), 20, "LineDecoration size changed");
-    assert_eq!(mem::size_of::<LineDecorationTemplate>(), 88, "LineDecorationTemplate size changed");
+    assert_eq!(mem::size_of::<LineDecorationTemplate>(), 68, "LineDecorationTemplate size changed");
     assert_eq!(mem::size_of::<LineDecorationKey>(), 48, "LineDecorationKey size changed");
 }

@@ -714,7 +714,7 @@ impl GradientGpuBlockBuilder {
 }
 
 #[test]
-#[cfg(target_os = "linux")]
+#[cfg(target_pointer_width = "64")]
 fn test_struct_sizes() {
     use std::mem;
     // The sizes of these structures are critical for performance on a number of
@@ -724,10 +724,10 @@ fn test_struct_sizes() {
     // (b) You made a structure larger. This is not necessarily a problem, but should only
     //     be done with care, and after checking if talos performance regresses badly.
     assert_eq!(mem::size_of::<LinearGradient>(), 72, "LinearGradient size changed");
-    assert_eq!(mem::size_of::<LinearGradientTemplate>(), 168, "LinearGradientTemplate size changed");
+    assert_eq!(mem::size_of::<LinearGradientTemplate>(), 128, "LinearGradientTemplate size changed");
     assert_eq!(mem::size_of::<LinearGradientKey>(), 96, "LinearGradientKey size changed");
 
     assert_eq!(mem::size_of::<RadialGradient>(), 72, "RadialGradient size changed");
-    assert_eq!(mem::size_of::<RadialGradientTemplate>(), 168, "RadialGradientTemplate size changed");
+    assert_eq!(mem::size_of::<RadialGradientTemplate>(), 136, "RadialGradientTemplate size changed");
     assert_eq!(mem::size_of::<RadialGradientKey>(), 104, "RadialGradientKey size changed");
 }

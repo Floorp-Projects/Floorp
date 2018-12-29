@@ -549,7 +549,7 @@ impl IsVisible for YuvImage {
 }
 
 #[test]
-#[cfg(target_os = "linux")]
+#[cfg(target_pointer_width = "64")]
 fn test_struct_sizes() {
     use std::mem;
     // The sizes of these structures are critical for performance on a number of
@@ -559,9 +559,9 @@ fn test_struct_sizes() {
     // (b) You made a structure larger. This is not necessarily a problem, but should only
     //     be done with care, and after checking if talos performance regresses badly.
     assert_eq!(mem::size_of::<Image>(), 56, "Image size changed");
-    assert_eq!(mem::size_of::<ImageTemplate>(), 144, "ImageTemplate size changed");
+    assert_eq!(mem::size_of::<ImageTemplate>(), 124, "ImageTemplate size changed");
     assert_eq!(mem::size_of::<ImageKey>(), 84, "ImageKey size changed");
     assert_eq!(mem::size_of::<YuvImage>(), 36, "YuvImage size changed");
-    assert_eq!(mem::size_of::<YuvImageTemplate>(), 96, "YuvImageTemplate size changed");
+    assert_eq!(mem::size_of::<YuvImageTemplate>(), 72, "YuvImageTemplate size changed");
     assert_eq!(mem::size_of::<YuvImageKey>(), 64, "YuvImageKey size changed");
 }

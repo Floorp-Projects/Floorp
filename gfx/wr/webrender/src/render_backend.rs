@@ -8,7 +8,7 @@
 //! See the comment at the top of the `renderer` module for a description of
 //! how these two pieces interact.
 
-use api::{ApiMsg, BuiltDisplayList, ClearCache, DebugCommand};
+use api::{ApiMsg, BuiltDisplayList, ClearCache, DebugCommand, DebugFlags};
 #[cfg(feature = "debugger")]
 use api::{BuiltDisplayListIter, SpecificDisplayItem};
 use api::{DevicePixelScale, DeviceIntPoint, DeviceIntRect, DeviceIntSize};
@@ -659,6 +659,7 @@ pub struct RenderBackend {
     recorder: Option<Box<ApiRecordingReceiver>>,
     sampler: Option<Box<AsyncPropertySampler + Send>>,
     size_of_op: Option<VoidPtrToSizeFn>,
+    debug_flags: DebugFlags,
     namespace_alloc_by_client: bool,
 }
 
@@ -677,6 +678,7 @@ impl RenderBackend {
         recorder: Option<Box<ApiRecordingReceiver>>,
         sampler: Option<Box<AsyncPropertySampler + Send>>,
         size_of_op: Option<VoidPtrToSizeFn>,
+        debug_flags: DebugFlags,
         namespace_alloc_by_client: bool,
     ) -> RenderBackend {
         RenderBackend {
@@ -696,6 +698,7 @@ impl RenderBackend {
             recorder,
             sampler,
             size_of_op,
+            debug_flags,
             namespace_alloc_by_client,
         }
     }
@@ -1005,6 +1008,8 @@ impl RenderBackend {
                 // recently used resources.
                 self.resource_cache.clear(ClearCache::all());
 
+                self.clear_gpu_cache();
+
                 let pending_update = self.resource_cache.pending_updates();
                 let msg = ResultMsg::UpdateResources {
                     updates: pending_update,
@@ -1104,6 +1109,22 @@ impl RenderBackend {
                     DebugCommand::SetFlags(flags) => {
                         self.resource_cache.set_debug_flags(flags);
                         self.gpu_cache.set_debug_flags(flags);
+
+                        // If we're toggling on the GPU cache debug display, we
+                        // need to blow away the cache. This is because we only
+                        // send allocation/free notifications to the renderer
+                        // thread when the debug display is enabled, and thus
+                        // enabling it when the cache is partially populated will
+                        // give the renderer an incomplete view of the world.
+                        // And since we might as well drop all the debugging state
+                        // from the renderer when we disable the debug display,
+                        // we just clear the cache on toggle.
+                        let changed = self.debug_flags ^ flags;
+                        if changed.contains(DebugFlags::GPU_CACHE_DBG) {
+                            self.clear_gpu_cache();
+                        }
+                        self.debug_flags = flags;
+
                         ResultMsg::DebugCommand(option)
                     }
                     _ => ResultMsg::DebugCommand(option),
@@ -1155,6 +1176,13 @@ impl RenderBackend {
             &mut txn.resource_updates,
             &mut profile_counters.resources,
         );
+
+        // If we've been above the threshold for reclaiming GPU cache memory for
+        // long enough, drop it and rebuild it. This needs to be done before any
+        // updates for this frame are made.
+        if self.gpu_cache.should_reclaim_memory() {
+            self.clear_gpu_cache();
+        }
 
         for scene_msg in transaction_msg.scene_ops.drain(..) {
             let _timer = profile_counters.total_time.timer();
@@ -1519,6 +1547,13 @@ impl RenderBackend {
         // will add its report to this one and send the result back to the original
         // thread waiting on the request.
         self.scene_tx.send(SceneBuilderRequest::ReportMemory(report, tx)).unwrap();
+    }
+
+    /// Drops everything in the GPU cache. Must not be called once gpu cache entries
+    /// for the next frame have already been requested.
+    fn clear_gpu_cache(&mut self) {
+        self.gpu_cache.clear();
+        self.result_tx.send(ResultMsg::ClearGpuCache).unwrap();
     }
 }
 
