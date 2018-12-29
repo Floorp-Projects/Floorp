@@ -37,6 +37,7 @@
 #include "jit/BaselineJIT.h"
 #include "js/CharacterEncoding.h"
 #include "js/MemoryMetrics.h"
+#include "js/PropertyDescriptor.h"  // JS::FromPropertyDescriptor
 #include "js/Proxy.h"
 #include "js/UbiNode.h"
 #include "js/UniquePtr.h"
