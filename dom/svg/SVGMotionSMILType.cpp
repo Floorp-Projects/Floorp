@@ -46,7 +46,7 @@ struct PathPointParams {  // Point along a path
  * Instances of this class represent the points that we move between during
  * <animateMotion>.  Each nsSMILValue will get a nsTArray of these (generally
  * with at most 1 entry in the array, except for in SandwichAdd).  (This
- * matches our behavior in nsSVGTransformSMILType.)
+ * matches our behavior in SVGTransformListSMILType.)
  *
  * NOTE: In general, MotionSegments are represented as points on a path
  * (eSegmentType_PathPoint), so that we can easily interpolate and compute
