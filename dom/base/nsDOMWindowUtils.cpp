@@ -549,7 +549,7 @@ nsDOMWindowUtils::SetResolutionAndScaleTo(float aResolution) {
   }
 
   presShell->SetResolutionAndScaleTo(aResolution,
-                                     nsIPresShell::ChangeOrigin::eOther);
+                                     nsIPresShell::ChangeOrigin::eMainThread);
 
   return NS_OK;
 }
