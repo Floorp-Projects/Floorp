@@ -413,6 +413,9 @@ class TestMetadata(object):
             self.add_wpt_manifest_data()
 
         for path in sorted(paths):
+            if os.path.sep != "/":
+                path = path.replace("/", os.path.sep)
+
             if path is None:
                 candidate_paths |= set(self._tests_by_path.keys())
                 continue
