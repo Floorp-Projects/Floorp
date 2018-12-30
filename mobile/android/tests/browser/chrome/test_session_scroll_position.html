@@ -72,8 +72,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1498892
     let {x, y, zoom} = data;
     let utils = getFrame(browser, data).windowUtils;
 
-    let actualX = {}, actualY = {}, actualZoom = {};
-    utils.getResolution(actualZoom);
+    let actualX = {}, actualY = {};
+    let actualZoom = utils.getResolution();
     utils.getScrollXY(false, actualX, actualY);
 
     if (data.hasOwnProperty("x")) {
@@ -83,7 +83,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1498892
       is(actualY.value, y, "scrollY set correctly");
     }
     if (data.hasOwnProperty("zoom")) {
-      ok(fuzzyEquals(actualZoom.value, zoom), "zoom set correctly");
+      ok(fuzzyEquals(actualZoom, zoom), "zoom set correctly");
     }
   }
 
