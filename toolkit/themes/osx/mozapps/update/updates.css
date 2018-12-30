@@ -165,9 +165,5 @@ update {
 #historyItems {
   -moz-appearance: listbox;
   height: 200px;
-  margin: 1px 5px 4px 5px;
-}
-
-#historyItems > scrollbox {
-  margin-bottom: 1px;
+  margin: 1px 5px 5px 5px;
 }
