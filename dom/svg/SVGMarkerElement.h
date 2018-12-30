@@ -127,7 +127,7 @@ class SVGMarkerElement : public SVGMarkerElementBase {
   already_AddRefed<SVGAnimatedEnumeration> OrientType();
   already_AddRefed<SVGAnimatedAngle> OrientAngle();
   void SetOrientToAuto();
-  void SetOrientToAngle(SVGAngle& angle, ErrorResult& rv);
+  void SetOrientToAngle(DOMSVGAngle& angle, ErrorResult& rv);
 
  protected:
   virtual bool ParseAttribute(int32_t aNameSpaceID, nsAtom* aName,

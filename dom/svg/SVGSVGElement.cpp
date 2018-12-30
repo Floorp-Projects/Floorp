@@ -14,6 +14,7 @@
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/SMILAnimationController.h"
 
+#include "DOMSVGAngle.h"
 #include "DOMSVGLength.h"
 #include "DOMSVGNumber.h"
 #include "DOMSVGPoint.h"
@@ -22,7 +23,6 @@
 #include "nsIFrame.h"
 #include "nsISVGSVGFrame.h"
 #include "nsSMILTimeContainer.h"
-#include "SVGAngle.h"
 #include "nsSVGDisplayableFrame.h"
 #include "nsSVGUtils.h"
 
@@ -261,8 +261,8 @@ already_AddRefed<DOMSVGLength> SVGSVGElement::CreateSVGLength() {
   return length.forget();
 }
 
-already_AddRefed<SVGAngle> SVGSVGElement::CreateSVGAngle() {
-  return do_AddRef(new SVGAngle(this));
+already_AddRefed<DOMSVGAngle> SVGSVGElement::CreateSVGAngle() {
+  return do_AddRef(new DOMSVGAngle(this));
 }
 
 already_AddRefed<nsISVGPoint> SVGSVGElement::CreateSVGPoint() {
