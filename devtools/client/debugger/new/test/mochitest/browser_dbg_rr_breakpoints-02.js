@@ -7,7 +7,7 @@
 async function test() {
   waitForExplicitFinish();
 
-  const dbg = await attatchRecordingDebugger("doc_rr_basic.html", { waitForRecording: true });
+  const dbg = await attachRecordingDebugger("doc_rr_basic.html", { waitForRecording: true });
   const {threadClient, tab, toolbox} = dbg;
 
   await setBreakpoint(threadClient, "doc_rr_basic.html", 21);
