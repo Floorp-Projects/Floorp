@@ -157,7 +157,7 @@ nsLookAndFeel::ProcessSelectionBackground(nscolor aColor)
   if (sat > 0) {
     // The color is not a shade of grey, restore the saturation taken away by
     // the transparency.
-    sat = sat * factor;
+    sat = mozilla::clamped(sat * factor, 0, 255);
   } else {
     // The color is a shade of grey, find the value that looks equivalent
     // on a white background with the given opacity.
