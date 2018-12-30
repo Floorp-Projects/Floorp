@@ -4,44 +4,44 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "SVGAngle.h"
+#include "DOMSVGAngle.h"
 #include "nsSVGAngle.h"
 #include "mozilla/dom/SVGAngleBinding.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
 
-NS_SVG_VAL_IMPL_CYCLE_COLLECTION_WRAPPERCACHED(SVGAngle, mSVGElement)
+NS_SVG_VAL_IMPL_CYCLE_COLLECTION_WRAPPERCACHED(DOMSVGAngle, mSVGElement)
 
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(SVGAngle, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(SVGAngle, Release)
+NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(DOMSVGAngle, AddRef)
+NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(DOMSVGAngle, Release)
 
-SVGAngle::SVGAngle(SVGElement* aSVGElement)
-    : mSVGElement(aSVGElement), mType(SVGAngle::CreatedValue) {
+DOMSVGAngle::DOMSVGAngle(SVGElement* aSVGElement)
+    : mSVGElement(aSVGElement), mType(DOMSVGAngle::CreatedValue) {
   mVal = new nsSVGAngle();
   mVal->Init();
 }
 
-JSObject* SVGAngle::WrapObject(JSContext* aCx,
-                               JS::Handle<JSObject*> aGivenProto) {
+JSObject* DOMSVGAngle::WrapObject(JSContext* aCx,
+                                  JS::Handle<JSObject*> aGivenProto) {
   return SVGAngle_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-uint16_t SVGAngle::UnitType() const {
+uint16_t DOMSVGAngle::UnitType() const {
   if (mType == AnimValue) {
     return mVal->mAnimValUnit;
   }
   return mVal->mBaseValUnit;
 }
 
-float SVGAngle::Value() const {
+float DOMSVGAngle::Value() const {
   if (mType == AnimValue) {
     return mVal->GetAnimValue();
   }
   return mVal->GetBaseValue();
 }
 
-void SVGAngle::SetValue(float aValue, ErrorResult& rv) {
+void DOMSVGAngle::SetValue(float aValue, ErrorResult& rv) {
   if (mType == AnimValue) {
     rv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
     return;
@@ -51,14 +51,14 @@ void SVGAngle::SetValue(float aValue, ErrorResult& rv) {
                      isBaseVal ? mSVGElement.get() : nullptr, isBaseVal);
 }
 
-float SVGAngle::ValueInSpecifiedUnits() const {
+float DOMSVGAngle::ValueInSpecifiedUnits() const {
   if (mType == AnimValue) {
     return mVal->mAnimVal;
   }
   return mVal->mBaseVal;
 }
 
-void SVGAngle::SetValueInSpecifiedUnits(float aValue, ErrorResult& rv) {
+void DOMSVGAngle::SetValueInSpecifiedUnits(float aValue, ErrorResult& rv) {
   if (mType == AnimValue) {
     rv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
     return;
@@ -69,9 +69,9 @@ void SVGAngle::SetValueInSpecifiedUnits(float aValue, ErrorResult& rv) {
   }
 }
 
-void SVGAngle::NewValueSpecifiedUnits(uint16_t unitType,
-                                      float valueInSpecifiedUnits,
-                                      ErrorResult& rv) {
+void DOMSVGAngle::NewValueSpecifiedUnits(uint16_t unitType,
+                                         float valueInSpecifiedUnits,
+                                         ErrorResult& rv) {
   if (mType == AnimValue) {
     rv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
     return;
@@ -81,7 +81,7 @@ void SVGAngle::NewValueSpecifiedUnits(uint16_t unitType,
       mType == BaseValue ? mSVGElement.get() : nullptr);
 }
 
-void SVGAngle::ConvertToSpecifiedUnits(uint16_t unitType, ErrorResult& rv) {
+void DOMSVGAngle::ConvertToSpecifiedUnits(uint16_t unitType, ErrorResult& rv) {
   if (mType == AnimValue) {
     rv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
     return;
@@ -90,7 +90,7 @@ void SVGAngle::ConvertToSpecifiedUnits(uint16_t unitType, ErrorResult& rv) {
       unitType, mType == BaseValue ? mSVGElement.get() : nullptr);
 }
 
-void SVGAngle::SetValueAsString(const nsAString& aValue, ErrorResult& rv) {
+void DOMSVGAngle::SetValueAsString(const nsAString& aValue, ErrorResult& rv) {
   if (mType == AnimValue) {
     rv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
     return;
@@ -100,7 +100,7 @@ void SVGAngle::SetValueAsString(const nsAString& aValue, ErrorResult& rv) {
                                 isBaseVal);
 }
 
-void SVGAngle::GetValueAsString(nsAString& aValue) {
+void DOMSVGAngle::GetValueAsString(nsAString& aValue) {
   if (mType == AnimValue) {
     mVal->GetAnimValueString(aValue);
   } else {
