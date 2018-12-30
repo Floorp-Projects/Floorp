@@ -7,6 +7,7 @@
 
 #include "nsLayoutCID.h"
 #include "nsContentCID.h"
+#include "nsContentList.h"
 #include "nsIWeakReference.h"
 #include "nsIContentViewer.h"
 #include "nsIComponentManager.h"

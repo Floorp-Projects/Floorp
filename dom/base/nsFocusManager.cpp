@@ -1687,7 +1687,8 @@ bool nsFocusManager::Blur(nsPIDOMWindowOuter* aWindowToClear,
     // that the check is made for suppressed documents. Check to ensure that
     // the document isn't null in case someone closed it during the blur above
     nsIDocument* doc = window->GetExtantDoc();
-    if (doc) SendFocusOrBlurEvent(eBlur, presShell, doc, doc, 1, false);
+    if (doc)
+      SendFocusOrBlurEvent(eBlur, presShell, doc, ToSupports(doc), 1, false);
     if (mFocusedWindow == nullptr)
       SendFocusOrBlurEvent(eBlur, presShell, doc,
                            window->GetCurrentInnerWindow(), 1, false);
@@ -1804,7 +1805,7 @@ void nsFocusManager::Focus(nsPIDOMWindowOuter* aWindow, Element* aElement,
                                      GetFocusMoveActionCause(aFlags));
     }
     if (doc) {
-      SendFocusOrBlurEvent(eFocus, presShell, doc, doc,
+      SendFocusOrBlurEvent(eFocus, presShell, doc, ToSupports(doc),
                            aFlags & FOCUSMETHOD_MASK, aWindowRaised);
     }
     if (mFocusedWindow == aWindow && mFocusedElement == nullptr) {

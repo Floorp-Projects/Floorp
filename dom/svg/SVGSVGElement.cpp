@@ -22,7 +22,6 @@
 #include "nsIFrame.h"
 #include "nsISVGSVGFrame.h"
 #include "nsSMILTimeContainer.h"
-#include "nsSVGAngle.h"
 #include "SVGAngle.h"
 #include "nsSVGDisplayableFrame.h"
 #include "nsSVGUtils.h"
@@ -263,10 +262,7 @@ already_AddRefed<DOMSVGLength> SVGSVGElement::CreateSVGLength() {
 }
 
 already_AddRefed<SVGAngle> SVGSVGElement::CreateSVGAngle() {
-  nsSVGAngle* angle = new nsSVGAngle();
-  angle->Init();
-  RefPtr<SVGAngle> svgangle = new SVGAngle(angle, this, SVGAngle::CreatedValue);
-  return svgangle.forget();
+  return do_AddRef(new SVGAngle(this));
 }
 
 already_AddRefed<nsISVGPoint> SVGSVGElement::CreateSVGPoint() {
