@@ -204,28 +204,6 @@
     </implementation>
   </binding>
 
-  <!-- Categories list - displays the list of categories on the left pane. -->
-  <binding id="categories-list"
-           extends="chrome://global/content/bindings/richlistbox.xml#richlistbox">
-    <implementation>
-      <!-- This needs to be overridden to allow the fancy animation while not
-           allowing that item to be selected when hiding.  -->
-      <method name="_canUserSelect">
-        <parameter name="aItem"/>
-        <body>
-        <![CDATA[
-          if (aItem.hasAttribute("disabled") &&
-              aItem.getAttribute("disabled") == "true")
-            return false;
-          var style = document.defaultView.getComputedStyle(aItem);
-          return style.display != "none" && style.visibility == "visible";
-        ]]>
-        </body>
-      </method>
-    </implementation>
-  </binding>
-
-
   <!-- Category item - an item in the category list. -->
   <binding id="category"
            extends="chrome://global/content/bindings/richlistbox.xml#richlistitem">

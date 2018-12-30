@@ -742,7 +742,8 @@
         <body>
         <![CDATA[
           var style = document.defaultView.getComputedStyle(aItem);
-          return style.display != "none" && style.visibility == "visible";
+          return style.display != "none" && style.visibility == "visible" &&
+                 style.MozUserInput != "none";
         ]]>
         </body>
       </method>
