@@ -78,6 +78,7 @@
 #include "nsCCUncollectableMarker.h"
 #include "nsURILoader.h"
 #include "mozilla/BasicEvents.h"
+#include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/dom/DocumentL10n.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/NodeInfoInlines.h"
@@ -989,9 +990,8 @@ nsresult XULDocument::DoneWalking() {
                      mDocumentL10n, true, false);
 
     nsContentUtils::DispatchTrustedEvent(
-        this, static_cast<nsIDocument*>(this),
-        NS_LITERAL_STRING("MozBeforeInitialXULLayout"), CanBubble::eYes,
-        Cancelable::eNo);
+        this, ToSupports(this), NS_LITERAL_STRING("MozBeforeInitialXULLayout"),
+        CanBubble::eYes, Cancelable::eNo);
 
     RemoveEventListener(NS_LITERAL_STRING("MozBeforeInitialXULLayout"),
                         mDocumentL10n, true);

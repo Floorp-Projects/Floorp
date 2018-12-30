@@ -131,7 +131,7 @@ NS_IMETHODIMP
 ImageListener::OnStopRequest(nsIRequest* aRequest, nsISupports* aCtxt,
                              nsresult aStatus) {
   ImageDocument* imgDoc = static_cast<ImageDocument*>(mDocument.get());
-  nsContentUtils::DispatchChromeEvent(imgDoc, static_cast<nsIDocument*>(imgDoc),
+  nsContentUtils::DispatchChromeEvent(imgDoc, ToSupports(imgDoc),
                                       NS_LITERAL_STRING("ImageContentLoaded"),
                                       CanBubble::eYes, Cancelable::eYes);
   return MediaDocumentStreamListener::OnStopRequest(aRequest, aCtxt, aStatus);
