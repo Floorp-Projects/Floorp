@@ -183,12 +183,12 @@ OfflineCacheUpdateGlue::ApplicationCacheAvailable(
   // Check that the document that requested this update was
   // previously associated with an application cache.  If not, it
   // should be associated with the new one.
-  nsCOMPtr<nsIApplicationCacheContainer> container =
-      do_QueryInterface(mDocument);
-  if (!container) return NS_OK;
+  if (!mDocument) {
+    return NS_OK;
+  }
 
   nsCOMPtr<nsIApplicationCache> existingCache;
-  nsresult rv = container->GetApplicationCache(getter_AddRefs(existingCache));
+  nsresult rv = mDocument->GetApplicationCache(getter_AddRefs(existingCache));
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!existingCache) {
@@ -201,7 +201,7 @@ OfflineCacheUpdateGlue::ApplicationCacheAvailable(
            clientID.get(), mDocument.get()));
     }
 
-    rv = container->SetApplicationCache(aApplicationCache);
+    rv = mDocument->SetApplicationCache(aApplicationCache);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

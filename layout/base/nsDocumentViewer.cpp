@@ -488,18 +488,19 @@ class AutoPrintEventDispatcher {
 
  private:
   void DispatchEventToWindowTree(const nsAString& aEvent) {
-    nsCOMArray<nsIDocument> targets;
+    nsTArray<nsCOMPtr<nsIDocument>> targets;
     CollectDocuments(mTop, &targets);
-    for (int32_t i = 0; i < targets.Count(); ++i) {
-      nsIDocument* d = targets[i];
-      nsContentUtils::DispatchTrustedEvent(
-          d, d->GetWindow(), aEvent, CanBubble::eNo, Cancelable::eNo, nullptr);
+    for (nsCOMPtr<nsIDocument>& doc : targets) {
+      nsContentUtils::DispatchTrustedEvent(doc, doc->GetWindow(), aEvent,
+                                           CanBubble::eNo, Cancelable::eNo,
+                                           nullptr);
     }
   }
 
   static bool CollectDocuments(nsIDocument* aDocument, void* aData) {
     if (aDocument) {
-      static_cast<nsCOMArray<nsIDocument>*>(aData)->AppendObject(aDocument);
+      static_cast<nsTArray<nsCOMPtr<nsIDocument>>*>(aData)->AppendElement(
+          aDocument);
       aDocument->EnumerateSubDocuments(CollectDocuments, aData);
     }
     return true;
@@ -1085,7 +1086,7 @@ nsDocumentViewer::LoadComplete(nsresult aStatus) {
       nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
       if (os) {
         nsIPrincipal* principal = d->NodePrincipal();
-        os->NotifyObservers(d,
+        os->NotifyObservers(ToSupports(d),
                             nsContentUtils::IsSystemPrincipal(principal)
                                 ? "chrome-document-loaded"
                                 : "content-document-loaded",
@@ -2851,9 +2852,9 @@ nsDocumentViewer::SetTextZoom(float aTextZoom) {
 
   // Dispatch TextZoomChange event only if text zoom value has changed.
   if (textZoomChange) {
-    nsContentUtils::DispatchChromeEvent(
-        mDocument, static_cast<nsIDocument*>(mDocument),
-        NS_LITERAL_STRING("TextZoomChange"), CanBubble::eYes, Cancelable::eYes);
+    nsContentUtils::DispatchChromeEvent(mDocument, ToSupports(mDocument),
+                                        NS_LITERAL_STRING("TextZoomChange"),
+                                        CanBubble::eYes, Cancelable::eYes);
   }
 
   return NS_OK;
@@ -2968,9 +2969,9 @@ nsDocumentViewer::SetFullZoom(float aFullZoom) {
   // Dispatch FullZoomChange event only if fullzoom value really was been
   // changed
   if (fullZoomChange) {
-    nsContentUtils::DispatchChromeEvent(
-        mDocument, static_cast<nsIDocument*>(mDocument),
-        NS_LITERAL_STRING("FullZoomChange"), CanBubble::eYes, Cancelable::eYes);
+    nsContentUtils::DispatchChromeEvent(mDocument, ToSupports(mDocument),
+                                        NS_LITERAL_STRING("FullZoomChange"),
+                                        CanBubble::eYes, Cancelable::eYes);
   }
 
   return NS_OK;
@@ -4381,7 +4382,8 @@ nsDocumentShownDispatcher::Run() {
   nsCOMPtr<nsIObserverService> observerService =
       mozilla::services::GetObserverService();
   if (observerService) {
-    observerService->NotifyObservers(mDocument, "document-shown", nullptr);
+    observerService->NotifyObservers(ToSupports(mDocument), "document-shown",
+                                     nullptr);
   }
   return NS_OK;
 }

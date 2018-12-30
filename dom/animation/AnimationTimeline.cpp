@@ -11,6 +11,8 @@
 namespace mozilla {
 namespace dom {
 
+AnimationTimeline::~AnimationTimeline() { mAnimationOrder.clear(); }
+
 NS_IMPL_CYCLE_COLLECTION_CLASS(AnimationTimeline)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(AnimationTimeline)
