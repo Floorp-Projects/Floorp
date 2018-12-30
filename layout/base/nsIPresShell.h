@@ -1856,6 +1856,17 @@ class nsIPresShell : public nsStubDocumentObserver {
   // performing a flush with mFlushAnimations == true.
   bool mNeedThrottledAnimationFlush : 1;
 
+  bool mFontSizeInflationForceEnabled : 1;
+  bool mFontSizeInflationDisabledInMasterProcess : 1;
+  bool mFontSizeInflationEnabled : 1;
+
+  bool mPaintingIsFrozen : 1;
+
+  // If a document belongs to an invisible DocShell, this flag must be set
+  // to true, so we can avoid any paint calls for widget related to this
+  // presshell.
+  bool mIsNeverPainting : 1;
+
   uint32_t mPresShellId;
 
   static nsIContent* gKeyDownTarget;
@@ -1865,19 +1876,11 @@ class nsIPresShell : public nsStubDocumentObserver {
   uint32_t mFontSizeInflationEmPerLine;
   uint32_t mFontSizeInflationMinTwips;
   uint32_t mFontSizeInflationLineThreshold;
-  bool mFontSizeInflationForceEnabled;
-  bool mFontSizeInflationDisabledInMasterProcess;
-  bool mFontSizeInflationEnabled;
-
-  bool mPaintingIsFrozen;
-
-  // If a document belongs to an invisible DocShell, this flag must be set
-  // to true, so we can avoid any paint calls for widget related to this
-  // presshell.
-  bool mIsNeverPainting;
 
   // Whether we're currently under a FlushPendingNotifications.
   // This is used to handle flush reentry correctly.
+  // NOTE: This can't be a bitfield since AutoRestore has a reference to this
+  // variable.
   bool mInFlush;
 
   nsIFrame* mCurrentEventFrame;
