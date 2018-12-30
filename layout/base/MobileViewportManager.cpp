@@ -329,7 +329,8 @@ void MobileViewportManager::UpdateResolution(
   if (newZoom) {
     LayoutDeviceToLayerScale resolution = ZoomToResolution(*newZoom, cssToDev);
     MVM_LOG("%p: setting resolution %f\n", this, resolution.scale);
-    mPresShell->SetResolutionAndScaleTo(resolution.scale, nsGkAtoms::other);
+    mPresShell->SetResolutionAndScaleTo(resolution.scale,
+                                        nsIPresShell::ChangeOrigin::eOther);
 
     MVM_LOG("%p: New zoom is %f\n", this, newZoom->scale);
   }

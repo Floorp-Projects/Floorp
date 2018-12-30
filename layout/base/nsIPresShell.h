@@ -1371,12 +1371,17 @@ class nsIPresShell : public nsStubDocumentObserver {
    * The resolution defaults to 1.0.
    *
    * |aOrigin| specifies who originated the resolution change. For changes
-   * sent by APZ, pass nsGkAtoms::apz. For changes sent by the main thread,
-   * use pass nsGkAtoms::other or nsGkAtoms::restore (similar to the |aOrigin|
-   * parameter of nsIScrollableFrame::ScrollToCSSPixels()).
+   * sent by APZ, pass ChangeOrigin::eApz. For changes sent by the main thread,
+   * use pass ChangeOrigin::Other or ChangeOrigin::Restore (similar to the
+   * |aOrigin| parameter of nsIScrollableFrame::ScrollToCSSPixels()).
    */
+  enum class ChangeOrigin : uint8_t {
+    eApz,
+    eRestore,
+    eOther,
+  };
   virtual nsresult SetResolutionAndScaleTo(float aResolution,
-                                           nsAtom* aOrigin) = 0;
+                                           ChangeOrigin aOrigin) = 0;
   float GetResolution() const { return mResolution.valueOr(1.0); }
   virtual float GetCumulativeResolution() = 0;
 

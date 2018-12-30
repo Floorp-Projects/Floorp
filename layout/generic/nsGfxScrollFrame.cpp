@@ -6162,7 +6162,7 @@ void ScrollFrameHelper::RestoreState(PresState* aState) {
   if (mIsRoot) {
     nsIPresShell* presShell = mOuter->PresShell();
     presShell->SetResolutionAndScaleTo(aState->resolution(),
-                                       nsGkAtoms::restore);
+                                       nsIPresShell::ChangeOrigin::eRestore);
   }
 }
 
