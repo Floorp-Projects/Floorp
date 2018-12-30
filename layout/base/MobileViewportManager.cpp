@@ -110,9 +110,9 @@ float MobileViewportManager::ComputeIntrinsicResolution() const {
 mozilla::CSSToScreenScale MobileViewportManager::ComputeIntrinsicScale(
     const nsViewportInfo& aViewportInfo,
     const mozilla::ScreenIntSize& aDisplaySize,
-    const mozilla::CSSSize& aViewportSize) const {
+    const mozilla::CSSSize& aViewportOrContentSize) const {
   CSSToScreenScale intrinsicScale =
-      MaxScaleRatio(ScreenSize(aDisplaySize), aViewportSize);
+      MaxScaleRatio(ScreenSize(aDisplaySize), aViewportOrContentSize);
   MVM_LOG("%p: Intrinsic computed zoom is %f\n", this, intrinsicScale.scale);
   return ClampZoom(intrinsicScale, aViewportInfo);
 }
