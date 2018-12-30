@@ -15,6 +15,7 @@
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/FunctionBinding.h"
 #include "mozilla/dom/Performance.h"
+#include "mozilla/dom/PromiseBinding.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/StructuredCloneHolder.h"
 #include "mozilla/dom/ToJSValue.h"

@@ -520,8 +520,8 @@ class nsBeforeFirstPaintDispatcher : public Runnable {
     nsCOMPtr<nsIObserverService> observerService =
         mozilla::services::GetObserverService();
     if (observerService) {
-      observerService->NotifyObservers(mDocument, "before-first-paint",
-                                       nullptr);
+      observerService->NotifyObservers(ToSupports(mDocument),
+                                       "before-first-paint", nullptr);
     }
     return NS_OK;
   }
@@ -1444,7 +1444,7 @@ void nsIPresShell::SetAuthorStyleDisabled(bool aStyleDisabled) {
         mozilla::services::GetObserverService();
     if (observerService) {
       observerService->NotifyObservers(
-          mDocument, "author-style-disabled-changed", nullptr);
+          ToSupports(mDocument), "author-style-disabled-changed", nullptr);
     }
   }
 }

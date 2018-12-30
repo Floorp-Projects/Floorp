@@ -4914,9 +4914,9 @@ void ScrollFrameHelper::FireScrollEvent() {
   mozilla::layers::ScrollLinkedEffectDetector detector(
       content->GetComposedDoc());
   if (mIsRoot) {
-    nsIDocument* doc = content->GetUncomposedDoc();
-    if (doc) {
-      EventDispatcher::Dispatch(doc, prescontext, &event, nullptr, &status);
+    if (nsIDocument* doc = content->GetUncomposedDoc()) {
+      EventDispatcher::Dispatch(ToSupports(doc), prescontext, &event, nullptr,
+                                &status);
     }
   } else {
     // scroll events fired at elements don't bubble (although scroll events
@@ -6193,10 +6193,8 @@ void ScrollFrameHelper::FireScrolledAreaEvent() {
   nsIContent* content = mOuter->GetContent();
 
   event.mArea = mScrolledFrame->GetScrollableOverflowRectRelativeToParent();
-
-  nsIDocument* doc = content->GetUncomposedDoc();
-  if (doc) {
-    EventDispatcher::Dispatch(doc, prescontext, &event, nullptr);
+  if (nsIDocument* doc = content->GetUncomposedDoc()) {
+    EventDispatcher::Dispatch(ToSupports(doc), prescontext, &event, nullptr);
   }
 }
 

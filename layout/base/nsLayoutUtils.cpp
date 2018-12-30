@@ -8572,8 +8572,8 @@ void MaybeSetupTransactionIdAllocator(layers::LayerManager* aManager,
   if (nsIDocument* doc = aShell->GetDocument()) {
     WidgetEvent event(true, eVoidEvent);
     nsTArray<EventTarget*> targets;
-    nsresult rv = EventDispatcher::Dispatch(doc, nullptr, &event, nullptr,
-                                            nullptr, nullptr, &targets);
+    nsresult rv = EventDispatcher::Dispatch(
+        ToSupports(doc), nullptr, &event, nullptr, nullptr, nullptr, &targets);
     NS_ENSURE_SUCCESS(rv, false);
     for (size_t i = 0; i < targets.Length(); i++) {
       if (targets[i]->IsApzAware()) {

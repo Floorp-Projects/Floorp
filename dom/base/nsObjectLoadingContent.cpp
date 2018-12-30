@@ -262,7 +262,7 @@ class nsSimplePluginEvent : public Runnable {
 
   nsSimplePluginEvent(nsIDocument* aTarget, const nsAString& aEvent)
       : mozilla::Runnable("nsSimplePluginEvent"),
-        mTarget(aTarget),
+        mTarget(ToSupports(aTarget)),
         mDocument(aTarget),
         mEvent(aEvent) {
     MOZ_ASSERT(aTarget);

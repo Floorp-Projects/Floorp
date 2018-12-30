@@ -166,9 +166,7 @@ nsOfflineCachePendingUpdate::OnStateChange(nsIWebProgress *aWebProgress,
   nsPIDOMWindowInner *innerWindow = outerWindow->GetCurrentInnerWindow();
 
   nsCOMPtr<nsIDocument> progressDoc = outerWindow->GetDoc();
-  if (!progressDoc) return NS_OK;
-
-  if (!SameCOMIdentity(progressDoc, updateDoc)) {
+  if (!progressDoc || progressDoc != updateDoc) {
     return NS_OK;
   }
 

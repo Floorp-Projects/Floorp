@@ -157,12 +157,12 @@ static nsRect GetBoxRectForFrame(nsIFrame** aFrame, CSSBoxType aType) {
 
 class AccumulateQuadCallback : public nsLayoutUtils::BoxCallback {
  public:
-  AccumulateQuadCallback(nsISupports* aParentObject,
+  AccumulateQuadCallback(nsIDocument* aParentObject,
                          nsTArray<RefPtr<DOMQuad> >& aResult,
                          nsIFrame* aRelativeToFrame,
                          const nsPoint& aRelativeToBoxTopLeft,
                          CSSBoxType aBoxType)
-      : mParentObject(aParentObject),
+      : mParentObject(ToSupports(aParentObject)),
         mResult(aResult),
         mRelativeToFrame(aRelativeToFrame),
         mRelativeToBoxTopLeft(aRelativeToBoxTopLeft),
