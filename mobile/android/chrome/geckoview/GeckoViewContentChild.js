@@ -88,12 +88,12 @@ class GeckoViewContentChild extends GeckoViewChildModule {
     let [formdata, scrolldata] = this.Utils.mapFrameTree(content, FormData.collect, ssu.collectScrollPosition.bind(ssu));
 
     // Save the current document resolution.
-    let zoom = { value: 1 };
+    let zoom = 1;
     let domWindowUtils = content.windowUtils;
-    domWindowUtils.getResolution(zoom);
+    zoom = domWindowUtils.getResolution();
     scrolldata = scrolldata || {};
     scrolldata.zoom = {};
-    scrolldata.zoom.resolution = zoom.value;
+    scrolldata.zoom.resolution = zoom;
 
     // Save some data that'll help in adjusting the zoom level
     // when restoring in a different screen orientation.

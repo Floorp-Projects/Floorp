@@ -220,7 +220,7 @@ interface nsIDOMWindowUtils : nsISupports {
    */
   void setResolutionAndScaleTo(in float aResolution);
 
-  void getResolution(out float aResolution);
+  float getResolution();
 
   /**
    * Set a resolution on the presShell which is the "restored" from history.

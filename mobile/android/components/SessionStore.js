@@ -936,11 +936,11 @@ SessionStore.prototype = {
     scrolldata = scrolldata || {};
 
     // Save the current document resolution.
-    let zoom = { value: 1 };
-    content.windowUtils.getResolution(zoom);
+    let zoom = 1;
+    zoom = content.windowUtils.getResolution();
     scrolldata.zoom = {};
-    scrolldata.zoom.resolution = zoom.value;
-    log("onTabScroll() zoom level: " + zoom.value);
+    scrolldata.zoom.resolution = zoom;
+    log("onTabScroll() zoom level: " + zoom);
 
     // Save some data that'll help in adjusting the zoom level
     // when restoring in a different screen orientation.
