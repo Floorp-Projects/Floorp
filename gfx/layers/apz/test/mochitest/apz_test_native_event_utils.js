@@ -4,9 +4,9 @@
 // Utilities for synthesizing of native events.
 
 function getResolution() {
-  let resolution = { value: -1 }; // bogus value in case DWU fails us
-  SpecialPowers.getDOMWindowUtils(window).getResolution(resolution);
-  return resolution.value;
+  let resolution = -1; // bogus value in case DWU fails us
+  resolution = SpecialPowers.getDOMWindowUtils(window).getResolution();
+  return resolution;
 }
 
 function getPlatform() {
