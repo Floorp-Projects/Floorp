@@ -801,6 +801,7 @@ nsIPresShell::nsIPresShell()
       mFontSizeInflationEnabled(false),
       mPaintingIsFrozen(false),
       mIsNeverPainting(false),
+      mResolutionUpdated(false),
       mPresShellId(0),
       mFontSizeInflationEmPerLine(0),
       mFontSizeInflationMinTwips(0),
@@ -839,7 +840,6 @@ PresShell::PresShell()
       mHasReceivedPaintMessage(false),
       mIsLastKeyDownCanceled(false),
       mHasHandledUserInput(false),
-      mResolutionUpdated(false),
       mForceDispatchKeyPressEventsForNonPrintableKeys(false),
       mForceUseLegacyKeyCodeAndCharCodeValues(false),
       mInitializedWithKeyPressEventDispatchingBlacklist(false) {

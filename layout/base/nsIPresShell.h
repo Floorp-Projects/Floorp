@@ -1388,8 +1388,8 @@ class nsIPresShell : public nsStubDocumentObserver {
    * Accessors for a flag that tracks whether the most recent change to
    * the pres shell's resolution was originated by the main thread.
    */
-  virtual bool IsResolutionUpdated() const = 0;
-  virtual void SetResolutionUpdated(bool aUpdated) = 0;
+  bool IsResolutionUpdated() const { return mResolutionUpdated; }
+  void SetResolutionUpdated(bool aUpdated) { mResolutionUpdated = aUpdated; }
 
   /**
    * Calculate the cumulative scale resolution from this document up to
@@ -1866,6 +1866,10 @@ class nsIPresShell : public nsStubDocumentObserver {
   // to true, so we can avoid any paint calls for widget related to this
   // presshell.
   bool mIsNeverPainting : 1;
+
+  // Whether the most recent change to the pres shell resolution was
+  // originated by the main thread.
+  bool mResolutionUpdated : 1;
 
   uint32_t mPresShellId;
 
