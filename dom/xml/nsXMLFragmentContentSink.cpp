@@ -168,7 +168,9 @@ void nsXMLFragmentContentSink::SetDocumentCharset(
   MOZ_ASSERT_UNREACHABLE("fragments shouldn't set charset");
 }
 
-nsISupports* nsXMLFragmentContentSink::GetTarget() { return mTargetDocument; }
+nsISupports* nsXMLFragmentContentSink::GetTarget() {
+  return ToSupports(mTargetDocument);
+}
 
 ////////////////////////////////////////////////////////////////////////
 

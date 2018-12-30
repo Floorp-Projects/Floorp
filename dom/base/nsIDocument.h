@@ -25,6 +25,8 @@
 #include "nsIPresShell.h"
 #include "nsIChannelEventSink.h"
 #include "nsIProgressEventSink.h"
+#include "nsIRadioGroupContainer.h"
+#include "nsIScriptObjectPrincipal.h"
 #include "nsISecurityEventSink.h"
 #include "nsIScriptGlobalObject.h"  // for member (in nsCOMPtr)
 #include "nsIServiceManager.h"
@@ -35,6 +37,7 @@
 #include "nsPIDOMWindow.h"           // for use in inline functions
 #include "nsPropertyTable.h"         // for member
 #include "nsStringFwd.h"
+#include "nsStubMutationObserver.h"
 #include "nsTHashtable.h"  // for member
 #include "nsURIHashKey.h"
 #include "mozilla/net/ReferrerPolicy.h"  // for member
@@ -82,6 +85,7 @@ class nsDOMNavigationTiming;
 class nsDOMStyleSheetSetList;
 class nsFrameLoader;
 class nsGlobalWindowInner;
+class nsHtml5TreeOpExecutor;
 class nsHTMLCSSStyleSheet;
 class nsHTMLDocument;
 class nsHTMLStyleSheet;
@@ -434,6 +438,11 @@ class PrincipalFlashClassifier;
 // Gecko.
 class nsIDocument : public nsINode,
                     public mozilla::dom::DocumentOrShadowRoot,
+                    public nsSupportsWeakReference,
+                    public nsIRadioGroupContainer,
+                    public nsIScriptObjectPrincipal,
+                    public nsIApplicationCacheContainer,
+                    public nsStubMutationObserver,
                     public mozilla::dom::DispatcherTrait {
   typedef mozilla::dom::GlobalObject GlobalObject;
 
@@ -451,9 +460,83 @@ class nsIDocument : public nsINode,
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOCUMENT_IID)
 
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+
+  NS_DECL_ADDSIZEOFEXCLUDINGTHIS
+
+  NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsIDocument,
+                                                                   nsINode)
+
+#define NS_DOCUMENT_NOTIFY_OBSERVERS(func_, params_)                          \
+  do {                                                                        \
+    NS_OBSERVER_ARRAY_NOTIFY_XPCOM_OBSERVERS(mObservers, nsIDocumentObserver, \
+                                             func_, params_);                 \
+    /* FIXME(emilio): Apparently we can keep observing from the BFCache? That \
+       looks bogus. */                                                        \
+    if (nsIPresShell* shell = GetObservingShell()) {                          \
+      shell->func_ params_;                                                   \
+    }                                                                         \
+  } while (0)
+
 #ifdef MOZILLA_INTERNAL_API
   nsIDocument();
 #endif
+
+  // nsIApplicationCacheContainer
+  NS_DECL_NSIAPPLICATIONCACHECONTAINER
+
+  // nsIRadioGroupContainer
+  NS_IMETHOD WalkRadioGroup(const nsAString& aName, nsIRadioVisitor* aVisitor,
+                            bool aFlushContent) final {
+    return DocumentOrShadowRoot::WalkRadioGroup(aName, aVisitor, aFlushContent);
+  }
+
+  void SetCurrentRadioButton(const nsAString& aName,
+                             mozilla::dom::HTMLInputElement* aRadio) final {
+    DocumentOrShadowRoot::SetCurrentRadioButton(aName, aRadio);
+  }
+
+  mozilla::dom::HTMLInputElement* GetCurrentRadioButton(
+      const nsAString& aName) final {
+    return DocumentOrShadowRoot::GetCurrentRadioButton(aName);
+  }
+
+  NS_IMETHOD
+  GetNextRadioButton(const nsAString& aName, const bool aPrevious,
+                     mozilla::dom::HTMLInputElement* aFocusedRadio,
+                     mozilla::dom::HTMLInputElement** aRadioOut) final {
+    return DocumentOrShadowRoot::GetNextRadioButton(aName, aPrevious,
+                                                    aFocusedRadio, aRadioOut);
+  }
+  void AddToRadioGroup(const nsAString& aName,
+                       mozilla::dom::HTMLInputElement* aRadio) final {
+    DocumentOrShadowRoot::AddToRadioGroup(aName, aRadio);
+  }
+  void RemoveFromRadioGroup(const nsAString& aName,
+                            mozilla::dom::HTMLInputElement* aRadio) final {
+    DocumentOrShadowRoot::RemoveFromRadioGroup(aName, aRadio);
+  }
+  uint32_t GetRequiredRadioCount(const nsAString& aName) const final {
+    return DocumentOrShadowRoot::GetRequiredRadioCount(aName);
+  }
+  void RadioRequiredWillChange(const nsAString& aName,
+                               bool aRequiredAdded) final {
+    DocumentOrShadowRoot::RadioRequiredWillChange(aName, aRequiredAdded);
+  }
+  bool GetValueMissingState(const nsAString& aName) const final {
+    return DocumentOrShadowRoot::GetValueMissingState(aName);
+  }
+  void SetValueMissingState(const nsAString& aName, bool aValue) final {
+    return DocumentOrShadowRoot::SetValueMissingState(aName, aValue);
+  }
+
+  // nsIScriptObjectPrincipal
+  nsIPrincipal* GetPrincipal() final { return NodePrincipal(); }
+
+  // EventTarget
+  void GetEventTargetParent(mozilla::EventChainPreVisitor& aVisitor) override;
+  mozilla::EventListenerManager* GetOrCreateListenerManager() override;
+  mozilla::EventListenerManager* GetExistingListenerManager() const override;
 
   // This helper class must be set when we dispatch beforeunload and unload
   // events in order to avoid unterminate sync XHRs.
@@ -510,6 +593,9 @@ class nsIDocument : public nsINode,
    * MayStartLayout() until SetMayStartLayout(true) is called on it.  Making
    * sure this happens is the responsibility of the caller of
    * StartDocumentLoad().
+   *
+   * This function has an implementation, and does some setup, but does NOT set
+   * *aDocListener; this is the job of subclasses.
    */
   virtual nsresult StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
                                      nsILoadGroup* aLoadGroup,
@@ -517,7 +603,7 @@ class nsIDocument : public nsINode,
                                      nsIStreamListener** aDocListener,
                                      bool aReset,
                                      nsIContentSink* aSink = nullptr) = 0;
-  virtual void StopDocumentLoad() = 0;
+  virtual void StopDocumentLoad();
 
   virtual void SetSuppressParserErrorElement(bool aSuppress) {}
   virtual bool SuppressParserErrorElement() { return false; }
@@ -534,6 +620,7 @@ class nsIDocument : public nsINode,
                  nsINode** aResult) const override {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
+  nsresult CloneDocHelper(nsIDocument* clone) const;
 
   /**
    * Signal that the document title may have changed
@@ -786,6 +873,11 @@ class nsIDocument : public nsINode,
    */
   void SetIsInitialDocument(bool aIsInitialDocument) {
     mIsInitialDocumentInWindow = aIsInitialDocument;
+  }
+
+  void SetLoadedAsData(bool aLoadedAsData) { mLoadedAsData = aLoadedAsData; }
+  void SetLoadedAsInteractiveData(bool aLoadedAsInteractiveData) {
+    mLoadedAsInteractiveData = aLoadedAsInteractiveData;
   }
 
   /**
@@ -1318,6 +1410,12 @@ class nsIDocument : public nsINode,
 
   void MaybeEndOutermostXBLUpdate();
 
+  void RetrieveRelevantHeaders(nsIChannel* aChannel);
+
+  void TryChannelCharset(nsIChannel* aChannel, int32_t& aCharsetSource,
+                         NotNull<const Encoding*>& aEncoding,
+                         nsHtml5TreeOpExecutor* aExecutor);
+
   void DispatchContentLoadedEvents();
 
   void DispatchPageTransition(mozilla::dom::EventTarget* aDispatchTarget,
@@ -1782,11 +1880,11 @@ class nsIDocument : public nsINode,
   // content model or of style data, EndUpdate must be called afterward.
   // To make this easy and painless, use the mozAutoDocUpdate helper class.
   void BeginUpdate();
-  virtual void EndUpdate() = 0;
+  virtual void EndUpdate();
   uint32_t UpdateNestingLevel() { return mUpdateNestLevel; }
 
-  virtual void BeginLoad() = 0;
-  virtual void EndLoad() = 0;
+  virtual void BeginLoad();
+  virtual void EndLoad();
 
   enum ReadyState {
     READYSTATE_UNINITIALIZED = 0,
@@ -2036,12 +2134,14 @@ class nsIDocument : public nsINode,
    */
   virtual bool CanSavePresentation(nsIRequest* aNewRequest);
 
+  virtual nsresult Init();
+
   /**
    * Notify the document that its associated ContentViewer is being destroyed.
    * This releases circular references so that the document can go away.
    * Destroy() is only called on documents that have a content viewer.
    */
-  virtual void Destroy() = 0;
+  virtual void Destroy();
 
   /**
    * Notify the document that its associated ContentViewer is no longer
@@ -2049,7 +2149,7 @@ class nsIDocument : public nsINode,
    * be rendered in "zombie state" until the next document is ready.
    * The document should save form control state.
    */
-  virtual void RemovedFromDocShell() = 0;
+  virtual void RemovedFromDocShell();
 
   /**
    * Get the layout history state that should be used to save and restore state
@@ -2065,14 +2165,17 @@ class nsIDocument : public nsINode,
    * UnblockOnload() or the load has been stopped altogether (by the user
    * pressing the Stop button, say).
    */
-  virtual void BlockOnload() = 0;
+  void BlockOnload();
   /**
    * @param aFireSync whether to fire onload synchronously.  If false,
    * onload will fire asynchronously after all onload blocks have been
    * removed.  It will NOT fire from inside UnblockOnload.  If true,
    * onload may fire from inside UnblockOnload.
    */
-  virtual void UnblockOnload(bool aFireSync) = 0;
+  void UnblockOnload(bool aFireSync);
+
+  // Only BlockOnload should call this!
+  void AsyncBlockOnload();
 
   void BlockDOMContentLoaded() { ++mBlockDOMContentLoaded; }
 
@@ -2995,6 +3098,17 @@ class nsIDocument : public nsINode,
   void ExitPointerLock() { UnlockPointer(this); }
 
   static bool IsUnprefixedFullscreenEnabled(JSContext* aCx, JSObject* aObject);
+  static bool DocumentSupportsL10n(JSContext* aCx, JSObject* aObject);
+  static bool IsWebAnimationsEnabled(JSContext* aCx, JSObject* aObject);
+  static bool IsWebAnimationsEnabled(mozilla::dom::CallerType aCallerType);
+  static bool IsWebAnimationsGetAnimationsEnabled(JSContext* aCx,
+                                                  JSObject* aObject);
+  static bool AreWebAnimationsImplicitKeyframesEnabled(JSContext* aCx,
+                                                       JSObject* aObject);
+  static bool AreWebAnimationsTimelinesEnabled(JSContext* aCx,
+                                               JSObject* aObject);
+  // Checks that the caller is either chrome or some addon.
+  static bool IsCallerChromeOrAddon(JSContext* aCx, JSObject* aObject);
 
 #ifdef MOZILLA_INTERNAL_API
   bool Hidden() const {
@@ -3322,6 +3436,10 @@ class nsIDocument : public nsINode,
                                          const nsAString& aScaleString);
 
   nsTArray<nsString> mL10nResources;
+
+  // The application cache that this document is associated with, if
+  // any.  This can change during the lifetime of the document.
+  nsCOMPtr<nsIApplicationCache> mApplicationCache;
 
  public:
   bool IsThirdParty();
@@ -4338,6 +4456,10 @@ class nsIDocument : public nsINode,
 
   // Pres shell resolution saved before entering fullscreen mode.
   float mSavedResolution;
+
+ public:
+  // Needs to be public because the bindings code pokes at it.
+  js::ExpandoAndGeneration mExpandoAndGeneration;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocument, NS_IDOCUMENT_IID)
@@ -4384,7 +4506,7 @@ class MOZ_STACK_CLASS nsAutoSyncOperation {
   ~nsAutoSyncOperation();
 
  private:
-  nsCOMArray<nsIDocument> mDocuments;
+  nsTArray<nsCOMPtr<nsIDocument>> mDocuments;
   uint32_t mMicroTaskLevel;
 };
 
@@ -4495,6 +4617,10 @@ inline nsIDocument* nsINode::AsDocument() {
 inline const nsIDocument* nsINode::AsDocument() const {
   MOZ_ASSERT(IsDocument());
   return static_cast<const nsIDocument*>(this);
+}
+
+inline nsISupports* ToSupports(nsIDocument* aDoc) {
+  return static_cast<nsINode*>(aDoc);
 }
 
 #endif /* nsIDocument_h___ */

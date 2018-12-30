@@ -31,6 +31,7 @@
 #include "nsAtom.h"
 #include "mozilla/dom/NodeInfo.h"
 #include "mozilla/dom/Event.h"
+#include "mozilla/dom/ScriptLoader.h"
 #include "mozilla/dom/TouchEvent.h"
 #include "nsIDocumentInlines.h"
 #include "nsIDocumentEncoder.h"

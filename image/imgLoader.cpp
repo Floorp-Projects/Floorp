@@ -2155,11 +2155,11 @@ nsresult imgLoader::LoadImage(
 
   if (cache.Get(key, getter_AddRefs(entry)) && entry) {
     bool newChannelCreated = false;
-    if (ValidateEntry(entry, aURI, aInitialDocumentURI, aReferrerURI,
-                      aReferrerPolicy, aLoadGroup, aObserver, aLoadingDocument,
-                      aLoadingDocument, requestFlags, aContentPolicyType, true,
-                      &newChannelCreated, _retval, aTriggeringPrincipal,
-                      corsmode)) {
+    if (ValidateEntry(
+            entry, aURI, aInitialDocumentURI, aReferrerURI, aReferrerPolicy,
+            aLoadGroup, aObserver, ToSupports(aLoadingDocument),
+            aLoadingDocument, requestFlags, aContentPolicyType, true,
+            &newChannelCreated, _retval, aTriggeringPrincipal, corsmode)) {
       request = entry->GetRequest();
 
       // If this entry has no proxies, its request has no reference to the
@@ -2185,9 +2185,10 @@ nsresult imgLoader::LoadImage(
         // - we don't have cache. We are not in this if() stmt. A new channel is
         //   created and that triggers the CSP checks.
         // - We have a cache entry and this is blocked by CSP directives.
-        DebugOnly<bool> shouldLoad = ShouldLoadCachedImage(
-            request, aLoadingDocument, aTriggeringPrincipal, aContentPolicyType,
-            /* aSendCSPViolationReports */ true);
+        DebugOnly<bool> shouldLoad =
+            ShouldLoadCachedImage(request, ToSupports(aLoadingDocument),
+                                  aTriggeringPrincipal, aContentPolicyType,
+                                  /* aSendCSPViolationReports */ true);
         MOZ_ASSERT(shouldLoad);
       }
     } else {
@@ -2244,8 +2245,9 @@ nsresult imgLoader::LoadImage(
     nsCOMPtr<nsILoadGroup> channelLoadGroup;
     newChannel->GetLoadGroup(getter_AddRefs(channelLoadGroup));
     rv = request->Init(aURI, aURI, /* aHadInsecureRedirect = */ false,
-                       channelLoadGroup, newChannel, entry, aLoadingDocument,
-                       aTriggeringPrincipal, corsmode, aReferrerPolicy);
+                       channelLoadGroup, newChannel, entry,
+                       ToSupports(aLoadingDocument), aTriggeringPrincipal,
+                       corsmode, aReferrerPolicy);
     if (NS_FAILED(rv)) {
       return NS_ERROR_FAILURE;
     }

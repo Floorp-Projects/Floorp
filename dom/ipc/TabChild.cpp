@@ -444,7 +444,7 @@ TabChild::Observe(nsISupports* aSubject, const char* aTopic,
       nsCOMPtr<nsIDocument> subject(do_QueryInterface(aSubject));
       nsCOMPtr<nsIDocument> doc(GetDocument());
 
-      if (SameCOMIdentity(subject, doc)) {
+      if (subject == doc) {
         nsCOMPtr<nsIPresShell> shell(doc->GetShell());
         if (shell) {
           shell->SetIsFirstPaint(true);
