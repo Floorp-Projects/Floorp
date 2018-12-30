@@ -735,6 +735,7 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvValidateFontDescriptor(
                       << family << "\" has "
                       << (attribs == INVALID_FILE_ATTRIBUTES ? "INVALID"
                                                              : "valid")
+                      << "(" << hexa(attribs) << ")"
                       << " file \"" << files << "\"";
     }
     remaining -= fileLength + 1;
