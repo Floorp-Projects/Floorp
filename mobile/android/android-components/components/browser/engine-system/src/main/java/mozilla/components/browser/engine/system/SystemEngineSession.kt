@@ -318,6 +318,8 @@ class SystemEngineSession(private val defaultSettings: Settings? = null) : Engin
             webSettings.userAgentString = toggleDesktopUA(webSettings.userAgentString, enable)
             webSettings.useWideViewPort = enable
 
+            notifyObservers { onDesktopModeChange(enable) }
+
             if (reload) {
                 view.reload()
             }
