@@ -1372,13 +1372,12 @@ class nsIPresShell : public nsStubDocumentObserver {
    *
    * |aOrigin| specifies who originated the resolution change. For changes
    * sent by APZ, pass ChangeOrigin::eApz. For changes sent by the main thread,
-   * use pass ChangeOrigin::Other or ChangeOrigin::Restore (similar to the
-   * |aOrigin| parameter of nsIScrollableFrame::ScrollToCSSPixels()).
+   * use pass ChangeOrigin::eMainThread (similar to the |aOrigin| parameter of
+   * nsIScrollableFrame::ScrollToCSSPixels()).
    */
   enum class ChangeOrigin : uint8_t {
     eApz,
-    eRestore,
-    eOther,
+    eMainThread,
   };
   virtual nsresult SetResolutionAndScaleTo(float aResolution,
                                            ChangeOrigin aOrigin) = 0;
