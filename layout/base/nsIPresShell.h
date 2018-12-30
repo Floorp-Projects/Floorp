@@ -1394,11 +1394,6 @@ class nsIPresShell : public nsStubDocumentObserver {
   virtual float GetCumulativeNonRootScaleResolution() = 0;
 
   /**
-   * Was the current resolution set by the user or just default initialized?
-   */
-  bool IsResolutionSet() { return mResolution.isSome(); }
-
-  /**
    * Used by session restore code to restore a resolution before the first
    * paint.
    */

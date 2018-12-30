@@ -581,18 +581,6 @@ nsDOMWindowUtils::GetResolution(float* aResolution) {
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::GetIsResolutionSet(bool* aIsResolutionSet) {
-  nsIPresShell* presShell = GetPresShell();
-  if (!presShell) {
-    return NS_ERROR_FAILURE;
-  }
-
-  *aIsResolutionSet = presShell->IsResolutionSet();
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsDOMWindowUtils::SetIsFirstPaint(bool aIsFirstPaint) {
   nsIPresShell* presShell = GetPresShell();
   if (presShell) {
