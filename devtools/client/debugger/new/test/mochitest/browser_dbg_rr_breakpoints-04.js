@@ -8,7 +8,7 @@
 async function test() {
   waitForExplicitFinish();
 
-  const dbg = await attatchRecordingDebugger("doc_rr_continuous.html");
+  const dbg = await attachRecordingDebugger("doc_rr_continuous.html");
   const {threadClient, tab, toolbox} = dbg;
 
   await setBreakpoint(threadClient, "doc_rr_continuous.html", 14);
