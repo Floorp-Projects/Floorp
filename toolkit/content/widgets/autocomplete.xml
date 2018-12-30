@@ -664,6 +664,63 @@
       <field name="mPopupOpen">false</field>
       <field name="_currentIndex">0</field>
 
+      <constructor><![CDATA[
+        if (!this.listEvents) {
+          this.listEvents = {
+            handleEvent: event => {
+              if (!this.parentNode) {
+                return;
+              }
+
+              switch (event.type) {
+                case "mouseup":
+                  // Don't call onPopupClick for the scrollbar buttons, thumb,
+                  // slider, etc. If we hit the richlistbox and not a
+                  // richlistitem, we ignore the event.
+                  if (event.target.closest("richlistbox,richlistitem")
+                                  .localName == "richlistitem") {
+                    this.onPopupClick(event);
+                  }
+                  break;
+                case "mousemove":
+                  if (Date.now() - this.mLastMoveTime <= 30) {
+                    return;
+                  }
+
+                  let item = event.target.closest("richlistbox,richlistitem");
+
+                  // If we hit the richlistbox and not a richlistitem, we ignore
+                  // the event.
+                  if (item.localName == "richlistbox") {
+                    return;
+                  }
+
+                  let index = this.richlistbox.getIndexOfItem(item);
+
+                  this.mousedOverIndex = index;
+
+                  if (item.selectedByMouseOver) {
+                    this.richlistbox.selectedIndex = index;
+                  }
+
+                  this.mLastMoveTime = Date.now();
+                  break;
+              }
+            },
+          };
+          this.richlistbox.addEventListener("mouseup", this.listEvents);
+          this.richlistbox.addEventListener("mousemove", this.listEvents);
+        }
+      ]]></constructor>
+
+      <destructor><![CDATA[
+        if (this.listEvents) {
+          this.richlistbox.removeEventListener("mouseup", this.listEvents);
+          this.richlistbox.removeEventListener("mousemove", this.listEvents);
+          delete this.listEvents;
+        }
+      ]]></destructor>
+
       <!-- =================== nsIAutoCompletePopup =================== -->
 
       <property name="input" readonly="true"
@@ -766,10 +823,12 @@
       </property>
 
       <field name="_previousSelectedIndex">-1</field>
+      <field name="mLastMoveTime">Date.now()</field>
+      <field name="mousedOverIndex">-1</field>
 
       <method name="onSearchBegin">
         <body><![CDATA[
-          this.richlistbox.mousedOverIndex = -1;
+          this.mousedOverIndex = -1;
 
           if (typeof this._onSearchBegin == "function") {
             this._onSearchBegin();
@@ -1011,7 +1070,7 @@
                 originalText == trimmedSearchString &&
                 invalidateReason == iface.INVALIDATE_REASON_NEW_RESULT &&
                 (originalValue == value ||
-                 this.richlistbox.mousedOverIndex === this._currentIndex)) {
+                 this.mousedOverIndex === this._currentIndex)) {
 
               // try to re-use the existing item
               let reused = item._reuseAcItem();
@@ -2234,51 +2293,6 @@
         }
         control.currentItem = this;
       ]]></handler>
-    </handlers>
-  </binding>
-
-  <binding id="autocomplete-richlistbox" extends="chrome://global/content/bindings/richlistbox.xml#richlistbox">
-    <implementation>
-      <field name="mLastMoveTime">Date.now()</field>
-      <field name="mousedOverIndex">-1</field>
-    </implementation>
-    <handlers>
-      <handler event="mouseup">
-        <![CDATA[
-        // Don't call onPopupClick for the scrollbar buttons, thumb, slider, etc.
-        // If we hit the richlistbox and not a richlistitem, we ignore the event.
-        if (event.originalTarget.closest("richlistbox,richlistitem").localName == "richlistbox") {
-          return;
-        }
-
-        this.parentNode.onPopupClick(event);
-      ]]>
-      </handler>
-
-      <handler event="mousemove">
-        <![CDATA[
-        if (Date.now() - this.mLastMoveTime <= 30) {
-          return;
-        }
-
-        let item = event.target.closest("richlistbox,richlistitem");
-
-        // If we hit the richlistbox and not a richlistitem, we ignore the event.
-        if (item.localName == "richlistbox") {
-          return;
-        }
-
-        let index = this.getIndexOfItem(item);
-
-        this.mousedOverIndex = index;
-
-        if (item.selectedByMouseOver) {
-          this.selectedIndex = index;
-        }
-
-        this.mLastMoveTime = Date.now();
-      ]]>
-      </handler>
     </handlers>
   </binding>
 </bindings>
