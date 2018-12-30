@@ -548,7 +548,8 @@ nsDOMWindowUtils::SetResolutionAndScaleTo(float aResolution) {
     return NS_ERROR_FAILURE;
   }
 
-  presShell->SetResolutionAndScaleTo(aResolution, nsGkAtoms::other);
+  presShell->SetResolutionAndScaleTo(aResolution,
+                                     nsIPresShell::ChangeOrigin::eOther);
 
   return NS_OK;
 }
