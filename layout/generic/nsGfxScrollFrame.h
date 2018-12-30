@@ -525,7 +525,6 @@ class ScrollFrameHelper : public nsIReflowCallback {
   RefPtr<ScrollbarActivity> mScrollbarActivity;
   nsTArray<nsIScrollPositionListener*> mListeners;
   nsAtom* mLastScrollOrigin;
-  bool mAllowScrollOriginDowngrade;
   nsAtom* mLastSmoothScrollOrigin;
   Maybe<nsPoint> mApzSmoothScrollDestination;
   uint32_t mScrollGeneration;
@@ -558,7 +557,6 @@ class ScrollFrameHelper : public nsIReflowCallback {
 
   // The scroll position where we last updated frame visibility.
   nsPoint mLastUpdateFramesPos;
-  bool mHadDisplayPortAtLastFrameUpdate;
   nsRect mDisplayPortAtLastFrameUpdate;
 
   nsRect mPrevScrolledRect;
@@ -568,6 +566,8 @@ class ScrollFrameHelper : public nsIReflowCallback {
   // Timer to remove the displayport some time after scrolling has stopped
   nsCOMPtr<nsITimer> mDisplayPortExpiryTimer;
 
+  bool mAllowScrollOriginDowngrade : 1;
+  bool mHadDisplayPortAtLastFrameUpdate : 1;
   bool mNeverHasVerticalScrollbar : 1;
   bool mNeverHasHorizontalScrollbar : 1;
   bool mHasVerticalScrollbar : 1;
