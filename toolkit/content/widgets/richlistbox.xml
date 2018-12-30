@@ -14,17 +14,9 @@
 
   <binding id="richlistbox"
            extends="chrome://global/content/bindings/general.xml#basecontrol">
-    <content>
-      <xul:scrollbox allowevents="true" orient="vertical" anonid="main-box"
-                     flex="1" style="overflow: auto;" xbl:inherits="dir,pack">
-        <children/>
-      </xul:scrollbox>
-    </content>
+    <content allowevents="true" orient="vertical"/>
 
     <implementation implements="nsIDOMXULMultiSelectControlElement">
-      <field name="_scrollbox">
-        document.getAnonymousElementByAttribute(this, "anonid", "main-box");
-      </field>
       <constructor>
         <![CDATA[
           this._refreshSelection();
@@ -471,21 +463,26 @@
 
       <method name="ensureElementIsVisible">
         <parameter name="aElement"/>
+        <parameter name="aAlignToTop"/>
         <body>
           <![CDATA[
-            if (!aElement)
+            if (!aElement) {
               return;
+            }
+
+            // These calculations assume that there is no padding on the
+            // "richlistbox" element, although there might be a margin.
             var targetRect = aElement.getBoundingClientRect();
-            var scrollRect = this._scrollbox.getBoundingClientRect();
+            var scrollRect = this.getBoundingClientRect();
             var offset = targetRect.top - scrollRect.top;
-            if (offset >= 0) {
+            if (!aAlignToTop && offset >= 0) {
               // scrollRect.bottom wouldn't take a horizontal scroll bar into account
-              let scrollRectBottom = scrollRect.top + this._scrollbox.clientHeight;
+              let scrollRectBottom = scrollRect.top + this.clientHeight;
               offset = targetRect.bottom - scrollRectBottom;
               if (offset <= 0)
                 return;
             }
-            this._scrollbox.scrollTop += offset;
+            this.scrollTop += offset;
           ]]>
         </body>
       </method>
@@ -495,8 +492,9 @@
         <body>
           <![CDATA[
             var item = this.getItemAtIndex(aIndex);
-            if (item)
-              this._scrollbox.scrollToElement(item);
+            if (item) {
+              this.ensureElementIsVisible(item, true);
+            }
           ]]>
         </body>
       </method>
@@ -541,15 +539,15 @@
             // the new current item is at approximately the same position as
             // the existing current item.
             if (this._isItemVisible(this.currentItem))
-              this._scrollbox.scrollBy(0, this._scrollbox.boxObject.height * aDirection);
+              this.scrollBy(0, this.clientHeight * aDirection);
 
             // Figure out, how many items fully fit into the view port
             // (including the currently selected one), and determine
             // the index of the first one lying (partially) outside
-            var height = this._scrollbox.boxObject.height;
+            var height = this.clientHeight;
             var startBorder = this.currentItem.boxObject.y;
             if (aDirection == -1)
-              startBorder += this.currentItem.boxObject.height;
+              startBorder += this.currentItem.clientHeight;
 
             var index = this.currentIndex;
             for (var ix = index; 0 <= ix && ix < children.length; ix += aDirection) {
@@ -607,7 +605,7 @@
                 if (this.selType != "multiple" && this.selectedCount == 0)
                   this.selectedItem = currentItem;
 
-                if (this._scrollbox.boxObject.height) {
+                if (this.clientHeight) {
                   this.ensureElementIsVisible(currentItem);
                 } else {
                   // XXX hack around a bug in ensureElementIsVisible as it will
@@ -670,11 +668,11 @@
             if (!aItem)
               return false;
 
-            var y = this._scrollbox.scrollTop + this._scrollbox.boxObject.y;
+            var y = this.scrollTop + this.boxObject.y;
 
             // Partially visible items are also considered visible
-            return (aItem.boxObject.y + aItem.boxObject.height > y) &&
-                   (aItem.boxObject.y < y + this._scrollbox.boxObject.height);
+            return (aItem.boxObject.y + aItem.clientHeight > y) &&
+                   (aItem.boxObject.y < y + this.clientHeight);
           ]]>
         </body>
       </method>
@@ -908,7 +906,7 @@
       <handler event="click">
         <![CDATA[
           // clicking into nothing should unselect
-          if (event.originalTarget == this._scrollbox) {
+          if (event.originalTarget == this) {
             this.clearSelection();
             this.currentItem = null;
           }
@@ -920,10 +918,10 @@
           // Only handle swipe gestures up and down
           switch (event.direction) {
             case event.DIRECTION_DOWN:
-              this._scrollbox.scrollTop = this._scrollbox.scrollHeight;
+              this.scrollTop = this.scrollHeight;
               break;
             case event.DIRECTION_UP:
-              this._scrollbox.scrollTop = 0;
+              this.scrollTop = 0;
               break;
           }
         ]]>

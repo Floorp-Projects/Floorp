@@ -30,9 +30,7 @@ function getScrollIndexAmount(aDirection) {
 
 function test_richlistbox()
 {
-  richListBox.minHeight = richListBox.maxHeight = richListBox.height =
-    80 + (80 - richListBox._scrollbox.clientHeight);
-  var height = richListBox._scrollbox.clientHeight;
+  var height = richListBox.clientHeight;
   var item;
   do {
     item = richListBox.appendItem("Test", "");

@@ -150,11 +150,8 @@ button > hbox > label {
 
 /* Category List */
 
-#categories > scrollbox {
+#categories {
   overflow: visible !important; /* Cancel scrollbar and do not clip overflow content when window size goes very small */
-}
-
-#categories > scrollbox > box {
   padding: 1px; /* Adding padding around richlistitem in order to make entire keyboard focusing outline visible */
 }
 
