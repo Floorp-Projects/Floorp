@@ -9,10 +9,6 @@ xhtml|link {
   display: none;
 }
 
-#categories {
-  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#categories-list");
-}
-
 .category {
   -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#category");
 }

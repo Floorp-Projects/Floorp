@@ -160,6 +160,7 @@ button.warning {
   opacity: 0;
   transition-property: min-height, opacity;
   transition-duration: 1s, 0.8s;
+  -moz-user-input: none; /* Prevents list item selection during animation. */
 }
 
 #categories > .category:not([disabled]) {
