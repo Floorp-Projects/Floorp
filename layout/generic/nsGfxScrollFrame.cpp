@@ -5466,8 +5466,6 @@ bool ScrollFrameHelper::ReflowFinished() {
   mUpdateScrollbarAttributes = false;
 
   // Update scrollbar attributes.
-  nsPresContext* presContext = mOuter->PresContext();
-
   if (mMayHaveDirtyFixedChildren) {
     mMayHaveDirtyFixedChildren = false;
     nsIFrame* parentFrame = mOuter->GetParent();
@@ -5475,8 +5473,8 @@ bool ScrollFrameHelper::ReflowFinished() {
              parentFrame->GetChildList(nsIFrame::kFixedList).FirstChild();
          fixedChild; fixedChild = fixedChild->GetNextSibling()) {
       // force a reflow of the fixed child
-      presContext->PresShell()->FrameNeedsReflow(
-          fixedChild, nsIPresShell::eResize, NS_FRAME_HAS_DIRTY_CHILDREN);
+      mOuter->PresShell()->FrameNeedsReflow(fixedChild, nsIPresShell::eResize,
+                                            NS_FRAME_HAS_DIRTY_CHILDREN);
     }
   }
 
