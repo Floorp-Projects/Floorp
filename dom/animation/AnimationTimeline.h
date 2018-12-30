@@ -31,7 +31,7 @@ class AnimationTimeline : public nsISupports, public nsWrapperCache {
   }
 
  protected:
-  virtual ~AnimationTimeline() { mAnimationOrder.clear(); }
+  virtual ~AnimationTimeline();
 
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS

@@ -887,7 +887,7 @@ nsWebBrowser::SaveDocument(nsISupports* aDocumentish, nsISupports* aFile,
   } else {
     nsCOMPtr<nsIDocument> domDoc;
     GetDocument(getter_AddRefs(domDoc));
-    doc = domDoc.forget();
+    doc = already_AddRefed<nsISupports>(ToSupports(domDoc.forget().take()));
   }
   if (!doc) {
     return NS_ERROR_FAILURE;

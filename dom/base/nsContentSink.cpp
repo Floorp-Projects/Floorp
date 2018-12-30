@@ -911,11 +911,6 @@ nsresult nsContentSink::SelectDocAppCache(
 
   *aAction = CACHE_SELECTION_NONE;
 
-  nsCOMPtr<nsIApplicationCacheContainer> applicationCacheDocument =
-      do_QueryInterface(mDocument);
-  NS_ASSERTION(applicationCacheDocument,
-               "mDocument must implement nsIApplicationCacheContainer.");
-
   if (aLoadApplicationCache) {
     nsCOMPtr<nsIURI> groupURI;
     rv = aLoadApplicationCache->GetManifestURI(getter_AddRefs(groupURI));
@@ -944,7 +939,7 @@ nsresult nsContentSink::SelectDocAppCache(
                   clientID.get(), docURISpec.get()));
 #endif
 
-      rv = applicationCacheDocument->SetApplicationCache(aLoadApplicationCache);
+      rv = mDocument->SetApplicationCache(aLoadApplicationCache);
       NS_ENSURE_SUCCESS(rv, rv);
 
       // Document will be added as implicit entry to the cache as part of
@@ -981,11 +976,6 @@ nsresult nsContentSink::SelectDocAppCacheNoManifest(
   if (aLoadApplicationCache) {
     // The document was loaded from an application cache, use that
     // application cache as the document's application cache.
-    nsCOMPtr<nsIApplicationCacheContainer> applicationCacheDocument =
-        do_QueryInterface(mDocument);
-    NS_ASSERTION(applicationCacheDocument,
-                 "mDocument must implement nsIApplicationCacheContainer.");
-
 #ifdef DEBUG
     nsAutoCString docURISpec, clientID;
     mDocumentURI->GetAsciiSpec(docURISpec);
@@ -996,7 +986,7 @@ nsresult nsContentSink::SelectDocAppCacheNoManifest(
                 clientID.get(), docURISpec.get()));
 #endif
 
-    rv = applicationCacheDocument->SetApplicationCache(aLoadApplicationCache);
+    rv = mDocument->SetApplicationCache(aLoadApplicationCache);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Return the uri and invoke the update process for the selected
@@ -1563,13 +1553,13 @@ void nsContentSink::NotifyDocElementCreated(nsIDocument* aDoc) {
   nsCOMPtr<nsIObserverService> observerService =
       mozilla::services::GetObserverService();
   if (observerService) {
-    observerService->NotifyObservers(aDoc, "document-element-inserted",
-                                     EmptyString().get());
+    observerService->NotifyObservers(
+        ToSupports(aDoc), "document-element-inserted", EmptyString().get());
   }
 
   nsContentUtils::DispatchChromeEvent(
-      aDoc, aDoc, NS_LITERAL_STRING("DOMDocElementInserted"), CanBubble::eYes,
-      Cancelable::eNo);
+      aDoc, ToSupports(aDoc), NS_LITERAL_STRING("DOMDocElementInserted"),
+      CanBubble::eYes, Cancelable::eNo);
 }
 
 NS_IMETHODIMP

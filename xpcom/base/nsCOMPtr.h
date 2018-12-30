@@ -164,7 +164,8 @@ template <typename T>
 class MOZ_STACK_CLASS nsQueryInterface final
     : public nsQueryInterfaceISupports {
  public:
-  explicit nsQueryInterface(T* aRawPtr) : nsQueryInterfaceISupports(aRawPtr) {}
+  explicit nsQueryInterface(T* aRawPtr)
+      : nsQueryInterfaceISupports(ToSupports(aRawPtr)) {}
 
   nsresult NS_FASTCALL operator()(const nsIID& aIID, void** aAnswer) const {
     return nsQueryInterfaceISupports::operator()(aIID, aAnswer);
@@ -190,26 +191,13 @@ class MOZ_STACK_CLASS nsQueryInterfaceWithError final
     : public nsQueryInterfaceISupportsWithError {
  public:
   explicit nsQueryInterfaceWithError(T* aRawPtr, nsresult* aError)
-      : nsQueryInterfaceISupportsWithError(aRawPtr, aError) {}
+      : nsQueryInterfaceISupportsWithError(ToSupports(aRawPtr), aError) {}
 
   nsresult NS_FASTCALL operator()(const nsIID& aIID, void** aAnswer) const {
     return nsQueryInterfaceISupportsWithError::operator()(aIID, aAnswer);
   }
 };
 #endif  // #ifndef NSCAP_FEATURE_USE_BASE
-
-#ifdef NSCAP_FEATURE_USE_BASE
-
-inline nsQueryInterfaceISupports do_QueryInterface(nsISupports* aRawPtr) {
-  return nsQueryInterfaceISupports(aRawPtr);
-}
-
-inline nsQueryInterfaceISupportsWithError do_QueryInterface(
-    nsISupports* aRawPtr, nsresult* aError) {
-  return nsQueryInterfaceISupportsWithError(aRawPtr, aError);
-}
-
-#else
 
 namespace mozilla {
 // PointedToType<> is needed so that do_QueryInterface() will work with a
@@ -220,6 +208,20 @@ using PointedToType =
     typename mozilla::RemovePointer<decltype(&*mozilla::DeclVal<T>())>::Type;
 }  // namespace mozilla
 
+#ifdef NSCAP_FEATURE_USE_BASE
+template <class T>
+inline nsQueryInterfaceISupports do_QueryInterface(T aPtr) {
+  return nsQueryInterfaceISupports(
+      ToSupports(static_cast<mozilla::PointedToType<T>*>(aPtr)));
+}
+
+template <class T>
+inline nsQueryInterfaceISupportsWithError do_QueryInterface(T aPtr,
+                                                            nsresult* aError) {
+  return nsQueryInterfaceISupportsWithError(
+      ToSupports(static_cast<mozilla::PointedToType<T>*>(aPtr)), aError);
+}
+#else
 template <class T>
 inline nsQueryInterface<mozilla::PointedToType<T> > do_QueryInterface(T aPtr) {
   return nsQueryInterface<mozilla::PointedToType<T> >(aPtr);
@@ -230,6 +232,7 @@ inline nsQueryInterfaceWithError<mozilla::PointedToType<T> > do_QueryInterface(
     T aRawPtr, nsresult* aError) {
   return nsQueryInterfaceWithError<mozilla::PointedToType<T> >(aRawPtr, aError);
 }
+
 #endif  // ! #ifdef NSCAP_FEATURE_USE_BASE
 
 template <class T>
@@ -380,13 +383,15 @@ class MOZ_IS_REFPTR nsCOMPtr final
     : private nsCOMPtr_base
 #endif
 {
-
+ private:
 #ifdef NSCAP_FEATURE_USE_BASE
-#define NSCAP_CTOR_BASE(x) nsCOMPtr_base(x)
+#define NSCAP_CTOR_BASE(x) nsCOMPtr_base(ToSupports(x))
+  void assign_assuming_AddRef(T* aNewPtr) {
+    nsCOMPtr_base::assign_assuming_AddRef(ToSupports(aNewPtr));
+  }
 #else
 #define NSCAP_CTOR_BASE(x) mRawPtr(x)
 
- private:
   void assign_with_AddRef(nsISupports*);
   template <typename U>
   void assign_from_qi(const nsQueryInterface<U>, const nsIID&);
@@ -635,7 +640,7 @@ class MOZ_IS_REFPTR nsCOMPtr final
   // Assignment operators
 
   nsCOMPtr<T>& operator=(const nsCOMPtr<T>& aRhs) {
-    assign_with_AddRef(aRhs.mRawPtr);
+    assign_with_AddRef(ToSupports(aRhs.mRawPtr));
     return *this;
   }
 
@@ -644,7 +649,7 @@ class MOZ_IS_REFPTR nsCOMPtr final
     // Make sure that U actually inherits from T
     static_assert(mozilla::IsBaseOf<T, U>::value,
                   "U should be a subclass of T");
-    assign_with_AddRef(static_cast<T*>(aRhs.get()));
+    assign_with_AddRef(ToSupports(static_cast<T*>(aRhs.get())));
     return *this;
   }
 
@@ -664,7 +669,7 @@ class MOZ_IS_REFPTR nsCOMPtr final
   }
 
   nsCOMPtr<T>& operator=(T* aRhs) {
-    assign_with_AddRef(aRhs);
+    assign_with_AddRef(ToSupports(aRhs));
     NSCAP_ASSERT_NO_QUERY_NEEDED();
     return *this;
   }
@@ -780,7 +785,7 @@ class MOZ_IS_REFPTR nsCOMPtr final
   // Exchange ownership with |aRhs|; can save a pair of refcount operations.
   void swap(T*& aRhs) {
 #ifdef NSCAP_FEATURE_USE_BASE
-    nsISupports* temp = aRhs;
+    nsISupports* temp = ToSupports(aRhs);
 #else
     T* temp = aRhs;
 #endif
