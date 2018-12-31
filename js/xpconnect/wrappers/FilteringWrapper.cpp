@@ -10,6 +10,7 @@
 #include "XrayWrapper.h"
 #include "nsJSUtils.h"
 #include "mozilla/ErrorResult.h"
+#include "xpcpublic.h"
 
 #include "jsapi.h"
 #include "js/Symbol.h"
@@ -41,6 +42,37 @@ static bool IsCrossOriginWhitelistedSymbol(JSContext* cx, JS::HandleId id) {
 bool IsCrossOriginWhitelistedProp(JSContext* cx, JS::HandleId id) {
   return id == GetJSIDByIndex(cx, XPCJSContext::IDX_THEN) ||
          IsCrossOriginWhitelistedSymbol(cx, id);
+}
+
+bool AppendCrossOriginWhitelistedPropNames(JSContext* cx,
+                                           JS::AutoIdVector& props) {
+  // Add "then" if it's not already in the list.
+  AutoIdVector thenProp(cx);
+  if (!thenProp.append(GetJSIDByIndex(cx, XPCJSContext::IDX_THEN))) {
+    return false;
+  }
+
+  if (!AppendUnique(cx, props, thenProp)) {
+    return false;
+  }
+
+  // Now add the three symbol-named props cross-origin objects have.
+#ifdef DEBUG
+  for (size_t n = 0; n < props.length(); ++n) {
+    MOZ_ASSERT(!JSID_IS_SYMBOL(props[n]),
+               "Unexpected existing symbol-name prop");
+  }
+#endif
+  if (!props.reserve(props.length() +
+                     ArrayLength(sCrossOriginWhitelistedSymbolCodes))) {
+    return false;
+  }
+
+  for (auto code : sCrossOriginWhitelistedSymbolCodes) {
+    props.infallibleAppend(SYMBOL_TO_JSID(JS::GetWellKnownSymbol(cx, code)));
+  }
+
+  return true;
 }
 
 template <typename Policy>
@@ -261,33 +293,7 @@ bool CrossOriginXrayWrapper::ownPropertyKeys(JSContext* cx,
     return false;
   }
 
-  // Add "then" if it's not already in the list.
-  AutoIdVector thenProp(cx);
-  if (!thenProp.append(GetJSIDByIndex(cx, XPCJSContext::IDX_THEN))) {
-    return false;
-  }
-
-  if (!AppendUnique(cx, props, thenProp)) {
-    return false;
-  }
-
-  // Now add the three symbol-named props cross-origin objects have.
-#ifdef DEBUG
-  for (size_t n = 0; n < props.length(); ++n) {
-    MOZ_ASSERT(!JSID_IS_SYMBOL(props[n]),
-               "Unexpected existing symbol-name prop");
-  }
-#endif
-  if (!props.reserve(props.length() +
-                     ArrayLength(sCrossOriginWhitelistedSymbolCodes))) {
-    return false;
-  }
-
-  for (auto code : sCrossOriginWhitelistedSymbolCodes) {
-    props.infallibleAppend(SYMBOL_TO_JSID(JS::GetWellKnownSymbol(cx, code)));
-  }
-
-  return true;
+  return AppendCrossOriginWhitelistedPropNames(cx, props);
 }
 
 bool CrossOriginXrayWrapper::defineProperty(JSContext* cx,
