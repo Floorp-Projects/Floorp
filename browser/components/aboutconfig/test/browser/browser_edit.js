@@ -1,10 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-ChromeUtils.import("resource://gre/modules/Preferences.jsm", this);
-
-const PAGE_URL = "chrome://browser/content/aboutconfig/aboutconfig.html";
-
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -22,14 +18,9 @@ add_task(async function setup() {
 });
 
 add_task(async function test_add_user_pref() {
-  await BrowserTestUtils.withNewTab({
-    gBrowser,
-    url: PAGE_URL,
-  }, async browser => {
-    await content.document.querySelector("button").click();
-
+  await AboutConfigTest.withNewTab(async function() {
     Assert.ok(!Services.prefs.getChildList("").find(pref => pref == "testPref"));
-    let search = content.document.getElementById("search");
+    let search = this.document.getElementById("search");
     search.value = "testPref";
     search.focus();
 
@@ -41,11 +32,11 @@ add_task(async function test_add_user_pref() {
     ]) {
       EventUtils.sendKey("return");
 
-      content.document.querySelector("#prefs button" + buttonSelector).click();
+      this.document.querySelector("#prefs button" + buttonSelector).click();
       Assert.ok(Services.prefs.getChildList("").find(pref => pref == "testPref"));
       Assert.ok(Preferences.get("testPref") === expectedValue);
-      content.document.querySelector("#prefs button[data-l10n-id='about-config-pref-delete']").click();
-      search = content.document.getElementById("search");
+      this.document.querySelector("#prefs button[data-l10n-id='about-config-pref-delete']").click();
+      search = this.document.getElementById("search");
       search.value = "testPref";
       search.focus();
     }
@@ -54,30 +45,25 @@ add_task(async function test_add_user_pref() {
 
 add_task(async function test_delete_user_pref() {
   Services.prefs.setBoolPref("userAddedPref", true);
-  await BrowserTestUtils.withNewTab({
-    gBrowser,
-    url: PAGE_URL,
-  }, async browser => {
-    await content.document.querySelector("button").click();
-
-    let list = [...content.document.getElementById("prefs")
+  await AboutConfigTest.withNewTab(async function() {
+    let list = [...this.document.getElementById("prefs")
       .getElementsByTagName("tr")];
     function getRow(name) {
       return list.find(row => row.querySelector("td").textContent == name);
     }
     Assert.ok(getRow("userAddedPref"));
     getRow("userAddedPref").lastChild.lastChild.click();
-    list = [...content.document.getElementById("prefs")
+    list = [...this.document.getElementById("prefs")
       .getElementsByTagName("tr")];
     Assert.ok(!getRow("userAddedPref"));
     Assert.ok(!Services.prefs.getChildList("").includes("userAddedPref"));
 
     // Search for nothing to test gPrefArray
-    let search = content.document.getElementById("search");
+    let search = this.document.getElementById("search");
     search.focus();
     EventUtils.sendKey("return");
 
-    list = [...content.document.getElementById("prefs")
+    list = [...this.document.getElementById("prefs")
       .getElementsByTagName("tr")];
     Assert.ok(!getRow("userAddedPref"));
   });
@@ -86,12 +72,7 @@ add_task(async function test_delete_user_pref() {
 add_task(async function test_reset_user_pref() {
   await SpecialPowers.pushPrefEnv({"set": [["browser.autofocus", false]]});
 
-  await BrowserTestUtils.withNewTab({
-    gBrowser,
-    url: PAGE_URL,
-  }, async browser => {
-    await content.document.querySelector("button").click();
-
+  await AboutConfigTest.withNewTab(async function() {
     function getRow(name) {
       return list.find(row => row.querySelector("td").textContent == name);
     }
@@ -100,12 +81,12 @@ add_task(async function test_reset_user_pref() {
     }
     let testPref = "browser.autofocus";
     // Click reset.
-    let list = [...content.document.getElementById("prefs")
+    let list = [...this.document.getElementById("prefs")
       .getElementsByTagName("tr")];
     let row = getRow(testPref);
     row.lastChild.lastChild.click();
     // Check new layout and reset.
-    list = [...content.document.getElementById("prefs")
+    list = [...this.document.getElementById("prefs")
       .getElementsByTagName("tr")];
     Assert.ok(!row.classList.contains("has-user-value"));
     Assert.equal(row.lastChild.childNodes.length, 0);
@@ -113,12 +94,12 @@ add_task(async function test_reset_user_pref() {
     Assert.equal(getValue(testPref), "" + Preferences.get(testPref));
 
     // Search for nothing to test gPrefArray
-    let search = content.document.getElementById("search");
+    let search = this.document.getElementById("search");
     search.focus();
     EventUtils.sendKey("return");
 
     // Check new layout and reset.
-    list = [...content.document.getElementById("prefs")
+    list = [...this.document.getElementById("prefs")
       .getElementsByTagName("tr")];
     row = getRow(testPref);
     Assert.ok(!row.classList.contains("has-user-value"));
@@ -128,12 +109,7 @@ add_task(async function test_reset_user_pref() {
 });
 
 add_task(async function test_modify() {
-  await BrowserTestUtils.withNewTab({
-    gBrowser,
-    url: PAGE_URL,
-  }, async browser => {
-    content.document.querySelector("button").click();
-
+  await AboutConfigTest.withNewTab(async function() {
     function getRow(name, list) {
       return list.find(row => row.querySelector("td").textContent == name);
     }
@@ -142,7 +118,7 @@ add_task(async function test_modify() {
     }
 
     // Test toggle for boolean prefs.
-    let list = [...content.document.getElementById("prefs")
+    let list = [...this.document.getElementById("prefs")
       .getElementsByTagName("tr")];
     for (let nameOfBoolPref of [
       "test.aboutconfig.modify.boolean",
