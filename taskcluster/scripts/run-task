@@ -516,6 +516,13 @@ def collect_vcs_options(args, project):
     checkout = getattr(args, '%s_checkout' % project)
     sparse_profile = getattr(args, '%s_sparse_profile' % project)
 
+    env_prefix = project.upper()
+
+    base_repo = os.environ.get('%s_BASE_REPOSITORY' % env_prefix)
+    head_repo = os.environ.get('%s_HEAD_REPOSITORY' % env_prefix)
+    revision = os.environ.get('%s_HEAD_REV' % env_prefix)
+    branch = os.environ.get('%s_HEAD_REF' % env_prefix)
+
     if checkout:
         checkout = os.path.expanduser(checkout)
 
@@ -523,6 +530,10 @@ def collect_vcs_options(args, project):
         'project': project,
         'checkout': checkout,
         'sparse-profile': sparse_profile,
+        'base-repo': base_repo,
+        'head-repo': head_repo,
+        'revision': revision,
+        'branch': branch,
     }
 
 
@@ -710,7 +721,7 @@ def main(args):
     gecko_options = collect_vcs_options(args, 'gecko')
 
     if gecko_options['checkout']:
-        base_repo = os.environ.get('GECKO_BASE_REPOSITORY')
+        base_repo = gecko_checkout['base-repo']
         # Some callers set the base repository to mozilla-central for historical
         # reasons. Switch to mozilla-unified because robustcheckout works best
         # with it.
@@ -718,17 +729,15 @@ def main(args):
             base_repo = 'https://hg.mozilla.org/mozilla-unified'
 
         os.environ['GECKO_HEAD_REV'] = vcs_checkout(
-            os.environ['GECKO_HEAD_REPOSITORY'],
+            gecko_options['head-repo'],
             gecko_options['checkout'],
             os.environ['HG_STORE_PATH'],
             fetch_hgfingerprint=args.fetch_hgfingerprint,
             base_repo=base_repo,
-            revision=os.environ.get('GECKO_HEAD_REV'),
-            branch=os.environ.get('GECKO_HEAD_REF'),
+            revision=gecko_options['revision'],
+            branch=gecko_options['branch'],
             sparse_profile=gecko_options['sparse-profile'])
-
-    elif not os.environ.get('GECKO_HEAD_REV') and \
-            os.environ.get('GECKO_HEAD_REF'):
+    elif gecko_options['branch'] and not gecko_options['revision']:
         print('task should be defined in terms of non-symbolic revision')
         return 1
 
@@ -738,20 +747,16 @@ def main(args):
     # resolved by a checkout.
     comm_options = collect_vcs_options(args, 'comm')
     if comm_options['checkout']:
-        base_repo = os.environ.get('COMM_BASE_REPOSITORY')
-
         os.environ['COMM_HEAD_REV'] = vcs_checkout(
-            os.environ['COMM_HEAD_REPOSITORY'],
+            comm_options['head-repo'],
             comm_options['checkout'],
             os.environ['HG_STORE_PATH'],
             fetch_hgfingerprint=args.fetch_hgfingerprint,
-            base_repo=base_repo,
-            revision=os.environ.get('COMM_HEAD_REV'),
-            branch=os.environ.get('COMM_HEAD_REF'),
+            base_repo=comm_options['base-repo'],
+            revision=comm_options['revision'],
+            branch=comm_options['branch'],
             sparse_profile=comm_options['sparse-profile'])
-
-    elif not os.environ.get('COMM_HEAD_REV') and \
-            os.environ.get('COMM_HEAD_REF'):
+    elif comm_options['branch'] and not comm_options['revision']:
         print('task should be defined in terms of non-symbolic revision')
         return 1
 
