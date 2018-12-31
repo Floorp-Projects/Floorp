@@ -306,7 +306,7 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
 
   bool ComputeDefaultWantsUntrusted(mozilla::ErrorResult& aRv) final;
 
-  virtual nsPIDOMWindowOuter* GetOwnerGlobalForBindings() override;
+  virtual nsPIDOMWindowOuter* GetOwnerGlobalForBindingsInternal() override;
 
   virtual nsIGlobalObject* GetOwnerGlobal() const override;
 
@@ -623,7 +623,8 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   nsDOMWindowList* GetFrames() final;
   already_AddRefed<nsPIDOMWindowOuter> GetFrames(mozilla::ErrorResult& aError);
   uint32_t Length();
-  already_AddRefed<nsPIDOMWindowOuter> GetTop(mozilla::ErrorResult& aError);
+  mozilla::dom::Nullable<mozilla::dom::WindowProxyHolder> GetTop(
+      mozilla::ErrorResult& aError);
 
  protected:
   explicit nsGlobalWindowInner(nsGlobalWindowOuter* aOuterWindow);
@@ -637,15 +638,15 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   void SetOpener(JSContext* aCx, JS::Handle<JS::Value> aOpener,
                  mozilla::ErrorResult& aError);
   void GetEvent(JSContext* aCx, JS::MutableHandle<JS::Value> aRetval);
-  already_AddRefed<nsPIDOMWindowOuter> GetParent(mozilla::ErrorResult& aError);
+  mozilla::dom::Nullable<mozilla::dom::WindowProxyHolder> GetParent(
+      mozilla::ErrorResult& aError);
   nsPIDOMWindowOuter* GetScriptableParent() override;
   mozilla::dom::Element* GetFrameElement(nsIPrincipal& aSubjectPrincipal,
                                          mozilla::ErrorResult& aError);
   mozilla::dom::Element* GetFrameElement() override;
-  already_AddRefed<nsPIDOMWindowOuter> Open(const nsAString& aUrl,
-                                            const nsAString& aName,
-                                            const nsAString& aOptions,
-                                            mozilla::ErrorResult& aError);
+  mozilla::dom::Nullable<mozilla::dom::WindowProxyHolder> Open(
+      const nsAString& aUrl, const nsAString& aName, const nsAString& aOptions,
+      mozilla::ErrorResult& aError);
   nsDOMOfflineResourceList* GetApplicationCache(mozilla::ErrorResult& aError);
   nsDOMOfflineResourceList* GetApplicationCache() override;
 
@@ -857,7 +858,7 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
 
   bool ShouldResistFingerprinting();
 
-  already_AddRefed<nsPIDOMWindowOuter> OpenDialog(
+  mozilla::dom::Nullable<mozilla::dom::WindowProxyHolder> OpenDialog(
       JSContext* aCx, const nsAString& aUrl, const nsAString& aName,
       const nsAString& aOptions,
       const mozilla::dom::Sequence<JS::Value>& aExtraArgument,

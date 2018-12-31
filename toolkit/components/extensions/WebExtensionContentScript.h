@@ -13,6 +13,7 @@
 
 #include "mozilla/Maybe.h"
 #include "mozilla/Variant.h"
+#include "mozilla/dom/WindowProxyHolder.h"
 #include "mozilla/extensions/MatchGlob.h"
 #include "mozilla/extensions/MatchPattern.h"
 #include "nsCOMPtr.h"
@@ -113,8 +114,8 @@ class MozDocumentMatcher : public nsISupports, public nsWrapperCache {
   bool MatchesLoadInfo(const URLInfo& aURL, nsILoadInfo* aLoadInfo) const {
     return Matches({aURL, aLoadInfo});
   }
-  bool MatchesWindow(nsPIDOMWindowOuter* aWindow) const {
-    return Matches(aWindow);
+  bool MatchesWindow(const dom::WindowProxyHolder& aWindow) const {
+    return Matches(aWindow.get());
   }
 
   WebExtensionPolicy* GetExtension() { return mExtension; }

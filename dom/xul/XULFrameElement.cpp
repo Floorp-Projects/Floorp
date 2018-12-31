@@ -48,19 +48,27 @@ already_AddRefed<nsIWebNavigation> XULFrameElement::GetWebNavigation() {
   return webnav.forget();
 }
 
-already_AddRefed<nsPIDOMWindowOuter> XULFrameElement::GetContentWindow() {
+Nullable<WindowProxyHolder> XULFrameElement::GetContentWindow() {
   nsCOMPtr<nsIDocShell> docShell = GetDocShell();
   if (docShell) {
     nsCOMPtr<nsPIDOMWindowOuter> win = docShell->GetWindow();
-    return win.forget();
+    if (win) {
+      return WindowProxyHolder(win.forget());
+    }
   }
 
   return nullptr;
 }
 
 nsIDocument* XULFrameElement::GetContentDocument() {
-  nsCOMPtr<nsPIDOMWindowOuter> win = GetContentWindow();
-  return win ? win->GetDoc() : nullptr;
+  nsCOMPtr<nsIDocShell> docShell = GetDocShell();
+  if (docShell) {
+    nsCOMPtr<nsPIDOMWindowOuter> win = docShell->GetWindow();
+    if (win) {
+      return win->GetDoc();
+    }
+  }
+  return nullptr;
 }
 
 void XULFrameElement::LoadSrc() {

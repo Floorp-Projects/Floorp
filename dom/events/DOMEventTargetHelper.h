@@ -128,7 +128,7 @@ class DOMEventTargetHelper : public dom::EventTarget,
     return mListenerManager && mListenerManager->HasListenersFor(aTypeWithOn);
   }
 
-  virtual nsPIDOMWindowOuter* GetOwnerGlobalForBindings() override {
+  virtual nsPIDOMWindowOuter* GetOwnerGlobalForBindingsInternal() override {
     return nsPIDOMWindowOuter::GetFromCurrentInner(GetOwner());
   }
 

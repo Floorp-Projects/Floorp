@@ -18,6 +18,7 @@
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/dom/HTMLIFrameElement.h"
 #include "mozilla/dom/ToJSValue.h"
+#include "mozilla/dom/WindowProxyHolder.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsVariant.h"
 #include "mozilla/dom/BrowserElementDictionariesBinding.h"
@@ -234,7 +235,8 @@ BrowserElementParent::OpenWindowInProcess(nsPIDOMWindowOuter* aOpenerWindow,
 
   if (!aForceNoOpener) {
     ErrorResult res;
-    popupFrameElement->PresetOpenerWindow(aOpenerWindow, res);
+    popupFrameElement->PresetOpenerWindow(WindowProxyHolder(aOpenerWindow),
+                                          res);
     MOZ_ASSERT(!res.Failed());
   }
 

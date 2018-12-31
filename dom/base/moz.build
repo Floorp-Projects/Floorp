@@ -235,6 +235,7 @@ EXPORTS.mozilla.dom += [
     'VisualViewport.h',
     'WebKitCSSMatrix.h',
     'WindowOrientationObserver.h',
+    'WindowProxyHolder.h',
 ]
 
 if CONFIG['FUZZING']:

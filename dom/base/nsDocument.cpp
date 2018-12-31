@@ -294,6 +294,7 @@
 #include "mozilla/net/ChannelEventQueue.h"
 #include "mozilla/net/RequestContextService.h"
 #include "StorageAccessPermissionRequest.h"
+#include "mozilla/dom/WindowProxyHolder.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -3366,6 +3367,14 @@ nsresult nsIDocument::GetSrcdocData(nsAString& aSrcdocData) {
   }
   aSrcdocData = VoidString();
   return NS_OK;
+}
+
+Nullable<WindowProxyHolder> nsIDocument::GetDefaultView() const {
+  nsPIDOMWindowOuter* win = GetWindow();
+  if (!win) {
+    return nullptr;
+  }
+  return WindowProxyHolder(win);
 }
 
 Element* nsIDocument::GetActiveElement() {
