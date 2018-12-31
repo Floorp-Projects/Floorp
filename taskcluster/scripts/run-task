@@ -525,8 +525,6 @@ def main(args):
                         help='Path to sparse checkout profile to use')
     parser.add_argument('--comm-checkout',
                         help='Directory where Comm checkout should be created')
-    parser.add_argument('--tools-checkout',
-                        help='Directory where build/tools checkout should be created')
     parser.add_argument('--fetch-hgfingerprint', action='store_true',
                         help='Fetch the latest hgfingerprint from the secrets store, '
                         'using the taskclsuerProxy')
@@ -536,8 +534,6 @@ def main(args):
     # expand ~ in some paths
     if args.gecko_checkout:
         args.gecko_checkout = os.path.expanduser(args.gecko_checkout)
-    if args.tools_checkout:
-        args.tools_checkout = os.path.expanduser(args.tools_checkout)
     if 'HG_STORE_PATH' in os.environ:
         os.environ['HG_STORE_PATH'] = os.path.expanduser(os.environ['HG_STORE_PATH'])
 
@@ -671,8 +667,7 @@ def main(args):
             os.chown(store_path, uid, gid)
 
     prepare_checkout_dir(args.gecko_checkout)
-    prepare_checkout_dir(args.tools_checkout)
-    if args.gecko_checkout or args.tools_checkout or args.comm_checkout:
+    if args.gecko_checkout or args.comm_checkout:
         prepare_hg_store_path()
 
     if IS_POSIX and running_as_root:
@@ -714,15 +709,6 @@ def main(args):
             os.environ.get('GECKO_HEAD_REF'):
         print('task should be defined in terms of non-symbolic revision')
         return 1
-
-    if args.tools_checkout:
-        vcs_checkout('https://hg.mozilla.org/build/tools',
-                     args.tools_checkout,
-                     os.environ['HG_STORE_PATH'],
-                     fetch_hgfingerprint=args.fetch_hgfingerprint,
-                     # Always check out the latest commit on default branch.
-                     # This is non-deterministic!
-                     branch='default')
 
     # Checkout the repository, setting the COMM_HEAD_REV to the current
     # revision hash. Revision hashes have priority over symbolic revisions. We
