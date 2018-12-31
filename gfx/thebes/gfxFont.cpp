@@ -885,7 +885,7 @@ gfxFloat gfxFont::GetGlyphHAdvance(DrawTarget* aDrawTarget, uint16_t aGID) {
     return 0;
   }
   if (ProvidesGlyphWidths()) {
-    return GetGlyphWidth(*aDrawTarget, aGID) / 65536.0;
+    return GetGlyphWidth(aGID) / 65536.0;
   }
   if (mFUnitsConvFactor < 0.0f) {
     GetMetrics(eHorizontal);
