@@ -329,7 +329,7 @@ void SMILAnimationController::DoSample(bool aSkipUnchangedContainers) {
   // (i) Here we sample the timed elements (fetched from the
   // SVGAnimationElements) which determine from the active time if the
   // element is active and what its simple time etc. is. This information is
-  // then passed to its time client (nsSMILAnimationFunction).
+  // then passed to its time client (SMILAnimationFunction).
   //
   // (ii) During the same loop we also build up a table that contains one
   // compositor for each animated attribute and which maps animated elements to
@@ -570,7 +570,7 @@ void SMILAnimationController::DoMilestoneSamples() {
     // Something's wrong/missing about animation's target; skip this animation
     return;
 
-  nsSMILAnimationFunction& func = aElement->AnimationFunction();
+  SMILAnimationFunction& func = aElement->AnimationFunction();
 
   // Only add active animation functions. If there are no active animations
   // targeting an attribute, no compositor will be created and any previously

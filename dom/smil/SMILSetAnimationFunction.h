@@ -8,15 +8,17 @@
 #define NS_SMILSETANIMATIONFUNCTION_H_
 
 #include "mozilla/Attributes.h"
-#include "nsSMILAnimationFunction.h"
+#include "mozilla/SMILAnimationFunction.h"
+
+namespace mozilla {
 
 //----------------------------------------------------------------------
-// nsSMILSetAnimationFunction
+// SMILSetAnimationFunction
 //
-// Subclass of nsSMILAnimationFunction that limits the behaviour to that offered
+// Subclass of SMILAnimationFunction that limits the behaviour to that offered
 // by a <set> element.
 //
-class nsSMILSetAnimationFunction : public nsSMILAnimationFunction {
+class SMILSetAnimationFunction : public SMILAnimationFunction {
  public:
   /*
    * Sets animation-specific attributes (or marks them dirty, in the case
@@ -59,5 +61,7 @@ class nsSMILSetAnimationFunction : public nsSMILAnimationFunction {
 
   bool IsDisallowedAttribute(const nsAtom* aAttribute) const;
 };
+
+}  // namespace mozilla
 
 #endif  // NS_SMILSETANIMATIONFUNCTION_H_

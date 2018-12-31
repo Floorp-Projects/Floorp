@@ -63,7 +63,7 @@ class SVGAnimationElement : public SVGAnimationElementBase, public SVGTests {
                                       nsAtom** aLocalName) const;
   nsSMILTimedElement& TimedElement();
   nsSMILTimeContainer* GetTimeContainer();
-  virtual nsSMILAnimationFunction& AnimationFunction() = 0;
+  virtual SMILAnimationFunction& AnimationFunction() = 0;
 
   virtual bool IsEventAttributeNameInternal(nsAtom* aName) override;
 

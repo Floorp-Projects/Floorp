@@ -796,7 +796,9 @@ void Realm::updateDebuggerObservesFlag(unsigned flag) {
           : maybeGlobal();
   const GlobalObject::DebuggerVector* v = global->getDebuggers();
   for (auto p = v->begin(); p != v->end(); p++) {
-    Debugger* dbg = *p;
+    // Use unbarrieredGet() to prevent triggering read barrier while collecting,
+    // this is safe as long as dbg does not escape.
+    Debugger* dbg = p->unbarrieredGet();
     if (flag == DebuggerObservesAllExecution
             ? dbg->observesAllExecution()
             : flag == DebuggerObservesCoverage

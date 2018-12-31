@@ -15,7 +15,7 @@ add_task(async function testMalformedXml() {
       notificationId: "update-manual",
       button: "button",
       beforeClick() {
-        checkWhatsNewLink("update-manual-whats-new", updateDetailsUrl);
+        checkWhatsNewLink(window, "update-manual-whats-new", updateDetailsUrl);
       },
       async cleanup() {
         await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);

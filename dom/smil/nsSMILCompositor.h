@@ -11,7 +11,7 @@
 #include "mozilla/UniquePtr.h"
 #include "nsTHashtable.h"
 #include "nsString.h"
-#include "nsSMILAnimationFunction.h"
+#include "SMILAnimationFunction.h"
 #include "nsSMILTargetIdentifier.h"
 #include "nsSMILCompositorTable.h"
 #include "PLDHashTable.h"
@@ -46,7 +46,7 @@ class nsSMILCompositor : public PLDHashEntryHdr {
   enum { ALLOW_MEMMOVE = false };
 
   // Adds the given animation function to this Compositor's list of functions
-  void AddAnimationFunction(nsSMILAnimationFunction* aFunc);
+  void AddAnimationFunction(mozilla::SMILAnimationFunction* aFunc);
 
   // Composes the attribute's current value with the list of animation
   // functions, and assigns the resulting value to this compositor's target
@@ -104,7 +104,7 @@ class nsSMILCompositor : public PLDHashEntryHdr {
   KeyType mKey;
 
   // Hash Value: List of animation functions that animate the specified attr
-  nsTArray<nsSMILAnimationFunction*> mAnimationFunctions;
+  nsTArray<mozilla::SMILAnimationFunction*> mAnimationFunctions;
 
   // Member data for detecting when we need to force-recompose
   // ---------------------------------------------------------
