@@ -5,6 +5,32 @@
 
 ChromeUtils.import("resource://gre/modules/Preferences.jsm", this);
 
+class AboutConfigRowTest {
+  constructor(element) {
+    this.element = element;
+  }
+
+  querySelector(selector) {
+    return this.element.querySelector(selector);
+  }
+
+  get name() {
+    return this.querySelector("td").textContent;
+  }
+
+  get value() {
+    return this.querySelector("td.cell-value").textContent;
+  }
+
+  get firstButton() {
+    return this.querySelector("button");
+  }
+
+  hasClass(className) {
+    return this.element.classList.contains(className);
+  }
+}
+
 class AboutConfigTest {
   static withNewTab(testFn, options = {}) {
     return BrowserTestUtils.withNewTab({
@@ -26,5 +52,22 @@ class AboutConfigTest {
     if (!options.dontBypassWarning) {
       this.document.querySelector("button").click();
     }
+  }
+
+  /**
+   * Array of AboutConfigRowTest objects, one for each row in the main table.
+   */
+  get rows() {
+    let elements = this.document.getElementById("prefs")
+                                .getElementsByTagName("tr");
+    return Array.map(elements, element => new AboutConfigRowTest(element));
+  }
+
+  /**
+   * Returns the AboutConfigRowTest object for the row in the main table which
+   * corresponds to the given preference name, or undefined if none is present.
+   */
+  getRow(name) {
+    return this.rows.find(row => row.name == name);
   }
 }

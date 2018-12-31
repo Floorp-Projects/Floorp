@@ -17,19 +17,10 @@ add_task(async function test_load_title() {
 
 add_task(async function test_load_settings() {
   await AboutConfigTest.withNewTab(async function() {
-    let list = [...this.document.getElementById("prefs")
-      .getElementsByTagName("tr")];
-    function getRow(name) {
-      return list.find(row => row.querySelector("td").textContent == name);
-    }
-    function getValue(name) {
-      return getRow(name).querySelector("td.cell-value").textContent;
-    }
-
     // Test if page contains elements.
-    Assert.ok(getRow("plugins.testmode"));
-    Assert.ok(getRow("dom.vr.enabled"));
-    Assert.ok(getRow("accessibility.AOM.enabled"));
+    Assert.ok(this.getRow("plugins.testmode"));
+    Assert.ok(this.getRow("dom.vr.enabled"));
+    Assert.ok(this.getRow("accessibility.AOM.enabled"));
 
     // Test if the modified state is displayed for the right prefs.
     let prefArray = Services.prefs.getChildList("");
@@ -37,20 +28,24 @@ add_task(async function test_load_settings() {
       name => Services.prefs.prefHasUserValue(name));
     let nameOfDefault = prefArray.find(
       name => !Services.prefs.prefHasUserValue(name));
-    Assert.ok(!getRow(nameOfDefault).classList.contains("has-user-value"));
-    Assert.ok(getRow(nameOfEdited).classList.contains("has-user-value"));
+    Assert.ok(!this.getRow(nameOfDefault).hasClass("has-user-value"));
+    Assert.ok(this.getRow(nameOfEdited).hasClass("has-user-value"));
 
     // Test to see if values are localized.
-    Assert.equal(getValue("font.language.group"), "x-western");
-    Assert.equal(getValue("intl.ellipsis"), "\u2026");
+    Assert.equal(this.getRow("font.language.group").value, "x-western");
+    Assert.equal(this.getRow("intl.ellipsis").value, "\u2026");
     Assert.equal(
-      getValue("gecko.handlerService.schemes.mailto.1.uriTemplate"),
+      this.getRow("gecko.handlerService.schemes.mailto.1.uriTemplate").value,
       "https://mail.google.com/mail/?extsrc=mailto&url=%s");
 
-    // Test to see if user created value is not empty string when it matches /^chrome:\/\/.+\/locale\/.+\.properties/.
-    Assert.equal(getValue("random.user.pref"),
+    // Test to see if user created value is not empty string when it matches
+    // /^chrome:\/\/.+\/locale\/.+\.properties/.
+    Assert.equal(this.getRow("random.user.pref").value,
       "chrome://test/locale/testing.properties");
-    // Test to see if empty string when value matches /^chrome:\/\/.+\/locale\/.+\.properties/ and an exception is thrown.
-    Assert.equal(getValue("gecko.handlerService.schemes.irc.1.name"), "");
+
+    // Test to see if empty string when value matches
+    // /^chrome:\/\/.+\/locale\/.+\.properties/ and an exception is thrown.
+    Assert.equal(this.getRow("gecko.handlerService.schemes.irc.1.name").value,
+      "");
   });
 });

@@ -13,8 +13,8 @@ add_task(async function test_load_warningpage() {
   await AboutConfigTest.withNewTab(async function() {
     // Test that the warning page is presented:
     Assert.equal(this.document.getElementsByTagName("button").length, 1);
-    Assert.equal(this.document.getElementById("search"), undefined);
-    Assert.equal(this.document.getElementById("prefs"), undefined);
+    Assert.ok(!this.document.getElementById("search"));
+    Assert.ok(!this.document.getElementById("prefs"));
 
     // Disable checkbox and reload.
     this.document.getElementById("showWarningNextTime").click();
