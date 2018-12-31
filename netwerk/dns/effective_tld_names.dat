@@ -11088,6 +11088,11 @@ firm.dk
 reg.dk
 store.dk
 
+// dapps.earth : https://dapps.earth/
+// Submitted by Daniil Burdakov <icqkill@gmail.com>
+*.dapps.earth
+*.bzz.dapps.earth
+
 // Debian : https://www.debian.org/
 // Submitted by Peter Palfrader / Debian Sysadmin Team <dsa-publicsuffixlist@debian.org>
 debian.net
@@ -11730,6 +11735,8 @@ goip.de
 
 // Google, Inc.
 // Submitted by Eduardo Vela <evn@google.com>
+run.app
+a.run.app
 *.0emm.com
 appspot.com
 blogspot.ae
@@ -11934,6 +11941,12 @@ edu.krd
 git-repos.de
 lcube-server.de
 svn-repos.de
+
+// Leadpages : https://www.leadpages.net
+// Submitted by Greg Dallavalle <domains@leadpages.net>
+leadpages.co
+lpages.co
+lpusercontent.com
 
 // Lightmaker Property Manager, Inc. : https://app.lmpm.com/
 // Submitted by Greg Holland <greg.holland@lmpm.com>
@@ -12528,6 +12541,12 @@ gdansk.pl
 gdynia.pl
 med.pl
 sopot.pl
+
+// Telebit : https://telebit.cloud
+// Submitted by AJ ONeal <aj@telebit.cloud>
+telebit.app
+telebit.io
+*.telebit.xyz
 
 // The Gwiddle Foundation : https://gwiddlefoundation.org.uk
 // Submitted by Joshua Bayfield <joshua.bayfield@gwiddlefoundation.org.uk>
