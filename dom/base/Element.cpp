@@ -76,7 +76,7 @@
 #include "mozilla/TextEvents.h"
 #include "nsNodeUtils.h"
 #include "mozilla/dom/DirectionalityUtils.h"
-#include "nsDocument.h"
+#include "nsIDocument.h"
 #include "nsAttrValueOrString.h"
 #include "nsAttrValueInlines.h"
 #include "nsCSSPseudoElements.h"

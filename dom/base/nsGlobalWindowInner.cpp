@@ -1999,7 +1999,7 @@ nsresult nsGlobalWindowInner::PostHandleEvent(EventChainPostVisitor& aVisitor) {
   } else if (aVisitor.mEvent->mMessage == eLoad &&
              aVisitor.mEvent->IsTrusted()) {
     // This is page load event since load events don't propagate to |window|.
-    // @see nsDocument::GetEventTargetParent.
+    // @see nsIDocument::GetEventTargetParent.
     mIsDocumentLoaded = true;
 
     mTimeoutManager->OnDocumentLoaded();

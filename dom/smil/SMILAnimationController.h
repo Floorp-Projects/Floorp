@@ -33,7 +33,7 @@ class SVGAnimationElement;
 //
 // The animation controller maintains the animation timer and determines the
 // sample times and sample rate for all SMIL animations in a document. There is
-// at most one animation controller per nsDocument so that frame-rate tuning can
+// at most one animation controller per document so that frame-rate tuning can
 // be performed at a document-level.
 //
 // The animation controller can contain many child time containers (timed

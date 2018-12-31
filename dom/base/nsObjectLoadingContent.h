@@ -155,7 +155,7 @@ class nsObjectLoadingContent : public nsImageLoadingContent,
 
   /**
    * Notify this class the document state has changed
-   * Called by nsDocument so we may suspend plugins in inactive documents)
+   * Called by nsIDocument so we may suspend plugins in inactive documents)
    */
   void NotifyOwnerDocumentActivityChanged();
 

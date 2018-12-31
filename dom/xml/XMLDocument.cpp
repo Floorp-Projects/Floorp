@@ -125,12 +125,11 @@ nsresult NS_NewDOMDocument(nsIDocument** aInstancePtrResult,
     htmlDoc->SetCompatibilityMode(eCompatibility_FullStandards);
     htmlDoc->SetIsXHTML(isXHTML);
   }
-  nsDocument* doc = static_cast<nsDocument*>(d.get());
-  doc->SetLoadedAsData(aLoadedAsData);
-  doc->nsDocument::SetDocumentURI(aDocumentURI);
+  d->SetLoadedAsData(aLoadedAsData);
+  d->SetDocumentURI(aDocumentURI);
   // Must set the principal first, since SetBaseURI checks it.
-  doc->SetPrincipal(aPrincipal);
-  doc->SetBaseURI(aBaseURI);
+  d->SetPrincipal(aPrincipal);
+  d->SetBaseURI(aBaseURI);
 
   // We need to set the script handling object after we set the principal such
   // that the doc group is assigned correctly.
@@ -142,7 +141,7 @@ nsresult NS_NewDOMDocument(nsIDocument** aInstancePtrResult,
 
   // XMLDocuments and documents "created in memory" get to be UTF-8 by default,
   // unlike the legacy HTML mess
-  doc->SetDocumentCharacterSet(UTF_8_ENCODING);
+  d->SetDocumentCharacterSet(UTF_8_ENCODING);
 
   if (aDoctype) {
     ErrorResult result;
@@ -162,7 +161,7 @@ nsresult NS_NewDOMDocument(nsIDocument** aInstancePtrResult,
     options.SetAsString();
 
     nsCOMPtr<Element> root =
-        doc->CreateElementNS(aNamespaceURI, aQualifiedName, options, result);
+        d->CreateElementNS(aNamespaceURI, aQualifiedName, options, result);
     if (NS_WARN_IF(result.Failed())) {
       return result.StealNSResult();
     }
@@ -209,14 +208,13 @@ nsresult NS_NewXBLDocument(nsIDocument** aInstancePtrResult,
       aPrincipal, false, nullptr, DocumentFlavorLegacyGuess);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsIDocument* idoc = *aInstancePtrResult;
+  nsIDocument* doc = *aInstancePtrResult;
 
   // XBL documents must allow XUL and XBL elements in them but the usual check
   // only checks if the document is loaded in the system principal which is
   // sometimes not the case.
-  idoc->ForceEnableXULXBL();
+  doc->ForceEnableXULXBL();
 
-  nsDocument* doc = static_cast<nsDocument*>(idoc);
   doc->SetLoadedAsInteractiveData(true);
   doc->SetReadyStateInternal(nsIDocument::READYSTATE_COMPLETE);
 
@@ -227,7 +225,7 @@ namespace mozilla {
 namespace dom {
 
 XMLDocument::XMLDocument(const char* aContentType)
-    : nsDocument(aContentType),
+    : nsIDocument(aContentType),
       mChannelIsPending(false),
       mAsync(true),
       mLoopingForSyncLoad(false),
@@ -243,14 +241,14 @@ XMLDocument::~XMLDocument() {
 }
 
 nsresult XMLDocument::Init() {
-  nsresult rv = nsDocument::Init();
+  nsresult rv = nsIDocument::Init();
   NS_ENSURE_SUCCESS(rv, rv);
 
   return rv;
 }
 
 void XMLDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup) {
-  nsDocument::Reset(aChannel, aLoadGroup);
+  nsIDocument::Reset(aChannel, aLoadGroup);
 }
 
 void XMLDocument::ResetToURI(nsIURI* aURI, nsILoadGroup* aLoadGroup,
@@ -261,7 +259,7 @@ void XMLDocument::ResetToURI(nsIURI* aURI, nsILoadGroup* aLoadGroup,
     mChannelIsPending = false;
   }
 
-  nsDocument::ResetToURI(aURI, aLoadGroup, aPrincipal);
+  nsIDocument::ResetToURI(aURI, aLoadGroup, aPrincipal);
 }
 
 bool XMLDocument::Load(const nsAString& aUrl, CallerType aCallerType,
@@ -479,7 +477,7 @@ nsresult XMLDocument::StartDocumentLoad(const char* aCommand,
                                         nsISupports* aContainer,
                                         nsIStreamListener** aDocListener,
                                         bool aReset, nsIContentSink* aSink) {
-  nsresult rv = nsDocument::StartDocumentLoad(
+  nsresult rv = nsIDocument::StartDocumentLoad(
       aCommand, aChannel, aLoadGroup, aContainer, aDocListener, aReset, aSink);
   if (NS_FAILED(rv)) return rv;
 
@@ -537,10 +535,10 @@ void XMLDocument::EndLoad() {
   mLoopingForSyncLoad = false;
 
   mSynchronousDOMContentLoaded = (mLoadedAsData || mLoadedAsInteractiveData);
-  nsDocument::EndLoad();
+  nsIDocument::EndLoad();
   if (mSynchronousDOMContentLoaded) {
     mSynchronousDOMContentLoaded = false;
-    nsDocument::SetReadyStateInternal(nsIDocument::READYSTATE_COMPLETE);
+    nsIDocument::SetReadyStateInternal(nsIDocument::READYSTATE_COMPLETE);
     // Generate a document load event for the case when an XML
     // document was loaded as pure data without any presentation
     // attached to it.
@@ -551,7 +549,7 @@ void XMLDocument::EndLoad() {
 
 /* virtual */ void XMLDocument::DocAddSizeOfExcludingThis(
     nsWindowSizes& aWindowSizes) const {
-  nsDocument::DocAddSizeOfExcludingThis(aWindowSizes);
+  nsIDocument::DocAddSizeOfExcludingThis(aWindowSizes);
 }
 
 // nsIDocument interface

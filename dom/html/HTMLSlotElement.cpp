@@ -10,7 +10,7 @@
 #include "mozilla/dom/HTMLUnknownElement.h"
 #include "mozilla/dom/ShadowRoot.h"
 #include "nsGkAtoms.h"
-#include "nsDocument.h"
+#include "nsIDocument.h"
 
 nsGenericHTMLElement* NS_NewHTMLSlotElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,

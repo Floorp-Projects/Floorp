@@ -111,7 +111,7 @@
 #include "nsCycleCollector.h"
 #include "nsDataHashtable.h"
 #include "nsDocShellCID.h"
-#include "nsDocument.h"
+#include "nsIDocument.h"
 #include "nsDOMCID.h"
 #include "mozilla/dom/DataTransfer.h"
 #include "nsDOMJSUtils.h"
