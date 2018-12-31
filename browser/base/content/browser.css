@@ -624,7 +624,7 @@ html|input.urlbar-input {
 
 /* Never show a scrollbar for the Location Bar popup.  This overrides the
    richlistbox inline overflow: auto style.*/
-#PopupAutoCompleteRichResult > richlistbox > scrollbox {
+#PopupAutoCompleteRichResult > richlistbox {
   overflow: hidden !important;
 }
 

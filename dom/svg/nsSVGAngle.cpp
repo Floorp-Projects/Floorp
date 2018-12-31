@@ -10,10 +10,10 @@
 #include "mozilla/dom/SVGMarkerElement.h"
 #include "mozilla/Move.h"
 #include "nsContentUtils.h"  // NS_ENSURE_FINITE
+#include "DOMSVGAngle.h"
 #include "nsSMILValue.h"
 #include "nsSVGAttrTearoffTable.h"
 #include "nsTextFormatter.h"
-#include "SVGAngle.h"
 #include "SVGAnimatedAngle.h"
 #include "SVGOrientSMILType.h"
 
@@ -29,8 +29,8 @@ static const nsStaticAtom* const angleUnitMap[] = {
 
 static nsSVGAttrTearoffTable<nsSVGAngle, SVGAnimatedAngle>
     sSVGAnimatedAngleTearoffTable;
-static nsSVGAttrTearoffTable<nsSVGAngle, SVGAngle> sBaseSVGAngleTearoffTable;
-static nsSVGAttrTearoffTable<nsSVGAngle, SVGAngle> sAnimSVGAngleTearoffTable;
+static nsSVGAttrTearoffTable<nsSVGAngle, DOMSVGAngle> sBaseSVGAngleTearoffTable;
+static nsSVGAttrTearoffTable<nsSVGAngle, DOMSVGAngle> sAnimSVGAngleTearoffTable;
 
 /* Helper functions */
 
@@ -174,27 +174,29 @@ nsresult nsSVGAngle::NewValueSpecifiedUnits(uint16_t unitType,
   return NS_OK;
 }
 
-already_AddRefed<SVGAngle> nsSVGAngle::ToDOMBaseVal(SVGElement* aSVGElement) {
-  RefPtr<SVGAngle> domBaseVal = sBaseSVGAngleTearoffTable.GetTearoff(this);
+already_AddRefed<DOMSVGAngle> nsSVGAngle::ToDOMBaseVal(
+    SVGElement* aSVGElement) {
+  RefPtr<DOMSVGAngle> domBaseVal = sBaseSVGAngleTearoffTable.GetTearoff(this);
   if (!domBaseVal) {
-    domBaseVal = new SVGAngle(this, aSVGElement, SVGAngle::BaseValue);
+    domBaseVal = new DOMSVGAngle(this, aSVGElement, DOMSVGAngle::BaseValue);
     sBaseSVGAngleTearoffTable.AddTearoff(this, domBaseVal);
   }
 
   return domBaseVal.forget();
 }
 
-already_AddRefed<SVGAngle> nsSVGAngle::ToDOMAnimVal(SVGElement* aSVGElement) {
-  RefPtr<SVGAngle> domAnimVal = sAnimSVGAngleTearoffTable.GetTearoff(this);
+already_AddRefed<DOMSVGAngle> nsSVGAngle::ToDOMAnimVal(
+    SVGElement* aSVGElement) {
+  RefPtr<DOMSVGAngle> domAnimVal = sAnimSVGAngleTearoffTable.GetTearoff(this);
   if (!domAnimVal) {
-    domAnimVal = new SVGAngle(this, aSVGElement, SVGAngle::AnimValue);
+    domAnimVal = new DOMSVGAngle(this, aSVGElement, DOMSVGAngle::AnimValue);
     sAnimSVGAngleTearoffTable.AddTearoff(this, domAnimVal);
   }
 
   return domAnimVal.forget();
 }
 
-SVGAngle::~SVGAngle() {
+DOMSVGAngle::~DOMSVGAngle() {
   if (mType == BaseValue) {
     sBaseSVGAngleTearoffTable.RemoveTearoff(mVal);
   } else if (mType == AnimValue) {

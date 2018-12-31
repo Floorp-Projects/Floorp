@@ -16,24 +16,24 @@ class nsSVGAngle;
 namespace mozilla {
 namespace dom {
 
-class SVGAngle final : public nsWrapperCache {
+class DOMSVGAngle final : public nsWrapperCache {
  public:
   typedef enum { BaseValue, AnimValue, CreatedValue } AngleType;
 
-  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(SVGAngle)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(SVGAngle)
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(DOMSVGAngle)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(DOMSVGAngle)
 
   /**
-   * Generic ctor for SVGAngle objects that are created for an attribute.
+   * Generic ctor for DOMSVGAngle objects that are created for an attribute.
    */
-  SVGAngle(nsSVGAngle* aVal, SVGElement* aSVGElement, AngleType aType)
+  DOMSVGAngle(nsSVGAngle* aVal, SVGElement* aSVGElement, AngleType aType)
       : mVal(aVal), mSVGElement(aSVGElement), mType(aType) {}
 
   /**
    * Ctor for creating the objects returned by SVGSVGElement.createSVGAngle(),
    * which do not initially belong to an attribute.
    */
-  explicit SVGAngle(SVGElement* aSVGElement);
+  explicit DOMSVGAngle(SVGElement* aSVGElement);
 
   // WebIDL
   SVGElement* GetParentObject() { return mSVGElement; }
@@ -50,7 +50,7 @@ class SVGAngle final : public nsWrapperCache {
   void ConvertToSpecifiedUnits(uint16_t unitType, ErrorResult& rv);
 
  protected:
-  ~SVGAngle();
+  ~DOMSVGAngle();
 
   nsSVGAngle* mVal;  // if mType is CreatedValue, we own the angle.  Otherwise,
                      // the element does.

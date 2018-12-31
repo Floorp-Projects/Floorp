@@ -24,7 +24,7 @@ function waitForThreadEvents(threadClient, eventName) {
 async function test() {
   waitForExplicitFinish();
 
-  const dbg = await attatchRecordingDebugger(
+  const dbg = await attachRecordingDebugger(
     "doc_rr_logs.html", 
     { waitForRecording: true }
   );

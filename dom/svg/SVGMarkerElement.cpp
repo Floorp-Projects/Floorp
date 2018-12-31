@@ -11,7 +11,7 @@
 #include "SVGAnimatedPreserveAspectRatio.h"
 #include "nsError.h"
 #include "mozilla/ArrayUtils.h"
-#include "mozilla/dom/SVGAngle.h"
+#include "mozilla/dom/DOMSVGAngle.h"
 #include "mozilla/dom/SVGGeometryElement.h"
 #include "mozilla/dom/SVGLengthBinding.h"
 #include "mozilla/dom/SVGMarkerElementBinding.h"
@@ -138,7 +138,7 @@ void SVGMarkerElement::SetOrientToAuto() {
           NS_LITERAL_STRING("auto"), true);
 }
 
-void SVGMarkerElement::SetOrientToAngle(SVGAngle& angle, ErrorResult& rv) {
+void SVGMarkerElement::SetOrientToAngle(DOMSVGAngle& angle, ErrorResult& rv) {
   float f = angle.Value();
   if (!IsFinite(f)) {
     rv.Throw(NS_ERROR_DOM_SVG_WRONG_TYPE_ERR);

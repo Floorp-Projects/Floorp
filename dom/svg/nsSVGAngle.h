@@ -21,7 +21,7 @@ namespace mozilla {
 
 namespace dom {
 class nsSVGOrientType;
-class SVGAngle;
+class DOMSVGAngle;
 class SVGAnimatedAngle;
 class SVGAnimationElement;
 class SVGElement;
@@ -29,7 +29,7 @@ class SVGElement;
 }  // namespace mozilla
 
 class nsSVGAngle {
-  friend class mozilla::dom::SVGAngle;
+  friend class mozilla::dom::DOMSVGAngle;
   friend class mozilla::dom::SVGAnimatedAngle;
   typedef mozilla::dom::SVGElement SVGElement;
 
@@ -85,9 +85,9 @@ class nsSVGAngle {
   nsresult NewValueSpecifiedUnits(uint16_t aUnitType, float aValue,
                                   SVGElement* aSVGElement);
   nsresult ConvertToSpecifiedUnits(uint16_t aUnitType, SVGElement* aSVGElement);
-  already_AddRefed<mozilla::dom::SVGAngle> ToDOMBaseVal(
+  already_AddRefed<mozilla::dom::DOMSVGAngle> ToDOMBaseVal(
       SVGElement* aSVGElement);
-  already_AddRefed<mozilla::dom::SVGAngle> ToDOMAnimVal(
+  already_AddRefed<mozilla::dom::DOMSVGAngle> ToDOMAnimVal(
       SVGElement* aSVGElement);
 
  public:
