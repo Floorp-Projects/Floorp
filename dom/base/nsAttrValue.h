@@ -22,13 +22,13 @@
 #include "nsMargin.h"
 #include "nsCOMPtr.h"
 #include "nsStringFwd.h"
-#include "SVGAttrValueWrapper.h"
 #include "nsTArrayForwardDeclare.h"
 #include "nsAtom.h"
-#include "mozilla/AtomArray.h"
-#include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/AtomArray.h"
 #include "mozilla/EnumTypeTraits.h"
+#include "mozilla/MemoryReporting.h"
+#include "mozilla/SVGAttrValueWrapper.h"
 
 class nsIDocument;
 class nsIURI;

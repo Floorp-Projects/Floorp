@@ -2,7 +2,7 @@ add_task(async function testBackgroundWindowFailures() {
   const maxBackgroundErrors = 5;
   SpecialPowers.pushPrefEnv({set: [
     [PREF_APP_UPDATE_BACKGROUNDMAXERRORS, maxBackgroundErrors],
-    [PREF_APP_UPDATE_DOWNLOADPROMPTMAXATTEMPTS, 2],
+    [PREF_APP_UPDATE_DOWNLOADPROMPT_MAXATTEMPTS, 2],
   ]});
 
   let updateParams = "badURL=1";
@@ -19,7 +19,7 @@ add_task(async function testBackgroundWindowFailures() {
       is(PanelUI.menuButton.getAttribute("badge-status"), "update-available",
          "The badge is showing for the background window");
 
-      checkWhatsNewLink("update-available-whats-new");
+      checkWhatsNewLink(extraWindow, "update-available-whats-new");
       let buttonEl = getNotificationButton(extraWindow, "update-available", "button");
       buttonEl.click();
 

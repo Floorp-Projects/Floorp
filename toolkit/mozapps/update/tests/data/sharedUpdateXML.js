@@ -162,6 +162,8 @@ function getRemotePatchString(aPatchProps) {
     set url(val) {
       this._url = val;
     },
+    custom1: null,
+    custom2: null,
     size: SIZE_SIMPLE_MAR,
   };
 
@@ -274,6 +276,8 @@ function getLocalPatchString(aPatchProps) {
     type: "complete",
     url: gURLData + FILE_SIMPLE_MAR,
     size: SIZE_SIMPLE_MAR,
+    custom1: null,
+    custom2: null,
     selected: "true",
     state: STATE_SUCCEEDED,
   };
@@ -335,8 +339,12 @@ function getPatchString(aPatchProps) {
   let type = "type=\"" + aPatchProps.type + "\" ";
   let url = "URL=\"" + aPatchProps.url + "\" ";
   let size = "size=\"" + aPatchProps.size + "\"";
+  let custom1 = aPatchProps.custom1 ? aPatchProps.custom1 + " " : "";
+  let custom2 = aPatchProps.custom2 ? aPatchProps.custom2 + " " : "";
   return "<patch " +
          type +
          url +
+         custom1 +
+         custom2 +
          size;
 }

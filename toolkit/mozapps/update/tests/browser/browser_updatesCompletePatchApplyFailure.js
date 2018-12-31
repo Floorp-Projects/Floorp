@@ -11,7 +11,7 @@ add_task(async function testCompletePatchApplyFailure() {
       notificationId: "update-manual",
       button: "button",
       beforeClick() {
-        checkWhatsNewLink("update-manual-whats-new");
+        checkWhatsNewLink(window, "update-manual-whats-new");
       },
       async cleanup() {
         await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);

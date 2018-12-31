@@ -108,7 +108,6 @@
 #include "nsGlobalWindow.h"
 #include "GLContext.h"
 #include "GLContextProvider.h"
-#include "SVGContentUtils.h"
 #include "nsIScreenManager.h"
 #include "nsFilterInstance.h"
 #include "nsSVGLength2.h"
@@ -117,11 +116,12 @@
 #include "Units.h"
 #include "CanvasUtils.h"
 #include "mozilla/CycleCollectedJSRuntime.h"
+#include "mozilla/ServoCSSParser.h"
 #include "mozilla/ServoStyleSet.h"
+#include "mozilla/SVGContentUtils.h"
 #include "mozilla/layers/CanvasClient.h"
 #include "mozilla/layers/WebRenderUserData.h"
 #include "mozilla/layers/WebRenderCanvasRenderer.h"
-#include "mozilla/ServoCSSParser.h"
 
 #undef free  // apparently defined by some windows header, clashing with a
              // free() method in SkTypes.h

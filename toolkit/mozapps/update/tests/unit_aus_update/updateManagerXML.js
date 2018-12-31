@@ -16,7 +16,9 @@ function run_test() {
                     url: "http://partial/",
                     size: "86",
                     selected: "true",
-                    state: STATE_PENDING};
+                    state: STATE_PENDING,
+                    custom1: "custom1_attr=\"custom1 patch value\"",
+                    custom2: "custom2_attr=\"custom2 patch value\""};
   let patches = getLocalPatchString(patchProps);
   let updateProps = {type: "major",
                      name: "New",
@@ -42,7 +44,9 @@ function run_test() {
                 url: "http://complete/",
                 size: "75",
                 selected: "true",
-                state: STATE_FAILED};
+                state: STATE_FAILED,
+                custom1: "custom3_attr=\"custom3 patch value\"",
+                custom2: "custom4_attr=\"custom4 patch value\""};
   patches = getLocalPatchString(patchProps);
   updateProps = {type: "minor",
                  name: "Existing",
@@ -66,7 +70,7 @@ function run_test() {
   Assert.equal(gUpdateManager.updateCount, 2,
                "the update manager updateCount attribute" + MSG_SHOULD_EQUAL);
 
-  debugDump("checking the activeUpdate properties");
+  debugDump("checking the first update properties");
   let update = gUpdateManager.getUpdateAt(0).QueryInterface(Ci.nsIWritablePropertyBag);
   Assert.equal(update.state, STATE_SUCCEEDED,
                "the update state attribute" + MSG_SHOULD_EQUAL);
@@ -102,9 +106,35 @@ function run_test() {
                "the update custom1_attr property" + MSG_SHOULD_EQUAL);
   Assert.equal(update.getProperty("custom2_attr"), "custom2 value",
                "the update custom2_attr property" + MSG_SHOULD_EQUAL);
+  // nsIPropertyBag enumerator
+  debugDump("checking the first update enumerator");
+  let e = update.enumerator;
+  Assert.ok(e.hasMoreElements(),
+            "the enumerator.hasMoreElements()" + MSG_SHOULD_EQUAL);
+  let prop = e.getNext().QueryInterface(Ci.nsIProperty);
+  Assert.ok(!!prop,
+            "the enumerator.getNext()" + MSG_SHOULD_EQUAL);
+  Assert.equal(prop.name, "custom1_attr",
+               "the first property name" + MSG_SHOULD_EQUAL);
+  Assert.equal(prop.value, "custom1 value",
+               "the first property value" + MSG_SHOULD_EQUAL);
+  prop = e.getNext().QueryInterface(Ci.nsIProperty);
+  Assert.ok(!!prop,
+            "the enumerator.getNext()" + MSG_SHOULD_EQUAL);
+  Assert.equal(prop.name, "custom2_attr",
+               "the second property name" + MSG_SHOULD_EQUAL);
+  Assert.equal(prop.value, "custom2 value",
+               "the second property value" + MSG_SHOULD_EQUAL);
+  prop = e.getNext().QueryInterface(Ci.nsIProperty);
+  Assert.equal(prop.name, "foregroundDownload",
+               "the third property name" + MSG_SHOULD_EQUAL);
+  Assert.equal(prop.value, "true",
+               "the third property value" + MSG_SHOULD_EQUAL);
+  Assert.ok(!e.hasMoreElements(),
+            "the enumerator.hasMoreElements()" + MSG_SHOULD_EQUAL);
 
-  debugDump("checking the activeUpdate patch properties");
-  let patch = update.selectedPatch;
+  debugDump("checking the first update patch properties");
+  let patch = update.selectedPatch.QueryInterface(Ci.nsIWritablePropertyBag);
   Assert.equal(patch.type, "partial",
                "the update patch type attribute" + MSG_SHOULD_EQUAL);
   Assert.equal(patch.URL, "http://partial/",
@@ -115,8 +145,33 @@ function run_test() {
             "the update patch selected attribute" + MSG_SHOULD_EQUAL);
   Assert.equal(patch.state, STATE_SUCCEEDED,
                "the update patch state attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(patch.getProperty("custom1_attr"), "custom1 patch value",
+               "the update patch custom1_attr property" + MSG_SHOULD_EQUAL);
+  Assert.equal(patch.getProperty("custom2_attr"), "custom2 patch value",
+               "the update patch custom2_attr property" + MSG_SHOULD_EQUAL);
+  // nsIPropertyBag enumerator
+  debugDump("checking the first update patch enumerator");
+  e = patch.enumerator;
+  Assert.ok(e.hasMoreElements(),
+            "the enumerator.hasMoreElements()" + MSG_SHOULD_EQUAL);
+  prop = e.getNext().QueryInterface(Ci.nsIProperty);
+  Assert.ok(!!prop,
+            "the enumerator.getNext()" + MSG_SHOULD_EQUAL);
+  Assert.equal(prop.name, "custom1_attr",
+               "the first property name" + MSG_SHOULD_EQUAL);
+  Assert.equal(prop.value, "custom1 patch value",
+               "the first property value" + MSG_SHOULD_EQUAL);
+  prop = e.getNext().QueryInterface(Ci.nsIProperty);
+  Assert.ok(!!prop,
+            "the enumerator.getNext()" + MSG_SHOULD_EQUAL);
+  Assert.equal(prop.name, "custom2_attr",
+               "the second property name" + MSG_SHOULD_EQUAL);
+  Assert.equal(prop.value, "custom2 patch value",
+               "the second property value" + MSG_SHOULD_EQUAL);
+  Assert.ok(!e.hasMoreElements(),
+            "the enumerator.hasMoreElements()" + MSG_SHOULD_EQUAL);
 
-  debugDump("checking the first update properties");
+  debugDump("checking the second update properties");
   update = gUpdateManager.getUpdateAt(1).QueryInterface(Ci.nsIWritablePropertyBag);
   Assert.equal(update.state, STATE_FAILED,
                "the update state attribute" + MSG_SHOULD_EQUAL);
@@ -151,9 +206,35 @@ function run_test() {
                "the update custom3_attr property" + MSG_SHOULD_EQUAL);
   Assert.equal(update.getProperty("custom4_attr"), "custom4 value",
                "the update custom4_attr property" + MSG_SHOULD_EQUAL);
+  // nsIPropertyBag enumerator
+  debugDump("checking the second update enumerator");
+  e = update.enumerator;
+  Assert.ok(e.hasMoreElements(),
+            "the enumerator.hasMoreElements()" + MSG_SHOULD_EQUAL);
+  prop = e.getNext().QueryInterface(Ci.nsIProperty);
+  Assert.ok(!!prop,
+            "the enumerator.getNext()" + MSG_SHOULD_EQUAL);
+  Assert.equal(prop.name, "custom3_attr",
+               "the first property name" + MSG_SHOULD_EQUAL);
+  Assert.equal(prop.value, "custom3 value",
+               "the first property value" + MSG_SHOULD_EQUAL);
+  prop = e.getNext().QueryInterface(Ci.nsIProperty);
+  Assert.ok(!!prop,
+            "the enumerator.getNext()" + MSG_SHOULD_EQUAL);
+  Assert.equal(prop.name, "custom4_attr",
+               "the second property name" + MSG_SHOULD_EQUAL);
+  Assert.equal(prop.value, "custom4 value",
+               "the second property value" + MSG_SHOULD_EQUAL);
+  prop = e.getNext().QueryInterface(Ci.nsIProperty);
+  Assert.equal(prop.name, "foregroundDownload",
+               "the third property name" + MSG_SHOULD_EQUAL);
+  Assert.equal(prop.value, "false",
+               "the third property value" + MSG_SHOULD_EQUAL);
+  Assert.ok(!e.hasMoreElements(),
+            "the enumerator.hasMoreElements()" + MSG_SHOULD_EQUAL);
 
-  debugDump("checking the first update patch properties");
-  patch = update.selectedPatch;
+  debugDump("checking the second update patch properties");
+  patch = update.selectedPatch.QueryInterface(Ci.nsIWritablePropertyBag);
   Assert.equal(patch.type, "complete",
                "the update patch type attribute" + MSG_SHOULD_EQUAL);
   Assert.equal(patch.URL, "http://complete/",
@@ -164,6 +245,31 @@ function run_test() {
             "the update patch selected attribute" + MSG_SHOULD_EQUAL);
   Assert.equal(patch.state, STATE_FAILED,
                "the update patch state attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(patch.getProperty("custom3_attr"), "custom3 patch value",
+               "the update patch custom3_attr property" + MSG_SHOULD_EQUAL);
+  Assert.equal(patch.getProperty("custom4_attr"), "custom4 patch value",
+               "the update patch custom4_attr property" + MSG_SHOULD_EQUAL);
+  // nsIPropertyBag enumerator
+  debugDump("checking the second update patch enumerator");
+  e = patch.enumerator;
+  Assert.ok(e.hasMoreElements(),
+            "the enumerator.hasMoreElements()" + MSG_SHOULD_EQUAL);
+  prop = e.getNext().QueryInterface(Ci.nsIProperty);
+  Assert.ok(!!prop,
+            "the enumerator.getNext()" + MSG_SHOULD_EQUAL);
+  Assert.equal(prop.name, "custom3_attr",
+               "the first property name" + MSG_SHOULD_EQUAL);
+  Assert.equal(prop.value, "custom3 patch value",
+               "the first property value" + MSG_SHOULD_EQUAL);
+  prop = e.getNext().QueryInterface(Ci.nsIProperty);
+  Assert.ok(!!prop,
+            "the enumerator.getNext()" + MSG_SHOULD_EQUAL);
+  Assert.equal(prop.name, "custom4_attr",
+               "the second property name" + MSG_SHOULD_EQUAL);
+  Assert.equal(prop.value, "custom4 patch value",
+               "the second property value" + MSG_SHOULD_EQUAL);
+  Assert.ok(!e.hasMoreElements(),
+            "the enumerator.hasMoreElements()" + MSG_SHOULD_EQUAL);
 
   // Cleaning up the active update along with reloading the update manager
   // in doTestFinish will prevent writing the update xml files during
