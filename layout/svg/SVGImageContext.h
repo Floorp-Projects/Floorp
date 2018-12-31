@@ -9,7 +9,7 @@
 
 #include "mozilla/Maybe.h"
 #include "mozilla/SVGContextPaint.h"
-#include "SVGPreserveAspectRatio.h"
+#include "mozilla/SVGPreserveAspectRatio.h"
 #include "Units.h"
 
 class nsIFrame;

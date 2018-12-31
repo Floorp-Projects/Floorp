@@ -13,6 +13,7 @@
 */
 
 #include "mozilla/Attributes.h"
+#include "mozilla/SVGContentUtils.h"
 #include "mozilla/dom/DOMRect.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/gfx/MatrixFwd.h"
@@ -23,7 +24,6 @@
 #include "nsError.h"
 #include "nsISupportsImpl.h"
 #include "nsStyledElement.h"
-#include "SVGContentUtils.h"
 #include "nsSVGClass.h"
 #include "gfxMatrix.h"
 

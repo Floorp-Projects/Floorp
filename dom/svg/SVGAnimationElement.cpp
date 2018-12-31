@@ -9,7 +9,7 @@
 #include "mozilla/dom/ElementInlines.h"
 #include "nsSMILTimeContainer.h"
 #include "SMILAnimationController.h"
-#include "nsSMILAnimationFunction.h"
+#include "SMILAnimationFunction.h"
 #include "nsContentUtils.h"
 #include "nsIContentInlines.h"
 #include "nsIURI.h"

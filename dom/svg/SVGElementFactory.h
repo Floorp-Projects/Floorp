@@ -42,7 +42,7 @@ typedef nsresult (*SVGContentCreatorFunction)(
       nsIContent** aResult,                                 \
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo, \
       mozilla::dom::FromParser aFromParser);
-#include "SVGTagList.h"
+#include "mozilla/SVGTagList.h"
 #undef SVG_TAG
 #undef SVG_FROM_PARSER_TAG
 

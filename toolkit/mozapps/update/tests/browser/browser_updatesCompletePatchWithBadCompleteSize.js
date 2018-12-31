@@ -1,5 +1,7 @@
 add_task(async function testCompletePatchWithBadCompleteSize() {
-  SpecialPowers.pushPrefEnv({set: [[PREF_APP_UPDATE_DOWNLOADPROMPTMAXATTEMPTS, 2]]});
+  SpecialPowers.pushPrefEnv({set: [
+    [PREF_APP_UPDATE_DOWNLOADPROMPT_MAXATTEMPTS, 2],
+  ]});
 
   let updateParams = "completePatchOnly=1&invalidCompleteSize=1";
 
@@ -21,7 +23,7 @@ add_task(async function testCompletePatchWithBadCompleteSize() {
       notificationId: "update-manual",
       button: "button",
       beforeClick() {
-        checkWhatsNewLink("update-manual-whats-new");
+        checkWhatsNewLink(window, "update-manual-whats-new");
       },
       async cleanup() {
         await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);

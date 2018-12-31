@@ -34,7 +34,7 @@ void nsSMILCompositor::Traverse(nsCycleCollectionTraversalCallback* aCallback) {
 }
 
 // Other methods
-void nsSMILCompositor::AddAnimationFunction(nsSMILAnimationFunction* aFunc) {
+void nsSMILCompositor::AddAnimationFunction(SMILAnimationFunction* aFunc) {
   if (aFunc) {
     mAnimationFunctions.AppendElement(aFunc);
   }
@@ -68,7 +68,7 @@ void nsSMILCompositor::ComposeAttribute(bool& aMightHavePendingStyleUpdates) {
   }
 
   // SECOND: Sort the animationFunctions, to prepare for compositing.
-  nsSMILAnimationFunction::Comparator comparator;
+  SMILAnimationFunction::Comparator comparator;
   mAnimationFunctions.Sort(comparator);
 
   // THIRD: Step backwards through animation functions to find out
@@ -169,7 +169,7 @@ bool nsSMILCompositor::MightNeedBaseStyle() const {
 
   // We should return true if at least one animation function might build on
   // the base value.
-  for (const nsSMILAnimationFunction* func : mAnimationFunctions) {
+  for (const SMILAnimationFunction* func : mAnimationFunctions) {
     if (!func->WillReplace()) {
       return true;
     }
@@ -193,7 +193,7 @@ uint32_t nsSMILCompositor::GetFirstFuncToAffectSandwich() {
 
   uint32_t i;
   for (i = mAnimationFunctions.Length(); i > 0; --i) {
-    nsSMILAnimationFunction* curAnimFunc = mAnimationFunctions[i - 1];
+    SMILAnimationFunction* curAnimFunc = mAnimationFunctions[i - 1];
     // In the following, the lack of short-circuit behavior of |= means that we
     // will ALWAYS run UpdateCachedTarget (even if mForceCompositing is true)
     // but only call HasChanged and WasSkippedInPrevSample if necessary.  This
