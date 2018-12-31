@@ -41,7 +41,7 @@ class gfxMacFont : public gfxFont {
     return mVariationFont || mFontEntry->HasFontTable(TRUETYPE_TAG('s', 'b', 'i', 'x'));
   }
 
-  int32_t GetGlyphWidth(DrawTarget &aDrawTarget, uint16_t aGID) override;
+  int32_t GetGlyphWidth(uint16_t aGID) override;
 
   already_AddRefed<mozilla::gfx::ScaledFont> GetScaledFont(
       mozilla::gfx::DrawTarget *aTarget) override;

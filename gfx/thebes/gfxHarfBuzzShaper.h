@@ -23,9 +23,6 @@ class gfxHarfBuzzShaper : public gfxFontShaper {
    */
   struct FontCallbackData {
     gfxHarfBuzzShaper *mShaper;
-    // initialized to a DrawTarget owned by our caller on every call to
-    // ShapeText
-    mozilla::gfx::DrawTarget *MOZ_NON_OWNING_REF mDrawTarget;
   };
 
   bool Initialize();
@@ -48,8 +45,8 @@ class gfxHarfBuzzShaper : public gfxFontShaper {
 
   hb_position_t GetGlyphVAdvance(hb_codepoint_t glyph) const;
 
-  void GetGlyphVOrigin(mozilla::gfx::DrawTarget &aDT, hb_codepoint_t aGlyph,
-                       hb_position_t *aX, hb_position_t *aY) const;
+  void GetGlyphVOrigin(hb_codepoint_t aGlyph, hb_position_t *aX,
+                       hb_position_t *aY) const;
 
   // get harfbuzz horizontal advance in 16.16 fixed point format.
   static hb_position_t HBGetGlyphHAdvance(hb_font_t *font, void *font_data,
