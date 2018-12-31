@@ -1942,11 +1942,12 @@ def check_run_task_caches(config, tasks):
                 if arg == '--':
                     break
 
-                if arg.startswith('--sparse-profile'):
+                if arg.startswith('--gecko-sparse-profile'):
                     if '=' not in arg:
                         raise Exception(
-                            '{} is specifying `--sparse-profile` to run-task as two arguments. '
-                            'Unable to determine if the sparse profile exists.'.format(
+                            '{} is specifying `--gecko-sparse-profile` to run-task '
+                            'as two arguments. Unable to determine if the sparse '
+                            'profile exists.'.format(
                                 task['label']))
                     _, sparse_profile = arg.split('=', 1)
                     if not os.path.exists(os.path.join(GECKO, sparse_profile)):

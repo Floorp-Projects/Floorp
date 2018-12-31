@@ -49,7 +49,7 @@ def common_setup(config, job, taskdesc, command):
         command.append('--gecko-checkout={}'.format(taskdesc['worker']['env']['GECKO_PATH']))
 
     if run['sparse-profile']:
-        command.append('--sparse-profile=build/sparse-profiles/%s' %
+        command.append('--gecko-sparse-profile=build/sparse-profiles/%s' %
                        run['sparse-profile'])
 
     taskdesc['worker'].setdefault('env', {})['MOZ_SCM_LEVEL'] = config.params['level']
