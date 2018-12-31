@@ -351,13 +351,9 @@ bool TenuredCell::isInsideZone(JS::Zone* zone) const {
   MOZ_ASSERT(!CurrentThreadIsIonCompiling());
   MOZ_ASSERT(thing);
   MOZ_ASSERT(CurrentThreadCanAccessZone(thing->zoneFromAnyThread()));
-
-  // It would be good if barriers were never triggered during collection, but
-  // at the moment this can happen e.g. when rekeying tables containing
-  // read-barriered GC things after a moving GC.
-  //
-  // TODO: Fix this and assert we're not collecting if we're on the active
-  // thread.
+  // Barriers should not be triggered on main thread while collecting.
+  MOZ_ASSERT_IF(CurrentThreadCanAccessRuntime(thing->runtimeFromAnyThread()),
+                !JS::RuntimeHeapIsCollecting());
 
   JS::shadow::Zone* shadowZone = thing->shadowZoneFromAnyThread();
   if (shadowZone->needsIncrementalBarrier()) {

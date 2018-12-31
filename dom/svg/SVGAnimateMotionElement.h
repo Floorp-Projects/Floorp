@@ -35,7 +35,7 @@ class SVGAnimateMotionElement final : public SVGAnimationElement {
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
   // SVGAnimationElement
-  virtual nsSMILAnimationFunction& AnimationFunction() override;
+  virtual SMILAnimationFunction& AnimationFunction() override;
   virtual bool GetTargetAttributeName(int32_t* aNamespaceID,
                                       nsAtom** aLocalName) const override;
 

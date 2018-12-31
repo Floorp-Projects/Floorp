@@ -7,9 +7,9 @@
 #ifndef mozilla_dom_SVGTests_h
 #define mozilla_dom_SVGTests_h
 
-#include "nsStringFwd.h"
-#include "SVGStringList.h"
 #include "nsCOMPtr.h"
+#include "nsStringFwd.h"
+#include "mozilla/SVGStringList.h"
 
 class nsAttrValue;
 class nsAtom;
