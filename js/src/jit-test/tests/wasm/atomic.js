@@ -1,4 +1,5 @@
-// |jit-test| skip-if: !wasmThreadsSupported()
+// |jit-test| skip-if: !wasmThreadsSupported() || getBuildConfiguration()['arm64']
+// skip arm64 due to bug 1513231
 
 const oob = /index out of bounds/;
 const unaligned = /unaligned memory access/;
