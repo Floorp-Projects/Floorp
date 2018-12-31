@@ -3,6 +3,7 @@ package mozilla.components.browser.menu.item
 import android.view.LayoutInflater
 import android.widget.CheckBox
 import mozilla.components.browser.menu.BrowserMenu
+import mozilla.components.browser.menu.R
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -14,11 +15,11 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 
 @RunWith(RobolectricTestRunner::class)
-class SimpleBrowserMenuCheckboxTest {
+class BrowserMenuCompoundButtonTest {
 
     @Test
     fun `simple menu items are always visible by default`() {
-        val item = SimpleBrowserMenuCheckbox("Hello") {
+        val item = SimpleTestBrowserCompoundButton("Hello") {
             // do nothing
         }
 
@@ -27,7 +28,7 @@ class SimpleBrowserMenuCheckboxTest {
 
     @Test
     fun `layout resource can be inflated`() {
-        val item = SimpleBrowserMenuCheckbox("Hello") {
+        val item = SimpleTestBrowserCompoundButton("Hello") {
             // do nothing
         }
 
@@ -42,7 +43,7 @@ class SimpleBrowserMenuCheckboxTest {
     fun `clicking bound view will invoke callback and dismiss menu`() {
         var callbackInvoked = false
 
-        val item = SimpleBrowserMenuCheckbox("Hello") { checked ->
+        val item = SimpleTestBrowserCompoundButton("Hello") { checked ->
             callbackInvoked = checked
         }
 
@@ -60,12 +61,20 @@ class SimpleBrowserMenuCheckboxTest {
     @Test
     fun `initialState is invoked on bind`() {
         val initialState: () -> Boolean = { true }
-        val item = SimpleBrowserMenuCheckbox("Hello", initialState) {}
+        val item = SimpleTestBrowserCompoundButton("Hello", initialState) {}
 
         val menu = mock(BrowserMenu::class.java)
         val view = spy(CheckBox(RuntimeEnvironment.application))
         item.bind(menu, view)
 
         verify(view).isChecked = true
+    }
+
+    class SimpleTestBrowserCompoundButton(
+        label: String,
+        initialState: () -> Boolean = { false },
+        listener: (Boolean) -> Unit
+    ) : BrowserMenuCompoundButton(label, initialState, listener) {
+        override fun getLayoutResource(): Int = R.layout.mozac_browser_menu_item_simple
     }
 }

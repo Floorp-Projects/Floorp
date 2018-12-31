@@ -13,7 +13,7 @@ import mozilla.components.browser.domains.autocomplete.ShippedDomainsProvider
 import mozilla.components.browser.engine.system.SystemEngine
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.BrowserMenuItemToolbar
-import mozilla.components.browser.menu.item.SimpleBrowserMenuCheckbox
+import mozilla.components.browser.menu.item.BrowserMenuCheckbox
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import mozilla.components.browser.search.SearchEngineManager
 import mozilla.components.browser.session.Session
@@ -100,7 +100,7 @@ open class DefaultComponents(private val applicationContext: Context) {
                 SimpleBrowserMenuItem("Clear Data") {
                     sessionUseCases.clearData.invoke()
                 },
-                SimpleBrowserMenuCheckbox("Request desktop site", {
+                BrowserMenuCheckbox("Request desktop site", {
                     sessionManager.selectedSessionOrThrow.desktopMode
                 }) { checked ->
                     sessionUseCases.requestDesktopSite.invoke(checked)
