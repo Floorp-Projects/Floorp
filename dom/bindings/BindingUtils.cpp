@@ -1126,11 +1126,6 @@ bool VariantToJsval(JSContext* aCx, nsIVariant* aVariant,
   return true;
 }
 
-bool WrapObject(JSContext* cx, const WindowProxyHolder& p,
-                JS::MutableHandle<JS::Value> rval) {
-  return ToJSValue(cx, p, rval);
-}
-
 static int CompareIdsAtIndices(const void* aElement1, const void* aElement2,
                                void* aClosure) {
   const uint16_t index1 = *static_cast<const uint16_t*>(aElement1);
@@ -2803,18 +2798,6 @@ namespace binding_detail {
  *                        getter/setter/method, unwrap it.  Otherwise just
  *                        return the given object.
  *
- * UnwrapThisObject: Takes a MutableHandle for a JSObject which contains the
- *                   this object (which the caller probably got from
- *                   MaybeUnwrapThisObject). It will try to get the right native
- *                   out of aObj. In some cases there are 2 possible types for
- *                   the native (which is why aSelf is a reference to a void*).
- *                   The ThisPolicy user should use the this JSObject* to
- *                   determine what C++ class aSelf contains. aObj is used to
- *                   keep the reflector object alive while self is being used,
- *                   so its value before and after the UnwrapThisObject call
- *                   could be different (if aObj was wrapped). The return value
- *                   is an nsresult, which will signal if an error occurred.
- *
  * HandleInvalidThis: If the |this| is not valid (wrong type of value, wrong
  *                    object, etc), decide what to do about it.  Returns a
  *                    boolean to return from the JSNative (false for failure,
@@ -2840,14 +2823,6 @@ struct NormalThisPolicy {
 
   static MOZ_ALWAYS_INLINE JSObject* MaybeUnwrapThisObject(JSObject* aObj) {
     return aObj;
-  }
-
-  static MOZ_ALWAYS_INLINE nsresult
-  UnwrapThisObject(JS::MutableHandle<JSObject*> aObj, void*& aSelf,
-                   prototypes::ID aProtoID, uint32_t aProtoDepth) {
-    binding_detail::MutableObjectHandleWrapper wrapper(aObj);
-    return binding_detail::UnwrapObjectInternal<void, true>(
-        wrapper, aSelf, aProtoID, aProtoDepth);
   }
 
   static bool HandleInvalidThis(JSContext* aCx, JS::CallArgs& aArgs,
@@ -2906,48 +2881,9 @@ struct CrossOriginThisPolicy : public MaybeGlobalThisPolicy {
       return js::UncheckedUnwrap(aObj);
     }
 
-    // Else just return aObj; our UnwrapThisObject call will try to
-    // CheckedUnwrap it, and either succeed or get a security error as needed.
+    // Else just return aObj; our UnwrapObjectInternal call will try to
+    // CheckedUnwrap it, and eitehr succeed or get a security error as needed.
     return aObj;
-  }
-
-  // After calling UnwrapThisObject aSelf can contain one of 2 types, depending
-  // on whether aObj is a proxy with a RemoteObjectProxy handler or a (maybe
-  // wrapped) normal WebIDL reflector. The generated binding code relies on this
-  // and uses IsRemoteObjectProxy to determine what type aSelf points to.
-  static MOZ_ALWAYS_INLINE nsresult
-  UnwrapThisObject(JS::MutableHandle<JSObject*> aObj, void*& aSelf,
-                   prototypes::ID aProtoID, uint32_t aProtoDepth) {
-    binding_detail::MutableObjectHandleWrapper wrapper(aObj);
-    // We need to pass false here, because if aObj doesn't have a DOMJSClass
-    // it might be a remote proxy object, and we don't want to throw in that
-    // case (even though unwrapping would fail).
-    nsresult rv = binding_detail::UnwrapObjectInternal<void, false>(
-        wrapper, aSelf, aProtoID, aProtoDepth);
-    if (NS_SUCCEEDED(rv)) {
-      return rv;
-    }
-
-    if (js::IsWrapper(wrapper)) {
-      JSObject* unwrappedObj =
-          js::CheckedUnwrap(wrapper, /* stopAtWindowProxy = */ false);
-      if (!unwrappedObj) {
-        return NS_ERROR_XPC_SECURITY_MANAGER_VETO;
-      }
-
-      // At this point we want to keep "unwrappedObj" alive, because we don't
-      // hold a strong reference in "aSelf".
-      wrapper = unwrappedObj;
-
-      return binding_detail::UnwrapObjectInternal<void, false>(
-          wrapper, aSelf, aProtoID, aProtoDepth);
-    }
-
-    if (!IsRemoteObjectProxy(wrapper, aProtoID)) {
-      return NS_ERROR_XPC_BAD_CONVERT_JS;
-    }
-    aSelf = RemoteObjectProxyBase::GetNative(wrapper);
-    return NS_OK;
   }
 
   // We want the HandleInvalidThis of MaybeGlobalThisPolicy.
@@ -3005,8 +2941,9 @@ bool GenericGetter(JSContext* cx, unsigned argc, JS::Value* vp) {
   JS::Rooted<JSObject*> rootSelf(cx, ThisPolicy::MaybeUnwrapThisObject(obj));
   void* self;
   {
-    nsresult rv =
-        ThisPolicy::UnwrapThisObject(&rootSelf, self, protoID, info->depth);
+    binding_detail::MutableObjectHandleWrapper wrapper(&rootSelf);
+    nsresult rv = binding_detail::UnwrapObjectInternal<void, true>(
+        wrapper, self, protoID, info->depth);
     if (NS_FAILED(rv)) {
       bool ok = ThisPolicy::HandleInvalidThis(
           cx, args, rv == NS_ERROR_XPC_SECURITY_MANAGER_VETO, protoID);
@@ -3061,8 +2998,9 @@ bool GenericSetter(JSContext* cx, unsigned argc, JS::Value* vp) {
   JS::Rooted<JSObject*> rootSelf(cx, ThisPolicy::MaybeUnwrapThisObject(obj));
   void* self;
   {
-    nsresult rv =
-        ThisPolicy::UnwrapThisObject(&rootSelf, self, protoID, info->depth);
+    binding_detail::MutableObjectHandleWrapper wrapper(&rootSelf);
+    nsresult rv = binding_detail::UnwrapObjectInternal<void, true>(
+        wrapper, self, protoID, info->depth);
     if (NS_FAILED(rv)) {
       return ThisPolicy::HandleInvalidThis(
           cx, args, rv == NS_ERROR_XPC_SECURITY_MANAGER_VETO, protoID);
@@ -3110,8 +3048,9 @@ bool GenericMethod(JSContext* cx, unsigned argc, JS::Value* vp) {
   JS::Rooted<JSObject*> rootSelf(cx, ThisPolicy::MaybeUnwrapThisObject(obj));
   void* self;
   {
-    nsresult rv =
-        ThisPolicy::UnwrapThisObject(&rootSelf, self, protoID, info->depth);
+    binding_detail::MutableObjectHandleWrapper wrapper(&rootSelf);
+    nsresult rv = binding_detail::UnwrapObjectInternal<void, true>(
+        wrapper, self, protoID, info->depth);
     if (NS_FAILED(rv)) {
       bool ok = ThisPolicy::HandleInvalidThis(
           cx, args, rv == NS_ERROR_XPC_SECURITY_MANAGER_VETO, protoID);
@@ -3284,21 +3223,14 @@ nsresult UnwrapArgImpl(JSContext* cx, JS::Handle<JSObject*> src,
   return wrappedJS->QueryInterface(iid, ppArg);
 }
 
-nsresult UnwrapWindowProxyArg(JSContext* cx, JS::Handle<JSObject*> src,
-                              WindowProxyHolder& ppArg) {
-  if (IsRemoteObjectProxy(src, prototypes::id::Window)) {
-    ppArg =
-        static_cast<BrowsingContext*>(RemoteObjectProxyBase::GetNative(src));
-    return NS_OK;
-  }
-
+nsresult UnwrapWindowProxyImpl(JSContext* cx, JS::Handle<JSObject*> src,
+                               nsPIDOMWindowOuter** ppArg) {
   nsCOMPtr<nsPIDOMWindowInner> inner;
   nsresult rv = UnwrapArg<nsPIDOMWindowInner>(cx, src, getter_AddRefs(inner));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsPIDOMWindowOuter> outer = inner->GetOuterWindow();
-  RefPtr<BrowsingContext> bc = outer ? outer->GetBrowsingContext() : nullptr;
-  ppArg = bc.forget();
+  outer.forget(ppArg);
   return NS_OK;
 }
 

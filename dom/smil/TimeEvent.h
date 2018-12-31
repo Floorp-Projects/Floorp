@@ -7,11 +7,8 @@
 #ifndef mozilla_dom_TimeEvent_h_
 #define mozilla_dom_TimeEvent_h_
 
-#include "nsDocShell.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/TimeEventBinding.h"
-#include "mozilla/dom/Nullable.h"
-#include "mozilla/dom/WindowProxyHolder.h"
 
 class nsGlobalWindowInner;
 
@@ -37,12 +34,7 @@ class TimeEvent final : public Event {
 
   int32_t Detail() const { return mDetail; }
 
-  Nullable<WindowProxyHolder> GetView() const {
-    if (!mView) {
-      return nullptr;
-    }
-    return WindowProxyHolder(mView->GetBrowsingContext());
-  }
+  nsPIDOMWindowOuter* GetView() const { return mView; }
 
   TimeEvent* AsTimeEvent() final { return this; }
 

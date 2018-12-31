@@ -37,7 +37,7 @@ JSObject* XULFrameElement::WrapNode(JSContext* aCx,
   return XULFrameElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-nsDocShell* XULFrameElement::GetDocShell() {
+nsIDocShell* XULFrameElement::GetDocShell() {
   RefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
   return frameLoader ? frameLoader->GetDocShell(IgnoreErrors()) : nullptr;
 }
@@ -48,24 +48,19 @@ already_AddRefed<nsIWebNavigation> XULFrameElement::GetWebNavigation() {
   return webnav.forget();
 }
 
-Nullable<WindowProxyHolder> XULFrameElement::GetContentWindow() {
-  RefPtr<nsDocShell> docShell = GetDocShell();
+already_AddRefed<nsPIDOMWindowOuter> XULFrameElement::GetContentWindow() {
+  nsCOMPtr<nsIDocShell> docShell = GetDocShell();
   if (docShell) {
-    return WindowProxyHolder(docShell->GetWindowProxy());
+    nsCOMPtr<nsPIDOMWindowOuter> win = docShell->GetWindow();
+    return win.forget();
   }
 
   return nullptr;
 }
 
 nsIDocument* XULFrameElement::GetContentDocument() {
-  nsCOMPtr<nsIDocShell> docShell = GetDocShell();
-  if (docShell) {
-    nsCOMPtr<nsPIDOMWindowOuter> win = docShell->GetWindow();
-    if (win) {
-      return win->GetDoc();
-    }
-  }
-  return nullptr;
+  nsCOMPtr<nsPIDOMWindowOuter> win = GetContentWindow();
+  return win ? win->GetDoc() : nullptr;
 }
 
 void XULFrameElement::LoadSrc() {
@@ -75,7 +70,7 @@ void XULFrameElement::LoadSrc() {
   RefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
   if (!frameLoader) {
     // Check if we have an opener we need to be setting
-    RefPtr<BrowsingContext> opener = mOpener;
+    nsCOMPtr<nsPIDOMWindowOuter> opener = mOpener;
     if (!opener) {
       // If we are a primary xul-browser, we want to take the opener property!
       nsCOMPtr<nsPIDOMWindowOuter> window = OwnerDoc()->GetWindow();
@@ -91,8 +86,7 @@ void XULFrameElement::LoadSrc() {
     // session history handling works like dynamic html:iframes.
     // Usually xul elements are used in chrome, which doesn't have
     // session history at all.
-    mFrameLoader = nsFrameLoader::Create(
-        this, opener ? opener->GetDOMWindow() : nullptr, false);
+    mFrameLoader = nsFrameLoader::Create(this, opener, false);
     if (NS_WARN_IF(!mFrameLoader)) {
       return;
     }

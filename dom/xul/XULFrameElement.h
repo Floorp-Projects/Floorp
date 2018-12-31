@@ -9,8 +9,6 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
-#include "mozilla/dom/Nullable.h"
-#include "mozilla/dom/WindowProxyHolder.h"
 #include "js/TypeDecls.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
@@ -23,8 +21,6 @@ class nsFrameLoader;
 namespace mozilla {
 namespace dom {
 
-class BrowsingContext;
-
 class XULFrameElement final : public nsXULElement, public nsIFrameLoaderOwner {
  public:
   explicit XULFrameElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
@@ -34,9 +30,9 @@ class XULFrameElement final : public nsXULElement, public nsIFrameLoaderOwner {
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(XULFrameElement, nsXULElement)
 
   // XULFrameElement.webidl
-  nsDocShell* GetDocShell();
+  nsIDocShell* GetDocShell();
   already_AddRefed<nsIWebNavigation> GetWebNavigation();
-  Nullable<WindowProxyHolder> GetContentWindow();
+  already_AddRefed<nsPIDOMWindowOuter> GetContentWindow();
   nsIDocument* GetContentDocument();
 
   // nsIFrameLoaderOwner / MozFrameLoaderOwner
@@ -49,9 +45,8 @@ class XULFrameElement final : public nsXULElement, public nsIFrameLoaderOwner {
     mFrameLoader = aFrameLoader;
   }
 
-  void PresetOpenerWindow(const Nullable<WindowProxyHolder>& aWindow,
-                          ErrorResult& aRv) {
-    mOpener = aWindow.IsNull() ? nullptr : aWindow.Value().get();
+  void PresetOpenerWindow(mozIDOMWindowProxy* aWindow, ErrorResult& aRv) {
+    mOpener = do_QueryInterface(aWindow);
   }
 
   void SwapFrameLoaders(mozilla::dom::HTMLIFrameElement& aOtherLoaderOwner,
@@ -77,7 +72,7 @@ class XULFrameElement final : public nsXULElement, public nsIFrameLoaderOwner {
   virtual ~XULFrameElement() {}
 
   RefPtr<nsFrameLoader> mFrameLoader;
-  RefPtr<BrowsingContext> mOpener;
+  nsCOMPtr<nsPIDOMWindowOuter> mOpener;
 
   JSObject* WrapNode(JSContext* aCx,
                      JS::Handle<JSObject*> aGivenProto) override;

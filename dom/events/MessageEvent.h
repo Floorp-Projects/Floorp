@@ -14,7 +14,6 @@
 namespace mozilla {
 namespace dom {
 
-class BrowsingContext;
 struct MessageEventInit;
 class MessagePort;
 class OwningWindowProxyOrMessagePortOrServiceWorker;
@@ -81,7 +80,7 @@ class MessageEvent final : public Event {
   JS::Heap<JS::Value> mData;
   nsString mOrigin;
   nsString mLastEventId;
-  RefPtr<BrowsingContext> mWindowSource;
+  RefPtr<nsPIDOMWindowOuter> mWindowSource;
   RefPtr<MessagePort> mPortSource;
   RefPtr<ServiceWorker> mServiceWorkerSource;
 

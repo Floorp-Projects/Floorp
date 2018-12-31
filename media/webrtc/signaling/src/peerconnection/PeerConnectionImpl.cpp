@@ -423,12 +423,13 @@ nsresult PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
 
   nsAutoCString locationCStr;
 
-  RefPtr<Location> location = mWindow->Location();
-  nsAutoString locationAStr;
-  res = location->ToString(locationAStr);
-  NS_ENSURE_SUCCESS(res, res);
+  if (RefPtr<Location> location = mWindow->GetLocation()) {
+    nsAutoString locationAStr;
+    res = location->ToString(locationAStr);
+    NS_ENSURE_SUCCESS(res, res);
 
-  CopyUTF16toUTF8(locationAStr, locationCStr);
+    CopyUTF16toUTF8(locationAStr, locationCStr);
+  }
 
   SprintfLiteral(temp, "%" PRIu64 " (id=%" PRIu64 " url=%s)",
                  static_cast<uint64_t>(timestamp),

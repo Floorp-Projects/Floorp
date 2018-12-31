@@ -54,10 +54,12 @@ class CustomElementReactionsStack;
 class MessageManagerGlobal;
 template <typename KeyType, typename ValueType>
 class Record;
-class WindowProxyHolder;
 
 nsresult UnwrapArgImpl(JSContext* cx, JS::Handle<JSObject*> src,
                        const nsIID& iid, void** ppArg);
+
+nsresult UnwrapWindowProxyImpl(JSContext* cx, JS::Handle<JSObject*> src,
+                               nsPIDOMWindowOuter** ppArg);
 
 /** Convert a jsval to an XPCOM pointer. Caller must not assume that src will
     keep the XPCOM pointer rooted. */
@@ -68,8 +70,12 @@ inline nsresult UnwrapArg(JSContext* cx, JS::Handle<JSObject*> src,
                        reinterpret_cast<void**>(ppArg));
 }
 
-nsresult UnwrapWindowProxyArg(JSContext* cx, JS::Handle<JSObject*> src,
-                              WindowProxyHolder& ppArg);
+template <>
+inline nsresult UnwrapArg<nsPIDOMWindowOuter>(JSContext* cx,
+                                              JS::Handle<JSObject*> src,
+                                              nsPIDOMWindowOuter** ppArg) {
+  return UnwrapWindowProxyImpl(cx, src, ppArg);
+}
 
 bool ThrowInvalidThis(JSContext* aCx, const JS::CallArgs& aArgs,
                       bool aSecurityError, const char* aInterfaceName);
@@ -1417,9 +1423,6 @@ inline bool WrapObject(JSContext* cx, JSObject& p,
   rval.set(JS::ObjectValue(p));
   return true;
 }
-
-bool WrapObject(JSContext* cx, const WindowProxyHolder& p,
-                JS::MutableHandle<JS::Value> rval);
 
 // Given an object "p" that inherits from nsISupports, wrap it and return the
 // result.  Null is returned on wrapping failure.  This is somewhat similar to

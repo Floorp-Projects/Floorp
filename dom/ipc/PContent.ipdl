@@ -322,18 +322,6 @@ struct NotificationEventData
     nsString behavior;
 };
 
-struct PostMessageData
-{
-    BrowsingContextId source;
-    nsString origin;
-    nsString targetOrigin;
-    nsIURI targetOriginURI;
-    nsIPrincipal callerPrincipal;
-    nsIPrincipal subjectPrincipal;
-    nsIURI callerDocumentURI;
-    bool isFromPrivateWindow;
-};
-
 /**
  * The PContent protocol is a top-level protocol between the UI process
  * and a content process. There is exactly one PContentParent/PContentChild pair
@@ -1269,13 +1257,6 @@ both:
      */
     async NotifyPushSubscriptionModifiedObservers(nsCString scope,
                                                   Principal principal);
-
-    async WindowClose(BrowsingContextId aContextId,
-                      bool aTrustedCaller);
-    async WindowFocus(BrowsingContextId aContextId);
-    async WindowBlur(BrowsingContextId aContextId);
-    async WindowPostMessage(BrowsingContextId aContextId, ClonedMessageData aMessage,
-                            PostMessageData aData);
 };
 
 }
