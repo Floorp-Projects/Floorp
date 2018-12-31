@@ -1189,6 +1189,9 @@ function UpdatePatch(patch) {
   for (var i = 0; i < patch.attributes.length; ++i) {
     var attr = patch.attributes.item(i);
     switch (attr.name) {
+      case "xmlns":
+        // Don't save the XML namespace.
+        break;
       case "selected":
         this.selected = attr.value == "true";
         break;
@@ -1198,8 +1201,19 @@ function UpdatePatch(patch) {
           throw Cr.NS_ERROR_ILLEGAL_VALUE;
         }
         // fall through
+      case "type":
+      case "URL":
+      case "finalURL":
+      case "state":
+      case "errorCode":
+        this[attr.name] = attr.value;
+        break;
       default:
         this[attr.name] = attr.value;
+        // Save custom attributes when serializing to the local xml file but
+        // don't use this method for the expected attributes which are already
+        // handled in serialize.
+        this.setProperty(attr.name, attr.value);
         break;
     }
   }
@@ -1260,16 +1274,22 @@ UpdatePatch.prototype = {
 
   /**
    * See nsIPropertyBag.idl
+   *
+   * Note: this only contains the nsIPropertyBag name / value pairs and not the
+   *       nsIUpdatePatch name / value pairs.
    */
   get enumerator() {
     return this.enumerate();
   },
 
   * enumerate() {
-    for (var p in this._properties) {
-      let prop = this.properties[p].data;
-      if (prop) {
-        yield prop;
+    for (let propName in this._properties) {
+      if (this._properties[propName].present) {
+        // The nsIPropertyBag enumerator returns a nsISimpleEnumerator whose
+        // elements are nsIProperty objects.
+        yield { name: propName,
+                value: this._properties[propName].data,
+                QueryInterface: ChromeUtils.generateQI([Ci.nsIProperty])};
       }
     }
   },
@@ -1361,7 +1381,8 @@ function Update(update) {
 
   for (let i = 0; i < update.attributes.length; ++i) {
     var attr = update.attributes.item(i);
-    if (attr.value == "undefined") {
+    if (attr.name == "xmlns" || attr.value == "undefined") {
+      // Don't save the XML namespace or undefined values.
       continue;
     } else if (attr.name == "detailsURL") {
       this._detailsURL = attr.value;
@@ -1577,16 +1598,22 @@ Update.prototype = {
 
   /**
    * See nsIPropertyBag.idl
+   *
+   * Note: this only contains the nsIPropertyBag name value / pairs and not the
+   *       nsIUpdate name / value pairs.
    */
   get enumerator() {
     return this.enumerate();
   },
 
   * enumerate() {
-    for (var p in this._properties) {
-      let prop = this.properties[p].data;
-      if (prop) {
-        yield prop;
+    for (let propName in this._properties) {
+      if (this._properties[propName].present) {
+        // The nsIPropertyBag enumerator returns a nsISimpleEnumerator whose
+        // elements are nsIProperty objects.
+        yield { name: propName,
+                value: this._properties[propName].data,
+                QueryInterface: ChromeUtils.generateQI([Ci.nsIProperty])};
       }
     }
   },
