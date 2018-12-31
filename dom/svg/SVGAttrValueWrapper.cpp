@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "SVGAttrValueWrapper.h"
-#include "nsSVGAngle.h"
+#include "SVGAngle.h"
 #include "nsSVGIntegerPair.h"
 #include "nsSVGLength2.h"
 #include "nsSVGNumberPair.h"
@@ -20,7 +20,7 @@
 
 using namespace mozilla;
 
-/*static*/ void SVGAttrValueWrapper::ToString(const nsSVGAngle* aAngle,
+/*static*/ void SVGAttrValueWrapper::ToString(const SVGAngle* aAngle,
                                               nsAString& aResult) {
   aAngle->GetBaseValueString(aResult);
 }

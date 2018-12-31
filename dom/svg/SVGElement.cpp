@@ -35,7 +35,7 @@
 #include "nsIPresShell.h"
 #include "nsIFrame.h"
 #include "nsLayoutUtils.h"
-#include "nsSVGAngle.h"
+#include "SVGAngle.h"
 #include "nsSVGBoolean.h"
 #include "nsSVGEnum.h"
 #include "nsSVGInteger.h"
@@ -462,7 +462,7 @@ bool SVGElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
     }
 
     if (!foundMatch) {
-      // Check for nsSVGAngle attribute
+      // Check for SVGAngle attribute
       AngleAttributesInfo angleInfo = GetAngleInfo();
       for (i = 0; i < angleInfo.mAngleCount; i++) {
         if (aAttribute == angleInfo.mAngleInfo[i].mName) {
