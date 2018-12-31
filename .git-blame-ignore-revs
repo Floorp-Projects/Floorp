@@ -7,3 +7,23 @@ abd6d77c618998827e5ffc3dab12f1a34d6ed03d # cinnabar
 # https://hg.mozilla.org/mozilla-central/rev/6f3709b3878117466168c40affa7bca0b60cf75b
 0e0308d10a5fd4a8dcf0601978776342a2abf2df # cinnabar
 265e6721798a455604328ed5262f430cfcc37c2f # gecko-dev
+
+# Bug 1516555 - Reformat everything to the Google coding style r=Ehsan
+# https://hg.mozilla.org/mozilla-central/rev/d57dde190f67
+cf6442a0664caf8eb39eb75b77963f648597cbd8 # cinnabar
+cccdda3c2aec019cc138d410fc0e4aa3e307b6ab # gecko-dev
+
+# Bug 1512961 - Reformat recent changes to the Google coding style r=Ehsan
+# https://hg.mozilla.org/integration/autoland/rev/8869368a3f30
+20061c7bfce850ba0158c7b8a439ac3ecc62a262 # cinnabar
+ad75e912fbc1d64ed63c1d0a51d7157566de1887 # gecko-dev
+
+# Bug 1513205 - Also update the tests to match the Google coding style
+# https://hg.mozilla.org/integration/autoland/rev/09c71a7cf75a
+13452f36fb36ad09d81f6b53eaf7928ee63f05e3 # cinnabar
+6f45c666bc7f98c3e3250a7c2cf8dc3fb95d12d7 # gecko-dev
+
+# Bug 1513205 - Ride along, update some code to match the Google coding style
+# https://hg.mozilla.org/integration/autoland/rev/039a7c0c18fb
+1ce955dcb2e09fd9ce19c1ec6c470f75db486bd2 # cinnabar
+7cf43b9bc01d650f87deceb65f336cdac7c0e78f # gecko-dev
