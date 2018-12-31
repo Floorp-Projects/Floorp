@@ -51,7 +51,13 @@ struct _cairo_dwrite_scaled_font {
     cairo_antialias_t antialias_mode;
     DWRITE_MEASURING_MODE measuring_mode;
     cairo_bool_t manual_show_glyphs_allowed;
-    cairo_d2d_surface_t::TextRenderingState rendering_mode;
+    enum TextRenderingState {
+        TEXT_RENDERING_UNINITIALIZED,
+        TEXT_RENDERING_NO_CLEARTYPE,
+        TEXT_RENDERING_NORMAL,
+        TEXT_RENDERING_GDI_CLASSIC
+    };
+    TextRenderingState rendering_mode;
 };
 typedef struct _cairo_dwrite_scaled_font cairo_dwrite_scaled_font_t;
 
@@ -102,7 +108,7 @@ public:
 	return family;
     }
 
-    static IDWriteRenderingParams *RenderingParams(cairo_d2d_surface_t::TextRenderingState mode)
+    static IDWriteRenderingParams *RenderingParams(cairo_dwrite_scaled_font_t::TextRenderingState mode)
     {
 	if (!mDefaultRenderingParams ||
             !mForceGDIClassicRenderingParams ||
@@ -111,9 +117,9 @@ public:
 	    CreateRenderingParams();
 	}
 	IDWriteRenderingParams *params;
-        if (mode == cairo_d2d_surface_t::TEXT_RENDERING_NO_CLEARTYPE) {
+        if (mode == cairo_dwrite_scaled_font_t::TEXT_RENDERING_NO_CLEARTYPE) {
             params = mDefaultRenderingParams;
-        } else if (mode == cairo_d2d_surface_t::TEXT_RENDERING_GDI_CLASSIC && mRenderingMode < 0) {
+        } else if (mode == cairo_dwrite_scaled_font_t::TEXT_RENDERING_GDI_CLASSIC && mRenderingMode < 0) {
             params = mForceGDIClassicRenderingParams;
         } else {
             params = mCustomClearTypeRenderingParams;
