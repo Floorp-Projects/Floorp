@@ -4,7 +4,7 @@
 | OS      | Intel 64 bit | Intel 32 bit | Arm 32 bit |
 |---------|:------------:|:------------:|:----------:|
 | Linux   | [![Build Status](http://build.palaso.org/app/rest/builds/buildType:bt124/statusIcon)](http://build.palaso.org/viewType.html?buildTypeId=bt124&guest=1) | [![Build Status](http://build.palaso.org/app/rest/builds/buildType:bt123/statusIcon)](http://build.palaso.org/viewType.html?buildTypeId=bt123&guest=1) | [![Build Status](http://build.palaso.org/app/rest/builds/buildType:Graphite_Linux32bitArm/statusIcon)](http://build.palaso.org/viewType.html?buildTypeId=Graphite_Linux32bitArm&guest=1) |
-| Windows | [![Build Status](http://build.palaso.org/app/rest/builds/buildType:Graphite_Windows64bitProduction/statusIcon)](http://build.palaso.org/viewType.html?buildTypeId=Graphite_Windows64bitProduction&guest=1) | [![Build Status](http://build.palaso.org/app/rest/builds/buildType:bt91/statusIcon)](http://build.palaso.org/viewType.html?buildTypeId=bt91&guest=1)| |
+| Windows | [![Build Status](http://build.palaso.org/app/rest/builds/buildType:Graphite_Windows64bit/statusIcon)](http://build.palaso.org/viewType.html?buildTypeId=Graphite_Windows64bit&guest=1) | [![Build Status](http://build.palaso.org/app/rest/builds/buildType:bt91/statusIcon)](http://build.palaso.org/viewType.html?buildTypeId=bt91&guest=1)| |
 
 ## What is Graphite?
 
