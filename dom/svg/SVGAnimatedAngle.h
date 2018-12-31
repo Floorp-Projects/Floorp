@@ -11,7 +11,7 @@
 #include "SVGElement.h"
 #include "mozilla/Attributes.h"
 
-class nsSVGAngle;
+class SVGAngle;
 
 namespace mozilla {
 namespace dom {
@@ -23,7 +23,7 @@ class SVGAnimatedAngle final : public nsWrapperCache {
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(SVGAnimatedAngle)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(SVGAnimatedAngle)
 
-  SVGAnimatedAngle(nsSVGAngle* aVal, SVGElement* aSVGElement)
+  SVGAnimatedAngle(SVGAngle* aVal, SVGElement* aSVGElement)
       : mVal(aVal), mSVGElement(aSVGElement) {}
 
   // WebIDL
@@ -36,7 +36,7 @@ class SVGAnimatedAngle final : public nsWrapperCache {
  protected:
   ~SVGAnimatedAngle();
 
-  nsSVGAngle* mVal;  // kept alive because it belongs to content
+  SVGAngle* mVal;  // kept alive because it belongs to content
   RefPtr<SVGElement> mSVGElement;
 };
 

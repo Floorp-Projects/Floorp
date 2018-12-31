@@ -14,7 +14,7 @@
 
 #include "nsString.h"
 
-class nsSVGAngle;
+class SVGAngle;
 class nsSVGIntegerPair;
 class nsSVGLength2;
 class nsSVGNumberPair;
@@ -34,7 +34,7 @@ namespace mozilla {
 
 class SVGAttrValueWrapper {
  public:
-  static void ToString(const nsSVGAngle* aAngle, nsAString& aResult);
+  static void ToString(const SVGAngle* aAngle, nsAString& aResult);
   static void ToString(const nsSVGIntegerPair* aIntegerPair,
                        nsAString& aResult);
   static void ToString(const nsSVGLength2* aLength, nsAString& aResult);

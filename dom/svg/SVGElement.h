@@ -27,7 +27,7 @@
 #include "nsSVGClass.h"
 #include "gfxMatrix.h"
 
-class nsSVGAngle;
+class SVGAngle;
 class nsSVGBoolean;
 class nsSVGEnum;
 class nsSVGInteger;
@@ -448,11 +448,11 @@ class SVGElement : public SVGElementBase  // nsIContent
   };
 
   struct AngleAttributesInfo {
-    nsSVGAngle* const mAngles;
+    SVGAngle* const mAngles;
     const AngleInfo* const mAngleInfo;
     const uint32_t mAngleCount;
 
-    AngleAttributesInfo(nsSVGAngle* aAngles, AngleInfo* aAngleInfo,
+    AngleAttributesInfo(SVGAngle* aAngles, AngleInfo* aAngleInfo,
                         uint32_t aAngleCount)
         : mAngles(aAngles), mAngleInfo(aAngleInfo), mAngleCount(aAngleCount) {}
 
