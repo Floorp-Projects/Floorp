@@ -20,9 +20,6 @@ add_task(async function setup() {
 add_task(async function test_add_user_pref() {
   await AboutConfigTest.withNewTab(async function() {
     Assert.ok(!Services.prefs.getChildList("").find(pref => pref == "testPref"));
-    let search = this.document.getElementById("search");
-    search.value = "testPref";
-    search.focus();
 
     for (let [buttonSelector, expectedValue] of [
       [".add-true", true],
@@ -30,15 +27,11 @@ add_task(async function test_add_user_pref() {
       [".add-Number", 0],
       [".add-String", ""],
     ]) {
-      EventUtils.sendKey("return");
-
+      this.search("testPref");
       this.document.querySelector("#prefs button" + buttonSelector).click();
       Assert.ok(Services.prefs.getChildList("").find(pref => pref == "testPref"));
       Assert.ok(Preferences.get("testPref") === expectedValue);
       this.document.querySelector("#prefs button[data-l10n-id='about-config-pref-delete']").click();
-      search = this.document.getElementById("search");
-      search.value = "testPref";
-      search.focus();
     }
   });
 });
@@ -52,10 +45,7 @@ add_task(async function test_delete_user_pref() {
     Assert.ok(!Services.prefs.getChildList("").includes("userAddedPref"));
 
     // Search for nothing to test gPrefArray
-    let search = this.document.getElementById("search");
-    search.focus();
-    EventUtils.sendKey("return");
-
+    this.search();
     Assert.ok(!this.getRow("userAddedPref"));
   });
 });
@@ -75,11 +65,7 @@ add_task(async function test_reset_user_pref() {
     Assert.equal(this.getRow(testPref).value, "" + Preferences.get(testPref));
 
     // Search for nothing to test gPrefArray
-    let search = this.document.getElementById("search");
-    search.focus();
-    EventUtils.sendKey("return");
-
-    // Check new layout and reset.
+    this.search();
     row = this.getRow(testPref);
     Assert.ok(!row.hasClass("has-user-value"));
     Assert.equal(row.element.lastChild.childNodes.length, 0);
