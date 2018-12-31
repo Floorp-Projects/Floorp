@@ -33,6 +33,7 @@
 #include "nsWindowWatcher.h"
 #include "mozilla/BrowserElementParent.h"
 #include "mozilla/NullPrincipal.h"
+#include "nsDocShell.h"
 #include "nsDocShellLoadState.h"
 
 #include "nsIScriptObjectPrincipal.h"

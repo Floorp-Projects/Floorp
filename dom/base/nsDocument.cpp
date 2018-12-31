@@ -5709,9 +5709,7 @@ already_AddRefed<Location> nsIDocument::GetLocation() const {
     return nullptr;
   }
 
-  nsGlobalWindowInner* window = nsGlobalWindowInner::Cast(w);
-  RefPtr<Location> loc = window->GetLocation();
-  return loc.forget();
+  return do_AddRef(w->Location());
 }
 
 Element* nsIDocument::GetHtmlElement() const {
