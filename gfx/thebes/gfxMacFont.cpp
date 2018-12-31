@@ -496,7 +496,7 @@ CTFontRef gfxMacFont::CreateCTFontFromCGFontWithVariations(
   return ctFont;
 }
 
-int32_t gfxMacFont::GetGlyphWidth(DrawTarget &aDrawTarget, uint16_t aGID) {
+int32_t gfxMacFont::GetGlyphWidth(uint16_t aGID) {
   if (mVariationFont) {
     // Avoid a potential Core Text crash (bug 1450209) by using
     // CoreGraphics glyph advance API. This is inferior for 'sbix'

@@ -357,7 +357,7 @@ hb_position_t gfxHarfBuzzShaper::HBGetGlyphHAdvance(hb_font_t *font,
       static_cast<const gfxHarfBuzzShaper::FontCallbackData *>(font_data);
   const gfxHarfBuzzShaper *shaper = fcd->mShaper;
   if (shaper->mUseFontGlyphWidths) {
-    return shaper->GetFont()->GetGlyphWidth(*fcd->mDrawTarget, glyph);
+    return shaper->GetFont()->GetGlyphWidth(glyph);
   }
   return shaper->GetGlyphHAdvance(glyph);
 }
@@ -400,14 +400,14 @@ hb_bool_t gfxHarfBuzzShaper::HBGetGlyphVOrigin(hb_font_t *font, void *font_data,
                                                void *user_data) {
   const gfxHarfBuzzShaper::FontCallbackData *fcd =
       static_cast<const gfxHarfBuzzShaper::FontCallbackData *>(font_data);
-  fcd->mShaper->GetGlyphVOrigin(*fcd->mDrawTarget, glyph, x, y);
+  fcd->mShaper->GetGlyphVOrigin(glyph, x, y);
   return true;
 }
 
-void gfxHarfBuzzShaper::GetGlyphVOrigin(DrawTarget &aDT, hb_codepoint_t aGlyph,
+void gfxHarfBuzzShaper::GetGlyphVOrigin(hb_codepoint_t aGlyph,
                                         hb_position_t *aX,
                                         hb_position_t *aY) const {
-  *aX = 0.5 * (mUseFontGlyphWidths ? mFont->GetGlyphWidth(aDT, aGlyph)
+  *aX = 0.5 * (mUseFontGlyphWidths ? mFont->GetGlyphWidth(aGlyph)
                                    : GetGlyphHAdvance(aGlyph));
 
   if (mVORGTable) {
@@ -1339,7 +1339,6 @@ bool gfxHarfBuzzShaper::ShapeText(DrawTarget *aDrawTarget,
     return false;
   }
 
-  mCallbackData.mDrawTarget = aDrawTarget;
   mUseVerticalPresentationForms = false;
 
   if (!Initialize()) {

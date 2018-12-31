@@ -8,7 +8,7 @@
 
 #include "mozilla/Attributes.h"
 #include "nsContentList.h"
-#include "nsDocument.h"
+#include "nsIDocument.h"
 #include "nsIHTMLDocument.h"
 #include "nsIHTMLCollection.h"
 #include "nsIScriptElement.h"
@@ -33,18 +33,18 @@ class HTMLAllCollection;
 }  // namespace dom
 }  // namespace mozilla
 
-class nsHTMLDocument : public nsDocument, public nsIHTMLDocument {
+class nsHTMLDocument : public nsIDocument, public nsIHTMLDocument {
   typedef mozilla::net::ReferrerPolicy ReferrerPolicy;
 
  public:
-  using nsDocument::GetPlugins;
-  using nsDocument::SetDocumentURI;
+  using nsIDocument::GetPlugins;
+  using nsIDocument::SetDocumentURI;
 
   nsHTMLDocument();
   virtual nsresult Init() override;
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsHTMLDocument, nsDocument)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsHTMLDocument, nsIDocument)
 
   // nsIDocument
   virtual void Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup) override;

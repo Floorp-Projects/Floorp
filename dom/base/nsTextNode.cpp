@@ -20,7 +20,7 @@
 #ifdef DEBUG
 #include "nsRange.h"
 #endif
-#include "nsDocument.h"
+#include "nsIDocument.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;

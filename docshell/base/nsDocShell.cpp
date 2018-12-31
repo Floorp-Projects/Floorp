@@ -2476,7 +2476,7 @@ void nsDocShell::MaybeCreateInitialClientSource(nsIPrincipal* aPrincipal) {
   // Sometimes there is no principal available when we are called from
   // CreateAboutBlankContentViewer.  For example, sometimes the principal
   // is only extracted from the load context after the document is created
-  // in nsDocument::ResetToURI().  Ideally we would do something similar
+  // in nsIDocument::ResetToURI().  Ideally we would do something similar
   // here, but for now lets just avoid the issue by not preallocating the
   // client.
   if (!principal) {
@@ -10885,7 +10885,7 @@ bool nsDocShell::OnLoadingSite(nsIChannel* aChannel, bool aFireOnLocationChange,
   // If this a redirect, use the final url (uri)
   // else use the original url
   //
-  // Note that this should match what documents do (see nsDocument::Reset).
+  // Note that this should match what documents do (see nsIDocument::Reset).
   NS_GetFinalChannelURI(aChannel, getter_AddRefs(uri));
   NS_ENSURE_TRUE(uri, false);
 

@@ -55,7 +55,7 @@ dictionary ComputedEffectTiming : EffectTiming {
   unrestricted double?  currentIteration = null;
 };
 
-[Func="nsDocument::IsWebAnimationsEnabled"]
+[Func="nsIDocument::IsWebAnimationsEnabled"]
 interface AnimationEffect {
   EffectTiming getTiming();
   [BinaryName="getComputedTimingAsDict"]

@@ -140,7 +140,7 @@ XULDocument::XULDocument(void)
       mOffThreadCompileStringBuf(nullptr),
       mOffThreadCompileStringLength(0),
       mInitialLayoutComplete(false) {
-  // Override the default in nsDocument
+  // Override the default in nsIDocument
   mCharacterSet = UTF_8_ENCODING;
 
   mDefaultElementType = kNameSpaceID_XUL;
@@ -254,7 +254,7 @@ nsresult XULDocument::StartDocumentLoad(const char* aCommand,
       }
     }
   }
-  // NOTE: If this ever starts calling nsDocument::StartDocumentLoad
+  // NOTE: If this ever starts calling nsIDocument::StartDocumentLoad
   // we'll possibly need to reset our content type afterwards.
   mStillWalking = true;
   mMayStartLayout = false;

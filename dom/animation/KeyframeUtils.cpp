@@ -27,7 +27,7 @@
 #include "nsCSSPropertyIDSet.h"
 #include "nsCSSProps.h"
 #include "nsCSSPseudoElements.h"  // For CSSPseudoElementType
-#include "nsDocument.h"  // For nsDocument::AreWebAnimationsImplicitKeyframesEnabled
+#include "nsIDocument.h"  // For nsIDocument::AreWebAnimationsImplicitKeyframesEnabled
 #include "nsIScriptError.h"
 #include "nsTArray.h"
 #include <algorithm>  // For std::stable_sort, std::min
@@ -224,7 +224,7 @@ static void DistributeRange(const Range<Keyframe>& aRange);
     return keyframes;
   }
 
-  if (!nsDocument::AreWebAnimationsImplicitKeyframesEnabled(aCx, nullptr) &&
+  if (!nsIDocument::AreWebAnimationsImplicitKeyframesEnabled(aCx, nullptr) &&
       HasImplicitKeyframeValues(keyframes, aDocument)) {
     keyframes.Clear();
     aRv.Throw(NS_ERROR_DOM_ANIM_MISSING_PROPS_ERR);

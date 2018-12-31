@@ -28,7 +28,7 @@
 #include "mozilla/dom/SVGAnimatedLength.h"
 #include "nsMimeTypes.h"
 #include "DOMSVGLength.h"
-#include "nsDocument.h"
+#include "nsIDocument.h"
 #include "mozilla/dom/ImageTracker.h"
 
 namespace mozilla {

@@ -37,10 +37,10 @@
 struct hb_subset_plan_t
 {
   hb_object_header_t header;
-  ASSERT_POD ();
 
   bool drop_hints : 1;
   bool drop_layout : 1;
+  bool desubroutinize : 1;
 
   // For each cp that we'd like to retain maps to the corresponding gid.
   hb_set_t *unicodes;
@@ -55,9 +55,8 @@ struct hb_subset_plan_t
   hb_face_t *source;
   hb_face_t *dest;
 
-  inline bool
-  new_gid_for_codepoint (hb_codepoint_t codepoint,
-                         hb_codepoint_t *new_gid) const
+  bool new_gid_for_codepoint (hb_codepoint_t codepoint,
+			      hb_codepoint_t *new_gid) const
   {
     hb_codepoint_t old_gid = codepoint_to_glyph->get (codepoint);
     if (old_gid == HB_MAP_VALUE_INVALID)
@@ -66,9 +65,8 @@ struct hb_subset_plan_t
     return new_gid_for_old_gid (old_gid, new_gid);
   }
 
-  inline bool
-  new_gid_for_old_gid (hb_codepoint_t old_gid,
-                      hb_codepoint_t *new_gid) const
+  bool new_gid_for_old_gid (hb_codepoint_t old_gid,
+			    hb_codepoint_t *new_gid) const
   {
     hb_codepoint_t gid = glyph_map->get (old_gid);
     if (gid == HB_MAP_VALUE_INVALID)
@@ -78,15 +76,15 @@ struct hb_subset_plan_t
     return true;
   }
 
-  inline bool
+  bool
   add_table (hb_tag_t tag,
-             hb_blob_t *contents)
+	     hb_blob_t *contents)
   {
     hb_blob_t *source_blob = source->reference_table (tag);
     DEBUG_MSG(SUBSET, nullptr, "add table %c%c%c%c, dest %d bytes, source %d bytes",
-              HB_UNTAG(tag),
-              hb_blob_get_length (contents),
-              hb_blob_get_length (source_blob));
+	      HB_UNTAG(tag),
+	      hb_blob_get_length (contents),
+	      hb_blob_get_length (source_blob));
     hb_blob_destroy (source_blob);
     return hb_face_builder_add_table (dest, tag, contents);
   }

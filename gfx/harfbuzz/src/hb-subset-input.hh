@@ -37,13 +37,13 @@
 struct hb_subset_input_t
 {
   hb_object_header_t header;
-  ASSERT_POD ();
 
   hb_set_t *unicodes;
   hb_set_t *glyphs;
 
   bool drop_hints : 1;
   bool drop_layout : 1;
+  bool desubroutinize : 1;
   /* TODO
    *
    * features

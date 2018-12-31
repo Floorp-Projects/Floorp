@@ -29,18 +29,52 @@
 #ifndef HB_HH
 #define HB_HH
 
-#define _GNU_SOURCE 1
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
+/*
+ * Following added based on what AC_USE_SYSTEM_EXTENSIONS adds to
+ * config.h.in.  Copied here for the convenience of those embedding
+ * HarfBuzz and not using our build system.
+ */
+/* Enable extensions on AIX 3, Interix.  */
+#ifndef _ALL_SOURCE
+# define _ALL_SOURCE 1
+#endif
+/* Enable GNU extensions on systems that have them.  */
+#ifndef _GNU_SOURCE
+# define _GNU_SOURCE 1
+#endif
+/* Enable threading extensions on Solaris.  */
+#ifndef _POSIX_PTHREAD_SEMANTICS
+# define _POSIX_PTHREAD_SEMANTICS 1
+#endif
+/* Enable extensions on HP NonStop.  */
+#ifndef _TANDEM_SOURCE
+# define _TANDEM_SOURCE 1
+#endif
+/* Enable general extensions on Solaris.  */
+#ifndef __EXTENSIONS__
+# define __EXTENSIONS__ 1
+#endif
+
+#ifndef _POSIX_C_SOURCE
+#define _POSIX_C_SOURCE 200809L
+#endif
+
+#if defined (_MSC_VER) && defined (HB_DLL_EXPORT)
+#define HB_EXTERN __declspec (dllexport) extern
+#endif
+
 #include "hb.h"
 #define HB_H_IN
-#ifdef HAVE_OT
 #include "hb-ot.h"
 #define HB_OT_H_IN
-#endif
+#include "hb-aat.h"
+#define HB_AAT_H_IN
+
+#include "hb-aat.h"
 
 #include <math.h>
 #include <stdlib.h>
@@ -127,14 +161,14 @@ struct _hb_alignof
 
 /* https://github.com/harfbuzz/harfbuzz/issues/1127 */
 #ifndef explicit_operator
-#define explicit_operator
+#define explicit_operator operator
 #endif
 
 #else /* __cplusplus >= 201103L */
 
 /* https://github.com/harfbuzz/harfbuzz/issues/1127 */
 #ifndef explicit_operator
-#define explicit_operator explicit
+#define explicit_operator explicit operator
 #endif
 
 #endif /* __cplusplus < 201103L */
@@ -174,8 +208,10 @@ struct _hb_alignof
 # if !defined(HB_NO_VISIBILITY) && !defined(__MINGW32__) && !defined(__CYGWIN__) && !defined(_MSC_VER) && !defined(__SUNPRO_CC)
 #  define HB_INTERNAL __attribute__((__visibility__("hidden")))
 # elif defined(__MINGW32__)
-   /* We use -export-symbols on mingw32, since it does not support visibility
-    * attribute. */
+   /* We use -export-symbols on mingw32, since it does not support visibility attributes. */
+#  define HB_INTERNAL
+# elif defined (_MSC_VER) && defined (HB_DLL_EXPORT)
+   /* We do not try to export internal symbols on Visual Studio */
 #  define HB_INTERNAL
 #else
 #  define HB_INTERNAL
@@ -229,7 +265,16 @@ struct _hb_alignof
 #  define HB_FALLTHROUGH /* FALLTHROUGH */
 #endif
 
-#if defined(_WIN32) || defined(__CYGWIN__)
+#if defined(__clang__)
+/* Disable certain sanitizer errors. */
+/* https://github.com/harfbuzz/harfbuzz/issues/1247 */
+#define HB_NO_SANITIZE_SIGNED_INTEGER_OVERFLOW __attribute__((no_sanitize("signed-integer-overflow")))
+#else
+#define HB_NO_SANITIZE_SIGNED_INTEGER_OVERFLOW
+#endif
+
+
+#ifdef _WIN32
    /* We need Windows Vista for both Uniscribe backend and for
     * MemoryBarrier.  We don't support compiling on Windows XP,
     * though we run on it fine. */
@@ -237,7 +282,9 @@ struct _hb_alignof
 #    undef _WIN32_WINNT
 #  endif
 #  ifndef _WIN32_WINNT
-#    define _WIN32_WINNT 0x0600
+#    if !defined(WINAPI_FAMILY) || !(WINAPI_FAMILY==WINAPI_FAMILY_PC_APP || WINAPI_FAMILY==WINAPI_FAMILY_PHONE_APP)
+#      define _WIN32_WINNT 0x0600
+#    endif
 #  endif
 #  ifndef WIN32_LEAN_AND_MEAN
 #    define WIN32_LEAN_AND_MEAN 1
@@ -262,7 +309,7 @@ static int errno = 0; /* Use something better? */
 #  endif
 #endif
 
-#if HAVE_ATEXIT
+#if defined(HAVE_ATEXIT) && !defined(HB_USE_ATEXIT)
 /* atexit() is only safe to be called from shared libraries on certain
  * platforms.  Whitelist.
  * https://bugs.freedesktop.org/show_bug.cgi?id=82246 */
@@ -294,6 +341,9 @@ static int errno = 0; /* Use something better? */
 #ifdef HB_NO_ATEXIT
 #  undef HB_USE_ATEXIT
 #endif
+#ifndef HB_USE_ATEXIT
+#  define HB_USE_ATEXIT 0
+#endif
 
 #define HB_STMT_START do
 #define HB_STMT_END   while (0)
@@ -318,35 +368,40 @@ static_assert ((sizeof (hb_mask_t) == 4), "");
 static_assert ((sizeof (hb_var_int_t) == 4), "");
 
 
-/* We like our types POD */
+#if __cplusplus >= 201103L
 
-#define _ASSERT_TYPE_POD1(_line, _type)	union _type_##_type##_on_line_##_line##_is_not_POD { _type instance; }
-#define _ASSERT_TYPE_POD0(_line, _type)	_ASSERT_TYPE_POD1 (_line, _type)
-#define ASSERT_TYPE_POD(_type)		_ASSERT_TYPE_POD0 (__LINE__, _type)
+/* We only enable these with C++11 or later, since earlier language
+ * does not allow structs with constructors in unions, and we need
+ * those. */
 
-#ifdef __GNUC__
-# define _ASSERT_INSTANCE_POD1(_line, _instance) \
-	HB_STMT_START { \
-		typedef __typeof__(_instance) _type_##_line; \
-		_ASSERT_TYPE_POD1 (_line, _type_##_line); \
-	} HB_STMT_END
-#else
-# define _ASSERT_INSTANCE_POD1(_line, _instance)	typedef int _assertion_on_line_##_line##_not_tested
-#endif
-# define _ASSERT_INSTANCE_POD0(_line, _instance)	_ASSERT_INSTANCE_POD1 (_line, _instance)
-# define ASSERT_INSTANCE_POD(_instance)			_ASSERT_INSTANCE_POD0 (__LINE__, _instance)
-
-/* Check _assertion in a method environment */
-#define _ASSERT_POD1(_line) \
-	HB_UNUSED inline void _static_assertion_on_line_##_line (void) const \
-	{ _ASSERT_INSTANCE_POD1 (_line, *this); /* Make sure it's POD. */ }
-# define _ASSERT_POD0(_line)	_ASSERT_POD1 (_line)
-# define ASSERT_POD()		_ASSERT_POD0 (__LINE__)
-
-
-#define HB_DISALLOW_COPY_AND_ASSIGN(TypeName) \
+#define HB_NO_COPY_ASSIGN(TypeName) \
   TypeName(const TypeName&); \
   void operator=(const TypeName&)
+#define HB_NO_COPY_ASSIGN_TEMPLATE2(TypeName, T1, T2) \
+  TypeName(const TypeName<T1, T2>&); \
+  void operator=(const TypeName<T1, T2>&)
+#define HB_NO_CREATE_COPY_ASSIGN(TypeName) \
+  TypeName(); \
+  TypeName(const TypeName&); \
+  void operator=(const TypeName&)
+#define HB_NO_CREATE_COPY_ASSIGN_TEMPLATE(TypeName, T) \
+  TypeName(); \
+  TypeName(const TypeName<T>&); \
+  void operator=(const TypeName<T>&)
+#define HB_NO_CREATE_COPY_ASSIGN_TEMPLATE2(TypeName, T1, T2) \
+  TypeName(); \
+  TypeName(const TypeName<T1, T2>&); \
+  void operator=(const TypeName<T1, T2>&)
+
+#else /* __cpluspplus >= 201103L */
+
+#define HB_NO_COPY_ASSIGN(TypeName) static_assert (true, "")
+#define HB_NO_COPY_ASSIGN_TEMPLATE2(TypeName, T1, T2) static_assert (true, "")
+#define HB_NO_CREATE_COPY_ASSIGN(TypeName) static_assert (true, "")
+#define HB_NO_CREATE_COPY_ASSIGN_TEMPLATE(TypeName, T) static_assert (true, "")
+#define HB_NO_CREATE_COPY_ASSIGN_TEMPLATE2(TypeName, T1, T2) static_assert (true, "")
+
+#endif /* __cpluspplus >= 201103L */
 
 
 /*
@@ -419,9 +474,11 @@ typedef uint64_t hb_vector_size_impl_t;
  * For example, for testing "x ∈ {x1, x2, x3}" use:
  * (FLAG_UNSAFE(x) & (FLAG(x1) | FLAG(x2) | FLAG(x3)))
  */
-#define FLAG(x) (ASSERT_STATIC_EXPR_ZERO ((unsigned int)(x) < 32) + (1U << (unsigned int)(x)))
-#define FLAG_UNSAFE(x) ((unsigned int)(x) < 32 ? (1U << (unsigned int)(x)) : 0)
+#define FLAG(x) (ASSERT_STATIC_EXPR_ZERO ((unsigned)(x) < 32) + (((uint32_t) 1U) << (unsigned)(x)))
+#define FLAG_UNSAFE(x) ((unsigned)(x) < 32 ? (((uint32_t) 1U) << (unsigned)(x)) : 0)
 #define FLAG_RANGE(x,y) (ASSERT_STATIC_EXPR_ZERO ((x) < (y)) + FLAG(y+1) - FLAG(x))
+#define FLAG64(x) (ASSERT_STATIC_EXPR_ZERO ((unsigned)(x) < 64) + (((uint64_t) 1ULL) << (unsigned)(x)))
+#define FLAG64_UNSAFE(x) ((unsigned)(x) < 64 ? (((uint64_t) 1ULL) << (unsigned)(x)) : 0)
 
 
 /* Size signifying variable-sized array */
@@ -466,6 +523,26 @@ _hb_memalign(void **memptr, size_t alignment, size_t size)
 #if !defined(posix_memalign) && !defined(HAVE_POSIX_MEMALIGN)
 #define posix_memalign _hb_memalign
 #endif
+
+
+/*
+ * For lack of a better place, put Zawgyi script hack here.
+ * https://github.com/harfbuzz/harfbuzz/issues/1162
+ */
+
+#define HB_SCRIPT_MYANMAR_ZAWGYI	((hb_script_t) HB_TAG ('Q','a','a','g'))
+
+
+/* Some really basic things everyone wants. */
+template <typename T> struct hb_remove_const { typedef T value; };
+template <typename T> struct hb_remove_const<const T> { typedef T value; };
+#define hb_remove_const(T) hb_remove_const<T>::value
+template <typename T> struct hb_remove_reference { typedef T value; };
+template <typename T> struct hb_remove_reference<T &> { typedef T value; };
+#define hb_remove_reference(T) hb_remove_reference<T>::value
+template <typename T> struct hb_remove_pointer { typedef T value; };
+template <typename T> struct hb_remove_pointer<T *> { typedef T value; };
+#define hb_remove_pointer(T) hb_remove_pointer<T>::value
 
 
 /* Headers we include for everyone.  Keep sorted.  They express dependency amongst

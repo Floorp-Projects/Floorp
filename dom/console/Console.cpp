@@ -28,7 +28,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/StaticPrefs.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsDocument.h"
+#include "nsIDocument.h"
 #include "nsDOMNavigationTiming.h"
 #include "nsGlobalWindow.h"
 #include "nsJSUtils.h"

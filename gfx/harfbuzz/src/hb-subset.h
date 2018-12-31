@@ -62,15 +62,19 @@ hb_subset_input_get_drop_hints (hb_subset_input_t *subset_input);
 
 HB_EXTERN void
 hb_subset_input_set_drop_layout (hb_subset_input_t *subset_input,
-				hb_bool_t drop_layout);
+				 hb_bool_t drop_layout);
 HB_EXTERN hb_bool_t
 hb_subset_input_get_drop_layout (hb_subset_input_t *subset_input);
 
+HB_EXTERN void
+hb_subset_input_set_desubroutinize (hb_subset_input_t *subset_input,
+        hb_bool_t desubroutinize);
+HB_EXTERN hb_bool_t
+hb_subset_input_get_desubroutinize (hb_subset_input_t *subset_input);
 
-/* hb_subset() */
+/* hb_subset () */
 HB_EXTERN hb_face_t *
-hb_subset (hb_face_t *source,
-           hb_subset_input_t *input);
+hb_subset (hb_face_t *source, hb_subset_input_t *input);
 
 
 HB_END_DECLS

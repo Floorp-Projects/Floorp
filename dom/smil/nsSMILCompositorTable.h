@@ -13,7 +13,7 @@
 // nsSMILCompositorTable : A hashmap of nsSMILCompositors
 //
 // This is just a forward-declaration because it is included in
-// SMILAnimationController which is used in nsDocument. We don't want to
+// SMILAnimationController which is used in nsIDocument. We don't want to
 // expose all of nsSMILCompositor or otherwise any changes to it will mean the
 // whole world will need to be rebuilt.
 
