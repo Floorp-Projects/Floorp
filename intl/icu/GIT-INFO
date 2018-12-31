@@ -1,7 +1,14 @@
-commit 6cbd62e59e30f73b444be89ea71fd74275ac53a4
-Author: Shane Carr <shane@unicode.org>
-Date:   Mon Oct 29 23:52:44 2018 -0700
+commit f3fa0d604ef6527a01dab96f4bfa3c5290127337
+Author: Markus Scherer <markus.icu@gmail.com>
+Date:   Fri Nov 9 12:54:22 2018 -0800
 
-    ICU-20246 Fixing another integer overflow in number parsing.
+    ICU-20250 make UnicodeSet(intprop=value) faster
+    - fastpath for UnicodeSet.add(new last range)
+    - fewer UnicodeSet memory allocations:
+      initial internal list array, exponential array growth,
+      allocate strings list/set only when first one is added
+    - faster CodePointTrie.getRange(): fewer calls to filter function
+    - revert UnicodeSet(intprop=value) from trie ranges to range starts + lookup
+    - cache per-int-prop range starts: fewer lookups
     
-    (cherry picked from commit 53d8c8f3d181d87a6aa925b449b51c4a2c922a51)
+    (cherry picked from commit 98f9170004c29388d756a8a283573164a7a26bef)

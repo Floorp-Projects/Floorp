@@ -13,7 +13,7 @@
   min-height: 39px;
 }
 
-.view-pane > .list > scrollbox {
+.view-pane > .list {
   padding-right: 24px;
   padding-left: 24px;
 }

@@ -595,9 +595,6 @@ panel[type="autocomplete-richlistbox"] {
 .autocomplete-richlistbox {
   -moz-binding: url("chrome://global/content/bindings/autocomplete.xml#autocomplete-richlistbox");
   -moz-user-focus: ignore;
-}
-
-.autocomplete-richlistbox > scrollbox {
   overflow-x: hidden !important;
 }
 
