@@ -71,12 +71,12 @@ nsGenericHTMLFrameElement::~nsGenericHTMLFrameElement() {
 
 nsIDocument* nsGenericHTMLFrameElement::GetContentDocument(
     nsIPrincipal& aSubjectPrincipal) {
-  RefPtr<BrowsingContext> bc = GetContentWindowInternal();
-  if (!bc) {
+  nsCOMPtr<nsPIDOMWindowOuter> win = GetContentWindow();
+  if (!win) {
     return nullptr;
   }
 
-  nsIDocument* doc = bc->GetDOMWindow()->GetDoc();
+  nsIDocument* doc = win->GetDoc();
   if (!doc) {
     return nullptr;
   }
@@ -88,7 +88,8 @@ nsIDocument* nsGenericHTMLFrameElement::GetContentDocument(
   return doc;
 }
 
-BrowsingContext* nsGenericHTMLFrameElement::GetContentWindowInternal() {
+already_AddRefed<nsPIDOMWindowOuter>
+nsGenericHTMLFrameElement::GetContentWindow() {
   EnsureFrameLoader();
 
   if (!mFrameLoader) {
@@ -100,20 +101,18 @@ BrowsingContext* nsGenericHTMLFrameElement::GetContentWindowInternal() {
     return nullptr;
   }
 
-  RefPtr<nsDocShell> doc_shell = mFrameLoader->GetDocShell(IgnoreErrors());
+  nsCOMPtr<nsIDocShell> doc_shell = mFrameLoader->GetDocShell(IgnoreErrors());
   if (!doc_shell) {
     return nullptr;
   }
 
-  return doc_shell->GetBrowsingContext();
-}
+  nsCOMPtr<nsPIDOMWindowOuter> win = doc_shell->GetWindow();
 
-Nullable<WindowProxyHolder> nsGenericHTMLFrameElement::GetContentWindow() {
-  RefPtr<BrowsingContext> bc = GetContentWindowInternal();
-  if (!bc) {
+  if (!win) {
     return nullptr;
   }
-  return WindowProxyHolder(bc);
+
+  return win.forget();
 }
 
 void nsGenericHTMLFrameElement::EnsureFrameLoader() {
@@ -125,8 +124,7 @@ void nsGenericHTMLFrameElement::EnsureFrameLoader() {
   // Strangely enough, this method doesn't actually ensure that the
   // frameloader exists.  It's more of a best-effort kind of thing.
   mFrameLoader = nsFrameLoader::Create(
-      this, mOpenerWindow ? mOpenerWindow->GetDOMWindow() : nullptr,
-      mNetworkCreated);
+      this, nsPIDOMWindowOuter::From(mOpenerWindow), mNetworkCreated);
 }
 
 nsresult nsGenericHTMLFrameElement::CreateRemoteFrameLoader(
@@ -152,11 +150,10 @@ nsGenericHTMLFrameElement::GetFrameLoader() {
   return loader.forget();
 }
 
-void nsGenericHTMLFrameElement::PresetOpenerWindow(
-    const Nullable<WindowProxyHolder>& aOpenerWindow, ErrorResult& aRv) {
+void nsGenericHTMLFrameElement::PresetOpenerWindow(mozIDOMWindowProxy* aWindow,
+                                                   ErrorResult& aRv) {
   MOZ_ASSERT(!mFrameLoader);
-  mOpenerWindow =
-      aOpenerWindow.IsNull() ? nullptr : aOpenerWindow.Value().get();
+  mOpenerWindow = nsPIDOMWindowOuter::From(aWindow);
 }
 
 void nsGenericHTMLFrameElement::InternalSetFrameLoader(

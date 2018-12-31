@@ -9,7 +9,6 @@
 
 #include "js/TypeDecls.h"
 #include "mozilla/ErrorResult.h"
-#include "mozilla/dom/BrowsingContext.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIWeakReferenceUtils.h"
 #include "nsPIDOMWindow.h"
@@ -29,8 +28,6 @@ namespace dom {
 
 class Location final : public nsISupports, public nsWrapperCache {
  public:
-  typedef Location RemoteProxy;
-
   Location(nsPIDOMWindowInner* aWindow, nsIDocShell* aDocShell);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS

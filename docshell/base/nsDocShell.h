@@ -383,13 +383,10 @@ class nsDocShell final : public nsDocLoader,
   // shift while triggering reload)
   bool IsForceReloading();
 
-  mozilla::dom::BrowsingContext* GetBrowsingContext() const {
-    return mBrowsingContext;
-  }
-  mozilla::dom::BrowsingContext* GetWindowProxy() {
-    EnsureScriptEnvironment();
-    return mBrowsingContext;
-  }
+  /**
+   * Native getter for a DocShell's BrowsingContext.
+   */
+  mozilla::dom::BrowsingContext* GetBrowsingContext() const;
 
   /**
    * Loads the given URI. See comments on nsDocShellLoadState members for more

@@ -97,7 +97,6 @@ namespace mozilla {
 class AbstractThread;
 namespace dom {
 class BarProp;
-class BrowsingContext;
 struct ChannelPixelLayout;
 class ClientSource;
 class Console;
@@ -214,8 +213,6 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
                                   public nsAPostRefreshObserver,
                                   public mozilla::webgpu::InstanceProvider {
  public:
-  typedef mozilla::dom::BrowsingContext RemoteProxy;
-
   typedef mozilla::TimeStamp TimeStamp;
   typedef mozilla::TimeDuration TimeDuration;
 
@@ -309,7 +306,7 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
 
   bool ComputeDefaultWantsUntrusted(mozilla::ErrorResult& aRv) final;
 
-  virtual nsPIDOMWindowOuter* GetOwnerGlobalForBindingsInternal() override;
+  virtual nsPIDOMWindowOuter* GetOwnerGlobalForBindings() override;
 
   virtual nsIGlobalObject* GetOwnerGlobal() const override;
 
@@ -423,8 +420,7 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
 
   inline nsGlobalWindowOuter* GetScriptableTopInternal();
 
-  already_AddRefed<mozilla::dom::BrowsingContext> GetChildWindow(
-      const nsAString& aName);
+  nsPIDOMWindowOuter* GetChildWindow(const nsAString& aName);
 
   // These return true if we've reached the state in this top level window
   // where we ask the user if further dialogs should be blocked.
@@ -601,12 +597,12 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   static JSObject* CreateNamedPropertiesObject(JSContext* aCx,
                                                JS::Handle<JSObject*> aProto);
 
-  mozilla::dom::BrowsingContext* Window();
-  mozilla::dom::BrowsingContext* Self() { return Window(); }
+  nsGlobalWindowInner* Window();
+  nsGlobalWindowInner* Self();
   nsIDocument* GetDocument() { return GetDoc(); }
   void GetName(nsAString& aName, mozilla::ErrorResult& aError);
   void SetName(const nsAString& aName, mozilla::ErrorResult& aError);
-  mozilla::dom::Location* Location() override;
+  mozilla::dom::Location* GetLocation() override;
   nsHistory* GetHistory(mozilla::ErrorResult& aError);
   mozilla::dom::CustomElementRegistry* CustomElements() override;
   mozilla::dom::BarProp* GetLocationbar(mozilla::ErrorResult& aError);
@@ -617,8 +613,7 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   mozilla::dom::BarProp* GetToolbar(mozilla::ErrorResult& aError);
   void GetStatus(nsAString& aStatus, mozilla::ErrorResult& aError);
   void SetStatus(const nsAString& aStatus, mozilla::ErrorResult& aError);
-  void Close(mozilla::dom::CallerType aCallerType,
-             mozilla::ErrorResult& aError);
+  void Close(mozilla::ErrorResult& aError);
   nsresult Close() override;
   bool GetClosed(mozilla::ErrorResult& aError);
   void Stop(mozilla::ErrorResult& aError);
@@ -626,10 +621,9 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   nsresult Focus() override;
   void Blur(mozilla::ErrorResult& aError);
   nsDOMWindowList* GetFrames() final;
-  mozilla::dom::BrowsingContext* GetFrames(mozilla::ErrorResult& aError);
+  already_AddRefed<nsPIDOMWindowOuter> GetFrames(mozilla::ErrorResult& aError);
   uint32_t Length();
-  mozilla::dom::Nullable<mozilla::dom::WindowProxyHolder> GetTop(
-      mozilla::ErrorResult& aError);
+  already_AddRefed<nsPIDOMWindowOuter> GetTop(mozilla::ErrorResult& aError);
 
  protected:
   explicit nsGlobalWindowInner(nsGlobalWindowOuter* aOuterWindow);
@@ -643,15 +637,15 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   void SetOpener(JSContext* aCx, JS::Handle<JS::Value> aOpener,
                  mozilla::ErrorResult& aError);
   void GetEvent(JSContext* aCx, JS::MutableHandle<JS::Value> aRetval);
-  mozilla::dom::Nullable<mozilla::dom::WindowProxyHolder> GetParent(
-      mozilla::ErrorResult& aError);
+  already_AddRefed<nsPIDOMWindowOuter> GetParent(mozilla::ErrorResult& aError);
   nsPIDOMWindowOuter* GetScriptableParent() override;
   mozilla::dom::Element* GetFrameElement(nsIPrincipal& aSubjectPrincipal,
                                          mozilla::ErrorResult& aError);
   mozilla::dom::Element* GetFrameElement() override;
-  mozilla::dom::Nullable<mozilla::dom::WindowProxyHolder> Open(
-      const nsAString& aUrl, const nsAString& aName, const nsAString& aOptions,
-      mozilla::ErrorResult& aError);
+  already_AddRefed<nsPIDOMWindowOuter> Open(const nsAString& aUrl,
+                                            const nsAString& aName,
+                                            const nsAString& aOptions,
+                                            mozilla::ErrorResult& aError);
   nsDOMOfflineResourceList* GetApplicationCache(mozilla::ErrorResult& aError);
   nsDOMOfflineResourceList* GetApplicationCache() override;
 
@@ -863,7 +857,7 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
 
   bool ShouldResistFingerprinting();
 
-  mozilla::dom::Nullable<mozilla::dom::WindowProxyHolder> OpenDialog(
+  already_AddRefed<nsPIDOMWindowOuter> OpenDialog(
       JSContext* aCx, const nsAString& aUrl, const nsAString& aName,
       const nsAString& aOptions,
       const mozilla::dom::Sequence<JS::Value>& aExtraArgument,

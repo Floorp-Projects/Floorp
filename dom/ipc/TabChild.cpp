@@ -25,9 +25,7 @@
 #include "mozilla/dom/indexedDB/PIndexedDBPermissionRequestChild.h"
 #include "mozilla/dom/MessageManagerBinding.h"
 #include "mozilla/dom/MouseEventBinding.h"
-#include "mozilla/dom/Nullable.h"
 #include "mozilla/dom/PaymentRequestChild.h"
-#include "mozilla/dom/WindowProxyHolder.h"
 #include "mozilla/gfx/CrossProcessPaint.h"
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/ipc/URIUtils.h"
@@ -3261,13 +3259,15 @@ void TabChildMessageManager::MarkForCC() {
   MessageManagerGlobal::MarkForCC();
 }
 
-Nullable<WindowProxyHolder> TabChildMessageManager::GetContent(
+already_AddRefed<nsPIDOMWindowOuter> TabChildMessageManager::GetContent(
     ErrorResult& aError) {
-  nsCOMPtr<nsIDocShell> docShell = GetDocShell(aError);
-  if (!docShell) {
+  if (!mTabChild) {
+    aError.Throw(NS_ERROR_NULL_POINTER);
     return nullptr;
   }
-  return WindowProxyHolder(nsDocShell::Cast(docShell)->GetBrowsingContext());
+  nsCOMPtr<nsPIDOMWindowOuter> window =
+      do_GetInterface(mTabChild->WebNavigation());
+  return window.forget();
 }
 
 already_AddRefed<nsIDocShell> TabChildMessageManager::GetDocShell(

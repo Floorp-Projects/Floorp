@@ -17,7 +17,7 @@
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIScriptContext.h"
 #include "nsIClassInfo.h"
-#include "nsDocShell.h"
+#include "nsIDocShell.h"
 #include "nsCOMArray.h"
 #include "nsIRunnable.h"
 #include "nsWeakReference.h"
@@ -42,12 +42,12 @@ class InProcessTabChildMessageManager final
   typedef mozilla::dom::ipc::StructuredCloneData StructuredCloneData;
 
  private:
-  InProcessTabChildMessageManager(nsDocShell* aShell, nsIContent* aOwner,
+  InProcessTabChildMessageManager(nsIDocShell* aShell, nsIContent* aOwner,
                                   nsFrameMessageManager* aChrome);
 
  public:
   static already_AddRefed<InProcessTabChildMessageManager> Create(
-      nsDocShell* aShell, nsIContent* aOwner, nsFrameMessageManager* aChrome) {
+      nsIDocShell* aShell, nsIContent* aOwner, nsFrameMessageManager* aChrome) {
     RefPtr<InProcessTabChildMessageManager> mm =
         new InProcessTabChildMessageManager(aShell, aOwner, aChrome);
 
@@ -65,10 +65,12 @@ class InProcessTabChildMessageManager final
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
 
-  Nullable<WindowProxyHolder> GetContent(ErrorResult& aError) override;
+  virtual already_AddRefed<nsPIDOMWindowOuter> GetContent(
+      ErrorResult& aError) override;
   virtual already_AddRefed<nsIDocShell> GetDocShell(
       ErrorResult& aError) override {
-    return do_AddRef(mDocShell);
+    nsCOMPtr<nsIDocShell> docShell(mDocShell);
+    return docShell.forget();
   }
   virtual already_AddRefed<nsIEventTarget> GetTabEventTarget() override;
   virtual uint64_t ChromeOuterWindowID() override;
@@ -119,7 +121,7 @@ class InProcessTabChildMessageManager final
  protected:
   virtual ~InProcessTabChildMessageManager();
 
-  RefPtr<nsDocShell> mDocShell;
+  nsCOMPtr<nsIDocShell> mDocShell;
   bool mLoadingScript;
 
   // Is this the message manager for an in-process <iframe mozbrowser>? This

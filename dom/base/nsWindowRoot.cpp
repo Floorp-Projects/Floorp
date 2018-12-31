@@ -106,8 +106,8 @@ nsresult nsWindowRoot::PostHandleEvent(EventChainPostVisitor& aVisitor) {
   return NS_OK;
 }
 
-nsPIDOMWindowOuter* nsWindowRoot::GetOwnerGlobalForBindingsInternal() {
-  return mWindow;
+nsPIDOMWindowOuter* nsWindowRoot::GetOwnerGlobalForBindings() {
+  return GetWindow();
 }
 
 nsIGlobalObject* nsWindowRoot::GetOwnerGlobal() const {

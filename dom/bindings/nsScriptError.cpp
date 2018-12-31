@@ -62,7 +62,16 @@ void nsScriptErrorBase::InitializeOnMainThread() {
       nsPIDOMWindowOuter* outer = window->GetOuterWindow();
       if (outer) mOuterWindowID = outer->WindowID();
 
-      mIsFromPrivateWindow = ComputeIsFromPrivateWindow(window);
+      nsIDocShell* docShell = window->GetDocShell();
+      nsCOMPtr<nsILoadContext> loadContext = do_QueryInterface(docShell);
+
+      if (loadContext) {
+        // Never mark exceptions from chrome windows as having come from
+        // private windows, since we always want them to be reported.
+        nsIPrincipal* winPrincipal = window->GetPrincipal();
+        mIsFromPrivateWindow = loadContext->UsePrivateBrowsing() &&
+                               !nsContentUtils::IsSystemPrincipal(winPrincipal);
+      }
     }
   }
 
@@ -378,15 +387,6 @@ nsScriptErrorBase::GetNotes(nsIArray** aNotes) {
   array.forget(aNotes);
 
   return NS_OK;
-}
-
-/* static */ bool nsScriptErrorBase::ComputeIsFromPrivateWindow(
-    nsGlobalWindowInner* aWindow) {
-  // Never mark exceptions from chrome windows as having come from private
-  // windows, since we always want them to be reported.
-  nsIPrincipal* winPrincipal = aWindow->GetPrincipal();
-  return aWindow->IsPrivateBrowsing() &&
-         !nsContentUtils::IsSystemPrincipal(winPrincipal);
 }
 
 NS_IMPL_ISUPPORTS(nsScriptError, nsIConsoleMessage, nsIScriptError)

@@ -34,9 +34,6 @@ class EventListener;
 class EventListenerOptionsOrBoolean;
 class EventHandlerNonNull;
 class GlobalObject;
-template <typename>
-struct Nullable;
-class WindowProxyHolder;
 
 // IID for the dom::EventTarget interface
 #define NS_EVENTTARGET_IID                           \
@@ -178,8 +175,7 @@ class EventTarget : public nsISupports, public nsWrapperCache {
   // Returns an outer window that corresponds to the inner window this event
   // target is associated with.  Will return null if the inner window is not the
   // current inner or if there is no window around at all.
-  Nullable<WindowProxyHolder> GetOwnerGlobalForBindings();
-  virtual nsPIDOMWindowOuter* GetOwnerGlobalForBindingsInternal() = 0;
+  virtual nsPIDOMWindowOuter* GetOwnerGlobalForBindings() = 0;
 
   // The global object this event target is associated with, if any.
   // This may be an inner window or some other global object.  This
