@@ -10,7 +10,7 @@
  * liability, trademark and document use rules apply.
  */
 
-[Func="nsDocument::IsWebAnimationsGetAnimationsEnabled",
+[Func="nsIDocument::IsWebAnimationsGetAnimationsEnabled",
  HeaderFile="nsTransitionManager.h"]
 interface CSSTransition : Animation {
   [Constant] readonly attribute DOMString transitionProperty;

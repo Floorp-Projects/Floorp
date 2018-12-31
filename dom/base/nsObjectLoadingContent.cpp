@@ -918,7 +918,7 @@ nsresult nsObjectLoadingContent::BuildParametersArray() {
 
 void nsObjectLoadingContent::NotifyOwnerDocumentActivityChanged() {
   // XXX(johns): We cannot touch plugins or run arbitrary script from this call,
-  //             as nsDocument is in a non-reentrant state.
+  //             as nsIDocument is in a non-reentrant state.
 
   // If we have a plugin we want to queue an event to stop it unless we are
   // moved into an active document before returning to the event loop.

@@ -11,7 +11,7 @@
 #include "nsPresContext.h"
 #include "nsMappedAttributes.h"
 #include "nsSize.h"
-#include "nsDocument.h"
+#include "nsIDocument.h"
 #include "nsIDocument.h"
 #include "nsImageFrame.h"
 #include "nsIScriptContext.h"

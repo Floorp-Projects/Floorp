@@ -183,7 +183,7 @@ uint64_t InProcessTabChildMessageManager::ChromeOuterWindowID() {
 }
 
 void InProcessTabChildMessageManager::FireUnloadEvent() {
-  // We're called from nsDocument::MaybeInitializeFinalizeFrameLoaders, so it
+  // We're called from nsIDocument::MaybeInitializeFinalizeFrameLoaders, so it
   // should be safe to run script.
   MOZ_ASSERT(nsContentUtils::IsSafeToRunScript());
 

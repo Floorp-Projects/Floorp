@@ -977,7 +977,7 @@ nsresult ContentChild::ProvideWindowCommon(
 
     // Set the opener window for this window before we start loading the
     // document inside of it. We have to do this before loading the remote
-    // scripts, because they can poke at the document and cause the nsDocument
+    // scripts, because they can poke at the document and cause the nsIDocument
     // to be created before the openerwindow
     nsCOMPtr<mozIDOMWindowProxy> windowProxy =
         do_GetInterface(newChild->WebNavigation());

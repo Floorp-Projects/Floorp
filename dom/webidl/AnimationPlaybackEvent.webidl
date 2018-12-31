@@ -10,7 +10,7 @@
  * liability, trademark and document use rules apply.
  */
 
-[Func="nsDocument::IsWebAnimationsEnabled",
+[Func="nsIDocument::IsWebAnimationsEnabled",
  Constructor(DOMString type,
              optional AnimationPlaybackEventInit eventInitDict)]
 interface AnimationPlaybackEvent : Event {

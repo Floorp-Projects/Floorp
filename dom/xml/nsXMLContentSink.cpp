@@ -241,7 +241,7 @@ NS_IMETHODIMP
 nsXMLContentSink::DidBuildModel(bool aTerminated) {
   if (!mParser) {
     // If mParser is null, this parse has already been terminated and must
-    // not been terminated again. However, nsDocument may still think that
+    // not been terminated again. However, nsIDocument may still think that
     // the parse has not been terminated and call back into here in the case
     // where the XML parser has finished but the XSLT transform associated
     // with the document has not.
