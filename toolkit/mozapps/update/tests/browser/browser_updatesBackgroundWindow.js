@@ -21,7 +21,7 @@ add_task(async function testUpdatesBackgroundWindow() {
       await SimpleTest.promiseFocus(window);
       await popupShownPromise;
 
-      checkWhatsNewLink("update-available-whats-new");
+      checkWhatsNewLink(window, "update-available-whats-new");
       let buttonEl = getNotificationButton(window, "update-available", "button");
       buttonEl.click();
     },

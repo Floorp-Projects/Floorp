@@ -11,7 +11,7 @@ add_task(async function testBasicPromptNoStaging() {
       notificationId: "update-available",
       button: "button",
       beforeClick() {
-        checkWhatsNewLink("update-available-whats-new");
+        checkWhatsNewLink(window, "update-available-whats-new");
       },
     },
     {
