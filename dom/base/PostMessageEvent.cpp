@@ -34,15 +34,18 @@ PostMessageEvent::PostMessageEvent(BrowsingContext* aSource,
                                    const nsAString& aCallerOrigin,
                                    nsGlobalWindowOuter* aTargetWindow,
                                    nsIPrincipal* aProvidedPrincipal,
-                                   nsIDocument* aSourceDocument)
+                                   uint64_t aCallerWindowID,
+                                   nsIURI* aCallerDocumentURI)
     : Runnable("dom::PostMessageEvent"),
-      StructuredCloneHolder(CloningSupported, TransferringSupported,
-                            StructuredCloneScope::SameProcessSameThread),
       mSource(aSource),
       mCallerOrigin(aCallerOrigin),
       mTargetWindow(aTargetWindow),
       mProvidedPrincipal(aProvidedPrincipal),
-      mSourceDocument(aSourceDocument) {}
+      mHolder(StructuredCloneHolder::CloningSupported,
+              StructuredCloneHolder::TransferringSupported,
+              JS::StructuredCloneScope::SameProcessSameThread),
+      mCallerWindowID(aCallerWindowID),
+      mCallerDocumentURI(aCallerDocumentURI) {}
 
 PostMessageEvent::~PostMessageEvent() {}
 
@@ -55,11 +58,11 @@ PostMessageEvent::Run() {
   jsapi.Init();
   JSContext* cx = jsapi.cx();
 
-  // The document is just used for the principal mismatch error message below.
-  // Use a stack variable so mSourceDocument is not held onto after this method
-  // finishes, regardless of the method outcome.
-  nsCOMPtr<nsIDocument> sourceDocument;
-  sourceDocument.swap(mSourceDocument);
+  // The document URI is just used for the principal mismatch error message
+  // below. Use a stack variable so mCallerDocumentURI is not held onto after
+  // this method finishes, regardless of the method outcome.
+  nsCOMPtr<nsIURI> callerDocumentURI;
+  callerDocumentURI.swap(mCallerDocumentURI);
 
   // If we bailed before this point we're going to leak mMessage, but
   // that's probably better than crashing.
@@ -115,10 +118,13 @@ PostMessageEvent::Run() {
 
       const char16_t* params[] = {providedOrigin.get(), targetOrigin.get()};
 
-      nsContentUtils::ReportToConsole(
-          nsIScriptError::errorFlag, NS_LITERAL_CSTRING("DOM Window"),
-          sourceDocument, nsContentUtils::eDOM_PROPERTIES,
-          "TargetPrincipalDoesNotMatch", params, ArrayLength(params));
+      nsAutoString errorText;
+      nsContentUtils::FormatLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+                                            "TargetPrincipalDoesNotMatch",
+                                            params, errorText);
+      nsContentUtils::ReportToConsoleByWindowID(
+          errorText, nsIScriptError::errorFlag,
+          NS_LITERAL_CSTRING("DOM Window"), mCallerWindowID, callerDocumentURI);
 
       return NS_OK;
     }
@@ -129,7 +135,7 @@ PostMessageEvent::Run() {
   nsCOMPtr<mozilla::dom::EventTarget> eventTarget =
       do_QueryObject(targetWindow);
 
-  Read(targetWindow->AsInner(), cx, &messageData, rv);
+  mHolder.Read(targetWindow->AsInner(), cx, &messageData, rv);
   if (NS_WARN_IF(rv.Failed())) {
     DispatchError(cx, targetWindow, eventTarget);
     return NS_OK;
@@ -144,7 +150,7 @@ PostMessageEvent::Run() {
   }
 
   Sequence<OwningNonNull<MessagePort>> ports;
-  if (!TakeTransferredPortsAsSequence(ports)) {
+  if (!mHolder.TakeTransferredPortsAsSequence(ports)) {
     DispatchError(cx, targetWindow, eventTarget);
     return NS_OK;
   }
