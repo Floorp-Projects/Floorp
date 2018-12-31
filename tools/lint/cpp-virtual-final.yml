@@ -4,10 +4,7 @@ cpp-virtual-final:
                   `virtual`, `final`, or `override`"
     level: error
     include: ['.']
-    exclude:
-        # Third-party code with cpp-virtual-final warnings:
-        - '**/node_modules'
-    extensions: ['cpp', 'h', 'mm']
+    extensions: ['cc', 'cpp', 'h', 'mm']
     type: regex
     #
     # This lint warns about:
@@ -19,7 +16,7 @@ cpp-virtual-final:
     # Caveats: This lint ...
     #
     #   * Doesn't warn about `virtual void NotBad() override` at this time
-    #     because there are 8000+ instances.
+    #     because there are currently 6963 instances of this pattern.
     #
     #   * Doesn't warn about function declarations that span multiple lines
     #     because the regex can't match across line breaks.
