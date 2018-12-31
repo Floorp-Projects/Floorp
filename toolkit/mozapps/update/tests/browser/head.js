@@ -283,12 +283,13 @@ function waitForEvent(topic, status = null) {
 /**
  * Gets the specified button for the notification.
  *
- * @param  window
+ * @param  win
  *         The window to get the notification button for.
  * @param  notificationId
  *         The ID of the notification to get the button for.
  * @param  button
  *         The anonid of the button to get.
+ * @return The button element.
  */
 function getNotificationButton(win, notificationId, button) {
   let notification = win.document.getElementById(`appMenu-${notificationId}-notification`);
@@ -301,13 +302,15 @@ function getNotificationButton(win, notificationId, button) {
  * matches the url parameter provided. If no URL is provided, it will instead
  * ensure that the link matches the default link URL.
  *
+ * @param  win
+ *         The window to get the "What's new" link for.
  * @param  id
  *         The ID of the "What's new" link element.
  * @param  url (optional)
  *         The URL to check against. If none is provided, a default will be used.
  */
-function checkWhatsNewLink(id, url) {
-  let whatsNewLink = document.getElementById(id);
+function checkWhatsNewLink(win, id, url) {
+  let whatsNewLink = win.document.getElementById(id);
   is(whatsNewLink.href,
      url || URL_HTTP_UPDATE_SJS + "?uiURL=DETAILS",
      "What's new link points to the test_details URL");
