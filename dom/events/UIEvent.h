@@ -13,6 +13,7 @@
 #include "mozilla/dom/UIEventBinding.h"
 #include "mozilla/dom/WindowProxyHolder.h"
 #include "nsDeviceContext.h"
+#include "nsDocShell.h"
 #include "nsLayoutUtils.h"
 #include "nsPresContext.h"
 

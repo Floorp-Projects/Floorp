@@ -299,19 +299,28 @@ using mozilla::dom::cache::CacheStorage;
   return outer->method args;                                         \
   PR_END_MACRO
 
-#define FORWARD_TO_OUTER_OR_THROW(method, args, errorresult, err_rval) \
-  PR_BEGIN_MACRO                                                       \
-  nsGlobalWindowOuter* outer = GetOuterWindowInternal();               \
-  if (MOZ_LIKELY(HasActiveDocument())) {                               \
-    return outer->method args;                                         \
-  }                                                                    \
-  if (!outer) {                                                        \
-    NS_WARNING("No outer window available!");                          \
-    errorresult.Throw(NS_ERROR_NOT_INITIALIZED);                       \
-  } else {                                                             \
-    errorresult.Throw(NS_ERROR_XPC_SECURITY_MANAGER_VETO);             \
-  }                                                                    \
-  return err_rval;                                                     \
+static nsGlobalWindowOuter* GetOuterWindowForForwarding(
+    nsGlobalWindowInner* aInner, ErrorResult& aError) {
+  nsGlobalWindowOuter* outer = aInner->GetOuterWindowInternal();
+  if (MOZ_LIKELY(aInner->HasActiveDocument())) {
+    return outer;
+  }
+  if (!outer) {
+    NS_WARNING("No outer window available!");
+    aError.Throw(NS_ERROR_NOT_INITIALIZED);
+  } else {
+    aError.Throw(NS_ERROR_XPC_SECURITY_MANAGER_VETO);
+  }
+  return nullptr;
+}
+
+#define FORWARD_TO_OUTER_OR_THROW(method, args, errorresult, err_rval)         \
+  PR_BEGIN_MACRO                                                               \
+  nsGlobalWindowOuter* outer = GetOuterWindowForForwarding(this, errorresult); \
+  if (MOZ_LIKELY(outer)) {                                                     \
+    return outer->method args;                                                 \
+  }                                                                            \
+  return err_rval;                                                             \
   PR_END_MACRO
 
 #define FORWARD_TO_OUTER_VOID(method, args)                          \
@@ -2112,9 +2121,9 @@ void nsPIDOMWindowInner::UnmuteAudioContexts() {
   }
 }
 
-nsGlobalWindowInner* nsGlobalWindowInner::Window() { return this; }
-
-nsGlobalWindowInner* nsGlobalWindowInner::Self() { return this; }
+BrowsingContext* nsGlobalWindowInner::Window() {
+  return mOuterWindow ? mOuterWindow->GetBrowsingContext() : nullptr;
+}
 
 Navigator* nsPIDOMWindowInner::Navigator() {
   if (!mNavigator) {
@@ -3419,7 +3428,7 @@ void nsGlobalWindowInner::Prompt(const nsAString& aMessage,
 }
 
 void nsGlobalWindowInner::Focus(ErrorResult& aError) {
-  FORWARD_TO_OUTER_OR_THROW(FocusOuter, (aError), aError, );
+  FORWARD_TO_OUTER_OR_THROW(FocusOuter, (), aError, );
 }
 
 nsresult nsGlobalWindowInner::Focus() {
@@ -3751,8 +3760,8 @@ void nsGlobalWindowInner::PostMessageMoz(
                  aSubjectPrincipal, aRv);
 }
 
-void nsGlobalWindowInner::Close(ErrorResult& aError) {
-  FORWARD_TO_OUTER_OR_THROW(CloseOuter, (nsContentUtils::IsCallerChrome()),
+void nsGlobalWindowInner::Close(CallerType aCallerType, ErrorResult& aError) {
+  FORWARD_TO_OUTER_OR_THROW(CloseOuter, (aCallerType == CallerType::System),
                             aError, );
 }
 
@@ -3934,7 +3943,7 @@ EventListenerManager* nsGlobalWindowInner::GetExistingListenerManager() const {
 // nsGlobalWindowInner::nsPIDOMWindow
 //*****************************************************************************
 
-Location* nsGlobalWindowInner::GetLocation() {
+Location* nsGlobalWindowInner::Location() {
   if (!mLocation) {
     mLocation = new dom::Location(this, GetDocShell());
   }

@@ -34,6 +34,7 @@ class ChromeBrowsingContext final : public BrowsingContext {
   bool IsOwnedByProcess(uint64_t aProcessId) const {
     return mProcessId == aProcessId;
   }
+  uint64_t OwnerProcessId() const { return mProcessId; }
 
   void GetWindowGlobals(nsTArray<RefPtr<WindowGlobalParent>>& aWindows);
 

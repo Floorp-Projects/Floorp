@@ -10,6 +10,9 @@
 #include "mozilla/dom/BrowsingContextBinding.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/Location.h"
+#include "mozilla/dom/LocationBinding.h"
+#include "mozilla/dom/WindowBinding.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/HashTable.h"
@@ -17,7 +20,9 @@
 #include "mozilla/StaticPtr.h"
 
 #include "nsDocShell.h"
+#include "nsGlobalWindowOuter.h"
 #include "nsContentUtils.h"
+#include "nsScriptError.h"
 #include "nsThreadUtils.h"
 
 namespace mozilla {
@@ -50,14 +55,12 @@ static void Sync(BrowsingContext* aBrowsingContext) {
 
   auto cc = ContentChild::GetSingleton();
   MOZ_DIAGNOSTIC_ASSERT(cc);
-  nsAutoString name;
-  aBrowsingContext->GetName(name);
   RefPtr<BrowsingContext> parent = aBrowsingContext->GetParent();
   BrowsingContext* opener = aBrowsingContext->GetOpener();
   cc->SendAttachBrowsingContext(BrowsingContextId(parent ? parent->Id() : 0),
                                 BrowsingContextId(opener ? opener->Id() : 0),
                                 BrowsingContextId(aBrowsingContext->Id()),
-                                name);
+                                aBrowsingContext->Name());
 }
 
 /* static */ void BrowsingContext::Init() {
@@ -151,7 +154,8 @@ BrowsingContext::BrowsingContext(BrowsingContext* aParent,
       mBrowsingContextId(aBrowsingContextId),
       mParent(aParent),
       mOpener(aOpener),
-      mName(aName) {
+      mName(aName),
+      mClosed(false) {
   if (mParent) {
     mBrowsingContextGroup = mParent->mBrowsingContextGroup;
   } else if (mOpener) {
@@ -324,6 +328,138 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(BrowsingContext)
 
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(BrowsingContext, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(BrowsingContext, Release)
+
+void BrowsingContext::Location(JSContext* aCx,
+                               JS::MutableHandle<JSObject*> aLocation,
+                               OOMReporter& aError) {}
+
+void BrowsingContext::Close(CallerType aCallerType, ErrorResult& aError) {
+  // FIXME We need to set mClosed, but only once we're sending the
+  //       DOMWindowClose event (which happens in the process where the
+  //       document for this browsing context is loaded).
+  //       See https://bugzilla.mozilla.org/show_bug.cgi?id=1516343.
+  ContentChild* cc = ContentChild::GetSingleton();
+  cc->SendWindowClose(BrowsingContextId(mBrowsingContextId),
+                      aCallerType == CallerType::System);
+}
+
+void BrowsingContext::Focus(ErrorResult& aError) {
+  ContentChild* cc = ContentChild::GetSingleton();
+  cc->SendWindowFocus(BrowsingContextId(mBrowsingContextId));
+}
+
+void BrowsingContext::Blur(ErrorResult& aError) {
+  ContentChild* cc = ContentChild::GetSingleton();
+  cc->SendWindowBlur(BrowsingContextId(mBrowsingContextId));
+}
+
+Nullable<WindowProxyHolder> BrowsingContext::GetTop(ErrorResult& aError) {
+  // We never return null or throw an error, but the implementation in
+  // nsGlobalWindow does and we need to use the same signature.
+  BrowsingContext* bc = this;
+  BrowsingContext* parent;
+  while ((parent = bc->mParent)) {
+    bc = parent;
+  }
+  return WindowProxyHolder(bc);
+}
+
+void BrowsingContext::GetOpener(JSContext* aCx,
+                                JS::MutableHandle<JS::Value> aOpener,
+                                ErrorResult& aError) const {
+  auto* opener = GetOpener();
+  if (!opener) {
+    aOpener.setNull();
+    return;
+  }
+
+  if (!ToJSValue(aCx, WindowProxyHolder(opener), aOpener)) {
+    aError.NoteJSContextException(aCx);
+  }
+}
+
+Nullable<WindowProxyHolder> BrowsingContext::GetParent(
+    ErrorResult& aError) const {
+  // We never throw an error, but the implementation in nsGlobalWindow does and
+  // we need to use the same signature.
+  if (!mParent) {
+    return nullptr;
+  }
+  return WindowProxyHolder(mParent.get());
+}
+
+void BrowsingContext::PostMessageMoz(JSContext* aCx,
+                                     JS::Handle<JS::Value> aMessage,
+                                     const nsAString& aTargetOrigin,
+                                     const Sequence<JSObject*>& aTransfer,
+                                     nsIPrincipal& aSubjectPrincipal,
+                                     ErrorResult& aError) {
+  RefPtr<BrowsingContext> sourceBc;
+  PostMessageData data;
+  data.targetOrigin() = aTargetOrigin;
+  data.subjectPrincipal() = &aSubjectPrincipal;
+  RefPtr<nsGlobalWindowInner> callerInnerWindow;
+  if (!nsGlobalWindowOuter::GatherPostMessageData(
+          aCx, aTargetOrigin, getter_AddRefs(sourceBc), data.origin(),
+          getter_AddRefs(data.targetOriginURI()),
+          getter_AddRefs(data.callerPrincipal()),
+          getter_AddRefs(callerInnerWindow),
+          getter_AddRefs(data.callerDocumentURI()), aError)) {
+    return;
+  }
+  data.source() = BrowsingContextId(sourceBc->Id());
+  data.isFromPrivateWindow() =
+      callerInnerWindow &&
+      nsScriptErrorBase::ComputeIsFromPrivateWindow(callerInnerWindow);
+
+  JS::Rooted<JS::Value> transferArray(aCx);
+  aError = nsContentUtils::CreateJSValueFromSequenceOfObject(aCx, aTransfer,
+                                                             &transferArray);
+  if (NS_WARN_IF(aError.Failed())) {
+    return;
+  }
+
+  ipc::StructuredCloneData message;
+  message.Write(aCx, aMessage, transferArray, aError);
+  if (NS_WARN_IF(aError.Failed())) {
+    return;
+  }
+
+  ContentChild* cc = ContentChild::GetSingleton();
+  ClonedMessageData messageData;
+  if (!message.BuildClonedMessageDataForChild(cc, messageData)) {
+    aError.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+
+  cc->SendWindowPostMessage(BrowsingContextId(mBrowsingContextId), messageData,
+                            data);
+}
+
+void BrowsingContext::PostMessageMoz(JSContext* aCx,
+                                     JS::Handle<JS::Value> aMessage,
+                                     const WindowPostMessageOptions& aOptions,
+                                     nsIPrincipal& aSubjectPrincipal,
+                                     ErrorResult& aError) {
+  PostMessageMoz(aCx, aMessage, aOptions.mTargetOrigin, aOptions.mTransfer,
+                 aSubjectPrincipal, aError);
+}
+
+already_AddRefed<BrowsingContext> BrowsingContext::FindChildWithName(
+    const nsAString& aName) {
+  // FIXME https://bugzilla.mozilla.org/show_bug.cgi?id=1515646 will reimplement
+  //       this on top of the BC tree.
+  MOZ_ASSERT(mDocShell);
+  nsCOMPtr<nsIDocShellTreeItem> child;
+  mDocShell->FindChildWithName(aName, false, true, nullptr, nullptr,
+                               getter_AddRefs(child));
+  nsCOMPtr<nsIDocShell> childDS = do_QueryInterface(child);
+  RefPtr<BrowsingContext> bc;
+  if (childDS) {
+    childDS->GetBrowsingContext(getter_AddRefs(bc));
+  }
+  return bc.forget();
+}
 
 }  // namespace dom
 }  // namespace mozilla
