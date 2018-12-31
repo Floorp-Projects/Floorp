@@ -7,10 +7,14 @@ from __future__ import absolute_import
 
 import json
 import os
+import posixpath
+import shutil
 import subprocess
 import sys
+import tempfile
 import time
 
+import mozcrash
 import mozinfo
 
 from mozdevice import ADBDevice
@@ -131,7 +135,8 @@ class Raptor(object):
             }
             runner_cls = runners[app]
             self.runner = runner_cls(
-                binary, profile=self.profile, process_args=process_args)
+                binary, profile=self.profile, process_args=process_args,
+                symbols_path=self.config['symbols_path'])
 
         self.log.info("raptor config: %s" % str(self.config))
 
@@ -386,14 +391,9 @@ class Raptor(object):
                         break
         finally:
             if self.config['app'] == "geckoview":
-                # TODO: if on geckoview is there some cleanup here i.e. check for crashes?
                 if self.config['power_test']:
                     finish_geckoview_power_test(self)
-            else:
-                try:
-                    self.runner.check_for_crashes()
-                except NotImplementedError:  # not implemented for Chrome
-                    pass
+            self.check_for_crashes()
 
         if self.playback is not None:
             self.playback.stop()
@@ -454,6 +454,31 @@ class Raptor(object):
 
     def get_page_timeout_list(self):
         return self.results_handler.page_timeout_list
+
+    def check_for_crashes(self):
+        if self.config['app'] == "geckoview":
+            logcat = self.device.get_logcat()
+            if logcat:
+                if mozcrash.check_for_java_exception(logcat, "raptor"):
+                    return
+            try:
+                dump_dir = tempfile.mkdtemp()
+                remote_dir = posixpath.join(self.device_profile, 'minidumps')
+                if not self.device.is_dir(remote_dir):
+                    self.log.error("No crash directory (%s) found on remote device" % remote_dir)
+                    return
+                self.device.pull(remote_dir, dump_dir)
+                mozcrash.log_crashes(self.log, dump_dir, self.config['symbols_path'])
+            finally:
+                try:
+                    shutil.rmtree(dump_dir)
+                except Exception:
+                    self.log.warning("unable to remove directory: %s" % dump_dir)
+        else:
+            try:
+                self.runner.check_for_crashes()
+            except NotImplementedError:  # not implemented for Chrome
+                pass
 
     def clean_up(self):
         self.control_server.stop()
