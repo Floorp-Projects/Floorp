@@ -79,8 +79,8 @@ bool SVGMotionSMILAnimationFunction::SetAttr(nsAtom* aAttribute,
     }
   } else {
     // Defer to superclass method
-    return nsSMILAnimationFunction::SetAttr(aAttribute, aValue, aResult,
-                                            aParseResult);
+    return SMILAnimationFunction::SetAttr(aAttribute, aValue, aResult,
+                                          aParseResult);
   }
 
   return true;
@@ -97,13 +97,13 @@ bool SVGMotionSMILAnimationFunction::UnsetAttr(nsAtom* aAttribute) {
     MarkStaleIfAttributeAffectsPath(aAttribute);
   } else {
     // Defer to superclass method
-    return nsSMILAnimationFunction::UnsetAttr(aAttribute);
+    return SMILAnimationFunction::UnsetAttr(aAttribute);
   }
 
   return true;
 }
 
-nsSMILAnimationFunction::nsSMILCalcMode
+SMILAnimationFunction::nsSMILCalcMode
 SVGMotionSMILAnimationFunction::GetCalcMode() const {
   const nsAttrValue* value = GetAttr(nsGkAtoms::calcMode);
   if (!value) {
@@ -164,7 +164,7 @@ void SVGMotionSMILAnimationFunction::RebuildPathAndVerticesFromBasicAttrs(
     } else {
       // Create dummy 'from' value at 0,0, if we're doing by-animation.
       // (NOTE: We don't add the dummy 0-point to our list for *to-animation*,
-      // because the nsSMILAnimationFunction logic for to-animation doesn't
+      // because the SMILAnimationFunction logic for to-animation doesn't
       // expect a dummy value. It only expects one value: the final 'to' value.)
       pathGenerator.MoveToOrigin();
       if (!HasAttr(nsGkAtoms::to)) {
@@ -320,7 +320,7 @@ nsresult SVGMotionSMILAnimationFunction::GetValues(const nsISMILAttr& aSMILAttr,
 void SVGMotionSMILAnimationFunction::CheckValueListDependentAttrs(
     uint32_t aNumValues) {
   // Call superclass method.
-  nsSMILAnimationFunction::CheckValueListDependentAttrs(aNumValues);
+  SMILAnimationFunction::CheckValueListDependentAttrs(aNumValues);
 
   // Added behavior: Do checks specific to keyPoints.
   CheckKeyPoints();
@@ -332,7 +332,7 @@ bool SVGMotionSMILAnimationFunction::IsToAnimation() const {
   // NOTE: We can't rely on mPathSourceType, because it might not have been
   // set to a useful value yet (or it might be stale).
   return !GetFirstMPathChild(mAnimationElement) && !HasAttr(nsGkAtoms::path) &&
-         nsSMILAnimationFunction::IsToAnimation();
+         SMILAnimationFunction::IsToAnimation();
 }
 
 void SVGMotionSMILAnimationFunction::CheckKeyPoints() {

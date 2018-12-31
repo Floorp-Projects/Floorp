@@ -4,9 +4,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsSMILSetAnimationFunction.h"
+#include "SMILSetAnimationFunction.h"
 
-inline bool nsSMILSetAnimationFunction::IsDisallowedAttribute(
+namespace mozilla {
+
+inline bool SMILSetAnimationFunction::IsDisallowedAttribute(
     const nsAtom* aAttribute) const {
   //
   // A <set> element is similar to <animate> but lacks:
@@ -25,10 +27,10 @@ inline bool nsSMILSetAnimationFunction::IsDisallowedAttribute(
   return false;
 }
 
-bool nsSMILSetAnimationFunction::SetAttr(nsAtom* aAttribute,
-                                         const nsAString& aValue,
-                                         nsAttrValue& aResult,
-                                         nsresult* aParseResult) {
+bool SMILSetAnimationFunction::SetAttr(nsAtom* aAttribute,
+                                       const nsAString& aValue,
+                                       nsAttrValue& aResult,
+                                       nsresult* aParseResult) {
   if (IsDisallowedAttribute(aAttribute)) {
     aResult.SetTo(aValue);
     if (aParseResult) {
@@ -45,35 +47,37 @@ bool nsSMILSetAnimationFunction::SetAttr(nsAtom* aAttribute,
     return true;
   }
 
-  return nsSMILAnimationFunction::SetAttr(aAttribute, aValue, aResult,
-                                          aParseResult);
+  return SMILAnimationFunction::SetAttr(aAttribute, aValue, aResult,
+                                        aParseResult);
 }
 
-bool nsSMILSetAnimationFunction::UnsetAttr(nsAtom* aAttribute) {
+bool SMILSetAnimationFunction::UnsetAttr(nsAtom* aAttribute) {
   if (IsDisallowedAttribute(aAttribute)) {
     return true;
   }
 
-  return nsSMILAnimationFunction::UnsetAttr(aAttribute);
+  return SMILAnimationFunction::UnsetAttr(aAttribute);
 }
 
-bool nsSMILSetAnimationFunction::HasAttr(nsAtom* aAttName) const {
+bool SMILSetAnimationFunction::HasAttr(nsAtom* aAttName) const {
   if (IsDisallowedAttribute(aAttName)) return false;
 
-  return nsSMILAnimationFunction::HasAttr(aAttName);
+  return SMILAnimationFunction::HasAttr(aAttName);
 }
 
-const nsAttrValue* nsSMILSetAnimationFunction::GetAttr(nsAtom* aAttName) const {
+const nsAttrValue* SMILSetAnimationFunction::GetAttr(nsAtom* aAttName) const {
   if (IsDisallowedAttribute(aAttName)) return nullptr;
 
-  return nsSMILAnimationFunction::GetAttr(aAttName);
+  return SMILAnimationFunction::GetAttr(aAttName);
 }
 
-bool nsSMILSetAnimationFunction::GetAttr(nsAtom* aAttName,
-                                         nsAString& aResult) const {
+bool SMILSetAnimationFunction::GetAttr(nsAtom* aAttName,
+                                       nsAString& aResult) const {
   if (IsDisallowedAttribute(aAttName)) return false;
 
-  return nsSMILAnimationFunction::GetAttr(aAttName, aResult);
+  return SMILAnimationFunction::GetAttr(aAttName, aResult);
 }
 
-bool nsSMILSetAnimationFunction::WillReplace() const { return true; }
+bool SMILSetAnimationFunction::WillReplace() const { return true; }
+
+}  // namespace mozilla

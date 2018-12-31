@@ -31,7 +31,7 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGAnimateMotionElement)
 
 //----------------------------------------------------------------------
 
-nsSMILAnimationFunction& SVGAnimateMotionElement::AnimationFunction() {
+SMILAnimationFunction& SVGAnimateMotionElement::AnimationFunction() {
   return mAnimationFunction;
 }
 
