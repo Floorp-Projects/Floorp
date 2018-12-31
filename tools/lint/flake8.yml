@@ -32,6 +32,7 @@ flake8:
         - testing/awsy
         - testing/firefox-ui
         - testing/geckodriver
+        - testing/gtest
         - testing/mach_commands.py
         - testing/marionette/client
         - testing/marionette/harness
