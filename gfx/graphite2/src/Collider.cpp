@@ -993,7 +993,7 @@ bool KernCollider::mergeSlot(Segment *seg, Slot *slot, const Position &currShift
             nooverlap = false;
     }
     if (nooverlap)
-        _mingap = max(_mingap, _xbound + currSpace + _margin - x);
+        _mingap = max(_mingap, _xbound - rtl * (currSpace + _margin + x));
     if (collides && !nooverlap)
         _hit = true;
     return collides | nooverlap;   // note that true is not a necessarily reliable value
