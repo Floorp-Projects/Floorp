@@ -16,7 +16,7 @@ class nsSVGAngle;
 namespace mozilla {
 namespace dom {
 
-class SVGAngle;
+class DOMSVGAngle;
 
 class SVGAnimatedAngle final : public nsWrapperCache {
  public:
@@ -30,8 +30,8 @@ class SVGAnimatedAngle final : public nsWrapperCache {
   SVGElement* GetParentObject() { return mSVGElement; }
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
-  already_AddRefed<SVGAngle> BaseVal();
-  already_AddRefed<SVGAngle> AnimVal();
+  already_AddRefed<DOMSVGAngle> BaseVal();
+  already_AddRefed<DOMSVGAngle> AnimVal();
 
  protected:
   ~SVGAnimatedAngle();

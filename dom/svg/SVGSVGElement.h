@@ -21,9 +21,9 @@ class SVGFragmentIdentifier;
 class EventChainPreVisitor;
 
 namespace dom {
+class DOMSVGAngle;
 class DOMSVGLength;
 class DOMSVGNumber;
-class SVGAngle;
 class SVGMatrix;
 class SVGIRect;
 class SVGSVGElement;
@@ -133,7 +133,7 @@ class SVGSVGElement final : public SVGSVGElementBase {
   void DeselectAll();
   already_AddRefed<DOMSVGNumber> CreateSVGNumber();
   already_AddRefed<DOMSVGLength> CreateSVGLength();
-  already_AddRefed<SVGAngle> CreateSVGAngle();
+  already_AddRefed<DOMSVGAngle> CreateSVGAngle();
   already_AddRefed<nsISVGPoint> CreateSVGPoint();
   already_AddRefed<SVGMatrix> CreateSVGMatrix();
   already_AddRefed<SVGIRect> CreateSVGRect();

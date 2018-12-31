@@ -7,7 +7,7 @@
 async function test() {
   waitForExplicitFinish();
 
-  const dbg = await attatchRecordingDebugger(
+  const dbg = await attachRecordingDebugger(
     "doc_rr_basic.html",
     { waitForRecording: true }
   );

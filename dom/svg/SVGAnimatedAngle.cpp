@@ -21,10 +21,10 @@ JSObject* SVGAnimatedAngle::WrapObject(JSContext* aCx,
   return SVGAnimatedAngle_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-already_AddRefed<SVGAngle> SVGAnimatedAngle::BaseVal() {
+already_AddRefed<DOMSVGAngle> SVGAnimatedAngle::BaseVal() {
   return mVal->ToDOMBaseVal(mSVGElement);
 }
 
-already_AddRefed<SVGAngle> SVGAnimatedAngle::AnimVal() {
+already_AddRefed<DOMSVGAngle> SVGAnimatedAngle::AnimVal() {
   return mVal->ToDOMAnimVal(mSVGElement);
 }

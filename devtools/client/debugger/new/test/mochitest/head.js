@@ -79,7 +79,7 @@ async function attachDebugger(tab) {
   return toolbox;
 }
 
-async function attatchRecordingDebugger(url, { waitForRecording } = { waitForRecording: false }) {
+async function attachRecordingDebugger(url, { waitForRecording } = { waitForRecording: false }) {
   let tab = BrowserTestUtils.addTab(gBrowser, null, { recordExecution: "*" });
   gBrowser.selectedTab = tab;
   openTrustedLinkIn(EXAMPLE_URL + url, "current");
