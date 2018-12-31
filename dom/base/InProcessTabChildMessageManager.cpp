@@ -19,6 +19,7 @@
 #include "mozilla/dom/MessageManagerBinding.h"
 #include "mozilla/dom/SameProcessMessageQueue.h"
 #include "mozilla/dom/ScriptLoader.h"
+#include "mozilla/dom/WindowProxyHolder.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -147,13 +148,16 @@ void InProcessTabChildMessageManager::CacheFrameLoader(
   mFrameLoader = aFrameLoader;
 }
 
-already_AddRefed<nsPIDOMWindowOuter>
-InProcessTabChildMessageManager::GetContent(ErrorResult& aError) {
+Nullable<WindowProxyHolder> InProcessTabChildMessageManager::GetContent(
+    ErrorResult& aError) {
   nsCOMPtr<nsPIDOMWindowOuter> content;
   if (mDocShell) {
     content = mDocShell->GetWindow();
   }
-  return content.forget();
+  if (!content) {
+    return nullptr;
+  }
+  return WindowProxyHolder(content);
 }
 
 already_AddRefed<nsIEventTarget>

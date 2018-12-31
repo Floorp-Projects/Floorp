@@ -1388,6 +1388,11 @@ def UnionTypes(unionTypes, config):
                             # refs, so we'll need the header to handler
                             # those.
                             headers.add(typeDesc.headerFile)
+                        elif typeDesc.interface.identifier.name == "WindowProxy":
+                            # In UnionTypes.h we need to see the declaration of the
+                            # WindowProxyHolder that we use to store the WindowProxy, so
+                            # we have its sizeof and know how big to make our union.
+                            headers.add(typeDesc.headerFile)
                         else:
                             declarations.add((typeDesc.nativeType, False))
                             implheaders.add(typeDesc.headerFile)
@@ -5491,6 +5496,28 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
                                             declArgs=declArgs,
                                             dealWithOptional=isOptional)
 
+        if descriptor.interface.identifier.name == "WindowProxy":
+            declType = CGGeneric("mozilla::dom::WindowProxyHolder")
+            if type.nullable():
+                declType = CGTemplatedType("Nullable", declType)
+                windowProxyHolderRef = "${declName}.SetValue()"
+            else:
+                windowProxyHolderRef = "${declName}"
+
+            failureCode = onFailureBadType(failureCode, descriptor.interface.identifier.name).define()
+            templateBody = fill("""
+                JS::Rooted<JSObject*> source(cx, &$${val}.toObject());
+                if (NS_FAILED(UnwrapWindowProxyArg(cx, source, ${windowProxyHolderRef}))) {
+                    $*{onFailure}
+                }
+                """,
+                windowProxyHolderRef=windowProxyHolderRef,
+                onFailure=failureCode)
+            templateBody = wrapObjectTemplate(templateBody, type,
+                                              "${declName}.SetNull();\n", failureCode)
+            return JSToNativeConversionInfo(templateBody, declType=declType,
+                                            dealWithOptional=isOptional)
+
         # This is an interface that we implement as a concrete class
         # or an XPCOM interface.
 
@@ -6675,6 +6702,16 @@ def getWrapTemplateForType(type, descriptorProvider, result, successCode,
     if type.isGeckoInterface() and not type.isCallbackInterface():
         descriptor = descriptorProvider.getDescriptor(type.unroll().inner.identifier.name)
         if type.nullable():
+            if descriptor.interface.identifier.name == "WindowProxy":
+                template, infal = getWrapTemplateForType(type.inner, descriptorProvider,
+                                                         "%s.Value()" % result, successCode,
+                                                         returnsNewObject, exceptionCode,
+                                                         spiderMonkeyInterfacesAreStructs)
+                return ("if (%s.IsNull()) {\n" % result +
+                        indent(setNull()) +
+                        "}\n" +
+                        template, infal)
+
             wrappingCode = ("if (!%s) {\n" % (result) +
                             indent(setNull()) +
                             "}\n")
@@ -6996,8 +7033,14 @@ def getRetvalDeclarationForType(returnType, descriptorProvider,
         return result, None, None, None, None
     if returnType.isGeckoInterface() or returnType.isPromise():
         if returnType.isGeckoInterface():
-            typeName = descriptorProvider.getDescriptor(
-                returnType.unroll().inner.identifier.name).nativeType
+            typeName = returnType.unroll().inner.identifier.name
+            if typeName == "WindowProxy":
+                result = CGGeneric("WindowProxyHolder")
+                if returnType.nullable():
+                    result = CGTemplatedType("Nullable", result)
+                return result, None, None, None, None
+
+            typeName = descriptorProvider.getDescriptor(typeName).nativeType
         else:
             typeName = "Promise"
         if isMember:
@@ -9834,11 +9877,13 @@ def getUnionAccessorSignatureType(type, descriptorProvider):
         descriptor = descriptorProvider.getDescriptor(
             type.unroll().inner.identifier.name)
         typeName = CGGeneric(descriptor.nativeType)
-        # Allow null pointers for old-binding classes.
-        if type.unroll().inner.isExternal():
-            typeName = CGWrapper(typeName, post="*")
-        else:
+        if not type.unroll().inner.isExternal():
             typeName = CGWrapper(typeName, post="&")
+        elif descriptor.interface.identifier.name == "WindowProxy":
+            typeName = CGGeneric("WindowProxyHolder const&")
+        else:
+            # Allow null pointers for old-binding classes.
+            typeName = CGWrapper(typeName, post="*")
         return typeName
 
     if type.isSpiderMonkeyInterface():
@@ -14476,6 +14521,9 @@ class CGNativeMember(ClassMethod):
 
         if type.isGeckoInterface() and not type.isCallbackInterface():
             iface = type.unroll().inner
+            if iface.identifier.name == "WindowProxy":
+                return "WindowProxyHolder", True, False
+
             argIsPointer = type.nullable() or iface.isExternal()
             forceOwningType = (iface.isCallback() or isMember)
             if argIsPointer:
