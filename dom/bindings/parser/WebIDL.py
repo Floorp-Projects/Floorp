@@ -5138,6 +5138,10 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
             if not attr.noArguments():
                 raise WebIDLError("[%s] must take no arguments" % identifier,
                                   [attr.location])
+            if identifier == "CrossOriginCallable" and self.isStatic():
+                raise WebIDLError("[CrossOriginCallable] is only allowed on non-static "
+                                  "attributes"
+                                  [attr.location, self.location])
         elif identifier == "Pure":
             if not attr.noArguments():
                 raise WebIDLError("[Pure] must take no arguments",
