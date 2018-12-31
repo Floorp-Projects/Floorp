@@ -20,44 +20,32 @@ add_task(async function test_locked() {
   Services.prefs.lockPref("test.aboutconfig.a");
   Services.prefs.lockPref("accessibility.AOM.enabled");
   await AboutConfigTest.withNewTab(async function() {
-    let list = [...this.document.getElementById("prefs")
-      .getElementsByTagName("tr")];
-    function getRow(name) {
-      return list.find(row => row.querySelector("td").textContent == name);
-    }
-    function getValue(name) {
-        return getRow(name).querySelector("td.cell-value").textContent;
-    }
-    function getButton(name) {
-      return getRow(name).querySelector("button");
-    }
-
     // Test locked default string pref.
-    let lockedPref = getRow("browser.search.searchEnginesURL");
-    Assert.ok(lockedPref.classList.contains("locked"));
-    Assert.equal(getValue("browser.search.searchEnginesURL"), "https://addons.mozilla.org/%LOCALE%/firefox/search-engines/");
-    Assert.ok(getButton("browser.search.searchEnginesURL").classList.contains("button-edit"));
-    Assert.equal(getButton("browser.search.searchEnginesURL").disabled, true);
+    let lockedPref = this.getRow("browser.search.searchEnginesURL");
+    Assert.ok(lockedPref.hasClass("locked"));
+    Assert.equal(lockedPref.value, "https://addons.mozilla.org/%LOCALE%/firefox/search-engines/");
+    Assert.ok(lockedPref.firstButton.classList.contains("button-edit"));
+    Assert.ok(lockedPref.firstButton.disabled);
 
     // Test locked default boolean pref.
-    lockedPref = getRow("accessibility.AOM.enabled");
-    Assert.ok(lockedPref.classList.contains("locked"));
-    Assert.equal(getValue("accessibility.AOM.enabled"), "false");
-    Assert.ok(getButton("accessibility.AOM.enabled").classList.contains("button-toggle"));
-    Assert.equal(getButton("accessibility.AOM.enabled").disabled, true);
+    lockedPref = this.getRow("accessibility.AOM.enabled");
+    Assert.ok(lockedPref.hasClass("locked"));
+    Assert.equal(lockedPref.value, "false");
+    Assert.ok(lockedPref.firstButton.classList.contains("button-toggle"));
+    Assert.ok(lockedPref.firstButton.disabled);
 
     // Test locked user added pref.
-    lockedPref = getRow("test.aboutconfig.a");
-    Assert.ok(lockedPref.classList.contains("locked"));
-    Assert.equal(getValue("test.aboutconfig.a"), "");
-    Assert.ok(getButton("test.aboutconfig.a").classList.contains("button-edit"));
-    Assert.equal(getButton("test.aboutconfig.a").disabled, true);
+    lockedPref = this.getRow("test.aboutconfig.a");
+    Assert.ok(lockedPref.hasClass("locked"));
+    Assert.equal(lockedPref.value, "");
+    Assert.ok(lockedPref.firstButton.classList.contains("button-edit"));
+    Assert.ok(lockedPref.firstButton.disabled);
 
     // Test pref not locked
-    let unlockedPref = getRow("accessibility.indicator.enabled");
-    Assert.equal(unlockedPref.classList.contains("locked"), false);
-    Assert.equal(getValue("accessibility.indicator.enabled"), "false");
-    Assert.ok(getButton("accessibility.indicator.enabled").classList.contains("button-toggle"));
-    Assert.equal(getButton("accessibility.indicator.enabled").disabled, false);
+    let unlockedPref = this.getRow("accessibility.indicator.enabled");
+    Assert.ok(!unlockedPref.hasClass("locked"));
+    Assert.equal(unlockedPref.value, "false");
+    Assert.ok(unlockedPref.firstButton.classList.contains("button-toggle"));
+    Assert.ok(!unlockedPref.firstButton.disabled);
   });
 });
