@@ -8,7 +8,6 @@
 #include "DOMSVGStringList.h"
 #include "nsIContent.h"
 #include "nsIContentInlines.h"
-#include "nsSVGFeatures.h"
 #include "mozilla/dom/SVGSwitchElement.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "nsStyleUtil.h"
@@ -42,9 +41,17 @@ already_AddRefed<DOMSVGStringList> SVGTests::SystemLanguage() {
                                          AsSVGElement(), true, LANGUAGE);
 }
 
-bool SVGTests::HasExtension(const nsAString& aExtension) {
-  return nsSVGFeatures::HasExtension(aExtension,
-                                     AsSVGElement()->IsInChromeDocument());
+bool SVGTests::HasExtension(const nsAString& aExtension) const {
+#define SVG_SUPPORTED_EXTENSION(str) \
+  if (aExtension.EqualsLiteral(str)) return true;
+  SVG_SUPPORTED_EXTENSION("http://www.w3.org/1999/xhtml")
+  nsNameSpaceManager* nameSpaceManager = nsNameSpaceManager::GetInstance();
+  if (AsSVGElement()->IsInChromeDocument() || !nameSpaceManager->mMathMLDisabled) {
+    SVG_SUPPORTED_EXTENSION("http://www.w3.org/1998/Math/MathML")
+  }
+#undef SVG_SUPPORTED_EXTENSION
+
+  return false;
 }
 
 bool SVGTests::IsConditionalProcessingAttribute(
@@ -109,8 +116,7 @@ bool SVGTests::PassesConditionalProcessingTests(
       return false;
     }
     for (uint32_t i = 0; i < mStringListAttributes[EXTENSIONS].Length(); i++) {
-      if (!nsSVGFeatures::HasExtension(mStringListAttributes[EXTENSIONS][i],
-                                       AsSVGElement()->IsInChromeDocument())) {
+      if (!HasExtension(mStringListAttributes[EXTENSIONS][i])) {
         return false;
       }
     }
