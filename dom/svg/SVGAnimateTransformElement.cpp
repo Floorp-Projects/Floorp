@@ -51,7 +51,7 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGAnimateTransformElement)
 
 //----------------------------------------------------------------------
 
-nsSMILAnimationFunction& SVGAnimateTransformElement::AnimationFunction() {
+SMILAnimationFunction& SVGAnimateTransformElement::AnimationFunction() {
   return mAnimationFunction;
 }
 

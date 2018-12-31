@@ -336,6 +336,9 @@ bool Zone::canCollect() {
 }
 
 void Zone::notifyObservingDebuggers() {
+  MOZ_ASSERT(JS::RuntimeHeapIsCollecting(),
+             "This method should be called during GC.");
+
   JSRuntime* rt = runtimeFromMainThread();
   JSContext* cx = rt->mainContextFromOwnThread();
 
@@ -352,7 +355,7 @@ void Zone::notifyObservingDebuggers() {
 
     for (GlobalObject::DebuggerVector::Range r = dbgs->all(); !r.empty();
          r.popFront()) {
-      if (!r.front()->debuggeeIsBeingCollected(rt->gc.majorGCCount())) {
+      if (!r.front().unbarrieredGet()->debuggeeIsBeingCollected(rt->gc.majorGCCount())) {
 #ifdef DEBUG
         fprintf(stderr,
                 "OOM while notifying observing Debuggers of a GC: The "

@@ -2578,7 +2578,8 @@ void DebugEnvironments::checkHashTablesAfterMovingGC() {
   for (MissingEnvironmentMap::Range r = missingEnvs.all(); !r.empty();
        r.popFront()) {
     CheckGCThingAfterMovingGC(r.front().key().scope());
-    CheckGCThingAfterMovingGC(r.front().value().get());
+    // Use unbarrieredGet() to prevent triggering read barrier while collecting.
+    CheckGCThingAfterMovingGC(r.front().value().unbarrieredGet());
   }
   for (LiveEnvironmentMap::Range r = liveEnvs.all(); !r.empty(); r.popFront()) {
     CheckGCThingAfterMovingGC(r.front().key());
