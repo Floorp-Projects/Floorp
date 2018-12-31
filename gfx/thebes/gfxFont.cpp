@@ -885,7 +885,7 @@ gfxFloat gfxFont::GetGlyphHAdvance(DrawTarget* aDrawTarget, uint16_t aGID) {
     return 0;
   }
   if (ProvidesGlyphWidths()) {
-    return GetGlyphWidth(*aDrawTarget, aGID) / 65536.0;
+    return GetGlyphWidth(aGID) / 65536.0;
   }
   if (mFUnitsConvFactor < 0.0f) {
     GetMetrics(eHorizontal);
@@ -1143,12 +1143,14 @@ void gfxFont::CheckForFeaturesInvolvingSpace() {
                                int(Script::NUM_SCRIPT_CODES)));
       for (Script s = Script::ARABIC; s < scriptCount;
            s = Script(static_cast<int>(s) + 1)) {
-        hb_script_t scriptTag = hb_script_t(GetScriptTagForCode(s));
-        hb_tag_t s1, s2;
-        hb_ot_tags_from_script(scriptTag, &s1, &s2);
-        sScriptTagToCode->Put(s1, s);
-        if (s2 != HB_OT_TAG_DEFAULT_SCRIPT) {
-          sScriptTagToCode->Put(s2, s);
+        hb_script_t script = hb_script_t(GetScriptTagForCode(s));
+        unsigned int scriptCount = 4;
+        hb_tag_t scriptTags[4];
+        hb_ot_tags_from_script_and_language(script, HB_LANGUAGE_INVALID,
+                                            &scriptCount, scriptTags, nullptr,
+                                            nullptr);
+        for (unsigned int i = 0; i < scriptCount; i++) {
+          sScriptTagToCode->Put(scriptTags[i], s);
         }
       }
 

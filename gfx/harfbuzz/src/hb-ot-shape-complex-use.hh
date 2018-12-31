@@ -88,7 +88,10 @@ enum use_category_t {
   USE_VMPre	= 23,	/* VOWEL_MOD_PRE */
   USE_SMAbv	= 41,	/* SYM_MOD_ABOVE */
   USE_SMBlw	= 42,	/* SYM_MOD_BELOW */
-  USE_CS	= 43	/* CONS_WITH_STACKER */
+  USE_CS	= 43,	/* CONS_WITH_STACKER */
+
+  /* https://github.com/harfbuzz/harfbuzz/issues/1102 */
+  USE_HVM	= 44,	/* HALANT_OR_VOWEL_MODIFIER */
 };
 
 HB_INTERNAL USE_TABLE_ELEMENT_TYPE

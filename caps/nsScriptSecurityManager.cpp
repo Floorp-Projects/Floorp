@@ -390,7 +390,7 @@ nsScriptSecurityManager::GetChannelURIPrincipal(nsIChannel* aChannel,
   MOZ_ASSERT(aChannel, "Must have channel!");
 
   // Get the principal from the URI.  Make sure this does the same thing
-  // as nsDocument::Reset and XULDocument::StartDocumentLoad.
+  // as nsIDocument::Reset and XULDocument::StartDocumentLoad.
   nsCOMPtr<nsIURI> uri;
   nsresult rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(uri));
   NS_ENSURE_SUCCESS(rv, rv);

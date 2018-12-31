@@ -1,6 +1,6 @@
 AC_PREREQ([2.64])
 AC_INIT([HarfBuzz],
-        [1.9.0],
+        [2.3.0],
         [https://github.com/harfbuzz/harfbuzz/issues/new],
         [harfbuzz],
         [http://harfbuzz.org/])
@@ -19,7 +19,6 @@ LT_PREREQ([2.2])
 LT_INIT([disable-static])
 
 # Check for programs
-AC_USE_SYSTEM_EXTENSIONS
 AC_PROG_CC
 AC_PROG_CC_C99
 AM_PROG_CC_C_O
@@ -147,12 +146,6 @@ fi
 AM_CONDITIONAL(HAVE_PTHREAD, $have_pthread)
 
 dnl ==========================================================================
-
-have_ot=true
-if $have_ot; then
-	AC_DEFINE(HAVE_OT, 1, [Have native OpenType Layout backend])
-fi
-AM_CONDITIONAL(HAVE_OT, $have_ot)
 
 have_fallback=true
 if $have_fallback; then
@@ -330,7 +323,7 @@ AC_ARG_WITH(graphite2,
 			[Use the graphite2 library @<:@default=no@:>@])],,
 	[with_graphite2=no])
 have_graphite2=false
-GRAPHITE2_DEPS="graphite2"
+GRAPHITE2_DEPS="graphite2 >= 1.2.0"
 AC_SUBST(GRAPHITE2_DEPS)
 if test "x$with_graphite2" = "xyes" -o "x$with_graphite2" = "xauto"; then
 	PKG_CHECK_MODULES(GRAPHITE2, $GRAPHITE2_DEPS, have_graphite2=true, :)
@@ -514,6 +507,7 @@ test/api/Makefile
 test/fuzzing/Makefile
 test/shaping/Makefile
 test/shaping/data/Makefile
+test/shaping/data/aots/Makefile
 test/shaping/data/in-house/Makefile
 test/shaping/data/text-rendering-tests/Makefile
 test/subset/Makefile

@@ -13,7 +13,6 @@
 #include "nsError.h"
 #include "nsQueryContentEventResult.h"
 #include "nsGlobalWindow.h"
-#include "nsIDocument.h"
 #include "nsFocusManager.h"
 #include "nsFrameManager.h"
 #include "nsRefreshDriver.h"
@@ -104,7 +103,7 @@
 #include "nsContentPermissionHelper.h"
 #include "nsCSSPseudoElements.h"  // for CSSPseudoElementType
 #include "nsNetUtil.h"
-#include "nsDocument.h"
+#include "nsIDocument.h"
 #include "HTMLImageElement.h"
 #include "HTMLCanvasElement.h"
 #include "mozilla/css/ImageLoader.h"
@@ -3793,8 +3792,8 @@ nsDOMWindowUtils::ForceUseCounterFlush(nsINode* aNode) {
 
     // Flush the document and any external documents that it depends on.
     const auto reportKind =
-        nsDocument::UseCounterReportKind::eIncludeExternalResources;
-    static_cast<nsDocument*>(doc.get())->ReportUseCounters(reportKind);
+        nsIDocument::UseCounterReportKind::eIncludeExternalResources;
+    doc->ReportUseCounters(reportKind);
     return NS_OK;
   }
 

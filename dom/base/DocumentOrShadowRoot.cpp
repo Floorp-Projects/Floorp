@@ -9,7 +9,7 @@
 #include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/dom/StyleSheetList.h"
-#include "nsDocument.h"
+#include "nsIDocument.h"
 #include "nsFocusManager.h"
 #include "nsIRadioVisitor.h"
 #include "nsIFormControl.h"
@@ -476,8 +476,8 @@ nsresult DocumentOrShadowRoot::GetNextRadioButton(
     const nsAString& aName, const bool aPrevious,
     HTMLInputElement* aFocusedRadio, HTMLInputElement** aRadioOut) {
   // XXX Can we combine the HTML radio button method impls of
-  //     nsDocument and nsHTMLFormControl?
-  // XXX Why is HTML radio button stuff in nsDocument, as
+  //     nsIDocument and nsHTMLFormControl?
+  // XXX Why is HTML radio button stuff in nsIDocument, as
   //     opposed to nsHTMLDocument?
   *aRadioOut = nullptr;
 

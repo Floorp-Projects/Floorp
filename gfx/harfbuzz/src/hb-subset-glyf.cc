@@ -31,12 +31,12 @@
 
 static bool
 _calculate_glyf_and_loca_prime_size (const OT::glyf::accelerator_t &glyf,
-                                     hb_vector_t<hb_codepoint_t> &glyph_ids,
-                                     hb_bool_t drop_hints,
-                                     bool *use_short_loca /* OUT */,
-                                     unsigned int *glyf_size /* OUT */,
-                                     unsigned int *loca_size /* OUT */,
-                                     hb_vector_t<unsigned int> *instruction_ranges /* OUT */)
+				     hb_vector_t<hb_codepoint_t> &glyph_ids,
+				     hb_bool_t drop_hints,
+				     bool *use_short_loca /* OUT */,
+				     unsigned int *glyf_size /* OUT */,
+				     unsigned int *loca_size /* OUT */,
+				     hb_vector_t<unsigned int> *instruction_ranges /* OUT */)
 {
   unsigned int total = 0;
   for (unsigned int i = 0; i < glyph_ids.len; i++)
@@ -53,8 +53,8 @@ _calculate_glyf_and_loca_prime_size (const OT::glyf::accelerator_t &glyf,
     *instruction_end = 0;
 
     unsigned int start_offset, end_offset;
-    if (unlikely (!(glyf.get_offsets(next_glyph, &start_offset, &end_offset)
-                    && glyf.remove_padding(start_offset, &end_offset))))
+    if (unlikely (!(glyf.get_offsets (next_glyph, &start_offset, &end_offset) &&
+		    glyf.remove_padding (start_offset, &end_offset))))
     {
       DEBUG_MSG(SUBSET, nullptr, "Invalid gid %d", next_glyph);
       continue;
@@ -64,11 +64,11 @@ _calculate_glyf_and_loca_prime_size (const OT::glyf::accelerator_t &glyf,
 
     if (drop_hints)
     {
-      if (unlikely (!glyf.get_instruction_offsets(start_offset, end_offset,
-                                                  instruction_start, instruction_end)))
+      if (unlikely (!glyf.get_instruction_offsets (start_offset, end_offset,
+						   instruction_start, instruction_end)))
       {
-        DEBUG_MSG(SUBSET, nullptr, "Unable to get instruction offsets for %d", next_glyph);
-        return false;
+	DEBUG_MSG(SUBSET, nullptr, "Unable to get instruction offsets for %d", next_glyph);
+	return false;
       }
     }
 
@@ -80,21 +80,21 @@ _calculate_glyf_and_loca_prime_size (const OT::glyf::accelerator_t &glyf,
   *glyf_size = total;
   *use_short_loca = (total <= 131070);
   *loca_size = (glyph_ids.len + 1)
-      * (*use_short_loca ? sizeof(OT::HBUINT16) : sizeof(OT::HBUINT32));
+      * (*use_short_loca ? sizeof (OT::HBUINT16) : sizeof (OT::HBUINT32));
 
   DEBUG_MSG(SUBSET, nullptr, "preparing to subset glyf: final size %d, loca size %d, using %s loca",
-            total,
-            *loca_size,
-            *use_short_loca ? "short" : "long");
+	    total,
+	    *loca_size,
+	    *use_short_loca ? "short" : "long");
   return true;
 }
 
 static bool
 _write_loca_entry (unsigned int  id,
-                   unsigned int  offset,
-                   bool          is_short,
-                   void         *loca_prime,
-                   unsigned int  loca_size)
+		   unsigned int  offset,
+		   bool          is_short,
+		   void         *loca_prime,
+		   unsigned int  loca_size)
 {
   unsigned int entry_size = is_short ? sizeof (OT::HBUINT16) : sizeof (OT::HBUINT32);
   if ((id + 1) * entry_size <= loca_size)
@@ -108,11 +108,11 @@ _write_loca_entry (unsigned int  id,
   }
 
   // Offset was not written because the write is out of bounds.
-  DEBUG_MSG (SUBSET,
-             nullptr,
-             "WARNING: Attempted to write an out of bounds loca entry at index %d. Loca size is %d.",
-             id,
-             loca_size);
+  DEBUG_MSG(SUBSET,
+	    nullptr,
+	    "WARNING: Attempted to write an out of bounds loca entry at index %d. Loca size is %d.",
+	    id,
+	    loca_size);
   return false;
 }
 
@@ -130,15 +130,15 @@ _update_components (hb_subset_plan_t * plan,
     {
       hb_codepoint_t new_gid;
       if (!plan->new_gid_for_old_gid (iterator.current->glyphIndex,
-                                      &new_gid))
+				      &new_gid))
 	continue;
 
       ((OT::glyf::CompositeGlyphHeader *) iterator.current)->glyphIndex.set (new_gid);
-    } while (iterator.move_to_next());
+    } while (iterator.move_to_next ());
   }
 }
 
-static bool _remove_composite_instruction_flag(char *glyf_prime, unsigned int length)
+static bool _remove_composite_instruction_flag (char *glyf_prime, unsigned int length)
 {
   /* remove WE_HAVE_INSTRUCTIONS from flags in dest */
   OT::glyf::CompositeGlyphHeader::Iterator composite_it;
@@ -148,20 +148,20 @@ static bool _remove_composite_instruction_flag(char *glyf_prime, unsigned int le
     glyph = composite_it.current;
     OT::HBUINT16 *flags = const_cast<OT::HBUINT16 *> (&glyph->flags);
     flags->set ( (uint16_t) *flags & ~OT::glyf::CompositeGlyphHeader::WE_HAVE_INSTRUCTIONS);
-  } while (composite_it.move_to_next());
+  } while (composite_it.move_to_next ());
   return true;
 }
 
 static bool
 _write_glyf_and_loca_prime (hb_subset_plan_t              *plan,
 			    const OT::glyf::accelerator_t &glyf,
-                            const char                    *glyf_data,
-                            bool                           use_short_loca,
-                            hb_vector_t<unsigned int> &instruction_ranges,
-                            unsigned int                   glyf_prime_size,
-                            char                          *glyf_prime_data /* OUT */,
-                            unsigned int                   loca_prime_size,
-                            char                          *loca_prime_data /* OUT */)
+			    const char                    *glyf_data,
+			    bool                           use_short_loca,
+			    hb_vector_t<unsigned int> &instruction_ranges,
+			    unsigned int                   glyf_prime_size,
+			    char                          *glyf_prime_data /* OUT */,
+			    unsigned int                   loca_prime_size,
+			    char                          *loca_prime_data /* OUT */)
 {
   hb_vector_t<hb_codepoint_t> &glyph_ids = plan->glyphs;
   char *glyf_prime_data_next = glyf_prime_data;
@@ -170,8 +170,8 @@ _write_glyf_and_loca_prime (hb_subset_plan_t              *plan,
   for (unsigned int i = 0; i < glyph_ids.len; i++)
   {
     unsigned int start_offset, end_offset;
-    if (unlikely (!(glyf.get_offsets (glyph_ids[i], &start_offset, &end_offset)
-                    && glyf.remove_padding(start_offset, &end_offset))))
+    if (unlikely (!(glyf.get_offsets (glyph_ids[i], &start_offset, &end_offset) &&
+		    glyf.remove_padding (start_offset, &end_offset))))
       end_offset = start_offset = 0;
 
     unsigned int instruction_start = instruction_ranges[i * 2];
@@ -181,10 +181,10 @@ _write_glyf_and_loca_prime (hb_subset_plan_t              *plan,
 
     if (glyf_prime_data_next + length > glyf_prime_data + glyf_prime_size)
     {
-      DEBUG_MSG (SUBSET,
-                 nullptr,
-                 "WARNING: Attempted to write an out of bounds glyph entry for gid %d (length %d)",
-                 i, length);
+      DEBUG_MSG(SUBSET,
+		 nullptr,
+		 "WARNING: Attempted to write an out of bounds glyph entry for gid %d (length %d)",
+		 i, length);
       return false;
     }
 
@@ -197,18 +197,18 @@ _write_glyf_and_loca_prime (hb_subset_plan_t              *plan,
       /* if the instructions end at the end this was a composite glyph, else simple */
       if (instruction_end == end_offset)
       {
-        if (unlikely (!_remove_composite_instruction_flag (glyf_prime_data_next, length))) return false;
+	if (unlikely (!_remove_composite_instruction_flag (glyf_prime_data_next, length))) return false;
       }
       else
-        /* zero instruction length, which is just before instruction_start */
-        memset (glyf_prime_data_next + instruction_start - start_offset - 2, 0, 2);
+	/* zero instruction length, which is just before instruction_start */
+	memset (glyf_prime_data_next + instruction_start - start_offset - 2, 0, 2);
     }
 
     success = success && _write_loca_entry (i,
-                                            glyf_prime_data_next - glyf_prime_data,
-                                            use_short_loca,
-                                            loca_prime_data,
-                                            loca_prime_size);
+					    glyf_prime_data_next - glyf_prime_data,
+					    use_short_loca,
+					    loca_prime_data,
+					    loca_prime_size);
     _update_components (plan, glyf_prime_data_next, length);
 
     // TODO: don't align to two bytes if using long loca.
@@ -216,20 +216,20 @@ _write_glyf_and_loca_prime (hb_subset_plan_t              *plan,
   }
 
   success = success && _write_loca_entry (glyph_ids.len,
-                                          glyf_prime_data_next - glyf_prime_data,
-                                          use_short_loca,
-                                          loca_prime_data,
-                                          loca_prime_size);
+					  glyf_prime_data_next - glyf_prime_data,
+					  use_short_loca,
+					  loca_prime_data,
+					  loca_prime_size);
   return success;
 }
 
 static bool
 _hb_subset_glyf_and_loca (const OT::glyf::accelerator_t  &glyf,
-                          const char                     *glyf_data,
-                          hb_subset_plan_t               *plan,
-                          bool                           *use_short_loca,
-                          hb_blob_t                     **glyf_prime /* OUT */,
-                          hb_blob_t                     **loca_prime /* OUT */)
+			  const char                     *glyf_data,
+			  hb_subset_plan_t               *plan,
+			  bool                           *use_short_loca,
+			  hb_blob_t                     **glyf_prime /* OUT */,
+			  hb_blob_t                     **loca_prime /* OUT */)
 {
   // TODO(grieger): Sanity check allocation size for the new table.
   hb_vector_t<hb_codepoint_t> &glyphs_to_retain = plan->glyphs;
@@ -237,43 +237,43 @@ _hb_subset_glyf_and_loca (const OT::glyf::accelerator_t  &glyf,
   unsigned int glyf_prime_size;
   unsigned int loca_prime_size;
   hb_vector_t<unsigned int> instruction_ranges;
-  instruction_ranges.init();
+  instruction_ranges.init ();
 
   if (unlikely (!_calculate_glyf_and_loca_prime_size (glyf,
-                                                      glyphs_to_retain,
-                                                      plan->drop_hints,
-                                                      use_short_loca,
-                                                      &glyf_prime_size,
-                                                      &loca_prime_size,
-                                                      &instruction_ranges))) {
-    instruction_ranges.fini();
+						      glyphs_to_retain,
+						      plan->drop_hints,
+						      use_short_loca,
+						      &glyf_prime_size,
+						      &loca_prime_size,
+						      &instruction_ranges))) {
+    instruction_ranges.fini ();
     return false;
   }
 
   char *glyf_prime_data = (char *) calloc (1, glyf_prime_size);
   char *loca_prime_data = (char *) calloc (1, loca_prime_size);
   if (unlikely (!_write_glyf_and_loca_prime (plan, glyf, glyf_data,
-                                             *use_short_loca,
-                                             instruction_ranges,
-                                             glyf_prime_size, glyf_prime_data,
-                                             loca_prime_size, loca_prime_data))) {
+					     *use_short_loca,
+					     instruction_ranges,
+					     glyf_prime_size, glyf_prime_data,
+					     loca_prime_size, loca_prime_data))) {
     free (glyf_prime_data);
     free (loca_prime_data);
-    instruction_ranges.fini();
+    instruction_ranges.fini ();
     return false;
   }
-  instruction_ranges.fini();
+  instruction_ranges.fini ();
 
   *glyf_prime = hb_blob_create (glyf_prime_data,
-                                glyf_prime_size,
-                                HB_MEMORY_MODE_READONLY,
-                                glyf_prime_data,
-                                free);
+				glyf_prime_size,
+				HB_MEMORY_MODE_READONLY,
+				glyf_prime_data,
+				free);
   *loca_prime = hb_blob_create (loca_prime_data,
-                                loca_prime_size,
-                                HB_MEMORY_MODE_READONLY,
-                                loca_prime_data,
-                                free);
+				loca_prime_size,
+				HB_MEMORY_MODE_READONLY,
+				loca_prime_data,
+				free);
   return true;
 }
 
@@ -287,24 +287,24 @@ _hb_subset_glyf_and_loca (const OT::glyf::accelerator_t  &glyf,
  **/
 bool
 hb_subset_glyf_and_loca (hb_subset_plan_t *plan,
-                         bool             *use_short_loca, /* OUT */
-                         hb_blob_t       **glyf_prime, /* OUT */
-                         hb_blob_t       **loca_prime /* OUT */)
+			 bool             *use_short_loca, /* OUT */
+			 hb_blob_t       **glyf_prime, /* OUT */
+			 hb_blob_t       **loca_prime /* OUT */)
 {
   hb_blob_t *glyf_blob = hb_sanitize_context_t ().reference_table<OT::glyf> (plan->source);
-  const char *glyf_data = hb_blob_get_data(glyf_blob, nullptr);
+  const char *glyf_data = hb_blob_get_data (glyf_blob, nullptr);
 
   OT::glyf::accelerator_t glyf;
-  glyf.init(plan->source);
+  glyf.init (plan->source);
   bool result = _hb_subset_glyf_and_loca (glyf,
-                                          glyf_data,
-                                          plan,
-                                          use_short_loca,
-                                          glyf_prime,
-                                          loca_prime);
+					  glyf_data,
+					  plan,
+					  use_short_loca,
+					  glyf_prime,
+					  loca_prime);
 
   hb_blob_destroy (glyf_blob);
-  glyf.fini();
+  glyf.fini ();
 
   return result;
 }

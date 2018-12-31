@@ -18,7 +18,7 @@
 #include "PLDHashTable.h"
 #include "nsCOMArray.h"
 #include "nsPIDOMWindow.h"
-#include "nsDocument.h"
+#include "nsIDocument.h"
 #ifdef MOZ_XUL
 #include "nsXULElement.h"
 #endif

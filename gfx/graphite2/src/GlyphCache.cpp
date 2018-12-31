@@ -164,6 +164,10 @@ GlyphCache::GlyphCache(const Face & face, const uint32 face_options)
         }
         delete _glyph_loader;
         _glyph_loader = 0;
+	// coverity[leaked_storage : FALSE] - calling read_glyph on index 0 saved
+	// glyphs as _glyphs[0]. Setting _glyph_loader to nullptr here flags that
+	// the dtor needs to call delete[] on _glyphs[0] to release what was allocated
+	// as glyphs
     }
 
     if (_glyphs && glyph(0) == 0)

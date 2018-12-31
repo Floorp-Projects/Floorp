@@ -59,7 +59,6 @@ class nsGlobalWindowInner;
 class nsGlobalWindowOuter;
 class nsDOMCSSAttributeDeclaration;
 class nsISMILAttr;
-class nsDocument;
 class nsDOMStringMap;
 struct ServoNodeData;
 

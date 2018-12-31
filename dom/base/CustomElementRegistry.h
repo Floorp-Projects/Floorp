@@ -22,8 +22,6 @@
 #include "nsWrapperCache.h"
 #include "nsContentUtils.h"
 
-class nsDocument;
-
 namespace mozilla {
 namespace dom {
 
@@ -351,8 +349,6 @@ class CustomElementReactionsStack {
 };
 
 class CustomElementRegistry final : public nsISupports, public nsWrapperCache {
-  // Allow nsDocument to access mCustomDefinitions and mCandidatesMap.
-  friend class ::nsDocument;
 
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS

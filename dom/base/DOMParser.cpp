@@ -271,10 +271,10 @@ already_AddRefed<DOMParser> DOMParser::CreateWithoutGlobal(ErrorResult& aRv) {
 
 already_AddRefed<nsIDocument> DOMParser::SetUpDocument(DocumentFlavor aFlavor,
                                                        ErrorResult& aRv) {
-  // We should really just use mOwner here, but nsDocument gets confused
+  // We should really just use mOwner here, but nsIDocument gets confused
   // if we pass it a scriptHandlingObject that doesn't QI to
   // nsIScriptGlobalObject, and test_isequalnode.js (an xpcshell test without
-  // a window global) breaks. The correct solution is just to wean nsDocument
+  // a window global) breaks. The correct solution is just to wean nsIDocument
   // off of nsIScriptGlobalObject, but that's a yak to shave another day.
   nsCOMPtr<nsIScriptGlobalObject> scriptHandlingObject =
       do_QueryInterface(mOwner);
