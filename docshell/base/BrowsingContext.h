@@ -12,11 +12,13 @@
 #include "mozilla/WeakPtr.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsIDocShell.h"
 #include "nsString.h"
 #include "nsTArray.h"
 #include "nsWrapperCache.h"
 
-class nsIDocShell;
+class nsGlobalWindowOuter;
+class nsOuterWindowProxy;
 
 namespace mozilla {
 
@@ -80,6 +82,12 @@ class BrowsingContext : public nsWrapperCache,
   nsIDocShell* GetDocShell() { return mDocShell; }
   void SetDocShell(nsIDocShell* aDocShell);
 
+  // Get the outer window object for this BrowsingContext if it is in-process
+  // and still has a docshell, or null otherwise.
+  nsPIDOMWindowOuter* GetDOMWindow() const {
+    return mDocShell ? mDocShell->GetWindow() : nullptr;
+  }
+
   // Attach the current BrowsingContext to its parent, in both the child and the
   // parent process. BrowsingContext objects are created attached by default, so
   // this method need only be called when restoring cached BrowsingContext
@@ -123,6 +131,13 @@ class BrowsingContext : public nsWrapperCache,
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
 
+  // Return the window proxy object that corresponds to this browsing context.
+  inline JSObject* GetWindowProxy() const { return mWindowProxy; }
+  // Set the window proxy object that corresponds to this browsing context.
+  void SetWindowProxy(JS::Handle<JSObject*> aWindowProxy) {
+    mWindowProxy = aWindowProxy;
+  }
+
   MOZ_DECLARE_WEAKREFERENCE_TYPENAME(BrowsingContext)
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(BrowsingContext)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(BrowsingContext)
@@ -136,6 +151,22 @@ class BrowsingContext : public nsWrapperCache,
                   Type aType);
 
  private:
+  friend class ::nsOuterWindowProxy;
+  friend class ::nsGlobalWindowOuter;
+  // Update the window proxy object that corresponds to this browsing context.
+  // This should be called from the window proxy object's objectMoved hook, if
+  // the object mWindowProxy points to was moved by the JS GC.
+  void UpdateWindowProxy(JSObject* obj, JSObject* old) {
+    if (mWindowProxy) {
+      MOZ_ASSERT(mWindowProxy == old);
+      mWindowProxy = obj;
+    }
+  }
+  // Clear the window proxy object that corresponds to this browsing context.
+  // This should be called if the window proxy object is finalized, or it can't
+  // reach its browsing context anymore.
+  void ClearWindowProxy() { mWindowProxy = nullptr; }
+
   // Type of BrowsingContent
   const Type mType;
 
@@ -148,6 +179,11 @@ class BrowsingContext : public nsWrapperCache,
   WeakPtr<BrowsingContext> mOpener;
   nsCOMPtr<nsIDocShell> mDocShell;
   nsString mName;
+  // This is not a strong reference, but using a JS::Heap for that should be
+  // fine. The JSObject stored in here should be a proxy with a
+  // nsOuterWindowProxy handler, which will update the pointer from its
+  // objectMoved hook and clear it from its finalize hook.
+  JS::Heap<JSObject*> mWindowProxy;
 };
 
 }  // namespace dom

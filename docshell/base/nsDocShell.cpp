@@ -13421,10 +13421,6 @@ nsDocShell::GetColorMatrix(uint32_t* aMatrixLen, float** aMatrix) {
 
 bool nsDocShell::IsForceReloading() { return IsForceReloadType(mLoadType); }
 
-BrowsingContext* nsDocShell::GetBrowsingContext() const {
-  return mBrowsingContext;
-}
-
 NS_IMETHODIMP
 nsDocShell::GetBrowsingContext(BrowsingContext** aBrowsingContext) {
   *aBrowsingContext = do_AddRef(mBrowsingContext).take();

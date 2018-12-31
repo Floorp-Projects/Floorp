@@ -445,6 +445,10 @@ void nsOuterWindowProxy::finalize(JSFreeOp* fop, JSObject* proxy) const {
   nsGlobalWindowOuter* outerWindow = GetOuterWindow(proxy);
   if (outerWindow) {
     outerWindow->ClearWrapper(proxy);
+    BrowsingContext* bc = outerWindow->GetBrowsingContext();
+    if (bc) {
+      bc->ClearWindowProxy();
+    }
 
     // Ideally we would use OnFinalize here, but it's possible that
     // EnsureScriptEnvironment will later be called on the window, and we don't
@@ -803,6 +807,10 @@ size_t nsOuterWindowProxy::objectMoved(JSObject* obj, JSObject* old) const {
   nsGlobalWindowOuter* outerWindow = GetOuterWindow(obj);
   if (outerWindow) {
     outerWindow->UpdateWrapper(obj, old);
+    BrowsingContext* bc = outerWindow->GetBrowsingContext();
+    if (bc) {
+      bc->UpdateWindowProxy(obj, old);
+    }
   }
   return 0;
 }
@@ -981,6 +989,9 @@ nsGlobalWindowOuter::~nsGlobalWindowOuter() {
 
   JSObject* proxy = GetWrapperMaybeDead();
   if (proxy) {
+    if (mBrowsingContext) {
+      mBrowsingContext->ClearWindowProxy();
+    }
     js::SetProxyReservedSlot(proxy, 0, js::PrivateValue(nullptr));
   }
 
@@ -1181,6 +1192,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGlobalWindowOuter)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOpenerForInitialContentBrowser)
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocShell)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mBrowsingContext)
 
   tmp->TraverseHostObjectURIs(cb);
 
@@ -1208,6 +1220,10 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindowOuter)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mOpenerForInitialContentBrowser)
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocShell)
+  if (tmp->mBrowsingContext) {
+    tmp->mBrowsingContext->ClearWindowProxy();
+    tmp->mBrowsingContext = nullptr;
+  }
 
   tmp->UnlinkHostObjectURIs();
 
@@ -1820,6 +1836,7 @@ nsresult nsGlobalWindowOuter::SetNewDocument(nsIDocument* aDocument,
 
       outerObject = xpc::TransplantObject(cx, obj, outerObject);
       if (!outerObject) {
+        mBrowsingContext->ClearWindowProxy();
         NS_ERROR("unable to transplant wrappers, probably OOM");
         return NS_ERROR_FAILURE;
       }
@@ -1841,6 +1858,7 @@ nsresult nsGlobalWindowOuter::SetNewDocument(nsIDocument* aDocument,
     {
       JS::Rooted<JSObject*> outer(cx, GetWrapperPreserveColor());
       js::SetWindowProxy(cx, newInnerGlobal, outer);
+      mBrowsingContext->SetWindowProxy(outer);
     }
 
     // Set scriptability based on the state of the docshell.
@@ -2085,7 +2103,7 @@ void nsGlobalWindowOuter::DispatchDOMWindowCreated() {
 
 void nsGlobalWindowOuter::ClearStatus() { SetStatusOuter(EmptyString()); }
 
-void nsGlobalWindowOuter::SetDocShell(nsIDocShell* aDocShell) {
+void nsGlobalWindowOuter::SetDocShell(nsDocShell* aDocShell) {
   MOZ_ASSERT(aDocShell);
 
   if (aDocShell == mDocShell) {
@@ -2093,6 +2111,7 @@ void nsGlobalWindowOuter::SetDocShell(nsIDocShell* aDocShell) {
   }
 
   mDocShell = aDocShell;  // Weak Reference
+  mBrowsingContext = aDocShell->GetBrowsingContext();
 
   nsCOMPtr<nsPIDOMWindowOuter> parentWindow = GetScriptableParentOrNull();
   MOZ_RELEASE_ASSERT(!parentWindow || !mTabGroup ||
@@ -2627,11 +2646,12 @@ bool nsPIDOMWindowOuter::GetServiceWorkersTestingEnabled() {
 
 Nullable<WindowProxyHolder> nsGlobalWindowOuter::GetParentOuter() {
   nsPIDOMWindowOuter* parent = GetScriptableParent();
-  if (!parent) {
+  BrowsingContext* parentBC;
+  if (!parent || !(parentBC = parent->GetBrowsingContext())) {
     return nullptr;
   }
 
-  return WindowProxyHolder(parent);
+  return WindowProxyHolder(parentBC);
 }
 
 /**
@@ -2699,14 +2719,11 @@ static nsresult GetTopImpl(nsGlobalWindowOuter* aWin, nsPIDOMWindowOuter** aTop,
 
     prevParent = parent;
 
-    nsCOMPtr<nsPIDOMWindowOuter> newParent;
     if (aScriptable) {
-      newParent = parent->GetScriptableParent();
+      parent = parent->GetScriptableParent();
     } else {
-      newParent = parent->GetParent();
+      parent = parent->GetParent();
     }
-
-    parent = newParent;
 
   } while (parent != prevParent);
 
@@ -2763,16 +2780,16 @@ void nsGlobalWindowOuter::GetContentOuter(JSContext* aCx,
 already_AddRefed<nsPIDOMWindowOuter> nsGlobalWindowOuter::GetContentInternal(
     ErrorResult& aError, CallerType aCallerType) {
   // First check for a named frame named "content"
-  nsCOMPtr<nsPIDOMWindowOuter> domWindow =
-      GetChildWindow(NS_LITERAL_STRING("content"));
-  if (domWindow) {
-    return domWindow.forget();
+  RefPtr<BrowsingContext> bc = GetChildWindow(NS_LITERAL_STRING("content"));
+  if (bc) {
+    nsCOMPtr<nsPIDOMWindowOuter> content(bc->GetDOMWindow());
+    return content.forget();
   }
 
   // If we're contained in <iframe mozbrowser>, then GetContent is the same as
   // window.top.
   if (mDocShell && mDocShell->GetIsInMozBrowser()) {
-    domWindow = GetScriptableTop();
+    nsCOMPtr<nsPIDOMWindowOuter> domWindow(GetScriptableTop());
     return domWindow.forget();
   }
 
@@ -2811,7 +2828,7 @@ already_AddRefed<nsPIDOMWindowOuter> nsGlobalWindowOuter::GetContentInternal(
     return nullptr;
   }
 
-  domWindow = primaryContent->GetWindow();
+  nsCOMPtr<nsPIDOMWindowOuter> domWindow = primaryContent->GetWindow();
   return domWindow.forget();
 }
 
@@ -3556,13 +3573,14 @@ uint32_t nsGlobalWindowOuter::Length() {
 
 Nullable<WindowProxyHolder> nsGlobalWindowOuter::GetTopOuter() {
   nsCOMPtr<nsPIDOMWindowOuter> top = GetScriptableTop();
-  if (!top) {
+  BrowsingContext* topBC;
+  if (!top || !(topBC = top->GetBrowsingContext())) {
     return nullptr;
   }
-  return WindowProxyHolder(top.forget());
+  return WindowProxyHolder(topBC);
 }
 
-nsPIDOMWindowOuter* nsGlobalWindowOuter::GetChildWindow(
+already_AddRefed<BrowsingContext> nsGlobalWindowOuter::GetChildWindow(
     const nsAString& aName) {
   nsCOMPtr<nsIDocShell> docShell(GetDocShell());
   NS_ENSURE_TRUE(docShell, nullptr);
@@ -3571,7 +3589,9 @@ nsPIDOMWindowOuter* nsGlobalWindowOuter::GetChildWindow(
   docShell->FindChildWithName(aName, false, true, nullptr, nullptr,
                               getter_AddRefs(child));
 
-  return child ? child->GetWindow() : nullptr;
+  return child && child->GetWindow()
+             ? do_AddRef(child->GetWindow()->GetBrowsingContext())
+             : nullptr;
 }
 
 bool nsGlobalWindowOuter::DispatchCustomEvent(const nsAString& aEventName) {
@@ -5239,10 +5259,11 @@ Nullable<WindowProxyHolder> nsGlobalWindowOuter::OpenOuter(
     ErrorResult& aError) {
   nsCOMPtr<nsPIDOMWindowOuter> window;
   aError = OpenJS(aUrl, aName, aOptions, getter_AddRefs(window));
-  if (!window) {
+  RefPtr<BrowsingContext> bc;
+  if (!window || !(bc = window->GetBrowsingContext())) {
     return nullptr;
   }
-  return WindowProxyHolder(window.forget());
+  return WindowProxyHolder(bc.forget());
 }
 
 nsresult nsGlobalWindowOuter::Open(const nsAString& aUrl,
@@ -5335,16 +5356,17 @@ Nullable<WindowProxyHolder> nsGlobalWindowOuter::OpenDialogOuter(
                         nullptr,             // aLoadState
                         false,               // aForceNoOpener
                         getter_AddRefs(dialog));
-  if (!dialog) {
+  RefPtr<BrowsingContext> bc;
+  if (!dialog || !(bc = dialog->GetBrowsingContext())) {
     return nullptr;
   }
-  return WindowProxyHolder(dialog.forget());
+  return WindowProxyHolder(bc.forget());
 }
 
-already_AddRefed<nsPIDOMWindowOuter> nsGlobalWindowOuter::GetFramesOuter() {
+BrowsingContext* nsGlobalWindowOuter::GetFramesOuter() {
   RefPtr<nsPIDOMWindowOuter> frames(this);
   FlushPendingNotifications(FlushType::ContentAndNotify);
-  return frames.forget();
+  return mBrowsingContext;
 }
 
 nsGlobalWindowInner* nsGlobalWindowOuter::CallerInnerWindow(JSContext* aCx) {
@@ -5528,12 +5550,13 @@ void nsGlobalWindowOuter::PostMessageMozOuter(JSContext* aCx,
 
   // Create and asynchronously dispatch a runnable which will handle actual DOM
   // event creation and dispatch.
-  RefPtr<PostMessageEvent> event =
-      new PostMessageEvent(nsContentUtils::IsCallerChrome() || !callerInnerWin
-                               ? nullptr
-                               : callerInnerWin->GetOuterWindowInternal(),
-                           origin, this, providedPrincipal,
-                           callerInnerWin ? callerInnerWin->GetDoc() : nullptr);
+  RefPtr<PostMessageEvent> event = new PostMessageEvent(
+      nsContentUtils::IsCallerChrome() || !callerInnerWin ||
+              !callerInnerWin->GetOuterWindowInternal()
+          ? nullptr
+          : callerInnerWin->GetOuterWindowInternal()->GetBrowsingContext(),
+      origin, this, providedPrincipal,
+      callerInnerWin ? callerInnerWin->GetDoc() : nullptr);
 
   JS::Rooted<JS::Value> message(aCx, aMessage);
   JS::Rooted<JS::Value> transfer(aCx, aTransfer);
@@ -7060,13 +7083,13 @@ ChromeMessageBroadcaster* nsGlobalWindowOuter::GetGroupMessageManager(
 }
 
 void nsPIDOMWindowOuter::SetOpenerForInitialContentBrowser(
-    nsPIDOMWindowOuter* aOpenerWindow) {
+    BrowsingContext* aOpenerWindow) {
   MOZ_ASSERT(!mOpenerForInitialContentBrowser,
              "Don't set OpenerForInitialContentBrowser twice!");
   mOpenerForInitialContentBrowser = aOpenerWindow;
 }
 
-already_AddRefed<nsPIDOMWindowOuter>
+already_AddRefed<BrowsingContext>
 nsPIDOMWindowOuter::TakeOpenerForInitialContentBrowser() {
   // Intentionally forget our own member
   return mOpenerForInitialContentBrowser.forget();
@@ -7267,7 +7290,7 @@ mozilla::dom::TabGroup* nsPIDOMWindowOuter::TabGroup() {
 }
 
 /* static */ already_AddRefed<nsGlobalWindowOuter> nsGlobalWindowOuter::Create(
-    nsIDocShell* aDocShell, bool aIsChrome) {
+    nsDocShell* aDocShell, bool aIsChrome) {
   uint64_t outerWindowID = aDocShell->GetOuterWindowID();
   RefPtr<nsGlobalWindowOuter> window = new nsGlobalWindowOuter(outerWindowID);
   if (aIsChrome) {
@@ -7410,8 +7433,3 @@ nsPIDOMWindowOuter::nsPIDOMWindowOuter(uint64_t aWindowID)
       mLargeAllocStatus(LargeAllocStatus::NONE) {}
 
 nsPIDOMWindowOuter::~nsPIDOMWindowOuter() {}
-
-mozilla::dom::BrowsingContext* nsPIDOMWindowOuter::GetBrowsingContext() const {
-  return mDocShell ? nsDocShell::Cast(mDocShell)->GetBrowsingContext()
-                   : nullptr;
-}
