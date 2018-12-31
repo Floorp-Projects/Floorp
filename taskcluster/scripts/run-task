@@ -540,6 +540,7 @@ def collect_vcs_options(args, project):
     return {
         'store-path': store_path,
         'project': project,
+        'env-prefix': env_prefix,
         'checkout': checkout,
         'sparse-profile': sparse_profile,
         'base-repo': base_repo,
@@ -547,6 +548,26 @@ def collect_vcs_options(args, project):
         'revision': revision,
         'branch': branch,
     }
+
+
+def vcs_checkout_from_args(args, project):
+    options = collect_vcs_options(args, project)
+
+    if not options['checkout']:
+        if options['branch'] and not options['revision']:
+            print('task should be defined in terms of non-symbolic revision')
+            sys.exit(1)
+        return
+
+    os.environ['%s_HEAD_REV' % options['env-prefix']] = vcs_checkout(
+        options['head-repo'],
+        options['checkout'],
+        options['store-path'],
+        base_repo=options['base-repo'],
+        revision=options['revision'],
+        fetch_hgfingerprint=args.fetch_hgfingerprint,
+        branch=options['branch'],
+        sparse_profile=options['sparse-profile'])
 
 
 def main(args):
@@ -722,44 +743,8 @@ def main(args):
         os.setresgid(gid, gid, gid)
         os.setresuid(uid, uid, uid)
 
-    # Checkout the repository, setting the GECKO_HEAD_REV to the current
-    # revision hash. Revision hashes have priority over symbolic revisions. We
-    # disallow running tasks with symbolic revisions unless they have been
-    # resolved by a checkout.
-    gecko_options = collect_vcs_options(args, 'gecko')
-
-    if gecko_options['checkout']:
-        os.environ['GECKO_HEAD_REV'] = vcs_checkout(
-            gecko_options['head-repo'],
-            gecko_options['checkout'],
-            gecko_options['store-path'],
-            fetch_hgfingerprint=args.fetch_hgfingerprint,
-            base_repo=gecko_options['base-repo'],
-            revision=gecko_options['revision'],
-            branch=gecko_options['branch'],
-            sparse_profile=gecko_options['sparse-profile'])
-    elif gecko_options['branch'] and not gecko_options['revision']:
-        print('task should be defined in terms of non-symbolic revision')
-        return 1
-
-    # Checkout the repository, setting the COMM_HEAD_REV to the current
-    # revision hash. Revision hashes have priority over symbolic revisions. We
-    # disallow running tasks with symbolic revisions unless they have been
-    # resolved by a checkout.
-    comm_options = collect_vcs_options(args, 'comm')
-    if comm_options['checkout']:
-        os.environ['COMM_HEAD_REV'] = vcs_checkout(
-            comm_options['head-repo'],
-            comm_options['checkout'],
-            comm_options['store-path'],
-            fetch_hgfingerprint=args.fetch_hgfingerprint,
-            base_repo=comm_options['base-repo'],
-            revision=comm_options['revision'],
-            branch=comm_options['branch'],
-            sparse_profile=comm_options['sparse-profile'])
-    elif comm_options['branch'] and not comm_options['revision']:
-        print('task should be defined in terms of non-symbolic revision')
-        return 1
+    vcs_checkout_from_args(args, 'gecko')
+    vcs_checkout_from_args(args, 'comm')
 
     try:
         if 'GECKO_PATH' in os.environ:
