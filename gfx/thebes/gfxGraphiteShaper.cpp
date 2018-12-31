@@ -33,7 +33,6 @@ gfxGraphiteShaper::gfxGraphiteShaper(gfxFont *aFont)
       mGrFace(mFont->GetFontEntry()->GetGrFace()),
       mGrFont(nullptr),
       mFallbackToSmallCaps(false) {
-  mCallbackData.mDrawTarget = nullptr;
   mCallbackData.mFont = aFont;
 }
 
@@ -47,7 +46,7 @@ gfxGraphiteShaper::~gfxGraphiteShaper() {
 /*static*/ float gfxGraphiteShaper::GrGetAdvance(const void *appFontHandle,
                                                  uint16_t glyphid) {
   const CallbackData *cb = static_cast<const CallbackData *>(appFontHandle);
-  return FixedToFloat(cb->mFont->GetGlyphWidth(*cb->mDrawTarget, glyphid));
+  return FixedToFloat(cb->mFont->GetGlyphWidth(glyphid));
 }
 
 static inline uint32_t MakeGraphiteLangTag(uint32_t aTag) {
@@ -84,8 +83,6 @@ bool gfxGraphiteShaper::ShapeText(DrawTarget *aDrawTarget,
   if (!mFont->SetupCairoFont(aDrawTarget)) {
     return false;
   }
-
-  mCallbackData.mDrawTarget = aDrawTarget;
 
   const gfxFontStyle *style = mFont->GetStyle();
 

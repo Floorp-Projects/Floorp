@@ -483,7 +483,7 @@ uint32_t gfxGDIFont::GetGlyph(uint32_t aUnicode, uint32_t aVarSelector) {
   return glyph;
 }
 
-int32_t gfxGDIFont::GetGlyphWidth(DrawTarget &aDrawTarget, uint16_t aGID) {
+int32_t gfxGDIFont::GetGlyphWidth(uint16_t aGID) {
   if (!mGlyphWidths) {
     mGlyphWidths = MakeUnique<nsDataHashtable<nsUint32HashKey, int32_t>>(128);
   }

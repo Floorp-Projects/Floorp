@@ -29,8 +29,7 @@ class gfxFT2FontBase : public gfxFont {
   virtual uint32_t GetGlyph(uint32_t unicode,
                             uint32_t variation_selector) override;
   virtual bool ProvidesGlyphWidths() const override { return true; }
-  virtual int32_t GetGlyphWidth(DrawTarget& aDrawTarget,
-                                uint16_t aGID) override;
+  virtual int32_t GetGlyphWidth(uint16_t aGID) override;
 
   virtual bool SetupCairoFont(DrawTarget* aDrawTarget) override;
 
