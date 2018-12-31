@@ -22,7 +22,7 @@ dictionary KeyframeEffectOptions : EffectTiming {
 
 // KeyframeEffect should run in the caller's compartment to do custom
 // processing on the `keyframes` object.
-[Func="nsDocument::IsWebAnimationsEnabled",
+[Func="nsIDocument::IsWebAnimationsEnabled",
  RunConstructorInCallerCompartment,
  Constructor ((Element or CSSPseudoElement)? target,
               object? keyframes,

@@ -14,7 +14,7 @@
 #include "mozilla/IntegerRange.h"
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/StyleSheetInlines.h"
-#include "nsDocument.h"
+#include "nsIDocument.h"
 #include "nsStyleSheetService.h"
 #include "nsXBLPrototypeResources.h"
 

@@ -61,7 +61,7 @@
 #include "mozilla/InternalMutationEvent.h"
 #include "mozilla/MouseEvents.h"
 #include "nsNodeUtils.h"
-#include "nsDocument.h"
+#include "nsIDocument.h"
 #include "nsAttrValueOrString.h"
 #include "nsQueryObject.h"
 #ifdef MOZ_XUL
@@ -1143,7 +1143,7 @@ void FragmentOrElement::DestroyContent() {
   // around the flattened tree.
   //
   // TODO(emilio): I suspect this can be asserted against instead, with a bit of
-  // effort to avoid calling nsDocument::Destroy with a shell...
+  // effort to avoid calling nsIDocument::Destroy with a shell...
   if (IsElement()) {
     AsElement()->ClearServoData();
   }
@@ -1234,7 +1234,7 @@ class ContentUnbinder : public Runnable {
         // observers and they should really see consistent
         // tree state.
         // If this code changes, change the corresponding code in
-        // FragmentOrElement's and nsDocument's unlink impls.
+        // FragmentOrElement's and nsIDocument's unlink impls.
         nsCOMPtr<nsIContent> child = container->GetLastChild();
         container->DisconnectChild(child);
         UnbindSubtree(child);
@@ -1340,7 +1340,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(FragmentOrElement)
     while (tmp->HasChildren()) {
       // Hold a strong ref to the node when we remove it, because we may be
       // the last reference to it.
-      // If this code changes, change the corresponding code in nsDocument's
+      // If this code changes, change the corresponding code in nsIDocument's
       // unlink impl and ContentUnbinder::UnbindSubtree.
       nsCOMPtr<nsIContent> child = tmp->GetLastChild();
       tmp->DisconnectChild(child);
