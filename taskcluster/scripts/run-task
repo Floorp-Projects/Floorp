@@ -519,7 +519,7 @@ def main(args):
     parser = argparse.ArgumentParser()
     parser.add_argument('--user', default='worker', help='user to run as')
     parser.add_argument('--group', default='worker', help='group to run as')
-    parser.add_argument('--vcs-checkout',
+    parser.add_argument('--gecko-checkout',
                         help='Directory where Gecko checkout should be created')
     parser.add_argument('--sparse-profile',
                         help='Path to sparse checkout profile to use')
@@ -534,8 +534,8 @@ def main(args):
     args = parser.parse_args(our_args)
 
     # expand ~ in some paths
-    if args.vcs_checkout:
-        args.vcs_checkout = os.path.expanduser(args.vcs_checkout)
+    if args.gecko_checkout:
+        args.gecko_checkout = os.path.expanduser(args.gecko_checkout)
     if args.tools_checkout:
         args.tools_checkout = os.path.expanduser(args.tools_checkout)
     if 'HG_STORE_PATH' in os.environ:
@@ -670,9 +670,9 @@ def main(args):
         if running_as_root:
             os.chown(store_path, uid, gid)
 
-    prepare_checkout_dir(args.vcs_checkout)
+    prepare_checkout_dir(args.gecko_checkout)
     prepare_checkout_dir(args.tools_checkout)
-    if args.vcs_checkout or args.tools_checkout or args.comm_checkout:
+    if args.gecko_checkout or args.tools_checkout or args.comm_checkout:
         prepare_hg_store_path()
 
     if IS_POSIX and running_as_root:
@@ -692,7 +692,7 @@ def main(args):
     # revision hash. Revision hashes have priority over symbolic revisions. We
     # disallow running tasks with symbolic revisions unless they have been
     # resolved by a checkout.
-    if args.vcs_checkout:
+    if args.gecko_checkout:
         base_repo = os.environ.get('GECKO_BASE_REPOSITORY')
         # Some callers set the base repository to mozilla-central for historical
         # reasons. Switch to mozilla-unified because robustcheckout works best
@@ -702,7 +702,7 @@ def main(args):
 
         os.environ['GECKO_HEAD_REV'] = vcs_checkout(
             os.environ['GECKO_HEAD_REPOSITORY'],
-            args.vcs_checkout,
+            args.gecko_checkout,
             os.environ['HG_STORE_PATH'],
             fetch_hgfingerprint=args.fetch_hgfingerprint,
             base_repo=base_repo,
