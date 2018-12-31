@@ -1,8 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const PAGE_URL = "chrome://browser/content/aboutconfig/aboutconfig.html";
-
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -12,24 +10,14 @@ add_task(async function setup() {
 });
 
 add_task(async function test_load_title() {
-  await BrowserTestUtils.withNewTab({
-    gBrowser,
-    url: PAGE_URL,
-  }, async browser => {
-    info("about:config loaded");
-    await content.document.l10n.ready;
-    Assert.equal(content.document.title, "about:config");
+  await AboutConfigTest.withNewTab(async function() {
+    Assert.equal(this.document.title, "about:config");
   });
 });
 
 add_task(async function test_load_settings() {
-  await BrowserTestUtils.withNewTab({
-    gBrowser,
-    url: PAGE_URL,
-  }, async browser => {
-    content.document.querySelector("button").click();
-
-    let list = [...content.document.getElementById("prefs")
+  await AboutConfigTest.withNewTab(async function() {
+    let list = [...this.document.getElementById("prefs")
       .getElementsByTagName("tr")];
     function getRow(name) {
       return list.find(row => row.querySelector("td").textContent == name);
