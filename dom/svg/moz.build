@@ -11,7 +11,6 @@ MOCHITEST_MANIFESTS += ['test/mochitest.ini']
 
 EXPORTS += [
     'nsSVGClass.h',
-    'nsSVGFeatures.h',
 ]
 
 EXPORTS.mozilla += [
@@ -131,7 +130,6 @@ UNIFIED_SOURCES += [
     'nsSVGBoolean.cpp',
     'nsSVGClass.cpp',
     'nsSVGEnum.cpp',
-    'nsSVGFeatures.cpp',
     'nsSVGInteger.cpp',
     'nsSVGIntegerPair.cpp',
     'nsSVGLength2.cpp',
