@@ -1,3 +1,5 @@
+// |jit-test| skip-if: getBuildConfiguration()['arm64']
+// skip arm64 due to bug 1513231
 const RuntimeError = WebAssembly.RuntimeError;
 
 function loadModuleSrc(type, ext, offset, align, drop = false) {
