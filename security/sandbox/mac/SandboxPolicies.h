@@ -231,6 +231,8 @@ static const char contentSandboxRules[] = R"SANDBOX_LITERAL(
   (if (defined? 'iokit-get-properties)
     (allow iokit-get-properties
       (iokit-property "board-id")
+      (iokit-property "vendor-id")
+      (iokit-property "device-id")
       (iokit-property "IODVDBundleName")
       (iokit-property "IOGLBundleName")
       (iokit-property "IOGVACodec")
