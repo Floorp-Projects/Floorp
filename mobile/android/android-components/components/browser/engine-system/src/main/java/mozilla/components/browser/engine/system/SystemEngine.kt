@@ -23,7 +23,7 @@ import org.json.JSONObject
  * WebView-based implementation of the Engine interface.
  */
 class SystemEngine(
-    context: Context,
+    private val context: Context,
     private val defaultSettings: Settings = DefaultSettings()
 ) : Engine {
     init {
@@ -44,7 +44,7 @@ class SystemEngine(
             // TODO Implement private browsing: https://github.com/mozilla-mobile/android-components/issues/649
             throw UnsupportedOperationException("Private browsing is not supported in ${this::class.java.simpleName}")
         }
-        return SystemEngineSession(defaultSettings)
+        return SystemEngineSession(context, defaultSettings)
     }
 
     /**

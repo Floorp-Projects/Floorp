@@ -27,10 +27,12 @@ class SystemWindowRequest(
     private val resultMsg: Message? = null
 ) : WindowRequest {
 
-    override val url: String = "about:blank"
+    override val url: String = ""
 
     override fun prepare(engineSession: EngineSession) {
-        (engineSession as SystemEngineSession).webView = newWebView
+        newWebView?.let {
+            (engineSession as SystemEngineSession).webView = it
+        }
     }
 
     override fun start() {

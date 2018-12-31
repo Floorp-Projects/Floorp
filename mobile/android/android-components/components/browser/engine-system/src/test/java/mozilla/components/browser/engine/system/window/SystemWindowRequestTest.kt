@@ -6,16 +6,20 @@ package mozilla.components.browser.engine.system.window
 
 import android.os.Message
 import android.webkit.WebView
+import androidx.test.core.app.ApplicationProvider
 import mozilla.components.browser.engine.system.SystemEngineSession
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import org.junit.runner.RunWith
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
+import org.robolectric.RobolectricTestRunner
 
+@RunWith(RobolectricTestRunner::class)
 class SystemWindowRequestTest {
 
     @Test
@@ -26,7 +30,7 @@ class SystemWindowRequestTest {
 
         assertTrue(request.openAsDialog)
         assertTrue(request.triggeredByUser)
-        assertEquals("about:blank", request.url)
+        assertEquals("", request.url)
     }
 
     @Test
@@ -35,7 +39,7 @@ class SystemWindowRequestTest {
         val newWebView = mock(WebView::class.java)
         val request = SystemWindowRequest(curWebView, newWebView)
 
-        val engineSession = SystemEngineSession()
+        val engineSession = SystemEngineSession(ApplicationProvider.getApplicationContext())
         request.prepare(engineSession)
         assertSame(newWebView, engineSession.webView)
     }
