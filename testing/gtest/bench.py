@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 
-import sys, subprocess, json, statistics
+import sys
+import subprocess
+import json
+import statistics
 
 proc = subprocess.Popen(["./mach", "gtest", sys.argv[1]], stdout=subprocess.PIPE)
 for line in proc.stdout:
