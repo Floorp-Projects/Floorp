@@ -9,7 +9,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/SVGAnimationElement.h"
-#include "nsSMILAnimationFunction.h"
+#include "mozilla/SMILAnimationFunction.h"
 
 nsresult NS_NewSVGAnimateTransformElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
@@ -22,7 +22,7 @@ class SVGAnimateTransformElement final : public SVGAnimationElement {
   explicit SVGAnimateTransformElement(
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
-  nsSMILAnimationFunction mAnimationFunction;
+  SMILAnimationFunction mAnimationFunction;
   friend nsresult(::NS_NewSVGAnimateTransformElement(
       nsIContent** aResult,
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
@@ -41,7 +41,7 @@ class SVGAnimateTransformElement final : public SVGAnimationElement {
                               nsAttrValue& aResult) override;
 
   // SVGAnimationElement
-  virtual nsSMILAnimationFunction& AnimationFunction() override;
+  virtual SMILAnimationFunction& AnimationFunction() override;
 };
 
 }  // namespace dom

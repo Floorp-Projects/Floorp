@@ -31,7 +31,7 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGSetElement)
 
 //----------------------------------------------------------------------
 
-nsSMILAnimationFunction& SVGSetElement::AnimationFunction() {
+SMILAnimationFunction& SVGSetElement::AnimationFunction() {
   return mAnimationFunction;
 }
 
