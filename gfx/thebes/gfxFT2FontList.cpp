@@ -518,7 +518,7 @@ nsresult FT2FontEntry::ReadCMAP(FontInfoData* aFontInfoData) {
       // check to see if the cmap includes complex script codepoints
       if (charmap->TestRange(sr->rangeStart, sr->rangeEnd)) {
         // We check for GSUB here, as GPOS alone would not be ok.
-        if (hasGSUB && SupportsScriptInGSUB(sr->tags)) {
+        if (hasGSUB && SupportsScriptInGSUB(sr->tags, sr->numTags)) {
           continue;
         }
         charmap->ClearRange(sr->rangeStart, sr->rangeEnd);

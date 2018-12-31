@@ -43,13 +43,13 @@ class PromiseResolver final : public PromiseNativeHandler {
 enum class DocumentL10nState { Initialized = 0, InitialTranslationTriggered };
 
 /**
- * This class maintains localization status of the nsDocument.
+ * This class maintains localization status of the document.
  *
- * The nsDocument will initialize it lazily when a link with a
- * localization resource is added to the document.
+ * The nsIDocument will initialize it lazily when a link with a localization
+ * resource is added to the document.
  *
  * Once initialized, DocumentL10n relays all API methods to an
- * instance of mozIDOMLocalization and maintaines a single promise
+ * instance of mozIDOMLocalization and maintains a single promise
  * which gets resolved the first time the document gets translated.
  */
 class DocumentL10n final : public nsIDOMEventListener, public nsWrapperCache {

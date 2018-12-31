@@ -13,7 +13,7 @@ import sys
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
-print ("""static Range os2UnicodeRangesSorted[] =
+print ("""static OS2Range _hb_os2_unicode_ranges[] =
 {""")
 
 args = sys.argv[1:]

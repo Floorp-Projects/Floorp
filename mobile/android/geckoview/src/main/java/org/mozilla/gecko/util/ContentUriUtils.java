@@ -16,7 +16,6 @@
 
 package org.mozilla.gecko.util;
 
-import android.annotation.SuppressLint;
 import android.content.ContentUris;
 import android.content.Context;
 import android.database.Cursor;
@@ -46,24 +45,26 @@ public class ContentUriUtils {
      * @param uri The Uri to query.
      * @author paulburke
      */
-    @SuppressLint("NewAPI")
-    public static @Nullable String getOriginalFilePathFromUri(final Context context, final Uri uri) throws IllegalArgumentException {
-
-        final boolean isKitKat = Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT;
-
+    public static @Nullable String getOriginalFilePathFromUri(final Context context, final Uri uri) {
         // DocumentProvider
-        if (isKitKat && DocumentsContract.isDocumentUri(context, uri)) {
+        if (Build.VERSION.SDK_INT >= 19 && DocumentsContract.isDocumentUri(context, uri)) {
             // ExternalStorageProvider
             if (isExternalStorageDocument(uri)) {
                 final String docId = DocumentsContract.getDocumentId(uri);
+                // The AOSP ExternalStorageProvider creates document IDs of the form
+                // "storage device ID" + ':' + "document path".
                 final String[] split = docId.split(":");
                 final String type = split[0];
+                final String docPath = split[1];
 
+                final String rootPath;
                 if ("primary".equalsIgnoreCase(type)) {
-                    return Environment.getExternalStorageDirectory() + "/" + split[1];
+                    rootPath = Environment.getExternalStorageDirectory().getAbsolutePath();
+                } else {
+                    rootPath = FileUtils.getExternalStoragePath(context, type);
                 }
-
-                // TODO handle non-primary volumes
+                return !TextUtils.isEmpty(rootPath) ?
+                        rootPath + "/" + docPath : null;
             }
             // DownloadsProvider
             else if (isDownloadsDocument(uri)) {
@@ -159,8 +160,7 @@ public class ContentUriUtils {
      * @author paulburke
      */
     private static String getDataColumn(Context context, Uri uri, String selection,
-                                        String[] selectionArgs) throws IllegalArgumentException {
-
+                                        String[] selectionArgs) {
         final String column = "_data";
         final String[] projection = {
                 column
@@ -169,8 +169,8 @@ public class ContentUriUtils {
         try (Cursor cursor = context.getContentResolver().query(uri, projection, selection, selectionArgs,
                 null)) {
             if (cursor != null && cursor.moveToFirst()) {
-                final int column_index = cursor.getColumnIndexOrThrow(column);
-                return cursor.getString(column_index);
+                final int column_index = cursor.getColumnIndex(column);
+                return column_index >= 0 ? cursor.getString(column_index) : null;
             }
         }
         return null;

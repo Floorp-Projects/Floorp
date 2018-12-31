@@ -29,7 +29,7 @@
 #include "nsHashKeys.h"
 #include "nsCCUncollectableMarker.h"
 #include "nsNameSpaceManager.h"
-#include "nsDocument.h"
+#include "nsIDocument.h"
 #include "nsWindowSizes.h"
 
 using namespace mozilla;
@@ -85,21 +85,21 @@ NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(nsNodeInfoManager, Release)
 
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(nsNodeInfoManager)
   if (tmp->mDocument) {
-    return NS_CYCLE_COLLECTION_PARTICIPANT(nsDocument)
+    return NS_CYCLE_COLLECTION_PARTICIPANT(nsIDocument)
         ->CanSkip(tmp->mDocument, aRemovingAllowed);
   }
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_END
 
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_BEGIN(nsNodeInfoManager)
   if (tmp->mDocument) {
-    return NS_CYCLE_COLLECTION_PARTICIPANT(nsDocument)
+    return NS_CYCLE_COLLECTION_PARTICIPANT(nsIDocument)
         ->CanSkipInCC(tmp->mDocument);
   }
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_END
 
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_BEGIN(nsNodeInfoManager)
   if (tmp->mDocument) {
-    return NS_CYCLE_COLLECTION_PARTICIPANT(nsDocument)
+    return NS_CYCLE_COLLECTION_PARTICIPANT(nsIDocument)
         ->CanSkipThis(tmp->mDocument);
   }
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_END

@@ -546,7 +546,7 @@ bool gfxDWriteFont::ProvidesGlyphWidths() const {
           !mStyle.variationSettings.IsEmpty());
 }
 
-int32_t gfxDWriteFont::GetGlyphWidth(DrawTarget& aDrawTarget, uint16_t aGID) {
+int32_t gfxDWriteFont::GetGlyphWidth(uint16_t aGID) {
   if (!mGlyphWidths) {
     mGlyphWidths = MakeUnique<nsDataHashtable<nsUint32HashKey, int32_t>>(128);
   }

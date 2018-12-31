@@ -39,7 +39,7 @@ namespace AAT {
 
 struct BaselineTableFormat0Part
 {
-  inline bool sanitize (hb_sanitize_context_t *c) const
+  bool sanitize (hb_sanitize_context_t *c) const
   {
     TRACE_SANITIZE (this);
     return_trace (likely (c->check_struct (this)));
@@ -57,7 +57,7 @@ struct BaselineTableFormat0Part
 
 struct BaselineTableFormat1Part
 {
-  inline bool sanitize (hb_sanitize_context_t *c) const
+  bool sanitize (hb_sanitize_context_t *c) const
   {
     TRACE_SANITIZE (this);
     return_trace (likely (c->check_struct (this) &&
@@ -75,7 +75,7 @@ struct BaselineTableFormat1Part
 
 struct BaselineTableFormat2Part
 {
-  inline bool sanitize (hb_sanitize_context_t *c) const
+  bool sanitize (hb_sanitize_context_t *c) const
   {
     TRACE_SANITIZE (this);
     return_trace (likely (c->check_struct (this)));
@@ -98,7 +98,7 @@ struct BaselineTableFormat2Part
 
 struct BaselineTableFormat3Part
 {
-  inline bool sanitize (hb_sanitize_context_t *c) const
+  bool sanitize (hb_sanitize_context_t *c) const
   {
     TRACE_SANITIZE (this);
     return_trace (c->check_struct (this) && lookupTable.sanitize (c));
@@ -116,15 +116,16 @@ struct BaselineTableFormat3Part
 
 struct bsln
 {
-  static const hb_tag_t tableTag = HB_AAT_TAG_bsln;
+  enum { tableTag = HB_AAT_TAG_bsln };
 
-  inline bool sanitize (hb_sanitize_context_t *c) const
+  bool sanitize (hb_sanitize_context_t *c) const
   {
     TRACE_SANITIZE (this);
     if (unlikely (!(c->check_struct (this) && defaultBaseline < 32)))
       return_trace (false);
 
-    switch (format) {
+    switch (format)
+    {
     case 0: return_trace (parts.format0.sanitize (c));
     case 1: return_trace (parts.format1.sanitize (c));
     case 2: return_trace (parts.format2.sanitize (c));

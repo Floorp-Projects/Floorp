@@ -4035,7 +4035,7 @@ void PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush) {
   bool didLayoutFlush = false;
   if (isSafeToFlush) {
     // Record that we are in a flush, so that our optimization in
-    // nsDocument::FlushPendingNotifications doesn't skip any re-entrant
+    // nsIDocument::FlushPendingNotifications doesn't skip any re-entrant
     // calls to us.  Otherwise, we might miss some needed flushes, since
     // we clear mNeedStyleFlush / mNeedLayoutFlush here at the top of
     // the function but we might not have done the work yet.
@@ -4047,7 +4047,7 @@ void PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush) {
     // need the frames in the external document to be constructed for the
     // filter to work). We only need external resources to be flushed when the
     // main document is flushing >= FlushType::Frames, so we flush external
-    // resources here instead of nsDocument::FlushPendingNotifications.
+    // resources here instead of nsIDocument::FlushPendingNotifications.
     mDocument->FlushExternalResources(flushType);
 
     // Force flushing of any pending content notifications that might have

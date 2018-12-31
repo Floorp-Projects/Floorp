@@ -12,7 +12,7 @@
 #include "nsIAnonymousContentCreator.h"
 #include "nsIFrame.h"
 #include "nsCSSAnonBoxes.h"
-#include "nsDocument.h"
+#include "nsIDocument.h"
 
 namespace mozilla {
 namespace dom {

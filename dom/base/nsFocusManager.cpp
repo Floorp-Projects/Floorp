@@ -13,7 +13,7 @@
 #include "nsGkAtoms.h"
 #include "nsGlobalWindow.h"
 #include "nsContentUtils.h"
-#include "nsDocument.h"
+#include "nsIDocument.h"
 #include "nsIContentParent.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDOMChromeWindow.h"
@@ -986,7 +986,7 @@ nsFocusManager::FireDelayedEvents(nsIDocument* aDocument) {
           !aDocument->GetInnerWindow()->IsCurrentInnerWindow()) {
         // If the document was navigated away from or is defunct, don't bother
         // firing events on it. Note the symmetry between this condition and
-        // the similar one in nsDocument.cpp:FireOrClearDelayedEvents.
+        // the similar one in nsIDocument.cpp:FireOrClearDelayedEvents.
         mDelayedBlurFocusEvents.RemoveElementAt(i);
         --i;
       } else if (!aDocument->EventHandlingSuppressed()) {

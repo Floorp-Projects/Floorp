@@ -451,6 +451,12 @@ class nsIDocument : public nsINode,
   template <typename T>
   using NotNull = mozilla::NotNull<T>;
 
+  explicit nsIDocument(const char* aContentType);
+  virtual ~nsIDocument();
+
+  nsIDocument(const nsIDocument&) = delete;
+  nsIDocument& operator=(const nsIDocument&) = delete;
+
  public:
   typedef nsExternalResourceMap::ExternalResourceLoad ExternalResourceLoad;
   typedef mozilla::FullscreenRequest FullscreenRequest;
@@ -477,10 +483,6 @@ class nsIDocument : public nsINode,
       shell->func_ params_;                                                   \
     }                                                                         \
   } while (0)
-
-#ifdef MOZILLA_INTERNAL_API
-  nsIDocument();
-#endif
 
   // nsIApplicationCacheContainer
   NS_DECL_NSIAPPLICATIONCACHECONTAINER
@@ -624,7 +626,7 @@ class nsIDocument : public nsINode,
 
   /**
    * Signal that the document title may have changed
-   * (see nsDocument::GetTitle).
+   * (see nsIDocument::GetTitle).
    * @param aBoundTitleElement true if an HTML or SVG <title> element
    * has just been bound to the document.
    */
@@ -1902,7 +1904,7 @@ class nsIDocument : public nsINode,
 
   // Notify that a document state has changed.
   // This should only be called by callers whose state is also reflected in the
-  // implementation of nsDocument::GetDocumentState.
+  // implementation of nsIDocument::GetDocumentState.
   void DocumentStatesChanged(mozilla::EventStates aStateMask);
 
   // Observation hooks for style data to propagate notifications
@@ -3624,8 +3626,6 @@ class nsIDocument : public nsINode,
     }
   }
 
-  ~nsIDocument();
-
   // Never ever call this. Only call GetWindow!
   nsPIDOMWindowOuter* GetWindowInternal() const;
 
@@ -3813,7 +3813,7 @@ class nsIDocument : public nsINode,
 
   // This flag is only set in XMLDocument, for e.g. documents used in XBL. We
   // don't want animations to play in such documents, so we need to store the
-  // flag here so that we can check it in nsDocument::GetAnimationController.
+  // flag here so that we can check it in nsIDocument::GetAnimationController.
   bool mLoadedAsInteractiveData : 1;
 
   // If true, whoever is creating the document has gotten it to the
@@ -4108,7 +4108,7 @@ class nsIDocument : public nsINode,
 
   nsCString mContentLanguage;
 
-  // The channel that got passed to nsDocument::StartDocumentLoad(), if any.
+  // The channel that got passed to nsIDocument::StartDocumentLoad(), if any.
   nsCOMPtr<nsIChannel> mChannel;
 
  private:
@@ -4313,6 +4313,8 @@ class nsIDocument : public nsINode,
 
   nsDocHeaderData* mHeaderData;
 
+  // For determining if this is a flash document which should be
+  // blocked based on its principal.
   RefPtr<PrincipalFlashClassifier> mPrincipalFlashClassifier;
   mozilla::dom::FlashClassification mFlashClassification;
   // Do not use this value directly. Call the |IsThirdParty()| method, which

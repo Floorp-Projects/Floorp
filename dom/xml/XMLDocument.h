@@ -9,7 +9,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/BindingDeclarations.h"
-#include "nsDocument.h"
+#include "nsIDocument.h"
 #include "nsIScriptContext.h"
 
 class nsIURI;
@@ -18,11 +18,11 @@ class nsIChannel;
 namespace mozilla {
 namespace dom {
 
-class XMLDocument : public nsDocument {
+class XMLDocument : public nsIDocument {
  public:
   explicit XMLDocument(const char* aContentType = "application/xml");
 
-  NS_INLINE_DECL_REFCOUNTING_INHERITED(XMLDocument, nsDocument)
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(XMLDocument, nsIDocument)
 
   virtual void Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup) override;
   virtual void ResetToURI(nsIURI* aURI, nsILoadGroup* aLoadGroup,
@@ -58,7 +58,7 @@ class XMLDocument : public nsDocument {
 
   // .location is [Unforgeable], so we have to make it clear that the
   // nsIDocument version applies to us (it's shadowed by the XPCOM thing on
-  // nsDocument).
+  // nsIDocument).
   using nsIDocument::GetLocation;
 
  protected:

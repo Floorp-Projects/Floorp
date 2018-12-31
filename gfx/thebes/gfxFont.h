@@ -1940,7 +1940,7 @@ class gfxFont {
 
   // The return value is interpreted as a horizontal advance in 16.16 fixed
   // point format.
-  virtual int32_t GetGlyphWidth(DrawTarget& aDrawTarget, uint16_t aGID) {
+  virtual int32_t GetGlyphWidth(uint16_t aGID) {
     return -1;
   }
 

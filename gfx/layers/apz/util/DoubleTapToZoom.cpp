@@ -31,8 +31,8 @@ using FrameForPointOption = nsLayoutUtils::FrameForPointOption;
 // the root frame of |aShell|. If the point is inside a subdocument, returns
 // an element inside the subdocument, rather than the subdocument element
 // (and does so recursively).
-// The implementation was adapted from nsDocument::ElementFromPoint(), with
-// the notable exception that we don't pass nsLayoutUtils::IGNORE_CROSS_DOC
+// The implementation was adapted from DocumentOrShadowRoot::ElementFromPoint(),
+// with the notable exception that we don't pass nsLayoutUtils::IGNORE_CROSS_DOC
 // to GetFrameForPoint(), so as to get the behaviour described above in the
 // presence of subdocuments.
 static already_AddRefed<dom::Element> ElementFromPoint(

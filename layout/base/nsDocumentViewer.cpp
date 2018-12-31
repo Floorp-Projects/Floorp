@@ -2578,7 +2578,7 @@ NS_IMETHODIMP nsDocumentViewer::ClearSelection() {
 
 NS_IMETHODIMP nsDocumentViewer::SelectAll() {
   // XXX this is a temporary implementation copied from nsWebShell
-  // for now. I think nsDocument and friends should have some helper
+  // for now. I think nsIDocument and friends should have some helper
   // functions to make this easier.
 
   // use nsCopySupport::GetSelectionForCopy() ?

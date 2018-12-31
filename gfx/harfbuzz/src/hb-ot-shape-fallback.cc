@@ -25,7 +25,7 @@
  */
 
 #include "hb-ot-shape-fallback.hh"
-#include "hb-ot-layout-gsubgpos.hh"
+#include "hb-kern.hh"
 
 static unsigned int
 recategorize_combining_class (hb_codepoint_t u,
@@ -162,9 +162,9 @@ recategorize_combining_class (hb_codepoint_t u,
 }
 
 void
-_hb_ot_shape_fallback_position_recategorize_marks (const hb_ot_shape_plan_t *plan HB_UNUSED,
-						   hb_font_t *font HB_UNUSED,
-						   hb_buffer_t  *buffer)
+_hb_ot_shape_fallback_mark_position_recategorize_marks (const hb_ot_shape_plan_t *plan HB_UNUSED,
+						        hb_font_t *font HB_UNUSED,
+						        hb_buffer_t  *buffer)
 {
   unsigned int count = buffer->len;
   hb_glyph_info_t *info = buffer->info;
@@ -192,7 +192,7 @@ zero_mark_advances (hb_buffer_t *buffer,
 }
 
 static inline void
-position_mark (const hb_ot_shape_plan_t *plan,
+position_mark (const hb_ot_shape_plan_t *plan HB_UNUSED,
 	       hb_font_t *font,
 	       hb_buffer_t  *buffer,
 	       hb_glyph_extents_t &base_extents,
@@ -417,9 +417,9 @@ position_cluster (const hb_ot_shape_plan_t *plan,
 }
 
 void
-_hb_ot_shape_fallback_position (const hb_ot_shape_plan_t *plan,
-				hb_font_t *font,
-				hb_buffer_t  *buffer)
+_hb_ot_shape_fallback_mark_position (const hb_ot_shape_plan_t *plan,
+				     hb_font_t *font,
+				     hb_buffer_t  *buffer)
 {
   _hb_buffer_assert_gsubgpos_vars (buffer);
 
@@ -435,74 +435,59 @@ _hb_ot_shape_fallback_position (const hb_ot_shape_plan_t *plan,
 }
 
 
-/* Performs old-style TrueType kerning. */
+struct hb_ot_shape_fallback_kern_driver_t
+{
+  hb_ot_shape_fallback_kern_driver_t (hb_font_t   *font_,
+				      hb_buffer_t *buffer) :
+    font (font_), direction (buffer->props.direction) {}
+
+  hb_position_t get_kerning (hb_codepoint_t first, hb_codepoint_t second) const
+  {
+    hb_position_t kern = 0;
+    font->get_glyph_kerning_for_direction (first, second,
+					   direction,
+					   &kern, &kern);
+    return kern;
+  }
+
+  hb_font_t *font;
+  hb_direction_t direction;
+};
+
+/* Performs font-assisted kerning. */
 void
 _hb_ot_shape_fallback_kern (const hb_ot_shape_plan_t *plan,
 			    hb_font_t *font,
-			    hb_buffer_t  *buffer)
+			    hb_buffer_t *buffer)
 {
-  if (!plan->has_kern) return;
+  if (HB_DIRECTION_IS_HORIZONTAL (buffer->props.direction) ?
+      !font->has_glyph_h_kerning_func () :
+      !font->has_glyph_v_kerning_func ())
+    return;
 
-  OT::hb_ot_apply_context_t c (1, font, buffer);
-  c.set_lookup_mask (plan->kern_mask);
-  c.set_lookup_props (OT::LookupFlag::IgnoreMarks);
-  OT::hb_ot_apply_context_t::skipping_iterator_t &skippy_iter = c.iter_input;
-  skippy_iter.init (&c);
+  bool reverse = HB_DIRECTION_IS_BACKWARD (buffer->props.direction);
 
-  unsigned int count = buffer->len;
-  hb_glyph_info_t *info = buffer->info;
-  hb_glyph_position_t *pos = buffer->pos;
-  for (unsigned int idx = 0; idx < count;)
-  {
-    skippy_iter.reset (idx, 1);
-    if (!skippy_iter.next ())
-    {
-      idx++;
-      continue;
-    }
+  if (reverse)
+    buffer->reverse ();
 
-    hb_position_t x_kern, y_kern;
-    font->get_glyph_kerning_for_direction (info[idx].codepoint,
-					   info[skippy_iter.idx].codepoint,
-					   buffer->props.direction,
-					   &x_kern, &y_kern);
+  hb_ot_shape_fallback_kern_driver_t driver (font, buffer);
+  OT::hb_kern_machine_t<hb_ot_shape_fallback_kern_driver_t> machine (driver);
+  machine.kern (font, buffer, plan->kern_mask, false);
 
-    if (x_kern)
-    {
-      hb_position_t kern1 = x_kern >> 1;
-      hb_position_t kern2 = x_kern - kern1;
-      pos[idx].x_advance += kern1;
-      pos[skippy_iter.idx].x_advance += kern2;
-      pos[skippy_iter.idx].x_offset += kern2;
-      buffer->unsafe_to_break (idx, skippy_iter.idx + 1);
-    }
-
-    if (y_kern)
-    {
-      hb_position_t kern1 = y_kern >> 1;
-      hb_position_t kern2 = y_kern - kern1;
-      pos[idx].y_advance += kern1;
-      pos[skippy_iter.idx].y_advance += kern2;
-      pos[skippy_iter.idx].y_offset += kern2;
-      buffer->unsafe_to_break (idx, skippy_iter.idx + 1);
-    }
-
-    idx = skippy_iter.idx;
-  }
+  if (reverse)
+    buffer->reverse ();
 }
 
 
 /* Adjusts width of various spaces. */
 void
-_hb_ot_shape_fallback_spaces (const hb_ot_shape_plan_t *plan,
+_hb_ot_shape_fallback_spaces (const hb_ot_shape_plan_t *plan HB_UNUSED,
 			      hb_font_t *font,
 			      hb_buffer_t  *buffer)
 {
-  if (!HB_DIRECTION_IS_HORIZONTAL (buffer->props.direction))
-    return;
-
   hb_glyph_info_t *info = buffer->info;
   hb_glyph_position_t *pos = buffer->pos;
+  bool horizontal = HB_DIRECTION_IS_HORIZONTAL (buffer->props.direction);
   unsigned int count = buffer->len;
   for (unsigned int i = 0; i < count; i++)
     if (_hb_glyph_info_is_unicode_space (&info[i]) && !_hb_glyph_info_ligated (&info[i]))
@@ -523,27 +508,40 @@ _hb_ot_shape_fallback_spaces (const hb_ot_shape_plan_t *plan,
 	case t::SPACE_EM_5:
 	case t::SPACE_EM_6:
 	case t::SPACE_EM_16:
-	  pos[i].x_advance = (font->x_scale + ((int) space_type)/2) / (int) space_type;
+	  if (horizontal)
+	    pos[i].x_advance = +(font->x_scale + ((int) space_type)/2) / (int) space_type;
+	  else
+	    pos[i].y_advance = -(font->y_scale + ((int) space_type)/2) / (int) space_type;
 	  break;
 
 	case t::SPACE_4_EM_18:
-	  pos[i].x_advance = (int64_t) font->x_scale * 4 / 18;
+	  if (horizontal)
+	    pos[i].x_advance = (int64_t) +font->x_scale * 4 / 18;
+	  else
+	    pos[i].y_advance = (int64_t) -font->y_scale * 4 / 18;
 	  break;
 
 	case t::SPACE_FIGURE:
 	  for (char u = '0'; u <= '9'; u++)
 	    if (font->get_nominal_glyph (u, &glyph))
 	    {
-	      pos[i].x_advance = font->get_glyph_h_advance (glyph);
+	      if (horizontal)
+		pos[i].x_advance = font->get_glyph_h_advance (glyph);
+	      else
+		pos[i].y_advance = font->get_glyph_v_advance (glyph);
 	      break;
 	    }
 	  break;
 
 	case t::SPACE_PUNCTUATION:
-	  if (font->get_nominal_glyph ('.', &glyph))
-	    pos[i].x_advance = font->get_glyph_h_advance (glyph);
-	  else if (font->get_nominal_glyph (',', &glyph))
-	    pos[i].x_advance = font->get_glyph_h_advance (glyph);
+	  if (font->get_nominal_glyph ('.', &glyph) ||
+	      font->get_nominal_glyph (',', &glyph))
+	  {
+	    if (horizontal)
+	      pos[i].x_advance = font->get_glyph_h_advance (glyph);
+	    else
+	      pos[i].y_advance = font->get_glyph_v_advance (glyph);
+	  }
 	  break;
 
 	case t::SPACE_NARROW:
@@ -552,7 +550,10 @@ _hb_ot_shape_fallback_spaces (const hb_ot_shape_plan_t *plan,
 	   * However, in my testing, many fonts have their regular space being about that
 	   * size.  To me, a percentage of the space width makes more sense.  Half is as
 	   * good as any. */
-	  pos[i].x_advance /= 2;
+	  if (horizontal)
+	    pos[i].x_advance /= 2;
+	  else
+	    pos[i].y_advance /= 2;
 	  break;
       }
     }

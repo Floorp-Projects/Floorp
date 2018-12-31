@@ -41,9 +41,6 @@ class gfxGraphiteShaper : public gfxFontShaper {
     // mFont is a pointer to the font that owns this shaper, so it will
     // remain valid throughout our lifetime
     gfxFont *MOZ_NON_OWNING_REF mFont;
-    // initialized to a DrawTarget owned by our caller on every call to
-    // ShapeText
-    mozilla::gfx::DrawTarget *MOZ_NON_OWNING_REF mDrawTarget;
   };
 
   CallbackData mCallbackData;
