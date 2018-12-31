@@ -3077,7 +3077,8 @@ class nsIDocument : public nsINode,
     return GetFuncStringContentList<nsCachableElementsByNameNodeList>(
         this, MatchNameAttribute, nullptr, UseExistingNameString, aName);
   }
-  nsPIDOMWindowOuter* GetDefaultView() const { return GetWindow(); }
+  mozilla::dom::Nullable<mozilla::dom::WindowProxyHolder> GetDefaultView()
+      const;
   Element* GetActiveElement();
   bool HasFocus(mozilla::ErrorResult& rv) const;
   nsIHTMLCollection* Applets();

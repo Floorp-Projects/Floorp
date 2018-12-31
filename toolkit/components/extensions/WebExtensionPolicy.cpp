@@ -445,12 +445,13 @@ bool WebExtensionPolicy::CanAccessContext(nsILoadContext* aContext) const {
   return mPrivateBrowsingAllowed || !aContext->UsePrivateBrowsing();
 }
 
-bool WebExtensionPolicy::CanAccessWindow(nsPIDOMWindowOuter* aWindow) const {
+bool WebExtensionPolicy::CanAccessWindow(
+    const dom::WindowProxyHolder& aWindow) const {
   if (mPrivateBrowsingAllowed) {
     return true;
   }
   // match browsing mode with policy
-  nsIDocShell* docShell = aWindow->GetDocShell();
+  nsIDocShell* docShell = aWindow.get()->GetDocShell();
   nsCOMPtr<nsILoadContext> loadContext = do_QueryInterface(docShell);
   return !(loadContext && loadContext->UsePrivateBrowsing());
 }
@@ -674,7 +675,7 @@ void DocumentObserver::Disconnect() {
 void DocumentObserver::NotifyMatch(MozDocumentMatcher& aMatcher,
                                    nsPIDOMWindowOuter* aWindow) {
   IgnoredErrorResult rv;
-  mCallbacks->OnNewDocument(aMatcher, aWindow, rv);
+  mCallbacks->OnNewDocument(aMatcher, dom::WindowProxyHolder(aWindow), rv);
 }
 
 void DocumentObserver::NotifyMatch(MozDocumentMatcher& aMatcher,

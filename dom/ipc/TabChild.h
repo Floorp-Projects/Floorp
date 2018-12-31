@@ -94,8 +94,7 @@ class TabChildMessageManager : public ContentFrameMessageManager,
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
 
-  virtual already_AddRefed<nsPIDOMWindowOuter> GetContent(
-      ErrorResult& aError) override;
+  virtual Nullable<WindowProxyHolder> GetContent(ErrorResult& aError) override;
   virtual already_AddRefed<nsIDocShell> GetDocShell(
       ErrorResult& aError) override;
   virtual already_AddRefed<nsIEventTarget> GetTabEventTarget() override;

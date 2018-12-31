@@ -19,8 +19,11 @@
 
 namespace mozilla {
 namespace dom {
+template <typename>
+struct Nullable;
+class WindowProxyHolder;
 class XULFrameElement;
-}
+}  // namespace dom
 }  // namespace mozilla
 
 #define NS_GENERICHTMLFRAMEELEMENT_IID               \
@@ -84,7 +87,8 @@ class nsGenericHTMLFrameElement : public nsGenericHTMLElement,
   void SwapFrameLoaders(nsIFrameLoaderOwner* aOtherLoaderOwner,
                         mozilla::ErrorResult& rv);
 
-  void PresetOpenerWindow(mozIDOMWindowProxy* aOpenerWindow,
+  void PresetOpenerWindow(const mozilla::dom::Nullable<
+                              mozilla::dom::WindowProxyHolder>& aOpenerWindow,
                           mozilla::ErrorResult& aRv);
 
   static void InitStatics();
@@ -112,7 +116,7 @@ class nsGenericHTMLFrameElement : public nsGenericHTMLElement,
   void EnsureFrameLoader();
   void LoadSrc();
   nsIDocument* GetContentDocument(nsIPrincipal& aSubjectPrincipal);
-  already_AddRefed<nsPIDOMWindowOuter> GetContentWindow();
+  mozilla::dom::Nullable<mozilla::dom::WindowProxyHolder> GetContentWindow();
 
   virtual nsresult AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                                 const nsAttrValue* aValue,
@@ -165,6 +169,8 @@ class nsGenericHTMLFrameElement : public nsGenericHTMLElement,
                             const nsAttrValueOrString* aValue,
                             nsIPrincipal* aMaybeScriptedPrincipal,
                             bool aNotify);
+
+  already_AddRefed<nsPIDOMWindowOuter> GetContentWindowInternal();
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsGenericHTMLFrameElement,

@@ -1077,8 +1077,8 @@ nsObjectLoadingContent::GetFrameLoader() {
   return loader.forget();
 }
 
-void nsObjectLoadingContent::PresetOpenerWindow(mozIDOMWindowProxy* aWindow,
-                                                mozilla::ErrorResult& aRv) {
+void nsObjectLoadingContent::PresetOpenerWindow(
+    const Nullable<WindowProxyHolder>& aOpenerWindow, ErrorResult& aRv) {
   aRv.Throw(NS_ERROR_FAILURE);
 }
 
