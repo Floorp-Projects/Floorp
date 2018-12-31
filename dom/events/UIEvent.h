@@ -53,7 +53,7 @@ class UIEvent : public Event {
     if (!mView) {
       return nullptr;
     }
-    return WindowProxyHolder(mView);
+    return WindowProxyHolder(mView->GetBrowsingContext());
   }
 
   int32_t Detail() const { return mDetail; }

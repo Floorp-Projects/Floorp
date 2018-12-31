@@ -1162,7 +1162,7 @@ mozilla::dom::Nullable<mozilla::dom::WindowProxyHolder> nsHTMLDocument::Open(
   if (!newWindow) {
     return nullptr;
   }
-  return WindowProxyHolder(newWindow.forget());
+  return WindowProxyHolder(newWindow->GetBrowsingContext());
 }
 
 already_AddRefed<nsIDocument> nsHTMLDocument::Open(

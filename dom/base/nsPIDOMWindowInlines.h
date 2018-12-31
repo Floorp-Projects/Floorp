@@ -68,6 +68,10 @@ nsIDocShell* nsPIDOMWindowInner::GetDocShell() const {
   return mOuterWindow ? mOuterWindow->GetDocShell() : nullptr;
 }
 
+mozilla::dom::BrowsingContext* nsPIDOMWindowOuter::GetBrowsingContext() const {
+  return mBrowsingContext;
+}
+
 mozilla::dom::Element* nsPIDOMWindowOuter::GetFocusedElement() const {
   return mInnerWindow ? mInnerWindow->GetFocusedElement() : nullptr;
 }

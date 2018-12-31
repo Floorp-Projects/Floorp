@@ -97,6 +97,7 @@ namespace mozilla {
 class AbstractThread;
 namespace dom {
 class BarProp;
+class BrowsingContext;
 struct ChannelPixelLayout;
 class ClientSource;
 class Console;
@@ -420,7 +421,8 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
 
   inline nsGlobalWindowOuter* GetScriptableTopInternal();
 
-  nsPIDOMWindowOuter* GetChildWindow(const nsAString& aName);
+  already_AddRefed<mozilla::dom::BrowsingContext> GetChildWindow(
+      const nsAString& aName);
 
   // These return true if we've reached the state in this top level window
   // where we ask the user if further dialogs should be blocked.
@@ -621,7 +623,7 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   nsresult Focus() override;
   void Blur(mozilla::ErrorResult& aError);
   nsDOMWindowList* GetFrames() final;
-  already_AddRefed<nsPIDOMWindowOuter> GetFrames(mozilla::ErrorResult& aError);
+  mozilla::dom::BrowsingContext* GetFrames(mozilla::ErrorResult& aError);
   uint32_t Length();
   mozilla::dom::Nullable<mozilla::dom::WindowProxyHolder> GetTop(
       mozilla::ErrorResult& aError);

@@ -190,7 +190,7 @@ Nullable<WindowProxyHolder> EventTarget::GetOwnerGlobalForBindings() {
     return nullptr;
   }
 
-  return WindowProxyHolder(win);
+  return WindowProxyHolder(win->GetBrowsingContext());
 }
 
 }  // namespace dom

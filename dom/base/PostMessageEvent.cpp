@@ -19,6 +19,7 @@
 #include "mozilla/dom/UnionConversions.h"
 #include "mozilla/EventDispatcher.h"
 #include "nsContentUtils.h"
+#include "nsDocShell.h"
 #include "nsGlobalWindow.h"
 #include "nsIPresShell.h"
 #include "nsIPrincipal.h"
@@ -29,7 +30,7 @@
 namespace mozilla {
 namespace dom {
 
-PostMessageEvent::PostMessageEvent(nsGlobalWindowOuter* aSource,
+PostMessageEvent::PostMessageEvent(BrowsingContext* aSource,
                                    const nsAString& aCallerOrigin,
                                    nsGlobalWindowOuter* aTargetWindow,
                                    nsIPrincipal* aProvidedPrincipal,
@@ -138,7 +139,9 @@ PostMessageEvent::Run() {
   RefPtr<MessageEvent> event = new MessageEvent(eventTarget, nullptr, nullptr);
 
   Nullable<WindowProxyOrMessagePortOrServiceWorker> source;
-  source.SetValue().SetAsWindowProxy() = mSource ? mSource->AsOuter() : nullptr;
+  if (mSource) {
+    source.SetValue().SetAsWindowProxy() = mSource;
+  }
 
   Sequence<OwningNonNull<MessagePort>> ports;
   if (!TakeTransferredPortsAsSequence(ports)) {
@@ -163,7 +166,7 @@ void PostMessageEvent::DispatchError(JSContext* aCx,
   init.mOrigin = mCallerOrigin;
 
   if (mSource) {
-    init.mSource.SetValue().SetAsWindowProxy() = mSource->AsOuter();
+    init.mSource.SetValue().SetAsWindowProxy() = mSource;
   }
 
   RefPtr<Event> event = MessageEvent::Constructor(

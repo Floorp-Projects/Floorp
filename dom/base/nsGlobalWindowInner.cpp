@@ -3311,7 +3311,7 @@ Nullable<WindowProxyHolder> nsGlobalWindowInner::GetTop(
   FORWARD_TO_OUTER_OR_THROW(GetTopOuter, (), aError, nullptr);
 }
 
-nsPIDOMWindowOuter* nsGlobalWindowInner::GetChildWindow(
+already_AddRefed<BrowsingContext> nsGlobalWindowInner::GetChildWindow(
     const nsAString& aName) {
   if (GetOuterWindowInternal()) {
     return GetOuterWindowInternal()->GetChildWindow(aName);
@@ -3701,8 +3701,7 @@ Nullable<WindowProxyHolder> nsGlobalWindowInner::OpenDialog(
       aError, nullptr);
 }
 
-already_AddRefed<nsPIDOMWindowOuter> nsGlobalWindowInner::GetFrames(
-    ErrorResult& aError) {
+BrowsingContext* nsGlobalWindowInner::GetFrames(ErrorResult& aError) {
   FORWARD_TO_OUTER_OR_THROW(GetFramesOuter, (), aError, nullptr);
 }
 
@@ -6911,7 +6910,7 @@ void nsGlobalWindowInner::GetSidebar(OwningExternalOrWindowProxy& aResult,
                                      ErrorResult& aRv) {
 #ifdef HAVE_SIDEBAR
   // First check for a named frame named "sidebar"
-  nsCOMPtr<nsPIDOMWindowOuter> domWindow =
+  RefPtr<BrowsingContext> domWindow =
       GetChildWindow(NS_LITERAL_STRING("sidebar"));
   if (domWindow) {
     aResult.SetAsWindowProxy() = domWindow.forget();

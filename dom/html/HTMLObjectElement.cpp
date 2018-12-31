@@ -380,7 +380,7 @@ Nullable<WindowProxyHolder> HTMLObjectElement::GetContentWindow(
   if (doc) {
     nsPIDOMWindowOuter* win = doc->GetWindow();
     if (win) {
-      return WindowProxyHolder(win);
+      return WindowProxyHolder(win->GetBrowsingContext());
     }
   }
 
