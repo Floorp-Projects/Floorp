@@ -19,6 +19,8 @@
 #include "nsIScriptError.h"
 #include "nsString.h"
 
+class nsGlobalWindowInner;
+
 class nsScriptErrorNote final : public nsIScriptErrorNote {
  public:
   nsScriptErrorNote();
@@ -48,6 +50,8 @@ class nsScriptErrorBase : public nsIScriptError {
   NS_DECL_NSISCRIPTERROR
 
   void AddNote(nsIScriptErrorNote* note);
+
+  static bool ComputeIsFromPrivateWindow(nsGlobalWindowInner* aWindow);
 
  protected:
   virtual ~nsScriptErrorBase();

@@ -9,6 +9,14 @@
 
 #include "mozilla/dom/BrowsingContext.h"
 
+struct JSContext;
+class JSObject;
+
+namespace JS {
+template <typename T>
+class MutableHandle;
+}  // namespace JS
+
 namespace mozilla {
 namespace dom {
 
@@ -60,6 +68,9 @@ inline void ImplCycleCollectionTraverse(
 inline void ImplCycleCollectionUnlink(WindowProxyHolder& aProxy) {
   aProxy.mBrowsingContext = nullptr;
 }
+
+extern bool GetRemoteOuterWindowProxy(JSContext* aCx, BrowsingContext* aContext,
+                                      JS::MutableHandle<JSObject*> aValue);
 
 }  // namespace dom
 }  // namespace mozilla

@@ -5127,19 +5127,6 @@ mozilla::ipc::IPCResult ContentParent::RecvA11yHandlerControl(
 #endif
 }
 
-}  // namespace dom
-}  // namespace mozilla
-
-NS_IMPL_ISUPPORTS(ParentIdleListener, nsIObserver)
-
-NS_IMETHODIMP
-ParentIdleListener::Observe(nsISupports*, const char* aTopic,
-                            const char16_t* aData) {
-  mozilla::Unused << mParent->SendNotifyIdleObserver(
-      mObserver, nsDependentCString(aTopic), nsDependentString(aData));
-  return NS_OK;
-}
-
 bool ContentParent::HandleWindowsMessages(const Message& aMsg) const {
   MOZ_ASSERT(aMsg.is_sync());
 
@@ -5776,4 +5763,101 @@ void ContentParent::UnregisterRemoveWorkerActor() {
         "dom::ContentParent::ShutDownProcess", this,
         &ContentParent::ShutDownProcess, SEND_SHUTDOWN_MESSAGE));
   }
+}
+
+mozilla::ipc::IPCResult ContentParent::RecvWindowClose(
+    const BrowsingContextId& aContextId, const bool& aTrustedCaller) {
+  RefPtr<ChromeBrowsingContext> bc = ChromeBrowsingContext::Get(aContextId);
+  if (!bc) {
+    MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Debug,
+            ("ParentIPC: Trying to send a message to dead or detached context "
+             "0x%08" PRIx64,
+             (uint64_t)aContextId));
+    return IPC_OK();
+  }
+
+  // FIXME Need to check that the sending process has access to the unit of
+  // related
+  //       browsing contexts of bc.
+
+  ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
+  ContentParent* cp =
+      cpm->GetContentProcessById(ContentParentId(bc->OwnerProcessId()));
+  Unused << cp->SendWindowClose(aContextId, aTrustedCaller);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult ContentParent::RecvWindowFocus(
+    const BrowsingContextId& aContextId) {
+  RefPtr<ChromeBrowsingContext> bc = ChromeBrowsingContext::Get(aContextId);
+  if (!bc) {
+    MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Debug,
+            ("ParentIPC: Trying to send a message to dead or detached context "
+             "0x%08" PRIx64,
+             (uint64_t)aContextId));
+    return IPC_OK();
+  }
+
+  ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
+  ContentParent* cp =
+      cpm->GetContentProcessById(ContentParentId(bc->OwnerProcessId()));
+  Unused << cp->SendWindowFocus(aContextId);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult ContentParent::RecvWindowBlur(
+    const BrowsingContextId& aContextId) {
+  RefPtr<ChromeBrowsingContext> bc = ChromeBrowsingContext::Get(aContextId);
+  if (!bc) {
+    MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Debug,
+            ("ParentIPC: Trying to send a message to dead or detached context "
+             "0x%08" PRIx64,
+             (uint64_t)aContextId));
+    return IPC_OK();
+  }
+
+  ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
+  ContentParent* cp =
+      cpm->GetContentProcessById(ContentParentId(bc->OwnerProcessId()));
+  Unused << cp->SendWindowBlur(aContextId);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult ContentParent::RecvWindowPostMessage(
+    const BrowsingContextId& aContextId, const ClonedMessageData& aMessage,
+    const PostMessageData& aData) {
+  RefPtr<ChromeBrowsingContext> bc = ChromeBrowsingContext::Get(aContextId);
+  if (!bc) {
+    MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Debug,
+            ("ParentIPC: Trying to send a message to dead or detached context "
+             "0x%08" PRIx64,
+             (uint64_t)aContextId));
+    return IPC_OK();
+  }
+
+  ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
+  ContentParent* cp =
+      cpm->GetContentProcessById(ContentParentId(bc->OwnerProcessId()));
+  StructuredCloneData messageFromChild;
+  UnpackClonedMessageDataForParent(aMessage, messageFromChild);
+  ClonedMessageData message;
+  if (!BuildClonedMessageDataForParent(cp, messageFromChild, message)) {
+    // FIXME Logging?
+    return IPC_OK();
+  }
+  Unused << cp->SendWindowPostMessage(aContextId, message, aData);
+  return IPC_OK();
+}
+
+}  // namespace dom
+}  // namespace mozilla
+
+NS_IMPL_ISUPPORTS(ParentIdleListener, nsIObserver)
+
+NS_IMETHODIMP
+ParentIdleListener::Observe(nsISupports*, const char* aTopic,
+                            const char16_t* aData) {
+  mozilla::Unused << mParent->SendNotifyIdleObserver(
+      mObserver, nsDependentCString(aTopic), nsDependentString(aData));
+  return NS_OK;
 }

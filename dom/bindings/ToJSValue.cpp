@@ -68,15 +68,24 @@ bool ToJSValue(JSContext* aCx, const WindowProxyHolder& aArgument,
     aValue.setNull();
     return true;
   }
-  JS::Rooted<JSObject*> windowProxy(aCx, bc->GetWindowProxy());
-  if (!windowProxy) {
-    nsPIDOMWindowOuter* window = bc->GetDOMWindow();
-    if (!window->EnsureInnerWindow()) {
-      return Throw(aCx, NS_ERROR_UNEXPECTED);
-    }
+  JS::Rooted<JSObject*> windowProxy(aCx);
+  if (bc->GetDocShell()) {
     windowProxy = bc->GetWindowProxy();
+    if (!windowProxy) {
+      nsPIDOMWindowOuter* window = bc->GetDOMWindow();
+      if (!window->EnsureInnerWindow()) {
+        return Throw(aCx, NS_ERROR_UNEXPECTED);
+      }
+      windowProxy = bc->GetWindowProxy();
+    }
+    return ToJSValue(aCx, windowProxy, aValue);
   }
-  return ToJSValue(aCx, windowProxy, aValue);
+
+  if (!GetRemoteOuterWindowProxy(aCx, bc, &windowProxy)) {
+    return false;
+  }
+  aValue.setObjectOrNull(windowProxy);
+  return true;
 }
 
 }  // namespace dom
