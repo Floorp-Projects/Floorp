@@ -417,9 +417,6 @@ class TestMetadata(object):
                 candidate_paths |= set(self._tests_by_path.keys())
                 continue
 
-            if os.path.sep != "/":
-                path = path.replace("/", os.path.sep)
-
             if '*' in path:
                 candidate_paths |= {p for p in self._tests_by_path
                                     if mozpath.match(p, path)}
