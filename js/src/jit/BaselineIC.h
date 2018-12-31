@@ -2784,7 +2784,13 @@ inline bool IsCacheableDOMProxy(JSObject* obj) {
   }
 
   const BaseProxyHandler* handler = obj->as<ProxyObject>().handler();
-  return handler->family() == GetDOMProxyHandlerFamily();
+  if (handler->family() != GetDOMProxyHandlerFamily()) {
+    return false;
+  }
+
+  // Some DOM proxies have dynamic prototypes.  We can't really cache those very
+  // well.
+  return obj->hasStaticPrototype();
 }
 
 struct IonOsrTempData;
