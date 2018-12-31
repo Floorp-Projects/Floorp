@@ -5400,12 +5400,12 @@ nsGlobalWindowInner* nsGlobalWindowOuter::CallerInnerWindow(JSContext* aCx) {
   return nsGlobalWindowInner::Cast(win);
 }
 
-void nsGlobalWindowOuter::PostMessageMozOuter(JSContext* aCx,
-                                              JS::Handle<JS::Value> aMessage,
-                                              const nsAString& aTargetOrigin,
-                                              JS::Handle<JS::Value> aTransfer,
-                                              nsIPrincipal& aSubjectPrincipal,
-                                              ErrorResult& aError) {
+/* static */
+bool nsGlobalWindowOuter::GatherPostMessageData(
+    JSContext* aCx, const nsAString& aTargetOrigin, BrowsingContext** aSource,
+    nsAString& aOrigin, nsIURI** aTargetOriginURI,
+    nsIPrincipal** aCallerPrincipal, uint64_t* aCallerInnerWindowID,
+    nsIURI** aCallerDocumentURI, ErrorResult& aError) {
   //
   // Window.postMessage is an intentional subversion of the same-origin policy.
   // As such, this code must be particularly careful in the information it
@@ -5418,6 +5418,13 @@ void nsGlobalWindowOuter::PostMessageMozOuter(JSContext* aCx,
   RefPtr<nsGlobalWindowInner> callerInnerWin = CallerInnerWindow(aCx);
   nsIPrincipal* callerPrin;
   if (callerInnerWin) {
+    nsCOMPtr<nsIDocument> doc = callerInnerWin->GetExtantDoc();
+    if (!doc) {
+      return false;
+    }
+    *aCallerInnerWindowID = doc->InnerWindowID();
+    NS_IF_ADDREF(*aCallerDocumentURI = doc->GetDocumentURI());
+
     // Compute the caller's origin either from its principal or, in the case the
     // principal doesn't carry a URI (e.g. the system principal), the caller's
     // document.  We must get this now instead of when the event is created and
@@ -5426,6 +5433,8 @@ void nsGlobalWindowOuter::PostMessageMozOuter(JSContext* aCx,
     // might have changed due to intervening navigations).
     callerPrin = callerInnerWin->GetPrincipal();
   } else {
+    *aCallerInnerWindowID = 0;
+
     // In case the global is not a window, it can be a sandbox, and the
     // sandbox's principal can be used for the security check.
     nsIGlobalObject* global = GetIncumbentGlobal();
@@ -5433,56 +5442,80 @@ void nsGlobalWindowOuter::PostMessageMozOuter(JSContext* aCx,
     callerPrin = global->PrincipalOrNull();
   }
   if (!callerPrin) {
-    return;
+    return false;
   }
 
   nsCOMPtr<nsIURI> callerOuterURI;
   if (NS_FAILED(callerPrin->GetURI(getter_AddRefs(callerOuterURI)))) {
-    return;
+    return false;
   }
 
-  nsAutoString origin;
   if (callerOuterURI) {
     // if the principal has a URI, use that to generate the origin
-    nsContentUtils::GetUTFOrigin(callerPrin, origin);
+    nsContentUtils::GetUTFOrigin(callerPrin, aOrigin);
   } else if (callerInnerWin) {
-    // otherwise use the URI of the document to generate origin
-    nsCOMPtr<nsIDocument> doc = callerInnerWin->GetExtantDoc();
-    if (!doc) {
-      return;
+    if (!*aCallerDocumentURI) {
+      return false;
     }
-    callerOuterURI = doc->GetDocumentURI();
-    // if the principal has a URI, use that to generate the origin
-    nsContentUtils::GetUTFOrigin(callerOuterURI, origin);
+    // otherwise use the URI of the document to generate origin
+    nsContentUtils::GetUTFOrigin(*aCallerDocumentURI, aOrigin);
   } else {
     // in case of a sandbox with a system principal origin can be empty
     if (!nsContentUtils::IsSystemPrincipal(callerPrin)) {
-      return;
+      return false;
     }
   }
+  NS_IF_ADDREF(*aCallerPrincipal = callerPrin);
+
+  // "/" indicates same origin as caller, "*" indicates no specific origin is
+  // required.
+  if (!aTargetOrigin.EqualsASCII("/") && !aTargetOrigin.EqualsASCII("*")) {
+    nsCOMPtr<nsIURI> targetOriginURI;
+    if (NS_FAILED(NS_NewURI(getter_AddRefs(targetOriginURI), aTargetOrigin))) {
+      aError.Throw(NS_ERROR_DOM_SYNTAX_ERR);
+      return false;
+    }
+
+    nsresult rv = NS_MutateURI(targetOriginURI)
+                      .SetUserPass(EmptyCString())
+                      .SetPathQueryRef(EmptyCString())
+                      .Finalize(aTargetOriginURI);
+    if (NS_FAILED(rv)) {
+      return false;
+    }
+  }
+
+  if (!nsContentUtils::IsCallerChrome() && callerInnerWin &&
+      callerInnerWin->GetOuterWindowInternal()) {
+    NS_ADDREF(*aSource = callerInnerWin->GetOuterWindowInternal()
+                             ->GetBrowsingContext());
+  } else {
+    *aSource = nullptr;
+  }
+
+  return true;
+}
+
+bool nsGlobalWindowOuter::GetPrincipalForPostMessage(
+    const nsAString& aTargetOrigin, nsIURI* aTargetOriginURI,
+    nsIPrincipal* aCallerPrincipal, nsIPrincipal& aSubjectPrincipal,
+    nsIPrincipal** aProvidedPrincipal) {
+  //
+  // Window.postMessage is an intentional subversion of the same-origin policy.
+  // As such, this code must be particularly careful in the information it
+  // exposes to calling code.
+  //
+  // http://www.whatwg.org/specs/web-apps/current-work/multipage/section-crossDocumentMessages.html
+  //
 
   // Convert the provided origin string into a URI for comparison purposes.
   nsCOMPtr<nsIPrincipal> providedPrincipal;
 
   if (aTargetOrigin.EqualsASCII("/")) {
-    providedPrincipal = callerPrin;
+    providedPrincipal = aCallerPrincipal;
   }
   // "*" indicates no specific origin is required.
   else if (!aTargetOrigin.EqualsASCII("*")) {
-    nsCOMPtr<nsIURI> originURI;
-    if (NS_FAILED(NS_NewURI(getter_AddRefs(originURI), aTargetOrigin))) {
-      aError.Throw(NS_ERROR_DOM_SYNTAX_ERR);
-      return;
-    }
-
-    nsresult rv = NS_MutateURI(originURI)
-                      .SetUserPass(EmptyCString())
-                      .SetPathQueryRef(EmptyCString())
-                      .Finalize(originURI);
-    if (NS_FAILED(rv)) {
-      return;
-    }
-
     OriginAttributes attrs = aSubjectPrincipal.OriginAttributesRef();
     if (aSubjectPrincipal.GetIsSystemPrincipal()) {
       auto principal = BasePrincipal::Cast(GetPrincipal());
@@ -5498,7 +5531,7 @@ void nsGlobalWindowOuter::PostMessageMozOuter(JSContext* aCx,
             NS_FAILED(principal->GetOrigin(targetOrigin)) ||
             NS_FAILED(aSubjectPrincipal.GetOrigin(sourceOrigin))) {
           NS_WARNING("Failed to get source and target origins");
-          return;
+          return false;
         }
 
         nsContentUtils::LogSimpleConsoleError(
@@ -5516,16 +5549,16 @@ void nsGlobalWindowOuter::PostMessageMozOuter(JSContext* aCx,
     // Create a nsIPrincipal inheriting the app/browser attributes from the
     // caller.
     providedPrincipal =
-        BasePrincipal::CreateCodebasePrincipal(originURI, attrs);
+        BasePrincipal::CreateCodebasePrincipal(aTargetOriginURI, attrs);
     if (NS_WARN_IF(!providedPrincipal)) {
-      return;
+      return false;
     }
   } else {
     // We still need to check the originAttributes if the target origin is '*'.
     // But we will ingore the FPD here since the FPDs are possible to be
     // different.
     auto principal = BasePrincipal::Cast(GetPrincipal());
-    NS_ENSURE_TRUE_VOID(principal);
+    NS_ENSURE_TRUE(principal, false);
 
     OriginAttributes targetAttrs = principal->OriginAttributesRef();
     OriginAttributes sourceAttrs = aSubjectPrincipal.OriginAttributesRef();
@@ -5544,24 +5577,47 @@ void nsGlobalWindowOuter::PostMessageMozOuter(JSContext* aCx,
     if (OriginAttributes::IsBlockPostMessageForFPI() &&
         !aSubjectPrincipal.GetIsSystemPrincipal() &&
         sourceAttrs.mFirstPartyDomain != targetAttrs.mFirstPartyDomain) {
-      return;
+      return false;
     }
+  }
+
+  providedPrincipal.forget(aProvidedPrincipal);
+  return true;
+}
+
+void nsGlobalWindowOuter::PostMessageMozOuter(JSContext* aCx,
+                                              JS::Handle<JS::Value> aMessage,
+                                              const nsAString& aTargetOrigin,
+                                              JS::Handle<JS::Value> aTransfer,
+                                              nsIPrincipal& aSubjectPrincipal,
+                                              ErrorResult& aError) {
+  RefPtr<BrowsingContext> sourceBc;
+  nsAutoString origin;
+  nsCOMPtr<nsIURI> targetOriginURI;
+  nsCOMPtr<nsIPrincipal> callerPrincipal;
+  uint64_t callerInnerWindowID;
+  nsCOMPtr<nsIURI> callerDocumentURI;
+  if (!GatherPostMessageData(
+          aCx, aTargetOrigin, getter_AddRefs(sourceBc), origin,
+          getter_AddRefs(targetOriginURI), getter_AddRefs(callerPrincipal),
+          &callerInnerWindowID, getter_AddRefs(callerDocumentURI), aError)) {
+    return;
+  }
+
+  nsCOMPtr<nsIPrincipal> providedPrincipal;
+  if (!GetPrincipalForPostMessage(aTargetOrigin, targetOriginURI,
+                                  callerPrincipal, aSubjectPrincipal,
+                                  getter_AddRefs(providedPrincipal))) {
+    return;
   }
 
   // Create and asynchronously dispatch a runnable which will handle actual DOM
   // event creation and dispatch.
-  RefPtr<PostMessageEvent> event = new PostMessageEvent(
-      nsContentUtils::IsCallerChrome() || !callerInnerWin ||
-              !callerInnerWin->GetOuterWindowInternal()
-          ? nullptr
-          : callerInnerWin->GetOuterWindowInternal()->GetBrowsingContext(),
-      origin, this, providedPrincipal,
-      callerInnerWin ? callerInnerWin->GetDoc() : nullptr);
+  RefPtr<PostMessageEvent> event =
+      new PostMessageEvent(sourceBc, origin, this, providedPrincipal,
+                           callerInnerWindowID, callerDocumentURI);
 
-  JS::Rooted<JS::Value> message(aCx, aMessage);
-  JS::Rooted<JS::Value> transfer(aCx, aTransfer);
-
-  event->Write(aCx, message, transfer, JS::CloneDataPolicy(), aError);
+  event->Write(aCx, aMessage, aTransfer, aError);
   if (NS_WARN_IF(aError.Failed())) {
     return;
   }
