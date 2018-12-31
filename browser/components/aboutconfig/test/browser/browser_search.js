@@ -26,10 +26,7 @@ add_task(async function test_search() {
     // Filter a subset of preferences. The "browser.download." branch is
     // chosen because it is very unlikely that its preferences would be
     // modified by other code during the execution of this test.
-    let search = this.document.getElementById("search");
-    search.value = "wser.down   ";
-    search.focus();
-    EventUtils.sendKey("return");
+    this.search("wser.down   ");
 
     let filteredPrefArray =
         prefArray.filter(pref => pref.includes("wser.down"));
@@ -39,9 +36,7 @@ add_task(async function test_search() {
     Assert.equal(this.rows.length, filteredPrefArray.length + 1);
 
     // Test empty search returns all preferences.
-    search.value = "";
-    search.focus();
-    EventUtils.sendKey("return");
+    this.search();
 
     // The total number of preferences may change at any time because of
     // operations running in the background, so we only test approximately.
@@ -51,18 +46,12 @@ add_task(async function test_search() {
     Assert.greater(this.rows.length, prefArray.length - 50);
 
     // Test invalid search returns no preferences.
-    search.value = "aJunkValueasdf";
-    search.focus();
-    EventUtils.sendKey("return");
-
-    // Expecting 1 row to be returned since it offers the ability to add
+    // Expecting 1 row to be returned since it offers the ability to add.
+    this.search("aJunkValueasdf");
     Assert.equal(this.rows.length, 1);
 
     // Test added preferences search returns 2 preferences.
-    search.value = "test.aboutconfig.a";
-    search.focus();
-    EventUtils.sendKey("return");
-
+    this.search("test.aboutconfig.a");
     Assert.equal(this.rows.length, 2);
   });
 });
