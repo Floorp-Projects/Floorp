@@ -22,10 +22,9 @@ namespace mozilla {
 namespace dom {
 class SVGAnimationElement;
 }  // namespace dom
-}  // namespace mozilla
 
 //----------------------------------------------------------------------
-// nsSMILAnimationFunction
+// SMILAnimationFunction
 //
 // The animation function calculates animation values. It it is provided with
 // time parameters (sample time, repeat iteration etc.) and it uses this to
@@ -36,9 +35,9 @@ class SVGAnimationElement;
 // element (e.g. from, by, to, values, calcMode, additive, accumulate, keyTimes,
 // keySplines)
 //
-class nsSMILAnimationFunction {
+class SMILAnimationFunction {
  public:
-  nsSMILAnimationFunction();
+  SMILAnimationFunction();
 
   /*
    * Sets the owning animation element which this class uses to query attribute
@@ -138,7 +137,7 @@ class nsSMILAnimationFunction {
    *
    * This method should never return any other value, including 0.
    */
-  int8_t CompareTo(const nsSMILAnimationFunction* aOther) const;
+  int8_t CompareTo(const SMILAnimationFunction* aOther) const;
 
   /*
    * The following methods are provided so that the compositor can optimize its
@@ -244,15 +243,15 @@ class nsSMILAnimationFunction {
     return mValueNeedsReparsingEverySample;
   }
 
-  // Comparator utility class, used for sorting nsSMILAnimationFunctions
+  // Comparator utility class, used for sorting SMILAnimationFunctions
   class Comparator {
    public:
-    bool Equals(const nsSMILAnimationFunction* aElem1,
-                const nsSMILAnimationFunction* aElem2) const {
+    bool Equals(const SMILAnimationFunction* aElem1,
+                const SMILAnimationFunction* aElem2) const {
       return (aElem1->CompareTo(aElem2) == 0);
     }
-    bool LessThan(const nsSMILAnimationFunction* aElem1,
-                  const nsSMILAnimationFunction* aElem2) const {
+    bool LessThan(const SMILAnimationFunction* aElem1,
+                  const SMILAnimationFunction* aElem2) const {
       return (aElem1->CompareTo(aElem2) < 0);
     }
   };
@@ -269,7 +268,7 @@ class nsSMILAnimationFunction {
     CALC_SPLINE
   };
 
-  // Used for sorting nsSMILAnimationFunctions
+  // Used for sorting SMILAnimationFunctions
   nsSMILTime GetBeginTime() const { return mBeginTime; }
 
   // Property getters
@@ -417,7 +416,7 @@ class nsSMILAnimationFunction {
 
   // The owning animation element. This is used for sorting based on document
   // position and for fetching attribute values stored in the element.
-  // Raw pointer is OK here, because this nsSMILAnimationFunction can't outlive
+  // Raw pointer is OK here, because this SMILAnimationFunction can't outlive
   // its owning animation element.
   mozilla::dom::SVGAnimationElement* mAnimationElement;
 
@@ -440,5 +439,7 @@ class nsSMILAnimationFunction {
   bool mPrevSampleWasSingleValueAnimation : 1;
   bool mWasSkippedInPrevSample : 1;
 };
+
+}  // namespace mozilla
 
 #endif  // NS_SMILANIMATIONFUNCTION_H_

@@ -2291,12 +2291,12 @@ void Zone::fixupInitialShapeTable() {
 
     // If the prototype has moved we have to rekey the entry.
     InitialShapeEntry entry = e.front();
-    if (entry.proto.proto().isObject() &&
-        IsForwarded(entry.proto.proto().toObject())) {
-      entry.proto.setProto(
-          TaggedProto(Forwarded(entry.proto.proto().toObject())));
+    // Use unbarrieredGet() to prevent triggering read barrier while collecting.
+    const TaggedProto& proto = entry.proto.proto().unbarrieredGet();
+    if (proto.isObject() && IsForwarded(proto.toObject())) {
+      entry.proto.setProto(TaggedProto(Forwarded(proto.toObject())));
       using Lookup = InitialShapeEntry::Lookup;
-      Lookup relookup(shape->getObjectClass(), Lookup::ShapeProto(entry.proto),
+      Lookup relookup(shape->getObjectClass(), Lookup::ShapeProto(proto),
                       shape->numFixedSlots(), shape->getObjectFlags());
       e.rekeyFront(relookup, entry);
     }

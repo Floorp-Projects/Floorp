@@ -56,6 +56,8 @@
   background-color: rgb(0, 100, 0);
 }
 
+.textLayer ::-moz-selection { background: rgb(0,0,255); }
+
 .textLayer ::selection { background: rgb(0,0,255); }
 
 .textLayer .endOfContent {
@@ -1675,6 +1677,7 @@ html[dir='rtl'] .outlineItemToggler::before {
 /* TODO: file FF bug to support ::-moz-selection:window-inactive
    so we can override the opaque grey background when the window is inactive;
    see https://bugzilla.mozilla.org/show_bug.cgi?id=706209 */
+::-moz-selection { background: rgba(0,0,255,0.3); }
 ::selection { background: rgba(0,0,255,0.3); }
 
 #errorWrapper {
