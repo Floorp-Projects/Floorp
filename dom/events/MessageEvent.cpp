@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/MessageEvent.h"
+#include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/MessageEventBinding.h"
 #include "mozilla/dom/MessagePort.h"
 #include "mozilla/dom/MessagePortBinding.h"
@@ -12,7 +13,6 @@
 
 #include "mozilla/HoldDropJSObjects.h"
 #include "jsapi.h"
-#include "nsGlobalWindow.h"  // So we can assign an nsGlobalWindow* to mWindowSource
 
 namespace mozilla {
 namespace dom {

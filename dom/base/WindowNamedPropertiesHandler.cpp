@@ -18,14 +18,15 @@ namespace mozilla {
 namespace dom {
 
 static bool ShouldExposeChildWindow(nsString& aNameBeingResolved,
-                                    nsPIDOMWindowOuter* aChild) {
-  Element* e = aChild->GetFrameElementInternal();
+                                    BrowsingContext* aChild) {
+  nsPIDOMWindowOuter* child = aChild->GetDOMWindow();
+  Element* e = child->GetFrameElementInternal();
   if (e && e->IsInShadowTree()) {
     return false;
   }
 
   // If we're same-origin with the child, go ahead and expose it.
-  nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(aChild);
+  nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(child);
   NS_ENSURE_TRUE(sop, false);
   if (nsContentUtils::SubjectPrincipal()->Equals(sop->GetPrincipal())) {
     return true;
@@ -100,13 +101,13 @@ bool WindowNamedPropertiesHandler::getOwnPropDescriptor(
   // Grab the DOM window.
   nsGlobalWindowInner* win = xpc::WindowGlobalOrNull(aProxy);
   if (win->Length() > 0) {
-    nsCOMPtr<nsPIDOMWindowOuter> childWin = win->GetChildWindow(str);
-    if (childWin && ShouldExposeChildWindow(str, childWin)) {
+    RefPtr<BrowsingContext> child = win->GetChildWindow(str);
+    if (child && ShouldExposeChildWindow(str, child)) {
       // We found a subframe of the right name. Shadowing via |var foo| in
       // global scope is still allowed, since |var| only looks up |own|
       // properties. But unqualified shadowing will fail, per-spec.
       JS::Rooted<JS::Value> v(aCx);
-      if (!ToJSValue(aCx, nsGlobalWindowOuter::Cast(childWin), &v)) {
+      if (!ToJSValue(aCx, WindowProxyHolder(child.forget()), &v)) {
         return false;
       }
       FillPropertyDescriptor(aDesc, aProxy, 0, v);
@@ -182,8 +183,8 @@ bool WindowNamedPropertiesHandler::ownPropNames(
         item->GetName(name);
         if (!names.Contains(name)) {
           // Make sure we really would expose it from getOwnPropDescriptor.
-          nsCOMPtr<nsPIDOMWindowOuter> childWin = win->GetChildWindow(name);
-          if (childWin && ShouldExposeChildWindow(name, childWin)) {
+          RefPtr<BrowsingContext> child = win->GetChildWindow(name);
+          if (child && ShouldExposeChildWindow(name, child)) {
             names.AppendElement(name);
           }
         }
