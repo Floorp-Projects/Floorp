@@ -30,13 +30,13 @@ typedef OfflineResourceList ApplicationCache;
 /*sealed*/ interface Window : EventTarget {
   // the current browsing context
   [Unforgeable, Constant, StoreInSlot,
-   CrossOriginReadable] readonly attribute WindowProxy window;
+   CrossOriginReadable] readonly attribute Window window;
   [Replaceable, Constant, StoreInSlot,
-   CrossOriginReadable] readonly attribute WindowProxy self;
+   CrossOriginReadable] readonly attribute Window self;
   [Unforgeable, StoreInSlot, Pure] readonly attribute Document? document;
   [Throws] attribute DOMString name;
-  [PutForwards=href, Unforgeable, CrossOriginReadable,
-   CrossOriginWritable] readonly attribute Location location;
+  [PutForwards=href, Unforgeable, BinaryName="getLocation",
+   CrossOriginReadable, CrossOriginWritable] readonly attribute Location location;
   [Throws] readonly attribute History history;
   readonly attribute CustomElementRegistry customElements;
   [Replaceable, Throws] readonly attribute BarProp locationbar;
@@ -46,7 +46,7 @@ typedef OfflineResourceList ApplicationCache;
   [Replaceable, Throws] readonly attribute BarProp statusbar;
   [Replaceable, Throws] readonly attribute BarProp toolbar;
   [Throws] attribute DOMString status;
-  [Throws, CrossOriginCallable, NeedsCallerType] void close();
+  [Throws, CrossOriginCallable] void close();
   [Throws, CrossOriginReadable] readonly attribute boolean closed;
   [Throws] void stop();
   [Throws, CrossOriginCallable] void focus();

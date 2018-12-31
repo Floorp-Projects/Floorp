@@ -294,7 +294,6 @@
 #include "mozilla/net/ChannelEventQueue.h"
 #include "mozilla/net/RequestContextService.h"
 #include "StorageAccessPermissionRequest.h"
-#include "mozilla/dom/WindowProxyHolder.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -3369,14 +3368,6 @@ nsresult nsIDocument::GetSrcdocData(nsAString& aSrcdocData) {
   return NS_OK;
 }
 
-Nullable<WindowProxyHolder> nsIDocument::GetDefaultView() const {
-  nsPIDOMWindowOuter* win = GetWindow();
-  if (!win) {
-    return nullptr;
-  }
-  return WindowProxyHolder(win->GetBrowsingContext());
-}
-
 Element* nsIDocument::GetActiveElement() {
   // Get the focused element.
   Element* focusedElement = GetRetargetedFocusedElement();
@@ -5709,7 +5700,9 @@ already_AddRefed<Location> nsIDocument::GetLocation() const {
     return nullptr;
   }
 
-  return do_AddRef(w->Location());
+  nsGlobalWindowInner* window = nsGlobalWindowInner::Cast(w);
+  RefPtr<Location> loc = window->GetLocation();
+  return loc.forget();
 }
 
 Element* nsIDocument::GetHtmlElement() const {

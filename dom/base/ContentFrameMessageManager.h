@@ -15,10 +15,6 @@
 namespace mozilla {
 namespace dom {
 
-template <typename>
-struct Nullable;
-class WindowProxyHolder;
-
 #define NS_CONTENTFRAMEMESSAGEMANAGER_IID            \
   {                                                  \
     0x97e192a6, 0xab7a, 0x4c8f, {                    \
@@ -37,7 +33,8 @@ class ContentFrameMessageManager : public DOMEventTargetHelper,
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_CONTENTFRAMEMESSAGEMANAGER_IID)
 
-  virtual Nullable<WindowProxyHolder> GetContent(ErrorResult& aError) = 0;
+  virtual already_AddRefed<nsPIDOMWindowOuter> GetContent(
+      ErrorResult& aError) = 0;
   virtual already_AddRefed<nsIDocShell> GetDocShell(ErrorResult& aError) = 0;
   virtual already_AddRefed<nsIEventTarget> GetTabEventTarget() = 0;
   virtual uint64_t ChromeOuterWindowID() = 0;

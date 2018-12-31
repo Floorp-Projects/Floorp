@@ -39,9 +39,6 @@ template <typename T>
 class Sequence;
 struct MozPluginParameter;
 class HTMLIFrameElement;
-template <typename T>
-struct Nullable;
-class WindowProxyHolder;
 class XULFrameElement;
 }  // namespace dom
 }  // namespace mozilla
@@ -238,8 +235,7 @@ class nsObjectLoadingContent : public nsImageLoadingContent,
 
   bool IsRewrittenYoutubeEmbed() const { return mRewrittenYoutubeEmbed; }
 
-  void PresetOpenerWindow(const mozilla::dom::Nullable<
-                              mozilla::dom::WindowProxyHolder>& aOpenerWindow,
+  void PresetOpenerWindow(mozIDOMWindowProxy* aOpenerWindow,
                           mozilla::ErrorResult& aRv);
 
  protected:

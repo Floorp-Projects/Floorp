@@ -19,11 +19,8 @@
 
 namespace mozilla {
 namespace dom {
-template <typename>
-struct Nullable;
-class WindowProxyHolder;
 class XULFrameElement;
-}  // namespace dom
+}
 }  // namespace mozilla
 
 #define NS_GENERICHTMLFRAMEELEMENT_IID               \
@@ -87,8 +84,7 @@ class nsGenericHTMLFrameElement : public nsGenericHTMLElement,
   void SwapFrameLoaders(nsIFrameLoaderOwner* aOtherLoaderOwner,
                         mozilla::ErrorResult& rv);
 
-  void PresetOpenerWindow(const mozilla::dom::Nullable<
-                              mozilla::dom::WindowProxyHolder>& aOpenerWindow,
+  void PresetOpenerWindow(mozIDOMWindowProxy* aOpenerWindow,
                           mozilla::ErrorResult& aRv);
 
   static void InitStatics();
@@ -116,7 +112,7 @@ class nsGenericHTMLFrameElement : public nsGenericHTMLElement,
   void EnsureFrameLoader();
   void LoadSrc();
   nsIDocument* GetContentDocument(nsIPrincipal& aSubjectPrincipal);
-  mozilla::dom::Nullable<mozilla::dom::WindowProxyHolder> GetContentWindow();
+  already_AddRefed<nsPIDOMWindowOuter> GetContentWindow();
 
   virtual nsresult AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                                 const nsAttrValue* aValue,
@@ -128,7 +124,7 @@ class nsGenericHTMLFrameElement : public nsGenericHTMLElement,
                                           bool aNotify) override;
 
   RefPtr<nsFrameLoader> mFrameLoader;
-  RefPtr<mozilla::dom::BrowsingContext> mOpenerWindow;
+  nsCOMPtr<nsPIDOMWindowOuter> mOpenerWindow;
 
   nsCOMPtr<nsIPrincipal> mSrcTriggeringPrincipal;
 
@@ -169,8 +165,6 @@ class nsGenericHTMLFrameElement : public nsGenericHTMLElement,
                             const nsAttrValueOrString* aValue,
                             nsIPrincipal* aMaybeScriptedPrincipal,
                             bool aNotify);
-
-  mozilla::dom::BrowsingContext* GetContentWindowInternal();
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsGenericHTMLFrameElement,

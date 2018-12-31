@@ -45,7 +45,7 @@ class DynamicFrameEventFilter final : public nsIDOMEventListener {
       return false;
     }
 
-    nsPIDOMWindowOuter* outer = target->GetOwnerGlobalForBindingsInternal();
+    nsPIDOMWindowOuter* outer = target->GetOwnerGlobalForBindings();
     if (!outer) {
       return false;
     }

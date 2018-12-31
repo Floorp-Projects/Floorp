@@ -16,9 +16,6 @@ namespace mozilla {
 namespace dom {
 
 class HTMLFormSubmission;
-template <typename T>
-struct Nullable;
-class WindowProxyHolder;
 
 class HTMLObjectElement final : public nsGenericHTMLFormElement,
                                 public nsObjectLoadingContent,
@@ -124,7 +121,7 @@ class HTMLObjectElement final : public nsGenericHTMLFormElement,
   }
   using nsObjectLoadingContent::GetContentDocument;
 
-  Nullable<WindowProxyHolder> GetContentWindow(nsIPrincipal& aSubjectPrincipal);
+  nsPIDOMWindowOuter* GetContentWindow(nsIPrincipal& aSubjectPrincipal);
 
   using nsIConstraintValidation::GetValidationMessage;
   using nsIConstraintValidation::SetCustomValidity;

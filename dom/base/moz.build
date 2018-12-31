@@ -211,7 +211,6 @@ EXPORTS.mozilla.dom += [
     'PlacesWeakCallbackWrapper.h',
     'PopupBlocker.h',
     'Pose.h',
-    'PostMessageEvent.h',
     'ProcessMessageManager.h',
     'ResponsiveImageSelector.h',
     'SameProcessMessageQueue.h',
@@ -236,7 +235,6 @@ EXPORTS.mozilla.dom += [
     'VisualViewport.h',
     'WebKitCSSMatrix.h',
     'WindowOrientationObserver.h',
-    'WindowProxyHolder.h',
 ]
 
 if CONFIG['FUZZING']:
@@ -370,7 +368,6 @@ UNIFIED_SOURCES += [
     'Pose.cpp',
     'PostMessageEvent.cpp',
     'ProcessMessageManager.cpp',
-    'RemoteOuterWindowProxy.cpp',
     'ResponsiveImageSelector.cpp',
     'SameProcessMessageQueue.cpp',
     'ScreenLuminance.cpp',

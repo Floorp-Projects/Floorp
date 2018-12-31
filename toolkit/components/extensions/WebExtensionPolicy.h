@@ -9,7 +9,6 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/Nullable.h"
 #include "mozilla/dom/WebExtensionPolicyBinding.h"
-#include "mozilla/dom/WindowProxyHolder.h"
 #include "mozilla/extensions/MatchPattern.h"
 
 #include "jspubtd.h"
@@ -129,7 +128,7 @@ class WebExtensionPolicy final : public nsISupports,
 
   bool CanAccessContext(nsILoadContext* aContext) const;
 
-  bool CanAccessWindow(const dom::WindowProxyHolder& aWindow) const;
+  bool CanAccessWindow(nsPIDOMWindowOuter* aWindow) const;
 
   static void GetActiveExtensions(
       dom::GlobalObject& aGlobal,

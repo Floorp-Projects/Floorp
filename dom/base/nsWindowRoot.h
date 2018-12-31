@@ -60,7 +60,7 @@ class nsWindowRoot final : public nsPIWindowRoot {
   virtual mozilla::dom::EventTarget* GetParentTarget() override {
     return mParent;
   }
-  virtual nsPIDOMWindowOuter* GetOwnerGlobalForBindingsInternal() override;
+  virtual nsPIDOMWindowOuter* GetOwnerGlobalForBindings() override;
   virtual nsIGlobalObject* GetOwnerGlobal() const override;
 
   nsIGlobalObject* GetParentObject();
