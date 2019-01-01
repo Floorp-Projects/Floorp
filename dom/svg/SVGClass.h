@@ -19,10 +19,8 @@ namespace mozilla {
 namespace dom {
 class SVGAnimatedString;
 class SVGElement;
-}  // namespace dom
-}  // namespace mozilla
 
-class nsSVGClass {
+class SVGClass {
  public:
   typedef mozilla::dom::SVGElement SVGElement;
 
@@ -47,13 +45,13 @@ class nsSVGClass {
  public:
   struct SMILString : public nsISMILAttr {
    public:
-    SMILString(nsSVGClass* aVal, SVGElement* aSVGElement)
+    SMILString(SVGClass* aVal, SVGElement* aSVGElement)
         : mVal(aVal), mSVGElement(aSVGElement) {}
 
     // These will stay alive because a nsISMILAttr only lives as long
     // as the Compositing step, and DOM elements don't get a chance to
     // die during that.
-    nsSVGClass* mVal;
+    SVGClass* mVal;
     SVGElement* mSVGElement;
 
     // nsISMILAttr methods
@@ -66,4 +64,8 @@ class nsSVGClass {
     virtual nsresult SetAnimValue(const nsSMILValue& aValue) override;
   };
 };
+
+}  // namespace dom
+}  // namespace mozilla
+
 #endif  //__NS_SVGCLASS_H__
