@@ -5,11 +5,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsSMILTimeContainer.h"
-#include "nsSMILTimeValue.h"
-#include "nsSMILTimedElement.h"
-#include <algorithm>
 
 #include "mozilla/AutoRestore.h"
+#include "mozilla/SMILTimedElement.h"
+#include "nsSMILTimeValue.h"
+#include <algorithm>
 
 using namespace mozilla;
 

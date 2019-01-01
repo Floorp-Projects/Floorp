@@ -7,12 +7,12 @@
 #include "SMILAnimationFunction.h"
 
 #include "mozilla/dom/SVGAnimationElement.h"
+#include "mozilla/SMILTimedElement.h"
 #include "mozilla/Move.h"
 #include "nsISMILAttr.h"
 #include "SMILCSSValueType.h"
 #include "nsSMILParserUtils.h"
 #include "SMILNullType.h"
-#include "nsSMILTimedElement.h"
 #include "nsAttrValueInlines.h"
 #include "nsGkAtoms.h"
 #include "nsCOMPtr.h"
@@ -255,9 +255,8 @@ int8_t SMILAnimationFunction::CompareTo(
 
   // Next sort based on syncbase dependencies: the dependent element sorts after
   // its syncbase
-  const nsSMILTimedElement& thisTimedElement =
-      mAnimationElement->TimedElement();
-  const nsSMILTimedElement& otherTimedElement =
+  const SMILTimedElement& thisTimedElement = mAnimationElement->TimedElement();
+  const SMILTimedElement& otherTimedElement =
       aOther->mAnimationElement->TimedElement();
   if (thisTimedElement.IsTimeDependent(otherTimedElement)) return 1;
   if (otherTimedElement.IsTimeDependent(thisTimedElement)) return -1;

@@ -210,7 +210,7 @@ class SMILAnimationFunction {
   /**
    * Updates the cached record of our animation target, and returns a boolean
    * that indicates whether the target has changed since the last call to this
-   * function. (This lets nsSMILCompositor check whether its animation
+   * function. (This lets SMILCompositor check whether its animation
    * functions have changed value or target since the last sample.  If none of
    * them have, then the compositor doesn't need to do anything.)
    *

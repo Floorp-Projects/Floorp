@@ -7,9 +7,9 @@
 #include "mozilla/dom/SVGAnimationElement.h"
 #include "mozilla/dom/SVGSVGElement.h"
 #include "mozilla/dom/ElementInlines.h"
+#include "mozilla/SMILAnimationController.h"
+#include "mozilla/SMILAnimationFunction.h"
 #include "nsSMILTimeContainer.h"
-#include "SMILAnimationController.h"
-#include "SMILAnimationFunction.h"
 #include "nsContentUtils.h"
 #include "nsIContentInlines.h"
 #include "nsIURI.h"
@@ -83,9 +83,7 @@ bool SVGAnimationElement::GetTargetAttributeName(int32_t* aNamespaceID,
       aLocalName));
 }
 
-nsSMILTimedElement& SVGAnimationElement::TimedElement() {
-  return mTimedElement;
-}
+SMILTimedElement& SVGAnimationElement::TimedElement() { return mTimedElement; }
 
 SVGElement* SVGAnimationElement::GetTargetElement() {
   FlushAnimations();

@@ -22,12 +22,12 @@ class nsSMILTimeValueSpec;
 // For an overview of how this class is related to other SMIL time classes see
 // the documentation in nsSMILTimeValue.h
 //
-// These objects are owned by an nsSMILTimedElement but MAY also be referenced
+// These objects are owned by an SMILTimedElement but MAY also be referenced
 // by:
 //
-// a) nsSMILIntervals that belong to the same nsSMILTimedElement and which refer
+// a) nsSMILIntervals that belong to the same SMILTimedElement and which refer
 //    to the nsSMILInstanceTimes which form the interval endpoints; and/or
-// b) nsSMILIntervals that belong to other nsSMILTimedElements but which need to
+// b) nsSMILIntervals that belong to other SMILTimedElements but which need to
 //    update dependent instance times when they change or are deleted.
 //    E.g. for begin='a.begin', 'a' needs to inform dependent
 //    nsSMILInstanceTimes if its begin time changes. This notification is
@@ -114,7 +114,7 @@ class nsSMILInstanceTime final {
 
     // Indicates that this instance time is referred to by an
     // nsSMILTimeValueSpec and as such may be updated. Such instance time should
-    // not be filtered out by the nsSMILTimedElement even if they appear to be
+    // not be filtered out by the SMILTimedElement even if they appear to be
     // in the past as they may be updated to a future time.
     kMayUpdate = 2,
 
@@ -135,7 +135,7 @@ class nsSMILInstanceTime final {
 
   // Additional reference count to determine if this instance time is currently
   // used as a fixed endpoint in any intervals. Instance times that are used in
-  // this way should not be removed when the owning nsSMILTimedElement removes
+  // this way should not be removed when the owning SMILTimedElement removes
   // instance times in response to a restart or in an attempt to free up memory
   // by filtering out old instance times.
   //
