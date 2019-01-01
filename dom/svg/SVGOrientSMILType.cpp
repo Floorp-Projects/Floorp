@@ -6,7 +6,7 @@
 
 #include "SVGOrientSMILType.h"
 #include "nsSMILValue.h"
-#include "nsSVGAngle.h"
+#include "SVGAngle.h"
 #include "nsDebug.h"
 #include "mozilla/dom/SVGMarkerElement.h"
 #include <math.h>
@@ -69,16 +69,16 @@ nsresult SVGOrientSMILType::Add(nsSMILValue& aDest,
   // We may be dealing with two different angle units, so we normalize to
   // degrees for the add:
   float currentAngle = aDest.mU.mOrient.mAngle *
-                       nsSVGAngle::GetDegreesPerUnit(aDest.mU.mOrient.mUnit);
-  float angleToAdd =
-      aValueToAdd.mU.mOrient.mAngle *
-      nsSVGAngle::GetDegreesPerUnit(aValueToAdd.mU.mOrient.mUnit) * aCount;
+                       SVGAngle::GetDegreesPerUnit(aDest.mU.mOrient.mUnit);
+  float angleToAdd = aValueToAdd.mU.mOrient.mAngle *
+                     SVGAngle::GetDegreesPerUnit(aValueToAdd.mU.mOrient.mUnit) *
+                     aCount;
 
   // And then we give the resulting animated value the same units as the value
   // that we're animating to/by (i.e. the same as aValueToAdd):
   aDest.mU.mOrient.mAngle =
       (currentAngle + angleToAdd) /
-      nsSVGAngle::GetDegreesPerUnit(aValueToAdd.mU.mOrient.mUnit);
+      SVGAngle::GetDegreesPerUnit(aValueToAdd.mU.mOrient.mUnit);
   aDest.mU.mOrient.mUnit = aValueToAdd.mU.mOrient.mUnit;
 
   return NS_OK;
@@ -98,9 +98,9 @@ nsresult SVGOrientSMILType::ComputeDistance(const nsSMILValue& aFrom,
 
   // Normalize both to degrees in case they're different angle units:
   double from = aFrom.mU.mOrient.mAngle *
-                nsSVGAngle::GetDegreesPerUnit(aFrom.mU.mOrient.mUnit);
-  double to = aTo.mU.mOrient.mAngle *
-              nsSVGAngle::GetDegreesPerUnit(aTo.mU.mOrient.mUnit);
+                SVGAngle::GetDegreesPerUnit(aFrom.mU.mOrient.mUnit);
+  double to =
+      aTo.mU.mOrient.mAngle * SVGAngle::GetDegreesPerUnit(aTo.mU.mOrient.mUnit);
 
   aDistance = fabs(to - from);
 
@@ -123,14 +123,14 @@ nsresult SVGOrientSMILType::Interpolate(const nsSMILValue& aStartVal,
   }
 
   float start = aStartVal.mU.mOrient.mAngle *
-                nsSVGAngle::GetDegreesPerUnit(aStartVal.mU.mOrient.mUnit);
+                SVGAngle::GetDegreesPerUnit(aStartVal.mU.mOrient.mUnit);
   float end = aEndVal.mU.mOrient.mAngle *
-              nsSVGAngle::GetDegreesPerUnit(aEndVal.mU.mOrient.mUnit);
+              SVGAngle::GetDegreesPerUnit(aEndVal.mU.mOrient.mUnit);
   float result = (start + (end - start) * aUnitDistance);
 
   // Again, we use the unit of the to/by value for the result:
   aResult.mU.mOrient.mAngle =
-      result / nsSVGAngle::GetDegreesPerUnit(aEndVal.mU.mOrient.mUnit);
+      result / SVGAngle::GetDegreesPerUnit(aEndVal.mU.mOrient.mUnit);
   aResult.mU.mOrient.mUnit = aEndVal.mU.mOrient.mUnit;
 
   return NS_OK;
