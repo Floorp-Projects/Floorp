@@ -17,10 +17,11 @@
 #include "SVGAnimatedAngle.h"
 #include "SVGOrientSMILType.h"
 
-using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::dom::SVGAngle_Binding;
 using namespace mozilla::dom::SVGMarkerElement_Binding;
+
+namespace mozilla {
 
 static const nsStaticAtom* const angleUnitMap[] = {
     nullptr, /* SVG_ANGLETYPE_UNKNOWN */
@@ -365,3 +366,5 @@ nsresult SVGAngle::SMILOrient::SetAnimValue(const nsSMILValue& aValue) {
   }
   return NS_OK;
 }
+
+}  // namespace mozilla

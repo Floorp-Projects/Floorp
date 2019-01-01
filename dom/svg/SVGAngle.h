@@ -26,7 +26,6 @@ class SVGAnimatedAngle;
 class SVGAnimationElement;
 class SVGElement;
 }  // namespace dom
-}  // namespace mozilla
 
 class SVGAngle {
   friend class mozilla::dom::DOMSVGAngle;
@@ -119,5 +118,7 @@ class SVGAngle {
     virtual nsresult SetAnimValue(const nsSMILValue& aValue) override;
   };
 };
+
+}  // namespace mozilla
 
 #endif  //__NS_SVGANGLE_H__
