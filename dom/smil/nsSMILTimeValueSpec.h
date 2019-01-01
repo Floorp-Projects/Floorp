@@ -14,12 +14,12 @@
 #include "nsIDOMEventListener.h"
 
 class nsSMILTimeValue;
-class nsSMILTimedElement;
 class nsSMILTimeContainer;
 class nsSMILInstanceTime;
 class nsSMILInterval;
 
 namespace mozilla {
+class SMILTimedElement;
 namespace dom {
 class Event;
 }  // namespace dom
@@ -40,11 +40,12 @@ class EventListenerManager;
 
 class nsSMILTimeValueSpec {
  public:
+  typedef mozilla::SMILTimedElement SMILTimedElement;
   typedef mozilla::dom::Element Element;
   typedef mozilla::dom::Event Event;
   typedef mozilla::dom::IDTracker IDTracker;
 
-  nsSMILTimeValueSpec(nsSMILTimedElement& aOwner, bool aIsBegin);
+  nsSMILTimeValueSpec(SMILTimedElement& aOwner, bool aIsBegin);
   ~nsSMILTimeValueSpec();
 
   nsresult SetSpec(const nsAString& aStringSpec, Element& aContextElement);
@@ -70,7 +71,7 @@ class nsSMILTimeValueSpec {
  protected:
   void UpdateReferencedElement(Element* aFrom, Element* aTo);
   void UnregisterFromReferencedElement(Element* aElement);
-  nsSMILTimedElement* GetTimedElement(Element* aElement);
+  SMILTimedElement* GetTimedElement(Element* aElement);
   bool IsWhitelistedEvent();
   void RegisterEventListener(Element* aElement);
   void UnregisterEventListener(Element* aElement);
@@ -81,7 +82,7 @@ class nsSMILTimeValueSpec {
       const nsSMILTimeContainer* aSrcContainer);
   bool ApplyOffset(nsSMILTimeValue& aTime) const;
 
-  nsSMILTimedElement* mOwner;
+  SMILTimedElement* mOwner;
   bool mIsBegin;  // Indicates if *we* are a begin spec,
                   // not to be confused with
                   // mParams.mSyncBegin which indicates

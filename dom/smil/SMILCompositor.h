@@ -9,34 +9,36 @@
 
 #include "mozilla/Move.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/SMILAnimationFunction.h"
+#include "mozilla/SMILCompositorTable.h"
 #include "nsTHashtable.h"
 #include "nsString.h"
-#include "SMILAnimationFunction.h"
 #include "nsSMILTargetIdentifier.h"
-#include "nsSMILCompositorTable.h"
 #include "PLDHashTable.h"
 
+namespace mozilla {
+
 //----------------------------------------------------------------------
-// nsSMILCompositor
+// SMILCompositor
 //
 // Performs the composition of the animation sandwich by combining the results
 // of a series animation functions according to the rules of SMIL composition
 // including prioritising animations.
 
-class nsSMILCompositor : public PLDHashEntryHdr {
+class SMILCompositor : public PLDHashEntryHdr {
  public:
   typedef nsSMILTargetIdentifier KeyType;
   typedef const KeyType& KeyTypeRef;
   typedef const KeyType* KeyTypePointer;
 
-  explicit nsSMILCompositor(KeyTypePointer aKey)
+  explicit SMILCompositor(KeyTypePointer aKey)
       : mKey(*aKey), mForceCompositing(false) {}
-  nsSMILCompositor(nsSMILCompositor&& toMove)
+  SMILCompositor(SMILCompositor&& toMove)
       : PLDHashEntryHdr(std::move(toMove)),
         mKey(std::move(toMove.mKey)),
         mAnimationFunctions(std::move(toMove.mAnimationFunctions)),
         mForceCompositing(false) {}
-  ~nsSMILCompositor() {}
+  ~SMILCompositor() {}
 
   // PLDHashEntryHdr methods
   KeyTypeRef GetKey() const { return mKey; }
@@ -46,7 +48,7 @@ class nsSMILCompositor : public PLDHashEntryHdr {
   enum { ALLOW_MEMMOVE = false };
 
   // Adds the given animation function to this Compositor's list of functions
-  void AddAnimationFunction(mozilla::SMILAnimationFunction* aFunc);
+  void AddAnimationFunction(SMILAnimationFunction* aFunc);
 
   // Composes the attribute's current value with the list of animation
   // functions, and assigns the resulting value to this compositor's target
@@ -65,7 +67,7 @@ class nsSMILCompositor : public PLDHashEntryHdr {
   void ToggleForceCompositing() { mForceCompositing = true; }
 
   // Transfers |aOther|'s mCachedBaseValue to |this|
-  void StealCachedBaseValue(nsSMILCompositor* aOther) {
+  void StealCachedBaseValue(SMILCompositor* aOther) {
     mCachedBaseValue = std::move(aOther->mCachedBaseValue);
   }
 
@@ -74,8 +76,7 @@ class nsSMILCompositor : public PLDHashEntryHdr {
   //
   // @param aBaseComputedStyle  An optional ComputedStyle which, if set, will be
   //                           used when fetching the base style.
-  mozilla::UniquePtr<nsISMILAttr> CreateSMILAttr(
-      mozilla::ComputedStyle* aBaseComputedStyle);
+  UniquePtr<nsISMILAttr> CreateSMILAttr(ComputedStyle* aBaseComputedStyle);
 
   // Returns the CSS property this compositor should animate, or
   // eCSSProperty_UNKNOWN if this compositor does not animate a CSS property.
@@ -104,7 +105,7 @@ class nsSMILCompositor : public PLDHashEntryHdr {
   KeyType mKey;
 
   // Hash Value: List of animation functions that animate the specified attr
-  nsTArray<mozilla::SMILAnimationFunction*> mAnimationFunctions;
+  nsTArray<SMILAnimationFunction*> mAnimationFunctions;
 
   // Member data for detecting when we need to force-recompose
   // ---------------------------------------------------------
@@ -118,5 +119,7 @@ class nsSMILCompositor : public PLDHashEntryHdr {
   // StealCachedBaseValue.)
   nsSMILValue mCachedBaseValue;
 };
+
+}  // namespace mozilla
 
 #endif  // NS_SMILCOMPOSITOR_H_

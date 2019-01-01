@@ -31,18 +31,16 @@ class SMILAnimationFunction;
 namespace dom {
 class SVGAnimationElement;
 }  // namespace dom
-}  // namespace mozilla
 
 //----------------------------------------------------------------------
-// nsSMILTimedElement
+// SMILTimedElement
 
-class nsSMILTimedElement {
+class SMILTimedElement {
  public:
-  nsSMILTimedElement();
-  ~nsSMILTimedElement();
+  SMILTimedElement();
+  ~SMILTimedElement();
 
   typedef mozilla::dom::Element Element;
-  typedef mozilla::SMILAnimationFunction SMILAnimationFunction;
 
   /*
    * Sets the owning animation element which this class uses to convert between
@@ -316,7 +314,7 @@ class nsSMILTimedElement {
    * effective interval is directly or indirectly derived from aOther, false
    * otherwise.
    */
-  bool IsTimeDependent(const nsSMILTimedElement& aOther) const;
+  bool IsTimeDependent(const SMILTimedElement& aOther) const;
 
   /**
    * Called when the timed element has been bound to the document so that
@@ -348,9 +346,9 @@ class nsSMILTimedElement {
 
  protected:
   // Typedefs
-  typedef nsTArray<mozilla::UniquePtr<nsSMILTimeValueSpec>> TimeValueSpecList;
+  typedef nsTArray<UniquePtr<nsSMILTimeValueSpec>> TimeValueSpecList;
   typedef nsTArray<RefPtr<nsSMILInstanceTime>> InstanceTimeList;
-  typedef nsTArray<mozilla::UniquePtr<nsSMILInterval>> IntervalList;
+  typedef nsTArray<UniquePtr<nsSMILInterval>> IntervalList;
   typedef nsPtrHashKey<nsSMILTimeValueSpec> TimeValueSpecPtrKey;
   typedef nsTHashtable<TimeValueSpecPtrKey> TimeValueSpecHashSet;
 
@@ -530,7 +528,7 @@ class nsSMILTimedElement {
   void NotifyChangedInterval(nsSMILInterval* aInterval,
                              bool aBeginObjectChanged, bool aEndObjectChanged);
 
-  void FireTimeEventAsync(mozilla::EventMessage aMsg, int32_t aDetail);
+  void FireTimeEventAsync(EventMessage aMsg, int32_t aDetail);
   const nsSMILInstanceTime* GetEffectiveBeginInstance() const;
   const nsSMILInterval* GetPreviousInterval() const;
   bool HasPlayed() const { return !mOldIntervals.IsEmpty(); }
@@ -582,7 +580,7 @@ class nsSMILTimedElement {
   uint32_t mInstanceSerialIndex;
 
   SMILAnimationFunction* mClient;
-  mozilla::UniquePtr<nsSMILInterval> mCurrentInterval;
+  UniquePtr<nsSMILInterval> mCurrentInterval;
   IntervalList mOldIntervals;
   uint32_t mCurrentRepeatIteration;
   nsSMILMilestone mPrevRegisteredMilestone;
@@ -635,14 +633,16 @@ class nsSMILTimedElement {
   static const uint8_t sMaxUpdateIntervalRecursionDepth;
 };
 
-inline void ImplCycleCollectionUnlink(nsSMILTimedElement& aField) {
+inline void ImplCycleCollectionUnlink(SMILTimedElement& aField) {
   aField.Unlink();
 }
 
 inline void ImplCycleCollectionTraverse(
-    nsCycleCollectionTraversalCallback& aCallback, nsSMILTimedElement& aField,
+    nsCycleCollectionTraversalCallback& aCallback, SMILTimedElement& aField,
     const char* aName, uint32_t aFlags = 0) {
   aField.Traverse(&aCallback);
 }
+
+}  // namespace mozilla
 
 #endif  // NS_SMILTIMEDELEMENT_H_

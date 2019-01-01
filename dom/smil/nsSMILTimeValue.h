@@ -27,7 +27,7 @@
  *                        an end time for animation.
  * nsSMILTimeValueSpec -- a component of a begin or end attribute, such as the
  *                        '5s' or 'a.end+2m' in begin="5s; a.end+2m". Acts as
- *                        a broker between an nsSMILTimedElement and its
+ *                        a broker between an SMILTimedElement and its
  *                        nsSMILInstanceTimes by generating new instance times
  *                        and handling changes to existing times.
  *

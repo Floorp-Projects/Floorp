@@ -8,6 +8,7 @@
 #define NS_SMILANIMATIONCONTROLLER_H_
 
 #include "mozilla/Attributes.h"
+#include "mozilla/SMILCompositorTable.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
@@ -15,7 +16,6 @@
 #include "nsTHashtable.h"
 #include "nsHashKeys.h"
 #include "nsSMILTimeContainer.h"
-#include "nsSMILCompositorTable.h"
 #include "nsSMILMilestone.h"
 #include "nsRefreshDriver.h"
 
@@ -143,7 +143,7 @@ class SMILAnimationController final : public nsSMILTimeContainer,
 
   static void AddAnimationToCompositorTable(
       mozilla::dom::SVGAnimationElement* aElement,
-      nsSMILCompositorTable* aCompositorTable, bool& aStyleFlushNeeded);
+      SMILCompositorTable* aCompositorTable, bool& aStyleFlushNeeded);
 
   static bool GetTargetIdentifierForAnimation(
       mozilla::dom::SVGAnimationElement* aAnimElem,
@@ -203,7 +203,7 @@ class SMILAnimationController final : public nsSMILTimeContainer,
   // so we can detect when an element/attribute used to be animated,
   // but isn't anymore for some reason. (e.g. if its <animate> element is
   // removed or retargeted)
-  nsAutoPtr<nsSMILCompositorTable> mLastCompositorTable;
+  nsAutoPtr<SMILCompositorTable> mLastCompositorTable;
 };
 
 }  // namespace mozilla
