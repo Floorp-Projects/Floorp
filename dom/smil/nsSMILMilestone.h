@@ -8,7 +8,7 @@
 #define NS_SMILMILESTONE_H_
 
 /*
- * A significant moment in an nsSMILTimedElement's lifetime where a sample is
+ * A significant moment in an SMILTimedElement's lifetime where a sample is
  * required.
  *
  * Animations register the next milestone in their lifetime with the time
@@ -27,7 +27,7 @@
  *
  * Furthermore, this distinction between sampling the end of an interval and
  * a regular sample is used within the timing model (specifically in
- * nsSMILTimedElement) to ensure that all intervals ending at time t are sampled
+ * SMILTimedElement) to ensure that all intervals ending at time t are sampled
  * before any new intervals are entered so that we have a fully up-to-date set
  * of instance times available before committing to a new interval. Once an
  * interval is entered, the begin time is fixed.

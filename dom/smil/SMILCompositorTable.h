@@ -10,14 +10,19 @@
 #include "nsTHashtable.h"
 
 //----------------------------------------------------------------------
-// nsSMILCompositorTable : A hashmap of nsSMILCompositors
+// SMILCompositorTable : A hashmap of SMILCompositors
 //
 // This is just a forward-declaration because it is included in
 // SMILAnimationController which is used in nsIDocument. We don't want to
-// expose all of nsSMILCompositor or otherwise any changes to it will mean the
+// expose all of SMILCompositor or otherwise any changes to it will mean the
 // whole world will need to be rebuilt.
 
-class nsSMILCompositor;
-typedef nsTHashtable<nsSMILCompositor> nsSMILCompositorTable;
+namespace mozilla {
+
+class SMILCompositor;
+
+typedef nsTHashtable<SMILCompositor> SMILCompositorTable;
+
+}  // namespace mozilla
 
 #endif  // NS_SMILCOMPOSITORTABLE_H_

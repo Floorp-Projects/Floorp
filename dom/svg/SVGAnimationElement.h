@@ -9,9 +9,9 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/IDTracker.h"
+#include "mozilla/dom/SVGElement.h"
 #include "mozilla/dom/SVGTests.h"
-#include "nsSMILTimedElement.h"
-#include "SVGElement.h"
+#include "mozilla/SMILTimedElement.h"
 
 namespace mozilla {
 namespace dom {
@@ -61,7 +61,7 @@ class SVGAnimationElement : public SVGAnimationElementBase, public SVGTests {
   Element* GetTargetElementContent();
   virtual bool GetTargetAttributeName(int32_t* aNamespaceID,
                                       nsAtom** aLocalName) const;
-  nsSMILTimedElement& TimedElement();
+  mozilla::SMILTimedElement& TimedElement();
   nsSMILTimeContainer* GetTimeContainer();
   virtual SMILAnimationFunction& AnimationFunction() = 0;
 
@@ -120,7 +120,7 @@ class SVGAnimationElement : public SVGAnimationElementBase, public SVGTests {
   };
 
   HrefTargetTracker mHrefTarget;
-  nsSMILTimedElement mTimedElement;
+  mozilla::SMILTimedElement mTimedElement;
 };
 
 }  // namespace dom

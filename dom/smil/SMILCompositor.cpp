@@ -4,19 +4,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsSMILCompositor.h"
+#include "SMILCompositor.h"
 
 #include "nsComputedDOMStyle.h"
 #include "nsCSSProps.h"
 #include "nsHashKeys.h"
 #include "nsSMILCSSProperty.h"
 
+namespace mozilla {
+
 // PLDHashEntryHdr methods
-bool nsSMILCompositor::KeyEquals(KeyTypePointer aKey) const {
+bool SMILCompositor::KeyEquals(KeyTypePointer aKey) const {
   return aKey && aKey->Equals(mKey);
 }
 
-/*static*/ PLDHashNumber nsSMILCompositor::HashKey(KeyTypePointer aKey) {
+/*static*/ PLDHashNumber SMILCompositor::HashKey(KeyTypePointer aKey) {
   // Combine the 3 values into one numeric value, which will be hashed.
   // NOTE: We right-shift one of the pointers by 2 to get some randomness in
   // its 2 lowest-order bits. (Those shifted-off bits will always be 0 since
@@ -26,7 +28,7 @@ bool nsSMILCompositor::KeyEquals(KeyTypePointer aKey) const {
 }
 
 // Cycle-collection support
-void nsSMILCompositor::Traverse(nsCycleCollectionTraversalCallback* aCallback) {
+void SMILCompositor::Traverse(nsCycleCollectionTraversalCallback* aCallback) {
   if (!mKey.mElement) return;
 
   NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*aCallback, "Compositor mKey.mElement");
@@ -34,13 +36,13 @@ void nsSMILCompositor::Traverse(nsCycleCollectionTraversalCallback* aCallback) {
 }
 
 // Other methods
-void nsSMILCompositor::AddAnimationFunction(SMILAnimationFunction* aFunc) {
+void SMILCompositor::AddAnimationFunction(SMILAnimationFunction* aFunc) {
   if (aFunc) {
     mAnimationFunctions.AppendElement(aFunc);
   }
 }
 
-void nsSMILCompositor::ComposeAttribute(bool& aMightHavePendingStyleUpdates) {
+void SMILCompositor::ComposeAttribute(bool& aMightHavePendingStyleUpdates) {
   if (!mKey.mElement) return;
 
   // If we might need to resolve base styles, grab a suitable ComputedStyle
@@ -59,7 +61,7 @@ void nsSMILCompositor::ComposeAttribute(bool& aMightHavePendingStyleUpdates) {
     return;
   }
   if (mAnimationFunctions.IsEmpty()) {
-    // No active animation functions. (We can still have a nsSMILCompositor in
+    // No active animation functions. (We can still have a SMILCompositor in
     // that case if an animation function has *just* become inactive)
     smilAttr->ClearAnimValue();
     // Removing the animation effect may require a style update.
@@ -104,7 +106,7 @@ void nsSMILCompositor::ComposeAttribute(bool& aMightHavePendingStyleUpdates) {
   }
 }
 
-void nsSMILCompositor::ClearAnimationEffects() {
+void SMILCompositor::ClearAnimationEffects() {
   if (!mKey.mElement || !mKey.mAttributeName) return;
 
   UniquePtr<nsISMILAttr> smilAttr = CreateSMILAttr(nullptr);
@@ -117,7 +119,7 @@ void nsSMILCompositor::ClearAnimationEffects() {
 
 // Protected Helper Functions
 // --------------------------
-UniquePtr<nsISMILAttr> nsSMILCompositor::CreateSMILAttr(
+UniquePtr<nsISMILAttr> SMILCompositor::CreateSMILAttr(
     ComputedStyle* aBaseComputedStyle) {
   nsCSSPropertyID propID = GetCSSPropertyToAnimate();
 
@@ -130,7 +132,7 @@ UniquePtr<nsISMILAttr> nsSMILCompositor::CreateSMILAttr(
                                         mKey.mAttributeName);
 }
 
-nsCSSPropertyID nsSMILCompositor::GetCSSPropertyToAnimate() const {
+nsCSSPropertyID SMILCompositor::GetCSSPropertyToAnimate() const {
   if (mKey.mAttributeNamespaceID != kNameSpaceID_None) {
     return eCSSProperty_UNKNOWN;
   }
@@ -162,7 +164,7 @@ nsCSSPropertyID nsSMILCompositor::GetCSSPropertyToAnimate() const {
   return propID;
 }
 
-bool nsSMILCompositor::MightNeedBaseStyle() const {
+bool SMILCompositor::MightNeedBaseStyle() const {
   if (GetCSSPropertyToAnimate() == eCSSProperty_UNKNOWN) {
     return false;
   }
@@ -178,7 +180,7 @@ bool nsSMILCompositor::MightNeedBaseStyle() const {
   return false;
 }
 
-uint32_t nsSMILCompositor::GetFirstFuncToAffectSandwich() {
+uint32_t SMILCompositor::GetFirstFuncToAffectSandwich() {
   // For performance reasons, we throttle most animations on elements in
   // display:none subtrees. (We can't throttle animations that target the
   // "display" property itself, though -- if we did, display:none elements
@@ -222,10 +224,12 @@ uint32_t nsSMILCompositor::GetFirstFuncToAffectSandwich() {
   return i;
 }
 
-void nsSMILCompositor::UpdateCachedBaseValue(const nsSMILValue& aBaseValue) {
+void SMILCompositor::UpdateCachedBaseValue(const nsSMILValue& aBaseValue) {
   if (mCachedBaseValue != aBaseValue) {
     // Base value has changed since last sample.
     mCachedBaseValue = aBaseValue;
     mForceCompositing = true;
   }
 }
+
+}  // namespace mozilla

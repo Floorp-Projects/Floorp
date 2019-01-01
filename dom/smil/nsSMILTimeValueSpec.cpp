@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/EventListenerManager.h"
+#include "mozilla/SMILTimedElement.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/SVGAnimationElement.h"
 #include "mozilla/dom/TimeEvent.h"
@@ -12,7 +13,6 @@
 #include "nsSMILInterval.h"
 #include "nsSMILTimeContainer.h"
 #include "nsSMILTimeValue.h"
-#include "nsSMILTimedElement.h"
 #include "nsSMILInstanceTime.h"
 #include "nsSMILParserUtils.h"
 #include "nsString.h"
@@ -37,7 +37,7 @@ nsSMILTimeValueSpec::EventListener::HandleEvent(Event* aEvent) {
 //----------------------------------------------------------------------
 // Implementation
 
-nsSMILTimeValueSpec::nsSMILTimeValueSpec(nsSMILTimedElement& aOwner,
+nsSMILTimeValueSpec::nsSMILTimeValueSpec(SMILTimedElement& aOwner,
                                          bool aIsBegin)
     : mOwner(&aOwner), mIsBegin(aIsBegin), mReferencedElement(this) {}
 
@@ -184,7 +184,7 @@ void nsSMILTimeValueSpec::UpdateReferencedElement(Element* aFrom,
 
   switch (mParams.mType) {
     case nsSMILTimeValueSpecParams::SYNCBASE: {
-      nsSMILTimedElement* to = GetTimedElement(aTo);
+      SMILTimedElement* to = GetTimedElement(aTo);
       if (to) {
         to->AddDependent(*this);
       }
@@ -205,7 +205,7 @@ void nsSMILTimeValueSpec::UnregisterFromReferencedElement(Element* aElement) {
   if (!aElement) return;
 
   if (mParams.mType == nsSMILTimeValueSpecParams::SYNCBASE) {
-    nsSMILTimedElement* timedElement = GetTimedElement(aElement);
+    SMILTimedElement* timedElement = GetTimedElement(aElement);
     if (timedElement) {
       timedElement->RemoveDependent(*this);
     }
@@ -215,7 +215,7 @@ void nsSMILTimeValueSpec::UnregisterFromReferencedElement(Element* aElement) {
   }
 }
 
-nsSMILTimedElement* nsSMILTimeValueSpec::GetTimedElement(Element* aElement) {
+SMILTimedElement* nsSMILTimeValueSpec::GetTimedElement(Element* aElement) {
   return aElement && aElement->IsNodeOfType(nsINode::eANIMATION)
              ? &static_cast<SVGAnimationElement*>(aElement)->TimedElement()
              : nullptr;
