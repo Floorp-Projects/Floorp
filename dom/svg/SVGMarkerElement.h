@@ -8,7 +8,7 @@
 #define mozilla_dom_SVGMarkerElement_h
 
 #include "nsAutoPtr.h"
-#include "nsSVGAngle.h"
+#include "SVGAngle.h"
 #include "nsSVGEnum.h"
 #include "nsSVGLength2.h"
 #include "nsSVGViewBox.h"
@@ -41,7 +41,7 @@ class nsSVGOrientType {
   // XXX FIXME like https://bugzilla.mozilla.org/show_bug.cgi?id=545550 but
   // without adding an mIsAnimated member...?
   void SetBaseValue(uint16_t aValue) { mAnimVal = mBaseVal = uint8_t(aValue); }
-  // no need to notify, since nsSVGAngle does that
+  // no need to notify, since SVGAngle does that
   void SetAnimValue(uint16_t aValue) { mAnimVal = uint8_t(aValue); }
 
   // we want to avoid exposing SVG_MARKER_ORIENT_AUTO_START_REVERSE to
@@ -153,7 +153,7 @@ class SVGMarkerElement : public SVGMarkerElementBase {
   static EnumInfo sEnumInfo[1];
 
   enum { ORIENT };
-  nsSVGAngle mAngleAttributes[1];
+  SVGAngle mAngleAttributes[1];
   static AngleInfo sAngleInfo[1];
 
   nsSVGViewBox mViewBox;
