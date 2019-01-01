@@ -9,10 +9,6 @@ with Files("**"):
 
 MOCHITEST_MANIFESTS += ['test/mochitest.ini']
 
-EXPORTS += [
-    'nsSVGClass.h',
-]
-
 EXPORTS.mozilla += [
     'SVGAttrValueWrapper.h',
     'SVGContentUtils.h',
@@ -39,6 +35,7 @@ EXPORTS.mozilla.dom += [
     'SVGAnimateTransformElement.h',
     'SVGAnimationElement.h',
     'SVGCircleElement.h',
+    'SVGClass.h',
     'SVGClipPathElement.h',
     'SVGComponentTransferFunctionElement.h',
     'SVGDefsElement.h',
@@ -127,7 +124,6 @@ UNIFIED_SOURCES += [
     'DOMSVGTransformList.cpp',
     'nsISVGPoint.cpp',
     'nsSVGBoolean.cpp',
-    'nsSVGClass.cpp',
     'nsSVGEnum.cpp',
     'nsSVGInteger.cpp',
     'nsSVGIntegerPair.cpp',
@@ -158,6 +154,7 @@ UNIFIED_SOURCES += [
     'SVGAnimationElement.cpp',
     'SVGAttrValueWrapper.cpp',
     'SVGCircleElement.cpp',
+    'SVGClass.cpp',
     'SVGClipPathElement.cpp',
     'SVGContentUtils.cpp',
     'SVGDataParser.cpp',

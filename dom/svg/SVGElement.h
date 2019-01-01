@@ -16,6 +16,7 @@
 #include "mozilla/SVGContentUtils.h"
 #include "mozilla/dom/DOMRect.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/SVGClass.h"
 #include "mozilla/gfx/MatrixFwd.h"
 #include "nsAutoPtr.h"
 #include "nsChangeHint.h"
@@ -24,7 +25,6 @@
 #include "nsError.h"
 #include "nsISupportsImpl.h"
 #include "nsStyledElement.h"
-#include "nsSVGClass.h"
 #include "gfxMatrix.h"
 
 class SVGAngle;
@@ -611,7 +611,7 @@ class SVGElement : public SVGElementBase  // nsIContent
   void UnsetAttrInternal(int32_t aNameSpaceID, nsAtom* aAttribute,
                          bool aNotify);
 
-  nsSVGClass mClassAttribute;
+  SVGClass mClassAttribute;
   nsAutoPtr<nsAttrValue> mClassAnimAttr;
   RefPtr<mozilla::DeclarationBlock> mContentDeclarationBlock;
 };

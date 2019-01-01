@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsSVGClass.h"
+#include "SVGClass.h"
 
 #include "mozilla/dom/SVGAnimatedString.h"
 #include "mozilla/Move.h"
@@ -12,17 +12,17 @@
 #include "nsSMILValue.h"
 #include "SMILStringType.h"
 
-using namespace mozilla;
-using namespace mozilla::dom;
+namespace mozilla {
+namespace dom {
 
 struct DOMAnimatedString final : public SVGAnimatedString {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMAnimatedString)
 
-  DOMAnimatedString(nsSVGClass* aVal, SVGElement* aSVGElement)
+  DOMAnimatedString(SVGClass* aVal, SVGElement* aSVGElement)
       : SVGAnimatedString(aSVGElement), mVal(aVal) {}
 
-  nsSVGClass* mVal;  // kept alive because it belongs to content
+  SVGClass* mVal;  // kept alive because it belongs to content
 
   void GetBaseVal(nsAString& aResult) override {
     mVal->GetBaseValue(aResult, mSVGElement);
@@ -48,7 +48,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMAnimatedString)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-already_AddRefed<SVGAnimatedString> nsSVGClass::ToDOMAnimatedString(
+already_AddRefed<SVGAnimatedString> SVGClass::ToDOMAnimatedString(
     SVGElement* aSVGElement) {
   RefPtr<DOMAnimatedString> result = new DOMAnimatedString(this, aSVGElement);
   return result.forget();
@@ -56,8 +56,8 @@ already_AddRefed<SVGAnimatedString> nsSVGClass::ToDOMAnimatedString(
 
 /* Implementation */
 
-void nsSVGClass::SetBaseValue(const nsAString& aValue, SVGElement* aSVGElement,
-                              bool aDoSetAttr) {
+void SVGClass::SetBaseValue(const nsAString& aValue, SVGElement* aSVGElement,
+                            bool aDoSetAttr) {
   NS_ASSERTION(aSVGElement, "Null element passed to SetBaseValue");
 
   aSVGElement->SetMayHaveClass();
@@ -69,13 +69,13 @@ void nsSVGClass::SetBaseValue(const nsAString& aValue, SVGElement* aSVGElement,
   }
 }
 
-void nsSVGClass::GetBaseValue(nsAString& aValue,
-                              const SVGElement* aSVGElement) const {
+void SVGClass::GetBaseValue(nsAString& aValue,
+                            const SVGElement* aSVGElement) const {
   aSVGElement->GetAttr(kNameSpaceID_None, nsGkAtoms::_class, aValue);
 }
 
-void nsSVGClass::GetAnimValue(nsAString& aResult,
-                              const SVGElement* aSVGElement) const {
+void SVGClass::GetAnimValue(nsAString& aResult,
+                            const SVGElement* aSVGElement) const {
   if (mAnimVal) {
     aResult = *mAnimVal;
     return;
@@ -84,8 +84,7 @@ void nsSVGClass::GetAnimValue(nsAString& aResult,
   aSVGElement->GetAttr(kNameSpaceID_None, nsGkAtoms::_class, aResult);
 }
 
-void nsSVGClass::SetAnimValue(const nsAString& aValue,
-                              SVGElement* aSVGElement) {
+void SVGClass::SetAnimValue(const nsAString& aValue, SVGElement* aSVGElement) {
   if (mAnimVal && mAnimVal->Equals(aValue)) {
     return;
   }
@@ -102,11 +101,11 @@ void DOMAnimatedString::GetAnimVal(nsAString& aResult) {
   mVal->GetAnimValue(aResult, mSVGElement);
 }
 
-UniquePtr<nsISMILAttr> nsSVGClass::ToSMILAttr(SVGElement* aSVGElement) {
+UniquePtr<nsISMILAttr> SVGClass::ToSMILAttr(SVGElement* aSVGElement) {
   return MakeUnique<SMILString>(this, aSVGElement);
 }
 
-nsresult nsSVGClass::SMILString::ValueFromString(
+nsresult SVGClass::SMILString::ValueFromString(
     const nsAString& aStr, const dom::SVGAnimationElement* /*aSrcElement*/,
     nsSMILValue& aValue, bool& aPreventCachingOfSandwich) const {
   nsSMILValue val(SMILStringType::Singleton());
@@ -117,21 +116,21 @@ nsresult nsSVGClass::SMILString::ValueFromString(
   return NS_OK;
 }
 
-nsSMILValue nsSVGClass::SMILString::GetBaseValue() const {
+nsSMILValue SVGClass::SMILString::GetBaseValue() const {
   nsSMILValue val(SMILStringType::Singleton());
   mSVGElement->GetAttr(kNameSpaceID_None, nsGkAtoms::_class,
                        *static_cast<nsAString*>(val.mU.mPtr));
   return val;
 }
 
-void nsSVGClass::SMILString::ClearAnimValue() {
+void SVGClass::SMILString::ClearAnimValue() {
   if (mVal->mAnimVal) {
     mVal->mAnimVal = nullptr;
     mSVGElement->DidAnimateClass();
   }
 }
 
-nsresult nsSVGClass::SMILString::SetAnimValue(const nsSMILValue& aValue) {
+nsresult SVGClass::SMILString::SetAnimValue(const nsSMILValue& aValue) {
   NS_ASSERTION(aValue.mType == SMILStringType::Singleton(),
                "Unexpected type to assign animated value");
   if (aValue.mType == SMILStringType::Singleton()) {
@@ -139,3 +138,6 @@ nsresult nsSVGClass::SMILString::SetAnimValue(const nsSMILValue& aValue) {
   }
   return NS_OK;
 }
+
+}  // namespace dom
+}  // namespace mozilla
