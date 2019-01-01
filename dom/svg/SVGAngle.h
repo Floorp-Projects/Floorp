@@ -28,7 +28,7 @@ class SVGElement;
 }  // namespace dom
 }  // namespace mozilla
 
-class nsSVGAngle {
+class SVGAngle {
   friend class mozilla::dom::DOMSVGAngle;
   friend class mozilla::dom::SVGAnimatedAngle;
   typedef mozilla::dom::SVGElement SVGElement;
@@ -98,7 +98,7 @@ class nsSVGAngle {
 
   struct SMILOrient final : public nsISMILAttr {
    public:
-    SMILOrient(mozilla::dom::nsSVGOrientType* aOrientType, nsSVGAngle* aAngle,
+    SMILOrient(mozilla::dom::nsSVGOrientType* aOrientType, SVGAngle* aAngle,
                SVGElement* aSVGElement)
         : mOrientType(aOrientType), mAngle(aAngle), mSVGElement(aSVGElement) {}
 
@@ -106,7 +106,7 @@ class nsSVGAngle {
     // as the Compositing step, and DOM elements don't get a chance to
     // die during that.
     mozilla::dom::nsSVGOrientType* mOrientType;
-    nsSVGAngle* mAngle;
+    SVGAngle* mAngle;
     SVGElement* mSVGElement;
 
     // nsISMILAttr methods
