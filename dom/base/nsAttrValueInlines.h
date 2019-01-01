@@ -44,7 +44,7 @@ struct MiscContainer final {
         nsIURI* mURL;
         mozilla::AtomArray* mAtomArray;
         nsIntMargin* mIntMargin;
-        const SVGAngle* mSVGAngle;
+        const mozilla::SVGAngle* mSVGAngle;
         const nsSVGIntegerPair* mSVGIntegerPair;
         const nsSVGLength2* mSVGLength;
         const mozilla::SVGLengthList* mSVGLengthList;

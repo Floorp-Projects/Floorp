@@ -152,7 +152,7 @@ class nsAttrValue {
              const nsAString* aSerialized);
   void SetTo(nsIURI* aValue, const nsAString* aSerialized);
   void SetTo(const nsIntMargin& aValue);
-  void SetTo(const SVGAngle& aValue, const nsAString* aSerialized);
+  void SetTo(const mozilla::SVGAngle& aValue, const nsAString* aSerialized);
   void SetTo(const nsSVGIntegerPair& aValue, const nsAString* aSerialized);
   void SetTo(const nsSVGLength2& aValue, const nsAString* aSerialized);
   void SetTo(const mozilla::SVGLengthList& aValue,

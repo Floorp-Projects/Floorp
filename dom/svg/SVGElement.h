@@ -27,7 +27,6 @@
 #include "nsStyledElement.h"
 #include "gfxMatrix.h"
 
-class SVGAngle;
 class nsSVGBoolean;
 class nsSVGEnum;
 class nsSVGInteger;
@@ -46,6 +45,7 @@ nsresult NS_NewSVGElement(mozilla::dom::Element** aResult,
 namespace mozilla {
 class DeclarationBlock;
 
+class SVGAngle;
 class SVGAnimatedNumberList;
 class SVGNumberList;
 class SVGAnimatedLengthList;
