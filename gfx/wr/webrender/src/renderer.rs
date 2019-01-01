@@ -1363,18 +1363,27 @@ impl VertexDataTexture {
         let existing_height = self.texture.as_ref().map_or(0, |t| t.get_dimensions().height);
 
         // Create a new texture if needed.
-        if needed_height > existing_height {
+        //
+        // These textures are generally very small, which is why we don't bother
+        // with incremental updates and just re-upload every frame. For most pages
+        // they're one row each, and on stress tests like css-francine they end up
+        // in the 6-14 range. So we size the texture tightly to what we need (usually
+        // 1), and shrink it if the waste would be more than 10 rows. This helps
+        // with memory overhead, especially because there are several instances of
+        // these textures per Renderer.
+        if needed_height > existing_height || needed_height + 10 < existing_height {
             // Drop the existing texture, if any.
             if let Some(t) = self.texture.take() {
                 device.delete_texture(t);
             }
-            let new_height = (needed_height + 127) & !127;
 
             let texture = device.create_texture(
                 TextureTarget::Default,
                 self.format,
                 width,
-                new_height,
+                // Ensure height is at least two to work around
+                // https://bugs.chromium.org/p/angleproject/issues/detail?id=3039
+                needed_height.max(2),
                 TextureFilter::Nearest,
                 None,
                 1,
