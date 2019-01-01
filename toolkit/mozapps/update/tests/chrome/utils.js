@@ -143,7 +143,7 @@ var gUseTestUpdater = false;
 // onload function.
 var DEBUG_AUS_TEST = true;
 
-const DATA_URI_SPEC = "chrome://mochitests/content/chrome/toolkit/mozapps/update/tests/data/";
+const DATA_URI_SPEC = "chrome://mochitests/content/chrome/toolkit/mozapps/update/tests/chrome/";
 /* import-globals-from ../data/shared.js */
 Services.scriptloader.loadSubScript(DATA_URI_SPEC + "shared.js", this);
 
