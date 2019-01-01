@@ -6,7 +6,7 @@
 # For changes here, also consider ../Makefile.in
 
 XPCSHELLTESTDIR = $(topobjdir)/_tests/xpcshell/toolkit/mozapps/update/tests
-MOCHITESTCHROMEDIR = $(topobjdir)/_tests/testing/mochitest/chrome/toolkit/mozapps/update/tests
+MOCHITESTCHROMEDIR = $(topobjdir)/_tests/testing/mochitest/chrome/toolkit/mozapps/update/tests/chrome
 
 ifeq (,$(MOZ_SUITE)$(MOZ_THUNDERBIRD))
 MOCHITESTBROWSERDIR = $(topobjdir)/_tests/testing/mochitest/browser/toolkit/mozapps/update/tests/browser
@@ -36,13 +36,13 @@ ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 	mv $(XPCSHELLTESTDIR)/data/updater.app/Contents/MacOS/updater-xpcshell $(XPCSHELLTESTDIR)/data/updater.app/Contents/MacOS/org.mozilla.updater
 
 	# Copy for mochitest chrome tests
-	rsync -a -C $(XPCSHELLTESTDIR)/data/updater.app $(MOCHITESTCHROMEDIR)/data/
+	rsync -a -C $(XPCSHELLTESTDIR)/data/updater.app $(MOCHITESTCHROMEDIR)/
 ifdef MOCHITESTBROWSERDIR
 	rsync -a -C $(XPCSHELLTESTDIR)/data/updater.app $(MOCHITESTBROWSERDIR)/
 endif
 else
 	cp $(FINAL_TARGET)/updater-xpcshell$(BIN_SUFFIX) $(XPCSHELLTESTDIR)/data/updater$(BIN_SUFFIX)
-	cp $(FINAL_TARGET)/updater-xpcshell$(BIN_SUFFIX) $(MOCHITESTCHROMEDIR)/data/updater$(BIN_SUFFIX)
+	cp $(FINAL_TARGET)/updater-xpcshell$(BIN_SUFFIX) $(MOCHITESTCHROMEDIR)/updater$(BIN_SUFFIX)
 ifdef MOCHITESTBROWSERDIR
 	cp $(FINAL_TARGET)/updater-xpcshell$(BIN_SUFFIX) $(MOCHITESTBROWSERDIR)/updater$(BIN_SUFFIX)
 endif
