@@ -23,7 +23,7 @@ def make_beetmover_description(config, jobs):
             yield job
             continue
 
-        group = 'BMR-L10n'
+        group = 'BMR'
 
         # add the locale code
         symbol = locale

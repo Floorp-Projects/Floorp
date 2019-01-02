@@ -104,9 +104,6 @@ def make_task_description(config, jobs):
             treeherder.setdefault('platform', _generate_treeherder_platform(
                 dep_th_platform, build_platform, build_type
             ))
-            treeherder.setdefault('symbol', _generate_treeherder_symbol(
-                is_nightly, build_platform
-            ))
 
             # ccov builds are tier 2, so they cannot have tier 1 tasks
             # depending on them.
@@ -114,6 +111,9 @@ def make_task_description(config, jobs):
                 'tier',
                 dep_job.task.get('extra', {}).get('treeherder', {}).get('tier', 1)
             )
+            treeherder.setdefault('symbol', _generate_treeherder_symbol(
+                dep_job.task.get('extra', {}).get('treeherder', {}).get('symbol')
+            ))
             treeherder.setdefault('kind', 'build')
 
         label = job['label']
@@ -171,8 +171,6 @@ def _generate_treeherder_platform(dep_th_platform, build_platform, build_type):
     return '{}/{}'.format(dep_th_platform, actual_build_type)
 
 
-def _generate_treeherder_symbol(is_nightly, build_platform):
-    if is_nightly:
-        return 'Ns'
-    else:
-        return 'Bs'
+def _generate_treeherder_symbol(build_symbol):
+    symbol = build_symbol + 's'
+    return symbol
