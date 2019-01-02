@@ -1379,59 +1379,6 @@ nsDocShell::GetHasMixedDisplayContentBlocked(
 }
 
 NS_IMETHODIMP
-nsDocShell::GetHasTrackingContentBlocked(bool* aHasTrackingContentBlocked) {
-  RefPtr<Document> doc(GetDocument());
-  *aHasTrackingContentBlocked = doc && doc->GetHasTrackingContentBlocked();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocShell::GetHasTrackingContentLoaded(bool* aHasTrackingContentLoaded) {
-  RefPtr<Document> doc(GetDocument());
-  *aHasTrackingContentLoaded = doc && doc->GetHasTrackingContentLoaded();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocShell::GetHasCookiesBlockedByPermission(
-    bool* aHasCookiesBlockedByPermission) {
-  RefPtr<Document> doc(GetDocument());
-  *aHasCookiesBlockedByPermission =
-      doc && doc->GetHasCookiesBlockedByPermission();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocShell::GetHasCookiesBlockedDueToTrackers(
-    bool* aHasCookiesBlockedDueToTrackers) {
-  RefPtr<Document> doc(GetDocument());
-  *aHasCookiesBlockedDueToTrackers = doc && doc->GetHasTrackingCookiesBlocked();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocShell::GetHasAllCookiesBeenBlocked(bool* aHasAllCookiesBeenBlocked) {
-  RefPtr<Document> doc(GetDocument());
-  *aHasAllCookiesBeenBlocked = doc && doc->GetHasAllCookiesBlocked();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocShell::GetHasForeignCookiesBeenBlocked(
-    bool* aHasForeignCookiesBeenBlocked) {
-  RefPtr<Document> doc(GetDocument());
-  *aHasForeignCookiesBeenBlocked = doc && doc->GetHasForeignCookiesBlocked();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocShell::GetHasCookiesLoaded(bool* aHasCookiesLoaded) {
-  RefPtr<Document> doc(GetDocument());
-  *aHasCookiesLoaded = doc && doc->GetHasCookiesLoaded();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsDocShell::GetAllowPlugins(bool* aAllowPlugins) {
   NS_ENSURE_ARG_POINTER(aAllowPlugins);
 
