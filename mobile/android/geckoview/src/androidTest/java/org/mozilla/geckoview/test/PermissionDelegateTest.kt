@@ -50,19 +50,6 @@ class PermissionDelegateTest : BaseSessionTest() {
         mainSession.loadTestPath(HELLO_HTML_PATH)
         mainSession.waitForPageStop()
 
-
-        mainSession.delegateDuringNextWait(object : Callbacks.PermissionDelegate {
-            @AssertCalled(count = 1)
-            override fun onAndroidPermissionsRequest(
-                    session: GeckoSession, permissions: Array<out String>?,
-                    callback: GeckoSession.PermissionDelegate.Callback) {
-                assertThat("Permissions list should be correct",
-                           listOf(*permissions!!), hasItems(Manifest.permission.CAMERA,
-                                                            Manifest.permission.RECORD_AUDIO))
-                callback.grant()
-            }
-        })
-
         val devices = mainSession.waitForJS(
                 "window.navigator.mediaDevices.enumerateDevices()")
 
