@@ -7694,6 +7694,10 @@ class CGPerSignatureCall(CGThing):
 
     The idlNode parameter can be either a method or an attr. We can query
     |idlNode.identifier| in both cases, so we can be agnostic between the two.
+
+    dontSetSlot should be set to True if the value should not be cached in a
+    slot (even if the attribute is marked as StoreInSlot or Cached in the
+    WebIDL).
     """
     # XXXbz For now each entry in the argument list is either an
     # IDLArgument or a FakeArgument, but longer-term we may want to
@@ -7703,7 +7707,8 @@ class CGPerSignatureCall(CGThing):
     def __init__(self, returnType, arguments, nativeMethodName, static,
                  descriptor, idlNode, argConversionStartsAt=0, getter=False,
                  setter=False, isConstructor=False, useCounterName=None,
-                 resultVar=None, objectName="obj"):
+                 resultVar=None, objectName="obj", dontSetSlot=False,
+                 extendedAttributes=None):
         assert idlNode.isMethod() == (not getter and not setter)
         assert idlNode.isAttr() == (getter or setter)
         # Constructors are always static
@@ -7713,12 +7718,15 @@ class CGPerSignatureCall(CGThing):
         self.returnType = returnType
         self.descriptor = descriptor
         self.idlNode = idlNode
-        self.extendedAttributes = descriptor.getExtendedAttributes(idlNode,
-                                                                   getter=getter,
-                                                                   setter=setter)
+        if extendedAttributes is None:
+            extendedAttributes = descriptor.getExtendedAttributes(idlNode,
+                                                                  getter=getter,
+                                                                  setter=setter)
+        self.extendedAttributes = extendedAttributes
         self.arguments = arguments
         self.argCount = len(arguments)
         self.isConstructor = isConstructor
+        self.setSlot = not dontSetSlot and idlNode.isAttr() and idlNode.slotIndices is not None
         cgThings = []
 
         deprecated = (idlNode.getExtendedAttribute("Deprecated") or
@@ -7961,8 +7969,7 @@ class CGPerSignatureCall(CGThing):
                               "NewObject implies that we need to keep the object alive with a strong reference.");
                 """)
 
-        setSlot = self.idlNode.isAttr() and self.idlNode.slotIndices is not None
-        if setSlot:
+        if self.setSlot:
             # For attributes in slots, we want to do some
             # post-processing once we've wrapped them.
             successCode = "break;\n"
@@ -7979,7 +7986,7 @@ class CGPerSignatureCall(CGThing):
             # trying to do the to-JS conversion in.  We're going to put that
             # thing in a variable named "conversionScope" if setSlot is true.
             # Otherwise, just use "obj" for lack of anything better.
-            'obj': "conversionScope" if setSlot else "obj"
+            'obj': "conversionScope" if self.setSlot else "obj"
         }
         try:
             wrapCode += wrapForType(self.returnType, self.descriptor, resultTemplateValues)
@@ -7989,7 +7996,7 @@ class CGPerSignatureCall(CGThing):
                             (err.typename,
                              self.descriptor.interface.identifier.name,
                              self.idlNode.identifier.name))
-        if setSlot:
+        if self.setSlot:
             if self.idlNode.isStatic():
                 raise TypeError(
                     "Attribute %s.%s is static, so we don't have a useful slot "
@@ -8590,7 +8597,8 @@ class CGGetterCall(CGPerSignatureCall):
     A class to generate a native object getter call for a particular IDL
     getter.
     """
-    def __init__(self, returnType, nativeMethodName, descriptor, attr):
+    def __init__(self, returnType, nativeMethodName, descriptor, attr, dontSetSlot=False,
+                 extendedAttributes=None):
         if attr.getExtendedAttribute("UseCounter"):
             useCounterName = "%s_%s_getter" % (descriptor.interface.identifier.name,
                                                attr.identifier.name)
@@ -8600,7 +8608,9 @@ class CGGetterCall(CGPerSignatureCall):
             nativeMethodName = "%s::%s" % (descriptor.nativeType, nativeMethodName)
         CGPerSignatureCall.__init__(self, returnType, [], nativeMethodName,
                                     attr.isStatic(), descriptor, attr,
-                                    getter=True, useCounterName=useCounterName)
+                                    getter=True, useCounterName=useCounterName,
+                                    dontSetSlot=dontSetSlot,
+                                    extendedAttributes=extendedAttributes)
 
 
 class CGNavigatorGetterCall(CGPerSignatureCall):
@@ -8608,10 +8618,12 @@ class CGNavigatorGetterCall(CGPerSignatureCall):
     A class to generate a native object getter call for an IDL getter for a
     property generated by NavigatorProperty.
     """
-    def __init__(self, returnType, _, descriptor, attr):
+    def __init__(self, returnType, _, descriptor, attr,
+                 dontSetSlot=False):
         nativeMethodName = "%s::ConstructNavigatorObject" % (toBindingNamespace(returnType.inner.identifier.name))
         CGPerSignatureCall.__init__(self, returnType, [], nativeMethodName,
-                                    True, descriptor, attr, getter=True)
+                                    True, descriptor, attr, getter=True,
+                                    dontSetSlot=dontSetSlot)
 
     def getArguments(self):
         # The navigator object should be associated with the global of
@@ -8791,9 +8803,13 @@ class CGSpecializedMethod(CGAbstractStaticMethod):
     def __init__(self, descriptor, method):
         self.method = method
         name = CppKeywords.checkMethodName(IDLToCIdentifier(method.identifier.name))
+        if method.getExtendedAttribute("CrossOriginCallable"):
+            selfArg = Argument('void*', 'void_self')
+        else:
+            selfArg = Argument('%s*' % descriptor.nativeType, 'self')
         args = [Argument('JSContext*', 'cx'),
                 Argument('JS::Handle<JSObject*>', 'obj'),
-                Argument('%s*' % descriptor.nativeType, 'self'),
+                selfArg,
                 Argument('const JSJitMethodCallArgs&', 'args')]
         CGAbstractStaticMethod.__init__(self, descriptor, name, 'bool', args,
                                         canRunScript=True)
@@ -8801,8 +8817,34 @@ class CGSpecializedMethod(CGAbstractStaticMethod):
     def definition_body(self):
         nativeName = CGSpecializedMethod.makeNativeName(self.descriptor,
                                                         self.method)
-        return CGMethodCall(nativeName, self.method.isStatic(), self.descriptor,
+        call = CGMethodCall(nativeName, self.method.isStatic(), self.descriptor,
                             self.method).define()
+        if self.method.getExtendedAttribute("CrossOriginCallable"):
+            for signature in self.method.signatures():
+                # non-void signatures would require us to deal with remote proxies for the
+                # return value here.
+                if not signature[0].isVoid():
+                    raise TypeError("We don't support a method marked as CrossOriginCallable "
+                                    "with non-void return type")
+            prototypeID, _ = PrototypeIDAndDepth(self.descriptor)
+            return fill("""
+                // CrossOriginThisPolicy::UnwrapThisObject stores a ${nativeType}::RemoteProxy in void_self
+                // if obj is a proxy with a RemoteObjectProxy handler for the right type, or else it stores
+                // a ${nativeType}. If we get here from the JIT (without going through UnwrapThisObject) we
+                // know void_self contains a ${nativeType}; we don't have special cases in the JIT to deal
+                // with remote object proxies.
+                if (IsRemoteObjectProxy(obj, ${prototypeID})) {
+                    ${nativeType}::RemoteProxy* self = static_cast<${nativeType}::RemoteProxy*>(void_self);
+                    $*{call}
+                }
+                ${nativeType}* self = static_cast<${nativeType}*>(void_self);
+                $*{call}
+                """,
+                prototypeID=prototypeID,
+                ifaceName=self.descriptor.name,
+                nativeType=self.descriptor.nativeType,
+                call=call)
+        return call
 
     def auto_profiler_label(self):
         interface_name = self.descriptor.interface.identifier.name
@@ -9094,10 +9136,14 @@ class CGSpecializedGetter(CGAbstractStaticMethod):
     def __init__(self, descriptor, attr):
         self.attr = attr
         name = 'get_' + IDLToCIdentifier(attr.identifier.name)
+        if attr.getExtendedAttribute("CrossOriginReadable"):
+            selfArg = Argument('void*', 'void_self')
+        else:
+            selfArg = Argument('%s*' % descriptor.nativeType, 'self')
         args = [
             Argument('JSContext*', 'cx'),
             Argument('JS::Handle<JSObject*>', 'obj'),
-            Argument('%s*' % descriptor.nativeType, 'self'),
+            selfArg,
             Argument('JSJitGetterCallArgs', 'args')
         ]
         # StoreInSlot attributes have their getters called from Wrap().  We
@@ -9117,6 +9163,30 @@ class CGSpecializedGetter(CGAbstractStaticMethod):
             return getMaplikeOrSetlikeSizeGetterBody(self.descriptor, self.attr)
         nativeName = CGSpecializedGetter.makeNativeName(self.descriptor,
                                                         self.attr)
+        prefix = ""
+        type = self.attr.type
+        if self.attr.getExtendedAttribute("CrossOriginReadable"):
+            remoteType = type
+            extendedAttributes = self.descriptor.getExtendedAttributes(self.attr, getter=True)
+            if remoteType.isGeckoInterface() and not remoteType.unroll().inner.isExternal():
+                # We'll use a JSObject. It might make more sense to use remoteType's
+                # RemoteProxy, but it's not easy to construct a type for that from here.
+                remoteType = BuiltinTypes[IDLBuiltinType.Types.object]
+                extendedAttributes.append('canOOM')
+                extendedAttributes.remove('infallible')
+            prototypeID, _ = PrototypeIDAndDepth(self.descriptor)
+            prefix = fill("""
+                if (IsRemoteObjectProxy(obj, ${prototypeID})) {
+                    ${nativeType}::RemoteProxy* self = static_cast<${nativeType}::RemoteProxy*>(void_self);
+                    $*{call}
+                }
+                ${nativeType}* self = static_cast<${nativeType}*>(void_self);
+            """,
+            prototypeID=prototypeID,
+            ifaceName=self.descriptor.name,
+            nativeType=self.descriptor.nativeType,
+            call=CGGetterCall(remoteType, nativeName, self.descriptor, self.attr, dontSetSlot=True,
+                              extendedAttributes=extendedAttributes).define())
         if self.attr.slotIndices is not None:
             # We're going to store this return value in a slot on some object,
             # to cache it.  The question is, which object?  For dictionary and
@@ -9137,7 +9207,7 @@ class CGSpecializedGetter(CGAbstractStaticMethod):
             # we know that in the interface type case the returned object is
             # wrappercached.  So creating Xrays to it is reasonable.
             if mayUseXrayExpandoSlots(self.descriptor, self.attr):
-                prefix = fill(
+                prefix += fill(
                     """
                     // Have to either root across the getter call or reget after.
                     bool isXray;
@@ -9151,7 +9221,7 @@ class CGSpecializedGetter(CGAbstractStaticMethod):
                                                                 self.descriptor),
                     slotIndex=memberReservedSlot(self.attr, self.descriptor))
             else:
-                prefix = fill(
+                prefix += fill(
                     """
                     // Have to either root across the getter call or reget after.
                     JS::Rooted<JSObject*> slotStorage(cx, js::UncheckedUnwrap(obj, /* stopAtWindowProxy = */ false));
@@ -9176,15 +9246,13 @@ class CGSpecializedGetter(CGAbstractStaticMethod):
 
                 """,
                 maybeWrap=getMaybeWrapValueFuncForType(self.attr.type))
-        else:
-            prefix = ""
 
         if self.attr.navigatorObjectGetter:
             cgGetterCall = CGNavigatorGetterCall
         else:
             cgGetterCall = CGGetterCall
         return (prefix +
-                cgGetterCall(self.attr.type, nativeName,
+                cgGetterCall(type, nativeName,
                              self.descriptor, self.attr).define())
 
     def auto_profiler_label(self):
@@ -9280,9 +9348,13 @@ class CGSpecializedSetter(CGAbstractStaticMethod):
     def __init__(self, descriptor, attr):
         self.attr = attr
         name = 'set_' + IDLToCIdentifier(attr.identifier.name)
+        if attr.getExtendedAttribute("CrossOriginWritable"):
+            selfArg = Argument('void*', 'void_self')
+        else:
+            selfArg = Argument('%s*' % descriptor.nativeType, 'self')
         args = [Argument('JSContext*', 'cx'),
                 Argument('JS::Handle<JSObject*>', 'obj'),
-                Argument('%s*' % descriptor.nativeType, 'self'),
+                selfArg,
                 Argument('JSJitSetterCallArgs', 'args')]
         CGAbstractStaticMethod.__init__(self, descriptor, name, "bool", args,
                                         canRunScript=True)
@@ -9290,8 +9362,29 @@ class CGSpecializedSetter(CGAbstractStaticMethod):
     def definition_body(self):
         nativeName = CGSpecializedSetter.makeNativeName(self.descriptor,
                                                         self.attr)
-        return CGSetterCall(self.attr.type, nativeName, self.descriptor,
-                            self.attr).define()
+        type = self.attr.type
+        call = CGSetterCall(type, nativeName, self.descriptor, self.attr).define()
+        if self.attr.getExtendedAttribute("CrossOriginWritable"):
+            if type.isGeckoInterface() and not type.unroll().inner.isExternal():
+                # a setter taking a Gecko interface would require us to deal with remote
+                # proxies for the value here.
+                raise TypeError("We don't support the setter of %s marked as "
+                                "CrossOriginWritable because it takes a Gecko interface "
+                                "as the value", attr.identifier.name)
+            prototypeID, _ = PrototypeIDAndDepth(self.descriptor)
+            return fill("""
+                if (IsRemoteObjectProxy(obj, ${prototypeID})) {
+                    ${nativeType}::RemoteProxy* self = static_cast<${nativeType}::RemoteProxy*>(void_self);
+                    $*{call}
+                }
+                ${nativeType}* self = static_cast<${nativeType}*>(void_self);
+                $*{call}
+                """,
+                prototypeID=prototypeID,
+                ifaceName=self.descriptor.name,
+                nativeType=self.descriptor.nativeType,
+                call=call)
+        return call
 
     def auto_profiler_label(self):
         interface_name = self.descriptor.interface.identifier.name
@@ -14090,6 +14183,7 @@ class CGBindingRoot(CGThing):
 
             return any(hasCrossOriginProperty(m) for m in desc.interface.members)
 
+        bindingDeclareHeaders["mozilla/dom/RemoteObjectProxy.h"] = any(descriptorHasCrossOriginProperties(d) for d in descriptors)
         bindingDeclareHeaders["jsapi.h"] = any(descriptorHasCrossOriginProperties(d) for d in descriptors)
         bindingDeclareHeaders["jspubtd.h"] = not bindingDeclareHeaders["jsapi.h"]
         bindingDeclareHeaders["js/RootingAPI.h"] = not bindingDeclareHeaders["jsapi.h"]
