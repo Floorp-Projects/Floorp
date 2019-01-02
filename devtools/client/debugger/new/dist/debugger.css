@@ -1617,6 +1617,8 @@ html .toggle-button.end.vertical svg {
 .project-text-search .result .line-value {
   grid-column: 2/3;
   padding-left: 5px;
+  text-overflow: ellipsis;
+  overflow-x: hidden;
 }
 
 .project-text-search .tree-indent {
@@ -1671,6 +1673,7 @@ html .toggle-button.end.vertical svg {
   height: 100%;
   display: grid;
   grid-template-columns: auto 1fr;
+  overflow-x: hidden;
 }
 
 .project-text-search .managed-tree .tree .tree-node {
