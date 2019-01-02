@@ -1126,6 +1126,11 @@ bool VariantToJsval(JSContext* aCx, nsIVariant* aVariant,
   return true;
 }
 
+bool WrapObject(JSContext* cx, const WindowProxyHolder& p,
+                JS::MutableHandle<JS::Value> rval) {
+  return ToJSValue(cx, p.get(), rval);
+}
+
 static int CompareIdsAtIndices(const void* aElement1, const void* aElement2,
                                void* aClosure) {
   const uint16_t index1 = *static_cast<const uint16_t*>(aElement1);
@@ -3223,14 +3228,14 @@ nsresult UnwrapArgImpl(JSContext* cx, JS::Handle<JSObject*> src,
   return wrappedJS->QueryInterface(iid, ppArg);
 }
 
-nsresult UnwrapWindowProxyImpl(JSContext* cx, JS::Handle<JSObject*> src,
-                               nsPIDOMWindowOuter** ppArg) {
+nsresult UnwrapWindowProxyArg(JSContext* cx, JS::Handle<JSObject*> src,
+                              WindowProxyHolder& ppArg) {
   nsCOMPtr<nsPIDOMWindowInner> inner;
   nsresult rv = UnwrapArg<nsPIDOMWindowInner>(cx, src, getter_AddRefs(inner));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsPIDOMWindowOuter> outer = inner->GetOuterWindow();
-  outer.forget(ppArg);
+  ppArg = outer.forget();
   return NS_OK;
 }
 

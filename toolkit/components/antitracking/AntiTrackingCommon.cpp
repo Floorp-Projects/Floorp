@@ -396,7 +396,7 @@ already_AddRefed<nsPIDOMWindowOuter> GetTopWindow(nsPIDOMWindowInner* aWindow) {
   nsCOMPtr<nsPIDOMWindowOuter> pwin;
   auto* outer = nsGlobalWindowOuter::Cast(aWindow->GetOuterWindow());
   if (outer) {
-    pwin = outer->GetTopOuter();
+    pwin = outer->GetScriptableTop();
   }
 
   if (!pwin) {

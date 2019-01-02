@@ -271,7 +271,7 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
 
   bool ComputeDefaultWantsUntrusted(mozilla::ErrorResult& aRv) final;
 
-  virtual nsPIDOMWindowOuter* GetOwnerGlobalForBindings() override;
+  virtual nsPIDOMWindowOuter* GetOwnerGlobalForBindingsInternal() override;
 
   virtual nsIGlobalObject* GetOwnerGlobal() const override;
 
@@ -529,7 +529,7 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
   already_AddRefed<nsPIDOMWindowOuter> GetFramesOuter();
   nsDOMWindowList* GetFrames() final;
   uint32_t Length();
-  already_AddRefed<nsPIDOMWindowOuter> GetTopOuter();
+  mozilla::dom::Nullable<mozilla::dom::WindowProxyHolder> GetTopOuter();
 
   nsresult GetPrompter(nsIPrompt** aPrompt) override;
 
@@ -542,16 +542,15 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
   nsPIDOMWindowOuter* GetSanitizedOpener(nsPIDOMWindowOuter* aOpener);
 
   already_AddRefed<nsPIDOMWindowOuter> GetOpener() override;
-  already_AddRefed<nsPIDOMWindowOuter> GetParentOuter();
+  mozilla::dom::Nullable<mozilla::dom::WindowProxyHolder> GetParentOuter();
   already_AddRefed<nsPIDOMWindowOuter> GetParent() override;
   nsPIDOMWindowOuter* GetScriptableParent() override;
   nsPIDOMWindowOuter* GetScriptableParentOrNull() override;
   mozilla::dom::Element* GetFrameElementOuter(nsIPrincipal& aSubjectPrincipal);
   mozilla::dom::Element* GetFrameElement() override;
-  already_AddRefed<nsPIDOMWindowOuter> OpenOuter(const nsAString& aUrl,
-                                                 const nsAString& aName,
-                                                 const nsAString& aOptions,
-                                                 mozilla::ErrorResult& aError);
+  mozilla::dom::Nullable<mozilla::dom::WindowProxyHolder> OpenOuter(
+      const nsAString& aUrl, const nsAString& aName, const nsAString& aOptions,
+      mozilla::ErrorResult& aError);
   nsresult Open(const nsAString& aUrl, const nsAString& aName,
                 const nsAString& aOptions, nsDocShellLoadState* aLoadState,
                 bool aForceNoOpener, nsPIDOMWindowOuter** _retval) override;
@@ -615,7 +614,7 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
 
   bool ShouldResistFingerprinting();
 
-  already_AddRefed<nsPIDOMWindowOuter> OpenDialogOuter(
+  mozilla::dom::Nullable<mozilla::dom::WindowProxyHolder> OpenDialogOuter(
       JSContext* aCx, const nsAString& aUrl, const nsAString& aName,
       const nsAString& aOptions,
       const mozilla::dom::Sequence<JS::Value>& aExtraArgument,

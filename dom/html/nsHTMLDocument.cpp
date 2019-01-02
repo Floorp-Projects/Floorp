@@ -1138,7 +1138,7 @@ void nsHTMLDocument::SetCookie(const nsAString& aCookie, ErrorResult& rv) {
   }
 }
 
-already_AddRefed<nsPIDOMWindowOuter> nsHTMLDocument::Open(
+mozilla::dom::Nullable<mozilla::dom::WindowProxyHolder> nsHTMLDocument::Open(
     JSContext* /* unused */, const nsAString& aURL, const nsAString& aName,
     const nsAString& aFeatures, bool aReplace, ErrorResult& rv) {
   MOZ_ASSERT(nsContentUtils::CanCallerAccess(this),
@@ -1159,7 +1159,10 @@ already_AddRefed<nsPIDOMWindowOuter> nsHTMLDocument::Open(
   nsCOMPtr<nsPIDOMWindowOuter> newWindow;
   // XXXbz We ignore aReplace for now.
   rv = win->OpenJS(aURL, aName, aFeatures, getter_AddRefs(newWindow));
-  return newWindow.forget();
+  if (!newWindow) {
+    return nullptr;
+  }
+  return WindowProxyHolder(newWindow.forget());
 }
 
 already_AddRefed<nsIDocument> nsHTMLDocument::Open(

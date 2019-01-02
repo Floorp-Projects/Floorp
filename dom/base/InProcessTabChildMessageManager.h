@@ -65,8 +65,7 @@ class InProcessTabChildMessageManager final
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
 
-  virtual already_AddRefed<nsPIDOMWindowOuter> GetContent(
-      ErrorResult& aError) override;
+  Nullable<WindowProxyHolder> GetContent(ErrorResult& aError) override;
   virtual already_AddRefed<nsIDocShell> GetDocShell(
       ErrorResult& aError) override {
     nsCOMPtr<nsIDocShell> docShell(mDocShell);

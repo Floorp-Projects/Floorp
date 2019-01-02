@@ -38,6 +38,7 @@
 #include "mozilla/dom/Timeout.h"
 #include "mozilla/dom/TimeoutHandler.h"
 #include "mozilla/dom/TimeoutManager.h"
+#include "mozilla/dom/WindowProxyHolder.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #if defined(MOZ_WIDGET_ANDROID)
 #include "mozilla/dom/WindowOrientationObserver.h"
@@ -2624,19 +2625,13 @@ bool nsPIDOMWindowOuter::GetServiceWorkersTestingEnabled() {
   return topWindow->mServiceWorkersTestingEnabled;
 }
 
-already_AddRefed<nsPIDOMWindowOuter> nsGlobalWindowOuter::GetParentOuter() {
-  if (!mDocShell) {
+Nullable<WindowProxyHolder> nsGlobalWindowOuter::GetParentOuter() {
+  nsPIDOMWindowOuter* parent = GetScriptableParent();
+  if (!parent) {
     return nullptr;
   }
 
-  nsCOMPtr<nsPIDOMWindowOuter> parent;
-  if (mDocShell->GetIsMozBrowser()) {
-    parent = this;
-  } else {
-    parent = GetParent();
-  }
-
-  return parent.forget();
+  return WindowProxyHolder(parent);
 }
 
 /**
@@ -2647,8 +2642,16 @@ already_AddRefed<nsPIDOMWindowOuter> nsGlobalWindowOuter::GetParentOuter() {
  * mozbrowser>, we will return |this| as its own parent.
  */
 nsPIDOMWindowOuter* nsGlobalWindowOuter::GetScriptableParent() {
-  nsCOMPtr<nsPIDOMWindowOuter> parent = GetParentOuter();
-  return parent.get();
+  if (!mDocShell) {
+    return nullptr;
+  }
+
+  if (mDocShell->GetIsMozBrowser()) {
+    return this;
+  }
+
+  nsCOMPtr<nsPIDOMWindowOuter> parent = GetParent();
+  return parent;
 }
 
 /**
@@ -2769,7 +2772,8 @@ already_AddRefed<nsPIDOMWindowOuter> nsGlobalWindowOuter::GetContentInternal(
   // If we're contained in <iframe mozbrowser>, then GetContent is the same as
   // window.top.
   if (mDocShell && mDocShell->GetIsInMozBrowser()) {
-    return GetTopOuter();
+    domWindow = GetScriptableTop();
+    return domWindow.forget();
   }
 
   nsCOMPtr<nsIDocShellTreeItem> primaryContent;
@@ -3550,9 +3554,12 @@ uint32_t nsGlobalWindowOuter::Length() {
   return windows ? windows->GetLength() : 0;
 }
 
-already_AddRefed<nsPIDOMWindowOuter> nsGlobalWindowOuter::GetTopOuter() {
+Nullable<WindowProxyHolder> nsGlobalWindowOuter::GetTopOuter() {
   nsCOMPtr<nsPIDOMWindowOuter> top = GetScriptableTop();
-  return top.forget();
+  if (!top) {
+    return nullptr;
+  }
+  return WindowProxyHolder(top.forget());
 }
 
 nsPIDOMWindowOuter* nsGlobalWindowOuter::GetChildWindow(
@@ -5227,12 +5234,15 @@ void nsGlobalWindowOuter::FireAbuseEvents(
                         aPopupWindowFeatures);
 }
 
-already_AddRefed<nsPIDOMWindowOuter> nsGlobalWindowOuter::OpenOuter(
+Nullable<WindowProxyHolder> nsGlobalWindowOuter::OpenOuter(
     const nsAString& aUrl, const nsAString& aName, const nsAString& aOptions,
     ErrorResult& aError) {
   nsCOMPtr<nsPIDOMWindowOuter> window;
   aError = OpenJS(aUrl, aName, aOptions, getter_AddRefs(window));
-  return window.forget();
+  if (!window) {
+    return nullptr;
+  }
+  return WindowProxyHolder(window.forget());
 }
 
 nsresult nsGlobalWindowOuter::Open(const nsAString& aUrl,
@@ -5302,7 +5312,7 @@ nsresult nsGlobalWindowOuter::OpenDialog(const nsAString& aUrl,
                       _retval);
 }
 
-already_AddRefed<nsPIDOMWindowOuter> nsGlobalWindowOuter::OpenDialogOuter(
+Nullable<WindowProxyHolder> nsGlobalWindowOuter::OpenDialogOuter(
     JSContext* aCx, const nsAString& aUrl, const nsAString& aName,
     const nsAString& aOptions, const Sequence<JS::Value>& aExtraArgument,
     ErrorResult& aError) {
@@ -5325,7 +5335,10 @@ already_AddRefed<nsPIDOMWindowOuter> nsGlobalWindowOuter::OpenDialogOuter(
                         nullptr,             // aLoadState
                         false,               // aForceNoOpener
                         getter_AddRefs(dialog));
-  return dialog.forget();
+  if (!dialog) {
+    return nullptr;
+  }
+  return WindowProxyHolder(dialog.forget());
 }
 
 already_AddRefed<nsPIDOMWindowOuter> nsGlobalWindowOuter::GetFramesOuter() {
@@ -6090,7 +6103,7 @@ bool nsGlobalWindowOuter::FindOuter(const nsAString& aString,
 // EventTarget
 //*****************************************************************************
 
-nsPIDOMWindowOuter* nsGlobalWindowOuter::GetOwnerGlobalForBindings() {
+nsPIDOMWindowOuter* nsGlobalWindowOuter::GetOwnerGlobalForBindingsInternal() {
   return this;
 }
 

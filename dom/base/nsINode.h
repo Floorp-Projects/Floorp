@@ -944,7 +944,7 @@ class nsINode : public mozilla::dom::EventTarget {
 
   virtual bool IsApzAware() const override;
 
-  virtual nsPIDOMWindowOuter* GetOwnerGlobalForBindings() override;
+  virtual nsPIDOMWindowOuter* GetOwnerGlobalForBindingsInternal() override;
   virtual nsIGlobalObject* GetOwnerGlobal() const override;
 
   using mozilla::dom::EventTarget::DispatchEvent;
