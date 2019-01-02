@@ -135,7 +135,7 @@ package org.mozilla.geckoview {
     method @android.support.annotation.UiThread @android.support.annotation.NonNull public static synchronized org.mozilla.geckoview.GeckoRuntime getDefault(@android.support.annotation.NonNull android.content.Context);
     method @android.support.annotation.UiThread @android.support.annotation.Nullable public org.mozilla.geckoview.GeckoRuntime.Delegate getDelegate();
     method @android.support.annotation.UiThread @android.support.annotation.Nullable public java.io.File getProfileDir();
-    method @android.support.annotation.AnyThread @android.support.annotation.Nullable public org.mozilla.geckoview.GeckoRuntimeSettings getSettings();
+    method @android.support.annotation.AnyThread @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings getSettings();
     method @android.support.annotation.UiThread @android.support.annotation.NonNull public org.mozilla.geckoview.RuntimeTelemetry getTelemetry();
     method @android.support.annotation.UiThread public void orientationChanged();
     method @android.support.annotation.UiThread public void orientationChanged(int);
