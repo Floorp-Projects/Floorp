@@ -7,10 +7,10 @@
 #ifndef mozilla_dom_SVGComponentTransferFunctionElement_h
 #define mozilla_dom_SVGComponentTransferFunctionElement_h
 
-#include "nsSVGEnum.h"
+#include "SVGAnimatedNumberList.h"
+#include "SVGEnum.h"
 #include "SVGFilters.h"
 #include "nsSVGNumber2.h"
-#include "SVGAnimatedNumberList.h"
 
 #define NS_SVG_FE_COMPONENT_TRANSFER_FUNCTION_ELEMENT_CID \
   {                                                       \
@@ -78,8 +78,8 @@ class SVGComponentTransferFunctionElement
   static NumberInfo sNumberInfo[5];
 
   enum { TYPE };
-  nsSVGEnum mEnumAttributes[1];
-  static nsSVGEnumMapping sTypeMap[];
+  SVGEnum mEnumAttributes[1];
+  static SVGEnumMapping sTypeMap[];
   static EnumInfo sEnumInfo[1];
 };
 

@@ -37,8 +37,8 @@ class SVGTextElement final : public SVGTextElementBase {
   virtual EnumAttributesInfo GetEnumInfo() override;
   virtual LengthAttributesInfo GetLengthInfo() override;
 
-  nsSVGEnum mEnumAttributes[1];
-  virtual nsSVGEnum* EnumAttributes() override { return mEnumAttributes; }
+  SVGEnum mEnumAttributes[1];
+  virtual SVGEnum* EnumAttributes() override { return mEnumAttributes; }
 
   nsSVGLength2 mLengthAttributes[1];
   virtual nsSVGLength2* LengthAttributes() override {

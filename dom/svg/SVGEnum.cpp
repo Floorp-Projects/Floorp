@@ -4,22 +4,23 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsSVGEnum.h"
+#include "SVGEnum.h"
 
+#include "mozilla/dom/SVGElement.h"
+#include "nsAtom.h"
 #include "nsError.h"
 #include "nsSVGAttrTearoffTable.h"
-#include "nsAtom.h"
-#include "SVGElement.h"
-#include "nsSMILValue.h"
 #include "SMILEnumType.h"
+#include "nsSMILValue.h"
 
-using namespace mozilla;
 using namespace mozilla::dom;
 
-static nsSVGAttrTearoffTable<nsSVGEnum, nsSVGEnum::DOMAnimatedEnum>
+namespace mozilla {
+
+static nsSVGAttrTearoffTable<SVGEnum, SVGEnum::DOMAnimatedEnum>
     sSVGAnimatedEnumTearoffTable;
 
-const nsSVGEnumMapping* nsSVGEnum::GetMapping(SVGElement* aSVGElement) {
+const SVGEnumMapping* SVGEnum::GetMapping(SVGElement* aSVGElement) {
   SVGElement::EnumAttributesInfo info = aSVGElement->GetEnumInfo();
 
   NS_ASSERTION(info.mEnumCount > 0 && mAttrEnum < info.mEnumCount,
@@ -28,9 +29,9 @@ const nsSVGEnumMapping* nsSVGEnum::GetMapping(SVGElement* aSVGElement) {
   return info.mEnumInfo[mAttrEnum].mMapping;
 }
 
-nsresult nsSVGEnum::SetBaseValueAtom(const nsAtom* aValue,
-                                     SVGElement* aSVGElement) {
-  const nsSVGEnumMapping* mapping = GetMapping(aSVGElement);
+nsresult SVGEnum::SetBaseValueAtom(const nsAtom* aValue,
+                                   SVGElement* aSVGElement) {
+  const SVGEnumMapping* mapping = GetMapping(aSVGElement);
 
   while (mapping && mapping->mKey) {
     if (aValue == mapping->mKey) {
@@ -54,8 +55,8 @@ nsresult nsSVGEnum::SetBaseValueAtom(const nsAtom* aValue,
   return NS_ERROR_DOM_TYPE_ERR;
 }
 
-nsAtom* nsSVGEnum::GetBaseValueAtom(SVGElement* aSVGElement) {
-  const nsSVGEnumMapping* mapping = GetMapping(aSVGElement);
+nsAtom* SVGEnum::GetBaseValueAtom(SVGElement* aSVGElement) {
+  const SVGEnumMapping* mapping = GetMapping(aSVGElement);
 
   while (mapping && mapping->mKey) {
     if (mBaseVal == mapping->mVal) {
@@ -67,8 +68,8 @@ nsAtom* nsSVGEnum::GetBaseValueAtom(SVGElement* aSVGElement) {
   return nsGkAtoms::_empty;
 }
 
-nsresult nsSVGEnum::SetBaseValue(uint16_t aValue, SVGElement* aSVGElement) {
-  const nsSVGEnumMapping* mapping = GetMapping(aSVGElement);
+nsresult SVGEnum::SetBaseValue(uint16_t aValue, SVGElement* aSVGElement) {
+  const SVGEnumMapping* mapping = GetMapping(aSVGElement);
 
   while (mapping && mapping->mKey) {
     if (mapping->mVal == aValue) {
@@ -89,7 +90,7 @@ nsresult nsSVGEnum::SetBaseValue(uint16_t aValue, SVGElement* aSVGElement) {
   return NS_ERROR_DOM_TYPE_ERR;
 }
 
-void nsSVGEnum::SetAnimValue(uint16_t aValue, SVGElement* aSVGElement) {
+void SVGEnum::SetAnimValue(uint16_t aValue, SVGElement* aSVGElement) {
   if (mIsAnimated && aValue == mAnimVal) {
     return;
   }
@@ -98,7 +99,7 @@ void nsSVGEnum::SetAnimValue(uint16_t aValue, SVGElement* aSVGElement) {
   aSVGElement->DidAnimateEnum(mAttrEnum);
 }
 
-already_AddRefed<SVGAnimatedEnumeration> nsSVGEnum::ToDOMAnimatedEnum(
+already_AddRefed<SVGAnimatedEnumeration> SVGEnum::ToDOMAnimatedEnum(
     SVGElement* aSVGElement) {
   RefPtr<DOMAnimatedEnum> domAnimatedEnum =
       sSVGAnimatedEnumTearoffTable.GetTearoff(this);
@@ -110,20 +111,20 @@ already_AddRefed<SVGAnimatedEnumeration> nsSVGEnum::ToDOMAnimatedEnum(
   return domAnimatedEnum.forget();
 }
 
-nsSVGEnum::DOMAnimatedEnum::~DOMAnimatedEnum() {
+SVGEnum::DOMAnimatedEnum::~DOMAnimatedEnum() {
   sSVGAnimatedEnumTearoffTable.RemoveTearoff(mVal);
 }
 
-UniquePtr<nsISMILAttr> nsSVGEnum::ToSMILAttr(SVGElement* aSVGElement) {
+UniquePtr<nsISMILAttr> SVGEnum::ToSMILAttr(SVGElement* aSVGElement) {
   return MakeUnique<SMILEnum>(this, aSVGElement);
 }
 
-nsresult nsSVGEnum::SMILEnum::ValueFromString(
-    const nsAString& aStr, const dom::SVGAnimationElement* /*aSrcElement*/,
+nsresult SVGEnum::SMILEnum::ValueFromString(
+    const nsAString& aStr, const SVGAnimationElement* /*aSrcElement*/,
     nsSMILValue& aValue, bool& aPreventCachingOfSandwich) const {
   nsAtom* valAtom = NS_GetStaticAtom(aStr);
   if (valAtom) {
-    const nsSVGEnumMapping* mapping = mVal->GetMapping(mSVGElement);
+    const SVGEnumMapping* mapping = mVal->GetMapping(mSVGElement);
 
     while (mapping && mapping->mKey) {
       if (valAtom == mapping->mKey) {
@@ -142,13 +143,13 @@ nsresult nsSVGEnum::SMILEnum::ValueFromString(
   return NS_ERROR_FAILURE;
 }
 
-nsSMILValue nsSVGEnum::SMILEnum::GetBaseValue() const {
+nsSMILValue SVGEnum::SMILEnum::GetBaseValue() const {
   nsSMILValue val(SMILEnumType::Singleton());
   val.mU.mUint = mVal->mBaseVal;
   return val;
 }
 
-void nsSVGEnum::SMILEnum::ClearAnimValue() {
+void SVGEnum::SMILEnum::ClearAnimValue() {
   if (mVal->mIsAnimated) {
     mVal->mIsAnimated = false;
     mVal->mAnimVal = mVal->mBaseVal;
@@ -156,7 +157,7 @@ void nsSVGEnum::SMILEnum::ClearAnimValue() {
   }
 }
 
-nsresult nsSVGEnum::SMILEnum::SetAnimValue(const nsSMILValue& aValue) {
+nsresult SVGEnum::SMILEnum::SetAnimValue(const nsSMILValue& aValue) {
   NS_ASSERTION(aValue.mType == SMILEnumType::Singleton(),
                "Unexpected type to assign animated value");
   if (aValue.mType == SMILEnumType::Singleton()) {
@@ -166,3 +167,5 @@ nsresult nsSVGEnum::SMILEnum::SetAnimValue(const nsSMILValue& aValue) {
   }
   return NS_OK;
 }
+
+}  // namespace mozilla
