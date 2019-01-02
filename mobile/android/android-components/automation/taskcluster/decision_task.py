@@ -76,16 +76,115 @@ def create_raw_task(name, description, full_command, scopes = []):
     }
 
 
-def create_module_task(module):
-    return create_task(
-        name='Android Components - Module ' + module,
-        description='Building and testing module ' + module,
-        command="-Pcoverage " + " ".join(map(lambda x: module + ":" + x, ['assemble', 'test', 'lint']))  +
-            " && automation/taskcluster/action/upload_coverage_report.sh",
-        scopes = [
-            "secrets:get:project/mobile/android-components/public-tokens"
-        ])
+def create_module_tasks(module):
+    # Helper functions relevant to creating taskcluter gradle module task definitions.
+    def taskcluster_task_definition(gradle_task, subtitle=""):
+        return create_task(
+            name="Android Components - Module %s %s" % (module, subtitle),
+            description="Running configured tasks for %s" % module,
+            command="-Pcoverage %s && automation/taskcluster/action/upload_coverage_report.sh" % gradle_task,
+            scopes = [
+                "secrets:get:project/mobile/android-components/public-tokens"
+            ])
 
+    def gradle_module_task_name(module, gradle_task_name):
+        return "%s:%s" % (module, gradle_task_name)
+
+    def craft_definition(module, variant, run_tests=True, lint_task=None):
+        module_task = gradle_module_task_name(module, "assemble%s" % variant)
+        subtitle = "assemble"
+
+        if run_tests:
+            module_task = "%s %s" % (module_task, gradle_module_task_name(module, "test%sDebugUnitTest" % variant))
+            subtitle = "%sAndTest" % subtitle
+
+        scheduled_lint = False
+        if lint_task and variant in lint_task:
+            module_task = "%s %s" % (module_task, gradle_module_task_name(module, lint_task))
+            subtitle = "%sAndLintDebug" % subtitle
+            scheduled_lint = True
+
+        return taskcluster_task_definition(module_task, subtitle=subtitle + variant), scheduled_lint
+
+    # Takes list of variants and produces taskcluter task definitions.
+    # Schedules a specified lint task at most once.
+    def variants_to_definitions(variants, run_tests=True, lint_task=None):
+        scheduled_lint = False
+        definitions = []
+        for variant in variants:
+            task_definition, definition_has_lint = craft_definition(
+                module, variant, run_tests=run_tests, lint_task=lint_task)
+            if definition_has_lint:
+                scheduled_lint = True
+            lint_task = lint_task if lint_task and not definition_has_lint else None
+            definitions.append(task_definition)
+        return definitions, scheduled_lint
+
+    # Module settings that describe which task definitions will be created.
+    # Absence of a module override means that default definition pattern will be used for the module.
+    module_overrides = {
+        ":samples-browser": {
+            "assembleOnly/Test": (
+                ["ServoArm", "SystemUniversal"],
+                [
+                    "GeckoBetaAarch64", "GeckoBetaArm", "GeckoBetaX86",
+                    "GeckoNightlyAarch64", "GeckoNightlyArm", "GeckoNightlyX86",
+                    "GeckoReleaseAarch64", "GeckoReleaseArm", "GeckoReleaseX86"
+                ]
+            ),
+            "lintTask": "lintGeckoBetaArmDebug"
+        },
+        ":support-test": {
+            "lintTask": "lint"
+        },
+        ":tooling-lint": {
+            "lintTask": "lint"
+        }
+    }
+
+    override = module_overrides.get(module, {})
+    task_definitions = []
+
+    # If assemble/test variant lists are specified, create individual tasks as appropriate,
+    # while also checking if we can sneak in a specified lint task along with a matching assemble
+    # or test variant. If lint task isn't specified, it's created separately.
+    if "assembleOnly/Test" in override:
+        assemble_only, assemble_and_test = override["assembleOnly/Test"]
+
+        # As an optimization, lint task will appear at most once in our final list of definitions.
+        lint_task = override.get("lintTask", "lintRelease")
+
+        # Assemble-only definitions with an optional lint task (if it matches variants).
+        assemble_only_definitions, scheduled_lint_with_assemble = variants_to_definitions(
+            assemble_only, run_tests=False, lint_task=lint_task)
+        # Assemble-and-test definitions with an optional lint task if it wasn't present
+        # above and matches variants.
+        assemble_and_test_definitions, scheduled_lint_with_test = variants_to_definitions(
+            assemble_and_test, run_tests=True, lint_task=lint_task if lint_task and not scheduled_lint_with_assemble else None)
+        # Combine two lists of task definitions.
+        task_definitions += assemble_only_definitions + assemble_and_test_definitions
+
+        # If neither list has a lint task within it, append a separate lint task.
+        # Overhead of a separate task just for linting is quite significant, but this should be a rare case.
+        if not scheduled_lint_with_assemble and not scheduled_lint_with_test:
+            task_definitions.append(taskcluster_task_definition(
+                gradle_module_task_name(module, lint_task),
+                subtitle="onlyLintRelease"))
+
+    # If only the lint task override is specified, 'assemble' and 'test' are left as-is.
+    elif "lintTask" in override:
+        task_definitions.append(taskcluster_task_definition(
+            " ".join([gradle_module_task_name(module, gradle_task) for gradle_task in ['assemble', 'test', override["lintTask"]]]),
+            subtitle="assembleAndTestAndCustomLintAll"))
+
+    # Default module task configuration is a single gradle task which runs assemble, test and lint for every
+    # variant configured for the given module.
+    else:
+        task_definitions.append(taskcluster_task_definition(
+            " ".join([gradle_module_task_name(module, gradle_task) for gradle_task in ['assemble', 'test', 'lintRelease']]),
+            subtitle="assembleAndTestAndLintReleaseAll"))
+
+    return task_definitions
 
 def create_detekt_task():
     return create_task(
@@ -123,9 +222,10 @@ if __name__ == "__main__":
         sys.exit(2)
 
     for module in modules:
-        task = create_module_task(module)
-        task_id = taskcluster.slugId()
-        lib.tasks.schedule_task(queue, task_id, task)
+        tasks = create_module_tasks(module)
+        for task in tasks:
+            task_id = taskcluster.slugId()
+            lib.tasks.schedule_task(queue, task_id, task)
 
     lib.tasks.schedule_task(queue, taskcluster.slugId(), create_detekt_task())
     lib.tasks.schedule_task(queue, taskcluster.slugId(), create_ktlint_task())
