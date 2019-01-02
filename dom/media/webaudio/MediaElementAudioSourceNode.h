@@ -44,6 +44,14 @@ class MediaElementAudioSourceNode final : public MediaStreamAudioSourceNode {
 
  private:
   explicit MediaElementAudioSourceNode(AudioContext* aContext);
+
+  void Destroy() override;
+
+  // If AudioContext was not allowed to start, we would try to start it when
+  // source starts.
+  void ListenForAllowedToPlay(const MediaElementAudioSourceOptions& aOptions);
+
+  MozPromiseRequestHolder<GenericNonExclusivePromise> mAllowedToPlayRequest;
 };
 
 }  // namespace dom
