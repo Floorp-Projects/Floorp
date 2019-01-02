@@ -1,3 +1,16 @@
+1.2.3
+=====
+This patch release removes the use of `feature(i128_type)` from byteorder,
+since it has been stabilized. We leave byteorder's `i128` feature in place
+in order to continue supporting compilation on older versions of Rust.
+
+
+1.2.2
+=====
+This patch release only consists of internal improvements and refactorings.
+Notably, this removes all uses of `transmute` and instead uses pointer casts.
+
+
 1.2.1
 =====
 This patch release removes more unnecessary uses of `unsafe` that
