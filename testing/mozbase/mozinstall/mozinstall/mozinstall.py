@@ -110,8 +110,8 @@ def install(src, dest):
                 return _install_url(src, dest)
             except Exception:
                 exc, val, tb = sys.exc_info()
-                msg = "{} ({})".format(msg, val)
-                reraise(InvalidSource, msg, tb)
+                error = InvalidSource("{} ({})".format(msg, val))
+                reraise(InvalidSource, error, tb)
         raise InvalidSource(msg)
 
     src = os.path.realpath(src)
@@ -288,7 +288,7 @@ def _install_dmg(src, dest):
         appDir = subprocess.check_output('hdiutil attach -nobrowse -noautoopen "%s"'
                                          '|grep /Volumes/'
                                          '|awk \'BEGIN{FS="\t"} {print $3}\'' % str(src),
-                                         shell=True).strip()
+                                         shell=True).strip().decode('ascii')
 
         for appFile in os.listdir(appDir):
             if appFile.endswith('.app'):
