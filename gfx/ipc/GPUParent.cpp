@@ -447,7 +447,13 @@ mozilla::ipc::IPCResult GPUParent::RecvRequestMemoryReport(
   GetGPUProcessName(processName);
 
   mozilla::dom::MemoryReportRequestClient::Start(
-      aGeneration, aAnonymize, aMinimizeMemoryUsage, aDMDFile, processName);
+      aGeneration, aAnonymize, aMinimizeMemoryUsage, aDMDFile, processName,
+      [&](const MemoryReport& aReport) {
+        Unused << GetSingleton()->SendAddMemoryReport(aReport);
+      },
+      [&](const uint32_t& aGeneration) {
+        return GetSingleton()->SendFinishMemoryReport(aGeneration);
+      });
   return IPC_OK();
 }
 

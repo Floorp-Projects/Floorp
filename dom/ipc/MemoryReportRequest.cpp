@@ -5,10 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MemoryReportRequest.h"
-#include "mozilla/RDDParent.h"
-#include "mozilla/Unused.h"
-#include "mozilla/dom/ContentChild.h"
-#include "mozilla/gfx/GPUParent.h"
 
 namespace mozilla {
 namespace dom {
@@ -54,9 +50,12 @@ NS_IMPL_ISUPPORTS(MemoryReportRequestClient, nsIRunnable)
 
 /* static */ void MemoryReportRequestClient::Start(
     uint32_t aGeneration, bool aAnonymize, bool aMinimizeMemoryUsage,
-    const MaybeFileDesc& aDMDFile, const nsACString& aProcessString) {
+    const MaybeFileDesc& aDMDFile, const nsACString& aProcessString,
+    const ReportCallback& aReportCallback,
+    const FinishCallback& aFinishCallback) {
   RefPtr<MemoryReportRequestClient> request = new MemoryReportRequestClient(
-      aGeneration, aAnonymize, aDMDFile, aProcessString);
+      aGeneration, aAnonymize, aDMDFile, aProcessString,
+      aReportCallback, aFinishCallback);
 
   DebugOnly<nsresult> rv;
   if (aMinimizeMemoryUsage) {
@@ -73,10 +72,13 @@ NS_IMPL_ISUPPORTS(MemoryReportRequestClient, nsIRunnable)
 
 MemoryReportRequestClient::MemoryReportRequestClient(
     uint32_t aGeneration, bool aAnonymize, const MaybeFileDesc& aDMDFile,
-    const nsACString& aProcessString)
+    const nsACString& aProcessString, const ReportCallback& aReportCallback,
+    const FinishCallback& aFinishCallback)
     : mGeneration(aGeneration),
       mAnonymize(aAnonymize),
-      mProcessString(aProcessString) {
+      mProcessString(aProcessString),
+      mReportCallback(aReportCallback),
+      mFinishCallback(aFinishCallback) {
   if (aDMDFile.type() == MaybeFileDesc::TFileDescriptor) {
     mDMDFile = aDMDFile.get_FileDescriptor();
   }
@@ -86,11 +88,16 @@ MemoryReportRequestClient::~MemoryReportRequestClient() {}
 
 class HandleReportCallback final : public nsIHandleReportCallback {
  public:
+  using ReportCallback = typename MemoryReportRequestClient::ReportCallback;
+
   NS_DECL_ISUPPORTS
 
   explicit HandleReportCallback(uint32_t aGeneration,
-                                const nsACString& aProcess)
-      : mGeneration(aGeneration), mProcess(aProcess) {}
+                                const nsACString& aProcess,
+                                const ReportCallback& aReportCallback)
+      : mGeneration(aGeneration),
+        mProcess(aProcess),
+        mReportCallback(aReportCallback) {}
 
   NS_IMETHOD Callback(const nsACString& aProcess, const nsACString& aPath,
                       int32_t aKind, int32_t aUnits, int64_t aAmount,
@@ -98,20 +105,7 @@ class HandleReportCallback final : public nsIHandleReportCallback {
                       nsISupports* aUnused) override {
     MemoryReport memreport(mProcess, nsCString(aPath), aKind, aUnits, aAmount,
                            mGeneration, nsCString(aDescription));
-    switch (XRE_GetProcessType()) {
-      case GeckoProcessType_Content:
-        ContentChild::GetSingleton()->SendAddMemoryReport(memreport);
-        break;
-      case GeckoProcessType_GPU:
-        Unused << gfx::GPUParent::GetSingleton()->SendAddMemoryReport(
-            memreport);
-        break;
-      case GeckoProcessType_RDD:
-        Unused << RDDParent::GetSingleton()->SendAddMemoryReport(memreport);
-        break;
-      default:
-        MOZ_ASSERT_UNREACHABLE("Unhandled process type");
-    }
+    mReportCallback(memreport);
     return NS_OK;
   }
 
@@ -120,41 +114,31 @@ class HandleReportCallback final : public nsIHandleReportCallback {
 
   uint32_t mGeneration;
   const nsCString mProcess;
+  ReportCallback mReportCallback;
 };
 
 NS_IMPL_ISUPPORTS(HandleReportCallback, nsIHandleReportCallback)
 
 class FinishReportingCallback final : public nsIFinishReportingCallback {
  public:
+  using FinishCallback = typename MemoryReportRequestClient::FinishCallback;
+
   NS_DECL_ISUPPORTS
 
-  explicit FinishReportingCallback(uint32_t aGeneration)
-      : mGeneration(aGeneration) {}
+  explicit FinishReportingCallback(uint32_t aGeneration,
+                                   const FinishCallback& aFinishCallback)
+      : mGeneration(aGeneration),
+        mFinishCallback(aFinishCallback) {}
 
   NS_IMETHOD Callback(nsISupports* aUnused) override {
-    bool sent = false;
-    switch (XRE_GetProcessType()) {
-      case GeckoProcessType_Content:
-        sent =
-            ContentChild::GetSingleton()->SendFinishMemoryReport(mGeneration);
-        break;
-      case GeckoProcessType_GPU:
-        sent =
-            gfx::GPUParent::GetSingleton()->SendFinishMemoryReport(mGeneration);
-        break;
-      case GeckoProcessType_RDD:
-        sent = RDDParent::GetSingleton()->SendFinishMemoryReport(mGeneration);
-        break;
-      default:
-        MOZ_ASSERT_UNREACHABLE("Unhandled process type");
-    }
-    return sent ? NS_OK : NS_ERROR_FAILURE;
+    return mFinishCallback(mGeneration) ? NS_OK : NS_ERROR_FAILURE;
   }
 
  private:
   ~FinishReportingCallback() = default;
 
   uint32_t mGeneration;
+  FinishCallback mFinishCallback;
 };
 
 NS_IMPL_ISUPPORTS(FinishReportingCallback, nsIFinishReportingCallback)
@@ -166,9 +150,9 @@ NS_IMETHODIMP MemoryReportRequestClient::Run() {
   // Run the reporters.  The callback will turn each measurement into a
   // MemoryReport.
   RefPtr<HandleReportCallback> handleReport =
-      new HandleReportCallback(mGeneration, mProcessString);
+      new HandleReportCallback(mGeneration, mProcessString, mReportCallback);
   RefPtr<FinishReportingCallback> finishReporting =
-      new FinishReportingCallback(mGeneration);
+      new FinishReportingCallback(mGeneration, mFinishCallback);
 
   nsresult rv = mgr->GetReportsForThisProcessExtended(
       handleReport, nullptr, mAnonymize, FileDescriptorToFILE(mDMDFile, "wb"),
