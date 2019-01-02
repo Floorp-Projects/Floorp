@@ -36,7 +36,7 @@ namespace dom {
 using namespace SVGPreserveAspectRatio_Binding;
 using namespace SVGSVGElement_Binding;
 
-SVGEnumMapping SVGSVGElement::sZoomAndPanMap[] = {
+nsSVGEnumMapping SVGSVGElement::sZoomAndPanMap[] = {
     {nsGkAtoms::disable, SVG_ZOOMANDPAN_DISABLE},
     {nsGkAtoms::magnify, SVG_ZOOMANDPAN_MAGNIFY},
     {nullptr, 0}};

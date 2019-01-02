@@ -7,9 +7,9 @@
 #ifndef mozilla_dom_SVGFEColorMatrixElement_h
 #define mozilla_dom_SVGFEColorMatrixElement_h
 
-#include "SVGAnimatedNumberList.h"
-#include "SVGEnum.h"
+#include "nsSVGEnum.h"
 #include "SVGFilters.h"
+#include "SVGAnimatedNumberList.h"
 
 nsresult NS_NewSVGFEColorMatrixElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
@@ -58,8 +58,8 @@ class SVGFEColorMatrixElement : public SVGFEColorMatrixElementBase {
   virtual NumberListAttributesInfo GetNumberListInfo() override;
 
   enum { TYPE };
-  SVGEnum mEnumAttributes[1];
-  static SVGEnumMapping sTypeMap[];
+  nsSVGEnum mEnumAttributes[1];
+  static nsSVGEnumMapping sTypeMap[];
   static EnumInfo sEnumInfo[1];
 
   enum { RESULT, IN1 };

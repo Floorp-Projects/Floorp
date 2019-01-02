@@ -204,7 +204,7 @@ gfxMatrix nsSVGMaskFrame::GetCanvasTM() { return mMatrixForChildren; }
 gfxMatrix nsSVGMaskFrame::GetMaskTransform(nsIFrame* aMaskedFrame) {
   SVGMaskElement* content = static_cast<SVGMaskElement*>(GetContent());
 
-  SVGEnum* maskContentUnits =
+  nsSVGEnum* maskContentUnits =
       &content->mEnumAttributes[SVGMaskElement::MASKCONTENTUNITS];
 
   uint32_t flags = nsSVGUtils::eBBoxIncludeFillGeometry |

@@ -35,17 +35,17 @@ SVGElement::LengthInfo SVGTextPathElement::sLengthInfo[2] = {
     {nsGkAtoms::startOffset, 0, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER,
      SVGContentUtils::X}};
 
-SVGEnumMapping SVGTextPathElement::sMethodMap[] = {
+nsSVGEnumMapping SVGTextPathElement::sMethodMap[] = {
     {nsGkAtoms::align, TEXTPATH_METHODTYPE_ALIGN},
     {nsGkAtoms::stretch, TEXTPATH_METHODTYPE_STRETCH},
     {nullptr, 0}};
 
-SVGEnumMapping SVGTextPathElement::sSpacingMap[] = {
+nsSVGEnumMapping SVGTextPathElement::sSpacingMap[] = {
     {nsGkAtoms::_auto, TEXTPATH_SPACINGTYPE_AUTO},
     {nsGkAtoms::exact, TEXTPATH_SPACINGTYPE_EXACT},
     {nullptr, 0}};
 
-SVGEnumMapping SVGTextPathElement::sSideMap[] = {
+nsSVGEnumMapping SVGTextPathElement::sSideMap[] = {
     {nsGkAtoms::left, TEXTPATH_SIDETYPE_LEFT},
     {nsGkAtoms::right, TEXTPATH_SIDETYPE_RIGHT},
     {nullptr, 0}};
