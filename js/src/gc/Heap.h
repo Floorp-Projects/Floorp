@@ -236,11 +236,15 @@ class Arena {
    * arenas and link them into a list for later processing. This
    * uses the following fields.
    */
+  static const size_t DELAYED_MARKING_FLAG_BITS = 3;
+  static const size_t DELAYED_MARKING_ARENA_BITS =
+    JS_BITS_PER_WORD - 8 - DELAYED_MARKING_FLAG_BITS;
   size_t onDelayedMarkingList_ : 1;
-  size_t hasDelayedMarking_ : 1;
-  size_t nextDelayedMarkingArena_ : JS_BITS_PER_WORD - 8 - 1 - 1;
+  size_t hasDelayedBlackMarking_ : 1;
+  size_t hasDelayedGrayMarking_ : 1;
+  size_t nextDelayedMarkingArena_ : DELAYED_MARKING_ARENA_BITS;
   static_assert(
-      ArenaShift >= 8 + 1 + 1,
+      DELAYED_MARKING_ARENA_BITS >= JS_BITS_PER_WORD - ArenaShift,
       "Arena::nextDelayedMarkingArena_ packing assumes that ArenaShift has "
       "enough bits to cover allocKind and delayed marking state.");
 
@@ -289,7 +293,8 @@ class Arena {
     zone = nullptr;
     allocKind = size_t(AllocKind::LIMIT);
     onDelayedMarkingList_ = 0;
-    hasDelayedMarking_ = 0;
+    hasDelayedBlackMarking_ = 0;
+    hasDelayedGrayMarking_ = 0;
     nextDelayedMarkingArena_ = 0;
     bufferedCells_ = nullptr;
   }
@@ -399,10 +404,10 @@ class Arena {
   void setNextDelayedMarkingArena(Arena* arena) {
     MOZ_ASSERT(!(uintptr_t(arena) & ArenaMask));
     MOZ_ASSERT(!onDelayedMarkingList_);
-    MOZ_ASSERT(!hasDelayedMarking_);
+    MOZ_ASSERT(!hasDelayedBlackMarking_);
+    MOZ_ASSERT(!hasDelayedGrayMarking_);
     MOZ_ASSERT(!nextDelayedMarkingArena_);
     onDelayedMarkingList_ = 1;
-    hasDelayedMarking_ = 1;
     if (arena) {
       nextDelayedMarkingArena_ = arena->address() >> ArenaShift;
     }
@@ -414,20 +419,31 @@ class Arena {
     nextDelayedMarkingArena_ = arena ? arena->address() >> ArenaShift : 0;
   }
 
-  bool hasDelayedMarking() const {
+  bool hasDelayedMarking(MarkColor color) const {
     MOZ_ASSERT(onDelayedMarkingList_);
-    return hasDelayedMarking_;
+    return color == MarkColor::Black ? hasDelayedBlackMarking_
+                                     : hasDelayedGrayMarking_;
   }
 
-  void setHasDelayedMarking(bool value) {
+  bool hasAnyDelayedMarking() const {
     MOZ_ASSERT(onDelayedMarkingList_);
-    hasDelayedMarking_ = value;
+    return hasDelayedBlackMarking_ || hasDelayedGrayMarking_;
+  }
+
+  void setHasDelayedMarking(MarkColor color, bool value) {
+    MOZ_ASSERT(onDelayedMarkingList_);
+    if (color == MarkColor::Black) {
+      hasDelayedBlackMarking_ = value;
+    } else {
+      hasDelayedGrayMarking_ = value;
+    }
   }
 
   void clearDelayedMarkingState() {
     MOZ_ASSERT(onDelayedMarkingList_);
     onDelayedMarkingList_ = 0;
-    hasDelayedMarking_ = 0;
+    hasDelayedBlackMarking_ = 0;
+    hasDelayedGrayMarking_ = 0;
     nextDelayedMarkingArena_ = 0;
   }
 
