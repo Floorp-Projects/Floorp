@@ -112,13 +112,6 @@ this.TopStoriesFeed = class TopStoriesFeed {
     this.store.dispatch(shouldBroadcast ? ac.BroadcastToContent(action) : ac.AlsoToPreloaded(action));
   }
 
-  maybeDispatchLayoutUpdate(data, shouldBroadcast) {
-    if (data && data.length) {
-      const action = {type: at.CONTENT_LAYOUT, data};
-      this.store.dispatch(shouldBroadcast ? ac.BroadcastToContent(action) : ac.AlsoToPreloaded(action));
-    }
-  }
-
   doContentUpdate(shouldBroadcast) {
     let updateProps = {};
     if (this.stories) {
@@ -181,7 +174,6 @@ this.TopStoriesFeed = class TopStoriesFeed {
       }
 
       const body = await response.json();
-      this.maybeDispatchLayoutUpdate(body.layout);
       this.updateSettings(body.settings);
       this.stories = this.rotate(this.transform(body.recommendations));
       this.cleanUpTopRecImpressionPref();
@@ -202,9 +194,7 @@ this.TopStoriesFeed = class TopStoriesFeed {
   async loadCachedData() {
     const data = await this.cache.get();
     let stories = data.stories && data.stories.recommendations;
-    let layout = data.stories && data.stories.layout;
     let topics = data.topics && data.topics.topics;
-    this.maybeDispatchLayoutUpdate(layout);
 
     let affinities = data.domainAffinities;
     if (this.personalized && affinities && affinities.scores) {
