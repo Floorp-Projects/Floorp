@@ -61,7 +61,6 @@ jittest:
             default: default
     run-on-projects:
         by-test-platform:
-            android-hw.*: ['try', 'mozilla-central']
             # Turn off for all linux and windows platforms, since it is
             # redundant with SM(...) jobs -- except for code coverage builds,
             # which are still needed since ccov doesn't yet work with
