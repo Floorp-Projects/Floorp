@@ -3075,8 +3075,8 @@ already_AddRefed<wr::WebRenderAPI> APZCTreeManager::GetWebRenderAPI() const {
   return api.forget();
 }
 
-already_AddRefed<GeckoContentController> APZCTreeManager::GetContentController(
-    LayersId aLayersId) const {
+/*static*/ already_AddRefed<GeckoContentController>
+APZCTreeManager::GetContentController(LayersId aLayersId) {
   RefPtr<GeckoContentController> controller;
   CompositorBridgeParent::CallWithIndirectShadowTree(
       aLayersId,
