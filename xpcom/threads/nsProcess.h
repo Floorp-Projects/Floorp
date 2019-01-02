@@ -46,6 +46,7 @@ class nsProcess final : public nsIProcess, public nsIObserver {
  private:
   ~nsProcess();
   static void Monitor(void* aArg);
+  static void RemoveExecutableCrashAnnotation();
   void ProcessComplete();
   nsresult CopyArgsAndRunProcess(bool aBlocking, const char** aArgs,
                                  uint32_t aCount, nsIObserver* aObserver,
@@ -56,6 +57,7 @@ class nsProcess final : public nsIProcess, public nsIObserver {
   // The 'args' array is null-terminated.
   nsresult RunProcess(bool aBlocking, char** aArgs, nsIObserver* aObserver,
                       bool aHoldWeak, bool aArgsUTF8);
+  void AddExecutableCrashAnnotation();
 
   PRThread* mThread;
   mozilla::Mutex mLock;
