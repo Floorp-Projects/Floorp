@@ -1779,22 +1779,17 @@ html .toggle-button.end.vertical svg {
 .sources-pane {
   display: flex;
   flex: 1;
-  overflow-x: auto;
-  overflow-y: auto;
   height: 100%;
 }
 
 .sources-list {
   flex: 1;
   display: flex;
-  overflow: hidden;
 }
 
 .sources-list .managed-tree {
   flex: 1;
   display: flex;
-  overflow-x: hidden;
-  overflow-y: auto;
 }
 
 .sources-list .managed-tree .tree-node:first-child {
