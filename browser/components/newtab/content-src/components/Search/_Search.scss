@@ -1,11 +1,11 @@
-.search-wrapper {
-  $search-height: 48px;
-  $search-icon-size: 24px;
-  $search-icon-padding: 12px;
-  $search-icon-width: 2 * $search-icon-padding + $search-icon-size -2;
-  $search-button-width: 48px;
-  $glyph-forward: url('chrome://browser/skin/forward.svg');
+$search-height: 48px;
+$search-icon-size: 24px;
+$search-icon-padding: 12px;
+$search-icon-width: 2 * $search-icon-padding + $search-icon-size -2;
+$search-button-width: 48px;
+$glyph-forward: url('chrome://browser/skin/forward.svg');
 
+.search-wrapper {
   padding: 34px 0 64px;
 
   @media (max-height: 700px) {
@@ -137,6 +137,85 @@
   }
 }
 
+.search-handoff-button {
+  background: var(--newtab-textbox-background-color) var(--newtab-search-icon) $search-icon-padding center no-repeat;
+  background-size: $search-icon-size;
+  border: solid 1px var(--newtab-search-border-color);
+  border-radius: 3px;
+  box-shadow: $shadow-secondary, 0 0 0 1px $black-15;
+  cursor: text;
+  font-size: 15px;
+  padding: 0;
+  padding-inline-end: 48px;
+  padding-inline-start: 46px;
+  opacity: 1;
+  transition: opacity 500ms;
+  width: 100%;
+
+  &:dir(rtl) {
+    background-position-x: right $search-icon-padding;
+  }
+
+  &:hover {
+    box-shadow: $shadow-secondary, 0 0 0 1px $black-25;
+  }
+
+  &:focus,
+  .search-active & {
+    border: $input-border-active;
+    box-shadow: var(--newtab-textbox-focus-boxshadow);
+  }
+
+  .search-hidden & {
+    opacity: 0;
+    visibility: hidden;
+  }
+
+  .fake-textbox {
+    opacity: 0.54;
+    text-align: left;
+  }
+
+  .fake-caret {
+    animation: caret-animation 1.3s steps(5, start) infinite;
+    background: var(--newtab-text-primary-color);
+    display: none;
+    inset-inline-start: 47px;
+    height: 17px;
+    position: absolute;
+    top: 16px;
+    width: 1px;
+
+    @keyframes caret-animation {
+      to {
+        visibility: hidden;
+      }
+    }
+
+    .search-active & {
+      display: block;
+    }
+  }
+
+  .fake-button {
+    background: $glyph-forward no-repeat center center;
+    background-size: 16px 16px;
+    border: 0;
+    border-radius: 0 $border-radius $border-radius 0;
+    -moz-context-properties: fill;
+    fill: var(--newtab-search-icon-color);
+    height: 100%;
+    inset-inline-end: 0;
+    position: absolute;
+    top: 1px;
+    width: $search-button-width;
+
+    &:dir(rtl) {
+      transform: scaleX(-1);
+    }
+  }
+}
+
 @media (min-height: 701px) {
   .fixed-search {
     main {
@@ -170,6 +249,19 @@
         &:dir(rtl) {
           background-position-x: right $search-icon-padding;
         }
+      }
+    }
+
+    .search-handoff-button {
+      background-position-x: $search-icon-padding;
+      background-size: $search-icon-size;
+
+      &:dir(rtl) {
+        background-position-x: right $search-icon-padding;
+      }
+
+      .fake-caret {
+        top: 10px;
       }
     }
   }

@@ -1460,40 +1460,4 @@ describe("Top Stories Feed", () => {
     assert.calledOnce(instance.uninit);
     assert.calledOnce(instance.init);
   });
-  describe("#layout", () => {
-    it("should call maybeDispatchLayoutUpdate from fetchStories", async () => {
-      instance.stories_endpoint = "stories-endpoint";
-      let fetchStub = globals.sandbox.stub();
-
-      const response = {
-        "layout": [1, 2],
-      };
-      globals.set("fetch", fetchStub);
-      fetchStub.resolves({ok: true, status: 200, json: () => Promise.resolve(response)});
-      sinon.spy(instance, "maybeDispatchLayoutUpdate");
-
-      await instance.fetchStories();
-      assert.calledOnce(instance.maybeDispatchLayoutUpdate);
-      assert.calledWith(instance.maybeDispatchLayoutUpdate, [1, 2]);
-    });
-    it("should call maybeDispatchLayoutUpdate from loadCachedData", async () => {
-      sinon.spy(instance, "maybeDispatchLayoutUpdate");
-      instance.cache.get = () => ({stories: {layout: [2, 3]}});
-
-      await instance.loadCachedData();
-      assert.calledOnce(instance.maybeDispatchLayoutUpdate);
-      assert.calledWith(instance.maybeDispatchLayoutUpdate, [2, 3]);
-    });
-    it("should call dispatch from maybeDispatchLayoutUpdate with available data", () => {
-      instance.maybeDispatchLayoutUpdate([1, 2]);
-      assert.calledOnce(instance.store.dispatch);
-      const [action] = instance.store.dispatch.firstCall.args;
-      assert.equal(action.type, "CONTENT_LAYOUT");
-      assert.deepEqual(action.data, [1, 2]);
-    });
-    it("should not call dispatch from maybeDispatchLayoutUpdate with no available data", () => {
-      instance.maybeDispatchLayoutUpdate([]);
-      assert.notCalled(instance.store.dispatch);
-    });
-  });
 });
