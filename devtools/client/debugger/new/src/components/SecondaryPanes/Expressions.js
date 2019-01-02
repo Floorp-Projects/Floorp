@@ -277,7 +277,7 @@ class Expressions extends Component<Props, State> {
   }
 
   renderNewExpressionInput() {
-    const { expressionError, showInput } = this.props;
+    const { expressionError } = this.props;
     const { editing, inputValue, focused } = this.state;
     const error = editing === false && expressionError === true;
     const placeholder: string = error
@@ -297,7 +297,6 @@ class Expressions extends Component<Props, State> {
             onBlur={this.hideInput}
             onKeyDown={this.handleKeyDown}
             onFocus={this.onFocus}
-            autoFocus={showInput}
             value={!editing ? inputValue : ""}
             ref={c => (this._input = c)}
             {...features.autocompleteExpression && {
