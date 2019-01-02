@@ -9,6 +9,8 @@
 
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/TimeEventBinding.h"
+#include "mozilla/dom/Nullable.h"
+#include "mozilla/dom/WindowProxyHolder.h"
 
 class nsGlobalWindowInner;
 
@@ -34,7 +36,12 @@ class TimeEvent final : public Event {
 
   int32_t Detail() const { return mDetail; }
 
-  nsPIDOMWindowOuter* GetView() const { return mView; }
+  Nullable<WindowProxyHolder> GetView() const {
+    if (!mView) {
+      return nullptr;
+    }
+    return WindowProxyHolder(mView);
+  }
 
   TimeEvent* AsTimeEvent() final { return this; }
 

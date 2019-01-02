@@ -108,7 +108,7 @@ void MessageEvent::GetSource(
 
   if (!aParam.mSource.IsNull()) {
     if (aParam.mSource.Value().IsWindowProxy()) {
-      event->mWindowSource = aParam.mSource.Value().GetAsWindowProxy();
+      event->mWindowSource = aParam.mSource.Value().GetAsWindowProxy().get();
     } else if (aParam.mSource.Value().IsMessagePort()) {
       event->mPortSource = aParam.mSource.Value().GetAsMessagePort();
     } else {
@@ -144,7 +144,7 @@ void MessageEvent::InitMessageEvent(
 
   if (!aSource.IsNull()) {
     if (aSource.Value().IsWindowProxy()) {
-      mWindowSource = aSource.Value().GetAsWindowProxy();
+      mWindowSource = aSource.Value().GetAsWindowProxy().get();
     } else if (aSource.Value().IsMessagePort()) {
       mPortSource = &aSource.Value().GetAsMessagePort();
     } else {
