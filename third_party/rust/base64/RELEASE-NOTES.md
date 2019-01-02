@@ -1,3 +1,17 @@
+# 0.10.0
+
+- Remove line wrapping. Line wrapping was never a great conceptual fit in this library, and other features (streaming encoding, etc) either couldn't support it or could support only special cases of it with a great increase in complexity. Line wrapping has been pulled out into a [line-wrap](https://crates.io/crates/line-wrap) crate, so it's still available if you need it.
+  - `Base64Display` creation no longer uses a `Result` because it can't fail, which means its helper methods for common
+  configs that `unwrap()` for you are no longer needed
+- Add a streaming encoder `Write` impl to transparently base64 as you write.
+- Remove the remaining `unsafe` code.
+- Remove whitespace stripping to simplify `no_std` support. No out of the box configs use it, and it's trivial to do yourself if needed: `filter(|b| !b" \n\t\r\x0b\x0c".contains(b)`.
+- Detect invalid trailing symbols when decoding and return an error rather than silently ignoring them.
+
+# 0.9.3
+
+- Update safemem
+
 # 0.9.2
 
 - Derive `Clone` for `DecodeError`.

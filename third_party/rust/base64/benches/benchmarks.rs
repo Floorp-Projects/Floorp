@@ -6,9 +6,10 @@ extern crate test;
 
 use base64::display;
 use base64::{decode, decode_config_buf, decode_config_slice, encode, encode_config_buf,
-             encode_config_slice, Config, MIME, STANDARD};
+             encode_config_slice, write, Config, STANDARD};
 
-use rand::Rng;
+use rand::{Rng, FromEntropy};
+use std::io::Write;
 use test::Bencher;
 
 #[bench]
@@ -67,11 +68,6 @@ fn encode_500b_reuse_buf(b: &mut Bencher) {
 }
 
 #[bench]
-fn encode_500b_reuse_buf_mime(b: &mut Bencher) {
-    do_encode_bench_reuse_buf(b, 500, MIME)
-}
-
-#[bench]
 fn encode_3kib(b: &mut Bencher) {
     do_encode_bench(b, 3 * 1024)
 }
@@ -92,8 +88,8 @@ fn encode_3kib_slice(b: &mut Bencher) {
 }
 
 #[bench]
-fn encode_3kib_reuse_buf_mime(b: &mut Bencher) {
-    do_encode_bench_reuse_buf(b, 3 * 1024, MIME)
+fn encode_3kib_reuse_buf_stream(b: &mut Bencher) {
+    do_encode_bench_stream(b, 3 * 1024, STANDARD)
 }
 
 #[bench]
@@ -303,7 +299,7 @@ fn do_encode_bench_display(b: &mut Bencher, size: usize) {
 
     b.bytes = v.len() as u64;
     b.iter(|| {
-        let e = format!("{}", display::Base64Display::standard(&v));
+        let e = format!("{}", display::Base64Display::with_config(&v, STANDARD));
         test::black_box(&e);
     });
 }
@@ -335,10 +331,27 @@ fn do_encode_bench_slice(b: &mut Bencher, size: usize, config: Config) {
     });
 }
 
+fn do_encode_bench_stream(b: &mut Bencher, size: usize, config: Config) {
+    let mut v: Vec<u8> = Vec::with_capacity(size);
+    fill(&mut v);
+
+    let mut buf = Vec::new();
+
+    b.bytes = v.len() as u64;
+
+    buf.reserve(size * 2);
+    b.iter(|| {
+        buf.clear();
+        let mut stream_enc = write::EncoderWriter::new(&mut buf, config);
+        stream_enc.write_all(&v).unwrap();
+        stream_enc.flush().unwrap();
+    });
+}
+
 fn fill(v: &mut Vec<u8>) {
     let cap = v.capacity();
     // weak randomness is plenty; we just want to not be completely friendly to the branch predictor
-    let mut r = rand::weak_rng();
+    let mut r = rand::rngs::SmallRng::from_entropy();
     while v.len() < cap {
         v.push(r.gen::<u8>());
     }
