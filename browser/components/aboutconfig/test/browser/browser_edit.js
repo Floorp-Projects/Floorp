@@ -54,6 +54,7 @@ add_task(async function test_reset_user_pref() {
   await SpecialPowers.pushPrefEnv({
     "set": [
       [PREF_BOOLEAN_DEFAULT_TRUE, false],
+      [PREF_STRING_LOCALIZED_MISSING, "user-value"],
     ],
   });
 
@@ -74,6 +75,16 @@ add_task(async function test_reset_user_pref() {
     Assert.ok(!row.hasClass("has-user-value"));
     Assert.ok(!row.resetColumnButton);
     Assert.equal(this.getRow(PREF_BOOLEAN_DEFAULT_TRUE).value, "true");
+
+    // Clicking reset on a localized preference without a corresponding value.
+    row = this.getRow(PREF_STRING_LOCALIZED_MISSING);
+    Assert.equal(row.value, "user-value");
+    row.resetColumnButton.click();
+    // Check new layout and reset.
+    Assert.ok(!row.hasClass("has-user-value"));
+    Assert.ok(!row.resetColumnButton);
+    Assert.ok(!Services.prefs.prefHasUserValue(PREF_STRING_LOCALIZED_MISSING));
+    Assert.equal(this.getRow(PREF_STRING_LOCALIZED_MISSING).value, "");
   });
 });
 
