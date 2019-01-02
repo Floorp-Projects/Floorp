@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_SVGFECompositeElement_h
 #define mozilla_dom_SVGFECompositeElement_h
 
-#include "SVGEnum.h"
+#include "nsSVGEnum.h"
 #include "SVGFilters.h"
 #include "nsSVGNumber2.h"
 
@@ -65,8 +65,8 @@ class SVGFECompositeElement : public SVGFECompositeElementBase {
   static NumberInfo sNumberInfo[4];
 
   enum { OPERATOR };
-  SVGEnum mEnumAttributes[1];
-  static SVGEnumMapping sOperatorMap[];
+  nsSVGEnum mEnumAttributes[1];
+  static nsSVGEnumMapping sOperatorMap[];
   static EnumInfo sEnumInfo[1];
 
   enum { RESULT, IN1, IN2 };

@@ -28,6 +28,7 @@
 #include "gfxMatrix.h"
 
 class nsSVGBoolean;
+class nsSVGEnum;
 class nsSVGInteger;
 class nsSVGIntegerPair;
 class nsSVGLength2;
@@ -35,6 +36,8 @@ class nsSVGNumber2;
 class nsSVGNumberPair;
 class nsSVGString;
 class nsSVGViewBox;
+
+struct nsSVGEnumMapping;
 
 nsresult NS_NewSVGElement(mozilla::dom::Element** aResult,
                           already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
@@ -46,7 +49,6 @@ class SVGAngle;
 class SVGAnimatedNumberList;
 class SVGNumberList;
 class SVGAnimatedLengthList;
-class SVGEnum;
 class SVGUserUnitList;
 class SVGAnimatedPointList;
 class SVGAnimatedPathSegList;
@@ -54,8 +56,6 @@ class SVGAnimatedPreserveAspectRatio;
 class SVGAnimatedTransformList;
 class SVGStringList;
 class DOMSVGStringList;
-
-struct SVGEnumMapping;
 
 namespace dom {
 class SVGSVGElement;
@@ -77,8 +77,6 @@ class SVGElement : public SVGElementBase  // nsIContent
   virtual nsresult Clone(mozilla::dom::NodeInfo*,
                          nsINode** aResult) const MOZ_MUST_OVERRIDE override;
 
-  typedef mozilla::SVGEnum SVGEnum;
-  typedef mozilla::SVGEnumMapping SVGEnumMapping;
   typedef mozilla::SVGNumberList SVGNumberList;
   typedef mozilla::SVGAnimatedNumberList SVGAnimatedNumberList;
   typedef mozilla::SVGUserUnitList SVGUserUnitList;
@@ -480,20 +478,20 @@ class SVGElement : public SVGElementBase  // nsIContent
     void Reset(uint8_t aAttrEnum);
   };
 
-  friend class mozilla::SVGEnum;
+  friend class ::nsSVGEnum;
 
   struct EnumInfo {
     nsStaticAtom* const mName;
-    const SVGEnumMapping* const mMapping;
+    const nsSVGEnumMapping* const mMapping;
     const uint16_t mDefaultValue;
   };
 
   struct EnumAttributesInfo {
-    SVGEnum* const mEnums;
+    nsSVGEnum* const mEnums;
     const EnumInfo* const mEnumInfo;
     const uint32_t mEnumCount;
 
-    EnumAttributesInfo(SVGEnum* aEnums, EnumInfo* aEnumInfo,
+    EnumAttributesInfo(nsSVGEnum* aEnums, EnumInfo* aEnumInfo,
                        uint32_t aEnumCount)
         : mEnums(aEnums), mEnumInfo(aEnumInfo), mEnumCount(aEnumCount) {}
 
@@ -607,7 +605,7 @@ class SVGElement : public SVGElementBase  // nsIContent
   virtual StringAttributesInfo GetStringInfo();
   virtual StringListAttributesInfo GetStringListInfo();
 
-  static SVGEnumMapping sSVGUnitTypesMap[];
+  static nsSVGEnumMapping sSVGUnitTypesMap[];
 
  private:
   void UnsetAttrInternal(int32_t aNameSpaceID, nsAtom* aAttribute,

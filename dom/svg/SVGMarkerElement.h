@@ -9,13 +9,13 @@
 
 #include "nsAutoPtr.h"
 #include "SVGAngle.h"
-#include "SVGAnimatedPreserveAspectRatio.h"
-#include "SVGEnum.h"
+#include "nsSVGEnum.h"
 #include "nsSVGLength2.h"
 #include "nsSVGViewBox.h"
+#include "SVGAnimatedPreserveAspectRatio.h"
+#include "SVGElement.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/SVGAnimatedEnumeration.h"
-#include "mozilla/dom/SVGElement.h"
 #include "mozilla/dom/SVGMarkerElementBinding.h"
 
 class nsSVGMarkerFrame;
@@ -62,8 +62,8 @@ class nsSVGOrientType {
       SVGElement* aSVGElement);
 
  private:
-  SVGEnumValue mAnimVal;
-  SVGEnumValue mBaseVal;
+  nsSVGEnumValue mAnimVal;
+  nsSVGEnumValue mBaseVal;
 
   struct DOMAnimatedEnum final : public SVGAnimatedEnumeration {
     DOMAnimatedEnum(nsSVGOrientType* aVal, SVGElement* aSVGElement)
@@ -148,8 +148,8 @@ class SVGMarkerElement : public SVGMarkerElementBase {
   static LengthInfo sLengthInfo[4];
 
   enum { MARKERUNITS };
-  SVGEnum mEnumAttributes[1];
-  static SVGEnumMapping sUnitsMap[];
+  nsSVGEnum mEnumAttributes[1];
+  static nsSVGEnumMapping sUnitsMap[];
   static EnumInfo sEnumInfo[1];
 
   enum { ORIENT };

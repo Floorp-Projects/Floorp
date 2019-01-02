@@ -25,7 +25,7 @@ SVGElement::NumberInfo SVGFEDisplacementMapElement::sNumberInfo[1] = {
     {nsGkAtoms::scale, 0, false},
 };
 
-SVGEnumMapping SVGFEDisplacementMapElement::sChannelMap[] = {
+nsSVGEnumMapping SVGFEDisplacementMapElement::sChannelMap[] = {
     {nsGkAtoms::R, SVG_CHANNEL_R},
     {nsGkAtoms::G, SVG_CHANNEL_G},
     {nsGkAtoms::B, SVG_CHANNEL_B},

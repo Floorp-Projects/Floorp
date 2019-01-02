@@ -7,14 +7,14 @@
 #ifndef mozilla_dom_SVGFEConvolveMatrixElement_h
 #define mozilla_dom_SVGFEConvolveMatrixElement_h
 
-#include "SVGAnimatedNumberList.h"
 #include "nsSVGBoolean.h"
-#include "SVGEnum.h"
+#include "nsSVGEnum.h"
 #include "SVGFilters.h"
 #include "nsSVGInteger.h"
 #include "nsSVGIntegerPair.h"
 #include "nsSVGNumber2.h"
 #include "nsSVGString.h"
+#include "SVGAnimatedNumberList.h"
 
 nsresult NS_NewSVGFEConvolveMatrixElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
@@ -98,8 +98,8 @@ class SVGFEConvolveMatrixElement : public SVGFEConvolveMatrixElementBase {
   static BooleanInfo sBooleanInfo[1];
 
   enum { EDGEMODE };
-  SVGEnum mEnumAttributes[1];
-  static SVGEnumMapping sEdgeModeMap[];
+  nsSVGEnum mEnumAttributes[1];
+  static nsSVGEnumMapping sEdgeModeMap[];
   static EnumInfo sEnumInfo[1];
 
   enum { RESULT, IN1 };

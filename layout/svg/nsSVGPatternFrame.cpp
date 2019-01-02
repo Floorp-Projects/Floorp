@@ -410,7 +410,7 @@ nsSVGPatternFrame *nsSVGPatternFrame::GetPatternWithChildren() {
 
 uint16_t nsSVGPatternFrame::GetEnumValue(uint32_t aIndex,
                                          nsIContent *aDefault) {
-  SVGEnum &thisEnum =
+  nsSVGEnum &thisEnum =
       static_cast<SVGPatternElement *>(GetContent())->mEnumAttributes[aIndex];
 
   if (thisEnum.IsExplicitlySet()) {
