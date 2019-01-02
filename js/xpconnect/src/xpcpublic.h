@@ -723,6 +723,15 @@ void RegisterJSStackFrame(JS::Realm* aRealm, JSStackFrameBase* aStackFrame);
 void UnregisterJSStackFrame(JS::Realm* aRealm, JSStackFrameBase* aStackFrame);
 void NukeJSStackFrames(JS::Realm* aRealm);
 
+// Check whether the given jsid is a property name (string or symbol) whose
+// value can be gotten cross-origin.  Cross-origin gets always return undefined
+// as the value, unless the Xray actually provides a different value.
+bool IsCrossOriginWhitelistedProp(JSContext* cx, JS::HandleId id);
+
+// Appends to props the jsids for property names (strings or symbols) whose
+// value can be gotten cross-origin.
+bool AppendCrossOriginWhitelistedPropNames(JSContext* cx,
+                                           JS::AutoIdVector& props);
 }  // namespace xpc
 
 namespace mozilla {
