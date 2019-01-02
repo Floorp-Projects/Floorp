@@ -1,5 +1,5 @@
 use byteorder::{BigEndian, ByteOrder};
-use {line_wrap, line_wrap_parameters, Config, LineWrap, STANDARD};
+use {Config, STANDARD};
 
 ///Encode arbitrary octets as base64.
 ///Returns a String.
@@ -37,13 +37,14 @@ pub fn encode<T: ?Sized + AsRef<[u8]>>(input: &T) -> String {
 ///```
 pub fn encode_config<T: ?Sized + AsRef<[u8]>>(input: &T, config: Config) -> String {
     let mut buf = match encoded_size(input.as_ref().len(), &config) {
-        Some(n) => String::with_capacity(n),
+        Some(n) => vec![0; n],
         None => panic!("integer overflow when calculating buffer size"),
     };
 
-    encode_config_buf(input, config, &mut buf);
+    let encoded_len = encode_config_slice(input.as_ref(), config, &mut buf[..]);
+    debug_assert_eq!(encoded_len, buf.len());
 
-    buf
+    return String::from_utf8(buf).expect("Invalid UTF8");
 }
 
 ///Encode arbitrary octets as base64.
@@ -67,27 +68,13 @@ pub fn encode_config<T: ?Sized + AsRef<[u8]>>(input: &T, config: Config) -> Stri
 pub fn encode_config_buf<T: ?Sized + AsRef<[u8]>>(input: &T, config: Config, buf: &mut String) {
     let input_bytes = input.as_ref();
 
-    let encoded_size = encoded_size(input_bytes.len(), &config)
-        .expect("usize overflow when calculating buffer size");
+    {
+        let mut sink = ::chunked_encoder::StringSink::new(buf);
+        let encoder = ::chunked_encoder::ChunkedEncoder::new(config);
 
-    let orig_buf_len = buf.len();
-
-    // we're only going to insert valid utf8
-    let buf_bytes;
-    unsafe {
-        buf_bytes = buf.as_mut_vec();
+        encoder.encode(input_bytes, &mut sink).expect("Writing to a String shouldn't fail")
     }
 
-    buf_bytes.resize(
-        orig_buf_len
-            .checked_add(encoded_size)
-            .expect("usize overflow when calculating expanded buffer size"),
-        0,
-    );
-
-    let mut b64_output = &mut buf_bytes[orig_buf_len..];
-
-    encode_with_padding_line_wrap(&input_bytes, &config, encoded_size, &mut b64_output);
 }
 
 /// Encode arbitrary octets as base64.
@@ -132,12 +119,12 @@ pub fn encode_config_slice<T: ?Sized + AsRef<[u8]>>(
 
     let mut b64_output = &mut output[0..encoded_size];
 
-    encode_with_padding_line_wrap(&input_bytes, &config, encoded_size, &mut b64_output);
+    encode_with_padding(&input_bytes, &config, encoded_size, &mut b64_output);
 
     encoded_size
 }
 
-/// B64-encode, pad, and line wrap (if configured).
+/// B64-encode and pad (if configured).
 ///
 /// This helper exists to avoid recalculating encoded_size, which is relatively expensive on short
 /// inputs.
@@ -147,7 +134,7 @@ pub fn encode_config_slice<T: ?Sized + AsRef<[u8]>>(
 /// `output` must be of size `encoded_size`.
 ///
 /// All bytes in `output` will be written to since it is exactly the size of the output.
-pub fn encode_with_padding_line_wrap(
+fn encode_with_padding(
     input: &[u8],
     config: &Config,
     encoded_size: usize,
@@ -167,17 +154,11 @@ pub fn encode_with_padding_line_wrap(
         .checked_add(padding_bytes)
         .expect("usize overflow when calculating b64 length");
 
-    let line_ending_bytes = if let LineWrap::Wrap(line_len, line_end) = config.line_wrap {
-        line_wrap(output, encoded_bytes, line_len, line_end)
-    } else {
-        0
-    };
-
-    debug_assert_eq!(encoded_size, encoded_bytes + line_ending_bytes);
+    debug_assert_eq!(encoded_size, encoded_bytes);
 }
 
-/// Encode input bytes to utf8 base64 bytes. Does not pad or line wrap.
-/// `output` must be long enough to hold the encoded `input` without padding or line wrapping.
+/// Encode input bytes to utf8 base64 bytes. Does not pad.
+/// `output` must be long enough to hold the encoded `input` without padding.
 /// Returns the number of bytes written.
 #[inline]
 pub fn encode_to_slice(input: &[u8], output: &mut [u8], encode_table: &[u8; 64]) -> usize {
@@ -297,14 +278,14 @@ pub fn encode_to_slice(input: &[u8], output: &mut [u8], encode_table: &[u8; 64])
     output_index
 }
 
-/// calculate the base64 encoded string size, including padding and line wraps if appropriate
+/// calculate the base64 encoded string size, including padding if appropriate
 pub fn encoded_size(bytes_len: usize, config: &Config) -> Option<usize> {
     let rem = bytes_len % 3;
 
     let complete_input_chunks = bytes_len / 3;
     let complete_chunk_output = complete_input_chunks.checked_mul(4);
 
-    let encoded_len_no_wrap = if rem > 0 {
+    if rem > 0 {
         if config.pad {
             complete_chunk_output.and_then(|c| c.checked_add(4))
         } else {
@@ -317,14 +298,7 @@ pub fn encoded_size(bytes_len: usize, config: &Config) -> Option<usize> {
         }
     } else {
         complete_chunk_output
-    };
-
-    encoded_len_no_wrap.map(|e| match config.line_wrap {
-        LineWrap::NoWrap => e,
-        LineWrap::Wrap(line_len, line_ending) => {
-            line_wrap_parameters(e, line_len, line_ending).total_len
-        }
-    })
+    }
 }
 
 /// Write padding characters.
@@ -349,10 +323,10 @@ mod tests {
     use super::*;
     use decode::decode_config_buf;
     use tests::{assert_encode_sanity, random_config};
-    use {CharacterSet, Config, LineEnding, LineWrap, MIME, STANDARD, URL_SAFE_NO_PAD};
+    use {Config, STANDARD, URL_SAFE_NO_PAD};
 
-    use self::rand::distributions::{IndependentSample, Range};
-    use self::rand::Rng;
+    use self::rand::distributions::{Distribution, Range};
+    use self::rand::{Rng, FromEntropy};
     use std;
     use std::str;
 
@@ -382,7 +356,7 @@ mod tests {
     }
 
     #[test]
-    fn encoded_size_correct_no_pad_no_wrap() {
+    fn encoded_size_correct_no_pad() {
         assert_encoded_length(0, 0, URL_SAFE_NO_PAD);
 
         assert_encoded_length(1, 2, URL_SAFE_NO_PAD);
@@ -407,68 +381,6 @@ mod tests {
     }
 
     #[test]
-    fn encoded_size_correct_mime() {
-        assert_encoded_length(0, 0, MIME);
-
-        assert_encoded_length(1, 4, MIME);
-        assert_encoded_length(2, 4, MIME);
-        assert_encoded_length(3, 4, MIME);
-
-        assert_encoded_length(4, 8, MIME);
-        assert_encoded_length(5, 8, MIME);
-        assert_encoded_length(6, 8, MIME);
-
-        assert_encoded_length(7, 12, MIME);
-        assert_encoded_length(8, 12, MIME);
-        assert_encoded_length(9, 12, MIME);
-
-        assert_encoded_length(54, 72, MIME);
-
-        assert_encoded_length(55, 76, MIME);
-        assert_encoded_length(56, 76, MIME);
-        assert_encoded_length(57, 76, MIME);
-
-        assert_encoded_length(58, 82, MIME);
-        assert_encoded_length(59, 82, MIME);
-        assert_encoded_length(60, 82, MIME);
-    }
-
-    #[test]
-    fn encoded_size_correct_lf_pad() {
-        let config = Config::new(
-            CharacterSet::Standard,
-            true,
-            false,
-            LineWrap::Wrap(76, LineEnding::LF),
-        );
-
-        assert_encoded_length(0, 0, config);
-
-        assert_encoded_length(1, 4, config);
-        assert_encoded_length(2, 4, config);
-        assert_encoded_length(3, 4, config);
-
-        assert_encoded_length(4, 8, config);
-        assert_encoded_length(5, 8, config);
-        assert_encoded_length(6, 8, config);
-
-        assert_encoded_length(7, 12, config);
-        assert_encoded_length(8, 12, config);
-        assert_encoded_length(9, 12, config);
-
-        assert_encoded_length(54, 72, config);
-
-        assert_encoded_length(55, 76, config);
-        assert_encoded_length(56, 76, config);
-        assert_encoded_length(57, 76, config);
-
-        // one fewer than MIME
-        assert_encoded_length(58, 81, config);
-        assert_encoded_length(59, 81, config);
-        assert_encoded_length(60, 81, config);
-    }
-
-    #[test]
     fn encoded_size_overflow() {
         assert_eq!(None, encoded_size(std::usize::MAX, &STANDARD));
     }
@@ -483,9 +395,8 @@ mod tests {
 
         let prefix_len_range = Range::new(0, 1000);
         let input_len_range = Range::new(0, 1000);
-        let line_len_range = Range::new(1, 1000);
 
-        let mut rng = rand::weak_rng();
+        let mut rng = rand::rngs::SmallRng::from_entropy();
 
         for _ in 0..10_000 {
             orig_data.clear();
@@ -494,13 +405,13 @@ mod tests {
             encoded_data_with_prefix.clear();
             decoded.clear();
 
-            let input_len = input_len_range.ind_sample(&mut rng);
+            let input_len = input_len_range.sample(&mut rng);
 
             for _ in 0..input_len {
                 orig_data.push(rng.gen());
             }
 
-            let prefix_len = prefix_len_range.ind_sample(&mut rng);
+            let prefix_len = prefix_len_range.sample(&mut rng);
             for _ in 0..prefix_len {
                 // getting convenient random single-byte printable chars that aren't base64 is
                 // annoying
@@ -508,7 +419,7 @@ mod tests {
             }
             encoded_data_with_prefix.push_str(&prefix);
 
-            let config = random_config(&mut rng, &line_len_range);
+            let config = random_config(&mut rng);
             encode_config_buf(&orig_data, config, &mut encoded_data_no_prefix);
             encode_config_buf(&orig_data, config, &mut encoded_data_with_prefix);
 
@@ -537,9 +448,8 @@ mod tests {
         let mut decoded = Vec::new();
 
         let input_len_range = Range::new(0, 1000);
-        let line_len_range = Range::new(1, 1000);
 
-        let mut rng = rand::weak_rng();
+        let mut rng = rand::rngs::SmallRng::from_entropy();
 
         for _ in 0..10_000 {
             orig_data.clear();
@@ -547,7 +457,7 @@ mod tests {
             encoded_data_original_state.clear();
             decoded.clear();
 
-            let input_len = input_len_range.ind_sample(&mut rng);
+            let input_len = input_len_range.sample(&mut rng);
 
             for _ in 0..input_len {
                 orig_data.push(rng.gen());
@@ -560,7 +470,7 @@ mod tests {
 
             encoded_data_original_state.extend_from_slice(&encoded_data);
 
-            let config = random_config(&mut rng, &line_len_range);
+            let config = random_config(&mut rng);
 
             let encoded_size = encoded_size(input_len, &config).unwrap();
 
@@ -592,22 +502,21 @@ mod tests {
         let mut decoded = Vec::new();
 
         let input_len_range = Range::new(0, 1000);
-        let line_len_range = Range::new(1, 1000);
 
-        let mut rng = rand::weak_rng();
+        let mut rng = rand::rngs::SmallRng::from_entropy();
 
         for _ in 0..10_000 {
             orig_data.clear();
             encoded_data.clear();
             decoded.clear();
 
-            let input_len = input_len_range.ind_sample(&mut rng);
+            let input_len = input_len_range.sample(&mut rng);
 
             for _ in 0..input_len {
                 orig_data.push(rng.gen());
             }
 
-            let config = random_config(&mut rng, &line_len_range);
+            let config = random_config(&mut rng);
 
             let encoded_size = encoded_size(input_len, &config).unwrap();
 
@@ -635,21 +544,20 @@ mod tests {
         let mut output = Vec::new();
 
         let input_len_range = Range::new(0, 1000);
-        let line_len_range = Range::new(1, 1000);
 
-        let mut rng = rand::weak_rng();
+        let mut rng = rand::rngs::SmallRng::from_entropy();
 
         for _ in 0..10_000 {
             input.clear();
             output.clear();
 
-            let input_len = input_len_range.ind_sample(&mut rng);
+            let input_len = input_len_range.sample(&mut rng);
 
             for _ in 0..input_len {
                 input.push(rng.gen());
             }
 
-            let config = random_config(&mut rng, &line_len_range);
+            let config = random_config(&mut rng);
 
             // fill up the output buffer with garbage
             let encoded_size = encoded_size(input_len, &config).unwrap();
@@ -671,26 +579,25 @@ mod tests {
     }
 
     #[test]
-    fn encode_with_padding_line_wrap_random_valid_utf8() {
+    fn encode_with_padding_random_valid_utf8() {
         let mut input = Vec::new();
         let mut output = Vec::new();
 
         let input_len_range = Range::new(0, 1000);
-        let line_len_range = Range::new(1, 1000);
 
-        let mut rng = rand::weak_rng();
+        let mut rng = rand::rngs::SmallRng::from_entropy();
 
         for _ in 0..10_000 {
             input.clear();
             output.clear();
 
-            let input_len = input_len_range.ind_sample(&mut rng);
+            let input_len = input_len_range.sample(&mut rng);
 
             for _ in 0..input_len {
                 input.push(rng.gen());
             }
 
-            let config = random_config(&mut rng, &line_len_range);
+            let config = random_config(&mut rng);
 
             // fill up the output buffer with garbage
             let encoded_size = encoded_size(input_len, &config).unwrap();
@@ -700,7 +607,7 @@ mod tests {
 
             let orig_output_buf = output.to_vec();
 
-            encode_with_padding_line_wrap(
+            encode_with_padding(
                 &input,
                 &config,
                 encoded_size,
@@ -719,7 +626,7 @@ mod tests {
     fn add_padding_random_valid_utf8() {
         let mut output = Vec::new();
 
-        let mut rng = rand::weak_rng();
+        let mut rng = rand::rngs::SmallRng::from_entropy();
 
         // cover our bases for length % 3
         for input_len in 0..10 {
@@ -746,7 +653,7 @@ mod tests {
         assert_eq!(encoded_len, encoded_size(input_len, &config).unwrap());
 
         let mut bytes: Vec<u8> = Vec::new();
-        let mut rng = rand::weak_rng();
+        let mut rng = rand::rngs::SmallRng::from_entropy();
 
         for _ in 0..input_len {
             bytes.push(rng.gen());
