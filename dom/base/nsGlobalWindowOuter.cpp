@@ -3582,16 +3582,9 @@ Nullable<WindowProxyHolder> nsGlobalWindowOuter::GetTopOuter() {
 
 already_AddRefed<BrowsingContext> nsGlobalWindowOuter::GetChildWindow(
     const nsAString& aName) {
-  nsCOMPtr<nsIDocShell> docShell(GetDocShell());
-  NS_ENSURE_TRUE(docShell, nullptr);
+  NS_ENSURE_TRUE(mBrowsingContext, nullptr);
 
-  nsCOMPtr<nsIDocShellTreeItem> child;
-  docShell->FindChildWithName(aName, false, true, nullptr, nullptr,
-                              getter_AddRefs(child));
-
-  return child && child->GetWindow()
-             ? do_AddRef(child->GetWindow()->GetBrowsingContext())
-             : nullptr;
+  return mBrowsingContext->FindChildWithName(aName);
 }
 
 bool nsGlobalWindowOuter::DispatchCustomEvent(const nsAString& aEventName) {
@@ -4487,8 +4480,8 @@ void nsGlobalWindowOuter::PromptOuter(const nsAString& aMessage,
   }
 }
 
-void nsGlobalWindowOuter::FocusOuter(ErrorResult& aError) {
-  nsIFocusManager* fm = nsFocusManager::GetFocusManager();
+void nsGlobalWindowOuter::FocusOuter() {
+  nsFocusManager* fm = nsFocusManager::GetFocusManager();
   if (!fm) {
     return;
   }
@@ -4578,7 +4571,10 @@ void nsGlobalWindowOuter::FocusOuter(ErrorResult& aError) {
     if (frame) {
       uint32_t flags = nsIFocusManager::FLAG_NOSCROLL;
       if (canFocus) flags |= nsIFocusManager::FLAG_RAISE;
-      aError = fm->SetFocus(frame, flags);
+      DebugOnly<nsresult> rv = fm->SetFocus(frame, flags);
+      MOZ_ASSERT(NS_SUCCEEDED(rv),
+                 "SetFocus only fails if the first argument is null, "
+                 "but we pass an element");
     }
     return;
   }
@@ -4587,7 +4583,10 @@ void nsGlobalWindowOuter::FocusOuter(ErrorResult& aError) {
     // if there is no parent, this must be a toplevel window, so raise the
     // window if canFocus is true. If this is a child process, the raise
     // window request will get forwarded to the parent by the puppet widget.
-    aError = fm->SetActiveWindow(this);
+    DebugOnly<nsresult> rv = fm->SetActiveWindow(this);
+    MOZ_ASSERT(NS_SUCCEEDED(rv),
+               "SetActiveWindow only fails if passed null or a non-toplevel "
+               "window, which is not the case here.");
   }
 }
 
@@ -5369,6 +5368,7 @@ BrowsingContext* nsGlobalWindowOuter::GetFramesOuter() {
   return mBrowsingContext;
 }
 
+/* static */
 nsGlobalWindowInner* nsGlobalWindowOuter::CallerInnerWindow(JSContext* aCx) {
   nsIGlobalObject* global = GetIncumbentGlobal();
   NS_ENSURE_TRUE(global, nullptr);
@@ -5404,7 +5404,7 @@ nsGlobalWindowInner* nsGlobalWindowOuter::CallerInnerWindow(JSContext* aCx) {
 bool nsGlobalWindowOuter::GatherPostMessageData(
     JSContext* aCx, const nsAString& aTargetOrigin, BrowsingContext** aSource,
     nsAString& aOrigin, nsIURI** aTargetOriginURI,
-    nsIPrincipal** aCallerPrincipal, uint64_t* aCallerInnerWindowID,
+    nsIPrincipal** aCallerPrincipal, nsGlobalWindowInner** aCallerInnerWindow,
     nsIURI** aCallerDocumentURI, ErrorResult& aError) {
   //
   // Window.postMessage is an intentional subversion of the same-origin policy.
@@ -5422,7 +5422,6 @@ bool nsGlobalWindowOuter::GatherPostMessageData(
     if (!doc) {
       return false;
     }
-    *aCallerInnerWindowID = doc->InnerWindowID();
     NS_IF_ADDREF(*aCallerDocumentURI = doc->GetDocumentURI());
 
     // Compute the caller's origin either from its principal or, in the case the
@@ -5433,8 +5432,6 @@ bool nsGlobalWindowOuter::GatherPostMessageData(
     // might have changed due to intervening navigations).
     callerPrin = callerInnerWin->GetPrincipal();
   } else {
-    *aCallerInnerWindowID = 0;
-
     // In case the global is not a window, it can be a sandbox, and the
     // sandbox's principal can be used for the security check.
     nsIGlobalObject* global = GetIncumbentGlobal();
@@ -5492,6 +5489,8 @@ bool nsGlobalWindowOuter::GatherPostMessageData(
   } else {
     *aSource = nullptr;
   }
+
+  callerInnerWin.forget(aCallerInnerWindow);
 
   return true;
 }
@@ -5595,12 +5594,13 @@ void nsGlobalWindowOuter::PostMessageMozOuter(JSContext* aCx,
   nsAutoString origin;
   nsCOMPtr<nsIURI> targetOriginURI;
   nsCOMPtr<nsIPrincipal> callerPrincipal;
-  uint64_t callerInnerWindowID;
+  RefPtr<nsGlobalWindowInner> callerInnerWindow;
   nsCOMPtr<nsIURI> callerDocumentURI;
-  if (!GatherPostMessageData(
-          aCx, aTargetOrigin, getter_AddRefs(sourceBc), origin,
-          getter_AddRefs(targetOriginURI), getter_AddRefs(callerPrincipal),
-          &callerInnerWindowID, getter_AddRefs(callerDocumentURI), aError)) {
+  if (!GatherPostMessageData(aCx, aTargetOrigin, getter_AddRefs(sourceBc),
+                             origin, getter_AddRefs(targetOriginURI),
+                             getter_AddRefs(callerPrincipal),
+                             getter_AddRefs(callerInnerWindow),
+                             getter_AddRefs(callerDocumentURI), aError)) {
     return;
   }
 
@@ -5613,9 +5613,9 @@ void nsGlobalWindowOuter::PostMessageMozOuter(JSContext* aCx,
 
   // Create and asynchronously dispatch a runnable which will handle actual DOM
   // event creation and dispatch.
-  RefPtr<PostMessageEvent> event =
-      new PostMessageEvent(sourceBc, origin, this, providedPrincipal,
-                           callerInnerWindowID, callerDocumentURI);
+  RefPtr<PostMessageEvent> event = new PostMessageEvent(
+      sourceBc, origin, this, providedPrincipal,
+      callerInnerWindow ? callerInnerWindow->WindowID() : 0, callerDocumentURI);
 
   event->Write(aCx, aMessage, aTransfer, aError);
   if (NS_WARN_IF(aError.Failed())) {
@@ -6247,7 +6247,7 @@ nsPIDOMWindowOuter* nsGlobalWindowOuter::GetPrivateRoot() {
 // This has a caller in Windows-only code (nsNativeAppSupportWin).
 Location* nsGlobalWindowOuter::GetLocation() {
   // This method can be called on the outer window as well.
-  FORWARD_TO_INNER(GetLocation, (), nullptr);
+  FORWARD_TO_INNER(Location, (), nullptr);
 }
 
 void nsGlobalWindowOuter::ActivateOrDeactivate(bool aActivate) {

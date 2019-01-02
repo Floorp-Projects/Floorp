@@ -214,6 +214,8 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
                                   public nsAPostRefreshObserver,
                                   public mozilla::webgpu::InstanceProvider {
  public:
+  typedef mozilla::dom::BrowsingContext RemoteProxy;
+
   typedef mozilla::TimeStamp TimeStamp;
   typedef mozilla::TimeDuration TimeDuration;
 
@@ -599,12 +601,12 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   static JSObject* CreateNamedPropertiesObject(JSContext* aCx,
                                                JS::Handle<JSObject*> aProto);
 
-  nsGlobalWindowInner* Window();
-  nsGlobalWindowInner* Self();
+  mozilla::dom::BrowsingContext* Window();
+  mozilla::dom::BrowsingContext* Self() { return Window(); }
   nsIDocument* GetDocument() { return GetDoc(); }
   void GetName(nsAString& aName, mozilla::ErrorResult& aError);
   void SetName(const nsAString& aName, mozilla::ErrorResult& aError);
-  mozilla::dom::Location* GetLocation() override;
+  mozilla::dom::Location* Location() override;
   nsHistory* GetHistory(mozilla::ErrorResult& aError);
   mozilla::dom::CustomElementRegistry* CustomElements() override;
   mozilla::dom::BarProp* GetLocationbar(mozilla::ErrorResult& aError);
@@ -615,7 +617,8 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   mozilla::dom::BarProp* GetToolbar(mozilla::ErrorResult& aError);
   void GetStatus(nsAString& aStatus, mozilla::ErrorResult& aError);
   void SetStatus(const nsAString& aStatus, mozilla::ErrorResult& aError);
-  void Close(mozilla::ErrorResult& aError);
+  void Close(mozilla::dom::CallerType aCallerType,
+             mozilla::ErrorResult& aError);
   nsresult Close() override;
   bool GetClosed(mozilla::ErrorResult& aError);
   void Stop(mozilla::ErrorResult& aError);

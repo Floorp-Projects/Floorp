@@ -969,6 +969,7 @@ void XPCJSRuntime::CustomGCCallback(JSGCStatus status) {
 }
 
 void CompartmentPrivate::UpdateWeakPointersAfterGC() {
+  mRemoteProxies.sweep();
   mWrappedJSMap->UpdateWeakPointersAfterGC();
 }
 

@@ -539,7 +539,7 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
   uint32_t GetMarkedCCGeneration() { return mMarkedCCGeneration; }
 
   mozilla::dom::Navigator* Navigator();
-  virtual mozilla::dom::Location* GetLocation() = 0;
+  virtual mozilla::dom::Location* Location() = 0;
 
   virtual nsresult GetControllers(nsIControllers** aControllers) = 0;
 
