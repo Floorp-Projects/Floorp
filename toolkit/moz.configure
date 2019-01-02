@@ -1390,6 +1390,7 @@ with only_when(compile_environment):
                 #error Insufficient JPEG library version
                 #endif
             ''',
+            flags=jpeg_flags.cflags,
             check_msg='for sufficient jpeg library version',
             onerror=lambda: die('Insufficient JPEG library version for '
                                 '--with-system-jpeg (62 required)'),
@@ -1406,6 +1407,7 @@ with only_when(compile_environment):
                 #error libjpeg-turbo JCS_EXTENSIONS required
                 #endif
             ''',
+            flags=jpeg_flags.cflags,
             check_msg='for sufficient libjpeg-turbo JCS_EXTENSIONS',
             onerror=lambda: die('libjpeg-turbo JCS_EXTENSIONS required for '
                                  '--with-system-jpeg'),
