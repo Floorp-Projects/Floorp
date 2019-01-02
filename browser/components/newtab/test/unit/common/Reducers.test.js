@@ -1,5 +1,5 @@
 import {INITIAL_STATE, insertPinned, reducers} from "common/Reducers.jsm";
-const {TopSites, App, Snippets, Prefs, Dialog, Sections, Pocket, DiscoveryStream, Search} = reducers;
+const {TopSites, App, Snippets, Prefs, Dialog, Sections, Pocket, Layout} = reducers;
 import {actionTypes as at} from "common/Actions.jsm";
 
 describe("Reducers", () => {
@@ -655,35 +655,13 @@ describe("Reducers", () => {
       assert.equal(state.pocketCta.useCta, data.use_cta);
     });
   });
-  describe("DiscoveryStream", () => {
+  describe("Layout", () => {
     it("should return INITIAL_STATE by default", () => {
-      assert.equal(DiscoveryStream(undefined, {type: "some_action"}), INITIAL_STATE.DiscoveryStream);
+      assert.equal(Layout(undefined, {type: "some_action"}), INITIAL_STATE.Layout);
     });
-    it("should set layout data with DISCOVERY_STREAM_LAYOUT_UPDATE", () => {
-      const state = DiscoveryStream(undefined, {type: at.DISCOVERY_STREAM_LAYOUT_UPDATE, data: ["test"]});
-      assert.equal(state.layout[0], "test");
-    });
-    it("should set config data with DISCOVERY_STREAM_CONFIG_CHANGE", () => {
-      const state = DiscoveryStream(undefined, {type: at.DISCOVERY_STREAM_CONFIG_CHANGE, data: {enabled: true}});
-      assert.deepEqual(state.config, {enabled: true});
-    });
-  });
-  describe("Search", () => {
-    it("should return INITIAL_STATE by default", () => {
-      assert.equal(Search(undefined, {type: "some_action"}), INITIAL_STATE.Search);
-    });
-    it("should set hide to true on HIDE_SEARCH", () => {
-      const nextState = Search(undefined, {type: "HIDE_SEARCH"});
-      assert.propertyVal(nextState, "hide", true);
-    });
-    it("should set focus to true on FOCUS_SEARCH", () => {
-      const nextState = Search(undefined, {type: "FOCUS_SEARCH"});
-      assert.propertyVal(nextState, "focus", true);
-    });
-    it("should set focus and hide to false on SHOW_SEARCH", () => {
-      const nextState = Search(undefined, {type: "SHOW_SEARCH"});
-      assert.propertyVal(nextState, "focus", false);
-      assert.propertyVal(nextState, "hide", false);
+    it("should set layout data with layout.type CONTENT_LAYOUT", () => {
+      const state = Layout(undefined, {type: at.CONTENT_LAYOUT, data: ["test"]});
+      assert.equal(state[0], "test");
     });
   });
 });

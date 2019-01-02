@@ -2,32 +2,12 @@
 .asrouter-admin {
   $border-color: var(--newtab-border-secondary-color);
   $monospace: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Mono', 'Droid Sans Mono', 'Source Code Pro', monospace;
+  max-width: 996px;
   margin: 0 auto;
   font-size: 14px;
-
-  display: flex;
-
-  .sidebar {
-    position: fixed;
-    width: 240px;
-    padding: 30px 20px;
-
-    ul {
-      margin: 0;
-      padding: 0;
-      list-style: none;
-    }
-
-    li a {
-      padding: 10px 34px;
-      display: block;
-
-      &:hover {
-        background: $grey-20;
-      }
-    }
-  }
-
+  // Reset .outer-wrapper styles
+  display: inherit;
+  padding: 0 0 92px;
 
   h1 {
     font-weight: 200;
