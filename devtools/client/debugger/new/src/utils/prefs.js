@@ -61,7 +61,7 @@ if (isDevelopment()) {
   pref("devtools.debugger.features.map-expression-bindings", true);
   pref("devtools.debugger.features.map-await-expression", true);
   pref("devtools.debugger.features.xhr-breakpoints", true);
-  pref("devtools.debugger.features.origial-blackbox", true);
+  pref("devtools.debugger.features.original-blackbox", true);
   pref("devtools.debugger.features.windowless-workers", false);
 }
 
@@ -117,7 +117,7 @@ export const features = new PrefsHelper("devtools.debugger.features", {
   mapAwaitExpression: ["Bool", "map-await-expression"],
   componentPane: ["Bool", "component-pane"],
   xhrBreakpoints: ["Bool", "xhr-breakpoints"],
-  originalBlackbox: ["Bool", "origial-blackbox"]
+  originalBlackbox: ["Bool", "original-blackbox"]
 });
 
 export const asyncStore = asyncStoreHelper("debugger", {
