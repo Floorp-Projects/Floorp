@@ -30,6 +30,7 @@ export type BreakpointSources = Array<{
 export type FormattedBreakpoint = {|
   id: BreakpointId,
   condition: ?string,
+  log: boolean,
   disabled: boolean,
   text: string,
   selectedLocation: SourceLocation
