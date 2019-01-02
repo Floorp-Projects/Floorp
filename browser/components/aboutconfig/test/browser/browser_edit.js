@@ -40,7 +40,7 @@ add_task(async function test_delete_user_pref() {
   Services.prefs.setBoolPref("userAddedPref", true);
   await AboutConfigTest.withNewTab(async function() {
     let row = this.getRow("userAddedPref");
-    row.element.lastChild.lastChild.click();
+    row.resetColumnButton.click();
     Assert.ok(!this.getRow("userAddedPref"));
     Assert.ok(!Services.prefs.getChildList("").includes("userAddedPref"));
 
@@ -57,10 +57,10 @@ add_task(async function test_reset_user_pref() {
     let testPref = "browser.autofocus";
     // Click reset.
     let row = this.getRow(testPref);
-    row.element.lastChild.lastChild.click();
+    row.resetColumnButton.click();
     // Check new layout and reset.
     Assert.ok(!row.hasClass("has-user-value"));
-    Assert.equal(row.element.lastChild.childNodes.length, 0);
+    Assert.ok(!row.resetColumnButton);
     Assert.ok(!Services.prefs.prefHasUserValue(testPref));
     Assert.equal(this.getRow(testPref).value, "" + Preferences.get(testPref));
 
@@ -68,7 +68,7 @@ add_task(async function test_reset_user_pref() {
     this.search();
     row = this.getRow(testPref);
     Assert.ok(!row.hasClass("has-user-value"));
-    Assert.equal(row.element.lastChild.childNodes.length, 0);
+    Assert.ok(!row.resetColumnButton);
     Assert.equal(this.getRow(testPref).value, "" + Preferences.get(testPref));
   });
 });
@@ -83,33 +83,31 @@ add_task(async function test_modify() {
       let row = this.getRow(nameOfBoolPref);
       // Do this a two times to reset the pref.
       for (let i = 0; i < 2; i++) {
-        row.querySelector("td.cell-edit").firstChild.click();
+        row.editColumnButton.click();
         // Check new layout and saving in backend.
         Assert.equal(this.getRow(nameOfBoolPref).value,
           "" + Preferences.get(nameOfBoolPref));
         let prefHasUserValue = Services.prefs.prefHasUserValue(nameOfBoolPref);
         Assert.equal(row.hasClass("has-user-value"), prefHasUserValue);
-        Assert.equal(row.element.lastChild.childNodes.length > 0, prefHasUserValue);
+        Assert.equal(!!row.resetColumnButton, prefHasUserValue);
       }
     }
 
     // Test abort of edit by starting with string and continuing with editing Int pref.
     let row = this.getRow("test.aboutconfig.modify.string");
-    row.querySelector("td.cell-edit").firstChild.click();
-    row.querySelector("td.cell-value").firstChild.firstChild.value = "test";
+    row.editColumnButton.click();
+    row.valueInput.value = "test";
     let intRow = this.getRow("test.aboutconfig.modify.number");
-    intRow.querySelector("td.cell-edit").firstChild.click();
-    Assert.equal(intRow.querySelector("td.cell-value").firstChild.firstChild.value,
+    intRow.editColumnButton.click();
+    Assert.equal(intRow.valueInput.value,
       Preferences.get("test.aboutconfig.modify.number"));
-    Assert.equal(this.getRow("test.aboutconfig.modify.string").value,
-      "" + Preferences.get("test.aboutconfig.modify.string"));
-    Assert.equal(row.querySelector("td.cell-value").textContent,
-      Preferences.get("test.aboutconfig.modify.string"));
+    Assert.ok(!row.valueInput);
+    Assert.equal(row.value, Preferences.get("test.aboutconfig.modify.string"));
 
     // Test regex check for Int pref.
-    intRow.querySelector("td.cell-value").firstChild.firstChild.value += "a";
-    intRow.querySelector("td.cell-edit").firstChild.click();
-    Assert.ok(!intRow.querySelector("td.cell-value").firstChild.firstChild.checkValidity());
+    intRow.valueInput.value += "a";
+    intRow.editColumnButton.click();
+    Assert.ok(!intRow.valueInput.checkValidity());
 
     // Test correct saving and DOM-update.
     for (let prefName of [
@@ -120,15 +118,14 @@ add_task(async function test_modify() {
     ]) {
       row = this.getRow(prefName);
       // Activate edit and check displaying.
-      row.querySelector("td.cell-edit").firstChild.click();
-      Assert.equal(row.querySelector("td.cell-value").firstChild.firstChild.value,
-        Preferences.get(prefName));
-      row.querySelector("td.cell-value").firstChild.firstChild.value = "42";
+      row.editColumnButton.click();
+      Assert.equal(row.valueInput.value, Preferences.get(prefName));
+      row.valueInput.value = "42";
       // Save and check saving.
-      row.querySelector("td.cell-edit").firstChild.click();
+      row.editColumnButton.click();
       Assert.equal(row.value, "" + Preferences.get(prefName));
       let prefHasUserValue = Services.prefs.prefHasUserValue(prefName);
-      Assert.equal(row.element.lastChild.childNodes.length > 0, prefHasUserValue);
+      Assert.equal(!!row.resetColumnButton, prefHasUserValue);
       Assert.equal(row.hasClass("has-user-value"), prefHasUserValue);
     }
   });

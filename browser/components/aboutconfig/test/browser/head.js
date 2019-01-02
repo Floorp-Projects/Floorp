@@ -22,8 +22,26 @@ class AboutConfigRowTest {
     return this.querySelector("td.cell-value").textContent;
   }
 
-  get firstButton() {
-    return this.querySelector("button");
+  /**
+   * Text input field when the row is in edit mode.
+   */
+  get valueInput() {
+    return this.querySelector("td.cell-value input");
+  }
+
+  /**
+   * This is normally "edit" or "toggle" based on the preference type, or "save"
+   * when the row is in edit mode.
+   */
+  get editColumnButton() {
+    return this.querySelector("td.cell-edit > button");
+  }
+
+  /**
+   * This can be "reset" or "delete" based on whether a default exists.
+   */
+  get resetColumnButton() {
+    return this.querySelector("td:last-child > button");
   }
 
   hasClass(className) {
