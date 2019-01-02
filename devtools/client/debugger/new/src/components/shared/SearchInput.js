@@ -104,7 +104,7 @@ class SearchInput extends Component<Props, State> {
   }
 
   renderSvg() {
-    const svgName = this.props.showErrorEmoji ? "sad-face" : "magnifying-glass";
+    const svgName = "magnifying-glass";
     return <Svg name={svgName} />;
   }
 
