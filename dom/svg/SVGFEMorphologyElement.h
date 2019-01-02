@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_SVGFEMorphologyElement_h
 #define mozilla_dom_SVGFEMorphologyElement_h
 
-#include "nsSVGEnum.h"
+#include "SVGEnum.h"
 #include "SVGFilters.h"
 #include "nsSVGNumberPair.h"
 #include "nsSVGString.h"
@@ -65,8 +65,8 @@ class SVGFEMorphologyElement : public SVGFEMorphologyElementBase {
   static NumberPairInfo sNumberPairInfo[1];
 
   enum { OPERATOR };
-  nsSVGEnum mEnumAttributes[1];
-  static nsSVGEnumMapping sOperatorMap[];
+  SVGEnum mEnumAttributes[1];
+  static SVGEnumMapping sOperatorMap[];
   static EnumInfo sEnumInfo[1];
 
   enum { RESULT, IN1 };
