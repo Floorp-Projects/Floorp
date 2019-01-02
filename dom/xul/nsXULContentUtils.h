@@ -17,7 +17,6 @@
 class nsAtom;
 class nsICollation;
 class nsIContent;
-class nsIDocument;
 
 namespace mozilla {
 namespace dom {

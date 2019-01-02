@@ -80,7 +80,7 @@ bool XULBroadcastManager::MayNeedListener(const Element& aElement) {
   return false;
 }
 
-XULBroadcastManager::XULBroadcastManager(nsIDocument* aDocument)
+XULBroadcastManager::XULBroadcastManager(Document* aDocument)
     : mDocument(aDocument),
       mBroadcasterMap(nullptr),
       mHandlingDelayedAttrChange(false),
@@ -473,7 +473,7 @@ nsresult XULBroadcastManager::FindBroadcaster(Element* aElement,
   NS_ENSURE_TRUE(*aListener, NS_ERROR_UNEXPECTED);
 
   // Try to find the broadcaster element in the document.
-  nsIDocument* doc = aElement->GetComposedDoc();
+  Document* doc = aElement->GetComposedDoc();
   if (doc) {
     *aBroadcaster = doc->GetElementById(aBroadcasterID);
   }

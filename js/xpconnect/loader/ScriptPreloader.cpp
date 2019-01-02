@@ -351,7 +351,7 @@ nsresult ScriptPreloader::Observe(nsISupports* subject, const char* topic,
     // If this is an uninitialized about:blank viewer or a chrome: document
     // (which should always be an XBL binding document), ignore it. We don't
     // have to worry about it loading malicious content.
-    if (nsCOMPtr<nsIDocument> doc = do_QueryInterface(subject)) {
+    if (nsCOMPtr<dom::Document> doc = do_QueryInterface(subject)) {
       nsCOMPtr<nsIURI> uri = doc->GetDocumentURI();
 
       bool schemeIs;

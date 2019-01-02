@@ -6,7 +6,7 @@
 
 #include "ServiceWorker.h"
 
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsPIDOMWindow.h"
 #include "RemoteServiceWorkerImpl.h"
 #include "ServiceWorkerCloneData.h"

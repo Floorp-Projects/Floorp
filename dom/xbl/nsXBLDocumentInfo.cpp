@@ -7,7 +7,7 @@
 #include "mozilla/DebugOnly.h"
 
 #include "nsXBLDocumentInfo.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsXBLPrototypeBinding.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIScriptContext.h"
@@ -96,7 +96,7 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsXBLDocumentInfo)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsXBLDocumentInfo)
 
-nsXBLDocumentInfo::nsXBLDocumentInfo(nsIDocument* aDocument)
+nsXBLDocumentInfo::nsXBLDocumentInfo(Document* aDocument)
     : mDocument(aDocument),
       mScriptAccess(true),
       mIsChrome(false),
@@ -174,7 +174,7 @@ void nsXBLDocumentInfo::RemovePrototypeBinding(const nsACString& aRef) {
 // static
 nsresult nsXBLDocumentInfo::ReadPrototypeBindings(nsIURI* aURI,
                                                   nsXBLDocumentInfo** aDocInfo,
-                                                  nsIDocument* aBoundDocument) {
+                                                  Document* aBoundDocument) {
   *aDocInfo = nullptr;
 
   nsAutoCString spec(kXBLCachePrefix);
@@ -214,7 +214,7 @@ nsresult nsXBLDocumentInfo::ReadPrototypeBindings(nsIURI* aURI,
   nsContentUtils::GetSecurityManager()->GetSystemPrincipal(
       getter_AddRefs(principal));
 
-  nsCOMPtr<nsIDocument> doc;
+  nsCOMPtr<Document> doc;
   rv = NS_NewXBLDocument(getter_AddRefs(doc), aURI, nullptr, principal);
   NS_ENSURE_SUCCESS(rv, rv);
 

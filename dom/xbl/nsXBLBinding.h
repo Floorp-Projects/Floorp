@@ -19,14 +19,12 @@
 class nsXBLPrototypeBinding;
 class nsIContent;
 class nsAtom;
-class nsIDocument;
 struct RawServoAuthorStyles;
 
 namespace mozilla {
 namespace dom {
-
+class Document;
 class XBLChildrenElement;
-
 }  // namespace dom
 }  // namespace mozilla
 
@@ -101,7 +99,7 @@ class nsXBLBinding final {
   void GenerateAnonymousContent();
   void BindAnonymousContent(nsIContent* aAnonParent, nsIContent* aElement,
                             bool aNativeAnon);
-  static void UnbindAnonymousContent(nsIDocument* aDocument,
+  static void UnbindAnonymousContent(mozilla::dom::Document* aDocument,
                                      nsIContent* aAnonParent,
                                      bool aNullParent = true);
   void InstallEventHandlers();
@@ -121,7 +119,8 @@ class nsXBLBinding final {
   void AttributeChanged(nsAtom* aAttribute, int32_t aNameSpaceID,
                         bool aRemoveFlag, bool aNotify);
 
-  void ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocument);
+  void ChangeDocument(mozilla::dom::Document* aOldDocument,
+                      mozilla::dom::Document* aNewDocument);
 
   const RawServoAuthorStyles* GetServoStyles() const;
 

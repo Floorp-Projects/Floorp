@@ -129,7 +129,7 @@ class nsBulletFrame final : public nsFrame {
                       mozilla::LogicalMargin* aPadding);
 
   void GetLoadGroup(nsPresContext* aPresContext, nsILoadGroup** aLoadGroup);
-  nsIDocument* GetOurCurrentDoc() const;
+  mozilla::dom::Document* GetOurCurrentDoc() const;
 
   mozilla::LogicalMargin mPadding;
   RefPtr<imgRequestProxy> mImageRequest;

@@ -23,7 +23,7 @@
 #include "nsStyleChangeList.h"
 #include "nsLayoutUtils.h"
 #include "nsIFrame.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsDOMMutationObserver.h"
 #include "nsIPresShell.h"
 #include "nsIPresShellInlines.h"

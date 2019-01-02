@@ -12,6 +12,7 @@
 
 namespace mozilla {
 
+using dom::Document;
 using gfx::DataSourceSurface;
 using gfx::IntSize;
 using gfx::SamplingFilter;
@@ -249,7 +250,7 @@ ImageWrapper::SetAnimationStartTime(const TimeStamp& aTime) {
   mInnerImage->SetAnimationStartTime(aTime);
 }
 
-void ImageWrapper::PropagateUseCounters(nsIDocument* aParentDocument) {
+void ImageWrapper::PropagateUseCounters(Document* aParentDocument) {
   mInnerImage->PropagateUseCounters(aParentDocument);
 }
 

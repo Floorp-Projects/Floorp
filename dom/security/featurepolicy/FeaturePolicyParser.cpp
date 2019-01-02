@@ -18,7 +18,7 @@ namespace dom {
 
 namespace {
 
-void ReportToConsoleUnsupportedFeature(nsIDocument* aDocument,
+void ReportToConsoleUnsupportedFeature(Document* aDocument,
                                        const nsString& aFeatureName) {
   const char16_t* params[] = {aFeatureName.get()};
 
@@ -28,7 +28,7 @@ void ReportToConsoleUnsupportedFeature(nsIDocument* aDocument,
       "FeaturePolicyUnsupportedFeatureName", params, ArrayLength(params));
 }
 
-void ReportToConsoleInvalidEmptyAllowValue(nsIDocument* aDocument,
+void ReportToConsoleInvalidEmptyAllowValue(Document* aDocument,
                                            const nsString& aFeatureName) {
   const char16_t* params[] = {aFeatureName.get()};
 
@@ -38,7 +38,7 @@ void ReportToConsoleInvalidEmptyAllowValue(nsIDocument* aDocument,
       "FeaturePolicyInvalidEmptyAllowValue", params, ArrayLength(params));
 }
 
-void ReportToConsoleInvalidAllowValue(nsIDocument* aDocument,
+void ReportToConsoleInvalidAllowValue(Document* aDocument,
                                       const nsString& aValue) {
   const char16_t* params[] = {aValue.get()};
 
@@ -51,7 +51,7 @@ void ReportToConsoleInvalidAllowValue(nsIDocument* aDocument,
 }  // namespace
 
 /* static */ bool FeaturePolicyParser::ParseString(
-    const nsAString& aPolicy, nsIDocument* aDocument, nsIPrincipal* aSelfOrigin,
+    const nsAString& aPolicy, Document* aDocument, nsIPrincipal* aSelfOrigin,
     nsIPrincipal* aSrcOrigin, nsTArray<Feature>& aParsedFeatures) {
   MOZ_ASSERT(aSelfOrigin);
 

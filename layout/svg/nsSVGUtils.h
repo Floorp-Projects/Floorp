@@ -31,7 +31,7 @@
 class gfxContext;
 class nsFrameList;
 class nsIContent;
-class nsIDocument;
+
 class nsIFrame;
 class nsPresContext;
 class nsStyleSVGPaint;

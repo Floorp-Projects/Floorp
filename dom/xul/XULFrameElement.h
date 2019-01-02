@@ -37,7 +37,7 @@ class XULFrameElement final : public nsXULElement, public nsIFrameLoaderOwner {
   nsDocShell* GetDocShell();
   already_AddRefed<nsIWebNavigation> GetWebNavigation();
   Nullable<WindowProxyHolder> GetContentWindow();
-  nsIDocument* GetContentDocument();
+  Document* GetContentDocument();
 
   // nsIFrameLoaderOwner / MozFrameLoaderOwner
   NS_IMETHOD_(already_AddRefed<nsFrameLoader>) GetFrameLoader() override {
@@ -62,7 +62,7 @@ class XULFrameElement final : public nsXULElement, public nsIFrameLoaderOwner {
                         mozilla::ErrorResult& rv);
 
   // nsIContent
-  virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+  virtual nsresult BindToTree(Document* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent) override;
   virtual void UnbindFromTree(bool aDeep, bool aNullParent) override;
   virtual void DestroyContent() override;

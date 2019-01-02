@@ -7,11 +7,11 @@
 #ifndef nsIPresShellInlines_h
 #define nsIPresShellInlines_h
 
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 
 void nsIPresShell::SetNeedLayoutFlush() {
   mNeedLayoutFlush = true;
-  if (nsIDocument* doc = mDocument->GetDisplayDocument()) {
+  if (mozilla::dom::Document* doc = mDocument->GetDisplayDocument()) {
     if (nsIPresShell* shell = doc->GetShell()) {
       shell->mNeedLayoutFlush = true;
     }
@@ -26,7 +26,7 @@ void nsIPresShell::SetNeedLayoutFlush() {
 
 void nsIPresShell::SetNeedStyleFlush() {
   mNeedStyleFlush = true;
-  if (nsIDocument* doc = mDocument->GetDisplayDocument()) {
+  if (mozilla::dom::Document* doc = mDocument->GetDisplayDocument()) {
     if (nsIPresShell* shell = doc->GetShell()) {
       shell->mNeedStyleFlush = true;
     }
@@ -46,7 +46,7 @@ void nsIPresShell::EnsureStyleFlush() {
 
 void nsIPresShell::SetNeedThrottledAnimationFlush() {
   mNeedThrottledAnimationFlush = true;
-  if (nsIDocument* doc = mDocument->GetDisplayDocument()) {
+  if (mozilla::dom::Document* doc = mDocument->GetDisplayDocument()) {
     if (nsIPresShell* shell = doc->GetShell()) {
       shell->mNeedThrottledAnimationFlush = true;
     }

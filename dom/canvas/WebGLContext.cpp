@@ -1212,7 +1212,7 @@ layers::LayersBackend WebGLContext::GetCompositorBackendType() const {
   return LayersBackend::LAYERS_NONE;
 }
 
-nsIDocument* WebGLContext::GetOwnerDoc() const {
+Document* WebGLContext::GetOwnerDoc() const {
   MOZ_ASSERT(mCanvasElement);
   if (!mCanvasElement) {
     return nullptr;
@@ -2316,7 +2316,7 @@ webgl::AvailabilityRunnable* WebGLContext::EnsureAvailabilityRunnable() {
     RefPtr<webgl::AvailabilityRunnable> runnable =
         new webgl::AvailabilityRunnable(this);
 
-    nsIDocument* document = GetOwnerDoc();
+    Document* document = GetOwnerDoc();
     if (document) {
       document->Dispatch(TaskCategory::Other, runnable.forget());
     } else {

@@ -17,7 +17,7 @@
 #include "nsFrameLoader.h"
 #include "nsIContentSecurityPolicy.h"
 #include "nsIDocShell.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIFrameLoaderOwner.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsISupportsImpl.h"
@@ -175,7 +175,7 @@ LoadInfo::LoadInfo(
           mTopLevelStorageAreaPrincipal =
               innerWindow->GetTopLevelStorageAreaPrincipal();
         } else if (contextOuter->IsTopLevelWindow()) {
-          nsIDocument* doc = innerWindow->GetExtantDoc();
+          Document* doc = innerWindow->GetExtantDoc();
           if (!doc || (!doc->StorageAccessSandboxed() &&
                        !nsContentUtils::IsInPrivateBrowsing(doc))) {
             mTopLevelStorageAreaPrincipal = innerWindow->GetPrincipal();
@@ -678,10 +678,9 @@ nsIPrincipal* LoadInfo::GetTopLevelStorageAreaPrincipal() {
 }
 
 NS_IMETHODIMP
-LoadInfo::GetLoadingDocument(nsIDocument** aResult) {
-  nsCOMPtr<nsINode> node = do_QueryReferent(mLoadingContext);
-  if (node) {
-    nsCOMPtr<nsIDocument> context = node->OwnerDoc();
+LoadInfo::GetLoadingDocument(Document** aResult) {
+  if (nsCOMPtr<nsINode> node = do_QueryReferent(mLoadingContext)) {
+    RefPtr<Document> context = node->OwnerDoc();
     context.forget(aResult);
   }
   return NS_OK;

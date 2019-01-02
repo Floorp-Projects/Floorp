@@ -122,7 +122,7 @@ NS_IMPL_CYCLE_COLLECTION(ScriptLoader, mNonAsyncExternalScriptInsertedRequests,
 NS_IMPL_CYCLE_COLLECTING_ADDREF(ScriptLoader)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(ScriptLoader)
 
-ScriptLoader::ScriptLoader(nsIDocument* aDocument)
+ScriptLoader::ScriptLoader(Document* aDocument)
     : mDocument(aDocument),
       mParserBlockingBlockerCount(0),
       mBlockerCount(0),
@@ -284,7 +284,7 @@ static bool IsScriptEventHandler(ScriptKind kind, nsIContent* aScriptElement) {
   return false;
 }
 
-nsresult ScriptLoader::CheckContentPolicy(nsIDocument* aDocument,
+nsresult ScriptLoader::CheckContentPolicy(Document* aDocument,
                                           nsISupports* aContext, nsIURI* aURI,
                                           const nsAString& aType,
                                           bool aIsPreLoad) {
@@ -753,7 +753,7 @@ static ScriptLoader* GetCurrentScriptLoader(JSContext* aCx) {
     return nullptr;
   }
 
-  nsIDocument* document = innerWindow->GetDocument();
+  Document* document = innerWindow->GetDocument();
   if (!document) {
     return nullptr;
   }
@@ -884,7 +884,7 @@ bool HostImportModuleDynamically(JSContext* aCx,
     // options from the document. This can happen when the user
     // triggers an inline event handler, as there is no active script
     // there.
-    nsIDocument* document = loader->GetDocument();
+    Document* document = loader->GetDocument();
     options = new ScriptFetchOptions(mozilla::CORS_NONE,
                                      document->GetReferrerPolicy(), nullptr,
                                      document->NodePrincipal());
@@ -1372,7 +1372,7 @@ bool ScriptLoader::PreloadURIComparator::Equals(const PreloadInfo& aPi,
 }
 
 static bool CSPAllowsInlineScript(nsIScriptElement* aElement,
-                                  nsIDocument* aDocument) {
+                                  Document* aDocument) {
   nsCOMPtr<nsIContentSecurityPolicy> csp;
   // Note: For imports NodePrincipal and the principal of the master are
   // the same.
@@ -2138,7 +2138,7 @@ nsresult ScriptLoader::ProcessRequest(ScriptLoadRequest* aRequest) {
 
   nsCOMPtr<nsINode> scriptElem = do_QueryInterface(aRequest->Element());
 
-  nsCOMPtr<nsIDocument> doc;
+  nsCOMPtr<Document> doc;
   if (!aRequest->mIsInline) {
     doc = scriptElem->OwnerDoc();
   }
@@ -2446,8 +2446,8 @@ static nsresult ExecuteCompiledScript(JSContext* aCx,
   JS::Rooted<JSScript*> script(aCx, aExec.GetScript());
 
   // Create a ClassicScript object and associate it with the JSScript.
-  RefPtr<ClassicScript> classicScript = new ClassicScript(
-    aRequest->mFetchOptions, aRequest->mBaseURL);
+  RefPtr<ClassicScript> classicScript =
+      new ClassicScript(aRequest->mFetchOptions, aRequest->mBaseURL);
   classicScript->AssociateWithScript(script);
 
   return aExec.ExecScript();
@@ -2467,7 +2467,7 @@ nsresult ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest) {
   if (!isDynamicImport) {
     nsCOMPtr<nsIContent> scriptContent(do_QueryInterface(aRequest->Element()));
     MOZ_ASSERT(scriptContent);
-    nsIDocument* ownerDoc = scriptContent->OwnerDoc();
+    Document* ownerDoc = scriptContent->OwnerDoc();
     if (ownerDoc != mDocument) {
       // Willful violation of HTML5 as of 2010-12-01
       return NS_ERROR_FAILURE;
@@ -2944,7 +2944,7 @@ bool ScriptLoader::ReadyToExecuteParserBlockingScripts() {
     return false;
   }
 
-  for (nsIDocument* doc = mDocument; doc; doc = doc->GetParentDocument()) {
+  for (Document* doc = mDocument; doc; doc = doc->GetParentDocument()) {
     ScriptLoader* ancestor = doc->ScriptLoader();
     if (!ancestor->SelfReadyToExecuteParserBlockingScripts() &&
         ancestor->AddPendingChildLoader(this)) {
@@ -2958,7 +2958,7 @@ bool ScriptLoader::ReadyToExecuteParserBlockingScripts() {
 
 /* static */ nsresult ScriptLoader::ConvertToUTF16(
     nsIChannel* aChannel, const uint8_t* aData, uint32_t aLength,
-    const nsAString& aHintCharset, nsIDocument* aDocument, char16_t*& aBufOut,
+    const nsAString& aHintCharset, Document* aDocument, char16_t*& aBufOut,
     size_t& aLengthOut) {
   if (!aLength) {
     aBufOut = nullptr;
@@ -3570,8 +3570,7 @@ void ScriptLoader::AddDeferRequest(ScriptLoadRequest* aRequest) {
   mDeferRequests.AppendElement(aRequest);
   if (mDeferEnabled && aRequest == mDeferRequests.getFirst() && mDocument &&
       !mBlockingDOMContentLoaded) {
-    MOZ_ASSERT(mDocument->GetReadyStateEnum() ==
-               nsIDocument::READYSTATE_LOADING);
+    MOZ_ASSERT(mDocument->GetReadyStateEnum() == Document::READYSTATE_LOADING);
     mBlockingDOMContentLoaded = true;
     mDocument->BlockDOMContentLoaded();
   }

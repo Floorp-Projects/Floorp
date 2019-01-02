@@ -93,7 +93,7 @@ class nsFormFillController final : public nsIFormFillController,
 
   void MaybeRemoveMutationObserver(nsINode* aNode);
 
-  void RemoveForDocument(nsIDocument* aDoc);
+  void RemoveForDocument(mozilla::dom::Document* aDoc);
 
   bool IsTextControl(nsINode* aNode);
 

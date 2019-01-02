@@ -10,7 +10,7 @@
 #include "mozilla/dom/Element.h"
 #include "nsIAccessibleEvent.h"
 #include "nsIContent.h"
-#include "nsIDocument.h"  // for GetShell()
+#include "mozilla/dom/Document.h"  // for GetShell()
 #include "nsIPresShell.h"
 
 #include "nsPoint.h"
@@ -29,6 +29,8 @@ class nsIWidget;
  */
 class nsCoreUtils {
  public:
+  typedef mozilla::dom::Document Document;
+
   /**
    * Return true if the given node is a label of a control.
    */
@@ -185,22 +187,22 @@ class nsCoreUtils {
   /**
    * Return true if the given document is root document.
    */
-  static bool IsRootDocument(nsIDocument *aDocument);
+  static bool IsRootDocument(Document *aDocument);
 
   /**
    * Return true if the given document is content document (not chrome).
    */
-  static bool IsContentDocument(nsIDocument *aDocument);
+  static bool IsContentDocument(Document *aDocument);
 
   /**
    * Return true if the given document node is for tab document accessible.
    */
-  static bool IsTabDocument(nsIDocument *aDocumentNode);
+  static bool IsTabDocument(Document *aDocumentNode);
 
   /**
    * Return true if the given document is an error page.
    */
-  static bool IsErrorPage(nsIDocument *aDocument);
+  static bool IsErrorPage(Document *aDocument);
 
   /**
    * Return presShell for the document containing the given DOM node.

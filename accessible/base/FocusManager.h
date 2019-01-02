@@ -8,10 +8,13 @@
 #include "mozilla/RefPtr.h"
 
 class nsINode;
-class nsIDocument;
 class nsISupports;
 
 namespace mozilla {
+namespace dom {
+class Document;
+}
+
 namespace a11y {
 
 class AccEvent;
@@ -117,7 +120,7 @@ class FocusManager {
   /**
    * Return DOM document having DOM focus.
    */
-  nsIDocument* FocusedDOMDocument() const;
+  dom::Document* FocusedDOMDocument() const;
 
  private:
   RefPtr<Accessible> mActiveItem;

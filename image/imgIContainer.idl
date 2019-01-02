@@ -6,6 +6,8 @@
 
 #include "nsISupports.idl"
 
+webidl Document;
+
 %{C++
 #include "ImgDrawResult.h"
 #include "gfxContext.h"
@@ -17,8 +19,6 @@
 #include "nsRect.h"
 #include "nsSize.h"
 #include "limits.h"
-
-class nsIDocument;
 
 namespace mozilla {
 namespace layers {
@@ -66,7 +66,6 @@ native Orientation(mozilla::image::Orientation);
 native TempRefSourceSurface(already_AddRefed<mozilla::gfx::SourceSurface>);
 native TempRefImgIContainer(already_AddRefed<imgIContainer>);
 native nsIntSizeByVal(nsIntSize);
-[ptr] native nsIDocument(nsIDocument);
 
 
 /**
@@ -592,7 +591,7 @@ interface imgIContainer : nsISupports
    * Propagate the use counters (if any) from this container to the passed in
    * document.
    */
-  [noscript, notxpcom] void propagateUseCounters(in nsIDocument aDocument);
+  [noscript, notxpcom] void propagateUseCounters(in Document aDocument);
 
   %{C++
   /*

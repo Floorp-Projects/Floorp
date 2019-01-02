@@ -9,7 +9,7 @@
 
 #include "nsCycleCollectionParticipant.h"
 #include "nsIContent.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIFocusManager.h"
 #include "nsIObserver.h"
 #include "nsIWidget.h"
@@ -44,6 +44,7 @@ class nsFocusManager final : public nsIFocusManager,
                              public nsIObserver,
                              public nsSupportsWeakReference {
   typedef mozilla::widget::InputContextAction InputContextAction;
+  typedef mozilla::dom::Document Document;
 
  public:
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsFocusManager, nsIFocusManager)
@@ -92,14 +93,14 @@ class nsFocusManager final : public nsIFocusManager,
   /**
    * Called when content has been removed.
    */
-  nsresult ContentRemoved(nsIDocument* aDocument, nsIContent* aContent);
+  nsresult ContentRemoved(Document* aDocument, nsIContent* aContent);
 
   /**
    * Called when mouse button event handling is started and finished.
    */
-  already_AddRefed<nsIDocument> SetMouseButtonHandlingDocument(
-      nsIDocument* aDocument) {
-    nsCOMPtr<nsIDocument> handlingDocument = mMouseButtonEventHandlingDocument;
+  already_AddRefed<Document> SetMouseButtonHandlingDocument(
+      Document* aDocument) {
+    RefPtr<Document> handlingDocument = mMouseButtonEventHandlingDocument;
     mMouseButtonEventHandlingDocument = aDocument;
     return handlingDocument.forget();
   }
@@ -114,7 +115,7 @@ class nsFocusManager final : public nsIFocusManager,
 
   void FlushBeforeEventHandlingIfNeeded(nsIContent* aContent) {
     if (mEventHandlingNeedsFlush) {
-      nsCOMPtr<nsIDocument> doc = aContent->GetComposedDoc();
+      nsCOMPtr<Document> doc = aContent->GetComposedDoc();
       if (doc) {
         mEventHandlingNeedsFlush = false;
         doc->FlushPendingNotifications(mozilla::FlushType::Layout);
@@ -319,7 +320,7 @@ class nsFocusManager final : public nsIFocusManager,
    */
   void SendFocusOrBlurEvent(
       mozilla::EventMessage aEventMessage, nsIPresShell* aPresShell,
-      nsIDocument* aDocument, nsISupports* aTarget, uint32_t aFocusMethod,
+      Document* aDocument, nsISupports* aTarget, uint32_t aFocusMethod,
       bool aWindowRaised, bool aIsRefocus = false,
       mozilla::dom::EventTarget* aRelatedTarget = nullptr);
 
@@ -398,8 +399,7 @@ class nsFocusManager final : public nsIFocusManager,
    * Retrieves the start and end points of the current selection for
    * aDocument and stores them in aStartContent and aEndContent.
    */
-  nsresult GetSelectionLocation(nsIDocument* aDocument,
-                                nsIPresShell* aPresShell,
+  nsresult GetSelectionLocation(Document* aDocument, nsIPresShell* aPresShell,
                                 nsIContent** aStartContent,
                                 nsIContent** aEndContent);
 
@@ -582,7 +582,7 @@ class nsFocusManager final : public nsIFocusManager,
    * - if aDocument is a frameset document.
    */
   mozilla::dom::Element* GetRootForFocus(nsPIDOMWindowOuter* aWindow,
-                                         nsIDocument* aDocument,
+                                         Document* aDocument,
                                          bool aForDocumentNavigation,
                                          bool aCheckVisibility);
 
@@ -664,7 +664,7 @@ class nsFocusManager final : public nsIFocusManager,
   // elements even if focus is in chrome content.  So, if this isn't nullptr
   // and the caller can access the document node, the caller should succeed in
   // moving focus.
-  nsCOMPtr<nsIDocument> mMouseButtonEventHandlingDocument;
+  RefPtr<Document> mMouseButtonEventHandlingDocument;
 
   // If set to true, layout of the document of the event target should be
   // flushed before handling focus depending events.

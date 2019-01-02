@@ -240,7 +240,7 @@ class nsGenericHTMLElement : public nsGenericHTMLElementBase {
 
  public:
   // Implementation for nsIContent
-  virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+  virtual nsresult BindToTree(Document* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent) override;
   virtual void UnbindFromTree(bool aDeep = true,
                               bool aNullParent = true) override;
@@ -577,7 +577,7 @@ class nsGenericHTMLElement : public nsGenericHTMLElementBase {
    * See if the document being tested has nav-quirks mode enabled.
    * @param doc the document
    */
-  static bool InNavQuirksMode(nsIDocument* aDoc);
+  static bool InNavQuirksMode(Document*);
 
   /**
    * Gets the absolute URI value of an attribute, by resolving any relative
@@ -932,7 +932,7 @@ class nsGenericHTMLFormElement : public nsGenericHTMLElement,
   virtual bool AllowDrop() override { return true; }
 
   // nsIContent
-  virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+  virtual nsresult BindToTree(Document* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent) override;
   virtual void UnbindFromTree(bool aDeep = true,
                               bool aNullParent = true) override;
@@ -1044,7 +1044,7 @@ class nsGenericHTMLFormElement : public nsGenericHTMLElement,
   void RemoveFormIdObserver();
 
   /**
-   * This method is a a callback for IDTargetObserver (from nsIDocument).
+   * This method is a a callback for IDTargetObserver (from Document).
    * It will be called each time the element associated with the id in @form
    * changes.
    */
@@ -1104,7 +1104,7 @@ class nsGenericHTMLFormElementWithState : public nsGenericHTMLFormElement {
    * Called when we have been cloned and adopted, and the information of the
    * node has been changed.
    */
-  virtual void NodeInfoChanged(nsIDocument* aOldDoc) override;
+  virtual void NodeInfoChanged(Document* aOldDoc) override;
 
  protected:
   /* Generates the state key for saving the form state in the session if not

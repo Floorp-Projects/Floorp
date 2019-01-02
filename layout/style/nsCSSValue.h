@@ -35,7 +35,7 @@
 class imgRequestProxy;
 class nsAtom;
 class nsIContent;
-class nsIDocument;
+
 class nsIPrincipal;
 class nsIURI;
 class nsPresContext;
@@ -149,7 +149,7 @@ struct URLValue final {
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
-  imgRequestProxy* LoadImage(nsIDocument* aDocument);
+  imgRequestProxy* LoadImage(mozilla::dom::Document* aDocument);
 
   uint64_t LoadID() const { return mLoadID; }
 
@@ -506,12 +506,12 @@ class nsCSSValue {
   // Not making this inline because that would force us to include
   // imgIRequest.h, which leads to REQUIRES hell, since this header is included
   // all over.
-  imgRequestProxy* GetImageValue(nsIDocument* aDocument) const;
+  imgRequestProxy* GetImageValue(mozilla::dom::Document* aDocument) const;
 
   // Like GetImageValue, but additionally will pass the imgRequestProxy
   // through nsContentUtils::GetStaticRequest if aPresContent is static.
   already_AddRefed<imgRequestProxy> GetPossiblyStaticImageValue(
-      nsIDocument* aDocument, nsPresContext* aPresContext) const;
+      mozilla::dom::Document* aDocument, nsPresContext* aPresContext) const;
 
   nscoord GetPixelLength() const;
 

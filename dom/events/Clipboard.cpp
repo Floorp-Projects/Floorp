@@ -125,7 +125,7 @@ already_AddRefed<Promise> Clipboard::Write(JSContext* aCx, DataTransfer& aData,
   }
 
   nsPIDOMWindowInner* owner = GetOwner();
-  nsIDocument* doc = owner ? owner->GetDoc() : nullptr;
+  Document* doc = owner ? owner->GetDoc() : nullptr;
   nsILoadContext* context = doc ? doc->GetLoadContext() : nullptr;
   if (!context) {
     p->MaybeRejectWithUndefined();

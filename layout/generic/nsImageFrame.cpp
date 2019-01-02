@@ -35,7 +35,7 @@
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsGkAtoms.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsContentUtils.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsStyleConsts.h"
@@ -2464,7 +2464,7 @@ void nsImageFrame::GetLoadGroup(nsPresContext* aPresContext,
 
   if (!shell) return;
 
-  nsIDocument* doc = shell->GetDocument();
+  Document* doc = shell->GetDocument();
   if (!doc) return;
 
   *aLoadGroup = doc->GetDocumentLoadGroup().take();

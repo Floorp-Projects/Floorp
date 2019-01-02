@@ -76,7 +76,7 @@ xpcAccessibleDocument::GetDocType(nsAString& aType) {
 }
 
 NS_IMETHODIMP
-xpcAccessibleDocument::GetDOMDocument(nsIDocument** aDOMDocument) {
+xpcAccessibleDocument::GetDOMDocument(dom::Document** aDOMDocument) {
   NS_ENSURE_ARG_POINTER(aDOMDocument);
   *aDOMDocument = nullptr;
 

@@ -24,7 +24,6 @@
 
 class nsFrameLoader;
 class nsIContent;
-class nsIDocument;
 class nsIDocShell;
 class nsIDocShellTreeItem;
 class imgIContainer;
@@ -43,6 +42,7 @@ class WheelTransaction;
 
 namespace dom {
 class DataTransfer;
+class Document;
 class Element;
 class Selection;
 class TabParent;
@@ -144,7 +144,7 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
   bool SetContentState(nsIContent* aContent, EventStates aState);
 
   void NativeAnonymousContentRemoved(nsIContent* aAnonContent);
-  void ContentRemoved(nsIDocument* aDocument, nsIContent* aContent);
+  void ContentRemoved(dom::Document* aDocument, nsIContent* aContent);
 
   bool EventStatusOK(WidgetGUIEvent* aEvent);
 
@@ -279,7 +279,7 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
 
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(EventStateManager, nsIObserver)
 
-  static nsIDocument* sMouseOverDocument;
+  static dom::Document* sMouseOverDocument;
 
   static EventStateManager* GetActiveEventStateManager() { return sActiveESM; }
 
@@ -1217,7 +1217,7 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
   nsCOMPtr<nsIContent> mURLTargetContent;
 
   nsPresContext* mPresContext;      // Not refcnted
-  nsCOMPtr<nsIDocument> mDocument;  // Doesn't necessarily need to be owner
+  RefPtr<dom::Document> mDocument;  // Doesn't necessarily need to be owner
 
   RefPtr<IMEContentObserver> mIMEContentObserver;
 
@@ -1284,11 +1284,12 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
 class AutoHandlingUserInputStatePusher {
  public:
   AutoHandlingUserInputStatePusher(bool aIsHandlingUserInput,
-                                   WidgetEvent* aEvent, nsIDocument* aDocument);
+                                   WidgetEvent* aEvent,
+                                   dom::Document* aDocument);
   ~AutoHandlingUserInputStatePusher();
 
  protected:
-  nsCOMPtr<nsIDocument> mMouseButtonEventHandlingDocument;
+  RefPtr<dom::Document> mMouseButtonEventHandlingDocument;
   EventMessage mMessage;
   bool mIsHandlingUserInput;
 

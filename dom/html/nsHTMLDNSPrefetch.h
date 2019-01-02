@@ -15,10 +15,10 @@
 #include "nsWeakReference.h"
 #include "nsIObserver.h"
 
-class nsIDocument;
 class nsITimer;
 namespace mozilla {
 namespace dom {
+class Document;
 class Link;
 }  // namespace dom
 }  // namespace mozilla
@@ -34,7 +34,7 @@ class nsHTMLDNSPrefetch {
   // The required aDocument parameter is the context requesting the prefetch -
   // under certain circumstances (e.g. headers, or security context) associated
   // with the context the prefetch will not be performed.
-  static bool IsAllowed(nsIDocument *aDocument);
+  static bool IsAllowed(mozilla::dom::Document *aDocument);
 
   static nsresult Initialize();
   static nsresult Shutdown();

@@ -47,7 +47,7 @@ class HTMLLinkElement final : public nsGenericHTMLElement,
                              JS::Handle<JSObject*> aGivenProto) override;
 
   // nsIContent
-  virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+  virtual nsresult BindToTree(Document* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent) override;
   virtual void UnbindFromTree(bool aDeep = true,
                               bool aNullParent = true) override;
@@ -70,7 +70,7 @@ class HTMLLinkElement final : public nsGenericHTMLElement,
   virtual void GetLinkTarget(nsAString& aTarget) override;
   virtual EventStates IntrinsicState() const override;
 
-  void CreateAndDispatchEvent(nsIDocument* aDoc, const nsAString& aEventName);
+  void CreateAndDispatchEvent(Document* aDoc, const nsAString& aEventName);
 
   virtual void OnDNSPrefetchDeferred() override;
   virtual void OnDNSPrefetchRequested() override;
@@ -155,14 +155,13 @@ class HTMLLinkElement final : public nsGenericHTMLElement,
     return AttrValueToCORSMode(GetParsedAttr(nsGkAtoms::crossorigin));
   }
 
-  void NodeInfoChanged(nsIDocument* aOldDoc) final {
+  void NodeInfoChanged(Document* aOldDoc) final {
     ClearHasPendingLinkUpdate();
     nsGenericHTMLElement::NodeInfoChanged(aOldDoc);
   }
 
   static bool CheckPreloadAttrs(const nsAttrValue& aAs, const nsAString& aType,
-                                const nsAString& aMedia,
-                                nsIDocument* aDocument);
+                                const nsAString& aMedia, Document* aDocument);
 
  protected:
   virtual ~HTMLLinkElement();

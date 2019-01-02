@@ -27,6 +27,7 @@ namespace dom {
 
 class AudioNode;
 class Blob;
+class Document;
 class DOMException;
 
 /**
@@ -166,7 +167,7 @@ class MediaRecorder final : public DOMEventTargetHelper,
   // session is running.
   nsTArray<RefPtr<Session>> mSessions;
 
-  nsCOMPtr<nsIDocument> mDocument;
+  RefPtr<Document> mDocument;
 
   // It specifies the container format as well as the audio and video capture
   // formats.

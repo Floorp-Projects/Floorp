@@ -18,7 +18,7 @@
 #include "gfx2DGlue.h"
 
 class nsIContent;
-class nsIDocument;
+
 class nsIFrame;
 class nsPresContext;
 class nsStyleCoord;
@@ -30,6 +30,7 @@ class SVGAnimatedPreserveAspectRatio;
 class SVGContextPaint;
 class SVGPreserveAspectRatio;
 namespace dom {
+class Document;
 class Element;
 class SVGElement;
 class SVGSVGElement;
@@ -190,7 +191,8 @@ class SVGContentUtils {
   /*
    * Report a localized error message to the error console.
    */
-  static nsresult ReportToConsole(nsIDocument* doc, const char* aWarning,
+  static nsresult ReportToConsole(dom::Document* doc,
+                                  const char* aWarning,
                                   const char16_t** aParams,
                                   uint32_t aParamsLength);
 

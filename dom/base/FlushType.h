@@ -13,7 +13,7 @@
 namespace mozilla {
 
 /**
- * This is the enum used by nsIDocument::FlushPendingNotifications to
+ * This is the enum used by Document::FlushPendingNotifications to
  * decide what to flush.
  *
  * Please note that if you change these values, you should sync it with the

@@ -97,7 +97,7 @@
 #include "nsIContentPolicy.h"
 #include "nsIContentSecurityPolicy.h"
 #include "nsIDocShell.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIFrame.h"
 #include "nsIObserverService.h"
 #include "nsIPermissionManager.h"
@@ -644,7 +644,7 @@ HTMLMediaElement::MediaLoadListener::OnStartRequest(nsIRequest* aRequest,
       // We make a note of this media node by including it in a dedicated
       // array of blocked tracking nodes under its parent document.
       if (status == NS_ERROR_TRACKING_URI) {
-        nsIDocument* ownerDoc = element->OwnerDoc();
+        Document* ownerDoc = element->OwnerDoc();
         if (ownerDoc) {
           ownerDoc->AddBlockedTrackingNode(element);
         }
@@ -1924,7 +1924,7 @@ static bool HasSourceChildren(nsIContent* aElement) {
   return false;
 }
 
-static nsCString DocumentOrigin(nsIDocument* aDoc) {
+static nsCString DocumentOrigin(Document* aDoc) {
   if (!aDoc) {
     return NS_LITERAL_CSTRING("null");
   }
@@ -4040,8 +4040,7 @@ void HTMLMediaElement::AfterMaybeChangeAttr(int32_t aNamespaceID, nsAtom* aName,
   }
 }
 
-nsresult HTMLMediaElement::BindToTree(nsIDocument* aDocument,
-                                      nsIContent* aParent,
+nsresult HTMLMediaElement::BindToTree(Document* aDocument, nsIContent* aParent,
                                       nsIContent* aBindingParent) {
   nsresult rv =
       nsGenericHTMLElement::BindToTree(aDocument, aParent, aBindingParent);
@@ -5625,12 +5624,12 @@ void HTMLMediaElement::CheckAutoplayDataReady() {
 }
 
 bool HTMLMediaElement::IsActive() const {
-  nsIDocument* ownerDoc = OwnerDoc();
+  Document* ownerDoc = OwnerDoc();
   return ownerDoc && ownerDoc->IsActive() && ownerDoc->IsVisible();
 }
 
 bool HTMLMediaElement::IsHidden() const {
-  nsIDocument* ownerDoc;
+  Document* ownerDoc;
   return mUnboundFromTree || !(ownerDoc = OwnerDoc()) || ownerDoc->Hidden();
 }
 
@@ -5928,7 +5927,7 @@ void HTMLMediaElement::SuspendOrResumeElement(bool aPauseElement,
 }
 
 bool HTMLMediaElement::IsBeingDestroyed() {
-  nsIDocument* ownerDoc = OwnerDoc();
+  Document* ownerDoc = OwnerDoc();
   nsIDocShell* docShell = ownerDoc ? ownerDoc->GetDocShell() : nullptr;
   bool isBeingDestroyed = false;
   if (docShell) {
@@ -5973,7 +5972,7 @@ void HTMLMediaElement::AddRemoveSelfReference() {
   // potential listener for every event. We would also have to keep the
   // element alive if it was playing and producing audio output --- right now
   // that's covered by the !mPaused check.
-  nsIDocument* ownerDoc = OwnerDoc();
+  Document* ownerDoc = OwnerDoc();
 
   // See the comment at the top of this file for the explanation of this
   // boolean expression.
@@ -6600,7 +6599,7 @@ already_AddRefed<nsIPrincipal> HTMLMediaElement::GetTopLevelPrincipal() {
   if (!top) {
     return nullptr;
   }
-  nsIDocument* doc = top->GetExtantDoc();
+  Document* doc = top->GetExtantDoc();
   if (!doc) {
     return nullptr;
   }
@@ -7085,7 +7084,7 @@ void HTMLMediaElement::NotifyDecoderActivityChanges() const {
   }
 }
 
-nsIDocument* HTMLMediaElement::GetDocument() const { return OwnerDoc(); }
+Document* HTMLMediaElement::GetDocument() const { return OwnerDoc(); }
 
 void HTMLMediaElement::ConstructMediaTracks(const MediaInfo* aInfo) {
   if (mMediaTracksConstructed || !aInfo) {

@@ -269,7 +269,7 @@ nsresult HTMLMenuItemElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
   return NS_OK;
 }
 
-nsresult HTMLMenuItemElement::BindToTree(nsIDocument* aDocument,
+nsresult HTMLMenuItemElement::BindToTree(Document* aDocument,
                                          nsIContent* aParent,
                                          nsIContent* aBindingParent) {
   nsresult rv =

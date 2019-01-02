@@ -27,7 +27,7 @@
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
 #include "nsIContent.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIForm.h"
 #include "nsIFormControl.h"
 #include "nsINode.h"
@@ -919,7 +919,7 @@ void IMEStateManager::UpdateIMEState(const IMEState& aNewIMEState,
   nsCOMPtr<nsIPresShell> presShell;
   if (!aEditorBase) {
     MOZ_ASSERT(aContent, "we must have content");
-    nsIDocument* doc = aContent->OwnerDoc();
+    Document* doc = aContent->OwnerDoc();
     presShell = doc->GetShell();
   } else {
     presShell = aEditorBase->GetPresShell();
@@ -1083,7 +1083,7 @@ IMEState IMEStateManager::GetNewIMEState(nsPresContext* aPresContext,
   if (!aContent) {
     // Even if there are no focused content, the focused document might be
     // editable, such case is design mode.
-    nsIDocument* doc = aPresContext->Document();
+    Document* doc = aPresContext->Document();
     if (doc && doc->HasFlag(NODE_IS_EDITABLE)) {
       MOZ_LOG(sISMLog, LogLevel::Debug,
               ("  GetNewIMEState() returns ENABLED because "
@@ -1472,7 +1472,7 @@ IMEContentObserver* IMEStateManager::GetActiveContentObserver() {
 
 // static
 nsIContent* IMEStateManager::GetRootContent(nsPresContext* aPresContext) {
-  nsIDocument* doc = aPresContext->Document();
+  Document* doc = aPresContext->Document();
   if (NS_WARN_IF(!doc)) {
     return nullptr;
   }
@@ -1784,7 +1784,7 @@ nsINode* IMEStateManager::GetRootEditableNode(nsPresContext* aPresContext,
     return root;
   }
   if (aPresContext) {
-    nsIDocument* document = aPresContext->Document();
+    Document* document = aPresContext->Document();
     if (document && document->IsEditable()) {
       return document;
     }

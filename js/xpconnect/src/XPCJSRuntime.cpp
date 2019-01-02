@@ -25,7 +25,7 @@
 #include "nsIObserverService.h"
 #include "nsIDebug2.h"
 #include "nsIDocShell.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIRunnable.h"
 #include "nsIPlatformInfo.h"
 #include "nsPIDOMWindow.h"
@@ -2180,7 +2180,7 @@ class OrphanReporter : public JS::ObjectPrivateVisitor {
     }
 
     nsWindowSizes sizes(mState);
-    nsIDocument::AddSizeOfNodeTree(*orphanTree, sizes);
+    mozilla::dom::Document::AddSizeOfNodeTree(*orphanTree, sizes);
 
     // We combine the node size with nsStyleSizes here. It's not ideal, but it's
     // hard to get the style structs measurements out to nsWindowMemoryReporter.

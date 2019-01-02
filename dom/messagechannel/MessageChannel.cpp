@@ -11,7 +11,7 @@
 #include "mozilla/dom/Navigator.h"
 #include "mozilla/dom/WorkerRunnable.h"
 #include "nsContentUtils.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIGlobalObject.h"
 #include "nsIPrincipal.h"
 #include "nsServiceManagerUtils.h"

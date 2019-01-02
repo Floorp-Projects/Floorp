@@ -22,7 +22,7 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIPermissionManager.h"
 #include "nsIDocShell.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIIDNService.h"
@@ -2268,7 +2268,7 @@ static bool IsFullyActive(nsPIDOMWindowInner* aWindow) {
     if (!aWindow) {
       return false;
     }
-    nsIDocument* document = aWindow->GetExtantDoc();
+    dom::Document* document = aWindow->GetExtantDoc();
     if (!document) {
       return false;
     }
@@ -2420,7 +2420,7 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
         __func__);
   }
 
-  nsIDocument* doc = aWindow->GetExtantDoc();
+  dom::Document* doc = aWindow->GetExtantDoc();
   if (NS_WARN_IF(!doc)) {
     return StreamPromise::CreateAndReject(
         MakeRefPtr<MediaMgrError>(MediaMgrError::Name::SecurityError),
@@ -4010,7 +4010,7 @@ bool MediaManager::IsActivelyCapturingOrHasAPermission(uint64_t aWindowId) {
     return false;
   }
 
-  nsIDocument* doc = window->GetExtantDoc();
+  dom::Document* doc = window->GetExtantDoc();
   if (NS_WARN_IF(!doc)) {
     return false;
   }

@@ -55,12 +55,12 @@
  * HTTP header support.
  **/
 
-class nsIDocument;
 class nsIHttpChannel;
 class nsINode;
 
 namespace mozilla {
 namespace dom {
+class Document;
 
 class FeaturePolicyUtils;
 
@@ -87,7 +87,8 @@ class FeaturePolicy final : public nsISupports, public nsWrapperCache {
 
   // Sets the declarative part of the policy. This can be from the HTTP header
   // or for the 'allow' HTML attribute.
-  void SetDeclaredPolicy(nsIDocument* aDocument, const nsAString& aPolicyString,
+  void SetDeclaredPolicy(mozilla::dom::Document* aDocument,
+                         const nsAString& aPolicyString,
                          nsIPrincipal* aSelfOrigin, nsIPrincipal* aSrcOrigin);
 
   // This method creates a policy for aFeatureName allowing it to '*' if it

@@ -82,11 +82,11 @@ static void EnableLogging(const char* aModulesStr) {
   }
 }
 
-static void LogDocURI(nsIDocument* aDocumentNode) {
+static void LogDocURI(dom::Document* aDocumentNode) {
   printf("uri: %s", aDocumentNode->GetDocumentURI()->GetSpecOrDefault().get());
 }
 
-static void LogDocShellState(nsIDocument* aDocumentNode) {
+static void LogDocShellState(dom::Document* aDocumentNode) {
   printf("docshell busy: ");
 
   nsAutoCString docShellBusy;
@@ -107,7 +107,7 @@ static void LogDocShellState(nsIDocument* aDocumentNode) {
   }
 }
 
-static void LogDocType(nsIDocument* aDocumentNode) {
+static void LogDocType(dom::Document* aDocumentNode) {
   if (aDocumentNode->IsActive()) {
     bool isContent = nsCoreUtils::IsContentDocument(aDocumentNode);
     printf("%s document", (isContent ? "content" : "chrome"));
@@ -116,7 +116,7 @@ static void LogDocType(nsIDocument* aDocumentNode) {
   }
 }
 
-static void LogDocShellTree(nsIDocument* aDocumentNode) {
+static void LogDocShellTree(dom::Document* aDocumentNode) {
   if (aDocumentNode->IsActive()) {
     nsCOMPtr<nsIDocShellTreeItem> treeItem(aDocumentNode->GetDocShell());
     nsCOMPtr<nsIDocShellTreeItem> parentTreeItem;
@@ -129,20 +129,20 @@ static void LogDocShellTree(nsIDocument* aDocumentNode) {
   }
 }
 
-static void LogDocState(nsIDocument* aDocumentNode) {
+static void LogDocState(dom::Document* aDocumentNode) {
   const char* docState = nullptr;
-  nsIDocument::ReadyState docStateFlag = aDocumentNode->GetReadyStateEnum();
+  dom::Document::ReadyState docStateFlag = aDocumentNode->GetReadyStateEnum();
   switch (docStateFlag) {
-    case nsIDocument::READYSTATE_UNINITIALIZED:
+    case dom::Document::READYSTATE_UNINITIALIZED:
       docState = "uninitialized";
       break;
-    case nsIDocument::READYSTATE_LOADING:
+    case dom::Document::READYSTATE_LOADING:
       docState = "loading";
       break;
-    case nsIDocument::READYSTATE_INTERACTIVE:
+    case dom::Document::READYSTATE_INTERACTIVE:
       docState = "interactive";
       break;
-    case nsIDocument::READYSTATE_COMPLETE:
+    case dom::Document::READYSTATE_COMPLETE:
       docState = "complete";
       break;
   }
@@ -163,7 +163,7 @@ static void LogDocState(nsIDocument* aDocumentNode) {
   printf(", has %srole content", rootEl ? "" : "no ");
 }
 
-static void LogPresShell(nsIDocument* aDocumentNode) {
+static void LogPresShell(dom::Document* aDocumentNode) {
   nsIPresShell* ps = aDocumentNode->GetShell();
   printf("presshell: %p", static_cast<void*>(ps));
 
@@ -175,13 +175,13 @@ static void LogPresShell(nsIDocument* aDocumentNode) {
   printf(", root scroll frame: %p", static_cast<void*>(sf));
 }
 
-static void LogDocLoadGroup(nsIDocument* aDocumentNode) {
+static void LogDocLoadGroup(dom::Document* aDocumentNode) {
   nsCOMPtr<nsILoadGroup> loadGroup = aDocumentNode->GetDocumentLoadGroup();
   printf("load group: %p", static_cast<void*>(loadGroup));
 }
 
-static void LogDocParent(nsIDocument* aDocumentNode) {
-  nsIDocument* parentDoc = aDocumentNode->GetParentDocument();
+static void LogDocParent(dom::Document* aDocumentNode) {
+  dom::Document* parentDoc = aDocumentNode->GetParentDocument();
   printf("parent DOM document: %p", static_cast<void*>(parentDoc));
   if (parentDoc) {
     printf(", parent acc document: %p",
@@ -192,7 +192,7 @@ static void LogDocParent(nsIDocument* aDocumentNode) {
   }
 }
 
-static void LogDocInfo(nsIDocument* aDocumentNode, DocAccessible* aDocument) {
+static void LogDocInfo(dom::Document* aDocumentNode, DocAccessible* aDocument) {
   printf("    DOM document: %p, acc document: %p\n    ",
          static_cast<void*>(aDocumentNode), static_cast<void*>(aDocument));
 
@@ -370,7 +370,7 @@ void logging::DocLoad(const char* aMsg, nsIWebProgress* aWebProgress,
     return;
   }
 
-  nsCOMPtr<nsIDocument> documentNode = window->GetDoc();
+  nsCOMPtr<dom::Document> documentNode = window->GetDoc();
   if (!documentNode) {
     MsgEnd();
     return;
@@ -394,7 +394,7 @@ void logging::DocLoad(const char* aMsg, nsIWebProgress* aWebProgress,
   MsgEnd();
 }
 
-void logging::DocLoad(const char* aMsg, nsIDocument* aDocumentNode) {
+void logging::DocLoad(const char* aMsg, dom::Document* aDocumentNode) {
   MsgBegin(sDocLoadTitle, "%s", aMsg);
 
   DocAccessible* document = GetExistingDocAccessible(aDocumentNode);
@@ -444,7 +444,7 @@ void logging::DocLoadEventHandled(AccEvent* aEvent) {
   MsgEnd();
 }
 
-void logging::DocCreate(const char* aMsg, nsIDocument* aDocumentNode,
+void logging::DocCreate(const char* aMsg, dom::Document* aDocumentNode,
                         DocAccessible* aDocument) {
   DocAccessible* document =
       aDocument ? aDocument : GetExistingDocAccessible(aDocumentNode);
@@ -454,7 +454,7 @@ void logging::DocCreate(const char* aMsg, nsIDocument* aDocumentNode,
   MsgEnd();
 }
 
-void logging::DocDestroy(const char* aMsg, nsIDocument* aDocumentNode,
+void logging::DocDestroy(const char* aMsg, dom::Document* aDocumentNode,
                          DocAccessible* aDocument) {
   DocAccessible* document =
       aDocument ? aDocument : GetExistingDocAccessible(aDocumentNode);
@@ -713,7 +713,7 @@ void logging::Address(const char* aDescr, Accessible* aAcc) {
   }
 
   DocAccessible* doc = aAcc->Document();
-  nsIDocument* docNode = doc->DocumentNode();
+  dom::Document* docNode = doc->DocumentNode();
   printf("    document: %p, node: %p\n", static_cast<void*>(doc),
          static_cast<void*>(docNode));
 

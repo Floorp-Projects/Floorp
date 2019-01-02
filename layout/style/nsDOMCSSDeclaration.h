@@ -20,7 +20,6 @@
 #include "nsCompatibility.h"
 
 class nsIPrincipal;
-class nsIDocument;
 struct JSContext;
 class JSObject;
 
@@ -32,6 +31,7 @@ class Loader;
 class Rule;
 }  // namespace css
 namespace dom {
+class Document;
 class Element;
 }
 
@@ -174,7 +174,7 @@ class nsDOMCSSDeclaration : public nsICSSDeclaration {
   // Document that we must call BeginUpdate/EndUpdate on around the
   // calls to SetCSSDeclaration and the style rule mutation that leads
   // to it.
-  virtual nsIDocument* DocToUpdate() = 0;
+  virtual mozilla::dom::Document* DocToUpdate() = 0;
 
   // mUrlExtraData returns URL data for parsing url values in
   // CSS. Returns nullptr on failure. If mUrlExtraData is nullptr,

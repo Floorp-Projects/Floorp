@@ -12,7 +12,7 @@
 
 #include "nsContentList.h"
 #include "nsIContent.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
 #include "nsWrapperCacheInlines.h"
 #include "nsContentUtils.h"
@@ -363,7 +363,7 @@ nsContentList::nsContentList(nsINode* aRootNode, int32_t aMatchNameSpaceId,
   // document at all right now (in the GetUncomposedDoc() sense), we're
   // not parser-created and don't need to be flushing stuff under us
   // to get our kids right.
-  nsIDocument* doc = mRootNode->GetUncomposedDoc();
+  Document* doc = mRootNode->GetUncomposedDoc();
   mFlushesNeeded = doc && !doc->IsHTMLDocument();
 }
 
@@ -396,7 +396,7 @@ nsContentList::nsContentList(nsINode* aRootNode, nsContentListMatchFunc aFunc,
   // document at all right now (in the GetUncomposedDoc() sense), we're
   // not parser-created and don't need to be flushing stuff under us
   // to get our kids right.
-  nsIDocument* doc = mRootNode->GetUncomposedDoc();
+  Document* doc = mRootNode->GetUncomposedDoc();
   mFlushesNeeded = doc && !doc->IsHTMLDocument();
 }
 
@@ -429,7 +429,7 @@ uint32_t nsContentList::Length(bool aDoFlush) {
 nsIContent* nsContentList::Item(uint32_t aIndex, bool aDoFlush) {
   if (mRootNode && aDoFlush && mFlushesNeeded) {
     // XXX sXBL/XBL2 issue
-    nsIDocument* doc = mRootNode->GetUncomposedDoc();
+    Document* doc = mRootNode->GetUncomposedDoc();
     if (doc) {
       // Flush pending content changes Bug 4891.
       doc->FlushPendingNotifications(FlushType::ContentAndNotify);
@@ -840,7 +840,7 @@ void nsContentList::RemoveFromHashtable() {
 void nsContentList::BringSelfUpToDate(bool aDoFlush) {
   if (mRootNode && aDoFlush && mFlushesNeeded) {
     // XXX sXBL/XBL2 issue
-    nsIDocument* doc = mRootNode->GetUncomposedDoc();
+    Document* doc = mRootNode->GetUncomposedDoc();
     if (doc) {
       // Flush pending content changes Bug 4891.
       doc->FlushPendingNotifications(FlushType::ContentAndNotify);

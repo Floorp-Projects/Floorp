@@ -56,7 +56,7 @@ static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
 
 #include "nsITimer.h"
 // notifications
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 
 #include "nsISelectionController.h"  //for the enums
 #include "nsCopySupport.h"
@@ -602,7 +602,7 @@ void nsFrameSelection::Init(nsIPresShell* aShell, nsIContent* aLimiter,
                               ? sSelectionEventsOnTextControlsEnabled
                               : sSelectionEventsEnabled;
 
-  nsIDocument* doc = aShell->GetDocument();
+  Document* doc = aShell->GetDocument();
   if (initSelectEvents ||
       (doc && nsContentUtils::IsSystemPrincipal(doc->NodePrincipal()))) {
     int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
@@ -1860,7 +1860,7 @@ nsresult nsFrameSelection::SelectAll() {
     rootContent = mAncestorLimiter;
   } else {
     NS_ENSURE_STATE(mShell);
-    nsIDocument* doc = mShell->GetDocument();
+    Document* doc = mShell->GetDocument();
     if (!doc) return NS_ERROR_FAILURE;
     rootContent = doc->GetRootElement();
     if (!rootContent) return NS_ERROR_FAILURE;
@@ -2735,7 +2735,7 @@ nsresult nsFrameSelection::UpdateSelectionCacheOnRepaintSelection(
   if (!ps) {
     return NS_OK;
   }
-  nsCOMPtr<nsIDocument> aDoc = ps->GetDocument();
+  nsCOMPtr<Document> aDoc = ps->GetDocument();
 
   if (aDoc && aSel && !aSel->IsCollapsed()) {
     return nsCopySupport::HTMLCopy(aSel, aDoc, nsIClipboard::kSelectionCache,
@@ -2782,7 +2782,7 @@ int16_t AutoCopyListener::sClipboardID = -1;
  */
 
 // static
-void AutoCopyListener::OnSelectionChange(nsIDocument* aDocument,
+void AutoCopyListener::OnSelectionChange(Document* aDocument,
                                          Selection& aSelection,
                                          int16_t aReason) {
   MOZ_ASSERT(IsValidClipboardID(sClipboardID));

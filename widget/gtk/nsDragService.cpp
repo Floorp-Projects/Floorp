@@ -34,7 +34,7 @@
 #include "nsImageToPixbuf.h"
 #include "nsPresContext.h"
 #include "nsIContent.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsViewManager.h"
 #include "nsIFrame.h"
 #include "nsGtkUtils.h"
@@ -257,7 +257,7 @@ static void OnSourceGrabEventAfter(GtkWidget *widget, GdkEvent *event,
       G_PRIORITY_DEFAULT_IDLE, 350, DispatchMotionEventCopy, nullptr, nullptr);
 }
 
-static GtkWindow *GetGtkWindow(nsIDocument *aDocument) {
+static GtkWindow *GetGtkWindow(dom::Document *aDocument) {
   if (!aDocument) return nullptr;
 
   nsCOMPtr<nsIPresShell> presShell = aDocument->GetShell();

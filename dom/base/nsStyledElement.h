@@ -88,7 +88,7 @@ class nsStyledElement : public nsStyledElementBase {
   nsresult ReparseStyleAttribute(bool aForceInDataDoc,
                                  bool aForceIfAlreadyParsed);
 
-  virtual void NodeInfoChanged(nsIDocument* aOldDoc) override;
+  virtual void NodeInfoChanged(mozilla::dom::Document* aOldDoc) override;
 
   virtual nsresult BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
                                  const nsAttrValueOrString* aValue,

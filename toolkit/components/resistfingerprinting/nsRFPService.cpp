@@ -928,7 +928,7 @@ void nsRFPService::GetKeyboardLangAndRegion(const nsAString& aLanguage,
 
 /* static */
 bool nsRFPService::GetSpoofedKeyCodeInfo(
-    const nsIDocument* aDoc, const WidgetKeyboardEvent* aKeyboardEvent,
+    const dom::Document* aDoc, const WidgetKeyboardEvent* aKeyboardEvent,
     SpoofingKeyboardCode& aOut) {
   MOZ_ASSERT(aKeyboardEvent);
 
@@ -980,7 +980,7 @@ bool nsRFPService::GetSpoofedKeyCodeInfo(
 
 /* static */
 bool nsRFPService::GetSpoofedModifierStates(
-    const nsIDocument* aDoc, const WidgetKeyboardEvent* aKeyboardEvent,
+    const dom::Document* aDoc, const WidgetKeyboardEvent* aKeyboardEvent,
     const Modifiers aModifier, bool& aOut) {
   MOZ_ASSERT(aKeyboardEvent);
 
@@ -1005,7 +1005,7 @@ bool nsRFPService::GetSpoofedModifierStates(
 }
 
 /* static */
-bool nsRFPService::GetSpoofedCode(const nsIDocument* aDoc,
+bool nsRFPService::GetSpoofedCode(const dom::Document* aDoc,
                                   const WidgetKeyboardEvent* aKeyboardEvent,
                                   nsAString& aOut) {
   MOZ_ASSERT(aKeyboardEvent);
@@ -1030,7 +1030,7 @@ bool nsRFPService::GetSpoofedCode(const nsIDocument* aDoc,
 }
 
 /* static */
-bool nsRFPService::GetSpoofedKeyCode(const nsIDocument* aDoc,
+bool nsRFPService::GetSpoofedKeyCode(const dom::Document* aDoc,
                                      const WidgetKeyboardEvent* aKeyboardEvent,
                                      uint32_t& aOut) {
   MOZ_ASSERT(aKeyboardEvent);

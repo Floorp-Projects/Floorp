@@ -31,7 +31,7 @@
 #include "nsContentUtils.h"
 #include "nsICSSDeclaration.h"
 #include "nsIContentInlines.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsError.h"
 #include "nsGkAtoms.h"
 #include "nsIPresShell.h"
@@ -224,7 +224,7 @@ nsresult SVGElement::Init() {
 //----------------------------------------------------------------------
 // nsIContent methods
 
-nsresult SVGElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+nsresult SVGElement::BindToTree(Document* aDocument, nsIContent* aParent,
                                 nsIContent* aBindingParent) {
   nsresult rv = SVGElementBase::BindToTree(aDocument, aParent, aBindingParent);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -875,7 +875,7 @@ nsChangeHint SVGElement::GetAttributeChangeHint(const nsAtom* aAttribute,
 
 bool SVGElement::IsNodeOfType(uint32_t aFlags) const { return false; }
 
-void SVGElement::NodeInfoChanged(nsIDocument* aOldDoc) {
+void SVGElement::NodeInfoChanged(Document* aOldDoc) {
   SVGElementBase::NodeInfoChanged(aOldDoc);
   aOldDoc->UnscheduleSVGForPresAttrEvaluation(this);
   mContentDeclarationBlock = nullptr;
@@ -1138,7 +1138,7 @@ void SVGElement::UpdateContentDeclarationBlock() {
     return;
   }
 
-  nsIDocument* doc = OwnerDoc();
+  Document* doc = OwnerDoc();
   MappedAttrParser mappedAttrParser(doc->CSSLoader(), doc->GetDocumentURI(),
                                     GetBaseURI(), this);
 
@@ -1295,7 +1295,7 @@ void SVGElement::DidChangeValue(nsAtom* aName,
           ? static_cast<uint8_t>(MutationEvent_Binding::MODIFICATION)
           : static_cast<uint8_t>(MutationEvent_Binding::ADDITION);
 
-  nsIDocument* document = GetComposedDoc();
+  Document* document = GetComposedDoc();
   mozAutoDocUpdate updateBatch(document, kNotifyDocumentObservers);
   // XXX Really, the fourth argument to SetAttrAndNotify should be null if
   // aEmptyOrOldValue does not represent the actual previous value of the
@@ -2114,7 +2114,7 @@ void SVGElement::StringListAttributesInfo::Reset(uint8_t aAttrEnum) {
   // caller notifies
 }
 
-nsresult SVGElement::ReportAttributeParseFailure(nsIDocument* aDocument,
+nsresult SVGElement::ReportAttributeParseFailure(Document* aDocument,
                                                  nsAtom* aAttribute,
                                                  const nsAString& aValue) {
   const nsString& attributeValue = PromiseFlatString(aValue);
@@ -2316,14 +2316,14 @@ UniquePtr<nsISMILAttr> SVGElement::GetAnimatedAttr(int32_t aNamespaceID,
 }
 
 void SVGElement::AnimationNeedsResample() {
-  nsIDocument* doc = GetComposedDoc();
+  Document* doc = GetComposedDoc();
   if (doc && doc->HasAnimationController()) {
     doc->GetAnimationController()->SetResampleNeeded();
   }
 }
 
 void SVGElement::FlushAnimations() {
-  nsIDocument* doc = GetComposedDoc();
+  Document* doc = GetComposedDoc();
   if (doc && doc->HasAnimationController()) {
     doc->GetAnimationController()->FlushResampleRequests();
   }

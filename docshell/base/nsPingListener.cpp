@@ -9,14 +9,13 @@
 #include "mozilla/Preferences.h"
 
 #include "mozilla/dom/DocGroup.h"
+#include "mozilla/dom/Document.h"
 
-#include "nsIDocument.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsIInputStream.h"
 #include "nsIProtocolHandler.h"
 #include "nsIUploadChannel2.h"
 
-#include "nsIDocument.h"
 #include "nsNetUtil.h"
 #include "nsStreamUtils.h"
 #include "nsStringStream.h"
@@ -92,7 +91,7 @@ static void SendPing(void* aClosure, nsIContent* aContent, nsIURI* aURI,
     return;
   }
 
-  nsIDocument* doc = aContent->OwnerDoc();
+  Document* doc = aContent->OwnerDoc();
 
   nsCOMPtr<nsIChannel> chan;
   NS_NewChannel(getter_AddRefs(chan), aURI, doc,
@@ -267,7 +266,7 @@ static void ForEachPing(nsIContent* aContent, ForEachPingCallback aCallback,
     return;
   }
 
-  nsIDocument* doc = aContent->OwnerDoc();
+  Document* doc = aContent->OwnerDoc();
   nsAutoCString charset;
   doc->GetDocumentCharacterSet()->Name(charset);
 

@@ -12,13 +12,15 @@
 #include "mozilla/RefPtr.h"
 
 class nsIDOMWindowUtils;
-class nsIDocument;
+
 class nsIPresShell;
 class nsIWidget;
-
 class MessageLoop;
 
 namespace mozilla {
+namespace dom {
+class Document;
+}
 
 namespace layers {
 
@@ -85,8 +87,8 @@ class ChromeProcessController : public mozilla::layers::GeckoContentController {
 
   void InitializeRoot();
   nsIPresShell* GetPresShell() const;
-  nsIDocument* GetRootDocument() const;
-  nsIDocument* GetRootContentDocument(
+  dom::Document* GetRootDocument() const;
+  dom::Document* GetRootContentDocument(
       const ScrollableLayerGuid::ViewID& aScrollId) const;
   void HandleDoubleTap(const mozilla::CSSPoint& aPoint, Modifiers aModifiers,
                        const ScrollableLayerGuid& aGuid);

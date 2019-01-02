@@ -111,7 +111,7 @@ void SVGScriptElement::GetScriptCharset(nsAString& charset) {
   charset.Truncate();
 }
 
-void SVGScriptElement::FreezeExecutionAttrs(nsIDocument* aOwnerDoc) {
+void SVGScriptElement::FreezeExecutionAttrs(Document* aOwnerDoc) {
   if (mFrozen) {
     return;
   }
@@ -182,8 +182,7 @@ SVGElement::StringAttributesInfo SVGScriptElement::GetStringInfo() {
 //----------------------------------------------------------------------
 // nsIContent methods
 
-nsresult SVGScriptElement::BindToTree(nsIDocument* aDocument,
-                                      nsIContent* aParent,
+nsresult SVGScriptElement::BindToTree(Document* aDocument, nsIContent* aParent,
                                       nsIContent* aBindingParent) {
   nsresult rv =
       SVGScriptElementBase::BindToTree(aDocument, aParent, aBindingParent);

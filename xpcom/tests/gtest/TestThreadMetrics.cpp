@@ -89,8 +89,8 @@ class ThreadMetrics : public ::testing::Test {
     Preferences::SetBool(prefKey, true);
     // building the TabGroup/DocGroup structure
     nsCString key = NS_LITERAL_CSTRING("key");
-    nsCOMPtr<nsIDocument> doc;
-    RefPtr<mozilla::dom::TabGroup> tabGroup = new mozilla::dom::TabGroup(false);
+    RefPtr<dom::Document> doc;
+    RefPtr<dom::TabGroup> tabGroup = new dom::TabGroup(false);
     mDocGroup = tabGroup->AddDocument(key, doc);
     mSchedulerGroup = new MSchedulerGroup(mDocGroup);
     mCounter = mDocGroup->GetPerformanceCounter();

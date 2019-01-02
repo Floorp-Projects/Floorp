@@ -21,6 +21,9 @@ class nsIURI;
 class ExpandedPrincipal;
 
 namespace mozilla {
+namespace dom {
+class Document;
+}
 namespace extensions {
 class WebExtensionPolicy;
 }
@@ -105,10 +108,10 @@ class BasePrincipal : public nsJSPrincipals {
   NS_IMETHOD GetAddonPolicy(nsISupports** aResult) final;
   NS_IMETHOD GetCsp(nsIContentSecurityPolicy** aCsp) override;
   NS_IMETHOD SetCsp(nsIContentSecurityPolicy* aCsp) override;
-  NS_IMETHOD EnsureCSP(nsIDocument* aDocument,
+  NS_IMETHOD EnsureCSP(dom::Document* aDocument,
                        nsIContentSecurityPolicy** aCSP) override;
   NS_IMETHOD GetPreloadCsp(nsIContentSecurityPolicy** aPreloadCSP) override;
-  NS_IMETHOD EnsurePreloadCSP(nsIDocument* aDocument,
+  NS_IMETHOD EnsurePreloadCSP(dom::Document* aDocument,
                               nsIContentSecurityPolicy** aCSP) override;
   NS_IMETHOD GetCspJSON(nsAString& outCSPinJSON) override;
   NS_IMETHOD GetIsNullPrincipal(bool* aResult) override;

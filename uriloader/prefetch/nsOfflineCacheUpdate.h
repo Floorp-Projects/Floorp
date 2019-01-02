@@ -326,7 +326,8 @@ class nsOfflineCacheUpdateService final : public nsIOfflineCacheUpdateService,
                       nsOfflineCacheUpdate **aUpdate);
 
   nsresult Schedule(nsIURI *aManifestURI, nsIURI *aDocumentURI,
-                    nsIPrincipal *aLoadingPrincipal, nsIDocument *aDocument,
+                    nsIPrincipal *aLoadingPrincipal,
+                    mozilla::dom::Document *aDocument,
                     nsPIDOMWindowInner *aWindow, nsIFile *aCustomProfileDir,
                     nsIOfflineCacheUpdate **aUpdate);
 

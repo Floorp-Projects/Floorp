@@ -547,7 +547,7 @@ already_AddRefed<PaymentRequest> PaymentRequest::Constructor(
     return nullptr;
   }
 
-  nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
+  nsCOMPtr<Document> doc = window->GetExtantDoc();
   if (!doc) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;
@@ -566,7 +566,7 @@ already_AddRefed<PaymentRequest> PaymentRequest::Constructor(
   }
 
   // Get the top level principal
-  nsCOMPtr<nsIDocument> topLevelDoc = doc->GetTopLevelContentDocument();
+  nsCOMPtr<Document> topLevelDoc = doc->GetTopLevelContentDocument();
   MOZ_ASSERT(topLevelDoc);
   nsCOMPtr<nsIPrincipal> topLevelPrincipal = topLevelDoc->NodePrincipal();
 
@@ -695,7 +695,7 @@ already_AddRefed<Promise> PaymentRequest::Show(
 
   nsIGlobalObject* global = GetOwnerGlobal();
   nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(global);
-  nsIDocument* doc = win->GetExtantDoc();
+  Document* doc = win->GetExtantDoc();
 
   if (!EventStateManager::IsHandlingUserInput()) {
     nsString msg = NS_LITERAL_STRING(
@@ -1117,14 +1117,14 @@ bool PaymentRequest::InFullyActiveDocument() {
   }
 
   nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(global);
-  nsIDocument* doc = win->GetExtantDoc();
+  Document* doc = win->GetExtantDoc();
   if (!doc || !doc->IsCurrentActiveDocument()) {
     return false;
   }
 
   // According to the definition of the fully active document, recursive
   // checking the parent document are all IsCurrentActiveDocument
-  nsIDocument* parentDoc = doc->GetParentDocument();
+  Document* parentDoc = doc->GetParentDocument();
   while (parentDoc) {
     if (parentDoc && !parentDoc->IsCurrentActiveDocument()) {
       return false;
@@ -1136,7 +1136,7 @@ bool PaymentRequest::InFullyActiveDocument() {
 
 void PaymentRequest::RegisterActivityObserver() {
   if (nsPIDOMWindowInner* window = GetOwner()) {
-    nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
+    nsCOMPtr<Document> doc = window->GetExtantDoc();
     if (doc) {
       doc->RegisterActivityObserver(
           NS_ISUPPORTS_CAST(nsIDocumentActivity*, this));
@@ -1146,7 +1146,7 @@ void PaymentRequest::RegisterActivityObserver() {
 
 void PaymentRequest::UnregisterActivityObserver() {
   if (nsPIDOMWindowInner* window = GetOwner()) {
-    nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
+    nsCOMPtr<Document> doc = window->GetExtantDoc();
     if (doc) {
       doc->UnregisterActivityObserver(
           NS_ISUPPORTS_CAST(nsIDocumentActivity*, this));
@@ -1157,7 +1157,7 @@ void PaymentRequest::UnregisterActivityObserver() {
 void PaymentRequest::NotifyOwnerDocumentActivityChanged() {
   nsPIDOMWindowInner* window = GetOwner();
   NS_ENSURE_TRUE_VOID(window);
-  nsIDocument* doc = window->GetExtantDoc();
+  Document* doc = window->GetExtantDoc();
   NS_ENSURE_TRUE_VOID(doc);
 
   if (!InFullyActiveDocument()) {

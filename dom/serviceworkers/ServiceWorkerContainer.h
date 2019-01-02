@@ -123,9 +123,9 @@ class ServiceWorkerContainer final : public DOMEventTargetHelper {
   // message if the storage check fails.  This method takes an optional
   // callback that can be used to report the storage failure to the
   // devtools console.
-  nsIGlobalObject* GetGlobalIfValid(ErrorResult& aRv,
-                                    const std::function<void(nsIDocument*)>&&
-                                        aStorageFailureCB = nullptr) const;
+  nsIGlobalObject* GetGlobalIfValid(
+      ErrorResult& aRv,
+      const std::function<void(Document*)>&& aStorageFailureCB = nullptr) const;
 
   struct ReceivedMessage;
 

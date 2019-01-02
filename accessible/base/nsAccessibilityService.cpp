@@ -282,7 +282,7 @@ nsAccessibilityService::ListenersChanged(nsIArray* aEventChanges) {
     NS_ENSURE_SUCCESS(rv, rv);
 
     for (uint32_t i = 0; i < changeCount; i++) {
-      nsIDocument* ownerDoc = node->OwnerDoc();
+      Document* ownerDoc = node->OwnerDoc();
       DocAccessible* document = GetExistingDocAccessible(ownerDoc);
 
       // Create an accessible for a inaccessible element having click event
@@ -318,7 +318,7 @@ nsAccessibilityService::Observe(nsISupports* aSubject, const char* aTopic,
 }
 
 void nsAccessibilityService::NotifyOfAnchorJumpTo(nsIContent* aTargetNode) {
-  nsIDocument* documentNode = aTargetNode->GetUncomposedDoc();
+  Document* documentNode = aTargetNode->GetUncomposedDoc();
   if (documentNode) {
     DocAccessible* document = GetDocAccessible(documentNode);
     if (document) document->SetAnchorJump(aTargetNode);
@@ -333,7 +333,7 @@ void nsAccessibilityService::FireAccessibleEvent(uint32_t aEvent,
 Accessible* nsAccessibilityService::GetRootDocumentAccessible(
     nsIPresShell* aPresShell, bool aCanCreate) {
   nsIPresShell* ps = aPresShell;
-  nsIDocument* documentNode = aPresShell->GetDocument();
+  Document* documentNode = aPresShell->GetDocument();
   if (documentNode) {
     nsCOMPtr<nsIDocShellTreeItem> treeItem(documentNode->GetDocShell());
     if (treeItem) {

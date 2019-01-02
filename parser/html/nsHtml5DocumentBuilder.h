@@ -9,7 +9,7 @@
 
 #include "nsContentSink.h"
 #include "nsHtml5DocumentMode.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIContent.h"
 
 typedef nsIContent* nsIContentPtr;
@@ -35,11 +35,11 @@ class nsHtml5DocumentBuilder : public nsContentSink {
     *(mOwnedElements.AppendElement()) = aContent;
   }
 
-  nsresult Init(nsIDocument* aDoc, nsIURI* aURI, nsISupports* aContainer,
+  nsresult Init(Document* aDoc, nsIURI* aURI, nsISupports* aContainer,
                 nsIChannel* aChannel);
 
   // Getters and setters for fields from nsContentSink
-  nsIDocument* GetDocument() { return mDocument; }
+  Document* GetDocument() { return mDocument; }
 
   nsNodeInfoManager* GetNodeInfoManager() { return mNodeInfoManager; }
 

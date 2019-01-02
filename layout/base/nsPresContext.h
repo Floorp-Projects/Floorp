@@ -50,7 +50,6 @@ class nsBidi;
 class nsIPrintSettings;
 class nsDocShell;
 class nsIDocShell;
-class nsIDocument;
 class nsITheme;
 class nsIContent;
 class nsIFrame;
@@ -83,6 +82,7 @@ class ContainerLayer;
 class LayerManager;
 }  // namespace layers
 namespace dom {
+class Document;
 class Element;
 }  // namespace dom
 }  // namespace mozilla
@@ -152,7 +152,7 @@ class nsPresContext : public nsISupports,
     eContext_PageLayout     // paginated & editable.
   };
 
-  nsPresContext(nsIDocument* aDocument, nsPresContextType aType);
+  nsPresContext(mozilla::dom::Document* aDocument, nsPresContextType aType);
 
   /**
    * Initialize the presentation context from a particular device.
@@ -217,7 +217,7 @@ class nsPresContext : public nsISupports,
 
   virtual bool IsRoot() { return false; }
 
-  nsIDocument* Document() const {
+  mozilla::dom::Document* Document() const {
     NS_ASSERTION(
         !mShell || !mShell->GetDocument() || mShell->GetDocument() == mDocument,
         "nsPresContext doesn't have the same document as nsPresShell!");
@@ -857,7 +857,7 @@ class nsPresContext : public nsISupports,
   /**
    * Get the Bidi options for the presentation context
    * Not inline so consumers of nsPresContext are not forced to
-   * include nsIDocument.
+   * include Document.
    */
   uint32_t GetBidi() const;
 
@@ -1162,11 +1162,11 @@ class nsPresContext : public nsISupports,
   // aData here is a pointer to a double that holds the CSS to device-pixel
   // scale factor from the parent, which will be applied to the subdocument's
   // device context instead of retrieving a scale from the widget.
-  static bool UIResolutionChangedSubdocumentCallback(nsIDocument* aDocument,
-                                                     void* aData);
+  static bool UIResolutionChangedSubdocumentCallback(
+      mozilla::dom::Document* aDocument, void* aData);
 
   void SetImgAnimations(nsIContent* aParent, uint16_t aMode);
-  void SetSMILAnimations(nsIDocument* aDoc, uint16_t aNewMode,
+  void SetSMILAnimations(mozilla::dom::Document* aDoc, uint16_t aNewMode,
                          uint16_t aOldMode);
   void GetDocumentColorPreferences();
 
@@ -1190,10 +1190,10 @@ class nsPresContext : public nsISupports,
 
   void UpdateCharSet(NotNull<const Encoding*> aCharSet);
 
-  static bool NotifyDidPaintSubdocumentCallback(nsIDocument* aDocument,
-                                                void* aData);
-  static bool NotifyRevokingDidPaintSubdocumentCallback(nsIDocument* aDocument,
-                                                        void* aData);
+  static bool NotifyDidPaintSubdocumentCallback(
+      mozilla::dom::Document* aDocument, void* aData);
+  static bool NotifyRevokingDidPaintSubdocumentCallback(
+      mozilla::dom::Document* aDocument, void* aData);
 
  public:
   // Used by the PresShell to force a reflow when some aspect of font info
@@ -1244,7 +1244,7 @@ class nsPresContext : public nsISupports,
   // the nsPresShell owns a strong reference to the nsPresContext, and is
   // responsible for nulling this pointer before it is destroyed
   nsIPresShell* MOZ_NON_OWNING_REF mShell;  // [WEAK]
-  nsCOMPtr<nsIDocument> mDocument;
+  RefPtr<mozilla::dom::Document> mDocument;
   RefPtr<nsDeviceContext> mDeviceContext;  // [STRONG] could be weak, but
                                            // better safe than sorry.
                                            // Cannot reintroduce cycles
@@ -1475,7 +1475,7 @@ class nsPresContext : public nsISupports,
 
 class nsRootPresContext final : public nsPresContext {
  public:
-  nsRootPresContext(nsIDocument* aDocument, nsPresContextType aType);
+  nsRootPresContext(mozilla::dom::Document* aDocument, nsPresContextType aType);
   virtual ~nsRootPresContext();
   virtual void Detach() override;
 

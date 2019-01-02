@@ -15,7 +15,7 @@
 #include "mozilla/layers/APZThreadUtils.h"
 #include "mozilla/layers/IAPZCTreeManager.h"
 #include "mozilla/layers/DoubleTapToZoom.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIPresShell.h"
 #include "nsLayoutUtils.h"
@@ -94,14 +94,14 @@ nsIPresShell* ChromeProcessController::GetPresShell() const {
   return nullptr;
 }
 
-nsIDocument* ChromeProcessController::GetRootDocument() const {
+dom::Document* ChromeProcessController::GetRootDocument() const {
   if (nsIPresShell* presShell = GetPresShell()) {
     return presShell->GetDocument();
   }
   return nullptr;
 }
 
-nsIDocument* ChromeProcessController::GetRootContentDocument(
+dom::Document* ChromeProcessController::GetRootContentDocument(
     const ScrollableLayerGuid::ViewID& aScrollId) const {
   nsIContent* content = nsLayoutUtils::FindContentFor(aScrollId);
   if (!content) {
@@ -120,7 +120,7 @@ void ChromeProcessController::HandleDoubleTap(
     const ScrollableLayerGuid& aGuid) {
   MOZ_ASSERT(MessageLoop::current() == mUILoop);
 
-  nsCOMPtr<nsIDocument> document = GetRootContentDocument(aGuid.mScrollId);
+  RefPtr<dom::Document> document = GetRootContentDocument(aGuid.mScrollId);
   if (!document.get()) {
     return;
   }

@@ -206,7 +206,7 @@ already_AddRefed<nsIURI> XULLinkAccessible::AnchorURIAt(
   mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::href, href);
 
   nsCOMPtr<nsIURI> baseURI = mContent->GetBaseURI();
-  nsIDocument* document = mContent->OwnerDoc();
+  dom::Document* document = mContent->OwnerDoc();
 
   nsCOMPtr<nsIURI> anchorURI;
   NS_NewURI(getter_AddRefs(anchorURI), href,

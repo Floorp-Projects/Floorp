@@ -126,7 +126,7 @@ class HTMLEditor final : public TextEditor,
   bool GetReturnInParagraphCreatesNewParagraph();
 
   // TextEditor overrides
-  virtual nsresult Init(nsIDocument& aDoc, Element* aRoot,
+  virtual nsresult Init(Document& aDoc, Element* aRoot,
                         nsISelectionController* aSelCon, uint32_t aFlags,
                         const nsAString& aValue) override;
   NS_IMETHOD BeginningOfDocument() override;
@@ -519,7 +519,7 @@ class HTMLEditor final : public TextEditor,
    * InsertTextWithTransaction() inserts aStringToInsert at aPointToInsert.
    */
   virtual nsresult InsertTextWithTransaction(
-      nsIDocument& aDocument, const nsAString& aStringToInsert,
+      Document& aDocument, const nsAString& aStringToInsert,
       const EditorRawDOMPoint& aPointToInsert,
       EditorRawDOMPoint* aPointAfterInsertedString = nullptr) override;
 
@@ -1615,7 +1615,7 @@ class HTMLEditor final : public TextEditor,
 
    public:
     BlobReader(dom::BlobImpl* aBlob, HTMLEditor* aHTMLEditor, bool aIsSafe,
-               nsIDocument* aSourceDoc, const EditorDOMPoint& aPointToInsert,
+               Document* aSourceDoc, const EditorDOMPoint& aPointToInsert,
                bool aDoDeleteSelection);
 
     NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(BlobReader)
@@ -1629,7 +1629,7 @@ class HTMLEditor final : public TextEditor,
 
     RefPtr<dom::BlobImpl> mBlob;
     RefPtr<HTMLEditor> mHTMLEditor;
-    nsCOMPtr<nsIDocument> mSourceDoc;
+    nsCOMPtr<Document> mSourceDoc;
     EditorDOMPoint mPointToInsert;
     EditAction mEditAction;
     bool mIsSafe;
@@ -1942,7 +1942,7 @@ class HTMLEditor final : public TextEditor,
    */
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   nsresult InsertObject(const nsACString& aType, nsISupports* aObject,
-                        bool aIsSafe, nsIDocument* aSourceDoc,
+                        bool aIsSafe, Document* aSourceDoc,
                         const EditorDOMPoint& aPointToInsert,
                         bool aDoDeleteSelection);
 
@@ -1952,7 +1952,7 @@ class HTMLEditor final : public TextEditor,
   nsresult PrepareHTMLTransferable(nsITransferable** transferable);
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   nsresult InsertFromTransferable(nsITransferable* transferable,
-                                  nsIDocument* aSourceDoc,
+                                  Document* aSourceDoc,
                                   const nsAString& aContextStr,
                                   const nsAString& aInfoStr,
                                   bool havePrivateHTMLFlavor,
@@ -1964,8 +1964,7 @@ class HTMLEditor final : public TextEditor,
    */
   MOZ_CAN_RUN_SCRIPT
   virtual nsresult InsertFromDataTransfer(dom::DataTransfer* aDataTransfer,
-                                          int32_t aIndex,
-                                          nsIDocument* aSourceDoc,
+                                          int32_t aIndex, Document* aSourceDoc,
                                           const EditorDOMPoint& aDroppedAt,
                                           bool aDoDeleteSelection) override;
 
@@ -1980,7 +1979,7 @@ class HTMLEditor final : public TextEditor,
       nsCOMPtr<nsINode>* outStartNode, nsCOMPtr<nsINode>* outEndNode,
       int32_t* outStartOffset, int32_t* outEndOffset, bool aTrustedInput);
   nsresult ParseFragment(const nsAString& aStr, nsAtom* aContextLocalName,
-                         nsIDocument* aTargetDoc,
+                         Document* aTargetDoc,
                          dom::DocumentFragment** aFragment, bool aTrustedInput);
   void CreateListOfNodesToPaste(dom::DocumentFragment& aFragment,
                                 nsTArray<OwningNonNull<nsINode>>& outNodeList,
@@ -2085,9 +2084,9 @@ class HTMLEditor final : public TextEditor,
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   nsresult DoInsertHTMLWithContext(
       const nsAString& aInputString, const nsAString& aContextStr,
-      const nsAString& aInfoStr, const nsAString& aFlavor,
-      nsIDocument* aSourceDoc, const EditorDOMPoint& aPointToInsert,
-      bool aDeleteSelection, bool aTrustedInput, bool aClearStyle = true);
+      const nsAString& aInfoStr, const nsAString& aFlavor, Document* aSourceDoc,
+      const EditorDOMPoint& aPointToInsert, bool aDeleteSelection,
+      bool aTrustedInput, bool aClearStyle = true);
 
   /**
    * sets the position of an element; warning it does NOT check if the

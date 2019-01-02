@@ -21,7 +21,7 @@ class HTMLMetaElement final : public nsGenericHTMLElement {
   // nsISupports
   NS_INLINE_DECL_REFCOUNTING_INHERITED(HTMLMetaElement, nsGenericHTMLElement)
 
-  virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+  virtual nsresult BindToTree(Document* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent) override;
   virtual void UnbindFromTree(bool aDeep = true,
                               bool aNullParent = true) override;
@@ -32,7 +32,7 @@ class HTMLMetaElement final : public nsGenericHTMLElement {
                                 nsIPrincipal* aSubjectPrincipal,
                                 bool aNotify) override;
 
-  void CreateAndDispatchEvent(nsIDocument* aDoc, const nsAString& aEventName);
+  void CreateAndDispatchEvent(Document* aDoc, const nsAString& aEventName);
 
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
@@ -64,7 +64,7 @@ class HTMLMetaElement final : public nsGenericHTMLElement {
   virtual ~HTMLMetaElement();
 
  private:
-  void SetMetaReferrer(nsIDocument* aDocument);
+  void SetMetaReferrer(Document* aDocument);
 };
 
 }  // namespace dom

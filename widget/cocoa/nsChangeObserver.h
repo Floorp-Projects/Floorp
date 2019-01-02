@@ -8,17 +8,23 @@
 #define nsChangeObserver_h_
 
 class nsIContent;
-class nsIDocument;
 class nsAtom;
+namespace mozilla {
+namespace dom {
+class Document;
+}
+}  // namespace mozilla
 
-#define NS_DECL_CHANGEOBSERVER                                                \
-  void ObserveAttributeChanged(nsIDocument* aDocument, nsIContent* aContent,  \
-                               nsAtom* aAttribute) override;                  \
-  void ObserveContentRemoved(nsIDocument* aDocument, nsIContent* aContainer,  \
-                             nsIContent* aChild, nsIContent* aPreviousChild)  \
-      override;                                                               \
-  void ObserveContentInserted(nsIDocument* aDocument, nsIContent* aContainer, \
-                              nsIContent* aChild) override;
+#define NS_DECL_CHANGEOBSERVER                                            \
+  void ObserveAttributeChanged(mozilla::dom::Document* aDocument,         \
+                               nsIContent* aContent, nsAtom* aAttribute)  \
+      override;                                                           \
+  void ObserveContentRemoved(mozilla::dom::Document* aDocument,           \
+                             nsIContent* aContainer, nsIContent* aChild,  \
+                             nsIContent* aPreviousChild) override;        \
+  void ObserveContentInserted(mozilla::dom::Document* aDocument,          \
+                              nsIContent* aContainer, nsIContent* aChild) \
+      override;
 
 // Something that wants to be alerted to changes in attributes or changes in
 // its corresponding content object.
@@ -31,15 +37,15 @@ class nsAtom;
 class nsChangeObserver {
  public:
   // XXX use dom::Element
-  virtual void ObserveAttributeChanged(nsIDocument* aDocument,
+  virtual void ObserveAttributeChanged(mozilla::dom::Document* aDocument,
                                        nsIContent* aContent,
                                        nsAtom* aAttribute) = 0;
 
-  virtual void ObserveContentRemoved(nsIDocument* aDocument,
+  virtual void ObserveContentRemoved(mozilla::dom::Document* aDocument,
                                      nsIContent* aContainer, nsIContent* aChild,
                                      nsIContent* aPreviousSibling) = 0;
 
-  virtual void ObserveContentInserted(nsIDocument* aDocument,
+  virtual void ObserveContentInserted(mozilla::dom::Document* aDocument,
                                       nsIContent* aContainer,
                                       nsIContent* aChild) = 0;
 };

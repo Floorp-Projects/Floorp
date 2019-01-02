@@ -25,7 +25,7 @@
 #include "nsIAppShellService.h"
 #include "nsIServiceManager.h"
 #include "nsIContentViewer.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsPIDOMWindow.h"
 #include "nsScreen.h"
 #include "nsIEmbeddingSiteWindow.h"
@@ -216,7 +216,7 @@ NS_IMETHODIMP nsXULWindow::SetZLevel(uint32_t aLevel) {
   nsCOMPtr<nsIContentViewer> cv;
   mDocShell->GetContentViewer(getter_AddRefs(cv));
   if (cv) {
-    nsCOMPtr<nsIDocument> doc = cv->GetDocument();
+    RefPtr<dom::Document> doc = cv->GetDocument();
     if (doc) {
       ErrorResult rv;
       RefPtr<dom::Event> event = doc->CreateEvent(NS_LITERAL_STRING("Events"),
@@ -1585,7 +1585,7 @@ nsresult nsXULWindow::GetPersistentValue(const nsAtom* aAttr,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDocument> ownerDoc = docShellElement->OwnerDoc();
+  RefPtr<dom::Document> ownerDoc = docShellElement->OwnerDoc();
   nsIURI* docURI = ownerDoc->GetDocumentURI();
   if (!docURI) {
     return NS_ERROR_FAILURE;
@@ -1632,7 +1632,7 @@ nsresult nsXULWindow::SetPersistentValue(const nsAtom* aAttr,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDocument> ownerDoc = docShellElement->OwnerDoc();
+  RefPtr<dom::Document> ownerDoc = docShellElement->OwnerDoc();
   nsIURI* docURI = ownerDoc->GetDocumentURI();
   if (!docURI) {
     return NS_ERROR_FAILURE;
@@ -1798,7 +1798,7 @@ dom::Element* nsXULWindow::GetWindowDOMElement() const {
   mDocShell->GetContentViewer(getter_AddRefs(cv));
   NS_ENSURE_TRUE(cv, nullptr);
 
-  const nsIDocument* document = cv->GetDocument();
+  const dom::Document* document = cv->GetDocument();
   NS_ENSURE_TRUE(document, nullptr);
 
   return document->GetRootElement();

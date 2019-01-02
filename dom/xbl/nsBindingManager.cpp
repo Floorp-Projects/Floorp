@@ -17,7 +17,7 @@
 #include "plstr.h"
 #include "nsIContent.h"
 #include "nsIContentInlines.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsContentUtils.h"
 #include "nsIPresShell.h"
 #include "nsIPresShellInlines.h"
@@ -109,7 +109,7 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(nsBindingManager)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsBindingManager)
 
 // Constructors/Destructors
-nsBindingManager::nsBindingManager(nsIDocument* aDocument)
+nsBindingManager::nsBindingManager(Document* aDocument)
     : mProcessingAttachedStack(false),
       mDestroyed(false),
       mAttachedStackSizeOnOutermost(0),
@@ -181,7 +181,7 @@ nsresult nsBindingManager::SetWrappedJS(nsIContent* aContent,
 }
 
 void nsBindingManager::RemovedFromDocumentInternal(
-    nsIContent* aContent, nsIDocument* aOldDocument,
+    nsIContent* aContent, Document* aOldDocument,
     DestructorHandling aDestructorHandling) {
   MOZ_ASSERT(aOldDocument != nullptr, "no old document");
 
@@ -241,7 +241,7 @@ nsresult nsBindingManager::ClearBinding(Element* aElement) {
   // XXXbz should that be ownerdoc?  Wouldn't we need a ref to the
   // currentdoc too?  What's the one that should be passed to
   // ChangeDocument?
-  nsCOMPtr<nsIDocument> doc = aElement->OwnerDoc();
+  nsCOMPtr<Document> doc = aElement->OwnerDoc();
 
   // Destroy the frames here before the UnbindFromTree happens.
   nsIPresShell* presShell = doc->GetShell();
@@ -268,7 +268,7 @@ nsresult nsBindingManager::ClearBinding(Element* aElement) {
   return NS_OK;
 }
 
-nsresult nsBindingManager::LoadBindingDocument(nsIDocument* aBoundDoc,
+nsresult nsBindingManager::LoadBindingDocument(Document* aBoundDoc,
                                                nsIURI* aURL,
                                                nsIPrincipal* aOriginPrincipal) {
   MOZ_ASSERT(aURL, "Must have a URI to load!");
@@ -367,7 +367,7 @@ void nsBindingManager::DoProcessAttachedQueue() {
   if (mDocument) {
     // Hold a strong reference while calling UnblockOnload since that might
     // run script.
-    nsCOMPtr<nsIDocument> doc = mDocument;
+    nsCOMPtr<Document> doc = mDocument;
     doc->UnblockOnload(true);
   }
 }

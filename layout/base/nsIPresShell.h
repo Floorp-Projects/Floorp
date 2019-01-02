@@ -46,7 +46,6 @@
 
 class gfxContext;
 class nsDocShell;
-class nsIDocument;
 class nsIFrame;
 class nsPresContext;
 class nsWindowSizes;
@@ -96,6 +95,7 @@ class EventStates;
 namespace dom {
 class Element;
 class Event;
+class Document;
 class HTMLSlotElement;
 class Touch;
 class Selection;
@@ -175,6 +175,7 @@ class nsIPresShell : public nsStubDocumentObserver {
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IPRESSHELL_IID)
 
  protected:
+  typedef mozilla::dom::Document Document;
   typedef mozilla::layers::LayerManager LayerManager;
   typedef mozilla::gfx::SourceSurface SourceSurface;
 
@@ -247,7 +248,7 @@ class nsIPresShell : public nsStubDocumentObserver {
     mFrameArena.ClearArenaRefPtrs(aObjectID);
   }
 
-  nsIDocument* GetDocument() const { return mDocument; }
+  Document* GetDocument() const { return mDocument; }
 
   nsPresContext* GetPresContext() const { return mPresContext; }
 
@@ -549,7 +550,7 @@ class nsIPresShell : public nsStubDocumentObserver {
    * will not affect the content model; it'll just affect style and
    * frames. Callers that actually want up-to-date presentation (other
    * than the document itself) should probably be calling
-   * nsIDocument::FlushPendingNotifications.
+   * Document::FlushPendingNotifications.
    *
    * This method can execute script, which can destroy this presshell object
    * unless someone is holding a reference to it on the stack.  The presshell
@@ -1015,7 +1016,7 @@ class nsIPresShell : public nsStubDocumentObserver {
    * Notify that a content node's state has changed
    */
   virtual void ContentStateChanged(
-      nsIDocument* aDocument, nsIContent* aContent,
+      Document* aDocument, nsIContent* aContent,
       mozilla::EventStates aStateMask) override = 0;
 
   /**
@@ -1679,7 +1680,7 @@ class nsIPresShell : public nsStubDocumentObserver {
 
   void SyncWindowProperties(nsView* aView);
 
-  virtual nsIDocument* GetPrimaryContentDocument() = 0;
+  virtual Document* GetPrimaryContentDocument() = 0;
 
   // aSheetType is one of the nsIStyleSheetService *_SHEET constants.
   virtual void NotifyStyleSheetServiceSheetAdded(mozilla::StyleSheet* aSheet,
@@ -1696,7 +1697,7 @@ class nsIPresShell : public nsStubDocumentObserver {
 
   // These are the same Document and PresContext owned by the DocViewer.
   // we must share ownership.
-  nsCOMPtr<nsIDocument> mDocument;
+  RefPtr<Document> mDocument;
   RefPtr<nsPresContext> mPresContext;
   mozilla::UniquePtr<mozilla::ServoStyleSet> mStyleSet;
   mozilla::UniquePtr<nsCSSFrameConstructor> mFrameConstructor;

@@ -6,13 +6,13 @@
 
 #include "ChildIterator.h"
 #include "nsContentUtils.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/HTMLSlotElement.h"
 #include "mozilla/dom/XBLChildrenElement.h"
 #include "mozilla/dom/ShadowRoot.h"
 #include "nsIAnonymousContentCreator.h"
 #include "nsIFrame.h"
 #include "nsCSSAnonBoxes.h"
-#include "nsIDocument.h"
 
 namespace mozilla {
 namespace dom {

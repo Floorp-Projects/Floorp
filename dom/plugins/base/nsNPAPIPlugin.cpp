@@ -30,7 +30,7 @@
 
 #include "nsPIDOMWindow.h"
 #include "nsGlobalWindow.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIContent.h"
 #include "nsIIDNService.h"
 #include "nsIScriptGlobalObject.h"
@@ -97,6 +97,7 @@ using mozilla::plugins::PluginModuleContentParent;
 
 using namespace mozilla;
 using namespace mozilla::plugins::parent;
+using mozilla::dom::Document;
 
 // We should make this const...
 static NPNetscapeFuncs sBrowserFuncs = {
@@ -388,7 +389,7 @@ namespace {
 
 static char *gNPPException;
 
-static nsIDocument *GetDocumentFromNPP(NPP npp) {
+static Document *GetDocumentFromNPP(NPP npp) {
   NS_ENSURE_TRUE(npp, nullptr);
 
   nsNPAPIPluginInstance *inst = (nsNPAPIPluginInstance *)npp->ndata;
@@ -399,7 +400,7 @@ static nsIDocument *GetDocumentFromNPP(NPP npp) {
   RefPtr<nsPluginInstanceOwner> owner = inst->GetOwner();
   NS_ENSURE_TRUE(owner, nullptr);
 
-  nsCOMPtr<nsIDocument> doc;
+  nsCOMPtr<Document> doc;
   owner->GetDocument(getter_AddRefs(doc));
 
   return doc;
@@ -640,7 +641,7 @@ NPObject *_getwindowobject(NPP npp) {
 
   // The window want to return here is the outer window, *not* the inner (since
   // we don't know what the plugin will do with it).
-  nsIDocument *doc = GetDocumentFromNPP(npp);
+  Document *doc = GetDocumentFromNPP(npp);
   NS_ENSURE_TRUE(doc, nullptr);
   nsCOMPtr<nsPIDOMWindowOuter> outer = doc->GetWindow();
   NS_ENSURE_TRUE(outer, nullptr);
@@ -668,7 +669,7 @@ NPObject *_getpluginelement(NPP npp) {
 
   if (!element) return nullptr;
 
-  nsIDocument *doc = GetDocumentFromNPP(npp);
+  Document *doc = GetDocumentFromNPP(npp);
   if (NS_WARN_IF(!doc)) {
     return nullptr;
   }
@@ -911,7 +912,7 @@ bool _evaluate(NPP npp, NPObject *npobj, NPString *script, NPVariant *result) {
 
   NPPAutoPusher nppPusher(npp);
 
-  nsIDocument *doc = GetDocumentFromNPP(npp);
+  Document *doc = GetDocumentFromNPP(npp);
   NS_ENSURE_TRUE(doc, false);
 
   nsGlobalWindowInner *win = nsGlobalWindowInner::Cast(doc->GetInnerWindow());

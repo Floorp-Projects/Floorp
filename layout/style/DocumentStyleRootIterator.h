@@ -10,7 +10,7 @@
 #include "nsTArray.h"
 
 class nsIContent;
-class nsIDocument;
+
 class nsINode;
 
 namespace mozilla {

@@ -55,7 +55,7 @@ void XULScrollElement::ScrollByIndex(int32_t aIndex, ErrorResult& aRv) {
 
   nscoord frameWidth = 0;
   if (!isLTR && horiz) {
-    nsCOMPtr<nsIDocument> doc = GetComposedDoc();
+    nsCOMPtr<Document> doc = GetComposedDoc();
 
     nsCOMPtr<nsIPresShell> shell = doc->GetShell();
     if (!shell) {
@@ -146,7 +146,7 @@ void XULScrollElement::ScrollByIndex(int32_t aIndex, ErrorResult& aRv) {
 }
 
 void XULScrollElement::ScrollToElement(Element& child, ErrorResult& aRv) {
-  nsCOMPtr<nsIDocument> doc = GetComposedDoc();
+  nsCOMPtr<Document> doc = GetComposedDoc();
   if (!doc) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
@@ -170,7 +170,7 @@ void XULScrollElement::ScrollToElement(Element& child, ErrorResult& aRv) {
 
 void XULScrollElement::EnsureElementIsVisible(Element& aChild,
                                               ErrorResult& aRv) {
-  nsCOMPtr<nsIDocument> doc = GetComposedDoc();
+  nsCOMPtr<Document> doc = GetComposedDoc();
   if (!doc) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;

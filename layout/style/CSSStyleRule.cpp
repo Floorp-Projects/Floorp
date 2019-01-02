@@ -70,7 +70,7 @@ nsresult CSSStyleRuleDeclaration::SetCSSDeclaration(
   return NS_OK;
 }
 
-nsIDocument* CSSStyleRuleDeclaration::DocToUpdate() { return nullptr; }
+Document* CSSStyleRuleDeclaration::DocToUpdate() { return nullptr; }
 
 nsDOMCSSDeclaration::ParsingEnvironment
 CSSStyleRuleDeclaration::GetParsingEnvironment(

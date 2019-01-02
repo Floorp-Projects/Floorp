@@ -13,7 +13,6 @@
 #include "nsIDOMEventListener.h"
 #include "nsIObserver.h"
 
-class nsIDocument;
 class nsIPresShell;
 
 namespace mozilla {
@@ -35,14 +34,14 @@ class ZoomConstraintsClient final : public nsIDOMEventListener,
   ~ZoomConstraintsClient();
 
  public:
-  void Init(nsIPresShell* aPresShell, nsIDocument* aDocument);
+  void Init(nsIPresShell* aPresShell, mozilla::dom::Document* aDocument);
   void Destroy();
   void ScreenSizeChanged();
 
  private:
   void RefreshZoomConstraints();
 
-  nsCOMPtr<nsIDocument> mDocument;
+  RefPtr<mozilla::dom::Document> mDocument;
   // raw ref since the presShell owns this
   nsIPresShell* MOZ_NON_OWNING_REF mPresShell;
   nsCOMPtr<mozilla::dom::EventTarget> mEventTarget;

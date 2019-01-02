@@ -12,7 +12,7 @@
 #include "mozilla/dom/Element.h"
 #include "nsCOMPtr.h"
 #include "nsIContent.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIDOMWindow.h"
 #include "nsIFrame.h"
 #include "nsIFrameInlines.h"
@@ -96,7 +96,7 @@ static bool IsRectZoomedIn(const CSSRect& aRect,
 
 }  // namespace
 
-CSSRect CalculateRectToZoomTo(const nsCOMPtr<nsIDocument>& aRootContentDocument,
+CSSRect CalculateRectToZoomTo(const RefPtr<dom::Document>& aRootContentDocument,
                               const CSSPoint& aPoint) {
   // Ensure the layout information we get is up-to-date.
   aRootContentDocument->FlushPendingNotifications(FlushType::Layout);

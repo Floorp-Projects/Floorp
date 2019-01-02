@@ -16,7 +16,7 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Promise.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIScriptError.h"
 
 namespace mozilla {
@@ -31,7 +31,7 @@ class FullscreenChange : public LinkedListElement<FullscreenChange> {
   };
 
   ChangeType Type() const { return mType; }
-  nsIDocument* Document() const { return mDocument; }
+  dom::Document* Document() const { return mDocument; }
   dom::Promise* GetPromise() const { return mPromise; }
 
   void MayResolvePromise() const {
@@ -51,7 +51,7 @@ class FullscreenChange : public LinkedListElement<FullscreenChange> {
  protected:
   typedef dom::Promise Promise;
 
-  FullscreenChange(ChangeType aType, nsIDocument* aDocument,
+  FullscreenChange(ChangeType aType, dom::Document* aDocument,
                    already_AddRefed<Promise> aPromise)
       : mType(aType), mDocument(aDocument), mPromise(aPromise) {
     MOZ_ASSERT(aDocument);
@@ -64,7 +64,7 @@ class FullscreenChange : public LinkedListElement<FullscreenChange> {
 
  private:
   ChangeType mType;
-  nsCOMPtr<nsIDocument> mDocument;
+  nsCOMPtr<dom::Document> mDocument;
   RefPtr<Promise> mPromise;
 };
 
@@ -135,19 +135,20 @@ class FullscreenExit : public FullscreenChange {
  public:
   static const ChangeType kType = eExit;
 
-  static UniquePtr<FullscreenExit> Create(nsIDocument* aDoc, ErrorResult& aRv) {
+  static UniquePtr<FullscreenExit> Create(dom::Document* aDoc,
+                                          ErrorResult& aRv) {
     RefPtr<Promise> promise = Promise::Create(aDoc->GetOwnerGlobal(), aRv);
     return WrapUnique(new FullscreenExit(aDoc, promise.forget()));
   }
 
-  static UniquePtr<FullscreenExit> CreateForRemote(nsIDocument* aDoc) {
+  static UniquePtr<FullscreenExit> CreateForRemote(dom::Document* aDoc) {
     return WrapUnique(new FullscreenExit(aDoc, nullptr));
   }
 
   ~FullscreenExit() { MOZ_COUNT_DTOR(FullscreenExit); }
 
  private:
-  FullscreenExit(nsIDocument* aDoc, already_AddRefed<Promise> aPromise)
+  FullscreenExit(dom::Document* aDoc, already_AddRefed<Promise> aPromise)
       : FullscreenChange(kType, aDoc, std::move(aPromise)) {
     MOZ_COUNT_CTOR(FullscreenExit);
   }

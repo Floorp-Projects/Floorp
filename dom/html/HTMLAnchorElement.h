@@ -43,7 +43,7 @@ class HTMLAnchorElement final : public nsGenericHTMLElement, public Link {
   // DOM memory reporter participant
   NS_DECL_ADDSIZEOFEXCLUDINGTHIS
 
-  virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+  virtual nsresult BindToTree(Document* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent) override;
   virtual void UnbindFromTree(bool aDeep = true,
                               bool aNullParent = true) override;
@@ -176,7 +176,7 @@ class HTMLAnchorElement final : public nsGenericHTMLElement, public Link {
   void Stringify(nsAString& aResult) { GetHref(aResult); }
   void ToString(nsAString& aSource);
 
-  void NodeInfoChanged(nsIDocument* aOldDoc) final {
+  void NodeInfoChanged(Document* aOldDoc) final {
     ClearHasPendingLinkUpdate();
     nsGenericHTMLElement::NodeInfoChanged(aOldDoc);
   }

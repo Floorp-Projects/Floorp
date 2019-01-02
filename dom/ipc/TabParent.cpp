@@ -1103,7 +1103,7 @@ void TabParent::SendRealMouseEvent(WidgetMouseEvent& aEvent) {
 }
 
 LayoutDeviceToCSSScale TabParent::GetLayoutDeviceToCSSScale() {
-  nsIDocument* doc = (mFrameElement ? mFrameElement->OwnerDoc() : nullptr);
+  Document* doc = (mFrameElement ? mFrameElement->OwnerDoc() : nullptr);
   nsPresContext* ctx = (doc ? doc->GetPresContext() : nullptr);
   return LayoutDeviceToCSSScale(
       ctx ? (float)ctx->AppUnitsPerDevPixel() / AppUnitsPerCSSPixel() : 0.0f);
@@ -2025,7 +2025,7 @@ mozilla::ipc::IPCResult TabParent::RecvReplyKeyEvent(
 
   // Here we convert the WidgetEvent that we received to an Event
   // to be able to dispatch it to the <browser> element as the target element.
-  nsIDocument* doc = mFrameElement->OwnerDoc();
+  Document* doc = mFrameElement->OwnerDoc();
   nsPresContext* presContext = doc->GetPresContext();
   NS_ENSURE_TRUE(presContext, IPC_OK());
 
@@ -2080,7 +2080,7 @@ mozilla::ipc::IPCResult TabParent::RecvAccessKeyNotHandled(
 
   // Here we convert the WidgetEvent that we received to an Event
   // to be able to dispatch it to the <browser> element as the target element.
-  nsIDocument* doc = mFrameElement->OwnerDoc();
+  Document* doc = mFrameElement->OwnerDoc();
   nsIPresShell* presShell = doc->GetShell();
   NS_ENSURE_TRUE(presShell, IPC_OK());
 

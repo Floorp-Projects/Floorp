@@ -650,7 +650,7 @@ NS_IMETHODIMP
 PresentationConnection::GetLoadGroup(nsILoadGroup** aLoadGroup) {
   *aLoadGroup = nullptr;
 
-  nsCOMPtr<nsIDocument> doc = GetOwner() ? GetOwner()->GetExtantDoc() : nullptr;
+  nsCOMPtr<Document> doc = GetOwner() ? GetOwner()->GetExtantDoc() : nullptr;
   if (!doc) {
     return NS_ERROR_FAILURE;
   }

@@ -27,7 +27,7 @@
 #include "nsGlobalWindow.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMWindow.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsXPCOM.h"
 #include "nsIXPConnect.h"
 #include "nsContentUtils.h"
@@ -1033,7 +1033,7 @@ class InitRunnable final : public WebSocketMainThreadRunnable {
 
     ClearException ce(jsapi.cx());
 
-    nsIDocument* doc = aWindow->GetExtantDoc();
+    Document* doc = aWindow->GetExtantDoc();
     if (!doc) {
       mErrorCode = NS_ERROR_FAILURE;
       return true;
@@ -1084,7 +1084,7 @@ class ConnectRunnable final : public WebSocketMainThreadRunnable {
 
  protected:
   virtual bool InitWithWindow(nsPIDOMWindowInner* aWindow) override {
-    nsIDocument* doc = aWindow->GetExtantDoc();
+    Document* doc = aWindow->GetExtantDoc();
     if (!doc) {
       return true;
     }
@@ -1128,7 +1128,7 @@ class AsyncOpenRunnable final : public WebSocketMainThreadRunnable {
     AssertIsOnMainThread();
     MOZ_ASSERT(aWindow);
 
-    nsIDocument* doc = aWindow->GetExtantDoc();
+    Document* doc = aWindow->GetExtantDoc();
     if (!doc) {
       mErrorCode = NS_ERROR_FAILURE;
       return true;
@@ -1509,7 +1509,7 @@ nsresult WebSocketImpl::Init(JSContext* aCx, nsIPrincipal* aLoadingPrincipal,
   rv = ParseURL(aURL);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIDocument> originDoc = mWebSocket->GetDocumentIfCurrent();
+  nsCOMPtr<Document> originDoc = mWebSocket->GetDocumentIfCurrent();
   if (!originDoc) {
     rv = mWebSocket->CheckInnerWindowCorrectness();
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1706,7 +1706,7 @@ nsresult WebSocketImpl::InitializeConnection(nsIPrincipal* aPrincipal) {
 
   // manually adding loadinfo to the channel since it
   // was not set during channel creation.
-  nsCOMPtr<nsIDocument> doc = do_QueryReferent(mOriginDocument);
+  nsCOMPtr<Document> doc = do_QueryReferent(mOriginDocument);
 
   // mOriginDocument has to be release on main-thread because WeakReferences
   // are not thread-safe.
@@ -2476,7 +2476,7 @@ WebSocketImpl::GetLoadGroup(nsILoadGroup** aLoadGroup) {
   *aLoadGroup = nullptr;
 
   if (mIsMainThread) {
-    nsCOMPtr<nsIDocument> doc = mWebSocket->GetDocumentIfCurrent();
+    nsCOMPtr<Document> doc = mWebSocket->GetDocumentIfCurrent();
     if (doc) {
       *aLoadGroup = doc->GetDocumentLoadGroup().take();
     }
@@ -2497,7 +2497,7 @@ WebSocketImpl::GetLoadGroup(nsILoadGroup** aLoadGroup) {
     return NS_OK;
   }
 
-  nsIDocument* doc = window->GetExtantDoc();
+  Document* doc = window->GetExtantDoc();
   if (doc) {
     *aLoadGroup = doc->GetDocumentLoadGroup().take();
   }
@@ -2707,7 +2707,7 @@ nsresult WebSocketImpl::GetLoadingPrincipal(nsIPrincipal** aPrincipal) {
 
     innerWindow = currentInnerWindow;
 
-    nsCOMPtr<nsIDocument> document = innerWindow->GetExtantDoc();
+    nsCOMPtr<Document> document = innerWindow->GetExtantDoc();
     if (NS_WARN_IF(!document)) {
       return NS_ERROR_DOM_SECURITY_ERR;
     }

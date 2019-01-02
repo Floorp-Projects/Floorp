@@ -89,7 +89,7 @@ already_AddRefed<nsIPrincipal> PermissionStatus::GetPrincipal() const {
     return nullptr;
   }
 
-  nsIDocument* doc = window->GetExtantDoc();
+  Document* doc = window->GetExtantDoc();
   if (NS_WARN_IF(!doc)) {
     return nullptr;
   }

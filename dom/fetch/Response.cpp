@@ -98,7 +98,7 @@ Response::~Response() { mozilla::DropJSObjects(this); }
     nsCOMPtr<nsIURI> baseURI;
     nsCOMPtr<nsPIDOMWindowInner> inner(
         do_QueryInterface(aGlobal.GetAsSupports()));
-    nsIDocument* doc = inner ? inner->GetExtantDoc() : nullptr;
+    Document* doc = inner ? inner->GetExtantDoc() : nullptr;
     if (doc) {
       baseURI = doc->GetBaseURI();
     }
@@ -193,7 +193,7 @@ Response::~Response() { mozilla::DropJSObjects(this); }
     ChannelInfo info;
     nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(global);
     if (window) {
-      nsIDocument* doc = window->GetExtantDoc();
+      Document* doc = window->GetExtantDoc();
       MOZ_ASSERT(doc);
       info.InitFromDocument(doc);
     } else {

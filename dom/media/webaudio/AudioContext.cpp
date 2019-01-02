@@ -225,9 +225,9 @@ void AudioContext::EnsureAutoplayRequested() {
                      request.get());
         self->mWasAllowedToStart = false;
         self->DispatchBlockedEvent();
-        nsIDocument* doc = self->GetParentObject()
-                               ? self->GetParentObject()->GetExtantDoc()
-                               : nullptr;
+        Document* doc = self->GetParentObject()
+                            ? self->GetParentObject()->GetExtantDoc()
+                            : nullptr;
         nsContentUtils::ReportToConsole(
             nsIScriptError::warningFlag, NS_LITERAL_CSTRING("Media"), doc,
             nsContentUtils::eDOM_PROPERTIES, "BlockAutoplayError");
@@ -804,7 +804,7 @@ class OnStateChangeTask final : public Runnable {
       return NS_ERROR_FAILURE;
     }
 
-    nsIDocument* doc = parent->GetExtantDoc();
+    Document* doc = parent->GetExtantDoc();
     if (!doc) {
       return NS_ERROR_FAILURE;
     }
@@ -1017,7 +1017,7 @@ void AudioContext::DispatchBlockedEvent() {
           return;
         }
 
-        nsIDocument* doc = parent->GetExtantDoc();
+        Document* doc = parent->GetExtantDoc();
         if (!doc) {
           return;
         }

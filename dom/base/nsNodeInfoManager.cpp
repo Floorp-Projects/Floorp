@@ -11,13 +11,13 @@
 #include "nsNodeInfoManager.h"
 
 #include "mozilla/DebugOnly.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/NodeInfo.h"
 #include "mozilla/dom/NodeInfoInlines.h"
 #include "mozilla/NullPrincipal.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsAtom.h"
-#include "nsIDocument.h"
 #include "nsIPrincipal.h"
 #include "nsIURI.h"
 #include "nsContentUtils.h"
@@ -29,7 +29,6 @@
 #include "nsHashKeys.h"
 #include "nsCCUncollectableMarker.h"
 #include "nsNameSpaceManager.h"
-#include "nsIDocument.h"
 #include "nsWindowSizes.h"
 
 using namespace mozilla;
@@ -85,26 +84,26 @@ NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(nsNodeInfoManager, Release)
 
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(nsNodeInfoManager)
   if (tmp->mDocument) {
-    return NS_CYCLE_COLLECTION_PARTICIPANT(nsIDocument)
-        ->CanSkip(tmp->mDocument, aRemovingAllowed);
+    return NS_CYCLE_COLLECTION_PARTICIPANT(Document)->CanSkip(tmp->mDocument,
+                                                              aRemovingAllowed);
   }
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_END
 
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_BEGIN(nsNodeInfoManager)
   if (tmp->mDocument) {
-    return NS_CYCLE_COLLECTION_PARTICIPANT(nsIDocument)
-        ->CanSkipInCC(tmp->mDocument);
+    return NS_CYCLE_COLLECTION_PARTICIPANT(Document)->CanSkipInCC(
+        tmp->mDocument);
   }
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_END
 
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_BEGIN(nsNodeInfoManager)
   if (tmp->mDocument) {
-    return NS_CYCLE_COLLECTION_PARTICIPANT(nsIDocument)
-        ->CanSkipThis(tmp->mDocument);
+    return NS_CYCLE_COLLECTION_PARTICIPANT(Document)->CanSkipThis(
+        tmp->mDocument);
   }
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_END
 
-nsresult nsNodeInfoManager::Init(nsIDocument* aDocument) {
+nsresult nsNodeInfoManager::Init(Document* aDocument) {
   MOZ_ASSERT(!mPrincipal, "Being inited when we already have a principal?");
 
   mPrincipal = NullPrincipal::CreateWithoutOriginAttributes();

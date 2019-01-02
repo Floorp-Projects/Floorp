@@ -12,7 +12,6 @@
 #include "nsIChannelEventSink.h"
 
 class nsIStreamListener;
-class nsIDocument;
 
 #define NS_CONTENTSECURITYMANAGER_CONTRACTID \
   "@mozilla.org/contentsecuritymanager;1"

@@ -31,7 +31,7 @@ static bool ShouldPersistAttribute(Element* aElement, nsAtom* aAttribute) {
 
 NS_IMPL_ISUPPORTS(XULPersist, nsIDocumentObserver)
 
-XULPersist::XULPersist(nsIDocument* aDocument)
+XULPersist::XULPersist(Document* aDocument)
     : nsStubDocumentObserver(), mDocument(aDocument) {}
 
 XULPersist::~XULPersist() {}

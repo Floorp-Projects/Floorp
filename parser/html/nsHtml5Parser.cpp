@@ -666,7 +666,7 @@ nsresult nsHtml5Parser::ParseUntilBlocked() {
   }
 }
 
-nsresult nsHtml5Parser::Initialize(nsIDocument* aDoc, nsIURI* aURI,
+nsresult nsHtml5Parser::Initialize(mozilla::dom::Document* aDoc, nsIURI* aURI,
                                    nsISupports* aContainer,
                                    nsIChannel* aChannel) {
   return mExecutor->Init(aDoc, aURI, aContainer, aChannel);

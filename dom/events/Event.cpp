@@ -29,7 +29,7 @@
 #include "nsIFrame.h"
 #include "nsIContent.h"
 #include "nsIContentInlines.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIPresShell.h"
 #include "nsIScrollableFrame.h"
 #include "nsJSEnvironment.h"
@@ -222,7 +222,7 @@ void Event::GetType(nsAString& aType) const {
 
 EventTarget* Event::GetTarget() const { return mEvent->GetDOMEventTarget(); }
 
-already_AddRefed<nsIDocument> Event::GetDocument() const {
+already_AddRefed<Document> Event::GetDocument() const {
   nsCOMPtr<EventTarget> eventTarget = GetTarget();
 
   if (!eventTarget) {
@@ -236,7 +236,7 @@ already_AddRefed<nsIDocument> Event::GetDocument() const {
     return nullptr;
   }
 
-  nsCOMPtr<nsIDocument> doc;
+  nsCOMPtr<Document> doc;
   doc = win->GetExtantDoc();
 
   return doc.forget();
@@ -301,7 +301,7 @@ bool Event::Init(mozilla::dom::EventTarget* aGlobal) {
   bool trusted = false;
   nsCOMPtr<nsPIDOMWindowInner> w = do_QueryInterface(aGlobal);
   if (w) {
-    nsCOMPtr<nsIDocument> d = w->GetExtantDoc();
+    nsCOMPtr<Document> d = w->GetExtantDoc();
     if (d) {
       trusted = nsContentUtils::IsChromeDoc(d);
       nsPresContext* presContext = d->GetPresContext();
@@ -384,12 +384,12 @@ void Event::PreventDefaultInternal(bool aCalledByDefaultHandler,
   if (mEvent->mFlags.mInPassiveListener) {
     nsCOMPtr<nsPIDOMWindowInner> win(do_QueryInterface(mOwner));
     if (win) {
-      if (nsIDocument* doc = win->GetExtantDoc()) {
+      if (Document* doc = win->GetExtantDoc()) {
         nsString type;
         GetType(type);
         const char16_t* params[] = {type.get()};
-        doc->WarnOnceAbout(nsIDocument::ePreventDefaultFromPassiveListener,
-                           false, params, ArrayLength(params));
+        doc->WarnOnceAbout(Document::ePreventDefaultFromPassiveListener, false,
+                           params, ArrayLength(params));
       }
     }
     return;

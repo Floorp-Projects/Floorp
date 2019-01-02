@@ -50,7 +50,7 @@ void MediaError::GetMessage(nsAString& aResult) const {
             "  If it is really necessary, please add it to the whitelist in"
             " MediaError::GetMessage: ") +
         mMessage;
-    nsIDocument* ownerDoc = mParent->OwnerDoc();
+    Document* ownerDoc = mParent->OwnerDoc();
     AutoJSAPI api;
     if (api.Init(ownerDoc->GetScopeObject())) {
       // We prefer this API because it can also print to our debug log and

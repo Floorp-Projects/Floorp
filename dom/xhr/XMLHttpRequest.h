@@ -100,7 +100,7 @@ class XMLHttpRequest : public XMLHttpRequestEventTarget {
 
   virtual void GetResponseText(DOMString& aResponseText, ErrorResult& aRv) = 0;
 
-  virtual nsIDocument* GetResponseXML(ErrorResult& aRv) = 0;
+  virtual Document* GetResponseXML(ErrorResult& aRv) = 0;
 
   virtual bool MozBackgroundRequest() const = 0;
 

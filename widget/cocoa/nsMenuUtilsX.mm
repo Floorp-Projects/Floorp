@@ -14,7 +14,7 @@
 #include "nsCocoaWindow.h"
 #include "nsGkAtoms.h"
 #include "nsGlobalWindowInner.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsPIDOMWindow.h"
 #include "nsQueryObject.h"
 #include "mozilla/dom/XULCommandEvent.h"
@@ -25,7 +25,7 @@ void nsMenuUtilsX::DispatchCommandTo(nsIContent* aTargetContent)
 {
   MOZ_ASSERT(aTargetContent, "null ptr");
 
-  nsIDocument* doc = aTargetContent->OwnerDoc();
+  dom::Document* doc = aTargetContent->OwnerDoc();
   if (doc) {
     RefPtr<dom::XULCommandEvent> event =
       new dom::XULCommandEvent(doc, doc->GetPresContext(), nullptr);

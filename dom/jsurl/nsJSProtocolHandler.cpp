@@ -38,7 +38,7 @@
 #include "nsJSUtils.h"
 #include "nsThreadUtils.h"
 #include "nsIScriptChannel.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsILoadInfo.h"
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
@@ -189,7 +189,7 @@ nsresult nsJSThunk::EvaluateScript(
 
   // Sandboxed document check: javascript: URI's are disabled
   // in a sandboxed document unless 'allow-scripts' was specified.
-  nsIDocument* doc = aOriginalInnerWindow->GetExtantDoc();
+  mozilla::dom::Document* doc = aOriginalInnerWindow->GetExtantDoc();
   if (doc && doc->HasScriptsBlockedBySandbox()) {
     return NS_ERROR_DOM_RETVAL_UNDEFINED;
   }
@@ -339,7 +339,7 @@ class nsJSChannel : public nsIChannel,
                                                       // load started against.
   // If we blocked onload on a document in AsyncOpen2, this is the document we
   // did it on.
-  nsCOMPtr<nsIDocument> mDocumentOnloadBlockedOn;
+  RefPtr<mozilla::dom::Document> mDocumentOnloadBlockedOn;
 
   nsresult mStatus;  // Our status
 

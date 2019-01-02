@@ -123,7 +123,7 @@ UDPSocket::UDPSocket(nsPIDOMWindowInner* aOwner,
       mReadyState(SocketReadyState::Opening) {
   MOZ_ASSERT(aOwner);
 
-  nsIDocument* aDoc = aOwner->GetExtantDoc();
+  Document* aDoc = aOwner->GetExtantDoc();
   if (aDoc) {
     aDoc->DisallowBFCaching();
   }

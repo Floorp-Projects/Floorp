@@ -76,7 +76,7 @@ bool FeaturePolicy::HasDeclaredFeature(const nsAString& aFeatureName) const {
   return false;
 }
 
-void FeaturePolicy::SetDeclaredPolicy(nsIDocument* aDocument,
+void FeaturePolicy::SetDeclaredPolicy(Document* aDocument,
                                       const nsAString& aPolicyString,
                                       nsIPrincipal* aSelfOrigin,
                                       nsIPrincipal* aSrcOrigin) {

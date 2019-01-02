@@ -82,8 +82,8 @@ rusty-enums = [
     "nsStyleSVGOpacitySource",
     "nsStyleUnit",
     "nsCSSKeyword",
-    "nsIDocument_DocumentTheme",
-    "nsIDocument_Type",
+    "mozilla::dom::Document_DocumentTheme",
+    "mozilla::dom::Document_Type",
     "nsCSSUnit",
     "nsCSSFontDesc",
     "nsCSSPropertyID",
@@ -362,7 +362,7 @@ opaque-types = [
                      #    doesn't expose properly.
     "nsBaseHashtable", "nsRefPtrHashtable", "nsDataHashtable", "nsClassHashtable",  # <- Ditto
     "nsInterfaceHashtable",  # <- Ditto
-    "nsIDocument_SelectorCache",  # <- Inherits from nsExpirationTracker<.., 4>
+    "mozilla::dom::Document_SelectorCache",  # <- Inherits from nsExpirationTracker<.., 4>
     "nsIPresShell_ScrollAxis",  # <- For some reason the alignment of this is 4
                                 # for clang.
     "nsPIDOMWindow",  # <- Takes the vtable from a template parameter, and we can't
@@ -479,8 +479,8 @@ structs-types = [
     "nsAttrValue",
     "nsIContent",
     "nsINode",
-    "nsIDocument",
-    "nsIDocument_DocumentTheme",
+    "Document",
+    "Document_DocumentTheme",
     "nsSimpleContentList",
     "mozilla::MediumFeaturesChangedResult",
     "RawGeckoAnimationPropertySegment",

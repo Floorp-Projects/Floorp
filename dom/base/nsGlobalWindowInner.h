@@ -49,7 +49,7 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/webgpu/InstanceProvider.h"
 #include "nsWrapperCacheInlines.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/EventTarget.h"
 #include "mozilla/dom/WindowBinding.h"
 #include "Units.h"
@@ -363,7 +363,7 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
 
   virtual nsresult FireDelayedDOMEvents() override;
 
-  virtual nsresult SetNewDocument(nsIDocument* aDocument, nsISupports* aState,
+  virtual nsresult SetNewDocument(Document* aDocument, nsISupports* aState,
                                   bool aForceReuseInnerWindow) override;
 
   virtual void MaybeUpdateTouchState() override;
@@ -603,7 +603,7 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
 
   mozilla::dom::BrowsingContext* Window();
   mozilla::dom::BrowsingContext* Self() { return Window(); }
-  nsIDocument* GetDocument() { return GetDoc(); }
+  Document* GetDocument() { return GetDoc(); }
   void GetName(nsAString& aName, mozilla::ErrorResult& aError);
   void SetName(const nsAString& aName, mozilla::ErrorResult& aError);
   mozilla::dom::Location* Location() override;
@@ -1048,7 +1048,7 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
 
   // Only to be called on an inner window.
   // aDocument must not be null.
-  void InnerSetNewDocument(JSContext* aCx, nsIDocument* aDocument);
+  void InnerSetNewDocument(JSContext* aCx, Document* aDocument);
 
   nsresult EnsureClientSource();
   nsresult ExecutionReady();

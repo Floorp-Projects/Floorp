@@ -26,7 +26,7 @@ class BodyExtractorBase {
 
 // The implementation versions of this template are:
 // ArrayBuffer, ArrayBufferView, Blob, FormData,
-// URLSearchParams, nsAString, nsIDocument, nsIInputStream.
+// URLSearchParams, nsAString, Document, nsIInputStream.
 template <typename Type>
 class BodyExtractor final : public BodyExtractorBase {
   Type* mBody;

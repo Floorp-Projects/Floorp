@@ -11,7 +11,6 @@
 
 #include "nsISupports.h"
 
-class nsIDocument;
 class nsIPresShell;
 
 // 1295f7c0-96b3-41fc-93ed-c95dfb712ce7

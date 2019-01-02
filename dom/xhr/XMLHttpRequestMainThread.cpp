@@ -414,7 +414,7 @@ size_t XMLHttpRequestMainThread::SizeOfEventTargetIncludingThis(
 static void LogMessage(const char* aWarning, nsPIDOMWindowInner* aWindow,
                        const char16_t** aParams = nullptr,
                        uint32_t aParamCount = 0) {
-  nsCOMPtr<nsIDocument> doc;
+  nsCOMPtr<Document> doc;
   if (aWindow) {
     doc = aWindow->GetExtantDoc();
   }
@@ -423,7 +423,7 @@ static void LogMessage(const char* aWarning, nsPIDOMWindowInner* aWindow,
       nsContentUtils::eDOM_PROPERTIES, aWarning, aParams, aParamCount);
 }
 
-nsIDocument* XMLHttpRequestMainThread::GetResponseXML(ErrorResult& aRv) {
+Document* XMLHttpRequestMainThread::GetResponseXML(ErrorResult& aRv) {
   if (mResponseType != XMLHttpRequestResponseType::_empty &&
       mResponseType != XMLHttpRequestResponseType::Document) {
     aRv.Throw(
@@ -1185,7 +1185,7 @@ already_AddRefed<nsILoadGroup> XMLHttpRequestMainThread::GetLoadGroup() const {
     return ref.forget();
   }
 
-  nsIDocument* doc = GetDocumentIfCurrent();
+  Document* doc = GetDocumentIfCurrent();
   if (doc) {
     return doc->GetDocumentLoadGroup();
   }
@@ -1355,14 +1355,14 @@ nsresult XMLHttpRequestMainThread::Open(const nsACString& aMethod,
   // Gecko-specific
   if (!aAsync && !DontWarnAboutSyncXHR() && GetOwner() &&
       GetOwner()->GetExtantDoc()) {
-    GetOwner()->GetExtantDoc()->WarnOnceAbout(nsIDocument::eSyncXMLHttpRequest);
+    GetOwner()->GetExtantDoc()->WarnOnceAbout(Document::eSyncXMLHttpRequest);
   }
 
   Telemetry::Accumulate(Telemetry::XMLHTTPREQUEST_ASYNC_OR_SYNC,
                         aAsync ? 0 : 1);
 
   // Step 1
-  nsCOMPtr<nsIDocument> responsibleDocument = GetDocumentIfCurrent();
+  nsCOMPtr<Document> responsibleDocument = GetDocumentIfCurrent();
   if (!responsibleDocument) {
     // This could be because we're no longer current or because we're in some
     // non-window context...
@@ -1945,7 +1945,7 @@ XMLHttpRequestMainThread::OnStartRequest(nsIRequest* request,
     NS_ENSURE_SUCCESS(rv, rv);
     baseURI = docURI;
 
-    nsCOMPtr<nsIDocument> doc = GetDocumentIfCurrent();
+    nsCOMPtr<Document> doc = GetDocumentIfCurrent();
     nsCOMPtr<nsIURI> chromeXHRDocURI, chromeXHRDocBaseURI;
     if (doc) {
       chromeXHRDocURI = doc->GetDocumentURI();
@@ -2212,7 +2212,7 @@ XMLHttpRequestMainThread::OnStopRequest(nsIRequest* request, nsISupports* ctxt,
     NS_ASSERTION(!mFlagSyncLooping,
                  "We weren't supposed to support HTML parsing with XHR!");
     mParseEndListener = new nsXHRParseEndListener(this);
-    nsCOMPtr<EventTarget> eventTarget = mResponseXML;
+    RefPtr<EventTarget> eventTarget = mResponseXML;
     EventListenerManager* manager = eventTarget->GetOrCreateListenerManager();
     manager->AddEventListenerByType(mParseEndListener,
                                     kLiteralString_DOMContentLoaded,
@@ -2335,7 +2335,7 @@ nsresult XMLHttpRequestMainThread::CreateChannel() {
   // Use the responsibleDocument if we have it, except for dedicated workers
   // where it will be the parent document, which is not the one we want to use.
   nsresult rv;
-  nsCOMPtr<nsIDocument> responsibleDocument = GetDocumentIfCurrent();
+  nsCOMPtr<Document> responsibleDocument = GetDocumentIfCurrent();
   if (responsibleDocument &&
       responsibleDocument->NodePrincipal() == mPrincipal) {
     rv = NS_NewChannel(getter_AddRefs(mChannel), mRequestURL,
@@ -2390,7 +2390,7 @@ nsresult XMLHttpRequestMainThread::CreateChannel() {
 }
 
 void XMLHttpRequestMainThread::MaybeLowerChannelPriority() {
-  nsCOMPtr<nsIDocument> doc = GetDocumentIfCurrent();
+  nsCOMPtr<Document> doc = GetDocumentIfCurrent();
   if (!doc) {
     return;
   }
@@ -2457,7 +2457,7 @@ nsresult XMLHttpRequestMainThread::InitiateFetch(
 
     if (!IsSystemXHR()) {
       nsCOMPtr<nsPIDOMWindowInner> owner = GetOwner();
-      nsCOMPtr<nsIDocument> doc = owner ? owner->GetExtantDoc() : nullptr;
+      nsCOMPtr<Document> doc = owner ? owner->GetExtantDoc() : nullptr;
       mozilla::net::ReferrerPolicy referrerPolicy =
           doc ? doc->GetReferrerPolicy() : mozilla::net::RP_Unset;
       nsContentUtils::SetFetchReferrerURIWithPolicy(
@@ -2669,7 +2669,7 @@ void XMLHttpRequestMainThread::Send(
   }
 
   if (aData.Value().IsDocument()) {
-    BodyExtractor<nsIDocument> body(&aData.Value().GetAsDocument());
+    BodyExtractor<Document> body(&aData.Value().GetAsDocument());
     aRv = SendInternal(&body, true);
     return;
   }
@@ -3448,7 +3448,7 @@ XMLHttpRequestMainThread::SyncTimeoutType
 XMLHttpRequestMainThread::MaybeStartSyncTimeoutTimer() {
   MOZ_ASSERT(mFlagSynchronous);
 
-  nsIDocument* doc = GetDocumentIfCurrent();
+  Document* doc = GetDocumentIfCurrent();
   if (!doc || !doc->GetPageUnloadingEventTimeStamp()) {
     return eNoTimerNeeded;
   }

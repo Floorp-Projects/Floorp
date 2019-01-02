@@ -32,7 +32,7 @@ class nsContentDLF final : public nsIDocumentLoaderFactory {
 
   nsresult InitUAStyleSheet();
 
-  typedef already_AddRefed<nsIDocument> (*DocumentCreator)();
+  typedef already_AddRefed<mozilla::dom::Document> (*DocumentCreator)();
   nsresult CreateDocument(const char* aCommand, nsIChannel* aChannel,
                           nsILoadGroup* aLoadGroup, nsIDocShell* aContainer,
                           DocumentCreator aDocumentCreator,
@@ -50,7 +50,7 @@ class nsContentDLF final : public nsIDocumentLoaderFactory {
    * principal.  aPrincipal is allowed to be null, in which case the
    * new document will get the about:blank codebase principal.
    */
-  static already_AddRefed<nsIDocument> CreateBlankDocument(
+  static already_AddRefed<mozilla::dom::Document> CreateBlankDocument(
       nsILoadGroup* aLoadGroup, nsIPrincipal* aPrincipal,
       nsDocShell* aContainer);
 

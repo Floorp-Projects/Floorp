@@ -17,7 +17,7 @@
 #include "nsGlobalWindowInner.h"
 #include "nsIAutoplay.h"
 #include "nsContentUtils.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "MediaManager.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
@@ -31,7 +31,7 @@ mozilla::LazyLogModule gAutoplayPermissionLog("Autoplay");
 namespace mozilla {
 namespace dom {
 
-static nsIDocument* ApproverDocOf(const nsIDocument& aDocument) {
+static Document* ApproverDocOf(const Document& aDocument) {
   nsCOMPtr<nsIDocShell> ds = aDocument.GetDocShell();
   if (!ds) {
     return nullptr;
@@ -94,7 +94,7 @@ static bool IsWindowAllowedToPlay(nsPIDOMWindowInner* aWindow) {
     return true;
   }
 
-  nsIDocument* approver = ApproverDocOf(*aWindow->GetExtantDoc());
+  Document* approver = ApproverDocOf(*aWindow->GetExtantDoc());
   if (!approver) {
     return false;
   }
@@ -121,8 +121,8 @@ static bool IsWindowAllowedToPlay(nsPIDOMWindowInner* aWindow) {
 
 /* static */
 already_AddRefed<AutoplayPermissionManager> AutoplayPolicy::RequestFor(
-    const nsIDocument& aDocument) {
-  nsIDocument* document = ApproverDocOf(aDocument);
+    const Document& aDocument) {
+  Document* document = ApproverDocOf(aDocument);
   if (!document) {
     return nullptr;
   }
@@ -157,9 +157,9 @@ static bool IsMediaElementAllowedToPlay(const HTMLMediaElement& aElement) {
     return true;
   }
 
-  nsIDocument* topDocument = ApproverDocOf(*aElement.OwnerDoc());
-  if (topDocument && topDocument->MediaDocumentKind() ==
-                         nsIDocument::MediaDocumentKind::Video) {
+  Document* topDocument = ApproverDocOf(*aElement.OwnerDoc());
+  if (topDocument &&
+      topDocument->MediaDocumentKind() == Document::MediaDocumentKind::Video) {
     AUTOPLAY_LOG("Allow video document %p to autoplay", &aElement);
     return true;
   }

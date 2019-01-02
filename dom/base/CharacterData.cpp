@@ -18,7 +18,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLSlotElement.h"
 #include "mozilla/dom/ShadowRoot.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsReadableUtils.h"
 #include "mozilla/InternalMutationEvent.h"
 #include "nsIURI.h"
@@ -230,7 +230,7 @@ nsresult CharacterData::SetTextInternal(
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  nsIDocument* document = GetComposedDoc();
+  Document* document = GetComposedDoc();
   mozAutoDocUpdate updateBatch(document, aNotify);
 
   bool haveMutationListeners =
@@ -390,7 +390,7 @@ void CharacterData::ToCString(nsAString& aBuf, int32_t aOffset,
 }
 #endif
 
-nsresult CharacterData::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+nsresult CharacterData::BindToTree(Document* aDocument, nsIContent* aParent,
                                    nsIContent* aBindingParent) {
   MOZ_ASSERT(aParent || aDocument, "Must have document if no parent!");
   MOZ_ASSERT(NODE_FROM(aParent, aDocument)->OwnerDoc() == OwnerDoc(),
@@ -500,7 +500,7 @@ void CharacterData::UnbindFromTree(bool aDeep, bool aNullParent) {
   // Unset frame flags; if we need them again later, they'll get set again.
   UnsetFlags(NS_CREATE_FRAME_IF_NON_WHITESPACE | NS_REFRAME_IF_WHITESPACE);
 
-  nsIDocument* document = GetComposedDoc();
+  Document* document = GetComposedDoc();
 
   if (aNullParent) {
     if (this->IsRootOfNativeAnonymousSubtree()) {

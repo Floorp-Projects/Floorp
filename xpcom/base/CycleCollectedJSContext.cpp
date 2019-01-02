@@ -226,7 +226,7 @@ class PromiseJobRunnable final : public MicroTaskRunnable {
     if (global && !global->IsDying()) {
       // Propagate the user input event handling bit if needed.
       nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(global);
-      nsCOMPtr<nsIDocument> doc;
+      RefPtr<Document> doc;
       if (win) {
         doc = win->GetExtantDoc();
       }

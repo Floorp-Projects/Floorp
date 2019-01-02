@@ -26,7 +26,7 @@
 #include "TypeInState.h"
 
 #include "nsHTMLDocument.h"
-#include "nsIDocumentInlines.h"
+#include "mozilla/dom/DocumentInlines.h"
 #include "nsISelectionController.h"
 #include "nsILinkHandler.h"
 #include "nsIInlineSpellChecker.h"
@@ -295,7 +295,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(HTMLEditor)
   NS_INTERFACE_MAP_ENTRY(nsIEditorMailSupport)
 NS_INTERFACE_MAP_END_INHERITING(TextEditor)
 
-nsresult HTMLEditor::Init(nsIDocument& aDoc, Element* aRoot,
+nsresult HTMLEditor::Init(Document& aDoc, Element* aRoot,
                           nsISelectionController* aSelCon, uint32_t aFlags,
                           const nsAString& aInitialValue) {
   MOZ_ASSERT(aInitialValue.IsEmpty(), "Non-empty initial values not supported");
@@ -360,7 +360,7 @@ void HTMLEditor::PreDestroy(bool aDestroyingFrames) {
   // FYI: Cannot create AutoEditActionDataSetter here.  However, it does not
   //      necessary for the methods called by the following code.
 
-  nsCOMPtr<nsIDocument> document = GetDocument();
+  RefPtr<Document> document = GetDocument();
   if (document) {
     document->RemoveMutationObserver(this);
   }
@@ -380,8 +380,8 @@ void HTMLEditor::PreDestroy(bool aDestroyingFrames) {
 }
 
 NS_IMETHODIMP
-HTMLEditor::NotifySelectionChanged(nsIDocument* aDocument,
-                                   Selection* aSelection, int16_t aReason) {
+HTMLEditor::NotifySelectionChanged(Document* aDocument, Selection* aSelection,
+                                   int16_t aReason) {
   if (NS_WARN_IF(!aDocument) || NS_WARN_IF(!aSelection)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -427,7 +427,7 @@ void HTMLEditor::UpdateRootElement() {
 
   mRootElement = GetBodyElement();
   if (!mRootElement) {
-    nsCOMPtr<nsIDocument> doc = GetDocument();
+    RefPtr<Document> doc = GetDocument();
     if (doc) {
       // If there is no HTML body element,
       // we should use the document root element instead.
@@ -445,7 +445,7 @@ Element* HTMLEditor::FindSelectionRoot(nsINode* aNode) const {
   MOZ_ASSERT(aNode->IsDocument() || aNode->IsContent(),
              "aNode must be content or document node");
 
-  nsIDocument* doc = aNode->GetComposedDoc();
+  Document* doc = aNode->GetComposedDoc();
   if (!doc) {
     return nullptr;
   }
@@ -998,7 +998,7 @@ bool HTMLEditor::IsVisibleBRElement(nsINode* aNode) {
 
 NS_IMETHODIMP
 HTMLEditor::UpdateBaseURL() {
-  nsCOMPtr<nsIDocument> doc = GetDocument();
+  RefPtr<Document> doc = GetDocument();
   NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
 
   // Look for an HTML <base> tag
@@ -1259,7 +1259,7 @@ nsresult HTMLEditor::ReplaceHeadContentsWithSourceWithTransaction(
   // insert in <head>.  Use the head node as a parent and delete/insert
   // directly.
   // XXX We're using AutoTopLevelEditSubActionNotifier above...
-  nsCOMPtr<nsIDocument> document = GetDocument();
+  RefPtr<Document> document = GetDocument();
   if (NS_WARN_IF(!document)) {
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -3062,7 +3062,7 @@ HTMLEditor::GetLinkedObjects(nsIArray** aNodeList) {
   }
 
   nsCOMPtr<nsIContentIterator> iter = NS_NewContentIterator();
-  nsCOMPtr<nsIDocument> doc = GetDocument();
+  RefPtr<Document> doc = GetDocument();
   NS_ENSURE_TRUE(doc, NS_ERROR_UNEXPECTED);
 
   iter->Init(doc->GetRootElement());
@@ -3237,7 +3237,7 @@ void HTMLEditor::EnableStyleSheetInternal(const nsAString& aURL, bool aEnable) {
   }
 
   // Ensure the style sheet is owned by our document.
-  nsCOMPtr<nsIDocument> document = GetDocument();
+  RefPtr<Document> document = GetDocument();
   sheet->SetAssociatedDocumentOrShadowRoot(
       document, StyleSheet::NotOwnedByDocumentOrShadowRoot);
 
@@ -3253,7 +3253,7 @@ bool HTMLEditor::EnableExistingStyleSheet(const nsAString& aURL) {
   }
 
   // Ensure the style sheet is owned by our document.
-  nsCOMPtr<nsIDocument> document = GetDocument();
+  RefPtr<Document> document = GetDocument();
   sheet->SetAssociatedDocumentOrShadowRoot(
       document, StyleSheet::NotOwnedByDocumentOrShadowRoot);
 
@@ -3433,7 +3433,7 @@ nsresult HTMLEditor::DeleteTextWithTransaction(CharacterData& aCharData,
 }
 
 nsresult HTMLEditor::InsertTextWithTransaction(
-    nsIDocument& aDocument, const nsAString& aStringToInsert,
+    Document& aDocument, const nsAString& aStringToInsert,
     const EditorRawDOMPoint& aPointToInsert,
     EditorRawDOMPoint* aPointAfterInsertedString) {
   if (NS_WARN_IF(!aPointToInsert.IsSet())) {
@@ -4748,7 +4748,7 @@ nsIContent* HTMLEditor::GetFocusedContent() {
 
   nsCOMPtr<nsIContent> focusedContent = fm->GetFocusedElement();
 
-  nsCOMPtr<nsIDocument> document = GetDocument();
+  RefPtr<Document> document = GetDocument();
   if (NS_WARN_IF(!document)) {
     return nullptr;
   }
@@ -4786,7 +4786,7 @@ already_AddRefed<nsIContent> HTMLEditor::GetFocusedContentForIME() {
     return nullptr;
   }
 
-  nsCOMPtr<nsIDocument> document = GetDocument();
+  RefPtr<Document> document = GetDocument();
   if (NS_WARN_IF(!document)) {
     return nullptr;
   }
@@ -4798,7 +4798,7 @@ bool HTMLEditor::IsActiveInDOMWindow() {
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
   NS_ENSURE_TRUE(fm, false);
 
-  nsCOMPtr<nsIDocument> document = GetDocument();
+  RefPtr<Document> document = GetDocument();
   if (NS_WARN_IF(!document)) {
     return false;
   }
@@ -4829,7 +4829,7 @@ bool HTMLEditor::IsActiveInDOMWindow() {
 }
 
 Element* HTMLEditor::GetActiveEditingHost() const {
-  nsIDocument* document = GetDocument();
+  Document* document = GetDocument();
   if (NS_WARN_IF(!document)) {
     return nullptr;
   }
@@ -4914,7 +4914,7 @@ void HTMLEditor::NotifyRootChanged() {
 
 Element* HTMLEditor::GetBodyElement() {
   MOZ_ASSERT(IsInitialized(), "The HTMLEditor hasn't been initialized yet");
-  nsCOMPtr<nsIDocument> document = GetDocument();
+  RefPtr<Document> document = GetDocument();
   if (NS_WARN_IF(!document)) {
     return nullptr;
   }
@@ -4939,7 +4939,7 @@ already_AddRefed<nsINode> HTMLEditor::GetFocusedNode() {
     return focusedElement.forget();
   }
 
-  nsCOMPtr<nsIDocument> document = GetDocument();
+  RefPtr<Document> document = GetDocument();
   return document.forget();
 }
 
@@ -4951,7 +4951,7 @@ bool HTMLEditor::OurWindowHasFocus() {
   if (!focusedWindow) {
     return false;
   }
-  nsCOMPtr<nsIDocument> document = GetDocument();
+  RefPtr<Document> document = GetDocument();
   if (NS_WARN_IF(!document)) {
     return false;
   }
@@ -4978,7 +4978,7 @@ bool HTMLEditor::IsAcceptableInputEvent(WidgetGUIEvent* aGUIEvent) {
   }
   NS_ENSURE_TRUE(target, false);
 
-  nsCOMPtr<nsIDocument> document = GetDocument();
+  RefPtr<Document> document = GetDocument();
   if (NS_WARN_IF(!document)) {
     return false;
   }
@@ -4986,7 +4986,7 @@ bool HTMLEditor::IsAcceptableInputEvent(WidgetGUIEvent* aGUIEvent) {
   if (document->HasFlag(NODE_IS_EDITABLE)) {
     // If this editor is in designMode and the event target is the document,
     // the event is for this editor.
-    nsCOMPtr<nsIDocument> targetDocument = do_QueryInterface(target);
+    nsCOMPtr<Document> targetDocument = do_QueryInterface(target);
     if (targetDocument) {
       return targetDocument == document;
     }
@@ -5065,7 +5065,7 @@ already_AddRefed<Element> HTMLEditor::GetInputEventTargetElement() {
 Element* HTMLEditor::GetEditorRoot() const { return GetActiveEditingHost(); }
 
 nsHTMLDocument* HTMLEditor::GetHTMLDocument() const {
-  nsIDocument* doc = GetDocument();
+  Document* doc = GetDocument();
   if (NS_WARN_IF(!doc)) {
     return nullptr;
   }

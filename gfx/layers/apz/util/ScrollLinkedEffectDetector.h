@@ -9,8 +9,6 @@
 
 #include "mozilla/RefPtr.h"
 
-class nsIDocument;
-
 namespace mozilla {
 namespace layers {
 
@@ -30,11 +28,11 @@ class MOZ_STACK_CLASS ScrollLinkedEffectDetector {
  public:
   static void PositioningPropertyMutated();
 
-  explicit ScrollLinkedEffectDetector(nsIDocument* aDoc);
+  explicit ScrollLinkedEffectDetector(dom::Document*);
   ~ScrollLinkedEffectDetector();
 
  private:
-  RefPtr<nsIDocument> mDocument;
+  RefPtr<dom::Document> mDocument;
 };
 
 }  // namespace layers

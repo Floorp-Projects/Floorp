@@ -17,8 +17,8 @@
 #include "nsContentUtils.h"
 #include "nsIContent.h"
 #include "nsIContentInlines.h"
-#include "nsIDocument.h"
-#include "nsIDocumentInlines.h"  // for nsIDocument and HTMLBodyElement
+#include "mozilla/dom/Document.h"
+#include "DocumentInlines.h"  // for Document and HTMLBodyElement
 #include "nsIPresShell.h"
 #include "nsIScrollableFrame.h"
 #include "nsITextControlElement.h"
@@ -659,7 +659,7 @@ ESMAutoDirWheelDeltaAdjuster::ESMAutoDirWheelDeltaAdjuster(
     // If we are going to honour root, first try to get the frame for <body> as
     // the honoured root, because <body> is in preference to <html> if the
     // current document is an HTML document.
-    nsIDocument* document = aScrollFrame.PresShell()->GetDocument();
+    Document* document = aScrollFrame.PresShell()->GetDocument();
     if (document) {
       Element* bodyElement = document->GetBodyElement();
       if (bodyElement) {

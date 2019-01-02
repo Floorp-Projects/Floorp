@@ -10,16 +10,20 @@
 #include "mozilla/dom/Animation.h"
 #include "mozilla/TypedEnumBits.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsTHashtable.h"
 
 class nsIFrame;
 
 namespace mozilla {
 
+namespace dom {
+class Document;
+}
+
 class PendingAnimationTracker final {
  public:
-  explicit PendingAnimationTracker(nsIDocument* aDocument)
+  explicit PendingAnimationTracker(dom::Document* aDocument)
       : mDocument(aDocument) {}
 
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(PendingAnimationTracker)
@@ -86,7 +90,7 @@ class PendingAnimationTracker final {
 
   AnimationSet mPlayPendingSet;
   AnimationSet mPausePendingSet;
-  nsCOMPtr<nsIDocument> mDocument;
+  RefPtr<dom::Document> mDocument;
 
  public:
   enum class CheckState {

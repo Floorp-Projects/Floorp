@@ -24,7 +24,7 @@
 
 class nsAtom;
 class nsIContent;
-class nsIDocument;
+
 class nsXBLAttributeEntry;
 class nsXBLBinding;
 class nsXBLProtoImplField;
@@ -173,7 +173,7 @@ class nsXBLPrototypeBinding final
 
  private:
   nsresult Read(nsIObjectInputStream* aStream, nsXBLDocumentInfo* aDocInfo,
-                nsIDocument* aDocument, uint8_t aFlags);
+                mozilla::dom::Document* aDocument, uint8_t aFlags);
 
   /**
    * Read a new binding from the stream aStream into the xbl document aDocument.
@@ -189,7 +189,8 @@ class nsXBLPrototypeBinding final
  public:
   static nsresult ReadNewBinding(nsIObjectInputStream* aStream,
                                  nsXBLDocumentInfo* aDocInfo,
-                                 nsIDocument* aDocument, uint8_t aFlags);
+                                 mozilla::dom::Document* aDocument,
+                                 uint8_t aFlags);
 
   /**
    * Write this binding to the stream.
@@ -202,8 +203,8 @@ class nsXBLPrototypeBinding final
    * the child will be inserted into.
    */
   nsresult ReadContentNode(nsIObjectInputStream* aStream,
-                           nsIDocument* aDocument, nsNodeInfoManager* aNim,
-                           nsIContent** aChild);
+                           mozilla::dom::Document* aDocument,
+                           nsNodeInfoManager* aNim, nsIContent** aChild);
 
   /**
    * Write the content node aNode to aStream.

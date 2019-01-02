@@ -33,7 +33,7 @@
 #include "mozilla/dom/DOMStringList.h"
 #include "mozilla/dom/DataTransfer.h"
 #include "mozilla/dom/DragEvent.h"
-#include "nsIDocument.h"             // for nsIDocument
+#include "mozilla/dom/Document.h"    // for Document
 #include "nsIFocusManager.h"         // for nsIFocusManager
 #include "nsIFormControl.h"          // for nsIFormControl, etc.
 #include "nsINode.h"                 // for nsINode, ::NODE_IS_EDITABLE, etc.
@@ -63,7 +63,7 @@ namespace mozilla {
 using namespace dom;
 
 static void DoCommandCallback(Command aCommand, void* aData) {
-  nsIDocument* doc = static_cast<nsIDocument*>(aData);
+  Document* doc = static_cast<Document*>(aData);
   nsPIDOMWindowOuter* win = doc->GetWindow();
   if (!win) {
     return;
@@ -271,7 +271,7 @@ nsIContent* EditorEventListener::GetFocusedRootContent() {
     return nullptr;
   }
 
-  nsIDocument* composedDoc = focusedContent->GetComposedDoc();
+  Document* composedDoc = focusedContent->GetComposedDoc();
   NS_ENSURE_TRUE(composedDoc, nullptr);
 
   if (composedDoc->HasFlag(NODE_IS_EDITABLE)) {
@@ -287,7 +287,7 @@ bool EditorEventListener::EditorHasFocus() {
   if (!focusedContent) {
     return false;
   }
-  nsIDocument* composedDoc = focusedContent->GetComposedDoc();
+  Document* composedDoc = focusedContent->GetComposedDoc();
   return !!composedDoc;
 }
 
@@ -564,7 +564,7 @@ nsresult EditorEventListener::KeyPress(WidgetKeyboardEvent* aKeyboardEvent) {
     NS_ENSURE_TRUE(widget, NS_OK);
   }
 
-  nsCOMPtr<nsIDocument> doc = editorBase->GetDocument();
+  RefPtr<Document> doc = editorBase->GetDocument();
 
   // WidgetKeyboardEvent::ExecuteEditCommands() requires non-nullptr mWidget.
   // If the event is created by chrome script, it is nullptr but we need to
@@ -853,10 +853,10 @@ bool EditorEventListener::CanDrop(DragEvent* aEvent) {
   // There is a source node, so compare the source documents and this document.
   // Disallow drops on the same document.
 
-  nsCOMPtr<nsIDocument> domdoc = editorBase->GetDocument();
+  RefPtr<Document> domdoc = editorBase->GetDocument();
   NS_ENSURE_TRUE(domdoc, false);
 
-  nsCOMPtr<nsIDocument> sourceDoc = sourceNode->OwnerDoc();
+  RefPtr<Document> sourceDoc = sourceNode->OwnerDoc();
 
   // If the source and the dest are not same document, allow to drop it always.
   if (domdoc != sourceDoc) {
@@ -1108,7 +1108,7 @@ bool EditorEventListener::ShouldHandleNativeKeyBindings(
     return false;
   }
 
-  nsCOMPtr<nsIDocument> doc = editorBase->GetDocument();
+  RefPtr<Document> doc = editorBase->GetDocument();
   if (doc->HasFlag(NODE_IS_EDITABLE)) {
     // Don't need to perform any checks in designMode documents.
     return true;

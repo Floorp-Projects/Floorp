@@ -8,8 +8,13 @@
 
 #include "txCore.h"
 
-class nsIDocument;
 class nsINode;
+
+namespace mozilla {
+namespace dom {
+class Document;
+}
+}  // namespace mozilla
 
 /**
  * A utility class for URI handling
@@ -21,7 +26,8 @@ class URIUtils {
   /**
    * Reset the given document with the document of the source node
    */
-  static void ResetWithSource(nsIDocument* aNewDoc, nsINode* aSourceNode);
+  static void ResetWithSource(mozilla::dom::Document* aNewDoc,
+                              nsINode* aSourceNode);
 
   /**
    * Resolves the given href argument, using the given documentBase

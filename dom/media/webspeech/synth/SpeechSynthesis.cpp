@@ -14,7 +14,7 @@
 #include "SpeechSynthesis.h"
 #include "nsContentUtils.h"
 #include "nsSynthVoiceRegistry.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIDocShell.h"
 
 #undef LOG
@@ -154,7 +154,7 @@ void SpeechSynthesis::AdvanceQueue() {
 
   nsAutoString docLang;
   nsCOMPtr<nsPIDOMWindowInner> window = GetOwner();
-  nsIDocument* doc = window ? window->GetExtantDoc() : nullptr;
+  Document* doc = window ? window->GetExtantDoc() : nullptr;
 
   if (doc) {
     Element* elm = doc->GetHtmlElement();

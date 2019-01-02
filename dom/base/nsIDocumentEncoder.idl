@@ -14,10 +14,9 @@ webidl Selection;
 
 %{ C++
 class nsINode;
-class nsIDocument;
+
 %}
 [ptr] native nsINodePtr(nsINode);
-[ptr] native nsIDocumentPtr(nsIDocument);
 
 [scriptable, uuid(3d9371d8-a2ad-403e-8b0e-8885ad3562e3)]
 interface nsIDocumentEncoderNodeFixup : nsISupports
@@ -224,8 +223,8 @@ interface nsIDocumentEncoder : nsISupports
   const unsigned long OutputDisallowLineBreaking = (1 << 27);
 
   /**
-   * Release reference of nsIDocument after using encodeTo* method to recycle
-   * this encoder without holding nsIDocument. To use this encoder again,
+   * Release reference of Document after using encodeTo* method to recycle
+   * this encoder without holding Document. To use this encoder again,
    * we have to call init again.
    */
   const unsigned long RequiresReinitAfterOutput = (1 << 28);
@@ -239,7 +238,7 @@ interface nsIDocumentEncoder : nsISupports
   void init(in Document aDocument,
             in AString aMimeType,
             in unsigned long aFlags);
-  [noscript] void nativeInit(in nsIDocumentPtr aDocument,
+  [noscript] void nativeInit(in Document aDocument,
                              in AString aMimeType,
                              in unsigned long aFlags);
 

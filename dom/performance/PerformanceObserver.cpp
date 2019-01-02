@@ -166,7 +166,7 @@ void PerformanceObserver::Observe(const PerformanceObserverInit& aOptions) {
                                           params);
     } else {
       nsCOMPtr<nsPIDOMWindowInner> ownerWindow = do_QueryInterface(mOwner);
-      nsIDocument* document = ownerWindow->GetExtantDoc();
+      Document* document = ownerWindow->GetExtantDoc();
       const char16_t* params[] = {invalidTypesJoined.get()};
       nsContentUtils::ReportToConsole(
           nsIScriptError::warningFlag, NS_LITERAL_CSTRING("DOM"), document,

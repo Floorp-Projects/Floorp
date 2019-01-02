@@ -30,7 +30,8 @@ class nsIStatefulFrame {
   NS_IMETHOD RestoreState(mozilla::PresState* aState) = 0;
 
   // Generate a key for this stateful frame
-  NS_IMETHOD GenerateStateKey(nsIContent* aContent, nsIDocument* aDocument,
+  NS_IMETHOD GenerateStateKey(nsIContent* aContent,
+                              mozilla::dom::Document* aDocument,
                               nsACString& aKey) {
     return nsContentUtils::GenerateStateKey(aContent, aDocument, aKey);
   };
