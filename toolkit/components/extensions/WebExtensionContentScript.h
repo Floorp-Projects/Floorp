@@ -115,7 +115,7 @@ class MozDocumentMatcher : public nsISupports, public nsWrapperCache {
     return Matches({aURL, aLoadInfo});
   }
   bool MatchesWindow(const dom::WindowProxyHolder& aWindow) const {
-    return Matches(aWindow.get());
+    return Matches(aWindow.get()->GetDOMWindow());
   }
 
   WebExtensionPolicy* GetExtension() { return mExtension; }

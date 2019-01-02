@@ -675,7 +675,8 @@ void DocumentObserver::Disconnect() {
 void DocumentObserver::NotifyMatch(MozDocumentMatcher& aMatcher,
                                    nsPIDOMWindowOuter* aWindow) {
   IgnoredErrorResult rv;
-  mCallbacks->OnNewDocument(aMatcher, dom::WindowProxyHolder(aWindow), rv);
+  mCallbacks->OnNewDocument(
+      aMatcher, WindowProxyHolder(aWindow->GetBrowsingContext()), rv);
 }
 
 void DocumentObserver::NotifyMatch(MozDocumentMatcher& aMatcher,

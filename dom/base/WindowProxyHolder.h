@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_WindowProxyHolder_h__
 #define mozilla_dom_WindowProxyHolder_h__
 
-#include "nsPIDOMWindow.h"
+#include "mozilla/dom/BrowsingContext.h"
 
 namespace mozilla {
 namespace dom {
@@ -22,43 +22,43 @@ namespace dom {
 class WindowProxyHolder {
  public:
   WindowProxyHolder() = default;
-  explicit WindowProxyHolder(nsPIDOMWindowOuter* aWin) : mWindow(aWin) {
-    MOZ_ASSERT(mWindow, "Don't set WindowProxyHolder to null.");
+  explicit WindowProxyHolder(BrowsingContext* aBC) : mBrowsingContext(aBC) {
+    MOZ_ASSERT(mBrowsingContext, "Don't set WindowProxyHolder to null.");
   }
-  explicit WindowProxyHolder(already_AddRefed<nsPIDOMWindowOuter>&& aWin)
-      : mWindow(std::move(aWin)) {
-    MOZ_ASSERT(mWindow, "Don't set WindowProxyHolder to null.");
+  explicit WindowProxyHolder(already_AddRefed<BrowsingContext>&& aBC)
+      : mBrowsingContext(std::move(aBC)) {
+    MOZ_ASSERT(mBrowsingContext, "Don't set WindowProxyHolder to null.");
   }
-  WindowProxyHolder& operator=(nsPIDOMWindowOuter* aWin) {
-    mWindow = aWin;
-    MOZ_ASSERT(mWindow, "Don't set WindowProxyHolder to null.");
+  WindowProxyHolder& operator=(BrowsingContext* aBC) {
+    mBrowsingContext = aBC;
+    MOZ_ASSERT(mBrowsingContext, "Don't set WindowProxyHolder to null.");
     return *this;
   }
-  WindowProxyHolder& operator=(already_AddRefed<nsPIDOMWindowOuter>&& aWin) {
-    mWindow = std::move(aWin);
-    MOZ_ASSERT(mWindow, "Don't set WindowProxyHolder to null.");
+  WindowProxyHolder& operator=(already_AddRefed<BrowsingContext>&& aBC) {
+    mBrowsingContext = std::move(aBC);
+    MOZ_ASSERT(mBrowsingContext, "Don't set WindowProxyHolder to null.");
     return *this;
   }
 
-  nsPIDOMWindowOuter* get() const {
-    MOZ_ASSERT(mWindow, "WindowProxyHolder hasn't been initialized.");
-    return mWindow;
+  BrowsingContext* get() const {
+    MOZ_ASSERT(mBrowsingContext, "WindowProxyHolder hasn't been initialized.");
+    return mBrowsingContext;
   }
 
  private:
   friend void ImplCycleCollectionUnlink(WindowProxyHolder& aProxy);
 
-  nsCOMPtr<nsPIDOMWindowOuter> mWindow;
+  RefPtr<BrowsingContext> mBrowsingContext;
 };
 
 inline void ImplCycleCollectionTraverse(
     nsCycleCollectionTraversalCallback& aCallback, WindowProxyHolder& aProxy,
     const char* aName, uint32_t aFlags = 0) {
-  CycleCollectionNoteChild(aCallback, aProxy.get(), "mWindow", aFlags);
+  CycleCollectionNoteChild(aCallback, aProxy.get(), "mBrowsingContext", aFlags);
 }
 
 inline void ImplCycleCollectionUnlink(WindowProxyHolder& aProxy) {
-  aProxy.mWindow = nullptr;
+  aProxy.mBrowsingContext = nullptr;
 }
 
 }  // namespace dom

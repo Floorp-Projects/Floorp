@@ -6,6 +6,7 @@
 
 #include "InProcessTabChildMessageManager.h"
 #include "nsContentUtils.h"
+#include "nsDocShell.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIComponentManager.h"
@@ -77,7 +78,7 @@ nsresult InProcessTabChildMessageManager::DoSendAsyncMessage(
 }
 
 InProcessTabChildMessageManager::InProcessTabChildMessageManager(
-    nsIDocShell* aShell, nsIContent* aOwner, nsFrameMessageManager* aChrome)
+    nsDocShell* aShell, nsIContent* aOwner, nsFrameMessageManager* aChrome)
     : ContentFrameMessageManager(new nsFrameMessageManager(this)),
       mDocShell(aShell),
       mLoadingScript(false),
@@ -150,14 +151,10 @@ void InProcessTabChildMessageManager::CacheFrameLoader(
 
 Nullable<WindowProxyHolder> InProcessTabChildMessageManager::GetContent(
     ErrorResult& aError) {
-  nsCOMPtr<nsPIDOMWindowOuter> content;
-  if (mDocShell) {
-    content = mDocShell->GetWindow();
-  }
-  if (!content) {
+  if (!mDocShell) {
     return nullptr;
   }
-  return WindowProxyHolder(content);
+  return WindowProxyHolder(mDocShell->GetBrowsingContext());
 }
 
 already_AddRefed<nsIEventTarget>
@@ -171,9 +168,8 @@ uint64_t InProcessTabChildMessageManager::ChromeOuterWindowID() {
     return 0;
   }
 
-  nsCOMPtr<nsIDocShellTreeItem> item = mDocShell;
   nsCOMPtr<nsIDocShellTreeItem> root;
-  nsresult rv = item->GetRootTreeItem(getter_AddRefs(root));
+  nsresult rv = mDocShell->GetRootTreeItem(getter_AddRefs(root));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return 0;
   }

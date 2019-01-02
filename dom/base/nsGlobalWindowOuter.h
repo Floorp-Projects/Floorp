@@ -57,6 +57,7 @@
 #include "mozilla/dom/ImageBitmapSource.h"
 #include "mozilla/UniquePtr.h"
 
+class nsDocShell;
 class nsIArray;
 class nsIBaseWindow;
 class nsIContent;
@@ -93,6 +94,7 @@ class AbstractThread;
 class DOMEventTargetHelper;
 namespace dom {
 class BarProp;
+class BrowsingContext;
 struct ChannelPixelLayout;
 class Console;
 class Crypto;
@@ -216,7 +218,7 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
     return (nsGlobalWindowOuter*)(mozilla::dom::EventTarget*)supports;
   }
 
-  static already_AddRefed<nsGlobalWindowOuter> Create(nsIDocShell* aDocShell,
+  static already_AddRefed<nsGlobalWindowOuter> Create(nsDocShell* aDocShell,
                                                       bool aIsChrome);
 
   // public methods
@@ -362,7 +364,8 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
 
   inline nsGlobalWindowOuter* GetScriptableTopInternal();
 
-  nsPIDOMWindowOuter* GetChildWindow(const nsAString& aName);
+  already_AddRefed<mozilla::dom::BrowsingContext> GetChildWindow(
+      const nsAString& aName);
 
   // These return true if we've reached the state in this top level window
   // where we ask the user if further dialogs should be blocked.
@@ -526,7 +529,7 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
   void FocusOuter(mozilla::ErrorResult& aError);
   nsresult Focus() override;
   void BlurOuter();
-  already_AddRefed<nsPIDOMWindowOuter> GetFramesOuter();
+  mozilla::dom::BrowsingContext* GetFramesOuter();
   nsDOMWindowList* GetFrames() final;
   uint32_t Length();
   mozilla::dom::Nullable<mozilla::dom::WindowProxyHolder> GetTopOuter();
@@ -981,7 +984,7 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
       nsIDocument* aDocument,
       SecureContextFlags aFlags = SecureContextFlags::eDefault);
 
-  void SetDocShell(nsIDocShell* aDocShell);
+  void SetDocShell(nsDocShell* aDocShell);
 
   // nsPIDOMWindow{Inner,Outer} should be able to see these helper methods.
   friend class nsPIDOMWindowInner;
@@ -1099,6 +1102,7 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
 
   friend class nsDOMScriptableHelper;
   friend class nsDOMWindowUtils;
+  friend class mozilla::dom::BrowsingContext;
   friend class mozilla::dom::PostMessageEvent;
   friend class DesktopNotification;
   friend class mozilla::dom::TimeoutManager;
