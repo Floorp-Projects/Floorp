@@ -59,6 +59,8 @@ async function setConditionalBreakpoint(dbg, index, condition) {
 
 add_task(async function() {
   const dbg = await initDebugger("doc-scripts.html", "simple2");
+  await pushPref("devtools.debugger.features.column-breakpoints", false);
+
   await selectSource(dbg, "simple2");
   await waitForSelectedSource(dbg, "simple2");
 
@@ -72,7 +74,7 @@ add_task(async function() {
   await setConditionalBreakpoint(dbg, 5, "2");
   await waitForDispatch(dbg, "SET_BREAKPOINT_CONDITION");
   bp = findBreakpoint(dbg, "simple2", 5);
-  is(bp.condition, "12", "breakpoint is created with the condition");
+  is(bp.condition, "2", "breakpoint is created with the condition");
   assertEditorBreakpoint(dbg, 5, true);
 
   clickElement(dbg, "gutter", 5);
