@@ -458,6 +458,11 @@ RefPtr<PerformanceInfoPromise> WorkerDebugger::ReportPerformanceInfo() {
 
   // getting the worker URL
   RefPtr<nsIURI> scriptURI = mWorkerPrivate->GetResolvedScriptURI();
+  if (NS_WARN_IF(!scriptURI)) {
+    // This can happen at shutdown, let's stop here.
+    return PerformanceInfoPromise::CreateAndReject(NS_ERROR_FAILURE,
+                                                   __func__);
+  }
   nsCString url = scriptURI->GetSpecOrDefault();
 
   // Workers only produce metrics for a single category -
