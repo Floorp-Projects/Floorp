@@ -3275,7 +3275,7 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
 }
 
 .breakpoints-list .breakpoint:hover .breakpoint-line {
-  display: none;
+  color: transparent;
 }
 
 .breakpoints-list .breakpoint.paused:hover {
