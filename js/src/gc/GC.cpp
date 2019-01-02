@@ -1208,7 +1208,8 @@ bool GCRuntime::parseAndSetZeal(const char* str) {
   for (const auto& descr : modes) {
     uint32_t mode;
     if (!ParseZealModeName(descr, &mode) &&
-        !ParseZealModeNumericParam(descr, &mode)) {
+        !(ParseZealModeNumericParam(descr, &mode) &&
+          mode <= unsigned(ZealMode::Limit))) {
       return PrintZealHelpAndFail();
     }
 
