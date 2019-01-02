@@ -11,6 +11,7 @@ import android.view.View
 import android.view.ViewGroup
 import kotlinx.android.synthetic.main.fragment_crash_reporter.*
 import org.mozilla.focus.R
+import org.mozilla.focus.telemetry.TelemetryWrapper
 
 class CrashReporterFragment : Fragment() {
     var onCloseTabPressed: ((sendCrashReport: Boolean) -> Unit)? = null
@@ -24,8 +25,12 @@ class CrashReporterFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        TelemetryWrapper.crashReporterOpened()
+
         closeTabButton.setOnClickListener {
             val wantsSubmitCrashReport = sendCrashCheckbox.isChecked
+            TelemetryWrapper.closeTabButtonTapped(wantsSubmitCrashReport)
+
             onCloseTabPressed?.invoke(wantsSubmitCrashReport)
         }
     }

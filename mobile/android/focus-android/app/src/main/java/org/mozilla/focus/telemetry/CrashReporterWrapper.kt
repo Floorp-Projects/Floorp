@@ -29,6 +29,7 @@ import java.util.Locale
  * builds, add a .sentry_token file and replace the [TelemetryWrapper.isTelemetryEnabled]
  * value with true (upload is disabled by default in dev builds).
  */
+
 object CrashReporterWrapper {
     private const val SOCORRO_APP_NAME = "Focus"
     private const val TAG_BUILD_FLAVOR: String = "build_flavor"
