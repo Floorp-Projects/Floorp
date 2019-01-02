@@ -35,13 +35,7 @@ void VRLayerChild::Initialize(dom::HTMLCanvasElement* aCanvasElement,
   MOZ_ASSERT(aCanvasElement);
   mLeftEyeRect = aLeftEyeRect;
   mRightEyeRect = aRightEyeRect;
-  if (mCanvasElement == nullptr) {
-    mCanvasElement = aCanvasElement;
-    VRManagerChild* vrmc = VRManagerChild::Get();
-    vrmc->RunFrameRequestCallbacks();
-  } else {
-    mCanvasElement = aCanvasElement;
-  }
+  mCanvasElement = aCanvasElement;
 }
 
 void VRLayerChild::SubmitFrame(const VRDisplayInfo& aDisplayInfo) {
