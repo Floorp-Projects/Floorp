@@ -113,6 +113,7 @@ class MediaQueryList;
 class Navigator;
 class OwningExternalOrWindowProxy;
 class Promise;
+class PostMessageData;
 class PostMessageEvent;
 struct RequestInit;
 class RequestOrUSVString;
@@ -757,7 +758,7 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
   inline void MaybeClearInnerWindow(nsGlobalWindowInner* aExpectedInner);
 
   // We need a JSContext to get prototypes inside CallerInnerWindow.
-  nsGlobalWindowInner* CallerInnerWindow(JSContext* aCx);
+  static nsGlobalWindowInner* CallerInnerWindow(JSContext* aCx);
 
   // Get the parent, returns null if this is a toplevel window
   nsPIDOMWindowOuter* GetParentInternal();
@@ -966,6 +967,68 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
                            JS::Handle<JS::Value> aTransfer,
                            nsIPrincipal& aSubjectPrincipal,
                            mozilla::ErrorResult& aError);
+
+ private:
+  /**
+   * Gather the necessary data from the caller for a postMessage call.
+   *
+   * @param aCx The JSContext.
+   *
+   * @param aTargetOrigin The value passed as the targetOrigin argument to the
+   * postMessage call.
+   *
+   * @param aSource [out] The browsing context for the incumbent global.
+   *
+   * @param aOrigin [out] The value to use for the origin property of the
+   * MessageEvent object.
+   *
+   * @param aTargetOriginURI [out] The origin of the URI contained in
+   * aTargetOrigin, null if aTargetOrigin is "/" or "*".
+   *
+   * @param aCallerPrincipal [out] The principal of the incumbent global of the
+   *                               postMessage call.
+   *
+   * @param aCallerInnerWindowID [out] Inner window ID of the caller of
+   * postMessage, or 0 if the incumbent global is not a Window.
+   *
+   * @param aCallerDocumentURI [out] The URI of the document of the incumbent
+   * global if it's a Window, null otherwise.
+   *
+   * @param aError [out] The error, if any.
+   *
+   * @return Whether the postMessage call should continue or return now.
+   */
+  static bool GatherPostMessageData(
+      JSContext* aCx, const nsAString& aTargetOrigin,
+      mozilla::dom::BrowsingContext** aSource, nsAString& aOrigin,
+      nsIURI** aTargetOriginURI, nsIPrincipal** aCallerPrincipal,
+      uint64_t* aCallerInnerWindowID, nsIURI** aCallerDocumentURI,
+      mozilla::ErrorResult& aError);
+  /**
+   * Compute the principal to use for checking against the target principal in a
+   * postMessage call.
+   *
+   * @param aTargetOrigin The value passed as the targetOrigin argument to the
+   * postMessage call.
+   *
+   * @param aTargetOriginURI The origin of the URI contained in aTargetOrigin
+   * (see GatherPostMessageData).
+   *
+   * @param aCallerPrincipal The principal of the incumbent global of the
+   * postMessage call (see GatherPostMessageData).
+   *
+   * @param aSubjectPrincipal The subject principal for the postMessage call.
+   *
+   * @param aProvidedPrincipal [out] The principal to use for checking against
+   * the target's principal.
+   *
+   * @return Whether the postMessage call should continue or return now.
+   */
+  bool GetPrincipalForPostMessage(const nsAString& aTargetOrigin,
+                                  nsIURI* aTargetOriginURI,
+                                  nsIPrincipal* aCallerPrincipal,
+                                  nsIPrincipal& aSubjectPrincipal,
+                                  nsIPrincipal** aProvidedPrincipal);
 
   // Ask the user if further dialogs should be blocked, if dialogs are currently
   // being abused. This is used in the cases where we have no modifiable UI to
