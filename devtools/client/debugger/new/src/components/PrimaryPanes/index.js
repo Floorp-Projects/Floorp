@@ -14,7 +14,8 @@ import {
   getRelativeSources,
   getActiveSearch,
   getSelectedPrimaryPaneTab,
-  getWorkerDisplayName
+  getWorkerDisplayName,
+  isValidThread
 } from "../../selectors";
 import { features, prefs } from "../../utils/prefs";
 import "./Sources.css";
@@ -38,7 +39,8 @@ type Props = {
   setPrimaryPaneTab: typeof actions.setPrimaryPaneTab,
   setActiveSearch: typeof actions.setActiveSearch,
   closeActiveSearch: typeof actions.closeActiveSearch,
-  getWorkerDisplayName: string => string
+  getWorkerDisplayName: string => string,
+  isValidThread: string => boolean
 };
 
 class PrimaryPanes extends Component<Props, State> {
@@ -96,7 +98,9 @@ class PrimaryPanes extends Component<Props, State> {
 
   renderThreadSources() {
     const threads = sortBy(
-      Object.getOwnPropertyNames(this.props.sources),
+      Object.getOwnPropertyNames(this.props.sources).filter(
+        this.props.isValidThread
+      ),
       this.props.getWorkerDisplayName
     );
 
@@ -132,7 +136,8 @@ const mapStateToProps = state => ({
   selectedTab: getSelectedPrimaryPaneTab(state),
   sources: getRelativeSources(state),
   sourceSearchOn: getActiveSearch(state) === "source",
-  getWorkerDisplayName: thread => getWorkerDisplayName(state, thread)
+  getWorkerDisplayName: thread => getWorkerDisplayName(state, thread),
+  isValidThread: thread => isValidThread(state, thread)
 });
 
 const connector = connect(
