@@ -2309,7 +2309,7 @@ nsDocShell::NotifyScrollObservers() {
 
 NS_IMETHODIMP
 nsDocShell::GetName(nsAString& aName) {
-  mBrowsingContext->GetName(aName);
+  aName = mBrowsingContext->Name();
   return NS_OK;
 }
 

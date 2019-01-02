@@ -21,9 +21,11 @@
 #include "nsContentUtils.h"
 #include "nsDocShell.h"
 #include "nsGlobalWindow.h"
+#include "nsIConsoleService.h"
 #include "nsIPresShell.h"
 #include "nsIPrincipal.h"
 #include "nsIScriptError.h"
+#include "nsNetUtil.h"
 #include "nsPresContext.h"
 #include "nsQueryObject.h"
 
@@ -34,18 +36,17 @@ PostMessageEvent::PostMessageEvent(BrowsingContext* aSource,
                                    const nsAString& aCallerOrigin,
                                    nsGlobalWindowOuter* aTargetWindow,
                                    nsIPrincipal* aProvidedPrincipal,
-                                   uint64_t aCallerWindowID,
-                                   nsIURI* aCallerDocumentURI)
+                                   const Maybe<uint64_t>& aCallerWindowID,
+                                   nsIURI* aCallerDocumentURI,
+                                   bool aIsFromPrivateWindow)
     : Runnable("dom::PostMessageEvent"),
       mSource(aSource),
       mCallerOrigin(aCallerOrigin),
       mTargetWindow(aTargetWindow),
       mProvidedPrincipal(aProvidedPrincipal),
-      mHolder(StructuredCloneHolder::CloningSupported,
-              StructuredCloneHolder::TransferringSupported,
-              JS::StructuredCloneScope::SameProcessSameThread),
       mCallerWindowID(aCallerWindowID),
-      mCallerDocumentURI(aCallerDocumentURI) {}
+      mCallerDocumentURI(aCallerDocumentURI),
+      mIsFromPrivateWindow(aIsFromPrivateWindow) {}
 
 PostMessageEvent::~PostMessageEvent() {}
 
@@ -122,11 +123,31 @@ PostMessageEvent::Run() {
       nsContentUtils::FormatLocalizedString(nsContentUtils::eDOM_PROPERTIES,
                                             "TargetPrincipalDoesNotMatch",
                                             params, errorText);
-      nsContentUtils::ReportToConsoleByWindowID(
-          errorText, nsIScriptError::errorFlag,
-          NS_LITERAL_CSTRING("DOM Window"), mCallerWindowID, callerDocumentURI);
 
-      return NS_OK;
+      nsCOMPtr<nsIScriptError> errorObject =
+          do_CreateInstance(NS_SCRIPTERROR_CONTRACTID, &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      if (mCallerWindowID.isSome()) {
+        rv = errorObject->InitWithSourceURI(
+            errorText, callerDocumentURI, EmptyString(), 0, 0,
+            nsIScriptError::errorFlag, "DOM Window", mCallerWindowID.value());
+      } else {
+        nsString uriSpec;
+        rv = NS_GetSanitizedURIStringFromURI(callerDocumentURI, uriSpec);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        rv = errorObject->Init(errorText, uriSpec, EmptyString(), 0, 0,
+                               nsIScriptError::errorFlag, "DOM Window",
+                               mIsFromPrivateWindow);
+      }
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      nsCOMPtr<nsIConsoleService> consoleService =
+          do_GetService(NS_CONSOLESERVICE_CONTRACTID, &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      return consoleService->LogMessage(errorObject);
     }
   }
 
@@ -135,7 +156,16 @@ PostMessageEvent::Run() {
   nsCOMPtr<mozilla::dom::EventTarget> eventTarget =
       do_QueryObject(targetWindow);
 
-  mHolder.Read(targetWindow->AsInner(), cx, &messageData, rv);
+  StructuredCloneHolder* holder;
+  if (mHolder.constructed<StructuredCloneHolder>()) {
+    mHolder.ref<StructuredCloneHolder>().Read(targetWindow->AsInner(), cx,
+                                              &messageData, rv);
+    holder = &mHolder.ref<StructuredCloneHolder>();
+  } else {
+    MOZ_ASSERT(mHolder.constructed<ipc::StructuredCloneData>());
+    mHolder.ref<ipc::StructuredCloneData>().Read(cx, &messageData, rv);
+    holder = &mHolder.ref<ipc::StructuredCloneData>();
+  }
   if (NS_WARN_IF(rv.Failed())) {
     DispatchError(cx, targetWindow, eventTarget);
     return NS_OK;
@@ -150,7 +180,7 @@ PostMessageEvent::Run() {
   }
 
   Sequence<OwningNonNull<MessagePort>> ports;
-  if (!mHolder.TakeTransferredPortsAsSequence(ports)) {
+  if (!holder->TakeTransferredPortsAsSequence(ports)) {
     DispatchError(cx, targetWindow, eventTarget);
     return NS_OK;
   }

@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_TimeEvent_h_
 #define mozilla_dom_TimeEvent_h_
 
+#include "nsDocShell.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/TimeEventBinding.h"
 #include "mozilla/dom/Nullable.h"
