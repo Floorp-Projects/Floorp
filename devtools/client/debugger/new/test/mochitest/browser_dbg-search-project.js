@@ -67,12 +67,12 @@ add_task(async function() {
   pressKey(dbg, "Enter");
   await waitForState(dbg, state => state.projectTextSearch.status === "DONE");
 
-  is(getExpandedResultsCount(dbg), 15);
+  is(getExpandedResultsCount(dbg), 18);
 
   const collapsedNodes = findAllElements(dbg, "projectSearchCollapsed");
   is(collapsedNodes.length, 1);
 
   collapsedNodes[0].click();
 
-  is(getExpandedResultsCount(dbg), 155);
+  is(getExpandedResultsCount(dbg), 226);
 });
