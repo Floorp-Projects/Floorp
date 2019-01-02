@@ -51,6 +51,7 @@ ALLOWED_URL_PREFIXES = (
 )
 STAGING_URL_PREFIXES = (
     "http://ftp.stage.mozaws.net/",
+    "https://ftp.stage.mozaws.net/",
 )
 
 DEFAULT_FILENAME_TEMPLATE = "{appName}-{branch}-{version}-{platform}-" \
