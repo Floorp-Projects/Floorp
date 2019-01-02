@@ -15,7 +15,7 @@ using namespace mozilla::a11y;
 ////////////////////////////////////////////////////////////////////////////////
 // Constructor/destructor
 
-RootAccessibleWrap::RootAccessibleWrap(nsIDocument* aDocument,
+RootAccessibleWrap::RootAccessibleWrap(dom::Document* aDocument,
                                        nsIPresShell* aPresShell)
     : RootAccessible(aDocument, aPresShell), mOuter(&mInternalUnknown) {}
 

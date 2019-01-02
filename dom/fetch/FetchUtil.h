@@ -15,12 +15,12 @@
 #include "mozilla/dom/FormData.h"
 
 class nsIPrincipal;
-class nsIDocument;
 class nsIHttpChannel;
 
 namespace mozilla {
 namespace dom {
 
+class Document;
 class InternalRequest;
 class WorkerPrivate;
 
@@ -46,8 +46,7 @@ class FetchUtil final {
                             nsCString& aHeaderName, nsCString& aHeaderValue,
                             bool* aWasEmptyHeader);
 
-  static nsresult SetRequestReferrer(nsIPrincipal* aPrincipal,
-                                     nsIDocument* aDoc,
+  static nsresult SetRequestReferrer(nsIPrincipal* aPrincipal, Document* aDoc,
                                      nsIHttpChannel* aChannel,
                                      InternalRequest* aRequest);
 

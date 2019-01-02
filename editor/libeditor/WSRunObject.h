@@ -236,7 +236,8 @@ class MOZ_STACK_CLASS WSRunObject final {
    *                        Otherwise, an error code.
    */
   template <typename PT, typename CT>
-  nsresult InsertText(nsIDocument& aDocument, const nsAString& aStringToInsert,
+  nsresult InsertText(dom::Document& aDocument,
+                      const nsAString& aStringToInsert,
                       const EditorDOMPointBase<PT, CT>& aPointToInsert,
                       EditorRawDOMPoint* aPointAfterInsertedString = nullptr);
 

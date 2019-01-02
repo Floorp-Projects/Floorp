@@ -8,7 +8,7 @@
 #include "mozilla/dom/FetchDriver.h"
 
 #include "nsIAsyncVerifyRedirectCallback.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
 #include "nsIFileChannel.h"
@@ -1358,7 +1358,7 @@ FetchDriver::GetInterface(const nsIID& aIID, void** aResult) {
   return QueryInterface(aIID, aResult);
 }
 
-void FetchDriver::SetDocument(nsIDocument* aDocument) {
+void FetchDriver::SetDocument(Document* aDocument) {
   // Cannot set document after Fetch() has been called.
   MOZ_ASSERT(!mFetchCalled);
   mDocument = aDocument;

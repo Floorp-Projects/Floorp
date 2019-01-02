@@ -20,7 +20,7 @@
 #include "nsIContent.h"
 #include "nsIContentSink.h"
 #include "nsIDTD.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIDocumentEncoder.h"
 #include "nsIFragmentContentSink.h"
 #include "nsIParser.h"
@@ -51,7 +51,7 @@ nsParserUtils::Sanitize(const nsAString& aFromStr, uint32_t aFlags,
   NS_NewURI(getter_AddRefs(uri), "about:blank");
   nsCOMPtr<nsIPrincipal> principal =
       mozilla::NullPrincipal::CreateWithoutOriginAttributes();
-  nsCOMPtr<nsIDocument> document;
+  RefPtr<Document> document;
   nsresult rv = NS_NewDOMDocument(getter_AddRefs(document), EmptyString(),
                                   EmptyString(), nullptr, uri, uri, principal,
                                   true, nullptr, DocumentFlavorHTML);
@@ -83,18 +83,13 @@ nsParserUtils::ParseFragment(const nsAString& aFragment, uint32_t aFlags,
   NS_ENSURE_ARG(aContextElement);
   *aReturn = nullptr;
 
-  nsCOMPtr<nsIDocument> document;
-  document = aContextElement->OwnerDoc();
+  RefPtr<Document> document = aContextElement->OwnerDoc();
 
   nsAutoScriptBlockerSuppressNodeRemoved autoBlocker;
 
   // stop scripts
-  RefPtr<ScriptLoader> loader;
-  bool scripts_enabled = false;
-  if (document) {
-    loader = document->ScriptLoader();
-    scripts_enabled = loader->GetEnabled();
-  }
+  RefPtr<ScriptLoader> loader = document->ScriptLoader();
+  bool scripts_enabled = loader->GetEnabled();
   if (scripts_enabled) {
     loader->SetEnabled(false);
   }

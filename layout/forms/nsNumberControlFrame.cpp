@@ -300,7 +300,7 @@ class FocusTextField : public Runnable {
 already_AddRefed<Element> nsNumberControlFrame::MakeAnonymousElement(
     Element* aParent, nsAtom* aTagName, CSSPseudoElementType aPseudoType) {
   // Get the NodeInfoManager and tag necessary to create the anonymous divs.
-  nsIDocument* doc = mContent->GetComposedDoc();
+  Document* doc = mContent->GetComposedDoc();
   RefPtr<Element> resultElement = doc->CreateHTMLElement(aTagName);
   resultElement->SetPseudoElementType(aPseudoType);
 

@@ -19,7 +19,7 @@
 
 #include "mozilla/dom/HTMLTableElement.h"
 #include "nsIHTMLCollection.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIMutableArray.h"
 #include "nsIPersistentProperties2.h"
 #include "nsIPresShell.h"

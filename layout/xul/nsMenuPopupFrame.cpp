@@ -20,7 +20,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsIPresShell.h"
 #include "nsFrameManager.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsRect.h"
 #include "nsIComponentManager.h"
 #include "nsBoxLayoutState.h"
@@ -866,7 +866,7 @@ void nsMenuPopupFrame::HidePopup(bool aDeselectMenu, nsPopupState aNewState) {
     // if the popup had a trigger node set, clear the global window popup node
     // as well
     if (mTriggerContent) {
-      nsIDocument* doc = mContent->GetUncomposedDoc();
+      Document* doc = mContent->GetUncomposedDoc();
       if (doc) {
         if (nsPIDOMWindowOuter* win = doc->GetWindow()) {
           nsCOMPtr<nsPIWindowRoot> root = win->GetTopWindowRoot();

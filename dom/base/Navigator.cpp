@@ -483,7 +483,7 @@ bool Navigator::CookieEnabled() {
     return cookieEnabled;
   }
 
-  nsCOMPtr<nsIDocument> doc = mWindow->GetExtantDoc();
+  nsCOMPtr<Document> doc = mWindow->GetExtantDoc();
   if (!doc) {
     return cookieEnabled;
   }
@@ -531,7 +531,7 @@ void Navigator::GetBuildID(nsAString& aBuildID, CallerType aCallerType,
     nsAutoCString host;
     bool isHTTPS = false;
     if (mWindow) {
-      nsCOMPtr<nsIDocument> doc = mWindow->GetDoc();
+      nsCOMPtr<Document> doc = mWindow->GetDoc();
       if (doc) {
         nsIURI* uri = doc->GetDocumentURI();
         if (uri) {
@@ -602,7 +602,7 @@ namespace {
 
 class VibrateWindowListener : public nsIDOMEventListener {
  public:
-  VibrateWindowListener(nsPIDOMWindowInner* aWindow, nsIDocument* aDocument) {
+  VibrateWindowListener(nsPIDOMWindowInner* aWindow, Document* aDocument) {
     mWindow = do_GetWeakReference(aWindow);
     mDocument = do_GetWeakReference(aDocument);
 
@@ -628,14 +628,14 @@ NS_IMPL_ISUPPORTS(VibrateWindowListener, nsIDOMEventListener)
 
 StaticRefPtr<VibrateWindowListener> gVibrateWindowListener;
 
-static bool MayVibrate(nsIDocument* doc) {
+static bool MayVibrate(Document* doc) {
   // Hidden documents cannot start or stop a vibration.
   return (doc && !doc->Hidden());
 }
 
 NS_IMETHODIMP
 VibrateWindowListener::HandleEvent(Event* aEvent) {
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(aEvent->GetTarget());
+  nsCOMPtr<Document> doc = do_QueryInterface(aEvent->GetTarget());
 
   if (!MayVibrate(doc)) {
     // It's important that we call CancelVibrate(), not Vibrate() with an
@@ -696,7 +696,7 @@ void Navigator::SetVibrationPermission(bool aPermitted, bool aPersistent) {
     return;
   }
 
-  nsCOMPtr<nsIDocument> doc = mWindow->GetExtantDoc();
+  nsCOMPtr<Document> doc = mWindow->GetExtantDoc();
 
   if (!MayVibrate(doc)) {
     return;
@@ -742,7 +742,7 @@ bool Navigator::Vibrate(const nsTArray<uint32_t>& aPattern) {
     return false;
   }
 
-  nsCOMPtr<nsIDocument> doc = mWindow->GetExtantDoc();
+  nsCOMPtr<Document> doc = mWindow->GetExtantDoc();
 
   if (!MayVibrate(doc)) {
     return false;
@@ -969,9 +969,9 @@ void Navigator::RegisterProtocolHandler(const nsAString& aScheme,
     return;
   }
 
-  nsCOMPtr<nsIDocument> doc = mWindow->GetDoc();
+  nsCOMPtr<Document> doc = mWindow->GetDoc();
   if (!mWindow->IsSecureContext()) {
-    doc->WarnOnceAbout(nsIDocument::eRegisterProtocolHandlerInsecure);
+    doc->WarnOnceAbout(Document::eRegisterProtocolHandlerInsecure);
   }
 
   // Determine if doc is allowed to assign this handler
@@ -1113,7 +1113,7 @@ bool Navigator::SendBeaconInternal(const nsAString& aUrl,
     return false;
   }
 
-  nsCOMPtr<nsIDocument> doc = mWindow->GetDoc();
+  nsCOMPtr<Document> doc = mWindow->GetDoc();
   if (!doc) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return false;
@@ -1708,7 +1708,7 @@ nsresult Navigator::GetUserAgent(nsPIDOMWindowInner* aWindow,
 
   // Copy the User-Agent header from the document channel which has already been
   // subject to UA overrides.
-  nsCOMPtr<nsIDocument> doc = aWindow->GetExtantDoc();
+  nsCOMPtr<Document> doc = aWindow->GetExtantDoc();
   if (!doc) {
     return NS_OK;
   }
@@ -1750,7 +1750,7 @@ already_AddRefed<Promise> Navigator::RequestMediaKeySystemAccess(
                         mWindow->IsSecureContext());
 
   if (!mWindow->IsSecureContext()) {
-    nsIDocument* doc = mWindow->GetExtantDoc();
+    Document* doc = mWindow->GetExtantDoc();
     nsString uri;
     if (doc) {
       Unused << doc->GetDocumentURI(uri);
@@ -1763,7 +1763,7 @@ already_AddRefed<Promise> Navigator::RequestMediaKeySystemAccess(
                                     params, ArrayLength(params));
   }
 
-  nsIDocument* doc = mWindow->GetExtantDoc();
+  Document* doc = mWindow->GetExtantDoc();
   if (doc && !FeaturePolicyUtils::IsFeatureAllowed(
                  doc, NS_LITERAL_STRING("encrypted-media"))) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);

@@ -11,7 +11,6 @@
 #include "mozilla/dom/InspectorUtilsBinding.h"
 
 class nsAtom;
-class nsIDocument;
 class ComputedStyle;
 
 namespace mozilla {
@@ -34,7 +33,7 @@ namespace dom {
  */
 class InspectorUtils {
  public:
-  static void GetAllStyleSheets(GlobalObject& aGlobal, nsIDocument& aDocument,
+  static void GetAllStyleSheets(GlobalObject& aGlobal, Document& aDocument,
                                 bool aDocumentOnly,
                                 nsTArray<RefPtr<StyleSheet>>& aResult);
   static void GetCSSStyleRules(GlobalObject& aGlobal, Element& aElement,

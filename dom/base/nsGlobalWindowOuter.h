@@ -47,7 +47,7 @@
 #include "mozilla/GuardObjects.h"
 #include "mozilla/LinkedList.h"
 #include "nsWrapperCacheInlines.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/EventTarget.h"
 #include "mozilla/dom/WindowBinding.h"
 #include "Units.h"
@@ -312,11 +312,11 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
   virtual nsresult FireDelayedDOMEvents() override;
 
   // Outer windows only.
-  bool WouldReuseInnerWindow(nsIDocument* aNewDocument);
+  bool WouldReuseInnerWindow(Document* aNewDocument);
 
   void DetachFromDocShell();
 
-  virtual nsresult SetNewDocument(nsIDocument* aDocument, nsISupports* aState,
+  virtual nsresult SetNewDocument(Document* aDocument, nsISupports* aState,
                                   bool aForceReuseInnerWindow) override;
 
   // Outer windows only.
@@ -455,7 +455,7 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
   bool IsTopLevelWindow();
 
   virtual void FirePopupBlockedEvent(
-      nsIDocument* aDoc, nsIURI* aPopupURI, const nsAString& aPopupWindowName,
+      Document* aDoc, nsIURI* aPopupURI, const nsAString& aPopupWindowName,
       const nsAString& aPopupWindowFeatures) override;
 
   virtual void NotifyContentBlockingState(unsigned aState, nsIChannel* aChannel,
@@ -516,7 +516,7 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
 
   nsISupports* GetParentObject() { return nullptr; }
 
-  nsIDocument* GetDocument() { return GetDoc(); }
+  Document* GetDocument() { return GetDoc(); }
   void GetNameOuter(nsAString& aName);
   void SetNameOuter(const nsAString& aName, mozilla::ErrorResult& aError);
   mozilla::dom::Location* GetLocation() override;
@@ -839,7 +839,7 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
                         nsPIDOMWindowOuter** aReturn);
 
   // Checks that the channel was loaded by the URI currently loaded in aDoc
-  static bool SameLoadingURI(nsIDocument* aDoc, nsIChannel* aChannel);
+  static bool SameLoadingURI(Document* aDoc, nsIChannel* aChannel);
 
  public:
   // Helper Functions
@@ -1046,7 +1046,7 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
   // Called only on outer windows to compute the value that will be returned by
   // IsSecureContext() for the inner window that corresponds to aDocument.
   bool ComputeIsSecureContext(
-      nsIDocument* aDocument,
+      Document* aDocument,
       SecureContextFlags aFlags = SecureContextFlags::eDefault);
 
   void SetDocShell(nsDocShell* aDocShell);
@@ -1137,7 +1137,7 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
   // document. If we don't (for example, if the outer window is closed before
   // the LeaveModalState call), then the inner window whose mDoc is our
   // mSuspendedDoc is responsible for unsuspending it.
-  nsCOMPtr<nsIDocument> mSuspendedDoc;
+  RefPtr<Document> mSuspendedDoc;
 
 #ifdef DEBUG
   // This member is used in the debug only assertions in TabGroup()

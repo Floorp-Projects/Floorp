@@ -110,7 +110,7 @@ class AttrArray {
 
   // Force this to have mapped attributes, even if those attributes are empty.
   nsresult ForceMapped(nsMappedAttributeElement* aContent,
-                       nsIDocument* aDocument);
+                       mozilla::dom::Document* aDocument);
 
   // Clear the servo declaration block on the mapped attributes, if any
   // Will assert off main thread

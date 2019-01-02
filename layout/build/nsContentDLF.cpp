@@ -16,7 +16,7 @@
 #include "nsIContentViewer.h"
 #include "nsICategoryManager.h"
 #include "nsIDocumentLoaderFactory.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIURL.h"
 #include "nsNodeInfoManager.h"
 #include "nsIScriptSecurityManager.h"
@@ -41,6 +41,8 @@
 // Factory code for creating variations on html documents
 
 #undef NOISY_REGISTRY
+
+using mozilla::dom::Document;
 
 already_AddRefed<nsIContentViewer> NS_NewContentViewer();
 
@@ -149,8 +151,8 @@ nsContentDLF::CreateInstance(const char* aCommand, nsIChannel* aChannel,
   if (IsTypeInList(contentType, gHTMLTypes) ||
       nsContentUtils::IsPlainTextType(contentType)) {
     return CreateDocument(aCommand, aChannel, aLoadGroup, aContainer,
-                          []() -> already_AddRefed<nsIDocument> {
-                            nsCOMPtr<nsIDocument> doc;
+                          []() -> already_AddRefed<Document> {
+                            RefPtr<Document> doc;
                             nsresult rv =
                                 NS_NewHTMLDocument(getter_AddRefs(doc));
                             NS_ENSURE_SUCCESS(rv, nullptr);
@@ -162,8 +164,8 @@ nsContentDLF::CreateInstance(const char* aCommand, nsIChannel* aChannel,
   // Try XML
   if (IsTypeInList(contentType, gXMLTypes)) {
     return CreateDocument(aCommand, aChannel, aLoadGroup, aContainer,
-                          []() -> already_AddRefed<nsIDocument> {
-                            nsCOMPtr<nsIDocument> doc;
+                          []() -> already_AddRefed<Document> {
+                            RefPtr<Document> doc;
                             nsresult rv =
                                 NS_NewXMLDocument(getter_AddRefs(doc));
                             NS_ENSURE_SUCCESS(rv, nullptr);
@@ -175,8 +177,8 @@ nsContentDLF::CreateInstance(const char* aCommand, nsIChannel* aChannel,
   // Try SVG
   if (IsTypeInList(contentType, gSVGTypes)) {
     return CreateDocument(aCommand, aChannel, aLoadGroup, aContainer,
-                          []() -> already_AddRefed<nsIDocument> {
-                            nsCOMPtr<nsIDocument> doc;
+                          []() -> already_AddRefed<Document> {
+                            RefPtr<Document> doc;
                             nsresult rv =
                                 NS_NewSVGDocument(getter_AddRefs(doc));
                             NS_ENSURE_SUCCESS(rv, nullptr);
@@ -199,8 +201,8 @@ nsContentDLF::CreateInstance(const char* aCommand, nsIChannel* aChannel,
           contentType.get(),
           /* DecoderDoctorDiagnostics* */ nullptr)) {
     return CreateDocument(aCommand, aChannel, aLoadGroup, aContainer,
-                          []() -> already_AddRefed<nsIDocument> {
-                            nsCOMPtr<nsIDocument> doc;
+                          []() -> already_AddRefed<Document> {
+                            RefPtr<Document> doc;
                             nsresult rv =
                                 NS_NewVideoDocument(getter_AddRefs(doc));
                             NS_ENSURE_SUCCESS(rv, nullptr);
@@ -212,8 +214,8 @@ nsContentDLF::CreateInstance(const char* aCommand, nsIChannel* aChannel,
   // Try image types
   if (IsImageContentType(contentType.get())) {
     return CreateDocument(aCommand, aChannel, aLoadGroup, aContainer,
-                          []() -> already_AddRefed<nsIDocument> {
-                            nsCOMPtr<nsIDocument> doc;
+                          []() -> already_AddRefed<Document> {
+                            RefPtr<Document> doc;
                             nsresult rv =
                                 NS_NewImageDocument(getter_AddRefs(doc));
                             NS_ENSURE_SUCCESS(rv, nullptr);
@@ -228,8 +230,8 @@ nsContentDLF::CreateInstance(const char* aCommand, nsIChannel* aChannel,
   if (pluginHost &&
       pluginHost->HavePluginForType(contentType, nsPluginHost::eExcludeNone)) {
     return CreateDocument(aCommand, aChannel, aLoadGroup, aContainer,
-                          []() -> already_AddRefed<nsIDocument> {
-                            nsCOMPtr<nsIDocument> doc;
+                          []() -> already_AddRefed<Document> {
+                            RefPtr<Document> doc;
                             nsresult rv =
                                 NS_NewPluginDocument(getter_AddRefs(doc));
                             NS_ENSURE_SUCCESS(rv, nullptr);
@@ -244,7 +246,7 @@ nsContentDLF::CreateInstance(const char* aCommand, nsIChannel* aChannel,
 
 NS_IMETHODIMP
 nsContentDLF::CreateInstanceForDocument(nsISupports* aContainer,
-                                        nsIDocument* aDocument,
+                                        Document* aDocument,
                                         const char* aCommand,
                                         nsIContentViewer** aContentViewer) {
   MOZ_ASSERT(aDocument);
@@ -257,11 +259,11 @@ nsContentDLF::CreateInstanceForDocument(nsISupports* aContainer,
   return NS_OK;
 }
 
-/* static */ already_AddRefed<nsIDocument> nsContentDLF::CreateBlankDocument(
+/* static */ already_AddRefed<Document> nsContentDLF::CreateBlankDocument(
     nsILoadGroup* aLoadGroup, nsIPrincipal* aPrincipal,
     nsDocShell* aContainer) {
   // create a new blank HTML document
-  nsCOMPtr<nsIDocument> blankDoc;
+  RefPtr<Document> blankDoc;
   mozilla::Unused << NS_NewHTMLDocument(getter_AddRefs(blankDoc));
 
   if (!blankDoc) {
@@ -338,7 +340,7 @@ nsresult nsContentDLF::CreateDocument(
 #endif
 
   // Create the document
-  nsCOMPtr<nsIDocument> doc = aDocumentCreator();
+  RefPtr<Document> doc = aDocumentCreator();
   NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
 
   // Create the content viewer  XXX: could reuse content viewer here!
@@ -363,7 +365,7 @@ nsresult nsContentDLF::CreateXULDocument(
     const char* aCommand, nsIChannel* aChannel, nsILoadGroup* aLoadGroup,
     nsIDocShell* aContainer, nsISupports* aExtraInfo,
     nsIStreamListener** aDocListener, nsIContentViewer** aContentViewer) {
-  nsCOMPtr<nsIDocument> doc;
+  RefPtr<Document> doc;
   nsresult rv = NS_NewXULDocument(getter_AddRefs(doc));
   if (NS_FAILED(rv)) return rv;
 

@@ -18,7 +18,6 @@
 
 class nsGlobalWindowOuter;
 class nsGlobalWindowInner;
-class nsIDocument;
 class nsIPrincipal;
 
 namespace mozilla {

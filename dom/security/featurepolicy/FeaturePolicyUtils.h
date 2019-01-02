@@ -10,10 +10,10 @@
 #include "nsString.h"
 #include <functional>
 
-class nsIDocument;
-
 namespace mozilla {
 namespace dom {
+
+class Document;
 
 class FeaturePolicyUtils final {
  public:
@@ -30,7 +30,7 @@ class FeaturePolicyUtils final {
 
   // This method returns true if aFeatureName is allowed for aDocument.
   // Use this method everywhere you need to check feature-policy directives.
-  static bool IsFeatureAllowed(nsIDocument* aDocument,
+  static bool IsFeatureAllowed(Document* aDocument,
                                const nsAString& aFeatureName);
 
   // Returns true if aFeatureName is a known feature policy name.
@@ -45,7 +45,7 @@ class FeaturePolicyUtils final {
       const nsAString& aFeatureName);
 
  private:
-  static void ReportViolation(nsIDocument* aDocument,
+  static void ReportViolation(Document* aDocument,
                               const nsAString& aFeatureName);
 };
 

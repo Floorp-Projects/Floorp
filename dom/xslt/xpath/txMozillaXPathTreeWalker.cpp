@@ -34,7 +34,7 @@ void txXPathTreeWalker::moveToRoot() {
     return;
   }
 
-  nsIDocument* root = mPosition.mNode->GetUncomposedDoc();
+  Document* root = mPosition.mNode->GetUncomposedDoc();
   if (root) {
     mPosition.mIndex = txXPathNode::eDocument;
     mPosition.mNode = root;
@@ -53,7 +53,7 @@ bool txXPathTreeWalker::moveToElementById(const nsAString& aID) {
     return false;
   }
 
-  nsIDocument* doc = mPosition.mNode->GetUncomposedDoc();
+  Document* doc = mPosition.mNode->GetUncomposedDoc();
 
   nsCOMPtr<nsIContent> content;
   if (doc) {
@@ -490,8 +490,8 @@ int txXPathNodeUtils::comparePosition(const txXPathNode& aNode,
   }
 
   // Get document for both nodes.
-  nsIDocument* document = aNode.mNode->GetUncomposedDoc();
-  nsIDocument* otherDocument = aOtherNode.mNode->GetUncomposedDoc();
+  Document* document = aNode.mNode->GetUncomposedDoc();
+  Document* otherDocument = aOtherNode.mNode->GetUncomposedDoc();
 
   // If the nodes have different current documents, compare the document
   // pointers.
@@ -626,7 +626,7 @@ txXPathNode* txXPathNativeNode::createXPathNode(nsINode* aNode,
 }
 
 /* static */
-txXPathNode* txXPathNativeNode::createXPathNode(nsIDocument* aDocument) {
+txXPathNode* txXPathNativeNode::createXPathNode(Document* aDocument) {
   return new txXPathNode(aDocument);
 }
 
@@ -657,8 +657,8 @@ nsIContent* txXPathNativeNode::getContent(const txXPathNode& aNode) {
 }
 
 /* static */
-nsIDocument* txXPathNativeNode::getDocument(const txXPathNode& aNode) {
+Document* txXPathNativeNode::getDocument(const txXPathNode& aNode) {
   NS_ASSERTION(aNode.isDocument(),
-               "Only call getDocument on nsIDocument wrappers!");
+               "Only call getDocument on Document wrappers!");
   return aNode.Document();
 }

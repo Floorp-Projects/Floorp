@@ -5,7 +5,7 @@
 
 #include "nsNativeTheme.h"
 #include "nsIWidget.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIContent.h"
 #include "nsIFrame.h"
 #include "nsIPresShell.h"
@@ -29,7 +29,7 @@
 #include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/HTMLProgressElement.h"
 #include "mozilla/StaticPrefs.h"
-#include "nsIDocumentInlines.h"
+#include "mozilla/dom/DocumentInlines.h"
 #include <algorithm>
 
 using namespace mozilla;
@@ -107,7 +107,7 @@ EventStates nsNativeTheme::GetContentState(nsIFrame* aFrame,
   if (aAppearance == StyleAppearance::Button) return flags;
 #endif
 #if defined(XP_MACOSX) || defined(XP_WIN)
-  nsIDocument* doc = aFrame->GetContent()->OwnerDoc();
+  Document* doc = aFrame->GetContent()->OwnerDoc();
   nsPIDOMWindowOuter* window = doc->GetWindow();
   if (window && !window->ShouldShowFocusRing()) flags &= ~NS_EVENT_STATE_FOCUS;
 #endif
@@ -654,8 +654,7 @@ static nsIFrame* GetBodyFrame(nsIFrame* aCanvasFrame) {
   if (!content) {
     return nullptr;
   }
-  nsIDocument* document = content->OwnerDoc();
-  nsIContent* body = document->GetBodyElement();
+  nsIContent* body = content->OwnerDoc()->GetBodyElement();
   if (!body) {
     return nullptr;
   }

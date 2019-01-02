@@ -58,7 +58,7 @@ class CSSKeyframeDeclaration : public nsDOMCSSDeclaration {
       nsIPrincipal* aSubjectPrincipal) const final {
     return GetParsingEnvironmentForRule(mRule);
   }
-  nsIDocument* DocToUpdate() final { return nullptr; }
+  Document* DocToUpdate() final { return nullptr; }
 
   nsINode* GetParentObject() final {
     return mRule ? mRule->GetParentObject() : nullptr;

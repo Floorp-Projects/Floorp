@@ -443,7 +443,7 @@ nsWebBrowser::FindItemWithName(const nsAString& aName,
                                      aSkipTabGroup, aResult);
 }
 
-nsIDocument* nsWebBrowser::GetDocument() {
+dom::Document* nsWebBrowser::GetDocument() {
   return mDocShell ? mDocShell->GetDocument() : nullptr;
 }
 
@@ -640,7 +640,7 @@ nsWebBrowser::GetSessionHistoryXPCOM(nsISupports** aSessionHistory) {
 }
 
 NS_IMETHODIMP
-nsWebBrowser::GetDocument(nsIDocument** aDocument) {
+nsWebBrowser::GetDocument(dom::Document** aDocument) {
   NS_ENSURE_STATE(mDocShell);
 
   return mDocShellAsNav->GetDocument(aDocument);
@@ -885,7 +885,7 @@ nsWebBrowser::SaveDocument(nsISupports* aDocumentish, nsISupports* aFile,
   if (aDocumentish) {
     doc = aDocumentish;
   } else {
-    nsCOMPtr<nsIDocument> domDoc;
+    RefPtr<dom::Document> domDoc;
     GetDocument(getter_AddRefs(domDoc));
     doc = already_AddRefed<nsISupports>(ToSupports(domDoc.forget().take()));
   }
@@ -1320,7 +1320,7 @@ static void DrawPaintedLayer(PaintedLayer* aLayer, gfxContext* aContext,
 
 void nsWebBrowser::WindowActivated() {
 #if defined(DEBUG_smaug)
-  nsCOMPtr<nsIDocument> document = mDocShell->GetDocument();
+  RefPtr<dom::Document> document = mDocShell->GetDocument();
   nsAutoString documentURI;
   document->GetDocumentURI(documentURI);
   printf("nsWebBrowser::NS_ACTIVATE %p %s\n", (void*)this,
@@ -1331,7 +1331,7 @@ void nsWebBrowser::WindowActivated() {
 
 void nsWebBrowser::WindowDeactivated() {
 #if defined(DEBUG_smaug)
-  nsCOMPtr<nsIDocument> document = mDocShell->GetDocument();
+  RefPtr<dom::Document> document = mDocShell->GetDocument();
   nsAutoString documentURI;
   document->GetDocumentURI(documentURI);
   printf("nsWebBrowser::NS_DEACTIVATE %p %s\n", (void*)this,

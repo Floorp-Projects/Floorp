@@ -22,11 +22,12 @@
 class nsPIDOMWindowInner;
 class nsGlobalWindowInner;
 class nsIScriptContext;
-class nsIDocument;
 class nsIDocShell;
 
 namespace mozilla {
 namespace dom {
+
+class Document;
 
 /*
  * System-wide setup/teardown routines. Init and Destroy should be invoked
@@ -89,7 +90,7 @@ nsIGlobalObject* GetEntryGlobal();
 
 // If the entry global is a window, returns its extant document. Otherwise,
 // returns null.
-nsIDocument* GetEntryDocument();
+Document* GetEntryDocument();
 
 // Returns the global associated with the top-most entry of the the Script
 // Settings Stack. See the HTML spec. This may be null.

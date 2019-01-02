@@ -12,15 +12,14 @@
 #include "mozilla/dom/TextBinding.h"
 #include "nsContentUtils.h"
 #include "mozilla/dom/DirectionalityUtils.h"
+#include "mozilla/dom/Document.h"
 #include "nsIDOMEventListener.h"
-#include "nsIDocument.h"
 #include "nsThreadUtils.h"
 #include "nsStubMutationObserver.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #ifdef DEBUG
 #include "nsRange.h"
 #endif
-#include "nsIDocument.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -43,7 +42,7 @@ class nsAttributeTextNode final : public nsTextNode,
     NS_ASSERTION(mAttrName, "Must have attr name");
   }
 
-  virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+  virtual nsresult BindToTree(Document* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent) override;
   virtual void UnbindFromTree(bool aDeep = true,
                               bool aNullParent = true) override;
@@ -115,7 +114,7 @@ nsresult nsTextNode::AppendTextForNormalize(const char16_t* aBuffer,
                          &details);
 }
 
-nsresult nsTextNode::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+nsresult nsTextNode::BindToTree(Document* aDocument, nsIContent* aParent,
                                 nsIContent* aBindingParent) {
   nsresult rv = CharacterData::BindToTree(aDocument, aParent, aBindingParent);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -196,7 +195,7 @@ nsresult NS_NewAttributeContent(nsNodeInfoManager* aNodeInfoManager,
 NS_IMPL_ISUPPORTS_INHERITED(nsAttributeTextNode, nsTextNode,
                             nsIMutationObserver)
 
-nsresult nsAttributeTextNode::BindToTree(nsIDocument* aDocument,
+nsresult nsAttributeTextNode::BindToTree(Document* aDocument,
                                          nsIContent* aParent,
                                          nsIContent* aBindingParent) {
   MOZ_ASSERT(

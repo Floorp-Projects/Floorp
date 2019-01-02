@@ -15,7 +15,7 @@
 #include "nsComponentManagerUtils.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIBaseWindow.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsDocShell.h"
 
 #include "mozilla/dom/BrowsingContext.h"
@@ -57,7 +57,7 @@ nsPrintObject::~nsPrintObject() {
 }
 
 //------------------------------------------------------------------
-nsresult nsPrintObject::Init(nsIDocShell* aDocShell, nsIDocument* aDoc,
+nsresult nsPrintObject::Init(nsIDocShell* aDocShell, Document* aDoc,
                              bool aPrintPreview) {
   NS_ENSURE_STATE(aDoc);
 
@@ -87,7 +87,7 @@ nsresult nsPrintObject::Init(nsIDocShell* aDocShell, nsIDocument* aDoc,
   NS_ENSURE_TRUE(mDocShell, NS_ERROR_FAILURE);
 
   // Keep the document related to this docshell alive
-  nsCOMPtr<nsIDocument> dummy = do_GetInterface(mDocShell);
+  nsCOMPtr<Document> dummy = do_GetInterface(mDocShell);
   mozilla::Unused << dummy;
 
   nsCOMPtr<nsIContentViewer> viewer;

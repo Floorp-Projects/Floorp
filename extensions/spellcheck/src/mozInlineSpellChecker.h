@@ -109,7 +109,7 @@ class mozInlineSpellStatus {
 
   nsresult FillNoCheckRangeFromAnchor(mozInlineSpellWordUtil& aWordUtil);
 
-  nsIDocument* GetDocument() const;
+  mozilla::dom::Document* GetDocument() const;
   already_AddRefed<nsRange> PositionToCollapsedRange(nsINode* aNode,
                                                      uint32_t aOffset);
 };

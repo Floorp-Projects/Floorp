@@ -8,7 +8,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/intl/LocaleService.h"
 #include "nsIContent.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsString.h"
 #include "unicode/uloc.h"
 #include "unicode/unum.h"
@@ -55,9 +55,8 @@ void ICUUtils::LanguageTagIterForContent::GetNext(nsACString& aBCP47LangTag) {
     mCurrentFallbackIndex = 1;
     // Else try the language specified by any Content-Language HTTP header or
     // pragma directive:
-    nsIDocument* doc = mContent->OwnerDoc();
     nsAutoString lang;
-    doc->GetContentLanguage(lang);
+    mContent->OwnerDoc()->GetContentLanguage(lang);
     if (!lang.IsEmpty()) {
       aBCP47LangTag = NS_ConvertUTF16toUTF8(lang);
       return;

@@ -44,6 +44,7 @@
 #include "nsXBLBinding.h"
 
 using namespace mozilla;
+using mozilla::dom::Document;
 
 static NS_DEFINE_CID(kFormProcessorCID, NS_FORMPROCESSOR_CID);
 
@@ -53,7 +54,7 @@ static NS_DEFINE_CID(kFormProcessorCID, NS_FORMPROCESSOR_CID);
  */
 class MOZ_STACK_CLASS nsHtml5OtherDocUpdate {
  public:
-  nsHtml5OtherDocUpdate(nsIDocument* aCurrentDoc, nsIDocument* aExecutorDoc) {
+  nsHtml5OtherDocUpdate(Document* aCurrentDoc, Document* aExecutorDoc) {
     MOZ_ASSERT(aCurrentDoc, "Node has no doc?");
     MOZ_ASSERT(aExecutorDoc, "Executor has no doc?");
     if (MOZ_LIKELY(aCurrentDoc == aExecutorDoc)) {
@@ -71,7 +72,7 @@ class MOZ_STACK_CLASS nsHtml5OtherDocUpdate {
   }
 
  private:
-  nsCOMPtr<nsIDocument> mDocument;
+  RefPtr<Document> mDocument;
 };
 
 nsHtml5TreeOperation::nsHtml5TreeOperation()
@@ -188,7 +189,7 @@ nsresult nsHtml5TreeOperation::AppendToDocument(
   MOZ_ASSERT(aBuilder->IsInDocUpdate());
   nsresult rv = NS_OK;
 
-  nsIDocument* doc = aBuilder->GetDocument();
+  Document* doc = aBuilder->GetDocument();
   rv = doc->AppendChildTo(aNode, false);
   if (rv == NS_ERROR_DOM_HIERARCHY_REQUEST_ERR) {
     aNode->SetParserHasNotified();
@@ -340,7 +341,7 @@ nsIContent* nsHtml5TreeOperation::CreateHTMLElement(
   NS_ASSERTION(nodeInfo, "Got null nodeinfo.");
 
   dom::Element* newContent = nullptr;
-  nsIDocument* document = nodeInfo->GetDocument();
+  Document* document = nodeInfo->GetDocument();
   bool willExecuteScript = false;
   bool isCustomElement = false;
   RefPtr<nsAtom> isAtom;
@@ -372,7 +373,7 @@ nsIContent* nsHtml5TreeOperation::CreateHTMLElement(
 
   if (willExecuteScript) {  // This will cause custom element constructors to
                             // run
-    AutoSetThrowOnDynamicMarkupInsertionCounter
+    mozilla::dom::AutoSetThrowOnDynamicMarkupInsertionCounter
         throwOnDynamicMarkupInsertionCounter(document);
     nsHtml5AutoPauseUpdate autoPauseContentUpdate(aBuilder);
     { nsAutoMicroTask mt; }
@@ -970,7 +971,7 @@ nsresult nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       return NS_OK;
     }
     case eTreeOpEnableEncodingMenu: {
-      nsIDocument* doc = aBuilder->GetDocument();
+      Document* doc = aBuilder->GetDocument();
       doc->EnableEncodingMenu();
       return NS_OK;
     }
@@ -997,7 +998,7 @@ nsresult nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
 
       nsDependentString relative(buffer, length);
 
-      nsIDocument* doc = aBuilder->GetDocument();
+      Document* doc = aBuilder->GetDocument();
 
       auto encoding = doc->GetDocumentCharacterSet();
       nsCOMPtr<nsIURI> uri;

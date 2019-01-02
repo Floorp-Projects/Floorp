@@ -8,6 +8,8 @@
 interface nsIURI;
 interface nsINetworkPredictorVerifier;
 
+webidl Document;
+
 typedef unsigned long PredictorPredictReason;
 typedef unsigned long PredictorLearnReason;
 
@@ -143,7 +145,7 @@ interface nsINetworkPredictor : nsISupports
 %{C++
 // Wrapper functions to make use of the predictor easier and less invasive
 class nsIChannel;
-class nsIDocument;
+
 class nsILoadContext;
 class nsILoadGroup;
 class nsINetworkPredictorVerifier;
@@ -170,7 +172,7 @@ nsresult PredictorLearn(nsIURI *targetURI,
 nsresult PredictorLearn(nsIURI *targetURI,
                         nsIURI *sourceURI,
                         PredictorLearnReason reason,
-                        nsIDocument *document);
+                        dom::Document *document);
 
 nsresult PredictorLearnRedirect(nsIURI *targetURI,
                                 nsIChannel *channel,

@@ -10,7 +10,7 @@
 #include "nsDataHashtable.h"
 #include "nsHashKeys.h"
 #include "nsAtom.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsStringFwd.h"
 #include "nsTArray.h"
 

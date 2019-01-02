@@ -13,8 +13,6 @@
 #include "nsGkAtoms.h"
 #include "nsIURL.h"
 
-class nsIDocument;
-
 namespace mozilla {
 class EventChainPostVisitor;
 class EventChainPreVisitor;
@@ -44,7 +42,7 @@ class HTMLAreaElement final : public nsGenericHTMLElement, public Link {
   virtual void GetLinkTarget(nsAString& aTarget) override;
   virtual already_AddRefed<nsIURI> GetHrefURI() const override;
 
-  virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+  virtual nsresult BindToTree(Document* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent) override;
   virtual void UnbindFromTree(bool aDeep = true,
                               bool aNullParent = true) override;
@@ -150,7 +148,7 @@ class HTMLAreaElement final : public nsGenericHTMLElement, public Link {
   void ToString(nsAString& aSource);
   void Stringify(nsAString& aResult) { GetHref(aResult); }
 
-  void NodeInfoChanged(nsIDocument* aOldDoc) final {
+  void NodeInfoChanged(Document* aOldDoc) final {
     ClearHasPendingLinkUpdate();
     nsGenericHTMLElement::NodeInfoChanged(aOldDoc);
   }

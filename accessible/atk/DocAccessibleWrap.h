@@ -18,7 +18,7 @@ namespace a11y {
 
 class DocAccessibleWrap : public DocAccessible {
  public:
-  DocAccessibleWrap(nsIDocument* aDocument, nsIPresShell* aPresShell);
+  DocAccessibleWrap(dom::Document* aDocument, nsIPresShell* aPresShell);
   virtual ~DocAccessibleWrap();
 
   bool mActivated;

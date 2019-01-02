@@ -15,7 +15,6 @@
 
 class nsContentList;
 class nsCycleCollectionTraversalCallback;
-class nsIDocument;
 class nsINode;
 class nsINodeList;
 class nsIRadioVisitor;
@@ -47,7 +46,7 @@ class DocumentOrShadowRoot {
   };
 
  public:
-  explicit DocumentOrShadowRoot(nsIDocument&);
+  explicit DocumentOrShadowRoot(Document&);
   explicit DocumentOrShadowRoot(ShadowRoot&);
 
   // Unusual argument naming is because of cycle collection macros.

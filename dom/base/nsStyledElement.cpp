@@ -16,7 +16,7 @@
 #include "nsDOMCSSDeclaration.h"
 #include "nsDOMCSSAttrDeclaration.h"
 #include "nsServiceManagerUtils.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/DeclarationBlock.h"
 #include "mozilla/css/Loader.h"
 #include "nsXULElement.h"
@@ -117,7 +117,7 @@ nsresult nsStyledElement::SetInlineStyleDeclaration(
   nsAttrValue attrValue(do_AddRef(&aDeclaration), nullptr);
   SetMayHaveStyle();
 
-  nsIDocument* document = GetComposedDoc();
+  Document* document = GetComposedDoc();
   mozAutoDocUpdate updateBatch(document, true);
   return SetAttrAndNotify(kNameSpaceID_None, nsGkAtoms::style, nullptr,
                           aData.mOldValue.ptrOr(nullptr), attrValue, nullptr,
@@ -165,7 +165,7 @@ nsresult nsStyledElement::ReparseStyleAttribute(bool aForceInDataDoc,
   return NS_OK;
 }
 
-void nsStyledElement::NodeInfoChanged(nsIDocument* aOldDoc) {
+void nsStyledElement::NodeInfoChanged(Document* aOldDoc) {
   nsStyledElementBase::NodeInfoChanged(aOldDoc);
 }
 
@@ -182,7 +182,7 @@ void nsStyledElement::ParseStyleAttribute(const nsAString& aValue,
                                           nsIPrincipal* aMaybeScriptedPrincipal,
                                           nsAttrValue& aResult,
                                           bool aForceInDataDoc) {
-  nsIDocument* doc = OwnerDoc();
+  Document* doc = OwnerDoc();
   bool isNativeAnon = IsInNativeAnonymousSubtree();
 
   if (!isNativeAnon && !nsStyleUtil::CSPAllowsInlineStyle(

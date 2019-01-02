@@ -1301,7 +1301,7 @@ nsresult HTMLEditRules::WillInsertText(EditSubAction aEditSubAction,
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "WillInsert() failed");
 
   // we need to get the doc
-  nsCOMPtr<nsIDocument> doc = HTMLEditorRef().GetDocument();
+  RefPtr<Document> doc = HTMLEditorRef().GetDocument();
   if (NS_WARN_IF(!doc)) {
     return NS_ERROR_FAILURE;
   }
@@ -5657,7 +5657,7 @@ CreateElementResult HTMLEditRules::ConvertListType(Element& aListElement,
   return CreateElementResult(listElement.forget());
 }
 
-nsresult HTMLEditRules::CreateStyleForInsertText(nsIDocument& aDocument) {
+nsresult HTMLEditRules::CreateStyleForInsertText(Document& aDocument) {
   MOZ_ASSERT(IsEditorDataAvailable());
   MOZ_ASSERT(HTMLEditorRef().mTypeInState);
 

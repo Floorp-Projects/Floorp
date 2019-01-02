@@ -13,7 +13,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsINode.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsLayoutUtils.h"
 #include "prmon.h"
 #include "nsStubMutationObserver.h"
@@ -484,7 +484,7 @@ class nsRange final : public nsStubMutationObserver,
     static bool sIsNested;
   };
 
-  nsCOMPtr<nsIDocument> mOwner;
+  RefPtr<mozilla::dom::Document> mOwner;
   nsCOMPtr<nsINode> mRoot;
   // mRegisteredCommonAncestor is only non-null when the range
   // IsInSelection().  It's kept alive via mStartContainer/mEndContainer,

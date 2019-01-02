@@ -8,14 +8,13 @@
 #define mozilla_dom_DOMParser_h_
 
 #include "nsCOMPtr.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsWrapperCache.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/Span.h"
 #include "mozilla/dom/DOMParserBinding.h"
 #include "mozilla/dom/TypedArray.h"
 
-class nsIDocument;
 class nsIGlobalObject;
 
 namespace mozilla {
@@ -34,25 +33,25 @@ class DOMParser final : public nsISupports, public nsWrapperCache {
   static already_AddRefed<DOMParser> Constructor(const GlobalObject& aOwner,
                                                  mozilla::ErrorResult& rv);
 
-  already_AddRefed<nsIDocument> ParseFromString(const nsAString& aStr,
-                                                SupportedType aType,
-                                                ErrorResult& aRv);
+  already_AddRefed<Document> ParseFromString(const nsAString& aStr,
+                                             SupportedType aType,
+                                             ErrorResult& aRv);
 
   // Sequence converts to Span, so we can use this overload for both
   // the Sequence case and our internal uses.
-  already_AddRefed<nsIDocument> ParseFromBuffer(Span<const uint8_t> aBuf,
-                                                SupportedType aType,
-                                                ErrorResult& aRv);
+  already_AddRefed<Document> ParseFromBuffer(Span<const uint8_t> aBuf,
+                                             SupportedType aType,
+                                             ErrorResult& aRv);
 
-  already_AddRefed<nsIDocument> ParseFromBuffer(const Uint8Array& aBuf,
-                                                SupportedType aType,
-                                                ErrorResult& aRv);
+  already_AddRefed<Document> ParseFromBuffer(const Uint8Array& aBuf,
+                                             SupportedType aType,
+                                             ErrorResult& aRv);
 
-  already_AddRefed<nsIDocument> ParseFromStream(nsIInputStream* aStream,
-                                                const nsAString& aCharset,
-                                                int32_t aContentLength,
-                                                SupportedType aType,
-                                                ErrorResult& aRv);
+  already_AddRefed<Document> ParseFromStream(nsIInputStream* aStream,
+                                             const nsAString& aCharset,
+                                             int32_t aContentLength,
+                                             SupportedType aType,
+                                             ErrorResult& aRv);
 
   void ForceEnableXULXBL() { mForceEnableXULXBL = true; }
 
@@ -70,8 +69,8 @@ class DOMParser final : public nsISupports, public nsWrapperCache {
   DOMParser(nsIGlobalObject* aOwner, nsIPrincipal* aDocPrincipal,
             nsIURI* aDocumentURI, nsIURI* aBaseURI);
 
-  already_AddRefed<nsIDocument> SetUpDocument(DocumentFlavor aFlavor,
-                                              ErrorResult& aRv);
+  already_AddRefed<Document> SetUpDocument(DocumentFlavor aFlavor,
+                                           ErrorResult& aRv);
 
   nsCOMPtr<nsIGlobalObject> mOwner;
   nsCOMPtr<nsIPrincipal> mPrincipal;

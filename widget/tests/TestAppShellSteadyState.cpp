@@ -8,7 +8,7 @@
 #include "nsGlobalWindowOuter.h"
 #include "nsIAppShell.h"
 #include "nsIAppShellService.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIDOMEventListener.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMWindowUtils.h"
@@ -165,9 +165,9 @@ class EventListener final : public nsIDOMEventListener {
     if (type.EqualsLiteral("load")) {
       passed("Got load event");
 
-      nsCOMPtr<nsIDocument> document = do_QueryInterface(aEvent->GetTarget());
+      nsCOMPtr<dom::Document> document = do_QueryInterface(aEvent->GetTarget());
       if (!document) {
-        fail("Failed to QI to nsIDocument!");
+        fail("Failed to QI to Document!");
         return NS_ERROR_FAILURE;
       }
 

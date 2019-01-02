@@ -1727,7 +1727,7 @@ already_AddRefed<imgIContainer> RasterImage::Unwrap() {
   return self.forget();
 }
 
-void RasterImage::PropagateUseCounters(nsIDocument*) {
+void RasterImage::PropagateUseCounters(dom::Document*) {
   // No use counters.
 }
 

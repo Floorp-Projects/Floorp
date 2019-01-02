@@ -1017,7 +1017,7 @@ ImageBitmap::CreateFromOffscreenCanvas(nsIGlobalObject* aGlobal,
   }
 
   window->GetExtantDoc()->WarnOnceAbout(
-      nsIDocument::eCreateImageBitmapCanvasRenderingContext2D);
+      Document::eCreateImageBitmapCanvasRenderingContext2D);
 
   // Check write-only mode.
   bool writeOnly =

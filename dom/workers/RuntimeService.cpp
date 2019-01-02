@@ -10,7 +10,7 @@
 #include "nsIChannel.h"
 #include "nsIContentSecurityPolicy.h"
 #include "nsICookieService.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIDOMChromeWindow.h"
 #include "nsIEffectiveTLDService.h"
 #include "nsIObserverService.h"

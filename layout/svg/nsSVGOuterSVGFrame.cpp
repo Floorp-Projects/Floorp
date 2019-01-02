@@ -10,7 +10,7 @@
 // Keep others in (case-insensitive) order:
 #include "gfxContext.h"
 #include "nsDisplayList.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIObjectLoadingContent.h"
 #include "nsSVGIntegrationUtils.h"
@@ -109,7 +109,7 @@ void nsSVGOuterSVGFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
 
   nsSVGDisplayContainerFrame::Init(aContent, aParent, aPrevInFlow);
 
-  nsIDocument* doc = mContent->GetUncomposedDoc();
+  Document* doc = mContent->GetUncomposedDoc();
   if (doc) {
     // we only care about our content's zoom and pan values if it's the root
     // element
@@ -899,7 +899,7 @@ bool nsSVGOuterSVGFrame::IsRootOfReplacedElementSubDoc(
 bool nsSVGOuterSVGFrame::IsRootOfImage() {
   if (!mContent->GetParent()) {
     // Our content is the document element
-    nsIDocument* doc = mContent->GetUncomposedDoc();
+    Document* doc = mContent->GetUncomposedDoc();
     if (doc && doc->IsBeingUsedAsImage()) {
       // Our document is being used as an image
       return true;

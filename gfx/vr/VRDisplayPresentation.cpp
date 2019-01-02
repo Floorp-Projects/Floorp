@@ -72,12 +72,8 @@ void VRDisplayPresentation::CreateLayers() {
       continue;
     }
 
-    nsCOMPtr<nsIEventTarget> target;
-    nsIDocument* doc;
-    doc = canvasElement->OwnerDoc();
-    if (doc) {
-      target = doc->EventTargetFor(TaskCategory::Other);
-    }
+    nsCOMPtr<nsIEventTarget> target =
+        canvasElement->OwnerDoc()->EventTargetFor(TaskCategory::Other);
 
     if (mLayers.Length() <= iLayer) {
       // Not enough layers, let's add one

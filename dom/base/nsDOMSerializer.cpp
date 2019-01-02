@@ -7,7 +7,7 @@
 #include "nsDOMSerializer.h"
 
 #include "mozilla/Encoding.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIDocumentEncoder.h"
 #include "nsComponentManagerUtils.h"
 #include "nsContentCID.h"
@@ -28,7 +28,7 @@ static already_AddRefed<nsIDocumentEncoder> SetUpEncoder(
     return nullptr;
   }
 
-  nsIDocument* doc = aRoot.OwnerDoc();
+  dom::Document* doc = aRoot.OwnerDoc();
   bool entireDocument = (doc == &aRoot);
 
   // This method will fail if no document

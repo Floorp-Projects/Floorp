@@ -42,7 +42,7 @@
 #include "nsPresContext.h"
 #include "nsMappedAttributes.h"
 #include "nsIFormControl.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIPresShell.h"
 #include "nsIFormControlFrame.h"
 #include "nsITextControlFrame.h"
@@ -51,7 +51,6 @@
 #include "nsIServiceManager.h"
 #include "nsError.h"
 #include "nsIEditor.h"
-#include "nsIDocument.h"
 #include "nsAttrValueOrString.h"
 #include "nsDateTimeControlFrame.h"
 
@@ -667,7 +666,7 @@ nsresult HTMLInputElement::InitColorPicker() {
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIDocument> doc = OwnerDoc();
+  nsCOMPtr<Document> doc = OwnerDoc();
 
   nsCOMPtr<nsPIDOMWindowOuter> win = doc->GetWindow();
   if (!win) {
@@ -712,7 +711,7 @@ nsresult HTMLInputElement::InitFilePicker(FilePickerType aType) {
   }
 
   // Get parent nsPIDOMWindow object.
-  nsCOMPtr<nsIDocument> doc = OwnerDoc();
+  nsCOMPtr<Document> doc = OwnerDoc();
 
   nsCOMPtr<nsPIDOMWindowOuter> win = doc->GetWindow();
   if (!win) {
@@ -830,7 +829,7 @@ void HTMLInputElement::InitUploadLastDir() {
 void HTMLInputElement::DestroyUploadLastDir() { NS_IF_RELEASE(gUploadLastDir); }
 
 nsresult UploadLastDir::FetchDirectoryAndDisplayPicker(
-    nsIDocument* aDoc, nsIFilePicker* aFilePicker,
+    Document* aDoc, nsIFilePicker* aFilePicker,
     nsIFilePickerShownCallback* aFpCallback) {
   MOZ_ASSERT(aDoc, "aDoc is null");
   MOZ_ASSERT(aFilePicker, "aFilePicker is null");
@@ -861,8 +860,7 @@ nsresult UploadLastDir::FetchDirectoryAndDisplayPicker(
   return NS_OK;
 }
 
-nsresult UploadLastDir::StoreLastUsedDirectory(nsIDocument* aDoc,
-                                               nsIFile* aDir) {
+nsresult UploadLastDir::StoreLastUsedDirectory(Document* aDoc, nsIFile* aDir) {
   MOZ_ASSERT(aDoc, "aDoc is null");
   if (!aDir) {
     return NS_OK;
@@ -3845,7 +3843,7 @@ nsresult HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
           if (fm && IsSingleLineTextControl(false) &&
               !aVisitor.mEvent->AsFocusEvent()->mFromRaise &&
               SelectTextFieldOnFocus()) {
-            nsIDocument* document = GetComposedDoc();
+            Document* document = GetComposedDoc();
             if (document) {
               uint32_t lastFocusMethod;
               fm->GetLastFocusMethod(document->GetWindow(), &lastFocusMethod);
@@ -4280,8 +4278,7 @@ void HTMLInputElement::MaybeLoadImage() {
   }
 }
 
-nsresult HTMLInputElement::BindToTree(nsIDocument* aDocument,
-                                      nsIContent* aParent,
+nsresult HTMLInputElement::BindToTree(Document* aDocument, nsIContent* aParent,
                                       nsIContent* aBindingParent) {
   nsresult rv = nsGenericHTMLFormElementWithState::BindToTree(
       aDocument, aParent, aBindingParent);

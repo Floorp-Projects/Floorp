@@ -12,7 +12,7 @@
 #include "nsContentUtils.h"
 #include "nsIChannel.h"
 #include "nsIClassifiedChannel.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIDocShell.h"
 #include "nsIHttpChannel.h"
 #include "nsIHttpChannelInternal.h"
@@ -79,7 +79,7 @@ LazyLogModule UrlClassifierCommon::sLog("nsChannelClassifier");
   if (!docShell) {
     return;
   }
-  nsCOMPtr<nsIDocument> doc = docShell->GetDocument();
+  RefPtr<dom::Document> doc = docShell->GetDocument();
   NS_ENSURE_TRUE_VOID(doc);
 
   nsCOMPtr<nsIURI> uri;
@@ -213,7 +213,7 @@ UrlClassifierCommon::ShouldEnableTrackingProtectionOrAnnotation(
   if (!docShell) {
     return NS_OK;
   }
-  nsCOMPtr<nsIDocument> doc = docShell->GetDocument();
+  RefPtr<dom::Document> doc = docShell->GetDocument();
   NS_ENSURE_TRUE(doc, NS_OK);
 
   unsigned state;

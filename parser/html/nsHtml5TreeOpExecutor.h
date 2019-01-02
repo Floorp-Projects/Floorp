@@ -27,7 +27,11 @@
 class nsHtml5Parser;
 class nsHtml5StreamParser;
 class nsIContent;
-class nsIDocument;
+namespace mozilla {
+namespace dom {
+class Document;
+}
+}  // namespace mozilla
 
 class nsHtml5TreeOpExecutor final
     : public nsHtml5DocumentBuilder,
@@ -185,7 +189,7 @@ class nsHtml5TreeOpExecutor final
   void MaybeComplainAboutCharset(const char* aMsgId, bool aError,
                                  uint32_t aLineNumber);
 
-  void ComplainAboutBogusProtocolCharset(nsIDocument* aDoc);
+  void ComplainAboutBogusProtocolCharset(mozilla::dom::Document*);
 
   bool HasStarted() { return mStarted; }
 

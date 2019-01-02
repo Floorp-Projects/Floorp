@@ -11,7 +11,7 @@
 use nsID;
 
 // XXX: This macro should have an option for a custom base interface instead of
-// nsISupports, such that nsIDocument can have nsINode as a base, etc. For now,
+// nsISupports, such that Document can have nsINode as a base, etc. For now,
 // query_interface should be sufficient.
 macro_rules! nonidl {
     ($name:ident, $iid:expr) => {
@@ -49,8 +49,8 @@ macro_rules! nonidl {
     }
 }
 
-// Must be kept in sync with nsIDocument.h
-nonidl!(nsIDocument,
+// Must be kept in sync with Document.h
+nonidl!(Document,
         nsID(0xce1f7627, 0x7109, 0x4977,
              [0xba, 0x77, 0x49, 0x0f, 0xfd, 0xe0, 0x7a, 0xaa]));
 

@@ -24,7 +24,7 @@
 #include "nsIContentInlines.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsView.h"
 #include "nsViewManager.h"
 #include "nsGkAtoms.h"
@@ -46,11 +46,12 @@
 #include "RetainedDisplayListBuilder.h"
 
 using namespace mozilla;
+using mozilla::dom::Document;
 using mozilla::layout::RenderFrame;
 
 static bool sShowPreviousPage = true;
 
-static nsIDocument* GetDocumentFromView(nsView* aView) {
+static Document* GetDocumentFromView(nsView* aView) {
   MOZ_ASSERT(aView, "null view");
 
   nsViewManager* vm = aView->GetViewManager();
@@ -130,7 +131,7 @@ void nsSubDocumentFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
   // has changed documents however, we blow away the presentation.
   RefPtr<nsFrameLoader> frameloader = FrameLoader();
   if (frameloader) {
-    nsCOMPtr<nsIDocument> oldContainerDoc;
+    nsCOMPtr<Document> oldContainerDoc;
     nsIFrame* detachedFrame =
         frameloader->GetDetachedSubdocFrame(getter_AddRefs(oldContainerDoc));
     frameloader->SetDetachedSubdocFrame(nullptr, nullptr);
@@ -239,7 +240,7 @@ ScreenIntSize nsSubDocumentFrame::GetSubdocumentSize() {
   if (GetStateBits() & NS_FRAME_FIRST_REFLOW) {
     RefPtr<nsFrameLoader> frameloader = FrameLoader();
     if (frameloader) {
-      nsCOMPtr<nsIDocument> oldContainerDoc;
+      nsCOMPtr<Document> oldContainerDoc;
       nsIFrame* detachedFrame =
           frameloader->GetDetachedSubdocFrame(getter_AddRefs(oldContainerDoc));
       nsView* view = detachedFrame ? detachedFrame->GetView() : nullptr;
@@ -355,8 +356,8 @@ void nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   }
 
   if (aBuilder->IsInFilter()) {
-    nsIDocument* outerDoc = PresShell()->GetDocument();
-    nsIDocument* innerDoc = presShell->GetDocument();
+    Document* outerDoc = PresShell()->GetDocument();
+    Document* innerDoc = presShell->GetDocument();
     if (outerDoc && innerDoc) {
       if (!outerDoc->NodePrincipal()->Equals(innerDoc->NodePrincipal())) {
         outerDoc->SetDocumentAndPageUseCounter(
@@ -1021,7 +1022,7 @@ static void DestroyDisplayItemDataForFrames(nsIFrame* aFrame) {
   }
 }
 
-static bool BeginSwapDocShellsForDocument(nsIDocument* aDocument, void*) {
+static bool BeginSwapDocShellsForDocument(Document* aDocument, void*) {
   MOZ_ASSERT(aDocument, "null document");
 
   nsIPresShell* shell = aDocument->GetShell();
@@ -1044,7 +1045,7 @@ static nsView* BeginSwapDocShellsForViews(nsView* aSibling) {
   // Collect the removed sibling views in reverse order in 'removedViews'.
   nsView* removedViews = nullptr;
   while (aSibling) {
-    nsIDocument* doc = ::GetDocumentFromView(aSibling);
+    Document* doc = ::GetDocumentFromView(aSibling);
     if (doc) {
       ::BeginSwapDocShellsForDocument(doc, nullptr);
     }
@@ -1099,7 +1100,7 @@ nsresult nsSubDocumentFrame::BeginSwapDocShells(nsIFrame* aOther) {
   return NS_OK;
 }
 
-static bool EndSwapDocShellsForDocument(nsIDocument* aDocument, void*) {
+static bool EndSwapDocShellsForDocument(Document* aDocument, void*) {
   MOZ_ASSERT(aDocument, "null document");
 
   // Our docshell and view trees have been updated for the new hierarchy.
@@ -1131,7 +1132,7 @@ static bool EndSwapDocShellsForDocument(nsIDocument* aDocument, void*) {
 
 static void EndSwapDocShellsForViews(nsView* aSibling) {
   for (; aSibling; aSibling = aSibling->GetNextSibling()) {
-    nsIDocument* doc = ::GetDocumentFromView(aSibling);
+    Document* doc = ::GetDocumentFromView(aSibling);
     if (doc) {
       ::EndSwapDocShellsForDocument(doc, nullptr);
     }

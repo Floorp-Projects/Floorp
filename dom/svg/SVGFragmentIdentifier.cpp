@@ -26,7 +26,7 @@ static bool IsMatchingParameter(const nsAString& aString,
 
 inline bool IgnoreWhitespace(char16_t aChar) { return false; }
 
-static SVGViewElement* GetViewElement(nsIDocument* aDocument,
+static SVGViewElement* GetViewElement(Document* aDocument,
                                       const nsAString& aId) {
   Element* element = aDocument->GetElementById(aId);
   return (element && element->IsSVGElement(nsGkAtoms::view))
@@ -160,7 +160,7 @@ bool SVGFragmentIdentifier::ProcessSVGViewSpec(const nsAString& aViewSpec,
 }
 
 bool SVGFragmentIdentifier::ProcessFragmentIdentifier(
-    nsIDocument* aDocument, const nsAString& aAnchorName) {
+    Document* aDocument, const nsAString& aAnchorName) {
   MOZ_ASSERT(aDocument->GetRootElement()->IsSVGElement(nsGkAtoms::svg),
              "expecting an SVG root element");
 

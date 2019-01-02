@@ -19,7 +19,7 @@ static const mozilla::CSSIntSize kViewportMaxSize(10000, 10000);
 
 /**
  * Information retrieved from the <meta name="viewport"> tag. See
- * nsIDocument::GetViewportInfo for more information on this functionality.
+ * Document::GetViewportInfo for more information on this functionality.
  */
 class MOZ_STACK_CLASS nsViewportInfo {
  public:
@@ -89,7 +89,7 @@ class MOZ_STACK_CLASS nsViewportInfo {
  private:
   /**
    * Constrain the viewport calculations from the
-   * nsIDocument::GetViewportInfo() function in order to always return
+   * Document::GetViewportInfo() function in order to always return
    * sane minimum/maximum values.
    */
   void ConstrainViewportValues();

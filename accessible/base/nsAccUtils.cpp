@@ -449,7 +449,7 @@ bool nsAccUtils::IsARIALive(const Accessible* aAccessible) {
   nsAutoString live;
   nsIContent* startContent = aAccessible->GetContent();
   while (startContent) {
-    nsIDocument* doc = startContent->GetComposedDoc();
+    dom::Document* doc = startContent->GetComposedDoc();
     if (!doc) {
       break;
     }
@@ -495,7 +495,7 @@ bool nsAccUtils::IsARIALive(const Accessible* aAccessible) {
       break;
     }
 
-    nsIDocument* parentDoc = doc->GetParentDocument();
+    dom::Document* parentDoc = doc->GetParentDocument();
     if (!parentDoc) {
       break;
     }

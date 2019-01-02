@@ -86,7 +86,7 @@ class WorkletFetchHandler final : public PromiseNativeHandler,
     nsCOMPtr<nsPIDOMWindowInner> window = aWorklet->GetParentObject();
     MOZ_ASSERT(window);
 
-    nsCOMPtr<nsIDocument> doc;
+    nsCOMPtr<Document> doc;
     doc = window->GetExtantDoc();
     if (!doc) {
       promise->MaybeReject(NS_ERROR_FAILURE);

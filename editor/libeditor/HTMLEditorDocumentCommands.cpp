@@ -12,7 +12,7 @@
 #include "nsDebug.h"                     // for NS_ENSURE_ARG_POINTER, etc
 #include "nsError.h"                     // for NS_ERROR_INVALID_ARG, etc
 #include "nsIDocShell.h"                 // for nsIDocShell
-#include "nsIDocument.h"                 // for nsIDocument
+#include "mozilla/dom/Document.h"        // for Document
 #include "nsIEditingSession.h"           // for nsIEditingSession, etc
 #include "nsIEditor.h"                   // for nsIEditor
 #include "nsIPlaintextEditor.h"          // for nsIPlaintextEditor, etc
@@ -653,7 +653,7 @@ DocumentStateCommand::GetCommandStateParams(const char* aCommandName,
     TextEditor* textEditor = editor->AsTextEditor();
     MOZ_ASSERT(textEditor);
 
-    nsCOMPtr<nsIDocument> doc = textEditor->GetDocument();
+    RefPtr<Document> doc = textEditor->GetDocument();
     if (NS_WARN_IF(!doc)) {
       return NS_ERROR_FAILURE;
     }

@@ -6,7 +6,7 @@
 
 #include "mozilla/dom/BoxObject.h"
 #include "nsCOMPtr.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "nsIContent.h"
@@ -107,7 +107,7 @@ nsIPresShell* BoxObject::GetPresShell(bool aFlushLayout) {
     return nullptr;
   }
 
-  nsCOMPtr<nsIDocument> doc = mContent->GetComposedDoc();
+  RefPtr<Document> doc = mContent->GetComposedDoc();
   if (!doc) {
     return nullptr;
   }

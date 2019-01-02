@@ -10,9 +10,11 @@
 #include "MediaResult.h"
 #include "nsString.h"
 
-class nsIDocument;
-
 namespace mozilla {
+
+namespace dom {
+class Document;
+}
 
 struct DecoderDoctorEvent {
   enum Domain {
@@ -43,20 +45,21 @@ class DecoderDoctorDiagnostics {
   // given format. All diagnostics for a document will be analyzed together
   // within a short timeframe.
   // Should only be called once.
-  void StoreFormatDiagnostics(nsIDocument* aDocument, const nsAString& aFormat,
-                              bool aCanPlay, const char* aCallSite);
+  void StoreFormatDiagnostics(dom::Document* aDocument,
+                              const nsAString& aFormat, bool aCanPlay,
+                              const char* aCallSite);
 
-  void StoreMediaKeySystemAccess(nsIDocument* aDocument,
+  void StoreMediaKeySystemAccess(dom::Document* aDocument,
                                  const nsAString& aKeySystem, bool aIsSupported,
                                  const char* aCallSite);
 
-  void StoreEvent(nsIDocument* aDocument, const DecoderDoctorEvent& aEvent,
+  void StoreEvent(dom::Document* aDocument, const DecoderDoctorEvent& aEvent,
                   const char* aCallSite);
 
-  void StoreDecodeError(nsIDocument* aDocument, const MediaResult& aError,
+  void StoreDecodeError(dom::Document* aDocument, const MediaResult& aError,
                         const nsString& aMediaSrc, const char* aCallSite);
 
-  void StoreDecodeWarning(nsIDocument* aDocument, const MediaResult& aWarning,
+  void StoreDecodeWarning(dom::Document* aDocument, const MediaResult& aWarning,
                           const nsString& aMediaSrc, const char* aCallSite);
 
   enum DiagnosticsType {

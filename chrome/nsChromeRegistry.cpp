@@ -18,7 +18,7 @@
 #include "mozilla/dom/URL.h"
 #include "nsDOMWindowList.h"
 #include "nsIConsoleService.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIDOMWindow.h"
 #include "nsIObserverService.h"
 #include "nsIPresShell.h"
@@ -39,6 +39,7 @@ nsChromeRegistry* nsChromeRegistry::gChromeRegistry;
 // DO NOT use namespace mozilla; it'll break due to a naming conflict between
 // mozilla::TextRange and a TextRange in OSX headers.
 using mozilla::StyleSheet;
+using mozilla::dom::Document;
 using mozilla::dom::IsChromeURI;
 using mozilla::dom::Location;
 
@@ -275,7 +276,7 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURI, nsIURI** aResult) {
 
 static void FlushSkinBindingsForWindow(nsPIDOMWindowOuter* aWindow) {
   // Get the document.
-  nsCOMPtr<nsIDocument> document = aWindow->GetDoc();
+  RefPtr<Document> document = aWindow->GetDoc();
   if (!document) return;
 
   // Annihilate all XBL bindings.
@@ -339,7 +340,7 @@ nsresult nsChromeRegistry::RefreshWindow(nsPIDOMWindowOuter* aWindow) {
 
   nsresult rv;
   // Get the document.
-  nsCOMPtr<nsIDocument> document = aWindow->GetDoc();
+  RefPtr<Document> document = aWindow->GetDoc();
   if (!document) return NS_OK;
 
   // Deal with the agent sheets first.  Have to do all the style sets by hand.

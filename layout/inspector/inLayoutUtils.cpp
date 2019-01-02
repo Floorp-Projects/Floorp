@@ -6,7 +6,7 @@
 
 #include "inLayoutUtils.h"
 
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIContent.h"
 #include "nsIContentViewer.h"
 #include "nsPIDOMWindow.h"
@@ -21,17 +21,17 @@ using namespace mozilla;
 ///////////////////////////////////////////////////////////////////////////////
 
 EventStateManager* inLayoutUtils::GetEventStateManagerFor(Element& aElement) {
-  nsIDocument* doc = aElement.OwnerDoc();
+  Document* doc = aElement.OwnerDoc();
   nsPresContext* presContext = doc->GetPresContext();
   if (!presContext) return nullptr;
 
   return presContext->EventStateManager();
 }
 
-nsIDocument* inLayoutUtils::GetSubDocumentFor(nsINode* aNode) {
+Document* inLayoutUtils::GetSubDocumentFor(nsINode* aNode) {
   nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
   if (content) {
-    nsCOMPtr<nsIDocument> doc = content->GetComposedDoc();
+    nsCOMPtr<Document> doc = content->GetComposedDoc();
     if (doc) {
       return doc->GetSubDocumentFor(content);
     }
@@ -40,7 +40,7 @@ nsIDocument* inLayoutUtils::GetSubDocumentFor(nsINode* aNode) {
   return nullptr;
 }
 
-nsINode* inLayoutUtils::GetContainerFor(const nsIDocument& aDoc) {
+nsINode* inLayoutUtils::GetContainerFor(const Document& aDoc) {
   nsPIDOMWindowOuter* pwin = aDoc.GetWindow();
   if (!pwin) {
     return nullptr;

@@ -7734,7 +7734,7 @@ class CGPerSignatureCall(CGThing):
         if deprecated:
             cgThings.append(CGGeneric(dedent(
                 """
-                DeprecationWarning(cx, obj, nsIDocument::e%s);
+                DeprecationWarning(cx, obj, Document::e%s);
                 """ % deprecated[0])))
 
         lenientFloatCode = None
@@ -9504,7 +9504,7 @@ class CGSpecializedLenientSetter(CGSpecializedSetter):
         # JS_DefineProperty can only deal with ASCII
         assert all(ord(c) < 128 for c in attrName)
         return dedent("""
-            DeprecationWarning(cx, obj, nsIDocument::eLenientSetter);
+            DeprecationWarning(cx, obj, Document::eLenientSetter);
             return true;
             """)
 
@@ -14203,7 +14203,7 @@ class CGBindingRoot(CGThing):
             iface = desc.interface
             return any(m.getExtendedAttribute("Deprecated") for m in iface.members + [iface])
 
-        bindingHeaders["nsIDocument.h"] = any(
+        bindingHeaders["mozilla/dom/Document.h"] = any(
             descriptorDeprecated(d) for d in descriptors)
         bindingHeaders["mozilla/Preferences.h"] = any(
             descriptorRequiresPreferences(d) for d in descriptors)

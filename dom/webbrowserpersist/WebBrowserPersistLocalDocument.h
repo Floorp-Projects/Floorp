@@ -9,7 +9,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIURI.h"
 #include "nsIWebBrowserPersistDocument.h"
 
@@ -21,7 +21,7 @@ namespace mozilla {
 class WebBrowserPersistLocalDocument final
     : public nsIWebBrowserPersistDocument {
  public:
-  explicit WebBrowserPersistLocalDocument(nsIDocument* aDocument);
+  explicit WebBrowserPersistLocalDocument(dom::Document* aDocument);
 
   NotNull<const Encoding*> GetCharacterSet() const;
   uint32_t GetPersistFlags() const;
@@ -33,7 +33,7 @@ class WebBrowserPersistLocalDocument final
   NS_DECL_CYCLE_COLLECTION_CLASS(WebBrowserPersistLocalDocument)
 
  private:
-  nsCOMPtr<nsIDocument> mDocument;
+  RefPtr<dom::Document> mDocument;
   uint32_t mPersistFlags;
 
   void DecideContentType(nsACString& aContentType);

@@ -17,8 +17,6 @@
  * yield the outgoing edges in a DOM node graph for reporting.
  */
 
-using mozilla::dom::Attr;
-
 namespace JS {
 namespace ubi {
 
@@ -53,28 +51,30 @@ class Concrete<nsIContent> : public Concrete<nsINode> {
 };
 
 template <>
-class Concrete<nsIDocument> : public Concrete<nsINode> {
+class Concrete<mozilla::dom::Document> : public Concrete<nsINode> {
  protected:
-  explicit Concrete(nsIDocument *ptr) : Concrete<nsINode>(ptr) {}
+  explicit Concrete(mozilla::dom::Document *ptr) : Concrete<nsINode>(ptr) {}
 
  public:
-  static void construct(void *storage, nsIDocument *ptr) {
+  static void construct(void *storage, mozilla::dom::Document *ptr) {
     new (storage) Concrete(ptr);
   }
   Size size(mozilla::MallocSizeOf mallocSizeOf) const override;
 
-  nsIDocument &getDoc() const { return *static_cast<nsIDocument *>(ptr); }
+  mozilla::dom::Document &getDoc() const {
+    return *static_cast<mozilla::dom::Document *>(ptr);
+  }
   const char16_t *typeName() const override { return concreteTypeName; };
   static const char16_t concreteTypeName[];
 };
 
 template <>
-class Concrete<Attr> : public Concrete<nsINode> {
+class Concrete<mozilla::dom::Attr> : public Concrete<nsINode> {
  protected:
-  explicit Concrete(Attr *ptr) : Concrete<nsINode>(ptr) {}
+  explicit Concrete(mozilla::dom::Attr *ptr) : Concrete<nsINode>(ptr) {}
 
  public:
-  static void construct(void *storage, Attr *ptr) {
+  static void construct(void *storage, mozilla::dom::Attr *ptr) {
     new (storage) Concrete(ptr);
   }
   const char16_t *typeName() const override { return concreteTypeName; };

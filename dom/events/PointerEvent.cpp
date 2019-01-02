@@ -266,7 +266,7 @@ bool PointerEvent::ShouldResistFingerprinting(CallerType aCallerType) {
     return false;
   }
 
-  nsCOMPtr<nsIDocument> doc = GetDocument();
+  nsCOMPtr<Document> doc = GetDocument();
 
   return doc && !nsContentUtils::IsChromeDoc(doc);
 }

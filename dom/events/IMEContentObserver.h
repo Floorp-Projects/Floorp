@@ -389,7 +389,7 @@ class IMEContentObserver final : public nsStubMutationObserver,
     NS_DECL_NSIDOCUMENTOBSERVER_BEGINUPDATE
     NS_DECL_NSIDOCUMENTOBSERVER_ENDUPDATE
 
-    void Observe(nsIDocument* aDocument);
+    void Observe(dom::Document*);
     void StopObserving();
     void Destroy();
 
@@ -402,7 +402,7 @@ class IMEContentObserver final : public nsStubMutationObserver,
     virtual ~DocumentObserver() { Destroy(); }
 
     RefPtr<IMEContentObserver> mIMEContentObserver;
-    nsCOMPtr<nsIDocument> mDocument;
+    RefPtr<dom::Document> mDocument;
     uint32_t mDocumentUpdating;
   };
   RefPtr<DocumentObserver> mDocumentObserver;

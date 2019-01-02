@@ -9,7 +9,7 @@
 
 #include "BindingStyleRule.h"
 #include "nsString.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIContent.h"
 #include "ChildIterator.h"
@@ -144,7 +144,7 @@ static already_AddRefed<nsINodeList> GetChildren(nsINode* aParent,
 
   nsCOMPtr<nsINodeList> ret;
   if (aShowSubDocuments) {
-    nsIDocument* domdoc = inLayoutUtils::GetSubDocumentFor(aParent);
+    Document* domdoc = inLayoutUtils::GetSubDocumentFor(aParent);
     if (domdoc) {
       aParent = domdoc;
     }

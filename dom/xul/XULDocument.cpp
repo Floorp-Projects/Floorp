@@ -140,7 +140,7 @@ XULDocument::XULDocument(void)
       mOffThreadCompileStringBuf(nullptr),
       mOffThreadCompileStringLength(0),
       mInitialLayoutComplete(false) {
-  // Override the default in nsIDocument
+  // Override the default in Document
   mCharacterSet = UTF_8_ENCODING;
 
   mDefaultElementType = kNameSpaceID_XUL;
@@ -167,7 +167,7 @@ XULDocument::~XULDocument() {
 }  // namespace dom
 }  // namespace mozilla
 
-nsresult NS_NewXULDocument(nsIDocument** result) {
+nsresult NS_NewXULDocument(Document** result) {
   MOZ_ASSERT(result != nullptr, "null ptr");
   if (!result) return NS_ERROR_NULL_POINTER;
 
@@ -214,7 +214,7 @@ NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(XULDocument, XMLDocument,
 
 //----------------------------------------------------------------------
 //
-// nsIDocument interface
+// Document interface
 //
 
 void XULDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup) {
@@ -254,7 +254,7 @@ nsresult XULDocument::StartDocumentLoad(const char* aCommand,
       }
     }
   }
-  // NOTE: If this ever starts calling nsIDocument::StartDocumentLoad
+  // NOTE: If this ever starts calling Document::StartDocumentLoad
   // we'll possibly need to reset our content type afterwards.
   mStillWalking = true;
   mMayStartLayout = false;
@@ -434,7 +434,7 @@ void XULDocument::ContentRemoved(nsIContent* aChild,
 
 //----------------------------------------------------------------------
 //
-// nsIDocument interface
+// Document interface
 //
 
 void XULDocument::AddElementToDocumentPost(Element* aElement) {

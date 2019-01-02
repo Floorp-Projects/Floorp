@@ -2125,12 +2125,10 @@ nsresult PluginModuleParent::NPP_NewInternal(
   RefPtr<dom::Element> elt;
   owner->GetDOMElement(getter_AddRefs(elt));
   if (elt) {
-    nsCOMPtr<nsIDocument> doc = elt->OwnerDoc();
-    if (doc) {
-      nsCOMPtr<nsIEventTarget> eventTarget =
-          doc->EventTargetFor(TaskCategory::Other);
-      SetEventTargetForActor(parentInstance, eventTarget);
-    }
+    RefPtr<dom::Document> doc = elt->OwnerDoc();
+    nsCOMPtr<nsIEventTarget> eventTarget =
+        doc->EventTargetFor(TaskCategory::Other);
+    SetEventTargetForActor(parentInstance, eventTarget);
   }
 
   if (!SendPPluginInstanceConstructor(

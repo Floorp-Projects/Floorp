@@ -9,7 +9,7 @@
 #include "nsIServiceManager.h"
 #include "nsResizerFrame.h"
 #include "nsIContent.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsGkAtoms.h"
 #include "nsNameSpaceManager.h"
 

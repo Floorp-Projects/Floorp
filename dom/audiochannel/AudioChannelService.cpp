@@ -877,7 +877,7 @@ void AudioChannelService::AudioChannelWindow::MaybeNotifyMediaBlockStart(
     return;
   }
 
-  nsCOMPtr<nsIDocument> doc = inner->GetExtantDoc();
+  nsCOMPtr<Document> doc = inner->GetExtantDoc();
   if (!doc) {
     return;
   }

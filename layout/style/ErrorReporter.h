@@ -12,11 +12,14 @@
 #include "nsString.h"
 
 struct nsCSSToken;
-class nsIDocument;
 class nsIURI;
 
 namespace mozilla {
 class StyleSheet;
+
+namespace dom {
+class Document;
+}
 
 namespace css {
 
@@ -36,7 +39,7 @@ class MOZ_STACK_CLASS ErrorReporter final {
     }
   }
 
-  static bool ShouldReportErrors(const nsIDocument&);
+  static bool ShouldReportErrors(const dom::Document&);
   static bool ShouldReportErrors(const StyleSheet* aSheet,
                                  const Loader* aLoader);
 

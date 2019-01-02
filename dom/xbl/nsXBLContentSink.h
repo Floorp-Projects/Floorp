@@ -60,7 +60,8 @@ class nsXBLContentSink : public nsXMLContentSink {
   nsXBLContentSink();
   ~nsXBLContentSink();
 
-  nsresult Init(nsIDocument* aDoc, nsIURI* aURL, nsISupports* aContainer);
+  nsresult Init(mozilla::dom::Document* aDoc, nsIURI* aURL,
+                nsISupports* aContainer);
 
   // nsIContentSink overrides
   NS_IMETHOD HandleStartElement(const char16_t* aName, const char16_t** aAtts,
@@ -139,6 +140,7 @@ class nsXBLContentSink : public nsXMLContentSink {
   nsXBLProtoImplField* mField;
 };
 
-nsresult NS_NewXBLContentSink(nsIXMLContentSink** aResult, nsIDocument* aDoc,
-                              nsIURI* aURL, nsISupports* aContainer);
+nsresult NS_NewXBLContentSink(nsIXMLContentSink** aResult,
+                              mozilla::dom::Document* aDoc, nsIURI* aURL,
+                              nsISupports* aContainer);
 #endif  // nsXBLContentSink_h__

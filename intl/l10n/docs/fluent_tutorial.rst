@@ -701,13 +701,13 @@ mozDOMLocalization
 ------------------
 
 mozDOMLocalization is a wrapper on DOMLocalization which exposes it via XPIDL
-to allow DocumentL10n and nsIDocument to communicate with it.
+to allow DocumentL10n and Document to communicate with it.
 
 DocumentL10n
 ------------
 
-DocumentL10n implements the DocumentL10n WebIDL API and allows nsIDocument
-to communicate with mozDOMLocalization.
+DocumentL10n implements the DocumentL10n WebIDL API and allows Document to
+communicate with mozDOMLocalization.
 
 L10nRegistry
 ------------

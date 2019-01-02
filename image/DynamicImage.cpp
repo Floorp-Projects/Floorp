@@ -275,7 +275,7 @@ already_AddRefed<imgIContainer> DynamicImage::Unwrap() {
   return self.forget();
 }
 
-void DynamicImage::PropagateUseCounters(nsIDocument*) {
+void DynamicImage::PropagateUseCounters(dom::Document*) {
   // No use counters.
 }
 

@@ -120,7 +120,7 @@ WebAuthnManagerBase::HandleEvent(Event* aEvent) {
   // The "deactivate" event on the root window has no
   // "current inner window" and thus GetTarget() is always null.
   if (type.Equals(kVisibilityChange)) {
-    nsCOMPtr<nsIDocument> doc = do_QueryInterface(aEvent->GetTarget());
+    nsCOMPtr<Document> doc = do_QueryInterface(aEvent->GetTarget());
     if (NS_WARN_IF(!doc) || !doc->Hidden()) {
       return NS_OK;
     }

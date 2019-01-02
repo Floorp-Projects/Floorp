@@ -15,7 +15,7 @@
 #include "mozilla/dom/SVGAnimationElement.h"
 #include "nsContentUtils.h"
 #include "nsCSSProps.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIPresShell.h"
 #include "nsIPresShellInlines.h"
 #include "nsITimer.h"
@@ -32,7 +32,7 @@ namespace mozilla {
 //----------------------------------------------------------------------
 // ctors, dtors, factory methods
 
-SMILAnimationController::SMILAnimationController(nsIDocument* aDoc)
+SMILAnimationController::SMILAnimationController(Document* aDoc)
     : mAvgTimeBetweenSamples(0),
       mResampleNeeded(false),
       mDeferredStartSampling(false),
@@ -290,7 +290,7 @@ void SMILAnimationController::DoSample(bool aSkipUnchangedContainers) {
   bool isStyleFlushNeeded = mResampleNeeded;
   mResampleNeeded = false;
 
-  nsCOMPtr<nsIDocument> document(mDocument);  // keeps 'this' alive too
+  nsCOMPtr<Document> document(mDocument);  // keeps 'this' alive too
 
   // Set running sample flag -- do this before flushing styles so that when we
   // flush styles we don't end up requesting extra samples
@@ -731,4 +731,3 @@ void SMILAnimationController::FlagDocumentNeedsFlush() {
 }
 
 }  // namespace mozilla
-

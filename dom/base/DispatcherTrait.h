@@ -18,20 +18,20 @@ class AbstractThread;
 namespace dom {
 class TabGroup;
 
-// This trait should be attached to classes like nsIGlobalObject and nsIDocument
+// This trait should be attached to classes like nsIGlobalObject and Document
 // that have a DocGroup or TabGroup attached to them. The methods here should
 // delegate to the DocGroup or TabGroup. We can't use the Dispatcher class
 // directly because it inherits from nsISupports.
 class DispatcherTrait {
  public:
-  // This method may or may not be safe off of the main thread. For nsIDocument
-  // it is safe. For nsIGlobalWindow it is not safe.
+  // This method may or may not be safe off of the main thread. For Document it
+  // is safe. For nsIGlobalWindow it is not safe.
   virtual nsresult Dispatch(TaskCategory aCategory,
                             already_AddRefed<nsIRunnable>&& aRunnable);
 
-  // This method may or may not be safe off of the main thread. For nsIDocument
-  // it is safe. For nsIGlobalWindow it is not safe. The nsISerialEventTarget
-  // can always be used off the main thread.
+  // This method may or may not be safe off of the main thread. For Document it
+  // is safe. For nsIGlobalWindow it is not safe. The nsISerialEventTarget can
+  // always be used off the main thread.
   virtual nsISerialEventTarget* EventTargetFor(TaskCategory aCategory) const;
 
   // Must be called on the main thread. The AbstractThread can always be used

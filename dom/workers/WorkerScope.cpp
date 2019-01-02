@@ -34,7 +34,7 @@
 #include "mozilla/StaticPrefs.h"
 #include "nsServiceManagerUtils.h"
 
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIServiceWorkerManager.h"
 #include "nsIScriptError.h"
 #include "nsIScriptTimeoutHandler.h"

@@ -165,13 +165,14 @@ class History final : public IHistory,
    * Mark all links for the given URI in the given document as visited. Used
    * within NotifyVisited.
    */
-  void NotifyVisitedForDocument(nsIURI* aURI, nsIDocument* aDocument);
+  void NotifyVisitedForDocument(nsIURI* aURI,
+                                mozilla::dom::Document* aDocument);
 
   /**
    * Dispatch a runnable for the document passed in which will call
    * NotifyVisitedForDocument with the correct URI and Document.
    */
-  void DispatchNotifyVisited(nsIURI* aURI, nsIDocument* aDocument);
+  void DispatchNotifyVisited(nsIURI* aURI, mozilla::dom::Document* aDocument);
 
   /**
    * The database handle.  This is initialized lazily by the first call to

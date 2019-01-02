@@ -30,7 +30,7 @@ SVGGraphicsElement::~SVGGraphicsElement() {}
 
 bool SVGGraphicsElement::IsSVGFocusable(bool* aIsFocusable,
                                         int32_t* aTabIndex) {
-  nsIDocument* doc = GetComposedDoc();
+  Document* doc = GetComposedDoc();
   if (!doc || doc->HasFlag(NODE_IS_EDITABLE)) {
     // In designMode documents we only allow focusing the document.
     if (aTabIndex) {

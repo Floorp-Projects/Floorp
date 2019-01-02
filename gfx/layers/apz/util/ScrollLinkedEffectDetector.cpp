@@ -6,7 +6,7 @@
 
 #include "ScrollLinkedEffectDetector.h"
 
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsThreadUtils.h"
 
 namespace mozilla {
@@ -24,7 +24,7 @@ bool ScrollLinkedEffectDetector::sFoundScrollLinkedEffect = false;
   }
 }
 
-ScrollLinkedEffectDetector::ScrollLinkedEffectDetector(nsIDocument* aDoc)
+ScrollLinkedEffectDetector::ScrollLinkedEffectDetector(dom::Document* aDoc)
     : mDocument(aDoc) {
   MOZ_ASSERT(NS_IsMainThread());
   sDepth++;

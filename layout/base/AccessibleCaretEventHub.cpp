@@ -21,7 +21,7 @@
 #include "nsDocShell.h"
 #include "nsFocusManager.h"
 #include "nsFrameSelection.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsITimer.h"
 #include "nsPresContext.h"
 
@@ -80,7 +80,7 @@ class AccessibleCaretEventHub::NoActionState
   }
 
   MOZ_CAN_RUN_SCRIPT
-  void OnSelectionChanged(AccessibleCaretEventHub* aContext, nsIDocument* aDoc,
+  void OnSelectionChanged(AccessibleCaretEventHub* aContext, Document* aDoc,
                           dom::Selection* aSel, int16_t aReason) override {
     aContext->mManager->OnSelectionChanged(aDoc, aSel, aReason);
   }
@@ -209,7 +209,7 @@ class AccessibleCaretEventHub::PressNoCaretState
   }
 
   MOZ_CAN_RUN_SCRIPT
-  void OnSelectionChanged(AccessibleCaretEventHub* aContext, nsIDocument* aDoc,
+  void OnSelectionChanged(AccessibleCaretEventHub* aContext, Document* aDoc,
                           dom::Selection* aSel, int16_t aReason) override {
     aContext->mManager->OnSelectionChanged(aDoc, aSel, aReason);
   }
@@ -644,7 +644,7 @@ void AccessibleCaretEventHub::ScrollPositionChanged() {
   mState->OnScrollPositionChanged(this);
 }
 
-void AccessibleCaretEventHub::OnSelectionChange(nsIDocument* aDoc,
+void AccessibleCaretEventHub::OnSelectionChange(Document* aDoc,
                                                 dom::Selection* aSel,
                                                 int16_t aReason) {
   if (!mInitialized) {

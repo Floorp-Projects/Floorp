@@ -11,7 +11,7 @@
 #include "mozilla/dom/Exceptions.h"
 #include "nsContentUtils.h"
 #include "nsCOMPtr.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIException.h"
 #include "nsMemory.h"
 #include "xpcprivate.h"

@@ -22,7 +22,7 @@ HTMLTemplateElement::HTMLTemplateElement(
     : nsGenericHTMLElement(std::move(aNodeInfo)) {
   SetHasWeirdParserInsertionMode();
 
-  nsIDocument* contentsOwner = OwnerDoc()->GetTemplateContentsOwner();
+  Document* contentsOwner = OwnerDoc()->GetTemplateContentsOwner();
   if (!contentsOwner) {
     MOZ_CRASH("There should always be a template contents owner.");
   }

@@ -9,7 +9,7 @@
 #include "mozilla/Telemetry.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsITimedChannel.h"
 
 namespace mozilla {
@@ -616,7 +616,7 @@ JSObject* PerformanceTiming::WrapObject(JSContext* cx,
 }
 
 bool PerformanceTiming::IsTopLevelContentDocument() const {
-  nsCOMPtr<nsIDocument> document = mPerformance->GetDocumentIfCurrent();
+  nsCOMPtr<Document> document = mPerformance->GetDocumentIfCurrent();
   if (!document) {
     return false;
   }

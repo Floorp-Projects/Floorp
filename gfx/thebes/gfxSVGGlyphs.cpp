@@ -7,7 +7,7 @@
 #include "mozilla/SVGContextPaint.h"
 #include "nsError.h"
 #include "nsString.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsICategoryManager.h"
 #include "nsIDocumentLoaderFactory.h"
 #include "nsIContentViewer.h"
@@ -37,8 +37,8 @@
 #define UTF8_CHARSET NS_LITERAL_CSTRING("utf-8")
 
 using namespace mozilla;
-
-typedef mozilla::dom::Element Element;
+using mozilla::dom::Document;
+using mozilla::dom::Element;
 
 /* static */ const mozilla::gfx::Color SimpleTextContextPaint::sZero;
 
@@ -329,7 +329,7 @@ nsresult gfxSVGGlyphsDocument::ParseDocument(const uint8_t *aBuffer,
   nsCOMPtr<nsIPrincipal> principal =
       NullPrincipal::CreateWithoutOriginAttributes();
 
-  nsCOMPtr<nsIDocument> document;
+  RefPtr<Document> document;
   rv = NS_NewDOMDocument(getter_AddRefs(document),
                          EmptyString(),  // aNamespaceURI
                          EmptyString(),  // aQualifiedName
@@ -351,7 +351,7 @@ nsresult gfxSVGGlyphsDocument::ParseDocument(const uint8_t *aBuffer,
   // Set this early because various decisions during page-load depend on it.
   document->SetIsBeingUsedAsImage();
   document->SetIsSVGGlyphsDocument();
-  document->SetReadyStateInternal(nsIDocument::READYSTATE_UNINITIALIZED);
+  document->SetReadyStateInternal(Document::READYSTATE_UNINITIALIZED);
 
   nsCOMPtr<nsIStreamListener> listener;
   rv = document->StartDocumentLoad("external-resource", channel,

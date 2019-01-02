@@ -89,7 +89,7 @@ class AsyncTimeEventRunner : public Runnable {
     event.mDetail = mDetail;
 
     nsPresContext* context = nullptr;
-    nsIDocument* doc = mTarget->GetComposedDoc();
+    Document* doc = mTarget->GetComposedDoc();
     if (doc) {
       context = doc->GetPresContext();
     }

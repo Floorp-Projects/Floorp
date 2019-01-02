@@ -37,7 +37,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Likely.h"
 #include "nsIURI.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include <algorithm>
 #include "ImageLoader.h"
 
@@ -1863,7 +1863,7 @@ bool nsStyleImageRequest::Resolve(nsPresContext* aPresContext,
 
   mResolved = true;
 
-  nsIDocument* doc = aPresContext->Document();
+  Document* doc = aPresContext->Document();
   nsIURI* docURI = doc->GetDocumentURI();
   if (GetImageValue()->HasRef()) {
     bool isEqualExceptRef = false;

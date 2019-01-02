@@ -15,7 +15,7 @@
 #include "nsIChannel.h"
 #include "nsContentUtils.h"
 #include "nsIDNSService.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIFile.h"
 #include "nsIHttpChannel.h"
 #include "nsIInputStream.h"
@@ -2173,7 +2173,7 @@ nsresult PredictorLearn(nsIURI *targetURI, nsIURI *sourceURI,
 }
 
 nsresult PredictorLearn(nsIURI *targetURI, nsIURI *sourceURI,
-                        PredictorLearnReason reason, nsIDocument *document) {
+                        PredictorLearnReason reason, dom::Document *document) {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!IsNullOrHttp(targetURI) || !IsNullOrHttp(sourceURI)) {

@@ -18,7 +18,7 @@
 #include "nsRFPService.h"
 #include "RuntimeService.h"
 
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 
 #include "WorkerPrivate.h"
 #include "WorkerRunnable.h"

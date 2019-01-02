@@ -24,7 +24,7 @@
 #include "nsIPresShell.h"
 
 #include "GeckoProfiler.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsPrintfCString.h"
 #include "RubyUtils.h"
 #include "mozilla/ArenaObjectID.h"

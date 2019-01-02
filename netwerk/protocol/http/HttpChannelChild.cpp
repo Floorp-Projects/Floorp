@@ -51,7 +51,7 @@
 #include "nsContentSecurityManager.h"
 #include "nsICompressConvStats.h"
 #include "nsIDeprecationWarner.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIDOMWindowUtils.h"
 #include "nsIEventTarget.h"
 #include "nsIScriptError.h"
@@ -2608,7 +2608,7 @@ nsresult HttpChannelChild::ContinueAsyncOpen() {
   TimeStamp navigationStartTimeStamp;
   if (tabChild) {
     MOZ_ASSERT(tabChild->WebNavigation());
-    nsCOMPtr<nsIDocument> document = tabChild->GetDocument();
+    RefPtr<Document> document = tabChild->GetDocument();
     if (document) {
       contentWindowId = document->InnerWindowID();
       nsDOMNavigationTiming* navigationTiming = document->GetNavigationTiming();
@@ -3797,7 +3797,7 @@ NS_IMETHODIMP
 HttpChannelChild::LogMimeTypeMismatch(const nsACString& aMessageName,
                                       bool aWarning, const nsAString& aURL,
                                       const nsAString& aContentType) {
-  nsCOMPtr<nsIDocument> doc;
+  RefPtr<Document> doc;
   if (mLoadInfo) {
     mLoadInfo->GetLoadingDocument(getter_AddRefs(doc));
   }

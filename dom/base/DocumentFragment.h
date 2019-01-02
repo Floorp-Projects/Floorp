@@ -13,12 +13,12 @@
 #include "nsStringFwd.h"
 
 class nsAtom;
-class nsIDocument;
 class nsIContent;
 
 namespace mozilla {
 namespace dom {
 
+class Document;
 class Element;
 
 class DocumentFragment : public FragmentOrElement {
@@ -59,7 +59,7 @@ class DocumentFragment : public FragmentOrElement {
 
   virtual bool IsNodeOfType(uint32_t aFlags) const override;
 
-  nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+  nsresult BindToTree(Document* aDocument, nsIContent* aParent,
                       nsIContent* aBindingParent) override {
     NS_ASSERTION(false, "Trying to bind a fragment to a tree");
     return NS_ERROR_NOT_IMPLEMENTED;

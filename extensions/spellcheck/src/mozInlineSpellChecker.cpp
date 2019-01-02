@@ -405,10 +405,10 @@ nsresult mozInlineSpellStatus::FillNoCheckRangeFromAnchor(
 
 // mozInlineSpellStatus::GetDocument
 //
-//    Returns the nsIDocument object for the document for the
+//    Returns the Document object for the document for the
 //    current spellchecker.
 
-nsIDocument* mozInlineSpellStatus::GetDocument() const {
+Document* mozInlineSpellStatus::GetDocument() const {
   if (!mSpellChecker->mTextEditor) {
     return nullptr;
   }
@@ -424,7 +424,7 @@ nsIDocument* mozInlineSpellStatus::GetDocument() const {
 
 already_AddRefed<nsRange> mozInlineSpellStatus::PositionToCollapsedRange(
     nsINode* aNode, uint32_t aOffset) {
-  nsCOMPtr<nsIDocument> document = GetDocument();
+  RefPtr<Document> document = GetDocument();
   if (NS_WARN_IF(!document)) {
     return nullptr;
   }
@@ -653,7 +653,7 @@ nsresult mozInlineSpellChecker::RegisterEventListeners() {
 
   StartToListenToEditSubActions();
 
-  nsCOMPtr<nsIDocument> doc = mTextEditor->GetDocument();
+  RefPtr<Document> doc = mTextEditor->GetDocument();
   if (NS_WARN_IF(!doc)) {
     return NS_ERROR_FAILURE;
   }
@@ -672,7 +672,7 @@ nsresult mozInlineSpellChecker::UnregisterEventListeners() {
 
   EndListeningToEditSubActions();
 
-  nsCOMPtr<nsIDocument> doc = mTextEditor->GetDocument();
+  RefPtr<Document> doc = mTextEditor->GetDocument();
   if (NS_WARN_IF(!doc)) {
     return NS_ERROR_FAILURE;
   }
@@ -971,7 +971,7 @@ nsresult mozInlineSpellChecker::MakeSpellCheckRange(nsINode* aStartNode,
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIDocument> doc = mTextEditor->GetDocument();
+  RefPtr<Document> doc = mTextEditor->GetDocument();
   if (NS_WARN_IF(!doc)) {
     return NS_ERROR_FAILURE;
   }

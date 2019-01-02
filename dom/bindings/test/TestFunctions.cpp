@@ -106,7 +106,7 @@ bool TestFunctions::ObjectFromAboutBlank(JSContext* aCx, JSObject* aObj) {
     return false;
   }
 
-  nsIDocument* doc = win->GetDoc();
+  Document* doc = win->GetDoc();
   if (!doc) {
     return false;
   }

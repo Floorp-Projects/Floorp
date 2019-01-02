@@ -142,7 +142,7 @@ U2F::~U2F() {
 void U2F::Init(ErrorResult& aRv) {
   MOZ_ASSERT(mParent);
 
-  nsCOMPtr<nsIDocument> doc = mParent->GetDoc();
+  nsCOMPtr<Document> doc = mParent->GetDoc();
   MOZ_ASSERT(doc);
   if (!doc) {
     aRv.Throw(NS_ERROR_FAILURE);

@@ -84,7 +84,7 @@ void KeyboardEvent::GetCode(nsAString& aCodeName, CallerType aCallerType) {
 
   // When fingerprinting resistance is enabled, we will give a spoofed code
   // according to the content-language of the document.
-  nsCOMPtr<nsIDocument> doc = GetDocument();
+  nsCOMPtr<Document> doc = GetDocument();
 
   nsRFPService::GetSpoofedCode(doc, mEvent->AsKeyboardEvent(), aCodeName);
 }
@@ -227,7 +227,7 @@ uint32_t KeyboardEvent::ComputeTraditionalKeyCode(
 
   // When fingerprinting resistance is enabled, we will give a spoofed keyCode
   // according to the content-language of the document.
-  nsCOMPtr<nsIDocument> doc = GetDocument();
+  nsCOMPtr<Document> doc = GetDocument();
   uint32_t spoofedKeyCode;
 
   if (nsRFPService::GetSpoofedKeyCode(doc, &aKeyboardEvent, spoofedKeyCode)) {
@@ -364,7 +364,7 @@ bool KeyboardEvent::ShouldResistFingerprinting(CallerType aCallerType) {
     return false;
   }
 
-  nsCOMPtr<nsIDocument> doc = GetDocument();
+  nsCOMPtr<Document> doc = GetDocument();
 
   return doc && !nsContentUtils::IsChromeDoc(doc);
 }
@@ -372,7 +372,7 @@ bool KeyboardEvent::ShouldResistFingerprinting(CallerType aCallerType) {
 bool KeyboardEvent::GetSpoofedModifierStates(const Modifiers aModifierKey,
                                              const bool aRawModifierState) {
   bool spoofedState;
-  nsCOMPtr<nsIDocument> doc = GetDocument();
+  nsCOMPtr<Document> doc = GetDocument();
 
   if (nsRFPService::GetSpoofedModifierStates(doc, mEvent->AsKeyboardEvent(),
                                              aModifierKey, spoofedState)) {
