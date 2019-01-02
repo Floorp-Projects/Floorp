@@ -294,6 +294,7 @@
 #include "mozilla/net/ChannelEventQueue.h"
 #include "mozilla/net/RequestContextService.h"
 #include "StorageAccessPermissionRequest.h"
+#include "mozilla/dom/WindowProxyHolder.h"
 
 #define XML_DECLARATION_BITS_DECLARATION_EXISTS (1 << 0)
 #define XML_DECLARATION_BITS_ENCODING_EXISTS (1 << 1)
@@ -3364,6 +3365,14 @@ nsresult nsIDocument::GetSrcdocData(nsAString& aSrcdocData) {
   }
   aSrcdocData = VoidString();
   return NS_OK;
+}
+
+Nullable<WindowProxyHolder> nsIDocument::GetDefaultView() const {
+  nsPIDOMWindowOuter* win = GetWindow();
+  if (!win) {
+    return nullptr;
+  }
+  return WindowProxyHolder(win);
 }
 
 Element* nsIDocument::GetActiveElement() {

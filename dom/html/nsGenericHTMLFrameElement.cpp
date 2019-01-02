@@ -71,7 +71,7 @@ nsGenericHTMLFrameElement::~nsGenericHTMLFrameElement() {
 
 nsIDocument* nsGenericHTMLFrameElement::GetContentDocument(
     nsIPrincipal& aSubjectPrincipal) {
-  nsCOMPtr<nsPIDOMWindowOuter> win = GetContentWindow();
+  nsCOMPtr<nsPIDOMWindowOuter> win = GetContentWindowInternal();
   if (!win) {
     return nullptr;
   }
@@ -89,7 +89,7 @@ nsIDocument* nsGenericHTMLFrameElement::GetContentDocument(
 }
 
 already_AddRefed<nsPIDOMWindowOuter>
-nsGenericHTMLFrameElement::GetContentWindow() {
+nsGenericHTMLFrameElement::GetContentWindowInternal() {
   EnsureFrameLoader();
 
   if (!mFrameLoader) {
@@ -107,12 +107,15 @@ nsGenericHTMLFrameElement::GetContentWindow() {
   }
 
   nsCOMPtr<nsPIDOMWindowOuter> win = doc_shell->GetWindow();
+  return win.forget();
+}
 
+Nullable<WindowProxyHolder> nsGenericHTMLFrameElement::GetContentWindow() {
+  nsCOMPtr<nsPIDOMWindowOuter> win = GetContentWindowInternal();
   if (!win) {
     return nullptr;
   }
-
-  return win.forget();
+  return WindowProxyHolder(win.forget());
 }
 
 void nsGenericHTMLFrameElement::EnsureFrameLoader() {
@@ -150,10 +153,11 @@ nsGenericHTMLFrameElement::GetFrameLoader() {
   return loader.forget();
 }
 
-void nsGenericHTMLFrameElement::PresetOpenerWindow(mozIDOMWindowProxy* aWindow,
-                                                   ErrorResult& aRv) {
+void nsGenericHTMLFrameElement::PresetOpenerWindow(
+    const Nullable<WindowProxyHolder>& aOpenerWindow, ErrorResult& aRv) {
   MOZ_ASSERT(!mFrameLoader);
-  mOpenerWindow = nsPIDOMWindowOuter::From(aWindow);
+  mOpenerWindow =
+      aOpenerWindow.IsNull() ? nullptr : aOpenerWindow.Value().get();
 }
 
 void nsGenericHTMLFrameElement::InternalSetFrameLoader(

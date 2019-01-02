@@ -1047,7 +1047,7 @@ EventListenerManager* nsINode::GetExistingListenerManager() const {
   return nsContentUtils::GetExistingListenerManagerForNode(this);
 }
 
-nsPIDOMWindowOuter* nsINode::GetOwnerGlobalForBindings() {
+nsPIDOMWindowOuter* nsINode::GetOwnerGlobalForBindingsInternal() {
   bool dummy;
   auto* window = static_cast<nsGlobalWindowInner*>(
       OwnerDoc()->GetScriptHandlingObject(dummy));

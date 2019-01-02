@@ -2546,7 +2546,7 @@ bool nsGlobalWindowInner::HasActiveSpeechSynthesis() {
 
 #endif
 
-already_AddRefed<nsPIDOMWindowOuter> nsGlobalWindowInner::GetParent(
+Nullable<WindowProxyHolder> nsGlobalWindowInner::GetParent(
     ErrorResult& aError) {
   FORWARD_TO_OUTER_OR_THROW(GetParentOuter, (), aError, nullptr);
 }
@@ -3306,7 +3306,7 @@ double nsGlobalWindowInner::GetScrollY(ErrorResult& aError) {
 
 uint32_t nsGlobalWindowInner::Length() { FORWARD_TO_OUTER(Length, (), 0); }
 
-already_AddRefed<nsPIDOMWindowOuter> nsGlobalWindowInner::GetTop(
+Nullable<WindowProxyHolder> nsGlobalWindowInner::GetTop(
     mozilla::ErrorResult& aError) {
   FORWARD_TO_OUTER_OR_THROW(GetTopOuter, (), aError, nullptr);
 }
@@ -3684,14 +3684,15 @@ void nsGlobalWindowInner::ReleaseEvents() {
   }
 }
 
-already_AddRefed<nsPIDOMWindowOuter> nsGlobalWindowInner::Open(
-    const nsAString& aUrl, const nsAString& aName, const nsAString& aOptions,
-    ErrorResult& aError) {
+Nullable<WindowProxyHolder> nsGlobalWindowInner::Open(const nsAString& aUrl,
+                                                      const nsAString& aName,
+                                                      const nsAString& aOptions,
+                                                      ErrorResult& aError) {
   FORWARD_TO_OUTER_OR_THROW(OpenOuter, (aUrl, aName, aOptions, aError), aError,
                             nullptr);
 }
 
-already_AddRefed<nsPIDOMWindowOuter> nsGlobalWindowInner::OpenDialog(
+Nullable<WindowProxyHolder> nsGlobalWindowInner::OpenDialog(
     JSContext* aCx, const nsAString& aUrl, const nsAString& aName,
     const nsAString& aOptions, const Sequence<JS::Value>& aExtraArgument,
     ErrorResult& aError) {
@@ -3881,7 +3882,7 @@ void nsGlobalWindowInner::Btoa(const nsAString& aBinaryData,
 // EventTarget
 //*****************************************************************************
 
-nsPIDOMWindowOuter* nsGlobalWindowInner::GetOwnerGlobalForBindings() {
+nsPIDOMWindowOuter* nsGlobalWindowInner::GetOwnerGlobalForBindingsInternal() {
   return nsPIDOMWindowOuter::GetFromCurrentInner(this);
 }
 
