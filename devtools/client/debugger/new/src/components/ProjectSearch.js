@@ -39,6 +39,7 @@ export type Match = {
   sourceId: string,
   line: number,
   column: number,
+  matchIndex: number,
   match: string,
   value: string,
   text: string
@@ -263,7 +264,7 @@ export class ProjectSearch extends Component<Props, State> {
     if (!this.props.query) {
       return;
     }
-    if (results.length && status === statusType.done) {
+    if (results.length) {
       return (
         <ManagedTree
           getRoots={() => results}
