@@ -272,6 +272,7 @@ export class ProjectSearch extends Component<Props, State> {
           itemHeight={24}
           autoExpandAll={true}
           autoExpandDepth={1}
+          autoExpandNodeChildrenLimit={100}
           getParent={item => null}
           getPath={getFilePath}
           renderItem={this.renderItem}
