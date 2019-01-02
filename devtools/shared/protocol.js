@@ -815,38 +815,40 @@ Response.prototype = {
  *   conn can be null if the subclass provides a conn property.
  * @constructor
  */
-var Pool = function(conn) {
-  if (conn) {
-    this.conn = conn;
-  }
-};
+class Pool extends EventEmitter {
+  constructor(conn) {
+    super();
 
-Pool.prototype = extend(EventEmitter.prototype, {
+    if (conn) {
+      this.conn = conn;
+    }
+    this.__poolMap = null;
+  }
+
   /**
    * Return the parent pool for this client.
    */
-  parent: function() {
+  parent() {
     return this.conn.poolFor(this.actorID);
-  },
+  }
 
-  poolFor: function(actorID) {
+  poolFor(actorID) {
     return this.conn.poolFor(actorID);
-  },
+  }
 
   /**
    * Override this if you want actors returned by this actor
    * to belong to a different actor by default.
    */
-  marshallPool: function() {
+  marshallPool() {
     return this;
-  },
+  }
 
   /**
    * Pool is the base class for all actors, even leaf nodes.
    * If the child map is actually referenced, go ahead and create
    * the stuff needed by the pool.
    */
-  __poolMap: null,
   get _poolMap() {
     if (this.__poolMap) {
       return this.__poolMap;
@@ -854,12 +856,12 @@ Pool.prototype = extend(EventEmitter.prototype, {
     this.__poolMap = new Map();
     this.conn.addActorPool(this);
     return this.__poolMap;
-  },
+  }
 
   /**
    * Add an actor as a child of this pool.
    */
-  manage: function(actor) {
+  manage(actor) {
     if (!actor.actorID) {
       actor.actorID = this.conn.allocID(actor.actorPrefix || actor.typeName);
     } else {
@@ -875,44 +877,44 @@ Pool.prototype = extend(EventEmitter.prototype, {
       }
     }
     this._poolMap.set(actor.actorID, actor);
-  },
+  }
 
   /**
    * Remove an actor as a child of this pool.
    */
-  unmanage: function(actor) {
+  unmanage(actor) {
     this.__poolMap && this.__poolMap.delete(actor.actorID);
-  },
+  }
 
   // true if the given actor ID exists in the pool.
-  has: function(actorID) {
+  has(actorID) {
     return this.__poolMap && this._poolMap.has(actorID);
-  },
+  }
 
   // The actor for a given actor id stored in this pool
-  actor: function(actorID) {
+  actor(actorID) {
     if (this.__poolMap) {
       return this._poolMap.get(actorID);
     }
     return null;
-  },
+  }
 
   // Same as actor, should update debugger connection to use 'actor'
   // and then remove this.
-  get: function(actorID) {
+  get(actorID) {
     if (this.__poolMap) {
       return this._poolMap.get(actorID);
     }
     return null;
-  },
+  }
 
   // True if this pool has no children.
-  isEmpty: function() {
+  isEmpty() {
     return !this.__poolMap || this._poolMap.size == 0;
-  },
+  }
 
   // Generator that yields each non-self child of the pool.
-  poolChildren: function* () {
+  * poolChildren() {
     if (!this.__poolMap) {
       return;
     }
@@ -923,13 +925,13 @@ Pool.prototype = extend(EventEmitter.prototype, {
       }
       yield actor;
     }
-  },
+  }
 
   /**
    * Destroy this item, removing it from a parent if it has one,
    * and destroying all children if necessary.
    */
-  destroy: function() {
+  destroy() {
     const parent = this.parent();
     if (parent) {
       parent.unmanage(this);
@@ -954,16 +956,16 @@ Pool.prototype = extend(EventEmitter.prototype, {
     this.conn.removeActorPool(this, true);
     this.__poolMap.clear();
     this.__poolMap = null;
-  },
+  }
 
   /**
    * For getting along with the debugger server pools, should be removable
    * eventually.
    */
-  cleanup: function() {
+  cleanup() {
     this.destroy();
-  },
-});
+  }
+}
 exports.Pool = Pool;
 
 /**
@@ -982,32 +984,35 @@ var actorSpecs = new WeakMap();
  *   conn can be null if the subclass provides a conn property.
  * @constructor
  */
-var Actor = function(conn) {
-  Pool.call(this, conn);
+class Actor extends Pool {
+  // Existing Actors extending this class expect initialize to contain constructor logic.
+  initialize(conn) {
+    // Repeat Pool.constructor here as we can't call it from initialize
+    // This is to be removed once actors switch to es classes and are able to call
+    // Actor's contructor.
+    if (conn) {
+      this.conn = conn;
+    }
 
-  this._actorSpec = actorSpecs.get(Object.getPrototypeOf(this));
-  // Forward events to the connection.
-  if (this._actorSpec && this._actorSpec.events) {
-    for (const [name, request] of this._actorSpec.events.entries()) {
-      this.on(name, (...args) => {
-        this._sendEvent(name, request, ...args);
-      });
+    // Will contain the actor's ID
+    this.actorID = null;
+
+    this._actorSpec = actorSpecs.get(Object.getPrototypeOf(this));
+    // Forward events to the connection.
+    if (this._actorSpec && this._actorSpec.events) {
+      for (const [name, request] of this._actorSpec.events.entries()) {
+        this.on(name, (...args) => {
+          this._sendEvent(name, request, ...args);
+        });
+      }
     }
   }
-};
 
-Actor.prototype = extend(Pool.prototype, {
-  // Will contain the actor's ID
-  actorID: null,
-
-  // Existing Actors extending this class expect initialize to contain constructor logic.
-  initialize: Actor,
-
-  toString: function() {
+  toString() {
     return "[Actor " + this.typeName + "/" + this.actorID + "]";
-  },
+  }
 
-  _sendEvent: function(name, request, ...args) {
+  _sendEvent(name, request, ...args) {
     if (!this.actorID) {
       console.error(`Tried to send a '${name}' event on an already destroyed actor` +
                     ` '${this.typeName}'`);
@@ -1022,12 +1027,12 @@ Actor.prototype = extend(Pool.prototype, {
     }
     packet.from = packet.from || this.actorID;
     this.conn.send(packet);
-  },
+  }
 
-  destroy: function() {
-    Pool.prototype.destroy.call(this);
+  destroy() {
+    super.destroy();
     this.actorID = null;
-  },
+  }
 
   /**
    * Override this method in subclasses to serialize the actor.
@@ -1035,11 +1040,11 @@ Actor.prototype = extend(Pool.prototype, {
    *   Optional string to customize the form.
    * @returns A jsonable object.
    */
-  form: function(hint) {
+  form(hint) {
     return { actor: this.actorID };
-  },
+  }
 
-  writeError: function(error, typeName, method) {
+  writeError(error, typeName, method) {
     console.error(`Error while calling actor '${typeName}'s method '${method}'`,
                   error.message);
     if (error.stack) {
@@ -1050,13 +1055,13 @@ Actor.prototype = extend(Pool.prototype, {
       error: error.error || "unknownError",
       message: error.message,
     });
-  },
+  }
 
-  _queueResponse: function(create) {
+  _queueResponse(create) {
     const pending = this._pendingResponse || Promise.resolve(null);
     const response = create(pending);
     this._pendingResponse = response;
-  },
+  }
 
   /**
    * Throw an error with the passed message and attach an `error` property to the Error
@@ -1066,12 +1071,13 @@ Actor.prototype = extend(Pool.prototype, {
    * @param {String} message: The string that will be passed to the Error constructor.
    * @throws This always throw.
    */
-  throwError: function(error, message) {
+  throwError(error, message) {
     const err = new Error(message);
     err.error = error;
     throw err;
-  },
-});
+  }
+}
+
 exports.Actor = Actor;
 
 /**
@@ -1284,35 +1290,34 @@ exports.ActorClassWithSpec = ActorClassWithSpec;
  *   The json form provided by the server.
  * @constructor
  */
-var Front = function(conn = null, form = null, detail = null, context = null) {
-  Pool.call(this, conn);
-  this._requests = [];
+class Front extends Pool {
+  constructor(conn = null, form = null, detail = null, context = null) {
+    super(conn);
+    this.actorID = null;
+    this._requests = [];
 
-  // Front listener functions registered via `onFront` get notified
-  // of new fronts via this dedicated EventEmitter object.
-  this._frontListeners = new EventEmitter();
+    // Front listener functions registered via `onFront` get notified
+    // of new fronts via this dedicated EventEmitter object.
+    this._frontListeners = new EventEmitter();
 
-  // List of optional listener for each event, that is processed immediatly on packet
-  // receival, before emitting event via EventEmitter on the Front.
-  // These listeners are register via Front.before function.
-  // Map(Event Name[string] => Event Listener[function])
-  this._beforeListeners = new Map();
+    // List of optional listener for each event, that is processed immediatly on packet
+    // receival, before emitting event via EventEmitter on the Front.
+    // These listeners are register via Front.before function.
+    // Map(Event Name[string] => Event Listener[function])
+    this._beforeListeners = new Map();
 
-  // protocol.js no longer uses this data in the constructor, only external
-  // uses do.  External usage of manually-constructed fronts will be
-  // drastically reduced if we convert the root and target actors to
-  // protocol.js, in which case this can probably go away.
-  if (form) {
-    this.actorID = form.actor;
-    form = types.getType(this.typeName).formType(detail).read(form, this, detail);
-    this.form(form, detail, context);
+    // protocol.js no longer uses this data in the constructor, only external
+    // uses do.  External usage of manually-constructed fronts will be
+    // drastically reduced if we convert the root and target actors to
+    // protocol.js, in which case this can probably go away.
+    if (form) {
+      this.actorID = form.actor;
+      form = types.getType(this.typeName).formType(detail).read(form, this, detail);
+      this.form(form, detail, context);
+    }
   }
-};
 
-Front.prototype = extend(Pool.prototype, {
-  actorID: null,
-
-  destroy: function() {
+  destroy() {
     // Reject all outstanding requests, they won't make sense after
     // the front is destroyed.
     while (this._requests && this._requests.length > 0) {
@@ -1322,23 +1327,23 @@ Front.prototype = extend(Pool.prototype, {
                 "\n\nRequest stack:\n" + stack.formattedStack;
       deferred.reject(new Error(msg));
     }
-    Pool.prototype.destroy.call(this);
+    super.destroy();
     this.clearEvents();
     this.actorID = null;
     this._frontListeners = null;
     this._beforeListeners = null;
-  },
+  }
 
-  manage: function(front) {
+  manage(front) {
     if (!front.actorID) {
       throw new Error("Can't manage front without an actor ID.\n" +
                       "Ensure server supports " + front.typeName + ".");
     }
-    Pool.prototype.manage.call(this, front);
+    super.manage(front);
 
     // Call listeners registered via `onFront` method
     this._frontListeners.emit(front.typeName, front);
-  },
+  }
 
   // Run callback on every front of this type that currently exists, and on every
   // instantiation of front type in the future.
@@ -1351,7 +1356,7 @@ Front.prototype = extend(Pool.prototype, {
     }
     // Then register the callback for fronts instantiated in the future
     this._frontListeners.on(typeName, callback);
-  },
+  }
 
   /**
    * Register an event listener that will be called immediately on packer receival.
@@ -1369,22 +1374,22 @@ Front.prototype = extend(Pool.prototype, {
       throw new Error(`Can't register multiple before listeners for "${type}".`);
     }
     this._beforeListeners.set(type, callback);
-  },
+  }
 
-  toString: function() {
+  toString() {
     return "[Front for " + this.typeName + "/" + this.actorID + "]";
-  },
+  }
 
   /**
    * Update the actor from its representation.
    * Subclasses should override this.
    */
-  form: function(form) {},
+  form(form) {}
 
   /**
    * Send a packet on the connection.
    */
-  send: function(packet) {
+  send(packet) {
     if (packet.to) {
       this.conn._transport.send(packet);
     } else {
@@ -1394,12 +1399,12 @@ Front.prototype = extend(Pool.prototype, {
         this.conn._transport.send(packet);
       }
     }
-  },
+  }
 
   /**
    * Send a two-way request on the connection.
    */
-  request: function(packet) {
+  request(packet) {
     const deferred = defer();
     // Save packet basics for debugging
     const { to, type } = packet;
@@ -1411,12 +1416,12 @@ Front.prototype = extend(Pool.prototype, {
     });
     this.send(packet);
     return deferred.promise;
-  },
+  }
 
   /**
    * Handler for incoming packets from the client's actor.
    */
-  onPacket: function(packet) {
+  onPacket(packet) {
     // Pick off event packets
     const type = packet.type || undefined;
     if (this._clientSpec.events && this._clientSpec.events.has(type)) {
@@ -1439,13 +1444,13 @@ Front.prototype = extend(Pool.prototype, {
         // wait for their resolution before emitting. Otherwise, emit synchronously.
         if (result && typeof result.then == "function") {
           result.then(() => {
-            return EventEmitter.emit.apply(null, [this, event.name].concat(args));
+            super.emit(event.name, ...args);
           });
           return;
         }
       }
 
-      EventEmitter.emit.apply(null, [this, event.name].concat(args));
+      super.emit(event.name, ...args);
       return;
     }
 
@@ -1473,11 +1478,11 @@ Front.prototype = extend(Pool.prototype, {
         deferred.resolve(packet);
       }
     }, stack, "DevTools RDP");
-  },
+  }
 
   hasRequests() {
     return !!this._requests.length;
-  },
+  }
 
   /**
    * Wait for all current requests from this front to settle.  This is especially useful
@@ -1489,8 +1494,8 @@ Front.prototype = extend(Pool.prototype, {
    */
   waitForRequestsToSettle() {
     return settleAll(this._requests.map(({ deferred }) => deferred.promise));
-  },
-});
+  }
+}
 
 exports.Front = Front;
 
