@@ -183,8 +183,8 @@ class AudioContext final : public DOMEventTargetHelper,
 
   bool IsRunning() const;
 
-  // Called when an AudioScheduledSourceNode started, this method might resume
-  // the AudioContext if it was not allowed to start.
+  // Called when an AudioScheduledSourceNode started or the source node starts,
+  // this method might resume the AudioContext if it was not allowed to start.
   void StartBlockedAudioContextIfAllowed();
 
   // Those three methods return a promise to content, that is resolved when an
