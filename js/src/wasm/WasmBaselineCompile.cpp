@@ -7133,6 +7133,15 @@ void BaseCompiler::emitWrapI64ToI32() {
 
 void BaseCompiler::emitExtendI32_8() {
   RegI32 r = popI32();
+#ifdef JS_CODEGEN_X86
+  if (!ra.isSingleByteI32(r)) {
+    ScratchI8 scratch(*this);
+    moveI32(r, scratch);
+    masm.move8SignExtend(scratch, r);
+    pushI32(r);
+    return;
+  }
+#endif
   masm.move8SignExtend(r, r);
   pushI32(r);
 }
