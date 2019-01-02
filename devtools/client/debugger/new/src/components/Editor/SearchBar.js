@@ -231,7 +231,7 @@ class SearchBar extends Component<Props, State> {
     }
 
     if (count == 0) {
-      return L10N.getStr("editor.noResults");
+      return L10N.getStr("editor.noResultsFound");
     }
 
     if (index == -1) {
