@@ -1101,7 +1101,7 @@ const selectors = {
   // These work for bobth the breakpoint listing and gutter marker
   gutterContextMenu: {
     addConditionalBreakpoint: "#node-menu-add-condition, #node-menu-add-conditional-breakpoint",
-    editBreakpoint: "#node-menu-edit-condition, #node-menu-edit-conditional-breakpoint"
+    editConditionalBreakpoint: "#node-menu-edit-condition, #node-menu-edit-conditional-breakpoint"
   },
   menuitem: i => `menupopup menuitem:nth-child(${i})`,
   pauseOnExceptions: ".pause-exceptions",
