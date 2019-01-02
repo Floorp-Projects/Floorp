@@ -406,29 +406,11 @@ async function createSources(client: ThreadClient) {
 }
 
 async function fetchSources(): Promise<any[]> {
-  let sources = await createSources(threadClient);
+  const sources = await createSources(threadClient);
 
   // NOTE: this happens when we fetch sources and then immediately navigate
   if (!sources) {
     return [];
-  }
-
-  if (features.windowlessWorkers) {
-    // Also fetch sources from any workers.
-    workerClients = await updateWorkerClients({
-      threadClient,
-      debuggerClient,
-      tabTarget,
-      workerClients
-    });
-
-    const workerNames = Object.getOwnPropertyNames(workerClients);
-    workerNames.forEach(actor => {
-      const workerSources = createSources(workerClients[actor].thread);
-      if (workerSources) {
-        sources = sources.concat(workerSources);
-      }
-    });
   }
 
   return sources;
@@ -444,6 +426,11 @@ async function fetchWorkers(): Promise<{ workers: Worker[] }> {
     });
 
     const workerNames = Object.getOwnPropertyNames(workerClients);
+
+    workerNames.forEach(actor => {
+      createSources(workerClients[actor].thread);
+    });
+
     return {
       workers: workerNames.map(actor =>
         createWorker(actor, workerClients[actor].url)
