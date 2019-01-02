@@ -5,6 +5,7 @@
 // @flow
 
 import React, { Component } from "react";
+import { sortBy } from "lodash";
 import { connect } from "../../utils/connect";
 import { Tab, Tabs, TabList, TabPanels } from "react-aria-components/src/tabs";
 import { formatKeyShortcut } from "../../utils/text";
@@ -94,13 +95,11 @@ class PrimaryPanes extends Component<Props, State> {
   }
 
   renderThreadSources() {
-    const threads = Object.getOwnPropertyNames(this.props.sources);
-    threads.sort(
-      (a, b) =>
-        this.props.getWorkerDisplayName(a) > this.props.getWorkerDisplayName(b)
-          ? 1
-          : -1
+    const threads = sortBy(
+      Object.getOwnPropertyNames(this.props.sources),
+      this.props.getWorkerDisplayName
     );
+
     return threads.map(thread => <SourcesTree thread={thread} key={thread} />);
   }
 
