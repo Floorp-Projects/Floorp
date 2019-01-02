@@ -5,7 +5,7 @@ import {Search} from "content-src/components/Search/Search";
 import {shallow} from "enzyme";
 
 describe("<Base>", () => {
-  let DEFAULT_PROPS = {store: {getState: () => {}}, App: {initialized: true}, Prefs: {values: {}}, Sections: [], dispatch: () => {}};
+  let DEFAULT_PROPS = {store: {getState: () => {}}, App: {initialized: true}, Prefs: {values: {}}, Sections: [], DiscoveryStream: {config: {enabled: false}}, dispatch: () => {}};
 
   it("should render Base component", () => {
     const wrapper = shallow(<Base {...DEFAULT_PROPS} />);
@@ -27,7 +27,7 @@ describe("<Base>", () => {
 });
 
 describe("<BaseContent>", () => {
-  let DEFAULT_PROPS = {store: {getState: () => {}}, App: {initialized: true}, Prefs: {values: {}}, Sections: [], dispatch: () => {}};
+  let DEFAULT_PROPS = {store: {getState: () => {}}, App: {initialized: true}, Prefs: {values: {}}, Sections: [], DiscoveryStream: {config: {enabled: false}}, dispatch: () => {}};
 
   it("should render an ErrorBoundary with a Search child", () => {
     const searchEnabledProps =
