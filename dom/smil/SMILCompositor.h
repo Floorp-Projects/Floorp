@@ -13,7 +13,7 @@
 #include "mozilla/SMILCompositorTable.h"
 #include "nsTHashtable.h"
 #include "nsString.h"
-#include "nsSMILTargetIdentifier.h"
+#include "SMILTargetIdentifier.h"
 #include "PLDHashTable.h"
 
 namespace mozilla {
@@ -27,7 +27,7 @@ namespace mozilla {
 
 class SMILCompositor : public PLDHashEntryHdr {
  public:
-  typedef nsSMILTargetIdentifier KeyType;
+  typedef SMILTargetIdentifier KeyType;
   typedef const KeyType& KeyTypeRef;
   typedef const KeyType* KeyTypePointer;
 

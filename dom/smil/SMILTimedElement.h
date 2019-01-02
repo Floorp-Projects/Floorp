@@ -9,10 +9,10 @@
 
 #include "mozilla/EventForwards.h"
 #include "mozilla/Move.h"
+#include "mozilla/SMILMilestone.h"
 #include "mozilla/UniquePtr.h"
 #include "nsSMILInterval.h"
 #include "nsSMILInstanceTime.h"
-#include "nsSMILMilestone.h"
 #include "nsSMILTimeValueSpec.h"
 #include "nsSMILRepeatCount.h"
 #include "nsSMILTypes.h"
@@ -22,12 +22,12 @@
 #include "nsAutoPtr.h"
 #include "nsAttrValue.h"
 
-class nsSMILTimeContainer;
 class nsSMILTimeValue;
 class nsAtom;
 
 namespace mozilla {
 class SMILAnimationFunction;
+class SMILTimeContainer;
 namespace dom {
 class SVGAnimationElement;
 }  // namespace dom
@@ -52,7 +52,7 @@ class SMILTimedElement {
    * Returns the time container with which this timed element is associated or
    * nullptr if it is not associated with a time container.
    */
-  nsSMILTimeContainer* GetTimeContainer();
+  SMILTimeContainer* GetTimeContainer();
 
   /*
    * Returns the element targeted by the animation element. Needed for
@@ -516,7 +516,7 @@ class SMILTimedElement {
   nsresult AddInstanceTimeFromCurrentTime(nsSMILTime aCurrentTime,
                                           double aOffsetSeconds, bool aIsBegin);
   void RegisterMilestone();
-  bool GetNextMilestone(nsSMILMilestone& aNextMilestone) const;
+  bool GetNextMilestone(SMILMilestone& aNextMilestone) const;
 
   // Notification methods. Note that these notifications can result in nested
   // calls to this same object. Therefore,
@@ -583,8 +583,8 @@ class SMILTimedElement {
   UniquePtr<nsSMILInterval> mCurrentInterval;
   IntervalList mOldIntervals;
   uint32_t mCurrentRepeatIteration;
-  nsSMILMilestone mPrevRegisteredMilestone;
-  static const nsSMILMilestone sMaxMilestone;
+  SMILMilestone mPrevRegisteredMilestone;
+  static const SMILMilestone sMaxMilestone;
   static const uint8_t sMaxNumIntervals;
   static const uint8_t sMaxNumInstanceTimes;
 

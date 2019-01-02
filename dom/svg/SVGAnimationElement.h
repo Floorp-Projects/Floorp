@@ -8,10 +8,10 @@
 #define mozilla_dom_SVGAnimationElement_h
 
 #include "mozilla/Attributes.h"
+#include "mozilla/SMILTimedElement.h"
 #include "mozilla/dom/IDTracker.h"
 #include "mozilla/dom/SVGElement.h"
 #include "mozilla/dom/SVGTests.h"
-#include "mozilla/SMILTimedElement.h"
 
 namespace mozilla {
 namespace dom {
@@ -62,7 +62,7 @@ class SVGAnimationElement : public SVGAnimationElementBase, public SVGTests {
   virtual bool GetTargetAttributeName(int32_t* aNamespaceID,
                                       nsAtom** aLocalName) const;
   mozilla::SMILTimedElement& TimedElement();
-  nsSMILTimeContainer* GetTimeContainer();
+  mozilla::SMILTimeContainer* GetTimeContainer();
   virtual SMILAnimationFunction& AnimationFunction() = 0;
 
   virtual bool IsEventAttributeNameInternal(nsAtom* aName) override;

@@ -8,7 +8,7 @@
 
 function getTestDataFile(aFilename) {
   let file = Cc["@mozilla.org/file/directory_service;1"].
-            getService(Ci.nsIProperties).get("CurWorkD", Ci.nsIFile);
+             getService(Ci.nsIProperties).get("CurWorkD", Ci.nsIFile);
   let pathParts = REL_PATH_DATA.split("/");
   for (let i = 0; i < pathParts.length; ++i) {
     file.append(pathParts[i]);

@@ -13,10 +13,9 @@ nsresult NS_NewSVGSVGElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
     mozilla::dom::FromParser aFromParser);
 
-class nsSMILTimeContainer;
-
 namespace mozilla {
 class AutoSVGViewHandler;
+class SMILTimeContainer;
 class SVGFragmentIdentifier;
 class EventChainPreVisitor;
 
@@ -160,7 +159,7 @@ class SVGSVGElement final : public SVGSVGElementBase {
     return mCurrentViewID && mCurrentViewID->Equals(aViewID);
   }
 
-  nsSMILTimeContainer* GetTimedDocumentRoot();
+  SMILTimeContainer* GetTimedDocumentRoot();
 
   // public helpers:
 
@@ -231,7 +230,7 @@ class SVGSVGElement final : public SVGSVGElementBase {
 
   // The time container for animations within this SVG document fragment. Set
   // for all outermost <svg> elements (not nested <svg> elements).
-  nsAutoPtr<nsSMILTimeContainer> mTimedDocumentRoot;
+  nsAutoPtr<SMILTimeContainer> mTimedDocumentRoot;
 
   // zoom and pan
   // IMPORTANT: see the comment in RecordCurrentScaleTranslate before writing

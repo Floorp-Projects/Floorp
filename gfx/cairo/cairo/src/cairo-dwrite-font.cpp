@@ -39,8 +39,8 @@
 #include "cairo-win32-private.h"
 #include "cairo-surface-private.h"
 #include "cairo-clip-private.h"
+#include "cairo-win32-refptr.h"
 
-#include "cairo-d2d-private.h"
 #include "cairo-dwrite-private.h"
 #include "cairo-truetype-subset-private.h"
 #include <float.h>
@@ -510,7 +510,7 @@ _cairo_dwrite_font_face_scaled_font_create (void			*abstract_face,
     dwriteFont->manual_show_glyphs_allowed = TRUE;
     dwriteFont->rendering_mode =
         default_quality == CAIRO_ANTIALIAS_SUBPIXEL ?
-            cairo_d2d_surface_t::TEXT_RENDERING_NORMAL : cairo_d2d_surface_t::TEXT_RENDERING_NO_CLEARTYPE;
+            cairo_dwrite_scaled_font_t::TEXT_RENDERING_NORMAL : cairo_dwrite_scaled_font_t::TEXT_RENDERING_NO_CLEARTYPE;
 
     return _cairo_scaled_font_set_metrics (*font, &extents);
 }
@@ -1101,10 +1101,10 @@ void
 cairo_dwrite_scaled_font_set_force_GDI_classic(cairo_scaled_font_t *dwrite_scaled_font, cairo_bool_t force)
 {
     cairo_dwrite_scaled_font_t *font = reinterpret_cast<cairo_dwrite_scaled_font_t*>(dwrite_scaled_font);
-    if (force && font->rendering_mode == cairo_d2d_surface_t::TEXT_RENDERING_NORMAL) {
-        font->rendering_mode = cairo_d2d_surface_t::TEXT_RENDERING_GDI_CLASSIC;
-    } else if (!force && font->rendering_mode == cairo_d2d_surface_t::TEXT_RENDERING_GDI_CLASSIC) {
-        font->rendering_mode = cairo_d2d_surface_t::TEXT_RENDERING_NORMAL;
+    if (force && font->rendering_mode == cairo_dwrite_scaled_font_t::TEXT_RENDERING_NORMAL) {
+        font->rendering_mode = cairo_dwrite_scaled_font_t::TEXT_RENDERING_GDI_CLASSIC;
+    } else if (!force && font->rendering_mode == cairo_dwrite_scaled_font_t::TEXT_RENDERING_GDI_CLASSIC) {
+        font->rendering_mode = cairo_dwrite_scaled_font_t::TEXT_RENDERING_NORMAL;
     }
 }
 
@@ -1112,7 +1112,7 @@ cairo_bool_t
 cairo_dwrite_scaled_font_get_force_GDI_classic(cairo_scaled_font_t *dwrite_scaled_font)
 {
     cairo_dwrite_scaled_font_t *font = reinterpret_cast<cairo_dwrite_scaled_font_t*>(dwrite_scaled_font);
-    return font->rendering_mode == cairo_d2d_surface_t::TEXT_RENDERING_GDI_CLASSIC;
+    return font->rendering_mode == cairo_dwrite_scaled_font_t::TEXT_RENDERING_GDI_CLASSIC;
 }
 
 void
@@ -1141,7 +1141,7 @@ _dwrite_draw_glyphs_to_gdi_surface_gdi(cairo_win32_surface_t *surface,
     IDWriteBitmapRenderTarget *rt;
     HRESULT rv;
 
-    cairo_d2d_surface_t::TextRenderingState renderingState =
+    cairo_dwrite_scaled_font_t::TextRenderingState renderingState =
       scaled_font->rendering_mode;
 
     rv = gdiInterop->CreateBitmapRenderTarget(surface->dc,
@@ -1157,10 +1157,10 @@ _dwrite_draw_glyphs_to_gdi_surface_gdi(cairo_win32_surface_t *surface,
 	}
     }
 
-    if ((renderingState == cairo_d2d_surface_t::TEXT_RENDERING_NORMAL ||
-         renderingState == cairo_d2d_surface_t::TEXT_RENDERING_GDI_CLASSIC) &&
+    if ((renderingState == cairo_dwrite_scaled_font_t::TEXT_RENDERING_NORMAL ||
+         renderingState == cairo_dwrite_scaled_font_t::TEXT_RENDERING_GDI_CLASSIC) &&
         !surface->base.permit_subpixel_antialiasing) {
-      renderingState = cairo_d2d_surface_t::TEXT_RENDERING_NO_CLEARTYPE;
+      renderingState = cairo_dwrite_scaled_font_t::TEXT_RENDERING_NO_CLEARTYPE;
       IDWriteBitmapRenderTarget1* rt1;
       rv = rt->QueryInterface(&rt1);
       
@@ -1192,8 +1192,8 @@ _dwrite_draw_glyphs_to_gdi_surface_gdi(cairo_win32_surface_t *surface,
 	   SRCCOPY | NOMIRRORBITMAP);
     DWRITE_MEASURING_MODE measureMode; 
     switch (renderingState) {
-    case cairo_d2d_surface_t::TEXT_RENDERING_GDI_CLASSIC:
-    case cairo_d2d_surface_t::TEXT_RENDERING_NO_CLEARTYPE:
+    case cairo_dwrite_scaled_font_t::TEXT_RENDERING_GDI_CLASSIC:
+    case cairo_dwrite_scaled_font_t::TEXT_RENDERING_NO_CLEARTYPE:
         measureMode = DWRITE_MEASURING_MODE_GDI_CLASSIC;
         break;
     default:
