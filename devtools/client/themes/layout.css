@@ -458,10 +458,12 @@ html[dir="rtl"] .flex-item-list .devtools-button::after {
 .flex-outline-point.min {
   grid-column: min;
   place-self: end;
+  left: -4px;
 }
 
 .flex-outline.shrinking .flex-outline-point.min {
   place-self: end start;
+  left: -1px;
 }
 
 .flex-outline-point.max {
@@ -513,7 +515,7 @@ html[dir="rtl"] .flex-item-list .devtools-button::after {
 }
 
 .flex-outline-point.final::before,
-.flex-outline.shrinking .flex-outline-point.min::before,
+.flex-outline-point.min::before,
 .flex-outline-point.max::before,
 .flex-outline.shrinking .flex-outline-point.basis::before,
 .flex-outline.horizontal-rl .flex-outline-point.basis::before,
@@ -522,11 +524,11 @@ html[dir="rtl"] .flex-item-list .devtools-button::after {
 .flex-outline.vertical-bt .flex-outline-point.basis::before,
 .flex-outline.vertical-bt .flex-outline-point.basisfinal::before,
 .flex-outline.vertical-bt.shrinking .flex-outline-point.final::before {
-  border-width: 0 0 0 1px;
+  border-left-width: 1px;
+  border-right-width: 0;
 }
 
 .flex-outline-point.basis::before,
-.flex-outline-point.min::before,
 .flex-outline.shrinking .flex-outline-point.final::before,
 .flex-outline-point.basisfinal::before,
 .flex-outline.horizontal-rl .flex-outline-point.final::before,
@@ -536,7 +538,8 @@ html[dir="rtl"] .flex-item-list .devtools-button::after {
 .flex-outline.vertical-bt .flex-outline-point.final::before,
 .flex-outline.vertical-bt .flex-outline-point.min::before,
 .flex-outline.vertical-bt .flex-outline-point.max::before {
-  border-width: 0 1px 0 0;
+  border-right-width: 1px;
+  border-left-width: 0;
 }
 
 .flex-outline.horizontal-rl,
