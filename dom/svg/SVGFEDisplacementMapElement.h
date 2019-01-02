@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_SVGFEDisplacementMapElement_h
 #define mozilla_dom_SVGFEDisplacementMapElement_h
 
-#include "SVGEnum.h"
+#include "nsSVGEnum.h"
 #include "SVGFilters.h"
 
 nsresult NS_NewSVGFEDisplacementMapElement(
@@ -74,8 +74,8 @@ class SVGFEDisplacementMapElement : public SVGFEDisplacementMapElementBase {
   static NumberInfo sNumberInfo[1];
 
   enum { CHANNEL_X, CHANNEL_Y };
-  SVGEnum mEnumAttributes[2];
-  static SVGEnumMapping sChannelMap[];
+  nsSVGEnum mEnumAttributes[2];
+  static nsSVGEnumMapping sChannelMap[];
   static EnumInfo sEnumInfo[2];
 
   enum { RESULT, IN1, IN2 };

@@ -1204,7 +1204,7 @@ bool nsSVGUtils::CanOptimizeOpacity(nsIFrame* aFrame) {
 }
 
 gfxMatrix nsSVGUtils::AdjustMatrixForUnits(const gfxMatrix& aMatrix,
-                                           SVGEnum* aUnits, nsIFrame* aFrame,
+                                           nsSVGEnum* aUnits, nsIFrame* aFrame,
                                            uint32_t aFlags) {
   if (aFrame && aUnits->GetAnimValue() == SVG_UNIT_TYPE_OBJECTBOUNDINGBOX) {
     gfxRect bbox = GetBBox(aFrame, aFlags);

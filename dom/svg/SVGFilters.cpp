@@ -6,30 +6,31 @@
 
 #include "SVGFilters.h"
 
-#include <algorithm>
-#include "DOMSVGAnimatedNumberList.h"
-#include "imgIContainer.h"
+#include "SVGElement.h"
 #include "nsGkAtoms.h"
-#include "nsCOMPtr.h"
-#include "nsIFrame.h"
-#include "nsLayoutUtils.h"
-#include "SVGAnimatedNumberList.h"
-#include "nsSVGBoolean.h"
-#include "SVGEnum.h"
-#include "nsSVGFilterInstance.h"
-#include "nsSVGInteger.h"
-#include "nsSVGIntegerPair.h"
 #include "nsSVGNumber2.h"
 #include "nsSVGNumberPair.h"
+#include "nsSVGInteger.h"
+#include "nsSVGIntegerPair.h"
+#include "nsSVGBoolean.h"
+#include "nsCOMPtr.h"
+#include "nsSVGFilterInstance.h"
+#include "nsSVGEnum.h"
 #include "SVGNumberList.h"
-#include "nsSVGString.h"
-#include "mozilla/ArrayUtils.h"
-#include "mozilla/ComputedStyle.h"
-#include "mozilla/SVGContentUtils.h"
+#include "SVGAnimatedNumberList.h"
+#include "DOMSVGAnimatedNumberList.h"
+#include "nsLayoutUtils.h"
 #include "nsSVGUtils.h"
+#include "mozilla/ComputedStyle.h"
+#include "nsIFrame.h"
+#include "imgIContainer.h"
+#include "mozilla/dom/SVGFilterElement.h"
+#include "nsSVGString.h"
+#include "SVGContentUtils.h"
+#include <algorithm>
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/dom/SVGAnimatedLength.h"
 #include "mozilla/dom/SVGComponentTransferFunctionElement.h"
-#include "mozilla/dom/SVGElement.h"
 #include "mozilla/dom/SVGFEDistantLightElement.h"
 #include "mozilla/dom/SVGFEFuncAElementBinding.h"
 #include "mozilla/dom/SVGFEFuncBElementBinding.h"
@@ -37,7 +38,6 @@
 #include "mozilla/dom/SVGFEFuncRElementBinding.h"
 #include "mozilla/dom/SVGFEPointLightElement.h"
 #include "mozilla/dom/SVGFESpotLightElement.h"
-#include "mozilla/dom/SVGFilterElement.h"
 #include "mozilla/dom/SVGLengthBinding.h"
 
 #if defined(XP_WIN)
@@ -176,7 +176,7 @@ SVGElement::NumberInfo SVGComponentTransferFunctionElement::sNumberInfo[5] = {
     {nsGkAtoms::exponent, 1, false},
     {nsGkAtoms::offset, 0, false}};
 
-SVGEnumMapping SVGComponentTransferFunctionElement::sTypeMap[] = {
+nsSVGEnumMapping SVGComponentTransferFunctionElement::sTypeMap[] = {
     {nsGkAtoms::identity, SVG_FECOMPONENTTRANSFER_TYPE_IDENTITY},
     {nsGkAtoms::table, SVG_FECOMPONENTTRANSFER_TYPE_TABLE},
     {nsGkAtoms::discrete, SVG_FECOMPONENTTRANSFER_TYPE_DISCRETE},

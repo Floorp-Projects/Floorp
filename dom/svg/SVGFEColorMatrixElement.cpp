@@ -24,7 +24,7 @@ JSObject* SVGFEColorMatrixElement::WrapNode(JSContext* aCx,
   return SVGFEColorMatrixElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-SVGEnumMapping SVGFEColorMatrixElement::sTypeMap[] = {
+nsSVGEnumMapping SVGFEColorMatrixElement::sTypeMap[] = {
     {nsGkAtoms::matrix, SVG_FECOLORMATRIX_TYPE_MATRIX},
     {nsGkAtoms::saturate, SVG_FECOLORMATRIX_TYPE_SATURATE},
     {nsGkAtoms::hueRotate, SVG_FECOLORMATRIX_TYPE_HUE_ROTATE},

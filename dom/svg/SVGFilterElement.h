@@ -7,11 +7,11 @@
 #ifndef mozilla_dom_SVGFilterElement_h
 #define mozilla_dom_SVGFilterElement_h
 
-#include "SVGEnum.h"
+#include "nsSVGEnum.h"
+#include "SVGElement.h"
 #include "nsSVGIntegerPair.h"
 #include "nsSVGLength2.h"
 #include "nsSVGString.h"
-#include "mozilla/dom/SVGElement.h"
 
 class nsSVGFilterFrame;
 class nsSVGFilterInstance;
@@ -65,7 +65,7 @@ class SVGFilterElement : public SVGFilterElementBase {
   static LengthInfo sLengthInfo[4];
 
   enum { FILTERUNITS, PRIMITIVEUNITS };
-  SVGEnum mEnumAttributes[2];
+  nsSVGEnum mEnumAttributes[2];
   static EnumInfo sEnumInfo[2];
 
   enum { HREF, XLINK_HREF };

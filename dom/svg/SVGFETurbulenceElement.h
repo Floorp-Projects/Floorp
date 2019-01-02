@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_SVGFETurbulenceElement_h
 #define mozilla_dom_SVGFETurbulenceElement_h
 
-#include "SVGEnum.h"
+#include "nsSVGEnum.h"
 #include "SVGFilters.h"
 #include "nsSVGNumber2.h"
 #include "nsSVGInteger.h"
@@ -76,9 +76,9 @@ class SVGFETurbulenceElement : public SVGFETurbulenceElementBase {
   static IntegerInfo sIntegerInfo[1];
 
   enum { TYPE, STITCHTILES };
-  SVGEnum mEnumAttributes[2];
-  static SVGEnumMapping sTypeMap[];
-  static SVGEnumMapping sStitchTilesMap[];
+  nsSVGEnum mEnumAttributes[2];
+  static nsSVGEnumMapping sTypeMap[];
+  static nsSVGEnumMapping sStitchTilesMap[];
   static EnumInfo sEnumInfo[2];
 
   enum { RESULT };

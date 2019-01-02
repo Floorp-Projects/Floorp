@@ -37,8 +37,8 @@ class SVGTSpanElement final : public SVGTSpanElementBase {
   virtual EnumAttributesInfo GetEnumInfo() override;
   virtual LengthAttributesInfo GetLengthInfo() override;
 
-  SVGEnum mEnumAttributes[1];
-  virtual SVGEnum* EnumAttributes() override { return mEnumAttributes; }
+  nsSVGEnum mEnumAttributes[1];
+  virtual nsSVGEnum* EnumAttributes() override { return mEnumAttributes; }
 
   nsSVGLength2 mLengthAttributes[1];
   virtual nsSVGLength2* LengthAttributes() override {

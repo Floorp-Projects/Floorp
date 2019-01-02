@@ -19,7 +19,7 @@ JSObject* SVGViewElement::WrapNode(JSContext* aCx,
   return SVGViewElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-SVGEnumMapping SVGViewElement::sZoomAndPanMap[] = {
+nsSVGEnumMapping SVGViewElement::sZoomAndPanMap[] = {
     {nsGkAtoms::disable, SVG_ZOOMANDPAN_DISABLE},
     {nsGkAtoms::magnify, SVG_ZOOMANDPAN_MAGNIFY},
     {nullptr, 0}};
