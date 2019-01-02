@@ -11,9 +11,9 @@ add_task(async function setup() {
   });
 
   registerCleanupFunction(() => {
-    Services.prefs.clearUserPref("accessibility.typeaheadfind.autostart");
-    Services.prefs.clearUserPref("accessibility.typeaheadfind.soundURL");
-    Services.prefs.clearUserPref("accessibility.typeaheadfind.casesensitive");
+    Services.prefs.clearUserPref(PREF_BOOLEAN_DEFAULT_TRUE);
+    Services.prefs.clearUserPref(PREF_NUMBER_DEFAULT_ZERO);
+    Services.prefs.clearUserPref(PREF_STRING_DEFAULT_EMPTY);
   });
 });
 
@@ -51,25 +51,29 @@ add_task(async function test_delete_user_pref() {
 });
 
 add_task(async function test_reset_user_pref() {
-  await SpecialPowers.pushPrefEnv({"set": [["browser.autofocus", false]]});
+  await SpecialPowers.pushPrefEnv({
+    "set": [
+      [PREF_BOOLEAN_DEFAULT_TRUE, false],
+    ],
+  });
 
   await AboutConfigTest.withNewTab(async function() {
     let testPref = "browser.autofocus";
     // Click reset.
-    let row = this.getRow(testPref);
+    let row = this.getRow(PREF_BOOLEAN_DEFAULT_TRUE);
     row.resetColumnButton.click();
     // Check new layout and reset.
     Assert.ok(!row.hasClass("has-user-value"));
     Assert.ok(!row.resetColumnButton);
-    Assert.ok(!Services.prefs.prefHasUserValue(testPref));
-    Assert.equal(this.getRow(testPref).value, "" + Preferences.get(testPref));
+    Assert.ok(!Services.prefs.prefHasUserValue(PREF_BOOLEAN_DEFAULT_TRUE));
+    Assert.equal(this.getRow(PREF_BOOLEAN_DEFAULT_TRUE).value, "true");
 
     // Search for nothing to test gPrefArray
     this.search();
-    row = this.getRow(testPref);
+    row = this.getRow(PREF_BOOLEAN_DEFAULT_TRUE);
     Assert.ok(!row.hasClass("has-user-value"));
     Assert.ok(!row.resetColumnButton);
-    Assert.equal(this.getRow(testPref).value, "" + Preferences.get(testPref));
+    Assert.equal(this.getRow(PREF_BOOLEAN_DEFAULT_TRUE).value, "true");
   });
 });
 
@@ -78,7 +82,7 @@ add_task(async function test_modify() {
     // Test toggle for boolean prefs.
     for (let nameOfBoolPref of [
       "test.aboutconfig.modify.boolean",
-      "accessibility.typeaheadfind.autostart",
+      PREF_BOOLEAN_DEFAULT_TRUE,
     ]) {
       let row = this.getRow(nameOfBoolPref);
       // Do this a two times to reset the pref.
@@ -113,8 +117,8 @@ add_task(async function test_modify() {
     for (let prefName of [
       "test.aboutconfig.modify.string",
       "test.aboutconfig.modify.number",
-      "accessibility.typeaheadfind.soundURL",
-      "accessibility.typeaheadfind.casesensitive",
+      PREF_NUMBER_DEFAULT_ZERO,
+      PREF_STRING_DEFAULT_EMPTY,
     ]) {
       row = this.getRow(prefName);
       // Activate edit and check displaying.
