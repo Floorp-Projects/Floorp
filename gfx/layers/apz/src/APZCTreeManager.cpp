@@ -1123,7 +1123,7 @@ static bool WillHandleInput(const PanGestureOrScrollWheelInput& aPanInput) {
   return APZInputBridge::ActionForWheelEvent(&wheelEvent).isSome();
 }
 
-void APZCTreeManager::FlushApzRepaints(LayersId aLayersId) {
+/*static*/ void APZCTreeManager::FlushApzRepaints(LayersId aLayersId) {
   // Previously, paints were throttled and therefore this method was used to
   // ensure any pending paints were flushed. Now, paints are flushed
   // immediately, so it is safe to simply send a notification now.
