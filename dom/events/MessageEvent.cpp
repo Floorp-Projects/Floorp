@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/MessageEvent.h"
+#include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/MessageEventBinding.h"
 #include "mozilla/dom/MessagePort.h"
 #include "mozilla/dom/MessagePortBinding.h"
@@ -12,7 +13,6 @@
 
 #include "mozilla/HoldDropJSObjects.h"
 #include "jsapi.h"
-#include "nsGlobalWindow.h"  // So we can assign an nsGlobalWindow* to mWindowSource
 
 namespace mozilla {
 namespace dom {
@@ -108,7 +108,7 @@ void MessageEvent::GetSource(
 
   if (!aParam.mSource.IsNull()) {
     if (aParam.mSource.Value().IsWindowProxy()) {
-      event->mWindowSource = aParam.mSource.Value().GetAsWindowProxy();
+      event->mWindowSource = aParam.mSource.Value().GetAsWindowProxy().get();
     } else if (aParam.mSource.Value().IsMessagePort()) {
       event->mPortSource = aParam.mSource.Value().GetAsMessagePort();
     } else {
@@ -144,7 +144,7 @@ void MessageEvent::InitMessageEvent(
 
   if (!aSource.IsNull()) {
     if (aSource.Value().IsWindowProxy()) {
-      mWindowSource = aSource.Value().GetAsWindowProxy();
+      mWindowSource = aSource.Value().GetAsWindowProxy().get();
     } else if (aSource.Value().IsMessagePort()) {
       mPortSource = &aSource.Value().GetAsMessagePort();
     } else {

@@ -8589,8 +8589,11 @@ class StringBuilder {
   }
 
   bool ToString(nsAString& aOut) {
+    if (!mLength.isValid()) {
+      return false;
+    }
     nsresult rv;
-    BulkAppender appender(aOut.BulkWrite(mLength, 0, true, rv));
+    BulkAppender appender(aOut.BulkWrite(mLength.value(), 0, true, rv));
     if (NS_FAILED(rv)) {
       return false;
     }
@@ -8725,7 +8728,7 @@ class StringBuilder {
   nsAutoPtr<StringBuilder> mNext;
   StringBuilder* mLast;
   // mLength is used only in the first StringBuilder object in the linked list.
-  uint32_t mLength;
+  CheckedInt<uint32_t> mLength;
 };
 
 }  // namespace

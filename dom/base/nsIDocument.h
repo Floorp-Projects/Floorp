@@ -48,6 +48,7 @@
 #include "nsExpirationTracker.h"
 #include "nsClassHashtable.h"
 #include "mozilla/CORSMode.h"
+#include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/ContentBlockingLog.h"
 #include "mozilla/dom/DispatcherTrait.h"
 #include "mozilla/dom/DocumentOrShadowRoot.h"
@@ -3079,7 +3080,8 @@ class nsIDocument : public nsINode,
     return GetFuncStringContentList<nsCachableElementsByNameNodeList>(
         this, MatchNameAttribute, nullptr, UseExistingNameString, aName);
   }
-  nsPIDOMWindowOuter* GetDefaultView() const { return GetWindow(); }
+  mozilla::dom::Nullable<mozilla::dom::WindowProxyHolder> GetDefaultView()
+      const;
   Element* GetActiveElement();
   bool HasFocus(mozilla::ErrorResult& rv) const;
   nsIHTMLCollection* Applets();

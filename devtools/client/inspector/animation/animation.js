@@ -141,8 +141,8 @@ class AnimationInspector {
     this.provider = provider;
 
     this.inspector.sidebar.on("select", this.onSidebarSelectionChanged);
-    this.inspector.toolbox.on("picker-started", this.onElementPickerStarted);
-    this.inspector.toolbox.on("picker-stopped", this.onElementPickerStopped);
+    this.inspector.inspector.nodePicker.on("picker-started", this.onElementPickerStarted);
+    this.inspector.inspector.nodePicker.on("picker-stopped", this.onElementPickerStopped);
     this.inspector.toolbox.on("select", this.onSidebarSelectionChanged);
   }
 
@@ -165,8 +165,12 @@ class AnimationInspector {
     this.inspector.selection.off("new-node-front", this.update);
     this.inspector.sidebar.off("select", this.onSidebarSelectionChanged);
     this.inspector.toolbox.off("inspector-sidebar-resized", this.onSidebarResized);
-    this.inspector.toolbox.off("picker-started", this.onElementPickerStarted);
-    this.inspector.toolbox.off("picker-stopped", this.onElementPickerStopped);
+    this.inspector.inspector.nodePicker.off(
+      "picker-started", this.onElementPickerStarted
+    );
+    this.inspector.inspector.nodePicker.off(
+      "picker-stopped", this.onElementPickerStopped
+    );
     this.inspector.toolbox.off("select", this.onSidebarSelectionChanged);
 
     this.animationsFrontPromise.then(front => {
@@ -648,7 +652,7 @@ class AnimationInspector {
   }
 
   toggleElementPicker() {
-    this.inspector.toolbox.highlighterUtils.togglePicker();
+    this.inspector.inspector.nodePicker.togglePicker();
   }
 
   async update() {

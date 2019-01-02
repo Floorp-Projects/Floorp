@@ -38,8 +38,6 @@ const L10N = new LocalizationHelper("devtools/client/locales/toolbox.properties"
 
 loader.lazyRequireGetter(this, "AppConstants",
   "resource://gre/modules/AppConstants.jsm", true);
-loader.lazyRequireGetter(this, "getHighlighterUtils",
-  "devtools/client/framework/toolbox-highlighter-utils", true);
 loader.lazyRequireGetter(this, "flags",
   "devtools/shared/flags");
 loader.lazyRequireGetter(this, "KeyShortcuts",
@@ -136,7 +134,6 @@ function Toolbox(target, selectedTool, hostType, contentWindow, frameId,
   this._splitConsoleOnKeypress = this._splitConsoleOnKeypress.bind(this);
   this.closeToolbox = this.closeToolbox.bind(this);
   this.destroy = this.destroy.bind(this);
-  this.highlighterUtils = getHighlighterUtils(this);
   this._highlighterReady = this._highlighterReady.bind(this);
   this._highlighterHidden = this._highlighterHidden.bind(this);
   this._applyCacheSettings = this._applyCacheSettings.bind(this);
@@ -152,8 +149,10 @@ function Toolbox(target, selectedTool, hostType, contentWindow, frameId,
   this._onToolbarArrowKeypress = this._onToolbarArrowKeypress.bind(this);
   this._onPickerClick = this._onPickerClick.bind(this);
   this._onPickerKeypress = this._onPickerKeypress.bind(this);
+  this._onPickerStarting = this._onPickerStarting.bind(this);
   this._onPickerStarted = this._onPickerStarted.bind(this);
   this._onPickerStopped = this._onPickerStopped.bind(this);
+  this._onPickerCanceled = this._onPickerCanceled.bind(this);
   this._onInspectObject = this._onInspectObject.bind(this);
   this._onNewSelectedNodeFront = this._onNewSelectedNodeFront.bind(this);
   this._onToolSelected = this._onToolSelected.bind(this);
@@ -192,9 +191,6 @@ function Toolbox(target, selectedTool, hostType, contentWindow, frameId,
 
   gDevTools.on("tool-registered", this._toolRegistered);
   gDevTools.on("tool-unregistered", this._toolUnregistered);
-
-  this.on("picker-started", this._onPickerStarted);
-  this.on("picker-stopped", this._onPickerStopped);
 
   /**
    * Get text direction for the current locale direction.
@@ -375,8 +371,6 @@ Toolbox.prototype = {
   /**
    * Get the toolbox highlighter front. Note that it may not always have been
    * initialized first. Use `initInspector()` if needed.
-   * Consider using highlighterUtils instead, it exposes the highlighter API in
-   * a useful way for the toolbox panels
    */
   get highlighter() {
     return this._highlighter;
@@ -1273,7 +1267,7 @@ Toolbox.prototype = {
    * Note: Toggle picker can be overwritten by panel other than the inspector to
    * allow for custom picker behaviour.
    */
-  _onPickerClick: function() {
+  _onPickerClick: async function() {
     const focus = this.hostType === Toolbox.HostType.BOTTOM ||
                   this.hostType === Toolbox.HostType.LEFT ||
                   this.hostType === Toolbox.HostType.RIGHT;
@@ -1281,7 +1275,10 @@ Toolbox.prototype = {
     if (currentPanel.togglePicker) {
       currentPanel.togglePicker(focus);
     } else {
-      this.highlighterUtils.togglePicker(focus);
+      if (!this.inspector) {
+        await this.initInspector();
+      }
+      this.inspector.nodePicker.togglePicker(focus);
     }
   },
 
@@ -1295,19 +1292,35 @@ Toolbox.prototype = {
       if (currentPanel.cancelPicker) {
         currentPanel.cancelPicker();
       } else {
-        this.highlighterUtils.cancelPicker();
+        this.inspector.nodePicker.cancel();
       }
       // Stop the console from toggling.
       event.stopImmediatePropagation();
     }
   },
 
-  _onPickerStarted: function() {
+  _onPickerStarting: async function() {
+    this.pickerButton.isChecked = true;
+    await this.selectTool("inspector", "inspect_dom");
+    this.on("select", this.inspector.nodePicker.stop);
+  },
+
+  _onPickerStarted: async function() {
     this.doc.addEventListener("keypress", this._onPickerKeypress, true);
   },
 
   _onPickerStopped: function() {
+    this.off("select", this.inspector.nodePicker.stop);
     this.doc.removeEventListener("keypress", this._onPickerKeypress, true);
+    this.pickerButton.isChecked = false;
+  },
+
+  /**
+   * When the picker is canceled, make sure the toolbox
+   * gets the focus.
+   */
+  _onPickerCanceled: function() {
+    this.win.focus();
   },
 
   /**
@@ -2708,6 +2721,10 @@ Toolbox.prototype = {
         this._highlighter = this.inspector.highlighter;
         this._selection = this.inspector.selection;
 
+        this.inspector.nodePicker.on("picker-starting", this._onPickerStarting);
+        this.inspector.nodePicker.on("picker-started", this._onPickerStarted);
+        this.inspector.nodePicker.on("picker-stopped", this._onPickerStopped);
+        this.inspector.nodePicker.on("picker-node-canceled", this._onPickerCanceled);
         this.walker.on("highlighter-ready", this._highlighterReady);
         this.walker.on("highlighter-hide", this._highlighterHidden);
         this._selection.on("new-node-front", this._onNewSelectedNodeFront);
@@ -2960,7 +2977,6 @@ Toolbox.prototype = {
           }
           const target = this._target;
           this._target = null;
-          this.highlighterUtils.release();
           target.off("close", this.destroy);
           return target.destroy();
         }, console.error).then(() => {

@@ -60,11 +60,11 @@ add_task(async function() {
   await testActor.isNodeCorrectlyHighlighted(iframeBodySelector, is);
 
   info("Waiting for the element picker to deactivate.");
-  await inspector.toolbox.highlighterUtils.stopPicker();
+  await inspector.inspector.nodePicker.stop();
 
   function moveMouseOver(selector, x, y) {
     info("Waiting for element " + selector + " to be highlighted");
     testActor.synthesizeMouse({selector, x, y, options: {type: "mousemove"}});
-    return inspector.toolbox.once("picker-node-hovered");
+    return inspector.inspector.nodePicker.once("picker-node-hovered");
   }
 });

@@ -294,6 +294,7 @@
 #include "mozilla/net/ChannelEventQueue.h"
 #include "mozilla/net/RequestContextService.h"
 #include "StorageAccessPermissionRequest.h"
+#include "mozilla/dom/WindowProxyHolder.h"
 
 #define XML_DECLARATION_BITS_DECLARATION_EXISTS (1 << 0)
 #define XML_DECLARATION_BITS_ENCODING_EXISTS (1 << 1)
@@ -3366,6 +3367,14 @@ nsresult nsIDocument::GetSrcdocData(nsAString& aSrcdocData) {
   return NS_OK;
 }
 
+Nullable<WindowProxyHolder> nsIDocument::GetDefaultView() const {
+  nsPIDOMWindowOuter* win = GetWindow();
+  if (!win) {
+    return nullptr;
+  }
+  return WindowProxyHolder(win->GetBrowsingContext());
+}
+
 Element* nsIDocument::GetActiveElement() {
   // Get the focused element.
   Element* focusedElement = GetRetargetedFocusedElement();
@@ -5698,9 +5707,7 @@ already_AddRefed<Location> nsIDocument::GetLocation() const {
     return nullptr;
   }
 
-  nsGlobalWindowInner* window = nsGlobalWindowInner::Cast(w);
-  RefPtr<Location> loc = window->GetLocation();
-  return loc.forget();
+  return do_AddRef(w->Location());
 }
 
 Element* nsIDocument::GetHtmlElement() const {
