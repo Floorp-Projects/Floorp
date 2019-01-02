@@ -13,6 +13,7 @@
 #include "mozilla/dom/SVGViewElement.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/SMILAnimationController.h"
+#include "mozilla/SMILTimeContainer.h"
 
 #include "DOMSVGAngle.h"
 #include "DOMSVGLength.h"
@@ -22,7 +23,6 @@
 #include "nsLayoutStylesheetCache.h"
 #include "nsIFrame.h"
 #include "nsISVGSVGFrame.h"
-#include "nsSMILTimeContainer.h"
 #include "nsSVGDisplayableFrame.h"
 #include "nsSVGUtils.h"
 
@@ -196,25 +196,25 @@ void SVGSVGElement::ForceRedraw() {
 
 void SVGSVGElement::PauseAnimations() {
   if (mTimedDocumentRoot) {
-    mTimedDocumentRoot->Pause(nsSMILTimeContainer::PAUSE_SCRIPT);
+    mTimedDocumentRoot->Pause(SMILTimeContainer::PAUSE_SCRIPT);
   }
   // else we're not the outermost <svg> or not bound to a tree, so silently fail
 }
 
 void SVGSVGElement::UnpauseAnimations() {
   if (mTimedDocumentRoot) {
-    mTimedDocumentRoot->Resume(nsSMILTimeContainer::PAUSE_SCRIPT);
+    mTimedDocumentRoot->Resume(SMILTimeContainer::PAUSE_SCRIPT);
   }
   // else we're not the outermost <svg> or not bound to a tree, so silently fail
 }
 
 bool SVGSVGElement::AnimationsPaused() {
-  nsSMILTimeContainer* root = GetTimedDocumentRoot();
-  return root && root->IsPausedByType(nsSMILTimeContainer::PAUSE_SCRIPT);
+  SMILTimeContainer* root = GetTimedDocumentRoot();
+  return root && root->IsPausedByType(SMILTimeContainer::PAUSE_SCRIPT);
 }
 
 float SVGSVGElement::GetCurrentTimeAsFloat() {
-  nsSMILTimeContainer* root = GetTimedDocumentRoot();
+  SMILTimeContainer* root = GetTimedDocumentRoot();
   if (root) {
     double fCurrentTimeMs = double(root->GetCurrentTimeAsSMILTime());
     return (float)(fCurrentTimeMs / PR_MSEC_PER_SEC);
@@ -358,7 +358,7 @@ void SVGSVGElement::SetZoomAndPan(uint16_t aZoomAndPan, ErrorResult& rv) {
 }
 
 //----------------------------------------------------------------------
-nsSMILTimeContainer* SVGSVGElement::GetTimedDocumentRoot() {
+SMILTimeContainer* SVGSVGElement::GetTimedDocumentRoot() {
   if (mTimedDocumentRoot) {
     return mTimedDocumentRoot;
   }
@@ -385,7 +385,7 @@ nsresult SVGSVGElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
       if (WillBeOutermostSVG(aParent, aBindingParent)) {
         // We'll be the outermost <svg> element.  We'll need a time container.
         if (!mTimedDocumentRoot) {
-          mTimedDocumentRoot = new nsSMILTimeContainer();
+          mTimedDocumentRoot = new SMILTimeContainer();
         }
       } else {
         // We're a child of some other <svg> element, so we don't need our own

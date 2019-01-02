@@ -64,7 +64,7 @@ void nsSMILInstanceTime::Unlink() {
 }
 
 void nsSMILInstanceTime::HandleChangedInterval(
-    const nsSMILTimeContainer* aSrcContainer, bool aBeginObjectChanged,
+    const SMILTimeContainer* aSrcContainer, bool aBeginObjectChanged,
     bool aEndObjectChanged) {
   // It's possible a sequence of notifications might cause our base interval to
   // be updated and then deleted. Furthermore, the delete might happen whilst

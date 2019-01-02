@@ -287,7 +287,7 @@ bool SMILAnimationFunction::HasChanged() const {
 }
 
 bool SMILAnimationFunction::UpdateCachedTarget(
-    const nsSMILTargetIdentifier& aNewTarget) {
+    const SMILTargetIdentifier& aNewTarget) {
   if (!mLastTarget.Equals(aNewTarget)) {
     mLastTarget = aNewTarget;
     return true;

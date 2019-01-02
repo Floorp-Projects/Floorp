@@ -15,10 +15,7 @@ EXPORTS += [
     'nsSMILInstanceTime.h',
     'nsSMILInterval.h',
     'nsSMILKeySpline.h',
-    'nsSMILMilestone.h',
     'nsSMILRepeatCount.h',
-    'nsSMILTargetIdentifier.h',
-    'nsSMILTimeContainer.h',
     'nsSMILTimeValue.h',
     'nsSMILTimeValueSpec.h',
     'nsSMILTimeValueSpecParams.h',
@@ -33,7 +30,10 @@ EXPORTS.mozilla += [
     'SMILAnimationController.h',
     'SMILAnimationFunction.h',
     'SMILCompositorTable.h',
+    'SMILMilestone.h',
     'SMILSetAnimationFunction.h',
+    'SMILTargetIdentifier.h',
+    'SMILTimeContainer.h',
     'SMILTimedElement.h',
 ]
 
@@ -48,7 +48,6 @@ UNIFIED_SOURCES += [
     'nsSMILKeySpline.cpp',
     'nsSMILParserUtils.cpp',
     'nsSMILRepeatCount.cpp',
-    'nsSMILTimeContainer.cpp',
     'nsSMILTimeValue.cpp',
     'nsSMILTimeValueSpec.cpp',
     'nsSMILValue.cpp',
@@ -63,6 +62,7 @@ UNIFIED_SOURCES += [
     'SMILNullType.cpp',
     'SMILSetAnimationFunction.cpp',
     'SMILStringType.cpp',
+    'SMILTimeContainer.cpp',
     'SMILTimedElement.cpp',
     'TimeEvent.cpp',
 ]

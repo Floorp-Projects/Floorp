@@ -7,6 +7,10 @@
 #ifndef NS_SMILMILESTONE_H_
 #define NS_SMILMILESTONE_H_
 
+#include "nsSMILTypes.h"
+
+namespace mozilla {
+
 /*
  * A significant moment in an SMILTimedElement's lifetime where a sample is
  * required.
@@ -32,32 +36,31 @@
  * of instance times available before committing to a new interval. Once an
  * interval is entered, the begin time is fixed.
  */
-class nsSMILMilestone {
+class SMILMilestone {
  public:
-  nsSMILMilestone(nsSMILTime aTime, bool aIsEnd)
-      : mTime(aTime), mIsEnd(aIsEnd) {}
+  SMILMilestone(nsSMILTime aTime, bool aIsEnd) : mTime(aTime), mIsEnd(aIsEnd) {}
 
-  nsSMILMilestone() : mTime(0), mIsEnd(false) {}
+  SMILMilestone() : mTime(0), mIsEnd(false) {}
 
-  bool operator==(const nsSMILMilestone& aOther) const {
+  bool operator==(const SMILMilestone& aOther) const {
     return mTime == aOther.mTime && mIsEnd == aOther.mIsEnd;
   }
 
-  bool operator!=(const nsSMILMilestone& aOther) const {
+  bool operator!=(const SMILMilestone& aOther) const {
     return !(*this == aOther);
   }
 
-  bool operator<(const nsSMILMilestone& aOther) const {
+  bool operator<(const SMILMilestone& aOther) const {
     // Earlier times sort first, and for equal times end milestones sort first
     return mTime < aOther.mTime ||
            (mTime == aOther.mTime && mIsEnd && !aOther.mIsEnd);
   }
 
-  bool operator<=(const nsSMILMilestone& aOther) const {
+  bool operator<=(const SMILMilestone& aOther) const {
     return *this == aOther || *this < aOther;
   }
 
-  bool operator>=(const nsSMILMilestone& aOther) const {
+  bool operator>=(const SMILMilestone& aOther) const {
     return !(*this < aOther);
   }
 
@@ -66,5 +69,7 @@ class nsSMILMilestone {
   bool mIsEnd;       // true if this milestone corresponds to an interval
                      // end, false otherwise.
 };
+
+}  // namespace mozilla
 
 #endif  // NS_SMILMILESTONE_H_
