@@ -1,7 +1,7 @@
 extern crate base64;
 extern crate rand;
 
-use rand::Rng;
+use rand::{Rng, FromEntropy};
 
 use base64::*;
 
@@ -19,7 +19,7 @@ fn roundtrip_random(
 ) {
     // let the short ones be short but don't let it get too crazy large
     let num_rounds = calculate_number_of_rounds(byte_len, approx_values_per_byte, max_rounds);
-    let mut r = rand::weak_rng();
+    let mut r = rand::rngs::SmallRng::from_entropy();
     let mut decode_buf = Vec::new();
 
     for _ in 0..num_rounds {
@@ -53,7 +53,7 @@ fn calculate_number_of_rounds(byte_len: usize, approx_values_per_byte: u8, max: 
 }
 
 fn no_pad_config() -> Config {
-    Config::new(CharacterSet::Standard, false, false, LineWrap::NoWrap)
+    Config::new(CharacterSet::Standard, false)
 }
 
 #[test]
@@ -141,7 +141,7 @@ fn display_wrapper_matches_normal_encode() {
 
     assert_eq!(
         encode(&bytes),
-        format!("{}", base64::display::Base64Display::standard(&bytes))
+        format!("{}", base64::display::Base64Display::with_config(&bytes, STANDARD))
     );
 }
 
@@ -158,7 +158,7 @@ fn encode_config_slice_can_use_inline_buffer() {
     let mut larger_buf: [u8; 24] = [0; 24];
     let mut input: [u8; 16] = [0; 16];
 
-    let mut rng = rand::weak_rng();
+    let mut rng = rand::rngs::SmallRng::from_entropy();
     for elt in &mut input {
         *elt = rng.gen();
     }
@@ -182,7 +182,7 @@ fn encode_config_slice_panics_when_buffer_too_small() {
     let mut buf: [u8; 22] = [0; 22];
     let mut input: [u8; 16] = [0; 16];
 
-    let mut rng = rand::weak_rng();
+    let mut rng = rand::rngs::SmallRng::from_entropy();
     for elt in &mut input {
         *elt = rng.gen();
     }
