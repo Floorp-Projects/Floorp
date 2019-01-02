@@ -24,7 +24,7 @@ function getLocation(breakpoint, isGeneratedSource) {
 }
 
 const formatBreakpoint = memoize(function(breakpoint, selectedSource) {
-  const { condition, loading, disabled, hidden } = breakpoint;
+  const { condition, loading, disabled, hidden, log } = breakpoint;
   const sourceId = selectedSource.id;
   const isGeneratedSource = isGeneratedId(sourceId);
 
@@ -33,7 +33,8 @@ const formatBreakpoint = memoize(function(breakpoint, selectedSource) {
     condition,
     loading,
     disabled,
-    hidden
+    hidden,
+    log
   };
 });
 
@@ -71,10 +72,13 @@ export const getVisibleBreakpoints: Selector<?(Breakpoint[])> = createSelector(
  */
 export const getFirstVisibleBreakpoints: Selector<
   Breakpoint[]
-> = createSelector(getVisibleBreakpoints, breakpoints => {
-  if (!breakpoints) {
-    return [];
-  }
+> = createSelector(
+  getVisibleBreakpoints,
+  breakpoints => {
+    if (!breakpoints) {
+      return [];
+    }
 
-  return (uniqBy(sortBreakpoints(breakpoints), bp => bp.location.line): any);
-});
+    return (uniqBy(sortBreakpoints(breakpoints), bp => bp.location.line): any);
+  }
+);
