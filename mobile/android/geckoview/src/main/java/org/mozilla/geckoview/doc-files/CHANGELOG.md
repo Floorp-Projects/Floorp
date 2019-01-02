@@ -98,4 +98,4 @@ layout: geckoview
 [65.24]: ../CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: ../GeckoResult.html
 
-[api-version]: cdbaa3fa639126d2d45a0cd8e9508f95a9e98e33
+[api-version]: 8827d6c8c7c2aa54cfad31c21aca5dc7d6d42311

@@ -333,7 +333,7 @@ public final class GeckoRuntime implements Parcelable {
     }
 
     @AnyThread
-    public @Nullable GeckoRuntimeSettings getSettings() {
+    public @NonNull GeckoRuntimeSettings getSettings() {
         return mSettings;
     }
 
