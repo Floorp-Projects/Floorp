@@ -7,8 +7,8 @@
 #ifndef mozilla_dom_SVGFEBlendElement_h
 #define mozilla_dom_SVGFEBlendElement_h
 
+#include "SVGEnum.h"
 #include "SVGFilters.h"
-#include "nsSVGEnum.h"
 
 nsresult NS_NewSVGFEBlendElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
@@ -53,8 +53,8 @@ class SVGFEBlendElement : public SVGFEBlendElementBase {
   virtual StringAttributesInfo GetStringInfo() override;
 
   enum { MODE };
-  nsSVGEnum mEnumAttributes[1];
-  static nsSVGEnumMapping sModeMap[];
+  SVGEnum mEnumAttributes[1];
+  static SVGEnumMapping sModeMap[];
   static EnumInfo sEnumInfo[1];
 
   enum { RESULT, IN1, IN2 };

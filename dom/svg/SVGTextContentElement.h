@@ -9,7 +9,7 @@
 
 #include "mozilla/dom/SVGGraphicsElement.h"
 #include "mozilla/dom/SVGAnimatedEnumeration.h"
-#include "nsSVGEnum.h"
+#include "SVGEnum.h"
 #include "nsSVGLength2.h"
 
 class SVGTextFrame;
@@ -60,8 +60,8 @@ class SVGTextContentElement : public SVGTextContentElementBase {
   GetNonLayoutDependentNumberOfChars();
 
   enum { LENGTHADJUST };
-  virtual nsSVGEnum* EnumAttributes() = 0;
-  static nsSVGEnumMapping sLengthAdjustMap[];
+  virtual SVGEnum* EnumAttributes() = 0;
+  static SVGEnumMapping sLengthAdjustMap[];
   static EnumInfo sEnumInfo[1];
 
   enum { TEXTLENGTH };
