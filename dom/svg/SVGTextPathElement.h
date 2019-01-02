@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_SVGTextPathElement_h
 #define mozilla_dom_SVGTextPathElement_h
 
-#include "nsSVGEnum.h"
+#include "SVGEnum.h"
 #include "nsSVGLength2.h"
 #include "nsSVGString.h"
 #include "mozilla/dom/SVGAnimatedPathSegList.h"
@@ -72,11 +72,11 @@ class SVGTextPathElement final : public SVGTextPathElementBase {
   static LengthInfo sLengthInfo[2];
 
   enum { /* LENGTHADJUST, */ METHOD = 1, SPACING, SIDE };
-  nsSVGEnum mEnumAttributes[4];
-  virtual nsSVGEnum* EnumAttributes() override { return mEnumAttributes; }
-  static nsSVGEnumMapping sMethodMap[];
-  static nsSVGEnumMapping sSpacingMap[];
-  static nsSVGEnumMapping sSideMap[];
+  SVGEnum mEnumAttributes[4];
+  virtual SVGEnum* EnumAttributes() override { return mEnumAttributes; }
+  static SVGEnumMapping sMethodMap[];
+  static SVGEnumMapping sSpacingMap[];
+  static SVGEnumMapping sSideMap[];
   static EnumInfo sEnumInfo[4];
 
   enum { HREF, XLINK_HREF };
