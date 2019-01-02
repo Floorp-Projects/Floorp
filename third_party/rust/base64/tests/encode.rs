@@ -95,50 +95,6 @@ fn encode_all_bytes_url() {
 }
 
 #[test]
-fn encode_line_ending_lf_partial_last_line() {
-    let config = Config::new(
-        CharacterSet::Standard,
-        true,
-        false,
-        LineWrap::Wrap(3, LineEnding::LF),
-    );
-    assert_eq!("Zm9\nvYm\nFy", encode_config(b"foobar", config));
-}
-
-#[test]
-fn encode_line_ending_crlf_partial_last_line() {
-    let config = Config::new(
-        CharacterSet::Standard,
-        true,
-        false,
-        LineWrap::Wrap(3, LineEnding::CRLF),
-    );
-    assert_eq!("Zm9\r\nvYm\r\nFy", encode_config(b"foobar", config));
-}
-
-#[test]
-fn encode_line_ending_lf_full_last_line() {
-    let config = Config::new(
-        CharacterSet::Standard,
-        true,
-        false,
-        LineWrap::Wrap(4, LineEnding::LF),
-    );
-    assert_eq!("Zm9v\nYmFy", encode_config(b"foobar", config));
-}
-
-#[test]
-fn encode_line_ending_crlf_full_last_line() {
-    let config = Config::new(
-        CharacterSet::Standard,
-        true,
-        false,
-        LineWrap::Wrap(4, LineEnding::CRLF),
-    );
-    assert_eq!("Zm9v\r\nYmFy", encode_config(b"foobar", config));
-}
-
-#[test]
 fn encode_url_safe_without_padding() {
     let encoded = encode_config(b"alice", URL_SAFE_NO_PAD);
     assert_eq!(&encoded, "YWxpY2U");
