@@ -174,7 +174,7 @@ class NavigationDelegateTest : BaseSessionTest() {
     @Setting(key = Setting.Key.USE_TRACKING_PROTECTION, value = "true")
     @Test fun trackingProtection() {
         val category = TrackingProtectionDelegate.CATEGORY_TEST;
-        sessionRule.runtime.settings!!.trackingProtectionCategories = category
+        sessionRule.runtime.settings.trackingProtectionCategories = category
         sessionRule.session.loadTestPath(TRACKERS_PATH)
 
         sessionRule.waitUntilCalled(
@@ -244,7 +244,7 @@ class NavigationDelegateTest : BaseSessionTest() {
     @Test fun bypassClassifier() {
         val phishingUri = "https://www.itisatrap.org/firefox/its-a-trap.html"
 
-        sessionRule.runtime.settings!!.blockPhishing = true
+        sessionRule.runtime.settings.blockPhishing = true
 
         sessionRule.session.loadUri(phishingUri + "?bypass=true",
                                     GeckoSession.LOAD_FLAGS_BYPASS_CLASSIFIER)
@@ -263,14 +263,14 @@ class NavigationDelegateTest : BaseSessionTest() {
     @Test fun safebrowsingPhishing() {
         val phishingUri = "https://www.itisatrap.org/firefox/its-a-trap.html"
 
-        sessionRule.runtime.settings!!.blockPhishing = true
+        sessionRule.runtime.settings.blockPhishing = true
 
         // Add query string to avoid bypassing classifier check because of cache.
         testLoadExpectError(phishingUri + "?block=true",
                         WebRequestError.ERROR_CATEGORY_SAFEBROWSING,
                         WebRequestError.ERROR_SAFEBROWSING_PHISHING_URI)
 
-        sessionRule.runtime.settings!!.blockPhishing = false
+        sessionRule.runtime.settings.blockPhishing = false
 
         sessionRule.session.loadUri(phishingUri + "?block=false")
         sessionRule.session.waitForPageStop()
@@ -288,13 +288,13 @@ class NavigationDelegateTest : BaseSessionTest() {
     @Test fun safebrowsingMalware() {
         val malwareUri = "https://www.itisatrap.org/firefox/its-an-attack.html"
 
-        sessionRule.runtime.settings!!.blockMalware = true
+        sessionRule.runtime.settings.blockMalware = true
 
         testLoadExpectError(malwareUri + "?block=true",
                         WebRequestError.ERROR_CATEGORY_SAFEBROWSING,
                         WebRequestError.ERROR_SAFEBROWSING_MALWARE_URI)
 
-        sessionRule.runtime.settings!!.blockMalware = false
+        sessionRule.runtime.settings.blockMalware = false
 
         sessionRule.session.loadUri(malwareUri + "?block=false")
         sessionRule.session.waitForPageStop()
@@ -312,13 +312,13 @@ class NavigationDelegateTest : BaseSessionTest() {
     @Test fun safebrowsingUnwanted() {
         val unwantedUri = "https://www.itisatrap.org/firefox/unwanted.html"
 
-        sessionRule.runtime.settings!!.blockMalware = true
+        sessionRule.runtime.settings.blockMalware = true
 
         testLoadExpectError(unwantedUri + "?block=true",
                         WebRequestError.ERROR_CATEGORY_SAFEBROWSING,
                         WebRequestError.ERROR_SAFEBROWSING_UNWANTED_URI)
 
-        sessionRule.runtime.settings!!.blockMalware = false
+        sessionRule.runtime.settings.blockMalware = false
 
         sessionRule.session.loadUri(unwantedUri + "?block=false")
         sessionRule.session.waitForPageStop()
@@ -336,13 +336,13 @@ class NavigationDelegateTest : BaseSessionTest() {
     @Test fun safebrowsingHarmful() {
         val harmfulUri = "https://www.itisatrap.org/firefox/harmful.html"
 
-        sessionRule.runtime.settings!!.blockMalware = true
+        sessionRule.runtime.settings.blockMalware = true
 
         testLoadExpectError(harmfulUri + "?block=true",
                         WebRequestError.ERROR_CATEGORY_SAFEBROWSING,
                         WebRequestError.ERROR_SAFEBROWSING_HARMFUL_URI)
 
-        sessionRule.runtime.settings!!.blockMalware = false
+        sessionRule.runtime.settings.blockMalware = false
 
         sessionRule.session.loadUri(harmfulUri + "?block=false")
         sessionRule.session.waitForPageStop()
