@@ -67,7 +67,7 @@ export class ConditionalPanel extends PureComponent<Props> {
     if (log) {
       condition = `console.log(${condition})`;
     }
-    return this.props.setBreakpointCondition(location, { condition });
+    return this.props.setBreakpointCondition(location, { condition, log });
   }
 
   clearConditionalPanel() {

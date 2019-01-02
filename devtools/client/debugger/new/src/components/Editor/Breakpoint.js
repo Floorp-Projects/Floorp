@@ -61,7 +61,11 @@ class Breakpoint extends PureComponent<Props> {
 
     editor.codeMirror.addLineClass(line, "line", "new-breakpoint");
     if (breakpoint.condition) {
-      editor.codeMirror.addLineClass(line, "line", "has-condition");
+      if (breakpoint.log) {
+        editor.codeMirror.addLineClass(line, "line", "has-condition log");
+      } else {
+        editor.codeMirror.addLineClass(line, "line", "has-condition");
+      }
     } else {
       editor.codeMirror.removeLineClass(line, "line", "has-condition");
     }
