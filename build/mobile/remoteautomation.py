@@ -44,6 +44,9 @@ class RemoteAutomation(Automation):
         Kills the app if it runs for longer than |maxTime| seconds, or outputs nothing
         for |timeout| seconds.
         """
+        if self.device.is_file(self.remoteLog):
+            self.device.rm(self.remoteLog, root=True)
+            self.log.info("remoteautomation.py | runApp deleted %s" % self.remoteLog)
 
         if utilityPath is None:
             utilityPath = self.DIST_BIN

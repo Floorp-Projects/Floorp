@@ -1,13 +1,12 @@
 [base64](https://crates.io/crates/base64)
 ===
-[![Docs](https://docs.rs/base64/badge.svg)](https://docs.rs/base64)
+
+[![](https://img.shields.io/crates/v/base64.svg)](https://crates.io/crates/base64) [![Docs](https://docs.rs/base64/badge.svg)](https://docs.rs/base64) [![Build](https://travis-ci.org/alicemaz/rust-base64.svg?branch=master)](https://travis-ci.org/alicemaz/rust-base64) [![codecov](https://codecov.io/gh/alicemaz/rust-base64/branch/master/graph/badge.svg)](https://codecov.io/gh/alicemaz/rust-base64)
 
 It's base64. What more could anyone want?
 
 Example
 ---
-
-In Cargo.toml: `base64 = "~0.6.0"`
 
 ```rust
 extern crate base64;
@@ -93,7 +92,6 @@ This uses [cargo-fuzz](https://github.com/rust-fuzz/cargo-fuzz). See `fuzz/fuzze
 ```
 cargo +nightly fuzz run roundtrip
 cargo +nightly fuzz run roundtrip_no_pad
-cargo +nightly fuzz run roundtrip_mime -- -max_len=10240
 cargo +nightly fuzz run roundtrip_random_config -- -max_len=10240
 ```
 

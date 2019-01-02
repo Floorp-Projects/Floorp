@@ -20,10 +20,11 @@ update:
 	[ -d ./spec ] || git clone https://github.com/webassembly/spec ./spec
 	(cd ./spec/interpreter && make)
 	./spec/test/build.py \
+		--use-sync \
 		--js ../jit-test/tests/wasm/spec \
 		--html ../../../testing/web-platform/mozilla/tests/wasm
-	echo "|jit-test| test-also-wasm-baseline; include:wasm-testharness.js" > ../jit-test/tests/wasm/spec/directives.txt
-	../../../mach wpt-manifest-update
+	echo "|jit-test| test-also-no-wasm-baseline; test-also-no-wasm-ion; test-also-wasm-tiering; include:wasm-testharness.js" > ../jit-test/tests/wasm/spec/directives.txt
+	echo "|jit-test| skip-if:true" > ../jit-test/tests/wasm/spec/harness/directives.txt
 
 run:
 	@[ -z $(MOZCONFIG) ] && echo "You need to define the MOZCONFIG env variable first."
