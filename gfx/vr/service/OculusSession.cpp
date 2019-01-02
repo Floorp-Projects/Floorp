@@ -156,9 +156,9 @@ ovrButton OculusControllerButtons[2][kNumOculusButtons] = {
 };
 
 ovrTouch OculusControllerTouches[2][kNumOculusButtons] = {
-    {(ovrTouch)0, ovrTouch_LIndexTrigger, (ovrTouch)0, (ovrTouch)0, (ovrTouch)0,
+    {ovrTouch_LThumb, ovrTouch_LIndexTrigger, (ovrTouch)0, ovrTouch_X, ovrTouch_Y,
      ovrTouch_LThumbRest},
-    {(ovrTouch)0, ovrTouch_RIndexTrigger, (ovrTouch)0, (ovrTouch)0, (ovrTouch)0,
+    {ovrTouch_RThumb, ovrTouch_RIndexTrigger, (ovrTouch)0, ovrTouch_A, ovrTouch_B,
      ovrTouch_RThumbRest},
 };
 
