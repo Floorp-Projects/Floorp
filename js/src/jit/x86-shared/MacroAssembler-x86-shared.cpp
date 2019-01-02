@@ -1174,11 +1174,11 @@ static void AtomicFetchOp(MacroAssembler& masm,
 
   switch (Scalar::byteSize(arrayType)) {
     case 1:
-      CheckBytereg(value);
       CheckBytereg(output);
       switch (op) {
         case AtomicFetchAddOp:
         case AtomicFetchSubOp:
+          CheckBytereg(value);  // But not for the bitwise ops
           SetupValue(masm, op, value, output);
           if (access) masm.append(*access, masm.size());
           masm.lock_xaddb(output, Operand(mem));
