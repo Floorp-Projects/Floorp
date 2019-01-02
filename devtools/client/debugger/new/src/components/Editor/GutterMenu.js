@@ -120,7 +120,12 @@ export function gutterMenu({
       : gutterItems.addConditional)
   };
 
-  const items = [toggleBreakpointItem, conditionalBreakpoint, logPoint];
+  let items = [toggleBreakpointItem, conditionalBreakpoint, logPoint];
+
+  if (breakpoint && breakpoint.condition) {
+    const remove = breakpoint.log ? conditionalBreakpoint : logPoint;
+    items = items.filter(item => item !== remove);
+  }
 
   if (isPaused) {
     const continueToHereItem = {

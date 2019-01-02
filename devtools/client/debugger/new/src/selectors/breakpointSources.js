@@ -39,12 +39,13 @@ function formatBreakpoint(
   breakpoint: Breakpoint,
   selectedSource: ?Source
 ): FormattedBreakpoint {
-  const { id, condition, disabled } = breakpoint;
+  const { id, condition, disabled, log } = breakpoint;
 
   return {
     id,
     condition,
     disabled,
+    log,
     text:
       selectedSource && isGenerated(selectedSource)
         ? breakpoint.text

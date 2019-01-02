@@ -135,14 +135,14 @@ class Breakpoint extends PureComponent<Props> {
   /* eslint-disable react/no-danger */
   render() {
     const { breakpoint } = this.props;
-
     return (
       <div
         className={classnames({
           breakpoint,
           paused: this.isCurrentlyPausedAtBreakpoint(),
           disabled: breakpoint.disabled,
-          "is-conditional": !!breakpoint.condition
+          "is-conditional": !!breakpoint.condition,
+          log: breakpoint.log
         })}
         onClick={this.selectBreakpoint}
         onDoubleClick={this.onDoubleClick}

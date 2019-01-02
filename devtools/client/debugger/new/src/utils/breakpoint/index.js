@@ -130,7 +130,8 @@ export function createBreakpoint(
     astLocation,
     id,
     text,
-    originalText
+    originalText,
+    log
   } = overrides;
 
   const defaultASTLocation = {
@@ -141,6 +142,7 @@ export function createBreakpoint(
   const properties = {
     id,
     condition: condition || null,
+    log: log || false,
     disabled: disabled || false,
     hidden: hidden || false,
     loading: false,
@@ -183,6 +185,7 @@ export function createPendingBreakpoint(bp: Breakpoint) {
 
   return {
     condition: bp.condition,
+    log: bp.log,
     disabled: bp.disabled,
     location: pendingLocation,
     astLocation: bp.astLocation,
