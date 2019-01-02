@@ -11,6 +11,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/SMILAnimationFunction.h"
+#include "mozilla/SMILTimeContainer.h"
 #include "mozilla/TaskCategory.h"
 #include "mozilla/dom/SVGAnimationElement.h"
 #include "nsAttrValueInlines.h"
@@ -18,7 +19,6 @@
 #include "nsSMILTimeValueSpec.h"
 #include "nsSMILInstanceTime.h"
 #include "nsSMILParserUtils.h"
-#include "nsSMILTimeContainer.h"
 #include "nsGkAtoms.h"
 #include "nsReadableUtils.h"
 #include "nsMathUtils.h"
@@ -198,7 +198,7 @@ const nsAttrValue::EnumTable SMILTimedElement::sRestartModeTable[] = {
     {"never", RESTART_NEVER},
     {nullptr, 0}};
 
-const nsSMILMilestone SMILTimedElement::sMaxMilestone(
+const SMILMilestone SMILTimedElement::sMaxMilestone(
     std::numeric_limits<nsSMILTime>::max(), false);
 
 // The thresholds at which point we start filtering intervals and instance times
@@ -269,7 +269,7 @@ void SMILTimedElement::SetAnimationElement(SVGAnimationElement* aElement) {
   mAnimationElement = aElement;
 }
 
-nsSMILTimeContainer* SMILTimedElement::GetTimeContainer() {
+SMILTimeContainer* SMILTimedElement::GetTimeContainer() {
   return mAnimationElement ? mAnimationElement->GetTimeContainer() : nullptr;
 }
 
@@ -295,7 +295,7 @@ dom::Element* SMILTimedElement::GetTargetElement() {
 // without first checking the restart mode.
 
 nsresult SMILTimedElement::BeginElementAt(double aOffsetSeconds) {
-  nsSMILTimeContainer* container = GetTimeContainer();
+  SMILTimeContainer* container = GetTimeContainer();
   if (!container) return NS_ERROR_FAILURE;
 
   nsSMILTime currentTime = container->GetCurrentTimeAsSMILTime();
@@ -303,7 +303,7 @@ nsresult SMILTimedElement::BeginElementAt(double aOffsetSeconds) {
 }
 
 nsresult SMILTimedElement::EndElementAt(double aOffsetSeconds) {
-  nsSMILTimeContainer* container = GetTimeContainer();
+  SMILTimeContainer* container = GetTimeContainer();
   if (!container) return NS_ERROR_FAILURE;
 
   nsSMILTime currentTime = container->GetCurrentTimeAsSMILTime();
@@ -503,7 +503,7 @@ void SMILTimedElement::DoSampleAt(nsSMILTime aContainerTime, bool aEndOnly) {
   // start) we transfer a node from another document fragment that has already
   // started. In such a case we might receive milestone samples registered with
   // the already active container.
-  if (GetTimeContainer()->IsPausedByType(nsSMILTimeContainer::PAUSE_BEGIN))
+  if (GetTimeContainer()->IsPausedByType(SMILTimeContainer::PAUSE_BEGIN))
     return;
 
   // We use an end-sample to start animation since an end-sample lets us
@@ -1993,16 +1993,16 @@ nsresult SMILTimedElement::AddInstanceTimeFromCurrentTime(
 }
 
 void SMILTimedElement::RegisterMilestone() {
-  nsSMILTimeContainer* container = GetTimeContainer();
+  SMILTimeContainer* container = GetTimeContainer();
   if (!container) return;
   MOZ_ASSERT(mAnimationElement,
              "Got a time container without an owning animation element");
 
-  nsSMILMilestone nextMilestone;
+  SMILMilestone nextMilestone;
   if (!GetNextMilestone(nextMilestone)) return;
 
   // This method is called every time we might possibly have updated our
-  // current interval, but since nsSMILTimeContainer makes no attempt to filter
+  // current interval, but since SMILTimeContainer makes no attempt to filter
   // out redundant milestones we do some rudimentary filtering here. It's not
   // perfect, but unnecessary samples are fairly cheap.
   if (nextMilestone >= mPrevRegisteredMilestone) return;
@@ -2011,7 +2011,7 @@ void SMILTimedElement::RegisterMilestone() {
   mPrevRegisteredMilestone = nextMilestone;
 }
 
-bool SMILTimedElement::GetNextMilestone(nsSMILMilestone& aNextMilestone) const {
+bool SMILTimedElement::GetNextMilestone(SMILMilestone& aNextMilestone) const {
   // Return the next key moment in our lifetime.
   //
   // XXX It may be possible in future to optimise this so that we only register
@@ -2086,7 +2086,7 @@ void SMILTimedElement::NotifyNewInterval() {
              "Attempting to notify dependents of a new interval but the "
              "interval is not set");
 
-  nsSMILTimeContainer* container = GetTimeContainer();
+  SMILTimeContainer* container = GetTimeContainer();
   if (container) {
     container->SyncPauseTime();
   }
@@ -2110,7 +2110,7 @@ void SMILTimedElement::NotifyChangedInterval(nsSMILInterval* aInterval,
                                              bool aEndObjectChanged) {
   MOZ_ASSERT(aInterval, "Null interval for change notification");
 
-  nsSMILTimeContainer* container = GetTimeContainer();
+  SMILTimeContainer* container = GetTimeContainer();
   if (container) {
     container->SyncPauseTime();
   }

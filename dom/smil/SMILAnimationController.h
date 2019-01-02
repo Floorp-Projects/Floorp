@@ -9,20 +9,20 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/SMILCompositorTable.h"
+#include "mozilla/SMILMilestone.h"
+#include "mozilla/SMILTimeContainer.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
 #include "nsITimer.h"
 #include "nsTHashtable.h"
 #include "nsHashKeys.h"
-#include "nsSMILTimeContainer.h"
-#include "nsSMILMilestone.h"
 #include "nsRefreshDriver.h"
 
-struct nsSMILTargetIdentifier;
 class nsIDocument;
 
 namespace mozilla {
+struct SMILTargetIdentifier;
 namespace dom {
 class Element;
 class SVGAnimationElement;
@@ -41,8 +41,8 @@ class SVGAnimationElement;
 // a compound document. These time containers can be paused individually or
 // here, at the document level.
 //
-class SMILAnimationController final : public nsSMILTimeContainer,
-                                        public nsARefreshObserver {
+class SMILAnimationController final : public SMILTimeContainer,
+                                      public nsARefreshObserver {
  public:
   explicit SMILAnimationController(nsIDocument* aDoc);
 
@@ -114,7 +114,7 @@ class SMILAnimationController final : public nsSMILTimeContainer,
   ~SMILAnimationController();
 
   // Typedefs
-  typedef nsPtrHashKey<nsSMILTimeContainer> TimeContainerPtrKey;
+  typedef nsPtrHashKey<SMILTimeContainer> TimeContainerPtrKey;
   typedef nsTHashtable<TimeContainerPtrKey> TimeContainerHashtable;
   typedef nsPtrHashKey<mozilla::dom::SVGAnimationElement>
       AnimationElementPtrKey;
@@ -147,11 +147,11 @@ class SMILAnimationController final : public nsSMILTimeContainer,
 
   static bool GetTargetIdentifierForAnimation(
       mozilla::dom::SVGAnimationElement* aAnimElem,
-      nsSMILTargetIdentifier& aResult);
+      SMILTargetIdentifier& aResult);
 
   // Methods for adding/removing time containers
-  virtual nsresult AddChild(nsSMILTimeContainer& aChild) override;
-  virtual void RemoveChild(nsSMILTimeContainer& aChild) override;
+  virtual nsresult AddChild(SMILTimeContainer& aChild) override;
+  virtual void RemoveChild(SMILTimeContainer& aChild) override;
 
   void FlagDocumentNeedsFlush();
 

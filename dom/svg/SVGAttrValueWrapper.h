@@ -14,13 +14,13 @@
 
 #include "nsString.h"
 
-class SVGAngle;
 class nsSVGIntegerPair;
 class nsSVGLength2;
 class nsSVGNumberPair;
 class nsSVGViewBox;
 
 namespace mozilla {
+class SVGAngle;
 class SVGLengthList;
 class SVGNumberList;
 class SVGPathData;

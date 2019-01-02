@@ -7,11 +7,15 @@
 #ifndef NS_SMILINSTANCETIME_H_
 #define NS_SMILINSTANCETIME_H_
 
+#include "nsISupportsImpl.h"
 #include "nsSMILTimeValue.h"
 
 class nsSMILInterval;
-class nsSMILTimeContainer;
 class nsSMILTimeValueSpec;
+
+namespace mozilla {
+class SMILTimeContainer;
+}
 
 //----------------------------------------------------------------------
 // nsSMILInstanceTime
@@ -55,7 +59,7 @@ class nsSMILInstanceTime final {
                               nsSMILInterval* aBaseInterval = nullptr);
 
   void Unlink();
-  void HandleChangedInterval(const nsSMILTimeContainer* aSrcContainer,
+  void HandleChangedInterval(const mozilla::SMILTimeContainer* aSrcContainer,
                              bool aBeginObjectChanged, bool aEndObjectChanged);
   void HandleDeletedInterval();
   void HandleFilteredInterval();

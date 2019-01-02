@@ -8,22 +8,24 @@
 #define NS_SMILTIMECONTAINER_H_
 
 #include "mozilla/dom/SVGAnimationElement.h"
+#include "mozilla/SMILMilestone.h"
 #include "nscore.h"
 #include "nsSMILTypes.h"
 #include "nsTPriorityQueue.h"
-#include "nsSMILMilestone.h"
 
 class nsSMILTimeValue;
 
+namespace mozilla {
+
 //----------------------------------------------------------------------
-// nsSMILTimeContainer
+// SMILTimeContainer
 //
 // Common base class for a time base that can be paused, resumed, and sampled.
 //
-class nsSMILTimeContainer {
+class SMILTimeContainer {
  public:
-  nsSMILTimeContainer();
-  virtual ~nsSMILTimeContainer();
+  SMILTimeContainer();
+  virtual ~SMILTimeContainer();
 
   /*
    * Pause request types.
@@ -158,7 +160,7 @@ class nsSMILTimeContainer {
    *
    * The callee still retains ownership of the time container.
    */
-  nsresult SetParent(nsSMILTimeContainer* aParent);
+  nsresult SetParent(SMILTimeContainer* aParent);
 
   /*
    * Registers an element for a sample at the given time.
@@ -168,7 +170,7 @@ class nsSMILTimeContainer {
    *                      aMilestone.
    * @return  true if the element was successfully added, false otherwise.
    */
-  bool AddMilestone(const nsSMILMilestone& aMilestone,
+  bool AddMilestone(const SMILMilestone& aMilestone,
                     mozilla::dom::SVGAnimationElement& aElement);
 
   /*
@@ -185,7 +187,7 @@ class nsSMILTimeContainer {
    * @return true if there exists another milestone, false otherwise in
    * which case aNextMilestone will be unmodified.
    */
-  bool GetNextMilestoneInParentTime(nsSMILMilestone& aNextMilestone) const;
+  bool GetNextMilestoneInParentTime(SMILMilestone& aNextMilestone) const;
 
   typedef nsTArray<RefPtr<mozilla::dom::SVGAnimationElement> > AnimElemArray;
 
@@ -199,7 +201,7 @@ class nsSMILTimeContainer {
    *                              appended.
    * @return true if one or more elements match, false otherwise.
    */
-  bool PopMilestoneElementsAtMilestone(const nsSMILMilestone& aMilestone,
+  bool PopMilestoneElementsAtMilestone(const SMILMilestone& aMilestone,
                                        AnimElemArray& aMatchedElements);
 
   // Cycle-collection support
@@ -221,14 +223,14 @@ class nsSMILTimeContainer {
   /*
    * Adds a child time container.
    */
-  virtual nsresult AddChild(nsSMILTimeContainer& aChild) {
+  virtual nsresult AddChild(SMILTimeContainer& aChild) {
     return NS_ERROR_FAILURE;
   }
 
   /*
    * Removes a child time container.
    */
-  virtual void RemoveChild(nsSMILTimeContainer& aChild) {}
+  virtual void RemoveChild(SMILTimeContainer& aChild) {}
 
   /*
    * Implementation helper to update the current time.
@@ -242,7 +244,7 @@ class nsSMILTimeContainer {
   void NotifyTimeChange();
 
   // The parent time container, if any
-  nsSMILTimeContainer* mParent;
+  SMILTimeContainer* mParent;
 
   // The current time established at the last call to Sample()
   nsSMILTime mCurrentTime;
@@ -273,7 +275,7 @@ class nsSMILTimeContainer {
   uint32_t mPauseState;
 
   struct MilestoneEntry {
-    MilestoneEntry(const nsSMILMilestone& aMilestone,
+    MilestoneEntry(const SMILMilestone& aMilestone,
                    mozilla::dom::SVGAnimationElement& aElement)
         : mMilestone(aMilestone), mTimebase(&aElement) {}
 
@@ -281,7 +283,7 @@ class nsSMILTimeContainer {
       return mMilestone < aOther.mMilestone;
     }
 
-    nsSMILMilestone mMilestone;  // In container time.
+    SMILMilestone mMilestone;  // In container time.
     RefPtr<mozilla::dom::SVGAnimationElement> mTimebase;
   };
 
@@ -292,5 +294,7 @@ class nsSMILTimeContainer {
   // actually do the full sample.
   nsTPriorityQueue<MilestoneEntry> mMilestoneEntries;
 };
+
+}  // namespace mozilla
 
 #endif  // NS_SMILTIMECONTAINER_H_
