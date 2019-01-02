@@ -71,12 +71,12 @@ nsGenericHTMLFrameElement::~nsGenericHTMLFrameElement() {
 
 nsIDocument* nsGenericHTMLFrameElement::GetContentDocument(
     nsIPrincipal& aSubjectPrincipal) {
-  nsCOMPtr<nsPIDOMWindowOuter> win = GetContentWindowInternal();
-  if (!win) {
+  RefPtr<BrowsingContext> bc = GetContentWindowInternal();
+  if (!bc) {
     return nullptr;
   }
 
-  nsIDocument* doc = win->GetDoc();
+  nsIDocument* doc = bc->GetDOMWindow()->GetDoc();
   if (!doc) {
     return nullptr;
   }
@@ -88,8 +88,7 @@ nsIDocument* nsGenericHTMLFrameElement::GetContentDocument(
   return doc;
 }
 
-already_AddRefed<nsPIDOMWindowOuter>
-nsGenericHTMLFrameElement::GetContentWindowInternal() {
+BrowsingContext* nsGenericHTMLFrameElement::GetContentWindowInternal() {
   EnsureFrameLoader();
 
   if (!mFrameLoader) {
@@ -101,21 +100,20 @@ nsGenericHTMLFrameElement::GetContentWindowInternal() {
     return nullptr;
   }
 
-  nsCOMPtr<nsIDocShell> doc_shell = mFrameLoader->GetDocShell(IgnoreErrors());
+  RefPtr<nsDocShell> doc_shell = mFrameLoader->GetDocShell(IgnoreErrors());
   if (!doc_shell) {
     return nullptr;
   }
 
-  nsCOMPtr<nsPIDOMWindowOuter> win = doc_shell->GetWindow();
-  return win.forget();
+  return doc_shell->GetBrowsingContext();
 }
 
 Nullable<WindowProxyHolder> nsGenericHTMLFrameElement::GetContentWindow() {
-  nsCOMPtr<nsPIDOMWindowOuter> win = GetContentWindowInternal();
-  if (!win) {
+  RefPtr<BrowsingContext> bc = GetContentWindowInternal();
+  if (!bc) {
     return nullptr;
   }
-  return WindowProxyHolder(win.forget());
+  return WindowProxyHolder(bc);
 }
 
 void nsGenericHTMLFrameElement::EnsureFrameLoader() {
@@ -127,7 +125,8 @@ void nsGenericHTMLFrameElement::EnsureFrameLoader() {
   // Strangely enough, this method doesn't actually ensure that the
   // frameloader exists.  It's more of a best-effort kind of thing.
   mFrameLoader = nsFrameLoader::Create(
-      this, nsPIDOMWindowOuter::From(mOpenerWindow), mNetworkCreated);
+      this, mOpenerWindow ? mOpenerWindow->GetDOMWindow() : nullptr,
+      mNetworkCreated);
 }
 
 nsresult nsGenericHTMLFrameElement::CreateRemoteFrameLoader(

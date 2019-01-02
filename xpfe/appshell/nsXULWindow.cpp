@@ -2027,7 +2027,7 @@ NS_IMETHODIMP nsXULWindow::CreateNewContentWindow(int32_t aChromeFlags,
     nsCOMPtr<nsPIDOMWindowOuter> window = docShell->GetWindow();
     MOZ_ASSERT(window);
     window->SetOpenerForInitialContentBrowser(
-        nsPIDOMWindowOuter::From(aOpener));
+        nsPIDOMWindowOuter::From(aOpener)->GetBrowsingContext());
   }
 
   xulWin->LockUntilChromeLoad();

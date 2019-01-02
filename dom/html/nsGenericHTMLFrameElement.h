@@ -128,7 +128,7 @@ class nsGenericHTMLFrameElement : public nsGenericHTMLElement,
                                           bool aNotify) override;
 
   RefPtr<nsFrameLoader> mFrameLoader;
-  nsCOMPtr<nsPIDOMWindowOuter> mOpenerWindow;
+  RefPtr<mozilla::dom::BrowsingContext> mOpenerWindow;
 
   nsCOMPtr<nsIPrincipal> mSrcTriggeringPrincipal;
 
@@ -170,7 +170,7 @@ class nsGenericHTMLFrameElement : public nsGenericHTMLElement,
                             nsIPrincipal* aMaybeScriptedPrincipal,
                             bool aNotify);
 
-  already_AddRefed<nsPIDOMWindowOuter> GetContentWindowInternal();
+  mozilla::dom::BrowsingContext* GetContentWindowInternal();
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsGenericHTMLFrameElement,

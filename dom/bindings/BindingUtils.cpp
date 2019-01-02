@@ -1128,7 +1128,7 @@ bool VariantToJsval(JSContext* aCx, nsIVariant* aVariant,
 
 bool WrapObject(JSContext* cx, const WindowProxyHolder& p,
                 JS::MutableHandle<JS::Value> rval) {
-  return ToJSValue(cx, p.get(), rval);
+  return ToJSValue(cx, p, rval);
 }
 
 static int CompareIdsAtIndices(const void* aElement1, const void* aElement2,
@@ -3235,7 +3235,8 @@ nsresult UnwrapWindowProxyArg(JSContext* cx, JS::Handle<JSObject*> src,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsPIDOMWindowOuter> outer = inner->GetOuterWindow();
-  ppArg = outer.forget();
+  RefPtr<BrowsingContext> bc = outer ? outer->GetBrowsingContext() : nullptr;
+  ppArg = bc.forget();
   return NS_OK;
 }
 

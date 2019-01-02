@@ -40,7 +40,7 @@ class TimeEvent final : public Event {
     if (!mView) {
       return nullptr;
     }
-    return WindowProxyHolder(mView);
+    return WindowProxyHolder(mView->GetBrowsingContext());
   }
 
   TimeEvent* AsTimeEvent() final { return this; }

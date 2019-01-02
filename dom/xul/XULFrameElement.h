@@ -23,6 +23,8 @@ class nsFrameLoader;
 namespace mozilla {
 namespace dom {
 
+class BrowsingContext;
+
 class XULFrameElement final : public nsXULElement, public nsIFrameLoaderOwner {
  public:
   explicit XULFrameElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
@@ -32,7 +34,7 @@ class XULFrameElement final : public nsXULElement, public nsIFrameLoaderOwner {
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(XULFrameElement, nsXULElement)
 
   // XULFrameElement.webidl
-  nsIDocShell* GetDocShell();
+  nsDocShell* GetDocShell();
   already_AddRefed<nsIWebNavigation> GetWebNavigation();
   Nullable<WindowProxyHolder> GetContentWindow();
   nsIDocument* GetContentDocument();
@@ -75,7 +77,7 @@ class XULFrameElement final : public nsXULElement, public nsIFrameLoaderOwner {
   virtual ~XULFrameElement() {}
 
   RefPtr<nsFrameLoader> mFrameLoader;
-  nsCOMPtr<nsPIDOMWindowOuter> mOpener;
+  RefPtr<BrowsingContext> mOpener;
 
   JSObject* WrapNode(JSContext* aCx,
                      JS::Handle<JSObject*> aGivenProto) override;
