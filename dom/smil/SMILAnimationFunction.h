@@ -7,10 +7,10 @@
 #ifndef NS_SMILANIMATIONFUNCTION_H_
 #define NS_SMILANIMATIONFUNCTION_H_
 
+#include "mozilla/SMILTargetIdentifier.h"
 #include "nsISMILAttr.h"
 #include "nsGkAtoms.h"
 #include "nsString.h"
-#include "nsSMILTargetIdentifier.h"
 #include "nsSMILTimeValue.h"
 #include "nsSMILKeySpline.h"
 #include "nsSMILValue.h"
@@ -214,12 +214,12 @@ class SMILAnimationFunction {
    * functions have changed value or target since the last sample.  If none of
    * them have, then the compositor doesn't need to do anything.)
    *
-   * @param aNewTarget A nsSMILTargetIdentifier representing the animation
+   * @param aNewTarget A SMILTargetIdentifier representing the animation
    *                   target of this function for this sample.
    * @return  true if |aNewTarget| is different from the old cached value;
    *          otherwise, false.
    */
-  bool UpdateCachedTarget(const nsSMILTargetIdentifier& aNewTarget);
+  bool UpdateCachedTarget(const SMILTargetIdentifier& aNewTarget);
 
   /**
    * Returns true if this function was skipped in the previous sample (because
