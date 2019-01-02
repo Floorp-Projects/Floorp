@@ -10,6 +10,9 @@ permalink: /changelog/
 [Milestone](https://github.com/mozilla-mobile/android-components/milestone/40?closed=1),
 [API reference](https://mozilla-mobile.github.io/android-components/api/0.38.0/index)
 
+* **browser-engine-system**
+  * Added support for js alerts on SystemEngineView.
+
 * Compiled against:
   * Android (SDK: 28, Support Libraries: 28.0.0)
   * Kotlin (Stdlib: 1.3.10, Coroutines: 1.0.1)

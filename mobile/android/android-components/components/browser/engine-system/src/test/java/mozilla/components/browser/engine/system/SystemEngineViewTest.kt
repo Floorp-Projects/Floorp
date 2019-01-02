@@ -12,6 +12,7 @@ import android.net.http.SslError
 import android.os.Bundle
 import android.os.Message
 import android.view.View
+import android.webkit.JsResult
 import android.webkit.SslErrorHandler
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceError
@@ -24,6 +25,8 @@ import android.webkit.WebView.HitTestResult
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.core.app.ApplicationProvider.getApplicationContext
 import kotlinx.coroutines.runBlocking
+import mozilla.components.browser.engine.system.SystemEngineView.Companion.MAX_SUCCESSIVE_DIALOG_COUNT
+import mozilla.components.browser.engine.system.SystemEngineView.Companion.MAX_SUCCESSIVE_DIALOG_SECONDS_LIMIT
 import mozilla.components.browser.engine.system.matcher.UrlMatcher
 import mozilla.components.browser.errorpages.ErrorType
 import mozilla.components.concept.engine.EngineSession
@@ -55,6 +58,10 @@ import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyZeroInteractions
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
+import java.util.Calendar
+import java.util.Calendar.SECOND
+import java.util.Calendar.YEAR
+import java.util.Date
 
 @RunWith(RobolectricTestRunner::class)
 class SystemEngineViewTest {
@@ -1025,5 +1032,168 @@ class SystemEngineViewTest {
 
         engineView.render(SystemEngineSession(getApplicationContext()))
         assertFalse(engineView.onLongClick(null))
+    }
+    @Test
+    fun `Calling onJsAlert must provide an Alert PromptRequest`() {
+        val context = getApplicationContext<Context>()
+        val engineSession = SystemEngineSession(context)
+        val engineView = SystemEngineView(context)
+        var request: PromptRequest? = null
+
+        engineSession.register(object : EngineSession.Observer {
+            override fun onPromptRequest(promptRequest: PromptRequest) {
+                request = promptRequest
+            }
+        })
+
+        engineView.render(engineSession)
+
+        val mockJSResult = mock<JsResult>()
+
+        engineSession.webView.webChromeClient!!.onJsAlert(mock(), "http://www.mozilla.org", "message", mockJSResult)
+
+        val alertRequest = request as PromptRequest.Alert
+        assertTrue(request is PromptRequest.Alert)
+
+        assertTrue(alertRequest.title.contains("mozilla.org"))
+        assertEquals(alertRequest.hasShownManyDialogs, false)
+        assertEquals(alertRequest.message, "message")
+
+        alertRequest.onShouldShowNoMoreDialogs(true)
+        verify(mockJSResult).confirm()
+        assertEquals(engineView.jsAlertCount, 1)
+
+        alertRequest.onDismiss()
+        verify(mockJSResult).cancel()
+
+        alertRequest.onShouldShowNoMoreDialogs(true)
+        assertEquals(engineView.shouldShowMoreDialogs, false)
+
+        engineView.lastDialogShownAt = engineView.lastDialogShownAt.add(YEAR, -1)
+        engineSession.webView.webChromeClient!!.onJsAlert(mock(), "http://www.mozilla.org", "message", mockJSResult)
+
+        assertEquals(engineView.jsAlertCount, 1)
+        verify(mockJSResult, times(2)).cancel()
+
+        engineView.lastDialogShownAt = engineView.lastDialogShownAt.add(YEAR, -1)
+        engineView.jsAlertCount = 100
+        engineView.shouldShowMoreDialogs = true
+
+        engineSession.webView.webChromeClient!!.onJsAlert(mock(), "http://www.mozilla.org", null, mockJSResult)
+
+        assertTrue((request as PromptRequest.Alert).hasShownManyDialogs)
+
+        engineSession.currentUrl = "http://www.mozilla.org"
+        engineSession.webView.webChromeClient!!.onJsAlert(mock(), null, "message", mockJSResult)
+        assertTrue((request as PromptRequest.Alert).title.contains("mozilla.org"))
+    }
+
+    @Test
+    fun `are dialogs by count`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val engineView = SystemEngineView(context)
+
+        with(engineView) {
+
+            assertFalse(areDialogsAbusedByCount())
+
+            jsAlertCount = MAX_SUCCESSIVE_DIALOG_COUNT + 1
+
+            assertTrue(areDialogsAbusedByCount())
+
+            jsAlertCount = MAX_SUCCESSIVE_DIALOG_COUNT - 1
+
+            assertFalse(areDialogsAbusedByCount())
+        }
+    }
+
+    @Test
+    fun `are dialogs by time`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val engineView = SystemEngineView(context)
+
+        with(engineView) {
+
+            assertFalse(areDialogsAbusedByTime())
+
+            lastDialogShownAt = Date()
+
+            jsAlertCount = 1
+
+            assertTrue(areDialogsAbusedByTime())
+        }
+    }
+
+    @Test
+    fun `are dialogs being abused`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val engineView = SystemEngineView(context)
+
+        with(engineView) {
+
+            assertFalse(areDialogsBeingAbused())
+
+            jsAlertCount = MAX_SUCCESSIVE_DIALOG_COUNT + 1
+
+            assertTrue(areDialogsBeingAbused())
+
+            jsAlertCount = 0
+            lastDialogShownAt = Date()
+
+            assertFalse(areDialogsBeingAbused())
+
+            jsAlertCount = 1
+            lastDialogShownAt = Date()
+
+            assertTrue(areDialogsBeingAbused())
+        }
+    }
+
+    @Test
+    fun `update JSDialog abused state`() {
+
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val engineView = SystemEngineView(context)
+
+        with(engineView) {
+            val thresholdInSeconds = MAX_SUCCESSIVE_DIALOG_SECONDS_LIMIT + 1
+            lastDialogShownAt = lastDialogShownAt.add(SECOND, -thresholdInSeconds)
+
+            val initialDate = lastDialogShownAt
+            updateJSDialogAbusedState()
+
+            assertEquals(jsAlertCount, 1)
+            assertTrue(lastDialogShownAt.after(initialDate))
+
+            lastDialogShownAt = lastDialogShownAt.add(SECOND, -thresholdInSeconds)
+            updateJSDialogAbusedState()
+            assertEquals(jsAlertCount, 1)
+        }
+    }
+
+    @Test
+    fun `js alert abuse state must be reset every time a page is started`() {
+
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val engineSession = SystemEngineSession(context)
+        val engineView = SystemEngineView(context)
+
+        with(engineView) {
+            jsAlertCount = 20
+            shouldShowMoreDialogs = false
+
+            render(engineSession)
+            engineSession.webView.webViewClient!!.onPageStarted(mock(), "www.mozilla.org", null)
+
+            assertEquals(jsAlertCount, 0)
+            assertTrue(shouldShowMoreDialogs)
+        }
+    }
+
+    private fun Date.add(timeUnit: Int, amountOfTime: Int): Date {
+        val calendar = Calendar.getInstance()
+        calendar.time = this
+        calendar.add(timeUnit, amountOfTime)
+        return calendar.time
     }
 }
