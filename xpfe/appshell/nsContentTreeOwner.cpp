@@ -33,6 +33,7 @@
 #include "nsWindowWatcher.h"
 #include "mozilla/BrowserElementParent.h"
 #include "mozilla/NullPrincipal.h"
+#include "nsDocShell.h"
 #include "nsDocShellLoadState.h"
 
 #include "nsIScriptObjectPrincipal.h"
@@ -704,7 +705,9 @@ nsContentTreeOwner::ProvideWindow(
     mozIDOMWindowProxy** aReturn) {
   NS_ENSURE_ARG_POINTER(aParent);
 
-  auto* parent = nsPIDOMWindowOuter::From(aParent);
+  auto* parentWin = nsPIDOMWindowOuter::From(aParent);
+  dom::BrowsingContext* parent =
+      parentWin ? parentWin->GetBrowsingContext() : nullptr;
 
   *aReturn = nullptr;
 
@@ -759,7 +762,8 @@ nsContentTreeOwner::ProvideWindow(
   }
 
   int32_t openLocation = nsWindowWatcher::GetWindowOpenLocation(
-      parent, aChromeFlags, aCalledFromJS, aPositionSpecified, aSizeSpecified);
+      parentWin, aChromeFlags, aCalledFromJS, aPositionSpecified,
+      aSizeSpecified);
 
   if (openLocation != nsIBrowserDOMWindow::OPEN_NEWTAB &&
       openLocation != nsIBrowserDOMWindow::OPEN_CURRENTWINDOW) {

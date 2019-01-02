@@ -15,7 +15,7 @@ add_task(async function() {
   await startPicker(toolbox);
 
   info("Start using the picker by hovering over nodes");
-  const onHover = toolbox.once("picker-node-hovered");
+  const onHover = toolbox.inspector.nodePicker.once("picker-node-hovered");
   testActor.synthesizeMouse({
     options: {type: "mousemove"},
     center: true,
@@ -24,7 +24,7 @@ add_task(async function() {
   await onHover;
 
   info("Press escape and wait for the picker to stop");
-  const onPickerStopped = toolbox.once("picker-stopped");
+  const onPickerStopped = toolbox.inspector.nodePicker.once("picker-node-canceled");
   testActor.synthesizeKey({
     key: "VK_ESCAPE",
     options: {},

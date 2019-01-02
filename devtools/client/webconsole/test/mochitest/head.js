@@ -963,13 +963,14 @@ function isReverseSearchInputFocused(hud) {
  */
 async function selectNodeWithPicker(toolbox, testActor, selector) {
   const inspector = toolbox.getPanel("inspector");
+  const inspectorFront = inspector.inspector;
 
-  const onPickerStarted = inspector.toolbox.once("picker-started");
-  inspector.toolbox.highlighterUtils.startPicker();
+  const onPickerStarted = inspectorFront.nodePicker.once("picker-started");
+  inspectorFront.nodePicker.start();
   await onPickerStarted;
 
   info(`Picker mode started, now clicking on "${selector}" to select that node`);
-  const onPickerStopped = toolbox.once("picker-stopped");
+  const onPickerStopped = inspectorFront.nodePicker.once("picker-stopped");
   const onInspectorUpdated = inspector.once("inspector-updated");
 
   testActor.synthesizeMouse({

@@ -12,7 +12,7 @@
 #ifndef nsFrameLoader_h_
 #define nsFrameLoader_h_
 
-#include "nsIDocShell.h"
+#include "nsDocShell.h"
 #include "nsStringFwd.h"
 #include "nsIFrameLoaderOwner.h"
 #include "nsPoint.h"
@@ -118,7 +118,7 @@ class nsFrameLoader final : public nsStubMutationObserver,
 
   // WebIDL methods
 
-  nsIDocShell* GetDocShell(mozilla::ErrorResult& aRv);
+  nsDocShell* GetDocShell(mozilla::ErrorResult& aRv);
 
   already_AddRefed<nsITabParent> GetTabParent();
 
@@ -429,7 +429,7 @@ class nsFrameLoader final : public nsStubMutationObserver,
 
   nsresult PopulateUserContextIdFromAttribute(mozilla::OriginAttributes& aAttr);
 
-  nsCOMPtr<nsIDocShell> mDocShell;
+  RefPtr<nsDocShell> mDocShell;
   nsCOMPtr<nsIURI> mURIToLoad;
   nsCOMPtr<nsIPrincipal> mTriggeringPrincipal;
   mozilla::dom::Element* mOwnerContent;  // WEAK

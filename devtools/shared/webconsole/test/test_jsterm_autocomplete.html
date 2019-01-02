@@ -128,6 +128,11 @@
       await test(state.client);
     }
 
+    // Null out proxy1 and proxy2: the proxy handlers use scripted functions
+    // that can keep the debugger sandbox alive longer than necessary via their
+    // environment chain (due to the webconsole helper functions defined there).
+    await state.client.evaluateJSAsync(`this.proxy1 = null; this.proxy2 = null;`);
+
     await closeDebugger(state);
   }
 
