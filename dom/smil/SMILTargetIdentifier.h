@@ -9,8 +9,10 @@
 
 #include "mozilla/dom/Element.h"
 
+namespace mozilla {
+
 /**
- * Struct: nsSMILTargetIdentifier
+ * Struct: SMILTargetIdentifier
  *
  * Tuple of: { Animated Element, Attribute Name }
  *
@@ -22,13 +24,13 @@
  * future, and we need to make sure their target isn't deleted in that time.
  */
 
-struct nsSMILTargetIdentifier {
-  nsSMILTargetIdentifier()
+struct SMILTargetIdentifier {
+  SMILTargetIdentifier()
       : mElement(nullptr),
         mAttributeName(nullptr),
         mAttributeNamespaceID(kNameSpaceID_Unknown) {}
 
-  inline bool Equals(const nsSMILTargetIdentifier& aOther) const {
+  inline bool Equals(const SMILTargetIdentifier& aOther) const {
     return (aOther.mElement == mElement &&
             aOther.mAttributeName == mAttributeName &&
             aOther.mAttributeNamespaceID == mAttributeNamespaceID);
@@ -55,14 +57,14 @@ class nsSMILWeakTargetIdentifier {
   nsSMILWeakTargetIdentifier() : mElement(nullptr), mAttributeName(nullptr) {}
 
   // Allow us to update a weak identifier to match a given non-weak identifier
-  nsSMILWeakTargetIdentifier& operator=(const nsSMILTargetIdentifier& aOther) {
+  nsSMILWeakTargetIdentifier& operator=(const SMILTargetIdentifier& aOther) {
     mElement = aOther.mElement;
     mAttributeName = aOther.mAttributeName;
     return *this;
   }
 
   // Allow for comparison vs. non-weak identifier
-  inline bool Equals(const nsSMILTargetIdentifier& aOther) const {
+  inline bool Equals(const SMILTargetIdentifier& aOther) const {
     return (aOther.mElement == mElement &&
             aOther.mAttributeName == mAttributeName);
   }
@@ -71,5 +73,7 @@ class nsSMILWeakTargetIdentifier {
   const nsIContent* mElement;
   const nsAtom* mAttributeName;
 };
+
+}  // namespace mozilla
 
 #endif  // NS_SMILTARGETIDENTIFIER_H_

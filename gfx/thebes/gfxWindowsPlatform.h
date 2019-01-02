@@ -7,7 +7,7 @@
 #define GFX_WINDOWS_PLATFORM_H
 
 /**
- * XXX to get CAIRO_HAS_D2D_SURFACE, CAIRO_HAS_DWRITE_FONT
+ * XXX to get CAIRO_HAS_DWRITE_FONT
  * and cairo_win32_scaled_font_select_font
  */
 #include "cairo-win32.h"
