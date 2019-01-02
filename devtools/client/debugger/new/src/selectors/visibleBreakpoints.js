@@ -72,13 +72,10 @@ export const getVisibleBreakpoints: Selector<?(Breakpoint[])> = createSelector(
  */
 export const getFirstVisibleBreakpoints: Selector<
   Breakpoint[]
-> = createSelector(
-  getVisibleBreakpoints,
-  breakpoints => {
-    if (!breakpoints) {
-      return [];
-    }
-
-    return (uniqBy(sortBreakpoints(breakpoints), bp => bp.location.line): any);
+> = createSelector(getVisibleBreakpoints, breakpoints => {
+  if (!breakpoints) {
+    return [];
   }
-);
+
+  return (uniqBy(sortBreakpoints(breakpoints), bp => bp.location.line): any);
+});
