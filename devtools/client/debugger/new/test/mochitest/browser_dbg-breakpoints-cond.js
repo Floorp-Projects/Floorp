@@ -66,15 +66,16 @@ add_task(async function() {
 
   await setConditionalBreakpoint(dbg, 5, "1");
   await waitForDispatch(dbg, "ADD_BREAKPOINT");
-  
+
   let bp = findBreakpoint(dbg, "simple2", 5);
   is(bp.condition, "1", "breakpoint is created with the condition");
   assertEditorBreakpoint(dbg, 5, true);
 
+  // Edit the conditional breakpoint set above
   await setConditionalBreakpoint(dbg, 5, "2");
   await waitForDispatch(dbg, "SET_BREAKPOINT_CONDITION");
   bp = findBreakpoint(dbg, "simple2", 5);
-  is(bp.condition, "2", "breakpoint is created with the condition");
+  is(bp.condition, "12", "breakpoint is created with the condition");
   assertEditorBreakpoint(dbg, 5, true);
 
   clickElement(dbg, "gutter", 5);
