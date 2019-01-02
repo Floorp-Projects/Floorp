@@ -374,11 +374,14 @@ int32_t HTMLObjectElement::TabIndexDefault() {
   return IsFocusableForTabIndex() ? 0 : -1;
 }
 
-nsPIDOMWindowOuter* HTMLObjectElement::GetContentWindow(
+Nullable<WindowProxyHolder> HTMLObjectElement::GetContentWindow(
     nsIPrincipal& aSubjectPrincipal) {
   nsIDocument* doc = GetContentDocument(aSubjectPrincipal);
   if (doc) {
-    return doc->GetWindow();
+    nsPIDOMWindowOuter* win = doc->GetWindow();
+    if (win) {
+      return WindowProxyHolder(win->GetBrowsingContext());
+    }
   }
 
   return nullptr;

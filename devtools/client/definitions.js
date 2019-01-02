@@ -85,7 +85,7 @@ Tools.inspector = {
 
   preventClosingOnKey: true,
   onkey: function(panel, toolbox) {
-    toolbox.highlighterUtils.togglePicker();
+    toolbox.inspector.nodePicker.togglePicker();
   },
 
   isTargetSupported: function(target) {

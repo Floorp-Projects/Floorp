@@ -110,8 +110,8 @@ def install(src, dest):
                 return _install_url(src, dest)
             except Exception:
                 exc, val, tb = sys.exc_info()
-                msg = "{} ({})".format(msg, val)
-                reraise(InvalidSource, msg, tb)
+                error = InvalidSource("{} ({})".format(msg, val))
+                reraise(InvalidSource, error, tb)
         raise InvalidSource(msg)
 
     src = os.path.realpath(src)
@@ -285,13 +285,10 @@ def _install_dmg(src, dest):
         # According to the Apple doc, the hdiutil output is stable and is based on the tab
         # separators
         # Therefor, $3 should give us the mounted path
-        proc = subprocess.Popen('hdiutil attach -nobrowse -noautoopen "%s"'
-                                '|grep /Volumes/'
-                                '|awk \'BEGIN{FS="\t"} {print $3}\'' % src,
-                                shell=True,
-                                stdout=subprocess.PIPE)
-
-        appDir = proc.communicate()[0].strip()
+        appDir = subprocess.check_output('hdiutil attach -nobrowse -noautoopen "%s"'
+                                         '|grep /Volumes/'
+                                         '|awk \'BEGIN{FS="\t"} {print $3}\'' % str(src),
+                                         shell=True).strip().decode('ascii')
 
         for appFile in os.listdir(appDir):
             if appFile.endswith('.app'):
@@ -310,8 +307,8 @@ def _install_dmg(src, dest):
 
     finally:
         if appDir:
-            subprocess.call('hdiutil detach "%s" -quiet' % appDir,
-                            shell=True)
+            subprocess.check_call('hdiutil detach "%s" -quiet' % appDir,
+                                  shell=True)
 
     return dest
 
@@ -334,11 +331,7 @@ def _install_exe(src, dest):
     os.environ['__compat_layer'] = 'RunAsInvoker'
     cmd = '"%s" /extractdir=%s' % (src, os.path.realpath(dest))
 
-    # As long as we support Python 2.4 check_call will not be available.
-    result = subprocess.call(cmd)
-
-    if result is not 0:
-        raise Exception('Execution of installer failed.')
+    subprocess.check_call(cmd)
 
     return dest
 

@@ -8,6 +8,8 @@
 #include "mozilla/dom/EventTarget.h"
 #include "mozilla/dom/EventTargetBinding.h"
 #include "mozilla/dom/ConstructibleEventTarget.h"
+#include "mozilla/dom/Nullable.h"
+#include "mozilla/dom/WindowProxyHolder.h"
 #include "nsIGlobalObject.h"
 #include "nsThreadUtils.h"
 
@@ -180,6 +182,15 @@ void EventTarget::DispatchEvent(Event& aEvent, ErrorResult& aRv) {
   // The caller type doesn't really matter if we don't care about the
   // return value, but let's be safe and pass NonSystem.
   Unused << DispatchEvent(aEvent, CallerType::NonSystem, IgnoreErrors());
+}
+
+Nullable<WindowProxyHolder> EventTarget::GetOwnerGlobalForBindings() {
+  nsPIDOMWindowOuter* win = GetOwnerGlobalForBindingsInternal();
+  if (!win) {
+    return nullptr;
+  }
+
+  return WindowProxyHolder(win->GetBrowsingContext());
 }
 
 }  // namespace dom

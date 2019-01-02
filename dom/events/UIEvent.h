@@ -9,8 +9,11 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/Event.h"
+#include "mozilla/dom/Nullable.h"
 #include "mozilla/dom/UIEventBinding.h"
+#include "mozilla/dom/WindowProxyHolder.h"
 #include "nsDeviceContext.h"
+#include "nsDocShell.h"
 #include "nsLayoutUtils.h"
 #include "nsPresContext.h"
 
@@ -47,7 +50,12 @@ class UIEvent : public Event {
                    bool cancelableArg, nsGlobalWindowInner* viewArg,
                    int32_t detailArg);
 
-  nsPIDOMWindowOuter* GetView() const { return mView; }
+  Nullable<WindowProxyHolder> GetView() const {
+    if (!mView) {
+      return nullptr;
+    }
+    return WindowProxyHolder(mView->GetBrowsingContext());
+  }
 
   int32_t Detail() const { return mDetail; }
 

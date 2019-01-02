@@ -8,6 +8,7 @@
 #include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/Exceptions.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/dom/WindowProxyHolder.h"
 #include "nsAString.h"
 #include "nsContentUtils.h"
 #include "nsStringBuffer.h"
@@ -58,6 +59,33 @@ bool ToJSValue(JSContext* aCx, Promise& aArgument,
                JS::MutableHandle<JS::Value> aValue) {
   aValue.setObject(*aArgument.PromiseObj());
   return MaybeWrapObjectValue(aCx, aValue);
+}
+
+bool ToJSValue(JSContext* aCx, const WindowProxyHolder& aArgument,
+               JS::MutableHandle<JS::Value> aValue) {
+  BrowsingContext* bc = aArgument.get();
+  if (!bc) {
+    aValue.setNull();
+    return true;
+  }
+  JS::Rooted<JSObject*> windowProxy(aCx);
+  if (bc->GetDocShell()) {
+    windowProxy = bc->GetWindowProxy();
+    if (!windowProxy) {
+      nsPIDOMWindowOuter* window = bc->GetDOMWindow();
+      if (!window->EnsureInnerWindow()) {
+        return Throw(aCx, NS_ERROR_UNEXPECTED);
+      }
+      windowProxy = bc->GetWindowProxy();
+    }
+    return ToJSValue(aCx, windowProxy, aValue);
+  }
+
+  if (!GetRemoteOuterWindowProxy(aCx, bc, &windowProxy)) {
+    return false;
+  }
+  aValue.setObjectOrNull(windowProxy);
+  return true;
 }
 
 }  // namespace dom

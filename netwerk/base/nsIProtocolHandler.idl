@@ -284,22 +284,16 @@ interface nsIProtocolHandler : nsISupports
     const unsigned long URI_NON_PERSISTABLE = (1<<14);
 
     /**
-     * This protocol handler forbids accessing cookies e.g. for mail related
-     * protocols.
-     */
-    const unsigned long URI_FORBIDS_COOKIE_ACCESS = (1<<15);
-
-    /**
      * URIs for this protocol require the webapps permission on the principal
      * when opening URIs for a different domain. See bug#773886
      */
-    const unsigned long URI_CROSS_ORIGIN_NEEDS_WEBAPPS_PERM = (1<<16);
+    const unsigned long URI_CROSS_ORIGIN_NEEDS_WEBAPPS_PERM = (1<<15);
 
     /**
      * Channels for this protocol don't need to spin the event loop to handle
      * Open() and reads on the resulting stream.
      */
-    const unsigned long URI_SYNC_LOAD_IS_OK = (1<<17);
+    const unsigned long URI_SYNC_LOAD_IS_OK = (1<<16);
 
     /**
      * All the origins whose URI has this scheme are considered potentially
@@ -308,14 +302,14 @@ interface nsIProtocolHandler : nsISupports
      * a priori secure, and implementations may consider other,
      * implementation-specific URI schemes as secure.
      */
-    const unsigned long URI_IS_POTENTIALLY_TRUSTWORTHY = (1<<18);
+    const unsigned long URI_IS_POTENTIALLY_TRUSTWORTHY = (1<<17);
 
     /**
      * This URI may be fetched and the contents are visible to anyone. This is
      * semantically equivalent to the resource being served with all-access CORS
      * headers.
      */
-    const unsigned long URI_FETCHABLE_BY_ANYONE = (1 << 19);
+    const unsigned long URI_FETCHABLE_BY_ANYONE = (1 << 18);
 
     /**
      * If this flag is set, then the origin for this protocol is the full URI
@@ -324,16 +318,16 @@ interface nsIProtocolHandler : nsISupports
      * Note: this is not supported in Firefox.  It is currently only available
      * in Thunderbird and SeaMonkey.
      */
-    const unsigned long ORIGIN_IS_FULL_SPEC = (1 << 20);
+    const unsigned long ORIGIN_IS_FULL_SPEC = (1 << 19);
 
     /**
      * If this flag is set, the URI does not always allow content using the same
      * protocol to link to it.
      */
-    const unsigned long URI_SCHEME_NOT_SELF_LINKABLE = (1 << 21);
+    const unsigned long URI_SCHEME_NOT_SELF_LINKABLE = (1 << 20);
 
     /**
      * The URIs for this protocol can be loaded by extensions.
      */
-    const unsigned long URI_LOADABLE_BY_EXTENSIONS = (1 << 22);
+    const unsigned long URI_LOADABLE_BY_EXTENSIONS = (1 << 21);
 };

@@ -539,7 +539,7 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
   uint32_t GetMarkedCCGeneration() { return mMarkedCCGeneration; }
 
   mozilla::dom::Navigator* Navigator();
-  virtual mozilla::dom::Location* GetLocation() = 0;
+  virtual mozilla::dom::Location* Location() = 0;
 
   virtual nsresult GetControllers(nsIControllers** aControllers) = 0;
 
@@ -883,7 +883,10 @@ class nsPIDOMWindowOuter : public mozIDOMWindowProxy {
    */
   inline nsIDocShell* GetDocShell() const;
 
-  mozilla::dom::BrowsingContext* GetBrowsingContext() const;
+  /**
+   * Get the browsing context in this window.
+   */
+  inline mozilla::dom::BrowsingContext* GetBrowsingContext() const;
 
   /**
    * Set a new document in the window. Calling this method will in most cases
@@ -1103,8 +1106,10 @@ class nsPIDOMWindowOuter : public mozIDOMWindowProxy {
    * and TakeOpenerForInitialContentBrowser is used by nsXULElement in order to
    * take the value set earlier, and null out the value in the window.
    */
-  void SetOpenerForInitialContentBrowser(nsPIDOMWindowOuter* aOpener);
-  already_AddRefed<nsPIDOMWindowOuter> TakeOpenerForInitialContentBrowser();
+  void SetOpenerForInitialContentBrowser(
+      mozilla::dom::BrowsingContext* aOpener);
+  already_AddRefed<mozilla::dom::BrowsingContext>
+  TakeOpenerForInitialContentBrowser();
 
  protected:
   // Lazily instantiate an about:blank document if necessary, and if
@@ -1129,8 +1134,9 @@ class nsPIDOMWindowOuter : public mozIDOMWindowProxy {
 
   nsCOMPtr<mozilla::dom::Element> mFrameElement;
 
-  // This reference is used by nsGlobalWindow.
+  // These references are used by nsGlobalWindow.
   nsCOMPtr<nsIDocShell> mDocShell;
+  RefPtr<mozilla::dom::BrowsingContext> mBrowsingContext;
 
   uint32_t mModalStateDepth;
 
@@ -1180,7 +1186,7 @@ class nsPIDOMWindowOuter : public mozIDOMWindowProxy {
 
   mozilla::dom::LargeAllocStatus mLargeAllocStatus;
 
-  nsCOMPtr<nsPIDOMWindowOuter> mOpenerForInitialContentBrowser;
+  RefPtr<mozilla::dom::BrowsingContext> mOpenerForInitialContentBrowser;
 
   using PermissionInfo = std::pair<bool, mozilla::TimeStamp>;
   nsDataHashtable<nsStringHashKey, PermissionInfo> mAutoplayTemporaryPermission;

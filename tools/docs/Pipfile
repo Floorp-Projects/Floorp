@@ -8,6 +8,7 @@ backports-abc = "*"
 boto3 = "*"
 livereload = "*"
 recommonmark = "*"
+scandir = "*"
 singledispatch = "*"
 sphinx = "*"
 # Upgrading to 2.5 causes an intermittent in the Doc task
