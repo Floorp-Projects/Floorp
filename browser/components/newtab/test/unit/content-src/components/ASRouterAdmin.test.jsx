@@ -1,4 +1,4 @@
-import {ASRouterAdminInner} from "content-src/components/ASRouterAdmin/ASRouterAdmin";
+import {ASRouterAdmin} from "content-src/components/ASRouterAdmin/ASRouterAdmin";
 import {GlobalOverrider} from "test/unit/utils";
 import React from "react";
 import {shallow} from "enzyme";
@@ -9,7 +9,6 @@ describe("ASRouterAdmin", () => {
   let sendMessageStub;
   let addListenerStub;
   let removeListenerStub;
-  let wrapper;
   let FAKE_PROVIDER_PREF = [{
     enabled: true,
     id: "snippets_local_testing",
@@ -33,43 +32,37 @@ describe("ASRouterAdmin", () => {
     globals.set("RPMSendAsyncMessage", sendMessageStub);
     globals.set("RPMAddMessageListener", addListenerStub);
     globals.set("RPMRemoveMessageListener", removeListenerStub);
-
-    wrapper = shallow(<ASRouterAdminInner location={{routes: [""]}} />);
   });
   afterEach(() => {
     sandbox.restore();
     globals.restore();
   });
   it("should render ASRouterAdmin component", () => {
+    const wrapper = shallow(<ASRouterAdmin />);
     assert.ok(wrapper.exists());
   });
   it("should send ADMIN_CONNECT_STATE on mount", () => {
+    shallow(<ASRouterAdmin />);
+
     assert.calledOnce(sendMessageStub);
     assert.propertyVal(sendMessageStub.firstCall.args[1], "type", "ADMIN_CONNECT_STATE");
   });
   it("should set a listener on mount", () => {
+    const wrapper = shallow(<ASRouterAdmin />);
+
     assert.calledOnce(addListenerStub);
     assert.calledWithExactly(addListenerStub, sinon.match.string, wrapper.instance().onMessage);
   });
   it("should remove listener on unmount", () => {
+    const wrapper = shallow(<ASRouterAdmin />);
     wrapper.unmount();
+
     assert.calledOnce(removeListenerStub);
   });
-  describe("#getSection", () => {
-    it("should render a message provider section by default", () => {
-      assert.equal(wrapper.find("h2").at(1).text(), "Messages");
-    });
-    it("should render a targeting section for targeting route", () => {
-      wrapper = shallow(<ASRouterAdminInner location={{routes: ["targeting"]}} />);
-      assert.equal(wrapper.find("h2").at(0).text(), "Targeting Utilities");
-    });
-    it("should render a pocket section for pocket route", () => {
-      wrapper = shallow(<ASRouterAdminInner location={{routes: ["pocket"]}} Sections={[]} />);
-      assert.equal(wrapper.find("h2").at(0).text(), "Pocket");
-    });
-  });
   describe("#render", () => {
+    let wrapper;
     beforeEach(() => {
+      wrapper = shallow(<ASRouterAdmin />);
       wrapper.setState({
         providerPrefs: [],
         providers: [],
