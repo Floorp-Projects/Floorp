@@ -4105,9 +4105,16 @@ html[dir="rtl"] .object-node {
   padding-bottom: 10px;
 }
 
-.scopes-list .scope-type-toggle a {
+.scopes-list .scope-type-toggle button {
   /* Override color so that the link doesn't turn purple */
   color: var(--theme-body-color);
+  font-size: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.scopes-list .scope-type-toggle button:hover {
+  background: transparent;
 }
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
