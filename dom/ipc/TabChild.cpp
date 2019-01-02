@@ -3263,16 +3263,11 @@ void TabChildMessageManager::MarkForCC() {
 
 Nullable<WindowProxyHolder> TabChildMessageManager::GetContent(
     ErrorResult& aError) {
-  if (!mTabChild) {
-    aError.Throw(NS_ERROR_NULL_POINTER);
+  nsCOMPtr<nsIDocShell> docShell = GetDocShell(aError);
+  if (!docShell) {
     return nullptr;
   }
-  nsCOMPtr<nsPIDOMWindowOuter> window =
-      do_GetInterface(mTabChild->WebNavigation());
-  if (!window) {
-    return nullptr;
-  }
-  return WindowProxyHolder(window.forget());
+  return WindowProxyHolder(nsDocShell::Cast(docShell)->GetBrowsingContext());
 }
 
 already_AddRefed<nsIDocShell> TabChildMessageManager::GetDocShell(

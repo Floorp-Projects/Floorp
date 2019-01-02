@@ -3372,7 +3372,7 @@ Nullable<WindowProxyHolder> nsIDocument::GetDefaultView() const {
   if (!win) {
     return nullptr;
   }
-  return WindowProxyHolder(win);
+  return WindowProxyHolder(win->GetBrowsingContext());
 }
 
 Element* nsIDocument::GetActiveElement() {
