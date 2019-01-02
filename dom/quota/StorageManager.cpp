@@ -232,7 +232,7 @@ already_AddRefed<Promise> ExecuteOpOnMainOrWorkerThread(
       return nullptr;
     }
 
-    nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
+    nsCOMPtr<Document> doc = window->GetExtantDoc();
     if (NS_WARN_IF(!doc)) {
       aRv.Throw(NS_ERROR_FAILURE);
       return nullptr;

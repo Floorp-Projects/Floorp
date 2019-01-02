@@ -138,7 +138,7 @@ class Link : public nsISupports {
   // similar to the one in Element. Overriders must call
   // ClearHasPendingLinkUpdate().
   // If you change this, change also the method in Element.
-  virtual void NodeInfoChanged(nsIDocument *aOldDoc) = 0;
+  virtual void NodeInfoChanged(Document *aOldDoc) = 0;
 
   bool IsInDNSPrefetch() { return mInDNSPrefetch; }
   void SetIsInDNSPrefetch() { mInDNSPrefetch = true; }

@@ -46,7 +46,7 @@ class SVGAElement final : public SVGAElementBase, public Link {
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
   // nsIContent
-  virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+  virtual nsresult BindToTree(Document* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent) override;
   virtual void UnbindFromTree(bool aDeep = true,
                               bool aNullParent = true) override;
@@ -86,7 +86,7 @@ class SVGAElement final : public SVGAElementBase, public Link {
   void GetText(nsAString& aText, mozilla::ErrorResult& rv);
   void SetText(const nsAString& aText, mozilla::ErrorResult& rv);
 
-  void NodeInfoChanged(nsIDocument* aOldDoc) final {
+  void NodeInfoChanged(Document* aOldDoc) final {
     ClearHasPendingLinkUpdate();
     SVGAElementBase::NodeInfoChanged(aOldDoc);
   }

@@ -12,7 +12,7 @@
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/RefPtr.h"
 #include "nsCOMPtr.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsError.h"
 #include "imgLoader.h"
 #include "imgICache.h"
@@ -495,13 +495,13 @@ imgTools::CreateScriptedObserver(imgIScriptedNotificationObserver* aInner,
 }
 
 NS_IMETHODIMP
-imgTools::GetImgLoaderForDocument(nsIDocument* aDoc, imgILoader** aLoader) {
+imgTools::GetImgLoaderForDocument(dom::Document* aDoc, imgILoader** aLoader) {
   NS_IF_ADDREF(*aLoader = nsContentUtils::GetImgLoaderForDocument(aDoc));
   return NS_OK;
 }
 
 NS_IMETHODIMP
-imgTools::GetImgCacheForDocument(nsIDocument* aDoc, imgICache** aCache) {
+imgTools::GetImgCacheForDocument(dom::Document* aDoc, imgICache** aCache) {
   nsCOMPtr<imgILoader> loader;
   nsresult rv = GetImgLoaderForDocument(aDoc, getter_AddRefs(loader));
   NS_ENSURE_SUCCESS(rv, rv);

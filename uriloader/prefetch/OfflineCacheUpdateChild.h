@@ -11,7 +11,7 @@
 
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
 #include "nsIURI.h"
@@ -40,12 +40,12 @@ class OfflineCacheUpdateChild : public nsIOfflineCacheUpdate,
 
   explicit OfflineCacheUpdateChild(nsPIDOMWindowInner* aWindow);
 
-  void SetDocument(nsIDocument* aDocument);
+  void SetDocument(dom::Document* aDocument);
 
  private:
   ~OfflineCacheUpdateChild();
 
-  nsresult AssociateDocument(nsIDocument* aDocument,
+  nsresult AssociateDocument(dom::Document* aDocument,
                              nsIApplicationCache* aApplicationCache);
   void GatherObservers(nsCOMArray<nsIOfflineCacheUpdateObserver>& aObservers);
   nsresult Finish();
@@ -74,7 +74,7 @@ class OfflineCacheUpdateChild : public nsIOfflineCacheUpdate,
   nsCOMArray<nsIOfflineCacheUpdateObserver> mObservers;
 
   /* Document that requested this update */
-  nsCOMPtr<nsIDocument> mDocument;
+  nsCOMPtr<dom::Document> mDocument;
 
   /* Keep reference to the window that owns this update to call the
      parent offline cache update construcor */

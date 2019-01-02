@@ -24,7 +24,7 @@
 #include "mozilla/StaticPrefs.h"
 #include "mozilla/Unused.h"
 #include "nsCharTraits.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsFontMetrics.h"
 #include "nsPresContext.h"
 #include "nsIContent.h"
@@ -912,7 +912,7 @@ static nsRect GetDisplayPortFromMarginsData(
   return result;
 }
 
-static bool HasVisibleAnonymousContents(nsIDocument* aDoc) {
+static bool HasVisibleAnonymousContents(Document* aDoc) {
   for (RefPtr<AnonymousContent>& ac : aDoc->GetAnonymousContents()) {
     // We check to see if the anonymous content node has a frame. If it doesn't,
     // that means that's not visible to the user because e.g. it's display:none.
@@ -931,11 +931,11 @@ bool nsLayoutUtils::ShouldDisableApzForElement(nsIContent* aContent) {
     return false;
   }
 
-  nsIDocument* doc = aContent->GetComposedDoc();
+  Document* doc = aContent->GetComposedDoc();
   nsIPresShell* rootShell =
       APZCCallbackHelper::GetRootContentDocumentPresShellForContent(aContent);
   if (rootShell) {
-    if (nsIDocument* rootDoc = rootShell->GetDocument()) {
+    if (Document* rootDoc = rootShell->GetDocument()) {
       nsIContent* rootContent =
           rootShell->GetRootScrollFrame()
               ? rootShell->GetRootScrollFrame()->GetContent()
@@ -7455,7 +7455,7 @@ nsLayoutUtils::SurfaceFromElementResult nsLayoutUtils::SurfaceFromElement(
 
 /* static */
 Element* nsLayoutUtils::GetEditableRootContentByContentEditable(
-    nsIDocument* aDocument) {
+    Document* aDocument) {
   // If the document is in designMode we should return nullptr.
   if (!aDocument || aDocument->HasFlag(NODE_IS_EDITABLE)) {
     return nullptr;
@@ -7864,7 +7864,7 @@ void nsLayoutUtils::DeregisterImageRequest(nsPresContext* aPresContext,
 void nsLayoutUtils::PostRestyleEvent(Element* aElement,
                                      nsRestyleHint aRestyleHint,
                                      nsChangeHint aMinChangeHint) {
-  nsIDocument* doc = aElement->GetComposedDoc();
+  Document* doc = aElement->GetComposedDoc();
   if (doc) {
     RefPtr<nsPresContext> presContext = doc->GetPresContext();
     if (presContext) {
@@ -8569,7 +8569,7 @@ void MaybeSetupTransactionIdAllocator(layers::LayerManager* aManager,
 
 /* static */ bool nsLayoutUtils::HasDocumentLevelListenersForApzAwareEvents(
     nsIPresShell* aShell) {
-  if (nsIDocument* doc = aShell->GetDocument()) {
+  if (Document* doc = aShell->GetDocument()) {
     WidgetEvent event(true, eVoidEvent);
     nsTArray<EventTarget*> targets;
     nsresult rv = EventDispatcher::Dispatch(
@@ -8777,7 +8777,7 @@ static void MaybeReflowForInflationScreenSizeChange(
 
   nsIFrame* rootScrollFrame = presShell->GetRootScrollFrame();
   bool isRootScrollFrame = aScrollFrame == rootScrollFrame;
-  nsIDocument* document = presShell->GetDocument();
+  Document* document = presShell->GetDocument();
 
   if (scrollId != ScrollableLayerGuid::NULL_SCROLL_ID &&
       !presContext->GetParentPresContext()) {
@@ -8976,7 +8976,7 @@ static void MaybeReflowForInflationScreenSizeChange(
   nsIFrame* frame = aBuilder->RootReferenceFrame();
   nsPresContext* presContext = frame->PresContext();
   nsIPresShell* presShell = presContext->PresShell();
-  nsIDocument* document = presShell->GetDocument();
+  Document* document = presShell->GetDocument();
 
   // If we're using containerless scrolling, there is still one case where we
   // want the root container layer to have metrics. If the parent process is
@@ -9099,8 +9099,7 @@ static void MaybeReflowForInflationScreenSizeChange(
   }
 }
 
-/* static */ bool nsLayoutUtils::ShouldUseNoScriptSheet(
-    nsIDocument* aDocument) {
+/* static */ bool nsLayoutUtils::ShouldUseNoScriptSheet(Document* aDocument) {
   // also handle the case where print is done from print preview
   // see bug #342439 for more details
   if (aDocument->IsStaticDocument()) {
@@ -9109,8 +9108,7 @@ static void MaybeReflowForInflationScreenSizeChange(
   return aDocument->IsScriptEnabled();
 }
 
-/* static */ bool nsLayoutUtils::ShouldUseNoFramesSheet(
-    nsIDocument* aDocument) {
+/* static */ bool nsLayoutUtils::ShouldUseNoFramesSheet(Document* aDocument) {
   bool allowSubframes = true;
   nsIDocShell* docShell = aDocument->GetDocShell();
   if (docShell) {
@@ -9211,7 +9209,7 @@ nsRect nsLayoutUtils::GetSelectionBoundingRect(Selection* aSel) {
 
 static already_AddRefed<nsIPresShell> GetPresShell(const nsIContent* aContent) {
   nsCOMPtr<nsIPresShell> result;
-  if (nsIDocument* doc = aContent->GetComposedDoc()) {
+  if (Document* doc = aContent->GetComposedDoc()) {
     result = doc->GetShell();
   }
   return result.forget();
@@ -9694,8 +9692,7 @@ already_AddRefed<nsFontMetrics> nsLayoutUtils::GetMetricsFor(
   }
 }
 
-/* static */ bool nsLayoutUtils::ShouldHandleMetaViewport(
-    nsIDocument* aDocument) {
+/* static */ bool nsLayoutUtils::ShouldHandleMetaViewport(Document* aDocument) {
   auto metaViewportOverride = nsIDocShell::META_VIEWPORT_OVERRIDE_NONE;
   if (aDocument) {
     if (nsIDocShell* docShell = aDocument->GetDocShell()) {

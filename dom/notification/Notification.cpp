@@ -39,7 +39,7 @@
 #include "nsGlobalWindow.h"
 #include "nsIAlertsService.h"
 #include "nsIContentPermissionPrompt.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsILoadContext.h"
 #include "nsINotificationStorage.h"
 #include "nsIPermissionManager.h"
@@ -1353,7 +1353,7 @@ ServiceWorkerNotificationObserver::Observe(nsISupports* aSubject,
 bool Notification::IsInPrivateBrowsing() {
   AssertIsOnMainThread();
 
-  nsIDocument* doc = nullptr;
+  Document* doc = nullptr;
 
   if (mWorkerPrivate) {
     doc = mWorkerPrivate->GetDocument();
@@ -1681,7 +1681,7 @@ nsresult Notification::ResolveIconAndSoundURL(nsString& iconUrl,
   if (mWorkerPrivate) {
     baseUri = mWorkerPrivate->GetBaseURI();
   } else {
-    nsIDocument* doc = GetOwner() ? GetOwner()->GetExtantDoc() : nullptr;
+    Document* doc = GetOwner() ? GetOwner()->GetExtantDoc() : nullptr;
     if (doc) {
       baseUri = doc->GetBaseURI();
       encoding = doc->GetDocumentCharacterSet();
@@ -1722,7 +1722,7 @@ already_AddRefed<Promise> Notification::Get(
   AssertIsOnMainThread();
   MOZ_ASSERT(aWindow);
 
-  nsCOMPtr<nsIDocument> doc = aWindow->GetExtantDoc();
+  nsCOMPtr<Document> doc = aWindow->GetExtantDoc();
   if (!doc) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;

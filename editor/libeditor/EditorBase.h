@@ -22,7 +22,7 @@
 #include "nsCOMPtr.h"  // for already_AddRefed, nsCOMPtr
 #include "nsCycleCollectionParticipant.h"
 #include "nsGkAtoms.h"
-#include "nsIDocument.h"             // for nsIDocument
+#include "mozilla/dom/Document.h"
 #include "nsIContentInlines.h"       // for nsINode::IsEditable()
 #include "nsIEditor.h"               // for nsIEditor, etc.
 #include "nsIObserver.h"             // for NS_DECL_NSIOBSERVER, etc.
@@ -195,6 +195,7 @@ class EditorBase : public nsIEditor,
    *       method to edit the DOM tree, you can make your new method public.
    ****************************************************************************/
 
+  typedef dom::Document Document;
   typedef dom::Element Element;
   typedef dom::Selection Selection;
   typedef dom::Text Text;
@@ -225,7 +226,7 @@ class EditorBase : public nsIEditor,
    * @param aFlags        A bitmask of flags for specifying the behavior
    *                      of the editor.
    */
-  virtual nsresult Init(nsIDocument& doc, Element* aRoot,
+  virtual nsresult Init(Document& doc, Element* aRoot,
                         nsISelectionController* aSelCon, uint32_t aFlags,
                         const nsAString& aInitialValue);
 
@@ -247,7 +248,7 @@ class EditorBase : public nsIEditor,
   bool IsInitialized() const { return !!mDocument; }
   bool Destroyed() const { return mDidPreDestroy; }
 
-  nsIDocument* GetDocument() const { return mDocument; }
+  Document* GetDocument() const { return mDocument; }
 
   nsIPresShell* GetPresShell() const {
     return mDocument ? mDocument->GetShell() : nullptr;
@@ -858,7 +859,7 @@ class EditorBase : public nsIEditor,
    *                        Otherwise, an error code.
    */
   virtual nsresult InsertTextWithTransaction(
-      nsIDocument& aDocument, const nsAString& aStringToInsert,
+      Document& aDocument, const nsAString& aStringToInsert,
       const EditorRawDOMPoint& aPointToInsert,
       EditorRawDOMPoint* aPointAfterInsertedString = nullptr);
 
@@ -1172,7 +1173,7 @@ class EditorBase : public nsIEditor,
   /**
    * Creates text node which is marked as "maybe modified frequently".
    */
-  static already_AddRefed<nsTextNode> CreateTextNode(nsIDocument& aDocument,
+  static already_AddRefed<nsTextNode> CreateTextNode(Document& aDocument,
                                                      const nsAString& aData);
 
   /**
@@ -1946,7 +1947,7 @@ class EditorBase : public nsIEditor,
 
  private:
   nsCOMPtr<nsISelectionController> mSelectionController;
-  nsCOMPtr<nsIDocument> mDocument;
+  RefPtr<Document> mDocument;
 
   AutoEditActionDataSetter* mEditActionData;
 

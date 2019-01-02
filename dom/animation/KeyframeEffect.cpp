@@ -63,7 +63,7 @@ NS_INTERFACE_MAP_END_INHERITING(AnimationEffect)
 NS_IMPL_ADDREF_INHERITED(KeyframeEffect, AnimationEffect)
 NS_IMPL_RELEASE_INHERITED(KeyframeEffect, AnimationEffect)
 
-KeyframeEffect::KeyframeEffect(nsIDocument* aDocument,
+KeyframeEffect::KeyframeEffect(Document* aDocument,
                                const Maybe<OwningAnimationTarget>& aTarget,
                                TimingParams&& aTiming,
                                const KeyframeEffectParams& aOptions)
@@ -631,7 +631,7 @@ KeyframeEffect::ConstructKeyframeEffect(
   // In Xray case, the new objects should be created using the document of
   // the target global, but the KeyframeEffect constructors are called in the
   // caller's compartment to access `aKeyframes` object.
-  nsIDocument* doc = AnimationUtils::GetDocumentFromGlobal(aGlobal.Get());
+  Document* doc = AnimationUtils::GetDocumentFromGlobal(aGlobal.Get());
   if (!doc) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
@@ -819,7 +819,7 @@ void DumpAnimationProperties(
 
 /* static */ already_AddRefed<KeyframeEffect> KeyframeEffect::Constructor(
     const GlobalObject& aGlobal, KeyframeEffect& aSource, ErrorResult& aRv) {
-  nsIDocument* doc = AnimationUtils::GetCurrentRealmDocument(aGlobal.Context());
+  Document* doc = AnimationUtils::GetCurrentRealmDocument(aGlobal.Context());
   if (!doc) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
@@ -1241,7 +1241,7 @@ bool KeyframeEffect::CanThrottleOverflowChangesInScrollable(
     nsIFrame& aFrame) const {
   // If the target element is not associated with any documents, we don't care
   // it.
-  nsIDocument* doc = GetRenderedDocument();
+  Document* doc = GetRenderedDocument();
   if (!doc) {
     return true;
   }
@@ -1314,7 +1314,7 @@ nsIFrame* KeyframeEffect::GetPrimaryFrame() const {
   return frame;
 }
 
-nsIDocument* KeyframeEffect::GetRenderedDocument() const {
+Document* KeyframeEffect::GetRenderedDocument() const {
   if (!mTarget) {
     return nullptr;
   }
@@ -1322,7 +1322,7 @@ nsIDocument* KeyframeEffect::GetRenderedDocument() const {
 }
 
 nsIPresShell* KeyframeEffect::GetPresShell() const {
-  nsIDocument* doc = GetRenderedDocument();
+  Document* doc = GetRenderedDocument();
   if (!doc) {
     return nullptr;
   }

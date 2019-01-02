@@ -50,7 +50,7 @@ void IDTracker::ResetToURIFragmentID(nsIContent* aFromContent, nsIURI* aURI,
   NS_UnescapeURL(refPart);
 
   // Get the thing to observe changes to.
-  nsIDocument* doc = aFromContent->OwnerDoc();
+  Document* doc = aFromContent->OwnerDoc();
   DocumentOrShadowRoot* docOrShadow = DocOrShadowFromContent(*aFromContent);
   auto encoding = doc->GetDocumentCharacterSet();
 
@@ -66,7 +66,7 @@ void IDTracker::ResetToURIFragmentID(nsIContent* aFromContent, nsIURI* aURI,
     nsXBLBinding* binding = bindingParent->GetXBLBinding();
     if (!binding) {
       // This happens, for example, if aFromContent is part of the content
-      // inserted by a call to nsIDocument::InsertAnonymousContent, which we
+      // inserted by a call to Document::InsertAnonymousContent, which we
       // also want to handle.  (It also happens for <use>'s anonymous
       // content etc.)
       Element* anonRoot =
@@ -111,7 +111,7 @@ void IDTracker::ResetToURIFragmentID(nsIContent* aFromContent, nsIURI* aURI,
   bool isEqualExceptRef;
   rv = aURI->EqualsExceptRef(doc->GetDocumentURI(), &isEqualExceptRef);
   if (NS_FAILED(rv) || !isEqualExceptRef) {
-    RefPtr<nsIDocument::ExternalResourceLoad> load;
+    RefPtr<Document::ExternalResourceLoad> load;
     doc = doc->RequestExternalResource(aURI, aReferrer, aReferrerPolicy,
                                        aFromContent, getter_AddRefs(load));
     docOrShadow = doc;
@@ -227,7 +227,7 @@ IDTracker::DocumentLoadNotification::Observe(nsISupports* aSubject,
   NS_ASSERTION(PL_strcmp(aTopic, "external-resource-document-created") == 0,
                "Unexpected topic");
   if (mTarget) {
-    nsCOMPtr<nsIDocument> doc = do_QueryInterface(aSubject);
+    nsCOMPtr<Document> doc = do_QueryInterface(aSubject);
     mTarget->mPendingNotification = nullptr;
     NS_ASSERTION(!mTarget->mElement, "Why do we have content here?");
     // If we got here, that means we had Reset*() called with

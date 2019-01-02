@@ -28,7 +28,7 @@
 #include "ServiceWorkerRegistration.h"
 #include "ServiceWorkerUnregisterCallback.h"
 
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIServiceWorkerManager.h"
 #include "nsISupportsPrimitives.h"
 #include "nsPIDOMWindow.h"

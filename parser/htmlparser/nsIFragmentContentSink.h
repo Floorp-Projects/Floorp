@@ -7,10 +7,9 @@
 
 #include "nsISupports.h"
 
-class nsIDocument;
-
 namespace mozilla {
 namespace dom {
+class Document;
 class DocumentFragment;
 }  // namespace dom
 }  // namespace mozilla
@@ -48,7 +47,7 @@ class nsIFragmentContentSink : public nsISupports {
    * @param aDocument the document the new nodes will belong to
    * (should not be null)
    */
-  NS_IMETHOD SetTargetDocument(nsIDocument* aDocument) = 0;
+  NS_IMETHOD SetTargetDocument(mozilla::dom::Document*) = 0;
 
   /**
    * This method is used to indicate to the sink that we're done building

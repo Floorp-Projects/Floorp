@@ -17,8 +17,6 @@
 #include "mozilla/TouchEvents.h"
 #include "nsRefPtrHashtable.h"
 
-class nsIDocument;
-
 namespace mozilla {
 class PresShell;
 
@@ -28,7 +26,7 @@ class TouchManager {
   static void InitializeStatics();
   static void ReleaseStatics();
 
-  void Init(PresShell* aPresShell, nsIDocument* aDocument);
+  void Init(PresShell* aPresShell, dom::Document* aDocument);
   void Destroy();
 
   // Perform hit test and setup the event targets for touchstart. Other touch
@@ -63,11 +61,11 @@ class TouchManager {
  private:
   void EvictTouches();
   static void EvictTouchPoint(RefPtr<dom::Touch>& aTouch,
-                              nsIDocument* aLimitToDocument = nullptr);
+                              dom::Document* aLimitToDocument = nullptr);
   static void AppendToTouchList(WidgetTouchEvent::TouchArray* aTouchList);
 
   RefPtr<PresShell> mPresShell;
-  nsCOMPtr<nsIDocument> mDocument;
+  RefPtr<dom::Document> mDocument;
 
   struct TouchInfo {
     RefPtr<mozilla::dom::Touch> mTouch;

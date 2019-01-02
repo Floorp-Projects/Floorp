@@ -458,7 +458,7 @@ class Element : public FragmentOrElement {
     }
   }
 
-  bool GetBindingURL(nsIDocument* aDocument, css::URLValue** aResult);
+  bool GetBindingURL(Document* aDocument, css::URLValue** aResult);
 
   Directionality GetComputedDirectionality() const;
 
@@ -508,7 +508,7 @@ class Element : public FragmentOrElement {
   bool HasServoData() const { return !!mServoData.Get(); }
 
   void ClearServoData() { ClearServoData(GetComposedDoc()); }
-  void ClearServoData(nsIDocument* aDocument);
+  void ClearServoData(Document* aDocument);
 
   /**
    * Gets the custom element data used by web components custom element.
@@ -651,7 +651,7 @@ class Element : public FragmentOrElement {
 
   void UpdateEditableState(bool aNotify) override;
 
-  nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+  nsresult BindToTree(Document* aDocument, nsIContent* aParent,
                       nsIContent* aBindingParent) override;
 
   void UnbindFromTree(bool aDeep = true, bool aNullParent = true) override;
@@ -1455,7 +1455,7 @@ class Element : public FragmentOrElement {
    *
    * If you change this, change also the similar method in Link.
    */
-  virtual void NodeInfoChanged(nsIDocument* aOldDoc) {}
+  virtual void NodeInfoChanged(Document* aOldDoc) {}
 
   /**
    * Parse a string into an nsAttrValue for a CORS attribute.  This
@@ -1665,8 +1665,7 @@ class Element : public FragmentOrElement {
                             nsAttrValue& aParsedValue,
                             nsIPrincipal* aMaybeScriptedPrincipal,
                             uint8_t aModType, bool aFireMutation, bool aNotify,
-                            bool aCallAfterSetAttr,
-                            nsIDocument* aComposedDocument,
+                            bool aCallAfterSetAttr, Document* aComposedDocument,
                             const mozAutoDocUpdate& aGuard);
 
   /**
@@ -1946,7 +1945,7 @@ class Element : public FragmentOrElement {
 class RemoveFromBindingManagerRunnable : public mozilla::Runnable {
  public:
   RemoveFromBindingManagerRunnable(nsBindingManager* aManager,
-                                   nsIContent* aContent, nsIDocument* aDoc);
+                                   nsIContent* aContent, Document* aDoc);
 
   NS_IMETHOD Run() override;
 
@@ -1954,7 +1953,7 @@ class RemoveFromBindingManagerRunnable : public mozilla::Runnable {
   virtual ~RemoveFromBindingManagerRunnable();
   RefPtr<nsBindingManager> mManager;
   RefPtr<nsIContent> mContent;
-  nsCOMPtr<nsIDocument> mDoc;
+  RefPtr<Document> mDoc;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(Element, NS_ELEMENT_IID)

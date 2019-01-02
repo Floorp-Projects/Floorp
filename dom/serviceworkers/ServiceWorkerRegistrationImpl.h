@@ -10,7 +10,7 @@
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/Unused.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsPIDOMWindow.h"
 #include "ServiceWorkerManager.h"
 #include "ServiceWorkerRegistration.h"

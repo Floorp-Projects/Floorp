@@ -28,7 +28,7 @@
 #include "nsISelectionController.h"
 
 #include "nsPIDOMWindow.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIHTMLDocument.h"
 #include "nsGkAtoms.h"
 #include "nsIFrame.h"
@@ -83,7 +83,7 @@ static nsresult AppendImagePromise(nsITransferable* aTransferable,
 
 // Helper used for HTMLCopy and GetTransferableForSelection since both routines
 // share common code.
-static nsresult SelectionCopyHelper(Selection* aSel, nsIDocument* aDoc,
+static nsresult SelectionCopyHelper(Selection* aSel, Document* aDoc,
                                     bool doPutOnClipboard, int16_t aClipboardID,
                                     uint32_t aFlags,
                                     nsITransferable** aTransferable) {
@@ -278,7 +278,7 @@ static nsresult SelectionCopyHelper(Selection* aSel, nsIDocument* aDoc,
   return rv;
 }
 
-nsresult nsCopySupport::HTMLCopy(Selection* aSel, nsIDocument* aDoc,
+nsresult nsCopySupport::HTMLCopy(Selection* aSel, Document* aDoc,
                                  int16_t aClipboardID,
                                  bool aWithRubyAnnotation) {
   uint32_t flags = nsIDocumentEncoder::SkipInvisibleContent;
@@ -296,14 +296,14 @@ nsresult nsCopySupport::ClearSelectionCache() {
 }
 
 nsresult nsCopySupport::GetTransferableForSelection(
-    Selection* aSel, nsIDocument* aDoc, nsITransferable** aTransferable) {
+    Selection* aSel, Document* aDoc, nsITransferable** aTransferable) {
   return SelectionCopyHelper(aSel, aDoc, false, 0,
                              nsIDocumentEncoder::SkipInvisibleContent,
                              aTransferable);
 }
 
 nsresult nsCopySupport::GetTransferableForNode(
-    nsINode* aNode, nsIDocument* aDoc, nsITransferable** aTransferable) {
+    nsINode* aNode, Document* aDoc, nsITransferable** aTransferable) {
   // Make a temporary selection with aNode in a single range.
   // XXX We should try to get rid of the Selection object here.
   // XXX bug 1245883
@@ -325,7 +325,7 @@ nsresult nsCopySupport::GetTransferableForNode(
 
 nsresult nsCopySupport::GetContents(const nsACString& aMimeType,
                                     uint32_t aFlags, Selection* aSel,
-                                    nsIDocument* aDoc, nsAString& outdata) {
+                                    Document* aDoc, nsAString& outdata) {
   nsCOMPtr<nsIDocumentEncoder> docEncoder =
       do_createDocumentEncoder(PromiseFlatCString(aMimeType).get());
   NS_ENSURE_TRUE(docEncoder, NS_ERROR_FAILURE);
@@ -444,7 +444,7 @@ static nsresult AppendDOMNode(nsITransferable* aTransferable,
   nsCOMPtr<nsIDocumentEncoder> docEncoder = do_createHTMLCopyEncoder();
 
   // get document for the encoder
-  nsCOMPtr<nsIDocument> document = aDOMNode->OwnerDoc();
+  nsCOMPtr<Document> document = aDOMNode->OwnerDoc();
 
   // Note that XHTML is not counted as HTML here, because we can't copy it
   // properly (all the copy code for non-plaintext assumes using HTML
@@ -584,7 +584,7 @@ static nsresult AppendImagePromise(nsITransferable* aTransferable,
 }
 #endif  // XP_WIN
 
-nsIContent* nsCopySupport::GetSelectionForCopy(nsIDocument* aDocument,
+nsIContent* nsCopySupport::GetSelectionForCopy(Document* aDocument,
                                                Selection** aSelection) {
   *aSelection = nullptr;
 
@@ -605,7 +605,7 @@ nsIContent* nsCopySupport::GetSelectionForCopy(nsIDocument* aDocument,
   return focusedContent;
 }
 
-bool nsCopySupport::CanCopy(nsIDocument* aDocument) {
+bool nsCopySupport::CanCopy(Document* aDocument) {
   if (!aDocument) return false;
 
   RefPtr<Selection> sel;
@@ -670,7 +670,7 @@ bool nsCopySupport::FireClipboardEvent(EventMessage aEventMessage,
   nsCOMPtr<nsIPresShell> presShell = aPresShell;
   if (!presShell) return false;
 
-  nsCOMPtr<nsIDocument> doc = presShell->GetDocument();
+  nsCOMPtr<Document> doc = presShell->GetDocument();
   if (!doc) return false;
 
   nsCOMPtr<nsPIDOMWindowOuter> piWindow = doc->GetWindow();

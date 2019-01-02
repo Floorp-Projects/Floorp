@@ -31,6 +31,7 @@ class TextEditor;
 enum class EditSubAction : int32_t;
 
 namespace dom {
+class Document;
 class Element;
 class Selection;
 }  // namespace dom
@@ -801,7 +802,7 @@ class HTMLEditRules : public TextEditRules {
    *
    * @param aDocument           The document of the editor.
    */
-  MOZ_MUST_USE nsresult CreateStyleForInsertText(nsIDocument& aDocument);
+  MOZ_MUST_USE nsresult CreateStyleForInsertText(dom::Document& aDocument);
 
   /**
    * IsEmptyBlockElement() returns true if aElement is a block level element

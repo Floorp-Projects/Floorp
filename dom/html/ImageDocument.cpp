@@ -17,7 +17,7 @@
 #include "nsIImageLoadingContent.h"
 #include "nsGenericHTMLElement.h"
 #include "nsDocShell.h"
-#include "nsIDocumentInlines.h"
+#include "DocumentInlines.h"
 #include "nsDOMTokenList.h"
 #include "nsIDOMEventListener.h"
 #include "nsIFrame.h"
@@ -480,7 +480,7 @@ void ImageDocument::NotifyPossibleTitleChange(bool aBoundTitleElement) {
     mHasCustomTitle = true;
   }
 
-  nsIDocument::NotifyPossibleTitleChange(aBoundTitleElement);
+  Document::NotifyPossibleTitleChange(aBoundTitleElement);
 }
 
 NS_IMETHODIMP
@@ -847,8 +847,8 @@ float ImageDocument::GetResolution() {
 }  // namespace dom
 }  // namespace mozilla
 
-nsresult NS_NewImageDocument(nsIDocument** aResult) {
-  mozilla::dom::ImageDocument* doc = new mozilla::dom::ImageDocument();
+nsresult NS_NewImageDocument(mozilla::dom::Document** aResult) {
+  auto* doc = new mozilla::dom::ImageDocument();
   NS_ADDREF(doc);
 
   nsresult rv = doc->Init();

@@ -14,7 +14,7 @@
 
 // helpers
 #include "nsIClipboard.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsITransferable.h"
 #include "nsReadableUtils.h"
 

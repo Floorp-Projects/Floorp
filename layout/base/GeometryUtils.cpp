@@ -31,7 +31,7 @@ enum GeometryNodeType {
 };
 
 static nsIFrame* GetFrameForNode(nsINode* aNode, GeometryNodeType aType) {
-  nsIDocument* doc = aNode->OwnerDoc();
+  Document* doc = aNode->OwnerDoc();
   if (aType == GEOMETRY_NODE_TEXT) {
     if (nsIPresShell* shell = doc->GetShell()) {
       shell->FrameConstructor()->EnsureFrameForTextNodeIsCreatedAfterFlush(
@@ -157,7 +157,7 @@ static nsRect GetBoxRectForFrame(nsIFrame** aFrame, CSSBoxType aType) {
 
 class AccumulateQuadCallback : public nsLayoutUtils::BoxCallback {
  public:
-  AccumulateQuadCallback(nsIDocument* aParentObject,
+  AccumulateQuadCallback(Document* aParentObject,
                          nsTArray<RefPtr<DOMQuad> >& aResult,
                          nsIFrame* aRelativeToFrame,
                          const nsPoint& aRelativeToBoxTopLeft,
@@ -250,7 +250,7 @@ void GetBoxQuads(nsINode* aNode, const dom::BoxQuadOptions& aOptions,
     return;
   }
   AutoWeakFrame weakFrame(frame);
-  nsIDocument* ownerDoc = aNode->OwnerDoc();
+  Document* ownerDoc = aNode->OwnerDoc();
   nsIFrame* relativeToFrame =
       GetFirstNonAnonymousFrameForGeometryNode(aOptions.mRelativeTo, ownerDoc);
   // The first frame might be destroyed now if the above call lead to an

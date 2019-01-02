@@ -31,7 +31,7 @@ void mozalloc_handle_oom(size_t size) {
   // "memory-pressure" synchronously, please audit all
   // nsExpirationTrackers and ensure that the actions they take
   // on memory-pressure notifications (via NotifyExpired) are safe.
-  // Note that nsIDocument::SelectorCache::NotifyExpired is _known_
+  // Note that Document::SelectorCache::NotifyExpired is _known_
   // to not be safe: it will delete the selector it's caching,
   // which might be in use at the time under querySelector or
   // querySelectorAll.

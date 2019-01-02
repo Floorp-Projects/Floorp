@@ -13,7 +13,7 @@
 #include "mozilla/dom/ImageCaptureErrorEvent.h"
 #include "mozilla/dom/ImageCaptureErrorEventBinding.h"
 #include "mozilla/dom/VideoStreamTrack.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "CaptureTask.h"
 #include "MediaEngineSource.h"
 
@@ -195,7 +195,7 @@ bool ImageCapture::CheckPrincipal() {
   if (!GetOwner()) {
     return false;
   }
-  nsCOMPtr<nsIDocument> doc = GetOwner()->GetExtantDoc();
+  nsCOMPtr<Document> doc = GetOwner()->GetExtantDoc();
   if (!doc || !principal) {
     return false;
   }

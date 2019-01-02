@@ -10,15 +10,14 @@
 #include "nsINode.h"
 #include "nsIContent.h"
 #include "nsIContentInlines.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
 #include "nsIMutationObserver.h"
-#include "nsIDocument.h"
 #include "mozilla/EventListenerManager.h"
 #include "nsIXPConnect.h"
 #include "PLDHashTable.h"
 #include "nsCOMArray.h"
 #include "nsPIDOMWindow.h"
-#include "nsIDocument.h"
 #ifdef MOZ_XUL
 #include "nsXULElement.h"
 #endif
@@ -56,7 +55,7 @@ enum class IsRemoveNotification {
 #endif
 
 // This macro expects the ownerDocument of content_ to be in scope as
-// |nsIDocument* doc|
+// |Document* doc|
 #define IMPL_MUTATION_NOTIFICATION(func_, content_, params_, remove_)         \
   PR_BEGIN_MACRO                                                              \
   bool needsEnterLeave = doc->MayHaveDOMMutationObservers();                  \
@@ -129,14 +128,14 @@ enum class IsRemoveNotification {
 
 void nsNodeUtils::CharacterDataWillChange(
     nsIContent* aContent, const CharacterDataChangeInfo& aInfo) {
-  nsIDocument* doc = aContent->OwnerDoc();
+  Document* doc = aContent->OwnerDoc();
   IMPL_MUTATION_NOTIFICATION(CharacterDataWillChange, aContent,
                              (aContent, aInfo), IsRemoveNotification::No);
 }
 
 void nsNodeUtils::CharacterDataChanged(nsIContent* aContent,
                                        const CharacterDataChangeInfo& aInfo) {
-  nsIDocument* doc = aContent->OwnerDoc();
+  Document* doc = aContent->OwnerDoc();
   IMPL_MUTATION_NOTIFICATION(CharacterDataChanged, aContent, (aContent, aInfo),
                              IsRemoveNotification::No);
 }
@@ -144,7 +143,7 @@ void nsNodeUtils::CharacterDataChanged(nsIContent* aContent,
 void nsNodeUtils::AttributeWillChange(Element* aElement, int32_t aNameSpaceID,
                                       nsAtom* aAttribute, int32_t aModType,
                                       const nsAttrValue* aNewValue) {
-  nsIDocument* doc = aElement->OwnerDoc();
+  Document* doc = aElement->OwnerDoc();
   IMPL_MUTATION_NOTIFICATION(
       AttributeWillChange, aElement,
       (aElement, aNameSpaceID, aAttribute, aModType, aNewValue),
@@ -154,7 +153,7 @@ void nsNodeUtils::AttributeWillChange(Element* aElement, int32_t aNameSpaceID,
 void nsNodeUtils::AttributeChanged(Element* aElement, int32_t aNameSpaceID,
                                    nsAtom* aAttribute, int32_t aModType,
                                    const nsAttrValue* aOldValue) {
-  nsIDocument* doc = aElement->OwnerDoc();
+  Document* doc = aElement->OwnerDoc();
   IMPL_MUTATION_NOTIFICATION(
       AttributeChanged, aElement,
       (aElement, aNameSpaceID, aAttribute, aModType, aOldValue),
@@ -164,7 +163,7 @@ void nsNodeUtils::AttributeChanged(Element* aElement, int32_t aNameSpaceID,
 void nsNodeUtils::AttributeSetToCurrentValue(Element* aElement,
                                              int32_t aNameSpaceID,
                                              nsAtom* aAttribute) {
-  nsIDocument* doc = aElement->OwnerDoc();
+  Document* doc = aElement->OwnerDoc();
   IMPL_MUTATION_NOTIFICATION(AttributeSetToCurrentValue, aElement,
                              (aElement, aNameSpaceID, aAttribute),
                              IsRemoveNotification::No);
@@ -172,7 +171,7 @@ void nsNodeUtils::AttributeSetToCurrentValue(Element* aElement,
 
 void nsNodeUtils::ContentAppended(nsIContent* aContainer,
                                   nsIContent* aFirstNewContent) {
-  nsIDocument* doc = aContainer->OwnerDoc();
+  Document* doc = aContainer->OwnerDoc();
 
   IMPL_MUTATION_NOTIFICATION(ContentAppended, aContainer, (aFirstNewContent),
                              IsRemoveNotification::No);
@@ -180,7 +179,7 @@ void nsNodeUtils::ContentAppended(nsIContent* aContainer,
 
 void nsNodeUtils::NativeAnonymousChildListChange(nsIContent* aContent,
                                                  bool aIsRemove) {
-  nsIDocument* doc = aContent->OwnerDoc();
+  Document* doc = aContent->OwnerDoc();
   auto isRemove =
       aIsRemove ? IsRemoveNotification::Yes : IsRemoveNotification::No;
   IMPL_MUTATION_NOTIFICATION(NativeAnonymousChildListChange, aContent,
@@ -189,8 +188,8 @@ void nsNodeUtils::NativeAnonymousChildListChange(nsIContent* aContent,
 
 void nsNodeUtils::ContentInserted(nsINode* aContainer, nsIContent* aChild) {
   MOZ_ASSERT(aContainer->IsContent() || aContainer->IsDocument(),
-             "container must be an nsIContent or an nsIDocument");
-  nsIDocument* doc = aContainer->OwnerDoc();
+             "container must be an nsIContent or an Document");
+  Document* doc = aContainer->OwnerDoc();
   IMPL_MUTATION_NOTIFICATION(ContentInserted, aContainer, (aChild),
                              IsRemoveNotification::No);
 }
@@ -198,8 +197,8 @@ void nsNodeUtils::ContentInserted(nsINode* aContainer, nsIContent* aChild) {
 void nsNodeUtils::ContentRemoved(nsINode* aContainer, nsIContent* aChild,
                                  nsIContent* aPreviousSibling) {
   MOZ_ASSERT(aContainer->IsContent() || aContainer->IsDocument(),
-             "container must be an nsIContent or an nsIDocument");
-  nsIDocument* doc = aContainer->OwnerDoc();
+             "container must be an nsIContent or an Document");
+  Document* doc = aContainer->OwnerDoc();
   MOZ_ASSERT(aChild->GetParentNode() == aContainer,
              "We expect the parent link to be still around at this point");
   IMPL_MUTATION_NOTIFICATION(ContentRemoved, aContainer,
@@ -224,7 +223,7 @@ void nsNodeUtils::AnimationMutated(Animation* aAnimation,
   }
 
   // A pseudo element and its parent element use the same owner doc.
-  nsIDocument* doc = target->mElement->OwnerDoc();
+  Document* doc = target->mElement->OwnerDoc();
   if (doc->MayHaveAnimationObservers()) {
     // we use the its parent element as the subject in DOM Mutation Observer.
     Element* elem = target->mElement;
@@ -280,7 +279,7 @@ void nsNodeUtils::LastRelease(nsINode* aNode) {
     if (aNode->HasProperties()) {
       // Strong reference to the document so that deleting properties can't
       // delete the document.
-      nsCOMPtr<nsIDocument> document = aNode->OwnerDoc();
+      nsCOMPtr<Document> document = aNode->OwnerDoc();
       document->DeleteAllPropertiesFor(aNode);
     }
 
@@ -359,7 +358,7 @@ already_AddRefed<nsINode> nsNodeUtils::CloneAndAdopt(
   if (nodeInfoManager) {
     // Don't allow importing/adopting nodes from non-privileged "scriptable"
     // documents to "non-scriptable" documents.
-    nsIDocument* newDoc = nodeInfoManager->GetDocument();
+    Document* newDoc = nodeInfoManager->GetDocument();
     if (NS_WARN_IF(!newDoc)) {
       aError.Throw(NS_ERROR_UNEXPECTED);
       return nullptr;
@@ -367,7 +366,7 @@ already_AddRefed<nsINode> nsNodeUtils::CloneAndAdopt(
     bool hasHadScriptHandlingObject = false;
     if (!newDoc->GetScriptHandlingObject(hasHadScriptHandlingObject) &&
         !hasHadScriptHandlingObject) {
-      nsIDocument* currentDoc = aNode->OwnerDoc();
+      Document* currentDoc = aNode->OwnerDoc();
       if (NS_WARN_IF(!nsContentUtils::IsChromeDoc(currentDoc) &&
                      (currentDoc->GetScriptHandlingObject(
                           hasHadScriptHandlingObject) ||
@@ -431,7 +430,7 @@ already_AddRefed<nsINode> nsNodeUtils::CloneAndAdopt(
       nodeInfoManager = clone->mNodeInfo->NodeInfoManager();
     }
   } else if (nodeInfoManager) {
-    nsIDocument* oldDoc = aNode->OwnerDoc();
+    Document* oldDoc = aNode->OwnerDoc();
     bool wasRegistered = false;
     if (elem) {
       oldDoc->ClearBoxObjectFor(elem);
@@ -443,7 +442,7 @@ already_AddRefed<nsINode> nsNodeUtils::CloneAndAdopt(
       elem->NodeInfoChanged(oldDoc);
     }
 
-    nsIDocument* newDoc = aNode->OwnerDoc();
+    Document* newDoc = aNode->OwnerDoc();
     if (newDoc) {
       if (elem) {
         // Adopted callback must be enqueued whenever a node’s
@@ -451,7 +450,7 @@ already_AddRefed<nsINode> nsNodeUtils::CloneAndAdopt(
         CustomElementData* data = elem->GetCustomElementData();
         if (data && data->mState == CustomElementData::State::eCustom) {
           LifecycleAdoptedCallbackArgs args = {oldDoc, newDoc};
-          nsContentUtils::EnqueueLifecycleCallback(nsIDocument::eAdopted, elem,
+          nsContentUtils::EnqueueLifecycleCallback(Document::eAdopted, elem,
                                                    nullptr, &args);
         }
       }

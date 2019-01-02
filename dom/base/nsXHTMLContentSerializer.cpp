@@ -14,7 +14,7 @@
 
 #include "mozilla/dom/Element.h"
 #include "nsIContent.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsElementTable.h"
 #include "nsNameSpaceManager.h"
 #include "nsString.h"
@@ -385,7 +385,7 @@ void nsXHTMLContentSerializer::AfterElementEnd(nsIContent* aContent,
 }
 
 NS_IMETHODIMP
-nsXHTMLContentSerializer::AppendDocumentStart(nsIDocument* aDocument,
+nsXHTMLContentSerializer::AppendDocumentStart(Document* aDocument,
                                               nsAString& aStr) {
   if (!mBodyOnly)
     return nsXMLContentSerializer::AppendDocumentStart(aDocument, aStr);

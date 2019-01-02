@@ -19,7 +19,7 @@
 #include "mozilla/dom/TreeBoxObject.h"
 #include "mozilla/dom/TreeContentViewBinding.h"
 #include "nsServiceManagerUtils.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -534,7 +534,7 @@ nsTreeContentView::SetTree(nsITreeBoxObject* aTree) {
     }
 
     // Add ourselves to document's observers.
-    nsIDocument* document = mRoot->GetComposedDoc();
+    Document* document = mRoot->GetComposedDoc();
     if (document) {
       document->AddObserver(this);
       mDocument = document;

@@ -481,7 +481,7 @@ AccessibleWrap::get_accRole(
     if (roleString.IsEmpty()) {
       // No role attribute (or it is an empty string).
       // Use the tag name.
-      nsIDocument* document = content->GetUncomposedDoc();
+      dom::Document* document = content->GetUncomposedDoc();
       if (!document) return E_FAIL;
 
       dom::NodeInfo* nodeInfo = content->NodeInfo();

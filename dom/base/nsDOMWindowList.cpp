@@ -8,7 +8,7 @@
 
 #include "FlushType.h"
 #include "nsCOMPtr.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIDOMWindow.h"
 #include "nsIDocShell.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -31,7 +31,7 @@ void nsDOMWindowList::EnsureFresh() {
   nsCOMPtr<nsIWebNavigation> shellAsNav = do_QueryInterface(mDocShellNode);
 
   if (shellAsNav) {
-    nsCOMPtr<nsIDocument> doc;
+    nsCOMPtr<Document> doc;
     shellAsNav->GetDocument(getter_AddRefs(doc));
 
     if (doc) {

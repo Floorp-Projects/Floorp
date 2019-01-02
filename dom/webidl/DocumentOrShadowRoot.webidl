@@ -29,7 +29,7 @@ interface DocumentOrShadowRoot {
   readonly attribute StyleSheetList styleSheets;
 
   readonly attribute Element? pointerLockElement;
-  [LenientSetter, Func="nsIDocument::IsUnprefixedFullscreenEnabled"]
+  [LenientSetter, Func="Document::IsUnprefixedFullscreenEnabled"]
   readonly attribute Element? fullscreenElement;
   [BinaryName="fullscreenElement"]
   readonly attribute Element? mozFullScreenElement;

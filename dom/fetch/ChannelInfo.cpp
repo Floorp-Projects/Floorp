@@ -8,7 +8,7 @@
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
 #include "nsIChannel.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIHttpChannel.h"
 #include "nsSerializationHelper.h"
 #include "mozilla/net/HttpBaseChannel.h"
@@ -18,7 +18,7 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-void ChannelInfo::InitFromDocument(nsIDocument* aDoc) {
+void ChannelInfo::InitFromDocument(Document* aDoc) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!mInited, "Cannot initialize the object twice");
 

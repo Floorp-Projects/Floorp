@@ -34,7 +34,7 @@
 #include "nsIContent.h"
 #include "mozilla/ComputedStyle.h"
 #include "nsIBoxObject.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsCSSRendering.h"
 #include "nsString.h"
 #include "nsContainerFrame.h"
@@ -280,7 +280,7 @@ void nsTreeBodyFrame::EnsureBoxObject() {
   if (!mTreeBoxObject) {
     nsIContent* parent = GetBaseElement();
     if (parent) {
-      nsIDocument* nsDoc = parent->GetComposedDoc();
+      Document* nsDoc = parent->GetComposedDoc();
       if (!nsDoc)  // there may be no document, if we're called from Destroy()
         return;
       ErrorResult ignored;
@@ -1942,7 +1942,7 @@ nsresult nsTreeBodyFrame::GetImage(int32_t aRowIndex, nsTreeColumn* aCol,
     listener->AddCell(aRowIndex, aCol);
     nsCOMPtr<imgINotificationObserver> imgNotificationObserver = listener;
 
-    nsIDocument* doc = mContent->GetComposedDoc();
+    Document* doc = mContent->GetComposedDoc();
     if (!doc)
       // The page is currently being torn down.  Why bother.
       return NS_ERROR_FAILURE;
@@ -4243,7 +4243,7 @@ void nsTreeBodyFrame::FireRowCountChangedEvent(int32_t aIndex, int32_t aCount) {
   nsCOMPtr<nsIContent> content(GetBaseElement());
   if (!content) return;
 
-  nsCOMPtr<nsIDocument> doc = content->OwnerDoc();
+  nsCOMPtr<Document> doc = content->OwnerDoc();
   MOZ_ASSERT(doc);
 
   RefPtr<Event> event = doc->CreateEvent(NS_LITERAL_STRING("customevent"),
@@ -4282,7 +4282,7 @@ void nsTreeBodyFrame::FireInvalidateEvent(int32_t aStartRowIdx,
   nsCOMPtr<nsIContent> content(GetBaseElement());
   if (!content) return;
 
-  nsCOMPtr<nsIDocument> doc = content->OwnerDoc();
+  nsCOMPtr<Document> doc = content->OwnerDoc();
 
   RefPtr<Event> event = doc->CreateEvent(NS_LITERAL_STRING("customevent"),
                                          CallerType::System, IgnoreErrors());

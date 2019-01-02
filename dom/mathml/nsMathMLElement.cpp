@@ -15,7 +15,7 @@
 #include "nsCSSValue.h"
 #include "nsMappedAttributes.h"
 #include "nsStyleConsts.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "mozAutoDocUpdate.h"
@@ -38,7 +38,7 @@ NS_IMPL_ISUPPORTS_INHERITED(nsMathMLElement, nsMathMLElementBase, Link)
 
 static nsresult WarnDeprecated(const char16_t* aDeprecatedAttribute,
                                const char16_t* aFavoredAttribute,
-                               nsIDocument* aDocument) {
+                               Document* aDocument) {
   const char16_t* argv[] = {aDeprecatedAttribute, aFavoredAttribute};
   return nsContentUtils::ReportToConsole(
       nsIScriptError::warningFlag, NS_LITERAL_CSTRING("MathML"), aDocument,
@@ -46,7 +46,7 @@ static nsresult WarnDeprecated(const char16_t* aDeprecatedAttribute,
 }
 
 static nsresult ReportLengthParseError(const nsString& aValue,
-                                       nsIDocument* aDocument) {
+                                       Document* aDocument) {
   const char16_t* arg = aValue.get();
   return nsContentUtils::ReportToConsole(
       nsIScriptError::errorFlag, NS_LITERAL_CSTRING("MathML"), aDocument,
@@ -54,7 +54,7 @@ static nsresult ReportLengthParseError(const nsString& aValue,
 }
 
 static nsresult ReportParseErrorNoTag(const nsString& aValue, nsAtom* aAtom,
-                                      nsIDocument* aDocument) {
+                                      Document* aDocument) {
   const char16_t* argv[] = {aValue.get(), aAtom->GetUTF16String()};
   return nsContentUtils::ReportToConsole(
       nsIScriptError::errorFlag, NS_LITERAL_CSTRING("MathML"), aDocument,
@@ -74,8 +74,7 @@ nsMathMLElement::nsMathMLElement(
       ALLOW_THIS_IN_INITIALIZER_LIST(Link(this)),
       mIncrementScriptLevel(false) {}
 
-nsresult nsMathMLElement::BindToTree(nsIDocument* aDocument,
-                                     nsIContent* aParent,
+nsresult nsMathMLElement::BindToTree(Document* aDocument, nsIContent* aParent,
                                      nsIContent* aBindingParent) {
   Link::ResetLinkState(false, Link::ElementHasHref());
 
@@ -88,7 +87,7 @@ nsresult nsMathMLElement::BindToTree(nsIDocument* aDocument,
   }
 
   // Set the bit in the document for telemetry.
-  if (nsIDocument* doc = GetComposedDoc()) {
+  if (Document* doc = GetComposedDoc()) {
     doc->SetMathMLEnabled();
   }
 
@@ -293,7 +292,7 @@ nsMapRuleToAttributesFunc nsMathMLElement::GetAttributeMappingFunction() const {
 /* static */ bool nsMathMLElement::ParseNumericValue(const nsString& aString,
                                                      nsCSSValue& aCSSValue,
                                                      uint32_t aFlags,
-                                                     nsIDocument* aDocument) {
+                                                     Document* aDocument) {
   nsAutoString str(aString);
   str.CompressWhitespace();  // aString is const in this code...
 

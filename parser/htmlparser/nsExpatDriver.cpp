@@ -32,6 +32,7 @@
 using mozilla::fallible;
 using mozilla::LogLevel;
 using mozilla::MakeStringSpan;
+using mozilla::dom::Document;
 
 #define kExpatSeparatorChar 0xFFFF
 
@@ -601,7 +602,7 @@ nsresult nsExpatDriver::OpenInputStreamFromExternalDTD(const char16_t *aFPIStr,
         "mOriginalSink not the same object as mSink?");
     nsCOMPtr<nsIPrincipal> loadingPrincipal;
     if (mOriginalSink) {
-      nsCOMPtr<nsIDocument> doc;
+      nsCOMPtr<Document> doc;
       doc = do_QueryInterface(mOriginalSink->GetTarget());
       if (doc) {
         loadingPrincipal = doc->NodePrincipal();
@@ -757,7 +758,7 @@ nsresult nsExpatDriver::HandleError() {
   }
 
   if (mOriginalSink) {
-    nsCOMPtr<nsIDocument> doc = do_QueryInterface(mOriginalSink->GetTarget());
+    nsCOMPtr<Document> doc = do_QueryInterface(mOriginalSink->GetTarget());
     if (doc && doc->SuppressParserErrorConsoleMessages()) {
       shouldReportError = false;
     }
@@ -1019,7 +1020,7 @@ nsExpatDriver::WillBuildModel(const CParserContext &aParserContext,
 
   XML_SetBase(mExpatParser, mURISpec.get());
 
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(mOriginalSink->GetTarget());
+  nsCOMPtr<Document> doc = do_QueryInterface(mOriginalSink->GetTarget());
   if (doc) {
     nsCOMPtr<nsPIDOMWindowOuter> win = doc->GetWindow();
     nsCOMPtr<nsPIDOMWindowInner> inner;

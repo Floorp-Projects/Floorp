@@ -75,7 +75,7 @@ nsresult ClientSource::SnapshotWindowState(ClientState* aStateOut) {
     return NS_OK;
   }
 
-  nsIDocument* doc = window->GetExtantDoc();
+  Document* doc = window->GetExtantDoc();
   if (NS_WARN_IF(!doc)) {
     return NS_ERROR_UNEXPECTED;
   }
@@ -232,7 +232,7 @@ nsresult ClientSource::WindowExecutionReady(nsPIDOMWindowInner* aInnerWindow) {
     return NS_OK;
   }
 
-  nsIDocument* doc = aInnerWindow->GetExtantDoc();
+  Document* doc = aInnerWindow->GetExtantDoc();
   NS_ENSURE_TRUE(doc, NS_ERROR_UNEXPECTED);
 
   nsIURI* uri = doc->GetOriginalURI();

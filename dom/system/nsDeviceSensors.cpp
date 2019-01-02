@@ -334,7 +334,7 @@ void nsDeviceSensors::Notify(const mozilla::hal::SensorData& aSensorData) {
       continue;
     }
 
-    if (nsCOMPtr<nsIDocument> doc = pwindow->GetDoc()) {
+    if (nsCOMPtr<Document> doc = pwindow->GetDoc()) {
       nsCOMPtr<mozilla::dom::EventTarget> target =
           do_QueryInterface(windowListeners[i]);
       if (type == nsIDeviceSensorData::TYPE_ACCELERATION ||
@@ -453,7 +453,7 @@ void nsDeviceSensors::FireDOMOrientationEvent(EventTarget* aTarget,
   }
 }
 
-void nsDeviceSensors::FireDOMMotionEvent(nsIDocument* doc, EventTarget* target,
+void nsDeviceSensors::FireDOMMotionEvent(Document* doc, EventTarget* target,
                                          uint32_t type, PRTime timestamp,
                                          double x, double y, double z) {
   // Attempt to coalesce events
@@ -537,7 +537,7 @@ bool nsDeviceSensors::IsSensorAllowedByPref(uint32_t aType,
   }
 
   nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aWindow);
-  nsCOMPtr<nsIDocument> doc;
+  nsCOMPtr<Document> doc;
   if (window) {
     doc = window->GetExtantDoc();
   }
@@ -550,7 +550,7 @@ bool nsDeviceSensors::IsSensorAllowedByPref(uint32_t aType,
       if (!gPrefMotionSensorEnabled) {
         return false;
       } else if (doc) {
-        doc->WarnOnceAbout(nsIDocument::eMotionEvent);
+        doc->WarnOnceAbout(Document::eMotionEvent);
       }
       break;
     case nsIDeviceSensorData::TYPE_GAME_ROTATION_VECTOR:
@@ -560,7 +560,7 @@ bool nsDeviceSensors::IsSensorAllowedByPref(uint32_t aType,
       if (!gPrefOrientationSensorEnabled) {
         return false;
       } else if (doc) {
-        doc->WarnOnceAbout(nsIDocument::eOrientationEvent);
+        doc->WarnOnceAbout(Document::eOrientationEvent);
       }
       break;
     case nsIDeviceSensorData::TYPE_PROXIMITY:
@@ -568,7 +568,7 @@ bool nsDeviceSensors::IsSensorAllowedByPref(uint32_t aType,
       if (!gPrefProximitySensorEnabled) {
         return false;
       } else if (doc) {
-        doc->WarnOnceAbout(nsIDocument::eProximityEvent, true);
+        doc->WarnOnceAbout(Document::eProximityEvent, true);
       }
       break;
     case nsIDeviceSensorData::TYPE_LIGHT:
@@ -576,7 +576,7 @@ bool nsDeviceSensors::IsSensorAllowedByPref(uint32_t aType,
       if (!gPrefAmbientLightSensorEnabled) {
         return false;
       } else if (doc) {
-        doc->WarnOnceAbout(nsIDocument::eAmbientLightEvent, true);
+        doc->WarnOnceAbout(Document::eAmbientLightEvent, true);
       }
       break;
     default:

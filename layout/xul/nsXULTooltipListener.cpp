@@ -7,7 +7,7 @@
 #include "nsXULTooltipListener.h"
 
 #include "nsXULElement.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsGkAtoms.h"
 #include "nsMenuPopupFrame.h"
 #include "nsIServiceManager.h"
@@ -326,7 +326,7 @@ void nsXULTooltipListener::CheckTreeBodyMove(MouseEvent* aMouseEvent) {
 
   // get the boxObject of the documentElement of the document the tree is in
   nsCOMPtr<nsIBoxObject> bx;
-  nsIDocument* doc = sourceNode->GetComposedDoc();
+  Document* doc = sourceNode->GetComposedDoc();
   if (doc) {
     ErrorResult ignored;
     bx = doc->GetBoxObjectFor(doc->GetRootElement(), ignored);
@@ -410,7 +410,7 @@ nsresult nsXULTooltipListener::ShowTooltip() {
 
       // listen for mousedown, mouseup, keydown, and DOMMouseScroll events at
       // document level
-      nsIDocument* doc = sourceNode->GetComposedDoc();
+      Document* doc = sourceNode->GetComposedDoc();
       if (doc) {
         // Probably, we should listen to untrusted events for hiding tooltips
         // on content since tooltips might disturb something of web
@@ -535,7 +535,7 @@ nsresult nsXULTooltipListener::FindTooltip(nsIContent* aTarget,
   if (!aTarget) return NS_ERROR_NULL_POINTER;
 
   // before we go on, make sure that target node still has a window
-  nsIDocument* document = aTarget->GetComposedDoc();
+  Document* document = aTarget->GetComposedDoc();
   if (!document) {
     NS_WARNING("Unable to retrieve the tooltip node document.");
     return NS_ERROR_FAILURE;
@@ -655,7 +655,7 @@ nsresult nsXULTooltipListener::DestroyTooltip() {
     mCurrentTooltip = nullptr;
 
     // clear out the tooltip node on the document
-    nsCOMPtr<nsIDocument> doc = currentTooltip->GetComposedDoc();
+    nsCOMPtr<Document> doc = currentTooltip->GetComposedDoc();
     if (doc) {
       // remove the mousedown and keydown listener from document
       doc->RemoveSystemEventListener(NS_LITERAL_STRING("DOMMouseScroll"), this,

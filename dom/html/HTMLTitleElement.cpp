@@ -9,7 +9,7 @@
 #include "mozilla/dom/HTMLTitleElementBinding.h"
 #include "mozilla/ErrorResult.h"
 #include "nsStyleConsts.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsContentUtils.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Title)
@@ -63,8 +63,7 @@ void HTMLTitleElement::ContentRemoved(nsIContent* aChild,
   SendTitleChangeEvent(false);
 }
 
-nsresult HTMLTitleElement::BindToTree(nsIDocument* aDocument,
-                                      nsIContent* aParent,
+nsresult HTMLTitleElement::BindToTree(Document* aDocument, nsIContent* aParent,
                                       nsIContent* aBindingParent) {
   // Let this fall through.
   nsresult rv =
@@ -90,7 +89,7 @@ void HTMLTitleElement::DoneAddingChildren(bool aHaveNotified) {
 }
 
 void HTMLTitleElement::SendTitleChangeEvent(bool aBound) {
-  nsIDocument* doc = GetUncomposedDoc();
+  Document* doc = GetUncomposedDoc();
   if (doc) {
     doc->NotifyPossibleTitleChange(aBound);
   }

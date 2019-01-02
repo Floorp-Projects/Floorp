@@ -109,7 +109,7 @@ nsIURI* GetBaseURI(bool aIsMainScript, WorkerPrivate* aWorkerPrivate) {
 }
 
 nsresult ConstructURI(const nsAString& aScriptURL, nsIURI* baseURI,
-                      nsIDocument* parentDoc, bool aDefaultURIEncoding,
+                      Document* parentDoc, bool aDefaultURIEncoding,
                       nsIURI** aResult) {
   nsresult rv;
   if (aDefaultURIEncoding) {
@@ -125,7 +125,7 @@ nsresult ConstructURI(const nsAString& aScriptURL, nsIURI* baseURI,
   return NS_OK;
 }
 
-nsresult ChannelFromScriptURL(nsIPrincipal* principal, nsIDocument* parentDoc,
+nsresult ChannelFromScriptURL(nsIPrincipal* principal, Document* parentDoc,
                               WorkerPrivate* aWorkerPrivate,
                               nsILoadGroup* loadGroup, nsIIOService* ios,
                               nsIScriptSecurityManager* secMan,
@@ -913,7 +913,7 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
     nsCOMPtr<nsIURI> baseURI = GetBaseURI(mIsMainScript, mWorkerPrivate);
 
     // May be null.
-    nsCOMPtr<nsIDocument> parentDoc = mWorkerPrivate->GetDocument();
+    nsCOMPtr<Document> parentDoc = mWorkerPrivate->GetDocument();
 
     nsCOMPtr<nsIChannel> channel;
     if (IsMainWorkerScript()) {
@@ -1120,7 +1120,7 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
     }
 
     // May be null.
-    nsIDocument* parentDoc = mWorkerPrivate->GetDocument();
+    Document* parentDoc = mWorkerPrivate->GetDocument();
 
     // Use the regular ScriptLoader for this grunt work! Should be just fine
     // because we're running on the main thread.
@@ -1270,7 +1270,7 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
     loadInfo.mMutedErrorFlag.emplace(!principal->Subsumes(responsePrincipal));
 
     // May be null.
-    nsIDocument* parentDoc = mWorkerPrivate->GetDocument();
+    Document* parentDoc = mWorkerPrivate->GetDocument();
 
     MOZ_ASSERT(!loadInfo.mScriptTextBuf);
 
@@ -1830,7 +1830,7 @@ class ChannelGetterRunnable final : public WorkerMainThreadRunnable {
     MOZ_ASSERT(baseURI);
 
     // May be null.
-    nsCOMPtr<nsIDocument> parentDoc = mWorkerPrivate->GetDocument();
+    nsCOMPtr<Document> parentDoc = mWorkerPrivate->GetDocument();
 
     mLoadInfo.mLoadGroup = mWorkerPrivate->GetLoadGroup();
 
@@ -2161,7 +2161,7 @@ void LoadAllScripts(WorkerPrivate* aWorkerPrivate,
 namespace workerinternals {
 
 nsresult ChannelFromScriptURLMainThread(
-    nsIPrincipal* aPrincipal, nsIDocument* aParentDoc, nsILoadGroup* aLoadGroup,
+    nsIPrincipal* aPrincipal, Document* aParentDoc, nsILoadGroup* aLoadGroup,
     nsIURI* aScriptURL, const Maybe<ClientInfo>& aClientInfo,
     nsContentPolicyType aMainScriptContentPolicyType, nsIChannel** aChannel) {
   AssertIsOnMainThread();

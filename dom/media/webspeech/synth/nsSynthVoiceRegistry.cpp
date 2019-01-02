@@ -621,7 +621,7 @@ already_AddRefed<nsSpeechTask> nsSynthVoiceRegistry::SpeakUtterance(
   }
 
   nsCOMPtr<nsPIDOMWindowInner> window = aUtterance.GetOwner();
-  nsCOMPtr<nsIDocument> doc = window ? window->GetDoc() : nullptr;
+  nsCOMPtr<Document> doc = window ? window->GetDoc() : nullptr;
 
   bool isChrome = nsContentUtils::IsChromeDoc(doc);
 

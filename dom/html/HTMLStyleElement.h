@@ -12,8 +12,6 @@
 #include "nsStyleLinkElement.h"
 #include "nsStubMutationObserver.h"
 
-class nsIDocument;
-
 namespace mozilla {
 namespace dom {
 
@@ -40,7 +38,7 @@ class HTMLStyleElement final : public nsGenericHTMLElement,
                                       nsIPrincipal* aSubjectPrincipal,
                                       mozilla::ErrorResult& aError) override;
 
-  virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+  virtual nsresult BindToTree(Document* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent) override;
   virtual void UnbindFromTree(bool aDeep = true,
                               bool aNullParent = true) override;

@@ -43,27 +43,27 @@ struct LifecycleCallbackArgs {
 };
 
 struct LifecycleAdoptedCallbackArgs {
-  nsCOMPtr<nsIDocument> mOldDocument;
-  nsCOMPtr<nsIDocument> mNewDocument;
+  RefPtr<Document> mOldDocument;
+  RefPtr<Document> mNewDocument;
 };
 
 class CustomElementCallback {
  public:
   CustomElementCallback(Element* aThisObject,
-                        nsIDocument::ElementCallbackType aCallbackType,
+                        Document::ElementCallbackType aCallbackType,
                         CallbackFunction* aCallback);
   void Traverse(nsCycleCollectionTraversalCallback& aCb) const;
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
   void Call();
   void SetArgs(LifecycleCallbackArgs& aArgs) {
-    MOZ_ASSERT(mType == nsIDocument::eAttributeChanged,
+    MOZ_ASSERT(mType == Document::eAttributeChanged,
                "Arguments are only used by attribute changed callback.");
     mArgs = aArgs;
   }
 
   void SetAdoptedCallbackArgs(
       LifecycleAdoptedCallbackArgs& aAdoptedCallbackArgs) {
-    MOZ_ASSERT(mType == nsIDocument::eAdopted,
+    MOZ_ASSERT(mType == Document::eAdopted,
                "Arguments are only used by adopted callback.");
     mAdoptedCallbackArgs = aAdoptedCallbackArgs;
   }
@@ -73,7 +73,7 @@ class CustomElementCallback {
   RefPtr<Element> mThisObject;
   RefPtr<CallbackFunction> mCallback;
   // The type of callback (eCreated, eAttached, etc.)
-  nsIDocument::ElementCallbackType mType;
+  Document::ElementCallbackType mType;
   // Arguments to be passed to the callback,
   // used by the attribute changed callback.
   LifecycleCallbackArgs mArgs;
@@ -349,7 +349,6 @@ class CustomElementReactionsStack {
 };
 
 class CustomElementRegistry final : public nsISupports, public nsWrapperCache {
-
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(CustomElementRegistry)
@@ -399,7 +398,7 @@ class CustomElementRegistry final : public nsISupports, public nsWrapperCache {
       JSContext* aCx, JSObject* aConstructor) const;
 
   static void EnqueueLifecycleCallback(
-      nsIDocument::ElementCallbackType aType, Element* aCustomElement,
+      Document::ElementCallbackType aType, Element* aCustomElement,
       LifecycleCallbackArgs* aArgs,
       LifecycleAdoptedCallbackArgs* aAdoptedCallbackArgs,
       CustomElementDefinition* aDefinition);
@@ -474,7 +473,7 @@ class CustomElementRegistry final : public nsISupports, public nsWrapperCache {
   ~CustomElementRegistry();
 
   static UniquePtr<CustomElementCallback> CreateCustomElementCallback(
-      nsIDocument::ElementCallbackType aType, Element* aCustomElement,
+      Document::ElementCallbackType aType, Element* aCustomElement,
       LifecycleCallbackArgs* aArgs,
       LifecycleAdoptedCallbackArgs* aAdoptedCallbackArgs,
       CustomElementDefinition* aDefinition);

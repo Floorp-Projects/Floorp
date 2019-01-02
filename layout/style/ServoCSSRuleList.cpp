@@ -22,7 +22,7 @@
 #include "mozilla/IntegerRange.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/StyleSheet.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 
 using namespace mozilla::dom;
 
@@ -157,7 +157,7 @@ nsresult ServoCSSRuleList::InsertRule(const nsAString& aRule, uint32_t aIndex) {
   NS_ConvertUTF16toUTF8 rule(aRule);
   bool nested = !!mParentRule;
   css::Loader* loader = nullptr;
-  if (nsIDocument* doc = mStyleSheet->GetAssociatedDocument()) {
+  if (Document* doc = mStyleSheet->GetAssociatedDocument()) {
     loader = doc->CSSLoader();
   }
   uint16_t type;

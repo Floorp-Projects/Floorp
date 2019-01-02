@@ -13,7 +13,7 @@
 #include "mozilla/AsyncEventDispatcher.h"
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsFrameSelection.h"
 #include "nsRange.h"
 #include "mozilla/dom/Selection.h"
@@ -72,10 +72,10 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(SelectionChangeEventDispatcher, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(SelectionChangeEventDispatcher, Release)
 
-void SelectionChangeEventDispatcher::OnSelectionChange(nsIDocument* aDoc,
+void SelectionChangeEventDispatcher::OnSelectionChange(Document* aDoc,
                                                        Selection* aSel,
                                                        int16_t aReason) {
-  nsIDocument* doc = aSel->GetParentObject();
+  Document* doc = aSel->GetParentObject();
   if (!(doc && nsContentUtils::IsSystemPrincipal(doc->NodePrincipal())) &&
       !nsFrameSelection::sSelectionEventsEnabled) {
     return;

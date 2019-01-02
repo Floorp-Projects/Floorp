@@ -24,7 +24,7 @@ class HTMLMarqueeElement final : public nsGenericHTMLElement {
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(HTMLMarqueeElement,
                                            nsGenericHTMLElement)
 
-  nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+  nsresult BindToTree(Document* aDocument, nsIContent* aParent,
                       nsIContent* aBindingParent) override;
   void UnbindFromTree(bool aDeep = true, bool aNullParent = true) override;
 

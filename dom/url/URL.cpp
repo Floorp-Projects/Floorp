@@ -12,7 +12,7 @@
 #include "mozilla/dom/URLBinding.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "nsContentUtils.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIURIMutator.h"
 
 namespace mozilla {

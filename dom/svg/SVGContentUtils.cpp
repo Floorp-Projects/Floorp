@@ -426,8 +426,7 @@ float SVGContentUtils::GetFontXHeight(ComputedStyle* aComputedStyle,
   return nsPresContext::AppUnitsToFloatCSSPixels(xHeight) /
          aPresContext->EffectiveTextZoom();
 }
-nsresult SVGContentUtils::ReportToConsole(nsIDocument* doc,
-                                          const char* aWarning,
+nsresult SVGContentUtils::ReportToConsole(Document* doc, const char* aWarning,
                                           const char16_t** aParams,
                                           uint32_t aParamsLength) {
   return nsContentUtils::ReportToConsole(
@@ -512,7 +511,7 @@ static gfx::Matrix GetCTMInternal(SVGElement* aElement, bool aScreenCTM,
 
   // XXX this does not take into account CSS transform, or that the non-SVG
   // content that we've hit may itself be inside an SVG foreignObject higher up
-  nsIDocument* currentDoc = aElement->GetComposedDoc();
+  Document* currentDoc = aElement->GetComposedDoc();
   float x = 0.0f, y = 0.0f;
   if (currentDoc &&
       element->NodeInfo()->Equals(nsGkAtoms::svg, kNameSpaceID_SVG)) {

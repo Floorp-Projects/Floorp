@@ -11,11 +11,12 @@
 using JS::ubi::EdgeRange;
 using JS::ubi::SimpleEdgeRange;
 
-const char16_t JS::ubi::Concrete<nsIDocument>::concreteTypeName[] =
-    u"nsIDocument";
+const char16_t JS::ubi::Concrete<mozilla::dom::Document>::concreteTypeName[] =
+    u"Document";
 const char16_t JS::ubi::Concrete<nsIContent>::concreteTypeName[] =
     u"nsIContent";
-const char16_t JS::ubi::Concrete<Attr>::concreteTypeName[] = u"Attr";
+const char16_t JS::ubi::Concrete<mozilla::dom::Attr>::concreteTypeName[] =
+    u"Attr";
 
 void JS::ubi::Concrete<nsINode>::construct(void* storage, nsINode* ptr) {
   // nsINode is abstract, and all of its inherited instances have
@@ -66,7 +67,7 @@ const char16_t* JS::ubi::Concrete<nsINode>::descriptiveTypeName() const {
   return get().NodeName().get();
 }
 
-JS::ubi::Node::Size JS::ubi::Concrete<nsIDocument>::size(
+JS::ubi::Node::Size JS::ubi::Concrete<mozilla::dom::Document>::size(
     mozilla::MallocSizeOf mallocSizeOf) const {
   AutoSuppressGCAnalysis suppress;
   mozilla::SizeOfState sz(mallocSizeOf);

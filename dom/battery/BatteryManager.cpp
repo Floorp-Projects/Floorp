@@ -13,7 +13,7 @@
 #include "mozilla/dom/BatteryManagerBinding.h"
 #include "mozilla/Preferences.h"
 #include "nsContentUtils.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 
 /**
  * We have to use macros here because our leak analysis tool things we are
@@ -116,7 +116,7 @@ void BatteryManager::UpdateFromBatteryInfo(
   mLevel = aBatteryInfo.level();
 
   // Round to the nearest ten percent for non-chrome.
-  nsIDocument* doc = GetOwner() ? GetOwner()->GetDoc() : nullptr;
+  Document* doc = GetOwner() ? GetOwner()->GetDoc() : nullptr;
 
   mCharging = aBatteryInfo.charging();
   mRemainingTime = aBatteryInfo.remainingTime();

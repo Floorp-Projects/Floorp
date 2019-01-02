@@ -22,8 +22,13 @@
 #define REPEAT_DELAY 50
 #endif
 
-class nsIDocument;
 class nsITimer;
+
+namespace mozilla {
+namespace dom {
+class Document;
+}
+}  // namespace mozilla
 
 class nsRepeatService final {
  public:
@@ -40,8 +45,8 @@ class nsRepeatService final {
   //
   // aDocument is used to get the event target in Start(). We need an event
   // target to init mRepeatTimer.
-  void Start(Callback aCallback, void* aCallbackData, nsIDocument* aDocument,
-             const nsACString& aCallbackName,
+  void Start(Callback aCallback, void* aCallbackData,
+             mozilla::dom::Document* aDocument, const nsACString& aCallbackName,
              uint32_t aInitialDelay = INITAL_REPEAT_DELAY);
   // Stop dispatching timer events to the callback. If the repeat service
   // is not currently configured with the given callback and data, this

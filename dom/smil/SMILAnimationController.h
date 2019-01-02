@@ -19,8 +19,6 @@
 #include "nsHashKeys.h"
 #include "nsRefreshDriver.h"
 
-class nsIDocument;
-
 namespace mozilla {
 struct SMILTargetIdentifier;
 namespace dom {
@@ -44,9 +42,10 @@ class SVGAnimationElement;
 class SMILAnimationController final : public SMILTimeContainer,
                                       public nsARefreshObserver {
  public:
-  explicit SMILAnimationController(nsIDocument* aDoc);
+  explicit SMILAnimationController(mozilla::dom::Document* aDoc);
 
-  // Clears mDocument pointer. (Called by our nsIDocument when it's going away)
+  // Clears mDocument pointer. (Called by our mozilla::dom::Document when it's
+  // going away)
   void Disconnect();
 
   // nsSMILContainer
@@ -197,7 +196,7 @@ class SMILAnimationController final : public SMILTimeContainer,
 
   // Store raw ptr to mDocument.  It owns the controller, so controller
   // shouldn't outlive it
-  nsIDocument* mDocument;
+  mozilla::dom::Document* mDocument;
 
   // Contains compositors used in our last sample.  We keep this around
   // so we can detect when an element/attribute used to be animated,

@@ -5,7 +5,7 @@
 #include "nsHtml5SVGLoadDispatcher.h"
 #include "mozilla/BasicEvents.h"
 #include "mozilla/EventDispatcher.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
 

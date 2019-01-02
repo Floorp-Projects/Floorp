@@ -16,7 +16,7 @@
 #include "nsIContent.h"
 #include "nsAtom.h"
 #include "nsNameSpaceManager.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIController.h"
 #include "nsIControllers.h"
 #include "nsXULElement.h"
@@ -300,7 +300,7 @@ nsresult nsXBLPrototypeHandler::ExecuteHandler(EventTarget* aTarget,
     boundGlobal = do_QueryInterface(aTarget);
 
   if (!boundGlobal) {
-    nsCOMPtr<nsIDocument> boundDocument(do_QueryInterface(aTarget));
+    nsCOMPtr<Document> boundDocument(do_QueryInterface(aTarget));
     if (!boundDocument) {
       // We must be an element.
       nsCOMPtr<nsIContent> content(do_QueryInterface(aTarget));
@@ -472,7 +472,7 @@ nsresult nsXBLPrototypeHandler::DispatchXBLCommand(EventTarget* aTarget,
     privateWindow = do_QueryInterface(aTarget);
     if (!privateWindow) {
       nsCOMPtr<nsIContent> elt(do_QueryInterface(aTarget));
-      nsCOMPtr<nsIDocument> doc;
+      nsCOMPtr<Document> doc;
       // XXXbz sXBL/XBL2 issue -- this should be the "scope doc" or
       // something... whatever we use when wrapping DOM nodes
       // normally.  It's not clear that the owner doc is the right
@@ -939,7 +939,7 @@ void nsXBLPrototypeHandler::ReportKeyConflict(const char16_t* aKey,
                                               const char16_t* aModifiers,
                                               Element* aKeyElement,
                                               const char* aMessageName) {
-  nsCOMPtr<nsIDocument> doc;
+  nsCOMPtr<Document> doc;
   if (mPrototypeBinding) {
     nsXBLDocumentInfo* docInfo = mPrototypeBinding->XBLDocumentInfo();
     if (docInfo) {

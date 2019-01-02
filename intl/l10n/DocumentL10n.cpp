@@ -72,7 +72,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(DocumentL10n)
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(DocumentL10n, mDocument, mDOMLocalization,
                                       mReady)
 
-DocumentL10n::DocumentL10n(nsIDocument* aDocument)
+DocumentL10n::DocumentL10n(Document* aDocument)
     : mDocument(aDocument), mState(DocumentL10nState::Initialized) {}
 
 DocumentL10n::~DocumentL10n() {}

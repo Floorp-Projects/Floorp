@@ -13,7 +13,7 @@
 #include "mozilla/dom/MutationEventBinding.h"
 #include "mozilla/InternalMutationEvent.h"
 #include "mozAutoDocUpdate.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIURI.h"
 #include "nsNodeUtils.h"
 #include "SMILCSSValueType.h"
@@ -82,7 +82,7 @@ nsresult nsDOMCSSAttributeDeclaration::SetCSSDeclaration(
              : mElement->SetInlineStyleDeclaration(*aDecl, *aClosureData);
 }
 
-nsIDocument* nsDOMCSSAttributeDeclaration::DocToUpdate() {
+Document* nsDOMCSSAttributeDeclaration::DocToUpdate() {
   // We need OwnerDoc() rather than GetUncomposedDoc() because it might
   // be the BeginUpdate call that inserts mElement into the document.
   return mElement->OwnerDoc();

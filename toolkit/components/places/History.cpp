@@ -1463,7 +1463,7 @@ void History::InitMemoryReporter() { RegisterWeakMemoryReporter(this); }
 // Helper function which performs the checking required to fetch the document
 // object for the given link. May return null if the link does not have an owner
 // document.
-static nsIDocument* GetLinkDocument(Link* aLink) {
+static Document* GetLinkDocument(Link* aLink) {
   // NOTE: Theoretically GetElement should never return nullptr, but it does
   // in GTests because they use a mock_Link which returns null from this
   // method.
@@ -1505,11 +1505,11 @@ History::NotifyVisited(nsIURI* aURI) {
   // Dispatch an event to each document which has a Link observing this URL.
   // These will fire asynchronously in the correct DocGroup.
   {
-    nsTArray<nsIDocument*> seen;  // Don't dispatch duplicate runnables.
+    nsTArray<Document*> seen;  // Don't dispatch duplicate runnables.
     ObserverArray::BackwardIterator iter(key->array);
     while (iter.HasMore()) {
       Link* link = iter.GetNext();
-      nsIDocument* doc = GetLinkDocument(link);
+      Document* doc = GetLinkDocument(link);
       if (seen.Contains(doc)) {
         continue;
       }
@@ -1521,7 +1521,7 @@ History::NotifyVisited(nsIURI* aURI) {
   return NS_OK;
 }
 
-void History::NotifyVisitedForDocument(nsIURI* aURI, nsIDocument* aDocument) {
+void History::NotifyVisitedForDocument(nsIURI* aURI, Document* aDocument) {
   MOZ_ASSERT(NS_IsMainThread());
   // Make sure that nothing invalidates our observer array while we're walking
   // over it.
@@ -1539,7 +1539,7 @@ void History::NotifyVisitedForDocument(nsIURI* aURI, nsIDocument* aDocument) {
     ObserverArray::BackwardIterator iter(key->array);
     while (iter.HasMore()) {
       Link* link = iter.GetNext();
-      nsIDocument* doc = GetLinkDocument(link);
+      Document* doc = GetLinkDocument(link);
       if (doc == aDocument) {
         link->SetLinkState(eLinkState_Visited);
         iter.Remove();
@@ -1557,9 +1557,9 @@ void History::NotifyVisitedForDocument(nsIURI* aURI, nsIDocument* aDocument) {
   }
 }
 
-void History::DispatchNotifyVisited(nsIURI* aURI, nsIDocument* aDocument) {
+void History::DispatchNotifyVisited(nsIURI* aURI, Document* aDocument) {
   // Capture strong references to the arguments to capture in the closure.
-  nsCOMPtr<nsIDocument> doc = aDocument;
+  RefPtr<Document> doc = aDocument;
   nsCOMPtr<nsIURI> uri = aURI;
 
   // Create and dispatch the runnable to call NotifyVisitedForDocument.

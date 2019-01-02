@@ -24,7 +24,7 @@
 
 class nsIChannel;
 class nsIObserverService;
-class nsIDocument;
+
 class nsIPIDOMWindowInner;
 class nsIPIDOMWindowOuter;
 
@@ -102,7 +102,7 @@ class ExtensionPolicyService final : public nsIAddonPolicyService,
   void UnregisterObservers();
 
   void CheckRequest(nsIChannel* aChannel);
-  void CheckDocument(nsIDocument* aDocument);
+  void CheckDocument(dom::Document* aDocument);
   void CheckWindow(nsPIDOMWindowOuter* aWindow);
 
   void CheckContentScripts(const DocInfo& aDocInfo, bool aIsPreload);

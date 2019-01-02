@@ -501,7 +501,7 @@ void PrintWinURI(T* win) {
     return;
   }
 
-  nsCOMPtr<nsIDocument> doc = win->GetExtantDoc();
+  nsCOMPtr<Document> doc = win->GetExtantDoc();
   if (!doc) {
     printf("No document in the window.\n");
     return;
@@ -1934,9 +1934,9 @@ void nsJSContext::MaybeRunNextCollectorSlice(nsIDocShell* aDocShell,
     return;
   }
 
-  nsIDocument* rootDocument = root->GetDocument();
+  Document* rootDocument = root->GetDocument();
   if (!rootDocument ||
-      rootDocument->GetReadyStateEnum() != nsIDocument::READYSTATE_COMPLETE ||
+      rootDocument->GetReadyStateEnum() != Document::READYSTATE_COMPLETE ||
       rootDocument->IsInBackgroundWindow()) {
     return;
   }

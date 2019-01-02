@@ -17,12 +17,12 @@ class nsGlobalWindowOuter;
 class nsIPresShell;
 class nsIWidget;
 class nsPresContext;
-class nsIDocument;
 class nsView;
 struct nsPoint;
 
 namespace mozilla {
 namespace dom {
+class Document;
 class Element;
 }  // namespace dom
 namespace layers {
@@ -79,7 +79,7 @@ class nsDOMWindowUtils final : public nsIDOMWindowUtils,
 
   nsIPresShell* GetPresShell();
   nsPresContext* GetPresContext();
-  nsIDocument* GetDocument();
+  mozilla::dom::Document* GetDocument();
   mozilla::layers::LayerTransactionChild* GetLayerTransaction();
   mozilla::layers::WebRenderBridgeChild* GetWebRenderBridge();
 

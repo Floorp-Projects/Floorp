@@ -14,7 +14,7 @@ namespace a11y {
 
 class DocAccessibleWrap : public DocAccessible {
  public:
-  DocAccessibleWrap(nsIDocument* aDocument, nsIPresShell* aPresShell);
+  DocAccessibleWrap(Document* aDocument, nsIPresShell* aPresShell);
   virtual ~DocAccessibleWrap();
 
   virtual nsresult HandleAccEvent(AccEvent* aEvent) override;

@@ -176,7 +176,7 @@ class XMLHttpRequestWorker final : public XMLHttpRequest {
   virtual void GetResponseText(DOMString& aResponseText,
                                ErrorResult& aRv) override;
 
-  virtual nsIDocument* GetResponseXML(ErrorResult& aRv) override {
+  virtual Document* GetResponseXML(ErrorResult& aRv) override {
     MOZ_CRASH("This method should not be called.");
   }
 

@@ -9,7 +9,7 @@
 #include "nsCOMPtr.h"
 #include "nsIForm.h"
 #include "nsILinkHandler.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsGkAtoms.h"
 #include "nsIFormControl.h"
 #include "nsError.h"
@@ -44,7 +44,7 @@ namespace dom {
 
 namespace {
 
-void SendJSWarning(nsIDocument* aDocument, const char* aWarningName,
+void SendJSWarning(Document* aDocument, const char* aWarningName,
                    const char16_t** aWarningArgs, uint32_t aWarningArgsLen) {
   nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
                                   NS_LITERAL_CSTRING("HTML"), aDocument,
@@ -85,7 +85,7 @@ class FSURLEncoded : public EncodingFormSubmission {
    */
   FSURLEncoded(nsIURI* aActionURL, const nsAString& aTarget,
                NotNull<const Encoding*> aEncoding, int32_t aMethod,
-               nsIDocument* aDocument, Element* aOriginatingElement)
+               Document* aDocument, Element* aOriginatingElement)
       : EncodingFormSubmission(aActionURL, aTarget, aEncoding,
                                aOriginatingElement),
         mMethod(aMethod),
@@ -127,7 +127,7 @@ class FSURLEncoded : public EncodingFormSubmission {
   nsCString mQueryString;
 
   /** The document whose URI to use when reporting errors */
-  nsCOMPtr<nsIDocument> mDocument;
+  nsCOMPtr<Document> mDocument;
 
   /** Whether or not we have warned about a file control not being submitted */
   bool mWarnedFileControl;
@@ -792,7 +792,7 @@ NotNull<const Encoding*> GetSubmitEncoding(nsGenericHTMLElement* aForm) {
   }
   // if there are no accept-charset or all the charset are not supported
   // Get the charset from document
-  nsIDocument* doc = aForm->GetComposedDoc();
+  Document* doc = aForm->GetComposedDoc();
   if (doc) {
     return doc->GetDocumentCharacterSet();
   }
@@ -869,7 +869,7 @@ void GetEnumAttr(nsGenericHTMLElement* aContent, nsAtom* atom,
     *aFormSubmission =
         new FSTextPlain(actionURL, target, encoding, aOriginatingElement);
   } else {
-    nsIDocument* doc = aForm->OwnerDoc();
+    Document* doc = aForm->OwnerDoc();
     if (enctype == NS_FORM_ENCTYPE_MULTIPART ||
         enctype == NS_FORM_ENCTYPE_TEXTPLAIN) {
       nsAutoString enctypeStr;

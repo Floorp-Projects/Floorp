@@ -761,11 +761,11 @@ static nsresult GetCreateWindowParams(mozIDOMWindowProxy* aParent,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDocument> doc = opener->GetDoc();
+  nsCOMPtr<Document> doc = opener->GetDoc();
   NS_ADDREF(*aTriggeringPrincipal = doc->NodePrincipal());
   nsCOMPtr<nsIURI> baseURI = doc->GetDocBaseURI();
   if (!baseURI) {
-    NS_ERROR("nsIDocument didn't return a base URI");
+    NS_ERROR("Document didn't return a base URI");
     return NS_ERROR_FAILURE;
   }
 
@@ -978,7 +978,7 @@ nsresult ContentChild::ProvideWindowCommon(
 
     // Set the opener window for this window before we start loading the
     // document inside of it. We have to do this before loading the remote
-    // scripts, because they can poke at the document and cause the nsIDocument
+    // scripts, because they can poke at the document and cause the Document
     // to be created before the openerwindow
     nsCOMPtr<mozIDOMWindowProxy> windowProxy =
         do_GetInterface(newChild->WebNavigation());
@@ -1237,14 +1237,14 @@ mozilla::ipc::IPCResult ContentChild::RecvRequestMemoryReport(
   GetProcessName(process);
   AppendProcessId(process);
 
-  MemoryReportRequestClient::Start(aGeneration, aAnonymize,
-                                   aMinimizeMemoryUsage, aDMDFile, process,
-                                   [&](const MemoryReport& aReport) {
-                                     Unused << GetSingleton()->SendAddMemoryReport(aReport);
-                                   },
-                                   [&](const uint32_t& aGeneration) {
-                                     return GetSingleton()->SendFinishMemoryReport(aGeneration);
-                                   });
+  MemoryReportRequestClient::Start(
+      aGeneration, aAnonymize, aMinimizeMemoryUsage, aDMDFile, process,
+      [&](const MemoryReport& aReport) {
+        Unused << GetSingleton()->SendAddMemoryReport(aReport);
+      },
+      [&](const uint32_t& aGeneration) {
+        return GetSingleton()->SendFinishMemoryReport(aGeneration);
+      });
   return IPC_OK();
 }
 
@@ -2893,9 +2893,8 @@ mozilla::ipc::IPCResult ContentChild::RecvPWebBrowserPersistDocumentConstructor(
   if (NS_WARN_IF(!aBrowser)) {
     return IPC_FAIL_NO_REASON(this);
   }
-  nsCOMPtr<nsIDocument> rootDoc =
-      static_cast<TabChild*>(aBrowser)->GetDocument();
-  nsCOMPtr<nsIDocument> foundDoc;
+  nsCOMPtr<Document> rootDoc = static_cast<TabChild*>(aBrowser)->GetDocument();
+  nsCOMPtr<Document> foundDoc;
   if (aOuterWindowID) {
     foundDoc = nsContentUtils::GetSubdocumentWithOuterWindowId(rootDoc,
                                                                aOuterWindowID);

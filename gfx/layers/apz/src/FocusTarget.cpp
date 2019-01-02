@@ -43,7 +43,7 @@ static already_AddRefed<nsIPresShell> GetRetargetEventPresShell(
     return nullptr;
   }
 
-  nsCOMPtr<nsIDocument> retargetEventDoc = window->GetExtantDoc();
+  RefPtr<Document> retargetEventDoc = window->GetExtantDoc();
   if (!retargetEventDoc) {
     return nullptr;
   }
@@ -117,7 +117,7 @@ FocusTarget::FocusTarget(nsIPresShell* aRootPresShell,
     return;
   }
 
-  nsCOMPtr<nsIDocument> document = presShell->GetDocument();
+  RefPtr<Document> document = presShell->GetDocument();
   if (!document) {
     FT_LOG("Creating nil target with seq=%" PRIu64 " (no document)\n",
            aFocusSequenceNumber);

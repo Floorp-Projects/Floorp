@@ -15,7 +15,7 @@
 #include "nsGkAtoms.h"
 #include "nsIContent.h"
 #include "nsIContentInlines.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIDocumentEncoder.h"
 #include "nsElementTable.h"
 #include "nsNameSpaceManager.h"
@@ -1037,7 +1037,7 @@ nsXMLContentSerializer::AppendElementEnd(Element* aElement, nsAString& aStr) {
 }
 
 NS_IMETHODIMP
-nsXMLContentSerializer::AppendDocumentStart(nsIDocument* aDocument,
+nsXMLContentSerializer::AppendDocumentStart(Document* aDocument,
                                             nsAString& aStr) {
   NS_ENSURE_ARG_POINTER(aDocument);
 

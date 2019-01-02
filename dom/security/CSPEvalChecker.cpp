@@ -9,7 +9,7 @@
 #include "mozilla/dom/WorkerRunnable.h"
 #include "mozilla/ErrorResult.h"
 #include "nsGlobalWindowInner.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsCOMPtr.h"
 #include "nsJSUtils.h"
 
@@ -102,7 +102,7 @@ class WorkerCSPCheckRunnable final : public WorkerMainThreadRunnable {
 
   // if CSP is enabled, and setTimeout/setInterval was called with a string,
   // disable the registration and log an error
-  nsCOMPtr<nsIDocument> doc = aWindow->GetExtantDoc();
+  nsCOMPtr<Document> doc = aWindow->GetExtantDoc();
   if (!doc) {
     // if there's no document, we don't have to do anything.
     *aAllowEval = true;

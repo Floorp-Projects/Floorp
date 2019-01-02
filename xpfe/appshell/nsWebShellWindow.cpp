@@ -40,7 +40,7 @@
 #include "nsIWebProgress.h"
 #include "nsIWebProgressListener.h"
 
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIDocumentLoaderFactory.h"
 #include "nsIObserverService.h"
 
@@ -231,7 +231,7 @@ nsresult nsWebShellWindow::Initialize(
     }
     rv = mDocShell->CreateAboutBlankContentViewer(principal);
     NS_ENSURE_SUCCESS(rv, rv);
-    nsCOMPtr<nsIDocument> doc = mDocShell->GetDocument();
+    RefPtr<Document> doc = mDocShell->GetDocument();
     NS_ENSURE_TRUE(!!doc, NS_ERROR_FAILURE);
     doc->SetIsInitialDocument(true);
   }
@@ -468,7 +468,7 @@ void nsWebShellWindow::WindowDeactivated() {
 }
 
 #ifdef USE_NATIVE_MENUS
-static void LoadNativeMenus(nsIDocument* aDoc, nsIWidget* aParentWindow) {
+static void LoadNativeMenus(Document* aDoc, nsIWidget* aParentWindow) {
   if (gfxPlatform::IsHeadless()) {
     return;
   }
@@ -602,7 +602,7 @@ nsWebShellWindow::OnStateChange(nsIWebProgress* aProgress, nsIRequest* aRequest,
   nsCOMPtr<nsIContentViewer> cv;
   mDocShell->GetContentViewer(getter_AddRefs(cv));
   if (cv) {
-    nsCOMPtr<nsIDocument> menubarDoc = cv->GetDocument();
+    RefPtr<Document> menubarDoc = cv->GetDocument();
     if (menubarDoc) LoadNativeMenus(menubarDoc, mWindow);
   }
 #endif  // USE_NATIVE_MENUS

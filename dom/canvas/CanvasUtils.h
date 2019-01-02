@@ -49,7 +49,7 @@ void DoDrawImageSecurityCheck(dom::HTMLCanvasElement* aCanvasElement,
 bool HasDrawWindowPrivilege(JSContext* aCx, JSObject* aObj);
 
 // Check site-specific permission and display prompt if appropriate.
-bool IsImageExtractionAllowed(nsIDocument* aDocument, JSContext* aCx,
+bool IsImageExtractionAllowed(dom::Document* aDocument, JSContext* aCx,
                               nsIPrincipal& aPrincipal);
 
 // Make a double out of |v|, treating undefined values as 0.0 (for

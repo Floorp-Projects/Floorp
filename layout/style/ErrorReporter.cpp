@@ -15,7 +15,7 @@
 #include "mozilla/Services.h"
 #include "mozilla/SystemGroup.h"
 #include "nsIConsoleService.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIDocShell.h"
 #include "nsIFactory.h"
 #include "nsINode.h"
@@ -29,6 +29,7 @@
 
 using namespace mozilla;
 using namespace mozilla::css;
+using namespace mozilla::dom;
 
 namespace {
 class ShortTermURISpecCache : public Runnable {
@@ -124,7 +125,7 @@ static uint64_t FindInnerWindowID(const StyleSheet* aSheet,
     innerWindowID = aSheet->FindOwningWindowInnerID();
   }
   if (innerWindowID == 0 && aLoader) {
-    if (nsIDocument* doc = aLoader->GetDocument()) {
+    if (Document* doc = aLoader->GetDocument()) {
       innerWindowID = doc->InnerWindowID();
     }
   }
@@ -160,7 +161,7 @@ ErrorReporter::~ErrorReporter() {
   }
 }
 
-bool ErrorReporter::ShouldReportErrors(const nsIDocument& aDoc) {
+bool ErrorReporter::ShouldReportErrors(const Document& aDoc) {
   MOZ_ASSERT(NS_IsMainThread());
   nsIDocShell* shell = aDoc.GetDocShell();
   if (!shell) {

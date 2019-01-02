@@ -226,7 +226,7 @@ enum class BrowsingContextInfo {
   UnknownBrowsingContext
 };
 
-void DOMIntersectionObserver::Update(nsIDocument* aDocument,
+void DOMIntersectionObserver::Update(Document* aDocument,
                                      DOMHighResTimeStamp time) {
   Element* root = nullptr;
   nsIFrame* rootFrame = nullptr;

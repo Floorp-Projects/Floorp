@@ -7,7 +7,7 @@
 #include "InternalRequest.h"
 
 #include "nsIContentPolicy.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsStreamUtils.h"
 
 #include "mozilla/ErrorResult.h"

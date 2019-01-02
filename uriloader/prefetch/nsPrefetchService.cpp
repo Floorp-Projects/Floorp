@@ -34,7 +34,7 @@
 #include "plstr.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsINode.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsContentUtils.h"
 #include "nsStyleLinkElement.h"
 #include "mozilla/AsyncEventDispatcher.h"

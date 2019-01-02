@@ -29,7 +29,7 @@
 #include "nsContainerFrame.h"
 #include "nsFrameTraversal.h"
 #include "nsIImageDocument.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIContent.h"
 #include "nsTextFragment.h"
 #include "nsIEditor.h"
@@ -516,7 +516,7 @@ nsresult nsTypeAheadFind::FindItNow(nsIPresShell* aPresShell, bool aIsLinksOnly,
         mPresShell = do_GetWeakReference(presShell);
       }
 
-      nsCOMPtr<nsIDocument> document = presShell->GetDocument();
+      RefPtr<Document> document = presShell->GetDocument();
       NS_ASSERTION(document, "Wow, presShell doesn't have document!");
       if (!document) return NS_ERROR_UNEXPECTED;
 
@@ -754,7 +754,7 @@ nsresult nsTypeAheadFind::GetSearchContainers(
 
   if (!presShell || !presContext) return NS_ERROR_FAILURE;
 
-  nsIDocument* doc = presShell->GetDocument();
+  Document* doc = presShell->GetDocument();
 
   if (!doc) return NS_ERROR_FAILURE;
 
@@ -1045,7 +1045,7 @@ nsTypeAheadFind::Find(const nsAString& aSearchString, bool aLinksOnly,
       nsPresContext* presContext = presShell->GetPresContext();
       NS_ENSURE_TRUE(presContext, NS_OK);
 
-      nsCOMPtr<nsIDocument> document = presShell->GetDocument();
+      nsCOMPtr<Document> document = presShell->GetDocument();
       if (!document) return NS_ERROR_UNEXPECTED;
 
       nsCOMPtr<nsIFocusManager> fm = do_GetService(FOCUSMANAGER_CONTRACTID);
@@ -1135,7 +1135,7 @@ nsTypeAheadFind::IsRangeVisible(nsRange* aRange, bool aMustBeInViewPort,
                                 bool* aResult) {
   nsCOMPtr<nsINode> node = aRange->GetStartContainer();
 
-  nsIDocument* doc = node->OwnerDoc();
+  Document* doc = node->OwnerDoc();
   nsCOMPtr<nsIPresShell> presShell = doc->GetShell();
   if (!presShell) {
     return NS_ERROR_UNEXPECTED;
@@ -1322,8 +1322,7 @@ NS_IMETHODIMP
 nsTypeAheadFind::IsRangeRendered(nsRange* aRange, bool* aResult) {
   nsINode* node = aRange->GetStartContainer();
 
-  nsIDocument* doc = node->OwnerDoc();
-  nsCOMPtr<nsIPresShell> presShell = doc->GetShell();
+  nsCOMPtr<nsIPresShell> presShell = node->OwnerDoc()->GetShell();
   if (!presShell) {
     return NS_ERROR_UNEXPECTED;
   }

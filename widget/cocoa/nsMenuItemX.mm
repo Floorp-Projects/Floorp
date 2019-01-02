@@ -19,7 +19,7 @@
 #include "mozilla/dom/Event.h"
 #include "mozilla/ErrorResult.h"
 #include "nsIWidget.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 
 using namespace mozilla;
 
@@ -73,7 +73,7 @@ nsresult nsMenuItemX::Create(nsMenuX* aParent, const nsString& aLabel, EMenuItem
 
   mMenuGroupOwner->RegisterForContentChanges(mContent, this);
 
-  nsIDocument *doc = mContent->GetUncomposedDoc();
+  dom::Document *doc = mContent->GetUncomposedDoc();
 
   // if we have a command associated with this menu item, register for changes
   // to the command DOM node
@@ -179,7 +179,7 @@ nsresult nsMenuItemX::DispatchDOMEvent(const nsString &eventName, bool *preventD
     return NS_ERROR_FAILURE;
 
   // get owner document for content
-  nsCOMPtr<nsIDocument> parentDoc = mContent->OwnerDoc();
+  nsCOMPtr<dom::Document> parentDoc = mContent->OwnerDoc();
 
   // create DOM event
   ErrorResult rv;
@@ -293,7 +293,7 @@ void nsMenuItemX::SetKeyEquiv()
 //
 
 void
-nsMenuItemX::ObserveAttributeChanged(nsIDocument *aDocument, nsIContent *aContent, nsAtom *aAttribute)
+nsMenuItemX::ObserveAttributeChanged(dom::Document *aDocument, nsIContent *aContent, nsAtom *aAttribute)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
@@ -357,7 +357,7 @@ nsMenuItemX::ObserveAttributeChanged(nsIDocument *aDocument, nsIContent *aConten
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-void nsMenuItemX::ObserveContentRemoved(nsIDocument* aDocument,
+void nsMenuItemX::ObserveContentRemoved(dom::Document* aDocument,
                                         nsIContent* aContainer,
                                         nsIContent* aChild,
                                         nsIContent* aPreviousSibling)
@@ -370,7 +370,7 @@ void nsMenuItemX::ObserveContentRemoved(nsIDocument* aDocument,
   mMenuParent->SetRebuild(true);
 }
 
-void nsMenuItemX::ObserveContentInserted(nsIDocument *aDocument, nsIContent* aContainer,
+void nsMenuItemX::ObserveContentInserted(dom::Document *aDocument, nsIContent* aContainer,
                                          nsIContent *aChild)
 {
   mMenuParent->SetRebuild(true);

@@ -15,7 +15,7 @@
 
 #include "nsContentUtils.h"
 
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
 #include "SVGObserverUtils.h"
 #include "nsPresContext.h"
@@ -1067,7 +1067,7 @@ JSObject* CanvasRenderingContext2D::WrapObject(
 
 bool CanvasRenderingContext2D::ParseColor(const nsAString& aString,
                                           nscolor* aColor) {
-  nsIDocument* document = mCanvasElement ? mCanvasElement->OwnerDoc() : nullptr;
+  Document* document = mCanvasElement ? mCanvasElement->OwnerDoc() : nullptr;
   css::Loader* loader = document ? document->CSSLoader() : nullptr;
 
   nsIPresShell* presShell = GetPresShell();
@@ -2455,7 +2455,7 @@ void CanvasRenderingContext2D::SetShadowColor(const nsAString& aShadowColor) {
 
 static already_AddRefed<RawServoDeclarationBlock> CreateDeclarationForServo(
     nsCSSPropertyID aProperty, const nsAString& aPropertyValue,
-    nsIDocument* aDocument) {
+    Document* aDocument) {
   RefPtr<URLExtraData> data = new URLExtraData(
       aDocument->GetDocBaseURI(), aDocument->GetDocumentURI(),
       aDocument->NodePrincipal(), aDocument->GetReferrerPolicy());
@@ -2484,7 +2484,7 @@ static already_AddRefed<RawServoDeclarationBlock> CreateDeclarationForServo(
 }
 
 static already_AddRefed<RawServoDeclarationBlock> CreateFontDeclarationForServo(
-    const nsAString& aFont, nsIDocument* aDocument) {
+    const nsAString& aFont, Document* aDocument) {
   return CreateDeclarationForServo(eCSSProperty_font, aFont, aDocument);
 }
 
@@ -2547,8 +2547,7 @@ static already_AddRefed<ComputedStyle> GetFontStyleForServo(
 }
 
 static already_AddRefed<RawServoDeclarationBlock>
-CreateFilterDeclarationForServo(const nsAString& aFilter,
-                                nsIDocument* aDocument) {
+CreateFilterDeclarationForServo(const nsAString& aFilter, Document* aDocument) {
   return CreateDeclarationForServo(eCSSProperty_filter, aFilter, aDocument);
 }
 
@@ -3978,7 +3977,7 @@ nsresult CanvasRenderingContext2D::DrawOrMeasureText(
   nsCOMPtr<nsIPresShell> presShell = GetPresShell();
   if (!presShell) return NS_ERROR_FAILURE;
 
-  nsIDocument* document = presShell->GetDocument();
+  Document* document = presShell->GetDocument();
 
   // replace all the whitespace characters with U+0020 SPACE
   nsAutoString textToDraw(aRawText);
@@ -4360,7 +4359,7 @@ bool CanvasRenderingContext2D::IsPointInPath(JSContext* aCx, double aX,
 
   // Check for site-specific permission and return false if no permission.
   if (mCanvasElement) {
-    nsCOMPtr<nsIDocument> ownerDoc = mCanvasElement->OwnerDoc();
+    nsCOMPtr<Document> ownerDoc = mCanvasElement->OwnerDoc();
     if (!CanvasUtils::IsImageExtractionAllowed(ownerDoc, aCx,
                                                aSubjectPrincipal)) {
       return false;
@@ -4406,7 +4405,7 @@ bool CanvasRenderingContext2D::IsPointInStroke(
 
   // Check for site-specific permission and return false if no permission.
   if (mCanvasElement) {
-    nsCOMPtr<nsIDocument> ownerDoc = mCanvasElement->OwnerDoc();
+    nsCOMPtr<Document> ownerDoc = mCanvasElement->OwnerDoc();
     if (!CanvasUtils::IsImageExtractionAllowed(ownerDoc, aCx,
                                                aSubjectPrincipal)) {
       return false;
@@ -5259,7 +5258,7 @@ nsresult CanvasRenderingContext2D::GetImageDataArray(
   // internal uses).
   bool usePlaceholder = false;
   if (mCanvasElement) {
-    nsCOMPtr<nsIDocument> ownerDoc = mCanvasElement->OwnerDoc();
+    nsCOMPtr<Document> ownerDoc = mCanvasElement->OwnerDoc();
     usePlaceholder = !CanvasUtils::IsImageExtractionAllowed(ownerDoc, aCx,
                                                             aSubjectPrincipal);
   }

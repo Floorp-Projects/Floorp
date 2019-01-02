@@ -323,7 +323,7 @@ void SVGSVGElement::SetCurrentScaleTranslate(float s, float x, float y) {
   mCurrentTranslate = SVGPoint(x, y);
 
   // now dispatch the appropriate event if we are the root element
-  nsIDocument* doc = GetUncomposedDoc();
+  Document* doc = GetUncomposedDoc();
   if (doc) {
     nsCOMPtr<nsIPresShell> presShell = doc->GetShell();
     if (presShell && IsRoot()) {
@@ -374,7 +374,7 @@ SMILTimeContainer* SVGSVGElement::GetTimedDocumentRoot() {
 }
 //----------------------------------------------------------------------
 // SVGElement
-nsresult SVGSVGElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+nsresult SVGSVGElement::BindToTree(Document* aDocument, nsIContent* aParent,
                                    nsIContent* aBindingParent) {
   SMILAnimationController* smilController = nullptr;
 
@@ -601,7 +601,7 @@ bool SVGSVGElement::ClearPreserveAspectRatioProperty() {
 
 SVGPreserveAspectRatio SVGSVGElement::GetPreserveAspectRatioWithOverride()
     const {
-  nsIDocument* doc = GetUncomposedDoc();
+  Document* doc = GetUncomposedDoc();
   if (doc && doc->IsBeingUsedAsImage()) {
     const SVGPreserveAspectRatio* pAROverridePtr =
         GetPreserveAspectRatioProperty();
@@ -636,7 +636,7 @@ SVGPreserveAspectRatio SVGSVGElement::GetPreserveAspectRatioWithOverride()
 SVGViewElement* SVGSVGElement::GetCurrentViewElement() const {
   if (mCurrentViewID) {
     // XXXsmaug It is unclear how this should work in case we're in Shadow DOM.
-    nsIDocument* doc = GetUncomposedDoc();
+    Document* doc = GetUncomposedDoc();
     if (doc) {
       Element* element = doc->GetElementById(*mCurrentViewID);
       if (element && element->IsSVGElement(nsGkAtoms::view)) {

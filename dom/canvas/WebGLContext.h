@@ -526,7 +526,7 @@ class WebGLContext : public nsICanvasRenderingContextInternal,
   void AssertCachedGlobalState() const;
 
   dom::HTMLCanvasElement* GetCanvas() const { return mCanvasElement; }
-  nsIDocument* GetOwnerDoc() const;
+  dom::Document* GetOwnerDoc() const;
 
   // WebIDL WebGLRenderingContext API
   void Commit();

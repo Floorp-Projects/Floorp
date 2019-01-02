@@ -30,7 +30,6 @@
 
 struct JSContext;
 class nsCSSPropertyIDSet;
-class nsIDocument;
 class nsIFrame;
 
 namespace mozilla {
@@ -42,6 +41,7 @@ namespace dom {
 class AsyncFinishNotification;
 class CSSAnimation;
 class CSSTransition;
+class Document;
 
 class Animation : public DOMEventTargetHelper,
                   public LinkedListElement<Animation> {
@@ -501,8 +501,8 @@ class Animation : public DOMEventTargetHelper,
     return mTimeline ? mTimeline->GetCurrentTimeAsTimeStamp() : TimeStamp();
   }
 
-  nsIDocument* GetRenderedDocument() const;
-  nsIDocument* GetTimelineDocument() const;
+  Document* GetRenderedDocument() const;
+  Document* GetTimelineDocument() const;
 
   RefPtr<AnimationTimeline> mTimeline;
   RefPtr<AnimationEffect> mEffect;

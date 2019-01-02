@@ -26,7 +26,7 @@
 #include "nsHTMLCSSStyleSheet.h"
 #include "nsStyledElement.h"
 #include "nsIURI.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include <algorithm>
 
 using namespace mozilla;
@@ -1487,7 +1487,7 @@ bool nsAttrValue::ParseIntMarginValue(const nsAString& aString) {
 bool nsAttrValue::ParseStyleAttribute(const nsAString& aString,
                                       nsIPrincipal* aMaybeScriptedPrincipal,
                                       nsStyledElement* aElement) {
-  nsIDocument* ownerDoc = aElement->OwnerDoc();
+  dom::Document* ownerDoc = aElement->OwnerDoc();
   nsHTMLCSSStyleSheet* sheet = ownerDoc->GetInlineStyleSheet();
   nsIURI* baseURI = aElement->GetBaseURIForStyleAttr();
   nsIURI* docURI = ownerDoc->GetDocumentURI();

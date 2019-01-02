@@ -62,7 +62,7 @@ void ContentProcessController::NotifyMozMouseScrollEvent(
 void ContentProcessController::NotifyFlushComplete() {
   if (mBrowser) {
     nsCOMPtr<nsIPresShell> shell;
-    if (nsCOMPtr<nsIDocument> doc = mBrowser->GetDocument()) {
+    if (nsCOMPtr<dom::Document> doc = mBrowser->GetDocument()) {
       shell = doc->GetShell();
     }
     APZCCallbackHelper::NotifyFlushComplete(shell.get());

@@ -11,8 +11,6 @@
 
 #include "nsIDOMEventListener.h"
 
-class nsIDocument;
-
 namespace mozilla {
 namespace a11y {
 
@@ -20,7 +18,7 @@ class RootAccessible : public DocAccessibleWrap, public nsIDOMEventListener {
   NS_DECL_ISUPPORTS_INHERITED
 
  public:
-  RootAccessible(nsIDocument* aDocument, nsIPresShell* aPresShell);
+  RootAccessible(dom::Document* aDocument, nsIPresShell* aPresShell);
 
   // nsIDOMEventListener
   NS_DECL_NSIDOMEVENTLISTENER

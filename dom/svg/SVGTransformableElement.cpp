@@ -201,7 +201,7 @@ already_AddRefed<SVGIRect> SVGTransformableElement::GetBBox(
 }
 
 already_AddRefed<SVGMatrix> SVGTransformableElement::GetCTM() {
-  nsIDocument* currentDoc = GetComposedDoc();
+  Document* currentDoc = GetComposedDoc();
   if (currentDoc) {
     // Flush all pending notifications so that our frames are up to date
     currentDoc->FlushPendingNotifications(FlushType::Layout);
@@ -213,7 +213,7 @@ already_AddRefed<SVGMatrix> SVGTransformableElement::GetCTM() {
 }
 
 already_AddRefed<SVGMatrix> SVGTransformableElement::GetScreenCTM() {
-  nsIDocument* currentDoc = GetComposedDoc();
+  Document* currentDoc = GetComposedDoc();
   if (currentDoc) {
     // Flush all pending notifications so that our frames are up to date
     currentDoc->FlushPendingNotifications(FlushType::Layout);

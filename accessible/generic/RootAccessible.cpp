@@ -32,7 +32,7 @@
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/EventTarget.h"
 #include "nsIDOMXULMultSelectCntrlEl.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIPropertyBag2.h"
 #include "nsIServiceManager.h"
@@ -58,7 +58,7 @@ NS_IMPL_ISUPPORTS_INHERITED(RootAccessible, DocAccessible, nsIDOMEventListener)
 ////////////////////////////////////////////////////////////////////////////////
 // Constructor/destructor
 
-RootAccessible::RootAccessible(nsIDocument* aDocument, nsIPresShell* aPresShell)
+RootAccessible::RootAccessible(Document* aDocument, nsIPresShell* aPresShell)
     : DocAccessibleWrap(aDocument, aPresShell) {
   mType = eRootType;
 }
@@ -448,7 +448,7 @@ Relation RootAccessible::RelationByType(RelationType aType) const {
     nsCOMPtr<nsPIDOMWindowOuter> contentWindow =
         nsGlobalWindowOuter::Cast(rootWindow)->GetContent();
     if (contentWindow) {
-      nsCOMPtr<nsIDocument> contentDocumentNode = contentWindow->GetDoc();
+      RefPtr<Document> contentDocumentNode = contentWindow->GetDoc();
       if (contentDocumentNode) {
         DocAccessible* contentDocument =
             GetAccService()->GetDocAccessible(contentDocumentNode);

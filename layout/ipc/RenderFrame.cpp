@@ -37,7 +37,7 @@ static already_AddRefed<LayerManager> GetLayerManager(
     }
   }
 
-  nsIDocument* doc = aFrameLoader->GetOwnerDoc();
+  Document* doc = aFrameLoader->GetOwnerDoc();
   if (!doc) {
     return nullptr;
   }

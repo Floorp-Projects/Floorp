@@ -9,8 +9,6 @@
 
 #include "mozilla/NotNull.h"
 
-class nsIDocument;
-
 namespace mozilla {
 
 class AutoplayPermissionManager;
@@ -19,6 +17,7 @@ namespace dom {
 
 class HTMLMediaElement;
 class AudioContext;
+class Document;
 
 /**
  * AutoplayPolicy is used to manage autoplay logic for all kinds of media,
@@ -51,7 +50,7 @@ class AutoplayPolicy {
   // Returns the AutoplayPermissionManager that a given document must request on
   // for autoplay permission.
   static already_AddRefed<AutoplayPermissionManager> RequestFor(
-      const nsIDocument& aDocument);
+      const Document& aDocument);
 };
 
 }  // namespace dom

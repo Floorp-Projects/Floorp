@@ -10,7 +10,7 @@
 #include "nsPresContext.h"
 #include "nsGkAtoms.h"
 #include "nsNameSpaceManager.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIPresShell.h"
 #include "nsNodeInfoManager.h"
 #include "nsContentCreatorFunctions.h"
@@ -50,7 +50,7 @@ void nsMeterFrame::DestroyFrom(nsIFrame* aDestructRoot,
 nsresult nsMeterFrame::CreateAnonymousContent(
     nsTArray<ContentInfo>& aElements) {
   // Get the NodeInfoManager and tag necessary to create the meter bar div.
-  nsCOMPtr<nsIDocument> doc = mContent->GetComposedDoc();
+  nsCOMPtr<Document> doc = mContent->GetComposedDoc();
 
   // Create the div.
   mBarDiv = doc->CreateHTMLElement(nsGkAtoms::div);

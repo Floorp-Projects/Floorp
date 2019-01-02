@@ -14,7 +14,7 @@
 #include "nsGkAtoms.h"
 #include "nsPresContext.h"
 #include "mozilla/EventStates.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIPresShell.h"
 #include "nsStyleConsts.h"
 #include "nsError.h"
@@ -68,14 +68,14 @@ static const PLDHashTableOps MappedAttrTable_Ops = {
 
 // -----------------------------------------------------------
 
-nsHTMLStyleSheet::nsHTMLStyleSheet(nsIDocument *aDocument)
+nsHTMLStyleSheet::nsHTMLStyleSheet(Document *aDocument)
     : mDocument(aDocument),
       mMappedAttrTable(&MappedAttrTable_Ops, sizeof(MappedAttrTableEntry)),
       mMappedAttrsDirty(false) {
   MOZ_ASSERT(aDocument);
 }
 
-void nsHTMLStyleSheet::SetOwningDocument(nsIDocument *aDocument) {
+void nsHTMLStyleSheet::SetOwningDocument(Document *aDocument) {
   mDocument = aDocument;  // not refcounted
 }
 

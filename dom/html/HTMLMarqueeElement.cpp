@@ -52,7 +52,7 @@ JSObject* HTMLMarqueeElement::WrapNode(JSContext* aCx,
   return dom::HTMLMarqueeElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-nsresult HTMLMarqueeElement::BindToTree(nsIDocument* aDocument,
+nsresult HTMLMarqueeElement::BindToTree(Document* aDocument,
                                         nsIContent* aParent,
                                         nsIContent* aBindingParent) {
   nsresult rv =

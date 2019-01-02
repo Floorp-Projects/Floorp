@@ -25,7 +25,7 @@ class AutoCopyListener final {
    * @param aReason             The reasons of the change.
    *                            See nsISelectionListener::*_REASON.
    */
-  static void OnSelectionChange(nsIDocument* aDocument,
+  static void OnSelectionChange(dom::Document* aDocument,
                                 dom::Selection& aSelection, int16_t aReason);
 
   /**

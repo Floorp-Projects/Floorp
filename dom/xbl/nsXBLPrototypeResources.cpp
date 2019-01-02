@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIContent.h"
 #include "nsIServiceManager.h"
 #include "nsXBLResourceLoader.h"
@@ -58,8 +58,7 @@ void nsXBLPrototypeResources::AddResourceListener(nsIContent* aBoundElement) {
 nsresult nsXBLPrototypeResources::FlushSkinSheets() {
   if (mStyleSheetList.Length() == 0) return NS_OK;
 
-  nsCOMPtr<nsIDocument> doc =
-      mLoader->mBinding->XBLDocumentInfo()->GetDocument();
+  nsCOMPtr<Document> doc = mLoader->mBinding->XBLDocumentInfo()->GetDocument();
 
   // If doc is null, we're in the process of tearing things down, so just
   // return without rebuilding anything.

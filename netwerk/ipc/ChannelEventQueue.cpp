@@ -10,7 +10,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Unused.h"
 #include "nsIChannel.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsThreadUtils.h"
 
 namespace mozilla {
@@ -206,7 +206,7 @@ bool ChannelEventQueue::MaybeSuspendIfEventsAreSuppressed() {
   // Suspend the queue if the associated document has suppressed event handling,
   // *and* it is not in the middle of a synchronous operation that might require
   // XHR events to be processed (such as a synchronous XHR).
-  nsCOMPtr<nsIDocument> document;
+  RefPtr<dom::Document> document;
   loadInfo->GetLoadingDocument(getter_AddRefs(document));
   if (document && document->EventHandlingSuppressed() &&
       !document->IsInSyncOperation()) {

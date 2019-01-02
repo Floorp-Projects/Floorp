@@ -14,7 +14,6 @@ interface imgIRequest;
 interface nsIChannel;
 interface nsIStreamListener;
 interface nsIURI;
-interface nsIDocument;
 interface nsIFrame;
 
 [ref] native MaybeOnNonvisible(const mozilla::Maybe<mozilla::OnNonvisible>);

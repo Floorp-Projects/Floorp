@@ -91,7 +91,7 @@ class nsIScriptElement : public nsIScriptLoaderObserver {
    *  - GetScriptURI()
    *  - GetScriptExternal()
    */
-  virtual void FreezeExecutionAttrs(nsIDocument* aOwnerDoc) = 0;
+  virtual void FreezeExecutionAttrs(mozilla::dom::Document*) = 0;
 
   /**
    * Is the script a module script. Currently only supported by HTML scripts.

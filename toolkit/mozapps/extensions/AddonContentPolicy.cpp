@@ -14,7 +14,7 @@
 #include "nsIConsoleService.h"
 #include "nsIContentSecurityPolicy.h"
 #include "nsIContent.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIEffectiveTLDService.h"
 #include "nsIScriptError.h"
 #include "nsIStringBundle.h"
@@ -50,10 +50,7 @@ static nsresult GetWindowIDFromContext(nsISupports* aContext,
   nsCOMPtr<nsIContent> content = do_QueryInterface(aContext);
   NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIDocument> document = content->OwnerDoc();
-  NS_ENSURE_TRUE(document, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsPIDOMWindowInner> window = document->GetInnerWindow();
+  nsCOMPtr<nsPIDOMWindowInner> window = content->OwnerDoc()->GetInnerWindow();
   NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
 
   *aResult = window->WindowID();

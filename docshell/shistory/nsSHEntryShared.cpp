@@ -11,7 +11,7 @@
 #include "nsIContentViewer.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsILayoutHistoryState.h"
 #include "nsISHistory.h"
 #include "nsIWebNavigation.h"
@@ -190,7 +190,7 @@ nsresult nsSHEntryShared::RemoveFromBFCacheAsync() {
   // release the references asynchronously so that the document doesn't get
   // nuked mid-mutation.
   nsCOMPtr<nsIContentViewer> viewer = mContentViewer;
-  nsCOMPtr<nsIDocument> document = mDocument;
+  RefPtr<dom::Document> document = mDocument;
   RefPtr<nsSHEntryShared> self = this;
   nsresult rv = mDocument->Dispatch(
       mozilla::TaskCategory::Other,

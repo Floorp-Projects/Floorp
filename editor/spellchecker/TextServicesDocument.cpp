@@ -113,7 +113,7 @@ nsresult TextServicesDocument::InitWithEditor(nsIEditor* aEditor) {
   // Check to see if we already have an mDocument. If we do, it
   // better be the same one the editor uses!
 
-  nsCOMPtr<nsIDocument> doc = aEditor->AsEditorBase()->GetDocument();
+  RefPtr<Document> doc = aEditor->AsEditorBase()->GetDocument();
   if (!doc || (mDocument && doc != mDocument)) {
     return NS_ERROR_FAILURE;
   }

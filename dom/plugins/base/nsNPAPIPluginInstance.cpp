@@ -18,7 +18,7 @@
 #include "nsPluginInstanceOwner.h"
 
 #include "nsThreadUtils.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIDocShell.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptContext.h"
@@ -196,7 +196,7 @@ already_AddRefed<nsPIDOMWindowOuter> nsNPAPIPluginInstance::GetDOMWindow() {
 
   RefPtr<nsPluginInstanceOwner> kungFuDeathGrip(mOwner);
 
-  nsCOMPtr<nsIDocument> doc;
+  nsCOMPtr<Document> doc;
   kungFuDeathGrip->GetDocument(getter_AddRefs(doc));
   if (!doc) return nullptr;
 
@@ -844,7 +844,7 @@ nsresult nsNPAPIPluginInstance::PrivateModeStateChanged(bool enabled) {
 nsresult nsNPAPIPluginInstance::IsPrivateBrowsing(bool* aEnabled) {
   if (!mOwner) return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIDocument> doc;
+  nsCOMPtr<Document> doc;
   mOwner->GetDocument(getter_AddRefs(doc));
   NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
 

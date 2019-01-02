@@ -25,7 +25,7 @@
 #include "nsIContent.h"
 #include "nsICSSDeclaration.h"
 #include "nsIDOMWindow.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIEditor.h"
 #include "nsINode.h"
 #include "nsISupportsImpl.h"
@@ -482,7 +482,7 @@ already_AddRefed<nsComputedDOMStyle> CSSEditUtils::GetComputedStyle(
     Element* aElement) {
   MOZ_ASSERT(aElement);
 
-  nsIDocument* doc = aElement->GetComposedDoc();
+  Document* doc = aElement->GetComposedDoc();
   NS_ENSURE_TRUE(doc, nullptr);
 
   RefPtr<nsComputedDOMStyle> style =

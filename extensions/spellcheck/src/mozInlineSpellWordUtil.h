@@ -8,7 +8,7 @@
 
 #include "mozilla/Attributes.h"
 #include "nsCOMPtr.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsString.h"
 #include "nsTArray.h"
 
@@ -116,12 +116,12 @@ class MOZ_STACK_CLASS mozInlineSpellWordUtil {
   // so we can access characters directly.
   static void NormalizeWord(nsAString& aWord);
 
-  nsIDocument* GetDocument() const { return mDocument; }
+  mozilla::dom::Document* GetDocument() const { return mDocument; }
   nsINode* GetRootNode() { return mRootNode; }
 
  private:
   // cached stuff for the editor, set by Init
-  nsCOMPtr<nsIDocument> mDocument;
+  RefPtr<mozilla::dom::Document> mDocument;
   bool mIsContentEditableOrDesignMode;
 
   // range to check, see SetPosition and SetEnd

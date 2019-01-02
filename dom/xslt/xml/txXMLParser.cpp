@@ -7,11 +7,13 @@
 #include "txURIUtils.h"
 #include "txXPathTreeWalker.h"
 
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsSyncLoadService.h"
 #include "nsNetUtil.h"
 #include "nsIURI.h"
 #include "nsIPrincipal.h"
+
+using namespace mozilla::dom;
 
 nsresult txParseDocumentFromURI(const nsAString& aHref,
                                 const txXPathNode& aLoader, nsAString& aErrMsg,
@@ -22,7 +24,7 @@ nsresult txParseDocumentFromURI(const nsAString& aHref,
   nsresult rv = NS_NewURI(getter_AddRefs(documentURI), aHref);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsIDocument* loaderDocument = txXPathNativeNode::getDocument(aLoader);
+  Document* loaderDocument = txXPathNativeNode::getDocument(aLoader);
 
   nsCOMPtr<nsILoadGroup> loadGroup = loaderDocument->GetDocumentLoadGroup();
 
@@ -31,7 +33,7 @@ nsresult txParseDocumentFromURI(const nsAString& aHref,
 
   // Raw pointer, we want the resulting txXPathNode to hold a reference to
   // the document.
-  nsIDocument* theDocument = nullptr;
+  Document* theDocument = nullptr;
   nsAutoSyncOperation sync(loaderDocument);
   rv = nsSyncLoadService::LoadDocument(
       documentURI, nsIContentPolicy::TYPE_INTERNAL_XMLHTTPREQUEST,

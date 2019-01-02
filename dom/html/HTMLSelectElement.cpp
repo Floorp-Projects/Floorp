@@ -23,7 +23,7 @@
 #include "nsError.h"
 #include "nsGkAtoms.h"
 #include "nsComboboxControlFrame.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIFormControlFrame.h"
 #include "nsIForm.h"
 #include "nsIFormProcessor.h"
@@ -1008,8 +1008,7 @@ bool HTMLSelectElement::SelectSomething(bool aNotify) {
   return false;
 }
 
-nsresult HTMLSelectElement::BindToTree(nsIDocument* aDocument,
-                                       nsIContent* aParent,
+nsresult HTMLSelectElement::BindToTree(Document* aDocument, nsIContent* aParent,
                                        nsIContent* aBindingParent) {
   nsresult rv = nsGenericHTMLFormElementWithState::BindToTree(
       aDocument, aParent, aBindingParent);

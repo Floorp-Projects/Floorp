@@ -179,7 +179,7 @@ nsIGlobalObject* GetEntryGlobal() {
   return ClampToSubject(ScriptSettingsStack::EntryGlobal());
 }
 
-nsIDocument* GetEntryDocument() {
+Document* GetEntryDocument() {
   nsIGlobalObject* global = GetEntryGlobal();
   nsCOMPtr<nsPIDOMWindowInner> entryWin = do_QueryInterface(global);
 

@@ -11,7 +11,7 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/dom/SVGDocument.h"
 #include "mozilla/Preferences.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsSVGPaintServerFrame.h"
 #include "SVGObserverUtils.h"
 
@@ -190,10 +190,8 @@ void SVGContextPaint::InitStrokeGeometry(gfxContext* aContext,
   mDashOffset /= devUnitsPerSVGUnit;
 }
 
-/* static */ SVGContextPaint* SVGContextPaint::GetContextPaint(
-    nsIContent* aContent) {
-  nsIDocument* ownerDoc = aContent->OwnerDoc();
-
+SVGContextPaint* SVGContextPaint::GetContextPaint(nsIContent* aContent) {
+  dom::Document* ownerDoc = aContent->OwnerDoc();
   if (!ownerDoc->IsSVGDocument()) {
     return nullptr;
   }

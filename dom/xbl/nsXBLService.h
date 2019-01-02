@@ -18,12 +18,12 @@
 class nsXBLBinding;
 class nsXBLDocumentInfo;
 class nsIContent;
-class nsIDocument;
 class nsIURI;
 class nsIPrincipal;
 
 namespace mozilla {
 namespace dom {
+class Document;
 class EventTarget;
 }  // namespace dom
 }  // namespace mozilla
@@ -55,7 +55,7 @@ class nsXBLService final : public nsSupportsWeakReference {
   // miss.  aOriginPrincipal or aBoundDocument may be null to bypass security
   // checks.
   nsresult LoadBindingDocumentInfo(nsIContent* aBoundElement,
-                                   nsIDocument* aBoundDocument,
+                                   mozilla::dom::Document* aBoundDocument,
                                    nsIURI* aBindingURI,
                                    nsIPrincipal* aOriginPrincipal,
                                    bool aForceSyncLoad,
@@ -75,10 +75,11 @@ class nsXBLService final : public nsSupportsWeakReference {
 
   // This method synchronously loads and parses an XBL file.
   nsresult FetchBindingDocument(nsIContent* aBoundElement,
-                                nsIDocument* aBoundDocument,
+                                mozilla::dom::Document* aBoundDocument,
                                 nsIURI* aDocumentURI, nsIURI* aBindingURI,
                                 nsIPrincipal* aOriginPrincipal,
-                                bool aForceSyncLoad, nsIDocument** aResult);
+                                bool aForceSyncLoad,
+                                mozilla::dom::Document** aResult);
 
   /**
    * This method calls the one below with an empty |aDontExtendURIs| array.

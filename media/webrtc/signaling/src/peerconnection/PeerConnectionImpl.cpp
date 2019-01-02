@@ -55,13 +55,13 @@
 #include "mozilla/Sprintf.h"
 
 #ifdef XP_WIN
-// We need to undef the MS macro for nsIDocument::CreateEvent
+// We need to undef the MS macro for Document::CreateEvent
 #ifdef CreateEvent
 #undef CreateEvent
 #endif
 #endif  // XP_WIN
 
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsGlobalWindow.h"
 #include "nsDOMDataChannel.h"
 #include "mozilla/dom/Location.h"
@@ -107,7 +107,7 @@
 
 #ifdef XP_WIN
 // We need to undef the MS macro again in case the windows include file
-// got imported after we included nsIDocument.h
+// got imported after we included mozilla/dom/Document.h
 #ifdef CreateEvent
 #undef CreateEvent
 #endif
@@ -287,7 +287,7 @@ bool IsPrivateBrowsing(nsPIDOMWindowInner* aWindow) {
     return false;
   }
 
-  nsIDocument* doc = aWindow->GetExtantDoc();
+  Document* doc = aWindow->GetExtantDoc();
   if (!doc) {
     return false;
   }
@@ -1683,7 +1683,7 @@ PeerConnectionImpl::SetPeerIdentity(const nsAString& aPeerIdentity) {
     }
   } else {
     mPeerIdentity = new PeerIdentity(aPeerIdentity);
-    nsIDocument* doc = GetWindow()->GetExtantDoc();
+    Document* doc = GetWindow()->GetExtantDoc();
     if (!doc) {
       CSFLogInfo(LOGTAG, "Can't update principal on streams; document gone");
       return NS_ERROR_FAILURE;
@@ -1709,7 +1709,7 @@ nsresult PeerConnectionImpl::OnAlpnNegotiated(const std::string& aAlpn) {
   // Besides, this is only used to say if we have been connected ever.
   if (!*mPrivacyRequested) {
     // Neither side wants privacy
-    nsIDocument* doc = GetWindow()->GetExtantDoc();
+    Document* doc = GetWindow()->GetExtantDoc();
     if (!doc) {
       CSFLogInfo(LOGTAG, "Can't update principal on streams; document gone");
       return NS_ERROR_FAILURE;
@@ -1721,7 +1721,7 @@ nsresult PeerConnectionImpl::OnAlpnNegotiated(const std::string& aAlpn) {
 }
 
 void PeerConnectionImpl::PrincipalChanged(MediaStreamTrack* aTrack) {
-  nsIDocument* doc = GetWindow()->GetExtantDoc();
+  Document* doc = GetWindow()->GetExtantDoc();
   if (doc) {
     mMedia->UpdateSinkIdentity_m(aTrack, doc->NodePrincipal(), mPeerIdentity);
   } else {
@@ -1919,7 +1919,7 @@ OwningNonNull<dom::MediaStreamTrack> PeerConnectionImpl::CreateReceiveTrack(
   // data (audio/video samples) accessible to the receiving page. We're
   // only certain that privacy hasn't been requested if we're connected.
   nsCOMPtr<nsIPrincipal> principal;
-  nsIDocument* doc = GetWindow()->GetExtantDoc();
+  Document* doc = GetWindow()->GetExtantDoc();
   MOZ_ASSERT(doc);
   if (mPrivacyRequested.isSome() && !*mPrivacyRequested) {
     principal = doc->NodePrincipal();
@@ -2216,7 +2216,7 @@ bool PeerConnectionImpl::PluginCrash(uint32_t aPluginID,
   CSFLogError(LOGTAG, "%s: Our plugin %llu crashed", __FUNCTION__,
               static_cast<unsigned long long>(aPluginID));
 
-  nsCOMPtr<nsIDocument> doc = mWindow->GetExtantDoc();
+  RefPtr<Document> doc = mWindow->GetExtantDoc();
   if (!doc) {
     NS_WARNING("Couldn't get document for PluginCrashed event!");
     return true;

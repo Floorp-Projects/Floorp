@@ -12,7 +12,7 @@
 #include "States.h"
 
 // NOTE: alphabetically ordered
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIDOMXULSelectCntrlEl.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
 #include "nsIDOMXULRelatedElement.h"

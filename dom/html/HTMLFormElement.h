@@ -94,7 +94,7 @@ class HTMLFormElement final : public nsGenericHTMLElement,
   void WillHandleEvent(EventChainPostVisitor& aVisitor) override;
   virtual nsresult PostHandleEvent(EventChainPostVisitor& aVisitor) override;
 
-  virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+  virtual nsresult BindToTree(Document* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent) override;
   virtual void UnbindFromTree(bool aDeep = true,
                               bool aNullParent = true) override;
@@ -147,7 +147,7 @@ class HTMLFormElement final : public nsGenericHTMLElement,
    *
    * @param aElement the element to add
    * @param aUpdateValidity If true, the form validity will be updated.
-   * @param aNotify If true, send nsIDocumentObserver notifications as needed.
+   * @param aNotify If true, send DocumentObserver notifications as needed.
    * @return NS_OK if the element was successfully added
    */
   nsresult AddElement(nsGenericHTMLFormElement* aElement, bool aUpdateValidity,
