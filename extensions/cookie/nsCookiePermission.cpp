@@ -129,6 +129,23 @@ nsCookiePermission::CanAccess(nsIPrincipal *aPrincipal,
 }
 
 NS_IMETHODIMP
+nsCookiePermission::CanAccessURI(nsIURI *aURI, nsCookieAccess *aResult) {
+  // Lazily initialize ourselves
+  if (!EnsureInitialized()) return NS_ERROR_UNEXPECTED;
+
+  // finally, check with permission manager...
+  nsresult rv =
+      mPermMgr->TestPermission(aURI, kPermissionType, (uint32_t *)aResult);
+  if (NS_SUCCEEDED(rv)) {
+    if (*aResult == nsICookiePermission::ACCESS_SESSION) {
+      *aResult = nsICookiePermission::ACCESS_ALLOW;
+    }
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP
 nsCookiePermission::CanSetCookie(nsIURI *aURI, nsIChannel *aChannel,
                                  nsICookie2 *aCookie, bool *aIsSession,
                                  int64_t *aExpiry, bool *aResult) {
