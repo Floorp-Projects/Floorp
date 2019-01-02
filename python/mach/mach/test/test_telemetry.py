@@ -37,8 +37,14 @@ def run_mach(tmpdir):
                                 env=env,
                                 **kwargs)
         # Load any telemetry data that was written
-        path = unicode(tmpdir.join('telemetry', 'outgoing'))
-        return [json.load(open(os.path.join(path, f), 'rb')) for f in os.listdir(path)]
+        path = tmpdir.join('telemetry', 'outgoing')
+        try:
+            return [json.load(f.open('rb')) for f in path.listdir()]
+        except EnvironmentError:
+            for p in path.parts(reverse=True):
+                if not p.check(dir=1):
+                    print('Path does not exist: "%s"' % p, file=sys.stderr)
+            raise
     return run
 
 
