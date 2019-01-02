@@ -39,7 +39,7 @@ SVGElement::IntegerPairInfo SVGFEConvolveMatrixElement::sIntegerPairInfo[1] = {
 SVGElement::BooleanInfo SVGFEConvolveMatrixElement::sBooleanInfo[1] = {
     {nsGkAtoms::preserveAlpha, false}};
 
-nsSVGEnumMapping SVGFEConvolveMatrixElement::sEdgeModeMap[] = {
+SVGEnumMapping SVGFEConvolveMatrixElement::sEdgeModeMap[] = {
     {nsGkAtoms::duplicate, SVG_EDGEMODE_DUPLICATE},
     {nsGkAtoms::wrap, SVG_EDGEMODE_WRAP},
     {nsGkAtoms::none, SVG_EDGEMODE_NONE},
