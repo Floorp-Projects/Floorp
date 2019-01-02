@@ -54,6 +54,7 @@ class VRProcessManager final : public VRProcessParent::Listener {
     NS_DECL_ISUPPORTS
     NS_DECL_NSIOBSERVER
     explicit Observer(VRProcessManager* aManager);
+    void Unregister();
 
    protected:
     ~Observer() {}
