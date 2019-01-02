@@ -4371,8 +4371,8 @@ void nsIDocument::SetScriptGlobalObject(
     nsIScriptGlobalObject* aScriptGlobalObject) {
   MOZ_ASSERT(aScriptGlobalObject || !mAnimationController ||
                  mAnimationController->IsPausedByType(
-                     nsSMILTimeContainer::PAUSE_PAGEHIDE |
-                     nsSMILTimeContainer::PAUSE_BEGIN),
+                     SMILTimeContainer::PAUSE_PAGEHIDE |
+                     SMILTimeContainer::PAUSE_BEGIN),
              "Clearing window pointer while animations are unpaused");
 
   if (mScriptGlobalObject && !aScriptGlobalObject) {
@@ -6149,7 +6149,7 @@ SMILAnimationController* nsIDocument::GetAnimationController() {
   nsPresContext* context = GetPresContext();
   if (mAnimationController && context &&
       context->ImageAnimationMode() == imgIContainer::kDontAnimMode) {
-    mAnimationController->Pause(nsSMILTimeContainer::PAUSE_USERPREF);
+    mAnimationController->Pause(SMILTimeContainer::PAUSE_USERPREF);
   }
 
   // If we're hidden (or being hidden), notify the newly-created animation

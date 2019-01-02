@@ -14,11 +14,11 @@
 #include "nsIDOMEventListener.h"
 
 class nsSMILTimeValue;
-class nsSMILTimeContainer;
 class nsSMILInstanceTime;
 class nsSMILInterval;
 
 namespace mozilla {
+class SMILTimeContainer;
 class SMILTimedElement;
 namespace dom {
 class Event;
@@ -40,6 +40,7 @@ class EventListenerManager;
 
 class nsSMILTimeValueSpec {
  public:
+  typedef mozilla::SMILTimeContainer SMILTimeContainer;
   typedef mozilla::SMILTimedElement SMILTimedElement;
   typedef mozilla::dom::Element Element;
   typedef mozilla::dom::Event Event;
@@ -53,13 +54,13 @@ class nsSMILTimeValueSpec {
   bool IsEventBased() const;
 
   void HandleNewInterval(nsSMILInterval& aInterval,
-                         const nsSMILTimeContainer* aSrcContainer);
+                         const SMILTimeContainer* aSrcContainer);
   void HandleTargetElementChange(Element* aNewTarget);
 
   // For created nsSMILInstanceTime objects
   bool DependsOnBegin() const;
   void HandleChangedInstanceTime(const nsSMILInstanceTime& aBaseTime,
-                                 const nsSMILTimeContainer* aSrcContainer,
+                                 const SMILTimeContainer* aSrcContainer,
                                  nsSMILInstanceTime& aInstanceTimeToUpdate,
                                  bool aObjectChanged);
   void HandleDeletedInstanceTime(nsSMILInstanceTime& aInstanceTime);
@@ -78,8 +79,7 @@ class nsSMILTimeValueSpec {
   void HandleEvent(Event* aEvent);
   bool CheckRepeatEventDetail(Event* aEvent);
   nsSMILTimeValue ConvertBetweenTimeContainers(
-      const nsSMILTimeValue& aSrcTime,
-      const nsSMILTimeContainer* aSrcContainer);
+      const nsSMILTimeValue& aSrcTime, const SMILTimeContainer* aSrcContainer);
   bool ApplyOffset(nsSMILTimeValue& aTime) const;
 
   SMILTimedElement* mOwner;
