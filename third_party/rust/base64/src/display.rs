@@ -4,25 +4,15 @@
 //! use base64::display::Base64Display;
 //!
 //! let data = vec![0x0, 0x1, 0x2, 0x3];
-//! let wrapper = Base64Display::standard(&data);
+//! let wrapper = Base64Display::with_config(&data, base64::STANDARD);
 //!
 //! assert_eq!("base64: AAECAw==", format!("base64: {}", wrapper));
 //! ```
 
-use super::chunked_encoder::{ChunkedEncoder, ChunkedEncoderError};
+use super::chunked_encoder::ChunkedEncoder;
 use super::Config;
 use std::fmt::{Display, Formatter};
 use std::{fmt, str};
-
-// I'm not convinced that we should expose ChunkedEncoder or its error type since it's just an
-// implementation detail, so use a different error type.
-/// Errors that can occur initializing a Base64Display.
-#[derive(Debug, PartialEq)]
-pub enum DisplayError {
-    /// If wrapping is configured, the line length must be a multiple of 4, and must not be absurdly
-    /// large (currently capped at 1024, subject to change).
-    InvalidLineLength,
-}
 
 /// A convenience wrapper for base64'ing bytes into a format string without heap allocation.
 pub struct Base64Display<'a> {
@@ -32,25 +22,11 @@ pub struct Base64Display<'a> {
 
 impl<'a> Base64Display<'a> {
     /// Create a `Base64Display` with the provided config.
-    pub fn with_config(bytes: &[u8], config: Config) -> Result<Base64Display, DisplayError> {
-        ChunkedEncoder::new(config)
-            .map(|c| Base64Display {
-                bytes,
-                chunked_encoder: c,
-            })
-            .map_err(|e| match e {
-                ChunkedEncoderError::InvalidLineLength => DisplayError::InvalidLineLength,
-            })
-    }
-
-    /// Convenience method for creating a `Base64Display` with the `STANDARD` configuration.
-    pub fn standard(bytes: &[u8]) -> Base64Display {
-        Base64Display::with_config(bytes, super::STANDARD).expect("STANDARD is valid")
-    }
-
-    /// Convenience method for creating a `Base64Display` with the `URL_SAFE` configuration.
-    pub fn url_safe(bytes: &[u8]) -> Base64Display {
-        Base64Display::with_config(bytes, super::URL_SAFE).expect("URL_SAFE is valid")
+    pub fn with_config(bytes: &[u8], config: Config) -> Base64Display {
+        Base64Display {
+            bytes,
+            chunked_encoder: ChunkedEncoder::new(config),
+        }
     }
 }
 
@@ -87,11 +63,11 @@ mod tests {
     fn basic_display() {
         assert_eq!(
             "~$Zm9vYmFy#*",
-            format!("~${}#*", Base64Display::standard("foobar".as_bytes()))
+            format!("~${}#*", Base64Display::with_config(b"foobar", STANDARD))
         );
         assert_eq!(
             "~$Zm9vYmFyZg==#*",
-            format!("~${}#*", Base64Display::standard("foobarf".as_bytes()))
+            format!("~${}#*", Base64Display::with_config(b"foobarf", STANDARD))
         );
     }
 
@@ -105,8 +81,7 @@ mod tests {
 
     impl SinkTestHelper for DisplaySinkTestHelper {
         fn encode_to_string(&self, config: Config, bytes: &[u8]) -> String {
-            format!("{}", Base64Display::with_config(bytes, config).unwrap())
+            format!("{}", Base64Display::with_config(bytes, config))
         }
     }
-
 }
