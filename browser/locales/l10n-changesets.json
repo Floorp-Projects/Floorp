@@ -490,7 +490,7 @@
             "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
-        "revision": "d6b5a70fd920"
+        "revision": "5a69c0af3fdb"
     },
     "et": {
         "platforms": [
