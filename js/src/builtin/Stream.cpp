@@ -9,6 +9,7 @@
 #include "js/Stream.h"
 
 #include "gc/Heap.h"
+#include "js/PropertySpec.h"
 #include "vm/Interpreter.h"
 #include "vm/JSContext.h"
 #include "vm/SelfHosting.h"

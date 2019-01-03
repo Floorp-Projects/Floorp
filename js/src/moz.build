@@ -146,6 +146,7 @@ EXPORTS.js += [
     '../public/ProfilingStack.h',
     '../public/Promise.h',
     '../public/PropertyDescriptor.h',
+    '../public/PropertySpec.h',
     '../public/ProtoKey.h',
     '../public/Proxy.h',
     '../public/Realm.h',

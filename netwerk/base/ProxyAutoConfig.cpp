@@ -16,6 +16,7 @@
 #include "nsJSUtils.h"
 #include "jsfriendapi.h"
 #include "js/CompilationAndEvaluation.h"
+#include "js/PropertySpec.h"
 #include "js/SourceText.h"
 #include "js/Utility.h"
 #include "prnetdb.h"

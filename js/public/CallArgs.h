@@ -73,7 +73,7 @@
 #include "js/Value.h"
 
 /* Typedef for native functions called by the JS VM. */
-typedef bool (*JSNative)(JSContext* cx, unsigned argc, JS::Value* vp);
+using JSNative = bool (*)(JSContext* cx, unsigned argc, JS::Value* vp);
 
 namespace JS {
 
