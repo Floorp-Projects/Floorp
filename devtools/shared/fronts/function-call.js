@@ -10,10 +10,6 @@ const { FrontClassWithSpec, registerFront } = require("devtools/shared/protocol"
  * The corresponding Front object for the FunctionCallActor.
  */
 class FunctionCallFront extends FrontClassWithSpec(functionCallSpec) {
-  constructor(client, form) {
-    super(client, form);
-  }
-
   /**
    * Adds some generic information directly to this instance,
    * to avoid extra roundtrips.

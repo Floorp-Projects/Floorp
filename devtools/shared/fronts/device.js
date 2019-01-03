@@ -10,8 +10,7 @@ const defer = require("devtools/shared/defer");
 
 class DeviceFront extends FrontClassWithSpec(deviceSpec) {
   constructor(client, form) {
-    super(client);
-    this.actorID = form.deviceActor;
+    super(client, { actor: form.deviceActor });
     this.manage(this);
   }
 

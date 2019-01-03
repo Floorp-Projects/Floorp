@@ -11,9 +11,6 @@ const { FrontClassWithSpec, registerFront } = require("devtools/shared/protocol"
 loader.lazyImporter(this, "NetUtil", "resource://gre/modules/NetUtil.jsm");
 
 class ActorActorFront extends FrontClassWithSpec(actorActorSpec) {
-  constructor(client, form) {
-    super(client, form);
-  }
 }
 
 exports.ActorActorFront = ActorActorFront;
@@ -48,8 +45,7 @@ function request(uri) {
 
 class ActorRegistryFront extends FrontClassWithSpec(actorRegistrySpec) {
   constructor(client, form) {
-    super(client,
-                                             { actor: form.actorRegistryActor });
+    super(client, { actor: form.actorRegistryActor });
 
     this.manage(this);
   }

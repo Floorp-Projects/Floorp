@@ -56,10 +56,6 @@ class WalkerFront extends FrontClassWithSpec(walkerSpec) {
     this.before("new-mutations", this.onMutations.bind(this));
   }
 
-  destroy() {
-    super.destroy();
-  }
-
   // Update the object given a form representation off the wire.
   form(json) {
     this.actorID = json.actor;
@@ -439,9 +435,8 @@ registerFront(WalkerFront);
  */
 class InspectorFront extends FrontClassWithSpec(inspectorSpec) {
   constructor(client, tabForm) {
-    super(client, tabForm);
+    super(client, { actor: tabForm.inspectorActor });
 
-    this.actorID = tabForm.inspectorActor;
     this._client = client;
     this._highlighters = new Map();
 

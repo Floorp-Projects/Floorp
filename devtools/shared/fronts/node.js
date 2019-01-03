@@ -26,14 +26,6 @@ const HIDDEN_CLASS = "__fx-devtools-hide-shortcut__";
  * Client side of a node list as returned by querySelectorAll()
  */
 class NodeListFront extends FrontClassWithSpec(nodeListSpec) {
-  constructor(client, form) {
-    super(client, form);
-  }
-
-  destroy() {
-    super.destroy();
-  }
-
   marshallPool() {
     return this.parent();
   }

@@ -13,9 +13,8 @@ loader.lazyRequireGetter(this, "HeapSnapshotFileUtils",
 
 class MemoryFront extends FrontClassWithSpec(memorySpec) {
   constructor(client, form) {
-    super(client, form);
+    super(client, { actor: form.memoryActor });
     this._client = client;
-    this.actorID = form.memoryActor;
     this.heapSnapshotFileActorID = null;
     this.manage(this);
   }

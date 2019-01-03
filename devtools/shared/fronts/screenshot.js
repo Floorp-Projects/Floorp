@@ -9,8 +9,7 @@ const { FrontClassWithSpec, registerFront } = require("devtools/shared/protocol"
 
 class ScreenshotFront extends FrontClassWithSpec(screenshotSpec) {
   constructor(client, form) {
-    super(client);
-    this.actorID = form.screenshotActor;
+    super(client, { actor: form.screenshotActor });
     this.manage(this);
   }
 

@@ -20,10 +20,6 @@ class ReflowFront extends FrontClassWithSpec(reflowSpec) {
     super(client, {actor: reflowActor});
     this.manage(this);
   }
-
-  destroy() {
-    super.destroy();
-  }
 }
 
 exports.ReflowFront = ReflowFront;

@@ -854,9 +854,6 @@ GeckoDriver.prototype.getContext = function() {
  * @param {Array.<(string|boolean|number|object|WebElement)>} args
  *     Arguments exposed to the script in <code>arguments</code>.
  *     The array items must be serialisable to the WebDriver protocol.
- * @param {number=} scriptTimeout
- *     Duration in milliseconds of when to interrupt and abort the
- *     script evaluation.
  * @param {string=} sandbox
  *     Name of the sandbox to evaluate the script in.  The sandbox is
  *     cached for later re-use on the same Window object if
@@ -878,8 +875,8 @@ GeckoDriver.prototype.getContext = function() {
  *     JavaScript notion of null or undefined.
  *
  * @throws {ScriptTimeoutError}
- *     If the script was interrupted due to reaching the
- *     <var>scriptTimeout</var> or default timeout.
+ *     If the script was interrupted due to reaching the session's
+ *     script timeout.
  * @throws {JavaScriptError}
  *     If an {@link Error} was thrown whilst evaluating the script.
  */
@@ -888,7 +885,6 @@ GeckoDriver.prototype.executeScript = async function(cmd) {
   let opts = {
     script: cmd.parameters.script,
     args: cmd.parameters.args,
-    timeout: cmd.parameters.scriptTimeout,
     sandboxName: cmd.parameters.sandbox,
     newSandbox: cmd.parameters.newSandbox,
     file: cmd.parameters.filename,
@@ -923,9 +919,6 @@ GeckoDriver.prototype.executeScript = async function(cmd) {
  * @param {Array.<(string|boolean|number|object|WebElement)>} args
  *     Arguments exposed to the script in <code>arguments</code>.
  *     The array items must be serialisable to the WebDriver protocol.
- * @param {number} scriptTimeout
- *     Duration in milliseconds of when to interrupt and abort the
- *     script evaluation.
  * @param {string=} sandbox
  *     Name of the sandbox to evaluate the script in.  The sandbox is
  *     cached for later re-use on the same Window object if
@@ -947,8 +940,8 @@ GeckoDriver.prototype.executeScript = async function(cmd) {
  *     JavaScript notion of null or undefined.
  *
  * @throws {ScriptTimeoutError}
- *     If the script was interrupted due to reaching the
- *     <var>scriptTimeout</var> or default timeout.
+ *     If the script was interrupted due to reaching the session's
+ *     script timeout.
  * @throws {JavaScriptError}
  *     If an Error was thrown whilst evaluating the script.
  */
@@ -957,7 +950,6 @@ GeckoDriver.prototype.executeAsyncScript = async function(cmd) {
   let opts = {
     script: cmd.parameters.script,
     args: cmd.parameters.args,
-    timeout: cmd.parameters.scriptTimeout,
     sandboxName: cmd.parameters.sandbox,
     newSandbox: cmd.parameters.newSandbox,
     file: cmd.parameters.filename,
@@ -972,7 +964,6 @@ GeckoDriver.prototype.execute_ = async function(
     script,
     args = [],
     {
-      timeout = null,
       sandboxName = null,
       newSandbox = false,
       file = "",
@@ -980,16 +971,11 @@ GeckoDriver.prototype.execute_ = async function(
       async = false,
     } = {}) {
 
-  if (typeof timeout == "undefined" || timeout === null) {
-    timeout = this.timeouts.script;
-  }
-
   assert.open(this.getCurrentWindow());
   await this._handleUserPrompts();
 
   assert.string(script, pprint`Expected "script" to be a string: ${script}`);
   assert.array(args, pprint`Expected script args to be an array: ${args}`);
-  assert.positiveInteger(timeout, pprint`Expected script timeout to be a positive integer: ${timeout}`);
   if (sandboxName !== null) {
     assert.string(sandboxName, pprint`Expected sandbox name to be a string: ${sandboxName}`);
   }
@@ -998,7 +984,7 @@ GeckoDriver.prototype.execute_ = async function(
   assert.number(line, pprint`Expected line to be a number: ${line}`);
 
   let opts = {
-    timeout,
+    timeout: this.timeouts.script,
     sandboxName,
     newSandbox,
     file,
@@ -1023,7 +1009,6 @@ GeckoDriver.prototype.execute_ = async function(
 
     case Context.Chrome:
       let sb = this.sandboxes.get(sandboxName, newSandbox);
-      opts.timeout = timeout;
       let wargs = evaluate.fromJSON(args, this.curBrowser.seenEls, sb.window);
       res = await evaluate.sandbox(sb, script, wargs, opts);
       els = this.curBrowser.seenEls;
