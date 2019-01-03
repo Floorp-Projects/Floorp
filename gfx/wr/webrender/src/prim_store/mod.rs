@@ -505,8 +505,8 @@ impl SizeKey {
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 #[derive(Copy, Debug, Clone, PartialEq)]
 pub struct VectorKey {
-    x: f32,
-    y: f32,
+    pub x: f32,
+    pub y: f32,
 }
 
 impl Eq for VectorKey {}
@@ -1731,7 +1731,7 @@ impl PrimitiveStore {
             let mut tile_cache = state.tile_cache.take().unwrap();
 
             // Build the dirty region(s) for this tile cache.
-            tile_cache.post_update(
+            pic.local_clip_rect = tile_cache.post_update(
                 resource_cache,
                 gpu_cache,
                 clip_store,
@@ -3247,6 +3247,11 @@ pub fn get_raster_rects(
         clipped_raster_rect,
         device_pixel_scale,
     );
+
+    // Ensure that we won't try to allocate a zero-sized clip render task.
+    if clipped.is_empty() {
+        return None;
+    }
 
     Some((clipped.to_i32(), unclipped))
 }

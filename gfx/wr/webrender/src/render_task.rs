@@ -270,7 +270,6 @@ pub struct PictureTask {
     pub uv_rect_handle: GpuCacheHandle,
     pub root_spatial_node_index: SpatialNodeIndex,
     uv_rect_kind: UvRectKind,
-    pub blits: Vec<TileBlit>,
 }
 
 #[derive(Debug)]
@@ -434,7 +433,6 @@ impl RenderTask {
         uv_rect_kind: UvRectKind,
         root_spatial_node_index: SpatialNodeIndex,
         clear_color: Option<ColorF>,
-        blits: Vec<TileBlit>,
     ) -> Self {
         let size = match location {
             RenderTaskLocation::Dynamic(_, size) => size,
@@ -462,7 +460,6 @@ impl RenderTask {
                 uv_rect_handle: GpuCacheHandle::new(),
                 uv_rect_kind,
                 root_spatial_node_index,
-                blits,
             }),
             clear_mode,
             saved_index: None,
