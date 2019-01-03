@@ -51,7 +51,7 @@ export function gutterMenu({
     },
     addConditional: {
       id: "node-menu-add-conditional-breakpoint",
-      label: L10N.getStr("editor.addConditionalBreakpoint")
+      label: L10N.getStr("editor.addConditionBreakpoint")
     },
     removeBreakpoint: {
       id: "node-menu-remove-breakpoint",
@@ -63,7 +63,7 @@ export function gutterMenu({
     },
     editConditional: {
       id: "node-menu-edit-conditional-breakpoint",
-      label: L10N.getStr("editor.editConditionalBreakpoint")
+      label: L10N.getStr("editor.editConditionBreakpoint")
     },
     enableBreakpoint: {
       id: "node-menu-enable-breakpoint",
@@ -107,7 +107,7 @@ export function gutterMenu({
   };
 
   const conditionalBreakpoint = {
-    accesskey: L10N.getStr("editor.addConditionalBreakpoint.accesskey"),
+    accesskey: L10N.getStr("editor.addConditionBreakpoint.accesskey"),
     disabled: false,
     // Leaving column undefined so pause points can be detected
     click: () =>
