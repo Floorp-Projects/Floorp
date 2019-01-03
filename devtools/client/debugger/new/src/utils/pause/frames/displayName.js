@@ -84,7 +84,7 @@ type formatDisplayNameParams = {
 export function formatDisplayName(
   frame: LocalFrame,
   { shouldMapDisplayName = true }: formatDisplayNameParams = {},
-  l10n: Object
+  l10n: typeof L10N
 ): string {
   const { library } = frame;
   let displayName = getFrameDisplayName(frame);
@@ -95,7 +95,7 @@ export function formatDisplayName(
   return simplifyDisplayName(displayName) || l10n.getStr("anonymousFunction");
 }
 
-export function formatCopyName(frame: LocalFrame, l10n: Object): string {
+export function formatCopyName(frame: LocalFrame, l10n: typeof L10N): string {
   const displayName = formatDisplayName(frame, undefined, l10n);
   const fileName = getFilename(frame.source);
   const frameLocation = frame.location.line;
