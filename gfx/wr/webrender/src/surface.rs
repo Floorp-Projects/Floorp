@@ -288,8 +288,8 @@ impl SurfaceDescriptor {
                 // coordinate system (which is the common case!) then we are effectively drawing
                 // in a local space anyway, so don't care about that transform for the purposes
                 // of validating the surface cache contents.
-                let raster_spatial_node = &clip_scroll_tree.spatial_nodes[raster_spatial_node_index.0];
-                let surface_spatial_node = &clip_scroll_tree.spatial_nodes[surface_spatial_node_index.0];
+                let raster_spatial_node = &clip_scroll_tree.spatial_nodes[raster_spatial_node_index.0 as usize];
+                let surface_spatial_node = &clip_scroll_tree.spatial_nodes[surface_spatial_node_index.0 as usize];
 
                 let mut key = CoordinateSpaceMapping::<LayoutPixel, PicturePixel>::new(
                     raster_spatial_node_index,
