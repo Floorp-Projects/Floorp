@@ -359,7 +359,7 @@ impl TileCache {
                 if let Some(ref mut current) = transform.current {
                     let mapping: CoordinateSpaceMapping<LayoutPixel, PicturePixel> = CoordinateSpaceMapping::new(
                         self.spatial_node_index,
-                        SpatialNodeIndex(i),
+                        SpatialNodeIndex::new(i),
                         frame_context.clip_scroll_tree,
                     ).expect("todo: handle invalid mappings");
 
@@ -1987,7 +1987,7 @@ impl PicturePrimitive {
             // No point including this cluster if it can't be transformed
             let spatial_node = &frame_context
                 .clip_scroll_tree
-                .spatial_nodes[cluster.spatial_node_index.0];
+                .spatial_nodes[cluster.spatial_node_index.0 as usize];
             if !spatial_node.invertible {
                 continue;
             }
