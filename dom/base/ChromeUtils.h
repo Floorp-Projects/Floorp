@@ -69,6 +69,9 @@ class ChromeUtils {
                               JS::MutableHandle<JSObject*> aRetval,
                               ErrorResult& aRv);
 
+  static void ReleaseAssert(GlobalObject& aGlobal, bool aCondition,
+                            const nsAString& aMessage);
+
   static void OriginAttributesToSuffix(
       GlobalObject& aGlobal, const dom::OriginAttributesDictionary& aAttrs,
       nsCString& aSuffix);
