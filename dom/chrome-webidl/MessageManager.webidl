@@ -542,7 +542,7 @@ interface MessageBroadcaster : MessageListenerManager
   /**
    * Return a single subordinate message manager.
    */
-  MessageListenerManager getChildAt(unsigned long aIndex);
+  MessageListenerManager? getChildAt(unsigned long aIndex);
 
   /**
    * Some processes are kept alive after their last tab/window are closed for testing
