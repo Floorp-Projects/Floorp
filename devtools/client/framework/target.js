@@ -188,11 +188,8 @@ const TargetFactory = exports.TargetFactory = {
  *
  * For now, only workers are having a distinct Target class called WorkerTarget.
  *
- * @param {Object} form
- *                  The TargetActor's form to be connected to. Null if front is passed.
  * @param {Front} activeTab
- *                  If we already have a front for this target, pass it here. Null if
- *                  form is passed.
+ *                  If we already have a front for this target, pass it here.
  * @param {DebuggerClient} client
  *                  The DebuggerClient instance to be used to debug this target.
  * @param {Boolean} chrome
@@ -202,11 +199,15 @@ const TargetFactory = exports.TargetFactory = {
  *                  If the target is a local Firefox tab, a reference to the firefox
  *                  frontend tab object.
  */
-function Target({ client, chrome, activeTab = null, tab = null }) {
+function Target({ activeTab, client, chrome, tab = null }) {
   EventEmitter.decorate(this);
   this.destroy = this.destroy.bind(this);
   this._onTabNavigated = this._onTabNavigated.bind(this);
   this.activeConsole = null;
+
+  if (!activeTab) {
+    throw new Error("Cannot instanciate target without a non-null activeTab");
+  }
   this.activeTab = activeTab;
 
   this._url = this.form.url;
