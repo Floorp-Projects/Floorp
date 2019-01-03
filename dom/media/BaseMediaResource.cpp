@@ -48,6 +48,8 @@ already_AddRefed<BaseMediaResource> BaseMediaResource::Create(
     return resource.forget();
   }
 
+  int64_t streamLength = -1;
+
   RefPtr<mozilla::dom::BlobImpl> blobImpl;
   if (dom::IsBlobURI(uri) &&
       NS_SUCCEEDED(NS_GetBlobForBlobURI(uri, getter_AddRefs(blobImpl))) &&
@@ -87,10 +89,13 @@ already_AddRefed<BaseMediaResource> BaseMediaResource::Create(
           aCallback, aChannel, uri, stream, size);
       return resource.forget();
     }
+
+    // We know the size of the stream for blobURLs, let's use it.
+    streamLength = size;
   }
 
-  RefPtr<BaseMediaResource> resource =
-      new ChannelMediaResource(aCallback, aChannel, uri, aIsPrivateBrowsing);
+  RefPtr<BaseMediaResource> resource = new ChannelMediaResource(
+      aCallback, aChannel, uri, streamLength, aIsPrivateBrowsing);
   return resource.forget();
 }
 
