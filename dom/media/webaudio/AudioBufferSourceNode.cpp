@@ -705,7 +705,7 @@ void AudioBufferSourceNode::Start(double aWhen, double aOffset,
     ns->SetDoubleParameter(START, aWhen);
   }
 
-  Context()->StartBlockedAudioContextIfAllowed();
+  Context()->NotifyScheduledSourceNodeStarted();
 }
 
 void AudioBufferSourceNode::Start(double aWhen, ErrorResult& aRv) {
