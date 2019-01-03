@@ -2092,6 +2092,9 @@ inline ReferenceType ReferenceTypeFromSimpleTypeDescrKey(uint32_t key) {
   return ReferenceType(key >> 1);
 }
 
+// Returns whether obj is a WindowProxy wrapping the script's global.
+extern bool IsWindowProxyForScriptGlobal(JSScript* script, JSObject* obj);
+
 }  // namespace jit
 }  // namespace js
 
