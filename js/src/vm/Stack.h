@@ -232,6 +232,7 @@ class AbstractFramePtr {
   inline JSScript* script() const;
   inline wasm::Instance* wasmInstance() const;
   inline GlobalObject* global() const;
+  inline bool hasGlobal(const GlobalObject* global) const;
   inline JSFunction* callee() const;
   inline Value calleev() const;
   inline Value& thisArgument() const;
