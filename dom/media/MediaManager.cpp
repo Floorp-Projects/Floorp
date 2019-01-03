@@ -1833,7 +1833,7 @@ RefPtr<MediaManager::MediaDeviceSetPromise> MediaManager::EnumerateRawDevices(
     if (realDeviceRequested) {
       MediaManager* manager = MediaManager::GetIfExists();
       MOZ_RELEASE_ASSERT(manager);  // Must exist while media thread is alive
-      realBackend = manager->GetBackend(aWindowId);
+      realBackend = manager->GetBackend();
     }
 
     auto result = MakeRefPtr<MediaDeviceSetRefCnt>();
@@ -2166,9 +2166,9 @@ int MediaManager::AddDeviceChangeCallback(DeviceChangeCallback* aCallback) {
     MOZ_RELEASE_ASSERT(manager);  // Must exist while media thread is alive
     // this is needed in case persistent permission is given but no gUM()
     // or enumeration() has created the real backend yet
-    manager->GetBackend(0);
+    manager->GetBackend();
     if (fakeDeviceChangeEventOn)
-      manager->GetBackend(0)->SetFakeDeviceChangeEvents();
+      manager->GetBackend()->SetFakeDeviceChangeEvents();
   }));
 
   return DeviceChangeCallback::AddDeviceChangeCallback(aCallback);
@@ -3262,7 +3262,7 @@ nsresult MediaManager::GetUserMediaDevices(
   return NS_ERROR_UNEXPECTED;
 }
 
-MediaEngine* MediaManager::GetBackend(uint64_t aWindowId) {
+MediaEngine* MediaManager::GetBackend() {
   MOZ_ASSERT(MediaManager::IsInMediaThread());
   // Plugin backends as appropriate. The default engine also currently
   // includes picture support for Android.
