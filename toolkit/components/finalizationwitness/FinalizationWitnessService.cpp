@@ -7,6 +7,7 @@
 #include "nsString.h"
 #include "jsapi.h"
 #include "js/CallNonGenericMethod.h"
+#include "js/PropertySpec.h"
 #include "mozJSComponentLoader.h"
 #include "nsZipArchive.h"
 

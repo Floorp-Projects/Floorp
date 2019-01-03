@@ -29,6 +29,7 @@
 #endif
 
 #include "js/CharacterEncoding.h"
+#include "js/PropertySpec.h"
 #include "js/Utility.h"
 #include "util/Text.h"
 #include "vm/Probes.h"

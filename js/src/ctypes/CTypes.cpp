@@ -40,6 +40,7 @@
 #include "gc/Policy.h"
 #include "jit/AtomicOperations.h"
 #include "js/CharacterEncoding.h"
+#include "js/PropertySpec.h"
 #include "js/StableStringChars.h"
 #include "js/UniquePtr.h"
 #include "js/Utility.h"

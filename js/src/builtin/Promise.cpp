@@ -15,6 +15,7 @@
 
 #include "gc/Heap.h"
 #include "js/Debug.h"
+#include "js/PropertySpec.h"
 #include "vm/AsyncFunction.h"
 #include "vm/AsyncIteration.h"
 #include "vm/Debugger.h"
