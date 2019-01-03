@@ -542,7 +542,6 @@ VectorImage::RequestRefresh(const TimeStamp& aTime) {
   mSVGDocumentWrapper->TickRefreshDriver();
 
   if (mHasPendingInvalidation) {
-    mHasPendingInvalidation = false;
     SendInvalidationNotifications();
   }
 }
@@ -555,14 +554,16 @@ void VectorImage::SendInvalidationNotifications() {
   // notifications there to ensure that there is actually a document observing
   // us. Otherwise, the notifications are just wasted effort.
   //
-  // Non-animated images call this method directly from
+  // Non-animated images post an event to call this method from
   // InvalidateObserversOnNextRefreshDriverTick, because RequestRefresh is never
   // called for them. Ordinarily this isn't needed, since we send out
   // invalidation notifications in OnSVGDocumentLoaded, but in rare cases the
   // SVG document may not be 100% ready to render at that time. In those cases
   // we would miss the subsequent invalidations if we didn't send out the
-  // notifications directly in |InvalidateObservers...|.
+  // notifications indirectly in |InvalidateObservers...|.
 
+  MOZ_ASSERT(mHasPendingInvalidation);
+  mHasPendingInvalidation = false;
   SurfaceCache::RemoveImage(ImageKey(this));
 
   if (UpdateImageContainer(Nothing())) {
@@ -1472,11 +1473,37 @@ VectorImage::OnDataAvailable(nsIRequest* aRequest, nsISupports* aCtxt,
 // Invalidation helper method
 
 void VectorImage::InvalidateObserversOnNextRefreshDriverTick() {
-  if (mHaveAnimations) {
-    mHasPendingInvalidation = true;
-  } else {
-    SendInvalidationNotifications();
+  if (mHasPendingInvalidation) {
+    return;
   }
+
+  mHasPendingInvalidation = true;
+
+  // Animated images can wait for the refresh tick.
+  if (mHaveAnimations) {
+    return;
+  }
+
+  // Non-animated images won't get the refresh tick, so we should just send an
+  // invalidation outside the current execution context. We need to defer
+  // because the layout tree is in the middle of invalidation, and the tree
+  // state needs to be consistent. Specifically only some of the frames have
+  // had the NS_FRAME_DESCENDANT_NEEDS_PAINT and/or NS_FRAME_NEEDS_PAINT bits
+  // set by InvalidateFrameInternal in layout/generic/nsFrame.cpp. These bits
+  // get cleared when we repaint the SVG into a surface by
+  // nsIFrame::ClearInvalidationStateBits in nsDisplayList::PaintRoot.
+  nsCOMPtr<nsIEventTarget> eventTarget;
+  if (mProgressTracker) {
+    eventTarget = mProgressTracker->GetEventTarget();
+  } else {
+    eventTarget = do_GetMainThread();
+  }
+
+  RefPtr<VectorImage> self(this);
+  nsCOMPtr<nsIRunnable> ev(NS_NewRunnableFunction(
+      "VectorImage::SendInvalidationNotifications",
+      [=]() -> void { self->SendInvalidationNotifications(); }));
+  eventTarget->Dispatch(ev.forget(), NS_DISPATCH_NORMAL);
 }
 
 void VectorImage::PropagateUseCounters(Document* aParentDocument) {
