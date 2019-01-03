@@ -9,6 +9,7 @@
 #include "builtin/Array.h"
 
 #include "jit/InlinableNatives.h"
+#include "js/PropertySpec.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/JSContext.h"
 #include "vm/Stack.h"

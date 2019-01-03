@@ -93,6 +93,7 @@
 #include "js/JSON.h"
 #include "js/MemoryFunctions.h"
 #include "js/Printf.h"
+#include "js/PropertySpec.h"
 #include "js/SourceText.h"
 #include "js/StableStringChars.h"
 #include "js/StructuredClone.h"
