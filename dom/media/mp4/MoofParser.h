@@ -208,16 +208,6 @@ class Sgpd final : public Atom  // SampleGroupDescription box.
   Result<Ok, nsresult> Parse(Box& aBox);
 };
 
-class AuxInfo {
- public:
-  AuxInfo(int64_t aMoofOffset, Saiz& aSaiz, Saio& aSaio);
-
- private:
-  int64_t mMoofOffset;
-  Saiz& mSaiz;
-  Saio& mSaio;
-};
-
 class Moof final : public Atom {
  public:
   Moof(Box& aBox, Trex& aTrex, Mvhd& aMvhd, Mdhd& aMdhd, Edts& aEdts,
@@ -246,8 +236,6 @@ class Moof final : public Atom {
   Result<Ok, nsresult> ParseTrun(Box& aBox, Tfhd& aTfhd, Mvhd& aMvhd,
                                  Mdhd& aMdhd, Edts& aEdts,
                                  uint64_t* aDecodeTime, bool aIsAudio);
-  void ParseSaiz(Box& aBox);
-  void ParseSaio(Box& aBox);
   bool ProcessCenc();
   uint64_t mMaxRoundingError;
 };
@@ -285,7 +273,6 @@ class MoofParser : public DecoderDoctorLifeLogger<MoofParser> {
   void ParseStbl(Box& aBox);
   void ParseStsd(Box& aBox);
   void ParseEncrypted(Box& aBox);
-  void ParseSinf(Box& aBox);
 
   bool BlockingReadNextMoof();
 
