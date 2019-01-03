@@ -166,8 +166,8 @@ struct TestFileData {
 };
 
 static const TestFileData testFiles[] = {
-    // filename                     parse #V dur   w    h  #A dur  crypt  off
-    // moof  headr  audio_profile
+    // filename parses? #V hasVideoIndex vDur w h #A aDur hasCrypto? moofOffset
+    // validMoof? hasHeader? audio_profile
     {"test_case_1156505.mp4", false, 0, false, -1, 0, 0, 0, -1, false, 152,
      false, false, 0},  // invalid ''trak box
     {"test_case_1181213.mp4", true, 1, true, 416666, 320, 240, 1, 477460, true,
@@ -349,10 +349,13 @@ TEST(MP4Metadata, test_case_mp4) {
   }
 }
 
-// Bug 1224019: This test produces way to much output, disabling for now.
+// This test was disabled by Bug 1224019 for producing way too much output.
+// This test no longer produces such output, as we've moved away from
+// stagefright, but it does take a long time to run. I can be useful to enable
+// as a sanity check on changes to the parser, but is too taxing to run as part
+// of normal test execution.
 #if 0
-TEST(MPEG4Metadata, test_case_mp4_subsets)
-{
+TEST(MP4Metadata, test_case_mp4_subsets) {
   static const size_t step = 1u;
   for (size_t test = 0; test < ArrayLength(testFiles); ++test) {
     nsTArray<uint8_t> buffer = ReadTestFile(testFiles[test].mFilename);
@@ -433,10 +436,13 @@ TEST(MoofParser, test_case_mp4) {
   }
 }
 
-// Bug 1224019: This test produces way to much output, disabling for now.
+// This test was disabled by Bug 1224019 for producing way too much output.
+// This test no longer produces such output, as we've moved away from
+// stagefright, but it does take a long time to run. I can be useful to enable
+// as a sanity check on changes to the parser, but is too taxing to run as part
+// of normal test execution.
 #if 0
-TEST(MoofParser, test_case_mp4_subsets)
-{
+TEST(MoofParser, test_case_mp4_subsets) {
   const size_t step = 1u;
   for (size_t test = 0; test < ArrayLength(testFiles); ++test) {
     nsTArray<uint8_t> buffer = ReadTestFile(testFiles[test].mFilename);
