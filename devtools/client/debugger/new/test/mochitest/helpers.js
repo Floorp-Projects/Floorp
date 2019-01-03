@@ -1101,7 +1101,7 @@ const selectors = {
   // These work for bobth the breakpoint listing and gutter marker
   gutterContextMenu: {
     addConditionalBreakpoint: "#node-menu-add-condition, #node-menu-add-conditional-breakpoint",
-    editBreakpoint: "#node-menu-edit-condition, #node-menu-edit-conditional-breakpoint"
+    editConditionalBreakpoint: "#node-menu-edit-condition, #node-menu-edit-conditional-breakpoint"
   },
   menuitem: i => `menupopup menuitem:nth-child(${i})`,
   pauseOnExceptions: ".pause-exceptions",
@@ -1137,7 +1137,9 @@ const selectors = {
   outlineItems: ".outline-list__element",
   conditionalPanelInput: ".conditional-breakpoint-panel input",
   searchField: ".search-field",
-  blackbox: ".action.black-box"
+  blackbox: ".action.black-box",
+  projectSearchCollapsed: ".project-text-search .arrow:not(.expanded)",
+  projectSerchExpandedResults: ".project-text-search .result",
 };
 
 function getSelector(elementName, ...args) {

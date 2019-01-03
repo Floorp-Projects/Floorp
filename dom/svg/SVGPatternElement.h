@@ -8,13 +8,13 @@
 #define mozilla_dom_SVGPatternElement_h
 
 #include "nsAutoPtr.h"
-#include "mozilla/dom/SVGElement.h"
 #include "SVGAnimatedPreserveAspectRatio.h"
 #include "SVGAnimatedTransformList.h"
-#include "nsSVGEnum.h"
+#include "SVGEnum.h"
 #include "nsSVGLength2.h"
 #include "nsSVGString.h"
 #include "nsSVGViewBox.h"
+#include "mozilla/dom/SVGElement.h"
 
 class nsSVGPatternFrame;
 
@@ -81,7 +81,7 @@ class SVGPatternElement final : public SVGPatternElementBase {
   static LengthInfo sLengthInfo[4];
 
   enum { PATTERNUNITS, PATTERNCONTENTUNITS };
-  nsSVGEnum mEnumAttributes[2];
+  SVGEnum mEnumAttributes[2];
   static EnumInfo sEnumInfo[2];
 
   nsAutoPtr<mozilla::SVGAnimatedTransformList> mPatternTransform;

@@ -194,7 +194,7 @@ class SecondaryPanes extends Component<Props, State> {
         },
         "plus",
         "plus",
-        L10N.getStr("xhrBreakpoints.placeholder")
+        L10N.getStr("xhrBreakpoints.label")
       )
     );
 

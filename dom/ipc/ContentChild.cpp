@@ -1238,7 +1238,13 @@ mozilla::ipc::IPCResult ContentChild::RecvRequestMemoryReport(
   AppendProcessId(process);
 
   MemoryReportRequestClient::Start(aGeneration, aAnonymize,
-                                   aMinimizeMemoryUsage, aDMDFile, process);
+                                   aMinimizeMemoryUsage, aDMDFile, process,
+                                   [&](const MemoryReport& aReport) {
+                                     Unused << GetSingleton()->SendAddMemoryReport(aReport);
+                                   },
+                                   [&](const uint32_t& aGeneration) {
+                                     return GetSingleton()->SendFinishMemoryReport(aGeneration);
+                                   });
   return IPC_OK();
 }
 

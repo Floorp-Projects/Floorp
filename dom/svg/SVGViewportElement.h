@@ -11,13 +11,13 @@
 #include "mozilla/dom/FromParser.h"
 #include "nsAutoPtr.h"
 #include "nsIContentInlines.h"
-#include "nsISVGPoint.h"
 #include "SVGAnimatedPreserveAspectRatio.h"
-#include "nsSVGEnum.h"
+#include "SVGEnum.h"
 #include "SVGGraphicsElement.h"
 #include "SVGImageContext.h"
-#include "SVGPreserveAspectRatio.h"
 #include "nsSVGLength2.h"
+#include "nsISVGPoint.h"
+#include "SVGPreserveAspectRatio.h"
 #include "nsSVGViewBox.h"
 
 class nsSVGOuterSVGFrame;

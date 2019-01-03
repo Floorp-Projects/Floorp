@@ -18,7 +18,8 @@ inline void js::gc::Arena::init(JS::Zone* zoneArg, AllocKind kind,
   MOZ_ASSERT(!zone);
   MOZ_ASSERT(!allocated());
   MOZ_ASSERT(!onDelayedMarkingList_);
-  MOZ_ASSERT(!hasDelayedMarking_);
+  MOZ_ASSERT(!hasDelayedBlackMarking_);
+  MOZ_ASSERT(!hasDelayedGrayMarking_);
   MOZ_ASSERT(!nextDelayedMarkingArena_);
 
   MOZ_MAKE_MEM_UNDEFINED(this, ArenaSize);
@@ -26,7 +27,8 @@ inline void js::gc::Arena::init(JS::Zone* zoneArg, AllocKind kind,
   zone = zoneArg;
   allocKind = size_t(kind);
   onDelayedMarkingList_ = 0;
-  hasDelayedMarking_ = 0;
+  hasDelayedBlackMarking_ = 0;
+  hasDelayedGrayMarking_ = 0;
   nextDelayedMarkingArena_ = 0;
   if (zone->isAtomsZone()) {
     zone->runtimeFromAnyThread()->gc.atomMarking.registerArena(this, lock);

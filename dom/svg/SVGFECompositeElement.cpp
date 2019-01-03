@@ -25,7 +25,7 @@ SVGElement::NumberInfo SVGFECompositeElement::sNumberInfo[4] = {
     {nsGkAtoms::k3, 0, false},
     {nsGkAtoms::k4, 0, false}};
 
-nsSVGEnumMapping SVGFECompositeElement::sOperatorMap[] = {
+SVGEnumMapping SVGFECompositeElement::sOperatorMap[] = {
     {nsGkAtoms::over, SVG_FECOMPOSITE_OPERATOR_OVER},
     {nsGkAtoms::in, SVG_FECOMPOSITE_OPERATOR_IN},
     {nsGkAtoms::out, SVG_FECOMPOSITE_OPERATOR_OUT},

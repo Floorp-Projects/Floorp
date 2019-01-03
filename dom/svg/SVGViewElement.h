@@ -7,11 +7,11 @@
 #ifndef mozilla_dom_SVGViewElement_h
 #define mozilla_dom_SVGViewElement_h
 
-#include "SVGElement.h"
-#include "nsSVGEnum.h"
-#include "nsSVGViewBox.h"
 #include "SVGAnimatedPreserveAspectRatio.h"
+#include "SVGEnum.h"
 #include "SVGStringList.h"
+#include "nsSVGViewBox.h"
+#include "mozilla/dom/SVGElement.h"
 
 class nsSVGOuterSVGFrame;
 
@@ -54,8 +54,8 @@ class SVGViewElement : public SVGViewElementBase {
   virtual EnumAttributesInfo GetEnumInfo() override;
 
   enum { ZOOMANDPAN };
-  nsSVGEnum mEnumAttributes[1];
-  static nsSVGEnumMapping sZoomAndPanMap[];
+  SVGEnum mEnumAttributes[1];
+  static SVGEnumMapping sZoomAndPanMap[];
   static EnumInfo sEnumInfo[1];
 
   virtual nsSVGViewBox* GetViewBox() override;

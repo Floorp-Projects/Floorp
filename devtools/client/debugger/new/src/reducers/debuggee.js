@@ -14,6 +14,7 @@ import type { Record } from "../utils/makeRecord";
 import type { Worker } from "../types";
 import type { Action } from "../actions/types";
 import makeRecord from "../utils/makeRecord";
+import { getMainThread } from "./pause";
 
 export type WorkersList = List<Worker>;
 
@@ -48,6 +49,18 @@ export const getWorkerDisplayName = (state: OuterState, thread: string) => {
     index++;
   }
   return "";
+};
+
+export const isValidThread = (state: OuterState, thread: string) => {
+  if (thread == getMainThread((state: any))) {
+    return true;
+  }
+  for (const { actor } of state.debuggee.workers) {
+    if (actor == thread) {
+      return true;
+    }
+  }
+  return false;
 };
 
 type OuterState = { debuggee: DebuggeeState };
