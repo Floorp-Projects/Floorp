@@ -1,5 +1,5 @@
-// |jit-test| skip-if: !getBuildConfiguration()['x86'] && !getBuildConfiguration()['x64']
-// Skip on non x86/x64 until Bug 1511615 is fixed for arm7/arm64.
+// |jit-test| skip-if: getBuildConfiguration()['arm'] || getBuildConfiguration()['arm64']
+// skip on arm, arm64 due to bug 1511615
 load(libdir + 'asserts.js');
 
 function test() {
