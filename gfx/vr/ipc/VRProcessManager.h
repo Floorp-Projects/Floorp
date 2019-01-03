@@ -26,7 +26,6 @@ class VRProcessManager final {
 
   // If not using a VR process, launch a new VR process asynchronously.
   void LaunchVRProcess();
-  void DestroyProcess();
 
   bool CreateGPUBridges(base::ProcessId aOtherProcess,
                         mozilla::ipc::Endpoint<PVRGPUChild>* aOutVRBridge);
@@ -42,6 +41,7 @@ class VRProcessManager final {
                           mozilla::ipc::Endpoint<PVRGPUChild>* aOutEndpoint);
   void OnXPCOMShutdown();
   void CleanShutdown();
+  void DestroyProcess();
 
   // Permanently disable the VR process and record a message why.
   void DisableVRProcess(const char* aMessage);

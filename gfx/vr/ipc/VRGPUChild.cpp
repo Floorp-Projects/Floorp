@@ -21,6 +21,15 @@ static StaticRefPtr<VRGPUChild> sVRGPUChildSingleton;
     return false;
   }
   sVRGPUChildSingleton = child;
+
+  RefPtr<Runnable> task =
+      NS_NewRunnableFunction("VRGPUChild::SendStartVRService", []() -> void {
+        VRGPUChild* vrGPUChild = VRGPUChild::Get();
+        vrGPUChild->SendStartVRService();
+      });
+
+  NS_DispatchToMainThread(task.forget());
+
   return true;
 }
 
@@ -31,7 +40,7 @@ static StaticRefPtr<VRGPUChild> sVRGPUChildSingleton;
   return sVRGPUChildSingleton;
 }
 
-/*static*/ void VRGPUChild::ShutDown() {
+/*static*/ void VRGPUChild::Shutdown() {
   MOZ_ASSERT(NS_IsMainThread());
   sVRGPUChildSingleton = nullptr;
 }
