@@ -182,6 +182,7 @@ function createServerAndGetTestUrl() {
   httpServer.registerPathHandler("/" + JS_ASCII_FILENAME,
     function(request, response) {
       response.setStatusLine(request.httpVersion, 200, "OK");
+      response.setHeader("Content-Type", "application/javascript", false);
       let content = "";
       for (const curSeason of SEASONS) {
         content += `console.log("${curSeason.english}");`;
@@ -192,6 +193,7 @@ function createServerAndGetTestUrl() {
   httpServer.registerPathHandler("/" + ENCODED_JS_UNICODE_FILENAME,
     function(request, response) {
       response.setStatusLine(request.httpVersion, 200, "OK");
+      response.setHeader("Content-Type", "application/javascript", false);
       let content = "";
       for (const curSeason of SEASONS) {
         content += `console.log("${curSeason.escapedChinese}");`;
