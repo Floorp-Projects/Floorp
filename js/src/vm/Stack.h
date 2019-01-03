@@ -1050,7 +1050,7 @@ namespace js {
 
 /*****************************************************************************/
 
-// SavedFrame caching to minimize stack walking.
+// [SMDOC] LiveSavedFrameCache: SavedFrame caching to minimize stack walking
 //
 // Since each SavedFrame object includes a 'parent' pointer to the SavedFrame
 // for its caller, if we could easily find the right SavedFrame for a given
