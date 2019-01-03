@@ -69,7 +69,7 @@ void HostFinalizeTopLevelScript(JSFreeOp* aFop, const JS::Value& aPrivate) {
 #ifdef DEBUG
   if (script->IsModuleScript()) {
     JSObject* module = script->AsModuleScript()->mModuleRecord.unbarrieredGet();
-    MOZ_ASSERT(JS::GetModulePrivate(module) == aPrivate);
+    MOZ_ASSERT_IF(module, JS::GetModulePrivate(module) == aPrivate);
   }
 #endif
 
