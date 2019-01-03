@@ -1175,19 +1175,8 @@ static void AllocateObjectBufferWithInit(JSContext* cx, TypedArrayObject* obj,
   }
 
   obj->setFixedSlot(TypedArrayObject::LENGTH_SLOT, Int32Value(count));
-  size_t nbytes;
 
-  switch (obj->type()) {
-#define CREATE_TYPED_ARRAY(T, N)                                \
-  case Scalar::N:                                               \
-    MOZ_ALWAYS_TRUE(js::CalculateAllocSize<T>(count, &nbytes)); \
-    break;
-    JS_FOR_EACH_TYPED_ARRAY(CREATE_TYPED_ARRAY)
-#undef CREATE_TYPED_ARRAY
-    default:
-      MOZ_CRASH("Unsupported TypedArray type");
-  }
-
+  size_t nbytes = count * obj->bytesPerElement();
   MOZ_ASSERT((CheckedUint32(nbytes) + sizeof(Value)).isValid());
 
   nbytes = JS_ROUNDUP(nbytes, sizeof(Value));

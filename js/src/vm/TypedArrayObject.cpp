@@ -526,9 +526,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
       return nullptr;
     }
 
-    size_t nbytes;
-    MOZ_ALWAYS_TRUE(js::CalculateAllocSize<NativeType>(len, &nbytes));
-
+    size_t nbytes = len * BYTES_PER_ELEMENT;
     bool fitsInline = nbytes <= INLINE_BUFFER_LIMIT;
 
     AutoSetNewObjectMetadata metadata(cx);
