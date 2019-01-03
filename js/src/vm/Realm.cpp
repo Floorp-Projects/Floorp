@@ -117,20 +117,26 @@ bool Realm::init(JSContext* cx, JSPrincipals* principals) {
   return true;
 }
 
-jit::JitRuntime* JSRuntime::createJitRuntime(JSContext* cx) {
+bool JSRuntime::createJitRuntime(JSContext* cx) {
   using namespace js::jit;
 
   MOZ_ASSERT(!jitRuntime_);
 
   if (!CanLikelyAllocateMoreExecutableMemory()) {
-    // Report OOM instead of potentially hitting the MOZ_CRASH below.
-    ReportOutOfMemory(cx);
-    return nullptr;
+    // Report OOM instead of potentially hitting the MOZ_CRASH below, but first
+    // try to release memory.
+    if (OnLargeAllocationFailure) {
+      OnLargeAllocationFailure();
+    }
+    if (!CanLikelyAllocateMoreExecutableMemory()) {
+      ReportOutOfMemory(cx);
+      return false;
+    }
   }
 
   jit::JitRuntime* jrt = cx->new_<jit::JitRuntime>();
   if (!jrt) {
-    return nullptr;
+    return false;
   }
 
   // Unfortunately, initialization depends on jitRuntime_ being non-null, so
@@ -145,7 +151,7 @@ jit::JitRuntime* JSRuntime::createJitRuntime(JSContext* cx) {
     noOOM.crash("OOM in createJitRuntime");
   }
 
-  return jitRuntime_;
+  return true;
 }
 
 bool Realm::ensureJitRealmExists(JSContext* cx) {
