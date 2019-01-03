@@ -2440,6 +2440,19 @@ class MOZ_RAII AutoSetProcessingScriptTag {
   ~AutoSetProcessingScriptTag() { mContext->SetProcessingScriptTag(mOldTag); }
 };
 
+static nsresult ExecuteCompiledScript(JSContext* aCx,
+                                      ScriptLoadRequest* aRequest,
+                                      nsJSUtils::ExecutionContext& aExec) {
+  JS::Rooted<JSScript*> script(aCx, aExec.GetScript());
+
+  // Create a ClassicScript object and associate it with the JSScript.
+  RefPtr<ClassicScript> classicScript = new ClassicScript(
+    aRequest->mFetchOptions, aRequest->mBaseURL);
+  classicScript->AssociateWithScript(script);
+
+  return aExec.ExecScript();
+}
+
 nsresult ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest) {
   using namespace mozilla::Telemetry;
   MOZ_ASSERT(aRequest->IsReadyToRun());
@@ -2548,14 +2561,18 @@ nsresult ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest) {
           if (aRequest->mOffThreadToken) {
             LOG(("ScriptLoadRequest (%p): Decode Bytecode & Join and Execute",
                  aRequest));
-            exec.JoinDecode(&aRequest->mOffThreadToken);
+            rv = exec.JoinDecode(&aRequest->mOffThreadToken);
           } else {
             LOG(("ScriptLoadRequest (%p): Decode Bytecode and Execute",
                  aRequest));
-            exec.Decode(options, aRequest->mScriptBytecode,
-                        aRequest->mBytecodeOffset);
+            rv = exec.Decode(options, aRequest->mScriptBytecode,
+                             aRequest->mBytecodeOffset);
           }
-          rv = exec.ExecScript();
+
+          if (rv == NS_OK) {
+            rv = ExecuteCompiledScript(cx, aRequest, exec);
+          }
+
           // We do not expect to be saving anything when we already have some
           // bytecode.
           MOZ_ASSERT(!aRequest->mCacheInfo);
@@ -2601,14 +2618,7 @@ nsresult ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest) {
 
             if (rv == NS_OK) {
               script = exec.GetScript();
-
-              // Create a ClassicScript object and associate it with the
-              // JSScript.
-              RefPtr<ClassicScript> classicScript = new ClassicScript(
-                  aRequest->mFetchOptions, aRequest->mBaseURL);
-              classicScript->AssociateWithScript(script);
-
-              rv = exec.ExecScript();
+              rv = ExecuteCompiledScript(cx, aRequest, exec);
             }
           }
 
