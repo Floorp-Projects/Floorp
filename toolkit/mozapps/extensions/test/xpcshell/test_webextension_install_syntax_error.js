@@ -7,7 +7,7 @@ add_task(async function setup() {
 
 add_task(async function install_xpi() {
   // WebExtension with a JSON syntax error in manifest.json
-  let xpi1 = Extension.generateXPI({
+  let xpi1 = AddonTestUtils.createTempWebExtensionFile({
     files: {
       "manifest.json": String.raw`{
         "manifest_version: 2,
@@ -19,7 +19,7 @@ add_task(async function install_xpi() {
   });
 
   // Valid WebExtension
-  let xpi2 = Extension.generateXPI({
+  let xpi2 = AddonTestUtils.createTempWebExtensionFile({
     files: {
       "manifest.json": String.raw`{
         "manifest_version": 2,
@@ -39,6 +39,4 @@ add_task(async function install_xpi() {
 
   let install2 = await AddonManager.getInstallForFile(xpi2);
   Assert.equal(install2.error, 0);
-
-  xpi1.remove(false);
 });
