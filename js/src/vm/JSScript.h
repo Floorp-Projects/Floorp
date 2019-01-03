@@ -2384,6 +2384,7 @@ class JSScript : public js::gc::TenuredCell {
   void sweepTypes(const js::AutoSweepTypeScript& sweep);
 
   inline js::GlobalObject& global() const;
+  inline bool hasGlobal(const js::GlobalObject* global) const;
   js::GlobalObject& uninlinedGlobal() const;
 
   uint32_t bodyScopeIndex() const { return bodyScopeIndex_; }

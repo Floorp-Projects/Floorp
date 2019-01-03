@@ -649,6 +649,10 @@ GlobalObject* DebugFrame::global() const {
   return &instance()->object()->global();
 }
 
+bool DebugFrame::hasGlobal(const GlobalObject* global) const {
+  return global == &instance()->objectUnbarriered()->global();
+}
+
 JSObject* DebugFrame::environmentChain() const {
   return &global()->lexicalEnvironment();
 }

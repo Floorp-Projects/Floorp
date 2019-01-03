@@ -2545,6 +2545,7 @@ class DebugFrame {
   uint32_t funcIndex() const { return funcIndex_; }
   Instance* instance() const { return frame_.instance(); }
   GlobalObject* global() const;
+  bool hasGlobal(const GlobalObject* global) const;
   JSObject* environmentChain() const;
   bool getLocal(uint32_t localIndex, MutableHandleValue vp);
 
