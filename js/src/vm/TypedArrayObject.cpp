@@ -436,8 +436,6 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
     const Class* clasp = instanceClass();
     gc::AllocKind allocKind = !fitsInline ? gc::GetGCObjectKind(clasp)
                                           : AllocKindForLazyBuffer(nbytes);
-    MOZ_ASSERT(CanBeFinalizedInBackground(allocKind, clasp));
-    allocKind = GetBackgroundAllocKind(allocKind);
 
     AutoSetNewObjectMetadata metadata(cx);
     jsbytecode* pc;
@@ -521,11 +519,8 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
 
     AutoSetNewObjectMetadata metadata(cx);
 
-    const Class* clasp = templateObj->group()->clasp();
     gc::AllocKind allocKind = !fitsInline ? gc::GetGCObjectKind(instanceClass())
                                           : AllocKindForLazyBuffer(nbytes);
-    MOZ_ASSERT(CanBeFinalizedInBackground(allocKind, clasp));
-    allocKind = GetBackgroundAllocKind(allocKind);
     RootedObjectGroup group(cx, templateObj->group());
     MOZ_ASSERT(group->clasp() == instanceClass());
 
