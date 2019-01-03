@@ -3321,7 +3321,9 @@ void MediaManager::OnNavigation(uint64_t aWindowID) {
 
   RefPtr<MediaManager> self = this;
   MediaManager::PostTask(NewTaskFrom([self, aWindowID]() {
-    self->GetBackend()->ReleaseResourcesForWindow(aWindowID);
+    if (self->mBackend) {
+      self->mBackend->ReleaseResourcesForWindow(aWindowID);
+    }
   }));
 }
 
