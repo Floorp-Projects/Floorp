@@ -211,7 +211,7 @@ class nsPrintJob final : public nsIObserver,
 
   void PageDone(nsresult aResult);
 
-  nsCOMPtr<mozilla::dom::Document> mDocument;
+  RefPtr<mozilla::dom::Document> mDocument;
   nsCOMPtr<nsIDocumentViewerPrint> mDocViewerPrint;
 
   nsWeakPtr mContainer;
