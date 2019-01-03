@@ -6955,7 +6955,14 @@ nsViewportInfo nsIDocument::GetViewportInfo(const ScreenIntSize& aDisplaySize) {
         size = displaySize;
       }
 
-      size.width = clamped(size.width, float(kViewportMinSize.width),
+      // The purpose of clamping the viewport width to a minimum size is to
+      // prevent page authors from setting it to a ridiculously small value.
+      // If the page is actually being rendered in a very small area (as might
+      // happen in e.g. Android 8's picture-in-picture mode), we don't want to
+      // prevent the viewport from taking on that size.
+      CSSSize effectiveMinSize = Min(CSSSize(kViewportMinSize), displaySize);
+
+      size.width = clamped(size.width, effectiveMinSize.width,
                            float(kViewportMaxSize.width));
 
       // Also recalculate the default zoom, if it wasn't specified in the
@@ -6965,7 +6972,7 @@ nsViewportInfo nsIDocument::GetViewportInfo(const ScreenIntSize& aDisplaySize) {
         scaleFloat = (scaleFloat > defaultScale) ? scaleFloat : defaultScale;
       }
 
-      size.height = clamped(size.height, float(kViewportMinSize.height),
+      size.height = clamped(size.height, effectiveMinSize.height,
                             float(kViewportMaxSize.height));
 
       // We need to perform a conversion, but only if the initial or maximum
