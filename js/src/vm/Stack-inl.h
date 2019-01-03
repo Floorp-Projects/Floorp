@@ -657,6 +657,13 @@ inline GlobalObject* AbstractFramePtr::global() const {
   return &script()->global();
 }
 
+inline bool AbstractFramePtr::hasGlobal(const GlobalObject* global) const {
+  if (isWasmDebugFrame()) {
+    return asWasmDebugFrame()->hasGlobal(global);
+  }
+  return script()->hasGlobal(global);
+}
+
 inline JSFunction* AbstractFramePtr::callee() const {
   if (isInterpreterFrame()) {
     return &asInterpreterFrame()->callee();
