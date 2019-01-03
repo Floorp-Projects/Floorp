@@ -163,7 +163,8 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
       wasmInstances(mutexid::WasmRuntimeInstances),
       moduleResolveHook(),
       moduleMetadataHook(),
-      moduleDynamicImportHook() {
+      moduleDynamicImportHook(),
+      scriptPrivateFinalizeHook() {
   JS_COUNT_CTOR(JSRuntime);
   liveRuntimesCount++;
 

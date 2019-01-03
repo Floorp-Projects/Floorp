@@ -1584,6 +1584,9 @@ pref("javascript.options.streams", true);
 // BigInt API
 pref("javascript.options.bigint", false);
 
+// Dynamic module import.
+pref("javascript.options.dynamicImport", false);
+
 // advanced prefs
 pref("advanced.mailftp",                    false);
 pref("image.animation_mode",                "normal");
