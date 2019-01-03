@@ -625,6 +625,11 @@ struct ImplicitEdgeHolderType<JSScript*> {
   typedef JSScript* Type;
 };
 
+template <>
+struct ImplicitEdgeHolderType<LazyScript*> {
+  typedef LazyScript* Type;
+};
+
 void GCMarker::markEphemeronValues(gc::Cell* markedCell,
                                    WeakEntryVector& values) {
   DebugOnly<size_t> initialLen = values.length();
@@ -838,6 +843,7 @@ void GCMarker::traverse(JSString* thing) {
 template <>
 void GCMarker::traverse(LazyScript* thing) {
   markAndScan(thing);
+  markImplicitEdges(thing);
 }
 template <>
 void GCMarker::traverse(Shape* thing) {

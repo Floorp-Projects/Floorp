@@ -1404,6 +1404,14 @@ JS_FRIEND_API void js::LogDtor(void* self, const char* type, uint32_t sz) {
   }
 }
 
+JS_FRIEND_API JS::Value js::MaybeGetScriptPrivate(JSObject* object) {
+  if (!object->is<ScriptSourceObject>()) {
+    return UndefinedValue();
+  }
+
+  return object->as<ScriptSourceObject>().canonicalPrivate();
+}
+
 JS_FRIEND_API uint64_t js::GetGCHeapUsageForObjectZone(JSObject* obj) {
   return obj->zone()->usage.gcBytes();
 }

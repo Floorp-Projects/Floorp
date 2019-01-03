@@ -75,6 +75,7 @@
 #include "mozilla/dom/ScriptSettings.h"
 #include "js/Debug.h"
 #include "js/GCAPI.h"
+#include "jsfriendapi.h"
 #include "nsContentUtils.h"
 #include "nsCycleCollectionNoteRootCallback.h"
 #include "nsCycleCollectionParticipant.h"
@@ -627,28 +628,36 @@ void CycleCollectedJSRuntime::NoteGCThingXPCOMChildren(
     // Nothing else to do!
     return;
   }
+
   // XXX This test does seem fragile, we should probably whitelist classes
   //     that do hold a strong reference, but that might not be possible.
-  else if (aClasp->flags & JSCLASS_HAS_PRIVATE &&
-           aClasp->flags & JSCLASS_PRIVATE_IS_NSISUPPORTS) {
+  if (aClasp->flags & JSCLASS_HAS_PRIVATE &&
+      aClasp->flags & JSCLASS_PRIVATE_IS_NSISUPPORTS) {
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(aCb, "js::GetObjectPrivate(obj)");
     aCb.NoteXPCOMChild(static_cast<nsISupports*>(js::GetObjectPrivate(aObj)));
-  } else {
-    const DOMJSClass* domClass = GetDOMClass(aObj);
-    if (domClass) {
-      NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(aCb, "UnwrapDOMObject(obj)");
-      // It's possible that our object is an unforgeable holder object, in
-      // which case it doesn't actually have a C++ DOM object associated with
-      // it.  Use UnwrapPossiblyNotInitializedDOMObject, which produces null in
-      // that case, since NoteXPCOMChild/NoteNativeChild are null-safe.
-      if (domClass->mDOMObjectIsISupports) {
-        aCb.NoteXPCOMChild(
-            UnwrapPossiblyNotInitializedDOMObject<nsISupports>(aObj));
-      } else if (domClass->mParticipant) {
-        aCb.NoteNativeChild(UnwrapPossiblyNotInitializedDOMObject<void>(aObj),
-                            domClass->mParticipant);
-      }
+    return;
+  }
+
+  const DOMJSClass* domClass = GetDOMClass(aObj);
+  if (domClass) {
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(aCb, "UnwrapDOMObject(obj)");
+    // It's possible that our object is an unforgeable holder object, in
+    // which case it doesn't actually have a C++ DOM object associated with
+    // it.  Use UnwrapPossiblyNotInitializedDOMObject, which produces null in
+    // that case, since NoteXPCOMChild/NoteNativeChild are null-safe.
+    if (domClass->mDOMObjectIsISupports) {
+      aCb.NoteXPCOMChild(
+          UnwrapPossiblyNotInitializedDOMObject<nsISupports>(aObj));
+    } else if (domClass->mParticipant) {
+      aCb.NoteNativeChild(UnwrapPossiblyNotInitializedDOMObject<void>(aObj),
+                          domClass->mParticipant);
     }
+    return;
+  }
+
+  JS::Value value = js::MaybeGetScriptPrivate(aObj);
+  if (!value.isUndefined()) {
+    aCb.NoteXPCOMChild(static_cast<nsISupports*>(value.toPrivate()));
   }
 }
 
