@@ -9,7 +9,7 @@ import { closeTabsForMissingThreads } from "./tabs";
 
 export function updateWorkers() {
   return async function({ dispatch, getState, client }: ThunkArgs) {
-    const { workers } = await client.fetchWorkers();
+    const workers = await client.fetchWorkers();
     dispatch(({ type: "SET_WORKERS", workers }: Action));
 
     dispatch(closeTabsForMissingThreads(workers));
