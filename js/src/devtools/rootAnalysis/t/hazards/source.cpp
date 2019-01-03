@@ -1,3 +1,5 @@
+#include <utility>
+
 #define ANNOTATE(property) __attribute__((annotate(property)))
 
 struct Cell {
@@ -223,6 +225,8 @@ class UniquePtr
 } ANNOTATE("moz_inherit_type_annotations_from_template_args");
 } // namespace mozilla
 
+extern void consume(mozilla::UniquePtr<Cell> uptr);
+
 void safevals() {
   Cell cell;
 
@@ -266,9 +270,32 @@ void safevals() {
     safe6.reset();
   }
 
+  // reset() to safe value after the GC -- but we've already used it, so it's
+  // too late.
+  {
+    mozilla::UniquePtr<Cell> unsafe7(&cell);
+    GC();
+    use(unsafe7.get());
+    unsafe7.reset();
+  }
+
   // initialized to safe value.
   {
-    mozilla::UniquePtr<Cell> safe7;
+    mozilla::UniquePtr<Cell> safe8;
     GC();
+  }
+
+  // passed to a function that takes ownership before GC.
+  {
+    mozilla::UniquePtr<Cell> safe9(&cell);
+    consume(std::move(safe9));
+    GC();
+  }
+
+  // passed to a function that takes ownership after GC.
+  {
+    mozilla::UniquePtr<Cell> unsafe10(&cell);
+    GC();
+    consume(std::move(unsafe10));
   }
 }
