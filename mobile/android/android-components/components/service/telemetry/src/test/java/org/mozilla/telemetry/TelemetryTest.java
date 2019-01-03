@@ -9,9 +9,17 @@ import android.app.job.JobParameters;
 import android.app.job.JobScheduler;
 import android.content.Context;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.PersistableBundle;
 import android.preference.PreferenceManager;
-
+import kotlin.Unit;
+import kotlin.jvm.functions.Function0;
+import mozilla.components.concept.fetch.Client;
+import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient;
+import mozilla.components.lib.fetch.okhttp.OkHttpClient;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
+import okhttp3.mockwebserver.RecordedRequest;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.After;
@@ -19,8 +27,10 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.telemetry.config.TelemetryConfiguration;
 import org.mozilla.telemetry.event.TelemetryEvent;
-import org.mozilla.telemetry.measurement.*;
-import org.mozilla.telemetry.net.HttpURLConnectionTelemetryClient;
+import org.mozilla.telemetry.measurement.DefaultSearchMeasurement;
+import org.mozilla.telemetry.measurement.ExperimentsMapMeasurement;
+import org.mozilla.telemetry.measurement.SearchesMeasurement;
+import org.mozilla.telemetry.measurement.SessionDurationMeasurement;
 import org.mozilla.telemetry.net.TelemetryClient;
 import org.mozilla.telemetry.ping.TelemetryCorePingBuilder;
 import org.mozilla.telemetry.ping.TelemetryEventPingBuilder;
@@ -32,38 +42,38 @@ import org.mozilla.telemetry.serialize.JSONPingSerializer;
 import org.mozilla.telemetry.serialize.TelemetryPingSerializer;
 import org.mozilla.telemetry.storage.FileTelemetryStorage;
 import org.mozilla.telemetry.storage.TelemetryStorage;
+import org.robolectric.ParameterizedRobolectricTestRunner;
 import org.robolectric.Robolectric;
-import org.robolectric.RobolectricTestRunner;
 import org.robolectric.RuntimeEnvironment;
 import org.robolectric.annotation.Config;
 
 import java.util.*;
 
-import kotlin.Unit;
-import kotlin.jvm.functions.Function0;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
-import okhttp3.mockwebserver.RecordedRequest;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
-@RunWith(RobolectricTestRunner.class)
-@Config(sdk = android.os.Build.VERSION_CODES.LOLLIPOP)
+@RunWith(ParameterizedRobolectricTestRunner.class)
+@Config(minSdk = Build.VERSION_CODES.M)
 public class TelemetryTest {
     private static final String TEST_USER_AGENT = "Test/42.0.23";
     private static final String TEST_SETTING_1 = "test-setting-1";
     private static final String TEST_SETTING_2 = "test-setting-2";
+
+    @ParameterizedRobolectricTestRunner.Parameters(name = "{1}")
+    public static Collection<Object[]> data() {
+        return Arrays.asList(new Object[][] {
+            { new HttpURLConnectionClient(), "HttpUrlConnection" },
+            { new OkHttpClient(), "OkHttp" }
+        });
+    }
+
+    private final Client httpClient;
+
+    public TelemetryTest(Client client, String name) {
+        this.httpClient = client;
+    }
 
     @Test
     public void testCorePingIntegration() throws Exception {
@@ -81,7 +91,7 @@ public class TelemetryTest {
         final TelemetryPingSerializer serializer = new JSONPingSerializer();
         final FileTelemetryStorage storage = new FileTelemetryStorage(configuration, serializer);
 
-        final TelemetryClient client = spy(new HttpURLConnectionTelemetryClient());
+        final TelemetryClient client = spy(new TelemetryClient(httpClient));
         final TelemetryScheduler scheduler = new JobSchedulerTelemetryScheduler();
 
         final TelemetryCorePingBuilder pingBuilder = spy(new TelemetryCorePingBuilder(configuration));
@@ -165,7 +175,7 @@ public class TelemetryTest {
         final TelemetryPingSerializer serializer = new JSONPingSerializer();
         final FileTelemetryStorage storage = new FileTelemetryStorage(configuration, serializer);
 
-        final TelemetryClient client = spy(new HttpURLConnectionTelemetryClient());
+        final TelemetryClient client = spy(new TelemetryClient(httpClient));
         final TelemetryScheduler scheduler = new JobSchedulerTelemetryScheduler();
 
         final TelemetryMobileEventPingBuilder pingBuilder = spy(new TelemetryMobileEventPingBuilder(configuration));
@@ -260,7 +270,7 @@ public class TelemetryTest {
         final TelemetryPingSerializer serializer = new JSONPingSerializer();
         final FileTelemetryStorage storage = new FileTelemetryStorage(configuration, serializer);
 
-        final TelemetryClient client = spy(new HttpURLConnectionTelemetryClient());
+        final TelemetryClient client = spy(new TelemetryClient(httpClient));
         final TelemetryScheduler scheduler = new JobSchedulerTelemetryScheduler();
 
         final TelemetryEventPingBuilder pingBuilder = spy(new TelemetryEventPingBuilder(configuration));
@@ -342,7 +352,7 @@ public class TelemetryTest {
         final TelemetryPingSerializer serializer = new JSONPingSerializer();
         final FileTelemetryStorage storage = new FileTelemetryStorage(configuration, serializer);
 
-        final TelemetryClient client = spy(new HttpURLConnectionTelemetryClient());
+        final TelemetryClient client = spy(new TelemetryClient(httpClient));
         final TelemetryScheduler scheduler = new JobSchedulerTelemetryScheduler();
 
         final Telemetry telemetry = new Telemetry(configuration, storage, client, scheduler)

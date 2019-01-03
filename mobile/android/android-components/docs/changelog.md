@@ -20,6 +20,20 @@ permalink: /changelog/
 * **feature-session-bundling**
   * 🆕 New component that saves the state of sessions (`SessionManager.Snapshot`) in grouped bundles (e.g. by time).
 
+* **service-telemetry**
+  * ⚠️ **This is a breaking change!** <br/>
+  HttpURLConnectionTelemetryClient was removed. *service-telemetry* is now using [*concept-fetch*](https://github.com/mozilla-mobile/android-components/tree/master/components/concept/fetch) which allows consumers to use a unified http client. There are two options available currently: [lib-fetch-httpurlconnection](https://github.com/mozilla-mobile/android-components/tree/master/components/lib/fetch-httpurlconnection) (Based on [HttpURLConnection](https://developer.android.com/reference/java/net/HttpURLConnection)) and [lib-fetch-okhttp](https://github.com/mozilla-mobile/android-components/tree/master/components/lib/fetch-okhttp) (Based on [OkHttp](https://github.com/square/okhttp)).
+
+  ```Kotlin
+  // Using HttpURLConnection:
+  val client = new TelemetryClient(HttpURLConnectionClient())
+
+  // Using OkHttp:
+  val client = OkHttpClient()
+
+  val telemetry = Telemetry(configuration, storage, client, scheduler)
+  ```
+
 # 0.36.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.35.0...v0.36.0),
