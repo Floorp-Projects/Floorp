@@ -187,6 +187,8 @@ Response::~Response() { mozilla::DropJSObjects(this); }
   RefPtr<InternalResponse> internalResponse =
       new InternalResponse(aInit.mStatus, aInit.mStatusText);
 
+  UniquePtr<mozilla::ipc::PrincipalInfo> principalInfo;
+
   // Grab a valid channel info from the global so this response is 'valid' for
   // interception.
   if (NS_IsMainThread()) {
@@ -196,6 +198,14 @@ Response::~Response() { mozilla::DropJSObjects(this); }
       Document* doc = window->GetExtantDoc();
       MOZ_ASSERT(doc);
       info.InitFromDocument(doc);
+
+      principalInfo.reset(new mozilla::ipc::PrincipalInfo());
+      nsresult rv =
+          PrincipalToPrincipalInfo(doc->NodePrincipal(), principalInfo.get());
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        aRv.ThrowTypeError<MSG_FETCH_BODY_CONSUMED_ERROR>();
+        return nullptr;
+      }
     } else {
       info.InitFromChromeGlobal(global);
     }
@@ -204,7 +214,11 @@ Response::~Response() { mozilla::DropJSObjects(this); }
     WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
     MOZ_ASSERT(worker);
     internalResponse->InitChannelInfo(worker->GetChannelInfo());
+    principalInfo =
+        MakeUnique<mozilla::ipc::PrincipalInfo>(worker->GetPrincipalInfo());
   }
+
+  internalResponse->SetPrincipalInfo(std::move(principalInfo));
 
   RefPtr<Response> r = new Response(global, internalResponse, nullptr);
 
