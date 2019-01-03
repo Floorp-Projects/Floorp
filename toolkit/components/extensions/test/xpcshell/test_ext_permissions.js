@@ -2,7 +2,6 @@
 
 const {AddonManager} = ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
 const {ExtensionPermissions} = ChromeUtils.import("resource://gre/modules/ExtensionPermissions.jsm");
-const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 const BROWSER_PROPERTIES = "chrome://browser/locale/browser.properties";
 
@@ -489,7 +488,7 @@ add_task(async function test_permissions_prompt() {
 
   const PERMS = ["history", "tabs"];
   const ORIGINS = ["https://test1.example.com/*", "https://test3.example.com/"];
-  let xpi = Extension.generateXPI({
+  let xpi = AddonTestUtils.createTempWebExtensionFile({
     background,
     manifest: {
       name: "permissions test",
@@ -526,7 +525,6 @@ add_task(async function test_permissions_prompt() {
   deepEqual(perms.origins, ORIGINS, "Update details includes only manifest origin permissions");
 
   await extension.unload();
-  await OS.File.remove(xpi.path);
 });
 
 // Check that internal permissions can not be set and are not returned by the API.

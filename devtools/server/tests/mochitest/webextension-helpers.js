@@ -1,6 +1,6 @@
 /* exported attachAddon, setWebExtensionOOPMode, waitForFramesUpdated, reloadAddon,
-            collectFrameUpdates, generateWebExtensionXPI, promiseInstallFile,
-            promiseAddonByID, promiseWebExtensionStartup, promiseWebExtensionShutdown
+   collectFrameUpdates, generateWebExtensionXPI, promiseInstallFile,
+   promiseWebExtensionStartup, promiseWebExtensionShutdown
  */
 
 "use strict";
@@ -10,13 +10,10 @@ const {DebuggerClient} = require("devtools/shared/client/debugger-client");
 const {DebuggerServer} = require("devtools/server/main");
 const {TargetFactory} = require("devtools/client/framework/target");
 
-const {AddonManager} = require("resource://gre/modules/AddonManager.jsm");
-const {Extension, Management} = require("resource://gre/modules/Extension.jsm");
-const {flushJarCache} = require("resource://gre/modules/ExtensionUtils.jsm");
-const {Services} = require("resource://gre/modules/Services.jsm");
+const {AddonTestUtils} = require("resource://testing-common/AddonTestUtils.jsm");
+const {ExtensionTestCommon} = require("resource://testing-common/ExtensionTestCommon.jsm");
 
 loader.lazyImporter(this, "ExtensionParent", "resource://gre/modules/ExtensionParent.jsm");
-loader.lazyImporter(this, "OS", "resource://gre/modules/osfile.jsm");
 
 // Initialize a minimal DebuggerServer and connect to the webextension addon actor.
 if (!DebuggerServer.initialized) {
@@ -129,78 +126,11 @@ async function reloadAddon({client}, addonId) {
 // Test helpers related to the AddonManager.
 
 function generateWebExtensionXPI(extDetails) {
-  const addonFile = Extension.generateXPI(extDetails);
-
-  flushJarCache(addonFile.path);
-  Services.ppmm.broadcastAsyncMessage("Extension:FlushJarCache",
-                                      {path: addonFile.path});
-
-  // Remove the file on cleanup if needed.
-  SimpleTest.registerCleanupFunction(() => {
-    flushJarCache(addonFile.path);
-    Services.ppmm.broadcastAsyncMessage("Extension:FlushJarCache",
-                                        {path: addonFile.path});
-
-    if (addonFile.exists()) {
-      OS.File.remove(addonFile.path);
-    }
-  });
-
-  return addonFile;
+  return ExtensionTestCommon.generateXPI(extDetails);
 }
 
-function promiseCompleteInstall(install) {
-  let listener;
-  return new Promise((resolve, reject) => {
-    listener = {
-      onDownloadFailed: reject,
-      onDownloadCancelled: reject,
-      onInstallFailed: reject,
-      onInstallCancelled: reject,
-      onInstallEnded: resolve,
-      onInstallPostponed: reject,
-    };
-
-    install.addListener(listener);
-    install.install();
-  }).then(() => {
-    install.removeListener(listener);
-    return install;
-  });
-}
-
-function promiseInstallFile(file) {
-  return AddonManager.getInstallForFile(file).then(install => {
-    if (!install) {
-      throw new Error(`No AddonInstall created for ${file.path}`);
-    }
-
-    if (install.state != AddonManager.STATE_DOWNLOADED) {
-      throw new Error(`Expected file to be downloaded for install of ${file.path}`);
-    }
-
-    return promiseCompleteInstall(install);
-  });
-}
-
-function promiseWebExtensionStartup() {
-  return new Promise(resolve => {
-    const listener = (evt, extension) => {
-      Management.off("ready", listener);
-      resolve(extension);
-    };
-
-    Management.on("ready", listener);
-  });
-}
-
-function promiseWebExtensionShutdown() {
-  return new Promise(resolve => {
-    const listener = (event, extension) => {
-      Management.off("shutdown", listener);
-      resolve(extension);
-    };
-
-    Management.on("shutdown", listener);
-  });
-}
+let {
+  promiseInstallFile,
+  promiseWebExtensionStartup,
+  promiseWebExtensionShutdown,
+} = AddonTestUtils;

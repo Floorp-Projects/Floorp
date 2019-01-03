@@ -5,7 +5,7 @@
 add_task(async function test_json_parser() {
   const ID = "json@test.web.extension";
 
-  let xpi = Extension.generateXPI({
+  let xpi = AddonTestUtils.createTempWebExtensionFile({
     files: {
       "manifest.json": String.raw`{
         // This is a manifest.
@@ -33,5 +33,4 @@ add_task(async function test_json_parser() {
                    "Manifest with correctly-filtered comments");
 
   Services.obs.notifyObservers(xpi, "flush-cache-entry");
-  xpi.remove(false);
 });
