@@ -115,13 +115,11 @@ void nsSecureBrowserUIImpl::CheckForBlockedContent() {
     if (docShell->GetHasMixedActiveContentLoaded()) {
       mState |= STATE_IS_BROKEN | STATE_LOADED_MIXED_ACTIVE_CONTENT;
       mState &= ~STATE_IS_SECURE;
-      mState &= ~STATE_SECURE_HIGH;
     }
 
     if (docShell->GetHasMixedDisplayContentLoaded()) {
       mState |= STATE_IS_BROKEN | STATE_LOADED_MIXED_DISPLAY_CONTENT;
       mState &= ~STATE_IS_SECURE;
-      mState &= ~STATE_SECURE_HIGH;
     }
 
     if (docShell->GetHasMixedActiveContentBlocked()) {

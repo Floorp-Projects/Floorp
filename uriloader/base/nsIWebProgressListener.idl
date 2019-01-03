@@ -248,31 +248,6 @@ interface nsIWebProgressListener : nsISupports
   const unsigned long STATE_CERT_DISTRUST_IMMINENT    = 0x00010000;
 
   /**
-   * Security Strength Flags
-   *
-   * These flags describe the security strength and accompany STATE_IS_SECURE
-   * in a call to the onSecurityChange method.  These flags are mutually
-   * exclusive.
-   *
-   * These flags are not meant to provide a precise description of data
-   * transfer security.  These are instead intended as a rough indicator that
-   * may be used to, for example, color code a security indicator or otherwise
-   * provide basic data transfer security feedback to the user.
-   *
-   * STATE_SECURE_HIGH
-   *   This flag indicates a high degree of security.
-   *
-   * STATE_SECURE_MED
-   *   This flag indicates a medium degree of security.
-   *
-   * STATE_SECURE_LOW
-   *   This flag indicates a low degree of security.
-   */
-  const unsigned long STATE_SECURE_HIGH     = 0x00080000;
-  const unsigned long STATE_SECURE_MED      = 0x00020000;
-  const unsigned long STATE_SECURE_LOW      = 0x00040000;
-
-  /**
     * State bits for EV == Extended Validation == High Assurance
     *
     * These flags describe the level of identity verification
