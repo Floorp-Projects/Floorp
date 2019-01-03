@@ -2462,9 +2462,11 @@ nsresult ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest) {
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIContent> scriptContent(do_QueryInterface(aRequest->Element()));
-  MOZ_ASSERT_IF(!scriptContent, aRequest->AsModuleRequest()->IsDynamicImport());
-  if (scriptContent) {
+  bool isDynamicImport = aRequest->IsModuleRequest() &&
+                         aRequest->AsModuleRequest()->IsDynamicImport();
+  if (!isDynamicImport) {
+    nsCOMPtr<nsIContent> scriptContent(do_QueryInterface(aRequest->Element()));
+    MOZ_ASSERT(scriptContent);
     nsIDocument* ownerDoc = scriptContent->OwnerDoc();
     if (ownerDoc != mDocument) {
       // Willful violation of HTML5 as of 2010-12-01
