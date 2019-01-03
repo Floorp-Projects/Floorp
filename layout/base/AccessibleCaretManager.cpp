@@ -244,7 +244,7 @@ void AccessibleCaretManager::UpdateCaretsForCursorMode(
   switch (result) {
     case PositionChangedResult::NotChanged:
     case PositionChangedResult::Changed:
-      if (aHints == UpdateCaretsHint::Default) {
+      if (!aHints.contains(UpdateCaretsHint::RespectOldAppearance)) {
         if (HasNonEmptyTextContent(GetEditingHostForFrame(frame))) {
           mFirstCaret->SetAppearance(Appearance::Normal);
         } else if (
@@ -268,9 +268,6 @@ void AccessibleCaretManager::UpdateCaretsForCursorMode(
         } else {
           mFirstCaret->SetAppearance(Appearance::NormalNotShown);
         }
-      } else if (aHints.contains(UpdateCaretsHint::RespectOldAppearance)) {
-        // Do nothing to preserve the appearance of the caret set by the
-        // caller.
       }
       break;
 
@@ -311,11 +308,8 @@ void AccessibleCaretManager::UpdateCaretsForSelectionMode(
     switch (result) {
       case PositionChangedResult::NotChanged:
       case PositionChangedResult::Changed:
-        if (aHints == UpdateCaretsHint::Default) {
+        if (!aHints.contains(UpdateCaretsHint::RespectOldAppearance)) {
           aCaret->SetAppearance(Appearance::Normal);
-        } else if (aHints.contains(UpdateCaretsHint::RespectOldAppearance)) {
-          // Do nothing to preserve the appearance of the caret set by the
-          // caller.
         }
         break;
 
@@ -339,9 +333,10 @@ void AccessibleCaretManager::UpdateCaretsForSelectionMode(
     }
   }
 
-  if (aHints == UpdateCaretsHint::Default) {
-    // Only check for tilt carets with default update hint. Otherwise we might
-    // override the appearance set by the caller.
+  if (!aHints.contains(UpdateCaretsHint::RespectOldAppearance)) {
+    // Only check for tilt carets when the caller doesn't ask us to preserve
+    // old appearance. Otherwise we might override the appearance set by the
+    // caller.
     if (StaticPrefs::layout_accessiblecaret_always_tilt()) {
       UpdateCaretsForAlwaysTilt(startFrame, endFrame);
     } else {
