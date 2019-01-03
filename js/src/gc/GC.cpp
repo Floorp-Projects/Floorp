@@ -1208,7 +1208,8 @@ bool GCRuntime::parseAndSetZeal(const char* str) {
   for (const auto& descr : modes) {
     uint32_t mode;
     if (!ParseZealModeName(descr, &mode) &&
-        !ParseZealModeNumericParam(descr, &mode)) {
+        !(ParseZealModeNumericParam(descr, &mode) &&
+          mode <= unsigned(ZealMode::Limit))) {
       return PrintZealHelpAndFail();
     }
 
@@ -8974,17 +8975,20 @@ JS_PUBLIC_API void js::gc::detail::AssertCellIsNotGray(const Cell* cell) {
   auto tc = &cell->asTenured();
   if (tc->zone()->isGCMarkingBlackAndGray()) {
     // We are doing gray marking in the cell's zone. Even if the cell is
-    // currently marked gray it may eventually be marked black. Delay the check
-    // until we finish gray marking.
-    JSRuntime* rt = tc->zone()->runtimeFromMainThread();
-    AutoEnterOOMUnsafeRegion oomUnsafe;
-    if (!rt->gc.cellsToAssertNotGray.ref().append(cell)) {
-      oomUnsafe.crash("Can't append to delayed gray checks list");
+    // currently marked gray it may eventually be marked black. Delay checking
+    // non-black cells until we finish gray marking.
+
+    if (!tc->isMarkedBlack()) {
+      JSRuntime* rt = tc->zone()->runtimeFromMainThread();
+      AutoEnterOOMUnsafeRegion oomUnsafe;
+      if (!rt->gc.cellsToAssertNotGray.ref().append(cell)) {
+        oomUnsafe.crash("Can't append to delayed gray checks list");
+      }
     }
     return;
   }
 
-  MOZ_ASSERT(!detail::CellIsMarkedGray(tc));
+  MOZ_ASSERT(!tc->isMarkedGray());
 }
 
 extern JS_PUBLIC_API bool js::gc::detail::ObjectIsMarkedBlack(

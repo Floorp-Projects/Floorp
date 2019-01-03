@@ -65,9 +65,8 @@ nsresult nsSVGGradientFrame::AttributeChanged(int32_t aNameSpaceID,
 
 uint16_t nsSVGGradientFrame::GetEnumValue(uint32_t aIndex,
                                           nsIContent* aDefault) {
-  const nsSVGEnum& thisEnum =
-      static_cast<dom::SVGGradientElement*>(GetContent())
-          ->mEnumAttributes[aIndex];
+  const SVGEnum& thisEnum = static_cast<dom::SVGGradientElement*>(GetContent())
+                                ->mEnumAttributes[aIndex];
 
   if (thisEnum.IsExplicitlySet()) {
     return thisEnum.GetAnimValue();

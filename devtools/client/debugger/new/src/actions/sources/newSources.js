@@ -63,9 +63,9 @@ function loadSourceMaps(sources: Source[]) {
         sourceQueue.queueSources(originalSources);
         return originalSources;
       })
-    )
+    );
 
-    await sourceQueue.flush()
+    await sourceQueue.flush();
     return flatten(sourceList);
   };
 }

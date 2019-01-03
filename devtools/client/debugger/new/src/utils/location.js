@@ -15,14 +15,14 @@ type IncompleteLocation = {
 
 export function createLocation({
   sourceId,
-  line,
+  line = 1,
   column,
-  sourceUrl
+  sourceUrl = ""
 }: IncompleteLocation): SourceLocation {
   return {
     sourceId,
-    line: line || 0,
+    line,
     column,
-    sourceUrl: sourceUrl || ""
+    sourceUrl
   };
 }

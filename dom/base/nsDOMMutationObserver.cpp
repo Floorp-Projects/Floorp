@@ -56,10 +56,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMMutationRecord)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsDOMMutationRecord)
-// Break down the linked list so that cycle collector can delete the
-// objects sooner.
-NS_IMPL_CYCLE_COLLECTING_RELEASE_WITH_LAST_RELEASE(nsDOMMutationRecord,
-                                                   mNext = nullptr)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsDOMMutationRecord)
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(nsDOMMutationRecord, mTarget,
                                       mPreviousSibling, mNextSibling,

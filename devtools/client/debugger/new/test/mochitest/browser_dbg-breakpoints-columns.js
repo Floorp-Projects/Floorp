@@ -22,10 +22,10 @@ function hasCondition(marker) {
 async function setConditionalBreakpoint(dbg, index, condition) {
   const {
       addConditionalBreakpoint,
-      editBreakpoint
+      editConditionalBreakpoint
   } = selectors.gutterContextMenu;
   // Make this work with either add or edit menu items
-  const selector = `${addConditionalBreakpoint},${editBreakpoint}`;
+  const selector = `${addConditionalBreakpoint},${editConditionalBreakpoint}`;
 
   rightClickElement(dbg, "breakpointItem", index);
   selectContextMenuItem(dbg, selector);
@@ -46,7 +46,7 @@ function removeBreakpointViaContext(dbg, index) {
 // Test enabling and disabling a breakpoint using the check boxes
 add_task(async function() {
   const dbg = await initDebugger("doc-scripts.html", "simple1");
-  await pushPref("devtools.debugger.features.column-breakpoints", true);
+  await pushPref("devtools.debugger.features.column-breakpoints", false);
 
   if(!Services.prefs.getBoolPref("devtools.debugger.features.column-breakpoints")) {
     ok(true, "This test only applies when column breakpoints are on");

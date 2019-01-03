@@ -11,12 +11,15 @@
 #include "mozilla/ipc/FileDescriptor.h"
 #include "nsISupports.h"
 
+#include <functional>
+
 class nsMemoryReporterManager;
 
 namespace mozilla {
 namespace dom {
 
 class MaybeFileDesc;
+class MemoryReport;
 
 class MemoryReportRequestHost final {
  public:
@@ -35,18 +38,25 @@ class MemoryReportRequestHost final {
 
 class MemoryReportRequestClient final : public nsIRunnable {
  public:
+  using ReportCallback = std::function<void(const MemoryReport&)>;
+  using FinishCallback = std::function<bool(const uint32_t&)>;
+
   NS_DECL_ISUPPORTS
 
   static void Start(uint32_t aGeneration, bool aAnonymize,
                     bool aMinimizeMemoryUsage, const MaybeFileDesc& aDMDFile,
-                    const nsACString& aProcessString);
+                    const nsACString& aProcessString,
+                    const ReportCallback& aReportCallback,
+                    const FinishCallback& aFinishCallback);
 
   NS_IMETHOD Run() override;
 
  private:
   MemoryReportRequestClient(uint32_t aGeneration, bool aAnonymize,
                             const MaybeFileDesc& aDMDFile,
-                            const nsACString& aProcessString);
+                            const nsACString& aProcessString,
+                            const ReportCallback& aReportCallback,
+                            const FinishCallback& aFinishCallback);
 
  private:
   ~MemoryReportRequestClient();
@@ -55,6 +65,8 @@ class MemoryReportRequestClient final : public nsIRunnable {
   bool mAnonymize;
   mozilla::ipc::FileDescriptor mDMDFile;
   nsCString mProcessString;
+  ReportCallback mReportCallback;
+  FinishCallback mFinishCallback;
 };
 
 }  // namespace dom

@@ -44,7 +44,8 @@ import { recordEvent } from "../../utils/telemetry";
 
 export type addBreakpointOptions = {
   condition?: string,
-  hidden?: boolean
+  hidden?: boolean,
+  log?: boolean
 };
 
 /**
@@ -283,12 +284,12 @@ export function remapBreakpoints(sourceId: string) {
  */
 export function setBreakpointCondition(
   location: SourceLocation,
-  { condition }: addBreakpointOptions = {}
+  { condition, log = false }: addBreakpointOptions = {}
 ) {
   return async ({ dispatch, getState, client, sourceMaps }: ThunkArgs) => {
     const bp = getBreakpoint(getState(), location);
     if (!bp) {
-      return dispatch(addBreakpoint(location, { condition }));
+      return dispatch(addBreakpoint(location, { condition, log }));
     }
 
     if (bp.loading) {
@@ -306,7 +307,7 @@ export function setBreakpointCondition(
       isOriginalId(bp.location.sourceId)
     );
 
-    const newBreakpoint = { ...bp, disabled: false, condition };
+    const newBreakpoint = { ...bp, disabled: false, condition, log };
 
     assertBreakpoint(newBreakpoint);
 
