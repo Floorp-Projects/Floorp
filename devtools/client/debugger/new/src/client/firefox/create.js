@@ -55,6 +55,7 @@ export function createSource(
     isPrettyPrinted: false,
     isWasm: false,
     sourceMapURL: source.sourceMapURL,
+    introductionUrl: source.introductionUrl,
     isBlackBoxed: false,
     loadedState: "unloaded"
   };
