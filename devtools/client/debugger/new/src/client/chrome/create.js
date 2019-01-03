@@ -27,13 +27,18 @@ export function toServerLocation(location: SourceLocation): ServerLocation {
   };
 }
 
-export function createFrame(frame: any): ChromeFrame {
+export function createFrame(frame: any): ?ChromeFrame {
+  const location = fromServerLocation(frame.location);
+  if (!location) {
+    return null;
+  }
+
   return {
     id: frame.callFrameId,
     displayName: frame.functionName,
     scopeChain: frame.scopeChain,
-    generatedLocation: frame.location,
-    location: fromServerLocation(frame.location)
+    generatedLocation: location,
+    location
   };
 }
 

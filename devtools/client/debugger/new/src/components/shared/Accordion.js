@@ -62,7 +62,7 @@ class Accordion extends Component<Props, State> {
     const { opened } = item;
 
     return (
-      <li role="listitem" className={item.className} key={i}>
+      <li className={item.className} key={i}>
         <h2
           className="_header"
           tabIndex="0"
@@ -87,7 +87,7 @@ class Accordion extends Component<Props, State> {
   };
   render() {
     return (
-      <ul role="list" className="accordion">
+      <ul className="accordion">
         {this.props.items.map(this.renderContainer)}
       </ul>
     );

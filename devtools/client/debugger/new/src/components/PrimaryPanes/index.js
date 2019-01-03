@@ -5,6 +5,7 @@
 // @flow
 
 import React, { Component } from "react";
+import { sortBy } from "lodash";
 import { connect } from "../../utils/connect";
 import { Tab, Tabs, TabList, TabPanels } from "react-aria-components/src/tabs";
 import { formatKeyShortcut } from "../../utils/text";
@@ -13,7 +14,8 @@ import {
   getRelativeSources,
   getActiveSearch,
   getSelectedPrimaryPaneTab,
-  getWorkerDisplayName
+  getWorkerDisplayName,
+  isValidThread
 } from "../../selectors";
 import { features, prefs } from "../../utils/prefs";
 import "./Sources.css";
@@ -37,7 +39,8 @@ type Props = {
   setPrimaryPaneTab: typeof actions.setPrimaryPaneTab,
   setActiveSearch: typeof actions.setActiveSearch,
   closeActiveSearch: typeof actions.closeActiveSearch,
-  getWorkerDisplayName: string => string
+  getWorkerDisplayName: string => string,
+  isValidThread: string => boolean
 };
 
 class PrimaryPanes extends Component<Props, State> {
@@ -94,13 +97,13 @@ class PrimaryPanes extends Component<Props, State> {
   }
 
   renderThreadSources() {
-    const threads = Object.getOwnPropertyNames(this.props.sources);
-    threads.sort(
-      (a, b) =>
-        this.props.getWorkerDisplayName(a) > this.props.getWorkerDisplayName(b)
-          ? 1
-          : -1
+    const threads = sortBy(
+      Object.getOwnPropertyNames(this.props.sources).filter(
+        this.props.isValidThread
+      ),
+      this.props.getWorkerDisplayName
     );
+
     return threads.map(thread => <SourcesTree thread={thread} key={thread} />);
   }
 
@@ -133,7 +136,8 @@ const mapStateToProps = state => ({
   selectedTab: getSelectedPrimaryPaneTab(state),
   sources: getRelativeSources(state),
   sourceSearchOn: getActiveSearch(state) === "source",
-  getWorkerDisplayName: thread => getWorkerDisplayName(state, thread)
+  getWorkerDisplayName: thread => getWorkerDisplayName(state, thread),
+  isValidThread: thread => isValidThread(state, thread)
 });
 
 const connector = connect(

@@ -9,6 +9,7 @@
 
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/Nullable.h"
+#include "mozilla/dom/WindowProxyHolder.h"
 #include "nsISupports.h"
 #include "nsWrapperCache.h"
 #include "nsAtom.h"

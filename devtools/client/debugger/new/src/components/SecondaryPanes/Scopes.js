@@ -125,8 +125,7 @@ class Scopes extends PureComponent<Props, State> {
           />
           {originalScopes ? (
             <div className="scope-type-toggle">
-              <a
-                href=""
+              <button
                 onClick={e => {
                   e.preventDefault();
                   this.setState({ showOriginal: !showOriginal });
@@ -135,7 +134,7 @@ class Scopes extends PureComponent<Props, State> {
                 {showOriginal
                   ? L10N.getStr("scopes.toggleToGenerated")
                   : L10N.getStr("scopes.toggleToOriginal")}
-              </a>
+              </button>
             </div>
           ) : null}
         </div>

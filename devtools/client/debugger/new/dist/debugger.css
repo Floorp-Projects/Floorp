@@ -245,10 +245,13 @@ button.open-accessibility-inspector,
 button.open-inspector {
   mask: url("resource://devtools/client/shared/components/reps/images/open-inspector.svg") no-repeat;
   display: inline-block;
+  vertical-align: top;
+  height: 15px;
+  width: 15px;
+  margin: 0 4px;
+  padding: 0;
+  border: none;
   background-color: var(--comment-node-color);
-  height: 16px;
-  margin-left: 0.25em;
-  vertical-align: middle;
   cursor: pointer;
 }
 
@@ -1499,7 +1502,7 @@ html .toggle-button.end.vertical svg {
 }
 
 .search-field input.empty {
-  color: var(--theme-highlight-orange);
+  color: var(--theme-body-color-inactive);
 }
 
 .search-field .summary {
@@ -1511,6 +1514,7 @@ html .toggle-button.end.vertical svg {
   align-self: center;
   padding-top: 1px;
   white-space: nowrap;
+  user-select: none;
 }
 
 .search-field .search-nav-buttons {
@@ -1614,6 +1618,8 @@ html .toggle-button.end.vertical svg {
 .project-text-search .result .line-value {
   grid-column: 2/3;
   padding-left: 5px;
+  text-overflow: ellipsis;
+  overflow-x: hidden;
 }
 
 .project-text-search .tree-indent {
@@ -1668,6 +1674,7 @@ html .toggle-button.end.vertical svg {
   height: 100%;
   display: grid;
   grid-template-columns: auto 1fr;
+  overflow-x: hidden;
 }
 
 .project-text-search .managed-tree .tree .tree-node {
@@ -1773,22 +1780,17 @@ html .toggle-button.end.vertical svg {
 .sources-pane {
   display: flex;
   flex: 1;
-  overflow-x: auto;
-  overflow-y: auto;
   height: 100%;
 }
 
 .sources-list {
   flex: 1;
   display: flex;
-  overflow: hidden;
 }
 
 .sources-list .managed-tree {
   flex: 1;
   display: flex;
-  overflow-x: hidden;
-  overflow-y: auto;
 }
 
 .sources-list .managed-tree .tree-node:first-child {
@@ -2757,6 +2759,11 @@ menuseparator {
   stroke: var(--theme-graphs-orange);
 }
 
+.column-breakpoint.has-condition.log svg {
+  fill: var(--theme-graphs-orange);
+  stroke: var(--theme-graphs-yellow);
+}
+
 .theme-dark .column-breakpoint.active svg {
   fill: var(--blue-55);
   stroke: var(--blue-40);
@@ -2966,6 +2973,11 @@ html[dir="rtl"] .editor-mount {
   stroke: var(--theme-graphs-orange);
 }
 
+.new-breakpoint.has-condition.log .CodeMirror-gutter-wrapper svg {
+  fill: var(--theme-graphs-orange);
+  stroke: var(--theme-graphs-yellow);
+}
+
 .editor.new-breakpoint.breakpoint-disabled svg {
   fill: var(--breakpoint-fill-disabled);
   stroke: var(--breakpoint-stroke-disabled);
@@ -3054,8 +3066,7 @@ debug-expression-error {
 .new-debug-line-error .CodeMirror-activeline-background {
   display: none;
 }
-
-.debugger:not(.can-rewind) .highlight-line .CodeMirror-line {
+.highlight-line .CodeMirror-line {
   animation: fade-highlight-out 1.5s normal forwards;
 }
 
@@ -3069,7 +3080,7 @@ debug-expression-error {
 }
 
 .theme-dark .highlight-line .CodeMirror-line {
-  animation: fade-highlight-out-dark 1.5s normal forwards;
+  animation: fade-highlight-out-dark 1s normal forwards;
 }
 
 @keyframes fade-highlight-out-dark {
@@ -3241,6 +3252,14 @@ html[dir="rtl"] .breakpoints-list .breakpoint.is-conditional {
   border-right-color: var(--theme-graphs-yellow);
 }
 
+html:not([dir="rtl"]) .breakpoints-list .breakpoint.is-conditional.log {
+  border-left-color: var(--theme-graphs-orange);
+}
+
+html[dir="rtl"] .breakpoints-list .breakpoint.is-conditional.log {
+  border-right-color: var(--theme-graphs-orange);
+}
+
 html .breakpoints-list .breakpoint.paused {
   background-color: var(--theme-toolbar-background-alt);
   border-color: var(--breakpoint-active-color);
@@ -3272,7 +3291,7 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
 }
 
 .breakpoints-list .breakpoint:hover .breakpoint-line {
-  display: none;
+  color: transparent;
 }
 
 .breakpoints-list .breakpoint.paused:hover {
@@ -4086,9 +4105,16 @@ html[dir="rtl"] .object-node {
   padding-bottom: 10px;
 }
 
-.scopes-list .scope-type-toggle a {
+.scopes-list .scope-type-toggle button {
   /* Override color so that the link doesn't turn purple */
   color: var(--theme-body-color);
+  font-size: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.scopes-list .scope-type-toggle button:hover {
+  background: transparent;
 }
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -4224,12 +4250,17 @@ html[dir="rtl"] .object-node {
 .shortcutKey {
   text-align: right;
   padding-right: 10px;
-  font-family: Courier;
+  font-family: var(--monospace-font-family);
+  font-size: 14px;
+  line-height: 18px;
+  color: var(--theme-body-color);
 }
 
 .shortcutLabel {
   text-align: left;
   padding-left: 10px;
+  font-size: 14px;
+  line-height: 18px;
 }
 
 .shortcutFunction {
