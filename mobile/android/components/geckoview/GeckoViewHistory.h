@@ -17,6 +17,12 @@
 
 class nsIWidget;
 
+namespace mozilla {
+namespace dom {
+class Document;
+}
+}
+
 struct VisitedURI {
   nsCOMPtr<nsIURI> mURI;
   bool mVisited = false;
