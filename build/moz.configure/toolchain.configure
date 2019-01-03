@@ -24,6 +24,15 @@ set_config('DEVELOPER_OPTIONS', developer_options)
 
 # PGO
 # ==============================================================
+js_option('--enable-profile-generate',
+          help='Build a PGO instrumented binary')
+
+imply_option('MOZ_PGO',
+             depends_if('--enable-profile-generate')(lambda _: True))
+
+set_config('MOZ_PROFILE_GENERATE',
+           depends_if('--enable-profile-generate')(lambda _: True))
+
 js_option(env='MOZ_PGO', help='Build with profile guided optimizations')
 
 set_config('MOZ_PGO', depends('MOZ_PGO')(lambda x: bool(x)))
