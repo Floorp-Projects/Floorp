@@ -401,6 +401,8 @@ class ReferrerSameOriginChecker final : public WorkerMainThreadRunnable {
     signal = aInit.mSignal.Value();
   }
 
+  UniquePtr<mozilla::ipc::PrincipalInfo> principalInfo;
+
   if (NS_IsMainThread()) {
     nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(global);
     if (window) {
@@ -408,6 +410,14 @@ class ReferrerSameOriginChecker final : public WorkerMainThreadRunnable {
       doc = window->GetExtantDoc();
       if (doc) {
         request->SetEnvironmentReferrerPolicy(doc->GetReferrerPolicy());
+
+        principalInfo.reset(new mozilla::ipc::PrincipalInfo());
+        nsresult rv =
+            PrincipalToPrincipalInfo(doc->NodePrincipal(), principalInfo.get());
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          aRv.ThrowTypeError<MSG_FETCH_BODY_CONSUMED_ERROR>();
+          return nullptr;
+        }
       }
     }
   } else {
@@ -415,8 +425,12 @@ class ReferrerSameOriginChecker final : public WorkerMainThreadRunnable {
     if (worker) {
       worker->AssertIsOnWorkerThread();
       request->SetEnvironmentReferrerPolicy(worker->GetReferrerPolicy());
+      principalInfo =
+          MakeUnique<mozilla::ipc::PrincipalInfo>(worker->GetPrincipalInfo());
     }
   }
+
+  request->SetPrincipalInfo(std::move(principalInfo));
 
   if (mode != RequestMode::EndGuard_) {
     request->ClearCreatedByFetchEvent();
