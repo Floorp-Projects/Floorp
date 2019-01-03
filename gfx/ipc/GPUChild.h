@@ -49,6 +49,7 @@ class GPUChild final : public PGPUChild, public gfxVarReceiver {
   mozilla::ipc::IPCResult RecvInitCrashReporter(
       Shmem&& shmem, const NativeThreadId& aThreadId) override;
   mozilla::ipc::IPCResult RecvCreateVRProcess() override;
+  mozilla::ipc::IPCResult RecvShutdownVRProcess() override;
 
   mozilla::ipc::IPCResult RecvAccumulateChildHistograms(
       InfallibleTArray<HistogramAccumulation>&& aAccumulations) override;

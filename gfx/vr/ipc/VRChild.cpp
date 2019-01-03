@@ -22,7 +22,6 @@ VRChild::VRChild(VRProcessParent* aHost) : mHost(aHost) {
 void VRChild::ActorDestroy(ActorDestroyReason aWhy) {
   gfxVars::RemoveReceiver(this);
   mHost->OnChannelClosed();
-  XRE_ShutdownChildProcess();
 }
 
 void VRChild::Init() {

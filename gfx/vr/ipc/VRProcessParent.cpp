@@ -91,8 +91,10 @@ static void DelayedDeleteSubprocess(GeckoChildProcessHost* aSubprocess) {
 }
 
 void VRProcessParent::DestroyProcess() {
-  mLaunchThread->Dispatch(NewRunnableFunction("DestroyProcessRunnable",
-                                              DelayedDeleteSubprocess, this));
+  if (mLaunchThread) {
+    mLaunchThread->Dispatch(NewRunnableFunction("DestroyProcessRunnable",
+                                                DelayedDeleteSubprocess, this));
+  }
 }
 
 void VRProcessParent::InitAfterConnect(bool aSucceeded) {
