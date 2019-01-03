@@ -2446,6 +2446,12 @@ class Document : public nsINode,
    */
   bool IsVisibleConsideringAncestors() const;
 
+  void SetSuppressedEventListener(EventListener* aListener);
+
+  EventListener* GetSuppressedEventListener() {
+    return mSuppressedEventListener;
+  }
+
   /**
    * Return true when this document is active, i.e., an active document
    * in a content viewer.  Note that this will return true for bfcached
@@ -4136,6 +4142,8 @@ class Document : public nsINode,
   // Any XHR ChannelEventQueues that were suspended on this document while
   // events were suppressed.
   nsTArray<RefPtr<mozilla::net::ChannelEventQueue>> mSuspendedQueues;
+
+  RefPtr<EventListener> mSuppressedEventListener;
 
   /**
    * https://html.spec.whatwg.org/#ignore-destructive-writes-counter
