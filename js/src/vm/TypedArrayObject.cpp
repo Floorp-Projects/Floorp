@@ -837,15 +837,14 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
   }
 
   static bool maybeCreateArrayBuffer(JSContext* cx, uint32_t count,
-                                     uint32_t unit,
                                      HandleObject nonDefaultProto,
                                      MutableHandle<ArrayBufferObject*> buffer) {
-    if (count >= INT32_MAX / unit) {
+    if (count >= INT32_MAX / BYTES_PER_ELEMENT) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                 JSMSG_BAD_ARRAY_LENGTH);
       return false;
     }
-    uint32_t byteLength = count * unit;
+    uint32_t byteLength = count * BYTES_PER_ELEMENT;
 
     MOZ_ASSERT(byteLength < INT32_MAX);
     static_assert(INLINE_BUFFER_LIMIT % BYTES_PER_ELEMENT == 0,
@@ -881,8 +880,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
     }
 
     Rooted<ArrayBufferObject*> buffer(cx);
-    if (!maybeCreateArrayBuffer(cx, uint32_t(nelements), BYTES_PER_ELEMENT,
-                                nullptr, &buffer)) {
+    if (!maybeCreateArrayBuffer(cx, uint32_t(nelements), nullptr, &buffer)) {
       return nullptr;
     }
 
@@ -891,7 +889,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
   }
 
   static bool AllocateArrayBuffer(JSContext* cx, HandleObject ctor,
-                                  uint32_t count, uint32_t unit,
+                                  uint32_t count,
                                   MutableHandle<ArrayBufferObject*> buffer);
 
   static JSObject* fromArray(JSContext* cx, HandleObject other,
@@ -946,10 +944,10 @@ TypedArrayObject* js::TypedArrayCreateWithTemplate(JSContext* cx,
 
 // ES2018 draft rev 2aea8f3e617b49df06414eb062ab44fad87661d3
 // 24.1.1.1 AllocateArrayBuffer ( constructor, byteLength )
-// byteLength = count * unit
+// byteLength = count * BYTES_PER_ELEMENT
 template <typename T>
 /* static */ bool TypedArrayObjectTemplate<T>::AllocateArrayBuffer(
-    JSContext* cx, HandleObject ctor, uint32_t count, uint32_t unit,
+    JSContext* cx, HandleObject ctor, uint32_t count,
     MutableHandle<ArrayBufferObject*> buffer) {
   // 24.1.1.1 step 1 (partially).
   RootedObject proto(cx);
@@ -980,7 +978,7 @@ template <typename T>
   }
 
   // 24.1.1.1 steps 1 (remaining part), 2-6.
-  if (!maybeCreateArrayBuffer(cx, count, unit, proto, buffer)) {
+  if (!maybeCreateArrayBuffer(cx, count, proto, buffer)) {
     return false;
   }
 
@@ -1110,13 +1108,12 @@ template <typename T>
     return nullptr;
   }
 
+  // Step 8 (skipped).
+
   // Step 9.
   uint32_t elementLength = srcArray->length();
 
-  // Steps 10-11.
-  Scalar::Type srcType = srcArray->type();
-
-  // Steps 12-13 (skipped).
+  // Steps 10-15 (skipped).
 
   // Steps 16-17.
   bool isShared = srcArray->isSharedMemory();
@@ -1130,23 +1127,12 @@ template <typename T>
     return nullptr;
   }
 
-  // Steps 8, 18-19.
+  // Steps 18-19.
   Rooted<ArrayBufferObject*> buffer(cx);
-  if (ArrayTypeID() == srcType) {
-    // Step 15.
-    uint32_t byteLength = srcArray->byteLength();
 
-    // Step 18.a.
-    // 24.1.1.4 CloneArrayBuffer(...), steps 1-3.
-    if (!AllocateArrayBuffer(cx, bufferCtor, byteLength, 1, &buffer)) {
-      return nullptr;
-    }
-  } else {
-    // Steps 14-15, 19.a.
-    if (!AllocateArrayBuffer(cx, bufferCtor, elementLength, BYTES_PER_ELEMENT,
-                             &buffer)) {
-      return nullptr;
-    }
+  // Step 19.a or 18.a, 24.1.1.4 CloneArrayBuffer(...) steps 1-3.
+  if (!AllocateArrayBuffer(cx, bufferCtor, elementLength, &buffer)) {
+    return nullptr;
   }
 
   // Step 19.b or 24.1.1.4 step 4.
@@ -1221,7 +1207,7 @@ template <typename T>
 
     // Step 6.c.
     Rooted<ArrayBufferObject*> buffer(cx);
-    if (!maybeCreateArrayBuffer(cx, len, BYTES_PER_ELEMENT, nullptr, &buffer)) {
+    if (!maybeCreateArrayBuffer(cx, len, nullptr, &buffer)) {
       return nullptr;
     }
 
@@ -1296,7 +1282,7 @@ template <typename T>
 
   // Step 10.
   Rooted<ArrayBufferObject*> buffer(cx);
-  if (!maybeCreateArrayBuffer(cx, len, BYTES_PER_ELEMENT, nullptr, &buffer)) {
+  if (!maybeCreateArrayBuffer(cx, len, nullptr, &buffer)) {
     return nullptr;
   }
 
