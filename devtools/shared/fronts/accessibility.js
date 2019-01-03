@@ -168,8 +168,7 @@ class AccessibleWalkerFront extends FrontClassWithSpec(accessibleWalkerSpec) {
 
 class AccessibilityFront extends FrontClassWithSpec(accessibilitySpec) {
   constructor(client, form) {
-    super(client, form);
-    this.actorID = form.accessibilityActor;
+    super(client, { actor: form.accessibilityActor });
     this.manage(this);
 
     this.before("init", this.init.bind(this));

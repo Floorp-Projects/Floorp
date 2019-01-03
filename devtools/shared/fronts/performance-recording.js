@@ -59,10 +59,6 @@ class PerformanceRecordingFront extends FrontClassWithSpec(performanceRecordingS
     this._allocations = { sites: [], timestamps: [], frames: [], sizes: [] };
   }
 
-  destroy() {
-    super.destroy();
-  }
-
   /**
    * Saves the current recording to a file.
    *

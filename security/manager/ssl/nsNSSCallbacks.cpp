@@ -1271,8 +1271,7 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
   if (renegotiationUnsafe) {
     state = nsIWebProgressListener::STATE_IS_BROKEN;
   } else {
-    state = nsIWebProgressListener::STATE_IS_SECURE |
-            nsIWebProgressListener::STATE_SECURE_HIGH;
+    state = nsIWebProgressListener::STATE_IS_SECURE;
     SSLVersionRange defVersion;
     rv = SSL_VersionRangeGetDefault(ssl_variant_stream, &defVersion);
     if (rv == SECSuccess && versions.max >= defVersion.max) {

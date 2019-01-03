@@ -29,10 +29,6 @@ class AnimationPlayerFront extends FrontClassWithSpec(animationPlayerSpec) {
     this.state = this.initialState;
   }
 
-  destroy() {
-    super.destroy();
-  }
-
   /**
    * If the AnimationsActor was given a reference to the WalkerActor previously
    * then calling this getter will return the animation target NodeFront.
@@ -205,10 +201,6 @@ class AnimationsFront extends FrontClassWithSpec(animationsSpec) {
   constructor(client, {animationsActor}) {
     super(client, {actor: animationsActor});
     this.manage(this);
-  }
-
-  destroy() {
-    super.destroy();
   }
 }
 
