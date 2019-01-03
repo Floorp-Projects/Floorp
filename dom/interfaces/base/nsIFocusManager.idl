@@ -6,8 +6,8 @@
 #include "domstubs.idl"
 
 interface mozIDOMWindowProxy;
-interface nsIDocument;
 
+webidl Document;
 webidl Element;
 
 [scriptable, uuid(86e1f1e1-365d-493b-b52a-a649f3f311dc)]
@@ -259,7 +259,7 @@ interface nsIFocusManager : nsISupports
   /**
    * Fire any events that have been delayed due to synchronized actions.
    */
-  [noscript] void fireDelayedEvents(in nsIDocument aDocument);
+  [noscript] void fireDelayedEvents(in Document aDocument);
 
   /**
    * Indicate that a plugin wishes to take the focus. This is similar to a

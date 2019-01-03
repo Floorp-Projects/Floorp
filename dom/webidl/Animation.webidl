@@ -16,9 +16,9 @@ enum AnimationPlayState { "idle", "running", "paused", "finished" };
               optional AnimationTimeline? timeline)]
 interface Animation : EventTarget {
   attribute DOMString id;
-  [Func="nsIDocument::IsWebAnimationsEnabled", Pure]
+  [Func="Document::IsWebAnimationsEnabled", Pure]
   attribute AnimationEffect? effect;
-  [Func="nsIDocument::AreWebAnimationsTimelinesEnabled"]
+  [Func="Document::AreWebAnimationsTimelinesEnabled"]
   attribute AnimationTimeline? timeline;
   [BinaryName="startTimeAsDouble"]
   attribute double? startTime;
@@ -30,9 +30,9 @@ interface Animation : EventTarget {
   readonly attribute AnimationPlayState playState;
   [BinaryName="pendingFromJS"]
   readonly attribute boolean            pending;
-  [Func="nsIDocument::IsWebAnimationsEnabled", Throws]
+  [Func="Document::IsWebAnimationsEnabled", Throws]
   readonly attribute Promise<Animation> ready;
-  [Func="nsIDocument::IsWebAnimationsEnabled", Throws]
+  [Func="Document::IsWebAnimationsEnabled", Throws]
   readonly attribute Promise<Animation> finished;
            attribute EventHandler       onfinish;
            attribute EventHandler       oncancel;

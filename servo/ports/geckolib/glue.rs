@@ -131,7 +131,6 @@ use style::gecko_bindings::structs::nsCSSPropertyID;
 use style::gecko_bindings::structs::nsCSSValueSharedList;
 use style::gecko_bindings::structs::nsChangeHint;
 use style::gecko_bindings::structs::nsCompatibility;
-use style::gecko_bindings::structs::nsIDocument;
 use style::gecko_bindings::structs::nsRestyleHint;
 use style::gecko_bindings::structs::nsStyleTransformMatrix::MatrixTransformOperator;
 use style::gecko_bindings::structs::nsTArray;
@@ -3591,7 +3590,7 @@ pub unsafe extern "C" fn Servo_StyleSet_CompatModeChanged(raw_data: RawServoStyl
         .device()
         .pres_context()
         .mDocument
-        .raw::<nsIDocument>();
+        .mRawPtr;
     data.stylist
         .set_quirks_mode(QuirksMode::from(doc.mCompatMode));
 }

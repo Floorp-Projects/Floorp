@@ -23,8 +23,6 @@
 #include "nsISMILAttr.h"
 #include "mozilla/dom/ShadowRoot.h"
 
-class nsIDocument;
-
 namespace mozilla {
 namespace dom {
 class HTMLSlotElement;
@@ -110,7 +108,7 @@ class CharacterData : public nsIContent {
   }
 
   // Implementation for nsIContent
-  nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+  nsresult BindToTree(Document* aDocument, nsIContent* aParent,
                       nsIContent* aBindingParent) override;
 
   void UnbindFromTree(bool aDeep = true, bool aNullParent = true) override;

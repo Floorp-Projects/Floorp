@@ -579,7 +579,7 @@ nsAppShell::Observe(nsISupports* aSubject, const char* aTopic,
   } else if (!strcmp(aTopic, "chrome-document-loaded")) {
     // Set the global ready state and enable the window event dispatcher
     // for this particular GeckoView.
-    nsCOMPtr<nsIDocument> doc = do_QueryInterface(aSubject);
+    nsCOMPtr<dom::Document> doc = do_QueryInterface(aSubject);
     MOZ_ASSERT(doc);
     if (const RefPtr<nsWindow> window = nsWindow::From(doc->GetWindow())) {
       if (jni::IsAvailable()) {

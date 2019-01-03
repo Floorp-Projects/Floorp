@@ -78,7 +78,7 @@ nsresult nsCanvasFrame::CreateAnonymousContent(
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDocument> doc = mContent->OwnerDoc();
+  nsCOMPtr<Document> doc = mContent->OwnerDoc();
 
   RefPtr<AccessibleCaretEventHub> eventHub =
       PresShell()->GetAccessibleCaretEventHub();

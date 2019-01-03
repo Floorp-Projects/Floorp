@@ -38,7 +38,7 @@ class nsXHTMLContentSerializer : public nsXMLContentSerializer {
   NS_IMETHOD AppendText(nsIContent* aText, int32_t aStartOffset,
                         int32_t aEndOffset, nsAString& aStr) override;
 
-  NS_IMETHOD AppendDocumentStart(nsIDocument* aDocument,
+  NS_IMETHOD AppendDocumentStart(mozilla::dom::Document* aDocument,
                                  nsAString& aStr) override;
 
  protected:

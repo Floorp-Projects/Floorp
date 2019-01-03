@@ -16,7 +16,7 @@
 #include "nsIWebProgressListener.h"
 #include "nsContentUtils.h"
 #include "nsIRequest.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIContentViewer.h"
 #include "nsIChannel.h"
 #include "nsIHttpChannel.h"
@@ -99,7 +99,7 @@ class nsMixedContentEvent : public Runnable {
         "No document shell root tree item from document shell tree item!");
 
     // now get the document from sameTypeRoot
-    nsCOMPtr<nsIDocument> rootDoc = sameTypeRoot->GetDocument();
+    nsCOMPtr<Document> rootDoc = sameTypeRoot->GetDocument();
     NS_ASSERTION(rootDoc,
                  "No root document from document shell root tree item.");
 
@@ -239,7 +239,7 @@ NS_IMPL_ISUPPORTS(nsMixedContentBlocker, nsIContentPolicy, nsIChannelEventSink)
 
 static void LogMixedContentMessage(
     MixedContentTypes aClassification, nsIURI* aContentLocation,
-    nsIDocument* aRootDoc, nsMixedContentBlockerMessageType aMessageType) {
+    Document* aRootDoc, nsMixedContentBlockerMessageType aMessageType) {
   nsAutoCString messageCategory;
   uint32_t severityFlag;
   nsAutoCString messageLookupKey;
@@ -775,7 +775,7 @@ nsresult nsMixedContentBlocker::ShouldLoad(
   // pages. Hence, we only have to check against http: here. Skip mixed content
   // blocking if the subresource load uses http: and the CSP directive
   // 'upgrade-insecure-requests' is present on the page.
-  nsIDocument* document = docShell->GetDocument();
+  Document* document = docShell->GetDocument();
   MOZ_ASSERT(document, "Expected a document");
   if (isHttpScheme && document->GetUpgradeInsecureRequests(isPreload)) {
     *aDecision = ACCEPT;
@@ -893,7 +893,7 @@ nsresult nsMixedContentBlocker::ShouldLoad(
   }
 
   // Get the root document from the sameTypeRoot
-  nsCOMPtr<nsIDocument> rootDoc = sameTypeRoot->GetDocument();
+  nsCOMPtr<Document> rootDoc = sameTypeRoot->GetDocument();
   NS_ASSERTION(rootDoc, "No root document from document shell root tree item.");
 
   // Get eventSink and the current security state from the docShell
@@ -952,7 +952,7 @@ nsresult nsMixedContentBlocker::ShouldLoad(
   // set hasMixedContentObjectSubrequest on this object if necessary
   if (aContentType == TYPE_OBJECT_SUBREQUEST) {
     if (!sBlockMixedObjectSubrequest) {
-      rootDoc->WarnOnceAbout(nsIDocument::eMixedDisplayObjectSubrequest);
+      rootDoc->WarnOnceAbout(Document::eMixedDisplayObjectSubrequest);
     }
     rootDoc->SetHasMixedContentObjectSubrequest(true);
   }

@@ -14,8 +14,8 @@
 #include "mozilla/layers/ZoomConstraints.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/Event.h"
-#include "nsIDocument.h"
 #include "nsIFrame.h"
 #include "nsLayoutUtils.h"
 #include "nsPoint.h"
@@ -96,7 +96,7 @@ void ZoomConstraintsClient::Destroy() {
 }
 
 void ZoomConstraintsClient::Init(nsIPresShell* aPresShell,
-                                 nsIDocument* aDocument) {
+                                 Document* aDocument) {
   if (!(aPresShell && aDocument)) {
     return;
   }

@@ -13,7 +13,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsIWebVTTParserWrapper.h"
 #include "mozilla/StaticPtr.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/HTMLDivElement.h"
 #include "mozilla/dom/TextTrack.h"
 #include "mozilla/StateWatching.h"
@@ -305,7 +305,7 @@ class TextTrackCue final : public DOMEventTargetHelper {
   void SetDefaultCueSettings();
   nsresult StashDocument();
 
-  RefPtr<nsIDocument> mDocument;
+  RefPtr<Document> mDocument;
   nsString mText;
   double mStartTime;
   double mEndTime;

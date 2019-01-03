@@ -26,11 +26,16 @@
 // Classes
 class nsPagePrintTimer;
 class nsIDocShell;
-class nsIDocument;
 class nsIDocumentViewerPrint;
 class nsPrintObject;
 class nsIDocShell;
 class nsIPageSequenceFrame;
+
+namespace mozilla {
+namespace dom {
+class Document;
+}
+}  // namespace mozilla
 
 /**
  * A print job may be instantiated either for printing to an actual physical
@@ -77,8 +82,8 @@ class nsPrintJob final : public nsIObserver,
   void DestroyPrintingData();
 
   nsresult Initialize(nsIDocumentViewerPrint* aDocViewerPrint,
-                      nsIDocShell* aContainer, nsIDocument* aDocument,
-                      float aScreenDPI);
+                      nsIDocShell* aContainer,
+                      mozilla::dom::Document* aDocument, float aScreenDPI);
 
   nsresult GetSeqFrameAndCountPages(nsIFrame*& aSeqFrame, int32_t& aCount);
 
@@ -87,7 +92,7 @@ class nsPrintJob final : public nsIObserver,
   //
   nsresult DocumentReadyForPrinting();
   nsresult GetSelectionDocument(nsIDeviceContextSpec* aDevSpec,
-                                nsIDocument** aNewDoc);
+                                mozilla::dom::Document** aNewDoc);
 
   nsresult SetupToPrintContent();
   nsresult EnablePOsForPrinting();
@@ -181,11 +186,11 @@ class nsPrintJob final : public nsIObserver,
 
   nsresult CommonPrint(bool aIsPrintPreview, nsIPrintSettings* aPrintSettings,
                        nsIWebProgressListener* aWebProgressListener,
-                       nsIDocument* aDoc);
+                       mozilla::dom::Document* aDoc);
 
   nsresult DoCommonPrint(bool aIsPrintPreview, nsIPrintSettings* aPrintSettings,
                          nsIWebProgressListener* aWebProgressListener,
-                         nsIDocument* aDoc);
+                         mozilla::dom::Document* aDoc);
 
   void FirePrintCompletionEvent();
 
@@ -206,7 +211,7 @@ class nsPrintJob final : public nsIObserver,
 
   void PageDone(nsresult aResult);
 
-  nsCOMPtr<nsIDocument> mDocument;
+  RefPtr<mozilla::dom::Document> mDocument;
   nsCOMPtr<nsIDocumentViewerPrint> mDocViewerPrint;
 
   nsWeakPtr mContainer;

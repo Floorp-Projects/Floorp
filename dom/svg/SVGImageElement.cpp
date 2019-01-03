@@ -180,8 +180,7 @@ void SVGImageElement::MaybeLoadSVGImage() {
   }
 }
 
-nsresult SVGImageElement::BindToTree(nsIDocument* aDocument,
-                                     nsIContent* aParent,
+nsresult SVGImageElement::BindToTree(Document* aDocument, nsIContent* aParent,
                                      nsIContent* aBindingParent) {
   nsresult rv =
       SVGImageElementBase::BindToTree(aDocument, aParent, aBindingParent);

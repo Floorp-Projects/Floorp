@@ -40,7 +40,7 @@
 #include "nsContentUtils.h"
 #include "nsIAsyncInputStream.h"
 #include "nsIBFCacheEntry.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIEventTarget.h"
 #include "nsIFileStreams.h"
 #include "nsNetCID.h"
@@ -2076,7 +2076,7 @@ mozilla::ipc::IPCResult BackgroundDatabaseChild::RecvVersionChange(
 
     // Anything in the bfcache has to be evicted and then we have to close the
     // database also.
-    if (nsCOMPtr<nsIDocument> doc = owner->GetExtantDoc()) {
+    if (nsCOMPtr<Document> doc = owner->GetExtantDoc()) {
       if (nsCOMPtr<nsIBFCacheEntry> bfCacheEntry = doc->GetBFCacheEntry()) {
         bfCacheEntry->RemoveFromBFCacheSync();
         shouldAbortAndClose = true;

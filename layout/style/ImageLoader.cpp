@@ -421,7 +421,7 @@ void ImageLoader::ClearFrames(nsPresContext* aPresContext) {
 }
 
 /* static */ void ImageLoader::LoadImage(URLValue* aImage,
-                                         nsIDocument* aLoadingDoc) {
+                                         Document* aLoadingDoc) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aLoadingDoc);
   MOZ_ASSERT(aImage);

@@ -20,7 +20,7 @@
 #include "nsNativeDragTarget.h"
 #include "nsNativeDragSource.h"
 #include "nsClipboard.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsDataObjCollection.h"
 
 #include "nsArrayUtils.h"
@@ -154,7 +154,7 @@ nsresult nsDragService::InvokeDragSessionImpl(
   // Try and get source URI of the items that are being dragged
   nsIURI* uri = nullptr;
 
-  nsCOMPtr<nsIDocument> doc(mSourceDocument);
+  RefPtr<dom::Document> doc(mSourceDocument);
   if (doc) {
     uri = doc->GetDocumentURI();
   }

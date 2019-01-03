@@ -1,6 +1,13 @@
 /* eslint-env es6:false */
 /* globals exports */
 /*
+ * DO NOT MODIFY THIS FILE DIRECTLY!
+ *
+ * This is a shared library that is maintained in an external repo:
+ * https://github.com/mozilla/readability
+ */
+
+/*
  * Copyright (c) 2010 Arc90 Inc
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -29,7 +36,8 @@ var REGEXPS = {
 };
 
 function isNodeVisible(node) {
-  return node.style.display != "none" && !node.hasAttribute("hidden");
+  // Have to null-check node.style to deal with SVG and MathML nodes.
+  return (!node.style || node.style.display != "none") && !node.hasAttribute("hidden");
 }
 
 /**

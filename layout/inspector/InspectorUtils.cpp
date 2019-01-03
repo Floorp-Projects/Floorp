@@ -16,7 +16,7 @@
 #include "nsString.h"
 #include "nsIStyleSheetLinkingElement.h"
 #include "nsIContentInlines.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIPresShell.h"
 #include "nsIDOMWindow.h"
 #include "nsXBLBinding.h"
@@ -54,7 +54,7 @@ namespace mozilla {
 namespace dom {
 
 /* static */ void InspectorUtils::GetAllStyleSheets(
-    GlobalObject& aGlobalObject, nsIDocument& aDocument, bool aDocumentOnly,
+    GlobalObject& aGlobalObject, Document& aDocument, bool aDocumentOnly,
     nsTArray<RefPtr<StyleSheet>>& aResult) {
   // Get the agent, then user and finally xbl sheets in the style set.
   nsIPresShell* presShell = aDocument.GetShell();
@@ -163,7 +163,7 @@ bool InspectorUtils::IsIgnorableWhitespace(CharacterData& aDataNode) {
     return;
   }
 
-  nsIDocument* doc = aElement.OwnerDoc();
+  Document* doc = aElement.OwnerDoc();
   nsIPresShell* shell = doc->GetShell();
   if (!shell) {
     return;
@@ -550,7 +550,7 @@ InspectorUtils::GetCleanComputedStyleForElement(dom::Element* aElement,
                                                 nsAtom* aPseudo) {
   MOZ_ASSERT(aElement);
 
-  nsIDocument* doc = aElement->GetComposedDoc();
+  Document* doc = aElement->GetComposedDoc();
   if (!doc) {
     return nullptr;
   }

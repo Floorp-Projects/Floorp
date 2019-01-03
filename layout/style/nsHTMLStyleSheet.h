@@ -20,15 +20,14 @@
 #include "mozilla/MemoryReporting.h"
 #include "nsString.h"
 
-class nsIDocument;
 class nsMappedAttributes;
 struct RawServoDeclarationBlock;
 
 class nsHTMLStyleSheet final {
  public:
-  explicit nsHTMLStyleSheet(nsIDocument* aDocument);
+  explicit nsHTMLStyleSheet(mozilla::dom::Document* aDocument);
 
-  void SetOwningDocument(nsIDocument* aDocument);
+  void SetOwningDocument(mozilla::dom::Document* aDocument);
 
   NS_INLINE_DECL_REFCOUNTING(nsHTMLStyleSheet)
 
@@ -70,7 +69,7 @@ class nsHTMLStyleSheet final {
 
  public:  // for mLangRuleTable structures only
  private:
-  nsIDocument* mDocument;
+  mozilla::dom::Document* mDocument;
   RefPtr<RawServoDeclarationBlock> mServoUnvisitedLinkDecl;
   RefPtr<RawServoDeclarationBlock> mServoVisitedLinkDecl;
   RefPtr<RawServoDeclarationBlock> mServoActiveLinkDecl;

@@ -8,7 +8,7 @@
 #define nsIContentInlines_h
 
 #include "nsIContent.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsBindingManager.h"
 #include "nsContentUtils.h"
 #include "nsAtom.h"
@@ -153,7 +153,7 @@ inline bool nsINode::IsEditable() const {
     return true;
   }
 
-  nsIDocument* doc = GetUncomposedDoc();
+  Document* doc = GetUncomposedDoc();
 
   // Check if the node is in a document and the document is in designMode.
   return doc && doc->HasFlag(NODE_IS_EDITABLE);

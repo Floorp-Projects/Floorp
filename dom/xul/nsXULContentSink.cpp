@@ -19,7 +19,7 @@
 #include "nsCOMPtr.h"
 #include "nsHTMLStyleSheet.h"
 #include "nsIContentSink.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIDOMEventListener.h"
 #include "nsIFormControl.h"
 #include "mozilla/dom/NodeInfo.h"
@@ -192,7 +192,7 @@ XULContentSinkImpl::WillBuildModel(nsDTDMode aDTDMode) {
 
 NS_IMETHODIMP
 XULContentSinkImpl::DidBuildModel(bool aTerminated) {
-  nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocument);
+  nsCOMPtr<Document> doc = do_QueryReferent(mDocument);
   if (doc) {
     doc->EndLoad();
     mDocument = nullptr;
@@ -224,20 +224,20 @@ XULContentSinkImpl::SetParser(nsParserBase* aParser) {
 
 void XULContentSinkImpl::SetDocumentCharset(
     NotNull<const Encoding*> aEncoding) {
-  nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocument);
+  nsCOMPtr<Document> doc = do_QueryReferent(mDocument);
   if (doc) {
     doc->SetDocumentCharacterSet(aEncoding);
   }
 }
 
 nsISupports* XULContentSinkImpl::GetTarget() {
-  nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocument);
+  nsCOMPtr<Document> doc = do_QueryReferent(mDocument);
   return ToSupports(doc);
 }
 
 //----------------------------------------------------------------------
 
-nsresult XULContentSinkImpl::Init(nsIDocument* aDocument,
+nsresult XULContentSinkImpl::Init(Document* aDocument,
                                   nsXULPrototypeDocument* aPrototype) {
   MOZ_ASSERT(aDocument != nullptr, "null ptr");
   if (!aDocument) return NS_ERROR_NULL_POINTER;
@@ -446,7 +446,7 @@ XULContentSinkImpl::HandleEndElement(const char16_t* aName) {
 
       // If given a src= attribute, we must ignore script tag content.
       if (!script->mSrcURI && !script->HasScriptObject()) {
-        nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocument);
+        nsCOMPtr<Document> doc = do_QueryReferent(mDocument);
 
         script->mOutOfLine = false;
         if (doc) {
@@ -582,7 +582,7 @@ XULContentSinkImpl::ReportError(const char16_t* aErrorText,
 
   // return leaving the document empty if we're asked to not add a <parsererror>
   // root node
-  nsCOMPtr<nsIDocument> idoc = do_QueryReferent(mDocument);
+  nsCOMPtr<Document> idoc = do_QueryReferent(mDocument);
   if (idoc && idoc->SuppressParserErrorElement()) {
     return NS_OK;
   };
@@ -794,7 +794,7 @@ nsresult XULContentSinkImpl::OpenScript(const char16_t** aAttributes,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDocument> doc(do_QueryReferent(mDocument));
+  nsCOMPtr<Document> doc(do_QueryReferent(mDocument));
   nsCOMPtr<nsIScriptGlobalObject> globalObject;
   if (doc) globalObject = do_QueryInterface(doc->GetWindow());
   RefPtr<nsXULPrototypeScript> script = new nsXULPrototypeScript(aLineNumber);
@@ -811,7 +811,7 @@ nsresult XULContentSinkImpl::OpenScript(const char16_t** aAttributes,
       if (!mSecMan)
         mSecMan = do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
       if (NS_SUCCEEDED(rv)) {
-        nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocument, &rv);
+        nsCOMPtr<Document> doc = do_QueryReferent(mDocument, &rv);
 
         if (NS_SUCCEEDED(rv)) {
           rv = mSecMan->CheckLoadURIWithPrincipal(

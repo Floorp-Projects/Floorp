@@ -21,7 +21,7 @@
 #include "ImgDrawResult.h"
 
 class gfxContext;
-class nsIDocument;
+
 class nsSVGPaintServerFrame;
 
 namespace mozilla {

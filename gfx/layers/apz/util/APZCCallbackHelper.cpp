@@ -24,7 +24,7 @@
 #include "nsIContent.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMWindowUtils.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIScrollableFrame.h"
 #include "nsLayoutUtils.h"
@@ -72,7 +72,7 @@ static ScreenMargin RecenterDisplayPort(const ScreenMargin& aDisplayPort) {
 
 static already_AddRefed<nsIPresShell> GetPresShell(const nsIContent* aContent) {
   nsCOMPtr<nsIPresShell> result;
-  if (nsIDocument* doc = aContent->GetComposedDoc()) {
+  if (dom::Document* doc = aContent->GetComposedDoc()) {
     result = doc->GetShell();
   }
   return result.forget();
@@ -416,7 +416,7 @@ void APZCCallbackHelper::InitializeRootDisplayport(nsIPresShell* aPresShell) {
 
 nsPresContext* APZCCallbackHelper::GetPresContextForContent(
     nsIContent* aContent) {
-  nsIDocument* doc = aContent->GetComposedDoc();
+  dom::Document* doc = aContent->GetComposedDoc();
   if (!doc) {
     return nullptr;
   }
@@ -441,7 +441,7 @@ nsIPresShell* APZCCallbackHelper::GetRootContentDocumentPresShellForContent(
 }
 
 static nsIPresShell* GetRootDocumentPresShell(nsIContent* aContent) {
-  nsIDocument* doc = aContent->GetComposedDoc();
+  dom::Document* doc = aContent->GetComposedDoc();
   if (!doc) {
     return nullptr;
   }
@@ -628,7 +628,8 @@ static nsIFrame* UpdateRootFrameForTouchTargetDocument(nsIFrame* aRootFrame) {
   // Root Content Document instead of the Root Document which are different in
   // Android. See bug 1229752 comment 16 for an explanation of why this is
   // necessary.
-  if (nsIDocument* doc = aRootFrame->PresShell()->GetPrimaryContentDocument()) {
+  if (dom::Document* doc =
+          aRootFrame->PresShell()->GetPrimaryContentDocument()) {
     if (nsIPresShell* shell = doc->GetShell()) {
       if (nsIFrame* frame = shell->GetRootFrame()) {
         return frame;
@@ -795,7 +796,7 @@ void DisplayportSetListener::DidRefresh() {
 
 UniquePtr<DisplayportSetListener>
 APZCCallbackHelper::SendSetTargetAPZCNotification(
-    nsIWidget* aWidget, nsIDocument* aDocument, const WidgetGUIEvent& aEvent,
+    nsIWidget* aWidget, dom::Document* aDocument, const WidgetGUIEvent& aEvent,
     const ScrollableLayerGuid& aGuid, uint64_t aInputBlockId) {
   if (!aWidget || !aDocument) {
     return nullptr;
@@ -852,8 +853,9 @@ APZCCallbackHelper::SendSetTargetAPZCNotification(
 }
 
 void APZCCallbackHelper::SendSetAllowedTouchBehaviorNotification(
-    nsIWidget* aWidget, nsIDocument* aDocument, const WidgetTouchEvent& aEvent,
-    uint64_t aInputBlockId, const SetAllowedTouchBehaviorCallback& aCallback) {
+    nsIWidget* aWidget, dom::Document* aDocument,
+    const WidgetTouchEvent& aEvent, uint64_t aInputBlockId,
+    const SetAllowedTouchBehaviorCallback& aCallback) {
   if (nsIPresShell* shell = aDocument->GetShell()) {
     if (nsIFrame* rootFrame = shell->GetRootFrame()) {
       rootFrame = UpdateRootFrameForTouchTargetDocument(rootFrame);
@@ -874,7 +876,7 @@ void APZCCallbackHelper::NotifyMozMouseScrollEvent(
   if (!targetContent) {
     return;
   }
-  nsCOMPtr<nsIDocument> ownerDoc = targetContent->OwnerDoc();
+  RefPtr<dom::Document> ownerDoc = targetContent->OwnerDoc();
   if (!ownerDoc) {
     return;
   }

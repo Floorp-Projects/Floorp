@@ -58,7 +58,6 @@ class nsStyleCoord;
 class nsStyleCorners;
 class nsPIDOMWindowOuter;
 class imgIRequest;
-class nsIDocument;
 struct nsStyleFont;
 struct nsOverflowAreas;
 
@@ -77,6 +76,7 @@ enum class StyleImageOrientation : uint8_t;
 namespace dom {
 class CanvasRenderingContext2D;
 class DOMRectList;
+class Document;
 class Element;
 class Event;
 class HTMLImageElement;
@@ -2206,7 +2206,7 @@ class nsLayoutUtils {
    *    returns nullptr because <body> isn't editable.
    */
   static mozilla::dom::Element* GetEditableRootContentByContentEditable(
-      nsIDocument* aDocument);
+      mozilla::dom::Document* aDocument);
 
   static void AddExtraBackgroundItems(nsDisplayListBuilder& aBuilder,
                                       nsDisplayList& aList, nsIFrame* aFrame,
@@ -2837,8 +2837,8 @@ class nsLayoutUtils {
   static bool ContainsMetricsWithId(const Layer* aLayer,
                                     const ViewID& aScrollId);
 
-  static bool ShouldUseNoScriptSheet(nsIDocument* aDocument);
-  static bool ShouldUseNoFramesSheet(nsIDocument* aDocument);
+  static bool ShouldUseNoScriptSheet(mozilla::dom::Document*);
+  static bool ShouldUseNoFramesSheet(mozilla::dom::Document*);
 
   /**
    * Get the text content inside the frame. This methods traverse the
@@ -2987,7 +2987,7 @@ class nsLayoutUtils {
    * Returns true if there are any preferences or overrides that indicate a
    * need to create a MobileViewportManager.
    */
-  static bool ShouldHandleMetaViewport(nsIDocument* aDocument);
+  static bool ShouldHandleMetaViewport(mozilla::dom::Document*);
 
   /**
    * Resolve a CSS <length-percentage> value to a definite size.

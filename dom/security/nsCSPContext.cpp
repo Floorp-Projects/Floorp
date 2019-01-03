@@ -18,7 +18,7 @@
 #include "nsIClassInfoImpl.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIHttpChannel.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -621,8 +621,7 @@ nsCSPContext::LogViolationDetails(
 #undef CASE_CHECK_AND_REPORT
 
 NS_IMETHODIMP
-nsCSPContext::SetRequestContext(nsIDocument* aDocument,
-                                nsIPrincipal* aPrincipal) {
+nsCSPContext::SetRequestContext(Document* aDocument, nsIPrincipal* aPrincipal) {
   MOZ_ASSERT(aDocument || aPrincipal,
              "Can't set context without doc or principal");
   NS_ENSURE_ARG(aDocument || aPrincipal);
@@ -687,7 +686,7 @@ void nsCSPContext::flushConsoleMessages() {
   bool privateWindow = false;
 
   // should flush messages even if doc is not available
-  nsCOMPtr<nsIDocument> doc = do_QueryReferent(mLoadingContext);
+  nsCOMPtr<Document> doc = do_QueryReferent(mLoadingContext);
   if (doc) {
     mInnerWindowID = doc->InnerWindowID();
     privateWindow =
@@ -731,7 +730,7 @@ void nsCSPContext::logToConsole(const char* aName, const char16_t** aParams,
   }
 
   bool privateWindow = false;
-  nsCOMPtr<nsIDocument> doc = do_QueryReferent(mLoadingContext);
+  nsCOMPtr<Document> doc = do_QueryReferent(mLoadingContext);
   if (doc) {
     privateWindow =
         !!doc->NodePrincipal()->OriginAttributesRef().mPrivateBrowsingId;
@@ -860,7 +859,7 @@ nsresult nsCSPContext::GatherSecurityPolicyViolationEventData(
   // status-code
   uint16_t statusCode = 0;
   {
-    nsCOMPtr<nsIDocument> doc = do_QueryReferent(mLoadingContext);
+    nsCOMPtr<Document> doc = do_QueryReferent(mLoadingContext);
     if (doc) {
       nsCOMPtr<nsIHttpChannel> channel = do_QueryInterface(doc->GetChannel());
       if (channel) {
@@ -943,7 +942,7 @@ nsresult nsCSPContext::SendReports(
   nsTArray<nsString> reportURIs;
   mPolicies[aViolatedPolicyIndex]->getReportURIs(reportURIs);
 
-  nsCOMPtr<nsIDocument> doc = do_QueryReferent(mLoadingContext);
+  nsCOMPtr<Document> doc = do_QueryReferent(mLoadingContext);
   nsCOMPtr<nsIURI> reportURI;
   nsCOMPtr<nsIChannel> reportChannel;
 
@@ -1104,7 +1103,7 @@ nsresult nsCSPContext::FireViolationEvent(
   // null.
   RefPtr<EventTarget> eventTarget = aTriggeringElement;
 
-  nsCOMPtr<nsIDocument> doc = do_QueryReferent(mLoadingContext);
+  nsCOMPtr<Document> doc = do_QueryReferent(mLoadingContext);
   if (doc && aTriggeringElement &&
       aTriggeringElement->GetComposedDoc() != doc) {
     eventTarget = nullptr;
@@ -1378,9 +1377,9 @@ nsCSPContext::PermitsAncestry(nsIDocShell* aDocShell,
       break;
     }
 
-    nsIDocument* doc = parentTreeItem->GetDocument();
+    Document* doc = parentTreeItem->GetDocument();
     NS_ASSERTION(doc,
-                 "Could not get nsIDocument from nsIDocShellTreeItem in "
+                 "Could not get Document from nsIDocShellTreeItem in "
                  "nsCSPContext::PermitsAncestry");
     NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
 

@@ -29,7 +29,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsIWebNavigation.h"
 #include "nsIContentViewer.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIContent.h"
 #include "nsIPresShell.h"
 #include "nsRect.h"
@@ -608,7 +608,7 @@ nsFormFillController::GetInPrivateContext(bool* aInPrivateContext) {
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDocument> doc = mFocusedInput->OwnerDoc();
+  RefPtr<Document> doc = mFocusedInput->OwnerDoc();
   nsCOMPtr<nsILoadContext> loadContext = doc->GetLoadContext();
   *aInPrivateContext = loadContext && loadContext->UsePrivateBrowsing();
   return NS_OK;
@@ -822,7 +822,7 @@ nsFormFillController::HandleEvent(Event* aEvent) {
       }
       return NS_OK;
     case ePageHide: {
-      nsCOMPtr<nsIDocument> doc = do_QueryInterface(aEvent->GetTarget());
+      nsCOMPtr<Document> doc = do_QueryInterface(aEvent->GetTarget());
       if (!doc) {
         return NS_OK;
       }
@@ -850,7 +850,7 @@ nsFormFillController::HandleEvent(Event* aEvent) {
   return NS_OK;
 }
 
-void nsFormFillController::RemoveForDocument(nsIDocument* aDoc) {
+void nsFormFillController::RemoveForDocument(Document* aDoc) {
   MOZ_LOG(sLogger, LogLevel::Verbose, ("RemoveForDocument: %p", aDoc));
   for (auto iter = mPwmgrInputs.Iter(); !iter.Done(); iter.Next()) {
     const nsINode* key = iter.Key();
@@ -1202,7 +1202,7 @@ void nsFormFillController::RemoveWindowListeners(nsPIDOMWindowOuter* aWindow) {
 
   StopControllingInput();
 
-  nsCOMPtr<nsIDocument> doc = aWindow->GetDoc();
+  RefPtr<Document> doc = aWindow->GetDoc();
   RemoveForDocument(doc);
 
   EventTarget* target = aWindow->GetChromeEventHandler();
@@ -1319,7 +1319,7 @@ nsPIDOMWindowOuter* nsFormFillController::GetWindowForDocShell(
   aDocShell->GetContentViewer(getter_AddRefs(contentViewer));
   NS_ENSURE_TRUE(contentViewer, nullptr);
 
-  nsCOMPtr<nsIDocument> doc = contentViewer->GetDocument();
+  RefPtr<Document> doc = contentViewer->GetDocument();
   NS_ENSURE_TRUE(doc, nullptr);
 
   return doc->GetWindow();

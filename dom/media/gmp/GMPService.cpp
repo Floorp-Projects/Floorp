@@ -177,7 +177,7 @@ GeckoMediaPluginService::RunPluginCrashCallbacks(
     if (NS_WARN_IF(!window)) {
       continue;
     }
-    nsCOMPtr<nsIDocument> document(window->GetExtantDoc());
+    RefPtr<dom::Document> document(window->GetExtantDoc());
     if (NS_WARN_IF(!document)) {
       continue;
     }

@@ -17,13 +17,12 @@
 #include "nsString.h"
 
 class nsIDOMWindow;
-
 class nsIDocShell;
-class nsIDocument;
 class nsRange;
 
 namespace mozilla {
 namespace dom {
+class Document;
 class Element;
 class Selection;
 }  // namespace dom
@@ -66,12 +65,14 @@ class nsWebBrowserFind : public nsIWebBrowserFind,
 
   void SetSelectionAndScroll(nsPIDOMWindowOuter* aWindow, nsRange* aRange);
 
-  nsresult GetRootNode(nsIDocument* aDomDoc, mozilla::dom::Element** aNode);
+  nsresult GetRootNode(mozilla::dom::Document* aDomDoc,
+                       mozilla::dom::Element** aNode);
   nsresult GetSearchLimits(nsRange* aRange, nsRange* aStartPt, nsRange* aEndPt,
-                           nsIDocument* aDoc, mozilla::dom::Selection* aSel,
-                           bool aWrap);
+                           mozilla::dom::Document* aDoc,
+                           mozilla::dom::Selection* aSel, bool aWrap);
   nsresult SetRangeAroundDocument(nsRange* aSearchRange, nsRange* aStartPoint,
-                                  nsRange* aEndPoint, nsIDocument* aDoc);
+                                  nsRange* aEndPoint,
+                                  mozilla::dom::Document* aDoc);
 
  protected:
   nsString mSearchString;

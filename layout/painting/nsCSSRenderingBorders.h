@@ -66,7 +66,6 @@ typedef enum {
   BorderColorStyleDark
 } BorderColorStyle;
 
-class nsIDocument;
 class nsPresContext;
 
 class nsCSSBorderRenderer final {
@@ -86,7 +85,8 @@ class nsCSSBorderRenderer final {
   friend class nsDisplayButtonForeground;
 
  public:
-  nsCSSBorderRenderer(nsPresContext* aPresContext, const nsIDocument* aDocument,
+  nsCSSBorderRenderer(nsPresContext* aPresContext,
+                      const mozilla::dom::Document* aDocument,
                       DrawTarget* aDrawTarget, const Rect& aDirtyRect,
                       Rect& aOuterRect,
                       const mozilla::StyleBorderStyle* aBorderStyles,
@@ -122,7 +122,7 @@ class nsCSSBorderRenderer final {
 
   // Target document to report warning
   nsPresContext* mPresContext;
-  const nsIDocument* mDocument;
+  const mozilla::dom::Document* mDocument;
 
   // destination DrawTarget and dirty rect
   DrawTarget* mDrawTarget;

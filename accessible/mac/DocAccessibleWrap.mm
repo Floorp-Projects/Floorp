@@ -10,7 +10,7 @@
 using namespace mozilla::a11y;
 
 DocAccessibleWrap::
-  DocAccessibleWrap(nsIDocument* aDocument, nsIPresShell* aPresShell) :
+  DocAccessibleWrap(mozilla::dom::Document* aDocument, nsIPresShell* aPresShell) :
   DocAccessible(aDocument, aPresShell)
 {
 }

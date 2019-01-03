@@ -34,7 +34,6 @@ class nsIContent;
 class nsICSSDeclaration;
 class nsIDocShell;
 class nsDocShellLoadState;
-class nsIDocument;
 class nsIPrincipal;
 class nsIScriptTimeoutHandler;
 class nsISerialEventTarget;
@@ -55,6 +54,7 @@ class ClientInfo;
 class ClientState;
 class ContentFrameMessageManager;
 class DocGroup;
+class Document;
 class TabGroup;
 class Element;
 class MozIdleObserver;
@@ -137,6 +137,7 @@ enum class LargeAllocStatus : uint8_t {
 
 class nsPIDOMWindowInner : public mozIDOMWindow {
  protected:
+  typedef mozilla::dom::Document Document;
   friend nsGlobalWindowInner;
   friend nsGlobalWindowOuter;
 
@@ -355,11 +356,11 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
 
   virtual void MaybeUpdateTouchState() {}
 
-  nsIDocument* GetExtantDoc() const { return mDoc; }
+  Document* GetExtantDoc() const { return mDoc; }
   nsIURI* GetDocumentURI() const;
   nsIURI* GetDocBaseURI() const;
 
-  nsIDocument* GetDoc() {
+  Document* GetDoc() {
     if (!mDoc) {
       MaybeCreateDoc();
     }
@@ -396,7 +397,7 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
    *
    * aDocument must not be null.
    */
-  virtual nsresult SetNewDocument(nsIDocument* aDocument, nsISupports* aState,
+  virtual nsresult SetNewDocument(Document* aDocument, nsISupports* aState,
                                   bool aForceReuseInnerWindow) = 0;
 
   /**
@@ -603,7 +604,7 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
   // value on both the outer window and the current inner window. Make
   // sure you keep them in sync!
   nsCOMPtr<mozilla::dom::EventTarget> mChromeEventHandler;  // strong
-  nsCOMPtr<nsIDocument> mDoc;                               // strong
+  RefPtr<Document> mDoc;
   // Cache the URI when mDoc is cleared.
   nsCOMPtr<nsIURI> mDocumentURI;  // strong
   nsCOMPtr<nsIURI> mDocBaseURI;   // strong
@@ -697,6 +698,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsPIDOMWindowInner, NS_PIDOMWINDOWINNER_IID)
 
 class nsPIDOMWindowOuter : public mozIDOMWindowProxy {
  protected:
+  typedef mozilla::dom::Document Document;
+
   explicit nsPIDOMWindowOuter(uint64_t aWindowID);
 
   ~nsPIDOMWindowOuter();
@@ -846,10 +849,10 @@ class nsPIDOMWindowOuter : public mozIDOMWindowProxy {
     return mMessageManager;
   }
 
-  nsIDocument* GetExtantDoc() const { return mDoc; }
+  Document* GetExtantDoc() const { return mDoc; }
   nsIURI* GetDocumentURI() const;
 
-  nsIDocument* GetDoc() {
+  Document* GetDoc() {
     if (!mDoc) {
       MaybeCreateDoc();
     }
@@ -896,7 +899,7 @@ class nsPIDOMWindowOuter : public mozIDOMWindowProxy {
    *
    * aDocument must not be null.
    */
-  virtual nsresult SetNewDocument(nsIDocument* aDocument, nsISupports* aState,
+  virtual nsresult SetNewDocument(Document* aDocument, nsISupports* aState,
                                   bool aForceReuseInnerWindow) = 0;
 
   /**
@@ -1036,7 +1039,7 @@ class nsPIDOMWindowOuter : public mozIDOMWindowProxy {
   /**
    * Fire a popup blocked event on the document.
    */
-  virtual void FirePopupBlockedEvent(nsIDocument* aDoc, nsIURI* aPopupURI,
+  virtual void FirePopupBlockedEvent(Document* aDoc, nsIURI* aPopupURI,
                                      const nsAString& aPopupWindowName,
                                      const nsAString& aPopupWindowFeatures) = 0;
 
@@ -1125,7 +1128,7 @@ class nsPIDOMWindowOuter : public mozIDOMWindowProxy {
   // value on both the outer window and the current inner window. Make
   // sure you keep them in sync!
   nsCOMPtr<mozilla::dom::EventTarget> mChromeEventHandler;  // strong
-  nsCOMPtr<nsIDocument> mDoc;                               // strong
+  RefPtr<Document> mDoc;
   // Cache the URI when mDoc is cleared.
   nsCOMPtr<nsIURI> mDocumentURI;  // strong
 

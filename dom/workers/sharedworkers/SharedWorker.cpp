@@ -146,7 +146,7 @@ already_AddRefed<SharedWorker> SharedWorker::Constructor(
   // StorageAccess value.
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   if (storageAllowed == nsContentUtils::StorageAccess::ePrivateBrowsing) {
-    nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
+    nsCOMPtr<Document> doc = window->GetExtantDoc();
     nsCOMPtr<nsIPrincipal> principal = doc ? doc->NodePrincipal() : nullptr;
     uint32_t privateBrowsingId = 0;
     if (principal) {

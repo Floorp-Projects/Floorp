@@ -66,7 +66,7 @@ class nsMappedAttributes final {
 
   // Apply the contained mapper to the contained set of servo rules,
   // unless the servo rules have already been initialized.
-  void LazilyResolveServoDeclaration(nsIDocument* aDocument);
+  void LazilyResolveServoDeclaration(mozilla::dom::Document* aDocument);
 
   // Obtain the contained servo declaration block
   // May return null if called before the inner block

@@ -162,7 +162,7 @@ void MediaKeySystemAccessManager::Request(
     return;
   }
 
-  nsCOMPtr<nsIDocument> doc = mWindow->GetExtantDoc();
+  nsCOMPtr<Document> doc = mWindow->GetExtantDoc();
   nsDataHashtable<nsCharPtrHashKey, bool> warnings;
   std::function<void(const char*)> deprecationWarningLogFn =
       [&](const char* aMsgName) {

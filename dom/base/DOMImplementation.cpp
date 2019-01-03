@@ -60,7 +60,7 @@ already_AddRefed<DocumentType> DOMImplementation::CreateDocumentType(
 nsresult DOMImplementation::CreateDocument(const nsAString& aNamespaceURI,
                                            const nsAString& aQualifiedName,
                                            DocumentType* aDoctype,
-                                           nsIDocument** aDocument) {
+                                           Document** aDocument) {
   *aDocument = nullptr;
 
   nsresult rv;
@@ -83,7 +83,7 @@ nsresult DOMImplementation::CreateDocument(const nsAString& aNamespaceURI,
 
   NS_ENSURE_STATE(!mScriptObject || scriptHandlingObject);
 
-  nsCOMPtr<nsIDocument> doc;
+  nsCOMPtr<Document> doc;
 
   rv = NS_NewDOMDocument(getter_AddRefs(doc), aNamespaceURI, aQualifiedName,
                          aDoctype, mDocumentURI, mBaseURI,
@@ -103,23 +103,23 @@ nsresult DOMImplementation::CreateDocument(const nsAString& aNamespaceURI,
     doc->SetContentType(NS_LITERAL_STRING("application/xml"));
   }
 
-  doc->SetReadyStateInternal(nsIDocument::READYSTATE_COMPLETE);
+  doc->SetReadyStateInternal(Document::READYSTATE_COMPLETE);
 
   doc.forget(aDocument);
   return NS_OK;
 }
 
-already_AddRefed<nsIDocument> DOMImplementation::CreateDocument(
+already_AddRefed<Document> DOMImplementation::CreateDocument(
     const nsAString& aNamespaceURI, const nsAString& aQualifiedName,
     DocumentType* aDoctype, ErrorResult& aRv) {
-  nsCOMPtr<nsIDocument> document;
+  nsCOMPtr<Document> document;
   aRv = CreateDocument(aNamespaceURI, aQualifiedName, aDoctype,
                        getter_AddRefs(document));
   return document.forget();
 }
 
 nsresult DOMImplementation::CreateHTMLDocument(const nsAString& aTitle,
-                                               nsIDocument** aDocument) {
+                                               Document** aDocument) {
   *aDocument = nullptr;
 
   NS_ENSURE_STATE(mOwner);
@@ -137,7 +137,7 @@ nsresult DOMImplementation::CreateHTMLDocument(const nsAString& aTitle,
 
   NS_ENSURE_STATE(!mScriptObject || scriptHandlingObject);
 
-  nsCOMPtr<nsIDocument> doc;
+  nsCOMPtr<Document> doc;
   nsresult rv = NS_NewDOMDocument(
       getter_AddRefs(doc), EmptyString(), EmptyString(), doctype, mDocumentURI,
       mBaseURI, mOwner->NodePrincipal(), true, scriptHandlingObject,
@@ -172,15 +172,15 @@ nsresult DOMImplementation::CreateHTMLDocument(const nsAString& aTitle,
   rv = root->AppendChildTo(body, false);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  doc->SetReadyStateInternal(nsIDocument::READYSTATE_COMPLETE);
+  doc->SetReadyStateInternal(Document::READYSTATE_COMPLETE);
 
   doc.forget(aDocument);
   return NS_OK;
 }
 
-already_AddRefed<nsIDocument> DOMImplementation::CreateHTMLDocument(
+already_AddRefed<Document> DOMImplementation::CreateHTMLDocument(
     const Optional<nsAString>& aTitle, ErrorResult& aRv) {
-  nsCOMPtr<nsIDocument> document;
+  nsCOMPtr<Document> document;
   aRv = CreateHTMLDocument(aTitle.WasPassed() ? aTitle.Value() : VoidString(),
                            getter_AddRefs(document));
   return document.forget();

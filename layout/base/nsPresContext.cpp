@@ -26,8 +26,8 @@
 #include "mozilla/ServoStyleSet.h"
 #include "nsIContent.h"
 #include "nsIFrame.h"
-#include "nsIDocument.h"
-#include "nsIDocumentInlines.h"
+#include "mozilla/dom/Document.h"
+#include "mozilla/dom/DocumentInlines.h"
 #include "nsIPrintSettings.h"
 #include "nsLanguageAtomService.h"
 #include "mozilla/LookAndFeel.h"
@@ -158,7 +158,7 @@ static bool IsVisualCharset(NotNull<const Encoding*> aCharset) {
   return aCharset == ISO_8859_8_ENCODING;
 }
 
-nsPresContext::nsPresContext(nsIDocument* aDocument, nsPresContextType aType)
+nsPresContext::nsPresContext(dom::Document* aDocument, nsPresContextType aType)
     : mType(aType),
       mShell(nullptr),
       mDocument(aDocument),
@@ -398,7 +398,7 @@ void nsPresContext::GetDocumentColorPreferences() {
                                  kUseStandinsForNativeColors);
   }
 
-  nsIDocument* doc = mDocument->GetDisplayDocument();
+  dom::Document* doc = mDocument->GetDisplayDocument();
   if (doc && doc->GetDocShell()) {
     isChromeDocShell =
         nsIDocShellTreeItem::typeChrome == doc->GetDocShell()->ItemType();
@@ -772,7 +772,7 @@ nsresult nsPresContext::Init(nsDeviceContext* aDeviceContext) {
     mRefreshDriver =
         mDocument->GetDisplayDocument()->GetPresContext()->RefreshDriver();
   } else {
-    nsIDocument* parent = mDocument->GetParentDocument();
+    dom::Document* parent = mDocument->GetParentDocument();
     // Unfortunately, sometimes |parent| here has no presshell because
     // printing screws up things.  Assert that in other cases it does,
     // but whenever the shell is null just fall back on using our own
@@ -836,7 +836,7 @@ void nsPresContext::AttachShell(nsIPresShell* aShell) {
   // namespace here.
   mCounterStyleManager = new mozilla::CounterStyleManager(this);
 
-  nsIDocument* doc = mShell->GetDocument();
+  dom::Document* doc = mShell->GetDocument();
   NS_ASSERTION(doc, "expect document here");
   if (doc) {
     // Have to update PresContext's mDocument before calling any other methods.
@@ -1089,7 +1089,7 @@ void nsPresContext::SetImgAnimations(nsIContent* aParent, uint16_t aMode) {
   }
 }
 
-void nsPresContext::SetSMILAnimations(nsIDocument* aDoc, uint16_t aNewMode,
+void nsPresContext::SetSMILAnimations(dom::Document* aDoc, uint16_t aNewMode,
                                       uint16_t aOldMode) {
   if (aDoc->HasAnimationController()) {
     SMILAnimationController* controller = aDoc->GetAnimationController();
@@ -1120,7 +1120,7 @@ void nsPresContext::SetImageAnimationMode(uint16_t aMode) {
   // Now walk the content tree and set the animation mode
   // on all the images.
   if (mShell != nullptr) {
-    nsIDocument* doc = mShell->GetDocument();
+    dom::Document* doc = mShell->GetDocument();
     if (doc) {
       doc->StyleImageLoader()->SetAnimationMode(aMode);
 
@@ -1266,7 +1266,7 @@ static bool CheckOverflow(const nsStyleDisplay* aDisplay,
 
 static Element* GetPropagatedScrollStylesForViewport(
     nsPresContext* aPresContext, ScrollStyles* aStyles) {
-  nsIDocument* document = aPresContext->Document();
+  Document* document = aPresContext->Document();
   Element* docElement = document->GetRootElement();
 
   // docElement might be null if we're doing this after removing it.
@@ -1323,7 +1323,7 @@ Element* nsPresContext::UpdateViewportScrollStylesOverride() {
         GetPropagatedScrollStylesForViewport(this, &mViewportScrollStyles);
   }
 
-  nsIDocument* document = Document();
+  dom::Document* document = Document();
   if (Element* fullscreenElement = document->GetFullscreenElement()) {
     // If the document is in fullscreen, but the fullscreen element is
     // not the root element, we should explicitly suppress the scrollbar
@@ -1388,7 +1388,7 @@ bool nsPresContext::BidiEnabled() const { return Document()->GetBidiEnabled(); }
 
 void nsPresContext::SetBidiEnabled() const {
   if (mShell) {
-    nsIDocument* doc = mShell->GetDocument();
+    dom::Document* doc = mShell->GetDocument();
     if (doc) {
       doc->SetBidiEnabled();
     }
@@ -1411,7 +1411,7 @@ void nsPresContext::SetBidi(uint32_t aSource) {
   } else if (IBMBIDI_TEXTTYPE_LOGICAL == GET_BIDI_OPTION_TEXTTYPE(aSource)) {
     SetVisualMode(false);
   } else {
-    nsIDocument* doc = mShell->GetDocument();
+    dom::Document* doc = mShell->GetDocument();
     if (doc) {
       SetVisualMode(IsVisualCharset(doc->GetDocumentCharacterSet()));
     }
@@ -1631,7 +1631,7 @@ void nsPresContext::UIResolutionChangedSync() {
 }
 
 /*static*/ bool nsPresContext::UIResolutionChangedSubdocumentCallback(
-    nsIDocument* aDocument, void* aData) {
+    dom::Document* aDocument, void* aData) {
   nsPresContext* pc = aDocument->GetPresContext();
   if (pc) {
     // For subdocuments, we want to apply the parent's scale, because there
@@ -1649,7 +1649,7 @@ static void NotifyTabUIResolutionChanged(TabParent* aTab, void* aArg) {
 }
 
 static void NotifyChildrenUIResolutionChanged(nsPIDOMWindowOuter* aWindow) {
-  nsCOMPtr<nsIDocument> doc = aWindow->GetExtantDoc();
+  nsCOMPtr<Document> doc = aWindow->GetExtantDoc();
   RefPtr<nsPIWindowRoot> topLevelWin = nsContentUtils::GetWindowRoot(doc);
   if (!topLevelWin) {
     return;
@@ -1758,8 +1758,8 @@ void nsPresContext::PostRebuildAllStyleDataEvent(nsChangeHint aExtraHint,
   RestyleManager()->PostRebuildAllStyleDataEvent(aExtraHint, aRestyleHint);
 }
 
-static bool MediaFeatureValuesChangedAllDocumentsCallback(
-    nsIDocument* aDocument, void* aChange) {
+static bool MediaFeatureValuesChangedAllDocumentsCallback(Document* aDocument,
+                                                          void* aChange) {
   auto* change = static_cast<const MediaFeatureChange*>(aChange);
   if (nsPresContext* pc = aDocument->GetPresContext()) {
     pc->MediaFeatureValuesChangedAllDocuments(*change);
@@ -2072,7 +2072,7 @@ void nsPresContext::FireDOMPaintEvent(
                                     static_cast<Event*>(event), this, nullptr);
 }
 
-static bool MayHavePaintEventListenerSubdocumentCallback(nsIDocument* aDocument,
+static bool MayHavePaintEventListenerSubdocumentCallback(Document* aDocument,
                                                          void* aData) {
   bool* result = static_cast<bool*>(aData);
   nsPresContext* pc = aDocument->GetPresContext();
@@ -2241,8 +2241,8 @@ struct NotifyDidPaintSubdocumentCallbackClosure {
   TransactionId mTransactionId;
   const mozilla::TimeStamp& mTimeStamp;
 };
-/* static */ bool nsPresContext::NotifyDidPaintSubdocumentCallback(
-    nsIDocument* aDocument, void* aData) {
+bool nsPresContext::NotifyDidPaintSubdocumentCallback(dom::Document* aDocument,
+                                                      void* aData) {
   NotifyDidPaintSubdocumentCallbackClosure* closure =
       static_cast<NotifyDidPaintSubdocumentCallbackClosure*>(aData);
   nsPresContext* pc = aDocument->GetPresContext();
@@ -2252,8 +2252,8 @@ struct NotifyDidPaintSubdocumentCallbackClosure {
   return true;
 }
 
-/* static */ bool nsPresContext::NotifyRevokingDidPaintSubdocumentCallback(
-    nsIDocument* aDocument, void* aData) {
+bool nsPresContext::NotifyRevokingDidPaintSubdocumentCallback(
+    dom::Document* aDocument, void* aData) {
   NotifyDidPaintSubdocumentCallbackClosure* closure =
       static_cast<NotifyDidPaintSubdocumentCallbackClosure*>(aData);
   nsPresContext* pc = aDocument->GetPresContext();
@@ -2706,7 +2706,7 @@ void nsPresContext::FlushFontFeatureValues() {
   }
 }
 
-nsRootPresContext::nsRootPresContext(nsIDocument* aDocument,
+nsRootPresContext::nsRootPresContext(dom::Document* aDocument,
                                      nsPresContextType aType)
     : nsPresContext(aDocument, aType) {}
 

@@ -190,7 +190,7 @@ typedef struct htab { /* Memory resident data structure */
 #define OADDR_OF(S, O) ((uint32)((uint32)(S) << SPLITSHIFT) + (O))
 
 #define BUCKET_TO_PAGE(B) \
-    (B) + hashp->HDRPAGES + ((B) ? hashp->SPARES[__log2((uint32)((B) + 1)) - 1] : 0)
+    (B) + hashp->HDRPAGES + ((B) ? hashp->SPARES[dbm_log2((uint32)((B) + 1)) - 1] : 0)
 #define OADDR_TO_PAGE(B) \
     BUCKET_TO_PAGE((1 << SPLITNUM((B))) - 1) + OPAGENUM((B));
 
@@ -314,28 +314,28 @@ typedef struct htab { /* Memory resident data structure */
 #define NEXT_FREE hdr.next_free
 #define H_CHARKEY hdr.h_charkey
 
-extern uint32 (*__default_hash)(const void *, size_t);
-void __buf_init(HTAB *hashp, int32 nbytes);
-int __big_delete(HTAB *hashp, BUFHEAD *bufp);
-BUFHEAD *__get_buf(HTAB *hashp, uint32 addr, BUFHEAD *prev_bp, int newpage);
-uint32 __call_hash(HTAB *hashp, char *k, size_t len);
+extern uint32 (*dbm_default_hash)(const void *, size_t);
+void dbm_buf_init(HTAB *hashp, int32 nbytes);
+int dbm_big_delete(HTAB *hashp, BUFHEAD *bufp);
+BUFHEAD *dbm_get_buf(HTAB *hashp, uint32 addr, BUFHEAD *prev_bp, int newpage);
+uint32 dbm_call_hash(HTAB *hashp, char *k, size_t len);
 #include "page.h"
-extern int __big_split(HTAB *hashp, BUFHEAD *op, BUFHEAD *np,
-                       BUFHEAD *big_keyp, uint32 addr, uint32 obucket, SPLIT_RETURN *ret);
-void __free_ovflpage(HTAB *hashp, BUFHEAD *obufp);
-BUFHEAD *__add_ovflpage(HTAB *hashp, BUFHEAD *bufp);
-int __big_insert(HTAB *hashp, BUFHEAD *bufp, const DBT *key, const DBT *val);
-int __expand_table(HTAB *hashp);
-uint32 __log2(uint32 num);
-void __reclaim_buf(HTAB *hashp, BUFHEAD *bp);
-int __get_page(HTAB *hashp, char *p, uint32 bucket, int is_bucket, int is_disk, int is_bitmap);
-int __put_page(HTAB *hashp, char *p, uint32 bucket, int is_bucket, int is_bitmap);
-int __ibitmap(HTAB *hashp, int pnum, int nbits, int ndx);
-int __buf_free(HTAB *hashp, int do_free, int to_disk);
-int __find_bigpair(HTAB *hashp, BUFHEAD *bufp, int ndx, char *key, int size);
-uint16 __find_last_page(HTAB *hashp, BUFHEAD **bpp);
-int __addel(HTAB *hashp, BUFHEAD *bufp, const DBT *key, const DBT *val);
-int __big_return(HTAB *hashp, BUFHEAD *bufp, int ndx, DBT *val, int set_current);
-int __delpair(HTAB *hashp, BUFHEAD *bufp, int ndx);
-int __big_keydata(HTAB *hashp, BUFHEAD *bufp, DBT *key, DBT *val, int set);
-int __split_page(HTAB *hashp, uint32 obucket, uint32 nbucket);
+extern int dbm_big_split(HTAB *hashp, BUFHEAD *op, BUFHEAD *np,
+                         BUFHEAD *big_keyp, uint32 addr, uint32 obucket, SPLIT_RETURN *ret);
+void dbm_free_ovflpage(HTAB *hashp, BUFHEAD *obufp);
+BUFHEAD *dbm_add_ovflpage(HTAB *hashp, BUFHEAD *bufp);
+int dbm_big_insert(HTAB *hashp, BUFHEAD *bufp, const DBT *key, const DBT *val);
+int dbm_expand_table(HTAB *hashp);
+uint32 dbm_log2(uint32 num);
+void dbm_reclaim_buf(HTAB *hashp, BUFHEAD *bp);
+int dbm_get_page(HTAB *hashp, char *p, uint32 bucket, int is_bucket, int is_disk, int is_bitmap);
+int dbm_put_page(HTAB *hashp, char *p, uint32 bucket, int is_bucket, int is_bitmap);
+int dbm_ibitmap(HTAB *hashp, int pnum, int nbits, int ndx);
+int dbm_buf_free(HTAB *hashp, int do_free, int to_disk);
+int dbm_find_bigpair(HTAB *hashp, BUFHEAD *bufp, int ndx, char *key, int size);
+uint16 dbm_find_last_page(HTAB *hashp, BUFHEAD **bpp);
+int dbm_addel(HTAB *hashp, BUFHEAD *bufp, const DBT *key, const DBT *val);
+int dbm_big_return(HTAB *hashp, BUFHEAD *bufp, int ndx, DBT *val, int set_current);
+int dbm_delpair(HTAB *hashp, BUFHEAD *bufp, int ndx);
+int dbm_big_keydata(HTAB *hashp, BUFHEAD *bufp, DBT *key, DBT *val, int set);
+int dbm_split_page(HTAB *hashp, uint32 obucket, uint32 nbucket);

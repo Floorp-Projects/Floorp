@@ -11,7 +11,7 @@
 #include "nsContentSink.h"
 #include "nsIExpatSink.h"
 #include "nsIDTD.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIContent.h"
 #include "nsGkAtoms.h"
 #include "mozilla/dom/NodeInfo.h"
@@ -66,7 +66,7 @@ class nsXMLFragmentContentSink : public nsXMLContentSink,
 
   // nsIFragmentContentSink
   NS_IMETHOD FinishFragmentParsing(DocumentFragment** aFragment) override;
-  NS_IMETHOD SetTargetDocument(nsIDocument* aDocument) override;
+  NS_IMETHOD SetTargetDocument(Document* aDocument) override;
   NS_IMETHOD WillBuildContent() override;
   NS_IMETHOD DidBuildContent() override;
   NS_IMETHOD IgnoreFirstContainer() override;
@@ -99,7 +99,7 @@ class nsXMLFragmentContentSink : public nsXMLContentSink,
       const nsAString& aMedia, const nsAString& aReferrerPolicy,
       bool* aWasXSLT = nullptr) override;
 
-  nsCOMPtr<nsIDocument> mTargetDocument;
+  nsCOMPtr<Document> mTargetDocument;
   // the fragment
   RefPtr<DocumentFragment> mRoot;
   bool mParseError;
@@ -334,7 +334,7 @@ nsXMLFragmentContentSink::FinishFragmentParsing(DocumentFragment** aFragment) {
 }
 
 NS_IMETHODIMP
-nsXMLFragmentContentSink::SetTargetDocument(nsIDocument* aTargetDocument) {
+nsXMLFragmentContentSink::SetTargetDocument(Document* aTargetDocument) {
   NS_ENSURE_ARG_POINTER(aTargetDocument);
 
   mTargetDocument = aTargetDocument;

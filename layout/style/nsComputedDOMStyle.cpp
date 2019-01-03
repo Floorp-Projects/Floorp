@@ -33,7 +33,7 @@
 #include "nsROCSSPrimitiveValue.h"
 
 #include "nsPresContext.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 
 #include "nsCSSProps.h"
 #include "nsCSSPseudoElements.h"
@@ -69,7 +69,7 @@ using namespace mozilla::dom;
  */
 
 already_AddRefed<nsComputedDOMStyle> NS_NewComputedDOMStyle(
-    dom::Element* aElement, const nsAString& aPseudoElt, nsIDocument* aDocument,
+    dom::Element* aElement, const nsAString& aPseudoElt, Document* aDocument,
     nsComputedDOMStyle::StyleType aStyleType) {
   RefPtr<nsComputedDOMStyle> computedStyle =
       new nsComputedDOMStyle(aElement, aPseudoElt, aDocument, aStyleType);
@@ -97,8 +97,8 @@ already_AddRefed<CSSValue> GetBackgroundList(
 }
 
 // Whether aDocument needs to restyle for aElement
-static bool DocumentNeedsRestyle(const nsIDocument* aDocument,
-                                 Element* aElement, nsAtom* aPseudo) {
+static bool DocumentNeedsRestyle(const Document* aDocument, Element* aElement,
+                                 nsAtom* aPseudo) {
   nsIPresShell* shell = aDocument->GetShell();
   if (!shell) {
     return true;
@@ -283,7 +283,7 @@ void ComputedStyleMap::Update() {
 
 nsComputedDOMStyle::nsComputedDOMStyle(dom::Element* aElement,
                                        const nsAString& aPseudoElt,
-                                       nsIDocument* aDocument,
+                                       Document* aDocument,
                                        StyleType aStyleType)
     : mDocumentWeak(nullptr),
       mOuterFrame(nullptr),
@@ -453,7 +453,7 @@ nsComputedDOMStyle::GetPropertyValue(const nsAString& aPropertyName,
 /* static */
 already_AddRefed<ComputedStyle> nsComputedDOMStyle::GetComputedStyle(
     Element* aElement, nsAtom* aPseudo, StyleType aStyleType) {
-  if (nsIDocument* doc = aElement->GetComposedDoc()) {
+  if (Document* doc = aElement->GetComposedDoc()) {
     doc->FlushPendingNotifications(FlushType::Style);
   }
   return GetComputedStyleNoFlush(aElement, aPseudo, aStyleType);
@@ -720,7 +720,7 @@ nsresult nsComputedDOMStyle::SetCSSDeclaration(DeclarationBlock*,
   MOZ_CRASH("called nsComputedDOMStyle::SetCSSDeclaration");
 }
 
-nsIDocument* nsComputedDOMStyle::DocToUpdate() {
+Document* nsComputedDOMStyle::DocToUpdate() {
   MOZ_CRASH("called nsComputedDOMStyle::DocToUpdate");
 }
 
@@ -755,7 +755,7 @@ void nsComputedDOMStyle::SetFrameComputedStyle(mozilla::ComputedStyle* aStyle,
   mComputedStyleGeneration = aGeneration;
 }
 
-bool nsComputedDOMStyle::NeedsToFlush(nsIDocument* aDocument) const {
+bool nsComputedDOMStyle::NeedsToFlush(Document* aDocument) const {
   // If mElement is not in the same document, we could do some checks to know if
   // there are some pending restyles can be ignored across documents (since we
   // will use the caller document's style), but it can be complicated and should
@@ -772,7 +772,7 @@ bool nsComputedDOMStyle::NeedsToFlush(nsIDocument* aDocument) const {
   }
   // If parent document is there, also needs to check if there is some change
   // that needs to flush this document (e.g. size change for iframe).
-  while (nsIDocument* parentDocument = aDocument->GetParentDocument()) {
+  while (Document* parentDocument = aDocument->GetParentDocument()) {
     Element* element = parentDocument->FindContentForSubDocument(aDocument);
     if (DocumentNeedsRestyle(parentDocument, element, nullptr)) {
       return true;
@@ -784,7 +784,7 @@ bool nsComputedDOMStyle::NeedsToFlush(nsIDocument* aDocument) const {
 }
 
 void nsComputedDOMStyle::UpdateCurrentStyleSources(bool aNeedsLayoutFlush) {
-  nsCOMPtr<nsIDocument> document = do_QueryReferent(mDocumentWeak);
+  nsCOMPtr<Document> document = do_QueryReferent(mDocumentWeak);
   if (!document) {
     ClearComputedStyle();
     return;

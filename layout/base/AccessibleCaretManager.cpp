@@ -91,7 +91,7 @@ void AccessibleCaretManager::Terminate() {
   mPresShell = nullptr;
 }
 
-nsresult AccessibleCaretManager::OnSelectionChanged(nsIDocument* aDoc,
+nsresult AccessibleCaretManager::OnSelectionChanged(Document* aDoc,
                                                     Selection* aSel,
                                                     int16_t aReason) {
   Selection* selection = GetSelection();
@@ -809,7 +809,7 @@ void AccessibleCaretManager::SetSelectionDragState(bool aState) const {
 }
 
 bool AccessibleCaretManager::IsPhoneNumber(nsAString& aCandidate) const {
-  RefPtr<nsIDocument> doc = mPresShell->GetDocument();
+  RefPtr<Document> doc = mPresShell->GetDocument();
   nsAutoString phoneNumberRegex(
       NS_LITERAL_STRING("(^\\+)?[0-9 ,\\-.()*#pw]{1,30}$"));
   return nsContentUtils::IsPatternMatching(aCandidate, phoneNumberRegex, doc);
@@ -904,7 +904,7 @@ bool AccessibleCaretManager::FlushLayout() {
     AutoRestore<bool> flushing(mFlushingLayout);
     mFlushingLayout = true;
 
-    if (nsIDocument* doc = mPresShell->GetDocument()) {
+    if (Document* doc = mPresShell->GetDocument()) {
       doc->FlushPendingNotifications(FlushType::Layout);
     }
   }
@@ -1273,7 +1273,7 @@ void AccessibleCaretManager::DispatchCaretStateChangedEvent(
     return;
   }
 
-  nsIDocument* doc = mPresShell->GetDocument();
+  Document* doc = mPresShell->GetDocument();
   MOZ_ASSERT(doc);
 
   CaretStateChangedEventInit init;

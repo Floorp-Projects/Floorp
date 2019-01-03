@@ -31,7 +31,7 @@
 #include "nsDeviceContext.h"
 #include "nsHTMLStyleSheet.h"
 #include "nsIAnonymousContentCreator.h"
-#include "nsIDocumentInlines.h"
+#include "mozilla/dom/DocumentInlines.h"
 #include "nsMediaFeatures.h"
 #include "nsPrintfCString.h"
 #include "nsXBLPrototypeBinding.h"
@@ -154,8 +154,8 @@ void ServoStyleSet::Init(nsPresContext* aPresContext) {
 }
 
 template <typename Functor>
-void EnumerateShadowRoots(const nsIDocument& aDoc, const Functor& aCb) {
-  const nsIDocument::ShadowRootSet& shadowRoots = aDoc.ComposedShadowRoots();
+void EnumerateShadowRoots(const Document& aDoc, const Functor& aCb) {
+  const Document::ShadowRootSet& shadowRoots = aDoc.ComposedShadowRoots();
   for (auto iter = shadowRoots.ConstIter(); !iter.Done(); iter.Next()) {
     ShadowRoot* root = iter.Get()->GetKey();
     MOZ_ASSERT(root);
@@ -791,7 +791,7 @@ nsresult ServoStyleSet::RemoveDocStyleSheet(StyleSheet* aSheet) {
 }
 
 nsresult ServoStyleSet::AddDocStyleSheet(StyleSheet* aSheet,
-                                         nsIDocument* aDocument) {
+                                         Document* aDocument) {
   MOZ_ASSERT(aSheet->IsApplicable());
   MOZ_ASSERT(aSheet->RawContents(),
              "Raw sheet should be in place by this point.");

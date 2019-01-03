@@ -15,7 +15,7 @@
 #include "nsContentUtils.h"
 #include "nsXULPopupManager.h"
 #include "nsIScriptContext.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIPrincipal.h"
 #include "nsIScriptSecurityManager.h"
@@ -183,7 +183,7 @@ nsresult nsXULPopupListener::HandleEvent(Event* aEvent) {
 #ifndef NS_CONTEXT_MENU_IS_MOUSEUP
 nsresult nsXULPopupListener::FireFocusOnTargetContent(
     nsIContent* aTargetContent, bool aIsTouch) {
-  nsCOMPtr<nsIDocument> doc = aTargetContent->OwnerDoc();
+  nsCOMPtr<Document> doc = aTargetContent->OwnerDoc();
 
   // strong reference to keep this from going away between events
   // XXXbz between what events?  We don't use this local at all!
@@ -302,7 +302,7 @@ nsresult nsXULPopupListener::LaunchPopup(MouseEvent* aEvent) {
   if (identifier.IsEmpty()) return rv;
 
   // Try to find the popup content and the document.
-  nsCOMPtr<nsIDocument> document = mElement->GetComposedDoc();
+  nsCOMPtr<Document> document = mElement->GetComposedDoc();
   if (!document) {
     NS_WARNING("No document!");
     return NS_ERROR_FAILURE;

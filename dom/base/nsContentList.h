@@ -165,7 +165,7 @@ class nsEmptyContentList final : public nsBaseContentList,
  */
 struct nsContentListKey {
   // We have to take an aIsHTMLDocument arg for two reasons:
-  // 1) We don't want to include nsIDocument.h in this header.
+  // 1) We don't want to include Document.h in this header.
   // 2) We need to do that to make nsContentList::RemoveFromHashtable
   //    work, because by the time it's called the document of the
   //    list's root node might have changed.

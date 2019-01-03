@@ -732,7 +732,7 @@ bool WindowShouldMatchActiveTab(nsPIDOMWindowOuter* aWin) {
     return false;
   }
 
-  nsIDocument* doc = aWin->GetExtantDoc();
+  Document* doc = aWin->GetExtantDoc();
   if (!doc) {
     return false;
   }
@@ -789,7 +789,7 @@ nsIPrincipal* DocInfo::Principal() const {
       const DocInfo& mThis;
 
       nsIPrincipal* match(Window aWin) {
-        nsCOMPtr<nsIDocument> doc = aWin->GetDoc();
+        RefPtr<Document> doc = aWin->GetDoc();
         return doc->NodePrincipal();
       }
       nsIPrincipal* match(LoadInfo aLoadInfo) {

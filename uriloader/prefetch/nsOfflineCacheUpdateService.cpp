@@ -19,7 +19,7 @@
 #include "nsIDocShell.h"
 #include "nsIDocumentLoader.h"
 #include "nsIDOMWindow.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIObserverService.h"
 #include "nsIURL.h"
 #include "nsIWebProgress.h"
@@ -97,7 +97,7 @@ class nsOfflineCachePendingUpdate final : public nsIWebProgressListener,
   nsOfflineCachePendingUpdate(nsOfflineCacheUpdateService *aService,
                               nsIURI *aManifestURI, nsIURI *aDocumentURI,
                               nsIPrincipal *aLoadingPrincipal,
-                              nsIDocument *aDocument)
+                              Document *aDocument)
       : mService(aService),
         mManifestURI(aManifestURI),
         mDocumentURI(aDocumentURI),
@@ -143,7 +143,7 @@ nsOfflineCachePendingUpdate::OnStateChange(nsIWebProgress *aWebProgress,
   if (mDidReleaseThis) {
     return NS_OK;
   }
-  nsCOMPtr<nsIDocument> updateDoc = do_QueryReferent(mDocument);
+  nsCOMPtr<Document> updateDoc = do_QueryReferent(mDocument);
   if (!updateDoc) {
     // The document that scheduled this update has gone away,
     // we don't need to listen anymore.
@@ -165,7 +165,7 @@ nsOfflineCachePendingUpdate::OnStateChange(nsIWebProgress *aWebProgress,
   auto *outerWindow = nsPIDOMWindowOuter::From(windowProxy);
   nsPIDOMWindowInner *innerWindow = outerWindow->GetCurrentInnerWindow();
 
-  nsCOMPtr<nsIDocument> progressDoc = outerWindow->GetDoc();
+  nsCOMPtr<Document> progressDoc = outerWindow->GetDoc();
   if (!progressDoc || progressDoc != updateDoc) {
     return NS_OK;
   }
@@ -299,7 +299,7 @@ nsresult nsOfflineCacheUpdateService::ScheduleUpdate(
 NS_IMETHODIMP
 nsOfflineCacheUpdateService::ScheduleOnDocumentStop(
     nsIURI *aManifestURI, nsIURI *aDocumentURI, nsIPrincipal *aLoadingPrincipal,
-    nsIDocument *aDocument) {
+    Document *aDocument) {
   LOG(
       ("nsOfflineCacheUpdateService::ScheduleOnDocumentStop [%p, "
        "manifestURI=%p, documentURI=%p doc=%p]",
@@ -429,7 +429,7 @@ nsresult nsOfflineCacheUpdateService::FindUpdate(
 
 nsresult nsOfflineCacheUpdateService::Schedule(
     nsIURI *aManifestURI, nsIURI *aDocumentURI, nsIPrincipal *aLoadingPrincipal,
-    nsIDocument *aDocument, nsPIDOMWindowInner *aWindow,
+    Document *aDocument, nsPIDOMWindowInner *aWindow,
     nsIFile *aCustomProfileDir, nsIOfflineCacheUpdate **aUpdate) {
   nsCOMPtr<nsIOfflineCacheUpdate> update;
   if (GeckoProcessType_Default != XRE_GetProcessType()) {

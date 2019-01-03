@@ -134,7 +134,7 @@ void FocusManager::NotifyOfDOMBlur(nsISupports* aTarget) {
   // the case when no element within this DOM document will be focused.
   nsCOMPtr<nsINode> targetNode(do_QueryInterface(aTarget));
   if (targetNode && targetNode->OwnerDoc() == FocusedDOMDocument()) {
-    nsIDocument* DOMDoc = targetNode->OwnerDoc();
+    dom::Document* DOMDoc = targetNode->OwnerDoc();
     DocAccessible* document = GetAccService()->GetDocAccessible(DOMDoc);
     if (document) {
       // Clear selection listener for previously focused element.
@@ -376,7 +376,7 @@ nsINode* FocusManager::FocusedDOMNode() const {
   return focusedWnd ? focusedWnd->GetExtantDoc() : nullptr;
 }
 
-nsIDocument* FocusManager::FocusedDOMDocument() const {
+dom::Document* FocusManager::FocusedDOMDocument() const {
   nsINode* focusedNode = FocusedDOMNode();
   return focusedNode ? focusedNode->OwnerDoc() : nullptr;
 }

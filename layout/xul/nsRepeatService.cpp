@@ -13,7 +13,7 @@
 
 #include "nsRepeatService.h"
 #include "mozilla/StaticPtr.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIServiceManager.h"
 
 using namespace mozilla;
@@ -38,7 +38,7 @@ nsRepeatService::~nsRepeatService() {
 /*static*/ void nsRepeatService::Shutdown() { gRepeatService = nullptr; }
 
 void nsRepeatService::Start(Callback aCallback, void* aCallbackData,
-                            nsIDocument* aDocument,
+                            dom::Document* aDocument,
                             const nsACString& aCallbackName,
                             uint32_t aInitialDelay) {
   MOZ_ASSERT(aCallback != nullptr, "null ptr");

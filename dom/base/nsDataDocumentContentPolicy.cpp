@@ -15,7 +15,7 @@
 #include "nsNetUtil.h"
 #include "nsIProtocolHandler.h"
 #include "nsScriptSecurityManager.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsINode.h"
 #include "nsIDOMWindow.h"
 #include "nsIURI.h"
@@ -48,7 +48,7 @@ nsDataDocumentContentPolicy::ShouldLoad(nsIURI *aContentLocation,
 
   *aDecision = nsIContentPolicy::ACCEPT;
   // Look for the document.  In most cases, requestingContext is a node.
-  nsCOMPtr<nsIDocument> doc;
+  nsCOMPtr<mozilla::dom::Document> doc;
   nsCOMPtr<nsINode> node = do_QueryInterface(requestingContext);
   if (node) {
     doc = node->OwnerDoc();
@@ -74,7 +74,7 @@ nsDataDocumentContentPolicy::ShouldLoad(nsIURI *aContentLocation,
     }
   }
 
-  nsIDocument *docToCheckForImage = doc->GetDisplayDocument();
+  mozilla::dom::Document *docToCheckForImage = doc->GetDisplayDocument();
   if (!docToCheckForImage) {
     docToCheckForImage = doc;
   }

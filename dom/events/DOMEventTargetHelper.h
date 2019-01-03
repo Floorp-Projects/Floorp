@@ -19,13 +19,12 @@
 #include "mozilla/LinkedList.h"
 #include "mozilla/dom/EventTarget.h"
 
-class nsIDocument;
-
 namespace mozilla {
 
 class ErrorResult;
 
 namespace dom {
+class Document;
 class Event;
 }  // namespace dom
 
@@ -146,7 +145,7 @@ class DOMEventTargetHelper : public dom::EventTarget,
   nsPIDOMWindowInner* GetWindowIfCurrent() const;
   // Returns the document associated with this event target, if that document is
   // the current document of its browsing context.  Will return null otherwise.
-  nsIDocument* GetDocumentIfCurrent() const;
+  mozilla::dom::Document* GetDocumentIfCurrent() const;
 
   // DETH subclasses may override the BindToOwner(nsIGlobalObject*) method
   // to take action when dynamically binding to a new global.  This is only

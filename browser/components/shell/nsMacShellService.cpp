@@ -5,7 +5,7 @@
 
 #include "nsDirectoryServiceDefs.h"
 #include "nsIImageLoadingContent.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIContent.h"
 #include "nsILocalFileMac.h"
 #include "nsIObserverService.h"

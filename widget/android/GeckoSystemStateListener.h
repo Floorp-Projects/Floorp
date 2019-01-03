@@ -7,7 +7,7 @@
 #define GeckoSystemStateListener_h
 
 #include "GeneratedJNINatives.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIPresShell.h"
 #include "nsIWindowMediator.h"
 #include "nsPIDOMWindow.h"
@@ -43,7 +43,7 @@ class GeckoSystemStateListener final
         if (window->Closed()) {
           continue;
         }
-        if (nsIDocument* doc = window->GetExtantDoc()) {
+        if (dom::Document* doc = window->GetExtantDoc()) {
           if (nsIPresShell* presShell = doc->GetShell()) {
             presShell->ThemeChanged();
           }

@@ -11,7 +11,7 @@
 #include "mozilla/css/GroupRule.h"
 #include "mozilla/dom/DocumentOrShadowRoot.h"
 #include "nsCCUncollectableMarker.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsWrapperCacheInlines.h"
 
 using namespace mozilla;

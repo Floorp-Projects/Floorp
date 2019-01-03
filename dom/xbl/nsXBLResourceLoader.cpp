@@ -6,7 +6,7 @@
 
 #include "nsTArray.h"
 #include "nsString.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIContent.h"
 #include "nsIPresShell.h"
 #include "nsXBLService.h"
@@ -81,7 +81,7 @@ bool nsXBLResourceLoader::LoadResources(nsIContent* aBoundElement) {
   mLoadingResources = true;
 
   // Declare our loaders.
-  nsCOMPtr<nsIDocument> doc = mBinding->XBLDocumentInfo()->GetDocument();
+  nsCOMPtr<Document> doc = mBinding->XBLDocumentInfo()->GetDocument();
   mBoundDocument = aBoundElement->OwnerDoc();
 
   mozilla::css::Loader* cssLoader = doc->CSSLoader();
@@ -209,7 +209,7 @@ void nsXBLResourceLoader::NotifyBoundElements() {
       continue;
     }
 
-    nsIDocument* doc = content->GetUncomposedDoc();
+    Document* doc = content->GetUncomposedDoc();
     if (!doc) {
       continue;
     }

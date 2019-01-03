@@ -28,7 +28,7 @@
 #include "mozilla/dom/SVGAnimatedLength.h"
 #include "nsMimeTypes.h"
 #include "DOMSVGLength.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/ImageTracker.h"
 
 namespace mozilla {
@@ -102,7 +102,7 @@ bool SVGDocumentWrapper::IsAnimated() {
     return false;
   }
 
-  nsIDocument* doc = mViewer->GetDocument();
+  Document* doc = mViewer->GetDocument();
   if (!doc) {
     return false;
   }
@@ -127,7 +127,7 @@ void SVGDocumentWrapper::StartAnimation() {
     return;
   }
 
-  nsIDocument* doc = mViewer->GetDocument();
+  Document* doc = mViewer->GetDocument();
   if (doc) {
     SMILAnimationController* controller = doc->GetAnimationController();
     if (controller) {
@@ -144,7 +144,7 @@ void SVGDocumentWrapper::StopAnimation() {
     return;
   }
 
-  nsIDocument* doc = mViewer->GetDocument();
+  Document* doc = mViewer->GetDocument();
   if (doc) {
     SMILAnimationController* controller = doc->GetAnimationController();
     if (controller) {
@@ -374,7 +374,7 @@ SVGDocument* SVGDocumentWrapper::GetDocument() {
   if (!mViewer) {
     return nullptr;
   }
-  nsIDocument* doc = mViewer->GetDocument();
+  Document* doc = mViewer->GetDocument();
   if (!doc) {
     return nullptr;
   }
@@ -386,7 +386,7 @@ SVGSVGElement* SVGDocumentWrapper::GetRootSVGElem() {
     return nullptr;  // Can happen during destruction
   }
 
-  nsIDocument* doc = mViewer->GetDocument();
+  Document* doc = mViewer->GetDocument();
   if (!doc) {
     return nullptr;  // Can happen during destruction
   }

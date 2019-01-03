@@ -426,7 +426,7 @@ dictionary MozProxyInfo {
  * url represents the parent of the loading window.
  * frameId is the outerWindowID for the parent of the loading window.
  *
- * For further details see nsILoadInfo.idl and nsIDocument::AncestorPrincipals.
+ * For further details see nsILoadInfo.idl and Document::AncestorPrincipals.
  */
 dictionary MozFrameAncestorInfo {
   required ByteString url;

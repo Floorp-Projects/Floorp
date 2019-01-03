@@ -2486,7 +2486,7 @@ bool ReportLenientThisUnwrappingFailure(JSContext* cx, JSObject* obj) {
   nsCOMPtr<nsPIDOMWindowInner> window =
       do_QueryInterface(global.GetAsSupports());
   if (window && window->GetDoc()) {
-    window->GetDoc()->WarnOnceAbout(nsIDocument::eLenientThis);
+    window->GetDoc()->WarnOnceAbout(Document::eLenientThis);
   }
   return true;
 }
@@ -3552,7 +3552,7 @@ bool HTMLConstructor(JSContext* aCx, unsigned aArgc, JS::Value* aVp,
   // Technically, per spec, a window always has a document.  In Gecko, a
   // sufficiently torn-down window might not, so check for that case.  We're
   // going to need a document to create an element.
-  nsIDocument* doc = window->GetExtantDoc();
+  Document* doc = window->GetExtantDoc();
   if (!doc) {
     return Throw(aCx, NS_ERROR_UNEXPECTED);
   }
@@ -3825,7 +3825,7 @@ static const char* kDeprecatedOperations[] = {
 #undef DEPRECATED_OPERATION
 
 void ReportDeprecation(nsPIDOMWindowInner* aWindow, nsIURI* aURI,
-                       nsIDocument::DeprecatedOperations aOperation,
+                       Document::DeprecatedOperations aOperation,
                        const nsAString& aFileName,
                        const Nullable<uint32_t>& aLineNumber,
                        const Nullable<uint32_t>& aColumnNumber) {
@@ -3876,7 +3876,7 @@ void ReportDeprecation(nsPIDOMWindowInner* aWindow, nsIURI* aURI,
 }
 
 void MaybeReportDeprecation(nsPIDOMWindowInner* aWindow,
-                            nsIDocument::DeprecatedOperations aOperation,
+                            Document::DeprecatedOperations aOperation,
                             const nsAString& aFileName,
                             const Nullable<uint32_t>& aLineNumber,
                             const Nullable<uint32_t>& aColumnNumber) {
@@ -3903,11 +3903,10 @@ void MaybeReportDeprecation(nsPIDOMWindowInner* aWindow,
 // console running on the main-thread.
 class DeprecationWarningRunnable final
     : public WorkerProxyToMainThreadRunnable {
-  const nsIDocument::DeprecatedOperations mOperation;
+  const Document::DeprecatedOperations mOperation;
 
  public:
-  explicit DeprecationWarningRunnable(
-      nsIDocument::DeprecatedOperations aOperation)
+  explicit DeprecationWarningRunnable(Document::DeprecatedOperations aOperation)
       : mOperation(aOperation) {}
 
  private:
@@ -3934,7 +3933,7 @@ class DeprecationWarningRunnable final
 }  // anonymous namespace
 
 void DeprecationWarning(JSContext* aCx, JSObject* aObject,
-                        nsIDocument::DeprecatedOperations aOperation) {
+                        Document::DeprecatedOperations aOperation) {
   GlobalObject global(aCx, aObject);
   if (global.Failed()) {
     NS_ERROR("Could not create global for DeprecationWarning");
@@ -3945,7 +3944,7 @@ void DeprecationWarning(JSContext* aCx, JSObject* aObject,
 }
 
 void DeprecationWarning(const GlobalObject& aGlobal,
-                        nsIDocument::DeprecatedOperations aOperation) {
+                        Document::DeprecatedOperations aOperation) {
   if (NS_IsMainThread()) {
     nsCOMPtr<nsPIDOMWindowInner> window =
         do_QueryInterface(aGlobal.GetAsSupports());

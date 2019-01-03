@@ -22,7 +22,7 @@
 #include "nsFrameSelection.h"
 #include "nsError.h"
 #include "nsGkAtoms.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIFrame.h"
 #include "nsIPresShell.h"
 #include "nsISVGSVGFrame.h"  //XXX

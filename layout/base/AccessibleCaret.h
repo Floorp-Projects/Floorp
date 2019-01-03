@@ -19,7 +19,6 @@
 #include "mozilla/RefPtr.h"
 #include "nsString.h"
 
-class nsIDocument;
 class nsIFrame;
 class nsIPresShell;
 struct nsPoint;
@@ -162,14 +161,13 @@ class AccessibleCaret {
   // Transform Appearance to CSS id used in ua.css.
   static nsAutoString AppearanceString(Appearance aAppearance);
 
-  already_AddRefed<dom::Element> CreateCaretElement(
-      nsIDocument* aDocument) const;
+  already_AddRefed<dom::Element> CreateCaretElement(dom::Document*) const;
 
   // Inject caret element into custom content container.
-  void InjectCaretElement(nsIDocument* aDocument);
+  void InjectCaretElement(dom::Document*);
 
   // Remove caret element from custom content container.
-  void RemoveCaretElement(nsIDocument* aDocument);
+  void RemoveCaretElement(dom::Document*);
 
   // The top-center of the imaginary caret to which this AccessibleCaret is
   // attached.
