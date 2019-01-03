@@ -179,7 +179,7 @@ class MediaManager final : public nsIMediaManagerService,
   NS_DECL_NSIMEDIAMANAGERSERVICE
 
   media::Parent<media::NonE10s>* GetNonE10sParent();
-  MediaEngine* GetBackend(uint64_t aWindowId = 0);
+  MediaEngine* GetBackend();
 
   WindowTable* GetActiveWindows() {
     MOZ_ASSERT(NS_IsMainThread());
