@@ -430,7 +430,7 @@ async function getWorkers(dbg) {
     getState
   } = dbg;
 
-  return getWorkers(getState()).toJS();
+  return getWorkers(getState());
 }
 
 async function waitForLoadedScopes(dbg) {

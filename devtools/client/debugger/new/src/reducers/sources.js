@@ -17,10 +17,11 @@ import {
   isGenerated,
   isOriginal as isOriginalSource
 } from "../utils/source";
+
 import { originalToGeneratedId } from "devtools-source-map";
 import { prefs } from "../utils/prefs";
 
-import type { Source, SourceId, SourceLocation } from "../types";
+import type { Source, SourceId, SourceLocation, Thread } from "../types";
 import type { PendingSelectedLocation, Selector } from "./types";
 import type { Action, DonePromiseAction, FocusItem } from "../actions/types";
 import type { LoadSourceAction } from "../actions/types/SourceAction";
@@ -142,18 +143,15 @@ function update(
     case "SET_PROJECT_DIRECTORY_ROOT":
       return updateProjectDirectoryRoot(state, action.url);
 
+    case "SET_WORKERS":
+      return addRelativeSourceThreads(state, action.workers);
+
     case "NAVIGATE":
-      const source =
-        state.selectedLocation &&
-        state.sources[state.selectedLocation.sourceId];
+      const newState = initialSourcesState();
+      return addRelativeSourceThread(newState, action.mainThread);
 
-      const url = source && source.url;
-
-      if (!url) {
-        return initialSourcesState();
-      }
-
-      return { ...initialSourcesState(), url };
+    case "CONNECT":
+      return addRelativeSourceThread(state, action.mainThread);
 
     case "SET_FOCUSED_SOURCE_ITEM":
       return { ...state, focusedItem: action.item };
@@ -261,6 +259,25 @@ function updateRelativeSource(
   relativeSources[source.thread][source.id] = relativeSource;
 
   return relativeSources;
+}
+
+function addRelativeSourceThread(state: SourcesState, thread: Thread) {
+  if (getRelativeSourcesForThread({ sources: state }, thread.actor)) {
+    return state;
+  }
+  return {
+    ...state,
+    relativeSources: { ...state.relativeSources, [thread.actor]: {} }
+  };
+}
+
+function addRelativeSourceThreads(state: SourcesState, workers: Thread[]) {
+  let newState = state;
+  for (const worker of workers) {
+    newState = addRelativeSourceThread(newState, worker);
+  }
+
+  return newState;
 }
 
 function updateProjectDirectoryRoot(state: SourcesState, root: string) {

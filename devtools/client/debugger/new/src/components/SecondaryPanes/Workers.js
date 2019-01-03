@@ -2,100 +2,65 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+// @flow
+
 import React, { Component } from "react";
 import { connect } from "../../utils/connect";
-import type { List } from "immutable";
+
+import actions from "../../actions";
+import { getThreads } from "../../selectors";
+import { getDisplayName } from "../../utils/workers";
+import { features } from "../../utils/prefs";
+import Worker from "./Worker";
+import AccessibleImage from "../shared/AccessibleImage";
+
+import type { Thread, Worker as WorkerType } from "../../types";
 
 import "./Workers.css";
 
-import actions from "../../actions";
-import {
-  getMainThread,
-  getCurrentThread,
-  threadIsPaused,
-  getWorkers,
-  getWorkerDisplayName
-} from "../../selectors";
-import { basename } from "../../utils/path";
-import { features } from "../../utils/prefs";
-import type { Worker } from "../../types";
-import AccessibleImage from "../shared/AccessibleImage";
-import classnames from "classnames";
-
 type Props = {
-  selectThread: string => void
+  threads: Thread[],
+  openWorkerToolbox: typeof actions.openWorkerToolbox
 };
 
 export class Workers extends Component<Props> {
-  props: {
-    workers: List<Worker>,
-    openWorkerToolbox: object => void,
-    mainThread: string,
-    currentThread: string
-  };
-
-  renderWorkers(workers, mainThread, currentThread) {
-    if (features.windowlessWorkers) {
-      return [{ actor: mainThread }, ...workers].map(worker => (
-        <div
-          className={classnames(
-            "worker",
-            worker.actor == currentThread && "selected"
-          )}
-          key={worker.actor}
-          onClick={() => this.props.selectThread(worker.actor)}
-        >
-          <AccessibleImage className="domain" />
-          {(worker.url
-            ? `${this.props.getWorkerDisplayName(worker.actor)}: ${basename(
-                worker.url
-              )}`
-            : "Main Thread") +
-            (this.props.threadIsPaused(worker.actor) ? " PAUSED" : "")}
-        </div>
-      ));
-    }
+  renderWorker(thread: WorkerType) {
     const { openWorkerToolbox } = this.props;
-    return workers.map(worker => (
+
+    return (
       <div
         className="worker"
-        key={worker.actor}
-        onClick={() => openWorkerToolbox(worker)}
+        key={thread.actor}
+        onClick={() => openWorkerToolbox(thread)}
       >
-        <AccessibleImage className="domain" />
-        {basename(worker.url)}
+        <div className="icon">
+          <AccessibleImage className={"worker"} />
+        </div>
+        <div className="label">{getDisplayName(thread)}</div>
       </div>
-    ));
-  }
-
-  renderNoWorkersPlaceholder() {
-    return <div className="pane-info">{L10N.getStr("noWorkersText")}</div>;
+    );
   }
 
   render() {
-    const { workers, mainThread, currentThread } = this.props;
-    return (
-      <div className="pane workers-list">
-        {workers && workers.size > 0
-          ? this.renderWorkers(workers, mainThread, currentThread)
-          : this.renderNoWorkersPlaceholder()}
-      </div>
-    );
+    const { threads } = this.props;
+
+    const workerList = features.windowlessWorkers
+      ? threads.map(thread => <Worker thread={thread} key={thread.actor} />)
+      : threads
+          .filter((thread: any) => thread.actorID)
+          .map(worker => this.renderWorker((worker: any)));
+
+    return <div className="pane workers-list">{workerList}</div>;
   }
 }
 
 const mapStateToProps = state => ({
-  workers: getWorkers(state),
-  getWorkerDisplayName: thread => getWorkerDisplayName(state, thread),
-  mainThread: getMainThread(state),
-  currentThread: getCurrentThread(state),
-  threadIsPaused: thread => threadIsPaused(state, thread)
+  threads: getThreads(state)
 });
 
 export default connect(
   mapStateToProps,
   {
-    openWorkerToolbox: actions.openWorkerToolbox,
-    selectThread: actions.selectThread
+    openWorkerToolbox: actions.openWorkerToolbox
   }
 )(Workers);

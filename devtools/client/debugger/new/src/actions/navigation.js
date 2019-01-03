@@ -20,7 +20,7 @@ import {
 } from "../workers/parser";
 
 import { clearWasmStates } from "../utils/wasm";
-
+import { getMainThread } from "../selectors";
 import type { Action, ThunkArgs } from "./types";
 
 /**
@@ -45,19 +45,28 @@ export function willNavigate(event: Object) {
   };
 }
 
-export function navigate(url: string): Action {
-  sourceQueue.clear();
+export function navigate(url: string) {
+  return async function({ dispatch, getState }: ThunkArgs) {
+    sourceQueue.clear();
+    const thread = getMainThread(getState());
 
-  return {
-    type: "NAVIGATE",
-    url
+    dispatch({
+      type: "NAVIGATE",
+      mainThread: { ...thread, url }
+    });
   };
 }
 
-export function connect(url: string, thread: string, canRewind: boolean) {
+export function connect(url: string, actor: string, canRewind: boolean) {
   return async function({ dispatch }: ThunkArgs) {
     await dispatch(updateWorkers());
-    dispatch(({ type: "CONNECT", url, thread, canRewind }: Action));
+    dispatch(
+      ({
+        type: "CONNECT",
+        mainThread: { url, actor, type: -1 },
+        canRewind
+      }: Action)
+    );
   };
 }
 
