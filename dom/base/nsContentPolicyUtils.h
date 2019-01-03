@@ -14,6 +14,8 @@
 #ifndef __nsContentPolicyUtils_h__
 #define __nsContentPolicyUtils_h__
 
+#include "mozilla/BasePrincipal.h"
+
 #include "nsContentUtils.h"
 #include "nsIContentPolicy.h"
 #include "nsIContent.h"
@@ -25,8 +27,6 @@
 // XXXtw sadly, this makes consumers of nsContentPolicyUtils depend on widget
 #include "nsIDocument.h"
 #include "nsPIDOMWindow.h"
-
-class nsIPrincipal;
 
 #define NS_CONTENTPOLICY_CONTRACTID "@mozilla.org/layout/content-policy;1"
 #define NS_CONTENTPOLICY_CATEGORY "content-policy"
@@ -172,7 +172,7 @@ inline const char *NS_CP_ContentTypeName(uint32_t contentType) {
      * from content policy checks, mostly as an optimization. Which means      \
      * that we need to apply this check to the loading principal, not the      \
      * principal that triggered the load. */                                   \
-    bool isSystem = loadingPrincipal->GetIsSystemPrincipal();                  \
+    bool isSystem = loadingPrincipal->IsSystemPrincipal();                     \
     if (isSystem && contentType != nsIContentPolicy::TYPE_DOCUMENT) {          \
       *decision = nsIContentPolicy::ACCEPT;                                    \
       nsCOMPtr<nsINode> n = do_QueryInterface(context);                        \

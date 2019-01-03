@@ -13,6 +13,7 @@
 #include "MediaStreamGraphImpl.h"
 #include "MediaStreamListener.h"
 #include "VideoStreamTrack.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/dom/AudioNode.h"
 #include "mozilla/dom/AudioTrack.h"
 #include "mozilla/dom/AudioTrackList.h"
@@ -732,7 +733,7 @@ void DOMMediaStream::NotifyPrincipalChanged() {
                          this, mPrincipal->GetIsNullPrincipal(),
                          mPrincipal->GetIsCodebasePrincipal(),
                          mPrincipal->GetIsExpandedPrincipal(),
-                         mPrincipal->GetIsSystemPrincipal()));
+                         mPrincipal->IsSystemPrincipal()));
   }
 
   for (uint32_t i = 0; i < mPrincipalChangeObservers.Length(); ++i) {
