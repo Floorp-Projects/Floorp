@@ -19,7 +19,7 @@ def make_beetmover_description(config, jobs):
         dep_job = job['primary-dependency']
         for locale in dep_job.attributes.get('chunk_locales', []):
 
-            group = 'BM-L10n'
+            group = 'BM'
 
             # add the locale code
             symbol = locale

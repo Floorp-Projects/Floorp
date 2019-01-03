@@ -37,26 +37,29 @@ add_task(async function getFilterContext() {
     "version",
   ];
   for (const key of expectedNormandyKeys) {
+    ok(key in context.environment, `environment.${key} is available`);
     ok(key in context.normandy, `normandy.${key} is available`);
   }
+  Assert.deepEqual(context.normandy, context.environment,
+                   "context offers normandy as backwards-compatible alias for context.environment");
 
   is(
-    context.normandy.recipe.id,
+    context.environment.recipe.id,
     recipe.id,
-    "normandy.recipe is the recipe passed to getFilterContext",
+    "environment.recipe is the recipe passed to getFilterContext",
   );
   delete recipe.unrelated;
   Assert.deepEqual(
-    context.normandy.recipe,
+    context.environment.recipe,
     recipe,
-    "normandy.recipe drops unrecognized attributes from the recipe",
+    "environment.recipe drops unrecognized attributes from the recipe",
   );
 
   // Filter context attributes are cached.
   await SpecialPowers.pushPrefEnv({set: [["app.normandy.user_id", "some id"]]});
-  is(context.normandy.userId, "some id", "User id is read from prefs when accessed");
+  is(context.environment.userId, "some id", "User id is read from prefs when accessed");
   await SpecialPowers.pushPrefEnv({set: [["app.normandy.user_id", "real id"]]});
-  is(context.normandy.userId, "some id", "userId was cached");
+  is(context.environment.userId, "some id", "userId was cached");
 
 });
 

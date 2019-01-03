@@ -1123,17 +1123,24 @@ static bool WillHandleInput(const PanGestureOrScrollWheelInput& aPanInput) {
   return APZInputBridge::ActionForWheelEvent(&wheelEvent).isSome();
 }
 
-void APZCTreeManager::FlushApzRepaints(LayersId aLayersId) {
+/*static*/ void APZCTreeManager::FlushApzRepaints(LayersId aLayersId) {
   // Previously, paints were throttled and therefore this method was used to
   // ensure any pending paints were flushed. Now, paints are flushed
   // immediately, so it is safe to simply send a notification now.
   APZCTM_LOG("Flushing repaints for layers id 0x%" PRIx64 "\n",
              uint64_t(aLayersId));
   RefPtr<GeckoContentController> controller = GetContentController(aLayersId);
+#ifndef MOZ_WIDGET_ANDROID
+  // On Android, this code is run in production and may actually get a nullptr
+  // controller here. On other platforms this code is test-only and should never
+  // get a nullptr.
   MOZ_ASSERT(controller);
-  controller->DispatchToRepaintThread(NewRunnableMethod(
-      "layers::GeckoContentController::NotifyFlushComplete", controller,
-      &GeckoContentController::NotifyFlushComplete));
+#endif
+  if (controller) {
+    controller->DispatchToRepaintThread(NewRunnableMethod(
+        "layers::GeckoContentController::NotifyFlushComplete", controller,
+        &GeckoContentController::NotifyFlushComplete));
+  }
 }
 
 nsEventStatus APZCTreeManager::ReceiveInputEvent(
@@ -3075,8 +3082,8 @@ already_AddRefed<wr::WebRenderAPI> APZCTreeManager::GetWebRenderAPI() const {
   return api.forget();
 }
 
-already_AddRefed<GeckoContentController> APZCTreeManager::GetContentController(
-    LayersId aLayersId) const {
+/*static*/ already_AddRefed<GeckoContentController>
+APZCTreeManager::GetContentController(LayersId aLayersId) {
   RefPtr<GeckoContentController> controller;
   CompositorBridgeParent::CallWithIndirectShadowTree(
       aLayersId,

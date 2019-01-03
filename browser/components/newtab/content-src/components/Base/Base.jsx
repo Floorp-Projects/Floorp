@@ -3,6 +3,7 @@ import {addLocaleData, injectIntl, IntlProvider} from "react-intl";
 import {ASRouterAdmin} from "content-src/components/ASRouterAdmin/ASRouterAdmin";
 import {ConfirmDialog} from "content-src/components/ConfirmDialog/ConfirmDialog";
 import {connect} from "react-redux";
+import {DiscoveryStreamBase} from "content-src/components/DiscoveryStreamBase/DiscoveryStreamBase";
 import {ErrorBoundary} from "content-src/components/ErrorBoundary/ErrorBoundary";
 import {ManualMigration} from "content-src/components/ManualMigration/ManualMigration";
 import {PrerenderData} from "common/PrerenderData.jsm";
@@ -82,10 +83,11 @@ export class _Base extends React.PureComponent {
 
     const prefs = props.Prefs.values;
     if (prefs["asrouter.devtoolsEnabled"]) {
-      if (window.location.hash === "#asrouter") {
+      if (window.location.hash.startsWith("#asrouter") ||
+          window.location.hash.startsWith("#devtools")) {
         return (<ASRouterAdmin />);
       }
-      console.log("ASRouter devtools enabled. To access visit %cabout:newtab#asrouter", "font-weight: bold"); // eslint-disable-line no-console
+      console.log("Activity Stream devtools enabled. To access visit %cabout:newtab#devtools", "font-weight: bold"); // eslint-disable-line no-console
     }
 
     if (!props.isPrerendered && !initialized) {
@@ -138,6 +140,8 @@ export class BaseContent extends React.PureComponent {
 
     const shouldBeFixedToTop = PrerenderData.arePrefsValid(name => prefs[name]);
     const noSectionsEnabled = !prefs["feeds.topsites"] && props.Sections.filter(section => section.enabled).length === 0;
+    const isDiscoveryStream = props.DiscoveryStream.config && props.DiscoveryStream.config.enabled;
+    const searchHandoffEnabled = prefs["improvesearch.handoffToAwesomebar"];
 
     const outerClassName = [
       "outer-wrapper",
@@ -153,17 +157,17 @@ export class BaseContent extends React.PureComponent {
             {prefs.showSearch &&
               <div className="non-collapsible-section">
                 <ErrorBoundary>
-                  <Search showLogo={noSectionsEnabled} />
+                  <Search showLogo={noSectionsEnabled} handoffEnabled={searchHandoffEnabled} {...props.Search} />
                 </ErrorBoundary>
               </div>
             }
             <div className={`body-wrapper${(initialized ? " on" : "")}`}>
-              {!prefs.migrationExpired &&
+              {!isDiscoveryStream && !prefs.migrationExpired &&
                 <div className="non-collapsible-section">
                   <ManualMigration />
                 </div>
                 }
-              <Sections />
+              {isDiscoveryStream ? <DiscoveryStreamBase /> : <Sections />}
               <PrefsButton onClick={this.openPreferences} />
             </div>
             <ConfirmDialog />
@@ -173,4 +177,10 @@ export class BaseContent extends React.PureComponent {
   }
 }
 
-export const Base = connect(state => ({App: state.App, Prefs: state.Prefs, Sections: state.Sections}))(_Base);
+export const Base = connect(state => ({
+  App: state.App,
+  Prefs: state.Prefs,
+  Sections: state.Sections,
+  DiscoveryStream: state.DiscoveryStream,
+  Search: state.Search,
+}))(_Base);

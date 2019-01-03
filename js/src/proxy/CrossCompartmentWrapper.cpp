@@ -460,6 +460,17 @@ JS_FRIEND_API void js::NukeCrossCompartmentWrapper(JSContext* cx,
   NukeRemovedCrossCompartmentWrapper(cx, wrapper);
 }
 
+JS_FRIEND_API void js::NukeCrossCompartmentWrapperIfExists(
+    JSContext* cx, JS::Compartment* source, JSObject* target) {
+  MOZ_ASSERT(source != target->compartment());
+  MOZ_ASSERT(!target->is<CrossCompartmentWrapperObject>());
+  auto ptr = source->lookupWrapper(target);
+  if (ptr) {
+    JSObject* wrapper = &ptr->value().get().toObject();
+    NukeCrossCompartmentWrapper(cx, wrapper);
+  }
+}
+
 // Returns true iff all realms in the compartment have been nuked.
 static bool NukedAllRealms(JS::Compartment* comp) {
   for (RealmsInCompartmentIter realm(comp); !realm.done(); realm.next()) {
@@ -604,6 +615,7 @@ void js::RemapWrapper(JSContext* cx, JSObject* wobjArg,
              "We don't want a dead proxy in the wrapper map");
   Value origv = ObjectValue(*origTarget);
   JS::Compartment* wcompartment = wobj->compartment();
+  MOZ_ASSERT(wcompartment != newTarget->compartment());
 
   AutoDisableProxyCheck adpc;
 

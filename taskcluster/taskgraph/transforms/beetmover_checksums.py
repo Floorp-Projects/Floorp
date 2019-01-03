@@ -19,6 +19,7 @@ from taskgraph.util.scriptworker import (generate_beetmover_artifact_map,
                                          get_worker_type_for_scope,
                                          should_use_artifact_map)
 from voluptuous import Optional, Required
+from taskgraph.util.treeherder import replace_group
 from taskgraph.transforms.task import task_description_schema
 
 # Voluptuous uses marker objects as dictionary *keys*, but they are not
@@ -46,7 +47,10 @@ def make_beetmover_checksums_description(config, jobs):
         attributes = dep_job.attributes
 
         treeherder = job.get('treeherder', {})
-        treeherder.setdefault('symbol', 'BMcs(N)')
+        treeherder.setdefault(
+            'symbol',
+            replace_group(dep_job.task['extra']['treeherder']['symbol'], 'BMcs')
+        )
         dep_th_platform = dep_job.task.get('extra', {}).get(
             'treeherder', {}).get('machine', {}).get('platform', '')
         treeherder.setdefault('platform',

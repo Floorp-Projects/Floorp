@@ -29,6 +29,7 @@ const {TopSitesFeed} = ChromeUtils.import("resource://activity-stream/lib/TopSit
 const {TopStoriesFeed} = ChromeUtils.import("resource://activity-stream/lib/TopStoriesFeed.jsm", {});
 const {HighlightsFeed} = ChromeUtils.import("resource://activity-stream/lib/HighlightsFeed.jsm", {});
 const {ASRouterFeed} = ChromeUtils.import("resource://activity-stream/lib/ASRouterFeed.jsm", {});
+const {DiscoveryStreamFeed} = ChromeUtils.import("resource://activity-stream/lib/DiscoveryStreamFeed.jsm", {});
 
 const DEFAULT_SITES = new Map([
   // This first item is the global list fallback for any unexpected geos
@@ -192,6 +193,10 @@ const PREFS_CONFIG = new Map([
     title: "A comma-delimited list of search shortcuts that have previously been pinned",
     value: "",
   }],
+  ["improvesearch.handoffToAwesomebar", {
+    title: "Should the search box handoff to the Awesomebar?",
+    value: true,
+  }],
   ["asrouter.devtoolsEnabled", {
     title: "Are the asrouter devtools enabled?",
     value: false,
@@ -210,6 +215,14 @@ const PREFS_CONFIG = new Map([
     }),
   }],
   // See browser/app/profile/firefox.js for other ASR preferences. They must be defined there to enable roll-outs.
+  ["discoverystream.config", {
+    title: "Configuration for the new pocket new tab",
+    value: JSON.stringify({
+      enabled: false,
+      // Set this to https://gist.githubusercontent.com/ScottDowne/164995d9535b4203846048bdee29d169/raw/0cf538411e6ee898eb116208d70842c62c8d52f1/spoc.json to test
+      layout_endpoint: "",
+    }),
+  }],
 ]);
 
 // Array of each feed's FEEDS_CONFIG factory and values to add to PREFS_CONFIG
@@ -304,6 +317,12 @@ const FEEDS_DATA = [
     name: "asrouterfeed",
     factory: () => new ASRouterFeed(),
     title: "Handles AS Router messages, such as snippets and onboaridng",
+    value: true,
+  },
+  {
+    name: "discoverystreamfeed",
+    factory: () => new DiscoveryStreamFeed(),
+    title: "Handles new pocket ui for the new tab page",
     value: true,
   },
 ];

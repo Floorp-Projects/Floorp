@@ -21,7 +21,7 @@ use picture::SurfaceInfo;
 use prim_store::{PrimitiveStore, DeferredResolve, PrimitiveScratchBuffer};
 use profiler::FrameProfileCounters;
 use render_backend::{FrameId, FrameResources};
-use render_task::{BlitSource, RenderTaskAddress, RenderTaskId, RenderTaskKind, TileBlit};
+use render_task::{BlitSource, RenderTaskAddress, RenderTaskId, RenderTaskKind};
 use render_task::{BlurTask, ClearMode, GlyphTask, RenderTaskLocation, RenderTaskTree, ScalingTask};
 use resource_cache::ResourceCache;
 use std::{cmp, usize, f32, i32, mem};
@@ -343,7 +343,6 @@ pub struct ColorRenderTarget {
     pub blits: Vec<BlitJob>,
     // List of frame buffer outputs for this render target.
     pub outputs: Vec<FrameOutput>,
-    pub tile_blits: Vec<TileBlit>,
     pub color_clears: Vec<RenderTaskId>,
     alpha_tasks: Vec<RenderTaskId>,
     screen_size: DeviceIntSize,
@@ -365,7 +364,6 @@ impl RenderTarget for ColorRenderTarget {
             outputs: Vec::new(),
             alpha_tasks: Vec::new(),
             color_clears: Vec::new(),
-            tile_blits: Vec::new(),
             screen_size,
             used_rect: DeviceIntRect::zero(),
         }
@@ -403,10 +401,15 @@ impl RenderTarget for ColorRenderTarget {
 
                     let (target_rect, _) = task.get_target_rect();
 
+                    let scisor_rect = if pic_task.can_merge {
+                        None
+                    } else {
+                        Some(target_rect)
+                    };
+
                     let mut batch_builder = AlphaBatchBuilder::new(
                         self.screen_size,
-                        target_rect,
-                        pic_task.can_merge,
+                        scisor_rect,
                     );
 
                     batch_builder.add_pic_to_batch(
@@ -422,21 +425,10 @@ impl RenderTarget for ColorRenderTarget {
                         z_generator,
                     );
 
-                    for blit in &pic_task.blits {
-                        self.tile_blits.push(TileBlit {
-                            dest_offset: blit.dest_offset,
-                            size: blit.size,
-                            target: blit.target.clone(),
-                            src_offset: DeviceIntPoint::new(
-                                blit.src_offset.x + target_rect.origin.x,
-                                blit.src_offset.y + target_rect.origin.y,
-                            ),
-                        })
-                    }
-
-                    if let Some(batch_container) = batch_builder.build(&mut merged_batches) {
-                        self.alpha_batch_containers.push(batch_container);
-                    }
+                    batch_builder.build(
+                        &mut self.alpha_batch_containers,
+                        &mut merged_batches,
+                    );
                 }
                 _ => {
                     unreachable!();
@@ -444,7 +436,9 @@ impl RenderTarget for ColorRenderTarget {
             }
         }
 
-        self.alpha_batch_containers.push(merged_batches);
+        if !merged_batches.is_empty() {
+            self.alpha_batch_containers.push(merged_batches);
+        }
     }
 
     fn add_task(
@@ -552,7 +546,9 @@ impl RenderTarget for ColorRenderTarget {
     }
 
     fn must_be_drawn(&self) -> bool {
-        !self.tile_blits.is_empty()
+        self.alpha_batch_containers.iter().any(|ab| {
+            !ab.tile_blits.is_empty()
+        })
     }
 
     fn needs_depth(&self) -> bool {

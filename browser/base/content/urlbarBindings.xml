@@ -292,7 +292,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
       <method name="onKeyPress">
         <parameter name="aEvent"/>
-        <parameter name="aNoDefer"/>
+        <parameter name="aOptions"/>
         <body><![CDATA[
           switch (aEvent.keyCode) {
             case KeyEvent.DOM_VK_LEFT:
@@ -333,14 +333,15 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             }
           }
 
-          if (!aNoDefer && this._shouldDeferKeyEvent(aEvent)) {
+          let noDefer = aOptions && aOptions.noDefer;
+          if (!noDefer && this._shouldDeferKeyEvent(aEvent)) {
             this._deferKeyEvent(aEvent, "onKeyPress");
             return false;
           }
           if (this.popup.popupOpen && this.popup.handleKeyPress(aEvent)) {
             return true;
           }
-          return this.handleKeyPress(aEvent);
+          return this.handleKeyPress(aEvent, aOptions);
         ]]></body>
       </method>
 
@@ -455,9 +456,11 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                The key event to defer.
         @param methodName
                The name of the method on `this` to call.  It's expected to take
-               two arguments: the event, and a noDefer bool.  If the bool is
-               true, then the event is being replayed and it should not be
-               deferred.
+               two arguments: the event, and an optional options object:
+               {
+                  noDefer: If true, then the event is being replayed and it
+                           should not be deferred again.
+               }
       -->
       <method name="_deferKeyEvent">
         <parameter name="event"/>
@@ -549,7 +552,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         <body><![CDATA[
           // Safety check: handle only if the search string didn't change.
           if (this.mController.searchString == instance.searchString) {
-            this[instance.methodName](instance.event, true);
+            this[instance.methodName](instance.event, {noDefer: true});
           }
         ]]></body>
       </method>
@@ -1523,7 +1526,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
       <method name="handleEnter">
         <parameter name="event"/>
-        <parameter name="noDefer"/>
+        <parameter name="options"/>
         <body><![CDATA[
           // We need to ensure we're using a selected autocomplete result.
           // A result should automatically be selected by default,
@@ -1543,6 +1546,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           // which will be called as a result of mController.handleEnter().
           this.handleEnterSearchString = this.mController.searchString;
 
+          let noDefer = options && options.noDefer;
           if (!noDefer && this._shouldDeferKeyEvent(event)) {
             // Defer the event until the first non-heuristic result comes in.
             this._deferKeyEvent(event, "handleEnter");
