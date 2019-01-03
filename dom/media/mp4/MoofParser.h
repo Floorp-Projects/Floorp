@@ -233,6 +233,7 @@ class Moof final : public Atom {
       mFragmentSampleEncryptionInfoEntries;
   FallibleTArray<SampleToGroupEntry> mFragmentSampleToGroupEntries;
 
+  Tfhd mTfhd;
   FallibleTArray<Saiz> mSaizs;
   FallibleTArray<Saio> mSaios;
   nsTArray<nsTArray<uint8_t>> mPsshes;
@@ -242,9 +243,9 @@ class Moof final : public Atom {
   void ParseTraf(Box& aBox, Trex& aTrex, Mvhd& aMvhd, Mdhd& aMdhd, Edts& aEdts,
                  Sinf& aSinf, uint64_t* aDecodeTime, bool aIsAudio);
   // aDecodeTime is updated to the end of the parsed TRUN on return.
-  Result<Ok, nsresult> ParseTrun(Box& aBox, Tfhd& aTfhd, Mvhd& aMvhd,
-                                 Mdhd& aMdhd, Edts& aEdts,
-                                 uint64_t* aDecodeTime, bool aIsAudio);
+  Result<Ok, nsresult> ParseTrun(Box& aBox, Mvhd& aMvhd, Mdhd& aMdhd,
+                                 Edts& aEdts, uint64_t* aDecodeTime,
+                                 bool aIsAudio);
   bool ProcessCenc();
   uint64_t mMaxRoundingError;
 };
