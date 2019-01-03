@@ -103,7 +103,7 @@ pub struct ClipDataMarker;
 pub type ClipDataStore = intern::DataStore<ClipItemKey, ClipNode, ClipDataMarker>;
 pub type ClipDataHandle = intern::Handle<ClipDataMarker>;
 pub type ClipDataUpdateList = intern::UpdateList<ClipItemKey>;
-pub type ClipDataInterner = intern::Interner<ClipItemKey, ClipItemSceneData, ClipDataMarker>;
+pub type ClipDataInterner = intern::Interner<ClipItemKey, (), ClipDataMarker>;
 
 // Result of comparing a clip node instance against a local rect.
 #[derive(Debug)]
@@ -705,53 +705,6 @@ impl ClipStore {
         self.clip_node_instances.clear();
     }
 
-
-    /// Walk the clip chain of a primitive, and calculate a minimal
-    /// local clip rect for the primitive.
-    #[allow(dead_code)]
-    pub fn build_local_clip_rect(
-        &self,
-        prim_clip_rect: LayoutRect,
-        spatial_node_index: SpatialNodeIndex,
-        clip_chain_id: ClipChainId,
-        clip_interner: &ClipDataInterner,
-    ) -> LayoutRect {
-        let mut clip_rect = prim_clip_rect;
-        let mut current_clip_chain_id = clip_chain_id;
-
-        // for each clip chain node
-        while current_clip_chain_id != ClipChainId::NONE {
-            let clip_chain_node = &self.clip_chain_nodes[current_clip_chain_id.0 as usize];
-
-            // If the clip chain node and the primitive share a spatial node,
-            // then by definition the clip can't move relative to the primitive,
-            // due to scrolling or transform animation. When that constraint
-            // holds, it's fine to include the local clip rect of this
-            // clip node in the local clip rect of the primitive itself. This
-            // is used to minimize the size of any render target allocations
-            // if this primitive ends up being part of an off-screen surface.
-
-            if clip_chain_node.spatial_node_index == spatial_node_index {
-                let clip_data = &clip_interner[clip_chain_node.handle];
-
-                // TODO(gw): For now, if a clip results in the local
-                //           rect of this primitive becoming zero, just
-                //           ignore and continue (it will be culled later
-                //           on). Technically, we could add a code path
-                //           here to drop the primitive immediately, but
-                //           that complicates some of the existing callers
-                //           of build_local_clip_rect.
-                clip_rect = clip_rect
-                    .intersection(&clip_data.clip_rect)
-                    .unwrap_or(LayoutRect::zero());
-            }
-
-            current_clip_chain_id = clip_chain_node.parent_clip_chain_id;
-        }
-
-        clip_rect
-    }
-
     /// Reports the heap usage of this clip store.
     pub fn malloc_size_of(&self, op: VoidPtrToSizeFn) -> usize {
         let mut size = 0;
@@ -824,15 +777,6 @@ impl ClipRegion<Option<ComplexClipRegion>> {
             complex_clips: None,
         }
     }
-}
-
-/// The information about an interned clip item that
-/// is stored and available in the scene builder
-/// thread.
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
-pub struct ClipItemSceneData {
-    pub clip_rect: LayoutRect,
 }
 
 // The ClipItemKey is a hashable representation of the contents
