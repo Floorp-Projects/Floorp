@@ -133,7 +133,6 @@ function Inspector(toolbox) {
   this._onContextMenu = this._onContextMenu.bind(this);
   this._onMarkupFrameLoad = this._onMarkupFrameLoad.bind(this);
   this._updateSearchResultsLabel = this._updateSearchResultsLabel.bind(this);
-  this._updateDebuggerPausedWarning = this._updateDebuggerPausedWarning.bind(this);
 
   this.onDetached = this.onDetached.bind(this);
   this.onHostChanged = this.onHostChanged.bind(this);
@@ -319,13 +318,6 @@ Inspector.prototype = {
     this.selection.on("new-node-front", this.onNewSelection);
     this.selection.on("detached-front", this.onDetached);
 
-    if (this.target.isLocalTab) {
-      this.target.on("thread-paused", this._updateDebuggerPausedWarning);
-      this.target.on("thread-resumed", this._updateDebuggerPausedWarning);
-      this.toolbox.on("select", this._updateDebuggerPausedWarning);
-      this._updateDebuggerPausedWarning();
-    }
-
     // Log the 3 pane inspector setting on inspector open. The question we want to answer
     // is:
     // "What proportion of users use the 3 pane vs 2 pane inspector on inspector open?"
@@ -481,35 +473,6 @@ Inspector.prototype = {
     }
 
     this.searchResultsLabel.textContent = str;
-  },
-
-  /**
-   * Show a warning notification box when the debugger is paused. We show the warning only
-   * when the inspector is selected.
-   */
-  _updateDebuggerPausedWarning: function() {
-    if (!this.toolbox.threadClient.paused && !this._notificationBox) {
-      return;
-    }
-
-    const notificationBox = this.notificationBox;
-    const notification = this.notificationBox.getNotificationWithValue(
-      "inspector-script-paused");
-
-    if (!notification && this.toolbox.currentToolId == "inspector" &&
-        this.toolbox.threadClient.paused) {
-      const message = INSPECTOR_L10N.getStr("debuggerPausedWarning.message");
-      notificationBox.appendNotification(message,
-        "inspector-script-paused", "", notificationBox.PRIORITY_WARNING_HIGH);
-    }
-
-    if (notification && this.toolbox.currentToolId != "inspector") {
-      notificationBox.removeNotification(notification);
-    }
-
-    if (notification && !this.toolbox.threadClient.paused) {
-      notificationBox.removeNotification(notification);
-    }
   },
 
   get React() {
@@ -1434,9 +1397,6 @@ Inspector.prototype = {
     this.sidebar.off("hide", this.onSidebarHidden);
     this.sidebar.off("destroy", this.onSidebarHidden);
     this.target.off("will-navigate", this._onBeforeNavigate);
-    this.target.off("thread-paused", this._updateDebuggerPausedWarning);
-    this.target.off("thread-resumed", this._updateDebuggerPausedWarning);
-    this._toolbox.off("select", this._updateDebuggerPausedWarning);
 
     for (const [, panel] of this._panels) {
       panel.destroy();
