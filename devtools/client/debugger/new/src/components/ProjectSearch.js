@@ -39,6 +39,7 @@ export type Match = {
   sourceId: string,
   line: number,
   column: number,
+  matchIndex: number,
   match: string,
   value: string,
   text: string
@@ -263,7 +264,7 @@ export class ProjectSearch extends Component<Props, State> {
     if (!this.props.query) {
       return;
     }
-    if (results.length && status === statusType.done) {
+    if (results.length) {
       return (
         <ManagedTree
           getRoots={() => results}
@@ -271,6 +272,7 @@ export class ProjectSearch extends Component<Props, State> {
           itemHeight={24}
           autoExpandAll={true}
           autoExpandDepth={1}
+          autoExpandNodeChildrenLimit={100}
           getParent={item => null}
           getPath={getFilePath}
           renderItem={this.renderItem}

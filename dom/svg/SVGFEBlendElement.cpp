@@ -20,7 +20,7 @@ JSObject* SVGFEBlendElement::WrapNode(JSContext* aCx,
   return SVGFEBlendElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-nsSVGEnumMapping SVGFEBlendElement::sModeMap[] = {
+SVGEnumMapping SVGFEBlendElement::sModeMap[] = {
     {nsGkAtoms::normal, SVG_FEBLEND_MODE_NORMAL},
     {nsGkAtoms::multiply, SVG_FEBLEND_MODE_MULTIPLY},
     {nsGkAtoms::screen, SVG_FEBLEND_MODE_SCREEN},

@@ -36,12 +36,12 @@ SVGElement::NumberPairInfo SVGFETurbulenceElement::sNumberPairInfo[1] = {
 SVGElement::IntegerInfo SVGFETurbulenceElement::sIntegerInfo[1] = {
     {nsGkAtoms::numOctaves, 1}};
 
-nsSVGEnumMapping SVGFETurbulenceElement::sTypeMap[] = {
+SVGEnumMapping SVGFETurbulenceElement::sTypeMap[] = {
     {nsGkAtoms::fractalNoise, SVG_TURBULENCE_TYPE_FRACTALNOISE},
     {nsGkAtoms::turbulence, SVG_TURBULENCE_TYPE_TURBULENCE},
     {nullptr, 0}};
 
-nsSVGEnumMapping SVGFETurbulenceElement::sStitchTilesMap[] = {
+SVGEnumMapping SVGFETurbulenceElement::sStitchTilesMap[] = {
     {nsGkAtoms::stitch, SVG_STITCHTYPE_STITCH},
     {nsGkAtoms::noStitch, SVG_STITCHTYPE_NOSTITCH},
     {nullptr, 0}};
