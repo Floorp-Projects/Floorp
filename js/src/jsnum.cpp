@@ -32,6 +32,7 @@
 #if !EXPOSE_INTL_API
 #include "js/LocaleSensitive.h"
 #endif
+#include "js/PropertySpec.h"
 #include "util/DoubleToString.h"
 #include "util/StringBuffer.h"
 #ifdef ENABLE_BIGINT

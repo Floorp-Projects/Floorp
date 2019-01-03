@@ -12,6 +12,7 @@
 #include "jsfriendapi.h"
 #include "js/CharacterEncoding.h"
 #include "js/CompilationAndEvaluation.h"
+#include "js/PropertySpec.h"
 #include "js/Proxy.h"
 #include "js/SourceText.h"
 #include "js/StructuredClone.h"

@@ -12,6 +12,7 @@
 #include "ctypes/CTypes.h"
 #include "js/CharacterEncoding.h"
 #include "js/MemoryFunctions.h"
+#include "js/PropertySpec.h"
 #include "js/StableStringChars.h"
 
 using JS::AutoStableStringChars;

@@ -11,6 +11,7 @@
 #include "js/CharacterEncoding.h"
 #include "js/Conversions.h"
 #include "js/JSON.h"
+#include "js/PropertySpec.h"
 #include "ChildInternal.h"
 #include "ParentInternal.h"
 #include "nsImportModule.h"
