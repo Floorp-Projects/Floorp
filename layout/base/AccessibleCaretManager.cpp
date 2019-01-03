@@ -579,6 +579,9 @@ nsresult AccessibleCaretManager::SelectWordOrShortcut(const nsPoint& aPoint) {
 void AccessibleCaretManager::OnScrollStart() {
   AC_LOG("%s", __FUNCTION__);
 
+  AutoRestore<bool> saveAllowFlushingLayout(mAllowFlushingLayout);
+  mAllowFlushingLayout = false;
+
   mIsScrollStarted = true;
 
   if (mFirstCaret->IsLogicallyVisible() || mSecondCaret->IsLogicallyVisible()) {
@@ -592,6 +595,9 @@ void AccessibleCaretManager::OnScrollEnd() {
   if (mLastUpdateCaretMode != GetCaretMode()) {
     return;
   }
+
+  AutoRestore<bool> saveAllowFlushingLayout(mAllowFlushingLayout);
+  mAllowFlushingLayout = false;
 
   mIsScrollStarted = false;
 
@@ -620,6 +626,9 @@ void AccessibleCaretManager::OnScrollPositionChanged() {
     return;
   }
 
+  AutoRestore<bool> saveAllowFlushingLayout(mAllowFlushingLayout);
+  mAllowFlushingLayout = false;
+
   if (mFirstCaret->IsLogicallyVisible() || mSecondCaret->IsLogicallyVisible()) {
     if (mIsScrollStarted) {
       // We don't want extra CaretStateChangedEvents dispatched when user is
@@ -639,6 +648,9 @@ void AccessibleCaretManager::OnReflow() {
   if (mLastUpdateCaretMode != GetCaretMode()) {
     return;
   }
+
+  AutoRestore<bool> saveAllowFlushingLayout(mAllowFlushingLayout);
+  mAllowFlushingLayout = false;
 
   if (mFirstCaret->IsLogicallyVisible() || mSecondCaret->IsLogicallyVisible()) {
     AC_LOG("%s: UpdateCarets(RespectOldAppearance)", __FUNCTION__);
@@ -895,7 +907,7 @@ void AccessibleCaretManager::ClearMaintainedSelection() const {
 }
 
 bool AccessibleCaretManager::FlushLayout() {
-  if (mPresShell) {
+  if (mPresShell && mAllowFlushingLayout) {
     AutoRestore<bool> flushing(mFlushingLayout);
     mFlushingLayout = true;
 
