@@ -1821,11 +1821,14 @@ var DownloadAddonInstall = class extends AddonInstall {
    *        An optional version for the add-on
    * @param {function(string) : Promise<void>} [options.promptHandler]
    *        A callback to prompt the user before installing.
+   * @param {boolean} [options.sendCookies]
+   *        Whether cookies should be sent when downloading the add-on.
    */
   constructor(installLocation, url, options = {}) {
     super(installLocation, url, options);
 
     this.browser = options.browser;
+    this.sendCookies = Boolean(options.sendCookies);
 
     this.state = AddonManager.STATE_AVAILABLE;
 
@@ -1936,10 +1939,12 @@ var DownloadAddonInstall = class extends AddonInstall {
         loadUsingSystemPrincipal: true,
       });
       this.channel.notificationCallbacks = this;
-      if (this.channel instanceof Ci.nsIHttpChannel) {
-        this.channel.setRequestHeader("Moz-XPI-Update", "1", true);
-        if (this.channel instanceof Ci.nsIHttpChannelInternal)
+      if (this.sendCookies) {
+        if (this.channel instanceof Ci.nsIHttpChannelInternal) {
           this.channel.forceAllowThirdPartyCookie = true;
+        }
+      } else {
+        this.channel.loadFlags |= Ci.nsIRequest.LOAD_ANONYMOUS;
       }
       this.channel.asyncOpen2(listener);
 
@@ -3563,6 +3568,8 @@ var XPIInstall = {
    * @param {Object} [aOptions.telemetryInfo]
    *        An optional object which provides details about the installation source
    *        included in the addon manager telemetry events.
+   * @param {boolean} [options.sendCookies = false]
+   *        Whether cookies should be sent when downloading the add-on.
    * @returns {AddonInstall}
    */
   async getInstallForURL(aUrl, aOptions) {

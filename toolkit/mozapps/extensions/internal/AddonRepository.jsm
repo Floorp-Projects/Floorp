@@ -447,7 +447,7 @@ var AddonRepository = {
 
     const fetchNextPage = (url) => {
       return new Promise((resolve, reject) => {
-        let request = new ServiceRequest();
+        let request = new ServiceRequest({mozAnon: true});
         request.mozBackgroundRequest = true;
         request.open("GET", url, true);
         request.responseType = "json";

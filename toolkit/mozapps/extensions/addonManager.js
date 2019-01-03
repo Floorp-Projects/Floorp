@@ -104,6 +104,7 @@ amManager.prototype = {
       icon,
       browser: aBrowser,
       telemetryInfo,
+      sendCookies: true,
     }).then(aInstall => {
       function callCallback(status) {
         try {
