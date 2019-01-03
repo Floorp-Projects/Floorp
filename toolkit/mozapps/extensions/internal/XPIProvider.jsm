@@ -86,6 +86,7 @@ const KEY_APP_FEATURES                = "XREAppFeat";
 const KEY_APP_PROFILE                 = "app-profile";
 const KEY_APP_SYSTEM_ADDONS           = "app-system-addons";
 const KEY_APP_SYSTEM_DEFAULTS         = "app-system-defaults";
+const KEY_APP_BUILTINS                = "app-builtin";
 const KEY_APP_GLOBAL                  = "app-global";
 const KEY_APP_SYSTEM_LOCAL            = "app-system-local";
 const KEY_APP_SYSTEM_SHARE            = "app-system-share";
@@ -104,7 +105,7 @@ const XPI_PERMISSION                  = "install";
 
 const XPI_SIGNATURE_CHECK_PERIOD      = 24 * 60 * 60;
 
-const DB_SCHEMA = 28;
+const DB_SCHEMA = 29;
 
 function encoded(strings, ...values) {
   let result = [];
@@ -410,6 +411,7 @@ const JSON_FIELDS = Object.freeze([
   "loader",
   "lastModifiedTime",
   "path",
+  "rootURI",
   "runInSafeMode",
   "signedState",
   "startupData",
@@ -430,6 +432,12 @@ class XPIState {
       if (prop in saved) {
         this[prop] = saved[prop];
       }
+    }
+
+    // Builds prior to be 1512436 did not include the rootURI property.
+    // If we're updating from such a build, add that property now.
+    if (!("rootURI" in this) && this.file) {
+      this.rootURI = getURIForResourceInFile(this.file, "").spec;
     }
 
     if (!this.telemetryKey) {
@@ -462,7 +470,7 @@ class XPIState {
     return this.file && this.file.path;
   }
   set path(path) {
-    this.file = getFile(path, this.location.dir);
+    this.file = path ? getFile(path, this.location.dir) : null;
   }
 
   /**
@@ -494,6 +502,7 @@ class XPIState {
       lastModifiedTime: this.lastModifiedTime,
       loader: this.loader,
       path: this.relativePath,
+      rootURI: this.rootURI,
       runInSafeMode: this.runInSafeMode,
       signedState: this.signedState,
       telemetryKey: this.telemetryKey,
@@ -581,13 +590,30 @@ class XPIState {
     this.runInSafeMode = canRunInSafeMode(aDBAddon);
     this.signedState = aDBAddon.signedState;
     this.file = aDBAddon._sourceBundle;
+    this.rootURI = aDBAddon.rootURI;
 
     if (aUpdated || mustGetMod) {
-      this.getModTime(this.file);
-      if (this.lastModifiedTime != aDBAddon.updateDate) {
-        aDBAddon.updateDate = this.lastModifiedTime;
-        if (XPIDatabase.initialized) {
-          XPIDatabase.saveChanges();
+      let file = this.file;
+
+      // Built-in addons should have jar: rootURIs, use the mod time
+      // for the containing jar file for those.
+      if (!file) {
+        let fileUrl = Services.io.newURI(this.rootURI);
+        if (fileUrl instanceof Ci.nsIJARURI) {
+          fileUrl = fileUrl.JARFile;
+        }
+        if (fileUrl instanceof Ci.nsIFileURL) {
+          file = fileUrl.file;
+        }
+      }
+
+      if (file) {
+        this.getModTime(file);
+        if (this.lastModifiedTime != aDBAddon.updateDate) {
+          aDBAddon.updateDate = this.lastModifiedTime;
+          if (XPIDatabase.initialized) {
+            XPIDatabase.saveChanges();
+          }
         }
       }
     }
@@ -810,6 +836,17 @@ class XPIStateLocation extends Map {
   get isSystem() {
     return false;
   }
+
+  get isBuiltin() {
+    return false;
+  }
+
+  // If this property is false, it does not implement readAddons()
+  // interface.  This is used for the temporary and built-in locations
+  // that do not correspond to a physical location that can be scanned.
+  get enumerable() {
+    return true;
+  }
 }
 
 class TemporaryLocation extends XPIStateLocation {
@@ -835,16 +872,44 @@ class TemporaryLocation extends XPIStateLocation {
     return {};
   }
 
-  readAddons() {
-    return new Map();
-  }
-
   get isTemporary() {
     return true;
+  }
+
+  get enumerable() {
+    return false;
   }
 }
 
 var TemporaryInstallLocation = new TemporaryLocation(KEY_APP_TEMPORARY);
+
+/**
+ * A "location" for addons installed from assets packged into the app.
+ */
+var BuiltInLocation = new class _BuiltInLocation extends XPIStateLocation {
+  constructor() {
+    super(KEY_APP_BUILTINS, null, null);
+    this.locked = false;
+  }
+
+  // The installer object is responsible for moving files around on disk
+  // when (un)installing an addon.  Since this location handles only addons
+  // that are embedded within the browser, these are no-ops.
+  makeInstaller() {
+    return {
+      installAddon() {},
+      uninstallAddon() {},
+    };
+  }
+
+  get isBuiltin() {
+    return true;
+  }
+
+  get enumerable() {
+    return false;
+  }
+}();
 
 /**
  * An object which identifies a directory install location for add-ons. The
@@ -991,7 +1056,7 @@ class DirectoryLocation extends XPIStateLocation {
  *
  * This location should point either to a XPI, or a directory in a local build.
  */
-class BuiltInLocation extends DirectoryLocation {
+class SystemAddonDefaults extends DirectoryLocation {
   /**
    * Read the manifest of allowed add-ons and build a mapping between ID and URI
    * for each.
@@ -1297,7 +1362,7 @@ var XPIStates = {
         continue;
       }
 
-      if (loc.isTemporary) {
+      if (!loc.enumerable) {
         continue;
       }
 
@@ -1612,11 +1677,10 @@ class BootstrapScope {
       let params = {
         id: addon.id,
         version: addon.version,
-        installPath: this.file.clone(),
-        resourceURI: getURIForResourceInFile(this.file, ""),
+        resourceURI: Services.io.newURI(addon.rootURI),
         signedState: addon.signedState,
         temporarilyInstalled: addon.location.isTemporary,
-        builtIn: addon.location instanceof BuiltInLocation,
+        builtIn: addon.location.isBuiltin,
       };
 
       if (aMethod == "startup" && addon.startupData) {
@@ -1674,21 +1738,21 @@ class BootstrapScope {
       XPIProvider.addAddonsToCrashReporter();
     }
 
-    logger.debug(`Loading bootstrap scope from ${this.file.path}`);
+    logger.debug(`Loading bootstrap scope from ${this.addon.rootURI}`);
 
     if (this.addon.isWebExtension) {
       switch (this.addon.type) {
         case "extension":
         case "theme":
-          this.scope = Extension.getBootstrapScope(this.addon.id, this.file);
+          this.scope = Extension.getBootstrapScope();
           break;
 
         case "locale":
-          this.scope = Langpack.getBootstrapScope(this.addon.id, this.file);
+          this.scope = Langpack.getBootstrapScope();
           break;
 
         case "dictionary":
-          this.scope = Dictionary.getBootstrapScope(this.addon.id, this.file);
+          this.scope = Dictionary.getBootstrapScope();
           break;
 
         default:
@@ -1700,7 +1764,7 @@ class BootstrapScope {
         throw new Error(`Cannot find loader for ${this.addon.loader}`);
       }
 
-      this.scope = loader.loadScope(this.addon, this.file);
+      this.scope = loader.loadScope(this.addon);
     }
   }
 
@@ -1838,7 +1902,10 @@ class BootstrapScope {
       this.callBootstrapMethod("uninstall", reason, extraArgs);
     }
     this.unloadBootstrapScope();
-    XPIInstall.flushJarCache(this.file);
+
+    if (this.file) {
+      XPIInstall.flushJarCache(this.file);
+    }
     XPIInstall.flushChromeCaches();
   }
 
@@ -1983,13 +2050,13 @@ var XPIProvider = {
       return new DirectoryLocation(aName, dir, aScope, aLocked);
     }
 
-    function BuiltInLoc(name, scope, key, paths) {
+    function SystemDefaultsLoc(name, scope, key, paths) {
       try {
         var dir = FileUtils.getDir(key, paths);
       } catch (e) {
         return null;
       }
-      return new BuiltInLocation(name, dir, scope);
+      return new SystemAddonDefaults(name, dir, scope);
     }
 
     function SystemLoc(aName, aScope, aKey, aPaths) {
@@ -2023,8 +2090,10 @@ var XPIProvider = {
       [SystemLoc, KEY_APP_SYSTEM_ADDONS, AddonManager.SCOPE_PROFILE,
        KEY_PROFILEDIR, [DIR_SYSTEM_ADDONS]],
 
-      [BuiltInLoc, KEY_APP_SYSTEM_DEFAULTS, AddonManager.SCOPE_PROFILE,
+      [SystemDefaultsLoc, KEY_APP_SYSTEM_DEFAULTS, AddonManager.SCOPE_PROFILE,
        KEY_APP_FEATURES, []],
+
+      [() => BuiltInLocation, KEY_APP_BUILTINS, AddonManager.SCOPE_SYSTEM],
 
       [DirectoryLoc, KEY_APP_SYSTEM_USER, AddonManager.SCOPE_USER,
        "XREUSysExt", [Services.appinfo.ID], true],
@@ -2734,8 +2803,9 @@ var XPIProvider = {
 };
 
 for (let meth of ["getInstallForFile", "getInstallForURL", "getInstallsByTypes",
-                  "installTemporaryAddon", "isInstallAllowed",
-                  "isInstallEnabled", "updateSystemAddons"]) {
+                  "installTemporaryAddon", "installBuiltinAddon",
+                  "isInstallAllowed", "isInstallEnabled",
+                  "updateSystemAddons"]) {
   XPIProvider[meth] = function() {
     return XPIInstall[meth](...arguments);
   };
@@ -2751,6 +2821,7 @@ for (let meth of ["addonChanged", "getAddonByID", "getAddonBySyncGUID",
 var XPIInternal = {
   BOOTSTRAP_REASONS,
   BootstrapScope,
+  BuiltInLocation,
   DB_SCHEMA,
   KEY_APP_SYSTEM_ADDONS,
   KEY_APP_SYSTEM_DEFAULTS,
