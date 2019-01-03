@@ -8,7 +8,6 @@
 #include "vm/TypedArrayObject.h"
 
 #include "mozilla/Alignment.h"
-#include "mozilla/Casting.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/TextUtils.h"
@@ -56,7 +55,6 @@ using namespace js;
 using JS::CanonicalizeNaN;
 using JS::ToInt32;
 using JS::ToUint32;
-using mozilla::AssertedCast;
 using mozilla::IsAsciiDigit;
 
 /*
@@ -279,9 +277,6 @@ uint32_t JS_FASTCALL js::ClampDoubleToUint8(const double x) {
   return y;
 }
 
-template <typename ElementType>
-static inline JSObject* NewArray(JSContext* cx, uint32_t nelements);
-
 namespace {
 
 enum class SpeciesConstructorOverride { None, ArrayBuffer };
@@ -491,8 +486,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
   static void initTypedArraySlots(TypedArrayObject* tarray, int32_t len) {
     MOZ_ASSERT(len >= 0);
     tarray->setFixedSlot(TypedArrayObject::BUFFER_SLOT, NullValue());
-    tarray->setFixedSlot(TypedArrayObject::LENGTH_SLOT,
-                         Int32Value(AssertedCast<int32_t>(len)));
+    tarray->setFixedSlot(TypedArrayObject::LENGTH_SLOT, Int32Value(len));
     tarray->setFixedSlot(TypedArrayObject::BYTEOFFSET_SLOT, Int32Value(0));
 
     // Verify that the private slot is at the expected place.
