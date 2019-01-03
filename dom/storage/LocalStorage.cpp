@@ -195,10 +195,6 @@ void LocalStorage::ApplyEvent(StorageEvent* aStorageEvent) {
   mCache->SetItem(this, key, value, old, LocalStorageCache::E10sPropagated);
 }
 
-bool LocalStorage::PrincipalEquals(nsIPrincipal* aPrincipal) {
-  return StorageUtils::PrincipalsEqual(mPrincipal, aPrincipal);
-}
-
 void LocalStorage::GetSupportedNames(nsTArray<nsString>& aKeys) {
   if (!CanUseStorage(*nsContentUtils::SubjectPrincipal())) {
     // return just an empty array
