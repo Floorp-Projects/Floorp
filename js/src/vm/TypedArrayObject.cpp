@@ -404,11 +404,11 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
       JSContext* cx, Handle<ArrayBufferObjectMaybeShared*> buffer,
       CreateSingleton createSingleton, uint32_t byteOffset, uint32_t len,
       HandleObject proto) {
-    MOZ_ASSERT(len < INT32_MAX / sizeof(NativeType));
+    MOZ_ASSERT(len < INT32_MAX / BYTES_PER_ELEMENT);
 
     gc::AllocKind allocKind =
         buffer ? gc::GetGCObjectKind(instanceClass())
-               : AllocKindForLazyBuffer(len * sizeof(NativeType));
+               : AllocKindForLazyBuffer(len * BYTES_PER_ELEMENT);
 
     // Subclassing mandates that we hand in the proto every time. Most of
     // the time, though, that [[Prototype]] will not be interesting. If
@@ -505,7 +505,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
 #endif
       tarray->initPrivate(buf);
     } else {
-      size_t nbytes = len * sizeof(NativeType);
+      size_t nbytes = len * BYTES_PER_ELEMENT;
 #ifdef DEBUG
       size_t dataOffset = TypedArrayObject::dataOffset();
       size_t offset = dataOffset + sizeof(HeapSlot);
@@ -520,7 +520,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
 
   static TypedArrayObject* makeTypedArrayWithTemplate(
       JSContext* cx, TypedArrayObject* templateObj, int32_t len) {
-    if (len < 0 || uint32_t(len) >= INT32_MAX / sizeof(NativeType)) {
+    if (len < 0 || uint32_t(len) >= INT32_MAX / BYTES_PER_ELEMENT) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                 JSMSG_BAD_ARRAY_LENGTH);
       return nullptr;
@@ -632,7 +632,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
       }
 
       // Step 7.
-      if (byteOffset % sizeof(NativeType) != 0) {
+      if (byteOffset % BYTES_PER_ELEMENT != 0) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                   JSMSG_TYPED_ARRAY_CONSTRUCT_BOUNDS);
         return nullptr;
@@ -662,7 +662,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
   static bool computeAndCheckLength(
       JSContext* cx, HandleArrayBufferObjectMaybeShared bufferMaybeUnwrapped,
       uint64_t byteOffset, uint64_t lengthIndex, uint32_t* length) {
-    MOZ_ASSERT(byteOffset % sizeof(NativeType) == 0);
+    MOZ_ASSERT(byteOffset % BYTES_PER_ELEMENT == 0);
     MOZ_ASSERT(byteOffset < uint64_t(DOUBLE_INTEGRAL_PRECISION_LIMIT));
     MOZ_ASSERT_IF(lengthIndex != UINT64_MAX,
                   lengthIndex < uint64_t(DOUBLE_INTEGRAL_PRECISION_LIMIT));
@@ -680,10 +680,10 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
     uint32_t len;
     if (lengthIndex == UINT64_MAX) {
       // Steps 11.a, 11.c.
-      if (bufferByteLength % sizeof(NativeType) != 0 ||
+      if (bufferByteLength % BYTES_PER_ELEMENT != 0 ||
           byteOffset > bufferByteLength) {
         // The given byte array doesn't map exactly to
-        // |sizeof(NativeType) * N| or |byteOffset| is invalid.
+        // |BYTES_PER_ELEMENT * N| or |byteOffset| is invalid.
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                   JSMSG_TYPED_ARRAY_CONSTRUCT_BOUNDS);
         return false;
@@ -691,10 +691,10 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
 
       // Step 11.b.
       uint32_t newByteLength = bufferByteLength - uint32_t(byteOffset);
-      len = newByteLength / sizeof(NativeType);
+      len = newByteLength / BYTES_PER_ELEMENT;
     } else {
       // Step 12.a.
-      uint64_t newByteLength = lengthIndex * sizeof(NativeType);
+      uint64_t newByteLength = lengthIndex * BYTES_PER_ELEMENT;
 
       // Step 12.b.
       if (byteOffset + newByteLength > bufferByteLength) {
@@ -710,9 +710,9 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
     // ArrayBuffer is too large for TypedArrays:
     // Standalone ArrayBuffers can hold up to INT32_MAX bytes, whereas
     // buffers in TypedArrays must have less than or equal to
-    // |INT32_MAX - sizeof(NativeType) - INT32_MAX % sizeof(NativeType)|
+    // |INT32_MAX - BYTES_PER_ELEMENT - INT32_MAX % BYTES_PER_ELEMENT|
     // bytes.
-    if (len >= INT32_MAX / sizeof(NativeType)) {
+    if (len >= INT32_MAX / BYTES_PER_ELEMENT) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                 JSMSG_TYPED_ARRAY_CONSTRUCT_BOUNDS);
       return false;
@@ -736,8 +736,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
     }
 
     CreateSingleton createSingleton = CreateSingleton::No;
-    if (length * sizeof(NativeType) >=
-        TypedArrayObject::SINGLETON_BYTE_LENGTH) {
+    if (length * BYTES_PER_ELEMENT >= TypedArrayObject::SINGLETON_BYTE_LENGTH) {
       createSingleton = CreateSingleton::Yes;
     }
 
@@ -821,7 +820,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
  public:
   static JSObject* fromBuffer(JSContext* cx, HandleObject bufobj,
                               uint32_t byteOffset, int32_t lengthInt) {
-    if (byteOffset % sizeof(NativeType) != 0) {
+    if (byteOffset % BYTES_PER_ELEMENT != 0) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                 JSMSG_TYPED_ARRAY_CONSTRUCT_BOUNDS);
       return nullptr;  // invalid byteOffset
@@ -849,7 +848,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
     uint32_t byteLength = count * unit;
 
     MOZ_ASSERT(byteLength < INT32_MAX);
-    static_assert(INLINE_BUFFER_LIMIT % sizeof(NativeType) == 0,
+    static_assert(INLINE_BUFFER_LIMIT % BYTES_PER_ELEMENT == 0,
                   "ArrayBuffer inline storage shouldn't waste any space");
 
     if (!nonDefaultProto && byteLength <= INLINE_BUFFER_LIMIT) {
