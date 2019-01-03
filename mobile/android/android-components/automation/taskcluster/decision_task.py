@@ -27,7 +27,10 @@ SKIP_TASKS_TRIGGER = '[ci skip]'
 
 
 def create_task(name, description, command, scopes = []):
-    return create_raw_task(name, description, "./gradlew --no-daemon clean %s" % command, scopes)
+    # When parallel builds are enabled, 'clean' sometimes overlaps with other gradle tasks,
+    # producing various IO errors. This is likely due to an internal problem with how we define 'clean'.
+    # For now, we work around this issue by eating the overhead of two separate gradle commands.
+    return create_raw_task(name, description, "./gradlew --no-daemon clean && ./gradlew --no-daemon %s" % command, scopes)
 
 
 def create_raw_task(name, description, full_command, scopes = []):
