@@ -11,8 +11,7 @@ const { emulationSpec } = require("devtools/shared/specs/emulation");
  */
 class EmulationFront extends FrontClassWithSpec(emulationSpec) {
   constructor(client, form) {
-    super(client);
-    this.actorID = form.emulationActor;
+    super(client, { actor: form.emulationActor });
     this.manage(this);
   }
 }

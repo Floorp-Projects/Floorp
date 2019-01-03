@@ -333,7 +333,10 @@ types.addActorType = function(name) {
           lazyLoadFront(name);
         }
 
-        front = new type.frontClass(ctx.conn); // eslint-disable-line new-cap
+        // Use intermediate Class variable to please eslint requiring
+        // a capital letter for all constructors.
+        const Class = type.frontClass;
+        front = new Class(ctx.conn);
         front.actorID = actorID;
         ctx.marshallPool().manage(front);
       }

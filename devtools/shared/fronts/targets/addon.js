@@ -8,8 +8,8 @@ const { FrontClassWithSpec, registerFront } = require("devtools/shared/protocol"
 loader.lazyRequireGetter(this, "BrowsingContextTargetFront", "devtools/shared/fronts/targets/browsing-context", true);
 
 class AddonTargetFront extends FrontClassWithSpec(addonTargetSpec) {
-  constructor(client) {
-    super(client);
+  constructor(client, form) {
+    super(client, form);
 
     this.client = client;
 

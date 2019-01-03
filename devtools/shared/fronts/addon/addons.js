@@ -8,8 +8,7 @@ const { FrontClassWithSpec, registerFront } = require("devtools/shared/protocol"
 
 class AddonsFront extends FrontClassWithSpec(addonsSpec) {
   constructor(client, {addonsActor}) {
-    super(client);
-    this.actorID = addonsActor;
+    super(client, { actor: addonsActor });
     this.manage(this);
   }
 }
