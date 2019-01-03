@@ -177,7 +177,6 @@ static void FreeJobQueueHandling(JSContext* cx) {
     return;
   }
 
-  cx->jobQueue->reset();
   FreeOp* fop = cx->defaultFreeOp();
   fop->delete_(cx->jobQueue.ref());
   cx->getIncumbentGlobalCallback = nullptr;
