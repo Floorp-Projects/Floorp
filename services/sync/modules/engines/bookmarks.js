@@ -322,34 +322,6 @@ BaseBookmarksEngine.prototype = {
   syncPriority: 4,
   allowSkippedRecord: false,
 
-  _migratedSyncMetadata: false,
-  async _migrateSyncMetadata({ migrateLastSync = true } = {}) {
-    if (this._migratedSyncMetadata) {
-      return;
-    }
-    let shouldWipeRemote = await PlacesSyncUtils.bookmarks.shouldWipeRemote();
-    if (!shouldWipeRemote) {
-      // Migrate the bookmarks sync ID and last sync time from prefs, to avoid
-      // triggering a full sync on upgrade. This can be removed in bug 1443021.
-      let existingSyncID = await super.getSyncID();
-      if (existingSyncID) {
-        this._log.debug("Migrating existing sync ID ${existingSyncID} from " +
-                        "prefs", { existingSyncID });
-        await this._ensureCurrentSyncID(existingSyncID);
-      }
-      if (migrateLastSync) {
-        let existingLastSync = await super.getLastSync();
-        if (existingLastSync) {
-          this._log.debug("Migrating existing last sync time " +
-                          "${existingLastSync} from prefs",
-                          { existingLastSync });
-          await PlacesSyncUtils.bookmarks.setLastSync(existingLastSync);
-        }
-      }
-    }
-    this._migratedSyncMetadata = true;
-  },
-
   // Exposed so that the buffered engine can override to store the sync ID in
   // the mirror.
   _ensureCurrentSyncID(newSyncID) {
@@ -617,7 +589,6 @@ BookmarksEngine.prototype = {
   },
 
   async _syncStartup() {
-    await this._migrateSyncMetadata();
     await SyncEngine.prototype._syncStartup.call(this);
 
     try {
@@ -794,13 +765,6 @@ BufferedBookmarksEngine.prototype = {
   // Needed to ensure we don't miss items when resuming a sync that failed or
   // aborted early.
   _defaultSort: "oldest",
-
-  async _syncStartup() {
-    await this._migrateSyncMetadata({
-      migrateLastSync: false,
-    });
-    await super._syncStartup();
-  },
 
   async _ensureCurrentSyncID(newSyncID) {
     await super._ensureCurrentSyncID(newSyncID);
