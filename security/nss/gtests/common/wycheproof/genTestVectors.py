@@ -7,6 +7,7 @@
 
 import json
 import os
+import subprocess
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -58,15 +59,46 @@ class ChaChaPoly():
 
         return result
 
+# Writes one Curve25519 testvector into C-header format. (Not clang-format conform)
+class Curve25519():
+    """Class that provides the generator function for a single curve25519 test case."""
 
-def generate_header(params):
+    # Static pkcs8 and skpi wrappers for the raw keys from Wycheproof.
+    # The public key section of the pkcs8 wrapper is filled up with 0's, which is
+    # not correct, but acceptable for the tests at this moment because
+    # validity of the public key is not checked.
+    # It's still necessary because of
+    # https://searchfox.org/nss/rev/7bc70a3317b800aac07bad83e74b6c79a9ec5bff/lib/pk11wrap/pk11pk12.c#171
+    pkcs8WrapperStart = "3067020100301406072a8648ce3d020106092b06010401da470f01044c304a0201010420"
+    pkcs8WrapperEnd = "a1230321000000000000000000000000000000000000000000000000000000000000000000"
+    spkiWrapper = "3039301406072a8648ce3d020106092b06010401da470f01032100"
+
+    def format_testcase(self, testcase):
+        result = '\n// Comment: {}'.format(testcase['comment'])
+        result += '\n{{{},\n'.format(string_to_hex_array(self.pkcs8WrapperStart + testcase['private'] + self.pkcs8WrapperEnd))
+        result += '{},\n'.format(string_to_hex_array(self.spkiWrapper + testcase['public']))
+        result += '{},\n'.format(string_to_hex_array(testcase['shared']))
+
+        # Flag 'acceptable' cases with secret == 0 as invalid for NSS.
+        # Flag 'acceptable' cases with forbidden public key values as invalid for NSS.
+        # Flag 'acceptable' cases with small public key (0 or 1) as invalid for NSS.
+        valid = testcase['result'] in ['valid', 'acceptable'] \
+                and not testcase['shared'] == "0000000000000000000000000000000000000000000000000000000000000000" \
+                and not testcase["public"] == "daffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff" \
+                and not testcase["public"] == "dbffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff" \
+                and not 'Small public key' in testcase['flags']
+        result += '{}}},\n'.format(str(valid).lower())
+
+        return result
+
+def generate_vectors_file(params):
     """
     Generate and store a .h-file with test vectors for one test.
 
     params -- Dictionary with parameters for test vector generation for the desired test.
     """
 
-    cases = import_testvector(os.path.join(script_dir, params['source']))
+    cases = import_testvector(os.path.join(script_dir, params['source_dir'] + params['source_file']))
 
     with open(os.path.join(script_dir, params['base'])) as base:
         header = base.read()
@@ -95,33 +127,62 @@ def generate_header(params):
 # formatter -- the test case formatter class to be used for this test.
 # crop_size_end -- number of characters removed from the end of the last generated test vector to close the array definiton.
 # finish -- string to re-insert at the end and finish the file. (identical to chars cropped at the start)
+# comment -- additional comments to add to the file just before defintion of the test vector array.
 aes_gcm_params = {
-    'source': 'testvectors/aes_gcm_test.json',
-    'base': 'header_bases/gcm-vectors.h',
-    'target': '../gcm-vectors.h',
+    'source_dir': 'source_vectors/',
+    'source_file': 'aes_gcm_test.json',
+    'base': '../testvectors_base/gcm-vectors_base.h',
+    'target': '../testvectors/gcm-vectors.h',
     'crop_size_start': -27,
     'array_init': 'const gcm_kat_value kGcmWycheproofVectors[] = {\n',
     'formatter' : AESGCM(),
     'crop_size_end': -3,
-    'finish': '#endif  // gcm_vectors_h__\n'
+    'finish': '#endif  // gcm_vectors_h__\n',
+    'comment' : ''
 }
 
 chacha_poly_params = {
-    'source': 'testvectors/chacha20_poly1305_test.json',
-    'base': 'header_bases/chachapoly-vectors.h',
-    'target': '../chachapoly-vectors.h',
+    'source_dir': 'source_vectors/',
+    'source_file': 'chacha20_poly1305_test.json',
+    'base': '../testvectors_base/chachapoly-vectors_base.h',
+    'target': '../testvectors/chachapoly-vectors.h',
     'crop_size_start': -35,
     'array_init': 'const chacha_testvector kChaCha20WycheproofVectors[] = {\n',
     'formatter' : ChaChaPoly(),
     'crop_size_end': -2,
-    'finish': '#endif  // chachapoly_vectors_h__\n'
+    'finish': '#endif  // chachapoly_vectors_h__\n',
+    'comment' : ''
 }
+
+curve25519_params = {
+    'source_dir': 'source_vectors/',
+    'source_file': 'x25519_test.json',
+    'base': '../testvectors_base/curve25519-vectors_base.h',
+    'target': '../testvectors/curve25519-vectors.h',
+    'crop_size_start': -34,
+    'array_init': 'const curve25519_testvector kCurve25519WycheproofVectors[] = {\n',
+    'formatter' : Curve25519(),
+    'crop_size_end': -2,
+    'finish': '#endif  // curve25519_vectors_h__\n',
+    'comment' : '// The public key section of the pkcs8 wrapped private key is\n\
+    // filled up with 0\'s, which is not correct, but acceptable for the\n\
+    // tests at this moment because validity of the public key is not checked.\n'
+}
+
+def update_tests(tests):
+
+    remote = "https://raw.githubusercontent.com/google/wycheproof/master/testvectors/"
+    for test in tests:
+        subprocess.check_call(['wget', remote+test['source_file'], '-O',
+                               'gtests/common/wycheproof/source_vectors/' +test['source_file'],
+                               '--no-check-certificate'])
 
 def generate_test_vectors():
     """Generate C-header files for all supported tests."""
-    all_params = [aes_gcm_params, chacha_poly_params]
-    for param in all_params:
-        generate_header(param)
+    all_tests = [aes_gcm_params, chacha_poly_params, curve25519_params]
+    update_tests(all_tests)
+    for test in all_tests:
+        generate_vectors_file(test)
 
 def main():
     generate_test_vectors()
