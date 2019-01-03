@@ -36,7 +36,7 @@ def create_raw_task(name, description, full_command, scopes = []):
     deadline = taskcluster.fromNow('1 day')
 
     return {
-        "workerType": 'github-worker',
+        "workerType": 'android-components-g',
         "taskGroupId": TASK_ID,
         "expires": taskcluster.stringDate(expires),
         "retries": 5,

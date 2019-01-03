@@ -61,7 +61,7 @@ class TaskBuilder(object):
 
     def build_task(self, name, description, command, dependencies=[],
                    artifacts={}, scopes=[], routes=[], features={},
-                   worker_type='github-worker'):
+                   worker_type='android-components-g'):
         created = datetime.datetime.now()
         expires = taskcluster.fromNow('1 year')
         deadline = taskcluster.fromNow('1 day')
