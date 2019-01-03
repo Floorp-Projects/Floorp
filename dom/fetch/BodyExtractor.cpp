@@ -62,7 +62,7 @@ nsresult BodyExtractor<const ArrayBufferView>::GetAsStream(
 }
 
 template <>
-nsresult BodyExtractor<nsIDocument>::GetAsStream(
+nsresult BodyExtractor<Document>::GetAsStream(
     nsIInputStream** aResult, uint64_t* aContentLength,
     nsACString& aContentTypeWithCharset, nsACString& aCharset) const {
   NS_ENSURE_STATE(mBody);

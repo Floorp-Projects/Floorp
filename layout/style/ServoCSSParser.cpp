@@ -10,7 +10,7 @@
 
 #include "mozilla/ServoBindings.h"
 #include "mozilla/ServoStyleSet.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 
 using namespace mozilla;
 
@@ -59,7 +59,7 @@ ServoCSSParser::ParseProperty(nsCSSPropertyID aProperty,
 }
 
 /* static */ already_AddRefed<URLExtraData> ServoCSSParser::GetURLExtraData(
-    nsIDocument* aDocument) {
+    Document* aDocument) {
   MOZ_ASSERT(aDocument);
 
   // FIXME this is using the wrong base uri (bug 1343919)
@@ -70,7 +70,7 @@ ServoCSSParser::ParseProperty(nsCSSPropertyID aProperty,
 }
 
 /* static */ ServoCSSParser::ParsingEnvironment
-ServoCSSParser::GetParsingEnvironment(nsIDocument* aDocument) {
+ServoCSSParser::GetParsingEnvironment(Document* aDocument) {
   return ParsingEnvironment(GetURLExtraData(aDocument),
                             aDocument->GetCompatibilityMode(),
                             aDocument->CSSLoader());

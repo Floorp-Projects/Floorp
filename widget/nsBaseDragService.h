@@ -24,7 +24,7 @@
 #define DRAG_TRANSLUCENCY 0.65
 
 class nsIContent;
-class nsIDocument;
+
 class nsINode;
 class nsPresContext;
 class nsIImageLoadingContent;
@@ -160,12 +160,15 @@ class nsBaseDragService : public nsIDragService, public nsIDragSession {
 
   nsCOMPtr<nsINode> mSourceNode;
   nsCString mTriggeringPrincipalURISpec;
-  nsCOMPtr<nsIDocument>
-      mSourceDocument;  // the document at the drag source. will be null
-                        //  if it came from outside the app.
-  nsContentPolicyType
-      mContentPolicyType;  // the contentpolicy type passed to the channel
-                           // when initiating the drag session
+
+  // the document at the drag source. will be null if it came from outside the
+  // app.
+  RefPtr<mozilla::dom::Document> mSourceDocument;
+
+  // the contentpolicy type passed to the channel when initiating the drag
+  // session
+  nsContentPolicyType mContentPolicyType;
+
   RefPtr<mozilla::dom::DataTransfer> mDataTransfer;
 
   // used to determine the image to appear on the cursor while dragging

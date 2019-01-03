@@ -7,7 +7,7 @@
 #include "mozilla/ArrayUtils.h"
 
 #include "nsXBLContentSink.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsBindingManager.h"
 #include "nsGkAtoms.h"
 #include "nsNameSpaceManager.h"
@@ -30,7 +30,7 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-nsresult NS_NewXBLContentSink(nsIXMLContentSink** aResult, nsIDocument* aDoc,
+nsresult NS_NewXBLContentSink(nsIXMLContentSink** aResult, Document* aDoc,
                               nsIURI* aURI, nsISupports* aContainer) {
   NS_ENSURE_ARG_POINTER(aResult);
 
@@ -61,7 +61,7 @@ nsXBLContentSink::nsXBLContentSink()
 
 nsXBLContentSink::~nsXBLContentSink() {}
 
-nsresult nsXBLContentSink::Init(nsIDocument* aDoc, nsIURI* aURI,
+nsresult nsXBLContentSink::Init(Document* aDoc, nsIURI* aURI,
                                 nsISupports* aContainer) {
   nsresult rv;
   rv = nsXMLContentSink::Init(aDoc, aURI, aContainer, nullptr);

@@ -97,7 +97,7 @@ class SVGElement : public SVGElementBase  // nsIContent
 
   // nsIContent interface methods
 
-  virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+  virtual nsresult BindToTree(Document* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent) override;
 
   virtual nsChangeHint GetAttributeChangeHint(const nsAtom* aAttribute,
@@ -109,7 +109,7 @@ class SVGElement : public SVGElementBase  // nsIContent
    * We override the default to unschedule computation of Servo declaration
    * blocks when adopted across documents.
    */
-  virtual void NodeInfoChanged(nsIDocument* aOldDoc) override;
+  virtual void NodeInfoChanged(Document* aOldDoc) override;
 
   NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const override;
 
@@ -328,7 +328,7 @@ class SVGElement : public SVGElementBase  // nsIContent
                               const nsAString& aValue,
                               nsIPrincipal* aMaybeScriptedPrincipal,
                               nsAttrValue& aResult) override;
-  static nsresult ReportAttributeParseFailure(nsIDocument* aDocument,
+  static nsresult ReportAttributeParseFailure(Document* aDocument,
                                               nsAtom* aAttribute,
                                               const nsAString& aValue);
 

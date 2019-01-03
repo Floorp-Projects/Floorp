@@ -7,12 +7,12 @@
 #ifndef __inLayoutUtils_h__
 #define __inLayoutUtils_h__
 
-class nsIDocument;
 class nsINode;
 
 namespace mozilla {
 class EventStateManager;
 namespace dom {
+class Document;
 class Element;
 }  // namespace dom
 }  // namespace mozilla
@@ -21,8 +21,8 @@ class inLayoutUtils {
  public:
   static mozilla::EventStateManager* GetEventStateManagerFor(
       mozilla::dom::Element& aElement);
-  static nsIDocument* GetSubDocumentFor(nsINode* aNode);
-  static nsINode* GetContainerFor(const nsIDocument& aDoc);
+  static mozilla::dom::Document* GetSubDocumentFor(nsINode* aNode);
+  static nsINode* GetContainerFor(const mozilla::dom::Document& aDoc);
 };
 
 #endif  // __inLayoutUtils_h__

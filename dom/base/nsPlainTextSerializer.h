@@ -72,7 +72,7 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
                               nsAString& aStr) override;
   NS_IMETHOD Flush(nsAString& aStr) override;
 
-  NS_IMETHOD AppendDocumentStart(nsIDocument* aDocument,
+  NS_IMETHOD AppendDocumentStart(mozilla::dom::Document* aDocument,
                                  nsAString& aStr) override;
 
   NS_IMETHOD ScanElementForPreformat(mozilla::dom::Element* aElement) override;

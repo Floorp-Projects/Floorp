@@ -69,13 +69,14 @@ nsGenericHTMLFrameElement::~nsGenericHTMLFrameElement() {
   }
 }
 
-nsIDocument* nsGenericHTMLFrameElement::GetContentDocument(
+Document* nsGenericHTMLFrameElement::GetContentDocument(
     nsIPrincipal& aSubjectPrincipal) {
   RefPtr<BrowsingContext> bc = GetContentWindowInternal();
   if (!bc) {
     return nullptr;
   }
 
+<<<<<<< working copy
   nsPIDOMWindowOuter* window = bc->GetDOMWindow();
   if (!window) {
     // Either our browsing context contents are out-of-process (in which case
@@ -84,8 +85,7 @@ nsIDocument* nsGenericHTMLFrameElement::GetContentDocument(
     // document, and we should still return null.
     return nullptr;
   }
-
-  nsIDocument* doc = window->GetDoc();
+  Document* doc = window->GetDoc();
   if (!doc) {
     return nullptr;
   }
@@ -212,7 +212,7 @@ void nsGenericHTMLFrameElement::LoadSrc() {
   mFrameLoader->LoadFrame(origSrc);
 }
 
-nsresult nsGenericHTMLFrameElement::BindToTree(nsIDocument* aDocument,
+nsresult nsGenericHTMLFrameElement::BindToTree(Document* aDocument,
                                                nsIContent* aParent,
                                                nsIContent* aBindingParent) {
   nsresult rv =
@@ -378,7 +378,7 @@ nsresult nsGenericHTMLFrameElement::CopyInnerTo(Element* aDest) {
   nsresult rv = nsGenericHTMLElement::CopyInnerTo(aDest);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsIDocument* doc = aDest->OwnerDoc();
+  Document* doc = aDest->OwnerDoc();
   if (doc->IsStaticDocument() && mFrameLoader) {
     nsGenericHTMLFrameElement* dest =
         static_cast<nsGenericHTMLFrameElement*>(aDest);

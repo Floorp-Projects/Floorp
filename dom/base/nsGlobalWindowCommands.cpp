@@ -483,7 +483,7 @@ nsresult nsClipboardCommand::IsCommandEnabled(const char *aCommandName,
   nsCOMPtr<nsPIDOMWindowOuter> window = do_QueryInterface(aContext);
   NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
+  nsCOMPtr<Document> doc = window->GetExtantDoc();
   if (doc->IsHTMLOrXHTML()) {
     // In HTML and XHTML documents, we always want the cut, copy and paste
     // commands to be enabled.

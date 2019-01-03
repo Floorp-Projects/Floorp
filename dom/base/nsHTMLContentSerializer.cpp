@@ -13,7 +13,7 @@
 #include "nsHTMLContentSerializer.h"
 
 #include "nsIContent.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsElementTable.h"
 #include "nsNameSpaceManager.h"
 #include "nsString.h"
@@ -47,7 +47,7 @@ nsHTMLContentSerializer::nsHTMLContentSerializer() { mIsHTMLSerializer = true; }
 nsHTMLContentSerializer::~nsHTMLContentSerializer() {}
 
 NS_IMETHODIMP
-nsHTMLContentSerializer::AppendDocumentStart(nsIDocument* aDocument,
+nsHTMLContentSerializer::AppendDocumentStart(Document* aDocument,
                                              nsAString& aStr) {
   return NS_OK;
 }

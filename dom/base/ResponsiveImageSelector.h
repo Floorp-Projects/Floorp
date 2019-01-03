@@ -31,7 +31,7 @@ class ResponsiveImageSelector {
   NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(ResponsiveImageSelector)
 
   explicit ResponsiveImageSelector(nsIContent* aContent);
-  explicit ResponsiveImageSelector(nsIDocument* aDocument);
+  explicit ResponsiveImageSelector(dom::Document* aDocument);
 
   // NOTE ABOUT CURRENT SELECTION
   //
@@ -65,7 +65,7 @@ class ResponsiveImageSelector {
 
   // The document we were created for, or the owner document of the content if
   // we were created for a specific nsIContent.
-  nsIDocument* Document();
+  dom::Document* Document();
 
   // Get the url and density for the selected best candidate. These
   // implicitly cause an image to be selected if necessary.

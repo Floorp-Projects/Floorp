@@ -452,7 +452,7 @@ nsCSPBaseSrc* nsCSPParser::keywordSource() {
 
   if (CSP_IsKeyword(mCurToken, CSP_UNSAFE_INLINE)) {
     nsWeakPtr ctx = mCSPContext->GetLoadingContext();
-    nsCOMPtr<nsIDocument> doc = do_QueryReferent(ctx);
+    nsCOMPtr<Document> doc = do_QueryReferent(ctx);
     if (doc) {
       doc->SetHasUnsafeInlineCSP(true);
     }
@@ -474,7 +474,7 @@ nsCSPBaseSrc* nsCSPParser::keywordSource() {
 
   if (CSP_IsKeyword(mCurToken, CSP_UNSAFE_EVAL)) {
     nsWeakPtr ctx = mCSPContext->GetLoadingContext();
-    nsCOMPtr<nsIDocument> doc = do_QueryReferent(ctx);
+    nsCOMPtr<Document> doc = do_QueryReferent(ctx);
     if (doc) {
       doc->SetHasUnsafeEvalCSP(true);
     }

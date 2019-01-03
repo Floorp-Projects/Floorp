@@ -9,7 +9,7 @@
 #include "nsError.h"
 #include "nsGenericHTMLElement.h"
 #include "nsGkAtoms.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "jsfriendapi.h"
 #include "nsContentUtils.h"
 #include "nsJSUtils.h"
@@ -45,7 +45,7 @@ already_AddRefed<HTMLAudioElement> HTMLAudioElement::Audio(
     const GlobalObject& aGlobal, const Optional<nsAString>& aSrc,
     ErrorResult& aRv) {
   nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(aGlobal.GetAsSupports());
-  nsIDocument* doc;
+  Document* doc;
   if (!win || !(doc = win->GetExtantDoc())) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;

@@ -9,7 +9,6 @@
 
 #include "mozilla/BasicEvents.h"
 
-class nsIDocument;
 class nsIPrincipal;
 
 namespace mozilla {

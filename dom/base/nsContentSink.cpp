@@ -10,7 +10,7 @@
  */
 
 #include "nsContentSink.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/css/Loader.h"
 #include "mozilla/dom/SRILogHelper.h"
 #include "nsStyleLinkElement.h"
@@ -182,7 +182,7 @@ void nsContentSink::InitializeStatics() {
                               0);
 }
 
-nsresult nsContentSink::Init(nsIDocument* aDoc, nsIURI* aURI,
+nsresult nsContentSink::Init(Document* aDoc, nsIURI* aURI,
                              nsISupports* aContainer, nsIChannel* aChannel) {
   MOZ_ASSERT(aDoc, "null ptr");
   MOZ_ASSERT(aURI, "null ptr");
@@ -1399,7 +1399,7 @@ void nsContentSink::FavorPerformanceHint(bool perfOverStarvation,
     appShell->FavorPerformanceHint(perfOverStarvation, starvationDelay);
 }
 
-void nsContentSink::BeginUpdate(nsIDocument* aDocument) {
+void nsContentSink::BeginUpdate(Document* aDocument) {
   // Remember nested updates from updates that we started.
   if (mInNotification > 0 && mUpdatesInNotification < 2) {
     ++mUpdatesInNotification;
@@ -1416,7 +1416,7 @@ void nsContentSink::BeginUpdate(nsIDocument* aDocument) {
   }
 }
 
-void nsContentSink::EndUpdate(nsIDocument* aDocument) {
+void nsContentSink::EndUpdate(Document* aDocument) {
   // If we're in a script and we didn't do the notification,
   // something else in the script processing caused the
   // notification to occur. Update our notion of how much
@@ -1430,9 +1430,9 @@ void nsContentSink::EndUpdate(nsIDocument* aDocument) {
 void nsContentSink::DidBuildModelImpl(bool aTerminated) {
   if (mDocument) {
     MOZ_ASSERT(aTerminated || mDocument->GetReadyStateEnum() ==
-                                  nsIDocument::READYSTATE_LOADING,
+                                  Document::READYSTATE_LOADING,
                "Bad readyState");
-    mDocument->SetReadyStateInternal(nsIDocument::READYSTATE_INTERACTIVE);
+    mDocument->SetReadyStateInternal(Document::READYSTATE_INTERACTIVE);
   }
 
   if (mScriptLoader) {
@@ -1547,7 +1547,7 @@ void nsContentSink::WillBuildModelImpl() {
 }
 
 /* static */
-void nsContentSink::NotifyDocElementCreated(nsIDocument* aDoc) {
+void nsContentSink::NotifyDocElementCreated(Document* aDoc) {
   MOZ_ASSERT(nsContentUtils::IsSafeToRunScript());
 
   nsCOMPtr<nsIObserverService> observerService =

@@ -76,7 +76,8 @@ class ChannelMediaResource
 
  public:
   ChannelMediaResource(MediaResourceCallback* aDecoder, nsIChannel* aChannel,
-                       nsIURI* aURI, bool aIsPrivateBrowsing = false);
+                       nsIURI* aURI, int64_t aStreamLength,
+                       bool aIsPrivateBrowsing = false);
   ~ChannelMediaResource();
 
   // These are called on the main thread by MediaCache. These must
@@ -251,6 +252,9 @@ class ChannelMediaResource
   MediaCacheStream mCacheStream;
 
   ChannelSuspendAgent mSuspendAgent;
+
+  // The size of the stream if known at construction time (such as with blob)
+  const int64_t mKnownStreamLength;
 };
 
 }  // namespace mozilla

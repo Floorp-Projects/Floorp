@@ -27,7 +27,7 @@ EXPORTS.mozilla += [
     'ComposerCommandsUpdater.h',
 ]
 
-# Needed because we include HTMLEditor.h which indirectly includes nsIDocument.h
+# Needed because we include HTMLEditor.h which indirectly includes Document.h
 LOCAL_INCLUDES += [
     '/dom/base',
     '/dom/html',  # For nsHTMLDocument

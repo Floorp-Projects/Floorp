@@ -40,7 +40,7 @@ namespace dom {
 
 class DocGroup final {
  public:
-  typedef nsTArray<nsIDocument*>::iterator Iterator;
+  typedef nsTArray<Document*>::iterator Iterator;
   friend class TabGroup;
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DocGroup)
@@ -66,7 +66,7 @@ class DocGroup final {
 
     return mReactionsStack;
   }
-  void RemoveDocument(nsIDocument* aWindow);
+  void RemoveDocument(Document* aWindow);
 
   // Iterators for iterating over every document within the DocGroup
   Iterator begin() {
@@ -111,7 +111,7 @@ class DocGroup final {
 
   nsCString mKey;
   RefPtr<TabGroup> mTabGroup;
-  nsTArray<nsIDocument*> mDocuments;
+  nsTArray<Document*> mDocuments;
   RefPtr<mozilla::dom::CustomElementReactionsStack> mReactionsStack;
   nsTArray<RefPtr<HTMLSlotElement>> mSignalSlotList;
   // This pointer will be null if dom.performance.enable_scheduler_timing is

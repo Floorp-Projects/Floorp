@@ -23,7 +23,7 @@
 #include "nsDeviceContext.h"
 #include "nsIContentInlines.h"
 #include "nsICrashReporter.h"
-#include "nsIDocumentInlines.h"
+#include "mozilla/dom/DocumentInlines.h"
 #include "nsILoadContext.h"
 #include "nsIFrame.h"
 #include "nsIMemoryReporter.h"
@@ -249,7 +249,7 @@ RawGeckoNodeBorrowed Gecko_GetNextStyleChild(
   return aIterator->GetNextChild();
 }
 
-bool Gecko_VisitedStylesEnabled(const nsIDocument* aDoc) {
+bool Gecko_VisitedStylesEnabled(const Document* aDoc) {
   MOZ_ASSERT(aDoc);
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -488,7 +488,7 @@ bool Gecko_GetAnimationRule(
     RawServoAnimationValueMapBorrowedMut aAnimationValues) {
   MOZ_ASSERT(aElement);
 
-  nsIDocument* doc = aElement->GetComposedDoc();
+  Document* doc = aElement->GetComposedDoc();
   if (!doc) {
     return false;
   }
@@ -704,7 +704,7 @@ void Gecko_FillAllImageLayers(nsStyleImageLayers* aLayers, uint32_t aMaxLen) {
 }
 
 bool Gecko_IsDocumentBody(RawGeckoElementBorrowed aElement) {
-  nsIDocument* doc = aElement->GetUncomposedDoc();
+  Document* doc = aElement->GetUncomposedDoc();
   return doc && doc->GetBodyElement() == aElement;
 }
 
@@ -769,8 +769,7 @@ nsAtom* Gecko_GetXMLLangValue(RawGeckoElementBorrowed aElement) {
   return atom.forget().take();
 }
 
-nsIDocument::DocumentTheme Gecko_GetDocumentLWTheme(
-    const nsIDocument* aDocument) {
+Document::DocumentTheme Gecko_GetDocumentLWTheme(const Document* aDocument) {
   return aDocument->ThreadSafeGetDocumentLWTheme();
 }
 
@@ -2078,7 +2077,7 @@ void Gecko_StyleSheet_FinishAsyncParse(
                  counters = std::move(useCounters)]() mutable {
         MOZ_ASSERT(NS_IsMainThread());
         SheetLoadData* data = d->get();
-        if (nsIDocument* doc = data->mLoader->GetDocument()) {
+        if (Document* doc = data->mLoader->GetDocument()) {
           if (const StyleUseCounters* docCounters =
                   doc->GetStyleUseCounters()) {
             Servo_UseCounters_Merge(docCounters, counters.get());
@@ -2218,7 +2217,7 @@ bool Gecko_DocumentRule_UseForPresentation(
     css::DocumentMatchingFunction aMatchingFunction) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsIDocument* doc = aPresContext->Document();
+  Document* doc = aPresContext->Document();
   nsIURI* docURI = doc->GetDocumentURI();
   nsAutoCString docURISpec;
   if (docURI) {
@@ -2315,8 +2314,8 @@ void Gecko_ContentList_AppendAll(nsSimpleContentList* aList,
   }
 }
 
-const nsTArray<Element*>* Gecko_Document_GetElementsWithId(
-    const nsIDocument* aDoc, nsAtom* aId) {
+const nsTArray<Element*>* Gecko_Document_GetElementsWithId(const Document* aDoc,
+                                                           nsAtom* aId) {
   MOZ_ASSERT(aDoc);
   MOZ_ASSERT(aId);
 

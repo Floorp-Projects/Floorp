@@ -120,7 +120,7 @@ already_AddRefed<Promise> Permissions::Revoke(JSContext* aCx,
     return nullptr;
   }
 
-  nsCOMPtr<nsIDocument> document = mWindow->GetExtantDoc();
+  nsCOMPtr<Document> document = mWindow->GetExtantDoc();
   if (!document) {
     promise->MaybeReject(NS_ERROR_UNEXPECTED);
     return promise.forget();

@@ -11,11 +11,16 @@
 template <class>
 class nsCOMPtr;
 class nsIContent;
-class nsIDocument;
 class nsINode;
 class nsIURI;
 template <class>
 class nsTArray;
+
+namespace mozilla {
+namespace dom {
+class Document;
+}
+}  // namespace mozilla
 
 #define NS_ITRANSFORMOBSERVER_IID                    \
   {                                                  \
@@ -28,10 +33,10 @@ class nsITransformObserver : public nsISupports {
  public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ITRANSFORMOBSERVER_IID)
 
-  NS_IMETHOD OnDocumentCreated(nsIDocument* aResultDocument) = 0;
+  NS_IMETHOD OnDocumentCreated(mozilla::dom::Document* aResultDocument) = 0;
 
   NS_IMETHOD OnTransformDone(nsresult aResult,
-                             nsIDocument* aResultDocument) = 0;
+                             mozilla::dom::Document* aResultDocument) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsITransformObserver, NS_ITRANSFORMOBSERVER_IID)
@@ -48,7 +53,8 @@ class nsIDocumentTransformer : public nsISupports {
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOCUMENTTRANSFORMER_IID)
 
   NS_IMETHOD SetTransformObserver(nsITransformObserver* aObserver) = 0;
-  NS_IMETHOD LoadStyleSheet(nsIURI* aUri, nsIDocument* aLoaderDocument) = 0;
+  NS_IMETHOD LoadStyleSheet(nsIURI* aUri,
+                            mozilla::dom::Document* aLoaderDocument) = 0;
   NS_IMETHOD SetSourceContentModel(nsINode* aSource) = 0;
   NS_IMETHOD CancelLoads() = 0;
 

@@ -33,7 +33,7 @@ class CSSStyleRuleDeclaration final : public nsDOMCSSDeclaration {
       Operation aOperation, mozilla::DeclarationBlock** aCreated) final;
   nsresult SetCSSDeclaration(DeclarationBlock* aDecl,
                              MutationClosureData* aClosureData) final;
-  nsIDocument* DocToUpdate() final;
+  Document* DocToUpdate() final;
   ParsingEnvironment GetParsingEnvironment(
       nsIPrincipal* aSubjectPrincipal) const final;
 

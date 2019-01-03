@@ -25,7 +25,7 @@
 #include "nsStringFwd.h"
 
 // XXXtw sadly, this makes consumers of nsContentPolicyUtils depend on widget
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsPIDOMWindow.h"
 
 #define NS_CONTENTPOLICY_CONTRACTID "@mozilla.org/layout/content-policy;1"
@@ -181,7 +181,7 @@ inline const char *NS_CP_ContentTypeName(uint32_t contentType) {
         n = win ? win->GetExtantDoc() : nullptr;                               \
       }                                                                        \
       if (n) {                                                                 \
-        nsIDocument *d = n->OwnerDoc();                                        \
+        mozilla::dom::Document *d = n->OwnerDoc();                             \
         if (d->IsLoadedAsData() || d->IsBeingUsedAsImage() ||                  \
             d->IsResourceDoc()) {                                              \
           nsCOMPtr<nsIContentPolicy> dataPolicy =                              \
@@ -272,7 +272,7 @@ inline nsIDocShell *NS_CP_GetDocShellFromContext(nsISupports *aContext) {
 
   if (!window) {
     // Our context might be a document.
-    nsCOMPtr<nsIDocument> doc = do_QueryInterface(aContext);
+    nsCOMPtr<mozilla::dom::Document> doc = do_QueryInterface(aContext);
     if (!doc) {
       // we were not a document after all, get our ownerDocument,
       // hopefully

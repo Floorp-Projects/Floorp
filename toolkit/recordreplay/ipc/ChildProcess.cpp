@@ -80,6 +80,9 @@ ChildProcessInfo::Disposition ChildProcessInfo::GetDisposition() {
       const ResumeMessage& nmsg = static_cast<const ResumeMessage&>(*msg);
       return nmsg.mForward ? AfterLastCheckpoint : BeforeLastCheckpoint;
     }
+    if (msg->mType == MessageType::RunToPoint) {
+      return AfterLastCheckpoint;
+    }
   }
   return AtLastCheckpoint;
 }

@@ -437,7 +437,7 @@ class InitRunnable final : public WorkerMainThreadRunnable {
       wp = wp->GetParent();
     }
     nsPIDOMWindowInner* window = wp->GetWindow();
-    nsIDocument* doc = window ? window->GetExtantDoc() : nullptr;
+    Document* doc = window ? window->GetExtantDoc() : nullptr;
     nsCOMPtr<nsIPrincipal> principal =
         doc ? doc->NodePrincipal() : wp->GetPrincipal();
     if (!principal) {
@@ -878,7 +878,7 @@ nsresult EventSourceImpl::GetBaseURI(nsIURI** aBaseURI) {
   nsCOMPtr<nsIURI> baseURI;
 
   // first we try from document->GetBaseURI()
-  nsCOMPtr<nsIDocument> doc = mEventSource->GetDocumentIfCurrent();
+  nsCOMPtr<Document> doc = mEventSource->GetDocumentIfCurrent();
   if (doc) {
     baseURI = doc->GetBaseURI();
   }
@@ -928,7 +928,7 @@ void EventSourceImpl::SetupHttpChannel() {
 nsresult EventSourceImpl::SetupReferrerPolicy() {
   AssertIsOnMainThread();
   MOZ_ASSERT(!IsShutDown());
-  nsCOMPtr<nsIDocument> doc = mEventSource->GetDocumentIfCurrent();
+  nsCOMPtr<Document> doc = mEventSource->GetDocumentIfCurrent();
   if (doc) {
     nsresult rv = mHttpChannel->SetReferrerWithPolicy(doc->GetDocumentURI(),
                                                       doc->GetReferrerPolicy());
@@ -960,7 +960,7 @@ nsresult EventSourceImpl::InitChannelAndRequestEventSource() {
   loadFlags = nsIRequest::LOAD_BACKGROUND | nsIRequest::LOAD_BYPASS_CACHE |
               nsIRequest::INHIBIT_CACHING;
 
-  nsCOMPtr<nsIDocument> doc = mEventSource->GetDocumentIfCurrent();
+  nsCOMPtr<Document> doc = mEventSource->GetDocumentIfCurrent();
 
   nsSecurityFlags securityFlags = nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS;
 

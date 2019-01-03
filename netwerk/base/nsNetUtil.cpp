@@ -29,7 +29,7 @@
 #include "nsIBufferedStreams.h"
 #include "nsIChannelEventSink.h"
 #include "nsIContentSniffer.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIDownloader.h"
 #include "nsIFileProtocolHandler.h"
 #include "nsIFileStreams.h"
@@ -2580,7 +2580,7 @@ nsresult NS_ShouldSecureUpgrade(nsIURI *aURI, nsILoadInfo *aLoadInfo,
           Telemetry::AccumulateCategorical(
               Telemetry::LABELS_HTTP_SCHEME_UPGRADE_TYPE::CSP);
         } else {
-          nsCOMPtr<nsIDocument> doc;
+          RefPtr<dom::Document> doc;
           nsINode *node = aLoadInfo->LoadingNode();
           if (node) {
             doc = node->OwnerDoc();
@@ -2709,12 +2709,9 @@ nsresult NS_CompareLoadInfoAndLoadContext(nsIChannel *aChannel) {
   bool isAboutPage = false;
   nsINode *node = loadInfo->LoadingNode();
   if (node) {
-    nsIDocument *doc = node->OwnerDoc();
-    if (doc) {
-      nsIURI *uri = doc->GetDocumentURI();
-      nsresult rv = uri->SchemeIs("about", &isAboutPage);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
+    nsIURI *uri = node->OwnerDoc()->GetDocumentURI();
+    nsresult rv = uri->SchemeIs("about", &isAboutPage);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   if (isAboutPage) {

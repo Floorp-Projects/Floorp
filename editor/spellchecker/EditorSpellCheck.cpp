@@ -23,7 +23,7 @@
 #include "nsError.h"                       // for NS_ERROR_NOT_INITIALIZED, etc
 #include "nsIContent.h"                    // for nsIContent
 #include "nsIContentPrefService2.h"        // for nsIContentPrefService2, etc
-#include "nsIDocument.h"                   // for nsIDocument
+#include "mozilla/dom/Document.h"          // for Document
 #include "nsIEditor.h"                     // for nsIEditor
 #include "nsILoadContext.h"
 #include "nsISupportsBase.h"   // for nsISupports
@@ -73,7 +73,7 @@ class UpdateDictionaryHolder {
 static nsIURI* GetDocumentURI(EditorBase* aEditor) {
   MOZ_ASSERT(aEditor);
 
-  nsIDocument* doc = aEditor->AsEditorBase()->GetDocument();
+  Document* doc = aEditor->AsEditorBase()->GetDocument();
   if (NS_WARN_IF(!doc)) {
     return nullptr;
   }
@@ -82,7 +82,7 @@ static nsIURI* GetDocumentURI(EditorBase* aEditor) {
 }
 
 static nsILoadContext* GetLoadContext(nsIEditor* aEditor) {
-  nsIDocument* doc = aEditor->AsEditorBase()->GetDocument();
+  Document* doc = aEditor->AsEditorBase()->GetDocument();
   if (NS_WARN_IF(!doc)) {
     return nullptr;
   }
@@ -324,7 +324,7 @@ EditorSpellCheck::InitSpellChecker(nsIEditor* aEditor,
   NS_ENSURE_TRUE(aEditor, NS_ERROR_NULL_POINTER);
   mEditor = aEditor->AsEditorBase();
 
-  nsCOMPtr<nsIDocument> doc = mEditor->GetDocument();
+  RefPtr<Document> doc = mEditor->GetDocument();
   if (NS_WARN_IF(!doc)) {
     return NS_ERROR_FAILURE;
   }
@@ -659,9 +659,8 @@ EditorSpellCheck::UpdateCurrentDictionary(
   uint32_t flags = 0;
   mEditor->GetFlags(&flags);
   if (flags & nsIPlaintextEditor::eEditorMailMask) {
-    nsCOMPtr<nsIDocument> ownerDoc = rootContent->OwnerDoc();
-    NS_ENSURE_TRUE(ownerDoc, NS_ERROR_FAILURE);
-    nsIDocument* parentDoc = ownerDoc->GetParentDocument();
+    RefPtr<Document> ownerDoc = rootContent->OwnerDoc();
+    Document* parentDoc = ownerDoc->GetParentDocument();
     if (parentDoc) {
       rootContent = parentDoc->GetDocumentElement();
       if (!rootContent) {
@@ -673,7 +672,7 @@ EditorSpellCheck::UpdateCurrentDictionary(
   RefPtr<DictionaryFetcher> fetcher =
       new DictionaryFetcher(this, aCallback, mDictionaryFetcherGroup);
   rootContent->GetLang(fetcher->mRootContentLang);
-  nsCOMPtr<nsIDocument> doc = rootContent->GetComposedDoc();
+  RefPtr<Document> doc = rootContent->GetComposedDoc();
   NS_ENSURE_STATE(doc);
   doc->GetContentLanguage(fetcher->mRootDocContentLang);
 

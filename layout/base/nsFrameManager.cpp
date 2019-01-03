@@ -18,7 +18,7 @@
 #include "mozilla/PresState.h"
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/dom/Element.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 
 #include "nsError.h"
 #include "nsAbsoluteContainingBlock.h"
@@ -145,7 +145,7 @@ void nsFrameManager::CaptureFrameStateFor(nsIFrame* aFrame,
   // Exit early if we get empty key
   nsAutoCString stateKey;
   nsIContent* content = aFrame->GetContent();
-  nsIDocument* doc = content ? content->GetUncomposedDoc() : nullptr;
+  Document* doc = content ? content->GetUncomposedDoc() : nullptr;
   nsresult rv = statefulFrame->GenerateStateKey(content, doc, stateKey);
   if (NS_FAILED(rv) || stateKey.IsEmpty()) {
     return;
@@ -206,7 +206,7 @@ void nsFrameManager::RestoreFrameStateFor(nsIFrame* aFrame,
   }
 
   nsAutoCString stateKey;
-  nsIDocument* doc = content->GetUncomposedDoc();
+  Document* doc = content->GetUncomposedDoc();
   nsresult rv = statefulFrame->GenerateStateKey(content, doc, stateKey);
   if (NS_FAILED(rv) || stateKey.IsEmpty()) {
     return;

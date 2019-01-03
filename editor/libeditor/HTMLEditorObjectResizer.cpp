@@ -24,7 +24,7 @@
 #include "nsAtom.h"
 #include "nsIContent.h"
 #include "nsID.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIPresShell.h"
 #include "nsISupportsUtils.h"
 #include "nsPIDOMWindow.h"
@@ -753,7 +753,7 @@ nsresult HTMLEditor::SetResizingInfoPosition(int32_t aX, int32_t aY, int32_t aW,
                     NS_LITERAL_STRING(", ") + diffHeightStr +
                     NS_LITERAL_STRING(")"));
 
-  nsCOMPtr<nsIDocument> doc = GetDocument();
+  RefPtr<Document> doc = GetDocument();
   textInfo = doc->CreateTextNode(info);
   if (NS_WARN_IF(!textInfo)) {
     return NS_ERROR_FAILURE;

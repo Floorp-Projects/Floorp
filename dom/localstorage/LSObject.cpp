@@ -249,7 +249,7 @@ nsresult LSObject::CreateForWindow(nsPIDOMWindowInner* aWindow,
   }
 
   nsString documentURI;
-  if (nsCOMPtr<nsIDocument> doc = aWindow->GetExtantDoc()) {
+  if (nsCOMPtr<Document> doc = aWindow->GetExtantDoc()) {
     rv = doc->GetDocumentURI(documentURI);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;

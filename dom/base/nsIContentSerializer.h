@@ -11,12 +11,12 @@
 #include "nsStringFwd.h"
 
 class nsIContent;
-class nsIDocument;
 
 namespace mozilla {
 class Encoding;
 namespace dom {
 class Comment;
+class Document;
 class DocumentType;
 class Element;
 class ProcessingInstruction;
@@ -69,7 +69,8 @@ class nsIContentSerializer : public nsISupports {
    * serialized by other methods. XML declaration is the most likely
    * thing this method can produce.
    */
-  NS_IMETHOD AppendDocumentStart(nsIDocument* aDocument, nsAString& aStr) = 0;
+  NS_IMETHOD AppendDocumentStart(mozilla::dom::Document* aDocument,
+                                 nsAString& aStr) = 0;
 
   // If Init() sets *aNeedsPerformatScanning to true, then these methods are
   // called when elements are started and ended, before AppendElementStart

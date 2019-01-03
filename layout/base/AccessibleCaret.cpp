@@ -171,7 +171,7 @@ void AccessibleCaret::EnsureApzAware() {
   }
 }
 
-void AccessibleCaret::InjectCaretElement(nsIDocument* aDocument) {
+void AccessibleCaret::InjectCaretElement(Document* aDocument) {
   ErrorResult rv;
   RefPtr<Element> element = CreateCaretElement(aDocument);
   mCaretElementHolder = aDocument->InsertAnonymousContent(*element, rv);
@@ -186,7 +186,7 @@ void AccessibleCaret::InjectCaretElement(nsIDocument* aDocument) {
 }
 
 already_AddRefed<Element> AccessibleCaret::CreateCaretElement(
-    nsIDocument* aDocument) const {
+    Document* aDocument) const {
   // Content structure of AccessibleCaret
   // <div class="moz-accessiblecaret">  <- CaretElement()
   //   <div id="text-overlay"           <- TextOverlayElement()
@@ -210,7 +210,7 @@ already_AddRefed<Element> AccessibleCaret::CreateCaretElement(
   return parent.forget();
 }
 
-void AccessibleCaret::RemoveCaretElement(nsIDocument* aDocument) {
+void AccessibleCaret::RemoveCaretElement(Document* aDocument) {
   CaretElement().RemoveEventListener(NS_LITERAL_STRING("touchstart"),
                                      mDummyTouchListener, false);
 

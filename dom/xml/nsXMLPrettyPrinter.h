@@ -9,8 +9,6 @@
 #include "nsStubDocumentObserver.h"
 #include "nsCOMPtr.h"
 
-class nsIDocument;
-
 class nsXMLPrettyPrinter : public nsStubDocumentObserver {
  public:
   nsXMLPrettyPrinter();
@@ -32,7 +30,8 @@ class nsXMLPrettyPrinter : public nsStubDocumentObserver {
    * @param [out] aDidPrettyPrint if true, and error not returned, actually
    *              went ahead with prettyprinting the document.
    */
-  nsresult PrettyPrint(nsIDocument* aDocument, bool* aDidPrettyPrint);
+  nsresult PrettyPrint(mozilla::dom::Document* aDocument,
+                       bool* aDidPrettyPrint);
 
   /**
    * Unhook the prettyprinter
@@ -50,7 +49,8 @@ class nsXMLPrettyPrinter : public nsStubDocumentObserver {
    */
   void MaybeUnhook(nsIContent* aContent);
 
-  nsIDocument* mDocument;  // weak. Set as long as we're observing the document
+  mozilla::dom::Document*
+      mDocument;  // weak. Set as long as we're observing the document
   bool mUnhookPending;
 };
 

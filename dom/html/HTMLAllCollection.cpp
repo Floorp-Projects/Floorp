@@ -66,7 +66,7 @@ void HTMLAllCollection::Item(const Optional<nsAString>& aNameOrIndex,
 
 nsContentList* HTMLAllCollection::Collection() {
   if (!mCollection) {
-    nsIDocument* document = mDocument;
+    Document* document = mDocument;
     mCollection = document->GetElementsByTagName(NS_LITERAL_STRING("*"));
     MOZ_ASSERT(mCollection);
   }

@@ -21,7 +21,7 @@
 #include "nsGkAtoms.h"
 #include "nsAtom.h"
 #include "nsIContent.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIFrame.h"
 #include "nsINode.h"
 #include "nsIPresShell.h"
@@ -448,7 +448,7 @@ void IMEContentObserver::ObserveEditableNode() {
     mRootContent->AddMutationObserver(this);
     // If it's in a document (should be so), we can use document observer to
     // reduce redundant computation of text change offsets.
-    nsIDocument* doc = mRootContent->GetComposedDoc();
+    Document* doc = mRootContent->GetComposedDoc();
     if (doc) {
       RefPtr<DocumentObserver> documentObserver = mDocumentObserver;
       documentObserver->Observe(doc);
@@ -2103,12 +2103,12 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(IMEContentObserver::DocumentObserver)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(IMEContentObserver::DocumentObserver)
 
-void IMEContentObserver::DocumentObserver::Observe(nsIDocument* aDocument) {
+void IMEContentObserver::DocumentObserver::Observe(Document* aDocument) {
   MOZ_ASSERT(aDocument);
 
   // Guarantee that aDocument won't be destroyed during a call of
   // StopObserving().
-  RefPtr<nsIDocument> newDocument = aDocument;
+  RefPtr<Document> newDocument = aDocument;
 
   StopObserving();
 
@@ -2125,7 +2125,7 @@ void IMEContentObserver::DocumentObserver::StopObserving() {
   RefPtr<IMEContentObserver> observer = mIMEContentObserver.forget();
 
   // Stop observing the document first.
-  RefPtr<nsIDocument> document = mDocument.forget();
+  RefPtr<Document> document = mDocument.forget();
   document->RemoveObserver(this);
 
   // Notify IMEContentObserver of ending of document updates if this already
@@ -2144,7 +2144,7 @@ void IMEContentObserver::DocumentObserver::Destroy() {
   mIMEContentObserver = nullptr;
 }
 
-void IMEContentObserver::DocumentObserver::BeginUpdate(nsIDocument* aDocument) {
+void IMEContentObserver::DocumentObserver::BeginUpdate(Document* aDocument) {
   if (NS_WARN_IF(Destroyed()) || NS_WARN_IF(!IsObserving())) {
     return;
   }
@@ -2152,7 +2152,7 @@ void IMEContentObserver::DocumentObserver::BeginUpdate(nsIDocument* aDocument) {
   mIMEContentObserver->BeginDocumentUpdate();
 }
 
-void IMEContentObserver::DocumentObserver::EndUpdate(nsIDocument* aDocument) {
+void IMEContentObserver::DocumentObserver::EndUpdate(Document* aDocument) {
   if (NS_WARN_IF(Destroyed()) || NS_WARN_IF(!IsObserving()) ||
       NS_WARN_IF(!IsUpdating())) {
     return;

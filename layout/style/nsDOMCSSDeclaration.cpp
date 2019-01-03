@@ -219,7 +219,7 @@ nsDOMCSSDeclaration::GetParsingEnvironmentForRule(const css::Rule* aRule) {
     return {nullptr, eCompatibility_FullStandards, nullptr};
   }
 
-  if (nsIDocument* document = sheet->GetAssociatedDocument()) {
+  if (Document* document = sheet->GetAssociatedDocument()) {
     return {
         sheet->URLData(),
         document->GetCompatibilityMode(),

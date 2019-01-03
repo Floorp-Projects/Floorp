@@ -11,8 +11,7 @@
 #include "nsPresContext.h"
 #include "nsMappedAttributes.h"
 #include "nsSize.h"
-#include "nsIDocument.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsImageFrame.h"
 #include "nsIScriptContext.h"
 #include "nsIURL.h"
@@ -102,7 +101,7 @@ class ImageLoadTask : public Runnable {
  private:
   ~ImageLoadTask() {}
   RefPtr<HTMLImageElement> mElement;
-  nsCOMPtr<nsIDocument> mDocument;
+  nsCOMPtr<Document> mDocument;
   bool mAlwaysLoad;
 
   // True if we want to set nsIClassOfService::UrgentStart to the channel to
@@ -488,8 +487,7 @@ bool HTMLImageElement::IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
   return false;
 }
 
-nsresult HTMLImageElement::BindToTree(nsIDocument* aDocument,
-                                      nsIContent* aParent,
+nsresult HTMLImageElement::BindToTree(Document* aDocument, nsIContent* aParent,
                                       nsIContent* aBindingParent) {
   nsresult rv =
       nsGenericHTMLElement::BindToTree(aDocument, aParent, aBindingParent);
@@ -611,7 +609,7 @@ EventStates HTMLImageElement::IntrinsicState() const {
          nsImageLoadingContent::ImageState();
 }
 
-void HTMLImageElement::NodeInfoChanged(nsIDocument* aOldDoc) {
+void HTMLImageElement::NodeInfoChanged(Document* aOldDoc) {
   nsGenericHTMLElement::NodeInfoChanged(aOldDoc);
   // Force reload image if adoption steps are run.
   // If loading is temporarily disabled, don't even launch script runner.
@@ -635,7 +633,7 @@ already_AddRefed<HTMLImageElement> HTMLImageElement::Image(
     const GlobalObject& aGlobal, const Optional<uint32_t>& aWidth,
     const Optional<uint32_t>& aHeight, ErrorResult& aError) {
   nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(aGlobal.GetAsSupports());
-  nsIDocument* doc;
+  Document* doc;
   if (!win || !(doc = win->GetExtantDoc())) {
     aError.Throw(NS_ERROR_FAILURE);
     return nullptr;
@@ -878,7 +876,7 @@ nsresult HTMLImageElement::LoadSelectedImage(bool aForce, bool aNotify,
       CancelImageRequests(aNotify);
       rv = NS_OK;
     } else {
-      nsIDocument* doc = OwnerDoc();
+      Document* doc = OwnerDoc();
       StringToURI(src, doc, getter_AddRefs(selectedSource));
       if (!aAlwaysLoad && SelectedSourceMatchesLast(selectedSource)) {
         UpdateDensityOnly();
@@ -1137,7 +1135,7 @@ bool HTMLImageElement::TryCreateResponsiveSelector(Element* aSourceElement) {
 }
 
 /* static */ bool HTMLImageElement::SelectSourceForTagWithAttrs(
-    nsIDocument* aDocument, bool aIsSourceTag, const nsAString& aSrcAttr,
+    Document* aDocument, bool aIsSourceTag, const nsAString& aSrcAttr,
     const nsAString& aSrcsetAttr, const nsAString& aSizesAttr,
     const nsAString& aTypeAttr, const nsAString& aMediaAttr,
     nsAString& aResult) {

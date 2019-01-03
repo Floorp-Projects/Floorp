@@ -9,7 +9,7 @@
 #include "nsIDocShell.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIContentViewer.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "XULDocument.h"
 #include "InProcessTabChildMessageManager.h"
 #include "nsIWindowMediator.h"
@@ -174,7 +174,7 @@ void MarkContentViewer(nsIContentViewer* aViewer, bool aCleanupJS) {
     return;
   }
 
-  nsIDocument* doc = aViewer->GetDocument();
+  Document* doc = aViewer->GetDocument();
   if (doc &&
       doc->GetMarkedCCGeneration() != nsCCUncollectableMarker::sGeneration) {
     doc->MarkUncollectableForCCGeneration(nsCCUncollectableMarker::sGeneration);
@@ -502,7 +502,7 @@ void mozilla::dom::TraceBlackJS(JSTracer* aTrc, bool aIsShutdownGC) {
         }
 
 #ifdef MOZ_XUL
-        nsIDocument* doc = window->GetExtantDoc();
+        Document* doc = window->GetExtantDoc();
         if (doc && doc->IsXULDocument()) {
           XULDocument* xulDoc = static_cast<XULDocument*>(doc);
           xulDoc->TraceProtos(aTrc);

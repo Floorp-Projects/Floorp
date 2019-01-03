@@ -408,7 +408,7 @@ void APZEventState::ProcessAPZStateChange(ViewID aViewId,
       }
 
       nsIContent* content = nsLayoutUtils::FindContentFor(aViewId);
-      nsIDocument* doc = content ? content->GetComposedDoc() : nullptr;
+      dom::Document* doc = content ? content->GetComposedDoc() : nullptr;
       nsCOMPtr<nsIDocShell> docshell(doc ? doc->GetDocShell() : nullptr);
       if (docshell && sf) {
         nsDocShell* nsdocshell = static_cast<nsDocShell*>(docshell.get());
@@ -427,7 +427,7 @@ void APZEventState::ProcessAPZStateChange(ViewID aViewId,
       }
 
       nsIContent* content = nsLayoutUtils::FindContentFor(aViewId);
-      nsIDocument* doc = content ? content->GetComposedDoc() : nullptr;
+      dom::Document* doc = content ? content->GetComposedDoc() : nullptr;
       nsCOMPtr<nsIDocShell> docshell(doc ? doc->GetDocShell() : nullptr);
       if (docshell && sf) {
         nsDocShell* nsdocshell = static_cast<nsDocShell*>(docshell.get());

@@ -24,7 +24,7 @@
 #include "nsMenuItemIconX.h"
 #include "nsObjCExceptions.h"
 #include "nsIContent.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsNameSpaceManager.h"
 #include "nsGkAtoms.h"
 #include "nsThreadUtils.h"
@@ -151,7 +151,7 @@ nsMenuItemIconX::GetIconURI(nsIURI** aIconURI)
   if (!hasImageAttr) {
     // If the content node has no "image" attribute, get the
     // "list-style-image" property from CSS.
-    nsCOMPtr<nsIDocument> document = mContent->GetComposedDoc();
+    RefPtr<mozilla::dom::Document> document = mContent->GetComposedDoc();
     if (!document || !mContent->IsElement()) {
       return NS_ERROR_FAILURE;
     }
@@ -221,7 +221,7 @@ nsMenuItemIconX::LoadIcon(nsIURI* aIconURI)
 
   if (!mContent) return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIDocument> document = mContent->OwnerDoc();
+  RefPtr<mozilla::dom::Document> document = mContent->OwnerDoc();
 
   nsCOMPtr<nsILoadGroup> loadGroup = document->GetDocumentLoadGroup();
   if (!loadGroup) return NS_ERROR_FAILURE;

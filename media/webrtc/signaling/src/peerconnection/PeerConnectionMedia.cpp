@@ -530,7 +530,7 @@ nsresult PeerConnectionMedia::AddTransceiver(
 
   if (aSendTrack) {
     // implement checking for peerIdentity (where failure == black/silence)
-    nsIDocument* doc = mParent->GetWindow()->GetExtantDoc();
+    Document* doc = mParent->GetWindow()->GetExtantDoc();
     if (doc) {
       transceiver->UpdateSinkIdentity(nullptr, doc->NodePrincipal(),
                                       mParent->GetPeerIdentity());

@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !getBuildConfiguration()['x86'] && !getBuildConfiguration()['x64'] && !getBuildConfiguration()['arm64']
+// |jit-test| skip-if: getBuildConfiguration()['arm']
 // skip arm7 due to bug 1513231
 
 // float_memory.wast:5

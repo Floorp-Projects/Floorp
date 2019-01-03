@@ -593,7 +593,7 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
   virtual void WindowUsesOMTC() {}
   virtual void RegisterTouchWindow() {}
 
-  nsIDocument* GetDocument() const;
+  mozilla::dom::Document* GetDocument() const;
 
   void EnsureTextEventDispatcher();
 

@@ -56,7 +56,7 @@ class WebProgressListener final : public nsIWebProgressListener,
     // from ServiceWorkerPrivate.
     aWebProgress->RemoveProgressListener(this);
 
-    nsCOMPtr<nsIDocument> doc = mWindow->GetExtantDoc();
+    nsCOMPtr<Document> doc = mWindow->GetExtantDoc();
     if (NS_WARN_IF(!doc)) {
       mPromise->Reject(NS_ERROR_FAILURE, __func__);
       mPromise = nullptr;

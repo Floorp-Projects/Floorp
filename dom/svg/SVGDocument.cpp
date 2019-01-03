@@ -48,7 +48,7 @@ nsresult SVGDocument::Clone(dom::NodeInfo* aNodeInfo, nsINode** aResult) const {
 ////////////////////////////////////////////////////////////////////////
 // Exported creation functions
 
-nsresult NS_NewSVGDocument(nsIDocument** aInstancePtrResult) {
+nsresult NS_NewSVGDocument(Document** aInstancePtrResult) {
   RefPtr<SVGDocument> doc = new SVGDocument();
 
   nsresult rv = doc->Init();

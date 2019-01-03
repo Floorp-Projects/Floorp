@@ -6,7 +6,7 @@
 #include "nsHTMLParts.h"
 #include "nsContainerFrame.h"
 #include "nsCSSRendering.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsPageFrame.h"
 #include "nsStyleConsts.h"
 #include "nsGkAtoms.h"
@@ -80,7 +80,7 @@ void nsDocElementBoxFrame::DestroyFrom(nsIFrame* aDestructRoot,
 
 nsresult nsDocElementBoxFrame::CreateAnonymousContent(
     nsTArray<ContentInfo>& aElements) {
-  nsIDocument* doc = mContent->GetComposedDoc();
+  Document* doc = mContent->GetComposedDoc();
   if (!doc) {
     // The page is currently being torn down.  Why bother.
     return NS_ERROR_FAILURE;

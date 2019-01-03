@@ -6,7 +6,7 @@
 
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 #include "nsContentUtils.h"
@@ -47,8 +47,7 @@ NS_IMPL_ISUPPORTS_INHERITED(HTMLScriptElement, nsGenericHTMLElement,
                             nsIScriptLoaderObserver, nsIScriptElement,
                             nsIMutationObserver)
 
-nsresult HTMLScriptElement::BindToTree(nsIDocument* aDocument,
-                                       nsIContent* aParent,
+nsresult HTMLScriptElement::BindToTree(Document* aDocument, nsIContent* aParent,
                                        nsIContent* aBindingParent) {
   nsresult rv =
       nsGenericHTMLElement::BindToTree(aDocument, aParent, aBindingParent);
@@ -168,7 +167,7 @@ void HTMLScriptElement::GetScriptCharset(nsAString& charset) {
   GetCharset(charset);
 }
 
-void HTMLScriptElement::FreezeExecutionAttrs(nsIDocument* aOwnerDoc) {
+void HTMLScriptElement::FreezeExecutionAttrs(Document* aOwnerDoc) {
   if (mFrozen) {
     return;
   }

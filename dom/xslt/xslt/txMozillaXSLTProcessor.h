@@ -58,7 +58,7 @@ class txMozillaXSLTProcessor final : public nsIDocumentTransformer,
   // nsIDocumentTransformer interface
   NS_IMETHOD SetTransformObserver(nsITransformObserver* aObserver) override;
   NS_IMETHOD LoadStyleSheet(nsIURI* aUri,
-                            nsIDocument* aLoaderDocument) override;
+                            mozilla::dom::Document* aLoaderDocument) override;
   NS_IMETHOD SetSourceContentModel(nsINode* aSource) override;
   NS_IMETHOD CancelLoads() override { return NS_OK; }
   NS_IMETHOD AddXSLTParamNamespace(const nsString& aPrefix,
@@ -89,9 +89,10 @@ class txMozillaXSLTProcessor final : public nsIDocumentTransformer,
 
   void ImportStylesheet(nsINode& stylesheet, mozilla::ErrorResult& aRv);
   already_AddRefed<mozilla::dom::DocumentFragment> TransformToFragment(
-      nsINode& source, nsIDocument& docVal, mozilla::ErrorResult& aRv);
-  already_AddRefed<nsIDocument> TransformToDocument(nsINode& source,
-                                                    mozilla::ErrorResult& aRv);
+      nsINode& source, mozilla::dom::Document& docVal,
+      mozilla::ErrorResult& aRv);
+  already_AddRefed<mozilla::dom::Document> TransformToDocument(
+      nsINode& source, mozilla::ErrorResult& aRv);
 
   void SetParameter(JSContext* aCx, const nsAString& aNamespaceURI,
                     const nsAString& aLocalName, JS::Handle<JS::Value> aValue,
@@ -113,7 +114,8 @@ class txMozillaXSLTProcessor final : public nsIDocumentTransformer,
 
   nsINode* GetSourceContentModel() { return mSource; }
 
-  nsresult TransformToDoc(nsIDocument** aResult, bool aCreateDataDocument);
+  nsresult TransformToDoc(mozilla::dom::Document** aResult,
+                          bool aCreateDataDocument);
 
   bool IsLoadDisabled() {
     return (mFlags & mozilla::dom::XSLTProcessor_Binding::DISABLE_ALL_LOADS) !=
@@ -141,7 +143,7 @@ class txMozillaXSLTProcessor final : public nsIDocumentTransformer,
   nsCOMPtr<nsISupports> mOwner;
 
   RefPtr<txStylesheet> mStylesheet;
-  nsIDocument* mStylesheetDocument;  // weak
+  mozilla::dom::Document* mStylesheetDocument;  // weak
   nsCOMPtr<nsIContent> mEmbeddedStylesheetRoot;
 
   nsCOMPtr<nsINode> mSource;
@@ -157,7 +159,7 @@ class txMozillaXSLTProcessor final : public nsIDocumentTransformer,
 };
 
 extern nsresult TX_LoadSheet(nsIURI* aUri, txMozillaXSLTProcessor* aProcessor,
-                             nsIDocument* aLoaderDocument,
+                             mozilla::dom::Document* aLoaderDocument,
                              mozilla::net::ReferrerPolicy aReferrerPolicy);
 
 extern nsresult TX_CompileStylesheet(nsINode* aNode,

@@ -261,24 +261,24 @@ partial interface Document {
 partial interface Document {
   // Note: Per spec the 'S' in these two is lowercase, but the "Moz"
   // versions have it uppercase.
-  [LenientSetter, Unscopable, Func="nsIDocument::IsUnprefixedFullscreenEnabled"]
+  [LenientSetter, Unscopable, Func="Document::IsUnprefixedFullscreenEnabled"]
   readonly attribute boolean fullscreen;
   [BinaryName="fullscreen"]
   readonly attribute boolean mozFullScreen;
-  [LenientSetter, Func="nsIDocument::IsUnprefixedFullscreenEnabled", NeedsCallerType]
+  [LenientSetter, Func="Document::IsUnprefixedFullscreenEnabled", NeedsCallerType]
   readonly attribute boolean fullscreenEnabled;
   [BinaryName="fullscreenEnabled", NeedsCallerType]
   readonly attribute boolean mozFullScreenEnabled;
 
-  [Throws, Func="nsIDocument::IsUnprefixedFullscreenEnabled"]
+  [Throws, Func="Document::IsUnprefixedFullscreenEnabled"]
   Promise<void> exitFullscreen();
   [Throws, BinaryName="exitFullscreen"]
   Promise<void> mozCancelFullScreen();
 
   // Events handlers
-  [Func="nsIDocument::IsUnprefixedFullscreenEnabled"]
+  [Func="Document::IsUnprefixedFullscreenEnabled"]
   attribute EventHandler onfullscreenchange;
-  [Func="nsIDocument::IsUnprefixedFullscreenEnabled"]
+  [Func="Document::IsUnprefixedFullscreenEnabled"]
   attribute EventHandler onfullscreenerror;
 };
 
@@ -329,9 +329,9 @@ partial interface Document {
 
 // https://drafts.csswg.org/web-animations/#extensions-to-the-document-interface
 partial interface Document {
-  [Func="nsIDocument::AreWebAnimationsTimelinesEnabled"]
+  [Func="Document::AreWebAnimationsTimelinesEnabled"]
   readonly attribute DocumentTimeline timeline;
-  [Func="nsIDocument::IsWebAnimationsGetAnimationsEnabled"]
+  [Func="Document::IsWebAnimationsGetAnimationsEnabled"]
   sequence<Animation> getAnimations();
 };
 
@@ -377,7 +377,7 @@ partial interface Document {
                     optional float force = 0);
   // XXXbz a hack to get around the fact that we don't support variadics as
   // distinguishing arguments yet.  Once this hack is removed. we can also
-  // remove the corresponding overload on nsIDocument, since Touch... and
+  // remove the corresponding overload on Document, since Touch... and
   // sequence<Touch> look the same in the C++.
   [NewObject, Func="nsGenericHTMLElement::TouchEventsEnabled"]
   TouchList createTouchList(Touch touch, Touch... touches);
@@ -528,7 +528,7 @@ partial interface Document {
 };
 
 partial interface Document {
-  [Func="nsIDocument::DocumentSupportsL10n"] readonly attribute DocumentL10n? l10n;
+  [Func="Document::DocumentSupportsL10n"] readonly attribute DocumentL10n? l10n;
 };
 
 Document implements XPathEvaluator;

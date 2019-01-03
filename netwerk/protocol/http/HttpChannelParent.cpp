@@ -46,7 +46,7 @@
 #include "nsIPrompt.h"
 #include "mozilla/net/RedirectChannelRegistrar.h"
 #include "nsIWindowWatcher.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsISecureBrowserUI.h"
 #include "nsStreamUtils.h"
 #include "nsStringStream.h"

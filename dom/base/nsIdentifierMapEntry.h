@@ -50,8 +50,7 @@ class nsIdentifierMapEntry : public PLDHashEntryHdr {
   typedef mozilla::net::ReferrerPolicy ReferrerPolicy;
 
   /**
-   * @see nsIDocument::IDTargetObserver, this is just here to avoid include
-   * hell.
+   * @see Document::IDTargetObserver, this is just here to avoid include hell.
    */
   typedef bool (*IDTargetObserver)(Element* aOldElement, Element* aNewelement,
                                    void* aData);

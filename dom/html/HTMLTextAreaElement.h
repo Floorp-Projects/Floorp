@@ -22,7 +22,6 @@
 #include "nsTextEditorState.h"
 
 class nsIControllers;
-class nsIDocument;
 class nsPresContext;
 
 namespace mozilla {
@@ -108,7 +107,7 @@ class HTMLTextAreaElement final : public nsGenericHTMLFormElementWithState,
   NS_IMETHOD_(bool) HasCachedSelection() override;
 
   // nsIContent
-  virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+  virtual nsresult BindToTree(Document* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent) override;
   virtual void UnbindFromTree(bool aDeep = true,
                               bool aNullParent = true) override;

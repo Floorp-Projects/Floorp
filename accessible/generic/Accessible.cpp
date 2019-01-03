@@ -37,7 +37,7 @@
 #include "nsINodeList.h"
 #include "nsPIDOMWindow.h"
 
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIContent.h"
 #include "nsIForm.h"
 #include "nsIFormControl.h"
@@ -265,7 +265,7 @@ KeyBinding Accessible::AccessKey() const {
   }
 
   // Determine the access modifier used in this context.
-  nsIDocument* document = mContent->GetUncomposedDoc();
+  dom::Document* document = mContent->GetUncomposedDoc();
   if (!document) return KeyBinding();
 
   nsCOMPtr<nsIDocShellTreeItem> treeItem(document->GetDocShell());
@@ -1025,7 +1025,7 @@ already_AddRefed<nsIPersistentProperties> Accessible::NativeAttributes() {
   // override properties on a widget they used in an iframe.
   nsIContent* startContent = mContent;
   while (startContent) {
-    nsIDocument* doc = startContent->GetComposedDoc();
+    dom::Document* doc = startContent->GetComposedDoc();
     if (!doc) break;
 
     nsAccUtils::SetLiveContainerAttributes(attributes, startContent,
@@ -1039,7 +1039,7 @@ already_AddRefed<nsIPersistentProperties> Accessible::NativeAttributes() {
     docShellTreeItem->GetSameTypeParent(getter_AddRefs(sameTypeParent));
     if (!sameTypeParent || sameTypeParent == docShellTreeItem) break;
 
-    nsIDocument* parentDoc = doc->GetParentDocument();
+    dom::Document* parentDoc = doc->GetParentDocument();
     if (!parentDoc) break;
 
     startContent = parentDoc->FindContentForSubDocument(doc);
@@ -1687,7 +1687,7 @@ Relation Accessible::RelationByType(RelationType aType) const {
         }
       } else {
         // In XUL, use first <button default="true" .../> in the document
-        nsIDocument* doc = mContent->OwnerDoc();
+        dom::Document* doc = mContent->OwnerDoc();
         nsIContent* buttonEl = nullptr;
         if (doc->IsXULDocument()) {
           dom::XULDocument* xulDoc = doc->AsXULDocument();
@@ -2393,7 +2393,7 @@ Accessible* Accessible::CurrentItem() const {
   if (HasOwnContent() && mContent->IsElement() &&
       mContent->AsElement()->GetAttr(kNameSpaceID_None,
                                      nsGkAtoms::aria_activedescendant, id)) {
-    nsIDocument* DOMDoc = mContent->OwnerDoc();
+    dom::Document* DOMDoc = mContent->OwnerDoc();
     dom::Element* activeDescendantElm = DOMDoc->GetElementById(id);
     if (activeDescendantElm) {
       DocAccessible* document = Document();

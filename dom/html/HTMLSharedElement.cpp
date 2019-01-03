@@ -39,7 +39,7 @@ void HTMLSharedElement::GetHref(nsAString& aValue) {
   GetAttr(kNameSpaceID_None, nsGkAtoms::href, href);
 
   nsCOMPtr<nsIURI> uri;
-  nsIDocument* doc = OwnerDoc();
+  Document* doc = OwnerDoc();
   nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(uri), href, doc,
                                             doc->GetFallbackBaseURI());
 
@@ -55,7 +55,7 @@ void HTMLSharedElement::GetHref(nsAString& aValue) {
 
 void HTMLSharedElement::DoneAddingChildren(bool aHaveNotified) {
   if (mNodeInfo->Equals(nsGkAtoms::head)) {
-    nsCOMPtr<nsIDocument> doc = GetUncomposedDoc();
+    nsCOMPtr<Document> doc = GetUncomposedDoc();
     if (doc) {
       doc->OnL10nResourceContainerParsed();
     }
@@ -125,7 +125,7 @@ HTMLSharedElement::IsAttributeMapped(const nsAtom* aAttribute) const {
   return nsGenericHTMLElement::IsAttributeMapped(aAttribute);
 }
 
-static void SetBaseURIUsingFirstBaseWithHref(nsIDocument* aDocument,
+static void SetBaseURIUsingFirstBaseWithHref(Document* aDocument,
                                              nsIContent* aMustMatch) {
   MOZ_ASSERT(aDocument, "Need a document!");
 
@@ -178,7 +178,7 @@ static void SetBaseURIUsingFirstBaseWithHref(nsIDocument* aDocument,
   aDocument->SetBaseURI(nullptr);
 }
 
-static void SetBaseTargetUsingFirstBaseWithTarget(nsIDocument* aDocument,
+static void SetBaseTargetUsingFirstBaseWithTarget(Document* aDocument,
                                                   nsIContent* aMustMatch) {
   MOZ_ASSERT(aDocument, "Need a document!");
 
@@ -230,8 +230,7 @@ nsresult HTMLSharedElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
       aNamespaceID, aName, aValue, aOldValue, aSubjectPrincipal, aNotify);
 }
 
-nsresult HTMLSharedElement::BindToTree(nsIDocument* aDocument,
-                                       nsIContent* aParent,
+nsresult HTMLSharedElement::BindToTree(Document* aDocument, nsIContent* aParent,
                                        nsIContent* aBindingParent) {
   nsresult rv =
       nsGenericHTMLElement::BindToTree(aDocument, aParent, aBindingParent);
@@ -252,7 +251,7 @@ nsresult HTMLSharedElement::BindToTree(nsIDocument* aDocument,
 }
 
 void HTMLSharedElement::UnbindFromTree(bool aDeep, bool aNullParent) {
-  nsIDocument* doc = GetUncomposedDoc();
+  Document* doc = GetUncomposedDoc();
 
   nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
 

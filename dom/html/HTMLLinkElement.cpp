@@ -18,7 +18,7 @@
 #include "nsGkAtoms.h"
 #include "nsDOMTokenList.h"
 #include "nsIContentInlines.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsINode.h"
 #include "nsIStyleSheetLinkingElement.h"
 #include "nsIURL.h"
@@ -109,8 +109,7 @@ bool HTMLLinkElement::HasDeferredDNSPrefetchRequest() {
   return HasFlag(HTML_LINK_DNS_PREFETCH_DEFERRED);
 }
 
-nsresult HTMLLinkElement::BindToTree(nsIDocument* aDocument,
-                                     nsIContent* aParent,
+nsresult HTMLLinkElement::BindToTree(Document* aDocument, nsIContent* aParent,
                                      nsIContent* aBindingParent) {
   Link::ResetLinkState(false, Link::ElementHasHref());
 
@@ -118,7 +117,7 @@ nsresult HTMLLinkElement::BindToTree(nsIDocument* aDocument,
       nsGenericHTMLElement::BindToTree(aDocument, aParent, aBindingParent);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (nsIDocument* doc = GetComposedDoc()) {
+  if (Document* doc = GetComposedDoc()) {
     doc->RegisterPendingLinkUpdate(this);
     TryDNSPrefetchOrPreconnectOrPrefetchOrPreloadOrPrerender();
   }
@@ -160,7 +159,7 @@ void HTMLLinkElement::UnbindFromTree(bool aDeep, bool aNullParent) {
 
   // If this is reinserted back into the document it will not be
   // from the parser.
-  nsIDocument* oldDoc = GetUncomposedDoc();
+  Document* oldDoc = GetUncomposedDoc();
   ShadowRoot* oldShadowRoot = GetContainingShadow();
 
   if (oldDoc && this->AttrValueIs(kNameSpaceID_None, nsGkAtoms::rel,
@@ -204,7 +203,7 @@ bool HTMLLinkElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
                                               aMaybeScriptedPrincipal, aResult);
 }
 
-void HTMLLinkElement::CreateAndDispatchEvent(nsIDocument* aDoc,
+void HTMLLinkElement::CreateAndDispatchEvent(Document* aDoc,
                                              const nsAString& aEventName) {
   if (!aDoc) return;
 
@@ -271,7 +270,7 @@ nsresult HTMLLinkElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
   // If a link's `rel` attribute was changed from or to `localization`,
   // update the list of localization links.
   if (aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::rel) {
-    nsIDocument* doc = GetComposedDoc();
+    Document* doc = GetComposedDoc();
     if (doc) {
       if ((aValue && aValue->Equals(nsGkAtoms::localization, eIgnoreCase)) &&
           (!aOldValue ||
@@ -291,7 +290,7 @@ nsresult HTMLLinkElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
   if (aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::href &&
       AttrValueIs(kNameSpaceID_None, nsGkAtoms::rel, nsGkAtoms::localization,
                   eIgnoreCase)) {
-    nsIDocument* doc = GetComposedDoc();
+    Document* doc = GetComposedDoc();
     if (doc) {
       if (aOldValue) {
         doc->LocalizationLinkRemoved(this);
@@ -482,7 +481,7 @@ bool IsFontMimeType(const nsAString& aType) {
 bool HTMLLinkElement::CheckPreloadAttrs(const nsAttrValue& aAs,
                                         const nsAString& aType,
                                         const nsAString& aMedia,
-                                        nsIDocument* aDocument) {
+                                        Document* aDocument) {
   nsContentPolicyType policyType = Link::AsValueToContentPolicy(aAs);
   if (policyType == nsIContentPolicy::TYPE_INVALID) {
     return false;

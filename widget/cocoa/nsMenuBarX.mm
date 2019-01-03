@@ -21,7 +21,7 @@
 
 #include "nsIContent.h"
 #include "nsIWidget.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIAppStartup.h"
 #include "nsIStringBundle.h"
 #include "nsToolkitCompsCID.h"
@@ -301,13 +301,13 @@ void nsMenuBarX::RemoveMenuAtIndex(uint32_t aIndex)
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-void nsMenuBarX::ObserveAttributeChanged(nsIDocument* aDocument,
+void nsMenuBarX::ObserveAttributeChanged(mozilla::dom::Document* aDocument,
                                          nsIContent* aContent,
                                          nsAtom* aAttribute)
 {
 }
 
-void nsMenuBarX::ObserveContentRemoved(nsIDocument* aDocument,
+void nsMenuBarX::ObserveContentRemoved(mozilla::dom::Document* aDocument,
                                        nsIContent* aContainer,
                                        nsIContent* aChild,
                                        nsIContent* aPreviousSibling)
@@ -318,7 +318,7 @@ void nsMenuBarX::ObserveContentRemoved(nsIDocument* aDocument,
   RemoveMenuAtIndex(index);
 }
 
-void nsMenuBarX::ObserveContentInserted(nsIDocument* aDocument,
+void nsMenuBarX::ObserveContentInserted(mozilla::dom::Document* aDocument,
                                         nsIContent* aContainer,
                                         nsIContent* aChild)
 {
@@ -478,7 +478,7 @@ char nsMenuBarX::GetLocalizedAccelKey(const char *shortcutID)
   if (!sLastGeckoMenuBarPainted)
     return 0;
 
-  nsCOMPtr<nsIDocument> doc = sLastGeckoMenuBarPainted->mContent->OwnerDoc();
+  nsCOMPtr<mozilla::dom::Document> doc = sLastGeckoMenuBarPainted->mContent->OwnerDoc();
   if (!doc)
     return 0;
 
@@ -536,7 +536,7 @@ bool nsMenuBarX::PerformKeyEquivalent(NSEvent* theEvent)
 // Hide the item in the menu by setting the 'hidden' attribute. Returns it in |outHiddenNode| so
 // the caller can hang onto it if they so choose. It is acceptable to pass nsull
 // for |outHiddenNode| if the caller doesn't care about the hidden node.
-void nsMenuBarX::HideItem(nsIDocument* inDoc, const nsAString & inID, nsIContent** outHiddenNode)
+void nsMenuBarX::HideItem(mozilla::dom::Document* inDoc, const nsAString & inID, nsIContent** outHiddenNode)
 {
   nsCOMPtr<Element> menuElement = inDoc->GetElementById(inID);
   if (menuElement) {
@@ -551,7 +551,7 @@ void nsMenuBarX::HideItem(nsIDocument* inDoc, const nsAString & inID, nsIContent
 // Do what is necessary to conform to the Aqua guidelines for menus.
 void nsMenuBarX::AquifyMenuBar()
 {
-  nsCOMPtr<nsIDocument> domDoc = mContent->GetComposedDoc();
+  RefPtr<mozilla::dom::Document> domDoc = mContent->GetComposedDoc();
   if (domDoc) {
     // remove the "About..." item and its separator
     HideItem(domDoc, NS_LITERAL_STRING("aboutSeparator"), nullptr);
@@ -586,7 +586,7 @@ NSMenuItem* nsMenuBarX::CreateNativeAppMenuItem(nsMenuX* inMenu, const nsAString
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
-  nsCOMPtr<nsIDocument> doc = inMenu->Content()->GetUncomposedDoc();
+  RefPtr<mozilla::dom::Document> doc = inMenu->Content()->GetUncomposedDoc();
   if (!doc) {
     return nil;
   }

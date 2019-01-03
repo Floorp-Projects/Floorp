@@ -444,7 +444,7 @@ void DOMMediaStream::AddTrack(MediaStreamTrack& aTrack) {
     aTrack.GetId(trackId);
     const char16_t* params[] = {trackId.get()};
     nsCOMPtr<nsPIDOMWindowInner> pWindow = GetParentObject();
-    nsIDocument* document = pWindow ? pWindow->GetExtantDoc() : nullptr;
+    Document* document = pWindow ? pWindow->GetExtantDoc() : nullptr;
     nsContentUtils::ReportToConsole(nsIScriptError::errorFlag,
                                     NS_LITERAL_CSTRING("Media"), document,
                                     nsContentUtils::eDOM_PROPERTIES,

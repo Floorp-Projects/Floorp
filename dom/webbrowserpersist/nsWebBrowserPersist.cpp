@@ -462,7 +462,7 @@ NS_IMETHODIMP nsWebBrowserPersist::SaveDocument(nsISupports *aDocument,
 
   nsCOMPtr<nsIWebBrowserPersistDocument> doc = do_QueryInterface(aDocument);
   if (!doc) {
-    nsCOMPtr<nsIDocument> localDoc = do_QueryInterface(aDocument);
+    nsCOMPtr<Document> localDoc = do_QueryInterface(aDocument);
     if (localDoc) {
       doc = new mozilla::WebBrowserPersistLocalDocument(localDoc);
     } else {

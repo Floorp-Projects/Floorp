@@ -16,7 +16,6 @@
 #include "nsThreadUtils.h"
 
 class nsPrintJob;
-class nsIDocument;
 
 //---------------------------------------------------
 //-- Page Timer Class
@@ -28,7 +27,7 @@ class nsPagePrintTimer final : public mozilla::Runnable,
 
   nsPagePrintTimer(nsPrintJob* aPrintJob,
                    nsIDocumentViewerPrint* aDocViewerPrint,
-                   nsIDocument* aDocument, uint32_t aDelay)
+                   mozilla::dom::Document* aDocument, uint32_t aDelay)
       : Runnable("nsPagePrintTimer"),
         mPrintJob(aPrintJob),
         mDocViewerPrint(*aDocViewerPrint),
@@ -68,7 +67,7 @@ class nsPagePrintTimer final : public mozilla::Runnable,
 
   nsPrintJob* mPrintJob;
   const mozilla::OwningNonNull<nsIDocumentViewerPrint> mDocViewerPrint;
-  nsCOMPtr<nsIDocument> mDocument;
+  RefPtr<mozilla::dom::Document> mDocument;
   nsCOMPtr<nsITimer> mTimer;
   nsCOMPtr<nsITimer> mWatchDogTimer;
   nsCOMPtr<nsITimer> mWaitingForRemotePrint;

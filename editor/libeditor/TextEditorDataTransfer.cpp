@@ -19,7 +19,7 @@
 #include "nsError.h"
 #include "nsIClipboard.h"
 #include "nsIContent.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIDragService.h"
 #include "nsIDragSession.h"
 #include "nsIEditor.h"
@@ -53,7 +53,7 @@ nsresult TextEditor::PrepareTransferable(nsITransferable** transferable) {
 
   // Get the nsITransferable interface for getting the data from the clipboard
   if (transferable) {
-    nsCOMPtr<nsIDocument> destdoc = GetDocument();
+    RefPtr<Document> destdoc = GetDocument();
     nsILoadContext* loadContext = destdoc ? destdoc->GetLoadContext() : nullptr;
     (*transferable)->Init(loadContext);
 
@@ -147,7 +147,7 @@ nsresult TextEditor::InsertTextFromTransferable(
 
 nsresult TextEditor::InsertFromDataTransfer(DataTransfer* aDataTransfer,
                                             int32_t aIndex,
-                                            nsIDocument* aSourceDoc,
+                                            Document* aSourceDoc,
                                             const EditorDOMPoint& aDroppedAt,
                                             bool aDoDeleteSelection) {
   MOZ_ASSERT(GetEditAction() == EditAction::eDrop);
@@ -195,7 +195,7 @@ nsresult TextEditor::OnDrop(DragEvent* aDropEvent) {
 
   nsCOMPtr<nsINode> sourceNode = dataTransfer->GetMozSourceNode();
 
-  nsCOMPtr<nsIDocument> srcdoc;
+  RefPtr<Document> srcdoc;
   if (sourceNode) {
     srcdoc = sourceNode->OwnerDoc();
   }
@@ -210,7 +210,7 @@ nsresult TextEditor::OnDrop(DragEvent* aDropEvent) {
   }
 
   // Current doc is destination
-  nsIDocument* destdoc = GetDocument();
+  Document* destdoc = GetDocument();
   if (NS_WARN_IF(!destdoc)) {
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -408,7 +408,7 @@ TextEditor::CanPaste(int32_t aSelectionType, bool* aCanPaste) {
   *aCanPaste = false;
 
   // Always enable the paste command when inside of a HTML or XHTML document.
-  nsCOMPtr<nsIDocument> doc = GetDocument();
+  RefPtr<Document> doc = GetDocument();
   if (doc && doc->IsHTMLOrXHTML()) {
     *aCanPaste = true;
     return NS_OK;
@@ -458,11 +458,11 @@ bool TextEditor::CanPasteTransferable(nsITransferable* aTransferable) {
   return false;
 }
 
-bool TextEditor::IsSafeToInsertData(nsIDocument* aSourceDoc) {
+bool TextEditor::IsSafeToInsertData(Document* aSourceDoc) {
   // Try to determine whether we should use a sanitizing fragment sink
   bool isSafe = false;
 
-  nsCOMPtr<nsIDocument> destdoc = GetDocument();
+  RefPtr<Document> destdoc = GetDocument();
   NS_ASSERTION(destdoc, "Where is our destination doc?");
   nsCOMPtr<nsIDocShellTreeItem> dsti = destdoc->GetDocShell();
   nsCOMPtr<nsIDocShellTreeItem> root;

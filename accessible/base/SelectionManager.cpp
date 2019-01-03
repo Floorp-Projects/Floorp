@@ -15,7 +15,7 @@
 #include "nsFrameSelection.h"
 
 #include "nsIAccessibleTypes.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIPresShell.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/dom/Element.h"
@@ -138,7 +138,7 @@ void SelectionManager::ProcessTextSelChangeEvent(AccEvent* aEvent) {
 }
 
 NS_IMETHODIMP
-SelectionManager::NotifySelectionChanged(nsIDocument* aDocument,
+SelectionManager::NotifySelectionChanged(dom::Document* aDocument,
                                          Selection* aSelection,
                                          int16_t aReason) {
   if (NS_WARN_IF(!aDocument) || NS_WARN_IF(!aSelection)) {

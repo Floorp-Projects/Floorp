@@ -786,7 +786,7 @@ class WorkerPrivate : public RelativeTimeline {
 
   void WorkerScriptLoaded();
 
-  nsIDocument* GetDocument() const;
+  Document* GetDocument() const;
 
   void MemoryPressure(bool aDummy);
 

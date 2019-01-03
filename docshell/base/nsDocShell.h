@@ -77,7 +77,6 @@ class nsICommandManager;
 class nsIContentViewer;
 class nsIController;
 class nsIDocShellTreeOwner;
-class nsIDocument;
 class nsIHttpChannel;
 class nsIMutableArray;
 class nsIPrompt;
@@ -729,7 +728,7 @@ class nsDocShell final : public nsDocLoader,
   // has not been created yet. |aNewDocument| should be the document that will
   // replace the current document.
   bool CanSavePresentation(uint32_t aLoadType, nsIRequest* aNewRequest,
-                           nsIDocument* aNewDocument);
+                           mozilla::dom::Document* aNewDocument);
 
   // Captures the state of the supporting elements of the presentation
   // (the "window" object, docshell tree, meta-refresh loads, and security

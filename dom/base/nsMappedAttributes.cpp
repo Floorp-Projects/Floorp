@@ -270,7 +270,7 @@ size_t nsMappedAttributes::SizeOfIncludingThis(
   return n;
 }
 
-void nsMappedAttributes::LazilyResolveServoDeclaration(nsIDocument* aDoc) {
+void nsMappedAttributes::LazilyResolveServoDeclaration(dom::Document* aDoc) {
   MOZ_ASSERT(!mServoStyle,
              "LazilyResolveServoDeclaration should not be called if "
              "mServoStyle is already set");

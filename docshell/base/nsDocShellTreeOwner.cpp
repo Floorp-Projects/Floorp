@@ -378,7 +378,7 @@ nsDocShellTreeOwner::SizeShellTo(nsIDocShellTreeItem* aShellItem, int32_t aCX,
 
   NS_ENSURE_TRUE(aShellItem, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIDocument> document = aShellItem->GetDocument();
+  RefPtr<Document> document = aShellItem->GetDocument();
   NS_ENSURE_TRUE(document, NS_ERROR_FAILURE);
 
   NS_ENSURE_TRUE(document->GetDocumentElement(), NS_ERROR_FAILURE);

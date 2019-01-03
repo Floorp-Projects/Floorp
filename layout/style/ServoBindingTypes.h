@@ -168,7 +168,6 @@
 
 class nsCSSPropertyIDSet;
 class nsCSSValue;
-class nsIDocument;
 class nsINode;
 class nsPresContext;
 class nsXBLBinding;
@@ -190,6 +189,7 @@ using GfxMatrix4x4 = mozilla::gfx::Float[16];
 
 namespace dom {
 class StyleChildrenIterator;
+class Document;
 class Element;
 }  // namespace dom
 }  // namespace mozilla
