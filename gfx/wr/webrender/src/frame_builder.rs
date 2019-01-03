@@ -339,11 +339,6 @@ impl FrameBuilder {
             .surfaces[ROOT_SURFACE_INDEX.0]
             .take_render_tasks();
 
-        let tile_blits = mem::replace(
-            &mut frame_state.surfaces[ROOT_SURFACE_INDEX.0].tile_blits,
-            Vec::new(),
-        );
-
         let root_render_task = RenderTask::new_picture(
             RenderTaskLocation::Fixed(self.screen_rect.to_i32()),
             self.screen_rect.size.to_f32(),
@@ -353,7 +348,6 @@ impl FrameBuilder {
             UvRectKind::Rect,
             root_spatial_node_index,
             None,
-            tile_blits,
         );
 
         let render_task_id = frame_state.render_tasks.add(root_render_task);
