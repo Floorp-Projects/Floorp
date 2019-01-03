@@ -38,6 +38,7 @@
 #include "mozilla/AutoTimelineMarker.h"
 #include "mozilla/BackgroundHangMonitor.h"
 #include "mozilla/Base64.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/LoadInfo.h"
@@ -5023,8 +5024,9 @@ void nsContentUtils::NotifyInstalledMenuKeyboardListener(bool aInstalling) {
 }
 
 bool nsContentUtils::IsSystemPrincipal(nsIPrincipal* aPrincipal) {
-  MOZ_ASSERT(IsInitialized());
-  return aPrincipal == sSystemPrincipal;
+  // Some consumers call us with a null aPrincipal and expect a false return
+  // value...
+  return aPrincipal && aPrincipal->IsSystemPrincipal();
 }
 
 bool nsContentUtils::IsExpandedPrincipal(nsIPrincipal* aPrincipal) {
@@ -6365,7 +6367,7 @@ bool nsContentUtils::AllowXULXBLForPrincipal(nsIPrincipal* aPrincipal) {
     return false;
   }
 
-  if (IsSystemPrincipal(aPrincipal)) {
+  if (aPrincipal->IsSystemPrincipal()) {
     return true;
   }
 
@@ -6556,7 +6558,7 @@ bool nsContentUtils::ChannelShouldInheritPrincipal(
          NS_SUCCEEDED(aLoadingPrincipal->CheckMayLoad(aURI, false, false)) &&
          // One more check here.  CheckMayLoad will always return true for the
          // system principal, but we do NOT want to inherit in that case.
-         !IsSystemPrincipal(aLoadingPrincipal));
+         !aLoadingPrincipal->IsSystemPrincipal());
   }
   return inherit;
 }
@@ -7960,7 +7962,7 @@ nsresult nsContentUtils::SetFetchReferrerURIWithPolicy(
 
   nsCOMPtr<nsIURI> principalURI;
 
-  if (IsSystemPrincipal(aPrincipal)) {
+  if (aPrincipal->IsSystemPrincipal()) {
     return NS_OK;
   }
 
@@ -9233,7 +9235,7 @@ bool nsContentUtils::IsSpecificAboutPage(JSObject* aGlobal, const char* aUri) {
 
   nsCOMPtr<nsIPrincipal> principal = aDocument->NodePrincipal();
 
-  if (principal->GetIsSystemPrincipal()) {
+  if (principal->IsSystemPrincipal()) {
     return true;
   }
 
@@ -9250,7 +9252,7 @@ bool nsContentUtils::IsSpecificAboutPage(JSObject* aGlobal, const char* aUri) {
       if (NS_FAILED(rv)) {
         return false;
       }
-      if (principal->GetIsSystemPrincipal()) {
+      if (principal->IsSystemPrincipal()) {
         // If a document with the system principal is sandboxing a subdocument
         // that would normally inherit the embedding element's principal (e.g.
         // a srcdoc document) then the embedding document does not trust the
@@ -9851,7 +9853,7 @@ static void AppendNativeAnonymousChildrenFromFrame(nsIFrame* aFrame,
   }
 
   // If aLoadingNode is content, bail out early.
-  if (!aLoadingNode->NodePrincipal()->GetIsSystemPrincipal()) {
+  if (!aLoadingNode->NodePrincipal()->IsSystemPrincipal()) {
     loadingPrincipal.forget(aTriggeringPrincipal);
     return result;
   }

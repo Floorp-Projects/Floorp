@@ -9,7 +9,7 @@
 #include "jsapi.h"
 #include "jsfriendapi.h"
 
-#include "nsJSPrincipals.h"
+#include "mozilla/BasePrincipal.h"
 
 using namespace JS;
 using namespace mozilla::scache;
@@ -45,8 +45,8 @@ nsresult ReadCachedScript(StartupCache* cache, nsACString& uri, JSContext* cx,
 
 nsresult WriteCachedScript(StartupCache* cache, nsACString& uri, JSContext* cx,
                            HandleScript script) {
-  MOZ_ASSERT(nsJSPrincipals::get(JS_GetScriptPrincipals(script))
-                 ->GetIsSystemPrincipal());
+  MOZ_ASSERT(
+      nsJSPrincipals::get(JS_GetScriptPrincipals(script))->IsSystemPrincipal());
 
   JS::TranscodeBuffer buffer;
   JS::TranscodeResult code = JS::EncodeScript(cx, buffer, script);
