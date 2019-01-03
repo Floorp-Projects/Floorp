@@ -31,7 +31,7 @@ void nsDOMWindowList::EnsureFresh() {
   nsCOMPtr<nsIWebNavigation> shellAsNav = do_QueryInterface(mDocShellNode);
 
   if (shellAsNav) {
-    nsCOMPtr<Document> doc;
+    nsCOMPtr<dom::Document> doc;
     shellAsNav->GetDocument(getter_AddRefs(doc));
 
     if (doc) {
