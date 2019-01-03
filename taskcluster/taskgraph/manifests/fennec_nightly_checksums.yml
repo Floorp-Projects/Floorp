@@ -34,7 +34,7 @@ default: &default
   locale_prefix:
     by-locale:
       default: ''
-      en-US: '${locale}'
+      en-US: '${locale}/'
   source_path_modifier: ''
   destinations:  # locale_prefix is appended
     by-locale:
