@@ -33,10 +33,6 @@ class PageStyleFront extends FrontClassWithSpec(pageStyleSpec) {
     this._form = form;
   }
 
-  destroy() {
-    super.destroy();
-  }
-
   get walker() {
     return this.inspector.walker;
   }
@@ -103,10 +99,6 @@ class StyleRuleFront extends FrontClassWithSpec(styleRuleSpec) {
     super(client, form, ctx, detail);
 
     this.before("location-changed", this._locationChangedPre.bind(this));
-  }
-
-  destroy() {
-    super.destroy();
   }
 
   form(form, detail) {

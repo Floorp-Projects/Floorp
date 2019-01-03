@@ -31,10 +31,6 @@ class PerformanceFront extends FrontClassWithSpec(performanceSpec) {
     await this.connect();
   }
 
-  destroy() {
-    super.destroy();
-  }
-
   /**
    * Conenct to the server, and handle once-off tasks like storing traits
    * or system info.
