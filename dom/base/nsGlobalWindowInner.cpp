@@ -234,6 +234,7 @@
 #include "mozilla/dom/PrimitiveConversions.h"
 #include "mozilla/dom/WindowBinding.h"
 #include "nsITabChild.h"
+#include "mozilla/dom/LoadedScript.h"
 #include "mozilla/dom/MediaQueryList.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/NavigatorBinding.h"
@@ -5983,8 +5984,6 @@ bool nsGlobalWindowInner::RunTimeoutHandler(Timeout* aTimeout,
 
     if (!callback) {
       // Evaluate the timeout expression.
-      const nsAString& script = handler->GetHandlerText();
-
       const char* filename = nullptr;
       uint32_t lineNo = 0, dummyColumn = 0;
       handler->GetLocation(&filename, &lineNo, &dummyColumn);
@@ -6001,7 +6000,16 @@ bool nsGlobalWindowInner::RunTimeoutHandler(Timeout* aTimeout,
       nsresult rv;
       {
         nsJSUtils::ExecutionContext exec(aes.cx(), global);
-        rv = exec.CompileAndExec(options, script);
+        rv = exec.Compile(options, handler->GetHandlerText());
+
+        if (rv == NS_OK) {
+          LoadedScript* initiatingScript = handler->GetInitiatingScript();
+          if (initiatingScript) {
+            initiatingScript->AssociateWithScript(exec.GetScript());
+          }
+
+          rv = exec.ExecScript();
+        }
       }
 
       if (rv == NS_SUCCESS_DOM_SCRIPT_EVALUATION_THREW_UNCATCHABLE) {

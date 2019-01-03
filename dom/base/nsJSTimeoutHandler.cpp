@@ -11,6 +11,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/dom/CSPEvalChecker.h"
 #include "mozilla/dom/FunctionBinding.h"
+#include "mozilla/dom/LoadedScript.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
@@ -39,6 +40,7 @@ class nsJSScriptTimeoutHandler final : public nsIScriptTimeoutHandler {
                            nsTArray<JS::Heap<JS::Value>>&& aArguments,
                            ErrorResult& aError);
   nsJSScriptTimeoutHandler(JSContext* aCx, nsGlobalWindowInner* aWindow,
+                           LoadedScript* aInitiatingScript,
                            const nsAString& aExpression, bool* aAllowEval,
                            ErrorResult& aError);
   nsJSScriptTimeoutHandler(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
@@ -61,6 +63,10 @@ class nsJSScriptTimeoutHandler final : public nsIScriptTimeoutHandler {
     *aFileName = mFileName.get();
     *aLineNo = mLineNo;
     *aColumn = mColumn;
+  }
+
+  virtual LoadedScript* GetInitiatingScript() override {
+    return mInitiatingScript;
   }
 
   virtual void MarkForCC() override {
@@ -88,6 +94,9 @@ class nsJSScriptTimeoutHandler final : public nsIScriptTimeoutHandler {
   // it should be used, else use mExpr.
   nsString mExpr;
   RefPtr<Function> mFunction;
+
+  // Initiating script for use when evaluating mExpr on the main thread.
+  RefPtr<LoadedScript> mInitiatingScript;
 };
 
 // nsJSScriptTimeoutHandler
@@ -95,8 +104,11 @@ class nsJSScriptTimeoutHandler final : public nsIScriptTimeoutHandler {
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsJSScriptTimeoutHandler)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsJSScriptTimeoutHandler)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mFunction)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mInitiatingScript)
   tmp->ReleaseJSObjects();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsJSScriptTimeoutHandler)
   if (MOZ_UNLIKELY(cb.WantDebugInfo())) {
     nsAutoCString name("nsJSScriptTimeoutHandler");
@@ -134,6 +146,9 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsJSScriptTimeoutHandler)
   if (tmp->mFunction) {
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFunction)
   }
+  if (tmp->mInitiatingScript) {
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mInitiatingScript)
+  }
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsJSScriptTimeoutHandler)
@@ -167,12 +182,14 @@ nsJSScriptTimeoutHandler::nsJSScriptTimeoutHandler(
   Init(aCx, std::move(aArguments));
 }
 
-nsJSScriptTimeoutHandler::nsJSScriptTimeoutHandler(JSContext* aCx,
-                                                   nsGlobalWindowInner* aWindow,
-                                                   const nsAString& aExpression,
-                                                   bool* aAllowEval,
-                                                   ErrorResult& aError)
-    : mLineNo(0), mColumn(0), mExpr(aExpression) {
+nsJSScriptTimeoutHandler::nsJSScriptTimeoutHandler(
+    JSContext* aCx, nsGlobalWindowInner* aWindow,
+    LoadedScript* aInitiatingScript, const nsAString& aExpression,
+    bool* aAllowEval, ErrorResult& aError)
+    : mLineNo(0),
+      mColumn(0),
+      mExpr(aExpression),
+      mInitiatingScript(aInitiatingScript) {
   if (!aWindow->GetContextInternal() || !aWindow->FastGetGlobalJSObject()) {
     // This window was already closed, or never properly initialized,
     // don't let a timer be scheduled on such a window.
@@ -260,9 +277,11 @@ already_AddRefed<nsIScriptTimeoutHandler> NS_CreateJSTimeoutHandler(
 already_AddRefed<nsIScriptTimeoutHandler> NS_CreateJSTimeoutHandler(
     JSContext* aCx, nsGlobalWindowInner* aWindow, const nsAString& aExpression,
     ErrorResult& aError) {
+  LoadedScript* script = ScriptLoader::GetActiveScript(aCx);
+
   bool allowEval = false;
   RefPtr<nsJSScriptTimeoutHandler> handler = new nsJSScriptTimeoutHandler(
-      aCx, aWindow, aExpression, &allowEval, aError);
+      aCx, aWindow, script, aExpression, &allowEval, aError);
   if (aError.Failed() || !allowEval) {
     return nullptr;
   }
