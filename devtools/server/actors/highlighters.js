@@ -381,6 +381,33 @@ exports.HighlighterActor = protocol.ActorClassWithSpec(highlighterSpec, {
     return this._walker.attachElement(node);
   },
 
+  _onSuppressedEvent(event) {
+    if (event.type == "mousemove") {
+      this._onHovered(event);
+    } else if (event.type == "mouseup") {
+      // Suppressed mousedown/mouseup events will be sent to us before they have
+      // been converted into click events. Just treat any mouseup as a click.
+      this._onPick(event);
+    }
+  },
+
+  /**
+   * When the debugger pauses execution in a page, events will not be delivered
+   * to any handlers added to elements on that page. This method uses the
+   * document's setSuppressedEventListener interface to bypass this restriction:
+   * events will be delivered to the callback at times when they would
+   * otherwise be suppressed. The set of events delivered this way is currently
+   * limited to mouse events.
+   *
+   * @param callback The function to call with suppressed events, or null.
+   */
+  _setSuppressedEventListener(callback) {
+    const document = this._targetActor.window.document;
+
+    // Pass the callback to setSuppressedEventListener as an EventListener.
+    document.setSuppressedEventListener(callback ? { handleEvent: callback } : null);
+  },
+
   _startPickerListeners: function() {
     const target = this._highlighterEnv.pageListenerTarget;
     target.addEventListener("mousemove", this._onHovered, true);
@@ -390,6 +417,8 @@ exports.HighlighterActor = protocol.ActorClassWithSpec(highlighterSpec, {
     target.addEventListener("dblclick", this._preventContentEvent, true);
     target.addEventListener("keydown", this._onKey, true);
     target.addEventListener("keyup", this._preventContentEvent, true);
+
+    this._setSuppressedEventListener(this._onSuppressedEvent.bind(this));
   },
 
   _stopPickerListeners: function() {
@@ -406,6 +435,8 @@ exports.HighlighterActor = protocol.ActorClassWithSpec(highlighterSpec, {
     target.removeEventListener("dblclick", this._preventContentEvent, true);
     target.removeEventListener("keydown", this._onKey, true);
     target.removeEventListener("keyup", this._preventContentEvent, true);
+
+    this._setSuppressedEventListener(null);
   },
 
   _highlighterReady: function() {
