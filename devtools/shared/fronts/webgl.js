@@ -14,9 +14,6 @@ const { FrontClassWithSpec, registerFront } = require("devtools/shared/protocol"
  * The corresponding Front object for the ShaderActor.
  */
 class ShaderFront extends FrontClassWithSpec(shaderSpec) {
-  constructor(client, form) {
-    super(client, form);
-  }
 }
 
 exports.ShaderFront = ShaderFront;
@@ -26,9 +23,6 @@ registerFront(ShaderFront);
  * The corresponding Front object for the ProgramActor.
  */
 class ProgramFront extends FrontClassWithSpec(programSpec) {
-  constructor(client, form) {
-    super(client, form);
-  }
 }
 
 exports.ProgramFront = ProgramFront;

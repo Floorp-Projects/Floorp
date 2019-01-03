@@ -9,10 +9,6 @@ const {longStringSpec, SimpleStringFront} = require("devtools/shared/specs/strin
 const { FrontClassWithSpec, registerFront } = require("devtools/shared/protocol");
 
 class LongStringFront extends FrontClassWithSpec(longStringSpec) {
-  constructor(client) {
-    super(client);
-  }
-
   destroy() {
     this.initial = null;
     this.length = null;
