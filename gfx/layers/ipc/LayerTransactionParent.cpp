@@ -925,6 +925,14 @@ TransactionId LayerTransactionParent::FlushTransactionId(
             LABELS_CONTENT_FRAME_TIME_REASON::SlowComposite);
       }
     }
+
+    if (!(mTxnVsyncId == VsyncId()) && mVsyncStartTime) {
+      latencyMs = (aCompositeEnd - mVsyncStartTime).ToMilliseconds();
+      latencyNorm = latencyMs / mVsyncRate.ToMilliseconds();
+      fracLatencyNorm = lround(latencyNorm * 100.0);
+      Telemetry::Accumulate(Telemetry::CONTENT_FRAME_TIME_VSYNC,
+                            fracLatencyNorm);
+    }
   }
 
 #if defined(ENABLE_FRAME_LATENCY_LOG)

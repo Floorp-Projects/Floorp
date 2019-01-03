@@ -83,6 +83,8 @@ class TransactionIdAllocator {
   virtual mozilla::TimeStamp GetTransactionStart() = 0;
 
   virtual VsyncId GetVsyncId() = 0;
+
+  virtual mozilla::TimeStamp GetVsyncStart() = 0;
 };
 
 }  // namespace layers

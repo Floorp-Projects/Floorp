@@ -234,6 +234,7 @@ bool WebRenderLayerManager::EndEmptyTransaction(EndTransactionFlags aFlags) {
                                   mAsyncResourceUpdates, mPaintSequenceNumber,
                                   mLatestTransactionId,
                                   mTransactionIdAllocator->GetVsyncId(),
+                                  mTransactionIdAllocator->GetVsyncStart(),
                                   refreshStart, mTransactionStart, mURL);
   ClearPendingScrollInfoUpdate();
 
@@ -366,6 +367,7 @@ void WebRenderLayerManager::EndTransactionWithoutLayer(
                                size.ToUnknownSize(), mLatestTransactionId,
                                mScrollData, containsSVGGroup,
                                mTransactionIdAllocator->GetVsyncId(),
+                               mTransactionIdAllocator->GetVsyncStart(),
                                refreshStart, mTransactionStart, mURL);
   }
 
