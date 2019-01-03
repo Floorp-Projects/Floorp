@@ -30,10 +30,6 @@ class NodeListFront extends FrontClassWithSpec(nodeListSpec) {
     super(client, form);
   }
 
-  destroy() {
-    super.destroy();
-  }
-
   marshallPool() {
     return this.parent();
   }
