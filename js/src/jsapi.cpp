@@ -466,7 +466,7 @@ JS_PUBLIC_API bool JS::InitSelfHostedCode(JSContext* cx) {
   }
 
 #ifndef JS_CODEGEN_NONE
-  if (!rt->getJitRuntime(cx)) {
+  if (!rt->createJitRuntime(cx)) {
     return false;
   }
 #endif

@@ -3280,32 +3280,30 @@ impl Renderer {
 
         self.handle_scaling(&target.scalings, TextureSource::PrevPassColor, projection, stats);
 
-        //TODO: record the pixel count for cached primitives
+        for alpha_batch_container in &target.alpha_batch_containers {
+            if let Some(scissor_rect) = alpha_batch_container.scissor_rect {
+                // Note: `framebuffer_target_rect` needs a Y-flip before going to GL
+                let rect = if draw_target.is_default() {
+                    let mut rect = scissor_rect
+                        .intersection(&framebuffer_target_rect.to_i32())
+                        .unwrap_or(DeviceIntRect::zero());
+                    rect.origin.y = draw_target.dimensions().height as i32 - rect.origin.y - rect.size.height;
+                    rect
+                } else {
+                    scissor_rect
+                };
+                self.device.enable_scissor();
+                self.device.set_scissor_rect(rect);
+            }
 
-        if target.needs_depth() {
-            let _gl = self.gpu_profile.start_marker("opaque batches");
-            let opaque_sampler = self.gpu_profile.start_sampler(GPU_SAMPLER_TAG_OPAQUE);
-            self.set_blend(false, framebuffer_kind);
-            //Note: depth equality is needed for split planes
-            self.device.set_depth_func(DepthFunction::LessEqual);
-            self.device.enable_depth();
-            self.device.enable_depth_write();
-
-            for alpha_batch_container in &target.alpha_batch_containers {
-                if let Some(target_rect) = alpha_batch_container.target_rect {
-                    // Note: `framebuffer_target_rect` needs a Y-flip before going to GL
-                    let rect = if draw_target.is_default() {
-                        let mut rect = target_rect
-                            .intersection(&framebuffer_target_rect.to_i32())
-                            .unwrap_or(DeviceIntRect::zero());
-                        rect.origin.y = draw_target.dimensions().height as i32 - rect.origin.y - rect.size.height;
-                        rect
-                    } else {
-                        target_rect
-                    };
-                    self.device.enable_scissor();
-                    self.device.set_scissor_rect(rect);
-                }
+            if !alpha_batch_container.opaque_batches.is_empty() {
+                let _gl = self.gpu_profile.start_marker("opaque batches");
+                let opaque_sampler = self.gpu_profile.start_sampler(GPU_SAMPLER_TAG_OPAQUE);
+                self.set_blend(false, framebuffer_kind);
+                //Note: depth equality is needed for split planes
+                self.device.set_depth_func(DepthFunction::LessEqual);
+                self.device.enable_depth();
+                self.device.enable_depth_write();
 
                 // Draw opaque batches front-to-back for maximum
                 // z-buffer efficiency!
@@ -3330,132 +3328,160 @@ impl Renderer {
                     );
                 }
 
-                if alpha_batch_container.target_rect.is_some() {
-                    self.device.disable_scissor();
-                }
+                self.device.disable_depth_write();
+                self.gpu_profile.finish_sampler(opaque_sampler);
             }
 
-            self.device.disable_depth_write();
-            self.gpu_profile.finish_sampler(opaque_sampler);
-        }
+            if !alpha_batch_container.alpha_batches.is_empty() {
+                let _gl = self.gpu_profile.start_marker("alpha batches");
+                let transparent_sampler = self.gpu_profile.start_sampler(GPU_SAMPLER_TAG_TRANSPARENT);
+                self.set_blend(true, framebuffer_kind);
+                let mut prev_blend_mode = BlendMode::None;
 
-        let _gl = self.gpu_profile.start_marker("alpha batches");
-        let transparent_sampler = self.gpu_profile.start_sampler(GPU_SAMPLER_TAG_TRANSPARENT);
-        self.set_blend(true, framebuffer_kind);
-        let mut prev_blend_mode = BlendMode::None;
+                for batch in &alpha_batch_container.alpha_batches {
+                    self.shaders.borrow_mut()
+                        .get(&batch.key, self.debug_flags)
+                        .bind(
+                            &mut self.device, projection,
+                            &mut self.renderer_errors,
+                        );
 
-        for alpha_batch_container in &target.alpha_batch_containers {
-            if let Some(target_rect) = alpha_batch_container.target_rect {
-                // Note: `framebuffer_target_rect` needs a Y-flip before going to GL
-                let rect = if draw_target.is_default() {
-                    let mut rect = target_rect
-                        .intersection(&framebuffer_target_rect.to_i32())
-                        .unwrap_or(DeviceIntRect::zero());
-                    rect.origin.y = draw_target.dimensions().height as i32 - rect.origin.y - rect.size.height;
-                    rect
-                } else {
-                    target_rect
-                };
-                self.device.enable_scissor();
-                self.device.set_scissor_rect(rect);
-            }
-
-            for batch in &alpha_batch_container.alpha_batches {
-                self.shaders.borrow_mut()
-                    .get(&batch.key, self.debug_flags)
-                    .bind(
-                        &mut self.device, projection,
-                        &mut self.renderer_errors,
-                    );
-
-                if batch.key.blend_mode != prev_blend_mode {
-                    match batch.key.blend_mode {
-                        _ if self.debug_flags.contains(DebugFlags::SHOW_OVERDRAW) &&
-                                framebuffer_kind == FramebufferKind::Main => {
-                            self.device.set_blend_mode_show_overdraw();
+                    if batch.key.blend_mode != prev_blend_mode {
+                        match batch.key.blend_mode {
+                            _ if self.debug_flags.contains(DebugFlags::SHOW_OVERDRAW) &&
+                                    framebuffer_kind == FramebufferKind::Main => {
+                                self.device.set_blend_mode_show_overdraw();
+                            }
+                            BlendMode::None => {
+                                unreachable!("bug: opaque blend in alpha pass");
+                            }
+                            BlendMode::Alpha => {
+                                self.device.set_blend_mode_alpha();
+                            }
+                            BlendMode::PremultipliedAlpha => {
+                                self.device.set_blend_mode_premultiplied_alpha();
+                            }
+                            BlendMode::PremultipliedDestOut => {
+                                self.device.set_blend_mode_premultiplied_dest_out();
+                            }
+                            BlendMode::SubpixelDualSource => {
+                                self.device.set_blend_mode_subpixel_dual_source();
+                            }
+                            BlendMode::SubpixelConstantTextColor(color) => {
+                                self.device.set_blend_mode_subpixel_constant_text_color(color);
+                            }
+                            BlendMode::SubpixelWithBgColor => {
+                                // Using the three pass "component alpha with font smoothing
+                                // background color" rendering technique:
+                                //
+                                // /webrender/doc/text-rendering.md
+                                //
+                                self.device.set_blend_mode_subpixel_with_bg_color_pass0();
+                                self.device.switch_mode(ShaderColorMode::SubpixelWithBgColorPass0 as _);
+                            }
                         }
-                        BlendMode::None => {
-                            unreachable!("bug: opaque blend in alpha pass");
-                        }
-                        BlendMode::Alpha => {
-                            self.device.set_blend_mode_alpha();
-                        }
-                        BlendMode::PremultipliedAlpha => {
-                            self.device.set_blend_mode_premultiplied_alpha();
-                        }
-                        BlendMode::PremultipliedDestOut => {
-                            self.device.set_blend_mode_premultiplied_dest_out();
-                        }
-                        BlendMode::SubpixelDualSource => {
-                            self.device.set_blend_mode_subpixel_dual_source();
-                        }
-                        BlendMode::SubpixelConstantTextColor(color) => {
-                            self.device.set_blend_mode_subpixel_constant_text_color(color);
-                        }
-                        BlendMode::SubpixelWithBgColor => {
-                            // Using the three pass "component alpha with font smoothing
-                            // background color" rendering technique:
-                            //
-                            // /webrender/doc/text-rendering.md
-                            //
-                            self.device.set_blend_mode_subpixel_with_bg_color_pass0();
-                            self.device.switch_mode(ShaderColorMode::SubpixelWithBgColorPass0 as _);
-                        }
+                        prev_blend_mode = batch.key.blend_mode;
                     }
-                    prev_blend_mode = batch.key.blend_mode;
-                }
 
-                // Handle special case readback for composites.
-                if let BatchKind::Brush(BrushBatchKind::MixBlend { task_id, source_id, backdrop_id }) = batch.key.kind {
-                    // composites can't be grouped together because
-                    // they may overlap and affect each other.
-                    debug_assert_eq!(batch.instances.len(), 1);
-                    self.handle_readback_composite(
-                        draw_target,
-                        alpha_batch_container.target_rect,
-                        &render_tasks[source_id],
-                        &render_tasks[task_id],
-                        &render_tasks[backdrop_id],
+                    // Handle special case readback for composites.
+                    if let BatchKind::Brush(BrushBatchKind::MixBlend { task_id, source_id, backdrop_id }) = batch.key.kind {
+                        // composites can't be grouped together because
+                        // they may overlap and affect each other.
+                        debug_assert_eq!(batch.instances.len(), 1);
+                        self.handle_readback_composite(
+                            draw_target,
+                            alpha_batch_container.scissor_rect,
+                            &render_tasks[source_id],
+                            &render_tasks[task_id],
+                            &render_tasks[backdrop_id],
+                        );
+                    }
+
+                    let _timer = self.gpu_profile.start_timer(batch.key.kind.sampler_tag());
+                    self.draw_instanced_batch(
+                        &batch.instances,
+                        VertexArrayKind::Primitive,
+                        &batch.key.textures,
+                        stats
                     );
+
+                    if batch.key.blend_mode == BlendMode::SubpixelWithBgColor {
+                        self.set_blend_mode_subpixel_with_bg_color_pass1(framebuffer_kind);
+                        self.device.switch_mode(ShaderColorMode::SubpixelWithBgColorPass1 as _);
+
+                        // When drawing the 2nd and 3rd passes, we know that the VAO, textures etc
+                        // are all set up from the previous draw_instanced_batch call,
+                        // so just issue a draw call here to avoid re-uploading the
+                        // instances and re-binding textures etc.
+                        self.device
+                            .draw_indexed_triangles_instanced_u16(6, batch.instances.len() as i32);
+
+                        self.set_blend_mode_subpixel_with_bg_color_pass2(framebuffer_kind);
+                        self.device.switch_mode(ShaderColorMode::SubpixelWithBgColorPass2 as _);
+
+                        self.device
+                            .draw_indexed_triangles_instanced_u16(6, batch.instances.len() as i32);
+
+                        prev_blend_mode = BlendMode::None;
+                    }
                 }
 
-                let _timer = self.gpu_profile.start_timer(batch.key.kind.sampler_tag());
-                self.draw_instanced_batch(
-                    &batch.instances,
-                    VertexArrayKind::Primitive,
-                    &batch.key.textures,
-                    stats
-                );
-
-                if batch.key.blend_mode == BlendMode::SubpixelWithBgColor {
-                    self.set_blend_mode_subpixel_with_bg_color_pass1(framebuffer_kind);
-                    self.device.switch_mode(ShaderColorMode::SubpixelWithBgColorPass1 as _);
-
-                    // When drawing the 2nd and 3rd passes, we know that the VAO, textures etc
-                    // are all set up from the previous draw_instanced_batch call,
-                    // so just issue a draw call here to avoid re-uploading the
-                    // instances and re-binding textures etc.
-                    self.device
-                        .draw_indexed_triangles_instanced_u16(6, batch.instances.len() as i32);
-
-                    self.set_blend_mode_subpixel_with_bg_color_pass2(framebuffer_kind);
-                    self.device.switch_mode(ShaderColorMode::SubpixelWithBgColorPass2 as _);
-
-                    self.device
-                        .draw_indexed_triangles_instanced_u16(6, batch.instances.len() as i32);
-
-                    prev_blend_mode = BlendMode::None;
-                }
+                self.device.disable_depth();
+                self.set_blend(false, framebuffer_kind);
+                self.gpu_profile.finish_sampler(transparent_sampler);
             }
 
-            if alpha_batch_container.target_rect.is_some() {
+            if alpha_batch_container.scissor_rect.is_some() {
                 self.device.disable_scissor();
             }
-        }
 
-        self.device.disable_depth();
-        self.set_blend(false, framebuffer_kind);
-        self.gpu_profile.finish_sampler(transparent_sampler);
+            // At the end of rendering a container, blit across any cache tiles
+            // to the texture cache for use on subsequent frames.
+            if !alpha_batch_container.tile_blits.is_empty() {
+                let _timer = self.gpu_profile.start_timer(GPU_TAG_BLIT);
+
+                self.device.bind_read_target(draw_target.into());
+
+                for blit in &alpha_batch_container.tile_blits {
+                    let texture = self.texture_resolver
+                        .resolve(&blit.target.texture_id)
+                        .expect("BUG: invalid target texture");
+
+                    self.device.bind_draw_target(DrawTarget::Texture {
+                        texture,
+                        layer: blit.target.texture_layer as usize,
+                        with_depth: false,
+                    });
+
+                    let mut src_rect = DeviceIntRect::new(
+                        blit.src_offset,
+                        blit.size,
+                    );
+
+                    let target_rect = blit.target.uv_rect.to_i32();
+
+                    let mut dest_rect = DeviceIntRect::new(
+                        DeviceIntPoint::new(
+                            blit.dest_offset.x + target_rect.origin.x,
+                            blit.dest_offset.y + target_rect.origin.y,
+                        ),
+                        blit.size,
+                    );
+
+                    // Modify the src/dest rects since we are blitting from the framebuffer
+                    src_rect.origin.y = draw_target.dimensions().height as i32 - src_rect.size.height - src_rect.origin.y;
+                    dest_rect.origin.y += dest_rect.size.height;
+                    dest_rect.size.height = -dest_rect.size.height;
+
+                    self.device.blit_render_target(
+                        src_rect,
+                        dest_rect,
+                    );
+                }
+
+                self.device.bind_draw_target(draw_target);
+            }
+        }
 
         // For any registered image outputs on this render target,
         // get the texture from caller and blit it.
@@ -3492,54 +3518,6 @@ impl Renderer {
                 handler.unlock(output.pipeline_id);
             }
         }
-
-        // At the end of rendering a target, blit across any cache tiles
-        // to the texture cache for use on subsequent frames.
-        if !target.tile_blits.is_empty() {
-            let _timer = self.gpu_profile.start_timer(GPU_TAG_BLIT);
-
-            self.device.bind_read_target(draw_target.into());
-
-            for blit in &target.tile_blits {
-                let texture = self.texture_resolver
-                    .resolve(&blit.target.texture_id)
-                    .expect("BUG: invalid target texture");
-
-                self.device.bind_draw_target(DrawTarget::Texture {
-                    texture,
-                    layer: blit.target.texture_layer as usize,
-                    with_depth: false,
-                });
-
-                let mut src_rect = DeviceIntRect::new(
-                    blit.src_offset,
-                    blit.size,
-                );
-
-                let target_rect = blit.target.uv_rect.to_i32();
-
-                let mut dest_rect = DeviceIntRect::new(
-                    DeviceIntPoint::new(
-                        blit.dest_offset.x + target_rect.origin.x,
-                        blit.dest_offset.y + target_rect.origin.y,
-                    ),
-                    blit.size,
-                );
-
-                // Modify the src/dest rects since we are blitting from the framebuffer
-                src_rect.origin.y = draw_target.dimensions().height as i32 - src_rect.size.height - src_rect.origin.y;
-                dest_rect.origin.y += dest_rect.size.height;
-                dest_rect.size.height = -dest_rect.size.height;
-
-                self.device.blit_render_target(
-                    src_rect,
-                    dest_rect,
-                );
-            }
-
-            self.device.bind_draw_target(draw_target);
-        }
-
     }
 
     fn draw_alpha_target(

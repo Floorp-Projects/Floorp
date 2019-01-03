@@ -1,8 +1,8 @@
 /* globals ContentSearchUIController */
 "use strict";
 
+import {actionCreators as ac, actionTypes as at} from "common/Actions.jsm";
 import {FormattedMessage, injectIntl} from "react-intl";
-import {actionCreators as ac} from "common/Actions.jsm";
 import {connect} from "react-redux";
 import {IS_NEWTAB} from "content-src/lib/constants";
 import React from "react";
@@ -10,7 +10,8 @@ import React from "react";
 export class _Search extends React.PureComponent {
   constructor(props) {
     super(props);
-    this.onClick = this.onClick.bind(this);
+    this.onSearchClick = this.onSearchClick.bind(this);
+    this.onSearchHandoffClick = this.onSearchHandoffClick.bind(this);
     this.onInputMount = this.onInputMount.bind(this);
   }
 
@@ -21,8 +22,24 @@ export class _Search extends React.PureComponent {
     }
   }
 
-  onClick(event) {
+  onSearchClick(event) {
     window.gContentSearchController.search(event);
+  }
+
+  onSearchHandoffClick(event) {
+    // When search hand-off is enabled, we render a big button that is styled to
+    // look like a search textbox. If the button is clicked with the mouse, we style
+    // the button as if it was a focused search box and show a fake cursor but
+    // really focus the awesomebar without the focus styles.
+    // If the button is clicked from the keyboard, we focus the awesomebar normally.
+    // This is to minimize confusion with users navigating with the keyboard and
+    // users using assistive technologoy.
+    const isKeyboardClick = event.clientX === 0 && event.clientY === 0;
+    const hiddenFocus =  !isKeyboardClick;
+    this.props.dispatch(ac.OnlyToMain({type: at.HANDOFF_SEARCH_TO_AWESOMEBAR, data: {hiddenFocus}}));
+    this.props.dispatch({type: at.FOCUS_SEARCH});
+
+    // TODO: Send a telemetry ping. BUG 1514732
   }
 
   componentWillUnmount() {
@@ -63,13 +80,20 @@ export class _Search extends React.PureComponent {
    * in order to execute searches in various tests
    */
   render() {
-    return (<div className="search-wrapper">
+    const wrapperClassName = [
+      "search-wrapper",
+      this.props.hide && "search-hidden",
+      this.props.focus && "search-active",
+    ].filter(v => v).join(" ");
+
+    return (<div className={wrapperClassName}>
       {this.props.showLogo &&
         <div className="logo-and-wordmark">
           <div className="logo" />
           <div className="wordmark" />
         </div>
       }
+      {!this.props.handoffEnabled &&
       <div className="search-inner-wrapper">
         <label htmlFor="newtab-search-text" className="search-label">
           <span className="sr-only"><FormattedMessage id="search_web_placeholder" /></span>
@@ -84,11 +108,32 @@ export class _Search extends React.PureComponent {
         <button
           id="searchSubmit"
           className="search-button"
-          onClick={this.onClick}
+          onClick={this.onSearchClick}
           title={this.props.intl.formatMessage({id: "search_button"})}>
           <span className="sr-only"><FormattedMessage id="search_button" /></span>
         </button>
       </div>
+      }
+      {this.props.handoffEnabled &&
+        <div className="search-inner-wrapper">
+          <button
+            className="search-handoff-button"
+            onClick={this.onSearchHandoffClick}
+            title={this.props.intl.formatMessage({id: "search_web_placeholder"})}>
+            <div className="fake-textbox">{this.props.intl.formatMessage({id: "search_web_placeholder"})}</div>
+            <div className="fake-caret" />
+            <div className="fake-button" />
+          </button>
+          {/*
+            This dummy and hidden input below is so we can load ContentSearchUIController.
+            Why? It sets --newtab-search-icon for us and it isn't trivial to port over.
+          */}
+          <input
+            type="search"
+            style={{display: "none"}}
+            ref={this.onInputMount} />
+        </div>
+      }
     </div>);
   }
 }

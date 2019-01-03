@@ -474,7 +474,7 @@ impl TransformPalette {
         clip_scroll_tree: &ClipScrollTree,
     ) -> usize {
         if to_index == ROOT_SPATIAL_NODE_INDEX {
-            from_index.0
+            from_index.0 as usize
         } else if from_index == to_index {
             0
         } else {
@@ -511,7 +511,7 @@ impl TransformPalette {
         &self,
         index: SpatialNodeIndex,
     ) -> LayoutToWorldTransform {
-        self.transforms[index.0]
+        self.transforms[index.0 as usize]
             .transform
             .with_destination::<WorldPixel>()
     }
@@ -520,7 +520,7 @@ impl TransformPalette {
         &self,
         index: SpatialNodeIndex,
     ) -> WorldToLayoutTransform {
-        self.transforms[index.0]
+        self.transforms[index.0 as usize]
             .inv_transform
             .with_source::<WorldPixel>()
     }

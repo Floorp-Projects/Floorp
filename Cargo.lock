@@ -2972,7 +2972,7 @@ dependencies = [
 
 [[package]]
 name = "webrender"
-version = "0.57.2"
+version = "0.58.0"
 dependencies = [
  "app_units 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "bincode 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -2998,12 +2998,12 @@ dependencies = [
  "smallvec 0.6.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "thread_profiler 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "time 0.1.40 (registry+https://github.com/rust-lang/crates.io-index)",
- "webrender_api 0.57.2",
+ "webrender_api 0.58.0",
 ]
 
 [[package]]
 name = "webrender_api"
-version = "0.57.2"
+version = "0.58.0"
 dependencies = [
  "app_units 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "bincode 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -3037,7 +3037,7 @@ dependencies = [
  "rayon 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "thread_profiler 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "uuid 0.6.5 (registry+https://github.com/rust-lang/crates.io-index)",
- "webrender 0.57.2",
+ "webrender 0.58.0",
 ]
 
 [[package]]

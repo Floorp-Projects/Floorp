@@ -223,13 +223,6 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
                           const TimeStamp& aSampleTime);
 
   /**
-   * Walk the tree of APZCs and flushes the repaint requests for all the APZCS
-   * corresponding to the given layers id. Finally, sends a flush complete
-   * notification to the GeckoContentController for the layers id.
-   */
-  void FlushApzRepaints(LayersId aLayersId);
-
-  /**
    * General handler for incoming input events. Manipulates the frame metrics
    * based on what type of input it is. For example, a PinchGestureEvent will
    * cause scaling. This should only be called externally to this class, and
@@ -536,6 +529,12 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
       const ScrollbarData& aScrollbarData, bool aScrollbarIsDescendant,
       AsyncTransformComponentMatrix* aOutClipTransform);
 
+  /**
+   * Dispatch a flush complete notification from the repaint thread of the
+   * content controller for the given layers id.
+   */
+  static void FlushApzRepaints(LayersId aLayersId);
+
   // Assert that the current thread is the sampler thread for this APZCTM.
   void AssertOnSamplerThread();
   // Assert that the current thread is the updater thread for this APZCTM.
@@ -728,9 +727,9 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
   LayerToParentLayerMatrix4x4 ComputeTransformForNode(
       const HitTestingTreeNode* aNode) const;
 
-  // Returns a pointer to the GeckoContentController for the given layers id.
-  already_AddRefed<GeckoContentController> GetContentController(
-      LayersId aLayersId) const;
+  // Look up the GeckoContentController for the given layers id.
+  static already_AddRefed<GeckoContentController> GetContentController(
+      LayersId aLayersId);
 
  protected:
   /* The input queue where input events are held until we know enough to

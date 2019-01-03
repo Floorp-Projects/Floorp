@@ -152,8 +152,8 @@ impl<F, T> CoordinateSpaceMapping<F, T> {
         clip_scroll_tree: &ClipScrollTree,
     ) -> Option<Self> {
         let spatial_nodes = &clip_scroll_tree.spatial_nodes;
-        let ref_spatial_node = &spatial_nodes[ref_spatial_node_index.0];
-        let target_spatial_node = &spatial_nodes[target_node_index.0];
+        let ref_spatial_node = &spatial_nodes[ref_spatial_node_index.0 as usize];
+        let target_spatial_node = &spatial_nodes[target_node_index.0 as usize];
 
         if ref_spatial_node_index == target_node_index {
             Some(CoordinateSpaceMapping::Local)
@@ -505,8 +505,8 @@ impl SizeKey {
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 #[derive(Copy, Debug, Clone, PartialEq)]
 pub struct VectorKey {
-    x: f32,
-    y: f32,
+    pub x: f32,
+    pub y: f32,
 }
 
 impl Eq for VectorKey {}
@@ -1731,7 +1731,7 @@ impl PrimitiveStore {
             let mut tile_cache = state.tile_cache.take().unwrap();
 
             // Build the dirty region(s) for this tile cache.
-            tile_cache.post_update(
+            pic.local_clip_rect = tile_cache.post_update(
                 resource_cache,
                 gpu_cache,
                 clip_store,
@@ -2214,7 +2214,7 @@ impl PrimitiveStore {
 
             let spatial_node = &frame_context
                 .clip_scroll_tree
-                .spatial_nodes[prim_instance.spatial_node_index.0];
+                .spatial_nodes[prim_instance.spatial_node_index.0 as usize];
 
             // TODO(gw): Although constructing these is cheap, they are often
             //           the same for many consecutive primitives, so it may
@@ -3248,6 +3248,11 @@ pub fn get_raster_rects(
         device_pixel_scale,
     );
 
+    // Ensure that we won't try to allocate a zero-sized clip render task.
+    if clipped.is_empty() {
+        return None;
+    }
+
     Some((clipped.to_i32(), unclipped))
 }
 
@@ -3320,7 +3325,7 @@ fn test_struct_sizes() {
     //     test expectations and move on.
     // (b) You made a structure larger. This is not necessarily a problem, but should only
     //     be done with care, and after checking if talos performance regresses badly.
-    assert_eq!(mem::size_of::<PrimitiveInstance>(), 120, "PrimitiveInstance size changed");
+    assert_eq!(mem::size_of::<PrimitiveInstance>(), 112, "PrimitiveInstance size changed");
     assert_eq!(mem::size_of::<PrimitiveInstanceKind>(), 40, "PrimitiveInstanceKind size changed");
     assert_eq!(mem::size_of::<PrimitiveTemplate>(), 56, "PrimitiveTemplate size changed");
     assert_eq!(mem::size_of::<PrimitiveTemplateKind>(), 20, "PrimitiveTemplateKind size changed");

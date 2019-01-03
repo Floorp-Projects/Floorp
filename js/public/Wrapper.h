@@ -424,6 +424,11 @@ void ReportAccessDenied(JSContext* cx);
 JS_FRIEND_API void NukeCrossCompartmentWrapper(JSContext* cx,
                                                JSObject* wrapper);
 
+// If a cross-compartment wrapper source => target exists, nuke it.
+JS_FRIEND_API void NukeCrossCompartmentWrapperIfExists(JSContext* cx,
+                                                       JS::Compartment* source,
+                                                       JSObject* target);
+
 void RemapWrapper(JSContext* cx, JSObject* wobj, JSObject* newTarget);
 
 JS_FRIEND_API bool RemapAllWrappersForObject(JSContext* cx, JSObject* oldTarget,

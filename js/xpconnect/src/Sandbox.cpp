@@ -1045,7 +1045,8 @@ nsresult xpc::CreateSandboxObject(JSContext* cx, MutableHandleValue vp,
   // [SecureContext] API (bug 1273687).  In that case we'd call
   // creationOptions.setSecureContext(true).
 
-  if (principal == nsXPConnect::SystemPrincipal()) {
+  bool isSystemPrincipal = principal == nsXPConnect::SystemPrincipal();
+  if (isSystemPrincipal) {
     creationOptions.setClampAndJitterTime(false);
   }
 
@@ -1055,6 +1056,12 @@ nsresult xpc::CreateSandboxObject(JSContext* cx, MutableHandleValue vp,
         js::UncheckedUnwrap(options.sameZoneAs));
   } else if (options.freshZone) {
     creationOptions.setNewCompartmentAndZone();
+  } else if (isSystemPrincipal && !options.invisibleToDebugger &&
+             !options.freshCompartment) {
+    // Use a shared system compartment for system-principal sandboxes that don't
+    // require invisibleToDebugger (this is a compartment property, see bug
+    // 1482215).
+    creationOptions.setExistingCompartment(xpc::PrivilegedJunkScope());
   } else {
     creationOptions.setNewCompartmentInSystemZone();
   }
@@ -1072,16 +1079,8 @@ nsresult xpc::CreateSandboxObject(JSContext* cx, MutableHandleValue vp,
     return NS_ERROR_FAILURE;
   }
 
-  CompartmentPrivate* priv = CompartmentPrivate::Get(sandbox);
-  priv->allowWaivers = options.allowWaivers;
-  priv->isWebExtensionContentScript = options.isWebExtensionContentScript;
-  priv->isContentXBLCompartment = options.isContentXBLScope;
-  priv->isUAWidgetCompartment = options.isUAWidgetScope;
-
   // Use exclusive expandos for non-system-principal sandboxes.
-  if (principal != nsXPConnect::SystemPrincipal()) {
-    priv->hasExclusiveExpandos = true;
-  }
+  bool hasExclusiveExpandos = !isSystemPrincipal;
 
   // Set up the wantXrays flag, which indicates whether xrays are desired even
   // for same-origin access.
@@ -1092,7 +1091,30 @@ nsresult xpc::CreateSandboxObject(JSContext* cx, MutableHandleValue vp,
   // Arguably we should just flip the default for chrome and still honor the
   // flag, but such a change would break code in subtle ways for minimal
   // benefit. So we just switch it off here.
-  priv->wantXrays = AccessCheck::isChrome(sandbox) ? false : options.wantXrays;
+  bool wantXrays = AccessCheck::isChrome(sandbox) ? false : options.wantXrays;
+
+  if (creationOptions.compartmentSpecifier() ==
+      JS::CompartmentSpecifier::ExistingCompartment) {
+    // Make sure the compartment we're reusing has flags that match what we
+    // would set on a new compartment.
+    CompartmentPrivate* priv = CompartmentPrivate::Get(sandbox);
+    MOZ_RELEASE_ASSERT(priv->allowWaivers == options.allowWaivers);
+    MOZ_RELEASE_ASSERT(priv->isWebExtensionContentScript ==
+                       options.isWebExtensionContentScript);
+    MOZ_RELEASE_ASSERT(priv->isContentXBLCompartment ==
+                       options.isContentXBLScope);
+    MOZ_RELEASE_ASSERT(priv->isUAWidgetCompartment == options.isUAWidgetScope);
+    MOZ_RELEASE_ASSERT(priv->hasExclusiveExpandos == hasExclusiveExpandos);
+    MOZ_RELEASE_ASSERT(priv->wantXrays == wantXrays);
+  } else {
+    CompartmentPrivate* priv = CompartmentPrivate::Get(sandbox);
+    priv->allowWaivers = options.allowWaivers;
+    priv->isWebExtensionContentScript = options.isWebExtensionContentScript;
+    priv->isContentXBLCompartment = options.isContentXBLScope;
+    priv->isUAWidgetCompartment = options.isUAWidgetScope;
+    priv->hasExclusiveExpandos = hasExclusiveExpandos;
+    priv->wantXrays = wantXrays;
+  }
 
   {
     JSAutoRealm ar(cx, sandbox);

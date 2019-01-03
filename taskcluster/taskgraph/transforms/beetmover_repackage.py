@@ -18,6 +18,7 @@ from taskgraph.util.scriptworker import (get_beetmover_bucket_scope,
                                          get_beetmover_action_scope,
                                          get_worker_type_for_scope)
 from taskgraph.util.taskcluster import get_artifact_prefix
+from taskgraph.util.treeherder import replace_group
 from taskgraph.transforms.task import task_description_schema
 from voluptuous import Required, Optional
 
@@ -171,7 +172,13 @@ def make_task_description(config, jobs):
         attributes = dep_job.attributes
 
         treeherder = job.get('treeherder', {})
-        treeherder.setdefault('symbol', 'BM-R')
+        upstream_symbol = dep_job.task['extra']['treeherder']['symbol']
+        if 'build' in job['dependent-tasks']:
+            upstream_symbol = job['dependent-tasks']['build'].task['extra']['treeherder']['symbol']
+        treeherder.setdefault(
+            'symbol',
+            replace_group(upstream_symbol, 'BMR')
+        )
         dep_th_platform = dep_job.task.get('extra', {}).get(
             'treeherder', {}).get('machine', {}).get('platform', '')
         treeherder.setdefault('platform',

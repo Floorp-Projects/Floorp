@@ -1352,15 +1352,12 @@ void CompositorBridgeParent::SetTestAsyncZoom(
 }
 
 void CompositorBridgeParent::FlushApzRepaints(const LayersId& aLayersId) {
-  MOZ_ASSERT(mApzcTreeManager);
   MOZ_ASSERT(mApzUpdater);
   MOZ_ASSERT(aLayersId.IsValid());
-  RefPtr<CompositorBridgeParent> self = this;
   mApzUpdater->RunOnControllerThread(
       aLayersId, NS_NewRunnableFunction(
-                     "layers::CompositorBridgeParent::FlushApzRepaints", [=]() {
-                       self->mApzcTreeManager->FlushApzRepaints(aLayersId);
-                     }));
+                     "layers::CompositorBridgeParent::FlushApzRepaints",
+                     [=]() { APZCTreeManager::FlushApzRepaints(aLayersId); }));
 }
 
 void CompositorBridgeParent::GetAPZTestData(const LayersId& aLayersId,

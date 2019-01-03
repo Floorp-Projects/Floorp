@@ -44,10 +44,17 @@ impl CoordinateSystem {
 #[derive(Debug, Copy, Clone, Eq, Hash, PartialEq, PartialOrd, Ord)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-pub struct SpatialNodeIndex(pub usize);
+pub struct SpatialNodeIndex(pub u32);
 
 pub const ROOT_SPATIAL_NODE_INDEX: SpatialNodeIndex = SpatialNodeIndex(0);
 const TOPMOST_SCROLL_NODE_INDEX: SpatialNodeIndex = SpatialNodeIndex(1);
+
+impl SpatialNodeIndex {
+    pub fn new(index: usize) -> Self {
+        debug_assert!(index < ::std::u32::MAX as usize);
+        SpatialNodeIndex(index as u32)
+    }
+}
 
 impl CoordinateSystemId {
     pub fn root() -> Self {
@@ -117,8 +124,8 @@ impl ClipScrollTree {
         from_node_index: SpatialNodeIndex,
         to_node_index: SpatialNodeIndex,
     ) -> Option<LayoutTransform> {
-        let from_node = &self.spatial_nodes[from_node_index.0];
-        let to_node = &self.spatial_nodes[to_node_index.0];
+        let from_node = &self.spatial_nodes[from_node_index.0 as usize];
+        let to_node = &self.spatial_nodes[to_node_index.0 as usize];
 
         let (child, parent, inverse) = if from_node_index.0 > to_node_index.0 {
             (from_node, to_node, false)
@@ -230,7 +237,7 @@ impl ClipScrollTree {
             None => return self.topmost_scroll_node_index(),
         };
 
-        let node = &self.spatial_nodes[index.0];
+        let node = &self.spatial_nodes[index.0 as usize];
         match node.node_type {
             SpatialNodeType::ScrollFrame(state) if state.sensitive_to_input_events() => index,
             _ => self.find_nearest_scrolling_ancestor(node.parent)
@@ -246,7 +253,7 @@ impl ClipScrollTree {
             return false;
         }
         let node_index = self.find_nearest_scrolling_ancestor(node_index);
-        self.spatial_nodes[node_index.0].scroll(scroll_location)
+        self.spatial_nodes[node_index.0 as usize].scroll(scroll_location)
     }
 
     pub fn update_tree(
@@ -280,7 +287,7 @@ impl ClipScrollTree {
         self.nodes_to_update.push((root_node_index, state));
 
         while let Some((node_index, mut state)) = self.nodes_to_update.pop() {
-            let node = match self.spatial_nodes.get_mut(node_index.0) {
+            let node = match self.spatial_nodes.get_mut(node_index.0 as usize) {
                 Some(node) => node,
                 None => continue,
             };
@@ -375,11 +382,11 @@ impl ClipScrollTree {
     }
 
     pub fn add_spatial_node(&mut self, node: SpatialNode) -> SpatialNodeIndex {
-        let index = SpatialNodeIndex(self.spatial_nodes.len());
+        let index = SpatialNodeIndex::new(self.spatial_nodes.len());
 
         // When the parent node is None this means we are adding the root.
         if let Some(parent_index) = node.parent {
-            self.spatial_nodes[parent_index.0].add_child(index);
+            self.spatial_nodes[parent_index.0 as usize].add_child(index);
         }
 
         self.spatial_nodes.push(node);
@@ -395,7 +402,7 @@ impl ClipScrollTree {
         index: SpatialNodeIndex,
         pt: &mut T,
     ) {
-        let node = &self.spatial_nodes[index.0];
+        let node = &self.spatial_nodes[index.0 as usize];
         match node.node_type {
             SpatialNodeType::StickyFrame(ref sticky_frame_info) => {
                 pt.new_level(format!("StickyFrame"));
@@ -450,7 +457,7 @@ impl ClipScrollTree {
         let mut current = spatial_node_index;
 
         while current != ROOT_SPATIAL_NODE_INDEX {
-            let node = &self.spatial_nodes[current.0];
+            let node = &self.spatial_nodes[current.0 as usize];
 
             match node.node_type {
                 SpatialNodeType::ReferenceFrame(ref info) => {
