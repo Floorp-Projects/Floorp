@@ -8,6 +8,7 @@
 
 #include "ds/OrderedHashTable.h"
 #include "gc/FreeOp.h"
+#include "js/PropertySpec.h"
 #include "js/Utility.h"
 #include "vm/EqualityOperations.h"  // js::SameValue
 #include "vm/GlobalObject.h"

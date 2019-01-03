@@ -6,6 +6,7 @@
 #include "perf/jsperf.h"
 
 #include "gc/FreeOp.h"
+#include "js/PropertySpec.h"
 #include "vm/JSContext.h" /* for error messages */
 #include "vm/JSObject.h"  /* for unwrapping without a context */
 
