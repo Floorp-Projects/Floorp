@@ -8,8 +8,7 @@ const { perfSpec } = require("devtools/shared/specs/perf");
 
 class PerfFront extends FrontClassWithSpec(perfSpec) {
   constructor(client, form) {
-    super(client, form);
-    this.actorID = form.perfActor;
+    super(client, { actor: form.perfActor });
     this.manage(this);
   }
 }

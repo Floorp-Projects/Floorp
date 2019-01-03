@@ -24,8 +24,7 @@ for (const childSpec of Object.values(childSpecs)) {
 
 class StorageFront extends FrontClassWithSpec(storageSpec) {
   constructor(client, tabForm) {
-    super(client);
-    this.actorID = tabForm.storageActor;
+    super(client, { actor: tabForm.storageActor });
     this.manage(this);
   }
 }

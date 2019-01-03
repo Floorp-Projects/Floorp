@@ -9,8 +9,8 @@ const { FrontClassWithSpec, registerFront } = require("devtools/shared/protocol"
 loader.lazyRequireGetter(this, "ThreadClient", "devtools/shared/client/thread-client");
 
 class WorkerTargetFront extends FrontClassWithSpec(workerTargetSpec) {
-  constructor(client) {
-    super(client);
+  constructor(client, form) {
+    super(client, form);
 
     this.thread = null;
     this.traits = {};

@@ -14,8 +14,7 @@ const { promisesSpec } = require("devtools/shared/specs/promises");
  */
 class PromisesFront extends FrontClassWithSpec(promisesSpec) {
   constructor(client, form) {
-    super(client, form);
-    this.actorID = form.promisesActor;
+    super(client, { actor: form.promisesActor });
     this.manage(this);
   }
 }
