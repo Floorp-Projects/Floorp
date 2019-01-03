@@ -45,7 +45,7 @@ export class Workers extends Component<Props> {
           key={worker.actor}
           onClick={() => this.props.selectThread(worker.actor)}
         >
-          <img className="domain" />
+          <AccessibleImage className="domain" />
           {(worker.url
             ? `${this.props.getWorkerDisplayName(worker.actor)}: ${basename(
                 worker.url
