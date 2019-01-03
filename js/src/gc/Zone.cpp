@@ -300,10 +300,7 @@ uint64_t Zone::gcNumber() {
 
 js::jit::JitZone* Zone::createJitZone(JSContext* cx) {
   MOZ_ASSERT(!jitZone_);
-
-  if (!cx->runtime()->getJitRuntime(cx)) {
-    return nullptr;
-  }
+  MOZ_ASSERT(cx->runtime()->hasJitRuntime());
 
   UniquePtr<jit::JitZone> jitZone(cx->new_<js::jit::JitZone>());
   if (!jitZone) {

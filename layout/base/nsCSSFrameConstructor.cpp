@@ -564,11 +564,11 @@ static nsIFrame* GetIBContainingBlockFor(nsIFrame* aFrame) {
   return parentFrame;
 }
 
-static nsIFrame* GetMultiColumnContainingBlockFor(nsIFrame* aFrame) {
+static nsContainerFrame* GetMultiColumnContainingBlockFor(nsIFrame* aFrame) {
   MOZ_ASSERT(aFrame->HasAnyStateBits(NS_FRAME_HAS_MULTI_COLUMN_ANCESTOR),
              "Should only be called if the frame has a multi-column ancestor!");
 
-  nsIFrame* current = aFrame->GetParent();
+  nsContainerFrame* current = aFrame->GetParent();
   while (current && !current->IsColumnSetWrapperFrame()) {
     current = current->GetParent();
   }
@@ -8316,7 +8316,8 @@ bool nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(
          grandparent->GetPrevSibling());
 
     if (needsReframe) {
-      nsIFrame* containingBlock = GetMultiColumnContainingBlockFor(inFlowFrame);
+      nsContainerFrame* containingBlock =
+          GetMultiColumnContainingBlockFor(inFlowFrame);
 
 #ifdef DEBUG
       if (IsFramePartOfIBSplit(inFlowFrame)) {

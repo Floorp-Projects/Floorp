@@ -159,7 +159,7 @@ impl HitTester {
         self.clip_chains.clear();
 
         for (index, node) in clip_scroll_tree.spatial_nodes.iter().enumerate() {
-            let index = SpatialNodeIndex(index);
+            let index = SpatialNodeIndex::new(index);
 
             // If we haven't already seen a node for this pipeline, record this one as the root
             // node.
@@ -237,7 +237,7 @@ impl HitTester {
 
         let node = &self.clip_chains[clip_chain_node_id.0 as usize].region;
         let transform = self
-            .spatial_nodes[spatial_node_index.0]
+            .spatial_nodes[spatial_node_index.0 as usize]
             .world_viewport_transform;
         let transformed_point = match transform
             .inverse()
@@ -264,7 +264,7 @@ impl HitTester {
 
         for &HitTestingRun(ref items, ref clip_and_scroll) in self.runs.iter().rev() {
             let spatial_node_index = clip_and_scroll.spatial_node_index;
-            let scroll_node = &self.spatial_nodes[spatial_node_index.0];
+            let scroll_node = &self.spatial_nodes[spatial_node_index.0 as usize];
             let transform = scroll_node.world_content_transform;
             let point_in_layer = match transform
                 .inverse()
@@ -301,7 +301,7 @@ impl HitTester {
         let mut result = HitTestResult::default();
         for &HitTestingRun(ref items, ref clip_and_scroll) in self.runs.iter().rev() {
             let spatial_node_index = clip_and_scroll.spatial_node_index;
-            let scroll_node = &self.spatial_nodes[spatial_node_index.0];
+            let scroll_node = &self.spatial_nodes[spatial_node_index.0 as usize];
             let pipeline_id = scroll_node.pipeline_id;
             match (test.pipeline_id, pipeline_id) {
                 (Some(id), node_id) if node_id != id => continue,
@@ -343,7 +343,7 @@ impl HitTester {
                 // the pipeline of the hit item. If we cannot get a transformed point, we are
                 // in a situation with an uninvertible transformation so we should just skip this
                 // result.
-                let root_node = &self.spatial_nodes[self.pipeline_root_nodes[&pipeline_id].0];
+                let root_node = &self.spatial_nodes[self.pipeline_root_nodes[&pipeline_id].0 as usize];
                 let point_in_viewport = match root_node.world_viewport_transform
                     .inverse()
                     .and_then(|inverted| inverted.transform_point2d(&point))
@@ -369,7 +369,7 @@ impl HitTester {
     }
 
     pub fn get_pipeline_root(&self, pipeline_id: PipelineId) -> &HitTestSpatialNode {
-        &self.spatial_nodes[self.pipeline_root_nodes[&pipeline_id].0]
+        &self.spatial_nodes[self.pipeline_root_nodes[&pipeline_id].0 as usize]
     }
 
     // Reports the CPU heap usage of this HitTester struct.

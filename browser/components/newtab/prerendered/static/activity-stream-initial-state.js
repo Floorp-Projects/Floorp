@@ -66,5 +66,15 @@ window.gActivityStreamPrerenderedState = {
     "pocketCta": {},
     "waitingForSpoc": true
   },
-  "Layout": []
+  "DiscoveryStream": {
+    "config": {
+      "enabled": false,
+      "layout_endpoint": ""
+    },
+    "layout": []
+  },
+  "Search": {
+    "focus": false,
+    "hide": false
+  }
 };

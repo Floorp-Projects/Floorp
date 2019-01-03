@@ -14,6 +14,7 @@
 #include "frontend/SourceNotes.h"
 #include "jit/BaselineFrame.h"
 #include "jit/BaselineInspector.h"
+#include "jit/CacheIR.h"
 #include "jit/Ion.h"
 #include "jit/IonControlFlow.h"
 #include "jit/IonOptimizationLevels.h"
@@ -11864,8 +11865,8 @@ MDefinition* IonBuilder::tryInnerizeWindow(MDefinition* obj) {
   // Try to optimize accesses on outer window proxies (window.foo, for
   // example) to go directly to the inner window, the global.
   //
-  // Callers should be careful not to pass the inner object to getters or
-  // setters that require outerization.
+  // Callers should be careful not to pass the global object to getters or
+  // setters that require the WindowProxy.
 
   if (obj->type() != MIRType::Object) {
     return obj;
@@ -11881,13 +11882,9 @@ MDefinition* IonBuilder::tryInnerizeWindow(MDefinition* obj) {
     return obj;
   }
 
-  if (!IsWindowProxy(singleton)) {
+  if (!IsWindowProxyForScriptGlobal(script(), singleton)) {
     return obj;
   }
-
-  // This must be a WindowProxy for the current Window/global. Else it'd be
-  // a cross-compartment wrapper and IsWindowProxy returns false for those.
-  MOZ_ASSERT(ToWindowIfWindowProxy(singleton) == &script()->global());
 
   // When we navigate, the WindowProxy is brain transplanted and we'll mark
   // its ObjectGroup as having unknown properties. The type constraint we add

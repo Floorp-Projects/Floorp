@@ -606,6 +606,22 @@ static bool FixWaiverAfterTransplant(JSContext* cx, HandleObject oldWaiver,
   MOZ_ASSERT(Wrapper::wrapperHandler(oldWaiver) == &XrayWaiver);
   MOZ_ASSERT(!js::IsCrossCompartmentWrapper(newobj));
 
+  // If the new compartment has a CCW for oldWaiver, nuke this CCW. This
+  // prevents confusing RemapAllWrappersForObject: it would call RemapWrapper
+  // with two same-compartment objects (the CCW and the new waiver).
+  //
+  // This can happen when loading a chrome page in a content frame and there
+  // exists a CCW from the chrome compartment to oldWaiver wrapping the window
+  // we just transplanted:
+  //
+  // Compartment 1  |  Compartment 2
+  // ----------------------------------------
+  // CCW1 -----------> oldWaiver --> CCW2 --+
+  // newWaiver                              |
+  // WindowProxy <--------------------------+
+  js::NukeCrossCompartmentWrapperIfExists(cx, js::GetObjectCompartment(newobj),
+                                          oldWaiver);
+
   // Create a waiver in the new compartment. We know there's not one already
   // because we _just_ transplanted, which means that |newobj| was either
   // created from scratch, or was previously cross-compartment wrapper (which

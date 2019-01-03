@@ -396,6 +396,7 @@
 
       <method name="handleKeyPress">
         <parameter name="aEvent"/>
+        <parameter name="aOptions"/>
         <body><![CDATA[
           if (aEvent.target.localName != "textbox")
             return true; // Let child buttons of autocomplete take input
@@ -472,7 +473,7 @@
                   kind: "key",
                 };
               }
-              cancel = this.handleEnter(aEvent);
+              cancel = this.handleEnter(aEvent, aOptions);
               break;
             case KeyEvent.DOM_VK_DELETE:
               if (isMac && !aEvent.shiftKey) {

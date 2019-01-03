@@ -1091,15 +1091,27 @@ def check_for_midl(target, compile_environment):
 midl = check_prog('MIDL', midl_names, when=check_for_midl, allow_missing=True)
 
 
-@depends(c_compiler, target, when=depends(midl, target)(lambda m, t: m and t.kernel == 'WINNT'))
-def midl_flags(c_compiler, target):
+@depends(c_compiler, target, vc_compiler_path,
+         when=depends(midl, target)(lambda m, t: m and t.kernel == 'WINNT'))
+@imports(_from='mozbuild.shellutil', _import='quote')
+def midl_flags(c_compiler, target, vc_compiler_path):
     if c_compiler and c_compiler.type in ('msvc', 'clang-cl'):
         env = {
             'x86': 'win32',
             'x86_64': 'x64',
             'aarch64': 'arm64',
         }[target.cpu]
-        return ['-env', env]
+        flags = ['-env', env]
+        if c_compiler.type == 'msvc':
+            flags += ['-cpp_cmd', c_compiler.compiler]
+            if c_compiler.flags:
+                flags += ['-cpp_opt', quote(' '.join(list(c_compiler.flags) + ['-E']))]
+        else:
+            # Ideally, we'd use the same flags setup as for msvc, but clang-cl
+            # currently doesn't work as a preprocessor for midl, so we need to
+            # find cl. https://bugs.llvm.org/show_bug.cgi?id=40140
+            flags += ['-cpp_cmd', find_program('cl', paths=vc_compiler_path)]
+        return flags
 
     # mingw
     return {
@@ -1390,6 +1402,7 @@ with only_when(compile_environment):
                 #error Insufficient JPEG library version
                 #endif
             ''',
+            flags=jpeg_flags.cflags,
             check_msg='for sufficient jpeg library version',
             onerror=lambda: die('Insufficient JPEG library version for '
                                 '--with-system-jpeg (62 required)'),
@@ -1406,6 +1419,7 @@ with only_when(compile_environment):
                 #error libjpeg-turbo JCS_EXTENSIONS required
                 #endif
             ''',
+            flags=jpeg_flags.cflags,
             check_msg='for sufficient libjpeg-turbo JCS_EXTENSIONS',
             onerror=lambda: die('libjpeg-turbo JCS_EXTENSIONS required for '
                                  '--with-system-jpeg'),

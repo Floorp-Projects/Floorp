@@ -141,12 +141,12 @@ UNIFIED_SOURCES += [
     'TransportSecurityInfo.cpp',
 ]
 
-if CONFIG['MOZ_LIB_SECRET']:
+if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
     UNIFIED_SOURCES += [
         'LibSecret.cpp',
     ]
-    CFLAGS += CONFIG['MOZ_LIB_SECRET_CFLAGS']
-    CXXFLAGS += CONFIG['MOZ_LIB_SECRET_CFLAGS']
+    CFLAGS += CONFIG['GLIB_CFLAGS']
+    CXXFLAGS += CONFIG['GLIB_CFLAGS']
 
 if CONFIG['OS_ARCH'] == 'Darwin':
     UNIFIED_SOURCES += [

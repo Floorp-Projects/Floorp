@@ -846,50 +846,6 @@ main {
     opacity: 1;
     transform: translateY(0); } }
 
-.sections-list.layout {
-  display: grid;
-  grid-template-columns: repeat(12, 1fr);
-  grid-column-gap: 10px;
-  grid-row-gap: 10px; }
-  .sections-list.layout .column {
-    border: 1px solid #000; }
-  .sections-list.layout .column-12 {
-    grid-column-start: auto;
-    grid-column-end: span 12; }
-  .sections-list.layout .column-11 {
-    grid-column-start: auto;
-    grid-column-end: span 11; }
-  .sections-list.layout .column-10 {
-    grid-column-start: auto;
-    grid-column-end: span 10; }
-  .sections-list.layout .column-9 {
-    grid-column-start: auto;
-    grid-column-end: span 9; }
-  .sections-list.layout .column-8 {
-    grid-column-start: auto;
-    grid-column-end: span 8; }
-  .sections-list.layout .column-7 {
-    grid-column-start: auto;
-    grid-column-end: span 7; }
-  .sections-list.layout .column-6 {
-    grid-column-start: auto;
-    grid-column-end: span 6; }
-  .sections-list.layout .column-5 {
-    grid-column-start: auto;
-    grid-column-end: span 5; }
-  .sections-list.layout .column-4 {
-    grid-column-start: auto;
-    grid-column-end: span 4; }
-  .sections-list.layout .column-3 {
-    grid-column-start: auto;
-    grid-column-end: span 3; }
-  .sections-list.layout .column-2 {
-    grid-column-start: auto;
-    grid-column-end: span 2; }
-  .sections-list.layout .column-1 {
-    grid-column-start: auto;
-    grid-column-end: span 1; }
-
 .sections-list .section-list {
   display: grid;
   grid-gap: 32px;
@@ -1092,6 +1048,64 @@ main {
     .search-wrapper .search-button:dir(rtl) {
       transform: scaleX(-1); }
 
+.search-handoff-button {
+  background: var(--newtab-textbox-background-color) var(--newtab-search-icon) 12px center no-repeat;
+  background-size: 24px;
+  border: solid 1px var(--newtab-search-border-color);
+  border-radius: 3px;
+  box-shadow: 0 1px 4px 0 rgba(12, 12, 13, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.15);
+  cursor: text;
+  font-size: 15px;
+  padding: 0;
+  padding-inline-end: 48px;
+  padding-inline-start: 46px;
+  opacity: 1;
+  transition: opacity 500ms;
+  width: 100%; }
+  .search-handoff-button:dir(rtl) {
+    background-position-x: right 12px; }
+  .search-handoff-button:hover {
+    box-shadow: 0 1px 4px 0 rgba(12, 12, 13, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.25); }
+  .search-handoff-button:focus,
+  .search-active .search-handoff-button {
+    border: 1px solid var(--newtab-textbox-focus-color);
+    box-shadow: var(--newtab-textbox-focus-boxshadow); }
+  .search-hidden .search-handoff-button {
+    opacity: 0;
+    visibility: hidden; }
+  .search-handoff-button .fake-textbox {
+    opacity: 0.54;
+    text-align: left; }
+  .search-handoff-button .fake-caret {
+    animation: caret-animation 1.3s steps(5, start) infinite;
+    background: var(--newtab-text-primary-color);
+    display: none;
+    inset-inline-start: 47px;
+    height: 17px;
+    position: absolute;
+    top: 16px;
+    width: 1px; }
+
+@keyframes caret-animation {
+  to {
+    visibility: hidden; } }
+    .search-active .search-handoff-button .fake-caret {
+      display: block; }
+  .search-handoff-button .fake-button {
+    background: url("chrome://browser/skin/forward.svg") no-repeat center center;
+    background-size: 16px 16px;
+    border: 0;
+    border-radius: 0 3px 3px 0;
+    -moz-context-properties: fill;
+    fill: var(--newtab-search-icon-color);
+    height: 100%;
+    inset-inline-end: 0;
+    position: absolute;
+    top: 1px;
+    width: 48px; }
+    .search-handoff-button .fake-button:dir(rtl) {
+      transform: scaleX(-1); }
+
 @media (min-height: 701px) {
   .fixed-search main {
     padding-top: 146px; }
@@ -1111,7 +1125,14 @@ main {
       background-position-x: 16px;
       background-size: 16px; }
       .fixed-search .search-wrapper input:dir(rtl) {
-        background-position-x: right 16px; } }
+        background-position-x: right 16px; }
+  .fixed-search .search-handoff-button {
+    background-position-x: 12px;
+    background-size: 24px; }
+    .fixed-search .search-handoff-button:dir(rtl) {
+      background-position-x: right 12px; }
+    .fixed-search .search-handoff-button .fake-caret {
+      top: 10px; } }
 
 .contentSearchSuggestionTable {
   background-color: var(--newtab-search-dropdown-color);
@@ -1610,11 +1631,22 @@ main {
       display: none; } }
 
 .asrouter-admin {
-  max-width: 996px;
   margin: 0 auto;
   font-size: 14px;
-  display: inherit;
-  padding: 0 0 92px; }
+  display: flex; }
+  .asrouter-admin .sidebar {
+    position: fixed;
+    width: 240px;
+    padding: 30px 20px; }
+    .asrouter-admin .sidebar ul {
+      margin: 0;
+      padding: 0;
+      list-style: none; }
+    .asrouter-admin .sidebar li a {
+      padding: 10px 34px;
+      display: block; }
+      .asrouter-admin .sidebar li a:hover {
+        background: #EDEDF0; }
   .asrouter-admin h1 {
     font-weight: 200;
     font-size: 32px; }
@@ -1725,6 +1757,50 @@ main {
     width: 12px; }
   .more-recommendations:dir(rtl)::after {
     transform: scaleX(-1); }
+
+.discovery-stream.layout {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  grid-column-gap: 10px;
+  grid-row-gap: 10px; }
+  .discovery-stream.layout .column {
+    border: 1px solid #000; }
+  .discovery-stream.layout .column-12 {
+    grid-column-start: auto;
+    grid-column-end: span 12; }
+  .discovery-stream.layout .column-11 {
+    grid-column-start: auto;
+    grid-column-end: span 11; }
+  .discovery-stream.layout .column-10 {
+    grid-column-start: auto;
+    grid-column-end: span 10; }
+  .discovery-stream.layout .column-9 {
+    grid-column-start: auto;
+    grid-column-end: span 9; }
+  .discovery-stream.layout .column-8 {
+    grid-column-start: auto;
+    grid-column-end: span 8; }
+  .discovery-stream.layout .column-7 {
+    grid-column-start: auto;
+    grid-column-end: span 7; }
+  .discovery-stream.layout .column-6 {
+    grid-column-start: auto;
+    grid-column-end: span 6; }
+  .discovery-stream.layout .column-5 {
+    grid-column-start: auto;
+    grid-column-end: span 5; }
+  .discovery-stream.layout .column-4 {
+    grid-column-start: auto;
+    grid-column-end: span 4; }
+  .discovery-stream.layout .column-3 {
+    grid-column-start: auto;
+    grid-column-end: span 3; }
+  .discovery-stream.layout .column-2 {
+    grid-column-start: auto;
+    grid-column-end: span 2; }
+  .discovery-stream.layout .column-1 {
+    grid-column-start: auto;
+    grid-column-end: span 1; }
 
 .ASRouterButton {
   font-weight: 600;

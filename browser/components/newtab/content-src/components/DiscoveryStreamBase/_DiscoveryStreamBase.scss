@@ -1,0 +1,20 @@
+.discovery-stream.layout {
+  $columns: 12;
+  display: grid;
+  grid-template-columns: repeat($columns, 1fr);
+  grid-column-gap: 10px;
+  grid-row-gap: 10px;
+
+  .column {
+    border: 1px solid $black;
+  }
+
+  @while $columns > 0 {
+    .column-#{$columns} {
+      grid-column-start: auto;
+      grid-column-end: span $columns;
+    }
+
+    $columns: $columns - 1;
+  }
+}
