@@ -592,7 +592,7 @@
             "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
-        "revision": "ebafbe47db71"
+        "revision": "7907398a9b1a"
     },
     "fy-NL": {
         "platforms": [
@@ -1311,7 +1311,7 @@
             "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
-        "revision": "cc79d7ae0433"
+        "revision": "e68cea2d41d1"
     },
     "rm": {
         "platforms": [
@@ -1447,7 +1447,7 @@
             "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
-        "revision": "d52f4bc206ab"
+        "revision": "de04864008ac"
     },
     "sr": {
         "platforms": [
