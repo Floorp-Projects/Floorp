@@ -93,7 +93,7 @@ class MediaStreamAudioSourceNode
  protected:
   explicit MediaStreamAudioSourceNode(AudioContext* aContext);
   void Init(DOMMediaStream* aMediaStream, ErrorResult& aRv);
-  virtual void Destroy();
+  void Destroy();
   virtual ~MediaStreamAudioSourceNode();
 
  private:

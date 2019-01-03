@@ -488,7 +488,7 @@ void OscillatorNode::Start(double aWhen, ErrorResult& aRv) {
                                   aWhen);
 
   MarkActive();
-  Context()->StartBlockedAudioContextIfAllowed();
+  Context()->NotifyScheduledSourceNodeStarted();
 }
 
 void OscillatorNode::Stop(double aWhen, ErrorResult& aRv) {
