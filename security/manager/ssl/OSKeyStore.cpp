@@ -12,12 +12,13 @@
 #include "nsXPCOM.h"
 #include "pk11pub.h"
 
-#ifdef MOZ_LIB_SECRET
-#include "LibSecret.h"
-#elif defined(XP_MACOSX)
+#if defined(XP_MACOSX)
 #include "KeychainSecret.h"
 #elif defined(XP_WIN)
 #include "CredentialManagerSecret.h"
+#elif defined(MOZ_WIDGET_GTK)
+#include "LibSecret.h"
+#include "NSSKeyStore.h"
 #else
 #include "NSSKeyStore.h"
 #endif
@@ -27,8 +28,6 @@ NS_IMPL_ISUPPORTS(OSKeyStore, nsIOSKeyStore, nsIObserver)
 using namespace mozilla;
 using dom::Promise;
 
-mozilla::LazyLogModule gOSKeyStoreLog("oskeystore");
-
 OSKeyStore::OSKeyStore()
     : mKs(nullptr), mKsThread(nullptr), mKsIsNSSKeyStore(false) {
   MOZ_ASSERT(NS_IsMainThread());
@@ -36,12 +35,17 @@ OSKeyStore::OSKeyStore()
     return;
   }
 
-#ifdef MOZ_LIB_SECRET
-  mKs.reset(new LibSecret());
-#elif defined(XP_MACOSX)
+#if defined(XP_MACOSX)
   mKs.reset(new KeychainSecret());
 #elif defined(XP_WIN)
   mKs.reset(new CredentialManagerSecret());
+#elif defined(MOZ_WIDGET_GTK)
+  if (NS_SUCCEEDED(MaybeLoadLibSecret())) {
+    mKs.reset(new LibSecret());
+  } else {
+    mKs.reset(new NSSKeyStore());
+    mKsIsNSSKeyStore = true;
+  }
 #else
   mKs.reset(new NSSKeyStore());
   mKsIsNSSKeyStore = true;
