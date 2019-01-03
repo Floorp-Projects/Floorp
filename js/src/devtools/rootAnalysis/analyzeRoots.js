@@ -341,6 +341,50 @@ function edgeKillsVariable(edge, variable)
     return false;
 }
 
+function edgeMovesVariable(edge, variable)
+{
+    if (edge.Kind != 'Call')
+        return false;
+    const callee = edge.Exp[0];
+    if (callee.Kind == 'Var' &&
+        callee.Variable.Kind == 'Func')
+    {
+        const { Variable: { Name: [ fullname, shortname ] } } = callee;
+        const [ mangled, unmangled ] = splitFunction(fullname);
+        // Match a UniquePtr move constructor.
+        if (unmangled.match(/::UniquePtr<[^>]*>::UniquePtr\((\w+::)*UniquePtr<[^>]*>&&/))
+            return true;
+    }
+
+    return false;
+}
+
+// Scan forward through the given 'body', starting at 'startpoint', looking for
+// a call that passes 'variable' to a move constructor that "consumes" it (eg
+// UniquePtr::UniquePtr(UniquePtr&&)).
+function bodyEatsVariable(variable, body, startpoint)
+{
+    const successors = getSuccessors(body);
+    const work = [startpoint];
+    while (work.length > 0) {
+        const point = work.shift();
+        if (!(point in successors))
+            continue;
+        for (const edge of successors[point]) {
+            if (edgeMovesVariable(edge, variable))
+                return true;
+            // edgeKillsVariable will find places where 'variable' is given a
+            // new value. Never observed in practice, since this function is
+            // only called with a temporary resulting from std::move(), which
+            // is used immediately for a call. But just to be robust to future
+            // uses:
+            if (!edgeKillsVariable(edge, variable))
+                work.push(edge.Index[1]);
+        }
+    }
+    return false;
+}
+
 // Return whether an edge "clears out" a variable's value. A simple example
 // would be
 //
@@ -357,9 +401,17 @@ function edgeKillsVariable(edge, variable)
 //     nogc.emplace(cx);
 //     foo(nogc);
 //
+// Yet another example is a UniquePtr being passed by value, which means the
+// receiver takes ownership:
+//
+//     UniquePtr<JSObject*> uobj(obj);
+//     foo(uobj);
+//     gc();
+//
 // Compare to edgeKillsVariable: killing (in backwards direction) means the
 // variable's value was live and is no longer. Invalidating means it wasn't
 // actually live after all.
+//
 function edgeInvalidatesVariable(edge, variable, body)
 {
     // var = nullptr;
@@ -372,6 +424,27 @@ function edgeInvalidatesVariable(edge, variable, body)
         return false;
 
     var callee = edge.Exp[0];
+
+    if (edge.Type.Kind == 'Function' &&
+        edge.Exp[0].Kind == 'Var' &&
+        edge.Exp[0].Variable.Kind == 'Func' &&
+        edge.Exp[0].Variable.Name[1] == 'move' &&
+        edge.Exp[0].Variable.Name[0].includes('std::move(') &&
+        expressionIsVariable(edge.PEdgeCallArguments.Exp[0], variable) &&
+        edge.Exp[1].Kind == 'Var' &&
+        edge.Exp[1].Variable.Kind == 'Temp')
+    {
+        // temp = std::move(var)
+        //
+        // If var is a UniquePtr, and we pass it into something that takes
+        // ownership, then it should be considered to be invalid. It really
+        // ought to be invalidated at the point of the function call that calls
+        // the move constructor, but given that we're creating a temporary here
+        // just for the purpose of passing it in, this edge is good enough.
+        const lhs = edge.Exp[1].Variable;
+        if (bodyEatsVariable(lhs, body, edge.Index[1]))
+            return true;
+    }
 
     if (edge.Type.Kind == 'Function' &&
         edge.Type.TypeFunctionCSU &&
@@ -401,6 +474,24 @@ function edgeInvalidatesVariable(edge, variable, body)
             return true;
         }
     } while(0);
+
+    // special-case: passing UniquePtr<T> by value.
+    if (edge.Type.Kind == 'Function' &&
+        edge.Type.TypeFunctionArgument &&
+        edge.PEdgeCallArguments)
+    {
+        for (const i in edge.Type.TypeFunctionArgument) {
+            const param = edge.Type.TypeFunctionArgument[i];
+            if (param.Type.Kind != 'CSU')
+                continue;
+            if (!param.Type.Name.startsWith("mozilla::UniquePtr<"))
+                continue;
+            const arg = edge.PEdgeCallArguments.Exp[i];
+            if (expressionIsVariable(arg, variable)) {
+                return true;
+            }
+        }
+    }
 
     return false;
 }
@@ -554,7 +645,7 @@ function findGCBeforeValueUse(start_body, start_point, suppressed, variable)
         for (var edge of predecessors[ppoint]) {
             var source = edge.Index[0];
 
-            if (edgeInvalidatesVariable(edge, variable)) {
+            if (edgeInvalidatesVariable(edge, variable, body)) {
                 // Terminate the search through this point; we thought we were
                 // within the live range, but it turns out that the variable
                 // was set to a value that we don't care about.
@@ -693,7 +784,7 @@ function variableLiveAcrossGC(suppressed, variable)
             //
 
             // Ignore uses that are just invalidating the previous value.
-            if (edgeInvalidatesVariable(edge, variable))
+            if (edgeInvalidatesVariable(edge, variable, body))
                 continue;
 
             var usePoint = edgeUsesVariable(edge, variable, body);
