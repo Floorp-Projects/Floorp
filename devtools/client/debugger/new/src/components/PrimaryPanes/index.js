@@ -5,27 +5,28 @@
 // @flow
 
 import React, { Component } from "react";
-import { sortBy } from "lodash";
-import { connect } from "../../utils/connect";
+import classnames from "classnames";
 import { Tab, Tabs, TabList, TabPanels } from "react-aria-components/src/tabs";
-import { formatKeyShortcut } from "../../utils/text";
+
 import actions from "../../actions";
 import {
   getRelativeSources,
   getActiveSearch,
   getSelectedPrimaryPaneTab,
-  getWorkerDisplayName,
-  isValidThread
+  getThreads
 } from "../../selectors";
 import { features, prefs } from "../../utils/prefs";
-import "./Sources.css";
-import classnames from "classnames";
+import { connect } from "../../utils/connect";
+import { formatKeyShortcut } from "../../utils/text";
 
 import Outline from "./Outline";
 import SourcesTree from "./SourcesTree";
 
 import type { SourcesMapByThread } from "../../reducers/types";
 import type { SelectedPrimaryPaneTabType } from "../../selectors";
+import type { Thread } from "../../types";
+
+import "./Sources.css";
 
 type State = {
   alphabetizeOutline: boolean
@@ -39,8 +40,7 @@ type Props = {
   setPrimaryPaneTab: typeof actions.setPrimaryPaneTab,
   setActiveSearch: typeof actions.setActiveSearch,
   closeActiveSearch: typeof actions.closeActiveSearch,
-  getWorkerDisplayName: string => string,
-  isValidThread: string => boolean
+  threads: Thread[]
 };
 
 class PrimaryPanes extends Component<Props, State> {
@@ -97,14 +97,9 @@ class PrimaryPanes extends Component<Props, State> {
   }
 
   renderThreadSources() {
-    const threads = sortBy(
-      Object.getOwnPropertyNames(this.props.sources).filter(
-        this.props.isValidThread
-      ),
-      this.props.getWorkerDisplayName
-    );
-
-    return threads.map(thread => <SourcesTree thread={thread} key={thread} />);
+    return this.props.threads.map(({ actor }) => (
+      <SourcesTree thread={actor} key={actor} />
+    ));
   }
 
   render() {
@@ -136,8 +131,7 @@ const mapStateToProps = state => ({
   selectedTab: getSelectedPrimaryPaneTab(state),
   sources: getRelativeSources(state),
   sourceSearchOn: getActiveSearch(state) === "source",
-  getWorkerDisplayName: thread => getWorkerDisplayName(state, thread),
-  isValidThread: thread => isValidThread(state, thread)
+  threads: getThreads(state)
 });
 
 const connector = connect(

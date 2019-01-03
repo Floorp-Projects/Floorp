@@ -49,4 +49,5 @@ DebuggerModules(
     'utils.js',
     'wasm.js',
     'worker.js',
+    'workers.js',
 )
