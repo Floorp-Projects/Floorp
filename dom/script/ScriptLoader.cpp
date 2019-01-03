@@ -928,7 +928,7 @@ void ScriptLoader::FinishDynamicImport(JSContext* aCx,
   if (NS_FAILED(aResult)) {
     MOZ_ASSERT(!JS_IsExceptionPending(aCx));
     JS_ReportErrorNumberUC(aCx, js::GetErrorMessage, nullptr,
-                           JSMSG_IMPORT_SCRIPT_NOT_FOUND);
+                           JSMSG_DYNAMIC_IMPORT_FAILED);
   }
 
   JS::Rooted<JS::Value> referencingScript(aCx,
