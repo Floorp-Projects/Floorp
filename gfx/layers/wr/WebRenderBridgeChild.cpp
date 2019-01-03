@@ -106,6 +106,7 @@ void WebRenderBridgeChild::EndTransaction(
     wr::IpcResourceUpdateQueue& aResources, const gfx::IntSize& aSize,
     TransactionId aTransactionId, const WebRenderScrollData& aScrollData,
     bool aContainsSVGGroup, const mozilla::VsyncId& aVsyncId,
+    const mozilla::TimeStamp& aVsyncStartTime,
     const mozilla::TimeStamp& aRefreshStartTime,
     const mozilla::TimeStamp& aTxnStartTime, const nsCString& aTxnURL) {
   MOZ_ASSERT(!mDestroyed);
@@ -126,8 +127,8 @@ void WebRenderBridgeChild::EndTransaction(
                            GetFwdTransactionId(), aTransactionId, aContentSize,
                            dlData, aDL.dl_desc, aScrollData, resourceUpdates,
                            smallShmems, largeShmems, mIdNamespace,
-                           aContainsSVGGroup, aVsyncId, aRefreshStartTime,
-                           aTxnStartTime, aTxnURL, fwdTime);
+                           aContainsSVGGroup, aVsyncId, aVsyncStartTime,
+                           aRefreshStartTime, aTxnStartTime, aTxnURL, fwdTime);
 
   mParentCommands.Clear();
   mDestroyedActors.Clear();
@@ -138,7 +139,7 @@ void WebRenderBridgeChild::EndEmptyTransaction(
     const FocusTarget& aFocusTarget, const ScrollUpdatesMap& aUpdates,
     Maybe<wr::IpcResourceUpdateQueue>& aResources,
     uint32_t aPaintSequenceNumber, TransactionId aTransactionId,
-    const mozilla::VsyncId& aVsyncId,
+    const mozilla::VsyncId& aVsyncId, const mozilla::TimeStamp& aVsyncStartTime,
     const mozilla::TimeStamp& aRefreshStartTime,
     const mozilla::TimeStamp& aTxnStartTime, const nsCString& aTxnURL) {
   MOZ_ASSERT(!mDestroyed);
@@ -157,8 +158,8 @@ void WebRenderBridgeChild::EndEmptyTransaction(
   this->SendEmptyTransaction(
       aFocusTarget, aUpdates, aPaintSequenceNumber, mParentCommands,
       mDestroyedActors, GetFwdTransactionId(), aTransactionId, resourceUpdates,
-      smallShmems, largeShmems, mIdNamespace, aVsyncId, aRefreshStartTime,
-      aTxnStartTime, aTxnURL, fwdTime);
+      smallShmems, largeShmems, mIdNamespace, aVsyncId, aVsyncStartTime,
+      aRefreshStartTime, aTxnStartTime, aTxnURL, fwdTime);
   mParentCommands.Clear();
   mDestroyedActors.Clear();
   mIsInTransaction = false;

@@ -73,12 +73,14 @@ class LayerTransactionParent final : public PLayerTransactionParent,
 
   const TransactionId& GetPendingTransactionId() { return mPendingTransaction; }
   void SetPendingTransactionId(TransactionId aId, const VsyncId& aVsyncId,
+                               const TimeStamp& aVsyncStartTime,
                                const TimeStamp& aRefreshStartTime,
                                const TimeStamp& aTxnStartTime,
                                const nsCString& aURL,
                                const TimeStamp& aFwdTime) {
     mPendingTransaction = aId;
     mTxnVsyncId = aVsyncId;
+    mVsyncStartTime = aVsyncStartTime;
     mRefreshStartTime = aRefreshStartTime;
     mTxnStartTime = aTxnStartTime;
     mTxnURL = aURL;
@@ -205,6 +207,7 @@ class LayerTransactionParent final : public PLayerTransactionParent,
 
   TransactionId mPendingTransaction;
   VsyncId mTxnVsyncId;
+  TimeStamp mVsyncStartTime;
   TimeStamp mRefreshStartTime;
   TimeStamp mTxnStartTime;
   TimeStamp mFwdTime;

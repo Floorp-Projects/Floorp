@@ -49,11 +49,11 @@ parent:
                        LayoutSize aContentSize, ByteBuf aDL, BuiltDisplayListDescriptor aDLDesc,
                        WebRenderScrollData aScrollData,
                        OpUpdateResource[] aResourceUpdates, RefCountedShmem[] aSmallShmems, Shmem[] aLargeShmems,
-                       IdNamespace aIdNamespace, bool containsSVGGroup, VsyncId vsyncId, TimeStamp refreshStartTime, TimeStamp txnStartTime, nsCString txnURL, TimeStamp fwdTime);
+                       IdNamespace aIdNamespace, bool containsSVGGroup, VsyncId vsyncId, TimeStamp vsyncStartTime, TimeStamp refreshStartTime, TimeStamp txnStartTime, nsCString txnURL, TimeStamp fwdTime);
   async EmptyTransaction(FocusTarget focusTarget, ScrollUpdatesMap scrollUpdates, uint32_t aPaintSequenceNumber,
                          WebRenderParentCommand[] commands, OpDestroy[] toDestroy, uint64_t fwdTransactionId, TransactionId transactionId,
                          OpUpdateResource[] aResourceUpdates, RefCountedShmem[] aSmallShmems, Shmem[] aLargeShmems,
-                         IdNamespace aIdNamespace, VsyncId vsyncId, TimeStamp refreshStartTime, TimeStamp txnStartTime, nsCString txnURL, TimeStamp fwdTime);
+                         IdNamespace aIdNamespace, VsyncId vsyncId, TimeStamp vsyncStartTime, TimeStamp refreshStartTime, TimeStamp txnStartTime, nsCString txnURL, TimeStamp fwdTime);
   async SetFocusTarget(FocusTarget focusTarget);
   async UpdateResources(OpUpdateResource[] aResourceUpdates, RefCountedShmem[] aSmallShmems, Shmem[] aLargeShmems);
   async ParentCommands(WebRenderParentCommand[] commands);
