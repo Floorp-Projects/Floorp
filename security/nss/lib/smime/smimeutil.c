@@ -457,6 +457,25 @@ smime_choose_cipher(CERTCertificate *scert, CERTCertificate **rcerts)
                 cipher_votes[strong_mapi] += pref;
                 pref--;
             } else {
+                if (pklen_bits > 3072) {
+                    /* While support for AES 256 is a SHOULD+ in RFC 5751
+                     * rather than a MUST, RSA and DSA keys longer than 3072
+                     * bits provide more than 128 bits of security strength.
+                     * So, AES 256 should be used to provide comparable
+                     * security. */
+                    cipher_abilities[aes256_mapi]++;
+                    cipher_votes[aes256_mapi] += pref;
+                    pref--;
+                }
+                if (pklen_bits > 1023) {
+                    /* RFC 5751 mandates support for AES 128, but also says
+                     * that RSA and DSA signature keys SHOULD NOT be less than
+                     * 1024 bits. So, cast vote for AES 128 if key length
+                     * is at least 1024 bits. */
+                    cipher_abilities[aes128_mapi]++;
+                    cipher_votes[aes128_mapi] += pref;
+                    pref--;
+                }
                 if (pklen_bits > 512) {
                     /* cast votes for the strong algorithm */
                     cipher_abilities[strong_mapi]++;

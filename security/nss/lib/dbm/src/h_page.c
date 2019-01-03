@@ -204,7 +204,7 @@ putpair(char *p, const DBT *key, DBT *val)
  *  -1 error
  */
 extern int
-__delpair(HTAB *hashp, BUFHEAD *bufp, int ndx)
+dbm_delpair(HTAB *hashp, BUFHEAD *bufp, int ndx)
 {
     register uint16 *bp, newoff;
     register int n;
@@ -214,7 +214,7 @@ __delpair(HTAB *hashp, BUFHEAD *bufp, int ndx)
     n = bp[0];
 
     if (bp[ndx + 1] < REAL_KEY)
-        return (__big_delete(hashp, bufp));
+        return (dbm_big_delete(hashp, bufp));
     if (ndx != 1)
         newoff = bp[ndx - 1];
     else
@@ -277,7 +277,7 @@ __delpair(HTAB *hashp, BUFHEAD *bufp, int ndx)
  *  -1 ==> Error
  */
 extern int
-__split_page(HTAB *hashp, uint32 obucket, uint32 nbucket)
+dbm_split_page(HTAB *hashp, uint32 obucket, uint32 nbucket)
 {
     register BUFHEAD *new_bufp, *old_bufp;
     register uint16 *ino;
@@ -292,10 +292,10 @@ __split_page(HTAB *hashp, uint32 obucket, uint32 nbucket)
 
     copyto = (uint16)hashp->BSIZE;
     off = (uint16)hashp->BSIZE;
-    old_bufp = __get_buf(hashp, obucket, NULL, 0);
+    old_bufp = dbm_get_buf(hashp, obucket, NULL, 0);
     if (old_bufp == NULL)
         return (-1);
-    new_bufp = __get_buf(hashp, nbucket, NULL, 0);
+    new_bufp = dbm_get_buf(hashp, nbucket, NULL, 0);
     if (new_bufp == NULL)
         return (-1);
 
@@ -331,7 +331,7 @@ __split_page(HTAB *hashp, uint32 obucket, uint32 nbucket)
         assert(((int)key.size) > -1);
 #endif
 
-        if (__call_hash(hashp, (char *)key.data, key.size) == obucket) {
+        if (dbm_call_hash(hashp, (char *)key.data, key.size) == obucket) {
             /* Don't switch page */
             diff = copyto - off;
             if (diff) {
@@ -443,8 +443,8 @@ ugly_split(HTAB *hashp, uint32 obucket, BUFHEAD *old_bufp,
             return DATABASE_CORRUPTED_ERROR;
 
         if (ino[2] < REAL_KEY && ino[2] != OVFLPAGE) {
-            if ((status = __big_split(hashp, old_bufp,
-                                      new_bufp, bufp, bufp->addr, obucket, &ret)))
+            if ((status = dbm_big_split(hashp, old_bufp,
+                                        new_bufp, bufp, bufp->addr, obucket, &ret)))
                 return (status);
             old_bufp = ret.oldp;
             if (!old_bufp)
@@ -477,7 +477,7 @@ ugly_split(HTAB *hashp, uint32 obucket, BUFHEAD *old_bufp,
                 scopyto - sizeof(uint16) * (ino[0] + 3);
             OFFSET(ino) = scopyto;
 
-            bufp = __get_buf(hashp, ov_addr, bufp, 0);
+            bufp = dbm_get_buf(hashp, ov_addr, bufp, 0);
             if (!bufp)
                 return (-1);
 
@@ -487,7 +487,7 @@ ugly_split(HTAB *hashp, uint32 obucket, BUFHEAD *old_bufp,
             moved = 0;
 
             if (last_bfp)
-                __free_ovflpage(hashp, last_bfp);
+                dbm_free_ovflpage(hashp, last_bfp);
             last_bfp = bufp;
         }
         /* Move regular sized pairs of there are any */
@@ -506,13 +506,13 @@ ugly_split(HTAB *hashp, uint32 obucket, BUFHEAD *old_bufp,
             val.size = ino[n] - ino[n + 1];
             off = ino[n + 1];
 
-            if (__call_hash(hashp, (char *)key.data, key.size) == obucket) {
+            if (dbm_call_hash(hashp, (char *)key.data, key.size) == obucket) {
                 /* Keep on old page */
                 if (PAIRFITS(op, (&key), (&val)))
                     putpair((char *)op, &key, &val);
                 else {
                     old_bufp =
-                        __add_ovflpage(hashp, old_bufp);
+                        dbm_add_ovflpage(hashp, old_bufp);
                     if (!old_bufp)
                         return (-1);
                     op = (uint16 *)old_bufp->page;
@@ -525,7 +525,7 @@ ugly_split(HTAB *hashp, uint32 obucket, BUFHEAD *old_bufp,
                     putpair((char *)np, &key, &val);
                 else {
                     new_bufp =
-                        __add_ovflpage(hashp, new_bufp);
+                        dbm_add_ovflpage(hashp, new_bufp);
                     if (!new_bufp)
                         return (-1);
                     np = (uint16 *)new_bufp->page;
@@ -536,7 +536,7 @@ ugly_split(HTAB *hashp, uint32 obucket, BUFHEAD *old_bufp,
         }
     }
     if (last_bfp)
-        __free_ovflpage(hashp, last_bfp);
+        dbm_free_ovflpage(hashp, last_bfp);
     return (0);
 }
 
@@ -548,7 +548,7 @@ ugly_split(HTAB *hashp, uint32 obucket, BUFHEAD *old_bufp,
  *  1 ==> failure
  */
 extern int
-__addel(HTAB *hashp, BUFHEAD *bufp, const DBT *key, const DBT *val)
+dbm_addel(HTAB *hashp, BUFHEAD *bufp, const DBT *key, const DBT *val)
 {
     register uint16 *bp, *sop;
     int do_expand;
@@ -562,7 +562,7 @@ __addel(HTAB *hashp, BUFHEAD *bufp, const DBT *key, const DBT *val)
                and we need to add another page */
             break;
         else if (bp[2] < REAL_KEY && bp[bp[0]] != OVFLPAGE) {
-            bufp = __get_buf(hashp, bp[bp[0] - 1], bufp, 0);
+            bufp = dbm_get_buf(hashp, bp[bp[0] - 1], bufp, 0);
             if (!bufp) {
 #ifdef DEBUG
                 assert(0);
@@ -585,7 +585,7 @@ __addel(HTAB *hashp, BUFHEAD *bufp, const DBT *key, const DBT *val)
                 return (0);
             }
         } else {
-            bufp = __get_buf(hashp, bp[bp[0] - 1], bufp, 0);
+            bufp = dbm_get_buf(hashp, bp[bp[0] - 1], bufp, 0);
             if (!bufp) {
 #ifdef DEBUG
                 assert(0);
@@ -599,7 +599,7 @@ __addel(HTAB *hashp, BUFHEAD *bufp, const DBT *key, const DBT *val)
         putpair(bufp->page, key, (DBT *)val);
     else {
         do_expand = 1;
-        bufp = __add_ovflpage(hashp, bufp);
+        bufp = dbm_add_ovflpage(hashp, bufp);
         if (!bufp) {
 #ifdef DEBUG
             assert(0);
@@ -610,7 +610,7 @@ __addel(HTAB *hashp, BUFHEAD *bufp, const DBT *key, const DBT *val)
 
         if (PAIRFITS(sop, key, val))
             putpair((char *)sop, key, (DBT *)val);
-        else if (__big_insert(hashp, bufp, key, val)) {
+        else if (dbm_big_insert(hashp, bufp, key, val)) {
 #ifdef DEBUG
             assert(0);
 #endif
@@ -625,7 +625,7 @@ __addel(HTAB *hashp, BUFHEAD *bufp, const DBT *key, const DBT *val)
     hashp->NKEYS++;
     if (do_expand ||
         (hashp->NKEYS / (hashp->MAX_BUCKET + 1) > hashp->FFACTOR))
-        return (__expand_table(hashp));
+        return (dbm_expand_table(hashp));
     return (0);
 }
 
@@ -636,7 +636,7 @@ __addel(HTAB *hashp, BUFHEAD *bufp, const DBT *key, const DBT *val)
  *  NULL on error
  */
 extern BUFHEAD *
-__add_ovflpage(HTAB *hashp, BUFHEAD *bufp)
+dbm_add_ovflpage(HTAB *hashp, BUFHEAD *bufp)
 {
     register uint16 *sp;
     uint16 ndx, ovfl_num;
@@ -657,7 +657,7 @@ __add_ovflpage(HTAB *hashp, BUFHEAD *bufp)
     tmp1 = bufp->addr;
     tmp2 = bufp->ovfl ? bufp->ovfl->addr : 0;
 #endif
-    if (!ovfl_num || !(bufp->ovfl = __get_buf(hashp, ovfl_num, bufp, 1)))
+    if (!ovfl_num || !(bufp->ovfl = dbm_get_buf(hashp, ovfl_num, bufp, 1)))
         return (NULL);
     bufp->ovfl->flags |= BUF_MOD;
 #ifdef DEBUG1
@@ -687,12 +687,12 @@ __add_ovflpage(HTAB *hashp, BUFHEAD *bufp)
  *  -1 indicates FAILURE
  */
 extern int
-__get_page(HTAB *hashp,
-           char *p,
-           uint32 bucket,
-           int is_bucket,
-           int is_disk,
-           int is_bitmap)
+dbm_get_page(HTAB *hashp,
+             char *p,
+             uint32 bucket,
+             int is_bucket,
+             int is_disk,
+             int is_bitmap)
 {
     register int fd, page;
     size_t size;
@@ -805,7 +805,7 @@ __get_page(HTAB *hashp,
  *  -1 ==>failure
  */
 extern int
-__put_page(HTAB *hashp, char *p, uint32 bucket, int is_bucket, int is_bitmap)
+dbm_put_page(HTAB *hashp, char *p, uint32 bucket, int is_bucket, int is_bitmap)
 {
     register int fd, page;
     size_t size;
@@ -895,7 +895,7 @@ __put_page(HTAB *hashp, char *p, uint32 bucket, int is_bucket, int is_bitmap)
  * once they are read in.
  */
 extern int
-__ibitmap(HTAB *hashp, int pnum, int nbits, int ndx)
+dbm_ibitmap(HTAB *hashp, int pnum, int nbits, int ndx)
 {
     uint32 *ip;
     size_t clearbytes, clearints;
@@ -1011,8 +1011,8 @@ overflow_page(HTAB *hashp)
          * don't have to if we tell init_bitmap not to leave it clear
          * in the first place.
          */
-        if (__ibitmap(hashp,
-                      (int)OADDR_OF(splitnum, offset), 1, free_page))
+        if (dbm_ibitmap(hashp,
+                        (int)OADDR_OF(splitnum, offset), 1, free_page))
             return (0);
         hashp->SPARES[splitnum]++;
 #ifdef DEBUG2
@@ -1084,7 +1084,7 @@ found:
  * Mark this overflow page as free.
  */
 extern void
-__free_ovflpage(HTAB *hashp, BUFHEAD *obufp)
+dbm_free_ovflpage(HTAB *hashp, BUFHEAD *obufp)
 {
     uint16 addr;
     uint32 *freep;
@@ -1125,7 +1125,7 @@ __free_ovflpage(HTAB *hashp, BUFHEAD *obufp)
     (void)fprintf(stderr, "FREE_OVFLPAGE: ADDR: %d BIT: %d PAGE %d\n",
                   obufp->addr, free_bit, free_page);
 #endif
-    __reclaim_buf(hashp, obufp);
+    dbm_reclaim_buf(hashp, obufp);
 }
 
 /*
@@ -1236,8 +1236,8 @@ fetch_bitmap(HTAB *hashp, uint32 ndx)
         return (NULL);
     if ((hashp->mapp[ndx] = (uint32 *)malloc((size_t)hashp->BSIZE)) == NULL)
         return (NULL);
-    if (__get_page(hashp,
-                   (char *)hashp->mapp[ndx], hashp->BITMAPS[ndx], 0, 1, 1)) {
+    if (dbm_get_page(hashp,
+                     (char *)hashp->mapp[ndx], hashp->BITMAPS[ndx], 0, 1, 1)) {
         free(hashp->mapp[ndx]);
         hashp->mapp[ndx] = NULL; /* NEW: 9-11-95 */
         return (NULL);
@@ -1253,13 +1253,13 @@ print_chain(int addr)
     short *bp, oaddr;
 
     (void)fprintf(stderr, "%d ", addr);
-    bufp = __get_buf(hashp, addr, NULL, 0);
+    bufp = dbm_get_buf(hashp, addr, NULL, 0);
     bp = (short *)bufp->page;
     while (bp[0] && ((bp[bp[0]] == OVFLPAGE) ||
                      ((bp[0] > 2) && bp[2] < REAL_KEY))) {
         oaddr = bp[bp[0] - 1];
         (void)fprintf(stderr, "%d ", (int)oaddr);
-        bufp = __get_buf(hashp, (int)oaddr, bufp, 0);
+        bufp = dbm_get_buf(hashp, (int)oaddr, bufp, 0);
         bp = (short *)bufp->page;
     }
     (void)fprintf(stderr, "\n");

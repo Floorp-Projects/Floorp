@@ -1573,6 +1573,13 @@ tls13_HandleClientHelloPart2(sslSocket *ss,
     const sslNamedGroupDef *previousGroup = NULL;
     PRBool hrr = PR_FALSE;
 
+    /* If the legacy_version field is set to 0x300 or smaller,
+     * reject the connection with protocol_version alert. */
+    if (ss->clientHelloVersion <= SSL_LIBRARY_VERSION_3_0) {
+        FATAL_ERROR(ss, SSL_ERROR_RX_MALFORMED_CLIENT_HELLO, protocol_version);
+        goto loser;
+    }
+
     ss->ssl3.hs.endOfFlight = PR_TRUE;
 
     if (ssl3_ExtensionNegotiated(ss, ssl_tls13_early_data_xtn)) {

@@ -12,7 +12,7 @@
 #include "cpputil.h"
 #include "nss_scoped_ptrs.h"
 
-#include "chachapoly-vectors.h"
+#include "testvectors/chachapoly-vectors.h"
 #include "gtest/gtest.h"
 
 namespace nss_test {

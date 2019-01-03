@@ -92,16 +92,16 @@ dbopen(const char *fname, int flags, int mode, DBTYPE type, const void *openinfo
 /* we don't need btree and recno right now */
 #if 0
             case DB_BTREE:
-                return (__bt_open(fname, flags & USE_OPEN_FLAGS,
+                return (dbm_bt_open(fname, flags & USE_OPEN_FLAGS,
                     mode, openinfo, flags & DB_FLAGS));
             case DB_RECNO:
-                return (__rec_open(fname, flags & USE_OPEN_FLAGS,
+                return (dbm_rec_open(fname, flags & USE_OPEN_FLAGS,
                     mode, openinfo, flags & DB_FLAGS));
 #endif
 
             case DB_HASH:
-                return (__hash_open(fname, flags & USE_OPEN_FLAGS,
-                                    mode, (const HASHINFO *)openinfo, flags & DB_FLAGS));
+                return (dbm_hash_open(fname, flags & USE_OPEN_FLAGS,
+                                      mode, (const HASHINFO *)openinfo, flags & DB_FLAGS));
             default:
                 break;
         }
@@ -110,7 +110,7 @@ dbopen(const char *fname, int flags, int mode, DBTYPE type, const void *openinfo
 }
 
 static int
-__dberr()
+dbm_dberr()
 {
     return (RET_ERROR);
 }
@@ -122,13 +122,13 @@ __dberr()
  *  dbp:    pointer to the DB structure.
  */
 void
-__dbpanic(DB *dbp)
+dbm_dbpanic(DB *dbp)
 {
     /* The only thing that can succeed is a close. */
-    dbp->del = (int (*)(const struct __db *, const DBT *, uint))__dberr;
-    dbp->fd = (int (*)(const struct __db *))__dberr;
-    dbp->get = (int (*)(const struct __db *, const DBT *, DBT *, uint))__dberr;
-    dbp->put = (int (*)(const struct __db *, DBT *, const DBT *, uint))__dberr;
-    dbp->seq = (int (*)(const struct __db *, DBT *, DBT *, uint))__dberr;
-    dbp->sync = (int (*)(const struct __db *, uint))__dberr;
+    dbp->del = (int (*)(const struct dbm_db *, const DBT *, uint))dbm_dberr;
+    dbp->fd = (int (*)(const struct dbm_db *))dbm_dberr;
+    dbp->get = (int (*)(const struct dbm_db *, const DBT *, DBT *, uint))dbm_dberr;
+    dbp->put = (int (*)(const struct dbm_db *, DBT *, const DBT *, uint))dbm_dberr;
+    dbp->seq = (int (*)(const struct dbm_db *, DBT *, DBT *, uint))dbm_dberr;
+    dbp->sync = (int (*)(const struct dbm_db *, uint))dbm_dberr;
 }
