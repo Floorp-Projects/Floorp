@@ -35,8 +35,12 @@ namespace js {
 
 class TypedArrayObject : public ArrayBufferViewObject {
  public:
-  static int lengthOffset();
-  static int dataOffset();
+  static constexpr int lengthOffset() {
+    return NativeObject::getFixedSlotOffset(LENGTH_SLOT);
+  }
+  static constexpr int dataOffset() {
+    return NativeObject::getPrivateDataOffset(DATA_SLOT);
+  }
 
   static_assert(js::detail::TypedArrayLengthSlot == LENGTH_SLOT,
                 "bad inlined constant in jsfriendapi.h");
@@ -70,11 +74,11 @@ class TypedArrayObject : public ArrayBufferViewObject {
     return &protoClasses[type];
   }
 
-  static const size_t FIXED_DATA_START = DATA_SLOT + 1;
+  static constexpr size_t FIXED_DATA_START = DATA_SLOT + 1;
 
   // For typed arrays which can store their data inline, the array buffer
   // object is created lazily.
-  static const uint32_t INLINE_BUFFER_LIMIT =
+  static constexpr uint32_t INLINE_BUFFER_LIMIT =
       (NativeObject::MAX_FIXED_SLOTS - FIXED_DATA_START) * sizeof(Value);
 
   static inline gc::AllocKind AllocKindForLazyBuffer(size_t nbytes);
@@ -134,7 +138,7 @@ class TypedArrayObject : public ArrayBufferViewObject {
    * regardless of the context in which they are created. This only applies to
    * typed arrays created with an existing ArrayBuffer.
    */
-  static const uint32_t SINGLETON_BYTE_LENGTH = 1024 * 1024 * 10;
+  static constexpr uint32_t SINGLETON_BYTE_LENGTH = 1024 * 1024 * 10;
 
   static bool isOriginalLengthGetter(Native native);
 

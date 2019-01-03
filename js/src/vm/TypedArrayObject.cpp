@@ -65,14 +65,6 @@ using mozilla::IsAsciiDigit;
  * the subclasses.
  */
 
-/* static */ int TypedArrayObject::lengthOffset() {
-  return NativeObject::getFixedSlotOffset(LENGTH_SLOT);
-}
-
-/* static */ int TypedArrayObject::dataOffset() {
-  return NativeObject::getPrivateDataOffset(DATA_SLOT);
-}
-
 /* static */ bool TypedArrayObject::is(HandleValue v) {
   return v.isObject() && v.toObject().is<TypedArrayObject>();
 }
@@ -291,12 +283,14 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
   static constexpr Scalar::Type ArrayTypeID() {
     return TypeIDOfType<NativeType>::id;
   }
-  static bool ArrayTypeIsUnsigned() { return TypeIsUnsigned<NativeType>(); }
-  static bool ArrayTypeIsFloatingPoint() {
+  static constexpr bool ArrayTypeIsUnsigned() {
+    return TypeIsUnsigned<NativeType>();
+  }
+  static constexpr bool ArrayTypeIsFloatingPoint() {
     return TypeIsFloatingPoint<NativeType>();
   }
 
-  static const size_t BYTES_PER_ELEMENT = sizeof(NativeType);
+  static constexpr size_t BYTES_PER_ELEMENT = sizeof(NativeType);
 
   static JSObject* createPrototype(JSContext* cx, JSProtoKey key) {
     Handle<GlobalObject*> global = cx->global();
