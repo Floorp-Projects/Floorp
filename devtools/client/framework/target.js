@@ -103,7 +103,7 @@ const TargetFactory = exports.TargetFactory = {
    * @param {Object} options
    *        The options object has the following properties:
    *        {
-   *          form: the remote protocol form of a tab,
+   *          activeTab: front for this tab target,
    *          client: a DebuggerClient instance
    *                  (caller owns this and is responsible for closing),
    *          chrome: true if the remote target is the whole process
