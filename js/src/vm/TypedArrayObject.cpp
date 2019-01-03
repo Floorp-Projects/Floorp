@@ -172,7 +172,7 @@ void TypedArrayObject::finalize(FreeOp* fop, JSObject* obj) {
   // enough.
   size_t nbytes = oldObj->byteLength();
 
-  size_t headerSize = dataOffset() + sizeof(HeapSlot);
+  constexpr size_t headerSize = dataOffset() + sizeof(HeapSlot);
 
   // See AllocKindForLazyBuffer.
   gc::AllocKind newAllocKind = obj->asTenured().getAllocKind();
@@ -494,8 +494,8 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
     } else {
       size_t nbytes = len * BYTES_PER_ELEMENT;
 #ifdef DEBUG
-      size_t dataOffset = TypedArrayObject::dataOffset();
-      size_t offset = dataOffset + sizeof(HeapSlot);
+      constexpr size_t dataOffset = TypedArrayObject::dataOffset();
+      constexpr size_t offset = dataOffset + sizeof(HeapSlot);
       MOZ_ASSERT(offset + nbytes <= GetGCKindBytes(allocKind));
 #endif
 
