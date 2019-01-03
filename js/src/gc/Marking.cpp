@@ -950,6 +950,10 @@ struct TypeParticipatesInCC {};
 JS_FOR_EACH_TRACEKIND(EXPAND_PARTICIPATES_IN_CC)
 #undef EXPAND_PARTICIPATES_IN_CC
 
+}  // namespace
+
+#ifdef DEBUG
+
 struct ParticipatesInCCFunctor {
   template <typename T>
   bool operator()() {
@@ -957,11 +961,11 @@ struct ParticipatesInCCFunctor {
   }
 };
 
-}  // namespace
-
 static bool TraceKindParticipatesInCC(JS::TraceKind kind) {
   return DispatchTraceKindTyped(ParticipatesInCCFunctor(), kind);
 }
+
+#endif // DEBUG
 
 template <typename T>
 bool js::GCMarker::mark(T* thing) {
@@ -2543,31 +2547,25 @@ void GCMarker::leaveWeakMarkingMode() {
 }
 
 void GCMarker::delayMarkingChildren(Cell* cell) {
-  delayMarkingArena(cell->asTenured().arena());
-}
-
-void GCMarker::delayMarkingArena(Arena* arena) {
-  if (arena->onDelayedMarkingList()) {
-    // The arena is already on the delayed marking list, so just set a flag to
-    // ensure it gets processed again.
-    if (!arena->hasDelayedMarking()) {
-      arena->setHasDelayedMarking(true);
-      delayedMarkingWorkAdded = true;
-    }
-    return;
-  }
-  arena->setNextDelayedMarkingArena(delayedMarkingList);
-  delayedMarkingList = arena;
-  delayedMarkingWorkAdded = true;
+  Arena* arena = cell->asTenured().arena();
+  if (!arena->onDelayedMarkingList()) {
+    arena->setNextDelayedMarkingArena(delayedMarkingList);
+    delayedMarkingList = arena;
 #ifdef DEBUG
-  markLaterArenas++;
+    markLaterArenas++;
 #endif
+  }
+  if (!arena->hasDelayedMarking(color)) {
+    arena->setHasDelayedMarking(color, true);
+    delayedMarkingWorkAdded = true;
+  }
 }
 
 void GCMarker::markDelayedChildren(Arena* arena, MarkColor color) {
   JS::TraceKind kind = MapAllocToTraceKind(arena->getAllocKind());
   MOZ_ASSERT_IF(color == MarkColor::Gray, TraceKindParticipatesInCC(kind));
 
+  AutoSetMarkColor setColor(*this, color);
   for (ArenaCellIterUnderGC i(arena); !i.done(); i.next()) {
     TenuredCell* t = i.getCell();
     if ((color == MarkColor::Gray && t->isMarkedGray()) ||
@@ -2577,38 +2575,31 @@ void GCMarker::markDelayedChildren(Arena* arena, MarkColor color) {
   }
 }
 
-static inline bool ArenaCanHaveGrayThings(Arena* arena) {
-  JS::TraceKind kind = MapAllocToTraceKind(arena->getAllocKind());
-  return TraceKindParticipatesInCC(kind);
-}
-
 /*
  * Process arenas from |delayedMarkingList| by marking the unmarked children of
- * marked cells of color |color|. If |shouldYield|, return early if the |budget|
- * is exceeded.
+ * marked cells of color |color|. Return early if the |budget| is exceeded.
  *
  * This is called twice, first to mark gray children and then to mark black
  * children.
  */
-bool GCMarker::processDelayedMarkingList(MarkColor color, bool shouldYield,
-                                         SliceBudget& budget) {
+bool GCMarker::processDelayedMarkingList(MarkColor color, SliceBudget& budget) {
   // Marking delayed children may add more arenas to the list, including arenas
-  // we are currently or have previously processed. Handle this by setting a
-  // flag on arenas we think we've processed which is cleared if they are
-  // re-added. Iterate the list until the flag is set on all arenas.
+  // we are currently processing or have previously processed. Handle this by
+  // clearing a flag on each arena before marking its children. This flag will
+  // be set again if the arena is re-added. Iterate the list until no new arenas
+  // were added.
 
   do {
     delayedMarkingWorkAdded = false;
     for (Arena* arena = delayedMarkingList; arena;
          arena = arena->getNextDelayedMarking()) {
-      if (!arena->hasDelayedMarking() ||
-          (color == MarkColor::Gray && !ArenaCanHaveGrayThings(arena))) {
+      if (!arena->hasDelayedMarking(color)) {
         continue;
       }
-      arena->setHasDelayedMarking(false);
+      arena->setHasDelayedMarking(color, false);
       markDelayedChildren(arena, color);
       budget.step(150);
-      if (shouldYield && budget.isOverBudget()) {
+      if (budget.isOverBudget()) {
         return false;
       }
     }
@@ -2631,34 +2622,32 @@ bool GCMarker::markAllDelayedChildren(SliceBudget& budget) {
   // Both black and gray cells in these arenas may have unmarked children, and
   // we must mark gray children first as gray entries always sit before black
   // entries on the mark stack. Therefore the list is processed in two stages.
-  //
-  // In order to guarantee progress here, the fist pass (gray marking) is done
-  // non-incrementally. We can't remove anything from the list until the second
-  // pass so if we yield during the first pass we will have to restart and
-  // process all the arenas over again. If there are enough arenas we may never
-  // finish during our timeslice. Disallowing yield during the first pass
-  // ensures that the list will at least shrink by one arena every time.
 
   MOZ_ASSERT(delayedMarkingList);
 
   bool finished;
-  finished = processDelayedMarkingList(MarkColor::Gray, false, /* don't yield */
-                                       budget);
-  MOZ_ASSERT(finished);
+  finished = processDelayedMarkingList(MarkColor::Gray, budget);
+  rebuildDelayedMarkingList();
+  if (!finished) {
+    return false;
+  }
 
-  forEachDelayedMarkingArena([&](Arena* arena) {
-    MOZ_ASSERT(!arena->hasDelayedMarking());
-    arena->setHasDelayedMarking(true);
-  });
+  finished = processDelayedMarkingList(MarkColor::Black, budget);
+  rebuildDelayedMarkingList();
 
-  finished = processDelayedMarkingList(MarkColor::Black,
-                                       true, /* yield if over budget */
-                                       budget);
+  MOZ_ASSERT_IF(finished, !delayedMarkingList);
+  MOZ_ASSERT_IF(finished, !markLaterArenas);
 
-  // Rebuild the list, removing processed arenas.
+  return finished;
+}
+
+void GCMarker::rebuildDelayedMarkingList() {
+  // Rebuild the delayed marking list, removing arenas which do not need further
+  // marking.
+
   Arena* listTail = nullptr;
   forEachDelayedMarkingArena([&](Arena* arena) {
-    if (!arena->hasDelayedMarking()) {
+    if (!arena->hasAnyDelayedMarking()) {
       arena->clearDelayedMarkingState();
 #ifdef DEBUG
       MOZ_ASSERT(markLaterArenas);
@@ -2670,15 +2659,6 @@ bool GCMarker::markAllDelayedChildren(SliceBudget& budget) {
     appendToDelayedMarkingList(&listTail, arena);
   });
   appendToDelayedMarkingList(&listTail, nullptr);
-
-  if (!finished) {
-    return false;
-  }
-
-  MOZ_ASSERT(!delayedMarkingList);
-  MOZ_ASSERT(!markLaterArenas);
-
-  return true;
 }
 
 inline void GCMarker::appendToDelayedMarkingList(Arena** listTail,

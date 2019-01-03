@@ -5,6 +5,7 @@
 // @flow
 
 import { createFrame, createLoadedObject } from "./create";
+import sourceQueue from "../../utils/source-queue";
 
 let actions;
 let pageAgent;
@@ -16,6 +17,7 @@ function setupEvents(dependencies: any) {
   pageAgent = dependencies.Page;
   clientType = dependencies.clientType;
   runtimeAgent = dependencies.Runtime;
+  sourceQueue.initialize(actions);
 }
 
 // Debugger Events
@@ -74,8 +76,7 @@ async function paused({
   if (clientType == "chrome") {
     pageAgent.configureOverlay({ message: "Paused in debugger.html" });
   }
-
-  await actions.paused({ frame, why, frames, loadedObjects });
+  await actions.paused({ thread: "root", frame, why, frames, loadedObjects });
 }
 
 function resumed() {

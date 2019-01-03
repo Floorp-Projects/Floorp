@@ -6,23 +6,25 @@
 
 #include "mozilla/dom/SVGElement.h"
 
-#include "mozilla/ArrayUtils.h"
-#include "mozilla/DebugOnly.h"
-#include "mozilla/Unused.h"
-
 #include "mozilla/dom/MutationEventBinding.h"
 #include "mozilla/dom/SVGAnimatedEnumeration.h"
 #include "mozilla/dom/SVGElementBinding.h"
+#include "mozilla/dom/SVGGeometryElement.h"
 #include "mozilla/dom/SVGLengthBinding.h"
 #include "mozilla/dom/SVGSVGElement.h"
 #include "mozilla/dom/SVGTests.h"
 #include "mozilla/dom/SVGUnitTypesBinding.h"
+
+#include "mozilla/ArrayUtils.h"
+#include "mozilla/DebugOnly.h"
 #include "mozilla/DeclarationBlock.h"
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/InternalMutationEvent.h"
 #include "mozilla/RestyleManager.h"
 #include "mozilla/SMILAnimationController.h"
+#include "mozilla/SVGContentUtils.h"
 #include "mozilla/Unused.h"
+
 #include "mozAutoDocUpdate.h"
 #include "nsAttrValueOrString.h"
 #include "nsCSSProps.h"
@@ -34,26 +36,24 @@
 #include "nsGkAtoms.h"
 #include "nsIPresShell.h"
 #include "nsIFrame.h"
+#include "nsQueryObject.h"
 #include "nsLayoutUtils.h"
 #include "SVGAngle.h"
-#include "nsSVGBoolean.h"
-#include "nsSVGEnum.h"
-#include "nsSVGInteger.h"
-#include "nsSVGIntegerPair.h"
-#include "nsSVGLength2.h"
-#include "nsSVGNumber2.h"
-#include "nsSVGNumberPair.h"
-#include "nsSVGString.h"
-#include "nsSVGViewBox.h"
 #include "SVGAnimatedNumberList.h"
 #include "SVGAnimatedLengthList.h"
 #include "SVGAnimatedPointList.h"
 #include "SVGAnimatedPathSegList.h"
 #include "SVGAnimatedTransformList.h"
-#include "SVGContentUtils.h"
-#include "SVGGeometryElement.h"
+#include "nsSVGBoolean.h"
+#include "SVGEnum.h"
+#include "nsSVGInteger.h"
+#include "nsSVGIntegerPair.h"
+#include "nsSVGLength2.h"
 #include "SVGMotionSMILAttr.h"
-#include "nsQueryObject.h"
+#include "nsSVGNumber2.h"
+#include "nsSVGNumberPair.h"
+#include "nsSVGString.h"
+#include "nsSVGViewBox.h"
 #include <stdarg.h>
 
 // This is needed to ensure correct handling of calls to the
@@ -83,7 +83,7 @@ using namespace SVGUnitTypes_Binding;
 
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGElement)
 
-nsSVGEnumMapping SVGElement::sSVGUnitTypesMap[] = {
+SVGEnumMapping SVGElement::sSVGUnitTypesMap[] = {
     {nsGkAtoms::userSpaceOnUse, SVG_UNIT_TYPE_USERSPACEONUSE},
     {nsGkAtoms::objectBoundingBox, SVG_UNIT_TYPE_OBJECTBOUNDINGBOX},
     {nullptr, 0}};
@@ -501,7 +501,7 @@ bool SVGElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
     }
 
     if (!foundMatch) {
-      // Check for nsSVGEnum attribute
+      // Check for SVGEnum attribute
       EnumAttributesInfo enumInfo = GetEnumInfo();
       for (i = 0; i < enumInfo.mEnumCount; i++) {
         if (aAttribute == enumInfo.mEnumInfo[i].mName) {

@@ -433,14 +433,23 @@ class Editor extends PureComponent<Props, State> {
     const {
       conditionalPanelLocation,
       closeConditionalPanel,
-      openConditionalPanel
+      openConditionalPanel,
+      selectedSource
     } = this.props;
 
     if (conditionalPanelLocation) {
       return closeConditionalPanel();
     }
 
-    return openConditionalPanel(conditionalPanelLocation);
+    if (!selectedSource) {
+      return;
+    }
+
+    return openConditionalPanel({
+      line: line,
+      sourceId: selectedSource.id,
+      sourceUrl: selectedSource.url
+    });
   };
 
   closeConditionalPanel = () => {

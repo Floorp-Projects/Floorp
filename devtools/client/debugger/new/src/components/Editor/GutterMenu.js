@@ -6,6 +6,7 @@ import { Component } from "react";
 import { showMenu } from "devtools-contextmenu";
 import { connect } from "../../utils/connect";
 import { lineAtHeight } from "../../utils/editor";
+import { features } from "../../utils/prefs";
 import {
   getContextMenu,
   getEmptyLines,
@@ -44,6 +45,10 @@ export function gutterMenu({
       id: "node-menu-add-breakpoint",
       label: L10N.getStr("editor.addBreakpoint")
     },
+    addLogPoint: {
+      id: "node-menu-add-log-point",
+      label: L10N.getStr("editor.addLogPoint")
+    },
     addConditional: {
       id: "node-menu-add-conditional-breakpoint",
       label: L10N.getStr("editor.addConditionalBreakpoint")
@@ -52,9 +57,13 @@ export function gutterMenu({
       id: "node-menu-remove-breakpoint",
       label: L10N.getStr("editor.removeBreakpoint")
     },
+    editLogPoint: {
+      id: "node-menu-edit-log-point",
+      label: L10N.getStr("editor.editLogPoint")
+    },
     editConditional: {
       id: "node-menu-edit-conditional-breakpoint",
-      label: L10N.getStr("editor.editBreakpoint")
+      label: L10N.getStr("editor.editConditionalBreakpoint")
     },
     enableBreakpoint: {
       id: "node-menu-enable-breakpoint",
@@ -83,6 +92,20 @@ export function gutterMenu({
     ...(breakpoint ? gutterItems.removeBreakpoint : gutterItems.addBreakpoint)
   };
 
+  const logPoint = {
+    accesskey: L10N.getStr("editor.addLogPoint.accesskey"),
+    disabled: false,
+    click: () =>
+      openConditionalPanel(
+        breakpoint ? breakpoint.location : { line, column, sourceId },
+        true
+      ),
+    accelerator: L10N.getStr("toggleCondPanel.key"),
+    ...(breakpoint && breakpoint.condition
+      ? gutterItems.editLogPoint
+      : gutterItems.addLogPoint)
+  };
+
   const conditionalBreakpoint = {
     accesskey: L10N.getStr("editor.addConditionalBreakpoint.accesskey"),
     disabled: false,
@@ -97,7 +120,12 @@ export function gutterMenu({
       : gutterItems.addConditional)
   };
 
-  const items = [toggleBreakpointItem, conditionalBreakpoint];
+  let items = [toggleBreakpointItem, conditionalBreakpoint, logPoint];
+
+  if (breakpoint && breakpoint.condition) {
+    const remove = breakpoint.log ? conditionalBreakpoint : logPoint;
+    items = items.filter(item => item !== remove);
+  }
 
   if (isPaused) {
     const continueToHereItem = {
@@ -151,8 +179,10 @@ class GutterContextMenuComponent extends Component {
       bp => bp.location.line === line && bp.location.column === column
     );
 
-    if (props.emptyLines && props.emptyLines.includes(line)) {
-      return;
+    // Allow getFirstVisiblePausePoint to find the best first breakpoint
+    // position by not providing an explicit column number
+    if (features.columnBreakpoints && !breakpoint && column === 0) {
+      column = undefined;
     }
 
     gutterMenu({ event, sourceId, line, column, breakpoint, ...props });
