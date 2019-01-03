@@ -98,7 +98,8 @@ if __name__ == '__main__':
         runner = FirefoxRunner(profile=profile,
                                binary=binary,
                                cmdargs=['data:text/html,<script>Quitter.quit()</script>'],
-                               env=env)
+                               env=env,
+                               process_args={'logfile': 'profile-run-1.log'})
         runner.start()
         ret = runner.wait()
         if ret:
@@ -116,7 +117,8 @@ if __name__ == '__main__':
         runner = FirefoxRunner(profile=profile,
                                binary=binary,
                                cmdargs=cmdargs,
-                               env=env)
+                               env=env,
+                               process_args={'logfile': 'profile-run-2.log'})
         runner.start(debug_args=debug_args, interactive=interactive)
         ret = runner.wait()
         httpd.stop()
