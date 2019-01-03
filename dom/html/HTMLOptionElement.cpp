@@ -15,7 +15,7 @@
 
 // Notify/query select frame for selected state
 #include "nsIFormControlFrame.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsNodeInfoManager.h"
 #include "nsCOMPtr.h"
 #include "mozilla/EventStates.h"
@@ -243,8 +243,7 @@ void HTMLOptionElement::SetText(const nsAString& aText, ErrorResult& aRv) {
   aRv = nsContentUtils::SetNodeTextContent(this, aText, true);
 }
 
-nsresult HTMLOptionElement::BindToTree(nsIDocument* aDocument,
-                                       nsIContent* aParent,
+nsresult HTMLOptionElement::BindToTree(Document* aDocument, nsIContent* aParent,
                                        nsIContent* aBindingParent) {
   nsresult rv =
       nsGenericHTMLElement::BindToTree(aDocument, aParent, aBindingParent);
@@ -299,7 +298,7 @@ already_AddRefed<HTMLOptionElement> HTMLOptionElement::Option(
     const Optional<nsAString>& aValue, bool aDefaultSelected, bool aSelected,
     ErrorResult& aError) {
   nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(aGlobal.GetAsSupports());
-  nsIDocument* doc;
+  Document* doc;
   if (!win || !(doc = win->GetExtantDoc())) {
     aError.Throw(NS_ERROR_FAILURE);
     return nullptr;

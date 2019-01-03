@@ -3,22 +3,24 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-#ifndef nsIDocumentInlines_h
-#define nsIDocumentInlines_h
+#ifndef mozilla_dom_DocumentInlines_h
+#define mozilla_dom_DocumentInlines_h
 
 #include "nsContentUtils.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/HTMLBodyElement.h"
 #include "nsStyleSheetService.h"
 
-inline mozilla::dom::HTMLBodyElement* nsIDocument::GetBodyElement() {
-  return static_cast<mozilla::dom::HTMLBodyElement*>(
-      GetHtmlChildElement(nsGkAtoms::body));
+namespace mozilla {
+namespace dom {
+
+inline HTMLBodyElement* Document::GetBodyElement() {
+  return static_cast<HTMLBodyElement*>(GetHtmlChildElement(nsGkAtoms::body));
 }
 
 template <typename T>
-size_t nsIDocument::FindDocStyleSheetInsertionPoint(
-    const nsTArray<T>& aDocSheets, const mozilla::StyleSheet& aSheet) {
+size_t Document::FindDocStyleSheetInsertionPoint(
+    const nsTArray<T>& aDocSheets, const StyleSheet& aSheet) {
   nsStyleSheetService* sheetService = nsStyleSheetService::GetInstance();
 
   // lowest index first
@@ -27,7 +29,7 @@ size_t nsIDocument::FindDocStyleSheetInsertionPoint(
   size_t count = aDocSheets.Length();
   size_t index = 0;
   for (; index < count; index++) {
-    auto* sheet = static_cast<mozilla::StyleSheet*>(aDocSheets[index]);
+    auto* sheet = static_cast<StyleSheet*>(aDocSheets[index]);
     MOZ_ASSERT(sheet);
     int32_t sheetDocIndex = IndexOfSheet(*sheet);
     if (sheetDocIndex > newDocIndex) break;
@@ -52,8 +54,7 @@ size_t nsIDocument::FindDocStyleSheetInsertionPoint(
   return size_t(index);
 }
 
-inline void nsIDocument::SetServoRestyleRoot(nsINode* aRoot,
-                                             uint32_t aDirtyBits) {
+inline void Document::SetServoRestyleRoot(nsINode* aRoot, uint32_t aDirtyBits) {
   MOZ_ASSERT(aRoot);
 
   MOZ_ASSERT(!mServoRestyleRoot || mServoRestyleRoot == aRoot ||
@@ -67,7 +68,7 @@ inline void nsIDocument::SetServoRestyleRoot(nsINode* aRoot,
 // Note: we break this out of SetServoRestyleRoot so that callers can add
 // bits without doing a no-op assignment to the restyle root, which would
 // involve cycle-collected refcount traffic.
-inline void nsIDocument::SetServoRestyleRootDirtyBits(uint32_t aDirtyBits) {
+inline void Document::SetServoRestyleRootDirtyBits(uint32_t aDirtyBits) {
   MOZ_ASSERT(aDirtyBits);
   MOZ_ASSERT((aDirtyBits & ~Element::kAllServoDescendantBits) == 0);
   MOZ_ASSERT((aDirtyBits & mServoRestyleRootDirtyBits) ==
@@ -76,4 +77,7 @@ inline void nsIDocument::SetServoRestyleRootDirtyBits(uint32_t aDirtyBits) {
   mServoRestyleRootDirtyBits = aDirtyBits;
 }
 
-#endif  // nsIDocumentInlines_h
+}  // namespace dom
+}  // namespace mozilla
+
+#endif  // mozilla_dom_DocumentInlines_h

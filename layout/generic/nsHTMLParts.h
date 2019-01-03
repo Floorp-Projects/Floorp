@@ -17,7 +17,7 @@ class nsCheckboxRadioFrame;
 class nsAtom;
 class nsNodeInfoManager;
 class nsIContent;
-class nsIDocument;
+
 class nsIFrame;
 class nsIHTMLContentSink;
 class nsIFragmentContentSink;
@@ -191,7 +191,7 @@ nsTableCellFrame* NS_NewTableCellFrame(nsIPresShell* aPresShell,
                                        nsTableFrame* aTableFrame);
 
 nsresult NS_NewHTMLContentSink(nsIHTMLContentSink** aInstancePtrResult,
-                               nsIDocument* aDoc, nsIURI* aURL,
+                               mozilla::dom::Document* aDoc, nsIURI* aURL,
                                nsISupports* aContainer,  // e.g. docshell
                                nsIChannel* aChannel);
 nsresult NS_NewHTMLFragmentContentSink(

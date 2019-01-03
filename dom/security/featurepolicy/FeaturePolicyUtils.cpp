@@ -9,7 +9,7 @@
 #include "mozilla/dom/FeaturePolicyViolationReportBody.h"
 #include "mozilla/dom/ReportingUtils.h"
 #include "mozilla/StaticPrefs.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIURIFixup.h"
 
 namespace mozilla {
@@ -74,7 +74,7 @@ FeaturePolicyUtils::DefaultAllowListFeature(const nsAString& aFeatureName) {
 }
 
 /* static */ bool FeaturePolicyUtils::IsFeatureAllowed(
-    nsIDocument* aDocument, const nsAString& aFeatureName) {
+    Document* aDocument, const nsAString& aFeatureName) {
   MOZ_ASSERT(aDocument);
 
   if (!StaticPrefs::dom_security_featurePolicy_enabled()) {
@@ -97,7 +97,7 @@ FeaturePolicyUtils::DefaultAllowListFeature(const nsAString& aFeatureName) {
 }
 
 /* static */ void FeaturePolicyUtils::ReportViolation(
-    nsIDocument* aDocument, const nsAString& aFeatureName) {
+    Document* aDocument, const nsAString& aFeatureName) {
   MOZ_ASSERT(aDocument);
 
   nsCOMPtr<nsIURI> uri = aDocument->GetDocumentURI();

@@ -15,7 +15,7 @@
 #include "nsGkAtoms.h"
 #include "nsHTMLDNSPrefetch.h"
 #include "nsAttrValueOrString.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "nsIURI.h"
@@ -94,8 +94,7 @@ bool HTMLAnchorElement::HasDeferredDNSPrefetchRequest() {
   return HasFlag(HTML_ANCHOR_DNS_PREFETCH_DEFERRED);
 }
 
-nsresult HTMLAnchorElement::BindToTree(nsIDocument* aDocument,
-                                       nsIContent* aParent,
+nsresult HTMLAnchorElement::BindToTree(Document* aDocument, nsIContent* aParent,
                                        nsIContent* aBindingParent) {
   Link::ResetLinkState(false, Link::ElementHasHref());
 
@@ -104,7 +103,7 @@ nsresult HTMLAnchorElement::BindToTree(nsIDocument* aDocument,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Prefetch links
-  nsIDocument* doc = GetComposedDoc();
+  Document* doc = GetComposedDoc();
   if (doc) {
     doc->RegisterPendingLinkUpdate(this);
     TryDNSPrefetch();
@@ -145,7 +144,7 @@ bool HTMLAnchorElement::IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
   }
 
   // cannot focus links if there is no link handler
-  nsIDocument* doc = GetComposedDoc();
+  Document* doc = GetComposedDoc();
   if (doc) {
     nsPresContext* presContext = doc->GetPresContext();
     if (presContext && !presContext->GetLinkHandler()) {

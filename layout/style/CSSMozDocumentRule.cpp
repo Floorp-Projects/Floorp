@@ -19,7 +19,7 @@ using namespace mozilla::css;
   return CSSMozDocumentRule_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-bool CSSMozDocumentRule::Match(nsIDocument* aDoc, nsIURI* aDocURI,
+bool CSSMozDocumentRule::Match(Document* aDoc, nsIURI* aDocURI,
                                const nsACString& aDocURISpec,
                                const nsACString& aPattern,
                                DocumentMatchingFunction aMatchingFunction) {
@@ -27,19 +27,19 @@ bool CSSMozDocumentRule::Match(nsIDocument* aDoc, nsIURI* aDocURI,
     case DocumentMatchingFunction::MediaDocument: {
       auto kind = aDoc->MediaDocumentKind();
       if (aPattern.EqualsLiteral("all")) {
-        return kind != nsIDocument::MediaDocumentKind::NotMedia;
+        return kind != Document::MediaDocumentKind::NotMedia;
       }
       MOZ_ASSERT(aPattern.EqualsLiteral("plugin") ||
                  aPattern.EqualsLiteral("image") ||
                  aPattern.EqualsLiteral("video"));
       switch (kind) {
-        case nsIDocument::MediaDocumentKind::NotMedia:
+        case Document::MediaDocumentKind::NotMedia:
           return false;
-        case nsIDocument::MediaDocumentKind::Plugin:
+        case Document::MediaDocumentKind::Plugin:
           return aPattern.EqualsLiteral("plugin");
-        case nsIDocument::MediaDocumentKind::Image:
+        case Document::MediaDocumentKind::Image:
           return aPattern.EqualsLiteral("image");
-        case nsIDocument::MediaDocumentKind::Video:
+        case Document::MediaDocumentKind::Video:
           return aPattern.EqualsLiteral("video");
       }
       MOZ_ASSERT_UNREACHABLE("Unknown media document kind");

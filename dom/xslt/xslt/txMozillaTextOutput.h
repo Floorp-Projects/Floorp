@@ -12,11 +12,11 @@
 #include "txOutputFormat.h"
 
 class nsITransformObserver;
-class nsIDocument;
 class nsIContent;
 
 namespace mozilla {
 namespace dom {
+class Document;
 class DocumentFragment;
 class Element;
 }  // namespace dom
@@ -31,7 +31,7 @@ class txMozillaTextOutput : public txAOutputXMLEventHandler {
   TX_DECL_TXAXMLEVENTHANDLER
   TX_DECL_TXAOUTPUTXMLEVENTHANDLER
 
-  nsresult createResultDocument(nsIDocument* aSourceDocument,
+  nsresult createResultDocument(mozilla::dom::Document* aSourceDocument,
                                 bool aLoadedAsData);
 
  private:
@@ -39,7 +39,7 @@ class txMozillaTextOutput : public txAOutputXMLEventHandler {
 
   nsCOMPtr<nsIContent> mTextParent;
   nsWeakPtr mObserver;
-  nsCOMPtr<nsIDocument> mDocument;
+  RefPtr<mozilla::dom::Document> mDocument;
   txOutputFormat mOutputFormat;
   nsString mText;
 };

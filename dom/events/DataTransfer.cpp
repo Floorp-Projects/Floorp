@@ -26,7 +26,7 @@
 #include "nsCRT.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIScriptContext.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsVariant.h"
 #include "mozilla/dom/ContentChild.h"
@@ -789,7 +789,7 @@ already_AddRefed<nsIArray> DataTransfer::GetTransferables(
     nsINode* aDragTarget) {
   MOZ_ASSERT(aDragTarget);
 
-  nsIDocument* doc = aDragTarget->GetComposedDoc();
+  Document* doc = aDragTarget->GetComposedDoc();
   if (!doc) {
     return nullptr;
   }

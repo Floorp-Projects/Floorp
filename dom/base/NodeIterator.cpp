@@ -13,7 +13,7 @@
 #include "nsError.h"
 
 #include "nsIContent.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsContentUtils.h"
 #include "nsCOMPtr.h"
 #include "mozilla/dom/NodeFilterBinding.h"
@@ -188,7 +188,7 @@ already_AddRefed<nsINode> NodeIterator::NextOrPrevNode(
 
 void NodeIterator::Detach() {
   if (mRoot) {
-    mRoot->OwnerDoc()->WarnOnceAbout(nsIDocument::eNodeIteratorDetach);
+    mRoot->OwnerDoc()->WarnOnceAbout(Document::eNodeIteratorDetach);
   }
 }
 

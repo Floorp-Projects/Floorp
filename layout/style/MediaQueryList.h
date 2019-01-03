@@ -19,8 +19,6 @@
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/dom/MediaQueryListBinding.h"
 
-class nsIDocument;
-
 namespace mozilla {
 namespace dom {
 
@@ -31,8 +29,8 @@ class MediaQueryList final : public DOMEventTargetHelper,
  public:
   // The caller who constructs is responsible for calling Evaluate
   // before calling any other methods.
-  MediaQueryList(nsIDocument* aDocument, const nsAString& aMediaQueryList,
-                 mozilla::dom::CallerType aCallerType);
+  MediaQueryList(Document* aDocument, const nsAString& aMediaQueryList,
+                 CallerType aCallerType);
 
  private:
   ~MediaQueryList();
@@ -89,7 +87,7 @@ class MediaQueryList final : public DOMEventTargetHelper,
   // after cycle collection unlinking.  Having a non-null mDocument
   // is equivalent to being in that document's mDOMMediaQueryLists
   // linked list.
-  nsCOMPtr<nsIDocument> mDocument;
+  RefPtr<Document> mDocument;
 
   RefPtr<MediaList> mMediaList;
   bool mMatches;

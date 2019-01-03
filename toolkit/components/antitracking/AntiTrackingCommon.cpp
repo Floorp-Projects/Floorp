@@ -41,6 +41,7 @@
 
 using namespace mozilla;
 using mozilla::dom::ContentChild;
+using mozilla::dom::Document;
 
 static LazyLogModule gAntiTrackingLog("AntiTracking");
 static const nsCString::size_type sMaxSpecLength = 128;
@@ -71,7 +72,7 @@ bool GetParentPrincipalAndTrackingOrigin(
     return false;
   }
 
-  nsIDocument* doc = a3rdPartyTrackingWindow->GetDocument();
+  Document* doc = a3rdPartyTrackingWindow->GetDocument();
   // Make sure storage access isn't disabled
   if (doc && (doc->StorageAccessSandboxed() ||
               nsContentUtils::IsInPrivateBrowsing(doc))) {
@@ -225,7 +226,7 @@ bool CheckContentBlockingAllowList(nsPIDOMWindowInner* aWindow) {
   nsPIDOMWindowOuter* top = aWindow->GetScriptableTop();
   if (top) {
     nsIURI* topWinURI = top->GetDocumentURI();
-    nsIDocument* doc = top->GetExtantDoc();
+    Document* doc = top->GetExtantDoc();
     bool isPrivateBrowsing =
         doc ? nsContentUtils::IsInPrivateBrowsing(doc) : false;
     return CheckContentBlockingAllowList(topWinURI, isPrivateBrowsing);
@@ -271,7 +272,7 @@ void ReportBlockingToConsole(nsPIDOMWindowOuter* aWindow, nsIURI* aURI,
     return;
   }
 
-  nsCOMPtr<nsIDocument> doc = docShell->GetDocument();
+  RefPtr<Document> doc = docShell->GetDocument();
   if (NS_WARN_IF(!doc)) {
     return;
   }
@@ -343,7 +344,7 @@ void ReportUnblockingConsole(
     return;
   }
 
-  nsCOMPtr<nsIDocument> doc = docShell->GetDocument();
+  RefPtr<Document> doc = docShell->GetDocument();
   if (NS_WARN_IF(!doc)) {
     return;
   }
@@ -383,7 +384,7 @@ void ReportUnblockingConsole(
 }
 
 already_AddRefed<nsPIDOMWindowOuter> GetTopWindow(nsPIDOMWindowInner* aWindow) {
-  nsIDocument* document = aWindow->GetExtantDoc();
+  Document* document = aWindow->GetExtantDoc();
   if (!document) {
     return nullptr;
   }
@@ -1527,7 +1528,7 @@ nsresult AntiTrackingCommon::IsOnContentBlockingAllowList(
   if (!inner) {
     return;
   }
-  nsIDocument* pwinDoc = inner->GetExtantDoc();
+  Document* pwinDoc = inner->GetExtantDoc();
   if (!pwinDoc) {
     return;
   }
@@ -1536,7 +1537,7 @@ nsresult AntiTrackingCommon::IsOnContentBlockingAllowList(
     return;
   }
 
-  nsIDocument* document = aWindow->GetExtantDoc();
+  Document* document = aWindow->GetExtantDoc();
   if (!document) {
     return;
   }

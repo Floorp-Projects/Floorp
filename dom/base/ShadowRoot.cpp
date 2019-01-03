@@ -179,7 +179,7 @@ void ShadowRoot::Unattach() {
 
 void ShadowRoot::InvalidateStyleAndLayoutOnSubtree(Element* aElement) {
   MOZ_ASSERT(aElement);
-  nsIDocument* doc = GetComposedDoc();
+  Document* doc = GetComposedDoc();
   if (!doc) {
     return;
   }
@@ -343,7 +343,7 @@ void ShadowRoot::RuleChanged(StyleSheet& aSheet, css::Rule*) {
 }
 
 void ShadowRoot::ApplicableRulesChanged() {
-  nsIDocument* doc = GetComposedDoc();
+  Document* doc = GetComposedDoc();
   if (!doc) {
     return;
   }
@@ -532,7 +532,7 @@ void ShadowRoot::MaybeReassignElement(Element* aElement) {
     return;
   }
 
-  if (nsIDocument* doc = GetComposedDoc()) {
+  if (Document* doc = GetComposedDoc()) {
     if (nsIPresShell* shell = doc->GetShell()) {
       shell->SlotAssignmentWillChange(*aElement, oldSlot, assignment.mSlot);
     }

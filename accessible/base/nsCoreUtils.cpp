@@ -9,7 +9,7 @@
 
 #include "nsIBaseWindow.h"
 #include "nsIDocShellTreeOwner.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsRange.h"
 #include "nsIBoxObject.h"
 #include "nsXULElement.h"
@@ -70,7 +70,7 @@ void nsCoreUtils::DispatchClickEvent(nsITreeBoxObject *aTreeBoxObj,
   aTreeBoxObj->GetTreeBody(getter_AddRefs(tcElm));
   if (!tcElm) return;
 
-  nsIDocument *document = tcElm->GetUncomposedDoc();
+  Document *document = tcElm->GetUncomposedDoc();
   if (!document) return;
 
   nsCOMPtr<nsIPresShell> presShell = document->GetShell();
@@ -340,7 +340,7 @@ already_AddRefed<nsIDocShell> nsCoreUtils::GetDocShellFor(nsINode *aNode) {
   return docShell.forget();
 }
 
-bool nsCoreUtils::IsRootDocument(nsIDocument *aDocument) {
+bool nsCoreUtils::IsRootDocument(Document *aDocument) {
   nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem = aDocument->GetDocShell();
   NS_ASSERTION(docShellTreeItem, "No document shell for document!");
 
@@ -350,14 +350,14 @@ bool nsCoreUtils::IsRootDocument(nsIDocument *aDocument) {
   return !parentTreeItem;
 }
 
-bool nsCoreUtils::IsContentDocument(nsIDocument *aDocument) {
+bool nsCoreUtils::IsContentDocument(Document *aDocument) {
   nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem = aDocument->GetDocShell();
   NS_ASSERTION(docShellTreeItem, "No document shell tree item for document!");
 
   return (docShellTreeItem->ItemType() == nsIDocShellTreeItem::typeContent);
 }
 
-bool nsCoreUtils::IsTabDocument(nsIDocument *aDocumentNode) {
+bool nsCoreUtils::IsTabDocument(Document *aDocumentNode) {
   nsCOMPtr<nsIDocShellTreeItem> treeItem(aDocumentNode->GetDocShell());
 
   nsCOMPtr<nsIDocShellTreeItem> parentTreeItem;
@@ -373,7 +373,7 @@ bool nsCoreUtils::IsTabDocument(nsIDocument *aDocumentNode) {
   return parentTreeItem == rootTreeItem;
 }
 
-bool nsCoreUtils::IsErrorPage(nsIDocument *aDocument) {
+bool nsCoreUtils::IsErrorPage(Document *aDocument) {
   nsIURI *uri = aDocument->GetDocumentURI();
   bool isAboutScheme = false;
   uri->SchemeIs("about", &isAboutScheme);

@@ -19,7 +19,6 @@
 #include "nsIDTD.h"
 #include "mozilla/dom/FromParser.h"
 
-class nsIDocument;
 class nsIURI;
 class nsIContent;
 class nsIParser;
@@ -50,8 +49,8 @@ class nsXMLContentSink : public nsContentSink,
  public:
   nsXMLContentSink();
 
-  nsresult Init(nsIDocument* aDoc, nsIURI* aURL, nsISupports* aContainer,
-                nsIChannel* aChannel);
+  nsresult Init(mozilla::dom::Document* aDoc, nsIURI* aURL,
+                nsISupports* aContainer, nsIChannel* aChannel);
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -75,9 +74,10 @@ class nsXMLContentSink : public nsContentSink,
   virtual void ContinueInterruptedParsingAsync() override;
 
   // nsITransformObserver
-  NS_IMETHOD OnDocumentCreated(nsIDocument* aResultDocument) override;
+  NS_IMETHOD OnDocumentCreated(
+      mozilla::dom::Document* aResultDocument) override;
   NS_IMETHOD OnTransformDone(nsresult aResult,
-                             nsIDocument* aResultDocument) override;
+                             mozilla::dom::Document* aResultDocument) override;
 
   // nsICSSLoaderObserver
   NS_IMETHOD StyleSheetLoaded(mozilla::StyleSheet* aSheet, bool aWasAlternate,

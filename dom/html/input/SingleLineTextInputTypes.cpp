@@ -17,8 +17,8 @@
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
 
-using mozilla::IsAsciiAlpha;
-using mozilla::IsAsciiDigit;
+using namespace mozilla;
+using namespace mozilla::dom;
 
 bool SingleLineTextInputTypeBase::IsMutable() const {
   return !mInputElement->IsDisabled() &&
@@ -82,7 +82,7 @@ bool SingleLineTextInputTypeBase::HasPatternMismatch() const {
     return false;
   }
 
-  nsIDocument* doc = mInputElement->OwnerDoc();
+  Document* doc = mInputElement->OwnerDoc();
 
   return !nsContentUtils::IsPatternMatching(value, pattern, doc);
 }

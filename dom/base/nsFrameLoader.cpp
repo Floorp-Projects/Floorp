@@ -19,7 +19,7 @@
 #include "nsIPresShell.h"
 #include "nsIContentInlines.h"
 #include "nsIContentViewer.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsPIDOMWindow.h"
 #include "nsIWebNavigation.h"
 #include "nsIWebProgress.h"
@@ -196,7 +196,7 @@ nsFrameLoader* nsFrameLoader::Create(Element* aOwner,
                                      bool aNetworkCreated,
                                      int32_t aJSPluginId) {
   NS_ENSURE_TRUE(aOwner, nullptr);
-  nsIDocument* doc = aOwner->OwnerDoc();
+  Document* doc = aOwner->OwnerDoc();
 
   // We never create nsFrameLoaders for elements in resource documents.
   //
@@ -258,7 +258,7 @@ void nsFrameLoader::LoadFrame(bool aOriginalSrc) {
     }
   }
 
-  nsIDocument* doc = mOwnerContent->OwnerDoc();
+  Document* doc = mOwnerContent->OwnerDoc();
   if (doc->IsStaticDocument()) {
     return;
   }
@@ -311,7 +311,7 @@ nsresult nsFrameLoader::LoadURI(nsIURI* aURI,
 
   mLoadingOriginalSrc = aOriginalSrc;
 
-  nsCOMPtr<nsIDocument> doc = mOwnerContent->OwnerDoc();
+  nsCOMPtr<Document> doc = mOwnerContent->OwnerDoc();
 
   nsresult rv;
   // If IsForJSPlugin() returns true then we want to allow the load. We're just
@@ -629,7 +629,7 @@ class MOZ_RAII AutoResetInShow {
   ~AutoResetInShow() { mFrameLoader->mInShow = false; }
 };
 
-static bool ParentWindowIsActive(nsIDocument* aDoc) {
+static bool ParentWindowIsActive(Document* aDoc) {
   nsCOMPtr<nsPIWindowRoot> root = nsContentUtils::GetWindowRoot(aDoc);
   if (root) {
     nsPIDOMWindowOuter* rootWin = root->GetWindow();
@@ -711,7 +711,7 @@ bool nsFrameLoader::Show(int32_t marginWidth, int32_t marginHeight,
   // https://bugzilla.mozilla.org/show_bug.cgi?id=284245
   presShell = mDocShell->GetPresShell();
   if (presShell) {
-    nsIDocument* doc = presShell->GetDocument();
+    Document* doc = presShell->GetDocument();
     nsHTMLDocument* htmlDoc =
         doc && doc->IsHTMLOrXHTML() ? doc->AsHTMLDocument() : nullptr;
 
@@ -767,7 +767,7 @@ void nsFrameLoader::MarginsChanged(uint32_t aMarginWidth,
 
   // There's a cached property declaration block
   // that needs to be updated
-  if (nsIDocument* doc = mDocShell->GetDocument()) {
+  if (Document* doc = mDocShell->GetDocument()) {
     for (nsINode* cur = doc; cur; cur = cur->GetNextNode()) {
       if (cur->IsHTMLElement(nsGkAtoms::body)) {
         static_cast<HTMLBodyElement*>(cur)->ClearMappedServoStyle();
@@ -908,8 +908,8 @@ nsresult nsFrameLoader::SwapWithOtherRemoteLoader(
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
-  nsIDocument* ourDoc = ourContent->GetComposedDoc();
-  nsIDocument* otherDoc = otherContent->GetComposedDoc();
+  Document* ourDoc = ourContent->GetComposedDoc();
+  Document* otherDoc = otherContent->GetComposedDoc();
   if (!ourDoc || !otherDoc) {
     // Again, how odd, given that we had docshells
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -1316,21 +1316,20 @@ nsresult nsFrameLoader::SwapWithOtherLoader(nsFrameLoader* aOther,
                    SameCOMIdentity(otherChromeEventHandler, otherContent),
                "How did that happen, exactly?");
 
-  nsCOMPtr<nsIDocument> ourChildDocument = ourWindow->GetExtantDoc();
-  nsCOMPtr<nsIDocument> otherChildDocument = otherWindow->GetExtantDoc();
+  nsCOMPtr<Document> ourChildDocument = ourWindow->GetExtantDoc();
+  nsCOMPtr<Document> otherChildDocument = otherWindow->GetExtantDoc();
   if (!ourChildDocument || !otherChildDocument) {
     // This shouldn't be happening
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  nsCOMPtr<nsIDocument> ourParentDocument =
-      ourChildDocument->GetParentDocument();
-  nsCOMPtr<nsIDocument> otherParentDocument =
+  nsCOMPtr<Document> ourParentDocument = ourChildDocument->GetParentDocument();
+  nsCOMPtr<Document> otherParentDocument =
       otherChildDocument->GetParentDocument();
 
   // Make sure to swap docshells between the two frames.
-  nsIDocument* ourDoc = ourContent->GetComposedDoc();
-  nsIDocument* otherDoc = otherContent->GetComposedDoc();
+  Document* ourDoc = ourContent->GetComposedDoc();
+  Document* otherDoc = otherContent->GetComposedDoc();
   if (!ourDoc || !otherDoc) {
     // Again, how odd, given that we had docshells
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -1565,7 +1564,7 @@ void nsFrameLoader::StartDestroy() {
     mRemoteBrowser->RemoveWindowListeners();
   }
 
-  nsCOMPtr<nsIDocument> doc;
+  nsCOMPtr<Document> doc;
   bool dynamicSubframeRemoval = false;
   if (mOwnerContent) {
     doc = mOwnerContent->OwnerDoc();
@@ -1837,7 +1836,7 @@ nsresult nsFrameLoader::MaybeCreateDocShell() {
   // Get our parent docshell off the document of mOwnerContent
   // XXXbz this is such a total hack.... We really need to have a
   // better setup for doing this.
-  nsIDocument* doc = mOwnerContent->OwnerDoc();
+  Document* doc = mOwnerContent->OwnerDoc();
 
   MOZ_RELEASE_ASSERT(!doc->IsResourceDoc(), "We shouldn't even exist");
 
@@ -2239,7 +2238,7 @@ nsresult nsFrameLoader::CheckForRecursiveLoad(nsIURI* aURI) {
 
 nsresult nsFrameLoader::GetWindowDimensions(nsIntRect& aRect) {
   // Need to get outer window position here
-  nsIDocument* doc = mOwnerContent->GetComposedDoc();
+  Document* doc = mOwnerContent->GetComposedDoc();
   if (!doc) {
     return NS_ERROR_FAILURE;
   }
@@ -2392,7 +2391,7 @@ bool nsFrameLoader::TryRemoteBrowser() {
   // XXXsmaug Per spec (2014/08/21) frameloader should not work in case the
   //         element isn't in document, only in shadow dom, but that will change
   //         https://www.w3.org/Bugs/Public/show_bug.cgi?id=26365#c0
-  nsIDocument* doc = mOwnerContent->GetComposedDoc();
+  Document* doc = mOwnerContent->GetComposedDoc();
   if (!doc) {
     return false;
   }
@@ -2613,7 +2612,7 @@ nsresult nsFrameLoader::CreateStaticClone(nsFrameLoader* aDest) {
   aDest->MaybeCreateDocShell();
   NS_ENSURE_STATE(aDest->mDocShell);
 
-  nsCOMPtr<nsIDocument> kungFuDeathGrip = aDest->mDocShell->GetDocument();
+  nsCOMPtr<Document> kungFuDeathGrip = aDest->mDocShell->GetDocument();
   Unused << kungFuDeathGrip;
 
   nsCOMPtr<nsIContentViewer> viewer;
@@ -2623,10 +2622,10 @@ nsresult nsFrameLoader::CreateStaticClone(nsFrameLoader* aDest) {
   nsIDocShell* origDocShell = GetDocShell(IgnoreErrors());
   NS_ENSURE_STATE(origDocShell);
 
-  nsCOMPtr<nsIDocument> doc = origDocShell->GetDocument();
+  nsCOMPtr<Document> doc = origDocShell->GetDocument();
   NS_ENSURE_STATE(doc);
 
-  nsCOMPtr<nsIDocument> clonedDoc = doc->CreateStaticClone(aDest->mDocShell);
+  nsCOMPtr<Document> clonedDoc = doc->CreateStaticClone(aDest->mDocShell);
 
   viewer->SetDocument(clonedDoc);
   return NS_OK;
@@ -2804,13 +2803,13 @@ void nsFrameLoader::SetRemoteBrowser(nsITabParent* aTabParent) {
 }
 
 void nsFrameLoader::SetDetachedSubdocFrame(nsIFrame* aDetachedFrame,
-                                           nsIDocument* aContainerDoc) {
+                                           Document* aContainerDoc) {
   mDetachedSubdocFrame = aDetachedFrame;
   mContainerDocWhileDetached = aContainerDoc;
 }
 
 nsIFrame* nsFrameLoader::GetDetachedSubdocFrame(
-    nsIDocument** aContainerDoc) const {
+    Document** aContainerDoc) const {
   NS_IF_ADDREF(*aContainerDoc = mContainerDocWhileDetached);
   return mDetachedSubdocFrame.GetFrame();
 }
@@ -2968,7 +2967,7 @@ already_AddRefed<mozilla::dom::Promise> nsFrameLoader::DrawSnapshot(
     return nullptr;
   }
 
-  RefPtr<nsIDocument> document = GetOwnerContent()->GetOwnerDocument();
+  RefPtr<Document> document = GetOwnerContent()->GetOwnerDocument();
   if (NS_WARN_IF(!document)) {
     aRv = NS_ERROR_FAILURE;
     return nullptr;
@@ -3066,9 +3065,8 @@ void nsFrameLoader::StartPersistence(
     return;
   }
 
-  nsCOMPtr<nsIDocument> rootDoc =
-      mDocShell ? mDocShell->GetDocument() : nullptr;
-  nsCOMPtr<nsIDocument> foundDoc;
+  nsCOMPtr<Document> rootDoc = mDocShell ? mDocShell->GetDocument() : nullptr;
+  nsCOMPtr<Document> foundDoc;
   if (aOuterWindowID) {
     foundDoc = nsContentUtils::GetSubdocumentWithOuterWindowId(rootDoc,
                                                                aOuterWindowID);
@@ -3151,7 +3149,7 @@ nsresult nsFrameLoader::GetNewTabContext(MutableTabContext* aTabContext,
   UIStateChangeType showFocusRings = UIStateChangeType_NoChange;
   uint64_t chromeOuterWindowID = 0;
 
-  nsIDocument* doc = mOwnerContent->OwnerDoc();
+  Document* doc = mOwnerContent->OwnerDoc();
   if (doc) {
     nsCOMPtr<nsPIWindowRoot> root = nsContentUtils::GetWindowRoot(doc);
     if (root) {

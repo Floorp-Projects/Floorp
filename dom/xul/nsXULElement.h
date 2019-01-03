@@ -31,7 +31,6 @@
 #include "mozilla/dom/DOMString.h"
 #include "mozilla/dom/FromParser.h"
 
-class nsIDocument;
 class nsXULPrototypeDocument;
 
 class nsIObjectInputStream;
@@ -206,7 +205,7 @@ class nsXULPrototypeScript : public nsXULPrototypeNode {
 
   nsresult Compile(const char16_t* aText, size_t aTextLength,
                    JS::SourceOwnership aOwnership, nsIURI* aURI,
-                   uint32_t aLineNo, nsIDocument* aDocument,
+                   uint32_t aLineNo, mozilla::dom::Document* aDocument,
                    nsIOffThreadScriptReceiver* aOffThreadReceiver = nullptr);
 
   void UnlinkJSObjects();
@@ -297,6 +296,8 @@ ASSERT_NODE_FLAGS_SPACE(ELEMENT_TYPE_SPECIFIC_BITS_OFFSET + 2);
 
 class nsXULElement : public nsStyledElement {
  protected:
+  typedef mozilla::dom::Document Document;
+
   // Use Construct to construct elements instead of this constructor.
   explicit nsXULElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
@@ -305,8 +306,8 @@ class nsXULElement : public nsStyledElement {
   using Element::Focus;
 
   static nsresult CreateFromPrototype(nsXULPrototypeElement* aPrototype,
-                                      nsIDocument* aDocument,
-                                      bool aIsScriptable, bool aIsRoot,
+                                      Document* aDocument, bool aIsScriptable,
+                                      bool aIsRoot,
                                       mozilla::dom::Element** aResult);
 
   // This is the constructor for nsXULElements.
@@ -324,7 +325,7 @@ class nsXULElement : public nsStyledElement {
   virtual nsresult PreHandleEvent(
       mozilla::EventChainVisitor& aVisitor) override;
   // nsIContent
-  virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+  virtual nsresult BindToTree(Document* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent) override;
   virtual void UnbindFromTree(bool aDeep, bool aNullParent) override;
   virtual void DestroyContent() override;
@@ -575,7 +576,7 @@ class nsXULElement : public nsStyledElement {
 
   void SetDrawsInTitlebar(bool aState);
   void SetDrawsTitle(bool aState);
-  void UpdateBrightTitlebarForeground(nsIDocument* aDocument);
+  void UpdateBrightTitlebarForeground(Document* aDocument);
 
  protected:
   void AddTooltipSupport();

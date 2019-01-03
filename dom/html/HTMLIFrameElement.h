@@ -34,7 +34,7 @@ class HTMLIFrameElement final : public nsGenericHTMLFrameElement {
   }
 
   // nsIContent
-  virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+  virtual nsresult BindToTree(Document* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent) override;
   virtual bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
                               const nsAString& aValue,
@@ -137,7 +137,7 @@ class HTMLIFrameElement final : public nsGenericHTMLFrameElement {
   void GetReferrerPolicy(nsAString& aReferrer) {
     GetEnumAttr(nsGkAtoms::referrerpolicy, EmptyCString().get(), aReferrer);
   }
-  nsIDocument* GetSVGDocument(nsIPrincipal& aSubjectPrincipal) {
+  Document* GetSVGDocument(nsIPrincipal& aSubjectPrincipal) {
     return GetContentDocument(aSubjectPrincipal);
   }
   bool Mozbrowser() const { return GetBoolAttr(nsGkAtoms::mozbrowser); }

@@ -63,7 +63,7 @@ class nsGenericHTMLFrameElement : public nsGenericHTMLElement,
   // nsIContent
   virtual bool IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
                                int32_t* aTabIndex) override;
-  virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+  virtual nsresult BindToTree(Document* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent) override;
   virtual void UnbindFromTree(bool aDeep = true,
                               bool aNullParent = true) override;
@@ -115,7 +115,7 @@ class nsGenericHTMLFrameElement : public nsGenericHTMLElement,
   // it makes sense.
   void EnsureFrameLoader();
   void LoadSrc();
-  nsIDocument* GetContentDocument(nsIPrincipal& aSubjectPrincipal);
+  Document* GetContentDocument(nsIPrincipal& aSubjectPrincipal);
   mozilla::dom::Nullable<mozilla::dom::WindowProxyHolder> GetContentWindow();
 
   virtual nsresult AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,

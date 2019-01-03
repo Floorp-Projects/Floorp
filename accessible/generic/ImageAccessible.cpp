@@ -13,7 +13,7 @@
 #include "imgIContainer.h"
 #include "imgIRequest.h"
 #include "nsGenericHTMLElement.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIImageLoadingContent.h"
 #include "nsIPresShell.h"
 #include "nsIServiceManager.h"
@@ -106,7 +106,7 @@ bool ImageAccessible::DoAction(uint8_t aIndex) const {
   uri->GetSpec(utf8spec);
   NS_ConvertUTF8toUTF16 spec(utf8spec);
 
-  nsIDocument* document = mContent->OwnerDoc();
+  dom::Document* document = mContent->OwnerDoc();
   nsCOMPtr<nsPIDOMWindowOuter> piWindow = document->GetWindow();
   if (!piWindow) return false;
 

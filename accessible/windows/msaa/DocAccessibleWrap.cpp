@@ -25,7 +25,7 @@ using namespace mozilla::a11y;
 // DocAccessibleWrap
 ////////////////////////////////////////////////////////////////////////////////
 
-DocAccessibleWrap::DocAccessibleWrap(nsIDocument* aDocument,
+DocAccessibleWrap::DocAccessibleWrap(dom::Document* aDocument,
                                      nsIPresShell* aPresShell)
     : DocAccessible(aDocument, aPresShell), mHWND(nullptr) {}
 

@@ -90,10 +90,10 @@ class txXPathNativeNode {
                                       bool aKeepRootAlive = false);
   static txXPathNode* createXPathNode(nsIContent* aContent,
                                       bool aKeepRootAlive = false);
-  static txXPathNode* createXPathNode(nsIDocument* aDocument);
+  static txXPathNode* createXPathNode(mozilla::dom::Document* aDocument);
   static nsINode* getNode(const txXPathNode& aNode);
   static nsIContent* getContent(const txXPathNode& aNode);
-  static nsIDocument* getDocument(const txXPathNode& aNode);
+  static mozilla::dom::Document* getDocument(const txXPathNode& aNode);
   static void addRef(const txXPathNode& aNode) { NS_ADDREF(aNode.mNode); }
   static void release(const txXPathNode& aNode) {
     nsINode* node = aNode.mNode;

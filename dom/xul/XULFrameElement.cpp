@@ -57,7 +57,7 @@ Nullable<WindowProxyHolder> XULFrameElement::GetContentWindow() {
   return nullptr;
 }
 
-nsIDocument* XULFrameElement::GetContentDocument() {
+Document* XULFrameElement::GetContentDocument() {
   nsCOMPtr<nsIDocShell> docShell = GetDocShell();
   if (docShell) {
     nsCOMPtr<nsPIDOMWindowOuter> win = docShell->GetWindow();
@@ -132,8 +132,7 @@ void XULFrameElement::SwapFrameLoaders(nsIFrameLoaderOwner* aOtherLoaderOwner,
   rv = loader->SwapWithOtherLoader(otherLoader, this, aOtherLoaderOwner);
 }
 
-nsresult XULFrameElement::BindToTree(nsIDocument* aDocument,
-                                     nsIContent* aParent,
+nsresult XULFrameElement::BindToTree(Document* aDocument, nsIContent* aParent,
                                      nsIContent* aBindingParent) {
   nsresult rv = nsXULElement::BindToTree(aDocument, aParent, aBindingParent);
   NS_ENSURE_SUCCESS(rv, rv);

@@ -86,7 +86,7 @@ class TextEditor : public EditorBase, public nsIPlaintextEditor {
   virtual bool CanPasteTransferable(nsITransferable* aTransferable);
 
   // Overrides of EditorBase
-  virtual nsresult Init(nsIDocument& aDoc, Element* aRoot,
+  virtual nsresult Init(Document& aDoc, Element* aRoot,
                         nsISelectionController* aSelCon, uint32_t aFlags,
                         const nsAString& aValue) override;
 
@@ -415,8 +415,7 @@ class TextEditor : public EditorBase, public nsIPlaintextEditor {
    */
   MOZ_CAN_RUN_SCRIPT
   virtual nsresult InsertFromDataTransfer(dom::DataTransfer* aDataTransfer,
-                                          int32_t aIndex,
-                                          nsIDocument* aSourceDoc,
+                                          int32_t aIndex, Document* aSourceDoc,
                                           const EditorDOMPoint& aDroppedAt,
                                           bool aDoDeleteSelection);
 
@@ -434,7 +433,7 @@ class TextEditor : public EditorBase, public nsIPlaintextEditor {
    * principals match, or we are in a editor context where this doesn't matter.
    * Otherwise, the data must be sanitized first.
    */
-  bool IsSafeToInsertData(nsIDocument* aSourceDoc);
+  bool IsSafeToInsertData(Document* aSourceDoc);
 
   virtual nsresult InitRules();
 
@@ -501,8 +500,7 @@ class TextEditor : public EditorBase, public nsIPlaintextEditor {
   bool FireClipboardEvent(EventMessage aEventMessage, int32_t aSelectionType,
                           bool* aActionTaken = nullptr);
 
-  bool UpdateMetaCharset(nsIDocument& aDocument,
-                         const nsACString& aCharacterSet);
+  bool UpdateMetaCharset(Document& aDocument, const nsACString& aCharacterSet);
 
   /**
    * EnsureComposition() should be called by composition event handlers.  This

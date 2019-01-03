@@ -93,7 +93,7 @@ class ScreenOrientation final
   LockPermission GetLockOrientationPermission(bool aCheckSandbox) const;
 
   // Gets the responsible document as defined in the spec.
-  nsIDocument* GetResponsibleDocument() const;
+  Document* GetResponsibleDocument() const;
 
   RefPtr<nsScreen> mScreen;
   RefPtr<FullscreenEventListener> mFullscreenListener;

@@ -2140,7 +2140,7 @@ bool nsDisplayListBuilder::IsInWillChangeBudget(nsIFrame* aFrame,
 
     const char16_t* params[] = {multiplierStr.get(), limitStr.get()};
     aFrame->PresContext()->Document()->WarnOnceAbout(
-        nsIDocument::eIgnoringWillChangeOverBudget, false, params,
+        Document::eIgnoringWillChangeOverBudget, false, params,
         ArrayLength(params));
   }
   return onBudget;
@@ -2398,7 +2398,7 @@ bool nsDisplayList::ComputeVisibilityForSublist(
   return anyVisible;
 }
 
-static bool TriggerPendingAnimationsOnSubDocuments(nsIDocument* aDocument,
+static bool TriggerPendingAnimationsOnSubDocuments(Document* aDocument,
                                                    void* aReadyTime) {
   PendingAnimationTracker* tracker = aDocument->GetPendingAnimationTracker();
   if (tracker) {
@@ -2415,7 +2415,7 @@ static bool TriggerPendingAnimationsOnSubDocuments(nsIDocument* aDocument,
   return true;
 }
 
-static void TriggerPendingAnimations(nsIDocument* aDocument,
+static void TriggerPendingAnimations(Document* aDocument,
                                      const TimeStamp& aReadyTime) {
   MOZ_ASSERT(!aReadyTime.IsNull(),
              "Animation ready time is not set. Perhaps we're using a layer"
@@ -2565,7 +2565,7 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(
   nsIFrame* frame = aBuilder->RootReferenceFrame();
   nsPresContext* presContext = frame->PresContext();
   nsIPresShell* presShell = presContext->PresShell();
-  nsIDocument* document = presShell->GetDocument();
+  Document* document = presShell->GetDocument();
 
   if (layerManager->GetBackendType() == layers::LayersBackend::LAYERS_WR) {
     if (doBeginTransaction) {
@@ -2963,8 +2963,7 @@ void nsDisplayList::HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                "How did we forget to pop some elements?");
 }
 
-static nsIContent* FindContentInDocument(nsDisplayItem* aItem,
-                                         nsIDocument* aDoc) {
+static nsIContent* FindContentInDocument(nsDisplayItem* aItem, Document* aDoc) {
   nsIFrame* f = aItem->Frame();
   while (f) {
     nsPresContext* pc = f->PresContext();
@@ -3007,7 +3006,7 @@ struct ContentComparator {
     // subdocument of commonAncestor, because display items for subdocuments
     // have been mixed into the same list. Ensure that we're looking at content
     // in commonAncestor's document.
-    nsIDocument* commonAncestorDoc = mCommonAncestor->OwnerDoc();
+    Document* commonAncestorDoc = mCommonAncestor->OwnerDoc();
     nsIContent* content1 = FindContentInDocument(aLeft, commonAncestorDoc);
     nsIContent* content2 = FindContentInDocument(aRight, commonAncestorDoc);
     if (!content1 || !content2) {

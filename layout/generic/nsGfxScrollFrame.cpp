@@ -19,7 +19,7 @@
 #include "nsContainerFrame.h"
 #include "nsGkAtoms.h"
 #include "nsNameSpaceManager.h"
-#include "nsIDocumentInlines.h"
+#include "mozilla/dom/DocumentInlines.h"
 #include "nsFontMetrics.h"
 #include "nsBoxLayoutState.h"
 #include "mozilla/dom/NodeInfo.h"
@@ -436,7 +436,7 @@ bool nsHTMLScrollFrame::TryLayout(ScrollReflowInput* aState,
       break;
     }
     // Only top level content document is considered.
-    nsIDocument* doc = pc->Document();
+    Document* doc = pc->Document();
     if (!doc->IsTopLevelContentDocument()) {
       break;
     }
@@ -841,7 +841,7 @@ bool nsHTMLScrollFrame::IsXULCollapsed() {
 // inside a <browser>.
 static Element* GetBrowserRoot(nsIContent* aContent) {
   if (aContent) {
-    nsIDocument* doc = aContent->GetUncomposedDoc();
+    Document* doc = aContent->GetUncomposedDoc();
     if (nsPIDOMWindowOuter* win = doc->GetWindow()) {
       Element* frameElement = win->GetFrameElementInternal();
       if (frameElement && frameElement->NodeInfo()->Equals(nsGkAtoms::browser,
@@ -4914,7 +4914,7 @@ void ScrollFrameHelper::FireScrollEvent() {
   mozilla::layers::ScrollLinkedEffectDetector detector(
       content->GetComposedDoc());
   if (mIsRoot) {
-    if (nsIDocument* doc = content->GetUncomposedDoc()) {
+    if (Document* doc = content->GetUncomposedDoc()) {
       EventDispatcher::Dispatch(ToSupports(doc), prescontext, &event, nullptr,
                                 &status);
     }
@@ -5122,7 +5122,7 @@ nsIFrame* ScrollFrameHelper::GetFrameForDir() const {
   if (mIsRoot) {
     // If we're the root scrollframe, we need the root element's style data.
     nsPresContext* presContext = mOuter->PresContext();
-    nsIDocument* document = presContext->Document();
+    Document* document = presContext->Document();
     Element* root = document->GetRootElement();
 
     // But for HTML and XHTML we want the body element.
@@ -6193,7 +6193,7 @@ void ScrollFrameHelper::FireScrolledAreaEvent() {
   nsIContent* content = mOuter->GetContent();
 
   event.mArea = mScrolledFrame->GetScrollableOverflowRectRelativeToParent();
-  if (nsIDocument* doc = content->GetUncomposedDoc()) {
+  if (Document* doc = content->GetUncomposedDoc()) {
     EventDispatcher::Dispatch(ToSupports(doc), prescontext, &event, nullptr);
   }
 }

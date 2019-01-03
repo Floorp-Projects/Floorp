@@ -69,8 +69,8 @@ class ManualNACPtr final {
     // Remove reference from the parent element.
     auto nac = static_cast<mozilla::ManualNACArray*>(
         parentContent->GetProperty(nsGkAtoms::manualNACProperty));
-    // nsIDocument::AdoptNode might remove all properties before destroying
-    // editor.  So we have to consider that NAC could be already removed.
+    // Document::AdoptNode might remove all properties before destroying editor.
+    // So we have to consider that NAC could be already removed.
     if (nac) {
       nac->RemoveElement(ptr);
       if (nac->IsEmpty()) {

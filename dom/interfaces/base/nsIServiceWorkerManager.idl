@@ -10,7 +10,6 @@ interface mozIDOMWindow;
 interface nsPIDOMWindowInner;
 interface mozIDOMWindowProxy;
 interface nsIArray;
-interface nsIDocument;
 interface nsIInterceptedChannel;
 interface nsIPrincipal;
 interface nsIRunnable;

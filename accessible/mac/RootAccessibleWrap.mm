@@ -16,7 +16,7 @@
 using namespace mozilla::a11y;
 
 RootAccessibleWrap::
-  RootAccessibleWrap(nsIDocument* aDocument, nsIPresShell* aPresShell) :
+  RootAccessibleWrap(mozilla::dom::Document* aDocument, nsIPresShell* aPresShell) :
   RootAccessible(aDocument, aPresShell)
 {
 }

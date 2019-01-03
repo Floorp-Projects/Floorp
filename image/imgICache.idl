@@ -7,7 +7,6 @@
 #include "nsISupports.idl"
 
 interface imgIRequest;
-interface nsIDocument;
 interface nsIPrincipal;
 interface nsIProperties;
 interface nsIURI;
@@ -89,5 +88,5 @@ interface imgICache : nsISupports
    * for doing this manually when they get destroyed.
    */
   [noscript, notxpcom]
-  void clearCacheForControlledDocument(in nsIDocument doc);
+  void clearCacheForControlledDocument(in Document doc);
 };

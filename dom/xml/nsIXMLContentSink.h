@@ -9,9 +9,13 @@
 #include "nsIContentSink.h"
 #include "nsISupports.h"
 
-class nsIDocument;
 class nsIURI;
 class nsIChannel;
+namespace mozilla {
+namespace dom {
+class Document;
+}
+}  // namespace mozilla
 
 #define NS_IXMLCONTENT_SINK_IID                      \
   {                                                  \
@@ -51,7 +55,7 @@ class nsIXMLContentSink : public nsIContentSink {
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIXMLContentSink, NS_IXMLCONTENT_SINK_IID)
 
 nsresult NS_NewXMLContentSink(nsIXMLContentSink** aInstancePtrResult,
-                              nsIDocument* aDoc, nsIURI* aURL,
+                              mozilla::dom::Document* aDoc, nsIURI* aURL,
                               nsISupports* aContainer, nsIChannel* aChannel);
 
 #endif  // nsIXMLContentSink_h___

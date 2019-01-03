@@ -26,7 +26,7 @@
 #include "nsContentUtils.h"
 #include "nsReadableUtils.h"
 #include "mozilla/Sprintf.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsGkAtoms.h"
 #include "nsCCUncollectableMarker.h"
 #include "nsNameSpaceManager.h"

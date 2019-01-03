@@ -341,7 +341,7 @@ class HttpBaseChannel : public nsHashPropertyBag,
       ReportAction aAction = ReportAction::Forget) override;
 
   void FlushConsoleReports(
-      nsIDocument *aDocument,
+      dom::Document *aDocument,
       ReportAction aAction = ReportAction::Forget) override;
 
   void FlushConsoleReports(

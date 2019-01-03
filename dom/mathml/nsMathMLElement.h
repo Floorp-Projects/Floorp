@@ -35,7 +35,7 @@ class nsMathMLElement final : public nsMathMLElementBase,
   // Implementation of nsISupports is inherited from nsMathMLElementBase
   NS_DECL_ISUPPORTS_INHERITED
 
-  nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+  nsresult BindToTree(Document* aDocument, nsIContent* aParent,
                       nsIContent* aBindingParent) override;
   virtual void UnbindFromTree(bool aDeep = true,
                               bool aNullParent = true) override;
@@ -59,7 +59,7 @@ class nsMathMLElement final : public nsMathMLElementBase,
                                    nsCSSValue& aCSSValue, uint32_t aFlags);
 
   static bool ParseNumericValue(const nsString& aString, nsCSSValue& aCSSValue,
-                                uint32_t aFlags, nsIDocument* aDocument);
+                                uint32_t aFlags, Document* aDocument);
 
   static void MapMathMLAttributesInto(const nsMappedAttributes* aAttributes,
                                       mozilla::MappedDeclarations&);
@@ -82,7 +82,7 @@ class nsMathMLElement final : public nsMathMLElementBase,
   virtual void GetLinkTarget(nsAString& aTarget) override;
   virtual already_AddRefed<nsIURI> GetHrefURI() const override;
 
-  virtual void NodeInfoChanged(nsIDocument* aOldDoc) override {
+  virtual void NodeInfoChanged(Document* aOldDoc) override {
     ClearHasPendingLinkUpdate();
     nsMathMLElementBase::NodeInfoChanged(aOldDoc);
   }

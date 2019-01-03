@@ -282,7 +282,7 @@ void HTMLCanvasElementObserver::RegisterVisibilityChangeEvent() {
     return;
   }
 
-  nsIDocument* document = mElement->OwnerDoc();
+  Document* document = mElement->OwnerDoc();
   document->AddSystemEventListener(NS_LITERAL_STRING("visibilitychange"), this,
                                    true, false);
 }
@@ -292,7 +292,7 @@ void HTMLCanvasElementObserver::UnregisterVisibilityChangeEvent() {
     return;
   }
 
-  nsIDocument* document = mElement->OwnerDoc();
+  Document* document = mElement->OwnerDoc();
   document->RemoveSystemEventListener(NS_LITERAL_STRING("visibilitychange"),
                                       this, true);
 }
@@ -845,7 +845,7 @@ OffscreenCanvas* HTMLCanvasElement::TransferControlToOffscreen(
 already_AddRefed<File> HTMLCanvasElement::MozGetAsFile(
     const nsAString& aName, const nsAString& aType,
     nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv) {
-  OwnerDoc()->WarnOnceAbout(nsIDocument::eMozGetAsFile);
+  OwnerDoc()->WarnOnceAbout(Document::eMozGetAsFile);
 
   // do a trust check if this is a write-only canvas
   if (mWriteOnly && !nsContentUtils::IsSystemPrincipal(&aSubjectPrincipal)) {
@@ -1197,7 +1197,7 @@ nsresult HTMLCanvasElement::RegisterFrameCaptureListener(
   }
 
   if (!mRequestedFrameRefreshObserver) {
-    nsIDocument* doc = OwnerDoc();
+    Document* doc = OwnerDoc();
     if (!doc) {
       return NS_ERROR_FAILURE;
     }

@@ -16,7 +16,6 @@
 
 #include "nsWrapperCache.h"
 
-class nsIDocument;
 class nsPresContext;
 class nsMediaQueryResultCacheKey;
 

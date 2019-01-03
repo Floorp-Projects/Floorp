@@ -67,7 +67,7 @@ already_AddRefed<nsIParser> nsHtml5Module::NewHtml5Parser() {
 }
 
 // static
-nsresult nsHtml5Module::Initialize(nsIParser* aParser, nsIDocument* aDoc,
+nsresult nsHtml5Module::Initialize(nsIParser* aParser, dom::Document* aDoc,
                                    nsIURI* aURI, nsISupports* aContainer,
                                    nsIChannel* aChannel) {
   MOZ_ASSERT(sNsHtml5ModuleInitialized, "nsHtml5Module not initialized.");

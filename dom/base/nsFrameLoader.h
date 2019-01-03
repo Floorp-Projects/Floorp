@@ -88,6 +88,7 @@ class nsFrameLoader final : public nsStubMutationObserver,
   friend class AutoResetInShow;
   friend class AutoResetInFrameSwap;
   typedef mozilla::dom::PBrowserParent PBrowserParent;
+  typedef mozilla::dom::Document Document;
   typedef mozilla::dom::TabParent TabParent;
   typedef mozilla::layout::RenderFrame RenderFrame;
 
@@ -265,7 +266,7 @@ class nsFrameLoader final : public nsStubMutationObserver,
    * Return the document that owns this, or null if we don't have
    * an owner.
    */
-  nsIDocument* GetOwnerDoc() const {
+  Document* GetOwnerDoc() const {
     return mOwnerContent ? mOwnerContent->OwnerDoc() : nullptr;
   }
 
@@ -318,13 +319,13 @@ class nsFrameLoader final : public nsStubMutationObserver,
    * in that case.
    */
   void SetDetachedSubdocFrame(nsIFrame* aDetachedFrame,
-                              nsIDocument* aContainerDoc);
+                              Document* aContainerDoc);
 
   /**
    * Retrieves the detached nsIFrame and the document containing the nsIFrame,
    * as set by SetDetachedSubdocFrame().
    */
-  nsIFrame* GetDetachedSubdocFrame(nsIDocument** aContainerDoc) const;
+  nsIFrame* GetDetachedSubdocFrame(Document** aContainerDoc) const;
 
   /**
    * Applies a new set of sandbox flags. These are merged with the sandbox
@@ -447,7 +448,7 @@ class nsFrameLoader final : public nsStubMutationObserver,
   // presentation is detached and stored in mDetachedSubdocFrame. This
   // enables us to detect whether the frame has moved documents during
   // a reframe, so that we know not to restore the presentation.
-  nsCOMPtr<nsIDocument> mContainerDocWhileDetached;
+  RefPtr<Document> mContainerDocWhileDetached;
 
   // An opener window which should be used when the docshell is created.
   nsCOMPtr<nsPIDOMWindowOuter> mOpener;

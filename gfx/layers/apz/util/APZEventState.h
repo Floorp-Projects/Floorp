@@ -23,7 +23,6 @@
 template <class>
 class nsCOMPtr;
 class nsIContent;
-class nsIDocument;
 class nsIPresShell;
 class nsIWidget;
 

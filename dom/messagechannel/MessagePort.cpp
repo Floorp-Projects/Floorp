@@ -33,7 +33,7 @@
 #include "SharedMessagePortMessage.h"
 
 #include "nsIBFCacheEntry.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIPresShell.h"
 #include "nsISupportsPrimitives.h"
 #include "nsServiceManagerUtils.h"
@@ -809,7 +809,7 @@ void MessagePort::RemoveDocFromBFCache() {
     return;
   }
 
-  nsIDocument* doc = window->GetExtantDoc();
+  Document* doc = window->GetExtantDoc();
   if (!doc) {
     return;
   }

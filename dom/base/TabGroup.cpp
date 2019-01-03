@@ -136,7 +136,7 @@ already_AddRefed<DocGroup> TabGroup::GetDocGroup(const nsACString& aKey) {
 }
 
 already_AddRefed<DocGroup> TabGroup::AddDocument(const nsACString& aKey,
-                                                 nsIDocument* aDocument) {
+                                                 Document* aDocument) {
   MOZ_ASSERT(NS_IsMainThread());
   HashEntry* entry = mDocGroups.PutEntry(aKey);
   RefPtr<DocGroup> docGroup;

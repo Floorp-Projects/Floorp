@@ -137,8 +137,8 @@ bool Gecko_MatchLang(RawGeckoElementBorrowed element, nsAtom* override_lang,
 
 nsAtom* Gecko_GetXMLLangValue(RawGeckoElementBorrowed element);
 
-nsIDocument::DocumentTheme Gecko_GetDocumentLWTheme(
-    const nsIDocument* aDocument);
+mozilla::dom::Document::DocumentTheme Gecko_GetDocumentLWTheme(
+    const mozilla::dom::Document*);
 
 bool Gecko_IsTableBorderNonzero(RawGeckoElementBorrowed element);
 bool Gecko_IsBrowserFrame(RawGeckoElementBorrowed element);
@@ -194,7 +194,7 @@ Gecko_GetActiveLinkAttrDeclarationBlock(RawGeckoElementBorrowed element);
 // Visited handling.
 
 // Returns whether visited styles are enabled for a given document.
-bool Gecko_VisitedStylesEnabled(const nsIDocument*);
+bool Gecko_VisitedStylesEnabled(const mozilla::dom::Document*);
 
 // Animations
 bool Gecko_GetAnimationRule(
@@ -770,10 +770,10 @@ void Gecko_ContentList_AppendAll(nsSimpleContentList* aContentList,
 // `const DocumentOrShadowRoot*`, but that doesn't make MSVC builds happy for a
 // reason I haven't really dug into.
 const nsTArray<mozilla::dom::Element*>* Gecko_Document_GetElementsWithId(
-    const nsIDocument* aDocument, nsAtom* aId);
+    const mozilla::dom::Document*, nsAtom* aId);
 
 const nsTArray<mozilla::dom::Element*>* Gecko_ShadowRoot_GetElementsWithId(
-    const mozilla::dom::ShadowRoot* aDocument, nsAtom* aId);
+    const mozilla::dom::ShadowRoot*, nsAtom* aId);
 
 // Check the value of the given bool preference. The pref name needs to
 // be null-terminated.
@@ -788,29 +788,31 @@ bool Gecko_IsMainThread();
 // Media feature helpers.
 //
 // Defined in nsMediaFeatures.cpp.
-mozilla::StyleDisplayMode Gecko_MediaFeatures_GetDisplayMode(nsIDocument*);
+mozilla::StyleDisplayMode Gecko_MediaFeatures_GetDisplayMode(
+    mozilla::dom::Document*);
 
-uint32_t Gecko_MediaFeatures_GetColorDepth(nsIDocument*);
+uint32_t Gecko_MediaFeatures_GetColorDepth(mozilla::dom::Document*);
 
-void Gecko_MediaFeatures_GetDeviceSize(nsIDocument*, nscoord* width,
+void Gecko_MediaFeatures_GetDeviceSize(mozilla::dom::Document*, nscoord* width,
                                        nscoord* height);
 
-float Gecko_MediaFeatures_GetResolution(nsIDocument*);
-bool Gecko_MediaFeatures_PrefersReducedMotion(nsIDocument*);
+float Gecko_MediaFeatures_GetResolution(mozilla::dom::Document*);
+bool Gecko_MediaFeatures_PrefersReducedMotion(mozilla::dom::Document*);
 
 mozilla::PointerCapabilities Gecko_MediaFeatures_PrimaryPointerCapabilities(
-    nsIDocument*);
+    mozilla::dom::Document*);
 
 mozilla::PointerCapabilities Gecko_MediaFeatures_AllPointerCapabilities(
-    nsIDocument*);
+    mozilla::dom::Document*);
 
-float Gecko_MediaFeatures_GetDevicePixelRatio(nsIDocument*);
+float Gecko_MediaFeatures_GetDevicePixelRatio(mozilla::dom::Document*);
 
-bool Gecko_MediaFeatures_HasSystemMetric(nsIDocument*, nsAtom* metric,
+bool Gecko_MediaFeatures_HasSystemMetric(mozilla::dom::Document*,
+                                         nsAtom* metric,
                                          bool is_accessible_from_content);
 
-bool Gecko_MediaFeatures_IsResourceDocument(nsIDocument*);
-nsAtom* Gecko_MediaFeatures_GetOperatingSystemVersion(nsIDocument*);
+bool Gecko_MediaFeatures_IsResourceDocument(mozilla::dom::Document*);
+nsAtom* Gecko_MediaFeatures_GetOperatingSystemVersion(mozilla::dom::Document*);
 
 }  // extern "C"
 

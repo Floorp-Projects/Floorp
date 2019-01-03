@@ -69,8 +69,7 @@ already_AddRefed<SVGAnimatedString> SVGMPathElement::Href() {
 //----------------------------------------------------------------------
 // nsIContent methods
 
-nsresult SVGMPathElement::BindToTree(nsIDocument* aDocument,
-                                     nsIContent* aParent,
+nsresult SVGMPathElement::BindToTree(Document* aDocument, nsIContent* aParent,
                                      nsIContent* aBindingParent) {
   MOZ_ASSERT(!mPathTracker.get(),
              "Shouldn't have href-target yet (or it should've been cleared)");

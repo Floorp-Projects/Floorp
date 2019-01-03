@@ -12,7 +12,7 @@
 #include "nsString.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 
 class nsINode;
 class txIParseContext;
@@ -31,14 +31,14 @@ class XPathResult;
  */
 class XPathEvaluator final : public NonRefcountedDOMObject {
  public:
-  explicit XPathEvaluator(nsIDocument* aDocument = nullptr);
+  explicit XPathEvaluator(Document* aDocument = nullptr);
   ~XPathEvaluator();
 
   // WebIDL API
   bool WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto,
                   JS::MutableHandle<JSObject*> aReflector);
-  nsIDocument* GetParentObject() {
-    nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocument);
+  Document* GetParentObject() {
+    nsCOMPtr<Document> doc = do_QueryReferent(mDocument);
     return doc;
   }
   static XPathEvaluator* Constructor(const GlobalObject& aGlobal,
@@ -57,7 +57,7 @@ class XPathEvaluator final : public NonRefcountedDOMObject {
  private:
   XPathExpression* CreateExpression(const nsAString& aExpression,
                                     txIParseContext* aContext,
-                                    nsIDocument* aDocument, ErrorResult& aRv);
+                                    Document* aDocument, ErrorResult& aRv);
 
   nsWeakPtr mDocument;
   RefPtr<txResultRecycler> mRecycler;

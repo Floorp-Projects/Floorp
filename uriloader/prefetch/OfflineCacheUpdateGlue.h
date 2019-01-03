@@ -17,6 +17,10 @@
 class nsOfflineCacheUpdate;
 
 namespace mozilla {
+namespace dom {
+class Document;
+}
+
 namespace docshell {
 
 // Like FORWARD_SAFE except methods:
@@ -87,14 +91,15 @@ class OfflineCacheUpdateGlue final : public nsSupportsWeakReference,
   NS_ADJUSTED_FORWARD_NSIOFFLINECACHEUPDATE(EnsureUpdate())
   NS_IMETHOD Schedule(void) override;
   NS_IMETHOD Init(nsIURI *aManifestURI, nsIURI *aDocumentURI,
-                  nsIPrincipal *aLoadingPrincipal, nsIDocument *aDocument,
+                  nsIPrincipal *aLoadingPrincipal,
+                  mozilla::dom::Document *aDocument,
                   nsIFile *aCustomProfileDir) override;
 
   NS_DECL_NSIOFFLINECACHEUPDATEOBSERVER
 
   OfflineCacheUpdateGlue();
 
-  void SetDocument(nsIDocument *aDocument);
+  void SetDocument(mozilla::dom::Document *aDocument);
 
  private:
   ~OfflineCacheUpdateGlue();
@@ -103,7 +108,7 @@ class OfflineCacheUpdateGlue final : public nsSupportsWeakReference,
   bool mCoalesced;
 
   /* Document that requested this update */
-  nsCOMPtr<nsIDocument> mDocument;
+  RefPtr<mozilla::dom::Document> mDocument;
   nsCOMPtr<nsIURI> mDocumentURI;
   nsCOMPtr<nsIPrincipal> mLoadingPrincipal;
 };

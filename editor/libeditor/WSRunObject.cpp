@@ -60,11 +60,11 @@ template already_AddRefed<Element> WSRunObject::InsertBreak(
     Selection& aSelection, const EditorRawDOMPoint& aPointToInsert,
     nsIEditor::EDirection aSelect);
 template nsresult WSRunObject::InsertText(
-    nsIDocument& aDocument, const nsAString& aStringToInsert,
+    Document& aDocument, const nsAString& aStringToInsert,
     const EditorDOMPoint& aPointToInsert,
     EditorRawDOMPoint* aPointAfterInsertedString);
 template nsresult WSRunObject::InsertText(
-    nsIDocument& aDocument, const nsAString& aStringToInsert,
+    Document& aDocument, const nsAString& aStringToInsert,
     const EditorRawDOMPoint& aPointToInsert,
     EditorRawDOMPoint* aPointAfterInsertedString);
 
@@ -250,7 +250,7 @@ already_AddRefed<Element> WSRunObject::InsertBreak(
 
 template <typename PT, typename CT>
 nsresult WSRunObject::InsertText(
-    nsIDocument& aDocument, const nsAString& aStringToInsert,
+    Document& aDocument, const nsAString& aStringToInsert,
     const EditorDOMPointBase<PT, CT>& aPointToInsert,
     EditorRawDOMPoint* aPointAfterInsertedString) {
   // MOOSE: for now, we always assume non-PRE formatting.  Fix this later.

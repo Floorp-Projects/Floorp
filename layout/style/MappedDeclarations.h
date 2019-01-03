@@ -25,7 +25,7 @@ namespace mozilla {
 // block for a given element.
 class MappedDeclarations final {
  public:
-  explicit MappedDeclarations(nsIDocument* aDoc,
+  explicit MappedDeclarations(dom::Document* aDoc,
                               already_AddRefed<RawServoDeclarationBlock> aDecls)
       : mDocument(aDoc), mDecl(aDecls) {
     MOZ_ASSERT(mDecl);
@@ -33,7 +33,7 @@ class MappedDeclarations final {
 
   ~MappedDeclarations() { MOZ_ASSERT(!mDecl, "Forgot to take the block?"); }
 
-  nsIDocument* Document() { return mDocument; }
+  dom::Document* Document() { return mDocument; }
 
   already_AddRefed<RawServoDeclarationBlock> TakeDeclarationBlock() {
     MOZ_ASSERT(mDecl);
@@ -176,7 +176,7 @@ class MappedDeclarations final {
   void SetBackgroundImage(const nsAttrValue& value);
 
  private:
-  nsIDocument* const mDocument;
+  dom::Document* const mDocument;
   RefPtr<RawServoDeclarationBlock> mDecl;
 };
 

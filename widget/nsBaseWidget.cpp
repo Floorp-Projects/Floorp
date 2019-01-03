@@ -26,7 +26,7 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsISimpleEnumerator.h"
 #include "nsIContent.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIPresShell.h"
 #include "nsIServiceManager.h"
 #include "mozilla/Preferences.h"
@@ -1146,7 +1146,7 @@ bool nsBaseWidget::ShowContextMenuAfterMouseUp() {
   return gContextMenuAfterMouseUp;
 }
 
-nsIDocument* nsBaseWidget::GetDocument() const {
+Document* nsBaseWidget::GetDocument() const {
   if (mWidgetListener) {
     if (nsIPresShell* presShell = mWidgetListener->GetPresShell()) {
       return presShell->GetDocument();
@@ -1687,7 +1687,7 @@ void nsBaseWidget::NotifyThemeChanged() {
 
 void nsBaseWidget::NotifyUIStateChanged(UIStateChangeType aShowAccelerators,
                                         UIStateChangeType aShowFocusRings) {
-  if (nsIDocument* doc = GetDocument()) {
+  if (Document* doc = GetDocument()) {
     nsPIDOMWindowOuter* win = doc->GetWindow();
     if (win) {
       win->SetKeyboardIndicators(aShowAccelerators, aShowFocusRings);

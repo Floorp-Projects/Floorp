@@ -18,7 +18,7 @@
 #include "nsContentSecurityManager.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsGlobalWindow.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIPresentationService.h"
 #include "nsIURI.h"
 #include "nsIUUIDGenerator.h"
@@ -41,8 +41,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(PresentationRequest)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 static nsresult GetAbsoluteURL(const nsAString& aUrl, nsIURI* aBaseUri,
-                               nsIDocument* aDocument,
-                               nsAString& aAbsoluteUrl) {
+                               Document* aDocument, nsAString& aAbsoluteUrl) {
   nsCOMPtr<nsIURI> uri;
   nsresult rv;
   if (aDocument) {
@@ -141,7 +140,7 @@ already_AddRefed<Promise> PresentationRequest::StartWithDevice(
     return nullptr;
   }
 
-  nsCOMPtr<nsIDocument> doc = GetOwner()->GetExtantDoc();
+  nsCOMPtr<Document> doc = GetOwner()->GetExtantDoc();
   if (NS_WARN_IF(!doc)) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
@@ -236,7 +235,7 @@ already_AddRefed<Promise> PresentationRequest::Reconnect(
     return nullptr;
   }
 
-  nsCOMPtr<nsIDocument> doc = GetOwner()->GetExtantDoc();
+  nsCOMPtr<Document> doc = GetOwner()->GetExtantDoc();
   if (NS_WARN_IF(!doc)) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
@@ -342,7 +341,7 @@ already_AddRefed<Promise> PresentationRequest::GetAvailability(
     return nullptr;
   }
 
-  nsCOMPtr<nsIDocument> doc = GetOwner()->GetExtantDoc();
+  nsCOMPtr<Document> doc = GetOwner()->GetExtantDoc();
   if (NS_WARN_IF(!doc)) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
@@ -456,15 +455,14 @@ void PresentationRequest::NotifyPromiseSettled() {
   }
 }
 
-bool PresentationRequest::IsProhibitMixedSecurityContexts(
-    nsIDocument* aDocument) {
+bool PresentationRequest::IsProhibitMixedSecurityContexts(Document* aDocument) {
   MOZ_ASSERT(aDocument);
 
   if (nsContentUtils::IsChromeDoc(aDocument)) {
     return true;
   }
 
-  nsCOMPtr<nsIDocument> doc = aDocument;
+  nsCOMPtr<Document> doc = aDocument;
   while (doc && !nsContentUtils::IsChromeDoc(doc)) {
     if (nsContentUtils::HttpsStateIsModern(doc)) {
       return true;

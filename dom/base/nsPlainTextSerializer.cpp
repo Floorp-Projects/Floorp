@@ -425,7 +425,7 @@ nsPlainTextSerializer::Flush(nsAString& aStr) {
 }
 
 NS_IMETHODIMP
-nsPlainTextSerializer::AppendDocumentStart(nsIDocument* aDocument,
+nsPlainTextSerializer::AppendDocumentStart(Document* aDocument,
                                            nsAString& aStr) {
   return NS_OK;
 }

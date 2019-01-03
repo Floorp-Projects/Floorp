@@ -8,7 +8,7 @@
 
 #include "nsAttrValue.h"
 #include "nsAttrValueInlines.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsPresContext.h"
 
 namespace mozilla {

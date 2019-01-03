@@ -606,7 +606,7 @@ PointerEventHandler::IsPointerEventImplicitCaptureForTouchEnabled() {
 /* static */ void PointerEventHandler::DispatchGotOrLostPointerCaptureEvent(
     bool aIsGotCapture, const WidgetPointerEvent* aPointerEvent,
     nsIContent* aCaptureTarget) {
-  nsIDocument* targetDoc = aCaptureTarget->OwnerDoc();
+  Document* targetDoc = aCaptureTarget->OwnerDoc();
   nsCOMPtr<nsIPresShell> shell = targetDoc->GetShell();
   if (NS_WARN_IF(!shell)) {
     return;

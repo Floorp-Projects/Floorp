@@ -19,7 +19,7 @@
 #include "nsString.h"
 #include "plstr.h"
 #include "nsIContent.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIXMLContentSink.h"
 #include "nsContentCID.h"
 #include "mozilla/dom/XMLDocument.h"
@@ -63,7 +63,7 @@ using namespace mozilla::dom;
 
 nsXBLService* nsXBLService::gInstance = nullptr;
 
-static bool IsAncestorBinding(nsIDocument* aDocument, nsIURI* aChildBindingURI,
+static bool IsAncestorBinding(Document* aDocument, nsIURI* aChildBindingURI,
                               nsIContent* aChild) {
   NS_ASSERTION(aDocument, "expected a document");
   NS_ASSERTION(aChildBindingURI, "expected a binding URI");
@@ -101,10 +101,10 @@ class nsXBLBindingRequest {
   nsCOMPtr<nsIURI> mBindingURI;
   nsCOMPtr<nsIContent> mBoundElement;
 
-  void DocumentLoaded(nsIDocument* aBindingDoc) {
+  void DocumentLoaded(Document* aBindingDoc) {
     // We only need the document here to cause frame construction, so
     // we need the current doc, not the owner doc.
-    nsIDocument* doc = mBoundElement->GetUncomposedDoc();
+    Document* doc = mBoundElement->GetUncomposedDoc();
     if (!doc) return;
 
     // Get the binding.
@@ -137,8 +137,8 @@ class nsXBLStreamListener final : public nsIStreamListener,
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSIDOMEVENTLISTENER
 
-  nsXBLStreamListener(nsIDocument* aBoundDocument, nsIXMLContentSink* aSink,
-                      nsIDocument* aBindingDocument);
+  nsXBLStreamListener(Document* aBoundDocument, nsIXMLContentSink* aSink,
+                      Document* aBindingDocument);
 
   void AddRequest(nsXBLBindingRequest* aRequest) {
     mBindingRequests.AppendElement(aRequest);
@@ -153,16 +153,16 @@ class nsXBLStreamListener final : public nsIStreamListener,
 
   nsWeakPtr mBoundDocument;
   nsCOMPtr<nsIXMLContentSink> mSink;       // Only set until OnStartRequest
-  nsCOMPtr<nsIDocument> mBindingDocument;  // Only set until OnStartRequest
+  nsCOMPtr<Document> mBindingDocument;     // Only set until OnStartRequest
 };
 
 /* Implementation file */
 NS_IMPL_ISUPPORTS(nsXBLStreamListener, nsIStreamListener, nsIRequestObserver,
                   nsIDOMEventListener)
 
-nsXBLStreamListener::nsXBLStreamListener(nsIDocument* aBoundDocument,
+nsXBLStreamListener::nsXBLStreamListener(Document* aBoundDocument,
                                          nsIXMLContentSink* aSink,
-                                         nsIDocument* aBindingDocument)
+                                         Document* aBindingDocument)
     : mSink(aSink), mBindingDocument(aBindingDocument) {
   /* member initializers and constructor code */
   mBoundDocument = do_GetWeakReference(aBoundDocument);
@@ -190,7 +190,7 @@ nsXBLStreamListener::OnStartRequest(nsIRequest* request, nsISupports* aCtxt) {
   // Make sure we don't hold on to the sink and binding document past this point
   nsCOMPtr<nsIXMLContentSink> sink;
   mSink.swap(sink);
-  nsCOMPtr<nsIDocument> doc;
+  nsCOMPtr<Document> doc;
   mBindingDocument.swap(doc);
 
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
@@ -248,11 +248,11 @@ nsresult nsXBLStreamListener::HandleEvent(Event* aEvent) {
   // Get the binding document; note that we don't hold onto it in this object
   // to avoid creating a cycle
   EventTarget* target = aEvent->GetCurrentTarget();
-  nsCOMPtr<nsIDocument> bindingDocument = do_QueryInterface(target);
+  nsCOMPtr<Document> bindingDocument = do_QueryInterface(target);
   NS_ASSERTION(bindingDocument, "Event not targeted at document?!");
 
   // See if we're still alive.
-  nsCOMPtr<nsIDocument> doc(do_QueryReferent(mBoundDocument));
+  nsCOMPtr<Document> doc(do_QueryReferent(mBoundDocument));
   if (!doc) {
     NS_WARNING(
         "XBL load did not complete until after document went away! Modal "
@@ -266,7 +266,7 @@ nsresult nsXBLStreamListener::HandleEvent(Event* aEvent) {
     // ready.
     if (count > 0) {
       nsXBLBindingRequest* req = mBindingRequests.ElementAt(0);
-      nsIDocument* document = req->mBoundElement->GetUncomposedDoc();
+      Document* document = req->mBoundElement->GetUncomposedDoc();
       if (document)
         document->FlushPendingNotifications(FlushType::ContentAndNotify);
     }
@@ -505,7 +505,7 @@ nsresult nsXBLService::LoadBindings(Element* aElement, nsIURI* aURL,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDocument> document = aElement->OwnerDoc();
+  nsCOMPtr<Document> document = aElement->OwnerDoc();
 
   nsAutoCString urlspec;
   nsresult rv = aURL->GetSpec(urlspec);
@@ -574,7 +574,7 @@ nsresult nsXBLService::LoadBindings(Element* aElement, nsIURI* aURL,
 }
 
 void nsXBLService::FlushStyleBindings(Element* aElement) {
-  nsCOMPtr<nsIDocument> document = aElement->OwnerDoc();
+  nsCOMPtr<Document> document = aElement->OwnerDoc();
 
   nsXBLBinding* binding = aElement->GetXBLBinding();
   if (binding) {
@@ -600,7 +600,7 @@ nsresult nsXBLService::AttachGlobalKeyHandler(EventTarget* aTarget) {
   nsCOMPtr<nsIContent> contentNode(do_QueryInterface(aTarget));
   if (contentNode) {
     // Only attach if we're really in a document
-    nsCOMPtr<nsIDocument> doc = contentNode->GetUncomposedDoc();
+    nsCOMPtr<Document> doc = contentNode->GetUncomposedDoc();
     if (doc) piTarget = doc;  // We're a XUL keyset. Attach to our document.
   }
 
@@ -643,7 +643,7 @@ nsresult nsXBLService::DetachGlobalKeyHandler(EventTarget* aTarget) {
     return NS_ERROR_FAILURE;
 
   // Only attach if we're really in a document
-  nsCOMPtr<nsIDocument> doc = contentNode->GetUncomposedDoc();
+  nsCOMPtr<Document> doc = contentNode->GetUncomposedDoc();
   if (doc) piTarget = doc;
 
   if (!piTarget) return NS_ERROR_FAILURE;
@@ -704,7 +704,7 @@ static bool MayBindToContent(nsXBLPrototypeBinding* aProtoBinding,
   }
 
   // Allow if the bound content subsumes the binding.
-  nsCOMPtr<nsIDocument> bindingDoc =
+  nsCOMPtr<Document> bindingDoc =
       aProtoBinding->XBLDocumentInfo()->GetDocument();
   NS_ENSURE_TRUE(bindingDoc, false);
   if (aBoundElement->NodePrincipal()->Subsumes(bindingDoc->NodePrincipal())) {
@@ -744,7 +744,7 @@ nsresult nsXBLService::GetBinding(nsIContent* aBoundElement, nsIURI* aURI,
   nsAutoCString ref;
   aURI->GetRef(ref);
 
-  nsCOMPtr<nsIDocument> boundDocument = aBoundElement->OwnerDoc();
+  nsCOMPtr<Document> boundDocument = aBoundElement->OwnerDoc();
 
   RefPtr<nsXBLDocumentInfo> docInfo;
   nsresult rv =
@@ -857,7 +857,7 @@ nsresult nsXBLService::GetBinding(nsIContent* aBoundElement, nsIURI* aURI,
 }
 
 nsresult nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement,
-                                               nsIDocument* aBoundDocument,
+                                               Document* aBoundDocument,
                                                nsIURI* aBindingURI,
                                                nsIPrincipal* aOriginPrincipal,
                                                bool aForceSyncLoad,
@@ -958,7 +958,7 @@ nsresult nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement,
     if (NS_SUCCEEDED(documentURI->SchemeIs("chrome", &chrome)) && chrome)
       aForceSyncLoad = true;
 
-    nsCOMPtr<nsIDocument> document;
+    nsCOMPtr<Document> document;
     rv = FetchBindingDocument(aBoundElement, aBoundDocument, documentURI,
                               aBindingURI, aOriginPrincipal, aForceSyncLoad,
                               getter_AddRefs(document));
@@ -1005,9 +1005,9 @@ nsresult nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement,
 }
 
 nsresult nsXBLService::FetchBindingDocument(
-    nsIContent* aBoundElement, nsIDocument* aBoundDocument,
-    nsIURI* aDocumentURI, nsIURI* aBindingURI, nsIPrincipal* aOriginPrincipal,
-    bool aForceSyncLoad, nsIDocument** aResult) {
+    nsIContent* aBoundElement, Document* aBoundDocument, nsIURI* aDocumentURI,
+    nsIURI* aBindingURI, nsIPrincipal* aOriginPrincipal, bool aForceSyncLoad,
+    Document** aResult) {
   nsresult rv = NS_OK;
   // Initialize our out pointer to nullptr
   *aResult = nullptr;
@@ -1022,7 +1022,7 @@ nsresult nsXBLService::FetchBindingDocument(
   if (IsChromeOrResourceURI(aDocumentURI)) aForceSyncLoad = true;
 
   // Create document and contentsink and set them up.
-  nsCOMPtr<nsIDocument> doc;
+  nsCOMPtr<Document> doc;
   rv = NS_NewXMLDocument(getter_AddRefs(doc));
   NS_ENSURE_SUCCESS(rv, rv);
 

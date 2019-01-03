@@ -42,7 +42,7 @@
 #include "nsGkAtoms.h"
 #include "nsIClipboard.h"
 #include "nsIContent.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIFile.h"
 #include "nsIInputStream.h"
 #include "nsIMIMEService.h"
@@ -194,9 +194,9 @@ HTMLEditor::InsertHTML(const nsAString& aInString) {
 
 nsresult HTMLEditor::DoInsertHTMLWithContext(
     const nsAString& aInputString, const nsAString& aContextStr,
-    const nsAString& aInfoStr, const nsAString& aFlavor,
-    nsIDocument* aSourceDoc, const EditorDOMPoint& aPointToInsert,
-    bool aDoDeleteSelection, bool aTrustedInput, bool aClearStyle) {
+    const nsAString& aInfoStr, const nsAString& aFlavor, Document* aSourceDoc,
+    const EditorDOMPoint& aPointToInsert, bool aDoDeleteSelection,
+    bool aTrustedInput, bool aClearStyle) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   if (NS_WARN_IF(!mRules)) {
@@ -726,7 +726,7 @@ nsresult HTMLEditor::PrepareHTMLTransferable(nsITransferable** aTransferable) {
 
   // Get the nsITransferable interface for getting the data from the clipboard
   if (aTransferable) {
-    nsCOMPtr<nsIDocument> destdoc = GetDocument();
+    RefPtr<Document> destdoc = GetDocument();
     nsILoadContext* loadContext = destdoc ? destdoc->GetLoadContext() : nullptr;
     (*aTransferable)->Init(loadContext);
 
@@ -951,7 +951,7 @@ NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(HTMLEditor::BlobReader, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(HTMLEditor::BlobReader, Release)
 
 HTMLEditor::BlobReader::BlobReader(BlobImpl* aBlob, HTMLEditor* aHTMLEditor,
-                                   bool aIsSafe, nsIDocument* aSourceDoc,
+                                   bool aIsSafe, Document* aSourceDoc,
                                    const EditorDOMPoint& aPointToInsert,
                                    bool aDoDeleteSelection)
     : mBlob(aBlob),
@@ -1101,7 +1101,7 @@ nsresult HTMLEditor::SlurpBlob(Blob* aBlob, nsPIDOMWindowOuter* aWindow,
 }
 
 nsresult HTMLEditor::InsertObject(const nsACString& aType, nsISupports* aObject,
-                                  bool aIsSafe, nsIDocument* aSourceDoc,
+                                  bool aIsSafe, Document* aSourceDoc,
                                   const EditorDOMPoint& aPointToInsert,
                                   bool aDoDeleteSelection) {
   MOZ_ASSERT(IsEditActionDataAvailable());
@@ -1206,7 +1206,7 @@ static bool GetCString(nsISupports* aData, nsACString& aText) {
 }
 
 nsresult HTMLEditor::InsertFromTransferable(nsITransferable* transferable,
-                                            nsIDocument* aSourceDoc,
+                                            Document* aSourceDoc,
                                             const nsAString& aContextStr,
                                             const nsAString& aInfoStr,
                                             bool havePrivateHTMLFlavor,
@@ -1316,7 +1316,7 @@ static void GetStringFromDataTransfer(DataTransfer* aDataTransfer,
 
 nsresult HTMLEditor::InsertFromDataTransfer(DataTransfer* aDataTransfer,
                                             int32_t aIndex,
-                                            nsIDocument* aSourceDoc,
+                                            Document* aSourceDoc,
                                             const EditorDOMPoint& aDroppedAt,
                                             bool aDoDeleteSelection) {
   MOZ_ASSERT(GetEditAction() == EditAction::eDrop);
@@ -1630,7 +1630,7 @@ HTMLEditor::CanPaste(int32_t aSelectionType, bool* aCanPaste) {
   *aCanPaste = false;
 
   // Always enable the paste command when inside of a HTML or XHTML document.
-  nsCOMPtr<nsIDocument> doc = GetDocument();
+  RefPtr<Document> doc = GetDocument();
   if (doc && doc->IsHTMLOrXHTML()) {
     *aCanPaste = true;
     return NS_OK;
@@ -1779,7 +1779,7 @@ nsresult HTMLEditor::PasteAsPlaintextQuotation(int32_t aSelectionType) {
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(trans, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIDocument> destdoc = GetDocument();
+  RefPtr<Document> destdoc = GetDocument();
   nsILoadContext* loadContext = destdoc ? destdoc->GetLoadContext() : nullptr;
   trans->Init(loadContext);
 
@@ -2302,7 +2302,7 @@ nsresult HTMLEditor::CreateDOMFragmentFromPaste(
   NS_ENSURE_TRUE(outFragNode && outStartNode && outEndNode,
                  NS_ERROR_NULL_POINTER);
 
-  nsCOMPtr<nsIDocument> doc = GetDocument();
+  RefPtr<Document> doc = GetDocument();
   NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
 
   // if we have context info, create a fragment for that
@@ -2395,7 +2395,7 @@ nsresult HTMLEditor::CreateDOMFragmentFromPaste(
 
 nsresult HTMLEditor::ParseFragment(const nsAString& aFragStr,
                                    nsAtom* aContextLocalName,
-                                   nsIDocument* aTargetDocument,
+                                   Document* aTargetDocument,
                                    DocumentFragment** aFragment,
                                    bool aTrustedInput) {
   nsAutoScriptBlockerSuppressNodeRemoved autoBlocker;

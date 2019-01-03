@@ -572,13 +572,15 @@ void PausedPhase::RestoreCheckpoint(size_t aCheckpoint) {
 void PausedPhase::RunToPoint(const ExecutionPoint& aTarget) {
   // This may only be used when we are paused at a normal checkpoint.
   MOZ_RELEASE_ASSERT(!mPoint.HasPosition());
-  size_t checkpoint = mPoint.mCheckpoint;
+  MOZ_RELEASE_ASSERT(aTarget.mCheckpoint == mPoint.mCheckpoint);
 
-  MOZ_RELEASE_ASSERT(aTarget.mCheckpoint == checkpoint);
   ResumeExecution();
+
+  // If we saved a temporary checkpoint, we need to rewind to erase any side
+  // effects that have happened, as when resuming forward.
   gNavigation->mReachBreakpointPhase.Enter(
-      CheckpointId(checkpoint), /* aRewind = */ false, aTarget,
-      /* aTemporaryCheckpoint = */ Nothing());
+      gNavigation->LastCheckpoint(), /* aRewind = */ mSavedTemporaryCheckpoint,
+      aTarget, /* aTemporaryCheckpoint = */ Nothing());
 }
 
 void PausedPhase::HandleDebuggerRequest(js::CharBuffer* aRequestBuffer) {

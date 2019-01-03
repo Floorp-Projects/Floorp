@@ -98,7 +98,7 @@
 #include "nsIX509Cert.h"
 #include "ScopedNSSTypes.h"
 #include "nsIDeprecationWarner.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsICompressConvStats.h"
 #include "nsCORSListenerProxy.h"
 #include "nsISocketProvider.h"
@@ -1267,7 +1267,7 @@ nsresult ProcessXCTO(nsHttpChannel *aChannel, nsIURI *aURI,
     // e.g. sending 'nosnif' instead of 'nosniff', let's log a warning.
     NS_ConvertUTF8toUTF16 char16_header(contentTypeOptionsHeader);
     const char16_t *params[] = {char16_header.get()};
-    nsCOMPtr<nsIDocument> doc;
+    RefPtr<Document> doc;
     aLoadInfo->GetLoadingDocument(getter_AddRefs(doc));
     nsContentUtils::ReportToConsole(
         nsIScriptError::warningFlag, NS_LITERAL_CSTRING("XCTO"), doc,
@@ -8918,12 +8918,12 @@ void nsHttpChannel::MaybeWarnAboutAppCache() {
   nsCOMPtr<nsIDeprecationWarner> warner;
   GetCallback(warner);
   if (warner) {
-    warner->IssueWarning(nsIDocument::eAppCache, false);
+    warner->IssueWarning(Document::eAppCache, false);
     // When the page is insecure and the API is still enabled
     // provide an additional warning for developers of removal
     if (!IsHTTPS() &&
         Preferences::GetBool("browser.cache.offline.insecure.enable")) {
-      warner->IssueWarning(nsIDocument::eAppCacheInsecure, true);
+      warner->IssueWarning(Document::eAppCacheInsecure, true);
     }
   }
 }

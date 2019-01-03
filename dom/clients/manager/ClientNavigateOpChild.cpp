@@ -200,7 +200,7 @@ RefPtr<ClientOpPromise> ClientNavigateOpChild::DoNavigate(
     return ClientOpPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
   }
 
-  nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
+  RefPtr<Document> doc = window->GetExtantDoc();
   if (!doc || !doc->IsActive()) {
     return ClientOpPromise::CreateAndReject(NS_ERROR_DOM_INVALID_STATE_ERR,
                                             __func__);

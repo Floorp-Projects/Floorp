@@ -18,7 +18,7 @@
 #include "nsIScriptContext.h"
 #include "nsDOMJSUtils.h"
 #include "nsJSUtils.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIXPConnect.h"
 #include "xpcpublic.h"
 #include "nsIContent.h"
@@ -401,7 +401,7 @@ static nsIGlobalObject *GetGlobalObject(NPP npp) {
   RefPtr<nsPluginInstanceOwner> owner = inst->GetOwner();
   NS_ENSURE_TRUE(owner, nullptr);
 
-  nsCOMPtr<nsIDocument> doc;
+  nsCOMPtr<dom::Document> doc;
   owner->GetDocument(getter_AddRefs(doc));
   NS_ENSURE_TRUE(doc, nullptr);
 

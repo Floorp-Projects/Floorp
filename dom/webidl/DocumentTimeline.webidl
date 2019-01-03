@@ -14,7 +14,7 @@ dictionary DocumentTimelineOptions {
   DOMHighResTimeStamp originTime = 0;
 };
 
-[Func="nsIDocument::AreWebAnimationsTimelinesEnabled",
+[Func="Document::AreWebAnimationsTimelinesEnabled",
  Constructor (optional DocumentTimelineOptions options)]
 interface DocumentTimeline : AnimationTimeline {
 };

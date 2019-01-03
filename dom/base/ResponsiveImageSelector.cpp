@@ -8,7 +8,7 @@
 #include "mozilla/ServoStyleSetInlines.h"
 #include "mozilla/TextUtils.h"
 #include "nsIURI.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsContentUtils.h"
 #include "nsPresContext.h"
 
@@ -100,7 +100,7 @@ static bool ParseFloat(const nsAString& aString, double& aDouble) {
 ResponsiveImageSelector::ResponsiveImageSelector(nsIContent* aContent)
     : mOwnerNode(aContent), mSelectedCandidateIndex(-1) {}
 
-ResponsiveImageSelector::ResponsiveImageSelector(nsIDocument* aDocument)
+ResponsiveImageSelector::ResponsiveImageSelector(dom::Document* aDocument)
     : mOwnerNode(aDocument), mSelectedCandidateIndex(-1) {}
 
 ResponsiveImageSelector::~ResponsiveImageSelector() {}
@@ -192,7 +192,7 @@ nsIContent* ResponsiveImageSelector::Content() {
   return mOwnerNode->IsContent() ? mOwnerNode->AsContent() : nullptr;
 }
 
-nsIDocument* ResponsiveImageSelector::Document() {
+dom::Document* ResponsiveImageSelector::Document() {
   return mOwnerNode->OwnerDoc();
 }
 
@@ -327,7 +327,7 @@ bool ResponsiveImageSelector::SelectImage(bool aReselect) {
     return oldBest != -1;
   }
 
-  nsIDocument* doc = Document();
+  dom::Document* doc = Document();
   nsPresContext* pctx = doc->GetPresContext();
   nsCOMPtr<nsIURI> baseURI = mOwnerNode->GetBaseURI();
 
@@ -400,7 +400,7 @@ int ResponsiveImageSelector::GetSelectedCandidateIndex() {
 
 bool ResponsiveImageSelector::ComputeFinalWidthForCurrentViewport(
     double* aWidth) {
-  nsIDocument* doc = Document();
+  dom::Document* doc = Document();
   nsIPresShell* presShell = doc->GetShell();
   nsPresContext* pctx = presShell ? presShell->GetPresContext() : nullptr;
 
