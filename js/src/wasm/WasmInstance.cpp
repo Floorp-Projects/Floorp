@@ -1070,10 +1070,7 @@ bool Instance::init(JSContext* cx, const DataSegmentVector& dataSegments,
     }
   }
 
-  JitRuntime* jitRuntime = cx->runtime()->getJitRuntime(cx);
-  if (!jitRuntime) {
-    return false;
-  }
+  JitRuntime* jitRuntime = cx->runtime()->jitRuntime();
   jsJitArgsRectifier_ = jitRuntime->getArgumentsRectifier();
   jsJitExceptionHandler_ = jitRuntime->getExceptionTail();
   preBarrierCode_ = jitRuntime->preBarrier(MIRType::Object);

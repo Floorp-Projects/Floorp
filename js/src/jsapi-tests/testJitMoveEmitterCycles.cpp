@@ -71,7 +71,6 @@ BEGIN_TEST(testJitMoveEmitterCycles_simple) {
   LifoAlloc lifo(LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
   TempAllocator alloc(&lifo);
   JitContext jc(cx, &alloc);
-  cx->runtime()->getJitRuntime(cx);
   StackMacroAssembler masm;
   MoveEmitter mover(masm);
   MoveResolver mr;
@@ -119,7 +118,6 @@ BEGIN_TEST(testJitMoveEmitterCycles_autogen) {
   LifoAlloc lifo(LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
   TempAllocator alloc(&lifo);
   JitContext jc(cx, &alloc);
-  cx->runtime()->getJitRuntime(cx);
   StackMacroAssembler masm;
   MoveEmitter mover(masm);
   MoveResolver mr;
@@ -245,7 +243,6 @@ BEGIN_TEST(testJitMoveEmitterCycles_autogen2) {
   LifoAlloc lifo(LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
   TempAllocator alloc(&lifo);
   JitContext jc(cx, &alloc);
-  cx->runtime()->getJitRuntime(cx);
   StackMacroAssembler masm;
   MoveEmitter mover(masm);
   MoveResolver mr;
@@ -388,7 +385,6 @@ BEGIN_TEST(testJitMoveEmitterCycles_autogen3) {
   LifoAlloc lifo(LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
   TempAllocator alloc(&lifo);
   JitContext jc(cx, &alloc);
-  cx->runtime()->getJitRuntime(cx);
   StackMacroAssembler masm;
   MoveEmitter mover(masm);
   MoveResolver mr;
@@ -530,7 +526,6 @@ BEGIN_TEST(testJitMoveEmitterCycles_bug1299147_1) {
   LifoAlloc lifo(LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
   TempAllocator alloc(&lifo);
   JitContext jc(cx, &alloc);
-  cx->runtime()->getJitRuntime(cx);
   StackMacroAssembler masm;
   MoveEmitter mover(masm);
   MoveResolver mr;
@@ -581,7 +576,6 @@ BEGIN_TEST(testJitMoveEmitterCycles_bug1299147) {
   LifoAlloc lifo(LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
   TempAllocator alloc(&lifo);
   JitContext jc(cx, &alloc);
-  cx->runtime()->getJitRuntime(cx);
   StackMacroAssembler masm;
   MoveEmitter mover(masm);
   MoveResolver mr;
