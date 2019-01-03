@@ -1065,7 +1065,9 @@ BrowserPageActions.sendToDevice = {
       item.classList.add("pageAction-sendToDevice-device", "subviewbutton");
       if (clientId) {
         item.classList.add("subviewbutton-iconic");
-        item.setAttribute("tooltiptext", gSync.formatLastSyncDate(lastModified));
+        if (lastModified) {
+          item.setAttribute("tooltiptext", gSync.formatLastSyncDate(lastModified));
+        }
       }
 
       item.addEventListener("command", event => {
@@ -1086,14 +1088,14 @@ BrowserPageActions.sendToDevice = {
     bodyNode.removeAttribute("state");
     // In the first ~10 sec after startup, Sync may not be loaded and the list
     // of devices will be empty.
-    if (gSync.syncConfiguredAndLoading) {
+    if (gSync.sendTabConfiguredAndLoading) {
       bodyNode.setAttribute("state", "notready");
       // Force a background Sync
       Services.tm.dispatchToMainThread(async () => {
         await Weave.Service.sync({why: "pageactions", engines: []}); // [] = clients engine only
         // There's no way Sync is still syncing at this point, but we check
         // anyway to avoid infinite looping.
-        if (!window.closed && !gSync.syncConfiguredAndLoading) {
+        if (!window.closed && !gSync.sendTabConfiguredAndLoading) {
           this.onShowingSubview(panelViewNode);
         }
       });
