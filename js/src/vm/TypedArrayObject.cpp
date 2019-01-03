@@ -81,9 +81,8 @@ using mozilla::IsAsciiDigit;
     return false;
   }
 
-  if (!buffer->addView(cx, tarray)) {
-    return false;
-  }
+  // Attaching the first view to an array buffer is infallible.
+  MOZ_ALWAYS_TRUE(buffer->addView(cx, tarray));
 
   // tarray is not shared, because if it were it would have a buffer.
   memcpy(buffer->dataPointer(), tarray->dataPointerUnshared(),
