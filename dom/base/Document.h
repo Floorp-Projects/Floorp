@@ -81,7 +81,6 @@ class imgIRequest;
 class nsBindingManager;
 class nsCachableElementsByNameNodeList;
 class nsContentList;
-class nsDocumentOnStack;
 class nsIDocShell;
 class nsDocShell;
 class nsDOMNavigationTiming;
@@ -119,7 +118,6 @@ class nsPresContext;
 class nsRange;
 class nsSimpleContentList;
 class nsTextNode;
-class nsUnblockOnloadEvent;
 class nsWindowSizes;
 class nsDOMCaretPosition;
 class nsViewportInfo;
@@ -207,6 +205,9 @@ class XPathResult;
 class XULDocument;
 template <typename>
 class Sequence;
+
+class nsDocumentOnStack;
+class nsUnblockOnloadEvent;
 
 template <typename, typename>
 class CallbackObjectHolder;
@@ -447,7 +448,7 @@ class Document : public nsINode,
   Document& operator=(const Document&) = delete;
 
  public:
-  typedef ExternalResourceMap::ExternalResourceLoad ExternalResourceLoad;
+  typedef mozilla::dom::ExternalResourceMap::ExternalResourceLoad ExternalResourceLoad;
   typedef net::ReferrerPolicy ReferrerPolicyEnum;
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOCUMENT_IID)
@@ -2800,7 +2801,7 @@ class Document : public nsINode,
   // This returns true when the document tree is being teared down.
   bool InUnlinkOrDeletion() { return mInUnlinkOrDeletion; }
 
-  ImageTracker* ImageTracker();
+  mozilla::dom::ImageTracker* ImageTracker();
 
   // AddPlugin adds a plugin-related element to mPlugins when the element is
   // added to the tree.
@@ -3092,7 +3093,7 @@ class Document : public nsINode,
 
 #ifdef MOZILLA_INTERNAL_API
   bool Hidden() const { return mVisibilityState != VisibilityState::Visible; }
-  VisibilityState VisibilityState() const { return mVisibilityState; }
+  mozilla::dom::VisibilityState VisibilityState() const { return mVisibilityState; }
 #endif
   void GetSelectedStyleSheetSet(nsAString& aSheetSet);
   void SetSelectedStyleSheetSet(const nsAString& aSheetSet);
