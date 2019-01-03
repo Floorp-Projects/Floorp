@@ -81,6 +81,9 @@ class nsJSUtils {
     // Scope chain in which the execution takes place.
     JS::AutoObjectVector mScopeChain;
 
+    // The compiled script.
+    JS::Rooted<JSScript*> mScript;
+
     // returned value forwarded when we have to interupt the execution eagerly
     // with mSkip.
     nsresult mRv;
@@ -100,6 +103,8 @@ class nsJSUtils {
     bool mWantsReturnValue;
 
     bool mExpectScopeChain;
+
+    bool mScriptUsed;
 #endif
 
    public:
@@ -111,8 +116,12 @@ class nsJSUtils {
     ExecutionContext(ExecutionContext&&) = delete;
 
     ~ExecutionContext() {
-      // This flag is resetted, when the returned value is extracted.
-      MOZ_ASSERT(!mWantsReturnValue);
+      // This flag is reset when the returned value is extracted.
+      MOZ_ASSERT_IF(!mSkip, !mWantsReturnValue);
+
+      // If encoding was started we expect the script to have been
+      // used when ending the encoding.
+      MOZ_ASSERT_IF(mEncodeBytecode && mScript && mRv == NS_OK, mScriptUsed);
     }
 
     // The returned value would be converted to a string if the
@@ -134,54 +143,53 @@ class nsJSUtils {
     // Set the scope chain in which the code should be executed.
     void SetScopeChain(const JS::AutoObjectVector& aScopeChain);
 
-    // Copy the returned value in the mutable handle argument, in case of a
+    // After getting a notification that an off-thread compilation terminated,
+    // this function will take the result of the parser and move it to the main
+    // thread.
+    MOZ_MUST_USE nsresult JoinCompile(JS::OffThreadToken** aOffThreadToken);
+
+    // Compile a script contained in a SourceText.
+    nsresult Compile(JS::CompileOptions& aCompileOptions,
+                     JS::SourceText<char16_t>& aSrcBuf);
+
+    // Compile a script contained in a string.
+    nsresult Compile(JS::CompileOptions& aCompileOptions,
+                     const nsAString& aScript);
+
+    // Decode a script contained in a buffer.
+    nsresult Decode(JS::CompileOptions& aCompileOptions,
+                    mozilla::Vector<uint8_t>& aBytecodeBuf,
+                    size_t aBytecodeIndex);
+
+    // After getting a notification that an off-thread decoding terminated, this
+    // function will get the result of the decoder and move it to the main
+    // thread.
+    nsresult JoinDecode(JS::OffThreadToken** aOffThreadToken);
+
+    nsresult JoinDecodeBinAST(JS::OffThreadToken** aOffThreadToken);
+
+    // Decode a BinAST encoded script contained in a buffer.
+    nsresult DecodeBinAST(JS::CompileOptions& aCompileOptions,
+                          const uint8_t* aBuf, size_t aLength);
+
+    // Get a successfully compiled script.
+    JSScript* GetScript();
+
+    // Execute the compiled script and ignore the return value.
+    MOZ_MUST_USE nsresult ExecScript();
+
+    // Execute the compiled script a get the return value.
+    //
+    // Copy the returned value into the mutable handle argument. In case of a
     // evaluation failure either during the execution or the conversion of the
-    // result to a string, the nsresult would be set to the corresponding result
-    // code, and the mutable handle argument would remain unchanged.
+    // result to a string, the nsresult is be set to the corresponding result
+    // code and the mutable handle argument remains unchanged.
     //
     // The value returned in the mutable handle argument is part of the
     // compartment given as argument to the ExecutionContext constructor. If the
     // caller is in a different compartment, then the out-param value should be
     // wrapped by calling |JS_WrapValue|.
-    MOZ_MUST_USE nsresult
-    ExtractReturnValue(JS::MutableHandle<JS::Value> aRetValue);
-
-    // After getting a notification that an off-thread compilation terminated,
-    // this function will take the result of the parser by moving it to the main
-    // thread before starting the execution of the script.
-    //
-    // The compiled script would be returned in the |aScript| out-param.
-    MOZ_MUST_USE nsresult JoinAndExec(JS::OffThreadToken** aOffThreadToken,
-                                      JS::MutableHandle<JSScript*> aScript);
-
-    // Compile a script contained in a SourceText, and execute it.
-    nsresult CompileAndExec(JS::CompileOptions& aCompileOptions,
-                            JS::SourceText<char16_t>& aSrcBuf,
-                            JS::MutableHandle<JSScript*> aScript);
-
-    // Compile a script contained in a string, and execute it.
-    nsresult CompileAndExec(JS::CompileOptions& aCompileOptions,
-                            const nsAString& aScript);
-
-    // Decode a script contained in a buffer, and execute it.
-    MOZ_MUST_USE nsresult DecodeAndExec(JS::CompileOptions& aCompileOptions,
-                                        mozilla::Vector<uint8_t>& aBytecodeBuf,
-                                        size_t aBytecodeIndex);
-
-    // After getting a notification that an off-thread decoding terminated, this
-    // function will get the result of the decoder by moving it to the main
-    // thread before starting the execution of the script.
-    MOZ_MUST_USE nsresult
-    DecodeJoinAndExec(JS::OffThreadToken** aOffThreadToken);
-
-    MOZ_MUST_USE nsresult
-    DecodeBinASTJoinAndExec(JS::OffThreadToken** aOffThreadToken,
-                            JS::MutableHandle<JSScript*> aScript);
-
-    // Decode a BinAST encoded script contained in a buffer, and execute it.
-    nsresult DecodeBinASTAndExec(JS::CompileOptions& aCompileOptions,
-                                 const uint8_t* aBuf, size_t aLength,
-                                 JS::MutableHandle<JSScript*> aScript);
+    MOZ_MUST_USE nsresult ExecScript(JS::MutableHandle<JS::Value> aRetValue);
   };
 
   static nsresult CompileModule(JSContext* aCx,

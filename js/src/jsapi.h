@@ -3104,13 +3104,17 @@ using ModuleDynamicImportHook = bool (*)(JSContext* cx,
                                          HandleObject promise);
 
 /**
- * Get the HostResolveImportedModule hook for the runtime.
+ * Get the HostImportModuleDynamically hook for the runtime.
  */
 extern JS_PUBLIC_API ModuleDynamicImportHook
 GetModuleDynamicImportHook(JSRuntime* rt);
 
 /**
- * Set the HostResolveImportedModule hook for the runtime to the given function.
+ * Set the HostImportModuleDynamically hook for the runtime to the given
+ * function.
+ *
+ * If this hook is not set (or set to nullptr) then the JS engine will throw an
+ * exception if dynamic module import is attempted.
  */
 extern JS_PUBLIC_API void SetModuleDynamicImportHook(
     JSRuntime* rt, ModuleDynamicImportHook func);
@@ -3151,6 +3155,32 @@ extern JS_PUBLIC_API void SetScriptPrivate(JSScript* script,
  * shared by all nested scripts compiled from a single source file.
  */
 extern JS_PUBLIC_API JS::Value GetScriptPrivate(JSScript* script);
+
+/*
+ * Return the private value associated with currently executing script or
+ * module, or undefined if there is no such script.
+ */
+extern JS_PUBLIC_API JS::Value GetScriptedCallerPrivate(JSContext* cx);
+
+/**
+ * A hook that's called whenever a script or module which has a private value
+ * set with SetScriptPrivate() or SetModulePrivate() is finalized. This can be
+ * used to clean up the private state. The private value is passed as an
+ * argument.
+ */
+using ScriptPrivateFinalizeHook = void (*)(JSFreeOp*, const JS::Value&);
+
+/**
+ * Get the script private finalize hook for the runtime.
+ */
+extern JS_PUBLIC_API ScriptPrivateFinalizeHook
+GetScriptPrivateFinalizeHook(JSRuntime* rt);
+
+/**
+ * Set the script private finalize hook for the runtime to the given function.
+ */
+extern JS_PUBLIC_API void SetScriptPrivateFinalizeHook(
+    JSRuntime* rt, ScriptPrivateFinalizeHook func);
 
 /*
  * Perform the ModuleInstantiate operation on the given source text module

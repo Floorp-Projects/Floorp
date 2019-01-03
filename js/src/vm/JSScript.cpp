@@ -1317,6 +1317,16 @@ void ScriptSourceObject::finalize(FreeOp* fop, JSObject* obj) {
   MOZ_ASSERT(fop->onMainThread());
   ScriptSourceObject* sso = &obj->as<ScriptSourceObject>();
   sso->source()->decref();
+
+  Value value = sso->canonicalPrivate();
+  if (!value.isUndefined()) {
+    // The embedding may need to dispose of its private data.
+    JS::AutoSuppressGCAnalysis suppressGC;
+    if (JS::ScriptPrivateFinalizeHook hook =
+            fop->runtime()->scriptPrivateFinalizeHook) {
+      hook(fop, value);
+    }
+  }
 }
 
 void ScriptSourceObject::trace(JSTracer* trc, JSObject* obj) {
@@ -1372,6 +1382,7 @@ ScriptSourceObject* ScriptSourceObject::createInternal(JSContext* cx,
   obj->initReservedSlot(ELEMENT_SLOT, MagicValue(JS_GENERIC_MAGIC));
   obj->initReservedSlot(ELEMENT_PROPERTY_SLOT, MagicValue(JS_GENERIC_MAGIC));
   obj->initReservedSlot(INTRODUCTION_SCRIPT_SLOT, MagicValue(JS_GENERIC_MAGIC));
+  obj->initReservedSlot(INTRODUCTION_SOURCE_OBJECT_SLOT, MagicValue(JS_GENERIC_MAGIC));
 
   return obj;
 }
@@ -1410,6 +1421,8 @@ ScriptSourceObject* ScriptSourceObject::unwrappedCanonical() const {
       source->getReservedSlot(ELEMENT_PROPERTY_SLOT).isMagic(JS_GENERIC_MAGIC));
   MOZ_ASSERT(source->getReservedSlot(INTRODUCTION_SCRIPT_SLOT)
                  .isMagic(JS_GENERIC_MAGIC));
+  MOZ_ASSERT(source->getReservedSlot(INTRODUCTION_SOURCE_OBJECT_SLOT)
+                 .isMagic(JS_GENERIC_MAGIC));
 
   RootedObject element(cx, options.element());
   RootedString elementAttributeName(cx, options.elementAttributeName());
@@ -1420,14 +1433,20 @@ ScriptSourceObject* ScriptSourceObject::unwrappedCanonical() const {
   // There is no equivalent of cross-compartment wrappers for scripts. If the
   // introduction script and ScriptSourceObject are in different compartments,
   // we would be creating a cross-compartment script reference, which is
-  // forbidden. In that case, simply don't bother to retain the introduction
-  // script.
-  Value introductionScript = UndefinedValue();
-  if (options.introductionScript() &&
-      options.introductionScript()->compartment() == cx->compartment()) {
-    introductionScript.setPrivateGCThing(options.introductionScript());
+  // forbidden. We can still store a CCW to the script source object though.
+  RootedValue introdutionScript(cx);
+  RootedValue introdutionSource(cx);
+  if (options.introductionScript()) {
+    if (options.introductionScript()->compartment() == cx->compartment()) {
+      introdutionScript.setPrivateGCThing(options.introductionScript());
+    }
+    introdutionSource.setObject(*options.introductionScript()->sourceObject());
+    if (!cx->compartment()->wrap(cx, &introdutionSource)) {
+      return false;
+    }
   }
-  source->setReservedSlot(INTRODUCTION_SCRIPT_SLOT, introductionScript);
+  source->setReservedSlot(INTRODUCTION_SCRIPT_SLOT, introdutionScript);
+  source->setReservedSlot(INTRODUCTION_SOURCE_OBJECT_SLOT, introdutionSource);
 
   return true;
 }

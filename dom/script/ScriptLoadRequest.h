@@ -50,6 +50,7 @@ class ScriptFetchOptions {
 
   const mozilla::CORSMode mCORSMode;
   const mozilla::net::ReferrerPolicy mReferrerPolicy;
+  bool mIsPreload;
   nsCOMPtr<nsIScriptElement> mElement;
   nsCOMPtr<nsIPrincipal> mTriggeringPrincipal;
 };
@@ -91,7 +92,10 @@ class ScriptLoadRequest
     Element()->ScriptEvaluated(aResult, Element(), mIsInline);
   }
 
-  bool IsPreload() { return Element() == nullptr; }
+  bool IsPreload() const {
+    MOZ_ASSERT_IF(mFetchOptions->mIsPreload, !Element());
+    return mFetchOptions->mIsPreload;
+  }
 
   virtual void Cancel();
 
@@ -199,16 +203,35 @@ class ScriptLoadRequest
     return mFetchOptions->mTriggeringPrincipal;
   }
 
-  void SetElement(nsIScriptElement* aElement) {
-    // Called when a preload request is later used for an actual request.
+  // Make this request a preload (speculative) request.
+  void SetIsPreloadRequest() {
+    MOZ_ASSERT(!Element());
+    MOZ_ASSERT(!IsPreload());
+    mFetchOptions->mIsPreload = true;
+  }
+
+  // Make a preload request into an actual load request for the given element.
+  void SetIsLoadRequest(nsIScriptElement* aElement) {
     MOZ_ASSERT(aElement);
     MOZ_ASSERT(!Element());
+    MOZ_ASSERT(IsPreload());
     mFetchOptions->mElement = aElement;
+    mFetchOptions->mIsPreload = false;
+  }
+
+  FromParser GetParserCreated() const {
+    nsIScriptElement* element = Element();
+    if (!element) {
+      return NOT_FROM_PARSER;
+    }
+    return element->GetParserCreated();
   }
 
   bool ShouldAcceptBinASTEncoding() const;
 
   void ClearScriptSource();
+
+  void SetScript(JSScript* aScript);
 
   void MaybeCancelOffThreadScript();
   void DropBytecodeCacheReferences();
@@ -271,6 +294,9 @@ class ScriptLoadRequest
   // Holds the Cache information, which is used to register the bytecode
   // on the cache entry, such that we can load it the next time.
   nsCOMPtr<nsICacheInfoChannel> mCacheInfo;
+
+  // The base URL used for resolving relative module imports.
+  nsCOMPtr<nsIURI> mBaseURL;
 };
 
 class ScriptLoadRequestList : private mozilla::LinkedList<ScriptLoadRequest> {

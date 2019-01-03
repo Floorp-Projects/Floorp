@@ -1170,14 +1170,24 @@ class ScriptSourceObject : public NativeObject {
     }
     return value.toGCThing()->as<JSScript>();
   }
+  ScriptSourceObject* unwrappedIntroductionSourceObject() const {
+    Value value =
+        unwrappedCanonical()->getReservedSlot(INTRODUCTION_SOURCE_OBJECT_SLOT);
+    if (value.isUndefined()) {
+      return nullptr;
+    }
+    return &UncheckedUnwrap(&value.toObject())->as<ScriptSourceObject>();
+  }
 
   void setPrivate(const Value& value) {
     MOZ_ASSERT(isCanonical());
     setReservedSlot(PRIVATE_SLOT, value);
   }
 
-  Value unwrappedPrivate() const {
-    return unwrappedCanonical()->getReservedSlot(PRIVATE_SLOT);
+  Value canonicalPrivate() const {
+    Value value = getReservedSlot(PRIVATE_SLOT);
+    MOZ_ASSERT_IF(!isCanonical(), value.isUndefined());
+    return value;
   }
 
  private:
@@ -1187,6 +1197,7 @@ class ScriptSourceObject : public NativeObject {
     ELEMENT_SLOT,
     ELEMENT_PROPERTY_SLOT,
     INTRODUCTION_SCRIPT_SLOT,
+    INTRODUCTION_SOURCE_OBJECT_SLOT,
     PRIVATE_SLOT,
     RESERVED_SLOTS
   };
