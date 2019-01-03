@@ -448,8 +448,8 @@ var SlightlyLessDodgyBootstrapMonitor = {
     }
 
     if (method !== "update" && method !== "uninstall") {
-      equal(params.installPath.path, lastParams.installPath.path,
-            `params.installPath should match last call`);
+      equal(params.resourceURI.spec, lastParams.resourceURI.spec,
+            `params.resourceURI should match last call`);
 
       ok(params.resourceURI.equals(lastParams.resourceURI),
          `params.resourceURI should match: "${params.resourceURI.spec}" == "${lastParams.resourceURI.spec}"`);
