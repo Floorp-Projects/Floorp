@@ -5,18 +5,6 @@
 
 ChromeUtils.import("resource://gre/modules/Preferences.jsm", this);
 
-// List of default preferences that can be used for tests, chosen because they
-// have little or no side-effects when they are modified for a brief time. If
-// any of these preferences are removed or their default state changes, just
-// update the constant to point to a different preference with the same default.
-const PREF_BOOLEAN_DEFAULT_TRUE = "accessibility.typeaheadfind.manual";
-const PREF_BOOLEAN_USERVALUE_TRUE = "browser.dom.window.dump.enabled";
-const PREF_NUMBER_DEFAULT_ZERO = "accessibility.typeaheadfind.casesensitive";
-const PREF_STRING_DEFAULT_EMPTY = "browser.helperApps.neverAsk.openFile";
-const PREF_STRING_DEFAULT_NOTEMPTY = "accessibility.typeaheadfind.soundURL";
-const PREF_STRING_DEFAULT_NOTEMPTY_VALUE = "beep";
-const PREF_STRING_LOCALIZED_MISSING = "gecko.handlerService.schemes.irc.1.name";
-
 class AboutConfigRowTest {
   constructor(element) {
     this.element = element;
@@ -34,26 +22,8 @@ class AboutConfigRowTest {
     return this.querySelector("td.cell-value").textContent;
   }
 
-  /**
-   * Text input field when the row is in edit mode.
-   */
-  get valueInput() {
-    return this.querySelector("td.cell-value input");
-  }
-
-  /**
-   * This is normally "edit" or "toggle" based on the preference type, or "save"
-   * when the row is in edit mode.
-   */
-  get editColumnButton() {
-    return this.querySelector("td.cell-edit > button");
-  }
-
-  /**
-   * This can be "reset" or "delete" based on whether a default exists.
-   */
-  get resetColumnButton() {
-    return this.querySelector("td:last-child > button");
+  get firstButton() {
+    return this.querySelector("button");
   }
 
   hasClass(className) {

@@ -14,6 +14,7 @@ add_task(async function setup() {
 add_task(async function test_search() {
   await AboutConfigTest.withNewTab(async function() {
     let prefArray = Services.prefs.getChildList("");
+    await this.document.querySelector("button").click();
 
     // The total number of preferences may change at any time because of
     // operations running in the background, so we only test approximately.
