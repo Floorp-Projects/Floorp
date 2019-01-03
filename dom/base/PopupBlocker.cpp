@@ -9,6 +9,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/TextEvents.h"
 #include "nsXULPopupManager.h"
+#include "nsIPermissionManager.h"
 
 namespace mozilla {
 namespace dom {

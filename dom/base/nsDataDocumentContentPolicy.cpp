@@ -48,7 +48,7 @@ nsDataDocumentContentPolicy::ShouldLoad(nsIURI *aContentLocation,
 
   *aDecision = nsIContentPolicy::ACCEPT;
   // Look for the document.  In most cases, requestingContext is a node.
-  nsCOMPtr<Document> doc;
+  nsCOMPtr<mozilla::dom::Document> doc;
   nsCOMPtr<nsINode> node = do_QueryInterface(requestingContext);
   if (node) {
     doc = node->OwnerDoc();
@@ -74,7 +74,7 @@ nsDataDocumentContentPolicy::ShouldLoad(nsIURI *aContentLocation,
     }
   }
 
-  Document *docToCheckForImage = doc->GetDisplayDocument();
+  mozilla::dom::Document *docToCheckForImage = doc->GetDisplayDocument();
   if (!docToCheckForImage) {
     docToCheckForImage = doc;
   }
