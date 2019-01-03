@@ -1,6 +1,6 @@
 [package]
 name = "webrender"
-version = "0.57.2"
+version = "0.58.0"
 authors = ["Glenn Watson <gw@intuitionlibrary.com>"]
 license = "MPL-2.0"
 repository = "https://github.com/servo/webrender"
@@ -41,7 +41,7 @@ sha2 = "0.8"
 smallvec = "0.6"
 thread_profiler = "0.1.1"
 time = "0.1"
-webrender_api = { version = "0.57.2", path = "../webrender_api" }
+webrender_api = { version = "0.58.0", path = "../webrender_api" }
 ws = { optional = true, version = "0.7.3" }
 
 [dependencies.pathfinder_font_renderer]
