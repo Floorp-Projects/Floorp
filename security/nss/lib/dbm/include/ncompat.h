@@ -89,13 +89,13 @@ typedef unsigned int  sigset_t;
 #define SIG_UNBLOCK 2
 #define SIG_SETMASK 3
 
-static int __sigtemp; /* For the use of sigprocmask */
+static int dbm_sigtemp; /* For the use of sigprocmask */
 
 /* Repeated test of oset != NULL is to avoid "*0". */
 #define sigprocmask(how, set, oset)                                                                                                                            \
-    ((__sigtemp =                                                                                                                                              \
+    ((dbm_sigtemp =                                                                                                                                            \
           (((how) == SIG_BLOCK) ? sigblock(0) | *(set) : (((how) == SIG_UNBLOCK) ? sigblock(0) & ~(*(set)) : ((how) == SIG_SETMASK ? *(set) : sigblock(0))))), \
-     ((oset) ? (*(oset ? oset : set) = sigsetmask(__sigtemp)) : sigsetmask(__sigtemp)), 0)
+     ((oset) ? (*(oset ? oset : set) = sigsetmask(dbm_sigtemp)) : sigsetmask(dbm_sigtemp)), 0)
 #endif
 
 /*
