@@ -149,8 +149,7 @@ registerFront(StyleSheetFront);
  */
 class StyleSheetsFront extends FrontClassWithSpec(styleSheetsSpec) {
   constructor(client, tabForm) {
-    super(client);
-    this.actorID = tabForm.styleSheetsActor;
+    super(client, { actor: tabForm.styleSheetsActor });
     this.manage(this);
   }
 }

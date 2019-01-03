@@ -1675,14 +1675,16 @@ class Marionette(object):
 
         :param script: A string containing the JavaScript to execute.
         :param script_args: An interable of arguments to pass to the script.
+        :param new_sandbox: If False, preserve global variables from
+            the last execute_*script call. This is True by default, in which
+            case no globals are preserved.
         :param sandbox: A tag referring to the sandbox you wish to use;
             if you specify a new tag, a new sandbox will be created.
             If you use the special tag `system`, the sandbox will
             be created using the system principal which has elevated
             privileges.
-        :param new_sandbox: If False, preserve global variables from
-            the last execute_*script call. This is True by default, in which
-            case no globals are preserved.
+        :param script_timeout: Timeout in milliseconds, overriding
+            the session's default script timeout.
 
         Simple usage example:
 
@@ -1727,6 +1729,11 @@ class Marionette(object):
             assert result == "foo"
 
         """
+        original_timeout = None
+        if script_timeout is not None:
+            original_timeout = self.timeout.script
+            self.timeout.script = script_timeout / 1000
+
         args = self._to_json(script_args)
         stack = traceback.extract_stack()
         frame = stack[-2:-1][0]  # grab the second-to-last frame
@@ -1735,10 +1742,13 @@ class Marionette(object):
                 "args": args,
                 "newSandbox": new_sandbox,
                 "sandbox": sandbox,
-                "scriptTimeout": script_timeout,
                 "line": int(frame[1]),
                 "filename": filename}
         rv = self._send_message("WebDriver:ExecuteScript", body, key="value")
+
+        if script_timeout is not None:
+            self.timeout.script = original_timeout
+
         return self._from_json(rv)
 
     def execute_async_script(self, script, script_args=(), new_sandbox=True,
@@ -1752,13 +1762,15 @@ class Marionette(object):
 
         :param script: A string containing the JavaScript to execute.
         :param script_args: An interable of arguments to pass to the script.
+        :param new_sandbox: If False, preserve global variables from
+            the last execute_*script call. This is True by default,
+            in which case no globals are preserved.
         :param sandbox: A tag referring to the sandbox you wish to use; if
             you specify a new tag, a new sandbox will be created.  If you
             use the special tag `system`, the sandbox will be created
             using the system principal which has elevated privileges.
-        :param new_sandbox: If False, preserve global variables from
-            the last execute_*script call. This is True by default,
-            in which case no globals are preserved.
+        :param script_timeout: Timeout in milliseconds, overriding
+            the session's default script timeout.
 
         Usage example:
 
@@ -1774,6 +1786,11 @@ class Marionette(object):
             ''')
             assert result == 1
         """
+        original_timeout = None
+        if script_timeout is not None:
+            original_timeout = self.timeout.script
+            self.timeout.script = script_timeout / 1000
+
         args = self._to_json(script_args)
         stack = traceback.extract_stack()
         frame = stack[-2:-1][0]  # grab the second-to-last frame
@@ -1785,8 +1802,11 @@ class Marionette(object):
                 "scriptTimeout": script_timeout,
                 "line": int(frame[1]),
                 "filename": filename}
-
         rv = self._send_message("WebDriver:ExecuteAsyncScript", body, key="value")
+
+        if script_timeout is not None:
+            self.timeout.script = original_timeout
+
         return self._from_json(rv)
 
     def find_element(self, method, target, id=None):

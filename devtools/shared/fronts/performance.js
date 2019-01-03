@@ -15,8 +15,7 @@ loader.lazyRequireGetter(this, "getSystemInfo",
 
 class PerformanceFront extends FrontClassWithSpec(performanceSpec) {
   constructor(client, form) {
-    super(client, form);
-    this.actorID = form.performanceActor;
+    super(client, { actor: form.performanceActor });
     this._queuedRecordings = [];
     this.manage(this);
     this._onRecordingStartedEvent = this._onRecordingStartedEvent.bind(this);
@@ -29,10 +28,6 @@ class PerformanceFront extends FrontClassWithSpec(performanceSpec) {
 
   async initialize() {
     await this.connect();
-  }
-
-  destroy() {
-    super.destroy();
   }
 
   /**

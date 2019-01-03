@@ -1235,10 +1235,10 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     return res ? res : {};
   },
 
-  onSources: async function(request) {
-    await Promise.all(this.dbg.findSources().map(source => {
+  onSources: function(request) {
+    for (const source of this.dbg.findSources()) {
       this.sources.createSourceActor(source);
-    }));
+    }
 
     // No need to flush the new source packets here, as we are sending the
     // list of sources out immediately and we don't need to invoke the
@@ -1871,19 +1871,25 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
    * @param {SourceActor} source
    */
   onNewSourceEvent: function(source) {
-    const type = "newSource";
-    this.conn.send({
-      from: this._parent.actorID,
-      type,
-      source: source.form(),
-    });
+    // Bug 1516197: New sources are likely detected due to either user
+    // interaction on the page, or devtools requests sent to the server.
+    // We use executeSoon because we don't want to block those operations
+    // by sending packets in the middle of them.
+    DevToolsUtils.executeSoon(() => {
+      const type = "newSource";
+      this.conn.send({
+        from: this._parent.actorID,
+        type,
+        source: source.form(),
+      });
 
-    // For compatibility and debugger still using `newSource` on the thread client,
-    // still emit this event here. Clean up in bug 1247084
-    this.conn.send({
-      from: this.actorID,
-      type,
-      source: source.form(),
+      // For compatibility and debugger still using `newSource` on the thread client,
+      // still emit this event here. Clean up in bug 1247084
+      this.conn.send({
+        from: this.actorID,
+        type,
+        source: source.form(),
+      });
     });
   },
 
