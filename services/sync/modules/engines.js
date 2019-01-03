@@ -785,6 +785,8 @@ SyncEngine.prototype = {
   // Which sortindex to use when retrieving records for this engine.
   _defaultSort: undefined,
 
+  _hasSyncedThisSession: false,
+
   _metadataPostProcessor(json) {
     if (Array.isArray(json)) {
       // Pre-`JSONFile` storage stored an array, but `JSONFile` defaults to
@@ -975,6 +977,14 @@ SyncEngine.prototype = {
   async resetLastSync() {
     this._log.debug("Resetting " + this.name + " last sync time");
     await this.setLastSync(0);
+  },
+
+  get hasSyncedThisSession() {
+    return this._hasSyncedThisSession;
+  },
+
+  set hasSyncedThisSession(hasSynced) {
+    this._hasSyncedThisSession = hasSynced;
   },
 
   get toFetch() {
@@ -1808,6 +1818,7 @@ SyncEngine.prototype = {
         }
       }
     }
+    this.hasSyncedThisSession = true;
     await this._tracker.asyncObserver.promiseObserversComplete();
   },
 
@@ -1985,6 +1996,7 @@ SyncEngine.prototype = {
 
   async _resetClient() {
     await this.resetLastSync();
+    this.hasSyncedThisSession = false;
     this.previousFailed = new SerializableSet();
     this.toFetch = new SerializableSet();
     this._needWeakUpload.clear();
