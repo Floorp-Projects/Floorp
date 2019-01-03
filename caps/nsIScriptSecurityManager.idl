@@ -224,6 +224,10 @@ interface nsIScriptSecurityManager : nsISupports
      * Check whether a given principal is a system principal.  This allows us
      * to avoid handing back the system principal to script while allowing
      * script to check whether a given principal is system.
+     *
+     * @deprecated use nsIPrincipal's accessors for this boolean.
+     * https://bugzilla.mozilla.org/show_bug.cgi?id=1517483 tracks removing
+     * this.
      */
     boolean isSystemPrincipal(in nsIPrincipal aPrincipal);
 %{C++

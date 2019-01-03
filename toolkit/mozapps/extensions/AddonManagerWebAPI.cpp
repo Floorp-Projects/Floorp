@@ -6,6 +6,7 @@
 
 #include "AddonManagerWebAPI.h"
 
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/dom/Navigator.h"
 #include "mozilla/dom/NavigatorBinding.h"
 
@@ -120,7 +121,7 @@ bool AddonManagerWebAPI::IsAPIEnabled(JSContext* aCx, JSObject* aGlobal) {
 
     // Reaching a window with a system principal means we have reached
     // privileged UI of some kind so stop at this point and allow access.
-    if (principal->GetIsSystemPrincipal()) {
+    if (principal->IsSystemPrincipal()) {
       return true;
     }
 

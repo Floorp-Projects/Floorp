@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/AbstractThread.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/dom/Clipboard.h"
 #include "mozilla/dom/ClipboardBinding.h"
 #include "mozilla/dom/Promise.h"
@@ -183,7 +184,7 @@ JSObject* Clipboard::WrapObject(JSContext* aCx,
                                              JSObject* aGlobal) {
   nsIPrincipal* prin = nsContentUtils::SubjectPrincipal(aCx);
   return IsTestingPrefEnabled() || prin->GetIsAddonOrExpandedAddonPrincipal() ||
-         prin->GetIsSystemPrincipal();
+         prin->IsSystemPrincipal();
 }
 
 /* static */ bool Clipboard::IsTestingPrefEnabled() {

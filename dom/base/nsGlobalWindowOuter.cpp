@@ -5522,7 +5522,7 @@ bool nsGlobalWindowOuter::GetPrincipalForPostMessage(
   // "*" indicates no specific origin is required.
   else if (!aTargetOrigin.EqualsASCII("*")) {
     OriginAttributes attrs = aSubjectPrincipal.OriginAttributesRef();
-    if (aSubjectPrincipal.GetIsSystemPrincipal()) {
+    if (aSubjectPrincipal.IsSystemPrincipal()) {
       auto principal = BasePrincipal::Cast(GetPrincipal());
 
       if (attrs != principal->OriginAttributesRef()) {
@@ -5574,13 +5574,13 @@ bool nsGlobalWindowOuter::GetPrincipalForPostMessage(
     // ContentTask.spawn() will be executed under the system principal and the
     // OA of the system principal mismatches with the OA of a private browsing
     // window.
-    MOZ_DIAGNOSTIC_ASSERT(aSubjectPrincipal.GetIsSystemPrincipal() ||
+    MOZ_DIAGNOSTIC_ASSERT(aSubjectPrincipal.IsSystemPrincipal() ||
                           sourceAttrs.EqualsIgnoringFPD(targetAttrs));
 
     // If 'privacy.firstparty.isolate.block_post_message' is true, we will block
     // postMessage across different first party domains.
     if (OriginAttributes::IsBlockPostMessageForFPI() &&
-        !aSubjectPrincipal.GetIsSystemPrincipal() &&
+        !aSubjectPrincipal.IsSystemPrincipal() &&
         sourceAttrs.mFirstPartyDomain != targetAttrs.mFirstPartyDomain) {
       return false;
     }
