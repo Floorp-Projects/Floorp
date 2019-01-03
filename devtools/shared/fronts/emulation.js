@@ -15,10 +15,6 @@ class EmulationFront extends FrontClassWithSpec(emulationSpec) {
     this.actorID = form.emulationActor;
     this.manage(this);
   }
-
-  destroy() {
-    super.destroy();
-  }
 }
 
 exports.EmulationFront = EmulationFront;

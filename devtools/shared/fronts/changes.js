@@ -15,10 +15,6 @@ class ChangesFront extends FrontClassWithSpec(changesSpec) {
     super(client, {actor: changesActor});
     this.manage(this);
   }
-
-  destroy() {
-    super.destroy();
-  }
 }
 
 exports.ChangesFront = ChangesFront;

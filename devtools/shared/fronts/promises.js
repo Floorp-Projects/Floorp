@@ -18,10 +18,6 @@ class PromisesFront extends FrontClassWithSpec(promisesSpec) {
     this.actorID = form.promisesActor;
     this.manage(this);
   }
-
-  destroy() {
-    super.destroy();
-  }
 }
 
 exports.PromisesFront = PromisesFront;
