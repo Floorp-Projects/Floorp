@@ -22,7 +22,7 @@ const uint32_t kCacheRefreshInterval = 500;
 // DocAccessibleWrap
 ////////////////////////////////////////////////////////////////////////////////
 
-DocAccessibleWrap::DocAccessibleWrap(nsIDocument* aDocument,
+DocAccessibleWrap::DocAccessibleWrap(Document* aDocument,
                                      nsIPresShell* aPresShell)
     : DocAccessible(aDocument, aPresShell) {
   nsCOMPtr<nsIDocShellTreeItem> treeItem(aDocument->GetDocShell());

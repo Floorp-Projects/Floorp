@@ -10,6 +10,35 @@ let gPrefArray;
 let gPrefRowInEdit;
 let gPrefInEdit;
 
+class PrefRow {
+  constructor(name) {
+    this.name = name;
+    this.refreshValue();
+  }
+
+  refreshValue() {
+    this.hasUserValue = Services.prefs.prefHasUserValue(this.name);
+    this.hasDefaultValue = this.hasUserValue ? prefHasDefaultValue(this.name)
+                                             : true;
+    this.isLocked = Services.prefs.prefIsLocked(this.name);
+
+    try {
+      // This can throw for locked preferences without a default value.
+      this.value = Preferences.get(this.name);
+      // We don't know which preferences should be read using getComplexValue,
+      // so we use a heuristic to determine if this is a localized preference.
+      if (!this.hasUserValue &&
+          /^chrome:\/\/.+\/locale\/.+\.properties/.test(this.value)) {
+        // This can throw if there is no value in the localized files.
+        this.value = Services.prefs.getComplexValue(this.name,
+          Ci.nsIPrefLocalizedString).data;
+      }
+    } catch (ex) {
+      this.value = "";
+    }
+  }
+}
+
 function getPrefName(prefRow) {
   return prefRow.getAttribute("aria-label");
 }
@@ -38,28 +67,7 @@ function loadPrefs() {
   prefs.id = "prefs";
   document.body.appendChild(prefs);
 
-  gPrefArray = Services.prefs.getChildList("").map(function(name) {
-    let hasUserValue = Services.prefs.prefHasUserValue(name);
-    let pref = {
-      name,
-      hasUserValue,
-      hasDefaultValue: hasUserValue ? prefHasDefaultValue(name) : true,
-      isLocked: Services.prefs.prefIsLocked(name),
-    };
-    // Try in case it's a localized string or locked user added pref
-    // If an execption is thrown the pref value is set to the empty string.
-    try {
-      // Throws an exception in case locked user added pref without default value
-      pref.value = Preferences.get(name);
-      // Throws an exception if there is no equivalent value in the localized files for the pref.
-      if (!pref.hasUserValue && /^chrome:\/\/.+\/locale\/.+\.properties/.test(pref.value)) {
-        pref.value = Services.prefs.getComplexValue(name, Ci.nsIPrefLocalizedString).data;
-      }
-    } catch (ex) {
-      pref.value = "";
-    }
-    return pref;
-  });
+  gPrefArray = Services.prefs.getChildList("").map(name => new PrefRow(name));
 
   gPrefArray.sort((a, b) => a.name > b.name);
 
@@ -80,8 +88,7 @@ function loadPrefs() {
     if (button.classList.contains("button-reset")) {
       // Reset pref and update gPrefArray.
       Services.prefs.clearUserPref(prefName);
-      pref.value = Preferences.get(prefName);
-      pref.hasUserValue = false;
+      pref.refreshValue();
       // Update UI.
       prefRow.textContent = "";
       prefRow.classList.remove("has-user-value");
@@ -102,8 +109,7 @@ function loadPrefs() {
     } else if (button.classList.contains("button-toggle")) {
       // Toggle the pref and update gPrefArray.
       Services.prefs.setBoolPref(prefName, !pref.value);
-      pref.value = !pref.value;
-      pref.hasUserValue = Services.prefs.prefHasUserValue(pref.name);
+      pref.refreshValue();
       // Update UI.
       prefRow.textContent = "";
       if (pref.hasUserValue) {
@@ -296,8 +302,7 @@ function endEditingPref(row) {
   }
 
   // Update gPrefArray.
-  gPrefInEdit.value = newValue;
-  gPrefInEdit.hasUserValue = Services.prefs.prefHasUserValue(name);
+  gPrefInEdit.refreshValue();
   // Update UI.
   row.textContent = "";
   if (gPrefInEdit.hasUserValue) {
@@ -327,12 +332,7 @@ function prefHasDefaultValue(name) {
 
 function addNewPref(name, value) {
   Preferences.set(name, value);
-  gPrefArray.push({
-    name,
-    value,
-    hasUserValue: true,
-    hasDefaultValue: false,
-  });
+  gPrefArray.push(new PrefRow(name));
   gPrefArray.sort((a, b) => a.name > b.name);
   filterPrefs();
 }

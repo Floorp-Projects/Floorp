@@ -34,7 +34,7 @@
 #include "nsUnicharUtils.h"
 #include "nsIURL.h"
 #include "nsIURIMutator.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIPrincipal.h"
 #include "nsIDocShellTreeItem.h"
@@ -400,7 +400,7 @@ void DragDataProducer::GetNodeString(nsIContent* inNode,
   outNodeString.Truncate();
 
   // use a range to get the text-equivalent of the node
-  nsCOMPtr<nsIDocument> doc = node->OwnerDoc();
+  nsCOMPtr<Document> doc = node->OwnerDoc();
   RefPtr<nsRange> range = doc->CreateRange(IgnoreErrors());
   if (range) {
     range->SelectNode(*node, IgnoreErrors());
@@ -718,7 +718,7 @@ nsresult DragDataProducer::Produce(DataTransfer* aDataTransfer, bool* aCanDrag,
     mInfoString.Truncate();
     mTitleString.Truncate();
 
-    nsCOMPtr<nsIDocument> doc = mWindow->GetDoc();
+    nsCOMPtr<Document> doc = mWindow->GetDoc();
     NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
 
     // if we have selected text, use it in preference to the node

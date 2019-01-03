@@ -214,20 +214,11 @@ class commandsAction(argparse.Action):
             print(c)
 
 class wycheproofAction(argparse.Action):
-    tests = ['aes_gcm_test.json', 'chacha20_poly1305_test.json']
 
     def __call__(self, parser, args, values, option_string=None):
-        self.update_tests()
         generate_test_vectors()
         clangFormat = cfAction(None, None, None)
         clangFormat(None, args, None)
-
-    def update_tests(self):
-        remote = "https://raw.githubusercontent.com/google/wycheproof/master/testvectors/"
-        for test in self.tests:
-            subprocess.check_call(['wget', remote+test, '-O',
-                                   'gtests/common/wycheproof/testvectors/'+test,
-                                   '--no-check-certificate'])
 
 
 def parse_arguments():

@@ -24,7 +24,7 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsIContent.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 #include "nsIProtocolHandler.h"
@@ -367,7 +367,7 @@ Loader::Loader()
 
 Loader::Loader(DocGroup* aDocGroup) : Loader() { mDocGroup = aDocGroup; }
 
-Loader::Loader(nsIDocument* aDocument) : Loader() {
+Loader::Loader(Document* aDocument) : Loader() {
   mDocument = aDocument;
   MOZ_ASSERT(mDocument, "We should get a valid document from the caller!");
 }
@@ -602,7 +602,7 @@ nsresult SheetLoadData::VerifySheetReadyToParse(nsresult aStatus,
     // Multiple sheet load instances might be tied to this request,
     // we annotate each one linked to a valid owning element (node).
     if (aStatus == NS_ERROR_TRACKING_URI) {
-      nsIDocument* doc = mLoader->GetDocument();
+      Document* doc = mLoader->GetDocument();
       if (doc) {
         for (SheetLoadData* data = this; data; data = data->mNext) {
           // mOwningElement may be null but AddBlockTrackingNode can cope
@@ -1057,7 +1057,7 @@ nsresult Loader::CreateSheet(nsIURI* aURI, nsIContent* aLinkingContent,
 }
 
 static Loader::MediaMatched MediaListMatches(const MediaList* aMediaList,
-                                             const nsIDocument* aDocument) {
+                                             const Document* aDocument) {
   if (!aMediaList || !aDocument) {
     return Loader::MediaMatched::Yes;
   }

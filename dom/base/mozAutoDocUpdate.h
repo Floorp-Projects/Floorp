@@ -8,7 +8,7 @@
 #define mozAutoDocUpdate_h_
 
 #include "nsContentUtils.h"  // For AddScriptBlocker() and RemoveScriptBlocker().
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIDocumentObserver.h"
 
 /**
@@ -20,7 +20,7 @@
  */
 class MOZ_STACK_CLASS mozAutoDocUpdate {
  public:
-  mozAutoDocUpdate(nsIDocument* aDocument, bool aNotify)
+  mozAutoDocUpdate(mozilla::dom::Document* aDocument, bool aNotify)
       : mDocument(aNotify ? aDocument : nullptr) {
     if (mDocument) {
       mDocument->BeginUpdate();
@@ -38,7 +38,7 @@ class MOZ_STACK_CLASS mozAutoDocUpdate {
   }
 
  private:
-  nsCOMPtr<nsIDocument> mDocument;
+  RefPtr<mozilla::dom::Document> mDocument;
 };
 
 #define MOZ_AUTO_DOC_UPDATE_PASTE2(tok, line) tok##line

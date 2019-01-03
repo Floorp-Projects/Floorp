@@ -5,11 +5,12 @@
 
 #include "txURIUtils.h"
 #include "nsNetUtil.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsIPrincipal.h"
 #include "mozilla/LoadInfo.h"
 
+using mozilla::dom::Document;
 using mozilla::net::LoadInfo;
 
 /**
@@ -42,8 +43,8 @@ void URIUtils::resolveHref(const nsAString& href, const nsAString& base,
 }  //-- resolveHref
 
 // static
-void URIUtils::ResetWithSource(nsIDocument* aNewDoc, nsINode* aSourceNode) {
-  nsCOMPtr<nsIDocument> sourceDoc = aSourceNode->OwnerDoc();
+void URIUtils::ResetWithSource(Document* aNewDoc, nsINode* aSourceNode) {
+  nsCOMPtr<Document> sourceDoc = aSourceNode->OwnerDoc();
   nsIPrincipal* sourcePrincipal = sourceDoc->NodePrincipal();
 
   // Copy the channel and loadgroup from the source document.

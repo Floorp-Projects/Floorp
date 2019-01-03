@@ -41,6 +41,7 @@
  */
 
 using namespace mozilla;
+using mozilla::dom::Document;
 
 void RetainedDisplayListData::AddModifiedFrame(nsIFrame* aFrame) {
   MOZ_ASSERT(!aFrame->IsFrameModified());
@@ -710,7 +711,7 @@ struct CbData {
 };
 
 static nsIFrame* GetRootFrameForPainting(nsDisplayListBuilder* aBuilder,
-                                         nsIDocument* aDocument) {
+                                         Document* aDocument) {
   // Although this is the actual subdocument, it might not be
   // what painting uses. Walk up to the nsSubDocumentFrame owning
   // us, and then ask that which subdoc it's going to paint.
@@ -750,7 +751,7 @@ static nsIFrame* GetRootFrameForPainting(nsDisplayListBuilder* aBuilder,
   return presShell ? presShell->GetRootFrame() : nullptr;
 }
 
-static bool SubDocEnumCb(nsIDocument* aDocument, void* aData) {
+static bool SubDocEnumCb(Document* aDocument, void* aData) {
   MOZ_ASSERT(aDocument);
   MOZ_ASSERT(aData);
 
@@ -761,7 +762,7 @@ static bool SubDocEnumCb(nsIDocument* aDocument, void* aData) {
     TakeAndAddModifiedAndFramesWithPropsFromRootFrame(
         data->builder, data->modifiedFrames, data->framesWithProps, rootFrame);
 
-    nsIDocument* innerDoc = rootFrame->PresShell()->GetDocument();
+    Document* innerDoc = rootFrame->PresShell()->GetDocument();
     if (innerDoc) {
       innerDoc->EnumerateSubDocuments(SubDocEnumCb, aData);
     }
@@ -778,7 +779,7 @@ static void GetModifiedAndFramesWithProps(
   TakeAndAddModifiedAndFramesWithPropsFromRootFrame(
       aBuilder, aOutModifiedFrames, aOutFramesWithProps, rootFrame);
 
-  nsIDocument* rootdoc = rootFrame->PresContext()->Document();
+  Document* rootdoc = rootFrame->PresContext()->Document();
   if (rootdoc) {
     CbData data = {aBuilder, aOutModifiedFrames, aOutFramesWithProps};
 

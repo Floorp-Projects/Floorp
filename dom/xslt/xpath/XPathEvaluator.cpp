@@ -14,7 +14,7 @@
 #include "txExprParser.h"
 #include "nsError.h"
 #include "txURIUtils.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsDOMString.h"
 #include "nsNameSpaceManager.h"
 #include "nsContentUtils.h"
@@ -55,7 +55,7 @@ class XPathEvaluatorParseContext : public txIParseContext {
   bool mIsCaseSensitive;
 };
 
-XPathEvaluator::XPathEvaluator(nsIDocument* aDocument)
+XPathEvaluator::XPathEvaluator(Document* aDocument)
     : mDocument(do_GetWeakReference(aDocument)) {}
 
 XPathEvaluator::~XPathEvaluator() {}
@@ -63,7 +63,7 @@ XPathEvaluator::~XPathEvaluator() {}
 XPathExpression* XPathEvaluator::CreateExpression(const nsAString& aExpression,
                                                   XPathNSResolver* aResolver,
                                                   ErrorResult& aRv) {
-  nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocument);
+  nsCOMPtr<Document> doc = do_QueryReferent(mDocument);
   XPathEvaluatorParseContext pContext(aResolver,
                                       !(doc && doc->IsHTMLDocument()));
   return CreateExpression(aExpression, &pContext, doc, aRv);
@@ -72,7 +72,7 @@ XPathExpression* XPathEvaluator::CreateExpression(const nsAString& aExpression,
 XPathExpression* XPathEvaluator::CreateExpression(const nsAString& aExpression,
                                                   nsINode* aResolver,
                                                   ErrorResult& aRv) {
-  nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocument);
+  nsCOMPtr<Document> doc = do_QueryReferent(mDocument);
   XPathEvaluatorParseContext pContext(aResolver,
                                       !(doc && doc->IsHTMLDocument()));
   return CreateExpression(aExpression, &pContext, doc, aRv);
@@ -80,7 +80,7 @@ XPathExpression* XPathEvaluator::CreateExpression(const nsAString& aExpression,
 
 XPathExpression* XPathEvaluator::CreateExpression(const nsAString& aExpression,
                                                   txIParseContext* aContext,
-                                                  nsIDocument* aDocument,
+                                                  Document* aDocument,
                                                   ErrorResult& aRv) {
   if (!mRecycler) {
     mRecycler = new txResultRecycler;

@@ -10,7 +10,7 @@
 #include "nsIPresShell.h"
 #include "nsIObjectFrame.h"
 #include "nsNPAPIPluginInstance.h"
-#include "nsIDocumentInlines.h"
+#include "DocumentInlines.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsNodeInfoManager.h"
 #include "nsContentCreatorFunctions.h"
@@ -262,7 +262,7 @@ PluginDocument::Print() {
 }  // namespace dom
 }  // namespace mozilla
 
-nsresult NS_NewPluginDocument(nsIDocument** aResult) {
+nsresult NS_NewPluginDocument(mozilla::dom::Document** aResult) {
   auto* doc = new mozilla::dom::PluginDocument();
 
   NS_ADDREF(doc);

@@ -18,7 +18,7 @@
 #include "nsUnicharUtils.h"
 #include "nsDOMString.h"
 #include "nsIContentInlines.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsGkAtoms.h"
 #include "nsCOMArray.h"
 #include "nsNameSpaceManager.h"
@@ -115,10 +115,10 @@ Element* Attr::GetElement() const {
   return content ? content->AsElement() : nullptr;
 }
 
-nsresult Attr::SetOwnerDocument(nsIDocument* aDocument) {
+nsresult Attr::SetOwnerDocument(Document* aDocument) {
   NS_ASSERTION(aDocument, "Missing document");
 
-  nsIDocument* doc = OwnerDoc();
+  Document* doc = OwnerDoc();
   NS_ASSERTION(doc != aDocument, "bad call to Attr::SetOwnerDocument");
   doc->DeleteAllPropertiesFor(this);
 

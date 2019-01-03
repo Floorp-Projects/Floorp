@@ -80,21 +80,21 @@ struct DDLoggedTypeTraits;
 }  // namespace mozilla
 
 // Some essential types that live outside of the media stack.
-class nsIDocument;
 class nsPIDOMWindowInner;
 class nsPIDOMWindowOuter;
 
 namespace mozilla {
 
 namespace dom {
+class Document;
 class HTMLAudioElement;
 class HTMLMediaElement;
 class HTMLVideoElement;
 }  // namespace dom
 
-DDLoggedTypeName(nsIDocument);
 DDLoggedTypeName(nsPIDOMWindowInner);
 DDLoggedTypeName(nsPIDOMWindowOuter);
+DDLoggedTypeName(dom::Document);
 DDLoggedTypeName(dom::HTMLMediaElement);
 DDLoggedTypeNameAndBase(dom::HTMLAudioElement, dom::HTMLMediaElement);
 DDLoggedTypeNameAndBase(dom::HTMLVideoElement, dom::HTMLMediaElement);

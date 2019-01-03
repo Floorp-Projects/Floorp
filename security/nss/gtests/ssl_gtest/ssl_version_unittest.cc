@@ -269,4 +269,11 @@ TEST_F(TlsConnectStreamTls13, Tls14ClientHelloWithSupportedVersions) {
   ASSERT_LT(static_cast<uint32_t>(SSL_LIBRARY_VERSION_TLS_1_2), version);
 }
 
+// Offer 1.3 but with ClientHello.legacy_version == SSL 3.0. This
+// causes a protocol version alert.  See RFC 8446 Appendix D.5.
+TEST_F(TlsConnectStreamTls13, Ssl30ClientHelloWithSupportedVersions) {
+  MakeTlsFilter<TlsClientHelloVersionSetter>(client_, SSL_LIBRARY_VERSION_3_0);
+  ConnectExpectAlert(server_, kTlsAlertProtocolVersion);
+}
+
 }  // namespace nss_test

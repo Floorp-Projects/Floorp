@@ -99,7 +99,7 @@ static mozilla::LazyLogModule sCSMLog("CSMLog");
   }
   nsCOMPtr<nsISupports> context = loadInfo->ContextForTopLevelLoad();
   nsCOMPtr<nsITabChild> tabChild = do_QueryInterface(context);
-  nsCOMPtr<nsIDocument> doc;
+  nsCOMPtr<Document> doc;
   if (tabChild) {
     doc = static_cast<mozilla::dom::TabChild*>(tabChild.get())->GetDocument();
   }
@@ -146,7 +146,7 @@ static mozilla::LazyLogModule sCSMLog("CSMLog");
     dataSpec.Truncate(50);
     dataSpec.AppendLiteral("...");
   }
-  nsCOMPtr<nsIDocument> doc;
+  nsCOMPtr<Document> doc;
   nsINode* node = loadInfo->LoadingNode();
   if (node) {
     doc = node->OwnerDoc();
@@ -209,7 +209,7 @@ static mozilla::LazyLogModule sCSMLog("CSMLog");
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDocument> doc;
+  nsCOMPtr<Document> doc;
   if (nsINode* node = loadInfo->LoadingNode()) {
     doc = node->OwnerDoc();
   }
@@ -266,7 +266,7 @@ static bool IsImageLoadInEditorAppType(nsILoadInfo* aLoadInfo) {
   if (!node) {
     return false;
   }
-  nsIDocument* doc = node->OwnerDoc();
+  Document* doc = node->OwnerDoc();
   if (!doc) {
     return false;
   }

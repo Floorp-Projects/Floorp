@@ -146,7 +146,7 @@ class HTMLMediaElement : public nsGenericHTMLElement,
                               nsIPrincipal* aMaybeScriptedPrincipal,
                               nsAttrValue& aResult) override;
 
-  virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+  virtual nsresult BindToTree(Document* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent) override;
   virtual void UnbindFromTree(bool aDeep = true,
                               bool aNullParent = true) override;
@@ -689,7 +689,7 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   };
   void MarkAsContentSource(CallerAPI aAPI);
 
-  nsIDocument* GetDocument() const override;
+  Document* GetDocument() const override;
 
   void ConstructMediaTracks(const MediaInfo* aInfo) override;
 
@@ -1357,7 +1357,7 @@ class HTMLMediaElement : public nsGenericHTMLElement,
 
   // Points to the document whose load we're blocking. This is the document
   // we're bound to when loading starts.
-  nsCOMPtr<nsIDocument> mLoadBlockedDoc;
+  nsCOMPtr<Document> mLoadBlockedDoc;
 
   // Contains names of events that have been raised while in the bfcache.
   // These events get re-dispatched when the bfcache is exited.

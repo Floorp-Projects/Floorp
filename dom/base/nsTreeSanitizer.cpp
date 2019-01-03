@@ -24,7 +24,7 @@
 #include "nsComponentManagerUtils.h"
 #include "nsContentUtils.h"
 #include "nsIParserUtils.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsQueryObject.h"
 
 using namespace mozilla;
@@ -1068,7 +1068,7 @@ bool nsTreeSanitizer::SanitizeStyleDeclaration(DeclarationBlock* aDeclaration) {
 
 bool nsTreeSanitizer::SanitizeStyleSheet(const nsAString& aOriginal,
                                          nsAString& aSanitized,
-                                         nsIDocument* aDocument,
+                                         Document* aDocument,
                                          nsIURI* aBaseURI) {
   nsresult rv = NS_OK;
   aSanitized.Truncate();
@@ -1167,7 +1167,7 @@ void nsTreeSanitizer::SanitizeAttributes(mozilla::dom::Element* aElement,
       if (aAllowed.mStyle && nsGkAtoms::style == attrLocal) {
         nsAutoString value;
         aElement->GetAttr(attrNs, attrLocal, value);
-        nsIDocument* document = aElement->OwnerDoc();
+        Document* document = aElement->OwnerDoc();
         RefPtr<URLExtraData> urlExtra(aElement->GetURLDataForStyleAttr());
         RefPtr<DeclarationBlock> decl = DeclarationBlock::FromCssText(
             value, urlExtra, document->GetCompatibilityMode(),
@@ -1334,7 +1334,7 @@ void nsTreeSanitizer::Sanitize(DocumentFragment* aFragment) {
   SanitizeChildren(aFragment);
 }
 
-void nsTreeSanitizer::Sanitize(nsIDocument* aDocument) {
+void nsTreeSanitizer::Sanitize(Document* aDocument) {
   // If you want to relax these preconditions, be sure to check the code in
   // here that notifies / does not notify or that fires mutation events if
   // in tree.
@@ -1474,7 +1474,7 @@ void nsTreeSanitizer::RemoveAllAttributes(Element* aElement) {
   }
 }
 
-void nsTreeSanitizer::LogMessage(const char* aMessage, nsIDocument* aDoc,
+void nsTreeSanitizer::LogMessage(const char* aMessage, Document* aDoc,
                                  Element* aElement, nsAtom* aAttr) {
   if (mLogRemovals) {
     nsAutoString msg;

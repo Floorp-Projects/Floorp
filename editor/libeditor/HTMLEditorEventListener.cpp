@@ -180,12 +180,12 @@ nsresult HTMLEditorEventListener::ListenToWindowResizeEvent(bool aListen) {
     return aListen ? NS_ERROR_FAILURE : NS_OK;
   }
 
-  nsIDocument* document = mEditorBase->AsHTMLEditor()->GetDocument();
+  Document* document = mEditorBase->AsHTMLEditor()->GetDocument();
   if (NS_WARN_IF(!document)) {
     return NS_ERROR_FAILURE;
   }
 
-  // nsIDocument::GetWindow() may return nullptr when HTMLEditor is destroyed
+  // Document::GetWindow() may return nullptr when HTMLEditor is destroyed
   // while the document is being unloaded.  If we cannot retrieve window as
   // expected, let's ignore it.
   nsPIDOMWindowOuter* window = document->GetWindow();

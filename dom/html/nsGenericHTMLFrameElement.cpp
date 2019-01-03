@@ -69,14 +69,14 @@ nsGenericHTMLFrameElement::~nsGenericHTMLFrameElement() {
   }
 }
 
-nsIDocument* nsGenericHTMLFrameElement::GetContentDocument(
+Document* nsGenericHTMLFrameElement::GetContentDocument(
     nsIPrincipal& aSubjectPrincipal) {
   RefPtr<BrowsingContext> bc = GetContentWindowInternal();
   if (!bc) {
     return nullptr;
   }
 
-  nsIDocument* doc = bc->GetDOMWindow()->GetDoc();
+  Document* doc = bc->GetDOMWindow()->GetDoc();
   if (!doc) {
     return nullptr;
   }
@@ -203,7 +203,7 @@ void nsGenericHTMLFrameElement::LoadSrc() {
   mFrameLoader->LoadFrame(origSrc);
 }
 
-nsresult nsGenericHTMLFrameElement::BindToTree(nsIDocument* aDocument,
+nsresult nsGenericHTMLFrameElement::BindToTree(Document* aDocument,
                                                nsIContent* aParent,
                                                nsIContent* aBindingParent) {
   nsresult rv =
@@ -369,7 +369,7 @@ nsresult nsGenericHTMLFrameElement::CopyInnerTo(Element* aDest) {
   nsresult rv = nsGenericHTMLElement::CopyInnerTo(aDest);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsIDocument* doc = aDest->OwnerDoc();
+  Document* doc = aDest->OwnerDoc();
   if (doc->IsStaticDocument() && mFrameLoader) {
     nsGenericHTMLFrameElement* dest =
         static_cast<nsGenericHTMLFrameElement*>(aDest);

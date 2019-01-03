@@ -27,7 +27,6 @@
 #include "nsAttrValue.h"
 
 class nsIURI;
-class nsIDocument;
 class nsPresContext;
 class nsIContent;
 class imgRequestProxy;
@@ -35,6 +34,7 @@ class imgRequestProxy;
 namespace mozilla {
 class AsyncEventDispatcher;
 namespace dom {
+class Document;
 class Element;
 }  // namespace dom
 }  // namespace mozilla
@@ -144,7 +144,7 @@ class nsImageLoadingContent : public nsIImageLoadingContent {
    */
   nsresult LoadImage(nsIURI* aNewURI, bool aForce, bool aNotify,
                      ImageLoadType aImageLoadType, bool aLoadStart = true,
-                     nsIDocument* aDocument = nullptr,
+                     mozilla::dom::Document* aDocument = nullptr,
                      nsLoadFlags aLoadFlags = nsIRequest::LOAD_NORMAL,
                      nsIPrincipal* aTriggeringPrincipal = nullptr);
 
@@ -162,8 +162,8 @@ class nsImageLoadingContent : public nsIImageLoadingContent {
    *
    * @return the document we belong to
    */
-  nsIDocument* GetOurOwnerDoc();
-  nsIDocument* GetOurCurrentDoc();
+  mozilla::dom::Document* GetOurOwnerDoc();
+  mozilla::dom::Document* GetOurCurrentDoc();
 
   /**
    * Helper function to get the frame associated with this content. Not named
@@ -211,7 +211,7 @@ class nsImageLoadingContent : public nsIImageLoadingContent {
   virtual mozilla::net::ReferrerPolicy GetImageReferrerPolicy();
 
   // Subclasses are *required* to call BindToTree/UnbindFromTree.
-  void BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+  void BindToTree(mozilla::dom::Document* aDocument, nsIContent* aParent,
                   nsIContent* aBindingParent);
   void UnbindFromTree(bool aDeep, bool aNullParent);
 
@@ -325,8 +325,8 @@ class nsImageLoadingContent : public nsIImageLoadingContent {
    * @param aDocument the document we belong to
    * @return the URI we want to be loading
    */
-  nsresult StringToURI(const nsAString& aSpec, nsIDocument* aDocument,
-                       nsIURI** aURI);
+  nsresult StringToURI(const nsAString& aSpec,
+                       mozilla::dom::Document* aDocument, nsIURI** aURI);
 
   void CreateStaticImageClone(nsImageLoadingContent* aDest) const;
 

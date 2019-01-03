@@ -44,7 +44,7 @@ class EvalContextImpl : public txIEvalContext {
 
 XPathExpression::XPathExpression(nsAutoPtr<Expr>&& aExpression,
                                  txResultRecycler* aRecycler,
-                                 nsIDocument* aDocument)
+                                 Document* aDocument)
     : mExpression(std::move(aExpression)),
       mRecycler(aRecycler),
       mDocument(do_GetWeakReference(aDocument)),
@@ -89,7 +89,7 @@ already_AddRefed<XPathResult> XPathExpression::EvaluateWithContext(
   }
 
   if (mCheckDocument) {
-    nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocument);
+    nsCOMPtr<Document> doc = do_QueryReferent(mDocument);
     if (doc != aContextNode.OwnerDoc()) {
       aRv.Throw(NS_ERROR_DOM_WRONG_DOCUMENT_ERR);
       return nullptr;

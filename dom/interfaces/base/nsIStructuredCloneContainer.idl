@@ -8,7 +8,6 @@
 #include "nsISupports.idl"
 
 interface nsIVariant;
-interface nsIDocument;
 
 %{C++
 #include "js/TypeDecls.h"

@@ -30,7 +30,7 @@
 #include "nsContentUtils.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/HTMLSelectElement.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIScrollableFrame.h"
 #include "mozilla/ServoStyleSet.h"
 #include "nsNodeInfoManager.h"
@@ -1462,7 +1462,7 @@ void nsComboboxControlFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   }
 
   // draw a focus indicator only when focus rings should be drawn
-  nsIDocument* doc = mContent->GetComposedDoc();
+  Document* doc = mContent->GetComposedDoc();
   if (doc) {
     nsPIDOMWindowOuter* window = doc->GetWindow();
     if (window && window->ShouldShowFocusRing()) {
@@ -1575,7 +1575,7 @@ nsComboboxControlFrame::RestoreState(PresState* aState) {
 // position for the same Element
 NS_IMETHODIMP
 nsComboboxControlFrame::GenerateStateKey(nsIContent* aContent,
-                                         nsIDocument* aDocument,
+                                         Document* aDocument,
                                          nsACString& aKey) {
   nsresult rv = nsContentUtils::GenerateStateKey(aContent, aDocument, aKey);
   if (NS_FAILED(rv) || aKey.IsEmpty()) {

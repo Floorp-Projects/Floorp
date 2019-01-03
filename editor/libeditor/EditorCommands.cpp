@@ -17,7 +17,7 @@
 #include "nsError.h"
 #include "nsIClipboard.h"
 #include "nsID.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIEditor.h"
 #include "nsISelectionController.h"
 #include "nsITransferable.h"
@@ -904,7 +904,7 @@ SelectionMoveCommands::DoCommand(const char* aCommandName,
 
   TextEditor* textEditor = editor->AsTextEditor();
   MOZ_ASSERT(textEditor);
-  nsCOMPtr<nsIDocument> doc = textEditor->GetDocument();
+  RefPtr<Document> doc = textEditor->GetDocument();
   if (doc) {
     // Most of the commands below (possibly all of them) need layout to
     // be up to date.

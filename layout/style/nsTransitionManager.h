@@ -34,7 +34,7 @@ struct StyleTransition;
 namespace mozilla {
 
 struct ElementPropertyTransition : public dom::KeyframeEffect {
-  ElementPropertyTransition(nsIDocument* aDocument,
+  ElementPropertyTransition(dom::Document* aDocument,
                             Maybe<OwningAnimationTarget>& aTarget,
                             TimingParams&& aTiming,
                             AnimationValue aStartForReversingTest,

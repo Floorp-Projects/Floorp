@@ -17,7 +17,7 @@
 #include "nsDeviceContext.h"
 #include "nsIBaseWindow.h"
 #include "nsIDocShell.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIWidget.h"
 #include "nsContentUtils.h"
 #include "mozilla/StyleSheet.h"
@@ -42,7 +42,7 @@ const OperatingSystemVersionInfo kOsVersionStrings[] = {
 #endif
 
 // A helper for four features below
-static nsSize GetSize(nsIDocument* aDocument) {
+static nsSize GetSize(Document* aDocument) {
   nsPresContext* pc = aDocument->GetPresContext();
 
   // Per spec, return a 0x0 viewport if we're not being rendered. See:
@@ -64,7 +64,7 @@ static nsSize GetSize(nsIDocument* aDocument) {
   return pc->GetVisibleArea().Size();
 }
 
-static bool IsDeviceSizePageSize(nsIDocument* aDocument) {
+static bool IsDeviceSizePageSize(Document* aDocument) {
   nsIDocShell* docShell = aDocument->GetDocShell();
   if (!docShell) {
     return false;
@@ -73,7 +73,7 @@ static bool IsDeviceSizePageSize(nsIDocument* aDocument) {
 }
 
 // A helper for three features below.
-static nsSize GetDeviceSize(nsIDocument* aDocument) {
+static nsSize GetDeviceSize(Document* aDocument) {
   if (nsContentUtils::ShouldResistFingerprinting(aDocument) ||
       IsDeviceSizePageSize(aDocument)) {
     return GetSize(aDocument);
@@ -99,11 +99,11 @@ static nsSize GetDeviceSize(nsIDocument* aDocument) {
   return size;
 }
 
-bool Gecko_MediaFeatures_IsResourceDocument(nsIDocument* aDocument) {
+bool Gecko_MediaFeatures_IsResourceDocument(Document* aDocument) {
   return aDocument->IsResourceDoc();
 }
 
-static nsDeviceContext* GetDeviceContextFor(nsIDocument* aDocument) {
+static nsDeviceContext* GetDeviceContextFor(Document* aDocument) {
   nsPresContext* pc = aDocument->GetPresContext();
   if (!pc) {
     return nullptr;
@@ -115,14 +115,14 @@ static nsDeviceContext* GetDeviceContextFor(nsIDocument* aDocument) {
   return pc->DeviceContext();
 }
 
-void Gecko_MediaFeatures_GetDeviceSize(nsIDocument* aDocument, nscoord* aWidth,
+void Gecko_MediaFeatures_GetDeviceSize(Document* aDocument, nscoord* aWidth,
                                        nscoord* aHeight) {
   nsSize size = GetDeviceSize(aDocument);
   *aWidth = size.width;
   *aHeight = size.height;
 }
 
-uint32_t Gecko_MediaFeatures_GetColorDepth(nsIDocument* aDocument) {
+uint32_t Gecko_MediaFeatures_GetColorDepth(Document* aDocument) {
   // Use depth of 24 when resisting fingerprinting, or when we're not being
   // rendered.
   uint32_t depth = 24;
@@ -140,7 +140,7 @@ uint32_t Gecko_MediaFeatures_GetColorDepth(nsIDocument* aDocument) {
   return depth / 3;
 }
 
-float Gecko_MediaFeatures_GetResolution(nsIDocument* aDocument) {
+float Gecko_MediaFeatures_GetResolution(Document* aDocument) {
   // We're returning resolution in terms of device pixels per css pixel, since
   // that is the preferred unit for media queries of resolution. This avoids
   // introducing precision error from conversion to and from less-used
@@ -162,16 +162,16 @@ float Gecko_MediaFeatures_GetResolution(nsIDocument* aDocument) {
          pc->DeviceContext()->AppUnitsPerDevPixel();
 }
 
-static nsIDocument* TopDocument(nsIDocument* aDocument) {
-  nsIDocument* current = aDocument;
-  while (nsIDocument* parent = current->GetParentDocument()) {
+static Document* TopDocument(Document* aDocument) {
+  Document* current = aDocument;
+  while (Document* parent = current->GetParentDocument()) {
     current = parent;
   }
   return current;
 }
 
-StyleDisplayMode Gecko_MediaFeatures_GetDisplayMode(nsIDocument* aDocument) {
-  nsIDocument* rootDocument = TopDocument(aDocument);
+StyleDisplayMode Gecko_MediaFeatures_GetDisplayMode(Document* aDocument) {
+  Document* rootDocument = TopDocument(aDocument);
 
   nsCOMPtr<nsISupports> container = rootDocument->GetContainer();
   if (nsCOMPtr<nsIBaseWindow> baseWindow = do_QueryInterface(container)) {
@@ -199,8 +199,7 @@ StyleDisplayMode Gecko_MediaFeatures_GetDisplayMode(nsIDocument* aDocument) {
   return static_cast<StyleDisplayMode>(docShell->GetDisplayMode());
 }
 
-bool Gecko_MediaFeatures_HasSystemMetric(nsIDocument* aDocument,
-                                         nsAtom* aMetric,
+bool Gecko_MediaFeatures_HasSystemMetric(Document* aDocument, nsAtom* aMetric,
                                          bool aIsAccessibleFromContent) {
   if (aIsAccessibleFromContent &&
       nsContentUtils::ShouldResistFingerprinting(aDocument)) {
@@ -211,7 +210,7 @@ bool Gecko_MediaFeatures_HasSystemMetric(nsIDocument* aDocument,
   return sSystemMetrics->IndexOf(aMetric) != sSystemMetrics->NoIndex;
 }
 
-nsAtom* Gecko_MediaFeatures_GetOperatingSystemVersion(nsIDocument* aDocument) {
+nsAtom* Gecko_MediaFeatures_GetOperatingSystemVersion(Document* aDocument) {
   if (nsContentUtils::ShouldResistFingerprinting(aDocument)) {
     return nullptr;
   }
@@ -232,14 +231,14 @@ nsAtom* Gecko_MediaFeatures_GetOperatingSystemVersion(nsIDocument* aDocument) {
   return nullptr;
 }
 
-bool Gecko_MediaFeatures_PrefersReducedMotion(nsIDocument* aDocument) {
+bool Gecko_MediaFeatures_PrefersReducedMotion(Document* aDocument) {
   if (nsContentUtils::ShouldResistFingerprinting(aDocument)) {
     return false;
   }
   return LookAndFeel::GetInt(LookAndFeel::eIntID_PrefersReducedMotion, 0) == 1;
 }
 
-static PointerCapabilities GetPointerCapabilities(nsIDocument* aDocument,
+static PointerCapabilities GetPointerCapabilities(Document* aDocument,
                                                   LookAndFeel::IntID aID) {
   MOZ_ASSERT(aID == LookAndFeel::eIntID_PrimaryPointerCapabilities ||
              aID == LookAndFeel::eIntID_AllPointerCapabilities);
@@ -272,13 +271,13 @@ static PointerCapabilities GetPointerCapabilities(nsIDocument* aDocument,
 }
 
 PointerCapabilities Gecko_MediaFeatures_PrimaryPointerCapabilities(
-    nsIDocument* aDocument) {
+    Document* aDocument) {
   return GetPointerCapabilities(aDocument,
                                 LookAndFeel::eIntID_PrimaryPointerCapabilities);
 }
 
 PointerCapabilities Gecko_MediaFeatures_AllPointerCapabilities(
-    nsIDocument* aDocument) {
+    Document* aDocument) {
   return GetPointerCapabilities(aDocument,
                                 LookAndFeel::eIntID_AllPointerCapabilities);
 }

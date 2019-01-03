@@ -79,7 +79,7 @@ already_AddRefed<InternalRequest> Request::GetInternalRequest() {
 }
 
 namespace {
-already_AddRefed<nsIURI> ParseURLFromDocument(nsIDocument* aDocument,
+already_AddRefed<nsIURI> ParseURLFromDocument(Document* aDocument,
                                               const nsAString& aInput,
                                               ErrorResult& aRv) {
   MOZ_ASSERT(aDocument);
@@ -93,7 +93,7 @@ already_AddRefed<nsIURI> ParseURLFromDocument(nsIDocument* aDocument,
   }
   return resolvedURI.forget();
 }
-void GetRequestURLFromDocument(nsIDocument* aDocument, const nsAString& aInput,
+void GetRequestURLFromDocument(Document* aDocument, const nsAString& aInput,
                                nsAString& aRequestURL, nsACString& aURLfragment,
                                ErrorResult& aRv) {
   nsCOMPtr<nsIURI> resolvedURI = ParseURLFromDocument(aDocument, aInput, aRv);
@@ -286,7 +286,7 @@ class ReferrerSameOriginChecker final : public WorkerMainThreadRunnable {
     nsCString fragment;
     if (NS_IsMainThread()) {
       nsCOMPtr<nsPIDOMWindowInner> inner(do_QueryInterface(global));
-      nsIDocument* doc = inner ? inner->GetExtantDoc() : nullptr;
+      Document* doc = inner ? inner->GetExtantDoc() : nullptr;
       if (doc) {
         GetRequestURLFromDocument(doc, input, requestURL, fragment, aRv);
       } else {
@@ -338,7 +338,7 @@ class ReferrerSameOriginChecker final : public WorkerMainThreadRunnable {
       nsAutoString referrerURL;
       if (NS_IsMainThread()) {
         nsCOMPtr<nsPIDOMWindowInner> inner(do_QueryInterface(global));
-        nsIDocument* doc = inner ? inner->GetExtantDoc() : nullptr;
+        Document* doc = inner ? inner->GetExtantDoc() : nullptr;
         nsCOMPtr<nsIURI> uri;
         if (doc) {
           uri = ParseURLFromDocument(doc, referrer, aRv);
@@ -401,13 +401,23 @@ class ReferrerSameOriginChecker final : public WorkerMainThreadRunnable {
     signal = aInit.mSignal.Value();
   }
 
+  UniquePtr<mozilla::ipc::PrincipalInfo> principalInfo;
+
   if (NS_IsMainThread()) {
     nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(global);
     if (window) {
-      nsCOMPtr<nsIDocument> doc;
+      nsCOMPtr<Document> doc;
       doc = window->GetExtantDoc();
       if (doc) {
         request->SetEnvironmentReferrerPolicy(doc->GetReferrerPolicy());
+
+        principalInfo.reset(new mozilla::ipc::PrincipalInfo());
+        nsresult rv =
+            PrincipalToPrincipalInfo(doc->NodePrincipal(), principalInfo.get());
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          aRv.ThrowTypeError<MSG_FETCH_BODY_CONSUMED_ERROR>();
+          return nullptr;
+        }
       }
     }
   } else {
@@ -415,8 +425,12 @@ class ReferrerSameOriginChecker final : public WorkerMainThreadRunnable {
     if (worker) {
       worker->AssertIsOnWorkerThread();
       request->SetEnvironmentReferrerPolicy(worker->GetReferrerPolicy());
+      principalInfo =
+          MakeUnique<mozilla::ipc::PrincipalInfo>(worker->GetPrincipalInfo());
     }
   }
+
+  request->SetPrincipalInfo(std::move(principalInfo));
 
   if (mode != RequestMode::EndGuard_) {
     request->ClearCreatedByFetchEvent();

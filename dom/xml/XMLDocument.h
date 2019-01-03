@@ -9,7 +9,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/BindingDeclarations.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIScriptContext.h"
 
 class nsIURI;
@@ -18,11 +18,11 @@ class nsIChannel;
 namespace mozilla {
 namespace dom {
 
-class XMLDocument : public nsIDocument {
+class XMLDocument : public Document {
  public:
   explicit XMLDocument(const char* aContentType = "application/xml");
 
-  NS_INLINE_DECL_REFCOUNTING_INHERITED(XMLDocument, nsIDocument)
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(XMLDocument, Document)
 
   virtual void Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup) override;
   virtual void ResetToURI(nsIURI* aURI, nsILoadGroup* aLoadGroup,
@@ -49,17 +49,16 @@ class XMLDocument : public nsIDocument {
 
   virtual void DocAddSizeOfExcludingThis(
       nsWindowSizes& aWindowSizes) const override;
-  // DocAddSizeOfIncludingThis is inherited from nsIDocument.
+  // DocAddSizeOfIncludingThis is inherited from Document.
 
   // WebIDL API
   bool Load(const nsAString& aUrl, CallerType aCallerType, ErrorResult& aRv);
   bool Async() const { return mAsync; }
   void SetAsync(bool aAsync) { mAsync = aAsync; }
 
-  // .location is [Unforgeable], so we have to make it clear that the
-  // nsIDocument version applies to us (it's shadowed by the XPCOM thing on
-  // nsIDocument).
-  using nsIDocument::GetLocation;
+  // .location is [Unforgeable], so we have to make it clear that the Document
+  // version applies to us (it's shadowed by the XPCOM thing on Document).
+  using Document::GetLocation;
 
  protected:
   virtual ~XMLDocument();
@@ -67,7 +66,7 @@ class XMLDocument : public nsIDocument {
   virtual JSObject* WrapNode(JSContext* aCx,
                              JS::Handle<JSObject*> aGivenProto) override;
 
-  friend nsresult(::NS_NewXMLDocument)(nsIDocument**, bool, bool);
+  friend nsresult(::NS_NewXMLDocument)(Document**, bool, bool);
 
   // mChannelIsPending indicates whether we're currently asynchronously loading
   // data from mChannel (via document.load() or normal load).  It's set to true

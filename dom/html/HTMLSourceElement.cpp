@@ -48,7 +48,7 @@ bool HTMLSourceElement::MatchesCurrentMedia() {
 }
 
 /* static */ bool HTMLSourceElement::WouldMatchMediaForDocument(
-    const nsAString& aMedia, const nsIDocument* aDocument) {
+    const nsAString& aMedia, const Document* aDocument) {
   if (aMedia.IsEmpty()) {
     return true;
   }
@@ -126,8 +126,7 @@ nsresult HTMLSourceElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
       aNameSpaceID, aName, aValue, aOldValue, aMaybeScriptedPrincipal, aNotify);
 }
 
-nsresult HTMLSourceElement::BindToTree(nsIDocument* aDocument,
-                                       nsIContent* aParent,
+nsresult HTMLSourceElement::BindToTree(Document* aDocument, nsIContent* aParent,
                                        nsIContent* aBindingParent) {
   nsresult rv =
       nsGenericHTMLElement::BindToTree(aDocument, aParent, aBindingParent);

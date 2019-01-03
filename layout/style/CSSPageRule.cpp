@@ -66,8 +66,6 @@ nsresult CSSPageRuleDeclaration::SetCSSDeclaration(
   return NS_OK;
 }
 
-nsIDocument* CSSPageRuleDeclaration::DocToUpdate() { return nullptr; }
-
 nsDOMCSSDeclaration::ParsingEnvironment
 CSSPageRuleDeclaration::GetParsingEnvironment(
     nsIPrincipal* aSubjectPrincipal) const {

@@ -7,6 +7,6 @@
 ## Additional documentation
 
 * [MDN Web Docs](http://developer.mozilla.org/) (also known as *MDN*) has a lot of information about XUL elements, HTML, JS, DOM, Web APIs, Gecko-specific APIs, and more.
-* [DXR](http://dxr.mozilla.org/mozilla-central/source/) is a source code search engine - search for symbols you want to learn about, eg. `nsIDocument`. [Searchfox](http://searchfox.org/mozilla-central/source) is an alternative.
+* [DXR](http://dxr.mozilla.org/mozilla-central/source/) is a source code search engine - search for symbols you want to learn about, eg. `Document`. [Searchfox](http://searchfox.org/mozilla-central/source) is an alternative.
 
 It is a good idea to [add smart keyword searches](https://support.mozilla.org/en-US/kb/how-search-from-address-bar) for DXR and MDN, so you can search faster.

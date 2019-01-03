@@ -19,7 +19,7 @@
 #include "nsNetUtil.h"
 #include "plstr.h"
 #include "nsContentCreatorFunctions.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIXMLContentSink.h"
 #include "nsContentCID.h"
 #include "mozilla/dom/XMLDocument.h"
@@ -720,7 +720,7 @@ class XBLPrototypeSetupCleanup {
 
 nsresult nsXBLPrototypeBinding::Read(nsIObjectInputStream* aStream,
                                      nsXBLDocumentInfo* aDocInfo,
-                                     nsIDocument* aDocument, uint8_t aFlags) {
+                                     Document* aDocument, uint8_t aFlags) {
   mInheritStyle = (aFlags & XBLBinding_Serialize_InheritStyle) ? true : false;
   mChromeOnlyContent =
       (aFlags & XBLBinding_Serialize_ChromeOnlyContent) ? true : false;
@@ -909,7 +909,7 @@ nsresult nsXBLPrototypeBinding::Read(nsIObjectInputStream* aStream,
 // static
 nsresult nsXBLPrototypeBinding::ReadNewBinding(nsIObjectInputStream* aStream,
                                                nsXBLDocumentInfo* aDocInfo,
-                                               nsIDocument* aDocument,
+                                               Document* aDocument,
                                                uint8_t aFlags) {
   // If the Read() succeeds, |binding| will end up being owned by aDocInfo's
   // binding table. Otherwise, we must manually delete it.
@@ -1070,7 +1070,7 @@ nsresult nsXBLPrototypeBinding::Write(nsIObjectOutputStream* aStream) {
 }
 
 nsresult nsXBLPrototypeBinding::ReadContentNode(nsIObjectInputStream* aStream,
-                                                nsIDocument* aDocument,
+                                                Document* aDocument,
                                                 nsNodeInfoManager* aNim,
                                                 nsIContent** aContent) {
   *aContent = nullptr;
@@ -1443,7 +1443,7 @@ nsresult nsXBLPrototypeBinding::ResolveBaseBinding() {
   if (mCheckedBaseProto) return NS_OK;
   mCheckedBaseProto = true;
 
-  nsCOMPtr<nsIDocument> doc = mXBLDocInfoWeak->GetDocument();
+  nsCOMPtr<Document> doc = mXBLDocInfoWeak->GetDocument();
 
   // Check for the presence of 'extends' and 'display' attributes
   nsAutoString display, extends;

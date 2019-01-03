@@ -448,9 +448,9 @@ void gfxUserFontEntry::ContinueLoad() {
     // to touch the generation to trigger another restyle.
     // XXX We may want to return synchronously in parallel traversal in those
     // cases as well if possible, so that we don't have an additional restyle.
-    // That doesn't work currently because nsIDocument::GetDocShell (called
-    // from FontFaceSet::CheckFontLoad) dereferences a weak pointer, which is
-    // not allowed in parallel traversal.
+    // That doesn't work currently because Document::GetDocShell (called from
+    // FontFaceSet::CheckFontLoad) dereferences a weak pointer, which is not
+    // allowed in parallel traversal.
     IncrementGeneration();
   }
 }

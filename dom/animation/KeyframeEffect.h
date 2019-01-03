@@ -33,7 +33,6 @@
 struct JSContext;
 class JSObject;
 class nsIContent;
-class nsIDocument;
 class nsIFrame;
 class nsIPresShell;
 
@@ -106,10 +105,11 @@ struct ElementPropertyTransition;
 namespace dom {
 
 class Animation;
+class Document;
 
 class KeyframeEffect : public AnimationEffect {
  public:
-  KeyframeEffect(nsIDocument* aDocument,
+  KeyframeEffect(Document* aDocument,
                  const Maybe<OwningAnimationTarget>& aTarget,
                  TimingParams&& aTiming, const KeyframeEffectParams& aOptions);
 
@@ -257,7 +257,7 @@ class KeyframeEffect : public AnimationEffect {
     return GetTarget() && HasGeometricProperties();
   }
 
-  nsIDocument* GetRenderedDocument() const;
+  Document* GetRenderedDocument() const;
   nsIPresShell* GetPresShell() const;
 
   // Associates a warning with the animated property on the specified frame

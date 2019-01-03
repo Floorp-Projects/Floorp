@@ -20,11 +20,11 @@ class nsIContent;
 class nsAtom;
 class nsITransformObserver;
 class nsNodeInfoManager;
-class nsIDocument;
 class nsINode;
 
 namespace mozilla {
 namespace dom {
+class Document;
 class DocumentFragment;
 }  // namespace dom
 }  // namespace mozilla
@@ -46,13 +46,13 @@ class txTransformNotifier final : public nsIScriptLoaderObserver,
   void AddPendingStylesheet();
   void OnTransformEnd(nsresult aResult = NS_OK);
   void OnTransformStart();
-  nsresult SetOutputDocument(nsIDocument* aDocument);
+  nsresult SetOutputDocument(mozilla::dom::Document* aDocument);
 
  private:
   ~txTransformNotifier();
   void SignalTransformEnd(nsresult aResult = NS_OK);
 
-  nsCOMPtr<nsIDocument> mDocument;
+  nsCOMPtr<mozilla::dom::Document> mDocument;
   nsCOMPtr<nsITransformObserver> mObserver;
   nsCOMArray<nsIScriptElement> mScriptElements;
   uint32_t mPendingStylesheetCount;
@@ -72,7 +72,7 @@ class txMozillaXMLOutput : public txAOutputXMLEventHandler {
   nsresult closePrevious(bool aFlushText);
 
   nsresult createResultDocument(const nsAString& aName, int32_t aNsID,
-                                nsIDocument* aSourceDocument,
+                                mozilla::dom::Document* aSourceDocument,
                                 bool aLoadedAsData);
 
  private:
@@ -87,7 +87,7 @@ class txMozillaXMLOutput : public txAOutputXMLEventHandler {
   nsresult startElementInternal(nsAtom* aPrefix, nsAtom* aLocalName,
                                 int32_t aNsID);
 
-  nsCOMPtr<nsIDocument> mDocument;
+  RefPtr<mozilla::dom::Document> mDocument;
   nsCOMPtr<nsINode> mCurrentNode;  // This is updated once an element is
                                    // 'closed' (i.e. once we're done
                                    // adding attributes to it).

@@ -148,7 +148,7 @@ bool AddonManagerWebAPI::IsAPIEnabled(JSContext* aCx, JSObject* aGlobal) {
       return true;
     }
 
-    nsIDocument* doc = win->GetDoc();
+    Document* doc = win->GetDoc();
     if (!doc) {
       return false;
     }

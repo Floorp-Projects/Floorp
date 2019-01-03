@@ -11,8 +11,10 @@
 #include "nsIApplicationCacheChannel.h"
 #include "nsIApplicationCacheContainer.h"
 #include "nsIChannel.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/Logging.h"
+
+using mozilla::dom::Document;
 
 //
 // To enable logging (see mozilla/Logging.h for full details):
@@ -90,8 +92,7 @@ OfflineCacheUpdateGlue::Schedule() {
 NS_IMETHODIMP
 OfflineCacheUpdateGlue::Init(nsIURI *aManifestURI, nsIURI *aDocumentURI,
                              nsIPrincipal *aLoadingPrincipal,
-                             nsIDocument *aDocument,
-                             nsIFile *aCustomProfileDir) {
+                             Document *aDocument, nsIFile *aCustomProfileDir) {
   nsresult rv;
 
   nsAutoCString originSuffix;
@@ -123,7 +124,7 @@ OfflineCacheUpdateGlue::Init(nsIURI *aManifestURI, nsIURI *aDocumentURI,
                        aCustomProfileDir);
 }
 
-void OfflineCacheUpdateGlue::SetDocument(nsIDocument *aDocument) {
+void OfflineCacheUpdateGlue::SetDocument(Document *aDocument) {
   // The design is one document for one cache update on the content process.
   NS_ASSERTION(!mDocument,
                "Setting more then a single document on an instance of "

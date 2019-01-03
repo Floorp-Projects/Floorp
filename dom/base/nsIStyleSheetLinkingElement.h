@@ -91,7 +91,8 @@ class nsIStyleSheetLinkingElement : public nsISupports {
     bool mHasAlternateRel;
     bool mIsInline;
 
-    SheetInfo(const nsIDocument&, nsIContent*, already_AddRefed<nsIURI> aURI,
+    SheetInfo(const mozilla::dom::Document&, nsIContent*,
+              already_AddRefed<nsIURI> aURI,
               already_AddRefed<nsIPrincipal> aTriggeringPrincipal,
               mozilla::net::ReferrerPolicy aReferrerPolicy,
               mozilla::CORSMode aCORSMode, const nsAString& aTitle,

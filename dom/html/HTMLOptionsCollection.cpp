@@ -18,7 +18,7 @@
 #include "nsContentCreatorFunctions.h"
 #include "nsError.h"
 #include "nsGkAtoms.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIFormControlFrame.h"
 #include "nsIForm.h"
 #include "nsIFormProcessor.h"

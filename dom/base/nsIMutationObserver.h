@@ -12,7 +12,6 @@
 class nsAttrValue;
 class nsAtom;
 class nsIContent;
-class nsIDocument;
 class nsINode;
 
 namespace mozilla {

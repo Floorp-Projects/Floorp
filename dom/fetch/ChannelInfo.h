@@ -11,7 +11,6 @@
 #include "nsCOMPtr.h"
 
 class nsIChannel;
-class nsIDocument;
 class nsIGlobalObject;
 class nsIURI;
 
@@ -21,6 +20,8 @@ class IPCChannelInfo;
 }  // namespace ipc
 
 namespace dom {
+
+class Document;
 
 // This class represents the information related to a Response that we
 // retrieve from the corresponding channel that is used to perform the fetch.
@@ -54,7 +55,7 @@ class ChannelInfo final {
     return *this;
   }
 
-  void InitFromDocument(nsIDocument* aDoc);
+  void InitFromDocument(Document* aDoc);
   void InitFromChannel(nsIChannel* aChannel);
   void InitFromChromeGlobal(nsIGlobalObject* aGlobal);
   void InitFromIPCChannelInfo(const IPCChannelInfo& aChannelInfo);

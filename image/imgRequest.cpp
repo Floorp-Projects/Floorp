@@ -18,7 +18,7 @@
 
 #include "nsIChannel.h"
 #include "nsICacheInfoChannel.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIThreadRetargetableRequest.h"
 #include "nsIInputStream.h"
 #include "nsIMultiPartChannel.h"
@@ -140,7 +140,7 @@ nsresult imgRequest::Init(nsIURI* aURI, nsIURI* aFinalURI,
   SetLoadId(aCX);
 
   // Grab the inner window ID of the loading document, if possible.
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(aCX);
+  nsCOMPtr<dom::Document> doc = do_QueryInterface(aCX);
   if (doc) {
     mInnerWindowId = doc->InnerWindowID();
   }

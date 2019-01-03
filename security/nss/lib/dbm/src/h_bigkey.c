@@ -85,7 +85,7 @@ static int collect_data(HTAB *, BUFHEAD *, int, int);
  *-1 ==> ERROR
  */
 extern int
-__big_insert(HTAB *hashp, BUFHEAD *bufp, const DBT *key, const DBT *val)
+dbm_big_insert(HTAB *hashp, BUFHEAD *bufp, const DBT *key, const DBT *val)
 {
     register uint16 *p;
     uint key_size, n, val_size;
@@ -114,7 +114,7 @@ __big_insert(HTAB *hashp, BUFHEAD *bufp, const DBT *key, const DBT *val)
         FREESPACE(p) = off - PAGE_META(n);
         OFFSET(p) = off;
         p[n] = PARTIAL_KEY;
-        bufp = __add_ovflpage(hashp, bufp);
+        bufp = dbm_add_ovflpage(hashp, bufp);
         if (!bufp)
             return (-1);
         n = p[0];
@@ -158,7 +158,7 @@ __big_insert(HTAB *hashp, BUFHEAD *bufp, const DBT *key, const DBT *val)
         OFFSET(p) = off;
         if (val_size) {
             p[n] = FULL_KEY;
-            bufp = __add_ovflpage(hashp, bufp);
+            bufp = dbm_add_ovflpage(hashp, bufp);
             if (!bufp)
                 return (-1);
             cp = bufp->page;
@@ -182,7 +182,7 @@ __big_insert(HTAB *hashp, BUFHEAD *bufp, const DBT *key, const DBT *val)
  *-1 => ERROR
  */
 extern int
-__big_delete(HTAB *hashp, BUFHEAD *bufp)
+dbm_big_delete(HTAB *hashp, BUFHEAD *bufp)
 {
     register BUFHEAD *last_bfp, *rbufp;
     uint16 *bp, pageno;
@@ -207,9 +207,9 @@ __big_delete(HTAB *hashp, BUFHEAD *bufp)
             break;
         pageno = bp[bp[0] - 1];
         rbufp->flags |= BUF_MOD;
-        rbufp = __get_buf(hashp, pageno, rbufp, 0);
+        rbufp = dbm_get_buf(hashp, pageno, rbufp, 0);
         if (last_bfp)
-            __free_ovflpage(hashp, last_bfp);
+            dbm_free_ovflpage(hashp, last_bfp);
         last_bfp = rbufp;
         if (!rbufp)
             return (-1); /* Error. */
@@ -244,9 +244,9 @@ __big_delete(HTAB *hashp, BUFHEAD *bufp)
 
     bufp->flags |= BUF_MOD;
     if (rbufp)
-        __free_ovflpage(hashp, rbufp);
+        dbm_free_ovflpage(hashp, rbufp);
     if (last_bfp != rbufp)
-        __free_ovflpage(hashp, last_bfp);
+        dbm_free_ovflpage(hashp, last_bfp);
 
     hashp->NKEYS--;
     return (0);
@@ -259,7 +259,7 @@ __big_delete(HTAB *hashp, BUFHEAD *bufp)
  * -3 error
  */
 extern int
-__find_bigpair(HTAB *hashp, BUFHEAD *bufp, int ndx, char *key, int size)
+dbm_find_bigpair(HTAB *hashp, BUFHEAD *bufp, int ndx, char *key, int size)
 {
     register uint16 *bp;
     register char *p;
@@ -279,7 +279,7 @@ __find_bigpair(HTAB *hashp, BUFHEAD *bufp, int ndx, char *key, int size)
             return (-2);
         kkey += bytes;
         ksize -= bytes;
-        bufp = __get_buf(hashp, bp[ndx + 2], bufp, 0);
+        bufp = dbm_get_buf(hashp, bp[ndx + 2], bufp, 0);
         if (!bufp)
             return (-3);
         p = bufp->page;
@@ -306,7 +306,7 @@ __find_bigpair(HTAB *hashp, BUFHEAD *bufp, int ndx, char *key, int size)
  * bucket)
  */
 extern uint16
-__find_last_page(HTAB *hashp, BUFHEAD **bpp)
+dbm_find_last_page(HTAB *hashp, BUFHEAD **bpp)
 {
     BUFHEAD *bufp;
     uint16 *bp, pageno;
@@ -332,7 +332,7 @@ __find_last_page(HTAB *hashp, BUFHEAD **bpp)
             return (0);
 
         pageno = bp[n - 1];
-        bufp = __get_buf(hashp, pageno, bufp, 0);
+        bufp = dbm_get_buf(hashp, pageno, bufp, 0);
         if (!bufp)
             return (0); /* Need to indicate an error! */
         bp = (uint16 *)bufp->page;
@@ -350,7 +350,7 @@ __find_last_page(HTAB *hashp, BUFHEAD **bpp)
  * index (index should always be 1).
  */
 extern int
-__big_return(
+dbm_big_return(
     HTAB *hashp,
     BUFHEAD *bufp,
     int ndx,
@@ -364,7 +364,7 @@ __big_return(
 
     bp = (uint16 *)bufp->page;
     while (bp[ndx + 1] == PARTIAL_KEY) {
-        bufp = __get_buf(hashp, bp[bp[0] - 1], bufp, 0);
+        bufp = dbm_get_buf(hashp, bp[bp[0] - 1], bufp, 0);
         if (!bufp)
             return (-1);
         bp = (uint16 *)bufp->page;
@@ -372,7 +372,7 @@ __big_return(
     }
 
     if (bp[ndx + 1] == FULL_KEY) {
-        bufp = __get_buf(hashp, bp[bp[0] - 1], bufp, 0);
+        bufp = dbm_get_buf(hashp, bp[bp[0] - 1], bufp, 0);
         if (!bufp)
             return (-1);
         bp = (uint16 *)bufp->page;
@@ -392,7 +392,7 @@ __big_return(
         len = bp[1] - off;
         save_p = bufp;
         save_addr = bufp->addr;
-        bufp = __get_buf(hashp, bp[bp[0] - 1], bufp, 0);
+        bufp = dbm_get_buf(hashp, bp[bp[0] - 1], bufp, 0);
         if (!bufp)
             return (-1);
         bp = (uint16 *)bufp->page;
@@ -409,8 +409,8 @@ __big_return(
                 hashp->cbucket++;
                 hashp->cndx = 1;
             } else {
-                hashp->cpage = __get_buf(hashp,
-                                         bp[bp[0] - 1], bufp, 0);
+                hashp->cpage = dbm_get_buf(hashp,
+                                           bp[bp[0] - 1], bufp, 0);
                 if (!hashp->cpage)
                     return (-1);
                 hashp->cndx = 1;
@@ -470,7 +470,7 @@ collect_data(
     save_bufp->flags |= BUF_PIN;
 
     /* read the length of the buffer */
-    for (totlen = len; bufp; bufp = __get_buf(hashp, bp[bp[0] - 1], bufp, 0)) {
+    for (totlen = len; bufp; bufp = dbm_get_buf(hashp, bp[bp[0] - 1], bufp, 0)) {
         bp = (uint16 *)bufp->page;
         mylen = hashp->BSIZE - bp[1];
 
@@ -502,7 +502,7 @@ collect_data(
 
     /* copy the buffers back into temp buf */
     for (bufp = save_bufp; bufp;
-         bufp = __get_buf(hashp, bp[bp[0] - 1], bufp, 0)) {
+         bufp = dbm_get_buf(hashp, bp[bp[0] - 1], bufp, 0)) {
         bp = (uint16 *)bufp->page;
         mylen = hashp->BSIZE - bp[1];
         memmove(&hashp->tmp_buf[len], (bufp->page) + bp[1], (size_t)mylen);
@@ -522,7 +522,7 @@ collect_data(
             hashp->cpage = NULL;
             hashp->cbucket++;
         } else {
-            hashp->cpage = __get_buf(hashp, bp[bp[0] - 1], bufp, 0);
+            hashp->cpage = dbm_get_buf(hashp, bp[bp[0] - 1], bufp, 0);
             if (!hashp->cpage)
                 return (-1);
             else if (!((uint16 *)hashp->cpage->page)[0]) {
@@ -538,7 +538,7 @@ collect_data(
  * Fill in the key and data for this big pair.
  */
 extern int
-__big_keydata(
+dbm_big_keydata(
     HTAB *hashp,
     BUFHEAD *bufp,
     DBT *key, DBT *val,
@@ -579,10 +579,10 @@ collect_key(
             free(hashp->tmp_key);
         if ((hashp->tmp_key = (char *)malloc((size_t)totlen)) == NULL)
             return (-1);
-        if (__big_return(hashp, bufp, 1, val, set))
+        if (dbm_big_return(hashp, bufp, 1, val, set))
             return (-1);
     } else {
-        xbp = __get_buf(hashp, bp[bp[0] - 1], bufp, 0);
+        xbp = dbm_get_buf(hashp, bp[bp[0] - 1], bufp, 0);
         if (!xbp || ((totlen =
                           collect_key(hashp, xbp, totlen, val, set)) < 1))
             return (-1);
@@ -601,7 +601,7 @@ collect_key(
  * -1 => error
  */
 extern int
-__big_split(
+dbm_big_split(
     HTAB *hashp,
     BUFHEAD *op, /* Pointer to where to put keys that go in old bucket */
     BUFHEAD *np, /* Pointer to new bucket page */
@@ -621,13 +621,13 @@ __big_split(
     bp = big_keyp;
 
     /* Now figure out where the big key/data goes */
-    if (__big_keydata(hashp, big_keyp, &key, &val, 0))
+    if (dbm_big_keydata(hashp, big_keyp, &key, &val, 0))
         return (-1);
-    change = (__call_hash(hashp, (char *)key.data, key.size) != obucket);
+    change = (dbm_call_hash(hashp, (char *)key.data, key.size) != obucket);
 
-    if ((ret->next_addr = __find_last_page(hashp, &big_keyp))) {
+    if ((ret->next_addr = dbm_find_last_page(hashp, &big_keyp))) {
         if (!(ret->nextp =
-                  __get_buf(hashp, ret->next_addr, big_keyp, 0)))
+                  dbm_get_buf(hashp, ret->next_addr, big_keyp, 0)))
             return (-1);
         ;
     } else
@@ -692,7 +692,7 @@ __big_split(
         tp[0] -= 2;
         FREESPACE(tp) = free_space + OVFLSIZE;
         OFFSET(tp) = off;
-        tmpp = __add_ovflpage(hashp, big_keyp);
+        tmpp = dbm_add_ovflpage(hashp, big_keyp);
         if (!tmpp)
             return (-1);
         tp[4] = n;

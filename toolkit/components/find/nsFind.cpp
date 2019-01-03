@@ -446,7 +446,7 @@ nsFind::Find(const char16_t* aPatText, nsRange* aSearchRange,
   NS_ENSURE_ARG(aEndPoint);
   NS_ENSURE_ARG_POINTER(aRangeRet);
 
-  nsIDocument* document =
+  Document* document =
       aStartPoint->GetRoot() ? aStartPoint->GetRoot()->OwnerDoc() : nullptr;
   NS_ENSURE_ARG(document);
 

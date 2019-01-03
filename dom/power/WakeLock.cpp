@@ -10,7 +10,7 @@
 #include "mozilla/Hal.h"
 #include "mozilla/HalWakeLock.h"
 #include "nsError.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
 #include "nsIPropertyBag2.h"
@@ -58,7 +58,7 @@ nsresult WakeLock::Init(const nsAString& aTopic, nsPIDOMWindowInner* aWindow) {
    * is always considered invisible.
    */
   if (aWindow) {
-    nsCOMPtr<nsIDocument> doc = aWindow->GetExtantDoc();
+    nsCOMPtr<Document> doc = aWindow->GetExtantDoc();
     NS_ENSURE_STATE(doc);
     mHidden = doc->Hidden();
   }
@@ -150,7 +150,7 @@ void WakeLock::DoUnlock() {
 
 void WakeLock::AttachEventListener() {
   if (nsCOMPtr<nsPIDOMWindowInner> window = do_QueryReferent(mWindow)) {
-    nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
+    nsCOMPtr<Document> doc = window->GetExtantDoc();
     if (doc) {
       doc->AddSystemEventListener(NS_LITERAL_STRING("visibilitychange"), this,
                                   /* useCapture = */ true,
@@ -169,7 +169,7 @@ void WakeLock::AttachEventListener() {
 
 void WakeLock::DetachEventListener() {
   if (nsCOMPtr<nsPIDOMWindowInner> window = do_QueryReferent(mWindow)) {
-    nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
+    nsCOMPtr<Document> doc = window->GetExtantDoc();
     if (doc) {
       doc->RemoveSystemEventListener(NS_LITERAL_STRING("visibilitychange"),
                                      this,
@@ -204,7 +204,7 @@ WakeLock::HandleEvent(Event* aEvent) {
   aEvent->GetType(type);
 
   if (type.EqualsLiteral("visibilitychange")) {
-    nsCOMPtr<nsIDocument> doc = do_QueryInterface(aEvent->GetTarget());
+    nsCOMPtr<Document> doc = do_QueryInterface(aEvent->GetTarget());
     NS_ENSURE_STATE(doc);
 
     bool oldHidden = mHidden;

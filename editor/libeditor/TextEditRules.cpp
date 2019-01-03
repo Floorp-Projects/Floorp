@@ -459,7 +459,7 @@ EditActionResult TextEditRules::WillInsertLineBreak(int32_t aMaxLength) {
     return EditActionIgnored(NS_ERROR_FAILURE);
   }
 
-  nsCOMPtr<nsIDocument> doc = TextEditorRef().GetDocument();
+  RefPtr<Document> doc = TextEditorRef().GetDocument();
   if (NS_WARN_IF(!doc)) {
     return EditActionIgnored(NS_ERROR_NOT_INITIALIZED);
   }
@@ -822,7 +822,7 @@ nsresult TextEditRules::WillInsertText(EditSubAction aEditSubAction,
   }
 
   // we need to get the doc
-  nsCOMPtr<nsIDocument> doc = TextEditorRef().GetDocument();
+  RefPtr<Document> doc = TextEditorRef().GetDocument();
   if (NS_WARN_IF(!doc)) {
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -946,7 +946,7 @@ nsresult TextEditRules::WillSetText(bool* aCancel, bool* aHandled,
       *aHandled = true;
       return NS_OK;
     }
-    RefPtr<nsIDocument> doc = TextEditorRef().GetDocument();
+    RefPtr<Document> doc = TextEditorRef().GetDocument();
     if (NS_WARN_IF(!doc)) {
       return NS_OK;
     }

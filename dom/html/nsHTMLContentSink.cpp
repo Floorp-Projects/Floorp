@@ -46,7 +46,7 @@
 #include "nsIChannel.h"
 #include "nsIHttpChannel.h"
 #include "nsIDocShell.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsStubDocumentObserver.h"
 #include "nsIHTMLDocument.h"
 #include "nsICookieService.h"
@@ -109,7 +109,7 @@ class HTMLContentSink : public nsContentSink, public nsIHTMLContentSink {
 
   HTMLContentSink();
 
-  nsresult Init(nsIDocument* aDoc, nsIURI* aURI, nsISupports* aContainer,
+  nsresult Init(Document* aDoc, nsIURI* aURI, nsISupports* aContainer,
                 nsIChannel* aChannel);
 
   // nsISupports
@@ -539,7 +539,7 @@ void SinkContext::UpdateChildCounts() {
   mNotifyLevel = mStackPos - 1;
 }
 
-nsresult NS_NewHTMLContentSink(nsIHTMLContentSink** aResult, nsIDocument* aDoc,
+nsresult NS_NewHTMLContentSink(nsIHTMLContentSink** aResult, Document* aDoc,
                                nsIURI* aURI, nsISupports* aContainer,
                                nsIChannel* aChannel) {
   NS_ENSURE_ARG_POINTER(aResult);
@@ -603,7 +603,7 @@ NS_IMPL_CYCLE_COLLECTION_INHERITED(HTMLContentSink, nsContentSink,
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(HTMLContentSink, nsContentSink,
                                              nsIContentSink, nsIHTMLContentSink)
 
-nsresult HTMLContentSink::Init(nsIDocument* aDoc, nsIURI* aURI,
+nsresult HTMLContentSink::Init(Document* aDoc, nsIURI* aURI,
                                nsISupports* aContainer, nsIChannel* aChannel) {
   NS_ENSURE_TRUE(aContainer, NS_ERROR_NULL_POINTER);
 
@@ -965,6 +965,6 @@ void HTMLContentSink::ContinueInterruptedParsingAsync() {
       "HTMLContentSink::ContinueInterruptedParsingIfEnabled", this,
       &HTMLContentSink::ContinueInterruptedParsingIfEnabled);
 
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(mHTMLDocument);
+  nsCOMPtr<Document> doc = do_QueryInterface(mHTMLDocument);
   doc->Dispatch(mozilla::TaskCategory::Other, ev.forget());
 }

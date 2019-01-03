@@ -43,7 +43,7 @@ class nsMappedAttributeElement : public nsMappedAttributeElementBase {
                                          bool* aValueWasSet,
                                          nsresult* aRetval) override;
 
-  virtual void NodeInfoChanged(nsIDocument* aOldDoc) override;
+  virtual void NodeInfoChanged(mozilla::dom::Document* aOldDoc) override;
 };
 
 #endif  // NS_MAPPEDATTRIBUTEELEMENT_H_

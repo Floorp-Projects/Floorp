@@ -13,7 +13,7 @@
 #include "mozilla/ReentrancyGuard.h"
 #include "mozilla/Likely.h"
 #include "nsDebug.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIFrame.h"
 
 namespace mozilla {
@@ -155,8 +155,8 @@ class MOZ_RAII AutoReferenceChainGuard {
     element->GetId(id);
     const char16_t* params[] = {tag.get(), id.get()};
     auto doc = mFrame->GetContent()->OwnerDoc();
-    auto warning = *mFrameInUse ? nsIDocument::eSVGRefLoop
-                                : nsIDocument::eSVGRefChainLengthExceeded;
+    auto warning = *mFrameInUse ? dom::Document::eSVGRefLoop
+                                : dom::Document::eSVGRefChainLengthExceeded;
     doc->WarnOnceAbout(warning, /* asError */ true, params,
                        ArrayLength(params));
   }

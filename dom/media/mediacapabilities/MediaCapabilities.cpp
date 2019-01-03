@@ -499,7 +499,7 @@ already_AddRefed<layers::KnowsCompositor> MediaCapabilities::GetCompositor() {
     return nullptr;
   }
 
-  nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
+  nsCOMPtr<Document> doc = window->GetExtantDoc();
   if (NS_WARN_IF(!doc)) {
     return nullptr;
   }

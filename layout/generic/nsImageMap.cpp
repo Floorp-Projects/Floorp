@@ -73,10 +73,8 @@ inline bool is_space(char c) {
 
 static void logMessage(nsIContent* aContent, const nsAString& aCoordsSpec,
                        int32_t aFlags, const char* aMessageName) {
-  nsIDocument* doc = aContent->OwnerDoc();
-
   nsContentUtils::ReportToConsole(
-      aFlags, NS_LITERAL_CSTRING("Layout: ImageMap"), doc,
+      aFlags, NS_LITERAL_CSTRING("Layout: ImageMap"), aContent->OwnerDoc(),
       nsContentUtils::eLAYOUT_PROPERTIES, aMessageName, nullptr, /* params */
       0, /* params length */
       nullptr,

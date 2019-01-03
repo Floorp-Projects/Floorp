@@ -989,7 +989,7 @@ void HTMLTableElement::BuildInheritedAttributes() {
   NS_ASSERTION(!mTableInheritedAttributes,
                "potential leak, plus waste of work");
   MOZ_ASSERT(NS_IsMainThread());
-  nsIDocument* document = GetComposedDoc();
+  Document* document = GetComposedDoc();
   nsHTMLStyleSheet* sheet =
       document ? document->GetAttributeStyleSheet() : nullptr;
   RefPtr<nsMappedAttributes> newAttrs;
@@ -1026,8 +1026,7 @@ void HTMLTableElement::ReleaseInheritedAttributes() {
   NS_IF_RELEASE(mTableInheritedAttributes);
 }
 
-nsresult HTMLTableElement::BindToTree(nsIDocument* aDocument,
-                                      nsIContent* aParent,
+nsresult HTMLTableElement::BindToTree(Document* aDocument, nsIContent* aParent,
                                       nsIContent* aBindingParent) {
   ReleaseInheritedAttributes();
   nsresult rv =

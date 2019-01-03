@@ -5,12 +5,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/DocGroup.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/HTMLSlotElement.h"
 #include "mozilla/dom/HTMLSlotElementBinding.h"
 #include "mozilla/dom/HTMLUnknownElement.h"
 #include "mozilla/dom/ShadowRoot.h"
 #include "nsGkAtoms.h"
-#include "nsIDocument.h"
 
 nsGenericHTMLElement* NS_NewHTMLSlotElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
@@ -39,8 +39,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsGenericHTMLElement)
 
 NS_IMPL_ELEMENT_CLONE(HTMLSlotElement)
 
-nsresult HTMLSlotElement::BindToTree(nsIDocument* aDocument,
-                                     nsIContent* aParent,
+nsresult HTMLSlotElement::BindToTree(Document* aDocument, nsIContent* aParent,
                                      nsIContent* aBindingParent) {
   RefPtr<ShadowRoot> oldContainingShadow = GetContainingShadow();
 

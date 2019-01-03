@@ -7,7 +7,7 @@
 
 #include "nsIContentViewer.h"
 #include "nsIDocShell.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIDOMWindow.h"
 #include "nsIFactory.h"
 #include "nsIInterfaceRequestor.h"
@@ -17,6 +17,7 @@
 
 #include "nsWindowMediator.h"
 
+using mozilla::dom::Document;
 using mozilla::dom::Element;
 
 //
@@ -31,7 +32,7 @@ static Element *GetElementFromDocShell(nsIDocShell *aShell) {
   nsCOMPtr<nsIContentViewer> cv;
   aShell->GetContentViewer(getter_AddRefs(cv));
   if (cv) {
-    nsCOMPtr<nsIDocument> doc = cv->GetDocument();
+    RefPtr<Document> doc = cv->GetDocument();
     if (doc) {
       return doc->GetDocumentElement();
     }
