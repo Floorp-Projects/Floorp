@@ -336,6 +336,14 @@ interface nsIPrincipal : nsISerializable
     [infallible] readonly attribute boolean isSystemPrincipal;
 
     /**
+     * Faster and nicer version callable from C++.  Callers must include
+     * BasePrincipal.h, where it's implemented.
+     */
+    %{C++
+      inline bool IsSystemPrincipal() const;
+    %}
+
+    /**
      * Returns true iff the principal is either an addon principal or
      * an expanded principal, which contains at least one addon principal.
      */
