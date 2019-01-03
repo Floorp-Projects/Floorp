@@ -1734,9 +1734,7 @@ impl PrimitiveStore {
             pic.local_clip_rect = tile_cache.post_update(
                 resource_cache,
                 gpu_cache,
-                clip_store,
                 frame_context,
-                resources,
             );
 
             pic.tile_cache = Some(tile_cache);
