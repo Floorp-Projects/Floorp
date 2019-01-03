@@ -27,6 +27,7 @@ struct IdleRequestOptions;
 class MozQueryInterface;
 class PrecompiledScript;
 class Promise;
+struct WindowActorOptions;
 
 class ChromeUtils {
  private:
@@ -172,6 +173,11 @@ class ChromeUtils {
   static bool HasReportingHeaderForOrigin(GlobalObject& global,
                                           const nsAString& aOrigin,
                                           ErrorResult& aRv);
+
+  static void RegisterWindowActor(const GlobalObject& aGlobal,
+                                  const nsAString& aName,
+                                  const WindowActorOptions& aOptions,
+                                  ErrorResult& aRv);
 };
 
 }  // namespace dom
