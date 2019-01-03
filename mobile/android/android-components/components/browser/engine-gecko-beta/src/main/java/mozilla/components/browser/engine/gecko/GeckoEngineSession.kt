@@ -272,6 +272,13 @@ class GeckoEngineSession(
             session: GeckoSession,
             request: NavigationDelegate.LoadRequest
         ): GeckoResult<AllowOrDeny> {
+            // TODO use onNewSession and create window request:
+            // https://github.com/mozilla-mobile/android-components/issues/1503
+            if (request.target == GeckoSession.NavigationDelegate.TARGET_WINDOW_NEW) {
+                geckoSession.loadUri(request.uri)
+                return GeckoResult.fromValue(AllowOrDeny.DENY)
+            }
+
             val response = settings.requestInterceptor?.onLoadRequest(
                 this@GeckoEngineSession,
                 request.uri
@@ -281,7 +288,6 @@ class GeckoEngineSession(
                     is InterceptionResponse.Url -> loadUrl(url)
                 }
             }
-
             return GeckoResult.fromValue(if (response != null) AllowOrDeny.DENY else AllowOrDeny.ALLOW)
         }
 

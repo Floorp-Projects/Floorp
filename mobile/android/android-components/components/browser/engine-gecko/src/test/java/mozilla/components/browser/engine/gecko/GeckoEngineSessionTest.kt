@@ -40,6 +40,7 @@ import org.mockito.Mockito.verifyZeroInteractions
 import org.mozilla.gecko.util.BundleEventListener
 import org.mozilla.gecko.util.GeckoBundle
 import org.mozilla.gecko.util.ThreadUtils
+import org.mozilla.geckoview.AllowOrDeny
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoRuntimeSettings
@@ -1074,7 +1075,7 @@ class GeckoEngineSessionTest {
         verifyZeroInteractions(observer)
     }
 
-    private fun mockLoadRequest(uri: String): GeckoSession.NavigationDelegate.LoadRequest {
+    private fun mockLoadRequest(uri: String, target: Int = 0): GeckoSession.NavigationDelegate.LoadRequest {
         val constructor = GeckoSession.NavigationDelegate.LoadRequest::class.java.getDeclaredConstructor(
             String::class.java,
             String::class.java,
@@ -1082,7 +1083,7 @@ class GeckoEngineSessionTest {
             Int::class.java)
         constructor.isAccessible = true
 
-        return constructor.newInstance(uri, uri, 0, 0)
+        return constructor.newInstance(uri, uri, target, 0)
     }
 
     @Test
@@ -1140,6 +1141,21 @@ class GeckoEngineSessionTest {
         engineSession.close()
 
         verify(geckoSession).close()
+    }
+
+    @Test
+    fun `Handle new window load requests`() {
+        val engineSession = GeckoEngineSession(mock())
+        engineSession.geckoSession = spy(engineSession.geckoSession)
+
+        val result = engineSession.geckoSession.navigationDelegate.onLoadRequest(
+                engineSession.geckoSession,
+                mockLoadRequest("sample:about", GeckoSession.NavigationDelegate.TARGET_WINDOW_NEW)
+        )
+
+        assertNotNull(result)
+        assertEquals(result!!.poll(0), AllowOrDeny.DENY)
+        verify(engineSession.geckoSession).loadUri("sample:about")
     }
 
     private fun mockGeckoSession(): GeckoSession {
