@@ -283,7 +283,7 @@ var LightweightThemeManager = {
       return theme;
     }
 
-    let req = new ServiceRequest();
+    let req = new ServiceRequest({mozAnon: true});
 
     req.mozBackgroundRequest = true;
     req.overrideMimeType("text/plain");

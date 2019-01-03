@@ -667,7 +667,7 @@ var Blocklist = {
     }
 
     LOG("Blocklist::notify: Requesting " + uri.spec);
-    let request = new ServiceRequest();
+    let request = new ServiceRequest({mozAnon: true});
     request.open("GET", uri.spec, true);
     request.channel.notificationCallbacks = new CertUtils.BadCertHandler();
     request.overrideMimeType("text/xml");
