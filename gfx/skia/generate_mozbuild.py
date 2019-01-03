@@ -456,7 +456,7 @@ def write_mozbuild(sources):
   write_sources(f, sources['arm'], 4)
   write_cflags(f, sources['arm'], opt_whitelist, 'skia_opt_flags', 4)
 
-  f.write("elif CONFIG['CPU_ARCH'] == 'aarch64' and CONFIG['CC_TYPE'] in ('clang', 'gcc'):\n")
+  f.write("elif CONFIG['CPU_ARCH'] == 'aarch64' and CONFIG['CC_TYPE'] in ('clang-cl', 'clang', 'gcc'):\n")
   write_sources(f, sources['arm64'], 4)
   write_cflags(f, sources['arm64'], opt_whitelist, 'skia_opt_flags', 4)
 
