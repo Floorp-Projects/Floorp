@@ -1616,6 +1616,8 @@ static const ClassSpec TypedArrayObjectSharedTypedArrayPrototypeClassSpec = {
     "TypedArrayPrototype", JSCLASS_HAS_CACHED_PROTO(JSProto_TypedArray),
     JS_NULL_CLASS_OPS, &TypedArrayObjectSharedTypedArrayPrototypeClassSpec};
 
+namespace {
+
 // this default implementation is only valid for integer types
 // less than 32-bits in size.
 template <typename NativeType>
@@ -1627,8 +1629,6 @@ Value TypedArrayObjectTemplate<NativeType>::getIndexValue(
 
   return Int32Value(getIndex(tarray, index));
 }
-
-namespace {
 
 // and we need to specialize for 32-bit integers and floats
 template <>
