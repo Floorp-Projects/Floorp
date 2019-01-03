@@ -10,10 +10,10 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsError.h"
 #include "nsISMILAttr.h"
-#include "SVGElement.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/dom/SVGAnimatedEnumeration.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/dom/SVGAnimatedEnumeration.h"
+#include "mozilla/dom/SVGElement.h"
 
 class nsAtom;
 class nsSMILValue;
@@ -22,16 +22,15 @@ namespace mozilla {
 namespace dom {
 class SVGAnimationElement;
 }  // namespace dom
-}  // namespace mozilla
 
-typedef uint8_t nsSVGEnumValue;
+typedef uint8_t SVGEnumValue;
 
-struct nsSVGEnumMapping {
+struct SVGEnumMapping {
   nsStaticAtom* const mKey;
-  const nsSVGEnumValue mVal;
+  const SVGEnumValue mVal;
 };
 
-class nsSVGEnum {
+class SVGEnum {
  public:
   typedef mozilla::dom::SVGElement SVGElement;
 
@@ -57,21 +56,21 @@ class nsSVGEnum {
   mozilla::UniquePtr<nsISMILAttr> ToSMILAttr(SVGElement* aSVGElement);
 
  private:
-  nsSVGEnumValue mAnimVal;
-  nsSVGEnumValue mBaseVal;
+  SVGEnumValue mAnimVal;
+  SVGEnumValue mBaseVal;
   uint8_t mAttrEnum;  // element specified tracking for attribute
   bool mIsAnimated;
   bool mIsBaseSet;
 
-  const nsSVGEnumMapping* GetMapping(SVGElement* aSVGElement);
+  const SVGEnumMapping* GetMapping(SVGElement* aSVGElement);
 
  public:
   struct DOMAnimatedEnum final : public mozilla::dom::SVGAnimatedEnumeration {
-    DOMAnimatedEnum(nsSVGEnum* aVal, SVGElement* aSVGElement)
+    DOMAnimatedEnum(SVGEnum* aVal, SVGElement* aSVGElement)
         : mozilla::dom::SVGAnimatedEnumeration(aSVGElement), mVal(aVal) {}
     virtual ~DOMAnimatedEnum();
 
-    nsSVGEnum* mVal;  // kept alive because it belongs to content
+    SVGEnum* mVal;  // kept alive because it belongs to content
 
     using mozilla::dom::SVGAnimatedEnumeration::SetBaseVal;
     virtual uint16_t BaseVal() override { return mVal->GetBaseValue(); }
@@ -90,13 +89,13 @@ class nsSVGEnum {
 
   struct SMILEnum : public nsISMILAttr {
    public:
-    SMILEnum(nsSVGEnum* aVal, SVGElement* aSVGElement)
+    SMILEnum(SVGEnum* aVal, SVGElement* aSVGElement)
         : mVal(aVal), mSVGElement(aSVGElement) {}
 
     // These will stay alive because a nsISMILAttr only lives as long
     // as the Compositing step, and DOM elements don't get a chance to
     // die during that.
-    nsSVGEnum* mVal;
+    SVGEnum* mVal;
     SVGElement* mSVGElement;
 
     // nsISMILAttr methods
@@ -109,5 +108,7 @@ class nsSVGEnum {
     virtual nsresult SetAnimValue(const nsSMILValue& aValue) override;
   };
 };
+
+}  // namespace mozilla
 
 #endif  //__NS_SVGENUM_H__

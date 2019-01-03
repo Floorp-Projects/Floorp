@@ -41,10 +41,10 @@ async function assertConditionalBreakpointIsFocused(dbg) {
 async function setConditionalBreakpoint(dbg, index, condition) {
   const {
     addConditionalBreakpoint,
-    editBreakpoint
+    editConditionalBreakpoint
   } = selectors.gutterContextMenu;
   // Make this work with either add or edit menu items
-  const selector = `${addConditionalBreakpoint},${editBreakpoint}`;
+  const selector = `${addConditionalBreakpoint},${editConditionalBreakpoint}`;
 
   rightClickElement(dbg, "gutter", index);
   selectContextMenuItem(dbg, selector);
@@ -59,16 +59,19 @@ async function setConditionalBreakpoint(dbg, index, condition) {
 
 add_task(async function() {
   const dbg = await initDebugger("doc-scripts.html", "simple2");
+  await pushPref("devtools.debugger.features.column-breakpoints", false);
+
   await selectSource(dbg, "simple2");
   await waitForSelectedSource(dbg, "simple2");
 
   await setConditionalBreakpoint(dbg, 5, "1");
   await waitForDispatch(dbg, "ADD_BREAKPOINT");
-  
+
   let bp = findBreakpoint(dbg, "simple2", 5);
   is(bp.condition, "1", "breakpoint is created with the condition");
   assertEditorBreakpoint(dbg, 5, true);
 
+  // Edit the conditional breakpoint set above
   await setConditionalBreakpoint(dbg, 5, "2");
   await waitForDispatch(dbg, "SET_BREAKPOINT_CONDITION");
   bp = findBreakpoint(dbg, "simple2", 5);

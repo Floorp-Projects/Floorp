@@ -293,13 +293,7 @@ class GCMarker : public JSTracer {
     linearWeakMarkingDisabled_ = true;
   }
 
-  void delayMarkingArena(gc::Arena* arena);
   void delayMarkingChildren(gc::Cell* cell);
-  void markDelayedChildren(gc::Arena* arena, gc::MarkColor color);
-  MOZ_MUST_USE bool markAllDelayedChildren(SliceBudget& budget);
-  bool processDelayedMarkingList(gc::MarkColor color, bool shouldYield,
-                                 SliceBudget& budget);
-  bool hasDelayedChildren() const { return !!delayedMarkingList; }
 
   bool isDrained() { return isMarkStackEmpty() && !delayedMarkingList; }
 
@@ -384,6 +378,11 @@ class GCMarker : public JSTracer {
 
   inline void processMarkStackTop(SliceBudget& budget);
 
+  void markDelayedChildren(gc::Arena* arena, gc::MarkColor color);
+  MOZ_MUST_USE bool markAllDelayedChildren(SliceBudget& budget);
+  bool processDelayedMarkingList(gc::MarkColor color, SliceBudget& budget);
+  bool hasDelayedChildren() const { return !!delayedMarkingList; }
+  void rebuildDelayedMarkingList();
   void appendToDelayedMarkingList(gc::Arena** listTail, gc::Arena* arena);
 
   template <typename F>
