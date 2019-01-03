@@ -46,7 +46,7 @@ using namespace mozilla::gfx;
 namespace mozilla {
 namespace CanvasUtils {
 
-bool IsImageExtractionAllowed(nsIDocument* aDocument, JSContext* aCx,
+bool IsImageExtractionAllowed(Document* aDocument, JSContext* aCx,
                               nsIPrincipal& aPrincipal) {
   // Do the rest of the checks only if privacy.resistFingerprinting is on.
   if (!nsContentUtils::ShouldResistFingerprinting()) {
@@ -93,7 +93,7 @@ bool IsImageExtractionAllowed(nsIDocument* aDocument, JSContext* aCx,
     }
   }
 
-  nsIDocument* topLevelDocument = aDocument->GetTopLevelContentDocument();
+  Document* topLevelDocument = aDocument->GetTopLevelContentDocument();
   nsIURI* topLevelDocURI =
       topLevelDocument ? topLevelDocument->GetDocumentURI() : nullptr;
   nsCString topLevelDocURISpec;

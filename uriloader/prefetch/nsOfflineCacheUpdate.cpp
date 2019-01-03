@@ -16,7 +16,7 @@
 #include "mozilla/dom/OfflineResourceListBinding.h"
 #include "nsIDocumentLoader.h"
 #include "nsIDOMWindow.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIObserverService.h"
 #include "nsIURL.h"
 #include "nsIURIMutator.h"
@@ -1178,7 +1178,7 @@ nsresult nsOfflineCacheUpdate::InitInternal(nsIURI *aManifestURI,
 
 nsresult nsOfflineCacheUpdate::Init(nsIURI *aManifestURI, nsIURI *aDocumentURI,
                                     nsIPrincipal *aLoadingPrincipal,
-                                    nsIDocument *aDocument,
+                                    dom::Document *aDocument,
                                     nsIFile *aCustomProfileDir) {
   nsresult rv;
 

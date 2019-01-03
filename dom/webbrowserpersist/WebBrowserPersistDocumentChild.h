@@ -11,8 +11,6 @@
 #include "nsCOMPtr.h"
 #include "nsIWebBrowserPersistDocument.h"
 
-class nsIDocument;
-
 namespace mozilla {
 
 class WebBrowserPersistDocumentChild final
@@ -24,7 +22,7 @@ class WebBrowserPersistDocumentChild final
   // This sends either Attributes or InitFailure and thereby causes
   // the actor to leave the START state.
   void Start(nsIWebBrowserPersistDocument* aDocument);
-  void Start(nsIDocument* aDocument);
+  void Start(dom::Document* aDocument);
 
   virtual mozilla::ipc::IPCResult RecvSetPersistFlags(
       const uint32_t& aNewFlags) override;

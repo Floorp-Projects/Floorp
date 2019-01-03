@@ -156,14 +156,14 @@ void SVGAElement::SetText(const nsAString& aText, mozilla::ErrorResult& rv) {
 //----------------------------------------------------------------------
 // nsIContent methods
 
-nsresult SVGAElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+nsresult SVGAElement::BindToTree(Document* aDocument, nsIContent* aParent,
                                  nsIContent* aBindingParent) {
   Link::ResetLinkState(false, Link::ElementHasHref());
 
   nsresult rv = SVGAElementBase::BindToTree(aDocument, aParent, aBindingParent);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsIDocument* doc = GetComposedDoc();
+  Document* doc = GetComposedDoc();
   if (doc) {
     doc->RegisterPendingLinkUpdate(this);
   }
@@ -218,7 +218,7 @@ bool SVGAElement::IsFocusableInternal(int32_t* aTabIndex, bool aWithMouse) {
   }
 
   // cannot focus links if there is no link handler
-  nsIDocument* doc = GetComposedDoc();
+  Document* doc = GetComposedDoc();
   if (doc) {
     nsPresContext* presContext = doc->GetPresContext();
     if (presContext && !presContext->GetLinkHandler()) {
@@ -312,7 +312,7 @@ void SVGAElement::GetLinkTarget(nsAString& aTarget) {
       case 1:
         return;
     }
-    nsIDocument* ownerDoc = OwnerDoc();
+    Document* ownerDoc = OwnerDoc();
     if (ownerDoc) {
       ownerDoc->GetBaseTarget(aTarget);
     }

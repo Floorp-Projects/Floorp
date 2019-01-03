@@ -12,7 +12,7 @@
 #include "mozilla/dom/HTMLFormControlsCollectionBinding.h"
 #include "mozilla/dom/HTMLFormElement.h"
 #include "nsGenericHTMLElement.h"  // nsGenericHTMLFormElement
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIFormControl.h"
 #include "RadioNodeList.h"
 #include "jsfriendapi.h"
@@ -105,7 +105,7 @@ void HTMLFormControlsCollection::Clear() {
 
 void HTMLFormControlsCollection::FlushPendingNotifications() {
   if (mForm) {
-    nsIDocument* doc = mForm->GetUncomposedDoc();
+    Document* doc = mForm->GetUncomposedDoc();
     if (doc) {
       doc->FlushPendingNotifications(FlushType::Content);
     }

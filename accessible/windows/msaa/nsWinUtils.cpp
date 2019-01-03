@@ -17,7 +17,7 @@
 #include "nsArrayUtils.h"
 #include "nsIArray.h"
 #include "nsICSSDeclaration.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIDocShellTreeItem.h"
 #include "mozilla/dom/Element.h"
 #include "nsXULAppAPI.h"

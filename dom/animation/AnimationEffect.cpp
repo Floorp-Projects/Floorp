@@ -35,7 +35,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(AnimationEffect)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-AnimationEffect::AnimationEffect(nsIDocument* aDocument, TimingParams&& aTiming)
+AnimationEffect::AnimationEffect(Document* aDocument, TimingParams&& aTiming)
     : mDocument(aDocument), mTiming(std::move(aTiming)) {}
 
 AnimationEffect::~AnimationEffect() = default;

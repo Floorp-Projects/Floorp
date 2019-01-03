@@ -21,7 +21,7 @@
 
 #include "nsIBFCacheEntry.h"
 #include "nsICookieService.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsISupportsPrimitives.h"
 
 #ifdef XP_WIN
@@ -393,7 +393,7 @@ void BroadcastChannel::RemoveDocFromBFCache() {
     return;
   }
 
-  nsIDocument* doc = window->GetExtantDoc();
+  Document* doc = window->GetExtantDoc();
   if (!doc) {
     return;
   }

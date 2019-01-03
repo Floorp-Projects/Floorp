@@ -13,7 +13,7 @@
 #include "nsIContent.h"
 #include "nsIContentIterator.h"
 #include "nsIDocShell.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsINode.h"
 

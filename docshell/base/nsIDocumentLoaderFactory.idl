@@ -10,9 +10,10 @@ interface nsIChannel;
 interface nsIContentViewer;
 interface nsIStreamListener;
 interface nsIDocShell;
-interface nsIDocument;
 interface nsILoadGroup;
 interface nsIPrincipal;
+
+webidl Document;
 
 /**
  * To get a component that implements nsIDocumentLoaderFactory
@@ -33,6 +34,6 @@ interface nsIDocumentLoaderFactory : nsISupports {
                               out nsIStreamListener aDocListenerResult);
 
     nsIContentViewer createInstanceForDocument(in nsISupports aContainer,
-                                         in nsIDocument aDocument,
+                                         in Document aDocument,
                                          in string aCommand);
 };

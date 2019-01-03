@@ -26,7 +26,7 @@
 #include "mozilla/ServoCSSParser.h"
 #include "gfxMatrix.h"
 #include "gfxQuaternion.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIFrame.h"
 #include "gfx2DGlue.h"
 #include "mozilla/ComputedStyleInlines.h"
@@ -168,7 +168,7 @@ double AnimationValue::ComputeDistance(nsCSSPropertyID aProperty,
 
   AnimationValue result;
 
-  nsCOMPtr<nsIDocument> doc = aElement->GetComposedDoc();
+  nsCOMPtr<Document> doc = aElement->GetComposedDoc();
   if (!doc) {
     return result;
   }

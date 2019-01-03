@@ -8,7 +8,7 @@
 
 #include "mozilla/Attributes.h"
 #include "nsContentList.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIHTMLDocument.h"
 #include "nsIHTMLCollection.h"
 #include "nsIScriptElement.h"
@@ -36,20 +36,25 @@ class WindowProxyHolder;
 }  // namespace dom
 }  // namespace mozilla
 
-class nsHTMLDocument : public nsIDocument, public nsIHTMLDocument {
+class nsHTMLDocument : public mozilla::dom::Document, public nsIHTMLDocument {
+ protected:
   typedef mozilla::net::ReferrerPolicy ReferrerPolicy;
+  typedef mozilla::dom::Document Document;
+  typedef mozilla::Encoding Encoding;
+  template <typename T>
+  using NotNull = mozilla::NotNull<T>;
 
  public:
-  using nsIDocument::GetPlugins;
-  using nsIDocument::SetDocumentURI;
+  using Document::GetPlugins;
+  using Document::SetDocumentURI;
 
   nsHTMLDocument();
   virtual nsresult Init() override;
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsHTMLDocument, nsIDocument)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsHTMLDocument, Document)
 
-  // nsIDocument
+  // Document
   virtual void Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup) override;
   virtual void ResetToURI(nsIURI* aURI, nsILoadGroup* aLoadGroup,
                           nsIPrincipal* aPrincipal) override;
@@ -128,7 +133,7 @@ class nsHTMLDocument : public nsIDocument, public nsIHTMLDocument {
 
   virtual void DocAddSizeOfExcludingThis(
       nsWindowSizes& aWindowSizes) const override;
-  // DocAddSizeOfIncludingThis is inherited from nsIDocument.
+  // DocAddSizeOfIncludingThis is inherited from Document.
 
   virtual bool WillIgnoreCharsetOverride() override;
 
@@ -150,7 +155,7 @@ class nsHTMLDocument : public nsIDocument, public nsIHTMLDocument {
     }
   }
   void GetSupportedNames(nsTArray<nsString>& aNames);
-  already_AddRefed<nsIDocument> Open(
+  already_AddRefed<Document> Open(
       JSContext* cx, const mozilla::dom::Optional<nsAString>& /* unused */,
       const nsAString& aReplace, mozilla::ErrorResult& aError);
   mozilla::dom::Nullable<mozilla::dom::WindowProxyHolder> Open(
@@ -197,7 +202,7 @@ class nsHTMLDocument : public nsIDocument, public nsIHTMLDocument {
   void ReleaseEvents();
   // We're picking up GetLocation from Document
   already_AddRefed<mozilla::dom::Location> GetLocation() const {
-    return nsIDocument::GetLocation();
+    return Document::GetLocation();
   }
 
   static bool MatchFormControls(Element* aElement, int32_t aNamespaceID,
@@ -334,10 +339,16 @@ class nsHTMLDocument : public nsIDocument, public nsIHTMLDocument {
   bool mPendingMaybeEditingStateChanged;
 };
 
-inline nsHTMLDocument* nsIDocument::AsHTMLDocument() {
+namespace mozilla {
+namespace dom {
+
+inline nsHTMLDocument* Document::AsHTMLDocument() {
   MOZ_ASSERT(IsHTMLOrXHTML());
   return static_cast<nsHTMLDocument*>(this);
 }
+
+}  // namespace dom
+}  // namespace mozilla
 
 #define NS_HTML_DOCUMENT_INTERFACE_TABLE_BEGIN(_class) \
   NS_DOCUMENT_INTERFACE_TABLE_BEGIN(_class)            \

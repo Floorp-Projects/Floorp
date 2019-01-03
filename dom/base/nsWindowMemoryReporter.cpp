@@ -7,7 +7,7 @@
 #include "nsWindowMemoryReporter.h"
 #include "nsWindowSizes.h"
 #include "nsGlobalWindow.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsDOMWindowList.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Preferences.h"
@@ -119,7 +119,7 @@ static nsresult NonJSSizeOfTab(nsPIDOMWindowOuter* aWindow, size_t* aDomSize,
 static already_AddRefed<nsIURI> GetWindowURI(nsGlobalWindowInner* aWindow) {
   NS_ENSURE_TRUE(aWindow, nullptr);
 
-  nsCOMPtr<nsIDocument> doc = aWindow->GetExtantDoc();
+  nsCOMPtr<Document> doc = aWindow->GetExtantDoc();
   nsCOMPtr<nsIURI> uri;
 
   if (doc) {

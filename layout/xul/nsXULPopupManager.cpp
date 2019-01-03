@@ -26,7 +26,7 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIBaseWindow.h"
 #include "nsCaret.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsPIWindowRoot.h"
 #include "nsFrameManager.h"
 #include "nsIObserverService.h"
@@ -267,7 +267,7 @@ bool nsXULPopupManager::Rollup(uint32_t aCount, bool aFlush,
             anchor->AsElement()->GetAttr(
                 kNameSpaceID_None, nsGkAtoms::consumeanchor, consumeAnchor);
             if (!consumeAnchor.IsEmpty()) {
-              nsIDocument* doc = anchor->GetOwnerDocument();
+              Document* doc = anchor->GetOwnerDocument();
               nsIContent* newAnchor = doc->GetElementById(consumeAnchor);
               if (newAnchor) {
                 anchor = newAnchor;
@@ -426,7 +426,7 @@ void nsXULPopupManager::AdjustPopupsOnWindowChange(
     if (item->IsNoAutoHide() && frame->GetAutoPosition()) {
       nsIContent* popup = frame->GetContent();
       if (popup) {
-        nsIDocument* document = popup->GetUncomposedDoc();
+        Document* document = popup->GetUncomposedDoc();
         if (document) {
           if (nsPIDOMWindowOuter* window = document->GetWindow()) {
             window = window->GetPrivateRoot();
@@ -534,7 +534,7 @@ void nsXULPopupManager::PopupResized(nsIFrame* aFrame,
 nsMenuPopupFrame* nsXULPopupManager::GetPopupFrameForContent(
     nsIContent* aContent, bool aShouldFlush) {
   if (aShouldFlush) {
-    nsIDocument* document = aContent->GetUncomposedDoc();
+    Document* document = aContent->GetUncomposedDoc();
     if (document) {
       nsCOMPtr<nsIPresShell> presShell = document->GetShell();
       if (presShell) presShell->FlushPendingNotifications(FlushType::Layout);
@@ -590,7 +590,7 @@ void nsXULPopupManager::InitTriggerEvent(Event* aEvent, nsIContent* aPopup,
       if (inputEvent) {
         mCachedModifiers = inputEvent->mModifiers;
       }
-      nsIDocument* doc = aPopup->GetUncomposedDoc();
+      Document* doc = aPopup->GetUncomposedDoc();
       if (doc) {
         nsIPresShell* presShell = doc->GetShell();
         nsPresContext* presContext;
@@ -779,7 +779,7 @@ static void CheckCaretDrawingState() {
     auto* piWindow = nsPIDOMWindowOuter::From(window);
     MOZ_ASSERT(piWindow);
 
-    nsCOMPtr<nsIDocument> focusedDoc = piWindow->GetDoc();
+    nsCOMPtr<Document> focusedDoc = piWindow->GetDoc();
     if (!focusedDoc) return;
 
     nsIPresShell* presShell = focusedDoc->GetShell();
@@ -1163,7 +1163,7 @@ void nsXULPopupManager::EnableRollup(nsIContent* aPopup, bool aShouldRollup) {
 #endif
 }
 
-bool nsXULPopupManager::IsChildOfDocShell(nsIDocument* aDoc,
+bool nsXULPopupManager::IsChildOfDocShell(Document* aDoc,
                                           nsIDocShellTreeItem* aExpected) {
   nsCOMPtr<nsIDocShellTreeItem> docShellItem(aDoc->GetDocShell());
   while (docShellItem) {
@@ -1342,7 +1342,7 @@ void nsXULPopupManager::FirePopupShowingEvent(nsIContent* aPopup,
                                        eCaseMatters)) {
     nsFocusManager* fm = nsFocusManager::GetFocusManager();
     if (fm) {
-      nsIDocument* doc = popup->GetUncomposedDoc();
+      Document* doc = popup->GetUncomposedDoc();
 
       // Only remove the focus if the currently focused item is ouside the
       // popup. It isn't a big deal if the current focus is in a child popup
@@ -1406,7 +1406,7 @@ void nsXULPopupManager::FirePopupHidingEvent(
                                    nsGkAtoms::_true, eCaseMatters))) {
     nsFocusManager* fm = nsFocusManager::GetFocusManager();
     if (fm) {
-      nsIDocument* doc = aPopup->GetUncomposedDoc();
+      Document* doc = aPopup->GetUncomposedDoc();
 
       // Remove the focus from the focused node only if it is inside the popup.
       RefPtr<Element> currentFocus = fm->GetFocusedElement();
@@ -1539,7 +1539,7 @@ void nsXULPopupManager::GetVisiblePopups(nsTArray<nsIFrame*>& aPopups) {
 }
 
 already_AddRefed<nsINode> nsXULPopupManager::GetLastTriggerNode(
-    nsIDocument* aDocument, bool aIsTooltip) {
+    Document* aDocument, bool aIsTooltip) {
   if (!aDocument) return nullptr;
 
   nsCOMPtr<nsINode> node;
@@ -1775,7 +1775,7 @@ void nsXULPopupManager::UpdateMenuItems(nsIContent* aPopup) {
   // command attribute. If so, then several attributes must potentially be
   // updated.
 
-  nsCOMPtr<nsIDocument> document = aPopup->GetUncomposedDoc();
+  nsCOMPtr<Document> document = aPopup->GetUncomposedDoc();
   if (!document) {
     return;
   }
@@ -2555,7 +2555,7 @@ NS_IMETHODIMP
 nsXULPopupHidingEvent::Run() {
   nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
 
-  nsIDocument* document = mPopup->GetUncomposedDoc();
+  Document* document = mPopup->GetUncomposedDoc();
   if (pm && document) {
     nsPresContext* context = document->GetPresContext();
     if (context) {

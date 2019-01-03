@@ -19,7 +19,7 @@
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/ServoUtils.h"
 #include "mozilla/StaticPrefs.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsStyleUtil.h"
 #include "mozilla/net/ReferrerPolicy.h"
 
@@ -159,7 +159,7 @@ already_AddRefed<FontFace> FontFace::Constructor(
     const FontFaceDescriptors& aDescriptors, ErrorResult& aRv) {
   nsISupports* global = aGlobal.GetAsSupports();
   nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(global);
-  nsIDocument* doc = window->GetDoc();
+  Document* doc = window->GetDoc();
   if (!doc) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;

@@ -56,7 +56,7 @@ void Presentation::SetDefaultRequest(PresentationRequest* aRequest) {
     return;
   }
 
-  nsCOMPtr<nsIDocument> doc = mWindow ? mWindow->GetExtantDoc() : nullptr;
+  nsCOMPtr<Document> doc = mWindow ? mWindow->GetExtantDoc() : nullptr;
   if (NS_WARN_IF(!doc)) {
     return;
   }
@@ -148,7 +148,7 @@ bool Presentation::HasReceiverSupport() const {
   }
 
   bool isPrivateWin = false;
-  nsCOMPtr<nsIDocument> doc = mWindow->GetExtantDoc();
+  nsCOMPtr<Document> doc = mWindow->GetExtantDoc();
   if (doc) {
     isPrivateWin =
         doc->NodePrincipal()->OriginAttributesRef().mPrivateBrowsingId > 0;

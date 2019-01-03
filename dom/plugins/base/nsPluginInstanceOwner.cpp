@@ -315,7 +315,7 @@ nsresult nsPluginInstanceOwner::SetInstance(nsNPAPIPluginInstance* aInstance) {
 
   mInstance = aInstance;
 
-  nsCOMPtr<nsIDocument> doc;
+  nsCOMPtr<Document> doc;
   GetDocument(getter_AddRefs(doc));
   if (doc) {
     if (nsCOMPtr<nsPIDOMWindowOuter> domWindow = doc->GetWindow()) {
@@ -335,7 +335,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetWindow(NPWindow*& aWindow) {
 }
 
 NS_IMETHODIMP nsPluginInstanceOwner::GetMode(int32_t* aMode) {
-  nsCOMPtr<nsIDocument> doc;
+  nsCOMPtr<Document> doc;
   nsresult rv = GetDocument(getter_AddRefs(doc));
   nsCOMPtr<nsIPluginDocument> pDoc(do_QueryInterface(doc));
 
@@ -377,7 +377,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetURL(
     return NS_OK;
   }
 
-  nsIDocument* doc = content->GetComposedDoc();
+  Document* doc = content->GetComposedDoc();
   if (!doc) {
     return NS_ERROR_FAILURE;
   }
@@ -451,7 +451,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetURL(
   return rv;
 }
 
-NS_IMETHODIMP nsPluginInstanceOwner::GetDocument(nsIDocument** aDocument) {
+NS_IMETHODIMP nsPluginInstanceOwner::GetDocument(Document** aDocument) {
   nsCOMPtr<nsIContent> content = do_QueryReferent(mContent);
   if (!aDocument || !content) {
     return NS_ERROR_NULL_POINTER;
@@ -2805,7 +2805,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void) {
     nsresult rv = NS_ERROR_FAILURE;
 
     nsCOMPtr<nsIWidget> parentWidget;
-    nsIDocument* doc = nullptr;
+    Document* doc = nullptr;
     nsCOMPtr<nsIContent> content = do_QueryReferent(mContent);
     if (content) {
       doc = content->OwnerDoc();

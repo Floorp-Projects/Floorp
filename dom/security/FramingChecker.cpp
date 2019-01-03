@@ -67,7 +67,7 @@ using namespace mozilla;
   nsCOMPtr<nsIDocShellTreeItem> thisDocShellItem(aDocShell);
   nsCOMPtr<nsIDocShellTreeItem> parentDocShellItem;
   nsCOMPtr<nsIDocShellTreeItem> curDocShellItem = thisDocShellItem;
-  nsCOMPtr<nsIDocument> topDoc;
+  nsCOMPtr<Document> topDoc;
   nsresult rv;
   nsCOMPtr<nsIScriptSecurityManager> ssm =
       do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
@@ -285,7 +285,7 @@ static bool ShouldIgnoreFrameOptions(nsIChannel* aChannel,
 
   nsCOMPtr<nsIURI> topURI;
 
-  nsCOMPtr<nsIDocument> document = aTopDocShellItem->GetDocument();
+  nsCOMPtr<Document> document = aTopDocShellItem->GetDocument();
   nsresult rv = document->NodePrincipal()->GetURI(getter_AddRefs(topURI));
   if (NS_FAILED(rv)) {
     return;

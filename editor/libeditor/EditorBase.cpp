@@ -73,7 +73,7 @@
 #include "nsIAbsorbingTransaction.h"   // for nsIAbsorbingTransaction
 #include "nsAtom.h"                    // for nsAtom
 #include "nsIContent.h"                // for nsIContent
-#include "nsIDocument.h"               // for nsIDocument
+#include "mozilla/dom/Document.h"      // for Document
 #include "nsIDOMEventListener.h"       // for nsIDOMEventListener
 #include "nsIDocumentStateListener.h"  // for nsIDocumentStateListener
 #include "nsIEditActionListener.h"     // for nsIEditActionListener
@@ -200,7 +200,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(EditorBase)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(EditorBase)
-  nsIDocument* currentDoc =
+  Document* currentDoc =
       tmp->mRootElement ? tmp->mRootElement->GetUncomposedDoc() : nullptr;
   if (currentDoc && nsCCUncollectableMarker::InGeneration(
                         cb, currentDoc->GetMarkedCCGeneration())) {
@@ -232,7 +232,7 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(EditorBase)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(EditorBase)
 
-nsresult EditorBase::Init(nsIDocument& aDocument, Element* aRoot,
+nsresult EditorBase::Init(Document& aDocument, Element* aRoot,
                           nsISelectionController* aSelectionController,
                           uint32_t aFlags, const nsAString& aValue) {
   MOZ_ASSERT(GetTopLevelEditSubAction() == EditSubAction::eNone,
@@ -607,14 +607,14 @@ bool EditorBase::IsSelectionEditable() {
 NS_IMETHODIMP
 EditorBase::GetIsDocumentEditable(bool* aIsDocumentEditable) {
   NS_ENSURE_ARG_POINTER(aIsDocumentEditable);
-  nsCOMPtr<nsIDocument> doc = GetDocument();
+  RefPtr<Document> doc = GetDocument();
   *aIsDocumentEditable = doc && IsModifiable();
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-EditorBase::GetDocument(nsIDocument** aDoc) {
+EditorBase::GetDocument(Document** aDoc) {
   NS_IF_ADDREF(*aDoc = mDocument);
   return *aDoc ? NS_OK : NS_ERROR_NOT_INITIALIZED;
 }
@@ -1064,7 +1064,7 @@ EditorBase::GetDocumentCharacterSet(nsACString& aCharset) {
 }
 
 nsresult EditorBase::GetDocumentCharsetInternal(nsACString& aCharset) const {
-  nsCOMPtr<nsIDocument> document = GetDocument();
+  RefPtr<Document> document = GetDocument();
   if (NS_WARN_IF(!document)) {
     return NS_ERROR_UNEXPECTED;
   }
@@ -1074,7 +1074,7 @@ nsresult EditorBase::GetDocumentCharsetInternal(nsACString& aCharset) const {
 
 NS_IMETHODIMP
 EditorBase::SetDocumentCharacterSet(const nsACString& characterSet) {
-  nsCOMPtr<nsIDocument> document = GetDocument();
+  RefPtr<Document> document = GetDocument();
   if (NS_WARN_IF(!document)) {
     return NS_ERROR_UNEXPECTED;
   }
@@ -1942,8 +1942,8 @@ EditorBase::RemoveEditorObserver(nsIEditorObserver* aObserver) {
 }
 
 NS_IMETHODIMP
-EditorBase::NotifySelectionChanged(nsIDocument* aDocument,
-                                   Selection* aSelection, int16_t aReason) {
+EditorBase::NotifySelectionChanged(Document* aDocument, Selection* aSelection,
+                                   int16_t aReason) {
   if (NS_WARN_IF(!aDocument) || NS_WARN_IF(!aSelection)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -2409,7 +2409,7 @@ EditorRawDOMPoint EditorBase::FindBetterInsertionPoint(
 }
 
 nsresult EditorBase::InsertTextWithTransaction(
-    nsIDocument& aDocument, const nsAString& aStringToInsert,
+    Document& aDocument, const nsAString& aStringToInsert,
     const EditorRawDOMPoint& aPointToInsert,
     EditorRawDOMPoint* aPointAfterInsertedString) {
   MOZ_ASSERT(
@@ -4140,7 +4140,7 @@ nsresult EditorBase::ClearSelection() {
 already_AddRefed<Element> EditorBase::CreateHTMLContent(const nsAtom* aTag) {
   MOZ_ASSERT(aTag);
 
-  nsCOMPtr<nsIDocument> doc = GetDocument();
+  RefPtr<Document> doc = GetDocument();
   if (!doc) {
     return nullptr;
   }
@@ -4160,7 +4160,7 @@ already_AddRefed<Element> EditorBase::CreateHTMLContent(const nsAtom* aTag) {
 
 // static
 already_AddRefed<nsTextNode> EditorBase::CreateTextNode(
-    nsIDocument& aDocument, const nsAString& aData) {
+    Document& aDocument, const nsAString& aData) {
   RefPtr<nsTextNode> text = aDocument.CreateEmptyTextNode();
   text->MarkAsMaybeModifiedFrequently();
   // Don't notify; this node is still being created.
@@ -4398,7 +4398,7 @@ nsresult EditorBase::FinalizeSelection() {
     // mean that it is an HTML editor, the selection controller is shared with
     // presShell.  So, even this editor loses focus, other part of the document
     // may still have focus.
-    nsCOMPtr<nsIDocument> doc = GetDocument();
+    RefPtr<Document> doc = GetDocument();
     ErrorResult ret;
     if (!doc || !doc->HasFocus(ret)) {
       // If the document already lost focus, mark the selection as disabled.
@@ -4616,7 +4616,7 @@ bool EditorBase::IsActiveInDOMWindow() {
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
   NS_ENSURE_TRUE(fm, false);
 
-  nsCOMPtr<nsIDocument> document = GetDocument();
+  RefPtr<Document> document = GetDocument();
   if (NS_WARN_IF(!document)) {
     return false;
   }

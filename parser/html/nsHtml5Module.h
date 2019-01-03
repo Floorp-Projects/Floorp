@@ -13,7 +13,7 @@ class nsHtml5Module {
   static void InitializeStatics();
   static void ReleaseStatics();
   static already_AddRefed<nsIParser> NewHtml5Parser();
-  static nsresult Initialize(nsIParser* aParser, nsIDocument* aDoc,
+  static nsresult Initialize(nsIParser* aParser, mozilla::dom::Document* aDoc,
                              nsIURI* aURI, nsISupports* aContainer,
                              nsIChannel* aChannel);
   static nsIThread* GetStreamParserThread();

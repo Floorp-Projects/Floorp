@@ -45,7 +45,7 @@ class HTMLOutputElement final : public nsGenericHTMLFormElement,
 
   EventStates IntrinsicState() const override;
 
-  virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+  virtual nsresult BindToTree(Document* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent) override;
 
   // This function is called when a callback function from nsIMutationObserver

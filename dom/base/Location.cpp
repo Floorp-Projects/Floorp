@@ -20,7 +20,7 @@
 #include "nsCOMPtr.h"
 #include "nsEscape.h"
 #include "nsIDOMWindow.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "nsError.h"
@@ -104,7 +104,7 @@ already_AddRefed<nsDocShellLoadState> Location::CheckURL(
 
   nsCOMPtr<nsPIDOMWindowInner> incumbent =
       do_QueryInterface(mozilla::dom::GetIncumbentGlobal());
-  nsCOMPtr<nsIDocument> doc = incumbent ? incumbent->GetDoc() : nullptr;
+  nsCOMPtr<Document> doc = incumbent ? incumbent->GetDoc() : nullptr;
 
   if (doc) {
     nsCOMPtr<nsIURI> docOriginalURI, docCurrentURI, principalURI;
@@ -420,7 +420,7 @@ void Location::SetHrefWithBase(const nsAString& aHref, nsIURI* aBase,
 
   nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mDocShell));
 
-  if (nsIDocument* doc = GetEntryDocument()) {
+  if (Document* doc = GetEntryDocument()) {
     result = NS_NewURI(getter_AddRefs(newUri), aHref,
                        doc->GetDocumentCharacterSet(), aBase);
   } else {
@@ -727,7 +727,7 @@ void Location::SetSearch(const nsAString& aSearch,
     return;
   }
 
-  if (nsIDocument* doc = GetEntryDocument()) {
+  if (Document* doc = GetEntryDocument()) {
     aRv = NS_MutateURI(uri)
               .SetQueryWithEncoding(NS_ConvertUTF16toUTF8(aSearch),
                                     doc->GetDocumentCharacterSet())
@@ -758,7 +758,7 @@ nsresult Location::Reload(bool aForceget) {
     // page since some sites may use this trick to work around gecko
     // reflow bugs, and this should have the same effect.
 
-    nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
+    nsCOMPtr<Document> doc = window->GetExtantDoc();
 
     nsPresContext* pcx;
     if (doc && (pcx = doc->GetPresContext())) {
@@ -806,7 +806,7 @@ void Location::Assign(const nsAString& aUrl, nsIPrincipal& aSubjectPrincipal,
 }
 
 already_AddRefed<nsIURI> Location::GetSourceBaseURL() {
-  nsIDocument* doc = GetEntryDocument();
+  Document* doc = GetEntryDocument();
   // If there's no entry document, we either have no Script Entry Point or one
   // that isn't a DOM Window.  This doesn't generally happen with the DOM, but
   // can sometimes happen with extension code in certain IPC configurations.  If

@@ -98,25 +98,25 @@ size_t LifecycleCallbackArgs::SizeOfExcludingThis(
 
 void CustomElementCallback::Call() {
   switch (mType) {
-    case nsIDocument::eConnected:
+    case Document::eConnected:
       static_cast<LifecycleConnectedCallback*>(mCallback.get())
           ->Call(mThisObject);
       break;
-    case nsIDocument::eDisconnected:
+    case Document::eDisconnected:
       static_cast<LifecycleDisconnectedCallback*>(mCallback.get())
           ->Call(mThisObject);
       break;
-    case nsIDocument::eAdopted:
+    case Document::eAdopted:
       static_cast<LifecycleAdoptedCallback*>(mCallback.get())
           ->Call(mThisObject, mAdoptedCallbackArgs.mOldDocument,
                  mAdoptedCallbackArgs.mNewDocument);
       break;
-    case nsIDocument::eAttributeChanged:
+    case Document::eAttributeChanged:
       static_cast<LifecycleAttributeChangedCallback*>(mCallback.get())
           ->Call(mThisObject, mArgs.name, mArgs.oldValue, mArgs.newValue,
                  mArgs.namespaceURI);
       break;
-    case nsIDocument::eGetCustomInterface:
+    case Document::eGetCustomInterface:
       MOZ_ASSERT_UNREACHABLE("Don't call GetCustomInterface through callback");
       break;
   }
@@ -149,7 +149,7 @@ size_t CustomElementCallback::SizeOfIncludingThis(
 }
 
 CustomElementCallback::CustomElementCallback(
-    Element* aThisObject, nsIDocument::ElementCallbackType aCallbackType,
+    Element* aThisObject, Document::ElementCallbackType aCallbackType,
     mozilla::dom::CallbackFunction* aCallback)
     : mThisObject(aThisObject), mCallback(aCallback), mType(aCallbackType) {}
 //-----------------------------------------------------
@@ -446,7 +446,7 @@ void CustomElementRegistry::UnregisterUnresolvedElement(Element* aElement,
 
 /* static */ UniquePtr<CustomElementCallback>
 CustomElementRegistry::CreateCustomElementCallback(
-    nsIDocument::ElementCallbackType aType, Element* aCustomElement,
+    Document::ElementCallbackType aType, Element* aCustomElement,
     LifecycleCallbackArgs* aArgs,
     LifecycleAdoptedCallbackArgs* aAdoptedCallbackArgs,
     CustomElementDefinition* aDefinition) {
@@ -457,31 +457,31 @@ CustomElementRegistry::CreateCustomElementCallback(
   // Let CALLBACK be the callback associated with the key NAME in CALLBACKS.
   CallbackFunction* func = nullptr;
   switch (aType) {
-    case nsIDocument::eConnected:
+    case Document::eConnected:
       if (aDefinition->mCallbacks->mConnectedCallback.WasPassed()) {
         func = aDefinition->mCallbacks->mConnectedCallback.Value();
       }
       break;
 
-    case nsIDocument::eDisconnected:
+    case Document::eDisconnected:
       if (aDefinition->mCallbacks->mDisconnectedCallback.WasPassed()) {
         func = aDefinition->mCallbacks->mDisconnectedCallback.Value();
       }
       break;
 
-    case nsIDocument::eAdopted:
+    case Document::eAdopted:
       if (aDefinition->mCallbacks->mAdoptedCallback.WasPassed()) {
         func = aDefinition->mCallbacks->mAdoptedCallback.Value();
       }
       break;
 
-    case nsIDocument::eAttributeChanged:
+    case Document::eAttributeChanged:
       if (aDefinition->mCallbacks->mAttributeChangedCallback.WasPassed()) {
         func = aDefinition->mCallbacks->mAttributeChangedCallback.Value();
       }
       break;
 
-    case nsIDocument::eGetCustomInterface:
+    case Document::eGetCustomInterface:
       MOZ_ASSERT_UNREACHABLE("Don't call GetCustomInterface through callback");
       break;
   }
@@ -506,7 +506,7 @@ CustomElementRegistry::CreateCustomElementCallback(
 }
 
 /* static */ void CustomElementRegistry::EnqueueLifecycleCallback(
-    nsIDocument::ElementCallbackType aType, Element* aCustomElement,
+    Document::ElementCallbackType aType, Element* aCustomElement,
     LifecycleCallbackArgs* aArgs,
     LifecycleAdoptedCallbackArgs* aAdoptedCallbackArgs,
     CustomElementDefinition* aDefinition) {
@@ -535,7 +535,7 @@ CustomElementRegistry::CreateCustomElementCallback(
     return;
   }
 
-  if (aType == nsIDocument::eAttributeChanged) {
+  if (aType == Document::eAttributeChanged) {
     RefPtr<nsAtom> attrName = NS_Atomize(aArgs->name);
     if (definition->mObservedAttributes.IsEmpty() ||
         !definition->mObservedAttributes.Contains(attrName)) {
@@ -553,19 +553,19 @@ namespace {
 class CandidateFinder {
  public:
   CandidateFinder(nsTHashtable<nsRefPtrHashKey<nsIWeakReference>>& aCandidates,
-                  nsIDocument* aDoc);
+                  Document* aDoc);
   nsTArray<nsCOMPtr<Element>> OrderedCandidates();
 
  private:
   bool Traverse(Element* aRoot, nsTArray<nsCOMPtr<Element>>& aOrderedElements);
 
-  nsCOMPtr<nsIDocument> mDoc;
+  nsCOMPtr<Document> mDoc;
   nsInterfaceHashtable<nsPtrHashKey<Element>, Element> mCandidates;
 };
 
 CandidateFinder::CandidateFinder(
     nsTHashtable<nsRefPtrHashKey<nsIWeakReference>>& aCandidates,
-    nsIDocument* aDoc)
+    Document* aDoc)
     : mDoc(aDoc), mCandidates(aCandidates.Count()) {
   MOZ_ASSERT(mDoc);
   for (auto iter = aCandidates.Iter(); !iter.Done(); iter.Next()) {
@@ -714,7 +714,7 @@ void CustomElementRegistry::Define(JSContext* aCx, const nsAString& aName,
    * 2. If name is not a valid custom element name, then throw a "SyntaxError"
    *    DOMException and abort these steps.
    */
-  nsIDocument* doc = mWindow->GetExtantDoc();
+  Document* doc = mWindow->GetExtantDoc();
   RefPtr<nsAtom> nameAtom(NS_Atomize(aName));
   if (!nsContentUtils::IsCustomElementName(nameAtom, nameSpaceID)) {
     aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
@@ -1060,7 +1060,7 @@ already_AddRefed<Promise> CustomElementRegistry::WhenDefined(
   }
 
   RefPtr<nsAtom> nameAtom(NS_Atomize(aName));
-  nsIDocument* doc = mWindow->GetExtantDoc();
+  Document* doc = mWindow->GetExtantDoc();
   uint32_t nameSpaceID =
       doc ? doc->GetDefaultNamespaceID() : kNameSpaceID_XHTML;
   if (!nsContentUtils::IsCustomElementName(nameAtom, nameSpaceID)) {
@@ -1134,16 +1134,15 @@ static void DoUpgrade(Element* aElement, CustomElementConstructor* aConstructor,
         LifecycleCallbackArgs args = {
             nsDependentAtomString(attrName), VoidString(), attrValue,
             (namespaceURI.IsEmpty() ? VoidString() : namespaceURI)};
-        nsContentUtils::EnqueueLifecycleCallback(nsIDocument::eAttributeChanged,
-                                                 aElement, &args, nullptr,
-                                                 aDefinition);
+        nsContentUtils::EnqueueLifecycleCallback(
+            Document::eAttributeChanged, aElement, &args, nullptr, aDefinition);
       }
     }
   }
 
   // Step 4.
   if (aElement->IsInComposedDoc()) {
-    nsContentUtils::EnqueueLifecycleCallback(nsIDocument::eConnected, aElement,
+    nsContentUtils::EnqueueLifecycleCallback(Document::eConnected, aElement,
                                              nullptr, nullptr, aDefinition);
   }
 

@@ -329,9 +329,24 @@ static bool num_parseFloat(JSContext* cx, unsigned argc, Value* vp) {
     return true;
   }
 
+  if (args[0].isNumber()) {
+    // ToString(-0) is "0", handle it accordingly.
+    if (args[0].isDouble() && args[0].toDouble() == 0.0) {
+      args.rval().setInt32(0);
+    } else {
+      args.rval().set(args[0]);
+    }
+    return true;
+  }
+
   JSString* str = ToString<CanGC>(cx, args[0]);
   if (!str) {
     return false;
+  }
+
+  if (str->hasIndexValue()) {
+    args.rval().setNumber(str->getIndexValue());
+    return true;
   }
 
   JSLinearString* linear = str->ensureLinear(cx);

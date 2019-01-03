@@ -14,7 +14,7 @@
 #include "mozilla/dom/Element.h"
 #include "nsIScriptSecurityManager.h"
 #include "mozilla/Preferences.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsVariant.h"
 #include "mozilla/dom/CustomEvent.h"
 #include "mozilla/dom/DocumentFragment.h"
@@ -34,7 +34,7 @@ nsXMLPrettyPrinter::~nsXMLPrettyPrinter() {
   NS_ASSERTION(!mDocument, "we shouldn't be referencing the document still");
 }
 
-nsresult nsXMLPrettyPrinter::PrettyPrint(nsIDocument* aDocument,
+nsresult nsXMLPrettyPrinter::PrettyPrint(Document* aDocument,
                                          bool* aDidPrettyPrint) {
   *aDidPrettyPrint = false;
 
@@ -54,7 +54,7 @@ nsresult nsXMLPrettyPrinter::PrettyPrint(nsIDocument* aDocument,
       NS_LITERAL_CSTRING("chrome://global/content/xml/XMLPrettyPrint.xsl"));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIDocument> xslDocument;
+  nsCOMPtr<Document> xslDocument;
   rv = nsSyncLoadService::LoadDocument(
       xslUri, nsIContentPolicy::TYPE_XSLT, nsContentUtils::GetSystemPrincipal(),
       nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL, nullptr, true,

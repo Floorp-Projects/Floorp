@@ -15,7 +15,7 @@
 #include "nsQuickSort.h"
 
 #include "nsIContent.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 
 #include "nsIPresShell.h"
 #include "nsViewManager.h"
@@ -30,6 +30,7 @@ static NS_DEFINE_CID(kLayoutDebuggerCID, NS_LAYOUT_DEBUGGER_CID);
 #include "mozilla/Preferences.h"
 
 using namespace mozilla;
+using mozilla::dom::Document;
 
 static already_AddRefed<nsIContentViewer> doc_viewer(nsIDocShell* aDocShell) {
   if (!aDocShell) return nullptr;
@@ -51,10 +52,10 @@ static nsViewManager* view_manager(nsIDocShell* aDocShell) {
 }
 
 #ifdef DEBUG
-static already_AddRefed<nsIDocument> document(nsIDocShell* aDocShell) {
+static already_AddRefed<Document> document(nsIDocShell* aDocShell) {
   nsCOMPtr<nsIContentViewer> cv(doc_viewer(aDocShell));
   if (!cv) return nullptr;
-  nsCOMPtr<nsIDocument> result = cv->GetDocument();
+  RefPtr<Document> result = cv->GetDocument();
   return result.forget();
 }
 #endif
@@ -299,7 +300,7 @@ static void DumpContentRecur(nsIDocShell* aDocShell, FILE* out) {
 #ifdef DEBUG
   if (nullptr != aDocShell) {
     fprintf(out, "docshell=%p \n", static_cast<void*>(aDocShell));
-    nsCOMPtr<nsIDocument> doc(document(aDocShell));
+    RefPtr<Document> doc(document(aDocShell));
     if (doc) {
       dom::Element* root = doc->GetRootElement();
       if (root) {

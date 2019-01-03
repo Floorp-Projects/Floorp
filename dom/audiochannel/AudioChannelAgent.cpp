@@ -6,7 +6,7 @@
 #include "AudioChannelService.h"
 #include "mozilla/Preferences.h"
 #include "nsContentUtils.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
 #include "nsIURI.h"
@@ -86,7 +86,7 @@ nsresult AudioChannelAgent::FindCorrectWindow(nsPIDOMWindowInner* aWindow) {
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDocument> doc = parent->GetExtantDoc();
+  nsCOMPtr<Document> doc = parent->GetExtantDoc();
   if (!doc) {
     return NS_OK;
   }

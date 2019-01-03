@@ -25,7 +25,7 @@
 #include "Layers.h"
 #include "gfxPlatform.h"
 #include "gfxPrefs.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 
 /**
    XXX TODO XXX

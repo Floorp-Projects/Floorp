@@ -235,7 +235,7 @@ nsSessionStoreUtils::RestoreDocShellCapabilities(
 }
 
 NS_IMETHODIMP
-nsSessionStoreUtils::CollectScrollPosition(nsIDocument* aDocument,
+nsSessionStoreUtils::CollectScrollPosition(Document* aDocument,
                                            nsACString& aRet) {
   aRet.Truncate();
 

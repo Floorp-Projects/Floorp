@@ -287,16 +287,16 @@ typedef enum { LockOutDatabase,
 #endif
 
 /* Access method description structure. */
-typedef struct __db {
+typedef struct dbm_db {
     DBTYPE type; /* Underlying db type. */
-    int (*close)(struct __db *);
-    int (*del)(const struct __db *, const DBT *, uint);
-    int (*get)(const struct __db *, const DBT *, DBT *, uint);
-    int (*put)(const struct __db *, DBT *, const DBT *, uint);
-    int (*seq)(const struct __db *, DBT *, DBT *, uint);
-    int (*sync)(const struct __db *, uint);
+    int (*close)(struct dbm_db *);
+    int (*del)(const struct dbm_db *, const DBT *, uint);
+    int (*get)(const struct dbm_db *, const DBT *, DBT *, uint);
+    int (*put)(const struct dbm_db *, DBT *, const DBT *, uint);
+    int (*seq)(const struct dbm_db *, DBT *, DBT *, uint);
+    int (*sync)(const struct dbm_db *, uint);
     void *internal; /* Access method private. */
-    int (*fd)(const struct __db *);
+    int (*fd)(const struct dbm_db *);
 } DB;
 
 #define BTREEMAGIC 0x053162
@@ -412,10 +412,10 @@ dbopen(const char *, int, int, DBTYPE, const void *);
 void dbSetOrClearDBLock(DBLockFlagEnum type);
 
 #ifdef __DBINTERFACE_PRIVATE
-DB *__bt_open(const char *, int, int, const BTREEINFO *, int);
-DB *__hash_open(const char *, int, int, const HASHINFO *, int);
-DB *__rec_open(const char *, int, int, const RECNOINFO *, int);
-void __dbpanic(DB *dbp);
+DB *dbm_bt_open(const char *, int, int, const BTREEINFO *, int);
+DB *dbm_hash_open(const char *, int, int, const HASHINFO *, int);
+DB *dbm_rec_open(const char *, int, int, const RECNOINFO *, int);
+void dbm_dbpanic(DB *dbp);
 #endif
 
 PR_END_EXTERN_C

@@ -46,7 +46,7 @@ JSObject* CSSPseudoElement::WrapObject(JSContext* aCx,
 
 void CSSPseudoElement::GetAnimations(const AnimationFilter& filter,
                                      nsTArray<RefPtr<Animation>>& aRetVal) {
-  nsIDocument* doc = mParentElement->GetComposedDoc();
+  Document* doc = mParentElement->GetComposedDoc();
   if (doc) {
     // We don't need to explicitly flush throttled animations here, since
     // updating the animation style of (pseudo-)elements will never affect the

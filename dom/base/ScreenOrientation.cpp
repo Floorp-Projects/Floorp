@@ -7,7 +7,7 @@
 #include "ScreenOrientation.h"
 #include "nsIDeviceSensors.h"
 #include "nsIDocShell.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsGlobalWindow.h"
 #include "nsSandboxFlags.h"
 #include "nsScreen.h"
@@ -77,7 +77,7 @@ ScreenOrientation::ScreenOrientation(nsPIDOMWindowInner* aWindow,
   mType = InternalOrientationToType(config.orientation());
   mAngle = config.angle();
 
-  nsIDocument* doc = GetResponsibleDocument();
+  Document* doc = GetResponsibleDocument();
   if (doc) {
     doc->SetCurrentOrientation(mType, mAngle);
   }
@@ -119,7 +119,7 @@ class ScreenOrientation::LockOrientationTask final : public nsIRunnable {
 
   LockOrientationTask(ScreenOrientation* aScreenOrientation, Promise* aPromise,
                       hal::ScreenOrientation aOrientationLock,
-                      nsIDocument* aDocument, bool aIsFullscreen);
+                      Document* aDocument, bool aIsFullscreen);
 
  protected:
   bool OrientationLockContains(OrientationType aOrientationType);
@@ -127,7 +127,7 @@ class ScreenOrientation::LockOrientationTask final : public nsIRunnable {
   RefPtr<ScreenOrientation> mScreenOrientation;
   RefPtr<Promise> mPromise;
   hal::ScreenOrientation mOrientationLock;
-  nsCOMPtr<nsIDocument> mDocument;
+  nsCOMPtr<Document> mDocument;
   bool mIsFullscreen;
 };
 
@@ -135,7 +135,7 @@ NS_IMPL_ISUPPORTS(ScreenOrientation::LockOrientationTask, nsIRunnable)
 
 ScreenOrientation::LockOrientationTask::LockOrientationTask(
     ScreenOrientation* aScreenOrientation, Promise* aPromise,
-    hal::ScreenOrientation aOrientationLock, nsIDocument* aDocument,
+    hal::ScreenOrientation aOrientationLock, Document* aDocument,
     bool aIsFullscreen)
     : mScreenOrientation(aScreenOrientation),
       mPromise(aPromise),
@@ -250,7 +250,7 @@ already_AddRefed<Promise> ScreenOrientation::Lock(
 static inline void AbortOrientationPromises(nsIDocShell* aDocShell) {
   MOZ_ASSERT(aDocShell);
 
-  nsIDocument* doc = aDocShell->GetDocument();
+  Document* doc = aDocShell->GetDocument();
   if (doc) {
     Promise* promise = doc->GetOrientationPendingPromise();
     if (promise) {
@@ -276,7 +276,7 @@ already_AddRefed<Promise> ScreenOrientation::LockInternal(
     hal::ScreenOrientation aOrientation, ErrorResult& aRv) {
   // Steps to apply an orientation lock as defined in spec.
 
-  nsIDocument* doc = GetResponsibleDocument();
+  Document* doc = GetResponsibleDocument();
   if (NS_WARN_IF(!doc)) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;
@@ -412,7 +412,7 @@ OrientationType ScreenOrientation::GetType(CallerType aCallerType,
     return OrientationType::Landscape_primary;
   }
 
-  nsIDocument* doc = GetResponsibleDocument();
+  Document* doc = GetResponsibleDocument();
   if (!doc) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return OrientationType::Portrait_primary;
@@ -427,7 +427,7 @@ uint16_t ScreenOrientation::GetAngle(CallerType aCallerType,
     return 0;
   }
 
-  nsIDocument* doc = GetResponsibleDocument();
+  Document* doc = GetResponsibleDocument();
   if (!doc) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return 0;
@@ -449,7 +449,7 @@ ScreenOrientation::GetLockOrientationPermission(bool aCheckSandbox) const {
     return LOCK_ALLOWED;
   }
 
-  nsCOMPtr<nsIDocument> doc = owner->GetDoc();
+  nsCOMPtr<Document> doc = owner->GetDoc();
   if (!doc || doc->Hidden()) {
     return LOCK_DENIED;
   }
@@ -468,7 +468,7 @@ ScreenOrientation::GetLockOrientationPermission(bool aCheckSandbox) const {
   return doc->Fullscreen() ? FULLSCREEN_LOCK_ALLOWED : LOCK_DENIED;
 }
 
-nsIDocument* ScreenOrientation::GetResponsibleDocument() const {
+Document* ScreenOrientation::GetResponsibleDocument() const {
   nsCOMPtr<nsPIDOMWindowInner> owner = GetOwner();
   if (!owner) {
     return nullptr;
@@ -482,7 +482,7 @@ void ScreenOrientation::Notify(const hal::ScreenConfiguration& aConfiguration) {
     return;
   }
 
-  nsIDocument* doc = GetResponsibleDocument();
+  Document* doc = GetResponsibleDocument();
   if (!doc) {
     return;
   }
@@ -573,7 +573,7 @@ ScreenOrientation::VisibleEventListener::HandleEvent(Event* aEvent) {
   nsCOMPtr<EventTarget> target = aEvent->GetCurrentTarget();
   MOZ_ASSERT(target);
 
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(target);
+  nsCOMPtr<Document> doc = do_QueryInterface(target);
   if (!doc || doc->Hidden()) {
     return NS_OK;
   }
@@ -634,7 +634,7 @@ ScreenOrientation::FullscreenEventListener::HandleEvent(Event* aEvent) {
   nsCOMPtr<EventTarget> target = aEvent->GetCurrentTarget();
   MOZ_ASSERT(target);
 
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(target);
+  nsCOMPtr<Document> doc = do_QueryInterface(target);
   MOZ_ASSERT(doc);
 
   // We have to make sure that the event we got is the event sent when

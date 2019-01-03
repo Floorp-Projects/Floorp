@@ -27,7 +27,7 @@
 #include "nsFrameList.h"
 #include "nsGkAtoms.h"
 #include "nsIContent.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIFrame.h"
 #include "nsIPresShell.h"
 #include "nsSVGDisplayableFrame.h"

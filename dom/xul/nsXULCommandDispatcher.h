@@ -23,6 +23,7 @@ class nsPIWindowRoot;
 
 namespace mozilla {
 namespace dom {
+class Document;
 class Element;
 }  // namespace dom
 }  // namespace mozilla
@@ -30,7 +31,7 @@ class Element;
 class nsXULCommandDispatcher : public nsIDOMXULCommandDispatcher,
                                public nsSupportsWeakReference {
  public:
-  explicit nsXULCommandDispatcher(nsIDocument* aDocument);
+  explicit nsXULCommandDispatcher(mozilla::dom::Document* aDocument);
 
   // nsISupports
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -50,7 +51,7 @@ class nsXULCommandDispatcher : public nsIDOMXULCommandDispatcher,
   mozilla::dom::Element* GetRootFocusedContentAndWindow(
       nsPIDOMWindowOuter** aWindow);
 
-  nsCOMPtr<nsIDocument> mDocument;
+  RefPtr<Document> mDocument;
 
   class Updater {
    public:

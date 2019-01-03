@@ -27,7 +27,7 @@
 #include "nsAttrValueInlines.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsDisplayList.h"
 #include "nsCounterManager.h"
 #include "nsBidiUtils.h"
@@ -1105,7 +1105,7 @@ nsBulletFrame::Notify(imgIRequest* aRequest, int32_t aType,
   }
 
   if (aType == imgINotificationObserver::DECODE_COMPLETE) {
-    if (nsIDocument* parent = GetOurCurrentDoc()) {
+    if (Document* parent = GetOurCurrentDoc()) {
       nsCOMPtr<imgIContainer> container;
       aRequest->GetImage(getter_AddRefs(container));
       if (container) {
@@ -1117,7 +1117,7 @@ nsBulletFrame::Notify(imgIRequest* aRequest, int32_t aType,
   return NS_OK;
 }
 
-nsIDocument* nsBulletFrame::GetOurCurrentDoc() const {
+Document* nsBulletFrame::GetOurCurrentDoc() const {
   nsIContent* parentContent = GetParent()->GetContent();
   return parentContent ? parentContent->GetComposedDoc() : nullptr;
 }
@@ -1175,7 +1175,7 @@ void nsBulletFrame::GetLoadGroup(nsPresContext* aPresContext,
 
   if (!shell) return;
 
-  nsIDocument* doc = shell->GetDocument();
+  Document* doc = shell->GetDocument();
   if (!doc) return;
 
   *aLoadGroup = doc->GetDocumentLoadGroup().take();

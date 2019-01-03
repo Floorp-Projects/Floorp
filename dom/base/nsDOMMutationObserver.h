@@ -24,7 +24,7 @@
 #include "mozilla/dom/Nullable.h"
 #include "mozilla/dom/MutationEventBinding.h"
 #include "mozilla/dom/MutationObserverBinding.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/Animation.h"
 #include "nsIAnimationObserver.h"
 #include "nsGlobalWindow.h"
@@ -712,11 +712,11 @@ class nsAutoAnimationMutationBatch {
   struct Entry;
 
  public:
-  explicit nsAutoAnimationMutationBatch(nsIDocument* aDocument) {
+  explicit nsAutoAnimationMutationBatch(mozilla::dom::Document* aDocument) {
     Init(aDocument);
   }
 
-  void Init(nsIDocument* aDocument) {
+  void Init(mozilla::dom::Document* aDocument) {
     if (!aDocument || !aDocument->MayHaveDOMMutationObservers() ||
         sCurrentBatch) {
       return;

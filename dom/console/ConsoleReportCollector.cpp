@@ -132,7 +132,7 @@ void ConsoleReportCollector::FlushReportsToConsoleForServiceWorkerScope(
   }
 }
 
-void ConsoleReportCollector::FlushConsoleReports(nsIDocument* aDocument,
+void ConsoleReportCollector::FlushConsoleReports(dom::Document* aDocument,
                                                  ReportAction aAction) {
   MOZ_ASSERT(NS_IsMainThread());
 

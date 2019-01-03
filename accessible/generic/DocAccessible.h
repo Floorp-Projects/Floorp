@@ -14,7 +14,7 @@
 #include "nsAutoPtr.h"
 #include "nsClassHashtable.h"
 #include "nsDataHashtable.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIDocumentObserver.h"
 #include "nsIObserver.h"
 #include "nsIScrollPositionListener.h"
@@ -28,6 +28,10 @@ const uint32_t kDefaultCacheLength = 128;
 namespace mozilla {
 
 class TextEditor;
+
+namespace dom {
+class Document;
+}
 
 namespace a11y {
 
@@ -50,8 +54,11 @@ class DocAccessible : public HyperTextAccessibleWrap,
   NS_DECL_NSIOBSERVER
   NS_DECL_NSIACCESSIBLEPIVOTOBSERVER
 
+ protected:
+  typedef mozilla::dom::Document Document;
+
  public:
-  DocAccessible(nsIDocument* aDocument, nsIPresShell* aPresShell);
+  DocAccessible(Document* aDocument, nsIPresShell* aPresShell);
 
   // nsIScrollPositionListener
   virtual void ScrollPositionWillChange(nscoord aX, nscoord aY) override {}
@@ -65,7 +72,7 @@ class DocAccessible : public HyperTextAccessibleWrap,
   virtual void Shutdown() override;
   virtual nsIFrame* GetFrame() const override;
   virtual nsINode* GetNode() const override { return mDocumentNode; }
-  nsIDocument* DocumentNode() const { return mDocumentNode; }
+  Document* DocumentNode() const { return mDocumentNode; }
 
   virtual mozilla::a11y::ENameValueFlag Name(nsString& aName) const override;
   virtual void Description(nsString& aDescription) override;
@@ -133,7 +140,7 @@ class DocAccessible : public HyperTextAccessibleWrap,
   bool IsContentLoaded() const {
     // eDOMLoaded flag check is used for error pages as workaround to make this
     // method return correct result since error pages do not receive 'pageshow'
-    // event and as consequence nsIDocument::IsShowing() returns false.
+    // event and as consequence Document::IsShowing() returns false.
     return mDocumentNode && mDocumentNode->IsVisible() &&
            (mDocumentNode->IsShowing() || HasLoadState(eDOMLoaded));
   }
@@ -596,7 +603,7 @@ class DocAccessible : public HyperTextAccessibleWrap,
   nsDataHashtable<nsPtrHashKey<const nsINode>, Accessible*>
       mNodeToAccessibleMap;
 
-  nsIDocument* mDocumentNode;
+  Document* mDocumentNode;
   nsCOMPtr<nsITimer> mScrollWatchTimer;
   uint16_t mScrollPositionChangedTicks;  // Used for tracking scroll events
   TimeStamp mLastScrollingDispatch;

@@ -131,7 +131,7 @@ class DOMIntersectionObserver final : public nsISupports,
 
   bool SetRootMargin(const nsAString& aString);
 
-  void Update(nsIDocument* aDocument, DOMHighResTimeStamp time);
+  void Update(Document* aDocument, DOMHighResTimeStamp time);
   void Notify();
 
  protected:
@@ -144,7 +144,7 @@ class DOMIntersectionObserver final : public nsISupports,
                                       double aIntersectionRatio);
 
   nsCOMPtr<nsPIDOMWindowInner> mOwner;
-  RefPtr<nsIDocument> mDocument;
+  RefPtr<Document> mDocument;
   RefPtr<mozilla::dom::IntersectionCallback> mCallback;
   RefPtr<Element> mRoot;
   nsStyleSides mRootMargin;

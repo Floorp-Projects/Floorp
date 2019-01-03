@@ -52,7 +52,7 @@ already_AddRefed<Promise> MIDIAccessManager::RequestMIDIAccess(
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
-  nsCOMPtr<nsIDocument> doc = aWindow->GetDoc();
+  nsCOMPtr<Document> doc = aWindow->GetDoc();
   if (NS_WARN_IF(!doc)) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;

@@ -21,7 +21,7 @@ class nsContentList;
   }
 
 /**
- * HTML document extensions to nsIDocument.
+ * HTML document extensions to Document.
  */
 class nsIHTMLDocument : public nsISupports {
  public:

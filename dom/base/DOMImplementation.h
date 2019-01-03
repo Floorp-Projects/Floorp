@@ -13,7 +13,7 @@
 #include "mozilla/ErrorResult.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIURI.h"
 #include "nsIWeakReferenceUtils.h"
@@ -21,13 +21,14 @@
 
 namespace mozilla {
 namespace dom {
+class Document;
 class DocumentType;
 
 class DOMImplementation final : public nsISupports, public nsWrapperCache {
   ~DOMImplementation() {}
 
  public:
-  DOMImplementation(nsIDocument* aOwner, nsIGlobalObject* aScriptObject,
+  DOMImplementation(Document* aOwner, nsIGlobalObject* aScriptObject,
                     nsIURI* aDocumentURI, nsIURI* aBaseURI)
       : mOwner(aOwner),
         mScriptObject(do_GetWeakReference(aScriptObject)),
@@ -39,7 +40,7 @@ class DOMImplementation final : public nsISupports, public nsWrapperCache {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMImplementation)
 
-  nsIDocument* GetParentObject() const { return mOwner; }
+  Document* GetParentObject() const { return mOwner; }
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
@@ -50,21 +51,21 @@ class DOMImplementation final : public nsISupports, public nsWrapperCache {
       const nsAString& aQualifiedName, const nsAString& aPublicId,
       const nsAString& aSystemId, ErrorResult& aRv);
 
-  already_AddRefed<nsIDocument> CreateDocument(const nsAString& aNamespaceURI,
-                                               const nsAString& aQualifiedName,
-                                               DocumentType* aDoctype,
-                                               ErrorResult& aRv);
+  already_AddRefed<Document> CreateDocument(const nsAString& aNamespaceURI,
+                                            const nsAString& aQualifiedName,
+                                            DocumentType* aDoctype,
+                                            ErrorResult& aRv);
 
-  already_AddRefed<nsIDocument> CreateHTMLDocument(
+  already_AddRefed<Document> CreateHTMLDocument(
       const Optional<nsAString>& aTitle, ErrorResult& aRv);
 
  private:
   nsresult CreateDocument(const nsAString& aNamespaceURI,
                           const nsAString& aQualifiedName,
-                          DocumentType* aDoctype, nsIDocument** aDocument);
-  nsresult CreateHTMLDocument(const nsAString& aTitle, nsIDocument** aDocument);
+                          DocumentType* aDoctype, Document** aDocument);
+  nsresult CreateHTMLDocument(const nsAString& aTitle, Document** aDocument);
 
-  nsCOMPtr<nsIDocument> mOwner;
+  nsCOMPtr<Document> mOwner;
   nsWeakPtr mScriptObject;
   nsCOMPtr<nsIURI> mDocumentURI;
   nsCOMPtr<nsIURI> mBaseURI;

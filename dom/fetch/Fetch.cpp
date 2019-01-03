@@ -8,7 +8,7 @@
 #include "FetchConsumer.h"
 #include "FetchStream.h"
 
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIGlobalObject.h"
 #include "nsIStreamLoader.h"
 
@@ -460,7 +460,7 @@ already_AddRefed<Promise> FetchRequest(nsIGlobalObject* aGlobal,
 
   if (NS_IsMainThread()) {
     nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aGlobal);
-    nsCOMPtr<nsIDocument> doc;
+    nsCOMPtr<Document> doc;
     nsCOMPtr<nsILoadGroup> loadGroup;
     nsIPrincipal* principal;
     bool isTrackingFetch = false;

@@ -40,7 +40,7 @@
 #include "nsISimpleEnumerator.h"
 #include "nsIStringStream.h"
 #include "nsIProgressEventSink.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsPluginLogging.h"
 #include "nsIScriptChannel.h"
 #include "nsIBlocklistService.h"
@@ -110,6 +110,7 @@
 
 using namespace mozilla;
 using mozilla::TimeStamp;
+using mozilla::dom::Document;
 using mozilla::dom::FakePluginMimeEntry;
 using mozilla::dom::FakePluginTagInit;
 using mozilla::dom::Promise;
@@ -839,10 +840,10 @@ nsresult nsPluginHost::SetUpPluginInstance(const nsACString& aMimeType,
   // reloading our plugin list. Only do that once per document to
   // avoid redundant high resource usage on pages with multiple
   // unkown instance types. We'll do that by caching the document.
-  nsCOMPtr<nsIDocument> document;
+  nsCOMPtr<Document> document;
   aOwner->GetDocument(getter_AddRefs(document));
 
-  nsCOMPtr<nsIDocument> currentdocument = do_QueryReferent(mCurrentDocument);
+  nsCOMPtr<Document> currentdocument = do_QueryReferent(mCurrentDocument);
   if (document == currentdocument) {
     return rv;
   }
@@ -3079,7 +3080,7 @@ nsresult nsPluginHost::NewPluginURLStream(
   NS_ENSURE_SUCCESS(rv, rv);
 
   RefPtr<dom::Element> element;
-  nsCOMPtr<nsIDocument> doc;
+  nsCOMPtr<Document> doc;
   if (owner) {
     owner->GetDOMElement(getter_AddRefs(element));
     owner->GetDocument(getter_AddRefs(doc));

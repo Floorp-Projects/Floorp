@@ -29,11 +29,12 @@
 #include "nsAtom.h"
 #include "nsHashKeys.h"
 
-class nsIDocument;
 class nsNodeInfoManager;
 
 namespace mozilla {
 namespace dom {
+
+class Document;
 
 class NodeInfo final {
  public:
@@ -172,7 +173,7 @@ class NodeInfo final {
   /*
    * Retrieve a pointer to the document that owns this node info.
    */
-  nsIDocument* GetDocument() const { return mDocument; }
+  Document* GetDocument() const { return mDocument; }
 
  private:
   NodeInfo() = delete;
@@ -281,8 +282,7 @@ class NodeInfo final {
 
   // This is a non-owning reference, but it's safe since it's set to nullptr
   // by nsNodeInfoManager::DropDocumentReference when the document is destroyed.
-  nsIDocument* MOZ_NON_OWNING_REF
-      mDocument;  // Cache of mOwnerManager->mDocument
+  Document* MOZ_NON_OWNING_REF mDocument;  // Cache of mOwnerManager->mDocument
 
   NodeInfoInner mInner;
 

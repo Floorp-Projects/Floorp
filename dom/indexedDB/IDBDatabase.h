@@ -18,7 +18,6 @@
 #include "nsString.h"
 #include "nsTHashtable.h"
 
-class nsIDocument;
 class nsIEventTarget;
 class nsPIDOMWindowInner;
 
@@ -113,7 +112,7 @@ class IDBDatabase final : public IDBWrapperCache {
 
   uint64_t Version() const;
 
-  already_AddRefed<nsIDocument> GetOwnerDocument() const;
+  already_AddRefed<Document> GetOwnerDocument() const;
 
   void Close() {
     AssertIsOnOwningThread();

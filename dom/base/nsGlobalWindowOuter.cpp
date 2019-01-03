@@ -116,7 +116,7 @@
 #include "nsIDeviceSensors.h"
 #include "nsIContent.h"
 #include "nsIDocShell.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "Crypto.h"
 #include "nsDOMString.h"
 #include "nsIEmbeddingSiteWindow.h"
@@ -306,7 +306,7 @@ using mozilla::TimeStamp;
     if (mIsClosed) {                                    \
       return err_rval;                                  \
     }                                                   \
-    nsCOMPtr<nsIDocument> kungFuDeathGrip = GetDoc();   \
+    nsCOMPtr<Document> kungFuDeathGrip = GetDoc();      \
     ::mozilla::Unused << kungFuDeathGrip;               \
     if (!mInnerWindow) {                                \
       return err_rval;                                  \
@@ -1283,7 +1283,7 @@ JSObject* nsGlobalWindowOuter::GetGlobalJSObject() {
   return FastGetGlobalJSObject();
 }
 
-bool nsGlobalWindowOuter::WouldReuseInnerWindow(nsIDocument* aNewDocument) {
+bool nsGlobalWindowOuter::WouldReuseInnerWindow(Document* aNewDocument) {
   // We reuse the inner window when:
   // a. We are currently at our original document.
   // b. At least one of the following conditions are true:
@@ -1429,7 +1429,7 @@ WindowStateHolder::~WindowStateHolder() {
 
 NS_IMPL_ISUPPORTS(WindowStateHolder, WindowStateHolder)
 
-bool nsGlobalWindowOuter::ComputeIsSecureContext(nsIDocument* aDocument,
+bool nsGlobalWindowOuter::ComputeIsSecureContext(Document* aDocument,
                                                  SecureContextFlags aFlags) {
   nsCOMPtr<nsIPrincipal> principal = aDocument->NodePrincipal();
   if (nsContentUtils::IsSystemPrincipal(principal)) {
@@ -1451,7 +1451,7 @@ bool nsGlobalWindowOuter::ComputeIsSecureContext(nsIDocument* aDocument,
     // reason we only use the GetScriptableParent call above to check that we
     // have a same-type parent, but actually get the inner window via the
     // document that we know is embedding us.
-    nsIDocument* creatorDoc = aDocument->GetParentDocument();
+    Document* creatorDoc = aDocument->GetParentDocument();
     if (!creatorDoc) {
       return false;  // we must be tearing down
     }
@@ -1621,7 +1621,7 @@ static nsresult CreateNativeGlobalForInner(JSContext* aCx,
   return NS_OK;
 }
 
-nsresult nsGlobalWindowOuter::SetNewDocument(nsIDocument* aDocument,
+nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
                                              nsISupports* aState,
                                              bool aForceReuseInnerWindow) {
   MOZ_ASSERT(mDocumentPrincipal == nullptr,
@@ -1643,7 +1643,7 @@ nsresult nsGlobalWindowOuter::SetNewDocument(nsIDocument* aDocument,
     return NS_ERROR_UNEXPECTED;
   }
 
-  nsCOMPtr<nsIDocument> oldDoc = mDoc;
+  RefPtr<Document> oldDoc = mDoc;
 
   AutoJSAPI jsapi;
   jsapi.Init();
@@ -2802,7 +2802,7 @@ already_AddRefed<nsPIDOMWindowOuter> nsGlobalWindowOuter::GetContentInternal(
   nsCOMPtr<nsIDocShellTreeItem> primaryContent;
   if (aCallerType != CallerType::System) {
     if (mDoc) {
-      mDoc->WarnOnceAbout(nsIDocument::eWindowContentUntrusted);
+      mDoc->WarnOnceAbout(Document::eWindowContentUntrusted);
     }
     // If we're called by non-chrome code, make sure we don't return
     // the primary content window if the calling tab is hidden. In
@@ -3706,19 +3706,18 @@ nsresult nsGlobalWindowOuter::SetFullScreen(bool aFullscreen) {
                                aFullscreen);
 }
 
-static void FinishDOMFullscreenChange(nsIDocument* aDoc,
-                                      bool aInDOMFullscreen) {
+static void FinishDOMFullscreenChange(Document* aDoc, bool aInDOMFullscreen) {
   if (aInDOMFullscreen) {
     // Ask the document to handle any pending DOM fullscreen change.
-    if (!nsIDocument::HandlePendingFullscreenRequests(aDoc)) {
+    if (!Document::HandlePendingFullscreenRequests(aDoc)) {
       // If we don't end up having anything in fullscreen,
       // async request exiting fullscreen.
-      nsIDocument::AsyncExitFullscreen(aDoc);
+      Document::AsyncExitFullscreen(aDoc);
     }
   } else {
     // If the window is leaving fullscreen state, also ask the document
     // to exit from DOM Fullscreen.
-    nsIDocument::ExitFullscreenInDocTree(aDoc);
+    Document::ExitFullscreenInDocTree(aDoc);
   }
 }
 
@@ -4568,7 +4567,7 @@ void nsGlobalWindowOuter::FocusOuter() {
   nsCOMPtr<nsPIDOMWindowOuter> parent =
       parentDsti ? parentDsti->GetWindow() : nullptr;
   if (parent) {
-    nsCOMPtr<nsIDocument> parentdoc = parent->GetDoc();
+    nsCOMPtr<Document> parentdoc = parent->GetDoc();
     if (!parentdoc) {
       return;
     }
@@ -4986,7 +4985,7 @@ already_AddRefed<nsPIWindowRoot> nsGlobalWindowOuter::GetTopWindowRoot() {
 }
 
 void nsGlobalWindowOuter::FirePopupBlockedEvent(
-    nsIDocument* aDoc, nsIURI* aPopupURI, const nsAString& aPopupWindowName,
+    Document* aDoc, nsIURI* aPopupURI, const nsAString& aPopupWindowName,
     const nsAString& aPopupWindowFeatures) {
   MOZ_ASSERT(aDoc);
 
@@ -5020,7 +5019,7 @@ void nsGlobalWindowOuter::NotifyContentBlockingState(unsigned aState,
   if (!docShell) {
     return;
   }
-  nsCOMPtr<nsIDocument> doc = docShell->GetDocument();
+  nsCOMPtr<Document> doc = docShell->GetDocument();
   NS_ENSURE_TRUE_VOID(doc);
 
   // This event might come after the user has navigated to another page.
@@ -5084,7 +5083,7 @@ void nsGlobalWindowOuter::NotifyContentBlockingState(unsigned aState,
     MOZ_ASSERT(!aBlocked,
                "We don't expected to see blocked STATE_COOKIES_LOADED");
     // Note that the logic in this branch is the logical negation of the logic
-    // in other branches, since the nsIDocument API we have is phrased in
+    // in other branches, since the Document API we have is phrased in
     // "loaded" terms as opposed to "blocked" terms.
     blockedValue = !aBlocked;
     doc->SetHasCookiesLoaded(blockedValue, origin);
@@ -5120,8 +5119,7 @@ void nsGlobalWindowOuter::NotifyContentBlockingState(unsigned aState,
 }
 
 // static
-bool nsGlobalWindowOuter::SameLoadingURI(nsIDocument* aDoc,
-                                         nsIChannel* aChannel) {
+bool nsGlobalWindowOuter::SameLoadingURI(Document* aDoc, nsIChannel* aChannel) {
   nsCOMPtr<nsIURI> docURI = aDoc->GetDocumentURI();
   nsCOMPtr<nsILoadInfo> channelLoadInfo = aChannel->GetLoadInfo();
   if (!channelLoadInfo || !docURI) {
@@ -5235,7 +5233,7 @@ void nsGlobalWindowOuter::FireAbuseEvents(
     return;
   }
 
-  nsCOMPtr<nsIDocument> topDoc = window->GetDoc();
+  nsCOMPtr<Document> topDoc = window->GetDoc();
   nsCOMPtr<nsIURI> popupURI;
 
   // build the URI of the would-have-been popup window
@@ -5245,7 +5243,7 @@ void nsGlobalWindowOuter::FireAbuseEvents(
 
   nsIURI* baseURL = nullptr;
 
-  nsCOMPtr<nsIDocument> doc = GetEntryDocument();
+  nsCOMPtr<Document> doc = GetEntryDocument();
   if (doc) baseURL = doc->GetDocBaseURI();
 
   // use the base URI to build what would have been the popup's URI
@@ -5424,7 +5422,7 @@ bool nsGlobalWindowOuter::GatherPostMessageData(
   RefPtr<nsGlobalWindowInner> callerInnerWin = CallerInnerWindow(aCx);
   nsIPrincipal* callerPrin;
   if (callerInnerWin) {
-    nsCOMPtr<nsIDocument> doc = callerInnerWin->GetExtantDoc();
+    RefPtr<Document> doc = callerInnerWin->GetExtantDoc();
     if (!doc) {
       return false;
     }
@@ -5912,7 +5910,7 @@ void nsGlobalWindowOuter::EnterModalState() {
   // Clear the capturing content if it is under topDoc.
   // Usually the activeESM check above does that, but there are cases when
   // we don't have activeESM, or it is for different document.
-  nsIDocument* topDoc = topWin->GetExtantDoc();
+  Document* topDoc = topWin->GetExtantDoc();
   nsIContent* capturingContent = nsIPresShell::GetCapturingContent();
   if (capturingContent && topDoc &&
       nsContentUtils::ContentIsCrossDocDescendantOf(capturingContent, topDoc)) {
@@ -5956,7 +5954,7 @@ void nsGlobalWindowOuter::LeaveModalState() {
     }
 
     if (topWin->mSuspendedDoc) {
-      nsCOMPtr<nsIDocument> currentDoc = topWin->GetExtantDoc();
+      nsCOMPtr<Document> currentDoc = topWin->GetExtantDoc();
       topWin->mSuspendedDoc->UnsuppressEventHandlingAndFireEvents(
           currentDoc == topWin->mSuspendedDoc);
       topWin->mSuspendedDoc = nullptr;
@@ -6100,7 +6098,7 @@ void nsGlobalWindowOuter::UpdateCommands(const nsAString& anAction,
     return;
   }
 
-  nsIDocument* doc = rootWindow->GetExtantDoc();
+  Document* doc = rootWindow->GetExtantDoc();
 
   if (!doc) {
     return;
@@ -6224,7 +6222,7 @@ nsPIDOMWindowOuter* nsGlobalWindowOuter::GetPrivateParent() {
     if (!chromeElement)
       return nullptr;  // This is ok, just means a null parent.
 
-    nsIDocument* doc = chromeElement->GetComposedDoc();
+    Document* doc = chromeElement->GetComposedDoc();
     if (!doc) return nullptr;  // This is ok, just means a null parent.
 
     return doc->GetWindow();
@@ -6238,7 +6236,7 @@ nsPIDOMWindowOuter* nsGlobalWindowOuter::GetPrivateRoot() {
 
   nsCOMPtr<nsIContent> chromeElement(do_QueryInterface(mChromeEventHandler));
   if (chromeElement) {
-    nsIDocument* doc = chromeElement->GetComposedDoc();
+    Document* doc = chromeElement->GetComposedDoc();
     if (doc) {
       nsCOMPtr<nsPIDOMWindowOuter> parent = doc->GetWindow();
       if (parent) {
@@ -6300,7 +6298,7 @@ void nsGlobalWindowOuter::ActivateOrDeactivate(bool aActivate) {
   }
 }
 
-static bool NotifyDocumentTree(nsIDocument* aDocument, void* aData) {
+static bool NotifyDocumentTree(Document* aDocument, void* aData) {
   aDocument->EnumerateSubDocuments(NotifyDocumentTree, nullptr);
   aDocument->DocumentStatesChanged(NS_DOCUMENT_STATE_WINDOW_INACTIVE);
   return true;
@@ -6833,7 +6831,7 @@ nsresult nsGlobalWindowOuter::OpenInternal(
       // XXXbz should this just use EnsureInnerWindow()?
 
       // Force document creation.
-      nsCOMPtr<nsIDocument> doc = (*aReturn)->GetDoc();
+      nsCOMPtr<Document> doc = (*aReturn)->GetDoc();
       Unused << doc;
     }
   }
@@ -6852,7 +6850,7 @@ void nsGlobalWindowOuter::MaybeAllowStorageForOpenedWindow(nsIURI* aURI) {
     return;
   }
 
-  nsIDocument* doc = inner->GetDoc();
+  Document* doc = inner->GetDoc();
   if (!doc) {
     return;
   }
@@ -6930,7 +6928,7 @@ nsresult nsGlobalWindowOuter::SecurityCheckURL(const char* aURL,
   //
   // Note the algorithm to get the base URI should match the one
   // used to actually kick off the load in nsWindowWatcher.cpp.
-  nsCOMPtr<nsIDocument> doc = sourceWindow->GetDoc();
+  nsCOMPtr<Document> doc = sourceWindow->GetDoc();
   nsIURI* baseURI = nullptr;
   auto encoding = UTF_8_ENCODING;  // default to utf-8
   if (doc) {
@@ -7449,7 +7447,7 @@ void nsPIDOMWindowOuter::MaybeCreateDoc() {
     // Note that |document| here is the same thing as our mDoc, but we
     // don't have to explicitly set the member variable because the docshell
     // has already called SetNewDocument().
-    nsCOMPtr<nsIDocument> document = docShell->GetDocument();
+    nsCOMPtr<Document> document = docShell->GetDocument();
     Unused << document;
   }
 }
@@ -7467,7 +7465,7 @@ void nsPIDOMWindowOuter::SetChromeEventHandlerInternal(
 }
 
 mozilla::dom::DocGroup* nsPIDOMWindowOuter::GetDocGroup() const {
-  nsIDocument* doc = GetExtantDoc();
+  Document* doc = GetExtantDoc();
   if (doc) {
     return doc->GetDocGroup();
   }

@@ -16,7 +16,7 @@ class XULPersist final : public nsStubDocumentObserver {
  public:
   NS_DECL_ISUPPORTS
 
-  explicit XULPersist(nsIDocument* aDocument);
+  explicit XULPersist(Document* aDocument);
   void Init();
   void DropDocumentReference();
 
@@ -35,7 +35,7 @@ class XULPersist final : public nsStubDocumentObserver {
 
   nsCOMPtr<nsIXULStore> mLocalStore;
   // A weak pointer to our document. Nulled out by DropDocumentReference.
-  nsIDocument* MOZ_NON_OWNING_REF mDocument;
+  Document* MOZ_NON_OWNING_REF mDocument;
 };
 
 }  // namespace dom

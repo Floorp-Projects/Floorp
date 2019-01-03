@@ -27,7 +27,7 @@
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "mozilla/StaticPrefs.h"
 #include "nsContentUtils.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIGlobalObject.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsURLParsers.h"
@@ -465,7 +465,7 @@ already_AddRefed<CacheStorage> CacheStorage::Constructor(
 
   bool privateBrowsing = false;
   if (nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(global)) {
-    nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
+    RefPtr<Document> doc = window->GetExtantDoc();
     if (doc) {
       nsCOMPtr<nsILoadContext> loadContext = doc->GetLoadContext();
       privateBrowsing = loadContext && loadContext->UsePrivateBrowsing();

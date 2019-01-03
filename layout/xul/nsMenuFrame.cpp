@@ -17,7 +17,7 @@
 #include "nsNameSpaceManager.h"
 #include "nsMenuPopupFrame.h"
 #include "nsMenuBarFrame.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIComponentManager.h"
 #include "nsBoxLayoutState.h"
 #include "nsIScrollableFrame.h"
@@ -624,7 +624,7 @@ nsIContent* nsMenuFrame::GetAnchor() {
   nsAutoString id;
   mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::anchor, id);
   if (!id.IsEmpty()) {
-    nsIDocument* doc = mContent->OwnerDoc();
+    Document* doc = mContent->OwnerDoc();
 
     anchor =
         doc->GetAnonymousElementByAttribute(mContent, nsGkAtoms::anonid, id);
@@ -915,7 +915,7 @@ void nsMenuFrame::BuildAcceleratorText(bool aNotify) {
   if (keyValue.IsEmpty()) return;
 
   // Turn the document into a DOM document so we can use getElementById
-  nsIDocument* document = mContent->GetUncomposedDoc();
+  Document* document = mContent->GetUncomposedDoc();
   if (!document) return;
 
   // XXXsmaug If mContent is in shadow dom, should we use

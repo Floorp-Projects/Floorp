@@ -118,7 +118,7 @@ int hash_accesses, hash_collisions, hash_expansions, hash_overflows;
  * This closes the file, flushing buffers as appropriate.
  */
 static void
-__remove_database(DB *dbp)
+dbm_remove_database(DB *dbp)
 {
     HTAB *hashp = (HTAB *)dbp->internal;
 
@@ -134,7 +134,7 @@ __remove_database(DB *dbp)
 /* OPEN/CLOSE */
 
 extern DB *
-__hash_open(const char *file, int flags, int mode, const HASHINFO *info, int dflags)
+dbm_hash_open(const char *file, int flags, int mode, const HASHINFO *info, int dflags)
 {
     HTAB *hashp = NULL;
     struct stat statbuf;
@@ -199,7 +199,7 @@ __hash_open(const char *file, int flags, int mode, const HASHINFO *info, int dfl
         if (info && info->hash)
             hashp->hash = info->hash;
         else
-            hashp->hash = __default_hash;
+            hashp->hash = dbm_default_hash;
 
         hdrsize = read(hashp->fp, (char *)&hashp->hdr, sizeof(HASHHDR));
         if (hdrsize == -1)
@@ -243,9 +243,9 @@ __hash_open(const char *file, int flags, int mode, const HASHINFO *info, int dfl
 
     /* Initialize Buffer Manager */
     if (info && info->cachesize)
-        __buf_init(hashp, (int32)info->cachesize);
+        dbm_buf_init(hashp, (int32)info->cachesize);
     else
-        __buf_init(hashp, DEF_BUFSIZE);
+        dbm_buf_init(hashp, DEF_BUFSIZE);
 
     hashp->new_file = new_table;
 #ifdef macintosh
@@ -331,7 +331,7 @@ init_hash(HTAB *hashp, const char *file, HASHINFO *info)
     hashp->SSHIFT = DEF_SEGSIZE_SHIFT;
     hashp->DSIZE = DEF_DIRSIZE;
     hashp->FFACTOR = DEF_FFACTOR;
-    hashp->hash = __default_hash;
+    hashp->hash = dbm_default_hash;
     memset(hashp->SPARES, 0, sizeof(hashp->SPARES));
     memset(hashp->BITMAPS, 0, sizeof(hashp->BITMAPS));
 
@@ -353,13 +353,13 @@ init_hash(HTAB *hashp, const char *file, HASHINFO *info)
         if (hashp->BSIZE > MAX_BSIZE)
             hashp->BSIZE = MAX_BSIZE;
 #endif
-        hashp->BSHIFT = __log2((uint32)hashp->BSIZE);
+        hashp->BSHIFT = dbm_log2((uint32)hashp->BSIZE);
     }
 
     if (info) {
         if (info->bsize) {
             /* Round pagesize up to power of 2 */
-            hashp->BSHIFT = __log2(info->bsize);
+            hashp->BSHIFT = dbm_log2(info->bsize);
             hashp->BSIZE = 1 << hashp->BSHIFT;
             if (hashp->BSIZE > MAX_BSIZE) {
                 errno = EINVAL;
@@ -406,7 +406,7 @@ init_htab(HTAB *hashp, int nelem)
      */
     nelem = (nelem - 1) / hashp->FFACTOR + 1;
 
-    l2 = __log2((uint32)PR_MAX(nelem, 2));
+    l2 = dbm_log2((uint32)PR_MAX(nelem, 2));
     nbuckets = 1 << l2;
 
     hashp->SPARES[l2] = l2 + 1;
@@ -415,7 +415,7 @@ init_htab(HTAB *hashp, int nelem)
     hashp->LAST_FREED = 2;
 
     /* First bitmap page is at: splitpoint l2 page offset 1 */
-    if (__ibitmap(hashp, (int)OADDR_OF(l2, 1), l2 + 1, 0))
+    if (dbm_ibitmap(hashp, (int)OADDR_OF(l2, 1), l2 + 1, 0))
         return (-1);
 
     hashp->MAX_BUCKET = hashp->LOW_MASK = nbuckets - 1;
@@ -425,7 +425,7 @@ init_htab(HTAB *hashp, int nelem)
                       1;
 
     nsegs = (nbuckets - 1) / hashp->SGSIZE + 1;
-    nsegs = 1 << __log2((uint32)nsegs);
+    nsegs = 1 << dbm_log2((uint32)nsegs);
 
     if (nsegs > hashp->DSIZE)
         hashp->DSIZE = nsegs;
@@ -463,7 +463,7 @@ hdestroy(HTAB *hashp)
      * Call on buffer manager to free buffers, and if required,
      * write them to disk.
      */
-    if (__buf_free(hashp, 1, hashp->save_file))
+    if (dbm_buf_free(hashp, 1, hashp->save_file))
         save_errno = errno;
     if (hashp->dir) {
         free(*hashp->dir); /* Free initial segments */
@@ -585,7 +585,7 @@ hash_sync(const DB *dbp, uint flags)
 
     if (!hashp->save_file)
         return (0);
-    if (__buf_free(hashp, 0, 1) || flush_meta(hashp))
+    if (dbm_buf_free(hashp, 0, 1) || flush_meta(hashp))
         return (DBM_ERROR);
 #if defined(_WIN32) || defined(_WINDOWS)
     if (hashp->updateEOF && hashp->filename && !hashp->is_temp) {
@@ -635,8 +635,8 @@ flush_meta(HTAB *hashp)
     }
     for (i = 0; i < NCACHED; i++)
         if (hashp->mapp[i])
-            if (__put_page(hashp, (char *)hashp->mapp[i],
-                           hashp->BITMAPS[i], 0, 1))
+            if (dbm_put_page(hashp, (char *)hashp->mapp[i],
+                             hashp->BITMAPS[i], 0, 1))
                 return (-1);
     return (0);
 }
@@ -675,7 +675,7 @@ hash_get(
 #if defined(unix) && defined(DEBUG)
         printf("\n\nDBM Database has been corrupted, tell Lou...\n\n");
 #endif
-        __remove_database((DB *)dbp);
+        dbm_remove_database((DB *)dbp);
     }
 
     return (rv);
@@ -711,7 +711,7 @@ hash_put(
 #if defined(unix) && defined(DEBUG)
         printf("\n\nDBM Database has been corrupted, tell Lou...\n\n");
 #endif
-        __remove_database((DB *)dbp);
+        dbm_remove_database((DB *)dbp);
     }
 
     return (rv);
@@ -744,7 +744,7 @@ hash_delete(
 #if defined(unix) && defined(DEBUG)
         printf("\n\nDBM Database has been corrupted, tell Lou...\n\n");
 #endif
-        __remove_database((DB *)dbp);
+        dbm_remove_database((DB *)dbp);
     }
 
     return (rv);
@@ -777,7 +777,7 @@ hash_access(
     off = hashp->BSIZE;
     size = key->size;
     kp = (char *)key->data;
-    rbufp = __get_buf(hashp, __call_hash(hashp, kp, size), NULL, 0);
+    rbufp = dbm_get_buf(hashp, dbm_call_hash(hashp, kp, size), NULL, 0);
     if (!rbufp)
         return (DATABASE_CORRUPTED_ERROR);
     save_bufp = rbufp;
@@ -805,7 +805,7 @@ hash_access(
 
             last_overflow_page_no = *bp;
 
-            rbufp = __get_buf(hashp, *bp, rbufp, 0);
+            rbufp = dbm_get_buf(hashp, *bp, rbufp, 0);
             if (!rbufp) {
                 save_bufp->flags &= ~BUF_PIN;
                 return (DBM_ERROR);
@@ -822,17 +822,17 @@ hash_access(
             off = hashp->BSIZE;
         } else if (bp[1] < REAL_KEY) {
             if ((ndx =
-                     __find_bigpair(hashp, rbufp, ndx, kp, (int)size)) > 0)
+                     dbm_find_bigpair(hashp, rbufp, ndx, kp, (int)size)) > 0)
                 goto found;
             if (ndx == -2) {
                 bufp = rbufp;
                 if (!(pageno =
-                          __find_last_page(hashp, &bufp))) {
+                          dbm_find_last_page(hashp, &bufp))) {
                     ndx = 0;
                     rbufp = bufp;
                     break; /* FOR */
                 }
-                rbufp = __get_buf(hashp, pageno, bufp, 0);
+                rbufp = dbm_get_buf(hashp, pageno, bufp, 0);
                 if (!rbufp) {
                     save_bufp->flags &= ~BUF_PIN;
                     return (DBM_ERROR);
@@ -853,7 +853,7 @@ hash_access(
     switch (action) {
         case HASH_PUT:
         case HASH_PUTNEW:
-            if (__addel(hashp, rbufp, key, val)) {
+            if (dbm_addel(hashp, rbufp, key, val)) {
                 save_bufp->flags &= ~BUF_PIN;
                 return (DBM_ERROR);
             } else {
@@ -875,7 +875,7 @@ found:
         case HASH_GET:
             bp = (uint16 *)rbufp->page;
             if (bp[ndx + 1] < REAL_KEY) {
-                if (__big_return(hashp, rbufp, ndx, val, 0))
+                if (dbm_big_return(hashp, rbufp, ndx, val, 0))
                     return (DBM_ERROR);
             } else {
                 val->data = (uint8 *)rbufp->page + (int)bp[ndx + 1];
@@ -883,14 +883,14 @@ found:
             }
             break;
         case HASH_PUT:
-            if ((__delpair(hashp, rbufp, ndx)) ||
-                (__addel(hashp, rbufp, key, val))) {
+            if ((dbm_delpair(hashp, rbufp, ndx)) ||
+                (dbm_addel(hashp, rbufp, key, val))) {
                 save_bufp->flags &= ~BUF_PIN;
                 return (DBM_ERROR);
             }
             break;
         case HASH_DELETE:
-            if (__delpair(hashp, rbufp, ndx))
+            if (dbm_delpair(hashp, rbufp, ndx))
                 return (DBM_ERROR);
             break;
         default:
@@ -933,7 +933,7 @@ hash_seq(
             for (bucket = hashp->cbucket;
                  bucket <= (uint32)hashp->MAX_BUCKET;
                  bucket++, hashp->cndx = 1) {
-                bufp = __get_buf(hashp, bucket, NULL, 0);
+                bufp = dbm_get_buf(hashp, bucket, NULL, 0);
                 if (!bufp)
                     return (DBM_ERROR);
                 hashp->cpage = bufp;
@@ -955,7 +955,7 @@ hash_seq(
 #endif
         while (bp[hashp->cndx + 1] == OVFLPAGE) {
             bufp = hashp->cpage =
-                __get_buf(hashp, bp[hashp->cndx], bufp, 0);
+                dbm_get_buf(hashp, bp[hashp->cndx], bufp, 0);
             if (!bufp)
                 return (DBM_ERROR);
             bp = (uint16 *)(bufp->page);
@@ -968,7 +968,7 @@ hash_seq(
     }
     ndx = hashp->cndx;
     if (bp[ndx + 1] < REAL_KEY) {
-        if (__big_keydata(hashp, bufp, key, data, 1))
+        if (dbm_big_keydata(hashp, bufp, key, data, 1))
             return (DBM_ERROR);
     } else {
         key->data = (uint8 *)hashp->cpage->page + bp[ndx];
@@ -994,7 +994,7 @@ hash_seq(
  *  -1 ==> Error
  */
 extern int
-__expand_table(HTAB *hashp)
+dbm_expand_table(HTAB *hashp)
 {
     uint32 old_bucket, new_bucket;
     int new_segnum, spare_ndx;
@@ -1029,7 +1029,7 @@ __expand_table(HTAB *hashp)
      * * increases), we need to copy the current contents of the spare
      * split bucket to the next bucket.
      */
-    spare_ndx = __log2((uint32)(hashp->MAX_BUCKET + 1));
+    spare_ndx = dbm_log2((uint32)(hashp->MAX_BUCKET + 1));
     if (spare_ndx > hashp->OVFL_POINT) {
         hashp->SPARES[spare_ndx] = hashp->SPARES[hashp->OVFL_POINT];
         hashp->OVFL_POINT = spare_ndx;
@@ -1041,7 +1041,7 @@ __expand_table(HTAB *hashp)
         hashp->HIGH_MASK = new_bucket | hashp->LOW_MASK;
     }
     /* Relocate records to the new bucket */
-    return (__split_page(hashp, old_bucket, new_bucket));
+    return (dbm_split_page(hashp, old_bucket, new_bucket));
 }
 
 /*
@@ -1065,7 +1065,7 @@ hash_realloc(
 }
 
 extern uint32
-__call_hash(HTAB *hashp, char *k, size_t len)
+dbm_call_hash(HTAB *hashp, char *k, size_t len)
 {
     uint32 n, bucket;
 

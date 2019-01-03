@@ -71,9 +71,7 @@
                 "name" : "test-tls13-legacy-version.py",
                 "arguments": [
                     "-p", "@PORT@"
-                ],
-                "comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1490006",
-                "exp_pass": false
+                ]
             },
             {
                 "name" : "test-tls13-nociphers.py",

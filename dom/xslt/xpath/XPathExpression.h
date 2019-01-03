@@ -14,7 +14,7 @@
 #include "mozilla/dom/XPathExpressionBinding.h"
 
 class Expr;
-class nsIDocument;
+
 class nsINode;
 class txResultRecycler;
 
@@ -29,7 +29,7 @@ class XPathResult;
 class XPathExpression final : public NonRefcountedDOMObject {
  public:
   XPathExpression(nsAutoPtr<Expr>&& aExpression, txResultRecycler* aRecycler,
-                  nsIDocument* aDocument);
+                  Document* aDocument);
   ~XPathExpression();
 
   bool WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto,

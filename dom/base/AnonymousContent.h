@@ -10,7 +10,7 @@
 #include "mozilla/dom/Element.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsICSSDeclaration.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 
 namespace mozilla {
 namespace dom {

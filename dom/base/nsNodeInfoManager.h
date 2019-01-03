@@ -21,11 +21,16 @@
 
 class nsBindingManager;
 class nsAtom;
-class nsIDocument;
 class nsIPrincipal;
 class nsWindowSizes;
 template <class T>
 struct already_AddRefed;
+
+namespace mozilla {
+namespace dom {
+class Document;
+}
+}  // namespace mozilla
 
 class nsNodeInfoManager final {
  private:
@@ -41,7 +46,7 @@ class nsNodeInfoManager final {
   /**
    * Initialize the nodeinfo manager with a document.
    */
-  nsresult Init(nsIDocument* aDocument);
+  nsresult Init(mozilla::dom::Document*);
 
   /**
    * Release the reference to the document, this will be called when
@@ -81,7 +86,7 @@ class nsNodeInfoManager final {
    * Retrieve a pointer to the document that owns this node info
    * manager.
    */
-  nsIDocument* GetDocument() const { return mDocument; }
+  mozilla::dom::Document* GetDocument() const { return mDocument; }
 
   /**
    * Gets the principal of the document this nodeinfo manager belongs to.
@@ -118,7 +123,7 @@ class nsNodeInfoManager final {
   void AddSizeOfIncludingThis(nsWindowSizes& aSizes) const;
 
  protected:
-  friend class nsIDocument;
+  friend class mozilla::dom::Document;
   friend class nsXULPrototypeDocument;
 
   /**
@@ -154,7 +159,7 @@ class nsNodeInfoManager final {
   };
 
   nsDataHashtable<NodeInfoInnerKey, mozilla::dom::NodeInfo*> mNodeInfoHash;
-  nsIDocument* MOZ_NON_OWNING_REF mDocument;  // WEAK
+  mozilla::dom::Document* MOZ_NON_OWNING_REF mDocument;  // WEAK
   uint32_t mNonDocumentNodeInfos;
   nsCOMPtr<nsIPrincipal> mPrincipal;  // Never null after Init() succeeds.
   nsCOMPtr<nsIPrincipal> mDefaultPrincipal;  // Never null after Init() succeeds

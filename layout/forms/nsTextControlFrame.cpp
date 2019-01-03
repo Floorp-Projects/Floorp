@@ -246,7 +246,7 @@ nsresult nsTextControlFrame::EnsureEditorInitialized() {
 
   if (mEditorHasBeenInitialized) return NS_OK;
 
-  nsIDocument* doc = mContent->GetComposedDoc();
+  Document* doc = mContent->GetComposedDoc();
   NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
 
   AutoWeakFrame weakFrame(this);
@@ -326,7 +326,7 @@ nsresult nsTextControlFrame::EnsureEditorInitialized() {
 
 static already_AddRefed<Element> CreateEmptyDiv(
     const nsTextControlFrame& aOwnerFrame) {
-  nsIDocument* doc = aOwnerFrame.PresContext()->Document();
+  Document* doc = aOwnerFrame.PresContext()->Document();
   RefPtr<mozilla::dom::NodeInfo> nodeInfo = doc->NodeInfoManager()->GetNodeInfo(
       nsGkAtoms::div, nullptr, kNameSpaceID_XHTML, nsINode::ELEMENT_NODE);
 
@@ -722,7 +722,7 @@ void nsTextControlFrame::SetFocus(bool aOn, bool aRepaint) {
   if (!isFocusedRightNow) {
     // Don't scroll the current selection if we've been focused using the mouse.
     uint32_t lastFocusMethod = 0;
-    nsIDocument* doc = GetContent()->GetComposedDoc();
+    Document* doc = GetContent()->GetComposedDoc();
     if (doc) {
       nsIFocusManager* fm = nsFocusManager::GetFocusManager();
       if (fm) {

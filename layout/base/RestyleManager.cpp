@@ -19,6 +19,7 @@
 #include "mozilla/Unused.h"
 #include "mozilla/ViewportFrame.h"
 #include "mozilla/dom/ChildIterator.h"
+#include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/ElementInlines.h"
 #include "mozilla/dom/HTMLBodyElement.h"
 
@@ -29,7 +30,6 @@
 #include "nsContentUtils.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsCSSRendering.h"
-#include "nsIDocumentInlines.h"
 #include "nsIFrame.h"
 #include "nsIFrameInlines.h"
 #include "nsImageFrame.h"
@@ -1111,7 +1111,7 @@ static bool IsPrimaryFrameOfRootOrBodyElement(nsIFrame* aFrame) {
     return false;
   }
 
-  nsIDocument* document = content->OwnerDoc();
+  Document* document = content->OwnerDoc();
   Element* root = document->GetRootElement();
   if (!root) {
     return false;
@@ -2921,7 +2921,7 @@ void RestyleManager::DoProcessPendingRestyles(ServoTraversalFlags aFlags) {
   AnimationsWithDestroyedFrame animationsWithDestroyedFrame(this);
 
   ServoStyleSet* styleSet = StyleSet();
-  nsIDocument* doc = presContext->Document();
+  Document* doc = presContext->Document();
 
   // Ensure the refresh driver is active during traversal to avoid mutating
   // mActiveTimer and mMostRecentRefresh time.

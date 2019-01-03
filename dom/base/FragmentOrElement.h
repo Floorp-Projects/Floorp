@@ -31,7 +31,6 @@ class nsDOMTokenList;
 class nsIControllers;
 class nsICSSDeclaration;
 class nsDOMCSSAttributeDeclaration;
-class nsIDocument;
 class nsDOMStringMap;
 class nsIURI;
 
@@ -115,7 +114,7 @@ class FragmentOrElement : public nsIContent {
    * If there are listeners for DOMNodeInserted event, fires the event on all
    * aNodes
    */
-  static void FireNodeInserted(nsIDocument* aDoc, nsINode* aParent,
+  static void FireNodeInserted(Document* aDoc, nsINode* aParent,
                                nsTArray<nsCOMPtr<nsIContent> >& aNodes);
 
   NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS_INHERITED(

@@ -45,7 +45,7 @@ void XBLChildrenElement::DoRemoveDefaultContent(bool aNotify) {
   // binding initially.
   if (aNotify) {
     Element* parent = GetParentElement();
-    if (nsIDocument* doc = parent->GetComposedDoc()) {
+    if (Document* doc = parent->GetComposedDoc()) {
       if (nsIPresShell* shell = doc->GetShell()) {
         shell->DestroyFramesForAndRestyle(parent);
       }
