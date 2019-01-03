@@ -1746,6 +1746,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(Document)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAnonymousContents)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCommandDispatcher)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFeaturePolicy)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSuppressedEventListener)
 
   // Traverse all our nsCOMArrays.
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mStyleSheets)
@@ -1837,6 +1838,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Document)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mCommandDispatcher)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocumentL10n);
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mFeaturePolicy)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mSuppressedEventListener)
 
   tmp->mParentDocument = nullptr;
 
@@ -8490,6 +8492,17 @@ void Document::AddSuspendedChannelEventQueue(net::ChannelEventQueue* aQueue) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(EventHandlingSuppressed());
   mSuspendedQueues.AppendElement(aQueue);
+}
+
+static bool SetSuppressedEventListenerInSubDocument(Document* aDocument,
+                                                    void* aData) {
+  aDocument->SetSuppressedEventListener(static_cast<EventListener*>(aData));
+  return true;
+}
+
+void Document::SetSuppressedEventListener(EventListener* aListener) {
+  mSuppressedEventListener = aListener;
+  EnumerateSubDocuments(SetSuppressedEventListenerInSubDocument, aListener);
 }
 
 nsISupports* Document::GetCurrentContentSink() {
