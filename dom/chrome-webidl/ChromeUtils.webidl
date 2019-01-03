@@ -105,6 +105,18 @@ namespace ChromeUtils {
   ArrayBuffer base64URLDecode(ByteString string,
                               Base64URLDecodeOptions options);
 
+  /**
+   * Cause the current process to fatally crash unless the given condition is
+   * true. This is similar to MOZ_RELEASE_ASSERT in C++ code.
+   *
+   * WARNING: This message is included publicly in the crash report, and must
+   * not contain private information.
+   *
+   * Crash report will be augmented with the current JS stack information.
+   */
+  void releaseAssert(boolean condition,
+                     optional DOMString message = "<no message>");
+
 #ifdef NIGHTLY_BUILD
 
   /**
