@@ -425,7 +425,9 @@ static ArrayBufferObject::BufferContents AllocateArrayBufferContents(
 static void NoteViewBufferWasDetached(
     ArrayBufferViewObject* view, ArrayBufferObject::BufferContents newContents,
     JSContext* cx) {
-  view->notifyBufferDetached(cx, newContents.data());
+  MOZ_ASSERT(!view->isSharedMemory());
+
+  view->notifyBufferDetached(newContents.data());
 
   // Notify compiled jit code that the base pointer has moved.
   MarkObjectStateChange(cx, view);
