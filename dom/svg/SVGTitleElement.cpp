@@ -52,8 +52,7 @@ void SVGTitleElement::ContentRemoved(nsIContent* aChild,
   SendTitleChangeEvent(false);
 }
 
-nsresult SVGTitleElement::BindToTree(nsIDocument* aDocument,
-                                     nsIContent* aParent,
+nsresult SVGTitleElement::BindToTree(Document* aDocument, nsIContent* aParent,
                                      nsIContent* aBindingParent) {
   // Let this fall through.
   nsresult rv =
@@ -79,7 +78,7 @@ void SVGTitleElement::DoneAddingChildren(bool aHaveNotified) {
 }
 
 void SVGTitleElement::SendTitleChangeEvent(bool aBound) {
-  nsIDocument* doc = GetUncomposedDoc();
+  Document* doc = GetUncomposedDoc();
   if (doc) {
     doc->NotifyPossibleTitleChange(aBound);
   }

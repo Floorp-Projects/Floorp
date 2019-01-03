@@ -17,9 +17,15 @@ function next() {
 }
 
 onmessage = function(e) {
-  if (e == 'xhr') {
+  if (e.data == 'xhr') {
     test_xhr_basic();
-  } else {
+  } else if (e.data == 'fetch') {
     test_fetch_basic();
+  } else if (e.data == 'response') {
+    test_response_basic();
+  } else if (e.data == 'request') {
+    test_request_basic();
+  } else {
+    ok(false, "Unknown message");
   }
 }

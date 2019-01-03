@@ -32,7 +32,7 @@
 #include "nsContentUtils.h"
 #include "nsDocShell.h"
 #include "nsError.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIPermissionManager.h"
 #include "nsIPrincipal.h"
 #include "nsIScriptError.h"
@@ -760,7 +760,7 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
       // MediaInputPort from the input stream, and let main thread check
       // track principals async later.
       nsPIDOMWindowInner* window = mRecorder->GetParentObject();
-      nsIDocument* document = window ? window->GetExtantDoc() : nullptr;
+      Document* document = window ? window->GetExtantDoc() : nullptr;
       nsContentUtils::ReportToConsole(nsIScriptError::errorFlag,
                                       NS_LITERAL_CSTRING("Media"), document,
                                       nsContentUtils::eDOM_PROPERTIES,
@@ -799,7 +799,7 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
 
   bool PrincipalSubsumes(nsIPrincipal* aPrincipal) {
     if (!mRecorder->GetOwner()) return false;
-    nsCOMPtr<nsIDocument> doc = mRecorder->GetOwner()->GetExtantDoc();
+    nsCOMPtr<Document> doc = mRecorder->GetOwner()->GetExtantDoc();
     if (!doc) {
       return false;
     }
@@ -825,9 +825,9 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
 
   bool AudioNodePrincipalSubsumes() {
     MOZ_ASSERT(mRecorder->mAudioNode);
-    nsIDocument* doc = mRecorder->mAudioNode->GetOwner()
-                           ? mRecorder->mAudioNode->GetOwner()->GetExtantDoc()
-                           : nullptr;
+    Document* doc = mRecorder->mAudioNode->GetOwner()
+                        ? mRecorder->mAudioNode->GetOwner()->GetExtantDoc()
+                        : nullptr;
     nsCOMPtr<nsIPrincipal> principal = doc ? doc->NodePrincipal() : nullptr;
     return PrincipalSubsumes(principal);
   }
@@ -1290,7 +1290,7 @@ void MediaRecorder::Start(const Optional<int32_t>& aTimeSlice,
     // to record, we should throw a security error.
     bool subsumes = false;
     nsPIDOMWindowInner* window;
-    nsIDocument* doc;
+    Document* doc;
     if (!(window = GetOwner()) || !(doc = window->GetExtantDoc()) ||
         NS_FAILED(doc->NodePrincipal()->Subsumes(mDOMStream->GetPrincipal(),
                                                  &subsumes)) ||
@@ -1640,7 +1640,7 @@ void MediaRecorder::RemoveSession(Session* aSession) {
 void MediaRecorder::NotifyOwnerDocumentActivityChanged() {
   nsPIDOMWindowInner* window = GetOwner();
   NS_ENSURE_TRUE_VOID(window);
-  nsIDocument* doc = window->GetExtantDoc();
+  Document* doc = window->GetExtantDoc();
   NS_ENSURE_TRUE_VOID(doc);
 
   bool inFrameSwap = false;

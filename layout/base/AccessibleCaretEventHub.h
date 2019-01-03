@@ -21,7 +21,6 @@
 
 class nsIPresShell;
 class nsITimer;
-class nsIDocument;
 
 namespace mozilla {
 class AccessibleCaretManager;
@@ -97,7 +96,7 @@ class AccessibleCaretEventHub : public nsIReflowObserver,
   State* GetState() const;
 
   MOZ_CAN_RUN_SCRIPT
-  void OnSelectionChange(nsIDocument* aDocument, dom::Selection* aSelection,
+  void OnSelectionChange(dom::Document* aDocument, dom::Selection* aSelection,
                          int16_t aReason);
 
  protected:
@@ -214,7 +213,7 @@ class AccessibleCaretEventHub::State {
   virtual void OnBlur(AccessibleCaretEventHub* aContext,
                       bool aIsLeavingDocument) {}
   virtual void OnSelectionChanged(AccessibleCaretEventHub* aContext,
-                                  nsIDocument* aDoc, dom::Selection* aSel,
+                                  dom::Document* aDoc, dom::Selection* aSel,
                                   int16_t aReason) {}
   virtual void OnReflow(AccessibleCaretEventHub* aContext) {}
   virtual void Enter(AccessibleCaretEventHub* aContext) {}

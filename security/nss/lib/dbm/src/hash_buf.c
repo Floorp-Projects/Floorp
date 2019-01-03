@@ -104,7 +104,7 @@ static BUFHEAD *newbuf(HTAB *, uint32, BUFHEAD *);
  * address you are seeking.
  */
 extern BUFHEAD *
-__get_buf(HTAB *hashp, uint32 addr, BUFHEAD *prev_bp, int newpage)
+dbm_get_buf(HTAB *hashp, uint32 addr, BUFHEAD *prev_bp, int newpage)
 /* If prev_bp set, indicates a new overflow page. */
 {
     register BUFHEAD *bp;
@@ -124,7 +124,7 @@ __get_buf(HTAB *hashp, uint32 addr, BUFHEAD *prev_bp, int newpage)
         /* Grab buffer out of directory */
         segment_ndx = addr & (hashp->SGSIZE - 1);
 
-        /* valid segment ensured by __call_hash() */
+        /* valid segment ensured by dbm_call_hash() */
         segp = hashp->dir[addr >> hashp->SSHIFT];
 #ifdef DEBUG
         assert(segp != NULL);
@@ -140,7 +140,7 @@ __get_buf(HTAB *hashp, uint32 addr, BUFHEAD *prev_bp, int newpage)
         bp = newbuf(hashp, addr, prev_bp);
         if (!bp)
             return (NULL);
-        if (__get_page(hashp, bp->page, addr, !prev_bp, is_disk, 0)) {
+        if (dbm_get_page(hashp, bp->page, addr, !prev_bp, is_disk, 0)) {
             /* free bp and its page */
             if (prev_bp) {
                 /* if prev_bp is set then the new page that
@@ -242,8 +242,8 @@ newbuf(HTAB *hashp, uint32 addr, BUFHEAD *prev_bp)
                 }
                 oaddr = shortp[shortp[0] - 1];
             }
-            if ((bp->flags & BUF_MOD) && __put_page(hashp, bp->page,
-                                                    bp->addr, (int)IS_BUCKET(bp->flags), 0))
+            if ((bp->flags & BUF_MOD) && dbm_put_page(hashp, bp->page,
+                                                      bp->addr, (int)IS_BUCKET(bp->flags), 0))
                 return (NULL);
             /*
              * Update the pointer to this page (i.e. invalidate it).
@@ -298,8 +298,8 @@ newbuf(HTAB *hashp, uint32 addr, BUFHEAD *prev_bp)
                     /* set before __put_page */
                     oaddr = shortp[shortp[0] - 1];
                 }
-                if ((xbp->flags & BUF_MOD) && __put_page(hashp,
-                                                         xbp->page, xbp->addr, 0, 0))
+                if ((xbp->flags & BUF_MOD) && dbm_put_page(hashp,
+                                                           xbp->page, xbp->addr, 0, 0))
                     return (NULL);
                 xbp->addr = 0;
                 xbp->flags = 0;
@@ -335,7 +335,7 @@ newbuf(HTAB *hashp, uint32 addr, BUFHEAD *prev_bp)
 }
 
 extern void
-__buf_init(HTAB *hashp, int32 nbytes)
+dbm_buf_init(HTAB *hashp, int32 nbytes)
 {
     BUFHEAD *bfp;
     int npages;
@@ -358,7 +358,7 @@ __buf_init(HTAB *hashp, int32 nbytes)
 }
 
 extern int
-__buf_free(HTAB *hashp, int do_free, int to_disk)
+dbm_buf_free(HTAB *hashp, int do_free, int to_disk)
 {
     BUFHEAD *bp;
     int status = -1;
@@ -370,8 +370,8 @@ __buf_free(HTAB *hashp, int do_free, int to_disk)
         /* Check that the buffer is valid */
         if (bp->addr || IS_BUCKET(bp->flags)) {
             if (to_disk && (bp->flags & BUF_MOD) &&
-                (status = __put_page(hashp, bp->page,
-                                     bp->addr, IS_BUCKET(bp->flags), 0))) {
+                (status = dbm_put_page(hashp, bp->page,
+                                       bp->addr, IS_BUCKET(bp->flags), 0))) {
 
                 if (do_free) {
                     if (bp->page)
@@ -397,7 +397,7 @@ __buf_free(HTAB *hashp, int do_free, int to_disk)
 }
 
 extern void
-__reclaim_buf(HTAB *hashp, BUFHEAD *bp)
+dbm_reclaim_buf(HTAB *hashp, BUFHEAD *bp)
 {
     bp->ovfl = 0;
     bp->addr = 0;

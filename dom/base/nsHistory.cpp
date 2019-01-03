@@ -9,7 +9,7 @@
 #include "jsapi.h"
 #include "nsCOMPtr.h"
 #include "nsPIDOMWindow.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "nsIDocShell.h"
@@ -113,7 +113,7 @@ void nsHistory::GetState(JSContext* aCx, JS::MutableHandle<JS::Value> aResult,
     return;
   }
 
-  nsCOMPtr<nsIDocument> doc = win->GetExtantDoc();
+  nsCOMPtr<Document> doc = win->GetExtantDoc();
   if (!doc) {
     aRv.Throw(NS_ERROR_NOT_AVAILABLE);
     return;
@@ -162,7 +162,7 @@ void nsHistory::Go(int32_t aDelta, ErrorResult& aRv) {
       // trick to work around gecko reflow bugs, and this should have
       // the same effect.
 
-      nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
+      nsCOMPtr<Document> doc = window->GetExtantDoc();
 
       nsPresContext* pcx;
       if (doc && (pcx = doc->GetPresContext())) {

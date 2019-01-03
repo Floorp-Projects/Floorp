@@ -15,8 +15,13 @@
 
 #include "mozilla/StaticPtr.h"
 
-class nsIDocument;
 class nsIWidget;
+
+namespace mozilla {
+namespace dom {
+class Document;
+}
+}
 
 struct VisitedURI {
   nsCOMPtr<nsIURI> mURI;
@@ -51,7 +56,7 @@ class GeckoViewHistory final : public mozilla::IHistory,
 
   void QueryVisitedStateInContentProcess();
   void QueryVisitedStateInParentProcess();
-  void DispatchNotifyVisited(nsIURI* aURI, nsIDocument* aDocument);
+  void DispatchNotifyVisited(nsIURI* aURI, mozilla::dom::Document* aDocument);
 
   static mozilla::StaticRefPtr<GeckoViewHistory> sHistory;
 

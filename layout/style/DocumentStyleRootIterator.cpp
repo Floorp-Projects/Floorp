@@ -20,7 +20,7 @@ DocumentStyleRootIterator::DocumentStyleRootIterator(nsINode* aStyleRoot)
     return;
   }
 
-  nsIDocument* doc = aStyleRoot->OwnerDoc();
+  dom::Document* doc = aStyleRoot->OwnerDoc();
   MOZ_ASSERT(doc == aStyleRoot);
   if (Element* root = doc->GetRootElement()) {
     mStyleRoots.AppendElement(root);

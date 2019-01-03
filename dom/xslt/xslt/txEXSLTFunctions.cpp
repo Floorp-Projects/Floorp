@@ -41,7 +41,7 @@ class txStylesheetCompilerState;
 // Utility functions
 // ------------------------------------------------------------------
 
-static nsIDocument* getSourceDocument(txIEvalContext* aContext) {
+static Document* getSourceDocument(txIEvalContext* aContext) {
   txExecutionState* es =
       static_cast<txExecutionState*>(aContext->getPrivateContext());
   if (!es) {
@@ -56,7 +56,7 @@ static nsIDocument* getSourceDocument(txIEvalContext* aContext) {
 
 static nsresult convertRtfToNode(txIEvalContext* aContext,
                                  txResultTreeFragment* aRtf) {
-  nsIDocument* doc = getSourceDocument(aContext);
+  Document* doc = getSourceDocument(aContext);
   if (!doc) {
     return NS_ERROR_UNEXPECTED;
   }
@@ -85,7 +85,7 @@ static nsresult convertRtfToNode(txIEvalContext* aContext,
 
 static nsresult createTextNode(txIEvalContext* aContext, nsString& aValue,
                                txXPathNode** aResult) {
-  nsIDocument* doc = getSourceDocument(aContext);
+  Document* doc = getSourceDocument(aContext);
   if (!doc) {
     return NS_ERROR_UNEXPECTED;
   }
@@ -104,7 +104,7 @@ static nsresult createTextNode(txIEvalContext* aContext, nsString& aValue,
 static nsresult createAndAddToResult(nsAtom* aName, const nsAString& aValue,
                                      txNodeSet* aResultSet,
                                      DocumentFragment* aResultHolder) {
-  nsIDocument* doc = aResultHolder->OwnerDoc();
+  Document* doc = aResultHolder->OwnerDoc();
   nsCOMPtr<Element> elem =
       doc->CreateElem(nsDependentAtomString(aName), nullptr, kNameSpaceID_None);
   NS_ENSURE_TRUE(elem, NS_ERROR_NULL_POINTER);
@@ -437,7 +437,7 @@ nsresult txEXSLTFunctionCall::evaluate(txIEvalContext* aContext,
       }
 
       // Set up holders for the result
-      nsIDocument* sourceDoc = getSourceDocument(aContext);
+      Document* sourceDoc = getSourceDocument(aContext);
       NS_ENSURE_STATE(sourceDoc);
 
       RefPtr<DocumentFragment> docFrag =
@@ -670,7 +670,7 @@ nsresult txEXSLTRegExFunctionCall::evaluate(txIEvalContext* aContext,
 
   switch (mType) {
     case txEXSLTType::MATCH: {
-      nsCOMPtr<nsIDocument> sourceDoc = getSourceDocument(aContext);
+      nsCOMPtr<Document> sourceDoc = getSourceDocument(aContext);
       NS_ENSURE_STATE(sourceDoc);
 
       RefPtr<DocumentFragment> docFrag;

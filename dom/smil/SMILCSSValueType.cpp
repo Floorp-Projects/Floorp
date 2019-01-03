@@ -25,7 +25,7 @@
 #include "mozilla/dom/Element.h"
 #include "nsDebug.h"
 #include "nsStyleUtil.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 
 using namespace mozilla::dom;
 
@@ -414,7 +414,7 @@ static ServoAnimationValues ValueFromStringHelper(nsCSSPropertyID aPropID,
                                                   const nsAString& aString) {
   ServoAnimationValues result;
 
-  nsIDocument* doc = aTargetElement->GetComposedDoc();
+  Document* doc = aTargetElement->GetComposedDoc();
   if (!doc) {
     return result;
   }
@@ -451,7 +451,7 @@ void SMILCSSValueType::ValueFromString(nsCSSPropertyID aPropID,
     return;
   }
 
-  nsIDocument* doc = aTargetElement->GetComposedDoc();
+  Document* doc = aTargetElement->GetComposedDoc();
   if (doc && !nsStyleUtil::CSPAllowsInlineStyle(nullptr, doc->NodePrincipal(),
                                                 nullptr, doc->GetDocumentURI(),
                                                 0, 0, aString, nullptr)) {
@@ -484,7 +484,7 @@ nsSMILValue SMILCSSValueType::ValueFromAnimationValue(
     const AnimationValue& aValue) {
   nsSMILValue result;
 
-  nsIDocument* doc = aTargetElement->GetComposedDoc();
+  Document* doc = aTargetElement->GetComposedDoc();
   // We'd like to avoid serializing |aValue| if possible, and since the
   // string passed to CSPAllowsInlineStyle is only used for reporting violations
   // and an intermediate CSS value is not likely to be particularly useful

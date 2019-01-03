@@ -17,7 +17,7 @@
 #include "nsIContent.h"
 #include "nsRefreshDriver.h"
 #include "nsPIDOMWindow.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsAnimationManager.h"
 #include "nsStyleTransformMatrix.h"
 #include "nsTransitionManager.h"

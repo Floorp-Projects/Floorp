@@ -7,7 +7,7 @@
 #include "nsCOMPtr.h"
 #include "nsTitleBarFrame.h"
 #include "nsIContent.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsGkAtoms.h"
 #include "nsIWidget.h"
 #include "nsMenuPopupFrame.h"

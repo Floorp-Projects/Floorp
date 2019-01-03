@@ -26,8 +26,8 @@ nsHtml5DocumentBuilder::nsHtml5DocumentBuilder(bool aRunsToCompletion)
   mRunsToCompletion = aRunsToCompletion;
 }
 
-nsresult nsHtml5DocumentBuilder::Init(nsIDocument* aDoc, nsIURI* aURI,
-                                      nsISupports* aContainer,
+nsresult nsHtml5DocumentBuilder::Init(mozilla::dom::Document* aDoc,
+                                      nsIURI* aURI, nsISupports* aContainer,
                                       nsIChannel* aChannel) {
   return nsContentSink::Init(aDoc, aURI, aContainer, aChannel);
 }

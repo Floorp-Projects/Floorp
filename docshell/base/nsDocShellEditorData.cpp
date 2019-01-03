@@ -129,7 +129,7 @@ nsresult nsDocShellEditorData::DetachFromWindow() {
   mDetachedMakeEditable = mMakeEditable;
   mMakeEditable = false;
 
-  nsCOMPtr<nsIDocument> doc = domWindow->GetDoc();
+  nsCOMPtr<dom::Document> doc = domWindow->GetDoc();
   nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(doc);
   if (htmlDoc) {
     mDetachedEditingState = htmlDoc->GetEditingState();
@@ -151,7 +151,7 @@ nsresult nsDocShellEditorData::ReattachToWindow(nsIDocShell* aDocShell) {
   mIsDetached = false;
   mMakeEditable = mDetachedMakeEditable;
 
-  nsCOMPtr<nsIDocument> doc = domWindow->GetDoc();
+  RefPtr<dom::Document> doc = domWindow->GetDoc();
   nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(doc);
   if (htmlDoc) {
     htmlDoc->SetEditingState(mDetachedEditingState);

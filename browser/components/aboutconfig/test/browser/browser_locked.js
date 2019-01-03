@@ -1,51 +1,54 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+const PREF_STRING_NO_DEFAULT = "test.aboutconfig.a";
+
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["test.aboutconfig.a", "some value"],
+      [PREF_STRING_NO_DEFAULT, "some value"],
     ],
   });
 });
 
 add_task(async function test_locked() {
   registerCleanupFunction(() => {
-    Services.prefs.unlockPref("browser.search.searchEnginesURL");
-    Services.prefs.unlockPref("test.aboutconfig.a");
-    Services.prefs.unlockPref("accessibility.AOM.enabled");
+    Services.prefs.unlockPref(PREF_STRING_DEFAULT_NOTEMPTY);
+    Services.prefs.unlockPref(PREF_BOOLEAN_DEFAULT_TRUE);
+    Services.prefs.unlockPref(PREF_STRING_NO_DEFAULT);
   });
 
-  Services.prefs.lockPref("browser.search.searchEnginesURL");
-  Services.prefs.lockPref("test.aboutconfig.a");
-  Services.prefs.lockPref("accessibility.AOM.enabled");
+  Services.prefs.lockPref(PREF_STRING_DEFAULT_NOTEMPTY);
+  Services.prefs.lockPref(PREF_BOOLEAN_DEFAULT_TRUE);
+  Services.prefs.lockPref(PREF_STRING_NO_DEFAULT);
+
   await AboutConfigTest.withNewTab(async function() {
     // Test locked default string pref.
-    let lockedPref = this.getRow("browser.search.searchEnginesURL");
+    let lockedPref = this.getRow(PREF_STRING_DEFAULT_NOTEMPTY);
     Assert.ok(lockedPref.hasClass("locked"));
-    Assert.equal(lockedPref.value, "https://addons.mozilla.org/%LOCALE%/firefox/search-engines/");
-    Assert.ok(lockedPref.firstButton.classList.contains("button-edit"));
-    Assert.ok(lockedPref.firstButton.disabled);
+    Assert.equal(lockedPref.value, PREF_STRING_DEFAULT_NOTEMPTY_VALUE);
+    Assert.ok(lockedPref.editColumnButton.classList.contains("button-edit"));
+    Assert.ok(lockedPref.editColumnButton.disabled);
 
     // Test locked default boolean pref.
-    lockedPref = this.getRow("accessibility.AOM.enabled");
+    lockedPref = this.getRow(PREF_BOOLEAN_DEFAULT_TRUE);
     Assert.ok(lockedPref.hasClass("locked"));
-    Assert.equal(lockedPref.value, "false");
-    Assert.ok(lockedPref.firstButton.classList.contains("button-toggle"));
-    Assert.ok(lockedPref.firstButton.disabled);
+    Assert.equal(lockedPref.value, "true");
+    Assert.ok(lockedPref.editColumnButton.classList.contains("button-toggle"));
+    Assert.ok(lockedPref.editColumnButton.disabled);
 
     // Test locked user added pref.
-    lockedPref = this.getRow("test.aboutconfig.a");
+    lockedPref = this.getRow(PREF_STRING_NO_DEFAULT);
     Assert.ok(lockedPref.hasClass("locked"));
     Assert.equal(lockedPref.value, "");
-    Assert.ok(lockedPref.firstButton.classList.contains("button-edit"));
-    Assert.ok(lockedPref.firstButton.disabled);
+    Assert.ok(lockedPref.editColumnButton.classList.contains("button-edit"));
+    Assert.ok(lockedPref.editColumnButton.disabled);
 
-    // Test pref not locked
-    let unlockedPref = this.getRow("accessibility.indicator.enabled");
+    // Test pref not locked.
+    let unlockedPref = this.getRow(PREF_BOOLEAN_USERVALUE_TRUE);
     Assert.ok(!unlockedPref.hasClass("locked"));
-    Assert.equal(unlockedPref.value, "false");
-    Assert.ok(unlockedPref.firstButton.classList.contains("button-toggle"));
-    Assert.ok(!unlockedPref.firstButton.disabled);
+    Assert.equal(unlockedPref.value, "true");
+    Assert.ok(unlockedPref.editColumnButton.classList.contains("button-toggle"));
+    Assert.ok(!unlockedPref.editColumnButton.disabled);
   });
 });

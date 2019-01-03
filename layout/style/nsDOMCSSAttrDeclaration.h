@@ -63,10 +63,10 @@ class nsDOMCSSAttributeDeclaration final : public nsDOMCSSDeclaration {
  protected:
   ~nsDOMCSSAttributeDeclaration();
 
-  virtual nsresult SetCSSDeclaration(
+  nsresult SetCSSDeclaration(
       mozilla::DeclarationBlock* aDecl,
       mozilla::MutationClosureData* aClosureData) override;
-  virtual nsIDocument* DocToUpdate() override;
+  mozilla::dom::Document* DocToUpdate() override;
 
   RefPtr<Element> mElement;
 

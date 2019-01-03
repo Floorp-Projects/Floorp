@@ -56,7 +56,7 @@
 #include "nsCaret.h"
 
 #include "nsITimer.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsINamed.h"
 
 #include "nsISelectionController.h"  //for the enums
@@ -419,7 +419,7 @@ void Selection::ToStringWithFormat(const nsAString& aFormatType,
     return;
   }
 
-  nsIDocument* doc = shell->GetDocument();
+  Document* doc = shell->GetDocument();
 
   // Flags should always include OutputSelectionOnly if we're coming from here:
   aFlags |= nsIDocumentEncoder::OutputSelectionOnly;
@@ -671,7 +671,7 @@ void Selection::Disconnect() {
   }
 }
 
-nsIDocument* Selection::GetParentObject() const {
+Document* Selection::GetParentObject() const {
   nsIPresShell* shell = GetPresShell();
   if (shell) {
     return shell->GetDocument();
@@ -685,7 +685,7 @@ DocGroup* Selection::GetDocGroup() const {
     return nullptr;
   }
 
-  nsIDocument* doc = shell->GetDocument();
+  Document* doc = shell->GetDocument();
   return doc ? doc->GetDocGroup() : nullptr;
 }
 
@@ -935,7 +935,7 @@ nsresult Selection::AddItem(nsRange* aItem, int32_t* aOutIndex,
     AutoTArray<RefPtr<nsRange>, 4> rangesToAdd;
     *aOutIndex = int32_t(mRanges.Length()) - 1;
 
-    nsIDocument* doc = GetParentObject();
+    Document* doc = GetParentObject();
     bool selectEventsEnabled =
         nsFrameSelection::sSelectionEventsEnabled ||
         (doc && nsContentUtils::IsSystemPrincipal(doc->NodePrincipal()));
@@ -1970,11 +1970,11 @@ void Selection::AddRangeJS(nsRange& aRange, ErrorResult& aRv) {
 }
 
 void Selection::AddRange(nsRange& aRange, ErrorResult& aRv) {
-  RefPtr<nsIDocument> document(GetParentObject());
+  RefPtr<Document> document(GetParentObject());
   return AddRangeInternal(aRange, document, aRv);
 }
 
-void Selection::AddRangeInternal(nsRange& aRange, nsIDocument* aDocument,
+void Selection::AddRangeInternal(nsRange& aRange, Document* aDocument,
                                  ErrorResult& aRv) {
   // If the given range is part of another Selection, we need to clone the
   // range first.
@@ -2244,7 +2244,7 @@ void Selection::Collapse(const RawRangeBoundary& aPoint, ErrorResult& aRv) {
 
 #ifdef DEBUG_SELECTION
   nsCOMPtr<nsIContent> content = do_QueryInterface(aPoint.Container());
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(aPoint.Container());
+  nsCOMPtr<Document> doc = do_QueryInterface(aPoint.Container());
   printf("Sel. Collapse to %p %s %d\n", container.get(),
          content ? nsAtomCString(content->NodeInfo()->NameAtom()).get()
                  : (doc ? "DOCUMENT" : "???"),
@@ -2868,13 +2868,13 @@ nsIPresShell* Selection::GetPresShell() const {
   return mFrameSelection->GetShell();
 }
 
-nsIDocument* Selection::GetDocument() const {
+Document* Selection::GetDocument() const {
   nsIPresShell* presShell = GetPresShell();
   return presShell ? presShell->GetDocument() : nullptr;
 }
 
 nsPIDOMWindowOuter* Selection::GetWindow() const {
-  nsIDocument* document = GetDocument();
+  Document* document = GetDocument();
   return document ? document->GetWindow() : nullptr;
 }
 
@@ -3164,7 +3164,7 @@ nsresult Selection::NotifySelectionListeners() {
   if (mSelectionType == SelectionType::eNormal &&
       calledByJSRestorer.SavedValue()) {
     nsPIDOMWindowOuter* window = GetWindow();
-    nsIDocument* document = GetDocument();
+    Document* document = GetDocument();
     // If the document is in design mode or doesn't have contenteditable
     // element, we don't need to move focus.
     if (window && document && !document->HasFlag(NODE_IS_EDITABLE) &&
@@ -3203,7 +3203,7 @@ nsresult Selection::NotifySelectionListeners() {
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDocument> doc;
+  nsCOMPtr<Document> doc;
   nsIPresShell* ps = GetPresShell();
   if (ps) {
     doc = ps->GetDocument();
@@ -3610,6 +3610,6 @@ AutoHideSelectionChanges::AutoHideSelectionChanges(
 
 bool Selection::HasSameRoot(nsINode& aNode) {
   nsINode* root = aNode.SubtreeRoot();
-  nsIDocument* doc = GetParentObject();
+  Document* doc = GetParentObject();
   return doc == root || (root && doc == root->GetComposedDoc());
 }

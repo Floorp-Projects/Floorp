@@ -21,7 +21,7 @@ namespace dom {
 
 class GeneratedImageContent final : public nsGenericHTMLElement {
  public:
-  static already_AddRefed<GeneratedImageContent> Create(nsIDocument&,
+  static already_AddRefed<GeneratedImageContent> Create(Document&,
                                                         uint32_t aContentIndex);
 
   explicit GeneratedImageContent(already_AddRefed<dom::NodeInfo>&& aNodeInfo)

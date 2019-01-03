@@ -561,11 +561,13 @@ class nsXULPopupManager final : public nsIDOMEventListener,
    * aDocument. aDocument must be non-null and be a document contained within
    * the same window hierarchy as the popup to retrieve.
    */
-  already_AddRefed<nsINode> GetLastTriggerPopupNode(nsIDocument* aDocument) {
+  already_AddRefed<nsINode> GetLastTriggerPopupNode(
+      mozilla::dom::Document* aDocument) {
     return GetLastTriggerNode(aDocument, false);
   }
 
-  already_AddRefed<nsINode> GetLastTriggerTooltipNode(nsIDocument* aDocument) {
+  already_AddRefed<nsINode> GetLastTriggerTooltipNode(
+      mozilla::dom::Document* aDocument) {
     return GetLastTriggerNode(aDocument, true);
   }
 
@@ -753,8 +755,8 @@ class nsXULPopupManager final : public nsIDOMEventListener,
                                        nsNavigationDirection aDir);
 
  protected:
-  already_AddRefed<nsINode> GetLastTriggerNode(nsIDocument* aDocument,
-                                               bool aIsTooltip);
+  already_AddRefed<nsINode> GetLastTriggerNode(
+      mozilla::dom::Document* aDocument, bool aIsTooltip);
 
   /**
    * Set mouse capturing for the current popup. This traps mouse clicks that
@@ -779,7 +781,8 @@ class nsXULPopupManager final : public nsIDOMEventListener,
   /*
    * Returns true if the docshell for aDoc is aExpected or a child of aExpected.
    */
-  bool IsChildOfDocShell(nsIDocument* aDoc, nsIDocShellTreeItem* aExpected);
+  bool IsChildOfDocShell(mozilla::dom::Document* aDoc,
+                         nsIDocShellTreeItem* aExpected);
 
   // the document the key event listener is attached to
   nsCOMPtr<mozilla::dom::EventTarget> mKeyListener;

@@ -10,11 +10,11 @@
 #include "mozilla/dom/CSSImportRule.h"
 #include "mozilla/dom/CSSRuleBinding.h"
 #include "mozilla/dom/CSSStyleRule.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/IntegerRange.h"
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/StyleSheetInlines.h"
-#include "nsIDocument.h"
 #include "nsStyleSheetService.h"
 #include "nsXBLPrototypeResources.h"
 

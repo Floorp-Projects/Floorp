@@ -31,7 +31,7 @@
 // clang-format off
 // Needs to be a on single line
 GECKO_BORROWED_TYPE(mozilla::dom::Element, RawGeckoElement)
-GECKO_BORROWED_TYPE(nsIDocument, RawGeckoDocument)
+GECKO_BORROWED_TYPE(mozilla::dom::Document, RawGeckoDocument)
 GECKO_BORROWED_TYPE(nsINode, RawGeckoNode)
 GECKO_BORROWED_TYPE(nsPresContext, RawGeckoPresContext)
 GECKO_BORROWED_TYPE(nsXBLBinding, RawGeckoXBLBinding)

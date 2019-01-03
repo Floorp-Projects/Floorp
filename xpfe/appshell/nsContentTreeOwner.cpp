@@ -38,7 +38,7 @@
 
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIURI.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #if defined(XP_MACOSX)
 #include "nsThreadUtils.h"
 #endif
@@ -650,7 +650,7 @@ NS_IMETHODIMP nsContentTreeOwner::SetTitle(const nsAString& aTitle) {
       //
       nsCOMPtr<nsIDocShellTreeItem> dsitem;
       GetPrimaryContentShell(getter_AddRefs(dsitem));
-      nsCOMPtr<nsIDocument> doc = dsitem ? dsitem->GetDocument() : nullptr;
+      RefPtr<dom::Document> doc = dsitem ? dsitem->GetDocument() : nullptr;
       if (doc) {
         nsCOMPtr<nsIURI> uri;
         nsIPrincipal* principal = doc->GetPrincipal();
@@ -684,7 +684,7 @@ NS_IMETHODIMP nsContentTreeOwner::SetTitle(const nsAString& aTitle) {
         }
       }
     }
-    nsIDocument* document = docShellElement->OwnerDoc();
+    dom::Document* document = docShellElement->OwnerDoc();
     ErrorResult rv;
     document->SetTitle(title, rv);
     return rv.StealNSResult();

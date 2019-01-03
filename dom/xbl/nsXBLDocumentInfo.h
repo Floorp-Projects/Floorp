@@ -12,7 +12,7 @@
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
 #include "nsWeakReference.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsCycleCollectionParticipant.h"
 
 class nsXBLPrototypeBinding;
@@ -21,9 +21,9 @@ class nsXBLDocumentInfo final : public nsSupportsWeakReference {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
-  explicit nsXBLDocumentInfo(nsIDocument* aDocument);
+  explicit nsXBLDocumentInfo(mozilla::dom::Document* aDocument);
 
-  nsIDocument* GetDocument() const { return mDocument; }
+  mozilla::dom::Document* GetDocument() const { return mDocument; }
 
   bool GetScriptAccess() const { return mScriptAccess; }
 
@@ -48,7 +48,7 @@ class nsXBLDocumentInfo final : public nsSupportsWeakReference {
 
   static nsresult ReadPrototypeBindings(nsIURI* aURI,
                                         nsXBLDocumentInfo** aDocInfo,
-                                        nsIDocument* aBoundDocument);
+                                        mozilla::dom::Document* aBoundDocument);
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
@@ -57,7 +57,7 @@ class nsXBLDocumentInfo final : public nsSupportsWeakReference {
  private:
   virtual ~nsXBLDocumentInfo();
 
-  nsCOMPtr<nsIDocument> mDocument;
+  RefPtr<mozilla::dom::Document> mDocument;
   bool mScriptAccess;
   bool mIsChrome;
   // the binding table owns each nsXBLPrototypeBinding

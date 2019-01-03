@@ -22,7 +22,7 @@
 
 class nsFrameSelection;
 class nsIContent;
-class nsIDocument;
+
 class nsIPresShell;
 struct nsPoint;
 
@@ -104,7 +104,7 @@ class AccessibleCaretManager {
 
   // Handle NotifySelectionChanged event from nsISelectionListener.
   MOZ_CAN_RUN_SCRIPT
-  virtual nsresult OnSelectionChanged(nsIDocument* aDoc, dom::Selection* aSel,
+  virtual nsresult OnSelectionChanged(dom::Document* aDoc, dom::Selection* aSel,
                                       int16_t aReason);
   // Handle key event.
   MOZ_CAN_RUN_SCRIPT

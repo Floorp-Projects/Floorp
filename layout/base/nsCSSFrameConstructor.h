@@ -35,7 +35,7 @@ class nsContainerFrame;
 class nsFirstLineFrame;
 class nsFirstLetterFrame;
 class nsCSSAnonBoxPseudoStaticAtom;
-class nsIDocument;
+
 class nsPageContentFrame;
 struct PendingBinding;
 
@@ -64,7 +64,8 @@ class nsCSSFrameConstructor final : public nsFrameManager {
   // FIXME(emilio): Is this really needed?
   friend class mozilla::RestyleManager;
 
-  nsCSSFrameConstructor(nsIDocument* aDocument, nsIPresShell* aPresShell);
+  nsCSSFrameConstructor(mozilla::dom::Document* aDocument,
+                        nsIPresShell* aPresShell);
   ~nsCSSFrameConstructor() { MOZ_ASSERT(mFCItemsInUse == 0); }
 
   // get the alternate text for a content node
@@ -2136,7 +2137,7 @@ class nsCSSFrameConstructor final : public nsFrameManager {
   void* AllocateFCItem();
   void FreeFCItem(FrameConstructionItem*);
 
-  nsIDocument* mDocument;  // Weak ref
+  mozilla::dom::Document* mDocument;  // Weak ref
 
   // See the comment at the start of ConstructRootFrame for more details
   // about the following frames.

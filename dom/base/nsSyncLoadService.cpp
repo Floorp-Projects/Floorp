@@ -18,7 +18,7 @@
 #include "nsIURI.h"
 #include "nsString.h"
 #include "nsWeakReference.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIPrincipal.h"
 #include "nsContentUtils.h"  // for kLoadAsData
 #include "nsThreadUtils.h"
@@ -46,7 +46,7 @@ class nsSyncLoader : public nsIStreamListener,
 
   nsresult LoadDocument(nsIChannel *aChannel, bool aChannelIsSync,
                         bool aForceToXML, ReferrerPolicy aReferrerPolicy,
-                        nsIDocument **aResult);
+                        Document **aResult);
 
   NS_FORWARD_NSISTREAMLISTENER(mListener->)
   NS_DECL_NSIREQUESTOBSERVER
@@ -120,7 +120,7 @@ NS_IMPL_ISUPPORTS(nsSyncLoader, nsIStreamListener, nsIRequestObserver,
 nsresult nsSyncLoader::LoadDocument(nsIChannel *aChannel, bool aChannelIsSync,
                                     bool aForceToXML,
                                     ReferrerPolicy aReferrerPolicy,
-                                    nsIDocument **aResult) {
+                                    Document **aResult) {
   NS_ENSURE_ARG(aChannel);
   NS_ENSURE_ARG_POINTER(aResult);
   *aResult = nullptr;
@@ -157,7 +157,7 @@ nsresult nsSyncLoader::LoadDocument(nsIChannel *aChannel, bool aChannelIsSync,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Create document
-  nsCOMPtr<nsIDocument> document;
+  nsCOMPtr<Document> document;
   rv = NS_NewXMLDocument(getter_AddRefs(document));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -283,7 +283,7 @@ nsresult nsSyncLoadService::LoadDocument(
     nsIURI *aURI, nsContentPolicyType aContentPolicyType,
     nsIPrincipal *aLoaderPrincipal, nsSecurityFlags aSecurityFlags,
     nsILoadGroup *aLoadGroup, bool aForceToXML, ReferrerPolicy aReferrerPolicy,
-    nsIDocument **aResult) {
+    Document **aResult) {
   nsCOMPtr<nsIChannel> channel;
   nsresult rv = NS_NewChannel(getter_AddRefs(channel), aURI, aLoaderPrincipal,
                               aSecurityFlags, aContentPolicyType,

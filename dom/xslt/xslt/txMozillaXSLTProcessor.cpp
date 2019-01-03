@@ -8,7 +8,7 @@
 #include "nsError.h"
 #include "nsIChannel.h"
 #include "mozilla/dom/Element.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIIOService.h"
 #include "nsILoadGroup.h"
 #include "nsIStringBundle.h"
@@ -43,7 +43,7 @@ using namespace mozilla::dom;
  */
 class txToDocHandlerFactory : public txAOutputHandlerFactory {
  public:
-  txToDocHandlerFactory(txExecutionState* aEs, nsIDocument* aSourceDocument,
+  txToDocHandlerFactory(txExecutionState* aEs, Document* aSourceDocument,
                         nsITransformObserver* aObserver, bool aDocumentIsData)
       : mEs(aEs),
         mSourceDocument(aSourceDocument),
@@ -54,7 +54,7 @@ class txToDocHandlerFactory : public txAOutputHandlerFactory {
 
  private:
   txExecutionState* mEs;
-  nsCOMPtr<nsIDocument> mSourceDocument;
+  nsCOMPtr<Document> mSourceDocument;
   nsCOMPtr<nsITransformObserver> mObserver;
   bool mDocumentIsData;
 };
@@ -162,7 +162,7 @@ nsresult txToFragmentHandlerFactory::createHandlerWith(
     case eMethodNotSet: {
       txOutputFormat format;
       format.merge(*aFormat);
-      nsCOMPtr<nsIDocument> doc = mFragment->OwnerDoc();
+      nsCOMPtr<Document> doc = mFragment->OwnerDoc();
 
       if (doc->IsHTMLDocument()) {
         format.mMethod = eHTMLOutput;
@@ -449,7 +449,7 @@ class nsTransformBlockerEvent : public mozilla::Runnable {
       : mozilla::Runnable("nsTransformBlockerEvent"), mProcessor(processor) {}
 
   ~nsTransformBlockerEvent() {
-    nsCOMPtr<nsIDocument> document =
+    nsCOMPtr<Document> document =
         mProcessor->GetSourceContentModel()->OwnerDoc();
     document->UnblockOnload(true);
   }
@@ -513,7 +513,7 @@ void txMozillaXSLTProcessor::ImportStylesheet(nsINode& aStyle,
   mStylesheetDocument->AddMutationObserver(this);
 }
 
-already_AddRefed<nsIDocument> txMozillaXSLTProcessor::TransformToDocument(
+already_AddRefed<Document> txMozillaXSLTProcessor::TransformToDocument(
     nsINode& aSource, ErrorResult& aRv) {
   if (NS_WARN_IF(NS_FAILED(mCompileResult))) {
     aRv.Throw(mCompileResult);
@@ -533,7 +533,7 @@ already_AddRefed<nsIDocument> txMozillaXSLTProcessor::TransformToDocument(
 
   mSource = &aSource;
 
-  nsCOMPtr<nsIDocument> doc;
+  nsCOMPtr<Document> doc;
   rv = TransformToDoc(getter_AddRefs(doc), true);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
@@ -542,7 +542,7 @@ already_AddRefed<nsIDocument> txMozillaXSLTProcessor::TransformToDocument(
   return doc.forget();
 }
 
-nsresult txMozillaXSLTProcessor::TransformToDoc(nsIDocument** aResult,
+nsresult txMozillaXSLTProcessor::TransformToDoc(Document** aResult,
                                                 bool aCreateDataDocument) {
   nsAutoPtr<txXPathNode> sourceNode(
       txXPathNativeNode::createXPathNode(mSource));
@@ -575,12 +575,11 @@ nsresult txMozillaXSLTProcessor::TransformToDoc(nsIDocument** aResult,
     if (aResult) {
       txAOutputXMLEventHandler* handler =
           static_cast<txAOutputXMLEventHandler*>(es.mOutputHandler);
-      nsCOMPtr<nsIDocument> doc;
+      nsCOMPtr<Document> doc;
       handler->getOutputDocument(getter_AddRefs(doc));
-      MOZ_ASSERT(
-          doc->GetReadyStateEnum() == nsIDocument::READYSTATE_INTERACTIVE,
-          "Bad readyState");
-      doc->SetReadyStateInternal(nsIDocument::READYSTATE_COMPLETE);
+      MOZ_ASSERT(doc->GetReadyStateEnum() == Document::READYSTATE_INTERACTIVE,
+                 "Bad readyState");
+      doc->SetReadyStateInternal(Document::READYSTATE_COMPLETE);
       doc.forget(aResult);
     }
   } else if (mObserver) {
@@ -592,7 +591,7 @@ nsresult txMozillaXSLTProcessor::TransformToDoc(nsIDocument** aResult,
 }
 
 already_AddRefed<DocumentFragment> txMozillaXSLTProcessor::TransformToFragment(
-    nsINode& aSource, nsIDocument& aOutput, ErrorResult& aRv) {
+    nsINode& aSource, Document& aOutput, ErrorResult& aRv) {
   if (NS_WARN_IF(NS_FAILED(mCompileResult))) {
     aRv.Throw(mCompileResult);
     return nullptr;
@@ -893,7 +892,7 @@ uint32_t txMozillaXSLTProcessor::Flags(SystemCallerGuarantee) { return mFlags; }
 
 NS_IMETHODIMP
 txMozillaXSLTProcessor::LoadStyleSheet(nsIURI* aUri,
-                                       nsIDocument* aLoaderDocument) {
+                                       Document* aLoaderDocument) {
   mozilla::net::ReferrerPolicy refpol = mozilla::net::RP_Unset;
   if (mStylesheetDocument) {
     refpol = mStylesheetDocument->GetReferrerPolicy();
@@ -967,7 +966,7 @@ void txMozillaXSLTProcessor::reportError(nsresult aResult,
 }
 
 void txMozillaXSLTProcessor::notifyError() {
-  nsCOMPtr<nsIDocument> document;
+  nsCOMPtr<Document> document;
   {
     nsresult rv = NS_NewXMLDocument(getter_AddRefs(document));
     NS_ENSURE_SUCCESS_VOID(rv);
@@ -976,9 +975,9 @@ void txMozillaXSLTProcessor::notifyError() {
   URIUtils::ResetWithSource(document, mSource);
 
   MOZ_ASSERT(
-      document->GetReadyStateEnum() == nsIDocument::READYSTATE_UNINITIALIZED,
+      document->GetReadyStateEnum() == Document::READYSTATE_UNINITIALIZED,
       "Bad readyState.");
-  document->SetReadyStateInternal(nsIDocument::READYSTATE_LOADING);
+  document->SetReadyStateInternal(Document::READYSTATE_LOADING);
 
   NS_NAMED_LITERAL_STRING(
       ns, "http://www.mozilla.org/newlayout/xml/parsererror.xml");
@@ -1028,9 +1027,9 @@ void txMozillaXSLTProcessor::notifyError() {
     }
   }
 
-  MOZ_ASSERT(document->GetReadyStateEnum() == nsIDocument::READYSTATE_LOADING,
+  MOZ_ASSERT(document->GetReadyStateEnum() == Document::READYSTATE_LOADING,
              "Bad readyState.");
-  document->SetReadyStateInternal(nsIDocument::READYSTATE_INTERACTIVE);
+  document->SetReadyStateInternal(Document::READYSTATE_INTERACTIVE);
 
   mObserver->OnTransformDone(mTransformResult, document);
 }

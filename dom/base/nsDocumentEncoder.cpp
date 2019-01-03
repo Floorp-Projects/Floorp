@@ -14,7 +14,7 @@
 #include "nscore.h"
 #include "nsIFactory.h"
 #include "nsISupports.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIHTMLDocument.h"
 #include "nsCOMPtr.h"
 #include "nsIContentSerializer.h"
@@ -145,7 +145,7 @@ class nsDocumentEncoder : public nsIDocumentEncoder {
     nsDocumentEncoder* mEncoder;
   };
 
-  nsCOMPtr<nsIDocument> mDocument;
+  nsCOMPtr<Document> mDocument;
   RefPtr<Selection> mSelection;
   RefPtr<nsRange> mRange;
   nsCOMPtr<nsINode> mNode;
@@ -224,14 +224,14 @@ nsDocumentEncoder::~nsDocumentEncoder() {
 }
 
 NS_IMETHODIMP
-nsDocumentEncoder::Init(nsIDocument* aDocument, const nsAString& aMimeType,
+nsDocumentEncoder::Init(Document* aDocument, const nsAString& aMimeType,
                         uint32_t aFlags) {
   return NativeInit(aDocument, aMimeType, aFlags);
 }
 
 NS_IMETHODIMP
-nsDocumentEncoder::NativeInit(nsIDocument* aDocument,
-                              const nsAString& aMimeType, uint32_t aFlags) {
+nsDocumentEncoder::NativeInit(Document* aDocument, const nsAString& aMimeType,
+                              uint32_t aFlags) {
   if (!aDocument) return NS_ERROR_INVALID_ARG;
 
   Initialize(!mMimeType.Equals(aMimeType));
@@ -815,7 +815,7 @@ nsDocumentEncoder::EncodeToStringWithMaxLength(uint32_t aMaxLength,
   }
   NS_ASSERTION(
       !mCachedBuffer->IsReadonly(),
-      "DocumentEncoder shouldn't keep reference to non-readonly buffer!");
+      "nsIDocumentEncoder shouldn't keep reference to non-readonly buffer!");
   static_cast<char16_t*>(mCachedBuffer->Data())[0] = char16_t(0);
   mCachedBuffer->ToString(0, output, true);
   // output owns the buffer now!
@@ -1022,7 +1022,7 @@ class nsHTMLCopyEncoder : public nsDocumentEncoder {
   nsHTMLCopyEncoder();
   virtual ~nsHTMLCopyEncoder();
 
-  NS_IMETHOD Init(nsIDocument* aDocument, const nsAString& aMimeType,
+  NS_IMETHOD Init(Document* aDocument, const nsAString& aMimeType,
                   uint32_t aFlags) override;
 
   // overridden methods from nsDocumentEncoder
@@ -1061,7 +1061,7 @@ nsHTMLCopyEncoder::nsHTMLCopyEncoder() { mIsTextWidget = false; }
 nsHTMLCopyEncoder::~nsHTMLCopyEncoder() {}
 
 NS_IMETHODIMP
-nsHTMLCopyEncoder::Init(nsIDocument* aDocument, const nsAString& aMimeType,
+nsHTMLCopyEncoder::Init(Document* aDocument, const nsAString& aMimeType,
                         uint32_t aFlags) {
   if (!aDocument) return NS_ERROR_INVALID_ARG;
 

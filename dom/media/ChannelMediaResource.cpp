@@ -27,10 +27,12 @@ namespace mozilla {
 
 ChannelMediaResource::ChannelMediaResource(MediaResourceCallback* aCallback,
                                            nsIChannel* aChannel, nsIURI* aURI,
+                                           int64_t aStreamLength,
                                            bool aIsPrivateBrowsing)
     : BaseMediaResource(aCallback, aChannel, aURI),
       mCacheStream(this, aIsPrivateBrowsing),
-      mSuspendAgent(mCacheStream) {}
+      mSuspendAgent(mCacheStream),
+      mKnownStreamLength(aStreamLength) {}
 
 ChannelMediaResource::~ChannelMediaResource() {
   MOZ_ASSERT(mClosed);
@@ -514,7 +516,8 @@ nsresult ChannelMediaResource::Open(nsIStreamListener** aStreamListener) {
   MOZ_ASSERT(aStreamListener);
   MOZ_ASSERT(mChannel);
 
-  int64_t streamLength = CalculateStreamLength();
+  int64_t streamLength =
+      mKnownStreamLength < 0 ? CalculateStreamLength() : mKnownStreamLength;
   nsresult rv = mCacheStream.Init(streamLength);
   if (NS_FAILED(rv)) {
     return rv;
@@ -613,7 +616,7 @@ already_AddRefed<BaseMediaResource> ChannelMediaResource::CloneData(
   MOZ_ASSERT(CanClone(), "Stream can't be cloned");
 
   RefPtr<ChannelMediaResource> resource =
-      new ChannelMediaResource(aCallback, nullptr, mURI);
+      new ChannelMediaResource(aCallback, nullptr, mURI, mKnownStreamLength);
 
   resource->mIsLiveStream = mIsLiveStream;
   resource->mIsTransportSeekable = mIsTransportSeekable;

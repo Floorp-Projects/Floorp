@@ -32,7 +32,6 @@
 class nsICSSLoaderObserver;
 class nsIConsoleReportCollector;
 class nsIContent;
-class nsIDocument;
 
 namespace mozilla {
 namespace dom {
@@ -209,7 +208,7 @@ class Loader final {
   // can be null if you want to use this constructor, and there's no
   // document when the Loader is constructed.
   explicit Loader(mozilla::dom::DocGroup*);
-  explicit Loader(nsIDocument*);
+  explicit Loader(mozilla::dom::Document*);
 
  private:
   // Private destructor, to discourage deletion outside of Release():
@@ -397,7 +396,7 @@ class Loader final {
   /**
    * Get the document we live for. May return null.
    */
-  nsIDocument* GetDocument() const { return mDocument; }
+  mozilla::dom::Document* GetDocument() const { return mDocument; }
 
   /**
    * Return true if this loader has pending loads (ones that would send
@@ -576,7 +575,8 @@ class Loader final {
 
   // This reference is nulled by the Document in it's destructor through
   // DropDocumentReference().
-  nsIDocument* MOZ_NON_OWNING_REF mDocument;  // the document we live for
+  mozilla::dom::Document* MOZ_NON_OWNING_REF
+      mDocument;  // the document we live for
 
   // For dispatching events via DocGroup::Dispatch() when mDocument is nullptr.
   RefPtr<mozilla::dom::DocGroup> mDocGroup;

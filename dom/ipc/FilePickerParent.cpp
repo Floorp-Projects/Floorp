@@ -7,7 +7,7 @@
 #include "FilePickerParent.h"
 #include "nsComponentManagerUtils.h"
 #include "nsNetCID.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIDOMWindow.h"
 #include "nsIFile.h"
 #include "nsISimpleEnumerator.h"

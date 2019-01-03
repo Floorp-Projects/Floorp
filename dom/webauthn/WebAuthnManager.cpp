@@ -69,7 +69,7 @@ static nsresult AssembleClientData(
 nsresult GetOrigin(nsPIDOMWindowInner* aParent,
                    /*out*/ nsAString& aOrigin, /*out*/ nsACString& aHost) {
   MOZ_ASSERT(aParent);
-  nsCOMPtr<nsIDocument> doc = aParent->GetDoc();
+  nsCOMPtr<Document> doc = aParent->GetDoc();
   MOZ_ASSERT(doc);
 
   nsCOMPtr<nsIPrincipal> principal = doc->NodePrincipal();
@@ -102,7 +102,7 @@ nsresult RelaxSameOrigin(nsPIDOMWindowInner* aParent,
                          const nsAString& aInputRpId,
                          /* out */ nsACString& aRelaxedRpId) {
   MOZ_ASSERT(aParent);
-  nsCOMPtr<nsIDocument> doc = aParent->GetDoc();
+  nsCOMPtr<Document> doc = aParent->GetDoc();
   MOZ_ASSERT(doc);
 
   nsCOMPtr<nsIPrincipal> principal = doc->NodePrincipal();
@@ -114,7 +114,7 @@ nsresult RelaxSameOrigin(nsPIDOMWindowInner* aParent,
   if (NS_FAILED(uri->GetAsciiHost(originHost))) {
     return NS_ERROR_FAILURE;
   }
-  nsCOMPtr<nsIDocument> document = aParent->GetDoc();
+  nsCOMPtr<Document> document = aParent->GetDoc();
   if (!document || !document->IsHTMLDocument()) {
     return NS_ERROR_FAILURE;
   }

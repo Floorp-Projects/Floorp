@@ -86,7 +86,7 @@ nsresult AsyncEventDispatcher::PostDOMEvent() {
     // Sometimes GetOwnerGlobal returns null because it uses
     // GetScriptHandlingObject rather than GetScopeObject.
     if (nsCOMPtr<nsINode> node = do_QueryInterface(mTarget)) {
-      nsCOMPtr<nsIDocument> doc = node->OwnerDoc();
+      nsCOMPtr<Document> doc = node->OwnerDoc();
       return doc->Dispatch(TaskCategory::Other,
                            ensureDeletionWhenFailing.forget());
     }

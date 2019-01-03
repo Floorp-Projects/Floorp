@@ -16,7 +16,6 @@
 #include "nsIHttpChannel.h"
 
 class nsIContent;
-class nsIDocument;
 
 namespace mozilla {
 namespace dom {
@@ -84,7 +83,7 @@ class HTMLTrackElement final : public nsGenericHTMLElement {
 
   // Override BindToTree() so that we can trigger a load when we become
   // the child of a media element.
-  virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+  virtual nsresult BindToTree(Document* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent) override;
   virtual void UnbindFromTree(bool aDeep, bool aNullParent) override;
 

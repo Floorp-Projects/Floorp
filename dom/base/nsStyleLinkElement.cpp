@@ -22,7 +22,7 @@
 #include "mozilla/dom/SRILogHelper.h"
 #include "mozilla/Preferences.h"
 #include "nsIContent.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsUnicharUtils.h"
 #include "nsCRT.h"
 #include "nsXPCOMCIDInternal.h"
@@ -35,7 +35,7 @@ using namespace mozilla;
 using namespace mozilla::dom;
 
 nsStyleLinkElement::SheetInfo::SheetInfo(
-    const nsIDocument& aDocument, nsIContent* aContent,
+    const Document& aDocument, nsIContent* aContent,
     already_AddRefed<nsIURI> aURI,
     already_AddRefed<nsIPrincipal> aTriggeringPrincipal,
     mozilla::net::ReferrerPolicy aReferrerPolicy, mozilla::CORSMode aCORSMode,
@@ -225,7 +225,7 @@ nsStyleLinkElement::UpdateStyleSheet(nsICSSLoaderObserver* aObserver) {
 }
 
 Result<nsStyleLinkElement::Update, nsresult>
-nsStyleLinkElement::UpdateStyleSheetInternal(nsIDocument* aOldDocument,
+nsStyleLinkElement::UpdateStyleSheetInternal(Document* aOldDocument,
                                              ShadowRoot* aOldShadowRoot,
                                              ForceUpdate aForceUpdate) {
   return DoUpdateStyleSheet(aOldDocument, aOldShadowRoot, nullptr,
@@ -233,7 +233,7 @@ nsStyleLinkElement::UpdateStyleSheetInternal(nsIDocument* aOldDocument,
 }
 
 Result<nsStyleLinkElement::Update, nsresult>
-nsStyleLinkElement::DoUpdateStyleSheet(nsIDocument* aOldDocument,
+nsStyleLinkElement::DoUpdateStyleSheet(Document* aOldDocument,
                                        ShadowRoot* aOldShadowRoot,
                                        nsICSSLoaderObserver* aObserver,
                                        ForceUpdate aForceUpdate) {
@@ -266,7 +266,7 @@ nsStyleLinkElement::DoUpdateStyleSheet(nsIDocument* aOldDocument,
     SetStyleSheet(nullptr);
   }
 
-  nsIDocument* doc = thisContent->GetComposedDoc();
+  Document* doc = thisContent->GetComposedDoc();
 
   // Loader could be null during unlink, see bug 1425866.
   if (!doc || !doc->CSSLoader() || !doc->CSSLoader()->GetEnabled()) {

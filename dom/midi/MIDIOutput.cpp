@@ -53,7 +53,7 @@ void MIDIOutput::Send(const Sequence<uint8_t>& aData,
   // message ASAP.
   TimeStamp timestamp;
   if (aTimestamp.WasPassed() && aTimestamp.Value() != 0) {
-    nsCOMPtr<nsIDocument> doc = GetOwner()->GetDoc();
+    nsCOMPtr<Document> doc = GetOwner()->GetDoc();
     if (!doc) {
       aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
       return;

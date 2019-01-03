@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsContentUtils.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/Sprintf.h"
 #include "nsGlobalWindow.h"
 #include "mozilla/dom/Event.h"
@@ -141,7 +141,7 @@ nsPIDOMWindowInner* DOMEventTargetHelper::GetWindowIfCurrent() const {
   return GetOwner();
 }
 
-nsIDocument* DOMEventTargetHelper::GetDocumentIfCurrent() const {
+Document* DOMEventTargetHelper::GetDocumentIfCurrent() const {
   nsPIDOMWindowInner* win = GetWindowIfCurrent();
   if (!win) {
     return nullptr;
@@ -215,7 +215,7 @@ nsresult DOMEventTargetHelper::WantsUntrusted(bool* aRetVal) {
   nsresult rv = CheckInnerWindowCorrectness();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIDocument> doc = GetDocumentIfCurrent();
+  nsCOMPtr<Document> doc = GetDocumentIfCurrent();
   // We can let listeners on workers to always handle all the events.
   *aRetVal = (doc && !nsContentUtils::IsChromeDoc(doc)) || !NS_IsMainThread();
   return rv;

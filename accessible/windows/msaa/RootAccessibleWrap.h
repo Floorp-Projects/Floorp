@@ -14,7 +14,7 @@ namespace a11y {
 
 class RootAccessibleWrap : public RootAccessible {
  public:
-  RootAccessibleWrap(nsIDocument* aDocument, nsIPresShell* aPresShell);
+  RootAccessibleWrap(dom::Document* aDocument, nsIPresShell* aPresShell);
   virtual ~RootAccessibleWrap();
 
   // RootAccessible

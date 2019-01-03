@@ -30,7 +30,6 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/SVGAttrValueWrapper.h"
 
-class nsIDocument;
 class nsIURI;
 class nsStyledElement;
 struct MiscContainer;

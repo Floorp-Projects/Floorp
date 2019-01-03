@@ -9,7 +9,7 @@
 #include "mozilla/StaticPrefs.h"
 #include "MediaDecoder.h"
 #include "nsContentUtils.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 
 namespace mozilla {
 
@@ -47,7 +47,7 @@ void BackgroundVideoDecodingPermissionObserver::RegisterEvent() {
     if (nsContentUtils::IsInStableOrMetaStableState()) {
       // Events shall not be fired synchronously to prevent anything visible
       // from the scripts while we are in stable state.
-      if (nsCOMPtr<nsIDocument> doc = GetOwnerDoc()) {
+      if (nsCOMPtr<dom::Document> doc = GetOwnerDoc()) {
         doc->Dispatch(
             TaskCategory::Other,
             NewRunnableMethod(
@@ -71,7 +71,7 @@ void BackgroundVideoDecodingPermissionObserver::UnregisterEvent() {
     if (nsContentUtils::IsInStableOrMetaStableState()) {
       // Events shall not be fired synchronously to prevent anything visible
       // from the scripts while we are in stable state.
-      if (nsCOMPtr<nsIDocument> doc = GetOwnerDoc()) {
+      if (nsCOMPtr<dom::Document> doc = GetOwnerDoc()) {
         doc->Dispatch(
             TaskCategory::Other,
             NewRunnableMethod(
@@ -92,7 +92,7 @@ BackgroundVideoDecodingPermissionObserver::
 }
 
 void BackgroundVideoDecodingPermissionObserver::EnableEvent() const {
-  nsIDocument* doc = GetOwnerDoc();
+  dom::Document* doc = GetOwnerDoc();
   if (!doc) {
     return;
   }
@@ -109,7 +109,7 @@ void BackgroundVideoDecodingPermissionObserver::EnableEvent() const {
 }
 
 void BackgroundVideoDecodingPermissionObserver::DisableEvent() const {
-  nsIDocument* doc = GetOwnerDoc();
+  dom::Document* doc = GetOwnerDoc();
   if (!doc) {
     return;
   }
@@ -127,7 +127,7 @@ void BackgroundVideoDecodingPermissionObserver::DisableEvent() const {
 
 already_AddRefed<nsPIDOMWindowOuter>
 BackgroundVideoDecodingPermissionObserver::GetOwnerWindow() const {
-  nsIDocument* doc = GetOwnerDoc();
+  dom::Document* doc = GetOwnerDoc();
   if (!doc) {
     return nullptr;
   }
@@ -146,7 +146,7 @@ BackgroundVideoDecodingPermissionObserver::GetOwnerWindow() const {
   return topWin.forget();
 }
 
-nsIDocument* BackgroundVideoDecodingPermissionObserver::GetOwnerDoc() const {
+dom::Document* BackgroundVideoDecodingPermissionObserver::GetOwnerDoc() const {
   if (!mDecoder->GetOwner()) {
     return nullptr;
   }

@@ -23,7 +23,7 @@
 #include "nsIInputStreamTee.h"
 #include "nsPrintfCString.h"
 #include "nsIScriptGlobalObject.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIWebNavigation.h"
 #include "nsContentUtils.h"
 #include "nsNetUtil.h"
@@ -532,7 +532,7 @@ nsresult nsPluginStreamListenerPeer::GetInterfaceGlobal(const nsIID& aIID,
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIDocument> doc;
+  nsCOMPtr<Document> doc;
   nsresult rv = owner->GetDocument(getter_AddRefs(doc));
   if (NS_FAILED(rv) || !doc) {
     return NS_ERROR_FAILURE;

@@ -13,7 +13,7 @@
 #include "nsImageLoadingContent.h"
 #include "nsError.h"
 #include "nsIContent.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMWindow.h"
 #include "nsServiceManagerUtils.h"
@@ -192,7 +192,7 @@ nsImageLoadingContent::Notify(imgIRequest* aRequest, int32_t aType,
         nsCOMPtr<nsIContent> thisNode =
             do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
 
-        nsIDocument* doc = GetOurOwnerDoc();
+        Document* doc = GetOurOwnerDoc();
         doc->AddBlockedTrackingNode(thisNode);
       }
     }
@@ -772,7 +772,7 @@ nsImageLoadingContent::LoadImageWithChannel(nsIChannel* aChannel,
     return NS_ERROR_NULL_POINTER;
   }
 
-  nsCOMPtr<nsIDocument> doc = GetOurOwnerDoc();
+  nsCOMPtr<Document> doc = GetOurOwnerDoc();
   if (!doc) {
     // Don't bother
     *aListener = nullptr;
@@ -836,7 +836,7 @@ nsresult nsImageLoadingContent::LoadImage(const nsAString& aNewURI, bool aForce,
                                           ImageLoadType aImageLoadType,
                                           nsIPrincipal* aTriggeringPrincipal) {
   // First, get a document (needed for security checks and the like)
-  nsIDocument* doc = GetOurOwnerDoc();
+  Document* doc = GetOurOwnerDoc();
   if (!doc) {
     // No reason to bother, I think...
     return NS_OK;
@@ -869,10 +869,12 @@ nsresult nsImageLoadingContent::LoadImage(const nsAString& aNewURI, bool aForce,
                    nsIRequest::LOAD_NORMAL, aTriggeringPrincipal);
 }
 
-nsresult nsImageLoadingContent::LoadImage(
-    nsIURI* aNewURI, bool aForce, bool aNotify, ImageLoadType aImageLoadType,
-    bool aLoadStart, nsIDocument* aDocument, nsLoadFlags aLoadFlags,
-    nsIPrincipal* aTriggeringPrincipal) {
+nsresult nsImageLoadingContent::LoadImage(nsIURI* aNewURI, bool aForce,
+                                          bool aNotify,
+                                          ImageLoadType aImageLoadType,
+                                          bool aLoadStart, Document* aDocument,
+                                          nsLoadFlags aLoadFlags,
+                                          nsIPrincipal* aTriggeringPrincipal) {
   MOZ_ASSERT(!mIsStartingImageLoad, "some evil code is reentering LoadImage.");
   if (mIsStartingImageLoad) {
     return NS_OK;
@@ -1135,11 +1137,11 @@ void nsImageLoadingContent::CancelImageRequests(bool aNotify) {
   ClearCurrentRequest(NS_BINDING_ABORTED, Some(OnNonvisible::DISCARD_IMAGES));
 }
 
-nsIDocument* nsImageLoadingContent::GetOurOwnerDoc() {
+Document* nsImageLoadingContent::GetOurOwnerDoc() {
   return AsContent()->OwnerDoc();
 }
 
-nsIDocument* nsImageLoadingContent::GetOurCurrentDoc() {
+Document* nsImageLoadingContent::GetOurCurrentDoc() {
   return AsContent()->GetComposedDoc();
 }
 
@@ -1157,7 +1159,7 @@ nsPresContext* nsImageLoadingContent::GetFramePresContext() {
 }
 
 nsresult nsImageLoadingContent::StringToURI(const nsAString& aSpec,
-                                            nsIDocument* aDocument,
+                                            Document* aDocument,
                                             nsIURI** aURI) {
   MOZ_ASSERT(aDocument, "Must have a document");
   MOZ_ASSERT(aURI, "Null out param");
@@ -1403,8 +1405,7 @@ bool nsImageLoadingContent::HaveSize(imgIRequest* aImage) {
   return (NS_SUCCEEDED(rv) && (status & imgIRequest::STATUS_SIZE_AVAILABLE));
 }
 
-void nsImageLoadingContent::BindToTree(nsIDocument* aDocument,
-                                       nsIContent* aParent,
+void nsImageLoadingContent::BindToTree(Document* aDocument, nsIContent* aParent,
                                        nsIContent* aBindingParent) {
   // We may be entering the document, so if our image should be tracked,
   // track it.
@@ -1416,7 +1417,7 @@ void nsImageLoadingContent::BindToTree(nsIDocument* aDocument,
 
 void nsImageLoadingContent::UnbindFromTree(bool aDeep, bool aNullParent) {
   // We may be leaving the document, so if our image is tracked, untrack it.
-  nsCOMPtr<nsIDocument> doc = GetOurCurrentDoc();
+  nsCOMPtr<Document> doc = GetOurCurrentDoc();
   if (!doc) return;
 
   UntrackImage(mCurrentRequest);
@@ -1449,7 +1450,7 @@ void nsImageLoadingContent::TrackImage(imgIRequest* aImage,
   MOZ_ASSERT(aImage == mCurrentRequest || aImage == mPendingRequest,
              "Why haven't we heard of this request?");
 
-  nsIDocument* doc = GetOurCurrentDoc();
+  Document* doc = GetOurCurrentDoc();
   if (!doc) {
     return;
   }
@@ -1497,7 +1498,7 @@ void nsImageLoadingContent::UntrackImage(
   // because the document empties out the tracker and unlocks all locked images
   // on destruction.  But if we were never in the document we may need to force
   // discarding the image here, since this is the only chance we have.
-  nsIDocument* doc = GetOurCurrentDoc();
+  Document* doc = GetOurCurrentDoc();
   if (aImage == mCurrentRequest) {
     if (doc && (mCurrentRequestFlags & REQUEST_IS_TRACKED)) {
       mCurrentRequestFlags &= ~REQUEST_IS_TRACKED;

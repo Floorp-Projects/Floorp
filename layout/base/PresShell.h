@@ -79,7 +79,7 @@ class PresShell final : public nsIPresShell,
 
   static bool AccessibleCaretEnabled(nsIDocShell* aDocShell);
 
-  void Init(nsIDocument* aDocument, nsPresContext* aPresContext,
+  void Init(Document* aDocument, nsPresContext* aPresContext,
             nsViewManager* aViewManager, UniquePtr<ServoStyleSet> aStyleSet);
   void Destroy() override;
 
@@ -678,7 +678,7 @@ class PresShell final : public nsIPresShell,
   void BackingScaleFactorChanged() override {
     mPresContext->UIResolutionChangedSync();
   }
-  nsIDocument* GetPrimaryContentDocument() override;
+  Document* GetPrimaryContentDocument() override;
 
   void PausePainting() override;
   void ResumePainting() override;

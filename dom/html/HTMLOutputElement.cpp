@@ -100,8 +100,7 @@ EventStates HTMLOutputElement::IntrinsicState() const {
   return states;
 }
 
-nsresult HTMLOutputElement::BindToTree(nsIDocument* aDocument,
-                                       nsIContent* aParent,
+nsresult HTMLOutputElement::BindToTree(Document* aDocument, nsIContent* aParent,
                                        nsIContent* aBindingParent) {
   nsresult rv =
       nsGenericHTMLFormElement::BindToTree(aDocument, aParent, aBindingParent);

@@ -111,7 +111,7 @@ interface nsITransferable : nsISupports
    *                                  .QueryInterface(Ci.nsILoadContext);
    *
    * In C++ callers, if you have the corresponding document, you can just call
-   * nsIDocument::GetLoadContext to get to the load context object.
+   * Document::GetLoadContext to get to the load context object.
    *
    * @param aContext the load context associated with the transferable object.
    *        This can be set to null if a load context is not available.

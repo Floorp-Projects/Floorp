@@ -9,11 +9,14 @@
 #include "nsIObserver.h"
 #include "nsISupportsImpl.h"
 
-class nsIDocument;
 class nsISupports;
 class nsPIDOMWindowOuter;
 
 namespace mozilla {
+
+namespace dom {
+class Document;
+}
 
 class MediaDecoder;
 
@@ -33,7 +36,7 @@ class BackgroundVideoDecodingPermissionObserver final : public nsIObserver {
   void EnableEvent() const;
   void DisableEvent() const;
   already_AddRefed<nsPIDOMWindowOuter> GetOwnerWindow() const;
-  nsIDocument* GetOwnerDoc() const;
+  dom::Document* GetOwnerDoc() const;
   bool IsValidEventSender(nsISupports* aSubject) const;
 
   // The life cycle of observer would always be shorter than decoder, so we

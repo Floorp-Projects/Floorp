@@ -6,10 +6,10 @@
 
 #include "DocumentOrShadowRoot.h"
 #include "mozilla/EventStateManager.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/dom/StyleSheetList.h"
-#include "nsIDocument.h"
 #include "nsFocusManager.h"
 #include "nsIRadioVisitor.h"
 #include "nsIFormControl.h"
@@ -24,7 +24,7 @@ DocumentOrShadowRoot::DocumentOrShadowRoot(
     mozilla::dom::ShadowRoot& aShadowRoot)
     : mAsNode(aShadowRoot), mKind(Kind::ShadowRoot) {}
 
-DocumentOrShadowRoot::DocumentOrShadowRoot(nsIDocument& aDoc)
+DocumentOrShadowRoot::DocumentOrShadowRoot(Document& aDoc)
     : mAsNode(aDoc), mKind(Kind::Document) {}
 
 void DocumentOrShadowRoot::AddSizeOfOwnedSheetArrayExcludingThis(
@@ -236,7 +236,7 @@ static void QueryNodesFromRect(DocumentOrShadowRoot& aRoot, const nsRect& aRect,
   constexpr bool returningElements =
       std::is_same<Element, NodeOrElement>::value;
 
-  nsCOMPtr<nsIDocument> doc = aRoot.AsNode().OwnerDoc();
+  nsCOMPtr<Document> doc = aRoot.AsNode().OwnerDoc();
 
   // Make sure the layout information we get is up-to-date, and
   // ensure we get a root frame (for everything but XUL)
@@ -476,8 +476,8 @@ nsresult DocumentOrShadowRoot::GetNextRadioButton(
     const nsAString& aName, const bool aPrevious,
     HTMLInputElement* aFocusedRadio, HTMLInputElement** aRadioOut) {
   // XXX Can we combine the HTML radio button method impls of
-  //     nsIDocument and nsHTMLFormControl?
-  // XXX Why is HTML radio button stuff in nsIDocument, as
+  //     Document and nsHTMLFormControl?
+  // XXX Why is HTML radio button stuff in Document, as
   //     opposed to nsHTMLDocument?
   *aRadioOut = nullptr;
 

@@ -16,7 +16,7 @@
 #include "nsViewManager.h"
 #include "nsViewportInfo.h"
 #include "UnitTransforms.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 
 #define MVM_LOG(...)
 // #define MVM_LOG(...) printf_stderr("MVM: " __VA_ARGS__)
@@ -33,7 +33,7 @@ using namespace mozilla;
 using namespace mozilla::layers;
 
 MobileViewportManager::MobileViewportManager(nsIPresShell* aPresShell,
-                                             nsIDocument* aDocument)
+                                             Document* aDocument)
     : mDocument(aDocument),
       mPresShell(aPresShell),
       mIsFirstPaint(false),

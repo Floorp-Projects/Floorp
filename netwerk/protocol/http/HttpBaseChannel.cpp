@@ -2984,7 +2984,7 @@ void HttpBaseChannel::FlushReportsToConsoleForServiceWorkerScope(
   mReportCollector->FlushReportsToConsoleForServiceWorkerScope(aScope, aAction);
 }
 
-void HttpBaseChannel::FlushConsoleReports(nsIDocument* aDocument,
+void HttpBaseChannel::FlushConsoleReports(dom::Document* aDocument,
                                           ReportAction aAction) {
   mReportCollector->FlushConsoleReports(aDocument, aAction);
 }
@@ -3293,7 +3293,7 @@ void HttpBaseChannel::DoNotifyListener() {
     if (mLoadGroup) {
       FlushConsoleReports(mLoadGroup);
     } else if (mLoadInfo) {
-      nsCOMPtr<nsIDocument> doc;
+      RefPtr<dom::Document> doc;
       mLoadInfo->GetLoadingDocument(getter_AddRefs(doc));
       FlushConsoleReports(doc);
     }
@@ -4172,7 +4172,7 @@ mozilla::dom::PerformanceStorage* HttpBaseChannel::GetPerformanceStorage() {
     return performanceStorage;
   }
 
-  nsCOMPtr<nsIDocument> loadingDocument;
+  RefPtr<dom::Document> loadingDocument;
   mLoadInfo->GetLoadingDocument(getter_AddRefs(loadingDocument));
   if (!loadingDocument) {
     return nullptr;

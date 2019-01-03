@@ -27,7 +27,8 @@ class OffsetEntry;
 class TextEditor;
 
 namespace dom {
-class Elemenent;
+class Document;
+class Element;
 };
 
 /**
@@ -47,7 +48,7 @@ class TextServicesDocument final : public nsIEditActionListener {
     eNext,
   };
 
-  nsCOMPtr<nsIDocument> mDocument;
+  RefPtr<dom::Document> mDocument;
   nsCOMPtr<nsISelectionController> mSelCon;
   RefPtr<TextEditor> mTextEditor;
   nsCOMPtr<nsIContentIterator> mIterator;

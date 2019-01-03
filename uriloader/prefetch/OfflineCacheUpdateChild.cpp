@@ -19,7 +19,7 @@
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsPIDOMWindow.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIObserverService.h"
 #include "nsIURL.h"
 #include "nsITabChild.h"
@@ -36,6 +36,7 @@
 using namespace mozilla::ipc;
 using namespace mozilla::net;
 using mozilla::dom::ContentChild;
+using mozilla::dom::Document;
 using mozilla::dom::TabChild;
 
 //
@@ -103,7 +104,7 @@ void OfflineCacheUpdateChild::GatherObservers(
   }
 }
 
-void OfflineCacheUpdateChild::SetDocument(nsIDocument *aDocument) {
+void OfflineCacheUpdateChild::SetDocument(Document *aDocument) {
   // The design is one document for one cache update on the content process.
   NS_ASSERTION(
       !mDocument,
@@ -130,7 +131,7 @@ void OfflineCacheUpdateChild::SetDocument(nsIDocument *aDocument) {
 }
 
 nsresult OfflineCacheUpdateChild::AssociateDocument(
-    nsIDocument *aDocument, nsIApplicationCache *aApplicationCache) {
+    Document *aDocument, nsIApplicationCache *aApplicationCache) {
   // Check that the document that requested this update was
   // previously associated with an application cache.  If not, it
   // should be associated with the new one.
@@ -162,8 +163,7 @@ nsresult OfflineCacheUpdateChild::AssociateDocument(
 NS_IMETHODIMP
 OfflineCacheUpdateChild::Init(nsIURI *aManifestURI, nsIURI *aDocumentURI,
                               nsIPrincipal *aLoadingPrincipal,
-                              nsIDocument *aDocument,
-                              nsIFile *aCustomProfileDir) {
+                              Document *aDocument, nsIFile *aCustomProfileDir) {
   nsresult rv;
 
   // Make sure the service has been initialized

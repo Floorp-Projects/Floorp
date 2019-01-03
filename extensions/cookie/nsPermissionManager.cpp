@@ -35,7 +35,7 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsIEffectiveTLDService.h"
 #include "nsPIDOMWindow.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/net/NeckoMessageUtils.h"
 #include "mozilla/Preferences.h"
 #include "nsReadLine.h"
@@ -2203,7 +2203,7 @@ nsPermissionManager::TestPermissionFromWindow(mozIDOMWindow* aWindow,
   nsCOMPtr<nsPIDOMWindowInner> window = nsPIDOMWindowInner::From(aWindow);
 
   // Get the document for security check
-  nsCOMPtr<nsIDocument> document = window->GetExtantDoc();
+  RefPtr<Document> document = window->GetExtantDoc();
   NS_ENSURE_TRUE(document, NS_NOINTERFACE);
 
   nsCOMPtr<nsIPrincipal> principal = document->NodePrincipal();

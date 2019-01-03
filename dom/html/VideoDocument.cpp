@@ -9,7 +9,7 @@
 #include "nsNodeInfoManager.h"
 #include "nsContentCreatorFunctions.h"
 #include "mozilla/dom/HTMLMediaElement.h"
-#include "nsIDocumentInlines.h"
+#include "DocumentInlines.h"
 #include "nsContentUtils.h"
 #include "mozilla/dom/Element.h"
 
@@ -138,8 +138,8 @@ void VideoDocument::UpdateTitle(nsIChannel* aChannel) {
 }  // namespace dom
 }  // namespace mozilla
 
-nsresult NS_NewVideoDocument(nsIDocument** aResult) {
-  mozilla::dom::VideoDocument* doc = new mozilla::dom::VideoDocument();
+nsresult NS_NewVideoDocument(mozilla::dom::Document** aResult) {
+  auto* doc = new mozilla::dom::VideoDocument();
 
   NS_ADDREF(doc);
   nsresult rv = doc->Init();

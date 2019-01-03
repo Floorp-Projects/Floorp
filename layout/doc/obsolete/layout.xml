@@ -79,7 +79,7 @@ document is reflowed, and the formatted changes are displayed.
 <Body>
 The actual interfaces involved are:
 <Interfaces>
-<Interface>nsIDocument</Interface>
+<Interface>Document</Interface>
 <Interface>nsIDocumentObserver</Interface>
 <Interface>nsIPresShell</Interface>
 <Interface>nsIStyleSet</Interface>

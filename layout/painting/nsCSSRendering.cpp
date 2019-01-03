@@ -31,7 +31,7 @@
 #include "nsGkAtoms.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsIContent.h"
-#include "nsIDocumentInlines.h"
+#include "mozilla/dom/DocumentInlines.h"
 #include "nsIScrollableFrame.h"
 #include "imgIRequest.h"
 #include "imgIContainer.h"
@@ -66,6 +66,7 @@ using namespace mozilla::css;
 using namespace mozilla::gfx;
 using namespace mozilla::image;
 using mozilla::CSSSizeOrRatio;
+using mozilla::dom::Document;
 
 static int gFrameTreeLockCount = 0;
 
@@ -810,7 +811,7 @@ static nsCSSBorderRenderer ConstructBorderRenderer(
       static_cast<int>(borderStyles[1]), static_cast<int>(borderStyles[2]),
       static_cast<int>(borderStyles[3]));
 
-  nsIDocument* document = nullptr;
+  Document* document = nullptr;
   nsIContent* content = aForFrame->GetContent();
   if (content) {
     document = content->OwnerDoc();
@@ -1045,7 +1046,7 @@ Maybe<nsCSSBorderRenderer> nsCSSRendering::CreateBorderRendererForOutline(
       Float(width) / oneDevPixel, Float(width) / oneDevPixel};
   Rect dirtyRect = NSRectToRect(aDirtyRect, oneDevPixel);
 
-  nsIDocument* document = nullptr;
+  Document* document = nullptr;
   nsIContent* content = aForFrame->GetContent();
   if (content) {
     document = content->OwnerDoc();
@@ -1217,7 +1218,7 @@ nsIFrame* nsCSSRendering::FindBackgroundStyleFrame(nsIFrame* aForFrame) {
     return aForFrame;
   }
 
-  nsIDocument* document = content->OwnerDoc();
+  Document* document = content->OwnerDoc();
 
   dom::Element* bodyContent = document->GetBodyElement();
   // We need to null check the body node (bug 118829) since
@@ -1291,7 +1292,7 @@ inline bool FindElementBackground(nsIFrame* aForFrame,
   if (aForFrame->Style()->GetPseudo()) return true;  // A pseudo-element frame.
 
   // We should only look at the <html> background if we're in an HTML document
-  nsIDocument* document = content->OwnerDoc();
+  Document* document = content->OwnerDoc();
 
   dom::Element* bodyContent = document->GetBodyElement();
   if (bodyContent != content)

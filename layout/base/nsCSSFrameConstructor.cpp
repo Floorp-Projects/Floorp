@@ -33,8 +33,8 @@
 #include "nsIFrameInlines.h"
 #include "nsGkAtoms.h"
 #include "nsPresContext.h"
-#include "nsIDocument.h"
-#include "nsIDocumentInlines.h"
+#include "mozilla/dom/Document.h"
+#include "mozilla/dom/DocumentInlines.h"
 #include "nsTableFrame.h"
 #include "nsTableColFrame.h"
 #include "nsTableRowFrame.h"
@@ -1486,7 +1486,7 @@ static bool ShouldCreateImageFrameForContent(const Element& aElement,
 
 //----------------------------------------------------------------------
 
-nsCSSFrameConstructor::nsCSSFrameConstructor(nsIDocument* aDocument,
+nsCSSFrameConstructor::nsCSSFrameConstructor(Document* aDocument,
                                              nsIPresShell* aPresShell)
     : nsFrameManager(aPresShell),
       mDocument(aDocument),
@@ -1762,7 +1762,7 @@ void nsCSSFrameConstructor::CreateGeneratedContentItem(
   // If the parent is in a shadow tree, make sure we don't
   // bind with a document because shadow roots and its descendants
   // are not in document.
-  nsIDocument* bindDocument =
+  Document* bindDocument =
       aOriginatingElement.HasFlag(NODE_IS_IN_SHADOW_TREE) ? nullptr : mDocument;
   rv = container->BindToTree(bindDocument, &aOriginatingElement,
                              &aOriginatingElement);
@@ -3548,7 +3548,7 @@ nsCSSFrameConstructor::FindCanvasData(const Element& aElement,
   // could be painting to the canvas.  That's the owner document of
   // the canvas, except when the owner document is a static document,
   // in which case it's the original document it was cloned from.
-  nsIDocument* doc = aElement.OwnerDoc();
+  Document* doc = aElement.OwnerDoc();
   if (doc->IsStaticDocument()) {
     doc = doc->GetOriginalDocument();
   }
@@ -3872,7 +3872,7 @@ nsresult nsCSSFrameConstructor::GetAnonymousContent(
     // If the parent is in a shadow tree, make sure we don't
     // bind with a document because shadow roots and its descendants
     // are not in document.
-    nsIDocument* bindDocument =
+    Document* bindDocument =
         aParent->HasFlag(NODE_IS_IN_SHADOW_TREE) ? nullptr : mDocument;
     rv = content->BindToTree(bindDocument, aParent, aParent);
     // If the anonymous content creator requested that the content should be
@@ -4122,8 +4122,7 @@ nsCSSFrameConstructor::FindXULDisplayData(const nsStyleDisplay& aDisplay,
       aDisplay.mDisplay == StyleDisplay::MozInlineBox) {
     if (!aElement.IsInNativeAnonymousSubtree() &&
         aElement.OwnerDoc()->IsContentDocument()) {
-      aElement.OwnerDoc()->WarnOnceAbout(
-          nsIDocument::eMozBoxOrInlineBoxDisplay);
+      aElement.OwnerDoc()->WarnOnceAbout(Document::eMozBoxOrInlineBoxDisplay);
     }
 
     // If we're emulating -moz-box with flexbox, then treat it as non-XUL and

@@ -16,7 +16,7 @@
 #include "nsGkAtoms.h"
 #include "nsXULElement.h"
 #include "nsPresContext.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsNameSpaceManager.h"
 #include "nsScrollbarButtonFrame.h"
 #include "nsIDOMEventListener.h"
@@ -590,9 +590,9 @@ nsresult nsSplitterFrameInner::MouseDown(Event* aMouseEvent) {
 
   while (nullptr != childBox) {
     nsIContent* content = childBox->GetContent();
-    nsIDocument* doc = content->OwnerDoc();
     int32_t dummy;
-    nsAtom* atom = doc->BindingManager()->ResolveTag(content, &dummy);
+    nsAtom* atom =
+        content->OwnerDoc()->BindingManager()->ResolveTag(content, &dummy);
 
     // skip over any splitters
     if (atom != nsGkAtoms::splitter) {

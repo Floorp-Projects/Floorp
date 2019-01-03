@@ -762,7 +762,7 @@ interface nsILoadInfo : nsISupports
    * The ancestorPrincipals[0] entry for an image loaded in an iframe will be the
    * principal of the iframe element's owner document.
    *
-   * See nsIDocument::AncestorPrincipals for more information.
+   * See Document::AncestorPrincipals for more information.
    *
    * Please note that this array has the same lifetime as the
    * loadInfo object - use with caution!

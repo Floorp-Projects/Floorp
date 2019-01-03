@@ -163,7 +163,7 @@ class TabChildBase : public nsISupports,
   virtual ScreenIntSize GetInnerSize() = 0;
 
   // Get the Document for the top-level window in this tab.
-  already_AddRefed<nsIDocument> GetDocument() const;
+  already_AddRefed<Document> GetDocument() const;
 
   // Get the pres-shell of the document for the top-level window in this tab.
   already_AddRefed<nsIPresShell> GetPresShell() const;

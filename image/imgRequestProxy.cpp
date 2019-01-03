@@ -20,6 +20,7 @@
 
 using namespace mozilla;
 using namespace mozilla::image;
+using mozilla::dom::Document;
 
 // The split of imgRequestProxy and imgRequestProxyStatic means that
 // certain overridden functions need to be usable in the destructor.
@@ -160,7 +161,7 @@ imgRequestProxy::~imgRequestProxy() {
 }
 
 nsresult imgRequestProxy::Init(imgRequest* aOwner, nsILoadGroup* aLoadGroup,
-                               nsIDocument* aLoadingDocument, nsIURI* aURI,
+                               Document* aLoadingDocument, nsIURI* aURI,
                                imgINotificationObserver* aObserver) {
   MOZ_ASSERT(!GetOwner() && !mListener,
              "imgRequestProxy is already initialized");
@@ -299,7 +300,7 @@ void imgRequestProxy::DispatchWithTarget(already_AddRefed<nsIRunnable> aEvent) {
   mEventTarget->Dispatch(std::move(aEvent), NS_DISPATCH_NORMAL);
 }
 
-void imgRequestProxy::AddToOwner(nsIDocument* aLoadingDocument) {
+void imgRequestProxy::AddToOwner(Document* aLoadingDocument) {
   // An imgRequestProxy can be initialized with neither a listener nor a
   // document. The caller could follow up later by cloning the canonical
   // imgRequestProxy with the actual listener. This is possible because
@@ -742,21 +743,21 @@ imgRequestProxy::Clone(imgINotificationObserver* aObserver,
 }
 
 nsresult imgRequestProxy::SyncClone(imgINotificationObserver* aObserver,
-                                    nsIDocument* aLoadingDocument,
+                                    Document* aLoadingDocument,
                                     imgRequestProxy** aClone) {
   return PerformClone(aObserver, aLoadingDocument,
                       /* aSyncNotify */ true, aClone);
 }
 
 nsresult imgRequestProxy::Clone(imgINotificationObserver* aObserver,
-                                nsIDocument* aLoadingDocument,
+                                Document* aLoadingDocument,
                                 imgRequestProxy** aClone) {
   return PerformClone(aObserver, aLoadingDocument,
                       /* aSyncNotify */ false, aClone);
 }
 
 nsresult imgRequestProxy::PerformClone(imgINotificationObserver* aObserver,
-                                       nsIDocument* aLoadingDocument,
+                                       Document* aLoadingDocument,
                                        bool aSyncNotify,
                                        imgRequestProxy** aClone) {
   MOZ_ASSERT(aClone, "Null out param");
@@ -1036,7 +1037,7 @@ imgRequestProxy::GetStaticRequest(imgIRequest** aReturn) {
   return result;
 }
 
-nsresult imgRequestProxy::GetStaticRequest(nsIDocument* aLoadingDocument,
+nsresult imgRequestProxy::GetStaticRequest(Document* aLoadingDocument,
                                            imgRequestProxy** aReturn) {
   *aReturn = nullptr;
   RefPtr<Image> image = GetImage();

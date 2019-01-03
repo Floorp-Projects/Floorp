@@ -94,7 +94,7 @@ const nsISupportsCString = Ci.nsISupportsCString;
  * @param aReferrer (nsIURI, optional)
  *        The referrer URI object (not a URL string) to use, or null
  *        if no referrer should be sent.
- * @param aDoc (nsIDocument, deprecated, optional)
+ * @param aDoc (Document, deprecated, optional)
  *        The content document that the save is being initiated from. If this
  *        is omitted, then aIsContentWindowPrivate must be provided.
  * @param aContentType (string, optional)

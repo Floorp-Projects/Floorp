@@ -96,7 +96,7 @@ bool ScriptElement::MaybeProcessScript() {
     return false;
   }
 
-  nsIDocument* ownerDoc = cont->OwnerDoc();
+  Document* ownerDoc = cont->OwnerDoc();
   FreezeExecutionAttrs(ownerDoc);
 
   mAlreadyStarted = true;
@@ -105,7 +105,7 @@ bool ScriptElement::MaybeProcessScript() {
   if (parser) {
     nsCOMPtr<nsIContentSink> sink = parser->GetContentSink();
     if (sink) {
-      nsCOMPtr<nsIDocument> parserDoc = do_QueryInterface(sink->GetTarget());
+      nsCOMPtr<Document> parserDoc = do_QueryInterface(sink->GetTarget());
       if (ownerDoc != parserDoc) {
         // Willful violation of HTML5 as of 2010-12-01
         return false;

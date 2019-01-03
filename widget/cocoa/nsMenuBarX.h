@@ -19,10 +19,10 @@ class nsMenuBarX;
 class nsMenuX;
 class nsIWidget;
 class nsIContent;
-class nsIDocument;
 
 namespace mozilla {
 namespace dom {
+class Document;
 class Element;
 }
 }
@@ -132,7 +132,7 @@ class nsMenuBarX : public nsMenuGroupOwnerX, public nsChangeObserver {
   void ConstructFallbackNativeMenus();
   nsresult InsertMenuAtIndex(nsMenuX* aMenu, uint32_t aIndex);
   void RemoveMenuAtIndex(uint32_t aIndex);
-  void HideItem(nsIDocument* inDoc, const nsAString& inID, nsIContent** outHiddenNode);
+  void HideItem(mozilla::dom::Document* inDoc, const nsAString& inID, nsIContent** outHiddenNode);
   void AquifyMenuBar();
   NSMenuItem* CreateNativeAppMenuItem(nsMenuX* inMenu, const nsAString& nodeID, SEL action, int tag,
                                       NativeMenuItemTarget* target);

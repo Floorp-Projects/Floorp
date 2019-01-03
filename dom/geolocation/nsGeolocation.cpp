@@ -24,7 +24,7 @@
 #include "nsContentPermissionHelper.h"
 #include "nsContentUtils.h"
 #include "nsGlobalWindow.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsINamed.h"
 #include "nsIObserverService.h"
 #include "nsIScriptError.h"
@@ -270,7 +270,7 @@ nsGeolocationRequest::Allow(JS::HandleValue aChoices) {
     nsCOMPtr<nsPIDOMWindowInner> window = mLocator->GetParentObject();
 
     if (window) {
-      nsCOMPtr<nsIDocument> doc = window->GetDoc();
+      nsCOMPtr<Document> doc = window->GetDoc();
       isVisible = doc && !doc->Hidden();
     }
 
@@ -815,7 +815,7 @@ nsresult Geolocation::Init(nsPIDOMWindowInner* aContentDom) {
     }
 
     // Grab the principal of the document
-    nsCOMPtr<nsIDocument> doc = aContentDom->GetDoc();
+    nsCOMPtr<Document> doc = aContentDom->GetDoc();
     if (!doc) {
       return NS_ERROR_FAILURE;
     }
@@ -974,7 +974,7 @@ bool Geolocation::ShouldBlockInsecureRequests() const {
     return false;
   }
 
-  nsCOMPtr<nsIDocument> doc = win->GetDoc();
+  nsCOMPtr<Document> doc = win->GetDoc();
   if (!doc) {
     return false;
   }
@@ -996,7 +996,7 @@ bool Geolocation::FeaturePolicyBlocked() const {
     return true;
   }
 
-  nsCOMPtr<nsIDocument> doc = win->GetExtantDoc();
+  nsCOMPtr<Document> doc = win->GetExtantDoc();
   if (!doc) {
     return false;
   }

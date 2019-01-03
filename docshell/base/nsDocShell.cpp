@@ -82,7 +82,7 @@
 #include "nsICookieService.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeOwner.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 #include "nsIDocumentLoaderFactory.h"
 #include "nsIDOMWindow.h"
 #include "nsIEditingSession.h"
@@ -568,9 +568,9 @@ nsDocShell::GetInterface(const nsIID& aIID, void** aSink) {
               aIID.Equals(NS_GET_IID(nsIDOMWindow))) &&
              NS_SUCCEEDED(EnsureScriptEnvironment())) {
     return mScriptGlobal->QueryInterface(aIID, aSink);
-  } else if (aIID.Equals(NS_GET_IID(nsIDocument)) &&
+  } else if (aIID.Equals(NS_GET_IID(Document)) &&
              NS_SUCCEEDED(EnsureContentViewer())) {
-    nsCOMPtr<nsIDocument> doc = mContentViewer->GetDocument();
+    RefPtr<Document> doc = mContentViewer->GetDocument();
     doc.forget(aSink);
     return *aSink ? NS_OK : NS_NOINTERFACE;
   } else if (aIID.Equals(NS_GET_IID(nsIApplicationCacheContainer))) {
@@ -584,7 +584,7 @@ nsDocShell::GetInterface(const nsIID& aIID, void** aSink) {
       return NS_ERROR_NO_INTERFACE;
     }
 
-    nsCOMPtr<nsIDocument> doc = contentViewer->GetDocument();
+    RefPtr<Document> doc = contentViewer->GetDocument();
     NS_ASSERTION(doc, "Should have a document.");
     if (!doc) {
       return NS_ERROR_NO_INTERFACE;
@@ -1030,11 +1030,11 @@ nsDOMNavigationTiming* nsDocShell::GetNavigationTiming() const {
   MOZ_ASSERT(aOriginTreeItem && aTargetTreeItem, "need two docshells");
 
   // Get origin document principal
-  nsCOMPtr<nsIDocument> originDocument = aOriginTreeItem->GetDocument();
+  RefPtr<Document> originDocument = aOriginTreeItem->GetDocument();
   NS_ENSURE_TRUE(originDocument, false);
 
   // Get target principal
-  nsCOMPtr<nsIDocument> targetDocument = aTargetTreeItem->GetDocument();
+  RefPtr<Document> targetDocument = aTargetTreeItem->GetDocument();
   NS_ENSURE_TRUE(targetDocument, false);
 
   bool equal;
@@ -1209,7 +1209,7 @@ nsDocShell::GetCharset(nsACString& aCharset) {
 
   nsIPresShell* presShell = GetPresShell();
   NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
-  nsIDocument* doc = presShell->GetDocument();
+  Document* doc = presShell->GetDocument();
   NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
   doc->GetDocumentCharacterSet()->Name(aCharset);
   return NS_OK;
@@ -1223,7 +1223,7 @@ nsDocShell::GatherCharsetMenuTelemetry() {
     return NS_OK;
   }
 
-  nsIDocument* doc = viewer->GetDocument();
+  Document* doc = viewer->GetDocument();
   if (!doc || doc->WillIgnoreCharsetOverride()) {
     return NS_OK;
   }
@@ -1346,7 +1346,7 @@ void nsDocShell::GetParentCharset(const Encoding*& aCharset,
 
 NS_IMETHODIMP
 nsDocShell::GetHasMixedActiveContentLoaded(bool* aHasMixedActiveContentLoaded) {
-  nsCOMPtr<nsIDocument> doc(GetDocument());
+  RefPtr<Document> doc(GetDocument());
   *aHasMixedActiveContentLoaded = doc && doc->GetHasMixedActiveContentLoaded();
   return NS_OK;
 }
@@ -1354,7 +1354,7 @@ nsDocShell::GetHasMixedActiveContentLoaded(bool* aHasMixedActiveContentLoaded) {
 NS_IMETHODIMP
 nsDocShell::GetHasMixedActiveContentBlocked(
     bool* aHasMixedActiveContentBlocked) {
-  nsCOMPtr<nsIDocument> doc(GetDocument());
+  RefPtr<Document> doc(GetDocument());
   *aHasMixedActiveContentBlocked =
       doc && doc->GetHasMixedActiveContentBlocked();
   return NS_OK;
@@ -1363,7 +1363,7 @@ nsDocShell::GetHasMixedActiveContentBlocked(
 NS_IMETHODIMP
 nsDocShell::GetHasMixedDisplayContentLoaded(
     bool* aHasMixedDisplayContentLoaded) {
-  nsCOMPtr<nsIDocument> doc(GetDocument());
+  RefPtr<Document> doc(GetDocument());
   *aHasMixedDisplayContentLoaded =
       doc && doc->GetHasMixedDisplayContentLoaded();
   return NS_OK;
@@ -1372,7 +1372,7 @@ nsDocShell::GetHasMixedDisplayContentLoaded(
 NS_IMETHODIMP
 nsDocShell::GetHasMixedDisplayContentBlocked(
     bool* aHasMixedDisplayContentBlocked) {
-  nsCOMPtr<nsIDocument> doc(GetDocument());
+  RefPtr<Document> doc(GetDocument());
   *aHasMixedDisplayContentBlocked =
       doc && doc->GetHasMixedDisplayContentBlocked();
   return NS_OK;
@@ -1380,14 +1380,14 @@ nsDocShell::GetHasMixedDisplayContentBlocked(
 
 NS_IMETHODIMP
 nsDocShell::GetHasTrackingContentBlocked(bool* aHasTrackingContentBlocked) {
-  nsCOMPtr<nsIDocument> doc(GetDocument());
+  RefPtr<Document> doc(GetDocument());
   *aHasTrackingContentBlocked = doc && doc->GetHasTrackingContentBlocked();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDocShell::GetHasTrackingContentLoaded(bool* aHasTrackingContentLoaded) {
-  nsCOMPtr<nsIDocument> doc(GetDocument());
+  RefPtr<Document> doc(GetDocument());
   *aHasTrackingContentLoaded = doc && doc->GetHasTrackingContentLoaded();
   return NS_OK;
 }
@@ -1395,7 +1395,7 @@ nsDocShell::GetHasTrackingContentLoaded(bool* aHasTrackingContentLoaded) {
 NS_IMETHODIMP
 nsDocShell::GetHasCookiesBlockedByPermission(
     bool* aHasCookiesBlockedByPermission) {
-  nsCOMPtr<nsIDocument> doc(GetDocument());
+  RefPtr<Document> doc(GetDocument());
   *aHasCookiesBlockedByPermission =
       doc && doc->GetHasCookiesBlockedByPermission();
   return NS_OK;
@@ -1404,14 +1404,14 @@ nsDocShell::GetHasCookiesBlockedByPermission(
 NS_IMETHODIMP
 nsDocShell::GetHasCookiesBlockedDueToTrackers(
     bool* aHasCookiesBlockedDueToTrackers) {
-  nsCOMPtr<nsIDocument> doc(GetDocument());
+  RefPtr<Document> doc(GetDocument());
   *aHasCookiesBlockedDueToTrackers = doc && doc->GetHasTrackingCookiesBlocked();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDocShell::GetHasAllCookiesBeenBlocked(bool* aHasAllCookiesBeenBlocked) {
-  nsCOMPtr<nsIDocument> doc(GetDocument());
+  RefPtr<Document> doc(GetDocument());
   *aHasAllCookiesBeenBlocked = doc && doc->GetHasAllCookiesBlocked();
   return NS_OK;
 }
@@ -1419,14 +1419,14 @@ nsDocShell::GetHasAllCookiesBeenBlocked(bool* aHasAllCookiesBeenBlocked) {
 NS_IMETHODIMP
 nsDocShell::GetHasForeignCookiesBeenBlocked(
     bool* aHasForeignCookiesBeenBlocked) {
-  nsCOMPtr<nsIDocument> doc(GetDocument());
+  RefPtr<Document> doc(GetDocument());
   *aHasForeignCookiesBeenBlocked = doc && doc->GetHasForeignCookiesBlocked();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDocShell::GetHasCookiesLoaded(bool* aHasCookiesLoaded) {
-  nsCOMPtr<nsIDocument> doc(GetDocument());
+  RefPtr<Document> doc(GetDocument());
   *aHasCookiesLoaded = doc && doc->GetHasCookiesLoaded();
   return NS_OK;
 }
@@ -1879,7 +1879,7 @@ nsDocShell::GetMayEnableCharacterEncodingMenu(
   if (!mContentViewer) {
     return NS_OK;
   }
-  nsIDocument* doc = mContentViewer->GetDocument();
+  Document* doc = mContentViewer->GetDocument();
   if (!doc) {
     return NS_OK;
   }
@@ -2238,7 +2238,7 @@ nsDocShell::GetCurrentDocumentChannel(nsIChannel** aResult) {
 
 nsIChannel* nsDocShell::GetCurrentDocChannel() {
   if (mContentViewer) {
-    nsIDocument* doc = mContentViewer->GetDocument();
+    Document* doc = mContentViewer->GetDocument();
     if (doc) {
       return doc->GetChannel();
     }
@@ -2476,7 +2476,7 @@ void nsDocShell::MaybeCreateInitialClientSource(nsIPrincipal* aPrincipal) {
   // Sometimes there is no principal available when we are called from
   // CreateAboutBlankContentViewer.  For example, sometimes the principal
   // is only extracted from the load context after the document is created
-  // in nsIDocument::ResetToURI().  Ideally we would do something similar
+  // in Document::ResetToURI().  Ideally we would do something similar
   // here, but for now lets just avoid the issue by not preallocating the
   // client.
   if (!principal) {
@@ -2531,7 +2531,7 @@ Maybe<ClientInfo> nsDocShell::GetInitialClientInfo() const {
 
   nsGlobalWindowInner* innerWindow =
       mScriptGlobal ? mScriptGlobal->GetCurrentInnerWindowInternal() : nullptr;
-  nsIDocument* doc = innerWindow ? innerWindow->GetExtantDoc() : nullptr;
+  Document* doc = innerWindow ? innerWindow->GetExtantDoc() : nullptr;
 
   if (!doc || !doc->IsInitialDocument()) {
     return Maybe<ClientInfo>();
@@ -2855,7 +2855,7 @@ bool nsDocShell::CanAccessItem(nsIDocShellTreeItem* aTargetItem,
   if (OriginAttributes::IsFirstPartyEnabled()) {
     if (aAccessingItem->ItemType() == nsIDocShellTreeItem::typeContent &&
         (accessingDS == accessingRootDS || accessingDS->GetIsMozBrowser())) {
-      nsCOMPtr<nsIDocument> accessingDoc = aAccessingItem->GetDocument();
+      RefPtr<Document> accessingDoc = aAccessingItem->GetDocument();
 
       if (accessingDoc) {
         nsCOMPtr<nsIPrincipal> accessingPrincipal =
@@ -2868,7 +2868,7 @@ bool nsDocShell::CanAccessItem(nsIDocShellTreeItem* aTargetItem,
 
     if (aTargetItem->ItemType() == nsIDocShellTreeItem::typeContent &&
         (targetDS == targetRootDS || targetDS->GetIsMozBrowser())) {
-      nsCOMPtr<nsIDocument> targetDoc = aAccessingItem->GetDocument();
+      RefPtr<Document> targetDoc = aAccessingItem->GetDocument();
 
       if (targetDoc) {
         nsCOMPtr<nsIPrincipal> targetPrincipal = targetDoc->NodePrincipal();
@@ -3090,7 +3090,7 @@ bool nsDocShell::IsSandboxedFrom(nsIDocShell* aTargetDocShell) {
   // active document, we will still enforce our own.
   uint32_t sandboxFlags = mSandboxFlags;
   if (mContentViewer) {
-    nsCOMPtr<nsIDocument> doc = mContentViewer->GetDocument();
+    RefPtr<Document> doc = mContentViewer->GetDocument();
     if (doc) {
       sandboxFlags = doc->GetSandboxFlags();
     }
@@ -3327,7 +3327,7 @@ nsDocShell::AddChild(nsIDocShellTreeItem* aChild) {
   if (!mContentViewer) {
     return NS_OK;
   }
-  nsIDocument* doc = mContentViewer->GetDocument();
+  Document* doc = mContentViewer->GetDocument();
   if (!doc) {
     return NS_OK;
   }
@@ -3667,7 +3667,7 @@ nsIScriptGlobalObject* nsDocShell::GetScriptGlobalObject() {
   return mScriptGlobal;
 }
 
-nsIDocument* nsDocShell::GetDocument() {
+Document* nsDocShell::GetDocument() {
   NS_ENSURE_SUCCESS(EnsureContentViewer(), nullptr);
   return mContentViewer->GetDocument();
 }
@@ -3712,7 +3712,7 @@ nsDocShell::GetContentBlockingLog(Promise** aPromise) {
     return NS_ERROR_FAILURE;
   }
 
-  nsIDocument* doc = mContentViewer->GetDocument();
+  Document* doc = mContentViewer->GetDocument();
   ErrorResult rv;
   RefPtr<Promise> promise = Promise::Create(doc->GetOwnerGlobal(), rv);
   if (NS_WARN_IF(rv.Failed())) {
@@ -4614,7 +4614,7 @@ nsDocShell::Reload(uint32_t aReloadFlags) {
                        // done
     rv = LoadHistoryEntry(mLSHE, loadType);
   } else {
-    nsCOMPtr<nsIDocument> doc(GetDocument());
+    RefPtr<Document> doc(GetDocument());
 
     if (!doc) {
       return NS_OK;
@@ -4740,11 +4740,11 @@ nsDocShell::Stop(uint32_t aStopFlags) {
 }
 
 NS_IMETHODIMP
-nsDocShell::GetDocument(nsIDocument** aDocument) {
+nsDocShell::GetDocument(Document** aDocument) {
   NS_ENSURE_ARG_POINTER(aDocument);
   NS_ENSURE_SUCCESS(EnsureContentViewer(), NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIDocument> doc = mContentViewer->GetDocument();
+  RefPtr<Document> doc = mContentViewer->GetDocument();
   if (!doc) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -5178,7 +5178,7 @@ nsDocShell::GetPositionAndSize(int32_t* aX, int32_t* aY, int32_t* aWidth,
   if (aWidth || aHeight) {
     // Caller wants to know our size; make sure to give them up to
     // date information.
-    nsCOMPtr<nsIDocument> doc(do_GetInterface(GetAsSupports(mParent)));
+    RefPtr<Document> doc(do_GetInterface(GetAsSupports(mParent)));
     if (doc) {
       doc->FlushPendingNotifications(FlushType::Layout);
     }
@@ -5371,7 +5371,7 @@ nsDocShell::SetIsActive(bool aIsActive) {
   // Tell the window about it
   if (mScriptGlobal) {
     mScriptGlobal->SetIsBackground(!aIsActive);
-    if (nsCOMPtr<nsIDocument> doc = mScriptGlobal->GetExtantDoc()) {
+    if (RefPtr<Document> doc = mScriptGlobal->GetExtantDoc()) {
       // Update orientation when the top-level browsing context becomes active.
       if (aIsActive) {
         nsCOMPtr<nsIDocShellTreeItem> parent;
@@ -5390,7 +5390,7 @@ nsDocShell::SetIsActive(bool aIsActive) {
   // Tell the nsDOMNavigationTiming about it
   RefPtr<nsDOMNavigationTiming> timing = mTiming;
   if (!timing && mContentViewer) {
-    nsIDocument* doc = mContentViewer->GetDocument();
+    Document* doc = mContentViewer->GetDocument();
     if (doc) {
       timing = doc->GetNavigationTiming();
     }
@@ -5538,7 +5538,7 @@ nsDocShell::SetMixedContentChannel(nsIChannel* aMixedContentChannel) {
 NS_IMETHODIMP
 nsDocShell::GetFailedChannel(nsIChannel** aFailedChannel) {
   NS_ENSURE_ARG_POINTER(aFailedChannel);
-  nsIDocument* doc = GetDocument();
+  Document* doc = GetDocument();
   if (!doc) {
     *aFailedChannel = nullptr;
     return NS_OK;
@@ -5571,7 +5571,7 @@ nsDocShell::GetAllowMixedContentAndConnectionData(
       sameTypeRoot.get() == static_cast<nsIDocShellTreeItem*>(this);
 
   // now get the document from sameTypeRoot
-  nsCOMPtr<nsIDocument> rootDoc = sameTypeRoot->GetDocument();
+  RefPtr<Document> rootDoc = sameTypeRoot->GetDocument();
   if (rootDoc) {
     nsCOMPtr<nsIPrincipal> rootPrincipal = rootDoc->NodePrincipal();
 
@@ -5891,7 +5891,7 @@ nsDocShell::ForceRefreshURI(nsIURI* aURI, nsIPrincipal* aPrincipal,
   // document's principal otherwise.
   nsCOMPtr<nsIPrincipal> principal = aPrincipal;
   if (!principal) {
-    nsCOMPtr<nsIDocument> doc = GetDocument();
+    RefPtr<Document> doc = GetDocument();
     if (!doc) {
       return NS_ERROR_FAILURE;
     }
@@ -6804,7 +6804,7 @@ nsresult nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
         return NS_OK;
       }
 
-      nsCOMPtr<nsIDocument> parentDoc;
+      RefPtr<Document> parentDoc;
       parentDoc = parentItem->GetDocument();
       if (!parentDoc) {
         return NS_OK;
@@ -7051,7 +7051,7 @@ nsresult nsDocShell::EnsureContentViewer() {
   NS_ENSURE_STATE(mContentViewer);
 
   if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsIDocument> doc(GetDocument());
+    RefPtr<Document> doc(GetDocument());
     NS_ASSERTION(doc,
                  "Should have doc if CreateAboutBlankContentViewer "
                  "succeeded!");
@@ -7074,7 +7074,7 @@ nsresult nsDocShell::EnsureContentViewer() {
 nsresult nsDocShell::CreateAboutBlankContentViewer(
     nsIPrincipal* aPrincipal, nsIURI* aBaseURI, bool aTryToSaveOldPresentation,
     bool aCheckPermitUnload) {
-  nsCOMPtr<nsIDocument> blankDoc;
+  RefPtr<Document> blankDoc;
   nsCOMPtr<nsIContentViewer> viewer;
   nsresult rv = NS_ERROR_FAILURE;
 
@@ -7222,7 +7222,7 @@ nsDocShell::CreateAboutBlankContentViewer(nsIPrincipal* aPrincipal) {
 
 bool nsDocShell::CanSavePresentation(uint32_t aLoadType,
                                      nsIRequest* aNewRequest,
-                                     nsIDocument* aNewDocument) {
+                                     Document* aNewDocument) {
   if (!mOSHE) {
     return false;  // no entry to save into
   }
@@ -7272,7 +7272,7 @@ bool nsDocShell::CanSavePresentation(uint32_t aLoadType,
   }
 
   // If the document does not want its presentation cached, then don't.
-  nsCOMPtr<nsIDocument> doc = mScriptGlobal->GetExtantDoc();
+  RefPtr<Document> doc = mScriptGlobal->GetExtantDoc();
   return doc && doc->CanSavePresentation(aNewRequest);
 }
 
@@ -7407,7 +7407,7 @@ nsDocShell::BeginRestore(nsIContentViewer* aContentViewer, bool aTop) {
   // the document's channel to the loadgroup to initiate stateChange
   // notifications.
 
-  nsCOMPtr<nsIDocument> doc = aContentViewer->GetDocument();
+  RefPtr<Document> doc = aContentViewer->GetDocument();
   if (doc) {
     nsIChannel* channel = doc->GetChannel();
     if (channel) {
@@ -7465,7 +7465,7 @@ nsDocShell::FinishRestore() {
     ReattachEditorToWindow(mOSHE);
   }
 
-  nsCOMPtr<nsIDocument> doc = GetDocument();
+  RefPtr<Document> doc = GetDocument();
   if (doc) {
     // Finally, we remove the request from the loadgroup.  This will
     // cause onStateChange(STATE_STOP) to fire, which will fire the
@@ -7610,7 +7610,7 @@ nsresult nsDocShell::RestoreFromHistory() {
     // at the time we initiated the new load.  We need to check whether
     // it's still safe to do so, since there may have been DOM mutations
     // or new requests initiated.
-    nsCOMPtr<nsIDocument> doc = viewer->GetDocument();
+    RefPtr<Document> doc = viewer->GetDocument();
     nsIRequest* request = nullptr;
     if (doc) {
       request = doc->GetChannel();
@@ -7746,7 +7746,7 @@ nsresult nsDocShell::RestoreFromHistory() {
   }
 
   nsCOMPtr<nsIContent> container;
-  nsCOMPtr<nsIDocument> sibling;
+  RefPtr<Document> sibling;
   if (rootViewParent && rootViewParent->GetParent()) {
     nsIFrame* frame = rootViewParent->GetParent()->GetFrame();
     container = frame ? frame->GetContent() : nullptr;
@@ -7787,7 +7787,7 @@ nsresult nsDocShell::RestoreFromHistory() {
 
   bool sticky = mLSHE->GetSticky();
 
-  nsCOMPtr<nsIDocument> document = mContentViewer->GetDocument();
+  RefPtr<Document> document = mContentViewer->GetDocument();
 
   nsCOMArray<nsIDocShellTreeItem> childShells;
   int32_t i = 0;
@@ -7868,7 +7868,7 @@ nsresult nsDocShell::RestoreFromHistory() {
   if (document) {
     RefPtr<nsDocShell> parent = GetParentDocshell();
     if (parent) {
-      nsCOMPtr<nsIDocument> d = parent->GetDocument();
+      RefPtr<Document> d = parent->GetDocument();
       if (d) {
         if (d->EventHandlingSuppressed()) {
           document->SuppressEventHandling(d->EventHandlingSuppressed());
@@ -8123,7 +8123,7 @@ nsresult nsDocShell::CreateContentViewer(const nsACString& aContentType,
     // at the time we initiated the new load.  We need to check whether
     // it's still safe to do so, since there may have been DOM mutations
     // or new requests initiated.
-    nsCOMPtr<nsIDocument> doc = viewer->GetDocument();
+    RefPtr<Document> doc = viewer->GetDocument();
     mSavingOldViewer = CanSavePresentation(mLoadType, aRequest, doc);
   }
 
@@ -8162,7 +8162,7 @@ nsresult nsDocShell::CreateContentViewer(const nsACString& aContentType,
     // following function calls need it.
     mLoadType = mFailedLoadType;
 
-    nsIDocument* doc = viewer->GetDocument();
+    Document* doc = viewer->GetDocument();
     if (doc) {
       doc->SetFailedChannel(failedChannel);
     }
@@ -8268,7 +8268,7 @@ nsresult nsDocShell::CreateContentViewer(const nsACString& aContentType,
   if (multiPartChannel) {
     nsCOMPtr<nsIPresShell> shell = GetPresShell();
     if (NS_SUCCEEDED(rv) && shell) {
-      nsIDocument* doc = shell->GetDocument();
+      Document* doc = shell->GetDocument();
       if (doc) {
         uint32_t partID;
         multiPartChannel->GetPartID(&partID);
@@ -8492,7 +8492,7 @@ nsresult nsDocShell::SetupNewViewer(nsIContentViewer* aNewViewer) {
 
 nsresult nsDocShell::SetDocCurrentStateObj(nsISHEntry* aShEntry) {
   NS_ENSURE_STATE(mContentViewer);
-  nsCOMPtr<nsIDocument> document = GetDocument();
+  RefPtr<Document> document = GetDocument();
   NS_ENSURE_TRUE(document, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIStructuredCloneContainer> scContainer;
@@ -8804,7 +8804,7 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
     }
   }
 
-  nsIDocument* doc = mContentViewer ? mContentViewer->GetDocument() : nullptr;
+  Document* doc = mContentViewer ? mContentViewer->GetDocument() : nullptr;
 
   const bool isDocumentAuxSandboxed =
       doc && (doc->GetSandboxFlags() & SANDBOXED_AUXILIARY_NAVIGATION);
@@ -8937,7 +8937,7 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
       // document in |newWin|, if any.
       nsCOMPtr<nsPIDOMWindowOuter> piNewWin = newWin;
       if (piNewWin) {
-        nsCOMPtr<nsIDocument> newDoc = piNewWin->GetExtantDoc();
+        RefPtr<Document> newDoc = piNewWin->GetExtantDoc();
         if (!newDoc || newDoc->IsInitialDocument()) {
           isNewWindow = true;
           aLoadState->SetLoadFlag(INTERNAL_LOAD_FLAGS_FIRST_LOAD);
@@ -9090,7 +9090,7 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
   // possible frameloader initialization before loading a new page.
   nsCOMPtr<nsIDocShellTreeItem> parent = GetParentDocshell();
   if (parent) {
-    nsCOMPtr<nsIDocument> doc = parent->GetDocument();
+    RefPtr<Document> doc = parent->GetDocument();
     if (doc) {
       doc->TryCancelFrameLoaderInitialization(this);
     }
@@ -9240,7 +9240,7 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
       SetHistoryEntry(&mLSHE, aLoadState->SHEntry());
 
       // Set the doc's URI according to the new history entry's URI.
-      nsCOMPtr<nsIDocument> doc = GetDocument();
+      RefPtr<Document> doc = GetDocument();
       NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
       doc->SetDocumentURI(aLoadState->URI());
 
@@ -9621,7 +9621,7 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
 }
 
 nsIPrincipal* nsDocShell::GetInheritedPrincipal(bool aConsiderCurrentDocument) {
-  nsCOMPtr<nsIDocument> document;
+  RefPtr<Document> document;
   bool inheritedFromCurrent = false;
 
   if (aConsiderCurrentDocument && mContentViewer) {
@@ -9820,7 +9820,7 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
       loadingPrincipal = loadingNode->NodePrincipal();
 #ifdef DEBUG
       // Get the docshell type for requestingElement.
-      nsCOMPtr<nsIDocument> requestingDoc = loadingNode->OwnerDoc();
+      RefPtr<Document> requestingDoc = loadingNode->OwnerDoc();
       nsCOMPtr<nsIDocShell> elementDocShell = requestingDoc->GetDocShell();
       // requestingElement docshell type = current docshell type.
       MOZ_ASSERT(
@@ -10558,7 +10558,7 @@ nsresult nsDocShell::ScrollToAnchor(bool aCurHasRef, bool aNewHasRef,
     if (NS_FAILED(rv)) {
       // Get a document charset
       NS_ENSURE_TRUE(mContentViewer, NS_ERROR_FAILURE);
-      nsIDocument* doc = mContentViewer->GetDocument();
+      Document* doc = mContentViewer->GetDocument();
       NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
       nsAutoCString charset;
       doc->GetDocumentCharacterSet()->Name(charset);
@@ -10885,7 +10885,7 @@ bool nsDocShell::OnLoadingSite(nsIChannel* aChannel, bool aFireOnLocationChange,
   // If this a redirect, use the final url (uri)
   // else use the original url
   //
-  // Note that this should match what documents do (see nsIDocument::Reset).
+  // Note that this should match what documents do (see Document::Reset).
   NS_GetFinalChannelURI(aChannel, getter_AddRefs(uri));
   NS_ENSURE_TRUE(uri, false);
 
@@ -10956,7 +10956,7 @@ nsDocShell::AddState(JS::Handle<JS::Value> aData, const nsAString& aTitle,
     aReplace = true;
   }
 
-  nsCOMPtr<nsIDocument> document = GetDocument();
+  RefPtr<Document> document = GetDocument();
   NS_ENSURE_TRUE(document, NS_ERROR_FAILURE);
 
   // Step 1: Serialize aData using structured clone.
@@ -10967,7 +10967,7 @@ nsDocShell::AddState(JS::Handle<JS::Value> aData, const nsAString& aTitle,
   // 634834)  To protect against this, we abort if our principal changes due
   // to the InitFromJSVal() call.
   {
-    nsCOMPtr<nsIDocument> origDocument = GetDocument();
+    RefPtr<Document> origDocument = GetDocument();
     if (!origDocument) {
       return NS_ERROR_DOM_SECURITY_ERR;
     }
@@ -10977,7 +10977,7 @@ nsDocShell::AddState(JS::Handle<JS::Value> aData, const nsAString& aTitle,
     rv = scContainer->InitFromJSVal(aData, aCx);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIDocument> newDocument = GetDocument();
+    RefPtr<Document> newDocument = GetDocument();
     if (!newDocument) {
       return NS_ERROR_DOM_SECURITY_ERR;
     }
@@ -12212,7 +12212,7 @@ nsresult nsDocShell::SetBaseUrlForWyciwyg(nsIContentViewer* aContentViewer) {
 
   // Get the current document and set the base uri
   if (baseURI) {
-    nsIDocument* document = aContentViewer->GetDocument();
+    Document* document = aContentViewer->GetDocument();
     if (document) {
       document->SetBaseURI(baseURI);
     }
@@ -12349,7 +12349,7 @@ bool nsDocShell::IsOKToLoadURI(nsIURI* aURI) {
   }
 
   bool isPrivateWin = false;
-  nsIDocument* doc = GetDocument();
+  Document* doc = GetDocument();
   if (doc) {
     isPrivateWin =
         doc->NodePrincipal()->OriginAttributesRef().mPrivateBrowsingId > 0;
@@ -12678,7 +12678,7 @@ nsDocShell::OnLinkClickSync(nsIContent* aContent, nsIURI* aURI,
   // link was in. From that document, we'll get the URI to use as the
   // referer, since the current URI in this docshell may be a
   // new document that we're in the process of loading.
-  nsCOMPtr<nsIDocument> refererDoc = aContent->OwnerDoc();
+  RefPtr<Document> refererDoc = aContent->OwnerDoc();
   NS_ENSURE_TRUE(refererDoc, NS_ERROR_UNEXPECTED);
 
   // Now check that the refererDoc's inner window is the current inner
@@ -12817,7 +12817,7 @@ bool nsDocShell::PluginsAllowedInCurrentDoc() {
     return false;
   }
 
-  nsIDocument* doc = mContentViewer->GetDocument();
+  Document* doc = mContentViewer->GetDocument();
   if (!doc) {
     return false;
   }
@@ -13015,7 +13015,7 @@ bool nsDocShell::CanSetOriginAttributes() {
   // TODO: Bug 1273058 - mContentViewer should be null when setting origin
   // attributes.
   if (mContentViewer) {
-    nsIDocument* doc = mContentViewer->GetDocument();
+    Document* doc = mContentViewer->GetDocument();
     if (doc) {
       nsIURI* uri = doc->GetDocumentURI();
       if (!uri) {
@@ -13255,9 +13255,9 @@ UniquePtr<ClientSource> nsDocShell::TakeInitialClientSource() {
 NS_IMETHODIMP
 nsDocShell::IssueWarning(uint32_t aWarning, bool aAsError) {
   if (mContentViewer) {
-    nsCOMPtr<nsIDocument> doc = mContentViewer->GetDocument();
+    RefPtr<Document> doc = mContentViewer->GetDocument();
     if (doc) {
-      doc->WarnOnceAbout(nsIDocument::DeprecatedOperations(aWarning), aAsError);
+      doc->WarnOnceAbout(Document::DeprecatedOperations(aWarning), aAsError);
     }
   }
   return NS_OK;

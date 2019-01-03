@@ -72,7 +72,7 @@ nsresult SVGFEImageElement::LoadSVGImage(bool aForce, bool aNotify) {
   if (baseURI && !href.IsEmpty()) NS_MakeAbsoluteURI(href, href, baseURI);
 
   // Make sure we don't get in a recursive death-spiral
-  nsIDocument* doc = OwnerDoc();
+  Document* doc = OwnerDoc();
   nsCOMPtr<nsIURI> hrefAsURI;
   if (NS_SUCCEEDED(StringToURI(href, doc, getter_AddRefs(hrefAsURI)))) {
     bool isEqual;
@@ -132,8 +132,7 @@ void SVGFEImageElement::MaybeLoadSVGImage() {
   }
 }
 
-nsresult SVGFEImageElement::BindToTree(nsIDocument* aDocument,
-                                       nsIContent* aParent,
+nsresult SVGFEImageElement::BindToTree(Document* aDocument, nsIContent* aParent,
                                        nsIContent* aBindingParent) {
   nsresult rv =
       SVGFEImageElementBase::BindToTree(aDocument, aParent, aBindingParent);

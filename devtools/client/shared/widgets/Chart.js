@@ -74,7 +74,7 @@ function PieTableChart(node, pie, table) {
 /**
  * Creates the DOM for a pie+table chart.
  *
- * @param nsIDocument document
+ * @param Document document
  *        The document responsible with creating the DOM.
  * @param object
  *        An object containing all or some of the following properties:
@@ -161,7 +161,7 @@ function createPieTableChart(document,
 /**
  * Creates the DOM for a pie chart based on the specified properties.
  *
- * @param nsIDocument document
+ * @param Document document
  *        The document responsible with creating the DOM.
  * @param object
  *        An object containing all or some of the following properties:
@@ -293,7 +293,7 @@ function createPieChart(document, { data, width, height, centerX, centerY, radiu
 /**
  * Creates the DOM for a table chart based on the specified properties.
  *
- * @param nsIDocument document
+ * @param Document document
  *        The document responsible with creating the DOM.
  * @param object
  *        An object containing all or some of the following properties:

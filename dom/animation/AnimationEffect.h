@@ -26,13 +26,14 @@ namespace dom {
 class Animation;
 class KeyframeEffect;
 struct ComputedEffectTiming;
+class Document;
 
 class AnimationEffect : public nsISupports, public nsWrapperCache {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(AnimationEffect)
 
-  AnimationEffect(nsIDocument* aDocument, TimingParams&& aTiming);
+  AnimationEffect(Document* aDocument, TimingParams&& aTiming);
 
   virtual KeyframeEffect* AsKeyframeEffect() { return nullptr; }
 
@@ -91,7 +92,7 @@ class AnimationEffect : public nsISupports, public nsWrapperCache {
   Nullable<TimeDuration> GetLocalTime() const;
 
  protected:
-  RefPtr<nsIDocument> mDocument;
+  RefPtr<Document> mDocument;
   RefPtr<Animation> mAnimation;
   TimingParams mTiming;
 };

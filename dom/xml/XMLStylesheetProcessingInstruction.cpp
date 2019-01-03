@@ -34,7 +34,7 @@ XMLStylesheetProcessingInstruction::~XMLStylesheetProcessingInstruction() {}
 // nsIContent
 
 nsresult XMLStylesheetProcessingInstruction::BindToTree(
-    nsIDocument* aDocument, nsIContent* aParent, nsIContent* aBindingParent) {
+    Document* aDocument, nsIContent* aParent, nsIContent* aBindingParent) {
   nsresult rv =
       ProcessingInstruction::BindToTree(aDocument, aParent, aBindingParent);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -49,7 +49,7 @@ nsresult XMLStylesheetProcessingInstruction::BindToTree(
 
 void XMLStylesheetProcessingInstruction::UnbindFromTree(bool aDeep,
                                                         bool aNullParent) {
-  nsCOMPtr<nsIDocument> oldDoc = GetUncomposedDoc();
+  nsCOMPtr<Document> oldDoc = GetUncomposedDoc();
 
   ProcessingInstruction::UnbindFromTree(aDeep, aNullParent);
   Unused << UpdateStyleSheetInternal(oldDoc, nullptr);
@@ -120,7 +120,7 @@ XMLStylesheetProcessingInstruction::GetStyleSheetInfo() {
     return Nothing();
   }
 
-  nsIDocument* doc = OwnerDoc();
+  Document* doc = OwnerDoc();
   nsIURI* baseURL =
       mOverriddenBaseURI ? mOverriddenBaseURI.get() : doc->GetDocBaseURI();
   auto encoding = doc->GetDocumentCharacterSet();

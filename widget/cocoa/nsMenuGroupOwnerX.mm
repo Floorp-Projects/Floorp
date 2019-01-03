@@ -18,7 +18,7 @@
 
 #include "mozilla/dom/Element.h"
 #include "nsIWidget.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Document.h"
 
 #include "nsINode.h"
 

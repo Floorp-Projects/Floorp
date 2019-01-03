@@ -30,7 +30,7 @@ HTMLMetaElement::~HTMLMetaElement() {}
 
 NS_IMPL_ELEMENT_CLONE(HTMLMetaElement)
 
-void HTMLMetaElement::SetMetaReferrer(nsIDocument* aDocument) {
+void HTMLMetaElement::SetMetaReferrer(Document* aDocument) {
   if (!aDocument || !AttrValueIs(kNameSpaceID_None, nsGkAtoms::name,
                                  nsGkAtoms::referrer, eIgnoreCase)) {
     return;
@@ -52,7 +52,7 @@ nsresult HTMLMetaElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                                        nsIPrincipal* aSubjectPrincipal,
                                        bool aNotify) {
   if (aNameSpaceID == kNameSpaceID_None) {
-    nsIDocument* document = GetUncomposedDoc();
+    Document* document = GetUncomposedDoc();
     if (aName == nsGkAtoms::content) {
       if (document && AttrValueIs(kNameSpaceID_None, nsGkAtoms::name,
                                   nsGkAtoms::viewport, eIgnoreCase)) {
@@ -70,8 +70,7 @@ nsresult HTMLMetaElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
       aNameSpaceID, aName, aValue, aOldValue, aSubjectPrincipal, aNotify);
 }
 
-nsresult HTMLMetaElement::BindToTree(nsIDocument* aDocument,
-                                     nsIContent* aParent,
+nsresult HTMLMetaElement::BindToTree(Document* aDocument, nsIContent* aParent,
                                      nsIContent* aBindingParent) {
   nsresult rv =
       nsGenericHTMLElement::BindToTree(aDocument, aParent, aBindingParent);
@@ -136,12 +135,12 @@ nsresult HTMLMetaElement::BindToTree(nsIDocument* aDocument,
 }
 
 void HTMLMetaElement::UnbindFromTree(bool aDeep, bool aNullParent) {
-  nsCOMPtr<nsIDocument> oldDoc = GetUncomposedDoc();
+  nsCOMPtr<Document> oldDoc = GetUncomposedDoc();
   CreateAndDispatchEvent(oldDoc, NS_LITERAL_STRING("DOMMetaRemoved"));
   nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
 }
 
-void HTMLMetaElement::CreateAndDispatchEvent(nsIDocument* aDoc,
+void HTMLMetaElement::CreateAndDispatchEvent(Document* aDoc,
                                              const nsAString& aEventName) {
   if (!aDoc) return;
 

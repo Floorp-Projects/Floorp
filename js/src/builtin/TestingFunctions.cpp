@@ -202,6 +202,15 @@ static bool GetBuildConfiguration(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
+#ifdef JS_CODEGEN_ARM
+  value = BooleanValue(true);
+#else
+  value = BooleanValue(false);
+#endif
+  if (!JS_SetProperty(cx, info, "arm", value)) {
+    return false;
+  }
+
 #ifdef JS_SIMULATOR_ARM
   value = BooleanValue(true);
 #else
