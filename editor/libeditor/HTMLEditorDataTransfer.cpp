@@ -1495,9 +1495,6 @@ nsresult HTMLEditor::PasteInternal(int32_t aClipboardType,
   // context to use instead of cfhtml context.
   bool bHavePrivateHTMLFlavor = HavePrivateHTMLFlavor(clipboard);
   if (bHavePrivateHTMLFlavor) {
-    nsCOMPtr<nsISupports> contextDataObj, infoDataObj;
-    nsCOMPtr<nsISupportsString> textDataObj;
-
     nsCOMPtr<nsITransferable> contextTransferable =
         do_CreateInstance("@mozilla.org/widget/transferable;1");
     if (NS_WARN_IF(!contextTransferable)) {
@@ -1506,8 +1503,14 @@ nsresult HTMLEditor::PasteInternal(int32_t aClipboardType,
     contextTransferable->Init(nullptr);
     contextTransferable->AddDataFlavor(kHTMLContext);
     clipboard->GetData(contextTransferable, aClipboardType);
-    contextTransferable->GetTransferData(kHTMLContext,
-                                         getter_AddRefs(contextDataObj));
+    nsCOMPtr<nsISupports> contextDataObj;
+    rv = contextTransferable->GetTransferData(kHTMLContext,
+                                              getter_AddRefs(contextDataObj));
+    if (NS_SUCCEEDED(rv) && contextDataObj) {
+      if (nsCOMPtr<nsISupportsString> str = do_QueryInterface(contextDataObj)) {
+        str->GetData(contextStr);
+      }
+    }
 
     nsCOMPtr<nsITransferable> infoTransferable =
         do_CreateInstance("@mozilla.org/widget/transferable;1");
@@ -1517,16 +1520,13 @@ nsresult HTMLEditor::PasteInternal(int32_t aClipboardType,
     infoTransferable->Init(nullptr);
     infoTransferable->AddDataFlavor(kHTMLInfo);
     clipboard->GetData(infoTransferable, aClipboardType);
-    infoTransferable->GetTransferData(kHTMLInfo, getter_AddRefs(infoDataObj));
-
-    if (contextDataObj) {
-      textDataObj = do_QueryInterface(contextDataObj);
-      textDataObj->GetData(contextStr);
-    }
-
-    if (infoDataObj) {
-      textDataObj = do_QueryInterface(infoDataObj);
-      textDataObj->GetData(infoStr);
+    nsCOMPtr<nsISupports> infoDataObj;
+    rv = infoTransferable->GetTransferData(kHTMLInfo,
+                                           getter_AddRefs(infoDataObj));
+    if (NS_SUCCEEDED(rv) && infoDataObj) {
+      if (nsCOMPtr<nsISupportsString> str = do_QueryInterface(infoDataObj)) {
+        str->GetData(infoStr);
+      }
     }
   }
 

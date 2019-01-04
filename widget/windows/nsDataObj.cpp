@@ -809,67 +809,69 @@ HRESULT nsDataObj::AddGetFormat(FORMATETC& aFE) { return S_OK; }
 HRESULT
 nsDataObj::GetDib(const nsACString& inFlavor, FORMATETC& aFormat,
                   STGMEDIUM& aSTG) {
-  ULONG result = E_FAIL;
   nsCOMPtr<nsISupports> genericDataWrapper;
-  mTransferable->GetTransferData(PromiseFlatCString(inFlavor).get(),
-                                 getter_AddRefs(genericDataWrapper));
-  nsCOMPtr<imgIContainer> image(do_QueryInterface(genericDataWrapper));
-  if (image) {
-    nsCOMPtr<imgITools> imgTools =
-        do_CreateInstance("@mozilla.org/image/tools;1");
-
-    nsAutoString options;
-    if (aFormat.cfFormat == CF_DIBV5) {
-      options.AppendLiteral("version=5");
-    } else {
-      options.AppendLiteral("version=3");
-    }
-
-    nsCOMPtr<nsIInputStream> inputStream;
-    nsresult rv = imgTools->EncodeImage(image, NS_LITERAL_CSTRING(IMAGE_BMP),
-                                        options, getter_AddRefs(inputStream));
-    if (NS_FAILED(rv) || !inputStream) {
-      return E_FAIL;
-    }
-
-    nsCOMPtr<imgIEncoder> encoder = do_QueryInterface(inputStream);
-    if (!encoder) {
-      return E_FAIL;
-    }
-
-    uint32_t size = 0;
-    rv = encoder->GetImageBufferUsed(&size);
-    if (NS_FAILED(rv) || size <= BFH_LENGTH) {
-      return E_FAIL;
-    }
-
-    char* src = nullptr;
-    rv = encoder->GetImageBuffer(&src);
-    if (NS_FAILED(rv) || !src) {
-      return E_FAIL;
-    }
-
-    // We don't want the file header.
-    src += BFH_LENGTH;
-    size -= BFH_LENGTH;
-
-    HGLOBAL glob = ::GlobalAlloc(GMEM_MOVEABLE | GMEM_ZEROINIT, size);
-    if (!glob) {
-      DWORD err = ::GetLastError();
-      return E_FAIL;
-    }
-
-    char* dst = (char*)::GlobalLock(glob);
-    ::CopyMemory(dst, src, size);
-    ::GlobalUnlock(glob);
-
-    aSTG.hGlobal = glob;
-    aSTG.tymed = TYMED_HGLOBAL;
-    result = S_OK;
-  } else {
-    NS_WARNING("Definitely not an image on clipboard");
+  if (NS_FAILED(
+          mTransferable->GetTransferData(PromiseFlatCString(inFlavor).get(),
+                                         getter_AddRefs(genericDataWrapper)))) {
+    return E_FAIL;
   }
-  return result;
+
+  nsCOMPtr<imgIContainer> image = do_QueryInterface(genericDataWrapper);
+  if (!image) {
+    return E_FAIL;
+  }
+
+  nsCOMPtr<imgITools> imgTools =
+      do_CreateInstance("@mozilla.org/image/tools;1");
+
+  nsAutoString options;
+  if (aFormat.cfFormat == CF_DIBV5) {
+    options.AppendLiteral("version=5");
+  } else {
+    options.AppendLiteral("version=3");
+  }
+
+  nsCOMPtr<nsIInputStream> inputStream;
+  nsresult rv = imgTools->EncodeImage(image, NS_LITERAL_CSTRING(IMAGE_BMP),
+                                      options, getter_AddRefs(inputStream));
+  if (NS_FAILED(rv) || !inputStream) {
+    return E_FAIL;
+  }
+
+  nsCOMPtr<imgIEncoder> encoder = do_QueryInterface(inputStream);
+  if (!encoder) {
+    return E_FAIL;
+  }
+
+  uint32_t size = 0;
+  rv = encoder->GetImageBufferUsed(&size);
+  if (NS_FAILED(rv) || size <= BFH_LENGTH) {
+    return E_FAIL;
+  }
+
+  char* src = nullptr;
+  rv = encoder->GetImageBuffer(&src);
+  if (NS_FAILED(rv) || !src) {
+    return E_FAIL;
+  }
+
+  // We don't want the file header.
+  src += BFH_LENGTH;
+  size -= BFH_LENGTH;
+
+  HGLOBAL glob = ::GlobalAlloc(GMEM_MOVEABLE | GMEM_ZEROINIT, size);
+  if (!glob) {
+    DWORD err = ::GetLastError();
+    return E_FAIL;
+  }
+
+  char* dst = (char*)::GlobalLock(glob);
+  ::CopyMemory(dst, src, size);
+  ::GlobalUnlock(glob);
+
+  aSTG.hGlobal = glob;
+  aSTG.tymed = TYMED_HGLOBAL;
+  return S_OK;
 }
 
 //
@@ -1271,8 +1273,11 @@ HRESULT nsDataObj::GetText(const nsACString& aDataFlavor, FORMATETC& aFE,
 
   // NOTE: CreateDataFromPrimitive creates new memory, that needs to be deleted
   nsCOMPtr<nsISupports> genericDataWrapper;
-  mTransferable->GetTransferData(flavorStr, getter_AddRefs(genericDataWrapper));
-  if (!genericDataWrapper) return E_FAIL;
+  nsresult rv = mTransferable->GetTransferData(
+      flavorStr, getter_AddRefs(genericDataWrapper));
+  if (NS_FAILED(rv) || !genericDataWrapper) {
+    return E_FAIL;
+  }
 
   uint32_t len;
   nsPrimitiveHelpers::CreateDataFromPrimitive(nsDependentCString(flavorStr),
@@ -1377,7 +1382,10 @@ HRESULT nsDataObj::DropFile(FORMATETC& aFE, STGMEDIUM& aSTG) {
   nsresult rv;
   nsCOMPtr<nsISupports> genericDataWrapper;
 
-  mTransferable->GetTransferData(kFileMime, getter_AddRefs(genericDataWrapper));
+  if (NS_FAILED(mTransferable->GetTransferData(
+          kFileMime, getter_AddRefs(genericDataWrapper)))) {
+    return E_FAIL;
+  }
   nsCOMPtr<nsIFile> file(do_QueryInterface(genericDataWrapper));
   if (!file) return E_FAIL;
 
@@ -1426,8 +1434,10 @@ HRESULT nsDataObj::DropImage(FORMATETC& aFE, STGMEDIUM& aSTG) {
   if (!mCachedTempFile) {
     nsCOMPtr<nsISupports> genericDataWrapper;
 
-    mTransferable->GetTransferData(kNativeImageMime,
-                                   getter_AddRefs(genericDataWrapper));
+    if (NS_FAILED(mTransferable->GetTransferData(
+            kNativeImageMime, getter_AddRefs(genericDataWrapper)))) {
+      return E_FAIL;
+    }
     nsCOMPtr<imgIContainer> image(do_QueryInterface(genericDataWrapper));
     if (!image) return E_FAIL;
 
@@ -1941,8 +1951,9 @@ HRESULT nsDataObj::GetDownloadDetails(nsIURI** aSourceURI,
 
   // get the URI from the kFilePromiseURLMime flavor
   nsCOMPtr<nsISupports> urlPrimitive;
-  mTransferable->GetTransferData(kFilePromiseURLMime,
-                                 getter_AddRefs(urlPrimitive));
+  nsresult rv = mTransferable->GetTransferData(kFilePromiseURLMime,
+                                               getter_AddRefs(urlPrimitive));
+  NS_ENSURE_SUCCESS(rv, E_FAIL);
   nsCOMPtr<nsISupportsString> srcUrlPrimitive = do_QueryInterface(urlPrimitive);
   NS_ENSURE_TRUE(srcUrlPrimitive, E_FAIL);
 
@@ -1954,8 +1965,9 @@ HRESULT nsDataObj::GetDownloadDetails(nsIURI** aSourceURI,
 
   nsAutoString srcFileName;
   nsCOMPtr<nsISupports> fileNamePrimitive;
-  mTransferable->GetTransferData(kFilePromiseDestFilename,
-                                 getter_AddRefs(fileNamePrimitive));
+  rv = mTransferable->GetTransferData(kFilePromiseDestFilename,
+                                      getter_AddRefs(fileNamePrimitive));
+  NS_ENSURE_SUCCESS(rv, E_FAIL);
   nsCOMPtr<nsISupportsString> srcFileNamePrimitive =
       do_QueryInterface(fileNamePrimitive);
   if (srcFileNamePrimitive) {

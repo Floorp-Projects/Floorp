@@ -6,6 +6,7 @@
 #include "mozilla/ArrayUtils.h"
 
 #include "mozilla/Logging.h"
+#include "mozilla/Unused.h"
 
 #include <unistd.h>
 #include <math.h>
@@ -6257,8 +6258,8 @@ provideDataForType:(NSString*)aType
           // Now request the kFilePromiseMime data, which will invoke the data
           // provider. If successful, the file will have been created.
           nsCOMPtr<nsISupports> fileDataPrimitive;
-          item->GetTransferData(kFilePromiseMime,
-                                getter_AddRefs(fileDataPrimitive));
+          Unused << item->GetTransferData(kFilePromiseMime,
+                                          getter_AddRefs(fileDataPrimitive));
         }
         CFRelease(urlRef);
         CFRelease(pboardRef);
