@@ -9,4 +9,4 @@ toolkit.jar:
    content/global/selectDialog.js             (content/selectDialog.js)
    content/global/selectDialog.xul            (content/selectDialog.xul)
    content/global/tabprompts.css              (content/tabprompts.css)
-*  content/global/tabprompts.xml              (content/tabprompts.xml)
+   content/global/tabprompts.jsm              (content/tabprompts.jsm)
