@@ -3107,9 +3107,6 @@ pref("layout.css.overflow-clip-box.enabled", false);
 // Is support for CSS contain enabled?
 pref("layout.css.contain.enabled", false);
 
-// Is support for CSS box-decoration-break enabled?
-pref("layout.css.box-decoration-break.enabled", true);
-
 // Is layout of CSS outline-style:auto enabled?
 pref("layout.css.outline-style-auto.enabled", false);
 

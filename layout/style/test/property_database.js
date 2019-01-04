@@ -1638,6 +1638,14 @@ var gCSSProperties = {
     other_values: [ "center", "end", "justify" ],
     invalid_values: []
   },
+  "box-decoration-break": {
+    domProp: "boxDecorationBreak",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "slice" ],
+    other_values: [ "clone" ],
+    invalid_values: [ "auto",  "none",  "1px" ],
+  },
   "box-sizing": {
     domProp: "boxSizing",
     inherited: false,
@@ -7292,17 +7300,6 @@ if (IsCSSPropertyPrefEnabled("layout.css.overflow-clip-box.enabled")) {
                     "content-box content-box" ],
     invalid_values: [ "none", "auto", "content-box none", "border-box", "0",
                       "content-box, content-box" ]
-  };
-}
-
-if (IsCSSPropertyPrefEnabled("layout.css.box-decoration-break.enabled")) {
-  gCSSProperties["box-decoration-break"] = {
-    domProp: "boxDecorationBreak",
-    inherited: false,
-    type: CSS_TYPE_LONGHAND,
-    initial_values: [ "slice" ],
-    other_values: [ "clone" ],
-    invalid_values: [ "auto",  "none",  "1px" ]
   };
 }
 

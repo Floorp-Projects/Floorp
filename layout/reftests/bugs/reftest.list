@@ -601,7 +601,7 @@ fails-if(Android&&!asyncPan) != 367247-l-hidden.html 367247-l-scroll.html
 fuzzy-if(skiaContent,0-32,0-33) fuzzy-if(d2d,0-5,0-2) == 368020-1.html 368020-1-ref.html
 == 368020-2.html 368020-2-ref.html
 == 368020-3.html 368020-3-ref.html
-pref(layout.css.box-decoration-break.enabled,true) == 368020-5.html 368020-5-ref.html
+== 368020-5.html 368020-5-ref.html
 == 368155-1.xhtml 368155-1-ref.xhtml
 asserts(4) == 368155-negative-margins-1.html 368155-negative-margins-1-ref.html # bug 387205 / bug 457397
 # we can't test this because there's antialiasing involved, and our comparison
