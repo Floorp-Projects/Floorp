@@ -1561,6 +1561,7 @@ static bool CheckResumptionValue(JSContext* cx, AbstractFramePtr frame,
   if (maybeThisv.isSome()) {
     const HandleValue& thisv = maybeThisv.ref();
     if (resumeMode == ResumeMode::Return && vp.isPrimitive()) {
+      // Forcing return from a class constructor. There are rules.
       if (vp.isUndefined()) {
         if (thisv.isMagic(JS_UNINITIALIZED_LEXICAL)) {
           return ThrowUninitializedThis(cx, frame);
@@ -1574,45 +1575,53 @@ static bool CheckResumptionValue(JSContext* cx, AbstractFramePtr frame,
       }
     }
   }
-  return true;
-}
 
-static void AdjustGeneratorResumptionValue(JSContext* cx,
-                                           AbstractFramePtr frame,
-                                           ResumeMode& resumeMode,
-                                           MutableHandleValue vp) {
+  // Are we forcing return from a generator?
   if (resumeMode == ResumeMode::Return && frame && frame.isFunctionFrame() &&
       frame.callee()->isGenerator()) {
-    // Treat `{return: <value>}` like a `return` statement. For generators,
-    // that means doing the work below. It's only what the debuggee would
-    // do for an ordinary `return` statement--using a few bytecode
-    // instructions--and it's simpler to do the work manually than to count
-    // on that bytecode sequence existing in the debuggee, somehow jump to
-    // it, and then avoid re-entering the debugger from it.
-    Rooted<GeneratorObject*> genObj(cx, GetGeneratorObjectForFrame(cx, frame));
-    if (genObj) {
-      // 1.  `return <value>` creates and returns a new object,
-      //     `{value: <value>, done: true}`.
-      if (!genObj->isBeforeInitialYield()) {
-        JSObject* pair = CreateIterResultObject(cx, vp, true);
-        if (!pair) {
-          // Out of memory in debuggee code. Arrange for this to propagate.
-          MOZ_ALWAYS_TRUE(cx->getPendingException(vp));
-          cx->clearPendingException();
-          resumeMode = ResumeMode::Throw;
-          return;
-        }
-        vp.setObject(*pair);
-      }
+    bool beforeInitialYield = true;
+    {
+      AutoRealm ar(cx, frame.callee());
 
-      // 2.  The generator must be closed.
-      genObj->setClosed();
-    } else {
-      // We're before the initial yield. Carry on with the forced return.
-      // The debuggee will see a call to a generator returning the
-      // non-generator value *vp.
+      // Treat `{return: <value>}` like a `return` statement. For generators,
+      // that means doing the work below. It's only what the debuggee would
+      // do for an ordinary `return` statement--using a few bytecode
+      // instructions--and it's simpler to do the work manually than to count
+      // on that bytecode sequence existing in the debuggee, somehow jump to
+      // it, and then avoid re-entering the debugger from it.
+      Rooted<GeneratorObject*> genObj(cx,
+                                      GetGeneratorObjectForFrame(cx, frame));
+      if (genObj) {
+        // 1.  `return <value>` creates and returns a new object,
+        //     `{value: <value>, done: true}`.
+        beforeInitialYield = genObj->isBeforeInitialYield();
+        if (!beforeInitialYield) {
+          JSObject* pair = CreateIterResultObject(cx, vp, true);
+          if (!pair) {
+            // Out of memory in debuggee code. Arrange for this to propagate.
+            return false;
+          }
+          vp.setObject(*pair);
+        }
+
+        // 2.  The generator must be closed.
+        genObj->setClosed();
+      } else {
+        beforeInitialYield = true;
+      }
+    }
+
+    // Forcing return from a generator before the initial yield is not
+    // supported because some engine-internal code assumes a call to a
+    // generator will return a GeneratorObject; see bug 1477084.
+    if (beforeInitialYield) {
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                JSMSG_DEBUG_FORCED_RETURN_DISALLOWED);
+      return false;
     }
   }
+
+  return true;
 }
 
 ResumeMode Debugger::reportUncaughtException(Maybe<AutoRealm>& ar) {
@@ -1720,7 +1729,6 @@ ResumeMode Debugger::leaveDebugger(Maybe<AutoRealm>& ar, AbstractFramePtr frame,
     resumeMode = ResumeMode::Terminate;
     vp.setUndefined();
   }
-  AdjustGeneratorResumptionValue(cx, frame, resumeMode, vp);
 
   return resumeMode;
 }
