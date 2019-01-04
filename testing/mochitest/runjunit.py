@@ -67,8 +67,7 @@ class JUnitTestRunner(MochitestDesktop):
         self.build_profile()
         self.startServers(
             self.options,
-            debuggerInfo=None,
-            ignoreSSLTunnelExts=True)
+            debuggerInfo=None)
         self.log.debug("Servers started")
 
     def server_init(self):
