@@ -70,7 +70,12 @@ bool nsIFrame::IsColumnSpan() const {
 }
 
 bool nsIFrame::IsColumnSpanInMulticolSubtree() const {
-  return IsColumnSpan() && HasAnyStateBits(NS_FRAME_HAS_MULTI_COLUMN_ANCESTOR);
+  return IsColumnSpan() &&
+         (HasAnyStateBits(NS_FRAME_HAS_MULTI_COLUMN_ANCESTOR) ||
+          // A frame other than inline and block won't have
+          // NS_FRAME_HAS_MULTI_COLUMN_ANCESTOR. We instead test its parent.
+          (GetParent() && GetParent()->Style()->GetPseudo() ==
+                              nsCSSAnonBoxes::columnSpanWrapper()));
 }
 
 mozilla::StyleDisplay nsIFrame::GetDisplay() const {
