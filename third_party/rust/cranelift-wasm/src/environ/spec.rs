@@ -1,6 +1,7 @@
 //! All the runtime support necessary for the wasm to cranelift translation is formalized by the
 //! traits `FunctionEnvironment` and `ModuleEnvironment`.
 use cranelift_codegen::cursor::FuncCursor;
+use cranelift_codegen::ir::immediates::Offset32;
 use cranelift_codegen::ir::{self, InstBuilder};
 use cranelift_codegen::isa::TargetFrontendConfig;
 use std::convert::From;
@@ -20,6 +21,8 @@ pub enum GlobalVariable {
     Memory {
         /// The address of the global variable storage.
         gv: ir::GlobalValue,
+        /// An offset to add to the address.
+        offset: Offset32,
         /// The global variable's type.
         ty: ir::Type,
     },
@@ -35,11 +38,7 @@ pub enum WasmError {
     ///
     /// This error code is used by a WebAssembly translator when it encounters invalid WebAssembly
     /// code. This should never happen for validated WebAssembly code.
-    #[fail(
-        display = "Invalid input WebAssembly code at offset {}: {}",
-        _1,
-        _0
-    )]
+    #[fail(display = "Invalid input WebAssembly code at offset {}: {}", _1, _0)]
     InvalidWebAssembly {
         /// A string describing the validation error.
         message: &'static str,
@@ -238,9 +237,6 @@ pub trait FuncEnvironment {
 pub trait ModuleEnvironment<'data> {
     /// Get the information needed to produce Cranelift IR for the current target.
     fn target_config(&self) -> TargetFrontendConfig;
-
-    /// Return the name for the given function index.
-    fn get_func_name(&self, func_index: FuncIndex) -> ir::ExternalName;
 
     /// Declares a function signature to the environment.
     fn declare_signature(&mut self, sig: &ir::Signature);
