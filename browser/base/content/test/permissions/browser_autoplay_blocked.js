@@ -38,10 +38,14 @@ add_task(async function testMainViewVisible() {
 
   Services.prefs.setIntPref("media.autoplay.default", Ci.nsIAutoplay.BLOCKED);
 
-  await BrowserTestUtils.withNewTab(AUTOPLAY_PAGE, async function() {
+  await BrowserTestUtils.withNewTab(AUTOPLAY_PAGE, async function(browser) {
     let permissionsList = document.getElementById("identity-popup-permission-list");
     let emptyLabel = permissionsList.nextElementSibling.nextElementSibling;
 
+    if (BrowserTestUtils.is_hidden(autoplayBlockedIcon())) {
+      // The block icon would be showed after tab receives `GloballyAutoplayBlocked` event.
+      await BrowserTestUtils.waitForEvent(browser, "GloballyAutoplayBlocked");
+    }
     ok(!BrowserTestUtils.is_hidden(autoplayBlockedIcon()), "Blocked icon is shown");
 
     await openIdentityPopup();
