@@ -4123,6 +4123,17 @@ SourceListener::InitializeAsync() {
                  MozPromiseHolder<SourceListenerPromise>& aHolder) {
                if (audioDevice) {
                  audioDevice->SetTrack(stream, kAudioTrack, principal);
+               }
+
+               if (videoDevice) {
+                 videoDevice->SetTrack(stream, kVideoTrack, principal);
+               }
+
+               // SetTrack() queued the tracks. We add them synchronously here
+               // to avoid races.
+               stream->FinishAddTracks();
+
+               if (audioDevice) {
                  nsresult rv = audioDevice->Start();
                  if (NS_FAILED(rv)) {
                    nsString log;
@@ -4143,7 +4154,6 @@ SourceListener::InitializeAsync() {
                }
 
                if (videoDevice) {
-                 videoDevice->SetTrack(stream, kVideoTrack, principal);
                  nsresult rv = videoDevice->Start();
                  if (NS_FAILED(rv)) {
                    if (audioDevice) {
@@ -4160,9 +4170,6 @@ SourceListener::InitializeAsync() {
                  }
                }
 
-               // Start() queued the tracks to be added synchronously to avoid
-               // races
-               stream->FinishAddTracks();
                LOG("started all sources");
                aHolder.Resolve(true, __func__);
              })
@@ -4186,15 +4193,8 @@ SourceListener::InitializeAsync() {
                  state->mTrackEnabled = true;
                  state->mTrackEnabledTime = TimeStamp::Now();
 
-                 if (state->mDevice->GetMediaSource() !=
-                     MediaSourceEnum::AudioCapture) {
-                   // For AudioCapture mStream is a dummy stream, so we don't
-                   // try to enable pulling - there won't be a track to enable
-                   // it for.
-                   mStream->SetPullingEnabled(state == mAudioDeviceState.get()
-                                                  ? kAudioTrack
-                                                  : kVideoTrack,
-                                              true);
+                 if (state == mVideoDeviceState.get()) {
+                   mStream->SetPullingEnabled(kVideoTrack, true);
                  }
                }
                return SourceListenerPromise::CreateAndResolve(true, __func__);

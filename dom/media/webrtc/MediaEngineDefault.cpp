@@ -454,8 +454,16 @@ nsresult MediaEngineDefaultAudioSource::Start(
     mSineGenerator = new SineWaveGenerator(mStream->GraphRate(), mFreq);
   }
 
-  MutexAutoLock lock(mMutex);
-  mState = kStarted;
+  {
+    MutexAutoLock lock(mMutex);
+    mState = kStarted;
+  }
+
+  NS_DispatchToMainThread(
+      NS_NewRunnableFunction(__func__, [stream = mStream, track = mTrackID]() {
+        stream->SetPullingEnabled(track, true);
+      }));
+
   return NS_OK;
 }
 
@@ -469,8 +477,15 @@ nsresult MediaEngineDefaultAudioSource::Stop(
 
   MOZ_ASSERT(mState == kStarted);
 
-  MutexAutoLock lock(mMutex);
-  mState = kStopped;
+  {
+    MutexAutoLock lock(mMutex);
+    mState = kStopped;
+  }
+
+  NS_DispatchToMainThread(
+      NS_NewRunnableFunction(__func__, [stream = mStream, track = mTrackID]() {
+        stream->SetPullingEnabled(track, false);
+      }));
   return NS_OK;
 }
 
