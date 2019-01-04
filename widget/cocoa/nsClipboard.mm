@@ -562,7 +562,10 @@ nsClipboard::PasteboardDictFromTransferable(nsITransferable* aTransferable)
              flavorStr.EqualsLiteral(kJPGImageMime) || flavorStr.EqualsLiteral(kGIFImageMime) ||
              flavorStr.EqualsLiteral(kNativeImageMime)) {
       nsCOMPtr<nsISupports> transferSupports;
-      aTransferable->GetTransferData(flavorStr.get(), getter_AddRefs(transferSupports));
+      rv = aTransferable->GetTransferData(flavorStr.get(), getter_AddRefs(transferSupports));
+      if (NS_FAILED(rv)) {
+        continue;
+      }
 
       nsCOMPtr<imgIContainer> image(do_QueryInterface(transferSupports));
       if (!image) {
