@@ -71,7 +71,7 @@ class Repository(object):
     def __init__(self, path, tool):
         self.path = os.path.abspath(path)
         self._tool = get_tool_path(tool)
-        self._env = os.environ.copy()
+        self._env = {k.encode('utf8'): v.encode('utf8') for k, v in os.environ.items()}
         self._version = None
         self._valid_diff_filter = ('m', 'a', 'd')
 
