@@ -29,6 +29,7 @@ class Output(object):
         self.summarized_results = {}
         self.supporting_data = supporting_data
         self.summarized_supporting_data = []
+        self.summarized_screenshots = []
 
     def summarize(self):
         suites = []
@@ -555,6 +556,43 @@ class Output(object):
 
         return subtests, vals
 
+    def summarize_screenshots(self, screenshots):
+        if len(screenshots) == 0:
+            return
+
+        self.summarized_screenshots.append("""<!DOCTYPE html>
+        <head>
+        <style>
+            table, th, td {
+              border: 1px solid black;
+              border-collapse: collapse;
+            }
+        </style>
+        </head>
+        <html> <body>
+        <h1>Captured screenshots!</h1>
+        <table style="width:100%">
+          <tr>
+            <th>Test Name</th>
+            <th>Pagecycle</th>
+            <th>Screenshot</th>
+          </tr>""")
+
+        for screenshot in screenshots:
+            self.summarized_screenshots.append("""<tr>
+            <th>%s</th>
+            <th> %s</th>
+            <th>
+                <img src="%s" alt="%s %s" width="320" height="240">
+            </th>
+            </tr>""" % (screenshot['test_name'],
+                        screenshot['page_cycle'],
+                        screenshot['screenshot'],
+                        screenshot['test_name'],
+                        screenshot['page_cycle']))
+
+        self.summarized_screenshots.append("""</table></body> </html>""")
+
     def output(self):
         """output to file and perfherder data json """
         if self.summarized_results == {}:
@@ -567,12 +605,21 @@ class Output(object):
             # and made into a tc artifact accessible in treeherder as perfherder-data.json)
             results_path = os.path.join(os.path.dirname(os.environ['MOZ_UPLOAD_DIR']),
                                         'raptor.json')
+            screenshot_path = os.path.join(os.path.dirname(os.environ['MOZ_UPLOAD_DIR']),
+                                           'screenshots.html')
         else:
             results_path = os.path.join(os.getcwd(), 'raptor.json')
+            screenshot_path = os.path.join(os.getcwd(), 'screenshots.html')
 
         with open(results_path, 'w') as f:
             for result in self.summarized_results:
                 f.write("%s\n" % result)
+
+        if len(self.summarized_screenshots) > 0:
+            with open(screenshot_path, 'w') as f:
+                for result in self.summarized_screenshots:
+                    f.write("%s\n" % result)
+            LOG.info("screen captures can be found locally at: %s" % screenshot_path)
 
         # when gecko_profiling, we don't want results ingested by Perfherder
         extra_opts = self.summarized_results['suites'][0].get('extraOptions', [])
