@@ -332,7 +332,7 @@ class TabChild final : public TabChildBase,
 
   virtual mozilla::ipc::IPCResult RecvRealDragEvent(
       const WidgetDragEvent& aEvent, const uint32_t& aDragAction,
-      const uint32_t& aDropEffect, const nsCString& aPrincipalURISpec) override;
+      const uint32_t& aDropEffect, const IPC::Principal& aPrincipal) override;
 
   virtual mozilla::ipc::IPCResult RecvRealKeyEvent(
       const mozilla::WidgetKeyboardEvent& aEvent) override;

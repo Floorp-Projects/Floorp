@@ -160,7 +160,7 @@ static void ReleaseFrame(layers::PlanarYCbCrData& aData) {
   free(aData.mYChannel);
 }
 
-nsresult MediaEngineDefaultVideoSource::SetTrack(
+void MediaEngineDefaultVideoSource::SetTrack(
     const RefPtr<const AllocationHandle>& aHandle,
     const RefPtr<SourceMediaStream>& aStream, TrackID aTrackID,
     const PrincipalHandle& aPrincipal) {
@@ -177,7 +177,6 @@ nsresult MediaEngineDefaultVideoSource::SetTrack(
   }
   aStream->AddTrack(aTrackID, new VideoSegment(),
                     SourceMediaStream::ADDTRACK_QUEUED);
-  return NS_OK;
 }
 
 nsresult MediaEngineDefaultVideoSource::Start(
@@ -424,7 +423,7 @@ nsresult MediaEngineDefaultAudioSource::Deallocate(
   return NS_OK;
 }
 
-nsresult MediaEngineDefaultAudioSource::SetTrack(
+void MediaEngineDefaultAudioSource::SetTrack(
     const RefPtr<const AllocationHandle>& aHandle,
     const RefPtr<SourceMediaStream>& aStream, TrackID aTrackID,
     const PrincipalHandle& aPrincipal) {
@@ -439,7 +438,6 @@ nsresult MediaEngineDefaultAudioSource::SetTrack(
   mTrackID = aTrackID;
   aStream->AddAudioTrack(aTrackID, aStream->GraphRate(), new AudioSegment(),
                          SourceMediaStream::ADDTRACK_QUEUED);
-  return NS_OK;
 }
 
 nsresult MediaEngineDefaultAudioSource::Start(
@@ -456,8 +454,16 @@ nsresult MediaEngineDefaultAudioSource::Start(
     mSineGenerator = new SineWaveGenerator(mStream->GraphRate(), mFreq);
   }
 
-  MutexAutoLock lock(mMutex);
-  mState = kStarted;
+  {
+    MutexAutoLock lock(mMutex);
+    mState = kStarted;
+  }
+
+  NS_DispatchToMainThread(
+      NS_NewRunnableFunction(__func__, [stream = mStream, track = mTrackID]() {
+        stream->SetPullingEnabled(track, true);
+      }));
+
   return NS_OK;
 }
 
@@ -471,8 +477,15 @@ nsresult MediaEngineDefaultAudioSource::Stop(
 
   MOZ_ASSERT(mState == kStarted);
 
-  MutexAutoLock lock(mMutex);
-  mState = kStopped;
+  {
+    MutexAutoLock lock(mMutex);
+    mState = kStopped;
+  }
+
+  NS_DispatchToMainThread(
+      NS_NewRunnableFunction(__func__, [stream = mStream, track = mTrackID]() {
+        stream->SetPullingEnabled(track, false);
+      }));
   return NS_OK;
 }
 

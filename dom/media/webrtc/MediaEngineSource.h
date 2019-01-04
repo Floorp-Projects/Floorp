@@ -145,10 +145,10 @@ class MediaEngineSourceInterface {
    *
    * This must be called before Start for the given AllocationHandle.
    */
-  virtual nsresult SetTrack(const RefPtr<const AllocationHandle>& aHandle,
-                            const RefPtr<SourceMediaStream>& aStream,
-                            TrackID aTrackID,
-                            const PrincipalHandle& aPrincipal) = 0;
+  virtual void SetTrack(const RefPtr<const AllocationHandle>& aHandle,
+                        const RefPtr<SourceMediaStream>& aStream,
+                        TrackID aTrackID,
+                        const PrincipalHandle& aPrincipal) = 0;
 
   /**
    * Called by MediaEngine to start feeding data to the track associated with
@@ -156,6 +156,8 @@ class MediaEngineSourceInterface {
    *
    * If this is the first AllocationHandle to start, the underlying device
    * will be started.
+   *
+   * NB: Audio sources handle the enabling of pulling themselves.
    */
   virtual nsresult Start(const RefPtr<const AllocationHandle>& aHandle) = 0;
 
@@ -204,6 +206,8 @@ class MediaEngineSourceInterface {
    *
    * Double-stopping a given allocation handle is allowed and will return NS_OK.
    * This is necessary sometimes during shutdown.
+   *
+   * NB: Audio sources handle the disabling of pulling themselves.
    */
   virtual nsresult Stop(const RefPtr<const AllocationHandle>& aHandle) = 0;
 

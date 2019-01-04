@@ -410,7 +410,7 @@ class TabParent final : public PBrowserParent,
 
   void SendRealDragEvent(WidgetDragEvent& aEvent, uint32_t aDragAction,
                          uint32_t aDropEffect,
-                         const nsCString& aPrincipalURISpec);
+                         const IPC::Principal& aPrincipal);
 
   void SendMouseWheelEvent(WidgetWheelEvent& aEvent);
 
@@ -531,10 +531,10 @@ class TabParent final : public PBrowserParent,
       nsTArray<IPCDataTransfer>&& aTransfers, const uint32_t& aAction,
       const OptionalShmem& aVisualDnDData, const uint32_t& aStride,
       const gfx::SurfaceFormat& aFormat, const LayoutDeviceIntRect& aDragRect,
-      const nsCString& aPrincipalURISpec) override;
+      const IPC::Principal& aPrincipal) override;
 
   void AddInitialDnDDataTo(DataTransfer* aDataTransfer,
-                           nsACString& aPrincipalURISpec);
+                           nsIPrincipal** aPrincipal);
 
   bool TakeDragVisualization(RefPtr<mozilla::gfx::SourceSurface>& aSurface,
                              LayoutDeviceIntRect* aDragRect);
@@ -662,7 +662,7 @@ class TabParent final : public PBrowserParent,
   RefPtr<gfx::DataSourceSurface> mDnDVisualization;
   bool mDragValid;
   LayoutDeviceIntRect mDragRect;
-  nsCString mDragPrincipalURISpec;
+  nsCOMPtr<nsIPrincipal> mDragPrincipal;
 
   nsCOMPtr<nsILoadContext> mLoadContext;
 
