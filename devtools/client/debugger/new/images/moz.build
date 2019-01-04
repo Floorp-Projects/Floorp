@@ -30,4 +30,5 @@ DevToolsModules(
     'tab.svg',
     'typescript.svg',
     'vuejs.svg',
+    'worker.svg',
 )

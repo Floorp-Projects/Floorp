@@ -416,7 +416,7 @@ async function fetchSources(): Promise<any[]> {
   return sources;
 }
 
-async function fetchWorkers(): Promise<{ workers: Worker[] }> {
+async function fetchWorkers(): Promise<Worker[]> {
   if (features.windowlessWorkers) {
     workerClients = await updateWorkerClients({
       tabTarget,
@@ -431,18 +431,17 @@ async function fetchWorkers(): Promise<{ workers: Worker[] }> {
       createSources(workerClients[actor].thread);
     });
 
-    return {
-      workers: workerNames.map(actor =>
-        createWorker(actor, workerClients[actor].url)
-      )
-    };
+    return workerNames.map(actor =>
+      createWorker(actor, workerClients[actor].url)
+    );
   }
 
   if (!supportsWorkers(tabTarget)) {
-    return Promise.resolve({ workers: [] });
+    return Promise.resolve([]);
   }
 
-  return tabTarget.activeTab.listWorkers();
+  const { workers } = await tabTarget.activeTab.listWorkers();
+  return workers;
 }
 
 const clientCommands = {
