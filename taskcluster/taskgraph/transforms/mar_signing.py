@@ -11,9 +11,9 @@ import os
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.attributes import copy_attributes_from_dependent_job, sorted_unique_list
 from taskgraph.util.scriptworker import (
+    add_scope_prefix,
     get_signing_cert_scope_per_platform,
     get_worker_type_for_scope,
-    get_autograph_format_scope,
 )
 from taskgraph.util.partials import get_balrog_platform_name, get_partials_artifacts
 from taskgraph.util.taskcluster import get_artifact_prefix
@@ -21,6 +21,11 @@ from taskgraph.util.treeherder import join_symbol
 
 import logging
 logger = logging.getLogger(__name__)
+
+SIGNING_FORMATS = {
+    'target.complete.mar': ['autograph_hash_only_mar384'],
+    'target.bz2.complete.mar': ['mar'],
+}
 
 transforms = TransformSequence()
 
@@ -70,12 +75,12 @@ def generate_complete_artifacts(job):
     upstream_artifacts = []
     for artifact in job.release_artifacts:
         basename = os.path.basename(artifact)
-        if basename.endswith('.complete.mar'):
+        if basename in SIGNING_FORMATS:
             upstream_artifacts.append({
                 "taskId": {"task-reference": '<{}>'.format(job.kind)},
                 "taskType": 'build',
                 "paths": [artifact],
-                "formats": ["autograph_hash_only_mar384"],
+                "formats": SIGNING_FORMATS[basename],
             })
 
     return upstream_artifacts
@@ -131,11 +136,12 @@ def make_task_description(config, jobs):
         signing_cert_scope = get_signing_cert_scope_per_platform(
             build_platform, is_nightly, config
         )
-        autograph_hash_format_scope = get_autograph_format_scope(config)
 
-        scopes = [signing_cert_scope, autograph_hash_format_scope]
-        if any("mar" in upstream_details["formats"] for upstream_details in upstream_artifacts):
-            scopes.append('project:releng:signing:format:mar')
+        scopes = [signing_cert_scope] + list({
+            add_scope_prefix(config, 'signing:format:{}'.format(format))
+            for artifact in upstream_artifacts
+            for format in artifact['formats']
+        })
 
         task = {
             'label': label,
