@@ -353,9 +353,15 @@ FormAutofillParent.prototype = {
   _updateSavedFieldNames() {
     log.debug("_updateSavedFieldNames");
 
-    Services.ppmm.initialProcessData.autofillSavedFieldNames =
-      new Set([...this.formAutofillStorage.addresses.getSavedFieldNames(),
-        ...this.formAutofillStorage.creditCards.getSavedFieldNames()]);
+    // Don't access the credit cards store unless it is enabled.
+    if (FormAutofill.isAutofillCreditCardsAvailable) {
+      Services.ppmm.initialProcessData.autofillSavedFieldNames =
+        new Set([...this.formAutofillStorage.addresses.getSavedFieldNames(),
+          ...this.formAutofillStorage.creditCards.getSavedFieldNames()]);
+    } else {
+      Services.ppmm.initialProcessData.autofillSavedFieldNames =
+        this.formAutofillStorage.addresses.getSavedFieldNames();
+    }
 
     Services.ppmm.broadcastAsyncMessage("FormAutofill:savedFieldNames",
                                         Services.ppmm.initialProcessData.autofillSavedFieldNames);
