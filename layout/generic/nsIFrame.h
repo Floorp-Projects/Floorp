@@ -4033,7 +4033,7 @@ class nsIFrame : public nsQueryFrame {
   bool HasDisplayItems();
   bool HasDisplayItem(nsDisplayItem* aItem);
 
-  bool ForceDescendIntoIfVisible() { return mForceDescendIntoIfVisible; }
+  bool ForceDescendIntoIfVisible() const { return mForceDescendIntoIfVisible; }
   void SetForceDescendIntoIfVisible(bool aForce) {
     mForceDescendIntoIfVisible = aForce;
   }

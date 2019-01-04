@@ -3352,44 +3352,38 @@ static nsDisplayItem* WrapInWrapList(nsDisplayListBuilder* aBuilder,
 /**
  * Check if a frame should be visited for building display list.
  */
-static bool DescendIntoChild(nsDisplayListBuilder* aBuilder, nsIFrame* aChild,
-                             const nsRect& aVisible, const nsRect& aDirty) {
-  nsIFrame* child = aChild;
-  const nsRect& dirty = aDirty;
-
-  if (!(child->GetStateBits() & NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO)) {
-    // No need to descend into child to catch placeholders for visible
-    // positioned stuff. So see if we can short-circuit frame traversal here.
-
-    // We can stop if child's frame subtree's intersection with the
-    // dirty area is empty.
-    // If the child is a scrollframe that we want to ignore, then we need
-    // to descend into it because its scrolled child may intersect the dirty
-    // area even if the scrollframe itself doesn't.
-    // There are cases where the "ignore scroll frame" on the builder is not set
-    // correctly, and so we additionally want to catch cases where the child is
-    // a root scrollframe and we are ignoring scrolling on the viewport.
-    nsIPresShell* shell = child->PresShell();
-    bool keepDescending = child == aBuilder->GetIgnoreScrollFrame() ||
-                          (shell->IgnoringViewportScrolling() &&
-                           child == shell->GetRootScrollFrame());
-    if (!keepDescending) {
-      nsRect childDirty;
-      if (!childDirty.IntersectRect(dirty, child->GetVisualOverflowRect()) &&
-          (!child->ForceDescendIntoIfVisible())) {
-        return false;
-      }
-      if (!childDirty.IntersectRect(aVisible, child->GetVisualOverflowRect())) {
-        return false;
-      }
-      // Usually we could set dirty to childDirty now but there's no
-      // benefit, and it can be confusing. It can especially confuse
-      // situations where we're going to ignore a scrollframe's clipping;
-      // we wouldn't want to clip the dirty area to the scrollframe's
-      // bounds in that case.
-    }
+static bool DescendIntoChild(nsDisplayListBuilder* aBuilder,
+                             const nsIFrame* aChild, const nsRect& aVisible,
+                             const nsRect& aDirty) {
+  if (aChild->GetStateBits() & NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO) {
+    return true;
   }
-  return true;
+
+  // If the child is a scrollframe that we want to ignore, then we need
+  // to descend into it because its scrolled child may intersect the dirty
+  // area even if the scrollframe itself doesn't.
+  if (aChild == aBuilder->GetIgnoreScrollFrame()) {
+    return true;
+  }
+
+  // There are cases where the "ignore scroll frame" on the builder is not set
+  // correctly, and so we additionally want to catch cases where the child is
+  // a root scrollframe and we are ignoring scrolling on the viewport.
+  if (aChild == aBuilder->GetPresShellIgnoreScrollFrame()) {
+    return true;
+  }
+
+  const nsRect overflow = aChild->GetVisualOverflowRect();
+
+  if (aDirty.Intersects(overflow)) {
+    return true;
+  }
+
+  if (aChild->ForceDescendIntoIfVisible() && aVisible.Intersects(overflow)) {
+    return true;
+  }
+
+  return false;
 }
 
 void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
