@@ -2762,6 +2762,11 @@ void nsIFrame::BuildDisplayListForStackingContext(
     }
   }
 
+  const bool useBlendMode = effects->mMixBlendMode != NS_STYLE_BLEND_NORMAL;
+  if (useBlendMode) {
+    aBuilder->SetContainsBlendMode(true);
+  }
+
   // reset blend mode so we can keep track if this stacking context needs have
   // a nsDisplayBlendContainer. Set the blend mode back when the routine exits
   // so we keep track if the parent stacking context needs a container too.
@@ -2846,7 +2851,6 @@ void nsIFrame::BuildDisplayListForStackingContext(
     aBuilder->EnterSVGEffectsContents(&hoistedScrollInfoItemsStorage);
   }
 
-  bool useBlendMode = effects->mMixBlendMode != NS_STYLE_BLEND_NORMAL;
   bool useStickyPosition =
       disp->mPosition == NS_STYLE_POSITION_STICKY &&
       IsScrollFrameActive(
@@ -3649,9 +3653,6 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
   const ActiveScrolledRoot* wrapListASR;
   bool canSkipWrapList = false;
   if (isStackingContext) {
-    if (effects->mMixBlendMode != NS_STYLE_BLEND_NORMAL) {
-      aBuilder->SetContainsBlendMode(true);
-    }
     // True stacking context.
     // For stacking contexts, BuildDisplayListForStackingContext handles
     // clipping and MarkAbsoluteFramesForDisplayList.
