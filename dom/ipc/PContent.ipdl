@@ -841,10 +841,6 @@ parent:
     sync PURLClassifier(Principal principal, bool useTrackingProtection)
         returns (bool success);
 
-    sync ClassifyLocal(URIParams uri, nsCString tables)
-        returns (nsresult rv, nsCString[] results);
-
-    // The async version of ClassifyLocal.
     async PURLClassifierLocal(URIParams uri, IPCURLClassifierFeature[] features);
 
     async PLoginReputation(URIParams formURI);
