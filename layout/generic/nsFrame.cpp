@@ -3465,13 +3465,18 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
 
   nsIFrame* child = aChild;
   aBuilder->RemoveFromWillChangeBudget(child);
-  const bool isPaintingToWindow = aBuilder->IsPaintingToWindow();
 
+  const bool isPaintingToWindow = aBuilder->IsPaintingToWindow();
   const bool doingShortcut =
       isPaintingToWindow &&
       (child->GetStateBits() & NS_FRAME_SIMPLE_DISPLAYLIST) &&
       // Animations may change the stacking context state.
       !(child->MayHaveTransformAnimation() || child->MayHaveOpacityAnimation());
+
+  if (doingShortcut) {
+    BuildDisplayListForSimpleChild(aBuilder, child, aLists);
+    return;
+  }
 
   // dirty rect in child-relative coordinates
   NS_ASSERTION(aBuilder->GetCurrentFrame() == this, "Wrong coord space!");
@@ -3479,16 +3484,67 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
   nsRect visible = aBuilder->GetVisibleRect() - offset;
   nsRect dirty = aBuilder->GetDirtyRect() - offset;
 
-  if (doingShortcut) {
-    BuildDisplayListForSimpleChild(aBuilder, child, aLists);
+  nsDisplayListBuilder::OutOfFlowDisplayData* savedOutOfFlowData = nullptr;
+  const bool isPlaceholder = child->IsPlaceholderFrame();
+  if (isPlaceholder) {
+    nsPlaceholderFrame* placeholder = static_cast<nsPlaceholderFrame*>(child);
+    if (placeholder->GetStateBits() & PLACEHOLDER_FOR_TOPLAYER) {
+      // If the out-of-flow frame is in the top layer, the viewport frame
+      // will paint it. Skip it here. Note that, only out-of-flow frames
+      // with this property should be skipped, because non-HTML elements
+      // may stop their children from being out-of-flow. Those frames
+      // should still be handled in the normal in-flow path.
+      return;
+    }
+
+    child = placeholder->GetOutOfFlowFrame();
+    NS_ASSERTION(child, "No out of flow frame?");
+
+    if (child) {
+      aBuilder->RemoveFromWillChangeBudget(child);
+    }
+
+    // If 'child' is a pushed float then it's owned by a block that's not an
+    // ancestor of the placeholder, and it will be painted by that block and
+    // should not be painted through the placeholder. Also recheck
+    // NS_FRAME_TOO_DEEP_IN_FRAME_TREE and NS_FRAME_IS_NONDISPLAY.
+    static const nsFrameState skipFlags =
+        (NS_FRAME_IS_PUSHED_FLOAT | NS_FRAME_TOO_DEEP_IN_FRAME_TREE |
+         NS_FRAME_IS_NONDISPLAY);
+    if (!child || (child->GetStateBits() & skipFlags) ||
+        nsLayoutUtils::IsPopup(child)) {
+      return;
+    }
+
+    MOZ_ASSERT(child->GetStateBits() & NS_FRAME_OUT_OF_FLOW);
+    savedOutOfFlowData = nsDisplayListBuilder::GetOutOfFlowData(child);
+
+    if (aBuilder->GetIncludeAllOutOfFlows()) {
+      visible = child->GetVisualOverflowRect();
+      dirty = child->GetVisualOverflowRect();
+    } else if (savedOutOfFlowData) {
+      visible =
+          savedOutOfFlowData->GetVisibleRectForFrame(aBuilder, child, &dirty);
+    } else {
+      // The out-of-flow frame did not intersect the dirty area. We may still
+      // need to traverse into it, since it may contain placeholders we need
+      // to enter to reach other out-of-flow frames that are visible.
+      visible.SetEmpty();
+      dirty.SetEmpty();
+    }
+  }
+
+  NS_ASSERTION(!child->IsPlaceholderFrame(),
+               "Should have dealt with placeholders already");
+
+  if (!DescendIntoChild(aBuilder, child, visible, dirty)) {
     return;
   }
 
   const bool isSVG = child->GetStateBits() & NS_FRAME_SVG_LAYOUT;
 
-  // It is raised if the control flow strays off the common path.
-  // The common path is the most common one of THE COMMON CASE
-  // mentioned later.
+  // This flag is raised if the control flow strays off the common path.
+  // The common path is the most common one of THE COMMON CASE mentioned later.
   bool awayFromCommonPath = !isPaintingToWindow;
 
   // true if this is a real or pseudo stacking context
@@ -3502,57 +3558,6 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
     // pseudo-stacking-context.
     pseudoStackingContext = true;
   }
-
-  nsDisplayListBuilder::OutOfFlowDisplayData* savedOutOfFlowData = nullptr;
-  const bool isPlaceholder = child->IsPlaceholderFrame();
-  if (isPlaceholder) {
-    nsPlaceholderFrame* placeholder = static_cast<nsPlaceholderFrame*>(child);
-    child = placeholder->GetOutOfFlowFrame();
-    aBuilder->RemoveFromWillChangeBudget(child);
-    NS_ASSERTION(child, "No out of flow frame?");
-    // If 'child' is a pushed float then it's owned by a block that's not an
-    // ancestor of the placeholder, and it will be painted by that block and
-    // should not be painted through the placeholder.
-    if (!child || nsLayoutUtils::IsPopup(child) ||
-        (child->GetStateBits() & NS_FRAME_IS_PUSHED_FLOAT))
-      return;
-    MOZ_ASSERT(child->GetStateBits() & NS_FRAME_OUT_OF_FLOW);
-    // If the out-of-flow frame is in the top layer, the viewport frame
-    // will paint it. Skip it here. Note that, only out-of-flow frames
-    // with this property should be skipped, because non-HTML elements
-    // may stop their children from being out-of-flow. Those frames
-    // should still be handled in the normal in-flow path.
-    if (placeholder->GetStateBits() & PLACEHOLDER_FOR_TOPLAYER) {
-      return;
-    }
-    // Recheck NS_FRAME_TOO_DEEP_IN_FRAME_TREE
-    if (child->GetStateBits() & NS_FRAME_TOO_DEEP_IN_FRAME_TREE) return;
-    savedOutOfFlowData = nsDisplayListBuilder::GetOutOfFlowData(child);
-    if (savedOutOfFlowData) {
-      visible =
-          savedOutOfFlowData->GetVisibleRectForFrame(aBuilder, child, &dirty);
-    } else {
-      // The out-of-flow frame did not intersect the dirty area. We may still
-      // need to traverse into it, since it may contain placeholders we need
-      // to enter to reach other out-of-flow frames that are visible.
-      visible.SetEmpty();
-      dirty.SetEmpty();
-    }
-
-    pseudoStackingContext = true;
-  }
-
-  NS_ASSERTION(!child->IsPlaceholderFrame(),
-               "Should have dealt with placeholders already");
-
-  if (aBuilder->GetIncludeAllOutOfFlows() && isPlaceholder) {
-    visible = child->GetVisualOverflowRect();
-    dirty = child->GetVisualOverflowRect();
-  } else if (!DescendIntoChild(aBuilder, child, visible, dirty)) {
-    return;
-  }
-
-  // XXX need to have inline-block and inline-table set pseudoStackingContext
 
   const nsStyleDisplay* ourDisp = StyleDisplay();
   // REVIEW: Taken from nsBoxFrame::Paint
@@ -3584,7 +3589,7 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
       (aFlags & DISPLAY_CHILD_FORCE_STACKING_CONTEXT);
 
   if (pseudoStackingContext || isStackingContext || isPositioned ||
-      (!isSVG && disp->IsFloating(child)) ||
+      isPlaceholder || (!isSVG && disp->IsFloating(child)) ||
       (isSVG && (effects->mClipFlags & NS_STYLE_CLIP_RECT) &&
        IsSVGContentWithCSSClip(child))) {
     pseudoStackingContext = true;
