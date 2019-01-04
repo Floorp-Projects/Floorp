@@ -1740,6 +1740,7 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime) {
   AutoRestore<TimeStamp> restoreTickStart(mTickStart);
   mTickStart = TimeStamp::Now();
   mTickVsyncId = aId;
+  mTickVsyncTime = aNowTime;
 
   gfxPlatform::GetPlatform()->SchedulePaintIfDeviceReset();
 
@@ -2120,6 +2121,8 @@ void nsRefreshDriver::ResetInitialTransactionId(
 mozilla::TimeStamp nsRefreshDriver::GetTransactionStart() { return mTickStart; }
 
 VsyncId nsRefreshDriver::GetVsyncId() { return mTickVsyncId; }
+
+mozilla::TimeStamp nsRefreshDriver::GetVsyncStart() { return mTickVsyncTime; }
 
 void nsRefreshDriver::NotifyTransactionCompleted(
     mozilla::layers::TransactionId aTransactionId) {

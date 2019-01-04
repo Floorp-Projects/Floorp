@@ -1797,6 +1797,9 @@ class nsContentUtils {
 
   /**
    * Returns true if aPrincipal is the system principal.
+   *
+   * @deprecated Use nsIPrincipal::IsSystemPrincipal instead!
+   * https://bugzilla.mozilla.org/show_bug.cgi?id=1517588 tracks removing this.
    */
   static bool IsSystemPrincipal(nsIPrincipal* aPrincipal);
 

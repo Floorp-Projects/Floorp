@@ -331,9 +331,18 @@ interface nsIPrincipal : nsISerializable
     [infallible] readonly attribute boolean isExpandedPrincipal;
 
     /**
-     * Returns true iff this is the system principal.
+     * Returns true iff this is the system principal.  C++ callers should use
+     * IsSystemPrincipal() instead of this scriptable accessor.
      */
-    [infallible] readonly attribute boolean isSystemPrincipal;
+    readonly attribute boolean isSystemPrincipal;
+
+    /**
+     * Faster and nicer version callable from C++.  Callers must include
+     * BasePrincipal.h, where it's implemented.
+     */
+    %{C++
+      inline bool IsSystemPrincipal() const;
+    %}
 
     /**
      * Returns true iff the principal is either an addon principal or

@@ -45,28 +45,6 @@ HistoryEngine.prototype = {
 
   syncPriority: 7,
 
-  _migratedSyncMetadata: false,
-  async _migrateSyncMetadata() {
-    if (this._migratedSyncMetadata) {
-      return;
-    }
-    // Migrate the history sync ID and last sync time from prefs, to avoid
-    // triggering a full sync on upgrade. This can be removed in bug 1443021.
-    let existingSyncID = await super.getSyncID();
-    if (existingSyncID) {
-      this._log.debug("Migrating existing sync ID ${existingSyncID} from prefs",
-                      { existingSyncID });
-      await PlacesSyncUtils.history.ensureCurrentSyncId(existingSyncID);
-    }
-    let existingLastSync = await super.getLastSync();
-    if (existingLastSync) {
-      this._log.debug("Migrating existing last sync time ${existingLastSync} " +
-                      "from prefs", { existingLastSync });
-      await PlacesSyncUtils.history.setLastSync(existingLastSync);
-    }
-    this._migratedSyncMetadata = true;
-  },
-
   async getSyncID() {
     return PlacesSyncUtils.history.getSyncId();
   },
@@ -103,11 +81,6 @@ HistoryEngine.prototype = {
   async setLastSync(lastSync) {
     await PlacesSyncUtils.history.setLastSync(lastSync);
     await super.setLastSync(lastSync); // Remove in bug 1443021.
-  },
-
-  async _syncStartup() {
-    await this._migrateSyncMetadata();
-    await super._syncStartup();
   },
 
   shouldSyncURL(url) {

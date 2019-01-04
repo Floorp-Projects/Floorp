@@ -13,16 +13,17 @@ using namespace mozilla;
 using namespace mozilla::gfx;
 using mozilla::ipc::IOThreadChild;
 
-VRProcessChild::VRProcessChild(ProcessId aParentPid)
-    : ProcessChild(aParentPid)
-#if defined(aParentPid)
-      ,
-      mVR(nullptr)
-#endif
-{
-}
+StaticRefPtr<VRParent> sVRParent;
 
-VRProcessChild::~VRProcessChild() {}
+VRProcessChild::VRProcessChild(ProcessId aParentPid)
+    : ProcessChild(aParentPid) {}
+
+VRProcessChild::~VRProcessChild() { sVRParent = nullptr; }
+
+/*static*/ VRParent* VRProcessChild::GetVRParent() {
+  MOZ_ASSERT(sVRParent);
+  return sVRParent;
+}
 
 bool VRProcessChild::Init(int aArgc, char* aArgv[]) {
   BackgroundHangMonitor::Startup();
@@ -37,10 +38,14 @@ bool VRProcessChild::Init(int aArgc, char* aArgv[]) {
     }
   }
 
-  mVR.Init(ParentPid(), parentBuildID, IOThreadChild::message_loop(),
-           IOThreadChild::channel());
+  sVRParent = new VRParent();
+  sVRParent->Init(ParentPid(), parentBuildID, IOThreadChild::message_loop(),
+                  IOThreadChild::channel());
 
   return true;
 }
 
-void VRProcessChild::CleanUp() { NS_ShutdownXPCOM(nullptr); }
+void VRProcessChild::CleanUp() {
+  sVRParent = nullptr;
+  NS_ShutdownXPCOM(nullptr);
+}

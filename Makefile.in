@@ -198,7 +198,11 @@ profiledbuild::
 
 # Change default target to PGO build if PGO is enabled.
 ifdef MOZ_PGO
+# If one of these is already set in addition to PGO we are doing a single phase
+# of PGO in isolation, so don't override the default target.
+ifeq (,$(MOZ_PROFILE_GENERATE)$(MOZ_PROFILE_USE))
 OVERRIDE_DEFAULT_GOAL := profiledbuild
+endif
 endif
 
 include $(topsrcdir)/config/rules.mk

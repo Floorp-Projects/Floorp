@@ -137,6 +137,10 @@ class BasePrincipal : public nsJSPrincipals {
     return static_cast<BasePrincipal*>(aPrin);
   }
 
+  static const BasePrincipal* Cast(const nsIPrincipal* aPrin) {
+    return static_cast<const BasePrincipal*>(aPrin);
+  }
+
   static already_AddRefed<BasePrincipal> CreateCodebasePrincipal(
       const nsACString& aOrigin);
 
@@ -181,6 +185,9 @@ class BasePrincipal : public nsJSPrincipals {
   inline bool FastSubsumesConsideringDomain(nsIPrincipal* aOther);
   inline bool FastSubsumesIgnoringFPD(nsIPrincipal* aOther);
   inline bool FastSubsumesConsideringDomainIgnoringFPD(nsIPrincipal* aOther);
+
+  // Fast way to check whether we have a system principal.
+  inline bool IsSystemPrincipal() const;
 
   // Returns the principal to inherit when a caller with this principal loads
   // the given URI.
@@ -345,6 +352,14 @@ inline bool BasePrincipal::FastSubsumesConsideringDomainIgnoringFPD(
   return FastSubsumesIgnoringFPD(aOther, ConsiderDocumentDomain);
 }
 
+inline bool BasePrincipal::IsSystemPrincipal() const {
+  return Kind() == eSystemPrincipal;
+}
+
 }  // namespace mozilla
+
+inline bool nsIPrincipal::IsSystemPrincipal() const {
+  return mozilla::BasePrincipal::Cast(this)->IsSystemPrincipal();
+}
 
 #endif /* mozilla_BasePrincipal_h */

@@ -49,11 +49,11 @@ var gSync = {
     return Cc["@mozilla.org/weave/service;1"].getService().wrappedJSObject.ready;
   },
 
-  // Returns true if sync is configured but hasn't loaded or is yet to determine
-  // if any remote clients exist.
-  get syncConfiguredAndLoading() {
+  // Returns true if sync is configured but hasn't loaded or the send tab
+  // targets list isn't ready yet.
+  get sendTabConfiguredAndLoading() {
     return UIState.get().status == UIState.STATUS_SIGNED_IN &&
-           (!this.syncReady || Weave.Service.clientsEngine.isFirstSync);
+           (!this.syncReady || !Weave.Service.clientsEngine.hasSyncedThisSession);
   },
 
   get isSignedIn() {
@@ -368,7 +368,7 @@ var gSync = {
       }
     }
 
-    if (gSync.syncConfiguredAndLoading) {
+    if (gSync.sendTabConfiguredAndLoading) {
       // We can only be in this case in the page action menu.
       return;
     }
@@ -542,7 +542,7 @@ var gSync = {
         break;
       }
     }
-    const enabled = !this.syncConfiguredAndLoading && hasASendableURI;
+    const enabled = !this.sendTabConfiguredAndLoading && hasASendableURI;
 
     let sendTabsToDevice = document.getElementById("context_sendTabToDevice");
     sendTabsToDevice.disabled = !enabled;
@@ -582,7 +582,7 @@ var gSync = {
 
     const targetURI = showSendLink ? contextMenu.linkURL :
                                      contextMenu.browser.currentURI.spec;
-    const enabled = !this.syncConfiguredAndLoading && this.isSendableURI(targetURI);
+    const enabled = !this.sendTabConfiguredAndLoading && this.isSendableURI(targetURI);
     contextMenu.setItemAttr(showSendPage ? "context-sendpagetodevice" :
                                            "context-sendlinktodevice",
                                            "disabled", !enabled || null);

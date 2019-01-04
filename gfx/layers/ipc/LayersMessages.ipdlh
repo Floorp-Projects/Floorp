@@ -555,6 +555,7 @@ struct TransactionInfo
   uint32_t paintSequenceNumber;
   bool isRepeatTransaction;
   VsyncId vsyncId;
+  TimeStamp vsyncStart;
   TimeStamp refreshStart;
   TimeStamp transactionStart;
   nsCString url;

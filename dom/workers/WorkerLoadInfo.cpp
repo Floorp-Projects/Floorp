@@ -7,6 +7,7 @@
 #include "WorkerLoadInfo.h"
 #include "WorkerPrivate.h"
 
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
@@ -253,7 +254,7 @@ bool WorkerLoadInfo::PrincipalURIMatchesScriptURL() {
   NS_ENSURE_SUCCESS(rv, false);
 
   // A system principal must either be a blob URL or a resource JSM.
-  if (mPrincipal->GetIsSystemPrincipal()) {
+  if (mPrincipal->IsSystemPrincipal()) {
     if (scheme == NS_LITERAL_CSTRING("blob")) {
       return true;
     }

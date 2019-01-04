@@ -264,7 +264,7 @@ void AssertLoadingPrincipalAndClientInfoMatch(
   //     Equals().
 
   // Allow worker debugger to load with a system principal.
-  if (aLoadingPrincipal->GetIsSystemPrincipal() &&
+  if (aLoadingPrincipal->IsSystemPrincipal() &&
       (aType == nsIContentPolicy::TYPE_INTERNAL_WORKER ||
        aType == nsIContentPolicy::TYPE_INTERNAL_SHARED_WORKER ||
        aType == nsIContentPolicy::TYPE_INTERNAL_SERVICE_WORKER ||

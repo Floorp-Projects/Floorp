@@ -21,6 +21,7 @@
 #include "nsIImageLoadingContent.h"
 #include "nsIRedirectHistoryEntry.h"
 
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/nsMixedContentBlocker.h"
 #include "mozilla/dom/TabChild.h"
@@ -1003,7 +1004,7 @@ nsContentSecurityManager::IsOriginPotentiallyTrustworthy(
   NS_ENSURE_ARG_POINTER(aPrincipal);
   NS_ENSURE_ARG_POINTER(aIsTrustWorthy);
 
-  if (aPrincipal->GetIsSystemPrincipal()) {
+  if (aPrincipal->IsSystemPrincipal()) {
     *aIsTrustWorthy = true;
     return NS_OK;
   }

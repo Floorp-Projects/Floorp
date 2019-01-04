@@ -3772,6 +3772,9 @@ nsCSSBorderImageRenderer::nsCSSBorderImageRenderer(
       case eStyleUnit_Auto:  // same as the slice value, in CSS pixels
         value = mSlice.Side(s);
         break;
+      case eStyleUnit_Calc:
+        value = std::max(0, coord.ComputeComputedCalc(borderDimension));
+        break;
       default:
         MOZ_ASSERT_UNREACHABLE(
             "unexpected CSS unit for border image area "

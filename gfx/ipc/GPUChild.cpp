@@ -171,6 +171,16 @@ mozilla::ipc::IPCResult GPUChild::RecvCreateVRProcess() {
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult GPUChild::RecvShutdownVRProcess() {
+  // Make sure stopping VR process at the main process
+  MOZ_ASSERT(XRE_IsParentProcess());
+  if (gfxPrefs::VRProcessEnabled()) {
+    VRProcessManager::Shutdown();
+  }
+
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult GPUChild::RecvNotifyUiObservers(
     const nsCString& aTopic) {
   nsCOMPtr<nsIObserverService> obsSvc = mozilla::services::GetObserverService();
