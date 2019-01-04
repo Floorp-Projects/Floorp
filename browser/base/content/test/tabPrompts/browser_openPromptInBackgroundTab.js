@@ -30,16 +30,15 @@ add_task(async function() {
   // switch tab back, and check the checkbox is displayed:
   await BrowserTestUtils.switchTab(gBrowser, openedTab);
   // check the prompt is there, and the extra row is present
-  let prompts = openedTab.linkedBrowser.parentNode.querySelectorAll("tabmodalprompt");
-  is(prompts.length, 1, "There should be 1 prompt");
-  let ourPrompt = prompts[0];
-  let row = ourPrompt.querySelector("row");
-  ok(row, "Should have found the row with our checkbox");
-  let checkbox = row.querySelector("checkbox[label*='example.com']");
+  let promptElements = openedTab.linkedBrowser.parentNode.querySelectorAll("tabmodalprompt");
+  is(promptElements.length, 1, "There should be 1 prompt");
+  let ourPromptElement = promptElements[0];
+  let checkbox = ourPromptElement.querySelector("checkbox[label*='example.com']");
   ok(checkbox, "The checkbox should be there");
   ok(!checkbox.checked, "Checkbox shouldn't be checked");
   // tick box and accept dialog
   checkbox.checked = true;
+  let ourPrompt = openedTab.linkedBrowser.tabModalPromptBox.prompts.get(ourPromptElement);
   ourPrompt.onButtonClick(0);
   // Wait for that click to actually be handled completely.
   await new Promise(function(resolve) {
