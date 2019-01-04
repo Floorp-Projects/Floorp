@@ -49,6 +49,27 @@ def is_linux():
     return sys.platform.startswith('linux')
 
 
+def debugger():
+    if "DEBUGGER" in os.environ:
+        return os.environ["DEBUGGER"]
+    return None
+
+
+def use_gdb():
+    return debugger() in ['gdb', 'cgdb', 'rust-gdb']
+
+
+def use_rr():
+    return debugger() == 'rr'
+
+
+def optimized_build():
+    if "OPTIMIZED" in os.environ:
+        opt = os.environ["OPTIMIZED"]
+        return opt not in ["0", "false"]
+    return True
+
+
 def set_osmesa_env(bin_path):
     """Set proper LD_LIBRARY_PATH and DRIVE for software rendering on Linux and OSX"""
     if is_linux():
@@ -67,11 +88,34 @@ def set_osmesa_env(bin_path):
 
 extra_flags = os.getenv('CARGOFLAGS', None)
 extra_flags = extra_flags.split(' ') if extra_flags else []
-subprocess.check_call(['cargo', 'build'] + extra_flags + ['--release', '--verbose', '--features', 'headless'])
-set_osmesa_env('../target/release/')
+build_cmd = ['cargo', 'build'] + extra_flags + ['--verbose', '--features', 'headless']
+if optimized_build():
+    build_cmd += ['--release']
+
+objdir = ''
+if optimized_build():
+    objdir = '../target/release/'
+else:
+    objdir = '../target/debug/'
+
+subprocess.check_call(build_cmd)
+
+set_osmesa_env(objdir)
+
+dbg_cmd = []
+if use_rr():
+    dbg_cmd = ['rr', 'record']
+elif use_gdb():
+    dbg_cmd = [debugger(), '--args']
+elif debugger():
+    print("Unknown debugger: " + debugger())
+    sys.exit(1)
+
 # TODO(gw): We have an occasional accuracy issue or bug (could be WR or OSMesa)
 #           where the output of a previous test that uses intermediate targets can
 #           cause 1.0 / 255.0 pixel differences in a subsequent test. For now, we
 #           run tests with no-scissor mode, which ensures a complete target clear
 #           between test runs. But we should investigate this further...
-subprocess.check_call(['../target/release/wrench', '--no-scissor', '-h'] + sys.argv[1:])
+cmd = dbg_cmd + [objdir + '/wrench', '--no-scissor', '-h'] + sys.argv[1:]
+print('Running: `' + ' '.join(cmd) + '`')
+subprocess.check_call(cmd)
