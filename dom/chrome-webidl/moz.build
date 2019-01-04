@@ -50,7 +50,6 @@ WEBIDL_FILES = [
     'MozStorageStatementRow.webidl',
     'PrecompiledScript.webidl',
     'PromiseDebugging.webidl',
-    'SessionStoreUtils.webidl',
     'StructuredCloneHolder.webidl',
     'TelemetryStopwatch.webidl',
     'WebExtensionContentScript.webidl',

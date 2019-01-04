@@ -2,26 +2,40 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "nsISupports.idl"
+
+interface mozIDOMWindowProxy;
 interface nsIDocShell;
-interface nsISupports;
+webidl EventTarget;
+webidl Document;
+interface mozIDOMWindow;
 
 /**
- * A callback passed to SessionStoreUtils.forEachNonDynamicChildFrame().
+ * A callback passed to nsISessionStoreUtils.forEachNonDynamicChildFrame().
  */
-callback SessionStoreUtilsFrameCallback = void (WindowProxy frame, unsigned long index);
+[function, scriptable, uuid(8199ebf7-76c0-43d6-bcbe-913dd3de3ebf)]
+interface nsISessionStoreUtilsFrameCallback : nsISupports
+{
+  /**
+   * handleFrame() will be called once for each non-dynamic child frame of the
+   * given parent |frame|. The second argument is the |index| of the frame in
+   * the list of all child frames.
+   */
+  void handleFrame(in mozIDOMWindowProxy frame, in unsigned long index);
+};
 
 /**
  * SessionStore utility functions implemented in C++ for performance reasons.
  */
-[ChromeOnly, Exposed=Window]
-namespace SessionStoreUtils {
+[scriptable, uuid(2be448ef-c783-45de-a0df-442bccbb4532)]
+interface nsISessionStoreUtils : nsISupports
+{
   /**
    * Calls the given |callback| once for each non-dynamic child frame of the
    * given |window|.
    */
-  [Throws]
-  void forEachNonDynamicChildFrame(WindowProxy window,
-                                   SessionStoreUtilsFrameCallback callback);
+  void forEachNonDynamicChildFrame(in mozIDOMWindowProxy window,
+                                   in nsISessionStoreUtilsFrameCallback callback);
 
   /**
    * Takes the given listener, wraps it in a filter that filters out events from
@@ -33,11 +47,11 @@ namespace SessionStoreUtils {
    * This is implemented as a native filter, rather than a JS-based one, for
    * performance reasons.
    */
-  [Throws]
-  nsISupports? addDynamicFrameFilteredListener(EventTarget target,
-                                               DOMString type,
-                                               any listener,
-                                               boolean useCapture);
+  [implicit_jscontext]
+  nsISupports addDynamicFrameFilteredListener(in EventTarget target,
+                                              in AString type,
+                                              in jsval listener,
+                                              in boolean useCapture);
 
   /**
    * Remove the passed-in filtered listener from the given event target, if it's
@@ -49,22 +63,21 @@ namespace SessionStoreUtils {
    * caller doesn't actually have something that WebIDL considers an
    * EventListener.
    */
-  [Throws]
-  void removeDynamicFrameFilteredListener(EventTarget target,
-                                          DOMString type,
-                                          nsISupports listener,
-                                          boolean useCapture);
+  void removeDynamicFrameFilteredListener(in EventTarget target,
+                                          in AString type,
+                                          in nsISupports listener,
+                                          in boolean useCapture);
 
   /*
    * Save the docShell.allow* properties
    */
-  ByteString collectDocShellCapabilities(nsIDocShell docShell);
+  ACString collectDocShellCapabilities(in nsIDocShell docShell);
 
   /*
    * Restore the docShell.allow* properties
    */
-  void restoreDocShellCapabilities(nsIDocShell docShell,
-                                   ByteString disallowCapabilities);
+  void restoreDocShellCapabilities(in nsIDocShell docShell,
+                                   in ACString disallowCapabilities);
 
   /**
    * Collects scroll position data for any given |frame| in the frame hierarchy.
@@ -75,17 +88,13 @@ namespace SessionStoreUtils {
    *         Returns null when there is no scroll data we want to store for the
    *         given |frame|.
    */
-  SSScrollPositionDict collectScrollPosition(Document document);
+  ACString collectScrollPosition(in Document document);
 
   /**
    * Restores scroll position data for any given |frame| in the frame hierarchy.
    *
    * @param frame (DOMWindow)
-   * @param value (object, see collectScrollPosition())
+   * @param value (ACString)
    */
-  void restoreScrollPosition(Window frame, optional SSScrollPositionDict data);
-};
-
-dictionary SSScrollPositionDict {
-  ByteString scroll;
+  void restoreScrollPosition(in mozIDOMWindow frame, in ACString data);
 };
