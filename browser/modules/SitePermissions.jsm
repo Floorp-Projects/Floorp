@@ -434,23 +434,6 @@ var SitePermissions = {
     return this._defaultPrefBranch.getIntPref(permissionID, this.UNKNOWN);
   },
 
-  /**
-   * Return whether the browser should notify the user if a permission was
-   * globally blocked due to a preference.
-   *
-   * @param {string} permissionID
-   *        The ID to get the state for.
-   *
-   * @return boolean Whether to show notification for globally blocked permissions.
-   */
-  showGloballyBlocked(permissionID) {
-    if (permissionID in gPermissionObject &&
-        gPermissionObject[permissionID].showGloballyBlocked)
-      return gPermissionObject[permissionID].showGloballyBlocked;
-
-    return false;
-  },
-
   /*
    * Return whether SitePermissions is permitted to store a TEMPORARY ALLOW
    * state for a particular permission.
@@ -763,7 +746,6 @@ var gPermissionObject = {
 
   "autoplay-media": {
     exactHostMatch: true,
-    showGloballyBlocked: true,
     permitTemporaryAllow: true,
     notifyWhenTemporaryPermissionChanged: true,
     getDefault() {
