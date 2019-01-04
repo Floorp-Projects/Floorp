@@ -7,6 +7,7 @@
 const Actions = require("./index");
 
 const {
+  getAllRuntimes,
   getCurrentRuntime,
   findRuntimeById,
 } = require("../modules/runtimes-state-helper");
@@ -25,6 +26,7 @@ const {
   DISCONNECT_RUNTIME_FAILURE,
   DISCONNECT_RUNTIME_START,
   DISCONNECT_RUNTIME_SUCCESS,
+  REMOTE_RUNTIMES_UPDATED,
   RUNTIME_PREFERENCE,
   RUNTIMES,
   UNWATCH_RUNTIME_FAILURE,
@@ -33,7 +35,6 @@ const {
   UPDATE_CONNECTION_PROMPT_SETTING_FAILURE,
   UPDATE_CONNECTION_PROMPT_SETTING_START,
   UPDATE_CONNECTION_PROMPT_SETTING_SUCCESS,
-  USB_RUNTIMES_UPDATED,
   WATCH_RUNTIME_FAILURE,
   WATCH_RUNTIME_START,
   WATCH_RUNTIME_SUCCESS,
@@ -195,12 +196,48 @@ function unwatchRuntime(id) {
   };
 }
 
-function updateUSBRuntimes(runtimes) {
+function updateNetworkRuntimes(locations) {
+  const runtimes = locations.map(location => {
+    const [ host, port ] = location.split(":");
+    return {
+      id: location,
+      extra: {
+        connectionParameters: { host, port: parseInt(port, 10) },
+      },
+      isUnknown: false,
+      name: location,
+      type: RUNTIMES.NETWORK,
+    };
+  });
+  return updateRemoteRuntimes(runtimes, RUNTIMES.NETWORK);
+}
+
+function updateUSBRuntimes(adbRuntimes) {
+  const runtimes = adbRuntimes.map(adbRuntime => {
+    // Set connectionParameters only for known runtimes.
+    const socketPath = adbRuntime._socketPath;
+    const deviceId = adbRuntime.deviceId;
+    const connectionParameters = adbRuntime.isUnknown() ? null : { deviceId, socketPath };
+    return {
+      id: adbRuntime.id,
+      extra: {
+        connectionParameters,
+        deviceName: adbRuntime.deviceName,
+      },
+      isUnknown: adbRuntime.isUnknown(),
+      name: adbRuntime.shortName,
+      type: RUNTIMES.USB,
+    };
+  });
+  return updateRemoteRuntimes(runtimes, RUNTIMES.USB);
+}
+
+function updateRemoteRuntimes(runtimes, type) {
   return async (dispatch, getState) => {
     const currentRuntime = getCurrentRuntime(getState().runtimes);
 
     if (currentRuntime &&
-        currentRuntime.type === RUNTIMES.USB &&
+        currentRuntime.type === type &&
         !runtimes.find(runtime => currentRuntime.id === runtime.id)) {
       // Since current USB runtime was invalid, move to this firefox page.
       // This case is considered as followings and so on:
@@ -215,18 +252,33 @@ function updateUSBRuntimes(runtimes) {
       await dispatch(Actions.selectPage(RUNTIMES.THIS_FIREFOX, RUNTIMES.THIS_FIREFOX));
     }
 
+    // Retrieve runtimeDetails from existing runtimes.
+    runtimes.forEach(runtime => {
+      const existingRuntime = findRuntimeById(runtime.id, getState().runtimes);
+      runtime.runtimeDetails = existingRuntime ? existingRuntime.runtimeDetails : null;
+    });
+
     // Disconnect runtimes that were no longer valid
     const validIds = runtimes.map(r => r.id);
-    const existingRuntimes = getState().runtimes.usbRuntimes;
-    const invalidRuntimes = existingRuntimes.filter(r => !validIds.includes(r.id));
+    const existingRuntimes = getAllRuntimes(getState().runtimes);
+    const invalidRuntimes = existingRuntimes.filter(r => {
+      return r.type === type && !validIds.includes(r.id);
+    });
 
     for (const invalidRuntime of invalidRuntimes) {
-      await dispatch(disconnectRuntime(invalidRuntime.id));
+      const isConnected = !!invalidRuntime.runtimeDetails;
+      if (isConnected) {
+        await dispatch(disconnectRuntime(invalidRuntime.id));
+      }
     }
 
-    dispatch({ type: USB_RUNTIMES_UPDATED, runtimes });
+    dispatch({ type: REMOTE_RUNTIMES_UPDATED, runtimes, runtimeType: type });
 
-    for (const runtime of getState().runtimes.usbRuntimes) {
+    for (const runtime of getAllRuntimes(getState().runtimes)) {
+      if (runtime.type !== type) {
+        continue;
+      }
+
       const isConnected = !!runtime.runtimeDetails;
       const hasConnectedClient = remoteClientManager.hasClient(runtime.id, runtime.type);
       if (!isConnected && hasConnectedClient) {
@@ -259,6 +311,7 @@ module.exports = {
   removeRuntimeListeners,
   unwatchRuntime,
   updateConnectionPromptSetting,
+  updateNetworkRuntimes,
   updateUSBRuntimes,
   watchRuntime,
 };

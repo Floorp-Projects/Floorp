@@ -165,6 +165,10 @@ class UrlbarController {
     }
 
     switch (event.keyCode) {
+      case KeyEvent.DOM_VK_ESCAPE:
+        this.input.handleRevert();
+        event.preventDefault();
+        break;
       case KeyEvent.DOM_VK_RETURN:
         if (AppConstants.platform == "macosx" &&
             event.metaKey) {
@@ -175,7 +179,7 @@ class UrlbarController {
         // TODO: We should have an input bufferrer so that we can use search results
         // if appropriate.
         this.input.handleCommand(event);
-        return;
+        break;
       case KeyEvent.DOM_VK_TAB:
         if (this.view.isOpen) {
           this.view.selectNextItem({ reverse: event.shiftKey });

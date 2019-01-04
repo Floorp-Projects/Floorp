@@ -58,6 +58,7 @@ var geckoInterval = 1;
 var geckoEntries = 1000000;
 var webRenderEnabled = false;
 var debugMode = 0;
+var screenCapture = false;
 
 var results = {"name": "",
                "page": "",
@@ -119,6 +120,10 @@ function getTestSettings() {
               webRenderEnabled = settings.webrender_enabled;
             }
           }
+        }
+
+        if (settings.screen_capture !== undefined) {
+          screenCapture = settings.screen_capture;
         }
 
         if (settings.newtab_per_cycle !== undefined) {
@@ -240,6 +245,10 @@ function waitForResult() {
           if (geckoProfiling) {
             await getGeckoProfile();
           }
+          if (screenCapture) {
+            await getScreenCapture();
+          }
+
           resolve();
         } else {
           setTimeout(checkForResult, 5);
@@ -252,6 +261,9 @@ function waitForResult() {
             await getGeckoProfile();
           }
           resolve();
+          if (screenCapture) {
+            await getScreenCapture();
+          }
         } else {
           setTimeout(checkForResult, 5);
         }
@@ -260,6 +272,36 @@ function waitForResult() {
     checkForResult();
   });
 }
+
+async function getScreenCapture() {
+  console.log("Capturing screenshot...");
+  var capturing;
+  if (["firefox", "geckoview"].includes(browserName)) {
+    capturing = ext.tabs.captureVisibleTab();
+    capturing.then(onCaptured, onError);
+    await capturing;
+  } else {
+    // create capturing promise
+    capturing =  new Promise(function(resolve, reject) {
+    ext.tabs.captureVisibleTab(resolve);
+  });
+
+    // capture and wait for promise to end
+    capturing.then(onCaptured, onError);
+    await capturing;
+  }
+}
+
+function onCaptured(screenshotUri) {
+  console.log("Screenshot capured!");
+  postToControlServer("screenshot", [screenshotUri, testName, pageCycle]);
+}
+
+function onError(error) {
+  console.log("Screenshot captured failed!");
+  console.log(`Error: ${error}`);
+}
+
 
 async function startGeckoProfiling() {
   var _threads;
@@ -476,6 +518,7 @@ function postToControlServer(msgType, msgData) {
   client.setRequestHeader("Content-Type", "application/json");
   if (client.readyState == 1) {
     console.log("posting to control server");
+    console.log(msgData);
     var data = { "type": "webext_" + msgType, "data": msgData};
     client.send(JSON.stringify(data));
   }

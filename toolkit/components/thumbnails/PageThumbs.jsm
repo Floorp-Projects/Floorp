@@ -47,7 +47,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "PageThumbsStorageService",
   "@mozilla.org/thumbnails/pagethumbs-service;1", "nsIPageThumbsStorageService");
 
 /**
- * Utilities for dealing with promises and Task.jsm
+ * Utilities for dealing with promises.
  */
 const TaskUtils = {
   /**

@@ -379,6 +379,9 @@ partial namespace ChromeUtils {
 
   [ChromeOnly, Throws]
   boolean hasReportingHeaderForOrigin(DOMString aOrigin);
+
+  [ChromeOnly, Throws]
+  void registerWindowActor(DOMString aName, WindowActorOptions aOptions);
 };
 
 /**
@@ -513,6 +516,17 @@ dictionary HeapSnapshotBoundaries {
 dictionary Base64URLEncodeOptions {
   /** Specifies whether the output should be padded with "=" characters. */
   required boolean pad;
+};
+
+dictionary WindowActorOptions {
+  /** This fields are used for configuring individual sides of the actor. */
+  required WindowActorSidedOptions parent;
+  required WindowActorSidedOptions child;
+};
+
+dictionary WindowActorSidedOptions {
+  /** The module path which should be loaded for the actor on this side. */
+  required DOMString moduleURI;
 };
 
 enum Base64URLDecodePadding {

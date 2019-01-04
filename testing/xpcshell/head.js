@@ -40,7 +40,7 @@ var _Services = ChromeUtils.import("resource://gre/modules/Services.jsm", null).
 _register_modules_protocol_handler();
 
 var _PromiseTestUtils = ChromeUtils.import("resource://testing-common/PromiseTestUtils.jsm", null).PromiseTestUtils;
-var _Task = ChromeUtils.import("resource://gre/modules/Task.jsm", null).Task;
+var _Task = ChromeUtils.import("resource://testing-common/Task.jsm", null).Task;
 
 let _NetUtil = ChromeUtils.import("resource://gre/modules/NetUtil.jsm", null).NetUtil;
 

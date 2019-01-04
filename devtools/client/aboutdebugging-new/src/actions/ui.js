@@ -80,7 +80,10 @@ function updateAdbAddonStatus(adbAddonStatus) {
 }
 
 function updateNetworkLocations(locations) {
-  return { type: NETWORK_LOCATIONS_UPDATED, locations };
+  return (dispatch, getState) => {
+    dispatch(Actions.updateNetworkRuntimes(locations));
+    dispatch({ type: NETWORK_LOCATIONS_UPDATED, locations });
+  };
 }
 
 function installAdbAddon() {
