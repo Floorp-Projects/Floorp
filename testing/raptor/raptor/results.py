@@ -72,7 +72,8 @@ class RaptorResultsHandler():
         output = Output(self.results, self.supporting_data)
         output.summarize()
         output.summarize_screenshots(self.images)
-        if self.supporting_data is not None:
+        # only dump out supporting data (i.e. power) if actual Raptor test completed
+        if self.supporting_data is not None and len(self.results) != 0:
             output.summarize_supporting_data()
             output.output_supporting_data()
         return output.output()
