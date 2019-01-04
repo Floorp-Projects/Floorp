@@ -267,7 +267,7 @@ this.DateTimeInputBaseImplWidget = class {
 
     // Used to store the non-formatted value, cleared when value is
     // cleared.
-    // nsDateTimeControlFrame::HasBadInput() will read this to decide
+    // DateTimeInputTypeBase::HasBadInput() will read this to decide
     // if the input has value.
     field.setAttribute("value", "");
 

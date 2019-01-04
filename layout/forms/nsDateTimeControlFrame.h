@@ -80,7 +80,6 @@ class nsDateTimeControlFrame final : public nsContainerFrame,
   void OnMinMaxStepAttrChanged();
   void HandleFocusEvent();
   void HandleBlurEvent();
-  bool HasBadInput();
 
  private:
   class SyncDisabledStateEvent;
@@ -108,8 +107,6 @@ class nsDateTimeControlFrame final : public nsContainerFrame,
    * Sync the disabled state of the anonymous children up with our content's.
    */
   void SyncDisabledState();
-
-  mozilla::dom::Element* GetInputAreaContentAsElement();
 
   // Anonymous child which is bound via XBL to an element that wraps the input
   // area and reset button.

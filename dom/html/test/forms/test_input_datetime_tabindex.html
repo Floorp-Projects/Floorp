@@ -34,6 +34,15 @@ SimpleTest.waitForFocus(function() {
   SimpleTest.finish();
 });
 
+function checkInnerTextboxTabindex(input, tabindex) {
+  let fields = SpecialPowers.wrap(input).openOrClosedShadowRoot.getElementsByClassName("datetime-edit-field");
+
+  for (let field of fields) {
+    is(field.tabIndex, tabindex, "tabIndex in the inner textbox should be correct");
+  }
+
+}
+
 function testTabindex(type) {
   let input1 = document.getElementById(type + "1");
   let input2 = document.getElementById(type + "2");
@@ -62,11 +71,17 @@ function testTabindex(type) {
   is(document.activeElement, input2,
      "input element with tabindex=-1 is still focusable");
 
+  checkInnerTextboxTabindex(input1, 0);
+  checkInnerTextboxTabindex(input2, -1);
+  checkInnerTextboxTabindex(input3, 0);
+
   // Changing the tabindex attribute dynamically.
   input3.setAttribute("tabindex", "-1");
   synthesizeKey("KEY_Tab"); // need only one TAB since input2 is not tabbable
   isnot(document.activeElement, input3,
         "element with tabindex changed to -1 should not be tabbable");
+
+  checkInnerTextboxTabindex(input3, -1);
 }
 
 function test() {
