@@ -387,7 +387,7 @@ const WHITELIST_FUNCTIONS: &'static [&'static str] = &[
     "JS_NewUint8Array",
     "JS_NewUint8ClampedArray",
     "js::ObjectClassName",
-    "JS_ObjectIsDate",
+    "JS::ObjectIsDate",
     "JS_ParseJSON",
     "JS_ReadBytes",
     "JS_ReadStructuredClone",
