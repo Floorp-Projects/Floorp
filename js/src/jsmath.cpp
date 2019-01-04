@@ -25,7 +25,6 @@
 
 #include "jit/InlinableNatives.h"
 #include "js/Class.h"
-#include "js/PropertySpec.h"
 #include "util/Windows.h"
 #include "vm/JSAtom.h"
 #include "vm/JSContext.h"

@@ -66,6 +66,7 @@ using mozilla::PositiveInfinity;
 /* static */ MOZ_THREAD_LOCAL(JSContext*) js::TlsContext;
 /* static */ Atomic<size_t> JSRuntime::liveRuntimesCount;
 Atomic<JS::LargeAllocationFailureCallback> js::OnLargeAllocationFailure;
+Atomic<JS::BuildIdOp> js::GetBuildId;
 
 namespace js {
 bool gCanUseExtraThreads = true;

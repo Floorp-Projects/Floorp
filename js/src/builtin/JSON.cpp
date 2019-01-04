@@ -19,7 +19,6 @@
 #include "builtin/BigInt.h"
 #endif
 #include "builtin/String.h"
-#include "js/PropertySpec.h"
 #include "js/StableStringChars.h"
 #include "util/StringBuffer.h"
 #include "vm/Interpreter.h"

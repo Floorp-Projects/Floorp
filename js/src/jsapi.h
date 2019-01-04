@@ -36,7 +36,6 @@
 #include "js/Id.h"
 #include "js/OffThreadScriptCompilation.h"
 #include "js/Principals.h"
-#include "js/PropertyDescriptor.h"
 #include "js/Realm.h"
 #include "js/RefCounted.h"
 #include "js/RootingAPI.h"
@@ -50,8 +49,6 @@
 /************************************************************************/
 
 struct JSFreeOp;
-struct JSFunctionSpec;
-struct JSPropertySpec;
 
 namespace JS {
 
@@ -246,6 +243,70 @@ JS_PUBLIC_API bool JS_StringHasBeenPinned(JSContext* cx, JSString* str);
 
 /************************************************************************/
 
+/* Property attributes, set in JSPropertySpec and passed to API functions.
+ *
+ * NB: The data structure in which some of these values are stored only uses
+ *     a uint8_t to store the relevant information. Proceed with caution if
+ *     trying to reorder or change the the first byte worth of flags.
+ */
+
+/* property is visible to for/in loop */
+static const uint8_t JSPROP_ENUMERATE = 0x01;
+
+/* not settable: assignment is no-op.  This flag is only valid when neither
+   JSPROP_GETTER nor JSPROP_SETTER is set. */
+static const uint8_t JSPROP_READONLY = 0x02;
+
+/* property cannot be deleted */
+static const uint8_t JSPROP_PERMANENT = 0x04;
+
+/* (0x08 is unused) */
+
+/* property holds getter function */
+static const uint8_t JSPROP_GETTER = 0x10;
+
+/* property holds setter function */
+static const uint8_t JSPROP_SETTER = 0x20;
+
+/* internal JS engine use only */
+static const uint8_t JSPROP_INTERNAL_USE_BIT = 0x80;
+
+/* native that can be called as a ctor */
+static const unsigned JSFUN_CONSTRUCTOR = 0x400;
+
+/* | of all the JSFUN_* flags */
+static const unsigned JSFUN_FLAGS_MASK = 0x400;
+
+/*
+ * Resolve hooks and enumerate hooks must pass this flag when calling
+ * JS_Define* APIs to reify lazily-defined properties.
+ *
+ * JSPROP_RESOLVING is used only with property-defining APIs. It tells the
+ * engine to skip the resolve hook when performing the lookup at the beginning
+ * of property definition. This keeps the resolve hook from accidentally
+ * triggering itself: unchecked recursion.
+ *
+ * For enumerate hooks, triggering the resolve hook would be merely silly, not
+ * fatal, except in some cases involving non-configurable properties.
+ */
+static const unsigned JSPROP_RESOLVING = 0x2000;
+
+/* ignore the value in JSPROP_ENUMERATE.  This flag only valid when defining
+   over an existing property. */
+static const unsigned JSPROP_IGNORE_ENUMERATE = 0x4000;
+
+/* ignore the value in JSPROP_READONLY.  This flag only valid when defining over
+   an existing property. */
+static const unsigned JSPROP_IGNORE_READONLY = 0x8000;
+
+/* ignore the value in JSPROP_PERMANENT.  This flag only valid when defining
+   over an existing property. */
+static const unsigned JSPROP_IGNORE_PERMANENT = 0x10000;
+
+/* ignore the Value in the descriptor. Nothing was specified when passed to
+   Object.defineProperty from script. */
+static const unsigned JSPROP_IGNORE_VALUE = 0x20000;
+
 /** Microseconds since the epoch, midnight, January 1, 1970 UTC. */
 extern JS_PUBLIC_API int64_t JS_Now(void);
 
@@ -282,6 +343,19 @@ namespace JS {
 extern JS_PUBLIC_API const char* InformalValueTypeName(const JS::Value& v);
 
 } /* namespace JS */
+
+extern JS_PUBLIC_API bool JS_StrictlyEqual(JSContext* cx,
+                                           JS::Handle<JS::Value> v1,
+                                           JS::Handle<JS::Value> v2,
+                                           bool* equal);
+
+extern JS_PUBLIC_API bool JS_LooselyEqual(JSContext* cx,
+                                          JS::Handle<JS::Value> v1,
+                                          JS::Handle<JS::Value> v2,
+                                          bool* equal);
+
+extern JS_PUBLIC_API bool JS_SameValue(JSContext* cx, JS::Handle<JS::Value> v1,
+                                       JS::Handle<JS::Value> v2, bool* same);
 
 /** True iff fun is the global eval function. */
 extern JS_PUBLIC_API bool JS_IsBuiltinEvalFunction(JSFunction* fun);
@@ -1078,8 +1152,250 @@ struct JSConstScalarSpec {
   T val;
 };
 
-using JSConstDoubleSpec = JSConstScalarSpec<double>;
-using JSConstIntegerSpec = JSConstScalarSpec<int32_t>;
+typedef JSConstScalarSpec<double> JSConstDoubleSpec;
+typedef JSConstScalarSpec<int32_t> JSConstIntegerSpec;
+
+struct JSJitInfo;
+
+/**
+ * Wrapper to relace JSNative for JSPropertySpecs and JSFunctionSpecs. This will
+ * allow us to pass one JSJitInfo per function with the property/function spec,
+ * without additional field overhead.
+ */
+struct JSNativeWrapper {
+  JSNative op;
+  const JSJitInfo* info;
+};
+
+/*
+ * Macro static initializers which make it easy to pass no JSJitInfo as part of
+ * a JSPropertySpec or JSFunctionSpec.
+ */
+#define JSNATIVE_WRAPPER(native) \
+  {                              \
+    { native, nullptr }          \
+  }
+
+/**
+ * Description of a property. JS_DefineProperties and JS_InitClass take arrays
+ * of these and define many properties at once. JS_PSG, JS_PSGS and JS_PS_END
+ * are helper macros for defining such arrays.
+ */
+struct JSPropertySpec {
+  struct SelfHostedWrapper {
+    void* unused;
+    const char* funname;
+  };
+
+  struct ValueWrapper {
+    uintptr_t type;
+    union {
+      const char* string;
+      int32_t int32;
+    };
+  };
+
+  const char* name;
+  uint8_t flags;
+  union {
+    struct {
+      union {
+        JSNativeWrapper native;
+        SelfHostedWrapper selfHosted;
+      } getter;
+      union {
+        JSNativeWrapper native;
+        SelfHostedWrapper selfHosted;
+      } setter;
+    } accessors;
+    ValueWrapper value;
+  };
+
+  bool isAccessor() const { return !(flags & JSPROP_INTERNAL_USE_BIT); }
+  JS_PUBLIC_API bool getValue(JSContext* cx,
+                              JS::MutableHandleValue value) const;
+
+  bool isSelfHosted() const {
+    MOZ_ASSERT(isAccessor());
+
+#ifdef DEBUG
+    // Verify that our accessors match our JSPROP_GETTER flag.
+    if (flags & JSPROP_GETTER) {
+      checkAccessorsAreSelfHosted();
+    } else {
+      checkAccessorsAreNative();
+    }
+#endif
+    return (flags & JSPROP_GETTER);
+  }
+
+  static_assert(sizeof(SelfHostedWrapper) == sizeof(JSNativeWrapper),
+                "JSPropertySpec::getter/setter must be compact");
+  static_assert(offsetof(SelfHostedWrapper, funname) ==
+                    offsetof(JSNativeWrapper, info),
+                "JS_SELF_HOSTED* macros below require that "
+                "SelfHostedWrapper::funname overlay "
+                "JSNativeWrapper::info");
+
+ private:
+  void checkAccessorsAreNative() const {
+    // We may have a getter or a setter or both.  And whichever ones we have
+    // should not have a SelfHostedWrapper for the accessor.
+    MOZ_ASSERT_IF(accessors.getter.native.info, accessors.getter.native.op);
+    MOZ_ASSERT_IF(accessors.setter.native.info, accessors.setter.native.op);
+  }
+
+  void checkAccessorsAreSelfHosted() const {
+    MOZ_ASSERT(!accessors.getter.selfHosted.unused);
+    MOZ_ASSERT(!accessors.setter.selfHosted.unused);
+  }
+};
+
+namespace JS {
+namespace detail {
+
+/* NEVER DEFINED, DON'T USE.  For use by JS_CAST_STRING_TO only. */
+template <size_t N>
+inline int CheckIsCharacterLiteral(const char (&arr)[N]);
+
+/* NEVER DEFINED, DON'T USE.  For use by JS_CAST_INT32_TO only. */
+inline int CheckIsInt32(int32_t value);
+
+}  // namespace detail
+}  // namespace JS
+
+#define JS_CAST_STRING_TO(s, To)                                      \
+  (static_cast<void>(sizeof(JS::detail::CheckIsCharacterLiteral(s))), \
+   reinterpret_cast<To>(s))
+
+#define JS_CAST_INT32_TO(s, To)                            \
+  (static_cast<void>(sizeof(JS::detail::CheckIsInt32(s))), \
+   reinterpret_cast<To>(s))
+
+#define JS_CHECK_ACCESSOR_FLAGS(flags)                                     \
+  (static_cast<mozilla::EnableIf<                                          \
+       ((flags) & ~(JSPROP_ENUMERATE | JSPROP_PERMANENT)) == 0>::Type>(0), \
+   (flags))
+
+#define JS_PS_ACCESSOR_SPEC(name, getter, setter, flags, extraFlags) \
+  {                                                                  \
+    name, uint8_t(JS_CHECK_ACCESSOR_FLAGS(flags) | extraFlags), {    \
+      { getter, setter }                                             \
+    }                                                                \
+  }
+#define JS_PS_VALUE_SPEC(name, value, flags)          \
+  {                                                   \
+    name, uint8_t(flags | JSPROP_INTERNAL_USE_BIT), { \
+      { value, JSNATIVE_WRAPPER(nullptr) }            \
+    }                                                 \
+  }
+
+#define SELFHOSTED_WRAPPER(name)                           \
+  {                                                        \
+    { nullptr, JS_CAST_STRING_TO(name, const JSJitInfo*) } \
+  }
+#define STRINGVALUE_WRAPPER(value)                   \
+  {                                                  \
+    {                                                \
+      reinterpret_cast<JSNative>(JSVAL_TYPE_STRING), \
+          JS_CAST_STRING_TO(value, const JSJitInfo*) \
+    }                                                \
+  }
+#define INT32VALUE_WRAPPER(value)                   \
+  {                                                 \
+    {                                               \
+      reinterpret_cast<JSNative>(JSVAL_TYPE_INT32), \
+          JS_CAST_INT32_TO(value, const JSJitInfo*) \
+    }                                               \
+  }
+
+/*
+ * JSPropertySpec uses JSNativeWrapper.  These macros encapsulate the definition
+ * of JSNative-backed JSPropertySpecs, by defining the JSNativeWrappers for
+ * them.
+ */
+#define JS_PSG(name, getter, flags)                   \
+  JS_PS_ACCESSOR_SPEC(name, JSNATIVE_WRAPPER(getter), \
+                      JSNATIVE_WRAPPER(nullptr), flags, 0)
+#define JS_PSGS(name, getter, setter, flags)          \
+  JS_PS_ACCESSOR_SPEC(name, JSNATIVE_WRAPPER(getter), \
+                      JSNATIVE_WRAPPER(setter), flags, 0)
+#define JS_SYM_GET(symbol, getter, flags)                                    \
+  JS_PS_ACCESSOR_SPEC(                                                       \
+      reinterpret_cast<const char*>(uint32_t(::JS::SymbolCode::symbol) + 1), \
+      JSNATIVE_WRAPPER(getter), JSNATIVE_WRAPPER(nullptr), flags, 0)
+#define JS_SELF_HOSTED_GET(name, getterName, flags)         \
+  JS_PS_ACCESSOR_SPEC(name, SELFHOSTED_WRAPPER(getterName), \
+                      JSNATIVE_WRAPPER(nullptr), flags, JSPROP_GETTER)
+#define JS_SELF_HOSTED_GETSET(name, getterName, setterName, flags) \
+  JS_PS_ACCESSOR_SPEC(name, SELFHOSTED_WRAPPER(getterName),        \
+                      SELFHOSTED_WRAPPER(setterName), flags,       \
+                      JSPROP_GETTER | JSPROP_SETTER)
+#define JS_SELF_HOSTED_SYM_GET(symbol, getterName, flags)                    \
+  JS_PS_ACCESSOR_SPEC(                                                       \
+      reinterpret_cast<const char*>(uint32_t(::JS::SymbolCode::symbol) + 1), \
+      SELFHOSTED_WRAPPER(getterName), JSNATIVE_WRAPPER(nullptr), flags,      \
+      JSPROP_GETTER)
+#define JS_STRING_PS(name, string, flags) \
+  JS_PS_VALUE_SPEC(name, STRINGVALUE_WRAPPER(string), flags)
+#define JS_STRING_SYM_PS(symbol, string, flags)                              \
+  JS_PS_VALUE_SPEC(                                                          \
+      reinterpret_cast<const char*>(uint32_t(::JS::SymbolCode::symbol) + 1), \
+      STRINGVALUE_WRAPPER(string), flags)
+#define JS_INT32_PS(name, value, flags) \
+  JS_PS_VALUE_SPEC(name, INT32VALUE_WRAPPER(value), flags)
+#define JS_PS_END                                         \
+  JS_PS_ACCESSOR_SPEC(nullptr, JSNATIVE_WRAPPER(nullptr), \
+                      JSNATIVE_WRAPPER(nullptr), 0, 0)
+
+/**
+ * To define a native function, set call to a JSNativeWrapper. To define a
+ * self-hosted function, set selfHostedName to the name of a function
+ * compiled during JSRuntime::initSelfHosting.
+ */
+struct JSFunctionSpec {
+  const char* name;
+  JSNativeWrapper call;
+  uint16_t nargs;
+  uint16_t flags;
+  const char* selfHostedName;
+};
+
+/*
+ * Terminating sentinel initializer to put at the end of a JSFunctionSpec array
+ * that's passed to JS_DefineFunctions or JS_InitClass.
+ */
+#define JS_FS_END JS_FN(nullptr, nullptr, 0, 0)
+
+/*
+ * Initializer macros for a JSFunctionSpec array element. JS_FNINFO allows the
+ * simple adding of JSJitInfos. JS_SELF_HOSTED_FN declares a self-hosted
+ * function. JS_INLINABLE_FN allows specifying an InlinableNative enum value for
+ * natives inlined or specialized by the JIT. Finally JS_FNSPEC has slots for
+ * all the fields.
+ *
+ * The _SYM variants allow defining a function with a symbol key rather than a
+ * string key. For example, use JS_SYM_FN(iterator, ...) to define an
+ * @@iterator method.
+ */
+#define JS_FN(name, call, nargs, flags) \
+  JS_FNSPEC(name, call, nullptr, nargs, flags, nullptr)
+#define JS_INLINABLE_FN(name, call, nargs, flags, native) \
+  JS_FNSPEC(name, call, &js::jit::JitInfo_##native, nargs, flags, nullptr)
+#define JS_SYM_FN(symbol, call, nargs, flags) \
+  JS_SYM_FNSPEC(symbol, call, nullptr, nargs, flags, nullptr)
+#define JS_FNINFO(name, call, info, nargs, flags) \
+  JS_FNSPEC(name, call, info, nargs, flags, nullptr)
+#define JS_SELF_HOSTED_FN(name, selfHostedName, nargs, flags) \
+  JS_FNSPEC(name, nullptr, nullptr, nargs, flags, selfHostedName)
+#define JS_SELF_HOSTED_SYM_FN(symbol, selfHostedName, nargs, flags) \
+  JS_SYM_FNSPEC(symbol, nullptr, nullptr, nargs, flags, selfHostedName)
+#define JS_SYM_FNSPEC(symbol, call, info, nargs, flags, selfHostedName)      \
+  JS_FNSPEC(                                                                 \
+      reinterpret_cast<const char*>(uint32_t(::JS::SymbolCode::symbol) + 1), \
+      call, info, nargs, flags, selfHostedName)
+#define JS_FNSPEC(name, call, info, nargs, flags, selfHostedName) \
+  { name, {call, info}, nargs, flags, selfHostedName }
 
 extern JS_PUBLIC_API JSObject* JS_InitClass(
     JSContext* cx, JS::HandleObject obj, JS::HandleObject parent_proto,
@@ -1496,6 +1812,286 @@ extern JS_PUBLIC_API bool JS_DeepFreezeObject(JSContext* cx,
  */
 extern JS_PUBLIC_API bool JS_FreezeObject(JSContext* cx,
                                           JS::Handle<JSObject*> obj);
+
+/*** Property descriptors ***************************************************/
+
+namespace JS {
+
+struct JS_PUBLIC_API PropertyDescriptor {
+  JSObject* obj;
+  unsigned attrs;
+  JSGetterOp getter;
+  JSSetterOp setter;
+  JS::Value value;
+
+  PropertyDescriptor()
+      : obj(nullptr),
+        attrs(0),
+        getter(nullptr),
+        setter(nullptr),
+        value(JS::UndefinedValue()) {}
+
+  static void trace(PropertyDescriptor* self, JSTracer* trc) {
+    self->trace(trc);
+  }
+  void trace(JSTracer* trc);
+};
+
+}  // namespace JS
+
+namespace js {
+
+template <typename Wrapper>
+class WrappedPtrOperations<JS::PropertyDescriptor, Wrapper> {
+  const JS::PropertyDescriptor& desc() const {
+    return static_cast<const Wrapper*>(this)->get();
+  }
+
+  bool has(unsigned bit) const {
+    MOZ_ASSERT(bit != 0);
+    MOZ_ASSERT((bit & (bit - 1)) == 0);  // only a single bit
+    return (desc().attrs & bit) != 0;
+  }
+
+  bool hasAny(unsigned bits) const { return (desc().attrs & bits) != 0; }
+
+  bool hasAll(unsigned bits) const { return (desc().attrs & bits) == bits; }
+
+ public:
+  // Descriptors with JSGetterOp/JSSetterOp are considered data
+  // descriptors. It's complicated.
+  bool isAccessorDescriptor() const {
+    return hasAny(JSPROP_GETTER | JSPROP_SETTER);
+  }
+  bool isGenericDescriptor() const {
+    return (desc().attrs & (JSPROP_GETTER | JSPROP_SETTER |
+                            JSPROP_IGNORE_READONLY | JSPROP_IGNORE_VALUE)) ==
+           (JSPROP_IGNORE_READONLY | JSPROP_IGNORE_VALUE);
+  }
+  bool isDataDescriptor() const {
+    return !isAccessorDescriptor() && !isGenericDescriptor();
+  }
+
+  bool hasConfigurable() const { return !has(JSPROP_IGNORE_PERMANENT); }
+  bool configurable() const {
+    MOZ_ASSERT(hasConfigurable());
+    return !has(JSPROP_PERMANENT);
+  }
+
+  bool hasEnumerable() const { return !has(JSPROP_IGNORE_ENUMERATE); }
+  bool enumerable() const {
+    MOZ_ASSERT(hasEnumerable());
+    return has(JSPROP_ENUMERATE);
+  }
+
+  bool hasValue() const {
+    return !isAccessorDescriptor() && !has(JSPROP_IGNORE_VALUE);
+  }
+  JS::HandleValue value() const {
+    return JS::HandleValue::fromMarkedLocation(&desc().value);
+  }
+
+  bool hasWritable() const {
+    return !isAccessorDescriptor() && !has(JSPROP_IGNORE_READONLY);
+  }
+  bool writable() const {
+    MOZ_ASSERT(hasWritable());
+    return !has(JSPROP_READONLY);
+  }
+
+  bool hasGetterObject() const { return has(JSPROP_GETTER); }
+  JS::HandleObject getterObject() const {
+    MOZ_ASSERT(hasGetterObject());
+    return JS::HandleObject::fromMarkedLocation(
+        reinterpret_cast<JSObject* const*>(&desc().getter));
+  }
+  bool hasSetterObject() const { return has(JSPROP_SETTER); }
+  JS::HandleObject setterObject() const {
+    MOZ_ASSERT(hasSetterObject());
+    return JS::HandleObject::fromMarkedLocation(
+        reinterpret_cast<JSObject* const*>(&desc().setter));
+  }
+
+  bool hasGetterOrSetter() const { return desc().getter || desc().setter; }
+
+  JS::HandleObject object() const {
+    return JS::HandleObject::fromMarkedLocation(&desc().obj);
+  }
+  unsigned attributes() const { return desc().attrs; }
+  JSGetterOp getter() const { return desc().getter; }
+  JSSetterOp setter() const { return desc().setter; }
+
+  void assertValid() const {
+#ifdef DEBUG
+    MOZ_ASSERT(
+        (attributes() &
+         ~(JSPROP_ENUMERATE | JSPROP_IGNORE_ENUMERATE | JSPROP_PERMANENT |
+           JSPROP_IGNORE_PERMANENT | JSPROP_READONLY | JSPROP_IGNORE_READONLY |
+           JSPROP_IGNORE_VALUE | JSPROP_GETTER | JSPROP_SETTER |
+           JSPROP_RESOLVING | JSPROP_INTERNAL_USE_BIT)) == 0);
+    MOZ_ASSERT(!hasAll(JSPROP_IGNORE_ENUMERATE | JSPROP_ENUMERATE));
+    MOZ_ASSERT(!hasAll(JSPROP_IGNORE_PERMANENT | JSPROP_PERMANENT));
+    if (isAccessorDescriptor()) {
+      MOZ_ASSERT(!has(JSPROP_READONLY));
+      MOZ_ASSERT(!has(JSPROP_IGNORE_READONLY));
+      MOZ_ASSERT(!has(JSPROP_IGNORE_VALUE));
+      MOZ_ASSERT(!has(JSPROP_INTERNAL_USE_BIT));
+      MOZ_ASSERT(value().isUndefined());
+      MOZ_ASSERT_IF(!has(JSPROP_GETTER), !getter());
+      MOZ_ASSERT_IF(!has(JSPROP_SETTER), !setter());
+    } else {
+      MOZ_ASSERT(!hasAll(JSPROP_IGNORE_READONLY | JSPROP_READONLY));
+      MOZ_ASSERT_IF(has(JSPROP_IGNORE_VALUE), value().isUndefined());
+    }
+
+    MOZ_ASSERT_IF(has(JSPROP_RESOLVING), !has(JSPROP_IGNORE_ENUMERATE));
+    MOZ_ASSERT_IF(has(JSPROP_RESOLVING), !has(JSPROP_IGNORE_PERMANENT));
+    MOZ_ASSERT_IF(has(JSPROP_RESOLVING), !has(JSPROP_IGNORE_READONLY));
+    MOZ_ASSERT_IF(has(JSPROP_RESOLVING), !has(JSPROP_IGNORE_VALUE));
+#endif
+  }
+
+  void assertComplete() const {
+#ifdef DEBUG
+    assertValid();
+    MOZ_ASSERT(
+        (attributes() & ~(JSPROP_ENUMERATE | JSPROP_PERMANENT |
+                          JSPROP_READONLY | JSPROP_GETTER | JSPROP_SETTER |
+                          JSPROP_RESOLVING | JSPROP_INTERNAL_USE_BIT)) == 0);
+    MOZ_ASSERT_IF(isAccessorDescriptor(),
+                  has(JSPROP_GETTER) && has(JSPROP_SETTER));
+#endif
+  }
+
+  void assertCompleteIfFound() const {
+#ifdef DEBUG
+    if (object()) {
+      assertComplete();
+    }
+#endif
+  }
+};
+
+template <typename Wrapper>
+class MutableWrappedPtrOperations<JS::PropertyDescriptor, Wrapper>
+    : public js::WrappedPtrOperations<JS::PropertyDescriptor, Wrapper> {
+  JS::PropertyDescriptor& desc() { return static_cast<Wrapper*>(this)->get(); }
+
+ public:
+  void clear() {
+    object().set(nullptr);
+    setAttributes(0);
+    setGetter(nullptr);
+    setSetter(nullptr);
+    value().setUndefined();
+  }
+
+  void initFields(JS::HandleObject obj, JS::HandleValue v, unsigned attrs,
+                  JSGetterOp getterOp, JSSetterOp setterOp) {
+    object().set(obj);
+    value().set(v);
+    setAttributes(attrs);
+    setGetter(getterOp);
+    setSetter(setterOp);
+  }
+
+  void assign(JS::PropertyDescriptor& other) {
+    object().set(other.obj);
+    setAttributes(other.attrs);
+    setGetter(other.getter);
+    setSetter(other.setter);
+    value().set(other.value);
+  }
+
+  void setDataDescriptor(JS::HandleValue v, unsigned attrs) {
+    MOZ_ASSERT((attrs & ~(JSPROP_ENUMERATE | JSPROP_PERMANENT |
+                          JSPROP_READONLY | JSPROP_IGNORE_ENUMERATE |
+                          JSPROP_IGNORE_PERMANENT | JSPROP_IGNORE_READONLY)) ==
+               0);
+    object().set(nullptr);
+    setAttributes(attrs);
+    setGetter(nullptr);
+    setSetter(nullptr);
+    value().set(v);
+  }
+
+  JS::MutableHandleObject object() {
+    return JS::MutableHandleObject::fromMarkedLocation(&desc().obj);
+  }
+  unsigned& attributesRef() { return desc().attrs; }
+  JSGetterOp& getter() { return desc().getter; }
+  JSSetterOp& setter() { return desc().setter; }
+  JS::MutableHandleValue value() {
+    return JS::MutableHandleValue::fromMarkedLocation(&desc().value);
+  }
+  void setValue(JS::HandleValue v) {
+    MOZ_ASSERT(!(desc().attrs & (JSPROP_GETTER | JSPROP_SETTER)));
+    attributesRef() &= ~JSPROP_IGNORE_VALUE;
+    value().set(v);
+  }
+
+  void setConfigurable(bool configurable) {
+    setAttributes(
+        (desc().attrs & ~(JSPROP_IGNORE_PERMANENT | JSPROP_PERMANENT)) |
+        (configurable ? 0 : JSPROP_PERMANENT));
+  }
+  void setEnumerable(bool enumerable) {
+    setAttributes(
+        (desc().attrs & ~(JSPROP_IGNORE_ENUMERATE | JSPROP_ENUMERATE)) |
+        (enumerable ? JSPROP_ENUMERATE : 0));
+  }
+  void setWritable(bool writable) {
+    MOZ_ASSERT(!(desc().attrs & (JSPROP_GETTER | JSPROP_SETTER)));
+    setAttributes((desc().attrs & ~(JSPROP_IGNORE_READONLY | JSPROP_READONLY)) |
+                  (writable ? 0 : JSPROP_READONLY));
+  }
+  void setAttributes(unsigned attrs) { desc().attrs = attrs; }
+
+  void setGetter(JSGetterOp op) { desc().getter = op; }
+  void setSetter(JSSetterOp op) { desc().setter = op; }
+  void setGetterObject(JSObject* obj) {
+    desc().getter = reinterpret_cast<JSGetterOp>(obj);
+    desc().attrs &=
+        ~(JSPROP_IGNORE_VALUE | JSPROP_IGNORE_READONLY | JSPROP_READONLY);
+    desc().attrs |= JSPROP_GETTER;
+  }
+  void setSetterObject(JSObject* obj) {
+    desc().setter = reinterpret_cast<JSSetterOp>(obj);
+    desc().attrs &=
+        ~(JSPROP_IGNORE_VALUE | JSPROP_IGNORE_READONLY | JSPROP_READONLY);
+    desc().attrs |= JSPROP_SETTER;
+  }
+
+  JS::MutableHandleObject getterObject() {
+    MOZ_ASSERT(this->hasGetterObject());
+    return JS::MutableHandleObject::fromMarkedLocation(
+        reinterpret_cast<JSObject**>(&desc().getter));
+  }
+  JS::MutableHandleObject setterObject() {
+    MOZ_ASSERT(this->hasSetterObject());
+    return JS::MutableHandleObject::fromMarkedLocation(
+        reinterpret_cast<JSObject**>(&desc().setter));
+  }
+};
+
+}  // namespace js
+
+namespace JS {
+
+extern JS_PUBLIC_API bool ObjectToCompletePropertyDescriptor(
+    JSContext* cx, JS::HandleObject obj, JS::HandleValue descriptor,
+    JS::MutableHandle<PropertyDescriptor> desc);
+
+/*
+ * ES6 draft rev 32 (2015 Feb 2) 6.2.4.4 FromPropertyDescriptor(Desc).
+ *
+ * If desc.object() is null, then vp is set to undefined.
+ */
+extern JS_PUBLIC_API bool FromPropertyDescriptor(
+    JSContext* cx, JS::Handle<JS::PropertyDescriptor> desc,
+    JS::MutableHandleValue vp);
+
+}  // namespace JS
 
 /*** Standard internal methods **********************************************
  *
@@ -2346,16 +2942,6 @@ extern JS_PUBLIC_API void JS_SetReservedSlot(JSObject* obj, uint32_t index,
 
 /************************************************************************/
 
-/* native that can be called as a ctor */
-static constexpr unsigned JSFUN_CONSTRUCTOR = 0x400;
-
-/* | of all the JSFUN_* flags */
-static constexpr unsigned JSFUN_FLAGS_MASK = 0x400;
-
-static_assert((JSPROP_FLAGS_MASK & JSFUN_FLAGS_MASK) == 0,
-              "JSFUN_* flags do not overlap JSPROP_* flags, because bits from "
-              "the two flag-sets appear in the same flag in some APIs");
-
 /*
  * Functions and scripts.
  */
@@ -2703,6 +3289,10 @@ extern JS_PUBLIC_API void JS_RequestInterruptCallbackCanWait(JSContext* cx);
 
 namespace JS {
 
+/* Vector of characters used for holding build ids. */
+
+typedef js::Vector<char, 0, js::SystemAllocPolicy> BuildIdCharVector;
+
 /**
  * The ConsumeStreamCallback is called from an active JSContext, passing a
  * StreamConsumer that wishes to consume the given host object as a stream of
@@ -2726,9 +3316,9 @@ namespace JS {
  *
  * After storeOptimizedEncoding() is called, on cache hit, the embedding
  * may call consumeOptimizedEncoding() instead of consumeChunk()/streamEnd().
- * The embedding must ensure that the GetOptimizedEncodingBuildId() (see
- * js/BuildId.h) at the time when an optimized encoding is created is the same
- * as when it is later consumed.
+ * The embedding must ensure that the GetOptimizedEncodingBuildId() at the time
+ * when an optimized encoding is created is the same as when it is later
+ * consumed.
  */
 
 class OptimizedEncodingListener {
@@ -2745,6 +3335,9 @@ class OptimizedEncodingListener {
   // finished processing a streamed resource.
   virtual void storeOptimizedEncoding(const uint8_t* bytes, size_t length) = 0;
 };
+
+extern MOZ_MUST_USE JS_PUBLIC_API bool GetOptimizedEncodingBuildId(
+    BuildIdCharVector* buildId);
 
 class JS_PUBLIC_API StreamConsumer {
  protected:
@@ -3399,6 +3992,25 @@ extern JS_PUBLIC_API bool SetForEach(JSContext* cx, HandleObject obj,
 
 } /* namespace JS */
 
+/*
+ * Dates.
+ */
+
+extern JS_PUBLIC_API JSObject* JS_NewDateObject(JSContext* cx, int year,
+                                                int mon, int mday, int hour,
+                                                int min, int sec);
+
+/**
+ * On success, returns true, setting |*isDate| to true if |obj| is a Date
+ * object or a wrapper around one, or to false if not.  Returns false on
+ * failure.
+ *
+ * This method returns true with |*isDate == false| when passed an ES6 proxy
+ * whose target is a Date, or when passed a revoked proxy.
+ */
+extern JS_PUBLIC_API bool JS_ObjectIsDate(JSContext* cx, JS::HandleObject obj,
+                                          bool* isDate);
+
 /************************************************************************/
 
 /*
@@ -3825,6 +4437,18 @@ struct AsmJSCacheOps {
 
 extern JS_PUBLIC_API void SetAsmJSCacheOps(JSContext* cx,
                                            const AsmJSCacheOps* callbacks);
+
+/**
+ * Return the buildId (represented as a sequence of characters) associated with
+ * the currently-executing build. If the JS engine is embedded such that a
+ * single cache entry can be observed by different compiled versions of the JS
+ * engine, it is critical that the buildId shall change for each new build of
+ * the JS engine.
+ */
+
+typedef bool (*BuildIdOp)(BuildIdCharVector* buildId);
+
+extern JS_PUBLIC_API void SetProcessBuildIdOp(BuildIdOp buildIdOp);
 
 /**
  * The WasmModule interface allows the embedding to hold a reference to the

@@ -18,7 +18,6 @@
 #include "builtin/Array.h"
 #include "jit/AtomicOperations.h"
 #include "js/Conversions.h"
-#include "js/PropertySpec.h"
 #include "js/Wrapper.h"
 #include "util/Windows.h"
 #include "vm/ArrayBufferObject.h"

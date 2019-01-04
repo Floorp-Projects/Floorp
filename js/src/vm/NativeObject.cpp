@@ -16,7 +16,6 @@
 #include "js/CharacterEncoding.h"
 #include "js/Value.h"
 #include "vm/Debugger.h"
-#include "vm/EqualityOperations.h"  // js::SameValue
 #include "vm/TypedArrayObject.h"
 #include "vm/UnboxedObject.h"
 
