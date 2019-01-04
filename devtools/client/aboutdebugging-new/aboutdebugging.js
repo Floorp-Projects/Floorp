@@ -78,8 +78,7 @@ const AboutDebugging = {
       this.mount
     );
 
-    this.actions.updateNetworkLocations(getNetworkLocations());
-
+    this.onNetworkLocationsUpdated();
     addNetworkLocationsObserver(this.onNetworkLocationsUpdated);
 
     // Listen to USB runtime updates and retrieve the initial list of runtimes.
