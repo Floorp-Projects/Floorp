@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 using mozilla::TimeStamp from "mozilla/TimeStamp.h";
+using mozilla::gfx::OpenVRControllerType from "gfxVR.h";
 
 include GraphicsMessages;
 include protocol PVRGPU;
@@ -20,6 +21,12 @@ parent:
 
   async UpdatePref(GfxPrefSetting pref);
   async UpdateVar(GfxVarUpdate var);
+  async OpenVRControllerActionPathToVR(nsCString aPath);
+  async OpenVRControllerManifestPathToVR(OpenVRControllerType aType, nsCString aPath);
+
+child:
+  async OpenVRControllerActionPathToParent(nsCString aPath);
+  async OpenVRControllerManifestPathToParent(OpenVRControllerType aType, nsCString aPath);
 };
 
 } // namespace gfx

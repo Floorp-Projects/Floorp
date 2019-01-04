@@ -48,7 +48,8 @@ class RaptorRunner(MozbuildObject):
                                            'mozharness')
         self.config_file_path = os.path.join(self._topobjdir, 'testing',
                                              'raptor-in_tree_conf.json')
-        self.binary_path = self.get_binary_path() if kwargs['app'] != 'geckoview' else None
+        self.binary_path = self.get_binary_path() if kwargs['app'] not in \
+            ['geckoview', 'fennec'] else None
         self.virtualenv_script = os.path.join(self.topsrcdir, 'third_party', 'python',
                                               'virtualenv', 'virtualenv.py')
         self.virtualenv_path = os.path.join(self._topobjdir, 'testing',
@@ -179,7 +180,7 @@ class MachRaptor(MachCommandBase):
 
         build_obj = MozbuildObject.from_environment(cwd=HERE)
 
-        if conditions.is_android(build_obj) or kwargs['app'] == 'geckoview':
+        if conditions.is_android(build_obj) or kwargs['app'] in ['geckoview', 'fennec']:
             from mozrunner.devices.android_device import verify_android_device
             from mozdevice import ADBAndroid, ADBHost
             if not verify_android_device(build_obj, install=True, app=kwargs['binary']):

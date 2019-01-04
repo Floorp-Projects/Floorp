@@ -93,8 +93,11 @@ endif
 
 MAKE_JSSHELL  = $(call py_action,zip,-C $(DIST)/bin --strip $(abspath $(PKG_JSSHELL)) $(JSSHELL_BINS))
 
-JARLOG_DIR = $(topobjdir)/jarlog/
-JARLOG_FILE_AB_CD = $(JARLOG_DIR)/$(AB_CD).log
+ifneq (,$(PGO_JARLOG_PATH))
+  JARLOG_FILE_AB_CD = $(PGO_JARLOG_PATH)
+else
+  JARLOG_FILE_AB_CD = $(topobjdir)/jarlog/$(AB_CD).log
+endif
 
 TAR_CREATE_FLAGS := --exclude=.mkdir.done $(TAR_CREATE_FLAGS)
 CREATE_FINAL_TAR = $(TAR) -c --owner=0 --group=0 --numeric-owner \

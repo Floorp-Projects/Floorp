@@ -108,6 +108,7 @@ child:
   async InitCrashReporter(Shmem shmem, NativeThreadId threadId);
 
   async CreateVRProcess();
+  async ShutdownVRProcess();
 
   // Have a message be broadcasted to the UI process by the UI process
   // observer service.

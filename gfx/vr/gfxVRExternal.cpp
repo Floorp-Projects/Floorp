@@ -439,10 +439,6 @@ VRSystemManagerExternal::VRSystemManagerExternal(
   mEnumerationCompleted = false;
 #endif
   mDoShutdown = false;
-
-  if (!aAPIShmem) {
-    OpenShmem();
-  }
 }
 
 VRSystemManagerExternal::~VRSystemManagerExternal() { CloseShmem(); }

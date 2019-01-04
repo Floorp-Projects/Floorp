@@ -1409,7 +1409,7 @@ var gCSSProperties = {
     type: CSS_TYPE_LONGHAND,
     applies_to_first_letter: true,
     initial_values: [ "1", "1 1 1 1" ],
-    other_values: [ "0", "0%", "0px", "auto auto auto auto", "10 10% auto 15px", "10px 10px 10px 10px", "10", "10 10", "10 10 10" ],
+    other_values: [ "0", "0%", "0px", "auto auto auto auto", "10 10% auto 15px", "10px 10px 10px 10px", "10", "10 10", "10 10 10", "calc(10px)", "calc(10px + 5%)" ],
     invalid_values: [ "-10", "-10px", "-10%", "10 10 10 10 10", "10 10 10 10 auto", "auto auto auto auto auto", "10px calc(nonsense)", "1px red" ],
     unbalanced_values: [ "10px calc(" ]
   },

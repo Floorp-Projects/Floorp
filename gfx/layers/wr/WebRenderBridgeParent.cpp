@@ -905,8 +905,9 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvSetDisplayList(
     nsTArray<RefCountedShmem>&& aSmallShmems,
     nsTArray<ipc::Shmem>&& aLargeShmems, const wr::IdNamespace& aIdNamespace,
     const bool& aContainsSVGGroup, const VsyncId& aVsyncId,
-    const TimeStamp& aRefreshStartTime, const TimeStamp& aTxnStartTime,
-    const nsCString& aTxnURL, const TimeStamp& aFwdTime) {
+    const TimeStamp& aVsyncStartTime, const TimeStamp& aRefreshStartTime,
+    const TimeStamp& aTxnStartTime, const nsCString& aTxnURL,
+    const TimeStamp& aFwdTime) {
   if (mDestroyed) {
     for (const auto& op : aToDestroy) {
       DestroyActor(op);
@@ -1000,8 +1001,8 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvSetDisplayList(
   }
 
   HoldPendingTransactionId(wrEpoch, aTransactionId, aContainsSVGGroup, aVsyncId,
-                           aRefreshStartTime, aTxnStartTime, aTxnURL, aFwdTime,
-                           mIsFirstPaint);
+                           aVsyncStartTime, aRefreshStartTime, aTxnStartTime,
+                           aTxnURL, aFwdTime, mIsFirstPaint);
   mIsFirstPaint = false;
 
   if (!validTransaction) {
@@ -1028,9 +1029,9 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvEmptyTransaction(
     nsTArray<OpUpdateResource>&& aResourceUpdates,
     nsTArray<RefCountedShmem>&& aSmallShmems,
     nsTArray<ipc::Shmem>&& aLargeShmems, const wr::IdNamespace& aIdNamespace,
-    const VsyncId& aVsyncId, const TimeStamp& aRefreshStartTime,
-    const TimeStamp& aTxnStartTime, const nsCString& aTxnURL,
-    const TimeStamp& aFwdTime) {
+    const VsyncId& aVsyncId, const TimeStamp& aVsyncStartTime,
+    const TimeStamp& aRefreshStartTime, const TimeStamp& aTxnStartTime,
+    const nsCString& aTxnURL, const TimeStamp& aFwdTime) {
   if (mDestroyed) {
     for (const auto& op : aToDestroy) {
       DestroyActor(op);
@@ -1119,7 +1120,8 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvEmptyTransaction(
   // Only register a value for CONTENT_FRAME_TIME telemetry if we actually drew
   // something. It is for consistency with disabling WebRender.
   HoldPendingTransactionId(mWrEpoch, aTransactionId, false, aVsyncId,
-                           aRefreshStartTime, aTxnStartTime, aTxnURL, aFwdTime,
+                           aVsyncStartTime, aRefreshStartTime, aTxnStartTime,
+                           aTxnURL, aFwdTime,
                            /* aIsFirstPaint */ false,
                            /* aUseForTelemetry */ scheduleComposite);
 
@@ -1822,13 +1824,15 @@ void WebRenderBridgeParent::MaybeGenerateFrame(VsyncId aId,
 void WebRenderBridgeParent::HoldPendingTransactionId(
     const wr::Epoch& aWrEpoch, TransactionId aTransactionId,
     bool aContainsSVGGroup, const VsyncId& aVsyncId,
-    const TimeStamp& aRefreshStartTime, const TimeStamp& aTxnStartTime,
-    const nsCString& aTxnURL, const TimeStamp& aFwdTime,
-    const bool aIsFirstPaint, const bool aUseForTelemetry) {
+    const TimeStamp& aVsyncStartTime, const TimeStamp& aRefreshStartTime,
+    const TimeStamp& aTxnStartTime, const nsCString& aTxnURL,
+    const TimeStamp& aFwdTime, const bool aIsFirstPaint,
+    const bool aUseForTelemetry) {
   MOZ_ASSERT(aTransactionId > LastPendingTransactionId());
   mPendingTransactionIds.push_back(PendingTransactionId(
-      aWrEpoch, aTransactionId, aContainsSVGGroup, aVsyncId, aRefreshStartTime,
-      aTxnStartTime, aTxnURL, aFwdTime, aIsFirstPaint, aUseForTelemetry));
+      aWrEpoch, aTransactionId, aContainsSVGGroup, aVsyncId, aVsyncStartTime,
+      aRefreshStartTime, aTxnStartTime, aTxnURL, aFwdTime, aIsFirstPaint,
+      aUseForTelemetry));
 }
 
 TransactionId WebRenderBridgeParent::LastPendingTransactionId() {
@@ -2025,6 +2029,15 @@ TransactionId WebRenderBridgeParent::FlushTransactionIdsForEpoch(
           Telemetry::AccumulateCategorical(
               LABELS_CONTENT_FRAME_TIME_REASON::SlowComposite);
         }
+      }
+
+      if (!(transactionId.mVsyncId == VsyncId()) &&
+          transactionId.mVsyncStartTime) {
+        latencyMs = (aEndTime - transactionId.mVsyncStartTime).ToMilliseconds();
+        latencyNorm = latencyMs / mVsyncRate.ToMilliseconds();
+        fracLatencyNorm = lround(latencyNorm * 100.0);
+        Telemetry::Accumulate(Telemetry::CONTENT_FRAME_TIME_VSYNC,
+                              fracLatencyNorm);
       }
     }
 

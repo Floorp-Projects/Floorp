@@ -30,6 +30,13 @@ struct ParamTraits<mozilla::gfx::VRDisplayCapabilityFlags>
           mozilla::gfx::VRDisplayCapabilityFlags::Cap_All> {};
 
 template <>
+struct ParamTraits<mozilla::gfx::OpenVRControllerType>
+    : public ContiguousEnumSerializer<
+          mozilla::gfx::OpenVRControllerType,
+          mozilla::gfx::OpenVRControllerType::Vive,
+          mozilla::gfx::OpenVRControllerType::NumOpenVRControllerTypes> {};
+
+template <>
 struct ParamTraits<mozilla::gfx::VRDisplayState> {
   typedef mozilla::gfx::VRDisplayState paramType;
 
