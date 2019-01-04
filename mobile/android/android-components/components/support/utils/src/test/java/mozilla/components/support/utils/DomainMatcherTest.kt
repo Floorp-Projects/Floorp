@@ -13,26 +13,57 @@ class DomainMatcherTest {
     fun `should perform basic domain matching for a given query`() {
         assertNull(segmentAwareDomainMatch("moz", listOf()))
 
-        val urls = listOf("http://www.mozilla.org", "http://firefox.com", "https://en.wikipedia.org/wiki/Mozilla", "about:config")
+        val urls = listOf(
+                "http://www.mozilla.org", "http://Firefox.com",
+                "https://mobile.twitter.com", "https://m.youtube.com",
+                "https://en.Wikipedia.org/Wiki/Mozilla",
+                "http://192.168.254.254:8000", "http://192.168.254.254:8000/admin",
+                "about:config"
+        )
+        // Full url matching.
+        assertEquals(
+                DomainMatch("http://www.mozilla.org", "http://www.mozilla.org"),
+                segmentAwareDomainMatch("http://www.m", urls)
+        )
+        // Protocol stripping.
+        assertEquals(
+                DomainMatch("http://www.mozilla.org", "www.mozilla.org"),
+                segmentAwareDomainMatch("www.moz", urls)
+        )
+        // Subdomain stripping.
         assertEquals(
                 DomainMatch("http://www.mozilla.org", "mozilla.org"),
                 segmentAwareDomainMatch("moz", urls)
         )
         assertEquals(
-                DomainMatch("http://www.mozilla.org", "www.mozilla.org"),
-                segmentAwareDomainMatch("www.moz", urls)
+                DomainMatch("https://mobile.twitter.com", "twitter.com"),
+                segmentAwareDomainMatch("twit", urls)
         )
         assertEquals(
-                DomainMatch("https://en.wikipedia.org/wiki/Mozilla", "en.wikipedia.org/wiki/Mozilla"),
+                DomainMatch("https://m.youtube.com", "youtube.com"),
+                segmentAwareDomainMatch("yo", urls)
+        )
+        // Case insensitivity in the host and in the path. Subdomain matching and stripping.
+        assertEquals(
+                DomainMatch("https://en.wikipedia.org/wiki/mozilla", "en.wikipedia.org/wiki/mozilla"),
                 segmentAwareDomainMatch("en", urls)
+        )
+        assertEquals(
+                DomainMatch("https://en.wikipedia.org/wiki/mozilla", "en.wikipedia.org/wiki/mozilla"),
+                segmentAwareDomainMatch("en.wikipedia.org/wi", urls)
         )
         assertEquals(
                 DomainMatch("http://firefox.com", "firefox.com"),
                 segmentAwareDomainMatch("fire", urls)
         )
+        // Urls with ports.
         assertEquals(
-                DomainMatch("http://www.mozilla.org", "http://www.mozilla.org"),
-                segmentAwareDomainMatch("http://www.m", urls)
+                DomainMatch("http://192.168.254.254:8000", "192.168.254.254:8000"),
+                segmentAwareDomainMatch("192", urls)
+        )
+        assertEquals(
+                DomainMatch("http://192.168.254.254:8000/admin", "192.168.254.254:8000/admin"),
+                segmentAwareDomainMatch("192.168.254.254:8000/a", urls)
         )
 
         assertNull(segmentAwareDomainMatch("nomatch", urls))

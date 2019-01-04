@@ -202,8 +202,8 @@ class InMemoryHistoryStorageTest {
 
         history.recordVisit("https://en.wikipedia.org/wiki/Mozilla", VisitType.LINK)
         res = history.getAutocompleteSuggestion("en")!!
-        assertEquals("en.wikipedia.org/wiki/Mozilla", res.text)
-        assertEquals("https://en.wikipedia.org/wiki/Mozilla", res.url)
+        assertEquals("en.wikipedia.org/wiki/mozilla", res.text)
+        assertEquals("https://en.wikipedia.org/wiki/mozilla", res.url)
         assertEquals("memoryHistory", res.source)
         assertEquals(3, res.totalItems)
 
