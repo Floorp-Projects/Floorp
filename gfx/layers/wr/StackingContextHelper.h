@@ -55,10 +55,6 @@ class MOZ_RAII StackingContextHelper {
   // Export the inherited scale
   gfx::Size GetInheritedScale() const { return mScale; }
 
-  const gfx::Matrix& GetInheritedTransform() const {
-    return mInheritedTransform;
-  }
-
   const gfx::Matrix& GetSnappingSurfaceTransform() const {
     return mSnappingSurfaceTransform;
   }
