@@ -27,31 +27,16 @@ import org.mozilla.gecko.GeckoAppShell;
     private volatile boolean mObservingVsync;
 
     private VsyncSource() {
-        // Use a dedicated lock object because |mainHandler| might synchronize
-        // on itself internally and we don't want to risk getting stuck for such
-        // a silly reason.
-        final Object lock = new Object();
-
         Handler mainHandler = new Handler(Looper.getMainLooper());
         mainHandler.post(new Runnable() {
             @Override
             public void run() {
-                synchronized (lock) {
-                    mChoreographer = Choreographer.getInstance();
-                    lock.notifyAll();
+                mChoreographer = Choreographer.getInstance();
+                if (mObservingVsync) {
+                    mChoreographer.postFrameCallback(VsyncSource.this);
                 }
             }
         });
-
-        synchronized (lock) {
-            while (mChoreographer == null) {
-                try {
-                    lock.wait();
-                } catch (final InterruptedException e) {
-                    // Ignore
-                }
-            }
-        }
     }
 
     @WrapForJNI(stubName = "NotifyVsync")
@@ -74,10 +59,13 @@ import org.mozilla.gecko.GeckoAppShell;
     public synchronized boolean observeVsync(boolean enable) {
         if (mObservingVsync != enable) {
             mObservingVsync = enable;
-            if (enable) {
-                mChoreographer.postFrameCallback(this);
-            } else {
-                mChoreographer.removeFrameCallback(this);
+
+            if (mChoreographer != null) {
+                if (enable) {
+                    mChoreographer.postFrameCallback(this);
+                } else {
+                    mChoreographer.removeFrameCallback(this);
+                }
             }
         }
         return mObservingVsync;
