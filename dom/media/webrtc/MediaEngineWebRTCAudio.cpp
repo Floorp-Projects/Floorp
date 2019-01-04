@@ -516,10 +516,6 @@ nsresult MediaEngineWebRTCMicrophoneSource::SetTrack(
   MOZ_ASSERT(aStream);
   MOZ_ASSERT(IsTrackIDExplicit(aTrackID));
 
-  if (mStream && mStream->Graph() != aStream->Graph()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
   MOZ_ASSERT(!mStream);
   MOZ_ASSERT(mTrackID == TRACK_NONE);
   MOZ_ASSERT(mPrincipal == PRINCIPAL_HANDLE_NONE);
