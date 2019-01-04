@@ -19,6 +19,7 @@ permalink: /changelog/
 
 * **browser-engine-system**
   * Added support for JavaScript alerts on SystemEngineView.
+  * Added support for [datetime-local](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/datetime-local) and [time](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/time) pickers.
 
 * **feature-prompts**, **browser-engine-gecko***
   * Added support for Authentication dialogs.

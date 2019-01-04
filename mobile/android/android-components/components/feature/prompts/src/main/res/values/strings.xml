@@ -15,6 +15,12 @@
     <!-- Title of a date picker dialog, this text is shown above a date picker. -->
     <string name="mozac_feature_prompts_pick_a_date">Pick a date</string>
 
+    <!-- Title of a time picker dialog, this text is shown above a time picker. -->
+    <string name="mozac_feature_prompts_pick_a_time">Pick a time</string>
+
+    <!-- Title of a date and time picker dialog, this text is shown above the picker. -->
+    <string name="mozac_feature_prompts_pick_a_date_and_time">Pick a date and time</string>
+
     <!-- Text for a positive button, when an user selects a date in date/time picker. -->
     <string name="mozac_feature_prompts_set_date">Set</string>
 

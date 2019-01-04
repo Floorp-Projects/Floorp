@@ -52,6 +52,7 @@ import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
+import java.security.InvalidParameterException
 import java.util.Date
 import java.util.UUID
 
@@ -304,49 +305,84 @@ class PromptFeatureTest {
     }
 
     @Test
-    fun `Selecting a date or calling onClear with unknown sessionId will not consume promptRequest`() {
-        val session = getSelectedSession()
-        var onClearWasCalled = false
-        var selectedDate: Date? = null
-        val promptRequest = PromptRequest.Date("title", Date(), null, null, { date -> selectedDate = date }) {
-            onClearWasCalled = true
+    fun `Selecting a time or calling onClear with unknown sessionId will not consume promptRequest`() {
+
+        val timeSelectionTypes = listOf(
+            PromptRequest.TimeSelection.Type.DATE,
+            PromptRequest.TimeSelection.Type.DATE_AND_TIME,
+            PromptRequest.TimeSelection.Type.TIME
+        )
+
+        timeSelectionTypes.forEach { timeType ->
+
+            val session = getSelectedSession()
+            var onClearWasCalled = false
+            var selectedDate: Date? = null
+
+            val promptRequest = PromptRequest.TimeSelection(
+                "title", Date(),
+                null,
+                null,
+                timeType,
+                { date -> selectedDate = date }) {
+                onClearWasCalled = true
+            }
+
+            promptFeature.start()
+
+            session.promptRequest = Consumable.from(promptRequest)
+
+            promptFeature.onConfirm("unknown_sessionId", Date())
+
+            assertFalse(session.promptRequest.isConsumed())
+            assertNull(selectedDate)
+            session.promptRequest = Consumable.from(promptRequest)
+
+            promptFeature.onClear("unknown_sessionId")
+            assertFalse(onClearWasCalled)
         }
-
-        promptFeature.start()
-
-        session.promptRequest = Consumable.from(promptRequest)
-
-        promptFeature.onConfirm("unknown_sessionId", Date())
-
-        assertFalse(session.promptRequest.isConsumed())
-        assertNull(selectedDate)
-        session.promptRequest = Consumable.from(promptRequest)
-
-        promptFeature.onClear("unknown_sessionId")
-        assertFalse(onClearWasCalled)
     }
 
     @Test
-    fun `selecting a date will consume promptRequest`() {
-        val session = getSelectedSession()
-        var onClearWasCalled = false
-        var selectedDate: Date? = null
-        val promptRequest = PromptRequest.Date("title", Date(), null, null, { date -> selectedDate = date }) {
-            onClearWasCalled = true
+    fun `selecting a time will consume promptRequest`() {
+        val timeSelectionTypes = listOf(
+            PromptRequest.TimeSelection.Type.DATE,
+            PromptRequest.TimeSelection.Type.DATE_AND_TIME,
+            PromptRequest.TimeSelection.Type.TIME
+        )
+
+        timeSelectionTypes.forEach { timeType ->
+
+            val session = getSelectedSession()
+            var onClearWasCalled = false
+            var selectedDate: Date? = null
+            val promptRequest = PromptRequest.TimeSelection(
+                "title", Date(),
+                null,
+                null,
+                PromptRequest.TimeSelection.Type.DATE,
+                { date -> selectedDate = date }) {
+                onClearWasCalled = true
+            }
+
+            promptFeature.start()
+            session.promptRequest = Consumable.from(promptRequest)
+
+            val date = Date()
+            promptFeature.onConfirm(session.id, Date())
+
+            assertTrue(session.promptRequest.isConsumed())
+            assertEquals(selectedDate, date)
+            session.promptRequest = Consumable.from(promptRequest)
+
+            promptFeature.onClear(session.id)
+            assertTrue(onClearWasCalled)
         }
+    }
 
-        promptFeature.start()
-        session.promptRequest = Consumable.from(promptRequest)
-
-        val date = Date()
-        promptFeature.onConfirm(session.id, Date())
-
-        assertTrue(session.promptRequest.isConsumed())
-        assertEquals(selectedDate, date)
-        session.promptRequest = Consumable.from(promptRequest)
-
-        promptFeature.onClear(session.id)
-        assertTrue(onClearWasCalled)
+    @Test(expected = InvalidParameterException::class)
+    fun `calling handleDialogsRequest with not a promptRequest type will throw an exception`() {
+        promptFeature.handleDialogsRequest(mock<PromptRequest.File>(), mock())
     }
 
     @Test(expected = IllegalStateException::class)

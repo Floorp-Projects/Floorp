@@ -55,17 +55,23 @@ sealed class PromptRequest {
      * @property initialDate date that dialog should be set by default.
      * @property minimumDate date allow to be selected.
      * @property maximumDate date allow to be selected.
+     * @property type indicate which [Type] of selection de user wants.
      * @property onSelect callback that is called when the date is selected.
      * @property onClear callback that is called when the user requests the picker to be clear up.
      */
-    data class Date(
+    class TimeSelection(
         val title: String,
         val initialDate: java.util.Date,
         val minimumDate: java.util.Date?,
         val maximumDate: java.util.Date?,
+        val type: Type = Type.DATE,
         val onSelect: (java.util.Date) -> Unit,
         val onClear: () -> Unit
-    ) : PromptRequest()
+    ) : PromptRequest() {
+        enum class Type {
+            DATE, DATE_AND_TIME, TIME
+        }
+    }
 
     /**
      * Value type that represents a request for a selecting one or multiple files.

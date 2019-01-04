@@ -9,6 +9,7 @@ import android.net.Uri
 import android.support.annotation.VisibleForTesting
 import mozilla.components.browser.engine.gecko.GeckoEngineSession
 import mozilla.components.concept.engine.prompt.Choice
+import mozilla.components.concept.engine.prompt.PromptRequest.TimeSelection
 import mozilla.components.concept.engine.prompt.PromptRequest.Alert
 import mozilla.components.concept.engine.prompt.PromptRequest.MenuChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.MultipleChoice
@@ -47,6 +48,7 @@ import org.mozilla.geckoview.GeckoSession.PromptDelegate.DATETIME_TYPE_MONTH
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.DATETIME_TYPE_TIME
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.DATETIME_TYPE_WEEK
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.FILE_TYPE_MULTIPLE
+import java.security.InvalidParameterException
 
 typealias GeckoChoice = GeckoSession.PromptDelegate.Choice
 
@@ -136,45 +138,26 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
         val onClear: () -> Unit = {
             geckoCallback.confirm("")
         }
-        when (type) {
-            DATETIME_TYPE_DATE -> {
-                notifyDatePromptRequest(
-                    title ?: "",
-                    initialDateString,
-                    minDate,
-                    maxDate,
-                    onClear,
-                    "yyyy-MM-dd",
-                    geckoCallback
-                )
-            }
-            DATETIME_TYPE_MONTH -> {
-                notifyDatePromptRequest(
-                    title ?: "",
-                    initialDateString,
-                    minDate,
-                    maxDate,
-                    onClear,
-                    "yyyy-MM",
-                    geckoCallback
-                )
-            }
-            DATETIME_TYPE_WEEK -> {
-                notifyDatePromptRequest(
-                    title ?: "",
-                    initialDateString,
-                    minDate,
-                    maxDate,
-                    onClear,
-                    "yyyy-'W'ww",
-                    geckoCallback
-                )
-            }
-            DATETIME_TYPE_TIME -> {
-            }
-            DATETIME_TYPE_DATETIME_LOCAL -> {
+        val format = when (type) {
+            DATETIME_TYPE_DATE -> "yyyy-MM-dd"
+            DATETIME_TYPE_MONTH -> "yyyy-MM"
+            DATETIME_TYPE_WEEK -> "yyyy-'W'ww"
+            DATETIME_TYPE_TIME -> "HH:mm"
+            DATETIME_TYPE_DATETIME_LOCAL -> "yyyy-MM-dd'T'HH:mm"
+            else -> {
+                throw InvalidParameterException("$type is not a valid DatetimeType")
             }
         }
+
+        notifyDatePromptRequest(
+            title ?: "",
+            initialDateString,
+            minDate,
+            maxDate,
+            onClear,
+            format,
+            geckoCallback
+        )
     }
 
     override fun onFilePrompt(
@@ -345,10 +328,15 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
             val stringDate = it.toString(format)
             geckoCallback.confirm(stringDate)
         }
+
+        val selectionType = when (format) {
+            "HH:mm" -> PromptRequest.TimeSelection.Type.TIME
+            "yyyy-MM-dd'T'HH:mm" -> PromptRequest.TimeSelection.Type.DATE_AND_TIME
+            else -> PromptRequest.TimeSelection.Type.DATE
+        }
+
         geckoEngineSession.notifyObservers {
-            onPromptRequest(
-                PromptRequest.Date(title, initialDate, minDate, maxDate, onSelect, onClear)
-            )
+            onPromptRequest(TimeSelection(title, initialDate, minDate, maxDate, selectionType, onSelect, onClear))
         }
     }
 

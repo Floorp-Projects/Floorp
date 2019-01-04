@@ -32,6 +32,8 @@ import mozilla.components.feature.prompts.ChoiceDialogFragment.Companion.SINGLE_
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.ktx.android.content.isPermissionGranted
 import java.security.InvalidParameterException
+import mozilla.components.concept.engine.prompt.PromptRequest.TimeSelection
+
 import java.util.Date
 
 @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
@@ -328,7 +330,7 @@ class PromptFeature(
         val session = sessionManager.findSessionById(sessionId) ?: return
         session.promptRequest.consume {
             when (it) {
-                is PromptRequest.Date -> it.onSelect(value as Date)
+                is PromptRequest.TimeSelection -> it.onSelect(value as Date)
                 is PromptRequest.Color -> it.onConfirm(value as String)
             }
             true
@@ -344,7 +346,7 @@ class PromptFeature(
         val session = sessionManager.findSessionById(sessionId) ?: return
         session.promptRequest.consume {
             when (it) {
-                is PromptRequest.Date -> it.onClear()
+                is PromptRequest.TimeSelection -> it.onClear()
             }
             true
         }
@@ -402,7 +404,8 @@ class PromptFeature(
     }
 
     @Suppress("ComplexMethod")
-    private fun handleDialogsRequest(
+    @VisibleForTesting(otherwise = PRIVATE)
+    internal fun handleDialogsRequest(
         promptRequest: PromptRequest,
         session: Session
     ) {
@@ -430,9 +433,23 @@ class PromptFeature(
                 }
             }
 
-            is PromptRequest.Date -> {
+            is PromptRequest.TimeSelection -> {
+
+                val selectionType = when (promptRequest.type) {
+                    TimeSelection.Type.DATE -> TimePickerDialogFragment.SELECTION_TYPE_DATE
+                    TimeSelection.Type.DATE_AND_TIME -> TimePickerDialogFragment.SELECTION_TYPE_DATE_AND_TIME
+                    TimeSelection.Type.TIME -> TimePickerDialogFragment.SELECTION_TYPE_TIME
+                }
+
                 with(promptRequest) {
-                    DatePickerDialogFragment.newInstance(session.id, title, initialDate, minimumDate, maximumDate)
+                    TimePickerDialogFragment.newInstance(
+                        session.id,
+                        title,
+                        initialDate,
+                        minimumDate,
+                        maximumDate,
+                        selectionType
+                    )
                 }
             }
 

@@ -4,6 +4,7 @@
 
 package mozilla.components.concept.engine.prompt
 
+import mozilla.components.concept.engine.prompt.PromptRequest.TimeSelection.Type
 import mozilla.components.concept.engine.prompt.PromptRequest.SingleChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.MultipleChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.MenuChoice
@@ -40,8 +41,15 @@ class PromptRequestTest {
         alert.onDismiss()
         alert.onShouldShowNoMoreDialogs(true)
 
-        val dateRequest = PromptRequest.Date("title", Date(), Date(), Date(), {}) {}
+        val dateRequest = PromptRequest.TimeSelection(
+            "title",
+            Date(),
+            Date(),
+            Date(),
+            Type.DATE,
+            {}) {}
         assertEquals(dateRequest.title, "title")
+        assertEquals(dateRequest.type, Type.DATE)
         assertNotNull(dateRequest.initialDate)
         assertNotNull(dateRequest.minimumDate)
         assertNotNull(dateRequest.maximumDate)
