@@ -7600,6 +7600,9 @@ static bool DumpScopeChain(JSContext* cx, unsigned argc, Value* vp) {
       return false;
     }
     script = JSFunction::getOrCreateScript(cx, fun);
+    if (!script) {
+      return false;
+    }
   } else {
     script = obj->as<ModuleObject>().maybeScript();
     if (!script) {
