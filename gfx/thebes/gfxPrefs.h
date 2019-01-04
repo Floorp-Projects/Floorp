@@ -378,11 +378,7 @@ class gfxPrefs final {
   DECL_GFX_PREF(Once, "dom.vr.enabled",                        VREnabled, bool, false);
   DECL_GFX_PREF(Live, "dom.vr.autoactivate.enabled",           VRAutoActivateEnabled, bool, false);
   DECL_GFX_PREF(Live, "dom.vr.controller_trigger_threshold",   VRControllerTriggerThreshold, float, 0.1f);
-#if defined(XP_WIN) && defined(NIGHTLY_BUILD)
   DECL_GFX_PREF(Once, "dom.vr.external.enabled",               VRExternalEnabled, bool, true);
-#else
-  DECL_GFX_PREF(Once, "dom.vr.external.enabled",               VRExternalEnabled, bool, false);
-#endif
   DECL_GFX_PREF(Live, "dom.vr.external.notdetected.timeout",   VRExternalNotDetectedTimeout, int32_t, 60000);
   DECL_GFX_PREF(Live, "dom.vr.external.quit.timeout",          VRExternalQuitTimeout, int32_t, 10000);
   DECL_GFX_PREF(Live, "dom.vr.navigation.timeout",             VRNavigationTimeout, int32_t, 1000);
@@ -405,11 +401,7 @@ class gfxPrefs final {
   DECL_GFX_PREF(Live, "dom.vr.puppet.enabled",                 VRPuppetEnabled, bool, false);
   DECL_GFX_PREF(Live, "dom.vr.puppet.submitframe",             VRPuppetSubmitFrame, uint32_t, 0);
   DECL_GFX_PREF(Live, "dom.vr.display.rafMaxDuration",         VRDisplayRafMaxDuration, uint32_t, 50);
-#if defined(XP_WIN) && defined(NIGHTLY_BUILD)
-  DECL_GFX_PREF(Once, "dom.vr.process.enabled",                VRProcessEnabled, bool, true);
-#else
   DECL_GFX_PREF(Once, "dom.vr.process.enabled",                VRProcessEnabled, bool, false);
-#endif
   DECL_GFX_PREF(Once, "dom.vr.service.enabled",                VRServiceEnabled, bool, true);
   DECL_GFX_PREF(Live, "dom.w3c_pointer_events.enabled",        PointerEventsEnabled, bool, false);
 
