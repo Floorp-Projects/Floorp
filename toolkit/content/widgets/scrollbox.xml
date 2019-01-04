@@ -66,7 +66,7 @@
         }
       ]]></destructor>
 
-      <field name="_scrollbox">
+      <field name="scrollbox">
         document.getAnonymousElementByAttribute(this, "anonid", "scrollbox");
       </field>
       <field name="_scrollButtonUp">
@@ -153,29 +153,29 @@
 
       <property name="scrollBoxObject" readonly="true">
         <getter><![CDATA[
-          return this._scrollbox.boxObject;
+          return this.scrollbox.boxObject;
         ]]></getter>
       </property>
 
       <property name="scrollClientRect" readonly="true">
         <getter><![CDATA[
-          return this._scrollbox.getBoundingClientRect();
+          return this.scrollbox.getBoundingClientRect();
         ]]></getter>
       </property>
 
       <property name="scrollClientSize" readonly="true">
         <getter><![CDATA[
           return this.orient == "vertical" ?
-                 this._scrollbox.clientHeight :
-                 this._scrollbox.clientWidth;
+                 this.scrollbox.clientHeight :
+                 this.scrollbox.clientWidth;
         ]]></getter>
       </property>
 
       <property name="scrollSize" readonly="true">
         <getter><![CDATA[
           return this.orient == "vertical" ?
-                 this._scrollbox.scrollHeight :
-                 this._scrollbox.scrollWidth;
+                 this.scrollbox.scrollHeight :
+                 this.scrollbox.scrollWidth;
         ]]></getter>
       </property>
 
@@ -193,8 +193,8 @@
       <property name="scrollPosition" readonly="true">
         <getter><![CDATA[
           return this.orient == "vertical" ?
-                 this._scrollbox.scrollTop :
-                 this._scrollbox.scrollLeft;
+                 this.scrollbox.scrollTop :
+                 this.scrollbox.scrollLeft;
         ]]></getter>
       </property>
 
@@ -204,7 +204,7 @@
 
       <field name="_isRTLScrollbox"><![CDATA[
         this.orient != "vertical" &&
-        document.defaultView.getComputedStyle(this._scrollbox).direction == "rtl";
+        document.defaultView.getComputedStyle(this.scrollbox).direction == "rtl";
       ]]></field>
 
       <method name="_onButtonClick">
@@ -298,7 +298,8 @@
             window.cancelAnimationFrame(this._ensureElementIsVisibleAnimationFrame);
           }
           this._ensureElementIsVisibleAnimationFrame = window.requestAnimationFrame(() => {
-            element.scrollIntoView({ behavior: aInstant ? "instant" : "auto" });
+            element.scrollIntoView({ block: "nearest",
+                                     behavior: aInstant ? "instant" : "auto" });
             this._ensureElementIsVisibleAnimationFrame = 0;
           });
         ]]></body>
@@ -538,7 +539,7 @@
         <body><![CDATA[
           let scrollOptions = { behavior: aInstant ? "instant" : "auto" };
           scrollOptions[this._startEndProps[0]] = aPixels;
-          this._scrollbox.scrollBy(scrollOptions);
+          this.scrollbox.scrollBy(scrollOptions);
         ]]></body>
       </method>
 
@@ -564,6 +565,11 @@
           // getBoundsWithoutFlushing.
           window.requestAnimationFrame(() => {
             setTimeout(() => {
+              if (!this._startEndProps) {
+                // We've been destroyed in the meantime.
+                return;
+              }
+
               this._scrollButtonUpdatePending = false;
 
               let scrolledToStart = false;
@@ -584,11 +590,11 @@
                 }
 
                 if (leftOrTopElement &&
-                    leftOrTopEdge(leftOrTopElement) >= leftOrTopEdge(this._scrollbox)) {
+                    leftOrTopEdge(leftOrTopElement) >= leftOrTopEdge(this.scrollbox)) {
                   scrolledToStart = !this._isRTLScrollbox;
                   scrolledToEnd = this._isRTLScrollbox;
                 } else if (rightOrBottomElement &&
-                           rightOrBottomEdge(rightOrBottomElement) <= rightOrBottomEdge(this._scrollbox)) {
+                           rightOrBottomEdge(rightOrBottomElement) <= rightOrBottomEdge(this.scrollbox)) {
                   scrolledToStart = this._isRTLScrollbox;
                   scrolledToEnd = !this._isRTLScrollbox;
                 }
