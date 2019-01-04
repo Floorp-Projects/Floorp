@@ -534,6 +534,10 @@ impl<'a> RawtestHarness<'a> {
         assert!(pixels_first != pixels_second);
 
         // cleanup
+        txn = Transaction::new();
+        txn.delete_blob_image(blob_img);
+        self.wrench.api.update_resources(txn.resource_updates);
+
         *self.wrench.callbacks.lock().unwrap() = blob::BlobCallbacks::new();
     }
 
@@ -662,6 +666,11 @@ impl<'a> RawtestHarness<'a> {
         assert_eq!(img2_requested.load(Ordering::SeqCst), 2);
 
         // cleanup
+        txn = Transaction::new();
+        txn.delete_blob_image(blob_img);
+        txn.delete_blob_image(blob_img2);
+        self.wrench.api.update_resources(txn.resource_updates);
+
         *self.wrench.callbacks.lock().unwrap() = blob::BlobCallbacks::new();
     }
 
@@ -760,6 +769,11 @@ impl<'a> RawtestHarness<'a> {
 
         assert!(pixels_first == pixels_second);
         assert!(pixels_first != pixels_third);
+
+        // cleanup
+        txn = Transaction::new();
+        txn.delete_blob_image(blob_img);
+        self.wrench.api.update_resources(txn.resource_updates);
     }
 
     // Ensures that content doing a save-restore produces the same results as not
