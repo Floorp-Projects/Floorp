@@ -1490,10 +1490,12 @@ bool nsIFrame::ChildrenHavePerspective(
 }
 
 bool nsIFrame::HasOpacityInternal(float aThreshold,
+                                  const nsStyleDisplay* aStyleDisplay,
+                                  const nsStyleEffects* aStyleEffects,
                                   EffectSet* aEffectSet) const {
   MOZ_ASSERT(0.0 <= aThreshold && aThreshold <= 1.0, "Invalid argument");
-  if (StyleEffects()->mOpacity < aThreshold ||
-      (StyleDisplay()->mWillChangeBitField & NS_STYLE_WILL_CHANGE_OPACITY)) {
+  if (aStyleEffects->mOpacity < aThreshold ||
+      (aStyleDisplay->mWillChangeBitField & NS_STYLE_WILL_CHANGE_OPACITY)) {
     return true;
   }
 
@@ -1518,6 +1520,7 @@ bool nsIFrame::IsSVGTransformed(gfx::Matrix* aOwnTransforms,
 }
 
 bool nsIFrame::Extend3DContext(const nsStyleDisplay* aStyleDisplay,
+                               const nsStyleEffects* aStyleEffects,
                                mozilla::EffectSet* aEffectSet) const {
   if (!(mState & NS_FRAME_MAY_BE_TRANSFORMED)) {
     return false;
@@ -1534,11 +1537,11 @@ bool nsIFrame::Extend3DContext(const nsStyleDisplay* aStyleDisplay,
     return false;
   }
 
-  if (HasOpacity(aEffectSet)) {
+  const nsStyleEffects* effects = StyleEffectsWithOptionalParam(aStyleEffects);
+  if (HasOpacity(disp, effects, aEffectSet)) {
     return false;
   }
 
-  const nsStyleEffects* effects = StyleEffects();
   return !nsFrame::ShouldApplyOverflowClipping(this, disp) &&
          !GetClipPropClipRect(disp, effects, GetSize()) &&
          !nsSVGIntegrationUtils::UsingEffectsForFrame(this);
@@ -2723,9 +2726,21 @@ void nsIFrame::BuildDisplayListForStackingContext(
   nsRect visibleRect = aBuilder->GetVisibleRect();
   nsRect dirtyRect = aBuilder->GetDirtyRect();
 
+  // We build an opacity item if it's not going to be drawn by SVG content.
+  // We could in principle skip creating an nsDisplayOpacity item if
+  // nsDisplayOpacity::NeedsActiveLayer returns false and usingSVGEffects is
+  // true (the nsDisplayFilter/nsDisplayMasksAndClipPaths could handle the
+  // opacity). Since SVG has perf issues where we sometimes spend a lot of
+  // time creating display list items that might be helpful.  We'd need to
+  // restore our mechanism to do that (changed in bug 1482403), and we'd
+  // need to invalidate the frame if the value that would be return from
+  // NeedsActiveLayer was to change, which we don't currently do.
+  const bool useOpacity = HasVisualOpacity(disp, effects, effectSet) &&
+                          !nsSVGUtils::CanOptimizeOpacity(this);
+
   const bool isTransformed = IsTransformed(disp);
   const bool hasPerspective = isTransformed && HasPerspective(disp);
-  const bool extend3DContext = Extend3DContext(disp, effectSet);
+  const bool extend3DContext = Extend3DContext(disp, effects, effectSet);
   const bool combines3DTransformWithAncestors =
       (extend3DContext || isTransformed) &&
       Combines3DTransformWithAncestors(disp);
@@ -2830,18 +2845,6 @@ void nsIFrame::BuildDisplayListForStackingContext(
         this, visibleRect);
     aBuilder->EnterSVGEffectsContents(&hoistedScrollInfoItemsStorage);
   }
-
-  // We build an opacity item if it's not going to be drawn by SVG content.
-  // We could in principle skip creating an nsDisplayOpacity item if
-  // nsDisplayOpacity::NeedsActiveLayer returns false and usingSVGEffects is
-  // true (the nsDisplayFilter/nsDisplayMasksAndClipPaths could handle the
-  // opacity). Since SVG has perf issues where we sometimes spend a lot of
-  // time creating display list items that might be helpful.  We'd need to
-  // restore our mechanism to do that (changed in bug 1482403), and we'd
-  // need to invalidate the frame if the value that would be return from
-  // NeedsActiveLayer was to change, which we don't currently do.
-  bool useOpacity =
-      HasVisualOpacity(effectSet) && !nsSVGUtils::CanOptimizeOpacity(this);
 
   bool useBlendMode = effects->mMixBlendMode != NS_STYLE_BLEND_NORMAL;
   bool useStickyPosition =
@@ -3550,7 +3553,6 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
 
   // Child is composited if it's transformed, partially transparent, or has
   // SVG effects or a blend mode..
-  EffectSet* effectSet = EffectSet::GetEffectSet(child);
   const nsStyleDisplay* disp = child->StyleDisplay();
   const nsStyleEffects* effects = child->StyleEffects();
   const nsStylePosition* pos = child->StylePosition();
@@ -3558,7 +3560,7 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
   const bool isPositioned = disp->IsAbsPosContainingBlock(child);
 
   const bool isStackingContext =
-      child->IsStackingContext(effectSet, disp, pos, effects, isPositioned) ||
+      child->IsStackingContext(disp, pos, effects, isPositioned) ||
       (aFlags & DISPLAY_CHILD_FORCE_STACKING_CONTEXT);
 
   if (pseudoStackingContext || isStackingContext || isPositioned ||
@@ -8993,7 +8995,7 @@ bool nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
        * the code above set their overflow area to empty. Manually collect these
        * overflow areas now.
        */
-      if (Extend3DContext(disp, effectSet)) {
+      if (Extend3DContext(disp, effects, effectSet)) {
         ComputePreserve3DChildrenOverflow(aOverflowAreas);
       }
     }
@@ -9084,7 +9086,7 @@ void nsIFrame::ComputePreserve3DChildrenOverflow(
 
         // If this child also extends the 3d context, then recurse into it
         // looking for more participants.
-        if (child->Extend3DContext(childDisp)) {
+        if (child->Extend3DContext(childDisp, child->StyleEffects())) {
           child->ComputePreserve3DChildrenOverflow(aOverflowAreas);
         }
       }
@@ -10293,12 +10295,12 @@ void nsIFrame::CreateOwnLayerIfNeeded(nsDisplayListBuilder* aBuilder,
   }
 }
 
-bool nsIFrame::IsStackingContext(EffectSet* aEffectSet,
-                                 const nsStyleDisplay* aStyleDisplay,
+bool nsIFrame::IsStackingContext(const nsStyleDisplay* aStyleDisplay,
                                  const nsStylePosition* aStylePosition,
                                  const nsStyleEffects* aStyleEffects,
                                  bool aIsPositioned) {
-  return HasOpacity(aEffectSet) || IsTransformed(aStyleDisplay) ||
+  return HasOpacity(aStyleDisplay, aStyleEffects, nullptr) ||
+         IsTransformed(aStyleDisplay) ||
          (IsFrameOfType(eSupportsContainLayoutAndPaint) &&
           (aStyleDisplay->IsContainPaint() ||
            aStyleDisplay->IsContainLayout())) ||
@@ -10318,8 +10320,7 @@ bool nsIFrame::IsStackingContext(EffectSet* aEffectSet,
 bool nsIFrame::IsStackingContext() {
   const nsStyleDisplay* disp = StyleDisplay();
   const bool isPositioned = disp->IsAbsPosContainingBlock(this);
-  return IsStackingContext(EffectSet::GetEffectSet(this), disp, StylePosition(),
-                           StyleEffects(), isPositioned);
+  return IsStackingContext(disp, StylePosition(), StyleEffects(), isPositioned);
 }
 
 static bool IsFrameScrolledOutOfView(const nsIFrame* aTarget,
