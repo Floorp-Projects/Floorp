@@ -249,6 +249,13 @@ void safevals() {
   GC();
   use(unsafe3);
 
+  // Unsafe because it's not nullptr anymore.
+  Cell* unsafe3b = &cell;
+  unsafe3b = nullptr;
+  unsafe3b = &cell;
+  GC();
+  use(unsafe3b);
+
   // Hazard involving UniquePtr.
   {
     mozilla::UniquePtr<Cell> unsafe4(&cell);
