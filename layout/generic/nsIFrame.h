@@ -3854,10 +3854,9 @@ class nsIFrame : public nsQueryFrame {
   // Does this frame have "column-span: all" style.
   //
   // Note this only checks computed style, but not testing whether the
-  // containing block formatting context was established by a multicol.
-  // Callers need to consider NS_FRAME_HAS_MULTI_COLUMN_ANCESTOR to check
-  // whether multi-column effects apply or not, or use
-  // IsColumnSpanInMulticolSubtree().
+  // containing block formatting context was established by a multicol. Callers
+  // need to use IsColumnSpanInMulticolSubtree() to check whether multi-column
+  // effects apply or not.
   inline bool IsColumnSpan() const;
 
   // Like IsColumnSpan(), but this also checks whether the frame has a
