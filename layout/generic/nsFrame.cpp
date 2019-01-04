@@ -3389,34 +3389,86 @@ static bool DescendIntoChild(nsDisplayListBuilder* aBuilder,
   return false;
 }
 
+void nsIFrame::BuildDisplayListForSimpleChild(nsDisplayListBuilder* aBuilder,
+                                              nsIFrame* aChild,
+                                              const nsDisplayListSet& aLists) {
+  // This is the shortcut for frames been handled along the common
+  // path, the most common one of THE COMMON CASE mentioned later.
+  MOZ_ASSERT(aChild->Type() != LayoutFrameType::Placeholder);
+  MOZ_ASSERT(!aBuilder->GetSelectedFramesOnly() &&
+                 !aBuilder->GetIncludeAllOutOfFlows(),
+             "It should be held for painting to window");
+  MOZ_ASSERT(aChild->GetStateBits() & NS_FRAME_SIMPLE_DISPLAYLIST);
+
+  const nsPoint offset = aChild->GetOffsetTo(this);
+  const nsRect visible = aBuilder->GetVisibleRect() - offset;
+  const nsRect dirty = aBuilder->GetDirtyRect() - offset;
+
+  if (!DescendIntoChild(aBuilder, aChild, visible, dirty)) {
+    return;
+  }
+
+  nsDisplayListBuilder::AutoBuildingDisplayList buildingForChild(
+      aBuilder, aChild, visible, dirty, false);
+
+  CheckForApzAwareEventHandlers(aBuilder, aChild);
+
+  aBuilder->BuildCompositorHitTestInfoIfNeeded(
+      aChild, aLists.BorderBackground(), false);
+
+  aChild->MarkAbsoluteFramesForDisplayList(aBuilder);
+  aBuilder->AdjustWindowDraggingRegion(aChild);
+  aBuilder->Check();
+  aChild->BuildDisplayList(aBuilder, aLists);
+  aBuilder->Check();
+  aBuilder->DisplayCaret(aChild, aLists.Content());
+#ifdef DEBUG
+  DisplayDebugBorders(aBuilder, aChild, aLists);
+#endif
+}
+
+static bool ShouldSkipFrame(nsDisplayListBuilder* aBuilder,
+                            const nsIFrame* aFrame) {
+  // If painting is restricted to just the background of the top level frame,
+  // then we have nothing to do here.
+  if (aBuilder->IsBackgroundOnly()) {
+    return true;
+  }
+
+  if ((aBuilder->IsForGenerateGlyphMask() ||
+       aBuilder->IsForPaintingSelectionBG()) &&
+      (!aFrame->IsTextFrame() && aFrame->IsLeaf())) {
+    return true;
+  }
+
+  // The placeholder frame should have the same content as the OOF frame.
+  if (aBuilder->GetSelectedFramesOnly() &&
+      (aFrame->IsLeaf() && !aFrame->IsSelected())) {
+    return true;
+  }
+
+  static const nsFrameState skipFlags =
+      (NS_FRAME_TOO_DEEP_IN_FRAME_TREE | NS_FRAME_IS_NONDISPLAY);
+
+  return (aFrame->GetStateBits() & skipFlags);
+}
+
 void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
                                         nsIFrame* aChild,
                                         const nsDisplayListSet& aLists,
                                         uint32_t aFlags) {
   AutoCheckBuilder check(aBuilder);
-  // If painting is restricted to just the background of the top level frame,
-  // then we have nothing to do here.
-  if (aBuilder->IsBackgroundOnly()) return;
 
-  if (aBuilder->IsForGenerateGlyphMask() ||
-      aBuilder->IsForPaintingSelectionBG()) {
-    if (!aChild->IsTextFrame() && aChild->IsLeaf()) {
-      return;
-    }
+  if (ShouldSkipFrame(aBuilder, aChild)) {
+    return;
   }
 
   nsIFrame* child = aChild;
-  if (child->HasAnyStateBits(NS_FRAME_TOO_DEEP_IN_FRAME_TREE |
-                             NS_FRAME_IS_NONDISPLAY))
-    return;
-
   aBuilder->RemoveFromWillChangeBudget(child);
-
-  const bool shortcutPossible =
-      aBuilder->IsPaintingToWindow() && aBuilder->BuildCompositorHitTestInfo();
+  const bool isPaintingToWindow = aBuilder->IsPaintingToWindow();
 
   const bool doingShortcut =
-      shortcutPossible &&
+      isPaintingToWindow &&
       (child->GetStateBits() & NS_FRAME_SIMPLE_DISPLAYLIST) &&
       // Animations may change the value of |HasOpacity()|.
       !(child->GetContent() && child->GetContent()->MayHaveAnimations());
@@ -3428,34 +3480,7 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
   nsRect dirty = aBuilder->GetDirtyRect() - offset;
 
   if (doingShortcut) {
-    // This is the shortcut for frames been handled along the common
-    // path, the most common one of THE COMMON CASE mentioned later.
-    MOZ_ASSERT(child->Type() != LayoutFrameType::Placeholder);
-    MOZ_ASSERT(!aBuilder->GetSelectedFramesOnly() &&
-                   !aBuilder->GetIncludeAllOutOfFlows(),
-               "It should be held for painting to window");
-
-    if (!DescendIntoChild(aBuilder, child, visible, dirty)) {
-      return;
-    }
-
-    nsDisplayListBuilder::AutoBuildingDisplayList buildingForChild(
-        aBuilder, child, visible, dirty, false);
-
-    CheckForApzAwareEventHandlers(aBuilder, child);
-
-    aBuilder->BuildCompositorHitTestInfoIfNeeded(
-        child, aLists.BorderBackground(), false);
-
-    child->MarkAbsoluteFramesForDisplayList(aBuilder);
-    aBuilder->AdjustWindowDraggingRegion(child);
-    aBuilder->Check();
-    child->BuildDisplayList(aBuilder, aLists);
-    aBuilder->Check();
-    aBuilder->DisplayCaret(child, aLists.Content());
-#ifdef DEBUG
-    DisplayDebugBorders(aBuilder, child, aLists);
-#endif
+    BuildDisplayListForSimpleChild(aBuilder, child, aLists);
     return;
   }
 
@@ -3464,7 +3489,7 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
   // It is raised if the control flow strays off the common path.
   // The common path is the most common one of THE COMMON CASE
   // mentioned later.
-  bool awayFromCommonPath = false;
+  bool awayFromCommonPath = !isPaintingToWindow;
 
   // true if this is a real or pseudo stacking context
   bool pseudoStackingContext =
@@ -3479,9 +3504,8 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
   }
 
   nsDisplayListBuilder::OutOfFlowDisplayData* savedOutOfFlowData = nullptr;
-  bool isPlaceholder = false;
-  if (child->IsPlaceholderFrame()) {
-    isPlaceholder = true;
+  const bool isPlaceholder = child->IsPlaceholderFrame();
+  if (isPlaceholder) {
     nsPlaceholderFrame* placeholder = static_cast<nsPlaceholderFrame*>(child);
     child = placeholder->GetOutOfFlowFrame();
     aBuilder->RemoveFromWillChangeBudget(child);
@@ -3520,10 +3544,6 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
 
   NS_ASSERTION(!child->IsPlaceholderFrame(),
                "Should have dealt with placeholders already");
-  if (aBuilder->GetSelectedFramesOnly() && child->IsLeaf() &&
-      !aChild->IsSelected()) {
-    return;
-  }
 
   if (aBuilder->GetIncludeAllOutOfFlows() && isPlaceholder) {
     visible = child->GetVisualOverflowRect();
@@ -3544,7 +3564,7 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
   // Since we're now sure that we're adding this frame to the display list
   // (which means we're painting it, modulo occlusion), mark it as visible
   // within the displayport.
-  if (aBuilder->IsPaintingToWindow() && child->TrackingVisibility()) {
+  if (isPaintingToWindow && child->TrackingVisibility()) {
     child->PresShell()->EnsureFrameInApproximatelyVisibleList(child);
     awayFromCommonPath = true;
   }
@@ -3653,7 +3673,7 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
     const bool differentAGR =
         buildingForChild.IsAnimatedGeometryRoot() || isPositioned;
 
-    if (!awayFromCommonPath && shortcutPossible && !differentAGR &&
+    if (!awayFromCommonPath && !differentAGR &&
         !buildingForChild.MaybeAnimatedGeometryRoot()) {
       // The shortcut is available for the child for next time.
       child->AddStateBits(NS_FRAME_SIMPLE_DISPLAYLIST);
