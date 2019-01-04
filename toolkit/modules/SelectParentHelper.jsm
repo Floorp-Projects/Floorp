@@ -245,7 +245,7 @@ var SelectParentHelper = {
         return;
       }
 
-      let scrollBox = currentMenulist.menupopup.scrollBox;
+      let scrollBox = currentMenulist.menupopup.scrollBox.scrollbox;
       let scrollTop = scrollBox.scrollTop;
 
       let options = msg.data.options;
