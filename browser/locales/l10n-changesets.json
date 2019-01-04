@@ -609,7 +609,7 @@
             "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
-        "revision": "28babf5709fc"
+        "revision": "f2ef76c6ac30"
     },
     "ga-IE": {
         "platforms": [
