@@ -19,16 +19,9 @@
 #include "js/GCHashTable.h"
 #include "js/Result.h"
 #include "js/RootingAPI.h"
-#include "js/TraceKind.h"
 #include "js/TypeDecls.h"
 #include "vm/StringType.h"
 #include "vm/Xdr.h"
-
-namespace JS {
-
-class BigInt;
-
-}  // namespace JS
 
 namespace js {
 
@@ -37,7 +30,7 @@ static bool StringToBigIntImpl(const mozilla::Range<const CharT>& chars,
                                uint8_t radix, Handle<JS::BigInt*> res);
 
 template <XDRMode mode>
-XDRResult XDRBigInt(XDRState<mode>* xdr, MutableHandle<JS::BigInt*> bi);
+XDRResult XDRBigInt(XDRState<mode>* xdr, MutableHandleBigInt bi);
 
 }  // namespace js
 
@@ -50,7 +43,7 @@ class BigInt final : public js::gc::TenuredCell {
                                      uint8_t radix, Handle<BigInt*> res);
   template <js::XDRMode mode>
   friend js::XDRResult js::XDRBigInt(js::XDRState<mode>* xdr,
-                                     MutableHandle<BigInt*> bi);
+                                     MutableHandleBigInt bi);
 
  protected:
   // Reserved word for Cell GC invariants. This also ensures minimum
@@ -111,8 +104,8 @@ class BigInt final : public js::gc::TenuredCell {
   static int64_t toInt64(BigInt* x);
   static uint64_t toUint64(BigInt* x);
 
-  static BigInt* asIntN(JSContext* cx, Handle<BigInt*> x, uint64_t bits);
-  static BigInt* asUintN(JSContext* cx, Handle<BigInt*> x, uint64_t bits);
+  static BigInt* asIntN(JSContext* cx, HandleBigInt x, uint64_t bits);
+  static BigInt* asUintN(JSContext* cx, HandleBigInt x, uint64_t bits);
 
   // Type-checking versions of arithmetic operations. These methods
   // must be called with at least one BigInt operand. Binary
@@ -150,7 +143,7 @@ class BigInt final : public js::gc::TenuredCell {
 
   static bool equal(BigInt* lhs, BigInt* rhs);
   static bool equal(BigInt* lhs, double rhs);
-  static JS::Result<bool> looselyEqual(JSContext* cx, Handle<BigInt*> lhs,
+  static JS::Result<bool> looselyEqual(JSContext* cx, HandleBigInt lhs,
                                        HandleValue rhs);
 
   static bool lessThan(BigInt* x, BigInt* y);
@@ -159,9 +152,9 @@ class BigInt final : public js::gc::TenuredCell {
   // or a string that can't be interpreted as a BigInt.
   static mozilla::Maybe<bool> lessThan(BigInt* lhs, double rhs);
   static mozilla::Maybe<bool> lessThan(double lhs, BigInt* rhs);
-  static bool lessThan(JSContext* cx, Handle<BigInt*> lhs, HandleString rhs,
+  static bool lessThan(JSContext* cx, HandleBigInt lhs, HandleString rhs,
                        mozilla::Maybe<bool>& res);
-  static bool lessThan(JSContext* cx, HandleString lhs, Handle<BigInt*> rhs,
+  static bool lessThan(JSContext* cx, HandleString lhs, HandleBigInt rhs,
                        mozilla::Maybe<bool>& res);
   static bool lessThan(JSContext* cx, HandleValue lhs, HandleValue rhs,
                        mozilla::Maybe<bool>& res);

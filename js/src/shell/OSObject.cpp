@@ -27,7 +27,6 @@
 #include "gc/FreeOp.h"
 #include "js/CharacterEncoding.h"
 #include "js/Conversions.h"
-#include "js/PropertySpec.h"
 #include "js/Wrapper.h"
 #include "shell/jsshell.h"
 #include "util/StringBuffer.h"

@@ -16,10 +16,8 @@ typedef uint32_t HashNumber;
 #include "js/CompilationAndEvaluation.h"
 #include "js/CompileOptions.h"
 #include "js/Conversions.h"
-#include "js/Date.h"
 #include "js/Initialization.h"
 #include "js/MemoryMetrics.h"
-#include "js/PropertySpec.h"
 #include "js/SourceText.h"
 #include "js/StructuredClone.h"
 

@@ -7,7 +7,6 @@
 #include "builtin/Symbol.h"
 
 #include "js/Symbol.h"
-#include "js/PropertySpec.h"
 #include "util/StringBuffer.h"
 #include "vm/SymbolType.h"
 

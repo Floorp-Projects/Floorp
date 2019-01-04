@@ -5,7 +5,6 @@
 #include <limits>
 #include <math.h>
 
-#include "js/Equality.h"  // JS::LooselyEqual
 #include "jsapi-tests/tests.h"
 
 using namespace std;
@@ -15,15 +14,15 @@ struct LooseEqualityFixture : public JSAPITest {
 
   bool leq(JS::HandleValue x, JS::HandleValue y) {
     bool equal;
-    CHECK(JS::LooselyEqual(cx, x, y, &equal) && equal);
-    CHECK(JS::LooselyEqual(cx, y, x, &equal) && equal);
+    CHECK(JS_LooselyEqual(cx, x, y, &equal) && equal);
+    CHECK(JS_LooselyEqual(cx, y, x, &equal) && equal);
     return true;
   }
 
   bool nleq(JS::HandleValue x, JS::HandleValue y) {
     bool equal;
-    CHECK(JS::LooselyEqual(cx, x, y, &equal) && !equal);
-    CHECK(JS::LooselyEqual(cx, y, x, &equal) && !equal);
+    CHECK(JS_LooselyEqual(cx, x, y, &equal) && !equal);
+    CHECK(JS_LooselyEqual(cx, y, x, &equal) && !equal);
     return true;
   }
 };

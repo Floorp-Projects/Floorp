@@ -47,7 +47,6 @@
 #include "js/Debug.h"
 #include "js/HashTable.h"
 #include "js/LocaleSensitive.h"
-#include "js/PropertySpec.h"
 #include "js/SourceText.h"
 #include "js/StableStringChars.h"
 #include "js/StructuredClone.h"

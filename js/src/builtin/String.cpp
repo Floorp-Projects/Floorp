@@ -34,7 +34,6 @@
 #if !EXPOSE_INTL_API
 #include "js/LocaleSensitive.h"
 #endif
-#include "js/PropertySpec.h"
 #include "js/StableStringChars.h"
 #include "js/UniquePtr.h"
 #if ENABLE_INTL_API

@@ -17,7 +17,6 @@
 #include "xpcprivate.h"
 
 #include "jsapi.h"
-#include "js/PropertySpec.h"
 #include "nsJSUtils.h"
 #include "nsPrintfCString.h"
 

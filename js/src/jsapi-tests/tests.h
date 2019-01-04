@@ -19,7 +19,6 @@
 #include "gc/GC.h"
 #include "js/AllocPolicy.h"
 #include "js/CharacterEncoding.h"
-#include "js/Equality.h"  // JS::SameValue
 #include "js/Vector.h"
 #include "vm/JSContext.h"
 
@@ -209,12 +208,12 @@ class JSAPITest {
                  const char* filename, int lineno) {
     bool same;
     JS::RootedValue actual(cx, actualArg), expected(cx, expectedArg);
-    return (JS::SameValue(cx, actual, expected, &same) && same) ||
+    return (JS_SameValue(cx, actual, expected, &same) && same) ||
            fail(JSAPITestString(
-                    "CHECK_SAME failed: expected JS::SameValue(cx, ") +
+                    "CHECK_SAME failed: expected JS_SameValue(cx, ") +
                     actualExpr + ", " + expectedExpr +
-                    "), got !JS::SameValue(cx, " + jsvalToSource(actual) +
-                    ", " + jsvalToSource(expected) + ")",
+                    "), got !JS_SameValue(cx, " + jsvalToSource(actual) + ", " +
+                    jsvalToSource(expected) + ")",
                 filename, lineno);
   }
 

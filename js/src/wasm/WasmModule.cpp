@@ -23,7 +23,6 @@
 
 #include "builtin/TypedObject.h"
 #include "jit/JitOptions.h"
-#include "js/BuildId.h"  // JS::BuildIdCharVector
 #include "threading/LockGuard.h"
 #include "util/NSPR.h"
 #include "wasm/WasmCompile.h"

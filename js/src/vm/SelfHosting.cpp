@@ -38,7 +38,6 @@
 #include "js/CharacterEncoding.h"
 #include "js/CompilationAndEvaluation.h"
 #include "js/Date.h"
-#include "js/PropertySpec.h"
 #include "js/StableStringChars.h"
 #include "js/Wrapper.h"
 #include "util/StringBuffer.h"

@@ -5,7 +5,6 @@
 
 #include "MozIntlHelper.h"
 #include "jsapi.h"
-#include "js/PropertySpec.h"
 #include "js/Wrapper.h"
 #include "mozilla/ModuleUtils.h"
 

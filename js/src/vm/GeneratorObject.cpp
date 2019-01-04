@@ -6,7 +6,6 @@
 
 #include "vm/GeneratorObject.h"
 
-#include "js/PropertySpec.h"
 #include "vm/JSObject.h"
 
 #include "vm/ArrayObject-inl.h"

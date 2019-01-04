@@ -61,7 +61,6 @@
 #include "js/JSON.h"
 #include "js/LocaleSensitive.h"
 #include "js/MemoryFunctions.h"
-#include "js/PropertySpec.h"
 #include "js/Proxy.h"
 #include "js/SliceBudget.h"
 #include "js/SourceText.h"
@@ -358,6 +357,33 @@ JS_PUBLIC_API JSType JS_TypeOfValue(JSContext* cx, HandleValue value) {
   CHECK_THREAD(cx);
   cx->check(value);
   return TypeOfValue(value);
+}
+
+JS_PUBLIC_API bool JS_StrictlyEqual(JSContext* cx, HandleValue value1,
+                                    HandleValue value2, bool* equal) {
+  AssertHeapIsIdle();
+  CHECK_THREAD(cx);
+  cx->check(value1, value2);
+  MOZ_ASSERT(equal);
+  return StrictlyEqual(cx, value1, value2, equal);
+}
+
+JS_PUBLIC_API bool JS_LooselyEqual(JSContext* cx, HandleValue value1,
+                                   HandleValue value2, bool* equal) {
+  AssertHeapIsIdle();
+  CHECK_THREAD(cx);
+  cx->check(value1, value2);
+  MOZ_ASSERT(equal);
+  return LooselyEqual(cx, value1, value2, equal);
+}
+
+JS_PUBLIC_API bool JS_SameValue(JSContext* cx, HandleValue value1,
+                                HandleValue value2, bool* same) {
+  AssertHeapIsIdle();
+  CHECK_THREAD(cx);
+  cx->check(value1, value2);
+  MOZ_ASSERT(same);
+  return SameValue(cx, value1, value2, same);
 }
 
 JS_PUBLIC_API bool JS_IsBuiltinEvalFunction(JSFunction* fun) {
@@ -4142,6 +4168,11 @@ JS_PUBLIC_API void JS::ShutdownAsyncTasks(JSContext* cx) {
   cx->runtime()->offThreadPromiseState.ref().shutdown(cx);
 }
 
+JS_PUBLIC_API bool JS::GetOptimizedEncodingBuildId(
+    JS::BuildIdCharVector* buildId) {
+  return wasm::GetOptimizedEncodingBuildId(buildId);
+}
+
 JS_PUBLIC_API void JS::InitConsumeStreamCallback(
     JSContext* cx, ConsumeStreamCallback consume,
     ReportStreamErrorCallback report) {
@@ -4966,6 +4997,37 @@ JS_PUBLIC_API JS::WarningReporter JS::SetWarningReporter(
   WarningReporter older = cx->runtime()->warningReporter;
   cx->runtime()->warningReporter = reporter;
   return older;
+}
+
+/************************************************************************/
+
+/*
+ * Dates.
+ */
+JS_PUBLIC_API JSObject* JS_NewDateObject(JSContext* cx, int year, int mon,
+                                         int mday, int hour, int min, int sec) {
+  AssertHeapIsIdle();
+  CHECK_THREAD(cx);
+  return NewDateObject(cx, year, mon, mday, hour, min, sec);
+}
+
+JS_PUBLIC_API JSObject* JS::NewDateObject(JSContext* cx, JS::ClippedTime time) {
+  AssertHeapIsIdle();
+  CHECK_THREAD(cx);
+  return NewDateObjectMsec(cx, time);
+}
+
+JS_PUBLIC_API bool JS_ObjectIsDate(JSContext* cx, HandleObject obj,
+                                   bool* isDate) {
+  cx->check(obj);
+
+  ESClass cls;
+  if (!GetBuiltinClass(cx, obj, &cls)) {
+    return false;
+  }
+
+  *isDate = cls == ESClass::Date;
+  return true;
 }
 
 /************************************************************************/
@@ -5985,6 +6047,10 @@ JS_PUBLIC_API bool JS::FinishIncrementalEncoding(JSContext* cx,
     return false;
   }
   return true;
+}
+
+JS_PUBLIC_API void JS::SetProcessBuildIdOp(JS::BuildIdOp buildIdOp) {
+  GetBuildId = buildIdOp;
 }
 
 JS_PUBLIC_API void JS::SetAsmJSCacheOps(JSContext* cx,

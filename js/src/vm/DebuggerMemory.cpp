@@ -16,7 +16,6 @@
 #include "gc/Marking.h"
 #include "js/AllocPolicy.h"
 #include "js/Debug.h"
-#include "js/PropertySpec.h"
 #include "js/TracingAPI.h"
 #include "js/UbiNode.h"
 #include "js/UbiNodeCensus.h"
