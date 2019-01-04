@@ -17,8 +17,8 @@ tasks:
       deadline: {$fromNow: '2 hours'}
       provisionerId: aws-provisioner-v1
       workerType: github-worker
-      routes: []
       scopes: []
+      routes: []
       payload:
         maxRunTime: 7200
         image: mozillamobile/focus-android:1.2
@@ -142,6 +142,8 @@ tasks:
           - project:mobile:focus:releng:googleplay:product:focus
           - secrets:get:project/focus/tokens
           - queue:route:index.project.mobile.focus.release.latest
+        routes:
+          - statuses  # Automatically added by taskcluster-github. It must be explicit because of Chain of Trust
         payload:
           maxRunTime: 600   # Decision should remain fast enough to schedule a handful of tasks
           image: mozillamobile/focus-android:1.2
@@ -222,6 +224,8 @@ tasks:
           - project:mobile:focus:releng:googleplay:product:focus
           - secrets:get:project/focus/tokens
           - queue:route:index.project.mobile.focus.nightly.latest
+        routes:
+          - statuses  # Automatically added by taskcluster-github. It must be explicit because of Chain of Trust
         payload:
           maxRunTime: 600   # Decision should remain fast enough to schedule a handful of tasks
           image: mozillamobile/focus-android:1.2
