@@ -4763,16 +4763,6 @@ window._gBrowser = {
       }
     });
 
-    this.addEventListener("AudibleAutoplayMediaOccurred", (event) => {
-      let browser = event.originalTarget;
-      let tab = this.getTabForBrowser(browser);
-      if (!tab) {
-        return;
-      }
-
-      Services.obs.notifyObservers(tab, "AudibleAutoplayMediaOccurred");
-    });
-
     this.addEventListener("GloballyAutoplayBlocked", (event) => {
       let browser = event.originalTarget;
       let tab = this.getTabForBrowser(browser);
