@@ -7,14 +7,19 @@
 #include "DateTimeInputTypes.h"
 
 #include "js/Date.h"
+#include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/dom/HTMLInputElement.h"
 #include "nsDateTimeControlFrame.h"
+#include "nsDOMTokenList.h"
 
 const double DateTimeInputTypeBase::kMinimumYear = 1;
 const double DateTimeInputTypeBase::kMaximumYear = 275760;
 const double DateTimeInputTypeBase::kMaximumMonthInMaximumYear = 9;
 const double DateTimeInputTypeBase::kMaximumWeekInMaximumYear = 37;
 const double DateTimeInputTypeBase::kMsPerDay = 24 * 60 * 60 * 1000;
+
+using namespace mozilla;
+using namespace mozilla::dom;
 
 /* static */ bool DateTimeInputTypeBase::IsInputDateTimeEnabled() {
   static bool sDateTimeEnabled = false;
@@ -95,13 +100,42 @@ bool DateTimeInputTypeBase::HasStepMismatch(bool aUseZeroIfValueNaN) const {
 }
 
 bool DateTimeInputTypeBase::HasBadInput() const {
+  Element* editWrapperElement = nullptr;
   nsDateTimeControlFrame* frame = do_QueryFrame(GetPrimaryFrame());
-  if (!frame) {
+  if (frame && frame->GetInputAreaContent()) {
+    // edit-wrapper is inside an XBL binding
+    editWrapperElement =
+        mInputElement->GetComposedDoc()->GetAnonymousElementByAttribute(
+            frame->GetInputAreaContent(), nsGkAtoms::anonid,
+            NS_LITERAL_STRING("edit-wrapper"));
+  } else if (mInputElement->GetShadowRoot()) {
+    // edit-wrapper is inside an UA Widget Shadow DOM
+    editWrapperElement = mInputElement->GetShadowRoot()->GetElementById(
+        NS_LITERAL_STRING("edit-wrapper"));
+  }
+  if (!editWrapperElement) {
     return false;
   }
 
-  return frame->HasBadInput();
-  ;
+  // Incomplete field does not imply bad input.
+  for (Element* child = editWrapperElement->GetFirstElementChild(); child;
+       child = child->GetNextElementSibling()) {
+    if (child->ClassList()->Contains(
+            NS_LITERAL_STRING("datetime-edit-field"))) {
+      nsAutoString value;
+      child->GetAttr(kNameSpaceID_None, nsGkAtoms::value, value);
+      if (value.IsEmpty()) {
+        return false;
+      }
+    }
+  }
+
+  // All fields are available but input element's value is empty implies
+  // it has been sanitized.
+  nsAutoString value;
+  mInputElement->GetValue(value, CallerType::System);
+
+  return value.IsEmpty();
 }
 
 nsresult DateTimeInputTypeBase::GetRangeOverflowMessage(nsAString& aMessage) {
@@ -125,9 +159,17 @@ nsresult DateTimeInputTypeBase::GetRangeUnderflowMessage(nsAString& aMessage) {
 }
 
 nsresult DateTimeInputTypeBase::MinMaxStepAttrChanged() {
-  nsDateTimeControlFrame* frame = do_QueryFrame(GetPrimaryFrame());
-  if (frame) {
-    frame->OnMinMaxStepAttrChanged();
+  if (Element* dateTimeBoxElement =
+          mInputElement->GetDateTimeBoxElementInUAWidget()) {
+    AsyncEventDispatcher* dispatcher = new AsyncEventDispatcher(
+        dateTimeBoxElement, NS_LITERAL_STRING("MozNotifyMinMaxStepAttrChanged"),
+        CanBubble::eNo, ChromeOnlyDispatch::eNo);
+    dispatcher->RunDOMEventWhenSafe();
+  } else {
+    nsDateTimeControlFrame* frame = do_QueryFrame(GetPrimaryFrame());
+    if (frame) {
+      frame->OnMinMaxStepAttrChanged();
+    }
   }
 
   return NS_OK;
