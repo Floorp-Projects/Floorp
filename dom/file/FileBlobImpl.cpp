@@ -56,9 +56,9 @@ FileBlobImpl::FileBlobImpl(const nsAString& aName,
 }
 
 FileBlobImpl::FileBlobImpl(nsIFile* aFile, const nsAString& aName,
-                           const nsAString& aContentType)
-    : BaseBlobImpl(NS_LITERAL_STRING("FileBlobImpl"), aName, aContentType,
-                   UINT64_MAX, INT64_MAX),
+                           const nsAString& aContentType,
+                           const nsAString& aBlobImplType)
+    : BaseBlobImpl(aBlobImplType, aName, aContentType, UINT64_MAX, INT64_MAX),
       mFile(aFile),
       mWholeFile(true),
       mFileId(-1) {
