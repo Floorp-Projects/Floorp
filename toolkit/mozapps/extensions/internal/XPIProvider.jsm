@@ -1636,7 +1636,7 @@ class BootstrapScope {
         this._beforeCallBootstrapMethod(aMethod, params, aReason);
 
         try {
-          result = method.call(scope, params, aReason);
+          result = await method.call(scope, params, aReason);
         } catch (e) {
           logger.warn(`Exception running bootstrap method ${aMethod} on ${addon.id}`, e);
         }
