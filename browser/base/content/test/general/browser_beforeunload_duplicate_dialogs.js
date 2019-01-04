@@ -8,10 +8,10 @@ function onTabModalDialogLoaded(node) {
   expectingDialog = false;
   if (wantToClose) {
     // This accepts the dialog, closing it
-    node.Dialog.ui.button0.click();
+    node.querySelector(".tabmodalprompt-button0").click();
   } else {
     // This keeps the page open
-    node.Dialog.ui.button1.click();
+    node.querySelector(".tabmodalprompt-button1").click();
   }
   if (resolveDialogPromise) {
     resolveDialogPromise();

@@ -23,7 +23,7 @@ add_task(async function test() {
     mutations.forEach(function(mutation) {
       if (buttonId && mutation.type == "attributes" && browser.hasAttribute("tabmodalPromptShowing")) {
         let prompt = stack.getElementsByTagNameNS(XUL_NS, "tabmodalprompt")[0];
-        document.getAnonymousElementByAttribute(prompt, "anonid", buttonId).click();
+        prompt.querySelector(`.tabmodalprompt-${buttonId}`).click();
         promptShown = true;
       }
     });

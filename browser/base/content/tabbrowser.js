@@ -1149,7 +1149,7 @@ window._gBrowser = {
 
     // If there's a tabmodal prompt showing, focus it.
     if (newBrowser.hasAttribute("tabmodalPromptShowing")) {
-      let prompts = newBrowser.parentNode.getElementsByTagNameNS(this._XUL_NS, "tabmodalprompt");
+      let prompts = newBrowser.tabModalPromptBox.listPrompts();
       let prompt = prompts[prompts.length - 1];
       // @tabmodalPromptShowing is also set for other tab modal prompts
       // (e.g. the Payment Request dialog) so there may not be a <tabmodalprompt>.

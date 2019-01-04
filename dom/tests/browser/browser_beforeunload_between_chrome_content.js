@@ -24,7 +24,8 @@ function awaitAndCloseBeforeUnloadDialog(doStayOnPage) {
   return new Promise(resolve => {
     function onDialogShown(node) {
       Services.obs.removeObserver(onDialogShown, "tabmodal-dialog-loaded");
-      let button = doStayOnPage ? node.ui.button1 : node.ui.button0;
+      let button =
+        node.querySelector(doStayOnPage ? ".tabmodalprompt-button1" : ".tabmodalprompt-button0");
       button.click();
       resolve();
     }

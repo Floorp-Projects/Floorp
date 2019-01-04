@@ -83,7 +83,7 @@ add_task(async function test_tab_options_modals() {
   Assert.equal(dialogs.length, 1, "Expect a tab modal opened for the about addons tab");
 
   info("Close the tab modal prompt");
-  dialogs[0].onButtonClick(0);
+  dialogs[0].querySelector(".tabmodalprompt-button0").click();
 
   await extension.awaitFinish("options-ui-modals");
 
