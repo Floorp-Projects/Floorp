@@ -29,6 +29,7 @@
 #include <string.h>
 
 #include "jsapi.h"
+#include "jsfriendapi.h"
 #include "jsnum.h"
 #include "jstypes.h"
 #include "jsutil.h"
@@ -3357,6 +3358,12 @@ JSObject* js::NewDateObjectMsec(JSContext* cx, ClippedTime t,
   return obj;
 }
 
+JS_PUBLIC_API JSObject* JS::NewDateObject(JSContext* cx, ClippedTime time) {
+  AssertHeapIsIdle();
+  CHECK_THREAD(cx);
+  return NewDateObjectMsec(cx, time);
+}
+
 JS_FRIEND_API JSObject* js::NewDateObject(JSContext* cx, int year, int mon,
                                           int mday, int hour, int min,
                                           int sec) {
@@ -3384,6 +3391,27 @@ JS_FRIEND_API bool js::DateIsValid(JSContext* cx, HandleObject obj,
   }
 
   *isValid = !IsNaN(unboxed.toNumber());
+  return true;
+}
+
+JS_PUBLIC_API JSObject* JS::NewDateObject(JSContext* cx, int year, int mon,
+                                          int mday, int hour, int min,
+                                          int sec) {
+  AssertHeapIsIdle();
+  CHECK_THREAD(cx);
+  return js::NewDateObject(cx, year, mon, mday, hour, min, sec);
+}
+
+JS_PUBLIC_API bool JS::ObjectIsDate(JSContext* cx, Handle<JSObject*> obj,
+                                    bool* isDate) {
+  cx->check(obj);
+
+  ESClass cls;
+  if (!GetBuiltinClass(cx, obj, &cls)) {
+    return false;
+  }
+
+  *isDate = cls == ESClass::Date;
   return true;
 }
 

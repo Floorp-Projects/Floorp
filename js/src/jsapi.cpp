@@ -4971,37 +4971,6 @@ JS_PUBLIC_API JS::WarningReporter JS::SetWarningReporter(
 /************************************************************************/
 
 /*
- * Dates.
- */
-JS_PUBLIC_API JSObject* JS_NewDateObject(JSContext* cx, int year, int mon,
-                                         int mday, int hour, int min, int sec) {
-  AssertHeapIsIdle();
-  CHECK_THREAD(cx);
-  return NewDateObject(cx, year, mon, mday, hour, min, sec);
-}
-
-JS_PUBLIC_API JSObject* JS::NewDateObject(JSContext* cx, JS::ClippedTime time) {
-  AssertHeapIsIdle();
-  CHECK_THREAD(cx);
-  return NewDateObjectMsec(cx, time);
-}
-
-JS_PUBLIC_API bool JS_ObjectIsDate(JSContext* cx, HandleObject obj,
-                                   bool* isDate) {
-  cx->check(obj);
-
-  ESClass cls;
-  if (!GetBuiltinClass(cx, obj, &cls)) {
-    return false;
-  }
-
-  *isDate = cls == ESClass::Date;
-  return true;
-}
-
-/************************************************************************/
-
-/*
  * Regular Expressions.
  */
 JS_PUBLIC_API JSObject* JS_NewRegExpObject(JSContext* cx, const char* bytes,
