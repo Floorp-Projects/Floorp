@@ -10,7 +10,6 @@
 
 #include "builtin/WeakSetObject.h"
 #include "gc/FreeOp.h"
-#include "js/PropertySpec.h"
 #include "vm/JSContext.h"
 #include "vm/SelfHosting.h"
 

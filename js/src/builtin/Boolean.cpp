@@ -14,7 +14,6 @@
 #include "jstypes.h"
 
 #include "jit/InlinableNatives.h"
-#include "js/PropertySpec.h"
 #include "util/StringBuffer.h"
 #ifdef ENABLE_BIGINT
 #include "vm/BigIntType.h"

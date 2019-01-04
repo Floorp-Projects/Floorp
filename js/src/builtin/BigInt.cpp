@@ -10,7 +10,6 @@
 
 #include "builtin/TypedObject.h"
 #include "gc/Tracer.h"
-#include "js/PropertySpec.h"
 #include "js/TracingAPI.h"
 #include "vm/ArrayBufferObject.h"
 #include "vm/BigIntType.h"

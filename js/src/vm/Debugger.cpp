@@ -27,8 +27,6 @@
 #include "jit/BaselineJIT.h"
 #include "js/CharacterEncoding.h"
 #include "js/Date.h"
-#include "js/PropertyDescriptor.h"
-#include "js/PropertySpec.h"
 #include "js/SourceText.h"
 #include "js/StableStringChars.h"
 #include "js/UbiNodeBreadthFirst.h"

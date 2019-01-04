@@ -9,7 +9,6 @@
 
 #include "jsapi.h"
 #include "jsfriendapi.h"
-#include "js/PropertySpec.h"
 #include "js/Wrapper.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"

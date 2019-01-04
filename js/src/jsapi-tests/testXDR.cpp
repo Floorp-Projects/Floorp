@@ -7,7 +7,6 @@
 #include "jsfriendapi.h"
 #include "builtin/String.h"
 
-#include "js/BuildId.h"  // JS::BuildIdCharVector, JS::SetProcessBuildIdOp
 #include "js/CompilationAndEvaluation.h"
 #include "js/Transcoding.h"
 #include "jsapi-tests/tests.h"

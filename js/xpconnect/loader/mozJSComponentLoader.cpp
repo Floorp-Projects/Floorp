@@ -20,7 +20,6 @@
 #include "js/CharacterEncoding.h"
 #include "js/CompilationAndEvaluation.h"
 #include "js/Printf.h"
-#include "js/PropertySpec.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
 #include "nsExceptionHandler.h"

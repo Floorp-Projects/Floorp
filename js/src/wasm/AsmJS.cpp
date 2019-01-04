@@ -34,7 +34,6 @@
 #include "frontend/ParseNode.h"
 #include "frontend/Parser.h"
 #include "gc/Policy.h"
-#include "js/BuildId.h"  // JS::BuildIdCharVector
 #include "js/MemoryMetrics.h"
 #include "js/Printf.h"
 #include "js/SourceText.h"

@@ -19,7 +19,6 @@
 #include "jsapi.h"
 #include "jsutil.h"
 
-#include "js/BuildId.h"  // JS::BuildIdCharVector
 #include "vm/Debugger.h"
 #include "vm/EnvironmentObject.h"
 #include "vm/JSContext.h"

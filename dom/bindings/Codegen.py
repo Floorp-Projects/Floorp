@@ -5190,7 +5190,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
             name = getUnionMemberName(memberType)
             dateObject = CGGeneric("%s.SetTo%s(cx, ${val});\n"
                                    "done = true;\n" % (unionArgumentObj, name))
-            dateObject = CGIfWrapper(dateObject, "JS::ObjectIsDate(cx, argObj)")
+            dateObject = CGIfWrapper(dateObject, "JS_ObjectIsDate(cx, argObj)")
             names.append(name)
         else:
             dateObject = None
@@ -6207,7 +6207,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
             JS::Rooted<JSObject*> possibleDateObject(cx, &$${val}.toObject());
             { // scope for isDate
               bool isDate;
-              if (!JS::ObjectIsDate(cx, possibleDateObject, &isDate)) {
+              if (!JS_ObjectIsDate(cx, possibleDateObject, &isDate)) {
                 $*{exceptionCode}
               }
               if (!isDate) {

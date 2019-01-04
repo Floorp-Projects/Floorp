@@ -24,7 +24,6 @@
 #include "gc/FreeOp.h"
 #include "gc/Marking.h"
 #include "js/CharacterEncoding.h"
-#include "js/PropertySpec.h"
 #include "js/UniquePtr.h"
 #include "js/Wrapper.h"
 #include "util/StringBuffer.h"

@@ -12,7 +12,6 @@
 #include "frontend/TokenStream.h"
 #include "irregexp/RegExpParser.h"
 #include "jit/InlinableNatives.h"
-#include "js/PropertySpec.h"
 #include "util/StringBuffer.h"
 #include "util/Unicode.h"
 #include "vm/JSContext.h"
