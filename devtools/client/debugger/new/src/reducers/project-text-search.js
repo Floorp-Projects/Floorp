@@ -11,16 +11,26 @@
  */
 
 import type { Action } from "../actions/types";
+import type { Cancellable } from "../types";
 
 export type Search = {
   +sourceId: string,
   +filepath: string,
   +matches: any[]
 };
-export type StatusType = "INITIAL" | "FETCHING" | "DONE" | "ERROR";
+
+export type SearchOperation = Cancellable;
+
+export type StatusType =
+  | "INITIAL"
+  | "FETCHING"
+  | "CANCELLED"
+  | "DONE"
+  | "ERROR";
 export const statusType = {
   initial: "INITIAL",
   fetching: "FETCHING",
+  cancelled: "CANCELLED",
   done: "DONE",
   error: "ERROR"
 };
@@ -28,6 +38,7 @@ export const statusType = {
 export type ResultList = Search[];
 export type ProjectTextSearchState = {
   +query: string,
+  +ongoingSearch?: SearchOperation,
   +results: ResultList,
   +status: string
 };
@@ -74,6 +85,9 @@ function update(
     case "CLEAR_SEARCH_RESULTS":
       return { ...state, results: [] };
 
+    case "ADD_ONGOING_SEARCH":
+      return { ...state, ongoingSearch: action.ongoingSearch };
+
     case "CLEAR_SEARCH":
     case "CLOSE_PROJECT_SEARCH":
     case "NAVIGATE":
@@ -83,6 +97,10 @@ function update(
 }
 
 type OuterState = { projectTextSearch: ProjectTextSearchState };
+
+export function getTextSearchOperation(state: OuterState) {
+  return state.projectTextSearch.ongoingSearch;
+}
 
 export function getTextSearchResults(state: OuterState) {
   return state.projectTextSearch.results;

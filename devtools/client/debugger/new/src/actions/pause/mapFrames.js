@@ -18,7 +18,6 @@ import { findClosestFunction } from "../../utils/ast";
 import type { Frame } from "../../types";
 import type { State } from "../../reducers/types";
 import type { ThunkArgs } from "../types";
-import { features } from "../../utils/prefs";
 
 import { isGeneratedId } from "devtools-source-map";
 

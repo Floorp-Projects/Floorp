@@ -98,6 +98,7 @@ toolkit.jar:
    content/global/elements/notificationbox.js  (widgets/notificationbox.js)
    content/global/elements/pluginProblem.js    (widgets/pluginProblem.js)
    content/global/elements/radio.js            (widgets/radio.js)
+   content/global/elements/richlistbox.js      (widgets/richlistbox.js)
    content/global/elements/marquee.css         (widgets/marquee.css)
    content/global/elements/marquee.js          (widgets/marquee.js)
    content/global/elements/stringbundle.js     (widgets/stringbundle.js)

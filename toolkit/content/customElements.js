@@ -306,6 +306,7 @@ if (!isDummyDocument) {
 
   for (let [tag, script] of [
     ["findbar", "chrome://global/content/elements/findbar.js"],
+    ["richlistbox", "chrome://global/content/elements/richlistbox.js"],
     ["stringbundle", "chrome://global/content/elements/stringbundle.js"],
     ["printpreview-toolbar", "chrome://global/content/printPreviewToolbar.js"],
     ["editor", "chrome://global/content/elements/editor.js"],
