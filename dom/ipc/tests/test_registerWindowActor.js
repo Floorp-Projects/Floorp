@@ -6,10 +6,10 @@
 add_task(function test_registerWindowActor() {
   let windowActorOptions = {
     parent: {
-      moduleURI: "resource:///actors/TestParent.jsm"
+      moduleURI: "resource:///actors/TestParent.jsm",
     },
     child: {
-      moduleURI: "resource:///actors/TestChild.jsm"
+      moduleURI: "resource:///actors/TestChild.jsm",
     },
   };
 
