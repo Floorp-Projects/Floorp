@@ -5272,6 +5272,15 @@ var gCSSProperties = {
     other_values: [ "url(#mysym)" ],
     invalid_values: []
   },
+  "mix-blend-mode": {
+    domProp: "mixBlendMode",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "normal" ],
+    other_values: ["multiply", "screen", "overlay", "darken", "lighten", "color-dodge", "color-burn",
+        "hard-light", "soft-light", "difference", "exclusion", "hue", "saturation", "color", "luminosity"],
+    invalid_values: [],
+  },
   "shape-image-threshold": {
     domProp: "shapeImageThreshold",
     inherited: false,
@@ -7236,18 +7245,6 @@ if (IsCSSPropertyPrefEnabled("layout.css.osx-font-smoothing.enabled")) {
     initial_values: [ "auto" ],
     other_values: [ "grayscale" ],
     invalid_values: [ "none", "subpixel-antialiased", "antialiased" ]
-  };
-}
-
-if (IsCSSPropertyPrefEnabled("layout.css.mix-blend-mode.enabled")) {
-  gCSSProperties["mix-blend-mode"] = {
-    domProp: "mixBlendMode",
-    inherited: false,
-    type: CSS_TYPE_LONGHAND,
-    initial_values: [ "normal" ],
-    other_values: ["multiply", "screen", "overlay", "darken", "lighten", "color-dodge", "color-burn",
-        "hard-light", "soft-light", "difference", "exclusion", "hue", "saturation", "color", "luminosity"],
-    invalid_values: []
   };
 }
 
