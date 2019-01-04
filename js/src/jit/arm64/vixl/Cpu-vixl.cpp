@@ -56,21 +56,4 @@ void CPU::SetUp() {
   icache_line_size_ = 4 << icache_line_size_power_of_two;
 }
 
-
-uint32_t CPU::GetCacheType() {
-#ifdef __aarch64__
-  uint64_t cache_type_register;
-  // Copy the content of the cache type register to a core register.
-  __asm__ __volatile__ ("mrs %[ctr], ctr_el0"  // NOLINT
-                        : [ctr] "=r" (cache_type_register));
-  VIXL_ASSERT(is_uint32(cache_type_register));
-  return cache_type_register;
-#else
-  // This will lead to a cache with 1 byte long lines, which is fine since
-  // neither EnsureIAndDCacheCoherency nor the simulator will need this
-  // information.
-  return 0;
-#endif
-}
-
 }  // namespace vixl
