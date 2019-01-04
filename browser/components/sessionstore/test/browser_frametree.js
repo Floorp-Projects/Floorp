@@ -103,22 +103,17 @@ add_task(async function test_frametree_dynamic() {
 
 async function countNonDynamicFrames(browser) {
   return ContentTask.spawn(browser, null, async () => {
-    const ssu = Cc["@mozilla.org/browser/sessionstore/utils;1"]
-                  .getService(Ci.nsISessionStoreUtils);
-
     let count = 0;
-    ssu.forEachNonDynamicChildFrame(content, () => count++);
+    SessionStoreUtils.forEachNonDynamicChildFrame(content, () => count++);
     return count;
   });
 }
 
 async function enumerateIndexes(browser) {
   return ContentTask.spawn(browser, null, async () => {
-    const ssu = Cc["@mozilla.org/browser/sessionstore/utils;1"]
-                  .getService(Ci.nsISessionStoreUtils);
-
     let indexes = [];
-    ssu.forEachNonDynamicChildFrame(content, (frame, i) => indexes.push(i));
+    SessionStoreUtils.forEachNonDynamicChildFrame(
+        content, (frame, i) => indexes.push(i));
     return indexes.join(",");
   });
 }

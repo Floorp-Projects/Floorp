@@ -17,9 +17,6 @@ ChromeUtils.defineModuleGetter(this, "SessionStorage",
 ChromeUtils.defineModuleGetter(this, "Utils",
   "resource://gre/modules/sessionstore/Utils.jsm");
 
-const ssu = Cc["@mozilla.org/browser/sessionstore/utils;1"]
-              .getService(Ci.nsISessionStoreUtils);
-
 /**
  * This module implements the content side of session restoration. The chrome
  * side is handled by SessionStore.jsm. The functions in this module are called
@@ -140,7 +137,8 @@ ContentRestoreInternal.prototype = {
 
     // Make sure to reset the capabilities and attributes in case this tab gets
     // reused.
-    ssu.restoreDocShellCapabilities(this.docShell, tabData.disallow);
+    SessionStoreUtils.restoreDocShellCapabilities(this.docShell, tabData.disallow);
+
 
     if (tabData.storage && this.docShell instanceof Ci.nsIDocShell) {
       SessionStorage.restore(this.docShell, tabData.storage);
@@ -298,7 +296,7 @@ ContentRestoreInternal.prototype = {
     // Restore scroll data.
     Utils.restoreFrameTreeData(window, scrollPositions, (frame, data) => {
       if (data.scroll) {
-        ssu.restoreScrollPosition(frame, data.scroll);
+        SessionStoreUtils.restoreScrollPosition(frame, data);
       }
     });
   },

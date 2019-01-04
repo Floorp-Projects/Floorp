@@ -14,9 +14,6 @@ ChromeUtils.defineModuleGetter(this, "NetUtil",
 XPCOMUtils.defineLazyServiceGetter(this, "serializationHelper",
                                    "@mozilla.org/network/serialization-helper;1",
                                    "nsISerializationHelper");
-XPCOMUtils.defineLazyServiceGetter(this, "ssu",
-                                   "@mozilla.org/browser/sessionstore/utils;1",
-                                   "nsISessionStoreUtils");
 XPCOMUtils.defineLazyServiceGetter(this, "eTLDService",
                                    "@mozilla.org/network/effective-tld-service;1",
                                    "nsIEffectiveTLDService");
@@ -161,22 +158,11 @@ var Utils = Object.freeze({
    */
   mapFrameTree(frame, ...dataCollectors) {
     // Collect data for the current frame.
-    let objs = dataCollectors.map(function(dataCollector) {
-      let obj = dataCollector(frame.document);
-        if (!obj || typeof(obj) == "object") {
-          return obj || {};
-        }
-        // Currently, we return string type when collecting scroll position.
-        // Will switched to webidl and return objects in the future.
-        if (typeof(obj) == "string") {
-          return {scroll: obj};
-        }
-        return obj;
-    });
+    let objs = dataCollectors.map(dataCollector => dataCollector(frame.document) || {});
     let children = dataCollectors.map(() => []);
 
     // Recurse into child frames.
-    ssu.forEachNonDynamicChildFrame(frame, (subframe, index) => {
+    SessionStoreUtils.forEachNonDynamicChildFrame(frame, (subframe, index) => {
       let results = this.mapFrameTree(subframe, ...dataCollectors);
       if (!results) {
         return;
@@ -217,7 +203,7 @@ var Utils = Object.freeze({
     }
 
     // Recurse into child frames.
-    ssu.forEachNonDynamicChildFrame(frame, (subframe, index) => {
+    SessionStoreUtils.forEachNonDynamicChildFrame(frame, (subframe, index) => {
       if (data.children[index]) {
         this.restoreFrameTreeData(subframe, data.children[index], cb);
       }
