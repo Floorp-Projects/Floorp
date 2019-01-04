@@ -3399,25 +3399,6 @@ extern JS_PUBLIC_API bool SetForEach(JSContext* cx, HandleObject obj,
 
 } /* namespace JS */
 
-/*
- * Dates.
- */
-
-extern JS_PUBLIC_API JSObject* JS_NewDateObject(JSContext* cx, int year,
-                                                int mon, int mday, int hour,
-                                                int min, int sec);
-
-/**
- * On success, returns true, setting |*isDate| to true if |obj| is a Date
- * object or a wrapper around one, or to false if not.  Returns false on
- * failure.
- *
- * This method returns true with |*isDate == false| when passed an ES6 proxy
- * whose target is a Date, or when passed a revoked proxy.
- */
-extern JS_PUBLIC_API bool JS_ObjectIsDate(JSContext* cx, JS::HandleObject obj,
-                                          bool* isDate);
-
 /************************************************************************/
 
 /*
