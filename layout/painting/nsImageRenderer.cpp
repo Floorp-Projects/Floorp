@@ -567,6 +567,9 @@ ImgDrawResult nsImageRenderer::BuildWebRenderDisplayItems(
           mForFrame->PresContext()->AppUnitsPerDevPixel();
       LayoutDeviceRect destRect =
           LayoutDeviceRect::FromAppUnits(aDest, appUnitsPerDevPixel);
+      auto stretchSize = wr::ToLayoutSize(destRect.Size());
+      destRect.Round();
+
       gfx::IntSize decodeSize =
           nsLayoutUtils::ComputeImageContainerDrawingParameters(
               mImageContainer, mForFrame, destRect, aSc, containerFlags,
@@ -600,8 +603,7 @@ ImgDrawResult nsImageRenderer::BuildWebRenderDisplayItems(
           appUnitsPerDevPixel);
       wr::LayoutRect fill = wr::ToRoundedLayoutRect(fillRect);
 
-      wr::LayoutRect roundedDest = wr::ToRoundedLayoutRect(destRect);
-      auto stretchSize = wr::ToLayoutSize(destRect.Size());
+      wr::LayoutRect roundedDest = wr::ToLayoutRect(destRect);
 
       // WebRender special cases situations where stretchSize == fillSize to
       // infer that it shouldn't use repeat sampling. This makes sure
