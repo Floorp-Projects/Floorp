@@ -75,6 +75,9 @@ class HttpBackgroundChannelParent final : public PHttpBackgroundChannelParent {
   // To send NotifyTrackingResource message over background channel.
   bool OnNotifyTrackingResource(bool aIsThirdParty);
 
+  // To send NotifyFlashPluginStateChanged message over background channel.
+  bool OnNotifyFlashPluginStateChanged(nsIHttpChannel::FlashPluginState aState);
+
   // To send SetClassifierMatchedInfo message over background channel.
   bool OnSetClassifierMatchedInfo(const nsACString& aList,
                                   const nsACString& aProvider,

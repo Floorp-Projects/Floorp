@@ -41,6 +41,11 @@ class UrlClassifierCommon final {
                                     const nsACString& aList,
                                     const nsACString& aProvider,
                                     const nsACString& aFullHash);
+
+  // Use this function only when you are looking for a pairwise whitelist uri
+  // with the format: http://toplevel.page/?resource=channel.uri.domain
+  static nsresult CreatePairwiseWhiteListURI(nsIChannel* aChannel,
+                                             nsIURI** aURI);
 };
 
 }  // namespace net

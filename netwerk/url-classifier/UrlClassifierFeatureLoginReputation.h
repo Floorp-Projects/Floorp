@@ -37,6 +37,10 @@ class UrlClassifierFeatureLoginReputation final
   NS_IMETHOD ProcessChannel(nsIChannel* aChannel, const nsACString& aList,
                             bool* aShouldContinue) override;
 
+  NS_IMETHOD GetURIByListType(nsIChannel* aChannel,
+                              nsIUrlClassifierFeature::listType aListType,
+                              nsIURI** aURI) override;
+
  private:
   UrlClassifierFeatureLoginReputation();
 };

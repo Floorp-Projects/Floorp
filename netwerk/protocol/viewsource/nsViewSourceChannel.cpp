@@ -766,6 +766,13 @@ nsViewSourceChannel::GetIsTrackingResource(bool *aIsTrackingResource) {
 }
 
 NS_IMETHODIMP
+nsViewSourceChannel::GetFlashPluginState(
+    nsIHttpChannel::FlashPluginState *aResult) {
+  return !mHttpChannel ? NS_ERROR_NULL_POINTER
+                       : mHttpChannel->GetFlashPluginState(aResult);
+}
+
+NS_IMETHODIMP
 nsViewSourceChannel::GetIsThirdPartyTrackingResource(
     bool *aIsTrackingResource) {
   return !mHttpChannel ? NS_ERROR_NULL_POINTER

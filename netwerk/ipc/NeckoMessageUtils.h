@@ -10,6 +10,7 @@
 
 #include "ipc/IPCMessageUtils.h"
 #include "nsExceptionHandler.h"
+#include "nsIHttpChannel.h"
 #include "nsPrintfCString.h"
 #include "nsString.h"
 #include "prio.h"
@@ -178,6 +179,12 @@ struct ParamTraits<mozilla::net::ResourceTimingStruct> {
            ReadParam(aMsg, aIter, &aResult->cacheReadEnd);
   }
 };
+
+template <>
+struct ParamTraits<nsIHttpChannel::FlashPluginState>
+    : public ContiguousEnumSerializerInclusive<
+          nsIHttpChannel::FlashPluginState, nsIHttpChannel::FlashPluginUnknown,
+          nsIHttpChannel::FlashPluginLastValue> {};
 
 }  // namespace IPC
 
