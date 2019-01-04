@@ -2,13 +2,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "nsSessionStoreUtils.h"
+
+#include "mozilla/dom/Event.h"
+#include "mozilla/dom/EventListenerBinding.h"
+#include "mozilla/dom/EventTarget.h"
+#include "mozilla/dom/ScriptSettings.h"
+#include "nsPIDOMWindow.h"
 #include "nsIDocShell.h"
 #include "nsGlobalWindowOuter.h"
 #include "nsIScrollableFrame.h"
 #include "nsPresContext.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "nsPrintfCString.h"
-#include "mozilla/dom/SessionStoreUtils.h"
 
 using namespace mozilla::dom;
 
@@ -31,7 +37,7 @@ class DynamicFrameEventFilter final : public nsIDOMEventListener {
   }
 
  private:
-  ~DynamicFrameEventFilter() = default;
+  ~DynamicFrameEventFilter() {}
 
   bool TargetInNonDynamicDocShell(Event* aEvent) {
     EventTarget* target = aEvent->GetTarget();
@@ -69,39 +75,30 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(DynamicFrameEventFilter)
 
 }  // anonymous namespace
 
-/* static */ void SessionStoreUtils::ForEachNonDynamicChildFrame(
-    const GlobalObject& aGlobal, WindowProxyHolder& aWindow,
-    SessionStoreUtilsFrameCallback& aCallback, ErrorResult& aRv) {
-  if (!aWindow.get()) {
-    aRv.Throw(NS_ERROR_INVALID_ARG);
-    return;
-  }
+NS_IMPL_ISUPPORTS(nsSessionStoreUtils, nsISessionStoreUtils)
 
-  nsCOMPtr<nsIDocShell> docShell = aWindow.get()->GetDocShell();
-  if (!docShell) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return;
-  }
+NS_IMETHODIMP
+nsSessionStoreUtils::ForEachNonDynamicChildFrame(
+    mozIDOMWindowProxy* aWindow, nsISessionStoreUtilsFrameCallback* aCallback) {
+  NS_ENSURE_TRUE(aWindow, NS_ERROR_INVALID_ARG);
+
+  nsCOMPtr<nsPIDOMWindowOuter> outer = nsPIDOMWindowOuter::From(aWindow);
+  NS_ENSURE_TRUE(outer, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIDocShell> docShell = outer->GetDocShell();
+  NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
 
   int32_t length;
-  aRv = docShell->GetChildCount(&length);
-  if (aRv.Failed()) {
-    return;
-  }
+  nsresult rv = docShell->GetChildCount(&length);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   for (int32_t i = 0; i < length; ++i) {
     nsCOMPtr<nsIDocShellTreeItem> item;
     docShell->GetChildAt(i, getter_AddRefs(item));
-    if (!item) {
-      aRv.Throw(NS_ERROR_FAILURE);
-      return;
-    }
+    NS_ENSURE_TRUE(item, NS_ERROR_FAILURE);
 
     nsCOMPtr<nsIDocShell> childDocShell(do_QueryInterface(item));
-    if (!childDocShell) {
-      aRv.Throw(NS_ERROR_FAILURE);
-      return;
-    }
+    NS_ENSURE_TRUE(childDocShell, NS_ERROR_FAILURE);
 
     bool isDynamic = false;
     nsresult rv = childDocShell->GetCreatedDynamically(&isDynamic);
@@ -110,60 +107,65 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(DynamicFrameEventFilter)
     }
 
     int32_t childOffset = childDocShell->GetChildOffset();
-    aCallback.Call(WindowProxyHolder(item->GetWindow()->GetBrowsingContext()),
-                   childOffset);
+    aCallback->HandleFrame(item->GetWindow(), childOffset);
   }
+
+  return NS_OK;
 }
 
-/* static */ already_AddRefed<nsISupports>
-SessionStoreUtils::AddDynamicFrameFilteredListener(
-    const GlobalObject& aGlobal, EventTarget& aTarget, const nsAString& aType,
-    JS::Handle<JS::Value> aListener, bool aUseCapture, ErrorResult& aRv) {
+NS_IMETHODIMP
+nsSessionStoreUtils::AddDynamicFrameFilteredListener(
+    EventTarget* aTarget, const nsAString& aType,
+    JS::Handle<JS::Value> aListener, bool aUseCapture, JSContext* aCx,
+    nsISupports** aResult) {
   if (NS_WARN_IF(!aListener.isObject())) {
-    aRv.Throw(NS_ERROR_INVALID_ARG);
-    return nullptr;
+    return NS_ERROR_INVALID_ARG;
   }
 
-  JSContext* cx = aGlobal.Context();
-  JS::Rooted<JSObject*> obj(cx, &aListener.toObject());
-  JS::Rooted<JSObject*> global(cx, JS::CurrentGlobalOrNull(cx));
+  NS_ENSURE_TRUE(aTarget, NS_ERROR_NO_INTERFACE);
+
+  JS::Rooted<JSObject*> obj(aCx, &aListener.toObject());
+  JS::Rooted<JSObject*> global(aCx, JS::CurrentGlobalOrNull(aCx));
   RefPtr<EventListener> listener =
-      new EventListener(cx, obj, global, GetIncumbentGlobal());
+      new EventListener(aCx, obj, global, GetIncumbentGlobal());
+
   nsCOMPtr<nsIDOMEventListener> filter(new DynamicFrameEventFilter(listener));
 
-  aRv = aTarget.AddEventListener(aType, filter, aUseCapture);
-  if (aRv.Failed()) {
-    return nullptr;
-  }
+  nsresult rv = aTarget->AddEventListener(aType, filter, aUseCapture);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  return filter.forget();
+  filter.forget(aResult);
+  return NS_OK;
 }
 
-/* static */ void SessionStoreUtils::RemoveDynamicFrameFilteredListener(
-    const GlobalObject& global, EventTarget& aTarget, const nsAString& aType,
-    nsISupports* aListener, bool aUseCapture, ErrorResult& aRv) {
+NS_IMETHODIMP
+nsSessionStoreUtils::RemoveDynamicFrameFilteredListener(EventTarget* aTarget,
+                                                        const nsAString& aType,
+                                                        nsISupports* aListener,
+                                                        bool aUseCapture) {
+  NS_ENSURE_TRUE(aTarget, NS_ERROR_NO_INTERFACE);
+
   nsCOMPtr<nsIDOMEventListener> listener = do_QueryInterface(aListener);
-  if (!listener) {
-    aRv.Throw(NS_ERROR_NO_INTERFACE);
-    return;
-  }
+  NS_ENSURE_TRUE(listener, NS_ERROR_NO_INTERFACE);
 
-  aTarget.RemoveEventListener(aType, listener, aUseCapture);
+  aTarget->RemoveEventListener(aType, listener, aUseCapture);
+  return NS_OK;
 }
 
-/* static */ void SessionStoreUtils::CollectDocShellCapabilities(
-    const GlobalObject& aGlobal, nsIDocShell* aDocShell, nsCString& aRetVal) {
+NS_IMETHODIMP
+nsSessionStoreUtils::CollectDocShellCapabilities(
+    nsIDocShell* aDocShell, nsACString& aDisallowCapabilities) {
   bool allow;
 
-#define TRY_ALLOWPROP(y)          \
-  PR_BEGIN_MACRO                  \
-  aDocShell->GetAllow##y(&allow); \
-  if (!allow) {                   \
-    if (!aRetVal.IsEmpty()) {     \
-      aRetVal.Append(',');        \
-    }                             \
-    aRetVal.Append(#y);           \
-  }                               \
+#define TRY_ALLOWPROP(y)                    \
+  PR_BEGIN_MACRO                            \
+  aDocShell->GetAllow##y(&allow);           \
+  if (!allow) {                             \
+    if (!aDisallowCapabilities.IsEmpty()) { \
+      aDisallowCapabilities.Append(',');    \
+    }                                       \
+    aDisallowCapabilities.Append(#y);       \
+  }                                         \
   PR_END_MACRO
 
   TRY_ALLOWPROP(Plugins);
@@ -178,12 +180,15 @@ SessionStoreUtils::AddDynamicFrameFilteredListener(
   TRY_ALLOWPROP(Auth);
   TRY_ALLOWPROP(ContentRetargeting);
   TRY_ALLOWPROP(ContentRetargetingOnChildren);
+
 #undef TRY_ALLOWPROP
+
+  return NS_OK;
 }
 
-/* static */ void SessionStoreUtils::RestoreDocShellCapabilities(
-    const GlobalObject& aGlobal, nsIDocShell* aDocShell,
-    const nsCString& aDisallowCapabilities) {
+NS_IMETHODIMP
+nsSessionStoreUtils::RestoreDocShellCapabilities(
+    nsIDocShell* aDocShell, const nsACString& aDisallowCapabilities) {
   aDocShell->SetAllowPlugins(true);
   aDocShell->SetAllowJavascript(true);
   aDocShell->SetAllowMetaRedirects(true);
@@ -225,19 +230,23 @@ SessionStoreUtils::AddDynamicFrameFilteredListener(
       aDocShell->SetAllowContentRetargetingOnChildren(false);
     }
   }
+
+  return NS_OK;
 }
 
-/* static */ void SessionStoreUtils::CollectScrollPosition(
-    const GlobalObject& aGlobal, Document& aDocument,
-    SSScrollPositionDict& aRetVal) {
-  nsIPresShell* presShell = aDocument.GetShell();
+NS_IMETHODIMP
+nsSessionStoreUtils::CollectScrollPosition(Document* aDocument,
+                                           nsACString& aRet) {
+  aRet.Truncate();
+
+  nsIPresShell* presShell = aDocument->GetShell();
   if (!presShell) {
-    return;
+    return NS_OK;
   }
 
   nsIScrollableFrame* frame = presShell->GetRootScrollFrameAsScrollable();
   if (!frame) {
-    return;
+    return NS_OK;
   }
 
   nsPoint scrollPos = frame->GetScrollPosition();
@@ -245,21 +254,22 @@ SessionStoreUtils::AddDynamicFrameFilteredListener(
   int scrollY = nsPresContext::AppUnitsToIntCSSPixels(scrollPos.y);
 
   if ((scrollX != 0) || (scrollY != 0)) {
-    aRetVal.mScroll.Construct() = nsPrintfCString("%d,%d", scrollX, scrollY);
+    const nsPrintfCString position("%d,%d", scrollX, scrollY);
+    aRet.Assign(position);
   }
+
+  return NS_OK;
 }
 
-/* static */ void SessionStoreUtils::RestoreScrollPosition(
-    const GlobalObject& aGlobal, nsGlobalWindowInner& aWindow,
-    const SSScrollPositionDict& aData) {
-  if (!aData.mScroll.WasPassed()) {
-    return;
-  }
-
-  nsCCharSeparatedTokenizer tokenizer(aData.mScroll.Value(), ',');
+NS_IMETHODIMP
+nsSessionStoreUtils::RestoreScrollPosition(mozIDOMWindow* aWindow,
+                                           const nsACString& aPos) {
+  nsCCharSeparatedTokenizer tokenizer(aPos, ',');
   nsAutoCString token(tokenizer.nextToken());
   int pos_X = atoi(token.get());
   token = tokenizer.nextToken();
   int pos_Y = atoi(token.get());
-  aWindow.ScrollTo(pos_X, pos_Y);
+  nsGlobalWindowInner::Cast(aWindow)->ScrollTo(pos_X, pos_Y);
+
+  return NS_OK;
 }

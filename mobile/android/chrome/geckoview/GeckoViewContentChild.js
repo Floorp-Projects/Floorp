@@ -15,6 +15,9 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   SessionHistory: "resource://gre/modules/sessionstore/SessionHistory.jsm",
 });
 
+const ssu = Cc["@mozilla.org/browser/sessionstore/utils;1"]
+              .getService(Ci.nsISessionStoreUtils);
+
 class GeckoViewContentChild extends GeckoViewChildModule {
   onInit() {
     debug `onInit`;
@@ -82,8 +85,7 @@ class GeckoViewContentChild extends GeckoViewChildModule {
 
   collectSessionState() {
     let history = SessionHistory.collect(docShell);
-    let [formdata, scrolldata] = this.Utils.mapFrameTree(
-        content, FormData.collect, SessionStoreUtils.collectScrollPosition);
+    let [formdata, scrolldata] = this.Utils.mapFrameTree(content, FormData.collect, ssu.collectScrollPosition.bind(ssu));
 
     // Save the current document resolution.
     let zoom = 1;
@@ -212,7 +214,7 @@ class GeckoViewContentChild extends GeckoViewChildModule {
             if (scrolldata) {
               this.Utils.restoreFrameTreeData(content, scrolldata, (frame, data) => {
                 if (data.scroll) {
-                  SessionStoreUtils.restoreScrollPosition(frame, data);
+                  ssu.restoreScrollPosition(frame, data.scroll);
                 }
               });
             }
