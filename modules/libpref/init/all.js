@@ -3026,9 +3026,6 @@ pref("layout.css.initial-letter.enabled", false);
 // Is support for mix-blend-mode enabled?
 pref("layout.css.mix-blend-mode.enabled", true);
 
-// Is support for isolation enabled?
-pref("layout.css.isolation.enabled", true);
-
 // Is support for scrollbar-color property enabled?
 pref("layout.css.scrollbar-color.enabled", true);
 
