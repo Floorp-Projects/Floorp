@@ -103,7 +103,7 @@ function popupShown()
 
   var popup = document.getElementById("popup");
   var rect = popup.getBoundingClientRect();
-  var scrollbox = document.getAnonymousNodes(popup)[0]._scrollbox;
+  var scrollbox = document.getAnonymousNodes(popup)[0].scrollbox;
   var expectedScrollPos = 0;
 
   if (gTestIndex == 0) {

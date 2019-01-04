@@ -1208,8 +1208,7 @@ bool nsMenuFrame::SizeToPopup(nsBoxLayoutState& aState, nsSize& aSize) {
 
       // if there is a scroll frame, add the desired width of the scrollbar as
       // well
-      nsIScrollableFrame* scrollFrame =
-          do_QueryFrame(popupFrame->PrincipalChildList().FirstChild());
+      nsIScrollableFrame* scrollFrame = popupFrame->GetScrollFrame(popupFrame);
       nscoord scrollbarWidth = 0;
       if (scrollFrame) {
         scrollbarWidth =
