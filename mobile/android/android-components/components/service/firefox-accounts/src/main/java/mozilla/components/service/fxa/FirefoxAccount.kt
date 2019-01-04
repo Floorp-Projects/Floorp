@@ -97,6 +97,13 @@ class FirefoxAccount internal constructor(private val inner: InternalFxAcct) : A
     }
 
     /**
+     * Fetches the connection success url.
+     */
+    fun getConnectionSuccessURL(): String {
+        return inner.getConnectionSuccessURL()
+    }
+
+    /**
      * Authenticates the current account using the code and state parameters fetched from the
      * redirect URL reached after completing the sign in flow triggered by [beginOAuthFlow].
      *
