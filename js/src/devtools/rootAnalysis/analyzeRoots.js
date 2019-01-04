@@ -453,26 +453,28 @@ function edgeInvalidatesVariable(edge, variable, body)
         expressionIsVariable(edge.PEdgeCallInstance.Exp, variable))
     do {
         const typeName = edge.Type.TypeFunctionCSU.Type.Name;
-        const m = typeName.match(/^mozilla::(\w+)</);
+        const m = typeName.match(/^(((\w|::)+?)(\w+))</);
         if (!m)
             break;
-        const type = m[1];
-        if (!["Maybe", "UniquePtr"].includes(type))
-            break;
-
-        // special-case: (type)::reset()
-        if (callee.Kind == 'Var' &&
-            callee.Variable.Name[1] == 'reset')
-        {
-            return true;
-        }
+        const [, type, namespace,, classname] = m;
 
         // special-case: the initial constructor that doesn't provide a value.
+        // Useful for things like Maybe<T>.
         if (callee.Kind == 'Var' &&
-            callee.Variable.Name[0].includes(`mozilla::${type}<T>::${type}()`))
+            typesWithSafeConstructors.has(type) &&
+            callee.Variable.Name[0].includes(`${namespace}${classname}<T>::${classname}()`))
         {
             return true;
         }
+
+        // special-case: UniquePtr::reset() and similar.
+        if (callee.Kind == 'Var' &&
+            type in resetterMethods &&
+            resetterMethods[type].has(callee.Variable.Name[1]))
+        {
+            return true;
+        }
+
     } while(0);
 
     // special-case: passing UniquePtr<T> by value.
