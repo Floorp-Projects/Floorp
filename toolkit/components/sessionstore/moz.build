@@ -4,12 +4,18 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-EXPORTS.mozilla.dom += [
-    'SessionStoreUtils.h',
+XPIDL_SOURCES += [
+    'nsISessionStoreUtils.idl',
+]
+
+XPIDL_MODULE = 'toolkit_sessionstore'
+
+EXPORTS += [
+    'nsSessionStoreUtils.h',
 ]
 
 UNIFIED_SOURCES += [
-    'SessionStoreUtils.cpp',
+    'nsSessionStoreUtils.cpp',
 ]
 
 FINAL_LIBRARY = 'xul'
