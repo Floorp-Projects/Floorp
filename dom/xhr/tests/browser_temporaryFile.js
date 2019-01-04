@@ -27,7 +27,6 @@ add_task(async _ => {
 });
 
 add_task(async _ => {
-  // TemporaryBlobImpl is not exposed. It's sent via PBackground and received as StreamBlobImpl.
   await SpecialPowers.pushPrefEnv({ "set" : [[ "dom.blob.memoryToTemporaryFile", 1 ]] });
 
   var data = new Array(2).join("1234567890ABCDEF");
@@ -38,7 +37,7 @@ add_task(async _ => {
     xhr.responseType = 'blob';
     xhr.send({toString: function() { return data; }});
     xhr.onloadend = _ => {
-      is(xhr.response.blobImplType, "StreamBlobImpl", "We want a StreamBlobImpl");
+      is(xhr.response.blobImplType, "StreamBlobImpl[TemporaryBlobImpl]", "We want a StreamBlobImpl holding a TemporaryBlobImpl on the parent side");
       resolve();
     }
   });

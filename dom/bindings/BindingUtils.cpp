@@ -65,6 +65,7 @@
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerScope.h"
 #include "mozilla/dom/XrayExpandoClass.h"
+#include "mozilla/dom/WindowProxyHolder.h"
 #include "mozilla/dom/XULScrollElementBinding.h"
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 #include "ipc/ErrorIPCUtils.h"
