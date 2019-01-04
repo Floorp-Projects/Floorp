@@ -194,6 +194,7 @@ extern crate png;
 extern crate rand;
 
 pub extern crate webrender_api;
+extern crate webrender_build;
 
 #[doc(hidden)]
 pub use device::{build_shader_strings, ReadPixelsFormat, UploadMethod, VertexUsageHint};

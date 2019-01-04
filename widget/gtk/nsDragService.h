@@ -63,8 +63,7 @@ class nsDragService final : public nsBaseDragService, public nsIObserver {
       const mozilla::Maybe<mozilla::CSSIntRegion> &aRegion,
       uint32_t aActionType) override;
   // nsIDragService
-  NS_IMETHOD InvokeDragSession(nsINode *aDOMNode,
-                               const nsACString &aPrincipalURISpec,
+  NS_IMETHOD InvokeDragSession(nsINode *aDOMNode, nsIPrincipal *aPrincipal,
                                nsIArray *anArrayTransferables,
                                uint32_t aActionType,
                                nsContentPolicyType aContentPolicyType) override;

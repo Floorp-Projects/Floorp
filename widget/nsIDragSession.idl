@@ -56,11 +56,11 @@ interface nsIDragSession : nsISupports
   readonly attribute Node sourceNode;
 
   /**
-   * The URI spec of the triggering principal.  This may be different than
-   * sourceNode's principal when sourceNode is xul:browser and the drag is
+   * the triggering principal.  This may be different than sourceNode's
+   * principal when sourceNode is xul:browser and the drag is
    * triggered in a browsing context inside it.
    */
-  attribute AUTF8String triggeringPrincipalURISpec;
+  attribute nsIPrincipal triggeringPrincipal;
 
   /**
    * The data transfer object for the current drag.
