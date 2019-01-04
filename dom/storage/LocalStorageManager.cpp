@@ -311,36 +311,13 @@ LocalStorageManager::CloneStorage(Storage* aStorage) {
 NS_IMETHODIMP
 LocalStorageManager::CheckStorage(nsIPrincipal* aPrincipal, Storage* aStorage,
                                   bool* aRetval) {
-  if (!aStorage || aStorage->Type() != Storage::eLocalStorage) {
-    return NS_ERROR_UNEXPECTED;
-  }
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aPrincipal);
+  MOZ_ASSERT(aStorage);
+  MOZ_ASSERT(aRetval);
 
-  RefPtr<LocalStorage> storage = static_cast<LocalStorage*>(aStorage);
-
-  *aRetval = false;
-
-  if (!aPrincipal) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  nsAutoCString suffix;
-  nsAutoCString origin;
-  nsresult rv = GenerateOriginKey(aPrincipal, suffix, origin);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  LocalStorageCache* cache = GetCache(suffix, origin);
-  if (cache != storage->GetCache()) {
-    return NS_OK;
-  }
-
-  if (!storage->PrincipalEquals(aPrincipal)) {
-    return NS_OK;
-  }
-
-  *aRetval = true;
-  return NS_OK;
+  // Only used by sessionStorage.
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP

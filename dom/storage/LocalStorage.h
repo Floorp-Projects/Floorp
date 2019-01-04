@@ -30,8 +30,6 @@ class LocalStorage final : public Storage, public nsSupportsWeakReference {
 
   const nsString& DocumentURI() const { return mDocumentURI; }
 
-  bool PrincipalEquals(nsIPrincipal* aPrincipal);
-
   LocalStorage(nsPIDOMWindowInner* aWindow, LocalStorageManager* aManager,
                LocalStorageCache* aCache, const nsAString& aDocumentURI,
                nsIPrincipal* aPrincipal, bool aIsPrivate);
@@ -74,10 +72,6 @@ class LocalStorage final : public Storage, public nsSupportsWeakReference {
   RefPtr<LocalStorageManager> mManager;
   RefPtr<LocalStorageCache> mCache;
   nsString mDocumentURI;
-
-  // Principal this Storage (i.e. localStorage or sessionStorage) has
-  // been created for
-  nsCOMPtr<nsIPrincipal> mPrincipal;
 
   // Whether this storage is running in private-browsing window.
   bool mIsPrivate : 1;

@@ -19,7 +19,8 @@ import {
   getRelativeSourcesForThread,
   getSourceCount,
   getFocusedSourceItem,
-  getWorkerDisplayName
+  getWorkerByThread,
+  getWorkerCount
 } from "../../selectors";
 
 import { getGeneratedSourceByURL } from "../../reducers/sources";
@@ -28,6 +29,7 @@ import { getGeneratedSourceByURL } from "../../reducers/sources";
 import actions from "../../actions";
 
 // Components
+import AccessibleImage from "../shared/AccessibleImage";
 import SourcesTreeItem from "./SourcesTreeItem";
 import ManagedTree from "../shared/ManagedTree";
 import Svg from "../shared/Svg";
@@ -43,17 +45,21 @@ import {
 } from "../../utils/sources-tree";
 import { getRawSourceURL } from "../../utils/source";
 
+import { getDisplayName } from "../../utils/workers";
+import { features } from "../../utils/prefs";
+
 import type {
   TreeNode,
   TreeDirectory,
   ParentMap
 } from "../../utils/sources-tree/types";
-import type { Source } from "../../types";
+import type { Worker, Source } from "../../types";
 import type { SourcesMap, State as AppState } from "../../reducers/types";
 import type { Item } from "../shared/ManagedTree";
 
 type Props = {
   thread: string,
+  worker: Worker,
   sources: SourcesMap,
   sourceCount: number,
   shownSource?: Source,
@@ -66,7 +72,7 @@ type Props = {
   clearProjectDirectoryRoot: typeof actions.clearProjectDirectoryRoot,
   focusItem: typeof actions.focusItem,
   focused: TreeNode,
-  workerDisplayName: string
+  workerCount: number
 };
 
 type State = {
@@ -324,8 +330,36 @@ class SourcesTree extends Component<Props, State> {
     );
   }
 
-  renderContents() {
-    const { projectRoot } = this.props;
+  renderThreadHeader() {
+    const { worker, workerCount } = this.props;
+
+    if (!features.windowlessWorkers || workerCount == 0) {
+      return null;
+    }
+
+    if (worker) {
+      return (
+        <div className="node thread-header">
+          <AccessibleImage className="worker" />
+          <span className="label">{getDisplayName(worker)}</span>
+        </div>
+      );
+    }
+
+    return (
+      <div className="node thread-header">
+        <AccessibleImage className={"file"} />
+        <span className="label">{L10N.getStr("mainThread")}</span>
+      </div>
+    );
+  }
+
+  render() {
+    const { projectRoot, worker } = this.props;
+
+    if (!features.windowlessWorkers && worker) {
+      return null;
+    }
 
     if (this.isEmpty()) {
       if (projectRoot) {
@@ -341,23 +375,12 @@ class SourcesTree extends Component<Props, State> {
     }
 
     return this.renderPane(
+      this.renderThreadHeader(),
       this.renderProjectRootHeader(),
       <div key="tree" className="sources-list" onKeyDown={this.onKeyDown}>
         {this.renderTree()}
       </div>
     );
-  }
-
-  render() {
-    if (this.props.workerDisplayName) {
-      return (
-        <div>
-          {this.props.workerDisplayName}
-          {this.renderContents()}
-        </div>
-      );
-    }
-    return this.renderContents();
   }
 }
 
@@ -392,7 +415,8 @@ const mapStateToProps = (state, props) => {
     projectRoot: getProjectDirectoryRoot(state),
     sources: getRelativeSourcesForThread(state, thread),
     sourceCount: getSourceCount(state, props.thread),
-    workerDisplayName: getWorkerDisplayName(state, thread)
+    worker: getWorkerByThread(state, thread),
+    workerCount: getWorkerCount(state)
   };
 };
 

@@ -722,7 +722,6 @@ wizardpage {
 /********** Rich Listbox ********/
 
 richlistbox {
-  -moz-binding: url('chrome://global/content/bindings/richlistbox.xml#richlistbox');
   -moz-user-focus: normal;
   -moz-box-orient: vertical;
 }

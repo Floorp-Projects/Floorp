@@ -23,7 +23,7 @@ import {
   removeSourcesFromTabList
 } from "../selectors";
 
-import { getMainThread } from "../reducers/pause";
+import { getMainThread } from "../reducers/debuggee";
 
 import type { Action, ThunkArgs } from "./types";
 import type { Source, Worker } from "../types";
@@ -106,7 +106,7 @@ export function closeTabsForMissingThreads(workers: Worker[]) {
       if (sourceId) {
         const source = getSourceFromId(getState(), sourceId);
         if (
-          source.thread != mainThread &&
+          source.thread != mainThread.actor &&
           !workers.some(({ actor }) => actor == source.thread)
         ) {
           removed.push(source);
