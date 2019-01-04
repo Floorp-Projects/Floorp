@@ -58,6 +58,8 @@ SCOPE_WHITELIST = [
     re.compile(r'^secrets:get:project/releng/gecko/build/level-[0-9]/\*'),
     # ptracing is generally useful for interactive tasks, too!
     re.compile(r'^docker-worker:feature:allowPtrace$'),
+    # docker-worker capabilities include loopback devices
+    re.compile(r'^docker-worker:capability:device:.*$'),
 ]
 
 
