@@ -1,0 +1,251 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Parser.pausePoints calls 1`] = `
+"/*bs*/foo(/**/1, /**/'2', /*bs*/bar())
+
+/*bs*/foo()
+  ./*bs*/bar()
+  ./*bs*/bazz()
+
+/*bs*/console./*bs*/log(/**/'yo')
+
+/*bs*/foo(
+  /**/1,
+  /*bs*/bar()
+)
+
+var /*bs*/a = 3;
+
+// set a step point at the first call expression in step expressions
+var /*bs*/x = { /**/a: /*bs*/a(), /**/b: /*b*/b(), /**/c: /*b*/c() };
+var /*bs*/b = /**/[ /*bs*/foo() ];
+/**/[ /*bs*/a(), /*b*/b(), /*b*/c() ];
+(/**/1, /*bs*/a(), /*b*/b());
+/*bs*/x(/**/1, /*bs*/a(), /*b*/b());
+"
+`;
+
+exports[`Parser.pausePoints control-flow 1`] = `
+"
+/*bs*/if (/*bs*/x) /**/{
+  /*bs*/foo();
+}
+else /*bs*/if (/*bs*/y) /**/{
+  /*bs*/foo();
+}
+else /**/{
+  /*bs*/foo();
+}
+
+/*bs*/for (var /*bs*/i=0; /*bs*/i< 5; i++ ) /**/{
+  /*bs*/foo();
+}
+
+/*bs*/while (/*bs*/x) /**/{
+  /*bs*/foo();
+}
+
+/*bs*/switch (/*bs*/c) {
+  /*bs*/case /*bs*/a:
+    /*bs*/console./*bs*/log(/**/'hi')
+}
+
+var /*bs*/a = 3;
+
+/*bs*/for (const /*bs*/val of /**/[/**/1, /**/2]) /**/{
+  /*bs*/console./*bs*/log(/**/\\"pause again\\", /**/val);
+}
+
+/*bs*/for (const /*bs*/val of vals) /**/{
+  /*bs*/console./*bs*/log(/**/\\"pause again\\", /**/val);
+}
+
+/*bs*/try /**/{
+} catch (e) /**/{
+}
+
+/*bs*/with (e) /**/{}
+"
+`;
+
+exports[`Parser.pausePoints decorators 1`] = `
+"/*bs*/@annotation
+class MyClass { }
+"
+`;
+
+exports[`Parser.pausePoints flow 1`] = `
+"/*bs*/class App extends Component {
+  /*b*/renderHello(name: string, action: ReduxAction, { /**/todos }: Props) /**/{
+    /*bs*/return \`howdy \${name}\`;
+  /**/}
+}
+"
+`;
+
+exports[`Parser.pausePoints func 1`] = `
+"/*b*/function square(n) /**/{
+  /*bs*/return n * n;
+/**/}
+
+/*bs*/export /*b*/function exFoo() /**/{
+  /*bs*/return \\"yay\\";
+/**/}
+
+/*b*/async function slowFoo() /**/{
+  /*bs*/return \\"meh\\";
+/**/}
+
+/*bs*/export /*b*/async function exSlowFoo() /**/{
+  /*bs*/return \\"yay in a bit\\";
+/**/}
+
+/*b*/function ret() /**/{
+  /*bs*/return /*bs*/foo();
+/**/}
+
+/*bs*/child = /*b*/function() /**/{/**/};
+
+/*bs*/(/*b*/function() /**/{
+  2;
+/**/})();
+
+const /*bs*/obj = {
+  /**/foo: /*b*/function name() /**/{
+    2 + 2;
+  /**/},
+
+  /*b*/bar() /**/{
+    2 + 2;
+  /**/}
+};
+
+/*bs*/export default /*b*/function root() /**/{
+/**/}
+
+/*b*/function test(a1, /**/a2 = 45, /**/{ /**/a3, /**/a4, /**/a5: /*bs*/{ /**/a6: /**/a7 } = {} } = {}) /**/{
+  /*bs*/console./*bs*/log(/**/\\"pause next here\\");
+/**/}
+
+/*b*/() => (/*bs*/x = 4/**/);
+
+/*b*/function ret2() /**/{
+  /*bs*/return (
+    /*bs*/foo()
+  );
+/**/}
+"
+`;
+
+exports[`Parser.pausePoints html 1`] = `
+"<html>
+<head>
+	<script type=\\"text/javascript\\">
+		var /*bs*/globalObject = {
+			/**/first: /**/\\"name\\",
+			/**/last: /**/\\"words\\"
+		};
+		/*b*/function sayHello (name) /**/{
+			/*bs*/return \`Hello, \${name}!\`;
+		/**/}
+	</script>
+	<style>
+		BODY {
+			font-size: 48px;
+			color: rebeccapurple;
+		}
+	</style>
+</head>
+<body>
+	<h1>Testing Script Tags in HTML</h1>
+	<script>
+		const /*bs*/capitalize = /*b*/name => /**/{
+			/*bs*/return /*bs*/name[0]./*bs*/toUpperCase() + /*bs*/name./*bs*/substring(/**/1)
+		/**/};
+		const /*bs*/greetAll = /**/[/**/\\"my friend\\", /**/\\"buddy\\", /**/\\"world\\"]
+			./*bs*/map(/**/capitalize)
+			./*bs*/map(/**/sayHello)
+			./*bs*/join(/**/\\"\\\\n\\");
+
+		/*bs*/globalObject.greetings = greetAll;
+	</script>
+	<p>
+		Some arbitrary intermediate content to affect the offsets of the scripts
+	</p>
+	<script>
+		/*bs*/(/*b*/function iife() /**/{
+			const /*bs*/greeting = /*bs*/sayHello(/**/\\"Ryan\\");
+			/*bs*/console./*bs*/log(/**/greeting);
+		/**/})();
+	</script>
+</body>
+</html>
+"
+`;
+
+exports[`Parser.pausePoints jsx 1`] = `
+"const /*bs*/jsxElement = /*bs*/<h1>/**/ Hi ! I'm here ! /**/</h1>;
+
+/*bs*/<div id=\\"3\\" res={/*b*/foo()}>/**/
+  /*b*/<Item>/**/{/*bs*/foo()}/**/</Item>/**/
+/**/</div>
+"
+`;
+
+exports[`Parser.pausePoints modules 1`] = `
+"/*bs*/import {x} from \\"y\\"
+/*bs*/import z from \\"y\\";
+
+/*bs*/export /*bs*/class AppComponent {
+  /*b*/title = 'app'
+}
+
+/*bs*/export default /*bs*/class AppComponent {
+  /*b*/title = 'app'
+}
+"
+`;
+
+exports[`Parser.pausePoints statements 1`] = `
+"/*bs*/debugger; /*bs*/debugger;
+/*bs*/console./*bs*/log(/**/\\"a\\"); /*bs*/console./*bs*/log(/**/\\"a\\");
+
+// assignments with valid pause locations
+/*bs*/this.x = 3;
+var /*bs*/a = 4;
+var /*bs*/d = /**/[/*bs*/foo()]
+var /*bs*/f = 3, /*bs*/e = 4;
+var /*bs*/g = /**/[], /*bs*/h = {};
+
+// assignments with invalid pause locations
+var /*bs*/b = /*bs*/foo();
+/*bs*/c = /*bs*/foo();
+
+
+const /*bs*/arr = /**/[
+  /**/'1',
+  /**/2,
+  /*bs*/foo()
+]
+
+const /*bs*/obj = {
+  /**/a: /**/'1',
+  /**/b: /**/2,
+  /**/c: /*bs*/foo(),
+}
+
+/*bs*/foo(
+  /**/1,
+  /*bs*/foo(
+    /**/1
+  ),
+  /**/3
+)
+
+/*bs*/throw new Error(\\"3\\");
+3;
+
+/*bs*/while (/*bs*/i < 6) /**/{ /*bs*/break }
+/*bs*/while (/*bs*/i < 6) /**/{ /*bs*/continue;}
+"
+`;

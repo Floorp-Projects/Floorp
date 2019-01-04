@@ -1,0 +1,541 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ManagedTree expands list items 1`] = `
+<div
+  className="managed-tree"
+>
+  <Tree
+    autoExpandAll={true}
+    autoExpandDepth={1}
+    getChildren={[Function]}
+    getKey={[Function]}
+    getParent={[Function]}
+    getPath={[Function]}
+    getRoots={[Function]}
+    isExpanded={[Function]}
+    itemHeight={24}
+    listItems={
+      Array [
+        Object {
+          "value": "A",
+        },
+        Object {
+          "value": "B",
+        },
+        Object {
+          "value": "C",
+        },
+        Object {
+          "value": "D",
+        },
+        Object {
+          "value": "E",
+        },
+      ]
+    }
+    onCollapse={[Function]}
+    onExpand={[Function]}
+    onFocus={
+      [MockFunction] {
+        "calls": Array [
+          Array [
+            Object {
+              "value": "A",
+            },
+          ],
+        ],
+        "results": Array [
+          Object {
+            "isThrow": false,
+            "value": undefined,
+          },
+        ],
+      }
+    }
+    renderItem={[Function]}
+  />
+</div>
+`;
+
+exports[`ManagedTree highlights list items 1`] = `
+<div
+  className="managed-tree"
+>
+  <Tree
+    autoExpandAll={true}
+    autoExpandDepth={1}
+    getChildren={[Function]}
+    getKey={[Function]}
+    getParent={[Function]}
+    getPath={[Function]}
+    getRoots={[Function]}
+    highlightItems={
+      Array [
+        Object {
+          "value": 5,
+        },
+        Object {
+          "value": 4,
+        },
+        Object {
+          "value": 3,
+        },
+        Object {
+          "value": 2,
+        },
+        Object {
+          "value": 1,
+        },
+      ]
+    }
+    isExpanded={[Function]}
+    itemHeight={24}
+    onCollapse={[Function]}
+    onExpand={[Function]}
+    onFocus={
+      [MockFunction] {
+        "calls": Array [
+          Array [
+            Object {
+              "value": 5,
+            },
+          ],
+        ],
+        "results": Array [
+          Object {
+            "isThrow": false,
+            "value": undefined,
+          },
+        ],
+      }
+    }
+    renderItem={[Function]}
+  />
+</div>
+`;
+
+exports[`ManagedTree render 1`] = `
+<div
+  className="managed-tree"
+>
+  <Tree
+    autoExpandAll={true}
+    autoExpandDepth={1}
+    getChildren={[Function]}
+    getKey={[Function]}
+    getParent={[Function]}
+    getPath={[Function]}
+    getRoots={[Function]}
+    isExpanded={[Function]}
+    itemHeight={24}
+    onCollapse={[Function]}
+    onExpand={[Function]}
+    onFocus={[MockFunction]}
+    renderItem={[Function]}
+  />
+</div>
+`;
+
+exports[`ManagedTree sets expanded items 1`] = `
+<ManagedTree
+  autoExpandAll={true}
+  autoExpandDepth={1}
+  getChildren={[Function]}
+  getParent={[Function]}
+  getPath={[Function]}
+  getRoots={[Function]}
+  itemHeight={24}
+  onCollapse={[MockFunction]}
+  onExpand={
+    [MockFunction] {
+      "calls": Array [
+        Array [
+          "a",
+          Set {
+            "a-$",
+            "b-$",
+            "c-$",
+          },
+        ],
+        Array [
+          "b",
+          Set {
+            "a-$",
+            "b-$",
+            "c-$",
+          },
+        ],
+        Array [
+          "c",
+          Set {
+            "a-$",
+            "b-$",
+            "c-$",
+          },
+        ],
+      ],
+      "results": Array [
+        Object {
+          "isThrow": false,
+          "value": undefined,
+        },
+        Object {
+          "isThrow": false,
+          "value": undefined,
+        },
+        Object {
+          "isThrow": false,
+          "value": undefined,
+        },
+      ],
+    }
+  }
+  onFocus={[MockFunction]}
+  renderItem={[Function]}
+>
+  <div
+    className="managed-tree"
+  >
+    <Tree
+      autoExpandAll={true}
+      autoExpandDepth={1}
+      getChildren={[Function]}
+      getKey={[Function]}
+      getParent={[Function]}
+      getPath={[Function]}
+      getRoots={[Function]}
+      isExpanded={[Function]}
+      itemHeight={24}
+      onCollapse={[Function]}
+      onExpand={[Function]}
+      onFocus={[MockFunction]}
+      renderItem={[Function]}
+    >
+      <div
+        className="tree "
+        onBlur={[Function]}
+        onFocus={[Function]}
+        onKeyDown={[Function]}
+        onKeyPress={[Function]}
+        onKeyUp={[Function]}
+        role="tree"
+        style={
+          Object {
+            "margin": 0,
+            "padding": 0,
+          }
+        }
+        tabIndex="0"
+      >
+        <TreeNode
+          depth={0}
+          expanded={true}
+          focused={false}
+          id="a-$"
+          index={0}
+          isExpandable={false}
+          item="a"
+          key="a-$"
+          onClick={[Function]}
+          onCollapse={[Function]}
+          onExpand={[Function]}
+          renderItem={[Function]}
+        >
+          <div
+            aria-expanded={true}
+            aria-level={1}
+            className="tree-node"
+            data-expandable={false}
+            id="a-$"
+            onClick={[Function]}
+            role="treeitem"
+          >
+            <div>
+              a
+            </div>
+          </div>
+        </TreeNode>
+        <TreeNode
+          depth={0}
+          expanded={true}
+          focused={false}
+          id={1}
+          index={1}
+          isExpandable={false}
+          item="b"
+          key="1"
+          onClick={[Function]}
+          onCollapse={[Function]}
+          onExpand={[Function]}
+          renderItem={[Function]}
+        >
+          <div
+            aria-expanded={true}
+            aria-level={1}
+            className="tree-node"
+            data-expandable={false}
+            id={1}
+            onClick={[Function]}
+            role="treeitem"
+          >
+            <div>
+              b
+            </div>
+          </div>
+        </TreeNode>
+        <TreeNode
+          depth={0}
+          expanded={true}
+          focused={false}
+          id={2}
+          index={2}
+          isExpandable={false}
+          item="c"
+          key="2"
+          onClick={[Function]}
+          onCollapse={[Function]}
+          onExpand={[Function]}
+          renderItem={[Function]}
+        >
+          <div
+            aria-expanded={true}
+            aria-level={1}
+            className="tree-node"
+            data-expandable={false}
+            id={2}
+            onClick={[Function]}
+            role="treeitem"
+          >
+            <div>
+              c
+            </div>
+          </div>
+        </TreeNode>
+      </div>
+    </Tree>
+  </div>
+</ManagedTree>
+`;
+
+exports[`ManagedTree sets expanded items 2`] = `
+<ManagedTree
+  autoExpandAll={true}
+  autoExpandDepth={1}
+  getChildren={[Function]}
+  getParent={[Function]}
+  getPath={[Function]}
+  getRoots={[Function]}
+  itemHeight={24}
+  onCollapse={
+    [MockFunction] {
+      "calls": Array [
+        Array [
+          "a",
+          Set {
+            "b-$",
+            "c-$",
+          },
+        ],
+      ],
+      "results": Array [
+        Object {
+          "isThrow": false,
+          "value": undefined,
+        },
+      ],
+    }
+  }
+  onExpand={
+    [MockFunction] {
+      "calls": Array [
+        Array [
+          "a",
+          Set {
+            "b-$",
+            "c-$",
+          },
+        ],
+        Array [
+          "b",
+          Set {
+            "b-$",
+            "c-$",
+          },
+        ],
+        Array [
+          "c",
+          Set {
+            "b-$",
+            "c-$",
+          },
+        ],
+      ],
+      "results": Array [
+        Object {
+          "isThrow": false,
+          "value": undefined,
+        },
+        Object {
+          "isThrow": false,
+          "value": undefined,
+        },
+        Object {
+          "isThrow": false,
+          "value": undefined,
+        },
+      ],
+    }
+  }
+  onFocus={
+    [MockFunction] {
+      "calls": Array [
+        Array [
+          "a",
+        ],
+      ],
+      "results": Array [
+        Object {
+          "isThrow": false,
+          "value": undefined,
+        },
+      ],
+    }
+  }
+  renderItem={[Function]}
+>
+  <div
+    className="managed-tree"
+  >
+    <Tree
+      autoExpandAll={true}
+      autoExpandDepth={1}
+      getChildren={[Function]}
+      getKey={[Function]}
+      getParent={[Function]}
+      getPath={[Function]}
+      getRoots={[Function]}
+      isExpanded={[Function]}
+      itemHeight={24}
+      onCollapse={[Function]}
+      onExpand={[Function]}
+      onFocus={
+        [MockFunction] {
+          "calls": Array [
+            Array [
+              "a",
+            ],
+          ],
+          "results": Array [
+            Object {
+              "isThrow": false,
+              "value": undefined,
+            },
+          ],
+        }
+      }
+      renderItem={[Function]}
+    >
+      <div
+        className="tree "
+        onBlur={[Function]}
+        onFocus={[Function]}
+        onKeyDown={[Function]}
+        onKeyPress={[Function]}
+        onKeyUp={[Function]}
+        role="tree"
+        style={
+          Object {
+            "margin": 0,
+            "padding": 0,
+          }
+        }
+        tabIndex="0"
+      >
+        <TreeNode
+          depth={0}
+          expanded={false}
+          focused={false}
+          id="a-$"
+          index={0}
+          isExpandable={false}
+          item="a"
+          key="a-$"
+          onClick={[Function]}
+          onCollapse={[Function]}
+          onExpand={[Function]}
+          renderItem={[Function]}
+        >
+          <div
+            aria-level={1}
+            className="tree-node"
+            data-expandable={false}
+            id="a-$"
+            onClick={[Function]}
+            role="treeitem"
+          >
+            <div>
+              a
+            </div>
+          </div>
+        </TreeNode>
+        <TreeNode
+          depth={0}
+          expanded={true}
+          focused={false}
+          id={1}
+          index={1}
+          isExpandable={false}
+          item="b"
+          key="1"
+          onClick={[Function]}
+          onCollapse={[Function]}
+          onExpand={[Function]}
+          renderItem={[Function]}
+        >
+          <div
+            aria-expanded={true}
+            aria-level={1}
+            className="tree-node"
+            data-expandable={false}
+            id={1}
+            onClick={[Function]}
+            role="treeitem"
+          >
+            <div>
+              b
+            </div>
+          </div>
+        </TreeNode>
+        <TreeNode
+          depth={0}
+          expanded={true}
+          focused={false}
+          id={2}
+          index={2}
+          isExpandable={false}
+          item="c"
+          key="2"
+          onClick={[Function]}
+          onCollapse={[Function]}
+          onExpand={[Function]}
+          renderItem={[Function]}
+        >
+          <div
+            aria-expanded={true}
+            aria-level={1}
+            className="tree-node"
+            data-expandable={false}
+            id={2}
+            onClick={[Function]}
+            role="treeitem"
+          >
+            <div>
+              c
+            </div>
+          </div>
+        </TreeNode>
+      </div>
+    </Tree>
+  </div>
+</ManagedTree>
+`;
