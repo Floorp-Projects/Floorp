@@ -201,6 +201,7 @@ public class GeckoPreferenceFragment extends PreferenceFragment {
             // Rebuild the list to reflect the current locale.
             getPreferenceScreen().removeAll();
             addPreferencesFromResource(getResource());
+            syncPreference = (SyncPreference) findPreference(GeckoPreferences.PREFS_SYNC);
         }
 
         // Fix the parent title regardless.
