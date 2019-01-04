@@ -3470,8 +3470,8 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
   const bool doingShortcut =
       isPaintingToWindow &&
       (child->GetStateBits() & NS_FRAME_SIMPLE_DISPLAYLIST) &&
-      // Animations may change the value of |HasOpacity()|.
-      !(child->GetContent() && child->GetContent()->MayHaveAnimations());
+      // Animations may change the stacking context state.
+      !(child->MayHaveTransformAnimation() || child->MayHaveOpacityAnimation());
 
   // dirty rect in child-relative coordinates
   NS_ASSERTION(aBuilder->GetCurrentFrame() == this, "Wrong coord space!");
