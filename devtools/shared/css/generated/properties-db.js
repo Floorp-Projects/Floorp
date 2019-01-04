@@ -9369,10 +9369,6 @@ exports.PREFERENCES = [
     "layout.css.font-variations.enabled"
   ],
   [
-    "image-orientation",
-    "layout.css.image-orientation.enabled"
-  ],
-  [
     "initial-letter",
     "layout.css.initial-letter.enabled"
   ],

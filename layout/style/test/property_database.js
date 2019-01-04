@@ -5206,6 +5206,14 @@ var gCSSProperties = {
     other_values: [ "0", "0.3", "-7.3" ],
     invalid_values: []
   },
+  "image-orientation": {
+    domProp: "imageOrientation",
+    inherited: true,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "none" ],
+    other_values: [ "from-image" ],
+    invalid_values: [ "0", "0deg" ],
+  },
   "image-rendering": {
     domProp: "imageRendering",
     inherited: true,
@@ -7196,16 +7204,6 @@ if (IsCSSPropertyPrefEnabled("layout.css.contain.enabled")) {
   };
 }
 
-if (IsCSSPropertyPrefEnabled("layout.css.image-orientation.enabled")) {
-  gCSSProperties["image-orientation"] = {
-    domProp: "imageOrientation",
-    inherited: true,
-    type: CSS_TYPE_LONGHAND,
-    initial_values: [ "none" ],
-    other_values: [ "from-image" ],
-    invalid_values: [ "0", "0deg" ]
-  };
-}
 
 if (IsCSSPropertyPrefEnabled("layout.css.initial-letter.enabled")) {
   gCSSProperties["initial-letter"] = {

@@ -3075,9 +3075,6 @@ pref("layout.css.convertFromNode.enabled", true);
 // Is support for CSS text-justify property enabled?
 pref("layout.css.text-justify.enabled", true);
 
-// Is support for the CSS image-orientation property enabled?
-pref("layout.css.image-orientation.enabled", true);
-
 // Is the paint-order property supported for HTML text?
 // (It is always supported for SVG.)
 pref("layout.css.paint-order.enabled", true);
