@@ -63,7 +63,7 @@ class MOZ_STACK_CLASS DragDataProducer {
                    nsIContent* aSelectionTargetNode, bool aIsAltKeyPressed);
   nsresult Produce(DataTransfer* aDataTransfer, bool* aCanDrag,
                    Selection** aSelection, nsIContent** aDragNode,
-                   nsACString& aPrincipalURISpec);
+                   nsIPrincipal** aPrincipal);
 
  private:
   void AddString(DataTransfer* aDataTransfer, const nsAString& aFlavor,
@@ -108,7 +108,7 @@ nsresult nsContentAreaDragDrop::GetDragData(
     nsPIDOMWindowOuter* aWindow, nsIContent* aTarget,
     nsIContent* aSelectionTargetNode, bool aIsAltKeyPressed,
     DataTransfer* aDataTransfer, bool* aCanDrag, Selection** aSelection,
-    nsIContent** aDragNode, nsACString& aPrincipalURISpec) {
+    nsIContent** aDragNode, nsIPrincipal** aPrincipal) {
   NS_ENSURE_TRUE(aSelectionTargetNode, NS_ERROR_INVALID_ARG);
 
   *aCanDrag = true;
@@ -116,7 +116,7 @@ nsresult nsContentAreaDragDrop::GetDragData(
   DragDataProducer provider(aWindow, aTarget, aSelectionTargetNode,
                             aIsAltKeyPressed);
   return provider.Produce(aDataTransfer, aCanDrag, aSelection, aDragNode,
-                          aPrincipalURISpec);
+                          aPrincipal);
 }
 
 NS_IMPL_ISUPPORTS(nsContentAreaDragDropDataProvider, nsIFlavorDataProvider)
@@ -483,7 +483,7 @@ nsresult DragDataProducer::GetImageData(imgIContainer* aImage,
 nsresult DragDataProducer::Produce(DataTransfer* aDataTransfer, bool* aCanDrag,
                                    Selection** aSelection,
                                    nsIContent** aDragNode,
-                                   nsACString& aPrincipalURISpec) {
+                                   nsIPrincipal** aPrincipal) {
   MOZ_ASSERT(aCanDrag && aSelection && aDataTransfer && aDragNode,
              "null pointer passed to Produce");
   NS_ASSERTION(mWindow, "window not set");
@@ -548,7 +548,7 @@ nsresult DragDataProducer::Produce(DataTransfer* aDataTransfer, bool* aCanDrag,
         if (tp) {
           // We have a TabParent, so it may have data for dnd in case the child
           // process started a dnd session.
-          tp->AddInitialDnDDataTo(aDataTransfer, aPrincipalURISpec);
+          tp->AddInitialDnDDataTo(aDataTransfer, aPrincipal);
         }
       }
     }

@@ -41,6 +41,13 @@ if CONFIG['CPU_ARCH'] == 'arm':
         'arm/filter_neon.S'
     ]
 
+if CONFIG['CPU_ARCH'] == 'aarch64' and CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+    DEFINES['MOZ_PNG_USE_ARM_NEON'] = True
+    UNIFIED_SOURCES += [
+        'arm/arm_init.c',
+        'arm/filter_neon_intrinsics.c'
+    ]
+
 if CONFIG['INTEL_ARCHITECTURE']:
     DEFINES['MOZ_PNG_USE_INTEL_SSE'] = True
     UNIFIED_SOURCES += [

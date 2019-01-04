@@ -976,13 +976,12 @@ nsresult MediaDevice::Allocate(const dom::MediaTrackConstraints& aConstraints,
                            aOutBadConstraint);
 }
 
-nsresult MediaDevice::SetTrack(const RefPtr<SourceMediaStream>& aStream,
-                               TrackID aTrackID,
-                               const PrincipalHandle& aPrincipalHandle) {
+void MediaDevice::SetTrack(const RefPtr<SourceMediaStream>& aStream,
+                           TrackID aTrackID,
+                           const PrincipalHandle& aPrincipalHandle) {
   MOZ_ASSERT(MediaManager::IsInMediaThread());
   MOZ_ASSERT(mSource);
-  return mSource->SetTrack(mAllocationHandle, aStream, aTrackID,
-                           aPrincipalHandle);
+  mSource->SetTrack(mAllocationHandle, aStream, aTrackID, aPrincipalHandle);
 }
 
 nsresult MediaDevice::Start() {
@@ -4123,11 +4122,19 @@ SourceListener::InitializeAsync() {
                   mVideoDeviceState ? mVideoDeviceState->mDevice : nullptr](
                  MozPromiseHolder<SourceListenerPromise>& aHolder) {
                if (audioDevice) {
-                 nsresult rv =
-                     audioDevice->SetTrack(stream, kAudioTrack, principal);
-                 if (NS_SUCCEEDED(rv)) {
-                   rv = audioDevice->Start();
-                 }
+                 audioDevice->SetTrack(stream, kAudioTrack, principal);
+               }
+
+               if (videoDevice) {
+                 videoDevice->SetTrack(stream, kVideoTrack, principal);
+               }
+
+               // SetTrack() queued the tracks. We add them synchronously here
+               // to avoid races.
+               stream->FinishAddTracks();
+
+               if (audioDevice) {
+                 nsresult rv = audioDevice->Start();
                  if (NS_FAILED(rv)) {
                    nsString log;
                    if (rv == NS_ERROR_NOT_AVAILABLE) {
@@ -4147,11 +4154,7 @@ SourceListener::InitializeAsync() {
                }
 
                if (videoDevice) {
-                 nsresult rv =
-                     videoDevice->SetTrack(stream, kVideoTrack, principal);
-                 if (NS_SUCCEEDED(rv)) {
-                   rv = videoDevice->Start();
-                 }
+                 nsresult rv = videoDevice->Start();
                  if (NS_FAILED(rv)) {
                    if (audioDevice) {
                      if (NS_WARN_IF(NS_FAILED(audioDevice->Stop()))) {
@@ -4167,9 +4170,6 @@ SourceListener::InitializeAsync() {
                  }
                }
 
-               // Start() queued the tracks to be added synchronously to avoid
-               // races
-               stream->FinishAddTracks();
                LOG("started all sources");
                aHolder.Resolve(true, __func__);
              })
@@ -4193,15 +4193,8 @@ SourceListener::InitializeAsync() {
                  state->mTrackEnabled = true;
                  state->mTrackEnabledTime = TimeStamp::Now();
 
-                 if (state->mDevice->GetMediaSource() !=
-                     MediaSourceEnum::AudioCapture) {
-                   // For AudioCapture mStream is a dummy stream, so we don't
-                   // try to enable pulling - there won't be a track to enable
-                   // it for.
-                   mStream->SetPullingEnabled(state == mAudioDeviceState.get()
-                                                  ? kAudioTrack
-                                                  : kVideoTrack,
-                                              true);
+                 if (state == mVideoDeviceState.get()) {
+                   mStream->SetPullingEnabled(kVideoTrack, true);
                  }
                }
                return SourceListenerPromise::CreateAndResolve(true, __func__);

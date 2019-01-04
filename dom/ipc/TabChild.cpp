@@ -1721,14 +1721,14 @@ mozilla::ipc::IPCResult TabChild::RecvNormalPriorityRealTouchMoveEvent(
 
 mozilla::ipc::IPCResult TabChild::RecvRealDragEvent(
     const WidgetDragEvent& aEvent, const uint32_t& aDragAction,
-    const uint32_t& aDropEffect, const nsCString& aPrincipalURISpec) {
+    const uint32_t& aDropEffect, const IPC::Principal& aPrincipal) {
   WidgetDragEvent localEvent(aEvent);
   localEvent.mWidget = mPuppetWidget;
 
   nsCOMPtr<nsIDragSession> dragSession = nsContentUtils::GetDragSession();
   if (dragSession) {
     dragSession->SetDragAction(aDragAction);
-    dragSession->SetTriggeringPrincipalURISpec(aPrincipalURISpec);
+    dragSession->SetTriggeringPrincipal(aPrincipal);
     RefPtr<DataTransfer> initialDataTransfer = dragSession->GetDataTransfer();
     if (initialDataTransfer) {
       initialDataTransfer->SetDropEffectInt(aDropEffect);
