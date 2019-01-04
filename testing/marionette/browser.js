@@ -259,6 +259,7 @@ browser.Context = class {
       y: this.window.screenY,
       width: this.window.outerWidth,
       height: this.window.outerHeight,
+      state: WindowState.from(this.window.windowState),
     };
   }
 
