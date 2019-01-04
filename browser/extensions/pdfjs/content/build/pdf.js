@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.1.145';
-var pdfjsBuild = 'd8f201ea';
+var pdfjsVersion = '2.1.153';
+var pdfjsBuild = '5a2bd9fc';
 
 var pdfjsSharedUtil = __w_pdfjs_require__(1);
 
@@ -5154,7 +5154,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise('GetDocRequest', {
     docId,
-    apiVersion: '2.1.145',
+    apiVersion: '2.1.153',
     source: {
       data: source.data,
       url: source.url,
@@ -6885,9 +6885,9 @@ const InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-const version = '2.1.145';
+const version = '2.1.153';
 exports.version = version;
-const build = 'd8f201ea';
+const build = '5a2bd9fc';
 exports.build = build;
 
 /***/ }),
@@ -10978,12 +10978,18 @@ class SimpleDOMNode {
   }
 
   get firstChild() {
-    return this.childNodes[0];
+    return this.childNodes && this.childNodes[0];
   }
 
   get nextSibling() {
-    let index = this.parentNode.childNodes.indexOf(this);
-    return this.parentNode.childNodes[index + 1];
+    const childNodes = this.parentNode.childNodes;
+
+    if (!childNodes) {
+      return undefined;
+    }
+
+    const index = childNodes.indexOf(this);
+    return childNodes[index + 1];
   }
 
   get textContent() {

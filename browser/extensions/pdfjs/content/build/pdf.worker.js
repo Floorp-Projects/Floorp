@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.1.145';
-var pdfjsBuild = 'd8f201ea';
+var pdfjsVersion = '2.1.153';
+var pdfjsBuild = '5a2bd9fc';
 
 var pdfjsCoreWorker = __w_pdfjs_require__(1);
 
@@ -375,7 +375,7 @@ var WorkerMessageHandler = {
     var cancelXHRs = null;
     var WorkerTasks = [];
     let apiVersion = docParams.apiVersion;
-    let workerVersion = '2.1.145';
+    let workerVersion = '2.1.153';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -6947,8 +6947,8 @@ class PDFDocument {
 
     let fingerprint = '';
 
-    for (const hashPart of hash) {
-      const hex = hashPart.toString(16);
+    for (let i = 0, ii = hash.length; i < ii; i++) {
+      const hex = hash[i].toString(16);
       fingerprint += hex.length === 1 ? '0' + hex : hex;
     }
 
@@ -31088,6 +31088,13 @@ var CFFParser = function CFFParserClosure() {
         if (validationCommand) {
           if (validationCommand.stem) {
             state.hints += stackSize >> 1;
+
+            if (value === 3 || value === 23) {
+              state.hasVStems = true;
+            } else if (state.hasVStems && (value === 1 || value === 18)) {
+              (0, _util.warn)('CFF stem hints are in wrong order');
+              data[j - 1] = value === 1 ? 3 : 23;
+            }
           }
 
           if ('min' in validationCommand) {
@@ -31157,7 +31164,8 @@ var CFFParser = function CFFParserClosure() {
           hints: 0,
           firstStackClearing: true,
           seac: null,
-          width: null
+          width: null,
+          hasVStems: false
         };
         var valid = true;
         var localSubrToUse = null;
