@@ -33,10 +33,14 @@ logger = logging.getLogger(__name__)
     context=[]
 )
 def cancel_all_action(parameters, graph_config, input, task_group_id, task_id, task):
+    def do_cancel_task(task_id):
+        logger.info('Cancelling task {}'.format(task_id))
+        cancel_task(task_id, use_proxy=True)
+
     own_task_id = os.environ.get('TASK_ID', '')
     with futures.ThreadPoolExecutor(CONCURRENCY) as e:
         cancels_jobs = [
-            e.submit(cancel_task, t, use_proxy=True)
+            e.submit(do_cancel_task, t)
             for t in list_task_group(task_group_id) if t != own_task_id
         ]
         for job in cancels_jobs:
