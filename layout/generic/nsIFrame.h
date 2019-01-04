@@ -1691,6 +1691,10 @@ class nsIFrame : public nsQueryFrame {
                                 const nsDisplayListSet& aLists,
                                 uint32_t aFlags = 0);
 
+  void BuildDisplayListForSimpleChild(nsDisplayListBuilder* aBuilder,
+                                      nsIFrame* aChild,
+                                      const nsDisplayListSet& aLists);
+
   bool RefusedAsyncAnimation() const {
     return GetProperty(RefusedAsyncAnimationProperty());
   }
