@@ -3589,8 +3589,8 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
   const bool isPositioned = disp->IsAbsPosContainingBlock(child);
 
   const bool isStackingContext =
-      child->IsStackingContext(disp, pos, effects, isPositioned) ||
-      (aFlags & DISPLAY_CHILD_FORCE_STACKING_CONTEXT);
+      (aFlags & DISPLAY_CHILD_FORCE_STACKING_CONTEXT) ||
+      child->IsStackingContext(disp, pos, effects, isPositioned);
 
   if (pseudoStackingContext || isStackingContext || isPositioned ||
       isPlaceholder || (!isSVG && disp->IsFloating(child)) ||
