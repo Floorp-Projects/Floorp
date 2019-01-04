@@ -9377,10 +9377,6 @@ exports.PREFERENCES = [
     "layout.css.osx-font-smoothing.enabled"
   ],
   [
-    "scroll-behavior",
-    "layout.css.scroll-behavior.property-enabled"
-  ],
-  [
     "scrollbar-width",
     "layout.css.scrollbar-width.enabled"
   ],

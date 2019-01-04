@@ -12,17 +12,17 @@ random-if(Android) HTTP == opacity-mixed-scrolling-1.html opacity-mixed-scrollin
 random-if(cocoaWidget) HTTP == opacity-mixed-scrolling-2.html opacity-mixed-scrolling-2.html?ref # see bug 625357
 fails-if(Android) == percent-height-overflowing-image-1.html percent-height-overflowing-image-1-ref.html # bug 1494132
 
-pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-1.html scroll-behavior-1.html?ref
-pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-2.html scroll-behavior-2.html?ref
-pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-3.html scroll-behavior-3.html?ref
-pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-4.html scroll-behavior-4.html?ref
-pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-5.html scroll-behavior-5.html?ref
-pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-6.html scroll-behavior-6.html?ref
-pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-7.html scroll-behavior-7.html?ref
-pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-8.html scroll-behavior-8.html?ref
-pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-9.html scroll-behavior-9.html?ref
-pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-10.html scroll-behavior-10.html?ref
-pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-textarea.html scroll-behavior-textarea.html?ref
+pref(layout.css.scroll-behavior.enabled,true) == scroll-behavior-1.html scroll-behavior-1.html?ref
+pref(layout.css.scroll-behavior.enabled,true) == scroll-behavior-2.html scroll-behavior-2.html?ref
+pref(layout.css.scroll-behavior.enabled,true) == scroll-behavior-3.html scroll-behavior-3.html?ref
+pref(layout.css.scroll-behavior.enabled,true) == scroll-behavior-4.html scroll-behavior-4.html?ref
+pref(layout.css.scroll-behavior.enabled,true) == scroll-behavior-5.html scroll-behavior-5.html?ref
+pref(layout.css.scroll-behavior.enabled,true) == scroll-behavior-6.html scroll-behavior-6.html?ref
+pref(layout.css.scroll-behavior.enabled,true) == scroll-behavior-7.html scroll-behavior-7.html?ref
+pref(layout.css.scroll-behavior.enabled,true) == scroll-behavior-8.html scroll-behavior-8.html?ref
+pref(layout.css.scroll-behavior.enabled,true) == scroll-behavior-9.html scroll-behavior-9.html?ref
+pref(layout.css.scroll-behavior.enabled,true) == scroll-behavior-10.html scroll-behavior-10.html?ref
+pref(layout.css.scroll-behavior.enabled,true) == scroll-behavior-textarea.html scroll-behavior-textarea.html?ref
 HTTP == simple-1.html simple-1.html?ref
 HTTP == subpixel-1.html#d subpixel-1-ref.html#d
 fuzzy-if(Android,0-4,0-120) HTTP == text-1.html text-1.html?ref

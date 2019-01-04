@@ -4451,6 +4451,14 @@ var gCSSProperties = {
       "over left", "right under", "0", "100px", "50%"
     ]
   },
+  "scroll-behavior": {
+    domProp: "scrollBehavior",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "auto" ],
+    other_values: [ "smooth" ],
+    invalid_values: [ "none",  "1px" ],
+  },
   "table-layout": {
     domProp: "tableLayout",
     inherited: false,
@@ -7292,17 +7300,6 @@ if (IsCSSPropertyPrefEnabled("layout.css.overflow-clip-box.enabled")) {
                     "content-box content-box" ],
     invalid_values: [ "none", "auto", "content-box none", "border-box", "0",
                       "content-box, content-box" ]
-  };
-}
-
-if (IsCSSPropertyPrefEnabled("layout.css.scroll-behavior.property-enabled")) {
-  gCSSProperties["scroll-behavior"] = {
-    domProp: "scrollBehavior",
-    inherited: false,
-    type: CSS_TYPE_LONGHAND,
-    initial_values: [ "auto" ],
-    other_values: [ "smooth" ],
-    invalid_values: [ "none",  "1px" ]
   };
 }
 
