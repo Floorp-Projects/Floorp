@@ -285,8 +285,8 @@ static GtkWindow *GetGtkWindow(dom::Document *aDocument) {
 
 NS_IMETHODIMP
 nsDragService::InvokeDragSession(
-    nsINode *aDOMNode, const nsACString &aPrincipalURISpec,
-    nsIArray *aArrayTransferables, uint32_t aActionType,
+    nsINode *aDOMNode, nsIPrincipal *aPrincipal, nsIArray *aArrayTransferables,
+    uint32_t aActionType,
     nsContentPolicyType aContentPolicyType = nsIContentPolicy::TYPE_OTHER) {
   MOZ_LOG(sDragLm, LogLevel::Debug, ("nsDragService::InvokeDragSession"));
 
@@ -296,7 +296,7 @@ nsDragService::InvokeDragSession(
   // know whether or not the drag succeeded.
   if (mSourceNode) return NS_ERROR_NOT_AVAILABLE;
 
-  return nsBaseDragService::InvokeDragSession(aDOMNode, aPrincipalURISpec,
+  return nsBaseDragService::InvokeDragSession(aDOMNode, aPrincipal,
                                               aArrayTransferables, aActionType,
                                               aContentPolicyType);
 }
