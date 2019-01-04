@@ -111,6 +111,9 @@ def write_test_settings_json(args, test_details, oskey):
     if test_details.get("alert_threshold", None) is not None:
         test_settings['raptor-options']['alert_threshold'] = float(test_details['alert_threshold'])
 
+    if test_details.get("screen_capture", None) is not None:
+        test_settings['raptor-options']['screen_capture'] = test_details.get("screen_capture")
+
     # if gecko profiling is enabled, write profiling settings for webext
     if test_details.get("gecko_profile", False):
         test_settings['raptor-options']['gecko_profile'] = True
