@@ -125,13 +125,12 @@ interface nsITransferable : nsISupports
   Array<ACString> flavorsTransferableCanExport();
 
   /**
-    * Given a flavor retrieve the data. 
+    * Given a flavor retrieve the data.
     *
     * @param  aFlavor (in parameter) the flavor of data to retrieve
     * @param  aData the data. Some variant of class in nsISupportsPrimitives.idl
-    * @param  aDataLen the length of the data
     */
-  void getTransferData(in string aFlavor, out nsISupports aData);
+  [must_use] void getTransferData(in string aFlavor, out nsISupports aData);
 
   /**
     * Returns the best flavor in the transferable, given those that have
