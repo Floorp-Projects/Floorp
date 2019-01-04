@@ -50,8 +50,7 @@ class FullParseHandler;
 
 }  // namespace frontend
 
-template <typename Unit>
-using AsmJSParser = frontend::Parser<frontend::FullParseHandler, Unit>;
+using AsmJSParser = frontend::Parser<frontend::FullParseHandler, char16_t>;
 
 // This function takes over parsing of a function starting with "use asm". The
 // return value indicates whether an error was reported which the caller should
@@ -60,8 +59,7 @@ using AsmJSParser = frontend::Parser<frontend::FullParseHandler, Unit>;
 // indeterminate amount and the entire function should be reparsed from the
 // beginning.
 
-extern MOZ_MUST_USE bool CompileAsmJS(JSContext* cx,
-                                      AsmJSParser<char16_t>& parser,
+extern MOZ_MUST_USE bool CompileAsmJS(JSContext* cx, AsmJSParser& parser,
                                       frontend::ParseNode* stmtList,
                                       bool* validated);
 
