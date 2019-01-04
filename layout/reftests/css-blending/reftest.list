@@ -95,6 +95,6 @@ pref(layout.css.background-blend-mode.enabled,true) == background-blending-moz-e
 fuzzy(0-1,0-40000) pref(layout.css.background-blend-mode.enabled,true) == mix-blend-mode-soft-light.html mix-blend-mode-soft-light-ref.html
 
 # Test plan 4.4.2 element with isolation:isolate creates an isolated group for blended children
-pref(layout.css.isolation.enabled,true) == blend-isolation.html blend-isolation-ref.html
+== blend-isolation.html blend-isolation-ref.html
 
 pref(layout.css.background-blend-mode.enabled,true) == bug1281593.html bug1281593-ref.html

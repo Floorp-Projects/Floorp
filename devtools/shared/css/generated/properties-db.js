@@ -9373,10 +9373,6 @@ exports.PREFERENCES = [
     "layout.css.initial-letter.enabled"
   ],
   [
-    "isolation",
-    "layout.css.isolation.enabled"
-  ],
-  [
     "mix-blend-mode",
     "layout.css.mix-blend-mode.enabled"
   ],

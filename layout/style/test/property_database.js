@@ -5222,6 +5222,14 @@ var gCSSProperties = {
     other_values: [ "optimizeSpeed", "optimizeQuality", "-moz-crisp-edges" ],
     invalid_values: []
   },
+  "isolation": {
+    domProp: "isolation",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "auto" ],
+    other_values: ["isolate"],
+    invalid_values: [],
+  },
   "lighting-color": {
     domProp: "lightingColor",
     inherited: false,
@@ -7239,17 +7247,6 @@ if (IsCSSPropertyPrefEnabled("layout.css.mix-blend-mode.enabled")) {
     initial_values: [ "normal" ],
     other_values: ["multiply", "screen", "overlay", "darken", "lighten", "color-dodge", "color-burn",
         "hard-light", "soft-light", "difference", "exclusion", "hue", "saturation", "color", "luminosity"],
-    invalid_values: []
-  };
-}
-
-if (IsCSSPropertyPrefEnabled("layout.css.isolation.enabled")) {
-  gCSSProperties["isolation"] = {
-    domProp: "isolation",
-    inherited: false,
-    type: CSS_TYPE_LONGHAND,
-    initial_values: [ "auto" ],
-    other_values: ["isolate"],
     invalid_values: []
   };
 }
