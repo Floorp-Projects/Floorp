@@ -100,6 +100,10 @@ pub struct OpacityBindingInfo {
     changed: bool,
 }
 
+/// A stable ID for a given tile, to help debugging.
+#[derive(Debug, Copy, Clone)]
+struct TileId(usize);
+
 /// Information about a cached tile.
 #[derive(Debug)]
 pub struct Tile {
@@ -118,11 +122,15 @@ pub struct Tile {
     /// cache handle can be used. Tiles are invalidated during the
     /// build_dirty_regions method.
     is_valid: bool,
+    /// The tile id is stable between display lists and / or frames,
+    /// if the tile is retained. Useful for debugging tile evictions.
+    id: TileId,
 }
 
 impl Tile {
     /// Construct a new, invalid tile.
     fn new(
+        id: TileId,
     ) -> Self {
         Tile {
             local_rect: LayoutRect::zero(),
@@ -131,6 +139,7 @@ impl Tile {
             handle: TextureCacheHandle::invalid(),
             descriptor: TileDescriptor::new(),
             is_valid: false,
+            id,
         }
     }
 
@@ -290,6 +299,8 @@ pub struct TileCache {
     /// scroll bars in gecko, when the content overflows under the
     /// scroll bar).
     world_bounding_rect: WorldRect,
+    /// Counter for the next id to assign for a new tile.
+    next_id: usize,
 }
 
 impl TileCache {
@@ -312,7 +323,14 @@ impl TileCache {
             scroll_offset: None,
             pending_blits: Vec::new(),
             world_bounding_rect: WorldRect::zero(),
+            next_id: 0,
         }
+    }
+
+    fn next_id(&mut self) -> TileId {
+        let id = TileId(self.next_id);
+        self.next_id += 1;
+        id
     }
 
     /// Get the tile coordinates for a given rectangle.
@@ -521,7 +539,7 @@ impl TileCache {
 
                 let mut tile = match old_tiles.remove(&key) {
                     Some(tile) => tile,
-                    None => Tile::new(),
+                    None => Tile::new(self.next_id()),
                 };
 
                 tile.world_rect = WorldRect::new(
@@ -897,6 +915,21 @@ impl TileCache {
 
         // Step through each tile and invalidate if the dependencies have changed.
         for (i, tile) in self.tiles.iter_mut().enumerate() {
+            // Invalidate if the backing texture was evicted.
+            if resource_cache.texture_cache.is_allocated(&tile.handle) {
+                // Request the backing texture so it won't get evicted this frame.
+                // We specifically want to mark the tile texture as used, even
+                // if it's detected not visible below and skipped. This is because
+                // we maintain the set of tiles we care about based on visibility
+                // during pre_update. If a tile still exists after that, we are
+                // assuming that it's either visible or we want to retain it for
+                // a while in case it gets scrolled back onto screen soon.
+                // TODO(gw): Consider switching to manual eviction policy?
+                resource_cache.texture_cache.request(&tile.handle, gpu_cache);
+            } else {
+                tile.is_valid = false;
+            }
+
             let visible_rect = match tile
                 .world_rect
                 .intersection(&frame_context.screen_world_rect)
@@ -907,14 +940,6 @@ impl TileCache {
 
             // Check the content of the tile is the same
             tile.is_valid &= tile.descriptor.is_valid();
-
-            // Invalidate if the backing texture was evicted.
-            if !resource_cache.texture_cache.is_allocated(&tile.handle) {
-                tile.is_valid = false;
-            }
-
-            // Request the backing texture so it won't get evicted this frame.
-            resource_cache.texture_cache.request(&tile.handle, gpu_cache);
 
             // Decide how to handle this tile when drawing this frame.
             if tile.is_valid {
