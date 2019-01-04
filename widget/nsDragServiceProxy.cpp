@@ -27,22 +27,6 @@ nsDragServiceProxy::nsDragServiceProxy() {}
 
 nsDragServiceProxy::~nsDragServiceProxy() {}
 
-static void GetPrincipalURIFromNode(nsCOMPtr<nsINode>& sourceNode,
-                                    nsCString& aPrincipalURISpec) {
-  if (!sourceNode) {
-    return;
-  }
-
-  nsCOMPtr<nsIPrincipal> principal = sourceNode->NodePrincipal();
-  nsCOMPtr<nsIURI> principalURI;
-  nsresult rv = principal->GetURI(getter_AddRefs(principalURI));
-  if (NS_FAILED(rv) || !principalURI) {
-    return;
-  }
-
-  principalURI->GetSpec(aPrincipalURISpec);
-}
-
 nsresult nsDragServiceProxy::InvokeDragSessionImpl(
     nsIArray* aArrayTransferables, const Maybe<CSSIntRegion>& aRegion,
     uint32_t aActionType) {
@@ -53,8 +37,10 @@ nsresult nsDragServiceProxy::InvokeDragSessionImpl(
   nsContentUtils::TransferablesToIPCTransferables(
       aArrayTransferables, dataTransfers, false, child->Manager(), nullptr);
 
-  nsCString principalURISpec;
-  GetPrincipalURIFromNode(mSourceNode, principalURISpec);
+  nsCOMPtr<nsIPrincipal> principal;
+  if (mSourceNode) {
+    principal = mSourceNode->NodePrincipal();
+  }
 
   LayoutDeviceIntRect dragRect;
   if (mHasImage || mSelection) {
@@ -83,7 +69,7 @@ nsresult nsDragServiceProxy::InvokeDragSessionImpl(
 
         mozilla::Unused << child->SendInvokeDragSession(
             dataTransfers, aActionType, surfaceData, stride,
-            dataSurface->GetFormat(), dragRect, principalURISpec);
+            dataSurface->GetFormat(), dragRect, IPC::Principal(principal));
         StartDragSession();
         return NS_OK;
       }
@@ -92,7 +78,7 @@ nsresult nsDragServiceProxy::InvokeDragSessionImpl(
 
   mozilla::Unused << child->SendInvokeDragSession(
       dataTransfers, aActionType, mozilla::void_t(), 0,
-      static_cast<SurfaceFormat>(0), dragRect, principalURISpec);
+      static_cast<SurfaceFormat>(0), dragRect, IPC::Principal(principal));
   StartDragSession();
   return NS_OK;
 }
