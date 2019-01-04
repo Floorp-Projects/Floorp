@@ -3081,9 +3081,6 @@ pref("layout.css.prefixes.animations", true);
 pref("layout.css.prefixes.box-sizing", true);
 pref("layout.css.prefixes.font-features", true);
 
-// Is support for background-blend-mode enabled?
-pref("layout.css.background-blend-mode.enabled", true);
-
 // Is -moz-osx-font-smoothing enabled?
 // Only supported in OSX builds
 #ifdef XP_MACOSX

@@ -9417,10 +9417,6 @@ exports.PREFERENCES = [
     "layout.css.scroll-snap.enabled"
   ],
   [
-    "background-blend-mode",
-    "layout.css.background-blend-mode.enabled"
-  ],
-  [
     "font-variation-settings",
     "layout.css.font-variations.enabled"
   ],

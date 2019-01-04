@@ -2746,6 +2746,18 @@ var gCSSProperties = {
     other_values: [ "fixed", "local", "scroll,scroll", "fixed, scroll", "scroll, fixed, local, scroll", "fixed, fixed" ],
     invalid_values: []
   },
+  "background-blend-mode": {
+    domProp: "backgroundBlendMode",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    applies_to_first_letter: true,
+    applies_to_first_line: true,
+    applies_to_placeholder: true,
+    initial_values: [ "normal" ],
+    other_values: [ "multiply", "screen", "overlay", "darken", "lighten", "color-dodge", "color-burn",
+      "hard-light", "soft-light", "difference", "exclusion", "hue", "saturation", "color", "luminosity" ],
+    invalid_values: ["none", "10px", "multiply multiply"],
+  },
   "background-clip": {
     /*
      * When we rename this to 'background-clip', we also
@@ -7253,21 +7265,6 @@ if (IsCSSPropertyPrefEnabled("layout.css.osx-font-smoothing.enabled")) {
     initial_values: [ "auto" ],
     other_values: [ "grayscale" ],
     invalid_values: [ "none", "subpixel-antialiased", "antialiased" ]
-  };
-}
-
-if (IsCSSPropertyPrefEnabled("layout.css.background-blend-mode.enabled")) {
-  gCSSProperties["background-blend-mode"] = {
-    domProp: "backgroundBlendMode",
-    inherited: false,
-    type: CSS_TYPE_LONGHAND,
-    applies_to_first_letter: true,
-    applies_to_first_line: true,
-    applies_to_placeholder: true,
-    initial_values: [ "normal" ],
-    other_values: [ "multiply", "screen", "overlay", "darken", "lighten", "color-dodge", "color-burn",
-      "hard-light", "soft-light", "difference", "exclusion", "hue", "saturation", "color", "luminosity" ],
-    invalid_values: ["none", "10px", "multiply multiply"]
   };
 }
 
