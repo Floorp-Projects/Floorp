@@ -1,0 +1,13 @@
+[package]
+name = "webrender_build"
+version = "0.0.1"
+license = "MPL-2.0"
+repository = "https://github.com/servo/webrender"
+description = "Code shared between precompilation (build.rs) and the rest of WebRender"
+
+[features]
+serialize_program = ["serde"]
+
+[dependencies]
+serde = { optional = true, version = "1.0", features = ["serde_derive"] }
+sha2 = "0.8"
