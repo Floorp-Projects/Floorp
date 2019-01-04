@@ -299,11 +299,32 @@ void MoofParser::ParseStbl(Box& aBox) {
 }
 
 void MoofParser::ParseStsd(Box& aBox) {
+  if (mTrex.mTrackId == 0) {
+    // If mTrex.mTrackId is 0, then the parser is being used to read multiple
+    // tracks metadata, and it is not a sane operation to try and map multiple
+    // sample description boxes, from different tracks, onto the parser, which
+    // is modeled around storing metadata for a single track.
+    return;
+  }
+  MOZ_ASSERT(
+      mSampleDescriptions.IsEmpty(),
+      "Shouldn't have any sample descriptions when starting to parse stsd");
+  uint32_t numberEncryptedEntries = 0;
   for (Box box = aBox.FirstChild(); box.IsAvailable(); box = box.Next()) {
+    SampleDescriptionEntry sampleDescriptionEntry{false};
     if (box.IsType("encv") || box.IsType("enca")) {
       ParseEncrypted(box);
+      sampleDescriptionEntry.mIsEncryptedEntry = true;
+      numberEncryptedEntries++;
+    }
+    if (!mSampleDescriptions.AppendElement(sampleDescriptionEntry,
+                                           mozilla::fallible)) {
+      LOG(Moof, "OOM");
+      return;
     }
   }
+  MOZ_ASSERT(numberEncryptedEntries <= 1,
+             "We don't expect or handle mulitple encrypted entries per track");
 }
 
 void MoofParser::ParseEncrypted(Box& aBox) {

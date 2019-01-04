@@ -208,6 +208,15 @@ class Sgpd final : public Atom  // SampleGroupDescription box.
   Result<Ok, nsresult> Parse(Box& aBox);
 };
 
+// Audio/video entries from the sample description box (stsd). We only need to
+// store if these are encrypted, so do not need a specialized class for
+// different audio and video data. Currently most of the parsing of these
+// entries is by the mp4parse-rust, but moof pasrser needs to know which of
+// these are encrypted when parsing the track fragment header (tfhd).
+struct SampleDescriptionEntry {
+  bool mIsEncryptedEntry = false;
+};
+
 class Moof final : public Atom {
  public:
   Moof(Box& aBox, Trex& aTrex, Mvhd& aMvhd, Mdhd& aMdhd, Edts& aEdts,
@@ -293,6 +302,7 @@ class MoofParser : public DecoderDoctorLifeLogger<MoofParser> {
   FallibleTArray<CencSampleEncryptionInfoEntry>
       mTrackSampleEncryptionInfoEntries;
   FallibleTArray<SampleToGroupEntry> mTrackSampleToGroupEntries;
+  FallibleTArray<SampleDescriptionEntry> mSampleDescriptions;
 
   nsTArray<Moof>& Moofs() { return mMoofs; }
 
