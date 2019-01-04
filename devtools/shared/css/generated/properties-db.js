@@ -9357,10 +9357,6 @@ exports.PSEUDO_ELEMENTS = [
  */
 exports.PREFERENCES = [
   [
-    "box-decoration-break",
-    "layout.css.box-decoration-break.enabled"
-  ],
-  [
     "color-adjust",
     "layout.css.color-adjust.enabled"
   ],
