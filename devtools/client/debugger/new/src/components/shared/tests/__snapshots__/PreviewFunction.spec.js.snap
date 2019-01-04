@@ -1,0 +1,23 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`PreviewFunction should return a span 1`] = `
+<span
+  className="function-signature"
+>
+  <span
+    className="function-name"
+  >
+    &lt;anonymous&gt;
+  </span>
+  <span
+    className="paren"
+  >
+    (
+  </span>
+  <span
+    className="paren"
+  >
+    )
+  </span>
+</span>
+`;

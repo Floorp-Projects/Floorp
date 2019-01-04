@@ -15,4 +15,5 @@ DIRS += [
 
 DebuggerModules(
     'main.js',
+    'vendors.js',
 )

@@ -1,0 +1,55 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Result list should render the component 1`] = `
+<ul
+  aria-live="polite"
+  className="result-list small"
+  id="result-list"
+  role="listbox"
+>
+  <li
+    aria-describedby="0-subtitle"
+    aria-labelledby="0-title"
+    className="result-item"
+    key="0value0"
+    onClick={[Function]}
+    role="option"
+    title="value"
+  >
+    <div
+      className="title"
+      id="0-title"
+    >
+      title
+    </div>
+    <div
+      className="subtitle"
+      id="0-subtitle"
+    >
+      subtitle
+    </div>
+  </li>
+  <li
+    aria-describedby="1-subtitle"
+    aria-labelledby="1-title"
+    className="result-item selected"
+    key="1value 11"
+    onClick={[Function]}
+    role="option"
+    title="value 1"
+  >
+    <div
+      className="title"
+      id="1-title"
+    >
+      title 1
+    </div>
+    <div
+      className="subtitle"
+      id="1-subtitle"
+    >
+      subtitle 1
+    </div>
+  </li>
+</ul>
+`;

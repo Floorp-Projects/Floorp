@@ -1,0 +1,19 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ObjectInspector - properties renders uninitialized bindings 1`] = `
+"
+  someFoo: (uninitialized)
+"
+`;
+
+exports[`ObjectInspector - properties renders unmapped bindings 1`] = `
+"
+  someFoo: (unmapped)
+"
+`;
+
+exports[`ObjectInspector - properties renders unscoped bindings 1`] = `
+"
+  someFoo: (unscoped)
+"
+`;
