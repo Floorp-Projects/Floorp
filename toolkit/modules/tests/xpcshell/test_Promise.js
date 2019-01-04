@@ -4,7 +4,7 @@
 
 ChromeUtils.import("resource://gre/modules/Promise.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/Task.jsm");
+ChromeUtils.import("resource://testing-common/Task.jsm");
 ChromeUtils.import("resource://testing-common/PromiseTestUtils.jsm");
 
 // Prevent test failures due to the unhandled rejections in this test file.
