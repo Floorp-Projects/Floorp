@@ -10,6 +10,8 @@
 #include "nsIUrlClassifierFeature.h"
 #include "nsString.h"
 
+class nsIURI;
+
 namespace mozilla {
 namespace net {
 
@@ -18,8 +20,10 @@ class UrlClassifierFeatureResult final : public nsIUrlClassifierFeatureResult {
   NS_DECL_ISUPPORTS
   NS_DECL_NSIURLCLASSIFIERFEATURERESULT
 
-  UrlClassifierFeatureResult(nsIUrlClassifierFeature* aFeature,
+  UrlClassifierFeatureResult(nsIURI* aURI, nsIUrlClassifierFeature* aFeature,
                              const nsACString& aList);
+
+  nsIURI* URI() const { return mURI; }
 
   nsIUrlClassifierFeature* Feature() const { return mFeature; }
 
@@ -30,6 +34,7 @@ class UrlClassifierFeatureResult final : public nsIUrlClassifierFeatureResult {
   ~UrlClassifierFeatureResult();
 
  private:
+  nsCOMPtr<nsIURI> mURI;
   nsCOMPtr<nsIUrlClassifierFeature> mFeature;
   const nsCString mList;
 };

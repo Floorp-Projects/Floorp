@@ -496,6 +496,20 @@ interface nsIHttpChannel : nsIChannel
     [infallible] readonly attribute boolean isThirdPartyTrackingResource;
 
     /**
+     * Returns the allowing status for flash plugin for this channel.
+     */
+    cenum FlashPluginState : 8 {
+      FlashPluginUnknown = 0,
+      FlashPluginAllowed = 1,
+      FlashPluginDenied = 2,
+      FlashPluginDeniedInSubdocuments = 3,
+
+      // Keep this equal to the last value.
+      FlashPluginLastValue = 3,
+    };
+    [infallible] readonly attribute nsIHttpChannel_FlashPluginState flashPluginState;
+
+    /**
      * This method is used by the document.cookie call site in order
      * to override the tracking status of an HTTP channel. This should
      * only be called by Gecko under certain circumstances when Gecko

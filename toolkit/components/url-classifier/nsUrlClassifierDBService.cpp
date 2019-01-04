@@ -127,11 +127,12 @@ class FeatureHolder final {
   };
 
   static already_AddRefed<FeatureHolder> Create(
-      const nsTArray<RefPtr<nsIUrlClassifierFeature>>& aFeatures,
+      nsIURI* aURI, const nsTArray<RefPtr<nsIUrlClassifierFeature>>& aFeatures,
       nsIUrlClassifierFeature::listType aListType) {
     MOZ_ASSERT(NS_IsMainThread());
+    MOZ_ASSERT(aURI);
 
-    RefPtr<FeatureHolder> holder = new FeatureHolder();
+    RefPtr<FeatureHolder> holder = new FeatureHolder(aURI);
 
     for (nsIUrlClassifierFeature* feature : aFeatures) {
       FeatureData* featureData = holder->mFeatureData.AppendElement();
@@ -202,20 +203,24 @@ class FeatureHolder final {
       }
 
       RefPtr<mozilla::net::UrlClassifierFeatureResult> result =
-          new mozilla::net::UrlClassifierFeatureResult(featureData.mFeature,
-                                                       list);
+          new mozilla::net::UrlClassifierFeatureResult(
+              mURI, featureData.mFeature, list);
       aResults.AppendElement(result);
     }
   }
 
  private:
-  FeatureHolder() { MOZ_ASSERT(NS_IsMainThread()); }
+  explicit FeatureHolder(nsIURI* aURI) : mURI(aURI) {
+    MOZ_ASSERT(NS_IsMainThread());
+  }
 
   ~FeatureHolder() {
     for (FeatureData& featureData : mFeatureData) {
       NS_ReleaseOnMainThreadSystemGroup("FeatureHolder:mFeatureData",
                                         featureData.mFeature.forget());
     }
+
+    NS_ReleaseOnMainThreadSystemGroup("FeatureHolder:mURI", mURI.forget());
   }
 
   TableData* GetOrCreateTableData(const nsACString& aTable) {
@@ -230,6 +235,7 @@ class FeatureHolder final {
     return tableData;
   }
 
+  nsCOMPtr<nsIURI> mURI;
   nsTArray<FeatureData> mFeatureData;
   nsTArray<RefPtr<TableData>> mTableData;
 };
@@ -298,6 +304,13 @@ class DummyFeature final : public nsIUrlClassifierFeature {
 
     // Nothing to do here.
     return NS_OK;
+  }
+
+  NS_IMETHODIMP
+  GetURIByListType(nsIChannel* aChannel,
+                   nsIUrlClassifierFeature::listType aListType,
+                   nsIURI** aURI) override {
+    return NS_ERROR_NOT_IMPLEMENTED;
   }
 
  private:
@@ -2839,7 +2852,8 @@ nsUrlClassifierDBService::AsyncClassifyLocalWithFeatures(
   auto startTime = TimeStamp::Now();  // For telemetry.
 
   // Let's keep the features alive and release them on the correct thread.
-  RefPtr<FeatureHolder> holder = FeatureHolder::Create(aFeatures, aListType);
+  RefPtr<FeatureHolder> holder =
+      FeatureHolder::Create(aURI, aFeatures, aListType);
   if (NS_WARN_IF(!holder)) {
     return NS_ERROR_FAILURE;
   }
@@ -2905,7 +2919,8 @@ bool nsUrlClassifierDBService::AsyncClassifyLocalWithFeaturesUsingPreferences(
       LOG(("URI found in preferences. Table: %s", tableName.get()));
 
       RefPtr<mozilla::net::UrlClassifierFeatureResult> result =
-          new mozilla::net::UrlClassifierFeatureResult(feature, tableName);
+          new mozilla::net::UrlClassifierFeatureResult(aURI, feature,
+                                                       tableName);
       results.AppendElement(result);
     }
   }

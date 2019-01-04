@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsIStreamListener.idl"
+#include "nsIHttpChannel.idl"
 
 interface nsITabParent;
 
@@ -45,6 +46,11 @@ interface nsIParentChannel : nsIStreamListener
    * this load.
    */
   [noscript] void notifyTrackingCookieBlocked(in uint32_t aRejectedReason);
+
+  /**
+   * Called to notify the HttpChannelChild that flash plugin state has changed.
+   */
+  [noscript] void notifyFlashPluginStateChanged(in nsIHttpChannel_FlashPluginState aState);
 
    /**
    * Called to set matched information when URL matches SafeBrowsing list.

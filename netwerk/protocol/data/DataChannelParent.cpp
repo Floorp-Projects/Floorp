@@ -53,6 +53,13 @@ DataChannelParent::NotifyTrackingResource(bool aIsThirdParty) {
 }
 
 NS_IMETHODIMP
+DataChannelParent::NotifyFlashPluginStateChanged(
+    nsIHttpChannel::FlashPluginState aState) {
+  // Nothing to do.
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 DataChannelParent::SetClassifierMatchedInfo(const nsACString &aList,
                                             const nsACString &aProvider,
                                             const nsACString &aFullHash) {
