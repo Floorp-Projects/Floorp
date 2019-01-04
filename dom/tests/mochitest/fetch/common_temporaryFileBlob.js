@@ -11,7 +11,7 @@ function test_fetch_basic() {
     ok(blob instanceof Blob, "We have a blob!");
     is(blob.size, data.length, "Data length matches");
     if ("SpecialPowers" in self) {
-      is(SpecialPowers.wrap(blob).blobImplType, "StreamBlobImpl", "We have a blob stored into a stream file");
+      is(SpecialPowers.wrap(blob).blobImplType, "StreamBlobImpl[TemporaryBlobImpl]", "We have a blob stored into a stream file");
     }
 
     var fr = new FileReader();
@@ -42,7 +42,7 @@ function test_xhr_basic() {
       ok(blob instanceof Blob, "We have a blob!");
       is(blob.size, data.length, "Data length matches");
       if ("SpecialPowers" in self) {
-        is(SpecialPowers.wrap(blob).blobImplType, "StreamBlobImpl", "We have a blob stored into a stream file");
+        is(SpecialPowers.wrap(blob).blobImplType, "StreamBlobImpl[TemporaryBlobImpl]", "We have a blob stored into a stream file");
       }
 
       var fr = new FileReader();
@@ -67,7 +67,7 @@ function test_response_basic() {
     ok(blob instanceof Blob, "We have a blob!");
     is(blob.size, data.length, "Data length matches");
     if ("SpecialPowers" in self) {
-      is(SpecialPowers.wrap(blob).blobImplType, "StreamBlobImpl", "We have a blob stored into a stream file");
+      is(SpecialPowers.wrap(blob).blobImplType, "StreamBlobImpl[TemporaryBlobImpl]", "We have a blob stored into a stream file");
     }
 
     var fr = new FileReader();
@@ -91,7 +91,7 @@ function test_request_basic() {
     ok(blob instanceof Blob, "We have a blob!");
     is(blob.size, data.length, "Data length matches");
     if ("SpecialPowers" in self) {
-      is(SpecialPowers.wrap(blob).blobImplType, "StreamBlobImpl", "We have a blob stored into a stream file");
+      is(SpecialPowers.wrap(blob).blobImplType, "StreamBlobImpl[TemporaryBlobImpl]", "We have a blob stored into a stream file");
     }
 
     var fr = new FileReader();

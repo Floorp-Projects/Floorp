@@ -59,12 +59,12 @@ already_AddRefed<BlobImpl> Deserialize(const IPCBlob& aIPCBlob) {
 
   if (aIPCBlob.file().type() == IPCFileUnion::Tvoid_t) {
     blobImpl = StreamBlobImpl::Create(inputStream.forget(), aIPCBlob.type(),
-                                      aIPCBlob.size());
+                                      aIPCBlob.size(), aIPCBlob.blobImplType());
   } else {
     const IPCFile& file = aIPCBlob.file().get_IPCFile();
     blobImpl = StreamBlobImpl::Create(inputStream.forget(), file.name(),
                                       aIPCBlob.type(), file.lastModified(),
-                                      aIPCBlob.size());
+                                      aIPCBlob.size(), aIPCBlob.blobImplType());
     blobImpl->SetDOMPath(file.DOMPath());
     blobImpl->SetFullPath(file.fullPath());
     blobImpl->SetIsDirectory(file.isDirectory());
@@ -178,6 +178,9 @@ nsresult SerializeInternal(BlobImpl* aBlobImpl, M* aManager,
   nsAutoString value;
   aBlobImpl->GetType(value);
   aIPCBlob.type() = value;
+
+  aBlobImpl->GetBlobImplType(value);
+  aIPCBlob.blobImplType() = value;
 
   ErrorResult rv;
   aIPCBlob.size() = aBlobImpl->GetSize(rv);

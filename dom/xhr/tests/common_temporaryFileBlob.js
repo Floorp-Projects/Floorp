@@ -17,7 +17,7 @@ function test_simple() {
     ok(xhr.response instanceof Blob, "We have a blob!");
     ok(!(xhr.response instanceof File), "Our blob is not a file!");
     if ("SpecialPowers" in self) {
-      is(SpecialPowers.wrap(xhr.response).blobImplType, "StreamBlobImpl", "We have a blob stored into a stream file");
+      is(SpecialPowers.wrap(xhr.response).blobImplType, "StreamBlobImpl[TemporaryBlobImpl]", "We have a blob stored into a stream file");
     }
     is(xhr.response.size, data.length, "Data length matches");
 
@@ -55,7 +55,7 @@ function test_reuse() {
     ok(xhr.response instanceof Blob, "We have a blob!");
     ok(!(xhr.response instanceof File), "Our blob is not a file!");
     if ("SpecialPowers" in self) {
-      is(SpecialPowers.wrap(xhr.response).blobImplType, "StreamBlobImpl", "We have a blob stored into a stream file");
+      is(SpecialPowers.wrap(xhr.response).blobImplType, "StreamBlobImpl[TemporaryBlobImpl]", "We have a blob stored into a stream file");
     }
     is(xhr.response.size, data.length, "Data length matches");
 
