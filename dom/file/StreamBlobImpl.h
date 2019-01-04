@@ -22,12 +22,13 @@ class StreamBlobImpl final : public BaseBlobImpl, public nsIMemoryReporter {
 
   static already_AddRefed<StreamBlobImpl> Create(
       already_AddRefed<nsIInputStream> aInputStream,
-      const nsAString& aContentType, uint64_t aLength);
+      const nsAString& aContentType, uint64_t aLength,
+      const nsAString& aBlobImplType);
 
   static already_AddRefed<StreamBlobImpl> Create(
       already_AddRefed<nsIInputStream> aInputStream, const nsAString& aName,
       const nsAString& aContentType, int64_t aLastModifiedDate,
-      uint64_t aLength);
+      uint64_t aLength, const nsAString& aBlobImplType);
 
   virtual void CreateInputStream(nsIInputStream** aStream,
                                  ErrorResult& aRv) override;
@@ -61,13 +62,17 @@ class StreamBlobImpl final : public BaseBlobImpl, public nsIMemoryReporter {
     return GetAllocationSize();
   }
 
+  void GetBlobImplType(nsAString& aBlobImplType) const override;
+
  private:
   StreamBlobImpl(already_AddRefed<nsIInputStream> aInputStream,
-                 const nsAString& aContentType, uint64_t aLength);
+                 const nsAString& aContentType, uint64_t aLength,
+                 const nsAString& aBlobImplType);
 
   StreamBlobImpl(already_AddRefed<nsIInputStream> aInputStream,
                  const nsAString& aName, const nsAString& aContentType,
-                 int64_t aLastModifiedDate, uint64_t aLength);
+                 int64_t aLastModifiedDate, uint64_t aLength,
+                 const nsAString& aBlobImplType);
 
   ~StreamBlobImpl();
 
