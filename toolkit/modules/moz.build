@@ -157,6 +157,7 @@ TESTING_JS_MODULES += [
     'HiddenFrame.jsm',
     'tests/modules/MockDocument.jsm',
     'tests/modules/PromiseTestUtils.jsm',
+    'tests/modules/Task.jsm',
     'tests/xpcshell/TestIntegration.jsm',
 ]
 
@@ -243,7 +244,6 @@ EXTRA_JS_MODULES += [
     'sessionstore/FormData.jsm',
     'ShortcutUtils.jsm',
     'Sqlite.jsm',
-    'Task.jsm',
     'Timer.jsm',
     'Troubleshoot.jsm',
     'UpdateUtils.jsm',

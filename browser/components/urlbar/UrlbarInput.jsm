@@ -251,6 +251,14 @@ class UrlbarInput {
     this._loadURL(url, where, openParams);
   }
 
+  handleRevert() {
+    this.window.gBrowser.userTypedValue = null;
+    this.window.URLBarSetURI(null, true);
+    if (this.value && this.focused) {
+      this.select();
+    }
+  }
+
   /**
    * Called by the view when a result is picked.
    *
@@ -273,8 +281,7 @@ class UrlbarInput {
 
     switch (result.type) {
       case UrlbarUtils.MATCH_TYPE.TAB_SWITCH: {
-        // TODO: Implement handleRevert or equivalent on the input.
-        // this.input.handleRevert();
+        this.handleRevert();
         let prevTab = this.window.gBrowser.selectedTab;
         let loadOpts = {
           adoptIntoActiveWindow: UrlbarPrefs.get("switchTabs.adoptIntoActiveWindow"),
@@ -590,8 +597,7 @@ class UrlbarInput {
     browser.focus();
 
     if (openUILinkWhere != "current") {
-      // TODO: Implement handleRevert or equivalent on the input.
-      // this.input.handleRevert();
+      this.handleRevert();
     }
 
     try {
@@ -600,8 +606,7 @@ class UrlbarInput {
       // This load can throw an exception in certain cases, which means
       // we'll want to replace the URL with the loaded URL:
       if (ex.result != Cr.NS_ERROR_LOAD_SHOWED_ERRORPAGE) {
-        // TODO: Implement handleRevert or equivalent on the input.
-        // this.input.handleRevert();
+        this.handleRevert();
       }
     }
 

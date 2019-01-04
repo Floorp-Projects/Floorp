@@ -7,10 +7,8 @@
 var EXPORTED_SYMBOLS = ["Log"];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-XPCOMUtils.defineLazyModuleGetters(this, {
-  Services: "resource://gre/modules/Services.jsm",
-  Task: "resource://gre/modules/Task.jsm",
-});
+ChromeUtils.defineModuleGetter(this, "Services",
+                               "resource://gre/modules/Services.jsm");
 const INTERNAL_FIELDS = new Set(["_level", "_message", "_time", "_namespace"]);
 
 
@@ -129,9 +127,6 @@ var Log = {
     // Standard JS exception
     if (e.stack) {
       let stack = e.stack;
-      // Avoid loading Task.jsm if there's no task on the stack.
-      if (stack.includes("/Task.jsm:"))
-        stack = Task.Debugging.generateReadableStack(stack);
       return "JS Stack trace: " + stack.trim()
         .replace(/@[^@]*?([^\/\.]+\.\w+:)/g, "@$1");
     }
