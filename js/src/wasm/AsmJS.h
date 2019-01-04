@@ -16,26 +16,10 @@
  * limitations under the License.
  */
 
-#ifndef wasm_AsmJS_h
-#define wasm_AsmJS_h
+#ifndef asmjs_asmjs_h
+#define asmjs_asmjs_h
 
-#include "mozilla/Attributes.h"  // MOZ_MUST_USE
-
-#include <stdint.h>  // uint32_t
-
-#include "js/CallArgs.h"  // JSNative
-
-struct JSContext;
-class JSFunction;
-
-namespace JS {
-
-union Value;
-
-template <typename T>
-class Handle;
-
-}  // namespace JS
+#include "NamespaceImports.h"
 
 namespace js {
 
@@ -50,8 +34,7 @@ class FullParseHandler;
 
 }  // namespace frontend
 
-template <typename Unit>
-using AsmJSParser = frontend::Parser<frontend::FullParseHandler, Unit>;
+using AsmJSParser = frontend::Parser<frontend::FullParseHandler, char16_t>;
 
 // This function takes over parsing of a function starting with "use asm". The
 // return value indicates whether an error was reported which the caller should
@@ -60,8 +43,7 @@ using AsmJSParser = frontend::Parser<frontend::FullParseHandler, Unit>;
 // indeterminate amount and the entire function should be reparsed from the
 // beginning.
 
-extern MOZ_MUST_USE bool CompileAsmJS(JSContext* cx,
-                                      AsmJSParser<char16_t>& parser,
+extern MOZ_MUST_USE bool CompileAsmJS(JSContext* cx, AsmJSParser& parser,
                                       frontend::ParseNode* stmtList,
                                       bool* validated);
 
@@ -85,16 +67,15 @@ extern bool IsAsmJSCompilationAvailable(JSContext* cx, unsigned argc,
 extern bool IsAsmJSModule(JSContext* cx, unsigned argc, JS::Value* vp);
 
 extern bool IsAsmJSModuleLoadedFromCache(JSContext* cx, unsigned argc,
-                                         JS::Value* vp);
+                                         Value* vp);
 
 extern bool IsAsmJSFunction(JSContext* cx, unsigned argc, JS::Value* vp);
 
 // asm.js toString/toSource support:
 
-extern JSString* AsmJSFunctionToString(JSContext* cx,
-                                       JS::Handle<JSFunction*> fun);
+extern JSString* AsmJSFunctionToString(JSContext* cx, HandleFunction fun);
 
-extern JSString* AsmJSModuleToString(JSContext* cx, JS::Handle<JSFunction*> fun,
+extern JSString* AsmJSModuleToString(JSContext* cx, HandleFunction fun,
                                      bool isToSource);
 
 // asm.js heap:
@@ -103,4 +84,4 @@ extern bool IsValidAsmJSHeapLength(uint32_t length);
 
 }  // namespace js
 
-#endif  // wasm_AsmJS_h
+#endif  // asmjs_asmjs_h
