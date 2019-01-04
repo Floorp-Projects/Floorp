@@ -9,6 +9,7 @@
 #include "nsFrameLoader.h"
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/dom/HTMLIFrameElement.h"
+#include "mozilla/dom/WindowProxyHolder.h"
 #include "mozilla/dom/XULFrameElement.h"
 #include "mozilla/dom/XULFrameElementBinding.h"
 

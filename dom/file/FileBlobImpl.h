@@ -29,8 +29,9 @@ class FileBlobImpl : public BaseBlobImpl {
                uint64_t aLength, nsIFile* aFile, int64_t aLastModificationDate);
 
   // Create as a file with custom name
-  FileBlobImpl(nsIFile* aFile, const nsAString& aName,
-               const nsAString& aContentType);
+  FileBlobImpl(
+      nsIFile* aFile, const nsAString& aName, const nsAString& aContentType,
+      const nsAString& aBlobImplType = NS_LITERAL_STRING("FileBlobImpl"));
 
   // Overrides
   virtual uint64_t GetSize(ErrorResult& aRv) override;
