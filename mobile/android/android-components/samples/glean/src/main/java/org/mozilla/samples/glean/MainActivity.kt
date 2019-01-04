@@ -17,6 +17,22 @@ open class MainActivity : AppCompatActivity() {
 
         // Generate an event when user clicks on the button.
         buttonGenerateData.setOnClickListener {
+            // These first two actions, adding to the string list and incrementing the counter are
+            // tied to a user lifetime metric which is persistent from launch to launch.
+
+            // Adds the EditText's text content as a new string in the string list metric from the
+            // metrics.yaml file.
+            GleanMetrics.Test.testStringList.add(etStringListInput.text.toString())
+            // Clear current text to help indicate something happened
+            etStringListInput.setText("")
+
+            // Increments the test_counter metric from the metrics.yaml file.
+            GleanMetrics.Test.testCounter.add()
+
+            // This is referencing the event ping named 'click' from the metrics.yaml file. In
+            // order to illustrate adding extra information to the event, it is also adding to the
+            // 'extras' field a dictionary of values.  Note that the dictionary keys must be
+            // declared in the metrics.yaml file under the 'extra_keys' section of an event metric.
             GleanMetrics.BrowserEngagement.click.record(
                     "object1",
                     "data",
@@ -27,14 +43,9 @@ open class MainActivity : AppCompatActivity() {
             )
         }
 
-        // Generate a "baseline" ping on click.
+        // Generate pings on click by simulating Glean handling a background event.
         buttonSendPing.setOnClickListener {
             Glean.handleEvent(Glean.PingEvent.Background)
         }
-
-        GleanMetrics.Test.testStringList.add("Hello")
-        GleanMetrics.Test.testStringList.add("World")
-
-        GleanMetrics.Test.testCounter.add()
     }
 }
