@@ -5,6 +5,6 @@ authors = ["michael@thelayzells.com"]
 
 [dependencies]
 libc = "0.2"
-nsstring = { path = "../../../servo/support/gecko/nsstring" }
+nsstring = { path = "../nsstring" }
 nserror = { path = "../nserror" }
 xpcom_macros = { path = "xpcom_macros" }
