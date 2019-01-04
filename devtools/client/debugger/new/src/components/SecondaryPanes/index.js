@@ -38,8 +38,7 @@ import Scopes from "./Scopes";
 
 import "./SecondaryPanes.css";
 
-import type { Expression } from "../../types";
-import type { WorkersList } from "../../reducers/types";
+import type { Expression, WorkerList } from "../../types";
 
 type AccordionPaneItem = {
   header: string,
@@ -78,7 +77,7 @@ type Props = {
   isWaitingOnBreak: boolean,
   shouldPauseOnExceptions: boolean,
   shouldPauseOnCaughtExceptions: boolean,
-  workers: WorkersList,
+  workers: WorkerList,
   toggleShortcutsModal: () => void,
   toggleAllBreakpoints: typeof actions.toggleAllBreakpoints,
   evaluateExpressions: typeof actions.evaluateExpressions,
@@ -263,7 +262,9 @@ class SecondaryPanes extends Component<Props, State> {
 
   getWorkersItem(): AccordionPaneItem {
     return {
-      header: L10N.getStr("workersHeader"),
+      header: features.windowlessWorkers
+        ? L10N.getStr("threadsHeader")
+        : L10N.getStr("workersHeader"),
       className: "workers-pane",
       component: <Workers />,
       opened: prefs.workersVisible,
@@ -303,7 +304,7 @@ class SecondaryPanes extends Component<Props, State> {
 
     const items: Array<AccordionPaneItem> = [];
     if (this.props.horizontal) {
-      if (features.workers && workers.size > 0) {
+      if (features.workers && workers.length > 0) {
         items.push(this.getWorkersItem());
       }
 
@@ -340,7 +341,7 @@ class SecondaryPanes extends Component<Props, State> {
       return [];
     }
 
-    if (features.workers && workers.size > 0) {
+    if (features.workers && workers.length > 0) {
       items.push(this.getWorkersItem());
     }
 

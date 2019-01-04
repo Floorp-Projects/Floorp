@@ -14,6 +14,7 @@ DebuggerModules(
     'index.js',
     'Scopes.js',
     'UtilsBar.js',
+    'Worker.js',
     'Workers.js',
     'XHRBreakpoints.js',
 )
