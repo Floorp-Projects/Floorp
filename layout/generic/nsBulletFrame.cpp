@@ -432,6 +432,8 @@ ImgDrawResult BulletRenderer::CreateWebRenderCommandsForImage(
       aItem->Frame()->PresContext()->AppUnitsPerDevPixel();
   LayoutDeviceRect destRect =
       LayoutDeviceRect::FromAppUnits(mDest, appUnitsPerDevPixel);
+  destRect.Round();
+
   Maybe<SVGImageContext> svgContext;
   gfx::IntSize decodeSize =
       nsLayoutUtils::ComputeImageContainerDrawingParameters(
@@ -454,7 +456,7 @@ ImgDrawResult BulletRenderer::CreateWebRenderCommandsForImage(
     return drawResult;
   }
 
-  wr::LayoutRect dest = wr::ToRoundedLayoutRect(destRect);
+  wr::LayoutRect dest = wr::ToLayoutRect(destRect);
 
   aBuilder.PushImage(dest, dest, !aItem->BackfaceIsHidden(), rendering,
                      key.value());
