@@ -361,7 +361,7 @@ toolbarpaletteitem {
 }
 
 #navigator-toolbox[fullscreenShouldAnimate] {
-  transition: 1.5s margin-top ease-out;
+  transition: 0.8s margin-top ease-out;
 }
 
 /* Rules to help integrate WebExtension buttons */

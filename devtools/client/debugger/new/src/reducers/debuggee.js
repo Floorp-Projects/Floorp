@@ -9,30 +9,38 @@
  * @module reducers/debuggee
  */
 
-import { List } from "immutable";
-import type { Record } from "../utils/makeRecord";
-import type { Worker } from "../types";
+import { sortBy } from "lodash";
+import { getDisplayName } from "../utils/workers";
+
+import type { MainThread, WorkerList } from "../types";
 import type { Action } from "../actions/types";
-import makeRecord from "../utils/makeRecord";
-import { getMainThread } from "./pause";
 
-export type WorkersList = List<Worker>;
-
-type DebuggeeState = {
-  workers: WorkersList
+export type DebuggeeState = {
+  workers: WorkerList,
+  mainThread: MainThread
 };
 
-export const createDebuggeeState: () => Record<DebuggeeState> = makeRecord({
-  workers: List()
-});
+export function initialDebuggeeState(): DebuggeeState {
+  return { workers: [], mainThread: { actor: "", url: "", type: -1 } };
+}
 
 export default function debuggee(
-  state: Record<DebuggeeState> = createDebuggeeState(),
+  state: DebuggeeState = initialDebuggeeState(),
   action: Action
-): Record<DebuggeeState> {
+): DebuggeeState {
   switch (action.type) {
+    case "CONNECT":
+      return {
+        ...state,
+        mainThread: action.mainThread
+      };
     case "SET_WORKERS":
-      return state.set("workers", List(action.workers));
+      return { ...state, workers: action.workers };
+    case "NAVIGATE":
+      return {
+        ...initialDebuggeeState(),
+        mainThread: action.mainThread
+      };
     default:
       return state;
   }
@@ -40,27 +48,22 @@ export default function debuggee(
 
 export const getWorkers = (state: OuterState) => state.debuggee.workers;
 
-export const getWorkerDisplayName = (state: OuterState, thread: string) => {
-  let index = 1;
-  for (const { actor } of state.debuggee.workers) {
-    if (actor == thread) {
-      return `Worker #${index}`;
-    }
-    index++;
-  }
-  return "";
-};
+export const getWorkerCount = (state: OuterState) => getWorkers(state).length;
 
-export const isValidThread = (state: OuterState, thread: string) => {
-  if (thread == getMainThread((state: any))) {
-    return true;
-  }
-  for (const { actor } of state.debuggee.workers) {
-    if (actor == thread) {
-      return true;
-    }
-  }
-  return false;
-};
+export function getWorkerByThread(state: OuterState, thread: string) {
+  return getWorkers(state).find(worker => worker.actor == thread);
+}
+
+export function getMainThread(state: OuterState): MainThread {
+  return state.debuggee.mainThread;
+}
+
+export function getDebuggeeUrl(state: OuterState): string {
+  return getMainThread(state).url;
+}
+
+export function getThreads(state: OuterState) {
+  return [getMainThread(state), ...sortBy(getWorkers(state), getDisplayName)];
+}
 
 type OuterState = { debuggee: DebuggeeState };
