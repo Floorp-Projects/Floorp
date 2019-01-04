@@ -21,11 +21,11 @@ extern crate target_lexicon;
 extern crate log;
 extern crate env_logger;
 
-mod baldrapi;  // Low-level C API, ignore this.
+mod baldrapi; // Low-level C API, ignore this.
 mod baldrdash; // High-level Rust API, use this.
-mod compile;   // Cranelift function compiler.
-mod cpu;       // CPU detection and `TargetISA` configuration.
-mod utils;     // Helpers for other source files.
+mod compile; // Cranelift function compiler.
+mod cpu; // CPU detection and `TargetISA` configuration.
+mod utils; // Helpers for other source files.
 mod wasm2clif; // WebAssembly to Cranelift translation callbacks.
 
 use baldrdash::{CompiledFunc, FuncCompileInput, ModuleEnvironment, StaticEnvironment};
