@@ -3676,11 +3676,9 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
 
     child->MarkAbsoluteFramesForDisplayList(aBuilder);
 
-    const bool differentAGR =
-        buildingForChild.IsAnimatedGeometryRoot() || isPositioned;
+    const bool differentAGR = buildingForChild.IsAnimatedGeometryRoot();
 
-    if (!awayFromCommonPath && !differentAGR &&
-        !buildingForChild.MaybeAnimatedGeometryRoot()) {
+    if (!awayFromCommonPath) {
       // The shortcut is available for the child for next time.
       child->AddStateBits(NS_FRAME_SIMPLE_DISPLAYLIST);
     }
@@ -3711,7 +3709,7 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
     nsDisplayListCollection pseudoStack(aBuilder);
 
     aBuilder->BuildCompositorHitTestInfoIfNeeded(
-        child, pseudoStack.BorderBackground(), differentAGR);
+        child, pseudoStack.BorderBackground(), differentAGR || isPositioned);
 
     aBuilder->AdjustWindowDraggingRegion(child);
     nsDisplayListBuilder::AutoContainerASRTracker contASRTracker(aBuilder);
