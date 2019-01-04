@@ -503,7 +503,7 @@ nsresult MediaEngineWebRTCMicrophoneSource::Deallocate(
   return NS_OK;
 }
 
-nsresult MediaEngineWebRTCMicrophoneSource::SetTrack(
+void MediaEngineWebRTCMicrophoneSource::SetTrack(
     const RefPtr<const AllocationHandle>&,
     const RefPtr<SourceMediaStream>& aStream, TrackID aTrackID,
     const PrincipalHandle& aPrincipal) {
@@ -524,7 +524,6 @@ nsresult MediaEngineWebRTCMicrophoneSource::SetTrack(
                          SourceMediaStream::ADDTRACK_QUEUED);
 
   LOG("Stream %p registered for microphone capture", aStream.get());
-  return NS_OK;
 }
 
 class StartStopMessage : public ControlMessage {
@@ -1160,13 +1159,12 @@ nsCString MediaEngineWebRTCAudioCaptureSource::GetUUID() const {
   return nsCString(Substring(asciiString, 1, NSID_LENGTH - 3));
 }
 
-nsresult MediaEngineWebRTCAudioCaptureSource::SetTrack(
+void MediaEngineWebRTCAudioCaptureSource::SetTrack(
     const RefPtr<const AllocationHandle>&,
     const RefPtr<SourceMediaStream>& aStream, TrackID aTrackID,
     const PrincipalHandle& aPrincipalHandle) {
   AssertIsOnOwningThread();
   // Nothing to do here. aStream is a placeholder dummy and not exposed.
-  return NS_OK;
 }
 
 nsresult MediaEngineWebRTCAudioCaptureSource::Start(
