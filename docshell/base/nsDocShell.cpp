@@ -2545,7 +2545,7 @@ void nsDocShell::RecomputeCanExecuteScripts() {
   RefPtr<nsDocShell> parent = GetParentDocshell();
 
   // If we have no tree owner, that means that we've been detached from the
-  // docshell tree (this is distinct from having no parent dochshell, which
+  // docshell tree (this is distinct from having no parent docshell, which
   // is the case for root docshells). It would be nice to simply disallow
   // script in detached docshells, but bug 986542 demonstrates that this
   // behavior breaks at least one website.

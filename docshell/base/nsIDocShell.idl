@@ -255,7 +255,7 @@ interface nsIDocShell : nsIDocShellTreeItem
   [infallible] attribute nsIDocShell_AppType appType;
 
   /**
-   * certain dochshells (like the message pane)
+   * certain docshells (like the message pane)
    * should not throw up auth dialogs
    * because it can act as a password trojan
    */
@@ -937,7 +937,7 @@ interface nsIDocShell : nsIDocShellTreeItem
    * at construction time, to avoid any painting activity.
    */
   [noscript, notxpcom] bool IsInvisible();
-  [noscript, notxpcom] void SetInvisible(in bool aIsInvisibleDochsell);
+  [noscript, notxpcom] void SetInvisible(in bool aIsInvisibleDocshell);
 
 /**
  * Get the script global for the document in this docshell.
