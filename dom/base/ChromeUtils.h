@@ -172,6 +172,10 @@ class ChromeUtils {
   static bool HasReportingHeaderForOrigin(GlobalObject& global,
                                           const nsAString& aOrigin,
                                           ErrorResult& aRv);
+
+  static PopupBlockerState GetPopupControlState(GlobalObject& aGlobal);
+
+  static bool IsPopupTokenUnused(GlobalObject& aGlobal);
 };
 
 }  // namespace dom

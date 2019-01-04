@@ -770,5 +770,34 @@ constexpr auto kSkipSelfHosted = JS::SavedFrameSelfHosted::Exclude;
       NS_ConvertUTF16toUTF8(aOrigin));
 }
 
+/* static */ PopupBlockerState ChromeUtils::GetPopupControlState(
+    GlobalObject& aGlobal) {
+  switch (PopupBlocker::GetPopupControlState()) {
+    case PopupBlocker::PopupControlState::openAllowed:
+      return PopupBlockerState::OpenAllowed;
+
+    case PopupBlocker::PopupControlState::openControlled:
+      return PopupBlockerState::OpenControlled;
+
+    case PopupBlocker::PopupControlState::openBlocked:
+      return PopupBlockerState::OpenBlocked;
+
+    case PopupBlocker::PopupControlState::openAbused:
+      return PopupBlockerState::OpenAbused;
+
+    case PopupBlocker::PopupControlState::openOverridden:
+      return PopupBlockerState::OpenOverridden;
+
+    default:
+      MOZ_CRASH(
+          "PopupBlocker::PopupControlState and PopupBlockerState are out of "
+          "sync");
+  }
+}
+
+/* static */ bool ChromeUtils::IsPopupTokenUnused(GlobalObject& aGlobal) {
+  return PopupBlocker::IsPopupOpeningTokenUnused();
+}
+
 }  // namespace dom
 }  // namespace mozilla
