@@ -205,7 +205,6 @@ add_task(async function sendToDevice_syncNotReady_other_states() {
     await promiseSyncReady();
     const sandbox = sinon.sandbox.create();
     sandbox.stub(gSync, "syncReady").get(() => false);
-    sandbox.stub(Weave.Service.clientsEngine, "isFirstSync").get(() => true);
     sandbox.stub(UIState, "get").returns({ status: UIState.STATUS_NOT_VERIFIED });
     sandbox.stub(gSync, "isSendableURI").returns(true);
 
@@ -262,13 +261,13 @@ add_task(async function sendToDevice_syncNotReady_configured() {
     await promiseSyncReady();
     const sandbox = sinon.sandbox.create();
     const syncReady = sandbox.stub(gSync, "syncReady").get(() => false);
-    const lastSync = sandbox.stub(Weave.Service.clientsEngine, "isFirstSync").get(() => true);
+    const hasSyncedThisSession = sandbox.stub(Weave.Service.clientsEngine, "hasSyncedThisSession").get(() => false);
     sandbox.stub(UIState, "get").returns({ status: UIState.STATUS_SIGNED_IN });
     sandbox.stub(gSync, "isSendableURI").returns(true);
 
     sandbox.stub(Weave.Service, "sync").callsFake(() => {
       syncReady.get(() => true);
-      lastSync.get(() => Date.now());
+      hasSyncedThisSession.get(() => true);
       sandbox.stub(gSync, "sendTabTargets").get(() => mockTargets);
       sandbox.stub(Weave.Service.clientsEngine, "getClientType").callsFake(id => mockTargets.find(c => c.clientRecord && c.clientRecord.id == id).clientRecord.type);
     });
@@ -316,13 +315,16 @@ add_task(async function sendToDevice_syncNotReady_configured() {
           },
         ];
         for (let target of mockTargets) {
+          const attrs = {
+            clientId: target.id,
+            label: target.name,
+            clientType: target.type,
+          };
+          if (target.clientRecord && target.clientRecord.serverLastModified) {
+            attrs.tooltiptext = gSync.formatLastSyncDate(new Date(target.clientRecord.serverLastModified * 1000));
+          }
           expectedItems.push({
-            attrs: {
-              clientId: target.id,
-              label: target.name,
-              clientType: target.type,
-              tooltiptext: target.clientRecord ? gSync.formatLastSyncDate(new Date(lastModifiedFixture * 1000)) : "",
-            },
+            attrs,
           });
         }
         expectedItems.push(
@@ -403,10 +405,10 @@ add_task(async function sendToDevice_noDevices() {
     await promiseSyncReady();
     const sandbox = sinon.sandbox.create();
     sandbox.stub(gSync, "syncReady").get(() => true);
-    sandbox.stub(Weave.Service.clientsEngine, "isFirstSync").get(() => false);
+    sandbox.stub(Weave.Service.clientsEngine, "hasSyncedThisSession").get(() => true);
+    sandbox.stub(Weave.Service.clientsEngine, "fxaDevices").get(() => []);
     sandbox.stub(UIState, "get").returns({ status: UIState.STATUS_SIGNED_IN });
     sandbox.stub(gSync, "isSendableURI").returns(true);
-    sandbox.stub(gSync, "sendTabTargets").get(() => []);
     sandbox.stub(Weave.Service.clientsEngine, "getClientType").callsFake(id => mockTargets.find(c => c.clientRecord && c.clientRecord.id == id).clientRecord.type);
 
     let cleanUp = () => {
@@ -469,7 +471,7 @@ add_task(async function sendToDevice_devices() {
     await promiseSyncReady();
     const sandbox = sinon.sandbox.create();
     sandbox.stub(gSync, "syncReady").get(() => true);
-    sandbox.stub(Weave.Service.clientsEngine, "isFirstSync").get(() => false);
+    sandbox.stub(Weave.Service.clientsEngine, "hasSyncedThisSession").get(() => true);
     sandbox.stub(UIState, "get").returns({ status: UIState.STATUS_SIGNED_IN });
     sandbox.stub(gSync, "isSendableURI").returns(true);
     sandbox.stub(gSync, "sendTabTargets").get(() => mockTargets);
@@ -535,7 +537,7 @@ add_task(async function sendToDevice_title() {
       await promiseSyncReady();
       const sandbox = sinon.sandbox.create();
       sandbox.stub(gSync, "syncReady").get(() => true);
-      sandbox.stub(Weave.Service.clientsEngine, "isFirstSync").get(() => false);
+      sandbox.stub(Weave.Service.clientsEngine, "hasSyncedThisSession").get(() => true);
       sandbox.stub(UIState, "get").returns({ status: UIState.STATUS_SIGNED_IN });
       sandbox.stub(gSync, "isSendableURI").returns(true);
       sandbox.stub(gSync, "sendTabTargets").get(() => []);
@@ -592,7 +594,7 @@ add_task(async function sendToDevice_inUrlbar() {
     await promiseSyncReady();
     const sandbox = sinon.sandbox.create();
     sandbox.stub(gSync, "syncReady").get(() => true);
-    sandbox.stub(Weave.Service.clientsEngine, "isFirstSync").get(() => false);
+    sandbox.stub(Weave.Service.clientsEngine, "hasSyncedThisSession").get(() => true);
     sandbox.stub(UIState, "get").returns({ status: UIState.STATUS_SIGNED_IN });
     sandbox.stub(gSync, "isSendableURI").returns(true);
     sandbox.stub(gSync, "sendTabTargets").get(() => mockTargets);

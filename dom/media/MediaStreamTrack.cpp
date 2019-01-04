@@ -9,6 +9,7 @@
 #include "MediaStreamError.h"
 #include "MediaStreamGraph.h"
 #include "MediaStreamListener.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/dom/Promise.h"
 #include "nsContentUtils.h"
 #include "nsIUUIDGenerator.h"
@@ -397,12 +398,12 @@ void MediaStreamTrack::SetPrincipal(nsIPrincipal* aPrincipal) {
   }
   mPrincipal = aPrincipal;
 
-  LOG(LogLevel::Info, ("MediaStreamTrack %p principal changed to %p. Now: "
-                       "null=%d, codebase=%d, expanded=%d, system=%d",
-                       this, mPrincipal.get(), mPrincipal->GetIsNullPrincipal(),
-                       mPrincipal->GetIsCodebasePrincipal(),
-                       mPrincipal->GetIsExpandedPrincipal(),
-                       mPrincipal->GetIsSystemPrincipal()));
+  LOG(LogLevel::Info,
+      ("MediaStreamTrack %p principal changed to %p. Now: "
+       "null=%d, codebase=%d, expanded=%d, system=%d",
+       this, mPrincipal.get(), mPrincipal->GetIsNullPrincipal(),
+       mPrincipal->GetIsCodebasePrincipal(),
+       mPrincipal->GetIsExpandedPrincipal(), mPrincipal->IsSystemPrincipal()));
   for (PrincipalChangeObserver<MediaStreamTrack>* observer :
        mPrincipalChangeObservers) {
     observer->PrincipalChanged(this);

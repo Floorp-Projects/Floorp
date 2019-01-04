@@ -17,7 +17,7 @@ def create_parser(mach_interface=False):
             help="name of raptor test to run")
     add_arg('--app', default='firefox', dest='app',
             help="name of the application we are testing (default: firefox)",
-            choices=['firefox', 'chrome', 'geckoview'])
+            choices=['firefox', 'chrome', 'geckoview', 'fennec'])
     add_arg('-b', '--binary', dest='binary',
             help="path to the browser executable that we are testing")
     add_arg('--host', dest='host',
@@ -75,7 +75,7 @@ def verify_options(parser, args):
         parser.error("--binary is required!")
 
     # if running on a desktop browser make sure the binary exists
-    if args.app != "geckoview":
+    if args.app not in ["geckoview", "fennec"]:
         if not os.path.isfile(args.binary):
             parser.error("{binary} does not exist!".format(**ctx))
 
@@ -117,7 +117,7 @@ class _PrintTests(_StopAction):
         here = os.path.abspath(os.path.dirname(__file__))
         raptor_ini = os.path.join(here, 'raptor.ini')
 
-        for _app in ["firefox", "chrome", "geckoview", "chrome-android"]:
+        for _app in ["firefox", "chrome", "geckoview", "chrome-android", "fennec"]:
             test_manifest = TestManifest([raptor_ini], strict=False)
             info = {"app": _app}
             available_tests = test_manifest.active_tests(exists=False,
@@ -179,6 +179,8 @@ class _PrintTests(_StopAction):
             return "Firefox Geckoview on Android"
         elif app == "chrome-android":
             return "Google Chrome on Android"
+        elif app == "fennec":
+            return "Firefox Fennec on Android"
 
     def filter_app(self, tests, values):
         for test in tests:

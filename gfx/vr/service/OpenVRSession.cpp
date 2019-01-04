@@ -27,6 +27,8 @@
 #include "binding/OpenVRWMRBinding.h"
 #endif
 
+#include "VRParent.h"
+#include "VRProcessChild.h"
 #include "VRThread.h"
 
 #if !defined(M_PI)
@@ -169,6 +171,13 @@ void UpdateButton(VRControllerState& aState,
   }
 }
 
+bool FileIsExisting(const nsCString& aPath) {
+  if (aPath.IsEmpty() || !std::ifstream(aPath.BeginReading())) {
+    return false;
+  }
+  return true;
+}
+
 };  // anonymous namespace
 
 OpenVRSession::OpenVRSession()
@@ -261,53 +270,131 @@ bool OpenVRSession::Initialize(mozilla::gfx::VRSystemState& aSystemState) {
 void OpenVRSession::SetupContollerActions() {
   // Check if this device binding file has been created.
   // If it didn't exist yet, create a new temp file.
-  if (!sViveBindingFile) {
-    sViveBindingFile = ControllerManifestFile::CreateManifest();
-    NS_DispatchToMainThread(
-        NS_NewRunnableFunction("ClearOnShutdown ControllerManifestFile",
-                               []() { ClearOnShutdown(&sViveBindingFile); }));
-  }
-  if (!sViveBindingFile->IsExisting()) {
-    sViveBindingFile->SetFileName(std::tmpnam(nullptr));
-    OpenVRViveBinding viveBinding;
-    std::ofstream viveBindingFile(sViveBindingFile->GetFileName());
-    if (viveBindingFile.is_open()) {
-      viveBindingFile << viveBinding.binding;
-      viveBindingFile.close();
+  nsCString controllerAction;
+  nsCString viveManifest;
+  nsCString WMRManifest;
+  nsCString knucklesManifest;
+
+  if (gfxPrefs::VRProcessEnabled()) {
+    VRParent* vrParent = VRProcessChild::GetVRParent();
+    nsCString output;
+
+    if (vrParent->GetOpenVRControllerActionPath(&output)) {
+      controllerAction = output;
+    } else {
+      controllerAction = std::tmpnam(nullptr);
     }
-  }
-  if (!sKnucklesBindingFile) {
-    sKnucklesBindingFile = ControllerManifestFile::CreateManifest();
-    NS_DispatchToMainThread(NS_NewRunnableFunction(
-        "ClearOnShutdown ControllerManifestFile",
-        []() { ClearOnShutdown(&sKnucklesBindingFile); }));
-  }
-  if (!sKnucklesBindingFile->IsExisting()) {
-    sKnucklesBindingFile->SetFileName(std::tmpnam(nullptr));
-    OpenVRKnucklesBinding knucklesBinding;
-    std::ofstream knucklesBindingFile(sKnucklesBindingFile->GetFileName());
-    if (knucklesBindingFile.is_open()) {
-      knucklesBindingFile << knucklesBinding.binding;
-      knucklesBindingFile.close();
+
+    if (vrParent->GetOpenVRControllerManifestPath(OpenVRControllerType::Vive,
+                                                  &output)) {
+      viveManifest = output;
+    } else {
+      viveManifest = std::tmpnam(nullptr);
     }
-  }
+    if (!FileIsExisting(viveManifest)) {
+      OpenVRViveBinding viveBinding;
+      std::ofstream viveBindingFile(viveManifest.BeginReading());
+      if (viveBindingFile.is_open()) {
+        viveBindingFile << viveBinding.binding;
+        viveBindingFile.close();
+      }
+    }
+
 #if defined(XP_WIN)
-  if (!sWMRBindingFile) {
-    sWMRBindingFile = ControllerManifestFile::CreateManifest();
-    NS_DispatchToMainThread(
-        NS_NewRunnableFunction("ClearOnShutdown ControllerManifestFile",
-                               []() { ClearOnShutdown(&sWMRBindingFile); }));
-  }
-  if (!sWMRBindingFile->IsExisting()) {
-    sWMRBindingFile->SetFileName(std::tmpnam(nullptr));
-    OpenVRWMRBinding WMRBinding;
-    std::ofstream WMRBindingFile(sWMRBindingFile->GetFileName());
-    if (WMRBindingFile.is_open()) {
-      WMRBindingFile << WMRBinding.binding;
-      WMRBindingFile.close();
+    if (vrParent->GetOpenVRControllerManifestPath(OpenVRControllerType::WMR,
+                                                  &output)) {
+      WMRManifest = output;
+    } else {
+      WMRManifest = std::tmpnam(nullptr);
     }
-  }
+    if (!FileIsExisting(WMRManifest)) {
+      OpenVRWMRBinding WMRBinding;
+      std::ofstream WMRBindingFile(WMRManifest.BeginReading());
+      if (WMRBindingFile.is_open()) {
+        WMRBindingFile << WMRBinding.binding;
+        WMRBindingFile.close();
+      }
+    }
 #endif
+
+    if (vrParent->GetOpenVRControllerManifestPath(
+            OpenVRControllerType::Knuckles, &output)) {
+      knucklesManifest = output;
+    } else {
+      knucklesManifest = std::tmpnam(nullptr);
+    }
+    if (!FileIsExisting(knucklesManifest)) {
+      OpenVRKnucklesBinding knucklesBinding;
+      std::ofstream knucklesBindingFile(knucklesManifest.BeginReading());
+      if (knucklesBindingFile.is_open()) {
+        knucklesBindingFile << knucklesBinding.binding;
+        knucklesBindingFile.close();
+      }
+    }
+  } else {
+    if (!sControllerActionFile) {
+      sControllerActionFile = ControllerManifestFile::CreateManifest();
+      NS_DispatchToMainThread(NS_NewRunnableFunction(
+          "ClearOnShutdown ControllerManifestFile",
+          []() { ClearOnShutdown(&sControllerActionFile); }));
+
+      sControllerActionFile->SetFileName(std::tmpnam(nullptr));
+    }
+    controllerAction = sControllerActionFile->GetFileName();
+
+    if (!sViveBindingFile) {
+      sViveBindingFile = ControllerManifestFile::CreateManifest();
+      NS_DispatchToMainThread(
+          NS_NewRunnableFunction("ClearOnShutdown ControllerManifestFile",
+                                 []() { ClearOnShutdown(&sViveBindingFile); }));
+    }
+    if (!sViveBindingFile->IsExisting()) {
+      sViveBindingFile->SetFileName(std::tmpnam(nullptr));
+      OpenVRViveBinding viveBinding;
+      std::ofstream viveBindingFile(sViveBindingFile->GetFileName());
+      if (viveBindingFile.is_open()) {
+        viveBindingFile << viveBinding.binding;
+        viveBindingFile.close();
+      }
+    }
+    viveManifest = sViveBindingFile->GetFileName();
+
+    if (!sKnucklesBindingFile) {
+      sKnucklesBindingFile = ControllerManifestFile::CreateManifest();
+      NS_DispatchToMainThread(NS_NewRunnableFunction(
+          "ClearOnShutdown ControllerManifestFile",
+          []() { ClearOnShutdown(&sKnucklesBindingFile); }));
+    }
+    if (!sKnucklesBindingFile->IsExisting()) {
+      sKnucklesBindingFile->SetFileName(std::tmpnam(nullptr));
+      OpenVRKnucklesBinding knucklesBinding;
+      std::ofstream knucklesBindingFile(sKnucklesBindingFile->GetFileName());
+      if (knucklesBindingFile.is_open()) {
+        knucklesBindingFile << knucklesBinding.binding;
+        knucklesBindingFile.close();
+      }
+    }
+    knucklesManifest = sKnucklesBindingFile->GetFileName();
+
+#if defined(XP_WIN)
+    if (!sWMRBindingFile) {
+      sWMRBindingFile = ControllerManifestFile::CreateManifest();
+      NS_DispatchToMainThread(
+          NS_NewRunnableFunction("ClearOnShutdown ControllerManifestFile",
+                                 []() { ClearOnShutdown(&sWMRBindingFile); }));
+    }
+    if (!sWMRBindingFile->IsExisting()) {
+      sWMRBindingFile->SetFileName(std::tmpnam(nullptr));
+      OpenVRWMRBinding WMRBinding;
+      std::ofstream WMRBindingFile(sWMRBindingFile->GetFileName());
+      if (WMRBindingFile.is_open()) {
+        WMRBindingFile << WMRBinding.binding;
+        WMRBindingFile.close();
+      }
+    }
+    WMRManifest = sWMRBindingFile->GetFileName();
+#endif
+  }
 
   ControllerInfo leftContollerInfo;
   leftContollerInfo.mActionPose =
@@ -408,19 +495,10 @@ void OpenVRSession::SetupContollerActions() {
   mControllerHand[OpenVRHand::Left] = leftContollerInfo;
   mControllerHand[OpenVRHand::Right] = rightContollerInfo;
 
-  // Check if the action file has been created,
-  // if it doesn't exist, create a new temp file.
-  if (!sControllerActionFile) {
-    sControllerActionFile = ControllerManifestFile::CreateManifest();
-    NS_DispatchToMainThread(NS_NewRunnableFunction(
-        "ClearOnShutdown ControllerManifestFile",
-        []() { ClearOnShutdown(&sControllerActionFile); }));
-  }
-  if (sControllerActionFile->IsExisting()) {
+  if (FileIsExisting(controllerAction)) {
     return;
   }
 
-  sControllerActionFile->SetFileName(std::tmpnam(nullptr));
   nsAutoString actionData;
   JSONWriter actionWriter(MakeUnique<StringWriteFunc>(actionData));
   actionWriter.Start();
@@ -431,17 +509,16 @@ void OpenVRSession::SetupContollerActions() {
   actionWriter.StartArrayProperty("default_bindings");
   actionWriter.StartObjectElement();
   actionWriter.StringProperty("controller_type", "vive_controller");
-  actionWriter.StringProperty("binding_url", sViveBindingFile->GetFileName());
+  actionWriter.StringProperty("binding_url", viveManifest.BeginReading());
   actionWriter.EndObject();
   actionWriter.StartObjectElement();
   actionWriter.StringProperty("controller_type", "knuckles");
-  actionWriter.StringProperty("binding_url",
-                              sKnucklesBindingFile->GetFileName());
+  actionWriter.StringProperty("binding_url", knucklesManifest.BeginReading());
   actionWriter.EndObject();
 #if defined(XP_WIN)
   actionWriter.StartObjectElement();
   actionWriter.StringProperty("controller_type", "holographic_controller");
-  actionWriter.StringProperty("binding_url", sWMRBindingFile->GetFileName());
+  actionWriter.StringProperty("binding_url", WMRManifest.BeginReading());
   actionWriter.EndObject();
 #endif
   actionWriter.EndArray();  // End "default_bindings": []
@@ -615,14 +692,31 @@ void OpenVRSession::SetupContollerActions() {
   actionWriter.EndArray();  // End "actions": []
   actionWriter.End();
 
-  std::ofstream actionfile(sControllerActionFile->GetFileName());
+  std::ofstream actionfile(controllerAction.BeginReading());
   nsCString actionResult(NS_ConvertUTF16toUTF8(actionData.get()));
   if (actionfile.is_open()) {
     actionfile << actionResult.get();
     actionfile.close();
   }
 
-  vr::VRInput()->SetActionManifestPath(sControllerActionFile->GetFileName());
+  vr::VRInput()->SetActionManifestPath(controllerAction.BeginReading());
+
+  // Notify the parent process these manifest files are already been recorded.
+  if (gfxPrefs::VRProcessEnabled()) {
+    NS_DispatchToMainThread(NS_NewRunnableFunction(
+        "SendOpenVRControllerActionPathToParent",
+        [controllerAction, viveManifest, WMRManifest, knucklesManifest]() {
+          VRParent* vrParent = VRProcessChild::GetVRParent();
+          Unused << vrParent->SendOpenVRControllerActionPathToParent(
+              controllerAction);
+          Unused << vrParent->SendOpenVRControllerManifestPathToParent(
+              OpenVRControllerType::Vive, viveManifest);
+          Unused << vrParent->SendOpenVRControllerManifestPathToParent(
+              OpenVRControllerType::WMR, WMRManifest);
+          Unused << vrParent->SendOpenVRControllerManifestPathToParent(
+              OpenVRControllerType::Knuckles, knucklesManifest);
+        }));
+  }
 }
 
 #if defined(XP_WIN)
@@ -1819,7 +1913,10 @@ void OpenVRSession::ProcessEvents(mozilla::gfx::VRSystemState& aSystemState) {
         break;
       case ::vr::EVREventType::VREvent_DriverRequestedQuit:
       case ::vr::EVREventType::VREvent_Quit:
-      case ::vr::EVREventType::VREvent_ProcessQuit:
+      // When SteamVR runtime haven't been launched before viewing VR,
+      // SteamVR will send a VREvent_ProcessQuit event. It will tell the parent
+      // process to shutdown the VR process, and we need to avoid it.
+      // case ::vr::EVREventType::VREvent_ProcessQuit:
       case ::vr::EVREventType::VREvent_QuitAcknowledged:
       case ::vr::EVREventType::VREvent_QuitAborted_UserPrompt:
         mShouldQuit = true;

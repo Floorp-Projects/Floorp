@@ -694,7 +694,8 @@ void ClientLayerManager::ForwardTransaction(bool aScheduleComposite) {
   bool ok = mForwarder->EndTransaction(
       mRegionToClear, mLatestTransactionId, aScheduleComposite,
       mPaintSequenceNumber, mIsRepeatTransaction,
-      mTransactionIdAllocator->GetVsyncId(), refreshStart, mTransactionStart,
+      mTransactionIdAllocator->GetVsyncId(),
+      mTransactionIdAllocator->GetVsyncStart(), refreshStart, mTransactionStart,
       mURL, &sent);
   if (ok) {
     if (sent) {

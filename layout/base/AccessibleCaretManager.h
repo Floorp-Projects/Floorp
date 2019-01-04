@@ -318,6 +318,10 @@ class AccessibleCaretManager {
   // Whether we're flushing layout, used for sanity-checking.
   bool mFlushingLayout = false;
 
+  // Set to false to disallow flushing layout in some callbacks such as
+  // OnReflow(), OnScrollStart(), OnScrollStart(), or OnScrollPositionChanged().
+  bool mAllowFlushingLayout = true;
+
   static const int32_t kAutoScrollTimerDelay = 30;
 
   // Clicking on the boundary of input or textarea will move the caret to the

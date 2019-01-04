@@ -266,7 +266,7 @@ BasePrincipal::GetIsExpandedPrincipal(bool* aResult) {
 
 NS_IMETHODIMP
 BasePrincipal::GetIsSystemPrincipal(bool* aResult) {
-  *aResult = Kind() == eSystemPrincipal;
+  *aResult = IsSystemPrincipal();
   return NS_OK;
 }
 

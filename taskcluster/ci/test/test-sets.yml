@@ -414,3 +414,9 @@ android-hw-arm7-raptor-power:
 
 android-hw-aarch64-raptor-power:
     - raptor-speedometer-geckoview-power
+
+android-hw-arm7-raptor-nightly:
+    - raptor-speedometer-fennec
+
+android-hw-aarch64-raptor-nightly:
+    - raptor-speedometer-fennec

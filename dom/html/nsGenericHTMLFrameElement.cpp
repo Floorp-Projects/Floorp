@@ -76,7 +76,15 @@ Document* nsGenericHTMLFrameElement::GetContentDocument(
     return nullptr;
   }
 
-  Document* doc = bc->GetDOMWindow()->GetDoc();
+  nsPIDOMWindowOuter* window = bc->GetDOMWindow();
+  if (!window) {
+    // Either our browsing context contents are out-of-process (in which case
+    // clearly this is a cross-origin call and we should return null), or our
+    // browsing context is torn-down enough to no longer have a window or a
+    // document, and we should still return null.
+    return nullptr;
+  }
+  Document* doc = window->GetDoc();
   if (!doc) {
     return nullptr;
   }

@@ -349,6 +349,22 @@ raptor-speedometer-geckoview-power:
             - --page-cycles 5
             - --host HOST_IP
 
+raptor-speedometer-fennec:
+    description: "Raptor Speedometer on Fennec"
+    try-name: raptor-speedometer-fennec
+    treeherder-symbol: Rap(sp)
+    target: target.apk
+    run-on-projects:
+        by-test-platform:
+            android-hw.*: built-projects
+    tier: 2
+    max-run-time: 900
+    mozharness:
+        extra-options:
+            - --test=raptor-speedometer-fennec
+            - --app=fennec
+            - --binary=org.mozilla.fennec_aurora
+
 raptor-speedometer-chrome:
     description: "Raptor Speedometer on Chrome"
     try-name: raptor-speedometer-chrome

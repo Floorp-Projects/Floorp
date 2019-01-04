@@ -7,14 +7,16 @@ const chrome_base = "chrome://mochitests/content/browser/browser/base/content/te
 Services.scriptloader.loadSubScript(chrome_base + "head.js", this);
 /* import-globals-from ../general/head.js */
 
-const targetsFixture = [ { id: 1, name: "Foo"}, { id: 2, name: "Bar"} ];
+const fxaDevices = [
+  {id: 1, name: "Foo", availableCommands: {"https://identity.mozilla.com/cmd/open-uri": "baz"}},
+  {id: 2, name: "Bar", clientRecord: "bar"}, // Legacy send tab target (no availableCommands).
+  {id: 3, name: "Homer"}, // Incompatible target.
+];
 
 let [testTab] = gBrowser.visibleTabs;
 
-function updateTabContextMenu(tab) {
+function updateTabContextMenu(tab = gBrowser.selectedTab) {
   let menu = document.getElementById("tabContextMenu");
-  if (!tab)
-    tab = gBrowser.selectedTab;
   var evt = new Event("");
   tab.dispatchEvent(evt);
   menu.openPopup(tab, "end_after", 0, 0, true, false, evt);
@@ -35,12 +37,11 @@ add_task(async function setup() {
 });
 
 add_task(async function test_tab_contextmenu() {
-  const sandbox = setupSendTabMocks({ syncReady: true, clientsSynced: true, targets: targetsFixture,
-                                      state: UIState.STATUS_SIGNED_IN, isSendableURI: true });
+  const sandbox = setupSendTabMocks({fxaDevices});
   let expectation = sandbox.mock(gSync)
                            .expects("sendTabToDevice")
                            .once()
-                           .withExactArgs("about:mozilla", [{id: 1, name: "Foo"}], "The Book of Mozilla, 11:14");
+                           .withExactArgs("about:mozilla", [fxaDevices[1]], "The Book of Mozilla, 11:14");
 
   updateTabContextMenu(testTab);
   await openTabContextMenu("context_sendTabToDevice");
@@ -55,8 +56,7 @@ add_task(async function test_tab_contextmenu() {
 });
 
 add_task(async function test_tab_contextmenu_unconfigured() {
-  const sandbox = setupSendTabMocks({ syncReady: true, clientsSynced: true, targets: targetsFixture,
-                                      state: UIState.STATUS_NOT_CONFIGURED, isSendableURI: true });
+  const sandbox = setupSendTabMocks({state: UIState.STATUS_NOT_CONFIGURED});
 
   updateTabContextMenu(testTab);
   is(document.getElementById("context_sendTabToDevice").hidden, false, "Send tab to device is shown");
@@ -66,8 +66,7 @@ add_task(async function test_tab_contextmenu_unconfigured() {
 });
 
 add_task(async function test_tab_contextmenu_not_sendable() {
-  const sandbox = setupSendTabMocks({ syncReady: true, clientsSynced: true, targets: [{ id: 1, name: "Foo"}],
-                                      state: UIState.STATUS_SIGNED_IN, isSendableURI: false });
+  const sandbox = setupSendTabMocks({fxaDevices, isSendableURI: false});
 
   updateTabContextMenu(testTab);
   is(document.getElementById("context_sendTabToDevice").hidden, false, "Send tab to device is shown");
@@ -77,8 +76,7 @@ add_task(async function test_tab_contextmenu_not_sendable() {
 });
 
 add_task(async function test_tab_contextmenu_not_synced_yet() {
-  const sandbox = setupSendTabMocks({ syncReady: true, clientsSynced: false, targets: [],
-                                      state: UIState.STATUS_SIGNED_IN, isSendableURI: true });
+  const sandbox = setupSendTabMocks({fxaDevices: null});
 
   updateTabContextMenu(testTab);
   is(document.getElementById("context_sendTabToDevice").hidden, false, "Send tab to device is shown");
@@ -88,8 +86,7 @@ add_task(async function test_tab_contextmenu_not_synced_yet() {
 });
 
 add_task(async function test_tab_contextmenu_sync_not_ready_configured() {
-  const sandbox = setupSendTabMocks({ syncReady: false, clientsSynced: false, targets: null,
-                                      state: UIState.STATUS_SIGNED_IN, isSendableURI: true });
+  const sandbox = setupSendTabMocks({syncReady: false});
 
   updateTabContextMenu(testTab);
   is(document.getElementById("context_sendTabToDevice").hidden, false, "Send tab to device is shown");
@@ -99,8 +96,7 @@ add_task(async function test_tab_contextmenu_sync_not_ready_configured() {
 });
 
 add_task(async function test_tab_contextmenu_sync_not_ready_other_state() {
-  const sandbox = setupSendTabMocks({ syncReady: false, clientsSynced: false, targets: null,
-                                      state: UIState.STATUS_NOT_VERIFIED, isSendableURI: true });
+  const sandbox = setupSendTabMocks({syncReady: false, state: UIState.STATUS_NOT_VERIFIED});
 
   updateTabContextMenu(testTab);
   is(document.getElementById("context_sendTabToDevice").hidden, false, "Send tab to device is shown");

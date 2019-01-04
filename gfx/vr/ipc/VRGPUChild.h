@@ -19,7 +19,7 @@ class VRGPUChild final : public PVRGPUChild {
   static VRGPUChild* Get();
   static bool InitForGPUProcess(Endpoint<PVRGPUChild>&& aEndpoint);
   static bool IsCreated();
-  static void ShutDown();
+  static void Shutdown();
 
  protected:
   explicit VRGPUChild() {}
