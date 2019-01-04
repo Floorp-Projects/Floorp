@@ -30,6 +30,23 @@
 
 namespace vixl {
 
+uint32_t CPU::GetCacheType() {
+#if defined(__aarch64__) && !defined(_MSC_VER)
+  uint64_t cache_type_register;
+  // Copy the content of the cache type register to a core register.
+  __asm__ __volatile__ ("mrs %[ctr], ctr_el0"  // NOLINT
+                        : [ctr] "=r" (cache_type_register));
+  VIXL_ASSERT(is_uint32(cache_type_register));
+  return cache_type_register;
+#else
+  // This will lead to a cache with 1 byte long lines, which is fine since
+  // neither EnsureIAndDCacheCoherency nor the simulator will need this
+  // information.
+  return 0;
+#endif
+}
+
+
 void CPU::EnsureIAndDCacheCoherency(void *address, size_t length) {
 #if defined(_MSC_VER) && defined(_M_ARM64)
   FlushInstructionCache(GetCurrentProcess(), address, length);
