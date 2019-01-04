@@ -9373,10 +9373,6 @@ exports.PREFERENCES = [
     "layout.css.initial-letter.enabled"
   ],
   [
-    "mix-blend-mode",
-    "layout.css.mix-blend-mode.enabled"
-  ],
-  [
     "-moz-osx-font-smoothing",
     "layout.css.osx-font-smoothing.enabled"
   ],
