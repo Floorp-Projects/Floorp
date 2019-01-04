@@ -416,6 +416,7 @@ timezoneTypes:table(nofallback){
             "Asia:Pontianak"{"idpnk"}
             "Asia:Pyongyang"{"kpfnj"}
             "Asia:Qatar"{"qadoh"}
+            "Asia:Qostanay"{"kzksn"}
             "Asia:Qyzylorda"{"kzkzo"}
             "Asia:Rangoon"{"mmrgn"}
             "Asia:Riyadh"{"saruh"}
