@@ -75,7 +75,6 @@ outstanding operations before FooService shuts down.
     // Module FooService
 
     Components.utils.import("resource://gre/modules/AsyncShutdown.jsm", this);
-    Components.utils.import("resource://gre/modules/Task.jsm", this);
 
     this.exports = ["FooService"];
 
@@ -84,12 +83,12 @@ outstanding operations before FooService shuts down.
     // Export the `client` capability, to let clients register shutdown blockers
     FooService.shutdown = shutdown.client;
 
-    // This Task should be triggered at some point during shutdown, generally
-    // as a client to another Barrier or Phase. Triggering this Task is not covered
+    // This function should be triggered at some point during shutdown, generally
+    // as a client to another Barrier or Phase. Triggering this function is not covered
     // in this snippet.
-    let onshutdown = Task.async(function*() {
+    let onshutdown = async function() {
       // Wait for all registered clients to have lifted the barrier
-      yield shutdown.wait();
+      await shutdown.wait();
 
       // Now deactivate FooService itself.
       // ...
@@ -121,7 +120,7 @@ The following snippet presents FooClient2, a more sophisticated client of FooSer
       // It can be any JSON serializable object.
       state: "Not started",
 
-      wait: Task.async(function*() {
+      async wait() {
         // This method is called once FooService starts informing its clients that
         // FooService wishes to shut down.
 
@@ -130,19 +129,19 @@ The following snippet presents FooClient2, a more sophisticated client of FooSer
         // to shutdown properly.
         this.state = "Starting";
 
-        let data = yield collectSomeData();
+        let data = await collectSomeData();
         this.state = "Data collection complete";
 
         try {
-          yield writeSomeDataToDisk(data);
+          await writeSomeDataToDisk(data);
           this.state = "Data successfully written to disk";
         } catch (ex) {
           this.state = "Writing data to disk failed, proceeding with shutdown: " + ex;
         }
 
-        yield FooService.oneLastCall();
+        await FooService.oneLastCall();
         this.state = "Ready";
-      }.bind(this)
+      }
     };
 
 
@@ -154,7 +153,6 @@ Example 4: A service with both internal and external dependencies
     // Module FooService2
 
     Components.utils.import("resource://gre/modules/AsyncShutdown.jsm", this);
-    Components.utils.import("resource://gre/modules/Task.jsm", this);
     Components.utils.import("resource://gre/modules/Promise.jsm", this);
 
     this.exports = ["FooService2"];
@@ -199,19 +197,19 @@ Example 4: A service with both internal and external dependencies
     };
 
 
-    // This Task should be triggered at some point during shutdown, generally
-    // as a client to another Barrier. Triggering this Task is not covered
+    // This function should be triggered at some point during shutdown, generally
+    // as a client to another Barrier. Triggering this function is not covered
     // in this snippet.
-    let onshutdown = Task.async(function*() {
+    let onshutdown = async function() {
       // Wait for all registered clients to have lifted the barrier.
       // These clients may open instances of FooConnection if they need to.
-      yield shutdown.wait();
+      await shutdown.wait();
 
       // Now stop accepting any other connection request.
       isClosed = true;
 
       // Wait for all instances of FooConnection to be closed.
-      yield connections.wait();
+      await connections.wait();
 
       // Now finish shutting down FooService2
       // ...

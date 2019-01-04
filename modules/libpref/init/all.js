@@ -3023,12 +3023,6 @@ pref("layout.css.individual-transform.enabled", false);
 // Is support for CSS initial-letter property enabled?
 pref("layout.css.initial-letter.enabled", false);
 
-// Is support for mix-blend-mode enabled?
-pref("layout.css.mix-blend-mode.enabled", true);
-
-// Is support for isolation enabled?
-pref("layout.css.isolation.enabled", true);
-
 // Is support for scrollbar-color property enabled?
 pref("layout.css.scrollbar-color.enabled", true);
 
@@ -3075,9 +3069,6 @@ pref("layout.css.convertFromNode.enabled", true);
 // Is support for CSS text-justify property enabled?
 pref("layout.css.text-justify.enabled", true);
 
-// Is support for the CSS image-orientation property enabled?
-pref("layout.css.image-orientation.enabled", true);
-
 // Is the paint-order property supported for HTML text?
 // (It is always supported for SVG.)
 pref("layout.css.paint-order.enabled", true);
@@ -3089,9 +3080,6 @@ pref("layout.css.prefixes.transitions", true);
 pref("layout.css.prefixes.animations", true);
 pref("layout.css.prefixes.box-sizing", true);
 pref("layout.css.prefixes.font-features", true);
-
-// Is support for background-blend-mode enabled?
-pref("layout.css.background-blend-mode.enabled", true);
 
 // Is -moz-osx-font-smoothing enabled?
 // Only supported in OSX builds
@@ -3107,17 +3095,11 @@ pref("layout.css.overflow-clip-box.enabled", false);
 // Is support for CSS contain enabled?
 pref("layout.css.contain.enabled", false);
 
-// Is support for CSS box-decoration-break enabled?
-pref("layout.css.box-decoration-break.enabled", true);
-
 // Is layout of CSS outline-style:auto enabled?
 pref("layout.css.outline-style-auto.enabled", false);
 
 // Is CSSOM-View scroll-behavior and its MSD smooth scrolling enabled?
 pref("layout.css.scroll-behavior.enabled", true);
-
-// Is the CSSOM-View scroll-behavior CSS property enabled?
-pref("layout.css.scroll-behavior.property-enabled", true);
 
 // Tuning of the smooth scroll motion used by CSSOM-View scroll-behavior.
 // Spring-constant controls the strength of the simulated MSD
@@ -5841,9 +5823,6 @@ pref("plugins.rewrite_youtube_embeds", true);
 
 // Disable browser frames by default
 pref("dom.mozBrowserFramesEnabled", false);
-
-// Is support for 'color-adjust' CSS property enabled?
-pref("layout.css.color-adjust.enabled", true);
 
 pref("dom.audiochannel.audioCompeting", false);
 pref("dom.audiochannel.audioCompeting.allAgents", false);

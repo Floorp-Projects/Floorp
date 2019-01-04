@@ -151,4 +151,12 @@ class Mocks {
     this._usbRuntimes = this._usbRuntimes.filter(runtime => runtime.id !== id);
     delete this._clients[RUNTIMES.USB][id];
   }
+
+  removeRuntime(id) {
+    if (this._clients[RUNTIMES.USB][id]) {
+      this.removeUSBRuntime(id);
+    } else if (this._clients[RUNTIMES.NETWORK][id]) {
+      this.removeNetworkRuntime(id);
+    }
+  }
 }

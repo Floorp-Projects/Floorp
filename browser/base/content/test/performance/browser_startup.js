@@ -114,7 +114,6 @@ const startupPhases = {
     modules: new Set([
       "resource://gre/modules/AsyncPrefs.jsm",
       "resource://gre/modules/LoginManagerContextMenu.jsm",
-      "resource://gre/modules/Task.jsm",
       "resource://pdf.js/PdfStreamConverter.jsm",
     ]),
   }},

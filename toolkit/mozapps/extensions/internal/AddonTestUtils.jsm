@@ -1526,8 +1526,7 @@ var AddonTestUtils = {
    *
    * @param {function} task
    *        The task to run while monitoring console output. May be
-   *        either a generator function, per Task.jsm, or an ordinary
-   *        function which returns promose.
+   *        an async function, or an ordinary function which returns a promose.
    * @return {Promise<[Array<nsIConsoleMessage>, *]>}
    *        Resolves to an object containing a `messages` property, with
    *        the array of console messages emitted during the execution
