@@ -2544,10 +2544,6 @@ bool SourceMediaStream::PullNewData(GraphTime aDesiredUpToTime) {
   // the stream at all.
   StreamTime t = GraphTimeToStreamTime(aDesiredUpToTime);
   StreamTime current = mTracks.GetEarliestTrackEnd();
-  LOG(LogLevel::Verbose,
-      ("%p: Calling NotifyPull aStream=%p t=%f current end=%f", GraphImpl(),
-       this, GraphImpl()->MediaTimeToSeconds(t),
-       GraphImpl()->MediaTimeToSeconds(current)));
   for (const TrackData& track : mUpdateTracks) {
     if (!track.mPullingEnabled) {
       continue;
@@ -2559,6 +2555,10 @@ bool SourceMediaStream::PullNewData(GraphTime aDesiredUpToTime) {
     if (t <= current) {
       continue;
     }
+    LOG(LogLevel::Verbose,
+        ("%p: Calling NotifyPull stream=%p track=%d t=%f current end=%f",
+         GraphImpl(), this, track.mID, GraphImpl()->MediaTimeToSeconds(t),
+         GraphImpl()->MediaTimeToSeconds(current)));
     MutexAutoUnlock unlock(mMutex);
     for (TrackBound<MediaStreamTrackListener>& l : mTrackListeners) {
       if (l.mTrackID == track.mID) {
