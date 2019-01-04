@@ -603,12 +603,20 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
             if not self.run_local:
                 # copy results to upload dir so they are included as an artifact
                 self.info("copying raptor results to upload dir:")
+
+                src = os.path.join(self.query_abs_dirs()['abs_work_dir'], 'raptor.json')
                 dest = os.path.join(env['MOZ_UPLOAD_DIR'], 'perfherder-data.json')
                 self.info(str(dest))
-                src = os.path.join(self.query_abs_dirs()['abs_work_dir'], 'raptor.json')
                 self._artifact_perf_data(src, dest)
+
                 if self.power_test:
                     src = os.path.join(self.query_abs_dirs()['abs_work_dir'], 'raptor-power.json')
+                    self._artifact_perf_data(src, dest)
+
+                src = os.path.join(self.query_abs_dirs()['abs_work_dir'], 'screenshots.html')
+                if os.path.exists(src):
+                    dest = os.path.join(env['MOZ_UPLOAD_DIR'], 'screenshots.html')
+                    self.info(str(dest))
                     self._artifact_perf_data(src, dest)
 
 

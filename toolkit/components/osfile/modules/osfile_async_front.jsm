@@ -48,8 +48,6 @@ ChromeUtils.import("resource://gre/modules/osfile/ospath.jsm", Path);
 // The library of promises.
 ChromeUtils.defineModuleGetter(this, "PromiseUtils",
                                "resource://gre/modules/PromiseUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "Task",
-                               "resource://gre/modules/Task.jsm");
 
 // The implementation of communications
 ChromeUtils.import("resource://gre/modules/PromiseWorker.jsm", this);
@@ -313,9 +311,6 @@ var Scheduler = this.Scheduler = {
 
         Scheduler.latestReceived = [];
         let stack = new Error().stack;
-        // Avoid loading Task.jsm if there's no task on the stack.
-        if (stack.includes("/Task.jsm:"))
-          stack = Task.Debugging.generateReadableStack(stack);
         Scheduler.latestSent = [Date.now(), stack, ...message];
 
         // Wait for result

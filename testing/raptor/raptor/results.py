@@ -19,6 +19,7 @@ class RaptorResultsHandler():
     def __init__(self):
         self.results = []
         self.page_timeout_list = []
+        self.images = []
         self.supporting_data = None
 
     def add(self, new_result_json):
@@ -26,6 +27,13 @@ class RaptorResultsHandler():
         LOG.info("received results in RaptorResultsHandler.add")
         new_result = RaptorTestResult(new_result_json)
         self.results.append(new_result)
+
+    def add_image(self, screenshot, test_name, page_cycle):
+        # add to results
+        LOG.info("received screenshot")
+        self.images.append({'screenshot': screenshot,
+                            'test_name': test_name,
+                            'page_cycle': page_cycle})
 
     def add_page_timeout(self, test_name, page_url):
         self.page_timeout_list.append({'test_name': test_name, 'url': page_url})
@@ -63,6 +71,7 @@ class RaptorResultsHandler():
         LOG.info("summarizing raptor test results")
         output = Output(self.results, self.supporting_data)
         output.summarize()
+        output.summarize_screenshots(self.images)
         if self.supporting_data is not None:
             output.summarize_supporting_data()
             output.output_supporting_data()

@@ -103,12 +103,12 @@ fuzzy-if(OSX,0-1,0-324) == background-layers-1b.html background-layers-1-ref.htm
 # box-decoration-break's effect on backgrounds is touchy and hard to test due to stretching
 # artifacts and the difficulty of covering exact lines, so just make sure
 # background-size results in a different rendering when present.
-pref(layout.css.box-decoration-break.enabled,true) != background-size-cover-slice.html background-size-slice.html
-pref(layout.css.box-decoration-break.enabled,true) != background-size-cover-clone.html background-size-clone.html
+!= background-size-cover-slice.html background-size-slice.html
+!= background-size-cover-clone.html background-size-clone.html
 
 # ...and make sure each rendering with background-size is different from the
 # other
-pref(layout.css.box-decoration-break.enabled,true) != background-size-cover-slice.html background-size-cover-clone.html
+!= background-size-cover-slice.html background-size-cover-clone.html
 
 random-if(OSX==1010) == background-size-monster-ch.html background-size-monster-ref.html # bug 1129300
 random-if(OSX==1010) == background-size-monster-cm.html background-size-monster-ref.html # bug 1129300

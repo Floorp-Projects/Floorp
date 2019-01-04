@@ -29,14 +29,18 @@ function getCurrentConnectionPromptSetting(runtimesState) {
 exports.getCurrentConnectionPromptSetting = getCurrentConnectionPromptSetting;
 
 function findRuntimeById(id, runtimesState) {
-  const allRuntimes = [
+  return getAllRuntimes(runtimesState).find(r => r.id === id);
+}
+exports.findRuntimeById = findRuntimeById;
+
+function getAllRuntimes(runtimesState) {
+  return [
     ...runtimesState.networkRuntimes,
     ...runtimesState.thisFirefoxRuntimes,
     ...runtimesState.usbRuntimes,
   ];
-  return allRuntimes.find(r => r.id === id);
 }
-exports.findRuntimeById = findRuntimeById;
+exports.getAllRuntimes = getAllRuntimes;
 
 function getCurrentRuntimeDetails(runtimesState) {
   const runtime = getCurrentRuntime(runtimesState);

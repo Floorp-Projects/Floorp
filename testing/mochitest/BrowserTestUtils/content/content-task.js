@@ -6,7 +6,7 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/Task.jsm", this);
+ChromeUtils.import("resource://testing-common/Task.jsm", this);
 ChromeUtils.import("resource://testing-common/ContentTaskUtils.jsm", this);
 const AssertCls = ChromeUtils.import("resource://testing-common/Assert.jsm", null).Assert;
 
