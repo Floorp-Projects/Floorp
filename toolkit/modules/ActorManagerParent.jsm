@@ -106,6 +106,7 @@ let ACTORS = {
       module: "resource://gre/actors/AudibleAutoplayChild.jsm",
       events: {
         "AudibleAutoplayMediaOccurred": {},
+        "GloballyAutoplayBlocked": {},
       },
     },
   },
