@@ -13,7 +13,7 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "Services",
                                "resource://gre/modules/Services.jsm");
 ChromeUtils.defineModuleGetter(this, "Task",
-                               "resource://gre/modules/Task.jsm");
+                               "resource://testing-common/Task.jsm");
 
 /**
  * Returns a promise that will be resolved with the given value, when an event
@@ -581,4 +581,3 @@ add_test(function exit_stack_tests() {
   Task.Debugging.maintainStack = maintainStack;
   run_next_test();
 });
-

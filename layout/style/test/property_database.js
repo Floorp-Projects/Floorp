@@ -1638,6 +1638,14 @@ var gCSSProperties = {
     other_values: [ "center", "end", "justify" ],
     invalid_values: []
   },
+  "box-decoration-break": {
+    domProp: "boxDecorationBreak",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "slice" ],
+    other_values: [ "clone" ],
+    invalid_values: [ "auto",  "none",  "1px" ],
+  },
   "box-sizing": {
     domProp: "boxSizing",
     inherited: false,
@@ -2737,6 +2745,18 @@ var gCSSProperties = {
     initial_values: [ "scroll" ],
     other_values: [ "fixed", "local", "scroll,scroll", "fixed, scroll", "scroll, fixed, local, scroll", "fixed, fixed" ],
     invalid_values: []
+  },
+  "background-blend-mode": {
+    domProp: "backgroundBlendMode",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    applies_to_first_letter: true,
+    applies_to_first_line: true,
+    applies_to_placeholder: true,
+    initial_values: [ "normal" ],
+    other_values: [ "multiply", "screen", "overlay", "darken", "lighten", "color-dodge", "color-burn",
+      "hard-light", "soft-light", "difference", "exclusion", "hue", "saturation", "color", "luminosity" ],
+    invalid_values: ["none", "10px", "multiply multiply"],
   },
   "background-clip": {
     /*
@@ -4443,6 +4463,14 @@ var gCSSProperties = {
       "over left", "right under", "0", "100px", "50%"
     ]
   },
+  "scroll-behavior": {
+    domProp: "scrollBehavior",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "auto" ],
+    other_values: [ "smooth" ],
+    invalid_values: [ "none",  "1px" ],
+  },
   "table-layout": {
     domProp: "tableLayout",
     inherited: false,
@@ -5198,6 +5226,14 @@ var gCSSProperties = {
     other_values: [ "0", "0.3", "-7.3" ],
     invalid_values: []
   },
+  "image-orientation": {
+    domProp: "imageOrientation",
+    inherited: true,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "none" ],
+    other_values: [ "from-image" ],
+    invalid_values: [ "0", "0deg" ],
+  },
   "image-rendering": {
     domProp: "imageRendering",
     inherited: true,
@@ -5205,6 +5241,14 @@ var gCSSProperties = {
     initial_values: [ "auto" ],
     other_values: [ "optimizeSpeed", "optimizeQuality", "-moz-crisp-edges" ],
     invalid_values: []
+  },
+  "isolation": {
+    domProp: "isolation",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "auto" ],
+    other_values: ["isolate"],
+    invalid_values: [],
   },
   "lighting-color": {
     domProp: "lightingColor",
@@ -5247,6 +5291,15 @@ var gCSSProperties = {
     initial_values: [ "none" ],
     other_values: [ "url(#mysym)" ],
     invalid_values: []
+  },
+  "mix-blend-mode": {
+    domProp: "mixBlendMode",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "normal" ],
+    other_values: ["multiply", "screen", "overlay", "darken", "lighten", "color-dodge", "color-burn",
+        "hard-light", "soft-light", "difference", "exclusion", "hue", "saturation", "color", "luminosity"],
+    invalid_values: [],
   },
   "shape-image-threshold": {
     domProp: "shapeImageThreshold",
@@ -7188,16 +7241,6 @@ if (IsCSSPropertyPrefEnabled("layout.css.contain.enabled")) {
   };
 }
 
-if (IsCSSPropertyPrefEnabled("layout.css.image-orientation.enabled")) {
-  gCSSProperties["image-orientation"] = {
-    domProp: "imageOrientation",
-    inherited: true,
-    type: CSS_TYPE_LONGHAND,
-    initial_values: [ "none" ],
-    other_values: [ "from-image" ],
-    invalid_values: [ "0", "0deg" ]
-  };
-}
 
 if (IsCSSPropertyPrefEnabled("layout.css.initial-letter.enabled")) {
   gCSSProperties["initial-letter"] = {
@@ -7222,44 +7265,6 @@ if (IsCSSPropertyPrefEnabled("layout.css.osx-font-smoothing.enabled")) {
     initial_values: [ "auto" ],
     other_values: [ "grayscale" ],
     invalid_values: [ "none", "subpixel-antialiased", "antialiased" ]
-  };
-}
-
-if (IsCSSPropertyPrefEnabled("layout.css.mix-blend-mode.enabled")) {
-  gCSSProperties["mix-blend-mode"] = {
-    domProp: "mixBlendMode",
-    inherited: false,
-    type: CSS_TYPE_LONGHAND,
-    initial_values: [ "normal" ],
-    other_values: ["multiply", "screen", "overlay", "darken", "lighten", "color-dodge", "color-burn",
-        "hard-light", "soft-light", "difference", "exclusion", "hue", "saturation", "color", "luminosity"],
-    invalid_values: []
-  };
-}
-
-if (IsCSSPropertyPrefEnabled("layout.css.isolation.enabled")) {
-  gCSSProperties["isolation"] = {
-    domProp: "isolation",
-    inherited: false,
-    type: CSS_TYPE_LONGHAND,
-    initial_values: [ "auto" ],
-    other_values: ["isolate"],
-    invalid_values: []
-  };
-}
-
-if (IsCSSPropertyPrefEnabled("layout.css.background-blend-mode.enabled")) {
-  gCSSProperties["background-blend-mode"] = {
-    domProp: "backgroundBlendMode",
-    inherited: false,
-    type: CSS_TYPE_LONGHAND,
-    applies_to_first_letter: true,
-    applies_to_first_line: true,
-    applies_to_placeholder: true,
-    initial_values: [ "normal" ],
-    other_values: [ "multiply", "screen", "overlay", "darken", "lighten", "color-dodge", "color-burn",
-      "hard-light", "soft-light", "difference", "exclusion", "hue", "saturation", "color", "luminosity" ],
-    invalid_values: ["none", "10px", "multiply multiply"]
   };
 }
 
@@ -7292,28 +7297,6 @@ if (IsCSSPropertyPrefEnabled("layout.css.overflow-clip-box.enabled")) {
                     "content-box content-box" ],
     invalid_values: [ "none", "auto", "content-box none", "border-box", "0",
                       "content-box, content-box" ]
-  };
-}
-
-if (IsCSSPropertyPrefEnabled("layout.css.box-decoration-break.enabled")) {
-  gCSSProperties["box-decoration-break"] = {
-    domProp: "boxDecorationBreak",
-    inherited: false,
-    type: CSS_TYPE_LONGHAND,
-    initial_values: [ "slice" ],
-    other_values: [ "clone" ],
-    invalid_values: [ "auto",  "none",  "1px" ]
-  };
-}
-
-if (IsCSSPropertyPrefEnabled("layout.css.scroll-behavior.property-enabled")) {
-  gCSSProperties["scroll-behavior"] = {
-    domProp: "scrollBehavior",
-    inherited: false,
-    type: CSS_TYPE_LONGHAND,
-    initial_values: [ "auto" ],
-    other_values: [ "smooth" ],
-    invalid_values: [ "none",  "1px" ]
   };
 }
 

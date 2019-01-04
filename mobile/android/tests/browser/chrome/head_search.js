@@ -1,7 +1,7 @@
 // Bits and pieces copied from toolkit/components/search/tests/xpcshell/head_search.js
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/Task.jsm");
+ChromeUtils.import("resource://testing-common/Task.jsm");
 
 /**
  * Adds test engines and returns a promise resolved when they are installed.
