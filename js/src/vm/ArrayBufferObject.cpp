@@ -87,32 +87,57 @@ bool js::ToClampedIndex(JSContext* cx, HandleValue v, uint32_t length,
   return true;
 }
 
-// If there are too many 4GB buffers live we run up against system resource
-// exhaustion (address space or number of memory map descriptors), see
-// bug 1068684, bug 1073934 for details.  The limiting case seems to be
-// Windows Vista Home 64-bit, where the per-process address space is limited
-// to 8TB.  Thus we track the number of live objects, and set a limit of
-// 1000 live objects per process and we throw an OOM error if the per-process
-// limit is exceeded.
+// If there are too many wasm memory buffers (typically 6GB each) live we run up
+// against system resource exhaustion (address space or number of memory map
+// descriptors), see bug 1068684, bug 1073934, bug 1517412, bug 1502733 for
+// details.  The limiting case seems to be Android on ARM64, where the
+// per-process address space is limited to 4TB (39 bits) by the organization of
+// the page tables.  An earlier problem was Windows Vista Home 64-bit, where the
+// per-process address space is limited to 8TB (40 bits).
+//
+// Thus we track the number of live objects, and set a limit of the number of
+// live buffer objects per process.  We trigger GC work when we approach the
+// limit and we throw an OOM error if the per-process limit is exceeded.  The
+// limit (MaximumLiveMappedBuffers) is specific to architecture, OS, and OS
+// configuration.
 //
 // Since the MaximumLiveMappedBuffers limit is not generally accounted for by
 // any existing GC-trigger heuristics, we need an extra heuristic for triggering
 // GCs when the caller is allocating memories rapidly without other garbage.
-// Thus, once the live buffer count crosses a certain threshold, we start
-// triggering GCs every N allocations. As we get close to the limit, perform
-// expensive non-incremental full GCs as a last-ditch effort to avoid
-// unnecessary failure. The *Sans use a ton of vmem for bookkeeping leaving a
-// lot less for the program so use a lower limit.
+// Thus, once the live buffer count crosses the threshold
+// StartTriggeringAtLiveBufferCount, we start triggering GCs every
+// AllocatedBuffersPerTrigger allocations.  Once we reach
+// StartSyncFullGCAtLiveBufferCount live buffers, we perform expensive
+// non-incremental full GCs as a last-ditch effort to avoid unnecessary failure.
+// Once we reach MaximumLiveMappedBuffers, we perform further full GCs before
+// giving up.
 
-#if defined(MOZ_TSAN) || defined(MOZ_ASAN)
+#if defined(JS_CODEGEN_ARM64) && defined(ANDROID)
+// With 6GB mappings, the hard limit is 84 buffers.  75 cuts it close.
+static const int32_t MaximumLiveMappedBuffers = 75;
+#elif defined(MOZ_TSAN) || defined(MOZ_ASAN)
+// ASAN and TSAN use a ton of vmem for bookkeeping leaving a lot less for the
+// program so use a lower limit.
 static const int32_t MaximumLiveMappedBuffers = 500;
 #else
 static const int32_t MaximumLiveMappedBuffers = 1000;
 #endif
+
+// StartTriggeringAtLiveBufferCount + AllocatedBuffersPerTrigger must be well
+// below StartSyncFullGCAtLiveBufferCount in order to provide enough time for
+// incremental GC to do its job.
+
+#if defined(JS_CODEGEN_ARM64) && defined(ANDROID)
+static const int32_t StartTriggeringAtLiveBufferCount = 15;
+static const int32_t StartSyncFullGCAtLiveBufferCount =
+    MaximumLiveMappedBuffers - 15;
+static const int32_t AllocatedBuffersPerTrigger = 15;
+#else
 static const int32_t StartTriggeringAtLiveBufferCount = 100;
 static const int32_t StartSyncFullGCAtLiveBufferCount =
     MaximumLiveMappedBuffers - 100;
 static const int32_t AllocatedBuffersPerTrigger = 100;
+#endif
 
 static Atomic<int32_t, mozilla::ReleaseAcquire> liveBufferCount(0);
 static Atomic<int32_t, mozilla::ReleaseAcquire> allocatedSinceLastTrigger(0);
