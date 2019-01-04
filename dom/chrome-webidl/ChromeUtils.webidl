@@ -379,6 +379,12 @@ partial namespace ChromeUtils {
 
   [ChromeOnly, Throws]
   boolean hasReportingHeaderForOrigin(DOMString aOrigin);
+
+  [ChromeOnly]
+  PopupBlockerState getPopupControlState();
+
+  [ChromeOnly]
+  boolean isPopupTokenUnused();
 };
 
 /**
@@ -536,4 +542,13 @@ enum Base64URLDecodePadding {
 dictionary Base64URLDecodeOptions {
   /** Specifies the padding mode for decoding the input. */
   required Base64URLDecodePadding padding;
+};
+
+// Keep this in sync with PopupBlocker::PopupControlState!
+enum PopupBlockerState {
+  "openAllowed",
+  "openControlled",
+  "openBlocked",
+  "openAbused",
+  "openOverridden",
 };
