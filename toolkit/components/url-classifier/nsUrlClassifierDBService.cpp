@@ -491,19 +491,6 @@ nsresult nsUrlClassifierDBServiceWorker::DoLocalLookupWithURI(
   return NS_OK;
 }
 
-static nsresult ProcessLookupResults(const LookupResultArray& aResults,
-                                     nsTArray<nsCString>& aTables) {
-  // Build the result array, eliminating any duplicate tables.
-  for (const RefPtr<const LookupResult> result : aResults) {
-    MOZ_ASSERT(!result->mNoise, "Lookup results should not have noise added");
-    LOG(("Found result from table %s", result->mTableName.get()));
-    if (aTables.IndexOf(result->mTableName) == nsTArray<nsCString>::NoIndex) {
-      aTables.AppendElement(result->mTableName);
-    }
-  }
-  return NS_OK;
-}
-
 /**
  * Lookup up a key in the database is a two step process:
  *
@@ -2017,26 +2004,6 @@ nsUrlClassifierDBService::Classify(nsIPrincipal* aPrincipal,
 }
 
 NS_IMETHODIMP
-nsUrlClassifierDBService::ClassifyLocal(nsIURI* aURI, const nsACString& aTables,
-                                        nsACString& aTableResults) {
-  nsTArray<nsCString> results;
-  ClassifyLocalWithTables(aURI, aTables, results);
-
-  // Convert the result array to a comma separated string
-  aTableResults.AssignLiteral("");
-  bool first = true;
-  for (nsCString& result : results) {
-    if (first) {
-      first = false;
-    } else {
-      aTableResults.AppendLiteral(",");
-    }
-    aTableResults.Append(result);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsUrlClassifierDBService::AsyncClassifyLocalWithTables(
     nsIURI* aURI, const nsACString& aTables,
     const nsTArray<nsCString>& aExtraTablesByPrefs,
@@ -2078,59 +2045,6 @@ nsUrlClassifierDBService::AsyncClassifyLocalWithTables(
   // here because the DummyFeature returns always the same values.
   return AsyncClassifyLocalWithFeatures(
       aURI, features, nsIUrlClassifierFeature::blacklist, callback);
-}
-
-NS_IMETHODIMP
-nsUrlClassifierDBService::ClassifyLocalWithTables(
-    nsIURI* aURI, const nsACString& aTables,
-    nsTArray<nsCString>& aTableResults) {
-  MOZ_ASSERT(NS_IsMainThread(),
-             "ClassifyLocalWithTables must be on main thread");
-  if (gShuttingDownThread) {
-    return NS_ERROR_ABORT;
-  }
-
-  nsresult rv;
-  if (XRE_IsContentProcess()) {
-    using namespace mozilla::dom;
-    using namespace mozilla::ipc;
-    URIParams uri;
-    SerializeURI(aURI, uri);
-    nsAutoCString tables(aTables);
-    bool result = ContentChild::GetSingleton()->SendClassifyLocal(
-        uri, tables, &rv, &aTableResults);
-    if (result) {
-      return rv;
-    }
-    return NS_ERROR_FAILURE;
-  }
-
-  AUTO_PROFILER_LABEL("nsUrlClassifierDBService::ClassifyLocalWithTables",
-                      OTHER);
-  Telemetry::AutoTimer<Telemetry::URLCLASSIFIER_CLASSIFYLOCAL_TIME> timer;
-
-  nsCOMPtr<nsIURI> uri = NS_GetInnermostURI(aURI);
-  NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
-
-  nsAutoCString key;
-  // Canonicalize the url
-  nsCOMPtr<nsIUrlClassifierUtils> utilsService =
-      do_GetService(NS_URLCLASSIFIERUTILS_CONTRACTID);
-  rv = utilsService->GetKeyForURI(uri, key);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsTArray<nsCString> tables;
-  Classifier::SplitTables(aTables, tables);
-
-  LookupResultArray results;
-  rv = mWorkerProxy->DoLocalLookupWithURI(key, tables, results);
-  // In unittests, we may not have been initalized, so don't crash.
-  if (NS_SUCCEEDED(rv)) {
-    rv = ProcessLookupResults(results, aTableResults);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  return NS_OK;
 }
 
 class ThreatHitReportListener final : public nsIStreamListener {
