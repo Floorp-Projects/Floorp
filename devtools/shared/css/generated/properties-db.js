@@ -9357,10 +9357,6 @@ exports.PSEUDO_ELEMENTS = [
  */
 exports.PREFERENCES = [
   [
-    "color-adjust",
-    "layout.css.color-adjust.enabled"
-  ],
-  [
     "column-span",
     "layout.css.column-span.enabled"
   ],
