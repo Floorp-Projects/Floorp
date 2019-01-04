@@ -1941,6 +1941,22 @@ VARCACHE_PREF(
 #undef PREF_VALUE
 
 //---------------------------------------------------------------------------
+// Plugins prefs
+//---------------------------------------------------------------------------
+
+VARCACHE_PREF(
+  "plugins.flashBlock.enabled",
+   plugins_flashBlock_enabled,
+  bool, false
+)
+
+VARCACHE_PREF(
+  "plugins.http_https_only",
+   plugins_http_https_only,
+  bool, true
+)
+
+//---------------------------------------------------------------------------
 // Reporting API
 //---------------------------------------------------------------------------
 

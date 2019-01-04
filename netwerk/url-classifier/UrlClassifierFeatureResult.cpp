@@ -10,10 +10,18 @@ namespace mozilla {
 namespace net {
 
 UrlClassifierFeatureResult::UrlClassifierFeatureResult(
-    nsIUrlClassifierFeature* aFeature, const nsACString& aList)
-    : mFeature(aFeature), mList(aList) {}
+    nsIURI* aURI, nsIUrlClassifierFeature* aFeature, const nsACString& aList)
+    : mURI(aURI), mFeature(aFeature), mList(aList) {}
 
 UrlClassifierFeatureResult::~UrlClassifierFeatureResult() = default;
+
+NS_IMETHODIMP
+UrlClassifierFeatureResult::GetUri(nsIURI** aURI) {
+  NS_ENSURE_ARG_POINTER(aURI);
+  nsCOMPtr<nsIURI> uri = mURI;
+  uri.forget(aURI);
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 UrlClassifierFeatureResult::GetFeature(nsIUrlClassifierFeature** aFeature) {

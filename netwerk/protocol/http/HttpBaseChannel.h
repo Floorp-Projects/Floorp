@@ -238,6 +238,8 @@ class HttpBaseChannel : public nsHashPropertyBag,
       bool *aIsTrackingResource) override;
   NS_IMETHOD OverrideTrackingFlagsForDocumentCookieAccessor(
       nsIHttpChannel *aDocumentChannel) override;
+  NS_IMETHOD GetFlashPluginState(
+      nsIHttpChannel::FlashPluginState *aState) override;
 
   // nsIHttpChannelInternal
   NS_IMETHOD GetDocumentURI(nsIURI **aDocumentURI) override;
@@ -412,6 +414,8 @@ class HttpBaseChannel : public nsHashPropertyBag,
   virtual void OnCopyComplete(nsresult aStatus);
 
   void SetIsTrackingResource(bool aIsThirdParty);
+
+  void SetFlashPluginState(nsIHttpChannel::FlashPluginState aState);
 
   const uint64_t &ChannelId() const { return mChannelId; }
 
@@ -647,6 +651,7 @@ class HttpBaseChannel : public nsHashPropertyBag,
   Atomic<bool, ReleaseAcquire> mCanceled;
   Atomic<bool, ReleaseAcquire> mIsFirstPartyTrackingResource;
   Atomic<bool, ReleaseAcquire> mIsThirdPartyTrackingResource;
+  Atomic<uint32_t, ReleaseAcquire> mFlashPluginState;
 
   uint32_t mLoadFlags;
   uint32_t mCaps;

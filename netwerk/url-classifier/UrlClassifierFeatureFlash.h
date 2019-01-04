@@ -4,38 +4,38 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_net_UrlClassifierFeatureTrackingAnnotation_h
-#define mozilla_net_UrlClassifierFeatureTrackingAnnotation_h
+#ifndef mozilla_UrlClassifierFeatureFlash_h
+#define mozilla_UrlClassifierFeatureFlash_h
 
 #include "UrlClassifierFeatureBase.h"
-
-class nsIChannel;
 
 namespace mozilla {
 namespace net {
 
-class UrlClassifierFeatureTrackingAnnotation final
-    : public UrlClassifierFeatureBase {
+class UrlClassifierFeatureFlash final : public UrlClassifierFeatureBase {
  public:
   static void Initialize();
-
   static void Shutdown();
 
-  static already_AddRefed<UrlClassifierFeatureTrackingAnnotation> MaybeCreate(
-      nsIChannel* aChannel);
+  static void MaybeCreate(
+      nsIChannel* aChannel,
+      nsTArray<nsCOMPtr<nsIUrlClassifierFeature>>& aFeatures);
 
-  NS_IMETHOD ProcessChannel(nsIChannel* aChannel, const nsACString& aList,
-                            bool* aShouldContinue) override;
+  NS_IMETHOD
+  ProcessChannel(nsIChannel* aChannel, const nsACString& aList,
+                 bool* aShouldContinue) override;
 
   NS_IMETHOD GetURIByListType(nsIChannel* aChannel,
                               nsIUrlClassifierFeature::listType aListType,
                               nsIURI** aURI) override;
 
  private:
-  UrlClassifierFeatureTrackingAnnotation();
+  explicit UrlClassifierFeatureFlash(uint32_t aId);
+
+  nsIHttpChannel::FlashPluginState mFlashPluginState;
 };
 
 }  // namespace net
 }  // namespace mozilla
 
-#endif  // mozilla_net_UrlClassifierFeatureTrackingAnnotation_h
+#endif  // mozilla_UrlClassifierFeatureFlash_h

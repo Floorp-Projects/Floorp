@@ -24,6 +24,74 @@ namespace net {
 
 namespace {
 
+// When we do blacklist/whitelist classification, from a list of features, we
+// need to aggregate them per URI, because not all the features work with the
+// same channel's URI.
+// This struct contains only the features able to deal with a particular URI.
+// See more in GetFeatureTasks().
+struct FeatureTask {
+  nsCOMPtr<nsIURI> mURI;
+  // Let's use RefPtr<> here, because this needs to be used with methods which
+  // require it.
+  nsTArray<RefPtr<nsIUrlClassifierFeature>> mFeatures;
+};
+
+// Features are able to classify particular URIs from a channel. For instance,
+// tracking-annotation feature uses the top-level URI to whitelist the current
+// channel's URI; flash feature always uses the channel's URI.  Because of
+// this, this function aggregates feature per URI in an array of FeatureTask
+// object.
+nsresult GetFeatureTasks(
+    nsIChannel* aChannel,
+    const nsTArray<nsCOMPtr<nsIUrlClassifierFeature>>& aFeatures,
+    nsIUrlClassifierFeature::listType aListType,
+    nsTArray<FeatureTask>& aTasks) {
+  MOZ_ASSERT(!aFeatures.IsEmpty());
+
+  // Let's unify features per nsIURI.
+  for (nsIUrlClassifierFeature* feature : aFeatures) {
+    nsCOMPtr<nsIURI> uri;
+    nsresult rv =
+        feature->GetURIByListType(aChannel, aListType, getter_AddRefs(uri));
+    if (NS_WARN_IF(NS_FAILED(rv)) || !uri) {
+      if (UC_LOG_ENABLED()) {
+        nsAutoCString errorName;
+        GetErrorName(rv, errorName);
+        UC_LOG(
+            ("GetFeatureTasks got an unexpected error (rv=%s) while trying to "
+             "create a whitelist URI. Allowing tracker.",
+             errorName.get()));
+      }
+      return rv;
+    }
+
+    MOZ_ASSERT(uri);
+
+    bool found = false;
+    for (FeatureTask& task : aTasks) {
+      bool equal = false;
+      rv = task.mURI->Equals(uri, &equal);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      if (equal) {
+        task.mFeatures.AppendElement(feature);
+        found = true;
+        break;
+      }
+    }
+
+    if (!found) {
+      FeatureTask* task = aTasks.AppendElement();
+      task->mURI = uri;
+      task->mFeatures.AppendElement(feature);
+    }
+  }
+
+  return NS_OK;
+}
+
 nsresult TrackerFound(
     const nsTArray<RefPtr<nsIUrlClassifierFeatureResult>>& aResults,
     nsIChannel* aChannel, const std::function<void()>& aCallback) {
@@ -48,81 +116,6 @@ nsresult TrackerFound(
   return NS_OK;
 }
 
-nsresult CreateWhiteListURI(nsIChannel* aChannel, nsIURI** aURI) {
-  MOZ_ASSERT(aChannel);
-  MOZ_ASSERT(aURI);
-
-  nsresult rv;
-  nsCOMPtr<nsIHttpChannelInternal> chan = do_QueryInterface(aChannel, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (!chan) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsCOMPtr<nsIURI> topWinURI;
-  rv = chan->GetTopWindowURI(getter_AddRefs(topWinURI));
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (!topWinURI) {
-    if (UC_LOG_ENABLED()) {
-      nsresult rv;
-      nsCOMPtr<nsIHttpChannel> httpChan = do_QueryInterface(aChannel, &rv);
-      nsCOMPtr<nsIURI> uri;
-      rv = httpChan->GetURI(getter_AddRefs(uri));
-      nsAutoCString spec;
-      uri->GetAsciiSpec(spec);
-      spec.Truncate(
-          std::min(spec.Length(), UrlClassifierCommon::sMaxSpecLength));
-      UC_LOG(
-          ("CreateWhiteListURI: No window URI associated with %s", spec.get()));
-    }
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIScriptSecurityManager> securityManager =
-      do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-  nsCOMPtr<nsIPrincipal> chanPrincipal;
-  rv = securityManager->GetChannelURIPrincipal(aChannel,
-                                               getter_AddRefs(chanPrincipal));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Craft a whitelist URL like "toplevel.page/?resource=third.party.domain"
-  nsAutoCString pageHostname, resourceDomain;
-  rv = topWinURI->GetHost(pageHostname);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = chanPrincipal->GetBaseDomain(resourceDomain);
-  NS_ENSURE_SUCCESS(rv, rv);
-  nsAutoCString whitelistEntry = NS_LITERAL_CSTRING("http://") + pageHostname +
-                                 NS_LITERAL_CSTRING("/?resource=") +
-                                 resourceDomain;
-  UC_LOG(("CreateWhiteListURI: Looking for %s in the whitelist (channel=%p)",
-          whitelistEntry.get(), aChannel));
-
-  nsCOMPtr<nsIURI> whitelistURI;
-  rv = NS_NewURI(getter_AddRefs(whitelistURI), whitelistEntry);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  whitelistURI.forget(aURI);
-  return NS_OK;
-}
-
-nsresult IsTrackerWhitelisted(
-    nsIURI* aWhiteListURI,
-    const nsTArray<RefPtr<nsIUrlClassifierFeature>>& aFeatures,
-    nsIUrlClassifierFeatureCallback* aCallback) {
-  MOZ_ASSERT(aWhiteListURI);
-  MOZ_ASSERT(!aFeatures.IsEmpty());
-  MOZ_ASSERT(aCallback);
-
-  nsresult rv;
-  nsCOMPtr<nsIURIClassifier> uriClassifier =
-      do_GetService(NS_URICLASSIFIERSERVICE_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return uriClassifier->AsyncClassifyLocalWithFeatures(
-      aWhiteListURI, aFeatures, nsIUrlClassifierFeature::whitelist, aCallback);
-}
-
 // This class is designed to get the results of checking whitelist.
 class WhitelistClassifierCallback final
     : public nsIUrlClassifierFeatureCallback {
@@ -131,25 +124,34 @@ class WhitelistClassifierCallback final
   NS_DECL_NSIURLCLASSIFIERFEATURECALLBACK
 
   WhitelistClassifierCallback(
-      nsIChannel* aChannel, nsIURI* aURI,
+      nsIChannel* aChannel,
       const nsTArray<RefPtr<nsIUrlClassifierFeatureResult>>& aBlacklistResults,
       std::function<void()>& aCallback)
       : mChannel(aChannel),
-        mURI(aURI),
+        mTaskCount(0),
         mBlacklistResults(aBlacklistResults),
         mChannelCallback(aCallback) {
     MOZ_ASSERT(mChannel);
-    MOZ_ASSERT(mURI);
     MOZ_ASSERT(!mBlacklistResults.IsEmpty());
+  }
+
+  void SetTaskCount(uint32_t aTaskCount) {
+    MOZ_ASSERT(aTaskCount > 0);
+    mTaskCount = aTaskCount;
   }
 
  private:
   ~WhitelistClassifierCallback() = default;
 
+  nsresult OnClassifyCompleteInternal();
+
   nsCOMPtr<nsIChannel> mChannel;
   nsCOMPtr<nsIURI> mURI;
+  uint32_t mTaskCount;
   nsTArray<RefPtr<nsIUrlClassifierFeatureResult>> mBlacklistResults;
   std::function<void()> mChannelCallback;
+
+  nsTArray<RefPtr<nsIUrlClassifierFeatureResult>> mWhitelistResults;
 };
 
 NS_IMPL_ISUPPORTS(WhitelistClassifierCallback, nsIUrlClassifierFeatureCallback)
@@ -157,18 +159,33 @@ NS_IMPL_ISUPPORTS(WhitelistClassifierCallback, nsIUrlClassifierFeatureCallback)
 NS_IMETHODIMP
 WhitelistClassifierCallback::OnClassifyComplete(
     const nsTArray<RefPtr<nsIUrlClassifierFeatureResult>>& aWhitelistResults) {
+  MOZ_ASSERT(mTaskCount > 0);
+
   UC_LOG(("WhitelistClassifierCallback[%p]:OnClassifyComplete channel=%p", this,
           mChannel.get()));
 
+  mWhitelistResults.AppendElements(aWhitelistResults);
+
+  if (--mTaskCount) {
+    // More callbacks will come.
+    return NS_OK;
+  }
+
+  return OnClassifyCompleteInternal();
+}
+
+nsresult WhitelistClassifierCallback::OnClassifyCompleteInternal() {
   nsTArray<RefPtr<nsIUrlClassifierFeatureResult>> remainingResults;
 
   for (nsIUrlClassifierFeatureResult* blacklistResult : mBlacklistResults) {
-    nsIUrlClassifierFeature* blacklistFeature =
-        static_cast<UrlClassifierFeatureResult*>(blacklistResult)->Feature();
+    UrlClassifierFeatureResult* result =
+        static_cast<UrlClassifierFeatureResult*>(blacklistResult);
+
+    nsIUrlClassifierFeature* blacklistFeature = result->Feature();
     MOZ_ASSERT(blacklistFeature);
 
     bool found = false;
-    for (nsIUrlClassifierFeatureResult* whitelistResult : aWhitelistResults) {
+    for (nsIUrlClassifierFeatureResult* whitelistResult : mWhitelistResults) {
       // We can do pointer comparison because Features are singletons.
       if (static_cast<UrlClassifierFeatureResult*>(whitelistResult)
               ->Feature() == blacklistFeature) {
@@ -188,13 +205,12 @@ WhitelistClassifierCallback::OnClassifyComplete(
       continue;
     }
 
-    if (nsContentUtils::IsURIInList(mURI, skipList)) {
+    if (nsContentUtils::IsURIInList(result->URI(), skipList)) {
       if (UC_LOG_ENABLED()) {
-        nsCString spec = mURI->GetSpecOrDefault();
         UC_LOG(
-            ("WhitelistClassifierCallback[%p]::OnClassifyComplete uri %s found "
-             "in skiplist",
-             this, spec.get()));
+            ("WhitelistClassifierCallback[%p]::OnClassifyComplete uri found in "
+             "skiplist",
+             this));
       }
 
       continue;
@@ -207,13 +223,10 @@ WhitelistClassifierCallback::OnClassifyComplete(
 
   if (remainingResults.IsEmpty()) {
     if (UC_LOG_ENABLED()) {
-      nsCString spec = mURI->GetSpecOrDefault();
-      spec.Truncate(
-          std::min(spec.Length(), UrlClassifierCommon::sMaxSpecLength));
       UC_LOG(
-          ("WhitelistClassifierCallback[%p]::OnClassifyComplete uri %s fully "
+          ("WhitelistClassifierCallback[%p]::OnClassifyComplete uri fully "
            "whitelisted",
-           this, spec.get()));
+           this));
     }
 
     mChannelCallback();
@@ -221,12 +234,10 @@ WhitelistClassifierCallback::OnClassifyComplete(
   }
 
   if (UC_LOG_ENABLED()) {
-    nsCString spec = mURI->GetSpecOrDefault();
-    spec.Truncate(std::min(spec.Length(), UrlClassifierCommon::sMaxSpecLength));
     UC_LOG(
-        ("WhitelistClassifierCallback[%p]::OnClassifyComplete "
-         "channel[%p] uri=%s, should not be whitelisted",
-         this, mChannel.get(), spec.get()));
+        ("WhitelistClassifierCallback[%p]::OnClassifyComplete channel[%p] "
+         "should not be whitelisted",
+         this, mChannel.get()));
   }
 
   return TrackerFound(remainingResults, mChannel, mChannelCallback);
@@ -239,19 +250,29 @@ class BlacklistClassifierCallback final
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIURLCLASSIFIERFEATURECALLBACK
 
-  BlacklistClassifierCallback(nsIChannel* aChannel, nsIURI* aURI,
+  BlacklistClassifierCallback(nsIChannel* aChannel,
                               std::function<void()>&& aCallback)
-      : mChannel(aChannel), mURI(aURI), mChannelCallback(std::move(aCallback)) {
+      : mChannel(aChannel),
+        mTaskCount(0),
+        mChannelCallback(std::move(aCallback)) {
     MOZ_ASSERT(mChannel);
-    MOZ_ASSERT(mURI);
+  }
+
+  void SetTaskCount(uint32_t aTaskCount) {
+    MOZ_ASSERT(aTaskCount > 0);
+    mTaskCount = aTaskCount;
   }
 
  private:
   ~BlacklistClassifierCallback() = default;
 
+  nsresult OnClassifyCompleteInternal();
+
   nsCOMPtr<nsIChannel> mChannel;
-  nsCOMPtr<nsIURI> mURI;
+  uint32_t mTaskCount;
   std::function<void()> mChannelCallback;
+
+  nsTArray<RefPtr<nsIUrlClassifierFeatureResult>> mResults;
 };
 
 NS_IMPL_ISUPPORTS(BlacklistClassifierCallback, nsIUrlClassifierFeatureCallback)
@@ -259,18 +280,29 @@ NS_IMPL_ISUPPORTS(BlacklistClassifierCallback, nsIUrlClassifierFeatureCallback)
 NS_IMETHODIMP
 BlacklistClassifierCallback::OnClassifyComplete(
     const nsTArray<RefPtr<nsIUrlClassifierFeatureResult>>& aResults) {
-  UC_LOG(("BlacklistClassifierCallback[%p]:OnClassifyComplete", this));
+  MOZ_ASSERT(mTaskCount > 0);
 
+  UC_LOG(("BlacklistClassifierCallback[%p]:OnClassifyComplete - remaining %d",
+          this, mTaskCount));
+
+  mResults.AppendElements(aResults);
+
+  if (--mTaskCount) {
+    // More callbacks will come.
+    return NS_OK;
+  }
+
+  return OnClassifyCompleteInternal();
+}
+
+nsresult BlacklistClassifierCallback::OnClassifyCompleteInternal() {
   // All good! The URL has not been classified.
-  if (aResults.IsEmpty()) {
+  if (mResults.IsEmpty()) {
     if (UC_LOG_ENABLED()) {
-      nsCString spec = mURI->GetSpecOrDefault();
-      spec.Truncate(
-          std::min(spec.Length(), UrlClassifierCommon::sMaxSpecLength));
       UC_LOG(
-          ("BlacklistClassifierCallback[%p]::OnClassifyComplete uri %s not "
-           "found in blacklist",
-           this, spec.get()));
+          ("BlacklistClassifierCallback[%p]::OnClassifyComplete uri not found "
+           "in blacklist",
+           this));
     }
 
     mChannelCallback();
@@ -278,63 +310,79 @@ BlacklistClassifierCallback::OnClassifyComplete(
   }
 
   if (UC_LOG_ENABLED()) {
-    nsCString spec = mURI->GetSpecOrDefault();
-    spec.Truncate(std::min(spec.Length(), UrlClassifierCommon::sMaxSpecLength));
     UC_LOG(
-        ("BlacklistClassifierCallback[%p]::OnClassifyComplete uri %s is in "
+        ("BlacklistClassifierCallback[%p]::OnClassifyComplete uri is in "
          "blacklist. Start checking whitelist.",
-         this, spec.get()));
+         this));
   }
 
-  nsCOMPtr<nsIURI> whitelistURI;
-  nsresult rv = CreateWhiteListURI(mChannel, getter_AddRefs(whitelistURI));
-  if (NS_FAILED(rv)) {
-    nsAutoCString errorName;
-    GetErrorName(rv, errorName);
-    NS_WARNING(
-        nsPrintfCString("BlacklistClassifierCallback[%p]:OnClassifyComplete "
-                        "got an unexpected error (rv=%s) while trying to "
-                        "create a whitelist URI. Allowing tracker.",
-                        this, errorName.get())
-            .get());
-    return TrackerFound(aResults, mChannel, mChannelCallback);
+  nsTArray<nsCOMPtr<nsIUrlClassifierFeature>> features;
+  for (nsIUrlClassifierFeatureResult* result : mResults) {
+    features.AppendElement(
+        static_cast<UrlClassifierFeatureResult*>(result)->Feature());
   }
 
-  if (!whitelistURI) {
+  nsTArray<FeatureTask> tasks;
+  nsresult rv = GetFeatureTasks(mChannel, features,
+                                nsIUrlClassifierFeature::whitelist, tasks);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return TrackerFound(mResults, mChannel, mChannelCallback);
+  }
+
+  if (tasks.IsEmpty()) {
     UC_LOG(
         ("BlacklistClassifierCallback[%p]:OnClassifyComplete could not create "
          "a whitelist URI. Ignoring whitelist.",
          this));
 
-    return TrackerFound(aResults, mChannel, mChannelCallback);
+    return TrackerFound(mResults, mChannel, mChannelCallback);
   }
 
-  nsCOMPtr<nsIUrlClassifierFeatureCallback> callback =
-      new WhitelistClassifierCallback(mChannel, mURI, aResults,
-                                      mChannelCallback);
+  RefPtr<WhitelistClassifierCallback> callback =
+      new WhitelistClassifierCallback(mChannel, mResults, mChannelCallback);
 
-  // xpcom parser creates array of interfaces using RefPtr<>.
-  nsTArray<RefPtr<nsIUrlClassifierFeature>> refPtrFeatures;
-  for (nsIUrlClassifierFeatureResult* result : aResults) {
-    refPtrFeatures.AppendElement(
-        static_cast<UrlClassifierFeatureResult*>(result)->Feature());
-  }
+  nsCOMPtr<nsIURIClassifier> uriClassifier =
+      do_GetService(NS_URICLASSIFIERSERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = IsTrackerWhitelisted(whitelistURI, refPtrFeatures, callback);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    if (UC_LOG_ENABLED()) {
-      nsAutoCString errorName;
-      GetErrorName(rv, errorName);
-      UC_LOG(
-          ("BlacklistClassifierCallback[%p]:OnClassifyComplete "
-           "IsTrackerWhitelisted has failed with rv=%s.",
-           this, errorName.get()));
+  uint32_t pendingCallbacks = 0;
+  for (FeatureTask& task : tasks) {
+    rv = uriClassifier->AsyncClassifyLocalWithFeatures(
+        task.mURI, task.mFeatures, nsIUrlClassifierFeature::whitelist,
+        callback);
+
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      if (UC_LOG_ENABLED()) {
+        nsAutoCString errorName;
+        GetErrorName(rv, errorName);
+        UC_LOG((
+            "BlacklistClassifierCallback[%p]:OnClassifyComplete Failed "
+            "calling AsyncClassifyLocalWithFeatures with rv=%s. Let's move on.",
+            this, errorName.get()));
+      }
+
+      continue;
     }
 
-    return TrackerFound(aResults, mChannel, mChannelCallback);
+    ++pendingCallbacks;
+  }
+
+  // All the AsyncClassifyLocalWithFeatures() calls return error. We do not
+  // expect callbacks.
+  if (pendingCallbacks == 0) {
+    if (UC_LOG_ENABLED()) {
+      UC_LOG(
+          ("BlacklistClassifierCallback[%p]:OnClassifyComplete All "
+           "AsyncClassifyLocalWithFeatures() calls return errors. We cannot "
+           "continue.",
+           this));
+    }
+
+    return TrackerFound(mResults, mChannel, mChannelCallback);
   }
 
   // Nothing else do here. Let's wait for the WhitelistClassifierCallback.
+  callback->SetTaskCount(pendingCallbacks);
   return NS_OK;
 }
 
@@ -349,19 +397,24 @@ BlacklistClassifierCallback::OnClassifyComplete(
     return NS_ERROR_INVALID_ARG;
   }
 
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = aChannel->GetURI(getter_AddRefs(uri));
-  if (NS_FAILED(rv) || !uri) {
-    return rv;
-  }
-
+  // We need to obtain the list of nsIUrlClassifierFeature objects able to
+  // classify this channel. If the list is empty, we do an early return.
   nsTArray<nsCOMPtr<nsIUrlClassifierFeature>> features;
   UrlClassifierFeatureFactory::GetFeaturesFromChannel(aChannel, features);
   if (features.IsEmpty()) {
-    UC_LOG(("AsyncUrlChannelClassifier: Feature list is empty for channel %p",
-            aChannel));
+    UC_LOG(
+        ("AsyncUrlChannelClassifier: Nothing to do for channel %p", aChannel));
     return NS_ERROR_FAILURE;
   }
+
+  nsTArray<FeatureTask> tasks;
+  nsresult rv = GetFeatureTasks(aChannel, features,
+                                nsIUrlClassifierFeature::blacklist, tasks);
+  if (NS_WARN_IF(NS_FAILED(rv)) || tasks.IsEmpty()) {
+    return rv;
+  }
+
+  MOZ_ASSERT(!tasks.IsEmpty());
 
   nsCOMPtr<nsIURIClassifier> uriClassifier =
       do_GetService(NS_URICLASSIFIERSERVICE_CONTRACTID, &rv);
@@ -369,24 +422,37 @@ BlacklistClassifierCallback::OnClassifyComplete(
     return rv;
   }
 
-  nsCOMPtr<nsIUrlClassifierFeatureCallback> callback =
-      new BlacklistClassifierCallback(aChannel, uri, std::move(aCallback));
+  RefPtr<BlacklistClassifierCallback> callback =
+      new BlacklistClassifierCallback(aChannel, std::move(aCallback));
 
-  if (UC_LOG_ENABLED()) {
-    nsCString spec = uri->GetSpecOrDefault();
-    spec.Truncate(std::min(spec.Length(), UrlClassifierCommon::sMaxSpecLength));
-    UC_LOG(("AsyncUrlChannelClassifier: Checking blacklist for uri=%s\n",
-            spec.get()));
+  uint32_t pendingCallbacks = 0;
+  for (FeatureTask& task : tasks) {
+    if (UC_LOG_ENABLED()) {
+      nsCString spec = task.mURI->GetSpecOrDefault();
+      spec.Truncate(
+          std::min(spec.Length(), UrlClassifierCommon::sMaxSpecLength));
+      UC_LOG(("AsyncUrlChannelClassifier: Checking blacklist for uri=%s\n",
+              spec.get()));
+    }
+
+    rv = uriClassifier->AsyncClassifyLocalWithFeatures(
+        task.mURI, task.mFeatures, nsIUrlClassifierFeature::blacklist,
+        callback);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      continue;
+    }
+
+    ++pendingCallbacks;
   }
 
-  // xpcom parser creates array of interfaces using RefPtr<>.
-  nsTArray<RefPtr<nsIUrlClassifierFeature>> refPtrFeatures;
-  for (nsIUrlClassifierFeature* feature : features) {
-    refPtrFeatures.AppendElement(feature);
+  // All the AsyncClassifyLocalWithFeatures() calls return error. We do not
+  // expect callbacks.
+  if (pendingCallbacks == 0) {
+    return NS_ERROR_FAILURE;
   }
 
-  return uriClassifier->AsyncClassifyLocalWithFeatures(
-      uri, refPtrFeatures, nsIUrlClassifierFeature::blacklist, callback);
+  callback->SetTaskCount(pendingCallbacks);
+  return NS_OK;
 }
 
 }  // namespace net

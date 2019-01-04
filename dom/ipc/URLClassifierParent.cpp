@@ -53,8 +53,8 @@ class IPCFeature final : public nsIUrlClassifierFeature {
  public:
   NS_DECL_ISUPPORTS
 
-  explicit IPCFeature(const IPCURLClassifierFeature& aFeature)
-      : mIPCFeature(aFeature) {}
+  IPCFeature(nsIURI* aURI, const IPCURLClassifierFeature& aFeature)
+      : mURI(aURI), mIPCFeature(aFeature) {}
 
   NS_IMETHOD
   GetName(nsACString& aName) override {
@@ -102,9 +102,22 @@ class IPCFeature final : public nsIUrlClassifierFeature {
     return NS_OK;
   }
 
+  NS_IMETHOD
+  GetURIByListType(nsIChannel* aChannel,
+                   nsIUrlClassifierFeature::listType aListType,
+                   nsIURI** aURI) override {
+    NS_ENSURE_ARG_POINTER(aURI);
+
+    // This method should not be called, but we have a URI, let's return it.
+    nsCOMPtr<nsIURI> uri = mURI;
+    uri.forget(aURI);
+    return NS_OK;
+  }
+
  private:
   ~IPCFeature() = default;
 
+  nsCOMPtr<nsIURI> mURI;
   IPCURLClassifierFeature mIPCFeature;
 };
 
@@ -130,7 +143,7 @@ mozilla::ipc::IPCResult URLClassifierLocalParent::StartClassify(
 
   nsTArray<RefPtr<nsIUrlClassifierFeature>> features;
   for (const IPCURLClassifierFeature& feature : aFeatures) {
-    features.AppendElement(new IPCFeature(feature));
+    features.AppendElement(new IPCFeature(aURI, feature));
   }
 
   // Doesn't matter if we pass blacklist, whitelist or any other list.
@@ -154,6 +167,8 @@ URLClassifierLocalParent::OnClassifyComplete(
 
     net::UrlClassifierFeatureResult* r =
         static_cast<net::UrlClassifierFeatureResult*>(result);
+
+    ipcResult->uri() = r->URI();
     r->Feature()->GetName(ipcResult->featureName());
     ipcResult->matchingList() = r->List();
   }
