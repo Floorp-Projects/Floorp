@@ -155,7 +155,11 @@ class _PrintTests(_StopAction):
                 if next_test.get("type", None) is not None:
                     test_list[suite]['type'] = next_test['type']
                     if next_test['type'] == "pageload":
-                        test_list[suite]['subtests'].append(next_test['name'])
+                        subtest = next_test['name']
+                        measure = next_test.get("measure")
+                        if measure is not None:
+                            subtest = "{0} ({1})".format(subtest, measure)
+                        test_list[suite]['subtests'].append(subtest)
 
             # print the list in a nice readable format
             for key in sorted(test_list.iterkeys()):
