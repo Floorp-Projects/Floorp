@@ -1,0 +1,306 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ObjectInspector - dimTopLevelWindow renders collapsed top-level window when dimTopLevelWindow =false 1`] = `
+<div
+  className="tree object-inspector"
+  onBlur={[Function]}
+  onFocus={[Function]}
+  onKeyDown={[Function]}
+  onKeyPress={[Function]}
+  onKeyUp={[Function]}
+  role="tree"
+  style={
+    Object {
+      "margin": 0,
+      "padding": 0,
+    }
+  }
+  tabIndex="0"
+>
+  <div
+    aria-expanded={false}
+    aria-level={1}
+    className="tree-node"
+    data-expandable={true}
+    id="Symbol(window)"
+    onClick={[Function]}
+    role="treeitem"
+  >
+    <div
+      className="node object-node"
+      onClick={[Function]}
+    >
+      <button
+        className="arrow"
+      />
+      <span
+        className="object-label"
+      >
+        window
+      </span>
+      <span
+        className="object-delimiter"
+      >
+        : 
+      </span>
+      <span
+        className="objectBox objectBox-Window"
+        data-link-actor-id="server1.conn3.obj198"
+      >
+        <span
+          className="objectTitle"
+        >
+          Window
+        </span>
+      </span>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`ObjectInspector - dimTopLevelWindow renders sub-level window 1`] = `
+<div
+  aria-activedescendant="Symbol(root)"
+  className="tree object-inspector"
+  onBlur={[Function]}
+  onFocus={[Function]}
+  onKeyDown={[Function]}
+  onKeyPress={[Function]}
+  onKeyUp={[Function]}
+  role="tree"
+  style={
+    Object {
+      "margin": 0,
+      "padding": 0,
+    }
+  }
+  tabIndex="0"
+>
+  <div
+    aria-expanded={true}
+    aria-level={1}
+    className="tree-node focused"
+    data-expandable={true}
+    id="Symbol(root)"
+    onClick={[Function]}
+    role="treeitem"
+  >
+    <div
+      className="node object-node focused"
+      onClick={[Function]}
+    >
+      <button
+        className="arrow expanded"
+      />
+      <span
+        className="object-label"
+      >
+        root
+      </span>
+    </div>
+  </div>
+  <div
+    aria-expanded={false}
+    aria-level={2}
+    className="tree-node"
+    data-expandable={true}
+    id="Symbol(window)"
+    onClick={[Function]}
+    role="treeitem"
+  >
+    <span
+      className="tree-indent"
+    >
+      ​
+    </span>
+    <div
+      className="node object-node"
+      onClick={[Function]}
+    >
+      <button
+        className="arrow"
+      />
+      <span
+        className="object-label"
+      >
+        window
+      </span>
+      <span
+        className="object-delimiter"
+      >
+        : 
+      </span>
+      <span
+        className="objectBox objectBox-Window"
+        data-link-actor-id="server1.conn3.obj198"
+      >
+        <span
+          className="objectTitle"
+        >
+          Window
+        </span>
+      </span>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`ObjectInspector - dimTopLevelWindow renders window as expected when dimTopLevelWindow is true 1`] = `
+<div
+  className="tree object-inspector"
+  onBlur={[Function]}
+  onFocus={[Function]}
+  onKeyDown={[Function]}
+  onKeyPress={[Function]}
+  onKeyUp={[Function]}
+  role="tree"
+  style={
+    Object {
+      "margin": 0,
+      "padding": 0,
+    }
+  }
+  tabIndex="0"
+>
+  <div
+    aria-expanded={false}
+    aria-level={1}
+    className="tree-node"
+    data-expandable={true}
+    id="Symbol(window)"
+    onClick={[Function]}
+    role="treeitem"
+  >
+    <div
+      className="node object-node lessen"
+      onClick={[Function]}
+    >
+      <button
+        className="arrow"
+      />
+      <span
+        className="object-label"
+      >
+        window
+      </span>
+      <span
+        className="object-delimiter"
+      >
+        : 
+      </span>
+      <span
+        className="objectBox objectBox-Window"
+        data-link-actor-id="server1.conn3.obj198"
+      >
+        <span
+          className="objectTitle"
+        >
+          Window
+        </span>
+      </span>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`ObjectInspector - dimTopLevelWindow renders window as expected when dimTopLevelWindow is true 2`] = `
+<div
+  aria-activedescendant="Symbol(window)"
+  className="tree object-inspector"
+  onBlur={[Function]}
+  onFocus={[Function]}
+  onKeyDown={[Function]}
+  onKeyPress={[Function]}
+  onKeyUp={[Function]}
+  role="tree"
+  style={
+    Object {
+      "margin": 0,
+      "padding": 0,
+    }
+  }
+  tabIndex="0"
+>
+  <div
+    aria-expanded={true}
+    aria-level={1}
+    className="tree-node focused"
+    data-expandable={true}
+    id="Symbol(window)"
+    onClick={[Function]}
+    role="treeitem"
+  >
+    <div
+      className="node object-node focused"
+      onClick={[Function]}
+    >
+      <button
+        className="arrow expanded"
+      />
+      <span
+        className="object-label"
+      >
+        window
+      </span>
+      <span
+        className="object-delimiter"
+      >
+        : 
+      </span>
+      <span
+        className="objectBox objectBox-Window"
+        data-link-actor-id="server1.conn3.obj198"
+      >
+        <span
+          className="objectTitle"
+        >
+          Window
+        </span>
+      </span>
+    </div>
+  </div>
+  <div
+    aria-level={2}
+    className="tree-node"
+    data-expandable={false}
+    id="Symbol(window/<prototype>)"
+    onClick={[Function]}
+    role="treeitem"
+  >
+    <span
+      className="tree-indent"
+    >
+      ​
+    </span>
+    <div
+      className="node object-node lessen"
+      onClick={[Function]}
+    >
+      <span
+        className="object-label"
+      >
+        &lt;prototype&gt;
+      </span>
+      <span
+        className="object-delimiter"
+      >
+        : 
+      </span>
+      <span
+        className="objectBox objectBox-object"
+      >
+        <span
+          className="objectLeftBrace"
+        >
+          {
+        </span>
+        <span
+          className="objectRightBrace"
+        >
+          }
+        </span>
+      </span>
+    </div>
+  </div>
+</div>
+`;

@@ -1,0 +1,206 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Breakpoint disabled 1`] = `
+<div
+  className="breakpoint disabled"
+  onClick={[Function]}
+  onContextMenu={[Function]}
+  onDoubleClick={[Function]}
+>
+  <input
+    checked={false}
+    className="breakpoint-checkbox"
+    onChange={[Function]}
+    onClick={[Function]}
+    type="checkbox"
+  />
+  <label
+    className="breakpoint-label cm-s-mozilla"
+  >
+    <span
+      dangerouslySetInnerHTML={
+        Object {
+          "__html": "",
+        }
+      }
+    />
+  </label>
+  <div
+    className="breakpoint-line-close"
+  >
+    <div
+      className="breakpoint-line"
+    >
+      53
+    </div>
+    <CloseButton
+      handleClick={[Function]}
+      tooltip="Remove breakpoint"
+    />
+  </div>
+</div>
+`;
+
+exports[`Breakpoint paused at a different 1`] = `
+<div
+  className="breakpoint"
+  onClick={[Function]}
+  onContextMenu={[Function]}
+  onDoubleClick={[Function]}
+>
+  <input
+    checked={true}
+    className="breakpoint-checkbox"
+    onChange={[Function]}
+    onClick={[Function]}
+    type="checkbox"
+  />
+  <label
+    className="breakpoint-label cm-s-mozilla"
+  >
+    <span
+      dangerouslySetInnerHTML={
+        Object {
+          "__html": "",
+        }
+      }
+    />
+  </label>
+  <div
+    className="breakpoint-line-close"
+  >
+    <div
+      className="breakpoint-line"
+    >
+      53
+    </div>
+    <CloseButton
+      handleClick={[Function]}
+      tooltip="Remove breakpoint"
+    />
+  </div>
+</div>
+`;
+
+exports[`Breakpoint paused at a generatedLocation 1`] = `
+<div
+  className="breakpoint paused"
+  onClick={[Function]}
+  onContextMenu={[Function]}
+  onDoubleClick={[Function]}
+>
+  <input
+    checked={true}
+    className="breakpoint-checkbox"
+    onChange={[Function]}
+    onClick={[Function]}
+    type="checkbox"
+  />
+  <label
+    className="breakpoint-label cm-s-mozilla"
+  >
+    <span
+      dangerouslySetInnerHTML={
+        Object {
+          "__html": "",
+        }
+      }
+    />
+  </label>
+  <div
+    className="breakpoint-line-close"
+  >
+    <div
+      className="breakpoint-line"
+    >
+      53
+    </div>
+    <CloseButton
+      handleClick={[Function]}
+      tooltip="Remove breakpoint"
+    />
+  </div>
+</div>
+`;
+
+exports[`Breakpoint paused at an original location 1`] = `
+<div
+  className="breakpoint paused"
+  onClick={[Function]}
+  onContextMenu={[Function]}
+  onDoubleClick={[Function]}
+>
+  <input
+    checked={true}
+    className="breakpoint-checkbox"
+    onChange={[Function]}
+    onClick={[Function]}
+    type="checkbox"
+  />
+  <label
+    className="breakpoint-label cm-s-mozilla"
+  >
+    <span
+      dangerouslySetInnerHTML={
+        Object {
+          "__html": "",
+        }
+      }
+    />
+  </label>
+  <div
+    className="breakpoint-line-close"
+  >
+    <div
+      className="breakpoint-line"
+    >
+      5
+    </div>
+    <CloseButton
+      handleClick={[Function]}
+      tooltip="Remove breakpoint"
+    />
+  </div>
+</div>
+`;
+
+exports[`Breakpoint simple 1`] = `
+<div
+  className="breakpoint"
+  onClick={[Function]}
+  onContextMenu={[Function]}
+  onDoubleClick={[Function]}
+>
+  <input
+    checked={true}
+    className="breakpoint-checkbox"
+    onChange={[Function]}
+    onClick={[Function]}
+    type="checkbox"
+  />
+  <label
+    className="breakpoint-label cm-s-mozilla"
+  >
+    <span
+      dangerouslySetInnerHTML={
+        Object {
+          "__html": "",
+        }
+      }
+    />
+  </label>
+  <div
+    className="breakpoint-line-close"
+  >
+    <div
+      className="breakpoint-line"
+    >
+      53
+    </div>
+    <CloseButton
+      handleClick={[Function]}
+      tooltip="Remove breakpoint"
+    />
+  </div>
+</div>
+`;

@@ -1,0 +1,73 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`sources-tree sortEntireTree alphabetically sorts children 1`] = `
+" - root path= 
+  - example.com path=example.com 
+    - foo path=example.com/foo 
+      - a_source3.js path=example.com/foo/a_source3.js source_id=undefined 
+      - b_source2.js path=example.com/foo/b_source2.js source_id=undefined 
+    - source1.js path=example.com/source1.js source_id=undefined 
+"
+`;
+
+exports[`sources-tree sortEntireTree puts folder at the top of the sort 1`] = `
+" - root path= 
+  - example.com path=example.com 
+    - folder path=example.com/folder 
+      - b path=example.com/folder/b 
+        - b.js path=example.com/folder/b/b.js source_id=undefined 
+      - c path=example.com/folder/c 
+        - (index) path=http://example.com/folder/c/ source_id=undefined 
+      - a.js path=example.com/folder/a.js source_id=undefined 
+"
+`;
+
+exports[`sources-tree sortEntireTree puts root debugee url at the top of the sort 1`] = `
+" - root path= 
+  - example.com path=example.com 
+    - b.js path=example.com/b.js source_id=undefined 
+  - api.example.com path=api.example.com 
+    - a.js path=api.example.com/a.js source_id=undefined 
+  - demo.com path=demo.com 
+    - c.js path=demo.com/c.js source_id=undefined 
+"
+`;
+
+exports[`sources-tree sortEntireTree puts root debugee url at the top of the sort 2`] = `
+" - root path= 
+  - demo.com path=demo.com 
+    - c.js path=demo.com/c.js source_id=undefined 
+  - api.example.com path=api.example.com 
+    - a.js path=api.example.com/a.js source_id=undefined 
+  - example.com path=example.com 
+    - b.js path=example.com/b.js source_id=undefined 
+"
+`;
+
+exports[`sources-tree sortEntireTree sorts folders first 1`] = `
+" - root path= 
+  - example.com path=example.com 
+    - (index) path=http://example.com source_id=undefined 
+    - b.js path=example.com/b.js 
+      - b_source.js path=example.com/b.js/b_source.js source_id=undefined 
+    - d path=example.com/d 
+      - d_source.js path=example.com/d/d_source.js source_id=undefined 
+    - a.js path=example.com/a.js source_id=undefined 
+    - b2 path=example.com/b2 source_id=undefined 
+    - c.js path=example.com/c.js source_id=undefined 
+"
+`;
+
+exports[`sources-tree sortEntireTree sorts folders first 2`] = `
+" - root path= 
+  - example.com path=example.com 
+    - (index) path=http://example.com source_id=undefined 
+    - b.js path=example.com/b.js 
+      - b_source.js path=example.com/b.js/b_source.js source_id=undefined 
+    - d path=example.com/d 
+      - d_source.js path=example.com/d/d_source.js source_id=undefined 
+    - a.js path=example.com/a.js source_id=undefined 
+    - b2 path=example.com/b2 source_id=undefined 
+    - c.js path=example.com/c.js source_id=undefined 
+"
+`;
