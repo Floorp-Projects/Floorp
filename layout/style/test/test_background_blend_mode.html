@@ -49,8 +49,7 @@ function test_bug_841601() {
 }
 
 SimpleTest.waitForExplicitFinish();
-SpecialPowers.pushPrefEnv({ "set": [["layout.css.background-blend-mode.enabled", true]] },
-                          test_bug_841601);
+test_bug_841601();
 
 </script>
 </pre>

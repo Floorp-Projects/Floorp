@@ -22,7 +22,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   OS: "resource://gre/modules/osfile.jsm",
   Log: "resource://gre/modules/Log.jsm",
   FileUtils: "resource://gre/modules/FileUtils.jsm",
-  Task: "resource://gre/modules/Task.jsm",
   PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
 });
 
@@ -302,14 +301,14 @@ ConnectionData.prototype = Object.freeze({
    * any write operation, as follows:
    *
    * myConnection.executeBeforeShutdown("Bookmarks: Removing a bookmark",
-   *   Task.async(function*(db) {
+   *   async function(db) {
    *     // The connection will not be closed and shutdown will not proceed
    *     // until this task has completed.
    *
    *     // `db` exposes the same API as `myConnection` but provides additional
    *     // logging support to help debug hard-to-catch shutdown timeouts.
    *
-   *     yield db.execute(...);
+   *     await db.execute(...);
    * }));
    *
    * @param {string} name A human-readable name for the ongoing operation, used
@@ -599,13 +598,7 @@ ConnectionData.prototype = Object.freeze({
 
           let result;
           try {
-            // Keep Task.spawn here to preserve API compat; unfortunately
-            // func was a generator rather than a task here.
-            result = func();
-            if (Object.prototype.toString.call(result) == "[object Generator]")
-              result = await Task.spawn(func); // eslint-disable-line mozilla/no-task
-            else
-              result = await result;
+            result = await func();
           } catch (ex) {
             // It's possible that the exception has been caused by trying to
             // close the connection in the middle of a transaction.
@@ -1406,22 +1399,21 @@ OpenedConnection.prototype = Object.freeze({
    * YOU SHOULD _NEVER_ NEST executeTransaction CALLS FOR ANY REASON, NOR
    * DIRECTLY, NOR THROUGH OTHER PROMISES.
    * FOR EXAMPLE, NEVER DO SOMETHING LIKE:
-   *   yield executeTransaction(function* () {
+   *   await executeTransaction(async function () {
    *     ...some_code...
-   *     yield executeTransaction(function* () { // WRONG!
+   *     await executeTransaction(async function () { // WRONG!
    *       ...some_code...
    *     })
-   *     yield someCodeThatExecuteTransaction(); // WRONG!
-   *     yield neverResolvedPromise; // WRONG!
+   *     await someCodeThatExecuteTransaction(); // WRONG!
+   *     await neverResolvedPromise; // WRONG!
    *   });
    * NESTING CALLS WILL BLOCK ANY FUTURE TRANSACTION UNTIL A TIMEOUT KICKS IN.
    * *****************************************************************************
    *
-   * A transaction is specified by a user-supplied function that is a
-   * generator function which can be used by Task.jsm's Task.spawn(). The
-   * function receives this connection instance as its argument.
+   * A transaction is specified by a user-supplied function that is an
+   * async function. The function receives this connection instance as its argument.
    *
-   * The supplied function is expected to yield promises. These are often
+   * The supplied function is expected to return promises. These are often
    * promises created by calling `execute` and `executeCached`. If the
    * generator is exhausted without any errors being thrown, the
    * transaction is committed. If an error occurs, the transaction is

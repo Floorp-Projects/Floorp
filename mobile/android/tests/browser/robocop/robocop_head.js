@@ -705,7 +705,7 @@ var _Task;
 function add_task(func) {
   if (!_Task) {
     let ns = {};
-    _Task = Components.utils.import("resource://gre/modules/Task.jsm", ns).Task;
+    _Task = Components.utils.import("resource://testing-common/Task.jsm", ns).Task;
   }
 
   _gTests.push([true, func]);

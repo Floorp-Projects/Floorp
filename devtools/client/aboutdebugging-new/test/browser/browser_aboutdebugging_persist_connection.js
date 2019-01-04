@@ -3,9 +3,11 @@
 
 "use strict";
 
-const RUNTIME_ID = "test-runtime-id";
-const RUNTIME_DEVICE_NAME = "test device name";
-const RUNTIME_APP_NAME = "TestApp";
+const NETWORK_RUNTIME_HOST = "localhost:6080";
+const NETWORK_RUNTIME_APP_NAME = "TestNetworkApp";
+const USB_RUNTIME_ID = "test-runtime-id";
+const USB_DEVICE_NAME = "test device name";
+const USB_APP_NAME = "TestApp";
 
 /* import-globals-from head-mocks.js */
 Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "head-mocks.js", this);
@@ -14,36 +16,57 @@ Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "head-mocks.js", this);
 add_task(async function() {
   const mocks = new Mocks();
 
-  let { document, tab } = await openAboutDebugging();
-
-  const usbClient = mocks.createUSBRuntime(RUNTIME_ID, {
-    name: RUNTIME_APP_NAME,
-    deviceName: RUNTIME_DEVICE_NAME,
+  info("Test with a USB runtime");
+  const usbClient = mocks.createUSBRuntime(USB_RUNTIME_ID, {
+    name: USB_APP_NAME,
+    deviceName: USB_DEVICE_NAME,
   });
-  mocks.emitUSBUpdate();
 
-  await connectToRuntime(RUNTIME_DEVICE_NAME, document);
-  await selectRuntime(RUNTIME_DEVICE_NAME, RUNTIME_APP_NAME, document);
+  await testRemoteClientPersistConnection(mocks, {
+    client: usbClient,
+    id: USB_RUNTIME_ID,
+    runtimeName: USB_APP_NAME,
+    sidebarName: USB_DEVICE_NAME,
+  });
+
+  info("Test with a network runtime");
+  const networkClient = mocks.createNetworkRuntime(NETWORK_RUNTIME_HOST, {
+    name: NETWORK_RUNTIME_APP_NAME,
+  });
+
+  await testRemoteClientPersistConnection(mocks, {
+    client: networkClient,
+    id: NETWORK_RUNTIME_HOST,
+    runtimeName: NETWORK_RUNTIME_APP_NAME,
+    sidebarName: NETWORK_RUNTIME_HOST,
+  });
+});
+
+async function testRemoteClientPersistConnection(mocks,
+  { client, id, runtimeName, sidebarName }) {
+  info("Open about:debugging and connect to the test runtime");
+  let { document, tab } = await openAboutDebugging();
+  await connectToRuntime(sidebarName, document);
+  await selectRuntime(sidebarName, runtimeName, document);
 
   info("Reload about:debugging");
   document = await reloadAboutDebugging(tab);
-  mocks.emitUSBUpdate();
 
   info("Wait until the remote runtime appears as connected");
   await waitUntil(() => {
-    const sidebarItem = findSidebarItemByText(RUNTIME_DEVICE_NAME, document);
+    const sidebarItem = findSidebarItemByText(sidebarName, document);
     return sidebarItem && !sidebarItem.querySelector(".js-connect-button");
   });
 
   // Remove the runtime without emitting an update.
   // This is what happens today when we simply close Firefox for Android.
-  info("Remove the runtime from the list of USB runtimes");
-  mocks.removeUSBRuntime(RUNTIME_ID);
+  info("Remove the runtime from the list of remote runtimes");
+  mocks.removeRuntime(id);
 
   info("Emit 'closed' on the client and wait for the sidebar item to disappear");
-  usbClient._eventEmitter.emit("closed");
-  await waitUntil(() => !findSidebarItemByText(RUNTIME_DEVICE_NAME, document));
+  client._eventEmitter.emit("closed");
+  await waitUntil(() => !findSidebarItemByText(sidebarName, document));
 
   info("Remove the tab");
   await removeTab(tab);
-});
+}
