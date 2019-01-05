@@ -185,7 +185,7 @@ function onTabModalDialogLoaded(node) {
   observer.observe(node.parentNode, {childList: true});
 
   BrowserTestUtils.waitForMessage(mm, "test-beforeunload:dialog-response").then((stayingOnPage) => {
-    let button = stayingOnPage ? node.ui.button1 : node.ui.button0;
+    let button = node.querySelector(stayingOnPage ? ".tabmodalprompt-button1" : ".tabmodalprompt-button0");
     // ... and then actually make the dialog go away
     info("Clicking button: " + button.label);
     EventUtils.synthesizeMouseAtCenter(button, {});

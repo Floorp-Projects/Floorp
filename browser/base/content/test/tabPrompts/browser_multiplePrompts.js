@@ -40,21 +40,22 @@ add_task(async function() {
 
   await promptsOpenedPromise;
 
-  let promptsCount = PROMPTCOUNT;
-  while (promptsCount--) {
-    let prompts = tab.linkedBrowser.parentNode.querySelectorAll("tabmodalprompt");
-    is(prompts.length, promptsCount + 1, "There should be " + (promptsCount + 1) + " prompt(s).");
+  let promptElementsCount = PROMPTCOUNT;
+  while (promptElementsCount--) {
+    let promptElements = tab.linkedBrowser.parentNode.querySelectorAll("tabmodalprompt");
+    is(promptElements.length, promptElementsCount + 1, "There should be " + (promptElementsCount + 1) + " prompt(s).");
     // The oldest should be the first.
     let i = 0;
-    for (let prompt of prompts) {
+    for (let promptElement of promptElements) {
+      let prompt = tab.linkedBrowser.tabModalPromptBox.prompts.get(promptElement);
       is(prompt.Dialog.args.text, "Alert countdown #" + i, "The #" + i + " alert should be labelled as such.");
-      if (i !== promptsCount) {
-        is(prompt.hidden, true, "This prompt should be hidden.");
+      if (i !== promptElementsCount) {
+        is(prompt.element.hidden, true, "This prompt should be hidden.");
         i++;
         continue;
       }
 
-      is(prompt.hidden, false, "The last prompt should not be hidden.");
+      is(prompt.element.hidden, false, "The last prompt should not be hidden.");
       prompt.onButtonClick(0);
 
       // The click is handled async; wait for an event loop turn for that to
@@ -65,8 +66,8 @@ add_task(async function() {
     }
   }
 
-  let prompts = tab.linkedBrowser.parentNode.querySelectorAll("tabmodalprompt");
-  is(prompts.length, 0, "Prompts should all be dismissed.");
+  let promptElements = tab.linkedBrowser.parentNode.querySelectorAll("tabmodalprompt");
+  is(promptElements.length, 0, "Prompts should all be dismissed.");
 
   BrowserTestUtils.removeTab(tab);
 });

@@ -166,8 +166,8 @@ struct TestFileData {
 };
 
 static const TestFileData testFiles[] = {
-    // filename                     parse #V dur   w    h  #A dur  crypt  off
-    // moof  headr  audio_profile
+    // filename parses? #V hasVideoIndex vDur w h #A aDur hasCrypto? moofOffset
+    // validMoof? hasHeader? audio_profile
     {"test_case_1156505.mp4", false, 0, false, -1, 0, 0, 0, -1, false, 152,
      false, false, 0},  // invalid ''trak box
     {"test_case_1181213.mp4", true, 1, true, 416666, 320, 240, 1, 477460, true,
@@ -349,10 +349,13 @@ TEST(MP4Metadata, test_case_mp4) {
   }
 }
 
-// Bug 1224019: This test produces way to much output, disabling for now.
+// This test was disabled by Bug 1224019 for producing way too much output.
+// This test no longer produces such output, as we've moved away from
+// stagefright, but it does take a long time to run. I can be useful to enable
+// as a sanity check on changes to the parser, but is too taxing to run as part
+// of normal test execution.
 #if 0
-TEST(MPEG4Metadata, test_case_mp4_subsets)
-{
+TEST(MP4Metadata, test_case_mp4_subsets) {
   static const size_t step = 1u;
   for (size_t test = 0; test < ArrayLength(testFiles); ++test) {
     nsTArray<uint8_t> buffer = ReadTestFile(testFiles[test].mFilename);
@@ -433,10 +436,55 @@ TEST(MoofParser, test_case_mp4) {
   }
 }
 
-// Bug 1224019: This test produces way to much output, disabling for now.
+TEST(MoofParser, test_case_sample_description_entries) {
+  const TestFileData* tests = testFiles;
+  size_t length = ArrayLength(testFiles);
+
+  for (size_t test = 0; test < length; ++test) {
+    nsTArray<uint8_t> buffer = ReadTestFile(tests[test].mFilename);
+    ASSERT_FALSE(buffer.IsEmpty());
+    RefPtr<ByteStream> stream =
+        new TestStream(buffer.Elements(), buffer.Length());
+
+    // Parse the first track. Treating it as audio is hacky, but this doesn't
+    // affect how we read the sample description entries.
+    MoofParser parser(stream, 1, false);
+    EXPECT_EQ(0u, parser.mOffset) << tests[test].mFilename;
+    EXPECT_FALSE(parser.ReachedEnd()) << tests[test].mFilename;
+    EXPECT_TRUE(parser.mInitRange.IsEmpty()) << tests[test].mFilename;
+
+    // Explicitly don't call parser.Metadata() so that the parser itself will
+    // read the metadata as if we're in a fragmented case. Otherwise the parser
+    // won't read the sample description table.
+
+    const MediaByteRangeSet byteRanges(
+        MediaByteRange(0, int64_t(buffer.Length())));
+    EXPECT_EQ(tests[test].mValidMoof, parser.RebuildFragmentedIndex(byteRanges))
+        << tests[test].mFilename;
+
+    // We only care about crypto data from the samples descriptions right now.
+    // This test should be expanded should we read further information.
+    if (tests[test].mHasCrypto) {
+      uint32_t numEncryptedEntries = 0;
+      // It's possible to have multiple sample description entries, but we only
+      // expect one to carry crypto info for encrypted tracks.
+      for (SampleDescriptionEntry entry : parser.mSampleDescriptions) {
+        if (entry.mIsEncryptedEntry) {
+          numEncryptedEntries++;
+        }
+      }
+      EXPECT_EQ(1u, numEncryptedEntries) << tests[test].mFilename;
+    }
+  }
+}
+
+// This test was disabled by Bug 1224019 for producing way too much output.
+// This test no longer produces such output, as we've moved away from
+// stagefright, but it does take a long time to run. I can be useful to enable
+// as a sanity check on changes to the parser, but is too taxing to run as part
+// of normal test execution.
 #if 0
-TEST(MoofParser, test_case_mp4_subsets)
-{
+TEST(MoofParser, test_case_mp4_subsets) {
   const size_t step = 1u;
   for (size_t test = 0; test < ArrayLength(testFiles); ++test) {
     nsTArray<uint8_t> buffer = ReadTestFile(testFiles[test].mFilename);

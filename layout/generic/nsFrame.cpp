@@ -1490,10 +1490,12 @@ bool nsIFrame::ChildrenHavePerspective(
 }
 
 bool nsIFrame::HasOpacityInternal(float aThreshold,
+                                  const nsStyleDisplay* aStyleDisplay,
+                                  const nsStyleEffects* aStyleEffects,
                                   EffectSet* aEffectSet) const {
   MOZ_ASSERT(0.0 <= aThreshold && aThreshold <= 1.0, "Invalid argument");
-  if (StyleEffects()->mOpacity < aThreshold ||
-      (StyleDisplay()->mWillChangeBitField & NS_STYLE_WILL_CHANGE_OPACITY)) {
+  if (aStyleEffects->mOpacity < aThreshold ||
+      (aStyleDisplay->mWillChangeBitField & NS_STYLE_WILL_CHANGE_OPACITY)) {
     return true;
   }
 
@@ -1518,6 +1520,7 @@ bool nsIFrame::IsSVGTransformed(gfx::Matrix* aOwnTransforms,
 }
 
 bool nsIFrame::Extend3DContext(const nsStyleDisplay* aStyleDisplay,
+                               const nsStyleEffects* aStyleEffects,
                                mozilla::EffectSet* aEffectSet) const {
   if (!(mState & NS_FRAME_MAY_BE_TRANSFORMED)) {
     return false;
@@ -1534,11 +1537,11 @@ bool nsIFrame::Extend3DContext(const nsStyleDisplay* aStyleDisplay,
     return false;
   }
 
-  if (HasOpacity(aEffectSet)) {
+  const nsStyleEffects* effects = StyleEffectsWithOptionalParam(aStyleEffects);
+  if (HasOpacity(disp, effects, aEffectSet)) {
     return false;
   }
 
-  const nsStyleEffects* effects = StyleEffects();
   return !nsFrame::ShouldApplyOverflowClipping(this, disp) &&
          !GetClipPropClipRect(disp, effects, GetSize()) &&
          !nsSVGIntegrationUtils::UsingEffectsForFrame(this);
@@ -2723,9 +2726,21 @@ void nsIFrame::BuildDisplayListForStackingContext(
   nsRect visibleRect = aBuilder->GetVisibleRect();
   nsRect dirtyRect = aBuilder->GetDirtyRect();
 
+  // We build an opacity item if it's not going to be drawn by SVG content.
+  // We could in principle skip creating an nsDisplayOpacity item if
+  // nsDisplayOpacity::NeedsActiveLayer returns false and usingSVGEffects is
+  // true (the nsDisplayFilter/nsDisplayMasksAndClipPaths could handle the
+  // opacity). Since SVG has perf issues where we sometimes spend a lot of
+  // time creating display list items that might be helpful.  We'd need to
+  // restore our mechanism to do that (changed in bug 1482403), and we'd
+  // need to invalidate the frame if the value that would be return from
+  // NeedsActiveLayer was to change, which we don't currently do.
+  const bool useOpacity = HasVisualOpacity(disp, effects, effectSet) &&
+                          !nsSVGUtils::CanOptimizeOpacity(this);
+
   const bool isTransformed = IsTransformed(disp);
   const bool hasPerspective = isTransformed && HasPerspective(disp);
-  const bool extend3DContext = Extend3DContext(disp, effectSet);
+  const bool extend3DContext = Extend3DContext(disp, effects, effectSet);
   const bool combines3DTransformWithAncestors =
       (extend3DContext || isTransformed) &&
       Combines3DTransformWithAncestors(disp);
@@ -2745,6 +2760,11 @@ void nsIFrame::BuildDisplayListForStackingContext(
       dirtyRect = visibleRect;
       aBuilder->SetDisablePartialUpdates(true);
     }
+  }
+
+  const bool useBlendMode = effects->mMixBlendMode != NS_STYLE_BLEND_NORMAL;
+  if (useBlendMode) {
+    aBuilder->SetContainsBlendMode(true);
   }
 
   // reset blend mode so we can keep track if this stacking context needs have
@@ -2831,19 +2851,6 @@ void nsIFrame::BuildDisplayListForStackingContext(
     aBuilder->EnterSVGEffectsContents(&hoistedScrollInfoItemsStorage);
   }
 
-  // We build an opacity item if it's not going to be drawn by SVG content.
-  // We could in principle skip creating an nsDisplayOpacity item if
-  // nsDisplayOpacity::NeedsActiveLayer returns false and usingSVGEffects is
-  // true (the nsDisplayFilter/nsDisplayMasksAndClipPaths could handle the
-  // opacity). Since SVG has perf issues where we sometimes spend a lot of
-  // time creating display list items that might be helpful.  We'd need to
-  // restore our mechanism to do that (changed in bug 1482403), and we'd
-  // need to invalidate the frame if the value that would be return from
-  // NeedsActiveLayer was to change, which we don't currently do.
-  bool useOpacity =
-      HasVisualOpacity(effectSet) && !nsSVGUtils::CanOptimizeOpacity(this);
-
-  bool useBlendMode = effects->mMixBlendMode != NS_STYLE_BLEND_NORMAL;
   bool useStickyPosition =
       disp->mPosition == NS_STYLE_POSITION_STICKY &&
       IsScrollFrameActive(
@@ -3352,44 +3359,102 @@ static nsDisplayItem* WrapInWrapList(nsDisplayListBuilder* aBuilder,
 /**
  * Check if a frame should be visited for building display list.
  */
-static bool DescendIntoChild(nsDisplayListBuilder* aBuilder, nsIFrame* aChild,
-                             const nsRect& aVisible, const nsRect& aDirty) {
-  nsIFrame* child = aChild;
-  const nsRect& dirty = aDirty;
-
-  if (!(child->GetStateBits() & NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO)) {
-    // No need to descend into child to catch placeholders for visible
-    // positioned stuff. So see if we can short-circuit frame traversal here.
-
-    // We can stop if child's frame subtree's intersection with the
-    // dirty area is empty.
-    // If the child is a scrollframe that we want to ignore, then we need
-    // to descend into it because its scrolled child may intersect the dirty
-    // area even if the scrollframe itself doesn't.
-    // There are cases where the "ignore scroll frame" on the builder is not set
-    // correctly, and so we additionally want to catch cases where the child is
-    // a root scrollframe and we are ignoring scrolling on the viewport.
-    nsIPresShell* shell = child->PresShell();
-    bool keepDescending = child == aBuilder->GetIgnoreScrollFrame() ||
-                          (shell->IgnoringViewportScrolling() &&
-                           child == shell->GetRootScrollFrame());
-    if (!keepDescending) {
-      nsRect childDirty;
-      if (!childDirty.IntersectRect(dirty, child->GetVisualOverflowRect()) &&
-          (!child->ForceDescendIntoIfVisible())) {
-        return false;
-      }
-      if (!childDirty.IntersectRect(aVisible, child->GetVisualOverflowRect())) {
-        return false;
-      }
-      // Usually we could set dirty to childDirty now but there's no
-      // benefit, and it can be confusing. It can especially confuse
-      // situations where we're going to ignore a scrollframe's clipping;
-      // we wouldn't want to clip the dirty area to the scrollframe's
-      // bounds in that case.
-    }
+static bool DescendIntoChild(nsDisplayListBuilder* aBuilder,
+                             const nsIFrame* aChild, const nsRect& aVisible,
+                             const nsRect& aDirty) {
+  if (aChild->GetStateBits() & NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO) {
+    return true;
   }
-  return true;
+
+  // If the child is a scrollframe that we want to ignore, then we need
+  // to descend into it because its scrolled child may intersect the dirty
+  // area even if the scrollframe itself doesn't.
+  if (aChild == aBuilder->GetIgnoreScrollFrame()) {
+    return true;
+  }
+
+  // There are cases where the "ignore scroll frame" on the builder is not set
+  // correctly, and so we additionally want to catch cases where the child is
+  // a root scrollframe and we are ignoring scrolling on the viewport.
+  if (aChild == aBuilder->GetPresShellIgnoreScrollFrame()) {
+    return true;
+  }
+
+  const nsRect overflow = aChild->GetVisualOverflowRect();
+
+  if (aDirty.Intersects(overflow)) {
+    return true;
+  }
+
+  if (aChild->ForceDescendIntoIfVisible() && aVisible.Intersects(overflow)) {
+    return true;
+  }
+
+  return false;
+}
+
+void nsIFrame::BuildDisplayListForSimpleChild(nsDisplayListBuilder* aBuilder,
+                                              nsIFrame* aChild,
+                                              const nsDisplayListSet& aLists) {
+  // This is the shortcut for frames been handled along the common
+  // path, the most common one of THE COMMON CASE mentioned later.
+  MOZ_ASSERT(aChild->Type() != LayoutFrameType::Placeholder);
+  MOZ_ASSERT(!aBuilder->GetSelectedFramesOnly() &&
+                 !aBuilder->GetIncludeAllOutOfFlows(),
+             "It should be held for painting to window");
+  MOZ_ASSERT(aChild->GetStateBits() & NS_FRAME_SIMPLE_DISPLAYLIST);
+
+  const nsPoint offset = aChild->GetOffsetTo(this);
+  const nsRect visible = aBuilder->GetVisibleRect() - offset;
+  const nsRect dirty = aBuilder->GetDirtyRect() - offset;
+
+  if (!DescendIntoChild(aBuilder, aChild, visible, dirty)) {
+    return;
+  }
+
+  nsDisplayListBuilder::AutoBuildingDisplayList buildingForChild(
+      aBuilder, aChild, visible, dirty, false);
+
+  CheckForApzAwareEventHandlers(aBuilder, aChild);
+
+  aBuilder->BuildCompositorHitTestInfoIfNeeded(
+      aChild, aLists.BorderBackground(), false);
+
+  aChild->MarkAbsoluteFramesForDisplayList(aBuilder);
+  aBuilder->AdjustWindowDraggingRegion(aChild);
+  aBuilder->Check();
+  aChild->BuildDisplayList(aBuilder, aLists);
+  aBuilder->Check();
+  aBuilder->DisplayCaret(aChild, aLists.Content());
+#ifdef DEBUG
+  DisplayDebugBorders(aBuilder, aChild, aLists);
+#endif
+}
+
+static bool ShouldSkipFrame(nsDisplayListBuilder* aBuilder,
+                            const nsIFrame* aFrame) {
+  // If painting is restricted to just the background of the top level frame,
+  // then we have nothing to do here.
+  if (aBuilder->IsBackgroundOnly()) {
+    return true;
+  }
+
+  if ((aBuilder->IsForGenerateGlyphMask() ||
+       aBuilder->IsForPaintingSelectionBG()) &&
+      (!aFrame->IsTextFrame() && aFrame->IsLeaf())) {
+    return true;
+  }
+
+  // The placeholder frame should have the same content as the OOF frame.
+  if (aBuilder->GetSelectedFramesOnly() &&
+      (aFrame->IsLeaf() && !aFrame->IsSelected())) {
+    return true;
+  }
+
+  static const nsFrameState skipFlags =
+      (NS_FRAME_TOO_DEEP_IN_FRAME_TREE | NS_FRAME_IS_NONDISPLAY);
+
+  return (aFrame->GetStateBits() & skipFlags);
 }
 
 void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
@@ -3397,32 +3462,25 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
                                         const nsDisplayListSet& aLists,
                                         uint32_t aFlags) {
   AutoCheckBuilder check(aBuilder);
-  // If painting is restricted to just the background of the top level frame,
-  // then we have nothing to do here.
-  if (aBuilder->IsBackgroundOnly()) return;
 
-  if (aBuilder->IsForGenerateGlyphMask() ||
-      aBuilder->IsForPaintingSelectionBG()) {
-    if (!aChild->IsTextFrame() && aChild->IsLeaf()) {
-      return;
-    }
+  if (ShouldSkipFrame(aBuilder, aChild)) {
+    return;
   }
 
   nsIFrame* child = aChild;
-  if (child->HasAnyStateBits(NS_FRAME_TOO_DEEP_IN_FRAME_TREE |
-                             NS_FRAME_IS_NONDISPLAY))
-    return;
-
   aBuilder->RemoveFromWillChangeBudget(child);
 
-  const bool shortcutPossible =
-      aBuilder->IsPaintingToWindow() && aBuilder->BuildCompositorHitTestInfo();
-
+  const bool isPaintingToWindow = aBuilder->IsPaintingToWindow();
   const bool doingShortcut =
-      shortcutPossible &&
+      isPaintingToWindow &&
       (child->GetStateBits() & NS_FRAME_SIMPLE_DISPLAYLIST) &&
-      // Animations may change the value of |HasOpacity()|.
-      !(child->GetContent() && child->GetContent()->MayHaveAnimations());
+      // Animations may change the stacking context state.
+      !(child->MayHaveTransformAnimation() || child->MayHaveOpacityAnimation());
+
+  if (doingShortcut) {
+    BuildDisplayListForSimpleChild(aBuilder, child, aLists);
+    return;
+  }
 
   // dirty rect in child-relative coordinates
   NS_ASSERTION(aBuilder->GetCurrentFrame() == this, "Wrong coord space!");
@@ -3430,44 +3488,68 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
   nsRect visible = aBuilder->GetVisibleRect() - offset;
   nsRect dirty = aBuilder->GetDirtyRect() - offset;
 
-  if (doingShortcut) {
-    // This is the shortcut for frames been handled along the common
-    // path, the most common one of THE COMMON CASE mentioned later.
-    MOZ_ASSERT(child->Type() != LayoutFrameType::Placeholder);
-    MOZ_ASSERT(!aBuilder->GetSelectedFramesOnly() &&
-                   !aBuilder->GetIncludeAllOutOfFlows(),
-               "It should be held for painting to window");
-
-    if (!DescendIntoChild(aBuilder, child, visible, dirty)) {
+  nsDisplayListBuilder::OutOfFlowDisplayData* savedOutOfFlowData = nullptr;
+  const bool isPlaceholder = child->IsPlaceholderFrame();
+  if (isPlaceholder) {
+    nsPlaceholderFrame* placeholder = static_cast<nsPlaceholderFrame*>(child);
+    if (placeholder->GetStateBits() & PLACEHOLDER_FOR_TOPLAYER) {
+      // If the out-of-flow frame is in the top layer, the viewport frame
+      // will paint it. Skip it here. Note that, only out-of-flow frames
+      // with this property should be skipped, because non-HTML elements
+      // may stop their children from being out-of-flow. Those frames
+      // should still be handled in the normal in-flow path.
       return;
     }
 
-    nsDisplayListBuilder::AutoBuildingDisplayList buildingForChild(
-        aBuilder, child, visible, dirty, false);
+    child = placeholder->GetOutOfFlowFrame();
+    NS_ASSERTION(child, "No out of flow frame?");
 
-    CheckForApzAwareEventHandlers(aBuilder, child);
+    if (child) {
+      aBuilder->RemoveFromWillChangeBudget(child);
+    }
 
-    aBuilder->BuildCompositorHitTestInfoIfNeeded(
-        child, aLists.BorderBackground(), false);
+    // If 'child' is a pushed float then it's owned by a block that's not an
+    // ancestor of the placeholder, and it will be painted by that block and
+    // should not be painted through the placeholder. Also recheck
+    // NS_FRAME_TOO_DEEP_IN_FRAME_TREE and NS_FRAME_IS_NONDISPLAY.
+    static const nsFrameState skipFlags =
+        (NS_FRAME_IS_PUSHED_FLOAT | NS_FRAME_TOO_DEEP_IN_FRAME_TREE |
+         NS_FRAME_IS_NONDISPLAY);
+    if (!child || (child->GetStateBits() & skipFlags) ||
+        nsLayoutUtils::IsPopup(child)) {
+      return;
+    }
 
-    child->MarkAbsoluteFramesForDisplayList(aBuilder);
-    aBuilder->AdjustWindowDraggingRegion(child);
-    aBuilder->Check();
-    child->BuildDisplayList(aBuilder, aLists);
-    aBuilder->Check();
-    aBuilder->DisplayCaret(child, aLists.Content());
-#ifdef DEBUG
-    DisplayDebugBorders(aBuilder, child, aLists);
-#endif
+    MOZ_ASSERT(child->GetStateBits() & NS_FRAME_OUT_OF_FLOW);
+    savedOutOfFlowData = nsDisplayListBuilder::GetOutOfFlowData(child);
+
+    if (aBuilder->GetIncludeAllOutOfFlows()) {
+      visible = child->GetVisualOverflowRect();
+      dirty = child->GetVisualOverflowRect();
+    } else if (savedOutOfFlowData) {
+      visible =
+          savedOutOfFlowData->GetVisibleRectForFrame(aBuilder, child, &dirty);
+    } else {
+      // The out-of-flow frame did not intersect the dirty area. We may still
+      // need to traverse into it, since it may contain placeholders we need
+      // to enter to reach other out-of-flow frames that are visible.
+      visible.SetEmpty();
+      dirty.SetEmpty();
+    }
+  }
+
+  NS_ASSERTION(!child->IsPlaceholderFrame(),
+               "Should have dealt with placeholders already");
+
+  if (!DescendIntoChild(aBuilder, child, visible, dirty)) {
     return;
   }
 
   const bool isSVG = child->GetStateBits() & NS_FRAME_SVG_LAYOUT;
 
-  // It is raised if the control flow strays off the common path.
-  // The common path is the most common one of THE COMMON CASE
-  // mentioned later.
-  bool awayFromCommonPath = false;
+  // This flag is raised if the control flow strays off the common path.
+  // The common path is the most common one of THE COMMON CASE mentioned later.
+  bool awayFromCommonPath = !isPaintingToWindow;
 
   // true if this is a real or pseudo stacking context
   bool pseudoStackingContext =
@@ -3481,62 +3563,6 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
     pseudoStackingContext = true;
   }
 
-  nsDisplayListBuilder::OutOfFlowDisplayData* savedOutOfFlowData = nullptr;
-  bool isPlaceholder = false;
-  if (child->IsPlaceholderFrame()) {
-    isPlaceholder = true;
-    nsPlaceholderFrame* placeholder = static_cast<nsPlaceholderFrame*>(child);
-    child = placeholder->GetOutOfFlowFrame();
-    aBuilder->RemoveFromWillChangeBudget(child);
-    NS_ASSERTION(child, "No out of flow frame?");
-    // If 'child' is a pushed float then it's owned by a block that's not an
-    // ancestor of the placeholder, and it will be painted by that block and
-    // should not be painted through the placeholder.
-    if (!child || nsLayoutUtils::IsPopup(child) ||
-        (child->GetStateBits() & NS_FRAME_IS_PUSHED_FLOAT))
-      return;
-    MOZ_ASSERT(child->GetStateBits() & NS_FRAME_OUT_OF_FLOW);
-    // If the out-of-flow frame is in the top layer, the viewport frame
-    // will paint it. Skip it here. Note that, only out-of-flow frames
-    // with this property should be skipped, because non-HTML elements
-    // may stop their children from being out-of-flow. Those frames
-    // should still be handled in the normal in-flow path.
-    if (placeholder->GetStateBits() & PLACEHOLDER_FOR_TOPLAYER) {
-      return;
-    }
-    // Recheck NS_FRAME_TOO_DEEP_IN_FRAME_TREE
-    if (child->GetStateBits() & NS_FRAME_TOO_DEEP_IN_FRAME_TREE) return;
-    savedOutOfFlowData = nsDisplayListBuilder::GetOutOfFlowData(child);
-    if (savedOutOfFlowData) {
-      visible =
-          savedOutOfFlowData->GetVisibleRectForFrame(aBuilder, child, &dirty);
-    } else {
-      // The out-of-flow frame did not intersect the dirty area. We may still
-      // need to traverse into it, since it may contain placeholders we need
-      // to enter to reach other out-of-flow frames that are visible.
-      visible.SetEmpty();
-      dirty.SetEmpty();
-    }
-
-    pseudoStackingContext = true;
-  }
-
-  NS_ASSERTION(!child->IsPlaceholderFrame(),
-               "Should have dealt with placeholders already");
-  if (aBuilder->GetSelectedFramesOnly() && child->IsLeaf() &&
-      !aChild->IsSelected()) {
-    return;
-  }
-
-  if (aBuilder->GetIncludeAllOutOfFlows() && isPlaceholder) {
-    visible = child->GetVisualOverflowRect();
-    dirty = child->GetVisualOverflowRect();
-  } else if (!DescendIntoChild(aBuilder, child, visible, dirty)) {
-    return;
-  }
-
-  // XXX need to have inline-block and inline-table set pseudoStackingContext
-
   const nsStyleDisplay* ourDisp = StyleDisplay();
   // REVIEW: Taken from nsBoxFrame::Paint
   // Don't paint our children if the theme object is a leaf.
@@ -3547,7 +3573,7 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
   // Since we're now sure that we're adding this frame to the display list
   // (which means we're painting it, modulo occlusion), mark it as visible
   // within the displayport.
-  if (aBuilder->IsPaintingToWindow() && child->TrackingVisibility()) {
+  if (isPaintingToWindow && child->TrackingVisibility()) {
     child->PresShell()->EnsureFrameInApproximatelyVisibleList(child);
     awayFromCommonPath = true;
   }
@@ -3556,7 +3582,6 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
 
   // Child is composited if it's transformed, partially transparent, or has
   // SVG effects or a blend mode..
-  EffectSet* effectSet = EffectSet::GetEffectSet(child);
   const nsStyleDisplay* disp = child->StyleDisplay();
   const nsStyleEffects* effects = child->StyleEffects();
   const nsStylePosition* pos = child->StylePosition();
@@ -3564,11 +3589,11 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
   const bool isPositioned = disp->IsAbsPosContainingBlock(child);
 
   const bool isStackingContext =
-      child->IsStackingContext(effectSet, disp, pos, effects, isPositioned) ||
-      (aFlags & DISPLAY_CHILD_FORCE_STACKING_CONTEXT);
+      (aFlags & DISPLAY_CHILD_FORCE_STACKING_CONTEXT) ||
+      child->IsStackingContext(disp, pos, effects, isPositioned);
 
   if (pseudoStackingContext || isStackingContext || isPositioned ||
-      (!isSVG && disp->IsFloating(child)) ||
+      isPlaceholder || (!isSVG && disp->IsFloating(child)) ||
       (isSVG && (effects->mClipFlags & NS_STYLE_CLIP_RECT) &&
        IsSVGContentWithCSSClip(child))) {
     pseudoStackingContext = true;
@@ -3628,9 +3653,6 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
   const ActiveScrolledRoot* wrapListASR;
   bool canSkipWrapList = false;
   if (isStackingContext) {
-    if (effects->mMixBlendMode != NS_STYLE_BLEND_NORMAL) {
-      aBuilder->SetContainsBlendMode(true);
-    }
     // True stacking context.
     // For stacking contexts, BuildDisplayListForStackingContext handles
     // clipping and MarkAbsoluteFramesForDisplayList.
@@ -3654,11 +3676,9 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
 
     child->MarkAbsoluteFramesForDisplayList(aBuilder);
 
-    const bool differentAGR =
-        buildingForChild.IsAnimatedGeometryRoot() || isPositioned;
+    const bool differentAGR = buildingForChild.IsAnimatedGeometryRoot();
 
-    if (!awayFromCommonPath && shortcutPossible && !differentAGR &&
-        !buildingForChild.MaybeAnimatedGeometryRoot()) {
+    if (!awayFromCommonPath) {
       // The shortcut is available for the child for next time.
       child->AddStateBits(NS_FRAME_SIMPLE_DISPLAYLIST);
     }
@@ -3689,7 +3709,7 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
     nsDisplayListCollection pseudoStack(aBuilder);
 
     aBuilder->BuildCompositorHitTestInfoIfNeeded(
-        child, pseudoStack.BorderBackground(), differentAGR);
+        child, pseudoStack.BorderBackground(), differentAGR || isPositioned);
 
     aBuilder->AdjustWindowDraggingRegion(child);
     nsDisplayListBuilder::AutoContainerASRTracker contASRTracker(aBuilder);
@@ -8999,7 +9019,7 @@ bool nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
        * the code above set their overflow area to empty. Manually collect these
        * overflow areas now.
        */
-      if (Extend3DContext(disp, effectSet)) {
+      if (Extend3DContext(disp, effects, effectSet)) {
         ComputePreserve3DChildrenOverflow(aOverflowAreas);
       }
     }
@@ -9090,7 +9110,7 @@ void nsIFrame::ComputePreserve3DChildrenOverflow(
 
         // If this child also extends the 3d context, then recurse into it
         // looking for more participants.
-        if (child->Extend3DContext(childDisp)) {
+        if (child->Extend3DContext(childDisp, child->StyleEffects())) {
           child->ComputePreserve3DChildrenOverflow(aOverflowAreas);
         }
       }
@@ -10299,12 +10319,12 @@ void nsIFrame::CreateOwnLayerIfNeeded(nsDisplayListBuilder* aBuilder,
   }
 }
 
-bool nsIFrame::IsStackingContext(EffectSet* aEffectSet,
-                                 const nsStyleDisplay* aStyleDisplay,
+bool nsIFrame::IsStackingContext(const nsStyleDisplay* aStyleDisplay,
                                  const nsStylePosition* aStylePosition,
                                  const nsStyleEffects* aStyleEffects,
                                  bool aIsPositioned) {
-  return HasOpacity(aEffectSet) || IsTransformed(aStyleDisplay) ||
+  return HasOpacity(aStyleDisplay, aStyleEffects, nullptr) ||
+         IsTransformed(aStyleDisplay) ||
          (IsFrameOfType(eSupportsContainLayoutAndPaint) &&
           (aStyleDisplay->IsContainPaint() ||
            aStyleDisplay->IsContainLayout())) ||
@@ -10324,8 +10344,7 @@ bool nsIFrame::IsStackingContext(EffectSet* aEffectSet,
 bool nsIFrame::IsStackingContext() {
   const nsStyleDisplay* disp = StyleDisplay();
   const bool isPositioned = disp->IsAbsPosContainingBlock(this);
-  return IsStackingContext(EffectSet::GetEffectSet(this), disp, StylePosition(),
-                           StyleEffects(), isPositioned);
+  return IsStackingContext(disp, StylePosition(), StyleEffects(), isPositioned);
 }
 
 static bool IsFrameScrolledOutOfView(const nsIFrame* aTarget,
