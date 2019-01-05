@@ -24,10 +24,10 @@ def generate(output, cbindgen_toml_path):
     ], env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     stdout, stderr = p.communicate()
-    if p.returncode == 0:
-        output.write(stdout)
-    else:
-        print("cbindgen failed: %s" % stderr)
+    if p.returncode != 0:
+        raise TypeError("cbindgen failed: %s" % stderr)
+
+    output.write(stdout)
 
     deps = set()
     deps.add(CARGO_LOCK)
@@ -35,4 +35,5 @@ def generate(output, cbindgen_toml_path):
         for file in files:
             if os.path.splitext(file)[1] == ".rs":
                 deps.add(mozpath.join(path, file))
+
     return deps
