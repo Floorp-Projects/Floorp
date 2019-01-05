@@ -140,7 +140,7 @@ also are pushed and popped like stacking contexts.
 WebRender must access `ClipNodes` and `SpatialNodes` quite a bit when building
 scenes and frames, so it tries to convert `ClipIds`, which are already
 per-pipeline indices, to global scene-wide indices.  Internally this is a
-conversion from `ClipId` into `SpatialNodeIndex`, `ClipNodeIndex` or
+conversion from `ClipId` into `SpatialNodeIndex` or
 `ClipChainIndex`. In order to make this conversion cheaper, the
 `DisplayListFlattner` assigns offsets for each pipeline and node type in the
 scene-wide `ClipScrollTree`.
