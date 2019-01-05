@@ -1,14 +1,12 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 "use strict";
 
-// This is loaded into all XUL windows. Wrap in a block to prevent
-// leaking to window scope.
-{
+// This is loaded into chrome windows with the subscript loader. If you need to
+// define globals, wrap in a block to prevent leaking onto `window`.
 
-class MozRichListBox extends MozElements.BaseControl {
+MozElements.RichListBox = class RichListBox extends MozElements.BaseControl {
   constructor() {
     super();
 
@@ -818,13 +816,11 @@ class MozRichListBox extends MozElements.BaseControl {
   ensureSelectedElementIsVisible() {
     return this.ensureElementIsVisible(this.selectedItem);
   }
-}
+};
 
-MozXULElement.implementCustomInterface(MozRichListBox, [
+MozXULElement.implementCustomInterface(MozElements.RichListBox, [
   Ci.nsIDOMXULSelectControlElement,
   Ci.nsIDOMXULMultiSelectControlElement,
 ]);
 
-customElements.define("richlistbox", MozRichListBox);
-
-}
+customElements.define("richlistbox", MozElements.RichListBox);
