@@ -18,27 +18,16 @@
 namespace mozilla {
 namespace net {
 
-/* static */ void UrlClassifierFeatureFactory::Initialize() {
-  // We want to expose Features only in the parent process.
-  if (!XRE_IsParentProcess()) {
-    return;
-  }
-
-  UrlClassifierFeatureFlash::Initialize();
-  UrlClassifierFeatureTrackingAnnotation::Initialize();
-  UrlClassifierFeatureTrackingProtection::Initialize();
-}
-
 /* static */ void UrlClassifierFeatureFactory::Shutdown() {
   // We want to expose Features only in the parent process.
   if (!XRE_IsParentProcess()) {
     return;
   }
 
-  UrlClassifierFeatureFlash::Shutdown();
+  UrlClassifierFeatureFlash::MaybeShutdown();
   UrlClassifierFeatureLoginReputation::MaybeShutdown();
-  UrlClassifierFeatureTrackingAnnotation::Shutdown();
-  UrlClassifierFeatureTrackingProtection::Shutdown();
+  UrlClassifierFeatureTrackingAnnotation::MaybeShutdown();
+  UrlClassifierFeatureTrackingProtection::MaybeShutdown();
 }
 
 /* static */ void UrlClassifierFeatureFactory::GetFeaturesFromChannel(
@@ -80,6 +69,10 @@ UrlClassifierFeatureFactory::GetFeatureLoginReputation() {
 
 /* static */ already_AddRefed<nsIUrlClassifierFeature>
 UrlClassifierFeatureFactory::GetFeatureByName(const nsACString& aName) {
+  if (!XRE_IsParentProcess()) {
+    return nullptr;
+  }
+
   nsCOMPtr<nsIUrlClassifierFeature> feature;
 
   // Tracking Protection

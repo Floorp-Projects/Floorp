@@ -17,9 +17,7 @@ namespace net {
 class UrlClassifierFeatureTrackingAnnotation final
     : public UrlClassifierFeatureBase {
  public:
-  static void Initialize();
-
-  static void Shutdown();
+  static void MaybeShutdown();
 
   static already_AddRefed<UrlClassifierFeatureTrackingAnnotation> MaybeCreate(
       nsIChannel* aChannel);
@@ -36,6 +34,8 @@ class UrlClassifierFeatureTrackingAnnotation final
 
  private:
   UrlClassifierFeatureTrackingAnnotation();
+
+  static void MaybeInitialize();
 };
 
 }  // namespace net

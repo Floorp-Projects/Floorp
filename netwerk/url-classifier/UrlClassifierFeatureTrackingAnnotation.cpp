@@ -120,25 +120,27 @@ UrlClassifierFeatureTrackingAnnotation::UrlClassifierFeatureTrackingAnnotation()
           NS_LITERAL_CSTRING(TABLE_ANNOTATION_WHITELIST_PREF),
           NS_LITERAL_CSTRING(URLCLASSIFIER_TRACKING_ANNOTATION_SKIP_URLS)) {}
 
-/* static */ void UrlClassifierFeatureTrackingAnnotation::Initialize() {
-  UC_LOG(("UrlClassifierFeatureTrackingAnnotation: Initializing"));
-  MOZ_ASSERT(!gFeatureTrackingAnnotation);
+/* static */ void UrlClassifierFeatureTrackingAnnotation::MaybeInitialize() {
+  MOZ_ASSERT(XRE_IsParentProcess());
+  UC_LOG(("UrlClassifierFeatureTrackingAnnotation: MaybeInitialize"));
 
-  gFeatureTrackingAnnotation = new UrlClassifierFeatureTrackingAnnotation();
-  gFeatureTrackingAnnotation->InitializePreferences();
+  if (!gFeatureTrackingAnnotation) {
+    gFeatureTrackingAnnotation = new UrlClassifierFeatureTrackingAnnotation();
+    gFeatureTrackingAnnotation->InitializePreferences();
+  }
 }
 
-/* static */ void UrlClassifierFeatureTrackingAnnotation::Shutdown() {
-  UC_LOG(("UrlClassifierFeatureTrackingAnnotation: Shutdown"));
-  MOZ_ASSERT(gFeatureTrackingAnnotation);
+/* static */ void UrlClassifierFeatureTrackingAnnotation::MaybeShutdown() {
+  UC_LOG(("UrlClassifierFeatureTrackingAnnotation: MaybeShutdown"));
 
-  gFeatureTrackingAnnotation->ShutdownPreferences();
-  gFeatureTrackingAnnotation = nullptr;
+  if (gFeatureTrackingAnnotation) {
+    gFeatureTrackingAnnotation->ShutdownPreferences();
+    gFeatureTrackingAnnotation = nullptr;
+  }
 }
 
 /* static */ already_AddRefed<UrlClassifierFeatureTrackingAnnotation>
 UrlClassifierFeatureTrackingAnnotation::MaybeCreate(nsIChannel* aChannel) {
-  MOZ_ASSERT(gFeatureTrackingAnnotation);
   MOZ_ASSERT(aChannel);
 
   UC_LOG(("UrlClassifierFeatureTrackingAnnotation: MaybeCreate for channel %p",
@@ -153,6 +155,9 @@ UrlClassifierFeatureTrackingAnnotation::MaybeCreate(nsIChannel* aChannel) {
     return nullptr;
   }
 
+  MaybeInitialize();
+  MOZ_ASSERT(gFeatureTrackingAnnotation);
+
   RefPtr<UrlClassifierFeatureTrackingAnnotation> self =
       gFeatureTrackingAnnotation;
   return self.forget();
@@ -161,11 +166,12 @@ UrlClassifierFeatureTrackingAnnotation::MaybeCreate(nsIChannel* aChannel) {
 /* static */ already_AddRefed<nsIUrlClassifierFeature>
 UrlClassifierFeatureTrackingAnnotation::GetIfNameMatches(
     const nsACString& aName) {
-  MOZ_ASSERT(gFeatureTrackingAnnotation);
-
   if (!aName.EqualsLiteral(TRACKING_ANNOTATION_FEATURE_NAME)) {
     return nullptr;
   }
+
+  MaybeInitialize();
+  MOZ_ASSERT(gFeatureTrackingAnnotation);
 
   RefPtr<UrlClassifierFeatureTrackingAnnotation> self =
       gFeatureTrackingAnnotation;
