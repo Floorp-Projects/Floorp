@@ -7,6 +7,7 @@
 #define UrlClassifierTelemetryUtils_h__
 
 #include "mozilla/TypedEnumBits.h"
+#include "nsISupportsImpl.h"
 
 namespace mozilla {
 namespace safebrowsing {

@@ -147,9 +147,15 @@ function testService() {
       SpecialPowers.doUrlClassify(prin, null, test.trackingProtection, function(errorCode) {
         is(errorCode, test.result,
            `Successful asynchronous classification of ${test.url} with TP=${test.trackingProtection}`);
-        SpecialPowers.doUrlClassifyLocal(uri, tables, function(errorCode1, tables1) {
-          is(tables1, test.table,
-             `Successful asynchronous local classification of ${test.url} with TP=${test.trackingProtection}`);
+        SpecialPowers.doUrlClassifyLocal(uri, tables, function(results) {
+          if (results.length == 0) {
+            is(test.table, "",
+               `Successful asynchronous local classification of ${test.url} with TP=${test.trackingProtection}`);
+          } else {
+            let result = results[0].QueryInterface(Ci.nsIUrlClassifierFeatureResult);
+            is(result.list, test.table,
+               `Successful asynchronous local classification of ${test.url} with TP=${test.trackingProtection}`);
+          }
           runNextTest();
         });
 
