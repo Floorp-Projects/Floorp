@@ -15,7 +15,7 @@
   --in-content-box-background-odd: rgba(12, 12, 13, 0.05); /* grey 90 a05 */
   --in-content-box-background-hover: #ededf0; /* grey 20 */
   --in-content-box-background-active: #d7d7db; /* grey 30 */
-  --in-content-box-border-color: var(--grey-90-a30);
+  --in-content-box-border-color: var(--grey-90-a40);
   --in-content-item-hover: rgba(69, 161, 255, 0.2); /* blue 40 a20 */
   --in-content-item-selected: #0a84ff;
   --in-content-border-highlight: #0a84ff;
@@ -63,6 +63,7 @@
   --grey-90-a10: rgba(12, 12, 13, 0.1);
   --grey-90-a20: rgba(12, 12, 13, 0.2);
   --grey-90-a30: rgba(12, 12, 13, 0.3);
+  --grey-90-a40: rgba(12, 12, 13, 0.4);
   --grey-90-a50: rgba(12, 12, 13, 0.5);
   --red-50: #ff0039;
   --red-50-a30: rgba(255, 0, 57, 0.3);
