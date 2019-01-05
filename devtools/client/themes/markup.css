@@ -237,6 +237,7 @@ ul.children + .tag-line::before {
   background-image: url(chrome://devtools/skin/images/more.svg);
   background-repeat: no-repeat;
   background-position: center;
+  background-size: 8px;
   border: 1px solid var(--badge-border-color);
   color: var(--badge-color);
   fill: var(--badge-interactive-color);
