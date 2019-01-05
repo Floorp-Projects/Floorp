@@ -105,6 +105,19 @@ interface nsIURIClassifier : nsISupports
                                       in nsIUrlClassifierFeatureCallback aCallback);
 
   /**
+   * Returns a feature named aFeatureName.
+   */
+  nsIUrlClassifierFeature getFeatureByName(in ACString aFeatureName);
+
+  /**
+   * Create a new feature with a list of tables. This method is just for
+   * testing! Don't use it elsewhere.
+   */
+  nsIUrlClassifierFeature createFeatureWithTables(in ACString aName,
+                                                  in Array<ACString> aBlacklistTables,
+                                                  in Array<ACString> aWhitelistTables);
+
+  /**
    * Report to the provider that a Safe Browsing warning was shown.
    *
    * @param aChannel

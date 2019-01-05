@@ -11,6 +11,7 @@
 #include "UrlClassifierFeatureLoginReputation.h"
 #include "UrlClassifierFeatureTrackingProtection.h"
 #include "UrlClassifierFeatureTrackingAnnotation.h"
+#include "UrlClassifierFeatureCustomTables.h"
 
 #include "nsAppRunner.h"
 
@@ -75,6 +76,47 @@ namespace net {
 nsIUrlClassifierFeature*
 UrlClassifierFeatureFactory::GetFeatureLoginReputation() {
   return UrlClassifierFeatureLoginReputation::MaybeGetOrCreate();
+}
+
+/* static */ already_AddRefed<nsIUrlClassifierFeature>
+UrlClassifierFeatureFactory::GetFeatureByName(const nsACString& aName) {
+  nsCOMPtr<nsIUrlClassifierFeature> feature;
+
+  // Tracking Protection
+  feature = UrlClassifierFeatureTrackingProtection::GetIfNameMatches(aName);
+  if (feature) {
+    return feature.forget();
+  }
+
+  // Tracking Annotation
+  feature = UrlClassifierFeatureTrackingAnnotation::GetIfNameMatches(aName);
+  if (feature) {
+    return feature.forget();
+  }
+
+  // Login reputation
+  feature = UrlClassifierFeatureLoginReputation::GetIfNameMatches(aName);
+  if (feature) {
+    return feature.forget();
+  }
+
+  // We use Flash feature just for document loading.
+  feature = UrlClassifierFeatureFlash::GetIfNameMatches(aName);
+  if (feature) {
+    return feature.forget();
+  }
+
+  return nullptr;
+}
+
+/* static */ already_AddRefed<nsIUrlClassifierFeature>
+UrlClassifierFeatureFactory::CreateFeatureWithTables(
+    const nsACString& aName, const nsTArray<nsCString>& aBlacklistTables,
+    const nsTArray<nsCString>& aWhitelistTables) {
+  nsCOMPtr<nsIUrlClassifierFeature> feature =
+      new UrlClassifierFeatureCustomTables(aName, aBlacklistTables,
+                                           aWhitelistTables);
+  return feature.forget();
 }
 
 }  // namespace net
