@@ -458,20 +458,16 @@ impl TileCache {
             .map(&pic_rect)
             .expect("bug: unable to map picture rect to world");
 
-        // TODO(gw): Inflate the world rect a bit, to ensure that we keep tiles in
-        //           the cache for a while after they disappear off-screen.
+        // If the bounding rect of the picture to cache doesn't intersect with
+        // the visible world rect at all, just take the screen world rect as
+        // a reference for the area to create tiles for. This allows existing
+        // tiles to be retained in case they are still valid if / when they
+        // get scrolled back onto the screen.
+
         let needed_world_rect = frame_context
             .screen_world_rect
-            .intersection(&pic_world_rect);
-
-        let needed_world_rect = match needed_world_rect {
-            Some(rect) => rect,
-            None => {
-                // TODO(gw): Should we explicitly drop any existing cache handles here?
-                self.tiles.clear();
-                return;
-            }
-        };
+            .intersection(&pic_world_rect)
+            .unwrap_or(frame_context.screen_world_rect);
 
         // Get a reference point that serves as an origin that all tiles we create
         // must be aligned to. This ensures that tiles get reused correctly between
@@ -493,7 +489,7 @@ impl TileCache {
         let pic_device_rect = pic_world_rect * frame_context.device_pixel_scale;
         let needed_device_rect = pic_device_rect
             .intersection(&device_world_rect)
-            .expect("todo: handle clipped device rect");
+            .unwrap_or(device_world_rect);
 
         // Expand the needed device rect vertically by a small number of tiles. This
         // ensures that as tiles are scrolled in/out of view, they are retained for
@@ -703,7 +699,18 @@ impl TileCache {
             resource_cache,
         );
 
-        match prim_instance.kind {
+        // For pictures, we don't (yet) know the valid clip rect, so we can't correctly
+        // use it to calculate the local bounding rect for the tiles. If we include them
+        // then we may calculate a bounding rect that is too large, since it won't include
+        // the clip bounds of the picture. Excluding them from the bounding rect here
+        // fixes any correctness issues (the clips themselves are considered when we
+        // consider the bounds of the primitives that are *children* of the picture),
+        // however it does potentially result in some un-necessary invalidations of a
+        // tile (in cases where the picture local rect affects the tile, but the clip
+        // rect eventually means it doesn't affect that tile).
+        // TODO(gw): Get picture clips earlier (during the initial picture traversal
+        //           pass) so that we can calculate these correctly.
+        let include_clip_rect = match prim_instance.kind {
             PrimitiveInstanceKind::Picture { pic_index,.. } => {
                 // Pictures can depend on animated opacity bindings.
                 let pic = &pictures[pic_index.0];
@@ -712,6 +719,8 @@ impl TileCache {
                         opacity_bindings.push(key.id);
                     }
                 }
+
+                false
             }
             PrimitiveInstanceKind::Rectangle { opacity_binding_index, .. } => {
                 if opacity_binding_index != OpacityBindingIndex::INVALID {
@@ -722,6 +731,8 @@ impl TileCache {
                         }
                     }
                 }
+
+                true
             }
             PrimitiveInstanceKind::Image { data_handle, image_instance_index, .. } => {
                 let image_data = &resources.image_data_store[data_handle].kind;
@@ -738,10 +749,12 @@ impl TileCache {
                 }
 
                 image_keys.push(image_data.key);
+                true
             }
             PrimitiveInstanceKind::YuvImage { data_handle, .. } => {
                 let yuv_image_data = &resources.yuv_image_data_store[data_handle].kind;
                 image_keys.extend_from_slice(&yuv_image_data.yuv_key);
+                true
             }
             PrimitiveInstanceKind::TextRun { .. } |
             PrimitiveInstanceKind::LineDecoration { .. } |
@@ -751,8 +764,9 @@ impl TileCache {
             PrimitiveInstanceKind::RadialGradient { .. } |
             PrimitiveInstanceKind::ImageBorder { .. } => {
                 // These don't contribute dependencies
+                true
             }
-        }
+        };
 
         // The transforms of any clips that are relative to the picture may affect
         // the content rendered by this primitive.
@@ -823,7 +837,9 @@ impl TileCache {
             current_clip_chain_id = clip_chain_node.parent_clip_chain_id;
         }
 
-        self.world_bounding_rect = self.world_bounding_rect.union(&world_clip_rect);
+        if include_clip_rect {
+            self.world_bounding_rect = self.world_bounding_rect.union(&world_clip_rect);
+        }
 
         // Normalize the tile coordinates before adding to tile dependencies.
         // For each affected tile, mark any of the primitive dependencies.
