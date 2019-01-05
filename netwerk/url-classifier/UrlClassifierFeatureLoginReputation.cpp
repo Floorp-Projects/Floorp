@@ -93,5 +93,18 @@ UrlClassifierFeatureLoginReputation::HasHostInPreferences(
       aHost, aListType, aPrefTableName, aResult);
 }
 
+NS_IMETHODIMP
+UrlClassifierFeatureLoginReputation::GetURIByListType(
+    nsIChannel* aChannel, nsIUrlClassifierFeature::listType aListType,
+    nsIURI** aURI) {
+  NS_ENSURE_ARG_POINTER(aChannel);
+  NS_ENSURE_ARG_POINTER(aURI);
+  MOZ_ASSERT(aListType == nsIUrlClassifierFeature::whitelist,
+             "UrlClassifierFeatureLoginReputation is meant to be used just to "
+             "whitelist URLs");
+
+  return aChannel->GetURI(aURI);
+}
+
 }  // namespace net
 }  // namespace mozilla

@@ -601,7 +601,8 @@ def set_treeherder_machine_platform(config, tests):
         elif 'android-hw' in test['test-platform']:
             test['treeherder-machine-platform'] = test['test-platform']
         elif 'android-em-7.0-x86' in test['test-platform']:
-            test['treeherder-machine-platform'] = 'android-em-7-0-x86/opt'
+            opt = test['test-platform'].split('/')[1]
+            test['treeherder-machine-platform'] = 'android-em-7-0-x86/'+opt
         else:
             test['treeherder-machine-platform'] = translation.get(
                 test['build-platform'], test['test-platform'])

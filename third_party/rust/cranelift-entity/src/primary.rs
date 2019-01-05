@@ -1,9 +1,13 @@
 //! Densely numbered entity references as mapping keys.
+use boxed_slice::BoxedSlice;
+use iter::{Iter, IterMut};
+use keys::Keys;
+use std::iter::FromIterator;
 use std::marker::PhantomData;
 use std::ops::{Index, IndexMut};
 use std::slice;
 use std::vec::Vec;
-use {EntityRef, Iter, IterMut, Keys};
+use EntityRef;
 
 /// A primary mapping `K -> V` allocating dense entity references.
 ///
@@ -18,7 +22,8 @@ use {EntityRef, Iter, IterMut, Keys};
 /// Note that `PrimaryMap` doesn't implement `Deref` or `DerefMut`, which would allow
 /// `&PrimaryMap<K, V>` to convert to `&[V]`. One of the main advantages of `PrimaryMap` is
 /// that it only allows indexing with the distinct `EntityRef` key type, so converting to a
-/// plain slice would make it easier to use incorrectly.
+/// plain slice would make it easier to use incorrectly. To make a slice of a `PrimaryMap`, use
+/// `into_boxed_slice`.
 #[derive(Debug, Clone)]
 pub struct PrimaryMap<K, V>
 where
@@ -36,6 +41,14 @@ where
     pub fn new() -> Self {
         Self {
             elems: Vec::new(),
+            unused: PhantomData,
+        }
+    }
+
+    /// Create a new empty map with the given capacity.
+    pub fn with_capacity(capacity: usize) -> Self {
+        Self {
+            elems: Vec::with_capacity(capacity),
             unused: PhantomData,
         }
     }
@@ -121,6 +134,11 @@ where
     pub fn reserve_exact(&mut self, additional: usize) {
         self.elems.reserve_exact(additional)
     }
+
+    /// Consumes this `PrimaryMap` and produces a `BoxedSlice`.
+    pub fn into_boxed_slice(self) -> BoxedSlice<K, V> {
+        unsafe { BoxedSlice::<K, V>::from_raw(Box::<[V]>::into_raw(self.elems.into_boxed_slice())) }
+    }
 }
 
 /// Immutable indexing into an `PrimaryMap`.
@@ -167,6 +185,21 @@ where
 
     fn into_iter(self) -> Self::IntoIter {
         IterMut::new(self.elems.iter_mut())
+    }
+}
+
+impl<K, V> FromIterator<V> for PrimaryMap<K, V>
+where
+    K: EntityRef,
+{
+    fn from_iter<T>(iter: T) -> Self
+    where
+        T: IntoIterator<Item = V>,
+    {
+        Self {
+            elems: Vec::from_iter(iter),
+            unused: PhantomData,
+        }
     }
 }
 
@@ -344,6 +377,19 @@ mod tests {
                 1 => assert_eq!(*value_mut, 33),
                 _ => panic!(),
             }
+        }
+    }
+
+    #[test]
+    fn from_iter() {
+        let mut m: PrimaryMap<E, usize> = PrimaryMap::new();
+        m.push(12);
+        m.push(33);
+
+        let n = m.values().collect::<PrimaryMap<E, _>>();
+        assert!(m.len() == n.len());
+        for (me, ne) in m.values().zip(n.values()) {
+            assert!(*me == **ne);
         }
     }
 }

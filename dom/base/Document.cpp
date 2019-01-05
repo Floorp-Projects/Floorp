@@ -282,7 +282,6 @@
 
 #include "mozilla/MediaManager.h"
 
-#include "nsIURIClassifier.h"
 #include "nsIURIMutator.h"
 #include "mozilla/DocumentStyleRootIterator.h"
 #include "mozilla/PendingFullscreenEvent.h"
@@ -335,65 +334,6 @@ static nsresult GetHttpChannelHelper(nsIChannel* aChannel,
 
   return NS_OK;
 }
-
-////////////////////////////////////////////////////////////////////
-// PrincipalFlashClassifier
-
-// Classify the flash based on the document principal.
-// The usage of this class is as follows:
-//
-// 1) Call AsyncClassify() as early as possible to asynchronously do
-//    classification against all the flash blocking related tables
-//    via nsIURIClassifier.asyncClassifyLocalWithTables.
-//
-// 2) At any time you need the classification result, call Result()
-//    and it is guaranteed to give you the result. Note that you have
-//    to specify "aIsThirdParty" to the function so please make sure
-//    you can already correctly decide if the document is third-party.
-//
-//    Behind the scenes, the sync classification API
-//    (nsIURIClassifier.classifyLocalWithTable) may be called as a fallback to
-//    synchronously get the result if the asyncClassifyLocalWithTables hasn't
-//    been done yet.
-//
-// 3) You can call Result() as many times as you want and only the first time
-//    it may unfortunately call the blocking sync API. The subsequent call
-//    will just return the result that came out at the first time.
-//
-class PrincipalFlashClassifier final : public nsIURIClassifierCallback {
- public:
-  NS_DECL_THREADSAFE_ISUPPORTS
-  NS_DECL_NSIURICLASSIFIERCALLBACK
-
-  PrincipalFlashClassifier();
-
-  // Fire async classification based on the given principal.
-  void AsyncClassify(nsIPrincipal* aPrincipal);
-
-  // Would block if the result hasn't come out.
-  mozilla::dom::FlashClassification ClassifyMaybeSync(nsIPrincipal* aPrincipal,
-                                                      bool aIsThirdParty);
-
- private:
-  ~PrincipalFlashClassifier() = default;
-
-  void Reset();
-  bool EnsureUriClassifier();
-  mozilla::dom::FlashClassification CheckIfClassifyNeeded(
-      nsIPrincipal* aPrincipal);
-  mozilla::dom::FlashClassification Resolve(bool aIsThirdParty);
-  mozilla::dom::FlashClassification AsyncClassifyInternal(
-      nsIPrincipal* aPrincipal);
-  void GetClassificationTables(bool aIsThirdParty, nsACString& aTables);
-
-  // For the fallback sync classification.
-  nsCOMPtr<nsIURI> mClassificationURI;
-
-  nsCOMPtr<nsIURIClassifier> mUriClassifier;
-  bool mAsyncClassified;
-  nsTArray<nsCString> mMatchedTables;
-  mozilla::dom::FlashClassification mResult;
-};
 
 }  // namespace dom
 }  // namespace mozilla
@@ -1395,8 +1335,7 @@ Document::Document(const char* aContentType)
       mViewportOverflowType(ViewportOverflowType::NoOverflow),
       mSubDocuments(nullptr),
       mHeaderData(nullptr),
-      mPrincipalFlashClassifier(new PrincipalFlashClassifier()),
-      mFlashClassification(FlashClassification::Unclassified),
+      mFlashClassification(FlashClassification::Unknown),
       mBoxObjectTable(nullptr),
       mCurrentOrientationAngle(0),
       mCurrentOrientationType(OrientationType::Portrait_primary),
@@ -2627,11 +2566,6 @@ nsresult Document::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
     // stop!  ERROR page!
     aChannel->Cancel(NS_ERROR_CSP_FRAME_ANCESTOR_VIOLATION);
   }
-
-  // Perform a async flash classification based on the doc principal
-  // in an early stage to reduce the blocking time.
-  mFlashClassification = FlashClassification::Unclassified;
-  mPrincipalFlashClassifier->AsyncClassify(GetPrincipal());
 
   return NS_OK;
 }
@@ -12036,317 +11970,27 @@ Document* Document::GetSameTypeParentDocument() {
 
 /**
  * Retrieves the classification of the Flash plugins in the document based on
- * the classification lists. We perform AsyncInitFlashClassification on
- * StartDocumentLoad() and the result may not be initialized when this function
- * gets called. In that case, We can only unfortunately have a blocking wait.
- *
- * For more information, see
+ * the classification lists. For more information, see
  * toolkit/components/url-classifier/flash-block-lists.rst
  */
-FlashClassification Document::PrincipalFlashClassification() {
-  MOZ_ASSERT(mPrincipalFlashClassifier);
-  return mPrincipalFlashClassifier->ClassifyMaybeSync(NodePrincipal(),
-                                                      IsThirdParty());
-}
-
-/**
- * Helper function for |Document::PrincipalFlashClassification|
- *
- * Adds a table name string to a table list (a comma separated string). The
- * table will not be added if the name is an empty string.
- */
-static void MaybeAddTableToTableList(const nsACString& aTableNames,
-                                     nsACString& aTableList) {
-  if (aTableNames.IsEmpty()) {
-    return;
-  }
-  if (!aTableList.IsEmpty()) {
-    aTableList.AppendLiteral(",");
-  }
-  aTableList.Append(aTableNames);
-}
-
-/**
- * Helper function for |Document::PrincipalFlashClassification|
- *
- * Takes an array of table names and a comma separated list of table names
- * Returns |true| if any table name in the array matches a table name in the
- * comma separated list.
- */
-static bool ArrayContainsTable(const nsTArray<nsCString>& aTableArray,
-                               const nsACString& aTableNames) {
-  for (const nsCString& table : aTableArray) {
-    // This check is sufficient because table names cannot contain commas and
-    // cannot contain another existing table name.
-    if (FindInReadable(table, aTableNames)) {
-      return true;
-    }
-  }
-  return false;
-}
-
-namespace {
-
-static const char* gCallbackPrefs[] = {
-    // We only need to register string-typed preferences.
-    "urlclassifier.flashAllowTable",
-    "urlclassifier.flashAllowExceptTable",
-    "urlclassifier.flashTable",
-    "urlclassifier.flashExceptTable",
-    "urlclassifier.flashSubDocTable",
-    "urlclassifier.flashSubDocExceptTable",
-    nullptr,
-};
-
-// An object to store all preferences we need for flash blocking feature.
-struct PrefStore {
-  PrefStore() : mFlashBlockEnabled(false), mPluginsHttpOnly(false) {
-    Preferences::AddBoolVarCache(&mFlashBlockEnabled,
-                                 "plugins.flashBlock.enabled");
-    Preferences::AddBoolVarCache(&mPluginsHttpOnly, "plugins.http_https_only");
-
-    Preferences::RegisterCallbacks(
-        PREF_CHANGE_METHOD(PrefStore::UpdateStringPrefs), gCallbackPrefs, this);
-
-    UpdateStringPrefs();
-  }
-
-  ~PrefStore() {
-    Preferences::UnregisterCallbacks(
-        PREF_CHANGE_METHOD(PrefStore::UpdateStringPrefs), gCallbackPrefs, this);
-  }
-
-  void UpdateStringPrefs(const char* aPref = nullptr) {
-    Preferences::GetCString("urlclassifier.flashAllowTable", mAllowTables);
-    Preferences::GetCString("urlclassifier.flashAllowExceptTable",
-                            mAllowExceptionsTables);
-    Preferences::GetCString("urlclassifier.flashTable", mDenyTables);
-    Preferences::GetCString("urlclassifier.flashExceptTable",
-                            mDenyExceptionsTables);
-    Preferences::GetCString("urlclassifier.flashSubDocTable",
-                            mSubDocDenyTables);
-    Preferences::GetCString("urlclassifier.flashSubDocExceptTable",
-                            mSubDocDenyExceptionsTables);
-  }
-
-  bool mFlashBlockEnabled;
-  bool mPluginsHttpOnly;
-
-  nsCString mAllowTables;
-  nsCString mAllowExceptionsTables;
-  nsCString mDenyTables;
-  nsCString mDenyExceptionsTables;
-  nsCString mSubDocDenyTables;
-  nsCString mSubDocDenyExceptionsTables;
-};
-
-static const PrefStore& GetPrefStore() {
-  static UniquePtr<PrefStore> sPrefStore;
-  if (!sPrefStore) {
-    sPrefStore.reset(new PrefStore());
-    ClearOnShutdown(&sPrefStore);
-  }
-  return *sPrefStore;
-}
-
-}  // end of unnamed namespace.
-
-////////////////////////////////////////////////////////////////////
-// PrincipalFlashClassifier implementation.
-
-NS_IMPL_ISUPPORTS(PrincipalFlashClassifier, nsIURIClassifierCallback)
-
-PrincipalFlashClassifier::PrincipalFlashClassifier() { Reset(); }
-
-void PrincipalFlashClassifier::Reset() {
-  mAsyncClassified = false;
-  mMatchedTables.Clear();
-  mResult = FlashClassification::Unclassified;
-}
-
-void PrincipalFlashClassifier::GetClassificationTables(bool aIsThirdParty,
-                                                       nsACString& aTables) {
-  aTables.Truncate();
-  auto& prefs = GetPrefStore();
-
-  MaybeAddTableToTableList(prefs.mAllowTables, aTables);
-  MaybeAddTableToTableList(prefs.mAllowExceptionsTables, aTables);
-  MaybeAddTableToTableList(prefs.mDenyTables, aTables);
-  MaybeAddTableToTableList(prefs.mDenyExceptionsTables, aTables);
-
-  if (aIsThirdParty) {
-    MaybeAddTableToTableList(prefs.mSubDocDenyTables, aTables);
-    MaybeAddTableToTableList(prefs.mSubDocDenyExceptionsTables, aTables);
-  }
-}
-
-bool PrincipalFlashClassifier::EnsureUriClassifier() {
-  if (!mUriClassifier) {
-    mUriClassifier = do_GetService(NS_URICLASSIFIERSERVICE_CONTRACTID);
-  }
-
-  return !!mUriClassifier;
-}
-
-FlashClassification PrincipalFlashClassifier::ClassifyMaybeSync(
-    nsIPrincipal* aPrincipal, bool aIsThirdParty) {
-  if (FlashClassification::Unclassified != mResult) {
-    // We already have the result. Just return it.
-    return mResult;
-  }
-
-  // TODO: Bug 1342333 - Entirely remove the use of the sync API
-  // (ClassifyLocalWithTables).
-  if (!mAsyncClassified) {
-    //
-    // We may
-    //   1) have called AsyncClassifyLocalWithTables but OnClassifyComplete
-    //      hasn't been called.
-    //   2) haven't even called AsyncClassifyLocalWithTables.
-    //
-    // In both cases we need to do the synchronous classification as the
-    // fallback.
-    //
-
-    if (!EnsureUriClassifier()) {
-      return FlashClassification::Denied;
-    }
-    mResult = CheckIfClassifyNeeded(aPrincipal);
-    if (FlashClassification::Unclassified != mResult) {
-      return mResult;
-    }
-
-    nsresult rv;
-    nsAutoCString classificationTables;
-    GetClassificationTables(aIsThirdParty, classificationTables);
-
-    if (!mClassificationURI) {
-      rv = aPrincipal->GetURI(getter_AddRefs(mClassificationURI));
-      if (NS_FAILED(rv) || !mClassificationURI) {
-        mResult = FlashClassification::Denied;
-        return mResult;
-      }
-    }
-
-    rv = mUriClassifier->ClassifyLocalWithTables(
-        mClassificationURI, classificationTables, mMatchedTables);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      if (rv == NS_ERROR_MALFORMED_URI) {
-        // This means that the URI had no hostname (ex: file://doc.html). In
-        // this case, we allow the default (Unknown plugin) behavior.
-        mResult = FlashClassification::Unknown;
-      } else {
-        mResult = FlashClassification::Denied;
-      }
-      return mResult;
-    }
-  }
-
-  // Resolve the result based on mMatchedTables and aIsThirdParty.
-  mResult = Resolve(aIsThirdParty);
-  MOZ_ASSERT(FlashClassification::Unclassified != mResult);
-
-  // The subsequent call of Result() will return the resolved result
-  // and never reach here until Reset() is called.
-  return mResult;
-}
-
-/*virtual*/ nsresult PrincipalFlashClassifier::OnClassifyComplete(
-    nsresult /*aErrorCode*/,
-    const nsACString& aLists,  // Only this matters.
-    const nsACString& /*aProvider*/, const nsACString& /*aPrefix*/) {
-  mAsyncClassified = true;
-
-  if (FlashClassification::Unclassified != mResult) {
-    // Result() has been called prior to this callback.
-    return NS_OK;
-  }
-
-  // TODO: Bug 1364804 - We should use a callback type which notifies
-  // the result as a string array rather than a formatted string.
-
-  // We only populate the matched list without resolving the classification
-  // result because we are not sure if the parent doc has been properly set.
-  // We also parse the comma-separated tables to array. (the code is copied
-  // from Classifier::SplitTables.)
-  nsACString::const_iterator begin, iter, end;
-  aLists.BeginReading(begin);
-  aLists.EndReading(end);
-  while (begin != end) {
-    iter = begin;
-    FindCharInReadable(',', iter, end);
-    nsDependentCSubstring table = Substring(begin, iter);
-    if (!table.IsEmpty()) {
-      mMatchedTables.AppendElement(Substring(begin, iter));
-    }
-    begin = iter;
-    if (begin != end) {
-      begin++;
-    }
-  }
-
-  return NS_OK;
-}
-
-// We resolve the classification result based on aIsThirdParty
-// and the matched tables we got ealier on (via either sync or async API).
-FlashClassification PrincipalFlashClassifier::Resolve(bool aIsThirdParty) {
-  MOZ_ASSERT(FlashClassification::Unclassified == mResult,
-             "We already have resolved classification result.");
-
-  if (mMatchedTables.IsEmpty()) {
-    return FlashClassification::Unknown;
-  }
-
-  auto& prefs = GetPrefStore();
-  if (ArrayContainsTable(mMatchedTables, prefs.mDenyTables) &&
-      !ArrayContainsTable(mMatchedTables, prefs.mDenyExceptionsTables)) {
-    return FlashClassification::Denied;
-  } else if (ArrayContainsTable(mMatchedTables, prefs.mAllowTables) &&
-             !ArrayContainsTable(mMatchedTables,
-                                 prefs.mAllowExceptionsTables)) {
-    return FlashClassification::Allowed;
-  }
-
-  if (aIsThirdParty &&
-      ArrayContainsTable(mMatchedTables, prefs.mSubDocDenyTables) &&
-      !ArrayContainsTable(mMatchedTables, prefs.mSubDocDenyExceptionsTables)) {
-    return FlashClassification::Denied;
-  }
-
-  return FlashClassification::Unknown;
-}
-
-void PrincipalFlashClassifier::AsyncClassify(nsIPrincipal* aPrincipal) {
-  MOZ_ASSERT(FlashClassification::Unclassified == mResult,
-             "The old classification result should be reset first.");
-  Reset();
-  mResult = AsyncClassifyInternal(aPrincipal);
-}
-
-FlashClassification PrincipalFlashClassifier::CheckIfClassifyNeeded(
-    nsIPrincipal* aPrincipal) {
-  nsresult rv;
-
-  auto& prefs = GetPrefStore();
-
+FlashClassification Document::DocumentFlashClassification() {
   // If neither pref is on, skip the null-principal and principal URI checks.
-  if (prefs.mPluginsHttpOnly && !prefs.mFlashBlockEnabled) {
+  if (!StaticPrefs::plugins_http_https_only() &&
+      !StaticPrefs::plugins_flashBlock_enabled()) {
     return FlashClassification::Unknown;
   }
 
-  nsCOMPtr<nsIPrincipal> principal = aPrincipal;
-  if (principal->GetIsNullPrincipal()) {
+  if (NodePrincipal()->GetIsNullPrincipal()) {
     return FlashClassification::Denied;
   }
 
   nsCOMPtr<nsIURI> classificationURI;
-  rv = principal->GetURI(getter_AddRefs(classificationURI));
+  nsresult rv = NodePrincipal()->GetURI(getter_AddRefs(classificationURI));
   if (NS_FAILED(rv) || !classificationURI) {
     return FlashClassification::Denied;
   }
 
-  if (prefs.mPluginsHttpOnly) {
+  if (StaticPrefs::plugins_http_https_only()) {
     // Only allow plugins for documents from an HTTP/HTTPS origin. This should
     // allow dependent data: URIs to load plugins, but not:
     // * chrome documents
@@ -12362,125 +12006,21 @@ FlashClassification PrincipalFlashClassifier::CheckIfClassifyNeeded(
 
   // If flash blocking is disabled, it is equivalent to all sites being
   // on neither list.
-  if (!prefs.mFlashBlockEnabled) {
+  if (!StaticPrefs::plugins_flashBlock_enabled()) {
     return FlashClassification::Unknown;
   }
 
-  return FlashClassification::Unclassified;
-}
-
-// Using nsIURIClassifier.asyncClassifyLocalWithTables to do classification
-// against the flash related tables based on the given principal.
-FlashClassification PrincipalFlashClassifier::AsyncClassifyInternal(
-    nsIPrincipal* aPrincipal) {
-  auto result = CheckIfClassifyNeeded(aPrincipal);
-  if (FlashClassification::Unclassified != result) {
-    return result;
-  }
-
-  // We haven't been able to decide if it's a third party document
-  // since determining if a document is third-party may depend on its
-  // parent document. At the time we call AsyncClassifyInternal
-  // (i.e. StartDocumentLoad) the parent document may not have been
-  // set. As a result, we wait until Resolve() to be called to
-  // take "is third party" into account. At this point, we just assume
-  // it's third-party to include every list.
-  nsAutoCString tables;
-  GetClassificationTables(true, tables);
-
-  if (tables.IsEmpty()) {
-    return FlashClassification::Unknown;
-  }
-
-  if (!EnsureUriClassifier()) {
-    return FlashClassification::Denied;
-  }
-
-  nsresult rv = aPrincipal->GetURI(getter_AddRefs(mClassificationURI));
-  if (NS_FAILED(rv) || !mClassificationURI) {
-    return FlashClassification::Denied;
-  }
-
-  // We don't support extra entries by pref for this classifier.
-  rv = mUriClassifier->AsyncClassifyLocalWithTables(
-      mClassificationURI, tables, nsTArray<nsCString>(), nsTArray<nsCString>(),
-      this);
-
-  if (NS_FAILED(rv)) {
-    if (rv == NS_ERROR_MALFORMED_URI) {
-      // This means that the URI had no hostname (ex: file://doc.html). In this
-      // case, we allow the default (Unknown plugin) behavior.
-      return FlashClassification::Unknown;
-    } else {
-      return FlashClassification::Denied;
-    }
-  }
-
-  return FlashClassification::Unclassified;
-}
-
-FlashClassification Document::ComputeFlashClassification() {
-  nsCOMPtr<nsIDocShellTreeItem> current = this->GetDocShell();
-  if (!current) {
-    return FlashClassification::Denied;
-  }
-  nsCOMPtr<nsIDocShellTreeItem> parent;
-  DebugOnly<nsresult> rv = current->GetSameTypeParent(getter_AddRefs(parent));
-  MOZ_ASSERT(NS_SUCCEEDED(rv),
-             "nsIDocShellTreeItem::GetSameTypeParent should never fail");
-
-  bool isTopLevel = !parent;
-  FlashClassification classification;
-  if (isTopLevel) {
-    classification = PrincipalFlashClassification();
-  } else {
-    nsCOMPtr<Document> parentDocument = GetParentDocument();
-    if (!parentDocument) {
-      return FlashClassification::Denied;
-    }
-    FlashClassification parentClassification =
-        parentDocument->DocumentFlashClassification();
-
-    if (parentClassification == FlashClassification::Denied) {
-      classification = FlashClassification::Denied;
-    } else {
-      classification = PrincipalFlashClassification();
-
-      // Allow unknown children to inherit allowed status from parent, but
-      // do not allow denied children to do so.
-      if (classification == FlashClassification::Unknown &&
-          parentClassification == FlashClassification::Allowed) {
-        classification = FlashClassification::Allowed;
-      }
-    }
-  }
-
-  return classification;
-}
-
-/**
- * Retrieves the classification of plugins in this document. This is dependent
- * on the classification of this document and all parent documents.
- * This function is infallible - It must return some classification that
- * callers can act on.
- *
- * This function will NOT return FlashClassification::Unclassified
- */
-FlashClassification Document::DocumentFlashClassification() {
-  if (mFlashClassification == FlashClassification::Unclassified) {
-    FlashClassification result = ComputeFlashClassification();
-    mFlashClassification = result;
-    MOZ_ASSERT(
-        result != FlashClassification::Unclassified,
-        "Document::GetPluginClassification should never return Unclassified");
+  if (mFlashClassification == FlashClassification::Unknown) {
+    mFlashClassification = DocumentFlashClassificationInternal();
   }
 
   return mFlashClassification;
 }
 
 /**
- * Initializes |mIsThirdParty| if necessary and returns its value. The value
- * returned represents whether this document should be considered Third-Party.
+ * Initializes |mIsThirdPartyForFlashClassifier| if necessary and returns its
+ * value. The value returned represents whether this document should be
+ * considered Third-Party.
  *
  * A top-level document cannot be a considered Third-Party; only subdocuments
  * may. For a subdocument to be considered Third-Party, it must meet ANY ONE
@@ -12493,15 +12033,15 @@ FlashClassification Document::DocumentFlashClassification() {
  * If there is an error in determining whether the document is Third-Party,
  * it will be assumed to be Third-Party for security reasons.
  */
-bool Document::IsThirdParty() {
-  if (mIsThirdParty.isSome()) {
-    return mIsThirdParty.value();
+bool Document::IsThirdPartyForFlashClassifier() {
+  if (mIsThirdPartyForFlashClassifier.isSome()) {
+    return mIsThirdPartyForFlashClassifier.value();
   }
 
   nsCOMPtr<nsIDocShellTreeItem> docshell = this->GetDocShell();
   if (!docshell) {
-    mIsThirdParty.emplace(true);
-    return mIsThirdParty.value();
+    mIsThirdPartyForFlashClassifier.emplace(true);
+    return mIsThirdPartyForFlashClassifier.value();
   }
 
   nsCOMPtr<nsIDocShellTreeItem> parent;
@@ -12511,20 +12051,20 @@ bool Document::IsThirdParty() {
   bool isTopLevel = !parent;
 
   if (isTopLevel) {
-    mIsThirdParty.emplace(false);
-    return mIsThirdParty.value();
+    mIsThirdPartyForFlashClassifier.emplace(false);
+    return mIsThirdPartyForFlashClassifier.value();
   }
 
   nsCOMPtr<Document> parentDocument = GetParentDocument();
   if (!parentDocument) {
     // Failure
-    mIsThirdParty.emplace(true);
-    return mIsThirdParty.value();
+    mIsThirdPartyForFlashClassifier.emplace(true);
+    return mIsThirdPartyForFlashClassifier.value();
   }
 
-  if (parentDocument->IsThirdParty()) {
-    mIsThirdParty.emplace(true);
-    return mIsThirdParty.value();
+  if (parentDocument->IsThirdPartyForFlashClassifier()) {
+    mIsThirdPartyForFlashClassifier.emplace(true);
+    return mIsThirdPartyForFlashClassifier.value();
   }
 
   nsCOMPtr<nsIPrincipal> principal = NodePrincipal();
@@ -12535,18 +12075,69 @@ bool Document::IsThirdParty() {
 
   if (NS_WARN_IF(NS_FAILED(rv))) {
     // Failure
-    mIsThirdParty.emplace(true);
-    return mIsThirdParty.value();
+    mIsThirdPartyForFlashClassifier.emplace(true);
+    return mIsThirdPartyForFlashClassifier.value();
   }
 
   if (!principalsMatch) {
-    mIsThirdParty.emplace(true);
-    return mIsThirdParty.value();
+    mIsThirdPartyForFlashClassifier.emplace(true);
+    return mIsThirdPartyForFlashClassifier.value();
   }
 
   // Fall-through. Document is not a Third-Party Document.
-  mIsThirdParty.emplace(false);
-  return mIsThirdParty.value();
+  mIsThirdPartyForFlashClassifier.emplace(false);
+  return mIsThirdPartyForFlashClassifier.value();
+}
+
+FlashClassification Document::DocumentFlashClassificationInternal() {
+  FlashClassification classification = FlashClassification::Unknown;
+
+  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(GetChannel());
+  if (httpChannel) {
+    nsIHttpChannel::FlashPluginState state = nsIHttpChannel::FlashPluginUnknown;
+    httpChannel->GetFlashPluginState(&state);
+
+    // Allow unknown children to inherit allowed status from parent, but do not
+    // allow denied children to do so.
+
+    if (state == nsIHttpChannel::FlashPluginDeniedInSubdocuments &&
+        IsThirdPartyForFlashClassifier()) {
+      return FlashClassification::Denied;
+    }
+
+    if (state == nsIHttpChannel::FlashPluginDenied) {
+      return FlashClassification::Denied;
+    }
+
+    if (state == nsIHttpChannel::FlashPluginAllowed) {
+      classification = FlashClassification::Allowed;
+    }
+  }
+
+  if (IsTopLevelContentDocument()) {
+    return classification;
+  }
+
+  Document* parentDocument = GetParentDocument();
+  if (!parentDocument) {
+    return FlashClassification::Denied;
+  }
+
+  FlashClassification parentClassification =
+      parentDocument->DocumentFlashClassification();
+
+  if (parentClassification == FlashClassification::Denied) {
+    return FlashClassification::Denied;
+  }
+
+  // Allow unknown children to inherit allowed status from parent, but
+  // do not allow denied children to do so.
+  if (classification == FlashClassification::Unknown &&
+      parentClassification == FlashClassification::Allowed) {
+    return FlashClassification::Allowed;
+  }
+
+  return classification;
 }
 
 void Document::ClearStaleServoData() {

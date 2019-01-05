@@ -9,7 +9,7 @@ geckoview-junit:
     max-run-time: 3600
     tier:
         by-test-platform:
-            android-em-7.0-x86/opt: 3
+            android-em-7.0-x86/.*: 3
             default: default
     chunks:
         by-test-platform:
@@ -21,10 +21,10 @@ geckoview-junit:
         script: android_emulator_unittest.py
         config:
             by-test-platform:
-                android-em-7.0-x86/opt:
+                android-em-7.0-x86/.*:
                     - android/android_common.py
                     - android/androidx86_7_0.py
-                android-em.*:
+                android-em-4.*:
                     - android/android_common.py
                     - android/androidarm_4_3_junit.py
         extra-options:

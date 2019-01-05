@@ -89,6 +89,12 @@ NullHttpChannel::GetIsTrackingResource(bool *aIsTrackingResource) {
 }
 
 NS_IMETHODIMP
+NullHttpChannel::GetFlashPluginState(
+    nsIHttpChannel::FlashPluginState *aResult) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 NullHttpChannel::GetIsThirdPartyTrackingResource(bool *aIsTrackingResource) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

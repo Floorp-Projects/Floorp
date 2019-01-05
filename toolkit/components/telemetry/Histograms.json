@@ -4784,17 +4784,6 @@
     "bug_numbers": [1315893],
     "description": "Time spent per classifier update (ms), keyed by the name of the provider."
   },
-  "URLCLASSIFIER_CLASSIFYLOCAL_TIME": {
-    "record_in_processes": ["main", "content"],
-    "alert_emails": ["francois@mozilla.com", "safebrowsing-telemetry@mozilla.org"],
-    "bug_numbers": [1334616],
-    "expires_in_version": "never",
-    "releaseChannelCollection": "opt-out",
-    "kind": "exponential",
-    "high": 60000,
-    "n_buckets": 30,
-    "description": "Time spent inside ClassifyLocalWithTables (ms)"
-  },
   "URLCLASSIFIER_ASYNC_CLASSIFYLOCAL_TIME": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["francois@mozilla.com", "safebrowsing-telemetry@mozilla.org"],

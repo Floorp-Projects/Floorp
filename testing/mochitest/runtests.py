@@ -568,7 +568,7 @@ class WebSocketServer(object):
 
 class SSLTunnel:
 
-    def __init__(self, options, logger, ignoreSSLTunnelExts=False):
+    def __init__(self, options, logger):
         self.log = logger
         self.process = None
         self.utilityPath = options.utilityPath
@@ -578,7 +578,6 @@ class SSLTunnel:
         self.httpPort = options.httpPort
         self.webServer = options.webServer
         self.webSocketPort = options.webSocketPort
-        self.useSSLTunnelExts = not ignoreSSLTunnelExts
 
         self.customCertRE = re.compile("^cert=(?P<nickname>[0-9a-zA-Z_ ]+)")
         self.clientAuthRE = re.compile("^clientauth=(?P<clientauth>[a-z]+)")
@@ -604,7 +603,7 @@ class SSLTunnel:
                 config.write("redirhost:%s:%s:%s:%s\n" %
                              (loc.host, loc.port, self.sslPort, redirhost))
 
-            if self.useSSLTunnelExts and option in (
+            if option in (
                     'tls1',
                     'ssl3',
                     'rc4',
@@ -1145,7 +1144,7 @@ class MochitestDesktop(object):
             self.log.error("runtests.py | Timed out while waiting for "
                            "websocket/process bridge startup.")
 
-    def startServers(self, options, debuggerInfo, ignoreSSLTunnelExts=False):
+    def startServers(self, options, debuggerInfo):
         # start servers and set ports
         # TODO: pass these values, don't set on `self`
         self.webServer = options.webServer
@@ -1169,8 +1168,7 @@ class MochitestDesktop(object):
         # start SSL pipe
         self.sslTunnel = SSLTunnel(
             options,
-            logger=self.log,
-            ignoreSSLTunnelExts=ignoreSSLTunnelExts)
+            logger=self.log)
         self.sslTunnel.buildConfig(self.locations)
         self.sslTunnel.start()
 
