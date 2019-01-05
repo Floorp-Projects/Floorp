@@ -30,3 +30,7 @@ unset MACOS_PRIVATE_FRAMEWORKS_DIR
 
 unset MOZ_STDCXX_COMPAT
 unset MOZ_NO_PIE_COMPAT
+
+unset AR
+unset NM
+unset RANLIB
