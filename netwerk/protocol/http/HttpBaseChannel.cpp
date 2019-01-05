@@ -168,6 +168,7 @@ HttpBaseChannel::HttpBaseChannel()
       mCanceled(false),
       mIsFirstPartyTrackingResource(false),
       mIsThirdPartyTrackingResource(false),
+      mFlashPluginState(nsIHttpChannel::FlashPluginUnknown),
       mLoadFlags(LOAD_NORMAL),
       mCaps(0),
       mClassOfService(0),
@@ -317,6 +318,12 @@ void HttpBaseChannel::SetIsTrackingResource(bool aIsThirdParty) {
     MOZ_ASSERT(!mIsThirdPartyTrackingResource);
     mIsFirstPartyTrackingResource = true;
   }
+}
+
+void HttpBaseChannel::SetFlashPluginState(
+    nsIHttpChannel::FlashPluginState aState) {
+  LOG(("HttpBaseChannel::SetFlashPluginState %p", this));
+  mFlashPluginState = aState;
 }
 
 nsresult HttpBaseChannel::Init(nsIURI* aURI, uint32_t aCaps,
@@ -1482,6 +1489,13 @@ NS_IMETHODIMP
 HttpBaseChannel::GetIsThirdPartyTrackingResource(bool* aIsTrackingResource) {
   MOZ_ASSERT(!(mIsFirstPartyTrackingResource && mIsThirdPartyTrackingResource));
   *aIsTrackingResource = mIsThirdPartyTrackingResource;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::GetFlashPluginState(nsIHttpChannel::FlashPluginState* aState) {
+  uint32_t flashPluginState = mFlashPluginState;
+  *aState = (nsIHttpChannel::FlashPluginState)flashPluginState;
   return NS_OK;
 }
 

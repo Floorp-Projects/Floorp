@@ -358,6 +358,25 @@ IPCResult HttpBackgroundChannelChild::RecvNotifyTrackingResource(
   return IPC_OK();
 }
 
+IPCResult HttpBackgroundChannelChild::RecvNotifyFlashPluginStateChanged(
+    const nsIHttpChannel::FlashPluginState& aState) {
+  LOG(
+      ("HttpBackgroundChannelChild::RecvNotifyFlashPluginStateChanged "
+       "[this=%p]\n",
+       this));
+  MOZ_ASSERT(OnSocketThread());
+
+  if (NS_WARN_IF(!mChannelChild)) {
+    return IPC_OK();
+  }
+
+  // NotifyFlashPluginStateChanged has no order dependency to OnStartRequest.
+  // It this be handled as soon as possible
+  mChannelChild->ProcessNotifyFlashPluginStateChanged(aState);
+
+  return IPC_OK();
+}
+
 IPCResult HttpBackgroundChannelChild::RecvSetClassifierMatchedInfo(
     const ClassifierInfo& info) {
   LOG(("HttpBackgroundChannelChild::RecvSetClassifierMatchedInfo [this=%p]\n",
