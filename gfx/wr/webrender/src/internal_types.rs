@@ -295,7 +295,6 @@ pub enum ResultMsg {
     DebugOutput(DebugOutput),
     RefreshShader(PathBuf),
     UpdateGpuCache(GpuCacheUpdateList),
-    ClearGpuCache,
     UpdateResources {
         updates: TextureUpdateList,
         memory_pressure: bool,
