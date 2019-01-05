@@ -304,6 +304,9 @@ pub struct GpuCacheDebugChunk {
 pub struct GpuCacheUpdateList {
     /// The frame current update list was generated from.
     pub frame_id: FrameId,
+    /// Whether the texture should be cleared before updates
+    /// are applied.
+    pub clear: bool,
     /// The current height of the texture. The render thread
     /// should resize the texture if required.
     pub height: i32,
@@ -669,6 +672,9 @@ pub struct GpuCache {
     saved_block_count: usize,
     /// The current debug flags for the system.
     debug_flags: DebugFlags,
+    /// Whether there is a pending clear to send with the
+    /// next update.
+    pending_clear: bool,
 }
 
 impl GpuCache {
@@ -679,17 +685,19 @@ impl GpuCache {
             texture: Texture::new(Epoch(0), debug_flags),
             saved_block_count: 0,
             debug_flags,
+            pending_clear: false,
         }
     }
 
-    /// Drops everything in the GPU cache. Paired by the caller with a message
-    /// to the renderer thread telling it to do the same.
+    /// Drops everything in the GPU cache. Must not be called once gpu cache entries
+    /// for the next frame have already been requested.
     pub fn clear(&mut self) {
         assert!(self.texture.updates.is_empty(), "Clearing with pending updates");
         let mut next_base_epoch = self.texture.max_epoch;
         next_base_epoch.next();
         self.texture = Texture::new(next_base_epoch, self.debug_flags);
         self.saved_block_count = 0;
+        self.pending_clear = true;
     }
 
     /// Begin a new frame.
@@ -805,8 +813,11 @@ impl GpuCache {
 
     /// Extract the pending updates from the cache.
     pub fn extract_updates(&mut self) -> GpuCacheUpdateList {
+        let clear = self.pending_clear;
+        self.pending_clear = false;
         GpuCacheUpdateList {
             frame_id: self.frame_id,
+            clear,
             height: self.texture.height,
             debug_commands: mem::replace(&mut self.texture.debug_commands, Vec::new()),
             updates: mem::replace(&mut self.texture.updates, Vec::new()),

@@ -1086,6 +1086,7 @@ impl GpuCacheTexture {
         let blit_source = self.texture.take();
 
         // Create the new texture.
+        assert!(height >= 2, "Height is too small for ANGLE");
         let new_size = DeviceIntSize::new(MAX_VERTEX_TEXTURE_WIDTH as _, height);
         let rt_info = Some(RenderTargetInfo { has_depth: false });
         let mut texture = device.create_texture(
@@ -2120,8 +2121,14 @@ impl Renderer {
                     self.backend_profile_counters = profile_counters;
                 }
                 ResultMsg::UpdateGpuCache(mut list) => {
+                    if list.clear {
+                        self.pending_gpu_cache_clear = true;
+                    }
                     #[cfg(feature = "debug_renderer")]
                     {
+                        if list.clear {
+                            self.gpu_cache_debug_chunks = Vec::new();
+                        }
                         for cmd in mem::replace(&mut list.debug_commands, Vec::new()) {
                             match cmd {
                                 GpuCacheDebugCmd::Alloc(chunk) => {
@@ -2141,13 +2148,6 @@ impl Renderer {
                         }
                     }
                     self.pending_gpu_cache_updates.push(list);
-                }
-                ResultMsg::ClearGpuCache => {
-                    #[cfg(feature = "debug_renderer")]
-                    {
-                        self.gpu_cache_debug_chunks = Vec::new();
-                    }
-                    self.pending_gpu_cache_clear = true;
                 }
                 ResultMsg::UpdateResources {
                     updates,
@@ -2741,6 +2741,7 @@ impl Renderer {
         if gpu_cache_height != 0 && GPU_CACHE_RESIZE_TEST {
             self.pending_gpu_cache_updates.push(GpuCacheUpdateList {
                 frame_id: FrameId::INVALID,
+                clear: false,
                 height: gpu_cache_height,
                 blocks: vec![[1f32; 4].into()],
                 updates: Vec::new(),
@@ -3841,6 +3842,7 @@ impl Renderer {
 
         let mut list = GpuCacheUpdateList {
             frame_id: FrameId::INVALID,
+            clear: false,
             height: self.gpu_cache_texture.get_height(),
             blocks: Vec::new(),
             updates: Vec::new(),
