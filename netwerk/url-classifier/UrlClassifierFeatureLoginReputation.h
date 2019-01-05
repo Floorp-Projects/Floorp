@@ -21,6 +21,9 @@ class UrlClassifierFeatureLoginReputation final
 
   static nsIUrlClassifierFeature* MaybeGetOrCreate();
 
+  static already_AddRefed<nsIUrlClassifierFeature> GetIfNameMatches(
+      const nsACString& aName);
+
   NS_IMETHOD
   GetTables(nsIUrlClassifierFeature::listType aListType,
             nsTArray<nsCString>& aResult) override;

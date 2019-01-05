@@ -2245,19 +2245,21 @@ SpecialPowersAPI.prototype = {
     let classifierService =
       Cc["@mozilla.org/url-classifier/dbservice;1"].getService(Ci.nsIURIClassifier);
 
-    let wrapCallback = (...args) => {
+    let wrapCallback = results => {
       Services.tm.dispatchToMainThread(() => {
         if (typeof callback == "function") {
-          callback(...args);
+          callback(wrapIfUnwrapped(results));
         } else {
-          callback.onClassifyComplete.call(undefined, ...args);
+          callback.onClassifyComplete.call(undefined, wrapIfUnwrapped(results));
         }
       });
     };
 
-    return classifierService.asyncClassifyLocalWithTables(unwrapIfWrapped(uri),
-                                                          tables, [], [],
-                                                          wrapCallback);
+    let feature = classifierService.createFeatureWithTables("test", tables.split(","), []);
+    return classifierService.asyncClassifyLocalWithFeatures(unwrapIfWrapped(uri),
+                                                            [feature],
+                                                            Ci.nsIUrlClassifierFeature.blacklist,
+                                                            wrapCallback);
   },
 
   EARLY_BETA_OR_EARLIER: AppConstants.EARLY_BETA_OR_EARLIER,

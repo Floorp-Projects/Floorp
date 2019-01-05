@@ -17,12 +17,13 @@ namespace net {
 class UrlClassifierFeatureTrackingAnnotation final
     : public UrlClassifierFeatureBase {
  public:
-  static void Initialize();
-
-  static void Shutdown();
+  static void MaybeShutdown();
 
   static already_AddRefed<UrlClassifierFeatureTrackingAnnotation> MaybeCreate(
       nsIChannel* aChannel);
+
+  static already_AddRefed<nsIUrlClassifierFeature> GetIfNameMatches(
+      const nsACString& aName);
 
   NS_IMETHOD ProcessChannel(nsIChannel* aChannel, const nsACString& aList,
                             bool* aShouldContinue) override;
@@ -33,6 +34,8 @@ class UrlClassifierFeatureTrackingAnnotation final
 
  private:
   UrlClassifierFeatureTrackingAnnotation();
+
+  static void MaybeInitialize();
 };
 
 }  // namespace net
