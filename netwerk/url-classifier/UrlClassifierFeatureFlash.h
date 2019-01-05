@@ -14,8 +14,7 @@ namespace net {
 
 class UrlClassifierFeatureFlash final : public UrlClassifierFeatureBase {
  public:
-  static void Initialize();
-  static void Shutdown();
+  static void MaybeShutdown();
 
   static void MaybeCreate(
       nsIChannel* aChannel,
@@ -34,6 +33,8 @@ class UrlClassifierFeatureFlash final : public UrlClassifierFeatureBase {
 
  private:
   explicit UrlClassifierFeatureFlash(uint32_t aId);
+
+  static void MaybeInitialize();
 
   nsIHttpChannel::FlashPluginState mFlashPluginState;
 };
