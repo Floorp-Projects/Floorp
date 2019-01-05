@@ -265,6 +265,8 @@ class HttpChannelChild final : public PHttpChannelChild,
   void ProcessNotifyCookieAllowed();
   void ProcessNotifyTrackingCookieBlocked(uint32_t aRejectedReason);
   void ProcessNotifyTrackingResource(bool aIsThirdParty);
+  void ProcessNotifyFlashPluginStateChanged(
+      nsIHttpChannel::FlashPluginState aState);
   void ProcessSetClassifierMatchedInfo(const nsCString& aList,
                                        const nsCString& aProvider,
                                        const nsCString& aFullHash);

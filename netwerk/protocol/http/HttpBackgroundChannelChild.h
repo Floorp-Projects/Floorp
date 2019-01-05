@@ -72,6 +72,9 @@ class HttpBackgroundChannelChild final : public PHttpBackgroundChannelChild {
 
   IPCResult RecvNotifyTrackingResource(const bool& aIsThirdParty) override;
 
+  IPCResult RecvNotifyFlashPluginStateChanged(
+      const nsIHttpChannel::FlashPluginState& aState) override;
+
   IPCResult RecvSetClassifierMatchedInfo(const ClassifierInfo& info) override;
 
   void ActorDestroy(ActorDestroyReason aWhy) override;

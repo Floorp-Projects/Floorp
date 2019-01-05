@@ -416,6 +416,12 @@ NS_IMETHODIMP nsExtProtocolChannel::NotifyTrackingResource(bool aIsThirdParty) {
   return NS_OK;
 }
 
+NS_IMETHODIMP nsExtProtocolChannel::NotifyFlashPluginStateChanged(
+    nsIHttpChannel::FlashPluginState aState) {
+  // nothing to do
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsExtProtocolChannel::Delete() {
   // nothing to do
   return NS_OK;

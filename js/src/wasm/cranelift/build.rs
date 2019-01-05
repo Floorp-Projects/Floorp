@@ -48,7 +48,8 @@ fn main() {
             "-std=gnu++14",
             "-fno-sized-deallocation",
             "-DRUST_BINDGEN",
-        ]).clang_arg("-I../..");
+        ])
+        .clang_arg("-I../..");
 
     match env::var_os("MOZ_TOPOBJDIR") {
         Some(path) => {

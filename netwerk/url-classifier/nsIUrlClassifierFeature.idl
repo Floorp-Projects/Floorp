@@ -11,6 +11,7 @@
 [ref] native StringArrayRef(nsTArray<nsCString>);
 
 interface nsIChannel;
+interface nsIURI;
 
 /**
  * A single URLClassifier feature.
@@ -62,6 +63,14 @@ interface nsIUrlClassifierFeature : nsISupports
    * processing other features.
    */
   [noscript] boolean processChannel(in nsIChannel aChannel, in ACString aList);
+
+  /**
+   * Features can work with different URLs from a channel (channel url, or
+   * top-level, or something else). This method returns what we need to use for
+   * the current list.
+   */
+  [noscript] nsIURI getURIByListType(in nsIChannel channel,
+                                     in nsIUrlClassifierFeature_listType listType);
 };
 
 /**
@@ -71,6 +80,8 @@ interface nsIUrlClassifierFeature : nsISupports
 [builtinclass, scriptable, uuid(ccb88140-5d66-4873-9815-a1b98d6cdc92)]
 interface nsIUrlClassifierFeatureResult : nsISupports
 {
+  readonly attribute nsIURI uri;
+
   readonly attribute nsIUrlClassifierFeature feature;
 
   // Comma separate tables or preferences.
