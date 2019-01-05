@@ -295,8 +295,6 @@ nsresult nsLayoutStatics::Initialize() {
   // Reporting API.
   ReportingHeader::Initialize();
 
-  mozilla::net::UrlClassifierFeatureFactory::Initialize();
-
   return NS_OK;
 }
 

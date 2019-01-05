@@ -18,8 +18,6 @@ namespace net {
 
 class UrlClassifierFeatureFactory final {
  public:
-  static void Initialize();
-
   static void Shutdown();
 
   static void GetFeaturesFromChannel(
