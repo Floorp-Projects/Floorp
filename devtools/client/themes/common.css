@@ -295,8 +295,7 @@ checkbox:-moz-focusring {
   height: 16px;
   margin: 0 3px;
   transition: opacity 0.05s ease-in-out;
-
-  color: var(--theme-toolbar-color);
+  color: var(--theme-toolbar-icon-color);
   direction: ltr;
   font-size: 11px;
 }
@@ -421,7 +420,7 @@ checkbox:-moz-focusring {
 }
 
 .devtools-option-toolbarbutton {
-  list-style-image: url("chrome://devtools/skin/images/tool-options.svg");
+  list-style-image: url("chrome://devtools/skin/images/settings.svg");
 }
 
 .devtools-toolbarbutton-group > .devtools-toolbarbutton:last-child {
@@ -770,7 +769,7 @@ checkbox:-moz-focusring {
   background-repeat: no-repeat;
   background-position: center;
   -moz-context-properties: fill;
-  fill: var(--theme-toolbar-photon-icon-color);
+  fill: var(--theme-toolbar-icon-color);
 }
 
 .all-tabs-menu:hover {

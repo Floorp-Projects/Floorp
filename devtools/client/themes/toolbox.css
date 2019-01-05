@@ -3,30 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-:root {
-  --close-button-image: url(chrome://devtools/skin/images/close.svg);
-  --dock-bottom-image: url(chrome://devtools/skin/images/dock-bottom.svg);
-  --dock-side-right-image: url(chrome://devtools/skin/images/dock-side-right.svg);
-  --dock-side-left-image: url(chrome://devtools/skin/images/dock-side-left.svg);
-  --dock-undock-image: url(chrome://devtools/skin/images/dock-undock.svg);
-  --more-button-image: url(chrome://devtools/skin/images/more.svg);
-  --settings-image: url(chrome://devtools/skin/images/tool-options-photon.svg);
-
-  --command-noautohide-image: url(images/command-noautohide.svg);
-  --command-console-image: url(images/command-console.svg);
-  --command-paintflashing-image: url(images/command-paintflashing.svg);
-  --command-screenshot-image: url(images/command-screenshot.svg);
-  --command-responsive-image: url(images/command-responsivemode.svg);
-  --command-replay-image: url(images/command-replay.svg);
-  --command-scratchpad-image: url(images/tool-scratchpad.svg);
-  --command-pick-image: url(images/command-pick.svg);
-  --command-pick-accessibility-image: url(images/command-pick-accessibility.svg);
-  --command-frames-image: url(images/command-frames.svg);
-  --command-rulers-image: url(images/command-rulers.svg);
-  --command-measure-image: url(images/command-measure.svg);
-  --command-chevron-image: url(images/command-chevron.svg);
-}
-
 /*
  *  Debug Target Info layout
  *  +------+-------------------+------------------+
@@ -126,6 +102,7 @@
   position: relative;
   display: flex;
   align-items: center;
+  flex-shrink: 0;
   min-height: 24px;
   margin: 0;
   padding: 0;
@@ -133,15 +110,15 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  color: var(--theme-toolbar-color);
   background-color: transparent;
-  flex-shrink: 0;
 }
 
 .devtools-tab-label {
   font-size: 12px;
   mask-image: linear-gradient(to left, transparent 0, black 6px);
   /* Set the end padding on the label to make sure the label gets faded out properly */
-  padding-inline-end: 10px;
+  padding-inline-end: 8px;
   min-width: 1px;
 }
 
@@ -153,15 +130,11 @@
   color: var(--theme-highlight-blue);
   font-size: 80%;
   font-weight: 500;
-  margin-inline-start: 5px;
+  margin-inline-start: 4px;
 }
 
 .devtools-tab-icon-only {
-  min-width: 24px;
-}
-
-.devtools-tab {
-  color: var(--theme-toolbar-color);
+  min-width: 26px;
 }
 
 .devtools-tab:hover,
@@ -185,22 +158,14 @@
 .devtools-tab > img {
   border: none;
   margin: 0;
-  margin-inline-start: 10px;
-  margin-inline-end: 5px;
-  max-height: 16px;
-  width: 16px; /* Prevents collapse during theme switching */
+  margin-inline-start: 8px;
+  margin-inline-end: 6px;
+  height: 16px;
+  width: 16px;
   vertical-align: text-top;
   flex-shrink: 0;
-}
-
-.devtools-tab > label {
-  white-space: nowrap;
-  margin: 0 4px;
-}
-
-.devtools-tab > img {
   -moz-context-properties: fill;
-  fill: var(--theme-toolbar-color);
+  fill: var(--theme-toolbar-icon-color);
 }
 
 .devtools-tab.selected > img {
@@ -211,28 +176,20 @@
   fill: var(--theme-toolbar-highlighted-color);
 }
 
-#devtools-chevron-menu-button::before {
-  -moz-context-properties: fill;
-  fill: var(--theme-toolbar-photon-icon-color);
-}
-
 /* Toolbox controls */
 
 #tools-chevron-menu-button::before {
-  top: 0;
-  inset-inline-end: 0;
-  background-image: var(--command-chevron-image);
-  background-position: center;
+  background-image: url("chrome://devtools/skin/images/command-chevron.svg");
 }
 
-.tools-chevron-menu:-moz-locale-dir(rtl) {
+#tools-chevron-menu-button:-moz-locale-dir(rtl)::before {
   transform: rotate(180deg);
 }
 
 /* On OSX the cursor turns into a window-resizing cursor at the edges of the
  * window, so bring the end of the toolbox in. */
 :root[platform="mac"] #toolbox-controls {
-  margin-inline-end: 3px;
+  margin-inline-end: 2px;
 }
 
 #toolbox-buttons-start > .devtools-separator {
@@ -243,44 +200,40 @@
   --separator-inline-margin: 5px;
 }
 
-#toolbox-close {
-  min-width: 24px;
-}
-
 #toolbox-close::before {
-  fill: var(--theme-toolbar-photon-icon-color);
-  background-image: var(--close-button-image);
-}
-
-#toolbox-meatball-menu-button {
-  min-width: 24px;
+  background-image: url("chrome://devtools/skin/images/close.svg");
 }
 
 #toolbox-meatball-menu-button::before {
-  fill: var(--theme-toolbar-photon-icon-color);
-  background-image: var(--more-button-image);
+  background-image: url("chrome://devtools/skin/images/more.svg");
 }
 
-#toolbox-meatball-menu-dock-bottom > .label::before {
-  --menuitem-icon-image: var(--dock-bottom-image);
+#toolbox-meatball-menu-dock-bottom {
+  --menuitem-icon-image: url("chrome://devtools/skin/images/dock-bottom.svg");
 }
-#toolbox-meatball-menu-dock-left > .label::before {
-  --menuitem-icon-image: var(--dock-side-left-image);
+
+#toolbox-meatball-menu-dock-left {
+  --menuitem-icon-image: url("chrome://devtools/skin/images/dock-side-left.svg");
 }
-#toolbox-meatball-menu-dock-right > .label::before {
-  --menuitem-icon-image: var(--dock-side-right-image);
+
+#toolbox-meatball-menu-dock-right {
+  --menuitem-icon-image: url("chrome://devtools/skin/images/dock-side-right.svg");
 }
-#toolbox-meatball-menu-dock-window > .label::before {
-  --menuitem-icon-image: var(--dock-undock-image);
+
+#toolbox-meatball-menu-dock-window {
+  --menuitem-icon-image: url("chrome://devtools/skin/images/dock-undock.svg");
 }
-#toolbox-meatball-menu-splitconsole > .label::before {
-  --menuitem-icon-image: var(--command-console-image);
+
+#toolbox-meatball-menu-splitconsole {
+  --menuitem-icon-image: url("chrome://devtools/skin/images/command-console.svg");
 }
-#toolbox-meatball-menu-noautohide > .label::before {
-  --menuitem-icon-image: var(--command-noautohide-image);
+
+#toolbox-meatball-menu-noautohide {
+  --menuitem-icon-image: url("chrome://devtools/skin/images/command-noautohide.svg");
 }
-#toolbox-meatball-menu-settings > .label::before {
-  --menuitem-icon-image: var(--settings-image);
+
+#toolbox-meatball-menu-settings {
+  --menuitem-icon-image: url("chrome://devtools/skin/images/settings.svg");
 }
 
 /* Command buttons */
@@ -294,7 +247,7 @@
   border: none !important;
   border-radius: 0 !important;
   position: relative;
-  min-width: 24px;
+  min-width: 26px;
 }
 
 #command-button-pick {
@@ -302,51 +255,40 @@
 }
 
 #command-button-pick::before {
-  background-image: var(--command-pick-image);
-  -moz-context-properties: fill, stroke;
-  fill: var(--theme-toolbar-photon-icon-color);
-  stroke: none;
-}
-
-#command-button-pick.checked::before {
-  fill: var(--theme-toolbar-checked-color);
-  stroke: var(--theme-toolbar-checked-color);
+  background-image: url("chrome://devtools/skin/images/command-pick.svg");
 }
 
 #command-button-pick.accessibility::before {
-  background-image: var(--command-pick-accessibility-image);
+  background-image: url("chrome://devtools/skin/images/command-pick-accessibility.svg");
 }
 
 /* Command button images */
 
 #command-button-paintflashing::before {
-  background-image: var(--command-paintflashing-image);
+  background-image: url("chrome://devtools/skin/images/command-paintflashing.svg");
 }
 
 #command-button-screenshot::before {
-  background-image: var(--command-screenshot-image);
+  background-image: url("chrome://devtools/skin/images/command-screenshot.svg");
 }
 
 #command-button-responsive::before {
-  background-image: var(--command-responsive-image);
-  -moz-context-properties: fill, stroke;
-  fill: var(--theme-toolbar-photon-icon-color);
-  stroke: none;
+  background-image: url("chrome://devtools/skin/images/command-responsivemode.svg");
+  -moz-context-properties: fill, fill-opacity;
+  fill-opacity: 0;
 }
 
 #command-button-responsive.checked::before {
-  fill: var(--theme-toolbar-checked-color);
-  stroke: var(--theme-toolbar-checked-color);
+  fill-opacity: 0.15;
+}
+
+.theme-dark #command-button-responsive.checked::before {
+  fill-opacity: 0.25;
 }
 
 #command-button-stop-replay::before,
 #command-button-replay::before {
-  background-image: var(--command-replay-image);
-  fill: var(--theme-toolbar-photon-icon-color);
-  -moz-context-properties: fill;
-  background-repeat: no-repeat;
-  height: 16px;
-  background-size: contain;
+  background-image: url("chrome://devtools/skin/images/command-replay.svg");
 }
 
 #command-button-replay,
@@ -359,36 +301,30 @@
   background: var(--toolbarbutton-background);
 }
 
-#command-button-stop-replay::before {
-  fill: currentColor;
-}
-
 #command-button-scratchpad::before {
-  background-image: var(--command-scratchpad-image);
-}
-
-#command-button-eyedropper::before {
-  background-image: var(--command-eyedropper-image);
+  background-image: url("chrome://devtools/skin/images/tool-scratchpad.svg");
 }
 
 #command-button-rulers::before {
-  background-image: var(--command-rulers-image);
+  background-image: url("chrome://devtools/skin/images/command-rulers.svg");
 }
 
 #command-button-measure::before {
-  background-image: var(--command-measure-image);
+  background-image: url("chrome://devtools/skin/images/command-measure.svg");
 }
 
 #command-button-frames::before {
-  background-image: var(--command-frames-image);
-  -moz-context-properties: fill, stroke;
-  fill: var(--theme-toolbar-photon-icon-color);
-  stroke: none;
+  background-image: url("chrome://devtools/skin/images/command-frames.svg");
+  -moz-context-properties: fill, fill-opacity;
+  fill-opacity: 0;
 }
 
 #command-button-frames.checked::before {
-  fill: var(--theme-toolbar-checked-color);
-  stroke: var(--theme-toolbar-checked-color);
+  fill-opacity: 0.15;
+}
+
+.theme-dark #command-button-frames.checked::before {
+  fill-opacity: 0.25;
 }
 
 /* Tooltip of frames menu  */

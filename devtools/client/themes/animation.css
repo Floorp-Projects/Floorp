@@ -7,7 +7,6 @@
 :root {
   --animation-item-hover-color: var(--grey-30-a40);
   --animation-item-selected-color: var(--grey-30-a90);
-  --command-pick-image: url(chrome://devtools/skin/images/command-pick.svg);
   --cssanimation-color: var(--purple-50);
   --csstransition-color: var(--blue-55);
   --devtools-toolbar-height: 24px;
@@ -396,7 +395,7 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
 /* On OSX the cursor turns into a window-resizing cursor at the edges of the
  * window, so bring the end of the close button in. */
 :root[platform="mac"] .animation-detail-header {
-  padding-inline-end: 3px;
+  padding-inline-end: 2px;
 }
 
 .animation-detail-title {
@@ -411,7 +410,6 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
 }
 
 .animation-detail-close-button::before {
-  fill: var(--theme-toolbar-photon-icon-color);
   background-image: url(chrome://devtools/skin/images/close.svg);
 }
 
@@ -697,5 +695,5 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
 }
 
 .animation-element-picker::before {
-  background-image: var(--command-pick-image);
+  background-image: url("chrome://devtools/skin/images/command-pick.svg");
 }

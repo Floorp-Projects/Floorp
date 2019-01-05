@@ -205,7 +205,8 @@ class ToolboxToolbar extends Component {
           disabled,
           className: (
             "command-button devtools-button "
-            + buttonClass + (isChecked ? " checked" : "")
+            + (buttonClass || "")
+            + (isChecked ? " checked" : "")
           ),
           onClick: (event) => {
             onClick(event);
