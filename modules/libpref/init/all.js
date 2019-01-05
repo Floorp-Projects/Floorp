@@ -5342,10 +5342,11 @@ pref("dom.vr.external.quit.timeout", 10000);
 // result in a non-responsive browser in the VR headset.
 pref("dom.vr.navigation.timeout", 5000);
 // Oculus device
-#if defined(HAVE_64BIT_BUILD)
+#if defined(HAVE_64BIT_BUILD) && !defined(ANDROID)
 // We are only enabling WebVR by default on 64-bit builds (Bug 1384459)
 pref("dom.vr.oculus.enabled", true);
 #else
+// On Android, this pref is irrelevant.
 pref("dom.vr.oculus.enabled", false);
 #endif
 // Minimum number of milliseconds after content has stopped VR presentation
@@ -5374,14 +5375,14 @@ pref("dom.vr.oculus.invisible.enabled", true);
 // OSVR device
 pref("dom.vr.osvr.enabled", false);
 // OpenVR device
-#if !defined(HAVE_64BIT_BUILD)
-// We are only enabling WebVR by default on 64-bit builds (Bug 1384459)
+#if !defined(HAVE_64BIT_BUILD) && !defined(ANDROID)
+// We are only enabling WebVR by default on 64-bit builds (Bug 1384459).
 pref("dom.vr.openvr.enabled", false);
 #elif defined(XP_WIN) || defined(XP_MACOSX)
 // We enable OpenVR by default for Windows and macOS
 pref("dom.vr.openvr.enabled", true);
 #else
-// See Bug 1310663 (Linux)
+// See Bug 1310663 (Linux).  On Android, this pref is irrelevant.
 pref("dom.vr.openvr.enabled", false);
 #endif
 #ifdef RELEASE_OR_BETA
