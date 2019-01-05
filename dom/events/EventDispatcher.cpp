@@ -185,12 +185,12 @@ class EventTargetChainItem {
     return nullptr;
   }
 
-  bool IsValid() {
+  bool IsValid() const {
     NS_WARNING_ASSERTION(!!(mTarget), "Event target is not valid!");
     return !!(mTarget);
   }
 
-  EventTarget* GetNewTarget() { return mNewTarget; }
+  EventTarget* GetNewTarget() const { return mNewTarget; }
 
   void SetNewTarget(EventTarget* aNewTarget) { mNewTarget = aNewTarget; }
 
@@ -205,7 +205,7 @@ class EventTargetChainItem {
     mRetargetedTouchTargets = std::move(aTargets);
   }
 
-  bool HasRetargetTouchTargets() {
+  bool HasRetargetTouchTargets() const {
     return mRetargetedTouchTargets.isSome() || mInitialTargetTouches.isSome();
   }
 
@@ -253,41 +253,41 @@ class EventTargetChainItem {
     mFlags.mForceContentDispatch = aForce;
   }
 
-  bool ForceContentDispatch() { return mFlags.mForceContentDispatch; }
+  bool ForceContentDispatch() const { return mFlags.mForceContentDispatch; }
 
   void SetWantsWillHandleEvent(bool aWants) {
     mFlags.mWantsWillHandleEvent = aWants;
   }
 
-  bool WantsWillHandleEvent() { return mFlags.mWantsWillHandleEvent; }
+  bool WantsWillHandleEvent() const { return mFlags.mWantsWillHandleEvent; }
 
   void SetWantsPreHandleEvent(bool aWants) {
     mFlags.mWantsPreHandleEvent = aWants;
   }
 
-  bool WantsPreHandleEvent() { return mFlags.mWantsPreHandleEvent; }
+  bool WantsPreHandleEvent() const { return mFlags.mWantsPreHandleEvent; }
 
   void SetPreHandleEventOnly(bool aWants) {
     mFlags.mPreHandleEventOnly = aWants;
   }
 
-  bool PreHandleEventOnly() { return mFlags.mPreHandleEventOnly; }
+  bool PreHandleEventOnly() const { return mFlags.mPreHandleEventOnly; }
 
   void SetRootOfClosedTree(bool aSet) { mFlags.mRootOfClosedTree = aSet; }
 
-  bool IsRootOfClosedTree() { return mFlags.mRootOfClosedTree; }
+  bool IsRootOfClosedTree() const { return mFlags.mRootOfClosedTree; }
 
   void SetItemInShadowTree(bool aSet) { mFlags.mItemInShadowTree = aSet; }
 
-  bool IsItemInShadowTree() { return mFlags.mItemInShadowTree; }
+  bool IsItemInShadowTree() const { return mFlags.mItemInShadowTree; }
 
   void SetIsSlotInClosedTree(bool aSet) { mFlags.mIsSlotInClosedTree = aSet; }
 
-  bool IsSlotInClosedTree() { return mFlags.mIsSlotInClosedTree; }
+  bool IsSlotInClosedTree() const { return mFlags.mIsSlotInClosedTree; }
 
   void SetIsChromeHandler(bool aSet) { mFlags.mIsChromeHandler = aSet; }
 
-  bool IsChromeHandler() { return mFlags.mIsChromeHandler; }
+  bool IsChromeHandler() const { return mFlags.mIsChromeHandler; }
 
   void SetMayHaveListenerManager(bool aMayHave) {
     mFlags.mMayHaveManager = aMayHave;
@@ -295,7 +295,7 @@ class EventTargetChainItem {
 
   bool MayHaveListenerManager() { return mFlags.mMayHaveManager; }
 
-  EventTarget* CurrentTarget() { return mTarget; }
+  EventTarget* CurrentTarget() const { return mTarget; }
 
   /**
    * Dispatches event through the event target chain.
@@ -1291,9 +1291,41 @@ static bool ShouldClearTargets(WidgetEvent* aEvent) {
   return nullptr;
 }
 
-// static
+struct CurrentTargetPathInfo {
+  uint32_t mIndex;
+  int32_t mHiddenSubtreeLevel;
+};
+
+static CurrentTargetPathInfo TargetPathInfo(
+    const nsTArray<EventTargetChainItem>& aEventPath,
+    const EventTarget& aCurrentTarget) {
+  int32_t currentTargetHiddenSubtreeLevel = 0;
+  for (uint32_t index = aEventPath.Length(); index--;) {
+    const EventTargetChainItem& item = aEventPath.ElementAt(index);
+    if (item.PreHandleEventOnly()) {
+      continue;
+    }
+
+    if (item.IsRootOfClosedTree()) {
+      currentTargetHiddenSubtreeLevel++;
+    }
+
+    if (item.CurrentTarget() == &aCurrentTarget) {
+      return {index, currentTargetHiddenSubtreeLevel};
+    }
+
+    if (item.IsSlotInClosedTree()) {
+      currentTargetHiddenSubtreeLevel--;
+    }
+  }
+  MOZ_ASSERT_UNREACHABLE("No target found?");
+  return {0, 0};
+}
+
+// https://dom.spec.whatwg.org/#dom-event-composedpath
 void EventDispatcher::GetComposedPathFor(WidgetEvent* aEvent,
                                          nsTArray<RefPtr<EventTarget>>& aPath) {
+  MOZ_ASSERT(aPath.IsEmpty());
   nsTArray<EventTargetChainItem>* path = aEvent->mPath;
   if (!path || path->IsEmpty() || !aEvent->mCurrentTarget) {
     return;
@@ -1305,47 +1337,68 @@ void EventDispatcher::GetComposedPathFor(WidgetEvent* aEvent,
     return;
   }
 
-  AutoTArray<EventTarget*, 128> reversedComposedPath;
-  bool hasSeenCurrentTarget = false;
-  uint32_t hiddenSubtreeLevel = 0;
-  for (uint32_t i = path->Length(); i;) {
-    --i;
+  CurrentTargetPathInfo currentTargetInfo =
+      TargetPathInfo(*path, *currentTarget);
 
-    EventTargetChainItem& item = path->ElementAt(i);
-    if (item.PreHandleEventOnly()) {
-      continue;
-    }
+  {
+    int32_t maxHiddenLevel = currentTargetInfo.mHiddenSubtreeLevel;
+    int32_t currentHiddenLevel = currentTargetInfo.mHiddenSubtreeLevel;
+    for (uint32_t index = currentTargetInfo.mIndex; index--;) {
+      EventTargetChainItem& item = path->ElementAt(index);
+      if (item.PreHandleEventOnly()) {
+        continue;
+      }
 
-    if (!hasSeenCurrentTarget && currentTarget == item.CurrentTarget()) {
-      hasSeenCurrentTarget = true;
-    } else if (hasSeenCurrentTarget && item.IsRootOfClosedTree()) {
-      ++hiddenSubtreeLevel;
-    }
+      if (item.IsRootOfClosedTree()) {
+        currentHiddenLevel++;
+      }
 
-    if (hiddenSubtreeLevel == 0) {
-      reversedComposedPath.AppendElement(item.CurrentTarget());
-    }
+      if (currentHiddenLevel <= maxHiddenLevel) {
+        aPath.AppendElement(item.CurrentTarget()->GetTargetForDOMEvent());
+      }
 
-    if (item.IsSlotInClosedTree() && hiddenSubtreeLevel > 0) {
-      --hiddenSubtreeLevel;
-    }
-
-    if (item.IsChromeHandler()) {
-      if (hasSeenCurrentTarget) {
-        // The current behavior is to include only EventTargets from
-        // either chrome side of event path or content side, not from both.
+      if (item.IsChromeHandler()) {
         break;
       }
 
-      // Need to start all over to collect the composed path on content side.
-      reversedComposedPath.Clear();
+      if (item.IsSlotInClosedTree()) {
+        currentHiddenLevel--;
+        maxHiddenLevel = std::min(maxHiddenLevel, currentHiddenLevel);
+      }
     }
+
+    aPath.Reverse();
   }
 
-  aPath.SetCapacity(reversedComposedPath.Length());
-  for (uint32_t i = reversedComposedPath.Length(); i;) {
-    --i;
-    aPath.AppendElement(reversedComposedPath[i]->GetTargetForDOMEvent());
+  aPath.AppendElement(currentTarget->GetTargetForDOMEvent());
+
+  {
+    int32_t maxHiddenLevel = currentTargetInfo.mHiddenSubtreeLevel;
+    int32_t currentHiddenLevel = currentTargetInfo.mHiddenSubtreeLevel;
+    for (uint32_t index = currentTargetInfo.mIndex + 1; index < path->Length();
+         ++index) {
+      EventTargetChainItem& item = path->ElementAt(index);
+      if (item.PreHandleEventOnly()) {
+        continue;
+      }
+
+      if (item.IsSlotInClosedTree()) {
+        currentHiddenLevel++;
+      }
+
+      if (item.IsChromeHandler()) {
+        break;
+      }
+
+      if (currentHiddenLevel <= maxHiddenLevel) {
+        aPath.AppendElement(item.CurrentTarget()->GetTargetForDOMEvent());
+      }
+
+      if (item.IsRootOfClosedTree()) {
+        currentHiddenLevel--;
+        maxHiddenLevel = std::min(maxHiddenLevel, currentHiddenLevel);
+      }
+    }
   }
 }
 

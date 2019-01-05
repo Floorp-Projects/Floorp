@@ -1,0 +1,14 @@
+<script>
+function eh1() {
+  a.remove()
+  window.event.composedPath()
+}
+function eh2() {
+  b.addEventListener("DOMNodeInserted", eh1)
+  c.insertAdjacentElement("afterBegin", document.createElement("s"))
+}
+</script>
+<image srcset="A" onerror="eh2()"></image>
+<marquee id="a">
+<time id="b">
+<dialog id="c">AA</dialog>
