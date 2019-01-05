@@ -47,7 +47,7 @@ Tools.options = {
   id: "options",
   ordinal: 0,
   url: "chrome://devtools/content/framework/toolbox-options.xhtml",
-  icon: "chrome://devtools/skin/images/tool-options.svg",
+  icon: "chrome://devtools/skin/images/settings.svg",
   bgTheme: "theme-body",
   label: l10n("options.label"),
   iconOnly: true,

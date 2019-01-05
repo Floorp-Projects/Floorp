@@ -18,7 +18,7 @@
 }
 
 .theme-dark {
-  --console-input-icon-color: var(--grey-60);
+  --console-input-icon-color: rgba(249, 249, 250, 0.4);
   --console-input-icon-focused: var(--blue-30);
   --console-output-icon-medium-color: var(--grey-50);
   --console-output-icon-strong-color: var(--grey-30);
@@ -34,7 +34,7 @@
 }
 
 .theme-light {
-  --console-input-icon-color: var(--grey-40);
+  --console-input-icon-color: rgb(12, 12, 13, 0.4);
   --console-input-icon-focused: var(--blue-55);
   --console-output-icon-medium-color: var(--grey-40);
   --console-output-icon-strong-color: var(--grey-60);
@@ -589,13 +589,16 @@ a.learn-more-link.webconsole-learn-more-link {
  * window, so bring the end of the close button in. */
 :root[platform="mac"] .split-console-close-button-wrapper,
 :root[platform="mac"] .webconsole-sidebar-toolbar {
-  padding-inline-end: 3px;
+  padding-inline-end: 2px;
 }
 
 #split-console-close-button {
-  margin-inline-end: 0;
   height: 100%;
   margin: 0;
+}
+
+#split-console-close-button::before {
+  background-image: url(chrome://devtools/skin/images/close.svg);
 }
 
 .webconsole-filterbar-primary .devtools-plaininput {
@@ -1021,15 +1024,9 @@ body {
 }
 
 .sidebar-close-button::before {
-  fill: var(--theme-toolbar-photon-icon-color);
   background-image: url(chrome://devtools/skin/images/close.svg);
 }
 
 .sidebar-contents .object-inspector {
   min-width: 100%;
-}
-
-#split-console-close-button::before {
-  fill: var(--theme-toolbar-photon-icon-color);
-  background-image: url(chrome://devtools/skin/images/close.svg);
 }

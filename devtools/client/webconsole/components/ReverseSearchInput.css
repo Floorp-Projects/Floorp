@@ -71,7 +71,7 @@
 
 .reverse-search-close-button::before {
   fill: var(--comment-node-color);
-  background-image: var(--close-button-image);
+  background-image: url("chrome://devtools/skin/images/close.svg");
 }
 
 .reverse-search.no-result input {

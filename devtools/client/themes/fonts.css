@@ -293,7 +293,7 @@
   background-image: url(chrome://devtools/skin/images/select-arrow.svg);
   background-repeat: no-repeat;
   background-position: right 4px center;
-  fill: var(--theme-toolbar-photon-icon-color);
+  fill: var(--theme-toolbar-icon-color);
   -moz-context-properties: fill;
   -moz-appearance: none;
   box-shadow: none;

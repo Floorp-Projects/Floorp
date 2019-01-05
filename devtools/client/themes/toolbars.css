@@ -190,7 +190,7 @@
 #toggle-breakpoints[checked] > image,
 .event-tooltip-debugger-icon {
   -moz-context-properties: fill;
-  fill: var(--theme-toolbar-color);
+  fill: var(--theme-toolbar-icon-color);
 }
 
 .hidden-labels-box:not(.visible) > label,
@@ -217,7 +217,7 @@ splitter.devtools-horizontal-splitter,
   overflow: hidden;
   padding-inline-start: 2px !important;
   padding-inline-end: 10px !important;
-  fill: var(--theme-toolbar-photon-icon-color);
+  fill: var(--theme-toolbar-icon-color);
   -moz-context-properties: fill;
 }
 

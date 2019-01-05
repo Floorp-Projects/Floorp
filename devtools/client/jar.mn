@@ -194,8 +194,6 @@ devtools.jar:
     skin/images/folder.svg (themes/images/folder.svg)
     skin/images/sad-face.svg (themes/images/sad-face.svg)
     skin/images/shape-swatch.svg (themes/images/shape-swatch.svg)
-    skin/images/tool-options.svg (themes/images/tool-options.svg)
-    skin/images/tool-options-photon.svg (themes/images/tool-options-photon.svg)
     skin/images/tool-webconsole.svg (themes/images/tool-webconsole.svg)
     skin/images/tool-canvas.svg (themes/images/tool-canvas.svg)
     skin/images/tool-debugger.svg (themes/images/tool-debugger.svg)

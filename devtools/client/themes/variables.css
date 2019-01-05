@@ -23,7 +23,7 @@
   --theme-tab-toolbar-background: var(--grey-10);
   --theme-toolbar-background: var(--grey-10);
   --theme-toolbar-color: var(--grey-90);
-  --theme-toolbar-photon-icon-color: var(--grey-90-a80);
+  --theme-toolbar-icon-color: var(--grey-90-a80);
   --theme-toolbar-selected-color: var(--blue-60);
   --theme-toolbar-checked-color: var(--blue-60);
   --theme-toolbar-highlighted-color: var(--green-60);
@@ -95,8 +95,6 @@
   --theme-popup-color: -moz-fieldText;
   --theme-popup-border-color: ThreeDShadow;
   --theme-popup-dimmed: hsla(0,0%,80%,.3);
-
-  --theme-messageCloseButtonFilter: invert(0);
 }
 
 /*
@@ -118,7 +116,7 @@
   --theme-tab-toolbar-background: var(--grey-90);
   --theme-toolbar-background: var(--grey-85);
   --theme-toolbar-color: var(--grey-40);
-  --theme-toolbar-photon-icon-color: var(--grey-40);
+  --theme-toolbar-icon-color: var(--grey-40);
   --theme-toolbar-selected-color: white;
   --theme-toolbar-checked-color: #75BFFF;
   --theme-toolbar-highlighted-color: var(--green-50);
@@ -190,8 +188,6 @@
   --theme-popup-color: rgb(249,249,250);
   --theme-popup-border-color: #27272b;
   --theme-popup-dimmed: rgba(249,249,250,.1);
-
-  --theme-messageCloseButtonFilter: invert(1);
 }
 
 :root {
