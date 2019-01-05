@@ -36,43 +36,53 @@ use util::{extract_inner_rect_safe, project_rect, ScaleOffset};
  ClipItem - A single clip item (e.g. a rounded rect, or a box shadow).
             These are an exposed API type, stored inline in a ClipNode.
 
- ClipNode - A ClipItem with attached positioning information (a spatial node index).
-            Stored as a contiguous array of nodes within the ClipStore.
+ ClipNode - A ClipItem with an attached GPU handle. The GPU handle is populated
+            when a ClipNodeInstance is built from this node (which happens while
+            preparing primitives for render).
 
+ ClipNodeInstance - A ClipNode with attached positioning information (a spatial
+                    node index). This is stored as a contiguous array of nodes
+                    within the ClipStore.
+
+    +-----------------------+-----------------------+-----------------------+
+    | ClipNodeInstance      | ClipNodeInstance      | ClipNodeInstance      |
     +-----------------------+-----------------------+-----------------------+
     | ClipItem              | ClipItem              | ClipItem              |
     | Spatial Node Index    | Spatial Node Index    | Spatial Node Index    |
     | GPU cache handle      | GPU cache handle      | GPU cache handle      |
+    | ...                   | ...                   | ...                   |
     +-----------------------+-----------------------+-----------------------+
                0                        1                       2
 
        +----------------+    |                                              |
-       | ClipItemRange  |____|                                              |
+       | ClipNodeRange  |____|                                              |
        |    index: 1    |                                                   |
        |    count: 2    |___________________________________________________|
        +----------------+
 
- ClipItemRange - A clip item range identifies a range of clip nodes. It is stored
-                 as an (index, count).
+ ClipNodeRange - A clip item range identifies a range of clip nodes instances.
+                 It is stored as an (index, count).
 
- ClipChain - A clip chain node contains a range of ClipNodes (a ClipItemRange)
-             and a parent link to an optional ClipChain. Both legacy hierchical clip
-             chains and user defined API clip chains use the same data structure.
-             ClipChainId is an index into an array, or ClipChainId::NONE for no parent.
+ ClipChainNode - A clip chain node contains a handle to an interned clip item,
+                 positioning information (from where the clip was defined), and
+                 an optional parent link to another ClipChainNode. ClipChainId
+                 is an index into an array, or ClipChainId::NONE for no parent.
 
-    +----------------+    ____+----------------+    ____+----------------+    ____+----------------+
-    | ClipChain      |   |    | ClipChain      |   |    | ClipChain      |   |    | ClipChain      |
-    +----------------+   |    +----------------+   |    +----------------+   |    +----------------+
-    | ClipItemRange  |   |    | ClipItemRange  |   |    | ClipItemRange  |   |    | ClipItemRange  |
-    | Parent Id      |___|    | Parent Id      |___|    | Parent Id      |___|    | Parent Id      |
-    +----------------+        +----------------+        +----------------+        +----------------+
+    +----------------+    ____+----------------+    ____+----------------+   /---> ClipChainId::NONE
+    | ClipChainNode  |   |    | ClipChainNode  |   |    | ClipChainNode  |   |
+    +----------------+   |    +----------------+   |    +----------------+   |
+    | ClipDataHandle |   |    | ClipDataHandle |   |    | ClipDataHandle |   |
+    | Spatial index  |   |    | Spatial index  |   |    | Spatial index  |   |
+    | Parent Id      |___|    | Parent Id      |___|    | Parent Id      |___|
+    | ...            |        | ...            |        | ...            |
+    +----------------+        +----------------+        +----------------+
 
  ClipChainInstance - A ClipChain that has been built for a specific primitive + positioning node.
 
-    When given a clip chain ID, and a local primitive rect + spatial node, the clip module
+    When given a clip chain ID, and a local primitive rect and its spatial node, the clip module
     creates a clip chain instance. This is a struct with various pieces of useful information
-    (such as a local clip rect and affected local bounding rect). It also contains a (index, count)
-    range specifier into an index buffer of the ClipNode structures that are actually relevant
+    (such as a local clip rect). It also contains a (index, count)
+    range specifier into an index buffer of the ClipNodeInstance structures that are actually relevant
     for this clip chain instance. The index buffer structure allows a single array to be used for
     all of the clip-chain instances built in a single frame. Each entry in the index buffer
     also stores some flags relevant to the clip node in this positioning context.
@@ -80,8 +90,8 @@ use util::{extract_inner_rect_safe, project_rect, ScaleOffset};
     +----------------------+
     | ClipChainInstance    |
     +----------------------+
-    | local_clip_rect      |
-    | local_bounding_rect  |________________________________________________________________________
+    | ...                  |
+    | local_clip_rect      |________________________________________________________________________
     | clips_range          |_______________                                                        |
     +----------------------+              |                                                        |
                                           |                                                        |
@@ -89,7 +99,7 @@ use util::{extract_inner_rect_safe, project_rect, ScaleOffset};
     | ClipNodeInstance | ClipNodeInstance | ClipNodeInstance | ClipNodeInstance | ClipNodeInstance |
     +------------------+------------------+------------------+------------------+------------------+
     | flags            | flags            | flags            | flags            | flags            |
-    | ClipNodeIndex    | ClipNodeIndex    | ClipNodeIndex    | ClipNodeIndex    | ClipNodeIndex    |
+    | ...              | ...              | ...              | ...              | ...              |
     +------------------+------------------+------------------+------------------+------------------+
 
  */
@@ -205,12 +215,6 @@ pub struct ClipChainNode {
     pub spatial_node_index: SpatialNodeIndex,
     pub parent_clip_chain_id: ClipChainId,
 }
-
-// An index into the clip_nodes array.
-#[derive(Clone, Copy, Debug, PartialEq, Hash, Eq)]
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
-pub struct ClipNodeIndex(pub u32);
 
 // When a clip node is found to be valid for a
 // clip chain instance, it's stored in an index
