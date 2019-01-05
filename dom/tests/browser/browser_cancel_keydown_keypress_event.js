@@ -6,7 +6,7 @@ function awaitAndCloseAlertDialog() {
   return new Promise(resolve => {
     function onDialogShown(node) {
       Services.obs.removeObserver(onDialogShown, "tabmodal-dialog-loaded");
-      let button = node.ui.button0;
+      let button = node.querySelector(".tabmodalprompt-button0");
       button.click();
       resolve();
     }

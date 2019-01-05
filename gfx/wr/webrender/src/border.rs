@@ -44,17 +44,6 @@ pub struct BorderRadiusAu {
     pub bottom_right: LayoutSizeAu,
 }
 
-impl BorderRadiusAu {
-    pub fn zero() -> Self {
-        BorderRadiusAu {
-            top_left: LayoutSizeAu::zero(),
-            top_right: LayoutSizeAu::zero(),
-            bottom_left: LayoutSizeAu::zero(),
-            bottom_right: LayoutSizeAu::zero(),
-        }
-    }
-}
-
 impl From<BorderRadius> for BorderRadiusAu {
     fn from(radius: BorderRadius) -> BorderRadiusAu {
         BorderRadiusAu {

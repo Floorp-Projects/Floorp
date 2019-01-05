@@ -274,9 +274,10 @@ browser.Context = class {
 
     // The modal is a direct sibling of the browser element.
     // See tabbrowser.xml's getTabModalPromptBox.
-    let modals = br.parentNode.getElementsByTagNameNS(
+    let modalElements = br.parentNode.getElementsByTagNameNS(
         XUL_NS, "tabmodalprompt");
-    return modals[0].ui;
+
+    return br.tabModalPromptBox.prompts.get(modalElements[0]).ui;
   }
 
   /**

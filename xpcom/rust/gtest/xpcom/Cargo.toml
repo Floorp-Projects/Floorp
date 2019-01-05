@@ -8,7 +8,7 @@ description = "Tests for rust bindings to xpcom interfaces"
 [dependencies]
 xpcom = { path = "../../xpcom" }
 nserror = { path = "../../nserror" }
-nsstring = { path = "../../../../servo/support/gecko/nsstring" }
+nsstring = { path = "../../nsstring" }
 
 [lib]
 path = "test.rs"
