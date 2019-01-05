@@ -17,6 +17,8 @@ namespace net {
 
 namespace {
 
+#define TRACKING_PROTECTION_FEATURE_NAME "tracking-protection"
+
 #define URLCLASSIFIER_TRACKING_BLACKLIST "urlclassifier.trackingTable"
 #define URLCLASSIFIER_TRACKING_BLACKLIST_TEST_ENTRIES \
   "urlclassifier.trackingTable.testEntries"
@@ -32,7 +34,7 @@ StaticRefPtr<UrlClassifierFeatureTrackingProtection> gFeatureTrackingProtection;
 
 UrlClassifierFeatureTrackingProtection::UrlClassifierFeatureTrackingProtection()
     : UrlClassifierFeatureBase(
-          NS_LITERAL_CSTRING("tracking-protection"),
+          NS_LITERAL_CSTRING(TRACKING_PROTECTION_FEATURE_NAME),
           NS_LITERAL_CSTRING(URLCLASSIFIER_TRACKING_BLACKLIST),
           NS_LITERAL_CSTRING(URLCLASSIFIER_TRACKING_WHITELIST),
           NS_LITERAL_CSTRING(URLCLASSIFIER_TRACKING_BLACKLIST_TEST_ENTRIES),
@@ -95,6 +97,20 @@ UrlClassifierFeatureTrackingProtection::MaybeCreate(nsIChannel* aChannel) {
 
   if (!UrlClassifierCommon::ShouldEnableTrackingProtectionOrAnnotation(
           aChannel, AntiTrackingCommon::eTrackingProtection)) {
+    return nullptr;
+  }
+
+  RefPtr<UrlClassifierFeatureTrackingProtection> self =
+      gFeatureTrackingProtection;
+  return self.forget();
+}
+
+/* static */ already_AddRefed<nsIUrlClassifierFeature>
+UrlClassifierFeatureTrackingProtection::GetIfNameMatches(
+    const nsACString& aName) {
+  MOZ_ASSERT(gFeatureTrackingProtection);
+
+  if (!aName.EqualsLiteral(TRACKING_PROTECTION_FEATURE_NAME)) {
     return nullptr;
   }
 

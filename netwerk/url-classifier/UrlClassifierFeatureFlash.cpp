@@ -111,6 +111,22 @@ UrlClassifierFeatureFlash::UrlClassifierFeatureFlash(uint32_t aId)
   }
 }
 
+/* static */ already_AddRefed<nsIUrlClassifierFeature>
+UrlClassifierFeatureFlash::GetIfNameMatches(const nsACString& aName) {
+  uint32_t numFeatures =
+      (sizeof(sFlashFeaturesMap) / sizeof(sFlashFeaturesMap[0]));
+  for (uint32_t i = 0; i < numFeatures; ++i) {
+    MOZ_ASSERT(sFlashFeaturesMap[i].mFeature);
+    if (aName.Equals(sFlashFeaturesMap[i].mName)) {
+      nsCOMPtr<nsIUrlClassifierFeature> self =
+          sFlashFeaturesMap[i].mFeature.get();
+      return self.forget();
+    }
+  }
+
+  return nullptr;
+}
+
 NS_IMETHODIMP
 UrlClassifierFeatureFlash::ProcessChannel(nsIChannel* aChannel,
                                           const nsACString& aList,
