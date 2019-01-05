@@ -21,6 +21,8 @@ namespace net {
 
 namespace {
 
+#define TRACKING_ANNOTATION_FEATURE_NAME "tracking-annotation"
+
 #define URLCLASSIFIER_ANNOTATION_BLACKLIST \
   "urlclassifier.trackingAnnotationTable"
 #define URLCLASSIFIER_ANNOTATION_BLACKLIST_TEST_ENTRIES \
@@ -109,7 +111,7 @@ static void LowerPriorityHelper(nsIChannel* aChannel) {
 
 UrlClassifierFeatureTrackingAnnotation::UrlClassifierFeatureTrackingAnnotation()
     : UrlClassifierFeatureBase(
-          NS_LITERAL_CSTRING("tracking-annotation"),
+          NS_LITERAL_CSTRING(TRACKING_ANNOTATION_FEATURE_NAME),
           NS_LITERAL_CSTRING(URLCLASSIFIER_ANNOTATION_BLACKLIST),
           NS_LITERAL_CSTRING(URLCLASSIFIER_ANNOTATION_WHITELIST),
           NS_LITERAL_CSTRING(URLCLASSIFIER_ANNOTATION_BLACKLIST_TEST_ENTRIES),
@@ -148,6 +150,20 @@ UrlClassifierFeatureTrackingAnnotation::MaybeCreate(nsIChannel* aChannel) {
 
   if (!UrlClassifierCommon::ShouldEnableTrackingProtectionOrAnnotation(
           aChannel, AntiTrackingCommon::eTrackingAnnotations)) {
+    return nullptr;
+  }
+
+  RefPtr<UrlClassifierFeatureTrackingAnnotation> self =
+      gFeatureTrackingAnnotation;
+  return self.forget();
+}
+
+/* static */ already_AddRefed<nsIUrlClassifierFeature>
+UrlClassifierFeatureTrackingAnnotation::GetIfNameMatches(
+    const nsACString& aName) {
+  MOZ_ASSERT(gFeatureTrackingAnnotation);
+
+  if (!aName.EqualsLiteral(TRACKING_ANNOTATION_FEATURE_NAME)) {
     return nullptr;
   }
 

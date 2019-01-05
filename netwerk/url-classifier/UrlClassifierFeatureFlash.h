@@ -21,6 +21,9 @@ class UrlClassifierFeatureFlash final : public UrlClassifierFeatureBase {
       nsIChannel* aChannel,
       nsTArray<nsCOMPtr<nsIUrlClassifierFeature>>& aFeatures);
 
+  static already_AddRefed<nsIUrlClassifierFeature> GetIfNameMatches(
+      const nsACString& aName);
+
   NS_IMETHOD
   ProcessChannel(nsIChannel* aChannel, const nsACString& aList,
                  bool* aShouldContinue) override;

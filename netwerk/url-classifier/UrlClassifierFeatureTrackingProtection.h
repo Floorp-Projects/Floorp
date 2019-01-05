@@ -24,6 +24,9 @@ class UrlClassifierFeatureTrackingProtection final
   static already_AddRefed<UrlClassifierFeatureTrackingProtection> MaybeCreate(
       nsIChannel* aChannel);
 
+  static already_AddRefed<nsIUrlClassifierFeature> GetIfNameMatches(
+      const nsACString& aName);
+
   NS_IMETHOD ProcessChannel(nsIChannel* aChannel, const nsACString& aList,
                             bool* aShouldContinue) override;
 

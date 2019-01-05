@@ -47,6 +47,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
 #include "mozilla/dom/URLClassifierChild.h"
+#include "mozilla/net/UrlClassifierFeatureFactory.h"
 #include "mozilla/net/UrlClassifierFeatureResult.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "mozilla/SyncRunnable.h"
@@ -2851,4 +2852,35 @@ bool nsUrlClassifierDBService::AsyncClassifyLocalWithFeaturesUsingPreferences(
 
   NS_DispatchToMainThread(cbRunnable);
   return true;
+}
+
+NS_IMETHODIMP
+nsUrlClassifierDBService::GetFeatureByName(const nsACString& aFeatureName,
+                                           nsIUrlClassifierFeature** aFeature) {
+  NS_ENSURE_ARG_POINTER(aFeature);
+  nsCOMPtr<nsIUrlClassifierFeature> feature =
+      mozilla::net::UrlClassifierFeatureFactory::GetFeatureByName(aFeatureName);
+  if (NS_WARN_IF(!feature)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  feature.forget(aFeature);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsUrlClassifierDBService::CreateFeatureWithTables(
+    const nsACString& aName, const nsTArray<nsCString>& aBlacklistTables,
+    const nsTArray<nsCString>& aWhitelistTables,
+    nsIUrlClassifierFeature** aFeature) {
+  NS_ENSURE_ARG_POINTER(aFeature);
+  nsCOMPtr<nsIUrlClassifierFeature> feature =
+      mozilla::net::UrlClassifierFeatureFactory::CreateFeatureWithTables(
+          aName, aBlacklistTables, aWhitelistTables);
+  if (NS_WARN_IF(!feature)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  feature.forget(aFeature);
+  return NS_OK;
 }
