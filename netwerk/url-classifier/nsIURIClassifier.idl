@@ -82,20 +82,6 @@ interface nsIURIClassifier : nsISupports
                    in nsIURIClassifierCallback aCallback);
 
   /**
-   * Asynchronously classify a URI with a comma-separated string
-   * containing the given tables. This does not make network requests.
-   * The callback does NOT totally follow nsIURIClassifierCallback's
-   * semantics described above. Only |aList| will be meaningful, which
-   * is a comma separated list of table names. (same as what classifyLocal
-   * returns.)
-   */
-  void asyncClassifyLocalWithTables(in nsIURI aURI,
-                                    in ACString aTables,
-                                    in Array<ACString> aExtraTablesByPrefs,
-                                    in Array<ACString> aExtraEntriesByPrefs,
-                                    in nsIURIClassifierCallback aCallback);
-
-  /**
    * Asynchronously classify a URI with list of features. This does not make
    * network requests.
    */
@@ -103,6 +89,19 @@ interface nsIURIClassifier : nsISupports
                                       in Array<nsIUrlClassifierFeature> aFeatures,
                                       in nsIUrlClassifierFeature_listType aListType,
                                       in nsIUrlClassifierFeatureCallback aCallback);
+
+  /**
+   * Returns a feature named aFeatureName.
+   */
+  nsIUrlClassifierFeature getFeatureByName(in ACString aFeatureName);
+
+  /**
+   * Create a new feature with a list of tables. This method is just for
+   * testing! Don't use it elsewhere.
+   */
+  nsIUrlClassifierFeature createFeatureWithTables(in ACString aName,
+                                                  in Array<ACString> aBlacklistTables,
+                                                  in Array<ACString> aWhitelistTables);
 
   /**
    * Report to the provider that a Safe Browsing warning was shown.

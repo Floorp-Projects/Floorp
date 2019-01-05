@@ -154,9 +154,16 @@ var TrackingProtection = {
     if (this.trackingTable == this.trackingAnnotationTable) {
       return true;
     }
+
+    let feature = classifierService.getFeatureByName("tracking-protection");
+    if (!feature) {
+      return false;
+    }
+
     return new Promise(resolve => {
-      classifierService.asyncClassifyLocalWithTables(uri, this.trackingTable, [], [],
-        (code, list) => resolve(!!list));
+      classifierService.asyncClassifyLocalWithFeatures(uri, [feature],
+        Ci.nsIUrlClassifierFeature.blacklist,
+        list => resolve(!!list.length));
     });
   },
 
