@@ -5638,9 +5638,6 @@ pref("urlclassifier.flashSubDocTable", "block-flashsubdoc-digest256");
 pref("urlclassifier.flashSubDocExceptTable", "except-flashsubdoc-digest256");
 pref("urlclassifier.flashInfobarTable", "except-flashinfobar-digest256");
 
-pref("plugins.http_https_only", true);
-pref("plugins.flashBlock.enabled", false);
-
 // Turn off Spatial navigation by default.
 pref("snav.enabled", false);
 

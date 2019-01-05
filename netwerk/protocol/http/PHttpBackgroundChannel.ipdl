@@ -13,6 +13,7 @@ include "mozilla/net/NeckoMessageUtils.h";
 
 using class nsHttpHeaderArray from "nsHttpHeaderArray.h";
 using struct mozilla::net::ResourceTimingStruct from "mozilla/net/TimingStruct.h";
+using nsIHttpChannel::FlashPluginState from "mozilla/net/NeckoMessageUtils.h";
 
 namespace mozilla {
 namespace net {
@@ -65,6 +66,10 @@ child:
   // Tell the child that the resource being loaded is on the tracking
   // protection list.
   async NotifyTrackingResource(bool aIsThirdParty);
+
+  // Tell the child that the current channel's document is not allowed to load
+  // flash content.
+  async NotifyFlashPluginStateChanged(FlashPluginState aState);
 
   // Tell the child information of matched URL againts SafeBrowsing list
   async SetClassifierMatchedInfo(ClassifierInfo info);

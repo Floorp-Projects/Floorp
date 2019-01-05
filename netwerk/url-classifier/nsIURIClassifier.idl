@@ -82,13 +82,6 @@ interface nsIURIClassifier : nsISupports
                    in nsIURIClassifierCallback aCallback);
 
   /**
-   * Synchronously classify a URI with a comma-separated string
-   * containing the given tables. This does not make network requests.
-   * The result is an array of table names that match.
-   */
-  [noscript] StringArrayRef classifyLocalWithTables(in nsIURI aURI, in ACString aTables);
-
-  /**
    * Asynchronously classify a URI with a comma-separated string
    * containing the given tables. This does not make network requests.
    * The callback does NOT totally follow nsIURIClassifierCallback's
@@ -110,12 +103,6 @@ interface nsIURIClassifier : nsISupports
                                       in Array<nsIUrlClassifierFeature> aFeatures,
                                       in nsIUrlClassifierFeature_listType aListType,
                                       in nsIUrlClassifierFeatureCallback aCallback);
-
-  /**
-   * Same as above, but returns a comma separated list of table names.
-   * This is an internal interface used only for testing purposes.
-   */
-  ACString classifyLocal(in nsIURI aURI, in ACString aTables);
 
   /**
    * Report to the provider that a Safe Browsing warning was shown.

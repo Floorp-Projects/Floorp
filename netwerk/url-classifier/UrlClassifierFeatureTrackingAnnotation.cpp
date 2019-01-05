@@ -201,5 +201,20 @@ UrlClassifierFeatureTrackingAnnotation::ProcessChannel(nsIChannel* aChannel,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+UrlClassifierFeatureTrackingAnnotation::GetURIByListType(
+    nsIChannel* aChannel, nsIUrlClassifierFeature::listType aListType,
+    nsIURI** aURI) {
+  NS_ENSURE_ARG_POINTER(aChannel);
+  NS_ENSURE_ARG_POINTER(aURI);
+
+  if (aListType == nsIUrlClassifierFeature::blacklist) {
+    return aChannel->GetURI(aURI);
+  }
+
+  MOZ_ASSERT(aListType == nsIUrlClassifierFeature::whitelist);
+  return UrlClassifierCommon::CreatePairwiseWhiteListURI(aChannel, aURI);
+}
+
 }  // namespace net
 }  // namespace mozilla

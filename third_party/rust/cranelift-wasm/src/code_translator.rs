@@ -26,7 +26,6 @@ use cranelift_codegen::ir::condcodes::{FloatCC, IntCC};
 use cranelift_codegen::ir::types::*;
 use cranelift_codegen::ir::{self, InstBuilder, JumpTableData, MemFlags};
 use cranelift_codegen::packed_option::ReservedValue;
-use cranelift_entity::EntityRef;
 use cranelift_frontend::{FunctionBuilder, Variable};
 use environ::{FuncEnvironment, GlobalVariable, ReturnMode, WasmError, WasmResult};
 use state::{ControlStackFrame, TranslationState};
@@ -75,12 +74,10 @@ pub fn translate_operator<FE: FuncEnvironment + ?Sized>(
         Operator::GetGlobal { global_index } => {
             let val = match state.get_global(builder.func, global_index, environ) {
                 GlobalVariable::Const(val) => val,
-                GlobalVariable::Memory { gv, ty } => {
+                GlobalVariable::Memory { gv, offset, ty } => {
                     let addr = builder.ins().global_value(environ.pointer_type(), gv);
-                    let mut flags = ir::MemFlags::new();
-                    flags.set_notrap();
-                    flags.set_aligned();
-                    builder.ins().load(ty, flags, addr, 0)
+                    let flags = ir::MemFlags::trusted();
+                    builder.ins().load(ty, flags, addr, offset)
                 }
             };
             state.push1(val);
@@ -88,13 +85,12 @@ pub fn translate_operator<FE: FuncEnvironment + ?Sized>(
         Operator::SetGlobal { global_index } => {
             match state.get_global(builder.func, global_index, environ) {
                 GlobalVariable::Const(_) => panic!("global #{} is a constant", global_index),
-                GlobalVariable::Memory { gv, .. } => {
+                GlobalVariable::Memory { gv, offset, ty } => {
                     let addr = builder.ins().global_value(environ.pointer_type(), gv);
-                    let mut flags = ir::MemFlags::new();
-                    flags.set_notrap();
-                    flags.set_aligned();
+                    let flags = ir::MemFlags::trusted();
                     let val = state.pop1();
-                    builder.ins().store(flags, val, addr, 0);
+                    debug_assert_eq!(ty, builder.func.dfg.value_type(val));
+                    builder.ins().store(flags, val, addr, offset);
                 }
             }
         }
@@ -358,7 +354,7 @@ pub fn translate_operator<FE: FuncEnvironment + ?Sized>(
             let (fref, num_args) = state.get_direct_func(builder.func, function_index, environ);
             let call = environ.translate_call(
                 builder.cursor(),
-                FuncIndex::new(function_index as usize),
+                FuncIndex::from_u32(function_index),
                 fref,
                 state.peekn(num_args),
             )?;
@@ -381,9 +377,9 @@ pub fn translate_operator<FE: FuncEnvironment + ?Sized>(
             let callee = state.pop1();
             let call = environ.translate_call_indirect(
                 builder.cursor(),
-                TableIndex::new(table_index as usize),
+                TableIndex::from_u32(table_index),
                 table,
-                SignatureIndex::new(index as usize),
+                SignatureIndex::from_u32(index),
                 sigref,
                 callee,
                 state.peekn(num_args),
@@ -404,13 +400,13 @@ pub fn translate_operator<FE: FuncEnvironment + ?Sized>(
         Operator::MemoryGrow { reserved } => {
             // The WebAssembly MVP only supports one linear memory, but we expect the reserved
             // argument to be a memory index.
-            let heap_index = MemoryIndex::new(reserved as usize);
+            let heap_index = MemoryIndex::from_u32(reserved);
             let heap = state.get_heap(builder.func, reserved, environ);
             let val = state.pop1();
             state.push1(environ.translate_memory_grow(builder.cursor(), heap_index, heap, val)?)
         }
         Operator::MemorySize { reserved } => {
-            let heap_index = MemoryIndex::new(reserved as usize);
+            let heap_index = MemoryIndex::from_u32(reserved);
             let heap = state.get_heap(builder.func, reserved, environ);
             state.push1(environ.translate_memory_size(builder.cursor(), heap_index, heap)?);
         }
@@ -992,20 +988,20 @@ fn get_heap_addr(
 ) -> (ir::Value, i32) {
     use std::cmp::min;
 
-    let guard_size: i64 = builder.func.heaps[heap].guard_size.into();
-    debug_assert!(guard_size > 0, "Heap guard pages currently required");
+    let mut adjusted_offset = u64::from(offset);
+    let offset_guard_size: u64 = builder.func.heaps[heap].offset_guard_size.into();
 
     // Generate `heap_addr` instructions that are friendly to CSE by checking offsets that are
-    // multiples of the guard size. Add one to make sure that we check the pointer itself is in
-    // bounds.
-    //
-    // For accesses on the outer skirts of the guard pages, we expect that we get a trap
-    // even if the access goes beyond the guard pages. This is because the first byte pointed to is
-    // inside the guard pages.
-    let check_size = min(
-        i64::from(u32::MAX),
-        1 + (i64::from(offset) / guard_size) * guard_size,
-    ) as u32;
+    // multiples of the offset-guard size. Add one to make sure that we check the pointer itself
+    // is in bounds.
+    if offset_guard_size != 0 {
+        adjusted_offset = adjusted_offset / offset_guard_size * offset_guard_size;
+    }
+
+    // For accesses on the outer skirts of the offset-guard pages, we expect that we get a trap
+    // even if the access goes beyond the offset-guard pages. This is because the first byte
+    // pointed to is inside the offset-guard pages.
+    let check_size = min(u64::from(u32::MAX), 1 + adjusted_offset) as u32;
     let base = builder.ins().heap_addr(addr_ty, heap, addr32, check_size);
 
     // Native load/store instructions take a signed `Offset32` immediate, so adjust the base

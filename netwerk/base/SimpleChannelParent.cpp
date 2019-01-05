@@ -53,6 +53,13 @@ SimpleChannelParent::NotifyTrackingResource(bool aIsThirdParty) {
 }
 
 NS_IMETHODIMP
+SimpleChannelParent::NotifyFlashPluginStateChanged(
+    nsIHttpChannel::FlashPluginState aState) {
+  // Nothing to do.
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 SimpleChannelParent::SetClassifierMatchedInfo(const nsACString& aList,
                                               const nsACString& aProvider,
                                               const nsACString& aPrefix) {

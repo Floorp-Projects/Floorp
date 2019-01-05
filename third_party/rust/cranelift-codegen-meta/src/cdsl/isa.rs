@@ -3,19 +3,22 @@ use cranelift_entity::PrimaryMap;
 use super::regs::{
     RegBank, RegBankBuilder, RegBankIndex, RegClass, RegClassBuilder, RegClassIndex, RegClassProto,
 };
+use super::settings::SettingGroup;
 
 pub struct TargetIsa {
     pub name: &'static str,
     pub reg_banks: PrimaryMap<RegBankIndex, RegBank>,
     pub reg_classes: PrimaryMap<RegClassIndex, RegClass>,
+    pub settings: SettingGroup,
 }
 
 impl TargetIsa {
-    pub fn new(name: &'static str) -> Self {
+    pub fn new(name: &'static str, settings: SettingGroup) -> Self {
         Self {
             name,
             reg_banks: PrimaryMap::new(),
             reg_classes: PrimaryMap::new(),
+            settings,
         }
     }
 }
@@ -25,9 +28,9 @@ pub struct TargetIsaBuilder {
 }
 
 impl TargetIsaBuilder {
-    pub fn new(name: &'static str) -> Self {
+    pub fn new(name: &'static str, settings: SettingGroup) -> Self {
         Self {
-            isa: TargetIsa::new(name),
+            isa: TargetIsa::new(name, settings),
         }
     }
 
@@ -150,16 +153,15 @@ impl TargetIsaBuilder {
 
                     // If the intersection is the second one, then it must be a subclass.
                     if intersect == rc2_mask {
-                        assert!(
-                            self.isa
-                                .reg_classes
-                                .get(*i1)
-                                .unwrap()
-                                .subclasses
-                                .iter()
-                                .find(|x| **x == *i2)
-                                .is_some()
-                        );
+                        assert!(self
+                            .isa
+                            .reg_classes
+                            .get(*i1)
+                            .unwrap()
+                            .subclasses
+                            .iter()
+                            .find(|x| **x == *i2)
+                            .is_some());
                     }
                 }
             }
@@ -181,7 +183,8 @@ impl TargetIsaBuilder {
             .values()
             .filter(|x| {
                 x.toprc == x.index && self.isa.reg_banks.get(x.bank).unwrap().pressure_tracking
-            }).count();
+            })
+            .count();
         assert!(num_toplevel <= 4, "Too many top-level register classes");
 
         self.isa
