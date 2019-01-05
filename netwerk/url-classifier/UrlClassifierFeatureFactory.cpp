@@ -11,22 +11,12 @@
 #include "UrlClassifierFeatureLoginReputation.h"
 #include "UrlClassifierFeatureTrackingProtection.h"
 #include "UrlClassifierFeatureTrackingAnnotation.h"
+#include "UrlClassifierFeatureCustomTables.h"
 
 #include "nsAppRunner.h"
 
 namespace mozilla {
 namespace net {
-
-/* static */ void UrlClassifierFeatureFactory::Initialize() {
-  // We want to expose Features only in the parent process.
-  if (!XRE_IsParentProcess()) {
-    return;
-  }
-
-  UrlClassifierFeatureFlash::Initialize();
-  UrlClassifierFeatureTrackingAnnotation::Initialize();
-  UrlClassifierFeatureTrackingProtection::Initialize();
-}
 
 /* static */ void UrlClassifierFeatureFactory::Shutdown() {
   // We want to expose Features only in the parent process.
@@ -34,10 +24,10 @@ namespace net {
     return;
   }
 
-  UrlClassifierFeatureFlash::Shutdown();
+  UrlClassifierFeatureFlash::MaybeShutdown();
   UrlClassifierFeatureLoginReputation::MaybeShutdown();
-  UrlClassifierFeatureTrackingAnnotation::Shutdown();
-  UrlClassifierFeatureTrackingProtection::Shutdown();
+  UrlClassifierFeatureTrackingAnnotation::MaybeShutdown();
+  UrlClassifierFeatureTrackingProtection::MaybeShutdown();
 }
 
 /* static */ void UrlClassifierFeatureFactory::GetFeaturesFromChannel(
@@ -75,6 +65,51 @@ namespace net {
 nsIUrlClassifierFeature*
 UrlClassifierFeatureFactory::GetFeatureLoginReputation() {
   return UrlClassifierFeatureLoginReputation::MaybeGetOrCreate();
+}
+
+/* static */ already_AddRefed<nsIUrlClassifierFeature>
+UrlClassifierFeatureFactory::GetFeatureByName(const nsACString& aName) {
+  if (!XRE_IsParentProcess()) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIUrlClassifierFeature> feature;
+
+  // Tracking Protection
+  feature = UrlClassifierFeatureTrackingProtection::GetIfNameMatches(aName);
+  if (feature) {
+    return feature.forget();
+  }
+
+  // Tracking Annotation
+  feature = UrlClassifierFeatureTrackingAnnotation::GetIfNameMatches(aName);
+  if (feature) {
+    return feature.forget();
+  }
+
+  // Login reputation
+  feature = UrlClassifierFeatureLoginReputation::GetIfNameMatches(aName);
+  if (feature) {
+    return feature.forget();
+  }
+
+  // We use Flash feature just for document loading.
+  feature = UrlClassifierFeatureFlash::GetIfNameMatches(aName);
+  if (feature) {
+    return feature.forget();
+  }
+
+  return nullptr;
+}
+
+/* static */ already_AddRefed<nsIUrlClassifierFeature>
+UrlClassifierFeatureFactory::CreateFeatureWithTables(
+    const nsACString& aName, const nsTArray<nsCString>& aBlacklistTables,
+    const nsTArray<nsCString>& aWhitelistTables) {
+  nsCOMPtr<nsIUrlClassifierFeature> feature =
+      new UrlClassifierFeatureCustomTables(aName, aBlacklistTables,
+                                           aWhitelistTables);
+  return feature.forget();
 }
 
 }  // namespace net
