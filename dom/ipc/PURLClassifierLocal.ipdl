@@ -6,13 +6,17 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include protocol PContent;
+
 include PURLClassifierInfo;
+
+using refcounted class nsIURI from "mozilla/ipc/URIUtils.h";
 
 namespace mozilla {
 namespace dom {
 
 struct URLClassifierLocalResult
 {
+  nsIURI uri;
   nsCString featureName;
   nsCString matchingList;
 };

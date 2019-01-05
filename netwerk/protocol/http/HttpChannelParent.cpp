@@ -1827,6 +1827,17 @@ HttpChannelParent::NotifyTrackingResource(bool aIsThirdParty) {
 }
 
 NS_IMETHODIMP
+HttpChannelParent::NotifyFlashPluginStateChanged(
+    nsIHttpChannel::FlashPluginState aState) {
+  LOG(("HttpChannelParent::NotifyFlashPluginStateChanged [this=%p]\n", this));
+  if (!mIPCClosed) {
+    MOZ_ASSERT(mBgParent);
+    Unused << mBgParent->OnNotifyFlashPluginStateChanged(aState);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 HttpChannelParent::Delete() {
   if (!mIPCClosed) Unused << DoSendDeleteSelf();
 

@@ -40,7 +40,7 @@ function createOriginalSource(
     url: originalUrl,
     relativeUrl: originalUrl,
     id: generatedToOriginalId(generatedSource.id, originalUrl),
-    thread: "",
+    thread: generatedSource.thread,
     isPrettyPrinted: false,
     isWasm: false,
     isBlackBoxed: false,

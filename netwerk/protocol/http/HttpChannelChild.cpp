@@ -1862,6 +1862,15 @@ void HttpChannelChild::ProcessNotifyTrackingResource(bool aIsThirdParty) {
   SetIsTrackingResource(aIsThirdParty);
 }
 
+void HttpChannelChild::ProcessNotifyFlashPluginStateChanged(
+    nsIHttpChannel::FlashPluginState aState) {
+  LOG(("HttpChannelChild::ProcessNotifyFlashPluginStateChanged [this=%p]\n",
+       this));
+  MOZ_ASSERT(OnSocketThread());
+
+  SetFlashPluginState(aState);
+}
+
 void HttpChannelChild::FlushedForDiversion() {
   LOG(("HttpChannelChild::FlushedForDiversion [this=%p]\n", this));
   MOZ_RELEASE_ASSERT(mDivertingToParent);

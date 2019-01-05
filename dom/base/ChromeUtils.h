@@ -174,6 +174,10 @@ class ChromeUtils {
                                           const nsAString& aOrigin,
                                           ErrorResult& aRv);
 
+  static PopupBlockerState GetPopupControlState(GlobalObject& aGlobal);
+
+  static bool IsPopupTokenUnused(GlobalObject& aGlobal);
+
   static void RegisterWindowActor(const GlobalObject& aGlobal,
                                   const nsAString& aName,
                                   const WindowActorOptions& aOptions,

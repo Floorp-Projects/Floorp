@@ -244,5 +244,66 @@ UrlClassifierCommon::ShouldEnableTrackingProtectionOrAnnotation(
   return NS_OK;
 }
 
+/* static */ nsresult UrlClassifierCommon::CreatePairwiseWhiteListURI(
+    nsIChannel* aChannel, nsIURI** aURI) {
+  MOZ_ASSERT(aChannel);
+  MOZ_ASSERT(aURI);
+
+  nsresult rv;
+  nsCOMPtr<nsIHttpChannelInternal> chan = do_QueryInterface(aChannel, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!chan) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIURI> topWinURI;
+  rv = chan->GetTopWindowURI(getter_AddRefs(topWinURI));
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!topWinURI) {
+    if (UC_LOG_ENABLED()) {
+      nsresult rv;
+      nsCOMPtr<nsIHttpChannel> httpChan = do_QueryInterface(aChannel, &rv);
+      nsCOMPtr<nsIURI> uri;
+      rv = httpChan->GetURI(getter_AddRefs(uri));
+      nsAutoCString spec;
+      uri->GetAsciiSpec(spec);
+      spec.Truncate(
+          std::min(spec.Length(), UrlClassifierCommon::sMaxSpecLength));
+      UC_LOG(("CreatePairwiseWhiteListURI: No window URI associated with %s",
+              spec.get()));
+    }
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIScriptSecurityManager> securityManager =
+      do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIPrincipal> chanPrincipal;
+  rv = securityManager->GetChannelURIPrincipal(aChannel,
+                                               getter_AddRefs(chanPrincipal));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Craft a whitelist URL like "toplevel.page/?resource=third.party.domain"
+  nsAutoCString pageHostname, resourceDomain;
+  rv = topWinURI->GetHost(pageHostname);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = chanPrincipal->GetBaseDomain(resourceDomain);
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsAutoCString whitelistEntry = NS_LITERAL_CSTRING("http://") + pageHostname +
+                                 NS_LITERAL_CSTRING("/?resource=") +
+                                 resourceDomain;
+  UC_LOG(
+      ("CreatePairwiseWhiteListURI: Looking for %s in the whitelist "
+       "(channel=%p)",
+       whitelistEntry.get(), aChannel));
+
+  nsCOMPtr<nsIURI> whitelistURI;
+  rv = NS_NewURI(getter_AddRefs(whitelistURI), whitelistEntry);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  whitelistURI.forget(aURI);
+  return NS_OK;
+}
+
 }  // namespace net
 }  // namespace mozilla
