@@ -3978,8 +3978,9 @@ static void WorkerMain(WorkerInput* input) {
   auto guard = mozilla::MakeScopeExit([&] {
     CancelOffThreadJobsForContext(cx);
     sc->markObservers.reset();
-    JS_DestroyContext(cx);
+    JS_SetContextPrivate(cx, nullptr);
     js_delete(sc);
+    JS_DestroyContext(cx);
     js_delete(input);
   });
 
@@ -10986,6 +10987,8 @@ int main(int argc, char** argv, char** envp) {
 
   CancelOffThreadJobsForRuntime(cx);
 
+  JS_SetContextPrivate(cx, nullptr);
+  sc.reset();
   JS_DestroyContext(cx);
   return result;
 }

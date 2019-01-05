@@ -184,15 +184,19 @@ void js::DestroyContext(JSContext* cx) {
 
   cx->jobQueue = nullptr;
   cx->internalJobQueue = nullptr;
+  SetContextProfilingStack(cx, nullptr);
+
+  JSRuntime* rt = cx->runtime();
 
   // Flush promise tasks executing in helper threads early, before any parts
   // of the JSRuntime that might be visible to helper threads are torn down.
-  cx->runtime()->offThreadPromiseState.ref().shutdown(cx);
+  rt->offThreadPromiseState.ref().shutdown(cx);
 
   // Destroy the runtime along with its last context.
-  cx->runtime()->destroyRuntime();
-  js_delete(cx->runtime());
+  js::AutoNoteSingleThreadedRegion nochecks;
+  rt->destroyRuntime();
   js_delete_poison(cx);
+  js_delete_poison(rt);
 }
 
 void JS::RootingContext::checkNoGCRooters() {
