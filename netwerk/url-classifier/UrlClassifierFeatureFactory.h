@@ -18,8 +18,6 @@ namespace net {
 
 class UrlClassifierFeatureFactory final {
  public:
-  static void Initialize();
-
   static void Shutdown();
 
   static void GetFeaturesFromChannel(
@@ -27,6 +25,13 @@ class UrlClassifierFeatureFactory final {
       nsTArray<nsCOMPtr<nsIUrlClassifierFeature>>& aFeatures);
 
   static nsIUrlClassifierFeature* GetFeatureLoginReputation();
+
+  static already_AddRefed<nsIUrlClassifierFeature> GetFeatureByName(
+      const nsACString& aFeatureName);
+
+  static already_AddRefed<nsIUrlClassifierFeature> CreateFeatureWithTables(
+      const nsACString& aName, const nsTArray<nsCString>& aBlacklistTables,
+      const nsTArray<nsCString>& aWhitelistTables);
 };
 
 }  // namespace net
