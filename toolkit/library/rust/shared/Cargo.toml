@@ -8,8 +8,8 @@ description = "Shared Rust code for libxul"
 [dependencies]
 geckoservo = { path = "../../../../servo/ports/geckolib", optional = true }
 mp4parse_capi = { path = "../../../../media/mp4parse-rust/mp4parse_capi" }
-nsstring = { path = "../../../../servo/support/gecko/nsstring" }
 nserror = { path = "../../../../xpcom/rust/nserror" }
+nsstring = { path = "../../../../xpcom/rust/nsstring" }
 netwerk_helper = { path = "../../../../netwerk/base/rust-helper" }
 xpcom = { path = "../../../../xpcom/rust/xpcom" }
 prefs_parser = { path = "../../../../modules/libpref/parser" }

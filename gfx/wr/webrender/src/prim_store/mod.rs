@@ -491,15 +491,6 @@ impl<U> From<TypedSize2D<f32, U>> for SizeKey {
     }
 }
 
-impl SizeKey {
-    pub fn zero() -> SizeKey {
-        SizeKey {
-            w: 0.0,
-            h: 0.0,
-        }
-    }
-}
-
 /// A hashable vec for using as a key during primitive interning.
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]

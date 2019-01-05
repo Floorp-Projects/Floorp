@@ -53,7 +53,7 @@ add_task(async function() {
         ok(!dialogNode.parentNode, "onbeforeunload dialog should be gone.");
         if (dialogNode.parentNode) {
           // Failed to remove onbeforeunload dialog, so do it ourselves:
-          let leaveBtn = dialogNode.ui.button0;
+          let leaveBtn = dialogNode.querySelector(".tabmodalprompt-button0");
           waitForDialogDestroyed(dialogNode, doCompletion);
           EventUtils.synthesizeMouseAtCenter(leaveBtn, {});
           return;

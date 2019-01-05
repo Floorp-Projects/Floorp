@@ -49,7 +49,7 @@
 
       this.check = function showAlert_finalCheck(aEvent) {
         var dialog = aEvent.accessible.DOMNode;
-        var info = dialog.ui.infoBody;
+        var info = dialog.querySelector(".tabmodalprompt-infoBody");
         testRelation(info, RELATION_DESCRIPTION_FOR, dialog);
         testRelation(dialog, RELATION_DESCRIBED_BY, info);
       };

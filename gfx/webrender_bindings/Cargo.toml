@@ -11,7 +11,7 @@ euclid = { version = "0.19.4", features = ["serde"] }
 app_units = "0.7"
 gleam = "0.6.8"
 log = "0.4"
-nsstring = { path = "../../servo/support/gecko/nsstring" }
+nsstring = { path = "../../xpcom/rust/nsstring" } 
 bincode = "1.0"
 uuid = { version = "0.6", features = ["v4"] }
 fxhash = "0.2.1"

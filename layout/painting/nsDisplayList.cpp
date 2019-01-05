@@ -1349,20 +1349,28 @@ void nsDisplayListBuilder::EnterPresShell(nsIFrame* aReferenceFrame,
   }
   state->mInsidePointerEventsNoneDoc = pointerEventsNone;
 
-  if (!buildCaret) return;
-
-  RefPtr<nsCaret> caret = state->mPresShell->GetCaret();
-  state->mCaretFrame = caret->GetPaintGeometry(&state->mCaretRect);
-  if (state->mCaretFrame) {
-    MarkFrameForDisplay(state->mCaretFrame, aReferenceFrame);
-  }
+  state->mPresShellIgnoreScrollFrame =
+      state->mPresShell->IgnoringViewportScrolling()
+          ? state->mPresShell->GetRootScrollFrame()
+          : nullptr;
 
   nsPresContext* pc = aReferenceFrame->PresContext();
   nsCOMPtr<nsIDocShell> docShell = pc->GetDocShell();
   if (docShell) {
     docShell->GetWindowDraggingAllowed(&mWindowDraggingAllowed);
   }
+
   mIsInChromePresContext = pc->IsChrome();
+
+  if (!buildCaret) {
+    return;
+  }
+
+  RefPtr<nsCaret> caret = state->mPresShell->GetCaret();
+  state->mCaretFrame = caret->GetPaintGeometry(&state->mCaretRect);
+  if (state->mCaretFrame) {
+    MarkFrameForDisplay(state->mCaretFrame, aReferenceFrame);
+  }
 }
 
 // A non-blank paint is a paint that does not just contain the canvas
