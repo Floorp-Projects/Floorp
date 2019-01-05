@@ -9,6 +9,7 @@
 
 #include "mozilla/dom/PURLClassifierChild.h"
 #include "mozilla/dom/PURLClassifierLocalChild.h"
+#include "mozilla/ipc/URIUtils.h"
 #include "mozilla/net/UrlClassifierFeatureResult.h"
 #include "nsIURIClassifier.h"
 #include "nsIUrlClassifierFeature.h"
@@ -63,8 +64,14 @@ class URLClassifierLocalChild : public PURLClassifierLocalChild {
           continue;
         }
 
+        RefPtr<nsIURI> uri = result.uri();
+        if (NS_WARN_IF(!uri)) {
+          continue;
+        }
+
         RefPtr<net::UrlClassifierFeatureResult> r =
-            new net::UrlClassifierFeatureResult(feature, result.matchingList());
+            new net::UrlClassifierFeatureResult(uri, feature,
+                                                result.matchingList());
         finalResults.AppendElement(r);
         break;
       }

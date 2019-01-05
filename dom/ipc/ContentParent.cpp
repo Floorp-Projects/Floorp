@@ -5454,23 +5454,6 @@ bool ContentParent::DeallocPLoginReputationParent(
   return true;
 }
 
-mozilla::ipc::IPCResult ContentParent::RecvClassifyLocal(
-    const URIParams& aURI, const nsCString& aTables, nsresult* aRv,
-    nsTArray<nsCString>* aResults) {
-  MOZ_ASSERT(aResults);
-  nsCOMPtr<nsIURI> uri = DeserializeURI(aURI);
-  if (!uri) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-  nsCOMPtr<nsIURIClassifier> uriClassifier =
-      do_GetService(NS_URICLASSIFIERSERVICE_CONTRACTID);
-  if (!uriClassifier) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-  *aRv = uriClassifier->ClassifyLocalWithTables(uri, aTables, *aResults);
-  return IPC_OK();
-}
-
 mozilla::ipc::IPCResult ContentParent::RecvFileCreationRequest(
     const nsID& aID, const nsString& aFullPath, const nsString& aType,
     const nsString& aName, const bool& aLastModifiedPassed,

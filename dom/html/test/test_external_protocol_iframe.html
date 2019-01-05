@@ -1,0 +1,39 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for external protocol URLs blocked for iframes</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+</head>
+<body>
+  <div id='foo'><a href='#'>Click here to test this issue</a></div>
+  <script>
+
+SimpleTest.waitForExplicitFinish();
+
+let foo = document.getElementById('foo');
+foo.addEventListener('click', _ => {
+  is(ChromeUtils.getPopupControlState(), "openAllowed", "Click events allow popups");
+  ok(!ChromeUtils.isPopupTokenUnused(), "Popup token has not been used yet");
+
+  for (let i = 0; i < 10; ++i) {
+    let ifr = document.createElement('iframe');
+    ifr.src = "foo+bar:all_good";
+    document.body.appendChild(ifr);
+
+    is(ChromeUtils.getPopupControlState(), "openAllowed", "Click events allow popups");
+    ok(ChromeUtils.isPopupTokenUnused(), "Popup token has been used!");
+  }
+
+  SimpleTest.finish();
+
+}, {once: true});
+
+setTimeout(_ => {
+  sendMouseEvent({type:'click'}, 'foo');
+}, 0);
+
+  </script>
+</body>
+</html>

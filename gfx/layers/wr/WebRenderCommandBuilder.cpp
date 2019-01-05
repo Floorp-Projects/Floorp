@@ -920,13 +920,13 @@ void Grouper::PaintContainerItem(DIGroup* aGroup, nsDisplayItem* aItem,
     case DisplayItemType::TYPE_TRANSFORM: {
       DisplayItemClip currentClip = aItem->GetClip();
 
-      gfx::Matrix matrix;
+      gfxContextMatrixAutoSaveRestore saveMatrix;
       if (currentClip.HasClip()) {
         aContext->Save();
         currentClip.ApplyTo(aContext, this->mAppUnitsPerDevPixel);
         aContext->GetDrawTarget()->FlushItem(aItemBounds);
       } else {
-        matrix = aContext->CurrentMatrix();
+        saveMatrix.SetContext(aContext);
       }
 
       auto transformItem = static_cast<nsDisplayTransform*>(aItem);
@@ -946,13 +946,11 @@ void Grouper::PaintContainerItem(DIGroup* aGroup, nsDisplayItem* aItem,
         aContext->Multiply(ThebesMatrix(trans2d));
         aGroup->PaintItemRange(this, aChildren->GetBottom(), nullptr, aContext,
                                aRecorder);
+      }
 
-        if (currentClip.HasClip()) {
-          aContext->Restore();
-          aContext->GetDrawTarget()->FlushItem(aItemBounds);
-        } else {
-          aContext->SetMatrix(matrix);
-        }
+      if (currentClip.HasClip()) {
+        aContext->Restore();
+        aContext->GetDrawTarget()->FlushItem(aItemBounds);
       }
       break;
     }

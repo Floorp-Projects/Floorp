@@ -20,6 +20,7 @@ class PopupBlocker final {
   // permissive to least permissive so that it's safe to push state in
   // all situations. Pushing popup state onto the stack never makes the
   // current popup state less permissive.
+  // Keep this in sync with PopupBlockerState webidl dictionary!
   enum PopupControlState {
     openAllowed = 0,  // open that window without worries
     openControlled,   // it's a popup, but allow it
@@ -46,6 +47,8 @@ class PopupBlocker final {
   // consumes the popup token for the current event. There is just 1 popup
   // allowed per event.
   static bool TryUsePopupOpeningToken();
+
+  static bool IsPopupOpeningTokenUnused();
 
   static PopupBlocker::PopupControlState GetEventPopupControlState(
       WidgetEvent* aEvent, Event* aDOMEvent = nullptr);

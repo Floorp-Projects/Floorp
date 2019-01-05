@@ -7,6 +7,7 @@
 #include "mozilla/net/UrlClassifierFeatureFactory.h"
 
 // List of Features
+#include "UrlClassifierFeatureFlash.h"
 #include "UrlClassifierFeatureLoginReputation.h"
 #include "UrlClassifierFeatureTrackingProtection.h"
 #include "UrlClassifierFeatureTrackingAnnotation.h"
@@ -22,6 +23,7 @@ namespace net {
     return;
   }
 
+  UrlClassifierFeatureFlash::Initialize();
   UrlClassifierFeatureTrackingAnnotation::Initialize();
   UrlClassifierFeatureTrackingProtection::Initialize();
 }
@@ -32,6 +34,7 @@ namespace net {
     return;
   }
 
+  UrlClassifierFeatureFlash::Shutdown();
   UrlClassifierFeatureLoginReputation::MaybeShutdown();
   UrlClassifierFeatureTrackingAnnotation::Shutdown();
   UrlClassifierFeatureTrackingProtection::Shutdown();
@@ -61,6 +64,11 @@ namespace net {
   if (feature) {
     aFeatures.AppendElement(feature);
   }
+
+  // Flash
+  nsTArray<nsCOMPtr<nsIUrlClassifierFeature>> flashFeatures;
+  UrlClassifierFeatureFlash::MaybeCreate(aChannel, flashFeatures);
+  aFeatures.AppendElements(flashFeatures);
 }
 
 /* static */

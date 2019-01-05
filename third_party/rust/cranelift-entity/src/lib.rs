@@ -32,10 +32,7 @@
 #![deny(missing_docs, trivial_numeric_casts, unused_extern_crates)]
 #![warn(unused_import_braces)]
 #![cfg_attr(feature = "std", deny(unstable_features))]
-#![cfg_attr(
-    feature = "clippy",
-    plugin(clippy(conf_file = "../../clippy.toml"))
-)]
+#![cfg_attr(feature = "clippy", plugin(clippy(conf_file = "../../clippy.toml")))]
 #![cfg_attr(
     feature = "cargo-clippy",
     allow(new_without_default, new_without_default_derive)
@@ -43,14 +40,14 @@
 #![cfg_attr(
     feature = "cargo-clippy",
     warn(
-        float_arithmetic,
-        mut_mut,
-        nonminimal_bool,
-        option_map_unwrap_or,
-        option_map_unwrap_or_else,
-        print_stdout,
-        unicode_not_nfc,
-        use_self
+        clippy::float_arithmetic,
+        clippy::mut_mut,
+        clippy::nonminimal_bool,
+        clippy::option_map_unwrap_or,
+        clippy::option_map_unwrap_or_else,
+        clippy::print_stdout,
+        clippy::unicode_not_nfc,
+        clippy::use_self
     )
 )]
 // Turns on no_std and alloc features if std is not available.
@@ -101,6 +98,21 @@ macro_rules! entity_impl {
                 $entity($crate::__core::u32::MAX)
             }
         }
+
+        impl $entity {
+            /// Return the underlying index value as a `u32`.
+            #[allow(dead_code)]
+            pub fn from_u32(x: u32) -> Self {
+                debug_assert!(x < $crate::__core::u32::MAX);
+                $entity(x)
+            }
+
+            /// Return the underlying index value as a `u32`.
+            #[allow(dead_code)]
+            pub fn as_u32(self) -> u32 {
+                self.0
+            }
+        }
     };
 
     // Include basic `Display` impl using the given display prefix.
@@ -124,6 +136,7 @@ macro_rules! entity_impl {
 
 pub mod packed_option;
 
+mod boxed_slice;
 mod iter;
 mod keys;
 mod list;
@@ -132,6 +145,7 @@ mod primary;
 mod set;
 mod sparse;
 
+pub use self::boxed_slice::BoxedSlice;
 pub use self::iter::{Iter, IterMut};
 pub use self::keys::Keys;
 pub use self::list::{EntityList, ListPool};

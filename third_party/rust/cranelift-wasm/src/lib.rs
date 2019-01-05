@@ -12,10 +12,7 @@
 #![deny(missing_docs, trivial_numeric_casts, unused_extern_crates)]
 #![warn(unused_import_braces)]
 #![cfg_attr(feature = "std", deny(unstable_features))]
-#![cfg_attr(
-    feature = "clippy",
-    plugin(clippy(conf_file = "../../clippy.toml"))
-)]
+#![cfg_attr(feature = "clippy", plugin(clippy(conf_file = "../../clippy.toml")))]
 #![cfg_attr(
     feature = "cargo-clippy",
     allow(new_without_default, new_without_default_derive)
@@ -23,14 +20,14 @@
 #![cfg_attr(
     feature = "cargo-clippy",
     warn(
-        float_arithmetic,
-        mut_mut,
-        nonminimal_bool,
-        option_map_unwrap_or,
-        option_map_unwrap_or_else,
-        print_stdout,
-        unicode_not_nfc,
-        use_self
+        clippy::float_arithmetic,
+        clippy::mut_mut,
+        clippy::nonminimal_bool,
+        clippy::option_map_unwrap_or,
+        clippy::option_map_unwrap_or_else,
+        clippy::print_stdout,
+        clippy::unicode_not_nfc,
+        clippy::use_self
     )
 )]
 #![cfg_attr(not(feature = "std"), no_std)]
@@ -39,6 +36,7 @@
 extern crate cranelift_codegen;
 #[macro_use]
 extern crate cranelift_entity;
+extern crate cast;
 extern crate cranelift_frontend;
 #[cfg(test)]
 extern crate target_lexicon;
@@ -67,7 +65,8 @@ pub use func_translator::FuncTranslator;
 pub use module_translator::translate_module;
 pub use translation_utils::{
     DefinedFuncIndex, DefinedGlobalIndex, DefinedMemoryIndex, DefinedTableIndex, FuncIndex, Global,
-    GlobalIndex, GlobalInit, Memory, MemoryIndex, SignatureIndex, Table, TableIndex,
+    GlobalIndex, GlobalInit, Memory, MemoryIndex, SignatureIndex, Table, TableElementType,
+    TableIndex,
 };
 
 #[cfg(not(feature = "std"))]

@@ -70,11 +70,7 @@ pub fn parse_import_section<'data>(
 
         match import.ty {
             ImportSectionEntryType::Function(sig) => {
-                environ.declare_func_import(
-                    SignatureIndex::new(sig as usize),
-                    module_name,
-                    field_name,
-                );
+                environ.declare_func_import(SignatureIndex::from_u32(sig), module_name, field_name);
             }
             ImportSectionEntryType::Memory(MemoryType {
                 limits: ref memlimits,
@@ -82,8 +78,8 @@ pub fn parse_import_section<'data>(
             }) => {
                 environ.declare_memory_import(
                     Memory {
-                        pages_count: memlimits.initial as usize,
-                        maximum: memlimits.maximum.map(|x| x as usize),
+                        minimum: memlimits.initial,
+                        maximum: memlimits.maximum,
                         shared,
                     },
                     module_name,
@@ -95,7 +91,7 @@ pub fn parse_import_section<'data>(
                     Global {
                         ty: type_to_type(ty.content_type).unwrap(),
                         mutability: ty.mutable,
-                        initializer: GlobalInit::Import(),
+                        initializer: GlobalInit::Import,
                     },
                     module_name,
                     field_name,
@@ -106,10 +102,10 @@ pub fn parse_import_section<'data>(
                     Table {
                         ty: match type_to_type(tab.element_type) {
                             Ok(t) => TableElementType::Val(t),
-                            Err(()) => TableElementType::Func(),
+                            Err(()) => TableElementType::Func,
                         },
-                        size: tab.limits.initial as usize,
-                        maximum: tab.limits.maximum.map(|x| x as usize),
+                        minimum: tab.limits.initial,
+                        maximum: tab.limits.maximum,
                     },
                     module_name,
                     field_name,
@@ -127,7 +123,7 @@ pub fn parse_function_section(
 ) -> WasmResult<()> {
     for entry in functions {
         let sigindex = entry?;
-        environ.declare_func_type(SignatureIndex::new(sigindex as usize));
+        environ.declare_func_type(SignatureIndex::from_u32(sigindex));
     }
     Ok(())
 }
@@ -142,10 +138,10 @@ pub fn parse_table_section(
         environ.declare_table(Table {
             ty: match type_to_type(table.element_type) {
                 Ok(t) => TableElementType::Val(t),
-                Err(()) => TableElementType::Func(),
+                Err(()) => TableElementType::Func,
             },
-            size: table.limits.initial as usize,
-            maximum: table.limits.maximum.map(|x| x as usize),
+            minimum: table.limits.initial,
+            maximum: table.limits.maximum,
         });
     }
     Ok(())
@@ -159,8 +155,8 @@ pub fn parse_memory_section(
     for entry in memories {
         let memory = entry?;
         environ.declare_memory(Memory {
-            pages_count: memory.limits.initial as usize,
-            maximum: memory.limits.maximum.map(|x| x as usize),
+            minimum: memory.limits.initial,
+            maximum: memory.limits.maximum,
             shared: memory.shared,
         });
     }
@@ -187,7 +183,7 @@ pub fn parse_global_section(
             Operator::F32Const { value } => GlobalInit::F32Const(value.bits()),
             Operator::F64Const { value } => GlobalInit::F64Const(value.bits()),
             Operator::GetGlobal { global_index } => {
-                GlobalInit::GlobalRef(GlobalIndex::new(global_index as usize))
+                GlobalInit::GetGlobal(GlobalIndex::from_u32(global_index))
             }
             ref s => panic!("unsupported init expr in global section: {:?}", s),
         };
@@ -230,7 +226,7 @@ pub fn parse_export_section<'data>(
 
 /// Parses the Start section of the wasm module.
 pub fn parse_start_section(index: u32, environ: &mut ModuleEnvironment) -> WasmResult<()> {
-    environ.declare_start_func(FuncIndex::new(index as usize));
+    environ.declare_start_func(FuncIndex::from_u32(index));
     Ok(())
 }
 
@@ -249,11 +245,11 @@ pub fn parse_element_section<'data>(
         let (base, offset) = match init_expr_reader.read_operator()? {
             Operator::I32Const { value } => (None, value as u32 as usize),
             Operator::GetGlobal { global_index } => match environ
-                .get_global(GlobalIndex::new(global_index as usize))
+                .get_global(GlobalIndex::from_u32(global_index))
                 .initializer
             {
                 GlobalInit::I32Const(value) => (None, value as u32 as usize),
-                GlobalInit::Import() => (Some(GlobalIndex::new(global_index as usize)), 0),
+                GlobalInit::Import => (Some(GlobalIndex::from_u32(global_index)), 0),
                 _ => panic!("should not happen"),
             },
             ref s => panic!("unsupported init expr in element section: {:?}", s),
@@ -262,9 +258,9 @@ pub fn parse_element_section<'data>(
         let mut elems = Vec::new();
         for item in items_reader {
             let x = item?;
-            elems.push(FuncIndex::new(x as usize));
+            elems.push(FuncIndex::from_u32(x));
         }
-        environ.declare_table_elements(TableIndex::new(table_index as usize), base, offset, elems)
+        environ.declare_table_elements(TableIndex::from_u32(table_index), base, offset, elems)
     }
     Ok(())
 }
@@ -297,17 +293,17 @@ pub fn parse_data_section<'data>(
         let (base, offset) = match init_expr_reader.read_operator()? {
             Operator::I32Const { value } => (None, value as u32 as usize),
             Operator::GetGlobal { global_index } => match environ
-                .get_global(GlobalIndex::new(global_index as usize))
+                .get_global(GlobalIndex::from_u32(global_index))
                 .initializer
             {
                 GlobalInit::I32Const(value) => (None, value as u32 as usize),
-                GlobalInit::Import() => (Some(GlobalIndex::new(global_index as usize)), 0),
+                GlobalInit::Import => (Some(GlobalIndex::from_u32(global_index)), 0),
                 _ => panic!("should not happen"),
             },
             ref s => panic!("unsupported init expr in data section: {:?}", s),
         };
         environ.declare_data_initialization(
-            MemoryIndex::new(memory_index as usize),
+            MemoryIndex::from_u32(memory_index),
             base,
             offset,
             data,

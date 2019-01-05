@@ -1,7 +1,7 @@
 job-defaults:
     target:
         by-test-platform:
-            android-em-7.0-x86/opt: geckoview-androidTest.apk
+            android-em-7.*: geckoview-androidTest.apk
             default: null
     serviceworker-e10s:
         by-test-platform:
@@ -14,10 +14,10 @@ job-defaults:
                 default: desktop_unittest.py
         config:
             by-test-platform:
-                android-em-7.0-x86/opt:
+                android-em-7.*:
                     - android/android_common.py
                     - android/androidx86_7_0.py
-                android-em.*:
+                android-em-4.*:
                     - android/android_common.py
                     - android/androidarm_4_3.py
                 linux.*:
@@ -44,8 +44,8 @@ crashtest:
     chunks:
         by-test-platform:
             android-em-4.3-arm7-api-16/debug: 10
-            android-em-7.0-x86/opt: 1
-            android-em.*: 4
+            android-em-4.3-arm7-api-16/opt: 4
+            android-em-7.*: 1
             default: 1
     e10s:
         by-test-platform:
@@ -70,6 +70,7 @@ jsreftest:
         by-test-platform:
             android-em-4.3-arm7-api-16/debug: 100
             android-em-7.0-x86/opt: 4
+            android-em-7.0-x86/debug: 8
             android-em.*: 40
             windows.*: 2
             windows10-64-ccov/debug: 5
@@ -98,8 +99,8 @@ reftest:
     chunks:
         by-test-platform:
             android-em-4.3-arm7-api-16/debug: 56
-            android-em-7.0-x86/opt: 5
-            android-em.*: 28
+            android-em-4.*: 28
+            android-em-7.*: 5
             macosx64.*/opt: 2
             macosx64.*/debug: 3
             macosx64-ccov/debug: 6
