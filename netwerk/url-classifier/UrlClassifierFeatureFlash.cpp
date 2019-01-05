@@ -34,6 +34,8 @@ static FlashFeatures sFlashFeaturesMap[] = {
      nsIHttpChannel::FlashPluginDeniedInSubdocuments},
 };
 
+bool IsInitialized() { return !!sFlashFeaturesMap[0].mFeature; }
+
 }  // namespace
 
 UrlClassifierFeatureFlash::UrlClassifierFeatureFlash(uint32_t aId)
@@ -53,7 +55,13 @@ UrlClassifierFeatureFlash::UrlClassifierFeatureFlash(uint32_t aId)
                 "nsIHttpChannel::FlashPluginLastValue is out-of-sync!");
 }
 
-/* static */ void UrlClassifierFeatureFlash::Initialize() {
+/* static */ void UrlClassifierFeatureFlash::MaybeInitialize() {
+  MOZ_ASSERT(XRE_IsParentProcess());
+
+  if (IsInitialized()) {
+    return;
+  }
+
   uint32_t numFeatures =
       (sizeof(sFlashFeaturesMap) / sizeof(sFlashFeaturesMap[0]));
   for (uint32_t i = 0; i < numFeatures; ++i) {
@@ -63,7 +71,11 @@ UrlClassifierFeatureFlash::UrlClassifierFeatureFlash(uint32_t aId)
   }
 }
 
-/* static */ void UrlClassifierFeatureFlash::Shutdown() {
+/* static */ void UrlClassifierFeatureFlash::MaybeShutdown() {
+  if (!IsInitialized()) {
+    return;
+  }
+
   uint32_t numFeatures =
       (sizeof(sFlashFeaturesMap) / sizeof(sFlashFeaturesMap[0]));
   for (uint32_t i = 0; i < numFeatures; ++i) {
@@ -100,6 +112,8 @@ UrlClassifierFeatureFlash::UrlClassifierFeatureFlash(uint32_t aId)
     }
   }
 
+  MaybeInitialize();
+
   uint32_t numFeatures =
       (sizeof(sFlashFeaturesMap) / sizeof(sFlashFeaturesMap[0]));
   for (uint32_t i = 0; i < numFeatures; ++i) {
@@ -109,6 +123,24 @@ UrlClassifierFeatureFlash::UrlClassifierFeatureFlash(uint32_t aId)
       aFeatures.AppendElement(sFlashFeaturesMap[i].mFeature);
     }
   }
+}
+
+/* static */ already_AddRefed<nsIUrlClassifierFeature>
+UrlClassifierFeatureFlash::GetIfNameMatches(const nsACString& aName) {
+  MaybeInitialize();
+
+  uint32_t numFeatures =
+      (sizeof(sFlashFeaturesMap) / sizeof(sFlashFeaturesMap[0]));
+  for (uint32_t i = 0; i < numFeatures; ++i) {
+    MOZ_ASSERT(sFlashFeaturesMap[i].mFeature);
+    if (aName.Equals(sFlashFeaturesMap[i].mName)) {
+      nsCOMPtr<nsIUrlClassifierFeature> self =
+          sFlashFeaturesMap[i].mFeature.get();
+      return self.forget();
+    }
+  }
+
+  return nullptr;
 }
 
 NS_IMETHODIMP
