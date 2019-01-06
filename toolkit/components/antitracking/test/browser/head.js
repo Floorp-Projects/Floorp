@@ -299,8 +299,8 @@ this.AntiTracking = {
 
       let cookieBlocked = 0;
       let listener = {
-        onSecurityChange(webProgress, request, state) {
-          if ((state & options.expectedBlockingNotifications)) {
+        onContentBlockingEvent(webProgress, request, event) {
+          if ((event & options.expectedBlockingNotifications)) {
             ++cookieBlocked;
           }
         },
