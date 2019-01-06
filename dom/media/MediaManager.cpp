@@ -994,13 +994,12 @@ nsresult MediaDevice::Allocate(const dom::MediaTrackConstraints& aConstraints,
                            aOutBadConstraint);
 }
 
-nsresult MediaDevice::SetTrack(const RefPtr<SourceMediaStream>& aStream,
-                               TrackID aTrackID,
-                               const PrincipalHandle& aPrincipalHandle) {
+void MediaDevice::SetTrack(const RefPtr<SourceMediaStream>& aStream,
+                           TrackID aTrackID,
+                           const PrincipalHandle& aPrincipalHandle) {
   MOZ_ASSERT(MediaManager::IsInMediaThread());
   MOZ_ASSERT(mSource);
-  return mSource->SetTrack(mAllocationHandle, aStream, aTrackID,
-                           aPrincipalHandle);
+  mSource->SetTrack(mAllocationHandle, aStream, aTrackID, aPrincipalHandle);
 }
 
 nsresult MediaDevice::Start() {
@@ -4048,11 +4047,8 @@ SourceListener::InitializeAsync() {
                   mVideoDeviceState ? mVideoDeviceState->mDevice : nullptr](
                  MozPromiseHolder<SourceListenerPromise>& aHolder) {
                if (audioDevice) {
-                 nsresult rv =
-                     audioDevice->SetTrack(stream, kAudioTrack, principal);
-                 if (NS_SUCCEEDED(rv)) {
-                   rv = audioDevice->Start();
-                 }
+                 audioDevice->SetTrack(stream, kAudioTrack, principal);
+                 nsresult rv = audioDevice->Start();
                  if (NS_FAILED(rv)) {
                    nsString log;
                    if (rv == NS_ERROR_NOT_AVAILABLE) {
@@ -4072,11 +4068,8 @@ SourceListener::InitializeAsync() {
                }
 
                if (videoDevice) {
-                 nsresult rv =
-                     videoDevice->SetTrack(stream, kVideoTrack, principal);
-                 if (NS_SUCCEEDED(rv)) {
-                   rv = videoDevice->Start();
-                 }
+                 videoDevice->SetTrack(stream, kVideoTrack, principal);
+                 nsresult rv = videoDevice->Start();
                  if (NS_FAILED(rv)) {
                    if (audioDevice) {
                      if (NS_WARN_IF(NS_FAILED(audioDevice->Stop()))) {
