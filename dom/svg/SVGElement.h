@@ -31,8 +31,6 @@ class nsSVGBoolean;
 class nsSVGInteger;
 class nsSVGLength2;
 class nsSVGNumber2;
-class nsSVGString;
-class nsSVGViewBox;
 
 nsresult NS_NewSVGElement(mozilla::dom::Element** aResult,
                           already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
@@ -52,8 +50,10 @@ class SVGUserUnitList;
 class SVGIntegerPair;
 class SVGNumberList;
 class SVGNumberPair;
+class SVGString;
 class SVGStringList;
 class DOMSVGStringList;
+class SVGViewBox;
 
 struct SVGEnumMapping;
 
@@ -556,11 +556,11 @@ class SVGElement : public SVGElementBase  // nsIContent
   };
 
   struct StringAttributesInfo {
-    nsSVGString* const mStrings;
+    SVGString* const mStrings;
     const StringInfo* const mStringInfo;
     const uint32_t mStringCount;
 
-    StringAttributesInfo(nsSVGString* aStrings, StringInfo* aStringInfo,
+    StringAttributesInfo(SVGString* aStrings, StringInfo* aStringInfo,
                          uint32_t aStringCount)
         : mStrings(aStrings),
           mStringInfo(aStringInfo),
@@ -600,7 +600,7 @@ class SVGElement : public SVGElementBase  // nsIContent
   virtual EnumAttributesInfo GetEnumInfo();
   // We assume all viewboxes and preserveAspectRatios are alike
   // so we don't need to wrap the class
-  virtual nsSVGViewBox* GetViewBox();
+  virtual SVGViewBox* GetViewBox();
   virtual SVGAnimatedPreserveAspectRatio* GetPreserveAspectRatio();
   virtual NumberListAttributesInfo GetNumberListInfo();
   virtual LengthListAttributesInfo GetLengthListInfo();

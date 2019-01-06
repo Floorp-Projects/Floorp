@@ -9,12 +9,16 @@
 
 #include "nsAutoPtr.h"
 #include "nsError.h"
-#include "SVGElement.h"
-#include "mozilla/Attributes.h"
 #include "mozilla/dom/SVGAnimatedString.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/UniquePtr.h"
 
-class nsSVGString {
+namespace mozilla {
+namespace dom {
+class SVGElement;
+}
+
+class SVGString {
  public:
   typedef mozilla::dom::SVGElement SVGElement;
 
@@ -55,10 +59,10 @@ class nsSVGString {
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
     NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMAnimatedString)
 
-    DOMAnimatedString(nsSVGString* aVal, SVGElement* aSVGElement)
+    DOMAnimatedString(SVGString* aVal, SVGElement* aSVGElement)
         : mozilla::dom::SVGAnimatedString(aSVGElement), mVal(aVal) {}
 
-    nsSVGString* mVal;  // kept alive because it belongs to content
+    SVGString* mVal;  // kept alive because it belongs to content
 
     void GetBaseVal(nsAString& aResult) override {
       mVal->GetBaseValue(aResult, mSVGElement);
@@ -78,13 +82,13 @@ class nsSVGString {
   };
   struct SMILString : public nsISMILAttr {
    public:
-    SMILString(nsSVGString* aVal, SVGElement* aSVGElement)
+    SMILString(SVGString* aVal, SVGElement* aSVGElement)
         : mVal(aVal), mSVGElement(aSVGElement) {}
 
     // These will stay alive because a nsISMILAttr only lives as long
     // as the Compositing step, and DOM elements don't get a chance to
     // die during that.
-    nsSVGString* mVal;
+    SVGString* mVal;
     SVGElement* mSVGElement;
 
     // nsISMILAttr methods
@@ -97,4 +101,7 @@ class nsSVGString {
     virtual nsresult SetAnimValue(const nsSMILValue& aValue) override;
   };
 };
+
+}  // namespace mozilla
+
 #endif  //__NS_SVGSTRING_H__

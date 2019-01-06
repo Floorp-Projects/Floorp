@@ -35,7 +35,7 @@ class SVGFEMergeNodeElement : public SVGFEMergeNodeElementBase {
   virtual bool AttributeAffectsRendering(int32_t aNameSpaceID,
                                          nsAtom* aAttribute) const override;
 
-  const nsSVGString* GetIn1() { return &mStringAttributes[IN1]; }
+  const SVGString* GetIn1() { return &mStringAttributes[IN1]; }
 
   // WebIDL
   already_AddRefed<SVGAnimatedString> In1();
@@ -44,7 +44,7 @@ class SVGFEMergeNodeElement : public SVGFEMergeNodeElementBase {
   virtual StringAttributesInfo GetStringInfo() override;
 
   enum { IN1 };
-  nsSVGString mStringAttributes[1];
+  SVGString mStringAttributes[1];
   static StringInfo sStringInfo[1];
 };
 

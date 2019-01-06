@@ -10,7 +10,7 @@
 #include "SVGAnimatedPreserveAspectRatio.h"
 #include "SVGEnum.h"
 #include "SVGStringList.h"
-#include "nsSVGViewBox.h"
+#include "SVGViewBox.h"
 #include "mozilla/dom/SVGElement.h"
 
 class nsSVGOuterSVGFrame;
@@ -58,10 +58,10 @@ class SVGViewElement : public SVGViewElementBase {
   static SVGEnumMapping sZoomAndPanMap[];
   static EnumInfo sEnumInfo[1];
 
-  virtual nsSVGViewBox* GetViewBox() override;
+  virtual SVGViewBox* GetViewBox() override;
   virtual SVGAnimatedPreserveAspectRatio* GetPreserveAspectRatio() override;
 
-  nsSVGViewBox mViewBox;
+  SVGViewBox mViewBox;
   SVGAnimatedPreserveAspectRatio mPreserveAspectRatio;
 };
 

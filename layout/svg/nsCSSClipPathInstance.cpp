@@ -7,19 +7,18 @@
 // Main header first:
 #include "nsCSSClipPathInstance.h"
 
-#include "gfx2DGlue.h"
-#include "gfxContext.h"
-#include "gfxPlatform.h"
+#include "mozilla/dom/SVGElement.h"
 #include "mozilla/dom/SVGPathData.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/PathHelpers.h"
 #include "mozilla/ShapeUtils.h"
+#include "nsSVGUtils.h"
+#include "gfx2DGlue.h"
+#include "gfxContext.h"
+#include "gfxPlatform.h"
 #include "nsCSSRendering.h"
 #include "nsIFrame.h"
 #include "nsLayoutUtils.h"
-#include "SVGElement.h"
-#include "nsSVGUtils.h"
-#include "nsSVGViewBox.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;

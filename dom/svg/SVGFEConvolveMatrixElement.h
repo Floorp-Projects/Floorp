@@ -14,7 +14,7 @@
 #include "nsSVGInteger.h"
 #include "SVGIntegerPair.h"
 #include "nsSVGNumber2.h"
-#include "nsSVGString.h"
+#include "SVGString.h"
 
 nsresult NS_NewSVGFEConvolveMatrixElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
@@ -46,7 +46,7 @@ class SVGFEConvolveMatrixElement : public SVGFEConvolveMatrixElementBase {
       nsTArray<RefPtr<SourceSurface>>& aInputImages) override;
   virtual bool AttributeAffectsRendering(int32_t aNameSpaceID,
                                          nsAtom* aAttribute) const override;
-  virtual nsSVGString& GetResultImageName() override {
+  virtual SVGString& GetResultImageName() override {
     return mStringAttributes[RESULT];
   }
   virtual void GetSourceImageNames(nsTArray<SVGStringInfo>& aSources) override;
@@ -103,7 +103,7 @@ class SVGFEConvolveMatrixElement : public SVGFEConvolveMatrixElementBase {
   static EnumInfo sEnumInfo[1];
 
   enum { RESULT, IN1 };
-  nsSVGString mStringAttributes[2];
+  SVGString mStringAttributes[2];
   static StringInfo sStringInfo[2];
 
   enum { KERNELMATRIX };

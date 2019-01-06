@@ -482,7 +482,7 @@ void nsAttrValue::SetTo(const SVGTransformList& aValue,
   SetSVGType(eSVGTransformList, &aValue, aSerialized);
 }
 
-void nsAttrValue::SetTo(const nsSVGViewBox& aValue,
+void nsAttrValue::SetTo(const SVGViewBox& aValue,
                         const nsAString* aSerialized) {
   SetSVGType(eSVGViewBox, &aValue, aSerialized);
 }

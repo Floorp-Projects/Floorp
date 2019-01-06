@@ -9,7 +9,7 @@
 
 #include "Link.h"
 #include "nsDOMTokenList.h"
-#include "nsSVGString.h"
+#include "SVGString.h"
 #include "mozilla/dom/SVGGraphicsElement.h"
 
 nsresult NS_NewSVGAElement(
@@ -97,7 +97,7 @@ class SVGAElement final : public SVGAElementBase, public Link {
   virtual StringAttributesInfo GetStringInfo() override;
 
   enum { HREF, XLINK_HREF, TARGET };
-  nsSVGString mStringAttributes[3];
+  SVGString mStringAttributes[3];
   static StringInfo sStringInfo[3];
 
   RefPtr<nsDOMTokenList> mRelList;

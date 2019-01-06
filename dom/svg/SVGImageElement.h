@@ -9,7 +9,7 @@
 
 #include "nsImageLoadingContent.h"
 #include "nsSVGLength2.h"
-#include "nsSVGString.h"
+#include "SVGString.h"
 #include "SVGGeometryElement.h"
 #include "SVGAnimatedPreserveAspectRatio.h"
 
@@ -110,7 +110,7 @@ class SVGImageElement : public SVGImageElementBase,
   SVGAnimatedPreserveAspectRatio mPreserveAspectRatio;
 
   enum { HREF, XLINK_HREF };
-  nsSVGString mStringAttributes[2];
+  SVGString mStringAttributes[2];
   static StringInfo sStringInfo[2];
 };
 

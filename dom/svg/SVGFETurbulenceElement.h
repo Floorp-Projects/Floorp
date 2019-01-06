@@ -11,7 +11,7 @@
 #include "SVGFilters.h"
 #include "nsSVGNumber2.h"
 #include "nsSVGInteger.h"
-#include "nsSVGString.h"
+#include "SVGString.h"
 
 nsresult NS_NewSVGFETurbulenceElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
@@ -42,7 +42,7 @@ class SVGFETurbulenceElement : public SVGFETurbulenceElementBase {
       nsTArray<RefPtr<SourceSurface>>& aInputImages) override;
   virtual bool AttributeAffectsRendering(int32_t aNameSpaceID,
                                          nsAtom* aAttribute) const override;
-  virtual nsSVGString& GetResultImageName() override {
+  virtual SVGString& GetResultImageName() override {
     return mStringAttributes[RESULT];
   }
 
@@ -82,7 +82,7 @@ class SVGFETurbulenceElement : public SVGFETurbulenceElementBase {
   static EnumInfo sEnumInfo[2];
 
   enum { RESULT };
-  nsSVGString mStringAttributes[1];
+  SVGString mStringAttributes[1];
   static StringInfo sStringInfo[1];
 };
 

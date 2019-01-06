@@ -9,7 +9,7 @@
 
 #include "SVGEnum.h"
 #include "nsSVGLength2.h"
-#include "nsSVGString.h"
+#include "SVGString.h"
 #include "mozilla/dom/SVGAnimatedPathSegList.h"
 #include "mozilla/dom/SVGTextContentElement.h"
 
@@ -80,7 +80,7 @@ class SVGTextPathElement final : public SVGTextPathElementBase {
   static EnumInfo sEnumInfo[4];
 
   enum { HREF, XLINK_HREF };
-  nsSVGString mStringAttributes[2];
+  SVGString mStringAttributes[2];
   static StringInfo sStringInfo[2];
 
   SVGAnimatedPathSegList mPath;

@@ -52,8 +52,8 @@
 #include "SVGMotionSMILAttr.h"
 #include "nsSVGNumber2.h"
 #include "SVGNumberPair.h"
-#include "nsSVGString.h"
-#include "nsSVGViewBox.h"
+#include "SVGString.h"
+#include "SVGViewBox.h"
 #include <stdarg.h>
 
 // This is needed to ensure correct handling of calls to the
@@ -178,7 +178,7 @@ nsresult SVGElement::Init() {
     enumInfo.Reset(i);
   }
 
-  nsSVGViewBox* viewBox = GetViewBox();
+  SVGViewBox* viewBox = GetViewBox();
 
   if (viewBox) {
     viewBox->Init();
@@ -547,9 +547,9 @@ bool SVGElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
     }
 
     if (!foundMatch) {
-      // Check for nsSVGViewBox attribute
+      // Check for SVGViewBox attribute
       if (aAttribute == nsGkAtoms::viewBox) {
-        nsSVGViewBox* viewBox = GetViewBox();
+        SVGViewBox* viewBox = GetViewBox();
         if (viewBox) {
           rv = viewBox->SetBaseValueString(aValue, this, false);
           if (NS_FAILED(rv)) {
@@ -607,7 +607,7 @@ bool SVGElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
   }
 
   if (!foundMatch) {
-    // Check for nsSVGString attribute
+    // Check for SVGString attribute
     StringAttributesInfo stringInfo = GetStringInfo();
     for (uint32_t i = 0; i < stringInfo.mStringCount; i++) {
       if (aNamespaceID == stringInfo.mStringInfo[i].mNamespaceID &&
@@ -783,7 +783,7 @@ void SVGElement::UnsetAttrInternal(int32_t aNamespaceID, nsAtom* aName,
 
     // Check if this is a nsViewBox attribute going away
     if (aName == nsGkAtoms::viewBox) {
-      nsSVGViewBox* viewBox = GetViewBox();
+      SVGViewBox* viewBox = GetViewBox();
       if (viewBox) {
         MaybeSerializeAttrBeforeRemoval(aName, aNotify);
         viewBox->Init();
@@ -1919,14 +1919,14 @@ void SVGElement::DidAnimateEnum(uint8_t aAttrEnum) {
   }
 }
 
-nsSVGViewBox* SVGElement::GetViewBox() { return nullptr; }
+SVGViewBox* SVGElement::GetViewBox() { return nullptr; }
 
 nsAttrValue SVGElement::WillChangeViewBox() {
   return WillChangeValue(nsGkAtoms::viewBox);
 }
 
 void SVGElement::DidChangeViewBox(const nsAttrValue& aEmptyOrOldValue) {
-  nsSVGViewBox* viewBox = GetViewBox();
+  SVGViewBox* viewBox = GetViewBox();
 
   NS_ASSERTION(viewBox, "DidChangeViewBox on element with no viewBox attrib");
 
@@ -2240,7 +2240,7 @@ UniquePtr<nsISMILAttr> SVGElement::GetAnimatedAttr(int32_t aNamespaceID,
 
     // viewBox:
     if (aName == nsGkAtoms::viewBox) {
-      nsSVGViewBox* viewBox = GetViewBox();
+      SVGViewBox* viewBox = GetViewBox();
       return viewBox ? viewBox->ToSMILAttr(this) : nullptr;
     }
 
