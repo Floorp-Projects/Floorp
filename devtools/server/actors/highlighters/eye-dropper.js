@@ -164,6 +164,10 @@ EyeDropper.prototype = {
     // Focus the content so the keyboard can be used.
     this.win.focus();
 
+    // Make sure we receive mouse events when the debugger has paused execution
+    // in the page.
+    this.win.document.setSuppressedEventListener(this);
+
     return true;
   },
 
@@ -191,6 +195,8 @@ EyeDropper.prototype = {
     this.getElement("root").removeAttribute("drawn");
 
     this.emit("hidden");
+
+    this.win.document.setSuppressedEventListener(null);
   },
 
   prepareImageCapture() {
@@ -330,7 +336,10 @@ EyeDropper.prototype = {
         // And move the eye-dropper's UI so it follows the mouse.
         this.moveTo(x, y);
         break;
+      // Note: when events are suppressed we will only get mousedown/mouseup and
+      // not any click events.
       case "click":
+      case "mouseup":
         this.selectColor();
         break;
       case "keydown":
