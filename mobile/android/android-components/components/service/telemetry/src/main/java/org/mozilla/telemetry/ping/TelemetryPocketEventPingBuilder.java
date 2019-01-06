@@ -10,9 +10,9 @@ import org.mozilla.telemetry.measurement.EventsMeasurement;
 import org.mozilla.telemetry.measurement.LocaleMeasurement;
 import org.mozilla.telemetry.measurement.OperatingSystemMeasurement;
 import org.mozilla.telemetry.measurement.OperatingSystemVersionMeasurement;
+import org.mozilla.telemetry.measurement.PocketIdMeasurement;
 import org.mozilla.telemetry.measurement.ProcessStartTimestampMeasurement;
 import org.mozilla.telemetry.measurement.SequenceMeasurement;
-import org.mozilla.telemetry.measurement.SettingsMeasurement;
 import org.mozilla.telemetry.measurement.TimezoneOffsetMeasurement;
 
 /**
@@ -30,6 +30,7 @@ public class TelemetryPocketEventPingBuilder extends TelemetryPingBuilder {
     public TelemetryPocketEventPingBuilder(TelemetryConfiguration configuration) {
         super(configuration, TYPE, VERSION);
 
+        addMeasurement(new PocketIdMeasurement(configuration));
         addMeasurement(new ProcessStartTimestampMeasurement(configuration));
         addMeasurement(new SequenceMeasurement(configuration, this));
         addMeasurement(new LocaleMeasurement());
@@ -37,7 +38,6 @@ public class TelemetryPocketEventPingBuilder extends TelemetryPingBuilder {
         addMeasurement(new OperatingSystemVersionMeasurement());
         addMeasurement(new CreatedTimestampMeasurement());
         addMeasurement(new TimezoneOffsetMeasurement());
-        addMeasurement(new SettingsMeasurement(configuration));
         addMeasurement(eventsMeasurement = new EventsMeasurement(configuration));
     }
 
