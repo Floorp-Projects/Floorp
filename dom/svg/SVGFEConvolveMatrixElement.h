@@ -12,7 +12,7 @@
 #include "SVGEnum.h"
 #include "SVGFilters.h"
 #include "nsSVGInteger.h"
-#include "nsSVGIntegerPair.h"
+#include "SVGIntegerPair.h"
 #include "nsSVGNumber2.h"
 #include "nsSVGString.h"
 
@@ -82,7 +82,7 @@ class SVGFEConvolveMatrixElement : public SVGFEConvolveMatrixElementBase {
   static NumberInfo sNumberInfo[2];
 
   enum { KERNEL_UNIT_LENGTH };
-  nsSVGNumberPair mNumberPairAttributes[1];
+  SVGNumberPair mNumberPairAttributes[1];
   static NumberPairInfo sNumberPairInfo[1];
 
   enum { TARGET_X, TARGET_Y };
@@ -90,7 +90,7 @@ class SVGFEConvolveMatrixElement : public SVGFEConvolveMatrixElementBase {
   static IntegerInfo sIntegerInfo[2];
 
   enum { ORDER };
-  nsSVGIntegerPair mIntegerPairAttributes[1];
+  SVGIntegerPair mIntegerPairAttributes[1];
   static IntegerPairInfo sIntegerPairInfo[1];
 
   enum { PRESERVEALPHA };

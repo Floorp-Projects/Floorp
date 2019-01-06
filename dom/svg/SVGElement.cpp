@@ -47,11 +47,11 @@
 #include "nsSVGBoolean.h"
 #include "SVGEnum.h"
 #include "nsSVGInteger.h"
-#include "nsSVGIntegerPair.h"
+#include "SVGIntegerPair.h"
 #include "nsSVGLength2.h"
 #include "SVGMotionSMILAttr.h"
 #include "nsSVGNumber2.h"
-#include "nsSVGNumberPair.h"
+#include "SVGNumberPair.h"
 #include "nsSVGString.h"
 #include "nsSVGViewBox.h"
 #include <stdarg.h>
@@ -407,7 +407,7 @@ bool SVGElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
     }
 
     if (!foundMatch) {
-      // Check for nsSVGNumberPair attribute
+      // Check for SVGNumberPair attribute
       NumberPairAttributesInfo numberPairInfo = GetNumberPairInfo();
       for (i = 0; i < numberPairInfo.mNumberPairCount; i++) {
         if (aAttribute == numberPairInfo.mNumberPairInfo[i].mName) {
@@ -443,7 +443,7 @@ bool SVGElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
     }
 
     if (!foundMatch) {
-      // Check for nsSVGIntegerPair attribute
+      // Check for SVGIntegerPair attribute
       IntegerPairAttributesInfo integerPairInfo = GetIntegerPairInfo();
       for (i = 0; i < integerPairInfo.mIntegerPairCount; i++) {
         if (aAttribute == integerPairInfo.mIntegerPairInfo[i].mName) {

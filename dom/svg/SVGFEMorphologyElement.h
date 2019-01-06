@@ -9,7 +9,7 @@
 
 #include "SVGEnum.h"
 #include "SVGFilters.h"
-#include "nsSVGNumberPair.h"
+#include "SVGNumberPair.h"
 #include "nsSVGString.h"
 
 nsresult NS_NewSVGFEMorphologyElement(
@@ -61,7 +61,7 @@ class SVGFEMorphologyElement : public SVGFEMorphologyElementBase {
   virtual StringAttributesInfo GetStringInfo() override;
 
   enum { RADIUS };
-  nsSVGNumberPair mNumberPairAttributes[1];
+  SVGNumberPair mNumberPairAttributes[1];
   static NumberPairInfo sNumberPairInfo[1];
 
   enum { OPERATOR };
