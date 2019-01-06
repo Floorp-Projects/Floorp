@@ -738,9 +738,7 @@ class AccessibilityTest : BaseSessionTest() {
     }
 
     @Setting(key = Setting.Key.FULL_ACCESSIBILITY_TREE, value = "true")
-    // disable test on debug for frequently failing #Bug 1505353
     @Test fun autoFill_navigation() {
-        assumeThat(sessionRule.env.isDebugBuild, equalTo(false))
         fun countAutoFillNodes(cond: (AccessibilityNodeInfo) -> Boolean =
                                        { it.className == "android.widget.EditText" },
                                id: Int = View.NO_ID): Int {
