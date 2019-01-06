@@ -9,7 +9,7 @@
 
 #include "SVGFilters.h"
 #include "nsSVGNumber2.h"
-#include "nsSVGNumberPair.h"
+#include "SVGNumberPair.h"
 #include "nsSVGString.h"
 
 nsresult NS_NewSVGFEDropShadowElement(
@@ -67,7 +67,7 @@ class SVGFEDropShadowElement : public SVGFEDropShadowElementBase {
   static NumberInfo sNumberInfo[2];
 
   enum { STD_DEV };
-  nsSVGNumberPair mNumberPairAttributes[1];
+  SVGNumberPair mNumberPairAttributes[1];
   static NumberPairInfo sNumberPairInfo[1];
 
   enum { RESULT, IN1 };

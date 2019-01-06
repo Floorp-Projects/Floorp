@@ -6,9 +6,9 @@
 
 #include "SVGAttrValueWrapper.h"
 #include "SVGAngle.h"
-#include "nsSVGIntegerPair.h"
+#include "SVGIntegerPair.h"
 #include "nsSVGLength2.h"
-#include "nsSVGNumberPair.h"
+#include "SVGNumberPair.h"
 #include "nsSVGViewBox.h"
 #include "SVGAnimatedPreserveAspectRatio.h"
 #include "SVGLengthList.h"
@@ -18,7 +18,7 @@
 #include "SVGStringList.h"
 #include "SVGTransformList.h"
 
-using namespace mozilla;
+namespace mozilla {
 
 /*static*/ void SVGAttrValueWrapper::ToString(const SVGAngle* aAngle,
                                               nsAString& aResult) {
@@ -26,7 +26,7 @@ using namespace mozilla;
 }
 
 /*static*/ void SVGAttrValueWrapper::ToString(
-    const nsSVGIntegerPair* aIntegerPair, nsAString& aResult) {
+    const SVGIntegerPair* aIntegerPair, nsAString& aResult) {
   aIntegerPair->GetBaseValueString(aResult);
 }
 
@@ -45,8 +45,8 @@ using namespace mozilla;
   aNumberList->GetValueAsString(aResult);
 }
 
-/*static*/ void SVGAttrValueWrapper::ToString(
-    const nsSVGNumberPair* aNumberPair, nsAString& aResult) {
+/*static*/ void SVGAttrValueWrapper::ToString(const SVGNumberPair* aNumberPair,
+                                              nsAString& aResult) {
   aNumberPair->GetBaseValueString(aResult);
 }
 
@@ -80,3 +80,5 @@ using namespace mozilla;
                                               nsAString& aResult) {
   aViewBox->GetBaseValueString(aResult);
 }
+
+}  // namespace mozilla

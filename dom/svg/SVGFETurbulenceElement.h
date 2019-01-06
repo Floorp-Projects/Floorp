@@ -68,7 +68,7 @@ class SVGFETurbulenceElement : public SVGFETurbulenceElementBase {
   static NumberInfo sNumberInfo[1];
 
   enum { BASE_FREQ };
-  nsSVGNumberPair mNumberPairAttributes[1];
+  SVGNumberPair mNumberPairAttributes[1];
   static NumberPairInfo sNumberPairInfo[1];
 
   enum { OCTAVES };

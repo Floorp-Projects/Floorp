@@ -14,14 +14,10 @@
 #include "nsIFrame.h"
 #include "nsLayoutUtils.h"
 #include "SVGAnimatedNumberList.h"
-#include "nsSVGBoolean.h"
 #include "SVGEnum.h"
 #include "nsSVGFilterInstance.h"
-#include "nsSVGInteger.h"
-#include "nsSVGIntegerPair.h"
-#include "nsSVGNumber2.h"
-#include "nsSVGNumberPair.h"
 #include "SVGNumberList.h"
+#include "SVGNumberPair.h"
 #include "nsSVGString.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/ComputedStyle.h"
@@ -148,15 +144,15 @@ bool SVGFE::StyleIsSetToSRGB() {
 }
 
 Size SVGFE::GetKernelUnitLength(nsSVGFilterInstance* aInstance,
-                                nsSVGNumberPair* aKernelUnitLength) {
+                                SVGNumberPair* aKernelUnitLength) {
   if (!aKernelUnitLength->IsExplicitlySet()) {
     return Size(1, 1);
   }
 
   float kernelX = aInstance->GetPrimitiveNumber(
-      SVGContentUtils::X, aKernelUnitLength, nsSVGNumberPair::eFirst);
+      SVGContentUtils::X, aKernelUnitLength, SVGNumberPair::eFirst);
   float kernelY = aInstance->GetPrimitiveNumber(
-      SVGContentUtils::Y, aKernelUnitLength, nsSVGNumberPair::eSecond);
+      SVGContentUtils::Y, aKernelUnitLength, SVGNumberPair::eSecond);
   return Size(kernelX, kernelY);
 }
 

@@ -41,12 +41,12 @@ already_AddRefed<SVGAnimatedString> SVGFEGaussianBlurElement::In1() {
 
 already_AddRefed<SVGAnimatedNumber> SVGFEGaussianBlurElement::StdDeviationX() {
   return mNumberPairAttributes[STD_DEV].ToDOMAnimatedNumber(
-      nsSVGNumberPair::eFirst, this);
+      SVGNumberPair::eFirst, this);
 }
 
 already_AddRefed<SVGAnimatedNumber> SVGFEGaussianBlurElement::StdDeviationY() {
   return mNumberPairAttributes[STD_DEV].ToDOMAnimatedNumber(
-      nsSVGNumberPair::eSecond, this);
+      SVGNumberPair::eSecond, this);
 }
 
 void SVGFEGaussianBlurElement::SetStdDeviation(float stdDeviationX,
@@ -61,10 +61,10 @@ FilterPrimitiveDescription SVGFEGaussianBlurElement::GetPrimitiveDescription(
     nsTArray<RefPtr<SourceSurface>>& aInputImages) {
   float stdX = aInstance->GetPrimitiveNumber(SVGContentUtils::X,
                                              &mNumberPairAttributes[STD_DEV],
-                                             nsSVGNumberPair::eFirst);
+                                             SVGNumberPair::eFirst);
   float stdY = aInstance->GetPrimitiveNumber(SVGContentUtils::Y,
                                              &mNumberPairAttributes[STD_DEV],
-                                             nsSVGNumberPair::eSecond);
+                                             SVGNumberPair::eSecond);
   if (stdX < 0 || stdY < 0) {
     return FilterPrimitiveDescription();
   }

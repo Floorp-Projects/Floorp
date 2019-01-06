@@ -8,7 +8,6 @@
 #define mozilla_dom_SVGFilterElement_h
 
 #include "SVGEnum.h"
-#include "nsSVGIntegerPair.h"
 #include "nsSVGLength2.h"
 #include "nsSVGString.h"
 #include "mozilla/dom/SVGElement.h"
