@@ -88,6 +88,13 @@ PrintProgressDialogChild::OnSecurityChange(nsIWebProgress* aProgress,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+PrintProgressDialogChild::OnContentBlockingEvent(nsIWebProgress* aProgress,
+                                                 nsIRequest* aRequest,
+                                                 uint32_t aEvent) {
+  return NS_OK;
+}
+
 // nsIPrintProgressParams
 
 NS_IMETHODIMP
