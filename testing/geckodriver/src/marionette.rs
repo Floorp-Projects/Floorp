@@ -481,15 +481,18 @@ impl MarionetteSession {
             | TakeScreenshot
             | TakeElementScreenshot(_) => WebDriverResponse::Generic(resp.to_value_response(true)?),
             GetTimeouts => {
-                let script = try_opt!(
-                    try_opt!(
+                let script = match try_opt!(
                         resp.result.get("script"),
                         ErrorStatus::UnknownError,
                         "Missing field: script"
-                    ).as_u64(),
-                    ErrorStatus::UnknownError,
-                    "Failed to interpret script timeout duration as u64"
-                );
+                    ) {
+                        Value::Null => None,
+                        n => try_opt!(
+                            Some(n.as_u64()),
+                            ErrorStatus::UnknownError,
+                            "Failed to interpret script timeout duration as u64"
+                        ),
+                };
                 // Check for the spec-compliant "pageLoad", but also for "page load",
                 // which was sent by Firefox 52 and earlier.
                 let page_load = try_opt!(
