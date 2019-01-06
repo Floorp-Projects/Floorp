@@ -5145,7 +5145,7 @@ void nsGlobalWindowOuter::NotifyContentBlockingState(unsigned aState,
     return;
   }
 
-  eventSink->OnSecurityChange(aChannel, state);
+  eventSink->OnContentBlockingEvent(aChannel, state);
 }
 
 // static
