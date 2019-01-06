@@ -194,12 +194,12 @@ function testOnWindow(aTestData) {
       let browser = win.gBrowser.selectedBrowser;
       let wp = win.gBrowser.contentWindow.docShell.QueryInterface(Ci.nsIWebProgress);
       let progressListener = {
-        onSecurityChange(aWebProgress, aRequest, aState) {
+        onContentBlockingEvent(aWebProgress, aRequest, aEvent) {
           expected = aTestData.reportUrl;
         },
         QueryInterface: ChromeUtils.generateQI(["nsISupportsWeakReference"]),
       };
-      wp.addProgressListener(progressListener, wp.NOTIFY_SECURITY);
+      wp.addProgressListener(progressListener, wp.NOTIFY_CONTENT_BLOCKING);
 
       await BrowserTestUtils.loadURI(browser, aTestData.url);
       await BrowserTestUtils.waitForContentEvent(browser, "DOMContentLoaded");

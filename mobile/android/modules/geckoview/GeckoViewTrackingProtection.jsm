@@ -12,7 +12,7 @@ class GeckoViewTrackingProtection extends GeckoViewModule {
   onEnable() {
     debug `onEnable`;
 
-    const flags = Ci.nsIWebProgress.NOTIFY_SECURITY;
+    const flags = Ci.nsIWebProgress.NOTIFY_CONTENT_BLOCKING;
     this.progressFilter =
       Cc["@mozilla.org/appshell/component/browser-status-filter;1"]
       .createInstance(Ci.nsIWebProgress);
@@ -20,10 +20,10 @@ class GeckoViewTrackingProtection extends GeckoViewModule {
     this.browser.addProgressListener(this.progressFilter, flags);
   }
 
-  onSecurityChange(aWebProgress, aRequest, aState) {
-    debug `onSecurityChange`;
+  onContentBlockingEvent(aWebProgress, aRequest, aEvent) {
+    debug `onContentBlockingEvent`;
 
-    if (!(aState & Ci.nsIWebProgressListener.STATE_BLOCKED_TRACKING_CONTENT) ||
+    if (!(aEvent & Ci.nsIWebProgressListener.STATE_BLOCKED_TRACKING_CONTENT) ||
         !aRequest || !(aRequest instanceof Ci.nsIClassifiedChannel)) {
       return;
     }

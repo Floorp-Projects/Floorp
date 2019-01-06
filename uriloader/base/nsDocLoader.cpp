@@ -1421,8 +1421,9 @@ NS_IMETHODIMP nsDocLoader::OnContentBlockingEvent(nsISupports* aContext,
   nsCOMPtr<nsIRequest> request = do_QueryInterface(aContext);
   nsIWebProgress* webProgress = static_cast<nsIWebProgress*>(this);
 
-  NOTIFY_LISTENERS(nsIWebProgress::NOTIFY_SECURITY,
-                   listener->OnSecurityChange(webProgress, request, aEvent););
+  NOTIFY_LISTENERS(
+      nsIWebProgress::NOTIFY_CONTENT_BLOCKING,
+      listener->OnContentBlockingEvent(webProgress, request, aEvent););
 
   // Pass the notification up to the parent...
   if (mParent) {

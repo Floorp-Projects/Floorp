@@ -968,10 +968,13 @@ window._gBrowser = {
 
     let securityUI = newBrowser.securityUI;
     if (securityUI) {
+      this._callProgressListeners(null, "onSecurityChange",
+                                  [webProgress, null, securityUI.state],
+                                  true, false);
       // Include the true final argument to indicate that this event is
       // simulated (instead of being observed by the webProgressListener).
-      this._callProgressListeners(null, "onSecurityChange",
-                                  [webProgress, null, securityUI.state, true],
+      this._callProgressListeners(null, "onContentBlockingEvent",
+                                  [webProgress, null, securityUI.contentBlockingEvent, true],
                                   true, false);
     }
 
@@ -1718,10 +1721,14 @@ window._gBrowser = {
     let securityUI = aBrowser.securityUI;
     let state = securityUI ? securityUI.state :
       Ci.nsIWebProgressListener.STATE_IS_INSECURE;
+    this._callProgressListeners(aBrowser, "onSecurityChange",
+                                [aBrowser.webProgress, null, state],
+                                true, false);
+    let event = securityUI ? securityUI.contentBlockingEvent : 0;
     // Include the true final argument to indicate that this event is
     // simulated (instead of being observed by the webProgressListener).
-    this._callProgressListeners(aBrowser, "onSecurityChange",
-                                [aBrowser.webProgress, null, state, true],
+    this._callProgressListeners(aBrowser, "onContentBlockingEvent",
+                                [aBrowser.webProgress, null, event, true],
                                 true, false);
 
     if (aShouldBeRemote) {
@@ -5192,6 +5199,10 @@ class TabProgressListener {
     if (!this.mBlank) {
       this._callProgressListeners("onLocationChange",
                                   [aWebProgress, aRequest, aLocation, aFlags]);
+      // Include the true final argument to indicate that this event is
+      // simulated (instead of being observed by the webProgressListener).
+      this._callProgressListeners("onContentBlockingEvent",
+                                  [aWebProgress, null, 0, true]);
     }
 
     if (topLevel) {
@@ -5213,6 +5224,11 @@ class TabProgressListener {
   onSecurityChange(aWebProgress, aRequest, aState) {
     this._callProgressListeners("onSecurityChange",
                                 [aWebProgress, aRequest, aState]);
+  }
+
+  onContentBlockingEvent(aWebProgress, aRequest, aEvent) {
+    this._callProgressListeners("onContentBlockingEvent",
+                                [aWebProgress, aRequest, aEvent]);
   }
 
   onRefreshAttempted(aWebProgress, aURI, aDelay, aSameURI) {
