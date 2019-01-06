@@ -240,7 +240,7 @@ nsresult MediaEngineRemoteVideoSource::Deallocate(
   return NS_OK;
 }
 
-nsresult MediaEngineRemoteVideoSource::SetTrack(
+void MediaEngineRemoteVideoSource::SetTrack(
     const RefPtr<const AllocationHandle>& aHandle,
     const RefPtr<SourceMediaStream>& aStream, TrackID aTrackID,
     const PrincipalHandle& aPrincipal) {
@@ -266,7 +266,6 @@ nsresult MediaEngineRemoteVideoSource::SetTrack(
   }
   aStream->AddTrack(aTrackID, new VideoSegment(),
                     SourceMediaStream::ADDTRACK_QUEUED);
-  return NS_OK;
 }
 
 nsresult MediaEngineRemoteVideoSource::Start(
