@@ -18,7 +18,7 @@
 #include "nsSVGFilterInstance.h"
 #include "SVGNumberList.h"
 #include "SVGNumberPair.h"
-#include "nsSVGString.h"
+#include "SVGString.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/SVGContentUtils.h"

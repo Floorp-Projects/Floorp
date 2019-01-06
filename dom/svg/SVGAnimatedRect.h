@@ -8,15 +8,14 @@
 #define mozilla_dom_SVGAnimatedRect_h
 
 #include "nsCycleCollectionParticipant.h"
+#include "mozilla/dom/SVGElement.h"
 #include "mozilla/dom/SVGRectBinding.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
 #include "nsWrapperCache.h"
-#include "SVGElement.h"
-
-class nsSVGViewBox;
 
 namespace mozilla {
+class SVGViewBox;
 namespace dom {
 
 class SVGAnimatedRect final : public nsWrapperCache {
@@ -24,7 +23,7 @@ class SVGAnimatedRect final : public nsWrapperCache {
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(SVGAnimatedRect)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(SVGAnimatedRect)
 
-  SVGAnimatedRect(nsSVGViewBox* aVal, SVGElement* aSVGElement);
+  SVGAnimatedRect(SVGViewBox* aVal, SVGElement* aSVGElement);
 
   SVGElement* GetParentObject() const { return mSVGElement; }
 
@@ -38,7 +37,7 @@ class SVGAnimatedRect final : public nsWrapperCache {
  private:
   virtual ~SVGAnimatedRect();
 
-  nsSVGViewBox* mVal;  // kept alive because it belongs to content
+  SVGViewBox* mVal;  // kept alive because it belongs to content
   RefPtr<SVGElement> mSVGElement;
 };
 

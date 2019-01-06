@@ -252,7 +252,7 @@ NS_QUERYFRAME_TAIL_INHERITING(nsSVGDisplayContainerFrame)
   }
 
   SVGViewElement* viewElement = content->GetCurrentViewElement();
-  const nsSVGViewBoxRect* viewbox = nullptr;
+  const SVGViewBoxRect* viewbox = nullptr;
 
   // The logic here should match HasViewBox().
   if (viewElement && viewElement->mViewBox.HasRect()) {

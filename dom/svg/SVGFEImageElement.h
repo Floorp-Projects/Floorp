@@ -49,7 +49,7 @@ class SVGFEImageElement final : public SVGFEImageElementBase,
       nsTArray<RefPtr<SourceSurface>>& aInputImages) override;
   virtual bool AttributeAffectsRendering(int32_t aNameSpaceID,
                                          nsAtom* aAttribute) const override;
-  virtual nsSVGString& GetResultImageName() override {
+  virtual SVGString& GetResultImageName() override {
     return mStringAttributes[RESULT];
   }
   virtual bool OutputIsTainted(const nsTArray<bool>& aInputsAreTainted,
@@ -95,7 +95,7 @@ class SVGFEImageElement final : public SVGFEImageElementBase,
   nsIContent* AsContent() override { return this; }
 
   enum { RESULT, HREF, XLINK_HREF };
-  nsSVGString mStringAttributes[3];
+  SVGString mStringAttributes[3];
   static StringInfo sStringInfo[3];
 
   SVGAnimatedPreserveAspectRatio mPreserveAspectRatio;

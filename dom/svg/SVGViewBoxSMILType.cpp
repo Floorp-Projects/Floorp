@@ -6,7 +6,7 @@
 
 #include "SVGViewBoxSMILType.h"
 #include "nsSMILValue.h"
-#include "nsSVGViewBox.h"
+#include "SVGViewBox.h"
 #include "nsDebug.h"
 #include <math.h>
 
@@ -17,13 +17,13 @@ namespace mozilla {
 void SVGViewBoxSMILType::Init(nsSMILValue& aValue) const {
   MOZ_ASSERT(aValue.IsNull(), "Unexpected value type");
 
-  aValue.mU.mPtr = new nsSVGViewBoxRect();
+  aValue.mU.mPtr = new SVGViewBoxRect();
   aValue.mType = this;
 }
 
 void SVGViewBoxSMILType::Destroy(nsSMILValue& aValue) const {
   MOZ_ASSERT(aValue.mType == this, "Unexpected SMIL value");
-  delete static_cast<nsSVGViewBoxRect*>(aValue.mU.mPtr);
+  delete static_cast<SVGViewBoxRect*>(aValue.mU.mPtr);
   aValue.mU.mPtr = nullptr;
   aValue.mType = SMILNullType::Singleton();
 }
@@ -33,9 +33,8 @@ nsresult SVGViewBoxSMILType::Assign(nsSMILValue& aDest,
   MOZ_ASSERT(aDest.mType == aSrc.mType, "Incompatible SMIL types");
   MOZ_ASSERT(aDest.mType == this, "Unexpected SMIL value");
 
-  const nsSVGViewBoxRect* src =
-      static_cast<const nsSVGViewBoxRect*>(aSrc.mU.mPtr);
-  nsSVGViewBoxRect* dst = static_cast<nsSVGViewBoxRect*>(aDest.mU.mPtr);
+  const SVGViewBoxRect* src = static_cast<const SVGViewBoxRect*>(aSrc.mU.mPtr);
+  SVGViewBoxRect* dst = static_cast<SVGViewBoxRect*>(aDest.mU.mPtr);
   *dst = *src;
   return NS_OK;
 }
@@ -45,10 +44,9 @@ bool SVGViewBoxSMILType::IsEqual(const nsSMILValue& aLeft,
   MOZ_ASSERT(aLeft.mType == aRight.mType, "Incompatible SMIL types");
   MOZ_ASSERT(aLeft.mType == this, "Unexpected type for SMIL value");
 
-  const nsSVGViewBoxRect* leftBox =
-      static_cast<const nsSVGViewBoxRect*>(aLeft.mU.mPtr);
-  const nsSVGViewBoxRect* rightBox =
-      static_cast<nsSVGViewBoxRect*>(aRight.mU.mPtr);
+  const SVGViewBoxRect* leftBox =
+      static_cast<const SVGViewBoxRect*>(aLeft.mU.mPtr);
+  const SVGViewBoxRect* rightBox = static_cast<SVGViewBoxRect*>(aRight.mU.mPtr);
   return *leftBox == *rightBox;
 }
 
@@ -71,10 +69,9 @@ nsresult SVGViewBoxSMILType::ComputeDistance(const nsSMILValue& aFrom,
   MOZ_ASSERT(aFrom.mType == aTo.mType, "Trying to compare different types");
   MOZ_ASSERT(aFrom.mType == this, "Unexpected source type");
 
-  const nsSVGViewBoxRect* from =
-      static_cast<const nsSVGViewBoxRect*>(aFrom.mU.mPtr);
-  const nsSVGViewBoxRect* to =
-      static_cast<const nsSVGViewBoxRect*>(aTo.mU.mPtr);
+  const SVGViewBoxRect* from =
+      static_cast<const SVGViewBoxRect*>(aFrom.mU.mPtr);
+  const SVGViewBoxRect* to = static_cast<const SVGViewBoxRect*>(aTo.mU.mPtr);
 
   if (from->none || to->none) {
     return NS_ERROR_FAILURE;
@@ -106,16 +103,16 @@ nsresult SVGViewBoxSMILType::Interpolate(const nsSMILValue& aStartVal,
   MOZ_ASSERT(aStartVal.mType == this, "Unexpected types for interpolation");
   MOZ_ASSERT(aResult.mType == this, "Unexpected result type");
 
-  const nsSVGViewBoxRect* start =
-      static_cast<const nsSVGViewBoxRect*>(aStartVal.mU.mPtr);
-  const nsSVGViewBoxRect* end =
-      static_cast<const nsSVGViewBoxRect*>(aEndVal.mU.mPtr);
+  const SVGViewBoxRect* start =
+      static_cast<const SVGViewBoxRect*>(aStartVal.mU.mPtr);
+  const SVGViewBoxRect* end =
+      static_cast<const SVGViewBoxRect*>(aEndVal.mU.mPtr);
 
   if (start->none || end->none) {
     return NS_ERROR_FAILURE;
   }
 
-  nsSVGViewBoxRect* current = static_cast<nsSVGViewBoxRect*>(aResult.mU.mPtr);
+  SVGViewBoxRect* current = static_cast<SVGViewBoxRect*>(aResult.mU.mPtr);
 
   float x = (start->x + (end->x - start->x) * aUnitDistance);
   float y = (start->y + (end->y - start->y) * aUnitDistance);
@@ -123,7 +120,7 @@ nsresult SVGViewBoxSMILType::Interpolate(const nsSMILValue& aStartVal,
   float height =
       (start->height + (end->height - start->height) * aUnitDistance);
 
-  *current = nsSVGViewBoxRect(x, y, width, height);
+  *current = SVGViewBoxRect(x, y, width, height);
 
   return NS_OK;
 }

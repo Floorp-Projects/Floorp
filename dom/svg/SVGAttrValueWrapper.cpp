@@ -5,18 +5,19 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "SVGAttrValueWrapper.h"
+
+#include "SVGAnimatedPreserveAspectRatio.h"
 #include "SVGAngle.h"
 #include "SVGIntegerPair.h"
 #include "nsSVGLength2.h"
-#include "SVGNumberPair.h"
-#include "nsSVGViewBox.h"
-#include "SVGAnimatedPreserveAspectRatio.h"
 #include "SVGLengthList.h"
+#include "SVGNumberPair.h"
 #include "SVGNumberList.h"
 #include "SVGPathData.h"
 #include "SVGPointList.h"
 #include "SVGStringList.h"
 #include "SVGTransformList.h"
+#include "SVGViewBox.h"
 
 namespace mozilla {
 
@@ -76,7 +77,7 @@ namespace mozilla {
   aTransformList->GetValueAsString(aResult);
 }
 
-/*static*/ void SVGAttrValueWrapper::ToString(const nsSVGViewBox* aViewBox,
+/*static*/ void SVGAttrValueWrapper::ToString(const SVGViewBox* aViewBox,
                                               nsAString& aResult) {
   aViewBox->GetBaseValueString(aResult);
 }

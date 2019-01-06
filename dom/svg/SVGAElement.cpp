@@ -13,7 +13,6 @@
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
 #include "nsGkAtoms.h"
-#include "nsSVGString.h"
 #include "nsIContentInlines.h"
 #include "nsIURI.h"
 

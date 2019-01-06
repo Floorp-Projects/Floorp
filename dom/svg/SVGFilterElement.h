@@ -9,7 +9,7 @@
 
 #include "SVGEnum.h"
 #include "nsSVGLength2.h"
-#include "nsSVGString.h"
+#include "SVGString.h"
 #include "mozilla/dom/SVGElement.h"
 
 class nsSVGFilterFrame;
@@ -68,7 +68,7 @@ class SVGFilterElement : public SVGFilterElementBase {
   static EnumInfo sEnumInfo[2];
 
   enum { HREF, XLINK_HREF };
-  nsSVGString mStringAttributes[2];
+  SVGString mStringAttributes[2];
   static StringInfo sStringInfo[2];
 };
 

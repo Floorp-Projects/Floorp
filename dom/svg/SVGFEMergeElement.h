@@ -34,7 +34,7 @@ class SVGFEMergeElement : public SVGFEMergeElementBase {
       nsSVGFilterInstance* aInstance, const IntRect& aFilterSubregion,
       const nsTArray<bool>& aInputsAreTainted,
       nsTArray<RefPtr<SourceSurface>>& aInputImages) override;
-  virtual nsSVGString& GetResultImageName() override {
+  virtual SVGString& GetResultImageName() override {
     return mStringAttributes[RESULT];
   }
   virtual void GetSourceImageNames(nsTArray<SVGStringInfo>& aSources) override;
@@ -46,7 +46,7 @@ class SVGFEMergeElement : public SVGFEMergeElementBase {
   virtual StringAttributesInfo GetStringInfo() override;
 
   enum { RESULT };
-  nsSVGString mStringAttributes[1];
+  SVGString mStringAttributes[1];
   static StringInfo sStringInfo[1];
 };
 

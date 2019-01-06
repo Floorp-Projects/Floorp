@@ -104,7 +104,7 @@ void nsSVGMarkerFrame::PaintMark(gfxContext& aContext,
     return;
   }
 
-  const nsSVGViewBoxRect viewBox = marker->GetViewBoxRect();
+  const SVGViewBoxRect viewBox = marker->GetViewBoxRect();
 
   if (viewBox.width <= 0.0f || viewBox.height <= 0.0f) {
     // We must disable rendering if the viewBox width or height are zero.
@@ -154,7 +154,7 @@ SVGBBox nsSVGMarkerFrame::GetMarkBBoxContribution(
     return bbox;
   }
 
-  const nsSVGViewBoxRect viewBox = content->GetViewBoxRect();
+  const SVGViewBoxRect viewBox = content->GetViewBoxRect();
 
   if (viewBox.width <= 0.0f || viewBox.height <= 0.0f) {
     return bbox;

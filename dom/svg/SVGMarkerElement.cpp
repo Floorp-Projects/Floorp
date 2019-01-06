@@ -240,7 +240,7 @@ SVGElement::EnumAttributesInfo SVGMarkerElement::GetEnumInfo() {
   return EnumAttributesInfo(mEnumAttributes, sEnumInfo, ArrayLength(sEnumInfo));
 }
 
-nsSVGViewBox* SVGMarkerElement::GetViewBox() { return &mViewBox; }
+SVGViewBox* SVGMarkerElement::GetViewBox() { return &mViewBox; }
 
 SVGAnimatedPreserveAspectRatio* SVGMarkerElement::GetPreserveAspectRatio() {
   return &mPreserveAspectRatio;
@@ -273,11 +273,11 @@ gfx::Matrix SVGMarkerElement::GetMarkerTransform(float aStrokeWidth,
                      -sin(angle) * scale, cos(angle) * scale, aMark.x, aMark.y);
 }
 
-nsSVGViewBoxRect SVGMarkerElement::GetViewBoxRect() {
+SVGViewBoxRect SVGMarkerElement::GetViewBoxRect() {
   if (mViewBox.HasRect()) {
     return mViewBox.GetAnimValue();
   }
-  return nsSVGViewBoxRect(
+  return SVGViewBoxRect(
       0, 0, mLengthAttributes[MARKERWIDTH].GetAnimValue(mCoordCtx),
       mLengthAttributes[MARKERHEIGHT].GetAnimValue(mCoordCtx));
 }
@@ -289,7 +289,7 @@ gfx::Matrix SVGMarkerElement::GetViewBoxTransform() {
     float viewportHeight =
         mLengthAttributes[MARKERHEIGHT].GetAnimValue(mCoordCtx);
 
-    nsSVGViewBoxRect viewbox = GetViewBoxRect();
+    SVGViewBoxRect viewbox = GetViewBoxRect();
 
     MOZ_ASSERT(viewbox.width > 0.0f && viewbox.height > 0.0f,
                "Rendering should be disabled");

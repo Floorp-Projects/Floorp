@@ -10,7 +10,7 @@
 #include "nsAutoPtr.h"
 #include "SVGEnum.h"
 #include "nsSVGLength2.h"
-#include "nsSVGString.h"
+#include "SVGString.h"
 #include "SVGAnimatedTransformList.h"
 #include "mozilla/dom/SVGElement.h"
 
@@ -69,7 +69,7 @@ class SVGGradientElement : public SVGGradientElementBase {
   static EnumInfo sEnumInfo[2];
 
   enum { HREF, XLINK_HREF };
-  nsSVGString mStringAttributes[2];
+  SVGString mStringAttributes[2];
   static StringInfo sStringInfo[2];
 
   // SVGGradientElement values

@@ -15,7 +15,6 @@
 #include "nsString.h"
 
 class nsSVGLength2;
-class nsSVGViewBox;
 
 namespace mozilla {
 class SVGAngle;
@@ -28,6 +27,7 @@ class SVGPointList;
 class SVGAnimatedPreserveAspectRatio;
 class SVGStringList;
 class SVGTransformList;
+class SVGViewBox;
 
 class SVGAttrValueWrapper {
  public:
@@ -45,7 +45,7 @@ class SVGAttrValueWrapper {
   static void ToString(const SVGStringList* aStringList, nsAString& aResult);
   static void ToString(const SVGTransformList* aTransformList,
                        nsAString& aResult);
-  static void ToString(const nsSVGViewBox* aViewBox, nsAString& aResult);
+  static void ToString(const SVGViewBox* aViewBox, nsAString& aResult);
 };
 
 } /* namespace mozilla */

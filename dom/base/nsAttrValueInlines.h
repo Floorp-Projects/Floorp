@@ -55,7 +55,7 @@ struct MiscContainer final {
         const mozilla::SVGAnimatedPreserveAspectRatio* mSVGPreserveAspectRatio;
         const mozilla::SVGStringList* mSVGStringList;
         const mozilla::SVGTransformList* mSVGTransformList;
-        const nsSVGViewBox* mSVGViewBox;
+        const mozilla::SVGViewBox* mSVGViewBox;
       };
       uint32_t mRefCount : 31;
       uint32_t mCached : 1;

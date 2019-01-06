@@ -7,7 +7,7 @@
 #include "SVGAnimatedRect.h"
 #include "mozilla/dom/SVGAnimatedRectBinding.h"
 #include "SVGElement.h"
-#include "nsSVGViewBox.h"
+#include "SVGViewBox.h"
 #include "SVGIRect.h"
 
 namespace mozilla {
@@ -18,11 +18,11 @@ NS_SVG_VAL_IMPL_CYCLE_COLLECTION_WRAPPERCACHED(SVGAnimatedRect, mSVGElement)
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(SVGAnimatedRect, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(SVGAnimatedRect, Release)
 
-SVGAnimatedRect::SVGAnimatedRect(nsSVGViewBox* aVal, SVGElement* aSVGElement)
+SVGAnimatedRect::SVGAnimatedRect(SVGViewBox* aVal, SVGElement* aSVGElement)
     : mVal(aVal), mSVGElement(aSVGElement) {}
 
 SVGAnimatedRect::~SVGAnimatedRect() {
-  nsSVGViewBox::sSVGAnimatedRectTearoffTable.RemoveTearoff(mVal);
+  SVGViewBox::sSVGAnimatedRectTearoffTable.RemoveTearoff(mVal);
 }
 
 already_AddRefed<SVGIRect> SVGAnimatedRect::GetBaseVal() {

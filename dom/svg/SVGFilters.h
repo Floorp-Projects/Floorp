@@ -12,7 +12,7 @@
 #include "FilterSupport.h"
 #include "nsImageLoadingContent.h"
 #include "nsSVGLength2.h"
-#include "nsSVGString.h"
+#include "SVGString.h"
 #include "nsSVGNumber2.h"
 #include "SVGNumberPair.h"
 
@@ -22,10 +22,10 @@ namespace mozilla {
 namespace dom {
 
 struct SVGStringInfo {
-  SVGStringInfo(const nsSVGString* aString, SVGElement* aElement)
+  SVGStringInfo(const SVGString* aString, SVGElement* aElement)
       : mString(aString), mElement(aElement) {}
 
-  const nsSVGString* mString;
+  const SVGString* mString;
   SVGElement* mElement;
 };
 
@@ -95,7 +95,7 @@ class SVGFE : public SVGFEBase {
     return !(aFlags & ~eFILTER);
   }
 
-  virtual nsSVGString& GetResultImageName() = 0;
+  virtual SVGString& GetResultImageName() = 0;
   // Return a list of all image names used as sources. Default is to
   // return no sources.
   virtual void GetSourceImageNames(nsTArray<SVGStringInfo>& aSources);
@@ -192,7 +192,7 @@ class SVGFELightingElement : public SVGFELightingElementBase {
 
   virtual bool AttributeAffectsRendering(int32_t aNameSpaceID,
                                          nsAtom* aAttribute) const override;
-  virtual nsSVGString& GetResultImageName() override {
+  virtual SVGString& GetResultImageName() override {
     return mStringAttributes[RESULT];
   }
   virtual void GetSourceImageNames(nsTArray<SVGStringInfo>& aSources) override;
@@ -229,7 +229,7 @@ class SVGFELightingElement : public SVGFELightingElementBase {
   static NumberPairInfo sNumberPairInfo[1];
 
   enum { RESULT, IN1 };
-  nsSVGString mStringAttributes[2];
+  SVGString mStringAttributes[2];
   static StringInfo sStringInfo[2];
 };
 
