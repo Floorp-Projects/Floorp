@@ -132,9 +132,9 @@ function getRemoteUpdateString(aUpdateProps, aPatches) {
     updateProps[name] = aUpdateProps[name];
   }
 
-  return getUpdateString(updateProps) + ">" +
+  return getUpdateString(updateProps) + ">\n " +
          aPatches +
-         "</update>";
+         "\n</update>";
 }
 
 /**
