@@ -6785,6 +6785,28 @@ nsresult PresShell::HandleEvent(nsIFrame* aFrame, WidgetGUIEvent* aEvent,
         auto event = MakeUnique<DelayedMouseEvent>(aEvent->AsMouseEvent());
         mDelayedEvents.AppendElement(std::move(event));
       }
+
+      // If there is a suppressed event listener associated with the document,
+      // notify it about the suppressed mouse event. This allows devtools
+      // features to continue receiving mouse events even when the devtools
+      // debugger has paused execution in a page.
+      RefPtr<EventListener> suppressedListener =
+        frame->PresContext()->Document()->GetSuppressedEventListener();
+      if (suppressedListener &&
+          aEvent->AsMouseEvent()->mReason != WidgetMouseEvent::eSynthesized) {
+        nsCOMPtr<nsIContent> targetContent;
+        frame->GetContentForEvent(aEvent, getter_AddRefs(targetContent));
+        if (targetContent) {
+          aEvent->mTarget = targetContent;
+        }
+
+        nsCOMPtr<EventTarget> et = aEvent->mTarget;
+        RefPtr<Event> event = EventDispatcher::CreateEvent(
+                et, frame->PresContext(), aEvent, EmptyString());
+
+        suppressedListener->HandleEvent(*event);
+      }
+
       return NS_OK;
     }
 
