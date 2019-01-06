@@ -1008,7 +1008,7 @@ impl RenderBackend {
                 // recently used resources.
                 self.resource_cache.clear(ClearCache::all());
 
-                self.clear_gpu_cache();
+                self.gpu_cache.clear();
 
                 let pending_update = self.resource_cache.pending_updates();
                 let msg = ResultMsg::UpdateResources {
@@ -1121,7 +1121,7 @@ impl RenderBackend {
                         // we just clear the cache on toggle.
                         let changed = self.debug_flags ^ flags;
                         if changed.contains(DebugFlags::GPU_CACHE_DBG) {
-                            self.clear_gpu_cache();
+                            self.gpu_cache.clear();
                         }
                         self.debug_flags = flags;
 
@@ -1181,7 +1181,7 @@ impl RenderBackend {
         // long enough, drop it and rebuild it. This needs to be done before any
         // updates for this frame are made.
         if self.gpu_cache.should_reclaim_memory() {
-            self.clear_gpu_cache();
+            self.gpu_cache.clear();
         }
 
         for scene_msg in transaction_msg.scene_ops.drain(..) {
@@ -1547,13 +1547,6 @@ impl RenderBackend {
         // will add its report to this one and send the result back to the original
         // thread waiting on the request.
         self.scene_tx.send(SceneBuilderRequest::ReportMemory(report, tx)).unwrap();
-    }
-
-    /// Drops everything in the GPU cache. Must not be called once gpu cache entries
-    /// for the next frame have already been requested.
-    fn clear_gpu_cache(&mut self) {
-        self.gpu_cache.clear();
-        self.result_tx.send(ResultMsg::ClearGpuCache).unwrap();
     }
 }
 
