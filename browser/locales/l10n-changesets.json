@@ -1209,7 +1209,7 @@
             "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
-        "revision": "4816112d7416"
+        "revision": "c43e859f077d"
     },
     "oc": {
         "platforms": [
@@ -1532,7 +1532,7 @@
             "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
-        "revision": "7d0b11e5d7df"
+        "revision": "67fce218e425"
     },
     "tr": {
         "platforms": [
