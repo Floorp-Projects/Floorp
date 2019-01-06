@@ -68,7 +68,7 @@ add_test(function test_Timeouts_fromJSON_unrecognised_field() {
 
 add_test(function test_Timeouts_fromJSON_invalid_types() {
   for (let value of [null, [], {}, false, "10", 2.5]) {
-    Assert.throws(() => Timeouts.fromJSON({"script": value}), /InvalidArgumentError/);
+    Assert.throws(() => Timeouts.fromJSON({"implicit": value}), /InvalidArgumentError/);
   }
 
   run_next_test();

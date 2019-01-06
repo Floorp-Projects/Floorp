@@ -84,14 +84,14 @@ impl NewSessionResponse {
 
 #[derive(Debug, PartialEq, Serialize)]
 pub struct TimeoutsResponse {
-    pub script: u64,
+    pub script: Option<u64>,
     #[serde(rename = "pageLoad")]
     pub page_load: u64,
     pub implicit: u64,
 }
 
 impl TimeoutsResponse {
-    pub fn new(script: u64, page_load: u64, implicit: u64) -> TimeoutsResponse {
+    pub fn new(script: Option<u64>, page_load: u64, implicit: u64) -> TimeoutsResponse {
         TimeoutsResponse {
             script,
             page_load,
@@ -260,7 +260,7 @@ mod tests {
     #[test]
     fn test_json_timeouts_response() {
         let json = r#"{"value":{"script":1,"pageLoad":2,"implicit":3}}"#;
-        let data = WebDriverResponse::Timeouts(TimeoutsResponse::new(1, 2, 3));
+        let data = WebDriverResponse::Timeouts(TimeoutsResponse::new(Some(1), 2, 3));
 
         check_serialize(&json, &data);
     }

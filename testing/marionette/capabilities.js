@@ -67,8 +67,11 @@ class Timeouts {
           break;
 
         case "script":
-          t.script = assert.positiveInteger(ms,
-              pprint`Expected ${type} to be a positive integer, got ${ms}`);
+          if (ms !== null) {
+            assert.positiveInteger(ms,
+                pprint`Expected ${type} to be a positive integer, got ${ms}`);
+          }
+          t.script = ms;
           break;
 
         case "pageLoad":
@@ -438,7 +441,9 @@ class Capabilities extends Map {
    * @return {Object.<string, ?>}
    */
   toJSON() {
-    return marshal(this);
+    let marshalled = marshal(this);
+    marshalled.timeouts = super.get("timeouts");
+    return marshalled;
   }
 
   /**
@@ -549,7 +554,7 @@ function getWebDriverPlatformName() {
 
 // Specialisation of |JSON.stringify| that produces JSON-safe object
 // literals, dropping empty objects and entries which values are undefined
-// or null.  Objects are allowed to produce their own JSON representations
+// or null. Objects are allowed to produce their own JSON representations
 // by implementing a |toJSON| function.
 function marshal(obj) {
   let rv = Object.create(null);
