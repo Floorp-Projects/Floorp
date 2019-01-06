@@ -29,10 +29,8 @@
 
 class nsSVGBoolean;
 class nsSVGInteger;
-class nsSVGIntegerPair;
 class nsSVGLength2;
 class nsSVGNumber2;
-class nsSVGNumberPair;
 class nsSVGString;
 class nsSVGViewBox;
 
@@ -44,14 +42,16 @@ class DeclarationBlock;
 
 class SVGAngle;
 class SVGAnimatedNumberList;
-class SVGNumberList;
+class SVGAnimatedPathSegList;
+class SVGAnimatedPointList;
+class SVGAnimatedPreserveAspectRatio;
+class SVGAnimatedTransformList;
 class SVGAnimatedLengthList;
 class SVGEnum;
 class SVGUserUnitList;
-class SVGAnimatedPointList;
-class SVGAnimatedPathSegList;
-class SVGAnimatedPreserveAspectRatio;
-class SVGAnimatedTransformList;
+class SVGIntegerPair;
+class SVGNumberList;
+class SVGNumberPair;
 class SVGStringList;
 class DOMSVGStringList;
 
@@ -389,11 +389,11 @@ class SVGElement : public SVGElementBase  // nsIContent
   };
 
   struct NumberPairAttributesInfo {
-    nsSVGNumberPair* const mNumberPairs;
+    SVGNumberPair* const mNumberPairs;
     const NumberPairInfo* const mNumberPairInfo;
     const uint32_t mNumberPairCount;
 
-    NumberPairAttributesInfo(nsSVGNumberPair* aNumberPairs,
+    NumberPairAttributesInfo(SVGNumberPair* aNumberPairs,
                              NumberPairInfo* aNumberPairInfo,
                              uint32_t aNumberPairCount)
         : mNumberPairs(aNumberPairs),
@@ -429,11 +429,11 @@ class SVGElement : public SVGElementBase  // nsIContent
   };
 
   struct IntegerPairAttributesInfo {
-    nsSVGIntegerPair* const mIntegerPairs;
+    SVGIntegerPair* const mIntegerPairs;
     const IntegerPairInfo* const mIntegerPairInfo;
     const uint32_t mIntegerPairCount;
 
-    IntegerPairAttributesInfo(nsSVGIntegerPair* aIntegerPairs,
+    IntegerPairAttributesInfo(SVGIntegerPair* aIntegerPairs,
                               IntegerPairInfo* aIntegerPairInfo,
                               uint32_t aIntegerPairCount)
         : mIntegerPairs(aIntegerPairs),

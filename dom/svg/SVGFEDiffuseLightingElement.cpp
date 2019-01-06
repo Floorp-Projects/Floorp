@@ -45,13 +45,13 @@ SVGFEDiffuseLightingElement::DiffuseConstant() {
 already_AddRefed<SVGAnimatedNumber>
 SVGFEDiffuseLightingElement::KernelUnitLengthX() {
   return mNumberPairAttributes[KERNEL_UNIT_LENGTH].ToDOMAnimatedNumber(
-      nsSVGNumberPair::eFirst, this);
+      SVGNumberPair::eFirst, this);
 }
 
 already_AddRefed<SVGAnimatedNumber>
 SVGFEDiffuseLightingElement::KernelUnitLengthY() {
   return mNumberPairAttributes[KERNEL_UNIT_LENGTH].ToDOMAnimatedNumber(
-      nsSVGNumberPair::eSecond, this);
+      SVGNumberPair::eSecond, this);
 }
 
 FilterPrimitiveDescription SVGFEDiffuseLightingElement::GetPrimitiveDescription(

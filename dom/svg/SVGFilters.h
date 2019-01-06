@@ -8,16 +8,15 @@
 #define __NS_SVGFILTERSELEMENT_H__
 
 #include "mozilla/Attributes.h"
+#include "mozilla/dom/SVGElement.h"
+#include "FilterSupport.h"
 #include "nsImageLoadingContent.h"
 #include "nsSVGLength2.h"
 #include "nsSVGString.h"
-#include "SVGElement.h"
 #include "nsSVGNumber2.h"
-#include "nsSVGNumberPair.h"
-#include "FilterSupport.h"
+#include "SVGNumberPair.h"
 
 class nsSVGFilterInstance;
-class nsSVGNumberPair;
 
 namespace mozilla {
 namespace dom {
@@ -147,7 +146,7 @@ class SVGFE : public SVGFEBase {
   virtual LengthAttributesInfo GetLengthInfo() override;
 
   Size GetKernelUnitLength(nsSVGFilterInstance* aInstance,
-                           nsSVGNumberPair* aKernelUnitLength);
+                           SVGNumberPair* aKernelUnitLength);
 
   enum { ATTR_X, ATTR_Y, ATTR_WIDTH, ATTR_HEIGHT };
   nsSVGLength2 mLengthAttributes[4];
@@ -226,7 +225,7 @@ class SVGFELightingElement : public SVGFELightingElementBase {
   static NumberInfo sNumberInfo[4];
 
   enum { KERNEL_UNIT_LENGTH };
-  nsSVGNumberPair mNumberPairAttributes[1];
+  SVGNumberPair mNumberPairAttributes[1];
   static NumberPairInfo sNumberPairInfo[1];
 
   enum { RESULT, IN1 };

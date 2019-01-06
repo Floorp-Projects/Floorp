@@ -8,7 +8,7 @@
 #define mozilla_dom_SVGFEGaussianBlurElement_h
 
 #include "SVGFilters.h"
-#include "nsSVGNumberPair.h"
+#include "SVGNumberPair.h"
 #include "nsSVGString.h"
 
 nsresult NS_NewSVGFEGaussianBlurElement(
@@ -56,7 +56,7 @@ class SVGFEGaussianBlurElement : public SVGFEGaussianBlurElementBase {
   virtual StringAttributesInfo GetStringInfo() override;
 
   enum { STD_DEV };
-  nsSVGNumberPair mNumberPairAttributes[1];
+  SVGNumberPair mNumberPairAttributes[1];
   static NumberPairInfo sNumberPairInfo[1];
 
   enum { RESULT, IN1 };

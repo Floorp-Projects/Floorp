@@ -52,12 +52,12 @@ already_AddRefed<SVGAnimatedNumber> SVGFEDropShadowElement::Dy() {
 
 already_AddRefed<SVGAnimatedNumber> SVGFEDropShadowElement::StdDeviationX() {
   return mNumberPairAttributes[STD_DEV].ToDOMAnimatedNumber(
-      nsSVGNumberPair::eFirst, this);
+      SVGNumberPair::eFirst, this);
 }
 
 already_AddRefed<SVGAnimatedNumber> SVGFEDropShadowElement::StdDeviationY() {
   return mNumberPairAttributes[STD_DEV].ToDOMAnimatedNumber(
-      nsSVGNumberPair::eSecond, this);
+      SVGNumberPair::eSecond, this);
 }
 
 void SVGFEDropShadowElement::SetStdDeviation(float stdDeviationX,
@@ -72,10 +72,10 @@ FilterPrimitiveDescription SVGFEDropShadowElement::GetPrimitiveDescription(
     nsTArray<RefPtr<SourceSurface>>& aInputImages) {
   float stdX = aInstance->GetPrimitiveNumber(SVGContentUtils::X,
                                              &mNumberPairAttributes[STD_DEV],
-                                             nsSVGNumberPair::eFirst);
+                                             SVGNumberPair::eFirst);
   float stdY = aInstance->GetPrimitiveNumber(SVGContentUtils::Y,
                                              &mNumberPairAttributes[STD_DEV],
-                                             nsSVGNumberPair::eSecond);
+                                             SVGNumberPair::eSecond);
   if (stdX < 0 || stdY < 0) {
     return FilterPrimitiveDescription();
   }

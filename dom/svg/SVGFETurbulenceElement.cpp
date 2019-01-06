@@ -62,12 +62,12 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFETurbulenceElement)
 
 already_AddRefed<SVGAnimatedNumber> SVGFETurbulenceElement::BaseFrequencyX() {
   return mNumberPairAttributes[BASE_FREQ].ToDOMAnimatedNumber(
-      nsSVGNumberPair::eFirst, this);
+      SVGNumberPair::eFirst, this);
 }
 
 already_AddRefed<SVGAnimatedNumber> SVGFETurbulenceElement::BaseFrequencyY() {
   return mNumberPairAttributes[BASE_FREQ].ToDOMAnimatedNumber(
-      nsSVGNumberPair::eSecond, this);
+      SVGNumberPair::eSecond, this);
 }
 
 already_AddRefed<SVGAnimatedInteger> SVGFETurbulenceElement::NumOctaves() {
@@ -91,9 +91,9 @@ FilterPrimitiveDescription SVGFETurbulenceElement::GetPrimitiveDescription(
     const nsTArray<bool>& aInputsAreTainted,
     nsTArray<RefPtr<SourceSurface>>& aInputImages) {
   float fX =
-      mNumberPairAttributes[BASE_FREQ].GetAnimValue(nsSVGNumberPair::eFirst);
+      mNumberPairAttributes[BASE_FREQ].GetAnimValue(SVGNumberPair::eFirst);
   float fY =
-      mNumberPairAttributes[BASE_FREQ].GetAnimValue(nsSVGNumberPair::eSecond);
+      mNumberPairAttributes[BASE_FREQ].GetAnimValue(SVGNumberPair::eSecond);
   float seed = mNumberAttributes[OCTAVES].GetAnimValue();
   uint32_t octaves =
       clamped(mIntegerAttributes[OCTAVES].GetAnimValue(), 0, MAX_OCTAVES);

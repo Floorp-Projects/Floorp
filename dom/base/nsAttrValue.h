@@ -152,13 +152,15 @@ class nsAttrValue {
   void SetTo(nsIURI* aValue, const nsAString* aSerialized);
   void SetTo(const nsIntMargin& aValue);
   void SetTo(const mozilla::SVGAngle& aValue, const nsAString* aSerialized);
-  void SetTo(const nsSVGIntegerPair& aValue, const nsAString* aSerialized);
+  void SetTo(const mozilla::SVGIntegerPair& aValue,
+             const nsAString* aSerialized);
   void SetTo(const nsSVGLength2& aValue, const nsAString* aSerialized);
   void SetTo(const mozilla::SVGLengthList& aValue,
              const nsAString* aSerialized);
   void SetTo(const mozilla::SVGNumberList& aValue,
              const nsAString* aSerialized);
-  void SetTo(const nsSVGNumberPair& aValue, const nsAString* aSerialized);
+  void SetTo(const mozilla::SVGNumberPair& aValue,
+             const nsAString* aSerialized);
   void SetTo(const mozilla::SVGPathData& aValue, const nsAString* aSerialized);
   void SetTo(const mozilla::SVGPointList& aValue, const nsAString* aSerialized);
   void SetTo(const mozilla::SVGAnimatedPreserveAspectRatio& aValue,

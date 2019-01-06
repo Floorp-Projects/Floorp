@@ -402,7 +402,7 @@ void nsAttrValue::SetTo(const SVGAngle& aValue, const nsAString* aSerialized) {
   SetSVGType(eSVGAngle, &aValue, aSerialized);
 }
 
-void nsAttrValue::SetTo(const nsSVGIntegerPair& aValue,
+void nsAttrValue::SetTo(const SVGIntegerPair& aValue,
                         const nsAString* aSerialized) {
   SetSVGType(eSVGIntegerPair, &aValue, aSerialized);
 }
@@ -432,7 +432,7 @@ void nsAttrValue::SetTo(const SVGNumberList& aValue,
   SetSVGType(eSVGNumberList, &aValue, aSerialized);
 }
 
-void nsAttrValue::SetTo(const nsSVGNumberPair& aValue,
+void nsAttrValue::SetTo(const SVGNumberPair& aValue,
                         const nsAString* aSerialized) {
   SetSVGType(eSVGNumberPair, &aValue, aSerialized);
 }
