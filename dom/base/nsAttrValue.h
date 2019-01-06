@@ -169,7 +169,7 @@ class nsAttrValue {
              const nsAString* aSerialized);
   void SetTo(const mozilla::SVGTransformList& aValue,
              const nsAString* aSerialized);
-  void SetTo(const nsSVGViewBox& aValue, const nsAString* aSerialized);
+  void SetTo(const mozilla::SVGViewBox& aValue, const nsAString* aSerialized);
 
   /**
    * Sets this object with the string or atom representation of aValue.

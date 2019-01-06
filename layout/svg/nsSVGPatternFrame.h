@@ -16,12 +16,12 @@
 
 class nsIFrame;
 class nsSVGLength2;
-class nsSVGViewBox;
 
 namespace mozilla {
 class SVGAnimatedPreserveAspectRatio;
 class SVGAnimatedTransformList;
 class SVGGeometryFrame;
+class SVGViewBox;
 }  // namespace mozilla
 
 class nsSVGPatternFrame final : public nsSVGPaintServerFrame {
@@ -79,8 +79,8 @@ class nsSVGPatternFrame final : public nsSVGPaintServerFrame {
   mozilla::SVGAnimatedTransformList* GetPatternTransformList(
       nsIContent* aDefault);
   gfxMatrix GetPatternTransform();
-  const nsSVGViewBox& GetViewBox(nsIContent* aDefault);
-  const nsSVGViewBox& GetViewBox() { return GetViewBox(mContent); }
+  const SVGViewBox& GetViewBox(nsIContent* aDefault);
+  const SVGViewBox& GetViewBox() { return GetViewBox(mContent); }
   const SVGAnimatedPreserveAspectRatio& GetPreserveAspectRatio(
       nsIContent* aDefault);
   const SVGAnimatedPreserveAspectRatio& GetPreserveAspectRatio() {
@@ -109,7 +109,7 @@ class nsSVGPatternFrame final : public nsSVGPaintServerFrame {
 
   gfxRect GetPatternRect(uint16_t aPatternUnits, const gfxRect& bbox,
                          const Matrix& callerCTM, nsIFrame* aTarget);
-  gfxMatrix ConstructCTM(const nsSVGViewBox& aViewBox,
+  gfxMatrix ConstructCTM(const SVGViewBox& aViewBox,
                          uint16_t aPatternContentUnits, uint16_t aPatternUnits,
                          const gfxRect& callerBBox, const Matrix& callerCTM,
                          nsIFrame* aTarget);

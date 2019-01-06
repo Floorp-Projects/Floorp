@@ -12,7 +12,7 @@
 #include "SVGAnimatedPreserveAspectRatio.h"
 #include "SVGEnum.h"
 #include "nsSVGLength2.h"
-#include "nsSVGViewBox.h"
+#include "SVGViewBox.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/SVGAnimatedEnumeration.h"
 #include "mozilla/dom/SVGElement.h"
@@ -109,7 +109,7 @@ class SVGMarkerElement : public SVGMarkerElementBase {
 
   // public helpers
   gfx::Matrix GetMarkerTransform(float aStrokeWidth, const nsSVGMark& aMark);
-  nsSVGViewBoxRect GetViewBoxRect();
+  SVGViewBoxRect GetViewBoxRect();
   gfx::Matrix GetViewBoxTransform();
 
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
@@ -140,7 +140,7 @@ class SVGMarkerElement : public SVGMarkerElementBase {
   virtual LengthAttributesInfo GetLengthInfo() override;
   virtual AngleAttributesInfo GetAngleInfo() override;
   virtual EnumAttributesInfo GetEnumInfo() override;
-  virtual nsSVGViewBox* GetViewBox() override;
+  virtual SVGViewBox* GetViewBox() override;
   virtual SVGAnimatedPreserveAspectRatio* GetPreserveAspectRatio() override;
 
   enum { REFX, REFY, MARKERWIDTH, MARKERHEIGHT };
@@ -156,7 +156,7 @@ class SVGMarkerElement : public SVGMarkerElementBase {
   SVGAngle mAngleAttributes[1];
   static AngleInfo sAngleInfo[1];
 
-  nsSVGViewBox mViewBox;
+  SVGViewBox mViewBox;
   SVGAnimatedPreserveAspectRatio mPreserveAspectRatio;
 
   // derived properties (from 'orient') handled separately

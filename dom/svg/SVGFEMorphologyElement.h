@@ -10,7 +10,7 @@
 #include "SVGEnum.h"
 #include "SVGFilters.h"
 #include "SVGNumberPair.h"
-#include "nsSVGString.h"
+#include "SVGString.h"
 
 nsresult NS_NewSVGFEMorphologyElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
@@ -39,7 +39,7 @@ class SVGFEMorphologyElement : public SVGFEMorphologyElementBase {
       nsTArray<RefPtr<SourceSurface>>& aInputImages) override;
   virtual bool AttributeAffectsRendering(int32_t aNameSpaceID,
                                          nsAtom* aAttribute) const override;
-  virtual nsSVGString& GetResultImageName() override {
+  virtual SVGString& GetResultImageName() override {
     return mStringAttributes[RESULT];
   }
   virtual void GetSourceImageNames(nsTArray<SVGStringInfo>& aSources) override;
@@ -70,7 +70,7 @@ class SVGFEMorphologyElement : public SVGFEMorphologyElementBase {
   static EnumInfo sEnumInfo[1];
 
   enum { RESULT, IN1 };
-  nsSVGString mStringAttributes[2];
+  SVGString mStringAttributes[2];
   static StringInfo sStringInfo[2];
 };
 

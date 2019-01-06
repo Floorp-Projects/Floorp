@@ -130,7 +130,7 @@ static float MaxExpansion(const Matrix &aMatrix) {
 // scale if the viewBox is specified and _patternUnits_ is set to or defaults to
 // objectBoundingBox though, since in that case the viewBox is relative to the
 // bbox
-static bool IncludeBBoxScale(const nsSVGViewBox &aViewBox,
+static bool IncludeBBoxScale(const SVGViewBox &aViewBox,
                              uint32_t aPatternContentUnits,
                              uint32_t aPatternUnits) {
   return (!aViewBox.IsExplicitlySet() &&
@@ -162,7 +162,7 @@ static Matrix GetPatternMatrix(uint16_t aPatternUnits,
   return patternMatrix;
 }
 
-static nsresult GetTargetGeometry(gfxRect *aBBox, const nsSVGViewBox &aViewBox,
+static nsresult GetTargetGeometry(gfxRect *aBBox, const SVGViewBox &aViewBox,
                                   uint16_t aPatternContentUnits,
                                   uint16_t aPatternUnits, nsIFrame *aTarget,
                                   const Matrix &aContextMatrix,
@@ -213,7 +213,7 @@ already_AddRefed<SourceSurface> nsSVGPatternFrame::PaintPattern(
   }
   nsIFrame *firstKid = patternWithChildren->mFrames.FirstChild();
 
-  const nsSVGViewBox &viewBox = GetViewBox();
+  const SVGViewBox &viewBox = GetViewBox();
 
   uint16_t patternContentUnits =
       GetEnumValue(SVGPatternElement::PATTERNCONTENTUNITS);
@@ -471,8 +471,8 @@ gfxMatrix nsSVGPatternFrame::GetPatternTransform() {
   return animTransformList->GetAnimValue().GetConsolidationMatrix();
 }
 
-const nsSVGViewBox &nsSVGPatternFrame::GetViewBox(nsIContent *aDefault) {
-  const nsSVGViewBox &thisViewBox =
+const SVGViewBox &nsSVGPatternFrame::GetViewBox(nsIContent *aDefault) {
+  const SVGViewBox &thisViewBox =
       static_cast<SVGPatternElement *>(GetContent())->mViewBox;
 
   if (thisViewBox.IsExplicitlySet()) {
@@ -610,7 +610,7 @@ gfxRect nsSVGPatternFrame::GetPatternRect(uint16_t aPatternUnits,
   return gfxRect(x, y, width, height);
 }
 
-gfxMatrix nsSVGPatternFrame::ConstructCTM(const nsSVGViewBox &aViewBox,
+gfxMatrix nsSVGPatternFrame::ConstructCTM(const SVGViewBox &aViewBox,
                                           uint16_t aPatternContentUnits,
                                           uint16_t aPatternUnits,
                                           const gfxRect &callerBBox,
@@ -634,7 +634,7 @@ gfxMatrix nsSVGPatternFrame::ConstructCTM(const nsSVGViewBox &aViewBox,
   if (!aViewBox.IsExplicitlySet()) {
     return gfxMatrix(scaleX, 0.0, 0.0, scaleY, 0.0, 0.0);
   }
-  const nsSVGViewBoxRect viewBoxRect = aViewBox.GetAnimValue();
+  const SVGViewBoxRect viewBoxRect = aViewBox.GetAnimValue();
 
   if (viewBoxRect.height <= 0.0f || viewBoxRect.width <= 0.0f) {
     return gfxMatrix(0.0, 0.0, 0.0, 0.0, 0.0, 0.0);  // singular

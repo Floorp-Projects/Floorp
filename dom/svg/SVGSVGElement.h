@@ -34,7 +34,7 @@ class SVGView {
   SVGView();
 
   mozilla::SVGEnum mZoomAndPan;
-  nsSVGViewBox mViewBox;
+  SVGViewBox mViewBox;
   SVGAnimatedPreserveAspectRatio mPreserveAspectRatio;
   nsAutoPtr<SVGAnimatedTransformList> mTransforms;
 };
@@ -219,7 +219,7 @@ class SVGSVGElement final : public SVGSVGElementBase {
   }
   virtual float GetCurrentScale() const override { return mCurrentScale; }
 
-  virtual const nsSVGViewBox& GetViewBoxInternal() const override;
+  virtual const SVGViewBox& GetViewBoxInternal() const override;
   virtual SVGAnimatedTransformList* GetTransformInternal() const override;
 
   virtual EnumAttributesInfo GetEnumInfo() override;

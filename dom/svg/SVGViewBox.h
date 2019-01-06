@@ -10,42 +10,41 @@
 #include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsError.h"
+#include "mozilla/Attributes.h"
+#include "nsISMILAttr.h"
+#include "nsSVGAttrTearoffTable.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/dom/SVGAnimatedRect.h"
 #include "mozilla/dom/SVGIRect.h"
-#include "nsISMILAttr.h"
-#include "SVGElement.h"
-#include "mozilla/Attributes.h"
-#include "mozilla/UniquePtr.h"
-#include "nsSVGAttrTearoffTable.h"
 
 class nsSMILValue;
 
 namespace mozilla {
 namespace dom {
 class SVGAnimationElement;
+class SVGElement;
 }  // namespace dom
-}  // namespace mozilla
 
-struct nsSVGViewBoxRect {
+struct SVGViewBoxRect {
   float x, y;
   float width, height;
   bool none;
 
-  nsSVGViewBoxRect() : x(0.0), y(0.0), width(0.0), height(0.0), none(true) {}
-  nsSVGViewBoxRect(float aX, float aY, float aWidth, float aHeight)
+  SVGViewBoxRect() : x(0.0), y(0.0), width(0.0), height(0.0), none(true) {}
+  SVGViewBoxRect(float aX, float aY, float aWidth, float aHeight)
       : x(aX), y(aY), width(aWidth), height(aHeight), none(false) {}
-  nsSVGViewBoxRect(const nsSVGViewBoxRect& rhs)
+  SVGViewBoxRect(const SVGViewBoxRect& rhs)
       : x(rhs.x),
         y(rhs.y),
         width(rhs.width),
         height(rhs.height),
         none(rhs.none) {}
-  bool operator==(const nsSVGViewBoxRect& aOther) const;
+  bool operator==(const SVGViewBoxRect& aOther) const;
 
-  static nsresult FromString(const nsAString& aStr, nsSVGViewBoxRect* aViewBox);
+  static nsresult FromString(const nsAString& aStr, SVGViewBoxRect* aViewBox);
 };
 
-class nsSVGViewBox {
+class SVGViewBox {
  public:
   typedef mozilla::dom::SVGElement SVGElement;
 
@@ -66,18 +65,18 @@ class nsSVGViewBox {
    */
   bool IsExplicitlySet() const {
     if (mAnimVal || mHasBaseVal) {
-      const nsSVGViewBoxRect& rect = GetAnimValue();
+      const SVGViewBoxRect& rect = GetAnimValue();
       return rect.none || (rect.width >= 0 && rect.height >= 0);
     }
     return false;
   }
 
-  const nsSVGViewBoxRect& GetBaseValue() const { return mBaseVal; }
-  void SetBaseValue(const nsSVGViewBoxRect& aRect, SVGElement* aSVGElement);
-  const nsSVGViewBoxRect& GetAnimValue() const {
+  const SVGViewBoxRect& GetBaseValue() const { return mBaseVal; }
+  void SetBaseValue(const SVGViewBoxRect& aRect, SVGElement* aSVGElement);
+  const SVGViewBoxRect& GetAnimValue() const {
     return mAnimVal ? *mAnimVal : mBaseVal;
   }
-  void SetAnimValue(const nsSVGViewBoxRect& aRect, SVGElement* aSVGElement);
+  void SetAnimValue(const SVGViewBoxRect& aRect, SVGElement* aSVGElement);
 
   nsresult SetBaseValueString(const nsAString& aValue, SVGElement* aSVGElement,
                               bool aDoSetAttr);
@@ -95,8 +94,8 @@ class nsSVGViewBox {
   mozilla::UniquePtr<nsISMILAttr> ToSMILAttr(SVGElement* aSVGElement);
 
  private:
-  nsSVGViewBoxRect mBaseVal;
-  nsAutoPtr<nsSVGViewBoxRect> mAnimVal;
+  SVGViewBoxRect mBaseVal;
+  nsAutoPtr<SVGViewBoxRect> mAnimVal;
   bool mHasBaseVal;
 
  public:
@@ -104,10 +103,10 @@ class nsSVGViewBox {
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
     NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMBaseVal)
 
-    DOMBaseVal(nsSVGViewBox* aVal, SVGElement* aSVGElement)
+    DOMBaseVal(SVGViewBox* aVal, SVGElement* aSVGElement)
         : mozilla::dom::SVGIRect(), mVal(aVal), mSVGElement(aSVGElement) {}
 
-    nsSVGViewBox* mVal;  // kept alive because it belongs to content
+    SVGViewBox* mVal;  // kept alive because it belongs to content
     RefPtr<SVGElement> mSVGElement;
 
     float X() const final { return mVal->GetBaseValue().x; }
@@ -133,10 +132,10 @@ class nsSVGViewBox {
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
     NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMAnimVal)
 
-    DOMAnimVal(nsSVGViewBox* aVal, SVGElement* aSVGElement)
+    DOMAnimVal(SVGViewBox* aVal, SVGElement* aSVGElement)
         : mozilla::dom::SVGIRect(), mVal(aVal), mSVGElement(aSVGElement) {}
 
-    nsSVGViewBox* mVal;  // kept alive because it belongs to content
+    SVGViewBox* mVal;  // kept alive because it belongs to content
     RefPtr<SVGElement> mSVGElement;
 
     // Script may have modified animation parameters or timeline -- DOM getters
@@ -185,13 +184,13 @@ class nsSVGViewBox {
 
   struct SMILViewBox : public nsISMILAttr {
    public:
-    SMILViewBox(nsSVGViewBox* aVal, SVGElement* aSVGElement)
+    SMILViewBox(SVGViewBox* aVal, SVGElement* aSVGElement)
         : mVal(aVal), mSVGElement(aSVGElement) {}
 
     // These will stay alive because a nsISMILAttr only lives as long
     // as the Compositing step, and DOM elements don't get a chance to
     // die during that.
-    nsSVGViewBox* mVal;
+    SVGViewBox* mVal;
     SVGElement* mSVGElement;
 
     // nsISMILAttr methods
@@ -204,8 +203,10 @@ class nsSVGViewBox {
     virtual nsresult SetAnimValue(const nsSMILValue& aValue) override;
   };
 
-  static nsSVGAttrTearoffTable<nsSVGViewBox, mozilla::dom::SVGAnimatedRect>
+  static nsSVGAttrTearoffTable<SVGViewBox, mozilla::dom::SVGAnimatedRect>
       sSVGAnimatedRectTearoffTable;
 };
+
+}  // namespace mozilla
 
 #endif  // __NS_SVGVIEWBOX_H__

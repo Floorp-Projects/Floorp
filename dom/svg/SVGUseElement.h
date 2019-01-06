@@ -12,7 +12,7 @@
 #include "nsStubMutationObserver.h"
 #include "mozilla/dom/SVGGraphicsElement.h"
 #include "nsSVGLength2.h"
-#include "nsSVGString.h"
+#include "SVGString.h"
 #include "nsTArray.h"
 
 class nsIContent;
@@ -140,7 +140,7 @@ class SVGUseElement final : public SVGUseElementBase,
   static LengthInfo sLengthInfo[4];
 
   enum { HREF, XLINK_HREF };
-  nsSVGString mStringAttributes[2];
+  SVGString mStringAttributes[2];
   static StringInfo sStringInfo[2];
 
   nsCOMPtr<nsIContent> mOriginal;  // if we've been cloned, our "real" copy

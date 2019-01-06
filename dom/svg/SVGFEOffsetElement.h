@@ -9,7 +9,7 @@
 
 #include "SVGFilters.h"
 #include "nsSVGNumber2.h"
-#include "nsSVGString.h"
+#include "SVGString.h"
 
 nsresult NS_NewSVGFEOffsetElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
@@ -38,7 +38,7 @@ class SVGFEOffsetElement : public SVGFEOffsetElementBase {
       nsTArray<RefPtr<SourceSurface>>& aInputImages) override;
   virtual bool AttributeAffectsRendering(int32_t aNameSpaceID,
                                          nsAtom* aAttribute) const override;
-  virtual nsSVGString& GetResultImageName() override {
+  virtual SVGString& GetResultImageName() override {
     return mStringAttributes[RESULT];
   }
   virtual void GetSourceImageNames(nsTArray<SVGStringInfo>& aSources) override;
@@ -59,7 +59,7 @@ class SVGFEOffsetElement : public SVGFEOffsetElementBase {
   static NumberInfo sNumberInfo[2];
 
   enum { RESULT, IN1 };
-  nsSVGString mStringAttributes[2];
+  SVGString mStringAttributes[2];
   static StringInfo sStringInfo[2];
 };
 

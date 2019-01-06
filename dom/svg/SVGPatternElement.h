@@ -12,8 +12,8 @@
 #include "SVGAnimatedTransformList.h"
 #include "SVGEnum.h"
 #include "nsSVGLength2.h"
-#include "nsSVGString.h"
-#include "nsSVGViewBox.h"
+#include "SVGString.h"
+#include "SVGViewBox.h"
 #include "mozilla/dom/SVGElement.h"
 
 class nsSVGPatternFrame;
@@ -72,7 +72,7 @@ class SVGPatternElement final : public SVGPatternElementBase {
  protected:
   virtual LengthAttributesInfo GetLengthInfo() override;
   virtual EnumAttributesInfo GetEnumInfo() override;
-  virtual nsSVGViewBox* GetViewBox() override;
+  virtual SVGViewBox* GetViewBox() override;
   virtual SVGAnimatedPreserveAspectRatio* GetPreserveAspectRatio() override;
   virtual StringAttributesInfo GetStringInfo() override;
 
@@ -87,11 +87,11 @@ class SVGPatternElement final : public SVGPatternElementBase {
   nsAutoPtr<mozilla::SVGAnimatedTransformList> mPatternTransform;
 
   enum { HREF, XLINK_HREF };
-  nsSVGString mStringAttributes[2];
+  SVGString mStringAttributes[2];
   static StringInfo sStringInfo[2];
 
   // SVGFitToViewbox properties
-  nsSVGViewBox mViewBox;
+  SVGViewBox mViewBox;
   SVGAnimatedPreserveAspectRatio mPreserveAspectRatio;
 };
 

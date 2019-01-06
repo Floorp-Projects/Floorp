@@ -9,7 +9,7 @@
 
 #include "SVGElement.h"
 #include "nsCOMPtr.h"
-#include "nsSVGString.h"
+#include "SVGString.h"
 #include "mozilla/dom/ScriptElement.h"
 
 nsresult NS_NewSVGScriptElement(
@@ -81,7 +81,7 @@ class SVGScriptElement final : public SVGScriptElementBase,
   virtual bool GetAsyncState() override { return false; }
 
   enum { HREF, XLINK_HREF };
-  nsSVGString mStringAttributes[2];
+  SVGString mStringAttributes[2];
   static StringInfo sStringInfo[2];
 };
 
