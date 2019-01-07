@@ -64,7 +64,6 @@ const TemporaryPermissions = {
       entry[prePath] = {};
     }
     entry[prePath][id] = {timeStamp: Date.now(), state};
-    this.notifyWhenTemporaryPermissionChanged(browser, id, prePath, state);
   },
 
   // Removes a permission with the specified id for the specified browser.
@@ -76,7 +75,6 @@ const TemporaryPermissions = {
     let prePath = browser.currentURI.prePath;
     if (entry && entry[prePath]) {
       delete entry[prePath][id];
-      this.notifyWhenTemporaryPermissionChanged(browser, id, prePath, SitePermissions.UNKNOWN);
     }
   },
 
@@ -114,29 +112,11 @@ const TemporaryPermissions = {
     return permissions;
   },
 
-  // Gets all permissions ID for the specified browser, this method will return
-  // all permissions ID stored in browser without checking current URI.
-  getAllPermissionIds(browser) {
-    let permissions = new Set();
-    let entry = this._stateByBrowser.get(browser);
-    for (let prePath in entry) {
-      for (let id in entry[prePath]) {
-        permissions.add(id);
-      }
-    }
-    return permissions;
-  },
-
   // Clears all permissions for the specified browser.
   // Unlike other methods, this does NOT clear only for
   // the currentURI but the whole browser state.
   clear(browser) {
-    let permissions = this.getAllPermissionIds(browser);
     this._stateByBrowser.delete(browser);
-    for (let permission of permissions) {
-      this.notifyWhenTemporaryPermissionChanged(browser, permission, null,
-                                                SitePermissions.UNKNOWN);
-    }
   },
 
   // Copies the temporary permission state of one browser
@@ -146,20 +126,6 @@ const TemporaryPermissions = {
     if (entry) {
       this._stateByBrowser.set(newBrowser, entry);
     }
-  },
-
-  // If permission has property 'notifyWhenTemporaryPermissionChanged', then
-  // notify browser when the temporary permission changed.
-  notifyWhenTemporaryPermissionChanged(browser, id, prePath, state) {
-    if (!(id in gPermissionObject) ||
-        !gPermissionObject[id].notifyWhenTemporaryPermissionChanged) {
-      return;
-    }
-    browser.messageManager
-           .sendAsyncMessage("TemporaryPermissionChanged",
-                             { permission: id,
-                               prePath,
-                               state });
   },
 };
 
@@ -747,7 +713,6 @@ var gPermissionObject = {
   "autoplay-media": {
     exactHostMatch: true,
     permitTemporaryAllow: true,
-    notifyWhenTemporaryPermissionChanged: true,
     getDefault() {
       let state = Services.prefs.getIntPref("media.autoplay.default",
                                             Ci.nsIAutoplay.PROMPT);
