@@ -59,3 +59,68 @@ function prepareMockFilePicker(path) {
   MockFilePicker.setFiles([_getSupportsFile(path).file]);
 }
 /* exported prepareMockFilePicker */
+
+/**
+ * Creates a web extension from scratch in a temporary location.
+ * The object must be removed when you're finished working with it.
+ */
+class TemporaryExtension {
+  constructor(addonId) {
+    this.addonId = addonId;
+    this.tmpDir = FileUtils.getDir("TmpD", ["browser_addons_reload"]);
+    if (!this.tmpDir.exists()) {
+      this.tmpDir.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
+    }
+    this.sourceDir = this.tmpDir.clone();
+    this.sourceDir.append(this.addonId);
+    if (!this.sourceDir.exists()) {
+      this.sourceDir.create(Ci.nsIFile.DIRECTORY_TYPE,
+                           FileUtils.PERMS_DIRECTORY);
+    }
+  }
+
+  writeManifest(manifestData) {
+    const manifest = this.sourceDir.clone();
+    manifest.append("manifest.json");
+    if (manifest.exists()) {
+      manifest.remove(true);
+    }
+    const fos = Cc["@mozilla.org/network/file-output-stream;1"]
+                              .createInstance(Ci.nsIFileOutputStream);
+    fos.init(manifest,
+             FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE |
+             FileUtils.MODE_TRUNCATE,
+             FileUtils.PERMS_FILE, 0);
+
+    const manifestString = JSON.stringify(manifestData);
+    fos.write(manifestString, manifestString.length);
+    fos.close();
+  }
+
+  remove() {
+    return this.tmpDir.remove(true);
+  }
+}
+/* exported TemporaryExtension */
+
+/**
+ * Install an add-on using the AddonManager so it does not show up as temporary.
+ */
+function installRegularAddon(filePath) {
+  const file = _getSupportsFile(filePath).file;
+  return new Promise(async (resolve, reject) => {
+    const install = await AddonManager.getInstallForFile(file);
+    if (!install) {
+      throw new Error(`An install was not created for ${filePath}`);
+    }
+    install.addListener({
+      onDownloadFailed: reject,
+      onDownloadCancelled: reject,
+      onInstallFailed: reject,
+      onInstallCancelled: reject,
+      onInstallEnded: resolve,
+    });
+    install.install();
+  });
+}
+/* exported installRegularAddon */
