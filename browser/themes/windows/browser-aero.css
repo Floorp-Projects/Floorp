@@ -210,7 +210,7 @@
           background-color: hsla(0,0%,0%,.22);
         }
 
-        #toolbar-menubar[brighttext] > #main-menubar > menu[_moz-menuactive="true"],
+        #toolbar-menubar[brighttext] > #menubar-items > #main-menubar > menu[_moz-menuactive="true"],
         toolbar[brighttext] .titlebar-button:not(.titlebar-close):hover {
           background-color: hsla(0,0%,100%,.22);
         }
