@@ -13,7 +13,7 @@
 
 #include "mozilla/dom/HTMLVideoElement.h"
 #include "mozilla/dom/ShadowRoot.h"
-#include "mozilla/layers/WebRenderLayerManager.h"
+#include "mozilla/layers/RenderRootStateManager.h"
 #include "nsDisplayList.h"
 #include "nsGenericHTMLElement.h"
 #include "nsPresContext.h"
@@ -436,7 +436,7 @@ class nsDisplayVideo : public nsDisplayItem {
       mozilla::wr::DisplayListBuilder& aBuilder,
       mozilla::wr::IpcResourceUpdateQueue& aResources,
       const mozilla::layers::StackingContextHelper& aSc,
-      mozilla::layers::WebRenderLayerManager* aManager,
+      mozilla::layers::RenderRootStateManager* aManager,
       nsDisplayListBuilder* aDisplayListBuilder) override {
     nsRect area = Frame()->GetContentRectRelativeToSelf() + ToReferenceFrame();
     HTMLVideoElement* element =

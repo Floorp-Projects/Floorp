@@ -70,6 +70,7 @@ class FrameLayerBuilder;
 struct MotionPathData;
 namespace layers {
 struct FrameMetrics;
+class RenderRootStateManager;
 class Layer;
 class ImageLayer;
 class ImageContainer;
@@ -2533,7 +2534,7 @@ class nsDisplayItem : public nsDisplayItemLink {
       mozilla::wr::DisplayListBuilder& aBuilder,
       mozilla::wr::IpcResourceUpdateQueue& aResources,
       const StackingContextHelper& aSc,
-      mozilla::layers::WebRenderLayerManager* aManager,
+      mozilla::layers::RenderRootStateManager* aManager,
       nsDisplayListBuilder* aDisplayListBuilder) {
     return false;
   }
@@ -3847,7 +3848,7 @@ class nsDisplayCaret : public nsDisplayItem {
       mozilla::wr::DisplayListBuilder& aBuilder,
       mozilla::wr::IpcResourceUpdateQueue& aResources,
       const StackingContextHelper& aSc,
-      mozilla::layers::WebRenderLayerManager* aManager,
+      mozilla::layers::RenderRootStateManager* aManager,
       nsDisplayListBuilder* aDisplayListBuilder) override;
 
  protected:
@@ -3877,7 +3878,7 @@ class nsDisplayBorder : public nsDisplayItem {
       mozilla::wr::DisplayListBuilder& aBuilder,
       mozilla::wr::IpcResourceUpdateQueue& aResources,
       const StackingContextHelper& aSc,
-      mozilla::layers::WebRenderLayerManager* aManager,
+      mozilla::layers::RenderRootStateManager* aManager,
       nsDisplayListBuilder* aDisplayListBuilder) override;
   void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
   nsDisplayItemGeometry* AllocateGeometry(
@@ -4043,7 +4044,7 @@ class nsDisplaySolidColor : public nsDisplaySolidColorBase {
       mozilla::wr::DisplayListBuilder& aBuilder,
       mozilla::wr::IpcResourceUpdateQueue& aResources,
       const StackingContextHelper& aSc,
-      mozilla::layers::WebRenderLayerManager* aManager,
+      mozilla::layers::RenderRootStateManager* aManager,
       nsDisplayListBuilder* aDisplayListBuilder) override;
   bool CanBeReused() const override { return mCanBeReused; }
 
@@ -4113,7 +4114,7 @@ class nsDisplaySolidColorRegion : public nsDisplayItem {
       mozilla::wr::DisplayListBuilder& aBuilder,
       mozilla::wr::IpcResourceUpdateQueue& aResources,
       const StackingContextHelper& aSc,
-      mozilla::layers::WebRenderLayerManager* aManager,
+      mozilla::layers::RenderRootStateManager* aManager,
       nsDisplayListBuilder* aDisplayListBuilder) override;
 
  protected:
@@ -4188,7 +4189,7 @@ class nsDisplayBackgroundImage : public nsDisplayImageContainer {
       mozilla::wr::DisplayListBuilder& aBuilder,
       mozilla::wr::IpcResourceUpdateQueue& aResources,
       const StackingContextHelper& aSc,
-      mozilla::layers::WebRenderLayerManager* aManager,
+      mozilla::layers::RenderRootStateManager* aManager,
       nsDisplayListBuilder* aDisplayListBuilder) override;
   void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                HitTestState* aState, nsTArray<nsIFrame*>* aOutFrames) override;
@@ -4414,7 +4415,7 @@ class nsDisplayThemedBackground : public nsDisplayItem {
       mozilla::wr::DisplayListBuilder& aBuilder,
       mozilla::wr::IpcResourceUpdateQueue& aResources,
       const StackingContextHelper& aSc,
-      mozilla::layers::WebRenderLayerManager* aManager,
+      mozilla::layers::RenderRootStateManager* aManager,
       nsDisplayListBuilder* aDisplayListBuilder) override;
 
   bool MustPaintOnContentSide() const override { return true; }
@@ -4551,7 +4552,7 @@ class nsDisplayBackgroundColor : public nsDisplayItem {
       mozilla::wr::DisplayListBuilder& aBuilder,
       mozilla::wr::IpcResourceUpdateQueue& aResources,
       const StackingContextHelper& aSc,
-      mozilla::layers::WebRenderLayerManager* aManager,
+      mozilla::layers::RenderRootStateManager* aManager,
       nsDisplayListBuilder* aDisplayListBuilder) override;
   nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
                            bool* aSnap) const override;
@@ -4720,7 +4721,7 @@ class nsDisplayClearBackground : public nsDisplayItem {
       mozilla::wr::DisplayListBuilder& aBuilder,
       mozilla::wr::IpcResourceUpdateQueue& aResources,
       const StackingContextHelper& aSc,
-      mozilla::layers::WebRenderLayerManager* aManager,
+      mozilla::layers::RenderRootStateManager* aManager,
       nsDisplayListBuilder* aDisplayListBuilder) override;
 };
 
@@ -4777,7 +4778,7 @@ class nsDisplayBoxShadowOuter final : public nsDisplayItem {
       mozilla::wr::DisplayListBuilder& aBuilder,
       mozilla::wr::IpcResourceUpdateQueue& aResources,
       const StackingContextHelper& aSc,
-      mozilla::layers::WebRenderLayerManager* aManager,
+      mozilla::layers::RenderRootStateManager* aManager,
       nsDisplayListBuilder* aDisplayListBuilder) override;
   nsRect GetBoundsInternal();
 
@@ -4843,7 +4844,7 @@ class nsDisplayBoxShadowInner : public nsDisplayItem {
       mozilla::wr::DisplayListBuilder& aBuilder,
       mozilla::wr::IpcResourceUpdateQueue& aResources,
       const StackingContextHelper& aSc,
-      mozilla::layers::WebRenderLayerManager* aManager,
+      mozilla::layers::RenderRootStateManager* aManager,
       nsDisplayListBuilder* aDisplayListBuilder) override;
 
  private:
@@ -4870,7 +4871,7 @@ class nsDisplayOutline : public nsDisplayItem {
       mozilla::wr::DisplayListBuilder& aBuilder,
       mozilla::wr::IpcResourceUpdateQueue& aResources,
       const StackingContextHelper& aSc,
-      mozilla::layers::WebRenderLayerManager* aManager,
+      mozilla::layers::RenderRootStateManager* aManager,
       nsDisplayListBuilder* aDisplayListBuilder) override;
   bool IsInvisibleInRect(const nsRect& aRect) const override;
   nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) const override;
@@ -4900,7 +4901,7 @@ class nsDisplayEventReceiver : public nsDisplayItem {
       mozilla::wr::DisplayListBuilder& aBuilder,
       mozilla::wr::IpcResourceUpdateQueue& aResources,
       const StackingContextHelper& aSc,
-      mozilla::layers::WebRenderLayerManager* aManager,
+      mozilla::layers::RenderRootStateManager* aManager,
       nsDisplayListBuilder* aDisplayListBuilder) override;
 };
 
@@ -4936,7 +4937,7 @@ class nsDisplayCompositorHitTestInfo : public nsDisplayHitTestInfoItem {
       mozilla::wr::DisplayListBuilder& aBuilder,
       mozilla::wr::IpcResourceUpdateQueue& aResources,
       const StackingContextHelper& aSc,
-      mozilla::layers::WebRenderLayerManager* aManager,
+      mozilla::layers::RenderRootStateManager* aManager,
       nsDisplayListBuilder* aDisplayListBuilder) override;
   uint32_t GetPerFrameKey() const override;
   int32_t ZIndex() const override;
@@ -5173,7 +5174,7 @@ class nsDisplayWrapList : public nsDisplayHitTestInfoItem {
       mozilla::wr::DisplayListBuilder& aBuilder,
       mozilla::wr::IpcResourceUpdateQueue& aResources,
       const StackingContextHelper& aSc,
-      mozilla::layers::WebRenderLayerManager* aManager,
+      mozilla::layers::RenderRootStateManager* aManager,
       nsDisplayListBuilder* aDisplayListBuilder) override;
 
   const ActiveScrolledRoot* GetFrameActiveScrolledRoot() {
@@ -5341,7 +5342,7 @@ class nsDisplayOpacity : public nsDisplayWrapList {
       mozilla::wr::DisplayListBuilder& aBuilder,
       mozilla::wr::IpcResourceUpdateQueue& aResources,
       const StackingContextHelper& aSc,
-      mozilla::layers::WebRenderLayerManager* aManager,
+      mozilla::layers::RenderRootStateManager* aManager,
       nsDisplayListBuilder* aDisplayListBuilder) override;
 
   float GetOpacity() const { return mOpacity; }
@@ -5421,7 +5422,7 @@ class nsDisplayBlendMode : public nsDisplayWrapList {
       mozilla::wr::DisplayListBuilder& aBuilder,
       mozilla::wr::IpcResourceUpdateQueue& aResources,
       const StackingContextHelper& aSc,
-      mozilla::layers::WebRenderLayerManager* aManager,
+      mozilla::layers::RenderRootStateManager* aManager,
       nsDisplayListBuilder* aDisplayListBuilder) override;
   bool ComputeVisibility(nsDisplayListBuilder* aBuilder,
                          nsRegion* aVisibleRegion) override;
@@ -5534,7 +5535,7 @@ class nsDisplayBlendContainer : public nsDisplayWrapList {
       mozilla::wr::DisplayListBuilder& aBuilder,
       mozilla::wr::IpcResourceUpdateQueue& aResources,
       const StackingContextHelper& aSc,
-      mozilla::layers::WebRenderLayerManager* aManager,
+      mozilla::layers::RenderRootStateManager* aManager,
       nsDisplayListBuilder* aDisplayListBuilder) override;
 
   bool CanMerge(const nsDisplayItem* aItem) const override {
@@ -5699,7 +5700,7 @@ class nsDisplayOwnLayer : public nsDisplayWrapList {
       mozilla::wr::DisplayListBuilder& aBuilder,
       mozilla::wr::IpcResourceUpdateQueue& aResources,
       const StackingContextHelper& aSc,
-      mozilla::layers::WebRenderLayerManager* aManager,
+      mozilla::layers::RenderRootStateManager* aManager,
       nsDisplayListBuilder* aDisplayListBuilder) override;
   bool UpdateScrollData(
       mozilla::layers::WebRenderScrollData* aData,
@@ -5863,7 +5864,7 @@ class nsDisplayStickyPosition : public nsDisplayOwnLayer {
       mozilla::wr::DisplayListBuilder& aBuilder,
       mozilla::wr::IpcResourceUpdateQueue& aResources,
       const StackingContextHelper& aSc,
-      mozilla::layers::WebRenderLayerManager* aManager,
+      mozilla::layers::RenderRootStateManager* aManager,
       nsDisplayListBuilder* aDisplayListBuilder) override;
 
   const ActiveScrolledRoot* GetContainerASR() const { return mContainerASR; }
@@ -5932,7 +5933,7 @@ class nsDisplayFixedPosition : public nsDisplayOwnLayer {
       mozilla::wr::DisplayListBuilder& aBuilder,
       mozilla::wr::IpcResourceUpdateQueue& aResources,
       const StackingContextHelper& aSc,
-      mozilla::layers::WebRenderLayerManager* aManager,
+      mozilla::layers::RenderRootStateManager* aManager,
       nsDisplayListBuilder* aDisplayListBuilder) override;
   bool UpdateScrollData(
       mozilla::layers::WebRenderScrollData* aData,
@@ -6255,7 +6256,7 @@ class nsDisplayMasksAndClipPaths : public nsDisplayEffectsBase {
       mozilla::wr::DisplayListBuilder& aBuilder,
       mozilla::wr::IpcResourceUpdateQueue& aResources,
       const StackingContextHelper& aSc,
-      mozilla::layers::WebRenderLayerManager* aManager,
+      mozilla::layers::RenderRootStateManager* aManager,
       nsDisplayListBuilder* aDisplayListBuilder) override;
 
   mozilla::Maybe<nsRect> GetClipWithRespectToASR(
@@ -6348,7 +6349,7 @@ class nsDisplayFilters : public nsDisplayEffectsBase {
       mozilla::wr::DisplayListBuilder& aBuilder,
       mozilla::wr::IpcResourceUpdateQueue& aResources,
       const StackingContextHelper& aSc,
-      mozilla::layers::WebRenderLayerManager* aManager,
+      mozilla::layers::RenderRootStateManager* aManager,
       nsDisplayListBuilder* aDisplayListBuilder) override;
 
   bool CreateWebRenderCSSFilters(nsTArray<mozilla::wr::WrFilterOp>& wrFilters);
@@ -6492,7 +6493,7 @@ class nsDisplayTransform : public nsDisplayHitTestInfoItem {
       mozilla::wr::DisplayListBuilder& aBuilder,
       mozilla::wr::IpcResourceUpdateQueue& aResources,
       const StackingContextHelper& aSc,
-      mozilla::layers::WebRenderLayerManager* aManager,
+      mozilla::layers::RenderRootStateManager* aManager,
       nsDisplayListBuilder* aDisplayListBuilder) override;
   bool UpdateScrollData(
       mozilla::layers::WebRenderScrollData* aData,
@@ -6859,7 +6860,7 @@ class nsDisplayPerspective : public nsDisplayHitTestInfoItem {
       mozilla::wr::DisplayListBuilder& aBuilder,
       mozilla::wr::IpcResourceUpdateQueue& aResources,
       const StackingContextHelper& aSc,
-      mozilla::layers::WebRenderLayerManager* aManager,
+      mozilla::layers::RenderRootStateManager* aManager,
       nsDisplayListBuilder* aDisplayListBuilder) override;
 
   bool ShouldBuildLayerEvenIfInvisible(
@@ -7026,7 +7027,7 @@ class nsDisplaySVGWrapper : public nsDisplayWrapList {
       mozilla::wr::DisplayListBuilder& aBuilder,
       mozilla::wr::IpcResourceUpdateQueue& aResources,
       const StackingContextHelper& aSc,
-      mozilla::layers::WebRenderLayerManager* aManager,
+      mozilla::layers::RenderRootStateManager* aManager,
       nsDisplayListBuilder* aDisplayListBuilder) override;
 };
 
@@ -7054,7 +7055,7 @@ class nsDisplayForeignObject : public nsDisplayWrapList {
       mozilla::wr::DisplayListBuilder& aBuilder,
       mozilla::wr::IpcResourceUpdateQueue& aResources,
       const StackingContextHelper& aSc,
-      mozilla::layers::WebRenderLayerManager* aManager,
+      mozilla::layers::RenderRootStateManager* aManager,
       nsDisplayListBuilder* aDisplayListBuilder) override;
 };
 

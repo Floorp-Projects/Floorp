@@ -69,7 +69,7 @@
 #include "mozilla/intl/WordBreaker.h"
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/layers/LayersMessages.h"
-#include "mozilla/layers/WebRenderLayerManager.h"
+#include "mozilla/layers/RenderRootStateManager.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
 #include "mozilla/webrender/WebRenderAPI.h"
 #include "mozilla/layers/StackingContextHelper.h"
@@ -4877,7 +4877,7 @@ class nsDisplayText final : public nsCharClipDisplayItem {
   bool CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
                                mozilla::wr::IpcResourceUpdateQueue& aResources,
                                const StackingContextHelper& aSc,
-                               WebRenderLayerManager* aManager,
+                               RenderRootStateManager* aManager,
                                nsDisplayListBuilder* aDisplayListBuilder) final;
   void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) final;
   NS_DISPLAY_DECL_NAME("Text", TYPE_TEXT)
@@ -5025,7 +5025,7 @@ void nsDisplayText::Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) {
 bool nsDisplayText::CreateWebRenderCommands(
     mozilla::wr::DisplayListBuilder& aBuilder,
     mozilla::wr::IpcResourceUpdateQueue& aResources,
-    const StackingContextHelper& aSc, WebRenderLayerManager* aManager,
+    const StackingContextHelper& aSc, RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) {
   if (mBounds.IsEmpty()) {
     return true;

@@ -13,6 +13,7 @@
 #include "mozilla/gfx/Types.h"
 #include "mozilla/layers/ClipManager.h"
 #include "mozilla/layers/ImageClient.h"
+#include "mozilla/layers/RenderRootStateManager.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
 #include "mozilla/layers/IpcResourceUpdateQueue.h"
@@ -179,7 +180,7 @@ static void DestroyBlobGroupDataProperty(nsTArray<BlobItemData*>* aArray) {
 static void TakeExternalSurfaces(
     WebRenderDrawEventRecorder* aRecorder,
     std::vector<RefPtr<SourceSurface>>& aExternalSurfaces,
-    WebRenderLayerManager* aManager, wr::IpcResourceUpdateQueue& aResources) {
+    RenderRootStateManager* aManager, wr::IpcResourceUpdateQueue& aResources) {
   aRecorder->TakeExternalSurfaces(aExternalSurfaces);
 
   for (auto& surface : aExternalSurfaces) {
@@ -354,7 +355,7 @@ struct DIGroup {
     }
   }
 
-  void ClearImageKey(WebRenderLayerManager* aManager, bool aForce = false) {
+  void ClearImageKey(RenderRootStateManager* aManager, bool aForce = false) {
     if (mKey) {
       MOZ_RELEASE_ASSERT(aForce || mInvalidRect.IsEmpty());
       aManager->AddBlobImageKeyForDiscard(mKey.value());
@@ -713,7 +714,7 @@ struct DIGroup {
 
     bool empty = aStartItem == aEndItem;
     if (empty) {
-      ClearImageKey(aWrManager, true);
+      ClearImageKey(aWrManager->GetRenderRootStateManager(), true);
       return;
     }
 
@@ -724,7 +725,8 @@ struct DIGroup {
     //   Contains(paintBounds);?
     wr::OpacityType opacity = wr::OpacityType::HasAlphaChannel;
 
-    TakeExternalSurfaces(recorder, mExternalSurfaces, aWrManager, aResources);
+    TakeExternalSurfaces(recorder, mExternalSurfaces,
+                         aWrManager->GetRenderRootStateManager(), aResources);
     bool hasItems = recorder->Finish();
     GP("%d Finish\n", hasItems);
     Range<uint8_t> bytes((uint8_t*)recorder->mOutputStream.mData,
@@ -1037,7 +1039,7 @@ void Grouper::PaintContainerItem(DIGroup* aGroup, nsDisplayItem* aItem,
 
 class WebRenderGroupData : public WebRenderUserData {
  public:
-  explicit WebRenderGroupData(WebRenderLayerManager* aWRManager,
+  explicit WebRenderGroupData(RenderRootStateManager* aWRManager,
                               nsDisplayItem* aItem);
   virtual ~WebRenderGroupData();
 
@@ -1128,9 +1130,10 @@ void Grouper::ConstructGroups(nsDisplayListBuilder* aDisplayListBuilder,
       sIndent++;
       // Note: this call to CreateWebRenderCommands can recurse back into
       // this function.
+      RenderRootStateManager* manager =
+          aCommandBuilder->mManager->GetRenderRootStateManager();
       bool createdWRCommands = item->CreateWebRenderCommands(
-          aBuilder, aResources, aSc, aCommandBuilder->mManager,
-          mDisplayListBuilder);
+          aBuilder, aResources, aSc, manager, mDisplayListBuilder);
       sIndent--;
       MOZ_RELEASE_ASSERT(createdWRCommands,
                          "active transforms should always succeed at creating "
@@ -1161,7 +1164,8 @@ void Grouper::ConstructGroups(nsDisplayListBuilder* aDisplayListBuilder,
         // The group changed size
         GP("Inner group size change\n");
         groupData->mFollowingGroup.ClearItems();
-        groupData->mFollowingGroup.ClearImageKey(aCommandBuilder->mManager);
+        groupData->mFollowingGroup.ClearImageKey(
+            aCommandBuilder->mManager->GetRenderRootStateManager());
       }
       groupData->mFollowingGroup.mGroupBounds = currentGroup->mGroupBounds;
       groupData->mFollowingGroup.mAppUnitsPerDevPixel =
@@ -1298,6 +1302,10 @@ static mozilla::gfx::IntRect ScaleToOutsidePixelsOffset(
   return rect;
 }
 
+RenderRootStateManager* WebRenderCommandBuilder::GetRenderRootStateManager() {
+  return mManager->GetRenderRootStateManager();
+}
+
 void WebRenderCommandBuilder::DoGroupingForDisplayList(
     nsDisplayList* aList, nsDisplayItem* aWrappingItem,
     nsDisplayListBuilder* aDisplayListBuilder, const StackingContextHelper& aSc,
@@ -1358,7 +1366,7 @@ void WebRenderCommandBuilder::DoGroupingForDisplayList(
     }
 
     group.ClearItems();
-    group.ClearImageKey(mManager);
+    group.ClearImageKey(mManager->GetRenderRootStateManager());
   }
 
   ScrollableLayerGuid::ViewID scrollId = ScrollableLayerGuid::NULL_SCROLL_ID;
@@ -1616,8 +1624,9 @@ void WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(
       // Note: this call to CreateWebRenderCommands can recurse back into
       // this function if the |item| is a wrapper for a sublist.
       item->SetPaintRect(item->GetBuildingRect());
+      RenderRootStateManager* manager = mManager->GetRenderRootStateManager();
       bool createdWRCommands = item->CreateWebRenderCommands(
-          aBuilder, aResources, aSc, mManager, aDisplayListBuilder);
+          aBuilder, aResources, aSc, manager, aDisplayListBuilder);
       if (!createdWRCommands) {
         PushItemAsImage(item, aBuilder, aResources, aSc, aDisplayListBuilder);
       }
@@ -2100,8 +2109,8 @@ WebRenderCommandBuilder::GenerateFallbackData(
           aItem, dt, offset, aDisplayListBuilder,
           fallbackData->mBasicLayerManager, scale, highlight);
       recorder->FlushItem(IntRect({0, 0}, dtSize.ToUnknownSize()));
-      TakeExternalSurfaces(recorder, fallbackData->mExternalSurfaces, mManager,
-                           aResources);
+      TakeExternalSurfaces(recorder, fallbackData->mExternalSurfaces,
+                           mManager->GetRenderRootStateManager(), aResources);
       recorder->Finish();
 
       if (isInvalidated) {
@@ -2185,9 +2194,9 @@ WebRenderCommandBuilder::GenerateFallbackData(
 
 class WebRenderMaskData : public WebRenderUserData {
  public:
-  explicit WebRenderMaskData(WebRenderLayerManager* aWRManager,
+  explicit WebRenderMaskData(RenderRootStateManager* aManager,
                              nsDisplayItem* aItem)
-      : WebRenderUserData(aWRManager, aItem),
+      : WebRenderUserData(aManager, aItem),
         mMaskStyle(nsStyleImageLayers::LayerType::Mask) {
     MOZ_COUNT_CTOR(WebRenderMaskData);
   }
@@ -2198,7 +2207,7 @@ class WebRenderMaskData : public WebRenderUserData {
 
   void ClearImageKey() {
     if (mBlobKey) {
-      mWRManager->AddBlobImageKeyForDiscard(mBlobKey.value());
+      mManager->AddBlobImageKeyForDiscard(mBlobKey.value());
     }
     mBlobKey.reset();
   }
@@ -2299,7 +2308,8 @@ Maybe<wr::WrImageMask> WebRenderCommandBuilder::BuildWrMaskImage(
     }
 
     recorder->FlushItem(IntRect(0, 0, size.width, size.height));
-    TakeExternalSurfaces(recorder, maskData->mExternalSurfaces, mManager,
+    TakeExternalSurfaces(recorder, maskData->mExternalSurfaces,
+                         mManager->GetRenderRootStateManager(),
                          aResources);
     recorder->Finish();
 
@@ -2393,17 +2403,17 @@ void WebRenderCommandBuilder::ClearCachedResources() {
   MOZ_RELEASE_ASSERT(mWebRenderUserDatas.Count() == 0);
 }
 
-WebRenderGroupData::WebRenderGroupData(WebRenderLayerManager* aWRManager,
-                                       nsDisplayItem* aItem)
-    : WebRenderUserData(aWRManager, aItem) {
+WebRenderGroupData::WebRenderGroupData(
+    RenderRootStateManager* aRenderRootStateManager, nsDisplayItem* aItem)
+    : WebRenderUserData(aRenderRootStateManager, aItem) {
   MOZ_COUNT_CTOR(WebRenderGroupData);
 }
 
 WebRenderGroupData::~WebRenderGroupData() {
   MOZ_COUNT_DTOR(WebRenderGroupData);
   GP("Group data destruct\n");
-  mSubGroup.ClearImageKey(mWRManager, true);
-  mFollowingGroup.ClearImageKey(mWRManager, true);
+  mSubGroup.ClearImageKey(mManager, true);
+  mFollowingGroup.ClearImageKey(mManager, true);
 }
 
 }  // namespace layers

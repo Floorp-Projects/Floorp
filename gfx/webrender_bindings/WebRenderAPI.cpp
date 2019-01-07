@@ -1078,7 +1078,7 @@ DisplayListBuilder::FixedPosScrollTargetTracker::GetScrollTargetForASR(
 already_AddRefed<gfxContext> DisplayListBuilder::GetTextContext(
     wr::IpcResourceUpdateQueue& aResources,
     const layers::StackingContextHelper& aSc,
-    layers::WebRenderLayerManager* aManager, nsDisplayItem* aItem,
+    layers::RenderRootStateManager* aManager, nsDisplayItem* aItem,
     nsRect& aBounds, const gfx::Point& aDeviceOffset) {
   if (!mCachedTextDT) {
     mCachedTextDT = new layout::TextDrawTarget(*this, aResources, aSc, aManager,

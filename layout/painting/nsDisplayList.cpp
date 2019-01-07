@@ -93,6 +93,7 @@
 #include "nsTextFrame.h"
 #include "nsSliderFrame.h"
 #include "ClientLayerManager.h"
+#include "mozilla/layers/RenderRootStateManager.h"
 #include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
@@ -710,7 +711,7 @@ static void AddAnimationsForProperty(
 
 static uint64_t AddAnimationsForWebRender(
     nsDisplayItem* aItem, nsCSSPropertyID aProperty,
-    mozilla::layers::WebRenderLayerManager* aManager,
+    mozilla::layers::RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) {
   RefPtr<WebRenderAnimationData> animationData =
       aManager->CommandBuilder()
@@ -719,7 +720,8 @@ static uint64_t AddAnimationsForWebRender(
   AddAnimationsForProperty(aItem->Frame(), aDisplayListBuilder, aItem,
                            aProperty, animationInfo, Send::Immediate,
                            layers::LayersBackend::LAYERS_WR);
-  animationInfo.StartPendingAnimations(aManager->GetAnimationReadyTime());
+  animationInfo.StartPendingAnimations(
+      aManager->LayerManager()->GetAnimationReadyTime());
 
   // Note that animationsId can be 0 (uninitialized in AnimationInfo) if there
   // are no active animations.
@@ -3292,7 +3294,7 @@ bool nsDisplaySolidColor::CreateWebRenderCommands(
     mozilla::wr::DisplayListBuilder& aBuilder,
     mozilla::wr::IpcResourceUpdateQueue& aResources,
     const StackingContextHelper& aSc,
-    mozilla::layers::WebRenderLayerManager* aManager,
+    mozilla::layers::RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) {
   LayoutDeviceRect bounds = LayoutDeviceRect::FromAppUnits(
       mBounds, mFrame->PresContext()->AppUnitsPerDevPixel());
@@ -3331,7 +3333,7 @@ bool nsDisplaySolidColorRegion::CreateWebRenderCommands(
     mozilla::wr::DisplayListBuilder& aBuilder,
     mozilla::wr::IpcResourceUpdateQueue& aResources,
     const StackingContextHelper& aSc,
-    mozilla::layers::WebRenderLayerManager* aManager,
+    mozilla::layers::RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) {
   for (auto iter = mRegion.RectIter(); !iter.Done(); iter.Next()) {
     nsRect rect = iter.Get();
@@ -3981,10 +3983,11 @@ bool nsDisplayBackgroundImage::CanBuildWebRenderDisplayItems(
 bool nsDisplayBackgroundImage::CreateWebRenderCommands(
     mozilla::wr::DisplayListBuilder& aBuilder,
     mozilla::wr::IpcResourceUpdateQueue& aResources,
-    const StackingContextHelper& aSc, WebRenderLayerManager* aManager,
+    const StackingContextHelper& aSc, RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) {
   ContainerLayerParameters parameter;
-  if (!CanBuildWebRenderDisplayItems(aManager, aDisplayListBuilder)) {
+  if (!CanBuildWebRenderDisplayItems(aManager->LayerManager(),
+                                     aDisplayListBuilder)) {
     return false;
   }
 
@@ -4338,7 +4341,7 @@ bool nsDisplayThemedBackground::CreateWebRenderCommands(
     mozilla::wr::DisplayListBuilder& aBuilder,
     mozilla::wr::IpcResourceUpdateQueue& aResources,
     const StackingContextHelper& aSc,
-    mozilla::layers::WebRenderLayerManager* aManager,
+    mozilla::layers::RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) {
   nsITheme* theme = StyleFrame()->PresContext()->GetTheme();
   return theme->CreateWebRenderCommandsForWidget(aBuilder, aResources, aSc,
@@ -4570,7 +4573,7 @@ bool nsDisplayBackgroundColor::CreateWebRenderCommands(
     mozilla::wr::DisplayListBuilder& aBuilder,
     mozilla::wr::IpcResourceUpdateQueue& aResources,
     const StackingContextHelper& aSc,
-    mozilla::layers::WebRenderLayerManager* aManager,
+    mozilla::layers::RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) {
   if (mColor == Color()) {
     return true;
@@ -4758,7 +4761,7 @@ bool nsDisplayClearBackground::CreateWebRenderCommands(
     mozilla::wr::DisplayListBuilder& aBuilder,
     mozilla::wr::IpcResourceUpdateQueue& aResources,
     const StackingContextHelper& aSc,
-    mozilla::layers::WebRenderLayerManager* aManager,
+    mozilla::layers::RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) {
   LayoutDeviceRect bounds = LayoutDeviceRect::FromAppUnits(
       nsRect(ToReferenceFrame(), mFrame->GetSize()),
@@ -4790,7 +4793,7 @@ bool nsDisplayOutline::CreateWebRenderCommands(
     mozilla::wr::DisplayListBuilder& aBuilder,
     mozilla::wr::IpcResourceUpdateQueue& aResources,
     const StackingContextHelper& aSc,
-    mozilla::layers::WebRenderLayerManager* aManager,
+    mozilla::layers::RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) {
   ContainerLayerParameters parameter;
 
@@ -4850,7 +4853,7 @@ bool nsDisplayEventReceiver::CreateWebRenderCommands(
     mozilla::wr::DisplayListBuilder& aBuilder,
     mozilla::wr::IpcResourceUpdateQueue& aResources,
     const StackingContextHelper& aSc,
-    mozilla::layers::WebRenderLayerManager* aManager,
+    mozilla::layers::RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) {
   // This display item should never be getting created when building a display
   // list for WebRender consumption, so this function should never get called.
@@ -4905,7 +4908,7 @@ bool nsDisplayCompositorHitTestInfo::CreateWebRenderCommands(
     mozilla::wr::DisplayListBuilder& aBuilder,
     mozilla::wr::IpcResourceUpdateQueue& aResources,
     const StackingContextHelper& aSc,
-    mozilla::layers::WebRenderLayerManager* aManager,
+    mozilla::layers::RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) {
   if (HitTestArea().IsEmpty()) {
     return true;
@@ -4986,7 +4989,7 @@ bool nsDisplayCaret::CreateWebRenderCommands(
     mozilla::wr::DisplayListBuilder& aBuilder,
     mozilla::wr::IpcResourceUpdateQueue& aResources,
     const StackingContextHelper& aSc,
-    mozilla::layers::WebRenderLayerManager* aManager,
+    mozilla::layers::RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) {
   using namespace mozilla::layers;
   int32_t contentOffset;
@@ -5080,7 +5083,7 @@ bool nsDisplayBorder::CreateWebRenderCommands(
     mozilla::wr::DisplayListBuilder& aBuilder,
     mozilla::wr::IpcResourceUpdateQueue& aResources,
     const StackingContextHelper& aSc,
-    mozilla::layers::WebRenderLayerManager* aManager,
+    mozilla::layers::RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) {
   nsRect rect = nsRect(ToReferenceFrame(), mFrame->GetSize());
 
@@ -5222,7 +5225,7 @@ bool nsDisplayBoxShadowOuter::CreateWebRenderCommands(
     mozilla::wr::DisplayListBuilder& aBuilder,
     mozilla::wr::IpcResourceUpdateQueue& aResources,
     const StackingContextHelper& aSc,
-    mozilla::layers::WebRenderLayerManager* aManager,
+    mozilla::layers::RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) {
   if (!CanBuildWebRenderDisplayItems()) {
     return false;
@@ -5439,7 +5442,7 @@ bool nsDisplayBoxShadowInner::CreateWebRenderCommands(
     mozilla::wr::DisplayListBuilder& aBuilder,
     mozilla::wr::IpcResourceUpdateQueue& aResources,
     const StackingContextHelper& aSc,
-    mozilla::layers::WebRenderLayerManager* aManager,
+    mozilla::layers::RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) {
   if (!CanCreateWebRenderCommands(aDisplayListBuilder, mFrame,
                                   ToReferenceFrame())) {
@@ -5704,7 +5707,7 @@ bool nsDisplayWrapList::CreateWebRenderCommands(
     mozilla::wr::DisplayListBuilder& aBuilder,
     mozilla::wr::IpcResourceUpdateQueue& aResources,
     const StackingContextHelper& aSc,
-    mozilla::layers::WebRenderLayerManager* aManager,
+    mozilla::layers::RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) {
   aManager->CommandBuilder().CreateWebRenderCommandsFromDisplayList(
       GetChildren(), this, aDisplayListBuilder, aSc, aBuilder, aResources);
@@ -6056,7 +6059,7 @@ bool nsDisplayOpacity::CreateWebRenderCommands(
     mozilla::wr::DisplayListBuilder& aBuilder,
     mozilla::wr::IpcResourceUpdateQueue& aResources,
     const StackingContextHelper& aSc,
-    mozilla::layers::WebRenderLayerManager* aManager,
+    mozilla::layers::RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) {
   float* opacityForSC = &mOpacity;
 
@@ -6104,7 +6107,7 @@ bool nsDisplayBlendMode::CreateWebRenderCommands(
     mozilla::wr::DisplayListBuilder& aBuilder,
     mozilla::wr::IpcResourceUpdateQueue& aResources,
     const StackingContextHelper& aSc,
-    mozilla::layers::WebRenderLayerManager* aManager,
+    mozilla::layers::RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) {
   nsTArray<mozilla::wr::WrFilterOp> filters;
   StackingContextHelper sc(aSc, GetActiveScrolledRoot(), mFrame, this, aBuilder,
@@ -6226,7 +6229,7 @@ bool nsDisplayBlendContainer::CreateWebRenderCommands(
     mozilla::wr::DisplayListBuilder& aBuilder,
     mozilla::wr::IpcResourceUpdateQueue& aResources,
     const StackingContextHelper& aSc,
-    mozilla::layers::WebRenderLayerManager* aManager,
+    mozilla::layers::RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) {
   StackingContextHelper sc(aSc, GetActiveScrolledRoot(), mFrame, this,
                            aBuilder);
@@ -6315,9 +6318,10 @@ already_AddRefed<Layer> nsDisplayOwnLayer::BuildLayer(
 bool nsDisplayOwnLayer::CreateWebRenderCommands(
     mozilla::wr::DisplayListBuilder& aBuilder,
     mozilla::wr::IpcResourceUpdateQueue& aResources,
-    const StackingContextHelper& aSc, WebRenderLayerManager* aManager,
+    const StackingContextHelper& aSc, RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) {
-  if (!aManager->AsyncPanZoomEnabled() || !IsScrollThumbLayer()) {
+  if (!aManager->LayerManager()->AsyncPanZoomEnabled() ||
+      !IsScrollThumbLayer()) {
     return nsDisplayWrapList::CreateWebRenderCommands(
         aBuilder, aResources, aSc, aManager, aDisplayListBuilder);
   }
@@ -6678,7 +6682,7 @@ bool nsDisplayFixedPosition::CreateWebRenderCommands(
     mozilla::wr::DisplayListBuilder& aBuilder,
     mozilla::wr::IpcResourceUpdateQueue& aResources,
     const StackingContextHelper& aSc,
-    mozilla::layers::WebRenderLayerManager* aManager,
+    mozilla::layers::RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) {
   // We install this RAII scrolltarget tracker so that any
   // nsDisplayCompositorHitTestInfo items inside this fixed-pos item (and that
@@ -6854,7 +6858,7 @@ static nscoord DistanceToRange(nscoord min, nscoord max) {
 bool nsDisplayStickyPosition::CreateWebRenderCommands(
     mozilla::wr::DisplayListBuilder& aBuilder,
     mozilla::wr::IpcResourceUpdateQueue& aResources,
-    const StackingContextHelper& aSc, WebRenderLayerManager* aManager,
+    const StackingContextHelper& aSc, RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) {
   StickyScrollContainer* stickyScrollContainer =
       StickyScrollContainer::GetStickyScrollContainerForFrame(mFrame);
@@ -7828,7 +7832,7 @@ bool nsDisplayTransform::ShouldBuildLayerEvenIfInvisible(
 bool nsDisplayTransform::CreateWebRenderCommands(
     mozilla::wr::DisplayListBuilder& aBuilder,
     mozilla::wr::IpcResourceUpdateQueue& aResources,
-    const StackingContextHelper& aSc, WebRenderLayerManager* aManager,
+    const StackingContextHelper& aSc, RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) {
   // We want to make sure we don't pollute the transform property in the WR
   // stacking context by including the position of this frame (relative to the
@@ -8425,7 +8429,7 @@ LayerState nsDisplayPerspective::GetLayerState(
 bool nsDisplayPerspective::CreateWebRenderCommands(
     mozilla::wr::DisplayListBuilder& aBuilder,
     mozilla::wr::IpcResourceUpdateQueue& aResources,
-    const StackingContextHelper& aSc, WebRenderLayerManager* aManager,
+    const StackingContextHelper& aSc, RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) {
   float appUnitsPerPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
   Matrix4x4 perspectiveMatrix;
@@ -9008,7 +9012,7 @@ enum class HandleOpacity {
 static Maybe<Pair<wr::WrClipId, HandleOpacity>> CreateWRClipPathAndMasks(
     nsDisplayMasksAndClipPaths* aDisplayItem, const LayoutDeviceRect& aBounds,
     wr::IpcResourceUpdateQueue& aResources, wr::DisplayListBuilder& aBuilder,
-    const StackingContextHelper& aSc, layers::WebRenderLayerManager* aManager,
+    const StackingContextHelper& aSc, layers::RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) {
   if (auto clip = CreateSimpleClipRegion(*aDisplayItem, aBuilder)) {
     return Some(MakePair(*clip, HandleOpacity::Yes));
@@ -9030,7 +9034,7 @@ bool nsDisplayMasksAndClipPaths::CreateWebRenderCommands(
     mozilla::wr::DisplayListBuilder& aBuilder,
     mozilla::wr::IpcResourceUpdateQueue& aResources,
     const StackingContextHelper& aSc,
-    mozilla::layers::WebRenderLayerManager* aManager,
+    mozilla::layers::RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) {
   bool snap;
   auto appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
@@ -9319,7 +9323,7 @@ bool nsDisplayFilters::CreateWebRenderCommands(
     mozilla::wr::DisplayListBuilder& aBuilder,
     mozilla::wr::IpcResourceUpdateQueue& aResources,
     const StackingContextHelper& aSc,
-    mozilla::layers::WebRenderLayerManager* aManager,
+    mozilla::layers::RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) {
   bool snap;
   float auPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
@@ -9420,7 +9424,7 @@ bool nsDisplaySVGWrapper::CreateWebRenderCommands(
     mozilla::wr::DisplayListBuilder& aBuilder,
     mozilla::wr::IpcResourceUpdateQueue& aResources,
     const StackingContextHelper& aSc,
-    mozilla::layers::WebRenderLayerManager* aManager,
+    mozilla::layers::RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) {
   if (gfxPrefs::WebRenderBlobInvalidation()) {
     return nsDisplayWrapList::CreateWebRenderCommands(
@@ -9481,7 +9485,7 @@ bool nsDisplayForeignObject::CreateWebRenderCommands(
     mozilla::wr::DisplayListBuilder& aBuilder,
     mozilla::wr::IpcResourceUpdateQueue& aResources,
     const StackingContextHelper& aSc,
-    mozilla::layers::WebRenderLayerManager* aManager,
+    mozilla::layers::RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) {
   if (gfxPrefs::WebRenderBlobInvalidation()) {
     AutoRestore<bool> restoreDoGrouping(aManager->CommandBuilder().mDoGrouping);

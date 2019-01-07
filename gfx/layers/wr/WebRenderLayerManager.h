@@ -18,6 +18,7 @@
 #include "mozilla/layers/APZTestData.h"
 #include "mozilla/layers/FocusTarget.h"
 #include "mozilla/layers/IpcResourceUpdateQueue.h"
+#include "mozilla/layers/RenderRootStateManager.h"
 #include "mozilla/layers/SharedSurfacesChild.h"
 #include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/layers/TransactionIdAllocator.h"
@@ -148,27 +149,11 @@ class WebRenderLayerManager final : public LayerManager {
 
   // adds an imagekey to a list of keys that will be discarded on the next
   // transaction or destruction
-  void AddImageKeyForDiscard(wr::ImageKey);
-  void AddBlobImageKeyForDiscard(wr::BlobImageKey);
   void DiscardImages();
-  void DiscardImagesInTransaction(wr::IpcResourceUpdateQueue& aResourceUpdates);
   void DiscardLocalImages();
 
-  wr::IpcResourceUpdateQueue& AsyncResourceUpdates();
-  void FlushAsyncResourceUpdates();
-
-  void RegisterAsyncAnimation(const wr::ImageKey& aKey,
-                              SharedSurfacesAnimation* aAnimation);
-  void DeregisterAsyncAnimation(const wr::ImageKey& aKey);
   void ClearAsyncAnimations();
   void WrReleasedImages(const nsTArray<wr::ExternalImageKeyPair>& aPairs);
-
-  // Methods to manage the compositor animation ids. Active animations are still
-  // going, and when they end we discard them and remove them from the active
-  // list.
-  void AddActiveCompositorAnimationId(uint64_t aId);
-  void AddCompositorAnimationsIdForDiscard(uint64_t aId);
-  void DiscardCompositorAnimations();
 
   WebRenderBridgeChild* WrBridge() const { return mWrChild; }
 
@@ -199,6 +184,8 @@ class WebRenderLayerManager final : public LayerManager {
   void StopFrameTimeRecording(uint32_t aStartIndex,
                               nsTArray<float>& aFrameIntervals) override;
 
+  RenderRootStateManager* GetRenderRootStateManager() { return &mStateManager; }
+
  private:
   /**
    * Take a snapshot of the parent context, and copy
@@ -208,15 +195,6 @@ class WebRenderLayerManager final : public LayerManager {
 
  private:
   nsIWidget* MOZ_NON_OWNING_REF mWidget;
-  nsTArray<wr::ImageKey> mImageKeysToDelete;
-  nsTArray<wr::BlobImageKey> mBlobImageKeysToDelete;
-
-  // Set of compositor animation ids for which there are active animations (as
-  // of the last transaction) on the compositor side.
-  std::unordered_set<uint64_t> mActiveCompositorAnimationIds;
-  // Compositor animation ids for animations that are done now and that we want
-  // the compositor to discard information for.
-  nsTArray<uint64_t> mDiscardedCompositorAnimationsIds;
 
   RefPtr<WebRenderBridgeChild> mWrChild;
 
@@ -254,9 +232,7 @@ class WebRenderLayerManager final : public LayerManager {
 
   size_t mLastDisplayListSize;
 
-  Maybe<wr::IpcResourceUpdateQueue> mAsyncResourceUpdates;
-  std::unordered_map<uint64_t, RefPtr<SharedSurfacesAnimation>>
-      mAsyncAnimations;
+  RenderRootStateManager mStateManager;
 };
 
 }  // namespace layers

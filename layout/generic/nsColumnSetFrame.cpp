@@ -47,7 +47,7 @@ class nsDisplayColumnRule : public nsDisplayItem {
       mozilla::wr::DisplayListBuilder& aBuilder,
       mozilla::wr::IpcResourceUpdateQueue& aResources,
       const StackingContextHelper& aSc,
-      mozilla::layers::WebRenderLayerManager* aManager,
+      mozilla::layers::RenderRootStateManager* aManager,
       nsDisplayListBuilder* aDisplayListBuilder) override;
   virtual void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
 
@@ -72,7 +72,7 @@ bool nsDisplayColumnRule::CreateWebRenderCommands(
     mozilla::wr::DisplayListBuilder& aBuilder,
     mozilla::wr::IpcResourceUpdateQueue& aResources,
     const StackingContextHelper& aSc,
-    mozilla::layers::WebRenderLayerManager* aManager,
+    mozilla::layers::RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) {
   RefPtr<gfxContext> screenRefCtx = gfxContext::CreateOrNull(
       gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget().get());
