@@ -11,11 +11,9 @@
 #include "mozIDOMWindow.h"
 
 #include "nsCOMPtr.h"
-#include "nsDataHashtable.h"
 #include "nsTArray.h"
 #include "mozilla/dom/EventTarget.h"
 #include "mozilla/TaskCategory.h"
-#include "mozilla/TimeStamp.h"
 #include "js/TypeDecls.h"
 #include "nsRefPtrHashtable.h"
 
@@ -790,13 +788,6 @@ class nsPIDOMWindowOuter : public mozIDOMWindowProxy {
   virtual void ActivateOrDeactivate(bool aActivate) = 0;
 
   /**
-   * These functions are used to modify and check temporary autoplay permission.
-   */
-  void NotifyTemporaryAutoplayPermissionChanged(int32_t aState,
-                                                const nsAString& aPrePath);
-  bool HasTemporaryAutoplayPermission();
-
-  /**
    * |top| gets the root of the window hierarchy.
    *
    * This function does not cross chrome-content boundaries, so if this
@@ -1190,9 +1181,6 @@ class nsPIDOMWindowOuter : public mozIDOMWindowProxy {
   mozilla::dom::LargeAllocStatus mLargeAllocStatus;
 
   RefPtr<mozilla::dom::BrowsingContext> mOpenerForInitialContentBrowser;
-
-  using PermissionInfo = std::pair<bool, mozilla::TimeStamp>;
-  nsDataHashtable<nsStringHashKey, PermissionInfo> mAutoplayTemporaryPermission;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsPIDOMWindowOuter, NS_PIDOMWINDOWOUTER_IID)

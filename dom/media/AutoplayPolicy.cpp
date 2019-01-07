@@ -87,13 +87,6 @@ static bool IsWindowAllowedToPlay(nsPIDOMWindowInner* aWindow) {
     return false;
   }
 
-  nsCOMPtr<nsPIDOMWindowOuter> topWindow = aWindow->GetScriptableTop();
-  if (topWindow && topWindow->HasTemporaryAutoplayPermission()) {
-    AUTOPLAY_LOG(
-        "Allow autoplay as document has temporary autoplay permission.");
-    return true;
-  }
-
   Document* approver = ApproverDocOf(*aWindow->GetExtantDoc());
   if (!approver) {
     return false;

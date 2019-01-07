@@ -106,7 +106,6 @@ let ACTORS = {
       module: "resource://gre/actors/AudioPlaybackChild.jsm",
       messages: [
         "AudioPlayback",
-        "TemporaryPermissionChanged",
       ],
       observers: [
         "audio-playback",

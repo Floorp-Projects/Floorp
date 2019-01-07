@@ -830,9 +830,9 @@ interface nsIDOMWindowUtils : nsISupports {
 
   /**
    * Returns the offset of the window's visual viewport relative to the
-   * layout viewport. 
+   * layout viewport.
    */
-  void getVisualViewportOffsetRelativeToLayoutViewport(out float aOffsetX, 
+  void getVisualViewportOffsetRelativeToLayoutViewport(out float aOffsetX,
                                                        out float aOffsetY);
 
   const long FLUSH_NONE = -1;
@@ -1932,23 +1932,6 @@ interface nsIDOMWindowUtils : nsISupports {
    * Reset the internal state to be used for above setPrefersReducedMotion.
    */
   void resetPrefersReducedMotionOverrideForTest();
-
-  /**
-   * Used to notify temporary autoplay permission change and cache it on the dom
-   * window. These states are equal to nsIPermissionManager's action states.
-   */
-  const long PERMISSION_UNKNOWN = 0;
-  const long PERMISSION_ALLOW = 1;
-  const long PERMISSION_DENY = 2;
-
-  void notifyTemporaryAutoplayPermissionChanged(in long aState,
-                                                in AString aPrePath);
-
-  /**
-   * Used to check whether the window temporarily allows autoplay for current
-   * domain.
-   */
-  bool isAutoplayTemporarilyAllowed();
 
   // These consts are only for testing purposes.
   const long DEFAULT_MOUSE_POINTER_ID = 0;
