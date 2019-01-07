@@ -107,62 +107,56 @@ void nsSecureBrowserUIImpl::CheckForBlockedContent() {
     }
   }
 
-  nsCOMPtr<nsIDocument> doc = docShell->GetDocument();
-  if (!doc) {
-    // If the docshell has no document, then there is no need to update mState.
-    return;
-  }
-
   // Has mixed content been loaded or blocked in nsMixedContentBlocker?
   // This only applies to secure documents even if they're affected by mixed
   // content blocking in which case the STATE_IS_BROKEN bit would be set rather
   // than STATE_IS_SECURE.
   if (((mState & STATE_IS_SECURE) != 0) || ((mState & STATE_IS_BROKEN) != 0)) {
-    if (doc->GetHasMixedActiveContentLoaded()) {
+    if (docShell->GetHasMixedActiveContentLoaded()) {
       mState |= STATE_IS_BROKEN | STATE_LOADED_MIXED_ACTIVE_CONTENT;
       mState &= ~STATE_IS_SECURE;
     }
 
-    if (doc->GetHasMixedDisplayContentLoaded()) {
+    if (docShell->GetHasMixedDisplayContentLoaded()) {
       mState |= STATE_IS_BROKEN | STATE_LOADED_MIXED_DISPLAY_CONTENT;
       mState &= ~STATE_IS_SECURE;
     }
 
-    if (doc->GetHasMixedActiveContentBlocked()) {
+    if (docShell->GetHasMixedActiveContentBlocked()) {
       mState |= STATE_BLOCKED_MIXED_ACTIVE_CONTENT;
     }
 
-    if (doc->GetHasMixedDisplayContentBlocked()) {
+    if (docShell->GetHasMixedDisplayContentBlocked()) {
       mState |= STATE_BLOCKED_MIXED_DISPLAY_CONTENT;
     }
   }
 
   // Has tracking content been blocked or loaded?
-  if (doc->GetHasTrackingContentBlocked()) {
+  if (docShell->GetHasTrackingContentBlocked()) {
     mState |= STATE_BLOCKED_TRACKING_CONTENT;
   }
 
-  if (doc->GetHasTrackingContentLoaded()) {
+  if (docShell->GetHasTrackingContentLoaded()) {
     mState |= STATE_LOADED_TRACKING_CONTENT;
   }
 
-  if (doc->GetHasCookiesBlockedByPermission()) {
+  if (docShell->GetHasCookiesBlockedByPermission()) {
     mState |= STATE_COOKIES_BLOCKED_BY_PERMISSION;
   }
 
-  if (doc->GetHasTrackingCookiesBlocked()) {
+  if (docShell->GetHasCookiesBlockedDueToTrackers()) {
     mState |= STATE_COOKIES_BLOCKED_TRACKER;
   }
 
-  if (doc->GetHasForeignCookiesBlocked()) {
+  if (docShell->GetHasForeignCookiesBeenBlocked()) {
     mState |= STATE_COOKIES_BLOCKED_FOREIGN;
   }
 
-  if (doc->GetHasAllCookiesBlocked()) {
+  if (docShell->GetHasAllCookiesBeenBlocked()) {
     mState |= STATE_COOKIES_BLOCKED_ALL;
   }
 
-  if (doc->GetHasCookiesLoaded()) {
+  if (docShell->GetHasCookiesLoaded()) {
     mState |= STATE_COOKIES_LOADED;
   }
 }
