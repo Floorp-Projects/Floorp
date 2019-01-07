@@ -53,6 +53,8 @@ SimpleTest.waitForFocus(function() {
      '"input" event should be never cancelable even if "click" event (on multi-line editor)');
   is(inputEvents[0].bubbles, true,
      '"input" event should always bubble (on multi-line editor)');
+  is(inputEvents[0].inputType, "insertLineBreak",
+     'inputType should be "insertLineBreak" on multi-line editor');
 
   // Note that despite of the name, insertLineBreak() should insert paragraph separator in HTMLEditor.
 
@@ -76,6 +78,8 @@ SimpleTest.waitForFocus(function() {
      '"input" event should be never cancelable even if "click" event (when defaultParagraphSeparator is "br") #1');
   is(inputEvents[0].bubbles, true,
      '"input" event should always bubble (when defaultParagraphSeparator is "br") #1');
+  is(inputEvents[0].inputType, "insertParagraph",
+     'inputType should be "insertParagraph" on HTMLEditor (when defaultParagraphSeparator is "br") #1');
 
   contenteditable.innerHTML = "<p>abcdef</p>";
   contenteditable.focus();
@@ -95,6 +99,8 @@ SimpleTest.waitForFocus(function() {
      '"input" event should be never cancelable even if "click" event (when defaultParagraphSeparator is "br") #2');
   is(inputEvents[0].bubbles, true,
      '"input" event should always bubble (when defaultParagraphSeparator is "br") #2');
+  is(inputEvents[0].inputType, "insertParagraph",
+     'inputType should be "insertParagraph" on HTMLEditor (when defaultParagraphSeparator is "br") #2');
 
   contenteditable.innerHTML = "<div>abcdef</div>";
   contenteditable.focus();
@@ -114,6 +120,8 @@ SimpleTest.waitForFocus(function() {
      '"input" event should be never cancelable even if "click" event (when defaultParagraphSeparator is "br") #3');
   is(inputEvents[0].bubbles, true,
      '"input" event should always bubble (when defaultParagraphSeparator is "br") #3');
+  is(inputEvents[0].inputType, "insertParagraph",
+     'inputType should be "insertParagraph" on HTMLEditor (when defaultParagraphSeparator is "br") #3');
 
   contenteditable.innerHTML = "<pre>abcdef</pre>";
   contenteditable.focus();
@@ -133,6 +141,8 @@ SimpleTest.waitForFocus(function() {
      '"input" event should be never cancelable even if "click" event (when defaultParagraphSeparator is "br") #4');
   is(inputEvents[0].bubbles, true,
      '"input" event should always bubble (when defaultParagraphSeparator is "br") #4');
+  is(inputEvents[0].inputType, "insertParagraph",
+     'inputType should be "insertParagraph" on HTMLEditor (when defaultParagraphSeparator is "br") #4');
 
   document.execCommand("defaultParagraphSeparator", false, "p");
 
@@ -154,6 +164,8 @@ SimpleTest.waitForFocus(function() {
      '"input" event should be never cancelable even if "click" event (when defaultParagraphSeparator is "p") #1');
   is(inputEvents[0].bubbles, true,
      '"input" event should always bubble (when defaultParagraphSeparator is "p") #1');
+  is(inputEvents[0].inputType, "insertParagraph",
+     'inputType should be "insertParagraph" on HTMLEditor (when defaultParagraphSeparator is "p") #1');
 
   contenteditable.innerHTML = "<p>abcdef</p>";
   contenteditable.focus();
@@ -173,6 +185,8 @@ SimpleTest.waitForFocus(function() {
      '"input" event should be never cancelable even if "click" event (when defaultParagraphSeparator is "p") #2');
   is(inputEvents[0].bubbles, true,
      '"input" event should always bubble (when defaultParagraphSeparator is "p") #2');
+  is(inputEvents[0].inputType, "insertParagraph",
+     'inputType should be "insertParagraph" on HTMLEditor (when defaultParagraphSeparator is "p") #2');
 
   contenteditable.innerHTML = "<div>abcdef</div>";
   contenteditable.focus();
@@ -192,6 +206,8 @@ SimpleTest.waitForFocus(function() {
      '"input" event should be never cancelable even if "click" event (when defaultParagraphSeparator is "p") #3');
   is(inputEvents[0].bubbles, true,
      '"input" event should always bubble (when defaultParagraphSeparator is "p") #3');
+  is(inputEvents[0].inputType, "insertParagraph",
+     'inputType should be "insertParagraph" on HTMLEditor (when defaultParagraphSeparator is "p") #3');
 
   contenteditable.innerHTML = "<pre>abcdef</pre>";
   contenteditable.focus();
@@ -211,6 +227,8 @@ SimpleTest.waitForFocus(function() {
      '"input" event should be never cancelable even if "click" event (when defaultParagraphSeparator is "p") #4');
   is(inputEvents[0].bubbles, true,
      '"input" event should always bubble (when defaultParagraphSeparator is "p") #4');
+  is(inputEvents[0].inputType, "insertParagraph",
+     'inputType should be "insertParagraph" on HTMLEditor (when defaultParagraphSeparator is "p") #4');
 
   document.execCommand("defaultParagraphSeparator", false, "div");
 
@@ -232,6 +250,8 @@ SimpleTest.waitForFocus(function() {
      '"input" event should be never cancelable even if "click" event (when defaultParagraphSeparator is "div") #1');
   is(inputEvents[0].bubbles, true,
      '"input" event should always bubble (when defaultParagraphSeparator is "div") #1');
+  is(inputEvents[0].inputType, "insertParagraph",
+     'inputType should be "insertParagraph" on HTMLEditor (when defaultParagraphSeparator is "div") #1');
 
   contenteditable.innerHTML = "<p>abcdef</p>";
   contenteditable.focus();
@@ -251,6 +271,8 @@ SimpleTest.waitForFocus(function() {
      '"input" event should be never cancelable even if "click" event (when defaultParagraphSeparator is "div") #2');
   is(inputEvents[0].bubbles, true,
      '"input" event should always bubble (when defaultParagraphSeparator is "div") #2');
+  is(inputEvents[0].inputType, "insertParagraph",
+     'inputType should be "insertParagraph" on HTMLEditor (when defaultParagraphSeparator is "div") #2');
 
   contenteditable.innerHTML = "<div>abcdef</div>";
   contenteditable.focus();
@@ -270,6 +292,8 @@ SimpleTest.waitForFocus(function() {
      '"input" event should be never cancelable even if "click" event (when defaultParagraphSeparator is "div") #3');
   is(inputEvents[0].bubbles, true,
      '"input" event should always bubble (when defaultParagraphSeparator is "div") #3');
+  is(inputEvents[0].inputType, "insertParagraph",
+     'inputType should be "insertParagraph" on HTMLEditor (when defaultParagraphSeparator is "div") #3');
 
   contenteditable.innerHTML = "<pre>abcdef</pre>";
   contenteditable.focus();
@@ -289,6 +313,8 @@ SimpleTest.waitForFocus(function() {
      '"input" event should be never cancelable even if "click" event (when defaultParagraphSeparator is "div") #4');
   is(inputEvents[0].bubbles, true,
      '"input" event should always bubble (when defaultParagraphSeparator is "div") #4');
+  is(inputEvents[0].inputType, "insertParagraph",
+     'inputType should be "insertParagraph" on HTMLEditor (when defaultParagraphSeparator is "div") #4');
 
   SimpleTest.finish();
 });

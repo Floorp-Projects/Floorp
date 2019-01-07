@@ -331,6 +331,8 @@ impl SpecNewSessionParameters {
 
         for (key, value) in obj {
             match &**key {
+                _x @ "script" if value.is_null() => { }
+
                 x @ "script" | x @ "pageLoad" | x @ "implicit" => {
                     let timeout = try_opt!(
                         value.as_f64(),

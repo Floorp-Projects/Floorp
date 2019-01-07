@@ -41,6 +41,8 @@ function handleInput(aEvent) {
      '"input" event should be never cancelable');
   is(aEvent.bubbles, true,
      '"input" event should always bubble');
+  is(aEvent.inputType, "insertReplacementText",
+     'inputType should be "insertReplacementText"');
   input.removeEventListener("input", handleInput, true);
   SimpleTest.finish();
 }

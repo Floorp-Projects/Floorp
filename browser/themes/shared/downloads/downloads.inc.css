@@ -57,7 +57,6 @@
 .downloadsPanelFooterButton:hover:active,
 .downloadsPanelFooterButton[open="true"] {
   outline: 1px solid var(--arrowpanel-dimmed-further);
-  box-shadow: 0 1px 0 hsla(210,4%,10%,.05) inset;
 }
 
 .downloadsPanelFooterButton > .button-box {
@@ -177,7 +176,7 @@
   border: none;
   background: transparent;
   padding: 0;
-  color: inherit;
+  color: inherit !important /* !important overrides button.css on Mac and Linux */;
 }
 
 .downloadButton > .button-box > .button-icon {

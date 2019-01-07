@@ -97,6 +97,8 @@ SimpleTest.waitForFocus(async function() {
            '"input" event should be never cancelable');
         is(aEvent.bubbles, true,
            '"input" event should always bubble');
+        is(aEvent.inputType, "",
+           `inputType should be empty string when an element is resized`);
       }
 
       content.addEventListener("input", onInput);

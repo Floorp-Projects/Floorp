@@ -25,13 +25,14 @@ SimpleTest.waitForFocus(function() {
   }
   editor.addEventListener("input", onInput);
 
-  function checkInputEvent(aEvent, aDescription) {
+  function checkInputEvent(aEvent, aInputType, aDescription) {
     if (aEvent.type != "input") {
       return;
     }
     ok(aEvent instanceof InputEvent, `${aDescription}"input" event should be dispatched with InputEvent interface`);
     is(aEvent.cancelable, false, `${aDescription}"input" event should be never cancelable`);
     is(aEvent.bubbles, true, `${aDescription}"input" event should always bubble`);
+    is(aEvent.inputType, aInputType, `${aDescription}inputType should be ${aInputType}`);
   }
 
   function selectFromTextSiblings(aNode) {
@@ -70,7 +71,7 @@ SimpleTest.waitForFocus(function() {
     is(inputEvents.length, 1,
       description + condition + ': nsIHTMLEditor.removeInlineProperty("b", "") should cause an "input" event');
     if (inputEvents.length > 0) {
-      checkInputEvent(inputEvents[0], description);
+      checkInputEvent(inputEvents[0], "formatBold", description);
     }
   }
 
@@ -86,7 +87,7 @@ SimpleTest.waitForFocus(function() {
     is(inputEvents.length, 1,
       description + condition + ': nsIHTMLEditor.removeInlineProperty("b", "") should cause an "input" event');
     if (inputEvents.length > 0) {
-      checkInputEvent(inputEvents[0], description);
+      checkInputEvent(inputEvents[0], "formatBold", description);
     }
   }
 
@@ -102,7 +103,7 @@ SimpleTest.waitForFocus(function() {
     is(inputEvents.length, 1,
       description + condition + ': nsIHTMLEditor.removeInlineProperty("b", "") should cause an "input" event');
     if (inputEvents.length > 0) {
-      checkInputEvent(inputEvents[0], description);
+      checkInputEvent(inputEvents[0], "formatBold", description);
     }
   }
 
@@ -118,7 +119,7 @@ SimpleTest.waitForFocus(function() {
     is(inputEvents.length, 1,
       description + condition + ': nsIHTMLEditor.removeInlineProperty("b", "") should cause an "input" event');
     if (inputEvents.length > 0) {
-      checkInputEvent(inputEvents[0], description);
+      checkInputEvent(inputEvents[0], "formatBold", description);
     }
   }
 
@@ -134,7 +135,7 @@ SimpleTest.waitForFocus(function() {
     is(inputEvents.length, 1,
       description + condition + ': nsIHTMLEditor.removeInlineProperty("i", "") should cause an "input" event');
     if (inputEvents.length > 0) {
-      checkInputEvent(inputEvents[0], description);
+      checkInputEvent(inputEvents[0], "formatItalic", description);
     }
   }
 
@@ -150,7 +151,7 @@ SimpleTest.waitForFocus(function() {
     is(inputEvents.length, 1,
       description + condition + ': nsIHTMLEditor.removeInlineProperty("b", "") should cause an "input" event');
     if (inputEvents.length > 0) {
-      checkInputEvent(inputEvents[0], description);
+      checkInputEvent(inputEvents[0], "formatBold", description);
     }
   }
 
@@ -166,7 +167,7 @@ SimpleTest.waitForFocus(function() {
     is(inputEvents.length, 1,
       description + condition + ': nsIHTMLEditor.removeInlineProperty("i", "") should cause an "input" event');
     if (inputEvents.length > 0) {
-      checkInputEvent(inputEvents[0], description);
+      checkInputEvent(inputEvents[0], "formatItalic", description);
     }
   }
 
@@ -182,7 +183,7 @@ SimpleTest.waitForFocus(function() {
     is(inputEvents.length, 1,
       description + condition + ': nsIHTMLEditor.removeInlineProperty("i", "") should cause an "input" event');
     if (inputEvents.length > 0) {
-      checkInputEvent(inputEvents[0], description);
+      checkInputEvent(inputEvents[0], "formatItalic", description);
     }
   }
 
@@ -198,7 +199,7 @@ SimpleTest.waitForFocus(function() {
     is(inputEvents.length, 1,
       description + condition + ': nsIHTMLEditor.removeInlineProperty("b", "") should cause an "input" event');
     if (inputEvents.length > 0) {
-      checkInputEvent(inputEvents[0], description);
+      checkInputEvent(inputEvents[0], "formatBold", description);
     }
   }
 
@@ -214,7 +215,7 @@ SimpleTest.waitForFocus(function() {
     is(inputEvents.length, 1,
       description + condition + ': nsIHTMLEditor.removeInlineProperty("href", "") should cause an "input" event');
     if (inputEvents.length > 0) {
-      checkInputEvent(inputEvents[0], description);
+      checkInputEvent(inputEvents[0], "", description);
     }
   }
 
@@ -231,7 +232,7 @@ SimpleTest.waitForFocus(function() {
     is(inputEvents.length, 1,
       description + condition + ': nsIHTMLEditor.removeInlineProperty("href", "") should cause an "input" event');
     if (inputEvents.length > 0) {
-      checkInputEvent(inputEvents[0], description);
+      checkInputEvent(inputEvents[0], "", description);
     }
   }
 
@@ -273,7 +274,7 @@ SimpleTest.waitForFocus(function() {
     is(inputEvents.length, 1,
       description + condition + ': nsIHTMLEditor.removeInlineProperty("name", "") should cause an "input" event');
     if (inputEvents.length > 0) {
-      checkInputEvent(inputEvents[0], description);
+      checkInputEvent(inputEvents[0], "", description);
     }
   }
 

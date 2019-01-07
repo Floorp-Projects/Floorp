@@ -29,13 +29,15 @@ SimpleTest.waitForFocus(function() {
     document.getElementById("textarea"),
   ];
   for (let editableElement of editableElements) {
-    function checkInputEvent(aEvent, aDescription) {
+    function checkInputEvent(aEvent, aInputType, aDescription) {
       ok(aEvent instanceof InputEvent,
          `"input" event should be dispatched with InputEvent interface ${aDescription}`);
       is(aEvent.cancelable, false,
          `"input" event should be never cancelable ${aDescription}`);
       is(aEvent.bubbles, true,
          `"input" event should always bubble ${aDescription}`);
+      is(aEvent.inputType, aInputType,
+         `inputType should be "${aInputType}" ${aDescription}`);
     }
 
     let inputEvents = [];
@@ -50,13 +52,13 @@ SimpleTest.waitForFocus(function() {
     synthesizeKey("a");
     is(inputEvents.length, 1,
        `Only one "input" event should be fired when inserting "a" with key on <${editableElement.tagName.toLowerCase()}> element`);
-    checkInputEvent(inputEvents[0], `when inserting "a" with key on <${editableElement.tagName.toLowerCase()}> element`);
+    checkInputEvent(inputEvents[0], "insertText", `when inserting "a" with key on <${editableElement.tagName.toLowerCase()}> element`);
 
     inputEvents = [];
     synthesizeKey("c");
     is(inputEvents.length, 1,
        `Only one "input" event should be fired when inserting "c" with key on <${editableElement.tagName.toLowerCase()}> element`);
-    checkInputEvent(inputEvents[0], `when inserting "c" with key on <${editableElement.tagName.toLowerCase()}> element`);
+    checkInputEvent(inputEvents[0], "insertText", `when inserting "c" with key on <${editableElement.tagName.toLowerCase()}> element`);
 
     inputEvents = [];
     synthesizeKey("KEY_ArrowLeft");
@@ -67,7 +69,7 @@ SimpleTest.waitForFocus(function() {
     synthesizeKey("b");
     is(inputEvents.length, 1,
        `Only one "input" event should be fired when inserting "b" with key on <${editableElement.tagName.toLowerCase()}> element`);
-    checkInputEvent(inputEvents[0], `when inserting "b" with key on <${editableElement.tagName.toLowerCase()}> element`);
+    checkInputEvent(inputEvents[0], "insertText", `when inserting "b" with key on <${editableElement.tagName.toLowerCase()}> element`);
 
     let editor = SpecialPowers.wrap(editableElement).editor;
     let transactionManager = editor.transactionManager;
@@ -91,7 +93,7 @@ SimpleTest.waitForFocus(function() {
     synthesizeKey("a");
     is(inputEvents.length, 1,
        `Only one "input" event should be fired when inserting "a" with key again on <${editableElement.tagName.toLowerCase()}> element`);
-    checkInputEvent(inputEvents[0], `when inserting "a" with key again on <${editableElement.tagName.toLowerCase()}> element`);
+    checkInputEvent(inputEvents[0], "insertText", `when inserting "a" with key again on <${editableElement.tagName.toLowerCase()}> element`);
 
     inputEvents = [];
     synthesizeKey("z", { accelKey: true });
@@ -99,7 +101,7 @@ SimpleTest.waitForFocus(function() {
        editableElement.tagName + ": undo should work after setting value");
     is(inputEvents.length, 1,
        `Only one "input" event should be fired when undoing on <${editableElement.tagName.toLowerCase()}> element`);
-    checkInputEvent(inputEvents[0], `when undoing on <${editableElement.tagName.toLowerCase()}> element`);
+    checkInputEvent(inputEvents[0], "historyUndo", `when undoing on <${editableElement.tagName.toLowerCase()}> element`);
 
     // Disable undo/redo.
     editor.enableUndo(0);

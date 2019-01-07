@@ -8,9 +8,13 @@
 interface InputEvent : UIEvent
 {
   readonly attribute boolean       isComposing;
+
+  [Pref="dom.inputevent.inputtype.enabled"]
+  readonly attribute DOMString inputType;
 };
 
 dictionary InputEventInit : UIEventInit
 {
   boolean isComposing = false;
+  DOMString inputType = "";
 };

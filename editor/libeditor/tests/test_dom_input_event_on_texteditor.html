@@ -66,12 +66,16 @@ function runTests() {
     is(aElement.value, "a", aDescription + "'a' key didn't change the value");
     ok(inputEvent, aDescription + "input event wasn't fired by 'a' key");
     ok(inputEvent.isTrusted, aDescription + "input event by 'a' key wasn't trusted event");
+    is(inputEvent.inputType, "insertText",
+       aDescription + 'inputType should be "insertText" when typing "a"');
 
     inputEvent = null;
     synthesizeKey("KEY_Backspace");
     is(aElement.value, "", aDescription + "BackSpace key didn't remove the value");
     ok(inputEvent, aDescription + "input event wasn't fired by BackSpace key");
     ok(inputEvent.isTrusted, aDescription + "input event by BackSpace key wasn't trusted event");
+    is(inputEvent.inputType, "deleteContentBackward",
+       aDescription + 'inputType should be "deleteContentBackward" when pressing "Backspace" with collapsed selection');
 
     if (aIsTextarea) {
       inputEvent = null;
@@ -79,6 +83,8 @@ function runTests() {
       is(aElement.value, "\n", aDescription + "Enter key didn't change the value");
       ok(inputEvent, aDescription + "input event wasn't fired by Enter key");
       ok(inputEvent.isTrusted, aDescription + "input event by Enter key wasn't trusted event");
+      is(inputEvent.inputType, "insertLineBreak",
+         aDescription + 'inputType should be "insertLineBreak" when pressing "Enter"');
     }
 
     inputEvent = null;
@@ -96,6 +102,8 @@ function runTests() {
     is(aElement.value, " ", aDescription + "Space key didn't change the value");
     ok(inputEvent, aDescription + "input event wasn't fired by Space key");
     ok(inputEvent.isTrusted, aDescription + "input event by Space key wasn't trusted event");
+    is(inputEvent.inputType, "insertText",
+       aDescription + 'inputType should be "insertText" when typing " "');
 
     inputEvent = null;
     synthesizeKey("KEY_Delete");
@@ -112,18 +120,47 @@ function runTests() {
     is(aElement.value, "", aDescription + "Delete key didn't remove the value");
     ok(inputEvent, aDescription + "input event wasn't fired by Delete key at the start");
     ok(inputEvent.isTrusted, aDescription + "input event by Delete key wasn't trusted event");
+    is(inputEvent.inputType, "deleteContentForward",
+       aDescription + 'inputType should be "deleteContentForward" when pressing "Delete" with collapsed selection');
 
     inputEvent = null;
     synthesizeKey("z", {accelKey: true});
     is(aElement.value, " ", aDescription + "Accel+Z key didn't undo the value");
     ok(inputEvent, aDescription + "input event wasn't fired by Undo");
     ok(inputEvent.isTrusted, aDescription + "input event by Undo wasn't trusted event");
+    is(inputEvent.inputType, "historyUndo",
+       aDescription + 'inputType should be "historyUndo" when doing "Undo"');
 
     inputEvent = null;
     synthesizeKey("Z", {accelKey: true, shiftKey: true});
     is(aElement.value, "", aDescription + "Accel+Y key didn't redo the value");
     ok(inputEvent, aDescription + "input event wasn't fired by Redo");
     ok(inputEvent.isTrusted, aDescription + "input event by Redo wasn't trusted event");
+    is(inputEvent.inputType, "historyRedo",
+       aDescription + 'inputType should be "historyRedo" when doing "Redo"');
+
+    // Backspace/Delete with non-collapsed selection.
+    aElement.value = "a";
+    aElement.select();
+    inputEvent = null;
+    synthesizeKey("KEY_Backspace");
+    ok(inputEvent,
+       aDescription + 'input event should be fired by pressing "Backspace" with non-collapsed selection');
+    ok(inputEvent.isTrusted,
+       aDescription + 'input event should be trusted when pressing "Backspace" with non-collapsed selection');
+    is(inputEvent.inputType, "deleteContentBackward",
+       aDescription + 'inputType should be "deleteContentBackward" when pressing "Backspace" with non-collapsed selection');
+
+    aElement.value = "a";
+    aElement.select();
+    inputEvent = null;
+    synthesizeKey("KEY_Delete");
+    ok(inputEvent,
+       aDescription + 'input event should be fired by pressing "Delete" with non-collapsed selection');
+    ok(inputEvent.isTrusted,
+       aDescription + 'input event should be trusted when pressing "Delete" with non-collapsed selection');
+    is(inputEvent.inputType, "deleteContentForward",
+       aDescription + 'inputType should be "deleteContentBackward" when Delete "Backspace" with non-collapsed selection');
 
     aElement.removeEventListener("input", handler, true);
   }

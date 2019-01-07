@@ -1139,7 +1139,8 @@ class WidgetSelectionEvent : public WidgetGUIEvent {
 
 class InternalEditorInputEvent : public InternalUIEvent {
  private:
-  InternalEditorInputEvent() : mIsComposing(false) {}
+  InternalEditorInputEvent()
+      : mInputType(EditorInputType::eUnknown), mIsComposing(false) {}
 
  public:
   virtual InternalEditorInputEvent* AsEditorInputEvent() override {
@@ -1149,7 +1150,7 @@ class InternalEditorInputEvent : public InternalUIEvent {
   InternalEditorInputEvent(bool aIsTrusted, EventMessage aMessage,
                            nsIWidget* aWidget = nullptr)
       : InternalUIEvent(aIsTrusted, aMessage, aWidget, eEditorInputEventClass),
-        mIsComposing(false) {}
+        mInputType(EditorInputType::eUnknown) {}
 
   virtual WidgetEvent* Duplicate() const override {
     MOZ_ASSERT(mClass == eEditorInputEventClass,
@@ -1162,14 +1163,31 @@ class InternalEditorInputEvent : public InternalUIEvent {
     return result;
   }
 
+  EditorInputType mInputType;
+
   bool mIsComposing;
 
   void AssignEditorInputEventData(const InternalEditorInputEvent& aEvent,
                                   bool aCopyTargets) {
     AssignUIEventData(aEvent, aCopyTargets);
 
+    mInputType = aEvent.mInputType;
     mIsComposing = aEvent.mIsComposing;
   }
+
+  void GetDOMInputTypeName(nsAString& aInputTypeName) {
+    GetDOMInputTypeName(mInputType, aInputTypeName);
+  }
+  static void GetDOMInputTypeName(EditorInputType aInputType,
+                                  nsAString& aInputTypeName);
+  static EditorInputType GetEditorInputType(const nsAString& aInputType);
+
+  static void Shutdown();
+
+ private:
+  static const char16_t* const kInputTypeNames[];
+  typedef nsDataHashtable<nsStringHashKey, EditorInputType> InputTypeHashtable;
+  static InputTypeHashtable* sInputTypeHashtable;
 };
 
 }  // namespace mozilla

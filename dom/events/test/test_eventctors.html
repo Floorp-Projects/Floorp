@@ -885,6 +885,25 @@ is(e.type, "hello", "Wrong event type!");
 is(e.isTrusted, false, "Event shouldn't be trusted!");
 is(e.eventPhase, Event.NONE, "Wrong event phase");
 
+// InputEvent
+e = new InputEvent("hello", {data: "something data", inputType: "invalid input type", isComposing: true});
+is(e.type, "hello", "InputEvent should set type attribute");
+todo_is(e.data, "something data", "InputEvent should have data attribute");
+is(e.inputType, "invalid input type", "InputEvent should have inputType attribute");
+is(e.isComposing, true, "InputEvent should have isComposing attribute");
+
+e = new InputEvent("hello", {inputType: "insertText"});
+is(e.inputType, "insertText", "InputEvent.inputType should return valid inputType from EditorInputType enum");
+e = new InputEvent("hello", {inputType: "deleteWordBackward"});
+is(e.inputType, "deleteWordBackward", "InputEvent.inputType should return valid inputType from EditorInputType enum");
+e = new InputEvent("hello", {inputType: "formatFontName"});
+is(e.inputType, "formatFontName", "InputEvent.inputType should return valid inputType from EditorInputType enum");
+
+e = new InputEvent("input", {});
+todo_is(e.data, "", "InputEvent.data should be empty string in default");
+is(e.inputType, "", "InputEvent.inputType should be empty string in default");
+is(e.isComposing, false, "InputEvent.isComposing should be false in default");
+
 </script>
 </pre>
 </body>

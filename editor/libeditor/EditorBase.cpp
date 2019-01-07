@@ -2017,14 +2017,24 @@ void EditorBase::NotifyEditorObservers(
   }
 }
 
-void EditorBase::FireInputEvent() {
+void EditorBase::FireInputEvent(EditAction aEditAction) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
+  // We don't need to dispatch multiple input events if there is a pending
+  // input event.  However, it may have different event target.  If we resolved
+  // this issue, we need to manage the pending events in an array.  But it's
+  // overwork.  We don't need to do it for the very rare case.
+  // TODO: However, we start to set InputEvent.inputType.  So, each "input"
+  //       event now notifies web app each change.  So, perhaps, we should
+  //       not omit input events.
+
   RefPtr<Element> targetElement = GetInputEventTargetElement();
   if (NS_WARN_IF(!targetElement)) {
     return;
   }
   RefPtr<TextEditor> textEditor = AsTextEditor();
-  DebugOnly<nsresult> rvIgnored =
-      nsContentUtils::DispatchInputEvent(targetElement, textEditor);
+  DebugOnly<nsresult> rvIgnored = nsContentUtils::DispatchInputEvent(
+      targetElement, ToInputType(aEditAction), textEditor);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
                        "Failed to dispatch input event");
 }
