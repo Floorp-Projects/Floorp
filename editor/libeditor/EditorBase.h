@@ -1771,8 +1771,14 @@ class EditorBase : public nsIEditor,
 
   nsresult DetermineCurrentDirection();
 
+  /**
+   * FireInputEvent() dispatches an "input" event synchronously or
+   * asynchronously if it's not safe to dispatch.
+   */
   MOZ_CAN_RUN_SCRIPT
-  void FireInputEvent();
+  void FireInputEvent() { FireInputEvent(GetEditAction()); }
+  MOZ_CAN_RUN_SCRIPT
+  void FireInputEvent(EditAction aEditAction);
 
   /**
    * Called after a transaction is done successfully.

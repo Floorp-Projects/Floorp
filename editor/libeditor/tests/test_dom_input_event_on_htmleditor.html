@@ -13,7 +13,7 @@
   <iframe id="editor1" srcdoc="<html><body contenteditable id='eventTarget'></body></html>"></iframe>
   <iframe id="editor2" srcdoc="<html contenteditable id='eventTarget'><body></body></html>"></iframe>
   <iframe id="editor3" srcdoc="<html><body><div contenteditable id='eventTarget'></div></body></html>"></iframe>
-  <iframe id="editor4" srcdoc="<html contenteditable id='eventTarget'><body><div contenteditable id='editTarget'></div></body></html>"></iframe>
+  <iframe id="editor4" srcdoc="<html contenteditable id='eventTarget'><body><div contenteditable></div></body></html>"></iframe>
   <iframe id="editor5" srcdoc="<html><body id='eventTarget'></body><script>document.designMode='on';</script></html>"></iframe>
 </div>
 <div id="content" style="display: none">
@@ -27,6 +27,7 @@
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(runTests, window);
 
+const kIsWin = navigator.platform.indexOf("Win") == 0;
 const kIsMac = navigator.platform.indexOf("Mac") == 0;
 
 function runTests() {
@@ -35,6 +36,7 @@ function runTests() {
     aWindow.focus();
 
     var body = aDocument.body;
+    var selection = aWindow.getSelection();
 
     var eventTarget = aDocument.getElementById("eventTarget");
     // The event target must be focusable because it's the editing host.
@@ -92,31 +94,43 @@ function runTests() {
     is(editTarget.innerHTML, "a", aDescription + "wrong element was edited");
     ok(inputEvent, aDescription + "input event wasn't fired by 'a' key");
     ok(inputEvent.isTrusted, aDescription + "input event by 'a' key wasn't trusted event");
+    is(inputEvent.inputType, "insertText",
+       aDescription + 'inputType should be "insertText" when typing "a"');
 
     inputEvent = null;
-    synthesizeKey("VK_BACK_SPACE", { }, aWindow);
+    synthesizeKey("KEY_Backspace", { }, aWindow);
     ok(inputEvent, aDescription + "input event wasn't fired by BackSpace key");
     ok(inputEvent.isTrusted, aDescription + "input event by BackSpace key wasn't trusted event");
+    is(inputEvent.inputType, "deleteContentBackward",
+       aDescription + 'inputType should be "deleteContentBackward" when pressing "Backspace" with collapsed selection');
 
     inputEvent = null;
     synthesizeKey("B", { shiftKey: true }, aWindow);
     ok(inputEvent, aDescription + "input event wasn't fired by 'B' key");
     ok(inputEvent.isTrusted, aDescription + "input event by 'B' key wasn't trusted event");
+    is(inputEvent.inputType, "insertText",
+       aDescription + 'inputType should be "insertText" when typing "B"');
 
     inputEvent = null;
-    synthesizeKey("VK_RETURN", { }, aWindow);
+    synthesizeKey("KEY_Enter", { }, aWindow);
     ok(inputEvent, aDescription + "input event wasn't fired by Enter key");
     ok(inputEvent.isTrusted, aDescription + "input event by Enter key wasn't trusted event");
+    is(inputEvent.inputType, "insertParagraph",
+       aDescription + 'inputType should be "insertParagraph" when pressing "Enter"');
 
     inputEvent = null;
     synthesizeKey("C", { shiftKey: true }, aWindow);
     ok(inputEvent, aDescription + "input event wasn't fired by 'C' key");
     ok(inputEvent.isTrusted, aDescription + "input event by 'C' key wasn't trusted event");
+    is(inputEvent.inputType, "insertText",
+       aDescription + 'inputType should be "insertText" when typing "C"');
 
     inputEvent = null;
-    synthesizeKey("VK_RETURN", { }, aWindow);
+    synthesizeKey("KEY_Enter", { }, aWindow);
     ok(inputEvent, aDescription + "input event wasn't fired by Enter key (again)");
     ok(inputEvent.isTrusted, aDescription + "input event by Enter key (again) wasn't trusted event");
+    is(inputEvent.inputType, "insertParagraph",
+       aDescription + 'inputType should be "insertParagraph" when pressing "Enter" again');
 
     inputEvent = null;
     editTarget.innerHTML = "foo-bar";
@@ -130,29 +144,197 @@ function runTests() {
     synthesizeKey(" ", { }, aWindow);
     ok(inputEvent, aDescription + "input event wasn't fired by Space key");
     ok(inputEvent.isTrusted, aDescription + "input event by Space key wasn't trusted event");
+    is(inputEvent.inputType, "insertText",
+       aDescription + 'inputType should be "insertText" when typing " "');
 
     inputEvent = null;
-    synthesizeKey("VK_DELETE", { }, aWindow);
+    synthesizeKey("KEY_Delete", { }, aWindow);
     ok(!inputEvent, aDescription + "input event was fired by Delete key at the end");
 
     inputEvent = null;
-    synthesizeKey("VK_LEFT", { }, aWindow);
+    synthesizeKey("KEY_ArrowLeft", { }, aWindow);
     ok(!inputEvent, aDescription + "input event was fired by Left key");
 
     inputEvent = null;
-    synthesizeKey("VK_DELETE", { }, aWindow);
+    synthesizeKey("KEY_Delete", { }, aWindow);
     ok(inputEvent, aDescription + "input event wasn't fired by Delete key at the start");
     ok(inputEvent.isTrusted, aDescription + "input event by Delete key wasn't trusted event");
+    is(inputEvent.inputType, "deleteContentForward",
+       aDescription + 'inputType should be "deleteContentForward" when pressing "Delete" with collapsed selection');
 
     inputEvent = null;
     synthesizeKey("z", { accelKey: true }, aWindow);
     ok(inputEvent, aDescription + "input event wasn't fired by Undo");
     ok(inputEvent.isTrusted, aDescription + "input event by Undo wasn't trusted event");
+    is(inputEvent.inputType, "historyUndo",
+       aDescription + 'inputType should be "historyUndo" when doing "Undo"');
 
     inputEvent = null;
     synthesizeKey("z", { accelKey: true, shiftKey: true }, aWindow);
     ok(inputEvent, aDescription + "input event wasn't fired by Redo");
     ok(inputEvent.isTrusted, aDescription + "input event by Redo wasn't trusted event");
+    is(inputEvent.inputType, "historyRedo",
+       aDescription + 'inputType should be "historyRedo" when doing "Redo"');
+
+    inputEvent = null;
+    synthesizeKey("KEY_Enter", {shiftKey: true}, aWindow);
+    ok(inputEvent, aDescription + "input event wasn't fired by Shift + Enter key");
+    ok(inputEvent.isTrusted, aDescription + "input event by Shift + Enter key wasn't trusted event");
+    is(inputEvent.inputType, "insertLineBreak",
+       aDescription + 'inputType should be "insertLineBreak" when pressing Shift + "Enter"');
+
+    // Backspace/Delete with non-collapsed selection.
+    editTarget.innerHTML = "a";
+    editTarget.focus();
+    selection.selectAllChildren(editTarget);
+    inputEvent = null;
+    synthesizeKey("KEY_Backspace", {}, aWindow);
+    ok(inputEvent,
+       aDescription + 'input event should be fired by pressing "Backspace" with non-collapsed selection');
+    ok(inputEvent.isTrusted,
+       aDescription + 'input event should be trusted when pressing "Backspace" with non-collapsed selection');
+    is(inputEvent.inputType, "deleteContentBackward",
+       aDescription + 'inputType should be "deleteContentBackward" when pressing "Backspace" with non-collapsed selection');
+
+    editTarget.innerHTML = "a";
+    editTarget.focus();
+    selection.selectAllChildren(editTarget);
+    inputEvent = null;
+    synthesizeKey("KEY_Delete", {}, aWindow);
+    ok(inputEvent,
+       aDescription + 'input event should be fired by pressing "Delete" with non-collapsed selection');
+    ok(inputEvent.isTrusted,
+       aDescription + 'input event should be trusted when pressing "Delete" with non-collapsed selection');
+    is(inputEvent.inputType, "deleteContentForward",
+       aDescription + 'inputType should be "deleteContentBackward" when Delete "Backspace" with non-collapsed selection');
+
+    // Delete to previous/next word boundary with collapsed selection.
+    editTarget.innerHTML = "a";
+    editTarget.focus();
+    selection.selectAllChildren(editTarget);
+    selection.collapseToEnd();
+    inputEvent = null;
+    SpecialPowers.doCommand(aWindow, "cmd_deleteWordBackward");
+    ok(inputEvent,
+       aDescription + "input event should be fired by deleting to previous word boundary with collapsed selection");
+    ok(inputEvent.isTrusted,
+       aDescription + "input event should be trusted when deleting to previous word boundary with collapsed selection");
+    is(inputEvent.inputType, "deleteWordBackward",
+       aDescription + 'inputType should be "deleteWordBackward" when deleting to previous word boundary with collapsed selection');
+
+    editTarget.innerHTML = "a";
+    editTarget.focus();
+    selection.selectAllChildren(editTarget);
+    selection.collapseToStart();
+    inputEvent = null;
+    SpecialPowers.doCommand(aWindow, "cmd_deleteWordForward");
+    ok(inputEvent,
+       aDescription + "input event should be fired by deleting to next word boundary with collapsed selection");
+    ok(inputEvent.isTrusted,
+       aDescription + "input event should be trusted when deleting to next word boundary with collapsed selection");
+    is(inputEvent.inputType, "deleteWordForward",
+       aDescription + 'inputType should be "deleteWordForward" when deleting to next word boundary with collapsed selection');
+
+    // Delete to previous/next word boundary with non-collapsed selection.
+    editTarget.innerHTML = "abc";
+    editTarget.focus();
+    selection.setBaseAndExtent(editTarget.firstChild, 1, editTarget.firstChild, 2);
+    inputEvent = null;
+    SpecialPowers.doCommand(aWindow, "cmd_deleteWordBackward");
+    ok(inputEvent,
+       aDescription + "input event should be fired by deleting to previous word boundary with non-collapsed selection");
+    ok(inputEvent.isTrusted,
+       aDescription + "input event should be trusted when deleting to previous word boundary with non-collapsed selection");
+    if (kIsWin) {
+      // Only on Windows, we collapse selection to start before handling this command.
+      is(inputEvent.inputType, "deleteWordBackward",
+         aDescription + 'inputType should be "deleteWordBackward" when deleting to previous word boundary with non-collapsed selection');
+    } else {
+      is(inputEvent.inputType, "deleteContentBackward",
+         aDescription + 'inputType should be "deleteContentBackward" when deleting to previous word boundary with non-collapsed selection');
+    }
+
+    editTarget.innerHTML = "abc";
+    editTarget.focus();
+    selection.setBaseAndExtent(editTarget.firstChild, 1, editTarget.firstChild, 2);
+    inputEvent = null;
+    SpecialPowers.doCommand(aWindow, "cmd_deleteWordForward");
+    ok(inputEvent,
+       aDescription + "input event should be fired by deleting to next word boundary with non-collapsed selection");
+    ok(inputEvent.isTrusted,
+       aDescription + "input event should be trusted when deleting to next word boundary with non-collapsed selection");
+    if (kIsWin) {
+      // Only on Windows, we collapse selection to start before handling this command.
+      is(inputEvent.inputType, "deleteWordForward",
+         aDescription + 'inputType should be "deleteWordForward" when deleting to next word boundary with non-collapsed selection');
+    } else {
+      is(inputEvent.inputType, "deleteContentForward",
+         aDescription + 'inputType should be "deleteContentForward" when deleting to next word boundary with non-collapsed selection');
+    }
+
+    // Delete to previous/next visual line boundary with collapsed selection.
+    editTarget.innerHTML = "a";
+    editTarget.focus();
+    selection.selectAllChildren(editTarget);
+    selection.collapseToEnd();
+    inputEvent = null;
+    SpecialPowers.doCommand(aWindow, "cmd_deleteToBeginningOfLine");
+    ok(inputEvent,
+       aDescription + "input event should be fired by deleting to previous visual line boundary with collapsed selection");
+    ok(inputEvent.isTrusted,
+       aDescription + "input event should be trusted when deleting to previous visual line boundary with collapsed selection");
+    is(inputEvent.inputType, "deleteSoftLineBackward",
+       aDescription + 'inputType should be "deleteSoftLineBackward" when deleting to previous visual line boundary with collapsed selection');
+
+    editTarget.innerHTML = "a";
+    editTarget.focus();
+    selection.selectAllChildren(editTarget);
+    selection.collapseToStart();
+    inputEvent = null;
+    SpecialPowers.doCommand(aWindow, "cmd_deleteToEndOfLine");
+    ok(inputEvent,
+       aDescription + "input event should be fired by deleting to next visual line boundary with collapsed selection");
+    ok(inputEvent.isTrusted,
+       aDescription + "input event should be trusted when deleting to next visual line boundary with collapsed selection");
+    is(inputEvent.inputType, "deleteSoftLineForward",
+       aDescription + 'inputType should be "deleteSoftLineForward" when deleting to visual line boundary with collapsed selection');
+
+    // Delete to previous/next visual line boundary with non-collapsed selection.
+    editTarget.innerHTML = "abc";
+    editTarget.focus();
+    selection.setBaseAndExtent(editTarget.firstChild, 1, editTarget.firstChild, 2);
+    inputEvent = null;
+    SpecialPowers.doCommand(aWindow, "cmd_deleteToBeginningOfLine");
+    ok(inputEvent,
+       aDescription + "input event should be fired by deleting to previous visual line boundary with non-collapsed selection");
+    ok(inputEvent.isTrusted,
+       aDescription + "input event should be trusted when deleting to previous visual line boundary with non-collapsed selection");
+    if (kIsWin) {
+      // Only on Windows, we collapse selection to start before handling this command.
+      is(inputEvent.inputType, "deleteSoftLineBackward",
+         aDescription + 'inputType should be "deleteSoftLineBackward" when deleting to next visual line boundary with non-collapsed selection');
+    } else {
+      is(inputEvent.inputType, "deleteContentBackward",
+         aDescription + 'inputType should be "deleteContentBackward" when deleting to previous visual line boundary with non-collapsed selection');
+    }
+
+    editTarget.innerHTML = "abc";
+    editTarget.focus();
+    selection.setBaseAndExtent(editTarget.firstChild, 1, editTarget.firstChild, 2);
+    inputEvent = null;
+    SpecialPowers.doCommand(aWindow, "cmd_deleteToEndOfLine");
+    ok(inputEvent,
+       aDescription + "input event should be fired by deleting to next visual line boundary with non-collapsed selection");
+    ok(inputEvent.isTrusted,
+       aDescription + "input event should be trusted when deleting to next visual line boundary with non-collapsed selection");
+    if (kIsWin) {
+      // Only on Windows, we collapse selection to start before handling this command.
+      is(inputEvent.inputType, "deleteSoftLineForward",
+         aDescription + 'inputType should be "deleteSoftLineForward" when deleting to next visual line boundary with non-collapsed selection');
+    } else {
+      is(inputEvent.inputType, "deleteContentForward",
+         aDescription + 'inputType should be "deleteContentForward" when deleting to next visual line boundary with non-collapsed selection');
+    }
 
     aWindow.removeEventListener("input", handler, true);
   }

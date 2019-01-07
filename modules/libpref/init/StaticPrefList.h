@@ -211,6 +211,15 @@ VARCACHE_PREF(
   bool, true
 )
 
+// Whether we conform to Input Events Level 1 or Input Events Level 2.
+// true:  conforming to Level 1
+// false: conforming to Level 2
+VARCACHE_PREF(
+  "dom.input_events.conform_to_level_1",
+   dom_input_events_conform_to_level_1,
+  bool, true
+)
+
 // NOTE: This preference is used in unit tests. If it is removed or its default
 // value changes, please update test_sharedMap_var_caches.js accordingly.
 VARCACHE_PREF(
