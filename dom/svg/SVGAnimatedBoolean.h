@@ -7,10 +7,10 @@
 #ifndef mozilla_dom_SVGAnimatedBoolean_h
 #define mozilla_dom_SVGAnimatedBoolean_h
 
+#include "SVGBoolean.h"
 #include "nsWrapperCache.h"
-#include "SVGElement.h"
 #include "mozilla/Attributes.h"
-#include "nsSVGBoolean.h"
+#include "mozilla/dom/SVGElement.h"
 
 namespace mozilla {
 namespace dom {
@@ -19,7 +19,7 @@ class SVGAnimatedBoolean final : public nsWrapperCache {
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(SVGAnimatedBoolean)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(SVGAnimatedBoolean)
 
-  SVGAnimatedBoolean(nsSVGBoolean* aVal, SVGElement* aSVGElement)
+  SVGAnimatedBoolean(SVGBoolean* aVal, SVGElement* aSVGElement)
       : mVal(aVal), mSVGElement(aSVGElement) {}
 
   // WebIDL
@@ -36,7 +36,7 @@ class SVGAnimatedBoolean final : public nsWrapperCache {
  protected:
   ~SVGAnimatedBoolean();
 
-  nsSVGBoolean* mVal;  // kept alive because it belongs to content
+  SVGBoolean* mVal;  // kept alive because it belongs to content
   RefPtr<SVGElement> mSVGElement;
 };
 

@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsSVGBoolean.h"
+#include "SVGBoolean.h"
 
 #include "nsError.h"
 #include "nsSVGAttrTearoffTable.h"
@@ -12,14 +12,15 @@
 #include "SMILBoolType.h"
 #include "SVGAnimatedBoolean.h"
 
-using namespace mozilla;
 using namespace mozilla::dom;
+
+namespace mozilla {
 
 /* Implementation */
 
-static inline nsSVGAttrTearoffTable<nsSVGBoolean, SVGAnimatedBoolean>&
+static inline nsSVGAttrTearoffTable<SVGBoolean, SVGAnimatedBoolean>&
 SVGAnimatedBooleanTearoffTable() {
-  static nsSVGAttrTearoffTable<nsSVGBoolean, SVGAnimatedBoolean>
+  static nsSVGAttrTearoffTable<SVGBoolean, SVGAnimatedBoolean>
       sSVGAnimatedBooleanTearoffTable;
   return sSVGAnimatedBooleanTearoffTable;
 }
@@ -48,8 +49,8 @@ static nsresult GetValueFromAtom(const nsAtom* aValueAsAtom, bool* aValue) {
   return NS_ERROR_DOM_SYNTAX_ERR;
 }
 
-nsresult nsSVGBoolean::SetBaseValueAtom(const nsAtom* aValue,
-                                        SVGElement* aSVGElement) {
+nsresult SVGBoolean::SetBaseValueAtom(const nsAtom* aValue,
+                                      SVGElement* aSVGElement) {
   bool val = false;
 
   nsresult rv = GetValueFromAtom(aValue, &val);
@@ -70,11 +71,11 @@ nsresult nsSVGBoolean::SetBaseValueAtom(const nsAtom* aValue,
   return NS_OK;
 }
 
-nsAtom* nsSVGBoolean::GetBaseValueAtom() const {
+nsAtom* SVGBoolean::GetBaseValueAtom() const {
   return mBaseVal ? nsGkAtoms::_true : nsGkAtoms::_false;
 }
 
-void nsSVGBoolean::SetBaseValue(bool aValue, SVGElement* aSVGElement) {
+void SVGBoolean::SetBaseValue(bool aValue, SVGElement* aSVGElement) {
   if (aValue == mBaseVal) {
     return;
   }
@@ -88,7 +89,7 @@ void nsSVGBoolean::SetBaseValue(bool aValue, SVGElement* aSVGElement) {
   aSVGElement->DidChangeBoolean(mAttrEnum);
 }
 
-void nsSVGBoolean::SetAnimValue(bool aValue, SVGElement* aSVGElement) {
+void SVGBoolean::SetAnimValue(bool aValue, SVGElement* aSVGElement) {
   if (mIsAnimated && mAnimVal == aValue) {
     return;
   }
@@ -97,7 +98,7 @@ void nsSVGBoolean::SetAnimValue(bool aValue, SVGElement* aSVGElement) {
   aSVGElement->DidAnimateBoolean(mAttrEnum);
 }
 
-already_AddRefed<SVGAnimatedBoolean> nsSVGBoolean::ToDOMAnimatedBoolean(
+already_AddRefed<SVGAnimatedBoolean> SVGBoolean::ToDOMAnimatedBoolean(
     SVGElement* aSVGElement) {
   RefPtr<SVGAnimatedBoolean> domAnimatedBoolean =
       SVGAnimatedBooleanTearoffTable().GetTearoff(this);
@@ -113,11 +114,11 @@ SVGAnimatedBoolean::~SVGAnimatedBoolean() {
   SVGAnimatedBooleanTearoffTable().RemoveTearoff(mVal);
 }
 
-UniquePtr<nsISMILAttr> nsSVGBoolean::ToSMILAttr(SVGElement* aSVGElement) {
+UniquePtr<nsISMILAttr> SVGBoolean::ToSMILAttr(SVGElement* aSVGElement) {
   return MakeUnique<SMILBool>(this, aSVGElement);
 }
 
-nsresult nsSVGBoolean::SMILBool::ValueFromString(
+nsresult SVGBoolean::SMILBool::ValueFromString(
     const nsAString& aStr, const SVGAnimationElement* /*aSrcElement*/,
     nsSMILValue& aValue, bool& aPreventCachingOfSandwich) const {
   bool value;
@@ -133,13 +134,13 @@ nsresult nsSVGBoolean::SMILBool::ValueFromString(
   return NS_OK;
 }
 
-nsSMILValue nsSVGBoolean::SMILBool::GetBaseValue() const {
+nsSMILValue SVGBoolean::SMILBool::GetBaseValue() const {
   nsSMILValue val(SMILBoolType::Singleton());
   val.mU.mBool = mVal->mBaseVal;
   return val;
 }
 
-void nsSVGBoolean::SMILBool::ClearAnimValue() {
+void SVGBoolean::SMILBool::ClearAnimValue() {
   if (mVal->mIsAnimated) {
     mVal->mIsAnimated = false;
     mVal->mAnimVal = mVal->mBaseVal;
@@ -147,7 +148,7 @@ void nsSVGBoolean::SMILBool::ClearAnimValue() {
   }
 }
 
-nsresult nsSVGBoolean::SMILBool::SetAnimValue(const nsSMILValue& aValue) {
+nsresult SVGBoolean::SMILBool::SetAnimValue(const nsSMILValue& aValue) {
   NS_ASSERTION(aValue.mType == SMILBoolType::Singleton(),
                "Unexpected type to assign animated value");
   if (aValue.mType == SMILBoolType::Singleton()) {
@@ -155,3 +156,5 @@ nsresult nsSVGBoolean::SMILBool::SetAnimValue(const nsSMILValue& aValue) {
   }
   return NS_OK;
 }
+
+}  // namespace mozilla
