@@ -233,6 +233,9 @@ pref("dom.keyboardevent.keypress.hack.dispatch_non_printable_keys", "");
 // check its explanation for the detail.
 pref("dom.keyboardevent.keypress.hack.use_legacy_keycode_and_charcode", "");
 
+// Whether InputEvent.inputType is enabled.
+pref("dom.inputevent.inputtype.enabled", true);
+
 // Whether the WebMIDI API is enabled
 pref("dom.webmidi.enabled", false);
 

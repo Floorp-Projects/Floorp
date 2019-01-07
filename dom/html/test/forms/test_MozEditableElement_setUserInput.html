@@ -162,6 +162,8 @@ SimpleTest.waitForFocus(() => {
         } else {
           ok(inputEvents[0] instanceof InputEvent,
              `"input" event should be dispatched with InputEvent interface when setUserInput("${test.input.before}") is called before ${tag} gets focus`);
+          is(inputEvents[0].inputType, "insertReplacementText",
+             `inputType should be "insertReplacementText" when setUserInput("${test.input.before}") is called before ${tag} gets focus`);
         }
       } else {
         ok(inputEvents[0] instanceof Event && !(inputEvents[0] instanceof UIEvent),
@@ -218,6 +220,8 @@ SimpleTest.waitForFocus(() => {
         } else {
           ok(inputEvents[0] instanceof InputEvent,
              `"input" event should be dispatched with InputEvent interface when setUserInput("${test.input.after}") is called after ${tag} gets focus`);
+          is(inputEvents[0].inputType, "insertReplacementText",
+             `inputType should be "insertReplacementText" when setUserInput("${test.input.after}") is called after ${tag} gets focus`);
         }
       } else {
         ok(inputEvents[0] instanceof Event && !(inputEvents[0] instanceof UIEvent),

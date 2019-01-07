@@ -2426,13 +2426,15 @@ bool nsTextEditorState::SetValue(const nsAString& aValue,
       }
 
       // If this is called as part of user input, we need to dispatch "input"
-      // event since web apps may want to know the user operation.
+      // event with "insertReplacementText" since web apps may want to know
+      // the user operation which changes editor value with a built-in function
+      // like autocomplete, password manager, session restore, etc.
       if (aFlags & eSetValue_BySetUserInput) {
         nsCOMPtr<Element> element = do_QueryInterface(textControlElement);
         MOZ_ASSERT(element);
-        RefPtr<TextEditor> textEditor;
-        DebugOnly<nsresult> rvIgnored =
-            nsContentUtils::DispatchInputEvent(element, textEditor);
+        RefPtr<TextEditor> textEditor;  // See bug 1506439
+        DebugOnly<nsresult> rvIgnored = nsContentUtils::DispatchInputEvent(
+            element, EditorInputType::eInsertReplacementText, textEditor);
         NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
                              "Failed to dispatch input event");
       }
