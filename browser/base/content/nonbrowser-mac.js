@@ -94,9 +94,13 @@ function nonBrowserWindowDelayedStartup() {
 }
 
 function nonBrowserWindowShutdown() {
-  let dockSupport = Cc["@mozilla.org/widget/macdocksupport;1"]
-                    .getService(Ci.nsIMacDockSupport);
-  dockSupport.dockMenu = null;
+  // If this is the hidden window being closed, release our reference to
+  // the dock menu element to prevent leaks on shutdown
+  if (window.location.href == "chrome://browser/content/hiddenWindow.xul") {
+    let dockSupport = Cc["@mozilla.org/widget/macdocksupport;1"]
+                      .getService(Ci.nsIMacDockSupport);
+    dockSupport.dockMenu = null;
+  }
 
   // If nonBrowserWindowDelayedStartup hasn't run yet, we have no work to do -
   // just cancel the pending timeout and return;
