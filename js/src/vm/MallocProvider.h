@@ -95,7 +95,7 @@ struct MallocProvider {
       client()->reportAllocationOverflow();
       return nullptr;
     }
-    p = (T*)client()->onOutOfMemory(AllocFunction::Malloc, bytes);
+    p = (T*)client()->onOutOfMemory(AllocFunction::Malloc, arena, bytes);
     if (p) {
       client()->updateMallocCounter(bytes);
     }
@@ -114,7 +114,8 @@ struct MallocProvider {
       client()->updateMallocCounter(bytes);
       return p;
     }
-    p = (T*)client()->onOutOfMemory(AllocFunction::Malloc, bytes);
+    p = (T*)client()->onOutOfMemory(AllocFunction::Malloc, js::MallocArena,
+                                    bytes);
     if (p) {
       client()->updateMallocCounter(bytes);
     }
@@ -137,7 +138,7 @@ struct MallocProvider {
       client()->reportAllocationOverflow();
       return nullptr;
     }
-    p = (T*)client()->onOutOfMemory(AllocFunction::Calloc, bytes);
+    p = (T*)client()->onOutOfMemory(AllocFunction::Calloc, arena, bytes);
     if (p) {
       client()->updateMallocCounter(bytes);
     }
@@ -156,7 +157,8 @@ struct MallocProvider {
       client()->updateMallocCounter(bytes);
       return p;
     }
-    p = (T*)client()->onOutOfMemory(AllocFunction::Calloc, bytes);
+    p = (T*)client()->onOutOfMemory(AllocFunction::Calloc, js::MallocArena,
+                                    bytes);
     if (p) {
       client()->updateMallocCounter(bytes);
     }
@@ -179,7 +181,8 @@ struct MallocProvider {
       client()->reportAllocationOverflow();
       return nullptr;
     }
-    p = (T*)client()->onOutOfMemory(AllocFunction::Realloc, bytes, prior);
+    p = (T*)client()->onOutOfMemory(AllocFunction::Realloc, js::MallocArena,
+                                    bytes, prior);
     if (p && newSize > oldSize) {
       client()->updateMallocCounter((newSize - oldSize) * sizeof(T));
     }
