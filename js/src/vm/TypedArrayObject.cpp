@@ -121,7 +121,7 @@ void TypedArrayObject::finalize(FreeOp* fop, JSObject* obj) {
   TypedArrayObject* curObj = &obj->as<TypedArrayObject>();
 
   // Template objects or discarded objects (which didn't have enough room
-  // for inner elements). Don't have anything to free.
+  // for inner elements) don't have anything to free.
   if (!curObj->elementsRaw()) {
     return;
   }
@@ -142,7 +142,7 @@ void TypedArrayObject::finalize(FreeOp* fop, JSObject* obj) {
 /* static */ size_t TypedArrayObject::objectMoved(JSObject* obj,
                                                   JSObject* old) {
   TypedArrayObject* newObj = &obj->as<TypedArrayObject>();
-  TypedArrayObject* oldObj = &old->as<TypedArrayObject>();
+  const TypedArrayObject* oldObj = &old->as<TypedArrayObject>();
   MOZ_ASSERT(newObj->elementsRaw() == oldObj->elementsRaw());
   MOZ_ASSERT(obj->isTenured());
 
@@ -171,17 +171,7 @@ void TypedArrayObject::finalize(FreeOp* fop, JSObject* obj) {
   // Determine if we can use inline data for the target array. If this is
   // possible, the nursery will have picked an allocation size that is large
   // enough.
-  size_t nbytes = 0;
-  switch (oldObj->type()) {
-#define OBJECT_MOVED_TYPED_ARRAY(T, N)     \
-  case Scalar::N:                          \
-    nbytes = oldObj->length() * sizeof(T); \
-    break;
-    JS_FOR_EACH_TYPED_ARRAY(OBJECT_MOVED_TYPED_ARRAY)
-#undef OBJECT_MOVED_TYPED_ARRAY
-    default:
-      MOZ_CRASH("Unsupported TypedArray type");
-  }
+  size_t nbytes = oldObj->byteLength();
 
   size_t headerSize = dataOffset() + sizeof(HeapSlot);
 
@@ -273,7 +263,7 @@ namespace {
 
 enum class SpeciesConstructorOverride { None, ArrayBuffer };
 
-enum class CreateSingleton { Yes, No };
+enum class CreateSingleton { No, Yes };
 
 template <typename NativeType>
 class TypedArrayObjectTemplate : public TypedArrayObject {
@@ -532,16 +522,18 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
     AutoSetNewObjectMetadata metadata(cx);
 
     const Class* clasp = templateObj->group()->clasp();
-    gc::AllocKind allocKind = !fitsInline ? gc::GetGCObjectKind(clasp)
+    gc::AllocKind allocKind = !fitsInline ? gc::GetGCObjectKind(instanceClass())
                                           : AllocKindForLazyBuffer(nbytes);
     MOZ_ASSERT(CanBeFinalizedInBackground(allocKind, clasp));
     allocKind = GetBackgroundAllocKind(allocKind);
     RootedObjectGroup group(cx, templateObj->group());
+    MOZ_ASSERT(group->clasp() == instanceClass());
 
     NewObjectKind newKind = TenuredObject;
 
     UniquePtr<void, JS::FreePolicy> buf;
-    if (!fitsInline && len > 0) {
+    if (!fitsInline) {
+      MOZ_ASSERT(len > 0);
       buf.reset(cx->pod_calloc<uint8_t>(nbytes));
       if (!buf) {
         return nullptr;
