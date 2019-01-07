@@ -41,6 +41,11 @@ public class TelemetryPocketEventPingBuilder extends TelemetryPingBuilder {
         addMeasurement(eventsMeasurement = new EventsMeasurement(configuration));
     }
 
+    @Override
+    protected boolean shouldIncludeClientId() {
+        return false;
+    }
+
     public EventsMeasurement getEventsMeasurement() {
         return eventsMeasurement;
     }
