@@ -715,10 +715,10 @@ var gPermissionObject = {
     permitTemporaryAllow: true,
     getDefault() {
       let state = Services.prefs.getIntPref("media.autoplay.default",
-                                            Ci.nsIAutoplay.PROMPT);
+                                            Ci.nsIAutoplay.BLOCKED);
       if (state == Ci.nsIAutoplay.ALLOWED) {
         return SitePermissions.ALLOW;
-      } if (state == Ci.nsIAutoplay.BLOCKED) {
+      } else if (state == Ci.nsIAutoplay.BLOCKED) {
         return SitePermissions.BLOCK;
       }
       return SitePermissions.UNKNOWN;
