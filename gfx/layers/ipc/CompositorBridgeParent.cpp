@@ -2477,6 +2477,17 @@ int32_t RecordContentFrameTime(
 
     // Record CONTENT_FRAME_TIME_REASON.
     //
+    // Note that deseralizing a layers update (RecvUpdate) can delay the receipt
+    // of the composite vsync message
+    // (CompositorBridgeParent::CompositeToTarget), since they're using the same
+    // thread. This can mean that compositing might start significantly late,
+    // but this code will still detect it as having successfully started on the
+    // right vsync (which is somewhat correct). We'd now have reduced time left
+    // in the vsync interval to finish compositing, so the chances of a missed
+    // frame increases. This is effectively including the RecvUpdate work as
+    // part of the 'compositing' phase for this metric, but it isn't included in
+    // COMPOSITE_TIME, and *is* included in CONTENT_FULL_PAINT_TIME.
+    //
     // Also of note is that when the root WebRenderBridgeParent decides to
     // skip a composite (due to the Renderer being busy), that won't notify
     // child WebRenderBridgeParents. That failure will show up as the
