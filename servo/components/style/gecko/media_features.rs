@@ -4,7 +4,6 @@
 
 //! Gecko's media feature list and evaluator.
 
-use app_units::Au;
 use crate::gecko_bindings::bindings;
 use crate::gecko_bindings::structs;
 use crate::media_queries::media_feature::{AllowsRanges, ParsingRequirements};
@@ -14,6 +13,7 @@ use crate::media_queries::{Device, MediaType};
 use crate::values::computed::CSSPixelLength;
 use crate::values::computed::Resolution;
 use crate::Atom;
+use app_units::Au;
 use euclid::Size2D;
 
 fn viewport_size(device: &Device) -> Size2D<Au> {
@@ -320,8 +320,7 @@ fn eval_overflow_block(device: &Device, query_value: Option<OverflowBlock>) -> b
     };
 
     match query_value {
-        OverflowBlock::None |
-        OverflowBlock::OptionalPaged => false,
+        OverflowBlock::None | OverflowBlock::OptionalPaged => false,
         OverflowBlock::Scroll => scrolling,
         OverflowBlock::Paged => !scrolling,
     }

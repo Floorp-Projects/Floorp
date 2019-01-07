@@ -11,7 +11,7 @@
 //! implementing custom lock types, it also allows users to write code which is
 //! generic with regards to different lock implementations.
 //!
-//! Basic usage of this crate is very straightfoward:
+//! Basic usage of this crate is very straightforward:
 //!
 //! 1. Create a raw lock type. This should only contain the lock state, not any
 //!    data protected by the lock.
@@ -27,7 +27,7 @@
 //! # Example
 //!
 //! ```
-//! use lock_api::{RawMutex, Mutex};
+//! use lock_api::{RawMutex, Mutex, GuardSend};
 //! use std::sync::atomic::{AtomicBool, Ordering, ATOMIC_BOOL_INIT};
 //!
 //! // 1. Define our raw lock type
@@ -36,6 +36,9 @@
 //! // 2. Implement RawMutex for this type
 //! unsafe impl RawMutex for RawSpinlock {
 //!     const INIT: RawSpinlock = RawSpinlock(ATOMIC_BOOL_INIT);
+//!
+//!     // A spinlock guard can be sent to another thread and unlocked there
+//!     type GuardMarker = GuardSend;
 //!
 //!     fn lock(&self) {
 //!         // Note: This isn't the best way of implementing a spinlock, but it
