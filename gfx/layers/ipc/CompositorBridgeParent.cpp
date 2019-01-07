@@ -2423,7 +2423,6 @@ int32_t RecordContentFrameTime(
   double latencyMs = (aCompositeEnd - aTxnStart).ToMilliseconds();
   double latencyNorm = latencyMs / aVsyncRate.ToMilliseconds();
   int32_t fracLatencyNorm = lround(latencyNorm * 100.0);
-  int32_t result = fracLatencyNorm;
 
 #ifdef MOZ_GECKO_PROFILER
   if (profiler_is_active()) {
@@ -2446,34 +2445,18 @@ int32_t RecordContentFrameTime(
 #endif
 
   Telemetry::Accumulate(Telemetry::CONTENT_FRAME_TIME, fracLatencyNorm);
-  if (aContainsSVGGroup) {
-    Telemetry::Accumulate(Telemetry::CONTENT_FRAME_TIME_WITH_SVG,
-                          fracLatencyNorm);
-  }
-
-  if (aRecordUploadStats) {
-    if (aStats) {
-      latencyMs -= (double(aStats->resource_upload_time) / 1000000.0);
-      latencyNorm = latencyMs / aVsyncRate.ToMilliseconds();
-      fracLatencyNorm = lround(latencyNorm * 100.0);
-    }
-    Telemetry::Accumulate(Telemetry::CONTENT_FRAME_TIME_WITHOUT_RESOURCE_UPLOAD,
-                          fracLatencyNorm);
-
-    if (aStats) {
-      latencyMs -= (double(aStats->gpu_cache_upload_time) / 1000000.0);
-      latencyNorm = latencyMs / aVsyncRate.ToMilliseconds();
-      fracLatencyNorm = lround(latencyNorm * 100.0);
-    }
-    Telemetry::Accumulate(Telemetry::CONTENT_FRAME_TIME_WITHOUT_UPLOAD,
-                          fracLatencyNorm);
-  }
 
   if (!(aTxnId == VsyncId()) && aVsyncStart) {
     latencyMs = (aCompositeEnd - aVsyncStart).ToMilliseconds();
     latencyNorm = latencyMs / aVsyncRate.ToMilliseconds();
     fracLatencyNorm = lround(latencyNorm * 100.0);
+    int32_t result = fracLatencyNorm;
     Telemetry::Accumulate(Telemetry::CONTENT_FRAME_TIME_VSYNC, fracLatencyNorm);
+
+    if (aContainsSVGGroup) {
+      Telemetry::Accumulate(Telemetry::CONTENT_FRAME_TIME_WITH_SVG,
+                            fracLatencyNorm);
+    }
 
     // Record CONTENT_FRAME_TIME_REASON.
     //
@@ -2531,9 +2514,29 @@ int32_t RecordContentFrameTime(
             LABELS_CONTENT_FRAME_TIME_REASON::SlowComposite);
       }
     }
+
+    if (aRecordUploadStats) {
+      if (aStats) {
+        latencyMs -= (double(aStats->resource_upload_time) / 1000000.0);
+        latencyNorm = latencyMs / aVsyncRate.ToMilliseconds();
+        fracLatencyNorm = lround(latencyNorm * 100.0);
+      }
+      Telemetry::Accumulate(
+          Telemetry::CONTENT_FRAME_TIME_WITHOUT_RESOURCE_UPLOAD,
+          fracLatencyNorm);
+
+      if (aStats) {
+        latencyMs -= (double(aStats->gpu_cache_upload_time) / 1000000.0);
+        latencyNorm = latencyMs / aVsyncRate.ToMilliseconds();
+        fracLatencyNorm = lround(latencyNorm * 100.0);
+      }
+      Telemetry::Accumulate(Telemetry::CONTENT_FRAME_TIME_WITHOUT_UPLOAD,
+                            fracLatencyNorm);
+    }
+    return result;
   }
 
-  return result;
+  return 0;
 }
 
 }  // namespace layers
