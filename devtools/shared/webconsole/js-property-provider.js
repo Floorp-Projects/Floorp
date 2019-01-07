@@ -215,9 +215,9 @@ function analyzeInputString(str) {
  *        Optional offset in the input where the cursor is located. If this is
  *        omitted then the cursor is assumed to be at the end of the input
  *        value.
- * - {Boolean} invokeUnsafeGetter (defaults to false).
- *        Optional boolean to indicate if the function should execute unsafe getter
- *        in order to retrieve its result's properties.
+ * - {Array} authorizedEvaluations (defaults to []).
+ *        Optional array containing all the different properties access that the engine
+ *        can execute in order to retrieve its result's properties.
  *        ⚠️ This should be set to true *ONLY* on user action as it may cause side-effects
  *        in the content page ⚠️
  * - {WebconsoleActor} webconsoleActor
@@ -231,7 +231,8 @@ function analyzeInputString(str) {
  *
  *          {
  *            isUnsafeGetter: true,
- *            getterName: {String} The name of the unsafe getter
+ *            getterPath: {Array<String>} An array of the property chain leading to the
+ *                        getter. Example: ["x", "myGetter"]
  *          }
  *
  *          If no completion valued could be computed, and the input is not an unsafe
@@ -251,7 +252,7 @@ function JSPropertyProvider({
   environment,
   inputValue,
   cursor,
-  invokeUnsafeGetter = false,
+  authorizedEvaluations = [],
   webconsoleActor,
   selectedNodeActor,
 }) {
@@ -448,18 +449,16 @@ function JSPropertyProvider({
       return null;
     }
 
-    if (!invokeUnsafeGetter && DevToolsUtils.isUnsafeGetter(obj, prop)) {
-      // If the unsafe getter is not the last property access of the input, bail out as
-      // things might get complex.
-      if (index !== properties.length - 1) {
-        return null;
-      }
+    const propPath = [firstProp].concat(properties.slice(0, index + 1));
+    const authorized = authorizedEvaluations.some(
+      x => JSON.stringify(x) === JSON.stringify(propPath));
 
+    if (!authorized && DevToolsUtils.isUnsafeGetter(obj, prop)) {
       // If we try to access an unsafe getter, return its name so we can consume that
       // on the frontend.
       return {
         isUnsafeGetter: true,
-        getterName: prop,
+        getterPath: propPath,
       };
     }
 
@@ -468,7 +467,7 @@ function JSPropertyProvider({
       // list[i][j]..[n]. Traverse the array to get the actual element.
       obj = getArrayMemberProperty(obj, null, prop);
     } else {
-      obj = DevToolsUtils.getProperty(obj, prop, invokeUnsafeGetter);
+      obj = DevToolsUtils.getProperty(obj, prop, authorized);
     }
 
     if (!isObjectUsable(obj)) {

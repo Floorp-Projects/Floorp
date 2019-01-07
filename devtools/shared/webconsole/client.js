@@ -381,10 +381,20 @@ WebConsoleClient.prototype = {
    * @param {String} frameActor
    *        The id of the frame actor that made the call.
    * @param {String} selectedNodeActor: Actor id of the selected node in the inspector.
+   * @param {Array} authorizedEvaluations
+   *        Array of the properties access which can be executed by the engine.
+   *        Example: [["x", "myGetter"], ["x", "myGetter", "y", "anotherGetter"]] to
+   *        retrieve properties of `x.myGetter.` and `x.myGetter.y.anotherGetter`.
    * @return request
    *         Request object that implements both Promise and EventEmitter interfaces
    */
-  autocomplete: function(string, cursor, frameActor, selectedNodeActor) {
+  autocomplete: function(
+    string,
+    cursor,
+    frameActor,
+    selectedNodeActor,
+    authorizedEvaluations
+  ) {
     const packet = {
       to: this._actor,
       type: "autocomplete",
@@ -392,6 +402,7 @@ WebConsoleClient.prototype = {
       cursor,
       frameActor,
       selectedNodeActor,
+      authorizedEvaluations,
     };
     return this._client.request(packet);
   },
