@@ -1249,9 +1249,6 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   // is put in the foreground, whereupon we will begin playback.
   bool AudioChannelAgentDelayingPlayback();
 
-  // Ensures we're prompting the user for permission to autoplay.
-  void EnsureAutoplayRequested(bool aHandlingUserInput);
-
   // Update the silence range of the audio track when the audible status of
   // silent audio track changes or seeking to the new position where the audio
   // track is silent.
@@ -1495,10 +1492,6 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   // Used to indicate if the MediaKeys attaching operation is on-going or not.
   bool mAttachingMediaKey = false;
   MozPromiseRequestHolder<SetCDMPromise> mSetCDMRequest;
-  // Request holder for permission prompt to autoplay. Non-null if we're
-  // currently showing a prompt for permission to autoplay.
-  MozPromiseRequestHolder<GenericNonExclusivePromise>
-      mAutoplayPermissionRequest;
 
   // Stores the time at the start of the current 'played' range.
   double mCurrentPlayRangeStart = 1.0;
