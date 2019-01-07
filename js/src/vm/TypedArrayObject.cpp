@@ -192,7 +192,8 @@ void TypedArrayObject::finalize(FreeOp* fop, JSObject* obj) {
     MOZ_ASSERT(!oldObj->hasInlineElements());
     AutoEnterOOMUnsafeRegion oomUnsafe;
     nbytes = JS_ROUNDUP(nbytes, sizeof(Value));
-    void* data = newObj->zone()->pod_malloc<uint8_t>(nbytes);
+    void* data = newObj->zone()->pod_malloc<uint8_t>(
+        nbytes, js::ArrayBufferContentsArena);
     if (!data) {
       oomUnsafe.crash(
           "Failed to allocate typed array elements while tenuring.");
@@ -528,7 +529,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
     UniquePtr<void, JS::FreePolicy> buf;
     if (!fitsInline) {
       MOZ_ASSERT(len > 0);
-      buf.reset(cx->pod_calloc<uint8_t>(nbytes));
+      buf.reset(cx->pod_calloc<uint8_t>(nbytes, js::ArrayBufferContentsArena));
       if (!buf) {
         return nullptr;
       }
