@@ -1500,16 +1500,18 @@ function appendProcessAboutMemoryElements(aP, aN, aProcess, aTrees,
   otherDegenerates.sort(TreeNode.compareUnsafeNames);
 
   // Now generate the elements, putting non-degenerate trees first.
-  let pre = appendSectionHeader(aP, "Other Measurements");
-  for (let t of otherTrees) {
-    appendTreeElements(pre, t, aProcess, "");
-    appendTextNode(pre, "\n"); // blank lines after non-degenerate trees
+  if (otherTrees.length || otherDegenerates.length) {
+    let pre = appendSectionHeader(aP, "Other Measurements");
+    for (let t of otherTrees) {
+      appendTreeElements(pre, t, aProcess, "");
+      appendTextNode(pre, "\n"); // blank lines after non-degenerate trees
+    }
+    for (let t of otherDegenerates) {
+      let padText = "".padStart(maxStringLength - t.toString().length, " ");
+      appendTreeElements(pre, t, aProcess, padText);
+    }
+    appendTextNode(aP, "\n"); // gives nice spacing when we copy and paste
   }
-  for (let t of otherDegenerates) {
-    let padText = "".padStart(maxStringLength - t.toString().length, " ");
-    appendTreeElements(pre, t, aProcess, padText);
-  }
-  appendTextNode(aP, "\n"); // gives nice spacing when we copy and paste
 
   // Add any warnings about inaccuracies in the "explicit" tree due to platform
   // limitations.  These must be computed after generating all the text.  The
