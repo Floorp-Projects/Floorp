@@ -1,3 +1,5 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -301,16 +303,17 @@ class AwsyTestCase(MarionetteTestCase):
         page_to_load = self.urls()[self._pages_loaded % len(self.urls())]
         tabs_loaded = len(self._tabs)
         is_new_tab = False
+        open_tab_script = r"""
+            gBrowser.loadOneTab("about:blank", {
+                inBackground: false,
+                triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+            });
+        """
 
         if tabs_loaded < self._maxTabs and tabs_loaded <= self._pages_loaded:
             full_tab_list = self.marionette.window_handles
 
-            # Trigger opening a new tab by finding the new tab button and
-            # clicking it
-            newtab_button = (self.marionette.find_element('id', 'tabbrowser-tabs')
-                                            .find_element('anon attribute',
-                                                          {'anonid': 'tabs-newtab-button'}))
-            newtab_button.click()
+            self.marionette.execute_script(open_tab_script, script_timeout=60000)
 
             self.wait_for_condition(lambda mn: len(
                 mn.window_handles) == tabs_loaded + 1)

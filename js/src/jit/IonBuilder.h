@@ -143,7 +143,7 @@ class IonBuilder : public MIRGenerator,
   AbortReasonOr<Ok> resumeAfter(MInstruction* ins);
   AbortReasonOr<Ok> maybeInsertResume();
 
-  bool blockIsOSREntry(const CFGBlock* block, const CFGBlock* predecessor);
+  AbortReasonOr<Ok> emitGoto(CFGBlock* successor, size_t popAmount);
 
   void insertRecompileCheck();
 

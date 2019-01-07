@@ -108,6 +108,19 @@ class FaviconLoad {
     this.channel.loadGroup = iconInfo.node.ownerGlobal.document.documentLoadGroup;
     this.channel.notificationCallbacks = this;
 
+    if (this.channel instanceof Ci.nsIHttpChannel) {
+      try {
+        let acceptHeader = Services.prefs.getCharPref("image.http.accept");
+        this.channel.setRequestHeader("Accept", acceptHeader, false);
+      } catch (e) {
+        // Failing to get the pref or set the header is ignorable.
+      }
+    }
+
+    if (this.channel instanceof Ci.nsIHttpChannelInternal) {
+      this.channel.blockAuthPrompt = true;
+    }
+
     if (Services.prefs.getBoolPref("network.http.tailing.enabled", true) &&
         this.channel instanceof Ci.nsIClassOfService) {
       this.channel.addClassFlags(Ci.nsIClassOfService.Tail | Ci.nsIClassOfService.Throttleable);
