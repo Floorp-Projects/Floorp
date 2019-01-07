@@ -8,7 +8,6 @@
 
 #include "blink/PeriodicWave.h"
 
-#include "mozilla/AutoplayPermissionManager.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/NotNull.h"
 #include "mozilla/OwningNonNull.h"
@@ -193,45 +192,8 @@ void AudioContext::NotifyScheduledSourceNodeStarted() {
   if (isAllowedToPlay) {
     ResumeInternal();
   } else {
-    EnsureAutoplayRequested();
+    DispatchBlockedEvent();
   }
-}
-
-void AudioContext::EnsureAutoplayRequested() {
-  nsPIDOMWindowInner* parent = GetParentObject();
-  if (!parent || !parent->AsGlobal()) {
-    return;
-  }
-
-  RefPtr<AutoplayPermissionManager> request =
-      AutoplayPolicy::RequestFor(*(parent->GetExtantDoc()));
-  if (!request) {
-    return;
-  }
-
-  AUTOPLAY_LOG("AudioContext %p EnsureAutoplayRequested %p", this,
-               request.get());
-  RefPtr<AudioContext> self = this;
-  request->RequestWithPrompt()->Then(
-      parent->AsGlobal()->AbstractMainThreadFor(TaskCategory::Other), __func__,
-      [self, request](bool aApproved) {
-        AUTOPLAY_LOG("%p Autoplay request approved request=%p", self.get(),
-                     request.get());
-        self->mWasAllowedToStart = true;
-        self->ResumeInternal();
-      },
-      [self, request](nsresult aError) {
-        AUTOPLAY_LOG("%p Autoplay request denied request=%p", self.get(),
-                     request.get());
-        self->mWasAllowedToStart = false;
-        self->DispatchBlockedEvent();
-        Document* doc = self->GetParentObject()
-                            ? self->GetParentObject()->GetExtantDoc()
-                            : nullptr;
-        nsContentUtils::ReportToConsole(
-            nsIScriptError::warningFlag, NS_LITERAL_CSTRING("Media"), doc,
-            nsContentUtils::eDOM_PROPERTIES, "BlockAutoplayError");
-      });
 }
 
 nsresult AudioContext::Init() {
@@ -980,8 +942,8 @@ already_AddRefed<Promise> AudioContext::Resume(ErrorResult& aRv) {
   if (isAllowedToPlay) {
     mWasAllowedToStart = true;
     ResumeInternal();
-  } else if (!isAllowedToPlay && !mWasAllowedToStart) {
-    EnsureAutoplayRequested();
+  } else {
+    DispatchBlockedEvent();
   }
 
   return promise.forget();
