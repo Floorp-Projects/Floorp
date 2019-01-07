@@ -565,7 +565,7 @@ var gTests = [
   { desc:     'calc() expressions are resolved to the equivalent units',
     frames:   { left: ['calc(10em + 10px)', 'calc(10em + 10%)'] },
     expected: [ { property: 'left',
-                  values: [ valueFormat(0, 'calc(110px)', 'replace', 'linear'),
+                  values: [ valueFormat(0, '110px', 'replace', 'linear'),
                             valueFormat(1, 'calc(10% + 100px)', 'replace') ] } ]
   },
 
