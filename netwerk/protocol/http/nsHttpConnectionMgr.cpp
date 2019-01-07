@@ -1489,18 +1489,24 @@ nsresult nsHttpConnectionMgr::TryDispatchTransaction(
   if (!(caps & NS_HTTP_DISALLOW_SPDY) && gHttpHandler->IsSpdyEnabled()) {
     RefPtr<nsHttpConnection> conn = GetSpdyActiveConn(ent);
     if (conn) {
-      bool websocketCheckOK =
-          trans->IsWebsocketUpgrade() ? conn->CanAcceptWebsocket() : true;
-      if (websocketCheckOK && ((caps & NS_HTTP_ALLOW_KEEPALIVE) ||
-                               (caps & NS_HTTP_ALLOW_SPDY_WITHOUT_KEEPALIVE) ||
-                               !conn->IsExperienced())) {
-        LOG(("   dispatch to spdy: [conn=%p]\n", conn.get()));
-        trans->RemoveDispatchedAsBlocking(); /* just in case */
-        nsresult rv = DispatchTransaction(ent, trans, conn);
-        NS_ENSURE_SUCCESS(rv, rv);
-        return NS_OK;
+      if (trans->IsWebsocketUpgrade() && !conn->CanAcceptWebsocket()) {
+        // This is a websocket transaction and we already have a h2 connection
+        // that do not support websockets, we should disable h2 for this
+        // transaction.
+        trans->DisableSpdy();
+        caps &= NS_HTTP_DISALLOW_SPDY;
+      } else {
+        if ((caps & NS_HTTP_ALLOW_KEEPALIVE) ||
+            (caps & NS_HTTP_ALLOW_SPDY_WITHOUT_KEEPALIVE) ||
+            !conn->IsExperienced()) {
+          LOG(("   dispatch to spdy: [conn=%p]\n", conn.get()));
+          trans->RemoveDispatchedAsBlocking(); /* just in case */
+          nsresult rv = DispatchTransaction(ent, trans, conn);
+          NS_ENSURE_SUCCESS(rv, rv);
+          return NS_OK;
+        }
+        unusedSpdyPersistentConnection = conn;
       }
-      unusedSpdyPersistentConnection = conn;
     }
   }
 
