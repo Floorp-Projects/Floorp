@@ -20,6 +20,7 @@ import org.mozilla.telemetry.ping.TelemetryEventPingBuilder;
 import org.mozilla.telemetry.ping.TelemetryMobileEventPingBuilder;
 import org.mozilla.telemetry.ping.TelemetryPing;
 import org.mozilla.telemetry.ping.TelemetryPingBuilder;
+import org.mozilla.telemetry.ping.TelemetryPocketEventPingBuilder;
 import org.mozilla.telemetry.schedule.TelemetryScheduler;
 import org.mozilla.telemetry.storage.TelemetryStorage;
 
@@ -95,6 +96,7 @@ public class Telemetry {
                 // ping type and then falling back on the legacy ping type.
                 final TelemetryPingBuilder mobileEventBuilder = pingBuilders.get(TelemetryMobileEventPingBuilder.TYPE);
                 final TelemetryPingBuilder focusEventBuilder = pingBuilders.get(TelemetryEventPingBuilder.TYPE);
+                final TelemetryPingBuilder pocketEventBuilder = pingBuilders.get(TelemetryPocketEventPingBuilder.TYPE);
                 final EventsMeasurement measurement;
                 final String addedPingType;
                 if (mobileEventBuilder != null) {
@@ -103,11 +105,13 @@ public class Telemetry {
                 } else if (focusEventBuilder != null) {
                     measurement = ((TelemetryEventPingBuilder) focusEventBuilder).getEventsMeasurement();
                     addedPingType = focusEventBuilder.getType();
+                } else if (pocketEventBuilder != null) {
+                    measurement = ((TelemetryPocketEventPingBuilder) pocketEventBuilder).getEventsMeasurement();
+                    addedPingType = pocketEventBuilder.getType();
                 } else {
                     throw new IllegalStateException("Expect either TelemetryEventPingBuilder or " +
                             "TelemetryMobileEventPingBuilder to be added to queue events");
                 }
-
                 measurement.add(event);
                 if (measurement.getEventCount() >= configuration.getMaximumNumberOfEventsPerPing()) {
                     queuePing(addedPingType);

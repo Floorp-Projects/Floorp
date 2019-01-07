@@ -35,6 +35,7 @@ import org.mozilla.telemetry.net.TelemetryClient;
 import org.mozilla.telemetry.ping.TelemetryCorePingBuilder;
 import org.mozilla.telemetry.ping.TelemetryEventPingBuilder;
 import org.mozilla.telemetry.ping.TelemetryMobileEventPingBuilder;
+import org.mozilla.telemetry.ping.TelemetryPocketEventPingBuilder;
 import org.mozilla.telemetry.schedule.TelemetryScheduler;
 import org.mozilla.telemetry.schedule.jobscheduler.JobSchedulerTelemetryScheduler;
 import org.mozilla.telemetry.schedule.jobscheduler.TelemetryJobService;
@@ -400,6 +401,78 @@ public class TelemetryTest {
         assertEquals(2, searches.getInt("actionbar.yahoo"));
         assertEquals(1, searches.getInt("actionbar.duckduckgo"));
         assertEquals(1, searches.getInt("actionbar.duckduckgo"));
+
+        server.shutdown();
+    }
+
+    @Test
+    public void testPocketPingIntegration() throws Exception {
+        final MockWebServer server = new MockWebServer();
+        server.enqueue(new MockResponse().setBody("OK"));
+
+        final TelemetryConfiguration configuration = new TelemetryConfiguration(RuntimeEnvironment.application)
+                .setAppName("TelemetryTest")
+                .setAppVersion("13.1.3")
+                .setUpdateChannel("test")
+                .setBuildId("789")
+                .setServerEndpoint("http://" + server.getHostName() + ":" + server.getPort())
+                .setUserAgent(TEST_USER_AGENT);
+
+        final TelemetryPingSerializer serializer = new JSONPingSerializer();
+        final FileTelemetryStorage storage = new FileTelemetryStorage(configuration, serializer);
+
+        final TelemetryClient client = spy(new TelemetryClient(httpClient));
+        final TelemetryScheduler scheduler = new JobSchedulerTelemetryScheduler();
+
+        final TelemetryPocketEventPingBuilder pingBuilder = spy(new TelemetryPocketEventPingBuilder(configuration));
+        doReturn("ffffffff-0000-0000-ffff-ffffffffffff").when(pingBuilder).generateDocumentId();
+
+        final Telemetry telemetry = new Telemetry(configuration, storage, client, scheduler)
+                .addPingBuilder(pingBuilder);
+        TelemetryHolder.set(telemetry);
+
+        TelemetryEvent.create("action", "type", "search_bar").queue();
+        TelemetryEvent.create("action", "type_query", "search_bar").queue();
+        TelemetryEvent.create("action", "click", "erase_button").queue();
+
+        telemetry.queuePing(TelemetryPocketEventPingBuilder.TYPE);
+        telemetry.scheduleUpload();
+
+        TestUtils.waitForExecutor(telemetry);
+
+        int a = storage.countStoredPings(TelemetryPocketEventPingBuilder.TYPE);
+        int b = telemetry.getStorage().countStoredPings(TelemetryPocketEventPingBuilder.TYPE);
+
+        assertEquals(1, storage.countStoredPings(TelemetryPocketEventPingBuilder.TYPE));
+
+        assertJobIsScheduled();
+        executePendingJob(TelemetryPocketEventPingBuilder.TYPE);
+
+        verify(client).uploadPing(eq(configuration), anyString(), anyString());
+
+        assertEquals(0, storage.countStoredPings(TelemetryPocketEventPingBuilder.TYPE));
+
+        final RecordedRequest request = server.takeRequest();
+        assertEquals("POST /submit/telemetry/ffffffff-0000-0000-ffff-ffffffffffff/fire-tv-events/TelemetryTest/13.1.3/test/789?v=4 HTTP/1.1", request.getRequestLine());
+        assertEquals("application/json; charset=utf-8", request.getHeader("Content-Type"));
+        assertEquals(TEST_USER_AGENT, request.getHeader("User-Agent"));
+        assertNotNull(request.getHeader("Date"));
+
+        final JSONObject object = new JSONObject(request.getBody().readUtf8());
+
+        assertFalse(object.has("clientId")); //Make sure pocket ping doesn't include client-id
+        assertTrue(object.has("pocketId"));
+        assertTrue(object.has("v"));
+        assertTrue(object.has("seq"));
+        assertTrue(object.has("locale"));
+        assertTrue(object.has("os"));
+        assertTrue(object.has("device"));
+        assertTrue(object.has("created"));
+        assertTrue(object.has("tz"));
+        assertTrue(object.has("events"));
+
+        final JSONArray events = object.getJSONArray("events");
+        assertEquals(3, events.length());
 
         server.shutdown();
     }

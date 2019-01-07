@@ -6,6 +6,7 @@ package org.mozilla.telemetry.ping;
 
 import org.mozilla.telemetry.config.TelemetryConfiguration;
 import org.mozilla.telemetry.measurement.CreatedTimestampMeasurement;
+import org.mozilla.telemetry.measurement.DeviceMeasurement;
 import org.mozilla.telemetry.measurement.EventsMeasurement;
 import org.mozilla.telemetry.measurement.LocaleMeasurement;
 import org.mozilla.telemetry.measurement.OperatingSystemMeasurement;
@@ -34,6 +35,7 @@ public class TelemetryPocketEventPingBuilder extends TelemetryPingBuilder {
         addMeasurement(new ProcessStartTimestampMeasurement(configuration));
         addMeasurement(new SequenceMeasurement(configuration, this));
         addMeasurement(new LocaleMeasurement());
+        addMeasurement(new DeviceMeasurement());
         addMeasurement(new OperatingSystemMeasurement());
         addMeasurement(new OperatingSystemVersionMeasurement());
         addMeasurement(new CreatedTimestampMeasurement());
@@ -48,11 +50,6 @@ public class TelemetryPocketEventPingBuilder extends TelemetryPingBuilder {
 
     public EventsMeasurement getEventsMeasurement() {
         return eventsMeasurement;
-    }
-
-    @Override
-    public boolean canBuild() {
-        return eventsMeasurement.getEventCount() >= getConfiguration().getMinimumEventsForUpload();
     }
 
     @Override
