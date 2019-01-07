@@ -34,6 +34,10 @@ public final class GeckoSessionSettings implements Parcelable {
     public static final int USER_AGENT_MODE_DESKTOP = 1;
     public static final int USER_AGENT_MODE_VR = 2;
 
+    // This needs to match GeckoViewSettingsChild.js
+    public static final int VIEWPORT_MODE_MOBILE = 0;
+    public static final int VIEWPORT_MODE_DESKTOP = 1;
+
     public static class Key<T> {
         /* package */ final String name;
         /* package */ final boolean initOnly;
@@ -98,6 +102,13 @@ public final class GeckoSessionSettings implements Parcelable {
         new Key<String>("userAgentOverride", /* initOnly */ false, /* values */ null);
 
     /**
+     * Key to specify which viewport mode we should use.
+     */
+    public static final Key<Integer> VIEWPORT_MODE =
+        new Key<Integer>("viewportMode", /* initOnly */ false,
+                         Arrays.asList(VIEWPORT_MODE_MOBILE, VIEWPORT_MODE_DESKTOP));
+
+    /**
      * Key to specify which display-mode we should use.
      */
     public static final Key<Integer> DISPLAY_MODE =
@@ -153,6 +164,7 @@ public final class GeckoSessionSettings implements Parcelable {
         mBundle.putBoolean(FULL_ACCESSIBILITY_TREE.name, false);
         mBundle.putInt(USER_AGENT_MODE.name, USER_AGENT_MODE_MOBILE);
         mBundle.putString(USER_AGENT_OVERRIDE.name, null);
+        mBundle.putInt(VIEWPORT_MODE.name, VIEWPORT_MODE_MOBILE);
         mBundle.putInt(DISPLAY_MODE.name, DISPLAY_MODE_BROWSER);
     }
 
