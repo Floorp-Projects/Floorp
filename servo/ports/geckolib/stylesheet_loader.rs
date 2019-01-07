@@ -7,7 +7,7 @@ use nsstring::nsCString;
 use servo_arc::Arc;
 use style::context::QuirksMode;
 use style::gecko::data::GeckoStyleSheet;
-use style::gecko::global_style_data::GLOBAL_STYLE_DATA;
+use style::global_style_data::GLOBAL_STYLE_DATA;
 use style::gecko_bindings::bindings;
 use style::gecko_bindings::bindings::Gecko_LoadStyleSheet;
 use style::gecko_bindings::structs::{Loader, LoaderReusableStyleSheets};
