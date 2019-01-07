@@ -80,7 +80,7 @@ class TaskBuilder(object):
             "retries": 5,
             "created": taskcluster.stringDate(created),
             "tags": {},
-            "priority": "lowest",
+            "priority": "highest",  # We now use dedicated build worker type.
             "deadline": taskcluster.stringDate(deadline),
             "dependencies": [self.task_id] + dependencies,
             "routes": routes,
