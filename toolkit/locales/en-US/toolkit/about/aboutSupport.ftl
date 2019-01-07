@@ -237,8 +237,6 @@ uses-tiling = Uses Tiling
 content-uses-tiling = Uses Tiling (Content)
 off-main-thread-paint-enabled = Off Main Thread Painting Enabled
 off-main-thread-paint-worker-count = Off Main Thread Painting Worker Count
-low-end-machine = Detected less performant machine
-target-frame-rate = Target Frame Rate
 
 audio-backend = Audio Backend
 max-audio-channels = Max Channels

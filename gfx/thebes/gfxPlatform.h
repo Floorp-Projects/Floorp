@@ -755,8 +755,6 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
   virtual void EnsureDevicesInitialized(){};
   virtual bool DevicesInitialized() { return true; };
 
-  static uint32_t TargetFrameRate();
-
  protected:
   gfxPlatform();
   virtual ~gfxPlatform();
