@@ -1,0 +1,46 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.console-header {
+  background: var(--theme-highlight-pink);
+  color: white;
+  margin: 0;
+}
+
+.console-header form {
+  display: flex;
+  padding: 1rem;
+}
+
+.console-header h1 {
+  font-size: 14px;
+  font-weight: 100;
+  color: white;
+}
+
+.console-header input {
+  background-color: var(--theme-highlight-pink);
+  flex: 1;
+  border: 1px solid white;
+  color: white;
+  font-size: 1.25rem;
+  padding: 0.25rem;
+  line-height: 2rem;
+  padding-left: 1rem;
+  margin: 0 1rem;
+}
+
+.console-header ::-webkit-input-placeholder {
+  color: white;
+  font-size: 1rem;
+  line-height: 2rem;
+  margin: 0;
+}
+
+.console-header .clear-button {
+  background: rgba(255, 255, 255, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: white;
+  font-size: 1.2rem;
+}

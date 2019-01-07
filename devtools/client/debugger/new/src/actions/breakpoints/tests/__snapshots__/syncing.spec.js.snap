@@ -1,0 +1,183 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`loading the debugger loads the initial breakpoint state 1`] = `
+Object {
+  "breakpoint": Object {
+    "astLocation": Object {
+      "name": undefined,
+      "offset": Object {
+        "line": 3,
+      },
+    },
+    "condition": null,
+    "disabled": false,
+    "generatedLocation": Object {
+      "column": undefined,
+      "line": 3,
+      "sourceId": "gen.js",
+      "sourceUrl": "http://localhost:8000/gen.js",
+    },
+    "hidden": false,
+    "id": "foo",
+    "loading": false,
+    "location": Object {
+      "column": undefined,
+      "line": 3,
+      "sourceId": "magic.js",
+      "sourceUrl": "http://localhost:8000/examples/magic.js",
+    },
+    "log": false,
+    "originalText": "",
+    "text": "",
+  },
+  "previousLocation": Object {
+    "column": undefined,
+    "line": 3,
+    "sourceId": "magic.js",
+    "sourceUrl": "http://localhost:8000/magic.js",
+  },
+}
+`;
+
+exports[`loading the debugger loads the initial breakpoint state with a changed file 1`] = `
+Object {
+  "breakpoint": Object {
+    "astLocation": Object {
+      "name": undefined,
+      "offset": Object {
+        "line": 3,
+      },
+    },
+    "condition": null,
+    "disabled": false,
+    "generatedLocation": Object {
+      "column": undefined,
+      "line": 3,
+      "sourceId": "gen.js",
+      "sourceUrl": "http://localhost:8000/gen.js",
+    },
+    "hidden": false,
+    "id": "foo",
+    "loading": false,
+    "location": Object {
+      "column": undefined,
+      "line": 12,
+      "sourceId": "magic.js",
+      "sourceUrl": "http://localhost:8000/examples/magic.js",
+    },
+    "log": false,
+    "originalText": "",
+    "text": "",
+  },
+  "previousLocation": Object {
+    "column": undefined,
+    "line": 3,
+    "sourceId": "magic.js",
+    "sourceUrl": "http://localhost:8000/magic.js",
+  },
+}
+`;
+
+exports[`reloading debuggee syncs with changed source and an existing disabled BP 1`] = `
+Object {
+  "http://localhost:8000/examples/magic.js:3:": Object {
+    "astLocation": Object {
+      "name": undefined,
+      "offset": Object {
+        "line": 3,
+      },
+    },
+    "condition": null,
+    "disabled": true,
+    "generatedLocation": Object {
+      "column": undefined,
+      "line": 1,
+      "sourceUrl": "http://localhost:8000/gen.js",
+    },
+    "location": Object {
+      "column": undefined,
+      "line": 3,
+      "sourceUrl": "http://localhost:8000/examples/magic.js",
+    },
+    "log": false,
+  },
+}
+`;
+
+exports[`reloading debuggee syncs with unchanged source with an existing BP 1`] = `
+Object {
+  "breakpoint": Object {
+    "astLocation": Object {
+      "name": undefined,
+      "offset": Object {
+        "line": 3,
+      },
+    },
+    "condition": null,
+    "disabled": false,
+    "generatedLocation": Object {
+      "column": undefined,
+      "line": 3,
+      "sourceId": "gen.js",
+      "sourceUrl": "http://localhost:8000/gen.js",
+    },
+    "hidden": false,
+    "id": "foo",
+    "loading": false,
+    "location": Object {
+      "column": undefined,
+      "line": 3,
+      "sourceId": "magic.js",
+      "sourceUrl": "http://localhost:8000/examples/magic.js",
+    },
+    "log": false,
+    "originalText": "",
+    "text": "",
+  },
+  "previousLocation": Object {
+    "column": undefined,
+    "line": 3,
+    "sourceId": "magic.js",
+    "sourceUrl": "http://localhost:8000/magic.js",
+  },
+}
+`;
+
+exports[`reloading debuggee updates a corresponding breakpoint for a changed source 1`] = `
+Object {
+  "breakpoint": Object {
+    "astLocation": Object {
+      "name": undefined,
+      "offset": Object {
+        "line": 3,
+      },
+    },
+    "condition": null,
+    "disabled": false,
+    "generatedLocation": Object {
+      "column": undefined,
+      "line": 5,
+      "sourceId": "gen.js",
+      "sourceUrl": "http://localhost:8000/gen.js",
+    },
+    "hidden": false,
+    "id": "gen.js:5:",
+    "loading": false,
+    "location": Object {
+      "column": undefined,
+      "line": 3,
+      "sourceId": "magic.js",
+      "sourceUrl": "http://localhost:8000/magic.js",
+    },
+    "log": false,
+    "originalText": "",
+    "text": "",
+  },
+  "previousLocation": Object {
+    "column": undefined,
+    "line": 3,
+    "sourceId": "magic.js",
+    "sourceUrl": "http://localhost:8000/magic.js",
+  },
+}
+`;

@@ -1,0 +1,67 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ObjectInspector - entries calls ObjectClient.enumEntries when expected 1`] = `
+"
+▼ Map(11)
+|  ▶︎ <entries>
+"
+`;
+
+exports[`ObjectInspector - entries calls ObjectClient.enumEntries when expected 2`] = `
+"
+  ▼ Map(11)
+[ |  ▼ <entries> ]
+  |  |  ▶︎ 0: \\"key-0\\" → \\"value-0\\"
+  |  |  ▶︎ 1: \\"key-1\\" → \\"value-1\\"
+  |  |  ▶︎ 2: \\"key-2\\" → \\"value-2\\"
+  |  |  ▶︎ 3: \\"key-3\\" → \\"value-3\\"
+  |  |  ▶︎ 4: \\"key-4\\" → \\"value-4\\"
+  |  |  ▶︎ 5: \\"key-5\\" → \\"value-5\\"
+  |  |  ▶︎ 6: \\"key-6\\" → \\"value-6\\"
+  |  |  ▶︎ 7: \\"key-7\\" → \\"value-7\\"
+  |  |  ▶︎ 8: \\"key-8\\" → \\"value-8\\"
+  |  |  ▶︎ 9: \\"key-9\\" → \\"value-9\\"
+  |  |  ▶︎ 10: \\"key-10\\" → \\"value-10\\"
+"
+`;
+
+exports[`ObjectInspector - entries calls ObjectClient.enumEntries when expected 3`] = `
+"
+  ▼ Map(11)
+[ |  ▶︎ <entries> ]
+"
+`;
+
+exports[`ObjectInspector - entries calls ObjectClient.enumEntries when expected 4`] = `
+"
+  ▼ Map(11)
+[ |  ▼ <entries> ]
+  |  |  ▶︎ 0: \\"key-0\\" → \\"value-0\\"
+  |  |  ▶︎ 1: \\"key-1\\" → \\"value-1\\"
+  |  |  ▶︎ 2: \\"key-2\\" → \\"value-2\\"
+  |  |  ▶︎ 3: \\"key-3\\" → \\"value-3\\"
+  |  |  ▶︎ 4: \\"key-4\\" → \\"value-4\\"
+  |  |  ▶︎ 5: \\"key-5\\" → \\"value-5\\"
+  |  |  ▶︎ 6: \\"key-6\\" → \\"value-6\\"
+  |  |  ▶︎ 7: \\"key-7\\" → \\"value-7\\"
+  |  |  ▶︎ 8: \\"key-8\\" → \\"value-8\\"
+  |  |  ▶︎ 9: \\"key-9\\" → \\"value-9\\"
+  |  |  ▶︎ 10: \\"key-10\\" → \\"value-10\\"
+"
+`;
+
+exports[`ObjectInspector - entries renders Object with entries as expected 1`] = `
+"
+▼ Map(2)
+|    size: 2
+|  ▼ <entries>
+|  |  ▼ 0: Symbol(a) → \\"value-a\\"
+|  |  |    <key>: Symbol(a)
+|  |  |    <value>: \\"value-a\\"
+|  |  ▼ 1: Symbol(b) → \\"value-b\\"
+|  |  |    <key>: Symbol(b)
+|  |  |    <value>: \\"value-b\\"
+|  ▼ <prototype>: {…}
+|  |    <prototype>: Object {  }
+"
+`;

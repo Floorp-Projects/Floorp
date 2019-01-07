@@ -4243,7 +4243,7 @@ void Debugger::removeDebuggeeGlobal(FreeOp* fop, GlobalObject* global,
   for (FrameMap::Enum e(frames); !e.empty(); e.popFront()) {
     AbstractFramePtr frame = e.front().key();
     DebuggerFrame* frameobj = e.front().value();
-    if (frame.global() == global) {
+    if (frame.hasGlobal(global)) {
       frameobj->freeFrameIterData(fop);
       DebuggerFrame_maybeDecrementFrameScriptStepModeCount(fop, frame,
                                                            frameobj);

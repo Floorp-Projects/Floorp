@@ -1,0 +1,27 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`indentation mad indentation 1`] = `
+"try {
+console.log(\\"yo\\")
+} catch (e) {
+console.log(\\"yo\\")
+ }"
+`;
+
+exports[`indentation one function 1`] = `
+"function foo() {
+ console.log(\\"yo\\")
+}"
+`;
+
+exports[`indentation one line 1`] = `"foo"`;
+
+exports[`indentation simple 1`] = `"foo"`;
+
+exports[`indentation try catch 1`] = `
+"try {
+ console.log(\\"yo\\")
+} catch (e) {
+ console.log(\\"yo\\")
+}"
+`;

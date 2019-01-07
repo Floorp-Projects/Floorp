@@ -1,0 +1,42 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ElementNode - Node with spaces in the class name renders with expected text content 1`] = `
+<span
+  className="objectBox objectBox-node"
+  data-link-actor-id="server1.conn3.child1/obj59"
+>
+  <span
+    className="angleBracket"
+  >
+    &lt;
+  </span>
+  <span
+    className="tag-name"
+  >
+    body
+  </span>
+   
+  <span>
+    <span
+      className="attrName"
+    >
+      class
+    </span>
+    <span
+      className="attrEqual"
+    >
+      =
+    </span>
+    <span
+      className="objectBox objectBox-string attrValue"
+    >
+      "a  b   c"
+    </span>
+  </span>
+  <span
+    className="angleBracket"
+  >
+    &gt;
+  </span>
+</span>
+`;

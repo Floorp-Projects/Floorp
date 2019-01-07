@@ -1,0 +1,10 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`pauseOnExceptions should track telemetry for pauseOnException changes 1`] = `
+Array [
+  Object {
+    "caught_exceptio": false,
+    "exceptions": true,
+  },
+]
+`;

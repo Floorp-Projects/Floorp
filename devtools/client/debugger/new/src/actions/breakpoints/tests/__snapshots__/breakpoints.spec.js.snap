@@ -1,0 +1,138 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`breakpoints adding a breakpoint to an invalid location adds only one breakpoint with a corrected location 1`] = `
+Object {
+  "astLocation": Object {
+    "index": 0,
+    "name": undefined,
+    "offset": Object {
+      "line": 7,
+      "sourceId": "a",
+      "sourceUrl": "http://localhost:8000/examples/a",
+    },
+  },
+  "condition": null,
+  "disabled": false,
+  "generatedLocation": Object {
+    "line": 7,
+    "sourceId": "a",
+    "sourceUrl": "http://localhost:8000/examples/a",
+  },
+  "hidden": false,
+  "id": "a:5:",
+  "loading": false,
+  "location": Object {
+    "line": 7,
+    "sourceId": "a",
+    "sourceUrl": "http://localhost:8000/examples/a",
+  },
+  "log": false,
+  "originalText": "",
+  "text": "",
+}
+`;
+
+exports[`breakpoints should add a breakpoint 1`] = `
+Array [
+  Object {
+    "breakpoints": Array [
+      Object {
+        "condition": null,
+        "disabled": false,
+        "id": "hi",
+        "log": false,
+        "selectedLocation": Object {
+          "line": 2,
+          "sourceId": "a",
+          "sourceUrl": "http://localhost:8000/examples/a",
+        },
+        "text": "return a",
+      },
+    ],
+    "source": Object {
+      "contentType": "text/javascript",
+      "error": undefined,
+      "id": "a",
+      "isBlackBoxed": false,
+      "isPrettyPrinted": false,
+      "isWasm": false,
+      "loadedState": "loaded",
+      "sourceMapURL": undefined,
+      "text": "function a() {
+  return a 
+}",
+      "url": "http://localhost:8000/examples/a",
+    },
+  },
+]
+`;
+
+exports[`breakpoints should not show a breakpoint that does not have text 1`] = `Array []`;
+
+exports[`breakpoints should remap breakpoints on pretty print 1`] = `
+Object {
+  "astLocation": Object {
+    "index": 0,
+    "name": undefined,
+    "offset": Object {
+      "line": 1,
+      "sourceId": "a.js",
+      "sourceUrl": "http://localhost:8000/examples/a.js",
+    },
+  },
+  "condition": null,
+  "disabled": false,
+  "generatedLocation": Object {
+    "line": 1,
+    "sourceId": "a.js",
+    "sourceUrl": "http://localhost:8000/examples/a.js",
+  },
+  "hidden": false,
+  "id": "hi",
+  "loading": false,
+  "location": Object {
+    "column": 0,
+    "line": 1,
+    "sourceId": "a.js/originalSource-d6d70368d5c252598541e693a7ad6c27",
+    "sourceUrl": "http://localhost:8000/examples/a.js:formatted",
+  },
+  "log": false,
+  "originalText": "function a() {",
+  "text": "function a() {",
+}
+`;
+
+exports[`breakpoints should show a disabled breakpoint that does not have text 1`] = `
+Array [
+  Object {
+    "breakpoints": Array [
+      Object {
+        "condition": null,
+        "disabled": true,
+        "id": "hi",
+        "log": false,
+        "selectedLocation": Object {
+          "line": 5,
+          "sourceId": "a",
+          "sourceUrl": "http://localhost:8000/examples/a",
+        },
+        "text": "",
+      },
+    ],
+    "source": Object {
+      "contentType": "text/javascript",
+      "error": undefined,
+      "id": "a",
+      "isBlackBoxed": false,
+      "isPrettyPrinted": false,
+      "isWasm": false,
+      "loadedState": "loaded",
+      "sourceMapURL": undefined,
+      "text": "function a() {
+  return a 
+}",
+      "url": "http://localhost:8000/examples/a",
+    },
+  },
+]
+`;

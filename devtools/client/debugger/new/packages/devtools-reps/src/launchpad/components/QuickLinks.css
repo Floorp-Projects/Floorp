@@ -1,0 +1,20 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.quick-links {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  background: rgba(255, 255, 255, 0.25);
+  padding: 0.5rem 1rem;
+}
+
+.quick-links button {
+  font-size: 1.2rem;
+  background: none;
+  border: none;
+  color: white;
+  margin: 0.5rem 0.25rem;
+  cursor: pointer;
+}
