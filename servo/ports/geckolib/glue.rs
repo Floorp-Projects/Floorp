@@ -4465,17 +4465,17 @@ pub extern "C" fn Servo_DeclarationBlock_SetPixelValue(
     use style::properties::{LonghandId, PropertyDeclaration};
     use style::values::generics::NonNegative;
     use style::values::generics::length::MozLength;
-    use style::values::specified::length::{NoCalcLength, NonNegativeLength, NonNegativeLengthOrPercentage};
-    use style::values::specified::length::{LengthOrPercentageOrAuto, LengthOrPercentage};
+    use style::values::specified::length::{NoCalcLength, NonNegativeLength, NonNegativeLengthPercentage};
+    use style::values::specified::length::{LengthPercentageOrAuto, LengthPercentage};
     use style::values::specified::{BorderCornerRadius, BorderSideWidth};
 
     let long = get_longhand_from_id!(property);
     let nocalc = NoCalcLength::from_px(value);
-    let lop = LengthOrPercentage::Length(nocalc);
-    let lop_or_auto = LengthOrPercentageOrAuto::LengthOrPercentage(lop.clone());
+    let lop = LengthPercentage::Length(nocalc);
+    let lop_or_auto = LengthPercentageOrAuto::LengthPercentage(lop.clone());
     let prop = match_wrap_declared! { long,
-        Height => MozLength::LengthOrPercentageOrAuto(lop_or_auto),
-        Width => MozLength::LengthOrPercentageOrAuto(lop_or_auto),
+        Height => MozLength::LengthPercentageOrAuto(lop_or_auto),
+        Width => MozLength::LengthPercentageOrAuto(lop_or_auto),
         BorderTopWidth => BorderSideWidth::Length(nocalc.into()),
         BorderRightWidth => BorderSideWidth::Length(nocalc.into()),
         BorderBottomWidth => BorderSideWidth::Length(nocalc.into()),
@@ -4493,19 +4493,19 @@ pub extern "C" fn Servo_DeclarationBlock_SetPixelValue(
             Box::new(BorderSpacing::new(v.clone(), v))
         },
         BorderTopLeftRadius => {
-            let length = NonNegativeLengthOrPercentage::from(nocalc);
+            let length = NonNegativeLengthPercentage::from(nocalc);
             Box::new(BorderCornerRadius::new(length.clone(), length))
         },
         BorderTopRightRadius => {
-            let length = NonNegativeLengthOrPercentage::from(nocalc);
+            let length = NonNegativeLengthPercentage::from(nocalc);
             Box::new(BorderCornerRadius::new(length.clone(), length))
         },
         BorderBottomLeftRadius => {
-            let length = NonNegativeLengthOrPercentage::from(nocalc);
+            let length = NonNegativeLengthPercentage::from(nocalc);
             Box::new(BorderCornerRadius::new(length.clone(), length))
         },
         BorderBottomRightRadius => {
-            let length = NonNegativeLengthOrPercentage::from(nocalc);
+            let length = NonNegativeLengthPercentage::from(nocalc);
             Box::new(BorderCornerRadius::new(length.clone(), length))
         },
     };
@@ -4525,7 +4525,7 @@ pub extern "C" fn Servo_DeclarationBlock_SetLengthValue(
     use style::properties::{LonghandId, PropertyDeclaration};
     use style::values::generics::length::MozLength;
     use style::values::specified::length::{AbsoluteLength, FontRelativeLength};
-    use style::values::specified::length::{LengthOrPercentage, LengthOrPercentageOrAuto, NoCalcLength};
+    use style::values::specified::length::{LengthPercentage, LengthPercentageOrAuto, NoCalcLength};
 
     let long = get_longhand_from_id!(property);
     let nocalc = match unit {
@@ -4550,10 +4550,10 @@ pub extern "C" fn Servo_DeclarationBlock_SetLengthValue(
     };
 
     let prop = match_wrap_declared! { long,
-        Width => MozLength::LengthOrPercentageOrAuto(LengthOrPercentageOrAuto::LengthOrPercentage(
-                LengthOrPercentage::Length(nocalc)
+        Width => MozLength::LengthPercentageOrAuto(LengthPercentageOrAuto::LengthPercentage(
+                LengthPercentage::Length(nocalc)
         )),
-        FontSize => LengthOrPercentage::from(nocalc).into(),
+        FontSize => LengthPercentage::from(nocalc).into(),
         MozScriptMinSize => MozScriptMinSize(nocalc),
     };
     write_locked_arc(declarations, |decls: &mut PropertyDeclarationBlock| {
@@ -4592,21 +4592,21 @@ pub extern "C" fn Servo_DeclarationBlock_SetPercentValue(
     use style::properties::{LonghandId, PropertyDeclaration};
     use style::values::computed::Percentage;
     use style::values::generics::length::MozLength;
-    use style::values::specified::length::{LengthOrPercentageOrAuto, LengthOrPercentage};
+    use style::values::specified::length::{LengthPercentageOrAuto, LengthPercentage};
 
     let long = get_longhand_from_id!(property);
     let pc = Percentage(value);
     let lop_or_auto =
-        LengthOrPercentageOrAuto::LengthOrPercentage(LengthOrPercentage::Percentage(pc));
+        LengthPercentageOrAuto::LengthPercentage(LengthPercentage::Percentage(pc));
 
     let prop = match_wrap_declared! { long,
-        Height => MozLength::LengthOrPercentageOrAuto(lop_or_auto),
-        Width => MozLength::LengthOrPercentageOrAuto(lop_or_auto),
+        Height => MozLength::LengthPercentageOrAuto(lop_or_auto),
+        Width => MozLength::LengthPercentageOrAuto(lop_or_auto),
         MarginTop => lop_or_auto,
         MarginRight => lop_or_auto,
         MarginBottom => lop_or_auto,
         MarginLeft => lop_or_auto,
-        FontSize => LengthOrPercentage::from(pc).into(),
+        FontSize => LengthPercentage::from(pc).into(),
     };
     write_locked_arc(declarations, |decls: &mut PropertyDeclarationBlock| {
         decls.push(prop, Importance::Normal);
@@ -4619,10 +4619,10 @@ pub extern "C" fn Servo_DeclarationBlock_SetAutoValue(
     property: nsCSSPropertyID,
 ) {
     use style::properties::{LonghandId, PropertyDeclaration};
-    use style::values::specified::{LengthOrPercentageOrAuto, MozLength};
+    use style::values::specified::{LengthPercentageOrAuto, MozLength};
 
     let long = get_longhand_from_id!(property);
-    let auto = LengthOrPercentageOrAuto::Auto;
+    let auto = LengthPercentageOrAuto::Auto;
 
     let prop = match_wrap_declared! { long,
         Height => MozLength::auto(),

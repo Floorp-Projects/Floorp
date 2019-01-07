@@ -63,42 +63,42 @@ fn test_rgba_color_interepolation_out_of_range_clamped_2() {
 // Transform
 #[test]
 fn test_transform_interpolation_on_translate() {
-    use style::values::computed::{CalcLengthOrPercentage, Length, LengthOrPercentage};
+    use style::values::computed::{CalcLengthPercentage, Length, LengthPercentage};
 
     let from = Transform(vec![
-        TransformOperation::Translate3D(LengthOrPercentage::Length(Length::new(0.)),
-                                        LengthOrPercentage::Length(Length::new(100.)),
+        TransformOperation::Translate3D(LengthPercentage::Length(Length::new(0.)),
+                                        LengthPercentage::Length(Length::new(100.)),
                                         Length::new(25.))]);
     let to = Transform(vec![
-        TransformOperation::Translate3D(LengthOrPercentage::Length(Length::new(100.)),
-                                        LengthOrPercentage::Length(Length::new(0.)),
+        TransformOperation::Translate3D(LengthPercentage::Length(Length::new(100.)),
+                                        LengthPercentage::Length(Length::new(0.)),
                                         Length::new(75.))]);
     assert_eq!(
         from.animate(&to, Procedure::Interpolate { progress: 0.5 }).unwrap(),
         Transform(vec![TransformOperation::Translate3D(
-            LengthOrPercentage::Length(Length::new(50.)),
-            LengthOrPercentage::Length(Length::new(50.)),
+            LengthPercentage::Length(Length::new(50.)),
+            LengthPercentage::Length(Length::new(50.)),
             Length::new(50.),
         )])
     );
 
     let from = Transform(vec![TransformOperation::Translate3D(
-        LengthOrPercentage::Percentage(Percentage(0.5)),
-        LengthOrPercentage::Percentage(Percentage(1.0)),
+        LengthPercentage::Percentage(Percentage(0.5)),
+        LengthPercentage::Percentage(Percentage(1.0)),
         Length::new(25.),
     )]);
     let to = Transform(vec![
-        TransformOperation::Translate3D(LengthOrPercentage::Length(Length::new(100.)),
-                                        LengthOrPercentage::Length(Length::new(50.)),
+        TransformOperation::Translate3D(LengthPercentage::Length(Length::new(100.)),
+                                        LengthPercentage::Length(Length::new(50.)),
                                         Length::new(75.))]);
     assert_eq!(
         from.animate(&to, Procedure::Interpolate { progress: 0.5 }).unwrap(),
         Transform(vec![TransformOperation::Translate3D(
             // calc(50px + 25%)
-            LengthOrPercentage::Calc(CalcLengthOrPercentage::new(Length::new(50.),
+            LengthPercentage::Calc(CalcLengthPercentage::new(Length::new(50.),
                                                                  Some(Percentage(0.25)))),
             // calc(25px + 50%)
-            LengthOrPercentage::Calc(CalcLengthOrPercentage::new(Length::new(25.),
+            LengthPercentage::Calc(CalcLengthPercentage::new(Length::new(25.),
                                                                  Some(Percentage(0.5)))),
             Length::new(50.),
         )])
@@ -150,13 +150,13 @@ fn test_transform_interpolation_on_skew() {
 
 #[test]
 fn test_transform_interpolation_on_mismatched_lists() {
-    use style::values::computed::{Angle, Length, LengthOrPercentage};
+    use style::values::computed::{Angle, Length, LengthPercentage};
 
     let from = Transform(vec![TransformOperation::Rotate3D(0.0, 0.0, 1.0,
                                                            Angle::from_radians(100.0))]);
     let to = Transform(vec![
-        TransformOperation::Translate3D(LengthOrPercentage::Length(Length::new(100.)),
-                                        LengthOrPercentage::Length(Length::new(0.)),
+        TransformOperation::Translate3D(LengthPercentage::Length(Length::new(100.)),
+                                        LengthPercentage::Length(Length::new(0.)),
                                         Length::new(0.))]);
     assert_eq!(
         from.animate(&to, Procedure::Interpolate { progress: 0.5 }).unwrap(),
