@@ -27,7 +27,7 @@ use style::stylesheets::{Stylesheet, StylesheetContents, NamespaceRule, CssRule,
 use style::stylesheets::keyframes_rule::{Keyframe, KeyframeSelector, KeyframePercentage};
 use style::values::{KeyframesName, CustomIdent};
 use style::values::computed::Percentage;
-use style::values::specified::{LengthOrPercentageOrAuto, PositionComponent};
+use style::values::specified::{LengthPercentageOrAuto, PositionComponent};
 use style::values::specified::TimingFunction;
 
 pub fn block_from<I>(iterable: I) -> PropertyDeclarationBlock
@@ -220,7 +220,7 @@ fn test_parse_stylesheet() {
                                           vec![KeyframePercentage::new(0.)]),
                             block: Arc::new(stylesheet.shared_lock.wrap(block_from(vec![
                                 (PropertyDeclaration::Width(
-                                    LengthOrPercentageOrAuto::Percentage(Percentage(0.))),
+                                    LengthPercentageOrAuto::Percentage(Percentage(0.))),
                                  Importance::Normal),
                             ]))),
                             source_location: SourceLocation {
@@ -233,7 +233,7 @@ fn test_parse_stylesheet() {
                                           vec![KeyframePercentage::new(1.)]),
                             block: Arc::new(stylesheet.shared_lock.wrap(block_from(vec![
                                 (PropertyDeclaration::Width(
-                                    LengthOrPercentageOrAuto::Percentage(Percentage(1.))),
+                                    LengthPercentageOrAuto::Percentage(Percentage(1.))),
                                  Importance::Normal),
                                 (PropertyDeclaration::AnimationTimingFunction(
                                     animation_timing_function::SpecifiedValue(
