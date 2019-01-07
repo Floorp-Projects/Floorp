@@ -768,7 +768,7 @@ bool VRSystemManagerExternal::PullState(
           if (!mEarliestRestartTime.IsNull() && mEarliestRestartTime < now) {
             mEarliestRestartTime =
                 now + TimeDuration::FromMilliseconds(
-                          (double)aDisplayState->mMinRestartInterval);
+                          (double)aDisplayState->minRestartInterval);
           }
         }
         if (!aWaitCondition || aWaitCondition()) {

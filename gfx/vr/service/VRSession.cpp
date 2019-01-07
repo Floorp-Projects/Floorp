@@ -101,9 +101,9 @@ bool VRSession::SubmitFrame(
 
 #elif defined(XP_MACOSX)
 
-  if (aLayer.mTextureType ==
+  if (aLayer.textureType ==
       VRLayerTextureType::LayerTextureType_MacIOSurface) {
-    return SubmitFrame(aLayer, aLayer.mTextureHandle);
+    return SubmitFrame(aLayer, aLayer.textureHandle);
   }
 
 #endif
