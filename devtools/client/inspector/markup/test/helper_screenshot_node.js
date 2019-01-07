@@ -66,6 +66,13 @@ async function takeNodeScreenshot(inspector) {
   info("Remove the downloaded screenshot file");
   await OS.File.remove(filePath);
 
+  // See intermittent Bug 1508435. Even after removing the file, tests still manage to
+  // reuse files from the previous test if they have the same name. Since our file name
+  // is based on a timestamp that has "second" precision, wait for one second to make sure
+  // screenshots will have different names.
+  info("Wait for one second to make sure future screenshots will use a different name");
+  await new Promise(r => setTimeout(r, 1000));
+
   return image;
 }
 /* exported takeNodeScreenshot */
