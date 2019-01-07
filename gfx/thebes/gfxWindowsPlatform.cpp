@@ -432,6 +432,10 @@ void gfxWindowsPlatform::InitAcceleration() {
   if (!DWriteEnabled() && GetDefaultContentBackend() == BackendType::SKIA) {
     InitDWriteSupport();
   }
+  // We need to listen for font setting changes even if DWrite is not used.
+  Factory::SetSystemTextQuality(gfxVars::SystemTextQuality());
+  gfxVars::SetSystemTextQualityListener(
+      gfxDWriteFont::SystemTextQualityChanged);
 
   // CanUseHardwareVideoDecoding depends on DeviceManagerDx state,
   // so update the cached value now.
@@ -465,9 +469,6 @@ bool gfxWindowsPlatform::InitDWriteSupport() {
 
   SetupClearTypeParams();
   reporter.SetSuccessful();
-  Factory::SetSystemTextQuality(gfxVars::SystemTextQuality());
-  gfxVars::SetSystemTextQualityListener(
-      gfxDWriteFont::SystemTextQualityChanged);
   return true;
 }
 
