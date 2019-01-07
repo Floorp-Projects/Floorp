@@ -40,7 +40,6 @@ class MediaElementTest : BaseSessionTest() {
         sessionRule.setPrefsUntilTestEnd(mapOf(
                 "media.autoplay.enabled.user-gestures-needed" to false,
                 "media.autoplay.default" to 0,
-                "media.autoplay.ask-permission" to false,
                 "full-screen-api.allow-trusted-requests-only" to false))
 
         sessionRule.session.loadTestPath(path)
