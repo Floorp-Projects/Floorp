@@ -21,9 +21,8 @@ namespace mozilla {
 namespace dom {
 class SVGAnimationElement;
 }  // namespace dom
-}  // namespace mozilla
 
-class nsSVGInteger {
+class SVGInteger {
  public:
   typedef mozilla::dom::SVGElement SVGElement;
 
@@ -63,11 +62,11 @@ class nsSVGInteger {
 
  public:
   struct DOMAnimatedInteger final : public mozilla::dom::SVGAnimatedInteger {
-    DOMAnimatedInteger(nsSVGInteger* aVal, SVGElement* aSVGElement)
+    DOMAnimatedInteger(SVGInteger* aVal, SVGElement* aSVGElement)
         : mozilla::dom::SVGAnimatedInteger(aSVGElement), mVal(aVal) {}
     virtual ~DOMAnimatedInteger();
 
-    nsSVGInteger* mVal;  // kept alive because it belongs to content
+    SVGInteger* mVal;  // kept alive because it belongs to content
 
     virtual int32_t BaseVal() override { return mVal->GetBaseValue(); }
     virtual void SetBaseVal(int32_t aValue) override {
@@ -84,13 +83,13 @@ class nsSVGInteger {
 
   struct SMILInteger : public nsISMILAttr {
    public:
-    SMILInteger(nsSVGInteger* aVal, SVGElement* aSVGElement)
+    SMILInteger(SVGInteger* aVal, SVGElement* aSVGElement)
         : mVal(aVal), mSVGElement(aSVGElement) {}
 
     // These will stay alive because a nsISMILAttr only lives as long
     // as the Compositing step, and DOM elements don't get a chance to
     // die during that.
-    nsSVGInteger* mVal;
+    SVGInteger* mVal;
     SVGElement* mSVGElement;
 
     // nsISMILAttr methods
@@ -103,5 +102,7 @@ class nsSVGInteger {
     virtual nsresult SetAnimValue(const nsSMILValue& aValue) override;
   };
 };
+
+}  // namespace mozilla
 
 #endif  //__NS_SVGINTEGER_H__

@@ -10,7 +10,7 @@
 #include "SVGEnum.h"
 #include "SVGFilters.h"
 #include "nsSVGNumber2.h"
-#include "nsSVGInteger.h"
+#include "SVGInteger.h"
 #include "SVGString.h"
 
 nsresult NS_NewSVGFETurbulenceElement(
@@ -72,7 +72,7 @@ class SVGFETurbulenceElement : public SVGFETurbulenceElementBase {
   static NumberPairInfo sNumberPairInfo[1];
 
   enum { OCTAVES };
-  nsSVGInteger mIntegerAttributes[1];
+  SVGInteger mIntegerAttributes[1];
   static IntegerInfo sIntegerInfo[1];
 
   enum { TYPE, STITCHTILES };

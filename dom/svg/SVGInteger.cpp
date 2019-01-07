@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsSVGInteger.h"
+#include "SVGInteger.h"
 
 #include "nsError.h"
 #include "nsSVGAttrTearoffTable.h"
@@ -12,16 +12,17 @@
 #include "SMILIntegerType.h"
 #include "SVGContentUtils.h"
 
-using namespace mozilla;
 using namespace mozilla::dom;
+
+namespace mozilla {
 
 /* Implementation */
 
-static nsSVGAttrTearoffTable<nsSVGInteger, nsSVGInteger::DOMAnimatedInteger>
+static nsSVGAttrTearoffTable<SVGInteger, SVGInteger::DOMAnimatedInteger>
     sSVGAnimatedIntegerTearoffTable;
 
-nsresult nsSVGInteger::SetBaseValueString(const nsAString &aValueAsString,
-                                          SVGElement *aSVGElement) {
+nsresult SVGInteger::SetBaseValueString(const nsAString &aValueAsString,
+                                        SVGElement *aSVGElement) {
   int32_t value;
 
   if (!SVGContentUtils::ParseInteger(aValueAsString, value)) {
@@ -38,12 +39,12 @@ nsresult nsSVGInteger::SetBaseValueString(const nsAString &aValueAsString,
   return NS_OK;
 }
 
-void nsSVGInteger::GetBaseValueString(nsAString &aValueAsString) {
+void SVGInteger::GetBaseValueString(nsAString &aValueAsString) {
   aValueAsString.Truncate();
   aValueAsString.AppendInt(mBaseVal);
 }
 
-void nsSVGInteger::SetBaseValue(int aValue, SVGElement *aSVGElement) {
+void SVGInteger::SetBaseValue(int aValue, SVGElement *aSVGElement) {
   // We can't just rely on SetParsedAttrValue (as called by DidChangeInteger)
   // detecting redundant changes since it will compare false if the existing
   // attribute value has an associated serialized version (a string value) even
@@ -62,7 +63,7 @@ void nsSVGInteger::SetBaseValue(int aValue, SVGElement *aSVGElement) {
   aSVGElement->DidChangeInteger(mAttrEnum);
 }
 
-void nsSVGInteger::SetAnimValue(int aValue, SVGElement *aSVGElement) {
+void SVGInteger::SetAnimValue(int aValue, SVGElement *aSVGElement) {
   if (mIsAnimated && aValue == mAnimVal) {
     return;
   }
@@ -71,7 +72,7 @@ void nsSVGInteger::SetAnimValue(int aValue, SVGElement *aSVGElement) {
   aSVGElement->DidAnimateInteger(mAttrEnum);
 }
 
-already_AddRefed<SVGAnimatedInteger> nsSVGInteger::ToDOMAnimatedInteger(
+already_AddRefed<SVGAnimatedInteger> SVGInteger::ToDOMAnimatedInteger(
     SVGElement *aSVGElement) {
   RefPtr<DOMAnimatedInteger> domAnimatedInteger =
       sSVGAnimatedIntegerTearoffTable.GetTearoff(this);
@@ -83,15 +84,15 @@ already_AddRefed<SVGAnimatedInteger> nsSVGInteger::ToDOMAnimatedInteger(
   return domAnimatedInteger.forget();
 }
 
-nsSVGInteger::DOMAnimatedInteger::~DOMAnimatedInteger() {
+SVGInteger::DOMAnimatedInteger::~DOMAnimatedInteger() {
   sSVGAnimatedIntegerTearoffTable.RemoveTearoff(mVal);
 }
 
-UniquePtr<nsISMILAttr> nsSVGInteger::ToSMILAttr(SVGElement *aSVGElement) {
+UniquePtr<nsISMILAttr> SVGInteger::ToSMILAttr(SVGElement *aSVGElement) {
   return MakeUnique<SMILInteger>(this, aSVGElement);
 }
 
-nsresult nsSVGInteger::SMILInteger::ValueFromString(
+nsresult SVGInteger::SMILInteger::ValueFromString(
     const nsAString &aStr, const dom::SVGAnimationElement * /*aSrcElement*/,
     nsSMILValue &aValue, bool &aPreventCachingOfSandwich) const {
   int32_t val;
@@ -107,13 +108,13 @@ nsresult nsSVGInteger::SMILInteger::ValueFromString(
   return NS_OK;
 }
 
-nsSMILValue nsSVGInteger::SMILInteger::GetBaseValue() const {
+nsSMILValue SVGInteger::SMILInteger::GetBaseValue() const {
   nsSMILValue val(SMILIntegerType::Singleton());
   val.mU.mInt = mVal->mBaseVal;
   return val;
 }
 
-void nsSVGInteger::SMILInteger::ClearAnimValue() {
+void SVGInteger::SMILInteger::ClearAnimValue() {
   if (mVal->mIsAnimated) {
     mVal->mIsAnimated = false;
     mVal->mAnimVal = mVal->mBaseVal;
@@ -121,7 +122,7 @@ void nsSVGInteger::SMILInteger::ClearAnimValue() {
   }
 }
 
-nsresult nsSVGInteger::SMILInteger::SetAnimValue(const nsSMILValue &aValue) {
+nsresult SVGInteger::SMILInteger::SetAnimValue(const nsSMILValue &aValue) {
   NS_ASSERTION(aValue.mType == SMILIntegerType::Singleton(),
                "Unexpected type to assign animated value");
   if (aValue.mType == SMILIntegerType::Singleton()) {
@@ -129,3 +130,5 @@ nsresult nsSVGInteger::SMILInteger::SetAnimValue(const nsSMILValue &aValue) {
   }
   return NS_OK;
 }
+
+}  // namespace mozilla
