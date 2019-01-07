@@ -51,7 +51,7 @@ class TemporaryExtensionAction extends PureComponent {
         },
         dom.button(
           {
-            className: "default-button",
+            className: "default-button js-temporary-extension-reload-button",
             onClick: e => this.reload(),
           },
           "Reload",
