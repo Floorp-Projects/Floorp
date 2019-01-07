@@ -575,17 +575,15 @@ nsresult MediaEngineWebRTCMicrophoneSource::Start(
                                               mTrackID, mPrincipal);
 
   RefPtr<MediaEngineWebRTCMicrophoneSource> that = this;
-  RefPtr<MediaStreamGraphImpl> gripGraph = mStream->GraphImpl();
-  NS_DispatchToMainThread(
-      media::NewRunnableFrom([that, graph = std::move(gripGraph), deviceID,
-                              stream = mStream, track = mTrackID]() {
-        if (graph) {
+  NS_DispatchToMainThread(media::NewRunnableFrom(
+      [that, deviceID, stream = mStream, track = mTrackID]() {
+        if (MediaStreamGraphImpl* graph = stream->GraphImpl()) {
           graph->AppendMessage(MakeUnique<StartStopMessage>(
               that->mInputProcessing, StartStopMessage::Start));
+          stream->SetPullingEnabled(track, true);
         }
 
         stream->OpenAudioInput(deviceID, that->mInputProcessing);
-        stream->SetPullingEnabled(track, true);
 
         return NS_OK;
       }));
@@ -612,11 +610,10 @@ nsresult MediaEngineWebRTCMicrophoneSource::Stop(
   }
 
   RefPtr<MediaEngineWebRTCMicrophoneSource> that = this;
-  RefPtr<MediaStreamGraphImpl> gripGraph = mStream->GraphImpl();
   NS_DispatchToMainThread(
-      media::NewRunnableFrom([that, graph = std::move(gripGraph),
-                              stream = mStream, track = mTrackID]() {
-        if (graph) {
+      media::NewRunnableFrom([that, stream = mStream, track = mTrackID]() {
+        if (MediaStreamGraphImpl* graph = stream->GraphImpl()) {
+          stream->SetPullingEnabled(track, false);
           graph->AppendMessage(MakeUnique<StartStopMessage>(
               that->mInputProcessing, StartStopMessage::Stop));
         }
@@ -624,7 +621,6 @@ nsresult MediaEngineWebRTCMicrophoneSource::Stop(
         CubebUtils::AudioDeviceID deviceID = that->mDeviceInfo->DeviceID();
         Maybe<CubebUtils::AudioDeviceID> id = Some(deviceID);
         stream->CloseAudioInput(id, that->mInputProcessing);
-        stream->SetPullingEnabled(track, false);
 
         return NS_OK;
       }));
