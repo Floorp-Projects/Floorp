@@ -35,7 +35,7 @@ class CompositorWidget;
 namespace layers {
 class CompositorBridgeParent;
 class WebRenderBridgeParent;
-class WebRenderLayerManager;
+class RenderRootStateManager;
 }  // namespace layers
 
 namespace layout {
@@ -504,7 +504,7 @@ class DisplayListBuilder {
   already_AddRefed<gfxContext> GetTextContext(
       wr::IpcResourceUpdateQueue& aResources,
       const layers::StackingContextHelper& aSc,
-      layers::WebRenderLayerManager* aManager, nsDisplayItem* aItem,
+      layers::RenderRootStateManager* aManager, nsDisplayItem* aItem,
       nsRect& aBounds, const gfx::Point& aDeviceOffset);
 
   // Try to avoid using this when possible.

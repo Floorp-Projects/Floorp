@@ -12,11 +12,11 @@
 namespace mozilla {
 namespace layers {
 
-class WebRenderLayerManager;
+class RenderRootStateManager;
 
 class WebRenderCanvasRenderer : public ShareableCanvasRenderer {
  public:
-  explicit WebRenderCanvasRenderer(WebRenderLayerManager* aManager)
+  explicit WebRenderCanvasRenderer(RenderRootStateManager* aManager)
       : mManager(aManager) {}
 
   void Initialize(const CanvasInitializeData& aData) override;
@@ -24,12 +24,12 @@ class WebRenderCanvasRenderer : public ShareableCanvasRenderer {
   CompositableForwarder* GetForwarder() override;
 
  protected:
-  WebRenderLayerManager* mManager;
+  RenderRootStateManager* mManager;
 };
 
 class WebRenderCanvasRendererAsync : public WebRenderCanvasRenderer {
  public:
-  explicit WebRenderCanvasRendererAsync(WebRenderLayerManager* aManager)
+  explicit WebRenderCanvasRendererAsync(RenderRootStateManager* aManager)
       : WebRenderCanvasRenderer(aManager) {}
   virtual ~WebRenderCanvasRendererAsync();
 

@@ -195,7 +195,8 @@ class nsDisplayTextOverflowMarker final : public nsDisplayItem {
   virtual bool CreateWebRenderCommands(
       mozilla::wr::DisplayListBuilder& aBuilder,
       mozilla::wr::IpcResourceUpdateQueue& aResources,
-      const StackingContextHelper& aSc, layers::WebRenderLayerManager* aManager,
+      const StackingContextHelper& aSc,
+      layers::RenderRootStateManager* aManager,
       nsDisplayListBuilder* aDisplayListBuilder) override;
 
   NS_DISPLAY_DECL_NAME("TextOverflow", TYPE_TEXT_OVERFLOW)
@@ -266,7 +267,7 @@ void nsDisplayTextOverflowMarker::PaintTextToContext(gfxContext* aCtx,
 bool nsDisplayTextOverflowMarker::CreateWebRenderCommands(
     mozilla::wr::DisplayListBuilder& aBuilder,
     mozilla::wr::IpcResourceUpdateQueue& aResources,
-    const StackingContextHelper& aSc, layers::WebRenderLayerManager* aManager,
+    const StackingContextHelper& aSc, layers::RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) {
   bool snap;
   nsRect bounds = GetBounds(aDisplayListBuilder, &snap);

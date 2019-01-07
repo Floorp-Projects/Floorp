@@ -28,7 +28,7 @@ class ComputedStyle;
 enum class StyleAppearance : uint8_t;
 namespace layers {
 class StackingContextHelper;
-class WebRenderLayerManager;
+class RenderRootStateManager;
 }  // namespace layers
 namespace wr {
 class DisplayListBuilder;
@@ -86,7 +86,7 @@ class nsITheme : public nsISupports {
       mozilla::wr::DisplayListBuilder& aBuilder,
       mozilla::wr::IpcResourceUpdateQueue& aResources,
       const mozilla::layers::StackingContextHelper& aSc,
-      mozilla::layers::WebRenderLayerManager* aManager, nsIFrame* aFrame,
+      mozilla::layers::RenderRootStateManager* aManager, nsIFrame* aFrame,
       StyleAppearance aWidgetType, const nsRect& aRect) {
     return false;
   }
