@@ -17,6 +17,18 @@ permalink: /changelog/
   * Mozilla App Services (FxA: 0.12.1, Sync Logins: 0.12.1, Places: 0.12.1)
   * Third Party Libs (Sentry: 1.7.14, Okhttp: 3.12.0)
 
+* **feature-customtabs**
+  * Added a new feature `CustomTabsToolbarFeature` which will handle setting up the `BrowserToolbar` with the configurations available in that session:
+
+  ```kotlin
+  CustomTabsToolbarFeature(
+    sessionManager,
+    browserToolbar,
+    sessionId
+  ).also { lifecycle.addObserver(it) }
+  ```
+  Note: this constructor API is still a work-in-progress and will change as more Custom Tabs support is added to it next release.
+
 * **feature-session-bundling**
   * 🆕 New component that saves the state of sessions (`SessionManager.Snapshot`) in grouped bundles (e.g. by time).
 
