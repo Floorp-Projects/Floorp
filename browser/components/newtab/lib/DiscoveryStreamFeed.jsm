@@ -82,9 +82,8 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
 
   async loadCachedData() {
     const cachedData = await this.cache.get() || {};
-
     let {layout: layoutResponse} = cachedData;
-    if (!layoutResponse || !(Date.now() - layoutResponse._timestamp > LAYOUT_UPDATE_TIME)) {
+    if (!layoutResponse || !(Date.now() - layoutResponse._timestamp < LAYOUT_UPDATE_TIME)) {
       layoutResponse = await this.fetchLayout();
       if (layoutResponse && layoutResponse.layout) {
         layoutResponse._timestamp = Date.now();
@@ -95,7 +94,13 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
     }
 
     if (layoutResponse && layoutResponse.layout) {
-      this.store.dispatch(ac.BroadcastToContent({type: at.DISCOVERY_STREAM_LAYOUT_UPDATE, data: layoutResponse.layout}));
+      this.store.dispatch(ac.BroadcastToContent({
+        type: at.DISCOVERY_STREAM_LAYOUT_UPDATE,
+        data: {
+          layout: layoutResponse.layout,
+          lastUpdated: layoutResponse._timestamp,
+        },
+      }));
     }
   }
 
@@ -105,16 +110,21 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
   }
 
   async disable() {
-    // Clear cache
-    await this.cache.set("layout", {});
+    await this.clearCache();
     // Reset reducer
-    this.store.dispatch(ac.BroadcastToContent({type: at.DISCOVERY_STREAM_LAYOUT_UPDATE, data: []}));
+    this.store.dispatch(ac.BroadcastToContent({type: at.DISCOVERY_STREAM_LAYOUT_RESET}));
     this.loaded = false;
   }
 
+  async clearCache() {
+    await this.cache.set("layout", {});
+  }
+
   async onPrefChange() {
-    // Load data from all endpoints if our config.enabled = true.
     if (this.config.enabled) {
+      // We always want to clear the cache if the pref has changed
+      await this.clearCache();
+      // Load data from all endpoints
       await this.enable();
     }
 
@@ -134,6 +144,9 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
         if (this.config.enabled) {
           await this.enable();
         }
+        break;
+      case at.DISCOVERY_STREAM_CONFIG_SET_VALUE:
+        Services.prefs.setStringPref(CONFIG_PREF_NAME, JSON.stringify({...this.config, [action.data.name]: action.data.value}));
         break;
       case at.DISCOVERY_STREAM_CONFIG_CHANGE:
         // When the config pref changes, load or unload data as needed.

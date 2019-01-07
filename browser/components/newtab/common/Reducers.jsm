@@ -52,6 +52,10 @@ const INITIAL_STATE = {
     // This is a JSON-parsed copy of the discoverystream.config pref value.
     config: {enabled: false, layout_endpoint: ""},
     layout: [],
+    lastUpdated: null,
+    feeds: {
+      // "https://foo.com/feed1": {lastUpdated: 123, data: []}
+    },
   },
   Search: {
     // Pretend the search box is focused after handing off to AwesomeBar.
@@ -448,7 +452,9 @@ function DiscoveryStream(prevState = INITIAL_STATE.DiscoveryStream, action) {
     case at.DISCOVERY_STREAM_CONFIG_SETUP:
       return {...prevState, config: action.data || {}};
     case at.DISCOVERY_STREAM_LAYOUT_UPDATE:
-      return {...prevState, layout: action.data || []};
+      return {...prevState, lastUpdated: action.data.lastUpdated || null, layout: action.data.layout || []};
+    case at.DISCOVERY_STREAM_LAYOUT_RESET:
+      return {...prevState, lastUpdated: INITIAL_STATE.DiscoveryStream.lastUpdated, layout: INITIAL_STATE.DiscoveryStream.layout};
     default:
       return prevState;
   }
