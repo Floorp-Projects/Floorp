@@ -59,8 +59,6 @@ class TempWebExt {
   }
 }
 
-// Remove in Bug 1497264
-/*
 add_task(async function reloadButtonReloadsAddon() {
   const ADDON_NAME = "test-devtools";
   const { tab, document, window } = await openAboutDebugging("addons");
@@ -94,7 +92,6 @@ add_task(async function reloadButtonReloadsAddon() {
   await tearDownAddon(AboutDebugging, reloadedAddon);
   await closeAboutDebugging(tab);
 });
-*/
 
 add_task(async function reloadButtonRefreshesMetadata() {
   const { tab, document, window } = await openAboutDebugging("addons");
