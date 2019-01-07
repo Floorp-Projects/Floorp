@@ -69,7 +69,8 @@
 
 .customizationmode-checkbox:not(:-moz-lwtheme),
 .customizationmode-button {
-  color: rgb(71, 71, 71);
+  /* !important overrides :hover:active color from button.css on Mac */
+  color: rgb(71, 71, 71) !important;
 }
 
 #customization-reset-button,
@@ -79,7 +80,7 @@
 }
 
 #customization-done-button {
-  color: #fff;
+  color: #fff !important;
   font-weight: 700;
   border-color: #0060df;
   background-color: #0a84ff;
