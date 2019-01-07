@@ -75,6 +75,8 @@ class nsPermissionManager final : public nsIPermissionManager,
     static PermissionKey* CreateFromPrincipal(nsIPrincipal* aPrincipal,
                                               nsresult& aResult);
     static PermissionKey* CreateFromURI(nsIURI* aURI, nsresult& aResult);
+    static PermissionKey* CreateFromOriginNoSuffix(
+        const nsACString& aOriginNoSuffix);
 
     explicit PermissionKey(const nsACString& aOrigin) : mOrigin(aOrigin) {}
 
@@ -266,23 +268,27 @@ class nsPermissionManager final : public nsIPermissionManager,
 
   PermissionHashKey* GetPermissionHashKey(nsIPrincipal* aPrincipal,
                                           uint32_t aType, bool aExactHostMatch);
-  PermissionHashKey* GetPermissionHashKey(nsIURI* aURI, uint32_t aType,
-                                          bool aExactHostMatch);
+  PermissionHashKey* GetPermissionHashKey(nsIURI* aURI,
+                                          const nsACString& aOriginNoSuffix,
+                                          uint32_t aType, bool aExactHostMatch);
 
   nsresult CommonTestPermission(nsIPrincipal* aPrincipal, const char* aType,
                                 uint32_t* aPermission, bool aExactHostMatch,
                                 bool aIncludingSession) {
-    return CommonTestPermissionInternal(aPrincipal, nullptr, aType, aPermission,
-                                        aExactHostMatch, aIncludingSession);
+    return CommonTestPermissionInternal(aPrincipal, nullptr, EmptyCString(),
+                                        aType, aPermission, aExactHostMatch,
+                                        aIncludingSession);
   }
   nsresult CommonTestPermission(nsIURI* aURI, const char* aType,
                                 uint32_t* aPermission, bool aExactHostMatch,
                                 bool aIncludingSession) {
-    return CommonTestPermissionInternal(nullptr, aURI, aType, aPermission,
-                                        aExactHostMatch, aIncludingSession);
+    return CommonTestPermissionInternal(nullptr, aURI, EmptyCString(), aType,
+                                        aPermission, aExactHostMatch,
+                                        aIncludingSession);
   }
   // Only one of aPrincipal or aURI is allowed to be passed in.
   nsresult CommonTestPermissionInternal(nsIPrincipal* aPrincipal, nsIURI* aURI,
+                                        const nsACString& aOriginNoSuffix,
                                         const char* aType,
                                         uint32_t* aPermission,
                                         bool aExactHostMatch,
