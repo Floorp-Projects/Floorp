@@ -1398,9 +1398,8 @@ nsresult AntiTrackingCommon::IsOnContentBlockingAllowList(
   NS_ENSURE_SUCCESS(rv, rv);
   escaped.Append(temp);
 
-  nsCOMPtr<nsIPermissionManager> permMgr =
-      do_GetService(NS_PERMISSIONMANAGER_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIPermissionManager> permMgr = services::GetPermissionManager();
+  NS_ENSURE_TRUE(permMgr, NS_ERROR_FAILURE);
 
   // Check both the normal mode and private browsing mode user override
   // permissions.
