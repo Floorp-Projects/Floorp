@@ -117,6 +117,10 @@ class FaviconLoad {
       }
     }
 
+    if (this.channel instanceof Ci.nsIHttpChannelInternal) {
+      this.channel.blockAuthPrompt = true;
+    }
+
     if (Services.prefs.getBoolPref("network.http.tailing.enabled", true) &&
         this.channel instanceof Ci.nsIClassOfService) {
       this.channel.addClassFlags(Ci.nsIClassOfService.Tail | Ci.nsIClassOfService.Throttleable);
