@@ -305,6 +305,8 @@ void LayerManagerMLGPU::Composite() {
   mClonedLayerTreeProperties = nullptr;
   mClonedLayerTreeProperties = LayerProperties::CloneFrom(mRoot);
 
+  PayloadPresented();
+
   mPayload.Clear();
 }
 
