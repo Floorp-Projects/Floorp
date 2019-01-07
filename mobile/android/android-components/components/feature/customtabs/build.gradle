@@ -22,8 +22,11 @@ android {
 }
 
 dependencies {
+    implementation project(':browser-session')
+    implementation project(':browser-toolbar')
     implementation project(':concept-engine')
     implementation project(':support-base')
+    implementation project(':support-utils')
 
     implementation Dependencies.kotlin_stdlib
     implementation Dependencies.kotlin_coroutines

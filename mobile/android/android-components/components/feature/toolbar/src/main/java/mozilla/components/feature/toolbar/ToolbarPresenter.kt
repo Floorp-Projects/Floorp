@@ -40,10 +40,6 @@ class ToolbarPresenter(
         activeSession?.let { session ->
             toolbar.url = session.url
 
-            session.customTabConfig?.toolbarColor?.let {
-                toolbar.asView().setBackgroundColor(it)
-            }
-
             updateToolbarSecurity(session.securityInfo)
 
             // TODO Apply remaining configurations: https://github.com/mozilla-mobile/android-components/issues/306
