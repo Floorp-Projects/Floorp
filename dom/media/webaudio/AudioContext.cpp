@@ -171,7 +171,6 @@ AudioContext::AudioContext(nsPIDOMWindowInner* aWindow, bool aIsOffline,
   // AudioContext.resume() or AudioScheduledSourceNode.start().
   if (!allowedToStart) {
     AUTOPLAY_LOG("AudioContext %p is not allowed to start", this);
-    mWasAllowedToStart = false;
     SuspendInternal(nullptr);
     ReportBlocked();
   }
@@ -940,7 +939,6 @@ already_AddRefed<Promise> AudioContext::Resume(ErrorResult& aRv) {
   AUTOPLAY_LOG("Trying to resume AudioContext %p, IsAllowedToPlay=%d", this,
                isAllowedToPlay);
   if (isAllowedToPlay) {
-    mWasAllowedToStart = true;
     ResumeInternal();
   } else {
     ReportBlocked();
@@ -951,6 +949,8 @@ already_AddRefed<Promise> AudioContext::Resume(ErrorResult& aRv) {
 
 void AudioContext::ResumeInternal() {
   AUTOPLAY_LOG("Allow to resume AudioContext %p", this);
+  mWasAllowedToStart = true;
+
   Destination()->Resume();
 
   nsTArray<MediaStream*> streams;
@@ -968,6 +968,7 @@ void AudioContext::ResumeInternal() {
 
 void AudioContext::ReportBlocked() {
   ReportToConsole(nsIScriptError::warningFlag, "BlockAutoplayError");
+  mWasAllowedToStart = false;
 
   if (!StaticPrefs::MediaBlockEventEnabled()) {
     return;
