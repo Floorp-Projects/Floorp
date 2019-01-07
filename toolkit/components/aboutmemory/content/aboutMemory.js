@@ -1546,8 +1546,86 @@ const kFrac1Style = {
  *        Optional options object.
  * @return A human-readable string representing the int.
  */
-function formatNum(aN, aOptions) {
-  return aN.toLocaleString("en-US", aOptions);
+function formatNum(aN, aOptions = {}) {
+  // Unfortunately toLocaleString is slow, so we implement a restricted
+  // version of it that just handles the formatting options we need in the
+  // above kFooStyle options objects.  If toLocaleString becomes faster in the
+  // future, this code can be replaced with:
+  //
+  //   return aN.toLocaleString("en-US", aOptions);
+
+  if (Number.isNaN(aN)) {
+    return "NaN";
+  }
+
+  if (aN == Infinity) {
+    return "∞";
+  }
+
+  if (aN == -Infinity) {
+    return "-∞";
+  }
+
+  // Extract options and apply defaults.
+  let style = aOptions.style || "decimal";
+  let percent = style == "percent";
+  let minIntegerDigits = aOptions.minimumIntegerDigits || 1;
+  let minFractionDigits = aOptions.minimumFractionDigits || 0;
+  let maxFractionDigits = aOptions.maximumFractionDigits || (percent ? 1 : 3);
+  assert(style == "decimal" || style == "percent", "unsupported style value");
+
+  // Store the sign and work on the absolute number from here on.
+  let formattedNum = aN < 0 ? "-" : "";
+
+  // Delegate most of the number formatting work to toFixed and then work
+  // on the resulting string.
+  let fixedNum = Math.abs(aN * (percent ? 100 : 1)).toFixed(maxFractionDigits);
+
+  // Split the fixed precision number into its integer and fractional parts.
+  let decimalPointIndex = fixedNum.indexOf(".");
+  let integerPart;
+  let fractionalPart;
+  if (decimalPointIndex == -1) {
+    integerPart = fixedNum;
+    fractionalPart = "";
+  } else {
+    integerPart = fixedNum.substring(0, decimalPointIndex);
+    fractionalPart = fixedNum.substring(decimalPointIndex + 1);
+  }
+
+  // Apply minimum and maximum digit lengths.
+  integerPart = integerPart.padStart(minIntegerDigits, "0");
+  fractionalPart = fractionalPart.padEnd(minFractionDigits, "0");
+
+  let zeroIndex = fractionalPart.length;
+  while (zeroIndex > minFractionDigits &&
+         fractionalPart[zeroIndex - 1] == "0") {
+    --zeroIndex;
+  }
+  fractionalPart = fractionalPart.substring(0, zeroIndex);
+
+  // Insert grouping separators in the integer part.
+  let i = (integerPart.length % 3) || 3;
+  let groupedIntegerPart = integerPart.substring(0, i);
+  while (i < integerPart.length) {
+    groupedIntegerPart += ",";
+    groupedIntegerPart += integerPart.substring(i, i + 3);
+    i += 3;
+  }
+
+  // Construct the formatted number.
+  formattedNum += groupedIntegerPart;
+  if (fractionalPart != "") {
+    formattedNum += ".";
+    formattedNum += fractionalPart;
+  }
+
+  // Add suffix if needed.
+  if (percent) {
+    formattedNum += "%";
+  }
+
+  return formattedNum;
 }
 
 /**
