@@ -4206,8 +4206,7 @@ void LIRGenerator::visitHasClass(MHasClass* ins) {
 
 void LIRGenerator::visitGuardToClass(MGuardToClass* ins) {
   MOZ_ASSERT(ins->object()->type() == MIRType::Object);
-  MOZ_ASSERT(ins->type() == MIRType::ObjectOrNull ||
-             ins->type() == MIRType::Object);
+  MOZ_ASSERT(ins->type() == MIRType::Object);
   LGuardToClass* lir =
       new (alloc()) LGuardToClass(useRegister(ins->object()), temp());
   assignSnapshot(lir, Bailout_TypeBarrierO);
