@@ -392,7 +392,7 @@ class Settings extends PureComponent {
         onChange: this.props.changeInterval,
       }),
       Range({
-        label: "Max buffer size:",
+        label: "Buffer size:",
         value: this.props.entries,
         id: "perf-range-entries",
         scale: this._entriesExponentialScale,
