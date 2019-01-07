@@ -52,6 +52,7 @@
 #include "mozilla/Maybe.h"
 #include "SVGImageContext.h"
 #include "Units.h"
+#include "mozilla/layers/RenderRootStateManager.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
 
 #if defined(XP_WIN)
@@ -375,7 +376,7 @@ ImgDrawResult nsImageBoxFrame::CreateWebRenderCommands(
     mozilla::wr::DisplayListBuilder& aBuilder,
     mozilla::wr::IpcResourceUpdateQueue& aResources,
     const StackingContextHelper& aSc,
-    mozilla::layers::WebRenderLayerManager* aManager, nsDisplayItem* aItem,
+    mozilla::layers::RenderRootStateManager* aManager, nsDisplayItem* aItem,
     nsPoint aPt, uint32_t aFlags) {
   ImgDrawResult result;
   Maybe<nsPoint> anchorPoint;
@@ -403,8 +404,8 @@ ImgDrawResult nsImageBoxFrame::CreateWebRenderCommands(
           imgCon, aItem->Frame(), fillRect, aSc, containerFlags, svgContext);
 
   RefPtr<layers::ImageContainer> container;
-  result = imgCon->GetImageContainerAtSize(aManager, decodeSize, svgContext,
-                                           containerFlags,
+  result = imgCon->GetImageContainerAtSize(aManager->LayerManager(), decodeSize,
+                                           svgContext, containerFlags,
                                            getter_AddRefs(container));
   if (!container) {
     NS_WARNING("Failed to get image container");
@@ -494,7 +495,7 @@ bool nsDisplayXULImage::CreateWebRenderCommands(
     mozilla::wr::DisplayListBuilder& aBuilder,
     mozilla::wr::IpcResourceUpdateQueue& aResources,
     const StackingContextHelper& aSc,
-    mozilla::layers::WebRenderLayerManager* aManager,
+    mozilla::layers::RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) {
   nsImageBoxFrame* imageFrame = static_cast<nsImageBoxFrame*>(mFrame);
   if (!imageFrame->CanOptimizeToImageLayer()) {

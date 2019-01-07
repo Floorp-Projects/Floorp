@@ -11,7 +11,7 @@
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "SharedSurfaceGL.h"
 #include "WebRenderBridgeChild.h"
-#include "WebRenderLayerManager.h"
+#include "RenderRootStateManager.h"
 
 namespace mozilla {
 namespace layers {
@@ -31,7 +31,7 @@ void WebRenderCanvasRendererAsync::Initialize(
   WebRenderCanvasRenderer::Initialize(aData);
 
   if (mPipelineId.isSome()) {
-    mManager->WrBridge()->RemovePipelineIdForCompositable(mPipelineId.ref());
+    mManager->RemovePipelineIdForCompositable(mPipelineId.ref());
     mPipelineId.reset();
   }
 }
@@ -60,8 +60,8 @@ bool WebRenderCanvasRendererAsync::CreateCompositable() {
     // Alloc async image pipeline id.
     mPipelineId = Some(
         mManager->WrBridge()->GetCompositorBridgeChild()->GetNextPipelineId());
-    mManager->WrBridge()->AddPipelineIdForCompositable(
-        mPipelineId.ref(), mCanvasClient->GetIPCHandle());
+    mManager->AddPipelineIdForCompositable(mPipelineId.ref(),
+                                           mCanvasClient->GetIPCHandle());
   }
 
   return true;
@@ -69,14 +69,14 @@ bool WebRenderCanvasRendererAsync::CreateCompositable() {
 
 void WebRenderCanvasRendererAsync::ClearCachedResources() {
   if (mPipelineId.isSome()) {
-    mManager->WrBridge()->RemovePipelineIdForCompositable(mPipelineId.ref());
+    mManager->RemovePipelineIdForCompositable(mPipelineId.ref());
     mPipelineId.reset();
   }
 }
 
 void WebRenderCanvasRendererAsync::Destroy() {
   if (mPipelineId.isSome()) {
-    mManager->WrBridge()->RemovePipelineIdForCompositable(mPipelineId.ref());
+    mManager->RemovePipelineIdForCompositable(mPipelineId.ref());
     mPipelineId.reset();
   }
 }
@@ -90,7 +90,7 @@ void WebRenderCanvasRendererAsync::
     // OpUpdateAsyncImagePipeline message, but during empty transaction, the
     // message is not sent to WebRenderBridgeParent. Then
     // OpUpdatedAsyncImagePipeline is used to notify the update.
-    mManager->WrBridge()->AddWebRenderParentCommand(
+    mManager->AddWebRenderParentCommand(
         OpUpdatedAsyncImagePipeline(mPipelineId.ref()));
   }
 }

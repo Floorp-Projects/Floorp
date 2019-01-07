@@ -97,7 +97,7 @@ class nsImageBoxFrame final : public nsLeafBoxFrame {
       mozilla::wr::DisplayListBuilder& aBuilder,
       mozilla::wr::IpcResourceUpdateQueue& aResources,
       const mozilla::layers::StackingContextHelper& aSc,
-      mozilla::layers::WebRenderLayerManager* aManager, nsDisplayItem* aItem,
+      mozilla::layers::RenderRootStateManager* aManager, nsDisplayItem* aItem,
       nsPoint aPt, uint32_t aFlags);
 
   bool CanOptimizeToImageLayer();
@@ -170,7 +170,7 @@ class nsDisplayXULImage final : public nsDisplayImageContainer {
       mozilla::wr::DisplayListBuilder& aBuilder,
       mozilla::wr::IpcResourceUpdateQueue& aResources,
       const StackingContextHelper& aSc,
-      mozilla::layers::WebRenderLayerManager* aManager,
+      mozilla::layers::RenderRootStateManager* aManager,
       nsDisplayListBuilder* aDisplayListBuilder) override;
 
   NS_DISPLAY_DECL_NAME("XULImage", TYPE_XUL_IMAGE)

@@ -22,6 +22,7 @@
 #include "mozilla/dom/GeneratedImageContent.h"
 #include "mozilla/dom/HTMLImageElement.h"
 #include "mozilla/dom/ResponsiveImageSelector.h"
+#include "mozilla/layers/RenderRootStateManager.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Unused.h"
@@ -1321,7 +1322,7 @@ class nsDisplayAltFeedback final : public nsDisplayItem {
       mozilla::wr::DisplayListBuilder& aBuilder,
       mozilla::wr::IpcResourceUpdateQueue& aResources,
       const StackingContextHelper& aSc,
-      mozilla::layers::WebRenderLayerManager* aManager,
+      mozilla::layers::RenderRootStateManager* aManager,
       nsDisplayListBuilder* aDisplayListBuilder) override {
     uint32_t flags = imgIContainer::FLAG_ASYNC_NOTIFY;
     nsImageFrame* f = static_cast<nsImageFrame*>(mFrame);
@@ -1493,7 +1494,7 @@ ImgDrawResult nsImageFrame::DisplayAltFeedbackWithoutLayer(
     nsDisplayItem* aItem, mozilla::wr::DisplayListBuilder& aBuilder,
     mozilla::wr::IpcResourceUpdateQueue& aResources,
     const StackingContextHelper& aSc,
-    mozilla::layers::WebRenderLayerManager* aManager,
+    mozilla::layers::RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder, nsPoint aPt, uint32_t aFlags) {
   // We should definitely have a gIconLoad here.
   MOZ_ASSERT(gIconLoad, "How did we succeed in Init then?");
@@ -1625,7 +1626,7 @@ ImgDrawResult nsImageFrame::DisplayAltFeedbackWithoutLayer(
               imgCon, this, destRect, aSc, aFlags, svgContext);
       RefPtr<ImageContainer> container;
       result = imgCon->GetImageContainerAtSize(
-          aManager, decodeSize, svgContext, aFlags, getter_AddRefs(container));
+          aManager->LayerManager(), decodeSize, svgContext, aFlags, getter_AddRefs(container));
       if (container) {
         bool wrResult = aManager->CommandBuilder().PushImage(
             aItem, container, aBuilder, aResources, aSc, destRect, bounds);
@@ -1878,7 +1879,7 @@ already_AddRefed<Layer> nsDisplayImage::BuildLayer(
 bool nsDisplayImage::CreateWebRenderCommands(
     mozilla::wr::DisplayListBuilder& aBuilder,
     mozilla::wr::IpcResourceUpdateQueue& aResources,
-    const StackingContextHelper& aSc, WebRenderLayerManager* aManager,
+    const StackingContextHelper& aSc, RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) {
   if (!mImage) {
     return false;
@@ -1908,7 +1909,8 @@ bool nsDisplayImage::CreateWebRenderCommands(
 
   RefPtr<layers::ImageContainer> container;
   ImgDrawResult drawResult = mImage->GetImageContainerAtSize(
-      aManager, decodeSize, svgContext, flags, getter_AddRefs(container));
+      aManager->LayerManager(), decodeSize, svgContext, flags,
+      getter_AddRefs(container));
 
   // While we got a container, it may not contain a fully decoded surface. If
   // that is the case, and we have an image we were previously displaying which
@@ -1921,7 +1923,7 @@ bool nsDisplayImage::CreateWebRenderCommands(
       if (mPrevImage && mPrevImage != mImage) {
         RefPtr<ImageContainer> prevContainer;
         drawResult = mPrevImage->GetImageContainerAtSize(
-            aManager, decodeSize, svgContext, flags,
+            aManager->LayerManager(), decodeSize, svgContext, flags,
             getter_AddRefs(prevContainer));
         if (prevContainer && drawResult == ImgDrawResult::SUCCESS) {
           container = std::move(prevContainer);

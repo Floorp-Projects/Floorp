@@ -41,7 +41,7 @@ namespace layers {
 
 class CompositorManagerChild;
 class ImageContainer;
-class WebRenderLayerManager;
+class RenderRootStateManager;
 
 class SharedSurfacesChild final {
  public:
@@ -67,7 +67,7 @@ class SharedSurfacesChild final {
    * This must be called from the main thread.
    */
   static nsresult Share(gfx::SourceSurfaceSharedData* aSurface,
-                        WebRenderLayerManager* aManager,
+                        RenderRootStateManager* aManager,
                         wr::IpcResourceUpdateQueue& aResources,
                         wr::ImageKey& aKey);
 
@@ -79,7 +79,7 @@ class SharedSurfacesChild final {
    * NS_ERROR_NOT_IMPLEMENTED. This must be called from the main thread.
    */
   static nsresult Share(ImageContainer* aContainer,
-                        WebRenderLayerManager* aManager,
+                        RenderRootStateManager* aManager,
                         wr::IpcResourceUpdateQueue& aResources,
                         wr::ImageKey& aKey);
 
@@ -103,7 +103,7 @@ class SharedSurfacesChild final {
 
   class ImageKeyData {
    public:
-    ImageKeyData(WebRenderLayerManager* aManager,
+    ImageKeyData(RenderRootStateManager* aManager,
                  const wr::ImageKey& aImageKey);
     ~ImageKeyData();
 
@@ -116,7 +116,7 @@ class SharedSurfacesChild final {
 
     Maybe<gfx::IntRect> TakeDirtyRect() { return std::move(mDirtyRect); }
 
-    RefPtr<WebRenderLayerManager> mManager;
+    RefPtr<RenderRootStateManager> mManager;
     Maybe<gfx::IntRect> mDirtyRect;
     wr::ImageKey mImageKey;
   };
@@ -157,7 +157,7 @@ class SharedSurfacesChild final {
       mShared = true;
     }
 
-    wr::ImageKey UpdateKey(WebRenderLayerManager* aManager,
+    wr::ImageKey UpdateKey(RenderRootStateManager* aManager,
                            wr::IpcResourceUpdateQueue& aResources,
                            const Maybe<gfx::IntRect>& aDirtyRect);
 
@@ -180,7 +180,7 @@ class SharedSurfacesChild final {
 
 class AnimationImageKeyData final : public SharedSurfacesChild::ImageKeyData {
  public:
-  AnimationImageKeyData(WebRenderLayerManager* aManager,
+  AnimationImageKeyData(RenderRootStateManager* aManager,
                         const wr::ImageKey& aImageKey);
 
   ~AnimationImageKeyData();
@@ -229,7 +229,7 @@ class SharedSurfacesAnimation final {
    */
   nsresult UpdateKey(gfx::SourceSurface* aParentSurface,
                      gfx::SourceSurfaceSharedData* aSurface,
-                     WebRenderLayerManager* aManager,
+                     RenderRootStateManager* aManager,
                      wr::IpcResourceUpdateQueue& aResources,
                      wr::ImageKey& aKey);
 
@@ -237,14 +237,14 @@ class SharedSurfacesAnimation final {
    * Release our reference to all frames up to and including the frame which
    * has an external image ID which matches aId.
    */
-  void ReleasePreviousFrame(WebRenderLayerManager* aManager,
+  void ReleasePreviousFrame(RenderRootStateManager* aManager,
                             const wr::ExternalImageId& aId);
 
   /**
    * Destroy any state information bound for the given layer manager. Any
    * image keys are already invalid.
    */
-  void Invalidate(WebRenderLayerManager* aManager);
+  void Invalidate(RenderRootStateManager* aManager);
 
  private:
   ~SharedSurfacesAnimation();

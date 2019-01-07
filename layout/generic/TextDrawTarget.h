@@ -8,6 +8,7 @@
 #define TextDrawTarget_h
 
 #include "mozilla/gfx/2D.h"
+#include "mozilla/layers/RenderRootStateManager.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
 #include "mozilla/webrender/WebRenderAPI.h"
@@ -52,7 +53,7 @@ class TextDrawTarget : public DrawTarget {
   explicit TextDrawTarget(wr::DisplayListBuilder& aBuilder,
                           wr::IpcResourceUpdateQueue& aResources,
                           const layers::StackingContextHelper& aSc,
-                          layers::WebRenderLayerManager* aManager,
+                          layers::RenderRootStateManager* aManager,
                           nsDisplayItem* aItem, nsRect& aBounds,
                           bool aCallerDoesSaveRestore = false)
       : mCallerDoesSaveRestore(aCallerDoesSaveRestore), mBuilder(aBuilder) {
@@ -67,7 +68,7 @@ class TextDrawTarget : public DrawTarget {
 
   void Reinitialize(wr::IpcResourceUpdateQueue& aResources,
                     const layers::StackingContextHelper& aSc,
-                    layers::WebRenderLayerManager* aManager,
+                    layers::RenderRootStateManager* aManager,
                     nsDisplayItem* aItem, nsRect& aBounds) {
     mResources = &aResources;
     mSc = &aSc;
@@ -317,7 +318,9 @@ class TextDrawTarget : public DrawTarget {
   }
 
   layers::WebRenderBridgeChild* WrBridge() { return mManager->WrBridge(); }
-  layers::WebRenderLayerManager* WrLayerManager() { return mManager; }
+  layers::WebRenderLayerManager* WrLayerManager() {
+    return mManager->LayerManager();
+  }
 
   Maybe<wr::ImageKey> DefineImage(const IntSize& aSize, uint32_t aStride,
                                   SurfaceFormat aFormat, const uint8_t* aData) {
@@ -368,7 +371,7 @@ class TextDrawTarget : public DrawTarget {
   wr::DisplayListBuilder& mBuilder;
   wr::IpcResourceUpdateQueue* mResources;
   const layers::StackingContextHelper* mSc;
-  layers::WebRenderLayerManager* mManager;
+  layers::RenderRootStateManager* mManager;
 
   // Computed facts
   IntSize mSize;
