@@ -9,7 +9,7 @@ use style::properties::declaration_block::PropertyDeclarationBlock;
 use style::properties::parse_property_declaration_list;
 use style::values::RGBA;
 use style::values::specified::{BorderStyle, BorderSideWidth, Color};
-use style::values::specified::{Length, LengthOrPercentage, LengthOrPercentageOrAuto};
+use style::values::specified::{Length, LengthPercentage, LengthPercentageOrAuto};
 use style::values::specified::NoCalcLength;
 use style::values::specified::url::SpecifiedUrl;
 use style_traits::ToCss;
@@ -33,15 +33,15 @@ fn property_declaration_block_should_serialize_correctly() {
 
     let declarations = vec![
         (PropertyDeclaration::Width(
-            LengthOrPercentageOrAuto::Length(NoCalcLength::from_px(70f32))),
+            LengthPercentageOrAuto::Length(NoCalcLength::from_px(70f32))),
          Importance::Normal),
 
         (PropertyDeclaration::MinHeight(
-            LengthOrPercentage::Length(NoCalcLength::from_px(20f32))),
+            LengthPercentage::Length(NoCalcLength::from_px(20f32))),
          Importance::Normal),
 
         (PropertyDeclaration::Height(
-            LengthOrPercentageOrAuto::Length(NoCalcLength::from_px(20f32))),
+            LengthPercentageOrAuto::Length(NoCalcLength::from_px(20f32))),
          Importance::Important),
 
         (PropertyDeclaration::Display(Display::InlineBlock),
@@ -84,7 +84,7 @@ mod shorthand_serialization {
         fn all_equal_properties_should_serialize_to_one_value() {
             let mut properties = Vec::new();
 
-            let px_70 = LengthOrPercentageOrAuto::Length(NoCalcLength::from_px(70f32));
+            let px_70 = LengthPercentageOrAuto::Length(NoCalcLength::from_px(70f32));
             properties.push(PropertyDeclaration::MarginTop(px_70.clone()));
             properties.push(PropertyDeclaration::MarginRight(px_70.clone()));
             properties.push(PropertyDeclaration::MarginBottom(px_70.clone()));
@@ -98,8 +98,8 @@ mod shorthand_serialization {
         fn equal_vertical_and_equal_horizontal_properties_should_serialize_to_two_value() {
             let mut properties = Vec::new();
 
-            let vertical_px = LengthOrPercentageOrAuto::Length(NoCalcLength::from_px(10f32));
-            let horizontal_px = LengthOrPercentageOrAuto::Length(NoCalcLength::from_px(5f32));
+            let vertical_px = LengthPercentageOrAuto::Length(NoCalcLength::from_px(10f32));
+            let horizontal_px = LengthPercentageOrAuto::Length(NoCalcLength::from_px(5f32));
 
             properties.push(PropertyDeclaration::MarginTop(vertical_px.clone()));
             properties.push(PropertyDeclaration::MarginRight(horizontal_px.clone()));
@@ -114,9 +114,9 @@ mod shorthand_serialization {
         fn different_vertical_and_equal_horizontal_properties_should_serialize_to_three_values() {
             let mut properties = Vec::new();
 
-            let top_px = LengthOrPercentageOrAuto::Length(NoCalcLength::from_px(8f32));
-            let bottom_px = LengthOrPercentageOrAuto::Length(NoCalcLength::from_px(10f32));
-            let horizontal_px = LengthOrPercentageOrAuto::Length(NoCalcLength::from_px(5f32));
+            let top_px = LengthPercentageOrAuto::Length(NoCalcLength::from_px(8f32));
+            let bottom_px = LengthPercentageOrAuto::Length(NoCalcLength::from_px(10f32));
+            let horizontal_px = LengthPercentageOrAuto::Length(NoCalcLength::from_px(5f32));
 
             properties.push(PropertyDeclaration::MarginTop(top_px));
             properties.push(PropertyDeclaration::MarginRight(horizontal_px.clone()));
@@ -131,10 +131,10 @@ mod shorthand_serialization {
         fn different_properties_should_serialize_to_four_values() {
             let mut properties = Vec::new();
 
-            let top_px = LengthOrPercentageOrAuto::Length(NoCalcLength::from_px(8f32));
-            let right_px = LengthOrPercentageOrAuto::Length(NoCalcLength::from_px(12f32));
-            let bottom_px = LengthOrPercentageOrAuto::Length(NoCalcLength::from_px(10f32));
-            let left_px = LengthOrPercentageOrAuto::Length(NoCalcLength::from_px(14f32));
+            let top_px = LengthPercentageOrAuto::Length(NoCalcLength::from_px(8f32));
+            let right_px = LengthPercentageOrAuto::Length(NoCalcLength::from_px(12f32));
+            let bottom_px = LengthPercentageOrAuto::Length(NoCalcLength::from_px(10f32));
+            let left_px = LengthPercentageOrAuto::Length(NoCalcLength::from_px(14f32));
 
             properties.push(PropertyDeclaration::MarginTop(top_px));
             properties.push(PropertyDeclaration::MarginRight(right_px));
@@ -207,12 +207,12 @@ mod shorthand_serialization {
 
         #[test]
         fn padding_should_serialize_correctly() {
-            use style::values::specified::NonNegativeLengthOrPercentage;
+            use style::values::specified::NonNegativeLengthPercentage;
 
             let mut properties = Vec::new();
 
-            let px_10: NonNegativeLengthOrPercentage = NoCalcLength::from_px(10f32).into();
-            let px_15: NonNegativeLengthOrPercentage = NoCalcLength::from_px(15f32).into();
+            let px_10: NonNegativeLengthPercentage = NoCalcLength::from_px(10f32).into();
+            let px_15: NonNegativeLengthPercentage = NoCalcLength::from_px(15f32).into();
             properties.push(PropertyDeclaration::PaddingTop(px_10.clone()));
             properties.push(PropertyDeclaration::PaddingRight(px_15.clone()));
             properties.push(PropertyDeclaration::PaddingBottom(px_10));

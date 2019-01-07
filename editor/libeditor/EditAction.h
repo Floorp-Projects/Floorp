@@ -6,6 +6,9 @@
 #ifndef mozilla_EditAction_h
 #define mozilla_EditAction_h
 
+#include "mozilla/EventForwards.h"
+#include "mozilla/StaticPrefs.h"
+
 namespace mozilla {
 
 /**
@@ -63,6 +66,10 @@ enum class EditAction {
   // next visual line break.
   // This may be set even when Selection is not collapsed.
   eDeleteToEndOfSoftLine,
+
+  // eDeleteByDrag indicates to remove selection by dragging the content
+  // to different place.
+  eDeleteByDrag,
 
   // eStartComposition indicates that user starts composition.
   eStartComposition,
@@ -462,6 +469,124 @@ enum class EditSubAction : int32_t {
   // eCreateBogusNode indicates to create a bogus <br> node.
   eCreateBogusNode,
 };
+
+inline EditorInputType ToInputType(EditAction aEditAction) {
+  switch (aEditAction) {
+    case EditAction::eInsertText:
+      return EditorInputType::eInsertText;
+    case EditAction::eReplaceText:
+      return EditorInputType::eInsertReplacementText;
+    case EditAction::eInsertLineBreak:
+      return EditorInputType::eInsertLineBreak;
+    case EditAction::eInsertParagraphSeparator:
+      return EditorInputType::eInsertParagraph;
+    case EditAction::eInsertOrderedListElement:
+    case EditAction::eRemoveOrderedListElement:
+      return EditorInputType::eInsertOrderedList;
+    case EditAction::eInsertUnorderedListElement:
+    case EditAction::eRemoveUnorderedListElement:
+      return EditorInputType::eInsertUnorderedList;
+    case EditAction::eInsertHorizontalRuleElement:
+      return EditorInputType::eInsertHorizontalRule;
+    case EditAction::eDrop:
+      return EditorInputType::eInsertFromDrop;
+    case EditAction::ePaste:
+      return EditorInputType::eInsertFromPaste;
+    case EditAction::eUpdateComposition:
+      return EditorInputType::eInsertCompositionText;
+    case EditAction::eCommitComposition:
+      if (StaticPrefs::dom_input_events_conform_to_level_1()) {
+        return EditorInputType::eInsertCompositionText;
+      }
+      return EditorInputType::eInsertFromComposition;
+    case EditAction::eCancelComposition:
+      if (StaticPrefs::dom_input_events_conform_to_level_1()) {
+        return EditorInputType::eInsertCompositionText;
+      }
+      return EditorInputType::eDeleteCompositionText;
+    case EditAction::eDeleteByComposition:
+      if (StaticPrefs::dom_input_events_conform_to_level_1()) {
+        // XXX Or EditorInputType::eDeleteContent?  I don't know which IME may
+        //     causes this situation.
+        return EditorInputType::eInsertCompositionText;
+      }
+      return EditorInputType::eDeleteByComposition;
+    case EditAction::eInsertLinkElement:
+      return EditorInputType::eInsertLink;
+    case EditAction::eDeleteWordBackward:
+      return EditorInputType::eDeleteWordBackward;
+    case EditAction::eDeleteWordForward:
+      return EditorInputType::eDeleteWordForward;
+    case EditAction::eDeleteToBeginningOfSoftLine:
+      return EditorInputType::eDeleteSoftLineBackward;
+    case EditAction::eDeleteToEndOfSoftLine:
+      return EditorInputType::eDeleteSoftLineForward;
+    case EditAction::eDeleteByDrag:
+      return EditorInputType::eDeleteByDrag;
+    case EditAction::eCut:
+      return EditorInputType::eDeleteByCut;
+    case EditAction::eDeleteSelection:
+    case EditAction::eRemoveTableRowElement:
+    case EditAction::eRemoveTableColumn:
+    case EditAction::eRemoveTableElement:
+    case EditAction::eDeleteTableCellContents:
+    case EditAction::eRemoveTableCellElement:
+      return EditorInputType::eDeleteContent;
+    case EditAction::eDeleteBackward:
+      return EditorInputType::eDeleteContentBackward;
+    case EditAction::eDeleteForward:
+      return EditorInputType::eDeleteContentForward;
+    case EditAction::eUndo:
+      return EditorInputType::eHistoryUndo;
+    case EditAction::eRedo:
+      return EditorInputType::eHistoryRedo;
+    case EditAction::eSetFontWeightProperty:
+    case EditAction::eRemoveFontWeightProperty:
+      return EditorInputType::eFormatBold;
+    case EditAction::eSetTextStyleProperty:
+    case EditAction::eRemoveTextStyleProperty:
+      return EditorInputType::eFormatItalic;
+    case EditAction::eSetTextDecorationPropertyUnderline:
+    case EditAction::eRemoveTextDecorationPropertyUnderline:
+      return EditorInputType::eFormatUnderline;
+    case EditAction::eSetTextDecorationPropertyLineThrough:
+    case EditAction::eRemoveTextDecorationPropertyLineThrough:
+      return EditorInputType::eFormatStrikeThrough;
+    case EditAction::eSetVerticalAlignPropertySuper:
+    case EditAction::eRemoveVerticalAlignPropertySuper:
+      return EditorInputType::eFormatSuperscript;
+    case EditAction::eSetVerticalAlignPropertySub:
+    case EditAction::eRemoveVerticalAlignPropertySub:
+      return EditorInputType::eFormatSubscript;
+    case EditAction::eJustify:
+      return EditorInputType::eFormatJustifyFull;
+    case EditAction::eAlignCenter:
+      return EditorInputType::eFormatJustifyCenter;
+    case EditAction::eAlignRight:
+      return EditorInputType::eFormatJustifyRight;
+    case EditAction::eAlignLeft:
+      return EditorInputType::eFormatJustifyLeft;
+    case EditAction::eIndent:
+      return EditorInputType::eFormatIndent;
+    case EditAction::eOutdent:
+      return EditorInputType::eFormatOutdent;
+    case EditAction::eRemoveAllInlineStyleProperties:
+      return EditorInputType::eFormatRemove;
+    case EditAction::eSetTextDirection:
+      return EditorInputType::eFormatSetBlockTextDirection;
+    case EditAction::eSetBackgroundColorPropertyInline:
+    case EditAction::eRemoveBackgroundColorPropertyInline:
+      return EditorInputType::eFormatBackColor;
+    case EditAction::eSetColorProperty:
+    case EditAction::eRemoveColorProperty:
+      return EditorInputType::eFormatFontColor;
+    case EditAction::eSetFontFamilyProperty:
+    case EditAction::eRemoveFontFamilyProperty:
+      return EditorInputType::eFormatFontName;
+    default:
+      return EditorInputType::eUnknown;
+  }
+}
 
 }  // namespace mozilla
 

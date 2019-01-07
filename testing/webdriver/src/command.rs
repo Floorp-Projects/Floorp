@@ -504,9 +504,38 @@ pub struct TimeoutsParameters {
     )]
     pub page_load: Option<u64>,
     #[serde(
-        default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_to_u64"
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "deserialize_to_nullable_u64"
     )]
-    pub script: Option<u64>,
+    pub script: Option<Option<u64>>,
+}
+
+fn deserialize_to_nullable_u64<'de, D>(deserializer: D) -> Result<Option<Option<u64>>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let opt = Option::deserialize(deserializer)?.map(|value: f64| value);
+    let value = match opt {
+        Some(n) => {
+            if n < 0.0 || n.fract() != 0.0 {
+                return Err(de::Error::custom(format!(
+                    "{} is not a positive Integer",
+                    n
+                )));
+            }
+            if (n as u64) > MAX_SAFE_INTEGER {
+                return Err(de::Error::custom(format!(
+                    "{} is greater than maximum safe integer",
+                    n
+                )));
+            }
+            Some(Some(n as u64))
+        }
+        None => Some(None),
+    };
+
+    Ok(value)
 }
 
 fn deserialize_to_u64<'de, D>(deserializer: D) -> Result<Option<u64>, D::Error>
@@ -1027,7 +1056,7 @@ mod tests {
         let data = TimeoutsParameters {
             implicit: Some(0u64),
             page_load: Some(2u64),
-            script: Some(9007199254740991u64),
+            script: Some(Some(9007199254740991u64)),
         };
 
         check_deserialize(&json, &data);

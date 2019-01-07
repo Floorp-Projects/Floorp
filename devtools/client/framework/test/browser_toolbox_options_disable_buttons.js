@@ -21,6 +21,7 @@ function test() {
       .then(testSelectTool)
       .then(testToggleToolboxButtons)
       .then(testPrefsAreRespectedWhenReopeningToolbox)
+      .then(testButtonStateOnClick)
       .then(cleanup, errorHandler);
   });
 }
@@ -79,6 +80,26 @@ function testPreferenceAndUIStateIsConsistent() {
   }
 }
 
+async function testButtonStateOnClick() {
+  const toolboxButtons = ["#command-button-rulers", "#command-button-measure"];
+  for (const toolboxButton of toolboxButtons) {
+    const button = doc.querySelector(toolboxButton);
+    if (button) {
+      const isChecked = waitUntil(() => button.classList.contains("checked"));
+
+      button.click();
+      await isChecked;
+      ok(button.classList.contains("checked"),
+        `Button for ${toolboxButton} can be toggled on`);
+
+      const isUnchecked = waitUntil(() => !button.classList.contains("checked"));
+      button.click();
+      await isUnchecked;
+      ok(!button.classList.contains("checked"),
+        `Button for ${toolboxButton} can be toggled off`);
+    }
+  }
+}
 function testToggleToolboxButtons() {
   const checkNodes = [...panelWin.document.querySelectorAll(
     "#enabled-toolbox-buttons-box input[type=checkbox]")];

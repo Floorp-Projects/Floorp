@@ -1696,4 +1696,54 @@ WidgetKeyboardEvent::ComputeCodeNameIndexFromKeyNameIndex(
   }
 }
 
+/******************************************************************************
+ * mozilla::InternalEditorInputEvent (TextEvents.h)
+ ******************************************************************************/
+
+#define NS_DEFINE_INPUTTYPE(aCPPName, aDOMName) (u"" aDOMName),
+const char16_t* const InternalEditorInputEvent::kInputTypeNames[] = {
+#include "mozilla/InputTypeList.h"
+};
+#undef NS_DEFINE_INPUTTYPE
+
+InternalEditorInputEvent::InputTypeHashtable*
+    InternalEditorInputEvent::sInputTypeHashtable = nullptr;
+
+/* static */ void InternalEditorInputEvent::Shutdown() {
+  delete sInputTypeHashtable;
+  sInputTypeHashtable = nullptr;
+}
+
+/* static */ void InternalEditorInputEvent::GetDOMInputTypeName(
+    EditorInputType aInputType, nsAString& aInputTypeName) {
+  if (static_cast<size_t>(aInputType) >=
+      static_cast<size_t>(EditorInputType::eUnknown)) {
+    aInputTypeName.Truncate();
+    return;
+  }
+
+  MOZ_RELEASE_ASSERT(
+      static_cast<size_t>(aInputType) < ArrayLength(kInputTypeNames),
+      "Illegal input type enumeration value");
+  aInputTypeName.Assign(kInputTypeNames[static_cast<size_t>(aInputType)]);
+}
+
+/* static */ EditorInputType InternalEditorInputEvent::GetEditorInputType(
+    const nsAString& aInputType) {
+  if (aInputType.IsEmpty()) {
+    return EditorInputType::eUnknown;
+  }
+
+  if (!sInputTypeHashtable) {
+    sInputTypeHashtable = new InputTypeHashtable(ArrayLength(kInputTypeNames));
+    for (size_t i = 0; i < ArrayLength(kInputTypeNames); i++) {
+      sInputTypeHashtable->Put(nsDependentString(kInputTypeNames[i]),
+                               static_cast<EditorInputType>(i));
+    }
+  }
+  EditorInputType result = EditorInputType::eUnknown;
+  sInputTypeHashtable->Get(aInputType, &result);
+  return result;
+}
+
 }  // namespace mozilla

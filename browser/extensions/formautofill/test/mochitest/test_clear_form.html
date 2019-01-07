@@ -74,6 +74,8 @@ async function confirmClear(selector) {
          '"input" event should be never cancelable');
       is(event.bubbles, true,
          '"input" event should always bubble');
+      is(event.inputType, "insertReplacementText",
+         'inputType value should be "insertReplacementText"');
       resolve();
     }, {once: true})
   );

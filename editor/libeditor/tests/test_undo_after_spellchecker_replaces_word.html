@@ -21,13 +21,15 @@ SimpleTest.waitForFocus(() => {
 
   textarea.focus();
 
-  function checkInputEvent(aEvent, aDescription) {
+  function checkInputEvent(aEvent, aInputType, aDescription) {
     ok(aEvent instanceof InputEvent,
        `"input" event should be dispatched with InputEvent interface ${aDescription}`);
     is(aEvent.cancelable, false,
        `"input" event should be never cancelable ${aDescription}`);
     is(aEvent.bubbles, true,
        `"input" event should always bubble ${aDescription}`);
+    is(aEvent.inputType, aInputType,
+       `inputType should be "${aInputType}" ${aDescription}`);
   }
 
   let inputEvents = [];
@@ -52,7 +54,7 @@ SimpleTest.waitForFocus(() => {
          "'abx' should be replaced with 'aux'");
       is(inputEvents.length, 1,
          'Only one "input" event should be fired when replacing a word with spellchecker');
-      checkInputEvent(inputEvents[0], "when replacing a word with spellchecker");
+      checkInputEvent(inputEvents[0], "insertReplacementText", "when replacing a word with spellchecker");
 
       inputEvents = [];
       synthesizeKey("z", { accelKey: true });
@@ -60,7 +62,7 @@ SimpleTest.waitForFocus(() => {
          "'abx' should be restored by undo");
       is(inputEvents.length, 1,
          'Only one "input" event should be fired when undoing the replacing word');
-      checkInputEvent(inputEvents[0], "when undoing the replacing word");
+      checkInputEvent(inputEvents[0], "historyUndo", "when undoing the replacing word");
 
       inputEvents = [];
       synthesizeKey("z", { accelKey: true, shiftKey: true });
@@ -68,7 +70,7 @@ SimpleTest.waitForFocus(() => {
          "'aux' should be restored by redo");
       is(inputEvents.length, 1,
          'Only one "input" event should be fired when redoing the replacing word');
-      checkInputEvent(inputEvents[0], "when redoing the replacing word");
+      checkInputEvent(inputEvents[0], "historyRedo", "when redoing the replacing word");
 
       textarea.removeEventListener("input", onInput);
 

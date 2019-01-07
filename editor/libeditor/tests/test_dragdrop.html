@@ -29,6 +29,7 @@ function checkInputEvent(aEvent, aExpectedTarget, aDescription) {
   is(aEvent.cancelable, false, `"input" event should be never cancelable ${aDescription}`);
   is(aEvent.bubbles, true, `"input" event should always bubble ${aDescription}`);
   is(aEvent.target, aExpectedTarget, `"input" event should be fired on the <${aExpectedTarget.tagName.toLowerCase()}> element ${aDescription}`);
+  is(aEvent.inputType, "insertFromDrop", `inputType should be "insertFromDrop" on the <${aExpectedTarget.tagName.toLowerCase()}> element ${aDescription}`);
 }
 
 function doTest() {

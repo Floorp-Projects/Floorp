@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for pre-order content iterator</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<script>
+var Cc = SpecialPowers.Cc;
+var Ci = SpecialPowers.Ci;
+function finish() {
+  // The SimpleTest may require usual elements in the template, but they shouldn't be during test.
+  // So, let's create them at end of the test.
+  document.body.innerHTML = '<div id="display"></div><div id="content"></div><pre id="test"></pre>';
+  SimpleTest.finish();
+}
+
+function createContentIterator() {
+  return Cc["@mozilla.org/scriptable-content-iterator;1"]
+      .createInstance(Ci.nsIScriptableContentIterator);
+}
+
+function getNodeDescription(aNode) {
+  if (aNode === undefined) {
+    return "undefine";
+  }
+  if (aNode === null) {
+    return "null";
+  }
+  function getElementDescription(aElement) {
+    if (aElement.tagName === "BR") {
+      if (aElement.previousSibling) {
+        return `<br> element after ${getNodeDescription(aElement.previousSibling)}`;
+      }
+      return `<br> element in ${getElementDescription(aElement.parentElement)}`;
+    }
+    let hasHint = aElement == document.body;
+    let tag = `<${aElement.tagName.toLowerCase()}`;
+    if (aElement.getAttribute("id")) {
+      tag += ` id="${aElement.getAttribute("id")}"`;
+      hasHint = true;
+    }
+    if (aElement.getAttribute("class")) {
+      tag += ` class="${aElement.getAttribute("class")}"`;
+      hasHint = true;
+    }
+    if (aElement.getAttribute("type")) {
+      tag += ` type="${aElement.getAttribute("type")}"`;
+    }
+    if (aElement.getAttribute("name")) {
+      tag += ` name="${aElement.getAttribute("name")}"`;
+    }
+    if (aElement.getAttribute("value")) {
+      tag += ` value="${aElement.getAttribute("value")}"`;
+      hasHint = true;
+    }
+    if (aElement.getAttribute("style")) {
+      tag += ` style="${aElement.getAttribute("style")}"`;
+      hasHint = true;
+    }
+    if (hasHint) {
+      return tag + ">";
+    }
+    return `${tag}> in ${getElementDescription(aElement.parentElement)}`;
+  }
+  switch (aNode.nodeType) {
+    case aNode.TEXT_NODE:
+      return `text node, "${aNode.wholeText.replace(/\n/g, '\\n')}"`;
+    case aNode.COMMENT_NODE:
+      return `comment node, "${aNode.data.replace(/\n/g, '\\n')}"`;
+    case aNode.ELEMENT_NODE:
+      return getElementDescription(SpecialPowers.unwrap(aNode));
+    default:
+      return "unknown node";
+  }
+}
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function () {
+  let iter = createContentIterator();
+
+  /**
+   * Basic behavior tests of first(), last(), prev() and next() after initialized with an empty element.
+   */
+  document.body.innerHTML = "<div></div>";
+  let description = "Initialized with empty <div> as root node:";
+  iter.initWithRootNode(Ci.nsIScriptableContentIterator.PRE_ORDER_ITERATOR, document.body.firstChild);
+  is(SpecialPowers.unwrap(iter.currentNode), document.body.firstChild,
+    `${description} currentNode should be the <div> immediately after initialization (got: ${getNodeDescription(iter.currentNode)})`);
+  ok(!iter.isDone, `${description} isDone shouldn't be true immediately after initialization`);
+
+  iter.first();
+  is(SpecialPowers.unwrap(iter.currentNode), document.body.firstChild,
+    `${description} currentNode should be the <div> after calling first() (got: ${getNodeDescription(iter.currentNode)})`);
+  ok(!iter.isDone, `${description} isDone shouldn't be true after calling first()`);
+
+  iter.last();
+  is(SpecialPowers.unwrap(iter.currentNode), document.body.firstChild,
+    `${description} currentNode should be the <div> after calling last() (got: ${getNodeDescription(iter.currentNode)})`);
+  ok(!iter.isDone, `${description} isDone shouldn't be true after calling last()`);
+
+  iter.prev();
+  is(SpecialPowers.unwrap(iter.currentNode), null,
+    `${description} currentNode should be null after calling prev() (got: ${getNodeDescription(iter.currentNode)})`);
+  ok(iter.isDone, `${description} isDone should be true after calling prev()`); // XXX Is this expected?
+
+  iter.first();
+  is(SpecialPowers.unwrap(iter.currentNode), document.body.firstChild,
+    `${description} currentNode should be the <div> after calling first() even after once done (got: ${getNodeDescription(iter.currentNode)})`);
+  ok(!iter.isDone, `${description} isDone shouldn't be true after calling first() even after once done`);
+
+  iter.next();
+  is(SpecialPowers.unwrap(iter.currentNode), null,
+    `${description} currentNode should be null after calling next() (got: ${getNodeDescription(iter.currentNode)})`);
+  ok(iter.isDone, `${description} isDone should be true after calling next()`);
+
+  /**
+   * Basic behavior tests of first(), last(), prev() and next() after initialized with a range which selects empty element.
+   */
+  let range = document.createRange();
+  range.selectNode(document.body.firstChild);
+  description = "Initialized with range including only empty <div>:";
+  iter.initWithRange(Ci.nsIScriptableContentIterator.PRE_ORDER_ITERATOR, range);
+  is(SpecialPowers.unwrap(iter.currentNode), document.body.firstChild,
+    `${description} currentNode should be the <div> immediately after initialization (got: ${getNodeDescription(iter.currentNode)})`);
+  ok(!iter.isDone, `${description} isDone shouldn't be true immediately after initialization`);
+
+  iter.first();
+  is(SpecialPowers.unwrap(iter.currentNode), document.body.firstChild,
+    `${description} currentNode should be the <div> after calling first() (got: ${getNodeDescription(iter.currentNode)})`);
+  ok(!iter.isDone, `${description} isDone shouldn't be true after calling first()`);
+
+  iter.last();
+  is(SpecialPowers.unwrap(iter.currentNode), document.body.firstChild,
+    `${description} currentNode should be the <div> after calling last() (got: ${getNodeDescription(iter.currentNode)})`);
+  ok(!iter.isDone, `${description} isDone shouldn't be true after calling last()`);
+
+  iter.prev();
+  is(SpecialPowers.unwrap(iter.currentNode), null,
+    `${description} currentNode should be null after calling prev() (got: ${getNodeDescription(iter.currentNode)})`);
+  ok(iter.isDone, `${description} isDone should be true after calling prev()`); // XXX Is this expected?
+
+  iter.first();
+  is(SpecialPowers.unwrap(iter.currentNode), document.body.firstChild,
+    `${description} currentNode should be the <div> after calling first() even after once done (got: ${getNodeDescription(iter.currentNode)})`);
+  ok(!iter.isDone, `${description} isDone shouldn't be true after calling first() even after once done`);
+
+  iter.next();
+  is(SpecialPowers.unwrap(iter.currentNode), null,
+    `${description} currentNode should be null after calling next() (got: ${getNodeDescription(iter.currentNode)})`);
+  ok(iter.isDone, `${description} isDone should be true after calling next()`);
+
+  /**
+   * Basic behavior tests of first(), last(), prev() and next() after initialized with positions which select empty element.
+   */
+  range.selectNode(document.body.firstChild);
+  description = "Initialized with positions including only empty <div>:";
+  iter.initWithPositions(Ci.nsIScriptableContentIterator.PRE_ORDER_ITERATOR,
+                         range.startContainer, range.startOffset,
+                         range.endContainer, range.endOffset);
+  is(SpecialPowers.unwrap(iter.currentNode), document.body.firstChild,
+    `${description} currentNode should be the <div> immediately after initialization (got: ${getNodeDescription(iter.currentNode)})`);
+  ok(!iter.isDone, `${description} isDone shouldn't be true immediately after initialization`);
+
+  iter.first();
+  is(SpecialPowers.unwrap(iter.currentNode), document.body.firstChild,
+    `${description} currentNode should be the <div> after calling first() (got: ${getNodeDescription(iter.currentNode)})`);
+  ok(!iter.isDone, `${description} isDone shouldn't be true after calling first()`);
+
+  iter.last();
+  is(SpecialPowers.unwrap(iter.currentNode), document.body.firstChild,
+    `${description} currentNode should be the <div> after calling last() (got: ${getNodeDescription(iter.currentNode)})`);
+  ok(!iter.isDone, `${description} isDone shouldn't be true after calling last()`);
+
+  iter.prev();
+  is(SpecialPowers.unwrap(iter.currentNode), null,
+    `${description} currentNode should be null after calling prev() (got: ${getNodeDescription(iter.currentNode)})`);
+  ok(iter.isDone, `${description} isDone should be true after calling prev()`); // XXX Is this expected?
+
+  iter.first();
+  is(SpecialPowers.unwrap(iter.currentNode), document.body.firstChild,
+    `${description} currentNode should be the <div> after calling first() even after once done (got: ${getNodeDescription(iter.currentNode)})`);
+  ok(!iter.isDone, `${description} isDone shouldn't be true after calling first() even after once done`);
+
+  iter.next();
+  is(SpecialPowers.unwrap(iter.currentNode), null,
+    `${description} currentNode should be null after calling next() (got: ${getNodeDescription(iter.currentNode)})`);
+  ok(iter.isDone, `${description} isDone should be true after calling next()`);
+
+  /**
+   * Tests to initializing with collapsed range in an empty element.
+   */
+  range = document.createRange();
+  range.collapse(document.body.firstChild, 0);
+  description = "Initialized with range collapsed in empty <div>:";
+  iter.initWithRange(Ci.nsIScriptableContentIterator.PRE_ORDER_ITERATOR, range);
+  is(SpecialPowers.unwrap(iter.currentNode), null,
+    `${description} currentNode should be null immediately after initialization (got: ${getNodeDescription(iter.currentNode)})`);
+  ok(iter.isDone, `${description} isDone should be true immediately after initialization`);
+
+  iter.first();
+  is(SpecialPowers.unwrap(iter.currentNode), null,
+    `${description} currentNode should be null even after calling first() (got: ${getNodeDescription(iter.currentNode)})`);
+  ok(iter.isDone, `${description} isDone should be true even after calling first()`);
+
+  /**
+   * Tests to initializing with collapsed range in an empty element.
+   */
+  description = "Initialized with a position in empty <div>:";
+  iter.initWithPositions(Ci.nsIScriptableContentIterator.PRE_ORDER_ITERATOR,
+                         document.body.firstChild, 0, document.body.firstChild, 0);
+  is(SpecialPowers.unwrap(iter.currentNode), null,
+    `${description} currentNode should be null immediately after initialization (got: ${getNodeDescription(iter.currentNode)})`);
+  ok(iter.isDone, `${description} isDone should be true immediately after initialization`);
+
+  iter.first();
+  is(SpecialPowers.unwrap(iter.currentNode), null,
+    `${description} currentNode should be null even after calling first() (got: ${getNodeDescription(iter.currentNode)})`);
+  ok(iter.isDone, `${description} isDone should be true even after calling first()`);
+
+  /**
+   * Basic behavior tests of first(), last(), prev() and next() after initialized with the text element.
+   */
+  document.body.innerHTML = "<div>some text.</div>";
+  description = "Initialized with a text node as root node:";
+  iter.initWithRootNode(Ci.nsIScriptableContentIterator.PRE_ORDER_ITERATOR, document.body.firstChild.firstChild);
+  is(SpecialPowers.unwrap(iter.currentNode), document.body.firstChild.firstChild,
+    `${description} currentNode should be the text node immediately after initialization (got: ${getNodeDescription(iter.currentNode)})`);
+  ok(!iter.isDone, `${description} isDone shouldn't be true immediately after initialization`);
+
+  iter.first();
+  is(SpecialPowers.unwrap(iter.currentNode), document.body.firstChild.firstChild,
+    `${description} currentNode should be the text node after calling first() (got: ${getNodeDescription(iter.currentNode)})`);
+  ok(!iter.isDone, `${description} isDone shouldn't be the text node after calling first()`);
+
+  iter.last();
+  is(SpecialPowers.unwrap(iter.currentNode), document.body.firstChild.firstChild,
+    `${description} currentNode should be the text node after calling last() (got: ${getNodeDescription(iter.currentNode)})`);
+  ok(!iter.isDone, `${description} isDone shouldn't be true after calling last()`);
+
+  iter.prev();
+  is(SpecialPowers.unwrap(iter.currentNode), null,
+    `${description} currentNode should be null after calling prev() (got: ${getNodeDescription(iter.currentNode)})`);
+  ok(iter.isDone, `${description} isDone should be true after calling prev()`); // XXX Is this expected?
+
+  iter.first();
+  is(SpecialPowers.unwrap(iter.currentNode), document.body.firstChild.firstChild,
+    `${description} currentNode should be the text node after calling first() even after once done (got: ${getNodeDescription(iter.currentNode)})`);
+  ok(!iter.isDone, `${description} isDone shouldn't be true after calling first() even after once done`);
+
+  iter.next();
+  is(SpecialPowers.unwrap(iter.currentNode), null,
+    `${description} currentNode should be null after calling next() (got: ${getNodeDescription(iter.currentNode)})`);
+  ok(iter.isDone, `${description} isDone should be true after calling next()`);
+
+  /**
+   * Basic behavior tests of first(), last(), prev() and next() after initialized with a range which selects the text node.
+   */
+  range = document.createRange();
+  range.selectNode(document.body.firstChild.firstChild);
+  description = "Initialized with range including only text node:";
+  iter.initWithRange(Ci.nsIScriptableContentIterator.PRE_ORDER_ITERATOR, range);
+  is(SpecialPowers.unwrap(iter.currentNode), document.body.firstChild.firstChild,
+    `${description} currentNode should be the text node immediately after initialization (got: ${getNodeDescription(iter.currentNode)})`);
+  ok(!iter.isDone, `${description} isDone shouldn't be true immediately after initialization`);
+
+  iter.first();
+  is(SpecialPowers.unwrap(iter.currentNode), document.body.firstChild.firstChild,
+    `${description} currentNode should be the text node after calling first() (got: ${getNodeDescription(iter.currentNode)})`);
+  ok(!iter.isDone, `${description} isDone shouldn't be true after calling first()`);
+
+  iter.last();
+  is(SpecialPowers.unwrap(iter.currentNode), document.body.firstChild.firstChild,
+    `${description} currentNode should be the text node after calling last() (got: ${getNodeDescription(iter.currentNode)})`);
+  ok(!iter.isDone, `${description} isDone shouldn't be true after calling last()`);
+
+  iter.prev();
+  is(SpecialPowers.unwrap(iter.currentNode), null,
+    `${description} currentNode should be null after calling prev() (got: ${getNodeDescription(iter.currentNode)})`);
+  ok(iter.isDone, `${description} isDone should be true after calling prev()`); // XXX Is this expected?
+
+  iter.first();
+  is(SpecialPowers.unwrap(iter.currentNode), document.body.firstChild.firstChild,
+    `${description} currentNode should be the text node after calling first() even after once done (got: ${getNodeDescription(iter.currentNode)})`);
+  ok(!iter.isDone, `${description} isDone shouldn't be true after calling first() even after once done`);
+
+  iter.next();
+  is(SpecialPowers.unwrap(iter.currentNode), null,
+    `${description} currentNode should be null after calling next() (got: ${getNodeDescription(iter.currentNode)})`);
+  ok(iter.isDone, `${description} isDone should be true after calling next()`);
+
+  /**
+   * Basic behavior tests of first() and next() after initialized with positions which select the text node.
+   * XXX In this case, content iterator lists up the parent <div> element.  Not sure if this is intentional difference
+   *     from initWithRange().
+   */
+  range.selectNode(document.body.firstChild);
+  description = "Initialized with positions including only text node:";
+  iter.initWithPositions(Ci.nsIScriptableContentIterator.PRE_ORDER_ITERATOR,
+                         range.startContainer, range.startOffset,
+                         range.endContainer, range.endOffset);
+  is(SpecialPowers.unwrap(iter.currentNode), document.body.firstChild,
+    `${description} currentNode should be the <div> element immediately after initialization (got: ${getNodeDescription(iter.currentNode)})`);
+  ok(!iter.isDone, `${description} isDone shouldn't be true immediately after initialization`);
+
+  iter.first();
+  is(SpecialPowers.unwrap(iter.currentNode), document.body.firstChild,
+    `${description} currentNode should be the <div> element after calling first() (got: ${getNodeDescription(iter.currentNode)})`);
+  ok(!iter.isDone, `${description} isDone shouldn't be true after calling first()`);
+
+  iter.next();
+  is(SpecialPowers.unwrap(iter.currentNode), document.body.firstChild.firstChild,
+    `${description} currentNode should be the text node after calling next() from first position (got: ${getNodeDescription(iter.currentNode)})`);
+  ok(!iter.isDone, `${description} isDone shouldn't be true after calling next() from first position`);
+
+  iter.next();
+  is(SpecialPowers.unwrap(iter.currentNode), null,
+    `${description} currentNode should be null after calling next() from second position (got: ${getNodeDescription(iter.currentNode)})`);
+  ok(iter.isDone, `${description} isDone should be true after calling next() from second position`);
+
+  /**
+   * Tests to initializing with collapsed range at start of a text node.
+   */
+  range = document.createRange();
+  range.collapse(document.body.firstChild.firstChild, 0);
+  description = "Initialized with range collapsed at start of text node:";
+  iter.initWithRange(Ci.nsIScriptableContentIterator.PRE_ORDER_ITERATOR, range);
+  is(SpecialPowers.unwrap(iter.currentNode), null,
+    `${description} currentNode should be null immediately after initialization (got: ${getNodeDescription(iter.currentNode)})`);
+  ok(iter.isDone, `${description} isDone should be true immediately after initialization`);
+
+  iter.first();
+  is(SpecialPowers.unwrap(iter.currentNode), null,
+    `${description} currentNode should be null even after calling first() (got: ${getNodeDescription(iter.currentNode)})`);
+  ok(iter.isDone, `${description} isDone should be true even after calling first()`);
+
+  /**
+   * Tests to initializing with collapsed range at start of a text node.
+   * XXX In this case, content iterator lists up the text node.  Not sure if this is intentional difference
+   *     from initWithRange().
+   */
+  description = "Initialized with a position at start of text node:";
+  iter.initWithPositions(Ci.nsIScriptableContentIterator.PRE_ORDER_ITERATOR,
+                         document.body.firstChild.firstChild, 0, document.body.firstChild.firstChild, 0);
+  is(SpecialPowers.unwrap(iter.currentNode), document.body.firstChild.firstChild,
+    `${description} currentNode should be the text node immediately after initialization (got: ${getNodeDescription(iter.currentNode)})`);
+  ok(!iter.isDone, `${description} isDone shouldn't be true immediately after initialization`);
+
+  iter.next();
+  is(SpecialPowers.unwrap(iter.currentNode), null,
+    `${description} currentNode should be null after calling next() (got: ${getNodeDescription(iter.currentNode)})`);
+  ok(iter.isDone, `${description} isDone should be true after calling next()`);
+
+  /**
+   * Tests to initializing with collapsed range at end of a text node.
+   */
+  range = document.createRange();
+  range.collapse(document.body.firstChild.firstChild, document.body.firstChild.firstChild.length);
+  description = "Initialized with range collapsed at end of text node:";
+  iter.initWithRange(Ci.nsIScriptableContentIterator.PRE_ORDER_ITERATOR, range);
+  is(SpecialPowers.unwrap(iter.currentNode), null,
+    `${description} currentNode should be null immediately after initialization (got: ${getNodeDescription(iter.currentNode)})`);
+  ok(iter.isDone, `${description} isDone should be true immediately after initialization`);
+
+  iter.first();
+  is(SpecialPowers.unwrap(iter.currentNode), null,
+    `${description} currentNode should be null even after calling first() (got: ${getNodeDescription(iter.currentNode)})`);
+  ok(iter.isDone, `${description} isDone should be true even after calling first()`);
+
+  /**
+   * Tests to initializing with collapsed range at end of a text node.
+   * XXX In this case, content iterator lists up the text node.  Not sure if this is intentional difference
+   *     from initWithRange().
+   */
+  description = "Initialized with a position at end of text node:";
+  iter.initWithPositions(Ci.nsIScriptableContentIterator.PRE_ORDER_ITERATOR,
+                         document.body.firstChild.firstChild, document.body.firstChild.firstChild.length,
+                         document.body.firstChild.firstChild, document.body.firstChild.firstChild.length);
+  is(SpecialPowers.unwrap(iter.currentNode), document.body.firstChild.firstChild,
+    `${description} currentNode should be the text node immediately after initialization (got: ${getNodeDescription(iter.currentNode)})`);
+  ok(!iter.isDone, `${description} isDone shouldn't be true immediately after initialization`);
+
+  iter.next();
+  is(SpecialPowers.unwrap(iter.currentNode), null,
+    `${description} currentNode should be null after calling next() (got: ${getNodeDescription(iter.currentNode)})`);
+  ok(iter.isDone, `${description} isDone should be true after calling next()`);
+
+  /**
+   * Tests to initializing with collapsed range at middle of a text node.
+   */
+  range = document.createRange();
+  range.collapse(document.body.firstChild.firstChild, document.body.firstChild.firstChild.length / 2);
+  description = "Initialized with range collapsed at end of text node:";
+  iter.initWithRange(Ci.nsIScriptableContentIterator.PRE_ORDER_ITERATOR, range);
+  is(SpecialPowers.unwrap(iter.currentNode), null,
+    `${description} currentNode should be null immediately after initialization (got: ${getNodeDescription(iter.currentNode)})`);
+  ok(iter.isDone, `${description} isDone should be true immediately after initialization`);
+
+  iter.first();
+  is(SpecialPowers.unwrap(iter.currentNode), null,
+    `${description} currentNode should be null even after calling first() (got: ${getNodeDescription(iter.currentNode)})`);
+  ok(iter.isDone, `${description} isDone should be true even after calling first()`);
+
+  /**
+   * Tests to initializing with collapsed range at middle of a text node.
+   * XXX In this case, content iterator lists up the text node.  Not sure if this is intentional difference
+   *     from initWithRange().
+   */
+  description = "Initialized with a position at end of text node:";
+  iter.initWithPositions(Ci.nsIScriptableContentIterator.PRE_ORDER_ITERATOR,
+                         document.body.firstChild.firstChild, document.body.firstChild.firstChild.length / 2,
+                         document.body.firstChild.firstChild, document.body.firstChild.firstChild.length / 2);
+  is(SpecialPowers.unwrap(iter.currentNode), document.body.firstChild.firstChild,
+    `${description} currentNode should be the text node immediately after initialization (got: ${getNodeDescription(iter.currentNode)})`);
+  ok(!iter.isDone, `${description} isDone shouldn't be true immediately after initialization`);
+
+  iter.next();
+  is(SpecialPowers.unwrap(iter.currentNode), null,
+    `${description} currentNode should be null after calling next() (got: ${getNodeDescription(iter.currentNode)})`);
+  ok(iter.isDone, `${description} isDone should be true after calling next()`);
+
+  /**
+   * Tests to initializing with a range selecting all text in a text node.
+   */
+  range = document.createRange();
+  range.setStart(document.body.firstChild.firstChild, 0);
+  range.setEnd(document.body.firstChild.firstChild, document.body.firstChild.firstChild.length);
+  description = "Initialized with range selecting all text in text node:";
+  iter.initWithRange(Ci.nsIScriptableContentIterator.PRE_ORDER_ITERATOR, range);
+  is(SpecialPowers.unwrap(iter.currentNode), document.body.firstChild.firstChild,
+    `${description} currentNode should be the text node immediately after initialization (got: ${getNodeDescription(iter.currentNode)})`);
+  ok(!iter.isDone, `${description} isDone shouldn't be true immediately after initialization`);
+
+  iter.next();
+  is(SpecialPowers.unwrap(iter.currentNode), null,
+    `${description} currentNode should be null after calling next() (got: ${getNodeDescription(iter.currentNode)})`);
+  ok(iter.isDone, `${description} isDone should be true after calling next()`);
+
+  /**
+   * Tests to initializing with positions selecting all text in a text node.
+   */
+  description = "Initialized with positions selecting all text in text node:";
+  iter.initWithPositions(Ci.nsIScriptableContentIterator.PRE_ORDER_ITERATOR,
+                         document.body.firstChild.firstChild, 0,
+                         document.body.firstChild.firstChild, document.body.firstChild.firstChild.length);
+  is(SpecialPowers.unwrap(iter.currentNode), document.body.firstChild.firstChild,
+    `${description} currentNode should be the text node immediately after initialization (got: ${getNodeDescription(iter.currentNode)})`);
+  ok(!iter.isDone, `${description} isDone shouldn't be true immediately after initialization`);
+
+  iter.next();
+  is(SpecialPowers.unwrap(iter.currentNode), null,
+    `${description} currentNode should be null after calling next() (got: ${getNodeDescription(iter.currentNode)})`);
+  ok(iter.isDone, `${description} isDone should be true after calling next()`);
+
+  /**
+   * Basic tests with complicated tree.
+   */
+  function check(aIter, aExpectedResult, aDescription) {
+    if (aExpectedResult.length > 0) {
+      is(SpecialPowers.unwrap(aIter.currentNode), aExpectedResult[0],
+        `${aDescription}: currentNode should be the text node immediately after initialization (got: ${getNodeDescription(aIter.currentNode)}, expected: ${getNodeDescription(aExpectedResult[0])})`);
+      ok(!aIter.isDone, `${aDescription}: isDone shouldn't be true immediately after initialization`);
+
+      aIter.first();
+      is(SpecialPowers.unwrap(aIter.currentNode), aExpectedResult[0],
+        `${aDescription}: currentNode should be the text node after calling first() (got: ${getNodeDescription(aIter.currentNode)}, expected: ${getNodeDescription(aExpectedResult[0])})`);
+      ok(!aIter.isDone, `${aDescription}: isDone shouldn't be true after calling first()`);
+
+      for (let expected of aExpectedResult) {
+        is(SpecialPowers.unwrap(aIter.currentNode), expected,
+          `${aDescription}: currentNode should be the node (got: ${getNodeDescription(aIter.currentNode)}, expected: ${getNodeDescription(expected)})`);
+        ok(!aIter.isDone, `${aDescription}: isDone shouldn't be true when ${getNodeDescription(expected)} is expected`);
+        aIter.next();
+      }
+
+      is(SpecialPowers.unwrap(aIter.currentNode), null,
+        `${aDescription}: currentNode should be null after calling next() finally (got: ${getNodeDescription(aIter.currentNode)}`);
+      ok(aIter.isDone, `${aDescription}: isDone should be true after calling next() finally`);
+    } else {
+      is(SpecialPowers.unwrap(aIter.currentNode), null,
+        `${aDescription}: currentNode should be null immediately after initialization (got: ${getNodeDescription(aIter.currentNode)})`);
+      ok(aIter.isDone, `${aDescription}: isDone should be true immediately after initialization`);
+
+      aIter.first();
+      is(SpecialPowers.unwrap(aIter.currentNode), null,
+        `${aDescription}: currentNode should be null after calling first() (got: ${getNodeDescription(aIter.currentNode)})`);
+      ok(aIter.isDone, `${aDescription}: isDone should be true after calling first()`);
+    }
+  }
+
+  document.body.innerHTML = "<p>" +
+                              "Here is <b>bold</b> and <i><u>underlined and </u>italic </i><span>or no style text.</span><br>" +
+                            "</p>" +
+                            "<p>" +
+                              "Here is an &lt;input&gt; element: <input type=\"text\" value=\"default value\"><br>\n" +
+                              "and a &lt;textarea&gt; element: <textarea>text area's text node</textarea><br><br>\n" +
+                              "<!-- and here is comment node -->" +
+                            "</p>";
+
+  let expectedResult =
+    [document.body, // <body>
+     document.body.firstChild, // first <p>
+     document.body.firstChild.firstChild, // the first text node
+     document.body.firstChild.firstChild.nextSibling, // <b>
+     document.body.firstChild.firstChild.nextSibling.firstChild, // text in <b>
+     document.body.firstChild.firstChild.nextSibling.nextSibling, // text next to <b>
+     document.body.firstChild.firstChild.nextSibling.nextSibling.nextSibling, // <i>
+     document.body.firstChild.firstChild.nextSibling.nextSibling.nextSibling.firstChild, // <u>
+     document.body.firstChild.firstChild.nextSibling.nextSibling.nextSibling.firstChild.firstChild, // text in <u>
+     document.body.firstChild.firstChild.nextSibling.nextSibling.nextSibling.firstChild.nextSibling, // text next to <u>
+     document.body.firstChild.firstChild.nextSibling.nextSibling.nextSibling.nextSibling, // <span>
+     document.body.firstChild.firstChild.nextSibling.nextSibling.nextSibling.nextSibling.firstChild, // text in <span>
+     document.body.firstChild.firstChild.nextSibling.nextSibling.nextSibling.nextSibling.nextSibling, // <br> next to <span>
+     document.body.firstChild.nextSibling, // second <p>
+     document.body.firstChild.nextSibling.firstChild, // the first text node in second <p>
+     document.body.firstChild.nextSibling.firstChild.nextSibling, // <input>
+     document.body.firstChild.nextSibling.firstChild.nextSibling.nextSibling, // <br> next to <input>
+     document.body.firstChild.nextSibling.firstChild.nextSibling.nextSibling.nextSibling, // text next to <input>
+     document.body.firstChild.nextSibling.firstChild.nextSibling.nextSibling.nextSibling.nextSibling, // <textarea>
+     document.body.firstChild.nextSibling.firstChild.nextSibling.nextSibling.nextSibling.nextSibling.firstChild, // text in <textarea>
+     document.body.firstChild.nextSibling.firstChild.nextSibling.nextSibling.nextSibling.nextSibling.nextSibling, // <br> next to <textarea>
+     document.body.firstChild.nextSibling.firstChild.nextSibling.nextSibling.nextSibling.nextSibling.nextSibling.nextSibling, // <br> next to <br>
+     document.body.firstChild.nextSibling.firstChild.nextSibling.nextSibling.nextSibling.nextSibling.nextSibling.nextSibling.nextSibling, // text next to <br>
+     document.body.firstChild.nextSibling.firstChild.nextSibling.nextSibling.nextSibling.nextSibling.nextSibling.nextSibling.nextSibling.nextSibling] // comment
+
+  iter.initWithRootNode(Ci.nsIScriptableContentIterator.PRE_ORDER_ITERATOR, document.body);
+  check(iter, expectedResult, "Initialized with the <body> as root element");
+
+  /**
+   * Selects the <body> with a range.
+   */
+  range = document.createRange();
+  range.selectNode(document.body);
+  iter.initWithRange(Ci.nsIScriptableContentIterator.PRE_ORDER_ITERATOR, range);
+  check(iter, expectedResult, "Initialized with range selecting the <body>");
+
+  /**
+   * Selects the <body> with positions.
+   */
+  iter.initWithPositions(Ci.nsIScriptableContentIterator.PRE_ORDER_ITERATOR,
+                         range.startContainer, range.startOffset, range.endContainer, range.endOffset);
+  check(iter, expectedResult, "Initialized with positions selecting the <body>");
+
+  /**
+   * Selects all children in the <body> with a range.
+   */
+  expectedResult.shift(); // <body> shouldn't be listed up.
+  range = document.createRange();
+  range.selectNodeContents(document.body);
+  iter.initWithRange(Ci.nsIScriptableContentIterator.PRE_ORDER_ITERATOR, range);
+  check(iter, expectedResult, "Initialized with range selecting all children in the <body>");
+
+  /**
+   * Selects all children in the <body> with positions.
+   */
+  iter.initWithPositions(Ci.nsIScriptableContentIterator.PRE_ORDER_ITERATOR,
+                         range.startContainer, range.startOffset, range.endContainer, range.endOffset);
+  check(iter, expectedResult, "Initialized with positions selecting all children in the <body>");
+
+  /**
+   * range/positions around elements.
+   */
+  document.body.innerHTML = "abc<b>def</b><i>ghi</i>jkl";
+  range = document.createRange();
+
+  range.setStart(document.body.firstChild, 0);
+  range.setEnd(document.body.firstChild.nextSibling.firstChild, 2);
+  iter.initWithRange(Ci.nsIScriptableContentIterator.PRE_ORDER_ITERATOR, range);
+  check(iter,
+        [document.body.firstChild, // text before <b>
+         document.body.firstChild.nextSibling, // <b>
+         document.body.firstChild.nextSibling.firstChild], // text in <b>
+        "Initialized with range selecting '[abc<b>de]f'");
+  iter.initWithPositions(Ci.nsIScriptableContentIterator.PRE_ORDER_ITERATOR,
+                         range.startContainer, range.startOffset,
+                         range.endContainer, range.endOffset);
+  check(iter,
+        [document.body.firstChild, // text before <b>
+         document.body.firstChild.nextSibling, // <b>
+         document.body.firstChild.nextSibling.firstChild], // text in <b>
+        "Initialized with positions selecting '[abc<b>de]f'");
+
+  range.setStart(document.body.firstChild, 2);
+  range.setEnd(document.body.firstChild.nextSibling.firstChild, 2);
+  iter.initWithRange(Ci.nsIScriptableContentIterator.PRE_ORDER_ITERATOR, range);
+  check(iter,
+        [document.body.firstChild, // text before <b>
+         document.body.firstChild.nextSibling, // <b>
+         document.body.firstChild.nextSibling.firstChild], // text in <b>
+        "Initialized with range selecting 'ab[c<b>de]f'");
+  iter.initWithPositions(Ci.nsIScriptableContentIterator.PRE_ORDER_ITERATOR,
+                         range.startContainer, range.startOffset,
+                         range.endContainer, range.endOffset);
+  check(iter,
+        [document.body.firstChild, // text before <b>
+         document.body.firstChild.nextSibling, // <b>
+         document.body.firstChild.nextSibling.firstChild], // text in <b>
+        "Initialized with positions selecting 'ab[c<b>de]f'");
+
+  range.setStart(document.body.firstChild, 3);
+  range.setEnd(document.body.firstChild.nextSibling.firstChild, 2);
+  iter.initWithRange(Ci.nsIScriptableContentIterator.PRE_ORDER_ITERATOR, range);
+  check(iter,
+        [document.body.firstChild, // text before <b>
+         document.body.firstChild.nextSibling, // <b>
+         document.body.firstChild.nextSibling.firstChild], // text in <b>
+        "Initialized with range selecting 'abc[<b>de]f'");
+  iter.initWithPositions(Ci.nsIScriptableContentIterator.PRE_ORDER_ITERATOR,
+                         range.startContainer, range.startOffset,
+                         range.endContainer, range.endOffset);
+  check(iter,
+        [document.body.firstChild, // text before <b>
+         document.body.firstChild.nextSibling, // <b>
+         document.body.firstChild.nextSibling.firstChild], // text in <b>
+        "Initialized with positions selecting 'abc[<b>de]f'");
+
+  range.setStart(document.body, 1);
+  range.setEnd(document.body.firstChild.nextSibling.firstChild, 2);
+  iter.initWithRange(Ci.nsIScriptableContentIterator.PRE_ORDER_ITERATOR, range);
+  check(iter,
+        [document.body.firstChild.nextSibling, // <b>
+         document.body.firstChild.nextSibling.firstChild], // text in <b>
+        "Initialized with range selecting 'abc{<b>de]f'");
+  iter.initWithPositions(Ci.nsIScriptableContentIterator.PRE_ORDER_ITERATOR,
+                         range.startContainer, range.startOffset,
+                         range.endContainer, range.endOffset);
+  check(iter,
+        [document.body.firstChild.nextSibling, // <b>
+         document.body.firstChild.nextSibling.firstChild], // text in <b>
+        "Initialized with positions selecting 'abc{<b>de]f'");
+
+  range.setStart(document.body.firstChild.nextSibling, 0);
+  range.setEnd(document.body.firstChild.nextSibling.firstChild, 2);
+  iter.initWithRange(Ci.nsIScriptableContentIterator.PRE_ORDER_ITERATOR, range);
+  check(iter,
+        [document.body.firstChild.nextSibling.firstChild], // text in <b>
+        "Initialized with range selecting '<b>{de]f'");
+  iter.initWithPositions(Ci.nsIScriptableContentIterator.PRE_ORDER_ITERATOR,
+                         range.startContainer, range.startOffset,
+                         range.endContainer, range.endOffset);
+  check(iter,
+        [document.body.firstChild.nextSibling.firstChild], // text in <b>
+        "Initialized with positions selecting '<b>{de]f'");
+
+  range.setStart(document.body.firstChild.nextSibling, 0);
+  range.setEnd(document.body.firstChild.nextSibling.firstChild, 3);
+  iter.initWithRange(Ci.nsIScriptableContentIterator.PRE_ORDER_ITERATOR, range);
+  check(iter,
+        [document.body.firstChild.nextSibling.firstChild], // text in <b>
+        "Initialized with range selecting '<b>{def]</b>'");
+  iter.initWithPositions(Ci.nsIScriptableContentIterator.PRE_ORDER_ITERATOR,
+                         range.startContainer, range.startOffset,
+                         range.endContainer, range.endOffset);
+  check(iter,
+        [document.body.firstChild.nextSibling.firstChild], // text in <b>
+        "Initialized with positions selecting '<b>{def]</b>'");
+
+  range.setStart(document.body.firstChild.nextSibling, 0);
+  range.setEnd(document.body.firstChild.nextSibling, 1);
+  iter.initWithRange(Ci.nsIScriptableContentIterator.PRE_ORDER_ITERATOR, range);
+  check(iter,
+        [document.body.firstChild.nextSibling.firstChild], // text in <b>
+        "Initialized with range selecting '<b>{def}</b>'");
+  iter.initWithPositions(Ci.nsIScriptableContentIterator.PRE_ORDER_ITERATOR,
+                         range.startContainer, range.startOffset,
+                         range.endContainer, range.endOffset);
+  check(iter,
+        [document.body.firstChild.nextSibling.firstChild], // text in <b>
+        "Initialized with positions selecting '<b>{def}</b>'");
+
+  range.setStart(document.body.firstChild.nextSibling, 0);
+  range.setEnd(document.body, 2);
+  iter.initWithRange(Ci.nsIScriptableContentIterator.PRE_ORDER_ITERATOR, range);
+  check(iter,
+        [document.body.firstChild.nextSibling.firstChild], // text in <b>
+        "Initialized with range selecting '<b>{def</b>}<i>ghi'");
+  iter.initWithPositions(Ci.nsIScriptableContentIterator.PRE_ORDER_ITERATOR,
+                         range.startContainer, range.startOffset,
+                         range.endContainer, range.endOffset);
+  check(iter,
+        [document.body.firstChild.nextSibling.firstChild], // text in <b>
+        "Initialized with positions selecting '<b>{def</b>}<i>ghi'");
+
+  range.setStart(document.body.firstChild.nextSibling.firstChild, 3);
+  range.setEnd(document.body, 2);
+  iter.initWithRange(Ci.nsIScriptableContentIterator.PRE_ORDER_ITERATOR, range);
+  check(iter,
+        [document.body.firstChild.nextSibling.firstChild], // text in <b>
+        "Initialized with range selecting '<b>def[</b>}<i>ghi'");
+  iter.initWithPositions(Ci.nsIScriptableContentIterator.PRE_ORDER_ITERATOR,
+                         range.startContainer, range.startOffset,
+                         range.endContainer, range.endOffset);
+  check(iter,
+        [document.body.firstChild.nextSibling.firstChild], // text in <b>
+        "Initialized with positions selecting '<b>def[</b>}<i>ghi'");
+
+  range.setStart(document.body.firstChild.nextSibling, 1);
+  range.setEnd(document.body, 2);
+  iter.initWithRange(Ci.nsIScriptableContentIterator.PRE_ORDER_ITERATOR, range);
+  check(iter, [],
+        "Initialized with range selecting '<b>def{</b>}<i>ghi'");
+  iter.initWithPositions(Ci.nsIScriptableContentIterator.PRE_ORDER_ITERATOR,
+                         range.startContainer, range.startOffset,
+                         range.endContainer, range.endOffset);
+  check(iter, [],
+        "Initialized with positions selecting '<b>def{</b>}<i>ghi'");
+
+  range.setStart(document.body.firstChild.nextSibling, 1);
+  range.setEnd(document.body.firstChild.nextSibling.nextSibling, 0);
+  iter.initWithRange(Ci.nsIScriptableContentIterator.PRE_ORDER_ITERATOR, range);
+  check(iter,
+        [document.body.firstChild.nextSibling.nextSibling], // <i>
+        "Initialized with range selecting '<b>def{</b><i>}ghi'");
+  iter.initWithPositions(Ci.nsIScriptableContentIterator.PRE_ORDER_ITERATOR,
+                         range.startContainer, range.startOffset,
+                         range.endContainer, range.endOffset);
+  check(iter,
+        [document.body.firstChild.nextSibling.nextSibling], // <i>
+        "Initialized with positions selecting '<b>def{</b><i>}ghi'");
+
+  range.setStart(document.body.firstChild.nextSibling, 1);
+  range.setEnd(document.body.firstChild.nextSibling.nextSibling.firstChild, 0);
+  iter.initWithRange(Ci.nsIScriptableContentIterator.PRE_ORDER_ITERATOR, range);
+  check(iter,
+        [document.body.firstChild.nextSibling.nextSibling, // <i>
+         document.body.firstChild.nextSibling.nextSibling.firstChild], // text in <i>
+        "Initialized with range selecting '<b>def{</b><i>]ghi'");
+  iter.initWithPositions(Ci.nsIScriptableContentIterator.PRE_ORDER_ITERATOR,
+                         range.startContainer, range.startOffset,
+                         range.endContainer, range.endOffset);
+  check(iter,
+        [document.body.firstChild.nextSibling.nextSibling, // <i>
+         document.body.firstChild.nextSibling.nextSibling.firstChild], // text in <i>
+        "Initialized with positions selecting '<b>def{</b><i>]ghi'");
+
+  range.setStart(document.body.firstChild.nextSibling.nextSibling, 0);
+  range.setEnd(document.body, 3);
+  iter.initWithRange(Ci.nsIScriptableContentIterator.PRE_ORDER_ITERATOR, range);
+  check(iter,
+        [document.body.firstChild.nextSibling.nextSibling.firstChild], // text in <i>
+        "Initialized with range selecting '<i>{ghi</i>}jkl'");
+  iter.initWithPositions(Ci.nsIScriptableContentIterator.PRE_ORDER_ITERATOR,
+                         range.startContainer, range.startOffset,
+                         range.endContainer, range.endOffset);
+  check(iter,
+        [document.body.firstChild.nextSibling.nextSibling.firstChild], // text in <i>
+        "Initialized with positions selecting '<i>{ghi</i>}jkl'");
+
+  range.setStart(document.body.firstChild.nextSibling.nextSibling.firstChild, 3);
+  range.setEnd(document.body, 3);
+  iter.initWithRange(Ci.nsIScriptableContentIterator.PRE_ORDER_ITERATOR, range);
+  check(iter,
+        [document.body.firstChild.nextSibling.nextSibling.firstChild], // text in <i>
+        "Initialized with range selecting '<i>ghi[</i>}jkl'");
+  iter.initWithPositions(Ci.nsIScriptableContentIterator.PRE_ORDER_ITERATOR,
+                         range.startContainer, range.startOffset,
+                         range.endContainer, range.endOffset);
+  check(iter,
+        [document.body.firstChild.nextSibling.nextSibling.firstChild], // text in <i>
+        "Initialized with positions selecting '<i>ghi[</i>}jkl'");
+
+  range.setStart(document.body.firstChild.nextSibling.nextSibling, 1);
+  range.setEnd(document.body, 3);
+  iter.initWithRange(Ci.nsIScriptableContentIterator.PRE_ORDER_ITERATOR, range);
+  check(iter, [],
+        "Initialized with range selecting '<i>ghi{</i>}jkl'");
+  iter.initWithPositions(Ci.nsIScriptableContentIterator.PRE_ORDER_ITERATOR,
+                         range.startContainer, range.startOffset,
+                         range.endContainer, range.endOffset);
+  check(iter, [],
+        "Initialized with positions selecting '<i>ghi{</i>}jkl'");
+
+  range.setStart(document.body.firstChild.nextSibling.nextSibling, 1);
+  range.setEnd(document.body.firstChild.nextSibling.nextSibling.nextSibling, 0);
+  iter.initWithRange(Ci.nsIScriptableContentIterator.PRE_ORDER_ITERATOR, range);
+  check(iter,
+        [document.body.firstChild.nextSibling.nextSibling.nextSibling], // text after <i>
+        "Initialized with range selecting '<i>ghi{</i>]jkl'");
+  iter.initWithPositions(Ci.nsIScriptableContentIterator.PRE_ORDER_ITERATOR,
+                         range.startContainer, range.startOffset,
+                         range.endContainer, range.endOffset);
+  check(iter,
+        [document.body.firstChild.nextSibling.nextSibling.nextSibling], // text after <i>
+        "Initialized with positions selecting '<i>ghi{</i>]jkl'");
+
+  /**
+   * range/positions around <br> elements.
+   */
+  document.body.innerHTML = "abc<br>def";
+  range = document.createRange();
+  range.setStart(document.body.firstChild, 3);
+  range.setEnd(document.body.firstChild.nextSibling.nextSibling, 0);
+  iter.initWithRange(Ci.nsIScriptableContentIterator.PRE_ORDER_ITERATOR, range);
+  check(iter,
+        [document.body.firstChild, // text before <br>
+         document.body.firstChild.nextSibling, // <br>
+         document.body.firstChild.nextSibling.nextSibling], // text after <br>
+        "Initialized with range selecting 'abc[<br>]def'");
+  iter.initWithPositions(Ci.nsIScriptableContentIterator.PRE_ORDER_ITERATOR,
+                         range.startContainer, range.startOffset,
+                         range.endContainer, range.endOffset);
+  check(iter,
+        [document.body.firstChild, // text before <br>
+         document.body.firstChild.nextSibling, // <br>
+         document.body.firstChild.nextSibling.nextSibling], // text after <br>
+        "Initialized with positions selecting 'abc[<br>]def'");
+
+  range.setStart(document.body, 1);
+  range.setEnd(document.body.firstChild.nextSibling.nextSibling, 0);
+  iter.initWithRange(Ci.nsIScriptableContentIterator.PRE_ORDER_ITERATOR, range);
+  check(iter,
+        [document.body.firstChild.nextSibling, // <br>
+         document.body.firstChild.nextSibling.nextSibling], // text after <br>
+        "Initialized with range selecting 'abc{<br>]def'");
+  iter.initWithPositions(Ci.nsIScriptableContentIterator.PRE_ORDER_ITERATOR,
+                         range.startContainer, range.startOffset,
+                         range.endContainer, range.endOffset);
+  check(iter,
+        [document.body.firstChild.nextSibling, // <br>
+         document.body.firstChild.nextSibling.nextSibling], // text after <br>
+        "Initialized with positions selecting 'abc{<br>]def'");
+
+  range.setStart(document.body.firstChild.nextSibling, 0);
+  range.setEnd(document.body.firstChild.nextSibling.nextSibling, 0);
+  iter.initWithRange(Ci.nsIScriptableContentIterator.PRE_ORDER_ITERATOR, range);
+  check(iter,
+        [document.body.firstChild.nextSibling, // <br>
+         document.body.firstChild.nextSibling.nextSibling], // text after <br>
+        "Initialized with range selecting 'abc{<br>]def' (starting in <br>)");
+  iter.initWithPositions(Ci.nsIScriptableContentIterator.PRE_ORDER_ITERATOR,
+                         range.startContainer, range.startOffset,
+                         range.endContainer, range.endOffset);
+  check(iter,
+        [document.body.firstChild.nextSibling, // <br>
+         document.body.firstChild.nextSibling.nextSibling], // text after <br>
+        "Initialized with positions selecting 'abc{<br>]def' (starting in <br>)");
+
+  range.setStart(document.body, 1);
+  range.setEnd(document.body, 2);
+  iter.initWithRange(Ci.nsIScriptableContentIterator.PRE_ORDER_ITERATOR, range);
+  check(iter,
+        [document.body.firstChild.nextSibling], // <br>
+        "Initialized with range selecting 'abc{<br>}def'");
+  iter.initWithPositions(Ci.nsIScriptableContentIterator.PRE_ORDER_ITERATOR,
+                         range.startContainer, range.startOffset,
+                         range.endContainer, range.endOffset);
+  check(iter,
+        [document.body.firstChild.nextSibling], // <br>
+        "Initialized with positions selecting 'abc{<br>}def'");
+
+  range.setStart(document.body.firstChild, 3);
+  range.setEnd(document.body.firstChild.nextSibling, 0);
+  iter.initWithRange(Ci.nsIScriptableContentIterator.PRE_ORDER_ITERATOR, range);
+  check(iter,
+        [document.body.firstChild], // text before <br>
+        "Initialized with range selecting 'abc[}<br>def' (ending in <br>)");
+  iter.initWithPositions(Ci.nsIScriptableContentIterator.PRE_ORDER_ITERATOR,
+                         range.startContainer, range.startOffset,
+                         range.endContainer, range.endOffset);
+  check(iter,
+        [document.body.firstChild], // text before <br>
+        "Initialized with positions selecting 'abc[}<br>def' (ending in <br>)");
+
+  finish();
+});
+</script>
+</head>
+<body></body>
+</html>
