@@ -73,7 +73,7 @@ def _do_request(url, force_get=False, **kwargs):
     if kwargs and not force_get:
         response = session.post(url, **kwargs)
     else:
-        response = session.get(url, stream=True)
+        response = session.get(url, stream=True, **kwargs)
     if response.status_code >= 400:
         # Consume content before raise_for_status, so that the connection can be
         # reused.
@@ -281,8 +281,8 @@ def send_email(address, subject, content, link, use_proxy=False):
     })
 
 
-def list_task_group(task_group_id):
-    """Generate the tasks in a task group"""
+def list_task_group_incomplete_tasks(task_group_id):
+    """Generate the incomplete tasks in a task group"""
     params = {}
     while True:
         url = liburls.api(get_root_url(), 'queue', 'v1',
