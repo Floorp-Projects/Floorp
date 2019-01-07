@@ -297,7 +297,7 @@ ${helpers.predefined_type(
         ${helpers.predefined_type(
             "min-%s" % size,
             "LengthPercentage",
-            "computed::LengthPercentage::Length(computed::Length::new(0.))",
+            "computed::LengthPercentage::zero()",
             "parse_non_negative",
             spec=spec % ("min-%s" % size),
             logical_group="min-size",
