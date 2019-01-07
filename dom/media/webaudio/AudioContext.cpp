@@ -967,7 +967,7 @@ void AudioContext::ResumeInternal() {
 }
 
 void AudioContext::ReportBlocked() {
-  ReportToConsole(nsIScriptError::warningFlag, "BlockAutoplayError");
+  ReportToConsole(nsIScriptError::warningFlag, "BlockAutoplayWebAudioError");
   mWasAllowedToStart = false;
 
   if (!StaticPrefs::MediaBlockEventEnabled()) {
