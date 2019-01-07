@@ -383,7 +383,7 @@ static bool AllowOperation(int aReqFlags, int aPerms) {
   }
   // We don't really allow executing anything,
   // so in true unix tradition we hijack this
-  // for directories.
+  // for directory access (creation).
   if (aReqFlags & X_OK) {
     needed |= SandboxBroker::MAY_CREATE;
   }
@@ -857,7 +857,7 @@ void SandboxBroker::ThreadMain(void) {
 
         case SANDBOX_FILE_LINK:
         case SANDBOX_FILE_SYMLINK:
-          if (permissive || AllowOperation(W_OK, perms)) {
+          if (permissive || AllowOperation(W_OK | X_OK, perms)) {
             if (DoLink(pathBuf, pathBuf2, req.mOp) == 0) {
               resp.mError = 0;
             } else {
@@ -869,7 +869,7 @@ void SandboxBroker::ThreadMain(void) {
           break;
 
         case SANDBOX_FILE_RENAME:
-          if (permissive || AllowOperation(W_OK, perms)) {
+          if (permissive || AllowOperation(W_OK | X_OK, perms)) {
             if (rename(pathBuf, pathBuf2) == 0) {
               resp.mError = 0;
             } else {
@@ -900,7 +900,7 @@ void SandboxBroker::ThreadMain(void) {
           break;
 
         case SANDBOX_FILE_UNLINK:
-          if (permissive || AllowOperation(W_OK, perms)) {
+          if (permissive || AllowOperation(W_OK | X_OK, perms)) {
             if (unlink(pathBuf) == 0) {
               resp.mError = 0;
             } else {
