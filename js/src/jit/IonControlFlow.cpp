@@ -992,10 +992,7 @@ ControlFlowGenerator::ControlStatus ControlFlowGenerator::processBrokenLoop(
     CFGState& state) {
   MOZ_ASSERT(!current);
 
-  {
-    state.loop.entry->setStopIns(CFGGoto::New(
-        alloc(), state.loop.entry->stopIns()->toLoopEntry()->successor()));
-  }
+  state.loop.entry->stopIns()->toLoopEntry()->setIsBrokenLoop();
 
   // If the loop started with a condition (while/for) then even if the
   // structure never actually loops, the condition itself can still fail and
