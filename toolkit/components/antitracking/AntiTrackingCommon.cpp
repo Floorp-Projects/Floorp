@@ -1386,16 +1386,14 @@ nsresult AntiTrackingCommon::IsOnContentBlockingAllowList(
   // Take the host/port portion so we can allowlist by site. Also ignore the
   // scheme, since users who put sites on the allowlist probably don't expect
   // allowlisting to depend on scheme.
-  nsresult rv = NS_ERROR_FAILURE;
-  nsCOMPtr<nsIURL> url = do_QueryInterface(aTopWinURI, &rv);
-  if (NS_FAILED(rv)) {
-    return rv;  // normal for some loads, no need to print a warning
-  }
-
   nsAutoCString escaped(NS_LITERAL_CSTRING("https://"));
   nsAutoCString temp;
-  rv = url->GetHostPort(temp);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsresult rv = aTopWinURI ? aTopWinURI->GetHostPort(temp) : NS_ERROR_FAILURE;
+  // GetHostPort returns an empty string (with a success error code) for file://
+  // URIs.
+  if (NS_FAILED(rv) || temp.IsEmpty()) {
+    return rv;  // normal for some loads, no need to print a warning
+  }
   escaped.Append(temp);
 
   nsCOMPtr<nsIPermissionManager> permMgr = services::GetPermissionManager();
