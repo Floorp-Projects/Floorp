@@ -1299,8 +1299,7 @@ this.VideoControlsImplWidget = class {
       },
 
       get isVideoInFullScreen() {
-        let element = this.shadowRoot.host;
-        return element.getRootNode().mozFullScreenElement == element;
+        return this.video.isSameNode(this.video.getRootNode().mozFullScreenElement);
       },
 
       toggleFullscreen() {
