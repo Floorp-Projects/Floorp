@@ -27,7 +27,7 @@ leak:GI___strdup
 leak:PR_Sleep
 
 # Bug 1363976 - Stylo holds some global data alive forever.
-leak:style::gecko::global_style_data
+leak:style::global_style_data
 
 ###
 ### Many leaks only affect some test suites.  The suite annotations are not checked.
