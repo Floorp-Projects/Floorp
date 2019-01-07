@@ -26,6 +26,8 @@ SimpleTest.waitForFocus(function() {
        `"input" event should be never cancelable ${aDescription}`);
     is(aEvent.bubbles, true,
        `"input" event should always bubble ${aDescription}`);
+    is(aEvent.inputType, "deleteContent",
+       `inputType should be "deleteContent" ${aDescription}`);
   }
 
   let inputEvents = [];

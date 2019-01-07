@@ -193,14 +193,18 @@ add_task(async function test_input_oncopy() {
   contentInput.setSelectionRange(2, 8);
 
   var oncopy_fired = false;
+  var oninput_fired = false;
   contentInput.oncopy = function() { oncopy_fired = true; };
+  contentInput.oninput = function () { oninput_fired = true; };
   try {
     await putOnClipboard("PUT TE", () => {
       synthesizeKey("c", {accelKey: 1});
     }, "copy on plaintext editor set clipboard correctly");
     ok(oncopy_fired, "copy event firing on plaintext editor");
+    ok(!oninput_fired, "input event shouldn't be fired on plaintext editor by copy");
   } finally {
     contentInput.oncopy = null;
+    contentInput.oninput = null;
   }
 });
 
@@ -212,16 +216,25 @@ add_task(async function test_input_oncut() {
   // that the input itself is empty.
   selectContentInput();
   var oncut_fired = false;
+  var oninput_count = 0;
+  var inputType = "";
   contentInput.oncut = function() { oncut_fired = true; };
+  contentInput.oninput = function (aEvent) {
+    oninput_count++;
+    inputType = aEvent.inputType;
+  };
   try {
     await putOnClipboard("INPUT TEXT", () => {
       synthesizeKey("x", {accelKey: 1});
     }, "cut on plaintext editor set clipboard correctly");
     ok(oncut_fired, "cut event firing on plaintext editor");
+    is(oninput_count, 1, "input event should be fired once by cut");
+    is(inputType, "deleteByCut", "inputType of the input event should be \"deleteByCut\"");
     is(contentInput.value, "",
       "cut on plaintext editor emptied editor");
   } finally {
     contentInput.oncut = null;
+    contentInput.oninput = null;
   }
 });
 
@@ -233,16 +246,26 @@ add_task(async function test_input_onpaste() {
   // input value did change (ie. paste succeeded).
   selectContentInput();
   var onpaste_fired = false;
+  var oninput_count = 0;
+  var inputType = "";
   contentInput.onpaste = function() { onpaste_fired = true; };
+  contentInput.oninput = function(aEvent) {
+    oninput_count++;
+    inputType = aEvent.inputType;
+  };
+
   try {
     synthesizeKey("v", {accelKey: 1});
     ok(onpaste_fired, "paste event firing on plaintext editor");
     is(getClipboardText(), clipboardInitialValue,
       "paste on plaintext editor did not modify clipboard contents");
+    is(oninput_count, 1, "input event should be fired once by cut");
+    is(inputType, "insertFromPaste", "inputType of the input event should be \"insertFromPaste\"");
     is(contentInput.value, clipboardInitialValue,
       "paste on plaintext editor did modify editor value");
   } finally {
     contentInput.onpaste = null;
+    contentInput.oninput = null;
   }
 });
 
@@ -254,6 +277,9 @@ add_task(async function test_input_oncopy_abort() {
   selectContentInput();
   var oncopy_fired = false;
   contentInput.oncopy = function() { oncopy_fired = true; return false; };
+  contentInput.oninput = function() {
+    ok(false, "input event shouldn't be fired by copy but canceled");
+  };
   try {
     await wontPutOnClipboard(clipboardInitialValue, () => {
       synthesizeKey("c", {accelKey: 1});
@@ -261,6 +287,7 @@ add_task(async function test_input_oncopy_abort() {
     ok(oncopy_fired, "copy event (to-be-cancelled) firing on plaintext editor");
   } finally {
     contentInput.oncopy = null;
+    contentInput.oninput = null;
   }
 });
 
@@ -273,6 +300,9 @@ add_task(async function test_input_oncut_abort() {
   selectContentInput();
   var oncut_fired = false;
   contentInput.oncut = function() { oncut_fired = true; return false; };
+  contentInput.oninput = function() {
+    ok(false, "input event shouldn't be fired by cut but canceled");
+  };
   try {
     await wontPutOnClipboard(clipboardInitialValue, () => {
       synthesizeKey("x", {accelKey: 1});
@@ -282,6 +312,7 @@ add_task(async function test_input_oncut_abort() {
       "aborted cut on plaintext editor did not modify editor contents");
   } finally {
     contentInput.oncut = null;
+    contentInput.oninput = null;
   }
 });
 
@@ -294,6 +325,9 @@ add_task(async function test_input_onpaste_abort() {
   selectContentInput();
   var onpaste_fired = false;
   contentInput.onpaste = function() { onpaste_fired = true; return false; };
+  contentInput.oninput = function() {
+    ok(false, "input event shouldn't be fired by paste but canceled");
+  };
   try {
     synthesizeKey("v", {accelKey: 1});
     ok(onpaste_fired,
@@ -304,6 +338,7 @@ add_task(async function test_input_onpaste_abort() {
       "aborted paste on plaintext editor did not modify modified editor value");
   } finally {
     contentInput.onpaste = null;
+    contentInput.oninput = null;
   }
 });
 

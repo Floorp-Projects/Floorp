@@ -997,6 +997,8 @@ function runTest() { // eslint-disable-line complexity
            testNum + " input event should be dispatched with InputEvent interface");
         ok(event.bubbles, testNum + " input event should bubble");
         ok(!event.cancelable, testNum + " input event shouldn't be cancelable");
+        is(event.inputType, "insertReplacementText",
+           testNum + ' inputType should be "insertReplacementText"');
       }, {once: true});
 
       synthesizeKey("KEY_ArrowDown");

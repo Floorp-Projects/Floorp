@@ -92,12 +92,11 @@ evaluate.sandbox = function(sb, script, args = [],
       line = 0,
       timeout = DEFAULT_TIMEOUT,
     } = {}) {
-  let scriptTimeoutID, timeoutHandler, unloadHandler;
+  let scriptTimeoutID, unloadHandler;
 
   let promise = new Promise((resolve, reject) => {
     let src = "";
     sb[COMPLETE] = resolve;
-    timeoutHandler = () => reject(new ScriptTimeoutError(`Timed out after ${timeout} ms`));
     unloadHandler = sandbox.cloneInto(
         () => reject(new JavaScriptError("Document was unloaded")),
         sb);
@@ -120,7 +119,10 @@ evaluate.sandbox = function(sb, script, args = [],
     }).apply(null, ${ARGUMENTS})`;
 
     // timeout and unload handlers
-    scriptTimeoutID = setTimeout(timeoutHandler, timeout);
+    if (timeout !== null) {
+      scriptTimeoutID = setTimeout(() => reject(new ScriptTimeoutError(
+          `Timed out after ${timeout} ms`)), timeout);
+    }
     sb.window.onunload = unloadHandler;
 
     let res;

@@ -117,6 +117,19 @@ enum CodeNameIndex : CodeNameIndexType {
 
 const nsCString ToString(CodeNameIndex aCodeNameIndex);
 
+#define NS_DEFINE_INPUTTYPE(aCPPName, aDOMName) e##aCPPName,
+
+typedef uint8_t EditorInputTypeType;
+enum class EditorInputType : EditorInputTypeType {
+#include "mozilla/InputTypeList.h"
+  // If a DOM input event is synthesized by script, this is used.  Then,
+  // specified input type should be stored as string and use it as .inputType
+  // value.
+  eUnknown,
+};
+
+#undef NS_DEFINE_INPUTTYPE
+
 #define NS_DEFINE_COMMAND(aName, aCommandStr) , Command##aName
 #define NS_DEFINE_COMMAND_NO_EXEC_COMMAND(aName) , Command##aName
 

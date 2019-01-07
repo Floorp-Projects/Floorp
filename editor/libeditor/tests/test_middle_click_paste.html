@@ -83,6 +83,8 @@ function checkInputEvent(aEvent, aDescription) {
      `"input" event should be never cancelable ${aDescription}`);
   is(aEvent.bubbles, true,
      `"input" event should always bubble ${aDescription}`);
+  is(aEvent.inputType, "insertFromPaste",
+     `inputType should be "insertFromPaste" ${aDescription}`);
 }
 
 async function doTextareaTests(aTextarea) {

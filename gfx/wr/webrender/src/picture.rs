@@ -4,8 +4,8 @@
 
 use api::{DeviceRect, FilterOp, MixBlendMode, PipelineId, PremultipliedColorF, PictureRect, PicturePoint, WorldPoint};
 use api::{DeviceIntRect, DevicePoint, LayoutRect, PictureToRasterTransform, LayoutPixel, PropertyBinding, PropertyBindingId};
-use api::{DevicePixelScale, RasterRect, RasterSpace, ColorF, ImageKey, DirtyRect, WorldSize, LayoutSize, ClipMode};
-use api::{PicturePixel, RasterPixel, WorldPixel, WorldRect, ImageFormat, ImageDescriptor, WorldVector2D};
+use api::{DevicePixelScale, RasterRect, RasterSpace, ColorF, ImageKey, DirtyRect, WorldSize, ClipMode};
+use api::{PicturePixel, RasterPixel, WorldPixel, WorldRect, ImageFormat, ImageDescriptor, WorldVector2D, LayoutPoint};
 use box_shadow::{BLUR_SAMPLE_SCALE};
 use clip::{ClipNodeCollector, ClipStore, ClipChainId, ClipChainNode, ClipItem};
 use clip_scroll_tree::{ROOT_SPATIAL_NODE_INDEX, ClipScrollTree, SpatialNodeIndex, CoordinateSystemId};
@@ -13,13 +13,13 @@ use device::TextureFilter;
 use euclid::{TypedScale, vec3, TypedRect, TypedPoint2D, TypedSize2D};
 use euclid::approxeq::ApproxEq;
 use intern::ItemUid;
-use internal_types::{FastHashMap, PlaneSplitter};
+use internal_types::{FastHashMap, FastHashSet, PlaneSplitter};
 use frame_builder::{FrameBuildingContext, FrameBuildingState, PictureState, PictureContext};
 use gpu_cache::{GpuCache, GpuCacheAddress, GpuCacheHandle};
 use gpu_types::{TransformPalette, TransformPaletteId, UvRectKind};
 use plane_split::{Clipper, Polygon, Splitter};
 use prim_store::{PictureIndex, PrimitiveInstance, SpaceMapper, VisibleFace, PrimitiveInstanceKind};
-use prim_store::{get_raster_rects, CoordinateSpaceMapping, VectorKey};
+use prim_store::{get_raster_rects, CoordinateSpaceMapping};
 use prim_store::{OpacityBindingStorage, ImageInstanceStorage, OpacityBindingIndex};
 use print_tree::PrintTreePrinter;
 use render_backend::FrameResources;
@@ -128,6 +128,10 @@ pub struct Tile {
     /// The tile id is stable between display lists and / or frames,
     /// if the tile is retained. Useful for debugging tile evictions.
     id: TileId,
+    /// The set of transforms that affect primitives on this tile we
+    /// care about. Stored as a set here, and then collected, sorted
+    /// and converted to transform key values during post_update.
+    transforms: FastHashSet<SpatialNodeIndex>,
 }
 
 impl Tile {
@@ -143,12 +147,14 @@ impl Tile {
             handle: TextureCacheHandle::invalid(),
             descriptor: TileDescriptor::new(),
             is_valid: false,
+            transforms: FastHashSet::default(),
             id,
         }
     }
 
     /// Clear the dependencies for a tile.
     fn clear(&mut self) {
+        self.transforms.clear();
         self.descriptor.clear();
     }
 }
@@ -158,8 +164,8 @@ impl Tile {
 pub struct PrimitiveDescriptor {
     /// Uniquely identifies the content of the primitive template.
     prim_uid: ItemUid,
-    /// The origin in world space of this primitive.
-    origin: WorldPoint,
+    /// The origin in local space of this primitive.
+    origin: LayoutPoint,
     /// The first clip in the clip_uids array of clips that affect this tile.
     first_clip: u16,
     /// The number of clips that affect this primitive instance.
@@ -179,10 +185,10 @@ pub struct TileDescriptor {
     /// to uniquely describe the content of the clip node.
     clip_uids: ComparableVec<ItemUid>,
 
-    /// List of tile relative offsets of the clip node origins. This
+    /// List of local offsets of the clip node origins. This
     /// ensures that if a clip node is supplied but has a different
     /// transform between frames that the tile is invalidated.
-    clip_vertices: ComparableVec<VectorKey>,
+    clip_vertices: ComparableVec<LayoutPoint>,
 
     /// List of image keys that this tile depends on.
     image_keys: ComparableVec<ImageKey>,
@@ -196,6 +202,10 @@ pub struct TileDescriptor {
 
     /// List of the currently valid rectangles for each primitive.
     current_rects: Vec<WorldRect>,
+
+    /// List of the (quantized) transforms that we care about
+    /// tracking for this tile.
+    transforms: ComparableVec<TransformKey>,
 }
 
 impl TileDescriptor {
@@ -208,6 +218,7 @@ impl TileDescriptor {
             image_keys: ComparableVec::new(),
             needed_rects: Vec::new(),
             current_rects: Vec::new(),
+            transforms: ComparableVec::new(),
         }
     }
 
@@ -220,6 +231,7 @@ impl TileDescriptor {
         self.opacity_bindings.reset();
         self.image_keys.reset();
         self.needed_rects.clear();
+        self.transforms.reset();
     }
 
     /// Check if the dependencies of this tile are valid.
@@ -249,6 +261,7 @@ impl TileDescriptor {
         self.clip_uids.is_valid() &&
         self.clip_vertices.is_valid() &&
         self.prims.is_valid() &&
+        self.transforms.is_valid() &&
         rects_valid
     }
 }
@@ -689,9 +702,10 @@ impl TileCache {
         // Build the list of resources that this primitive has dependencies on.
         let mut opacity_bindings: SmallVec<[PropertyBindingId; 4]> = SmallVec::new();
         let mut clip_chain_uids: SmallVec<[ItemUid; 8]> = SmallVec::new();
-        let mut clip_vertices: SmallVec<[WorldPoint; 8]> = SmallVec::new();
+        let mut clip_vertices: SmallVec<[LayoutPoint; 8]> = SmallVec::new();
         let mut image_keys: SmallVec<[ImageKey; 8]> = SmallVec::new();
         let mut current_clip_chain_id = prim_instance.clip_chain_id;
+        let mut clip_spatial_nodes = FastHashSet::default();
 
         // Some primitives can not be cached (e.g. external video images)
         let is_cacheable = prim_instance.is_cacheable(
@@ -819,19 +833,9 @@ impl TileCache {
             };
 
             if add_to_clip_deps {
-                // TODO(gw): Constructing a rect here rather than mapping a point
-                //           is wasteful. We can optimize this by extending the
-                //           SpaceMapper struct to support mapping a point.
-                let local_rect = LayoutRect::new(
-                    clip_chain_node.local_pos,
-                    LayoutSize::zero(),
-                );
-
-                if let Some(clip_world_rect) = self.map_local_to_world.map(&local_rect) {
-                    clip_vertices.push(clip_world_rect.origin);
-                }
-
+                clip_vertices.push(clip_chain_node.local_pos);
                 clip_chain_uids.push(clip_chain_node.handle.uid());
+                clip_spatial_nodes.insert(clip_chain_node.spatial_node_index);
             }
 
             current_clip_chain_id = clip_chain_node.parent_clip_chain_id;
@@ -891,37 +895,19 @@ impl TileCache {
                 // // Include any opacity bindings this primitive depends on.
                 tile.descriptor.opacity_bindings.extend_from_slice(&opacity_bindings);
 
-                // For the primitive origin, store the world origin relative to
-                // the world origin of the containing picture. This ensures that
-                // a tile with primitives in the same coordinate system as the
-                // container picture itself, but different offsets relative to
-                // the containing picture are correctly invalidated. It does this
-                // while still maintaining the property of keeping the same hash
-                // for different display lists where the local origin is different
-                // but the primitives themselves are at the same relative position.
-                let origin = WorldPoint::new(
-                    world_rect.origin.x - tile.world_rect.origin.x,
-                    world_rect.origin.y - tile.world_rect.origin.y
-                );
-
                 // Update the tile descriptor, used for tile comparison during scene swaps.
                 tile.descriptor.prims.push(PrimitiveDescriptor {
                     prim_uid: prim_instance.uid(),
-                    origin,
+                    origin: prim_instance.prim_origin,
                     first_clip: tile.descriptor.clip_uids.len() as u16,
                     clip_count: clip_chain_uids.len() as u16,
                 });
                 tile.descriptor.clip_uids.extend_from_slice(&clip_chain_uids);
+                tile.descriptor.clip_vertices.extend_from_slice(&clip_vertices);
 
-                // Store tile relative clip vertices.
-                // TODO(gw): We might need to quantize these to avoid
-                //           invalidations due to FP accuracy.
-                for clip_vertex in &clip_vertices {
-                    let clip_vertex = VectorKey {
-                        x: clip_vertex.x - tile.world_rect.origin.x,
-                        y: clip_vertex.y - tile.world_rect.origin.y,
-                    };
-                    tile.descriptor.clip_vertices.push(clip_vertex);
+                tile.transforms.insert(prim_instance.spatial_node_index);
+                for spatial_node_index in &clip_spatial_nodes {
+                    tile.transforms.insert(*spatial_node_index);
                 }
             }
         }
@@ -967,6 +953,18 @@ impl TileCache {
 
         // Step through each tile and invalidate if the dependencies have changed.
         for (i, tile) in self.tiles.iter_mut().enumerate() {
+            // Update tile transforms
+            let mut transform_spatial_nodes: Vec<SpatialNodeIndex> = tile.transforms.drain().collect();
+            transform_spatial_nodes.sort();
+            for spatial_node_index in transform_spatial_nodes {
+                let mapping: CoordinateSpaceMapping<LayoutPixel, PicturePixel> = CoordinateSpaceMapping::new(
+                    self.spatial_node_index,
+                    spatial_node_index,
+                    frame_context.clip_scroll_tree,
+                ).expect("todo: handle invalid mappings");
+                tile.descriptor.transforms.push(mapping.into());
+            }
+
             // Invalidate if the backing texture was evicted.
             if resource_cache.texture_cache.is_allocated(&tile.handle) {
                 // Request the backing texture so it won't get evicted this frame.
@@ -1000,7 +998,7 @@ impl TileCache {
                 }
             } else {
                 // Add the tile rect to the dirty rect.
-                dirty_world_rect = dirty_world_rect.union(&tile.world_rect);
+                dirty_world_rect = dirty_world_rect.union(&visible_rect);
 
                 // Ensure that this texture is allocated.
                 resource_cache.texture_cache.update(

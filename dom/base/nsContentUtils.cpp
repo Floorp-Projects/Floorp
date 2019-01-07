@@ -4104,11 +4104,13 @@ nsresult nsContentUtils::DispatchEvent(Document* aDoc, nsISupports* aTarget,
 // static
 nsresult nsContentUtils::DispatchInputEvent(Element* aEventTargetElement) {
   RefPtr<TextEditor> textEditor;  // See bug 1506439
-  return DispatchInputEvent(aEventTargetElement, textEditor);
+  return DispatchInputEvent(aEventTargetElement, EditorInputType::eUnknown,
+                            textEditor);
 }
 
 // static
 nsresult nsContentUtils::DispatchInputEvent(Element* aEventTargetElement,
+                                            EditorInputType aEditorInputType,
                                             TextEditor* aTextEditor) {
   if (NS_WARN_IF(!aEventTargetElement)) {
     return NS_ERROR_INVALID_ARG;
@@ -4142,6 +4144,7 @@ nsresult nsContentUtils::DispatchInputEvent(Element* aEventTargetElement,
 #endif  // #ifdef DEBUG
 
   if (!useInputEvent) {
+    MOZ_ASSERT(aEditorInputType == EditorInputType::eUnknown);
     // Dispatch "input" event with Event instance.
     WidgetEvent widgetEvent(true, eUnidentifiedEvent);
     widgetEvent.mSpecifiedEventType = nsGkAtoms::oninput;
@@ -4195,6 +4198,8 @@ nsresult nsContentUtils::DispatchInputEvent(Element* aEventTargetElement,
   // composition without editor.
   inputEvent.mIsComposing =
       aTextEditor ? !!aTextEditor->GetComposition() : false;
+
+  inputEvent.mInputType = aEditorInputType;
 
   (new AsyncEventDispatcher(aEventTargetElement, inputEvent))
       ->RunDOMEventWhenSafe();

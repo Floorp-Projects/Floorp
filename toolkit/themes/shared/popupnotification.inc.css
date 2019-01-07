@@ -64,10 +64,6 @@
   border-top: 1px solid var(--panel-separator-color);
 }
 
-.popup-notification-button:hover:active:not([disabled]) {
-  box-shadow: 0 1px 0 hsla(210,4%,10%,.05) inset;
-}
-
 .popup-notification-primary-button:not([alone]) {
   flex: 0 50%;
 }

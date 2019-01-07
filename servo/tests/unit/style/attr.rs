@@ -3,17 +3,17 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 use app_units::Au;
-use style::attr::{AttrValue, LengthOrPercentageOrAuto, parse_length};
-use style::values::computed::{CalcLengthOrPercentage, Percentage};
+use style::attr::{AttrValue, LengthPercentageOrAuto, parse_length};
+use style::values::computed::{CalcLengthPercentage, Percentage};
 
 #[test]
 fn test_length_calc() {
-    let calc = CalcLengthOrPercentage::new(Au(10).into(), Some(Percentage(0.2)));
+    let calc = CalcLengthPercentage::new(Au(10).into(), Some(Percentage(0.2)));
     assert_eq!(calc.to_used_value(Some(Au(10))), Some(Au(12)));
     assert_eq!(calc.to_used_value(Some(Au(0))), Some(Au(10)));
     assert_eq!(calc.to_used_value(None), None);
 
-    let calc = CalcLengthOrPercentage::new(Au(10).into(), None);
+    let calc = CalcLengthPercentage::new(Au(10).into(), None);
     assert_eq!(calc.to_used_value(Some(Au(0))), Some(Au(10)));
     assert_eq!(calc.to_used_value(None), Some(Au(10)));
 }
@@ -74,15 +74,15 @@ fn test_from_limited_i32_should_keep_parsed_value_when_not_an_int() {
 
 #[test]
 pub fn test_parse_length() {
-    fn check(input: &str, expected: LengthOrPercentageOrAuto) {
+    fn check(input: &str, expected: LengthPercentageOrAuto) {
         let parsed = parse_length(input);
         assert_eq!(parsed, expected);
     }
 
-    check("0", LengthOrPercentageOrAuto::Length(Au::from_px(0)));
-    check("0.000%", LengthOrPercentageOrAuto::Percentage(0.0));
-    check("+5.82%", LengthOrPercentageOrAuto::Percentage(0.0582));
-    check("5.82", LengthOrPercentageOrAuto::Length(Au::from_f64_px(5.82)));
-    check("invalid", LengthOrPercentageOrAuto::Auto);
-    check("12 followed by invalid", LengthOrPercentageOrAuto::Length(Au::from_px(12)));
+    check("0", LengthPercentageOrAuto::Length(Au::from_px(0)));
+    check("0.000%", LengthPercentageOrAuto::Percentage(0.0));
+    check("+5.82%", LengthPercentageOrAuto::Percentage(0.0582));
+    check("5.82", LengthPercentageOrAuto::Length(Au::from_f64_px(5.82)));
+    check("invalid", LengthPercentageOrAuto::Auto);
+    check("12 followed by invalid", LengthPercentageOrAuto::Length(Au::from_px(12)));
 }

@@ -1397,6 +1397,9 @@ class nsContentUtils {
    *
    * @param aEventTarget        The event target element of the "input" event.
    *                            Must not be nullptr.
+   * @param aEditorInputType    The inputType value of InputEvent.
+   *                            If aEventTarget won't dispatch "input" event
+   *                            with InputEvent, set EditorInputType::eUnknown.
    * @param aTextEditor         Optional.  If this is called by editor,
    *                            editor should set this.  Otherwise, leave
    *                            nullptr.
@@ -1405,6 +1408,7 @@ class nsContentUtils {
   static nsresult DispatchInputEvent(Element* aEventTarget);
   MOZ_CAN_RUN_SCRIPT
   static nsresult DispatchInputEvent(Element* aEventTarget,
+                                     mozilla::EditorInputType aEditorInputType,
                                      mozilla::TextEditor* aTextEditor);
 
   /**

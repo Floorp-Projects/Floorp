@@ -148,6 +148,7 @@ static void Shutdown();
 #include "nsControllerCommandTable.h"
 
 #include "mozilla/TextInputProcessor.h"
+#include "mozilla/ScriptableContentIterator.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -220,6 +221,7 @@ NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIPresentationService,
 NS_GENERIC_FACTORY_CONSTRUCTOR(PresentationTCPSessionTransport)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(NotificationTelemetryService, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(PushNotifier)
+NS_GENERIC_FACTORY_CONSTRUCTOR(ScriptableContentIterator)
 
 //-----------------------------------------------------------------------------
 
@@ -519,6 +521,8 @@ NS_DEFINE_NAMED_CID(TEXT_INPUT_PROCESSOR_CID);
 
 NS_DEFINE_NAMED_CID(NS_SCRIPTERROR_CID);
 
+NS_DEFINE_NAMED_CID(SCRIPTABLE_CONTENT_ITERATOR_CID);
+
 static nsresult LocalStorageManagerConstructor(nsISupports* aOuter,
                                                REFNSIID aIID, void** aResult) {
   if (NextGenLocalStorageEnabled()) {
@@ -604,6 +608,7 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kPRESENTATION_TCP_SESSION_TRANSPORT_CID, false, nullptr, PresentationTCPSessionTransportConstructor },
   { &kTEXT_INPUT_PROCESSOR_CID, false, nullptr, TextInputProcessorConstructor },
   { &kNS_SCRIPTERROR_CID, false, nullptr, nsScriptErrorConstructor },
+  { &kSCRIPTABLE_CONTENT_ITERATOR_CID, false, nullptr, ScriptableContentIteratorConstructor },
   { nullptr }
     // clang-format on
 };
@@ -676,6 +681,7 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
   { PRESENTATION_TCP_SESSION_TRANSPORT_CONTRACTID, &kPRESENTATION_TCP_SESSION_TRANSPORT_CID },
   { "@mozilla.org/text-input-processor;1", &kTEXT_INPUT_PROCESSOR_CID },
   { NS_SCRIPTERROR_CONTRACTID, &kNS_SCRIPTERROR_CID },
+  { "@mozilla.org/scriptable-content-iterator;1", &kSCRIPTABLE_CONTENT_ITERATOR_CID },
   { nullptr }
 };
 
