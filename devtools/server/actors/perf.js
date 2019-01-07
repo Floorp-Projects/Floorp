@@ -6,7 +6,6 @@
 const protocol = require("devtools/shared/protocol");
 const { ActorClassWithSpec, Actor } = protocol;
 const { perfSpec } = require("devtools/shared/specs/perf");
-const { DEFAULT_WINDOW_LENGTH } = require("devtools/shared/performance-new/common");
 const { Ci } = require("chrome");
 const Services = require("Services");
 
@@ -55,8 +54,9 @@ exports.PerfActor = ActorClassWithSpec(perfSpec, {
     // to be tweaked or made configurable as needed.
     const settings = {
       entries: options.entries || 1000000,
-      duration: options.duration !== undefined
-        ? options.duration : DEFAULT_WINDOW_LENGTH,
+      // Window length should be Infinite if nothing's been passed.
+      // options.duration is supported for `perfActorVersion > 0`.
+      duration: options.duration || 0,
       interval: options.interval || 1,
       features: options.features ||
         ["js", "stackwalk", "responsiveness", "threads", "leaf"],
