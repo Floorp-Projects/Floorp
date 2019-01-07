@@ -9,6 +9,7 @@ import errno
 import os
 import re
 import subprocess
+import sys
 
 from distutils.spawn import find_executable
 from distutils.version import LooseVersion
@@ -71,9 +72,19 @@ class Repository(object):
     def __init__(self, path, tool):
         self.path = os.path.abspath(path)
         self._tool = get_tool_path(tool)
-        self._env = os.environ.copy()
         self._version = None
         self._valid_diff_filter = ('m', 'a', 'd')
+
+        if os.name == 'nt' and sys.version_info[0] == 2:
+            self._env = {}
+            for k, v in os.environ.iteritems():
+                if isinstance(k, unicode):
+                    k = k.encode('utf8')
+                if isinstance(v, unicode):
+                    v = v.encode('utf8')
+                self._env[k] = v
+        else:
+            self._env = os.environ.copy()
 
     def __enter__(self):
         return self
