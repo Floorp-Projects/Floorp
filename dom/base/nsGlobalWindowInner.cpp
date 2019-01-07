@@ -17,7 +17,6 @@
 #include "nsHistory.h"
 #include "nsDOMNavigationTiming.h"
 #include "nsIDOMStorageManager.h"
-#include "mozilla/AutoplayPermissionManager.h"
 #include "mozilla/dom/ContentFrameMessageManager.h"
 #include "mozilla/dom/DOMJSProxyHandler.h"
 #include "mozilla/dom/DOMPrefs.h"
@@ -1012,12 +1011,6 @@ nsGlobalWindowInner::~nsGlobalWindowInner() {
     MOZ_ASSERT(sInnerWindowsById->Get(mWindowID),
                "This window should be in the hash table");
     sInnerWindowsById->Remove(mWindowID);
-  }
-
-  // If AutoplayPermissionManager is going to be destroyed before getting the
-  // request's result, we would treat it as user deny.
-  if (mAutoplayPermissionManager) {
-    mAutoplayPermissionManager->DenyPlayRequestIfExists();
   }
 
   nsContentUtils::InnerOrOuterWindowDestroyed();
@@ -7328,38 +7321,6 @@ nsIGlobalObject* nsPIDOMWindowInner::AsGlobal() {
 
 const nsIGlobalObject* nsPIDOMWindowInner::AsGlobal() const {
   return nsGlobalWindowInner::Cast(this);
-}
-
-static nsPIDOMWindowInner* GetTopLevelInnerWindow(nsPIDOMWindowInner* aWindow) {
-  if (!aWindow) {
-    return nullptr;
-  }
-  nsIDocShell* docShell = aWindow->GetDocShell();
-  if (!docShell) {
-    return nullptr;
-  }
-  nsCOMPtr<nsIDocShellTreeItem> rootTreeItem;
-  docShell->GetSameTypeRootTreeItem(getter_AddRefs(rootTreeItem));
-  if (!rootTreeItem || !rootTreeItem->GetDocument()) {
-    return nullptr;
-  }
-  return rootTreeItem->GetDocument()->GetInnerWindow();
-}
-
-already_AddRefed<mozilla::AutoplayPermissionManager>
-nsPIDOMWindowInner::GetAutoplayPermissionManager() {
-  // The AutoplayPermissionManager is stored on the top level window.
-  nsPIDOMWindowInner* window = GetTopLevelInnerWindow(this);
-  if (!window) {
-    return nullptr;
-  }
-  if (!window->mAutoplayPermissionManager) {
-    window->mAutoplayPermissionManager =
-        new AutoplayPermissionManager(nsGlobalWindowInner::Cast(window));
-  }
-  RefPtr<mozilla::AutoplayPermissionManager> manager =
-      window->mAutoplayPermissionManager;
-  return manager.forget();
 }
 
 void nsPIDOMWindowInner::SaveStorageAccessGranted(
