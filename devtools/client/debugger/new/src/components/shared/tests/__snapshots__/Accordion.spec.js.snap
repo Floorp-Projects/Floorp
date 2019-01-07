@@ -1,0 +1,75 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Accordion basic render 1`] = `
+<ul
+  className="accordion"
+>
+  <li
+    className="accordion-item-1"
+    key="0"
+  >
+    <h2
+      className="_header"
+      onClick={[Function]}
+      onKeyDown={[Function]}
+      tabIndex="0"
+    >
+      <Svg
+        className="expanded"
+        name="arrow"
+      />
+      Test Accordion Item 1
+    </h2>
+    <div
+      className="_content"
+    >
+      <div />
+    </div>
+  </li>
+  <li
+    className="accordion-item-2"
+    key="1"
+  >
+    <h2
+      className="_header"
+      onClick={[Function]}
+      onKeyDown={[Function]}
+      tabIndex="0"
+    >
+      <Svg
+        className=""
+        name="arrow"
+      />
+      Test Accordion Item 2
+      <div
+        className="header-buttons"
+        tabIndex="-1"
+      >
+        <button />
+      </div>
+    </h2>
+  </li>
+  <li
+    className="accordion-item-3"
+    key="2"
+  >
+    <h2
+      className="_header"
+      onClick={[Function]}
+      onKeyDown={[Function]}
+      tabIndex="0"
+    >
+      <Svg
+        className="expanded"
+        name="arrow"
+      />
+      Test Accordion Item 3
+    </h2>
+    <div
+      className="_content"
+    >
+      <div />
+    </div>
+  </li>
+</ul>
+`;

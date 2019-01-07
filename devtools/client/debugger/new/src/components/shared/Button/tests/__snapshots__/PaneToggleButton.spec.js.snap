@@ -1,0 +1,13 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`PaneToggleButton renders default 1`] = `
+<CommandBarButton
+  className="toggle-button vertical"
+  onClick={[Function]}
+  title="Expand panes"
+>
+  <Svg
+    name="togglePanes"
+  />
+</CommandBarButton>
+`;

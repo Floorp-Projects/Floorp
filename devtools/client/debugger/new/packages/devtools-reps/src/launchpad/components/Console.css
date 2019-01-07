@@ -1,0 +1,89 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+main {
+  --default-border: 1px solid var(--theme-splitter-color);
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.expressions {
+  padding: 2em 1em;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.rep-row {
+  border: var(--default-border);
+  margin-bottom: 1em;
+}
+
+.rep-input {
+  font-family: monospace;
+  background-color: var(--theme-toolbar-background-alt);
+  color: var(--theme-body-color);
+  padding: 0.5rem;
+}
+
+.rep-input:before {
+  content: "➜ ";
+}
+
+.reps {
+  display: flex;
+  flex-wrap: wrap;
+  padding: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.rep-element {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.rep-element + .rep-element {
+  margin-left: 0.5rem;
+}
+
+.rep-element[data-mode]::before {
+  content: attr(data-mode)":";
+  background-color: var(--theme-toolbar-background);
+  font-family: monospace;
+  display: inline-block;
+  font-size: 0.75rem;
+  padding: 0.1rem 0.25rem;
+  margin-right: 0.25rem;
+  border-radius: 0.25rem;
+}
+
+.packet header {
+  display: flex;
+  background-color: var(--theme-toolbar-background-alt);
+  border-top: var(--default-border);
+  color: var(--theme-body-color);
+  padding: 0.5rem;
+}
+
+.packet header::before {
+  display: inline-block;
+  padding-right: 0.5rem;
+}
+
+.packet header.packet-expanded::before {
+  content: "−";
+}
+
+.packet header.packet-collapsed::before {
+  content: "+";
+}
+
+.copy-packet-button {
+  margin-left: auto;
+  margin-right: 0.5rem;
+}
+
+.packet .packet-rep {
+  padding: 1rem;
+}
