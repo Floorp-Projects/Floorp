@@ -1778,76 +1778,6 @@ void TypedArrayObject::getElements(Value* vp) {
  * TypedArrayObject boilerplate
  */
 
-#define IMPL_TYPED_ARRAY_JSAPI_CONSTRUCTORS(Name, NativeType)                \
-  JS_FRIEND_API JSObject* JS_New##Name##Array(JSContext* cx,                 \
-                                              uint32_t nelements) {          \
-    return TypedArrayObjectTemplate<NativeType>::fromLength(cx, nelements);  \
-  }                                                                          \
-  JS_FRIEND_API JSObject* JS_New##Name##ArrayFromArray(JSContext* cx,        \
-                                                       HandleObject other) { \
-    return TypedArrayObjectTemplate<NativeType>::fromArray(cx, other);       \
-  }                                                                          \
-  JS_FRIEND_API JSObject* JS_New##Name##ArrayWithBuffer(                     \
-      JSContext* cx, HandleObject arrayBuffer, uint32_t byteOffset,          \
-      int32_t length) {                                                      \
-    return TypedArrayObjectTemplate<NativeType>::fromBuffer(                 \
-        cx, arrayBuffer, byteOffset, length);                                \
-  }                                                                          \
-  JS_FRIEND_API bool JS_Is##Name##Array(JSObject* obj) {                     \
-    if (!(obj = CheckedUnwrap(obj))) return false;                           \
-    const Class* clasp = obj->getClass();                                    \
-    return clasp == TypedArrayObjectTemplate<NativeType>::instanceClass();   \
-  }                                                                          \
-  JS_FRIEND_API JSObject* js::Unwrap##Name##Array(JSObject* obj) {           \
-    obj = CheckedUnwrap(obj);                                                \
-    if (!obj) return nullptr;                                                \
-    const Class* clasp = obj->getClass();                                    \
-    if (clasp == TypedArrayObjectTemplate<NativeType>::instanceClass())      \
-      return obj;                                                            \
-    return nullptr;                                                          \
-  }                                                                          \
-  const js::Class* const js::detail::Name##ArrayClassPtr =                   \
-      &js::TypedArrayObject::classes                                         \
-          [TypedArrayObjectTemplate<NativeType>::ArrayTypeID()];
-
-IMPL_TYPED_ARRAY_JSAPI_CONSTRUCTORS(Int8, int8_t)
-IMPL_TYPED_ARRAY_JSAPI_CONSTRUCTORS(Uint8, uint8_t)
-IMPL_TYPED_ARRAY_JSAPI_CONSTRUCTORS(Uint8Clamped, uint8_clamped)
-IMPL_TYPED_ARRAY_JSAPI_CONSTRUCTORS(Int16, int16_t)
-IMPL_TYPED_ARRAY_JSAPI_CONSTRUCTORS(Uint16, uint16_t)
-IMPL_TYPED_ARRAY_JSAPI_CONSTRUCTORS(Int32, int32_t)
-IMPL_TYPED_ARRAY_JSAPI_CONSTRUCTORS(Uint32, uint32_t)
-IMPL_TYPED_ARRAY_JSAPI_CONSTRUCTORS(Float32, float)
-IMPL_TYPED_ARRAY_JSAPI_CONSTRUCTORS(Float64, double)
-
-#define IMPL_TYPED_ARRAY_COMBINED_UNWRAPPERS(Name, ExternalType, InternalType) \
-  JS_FRIEND_API JSObject* JS_GetObjectAs##Name##Array(                         \
-      JSObject* obj, uint32_t* length, bool* isShared, ExternalType** data) {  \
-    if (!(obj = CheckedUnwrap(obj))) return nullptr;                           \
-                                                                               \
-    const Class* clasp = obj->getClass();                                      \
-    if (clasp != TypedArrayObjectTemplate<InternalType>::instanceClass())      \
-      return nullptr;                                                          \
-                                                                               \
-    TypedArrayObject* tarr = &obj->as<TypedArrayObject>();                     \
-    *length = tarr->length();                                                  \
-    *isShared = tarr->isSharedMemory();                                        \
-    *data = static_cast<ExternalType*>(tarr->dataPointerEither().unwrap(       \
-        /*safe - caller sees isShared flag*/));                                \
-                                                                               \
-    return obj;                                                                \
-  }
-
-IMPL_TYPED_ARRAY_COMBINED_UNWRAPPERS(Int8, int8_t, int8_t)
-IMPL_TYPED_ARRAY_COMBINED_UNWRAPPERS(Uint8, uint8_t, uint8_t)
-IMPL_TYPED_ARRAY_COMBINED_UNWRAPPERS(Uint8Clamped, uint8_t, uint8_clamped)
-IMPL_TYPED_ARRAY_COMBINED_UNWRAPPERS(Int16, int16_t, int16_t)
-IMPL_TYPED_ARRAY_COMBINED_UNWRAPPERS(Uint16, uint16_t, uint16_t)
-IMPL_TYPED_ARRAY_COMBINED_UNWRAPPERS(Int32, int32_t, int32_t)
-IMPL_TYPED_ARRAY_COMBINED_UNWRAPPERS(Uint32, uint32_t, uint32_t)
-IMPL_TYPED_ARRAY_COMBINED_UNWRAPPERS(Float32, float, float)
-IMPL_TYPED_ARRAY_COMBINED_UNWRAPPERS(Float64, double, double)
-
 static const ClassOps TypedArrayClassOps = {
     nullptr,                      /* addProperty */
     nullptr,                      /* delProperty */
@@ -2147,6 +2077,76 @@ bool js::DefineTypedArrayElement(JSContext* cx, HandleObject obj,
 }
 
 /* JS Friend API */
+
+#define IMPL_TYPED_ARRAY_JSAPI_CONSTRUCTORS(Name, NativeType)                \
+  JS_FRIEND_API JSObject* JS_New##Name##Array(JSContext* cx,                 \
+                                              uint32_t nelements) {          \
+    return TypedArrayObjectTemplate<NativeType>::fromLength(cx, nelements);  \
+  }                                                                          \
+  JS_FRIEND_API JSObject* JS_New##Name##ArrayFromArray(JSContext* cx,        \
+                                                       HandleObject other) { \
+    return TypedArrayObjectTemplate<NativeType>::fromArray(cx, other);       \
+  }                                                                          \
+  JS_FRIEND_API JSObject* JS_New##Name##ArrayWithBuffer(                     \
+      JSContext* cx, HandleObject arrayBuffer, uint32_t byteOffset,          \
+      int32_t length) {                                                      \
+    return TypedArrayObjectTemplate<NativeType>::fromBuffer(                 \
+        cx, arrayBuffer, byteOffset, length);                                \
+  }                                                                          \
+  JS_FRIEND_API bool JS_Is##Name##Array(JSObject* obj) {                     \
+    if (!(obj = CheckedUnwrap(obj))) return false;                           \
+    const Class* clasp = obj->getClass();                                    \
+    return clasp == TypedArrayObjectTemplate<NativeType>::instanceClass();   \
+  }                                                                          \
+  JS_FRIEND_API JSObject* js::Unwrap##Name##Array(JSObject* obj) {           \
+    obj = CheckedUnwrap(obj);                                                \
+    if (!obj) return nullptr;                                                \
+    const Class* clasp = obj->getClass();                                    \
+    if (clasp == TypedArrayObjectTemplate<NativeType>::instanceClass())      \
+      return obj;                                                            \
+    return nullptr;                                                          \
+  }                                                                          \
+  const js::Class* const js::detail::Name##ArrayClassPtr =                   \
+      &js::TypedArrayObject::classes                                         \
+          [TypedArrayObjectTemplate<NativeType>::ArrayTypeID()];
+
+IMPL_TYPED_ARRAY_JSAPI_CONSTRUCTORS(Int8, int8_t)
+IMPL_TYPED_ARRAY_JSAPI_CONSTRUCTORS(Uint8, uint8_t)
+IMPL_TYPED_ARRAY_JSAPI_CONSTRUCTORS(Uint8Clamped, uint8_clamped)
+IMPL_TYPED_ARRAY_JSAPI_CONSTRUCTORS(Int16, int16_t)
+IMPL_TYPED_ARRAY_JSAPI_CONSTRUCTORS(Uint16, uint16_t)
+IMPL_TYPED_ARRAY_JSAPI_CONSTRUCTORS(Int32, int32_t)
+IMPL_TYPED_ARRAY_JSAPI_CONSTRUCTORS(Uint32, uint32_t)
+IMPL_TYPED_ARRAY_JSAPI_CONSTRUCTORS(Float32, float)
+IMPL_TYPED_ARRAY_JSAPI_CONSTRUCTORS(Float64, double)
+
+#define IMPL_TYPED_ARRAY_COMBINED_UNWRAPPERS(Name, ExternalType, InternalType) \
+  JS_FRIEND_API JSObject* JS_GetObjectAs##Name##Array(                         \
+      JSObject* obj, uint32_t* length, bool* isShared, ExternalType** data) {  \
+    if (!(obj = CheckedUnwrap(obj))) return nullptr;                           \
+                                                                               \
+    const Class* clasp = obj->getClass();                                      \
+    if (clasp != TypedArrayObjectTemplate<InternalType>::instanceClass())      \
+      return nullptr;                                                          \
+                                                                               \
+    TypedArrayObject* tarr = &obj->as<TypedArrayObject>();                     \
+    *length = tarr->length();                                                  \
+    *isShared = tarr->isSharedMemory();                                        \
+    *data = static_cast<ExternalType*>(tarr->dataPointerEither().unwrap(       \
+        /*safe - caller sees isShared flag*/));                                \
+                                                                               \
+    return obj;                                                                \
+  }
+
+IMPL_TYPED_ARRAY_COMBINED_UNWRAPPERS(Int8, int8_t, int8_t)
+IMPL_TYPED_ARRAY_COMBINED_UNWRAPPERS(Uint8, uint8_t, uint8_t)
+IMPL_TYPED_ARRAY_COMBINED_UNWRAPPERS(Uint8Clamped, uint8_t, uint8_clamped)
+IMPL_TYPED_ARRAY_COMBINED_UNWRAPPERS(Int16, int16_t, int16_t)
+IMPL_TYPED_ARRAY_COMBINED_UNWRAPPERS(Uint16, uint16_t, uint16_t)
+IMPL_TYPED_ARRAY_COMBINED_UNWRAPPERS(Int32, int32_t, int32_t)
+IMPL_TYPED_ARRAY_COMBINED_UNWRAPPERS(Uint32, uint32_t, uint32_t)
+IMPL_TYPED_ARRAY_COMBINED_UNWRAPPERS(Float32, float, float)
+IMPL_TYPED_ARRAY_COMBINED_UNWRAPPERS(Float64, double, double)
 
 JS_FRIEND_API bool JS_IsTypedArrayObject(JSObject* obj) {
   return obj->canUnwrapAs<TypedArrayObject>();
