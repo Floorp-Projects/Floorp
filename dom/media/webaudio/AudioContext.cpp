@@ -173,7 +173,7 @@ AudioContext::AudioContext(nsPIDOMWindowInner* aWindow, bool aIsOffline,
     AUTOPLAY_LOG("AudioContext %p is not allowed to start", this);
     mWasAllowedToStart = false;
     SuspendInternal(nullptr);
-    DispatchBlockedEvent();
+    ReportBlocked();
   }
 
   FFTBlock::MainThreadInit();
@@ -192,7 +192,7 @@ void AudioContext::NotifyScheduledSourceNodeStarted() {
   if (isAllowedToPlay) {
     ResumeInternal();
   } else {
-    DispatchBlockedEvent();
+    ReportBlocked();
   }
 }
 
@@ -943,7 +943,7 @@ already_AddRefed<Promise> AudioContext::Resume(ErrorResult& aRv) {
     mWasAllowedToStart = true;
     ResumeInternal();
   } else {
-    DispatchBlockedEvent();
+    ReportBlocked();
   }
 
   return promise.forget();
@@ -966,7 +966,9 @@ void AudioContext::ResumeInternal() {
   mSuspendCalled = false;
 }
 
-void AudioContext::DispatchBlockedEvent() {
+void AudioContext::ReportBlocked() {
+  ReportToConsole(nsIScriptError::warningFlag, "BlockAutoplayError");
+
   if (!StaticPrefs::MediaBlockEventEnabled()) {
     return;
   }
@@ -1142,6 +1144,15 @@ BasicWaveFormCache* AudioContext::GetBasicWaveFormCache() {
     mBasicWaveFormCache = new BasicWaveFormCache(SampleRate());
   }
   return mBasicWaveFormCache;
+}
+
+void AudioContext::ReportToConsole(uint32_t aErrorFlags,
+                                   const char* aMsg) const {
+  MOZ_ASSERT(aMsg);
+  Document* doc =
+      GetParentObject() ? GetParentObject()->GetExtantDoc() : nullptr;
+  nsContentUtils::ReportToConsole(aErrorFlags, NS_LITERAL_CSTRING("Media"), doc,
+                                  nsContentUtils::eDOM_PROPERTIES, aMsg);
 }
 
 BasicWaveFormCache::BasicWaveFormCache(uint32_t aSampleRate)
