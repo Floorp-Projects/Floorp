@@ -4471,23 +4471,23 @@ pub extern "C" fn Servo_DeclarationBlock_SetPixelValue(
 
     let long = get_longhand_from_id!(property);
     let nocalc = NoCalcLength::from_px(value);
-    let lop = LengthPercentage::Length(nocalc);
-    let lop_or_auto = LengthPercentageOrAuto::LengthPercentage(lop.clone());
+    let lp = LengthPercentage::Length(nocalc);
+    let lp_or_auto = LengthPercentageOrAuto::LengthPercentage(lp.clone());
     let prop = match_wrap_declared! { long,
-        Height => MozLength::LengthPercentageOrAuto(lop_or_auto),
-        Width => MozLength::LengthPercentageOrAuto(lop_or_auto),
+        Height => MozLength::LengthPercentageOrAuto(lp_or_auto),
+        Width => MozLength::LengthPercentageOrAuto(lp_or_auto),
         BorderTopWidth => BorderSideWidth::Length(nocalc.into()),
         BorderRightWidth => BorderSideWidth::Length(nocalc.into()),
         BorderBottomWidth => BorderSideWidth::Length(nocalc.into()),
         BorderLeftWidth => BorderSideWidth::Length(nocalc.into()),
-        MarginTop => lop_or_auto,
-        MarginRight => lop_or_auto,
-        MarginBottom => lop_or_auto,
-        MarginLeft => lop_or_auto,
-        PaddingTop => NonNegative(lop),
-        PaddingRight => NonNegative(lop),
-        PaddingBottom => NonNegative(lop),
-        PaddingLeft => NonNegative(lop),
+        MarginTop => lp_or_auto,
+        MarginRight => lp_or_auto,
+        MarginBottom => lp_or_auto,
+        MarginLeft => lp_or_auto,
+        PaddingTop => NonNegative(lp),
+        PaddingRight => NonNegative(lp),
+        PaddingBottom => NonNegative(lp),
+        PaddingLeft => NonNegative(lp),
         BorderSpacing => {
             let v = NonNegativeLength::from(nocalc);
             Box::new(BorderSpacing::new(v.clone(), v))
@@ -4596,16 +4596,16 @@ pub extern "C" fn Servo_DeclarationBlock_SetPercentValue(
 
     let long = get_longhand_from_id!(property);
     let pc = Percentage(value);
-    let lop_or_auto =
+    let lp_or_auto =
         LengthPercentageOrAuto::LengthPercentage(LengthPercentage::Percentage(pc));
 
     let prop = match_wrap_declared! { long,
-        Height => MozLength::LengthPercentageOrAuto(lop_or_auto),
-        Width => MozLength::LengthPercentageOrAuto(lop_or_auto),
-        MarginTop => lop_or_auto,
-        MarginRight => lop_or_auto,
-        MarginBottom => lop_or_auto,
-        MarginLeft => lop_or_auto,
+        Height => MozLength::LengthPercentageOrAuto(lp_or_auto),
+        Width => MozLength::LengthPercentageOrAuto(lp_or_auto),
+        MarginTop => lp_or_auto,
+        MarginRight => lp_or_auto,
+        MarginBottom => lp_or_auto,
+        MarginLeft => lp_or_auto,
         FontSize => LengthPercentage::from(pc).into(),
     };
     write_locked_arc(declarations, |decls: &mut PropertyDeclarationBlock| {
