@@ -1,0 +1,33 @@
+{
+  "name": "devtools-components",
+  "version": "0.6.0",
+  "description": "DevTools HTML Components",
+  "main": "index.js",
+  "scripts": {
+    "copy-assets": "node bin/copy-assets",
+    "license-check": "devtools-license-check",
+    "storybook":
+      "NODE_ENV=storybook start-storybook -p 9002 -c .storybook -s ./src",
+    "test": "jest --projects jest.config.js"
+  },
+  "author": "Jason Laster",
+  "license": "MPL-2.0",
+  "dependencies": {
+    "prop-types": "^15.6.0",
+    "react": "^16.4.1",
+    "react-dom": "^16.4.1",
+    "react-dom-factories": "^1.0.2"
+  },
+  "devDependencies": {
+    "@storybook/react": "^3.3.14",
+    "babel-plugin-transform-es2015-modules-commonjs": "^6.26.0",
+    "babel-preset-react": "^6.24.1",
+    "devtools-license-check": "^0.7.0",
+    "enzyme": "^3.3.0",
+    "enzyme-adapter-react-16": "^1.1.1",
+    "eslint": "^5.0.0",
+    "eslint-plugin-mozilla": "1.0.4",
+    "fs-extra": "^7.0.0",
+    "lodash": "^4.17.2"
+  }
+}

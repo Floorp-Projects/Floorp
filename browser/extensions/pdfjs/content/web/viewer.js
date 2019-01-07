@@ -1021,8 +1021,11 @@ let PDFViewerApplication = {
       this.loadingBar.setWidth(this.appConfig.viewerContainer);
 
       if (!_app_options.AppOptions.get('disableHistory') && !this.isViewerEmbedded) {
-        let resetHistory = !_app_options.AppOptions.get('showPreviousViewOnLoad');
-        this.pdfHistory.initialize(pdfDocument.fingerprint, resetHistory);
+        this.pdfHistory.initialize({
+          fingerprint: pdfDocument.fingerprint,
+          resetHistory: !_app_options.AppOptions.get('showPreviousViewOnLoad'),
+          updateUrl: _app_options.AppOptions.get('historyUpdateUrl')
+        });
 
         if (this.pdfHistory.initialBookmark) {
           this.initialBookmark = this.pdfHistory.initialBookmark;
@@ -3928,6 +3931,10 @@ const defaultOptions = {
     value: 0,
     kind: OptionKind.VIEWER
   },
+  historyUpdateUrl: {
+    value: false,
+    kind: OptionKind.VIEWER
+  },
   imageResourcesPath: {
     value: './images/',
     kind: OptionKind.VIEWER
@@ -5798,7 +5805,11 @@ class PDFHistory {
     });
   }
 
-  initialize(fingerprint, resetHistory = false) {
+  initialize({
+    fingerprint,
+    resetHistory = false,
+    updateUrl = false
+  }) {
     if (!fingerprint || typeof fingerprint !== 'string') {
       console.error('PDFHistory.initialize: The "fingerprint" must be a non-empty string.');
       return;
@@ -5806,6 +5817,7 @@ class PDFHistory {
 
     let reInitialized = this.initialized && this.fingerprint !== fingerprint;
     this.fingerprint = fingerprint;
+    this._updateUrl = updateUrl === true;
 
     if (!this.initialized) {
       this._bindEvents();
@@ -5823,7 +5835,7 @@ class PDFHistory {
     this._destination = null;
     this._position = null;
 
-    if (!this._isValidState(state) || resetHistory) {
+    if (!this._isValidState(state, true) || resetHistory) {
       let {
         hash,
         page,
@@ -5970,11 +5982,21 @@ class PDFHistory {
 
     this._updateInternalState(destination, newState.uid);
 
+    let newUrl;
+
+    if (this._updateUrl && destination && destination.hash) {
+      const baseUrl = document.location.href.split('#')[0];
+
+      if (!baseUrl.startsWith('file://')) {
+        newUrl = `${baseUrl}#${destination.hash}`;
+      }
+    }
+
     if (shouldReplace) {
-      window.history.replaceState(newState, '');
+      window.history.replaceState(newState, '', newUrl);
     } else {
       this._maxUid = this._uid;
-      window.history.pushState(newState, '');
+      window.history.pushState(newState, '', newUrl);
     }
   }
 
@@ -6023,13 +6045,25 @@ class PDFHistory {
     this._pushOrReplaceState(position, forceReplace);
   }
 
-  _isValidState(state) {
+  _isValidState(state, checkReload = false) {
     if (!state) {
       return false;
     }
 
     if (state.fingerprint !== this.fingerprint) {
-      return false;
+      if (checkReload) {
+        if (typeof state.fingerprint !== 'string' || state.fingerprint.length !== this.fingerprint.length) {
+          return false;
+        }
+
+        const [perfEntry] = performance.getEntriesByType('navigation');
+
+        if (!perfEntry || perfEntry.type !== 'reload') {
+          return false;
+        }
+      } else {
+        return false;
+      }
     }
 
     if (!Number.isInteger(state.uid) || state.uid < 0) {
@@ -11600,6 +11634,7 @@ function getDefaultPreferences() {
       "disableOpenActionDestination": true,
       "disablePageMode": false,
       "disablePageLabels": false,
+      "historyUpdateUrl": false,
       "scrollModeOnLoad": 0,
       "spreadModeOnLoad": 0
     });

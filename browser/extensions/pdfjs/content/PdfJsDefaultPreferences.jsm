@@ -42,6 +42,7 @@ var PdfJsDefaultPreferences = Object.freeze({
  "disableOpenActionDestination": true,
  "disablePageMode": false,
  "disablePageLabels": false,
+ "historyUpdateUrl": false,
  "scrollModeOnLoad": 0,
  "spreadModeOnLoad": 0
 });

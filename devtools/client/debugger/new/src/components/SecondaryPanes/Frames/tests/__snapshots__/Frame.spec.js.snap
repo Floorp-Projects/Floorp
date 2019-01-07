@@ -1,0 +1,220 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Frame getFrameTitle 1`] = `
+<li
+  className="frame"
+  key="1"
+  onContextMenu={[Function]}
+  onKeyUp={[Function]}
+  onMouseDown={[Function]}
+  tabIndex={0}
+  title="Jump to https://aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com/assets/src/js/foo-view.js:10"
+>
+  	
+  <FrameTitle
+    frame={
+      Object {
+        "displayName": "renderFoo",
+        "id": 1,
+        "location": Object {
+          "line": 10,
+        },
+        "source": Object {
+          "url": "https://aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com/assets/src/js/foo-view.js",
+        },
+      }
+    }
+    options={
+      Object {
+        "shouldMapDisplayName": true,
+      }
+    }
+  />
+   
+  <FrameLocation
+    frame={
+      Object {
+        "displayName": "renderFoo",
+        "id": 1,
+        "location": Object {
+          "line": 10,
+        },
+        "source": Object {
+          "url": "https://aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com/assets/src/js/foo-view.js",
+        },
+      }
+    }
+  />
+  
+
+</li>
+`;
+
+exports[`Frame library frame 1`] = `
+<li
+  className="frame selected"
+  key="3"
+  onContextMenu={[Function]}
+  onKeyUp={[Function]}
+  onMouseDown={[Function]}
+  tabIndex={0}
+>
+  	
+  <FrameTitle
+    frame={
+      Object {
+        "displayName": "updateEvents",
+        "frameworkGroupingOn": false,
+        "id": 3,
+        "library": "backbone",
+        "location": Object {
+          "line": 12,
+        },
+        "source": Object {
+          "url": "backbone.js",
+        },
+        "toggleFrameworkGrouping": [MockFunction],
+      }
+    }
+    options={
+      Object {
+        "shouldMapDisplayName": true,
+      }
+    }
+  />
+   
+  <FrameLocation
+    frame={
+      Object {
+        "displayName": "updateEvents",
+        "frameworkGroupingOn": false,
+        "id": 3,
+        "library": "backbone",
+        "location": Object {
+          "line": 12,
+        },
+        "source": Object {
+          "url": "backbone.js",
+        },
+        "toggleFrameworkGrouping": [MockFunction],
+      }
+    }
+  />
+  
+
+</li>
+`;
+
+exports[`Frame user frame (not selected) 1`] = `
+<li
+  className="frame"
+  key="1"
+  onContextMenu={[Function]}
+  onKeyUp={[Function]}
+  onMouseDown={[Function]}
+  tabIndex={0}
+>
+  	
+  <FrameTitle
+    frame={
+      Object {
+        "displayName": "renderFoo",
+        "frameworkGroupingOn": false,
+        "id": 1,
+        "library": false,
+        "location": Object {
+          "line": 10,
+        },
+        "source": Object {
+          "isBlackBoxed": false,
+          "url": "foo-view.js",
+        },
+        "toggleFrameworkGrouping": [MockFunction],
+      }
+    }
+    options={
+      Object {
+        "shouldMapDisplayName": true,
+      }
+    }
+  />
+   
+  <FrameLocation
+    frame={
+      Object {
+        "displayName": "renderFoo",
+        "frameworkGroupingOn": false,
+        "id": 1,
+        "library": false,
+        "location": Object {
+          "line": 10,
+        },
+        "source": Object {
+          "isBlackBoxed": false,
+          "url": "foo-view.js",
+        },
+        "toggleFrameworkGrouping": [MockFunction],
+      }
+    }
+  />
+  
+
+</li>
+`;
+
+exports[`Frame user frame 1`] = `
+<li
+  className="frame selected"
+  key="1"
+  onContextMenu={[Function]}
+  onKeyUp={[Function]}
+  onMouseDown={[Function]}
+  tabIndex={0}
+>
+  	
+  <FrameTitle
+    frame={
+      Object {
+        "displayName": "renderFoo",
+        "frameworkGroupingOn": false,
+        "id": 1,
+        "library": false,
+        "location": Object {
+          "line": 10,
+        },
+        "source": Object {
+          "isBlackBoxed": false,
+          "url": "foo-view.js",
+        },
+        "toggleFrameworkGrouping": [MockFunction],
+      }
+    }
+    options={
+      Object {
+        "shouldMapDisplayName": true,
+      }
+    }
+  />
+   
+  <FrameLocation
+    frame={
+      Object {
+        "displayName": "renderFoo",
+        "frameworkGroupingOn": false,
+        "id": 1,
+        "library": false,
+        "location": Object {
+          "line": 10,
+        },
+        "source": Object {
+          "isBlackBoxed": false,
+          "url": "foo-view.js",
+        },
+        "toggleFrameworkGrouping": [MockFunction],
+      }
+    }
+  />
+  
+
+</li>
+`;

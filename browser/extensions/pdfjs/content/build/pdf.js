@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.1.153';
-var pdfjsBuild = '5a2bd9fc';
+var pdfjsVersion = '2.1.176';
+var pdfjsBuild = 'e4d2a160';
 
 var pdfjsSharedUtil = __w_pdfjs_require__(1);
 
@@ -5154,7 +5154,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise('GetDocRequest', {
     docId,
-    apiVersion: '2.1.153',
+    apiVersion: '2.1.176',
     source: {
       data: source.data,
       url: source.url,
@@ -6885,9 +6885,9 @@ const InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-const version = '2.1.153';
+const version = '2.1.176';
 exports.version = version;
-const build = '5a2bd9fc';
+const build = 'e4d2a160';
 exports.build = build;
 
 /***/ }),
@@ -10699,7 +10699,7 @@ function isWhitespaceString(s) {
 
 class XMLParserBase {
   _resolveEntities(s) {
-    return s.replace(/&([^;]+);/g, function (all, entity) {
+    return s.replace(/&([^;]+);/g, (all, entity) => {
       if (entity.substring(0, 2) === '#x') {
         return String.fromCharCode(parseInt(entity.substring(2), 16));
       } else if (entity.substring(0, 1) === '#') {
@@ -10989,6 +10989,11 @@ class SimpleDOMNode {
     }
 
     const index = childNodes.indexOf(this);
+
+    if (index === -1) {
+      return undefined;
+    }
+
     return childNodes[index + 1];
   }
 
@@ -11078,8 +11083,12 @@ class SimpleXMLParser extends XMLParserBase {
   }
 
   onEndElement(name) {
-    this._currentFragment = this._stack.pop();
+    this._currentFragment = this._stack.pop() || [];
     const lastElement = this._currentFragment[this._currentFragment.length - 1];
+
+    if (!lastElement) {
+      return;
+    }
 
     for (let i = 0, ii = lastElement.childNodes.length; i < ii; i++) {
       lastElement.childNodes[i].parentNode = lastElement;
