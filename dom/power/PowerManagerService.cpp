@@ -8,7 +8,6 @@
 #include "mozilla/Hal.h"
 #include "mozilla/HalWakeLock.h"
 #include "mozilla/ClearOnShutdown.h"
-#include "mozilla/ModuleUtils.h"
 #include "mozilla/Preferences.h"
 #include "nsIDOMWakeLockListener.h"
 #include "nsIDOMWindow.h"
@@ -149,35 +148,3 @@ already_AddRefed<WakeLock> PowerManagerService::NewWakeLockOnBehalfOfProcess(
 }  // namespace power
 }  // namespace dom
 }  // namespace mozilla
-
-NS_DEFINE_NAMED_CID(NS_POWERMANAGERSERVICE_CID);
-
-NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIPowerManagerService,
-                                         mozilla::dom::power::PowerManagerService::GetInstance)
-
-static const mozilla::Module::CIDEntry kPowerManagerCIDs[] = {
-    // clang-format off
-  { &kNS_POWERMANAGERSERVICE_CID, false, nullptr, nsIPowerManagerServiceConstructor, mozilla::Module::ALLOW_IN_GPU_PROCESS },
-  { nullptr }
-    // clang-format on
-};
-
-static const mozilla::Module::ContractIDEntry kPowerManagerContracts[] = {
-    // clang-format off
-  { POWERMANAGERSERVICE_CONTRACTID, &kNS_POWERMANAGERSERVICE_CID, mozilla::Module::ALLOW_IN_GPU_PROCESS },
-  { nullptr }
-    // clang-format on
-};
-
-// We mark the power module as being available in the GPU process because the
-// appshell depends on the power manager service.
-static const mozilla::Module kPowerManagerModule = {mozilla::Module::kVersion,
-                                                    kPowerManagerCIDs,
-                                                    kPowerManagerContracts,
-                                                    nullptr,
-                                                    nullptr,
-                                                    nullptr,
-                                                    nullptr,
-                                                    mozilla::Module::ALLOW_IN_GPU_PROCESS};
-
-NSMODULE_DEFN(nsPowerManagerModule) = &kPowerManagerModule;
