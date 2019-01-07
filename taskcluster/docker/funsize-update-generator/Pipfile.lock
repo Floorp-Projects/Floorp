@@ -343,11 +343,10 @@
         },
         "scriptworker": {
             "hashes": [
-                "sha256:602e284d344e8691a838dd0328851c02c4825bf7d1090e18dc6b8173817406e5",
-                "sha256:665f4c0cae460eab30071b8535bbc7307f9b34af5c5e374dfae2d90e586d7634"
+                "sha256:936aaa55e12e41a8294f2d4a24ee698fddc7ce4bea96de8ff1af65e745c2a835"
             ],
             "index": "pypi",
-            "version": "==17.1.0"
+            "version": "==17.2.0"
         },
         "sh": {
             "hashes": [
@@ -404,10 +403,10 @@
         },
         "virtualenv": {
             "hashes": [
-                "sha256:686176c23a538ecc56d27ed9d5217abd34644823d6391cbeb232f42bf722baad",
-                "sha256:f899fafcd92e1150f40c8215328be38ff24b519cd95357fa6e78e006c7638208"
+                "sha256:34b9ae3742abed2f95d3970acf4d80533261d6061b51160b197f84e5b4c98b4c",
+                "sha256:fa736831a7b18bd2bfeef746beb622a92509e9733d645952da136b0639cd40cd"
             ],
-            "version": "==16.1.0"
+            "version": "==16.2.0"
         },
         "yarl": {
             "hashes": [
