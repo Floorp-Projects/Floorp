@@ -162,6 +162,25 @@ function saveBrowser(aBrowser, aSkipPrompt, aOuterWindowID = 0) {
     throw "Must have a browser when calling saveBrowser";
   }
   let persistable = aBrowser.frameLoader;
+  // Because of how pdf.js deals with principals, saving the document the "normal"
+  // way won't work. Work around this by saving the pdf's URL directly:
+  if (aBrowser.contentPrincipal.URI &&
+      aBrowser.contentPrincipal.URI.spec == "resource://pdf.js/web/viewer.html" &&
+      aBrowser.currentURI.schemeIs("file")) {
+    let correctPrincipal = Services.scriptSecurityManager.createCodebasePrincipal(
+        aBrowser.currentURI, aBrowser.contentPrincipal.originAttributes);
+    internalSave(aBrowser.currentURI.spec,
+                 null /* no document */, null /* automatically determine filename */,
+                 null /* no content disposition */,
+                 "application/pdf", false /* don't bypass cache */,
+                 null /* no alternative title */, null /* no auto-chosen file info */,
+                 null /* null referrer will be OK for file: */,
+                 null /* no document */, aSkipPrompt /* caller decides about prompting */,
+                 null /* no cache key because the one for the document will be for pdfjs */,
+                 PrivateBrowsingUtils.isWindowPrivate(aBrowser.ownerGlobal),
+                 correctPrincipal);
+    return;
+  }
   let stack = Components.stack.caller;
   persistable.startPersistence(aOuterWindowID, {
     onDocumentReady(document) {
