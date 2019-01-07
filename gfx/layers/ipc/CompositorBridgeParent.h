@@ -704,6 +704,13 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
   DISALLOW_EVIL_CONSTRUCTORS(CompositorBridgeParent);
 };
 
+int32_t RecordContentFrameTime(
+    const VsyncId& aTxnId, const TimeStamp& aVsyncStart,
+    const TimeStamp& aTxnStart, const VsyncId& aCompositeId,
+    const TimeStamp& aCompositeEnd, const TimeDuration& aFullPaintTime,
+    const TimeDuration& aVsyncRate, bool aContainsSVGGroup,
+    bool aRecordUploadStats, wr::RendererStats* aStats = nullptr);
+
 }  // namespace layers
 }  // namespace mozilla
 
