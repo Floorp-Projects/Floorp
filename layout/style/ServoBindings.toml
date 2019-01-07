@@ -167,6 +167,7 @@ whitelist-vars = [
     "nsContentUtils_.*",
     "GECKO_IS_NIGHTLY",
     "mozilla::detail::gGkAtoms",
+    "mozilla::detail::kGkAtomsArrayOffset",
 ]
 whitelist-types = [
     "RawGecko.*",
@@ -377,6 +378,7 @@ opaque-types = [
     "mozilla::dom::.*Callback", # Pulls in ErrorResult and other things that
                                 # don't align properly on Linux 32-bit
     "mozilla::SchedulerGroup", # Non-standard-layout packing of field into superclass
+    "mozilla::detail::GkAtoms", # https://bugzilla.mozilla.org/show_bug.cgi?id=1517685
 ]
 
 # All cbindgen-types are in mod "structs::root::mozilla".
