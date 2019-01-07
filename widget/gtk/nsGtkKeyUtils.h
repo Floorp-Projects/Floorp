@@ -18,6 +18,8 @@
 #include <xkbcommon/xkbcommon.h>
 #endif
 
+class nsWindow;
+
 namespace mozilla {
 namespace widget {
 
@@ -95,19 +97,6 @@ class KeymapWrapper {
   static bool AreModifiersCurrentlyActive(Modifiers aModifiers);
 
   /**
-   * AreModifiersActive() just checks whether aModifierState indicates
-   * all modifiers in aModifiers are active or not.
-   *
-   * @param aModifiers        One or more of Modifier values except
-   *                          NOT_MODIFIER.
-   * @param aModifierState    GDK's modifier states.
-   * @return                  TRUE if aGdkModifierType indecates all of
-   *                          modifiers in aModifier are active.
-   *                          Otherwise, FALSE.
-   */
-  static bool AreModifiersActive(Modifiers aModifiers, guint aModifierState);
-
-  /**
    * Utility function to compute current keyboard modifiers for
    * WidgetInputEvent
    */
@@ -136,6 +125,55 @@ class KeymapWrapper {
    */
   static void InitKeyEvent(WidgetKeyboardEvent& aKeyEvent,
                            GdkEventKey* aGdkKeyEvent, bool aIsProcessedByIME);
+
+  /**
+   * DispatchKeyDownOrKeyUpEvent() dispatches eKeyDown or eKeyUp event.
+   *
+   * @param aWindow           The window to dispatch a keyboard event.
+   * @param aGdkKeyEvent      A native GDK_KEY_PRESS or GDK_KEY_RELEASE
+   *                          event.
+   * @param aIsProcessedByIME true if the event is handled by IME.
+   * @param aIsCancelled      [Out] true if the default is prevented.
+   * @return                  true if eKeyDown event is actually dispatched.
+   *                          Otherwise, false.
+   */
+  static bool DispatchKeyDownOrKeyUpEvent(nsWindow* aWindow,
+                                          GdkEventKey* aGdkKeyEvent,
+                                          bool aIsProcessedByIME,
+                                          bool* aIsCancelled);
+
+  /**
+   * DispatchKeyDownOrKeyUpEvent() dispatches eKeyDown or eKeyUp event.
+   *
+   * @param aWindow           The window to dispatch aKeyboardEvent.
+   * @param aKeyboardEvent    An eKeyDown or eKeyUp event.  This will be
+   *                          dispatched as is.
+   * @param aIsCancelled      [Out] true if the default is prevented.
+   * @return                  true if eKeyDown event is actually dispatched.
+   *                          Otherwise, false.
+   */
+  static bool DispatchKeyDownOrKeyUpEvent(nsWindow* aWindow,
+                                          WidgetKeyboardEvent& aKeyboardEvent,
+                                          bool* aIsCancelled);
+
+  /**
+   * GDK_KEY_PRESS event handler.
+   *
+   * @param aWindow           The window to dispatch eKeyDown event (and maybe
+   *                          eKeyPress events).
+   * @param aGdkKeyEvent      Receivied GDK_KEY_PRESS event.
+   */
+  static void HandleKeyPressEvent(nsWindow* aWindow, GdkEventKey* aGdkKeyEvent);
+
+  /**
+   * GDK_KEY_RELEASE event handler.
+   *
+   * @param aWindow           The window to dispatch eKeyUp event.
+   * @param aGdkKeyEvent      Receivied GDK_KEY_RELEASE event.
+   * @return                  true if an event is dispatched.  Otherwise, false.
+   */
+  static bool HandleKeyReleaseEvent(nsWindow* aWindow,
+                                    GdkEventKey* aGdkKeyEvent);
 
   /**
    * WillDispatchKeyboardEvent() is called via
@@ -233,6 +271,19 @@ class KeymapWrapper {
   static Modifier GetModifierForGDKKeyval(guint aGdkKeyval);
 
   static const char* GetModifierName(Modifier aModifier);
+
+  /**
+   * AreModifiersActive() just checks whether aModifierState indicates
+   * all modifiers in aModifiers are active or not.
+   *
+   * @param aModifiers        One or more of Modifier values except
+   *                          NOT_MODIFIER.
+   * @param aModifierState    GDK's modifier states.
+   * @return                  TRUE if aGdkModifierType indecates all of
+   *                          modifiers in aModifier are active.
+   *                          Otherwise, FALSE.
+   */
+  static bool AreModifiersActive(Modifiers aModifiers, guint aModifierState);
 
   /**
    * mGdkKeymap is a wrapped instance by this class.
@@ -371,6 +422,20 @@ class KeymapWrapper {
    */
   static GdkFilterReturn FilterEvents(GdkXEvent* aXEvent, GdkEvent* aGdkEvent,
                                       gpointer aData);
+
+  /**
+   * MaybeDispatchContextMenuEvent() may dispatch eContextMenu event if
+   * the given key combination should cause opening context menu.
+   *
+   * @param aWindow           The window to dispatch a contextmenu event.
+   * @param aEvent            The native key event.
+   * @return                  true if this method dispatched eContextMenu
+   *                          event.  Otherwise, false.
+   *                          Be aware, when this returns true, the
+   *                          widget may have been destroyed.
+   */
+  static bool MaybeDispatchContextMenuEvent(nsWindow* aWindow,
+                                            const GdkEventKey* aEvent);
 
   /**
    * See the document of WillDispatchKeyboardEvent().

@@ -12,7 +12,6 @@
 #include "mozilla/MiscEvents.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/RefPtr.h"
-#include "mozilla/TextEventDispatcher.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/TouchEvents.h"
@@ -2684,47 +2683,6 @@ bool nsWindow::DispatchContentCommandEvent(EventMessage aMsg) {
   return TRUE;
 }
 
-static bool IsCtrlAltTab(GdkEventKey *aEvent) {
-  return aEvent->keyval == GDK_Tab &&
-         KeymapWrapper::AreModifiersActive(
-             KeymapWrapper::CTRL | KeymapWrapper::ALT, aEvent->state);
-}
-
-bool nsWindow::DispatchKeyDownOrKeyUpEvent(GdkEventKey *aEvent,
-                                           bool aIsProcessedByIME,
-                                           bool *aIsCancelled) {
-  MOZ_ASSERT(aIsCancelled, "aIsCancelled must not be nullptr");
-
-  *aIsCancelled = false;
-
-  if (aEvent->type == GDK_KEY_PRESS && IsCtrlAltTab(aEvent)) {
-    return false;
-  }
-
-  EventMessage message = aEvent->type == GDK_KEY_PRESS ? eKeyDown : eKeyUp;
-  WidgetKeyboardEvent keyEvent(true, message, this);
-  KeymapWrapper::InitKeyEvent(keyEvent, aEvent, aIsProcessedByIME);
-  return DispatchKeyDownOrKeyUpEvent(keyEvent, aIsCancelled);
-}
-bool nsWindow::DispatchKeyDownOrKeyUpEvent(WidgetKeyboardEvent &aKeyboardEvent,
-                                           bool *aIsCancelled) {
-  MOZ_ASSERT(aIsCancelled, "aIsCancelled must not be nullptr");
-
-  *aIsCancelled = false;
-
-  RefPtr<TextEventDispatcher> dispatcher = GetTextEventDispatcher();
-  nsresult rv = dispatcher->BeginNativeInputTransaction();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return FALSE;
-  }
-
-  nsEventStatus status = nsEventStatus_eIgnore;
-  bool dispatched = dispatcher->DispatchKeyboardEvent(
-      aKeyboardEvent.mMessage, aKeyboardEvent, status, nullptr);
-  *aIsCancelled = (status == nsEventStatus_eConsumeNoDefault);
-  return dispatched;
-}
-
 WidgetEventTime nsWindow::GetWidgetEventTime(guint32 aEventTime) {
   return WidgetEventTime(aEventTime, GetEventTimeStamp(aEventTime));
 }
@@ -2773,182 +2731,18 @@ mozilla::CurrentX11TimeGetter *nsWindow::GetCurrentTimeGetter() {
 gboolean nsWindow::OnKeyPressEvent(GdkEventKey *aEvent) {
   LOGFOCUS(("OnKeyPressEvent [%p]\n", (void *)this));
 
-  // if we are in the middle of composing text, XIM gets to see it
-  // before mozilla does.
-  // FYI: Don't dispatch keydown event before notifying IME of the event
-  //      because IME may send a key event synchronously and consume the
-  //      original event.
-  bool IMEWasEnabled = false;
-  KeyHandlingState handlingState = KeyHandlingState::eNotHandled;
-  if (mIMContext) {
-    IMEWasEnabled = mIMContext->IsEnabled();
-    handlingState = mIMContext->OnKeyEvent(this, aEvent);
-    if (handlingState == KeyHandlingState::eHandled) {
-      return TRUE;
-    }
-  }
-
-  // work around for annoying things.
-  if (IsCtrlAltTab(aEvent)) {
-    return TRUE;
-  }
-
-  nsCOMPtr<nsIWidget> kungFuDeathGrip = this;
-
-  // Dispatch keydown event always.  At auto repeating, we should send
-  // KEYDOWN -> KEYPRESS -> KEYDOWN -> KEYPRESS ... -> KEYUP
-  // However, old distributions (e.g., Ubuntu 9.10) sent native key
-  // release event, so, on such platform, the DOM events will be:
-  // KEYDOWN -> KEYPRESS -> KEYUP -> KEYDOWN -> KEYPRESS -> KEYUP...
-
-  bool isKeyDownCancelled = false;
-  if (handlingState == KeyHandlingState::eNotHandled) {
-    if (DispatchKeyDownOrKeyUpEvent(aEvent, false, &isKeyDownCancelled) &&
-        (MOZ_UNLIKELY(mIsDestroyed) || isKeyDownCancelled)) {
-      return TRUE;
-    }
-    handlingState = KeyHandlingState::eNotHandledButEventDispatched;
-  }
-
-  // If a keydown event handler causes to enable IME, i.e., it moves
-  // focus from IME unusable content to IME usable editor, we should
-  // send the native key event to IME for the first input on the editor.
-  if (!IMEWasEnabled && mIMContext && mIMContext->IsEnabled()) {
-    // Notice our keydown event was already dispatched.  This prevents
-    // unnecessary DOM keydown event in the editor.
-    handlingState = mIMContext->OnKeyEvent(this, aEvent, true);
-    if (handlingState == KeyHandlingState::eHandled) {
-      return TRUE;
-    }
-  }
-
-  // Look for specialized app-command keys
-  switch (aEvent->keyval) {
-    case GDK_Back:
-      return DispatchCommandEvent(nsGkAtoms::Back);
-    case GDK_Forward:
-      return DispatchCommandEvent(nsGkAtoms::Forward);
-    case GDK_Refresh:
-      return DispatchCommandEvent(nsGkAtoms::Reload);
-    case GDK_Stop:
-      return DispatchCommandEvent(nsGkAtoms::Stop);
-    case GDK_Search:
-      return DispatchCommandEvent(nsGkAtoms::Search);
-    case GDK_Favorites:
-      return DispatchCommandEvent(nsGkAtoms::Bookmarks);
-    case GDK_HomePage:
-      return DispatchCommandEvent(nsGkAtoms::Home);
-    case GDK_Copy:
-    case GDK_F16:  // F16, F20, F18, F14 are old keysyms for Copy Cut Paste Undo
-      return DispatchContentCommandEvent(eContentCommandCopy);
-    case GDK_Cut:
-    case GDK_F20:
-      return DispatchContentCommandEvent(eContentCommandCut);
-    case GDK_Paste:
-    case GDK_F18:
-      return DispatchContentCommandEvent(eContentCommandPaste);
-    case GDK_Redo:
-      return DispatchContentCommandEvent(eContentCommandRedo);
-    case GDK_Undo:
-    case GDK_F14:
-      return DispatchContentCommandEvent(eContentCommandUndo);
-  }
-
-  WidgetKeyboardEvent keypressEvent(true, eKeyPress, this);
-  KeymapWrapper::InitKeyEvent(keypressEvent, aEvent, false);
-
-  // before we dispatch a key, check if it's the context menu key.
-  // If so, send a context menu key event instead.
-  if (MaybeDispatchContextMenuEvent(aEvent)) {
-    return TRUE;
-  }
-
-  RefPtr<TextEventDispatcher> dispatcher = GetTextEventDispatcher();
-  nsresult rv = dispatcher->BeginNativeInputTransaction();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return TRUE;
-  }
-
-  // If the character code is in the BMP, send the key press event.
-  // Otherwise, send a compositionchange event with the equivalent UTF-16
-  // string.
-  // TODO: Investigate other browser's behavior in this case because
-  //       this hack is odd for UI Events.
-  nsEventStatus status = nsEventStatus_eIgnore;
-  if (keypressEvent.mKeyNameIndex != KEY_NAME_INDEX_USE_STRING ||
-      keypressEvent.mKeyValue.Length() == 1) {
-    dispatcher->MaybeDispatchKeypressEvents(keypressEvent, status, aEvent);
-  } else {
-    WidgetEventTime eventTime = GetWidgetEventTime(aEvent->time);
-    dispatcher->CommitComposition(status, &keypressEvent.mKeyValue, &eventTime);
-  }
-
+  RefPtr<nsWindow> self(this);
+  KeymapWrapper::HandleKeyPressEvent(self, aEvent);
   return TRUE;
-}
-
-bool nsWindow::MaybeDispatchContextMenuEvent(const GdkEventKey *aEvent) {
-  KeyNameIndex keyNameIndex = KeymapWrapper::ComputeDOMKeyNameIndex(aEvent);
-
-  // Shift+F10 and ContextMenu should cause eContextMenu event.
-  if (keyNameIndex != KEY_NAME_INDEX_F10 &&
-      keyNameIndex != KEY_NAME_INDEX_ContextMenu) {
-    return false;
-  }
-
-  WidgetMouseEvent contextMenuEvent(true, eContextMenu, this,
-                                    WidgetMouseEvent::eReal,
-                                    WidgetMouseEvent::eContextMenuKey);
-
-  contextMenuEvent.mRefPoint = LayoutDeviceIntPoint(0, 0);
-  contextMenuEvent.AssignEventTime(GetWidgetEventTime(aEvent->time));
-  contextMenuEvent.mClickCount = 1;
-  KeymapWrapper::InitInputEvent(contextMenuEvent, aEvent->state);
-
-  if (contextMenuEvent.IsControl() || contextMenuEvent.IsMeta() ||
-      contextMenuEvent.IsAlt()) {
-    return false;
-  }
-
-  // If the key is ContextMenu, then an eContextMenu mouse event is
-  // dispatched regardless of the state of the Shift modifier.  When it is
-  // pressed without the Shift modifier, a web page can prevent the default
-  // context menu action.  When pressed with the Shift modifier, the web page
-  // cannot prevent the default context menu action.
-  // (PresShell::HandleEventInternal() sets mOnlyChromeDispatch to true.)
-
-  // If the key is F10, it needs Shift state because Shift+F10 is well-known
-  // shortcut key on Linux.  However, eContextMenu with Shift state is
-  // special.  It won't fire "contextmenu" event in the web content for
-  // blocking web page to prevent its default.  Therefore, this combination
-  // should work same as ContextMenu key.
-  // XXX Should we allow to block web page to prevent its default with
-  //     Ctrl+Shift+F10 or Alt+Shift+F10 instead?
-  if (keyNameIndex == KEY_NAME_INDEX_F10) {
-    if (!contextMenuEvent.IsShift()) {
-      return false;
-    }
-    contextMenuEvent.mModifiers &= ~MODIFIER_SHIFT;
-  }
-
-  DispatchInputEvent(&contextMenuEvent);
-  return true;
 }
 
 gboolean nsWindow::OnKeyReleaseEvent(GdkEventKey *aEvent) {
   LOGFOCUS(("OnKeyReleaseEvent [%p]\n", (void *)this));
 
-  if (mIMContext) {
-    KeyHandlingState handlingState = mIMContext->OnKeyEvent(this, aEvent);
-    if (handlingState != KeyHandlingState::eNotHandled) {
-      return TRUE;
-    }
-  }
-
-  bool isCancelled = false;
-  if (NS_WARN_IF(!DispatchKeyDownOrKeyUpEvent(aEvent, false, &isCancelled))) {
+  RefPtr<nsWindow> self(this);
+  if (NS_WARN_IF(!KeymapWrapper::HandleKeyReleaseEvent(self, aEvent))) {
     return FALSE;
   }
-
   return TRUE;
 }
 
