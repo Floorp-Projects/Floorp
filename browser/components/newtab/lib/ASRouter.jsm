@@ -44,8 +44,6 @@ const MAX_MESSAGE_LIFETIME_CAP = 100;
 const LOCAL_MESSAGE_PROVIDERS = {OnboardingMessageProvider, CFRMessageProvider, SnippetsTestMessageProvider};
 const STARTPAGE_VERSION = "6";
 
-const ADDONS_API_URL = "https://services.addons.mozilla.org/api/v3/addons/addon";
-
 const MessageLoaderUtils = {
   STARTPAGE_VERSION,
   REMOTE_LOADER_CACHE_KEY: "RemoteLoaderCache",
@@ -342,10 +340,15 @@ class _ASRouter {
       }
     }
 
+    // Group existing blocked messages with messages blocked through preferences
+    const excludeList = ASRouterPreferences.providers.filter(p => p.exclude)
+      .reduce((blocked, p) => blocked.concat(p.exclude), this.state.messageBlockList);
+
     this.setState(prevState => ({
       providers,
       // Clear any messages from removed providers
       messages: [...prevState.messages.filter(message => providerIDs.includes(message.provider))],
+      messageBlockList: excludeList,
     }));
   }
 
@@ -799,25 +802,6 @@ class _ASRouter {
     return impressions;
   }
 
-  async _fetchAddonInfo() {
-    let data = {};
-    const {content} = await AttributionCode.getAttrDataAsync();
-    if (!content) {
-      return data;
-    }
-    try {
-      const response = await fetch(`${ADDONS_API_URL}/${content}`);
-      if (response.status !== 204 && response.ok) {
-        const json = await response.json();
-        data.url = json.current_version.files[0].url;
-        data.iconURL = json.icon_url;
-      }
-    } catch (e) {
-      Cu.reportError("Failed to get the latest add-on version for Return to AMO");
-    }
-    return data;
-  }
-
   async sendNextMessage(target, trigger) {
     const msgs = this._getUnblockedMessages();
     let message = null;
@@ -827,19 +811,6 @@ class _ASRouter {
       [message] = previewMsgs;
     } else {
       message = await this._findMessage(msgs, trigger);
-    }
-
-    // We need some addon info if we are showing return to amo overlay, so fetch
-    // that, and update the message accordingly
-    if (message && message.template === "return_to_amo_overlay") {
-      const {url, iconURL} = await this._fetchAddonInfo();
-
-      // If we failed to get this info, we do not want to show this message
-      if (!url || !iconURL) {
-        return;
-      }
-      message.content.addon_icon = iconURL;
-      message.content.primary_button.action.data.url = url;
     }
 
     if (previewMsgs.length) {

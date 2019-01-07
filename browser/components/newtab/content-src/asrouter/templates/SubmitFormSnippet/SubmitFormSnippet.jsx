@@ -38,6 +38,7 @@ export class SubmitFormSnippet extends React.PureComponent {
     this.props.sendUserActionTelemetry({event: "CLICK_BUTTON", value: "conversion-subscribe-activation", id: "NEWTAB_FOOTER_BAR_CONTENT"});
 
     if (this.props.form_method.toUpperCase() === "GET") {
+      this.props.onBlock({preventDismiss: true});
       this.refs.form.submit();
       return;
     }
