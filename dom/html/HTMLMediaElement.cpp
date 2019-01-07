@@ -757,9 +757,15 @@ HTMLMediaElement::MediaLoadListener::GetInterface(const nsIID& aIID,
 void HTMLMediaElement::ReportLoadError(const char* aMsg,
                                        const char16_t** aParams,
                                        uint32_t aParamCount) {
-  nsContentUtils::ReportToConsole(
-      nsIScriptError::warningFlag, NS_LITERAL_CSTRING("Media"), OwnerDoc(),
-      nsContentUtils::eDOM_PROPERTIES, aMsg, aParams, aParamCount);
+  ReportToConsole(nsIScriptError::warningFlag, aMsg, aParams, aParamCount);
+}
+
+void HTMLMediaElement::ReportToConsole(uint32_t aErrorFlags, const char* aMsg,
+                                       const char16_t** aParams,
+                                       uint32_t aParamCount) const {
+  nsContentUtils::ReportToConsole(aErrorFlags, NS_LITERAL_CSTRING("Media"),
+                                  OwnerDoc(), nsContentUtils::eDOM_PROPERTIES,
+                                  aMsg, aParams, aParamCount);
 }
 
 class HTMLMediaElement::AudioChannelAgentCallback final
@@ -3114,10 +3120,8 @@ already_AddRefed<DOMMediaStream> HTMLMediaElement::CaptureStreamInternal(
     if (mSrcStream) {
       // We don't support applying volume and mute to the captured stream, when
       // capturing a MediaStream.
-      nsContentUtils::ReportToConsole(
-          nsIScriptError::errorFlag, NS_LITERAL_CSTRING("Media"), OwnerDoc(),
-          nsContentUtils::eDOM_PROPERTIES,
-          "MediaElementAudioCaptureOfMediaStreamError");
+      ReportToConsole(nsIScriptError::errorFlag,
+                      "MediaElementAudioCaptureOfMediaStreamError");
       return nullptr;
     }
 
@@ -3650,6 +3654,7 @@ void HTMLMediaElement::DispatchEventsWhenPlayWasNotAllowed() {
   asyncDispatcher->PostDOMEvent();
 #endif
   OwnerDoc()->MaybeNotifyAutoplayBlocked();
+  ReportToConsole(nsIScriptError::warningFlag, "BlockAutoplayError");
 }
 
 void HTMLMediaElement::PlayInternal(bool aHandlingUserInput) {
