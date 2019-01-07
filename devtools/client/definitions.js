@@ -596,7 +596,11 @@ function createHighlightButton(highlighterName, id) {
     isChecked(toolbox) {
       // if the inspector doesn't exist, then the highlighter has not yet been connected
       // to the front end.
-      const inspectorFront = toolbox.target.getCachedFront("inspector");
+      // TODO: we are using target._inspector here, but we should be using
+      // target.getCachedFront. This is a temporary solution until the inspector no
+      // longer relies on the toolbox and can be destroyed the same way any other
+      // front would be. Related: #1487677
+      const inspectorFront = toolbox.target._inspector;
       if (!inspectorFront) {
         // initialize the inspector front asyncronously. There is a potential for buggy
         // behavior here, but we need to change how the buttons get data (have them
