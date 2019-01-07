@@ -121,15 +121,20 @@ include('../build/moz.configure/node.configure')
 option('--with-l10n-base', nargs=1, env='L10NBASEDIR',
        help='Path to l10n repositories')
 
-@depends('--with-l10n-base')
+@depends('--with-l10n-base', 'MOZ_AUTOMATION', target, check_build_environment)
 @imports(_from='os.path', _import='isdir')
 @imports(_from='os.path', _import='expanduser')
 @imports(_from='os', _import='environ')
-def l10n_base(value):
+def l10n_base(value, automation, target, build_env):
     if value:
         path = value[0]
         if not isdir(path):
             die("Invalid value --with-l10n-base, %s doesn't exist", path)
+    elif automation:
+        if target.os == 'Android':
+            path = os.path.join(build_env.topobjdir, '..', '..', 'l10n-central')
+        else:
+            path = os.path.join(build_env.topobjdir, '..', '..', 'l10n')
     else:
         path = os.path.join(
             environ.get(
