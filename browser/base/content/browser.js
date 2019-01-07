@@ -7049,19 +7049,18 @@ function warnAboutClosingWindow() {
 
   // Figure out if there's at least one other browser window around.
   let otherPBWindowExists = false;
-  let nonPopupPresent = false;
+  let otherWindowExists = false;
   for (let win of browserWindows()) {
     if (!win.closed && win != window) {
+      otherWindowExists = true;
       if (isPBWindow && PrivateBrowsingUtils.isWindowPrivate(win))
         otherPBWindowExists = true;
-      if (win.toolbar.visible)
-        nonPopupPresent = true;
       // If the current window is not in private browsing mode we don't need to
       // look for other pb windows, we can leave the loop when finding the
       // first non-popup window. If however the current window is in private
       // browsing mode then we need at least one other pb and one non-popup
       // window to break out early.
-      if ((!isPBWindow || otherPBWindowExists) && nonPopupPresent)
+      if (!isPBWindow || otherPBWindowExists)
         break;
     }
   }
@@ -7076,7 +7075,7 @@ function warnAboutClosingWindow() {
       return false;
   }
 
-  if (nonPopupPresent) {
+  if (otherWindowExists) {
     return isPBWindow || gBrowser.warnAboutClosingTabs(closingTabs, gBrowser.closingTabsEnum.ALL);
   }
 
