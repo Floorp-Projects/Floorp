@@ -1078,7 +1078,7 @@ main {
     visibility: hidden; }
   .search-handoff-button .fake-textbox {
     opacity: 0.54;
-    text-align: left; }
+    text-align: start; }
   .search-handoff-button .fake-caret {
     animation: caret-animation 1.3s steps(5, start) infinite;
     background: var(--newtab-text-primary-color);
@@ -1094,20 +1094,6 @@ main {
     visibility: hidden; } }
     .search-active .search-handoff-button .fake-caret {
       display: block; }
-  .search-handoff-button .fake-button {
-    background: url("chrome://browser/skin/forward.svg") no-repeat center center;
-    background-size: 16px 16px;
-    border: 0;
-    border-radius: 0 3px 3px 0;
-    -moz-context-properties: fill;
-    fill: var(--newtab-search-icon-color);
-    height: 100%;
-    inset-inline-end: 0;
-    position: absolute;
-    top: 1px;
-    width: 48px; }
-    .search-handoff-button .fake-button:dir(rtl) {
-      transform: scaleX(-1); }
 
 @media (min-height: 701px) {
   .fixed-search main {
@@ -1713,6 +1699,11 @@ main {
     border-radius: 3px; }
     .asrouter-admin .helpLink a {
       text-decoration: underline; }
+  .asrouter-admin .dsEnabled {
+    padding: 10px;
+    font-size: 16px;
+    margin-bottom: 20px;
+    border: 1px solid var(--newtab-border-secondary-color); }
 
 .pocket-logged-in-cta {
   font-size: 13px;
@@ -1766,8 +1757,6 @@ main {
   grid-template-columns: repeat(12, 1fr);
   grid-column-gap: 10px;
   grid-row-gap: 10px; }
-  .discovery-stream.layout .column {
-    border: 1px solid #000; }
   .discovery-stream.layout .column-12 {
     grid-column-start: auto;
     grid-column-end: span 12; }
@@ -1804,6 +1793,28 @@ main {
   .discovery-stream.layout .column-1 {
     grid-column-start: auto;
     grid-column-end: span 1; }
+
+.section-title ul {
+  margin: 0;
+  padding: 0; }
+
+.section-title ul li {
+  display: inline-block; }
+  .section-title ul li::after {
+    content: '•';
+    padding: 8px; }
+  .section-title ul li:last-child::after {
+    content: none; }
+
+.section-title .ds-more-recommendations::after {
+  background: url("../data/content/assets/topic-show-more-12.svg") no-repeat center center;
+  content: '';
+  -moz-context-properties: fill;
+  display: inline-block;
+  height: 16px;
+  margin-inline-start: 5px;
+  vertical-align: top;
+  width: 12px; }
 
 .ASRouterButton {
   font-weight: 600;

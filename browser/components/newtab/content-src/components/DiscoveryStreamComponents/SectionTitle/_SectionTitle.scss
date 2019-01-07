@@ -1,0 +1,30 @@
+.section-title {
+  ul {
+    margin: 0;
+    padding: 0;
+  }
+
+  ul li {
+    display: inline-block;
+
+    &::after {
+      content: '•';
+      padding: 8px;
+    }
+
+    &:last-child::after {
+      content: none;
+    }
+  }
+
+  .ds-more-recommendations::after {
+    background: url('../data/content/assets/topic-show-more-12.svg') no-repeat center center;
+    content: '';
+    -moz-context-properties: fill;
+    display: inline-block;
+    height: 16px;
+    margin-inline-start: 5px;
+    vertical-align: top;
+    width: 12px;
+  }
+}

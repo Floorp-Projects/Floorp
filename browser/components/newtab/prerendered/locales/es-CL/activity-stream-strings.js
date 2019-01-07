@@ -97,7 +97,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_privacy_notice": "Aviso de privacidad",
   "firstrun_title": "Lleva a Firefox contigo",
   "firstrun_content": "Ten tus marcadores, historial, contraseñas y otros ajustes en todos tus dispositivos.",
-  "firstrun_learn_more_link": "Aprende más sobre Firefox Accounts",
+  "firstrun_learn_more_link": "Aprende más sobre las cuentas de Firefox",
   "firstrun_form_header": "Ingresa tu correo",
   "firstrun_form_sub_header": "para conectarte a Firefox Sync.",
   "firstrun_email_input_placeholder": "Correo",
@@ -108,5 +108,5 @@ window.gActivityStreamStrings = {
   "firstrun_continue_to_login": "Continuar",
   "firstrun_skip_login": "Saltar este paso",
   "context_menu_title": "Abrir menú",
-  "pocket_learn_more": "Aprender más"
+  "pocket_learn_more": "Saber más"
 };

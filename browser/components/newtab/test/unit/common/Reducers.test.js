@@ -660,8 +660,9 @@ describe("Reducers", () => {
       assert.equal(DiscoveryStream(undefined, {type: "some_action"}), INITIAL_STATE.DiscoveryStream);
     });
     it("should set layout data with DISCOVERY_STREAM_LAYOUT_UPDATE", () => {
-      const state = DiscoveryStream(undefined, {type: at.DISCOVERY_STREAM_LAYOUT_UPDATE, data: ["test"]});
+      const state = DiscoveryStream(undefined, {type: at.DISCOVERY_STREAM_LAYOUT_UPDATE, data: {layout: ["test"], lastUpdated: 123}});
       assert.equal(state.layout[0], "test");
+      assert.equal(state.lastUpdated, 123);
     });
     it("should set config data with DISCOVERY_STREAM_CONFIG_CHANGE", () => {
       const state = DiscoveryStream(undefined, {type: at.DISCOVERY_STREAM_CONFIG_CHANGE, data: {enabled: true}});

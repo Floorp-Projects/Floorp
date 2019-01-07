@@ -5,10 +5,6 @@
   grid-column-gap: 10px;
   grid-row-gap: 10px;
 
-  .column {
-    border: 1px solid $black;
-  }
-
   @while $columns > 0 {
     .column-#{$columns} {
       grid-column-start: auto;
