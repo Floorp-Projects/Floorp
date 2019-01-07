@@ -26,6 +26,11 @@ android {
         arm { dimension "abi" }
         x86 { dimension "abi" }
     }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
 }
 
 android.applicationVariants.all { variant ->
