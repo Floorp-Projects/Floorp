@@ -240,12 +240,14 @@ nsContextMenu.prototype = {
       this.selectionInfo = BrowserUtils.getSelectionDetails(window);
     }
 
+    const {gBrowser} = this.browser.ownerGlobal;
+
     this.textSelected      = this.selectionInfo.text;
     this.isTextSelected    = this.textSelected.length != 0;
     this.webExtBrowserType = this.browser.getAttribute("webextension-view-type");
     this.inWebExtBrowser   = !!this.webExtBrowserType;
-    this.inTabBrowser      = this.browser.ownerGlobal.gBrowser ?
-      !!this.browser.ownerGlobal.gBrowser.getTabForBrowser(this.browser) : false;
+    this.inTabBrowser      = gBrowser && gBrowser.getTabForBrowser ?
+      !!gBrowser.getTabForBrowser(this.browser) : false;
 
     if (context.shouldInitInlineSpellCheckerUINoChildren) {
       if (this.isRemote) {
