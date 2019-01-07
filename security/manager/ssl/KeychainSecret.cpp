@@ -69,16 +69,6 @@ nsresult KeychainSecret::StoreSecret(const nsACString& aSecret,
   // platform enforces this restriction using the application-identifier
   // entitlement that each application bundle should have. See
   // https://developer.apple.com/documentation/security/1401659-secitemadd?language=objc#discussion
-
-  // The keychain does not overwrite secrets by default (unlike other backends
-  // like libsecret and credential manager). To be consistent, we first delete
-  // any previously-stored secrets that use the given label.
-  nsresult rv = DeleteSecret(aLabel);
-  if (NS_FAILED(rv)) {
-    MOZ_LOG(gKeychainSecretLog, LogLevel::Debug,
-            ("DeleteSecret before StoreSecret failed"));
-    return rv;
-  }
   const CFStringRef keys[] = {kSecClass, kSecAttrAccount, kSecValueData};
   ScopedCFType<CFStringRef> label(MozillaStringToCFString(aLabel));
   if (!label) {
@@ -100,6 +90,10 @@ nsresult KeychainSecret::StoreSecret(const nsACString& aSecret,
       nullptr, (const void**)&keys, (const void**)&values, ArrayLength(keys),
       &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks));
   // https://developer.apple.com/documentation/security/1401659-secitemadd
+  // If we've been asked to store a secret with a label that matches the label
+  // for a preexisting secret, this will return an error without overwriting the
+  // secret (which is the behavior specified by
+  // nsIOSKeyStore.asyncGenerateSecret).
   OSStatus osrv = SecItemAdd(addDictionary.get(), nullptr);
   if (osrv != errSecSuccess) {
     MOZ_LOG(gKeychainSecretLog, LogLevel::Debug,
