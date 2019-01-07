@@ -76,6 +76,13 @@
            nomaxresults="true" />
 
     <tooltip id="addonitem-tooltip"/>
+
+    <menupopup id="contentAreaContextMenu"
+               onpopupshowing="Cu.reportError('This dummy menupopup is not supposed to be shown');
+                               return false">
+      <!-- a dummy element used to forward the context menu related to the extension's
+           options page XUL browsers to the context menu defined in the parent chrome window -->
+    </menupopup>
   </popupset>
 
   <!-- global commands - these act on all addons, or affect the addons manager
