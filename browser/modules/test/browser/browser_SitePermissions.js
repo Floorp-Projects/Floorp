@@ -19,32 +19,6 @@ add_task(async function testTempAllowThrows() {
   });
 });
 
-// Tests that we can set TEMPORARY ALLOW permissions for autoplay-media
-add_task(async function testTempAutoplayAllowed() {
-  Services.prefs.setIntPref("media.autoplay.default", 2);
-
-  let uri = Services.io.newURI("https://example.com");
-  let permId = "autoplay-media";
-
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, uri.spec);
-
-  SitePermissions.set(uri, permId, SitePermissions.ALLOW,
-                      SitePermissions.SCOPE_TEMPORARY, tab.linkedBrowser);
-
-  let permissions = SitePermissions.getAllPermissionDetailsForBrowser(tab.linkedBrowser);
-
-  let autoplay = permissions.find(({id}) => id === "autoplay-media");
-  Assert.deepEqual(autoplay, {
-    id: "autoplay-media",
-    label: "Automatically Play Media with Sound",
-    state: SitePermissions.ALLOW,
-    scope: SitePermissions.SCOPE_TEMPORARY,
-  });
-
-  Services.prefs.clearUserPref("media.autoplay.default");
-  BrowserTestUtils.removeTab(gBrowser.selectedTab);
-});
-
 // This tests the SitePermissions.getAllPermissionDetailsForBrowser function.
 add_task(async function testGetAllPermissionDetailsForBrowser() {
   let uri = Services.io.newURI("https://example.com");
