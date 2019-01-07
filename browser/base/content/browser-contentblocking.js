@@ -776,13 +776,6 @@ var ContentBlocking = {
       return;
     }
 
-    // The user might have navigated before the shield animation
-    // finished. In this case, reset the animation to be able to
-    // play it in full again and avoid choppiness.
-    if (webProgress.isTopLevel) {
-      this.iconBox.removeAttribute("animate");
-    }
-
     let anyDetected = false;
     let anyBlocking = false;
 
@@ -806,6 +799,26 @@ var ContentBlocking = {
     let hasException = Services.perms.testExactPermission(baseURI, type) ==
       Services.perms.ALLOW_ACTION;
 
+    // Reset the animation in case the user is switching tabs or if no blockers were detected
+    // (this is most likely happening because the user navigated on to a different site). This
+    // allows us to play it from the start without choppiness next time.
+    if (isSimulated || !anyBlocking) {
+      this.iconBox.removeAttribute("animate");
+    // Only play the animation when the shield is not already shown on the page (the visibility
+    // of the shield based on this onSecurityChange be determined afterwards).
+    } else if (anyBlocking && !this.iconBox.hasAttribute("active")) {
+      this.iconBox.setAttribute("animate", "true");
+
+      if (!isBrowserPrivate) {
+        let introCount = Services.prefs.getIntPref(this.prefIntroCount);
+        if (introCount < this.MAX_INTROS) {
+          Services.prefs.setIntPref(this.prefIntroCount, ++introCount);
+          Services.prefs.savePrefFile(null);
+          this.showIntroPanel();
+        }
+      }
+    }
+
     // We consider the shield state "active" when some kind of blocking activity
     // occurs on the page.  Note that merely allowing the loading of content that
     // we could have blocked does not trigger the appearance of the shield.
@@ -826,21 +839,6 @@ var ContentBlocking = {
       this.reportBreakageButton.removeAttribute("hidden");
     } else {
       this.reportBreakageButton.setAttribute("hidden", "true");
-    }
-
-    if (isSimulated) {
-      this.iconBox.removeAttribute("animate");
-    } else if (anyBlocking && webProgress.isTopLevel) {
-      this.iconBox.setAttribute("animate", "true");
-
-      if (!isBrowserPrivate) {
-        let introCount = Services.prefs.getIntPref(this.prefIntroCount);
-        if (introCount < this.MAX_INTROS) {
-          Services.prefs.setIntPref(this.prefIntroCount, ++introCount);
-          Services.prefs.savePrefFile(null);
-          this.showIntroPanel();
-        }
-      }
     }
 
     if (hasException) {
