@@ -76,6 +76,7 @@ class LayerTransactionParent final : public PLayerTransactionParent,
                                const TimeStamp& aVsyncStartTime,
                                const TimeStamp& aRefreshStartTime,
                                const TimeStamp& aTxnStartTime,
+                               const TimeStamp& aTxnEndTime,
                                const nsCString& aURL,
                                const TimeStamp& aFwdTime) {
     mPendingTransaction = aId;
@@ -83,6 +84,7 @@ class LayerTransactionParent final : public PLayerTransactionParent,
     mVsyncStartTime = aVsyncStartTime;
     mRefreshStartTime = aRefreshStartTime;
     mTxnStartTime = aTxnStartTime;
+    mTxnEndTime = aTxnEndTime;
     mTxnURL = aURL;
     mFwdTime = aFwdTime;
   }
@@ -210,6 +212,7 @@ class LayerTransactionParent final : public PLayerTransactionParent,
   TimeStamp mVsyncStartTime;
   TimeStamp mRefreshStartTime;
   TimeStamp mTxnStartTime;
+  TimeStamp mTxnEndTime;
   TimeStamp mFwdTime;
   nsCString mTxnURL;
 

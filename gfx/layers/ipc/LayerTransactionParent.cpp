@@ -888,7 +888,7 @@ TransactionId LayerTransactionParent::FlushTransactionId(
     const VsyncId& aId, TimeStamp& aCompositeEnd) {
   if (mId.IsValid() && mPendingTransaction.IsValid() && !mVsyncRate.IsZero()) {
     RecordContentFrameTime(mTxnVsyncId, mVsyncStartTime, mTxnStartTime, aId,
-                           aCompositeEnd, TimeDuration::FromMilliseconds(0),
+                           aCompositeEnd, mTxnEndTime - mTxnStartTime,
                            mVsyncRate, false, false);
   }
 
