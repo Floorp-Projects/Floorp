@@ -30,7 +30,6 @@ exports.PREFS = new PrefsHelper("devtools.performance", {
   "memory-sample-probability": ["Float", "memory.sample-probability"],
   "memory-max-log-length": ["Int", "memory.max-log-length"],
   "profiler-buffer-size": ["Int", "profiler.buffer-size"],
-  "profiler-window-length": ["Int", "profiler.window-length-seconds"],
   "profiler-sample-frequency": ["Int", "profiler.sample-frequency-hz"],
   // TODO: re-enable once we flame charts via bug 1148663.
   "enable-memory-flame": ["Bool", "ui.enable-memory-flame"],

@@ -170,10 +170,10 @@ RootActor.prototype = {
     // to retrieve the extension child process target actors.
     webExtensionAddonConnect: true,
     // Version of perf actor. Fx65+
-    // Version 1 - Firefox 65: Introduces a duration-based buffer. With that change
-    // Services.profiler.StartProfiler method accepts an additional parameter called
-    // `window-length`. This is an optional parameter but it will throw an error if the
-    // profiled Firefox doesn't accept it.
+    // Version 1 - Firefox 65: Introduces a duration-based buffer. It can be controlled
+    // by adding a `duration` property (in seconds) to the options passed to
+    // `front.startProfiler`. This is an optional parameter but it will throw an error if
+    // the profiled Firefox doesn't accept it.
     perfActorVersion: 1,
   },
 
