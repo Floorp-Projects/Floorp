@@ -175,7 +175,8 @@ void TouchManager::EvictTouches() {
 
     MOZ_ASSERT(touch->mOriginalTarget);
     nsCOMPtr<nsIContent> targetContent = do_QueryInterface(touch->GetTarget());
-    nsIFrame* targetFrame = targetContent->GetPrimaryFrame();
+    nsIFrame* targetFrame =
+        targetContent ? targetContent->GetPrimaryFrame() : nullptr;
     if (targetFrame && !anyTarget) {
       anyTarget = targetContent;
     } else {
