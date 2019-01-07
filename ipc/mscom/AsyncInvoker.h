@@ -105,7 +105,7 @@ template <typename AsyncInterface>
 class WaitableAsyncCall : public ForgettableAsyncCall<AsyncInterface> {
  public:
   explicit WaitableAsyncCall(ICallFactory* aCallFactory)
-      : ForgettableAsyncCall(aCallFactory),
+      : ForgettableAsyncCall<AsyncInterface>(aCallFactory),
         mEvent(::CreateEventW(nullptr, FALSE, FALSE, nullptr)) {}
 
   STDMETHODIMP Wait(DWORD aFlags, DWORD aTimeoutMilliseconds) override {
@@ -334,6 +334,6 @@ using WaitableAsyncInvoker =
   InvokerObj.Invoke(                                                  \
       &decltype(InvokerObj)::SyncInterfaceT::SyncMethodName,          \
       &decltype(InvokerObj)::AsyncInterfaceT::Begin_##SyncMethodName, \
-      __VA_ARGS__)
+      ##__VA_ARGS__)
 
 #endif  // mozilla_mscom_AsyncInvoker_h
