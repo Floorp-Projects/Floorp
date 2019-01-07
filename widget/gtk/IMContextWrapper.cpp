@@ -1944,8 +1944,9 @@ bool IMContextWrapper::MaybeDispatchKeyEventAsProcessedByIME(
     //      event is prevented since even on the other browsers, web
     //      applications cannot cancel the following composition event.
     //      Spec bug: https://github.com/w3c/uievents/issues/180
-    lastFocusedWindow->DispatchKeyDownOrKeyUpEvent(
-        sourceEvent, !mMaybeInDeadKeySequence, &mKeyboardEventWasConsumed);
+    KeymapWrapper::DispatchKeyDownOrKeyUpEvent(lastFocusedWindow, sourceEvent,
+                                               !mMaybeInDeadKeySequence,
+                                               &mKeyboardEventWasConsumed);
     MOZ_LOG(gGtkIMLog, LogLevel::Info,
             ("0x%p   MaybeDispatchKeyEventAsProcessedByIME(), keydown or keyup "
              "event is dispatched",
@@ -2010,8 +2011,8 @@ bool IMContextWrapper::MaybeDispatchKeyEventAsProcessedByIME(
                "aFollowingEvent=%s), dispatch fake eKeyDown event",
                this, ToChar(aFollowingEvent)));
 
-      lastFocusedWindow->DispatchKeyDownOrKeyUpEvent(
-          fakeKeyDownEvent, &mKeyboardEventWasConsumed);
+      KeymapWrapper::DispatchKeyDownOrKeyUpEvent(
+          lastFocusedWindow, fakeKeyDownEvent, &mKeyboardEventWasConsumed);
       MOZ_LOG(gGtkIMLog, LogLevel::Info,
               ("0x%p   MaybeDispatchKeyEventAsProcessedByIME(), "
                "fake keydown event is dispatched",
