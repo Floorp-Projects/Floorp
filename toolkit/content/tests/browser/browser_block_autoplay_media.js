@@ -72,10 +72,9 @@ add_task(async function block_autoplay_media() {
   await check_audio_suspended(tab2.linkedBrowser, SuspendedType.SUSPENDED_BLOCK);
 
 
-  // Test 4: Disable autoplay, enable asking for permission, and verify
-  // that when a tab is opened in the background and has had its playback
-  // start delayed, resuming via the audio tab indicator overrides the
-  // autoplay blocking logic.
+  // Test 4: Disable autoplay and verify that when a tab is opened in the
+  // background and has had its playback start delayed, resuming via the audio
+  // tab indicator overrides the autoplay blocking logic.
   //
   // Clicking "play" on the audio tab indicator should always start playback
   // in that tab, even if it's in an autoplay-blocked origin.
@@ -84,7 +83,7 @@ add_task(async function block_autoplay_media() {
   // a new document being loaded into the tab; the new document should have
   // to satisfy the autoplay requirements on its own.
   await SpecialPowers.pushPrefEnv({"set": [
-    ["media.autoplay.default", SpecialPowers.Ci.nsIAutoplay.PROMPT],
+    ["media.autoplay.default", SpecialPowers.Ci.nsIAutoplay.BLOCKED],
     ["media.autoplay.enabled.user-gestures-needed", true],
     ["media.autoplay.ask-permission", true],
   ]});

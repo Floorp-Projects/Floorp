@@ -114,9 +114,9 @@ static bool IsWindowAllowedToPlay(nsPIDOMWindowInner* aWindow) {
 static uint32_t DefaultAutoplayBehaviour() {
   int prefValue =
       Preferences::GetInt("media.autoplay.default", nsIAutoplay::ALLOWED);
-  if (prefValue < nsIAutoplay::ALLOWED || prefValue > nsIAutoplay::PROMPT) {
-    // Invalid pref values are just converted to ALLOWED.
-    return nsIAutoplay::ALLOWED;
+  if (prefValue < nsIAutoplay::ALLOWED || prefValue > nsIAutoplay::BLOCKED) {
+    // Invalid pref values are just converted to BLOCKED.
+    return nsIAutoplay::BLOCKED;
   }
   return prefValue;
 }
