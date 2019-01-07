@@ -13228,8 +13228,8 @@
   "CONTENT_LARGE_PAINT_PHASE_WEIGHT": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "mwoodrow@mozilla.com"],
-    "bug_numbers": [1309442],
-    "expires_in_version": "66",
+    "bug_numbers": [1309442, 1518134],
+    "expires_in_version": "72",
     "keyed": true,
     "keys": ["dl", "flb", "fr", "r"],
     "kind": "linear",
@@ -13240,8 +13240,8 @@
   "CONTENT_SMALL_PAINT_PHASE_WEIGHT": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "mwoodrow@mozilla.com"],
-    "bug_numbers": [1430897],
-    "expires_in_version": "66",
+    "bug_numbers": [1430897, 1518134],
+    "expires_in_version": "72",
     "keyed": true,
     "keys": ["dl", "flb", "fr", "r"],
     "kind": "linear",
