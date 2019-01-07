@@ -38,7 +38,7 @@ android-api-16/debug:
               type: directory
     run:
         using: mozharness
-        actions: [get-secrets, build, multi-l10n]
+        actions: [get-secrets, build]
         config:
             - builds/releng_base_android_64_builds.py
         script: "mozharness/scripts/fx_desktop_build.py"
@@ -95,7 +95,7 @@ android-api-16-ccov/debug:
               type: directory
     run:
         using: mozharness
-        actions: [get-secrets, build, multi-l10n]
+        actions: [get-secrets, build]
         config:
             - builds/releng_base_android_64_builds.py
         script: "mozharness/scripts/fx_desktop_build.py"
@@ -150,7 +150,7 @@ android-x86/opt:
               type: directory
     run:
         using: mozharness
-        actions: [get-secrets, build, multi-l10n]
+        actions: [get-secrets, build]
         config:
             - builds/releng_base_android_64_builds.py
         script: "mozharness/scripts/fx_desktop_build.py"
@@ -198,7 +198,7 @@ android-x86-fuzzing/debug:
               type: directory
     run:
         using: mozharness
-        actions: [get-secrets, build, multi-l10n]
+        actions: [get-secrets, build]
         config:
             - builds/releng_base_android_64_builds.py
         script: "mozharness/scripts/fx_desktop_build.py"
@@ -311,7 +311,7 @@ android-api-16/opt:
               type: directory
     run:
         using: mozharness
-        actions: [get-secrets, build, multi-l10n]
+        actions: [get-secrets, build]
         config:
             - builds/releng_base_android_64_builds.py
         script: "mozharness/scripts/fx_desktop_build.py"
@@ -361,7 +361,7 @@ android-api-16-without-google-play-services/opt:
               type: directory
     run:
         using: mozharness
-        actions: [get-secrets, build, multi-l10n]
+        actions: [get-secrets, build]
         config:
             - builds/releng_base_android_64_builds.py
         script: "mozharness/scripts/fx_desktop_build.py"
@@ -475,7 +475,7 @@ android-aarch64/opt:
               type: directory
     run:
         using: mozharness
-        actions: [get-secrets, build, multi-l10n]
+        actions: [get-secrets, build]
         config:
             - builds/releng_base_android_64_builds.py
         script: "mozharness/scripts/fx_desktop_build.py"
@@ -529,7 +529,7 @@ android-aarch64/debug:
               type: directory
     run:
         using: mozharness
-        actions: [get-secrets, build, multi-l10n]
+        actions: [get-secrets, build]
         config:
             - builds/releng_base_android_64_builds.py
         script: "mozharness/scripts/fx_desktop_build.py"
@@ -642,7 +642,7 @@ android-x86_64/opt:
               type: directory
     run:
         using: mozharness
-        actions: [get-secrets, build, multi-l10n]
+        actions: [get-secrets, build]
         config:
             - builds/releng_base_android_64_builds.py
         script: "mozharness/scripts/fx_desktop_build.py"
@@ -755,7 +755,7 @@ android-x86_64/debug:
               type: directory
     run:
         using: mozharness
-        actions: [get-secrets, build, multi-l10n]
+        actions: [get-secrets, build]
         config:
             - builds/releng_base_android_64_builds.py
         script: "mozharness/scripts/fx_desktop_build.py"
