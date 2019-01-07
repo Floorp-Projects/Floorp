@@ -1,0 +1,25 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`expressions wrap exxpression should wrap an expression 1`] = `
+"try {
+ foo
+} catch (e) {
+ e
+}"
+`;
+
+exports[`expressions wrap exxpression should wrap expression with a comment 1`] = `
+"try {
+ foo // yo yo
+} catch (e) {
+ e
+}"
+`;
+
+exports[`expressions wrap exxpression should wrap quotes 1`] = `
+"try {
+ \\"2\\"
+} catch (e) {
+ e
+}"
+`;

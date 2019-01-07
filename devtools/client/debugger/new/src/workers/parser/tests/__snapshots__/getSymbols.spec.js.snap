@@ -1,0 +1,1389 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Parser.getSymbols allSymbols 1`] = `
+"functions:
+[(4, 0), (6, 1)]  incrementCounter(counter)
+[(8, 12), (8, 27)]  sum(a, b)
+[(12, 2), (14, 3)]  doThing()
+[(15, 16), (17, 3)]  doOtherThing()
+[(20, 15), (20, 23)]  property()
+[(24, 2), (26, 3)]  constructor() Ultra
+[(28, 2), (30, 3)]  beAwesome(person) Ultra
+
+callExpressions:
+[(13, 12), (13, 15)]  log   hey
+[(29, 12), (29, 15)]  log
+[(33, 19), (33, 23)]  push
+
+memberExpressions:
+[(13, 12), (13, 15)] console.log log
+[(20, 4), (20, 12)] Obj.property property
+[(21, 4), (21, 17)] Obj.otherProperty otherProperty
+[(25, 9), (25, 16)] this.awesome awesome
+[(29, 12), (29, 15)] console.log log
+[(33, 19), (33, 23)] this.props.history.push push
+[(33, 11), (33, 18)] this.props.history history
+[(33, 5), (33, 10)] this.props props
+[(33, 48), (33, 50)] this.props.dac.id id
+[(33, 44), (33, 47)] this.props.dac dac
+[(33, 38), (33, 43)] this.props props
+
+objectProperties:
+[(11, 2), (11, 5)] Obj.foo foo
+[(15, 2), (15, 14)] Obj.doOtherThing doOtherThing
+
+comments:
+
+
+identifiers:
+[(1, 6), (1, 10)] TIME TIME
+[(2, 4), (2, 9)] count count
+[(4, 9), (4, 25)] incrementCounter incrementCounter
+[(4, 26), (4, 33)] counter counter
+[(5, 9), (5, 16)] counter counter
+[(8, 6), (8, 9)] sum sum
+[(8, 13), (8, 14)] a a
+[(8, 16), (8, 17)] b b
+[(8, 22), (8, 23)] a a
+[(8, 26), (8, 27)] b b
+[(10, 6), (10, 9)] Obj Obj
+[(11, 2), (11, 5)] 1 foo
+[(12, 2), (12, 9)] doThing doThing
+[(13, 4), (13, 11)] console console
+[(13, 12), (13, 15)] log log
+[(15, 2), (15, 14)]  doOtherThing
+[(20, 0), (20, 3)] Obj Obj
+[(20, 4), (20, 12)] property property
+[(21, 0), (21, 3)] Obj Obj
+[(21, 4), (21, 17)] otherProperty otherProperty
+[(23, 6), (23, 11)] Ultra Ultra
+[(25, 4), (25, 8)] this this
+[(25, 9), (25, 16)] awesome awesome
+[(28, 12), (28, 18)] person person
+[(29, 4), (29, 11)] console console
+[(29, 12), (29, 15)] log log
+[(29, 19), (29, 25)] person person
+[(33, 0), (33, 4)] this this
+[(33, 5), (33, 10)] props props
+[(33, 11), (33, 18)] history history
+[(33, 19), (33, 23)] push push
+[(33, 33), (33, 37)] this this
+[(33, 38), (33, 43)] props props
+[(33, 44), (33, 47)] dac dac
+[(33, 48), (33, 50)] id id
+
+classes:
+[(23, 0), (31, 1)]  Ultra
+
+imports:
+
+
+literals:
+
+
+hasJsx: false
+
+hasTypes: false
+
+loading: false"
+`;
+
+exports[`Parser.getSymbols call expression 1`] = `
+"functions:
+[(2, 0), (2, 70)]  evaluate(script, , )
+
+callExpressions:
+[(1, 0), (1, 8)]  dispatch
+[(4, 0), (4, 1)]  a
+[(4, 2), (4, 3)]  b
+[(4, 4), (4, 5)]  c
+[(6, 6), (6, 7)]  c
+[(6, 2), (6, 3)]  b
+[(7, 6), (7, 7)]  d
+
+memberExpressions:
+[(6, 6), (6, 7)]  c
+[(6, 2), (6, 3)] a.b b
+[(7, 6), (7, 7)] a.b.c.d d
+[(7, 4), (7, 5)] a.b.c c
+[(7, 2), (7, 3)] a.b b
+
+objectProperties:
+[(1, 11), (1, 12)]  d
+[(2, 28), (2, 35)]  frameId
+[(2, 41), (2, 48)]  frameId
+[(2, 55), (2, 56)]  c
+[(2, 61), (2, 62)]  c
+
+comments:
+
+
+identifiers:
+[(1, 0), (1, 8)] dispatch dispatch
+[(1, 11), (1, 12)] d d
+[(2, 9), (2, 17)] evaluate evaluate
+[(2, 18), (2, 24)] script script
+[(2, 28), (2, 35)] frameId frameId
+[(2, 41), (2, 48)] 3 frameId
+[(2, 55), (2, 56)] c c
+[(2, 61), (2, 62)] 2 c
+[(4, 0), (4, 1)] a a
+[(4, 2), (4, 3)] b b
+[(4, 4), (4, 5)] c c
+[(6, 0), (6, 1)] a a
+[(6, 2), (6, 3)] b b
+[(6, 6), (6, 7)] c c
+[(7, 0), (7, 1)] a a
+[(7, 2), (7, 3)] b b
+[(7, 4), (7, 5)] c c
+[(7, 6), (7, 7)] d d
+
+classes:
+
+
+imports:
+
+
+literals:
+
+
+hasJsx: false
+
+hasTypes: false
+
+loading: false"
+`;
+
+exports[`Parser.getSymbols call sites 1`] = `
+"functions:
+
+
+callExpressions:
+[(1, 0), (1, 3)]  aaa
+[(1, 4), (1, 7)]  bbb
+[(1, 11), (1, 14)]  ccc
+[(4, 3), (4, 7)]  ffff
+[(3, 3), (3, 6)]  eee
+[(2, 0), (2, 4)]  dddd
+
+memberExpressions:
+[(4, 3), (4, 7)]  ffff
+[(3, 3), (3, 6)]  eee
+
+objectProperties:
+
+
+comments:
+
+
+identifiers:
+[(1, 0), (1, 3)] aaa aaa
+[(1, 4), (1, 7)] bbb bbb
+[(1, 11), (1, 14)] ccc ccc
+[(2, 0), (2, 4)] dddd dddd
+[(3, 3), (3, 6)] eee eee
+[(4, 3), (4, 7)] ffff ffff
+
+classes:
+
+
+imports:
+
+
+literals:
+
+
+hasJsx: false
+
+hasTypes: false
+
+loading: false"
+`;
+
+exports[`Parser.getSymbols class 1`] = `
+"functions:
+[(2, 2), (4, 3)]  constructor() Test
+[(6, 2), (8, 3)]  bar(a) Test
+[(10, 8), (12, 3)]  baz(b) Test
+
+callExpressions:
+[(7, 12), (7, 15)]  log   bar
+
+memberExpressions:
+[(3, 9), (3, 12)] this.foo foo
+[(7, 12), (7, 15)] console.log log
+
+objectProperties:
+
+
+comments:
+
+
+identifiers:
+[(1, 6), (1, 10)] Test Test
+[(3, 4), (3, 8)] this this
+[(3, 9), (3, 12)] foo foo
+[(6, 6), (6, 7)] a a
+[(7, 4), (7, 11)] console console
+[(7, 12), (7, 15)] log log
+[(7, 23), (7, 24)] a a
+[(10, 2), (10, 5)] b => {
+  return b * 2;
+} baz
+[(10, 8), (10, 9)] b b
+[(11, 11), (11, 12)] b b
+[(15, 6), (15, 11)] Test2 Test2
+[(17, 4), (17, 19)] expressiveClass expressiveClass
+
+classes:
+[(1, 0), (13, 1)]  Test
+[(15, 0), (15, 14)]  Test2
+
+imports:
+
+
+literals:
+
+
+hasJsx: false
+
+hasTypes: false
+
+loading: false"
+`;
+
+exports[`Parser.getSymbols component 1`] = `
+"functions:
+[(6, 2), (9, 3)]  constructor(props) Punny
+[(11, 2), (11, 24)]  componentDidMount() Punny
+[(13, 2), (13, 14)]  onClick() Punny
+[(15, 2), (17, 3)]  renderMe() Punny
+[(19, 2), (19, 13)]  render() Punny
+[(29, 10), (31, 3)]  render() TodoView   1
+[(37, 10), (39, 3)]  render() TodoClass   2
+[(45, 10), (47, 3)]  render() createClass   3
+[(53, 10), (55, 3)]  render() TodoClass   4
+[(62, 0), (66, 1)]  Button()
+[(70, 8), (70, 21)]  x()
+[(72, 33), (79, 1)]  createElement(color)
+[(82, 26), (84, 1)]  update(newColor)
+
+callExpressions:
+[(7, 4), (7, 9)]
+[(8, 32), (8, 36)]  bind
+[(26, 31), (26, 37)]  extend
+[(30, 12), (30, 15)]  log   yo
+[(34, 18), (34, 29)]  createClass
+[(38, 12), (38, 15)]  log   yo
+[(42, 12), (42, 23)]  createClass
+[(46, 12), (46, 15)]  log   yo
+[(50, 16), (50, 27)]  createClass
+[(54, 12), (54, 15)]  log   yo
+[(65, 16), (65, 20)]  call
+[(68, 26), (68, 32)]  create
+
+memberExpressions:
+[(8, 9), (8, 16)] this.onClick onClick
+[(8, 32), (8, 36)] this.onClick.bind bind
+[(8, 24), (8, 31)] this.onClick onClick
+[(16, 30), (16, 37)] this.onClick onClick
+[(26, 31), (26, 37)] Backbone.View.extend extend
+[(26, 26), (26, 30)] Backbone.View View
+[(30, 12), (30, 15)] console.log log
+[(38, 12), (38, 15)] console.log log
+[(46, 12), (46, 15)] console.log log
+[(50, 4), (50, 13)] app.TodoClass TodoClass
+[(54, 12), (54, 15)] console.log log
+[(64, 7), (64, 12)] this.color color
+[(65, 16), (65, 20)] Nanocomponent.call call
+[(68, 7), (68, 16)] Button.prototype prototype
+[(68, 26), (68, 32)] Object.create create
+[(68, 47), (68, 56)] Nanocomponent.prototype prototype
+[(72, 17), (72, 30)] Button.prototype.createElement createElement
+[(72, 7), (72, 16)] Button.prototype prototype
+[(73, 7), (73, 12)] this.color color
+[(82, 17), (82, 23)] Button.prototype.update update
+[(82, 7), (82, 16)] Button.prototype prototype
+[(83, 27), (83, 32)] this.color color
+
+objectProperties:
+[(27, 2), (27, 9)]  tagName
+[(29, 2), (29, 8)]  render
+[(35, 2), (35, 9)]  tagName
+[(37, 2), (37, 8)]  render
+[(43, 2), (43, 9)]  tagName
+[(45, 2), (45, 8)]  render
+[(51, 2), (51, 9)]  tagName
+[(53, 2), (53, 8)]  render
+
+comments:
+[(1, 0), (3, 3)]
+[(22, 0), (24, 3)]
+[(58, 0), (60, 3)]
+[(81, 0), (81, 34)]
+
+identifiers:
+[(5, 6), (5, 11)] Punny Punny
+[(6, 14), (6, 19)] props props
+[(8, 4), (8, 8)] this this
+[(8, 9), (8, 16)] onClick onClick
+[(8, 19), (8, 23)] this this
+[(8, 24), (8, 31)] onClick onClick
+[(8, 32), (8, 36)] bind bind
+[(8, 37), (8, 41)] this this
+[(16, 25), (16, 29)] this this
+[(16, 30), (16, 37)] onClick onClick
+[(5, 20), (5, 29)] Component Component
+[(26, 6), (26, 14)] TodoView TodoView
+[(26, 17), (26, 25)] Backbone Backbone
+[(26, 26), (26, 30)] View View
+[(26, 31), (26, 37)] extend extend
+[(27, 2), (27, 9)] \\"li\\" tagName
+[(27, 11), (27, 15)] \\"li\\" li
+[(29, 2), (29, 8)]  render
+[(30, 4), (30, 11)] console console
+[(30, 12), (30, 15)] log log
+[(34, 6), (34, 15)] TodoClass TodoClass
+[(34, 18), (34, 29)] createClass createClass
+[(35, 2), (35, 9)] \\"li\\" tagName
+[(35, 11), (35, 15)] \\"li\\" li
+[(37, 2), (37, 8)]  render
+[(38, 4), (38, 11)] console console
+[(38, 12), (38, 15)] log log
+[(42, 0), (42, 9)] TodoClass TodoClass
+[(42, 12), (42, 23)] createClass createClass
+[(43, 2), (43, 9)] \\"li\\" tagName
+[(43, 11), (43, 15)] \\"li\\" li
+[(45, 2), (45, 8)]  render
+[(46, 4), (46, 11)] console console
+[(46, 12), (46, 15)] log log
+[(50, 0), (50, 3)] app app
+[(50, 4), (50, 13)] TodoClass TodoClass
+[(50, 16), (50, 27)] createClass createClass
+[(51, 2), (51, 9)] \\"li\\" tagName
+[(51, 11), (51, 15)] \\"li\\" li
+[(53, 2), (53, 8)]  render
+[(54, 4), (54, 11)] console console
+[(54, 12), (54, 15)] log log
+[(62, 9), (62, 15)] Button Button
+[(63, 8), (63, 12)] this this
+[(63, 24), (63, 30)] Button Button
+[(63, 44), (63, 50)] Button Button
+[(64, 2), (64, 6)] this this
+[(64, 7), (64, 12)] color color
+[(65, 2), (65, 15)] Nanocomponent Nanocomponent
+[(65, 16), (65, 20)] call call
+[(65, 21), (65, 25)] this this
+[(68, 0), (68, 6)] Button Button
+[(68, 7), (68, 16)] prototype prototype
+[(68, 19), (68, 25)] Object Object
+[(68, 26), (68, 32)] create create
+[(68, 33), (68, 46)] Nanocomponent Nanocomponent
+[(68, 47), (68, 56)] prototype prototype
+[(70, 4), (70, 5)] x x
+[(72, 0), (72, 6)] Button Button
+[(72, 7), (72, 16)] prototype prototype
+[(72, 17), (72, 30)] createElement createElement
+[(72, 42), (72, 47)] color color
+[(73, 2), (73, 6)] this this
+[(73, 7), (73, 12)] color color
+[(73, 15), (73, 20)] color color
+[(74, 9), (74, 13)] html html
+[(75, 39), (75, 44)] color color
+[(82, 0), (82, 6)] Button Button
+[(82, 7), (82, 16)] prototype prototype
+[(82, 17), (82, 23)] update update
+[(82, 35), (82, 43)] newColor newColor
+[(83, 9), (83, 17)] newColor newColor
+[(83, 22), (83, 26)] this this
+[(83, 27), (83, 32)] color color
+
+classes:
+[(5, 0), (20, 1)]  Punny
+
+imports:
+
+
+literals:
+
+
+hasJsx: true
+
+hasTypes: false
+
+loading: false"
+`;
+
+exports[`Parser.getSymbols destruct 1`] = `
+"functions:
+
+
+callExpressions:
+[(1, 21), (1, 28)]  compute
+[(4, 21), (4, 28)]  compute
+[(7, 35), (7, 42)]  entries
+[(8, 10), (8, 13)]  log
+
+memberExpressions:
+[(7, 35), (7, 42)] arr.entries entries
+[(8, 10), (8, 13)] console.log log
+[(16, 34), (16, 46)] prefsBlueprint[accessorName] accessorName
+
+objectProperties:
+[(1, 8), (1, 9)] b b
+[(1, 11), (1, 16)] resty resty
+[(2, 8), (2, 13)] first first
+[(2, 18), (2, 22)] last last
+[(11, 8), (11, 9)] a a
+[(11, 20), (11, 21)] b b
+[(11, 36), (11, 37)] a a
+[(12, 8), (12, 12)] temp temp
+[(12, 17), (12, 20)]  foo
+[(14, 7), (14, 10)] [key] key
+[(14, 23), (14, 24)] z z
+
+comments:
+
+
+identifiers:
+[(1, 8), (1, 9)] b b
+[(1, 11), (1, 16)] resty resty
+[(1, 21), (1, 28)] compute compute
+[(1, 29), (1, 34)] stuff stuff
+[(2, 15), (2, 16)] f f
+[(2, 24), (2, 25)] l l
+[(2, 8), (2, 13)] f first
+[(2, 18), (2, 22)] l last
+[(2, 30), (2, 33)] obj obj
+[(4, 7), (4, 8)] a a
+[(4, 13), (4, 17)] rest rest
+[(4, 21), (4, 28)] compute compute
+[(4, 29), (4, 34)] stuff stuff
+[(5, 7), (5, 8)] x x
+[(7, 12), (7, 17)] index index
+[(7, 19), (7, 26)] element element
+[(7, 31), (7, 34)] arr arr
+[(7, 35), (7, 42)] entries entries
+[(8, 2), (8, 9)] console console
+[(8, 10), (8, 13)] log log
+[(8, 14), (8, 19)] index index
+[(8, 21), (8, 28)] element element
+[(11, 8), (11, 9)] aa = 10 a
+[(11, 11), (11, 13)] aa aa
+[(11, 20), (11, 21)] bb = 5 b
+[(11, 23), (11, 25)] bb bb
+[(11, 36), (11, 37)] 3 a
+[(12, 22), (12, 27)] foooo foooo
+[(12, 8), (12, 12)] [{
+  foo: foooo
+}] temp
+[(12, 17), (12, 20)] foooo foo
+[(12, 35), (12, 38)] obj obj
+[(14, 13), (14, 16)] foo foo
+[(14, 7), (14, 10)] foo key
+[(14, 23), (14, 24)] \\"bar\\" z
+[(14, 26), (14, 31)] \\"bar\\" bar
+[(16, 7), (16, 15)] prefName prefName
+[(16, 19), (16, 33)] prefsBlueprint prefsBlueprint
+[(16, 34), (16, 46)] accessorName accessorName
+
+classes:
+
+
+imports:
+
+
+literals:
+
+
+hasJsx: false
+
+hasTypes: false
+
+loading: false"
+`;
+
+exports[`Parser.getSymbols es6 1`] = `
+"functions:
+
+
+callExpressions:
+[(1, 0), (1, 8)]  dispatch
+
+memberExpressions:
+
+
+objectProperties:
+[(1, 23), (1, 30)]  PROMISE
+
+comments:
+
+
+identifiers:
+[(1, 0), (1, 8)] dispatch dispatch
+[(1, 14), (1, 20)] action action
+[(1, 23), (1, 30)] promise PROMISE
+[(1, 33), (1, 40)] promise promise
+
+classes:
+
+
+imports:
+
+
+literals:
+
+
+hasJsx: false
+
+hasTypes: false
+
+loading: false"
+`;
+
+exports[`Parser.getSymbols expression 1`] = `
+"functions:
+[(10, 10), (10, 23)]  render() TodoView
+[(23, 0), (23, 28)]  params()
+[(24, 11), (24, 32)]  pars()
+
+callExpressions:
+[(9, 24), (9, 30)]  extend
+[(25, 18), (25, 24)]  doEvil
+
+memberExpressions:
+[(2, 19), (2, 33)] obj2.c.secondProperty secondProperty
+[(2, 17), (2, 18)] obj2.c c
+[(6, 40), (6, 46)] collection.books[1].author author
+[(6, 37), (6, 38)] collection.books[1]
+[(6, 31), (6, 36)] collection.books books
+[(7, 66), (7, 74)] collection.genres[\\"sci-fi\\"].movies[0].director director
+[(7, 63), (7, 64)] collection.genres[\\"sci-fi\\"].movies[0]
+[(7, 56), (7, 62)] collection.genres[\\"sci-fi\\"].movies movies
+[(7, 46), (7, 54)] collection.genres[\\"sci-fi\\"]
+[(7, 39), (7, 45)] collection.genres genres
+[(9, 4), (9, 12)] app.TodoView TodoView
+[(9, 24), (9, 30)] Backbone.extend extend
+[(14, 4), (14, 7)] obj.foo foo
+[(21, 40), (21, 41)] a.b.c.v.d d
+[(21, 38), (21, 39)] a.b.c.v v
+[(21, 36), (21, 37)] a.b.c c
+[(21, 34), (21, 35)] a.b b
+[(25, 29), (25, 43)]  secondProperty
+[(25, 27), (25, 28)]  c
+[(25, 18), (25, 24)] obj2.doEvil doEvil
+
+objectProperties:
+[(1, 14), (1, 15)] obj.a a
+[(1, 19), (1, 20)] obj.a.b b
+[(5, 15), (5, 16)] com[a] a
+[(5, 21), (5, 22)] com[a].b b
+[(5, 30), (5, 31)] com[a][d] d
+[(5, 42), (5, 43)] com[b] b
+[(10, 2), (10, 8)]  render
+[(14, 12), (14, 13)] obj.foo.a a
+[(14, 17), (14, 18)] obj.foo.a.b b
+[(14, 27), (14, 28)] obj.foo.b b
+[(15, 8), (15, 9)] com.a a
+[(15, 13), (15, 14)] com.a.b b
+[(15, 23), (15, 24)] com.b b
+[(18, 15), (18, 16)] res[0].a a
+[(18, 25), (18, 26)] res[1].b b
+[(19, 15), (19, 16)] res2.a a
+[(19, 21), (19, 22)] res2.a[0].b b
+[(20, 15), (20, 16)] res3.a a
+[(20, 21), (20, 22)] res3.a[0].b b
+[(20, 30), (20, 31)] res3.b b
+[(20, 36), (20, 37)] res3.b[0].c c
+[(21, 17), (21, 18)] res4[0].a a
+[(21, 29), (21, 30)] res4[0].b b
+[(23, 18), (23, 19)] a a
+[(23, 21), (23, 22)] b b
+[(24, 22), (24, 23)] a a
+[(24, 25), (24, 26)] b b
+
+comments:
+[(1, 29), (1, 44)]
+[(2, 35), (2, 68)]
+[(4, 0), (4, 22)]
+[(5, 51), (5, 67)]
+[(13, 0), (13, 14)]
+[(14, 35), (14, 54)]
+[(15, 31), (15, 46)]
+[(17, 0), (17, 9)]
+[(18, 34), (18, 50)]
+[(19, 32), (19, 50)]
+[(20, 47), (20, 65)]
+[(21, 47), (21, 66)]
+[(23, 29), (23, 38)]
+[(25, 45), (25, 70)]
+
+identifiers:
+[(1, 6), (1, 9)] obj obj
+[(1, 14), (1, 15)] ({
+  b: 2
+}) a
+[(1, 19), (1, 20)] 2 b
+[(2, 6), (2, 9)] foo foo
+[(2, 12), (2, 16)] obj2 obj2
+[(2, 17), (2, 18)] c c
+[(2, 19), (2, 33)] secondProperty secondProperty
+[(5, 6), (5, 9)] com com
+[(5, 15), (5, 16)] ({
+  b: \\"c\\",
+  [d]: \\"e\\"
+}) a
+[(5, 21), (5, 22)] \\"c\\" b
+[(5, 24), (5, 27)] \\"c\\" c
+[(5, 30), (5, 31)] \\"e\\" d
+[(5, 34), (5, 37)] \\"e\\" e
+[(5, 42), (5, 43)] 3 b
+[(6, 6), (6, 17)] firstAuthor firstAuthor
+[(6, 20), (6, 30)] collection collection
+[(6, 31), (6, 36)] books books
+[(6, 40), (6, 46)] author author
+[(7, 6), (7, 25)] firstActionDirector firstActionDirector
+[(7, 28), (7, 38)] collection collection
+[(7, 39), (7, 45)] genres genres
+[(7, 56), (7, 62)] movies movies
+[(7, 66), (7, 74)] director director
+[(9, 0), (9, 3)] app app
+[(9, 4), (9, 12)] TodoView TodoView
+[(9, 15), (9, 23)] Backbone Backbone
+[(9, 24), (9, 30)] extend extend
+[(10, 2), (10, 8)]  render
+[(14, 0), (14, 3)] obj obj
+[(14, 4), (14, 7)] foo foo
+[(14, 12), (14, 13)] ({
+  b: \\"c\\"
+}) a
+[(14, 17), (14, 18)] \\"c\\" b
+[(14, 20), (14, 23)] \\"c\\" c
+[(14, 27), (14, 28)] 3 b
+[(15, 0), (15, 3)] com com
+[(15, 8), (15, 9)] ({
+  b: \\"c\\"
+}) a
+[(15, 13), (15, 14)] \\"c\\" b
+[(15, 16), (15, 19)] \\"c\\" c
+[(15, 23), (15, 24)] 3 b
+[(18, 6), (18, 9)] res res
+[(18, 15), (18, 16)] 2 a
+[(18, 25), (18, 26)] 3 b
+[(19, 6), (19, 10)] res2 res2
+[(19, 15), (19, 16)] [{
+  b: 2
+}] a
+[(19, 21), (19, 22)] 2 b
+[(20, 6), (20, 10)] res3 res3
+[(20, 15), (20, 16)] [{
+  b: 2
+}] a
+[(20, 21), (20, 22)] 2 b
+[(20, 30), (20, 31)] [{
+  c: 3
+}] b
+[(20, 36), (20, 37)] 3 c
+[(21, 6), (21, 10)] res4 res4
+[(21, 17), (21, 18)] 3 a
+[(21, 29), (21, 30)] a.b.c.v.d b
+[(21, 32), (21, 33)] a a
+[(21, 34), (21, 35)] b b
+[(21, 36), (21, 37)] c c
+[(21, 38), (21, 39)] v v
+[(21, 40), (21, 41)] d d
+[(23, 9), (23, 15)] params params
+[(23, 18), (23, 19)] a a
+[(23, 21), (23, 22)] b b
+[(24, 4), (24, 8)] pars pars
+[(24, 22), (24, 23)] a a
+[(24, 25), (24, 26)] b b
+[(25, 6), (25, 10)] evil evil
+[(25, 13), (25, 17)] obj2 obj2
+[(25, 18), (25, 24)] doEvil doEvil
+[(25, 27), (25, 28)] c c
+[(25, 29), (25, 43)] secondProperty secondProperty
+
+classes:
+
+
+imports:
+
+
+literals:
+[(6, 37), (6, 38)] collection.books[1] 1
+[(7, 46), (7, 54)] collection.genres[\\"sci-fi\\"] sci-fi
+[(7, 63), (7, 64)] collection.genres[\\"sci-fi\\"].movies[0] 0
+
+hasJsx: false
+
+hasTypes: false
+
+loading: false"
+`;
+
+exports[`Parser.getSymbols finds symbols in an html file 1`] = `
+"functions:
+[(8, 2), (10, 3)]  sayHello(name)
+[(22, 21), (24, 3)]  capitalize(name)
+[(36, 3), (39, 3)]  iife()
+
+callExpressions:
+[(23, 18), (23, 29)]  toUpperCase
+[(23, 39), (23, 48)]  substring   1
+[(28, 4), (28, 8)]  join
+[(27, 4), (27, 7)]  map
+[(26, 4), (26, 7)]  map
+[(36, 3), (39, 3)]
+[(37, 20), (37, 28)]  sayHello   Ryan
+[(38, 11), (38, 14)]  log
+
+memberExpressions:
+[(23, 18), (23, 29)] name[0].toUpperCase toUpperCase
+[(23, 15), (23, 16)] name[0]
+[(23, 39), (23, 48)] name.substring substring
+[(28, 4), (28, 8)]  join
+[(27, 4), (27, 7)]  map
+[(26, 4), (26, 7)] map map
+[(30, 15), (30, 24)] globalObject.greetings greetings
+[(38, 11), (38, 14)] console.log log
+
+objectProperties:
+[(5, 3), (5, 8)] globalObject.first first
+[(6, 3), (6, 7)] globalObject.last last
+
+comments:
+
+
+identifiers:
+[(4, 6), (4, 18)] globalObject globalObject
+[(5, 3), (5, 8)] \\"name\\" first
+[(5, 10), (5, 16)] \\"name\\" name
+[(6, 3), (6, 7)] \\"words\\" last
+[(6, 9), (6, 16)] \\"words\\" words
+[(8, 11), (8, 19)] sayHello sayHello
+[(8, 21), (8, 25)] name name
+[(9, 20), (9, 24)] name name
+[(22, 8), (22, 18)] capitalize capitalize
+[(22, 21), (22, 25)] name name
+[(23, 10), (23, 14)] name name
+[(23, 18), (23, 29)] toUpperCase toUpperCase
+[(23, 34), (23, 38)] name name
+[(23, 39), (23, 48)] substring substring
+[(25, 8), (25, 16)] greetAll greetAll
+[(26, 4), (26, 7)] map map
+[(26, 8), (26, 18)] capitalize capitalize
+[(27, 4), (27, 7)] map map
+[(27, 8), (27, 16)] sayHello sayHello
+[(28, 4), (28, 8)] join join
+[(30, 2), (30, 14)] globalObject globalObject
+[(30, 15), (30, 24)] greetings greetings
+[(30, 27), (30, 35)] greetAll greetAll
+[(36, 12), (36, 16)] iife iife
+[(37, 9), (37, 17)] greeting greeting
+[(37, 20), (37, 28)] sayHello sayHello
+[(38, 3), (38, 10)] console console
+[(38, 11), (38, 14)] log log
+[(38, 15), (38, 23)] greeting greeting
+
+classes:
+
+
+imports:
+
+
+literals:
+[(23, 15), (23, 16)] name[0] 0
+
+hasJsx: false
+
+hasTypes: false
+
+loading: false"
+`;
+
+exports[`Parser.getSymbols flow 1`] = `
+"functions:
+[(2, 2), (4, 3)]  renderHello(name, action, ) App
+
+callExpressions:
+
+
+memberExpressions:
+
+
+objectProperties:
+[(2, 51), (2, 56)] todos todos
+
+comments:
+
+
+identifiers:
+[(1, 6), (1, 9)] App App
+[(2, 14), (2, 18)] name name
+[(2, 28), (2, 34)] action action
+[(2, 51), (2, 56)] todos todos
+[(3, 20), (3, 24)] name name
+[(1, 18), (1, 27)] Component Component
+
+classes:
+[(1, 0), (5, 1)]  App
+
+imports:
+
+
+literals:
+
+
+hasJsx: false
+
+hasTypes: true
+
+loading: false"
+`;
+
+exports[`Parser.getSymbols func 1`] = `
+"functions:
+[(1, 0), (3, 1)]  square(n)
+[(5, 7), (7, 1)]  exFoo()
+[(9, 0), (11, 1)]  slowFoo()
+[(13, 7), (15, 1)]  exSlowFoo()
+[(17, 0), (19, 1)]  ret()
+[(21, 8), (21, 21)]  child()
+[(23, 1), (25, 1)]  anonymous()
+[(28, 7), (30, 3)]  name()
+[(32, 2), (34, 3)]  bar()
+[(37, 15), (38, 1)]  root()
+[(40, 0), (42, 1)]  test(a1, , )
+[(44, 0), (44, 13)]  anonymous()    1
+[(46, 0), (50, 1)]  ret2()
+
+callExpressions:
+[(18, 9), (18, 12)]  foo
+[(23, 1), (25, 1)]
+[(41, 10), (41, 13)]  log   pause next here
+[(48, 4), (48, 7)]  foo
+
+memberExpressions:
+[(41, 10), (41, 13)] console.log log
+
+objectProperties:
+[(28, 2), (28, 5)] obj.foo foo
+[(40, 29), (40, 31)]  a3
+[(40, 33), (40, 35)]  a4
+[(40, 37), (40, 39)]  a5
+[(40, 43), (40, 45)]  a6
+
+comments:
+
+
+identifiers:
+[(1, 9), (1, 15)] square square
+[(1, 16), (1, 17)] n n
+[(2, 9), (2, 10)] n n
+[(2, 13), (2, 14)] n n
+[(5, 16), (5, 21)] exFoo exFoo
+[(9, 15), (9, 22)] slowFoo slowFoo
+[(13, 22), (13, 31)] exSlowFoo exSlowFoo
+[(17, 9), (17, 12)] ret ret
+[(18, 9), (18, 12)] foo foo
+[(21, 0), (21, 5)] child child
+[(27, 6), (27, 9)] obj obj
+[(28, 2), (28, 5)]  foo
+[(28, 16), (28, 20)] name name
+[(32, 2), (32, 5)] bar bar
+[(37, 24), (37, 28)] root root
+[(40, 9), (40, 13)] test test
+[(40, 14), (40, 16)] a1 a1
+[(40, 18), (40, 20)] a2 a2
+[(40, 29), (40, 31)] a3 a3
+[(40, 33), (40, 35)] a4 a4
+[(40, 37), (40, 39)] {
+  a6: a7
+} = {} a5
+[(40, 43), (40, 45)] a7 a6
+[(40, 47), (40, 49)] a7 a7
+[(41, 2), (41, 9)] console console
+[(41, 10), (41, 13)] log log
+[(44, 7), (44, 8)] x x
+[(46, 9), (46, 13)] ret2 ret2
+[(48, 4), (48, 7)] foo foo
+
+classes:
+
+
+imports:
+
+
+literals:
+
+
+hasJsx: false
+
+hasTypes: false
+
+loading: false"
+`;
+
+exports[`Parser.getSymbols function names 1`] = `
+"functions:
+[(4, 7), (4, 20)]  foo()
+[(5, 9), (5, 22)]  foo()    1
+[(6, 6), (6, 19)]  42()
+[(8, 2), (8, 10)]  foo()    2
+[(9, 2), (9, 12)]  foo()    3
+[(10, 2), (10, 9)]  42()    1
+[(13, 6), (13, 19)]  foo()    4
+[(14, 10), (14, 23)]  foo()    5
+[(16, 10), (16, 22)]  foo()    6
+[(17, 11), (17, 23)]  foo()    7
+[(18, 11), (18, 23)]  foo()    8
+[(20, 7), (20, 19)]  foo()    9
+[(21, 8), (21, 20)]  foo()    10
+[(22, 13), (22, 25)]  foo()    11
+[(24, 0), (24, 35)]  fn()
+[(24, 19), (24, 31)]  foo()    12
+[(25, 0), (25, 40)]  fn()    1
+[(25, 19), (25, 31)]  foo()    13
+[(26, 0), (26, 45)]  fn()    2
+[(26, 24), (26, 36)]  foo()    14
+[(29, 8), (29, 21)]  foo() Cls   15
+[(30, 10), (30, 23)]  foo() Cls   16
+[(31, 7), (31, 20)]  42() Cls   2
+[(33, 2), (33, 10)]  foo() Cls   17
+[(34, 2), (34, 12)]  foo() Cls   18
+[(35, 2), (35, 9)]  42() Cls   3
+[(38, 1), (38, 13)]  anonymous()
+[(40, 15), (40, 28)]  default()
+[(44, 0), (44, 27)]  a(first, second)
+[(45, 0), (45, 35)]  b(first = bla, second)
+[(46, 0), (46, 32)]  c(first = {}, second)
+[(47, 0), (47, 32)]  d(first = [], second)
+[(48, 0), (48, 40)]  e(first = defaultObj, second)
+[(49, 0), (49, 40)]  f(first = defaultArr, second)
+[(50, 0), (50, 34)]  g(first = null, second)
+
+callExpressions:
+
+
+memberExpressions:
+[(14, 4), (14, 7)] obj.foo foo
+
+objectProperties:
+[(4, 2), (4, 5)]  foo
+[(5, 2), (5, 7)]
+[(6, 2), (6, 4)]
+[(18, 5), (18, 8)] foo foo
+[(21, 2), (21, 5)] undefined.foo foo
+[(22, 2), (22, 5)] undefined.bar bar
+[(25, 13), (25, 16)]  foo
+[(26, 13), (26, 16)]  bar
+[(42, 20), (42, 21)] defaultObj.a a
+
+comments:
+[(1, 0), (1, 20)]
+
+identifiers:
+[(4, 2), (4, 5)]  foo
+[(5, 2), (5, 7)]  foo
+[(8, 2), (8, 5)] foo foo
+[(13, 0), (13, 3)] foo foo
+[(14, 0), (14, 3)] obj obj
+[(14, 4), (14, 7)] foo foo
+[(16, 4), (16, 7)] foo foo
+[(17, 5), (17, 8)] foo foo
+[(18, 5), (18, 8)] foo = function () {} foo
+[(20, 1), (20, 4)] foo foo
+[(21, 2), (21, 5)] foo = function () {} foo
+[(22, 2), (22, 5)] foo = function () {} bar
+[(22, 7), (22, 10)] foo foo
+[(24, 9), (24, 11)] fn fn
+[(24, 13), (24, 16)] foo foo
+[(25, 9), (25, 11)] fn fn
+[(25, 13), (25, 16)] foo = function () {} foo
+[(26, 9), (26, 11)] fn fn
+[(26, 13), (26, 16)] foo = function () {} bar
+[(26, 18), (26, 21)] foo foo
+[(28, 6), (28, 9)] Cls Cls
+[(29, 2), (29, 5)]  foo
+[(30, 2), (30, 7)]  foo
+[(42, 6), (42, 16)] defaultObj defaultObj
+[(42, 20), (42, 21)] 1 a
+[(43, 6), (43, 16)] defaultArr defaultArr
+[(44, 9), (44, 10)] a a
+[(44, 11), (44, 16)] first first
+[(44, 18), (44, 24)] second second
+[(45, 9), (45, 10)] b b
+[(45, 11), (45, 16)] first first
+[(45, 26), (45, 32)] second second
+[(46, 9), (46, 10)] c c
+[(46, 11), (46, 16)] first first
+[(46, 23), (46, 29)] second second
+[(47, 9), (47, 10)] d d
+[(47, 11), (47, 16)] first first
+[(47, 23), (47, 29)] second second
+[(48, 9), (48, 10)] e e
+[(48, 11), (48, 16)] first first
+[(48, 19), (48, 29)] defaultObj defaultObj
+[(48, 31), (48, 37)] second second
+[(49, 9), (49, 10)] f f
+[(49, 11), (49, 16)] first first
+[(49, 19), (49, 29)] defaultArr defaultArr
+[(49, 31), (49, 37)] second second
+[(50, 9), (50, 10)] g g
+[(50, 11), (50, 16)] first first
+[(50, 25), (50, 31)] second second
+
+classes:
+[(28, 0), (36, 1)]  Cls
+
+imports:
+
+
+literals:
+
+
+hasJsx: false
+
+hasTypes: false
+
+loading: false"
+`;
+
+exports[`Parser.getSymbols jsx 1`] = `
+"functions:
+
+
+callExpressions:
+[(3, 17), (3, 20)]  foo
+[(4, 9), (4, 12)]  foo
+
+memberExpressions:
+
+
+objectProperties:
+
+
+comments:
+
+
+identifiers:
+[(1, 6), (1, 16)] jsxElement jsxElement
+[(3, 17), (3, 20)] foo foo
+[(4, 9), (4, 12)] foo foo
+
+classes:
+
+
+imports:
+
+
+literals:
+
+
+hasJsx: true
+
+hasTypes: false
+
+loading: false"
+`;
+
+exports[`Parser.getSymbols math 1`] = `
+"functions:
+[(1, 0), (12, 1)]  math(n)
+[(2, 2), (5, 3)]  square(n)
+[(14, 12), (14, 25)]  child()
+[(15, 9), (15, 22)]  child2()
+
+callExpressions:
+[(8, 14), (8, 20)]  square   2
+[(10, 15), (10, 22)]  squaare   4
+
+memberExpressions:
+
+
+objectProperties:
+
+
+comments:
+[(3, 4), (3, 21)]
+[(7, 2), (7, 24)]
+
+identifiers:
+[(1, 9), (1, 13)] math math
+[(1, 14), (1, 15)] n n
+[(2, 11), (2, 17)] square square
+[(2, 18), (2, 19)] n n
+[(4, 4), (4, 5)] n n
+[(4, 8), (4, 9)] n n
+[(8, 8), (8, 11)] two two
+[(8, 14), (8, 20)] square square
+[(10, 8), (10, 12)] four four
+[(10, 15), (10, 22)] squaare squaare
+[(11, 9), (11, 12)] two two
+[(11, 15), (11, 19)] four four
+[(14, 4), (14, 9)] child child
+[(15, 0), (15, 6)] child2 child2
+
+classes:
+
+
+imports:
+
+
+literals:
+
+
+hasJsx: false
+
+hasTypes: false
+
+loading: false"
+`;
+
+exports[`Parser.getSymbols object expressions 1`] = `
+"functions:
+
+
+callExpressions:
+[(3, 62), (3, 70)]  getValue   2
+
+memberExpressions:
+
+
+objectProperties:
+[(1, 13), (1, 19)] y.params params
+[(2, 15), (2, 16)] foo.b b
+[(3, 14), (3, 15)] bar.x x
+[(3, 20), (3, 21)] bar.y y
+[(3, 30), (3, 31)] bar.z z
+[(3, 39), (3, 40)] bar.a a
+[(3, 48), (3, 49)] bar.s s
+[(3, 58), (3, 59)] bar.d d
+[(4, 27), (4, 37)]  frameActor
+[(6, 20), (6, 26)] collection.genres genres
+[(6, 29), (6, 37)] collection.genres
+[(6, 40), (6, 46)] collection.genres.undefined.movies movies
+[(6, 50), (6, 58)] collection.genres.undefined.movies[0].director director
+
+comments:
+
+
+identifiers:
+[(1, 6), (1, 7)] y y
+[(1, 13), (1, 19)] params params
+[(2, 6), (2, 9)] foo foo
+[(2, 15), (2, 16)] b b
+[(3, 6), (3, 9)] bar bar
+[(3, 14), (3, 15)] 3 x
+[(3, 20), (3, 21)] \\"434\\" y
+[(3, 23), (3, 28)] \\"434\\" 434
+[(3, 30), (3, 31)] true z
+[(3, 39), (3, 40)] null a
+[(3, 48), (3, 49)] c * 2 s
+[(3, 51), (3, 52)] c c
+[(3, 58), (3, 59)]  d
+[(3, 62), (3, 70)] getValue getValue
+[(4, 6), (4, 12)] params params
+[(4, 15), (4, 22)] frameId frameId
+[(4, 27), (4, 37)] frameId frameActor
+[(4, 39), (4, 46)] frameId frameId
+[(6, 6), (6, 16)] collection collection
+[(6, 20), (6, 26)] ({
+  \\"sci-fi\\": {
+    movies: [{
+      director: \\"yo\\"
+    }]
+  }
+}) genres
+[(6, 29), (6, 37)] ({
+  movies: [{
+    director: \\"yo\\"
+  }]
+}) sci-fi
+[(6, 40), (6, 46)] [{
+  director: \\"yo\\"
+}] movies
+[(6, 50), (6, 58)] \\"yo\\" director
+[(6, 60), (6, 64)] \\"yo\\" yo
+
+classes:
+
+
+imports:
+
+
+literals:
+
+
+hasJsx: false
+
+hasTypes: false
+
+loading: false"
+`;
+
+exports[`Parser.getSymbols proto 1`] = `
+"functions:
+[(1, 12), (1, 25)]  foo()
+[(3, 12), (3, 20)]  bar()
+[(7, 14), (7, 27)]  initialize() TodoView
+[(8, 2), (10, 3)]  doThing(b) TodoView
+[(11, 10), (13, 3)]  render() TodoView
+
+callExpressions:
+[(5, 31), (5, 37)]  extend
+[(9, 12), (9, 15)]  log   hi
+
+memberExpressions:
+[(5, 31), (5, 37)] Backbone.View.extend extend
+[(5, 26), (5, 30)] Backbone.View View
+[(9, 12), (9, 15)] console.log log
+
+objectProperties:
+[(6, 2), (6, 9)]  tagName
+[(7, 2), (7, 12)]  initialize
+[(11, 2), (11, 8)]  render
+
+comments:
+
+
+identifiers:
+[(1, 6), (1, 9)] foo foo
+[(3, 6), (3, 9)] bar bar
+[(5, 6), (5, 14)] TodoView TodoView
+[(5, 17), (5, 25)] Backbone Backbone
+[(5, 26), (5, 30)] View View
+[(5, 31), (5, 37)] extend extend
+[(6, 2), (6, 9)] \\"li\\" tagName
+[(6, 11), (6, 15)] \\"li\\" li
+[(7, 2), (7, 12)]  initialize
+[(8, 2), (8, 9)] doThing doThing
+[(8, 10), (8, 11)] b b
+[(9, 4), (9, 11)] console console
+[(9, 12), (9, 15)] log log
+[(9, 22), (9, 23)] b b
+[(11, 2), (11, 8)]  render
+[(12, 11), (12, 15)] this this
+
+classes:
+
+
+imports:
+
+
+literals:
+
+
+hasJsx: false
+
+hasTypes: false
+
+loading: false"
+`;
+
+exports[`Parser.getSymbols react component 1`] = `
+"functions:
+
+
+callExpressions:
+
+
+memberExpressions:
+
+
+objectProperties:
+
+
+comments:
+
+
+identifiers:
+[(1, 7), (1, 12)] React React
+[(1, 16), (1, 25)] Component Component
+[(3, 6), (3, 18)] PrimaryPanes PrimaryPanes
+[(3, 27), (3, 36)] Component Component
+
+classes:
+[(3, 0), (3, 39)]  PrimaryPanes
+
+imports:
+[(1, 0), (1, 41)]    React, Component
+
+literals:
+
+
+hasJsx: false
+
+hasTypes: false
+
+loading: false"
+`;
+
+exports[`Parser.getSymbols var 1`] = `
+"functions:
+
+
+callExpressions:
+
+
+memberExpressions:
+
+
+objectProperties:
+[(8, 6), (8, 9)] foo foo
+[(8, 13), (8, 16)] foo.bar bar
+[(9, 5), (9, 8)] baz baz
+[(10, 5), (10, 7)] ll ll
+[(15, 6), (15, 7)] a a
+[(17, 10), (17, 12)]  my
+[(19, 13), (19, 15)]  oy
+[(19, 17), (19, 20)]  vey
+[(19, 28), (19, 35)]  mitzvot
+
+comments:
+
+
+identifiers:
+[(1, 4), (1, 7)] foo foo
+[(2, 4), (2, 7)] bar bar
+[(3, 6), (3, 9)] baz baz
+[(4, 6), (4, 7)] a a
+[(5, 2), (5, 3)] b b
+[(6, 0), (6, 1)] a a
+[(8, 13), (8, 16)] bar bar
+[(8, 6), (8, 9)] {
+  bar
+} foo
+[(9, 5), (9, 8)] baz baz
+[(10, 5), (10, 7)] ll = 3 ll
+[(13, 5), (13, 10)] first first
+[(15, 9), (15, 11)] _a _a
+[(15, 6), (15, 7)] _a a
+[(17, 5), (17, 7)] oh oh
+[(17, 14), (17, 17)] god god
+[(17, 10), (17, 12)] god my
+[(19, 6), (19, 8)] oh oh
+[(19, 13), (19, 15)] oy oy
+[(19, 22), (19, 26)] _vey _vey
+[(19, 17), (19, 20)] _vey vey
+[(19, 28), (19, 35)] _mitz = 4 mitzvot
+[(19, 37), (19, 42)] _mitz _mitz
+[(21, 5), (21, 8)] one one
+[(21, 13), (21, 18)] stuff stuff
+
+classes:
+
+
+imports:
+
+
+literals:
+
+
+hasJsx: false
+
+hasTypes: false
+
+loading: false"
+`;

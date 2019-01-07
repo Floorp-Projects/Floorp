@@ -113,7 +113,7 @@ var commandsCheckDataChannel = [
     });
   },
 
-  function CREATE_NEGOTIATED_DATA_CHANNEL(test) {
+  function CREATE_NEGOTIATED_DATA_CHANNEL_MAX_RETRANSMITS(test) {
     var options = {
       negotiated:true,
       id: 5,
@@ -122,35 +122,21 @@ var commandsCheckDataChannel = [
       maxRetransmits: 500
     };
     return test.createDataChannel(options).then(result => {
-      var sourceChannel2 = result.local;
-      var targetChannel2 = result.remote;
+      is(result.local.binaryType, "blob", result.remote + " is of binary type 'blob'");
+      is(result.local.id, options.id, result.local + " id is:" + result.local.id);
+      is(result.local.protocol, options.protocol, result.local + " protocol is:" + result.local.protocol);
+      is(result.local.reliable, false, result.local + " reliable is:" + result.local.reliable);
+      is(result.local.ordered, options.ordered, result.local + " ordered is:" + result.local.ordered);
+      is(result.local.maxRetransmits, options.maxRetransmits, result.local + " maxRetransmits is:" + result.local.maxRetransmits);
+      is(result.local.maxPacketLifeTime, null, result.local + " maxPacketLifeTime is:" + result.local.maxPacketLifeTime);
 
-      is(targetChannel2.binaryType, "blob", targetChannel2 + " is of binary type 'blob'");
-
-      is(sourceChannel2.id, options.id, sourceChannel2 + " id is:" + sourceChannel2.id);
-      var reliable = !options.ordered ? false : (options.maxRetransmits || options.maxRetransmitTime);
-      is(sourceChannel2.protocol, options.protocol, sourceChannel2 + " protocol is:" + sourceChannel2.protocol);
-      is(sourceChannel2.reliable, reliable, sourceChannel2 + " reliable is:" + sourceChannel2.reliable);
-      /*
-        These aren't exposed by IDL yet
-        is(sourceChannel2.ordered, options.ordered, sourceChannel2 + " ordered is:" + sourceChannel2.ordered);
-        is(sourceChannel2.maxRetransmits, options.maxRetransmits, sourceChannel2 + " maxRetransmits is:" +
-        sourceChannel2.maxRetransmits);
-        is(sourceChannel2.maxRetransmitTime, options.maxRetransmitTime, sourceChannel2 + " maxRetransmitTime is:" +
-        sourceChannel2.maxRetransmitTime);
-      */
-
-      is(targetChannel2.id, options.id, targetChannel2 + " id is:" + targetChannel2.id);
-      is(targetChannel2.protocol, options.protocol, targetChannel2 + " protocol is:" + targetChannel2.protocol);
-      is(targetChannel2.reliable, reliable, targetChannel2 + " reliable is:" + targetChannel2.reliable);
-      /*
-        These aren't exposed by IDL yet
-        is(targetChannel2.ordered, options.ordered, targetChannel2 + " ordered is:" + targetChannel2.ordered);
-        is(targetChannel2.maxRetransmits, options.maxRetransmits, targetChannel2 + " maxRetransmits is:" +
-        targetChannel2.maxRetransmits);
-        is(targetChannel2.maxRetransmitTime, options.maxRetransmitTime, targetChannel2 + " maxRetransmitTime is:" +
-        targetChannel2.maxRetransmitTime);
-      */
+      is(result.remote.binaryType, "blob", result.remote + " is of binary type 'blob'");
+      is(result.remote.id, options.id, result.remote + " id is:" + result.remote.id);
+      is(result.remote.protocol, options.protocol, result.remote + " protocol is:" + result.remote.protocol);
+      is(result.remote.reliable, false, result.remote + " reliable is:" + result.remote.reliable);
+      is(result.remote.ordered, options.ordered, result.remote + " ordered is:" + result.remote.ordered);
+      is(result.remote.maxRetransmits, options.maxRetransmits, result.remote + " maxRetransmits is:" + result.remote.maxRetransmits);
+      is(result.remote.maxPacketLifeTime, null, result.remote + " maxPacketLifeTime is:" + result.remote.maxPacketLifeTime);
     });
   },
 
@@ -165,14 +151,25 @@ var commandsCheckDataChannel = [
     });
   },
 
-  function CREATE_NEGOTIATED_MAXPACKET_LIFE_DATA_CHANNEL(test) {
+  function CREATE_NEGOTIATED_DATA_CHANNEL_MAX_PACKET_LIFE_TIME(test) {
     var options = {
       ordered: false,
       maxPacketLifeTime: 10
     };
     return test.createDataChannel(options).then(result => {
-      is(result.remote.binaryType, "blob", "remote data channel is of binary type 'blob'");
+      is(result.local.binaryType, "blob", result.local + " is of binary type 'blob'");
+      is(result.local.protocol, "", result.local + " protocol is:" + result.local.protocol);
+      is(result.local.reliable, false, result.local + " reliable is:" + result.local.reliable);
+      is(result.local.ordered, options.ordered, result.local + " ordered is:" + result.local.ordered);
+      is(result.local.maxRetransmits, null, result.local + " maxRetransmits is:" + result.local.maxRetransmits);
+      is(result.local.maxPacketLifeTime, options.maxPacketLifeTime, result.local + " maxPacketLifeTime is:" + result.local.maxPacketLifeTime);
 
+      is(result.remote.binaryType, "blob", result.remote + " is of binary type 'blob'");
+      is(result.remote.protocol, "", result.remote + " protocol is:" + result.remote.protocol);
+      is(result.remote.reliable, false, result.remote + " reliable is:" + result.remote.reliable);
+      is(result.remote.ordered, options.ordered, result.remote + " ordered is:" + result.remote.ordered);
+      is(result.remote.maxRetransmits, null, result.remote + " maxRetransmits is:" + result.remote.maxRetransmits);
+      is(result.remote.maxPacketLifeTime, options.maxPacketLifeTime, result.remote + " maxPacketLifeTime is:" + result.remote.maxPacketLifeTime);
     });
   },
 

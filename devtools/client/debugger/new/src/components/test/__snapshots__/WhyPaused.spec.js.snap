@@ -1,0 +1,52 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`WhyPaused should pause reason with message 1`] = `
+<div
+  className="pane why-paused"
+>
+  <div>
+    <div>
+      Paused on breakpoint
+    </div>
+    <div
+      className="message"
+    >
+      bla is hit
+    </div>
+  </div>
+</div>
+`;
+
+exports[`WhyPaused should show pause reason with exception details 1`] = `
+<div
+  className="pane why-paused"
+>
+  <div>
+    <div>
+      Paused on exception
+    </div>
+    <div
+      className="message warning"
+    >
+      ReferenceError: o is not defined
+    </div>
+  </div>
+</div>
+`;
+
+exports[`WhyPaused should show pause reason with exception string 1`] = `
+<div
+  className="pane why-paused"
+>
+  <div>
+    <div>
+      Paused on exception
+    </div>
+    <div
+      className="message warning"
+    >
+      Not Available
+    </div>
+  </div>
+</div>
+`;

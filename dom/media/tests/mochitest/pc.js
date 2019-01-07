@@ -681,7 +681,32 @@ DataChannelWrapper.prototype = {
     return this._channel.reliable;
   },
 
-  // ordered, maxRetransmits and maxRetransmitTime not exposed yet
+  /**
+   * Returns the ordered attribute of the data channel
+   *
+   * @returns {bool} The ordered attribute
+   */
+  get ordered() {
+    return this._channel.ordered;
+  },
+
+  /**
+   * Returns the maxPacketLifeTime attribute of the data channel
+   *
+   * @returns {number} The maxPacketLifeTime attribute
+   */
+  get maxPacketLifeTime() {
+    return this._channel.maxPacketLifeTime;
+  },
+
+  /**
+   * Returns the maxRetransmits attribute of the data channel
+   *
+   * @returns {number} The maxRetransmits attribute
+   */
+  get maxRetransmits() {
+    return this._channel.maxRetransmits;
+  },
 
   /**
    * Returns the readyState bit of the data channel

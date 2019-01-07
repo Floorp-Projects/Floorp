@@ -1,0 +1,30 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Breakpoints Component should render breakpoints with columns 1`] = `
+<div>
+  <Breakpoint
+    breakpoint={
+      Object {
+        "location": Object {
+          "column": 2,
+          "sourceId": "server1.conn1.child1/source1",
+        },
+      }
+    }
+    editor={
+      Object {
+        "codeMirror": Object {
+          "setGutterMarker": [MockFunction],
+        },
+      }
+    }
+    key="server1.conn1.child1/source1:undefined:2"
+    selectedSource={
+      Object {
+        "get": [Function],
+        "sourceId": "server1.conn1.child1/source1",
+      }
+    }
+  />
+</div>
+`;

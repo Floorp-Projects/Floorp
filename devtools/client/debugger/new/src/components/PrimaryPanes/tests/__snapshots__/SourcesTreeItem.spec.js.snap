@@ -1,0 +1,1987 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`SourceTreeItem renderItem should not show domain item when the projectRoot exists 1`] = `undefined`;
+
+exports[`SourceTreeItem renderItem should show (mapped) for duplicate source items 1`] = `
+Object {
+  "component": <div
+    className="node"
+    key="http://mdn.com/one.js"
+    onClick={[Function]}
+    onContextMenu={[Function]}
+  >
+    <i
+      className="no-arrow"
+    />
+    <Connect(SourceIcon)
+      source={
+        Object {
+          "contentType": "",
+          "error": undefined,
+          "id": "server1.conn13.child1/39",
+          "isBlackBoxed": false,
+          "isPrettyPrinted": false,
+          "isWasm": false,
+          "loadedState": "unloaded",
+          "sourceMapURL": undefined,
+          "text": undefined,
+          "url": "http://mdn.com/one.js",
+        }
+      }
+    />
+    <span
+      className="label"
+    >
+       
+      one.js
+       
+      <span
+        className="suffix"
+      >
+        (mapped)
+      </span>
+    </span>
+  </div>,
+  "defaultState": null,
+  "instance": SourceTreeItem {
+    "context": Object {},
+    "onClick": [Function],
+    "onContextMenu": [Function],
+    "props": Object {
+      "clearProjectDirectoryRoot": [MockFunction],
+      "debuggeeUrl": "http://mdn.com",
+      "expanded": false,
+      "focusItem": [MockFunction],
+      "hasMatchingGeneratedSource": true,
+      "item": Object {
+        "contents": Object {
+          "contentType": "",
+          "error": undefined,
+          "id": "server1.conn13.child1/39",
+          "isBlackBoxed": false,
+          "isPrettyPrinted": false,
+          "isWasm": false,
+          "loadedState": "unloaded",
+          "sourceMapURL": undefined,
+          "text": undefined,
+          "url": undefined,
+        },
+        "name": "one.js",
+        "path": "http://mdn.com/one.js",
+        "type": "source",
+      },
+      "projectRoot": "",
+      "selectItem": [MockFunction],
+      "setExpanded": [MockFunction],
+      "setProjectDirectoryRoot": [MockFunction],
+      "source": Object {
+        "contentType": "",
+        "error": undefined,
+        "id": "server1.conn13.child1/39",
+        "isBlackBoxed": false,
+        "isPrettyPrinted": false,
+        "isWasm": false,
+        "loadedState": "unloaded",
+        "sourceMapURL": undefined,
+        "text": undefined,
+        "url": "http://mdn.com/one.js",
+      },
+    },
+    "refs": Object {},
+    "setState": [Function],
+    "state": null,
+    "updater": Updater {
+      "_callbacks": Array [],
+      "_renderer": ReactShallowRenderer {
+        "_context": Object {},
+        "_element": <SourceTreeItem
+          clearProjectDirectoryRoot={[MockFunction]}
+          debuggeeUrl="http://mdn.com"
+          expanded={false}
+          focusItem={[MockFunction]}
+          hasMatchingGeneratedSource={true}
+          item={
+            Object {
+              "contents": Object {
+                "contentType": "",
+                "error": undefined,
+                "id": "server1.conn13.child1/39",
+                "isBlackBoxed": false,
+                "isPrettyPrinted": false,
+                "isWasm": false,
+                "loadedState": "unloaded",
+                "sourceMapURL": undefined,
+                "text": undefined,
+                "url": undefined,
+              },
+              "name": "one.js",
+              "path": "http://mdn.com/one.js",
+              "type": "source",
+            }
+          }
+          projectRoot=""
+          selectItem={[MockFunction]}
+          setExpanded={[MockFunction]}
+          setProjectDirectoryRoot={[MockFunction]}
+          source={
+            Object {
+              "contentType": "",
+              "error": undefined,
+              "id": "server1.conn13.child1/39",
+              "isBlackBoxed": false,
+              "isPrettyPrinted": false,
+              "isWasm": false,
+              "loadedState": "unloaded",
+              "sourceMapURL": undefined,
+              "text": undefined,
+              "url": "http://mdn.com/one.js",
+            }
+          }
+        />,
+        "_forcedUpdate": false,
+        "_instance": [Circular],
+        "_newState": null,
+        "_rendered": <div
+          className="node"
+          onClick={[Function]}
+          onContextMenu={[Function]}
+        >
+          <i
+            className="no-arrow"
+          />
+          <Connect(SourceIcon)
+            source={
+              Object {
+                "contentType": "",
+                "error": undefined,
+                "id": "server1.conn13.child1/39",
+                "isBlackBoxed": false,
+                "isPrettyPrinted": false,
+                "isWasm": false,
+                "loadedState": "unloaded",
+                "sourceMapURL": undefined,
+                "text": undefined,
+                "url": "http://mdn.com/one.js",
+              }
+            }
+          />
+          <span
+            className="label"
+          >
+             
+            one.js
+             
+            <span
+              className="suffix"
+            >
+              (mapped)
+            </span>
+          </span>
+        </div>,
+        "_rendering": false,
+        "_updater": [Circular],
+      },
+    },
+    Symbol(enzyme.__setState__): [Function],
+  },
+  "props": Object {
+    "clearProjectDirectoryRoot": [MockFunction],
+    "debuggeeUrl": "http://mdn.com",
+    "expanded": false,
+    "focusItem": [MockFunction],
+    "hasMatchingGeneratedSource": true,
+    "item": Object {
+      "contents": Object {
+        "contentType": "",
+        "error": undefined,
+        "id": "server1.conn13.child1/39",
+        "isBlackBoxed": false,
+        "isPrettyPrinted": false,
+        "isWasm": false,
+        "loadedState": "unloaded",
+        "sourceMapURL": undefined,
+        "text": undefined,
+        "url": undefined,
+      },
+      "name": "one.js",
+      "path": "http://mdn.com/one.js",
+      "type": "source",
+    },
+    "projectRoot": "",
+    "selectItem": [MockFunction],
+    "setExpanded": [MockFunction],
+    "setProjectDirectoryRoot": [MockFunction],
+    "source": Object {
+      "contentType": "",
+      "error": undefined,
+      "id": "server1.conn13.child1/39",
+      "isBlackBoxed": false,
+      "isPrettyPrinted": false,
+      "isWasm": false,
+      "loadedState": "unloaded",
+      "sourceMapURL": undefined,
+      "text": undefined,
+      "url": "http://mdn.com/one.js",
+    },
+  },
+}
+`;
+
+exports[`SourceTreeItem renderItem should show domain item 1`] = `
+Object {
+  "component": <div
+    className="node"
+    key="root"
+    onClick={[Function]}
+    onContextMenu={[Function]}
+  >
+    <i
+      className="no-arrow"
+    />
+    <AccessibleImage
+      className="domain"
+    />
+    <span
+      className="label"
+    >
+       
+      root
+       
+    </span>
+  </div>,
+  "defaultState": null,
+  "instance": SourceTreeItem {
+    "context": Object {},
+    "onClick": [Function],
+    "onContextMenu": [Function],
+    "props": Object {
+      "clearProjectDirectoryRoot": [MockFunction],
+      "debuggeeUrl": "http://mdn.com",
+      "depth": 0,
+      "expanded": false,
+      "focusItem": [MockFunction],
+      "item": Object {
+        "contents": Object {
+          "contentType": "",
+          "error": undefined,
+          "id": "server1.conn13.child1/39",
+          "isBlackBoxed": false,
+          "isPrettyPrinted": false,
+          "isWasm": false,
+          "loadedState": "unloaded",
+          "sourceMapURL": undefined,
+          "text": undefined,
+          "url": undefined,
+        },
+        "name": "root",
+        "path": "root",
+        "type": "source",
+      },
+      "projectRoot": "",
+      "selectItem": [MockFunction],
+      "setExpanded": [MockFunction],
+      "setProjectDirectoryRoot": [MockFunction],
+      "source": Object {
+        "contentType": "",
+        "error": undefined,
+        "id": "server1.conn13.child1/39",
+        "isBlackBoxed": false,
+        "isPrettyPrinted": false,
+        "isWasm": false,
+        "loadedState": "unloaded",
+        "sourceMapURL": undefined,
+        "text": undefined,
+        "url": "http://mdn.com/one.js",
+      },
+    },
+    "refs": Object {},
+    "setState": [Function],
+    "state": null,
+    "updater": Updater {
+      "_callbacks": Array [],
+      "_renderer": ReactShallowRenderer {
+        "_context": Object {},
+        "_element": <SourceTreeItem
+          clearProjectDirectoryRoot={[MockFunction]}
+          debuggeeUrl="http://mdn.com"
+          depth={0}
+          expanded={false}
+          focusItem={[MockFunction]}
+          item={
+            Object {
+              "contents": Object {
+                "contentType": "",
+                "error": undefined,
+                "id": "server1.conn13.child1/39",
+                "isBlackBoxed": false,
+                "isPrettyPrinted": false,
+                "isWasm": false,
+                "loadedState": "unloaded",
+                "sourceMapURL": undefined,
+                "text": undefined,
+                "url": undefined,
+              },
+              "name": "root",
+              "path": "root",
+              "type": "source",
+            }
+          }
+          projectRoot=""
+          selectItem={[MockFunction]}
+          setExpanded={[MockFunction]}
+          setProjectDirectoryRoot={[MockFunction]}
+          source={
+            Object {
+              "contentType": "",
+              "error": undefined,
+              "id": "server1.conn13.child1/39",
+              "isBlackBoxed": false,
+              "isPrettyPrinted": false,
+              "isWasm": false,
+              "loadedState": "unloaded",
+              "sourceMapURL": undefined,
+              "text": undefined,
+              "url": "http://mdn.com/one.js",
+            }
+          }
+        />,
+        "_forcedUpdate": false,
+        "_instance": [Circular],
+        "_newState": null,
+        "_rendered": <div
+          className="node"
+          onClick={[Function]}
+          onContextMenu={[Function]}
+        >
+          <i
+            className="no-arrow"
+          />
+          <AccessibleImage
+            className="domain"
+          />
+          <span
+            className="label"
+          >
+             
+            root
+             
+          </span>
+        </div>,
+        "_rendering": false,
+        "_updater": [Circular],
+      },
+    },
+    Symbol(enzyme.__setState__): [Function],
+  },
+  "props": Object {
+    "clearProjectDirectoryRoot": [MockFunction],
+    "debuggeeUrl": "http://mdn.com",
+    "depth": 0,
+    "expanded": false,
+    "focusItem": [MockFunction],
+    "item": Object {
+      "contents": Object {
+        "contentType": "",
+        "error": undefined,
+        "id": "server1.conn13.child1/39",
+        "isBlackBoxed": false,
+        "isPrettyPrinted": false,
+        "isWasm": false,
+        "loadedState": "unloaded",
+        "sourceMapURL": undefined,
+        "text": undefined,
+        "url": undefined,
+      },
+      "name": "root",
+      "path": "root",
+      "type": "source",
+    },
+    "projectRoot": "",
+    "selectItem": [MockFunction],
+    "setExpanded": [MockFunction],
+    "setProjectDirectoryRoot": [MockFunction],
+    "source": Object {
+      "contentType": "",
+      "error": undefined,
+      "id": "server1.conn13.child1/39",
+      "isBlackBoxed": false,
+      "isPrettyPrinted": false,
+      "isWasm": false,
+      "loadedState": "unloaded",
+      "sourceMapURL": undefined,
+      "text": undefined,
+      "url": "http://mdn.com/one.js",
+    },
+  },
+}
+`;
+
+exports[`SourceTreeItem renderItem should show domain item as debuggee 1`] = `
+Object {
+  "component": <div
+    className="node"
+    key="root"
+    onClick={[Function]}
+    onContextMenu={[Function]}
+  >
+    <AccessibleImage
+      className="arrow"
+    />
+    <AccessibleImage
+      className="domain debuggee"
+    />
+    <span
+      className="label"
+    >
+       
+      http://mdn.com
+       
+    </span>
+  </div>,
+  "defaultState": null,
+  "instance": SourceTreeItem {
+    "context": Object {},
+    "onClick": [Function],
+    "onContextMenu": [Function],
+    "props": Object {
+      "clearProjectDirectoryRoot": [MockFunction],
+      "debuggeeUrl": "http://mdn.com",
+      "depth": 0,
+      "expanded": false,
+      "focusItem": [MockFunction],
+      "item": Object {
+        "contents": Array [],
+        "name": "http://mdn.com",
+        "path": "root",
+        "type": "directory",
+      },
+      "projectRoot": "",
+      "selectItem": [MockFunction],
+      "setExpanded": [MockFunction],
+      "setProjectDirectoryRoot": [MockFunction],
+      "source": Object {
+        "contentType": "",
+        "error": undefined,
+        "id": "server1.conn13.child1/39",
+        "isBlackBoxed": false,
+        "isPrettyPrinted": false,
+        "isWasm": false,
+        "loadedState": "unloaded",
+        "sourceMapURL": undefined,
+        "text": undefined,
+        "url": "http://mdn.com/one.js",
+      },
+    },
+    "refs": Object {},
+    "setState": [Function],
+    "state": null,
+    "updater": Updater {
+      "_callbacks": Array [],
+      "_renderer": ReactShallowRenderer {
+        "_context": Object {},
+        "_element": <SourceTreeItem
+          clearProjectDirectoryRoot={[MockFunction]}
+          debuggeeUrl="http://mdn.com"
+          depth={0}
+          expanded={false}
+          focusItem={[MockFunction]}
+          item={
+            Object {
+              "contents": Array [],
+              "name": "http://mdn.com",
+              "path": "root",
+              "type": "directory",
+            }
+          }
+          projectRoot=""
+          selectItem={[MockFunction]}
+          setExpanded={[MockFunction]}
+          setProjectDirectoryRoot={[MockFunction]}
+          source={
+            Object {
+              "contentType": "",
+              "error": undefined,
+              "id": "server1.conn13.child1/39",
+              "isBlackBoxed": false,
+              "isPrettyPrinted": false,
+              "isWasm": false,
+              "loadedState": "unloaded",
+              "sourceMapURL": undefined,
+              "text": undefined,
+              "url": "http://mdn.com/one.js",
+            }
+          }
+        />,
+        "_forcedUpdate": false,
+        "_instance": [Circular],
+        "_newState": null,
+        "_rendered": <div
+          className="node"
+          onClick={[Function]}
+          onContextMenu={[Function]}
+        >
+          <AccessibleImage
+            className="arrow"
+          />
+          <AccessibleImage
+            className="domain debuggee"
+          />
+          <span
+            className="label"
+          >
+             
+            http://mdn.com
+             
+          </span>
+        </div>,
+        "_rendering": false,
+        "_updater": [Circular],
+      },
+    },
+    Symbol(enzyme.__setState__): [Function],
+  },
+  "props": Object {
+    "clearProjectDirectoryRoot": [MockFunction],
+    "debuggeeUrl": "http://mdn.com",
+    "depth": 0,
+    "expanded": false,
+    "focusItem": [MockFunction],
+    "item": Object {
+      "contents": Array [],
+      "name": "http://mdn.com",
+      "path": "root",
+      "type": "directory",
+    },
+    "projectRoot": "",
+    "selectItem": [MockFunction],
+    "setExpanded": [MockFunction],
+    "setProjectDirectoryRoot": [MockFunction],
+    "source": Object {
+      "contentType": "",
+      "error": undefined,
+      "id": "server1.conn13.child1/39",
+      "isBlackBoxed": false,
+      "isPrettyPrinted": false,
+      "isWasm": false,
+      "loadedState": "unloaded",
+      "sourceMapURL": undefined,
+      "text": undefined,
+      "url": "http://mdn.com/one.js",
+    },
+  },
+}
+`;
+
+exports[`SourceTreeItem renderItem should show domain item as debuggee with focus and arrow 1`] = `
+Object {
+  "component": <div
+    className="node focused"
+    key="root"
+    onClick={[Function]}
+    onContextMenu={[Function]}
+  >
+    <AccessibleImage
+      className="arrow"
+    />
+    <AccessibleImage
+      className="domain debuggee"
+    />
+    <span
+      className="label"
+    >
+       
+      http://mdn.com
+       
+    </span>
+  </div>,
+  "defaultState": null,
+  "instance": SourceTreeItem {
+    "context": Object {},
+    "onClick": [Function],
+    "onContextMenu": [Function],
+    "props": Object {
+      "clearProjectDirectoryRoot": [MockFunction],
+      "debuggeeUrl": "http://mdn.com",
+      "depth": 0,
+      "expanded": false,
+      "focusItem": [MockFunction],
+      "focused": true,
+      "item": Object {
+        "contents": Array [],
+        "name": "http://mdn.com",
+        "path": "root",
+        "type": "directory",
+      },
+      "projectRoot": "",
+      "selectItem": [MockFunction],
+      "setExpanded": [MockFunction],
+      "setProjectDirectoryRoot": [MockFunction],
+      "source": Object {
+        "contentType": "",
+        "error": undefined,
+        "id": "server1.conn13.child1/39",
+        "isBlackBoxed": false,
+        "isPrettyPrinted": false,
+        "isWasm": false,
+        "loadedState": "unloaded",
+        "sourceMapURL": undefined,
+        "text": undefined,
+        "url": "http://mdn.com/one.js",
+      },
+    },
+    "refs": Object {},
+    "setState": [Function],
+    "state": null,
+    "updater": Updater {
+      "_callbacks": Array [],
+      "_renderer": ReactShallowRenderer {
+        "_context": Object {},
+        "_element": <SourceTreeItem
+          clearProjectDirectoryRoot={[MockFunction]}
+          debuggeeUrl="http://mdn.com"
+          depth={0}
+          expanded={false}
+          focusItem={[MockFunction]}
+          focused={true}
+          item={
+            Object {
+              "contents": Array [],
+              "name": "http://mdn.com",
+              "path": "root",
+              "type": "directory",
+            }
+          }
+          projectRoot=""
+          selectItem={[MockFunction]}
+          setExpanded={[MockFunction]}
+          setProjectDirectoryRoot={[MockFunction]}
+          source={
+            Object {
+              "contentType": "",
+              "error": undefined,
+              "id": "server1.conn13.child1/39",
+              "isBlackBoxed": false,
+              "isPrettyPrinted": false,
+              "isWasm": false,
+              "loadedState": "unloaded",
+              "sourceMapURL": undefined,
+              "text": undefined,
+              "url": "http://mdn.com/one.js",
+            }
+          }
+        />,
+        "_forcedUpdate": false,
+        "_instance": [Circular],
+        "_newState": null,
+        "_rendered": <div
+          className="node focused"
+          onClick={[Function]}
+          onContextMenu={[Function]}
+        >
+          <AccessibleImage
+            className="arrow"
+          />
+          <AccessibleImage
+            className="domain debuggee"
+          />
+          <span
+            className="label"
+          >
+             
+            http://mdn.com
+             
+          </span>
+        </div>,
+        "_rendering": false,
+        "_updater": [Circular],
+      },
+    },
+    Symbol(enzyme.__setState__): [Function],
+  },
+  "props": Object {
+    "clearProjectDirectoryRoot": [MockFunction],
+    "debuggeeUrl": "http://mdn.com",
+    "depth": 0,
+    "expanded": false,
+    "focusItem": [MockFunction],
+    "focused": true,
+    "item": Object {
+      "contents": Array [],
+      "name": "http://mdn.com",
+      "path": "root",
+      "type": "directory",
+    },
+    "projectRoot": "",
+    "selectItem": [MockFunction],
+    "setExpanded": [MockFunction],
+    "setProjectDirectoryRoot": [MockFunction],
+    "source": Object {
+      "contentType": "",
+      "error": undefined,
+      "id": "server1.conn13.child1/39",
+      "isBlackBoxed": false,
+      "isPrettyPrinted": false,
+      "isWasm": false,
+      "loadedState": "unloaded",
+      "sourceMapURL": undefined,
+      "text": undefined,
+      "url": "http://mdn.com/one.js",
+    },
+  },
+}
+`;
+
+exports[`SourceTreeItem renderItem should show focused item for folder with expanded arrow 1`] = `
+Object {
+  "component": <div
+    className="node focused"
+    key="folder/"
+    onClick={[Function]}
+    onContextMenu={[Function]}
+  >
+    <AccessibleImage
+      className="arrow expanded"
+    />
+    <AccessibleImage
+      className="folder"
+    />
+    <span
+      className="label"
+    >
+       
+      folder
+       
+    </span>
+  </div>,
+  "defaultState": null,
+  "instance": SourceTreeItem {
+    "context": Object {},
+    "onClick": [Function],
+    "onContextMenu": [Function],
+    "props": Object {
+      "clearProjectDirectoryRoot": [MockFunction],
+      "debuggeeUrl": "http://mdn.com",
+      "depth": 1,
+      "expanded": true,
+      "focusItem": [MockFunction],
+      "focused": true,
+      "item": Object {
+        "contents": Array [],
+        "name": "folder",
+        "path": "folder/",
+        "type": "directory",
+      },
+      "projectRoot": "",
+      "selectItem": [MockFunction],
+      "setExpanded": [MockFunction],
+      "setProjectDirectoryRoot": [MockFunction],
+      "source": null,
+    },
+    "refs": Object {},
+    "setState": [Function],
+    "state": null,
+    "updater": Updater {
+      "_callbacks": Array [],
+      "_renderer": ReactShallowRenderer {
+        "_context": Object {},
+        "_element": <SourceTreeItem
+          clearProjectDirectoryRoot={[MockFunction]}
+          debuggeeUrl="http://mdn.com"
+          depth={1}
+          expanded={true}
+          focusItem={[MockFunction]}
+          focused={true}
+          item={
+            Object {
+              "contents": Array [],
+              "name": "folder",
+              "path": "folder/",
+              "type": "directory",
+            }
+          }
+          projectRoot=""
+          selectItem={[MockFunction]}
+          setExpanded={[MockFunction]}
+          setProjectDirectoryRoot={[MockFunction]}
+          source={null}
+        />,
+        "_forcedUpdate": false,
+        "_instance": [Circular],
+        "_newState": null,
+        "_rendered": <div
+          className="node focused"
+          onClick={[Function]}
+          onContextMenu={[Function]}
+        >
+          <AccessibleImage
+            className="arrow expanded"
+          />
+          <AccessibleImage
+            className="folder"
+          />
+          <span
+            className="label"
+          >
+             
+            folder
+             
+          </span>
+        </div>,
+        "_rendering": false,
+        "_updater": [Circular],
+      },
+    },
+    Symbol(enzyme.__setState__): [Function],
+  },
+  "props": Object {
+    "clearProjectDirectoryRoot": [MockFunction],
+    "debuggeeUrl": "http://mdn.com",
+    "depth": 1,
+    "expanded": true,
+    "focusItem": [MockFunction],
+    "focused": true,
+    "item": Object {
+      "contents": Array [],
+      "name": "folder",
+      "path": "folder/",
+      "type": "directory",
+    },
+    "projectRoot": "",
+    "selectItem": [MockFunction],
+    "setExpanded": [MockFunction],
+    "setProjectDirectoryRoot": [MockFunction],
+    "source": null,
+  },
+}
+`;
+
+exports[`SourceTreeItem renderItem should show icon for angular item 1`] = `
+Object {
+  "component": <div
+    className="node"
+    key="ng://"
+    onClick={[Function]}
+    onContextMenu={[Function]}
+  >
+    <AccessibleImage
+      className="arrow"
+    />
+    <Svg
+      name="angular"
+    />
+    <span
+      className="label"
+    >
+       
+      Angular
+       
+    </span>
+  </div>,
+  "defaultState": null,
+  "instance": SourceTreeItem {
+    "context": Object {},
+    "onClick": [Function],
+    "onContextMenu": [Function],
+    "props": Object {
+      "clearProjectDirectoryRoot": [MockFunction],
+      "debuggeeUrl": "http://mdn.com",
+      "expanded": false,
+      "focusItem": [MockFunction],
+      "item": Object {
+        "contents": Array [],
+        "name": "ng://",
+        "path": "ng://",
+        "type": "directory",
+      },
+      "projectRoot": "",
+      "selectItem": [MockFunction],
+      "setExpanded": [MockFunction],
+      "setProjectDirectoryRoot": [MockFunction],
+      "source": Object {
+        "contentType": "",
+        "error": undefined,
+        "id": "server1.conn13.child1/39",
+        "isBlackBoxed": false,
+        "isPrettyPrinted": false,
+        "isWasm": false,
+        "loadedState": "unloaded",
+        "sourceMapURL": undefined,
+        "text": undefined,
+        "url": "http://mdn.com/one.js",
+      },
+    },
+    "refs": Object {},
+    "setState": [Function],
+    "state": null,
+    "updater": Updater {
+      "_callbacks": Array [],
+      "_renderer": ReactShallowRenderer {
+        "_context": Object {},
+        "_element": <SourceTreeItem
+          clearProjectDirectoryRoot={[MockFunction]}
+          debuggeeUrl="http://mdn.com"
+          expanded={false}
+          focusItem={[MockFunction]}
+          item={
+            Object {
+              "contents": Array [],
+              "name": "ng://",
+              "path": "ng://",
+              "type": "directory",
+            }
+          }
+          projectRoot=""
+          selectItem={[MockFunction]}
+          setExpanded={[MockFunction]}
+          setProjectDirectoryRoot={[MockFunction]}
+          source={
+            Object {
+              "contentType": "",
+              "error": undefined,
+              "id": "server1.conn13.child1/39",
+              "isBlackBoxed": false,
+              "isPrettyPrinted": false,
+              "isWasm": false,
+              "loadedState": "unloaded",
+              "sourceMapURL": undefined,
+              "text": undefined,
+              "url": "http://mdn.com/one.js",
+            }
+          }
+        />,
+        "_forcedUpdate": false,
+        "_instance": [Circular],
+        "_newState": null,
+        "_rendered": <div
+          className="node"
+          onClick={[Function]}
+          onContextMenu={[Function]}
+        >
+          <AccessibleImage
+            className="arrow"
+          />
+          <Svg
+            name="angular"
+          />
+          <span
+            className="label"
+          >
+             
+            Angular
+             
+          </span>
+        </div>,
+        "_rendering": false,
+        "_updater": [Circular],
+      },
+    },
+    Symbol(enzyme.__setState__): [Function],
+  },
+  "props": Object {
+    "clearProjectDirectoryRoot": [MockFunction],
+    "debuggeeUrl": "http://mdn.com",
+    "expanded": false,
+    "focusItem": [MockFunction],
+    "item": Object {
+      "contents": Array [],
+      "name": "ng://",
+      "path": "ng://",
+      "type": "directory",
+    },
+    "projectRoot": "",
+    "selectItem": [MockFunction],
+    "setExpanded": [MockFunction],
+    "setProjectDirectoryRoot": [MockFunction],
+    "source": Object {
+      "contentType": "",
+      "error": undefined,
+      "id": "server1.conn13.child1/39",
+      "isBlackBoxed": false,
+      "isPrettyPrinted": false,
+      "isWasm": false,
+      "loadedState": "unloaded",
+      "sourceMapURL": undefined,
+      "text": undefined,
+      "url": "http://mdn.com/one.js",
+    },
+  },
+}
+`;
+
+exports[`SourceTreeItem renderItem should show icon for folder with arrow 1`] = `
+Object {
+  "component": <div
+    className="node"
+    key="folder/"
+    onClick={[Function]}
+    onContextMenu={[Function]}
+  >
+    <AccessibleImage
+      className="arrow"
+    />
+    <AccessibleImage
+      className="folder"
+    />
+    <span
+      className="label"
+    >
+       
+      folder
+       
+    </span>
+  </div>,
+  "defaultState": null,
+  "instance": SourceTreeItem {
+    "context": Object {},
+    "onClick": [Function],
+    "onContextMenu": [Function],
+    "props": Object {
+      "clearProjectDirectoryRoot": [MockFunction],
+      "debuggeeUrl": "http://mdn.com",
+      "expanded": false,
+      "focusItem": [MockFunction],
+      "item": Object {
+        "contents": Array [],
+        "name": "folder",
+        "path": "folder/",
+        "type": "directory",
+      },
+      "projectRoot": "",
+      "selectItem": [MockFunction],
+      "setExpanded": [MockFunction],
+      "setProjectDirectoryRoot": [MockFunction],
+      "source": null,
+    },
+    "refs": Object {},
+    "setState": [Function],
+    "state": null,
+    "updater": Updater {
+      "_callbacks": Array [],
+      "_renderer": ReactShallowRenderer {
+        "_context": Object {},
+        "_element": <SourceTreeItem
+          clearProjectDirectoryRoot={[MockFunction]}
+          debuggeeUrl="http://mdn.com"
+          expanded={false}
+          focusItem={[MockFunction]}
+          item={
+            Object {
+              "contents": Array [],
+              "name": "folder",
+              "path": "folder/",
+              "type": "directory",
+            }
+          }
+          projectRoot=""
+          selectItem={[MockFunction]}
+          setExpanded={[MockFunction]}
+          setProjectDirectoryRoot={[MockFunction]}
+          source={null}
+        />,
+        "_forcedUpdate": false,
+        "_instance": [Circular],
+        "_newState": null,
+        "_rendered": <div
+          className="node"
+          onClick={[Function]}
+          onContextMenu={[Function]}
+        >
+          <AccessibleImage
+            className="arrow"
+          />
+          <AccessibleImage
+            className="folder"
+          />
+          <span
+            className="label"
+          >
+             
+            folder
+             
+          </span>
+        </div>,
+        "_rendering": false,
+        "_updater": [Circular],
+      },
+    },
+    Symbol(enzyme.__setState__): [Function],
+  },
+  "props": Object {
+    "clearProjectDirectoryRoot": [MockFunction],
+    "debuggeeUrl": "http://mdn.com",
+    "expanded": false,
+    "focusItem": [MockFunction],
+    "item": Object {
+      "contents": Array [],
+      "name": "folder",
+      "path": "folder/",
+      "type": "directory",
+    },
+    "projectRoot": "",
+    "selectItem": [MockFunction],
+    "setExpanded": [MockFunction],
+    "setProjectDirectoryRoot": [MockFunction],
+    "source": null,
+  },
+}
+`;
+
+exports[`SourceTreeItem renderItem should show icon for folder with expanded arrow 1`] = `
+Object {
+  "component": <div
+    className="node"
+    key="folder/"
+    onClick={[Function]}
+    onContextMenu={[Function]}
+  >
+    <AccessibleImage
+      className="arrow expanded"
+    />
+    <AccessibleImage
+      className="folder"
+    />
+    <span
+      className="label"
+    >
+       
+      folder
+       
+    </span>
+  </div>,
+  "defaultState": null,
+  "instance": SourceTreeItem {
+    "context": Object {},
+    "onClick": [Function],
+    "onContextMenu": [Function],
+    "props": Object {
+      "clearProjectDirectoryRoot": [MockFunction],
+      "debuggeeUrl": "http://mdn.com",
+      "depth": 1,
+      "expanded": true,
+      "focusItem": [MockFunction],
+      "focused": false,
+      "item": Object {
+        "contents": Array [],
+        "name": "folder",
+        "path": "folder/",
+        "type": "directory",
+      },
+      "projectRoot": "",
+      "selectItem": [MockFunction],
+      "setExpanded": [MockFunction],
+      "setProjectDirectoryRoot": [MockFunction],
+      "source": null,
+    },
+    "refs": Object {},
+    "setState": [Function],
+    "state": null,
+    "updater": Updater {
+      "_callbacks": Array [],
+      "_renderer": ReactShallowRenderer {
+        "_context": Object {},
+        "_element": <SourceTreeItem
+          clearProjectDirectoryRoot={[MockFunction]}
+          debuggeeUrl="http://mdn.com"
+          depth={1}
+          expanded={true}
+          focusItem={[MockFunction]}
+          focused={false}
+          item={
+            Object {
+              "contents": Array [],
+              "name": "folder",
+              "path": "folder/",
+              "type": "directory",
+            }
+          }
+          projectRoot=""
+          selectItem={[MockFunction]}
+          setExpanded={[MockFunction]}
+          setProjectDirectoryRoot={[MockFunction]}
+          source={null}
+        />,
+        "_forcedUpdate": false,
+        "_instance": [Circular],
+        "_newState": null,
+        "_rendered": <div
+          className="node"
+          onClick={[Function]}
+          onContextMenu={[Function]}
+        >
+          <AccessibleImage
+            className="arrow expanded"
+          />
+          <AccessibleImage
+            className="folder"
+          />
+          <span
+            className="label"
+          >
+             
+            folder
+             
+          </span>
+        </div>,
+        "_rendering": false,
+        "_updater": [Circular],
+      },
+    },
+    Symbol(enzyme.__setState__): [Function],
+  },
+  "props": Object {
+    "clearProjectDirectoryRoot": [MockFunction],
+    "debuggeeUrl": "http://mdn.com",
+    "depth": 1,
+    "expanded": true,
+    "focusItem": [MockFunction],
+    "focused": false,
+    "item": Object {
+      "contents": Array [],
+      "name": "folder",
+      "path": "folder/",
+      "type": "directory",
+    },
+    "projectRoot": "",
+    "selectItem": [MockFunction],
+    "setExpanded": [MockFunction],
+    "setProjectDirectoryRoot": [MockFunction],
+    "source": null,
+  },
+}
+`;
+
+exports[`SourceTreeItem renderItem should show icon for moz-extension item 1`] = `
+Object {
+  "component": <div
+    className="node"
+    key="moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856"
+    onClick={[Function]}
+    onContextMenu={[Function]}
+  >
+    <AccessibleImage
+      className="arrow"
+    />
+    <AccessibleImage
+      className="extension"
+    />
+    <span
+      className="label"
+    >
+       
+      moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856
+       
+    </span>
+  </div>,
+  "defaultState": null,
+  "instance": SourceTreeItem {
+    "context": Object {},
+    "onClick": [Function],
+    "onContextMenu": [Function],
+    "props": Object {
+      "clearProjectDirectoryRoot": [MockFunction],
+      "debuggeeUrl": "http://mdn.com",
+      "depth": 0,
+      "expanded": false,
+      "focusItem": [MockFunction],
+      "item": Object {
+        "contents": Array [],
+        "name": "moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856",
+        "path": "moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856",
+        "type": "directory",
+      },
+      "projectRoot": "",
+      "selectItem": [MockFunction],
+      "setExpanded": [MockFunction],
+      "setProjectDirectoryRoot": [MockFunction],
+      "source": Object {
+        "contentType": "",
+        "error": undefined,
+        "id": "server1.conn13.child1/39",
+        "isBlackBoxed": false,
+        "isPrettyPrinted": false,
+        "isWasm": false,
+        "loadedState": "unloaded",
+        "sourceMapURL": undefined,
+        "text": undefined,
+        "url": "http://mdn.com/one.js",
+      },
+    },
+    "refs": Object {},
+    "setState": [Function],
+    "state": null,
+    "updater": Updater {
+      "_callbacks": Array [],
+      "_renderer": ReactShallowRenderer {
+        "_context": Object {},
+        "_element": <SourceTreeItem
+          clearProjectDirectoryRoot={[MockFunction]}
+          debuggeeUrl="http://mdn.com"
+          depth={0}
+          expanded={false}
+          focusItem={[MockFunction]}
+          item={
+            Object {
+              "contents": Array [],
+              "name": "moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856",
+              "path": "moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856",
+              "type": "directory",
+            }
+          }
+          projectRoot=""
+          selectItem={[MockFunction]}
+          setExpanded={[MockFunction]}
+          setProjectDirectoryRoot={[MockFunction]}
+          source={
+            Object {
+              "contentType": "",
+              "error": undefined,
+              "id": "server1.conn13.child1/39",
+              "isBlackBoxed": false,
+              "isPrettyPrinted": false,
+              "isWasm": false,
+              "loadedState": "unloaded",
+              "sourceMapURL": undefined,
+              "text": undefined,
+              "url": "http://mdn.com/one.js",
+            }
+          }
+        />,
+        "_forcedUpdate": false,
+        "_instance": [Circular],
+        "_newState": null,
+        "_rendered": <div
+          className="node"
+          onClick={[Function]}
+          onContextMenu={[Function]}
+        >
+          <AccessibleImage
+            className="arrow"
+          />
+          <AccessibleImage
+            className="extension"
+          />
+          <span
+            className="label"
+          >
+             
+            moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856
+             
+          </span>
+        </div>,
+        "_rendering": false,
+        "_updater": [Circular],
+      },
+    },
+    Symbol(enzyme.__setState__): [Function],
+  },
+  "props": Object {
+    "clearProjectDirectoryRoot": [MockFunction],
+    "debuggeeUrl": "http://mdn.com",
+    "depth": 0,
+    "expanded": false,
+    "focusItem": [MockFunction],
+    "item": Object {
+      "contents": Array [],
+      "name": "moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856",
+      "path": "moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856",
+      "type": "directory",
+    },
+    "projectRoot": "",
+    "selectItem": [MockFunction],
+    "setExpanded": [MockFunction],
+    "setProjectDirectoryRoot": [MockFunction],
+    "source": Object {
+      "contentType": "",
+      "error": undefined,
+      "id": "server1.conn13.child1/39",
+      "isBlackBoxed": false,
+      "isPrettyPrinted": false,
+      "isWasm": false,
+      "loadedState": "unloaded",
+      "sourceMapURL": undefined,
+      "text": undefined,
+      "url": "http://mdn.com/one.js",
+    },
+  },
+}
+`;
+
+exports[`SourceTreeItem renderItem should show icon for webpack item 1`] = `
+Object {
+  "component": <div
+    className="node"
+    key="webpack://"
+    onClick={[Function]}
+    onContextMenu={[Function]}
+  >
+    <AccessibleImage
+      className="arrow"
+    />
+    <Svg
+      name="webpack"
+    />
+    <span
+      className="label"
+    >
+       
+      Webpack
+       
+    </span>
+  </div>,
+  "defaultState": null,
+  "instance": SourceTreeItem {
+    "context": Object {},
+    "onClick": [Function],
+    "onContextMenu": [Function],
+    "props": Object {
+      "clearProjectDirectoryRoot": [MockFunction],
+      "debuggeeUrl": "http://mdn.com",
+      "expanded": false,
+      "focusItem": [MockFunction],
+      "item": Object {
+        "contents": Array [],
+        "name": "webpack://",
+        "path": "webpack://",
+        "type": "directory",
+      },
+      "projectRoot": "",
+      "selectItem": [MockFunction],
+      "setExpanded": [MockFunction],
+      "setProjectDirectoryRoot": [MockFunction],
+      "source": Object {
+        "contentType": "",
+        "error": undefined,
+        "id": "server1.conn13.child1/39",
+        "isBlackBoxed": false,
+        "isPrettyPrinted": false,
+        "isWasm": false,
+        "loadedState": "unloaded",
+        "sourceMapURL": undefined,
+        "text": undefined,
+        "url": "http://mdn.com/one.js",
+      },
+    },
+    "refs": Object {},
+    "setState": [Function],
+    "state": null,
+    "updater": Updater {
+      "_callbacks": Array [],
+      "_renderer": ReactShallowRenderer {
+        "_context": Object {},
+        "_element": <SourceTreeItem
+          clearProjectDirectoryRoot={[MockFunction]}
+          debuggeeUrl="http://mdn.com"
+          expanded={false}
+          focusItem={[MockFunction]}
+          item={
+            Object {
+              "contents": Array [],
+              "name": "webpack://",
+              "path": "webpack://",
+              "type": "directory",
+            }
+          }
+          projectRoot=""
+          selectItem={[MockFunction]}
+          setExpanded={[MockFunction]}
+          setProjectDirectoryRoot={[MockFunction]}
+          source={
+            Object {
+              "contentType": "",
+              "error": undefined,
+              "id": "server1.conn13.child1/39",
+              "isBlackBoxed": false,
+              "isPrettyPrinted": false,
+              "isWasm": false,
+              "loadedState": "unloaded",
+              "sourceMapURL": undefined,
+              "text": undefined,
+              "url": "http://mdn.com/one.js",
+            }
+          }
+        />,
+        "_forcedUpdate": false,
+        "_instance": [Circular],
+        "_newState": null,
+        "_rendered": <div
+          className="node"
+          onClick={[Function]}
+          onContextMenu={[Function]}
+        >
+          <AccessibleImage
+            className="arrow"
+          />
+          <Svg
+            name="webpack"
+          />
+          <span
+            className="label"
+          >
+             
+            Webpack
+             
+          </span>
+        </div>,
+        "_rendering": false,
+        "_updater": [Circular],
+      },
+    },
+    Symbol(enzyme.__setState__): [Function],
+  },
+  "props": Object {
+    "clearProjectDirectoryRoot": [MockFunction],
+    "debuggeeUrl": "http://mdn.com",
+    "expanded": false,
+    "focusItem": [MockFunction],
+    "item": Object {
+      "contents": Array [],
+      "name": "webpack://",
+      "path": "webpack://",
+      "type": "directory",
+    },
+    "projectRoot": "",
+    "selectItem": [MockFunction],
+    "setExpanded": [MockFunction],
+    "setProjectDirectoryRoot": [MockFunction],
+    "source": Object {
+      "contentType": "",
+      "error": undefined,
+      "id": "server1.conn13.child1/39",
+      "isBlackBoxed": false,
+      "isPrettyPrinted": false,
+      "isWasm": false,
+      "loadedState": "unloaded",
+      "sourceMapURL": undefined,
+      "text": undefined,
+      "url": "http://mdn.com/one.js",
+    },
+  },
+}
+`;
+
+exports[`SourceTreeItem renderItem should show source item with source icon 1`] = `
+Object {
+  "component": <div
+    className="node"
+    key="http://mdn.com/one.js"
+    onClick={[Function]}
+    onContextMenu={[Function]}
+  >
+    <i
+      className="no-arrow"
+    />
+    <Connect(SourceIcon)
+      source={
+        Object {
+          "contentType": "",
+          "error": undefined,
+          "id": "server1.conn13.child1/39",
+          "isBlackBoxed": false,
+          "isPrettyPrinted": false,
+          "isWasm": false,
+          "loadedState": "unloaded",
+          "sourceMapURL": undefined,
+          "text": undefined,
+          "url": "http://mdn.com/one.js",
+        }
+      }
+    />
+    <span
+      className="label"
+    >
+       
+      one.js
+       
+    </span>
+  </div>,
+  "defaultState": null,
+  "instance": SourceTreeItem {
+    "context": Object {},
+    "onClick": [Function],
+    "onContextMenu": [Function],
+    "props": Object {
+      "clearProjectDirectoryRoot": [MockFunction],
+      "debuggeeUrl": "http://mdn.com",
+      "expanded": false,
+      "focusItem": [MockFunction],
+      "item": Object {
+        "contents": Object {
+          "contentType": "",
+          "error": undefined,
+          "id": "server1.conn13.child1/39",
+          "isBlackBoxed": false,
+          "isPrettyPrinted": false,
+          "isWasm": false,
+          "loadedState": "unloaded",
+          "sourceMapURL": undefined,
+          "text": undefined,
+          "url": undefined,
+        },
+        "name": "one.js",
+        "path": "http://mdn.com/one.js",
+        "type": "source",
+      },
+      "projectRoot": "",
+      "selectItem": [MockFunction],
+      "setExpanded": [MockFunction],
+      "setProjectDirectoryRoot": [MockFunction],
+      "source": Object {
+        "contentType": "",
+        "error": undefined,
+        "id": "server1.conn13.child1/39",
+        "isBlackBoxed": false,
+        "isPrettyPrinted": false,
+        "isWasm": false,
+        "loadedState": "unloaded",
+        "sourceMapURL": undefined,
+        "text": undefined,
+        "url": "http://mdn.com/one.js",
+      },
+    },
+    "refs": Object {},
+    "setState": [Function],
+    "state": null,
+    "updater": Updater {
+      "_callbacks": Array [],
+      "_renderer": ReactShallowRenderer {
+        "_context": Object {},
+        "_element": <SourceTreeItem
+          clearProjectDirectoryRoot={[MockFunction]}
+          debuggeeUrl="http://mdn.com"
+          expanded={false}
+          focusItem={[MockFunction]}
+          item={
+            Object {
+              "contents": Object {
+                "contentType": "",
+                "error": undefined,
+                "id": "server1.conn13.child1/39",
+                "isBlackBoxed": false,
+                "isPrettyPrinted": false,
+                "isWasm": false,
+                "loadedState": "unloaded",
+                "sourceMapURL": undefined,
+                "text": undefined,
+                "url": undefined,
+              },
+              "name": "one.js",
+              "path": "http://mdn.com/one.js",
+              "type": "source",
+            }
+          }
+          projectRoot=""
+          selectItem={[MockFunction]}
+          setExpanded={[MockFunction]}
+          setProjectDirectoryRoot={[MockFunction]}
+          source={
+            Object {
+              "contentType": "",
+              "error": undefined,
+              "id": "server1.conn13.child1/39",
+              "isBlackBoxed": false,
+              "isPrettyPrinted": false,
+              "isWasm": false,
+              "loadedState": "unloaded",
+              "sourceMapURL": undefined,
+              "text": undefined,
+              "url": "http://mdn.com/one.js",
+            }
+          }
+        />,
+        "_forcedUpdate": false,
+        "_instance": [Circular],
+        "_newState": null,
+        "_rendered": <div
+          className="node"
+          onClick={[Function]}
+          onContextMenu={[Function]}
+        >
+          <i
+            className="no-arrow"
+          />
+          <Connect(SourceIcon)
+            source={
+              Object {
+                "contentType": "",
+                "error": undefined,
+                "id": "server1.conn13.child1/39",
+                "isBlackBoxed": false,
+                "isPrettyPrinted": false,
+                "isWasm": false,
+                "loadedState": "unloaded",
+                "sourceMapURL": undefined,
+                "text": undefined,
+                "url": "http://mdn.com/one.js",
+              }
+            }
+          />
+          <span
+            className="label"
+          >
+             
+            one.js
+             
+          </span>
+        </div>,
+        "_rendering": false,
+        "_updater": [Circular],
+      },
+    },
+    Symbol(enzyme.__setState__): [Function],
+  },
+  "props": Object {
+    "clearProjectDirectoryRoot": [MockFunction],
+    "debuggeeUrl": "http://mdn.com",
+    "expanded": false,
+    "focusItem": [MockFunction],
+    "item": Object {
+      "contents": Object {
+        "contentType": "",
+        "error": undefined,
+        "id": "server1.conn13.child1/39",
+        "isBlackBoxed": false,
+        "isPrettyPrinted": false,
+        "isWasm": false,
+        "loadedState": "unloaded",
+        "sourceMapURL": undefined,
+        "text": undefined,
+        "url": undefined,
+      },
+      "name": "one.js",
+      "path": "http://mdn.com/one.js",
+      "type": "source",
+    },
+    "projectRoot": "",
+    "selectItem": [MockFunction],
+    "setExpanded": [MockFunction],
+    "setProjectDirectoryRoot": [MockFunction],
+    "source": Object {
+      "contentType": "",
+      "error": undefined,
+      "id": "server1.conn13.child1/39",
+      "isBlackBoxed": false,
+      "isPrettyPrinted": false,
+      "isWasm": false,
+      "loadedState": "unloaded",
+      "sourceMapURL": undefined,
+      "text": undefined,
+      "url": "http://mdn.com/one.js",
+    },
+  },
+}
+`;
+
+exports[`SourceTreeItem renderItem should show source item with source icon with focus 1`] = `
+Object {
+  "component": <div
+    className="node focused"
+    key="mdn.com/one.js"
+    onClick={[Function]}
+    onContextMenu={[Function]}
+  >
+    <i
+      className="no-arrow"
+    />
+    <Connect(SourceIcon)
+      source={
+        Object {
+          "contentType": "",
+          "error": undefined,
+          "id": "server1.conn13.child1/39",
+          "isBlackBoxed": false,
+          "isPrettyPrinted": false,
+          "isWasm": false,
+          "loadedState": "unloaded",
+          "sourceMapURL": undefined,
+          "text": undefined,
+          "url": "http://mdn.com/one.js",
+        }
+      }
+    />
+    <span
+      className="label"
+    >
+       
+      one.js
+       
+    </span>
+  </div>,
+  "defaultState": null,
+  "instance": SourceTreeItem {
+    "context": Object {},
+    "onClick": [Function],
+    "onContextMenu": [Function],
+    "props": Object {
+      "clearProjectDirectoryRoot": [MockFunction],
+      "debuggeeUrl": "http://mdn.com",
+      "depth": 1,
+      "expanded": false,
+      "focusItem": [MockFunction],
+      "focused": true,
+      "item": Object {
+        "contents": Object {
+          "contentType": "",
+          "error": undefined,
+          "id": "server1.conn13.child1/39",
+          "isBlackBoxed": false,
+          "isPrettyPrinted": false,
+          "isWasm": false,
+          "loadedState": "unloaded",
+          "sourceMapURL": undefined,
+          "text": undefined,
+          "url": "http://mdn.com/one.js",
+        },
+        "name": "one.js",
+        "path": "mdn.com/one.js",
+      },
+      "projectRoot": "",
+      "selectItem": [MockFunction],
+      "setExpanded": [MockFunction],
+      "setProjectDirectoryRoot": [MockFunction],
+      "source": Object {
+        "contentType": "",
+        "error": undefined,
+        "id": "server1.conn13.child1/39",
+        "isBlackBoxed": false,
+        "isPrettyPrinted": false,
+        "isWasm": false,
+        "loadedState": "unloaded",
+        "sourceMapURL": undefined,
+        "text": undefined,
+        "url": "http://mdn.com/one.js",
+      },
+    },
+    "refs": Object {},
+    "setState": [Function],
+    "state": null,
+    "updater": Updater {
+      "_callbacks": Array [],
+      "_renderer": ReactShallowRenderer {
+        "_context": Object {},
+        "_element": <SourceTreeItem
+          clearProjectDirectoryRoot={[MockFunction]}
+          debuggeeUrl="http://mdn.com"
+          depth={1}
+          expanded={false}
+          focusItem={[MockFunction]}
+          focused={true}
+          item={
+            Object {
+              "contents": Object {
+                "contentType": "",
+                "error": undefined,
+                "id": "server1.conn13.child1/39",
+                "isBlackBoxed": false,
+                "isPrettyPrinted": false,
+                "isWasm": false,
+                "loadedState": "unloaded",
+                "sourceMapURL": undefined,
+                "text": undefined,
+                "url": "http://mdn.com/one.js",
+              },
+              "name": "one.js",
+              "path": "mdn.com/one.js",
+            }
+          }
+          projectRoot=""
+          selectItem={[MockFunction]}
+          setExpanded={[MockFunction]}
+          setProjectDirectoryRoot={[MockFunction]}
+          source={
+            Object {
+              "contentType": "",
+              "error": undefined,
+              "id": "server1.conn13.child1/39",
+              "isBlackBoxed": false,
+              "isPrettyPrinted": false,
+              "isWasm": false,
+              "loadedState": "unloaded",
+              "sourceMapURL": undefined,
+              "text": undefined,
+              "url": "http://mdn.com/one.js",
+            }
+          }
+        />,
+        "_forcedUpdate": false,
+        "_instance": [Circular],
+        "_newState": null,
+        "_rendered": <div
+          className="node focused"
+          onClick={[Function]}
+          onContextMenu={[Function]}
+        >
+          <i
+            className="no-arrow"
+          />
+          <Connect(SourceIcon)
+            source={
+              Object {
+                "contentType": "",
+                "error": undefined,
+                "id": "server1.conn13.child1/39",
+                "isBlackBoxed": false,
+                "isPrettyPrinted": false,
+                "isWasm": false,
+                "loadedState": "unloaded",
+                "sourceMapURL": undefined,
+                "text": undefined,
+                "url": "http://mdn.com/one.js",
+              }
+            }
+          />
+          <span
+            className="label"
+          >
+             
+            one.js
+             
+          </span>
+        </div>,
+        "_rendering": false,
+        "_updater": [Circular],
+      },
+    },
+    Symbol(enzyme.__setState__): [Function],
+  },
+  "props": Object {
+    "clearProjectDirectoryRoot": [MockFunction],
+    "debuggeeUrl": "http://mdn.com",
+    "depth": 1,
+    "expanded": false,
+    "focusItem": [MockFunction],
+    "focused": true,
+    "item": Object {
+      "contents": Object {
+        "contentType": "",
+        "error": undefined,
+        "id": "server1.conn13.child1/39",
+        "isBlackBoxed": false,
+        "isPrettyPrinted": false,
+        "isWasm": false,
+        "loadedState": "unloaded",
+        "sourceMapURL": undefined,
+        "text": undefined,
+        "url": "http://mdn.com/one.js",
+      },
+      "name": "one.js",
+      "path": "mdn.com/one.js",
+    },
+    "projectRoot": "",
+    "selectItem": [MockFunction],
+    "setExpanded": [MockFunction],
+    "setProjectDirectoryRoot": [MockFunction],
+    "source": Object {
+      "contentType": "",
+      "error": undefined,
+      "id": "server1.conn13.child1/39",
+      "isBlackBoxed": false,
+      "isPrettyPrinted": false,
+      "isWasm": false,
+      "loadedState": "unloaded",
+      "sourceMapURL": undefined,
+      "text": undefined,
+      "url": "http://mdn.com/one.js",
+    },
+  },
+}
+`;

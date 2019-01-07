@@ -1,0 +1,57 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+/**
+ * Types reducer
+ * @module reducers/types
+ */
+
+// @flow
+
+import type { ASTState } from "./ast";
+import type { BreakpointsState } from "./breakpoints";
+import type { ExpressionState } from "./expressions";
+import type { DebuggeeState } from "./debuggee";
+import type { FileSearchState } from "./file-search";
+import type { PauseState } from "./pause";
+import type { PendingBreakpointsState } from "../selectors";
+import type { ProjectTextSearchState } from "./project-text-search";
+import type { Record } from "../utils/makeRecord";
+import type { SourcesState } from "./sources";
+import type { TabList } from "./tabs";
+import type { UIState } from "./ui";
+
+export type State = {
+  ast: Record<ASTState>,
+  breakpoints: BreakpointsState,
+  expressions: Record<ExpressionState>,
+  debuggee: DebuggeeState,
+  fileSearch: Record<FileSearchState>,
+  pause: PauseState,
+  pendingBreakpoints: PendingBreakpointsState,
+  projectTextSearch: ProjectTextSearchState,
+  sources: SourcesState,
+  tabs: TabList,
+  ui: Record<UIState>
+};
+
+export type Selector<T> = State => T;
+
+export type PendingSelectedLocation = {
+  url: string,
+  line?: number,
+  column?: number
+};
+
+export type { SourcesMap, SourcesMapByThread } from "./sources";
+export type { ActiveSearchType, OrientationType } from "./ui";
+export type { BreakpointsMap, XHRBreakpointsList } from "./breakpoints";
+export type { Command } from "./pause";
+export type {
+  SourceMetaDataMap,
+  SourceMetaDataType,
+  PausePoints,
+  PausePointsMap,
+  PausePoint
+} from "./ast";
