@@ -6,7 +6,13 @@
 
 DisableStlWrapping()
 
-GeckoCppUnitTests(['TestNativeNt'])
+GeckoCppUnitTests(
+    [
+        'TestNativeNt',
+        'TestSameBinary',
+    ],
+    linkage=None
+)
 
 LOCAL_INCLUDES += [
     '/browser/app/winlauncher',
@@ -16,6 +22,12 @@ OS_LIBS += [
     'mincore',
     'ntdll',
 ]
+
+if CONFIG['CC_TYPE'] in ('gcc', 'clang'):
+    # This allows us to use wmain as the entry point on mingw
+    LDFLAGS += [
+        '-municode',
+    ]
 
 if CONFIG['CC_TYPE'] == 'clang-cl':
     AllowCompilerWarnings()  # workaround for bug 1090497
