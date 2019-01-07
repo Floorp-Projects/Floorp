@@ -1383,51 +1383,42 @@ nsresult AntiTrackingCommon::IsOnContentBlockingAllowList(
             _spec),
            aTopWinURI);
 
-  nsCOMPtr<nsIIOService> ios = services::GetIOService();
-  NS_ENSURE_TRUE(ios, NS_ERROR_FAILURE);
-
   // Take the host/port portion so we can allowlist by site. Also ignore the
   // scheme, since users who put sites on the allowlist probably don't expect
   // allowlisting to depend on scheme.
-  nsresult rv = NS_ERROR_FAILURE;
-  nsCOMPtr<nsIURL> url = do_QueryInterface(aTopWinURI, &rv);
-  if (NS_FAILED(rv)) {
+  nsAutoCString escaped(NS_LITERAL_CSTRING("https://"));
+  nsAutoCString temp;
+  nsresult rv = aTopWinURI ? aTopWinURI->GetHostPort(temp) : NS_ERROR_FAILURE;
+  // GetHostPort returns an empty string (with a success error code) for file://
+  // URIs.
+  if (NS_FAILED(rv) || temp.IsEmpty()) {
     return rv;  // normal for some loads, no need to print a warning
   }
-
-  nsCString escaped(NS_LITERAL_CSTRING("https://"));
-  nsAutoCString temp;
-  rv = url->GetHostPort(temp);
-  NS_ENSURE_SUCCESS(rv, rv);
   escaped.Append(temp);
 
-  // Stuff the whole thing back into a URI for the permission manager.
-  nsCOMPtr<nsIURI> topWinURI;
-  rv = ios->NewURI(escaped, nullptr, nullptr, getter_AddRefs(topWinURI));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIPermissionManager> permMgr =
-      do_GetService(NS_PERMISSIONMANAGER_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIPermissionManager> permMgr = services::GetPermissionManager();
+  NS_ENSURE_TRUE(permMgr, NS_ERROR_FAILURE);
 
   // Check both the normal mode and private browsing mode user override
   // permissions.
   Pair<const char*, bool> types[] = {{"trackingprotection", false},
                                      {"trackingprotection-pb", true}};
 
+  auto topWinURI = PromiseFlatCString(escaped);
   for (size_t i = 0; i < ArrayLength(types); ++i) {
     if (aIsPrivateBrowsing != types[i].second()) {
       continue;
     }
 
     uint32_t permissions = nsIPermissionManager::UNKNOWN_ACTION;
-    rv = permMgr->TestPermission(topWinURI, types[i].first(), &permissions);
+    rv = permMgr->TestPermissionOriginNoSuffix(topWinURI, types[i].first(),
+                                               &permissions);
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (permissions == nsIPermissionManager::ALLOW_ACTION) {
       aIsAllowListed = true;
-      LOG_SPEC(("Found user override type %s for %s", types[i].first(), _spec),
-               topWinURI);
+      LOG(("Found user override type %s for %s", types[i].first(),
+           topWinURI.get()));
       // Stop checking the next permisson type if we decided to override.
       break;
     }

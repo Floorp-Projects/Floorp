@@ -29,6 +29,7 @@
                   "*://*.vice.com/*",
                   "*://*.wikia.com/*",
                   "*://*.wikipedia.org/*",
+                  "*://*.yahoo.com/*",
                   "*://*.youtube.com/*",
                   "*://*.yandex.ru/*"
                   ],
