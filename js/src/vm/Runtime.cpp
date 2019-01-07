@@ -690,7 +690,8 @@ void JSRuntime::updateMallocCounter(size_t nbytes) {
 }
 
 JS_FRIEND_API void* JSRuntime::onOutOfMemory(AllocFunction allocFunc,
-                                             size_t nbytes, void* reallocPtr,
+                                             arena_id_t arena, size_t nbytes,
+                                             void* reallocPtr,
                                              JSContext* maybecx) {
   MOZ_ASSERT_IF(allocFunc != AllocFunction::Realloc, !reallocPtr);
 
@@ -707,10 +708,10 @@ JS_FRIEND_API void* JSRuntime::onOutOfMemory(AllocFunction allocFunc,
     void* p;
     switch (allocFunc) {
       case AllocFunction::Malloc:
-        p = js_malloc(nbytes);
+        p = js_arena_malloc(arena, nbytes);
         break;
       case AllocFunction::Calloc:
-        p = js_calloc(nbytes);
+        p = js_arena_calloc(arena, nbytes, 1);
         break;
       case AllocFunction::Realloc:
         p = js_realloc(reallocPtr, nbytes);
@@ -729,12 +730,12 @@ JS_FRIEND_API void* JSRuntime::onOutOfMemory(AllocFunction allocFunc,
   return nullptr;
 }
 
-void* JSRuntime::onOutOfMemoryCanGC(AllocFunction allocFunc, size_t bytes,
-                                    void* reallocPtr) {
+void* JSRuntime::onOutOfMemoryCanGC(AllocFunction allocFunc, arena_id_t arena,
+                                    size_t bytes, void* reallocPtr) {
   if (OnLargeAllocationFailure && bytes >= LARGE_ALLOCATION) {
     OnLargeAllocationFailure();
   }
-  return onOutOfMemory(allocFunc, bytes, reallocPtr);
+  return onOutOfMemory(allocFunc, arena, bytes, reallocPtr);
 }
 
 bool JSRuntime::activeGCInAtomsZone() {
