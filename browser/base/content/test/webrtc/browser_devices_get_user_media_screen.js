@@ -18,6 +18,10 @@ const permissionError = "error: NotAllowedError: The request is not allowed " +
 const notFoundError =
     "error: NotFoundError: The object can not be found here.";
 
+let env = Cc["@mozilla.org/process/environment;1"]
+            .getService(Ci.nsIEnvironment);
+const isHeadless = env.get("MOZ_HEADLESS");
+
 var gTests = [
 
 {
@@ -176,34 +180,43 @@ var gTests = [
         nonScaryWindowIndex = i;
       }
     }
-    ok(scaryWindowIndexes.length, "there's at least one scary window, as Firefox is running");
-    ok(typeof scaryScreenIndex == "number", "there's at least one scary screen, as as all screens are");
-
-    // Select one scary window, a preview with a scary warning should appear.
-    let scaryWindowIndex;
-    for (scaryWindowIndex of scaryWindowIndexes) {
-      menulist.getItemAtIndex(scaryWindowIndex).doCommand();
-      ok(document.getElementById("webRTC-all-windows-shared").hidden,
-         "the 'all windows will be shared' warning should still be hidden");
-      try {
-        await TestUtils.waitForCondition(() =>
-            !document.getElementById("webRTC-preview").hidden, "", 100, 100);
-        break;
-      } catch (e) {
-        // A "scary window" is Firefox. Multiple Firefox windows have been
-        // observed to come and go during try runs, so we won't know which one
-        // is ours. To avoid intermittents, we ignore preview failing due to
-        // these going away on us, provided it succeeds on one of them.
-      }
+    if (isHeadless) {
+      is(scaryWindowIndexes.length, 0, "there are no scary Firefox windows in headless mode");
+    } else {
+      ok(scaryWindowIndexes.length, "there's at least one scary window, as Firefox is running");
     }
-    ok(!document.getElementById("webRTC-preview").hidden,
-       "the preview area is visible");
-    ok(!document.getElementById("webRTC-previewWarning").hidden,
-       "the scary warning is visible");
-    // Select the 'Select Window' item again, the preview should be hidden.
-    menulist.getItemAtIndex(0).doCommand();
-    ok(document.getElementById("webRTC-preview").hidden,
-       "the preview area is hidden");
+    ok(typeof scaryScreenIndex == "number", "there's at least one scary screen, as all screens are");
+
+    if (!isHeadless) {
+      // Select one scary window, a preview with a scary warning should appear.
+      let scaryWindowIndex;
+      for (scaryWindowIndex of scaryWindowIndexes) {
+        menulist.getItemAtIndex(scaryWindowIndex).doCommand();
+        ok(document.getElementById("webRTC-all-windows-shared").hidden,
+           "the 'all windows will be shared' warning should still be hidden");
+        try {
+          await TestUtils.waitForCondition(() =>
+              !document.getElementById("webRTC-preview").hidden, "", 100, 100);
+          break;
+        } catch (e) {
+          // A "scary window" is Firefox. Multiple Firefox windows have been
+          // observed to come and go during try runs, so we won't know which one
+          // is ours. To avoid intermittents, we ignore preview failing due to
+          // these going away on us, provided it succeeds on one of them.
+        }
+      }
+      ok(!document.getElementById("webRTC-preview").hidden,
+         "the preview area is visible");
+      ok(!document.getElementById("webRTC-previewWarning").hidden,
+         "the scary warning is visible");
+      // Select the 'Select Window' item again, the preview should be hidden.
+      menulist.getItemAtIndex(0).doCommand();
+      ok(document.getElementById("webRTC-preview").hidden,
+         "the preview area is hidden");
+
+      // Select the first window again so that we can have a stream.
+      menulist.getItemAtIndex(scaryWindowIndex).doCommand();
+    }
 
     // If we have a non-scary window, select it and verify the warning isn't displayed.
     // A non-scary window may not always exist on test slaves.
@@ -219,9 +232,6 @@ var gTests = [
          "the scary warning is hidden");
     } else {
       info("no non-scary window available on this test slave");
-
-      // Select the first window again so that we can have a stream.
-      menulist.getItemAtIndex(scaryWindowIndex).doCommand();
     }
 
     let indicator = promiseIndicatorWindow();
