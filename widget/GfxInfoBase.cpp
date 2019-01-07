@@ -1459,6 +1459,18 @@ GfxInfoBase::GetOffMainThreadPaintWorkerCount(
 }
 
 NS_IMETHODIMP
+GfxInfoBase::GetLowEndMachine(bool* aLowEndMachine) {
+  *aLowEndMachine = gfxPlatform::ShouldAdjustForLowEndMachine();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GfxInfoBase::GetTargetFrameRate(uint32_t* aTargetFrameRate) {
+  *aTargetFrameRate = gfxPlatform::TargetFrameRate();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 GfxInfoBase::GetIsHeadless(bool* aIsHeadless) {
   *aIsHeadless = gfxPlatform::IsHeadless();
   return NS_OK;
