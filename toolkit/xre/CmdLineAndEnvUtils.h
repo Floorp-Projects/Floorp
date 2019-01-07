@@ -296,27 +296,14 @@ inline wchar_t* ArgToString(wchar_t* d, const wchar_t* s) {
 
 /**
  * Creates a command line from a list of arguments.
- *
- * @param argc Number of elements in |argv|
- * @param argv Array of arguments
- * @param aArgcExtra Number of elements in |aArgvExtra|
- * @param aArgvExtra Optional array of arguments to be appended to the resulting
- *                   command line after those provided by |argv|.
  */
-inline UniquePtr<wchar_t[]> MakeCommandLine(int argc, wchar_t** argv,
-                                            int aArgcExtra = 0,
-                                            wchar_t** aArgvExtra = nullptr) {
+inline UniquePtr<wchar_t[]> MakeCommandLine(int argc, wchar_t** argv) {
   int i;
   int len = 0;
 
-  // The + 1 for each argument reserves space for either a ' ' or the null
-  // terminator, depending on the position of the argument.
+  // The + 1 of the last argument handles the allocation for null termination
   for (i = 0; i < argc; ++i) {
     len += internal::ArgStrLen(argv[i]) + 1;
-  }
-
-  for (i = 0; i < aArgcExtra; ++i) {
-    len += internal::ArgStrLen(aArgvExtra[i]) + 1;
   }
 
   // Protect against callers that pass 0 arguments
@@ -329,20 +316,10 @@ inline UniquePtr<wchar_t[]> MakeCommandLine(int argc, wchar_t** argv,
     return s;
   }
 
-  int totalArgc = argc + aArgcExtra;
-
   wchar_t* c = s.get();
   for (i = 0; i < argc; ++i) {
     c = internal::ArgToString(c, argv[i]);
-    if (i + 1 != totalArgc) {
-      *c = ' ';
-      ++c;
-    }
-  }
-
-  for (i = 0; i < aArgcExtra; ++i) {
-    c = internal::ArgToString(c, aArgvExtra[i]);
-    if (i + 1 != aArgcExtra) {
+    if (i + 1 != argc) {
       *c = ' ';
       ++c;
     }

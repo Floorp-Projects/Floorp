@@ -30,10 +30,6 @@
 #include "LaunchUnelevated.h"
 #include "ProcThreadAttributes.h"
 
-#if defined(MOZ_LAUNCHER_PROCESS)
-#include "SameBinary.h"
-#endif  // defined(MOZ_LAUNCHER_PROCESS)
-
 /**
  * At this point the child process has been created in a suspended state. Any
  * additional startup work (eg, blocklist setup) should go here.
@@ -143,6 +139,54 @@ static void MaybeBreakForBrowserDebugging() {
                 ::GetCurrentProcessId());
   ::Sleep(pauseLenMs);
 }
+
+#if defined(MOZ_LAUNCHER_PROCESS)
+
+static mozilla::LauncherResult<bool> IsSameBinaryAsParentProcess() {
+  mozilla::LauncherResult<DWORD> parentPid = mozilla::nt::GetParentProcessId();
+  if (parentPid.isErr()) {
+    return LAUNCHER_ERROR_FROM_RESULT(parentPid);
+  }
+
+  nsAutoHandle parentProcess(::OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION,
+                                           FALSE, parentPid.unwrap()));
+  if (!parentProcess.get()) {
+    DWORD err = ::GetLastError();
+    if (err == ERROR_INVALID_PARAMETER) {
+      // The process identified by parentPid has already exited. This is a
+      // common case when the parent process is not Firefox, thus we should
+      // return false instead of erroring out.
+      return false;
+    }
+
+    return LAUNCHER_ERROR_FROM_WIN32(err);
+  }
+
+  WCHAR parentExe[MAX_PATH + 1] = {};
+  DWORD parentExeLen = mozilla::ArrayLength(parentExe);
+  if (!::QueryFullProcessImageNameW(parentProcess.get(), PROCESS_NAME_NATIVE,
+                                    parentExe, &parentExeLen)) {
+    return LAUNCHER_ERROR_FROM_LAST();
+  }
+
+  WCHAR ourExe[MAX_PATH + 1] = {};
+  DWORD ourExeOk =
+      ::GetModuleFileNameW(nullptr, ourExe, mozilla::ArrayLength(ourExe));
+  if (!ourExeOk || ourExeOk == mozilla::ArrayLength(ourExe)) {
+    return LAUNCHER_ERROR_FROM_LAST();
+  }
+
+  mozilla::WindowsErrorResult<bool> isSame =
+      mozilla::DoPathsPointToIdenticalFile(parentExe, ourExe,
+                                           mozilla::PathType::eNtPath);
+  if (isSame.isErr()) {
+    return LAUNCHER_ERROR_FROM_MOZ_WINDOWS_ERROR(isSame.unwrapErr());
+  }
+
+  return isSame.unwrap();
+}
+
+#endif  // defined(MOZ_LAUNCHER_PROCESS)
 
 namespace mozilla {
 
