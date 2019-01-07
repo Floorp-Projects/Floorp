@@ -789,6 +789,13 @@ class HTMLMediaElement : public nsGenericHTMLElement,
                        uint32_t aParamCount = 0);
 
   /**
+   * Log message to web console.
+   */
+  void ReportToConsole(uint32_t aErrorFlags, const char* aMsg,
+                       const char16_t** aParams = nullptr,
+                       uint32_t aParamCount = 0) const;
+
+  /**
    * Changes mHasPlayedOrSeeked to aValue. If mHasPlayedOrSeeked changes
    * we'll force a reflow so that the video frame gets reflowed to reflect
    * the poster hiding or showing immediately.
