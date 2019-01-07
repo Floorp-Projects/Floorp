@@ -1,8 +1,7 @@
 apply plugin: 'com.android.application'
-
 apply plugin: 'kotlin-android'
-
 apply plugin: 'kotlin-android-extensions'
+apply from: "$project.rootDir/automation/gradle/versionCode.gradle"
 
 android {
     compileSdkVersion 28
@@ -20,14 +19,53 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
+    flavorDimensions "abi"
+    productFlavors {
+        // replace the libraries with 64-bit versions when they're ready
+        arm { dimension "abi" }
+        x86 { dimension "abi" }
+    }
+}
+
+android.applicationVariants.all { variant ->
+    def buildType = variant.buildType.name
+
+    if (buildType == "release" || buildType == "nightly") {
+        def versionCode = generatedVersionCode
+
+        // The Google Play Store does not allow multiple APKs for the same app that all have the
+        // same version code. Therefore we need to have different version codes for our ARM and x86
+        // builds.
+
+        // Our generated version code now has a length of 9 (See tools/gradle/versionCode.gradle).
+        // Our x86 builds need a higher version code to avoid installing ARM builds on an x86 device
+        // with ARM compatibility mode.
+
+        if (variant.flavorName.contains("X86")) {
+            versionCode = versionCode + 1
+        }// else variant.flavorName.contains("Arm")) use generated version code
+
+        variant.outputs.all { output ->
+            setVersionCodeOverride(versionCode)
+        }
+    }
+
+    println("----------------------------------------------")
+    println("Build type:   " + buildType)
+    println("Flavor:       " + variant.flavorName)
+    println("Version code: " + variant.mergedFlavor.versionCode)
 }
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-    implementation 'com.android.support:appcompat-v7:28.0.0'
-    implementation 'com.android.support.constraint:constraint-layout:1.1.3'
-    testImplementation 'junit:junit:4.12'
-    androidTestImplementation 'com.android.support.test:runner:1.0.2'
-    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
+    implementation Deps.kotlin_stdlib
+    implementation Deps.androidx_appcompat
+    implementation Deps.androidx_constraintlayout
+    testImplementation Deps.junit
+    androidTestImplementation Deps.tools_test_runner
+    androidTestImplementation Deps.tools_espresso_core
+
+    armImplementation Deps.geckoview_nightly_arm
+    x86Implementation Deps.geckoview_nightly_x86
 }
