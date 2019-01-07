@@ -166,6 +166,7 @@ whitelist-vars = [
     "kPresContext_.*",
     "nsContentUtils_.*",
     "GECKO_IS_NIGHTLY",
+    "mozilla::detail::gGkAtoms",
 ]
 whitelist-types = [
     "RawGecko.*",
