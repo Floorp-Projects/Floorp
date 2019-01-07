@@ -34,8 +34,6 @@ tasks:
           - queue:create-task:high:aws-provisioner-v1/android-components-g
           - queue:scheduler-id:${scheduler_id}
           - secrets:get:project/mobile/android-components/public-tokens
-        routes:
-          - statuses  # Automatically added by taskcluster-github. It must be explicit because of Chain of Trust
         payload:
           maxRunTime: 3600
           image: mozillamobile/android-components:1.11
@@ -146,6 +144,8 @@ tasks:
           - queue:create-task:highest:aws-provisioner-v1/gecko-focus
           - queue:create-task:highest:aws-provisioner-v1/github-worker
           - queue:scheduler-id:${scheduler_id}
+        routes:
+          - statuses  # Automatically added by taskcluster-github. It must be explicit because of Chain of Trust
         payload:
           maxRunTime: 600
           image: mozillamobile/android-components:1.11
@@ -220,6 +220,8 @@ tasks:
           - queue:create-task:highest:aws-provisioner-v1/gecko-focus
           - queue:create-task:highest:scriptworker-prov-v1/mobile-beetmover-v1
           - queue:scheduler-id:${scheduler_id}
+        routes:
+          - statuses  # Automatically added by taskcluster-github. It must be explicit because of Chain of Trust
         payload:
           maxRunTime: 600   # Decision should remain fast enough to schedule a handful of tasks
           image: 'mozillamobile/android-components:1.11'
