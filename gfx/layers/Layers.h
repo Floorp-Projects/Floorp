@@ -739,6 +739,7 @@ class LayerManager : public FrameRecorder {
     mPayload.AppendElements(aPayload);
     MOZ_ASSERT(mPayload.Length() < 10000);
   }
+  void PayloadPresented();
 
  protected:
   RefPtr<Layer> mRoot;
