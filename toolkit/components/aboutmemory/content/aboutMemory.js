@@ -1044,15 +1044,30 @@ function appendAboutMemoryMain(aProcessReports, aHasMozMallocUsableSize) {
       return 0;
     });
 
-    // Generate output for each process.
-    for (let [i, process] of processes.entries()) {
-      let section = appendElement(gMain, "div", "section");
+    // Set up a layout with a left (main) column to contain the process sections
+    // and a right (sidebar) column to contain the process index.
+    let outputContainer = appendElement(gMain, "div", "outputContainer");
 
+    let sections = appendElement(outputContainer, "div", "sections");
+    let sidebar = appendElement(outputContainer, "div", "sidebar");
+    let sidebarContents = appendElement(sidebar, "div", "sidebarContents");
+
+    let index = appendElement(sidebarContents, "div", "index");
+    appendElementWithText(index, "div", "indexLabel", "Process index");
+    let indexList = appendElement(index, "ul", "indexList");
+
+    // Generate output and an index link for each process.
+    for (let [i, process] of processes.entries()) {
+      let section = appendElement(sections, "div", "section");
       appendProcessAboutMemoryElements(section, i, process,
                                        pcollsByProcess[process]._trees,
                                        pcollsByProcess[process]._degenerates,
                                        pcollsByProcess[process]._heapTotal,
                                        aHasMozMallocUsableSize);
+
+      let indexListItem = appendElement(indexList, "li");
+      let indexLink = appendElementWithText(indexListItem, "a", "", process);
+      indexLink.href = "#start" + i;
     }
   }
 
