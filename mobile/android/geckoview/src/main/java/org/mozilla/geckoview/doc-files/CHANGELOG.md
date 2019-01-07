@@ -10,9 +10,6 @@ layout: geckoview
 [66.1]: https://developer.android.com/reference/android/support/annotation/NonNull
 [66.2]: https://developer.android.com/reference/android/support/annotation/Nullable
 
-- Added GeckoRuntimeSetting for enabling desktop viewport. Desktop viewport is
-  no longer set by `USER_AGENT_MODE_DESKTOP` and must be set separately.
-
 ## v65
 - Moved [`CompositorController`][65.1], [`DynamicToolbarAnimator`][65.2],
   [`OverscrollEdgeEffect`][65.3], [`PanZoomController`][65.4] from
@@ -101,4 +98,4 @@ layout: geckoview
 [65.24]: ../CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: ../GeckoResult.html
 
-[api-version]: a0f14e2c654491c9f12b3e1ce46e5e59705ef917
+[api-version]: 8827d6c8c7c2aa54cfad31c21aca5dc7d6d42311
