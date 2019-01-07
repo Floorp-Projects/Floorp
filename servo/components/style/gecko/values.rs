@@ -6,7 +6,6 @@
 
 //! Different kind of helpers to interact with Gecko values.
 
-use app_units::Au;
 use crate::counter_style::{Symbol, Symbols};
 use crate::gecko_bindings::structs::{self, nsStyleCoord, CounterStylePtr};
 use crate::gecko_bindings::structs::{StyleGridTrackBreadth, StyleShapeRadius};
@@ -27,6 +26,7 @@ use crate::values::generics::length::{MaxLength, MozLength};
 use crate::values::generics::{CounterStyleOrNone, NonNegative};
 use crate::values::{Auto, Either, None_, Normal};
 use crate::Atom;
+use app_units::Au;
 use cssparser::RGBA;
 use nsstring::{nsACString, nsCStr};
 use std::cmp::max;
@@ -286,9 +286,7 @@ impl GeckoStyleCoordConvertible for ComputedShapeRadius {
                     None
                 }
             },
-            _ => {
-                GeckoStyleCoordConvertible::from_gecko_style_coord(coord).map(ShapeRadius::Length)
-            },
+            _ => GeckoStyleCoordConvertible::from_gecko_style_coord(coord).map(ShapeRadius::Length),
         }
     }
 }

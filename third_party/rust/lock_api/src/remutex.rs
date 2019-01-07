@@ -268,7 +268,7 @@ impl<R: RawMutex, G: GetThreadId, T: ?Sized> ReentrantMutex<R, G, T> {
 }
 
 impl<R: RawMutexFair, G: GetThreadId, T: ?Sized> ReentrantMutex<R, G, T> {
-    /// Forcibly unlocks the mutex using a fair unlock procotol.
+    /// Forcibly unlocks the mutex using a fair unlock protocol.
     ///
     /// This is useful when combined with `mem::forget` to hold a lock without
     /// the need to maintain a `ReentrantMutexGuard` object alive, for example when
@@ -385,6 +385,33 @@ impl<'a, R: RawMutex + 'a, G: GetThreadId + 'a, T: ?Sized + 'a> ReentrantMutexGu
         }
     }
 
+    /// Attempts to make  a new `MappedReentrantMutexGuard` for a component of the
+    /// locked data. The original guard is return if the closure returns `None`.
+    ///
+    /// This operation cannot fail as the `ReentrantMutexGuard` passed
+    /// in already locked the mutex.
+    ///
+    /// This is an associated function that needs to be
+    /// used as `ReentrantMutexGuard::map(...)`. A method would interfere with methods of
+    /// the same name on the contents of the locked data.
+    #[inline]
+    pub fn try_map<U: ?Sized, F>(s: Self, f: F) -> Result<MappedReentrantMutexGuard<'a, R, G, U>, Self>
+    where
+        F: FnOnce(&mut T) -> Option<&mut U>,
+    {
+        let raw = &s.remutex.raw;
+        let data = match f(unsafe { &mut *s.remutex.data.get() }) {
+            Some(data) => data,
+            None => return Err(s),
+        };
+        mem::forget(s);
+        Ok(MappedReentrantMutexGuard {
+            raw,
+            data,
+            marker: PhantomData,
+        })
+    }
+
     /// Temporarily unlocks the mutex to execute the given function.
     ///
     /// This is safe because `&mut` guarantees that there exist no other
@@ -495,11 +522,11 @@ impl<'a, R: RawMutex + 'a, G: GetThreadId + 'a, T: ?Sized + 'a>
 {
     /// Makes a new `MappedReentrantMutexGuard` for a component of the locked data.
     ///
-    /// This operation cannot fail as the `ReentrantMutexGuard` passed
+    /// This operation cannot fail as the `MappedReentrantMutexGuard` passed
     /// in already locked the mutex.
     ///
     /// This is an associated function that needs to be
-    /// used as `ReentrantMutexGuard::map(...)`. A method would interfere with methods of
+    /// used as `MappedReentrantMutexGuard::map(...)`. A method would interfere with methods of
     /// the same name on the contents of the locked data.
     #[inline]
     pub fn map<U: ?Sized, F>(s: Self, f: F) -> MappedReentrantMutexGuard<'a, R, G, U>
@@ -514,6 +541,33 @@ impl<'a, R: RawMutex + 'a, G: GetThreadId + 'a, T: ?Sized + 'a>
             data,
             marker: PhantomData,
         }
+    }
+
+    /// Attempts to make  a new `MappedReentrantMutexGuard` for a component of the
+    /// locked data. The original guard is return if the closure returns `None`.
+    ///
+    /// This operation cannot fail as the `MappedReentrantMutexGuard` passed
+    /// in already locked the mutex.
+    ///
+    /// This is an associated function that needs to be
+    /// used as `MappedReentrantMutexGuard::map(...)`. A method would interfere with methods of
+    /// the same name on the contents of the locked data.
+    #[inline]
+    pub fn try_map<U: ?Sized, F>(s: Self, f: F) -> Result<MappedReentrantMutexGuard<'a, R, G, U>, Self>
+    where
+        F: FnOnce(&T) -> Option<&U>,
+    {
+        let raw = s.raw;
+        let data = match f(unsafe { &*s.data }) {
+            Some(data) => data,
+            None => return Err(s),
+        };
+        mem::forget(s);
+        Ok(MappedReentrantMutexGuard {
+            raw,
+            data,
+            marker: PhantomData,
+        })
     }
 }
 
