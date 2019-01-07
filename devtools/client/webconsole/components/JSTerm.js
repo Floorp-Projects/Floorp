@@ -1163,12 +1163,11 @@ class JSTerm extends Component {
         && items[0].label !== matchProp
       )
     ) {
-      let popupAlignElement;
+      const popupAlignElement = this.props.serviceContainer.getJsTermTooltipAnchor();
       let xOffset;
       let yOffset;
 
       if (this.editor) {
-        popupAlignElement = this.node.querySelector(".CodeMirror-cursor");
         // We need to show the popup at the "." or "[".
         xOffset = -1 * matchProp.length * this._inputCharWidth;
         yOffset = 5;
@@ -1177,10 +1176,6 @@ class JSTerm extends Component {
           (inputUntilCursor.lastIndexOf("\n") + 1) -
           matchProp.length;
         xOffset = (offset * this._inputCharWidth) + this._paddingInlineStart;
-        // We use completeNode as the popup anchor as its height never exceeds the
-        // content size, whereas it can be the case for inputNode (when there's no message
-        // in the output, it takes the whole height).
-        popupAlignElement = this.completeNode;
       }
 
       if (popupAlignElement) {
