@@ -177,7 +177,7 @@
   border: none;
   background: transparent;
   padding: 0;
-  color: inherit;
+  color: inherit !important /* !important overrides button.css on Mac and Linux */;
 }
 
 .downloadButton > .button-box > .button-icon {
