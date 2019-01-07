@@ -456,6 +456,35 @@ void* js::Nursery::allocateBufferSameLocation(JSObject* obj, size_t nbytes) {
   return allocate(nbytes);
 }
 
+void* js::Nursery::allocateZeroedBuffer(Zone* zone, size_t nbytes) {
+  MOZ_ASSERT(nbytes > 0);
+
+  if (nbytes <= MaxNurseryBufferSize) {
+    void* buffer = allocate(nbytes);
+    if (buffer) {
+      memset(buffer, 0, nbytes);
+      return buffer;
+    }
+  }
+
+  void* buffer = zone->pod_calloc<uint8_t>(nbytes);
+  if (buffer && !registerMallocedBuffer(buffer)) {
+    js_free(buffer);
+    return nullptr;
+  }
+  return buffer;
+}
+
+void* js::Nursery::allocateZeroedBuffer(JSObject* obj, size_t nbytes) {
+  MOZ_ASSERT(obj);
+  MOZ_ASSERT(nbytes > 0);
+
+  if (!IsInsideNursery(obj)) {
+    return obj->zone()->pod_calloc<uint8_t>(nbytes);
+  }
+  return allocateZeroedBuffer(obj->zone(), nbytes);
+}
+
 void* js::Nursery::reallocateBuffer(JSObject* obj, void* oldBuffer,
                                     size_t oldBytes, size_t newBytes) {
   if (!IsInsideNursery(obj)) {

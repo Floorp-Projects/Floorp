@@ -243,6 +243,17 @@ class Nursery {
    */
   void* allocateBufferSameLocation(JSObject* obj, size_t nbytes);
 
+  /* Allocate a zero-initialized buffer for a given zone, using the nursery if
+   * possible.
+   */
+  void* allocateZeroedBuffer(JS::Zone* zone, size_t nbytes);
+
+  /*
+   * Allocate a zero-initialized buffer for a given object, using the nursery if
+   * possible and obj is in the nursery.
+   */
+  void* allocateZeroedBuffer(JSObject* obj, size_t nbytes);
+
   /* Resize an existing object buffer. */
   void* reallocateBuffer(JSObject* obj, void* oldBuffer, size_t oldBytes,
                          size_t newBytes);
