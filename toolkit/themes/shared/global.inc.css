@@ -69,8 +69,10 @@
   background-color: var(--arrowpanel-dimmed);
 }
 
-.panel-footer > button:not([disabled]):hover:active {
+.panel-footer > button:not([disabled]):hover:active,
+.panel-footer > button:not([disabled])[open] {
   background-color: var(--arrowpanel-dimmed-further);
+  box-shadow: 0 1px 0 hsla(210,4%,10%,.05) inset;
 }
 
 .panel-footer > button:not([disabled])[default] {
