@@ -16,6 +16,8 @@ baseline:
       - baseline
     bugs:
       - 1497894
+    reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1512938#c3
     notification_emails:
       - telemetry-client-dev@mozilla.com
 
@@ -39,6 +41,8 @@ baseline:
       The name of the operating system.
     bugs:
       - 1497894
+    reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1512938#c3
     notification_emails:
       - telemetry-client-dev@mozilla.com
 
@@ -51,6 +55,8 @@ baseline:
       The version of the operating system.
     bugs:
       - 1497894
+    reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1512938#c3
     notification_emails:
       - telemetry-client-dev@mozilla.com
 
@@ -63,6 +69,8 @@ baseline:
       The manufacturer and model of the device.
     bugs:
       - 1497894
+    reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1512938#c3
     notification_emails:
       - telemetry-client-dev@mozilla.com
 
@@ -75,6 +83,8 @@ baseline:
       The architecture of the device, (e.g. "arm", "x86").
     bugs:
       - 1497894
+    reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1512938#c3
     notification_emails:
       - telemetry-client-dev@mozilla.com
 
@@ -108,6 +118,8 @@ glean.internal.metrics:
     lifetime: user
     bugs:
       - 1497894
+    reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1512938#c3
     notification_emails:
       - telemetry-client-dev@mozilla.com
 

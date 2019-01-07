@@ -3,6 +3,22 @@
 A client-side telemetry SDK for collecting metrics and sending them to Mozilla's telemetry service
 (eventually replacing [service-telemetry](../telemetry/README.md)).
 
+- [Before using the library](#before-using-the-library)
+- [Usage](#usage)
+    - [Setting up the dependency](#setting-up-the-dependency)
+    - [Integrating with the build system](#integrating-with-the-build-system)
+    - [Initializing glean](#initializing-glean)
+    - [Defining metrics](#defining-metrics)
+- [License](#license)
+
+## Before using the library
+Products using glean to collect telemetry **must**:
+
+- add documentation for any new metric collected with the library in its repository (see [an example](https://github.com/mozilla-mobile/android-components/blob/df429df1a193516f796f2330863af384cce820bc/components/service/glean/docs/pings.md));
+- go through data review for the newly collected data by following [this process](https://wiki.mozilla.org/Firefox/Data_Collection);
+- provide a way for users to turn data collection off (e.g. providing settings to control
+  `Glean.setMetricsEnabled()`).
+
 ## Usage
 
 ### Setting up the dependency
@@ -69,6 +85,10 @@ and sending its [pings](docs/pings.md).
 The metrics that your application collects must be defined in a ``metrics.yaml``
 file. The format of that file is documented
 [here](https://mozilla.github.io/glean_parser/metrics-yaml.html).
+
+**Important**: as stated [here](#before-using-the-library), any new data collection requires
+documentation and data-review. This is also required for any new metric automatically collected
+by glean.
 
 ## License
 
