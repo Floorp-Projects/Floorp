@@ -189,7 +189,7 @@ void VRDisplayHost::StartFrame() {
    * processed.
    */
   if (isPresenting && mLastStartedFrame > 0 &&
-      mDisplayInfo.mDisplayState.mLastSubmittedFrameId < mLastStartedFrame &&
+      mDisplayInfo.mDisplayState.lastSubmittedFrameId < mLastStartedFrame &&
       duration < (double)ANDROID_MAX_FRAME_DURATION) {
     return;
   }
@@ -332,7 +332,7 @@ void VRDisplayHost::SubmitFrame(VRLayerParent* aLayer,
    */
   if (mLastSubmittedFrameId > 0 &&
       mLastSubmittedFrameId !=
-          mDisplayInfo.mDisplayState.mLastSubmittedFrameId) {
+          mDisplayInfo.mDisplayState.lastSubmittedFrameId) {
     mLastStartedFrame = 0;
     return;
   }

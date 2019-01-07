@@ -1940,7 +1940,7 @@ bool OpenVRSession::SubmitFrame(
     const mozilla::gfx::VRLayer_Stereo_Immersive& aLayer,
     const VRLayerTextureHandle& aTexture) {
   return SubmitFrame(aTexture, ::vr::ETextureType::TextureType_IOSurface,
-                     aLayer.mLeftEyeRect, aLayer.mRightEyeRect);
+                     aLayer.leftEyeRect, aLayer.rightEyeRect);
 }
 #endif
 
