@@ -400,23 +400,6 @@ var SitePermissions = {
     return this._defaultPrefBranch.getIntPref(permissionID, this.UNKNOWN);
   },
 
-  /*
-   * Return whether SitePermissions is permitted to store a TEMPORARY ALLOW
-   * state for a particular permission.
-   *
-   * @param {string} permissionID
-   *        The ID to get the state for.
-   *
-   * @return boolean Whether storing TEMPORARY ALLOW is permitted.
-   */
-  permitTemporaryAllow(permissionID) {
-    if (permissionID in gPermissionObject &&
-        gPermissionObject[permissionID].permitTemporaryAllow)
-      return gPermissionObject[permissionID].permitTemporaryAllow;
-
-    return false;
-  },
-
   /**
    * Returns the state and scope of a particular permission for a given URI.
    *
@@ -522,7 +505,7 @@ var SitePermissions = {
       // If you ever consider removing this line, you likely want to implement
       // a more fine-grained TemporaryPermissions that temporarily blocks for the
       // entire browser, but temporarily allows only for specific frames.
-      if (state != this.BLOCK && !this.permitTemporaryAllow(permissionID)) {
+      if (state != this.BLOCK) {
         throw "'Block' is the only permission we can save temporarily on a browser";
       }
 
@@ -712,7 +695,6 @@ var gPermissionObject = {
 
   "autoplay-media": {
     exactHostMatch: true,
-    permitTemporaryAllow: true,
     getDefault() {
       let state = Services.prefs.getIntPref("media.autoplay.default",
                                             Ci.nsIAutoplay.BLOCKED);
