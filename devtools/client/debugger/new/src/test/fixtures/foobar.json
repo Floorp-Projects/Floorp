@@ -1,0 +1,56 @@
+{
+  "sources": {
+    "sources": {
+      "fooSourceActor": {
+        "id": "fooSourceActor",
+        "url": "http://example.com/foo/foo.js",
+        "filename": "foo.js",
+        "pathname": "foo/foo.js"
+      },
+      "barSourceActor": {
+        "id": "barSourceActor",
+        "url": "http://example.com/bar/bar.js",
+        "filename": "bar.js",
+        "pathname": "bar/bar.js"
+      },
+      "bazzSourceActor": {
+        "id": "bazzSourceActor",
+        "url": "http://example.com/bazz/bazz.js",
+        "filename": "bazz.js",
+        "pathname": "bazz/bazz.js"
+      }
+    },
+    "sourcesText": {
+      "fooSourceActor": {
+        "contentType": "text/javascript",
+        "text": "function() {\n  return foo;\n}"
+      },
+      "barSourceActor": {
+        "contentType": "text/javascript",
+        "text": "function() {\n  return bar;\n}"
+      },
+      "bazzSourceActor": {
+        "contentType": "text/javascript",
+        "text": "function() {\n  return bazz;\n}"
+      }
+    }
+  },
+  "breakpoints": {
+    "breakpoints": {
+      "fooBreakpointActor": {
+        "id": "fooBreakpointActor",
+        "location": {
+          "sourceId": "fooSourceActor",
+          "line": 16
+        }
+      },
+      "barBreakpointActor": {
+        "id": "barBreakpointActor",
+        "location": {
+          "sourceId": "barSourceActor",
+          "line": 18
+        }
+      }
+    }
+  }
+}

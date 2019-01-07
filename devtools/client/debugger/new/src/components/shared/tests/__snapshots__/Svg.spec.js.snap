@@ -1,0 +1,15 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Svg renders with props 1`] = `
+<i
+  aria-label="label"
+  className="webpack class"
+  dangerouslySetInnerHTML={
+    Object {
+      "__html": "<svg></svg>",
+    }
+  }
+  onClick={[Function]}
+  src={null}
+/>
+`;

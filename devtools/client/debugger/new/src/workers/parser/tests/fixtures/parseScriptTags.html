@@ -1,0 +1,42 @@
+<html>
+<head>
+	<script type="text/javascript">
+		var globalObject = {
+			first: "name",
+			last: "words"
+		};
+		function sayHello (name) {
+			return `Hello, ${name}!`;
+		}
+	</script>
+	<style>
+		BODY {
+			font-size: 48px;
+			color: rebeccapurple;
+		}
+	</style>
+</head>
+<body>
+	<h1>Testing Script Tags in HTML</h1>
+	<script>
+		const capitalize = name => {
+			return name[0].toUpperCase() + name.substring(1)
+		};
+		const greetAll = ["my friend", "buddy", "world"]
+			.map(capitalize)
+			.map(sayHello)
+			.join("\n");
+
+		globalObject.greetings = greetAll;
+	</script>
+	<p>
+		Some arbitrary intermediate content to affect the offsets of the scripts
+	</p>
+	<script>
+		(function iife() {
+			const greeting = sayHello("Ryan");
+			console.log(greeting);
+		})();
+	</script>
+</body>
+</html>

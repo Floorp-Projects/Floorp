@@ -1,0 +1,233 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Expressions should always have unique keys 1`] = `
+<ul
+  className="pane expressions-list"
+>
+  <li
+    className="expression-container"
+    key="expression1"
+    onDoubleClick={[Function]}
+    title="expression1"
+  >
+    <div
+      className="expression-content"
+    >
+      <Component
+        autoExpandDepth={0}
+        createObjectClient={[Function]}
+        disableWrap={true}
+        focusable={false}
+        onDOMNodeClick={[Function]}
+        onInspectIconClick={[Function]}
+        roots={
+          Array [
+            Object {
+              "contents": Object {
+                "value": Object {
+                  "class": "",
+                  "value": undefined,
+                },
+              },
+              "name": "expression1",
+              "path": "expression1",
+            },
+          ]
+        }
+      />
+      <div
+        className="expression-container__close-btn"
+      >
+        <CloseButton
+          handleClick={[Function]}
+          tooltip="Remove watch expression"
+        />
+      </div>
+    </div>
+  </li>
+  <li
+    className="expression-container"
+    key="expression2"
+    onDoubleClick={[Function]}
+    title="expression2"
+  >
+    <div
+      className="expression-content"
+    >
+      <Component
+        autoExpandDepth={0}
+        createObjectClient={[Function]}
+        disableWrap={true}
+        focusable={false}
+        onDOMNodeClick={[Function]}
+        onInspectIconClick={[Function]}
+        roots={
+          Array [
+            Object {
+              "contents": Object {
+                "value": Object {
+                  "class": "",
+                  "value": undefined,
+                },
+              },
+              "name": "expression2",
+              "path": "expression2",
+            },
+          ]
+        }
+      />
+      <div
+        className="expression-container__close-btn"
+      >
+        <CloseButton
+          handleClick={[Function]}
+          tooltip="Remove watch expression"
+        />
+      </div>
+    </div>
+  </li>
+  <li
+    className="expression-input-container"
+  >
+    <form
+      className="expression-input-form"
+      onSubmit={[Function]}
+    >
+      <input
+        className="input-expression"
+        onBlur={[Function]}
+        onChange={[Function]}
+        onFocus={[Function]}
+        onKeyDown={[Function]}
+        placeholder="Add watch expression"
+        type="text"
+        value=""
+      />
+      <input
+        style={
+          Object {
+            "display": "none",
+          }
+        }
+        type="submit"
+      />
+    </form>
+  </li>
+</ul>
+`;
+
+exports[`Expressions should render 1`] = `
+<ul
+  className="pane expressions-list"
+>
+  <li
+    className="expression-container"
+    key="expression1"
+    onDoubleClick={[Function]}
+    title="expression1"
+  >
+    <div
+      className="expression-content"
+    >
+      <Component
+        autoExpandDepth={0}
+        createObjectClient={[Function]}
+        disableWrap={true}
+        focusable={false}
+        onDOMNodeClick={[Function]}
+        onInspectIconClick={[Function]}
+        roots={
+          Array [
+            Object {
+              "contents": Object {
+                "value": Object {
+                  "class": "",
+                  "value": "foo",
+                },
+              },
+              "name": "expression1",
+              "path": "expression1",
+            },
+          ]
+        }
+      />
+      <div
+        className="expression-container__close-btn"
+      >
+        <CloseButton
+          handleClick={[Function]}
+          tooltip="Remove watch expression"
+        />
+      </div>
+    </div>
+  </li>
+  <li
+    className="expression-container"
+    key="expression2"
+    onDoubleClick={[Function]}
+    title="expression2"
+  >
+    <div
+      className="expression-content"
+    >
+      <Component
+        autoExpandDepth={0}
+        createObjectClient={[Function]}
+        disableWrap={true}
+        focusable={false}
+        onDOMNodeClick={[Function]}
+        onInspectIconClick={[Function]}
+        roots={
+          Array [
+            Object {
+              "contents": Object {
+                "value": Object {
+                  "class": "",
+                  "value": "bar",
+                },
+              },
+              "name": "expression2",
+              "path": "expression2",
+            },
+          ]
+        }
+      />
+      <div
+        className="expression-container__close-btn"
+      >
+        <CloseButton
+          handleClick={[Function]}
+          tooltip="Remove watch expression"
+        />
+      </div>
+    </div>
+  </li>
+  <li
+    className="expression-input-container"
+  >
+    <form
+      className="expression-input-form"
+      onSubmit={[Function]}
+    >
+      <input
+        className="input-expression"
+        onBlur={[Function]}
+        onChange={[Function]}
+        onFocus={[Function]}
+        onKeyDown={[Function]}
+        placeholder="Add watch expression"
+        type="text"
+        value=""
+      />
+      <input
+        style={
+          Object {
+            "display": "none",
+          }
+        }
+        type="submit"
+      />
+    </form>
+  </li>
+</ul>
+`;
