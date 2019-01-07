@@ -1,0 +1,51 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ObjectInspector - getters & setters onInvokeGetterButtonClick + getter & setter 1`] = `
+"
+▼ root
+|    x: (>>)
+|  ▶︎ <get x()>: function x()
+|  ▶︎ <set x()>: function x()
+"
+`;
+
+exports[`ObjectInspector - getters & setters onInvokeGetterButtonClick + getter 1`] = `
+"
+▼ root
+|    x: (>>)
+|  ▶︎ <get x()>: function x()
+"
+`;
+
+exports[`ObjectInspector - getters & setters onInvokeGetterButtonClick + setter 1`] = `
+"
+▼ root
+|    x: Setter
+|  ▶︎ <set x()>: function x()
+"
+`;
+
+exports[`ObjectInspector - getters & setters renders getters and setters as expected 1`] = `
+"
+▼ root
+|    x: Getter & Setter
+|  ▶︎ <get x()>: function x()
+|  ▶︎ <set x()>: function x()
+"
+`;
+
+exports[`ObjectInspector - getters & setters renders getters as expected 1`] = `
+"
+▼ root
+|    x: Getter
+|  ▶︎ <get x()>: function x()
+"
+`;
+
+exports[`ObjectInspector - getters & setters renders setters as expected 1`] = `
+"
+▼ root
+|    x: Setter
+|  ▶︎ <set x()>: function x()
+"
+`;

@@ -1,0 +1,56 @@
+{
+  "name": "devtools-reps",
+  "version": "0.23.0",
+  "description": "Devtools Reps",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node bin/dev-server.js",
+    "lint-js": "eslint src",
+    "firefox": "./node_modules/.bin/start-firefox --start --location https://devtools-html.github.io/debugger-examples/",
+    "chrome": "./node_modules/.bin/start-chrome",
+    "license-check": "devtools-license-check",
+    "test": "jest --projects jest.config.js"
+  },
+  "author": "",
+  "license": "MPL-2.0",
+  "repository": {
+    "url": "git://github.com/devtools-html/reps.git",
+    "type": "git"
+  },
+  "engineStrict": true,
+  "engines": {
+    "node": ">=8.9.4"
+  },
+  "dependencies": {
+    "classnames": "^2.2.5",
+    "devtools-components": "^0.6.0",
+    "lodash": "^4.17.2",
+    "prop-types": "^15.6.0",
+    "react": "^16.4.1",
+    "react-dom": "^16.4.1",
+    "react-dom-factories": "^1.0.2",
+    "react-redux": "^5.0.7",
+    "redux": "^3.7.2"
+  },
+  "devDependencies": {
+    "@sucrase/webpack-object-rest-spread-plugin": "^1.0.0",
+    "babel-plugin-syntax-object-rest-spread": "^6.13.0",
+    "babel-plugin-transform-es2015-modules-commonjs": "^6.26.0",
+    "babel-preset-react": "^6.24.1",
+    "devtools-config": "^0.0.16",
+    "devtools-launchpad": "^0.0.141",
+    "devtools-license-check": "^0.7.0",
+    "devtools-modules": "~1.1.0",
+    "devtools-services": "^0.0.1",
+    "enzyme": "^3.3.0",
+    "enzyme-adapter-react-16": "^1.1.1",
+    "enzyme-to-json": "^3.3.1",
+    "eslint": "^5.0.0",
+    "eslint-plugin-mozilla": "1.0.4",
+    "fs-extra": "^7.0.0",
+    "immutable": "^3.8.2",
+    "postcss-url-mapper": "^1.2.0",
+    "react-immutable-proptypes": "^2.1.0",
+    "redux-logger": "=3.0.6"
+  }
+}

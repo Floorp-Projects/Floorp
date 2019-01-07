@@ -1,0 +1,19 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ExceptionOption renders with values 1`] = `
+<div
+  className="testClassName"
+  onClick={[Function]}
+>
+  <input
+    checked="checked"
+    onChange={[Function]}
+    type="checkbox"
+  />
+  <div
+    className="breakpoint-exceptions-label"
+  >
+    testLabel
+  </div>
+</div>
+`;
