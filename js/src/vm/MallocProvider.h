@@ -49,8 +49,8 @@ namespace js {
 template <class Client>
 struct MallocProvider {
   template <class T>
-  T* maybe_pod_malloc(size_t numElems) {
-    T* p = js_pod_malloc<T>(numElems);
+  T* maybe_pod_malloc(size_t numElems, arena_id_t arena = js::MallocArena) {
+    T* p = js_pod_arena_malloc<T>(arena, numElems);
     if (MOZ_LIKELY(p)) {
       client()->updateMallocCounter(numElems * sizeof(T));
     }
@@ -85,8 +85,8 @@ struct MallocProvider {
   }
 
   template <class T>
-  T* pod_malloc(size_t numElems) {
-    T* p = maybe_pod_malloc<T>(numElems);
+  T* pod_malloc(size_t numElems, arena_id_t arena = js::MallocArena) {
+    T* p = maybe_pod_malloc<T>(numElems, arena);
     if (MOZ_LIKELY(p)) {
       return p;
     }
