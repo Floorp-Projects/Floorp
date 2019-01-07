@@ -591,7 +591,7 @@ pref("media.recorder.audio_node.enabled", false);
 pref("media.recorder.video.frame_drops", true);
 
 // Whether to autostart a media element with an |autoplay| attribute.
-// ALLOWED=0, BLOCKED=1, PROMPT=2, defined in dom/media/Autoplay.idl
+// ALLOWED=0, BLOCKED=1, defined in dom/media/Autoplay.idl
 pref("media.autoplay.default", 0);
 
 // By default, don't block WebAudio from playing automatically.
