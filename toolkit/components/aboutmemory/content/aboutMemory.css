@@ -54,7 +54,7 @@ div.sidebarContents {
   top: 0.5em;
 }
 
-div.index {
+div.sidebarItem {
   padding: 0.5em;
   margin: 1em 0em;
   border: 1px solid ThreeDShadow;
@@ -64,13 +64,17 @@ div.index {
   -moz-user-select: none;  /* no need to include this when cutting+pasting */
 }
 
-ul.indexList {
+input.filterInput {
+  width: calc(100% - 1em);
+}
+
+ul.index {
   list-style-position: inside;
   margin: 0;
   padding: 0;
 }
 
-ul.indexList > li {
+ul.index > li {
   padding-left: 0.5em;
 }
 
@@ -85,7 +89,7 @@ div.opsRow {
   display: inline-block;
 }
 
-div.opsRowLabel, div.indexLabel {
+div.opsRowLabel, div.sidebarLabel {
   display: block;
   margin-bottom: 0.2em;
   font-weight: bold;
