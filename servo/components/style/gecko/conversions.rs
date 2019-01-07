@@ -10,7 +10,6 @@
 
 #![allow(unsafe_code)]
 
-use app_units::Au;
 use crate::gecko::values::GeckoStyleCoordConvertible;
 use crate::gecko_bindings::bindings;
 use crate::gecko_bindings::structs::RawGeckoGfxMatrix4x4;
@@ -25,11 +24,12 @@ use crate::values::computed::{Angle, CalcLengthOrPercentage, Gradient, Image};
 use crate::values::computed::{Integer, LengthOrPercentage};
 use crate::values::computed::{LengthOrPercentageOrAuto, NonNegativeLengthOrPercentageOrAuto};
 use crate::values::computed::{Percentage, TextAlign};
-use crate::values::generics::NonNegative;
 use crate::values::generics::box_::VerticalAlign;
 use crate::values::generics::grid::{TrackListValue, TrackSize};
 use crate::values::generics::image::{CompatMode, GradientItem, Image as GenericImage};
 use crate::values::generics::rect::Rect;
+use crate::values::generics::NonNegative;
+use app_units::Au;
 use std::f32::consts::PI;
 
 impl From<CalcLengthOrPercentage> for nsStyleCoord_CalcValue {
@@ -677,11 +677,11 @@ pub mod basic_shape {
     use crate::values::generics::basic_shape::{
         BasicShape as GenericBasicShape, InsetRect, Polygon,
     };
-    use crate::values::generics::NonNegative;
     use crate::values::generics::basic_shape::{Circle, Ellipse, Path, PolygonCoord};
     use crate::values::generics::basic_shape::{GeometryBox, ShapeBox, ShapeSource};
     use crate::values::generics::border::BorderRadius as GenericBorderRadius;
     use crate::values::generics::rect::Rect;
+    use crate::values::generics::NonNegative;
     use crate::values::specified::SVGPathData;
     use std::borrow::Borrow;
 
@@ -841,10 +841,17 @@ pub mod basic_shape {
         fn from(other: &'a nsStyleCorners) -> Self {
             let get_corner = |index| {
                 BorderCornerRadius::new(
-                    NonNegative(LengthOrPercentage::from_gecko_style_coord(&other.data_at(index))
-                        .expect("<border-radius> should be a length, percentage, or calc value")),
-                    NonNegative(LengthOrPercentage::from_gecko_style_coord(&other.data_at(index + 1))
-                        .expect("<border-radius> should be a length, percentage, or calc value")),
+                    NonNegative(
+                        LengthOrPercentage::from_gecko_style_coord(&other.data_at(index)).expect(
+                            "<border-radius> should be a length, percentage, or calc value",
+                        ),
+                    ),
+                    NonNegative(
+                        LengthOrPercentage::from_gecko_style_coord(&other.data_at(index + 1))
+                            .expect(
+                                "<border-radius> should be a length, percentage, or calc value",
+                            ),
+                    ),
                 )
             };
 
