@@ -609,6 +609,8 @@ class ExecuteAsyncScriptRun(object):
             # Also, should check after the test if the firefox process is still running
             # and otherwise ignore any other result and set it to crash
             self.result = False, ("CRASH", None)
+        except errors.NoSuchWindowException:
+            self.result = False, ("CRASH", None)
         except Exception as e:
             message = getattr(e, "message", "")
             if message:
