@@ -431,17 +431,22 @@ public class TelemetryTest {
                 .addPingBuilder(pingBuilder);
         TelemetryHolder.set(telemetry);
 
-        TelemetryEvent.create("action", "type", "search_bar").queue();
-        TelemetryEvent.create("action", "type_query", "search_bar").queue();
-        TelemetryEvent.create("action", "click", "erase_button").queue();
+        {
+            final TelemetryPocketEventPingBuilder pocketPingBuilder =
+                    (TelemetryPocketEventPingBuilder) telemetry.getPingBuilder(TelemetryPocketEventPingBuilder.TYPE);
+
+            assertNotNull(pocketPingBuilder);
+
+            pocketPingBuilder.getEventsMeasurement()
+                    .add(TelemetryEvent.create("action", "type", "search_bar"))
+                    .add(TelemetryEvent.create("action", "type_query", "search_bar"))
+                    .add(TelemetryEvent.create("action", "click", "erase_button"));
+        }
 
         telemetry.queuePing(TelemetryPocketEventPingBuilder.TYPE);
         telemetry.scheduleUpload();
 
         TestUtils.waitForExecutor(telemetry);
-
-        int a = storage.countStoredPings(TelemetryPocketEventPingBuilder.TYPE);
-        int b = telemetry.getStorage().countStoredPings(TelemetryPocketEventPingBuilder.TYPE);
 
         assertEquals(1, storage.countStoredPings(TelemetryPocketEventPingBuilder.TYPE));
 

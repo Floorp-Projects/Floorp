@@ -5,6 +5,7 @@
 package org.mozilla.telemetry;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.RestrictTo;
 import android.support.annotation.VisibleForTesting;
 
@@ -58,6 +59,14 @@ public class Telemetry {
         return this;
     }
 
+    /**
+     * Returns a previously added ping builder or null if no ping builder of the given type has been added.
+     */
+    @Nullable
+    public TelemetryPingBuilder getPingBuilder(final String pingType) {
+        return pingBuilders.get(pingType);
+    }
+
     public Telemetry queuePing(final String pingType) {
         if (!configuration.isCollectionEnabled()) {
             return this;
@@ -96,7 +105,6 @@ public class Telemetry {
                 // ping type and then falling back on the legacy ping type.
                 final TelemetryPingBuilder mobileEventBuilder = pingBuilders.get(TelemetryMobileEventPingBuilder.TYPE);
                 final TelemetryPingBuilder focusEventBuilder = pingBuilders.get(TelemetryEventPingBuilder.TYPE);
-                final TelemetryPingBuilder pocketEventBuilder = pingBuilders.get(TelemetryPocketEventPingBuilder.TYPE);
                 final EventsMeasurement measurement;
                 final String addedPingType;
                 if (mobileEventBuilder != null) {
@@ -105,9 +113,6 @@ public class Telemetry {
                 } else if (focusEventBuilder != null) {
                     measurement = ((TelemetryEventPingBuilder) focusEventBuilder).getEventsMeasurement();
                     addedPingType = focusEventBuilder.getType();
-                } else if (pocketEventBuilder != null) {
-                    measurement = ((TelemetryPocketEventPingBuilder) pocketEventBuilder).getEventsMeasurement();
-                    addedPingType = pocketEventBuilder.getType();
                 } else {
                     throw new IllegalStateException("Expect either TelemetryEventPingBuilder or " +
                             "TelemetryMobileEventPingBuilder to be added to queue events");

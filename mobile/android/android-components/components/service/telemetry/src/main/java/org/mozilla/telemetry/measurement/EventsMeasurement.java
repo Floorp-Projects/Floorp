@@ -44,8 +44,9 @@ public class EventsMeasurement extends TelemetryMeasurement {
         this.logger = new Logger("telemetry/events");
     }
 
-    public void add(final TelemetryEvent event) {
+    public EventsMeasurement add(final TelemetryEvent event) {
         saveEventToDisk(event);
+        return this;
     }
 
     @Override
