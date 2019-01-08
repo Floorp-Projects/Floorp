@@ -100,6 +100,22 @@ pub struct OpacityBindingInfo {
     changed: bool,
 }
 
+/// Information stored in a tile descriptor for an opacity binding.
+#[derive(Debug, PartialEq, Clone)]
+pub enum OpacityBinding {
+    Value(f32),
+    Binding(PropertyBindingId),
+}
+
+impl From<PropertyBinding<f32>> for OpacityBinding {
+    fn from(binding: PropertyBinding<f32>) -> OpacityBinding {
+        match binding {
+            PropertyBinding::Binding(key, _) => OpacityBinding::Binding(key.id),
+            PropertyBinding::Value(value) => OpacityBinding::Value(value),
+        }
+    }
+}
+
 /// A stable ID for a given tile, to help debugging.
 #[derive(Debug, Copy, Clone)]
 struct TileId(usize);
@@ -195,7 +211,7 @@ pub struct TileDescriptor {
 
     /// The set of opacity bindings that this tile depends on.
     // TODO(gw): Ugh, get rid of all opacity binding support!
-    opacity_bindings: ComparableVec<PropertyBindingId>,
+    opacity_bindings: ComparableVec<OpacityBinding>,
 
     /// List of the required valid rectangles for each primitive.
     needed_rects: Vec<WorldRect>,
@@ -605,14 +621,16 @@ impl TileCache {
             }
 
             // Invalidate the tile if any opacity bindings changed.
-            for id in tile.descriptor.opacity_bindings.items() {
-                let changed = match self.opacity_bindings.get(id) {
-                    Some(info) => info.changed,
-                    None => true,
-                };
-                if changed {
-                    tile.is_valid = false;
-                    break;
+            for binding in tile.descriptor.opacity_bindings.items() {
+                if let OpacityBinding::Binding(id) = binding {
+                    let changed = match self.opacity_bindings.get(id) {
+                        Some(info) => info.changed,
+                        None => true,
+                    };
+                    if changed {
+                        tile.is_valid = false;
+                        break;
+                    }
                 }
             }
 
@@ -700,7 +718,7 @@ impl TileCache {
         let (p0, p1) = self.get_tile_coords_for_rect(&world_rect);
 
         // Build the list of resources that this primitive has dependencies on.
-        let mut opacity_bindings: SmallVec<[PropertyBindingId; 4]> = SmallVec::new();
+        let mut opacity_bindings: SmallVec<[OpacityBinding; 4]> = SmallVec::new();
         let mut clip_chain_uids: SmallVec<[ItemUid; 8]> = SmallVec::new();
         let mut clip_vertices: SmallVec<[LayoutPoint; 8]> = SmallVec::new();
         let mut image_keys: SmallVec<[ImageKey; 8]> = SmallVec::new();
@@ -729,9 +747,7 @@ impl TileCache {
                 // Pictures can depend on animated opacity bindings.
                 let pic = &pictures[pic_index.0];
                 if let Some(PictureCompositeMode::Filter(FilterOp::Opacity(binding, _))) = pic.requested_composite_mode {
-                    if let PropertyBinding::Binding(key, _) = binding {
-                        opacity_bindings.push(key.id);
-                    }
+                    opacity_bindings.push(binding.into());
                 }
 
                 false
@@ -740,9 +756,7 @@ impl TileCache {
                 if opacity_binding_index != OpacityBindingIndex::INVALID {
                     let opacity_binding = &opacity_binding_store[opacity_binding_index];
                     for binding in &opacity_binding.bindings {
-                        if let PropertyBinding::Binding(key, _) = binding {
-                            opacity_bindings.push(key.id);
-                        }
+                        opacity_bindings.push(OpacityBinding::from(*binding));
                     }
                 }
 
@@ -756,9 +770,7 @@ impl TileCache {
                 if opacity_binding_index != OpacityBindingIndex::INVALID {
                     let opacity_binding = &opacity_binding_store[opacity_binding_index];
                     for binding in &opacity_binding.bindings {
-                        if let PropertyBinding::Binding(key, _) = binding {
-                            opacity_bindings.push(key.id);
-                        }
+                        opacity_bindings.push(OpacityBinding::from(*binding));
                     }
                 }
 
