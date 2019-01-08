@@ -12,6 +12,7 @@ import actions from "../../actions";
 import {
   getRelativeSources,
   getActiveSearch,
+  getProjectDirectoryRoot,
   getSelectedPrimaryPaneTab,
   getThreads
 } from "../../selectors";
@@ -36,6 +37,7 @@ type Props = {
   selectedTab: SelectedPrimaryPaneTabType,
   sources: SourcesMapByThread,
   horizontal: boolean,
+  projectRoot: string,
   sourceSearchOn: boolean,
   setPrimaryPaneTab: typeof actions.setPrimaryPaneTab,
   setActiveSearch: typeof actions.setActiveSearch,
@@ -103,7 +105,7 @@ class PrimaryPanes extends Component<Props, State> {
   }
 
   render() {
-    const { selectedTab } = this.props;
+    const { selectedTab, projectRoot } = this.props;
     const activeIndex = selectedTab === "sources" ? 0 : 1;
 
     return (
@@ -115,7 +117,12 @@ class PrimaryPanes extends Component<Props, State> {
         <TabList className="source-outline-tabs">
           {this.renderOutlineTabs()}
         </TabList>
-        <TabPanels className="source-outline-panel" hasFocusableContent>
+        <TabPanels
+          className={classnames("source-outline-panel", {
+            "has-root": projectRoot
+          })}
+          hasFocusableContent
+        >
           <div>{this.renderThreadSources()}</div>
           <Outline
             alphabetizeOutline={this.state.alphabetizeOutline}
@@ -131,7 +138,8 @@ const mapStateToProps = state => ({
   selectedTab: getSelectedPrimaryPaneTab(state),
   sources: getRelativeSources(state),
   sourceSearchOn: getActiveSearch(state) === "source",
-  threads: getThreads(state)
+  threads: getThreads(state),
+  projectRoot: getProjectDirectoryRoot(state)
 });
 
 const connector = connect(
