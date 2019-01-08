@@ -29,6 +29,8 @@ interface nsIGfxInfo : nsISupports
   readonly attribute boolean ContentUsesTiling;
   readonly attribute boolean OffMainThreadPaintEnabled;
   readonly attribute long OffMainThreadPaintWorkerCount;
+  readonly attribute boolean LowEndMachine;
+  readonly attribute unsigned long TargetFrameRate;
 
   // XXX: Switch to a list of devices, rather than explicitly numbering them.
 

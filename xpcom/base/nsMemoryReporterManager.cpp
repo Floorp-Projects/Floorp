@@ -2439,6 +2439,18 @@ nsMemoryReporterManager::GetJSMainRuntimeTemporaryPeak(int64_t* aAmount) {
 }
 
 NS_IMETHODIMP
+nsMemoryReporterManager::GetJSMainRuntimeCompartmentsSystem(int64_t* aAmount) {
+  return GetInfallibleAmount(mAmountFns.mJSMainRuntimeCompartmentsSystem,
+                             aAmount);
+}
+
+NS_IMETHODIMP
+nsMemoryReporterManager::GetJSMainRuntimeCompartmentsUser(int64_t* aAmount) {
+  return GetInfallibleAmount(mAmountFns.mJSMainRuntimeCompartmentsUser,
+                             aAmount);
+}
+
+NS_IMETHODIMP
 nsMemoryReporterManager::GetJSMainRuntimeRealmsSystem(int64_t* aAmount) {
   return GetInfallibleAmount(mAmountFns.mJSMainRuntimeRealmsSystem, aAmount);
 }
@@ -2701,6 +2713,9 @@ nsresult UnregisterWeakMemoryReporter(nsIMemoryReporter* aReporter) {
 
 DEFINE_REGISTER_DISTINGUISHED_AMOUNT(Infallible, JSMainRuntimeGCHeap)
 DEFINE_REGISTER_DISTINGUISHED_AMOUNT(Infallible, JSMainRuntimeTemporaryPeak)
+DEFINE_REGISTER_DISTINGUISHED_AMOUNT(Infallible,
+                                     JSMainRuntimeCompartmentsSystem)
+DEFINE_REGISTER_DISTINGUISHED_AMOUNT(Infallible, JSMainRuntimeCompartmentsUser)
 DEFINE_REGISTER_DISTINGUISHED_AMOUNT(Infallible, JSMainRuntimeRealmsSystem)
 DEFINE_REGISTER_DISTINGUISHED_AMOUNT(Infallible, JSMainRuntimeRealmsUser)
 

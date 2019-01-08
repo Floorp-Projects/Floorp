@@ -1,0 +1,142 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+.result-list {
+  list-style: none;
+  margin: 0px;
+  padding: 0px;
+  overflow: auto;
+  width: calc(100% - 1px); /* 1px fixes the hidden right border */
+  background: var(--theme-body-background);
+}
+
+.result-list * {
+  -moz-user-select: none;
+  user-select: none;
+}
+
+.result-list li {
+  color: var(--theme-body-color);
+  padding: 4px 13px;
+  display: flex;
+}
+
+.result-list.big li {
+  padding: 5px;
+  flex-direction: row;
+  line-height: 18px;
+  font-size: 12px;
+}
+
+.result-list.small li {
+  justify-content: space-between;
+}
+
+.result-list li:hover {
+  background: var(--theme-tab-toolbar-background);
+}
+
+.result-list li.selected {
+  background: var(--accordion-header-background);
+}
+
+.result-list.small li.selected {
+  background-color: var(--theme-selection-background);
+  color: white;
+}
+
+.theme-dark .result-list.small li.selected {
+  background-color: var(--theme-body-background);
+}
+
+.theme-dark .result-list li:hover {
+  background: var(--grey-70);
+}
+
+.theme-dark .result-list li.selected {
+  background: var(--grey-70);
+}
+
+.result-list li .result-item-icon {
+  background-color: var(--theme-comment);
+}
+.result-list li.selected .result-item-icon {
+  background-color: var(--theme-selection-color);
+}
+
+.result-list li .result-item-icon.tab {
+  mask-size: 150%;
+  mask-position: 2px 4px;
+}
+
+.result-list li .img.result-item-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.result-list li .title {
+  word-break: break-all;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  /** https://searchfox.org/mozilla-central/source/devtools/client/themes/variables.css **/
+  color: var(--grey-90);
+}
+
+.theme-dark .result-list li .title {
+  /** https://searchfox.org/mozilla-central/source/devtools/client/themes/variables.css **/
+  color: var(--grey-30);
+}
+
+.result-list li.selected .title {
+  color: white;
+}
+
+.result-list.big li.selected {
+  background-color: var(--theme-selection-background);
+  color: white;
+}
+
+.result-list.big li.selected .subtitle {
+  color: white;
+}
+
+.result-list.big li.selected .subtitle .highlight {
+  color: white;
+  font-weight: bold;
+}
+
+.result-list.big li .subtitle {
+  word-break: break-all;
+  /** https://searchfox.org/mozilla-central/source/devtools/client/themes/variables.css **/
+  color: var(--grey-40);
+  margin-left: 15px;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.result-list.big li .subtitle {
+  line-height: 1.5em;
+}
+
+.theme-dark .result-list.big li.selected .subtitle {
+  color: white;
+}
+
+.theme-dark .result-list.big li .subtitle {
+  color: var(--theme-comment-alt);
+}
+
+.search-bar .result-list li.selected .subtitle {
+  color: white;
+}
+
+.search-bar .result-list {
+  border-bottom: 1px solid var(--theme-splitter-color);
+}
+
+.theme-dark .result-list {
+  background-color: var(--theme-body-background);
+}

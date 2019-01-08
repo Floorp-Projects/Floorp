@@ -144,6 +144,8 @@ class nsMemoryReporterManager final : public nsIMemoryReporterManager,
   struct AmountFns {
     mozilla::InfallibleAmountFn mJSMainRuntimeGCHeap;
     mozilla::InfallibleAmountFn mJSMainRuntimeTemporaryPeak;
+    mozilla::InfallibleAmountFn mJSMainRuntimeCompartmentsSystem;
+    mozilla::InfallibleAmountFn mJSMainRuntimeCompartmentsUser;
     mozilla::InfallibleAmountFn mJSMainRuntimeRealmsSystem;
     mozilla::InfallibleAmountFn mJSMainRuntimeRealmsUser;
 

@@ -1,0 +1,101 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+.source-footer {
+  background: var(--theme-body-background);
+  border-top: 1px solid var(--theme-splitter-color);
+  position: absolute;
+  display: flex;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  opacity: 1;
+  z-index: 1;
+  -moz-user-select: none;
+  user-select: none;
+  height: var(--editor-footer-height);
+  box-sizing: border-box;
+  justify-content: space-between;
+}
+
+.source-footer .commands {
+  display: flex;
+  align-items: center;
+}
+
+.source-footer .commands * {
+  -moz-user-select: none;
+  user-select: none;
+}
+
+.source-footer > .commands > .action {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: opacity 200ms;
+  border: none;
+  background: transparent;
+  padding: 6px;
+}
+
+.source-footer > .commands > .action .img {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.source-footer > .commands > button.action:hover {
+  background: var(--theme-toolbar-background-hover);
+}
+
+:root.theme-dark .source-footer > .commands > .action {
+  fill: var(--theme-body-color);
+}
+
+:root.theme-dark .source-footer > .commands > .action:hover {
+  fill: var(--theme-selection-color);
+}
+
+.source-footer > .commands > div.loader {
+  vertical-align: top;
+  width: 20px;
+  margin: 0 4px;
+}
+
+.source-footer > .commands > .action > .img.prettyPrint {
+  mask: url(/images/prettyPrint.svg) no-repeat;
+  height: 16px;
+  width: 16px;
+  background: var(--theme-body-color);
+}
+
+.source-footer > .commands > .action > .img.blackBox {
+  mask: url(/images/blackBox.svg) no-repeat;
+  height: 16px;
+  width: 16px;
+  background: var(--theme-body-color);
+}
+
+.source-footer > .commands > .blackboxed > .img.blackBox {
+  background: var(--theme-highlight-blue);
+}
+
+.source-footer .blackbox-summary,
+.source-footer .mapped-source,
+.source-footer .cursor-position {
+  color: var(--theme-body-color);
+  padding-left: 2.5px;
+}
+
+.source-footer .mapped-source {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.source-footer .cursor-position {
+  padding: 5px;
+  white-space: nowrap;
+}
