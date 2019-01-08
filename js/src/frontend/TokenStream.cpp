@@ -748,7 +748,7 @@ MOZ_COLD void TokenStreamChars<Utf8Unit, AnyCharsAccess>::internalEncodingError(
     }
 
     ReportCompileError(anyChars.cx, std::move(err), std::move(notes),
-                       JSREPORT_ERROR, errorNumber, args);
+                       JSREPORT_ERROR, errorNumber, &args);
   } while (false);
 
   va_end(args);
@@ -1307,19 +1307,19 @@ bool TokenStreamSpecific<Unit, AnyCharsAccess>::reportStrictModeErrorNumberVA(
 
   if (strictMode) {
     ReportCompileError(anyChars.cx, std::move(metadata), std::move(notes),
-                       JSREPORT_ERROR, errorNumber, *args);
+                       JSREPORT_ERROR, errorNumber, args);
     return false;
   }
 
   return anyChars.compileWarning(std::move(metadata), std::move(notes),
                                  JSREPORT_WARNING | JSREPORT_STRICT,
-                                 errorNumber, *args);
+                                 errorNumber, args);
 }
 
 bool TokenStreamAnyChars::compileWarning(ErrorMetadata&& metadata,
                                          UniquePtr<JSErrorNotes> notes,
                                          unsigned flags, unsigned errorNumber,
-                                         va_list args) {
+                                         va_list* args) {
   if (options().werrorOption) {
     flags &= ~JSREPORT_WARNING;
     ReportCompileError(cx, std::move(metadata), std::move(notes), flags,
@@ -1551,7 +1551,7 @@ void TokenStreamSpecific<Unit, AnyCharsAccess>::reportError(
   ErrorMetadata metadata;
   if (computeErrorMetadata(&metadata, anyChars.currentToken().pos.begin)) {
     ReportCompileError(anyChars.cx, std::move(metadata), nullptr,
-                       JSREPORT_ERROR, errorNumber, args);
+                       JSREPORT_ERROR, errorNumber, &args);
   }
 
   va_end(args);
@@ -1561,13 +1561,13 @@ void TokenStreamAnyChars::reportErrorNoOffset(unsigned errorNumber, ...) {
   va_list args;
   va_start(args, errorNumber);
 
-  reportErrorNoOffsetVA(errorNumber, args);
+  reportErrorNoOffsetVA(errorNumber, &args);
 
   va_end(args);
 }
 
 void TokenStreamAnyChars::reportErrorNoOffsetVA(unsigned errorNumber,
-                                                va_list args) {
+                                                va_list* args) {
   ErrorMetadata metadata;
   computeErrorMetadataNoOffset(&metadata);
 
@@ -1586,7 +1586,7 @@ bool TokenStreamSpecific<Unit, AnyCharsAccess>::warning(unsigned errorNumber,
       computeErrorMetadata(&metadata,
                            anyCharsAccess().currentToken().pos.begin) &&
       anyCharsAccess().compileWarning(std::move(metadata), nullptr,
-                                      JSREPORT_WARNING, errorNumber, args);
+                                      JSREPORT_WARNING, errorNumber, &args);
 
   va_end(args);
   return result;
@@ -1608,7 +1608,7 @@ bool TokenStreamSpecific<Unit, AnyCharsAccess>::reportExtraWarningErrorNumberVA(
 
   return anyChars.compileWarning(std::move(metadata), std::move(notes),
                                  JSREPORT_STRICT | JSREPORT_WARNING,
-                                 errorNumber, *args);
+                                 errorNumber, args);
 }
 
 template <typename Unit, class AnyCharsAccess>
@@ -1621,7 +1621,7 @@ void TokenStreamSpecific<Unit, AnyCharsAccess>::error(unsigned errorNumber,
   if (computeErrorMetadata(&metadata, this->sourceUnits.offset())) {
     TokenStreamAnyChars& anyChars = anyCharsAccess();
     ReportCompileError(anyChars.cx, std::move(metadata), nullptr,
-                       JSREPORT_ERROR, errorNumber, args);
+                       JSREPORT_ERROR, errorNumber, &args);
   }
 
   va_end(args);
@@ -1635,7 +1635,7 @@ void TokenStreamSpecific<Unit, AnyCharsAccess>::errorAtVA(uint32_t offset,
   if (computeErrorMetadata(&metadata, offset)) {
     TokenStreamAnyChars& anyChars = anyCharsAccess();
     ReportCompileError(anyChars.cx, std::move(metadata), nullptr,
-                       JSREPORT_ERROR, errorNumber, *args);
+                       JSREPORT_ERROR, errorNumber, args);
   }
 }
 

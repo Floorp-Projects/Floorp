@@ -141,7 +141,7 @@ void GeneralParser<ParseHandler, Unit>::error(unsigned errorNumber, ...) {
   ErrorMetadata metadata;
   if (tokenStream.computeErrorMetadata(&metadata, pos().begin)) {
     ReportCompileError(context, std::move(metadata), nullptr, JSREPORT_ERROR,
-                       errorNumber, args);
+                       errorNumber, &args);
   }
 
   va_end(args);
@@ -156,7 +156,7 @@ void GeneralParser<ParseHandler, Unit>::errorWithNotes(
   ErrorMetadata metadata;
   if (tokenStream.computeErrorMetadata(&metadata, pos().begin)) {
     ReportCompileError(context, std::move(metadata), std::move(notes),
-                       JSREPORT_ERROR, errorNumber, args);
+                       JSREPORT_ERROR, errorNumber, &args);
   }
 
   va_end(args);
@@ -171,7 +171,7 @@ void GeneralParser<ParseHandler, Unit>::errorAt(uint32_t offset,
   ErrorMetadata metadata;
   if (tokenStream.computeErrorMetadata(&metadata, offset)) {
     ReportCompileError(context, std::move(metadata), nullptr, JSREPORT_ERROR,
-                       errorNumber, args);
+                       errorNumber, &args);
   }
 
   va_end(args);
@@ -186,7 +186,7 @@ void GeneralParser<ParseHandler, Unit>::errorWithNotesAt(
   ErrorMetadata metadata;
   if (tokenStream.computeErrorMetadata(&metadata, offset)) {
     ReportCompileError(context, std::move(metadata), std::move(notes),
-                       JSREPORT_ERROR, errorNumber, args);
+                       JSREPORT_ERROR, errorNumber, &args);
   }
 
   va_end(args);
@@ -200,7 +200,7 @@ bool GeneralParser<ParseHandler, Unit>::warning(unsigned errorNumber, ...) {
   ErrorMetadata metadata;
   bool result = tokenStream.computeErrorMetadata(&metadata, pos().begin) &&
                 anyChars.compileWarning(std::move(metadata), nullptr,
-                                        JSREPORT_WARNING, errorNumber, args);
+                                        JSREPORT_WARNING, errorNumber, &args);
 
   va_end(args);
   return result;
@@ -216,7 +216,7 @@ bool GeneralParser<ParseHandler, Unit>::warningAt(uint32_t offset,
   bool result = tokenStream.computeErrorMetadata(&metadata, offset);
   if (result) {
     result = anyChars.compileWarning(std::move(metadata), nullptr,
-                                     JSREPORT_WARNING, errorNumber, args);
+                                     JSREPORT_WARNING, errorNumber, &args);
   }
 
   va_end(args);
@@ -285,7 +285,7 @@ bool ParserBase::warningNoOffset(unsigned errorNumber, ...) {
   anyChars.computeErrorMetadataNoOffset(&metadata);
 
   bool result = anyChars.compileWarning(std::move(metadata), nullptr,
-                                        JSREPORT_WARNING, errorNumber, args);
+                                        JSREPORT_WARNING, errorNumber, &args);
 
   va_end(args);
   return result;
@@ -299,7 +299,7 @@ void ParserBase::errorNoOffset(unsigned errorNumber, ...) {
   anyChars.computeErrorMetadataNoOffset(&metadata);
 
   ReportCompileError(context, std::move(metadata), nullptr, JSREPORT_ERROR,
-                     errorNumber, args);
+                     errorNumber, &args);
 
   va_end(args);
 }
