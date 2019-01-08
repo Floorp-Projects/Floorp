@@ -1331,6 +1331,8 @@ Document::Document(const char* aContentType)
       mSubDocuments(nullptr),
       mHeaderData(nullptr),
       mFlashClassification(FlashClassification::Unknown),
+      mScrollAnchorAdjustmentLength(0),
+      mScrollAnchorAdjustmentCount(0),
       mBoxObjectTable(nullptr),
       mCurrentOrientationAngle(0),
       mCurrentOrientationType(OrientationType::Portrait_primary),
@@ -6916,6 +6918,11 @@ void Document::UpdateViewportOverflowType(nscoord aScrolledWidth,
   }
 }
 
+void Document::UpdateForScrollAnchorAdjustment(nscoord aLength) {
+  mScrollAnchorAdjustmentLength += abs(aLength);
+  mScrollAnchorAdjustmentCount += 1;
+}
+
 EventListenerManager* Document::GetOrCreateListenerManager() {
   if (!mListenerManager) {
     mListenerManager =
@@ -11342,6 +11349,15 @@ void Document::ReportUseCounters(UseCounterReportKind aKind) {
 #undef CASE_OVERFLOW_TYPE
     }
     Telemetry::AccumulateCategorical(label);
+  }
+
+  if (IsTopLevelContentDocument()) {
+    CSSIntCoord adjustmentLength =
+        CSSPixel::FromAppUnits(mScrollAnchorAdjustmentLength).Rounded();
+    Telemetry::Accumulate(Telemetry::SCROLL_ANCHOR_ADJUSTMENT_LENGTH,
+                          adjustmentLength);
+    Telemetry::Accumulate(Telemetry::SCROLL_ANCHOR_ADJUSTMENT_COUNT,
+                          mScrollAnchorAdjustmentCount);
   }
 }
 

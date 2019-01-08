@@ -14532,5 +14532,31 @@
     "n_buckets": 50,
     "bug_numbers": [1499418],
     "description": "GeckoView: Time taken to initialize all GeckoView modules in ms."
+  },
+  "SCROLL_ANCHOR_ADJUSTMENT_LENGTH": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": [
+      "rhunt@mozilla.com"
+    ],
+    "expires_in_version": "70",
+    "kind": "exponential",
+    "low": 1,
+    "high": 10000,
+    "n_buckets": 50,
+    "bug_numbers": [1518624],
+    "description": "The absolute length in CSS pixels of all scroll adjustments performed by scroll anchoring in a top-level document."
+  },
+  "SCROLL_ANCHOR_ADJUSTMENT_COUNT": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": [
+      "rhunt@mozilla.com"
+    ],
+    "expires_in_version": "70",
+    "kind": "exponential",
+    "low": 1,
+    "high": 500,
+    "n_buckets": 50,
+    "bug_numbers": [1518624],
+    "description": "The amount of scroll adjustments performed by scroll anchoring in a top-level document."
   }
 }
