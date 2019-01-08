@@ -1528,7 +1528,7 @@ void WarnWrongMIMEOfScript(nsHttpChannel *aChannel, nsIURI *aURI,
   NS_ConvertUTF8toUTF16 typeString(contentType);
   if (!nsContentUtils::IsJavascriptMIMEType(typeString)) {
     ReportMimeTypeMismatch(aChannel, "WarnScriptWithWrongMimeType", aURI,
-                           contentType, Report::Error);
+                           contentType, Report::Warning);
   }
 }
 
