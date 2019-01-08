@@ -63,6 +63,10 @@
   padding: 0;
 }
 
+@notKeyfocus@ .downloadsPanelFooterButton:-moz-focusring {
+  outline: none;
+}
+
 #downloadsSummary {
   /* Reserve the same space as the button and separator in download items. */
   padding-inline-end: 59px;

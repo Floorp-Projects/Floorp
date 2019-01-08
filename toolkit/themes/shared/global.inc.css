@@ -65,6 +65,11 @@
   color: var(--panel-disabled-color) !important;
 }
 
+.panel-footer > button:-moz-focusring {
+  outline: 1px dotted;
+  outline-offset: -3px;
+}
+
 .panel-footer > button:not([disabled]):hover {
   background-color: var(--arrowpanel-dimmed);
 }
