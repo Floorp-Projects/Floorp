@@ -33,7 +33,7 @@ BUILDER = lib.tasks.TaskBuilder(
     tasks_priority=os.environ.get('TASKS_PRIORITY'),
 )
 
-BUILD_GRADLE_TASK_NAMES = ('assemble', 'test', 'lint')
+BUILD_GRADLE_TASK_NAMES = ('assembleRelease', 'test', 'lint')
 
 
 def _get_gradle_module_name(name):
@@ -65,9 +65,9 @@ def generate_build_task(version, artifact_info, is_snapshot, is_staging):
         description='Building and testing module {}'.format(module_name),
         command=(
             checkout +
-            ' && ./gradlew --no-daemon clean ' +
+            ' && ./gradlew --no-daemon clean && ./gradlew --no-daemon ' +
             snapshot_flag + gradle_tasks_for_this_module_only +
-            ' docs uploadArchives zipMavenArtifacts'
+            ' uploadArchives zipMavenArtifacts'
         ),
         features={
             'chainOfTrust': True,
