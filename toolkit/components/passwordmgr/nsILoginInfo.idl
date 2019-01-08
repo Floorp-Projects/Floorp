@@ -13,18 +13,18 @@
  */
 interface nsILoginInfo : nsISupports {
   /**
-   * The hostname the login applies to.
+   * The origin the login applies to, incorrectly called a hostname.
    *
-   * The hostname should be formatted as an URL. For example,
+   * For example,
    * "https://site.com", "http://site.com:1234", "ftp://ftp.site.com".
    */
   attribute AString hostname;
 
   /**
-   * The URL a form-based login was submitted to.
+   * The origin a form-based login was submitted to.
    *
-   * For logins obtained from HTML forms, this field is the |action|
-   * attribute from the |form| element, with the path removed. For
+   * For logins obtained from HTML forms, this field is the origin of the |action|
+   * attribute from the |form| element. For
    * example "http://www.site.com". [Forms with no |action| attribute
    * default to submitting to their origin URL, so we store that.]
    *
@@ -55,6 +55,8 @@ interface nsILoginInfo : nsISupports {
    *
    * For logins obtained from a HTTP or FTP protocol authentication,
    * this field is an empty string.
+   *
+   * @note This attribute is currently saved but not used.
    */
   attribute AString usernameField;
 
@@ -68,6 +70,8 @@ interface nsILoginInfo : nsISupports {
    *
    * For logins obtained from a HTTP or FTP protocol authentication,
    * this field is an empty string.
+   *
+   * @note This attribute is currently saved but not used.
    */
   attribute AString passwordField;
 
