@@ -69,9 +69,10 @@ class SystemEngineView @JvmOverloads constructor(
      * Render the content of the given session.
      */
     override fun render(session: EngineSession) {
-        this.session = session as SystemEngineSession
+        removeAllViews()
 
-        (session.webView?.parent as? SystemEngineView)?.removeView(session.webView)
+        this.session = session as SystemEngineSession
+        (session.webView.parent as? SystemEngineView)?.removeView(session.webView)
         addView(initWebView(session.webView))
     }
 

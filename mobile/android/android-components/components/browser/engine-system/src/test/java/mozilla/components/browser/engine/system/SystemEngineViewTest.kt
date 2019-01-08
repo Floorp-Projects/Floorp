@@ -1033,6 +1033,7 @@ class SystemEngineViewTest {
         engineView.render(SystemEngineSession(getApplicationContext()))
         assertFalse(engineView.onLongClick(null))
     }
+
     @Test
     fun `Calling onJsAlert must provide an Alert PromptRequest`() {
         val context = getApplicationContext<Context>()
@@ -1188,6 +1189,18 @@ class SystemEngineViewTest {
             assertEquals(jsAlertCount, 0)
             assertTrue(shouldShowMoreDialogs)
         }
+    }
+
+    @Test
+    fun `render removes webview from previous session`() {
+        val engineView = SystemEngineView(getApplicationContext())
+
+        val session1 = SystemEngineSession(getApplicationContext())
+        val session2 = SystemEngineSession(getApplicationContext())
+        engineView.render(session1)
+        engineView.render(session2)
+
+        assertNull(session1.webView.parent)
     }
 
     private fun Date.add(timeUnit: Int, amountOfTime: Int): Date {
