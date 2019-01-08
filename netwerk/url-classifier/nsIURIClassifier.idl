@@ -96,6 +96,11 @@ interface nsIURIClassifier : nsISupports
   nsIUrlClassifierFeature getFeatureByName(in ACString aFeatureName);
 
   /**
+   * Returns all the feature names.
+   */
+  Array<ACString> getFeatureNames();
+
+  /**
    * Create a new feature with a list of tables. This method is just for
    * testing! Don't use it elsewhere.
    */

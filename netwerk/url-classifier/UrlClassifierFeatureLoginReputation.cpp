@@ -33,6 +33,12 @@ UrlClassifierFeatureLoginReputation::UrlClassifierFeatureLoginReputation()
           EmptyCString())  // skip host pref
 {}
 
+/* static */ const char* UrlClassifierFeatureLoginReputation::Name() {
+  return StaticPrefs::browser_safebrowsing_passwords_enabled()
+             ? LOGIN_REPUTATION_FEATURE_NAME
+             : "";
+}
+
 /* static */ void UrlClassifierFeatureLoginReputation::MaybeShutdown() {
   UC_LOG(("UrlClassifierFeatureLoginReputation: MaybeShutdown"));
 
@@ -74,36 +80,6 @@ UrlClassifierFeatureLoginReputation::ProcessChannel(nsIChannel* aChannel,
       "UrlClassifierFeatureLoginReputation::ProcessChannel should never be "
       "called");
   return NS_OK;
-}
-
-NS_IMETHODIMP
-UrlClassifierFeatureLoginReputation::GetTables(
-    nsIUrlClassifierFeature::listType aListType, nsTArray<nsCString>& aTables) {
-  MOZ_ASSERT(aListType == nsIUrlClassifierFeature::whitelist,
-             "UrlClassifierFeatureLoginReputation is meant to be used just to "
-             "whitelist URLs");
-  return UrlClassifierFeatureBase::GetTables(aListType, aTables);
-}
-
-NS_IMETHODIMP
-UrlClassifierFeatureLoginReputation::HasTable(
-    const nsACString& aTable, nsIUrlClassifierFeature::listType aListType,
-    bool* aResult) {
-  MOZ_ASSERT(aListType == nsIUrlClassifierFeature::whitelist,
-             "UrlClassifierFeatureLoginReputation is meant to be used just to "
-             "whitelist URLs");
-  return UrlClassifierFeatureBase::HasTable(aTable, aListType, aResult);
-}
-
-NS_IMETHODIMP
-UrlClassifierFeatureLoginReputation::HasHostInPreferences(
-    const nsACString& aHost, nsIUrlClassifierFeature::listType aListType,
-    nsACString& aPrefTableName, bool* aResult) {
-  MOZ_ASSERT(aListType == nsIUrlClassifierFeature::whitelist,
-             "UrlClassifierFeatureLoginReputation is meant to be used just to "
-             "whitelist URLs");
-  return UrlClassifierFeatureBase::HasHostInPreferences(
-      aHost, aListType, aPrefTableName, aResult);
 }
 
 NS_IMETHODIMP
