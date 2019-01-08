@@ -17,6 +17,9 @@ const PREF_STRING_DEFAULT_NOTEMPTY = "accessibility.typeaheadfind.soundURL";
 const PREF_STRING_DEFAULT_NOTEMPTY_VALUE = "beep";
 const PREF_STRING_LOCALIZED_MISSING = "gecko.handlerService.schemes.irc.1.name";
 
+// Other preference names used in tests.
+const PREF_NEW = "test.aboutconfig.new";
+
 class AboutConfigRowTest {
   constructor(element) {
     this.element = element;
