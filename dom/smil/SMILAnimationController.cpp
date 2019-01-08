@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/SMILAnimationController.h"
+#include "SMILAnimationController.h"
 
 #include <algorithm>
 
@@ -20,7 +20,7 @@
 #include "nsIPresShellInlines.h"
 #include "nsITimer.h"
 #include "SMILCompositor.h"
-#include "nsSMILCSSProperty.h"
+#include "SMILCSSProperty.h"
 
 using namespace mozilla::dom;
 

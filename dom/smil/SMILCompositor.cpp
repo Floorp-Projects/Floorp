@@ -9,7 +9,7 @@
 #include "nsComputedDOMStyle.h"
 #include "nsCSSProps.h"
 #include "nsHashKeys.h"
-#include "nsSMILCSSProperty.h"
+#include "SMILCSSProperty.h"
 
 namespace mozilla {
 
@@ -124,8 +124,8 @@ UniquePtr<nsISMILAttr> SMILCompositor::CreateSMILAttr(
   nsCSSPropertyID propID = GetCSSPropertyToAnimate();
 
   if (propID != eCSSProperty_UNKNOWN) {
-    return MakeUnique<nsSMILCSSProperty>(propID, mKey.mElement.get(),
-                                         aBaseComputedStyle);
+    return MakeUnique<SMILCSSProperty>(propID, mKey.mElement.get(),
+                                       aBaseComputedStyle);
   }
 
   return mKey.mElement->GetAnimatedAttr(mKey.mAttributeNamespaceID,
@@ -140,7 +140,7 @@ nsCSSPropertyID SMILCompositor::GetCSSPropertyToAnimate() const {
   nsCSSPropertyID propID =
       nsCSSProps::LookupProperty(nsDependentAtomString(mKey.mAttributeName));
 
-  if (!nsSMILCSSProperty::IsPropertyAnimatable(propID)) {
+  if (!SMILCSSProperty::IsPropertyAnimatable(propID)) {
     return eCSSProperty_UNKNOWN;
   }
 

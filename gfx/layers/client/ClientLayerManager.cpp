@@ -696,9 +696,12 @@ void ClientLayerManager::ForwardTransaction(bool aScheduleComposite) {
       mPaintSequenceNumber, mIsRepeatTransaction,
       mTransactionIdAllocator->GetVsyncId(),
       mTransactionIdAllocator->GetVsyncStart(), refreshStart, mTransactionStart,
-      mURL, &sent);
+      mURL, &sent, mPayload);
+
   if (ok) {
     if (sent) {
+      // Our payload has now been dispatched.
+      mPayload.Clear();
       mNeedsComposite = false;
     }
   } else if (HasShadowManager()) {
