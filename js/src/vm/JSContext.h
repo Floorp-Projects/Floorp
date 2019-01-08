@@ -165,12 +165,12 @@ struct JSContext : public JS::RootingContext,
   }
 
   void* onOutOfMemory(js::AllocFunction allocFunc, size_t nbytes,
-                      void* reallocPtr = nullptr) {
+                      arena_id_t arena, void* reallocPtr = nullptr) {
     if (helperThread()) {
       addPendingOutOfMemory();
       return nullptr;
     }
-    return runtime_->onOutOfMemory(allocFunc, nbytes, reallocPtr, this);
+    return runtime_->onOutOfMemory(allocFunc, arena, nbytes, reallocPtr, this);
   }
 
   /* Clear the pending exception (if any) due to OOM. */
@@ -192,7 +192,7 @@ struct JSContext : public JS::RootingContext,
       return nullptr;
     }
     p = static_cast<T*>(
-        runtime()->onOutOfMemoryCanGC(js::AllocFunction::Calloc, bytes));
+        runtime()->onOutOfMemoryCanGC(js::AllocFunction::Calloc, arena, bytes));
     if (!p) {
       return nullptr;
     }

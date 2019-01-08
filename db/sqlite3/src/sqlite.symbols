@@ -45,6 +45,7 @@ sqlite3_create_function
 sqlite3_create_function16
 sqlite3_create_module
 sqlite3_data_count
+sqlite3_db_config
 sqlite3_db_filename
 sqlite3_db_handle
 sqlite3_db_mutex

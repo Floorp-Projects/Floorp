@@ -8,15 +8,15 @@
 #define NS_SMILANIMATIONFUNCTION_H_
 
 #include "mozilla/SMILTargetIdentifier.h"
-#include "nsISMILAttr.h"
-#include "nsGkAtoms.h"
-#include "nsString.h"
-#include "nsSMILTimeValue.h"
-#include "nsSMILKeySpline.h"
-#include "nsSMILValue.h"
-#include "nsTArray.h"
 #include "nsAttrValue.h"
+#include "nsGkAtoms.h"
+#include "nsISMILAttr.h"
+#include "SMILKeySpline.h"
+#include "nsSMILTimeValue.h"
 #include "nsSMILTypes.h"
+#include "nsSMILValue.h"
+#include "nsString.h"
+#include "nsTArray.h"
 
 namespace mozilla {
 namespace dom {
@@ -401,7 +401,7 @@ class SMILAnimationFunction {
   static nsAttrValue::EnumTable sAccumulateTable[];
 
   FallibleTArray<double> mKeyTimes;
-  FallibleTArray<nsSMILKeySpline> mKeySplines;
+  FallibleTArray<SMILKeySpline> mKeySplines;
 
   // These are the parameters provided by the previous sample. Currently we
   // perform lazy calculation. That is, we only calculate the result if and when

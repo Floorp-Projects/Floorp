@@ -834,13 +834,14 @@ struct JSRuntime : public js::MallocProvider<JSRuntime> {
    *
    * The function must be called outside the GC lock.
    */
-  JS_FRIEND_API void* onOutOfMemory(js::AllocFunction allocator, size_t nbytes,
+  JS_FRIEND_API void* onOutOfMemory(js::AllocFunction allocator,
+                                    arena_id_t arena, size_t nbytes,
                                     void* reallocPtr = nullptr,
                                     JSContext* maybecx = nullptr);
 
   /*  onOutOfMemory but can call OnLargeAllocationFailure. */
   JS_FRIEND_API void* onOutOfMemoryCanGC(js::AllocFunction allocator,
-                                         size_t nbytes,
+                                         arena_id_t arena, size_t nbytes,
                                          void* reallocPtr = nullptr);
 
   static const unsigned LARGE_ALLOCATION = 25 * 1024 * 1024;

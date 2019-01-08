@@ -731,6 +731,16 @@ class LayerManager : public FrameRecorder {
 
   virtual CompositorBridgeChild* GetCompositorBridgeChild() { return nullptr; }
 
+  void RegisterPayload(const CompositionPayload& aPayload) {
+    mPayload.AppendElement(aPayload);
+    MOZ_ASSERT(mPayload.Length() < 10000);
+  }
+  void RegisterPayload(const InfallibleTArray<CompositionPayload>& aPayload) {
+    mPayload.AppendElements(aPayload);
+    MOZ_ASSERT(mPayload.Length() < 10000);
+  }
+  void PayloadPresented();
+
  protected:
   RefPtr<Layer> mRoot;
   gfx::UserData mUserData;
@@ -757,6 +767,14 @@ class LayerManager : public FrameRecorder {
   TimeStamp mAnimationReadyTime;
   // The count of pixels that were painted in the current transaction.
   uint32_t mPaintedPixelCount;
+  // The payload associated with currently pending painting work, for
+  // client layer managers that typically means payload that is part of the
+  // 'upcoming transaction', for HostLayerManagers this typically means
+  // what has been included in received transactions to be presented on the
+  // next composite.
+  // IMPORTANT: Clients should take care to clear this or risk it slowly
+  // growing out of control.
+  InfallibleTArray<CompositionPayload> mPayload;
 
  public:
   /*

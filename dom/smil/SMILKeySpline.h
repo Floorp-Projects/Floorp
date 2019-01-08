@@ -10,12 +10,14 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/PodOperations.h"
 
+namespace mozilla {
+
 /**
  * Utility class to provide scaling defined in a keySplines element.
  */
-class nsSMILKeySpline {
+class SMILKeySpline {
  public:
-  nsSMILKeySpline() : mX1(0), mY1(0), mX2(0), mY2(0) {
+  SMILKeySpline() : mX1(0), mY1(0), mX2(0), mY2(0) {
     /* caller must call Init later */\
   }
 
@@ -25,10 +27,10 @@ class nsSMILKeySpline {
      * aX1, etc. are the x1, y1, x2, y2 cubic Bezier control points as defined
      * by SMILANIM 3.2.3. They must each be in the range 0.0 <= x <= 1.0
      */
-    nsSMILKeySpline(double aX1, double aY1, double aX2, double aY2)
-        : mX1(0), mY1(0), mX2(0), mY2(0) {
-      Init(aX1, aY1, aX2, aY2);
-    }
+  SMILKeySpline(double aX1, double aY1, double aX2, double aY2)
+      : mX1(0), mY1(0), mX2(0), mY2(0) {
+    Init(aX1, aY1, aX2, aY2);
+  }
 
     double X1() const { return mX1; }
     double Y1() const { return mY1; }
@@ -47,14 +49,14 @@ class nsSMILKeySpline {
 
     void GetSplineDerivativeValues(double aX, double& aDX, double& aDY) const;
 
-    bool operator==(const nsSMILKeySpline& aOther) const {
+    bool operator==(const SMILKeySpline& aOther) const {
       return mX1 == aOther.mX1 && mY1 == aOther.mY1 && mX2 == aOther.mX2 &&
              mY2 == aOther.mY2;
     }
-    bool operator!=(const nsSMILKeySpline& aOther) const {
+    bool operator!=(const SMILKeySpline& aOther) const {
       return !(*this == aOther);
     }
-    int32_t Compare(const nsSMILKeySpline& aRhs) const {
+    int32_t Compare(const SMILKeySpline& aRhs) const {
       if (mX1 != aRhs.mX1) return mX1 < aRhs.mX1 ? -1 : 1;
       if (mY1 != aRhs.mY1) return mY1 < aRhs.mY1 ? -1 : 1;
       if (mX2 != aRhs.mX2) return mX2 < aRhs.mX2 ? -1 : 1;
@@ -99,5 +101,7 @@ class nsSMILKeySpline {
 
     static const double kSampleStepSize;
 };
+
+}  // namespace mozilla
 
 #endif  // NS_SMILKEYSPLINE_H_
