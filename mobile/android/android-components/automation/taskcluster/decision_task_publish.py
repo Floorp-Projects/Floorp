@@ -97,9 +97,8 @@ def generate_beetmover_task(build_task_id, version, artifact, artifact_name, is_
             bucket_name = 'maven-snapshot-staging'
             bucket_public_url = 'https://maven-snapshots.stage.mozaws.net/'
         else:
-            # TODO: switch to prod bucket once staging works smoothly
-            bucket_name = 'maven-snapshot-staging'
-            bucket_public_url = 'https://maven-snapshots.stage.mozaws.net/'
+            bucket_name = 'maven-snapshot-production'
+            bucket_public_url = 'http://snapshots.maven.mozilla.org/'
     else:
         if is_staging:
             bucket_name = 'maven-staging'
