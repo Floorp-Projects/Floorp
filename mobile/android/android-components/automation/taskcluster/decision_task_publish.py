@@ -65,9 +65,9 @@ def generate_build_task(version, artifact_info, is_snapshot, is_staging):
         description='Building and testing module {}'.format(module_name),
         command=(
             checkout +
-            ' && ./gradlew --no-daemon clean && ./gradlew --no-daemon ' +
-            snapshot_flag + gradle_tasks_for_this_module_only +
-            ' uploadArchives zipMavenArtifacts'
+            ' && ./gradlew --no-daemon clean ' +
+            ' && ./gradlew --no-daemon ' + snapshot_flag + gradle_tasks_for_this_module_only +
+            ' && ./gradlew --no-daemon uploadArchives zipMavenArtifacts'
         ),
         features={
             'chainOfTrust': True,
