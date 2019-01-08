@@ -261,6 +261,22 @@ nsCSPContext::~nsCSPContext() {
   }
 }
 
+nsresult nsCSPContext::InitFromOther(nsCSPContext* aOtherContext,
+                                     Document* aDoc, nsIPrincipal* aPrincipal) {
+  NS_ENSURE_ARG(aOtherContext);
+
+  nsresult rv = SetRequestContext(aDoc, aPrincipal);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  for (auto policy : aOtherContext->mPolicies) {
+    nsAutoString policyStr;
+    policy->toString(policyStr);
+    AppendPolicy(policyStr, policy->getReportOnlyFlag(),
+                 policy->getDeliveredViaMetaTagFlag());
+  }
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsCSPContext::GetPolicyString(uint32_t aIndex, nsAString& outStr) {
   outStr.Truncate();
