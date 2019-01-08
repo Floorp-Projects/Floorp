@@ -28708,7 +28708,19 @@ var Font = function FontClosure() {
         }
 
         font.pos = (font.start ? font.start : 0) + header.offset;
-        font.pos += header.length - 2;
+        font.pos += 4;
+        font.pos += 2;
+        font.pos += 2;
+        font.pos += 2;
+        font.pos += 2;
+        font.pos += 2;
+        font.pos += 2;
+        font.pos += 2;
+        font.pos += 2;
+        font.pos += 2;
+        font.pos += 2;
+        font.pos += 8;
+        font.pos += 2;
         var numOfMetrics = font.getUint16();
 
         if (numOfMetrics > numGlyphs) {
