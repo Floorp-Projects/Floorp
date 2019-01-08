@@ -39,13 +39,6 @@
   -moz-appearance: none;
 }
 
-.downloadsPanelFooterButton {
-  margin: 0;
-  padding: 0;
-  min-width: 0;
-  min-height: 40px;
-}
-
 .downloadsPanelFooterButton:hover {
   outline: 1px solid var(--arrowpanel-dimmed);
 }
