@@ -6,8 +6,7 @@
 
 /*** Panel and outer controls ***/
 
-@keyfocus@ #downloadsSummary:focus,
-@keyfocus@ .downloadsPanelFooterButton:focus {
+@keyfocus@ #downloadsSummary:focus {
   outline: 2px -moz-mac-focusring solid;
   outline-offset: -2px;
 }
