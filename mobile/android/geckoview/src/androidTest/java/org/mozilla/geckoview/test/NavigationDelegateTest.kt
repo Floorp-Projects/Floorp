@@ -17,6 +17,7 @@ import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.NullDelegate
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.ReuseSession
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.Setting
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDevToolsAPI
+import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDisplay
 import org.mozilla.geckoview.test.util.Callbacks
 
 import android.support.test.filters.MediumTest
@@ -489,6 +490,43 @@ class NavigationDelegateTest : BaseSessionTest() {
         userAgent = sessionRule.session.evaluateJS(userAgentJs) as String
         assertThat("User agent should again be reported as VR after disabling override in onLoadRequest",
                 userAgent, containsString(vrSubStr))
+    }
+
+    @WithDevToolsAPI
+    @WithDisplay(width = 600, height = 200)
+    @Test fun viewportMode() {
+        sessionRule.session.loadTestPath(VEIWPORT_PATH)
+        sessionRule.waitForPageStop()
+
+        val desktopInnerWidth = 980.0
+        val physicalWidth = 600.0
+        val pixelRatio = sessionRule.session.evaluateJS("window.devicePixelRatio") as Double
+        val mobileInnerWidth = physicalWidth / pixelRatio
+        val innerWidthJs = "window.innerWidth"
+
+        var innerWidth = sessionRule.session.evaluateJS(innerWidthJs) as Double
+        assertThat("innerWidth should be equal to $mobileInnerWidth",
+                innerWidth, closeTo(mobileInnerWidth, 0.1))
+
+        sessionRule.session.settings.setInt(
+                GeckoSessionSettings.VIEWPORT_MODE, GeckoSessionSettings.VIEWPORT_MODE_DESKTOP)
+
+        sessionRule.session.reload()
+        sessionRule.session.waitForPageStop()
+
+        innerWidth = sessionRule.session.evaluateJS(innerWidthJs) as Double
+        assertThat("innerWidth should be equal to $desktopInnerWidth", innerWidth,
+                closeTo(desktopInnerWidth, 0.1))
+
+        sessionRule.session.settings.setInt(
+                GeckoSessionSettings.VIEWPORT_MODE, GeckoSessionSettings.VIEWPORT_MODE_MOBILE)
+
+        sessionRule.session.reload()
+        sessionRule.session.waitForPageStop()
+
+        innerWidth = sessionRule.session.evaluateJS(innerWidthJs) as Double
+        assertThat("innerWidth should be equal to $mobileInnerWidth again",
+                innerWidth, closeTo(mobileInnerWidth, 0.1))
     }
 
     @Test fun telemetrySnapshots() {
