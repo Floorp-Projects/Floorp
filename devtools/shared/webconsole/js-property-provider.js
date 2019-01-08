@@ -290,6 +290,7 @@ function JSPropertyProvider({
     return null;
   }
 
+  const env = environment || dbgObject.asEnvironment();
   const completionPart = lastStatement;
   const lastDotIndex = completionPart.lastIndexOf(".");
   const lastOpeningBracketIndex = isElementAccess ? completionPart.lastIndexOf("[") : -1;
@@ -319,12 +320,12 @@ function JSPropertyProvider({
       let matchingObject;
 
       if (astExpression.type === "ArrayExpression") {
-        matchingObject = Array.prototype;
+        matchingObject = getContentPrototypeObject(env, "Array");
       } else if (
         astExpression.type === "Literal" &&
         typeof astExpression.value === "string"
       ) {
-        matchingObject = String.prototype;
+        matchingObject = getContentPrototypeObject(env, "String");
       } else if (
         astExpression.type === "Literal" &&
         Number.isFinite(astExpression.value)
@@ -338,7 +339,7 @@ function JSPropertyProvider({
           !Number.isInteger(astExpression.value) ||
           /\d[^\.]{0}\.$/.test(completionPart) === false
         ) {
-          matchingObject = Number.prototype;
+          matchingObject = getContentPrototypeObject(env, "Number");
         } else {
           return null;
         }
@@ -353,7 +354,7 @@ function JSPropertyProvider({
           search = matchProp.replace(startQuoteRegex, "");
         }
 
-        let props = getMatchedProps(matchingObject, search);
+        let props = getMatchedPropsInDbgObject(matchingObject, search);
         if (isElementAccess) {
           props = wrapMatchesInQuotes(props, elementAccessQuote);
         }
@@ -398,11 +399,6 @@ function JSPropertyProvider({
   }
 
   let obj = dbgObject;
-
-  // The first property must be found in the environment of the paused debugger
-  // or of the global lexical scope.
-  const env = environment || obj.asEnvironment();
-
   if (properties.length === 0) {
     return {
       isElementAccess,
@@ -512,6 +508,29 @@ function JSPropertyProvider({
   }
 
   return prepareReturnedObject(getMatchedPropsInDbgObject(obj, search));
+}
+
+/**
+ * For a given environment and constructor name, returns its Debugger.Object wrapped
+ * prototype.
+ *
+ * @param {Environment} env
+ * @param {String} name: Name of the constructor object we want the prototype of.
+ * @returns {Debugger.Object|null} the prototype, or null if it not found.
+ */
+function getContentPrototypeObject(env, name) {
+  // Retrieve the outermost environment to get the global object.
+  let outermostEnv = env;
+  while (outermostEnv && outermostEnv.parent) {
+    outermostEnv = outermostEnv.parent;
+  }
+
+  const constructorObj = DevToolsUtils.getProperty(outermostEnv.object, name);
+  if (!constructorObj) {
+    return null;
+  }
+
+  return DevToolsUtils.getProperty(constructorObj, "prototype");
 }
 
 /**
