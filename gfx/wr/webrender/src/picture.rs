@@ -1106,9 +1106,7 @@ impl<'a> PictureUpdateState<'a> {
     }
 
     /// Pop a surface on the way up the picture traversal
-    fn pop_surface(
-        &mut self,
-    ) {
+    fn pop_surface(&mut self) {
         self.surface_stack.pop().unwrap();
     }
 
@@ -1214,6 +1212,8 @@ pub struct RasterConfig {
     /// Index to the surface descriptor for this
     /// picture.
     pub surface_index: SurfaceIndex,
+    /// Whether this picture establishes a rasterization root.
+    pub establishes_raster_root: bool,
 }
 
 /// Specifies how this Picture should be composited
@@ -1705,14 +1705,8 @@ impl PicturePrimitive {
             }
         };
 
-        // Don't bother pushing a clip node collector for a tile cache, it's not
-        // actually an off-screen surface.
-        // TODO(gw): The way this is handled via the picture composite mode is not
-        //           ideal - we should fix this up and then be able to remove hacks
-        //           like this.
-        if self.raster_config.is_some() && self.tile_cache.is_none() {
-            frame_state.clip_store
-                .push_surface(surface_spatial_node_index);
+        if self.raster_config.as_ref().map_or(false, |c| c.establishes_raster_root) {
+            frame_state.clip_store.push_raster_root(surface_spatial_node_index);
         }
 
         let map_pic_to_world = SpaceMapper::new_with_target(
@@ -1804,16 +1798,11 @@ impl PicturePrimitive {
         self.prim_list = prim_list;
         self.state = Some((state, context));
 
-        // Don't bother popping a clip node collector for a tile cache, it's not
-        // actually an off-screen surface (see comment when pushing surface for
-        // more information).
-        if self.tile_cache.is_some() {
-            return None;
+        if self.raster_config.as_ref().map_or(false, |c| c.establishes_raster_root) {
+            Some(frame_state.clip_store.pop_raster_root())
+        } else {
+            None
         }
-
-        self.raster_config.as_ref().map(|_| {
-            frame_state.clip_store.pop_surface()
-        })
     }
 
     pub fn take_state_and_context(&mut self) -> (PictureState, PictureContext) {
@@ -2016,6 +2005,7 @@ impl PicturePrimitive {
             self.raster_config = Some(RasterConfig {
                 composite_mode,
                 surface_index,
+                establishes_raster_root,
             });
 
             // If we have a cache key / descriptor for this surface,
