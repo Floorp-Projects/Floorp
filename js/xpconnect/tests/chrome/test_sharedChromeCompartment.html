@@ -1,0 +1,65 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1517694
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1517694</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://global/skin"/>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+"use strict";
+
+/** Test for Bug 1517694 **/
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+
+SimpleTest.waitForExplicitFinish();
+
+function isSameCompartment(global) {
+    // Note: if the global is in a different compartment, global.Math will be a
+    // cross-compartment wrapper (with class "Proxy").
+    return Cu.getClassName(global.Math, /* unwrap = */ false) === "Math";
+}
+
+function go() {
+    var frame = $('subframe');
+    frame.onload = null;
+
+    ok(isSameCompartment(frame.contentWindow),
+       "System window is in same compartment");
+
+    var sameCompSb = Cu.Sandbox(window);
+    ok(isSameCompartment(sameCompSb),
+       "System sandbox is in same compartment");
+
+    var ownCompSb = Cu.Sandbox(window, {freshCompartment: true});
+    ok(!isSameCompartment(ownCompSb),
+       "Sandbox created with freshCompartment is in separate compartment");
+
+    // Sandbox created in fresh-compartment sandbox must be in shared
+    // compartment.
+    var sb = Cu.evalInSandbox(`
+      let principal =
+        Cc["@mozilla.org/systemprincipal;1"].getService(Ci.nsIPrincipal);
+      Cu.Sandbox(principal)
+    `, ownCompSb);
+    ok(isSameCompartment(sb),
+       "System sandbox created in different compartment is in system compartment");
+
+    is(Cu.getClassName(XPCOMUtils, /* unwrap = */ false), "Object",
+       "Object defined in JSM is in same compartment");
+
+    SimpleTest.finish();
+}
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1517694">Mozilla Bug 1517694</a>
+
+<iframe id="subframe" src="file_empty.html" onload="go()"></iframe>
+
+</body>
+</html>

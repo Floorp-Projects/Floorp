@@ -1,12 +1,10 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-/* global sendAsyncMessage */
-
 "use strict";
 
-/* import-globals-from head-serviceworker.js */
-Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "head-serviceworker.js", this);
+/* import-globals-from helper-serviceworker.js */
+Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "helper-serviceworker.js", this);
 
 const SERVICE_WORKER = URL_ROOT + "resources/service-workers/push-sw.js";
 const TAB_URL = URL_ROOT + "resources/service-workers/push-sw.html";

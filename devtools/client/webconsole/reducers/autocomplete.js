@@ -8,22 +8,30 @@ const {
   AUTOCOMPLETE_DATA_RECEIVE,
   AUTOCOMPLETE_PENDING_REQUEST,
   AUTOCOMPLETE_RETRIEVE_FROM_CACHE,
+  APPEND_TO_HISTORY,
+  UPDATE_HISTORY_POSITION,
+  REVERSE_SEARCH_INPUT_CHANGE,
+  REVERSE_SEARCH_BACK,
+  REVERSE_SEARCH_NEXT,
   WILL_NAVIGATE,
 } = require("devtools/client/webconsole/constants");
 
-function getDefaultState() {
+function getDefaultState(overrides = {}) {
   return Object.freeze({
     cache: null,
     matches: [],
     matchProp: null,
     isElementAccess: false,
     pendingRequestId: null,
+    isUnsafeGetter: false,
+    getterPath: null,
+    authorizedEvaluations: [],
+    ...overrides,
   });
 }
 
 function autocomplete(state = getDefaultState(), action) {
   switch (action.type) {
-    case AUTOCOMPLETE_CLEAR:
     case WILL_NAVIGATE:
       return getDefaultState();
     case AUTOCOMPLETE_RETRIEVE_FROM_CACHE:
@@ -43,16 +51,51 @@ function autocomplete(state = getDefaultState(), action) {
         return getDefaultState();
       }
 
+      if (action.data.isUnsafeGetter) {
+        // We only want to display the getter confirm popup if the last char is a dot or
+        // an opening bracket, or if the user forced the autocompletion with Ctrl+Space.
+        if (action.input.endsWith(".") || action.input.endsWith("[") || action.force) {
+          return {
+            ...getDefaultState(),
+            isUnsafeGetter: true,
+            getterPath: action.data.getterPath,
+            authorizedEvaluations: action.authorizedEvaluations,
+          };
+        }
+
+        return {
+          ...state,
+          pendingRequestId: null,
+        };
+      }
+
       return {
         ...state,
+        authorizedEvaluations: action.authorizedEvaluations,
+        getterPath: null,
+        isUnsafeGetter: false,
+        pendingRequestId: null,
         cache: {
           input: action.input,
           frameActorId: action.frameActorId,
           ...action.data,
         },
-        pendingRequestId: null,
         ...action.data,
       };
+    // Reset the autocomplete data when:
+    // - clear is explicitely called
+    // - the user navigates the history
+    // - or an item was added to the history (i.e. something was evaluated).
+    case AUTOCOMPLETE_CLEAR:
+      return getDefaultState({
+        authorizedEvaluations: state.authorizedEvaluations,
+      });
+    case APPEND_TO_HISTORY:
+    case UPDATE_HISTORY_POSITION:
+    case REVERSE_SEARCH_INPUT_CHANGE:
+    case REVERSE_SEARCH_BACK:
+    case REVERSE_SEARCH_NEXT:
+      return getDefaultState();
   }
 
   return state;
@@ -101,6 +144,8 @@ function autoCompleteRetrieveFromCache(state, action) {
 
   return {
     ...state,
+    isUnsafeGetter: false,
+    getterPath: null,
     matches: newList,
     matchProp: filterBy,
     isElementAccess: cache.isElementAccess,

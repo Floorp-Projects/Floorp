@@ -1454,7 +1454,6 @@ BrowserGlue.prototype = {
     AboutPrivateBrowsingHandler.uninit();
     AutoCompletePopup.uninit();
     DateTimePickerParent.uninit();
-    SaveToPocket.uninit();
 
     // Browser errors are only collected on Nightly, but telemetry for
     // them is collected on all channels.

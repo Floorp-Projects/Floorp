@@ -3,8 +3,8 @@
 
 "use strict";
 
-/* import-globals-from head-mocks.js */
-Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "head-mocks.js", this);
+/* import-globals-from helper-mocks.js */
+Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "helper-mocks.js", this);
 
 // Test that USB runtimes appear and disappear from the sidebar.
 add_task(async function() {

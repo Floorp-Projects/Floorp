@@ -14,7 +14,6 @@
 
 @keyfocus@ @itemFocused@,
 @keyfocus@ #downloadsSummary:focus,
-@keyfocus@ .downloadsPanelFooterButton:focus,
 .downloadButton:focus {
   outline: 1px -moz-dialogtext dotted;
   outline-offset: -1px;

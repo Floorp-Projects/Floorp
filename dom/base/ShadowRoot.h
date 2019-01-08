@@ -15,7 +15,6 @@
 #include "mozilla/ServoBindings.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsIdentifierMapEntry.h"
 #include "nsIRadioGroupContainer.h"
 #include "nsStubMutationObserver.h"
 #include "nsTHashtable.h"

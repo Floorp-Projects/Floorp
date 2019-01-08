@@ -16,8 +16,10 @@ const {
  *
  * @param {Boolean} force: True to force a call to the server (as opposed to retrieve
  *                         from the cache).
+ * @param {Array<String>} getterPath: Array representing the getter access (i.e.
+ *                                    `a.b.c.d.` is described as ['a', 'b', 'c', 'd'] ).
  */
-function autocompleteUpdate(force) {
+function autocompleteUpdate(force, getterPath) {
   return ({dispatch, getState, services}) => {
     if (services.inputHasSelection()) {
       return dispatch(autocompleteClear());
@@ -48,10 +50,32 @@ function autocompleteUpdate(force) {
       return dispatch(autoCompleteDataRetrieveFromCache(input));
     }
 
+    let authorizedEvaluations = (
+      Array.isArray(state.authorizedEvaluations) &&
+      state.authorizedEvaluations.length > 0
+    ) ? state.authorizedEvaluations : [];
+
+    if (Array.isArray(getterPath) && getterPath.length > 0) {
+      // We need to check for any previous authorizations. For example, here if getterPath
+      // is ["a", "b", "c", "d"], we want to see if there was any other path that was
+      // authorized in a previous request. For that, we only add the previous
+      // authorizations if the last auth is contained in getterPath. (for the example, we
+      // would keep if it is [["a", "b"]], not if [["b"]] nor [["f", "g"]])
+      const last = authorizedEvaluations[authorizedEvaluations.length - 1];
+      const concat = !last || last.every((x, index) => x === getterPath[index]);
+      if (concat) {
+        authorizedEvaluations.push(getterPath);
+      } else {
+        authorizedEvaluations = [getterPath];
+      }
+    }
+
     return dispatch(autocompleteDataFetch({
       input,
       frameActorId,
       client: services.getWebConsoleClient(),
+      authorizedEvaluations,
+      force,
     }));
   };
 }
@@ -89,19 +113,40 @@ function generateRequestId() {
  * @param {Object} Object of the following shape:
  *        - {String} input: the expression that we want to complete.
  *        - {String} frameActorId: The id of the frame we want to autocomplete in.
+ *        - {Boolean} force: true if the user forced an autocompletion (with Ctrl+Space).
  *        - {WebConsoleClient} client: The webconsole client.
+ *        - {Array} authorizedEvaluations: Array of the properties access which can be
+ *                  executed by the engine.
+ *                   Example: [["x", "myGetter"], ["x", "myGetter", "y", "glitter"]]
+ *                  to retrieve properties of `x.myGetter.` and `x.myGetter.y.glitter`.
  */
 function autocompleteDataFetch({
   input,
   frameActorId,
+  force,
   client,
+  authorizedEvaluations,
 }) {
   return ({dispatch, services}) => {
     const selectedNodeActor = services.getSelectedNodeActor();
     const id = generateRequestId();
     dispatch({type: AUTOCOMPLETE_PENDING_REQUEST, id});
-    client.autocomplete(input, undefined, frameActorId, selectedNodeActor).then(res => {
-      dispatch(autocompleteDataReceive(id, input, frameActorId, res));
+    client.autocomplete(
+      input,
+      undefined,
+      frameActorId,
+      selectedNodeActor,
+      authorizedEvaluations
+    ).then(data => {
+      dispatch(
+        autocompleteDataReceive({
+          id,
+          input,
+          force,
+          frameActorId,
+          data,
+          authorizedEvaluations,
+        }));
     }).catch(e => {
       console.error("failed autocomplete", e);
       dispatch(autocompleteClear());
@@ -112,24 +157,38 @@ function autocompleteDataFetch({
 /**
  * Called when we receive the autocompletion data from the server.
  *
- * @param {Integer} id: The autocompletion request id. This will be used in the reducer to
- *                      check that we update the state with the last request results.
- * @param {String} input: The expression that was evaluated to get the data.
- *        - {String} frameActorId: The id of the frame the evaluation was made in.
- * @param {Object} data: The actual data sent from the server.
+ * @param {Object} Object of the following shape:
+ *        - {Integer} id: The autocompletion request id. This will be used in the reducer
+ *                        to check that we update the state with the last request results.
+ *        - {String} input: the expression that we want to complete.
+ *        - {String} frameActorId: The id of the frame we want to autocomplete in.
+ *        - {Boolean} force: true if the user forced an autocompletion (with Ctrl+Space).
+ *        - {Object} data: The actual data returned from the server.
+ *        - {Array} authorizedEvaluations: Array of the properties access which can be
+ *                  executed by the engine.
+ *                   Example: [["x", "myGetter"], ["x", "myGetter", "y", "glitter"]]
+ *                  to retrieve properties of `x.myGetter.` and `x.myGetter.y.glitter`.
  */
-function autocompleteDataReceive(id, input, frameActorId, data) {
+function autocompleteDataReceive({
+  id,
+  input,
+  frameActorId,
+  force,
+  data,
+  authorizedEvaluations,
+}) {
   return {
     type: AUTOCOMPLETE_DATA_RECEIVE,
     id,
     input,
+    force,
     frameActorId,
     data,
+    authorizedEvaluations,
   };
 }
 
 module.exports = {
+  autocompleteClear,
   autocompleteUpdate,
-  autocompleteDataFetch,
-  autocompleteDataReceive,
 };

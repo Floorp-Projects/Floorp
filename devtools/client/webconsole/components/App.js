@@ -15,6 +15,7 @@ const FilterBar = createFactory(require("devtools/client/webconsole/components/F
 const SideBar = createFactory(require("devtools/client/webconsole/components/SideBar"));
 const ReverseSearchInput = createFactory(require("devtools/client/webconsole/components/ReverseSearchInput"));
 const JSTerm = createFactory(require("devtools/client/webconsole/components/JSTerm"));
+const ConfirmDialog = createFactory(require("devtools/client/webconsole/components/ConfirmDialog"));
 const NotificationBox = createFactory(require("devtools/client/shared/components/NotificationBox").NotificationBox);
 
 const l10n = require("devtools/client/webconsole/webconsole-l10n");
@@ -246,6 +247,11 @@ class App extends Component {
         ),
         SideBar({
           serviceContainer,
+        }),
+        ConfirmDialog({
+          hud,
+          serviceContainer,
+          codeMirrorEnabled: jstermCodeMirror,
         }),
       )
     );

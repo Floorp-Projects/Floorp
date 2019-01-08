@@ -3,6 +3,9 @@
 
 "use strict";
 
+/* import-globals-from helper-collapsibilities.js */
+Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "helper-collapsibilities.js", this);
+
 /**
  * Check that navigating from This Firefox to Connect and back to This Firefox works and
  * does not leak.
