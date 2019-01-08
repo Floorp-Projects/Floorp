@@ -11,7 +11,6 @@
 #include "AudioParam.h"
 #include "mozilla/dom/PannerNodeBinding.h"
 #include "ThreeDPoint.h"
-#include "mozilla/WeakPtr.h"
 #include <limits>
 #include <set>
 
@@ -22,13 +21,11 @@ class AudioContext;
 class AudioBufferSourceNode;
 struct PannerOptions;
 
-class PannerNode final : public AudioNode, public SupportsWeakPtr<PannerNode> {
+class PannerNode final : public AudioNode {
  public:
   static already_AddRefed<PannerNode> Create(AudioContext& aAudioContext,
                                              const PannerOptions& aOptions,
                                              ErrorResult& aRv);
-
-  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(PannerNode)
 
   static already_AddRefed<PannerNode> Constructor(const GlobalObject& aGlobal,
                                                   AudioContext& aAudioContext,
