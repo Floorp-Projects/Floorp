@@ -62,7 +62,7 @@ permalink: /changelog/
   ```
 
 * **ui-autocomplete**
-  * Fixing bug [#1489](https://github.com/mozilla-mobile/android-components/issues/1489).
+  * Fixed a bug where pressing backspace could skip a character ([#1489](https://github.com/mozilla-mobile/android-components/issues/1489)).
 
 * **feature-customtabs**
   * Fixed a bug where a third-party app (like Gmail or Slack) could crash when calling warmup().
