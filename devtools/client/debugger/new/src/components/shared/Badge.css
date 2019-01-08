@@ -1,0 +1,16 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+.badge {
+  --size: 17px;
+  --radius: calc(var(--size) / 2);
+  height: var(--size);
+  min-width: var(--size);
+  line-height: var(--size);
+  background: var(--theme-toolbar-background-hover);
+  color: var(--theme-body-color);
+  border-radius: var(--radius);
+  padding: 0 4px;
+  font-size: 0.9em;
+}

@@ -1,0 +1,121 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+.expression-input-form {
+  width: 100%;
+}
+
+.input-expression {
+  width: 100%;
+  margin: 0;
+  border: 1px;
+  background-color: var(--theme-sidebar-background);
+  font-size: 12px;
+  padding: 0.5em 1.6em;
+  color: var(--theme-body-color);
+  outline: 0;
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20%,
+  60% {
+    transform: translateX(-10px);
+  }
+  40%,
+  80% {
+    transform: translateX(10px);
+  }
+}
+
+.input-expression::placeholder {
+  font-style: italic;
+  color: var(--theme-comment);
+}
+
+.input-expression:focus {
+  cursor: text;
+}
+
+.expressions-list {
+  /* TODO: add normalize */
+  margin: 0;
+  padding: 0;
+}
+
+.expression-input-container {
+  display: flex;
+  border: 1px solid transparent;
+}
+
+.expression-input-container.focused {
+  border: 1px solid var(--theme-highlight-blue);
+}
+
+:root.theme-dark .expression-input-container.focused {
+  border: 1px solid var(--blue-50);
+}
+
+.expression-input-container.error {
+  border: 1px solid red;
+}
+
+.expression-container {
+  border: 1px;
+  padding: 0.6em 1em 0.6em 0.5em;
+  width: 100%;
+  color: var(--theme-body-color);
+  background-color: var(--theme-body-background);
+  display: block;
+  position: relative;
+  min-height: var(--breakpoint-expression-height);
+}
+
+.expression-container > .tree {
+  width: 100%;
+  overflow: hidden;
+}
+
+:root.theme-light .expression-container:hover {
+  background-color: var(--theme-selection-background-hover);
+}
+
+:root.theme-dark .expression-container:hover {
+  background-color: var(--theme-selection-background-hover);
+}
+
+.tree .tree-node:not(.focused):hover {
+  background-color: transparent;
+}
+
+.expression-container__close-btn {
+  position: absolute;
+  offset-inline-end: 0px;
+  inset-inline-end: 0px;
+  top: 1px;
+}
+
+.expression-content {
+  position: relative;
+}
+
+.expression-content .tree {
+  overflow-x: hidden;
+  max-width: calc(100% - var(--breakpoint-expression-right-clear-space));
+}
+
+.expression-content .tree-node {
+  overflow-x: hidden;
+}
+
+.expression-content .tree-node[data-expandable="false"][aria-level="1"] {
+  padding-inline-start: 10px;
+}
+
+.expression-input {
+  max-width: 50%;
+}

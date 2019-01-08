@@ -1,0 +1,7 @@
+.img {
+  /* default height an width which will likely be overrode */
+  width: 12px;
+  height: 12px;
+  /* makes span appear like an image */
+  display: inline-block;
+}

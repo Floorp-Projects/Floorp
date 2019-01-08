@@ -1,0 +1,47 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+.column-breakpoint {
+  display: inline;
+}
+
+.column-breakpoint svg {
+  display: inline;
+  cursor: pointer;
+  height: 12px;
+  width: 9px;
+  vertical-align: top;
+}
+
+.column-breakpoint.active svg {
+  fill: var(--blue-50);
+  stroke: var(--blue-60);
+}
+
+.column-breakpoint.disabled svg {
+  fill: var(--blue-50);
+  stroke: var(--blue-40);
+  fill-opacity: 0.5;
+}
+
+.column-breakpoint.has-condition svg {
+  fill: var(--theme-graphs-yellow);
+  stroke: var(--theme-graphs-orange);
+}
+
+.column-breakpoint.has-condition.log svg {
+  fill: var(--theme-graphs-orange);
+  stroke: var(--theme-graphs-yellow);
+}
+
+.theme-dark .column-breakpoint.active svg {
+  fill: var(--blue-55);
+  stroke: var(--blue-40);
+}
+
+.theme-dark .column-breakpoint.disabled svg {
+  fill: var(--blue-50);
+  stroke: var(--blue-60);
+  fill-opacity: 0.5;
+}
