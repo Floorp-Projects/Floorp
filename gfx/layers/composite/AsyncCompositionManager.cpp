@@ -997,6 +997,9 @@ bool AsyncCompositionManager::ApplyAsyncContentTransformToTree(
                     if (RefPtr<UiCompositorControllerParent> uiController =
                             UiCompositorControllerParent::
                                 GetFromRootLayerTreeId(rootLayerTreeId)) {
+                      if (!animator) {
+                        uiController->NotifyUpdateScreenMetrics(metrics);
+                      }
                       uiController->NotifyFirstPaint();
                     }
                     mIsFirstPaint = false;

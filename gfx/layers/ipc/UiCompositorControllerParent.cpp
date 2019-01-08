@@ -16,6 +16,8 @@
 #include "mozilla/Move.h"
 #include "mozilla/Unused.h"
 
+#include "FrameMetrics.h"
+
 namespace mozilla {
 namespace layers {
 
@@ -238,6 +240,21 @@ void UiCompositorControllerParent::NotifyLayersUpdated() {
 
 void UiCompositorControllerParent::NotifyFirstPaint() {
   ToolbarAnimatorMessageFromCompositor(FIRST_PAINT);
+}
+
+void UiCompositorControllerParent::NotifyUpdateScreenMetrics(
+    const FrameMetrics& aMetrics) {
+#if defined(MOZ_WIDGET_ANDROID)
+  CSSToScreenScale scale = ViewTargetAs<ScreenPixel>(
+      aMetrics.GetZoom().ToScaleFactor(),
+      PixelCastJustification::ScreenIsParentLayerForRoot);
+  ScreenPoint scrollOffset = aMetrics.GetScrollOffset() * scale;
+  CompositorThreadHolder::Loop()->PostTask(
+      NewRunnableMethod<ScreenPoint, CSSToScreenScale>(
+          "UiCompositorControllerParent::SendRootFrameMetrics", this,
+          &UiCompositorControllerParent::SendRootFrameMetrics, scrollOffset,
+          scale));
+#endif
 }
 
 UiCompositorControllerParent::UiCompositorControllerParent(
