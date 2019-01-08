@@ -33,7 +33,7 @@ BUILDER = lib.tasks.TaskBuilder(
     tasks_priority=os.environ.get('TASKS_PRIORITY'),
 )
 
-BUILD_GRADLE_TASK_NAMES = ('assembleRelease', 'test', 'lint')
+BUILD_GRADLE_TASK_NAMES = ('assemble', 'test', 'lint')
 
 
 def _get_gradle_module_name(name):
@@ -56,7 +56,11 @@ def generate_build_task(version, artifact_info, is_snapshot, is_staging):
     snapshot_flag = '-Psnapshot ' if is_snapshot else ''
     module_name = _get_gradle_module_name(artifact_info['name'])
     gradle_tasks_for_this_module_only = ' '.join(
-        '{}:{}'.format(module_name, gradle_task)
+        '{}:{}{}'.format(
+            module_name,
+            gradle_task,
+            '' if is_snapshot else 'Release'
+        )
         for gradle_task in BUILD_GRADLE_TASK_NAMES
     )
 
