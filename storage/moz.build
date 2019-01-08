@@ -106,6 +106,10 @@ if CONFIG['MOZ_MEMORY'] and not CONFIG['MOZ_SYSTEM_SQLITE']:
     if CONFIG['OS_TARGET'] != 'Android':
         DEFINES['MOZ_STORAGE_MEMORY'] = True
 
+# Thunderbird needs the 2-argument version of fts3_tokenizer()
+if CONFIG['MOZ_THUNDERBIRD'] or CONFIG['MOZ_SUITE']:
+    DEFINES['MOZ_SQLITE_FTS3_TOKENIZER'] = 1
+
 # This is the default value.  If we ever change it when compiling sqlite, we
 # will need to change it here as well.
 DEFINES['SQLITE_MAX_LIKE_PATTERN_LENGTH'] = 50000

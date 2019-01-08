@@ -170,6 +170,8 @@ class CrossProcessCompositorBridgeParent final
 
   void UpdatePaintTime(LayerTransactionParent* aLayerTree,
                        const TimeDuration& aPaintTime) override;
+  void RegisterPayload(LayerTransactionParent* aLayerTree,
+                       const InfallibleTArray<CompositionPayload>& aPayload) override;
 
   PWebRenderBridgeParent* AllocPWebRenderBridgeParent(
       const wr::PipelineId& aPipelineId,
