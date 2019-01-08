@@ -63,7 +63,7 @@ NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(EffectCompositor, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(EffectCompositor, Release)
 
 /* static */ bool EffectCompositor::AllowCompositorAnimationsOnFrame(
-    const nsIFrame* aFrame, const EffectSet& aEffects,
+    const nsIFrame* aFrame,
     AnimationPerformanceWarning::Type& aWarning /* out */) {
   if (aFrame->RefusedAsyncAnimation()) {
     return false;
@@ -134,8 +134,7 @@ bool FindAnimationsForCompositor(
 
   AnimationPerformanceWarning::Type warning =
       AnimationPerformanceWarning::Type::None;
-  if (!EffectCompositor::AllowCompositorAnimationsOnFrame(aFrame, *effects,
-                                                          warning)) {
+  if (!EffectCompositor::AllowCompositorAnimationsOnFrame(aFrame, warning)) {
     if (warning != AnimationPerformanceWarning::Type::None) {
       EffectCompositor::SetPerformanceWarning(
           aFrame, aProperty, AnimationPerformanceWarning(warning));

@@ -311,8 +311,7 @@ nsLayoutUtils::GetAnimationPropertiesForCompositor(const nsIFrame* aFrame) {
   }
 
   AnimationPerformanceWarning::Type warning;
-  if (!EffectCompositor::AllowCompositorAnimationsOnFrame(aFrame, *effects,
-                                                          warning)) {
+  if (!EffectCompositor::AllowCompositorAnimationsOnFrame(aFrame, warning)) {
     return properties;
   }
 
