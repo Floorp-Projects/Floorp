@@ -272,6 +272,8 @@ class SpdyConnectTransaction final : public NullHttpTransaction {
   MOZ_MUST_USE nsresult WebsocketWriteSegments(nsAHttpSegmentWriter *writer,
                                                uint32_t count,
                                                uint32_t *countWritten);
+
+  bool mCreateShimErrorCalled;
 };
 
 }  // namespace net
