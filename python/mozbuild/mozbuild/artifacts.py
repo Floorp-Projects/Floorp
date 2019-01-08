@@ -553,9 +553,13 @@ JOB_DETAILS = {
                                                    r'public/build/target\.common\.tests\.(zip|tar\.gz)')),
     'linux-opt': (LinuxArtifactJob, (r'public/build/target\.tar\.bz2',
                                      r'public/build/target\.common\.tests\.(zip|tar\.gz)')),
+    'linux-pgo': (LinuxArtifactJob, (r'public/build/target\.tar\.bz2',
+                                     r'public/build/target\.common\.tests\.(zip|tar\.gz)')),
     'linux-debug': (LinuxArtifactJob, (r'public/build/target\.tar\.bz2',
                                        r'public/build/target\.common\.tests\.(zip|tar\.gz)')),
     'linux64-opt': (LinuxArtifactJob, (r'public/build/target\.tar\.bz2',
+                                       r'public/build/target\.common\.tests\.(zip|tar\.gz)')),
+    'linux64-pgo': (LinuxArtifactJob, (r'public/build/target\.tar\.bz2',
                                        r'public/build/target\.common\.tests\.(zip|tar\.gz)')),
     'linux64-debug': (LinuxArtifactJob, (r'public/build/target\.tar\.bz2',
                                          r'public/build/target\.common\.tests\.(zip|tar\.gz)')),
@@ -569,11 +573,19 @@ JOB_DETAILS = {
                                    r'public/build/target\.(zip|tar\.gz)',
                                    r'public/build/firefox-(.*)\.common\.tests\.(zip|tar\.gz)|'
                                    r'public/build/target\.common\.tests\.(zip|tar\.gz)')),
+    'win32-pgo': (WinArtifactJob, (r'public/build/firefox-(.*)\.win32\.(zip|tar\.gz)|'
+                                   r'public/build/target\.(zip|tar\.gz)',
+                                   r'public/build/firefox-(.*)\.common\.tests\.(zip|tar\.gz)|'
+                                   r'public/build/target\.common\.tests\.(zip|tar\.gz)')),
     'win32-debug': (WinArtifactJob, (r'public/build/firefox-(.*)\.win32\.(zip|tar\.gz)|'
                                      r'public/build/target\.(zip|tar\.gz)',
                                      r'public/build/firefox-(.*)\.common\.tests\.(zip|tar\.gz)|'
                                      r'public/build/target\.common\.tests\.(zip|tar\.gz)')),
     'win64-opt': (WinArtifactJob, (r'public/build/firefox-(.*)\.win64\.(zip|tar\.gz)|'
+                                   r'public/build/target\.(zip|tar\.gz)',
+                                   r'public/build/firefox-(.*)\.common\.tests\.(zip|tar\.gz)|'
+                                   r'public/build/target\.common\.tests\.(zip|tar\.gz)')),
+    'win64-pgo': (WinArtifactJob, (r'public/build/firefox-(.*)\.win64\.(zip|tar\.gz)|'
                                    r'public/build/target\.(zip|tar\.gz)',
                                    r'public/build/firefox-(.*)\.common\.tests\.(zip|tar\.gz)|'
                                    r'public/build/target\.common\.tests\.(zip|tar\.gz)')),
@@ -743,7 +755,7 @@ class TaskCache(CacheManager):
             product=artifact_job.product,
             job=job,
         )
-        self.log(logging.DEBUG, 'artifact',
+        self.log(logging.INFO, 'artifact',
                  {'namespace': namespace},
                  'Searching Taskcluster index with namespace: {namespace}')
         try:
@@ -990,6 +1002,8 @@ class Artifacts(object):
         # if MOZ_DEBUG is enabled.
         if self._substs.get('MOZ_DEBUG'):
             target_suffix = '-debug'
+        elif self._substs.get('MOZ_PGO'):
+            target_suffix = '-pgo'
         else:
             target_suffix = '-opt'
 

@@ -19,62 +19,9 @@ def developer_options(value):
         return True
 
 
-llvm_profdata = check_prog('LLVM_PROFDATA', ['llvm-profdata'],
-                           allow_missing=True)
-
-add_old_configure_assignment('LLVM_PROFDATA', llvm_profdata)
-
-
 add_old_configure_assignment('DEVELOPER_OPTIONS', developer_options)
 set_config('DEVELOPER_OPTIONS', developer_options)
 
-# PGO
-# ==============================================================
-js_option('--enable-profile-generate',
-          help='Build a PGO instrumented binary')
-
-imply_option('MOZ_PGO',
-             depends_if('--enable-profile-generate')(lambda _: True))
-
-set_config('MOZ_PROFILE_GENERATE',
-           depends_if('--enable-profile-generate')(lambda _: True))
-
-js_option('--enable-profile-use',
-          help='Use a generated profile during the build')
-
-js_option('--with-pgo-profile-path',
-          help='Path to the (unmerged) profile path to use during the build',
-          nargs=1)
-
-imply_option('MOZ_PGO',
-             depends_if('--enable-profile-use')(lambda _: True))
-
-set_config('MOZ_PROFILE_USE',
-           depends_if('--enable-profile-use')(lambda _: True))
-
-js_option(env='MOZ_PGO', help='Build with profile guided optimizations')
-
-set_config('MOZ_PGO', depends('MOZ_PGO')(lambda x: bool(x)))
-add_old_configure_assignment('MOZ_PGO', depends('MOZ_PGO')(lambda x: bool(x)))
-
-@depends('--with-pgo-profile-path', '--enable-profile-use', 'LLVM_PROFDATA')
-def pgo_profile_path(path, pgo_use, profdata):
-    if not path:
-        return
-    if path and not pgo_use:
-        die('Pass --enable-profile-use to use --with-pgo-profile-path.')
-    if path and not profdata:
-        die('LLVM_PROFDATA must be set to process the pgo profile.')
-    return path[0]
-
-set_config('PGO_PROFILE_PATH', pgo_profile_path)
-
-option('--with-pgo-jarlog',
-       help='Use the provided jarlog file when packaging during a profile-use '
-            'build',
-       nargs=1)
-
-set_config('PGO_JARLOG_PATH', depends_if('--with-pgo-jarlog')(lambda p: p))
 
 # Code optimization
 # ==============================================================
