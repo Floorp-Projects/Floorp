@@ -17,6 +17,7 @@ import lib.tasks
 
 
 TASK_ID = os.environ.get('TASK_ID')
+TASKS_PRIORITY = os.environ.get('TASKS_PRIORITY')
 REPO_URL = os.environ.get('MOBILE_HEAD_REPOSITORY')
 BRANCH = os.environ.get('MOBILE_HEAD_BRANCH')
 COMMIT = os.environ.get('MOBILE_HEAD_REV')
@@ -45,7 +46,7 @@ def create_raw_task(name, description, full_command, scopes = []):
         "retries": 5,
         "created": taskcluster.stringDate(created),
         "tags": {},
-        "priority": "lowest",
+        "priority": TASKS_PRIORITY,
         "schedulerId": "taskcluster-github",
         "deadline": taskcluster.stringDate(deadline),
         "dependencies": [ TASK_ID ],

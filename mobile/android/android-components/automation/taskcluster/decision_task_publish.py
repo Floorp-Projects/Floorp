@@ -30,6 +30,7 @@ BUILDER = lib.tasks.TaskBuilder(
     owner="skaspari@mozilla.com",
     source='{}/raw/{}/.taskcluster.yml'.format(REPO_URL, HEAD_REV),
     scheduler_id=os.environ.get('SCHEDULER_ID'),
+    tasks_priority=os.environ.get('TASKS_PRIORITY'),
 )
 
 BUILD_GRADLE_TASK_NAMES = ('assemble', 'test', 'lint')
