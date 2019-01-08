@@ -94,17 +94,27 @@ if __name__ == '__main__':
         # Add MOZ_OBJDIR to the env so that cygprofile.cpp can use it.
         env["MOZ_OBJDIR"] = build.topobjdir
 
+        # Write to an output file if we're running in automation
+        process_args = {}
+        if 'UPLOAD_PATH' in env:
+            process_args['logfile'] = os.path.join(env['UPLOAD_PATH'], 'profile-run-1.log')
+
         # Run Firefox a first time to initialize its profile
         runner = FirefoxRunner(profile=profile,
                                binary=binary,
                                cmdargs=['data:text/html,<script>Quitter.quit()</script>'],
                                env=env,
-                               process_args={'logfile': 'profile-run-1.log'})
+                               process_args=process_args)
         runner.start()
         ret = runner.wait()
         if ret:
             print("Firefox exited with code %d during profile initialization"
                   % ret)
+            logfile = process_args.get('logfile')
+            if logfile:
+                print("Firefox output (%s):" % logfile)
+                with open(logfile) as f:
+                    print(f.read())
             httpd.stop()
             sys.exit(ret)
 
@@ -113,15 +123,22 @@ if __name__ == '__main__':
             env["MOZ_JAR_LOG_FILE"] = os.path.abspath(jarlog)
             print("jarlog: %s" % env["MOZ_JAR_LOG_FILE"])
 
+        if 'UPLOAD_PATH' in env:
+            process_args['logfile'] = os.path.join(env['UPLOAD_PATH'], 'profile-run-2.log')
         cmdargs = ["http://localhost:%d/index.html" % PORT]
         runner = FirefoxRunner(profile=profile,
                                binary=binary,
                                cmdargs=cmdargs,
                                env=env,
-                               process_args={'logfile': 'profile-run-2.log'})
+                               process_args=process_args)
         runner.start(debug_args=debug_args, interactive=interactive)
         ret = runner.wait()
         httpd.stop()
         if ret:
             print("Firefox exited with code %d during profiling" % ret)
+            logfile = process_args.get('logfile')
+            if logfile:
+                print("Firefox output (%s):" % logfile)
+                with open(logfile) as f:
+                    print(f.read())
             sys.exit(ret)
