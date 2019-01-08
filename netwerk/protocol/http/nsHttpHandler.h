@@ -64,8 +64,9 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
 
   static already_AddRefed<nsHttpHandler> GetInstance();
 
-  MOZ_MUST_USE nsresult AddStandardRequestHeaders(nsHttpRequestHead *,
-                                                  bool isSecure);
+  MOZ_MUST_USE nsresult
+  AddStandardRequestHeaders(nsHttpRequestHead *, bool isSecure,
+                            nsContentPolicyType aContentPolicyType);
   MOZ_MUST_USE nsresult AddConnectionHeader(nsHttpRequestHead *,
                                             uint32_t capabilities);
   bool IsAcceptableEncoding(const char *encoding, bool isSecure);
@@ -411,7 +412,6 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
   void InitUserAgentComponents();
   void PrefsChanged(const char *pref);
 
-  MOZ_MUST_USE nsresult SetAccept(const char *);
   MOZ_MUST_USE nsresult SetAcceptLanguages();
   MOZ_MUST_USE nsresult SetAcceptEncodings(const char *, bool mIsSecure);
 
@@ -498,7 +498,6 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
 
   bool mEnforceAssocReq;
 
-  nsCString mAccept;
   nsCString mAcceptLanguages;
   nsCString mHttpAcceptEncodings;
   nsCString mHttpsAcceptEncodings;
