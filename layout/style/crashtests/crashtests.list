@@ -208,9 +208,9 @@ load font-face-truncated-src.html
 load large_border_image_width.html
 load link-transition-before.html
 load long-url-list-stack-overflow.html
-skip-if(Android&&AndroidVersion<21) load 1383981.html
-skip-if(Android&&AndroidVersion<21) load 1383981-2.html
-skip-if(Android&&AndroidVersion<21) load 1383981-3.html
+load 1383981.html
+load 1383981-2.html
+load 1383981-3.html
 load 1384824-1.html
 load 1384824-2.html
 load 1386773.html
