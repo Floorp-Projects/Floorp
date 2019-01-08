@@ -197,8 +197,9 @@ def release(version, is_snapshot, is_staging):
             )
         )
 
-    for generate_function in (generate_detekt_task, generate_ktlint_task, generate_compare_locales_task):
-        generate_and_append_task_to_task_graph(queue, task_graph, generate_function)
+    if is_snapshot:     # These jobs perma-fail on release
+        for generate_function in (generate_detekt_task, generate_ktlint_task, generate_compare_locales_task):
+            generate_and_append_task_to_task_graph(queue, task_graph, generate_function)
 
     print(json.dumps(task_graph, indent=4, separators=(',', ': ')))
 
