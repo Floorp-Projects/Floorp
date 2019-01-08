@@ -644,35 +644,55 @@ package org.mozilla.geckoview {
   @android.support.annotation.AnyThread public final class GeckoSessionSettings implements android.os.Parcelable {
     ctor public GeckoSessionSettings();
     ctor public GeckoSessionSettings(@android.support.annotation.NonNull org.mozilla.geckoview.GeckoSessionSettings);
-    method public boolean getBoolean(@android.support.annotation.NonNull org.mozilla.geckoview.GeckoSessionSettings.Key<java.lang.Boolean>);
-    method public int getInt(@android.support.annotation.NonNull org.mozilla.geckoview.GeckoSessionSettings.Key<java.lang.Integer>);
-    method public java.lang.String getString(@android.support.annotation.NonNull org.mozilla.geckoview.GeckoSessionSettings.Key<java.lang.String>);
+    method public boolean getAllowJavascript();
+    method @android.support.annotation.Nullable public java.lang.String getChromeUri();
+    method public int getDisplayMode();
+    method public boolean getFullAccessibilityTree();
+    method public int getScreenId();
+    method public boolean getSuspendMediaWhenInactive();
+    method public boolean getUseMultiprocess();
+    method public boolean getUsePrivateMode();
+    method public boolean getUseTrackingProtection();
+    method public int getUserAgentMode();
+    method @android.support.annotation.Nullable public java.lang.String getUserAgentOverride();
+    method public int getViewportMode();
     method public void readFromParcel(@android.support.annotation.NonNull android.os.Parcel);
-    method public void setBoolean(@android.support.annotation.NonNull org.mozilla.geckoview.GeckoSessionSettings.Key<java.lang.Boolean>, boolean);
-    method public void setInt(@android.support.annotation.NonNull org.mozilla.geckoview.GeckoSessionSettings.Key<java.lang.Integer>, int);
-    method public void setString(@android.support.annotation.NonNull org.mozilla.geckoview.GeckoSessionSettings.Key<java.lang.String>, @android.support.annotation.Nullable java.lang.String);
-    field public static final org.mozilla.geckoview.GeckoSessionSettings.Key<java.lang.Boolean> ALLOW_JAVASCRIPT;
-    field public static final org.mozilla.geckoview.GeckoSessionSettings.Key<java.lang.String> CHROME_URI;
+    method public void setAllowJavascript(boolean);
+    method public void setDisplayMode(int);
+    method public void setFullAccessibilityTree(boolean);
+    method public void setSuspendMediaWhenInactive(boolean);
+    method public void setUseTrackingProtection(boolean);
+    method public void setUserAgentMode(int);
+    method public void setUserAgentOverride(@android.support.annotation.Nullable java.lang.String);
+    method public void setViewportMode(int);
     field public static final android.os.Parcelable.Creator<org.mozilla.geckoview.GeckoSessionSettings> CREATOR;
-    field public static final org.mozilla.geckoview.GeckoSessionSettings.Key<java.lang.Integer> DISPLAY_MODE;
     field public static final int DISPLAY_MODE_BROWSER = 0;
     field public static final int DISPLAY_MODE_FULLSCREEN = 3;
     field public static final int DISPLAY_MODE_MINIMAL_UI = 1;
     field public static final int DISPLAY_MODE_STANDALONE = 2;
-    field public static final org.mozilla.geckoview.GeckoSessionSettings.Key<java.lang.Boolean> FULL_ACCESSIBILITY_TREE;
-    field public static final org.mozilla.geckoview.GeckoSessionSettings.Key<java.lang.Integer> SCREEN_ID;
-    field public static final org.mozilla.geckoview.GeckoSessionSettings.Key<java.lang.Boolean> SUSPEND_MEDIA_WHEN_INACTIVE;
-    field public static final org.mozilla.geckoview.GeckoSessionSettings.Key<java.lang.Integer> USER_AGENT_MODE;
     field public static final int USER_AGENT_MODE_DESKTOP = 1;
     field public static final int USER_AGENT_MODE_MOBILE = 0;
     field public static final int USER_AGENT_MODE_VR = 2;
-    field public static final org.mozilla.geckoview.GeckoSessionSettings.Key<java.lang.String> USER_AGENT_OVERRIDE;
-    field public static final org.mozilla.geckoview.GeckoSessionSettings.Key<java.lang.Boolean> USE_MULTIPROCESS;
-    field public static final org.mozilla.geckoview.GeckoSessionSettings.Key<java.lang.Boolean> USE_PRIVATE_MODE;
-    field public static final org.mozilla.geckoview.GeckoSessionSettings.Key<java.lang.Boolean> USE_TRACKING_PROTECTION;
-    field public static final org.mozilla.geckoview.GeckoSessionSettings.Key<java.lang.Integer> VIEWPORT_MODE;
     field public static final int VIEWPORT_MODE_DESKTOP = 1;
     field public static final int VIEWPORT_MODE_MOBILE = 0;
+  }
+
+  @android.support.annotation.AnyThread public static final class GeckoSessionSettings.Builder {
+    ctor public Builder();
+    ctor public Builder(org.mozilla.geckoview.GeckoSessionSettings);
+    method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoSessionSettings.Builder allowJavascript(boolean);
+    method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoSessionSettings build();
+    method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoSessionSettings.Builder chromeUri(java.lang.String);
+    method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoSessionSettings.Builder displayMode(int);
+    method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoSessionSettings.Builder fullAccessibilityTree(boolean);
+    method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoSessionSettings.Builder screenId(int);
+    method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoSessionSettings.Builder suspendMediaWhenInactive(boolean);
+    method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoSessionSettings.Builder useMultiprocess(boolean);
+    method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoSessionSettings.Builder usePrivateMode(boolean);
+    method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoSessionSettings.Builder useTrackingProtection(boolean);
+    method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoSessionSettings.Builder userAgentMode(int);
+    method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoSessionSettings.Builder userAgentOverride(@android.support.annotation.NonNull java.lang.String);
+    method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoSessionSettings.Builder viewportMode(int);
   }
 
   public static class GeckoSessionSettings.Key<T> {
