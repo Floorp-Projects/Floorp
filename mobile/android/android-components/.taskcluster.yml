@@ -52,7 +52,7 @@ tasks:
         else: mobile-1-decision
 
       build_worker_type:
-        $if: 'is_repo_trusted'
+        $if: 'is_repo_trusted && tasks_for in ["github-release", "cron"]'
         then: gecko-focus
         else: android-components-g
 
