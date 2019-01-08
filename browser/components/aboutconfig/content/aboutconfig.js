@@ -6,7 +6,22 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/Preferences.jsm");
 
 let gDefaultBranch = Services.prefs.getDefaultBranch("");
-let gPrefArray;
+
+/**
+ * Maps the name of each preference that exists in the back-end to its PrefRow
+ * object. This is as an optimization to avoid querying the preferences service
+ * each time the list is filtered.
+ */
+let gExistingPrefs = new Map();
+
+/**
+ * Maps each row element currently in the table to its PrefRow object.
+ */
+let gElementToPrefMap = new WeakMap();
+
+/**
+ * Reference to the PrefRow currently being edited, if any.
+ */
 let gPrefInEdit = null;
 
 class PrefRow {
@@ -16,8 +31,8 @@ class PrefRow {
 
     this.editing = false;
     this.element = document.createElement("tr");
-    this.element.setAttribute("aria-label", this.name);
     this._setupElement();
+    gElementToPrefMap.set(this.element, this);
   }
 
   refreshValue() {
@@ -159,10 +174,6 @@ class PrefRow {
   }
 }
 
-function getPrefName(prefRow) {
-  return prefRow.getAttribute("aria-label");
-}
-
 document.addEventListener("DOMContentLoaded", () => {
   if (!Preferences.get("browser.aboutConfig.showWarning")) {
     loadPrefs();
@@ -187,9 +198,8 @@ function loadPrefs() {
   prefs.id = "prefs";
   document.body.appendChild(prefs);
 
-  gPrefArray = Services.prefs.getChildList("").map(name => new PrefRow(name));
-
-  gPrefArray.sort((a, b) => a.name > b.name);
+  gExistingPrefs = new Map(Services.prefs.getChildList("")
+                                   .map(name => [name, new PrefRow(name)]));
 
   search.addEventListener("keypress", e => {
     if (e.key == "Enter") {
@@ -202,12 +212,10 @@ function loadPrefs() {
       return;
     }
     let prefRow = event.target.closest("tr");
-    let prefName = getPrefName(prefRow);
-    let pref = gPrefArray.find(p => p.name == prefName);
+    let pref = gElementToPrefMap.get(prefRow);
     let button = event.target.closest("button");
     if (button.classList.contains("button-reset")) {
-      // Reset pref and update gPrefArray.
-      Services.prefs.clearUserPref(prefName);
+      Services.prefs.clearUserPref(pref.name);
       pref.refreshValue();
       pref.refreshElement();
       pref.editButton.focus();
@@ -220,8 +228,7 @@ function loadPrefs() {
       addNewPref(prefRow.firstChild.innerHTML,
         button.classList.contains("add-Number") ? 0 : "").edit();
     } else if (button.classList.contains("button-toggle")) {
-      // Toggle the pref and update gPrefArray.
-      Services.prefs.setBoolPref(prefName, !pref.value);
+      Services.prefs.setBoolPref(pref.name, !pref.value);
       pref.refreshValue();
       pref.refreshElement();
     } else if (button.classList.contains("button-edit")) {
@@ -229,8 +236,8 @@ function loadPrefs() {
     } else if (button.classList.contains("button-save")) {
       pref.save();
     } else {
-      Services.prefs.clearUserPref(prefName);
-      gPrefArray.splice(gPrefArray.findIndex(p => p.name == prefName), 1);
+      Services.prefs.clearUserPref(pref.name);
+      gExistingPrefs.delete(pref.name);
       prefRow.remove();
     }
   });
@@ -245,10 +252,15 @@ function filterPrefs() {
 
   let substring = document.getElementById("search").value.trim();
   document.getElementById("prefs").textContent = "";
-  if (substring && !gPrefArray.some(pref => pref.name == substring)) {
+  let prefArray = [...gExistingPrefs.values()];
+  if (substring) {
+    prefArray = prefArray.filter(pref => pref.name.includes(substring));
+  }
+  prefArray.sort((a, b) => a.name > b.name);
+  if (substring && !gExistingPrefs.has(substring)) {
     document.getElementById("prefs").appendChild(createNewPrefFragment(substring));
   }
-  let fragment = createPrefsFragment(gPrefArray.filter(pref => pref.name.includes(substring)));
+  let fragment = createPrefsFragment(prefArray);
   document.getElementById("prefs").appendChild(fragment);
 }
 
@@ -313,8 +325,7 @@ function prefHasDefaultValue(name) {
 function addNewPref(name, value) {
   Preferences.set(name, value);
   let pref = new PrefRow(name);
-  gPrefArray.push(pref);
-  gPrefArray.sort((a, b) => a.name > b.name);
+  gExistingPrefs.set(name, pref);
   filterPrefs();
   return pref;
 }
