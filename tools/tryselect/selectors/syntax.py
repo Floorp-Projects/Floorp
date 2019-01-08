@@ -158,7 +158,7 @@ class SyntaxParser(BaseTryParser):
 
 
 class TryArgumentTokenizer(object):
-    symbols = [("separator", ","),
+    symbols = [("seperator", ","),
                ("list_start", "\["),
                ("list_end", "\]"),
                ("item", "([^,\[\]\s][^,\[\]]+)"),
@@ -222,7 +222,7 @@ class TryArgumentParser(object):
             self.data[value] = []
         self.current_item = value
         self.consume()
-        if self.token[0] == "separator":
+        if self.token[0] == "seperator":
             self.consume()
         elif self.token[0] == "list_start":
             self.consume()
@@ -237,7 +237,7 @@ class TryArgumentParser(object):
         value = self.token[1].strip()
         self.data[self.current_item].append(value)
         self.consume()
-        if self.token[0] == "separator":
+        if self.token[0] == "seperator":
             self.consume()
         elif self.token[0] == "list_end":
             self.consume()
@@ -246,7 +246,7 @@ class TryArgumentParser(object):
             raise ValueError
 
     def after_list_end_state(self):
-        self.expect("separator")
+        self.expect("seperator")
         self.consume()
         self.state = self.item_state
 
