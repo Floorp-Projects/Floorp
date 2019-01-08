@@ -207,7 +207,7 @@ class EffectCompositor {
   // runnning on the compositor.
   // Sets the reason in |aWarning| if the result is false.
   static bool AllowCompositorAnimationsOnFrame(
-      const nsIFrame* aFrame, const EffectSet& aEffects,
+      const nsIFrame* aFrame,
       AnimationPerformanceWarning::Type& aWarning /* out */);
 
  private:
