@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/EventListenerManager.h"
+#include "mozilla/SMILParserUtils.h"
 #include "mozilla/SMILTimeContainer.h"
 #include "mozilla/SMILTimedElement.h"
 #include "mozilla/dom/Event.h"
@@ -14,7 +15,6 @@
 #include "nsSMILInterval.h"
 #include "nsSMILTimeValue.h"
 #include "nsSMILInstanceTime.h"
-#include "nsSMILParserUtils.h"
 #include "nsString.h"
 #include <limits>
 
@@ -53,7 +53,7 @@ nsresult nsSMILTimeValueSpec::SetSpec(const nsAString& aStringSpec,
                                       Element& aContextElement) {
   nsSMILTimeValueSpecParams params;
 
-  if (!nsSMILParserUtils::ParseTimeValueSpecParams(aStringSpec, params))
+  if (!SMILParserUtils::ParseTimeValueSpecParams(aStringSpec, params))
     return NS_ERROR_FAILURE;
 
   mParams = params;

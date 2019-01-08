@@ -304,6 +304,10 @@ void LayerManagerMLGPU::Composite() {
   // performs invalidation against the clean layer tree.
   mClonedLayerTreeProperties = nullptr;
   mClonedLayerTreeProperties = LayerProperties::CloneFrom(mRoot);
+
+  PayloadPresented();
+
+  mPayload.Clear();
 }
 
 void LayerManagerMLGPU::RenderLayers() {

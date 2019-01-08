@@ -47,6 +47,7 @@ using mozilla::layers::ScrollableLayerGuid::ViewID from "mozilla/layers/Scrollab
 using mozilla::layers::LayersBackend from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::LayerHandle from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::CompositableHandle from "mozilla/layers/LayersTypes.h";
+using mozilla::layers::CompositionPayload from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::SimpleLayerAttributes from "mozilla/layers/LayerAttributes.h";
 using mozilla::CrossProcessSemaphoreHandle from "mozilla/ipc/CrossProcessSemaphore.h";
 using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
@@ -560,6 +561,10 @@ struct TransactionInfo
   TimeStamp transactionStart;
   nsCString url;
   TimeStamp fwdTime;
+  /* This provides some timing information on any content that is meant to be
+   * presented during this transaction.
+   */
+  CompositionPayload[] payload;
 };
 
 union MaybeTransform {

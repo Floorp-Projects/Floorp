@@ -8,7 +8,7 @@
 #define mozilla_layout_ScrollAnimationBezierPhysics_h_
 
 #include "ScrollAnimationPhysics.h"
-#include "nsSMILKeySpline.h"
+#include "mozilla/SMILKeySpline.h"
 
 namespace mozilla {
 
@@ -53,7 +53,7 @@ class ScrollAnimationBezierPhysics final : public ScrollAnimationPhysics {
   }
 
   nscoord VelocityComponent(double aTimeProgress,
-                            const nsSMILKeySpline& aTimingFunction,
+                            const SMILKeySpline& aTimingFunction,
                             nscoord aStart, nscoord aDestination) const;
 
   // Calculate duration, possibly dynamically according to events rate and
@@ -63,7 +63,7 @@ class ScrollAnimationBezierPhysics final : public ScrollAnimationPhysics {
 
   // Initializes the timing function in such a way that the current velocity is
   // preserved.
-  void InitTimingFunction(nsSMILKeySpline& aTimingFunction, nscoord aCurrentPos,
+  void InitTimingFunction(SMILKeySpline& aTimingFunction, nscoord aCurrentPos,
                           nscoord aCurrentVelocity, nscoord aDestination);
 
   // Initialize event history.
@@ -84,8 +84,8 @@ class ScrollAnimationBezierPhysics final : public ScrollAnimationPhysics {
   nsPoint mStartPos;
   nsPoint mDestination;
   TimeDuration mDuration;
-  nsSMILKeySpline mTimingFunctionX;
-  nsSMILKeySpline mTimingFunctionY;
+  SMILKeySpline mTimingFunctionX;
+  SMILKeySpline mTimingFunctionY;
   bool mIsFirstIteration;
 };
 
