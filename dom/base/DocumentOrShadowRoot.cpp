@@ -89,7 +89,7 @@ Element* DocumentOrShadowRoot::GetElementById(const nsAString& aElementId) {
     return nullptr;
   }
 
-  if (nsIdentifierMapEntry* entry = mIdentifierMap.GetEntry(aElementId)) {
+  if (IdentifierMapEntry* entry = mIdentifierMap.GetEntry(aElementId)) {
     if (Element* el = entry->GetIdElement()) {
       return el;
     }
@@ -394,7 +394,7 @@ Element* DocumentOrShadowRoot::AddIDTargetObserver(nsAtom* aID,
     return nullptr;
   }
 
-  nsIdentifierMapEntry* entry = mIdentifierMap.PutEntry(aID);
+  IdentifierMapEntry* entry = mIdentifierMap.PutEntry(aID);
   NS_ENSURE_TRUE(entry, nullptr);
 
   entry->AddContentChangeCallback(aObserver, aData, aForImage);
@@ -410,7 +410,7 @@ void DocumentOrShadowRoot::RemoveIDTargetObserver(nsAtom* aID,
     return;
   }
 
-  nsIdentifierMapEntry* entry = mIdentifierMap.GetEntry(aID);
+  IdentifierMapEntry* entry = mIdentifierMap.GetEntry(aID);
   if (!entry) {
     return;
   }
@@ -423,7 +423,7 @@ Element* DocumentOrShadowRoot::LookupImageElement(const nsAString& aId) {
     return nullptr;
   }
 
-  nsIdentifierMapEntry* entry = mIdentifierMap.GetEntry(aId);
+  IdentifierMapEntry* entry = mIdentifierMap.GetEntry(aId);
   return entry ? entry->GetImageIdElement() : nullptr;
 }
 
