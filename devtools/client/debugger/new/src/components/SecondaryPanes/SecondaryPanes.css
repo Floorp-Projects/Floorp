@@ -1,0 +1,73 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+.secondary-panes {
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  white-space: nowrap;
+  --breakpoint-expression-right-clear-space: 36px;
+  --breakpoint-expression-height: 2.4em;
+}
+
+/*
+  We apply overflow to the container with the commandbar.
+  This allows the commandbar to remain fixed when scrolling
+  until the content completely ends. Not just the height of
+  the wrapper.
+  Ref: https://github.com/devtools-html/debugger.html/issues/3426
+*/
+
+.secondary-panes-wrapper {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.secondary-panes .accordion {
+  flex: 1 0 auto;
+  margin-bottom: 0;
+}
+
+.secondary-panes-wrapper .accordion li:last-child ._content {
+  border-bottom: 0;
+}
+
+.pane {
+  color: var(--theme-body-color);
+}
+
+.pane .pane-info {
+  font-style: italic;
+  text-align: center;
+  padding: 0.5em;
+  -moz-user-select: none;
+  user-select: none;
+  cursor: default;
+}
+
+.secondary-panes .breakpoints-buttons {
+  display: flex;
+}
+
+.secondary-panes .accordion .plus {
+  margin-top: -2px;
+}
+
+.secondary-panes .accordion .plus svg {
+  width: 12px;
+  margin-top: 3px;
+  fill: var(--theme-body-color);
+}
+
+.secondary-panes .accordion .plus.active svg {
+  fill: var(--theme-highlight-blue);
+}
+
+.dropdown {
+  width: 20em;
+  overflow: auto;
+}

@@ -1,0 +1,28 @@
+.outline-filter {
+  margin: 5px 0 0 0;
+  padding: 0px 10px;
+}
+
+.outline-filter-input {
+  padding: 0.5em 1.6em;
+  width: 100%;
+  border: 1px solid var(--theme-splitter-color);
+  background-color: var(--theme-sidebar-background);
+  color: var(--theme-body-color);
+  font-size: 12px;
+  -moz-user-select: text;
+  user-select: text;
+}
+
+.outline-filter-input.focused {
+  border: 1px solid var(--theme-highlight-blue);
+}
+
+.outline-filter-input::placeholder {
+  font-style: italic;
+  color: var(--theme-comment);
+}
+
+.theme-dark .outline-filter-input.focused {
+  border: 1px solid var(--blue-50);
+}

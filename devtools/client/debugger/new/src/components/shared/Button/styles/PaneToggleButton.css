@@ -1,0 +1,45 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+.toggle-button {
+  transform: translate(0, 0px);
+  transition: transform 0.25s ease-in-out;
+  padding: 5px;
+}
+
+.toggle-button .togglePanes {
+  vertical-align: -2px;
+}
+
+.toggle-button svg {
+  fill: var(--theme-comment);
+  vertical-align: 0;
+}
+
+:root.theme-dark .toggle-button svg {
+  fill: var(--theme-comment-alt);
+}
+
+.toggle-button.end {
+  margin-inline-end: 0px;
+  margin-inline-start: auto;
+}
+
+.toggle-button.start {
+  margin-inline-start: 0px;
+}
+
+html:not([dir="rtl"]) .toggle-button.end svg,
+html[dir="rtl"] .toggle-button.start svg {
+  transform: rotate(180deg);
+}
+
+html .toggle-button.end.vertical svg {
+  transform: rotate(-90deg);
+}
+
+.toggle-button.start.collapsed,
+.toggle-button.end.collapsed {
+  transform: rotate(180deg);
+}

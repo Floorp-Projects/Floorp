@@ -1,0 +1,259 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+.breakpoints-toggle {
+  margin: 2px 3px;
+}
+
+.pane.breakpoints-list {
+  padding-bottom: 0.35em;
+}
+
+.breakpoints-list * {
+  user-select: none;
+}
+
+.breakpoints-list .breakpoint-heading {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  display: flex;
+  width: 100%;
+  align-items: center;
+}
+
+.breakpoints-list .breakpoint-heading .filename {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.breakpoints-list .breakpoint-heading .filename span {
+  opacity: 0.7;
+  padding-left: 4px;
+}
+
+/* temporary until we refactor the sources tree and tab icon styles */
+.breakpoints-list .breakpoint-heading .source-icon.file {
+  top: 0;
+}
+
+.breakpoints-list .breakpoint-heading,
+.breakpoints-list .breakpoint {
+  font-size: 12px;
+  color: var(--theme-content-color1);
+  position: relative;
+  transition: all 0.25s ease;
+  cursor: pointer;
+}
+
+.breakpoints-list .breakpoint-heading,
+.breakpoints-list .breakpoint,
+.breakpoints-exceptions,
+.breakpoints-exceptions-caught {
+  padding: 0.25em 1em;
+}
+
+.breakpoints-exceptions {
+  padding-bottom: 0.5em;
+  padding-top: 0.5em;
+  user-select: none;
+}
+
+.breakpoints-list .breakpoint {
+  min-height: var(--breakpoint-expression-height);
+}
+
+.breakpoints-exceptions-caught {
+  padding: 0 1em 0.5em 3em;
+  margin-top: -0.25em;
+}
+
+html[dir="rtl"] .breakpoints-exceptions-caught {
+  padding: 0 3em 0.5em 1em;
+}
+
+.breakpoints-exceptions-options:not(.empty) {
+  border-bottom: 1px solid var(--theme-splitter-color);
+  margin-bottom: 3px;
+}
+
+.breakpoints-exceptions input,
+.breakpoints-exceptions-caught input {
+  padding-inline-start: 2px;
+  margin-inline-start: 0;
+  vertical-align: text-bottom;
+}
+
+.breakpoint-exceptions-label {
+  padding-top: 2px;
+  padding-inline-start: 2px;
+  padding-inline-end: 8px;
+  cursor: default;
+}
+
+.breakpoints-list .breakpoint,
+.breakpoints-exceptions,
+.breakpoints-exceptions-caught {
+  display: flex;
+  align-items: center;
+}
+
+html[dir="rtl"] .breakpoints-list .breakpoint,
+html[dir="rtl"] .breakpoints-list .breakpoint-heading,
+html[dir="rtl"] .breakpoints-exceptions {
+  border-right: 4px solid transparent;
+}
+
+html:not([dir="rtl"]) .breakpoints-list .breakpoint,
+html:not([dir="rtl"]) .breakpoints-list .breakpoint-heading,
+html:not([dir="rtl"]) .breakpoints-exceptions {
+  border-left: 4px solid transparent;
+}
+
+html:not([dir="rtl"]) .breakpoints-list .breakpoint.is-conditional {
+  border-left-color: var(--theme-graphs-yellow);
+}
+
+html[dir="rtl"] .breakpoints-list .breakpoint.is-conditional {
+  border-right-color: var(--theme-graphs-yellow);
+}
+
+html:not([dir="rtl"]) .breakpoints-list .breakpoint.is-conditional.log {
+  border-left-color: var(--theme-graphs-orange);
+}
+
+html[dir="rtl"] .breakpoints-list .breakpoint.is-conditional.log {
+  border-right-color: var(--theme-graphs-orange);
+}
+
+html .breakpoints-list .breakpoint.paused {
+  background-color: var(--theme-toolbar-background-alt);
+  border-color: var(--breakpoint-active-color);
+}
+
+.breakpoints-list .breakpoint.disabled .breakpoint-label {
+  color: var(--theme-comment);
+  transition: color 0.15s linear;
+}
+
+.breakpoints-list .breakpoint:hover {
+  background-color: var(--search-overlays-semitransparent);
+}
+
+.breakpoints-list .breakpoint .breakpoint-line,
+.breakpoints-list .breakpoint-label {
+  font-family: var(--monospace-font-family);
+}
+
+.breakpoints-list .breakpoint .breakpoint-line {
+  font-size: 11px;
+  color: var(--theme-comment);
+  min-width: 16px;
+  text-align: right;
+}
+
+html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
+  text-align: left;
+}
+
+.breakpoints-list .breakpoint:hover .breakpoint-line {
+  color: transparent;
+}
+
+.breakpoints-list .breakpoint.paused:hover {
+  border-color: var(--breakpoint-active-color-hover);
+}
+
+.breakpoints-list .breakpoint-label {
+  max-width: calc(100% - var(--breakpoint-expression-right-clear-space));
+  display: inline-block;
+  padding-inline-end: 8px;
+  cursor: pointer;
+  flex-grow: 1;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  padding-top: 2px;
+  font-size: 11px;
+}
+
+.breakpoints-list .breakpoint-label,
+.breakpoint-line-close {
+  line-height: 1.4em;
+}
+
+.breakpoint-checkbox {
+  margin-inline-start: 0;
+  vertical-align: text-bottom;
+}
+
+.breakpoint-label .location {
+  width: 100%;
+  display: inline-block;
+  overflow-x: hidden;
+  text-overflow: ellipsis;
+  padding: 1px 0;
+  vertical-align: bottom;
+}
+
+.breakpoints-list .pause-indicator {
+  flex: 0 1 content;
+  order: 3;
+}
+
+.breakpoint .close-btn {
+  offset-inline-end: 15px;
+  inset-inline-end: 15px;
+  offset-inline-start: auto;
+  inset-inline-start: auto;
+  position: absolute;
+  top: 8px;
+  display: none;
+}
+
+.breakpoint:hover .close-btn {
+  display: flex;
+}
+
+.breakpoint .close {
+  visibility: hidden;
+}
+
+.breakpoint:hover .close {
+  visibility: visible;
+}
+
+.CodeMirror.cm-s-mozilla-breakpoint {
+  cursor: pointer;
+}
+
+.CodeMirror.cm-s-mozilla-breakpoint .CodeMirror-lines {
+  padding: 0;
+}
+
+.CodeMirror.cm-s-mozilla-breakpoint .CodeMirror-sizer {
+  min-width: initial !important;
+}
+
+.breakpoints-list .breakpoint .CodeMirror.cm-s-mozilla-breakpoint {
+  transition: opacity 0.15s linear;
+}
+
+.breakpoints-list .breakpoint.disabled .CodeMirror.cm-s-mozilla-breakpoint {
+  opacity: 0.5;
+}
+
+.CodeMirror.cm-s-mozilla-breakpoint .CodeMirror-line span[role="presentation"] {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: inline-block;
+}
+
+.CodeMirror.cm-s-mozilla-breakpoint .CodeMirror-code,
+.CodeMirror.cm-s-mozilla-breakpoint .CodeMirror-scroll {
+  pointer-events: none;
+}
+
+.CodeMirror.cm-s-mozilla-breakpoint {
+  padding-top: 1px;
+}

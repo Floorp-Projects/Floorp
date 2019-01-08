@@ -1,0 +1,37 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+.frames ul .frames-group .group,
+.frames ul .frames-group .group .location {
+  font-weight: 500;
+  cursor: default;
+  /*
+   * direction:rtl is set in Frames.css to overflow the location text from the
+   * start. Here we need to reset it in order to display the framework icon
+   * after the framework name.
+   */
+  direction: ltr;
+}
+
+.frames ul .frames-group.expanded .group,
+.frames ul .frames-group.expanded .group .location {
+  color: var(--theme-highlight-blue);
+}
+
+.frames ul .frames-group.expanded .react path {
+  fill: var(--theme-highlight-blue);
+}
+
+.frames ul .frames-group .frames-list li {
+  padding-left: 30px;
+}
+
+.frames ul .frames-group .frames-list {
+  border-top: 1px solid var(--theme-splitter-color);
+  border-bottom: 1px solid var(--theme-splitter-color);
+}
+
+.frames ul .frames-group.expanded .badge {
+  color: var(--theme-highlight-blue);
+}

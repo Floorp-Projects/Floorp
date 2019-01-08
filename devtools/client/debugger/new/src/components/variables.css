@@ -1,0 +1,19 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+:root {
+  --icon-size: 13px;
+}
+
+:root.theme-light,
+:root .theme-light {
+  --search-overlays-semitransparent: rgba(221, 225, 228, 0.66);
+  --popup-shadow-color: #d0d0d0;
+}
+
+:root.theme-dark,
+:root .theme-dark {
+  --search-overlays-semitransparent: rgba(42, 46, 56, 0.66);
+  --popup-shadow-color: #5c667b;
+}

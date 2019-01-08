@@ -1,0 +1,139 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+.command-bar {
+  flex: 0 0 29px;
+  border-bottom: 1px solid var(--theme-splitter-color);
+  display: flex;
+  overflow: hidden;
+  z-index: 1;
+  background-color: var(--theme-toolbar-background);
+}
+
+html[dir="rtl"] .command-bar {
+  border-right: 1px solid var(--theme-splitter-color);
+}
+
+.theme-dark .command-bar {
+  background-color: var(--theme-toolbar-background);
+}
+
+.img.pause,
+.img.stepOver,
+.img.stepIn,
+.img.stepOut,
+.img.resume,
+.img.rewind,
+.img.reverseStepOver,
+.img.reverseStepIn,
+.img.reverseStepOut,
+.img.replay-previous,
+.img.replay-next,
+.img.resume,
+.img.shortcuts,
+.img.skipPausing {
+  background-color: var(--theme-body-color);
+}
+
+.img.pause {
+  mask: url(/images/pause.svg) no-repeat;
+}
+
+.img.stepOver {
+  mask: url(/images/stepOver.svg) no-repeat;
+}
+
+.img.stepIn {
+  mask: url(/images/stepIn.svg) no-repeat;
+}
+
+.img.stepOut {
+  mask: url(/images/stepOut.svg) no-repeat;
+}
+
+.img.resume {
+  mask: url(/images/resume.svg) no-repeat;
+}
+
+.img.rewind {
+  mask: url(/images/resume.svg) no-repeat;
+  transform: scaleX(-1);
+}
+
+.img.reverseStepOver {
+  mask: url(/images/stepOver.svg) no-repeat;
+  transform: scaleX(-1);
+}
+
+.img.reverseStepIn {
+  mask: url(/images/stepIn.svg) no-repeat;
+  transform: scaleX(-1);
+}
+
+.img.reverseStepOut {
+  mask: url(/images/stepOut.svg) no-repeat;
+  transform: scaleX(-1);
+}
+
+.command-bar .filler {
+  flex-grow: 1;
+}
+
+.command-bar .img.shortcuts {
+  mask: url(/images/help.svg) no-repeat;
+  mask-size: contain;
+}
+
+.command-bar .replay-inactive {
+  opacity: 0.5;
+}
+
+.command-bar .step-position {
+  color: var(--theme-comment-alt);
+  padding-top: 8px;
+  margin-inline-end: 4px;
+}
+
+.command-bar .replay-active {
+  color: var(--theme-highlight-blue);
+}
+
+.command-bar .subSettings {
+  float: right;
+}
+
+.command-bar .skipPausing {
+  mask: url(/images/disable-pausing.svg) no-repeat;
+  mask-size: 100%;
+}
+
+.command-bar .active .skipPausing {
+  background-color: var(--theme-highlight-blue);
+}
+
+.bottom {
+  border-bottom: none;
+  background-color: var(--theme-body-background);
+  border-top: 1px solid var(--theme-splitter-color);
+  flex: 0 0 25px;
+}
+
+.command-bar.bottom {
+  justify-content: flex-end;
+}
+
+.command-bar.bottom > button {
+  color: var(--theme-comment);
+  width: 26px;
+}
+.command-bar.bottom > button:hover {
+  color: var(--theme-body-color);
+}
+
+.command-bar .divider {
+  width: 1px;
+  background: var(--theme-splitter-color);
+  height: 10px;
+  margin: 11px 6px 0 6px;
+}
