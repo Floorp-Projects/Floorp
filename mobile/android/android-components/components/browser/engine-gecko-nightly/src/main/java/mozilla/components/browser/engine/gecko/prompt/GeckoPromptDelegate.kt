@@ -47,14 +47,13 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
     GeckoSession.PromptDelegate {
 
     override fun onChoicePrompt(
-        session: GeckoSession?,
+        session: GeckoSession,
         title: String?,
         msg: String?,
         type: Int,
         geckoChoices: Array<out GeckoChoice>,
         callback: ChoiceCallback
     ) {
-
         val pair = convertToChoices(geckoChoices)
         // An array of all the GeckoChoices transformed as local Choices object.
         val choices = pair.first
@@ -67,7 +66,7 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
                 geckoEngineSession.notifyObservers {
                     onPromptRequest(SingleChoice(choices) { selectedChoice ->
                         val geckoChoice = mapChoicesToGeckoChoices[selectedChoice]
-                        callback.confirm(geckoChoice)
+                        callback.confirm(geckoChoice!!)
                     })
                 }
             }
@@ -76,7 +75,7 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
                 geckoEngineSession.notifyObservers {
                     onPromptRequest(MenuChoice(choices) { selectedChoice ->
                         val geckoChoice = mapChoicesToGeckoChoices[selectedChoice]
-                        callback.confirm(geckoChoice)
+                        callback.confirm(geckoChoice!!)
                     })
                 }
             }
@@ -93,7 +92,7 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
     }
 
     override fun onAlert(
-        session: GeckoSession?,
+        session: GeckoSession,
         title: String?,
         message: String?,
         callback: AlertCallback
@@ -113,10 +112,10 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
     }
 
     override fun onFilePrompt(
-        session: GeckoSession?,
+        session: GeckoSession,
         title: String?,
         selectionType: Int,
-        mimeTypes: Array<out String>,
+        mimeTypes: Array<out String>?,
         callback: FileCallback
     ) {
 
@@ -137,7 +136,7 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
         geckoEngineSession.notifyObservers {
             onPromptRequest(
                 PromptRequest.File(
-                    mimeTypes,
+                    mimeTypes ?: emptyArray(),
                     isMultipleFilesSelection,
                     onSelectSingle,
                     onSelectMultiple,
@@ -148,7 +147,7 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
     }
 
     override fun onDateTimePrompt(
-        session: GeckoSession?,
+        session: GeckoSession,
         title: String?,
         type: Int,
         value: String?,
@@ -202,37 +201,37 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
     }
 
     override fun onButtonPrompt(
-        session: GeckoSession?,
+        session: GeckoSession,
         title: String?,
         msg: String?,
         btnMsg: Array<out String>?,
-        callback: ButtonCallback?
+        callback: ButtonCallback
     ) = Unit
 
     override fun onColorPrompt(
-        session: GeckoSession?,
+        session: GeckoSession,
         title: String?,
         value: String?,
-        callback: TextCallback?
+        callback: TextCallback
     ) = Unit // Related issue: https://github.com/mozilla-mobile/android-components/issues/1469
 
     override fun onAuthPrompt(
-        session: GeckoSession?,
+        session: GeckoSession,
         title: String?,
         msg: String?,
-        options: AuthOptions?,
-        callback: AuthCallback?
+        options: AuthOptions,
+        callback: AuthCallback
     ) = Unit // Related issue: https://github.com/mozilla-mobile/android-components/issues/1378
 
     override fun onTextPrompt(
-        session: GeckoSession?,
+        session: GeckoSession,
         title: String?,
         msg: String?,
         value: String?,
-        callback: TextCallback?
+        callback: TextCallback
     ) = Unit // Related issue: https://github.com/mozilla-mobile/android-components/issues/1471
 
-    override fun onPopupRequest(session: GeckoSession?, targetUri: String?): GeckoResult<AllowOrDeny> {
+    override fun onPopupRequest(session: GeckoSession, targetUri: String?): GeckoResult<AllowOrDeny> {
         return GeckoResult()
     } // Related issue: https://github.com/mozilla-mobile/android-components/issues/1473
 

@@ -259,7 +259,11 @@ class GeckoEngineSession(
      */
     @Suppress("ComplexMethod")
     private fun createNavigationDelegate() = object : GeckoSession.NavigationDelegate {
-        override fun onLocationChange(session: GeckoSession?, url: String) {
+        override fun onLocationChange(session: GeckoSession, url: String?) {
+            if (url == null) {
+                return // ¯\_(ツ)_/¯
+            }
+
             // Ignore initial load of about:blank (see https://github.com/mozilla-mobile/android-components/issues/403)
             if (initialLoad && url == ABOUT_BLANK) {
                 return
@@ -292,11 +296,11 @@ class GeckoEngineSession(
             return GeckoResult.fromValue(if (response != null) AllowOrDeny.DENY else AllowOrDeny.ALLOW)
         }
 
-        override fun onCanGoForward(session: GeckoSession?, canGoForward: Boolean) {
+        override fun onCanGoForward(session: GeckoSession, canGoForward: Boolean) {
             notifyObservers { onNavigationStateChange(canGoForward = canGoForward) }
         }
 
-        override fun onCanGoBack(session: GeckoSession?, canGoBack: Boolean) {
+        override fun onCanGoBack(session: GeckoSession, canGoBack: Boolean) {
             notifyObservers { onNavigationStateChange(canGoBack = canGoBack) }
         }
 
@@ -306,7 +310,7 @@ class GeckoEngineSession(
         ): GeckoResult<GeckoSession> = GeckoResult.fromValue(null)
 
         override fun onLoadError(
-            session: GeckoSession?,
+            session: GeckoSession,
             uri: String?,
             error: WebRequestError
         ): GeckoResult<String> {
@@ -325,13 +329,13 @@ class GeckoEngineSession(
      * ProgressDelegate implementation for forwarding callbacks to observers of the session.
      */
     private fun createProgressDelegate() = object : GeckoSession.ProgressDelegate {
-        override fun onProgressChange(session: GeckoSession?, progress: Int) {
+        override fun onProgressChange(session: GeckoSession, progress: Int) {
             notifyObservers { onProgress(progress) }
         }
 
         override fun onSecurityChange(
-            session: GeckoSession?,
-            securityInfo: GeckoSession.ProgressDelegate.SecurityInformation?
+            session: GeckoSession,
+            securityInfo: GeckoSession.ProgressDelegate.SecurityInformation
         ) {
             // Ignore initial load of about:blank (see https://github.com/mozilla-mobile/android-components/issues/403)
             if (initialLoad && securityInfo?.origin?.startsWith(MOZ_NULL_PRINCIPAL) == true) {
@@ -339,16 +343,12 @@ class GeckoEngineSession(
             }
 
             notifyObservers {
-                if (securityInfo == null) {
-                    onSecurityChange(false)
-                    return@notifyObservers
-                }
                 onSecurityChange(securityInfo.isSecure, securityInfo.host, securityInfo.issuerOrganization)
             }
         }
 
-        override fun onPageStart(session: GeckoSession?, url: String?) {
-            url?.let { currentUrl = it }
+        override fun onPageStart(session: GeckoSession, url: String) {
+            currentUrl = url
 
             notifyObservers {
                 onProgress(PROGRESS_START)
@@ -356,7 +356,7 @@ class GeckoEngineSession(
             }
         }
 
-        override fun onPageStop(session: GeckoSession?, success: Boolean) {
+        override fun onPageStop(session: GeckoSession, success: Boolean) {
             if (success) {
                 notifyObservers {
                     onProgress(PROGRESS_STOP)
@@ -415,7 +415,7 @@ class GeckoEngineSession(
 
     @Suppress("ComplexMethod")
     internal fun createContentDelegate() = object : GeckoSession.ContentDelegate {
-        override fun onFirstComposite(session: GeckoSession?) = Unit
+        override fun onFirstComposite(session: GeckoSession) = Unit
 
         override fun onContextMenu(
             session: GeckoSession,
@@ -429,7 +429,7 @@ class GeckoEngineSession(
             }
         }
 
-        override fun onCrash(session: GeckoSession?) {
+        override fun onCrash(session: GeckoSession) {
             geckoSession.close()
             initGeckoSession()
         }
@@ -452,17 +452,17 @@ class GeckoEngineSession(
 
         override fun onCloseRequest(session: GeckoSession) = Unit
 
-        override fun onTitleChange(session: GeckoSession, title: String) {
+        override fun onTitleChange(session: GeckoSession, title: String?) {
             if (!privateMode) {
                 currentUrl?.let { url ->
                     settings.historyTrackingDelegate?.let { delegate ->
                         runBlocking {
-                            delegate.onTitleChanged(url, title)
+                            delegate.onTitleChanged(url, title ?: "")
                         }
                     }
                 }
             }
-            notifyObservers { onTitleChange(title) }
+            notifyObservers { onTitleChange(title ?: "") }
         }
 
         override fun onFocusRequest(session: GeckoSession) = Unit
@@ -475,7 +475,7 @@ class GeckoEngineSession(
 
     private fun createPermissionDelegate() = object : GeckoSession.PermissionDelegate {
         override fun onContentPermissionRequest(
-            session: GeckoSession?,
+            session: GeckoSession,
             uri: String?,
             type: Int,
             callback: GeckoSession.PermissionDelegate.Callback
@@ -485,8 +485,8 @@ class GeckoEngineSession(
         }
 
         override fun onMediaPermissionRequest(
-            session: GeckoSession?,
-            uri: String?,
+            session: GeckoSession,
+            uri: String,
             video: Array<out GeckoSession.PermissionDelegate.MediaSource>?,
             audio: Array<out GeckoSession.PermissionDelegate.MediaSource>?,
             callback: GeckoSession.PermissionDelegate.MediaCallback
@@ -500,7 +500,7 @@ class GeckoEngineSession(
         }
 
         override fun onAndroidPermissionsRequest(
-            session: GeckoSession?,
+            session: GeckoSession,
             permissions: Array<out String>?,
             callback: GeckoSession.PermissionDelegate.Callback
         ) {

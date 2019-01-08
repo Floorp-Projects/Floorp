@@ -146,21 +146,21 @@ class GeckoEngineSessionTest {
 
         captureDelegates()
 
-        progressDelegate.value.onPageStart(null, "http://mozilla.org")
+        progressDelegate.value.onPageStart(mock(), "http://mozilla.org")
         assertEquals(GeckoEngineSession.PROGRESS_START, observedProgress)
         assertEquals(true, observedLoadingState)
 
-        progressDelegate.value.onPageStop(null, true)
+        progressDelegate.value.onPageStop(mock(), true)
         assertEquals(GeckoEngineSession.PROGRESS_STOP, observedProgress)
         assertEquals(false, observedLoadingState)
 
         val securityInfo = mock(GeckoSession.ProgressDelegate.SecurityInformation::class.java)
-        progressDelegate.value.onSecurityChange(null, securityInfo)
+        progressDelegate.value.onSecurityChange(mock(), securityInfo)
         assertTrue(observedSecurityChange)
 
         observedSecurityChange = false
 
-        progressDelegate.value.onSecurityChange(null, null)
+        progressDelegate.value.onSecurityChange(mock(), mock())
         assertTrue(observedSecurityChange)
     }
 
@@ -182,13 +182,13 @@ class GeckoEngineSessionTest {
 
         captureDelegates()
 
-        navigationDelegate.value.onLocationChange(null, "http://mozilla.org")
+        navigationDelegate.value.onLocationChange(mock(), "http://mozilla.org")
         assertEquals("http://mozilla.org", observedUrl)
 
-        navigationDelegate.value.onCanGoBack(null, true)
+        navigationDelegate.value.onCanGoBack(mock(), true)
         assertEquals(true, observedCanGoBack)
 
-        navigationDelegate.value.onCanGoForward(null, true)
+        navigationDelegate.value.onCanGoForward(mock(), true)
         assertEquals(true, observedCanGoForward)
     }
 
@@ -262,7 +262,7 @@ class GeckoEngineSessionTest {
 
         permissionDelegate.value.onMediaPermissionRequest(
             geckoSession,
-            null,
+            "about:blank",
             null,
             null,
             mock(GeckoSession.PermissionDelegate.MediaCallback::class.java)
@@ -284,7 +284,7 @@ class GeckoEngineSessionTest {
         assertEquals("originContent", observedContentPermissionRequests[0].uri)
         assertEquals("", observedContentPermissionRequests[1].uri)
         assertEquals("originMedia", observedContentPermissionRequests[2].uri)
-        assertEquals("", observedContentPermissionRequests[3].uri)
+        assertEquals("about:blank", observedContentPermissionRequests[3].uri)
         assertEquals(2, observedAppPermissionRequests.size)
     }
 
@@ -429,11 +429,11 @@ class GeckoEngineSessionTest {
 
         captureDelegates()
 
-        progressDelegate.value.onSecurityChange(null,
+        progressDelegate.value.onSecurityChange(mock(),
                 MockSecurityInformation("moz-nullprincipal:{uuid}"))
         assertFalse(observedSecurityChange)
 
-        progressDelegate.value.onSecurityChange(null,
+        progressDelegate.value.onSecurityChange(mock(),
                 MockSecurityInformation("https://www.mozilla.org"))
         assertTrue(observedSecurityChange)
     }
@@ -450,16 +450,16 @@ class GeckoEngineSessionTest {
 
         captureDelegates()
 
-        navigationDelegate.value.onLocationChange(null, "about:blank")
+        navigationDelegate.value.onLocationChange(mock(), "about:blank")
         assertEquals("", observedUrl)
 
-        navigationDelegate.value.onLocationChange(null, "about:blank")
+        navigationDelegate.value.onLocationChange(mock(), "about:blank")
         assertEquals("", observedUrl)
 
-        navigationDelegate.value.onLocationChange(null, "https://www.mozilla.org")
+        navigationDelegate.value.onLocationChange(mock(), "https://www.mozilla.org")
         assertEquals("https://www.mozilla.org", observedUrl)
 
-        navigationDelegate.value.onLocationChange(null, "about:blank")
+        navigationDelegate.value.onLocationChange(mock(), "about:blank")
         assertEquals("about:blank", observedUrl)
     }
 
@@ -915,7 +915,7 @@ class GeckoEngineSessionTest {
                 ERROR_UNKNOWN)
         )
         verify(requestInterceptor, never()).onErrorRequest(engineSession, ErrorType.UNKNOWN, "")
-        onLoadError.then { value: String? ->
+        onLoadError!!.then { value: String? ->
             interceptedUri = value
             GeckoResult.fromValue(null)
         }
@@ -938,7 +938,7 @@ class GeckoEngineSessionTest {
         )
 
         verify(requestInterceptor).onErrorRequest(engineSession, ErrorType.UNKNOWN, "")
-        onLoadError.then { value: String? ->
+        onLoadError!!.then { value: String? ->
             interceptedUri = value
             GeckoResult.fromValue(null)
         }
@@ -969,7 +969,7 @@ class GeckoEngineSessionTest {
                 ERROR_CATEGORY_UNKNOWN,
                 ERROR_UNKNOWN)
         )
-        onLoadError.then { value: String? ->
+        onLoadError!!.then { value: String? ->
             assertTrue(value!!.contains("data:text/html;base64,"))
             GeckoResult.fromValue(null)
         }
@@ -981,7 +981,7 @@ class GeckoEngineSessionTest {
         val defaultSettings = DefaultSettings(requestInterceptor = requestInterceptor)
         val engineSession = GeckoEngineSession(mock(), defaultSettings = defaultSettings)
 
-        engineSession.geckoSession.navigationDelegate.onLoadError(
+        engineSession.geckoSession.navigationDelegate!!.onLoadError(
             engineSession.geckoSession,
             null,
             WebRequestError(ERROR_MALFORMED_URI, ERROR_CATEGORY_UNKNOWN)
@@ -1350,7 +1350,7 @@ class GeckoEngineSessionTest {
 
         assertTrue(engineSession.geckoSession.isOpen)
 
-        oldGeckoSession.contentDelegate.onCrash(mock())
+        oldGeckoSession.contentDelegate!!.onCrash(mock())
 
         assertFalse(oldGeckoSession.isOpen)
         assertTrue(engineSession.geckoSession != oldGeckoSession)
@@ -1382,7 +1382,7 @@ class GeckoEngineSessionTest {
             filename = null
         )
 
-        engineSession.geckoSession.contentDelegate.onExternalResponse(mock(), info)
+        engineSession.geckoSession.contentDelegate!!.onExternalResponse(mock(), info)
 
         assertEquals("1MB.zip", meaningFulFileName)
     }
