@@ -9,6 +9,8 @@
 #include "jsapi.h"
 
 #include "js/CharacterEncoding.h"
+#include "js/PropertyDescriptor.h"  // JS::FromPropertyDescriptor
+#include "vm/EqualityOperations.h"  // js::SameValue
 
 #include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"

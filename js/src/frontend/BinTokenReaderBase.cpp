@@ -29,7 +29,7 @@ void BinTokenReaderBase::updateLatestKnownGood() {
 ErrorResult<JS::Error&> BinTokenReaderBase::raiseError(
     const char* description) {
   MOZ_ASSERT(!hasRaisedError());
-  errorReporter_->reportErrorNoOffset(JSMSG_BINAST, description);
+  errorReporter_->errorNoOffset(JSMSG_BINAST, description);
   return cx_->alreadyReportedError();
 }
 

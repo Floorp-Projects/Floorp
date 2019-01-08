@@ -22,9 +22,8 @@ class SVGAnimationElement;
 class SVGAnimatedBoolean;
 class SVGElement;
 }  // namespace dom
-}  // namespace mozilla
 
-class nsSVGBoolean {
+class SVGBoolean {
  public:
   typedef mozilla::dom::SVGElement SVGElement;
 
@@ -56,13 +55,13 @@ class nsSVGBoolean {
  public:
   struct SMILBool : public nsISMILAttr {
    public:
-    SMILBool(nsSVGBoolean* aVal, SVGElement* aSVGElement)
+    SMILBool(SVGBoolean* aVal, SVGElement* aSVGElement)
         : mVal(aVal), mSVGElement(aSVGElement) {}
 
     // These will stay alive because a nsISMILAttr only lives as long
     // as the Compositing step, and DOM elements don't get a chance to
     // die during that.
-    nsSVGBoolean* mVal;
+    SVGBoolean* mVal;
     SVGElement* mSVGElement;
 
     // nsISMILAttr methods
@@ -75,4 +74,7 @@ class nsSVGBoolean {
     virtual nsresult SetAnimValue(const nsSMILValue& aValue) override;
   };
 };
+
+}  // namespace mozilla
+
 #endif  //__NS_SVGBOOLEAN_H__

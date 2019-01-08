@@ -1454,7 +1454,6 @@ static inline size_t byteSize(Type atype) {
     case Int64:
     case Float64:
       return 8;
-      return 16;
     default:
       MOZ_CRASH("invalid scalar type");
   }

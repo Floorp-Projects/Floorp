@@ -13,6 +13,7 @@
 
 #include "gc/Marking.h"
 #include "js/CharacterEncoding.h"
+#include "js/PropertySpec.h"
 #include "js/Vector.h"
 #include "util/StringBuffer.h"
 #include "vm/GlobalObject.h"

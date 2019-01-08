@@ -536,32 +536,32 @@ struct uint8_clamped {
 
 /* Note that we can't use std::numeric_limits here due to uint8_clamped. */
 template <typename T>
-inline bool TypeIsFloatingPoint() {
+inline constexpr bool TypeIsFloatingPoint() {
   return false;
 }
 template <>
-inline bool TypeIsFloatingPoint<float>() {
+inline constexpr bool TypeIsFloatingPoint<float>() {
   return true;
 }
 template <>
-inline bool TypeIsFloatingPoint<double>() {
+inline constexpr bool TypeIsFloatingPoint<double>() {
   return true;
 }
 
 template <typename T>
-inline bool TypeIsUnsigned() {
+inline constexpr bool TypeIsUnsigned() {
   return false;
 }
 template <>
-inline bool TypeIsUnsigned<uint8_t>() {
+inline constexpr bool TypeIsUnsigned<uint8_t>() {
   return true;
 }
 template <>
-inline bool TypeIsUnsigned<uint16_t>() {
+inline constexpr bool TypeIsUnsigned<uint16_t>() {
   return true;
 }
 template <>
-inline bool TypeIsUnsigned<uint32_t>() {
+inline constexpr bool TypeIsUnsigned<uint32_t>() {
   return true;
 }
 

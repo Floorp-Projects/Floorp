@@ -21,6 +21,7 @@
 #include "ds/Sort.h"
 #include "gc/FreeOp.h"
 #include "js/CharacterEncoding.h"
+#include "js/PropertySpec.h"
 #include "js/RootingAPI.h"
 #include "js/StableStringChars.h"
 #include "js/TypeDecls.h"
