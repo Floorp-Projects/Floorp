@@ -33,7 +33,7 @@ class UrlClassifierCommon final {
   static void NotifyChannelBlocked(nsIChannel* aChannel,
                                    unsigned aBlockedReason);
 
-  static bool ShouldEnableTrackingProtectionOrAnnotation(
+  static bool ShouldEnableClassifier(
       nsIChannel* aChannel,
       AntiTrackingCommon::ContentBlockingAllowListPurpose aBlockingPurpose);
 

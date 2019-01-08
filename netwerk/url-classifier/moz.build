@@ -24,6 +24,7 @@ UNIFIED_SOURCES += [
     'UrlClassifierFeatureBase.cpp',
     'UrlClassifierFeatureCustomTables.cpp',
     'UrlClassifierFeatureFactory.cpp',
+    'UrlClassifierFeatureFingerprinting.cpp',
     'UrlClassifierFeatureFlash.cpp',
     'UrlClassifierFeatureLoginReputation.cpp',
     'UrlClassifierFeatureResult.cpp',
