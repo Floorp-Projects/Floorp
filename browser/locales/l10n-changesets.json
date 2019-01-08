@@ -303,7 +303,7 @@
             "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
-        "revision": "e92ff79e10b8"
+        "revision": "bfbc693d20d7"
     },
     "de": {
         "platforms": [
@@ -320,7 +320,7 @@
             "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
-        "revision": "642b591c8cde"
+        "revision": "a9622338d782"
     },
     "dsb": {
         "platforms": [
@@ -575,7 +575,7 @@
             "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
-        "revision": "c21c079eb0b6"
+        "revision": "24d1428c852e"
     },
     "fr": {
         "platforms": [
@@ -745,7 +745,7 @@
             "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
-        "revision": "b519896babd4"
+        "revision": "212cb7c2a54d"
     },
     "hsb": {
         "platforms": [
@@ -864,7 +864,7 @@
             "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
-        "revision": "1c9556c653d6"
+        "revision": "f621c3539800"
     },
     "ja": {
         "platforms": [
@@ -988,7 +988,7 @@
             "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
-        "revision": "4cbaefc0a271"
+        "revision": "ce1e9fc0bb38"
     },
     "lij": {
         "platforms": [
@@ -1158,7 +1158,7 @@
             "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
-        "revision": "79e5819a0ba1"
+        "revision": "972229dc4c88"
     },
     "ne-NP": {
         "platforms": [
@@ -1192,7 +1192,7 @@
             "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
-        "revision": "5dae37bc12aa"
+        "revision": "8c2b8b23cd6f"
     },
     "nn-NO": {
         "platforms": [
@@ -1277,7 +1277,7 @@
             "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
-        "revision": "d6a131ab4b08"
+        "revision": "7f6283c86152"
     },
     "pt-BR": {
         "platforms": [
@@ -1362,7 +1362,7 @@
             "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
-        "revision": "8d841f435098"
+        "revision": "03fcc8beebee"
     },
     "si": {
         "platforms": [
@@ -1515,7 +1515,7 @@
             "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
-        "revision": "c166ee3ea8df"
+        "revision": "39638385db79"
     },
     "th": {
         "platforms": [
