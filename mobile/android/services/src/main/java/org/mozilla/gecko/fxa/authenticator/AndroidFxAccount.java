@@ -1077,12 +1077,15 @@ public class AndroidFxAccount {
           final String resultData = bundle.getString(FxAccountProfileService.KEY_RESULT_STRING);
           FxAccountUtils.pii(LOG_TAG, "Profile JSON fetch returned: " + resultData);
 
-          renameAccountIfNecessary(resultData, new Runnable() {
-            @Override
-            public void run() {
-              updateBundleValues(BUNDLE_KEY_PROFILE_JSON, resultData);
-              LocalBroadcastManager.getInstance(context).sendBroadcast(makeProfileJSONUpdatedIntent());
-            }
+          // We may get at this point due to a bad sync between states (e.g we sign in then we quickly sign out)
+          // Nothing else we can do but log an error.
+          if (!FirefoxAccounts.firefoxAccountsExist(context)) {
+            Logger.error(LOG_TAG, "ProfileResultReceiver: received result when no account exists!");
+            return;
+          }
+          renameAccountIfNecessary(resultData, () -> {
+            updateBundleValues(BUNDLE_KEY_PROFILE_JSON, resultData);
+            LocalBroadcastManager.getInstance(context).sendBroadcast(makeProfileJSONUpdatedIntent());
           });
           break;
         case Activity.RESULT_CANCELED:
