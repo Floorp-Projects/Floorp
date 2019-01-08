@@ -1,0 +1,142 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+.search-bar {
+  display: flex;
+  border: 1px solid transparent;
+  border-top: 1px solid var(--theme-splitter-color);
+  height: var(--editor-searchbar-height);
+}
+
+.search-bar.search-bar-focused {
+  border: 1px solid var(--blue-50);
+  transition: border-color 0.2s ease-in-out;
+}
+
+.search-bar .search-field {
+  padding-left: 7px;
+}
+
+.search-bar .search-shadow {
+  flex-grow: 1;
+  border-bottom: none;
+}
+
+.search-bar .search-shadow.focused {
+  border-color: transparent;
+  transition: none;
+}
+
+.search-bar .search-field {
+  border-bottom: none;
+  padding-right: 0;
+  height: 100%;
+}
+
+.search-field .close-btn {
+  align-self: center;
+}
+
+.search-bottom-bar * {
+  -moz-user-select: none;
+  user-select: none;
+}
+
+.search-bottom-bar {
+  display: flex;
+  flex-shrink: 0;
+  justify-content: flex-end;
+  background-color: var(--theme-toolbar-background);
+  padding: 0;
+  padding-inline-start: 1px;
+  padding-inline-end: 4px;
+}
+
+.search-bottom-bar .search-modifiers {
+  display: flex;
+  align-items: center;
+}
+
+.search-bottom-bar .search-modifiers button {
+  padding: 0 3px;
+  margin: 0 3px;
+  border: none;
+  background: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 3px;
+}
+
+.search-bottom-bar .search-modifiers button.close-btn.big .img {
+  width: 12px;
+  height: 12px;
+}
+
+.search-bottom-bar .search-modifiers .pipe-divider {
+  height: 70%;
+  border: 1px solid var(--grey-20);
+  vertical-align: middle;
+  margin-inline-start: 0.8em;
+  margin-inline-end: 0.3em;
+}
+
+.theme-dark .search-bottom-bar .search-modifiers .pipe-divider {
+  border-color: var(--grey-70);
+}
+
+.search-bottom-bar .search-modifiers button i {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0;
+  width: 16px;
+}
+
+.search-bottom-bar .search-modifiers button svg {
+  fill: var(--theme-comment);
+  height: 16px;
+  width: 16px;
+}
+
+.search-bottom-bar .search-modifiers button:hover {
+  background: var(--theme-toolbar-background-hover);
+}
+
+.search-bottom-bar .search-modifiers button.close-btn:hover {
+  background: var(--theme-selection-background);
+}
+
+.search-bottom-bar .search-modifiers button.active svg {
+  fill: var(--theme-selection-background);
+}
+
+.theme-dark .search-bottom-bar .search-modifiers button.active svg {
+  fill: white;
+}
+
+.search-bottom-bar .search-type-toggles {
+  display: flex;
+  align-items: center;
+  max-width: 68%;
+}
+
+.search-bottom-bar .search-type-name {
+  padding: 1px 0 0 0;
+  margin: 0 0 0 6px;
+  border: none;
+  background: transparent;
+  color: var(--theme-comment);
+}
+
+.search-bottom-bar .search-type-toggles .search-type-btn.active {
+  color: var(--theme-selection-background);
+}
+
+.theme-dark .search-bottom-bar .search-type-toggles .search-type-btn.active {
+  color: white;
+}
+
+.search-bar .result-list {
+  max-height: 230px;
+}

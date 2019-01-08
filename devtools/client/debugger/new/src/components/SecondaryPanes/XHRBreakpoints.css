@@ -1,0 +1,87 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+.xhr-input-form {
+  width: 100%;
+}
+
+.xhr-input {
+  width: 100%;
+  margin: 0;
+  border: 1px;
+  background-color: var(--theme-sidebar-background);
+  font-size: 12px;
+  padding: 0.5em 1.6em;
+  color: var(--theme-body-color);
+  outline: 0;
+}
+
+.xhr-input::placeholder {
+  font-style: italic;
+  color: var(--theme-comment);
+}
+
+.xhr-input:focus {
+  cursor: text;
+}
+
+.xhr-input-container {
+  display: flex;
+  border: 1px solid transparent;
+}
+
+.xhr-input-container.focused {
+  border: 1px solid var(--theme-highlight-blue);
+}
+
+:root.theme-dark .xhr-input-container.focused {
+  border: 1px solid var(--blue-50);
+}
+
+.xhr-input-container.error {
+  border: 1px solid red;
+}
+
+.xhr-container {
+  border-left: 4px solid transparent;
+  width: 100%;
+  color: var(--theme-body-color);
+  padding: 0.25em 1em;
+  background-color: var(--theme-body-background);
+  display: flex;
+  align-items: center;
+  position: relative;
+  min-height: var(--breakpoint-expression-height);
+}
+
+:root.theme-light .xhr-container:hover {
+  background-color: var(--theme-selection-background-hover);
+}
+
+:root.theme-dark .xhr-container:hover {
+  background-color: var(--theme-selection-background-hover);
+}
+
+.xhr-checkbox {
+    margin-left: 0px;
+}
+
+.xhr-label {
+  max-width: calc(100% - var(--breakpoint-expression-right-clear-space));
+  display: inline-block;
+  cursor: text;
+  flex-grow: 1;
+  text-overflow: ellipsis;
+  padding-inline-end: 8px;
+  font-size: 11px;
+}
+
+.xhr-container .close-btn {
+  offset-inline-end: 12px;
+  inset-inline-end: 12px;
+  offset-inline-start: auto;
+  inset-inline-start: auto;
+  position: absolute;
+  top: 8px;
+}

@@ -1,0 +1,41 @@
+.source-icon {
+  position: relative;
+  background-color: var(--theme-comment);
+  mask-size: 100%;
+  display: inline-block;
+  margin-inline-end: 5px;
+}
+
+.source-icon,
+.source-icon svg {
+  width: 15px;
+  height: 15px;
+}
+
+.source-icon.prettyPrint {
+  mask: url(/images/prettyPrint.svg) no-repeat;
+  mask-size: 100%;
+  background: var(--theme-highlight-blue);
+  fill: var(--theme-textbox-box-shadow);
+}
+
+.source-icon.vue {
+  background: url(/images/vuejs.svg) 1px 1px no-repeat;
+  background-size: 15px;
+}
+
+.source-icon.angular {
+  background: url(/images/angular.svg) 1px 1px no-repeat;
+  background-size: 13px 13px;
+}
+
+.source-icon.blackBox {
+  mask: url(/images/blackBox.svg) no-repeat;
+  mask-size: 100%;
+  background: var(--theme-highlight-blue);
+}
+
+.source-icon.react {
+  mask-size: 100%;
+  background: var(--theme-highlight-bluegrey);
+}

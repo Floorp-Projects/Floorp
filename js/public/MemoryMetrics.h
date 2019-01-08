@@ -958,8 +958,10 @@ extern JS_PUBLIC_API bool CollectRuntimeStats(JSContext* cx,
                                               ObjectPrivateVisitor* opv,
                                               bool anonymize);
 
-extern JS_PUBLIC_API size_t SystemRealmCount(JSContext* cx);
+extern JS_PUBLIC_API size_t SystemCompartmentCount(JSContext* cx);
+extern JS_PUBLIC_API size_t UserCompartmentCount(JSContext* cx);
 
+extern JS_PUBLIC_API size_t SystemRealmCount(JSContext* cx);
 extern JS_PUBLIC_API size_t UserRealmCount(JSContext* cx);
 
 extern JS_PUBLIC_API size_t PeakSizeOfTemporary(const JSContext* cx);

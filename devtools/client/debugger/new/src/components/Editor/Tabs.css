@@ -1,0 +1,178 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+.source-header {
+  border-bottom: 1px solid var(--theme-splitter-color);
+  width: 100%;
+  height: 29px;
+  display: flex;
+}
+
+.source-header * {
+  -moz-user-select: none;
+  user-select: none;
+}
+
+.source-header .new-tab-btn {
+  padding: 4px;
+  margin-top: 4px;
+  margin-left: 2px;
+  fill: var(--theme-comment);
+  transition: 0.1s ease;
+  align-self: center;
+}
+
+.source-header .new-tab-btn:hover {
+  background-color: var(--theme-toolbar-background-hover);
+}
+
+.source-header .new-tab-btn svg {
+  width: 12px;
+  display: block;
+}
+
+.source-tabs {
+  max-width: calc(100% - 80px);
+  align-self: flex-start;
+}
+
+.source-tab {
+  border-left: 1px solid transparent;
+  border-right: 1px solid transparent;
+  display: inline-flex;
+  align-items: center;
+  position: relative;
+  transition: all 0.15s ease;
+  min-width: 40px;
+  max-width: 100%;
+  overflow: hidden;
+  padding: 5px;
+  cursor: default;
+  height: 30px;
+  font-size: 12px;
+}
+
+.source-tab::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: transparent;
+  transition: transform 250ms var(--animation-curve), opacity 250ms var(--animation-curve);
+  opacity: 0;
+  transform: scaleX(0);
+}
+
+.source-tab:first-child {
+  margin-inline-start: 0;
+}
+
+.source-tab:not(.active):hover {
+  background: linear-gradient(var(--theme-toolbar-hover) 28px, transparent 1px);
+}
+
+.source-tab:not(.active):hover::before {
+  background: var(--tab-line-hover-color);
+  opacity: 1;
+  transform: scaleX(1);
+}
+
+.source-tab.active {
+  color: var(--theme-toolbar-selected-color);
+  border-bottom-color: transparent;
+  border-left: 1px solid var(--theme-splitter-color);
+  border-right: 1px solid var(--theme-splitter-color);
+  background-color: var(--theme-body-background);
+}
+
+.source-tab.active::before {
+  background: var(--tab-line-selected-color);
+  opacity: 1;
+  transform: scaleX(1);
+}
+
+.theme-dark .source-tab.active {
+  color: var(--theme-toolbar-selected-color);
+}
+
+.source-tab.active path,
+.source-tab:hover path {
+  fill: var(--theme-body-color);
+}
+
+.source-tab .source-icon {
+  margin-inline-end: 0;
+}
+
+.source-tab .img.prettyPrint,
+.source-tab .source-icon.blackBox {
+  height: 12px;
+  width: 12px;
+  align-self: center;
+}
+
+.source-tab .prettyPrint path {
+  fill: var(--theme-textbox-box-shadow);
+}
+
+.source-tab .img.react {
+  mask: url(/images/react.svg) no-repeat;
+  mask-size: 100%;
+  height: 14px;
+  width: 14px;
+  background: var(--theme-highlight-bluegrey);
+  top: 0;
+}
+
+.source-tab .blackBox path {
+  fill: var(--theme-textbox-box-shadow);
+}
+
+.theme-dark .source-tab .blackBox circle {
+  fill: var(--theme-body-color);
+}
+
+img.moreTabs {
+  mask: url(/images/command-chevron.svg) no-repeat;
+  mask-size: 100%;
+  width: 12px;
+  height: 12px;
+  display: block;
+  background: var(--theme-body-color);
+  margin-left: 6px;
+}
+
+html[dir="rtl"] .img.moreTabs {
+  transform: rotate(180deg);
+  margin-right: 6px;
+}
+
+.source-tab .filename {
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  padding: 0 4px;
+  align-self: center;
+  margin-bottom: 1px;
+}
+
+.source-tab .filename span {
+  opacity: 0.7;
+  padding-left: 4px;
+}
+
+.source-tab .close-btn {
+  visibility: hidden;
+  line-height: 0;
+}
+
+.source-tab.active .close-btn {
+  visibility: visible;
+}
+
+.source-tab:hover .close-btn {
+  visibility: visible;
+}

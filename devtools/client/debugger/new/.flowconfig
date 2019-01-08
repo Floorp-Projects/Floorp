@@ -1,0 +1,17 @@
+[ignore]
+.*node_modules/.*
+<PROJECT_ROOT>/firefox/.*
+.*mozilla-central/.*
+.*flow-coverage-report/.*
+.*custom_format_broken.json
+.*packages/devtools-reps/src/object-inspector/.*
+<PROJECT_ROOT>/webpack-stats/.*
+
+[include]
+./node_modules/source-map/source-map.js
+
+[libs]
+./src/global-types.js
+
+[options]
+suppress_comment=\\(.\\|\n\\)*\\$FlowIgnore

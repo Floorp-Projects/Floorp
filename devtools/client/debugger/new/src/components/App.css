@@ -1,0 +1,97 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+* {
+  box-sizing: border-box;
+}
+
+button {
+  background: transparent;
+  border: none;
+}
+
+button:hover,
+button:focus {
+  background-color: var(--theme-toolbar-background-hover);
+}
+
+.debugger {
+  display: flex;
+  flex: 1;
+  height: 100%;
+}
+
+.editor-pane {
+  display: flex;
+  position: relative;
+  flex: 1;
+  background-color: var(--theme-tab-toolbar-background);
+  height: calc(100% - 1px);
+  overflow: hidden;
+}
+
+.theme-dark .editor-pane {
+  background-color: var(--theme-toolbar-background);
+}
+
+.editor-container {
+  width: 100%;
+}
+
+.search-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  z-index: 200;
+  background-color: var(--search-overlays-semitransparent);
+}
+
+.search-container .close-button {
+  width: 16px;
+  margin-top: 25px;
+  margin-right: 20px;
+}
+
+/* Utils */
+.absolute-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.d-flex {
+  display: flex;
+}
+
+.align-items-center {
+  align-items: center;
+}
+
+.rounded-circle {
+  border-radius: 50%;
+}
+
+.text-white {
+  color: white;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.min-width-0 {
+  min-width: 0;
+}
+
+/*
+  Prevents horizontal scrollbar from displaying when
+  right pane collapsed (#7505)
+*/
+.split-box > .splitter:last-child {
+  display: none;
+}

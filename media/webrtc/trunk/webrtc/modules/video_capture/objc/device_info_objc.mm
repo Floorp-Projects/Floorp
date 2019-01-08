@@ -19,6 +19,29 @@
 
 @implementation DeviceInfoIosObjC
 
+- (id)init {
+  self = [super init];
+
+  if (nil != self) {
+    [self configureObservers];
+  }
+
+  return self;
+}
+
+
+- (void)dealloc {
+   NSNotificationCenter* notificationCenter = [NSNotificationCenter defaultCenter];
+   for (id observer in _observers)
+       [notificationCenter removeObserver:observer];
+}
+
+- (void)registerOwner:(DeviceInfoIos*)owner {
+  [_lock lock];
+  _owner = owner;
+  [_lock unlock];
+}
+
 + (int)captureDeviceCount {
   return [[AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo] count];
 }
@@ -77,6 +100,35 @@
   }
 
   return capability;
+}
+
+- (void)configureObservers {
+  //register device connected / disconnected event
+  _lock = [[NSLock alloc] init];
+
+  NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
+
+  id deviceWasConnectedObserver = [notificationCenter addObserverForName:AVCaptureDeviceWasConnectedNotification
+      object:nil
+      queue:[NSOperationQueue mainQueue]
+      usingBlock:^(NSNotification *note) {
+          [_lock lock];
+          if(_owner)
+              _owner->DeviceChange();
+          [_lock unlock];
+      }];
+
+  id deviceWasDisconnectedObserver = [notificationCenter addObserverForName:AVCaptureDeviceWasDisconnectedNotification
+      object:nil
+      queue:[NSOperationQueue mainQueue]
+      usingBlock:^(NSNotification *note) {
+          [_lock lock];
+          if(_owner)
+              _owner->DeviceChange();
+          [_lock unlock];
+      }];
+
+  _observers = [[NSArray alloc] initWithObjects:deviceWasConnectedObserver, deviceWasDisconnectedObserver, nil];
 }
 
 @end

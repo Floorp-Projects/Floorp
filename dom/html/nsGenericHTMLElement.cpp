@@ -203,12 +203,15 @@ static bool IsOffsetParent(nsIFrame* aFrame) {
   return false;
 }
 
-Element* nsGenericHTMLElement::GetOffsetRect(CSSIntRect& aRect) {
-  aRect = CSSIntRect();
+struct OffsetResult {
+  Element* mParent = nullptr;
+  CSSIntRect mRect;
+};
 
-  nsIFrame* frame = GetPrimaryFrame(FlushType::Layout);
+static OffsetResult GetUnretargetedOffsetsFor(const Element& aElement) {
+  nsIFrame* frame = aElement.GetPrimaryFrame();
   if (!frame) {
-    return nullptr;
+    return {};
   }
 
   nsIFrame* styleFrame = nsLayoutUtils::GetStyleFrame(frame);
@@ -217,7 +220,7 @@ Element* nsGenericHTMLElement::GetOffsetRect(CSSIntRect& aRect) {
   nsPoint origin(0, 0);
 
   nsIContent* offsetParent = nullptr;
-  Element* docElement = GetComposedDoc()->GetRootElement();
+  Element* docElement = aElement.GetComposedDoc()->GetRootElement();
   nsIContent* content = frame->GetContent();
 
   if (content &&
@@ -270,7 +273,7 @@ Element* nsGenericHTMLElement::GetOffsetRect(CSSIntRect& aRect) {
       //
       // We use GetBodyElement() here, not GetBody(), because we don't want to
       // end up with framesets here.
-      offsetParent = GetComposedDoc()->GetBodyElement();
+      offsetParent = aElement.GetComposedDoc()->GetBodyElement();
     }
   }
 
@@ -289,9 +292,44 @@ Element* nsGenericHTMLElement::GetOffsetRect(CSSIntRect& aRect) {
   // we only care about the size. We just have to use something non-null.
   nsRect rcFrame = nsLayoutUtils::GetAllInFlowRectsUnion(frame, frame);
   rcFrame.MoveTo(origin);
-  aRect = CSSIntRect::FromAppUnitsRounded(rcFrame);
+  return {Element::FromNodeOrNull(offsetParent),
+          CSSIntRect::FromAppUnitsRounded(rcFrame)};
+}
 
-  return offsetParent ? offsetParent->AsElement() : nullptr;
+static bool ShouldBeRetargeted(const Element& aReferenceElement,
+                               const Element& aElementToMaybeRetarget) {
+  ShadowRoot* shadow = aElementToMaybeRetarget.GetContainingShadow();
+  if (!shadow) {
+    return false;
+  }
+  for (ShadowRoot* scope = aReferenceElement.GetContainingShadow(); scope;
+       scope = scope->Host()->GetContainingShadow()) {
+    if (scope == shadow) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+Element* nsGenericHTMLElement::GetOffsetRect(CSSIntRect& aRect) {
+  aRect = CSSIntRect();
+
+  if (!GetPrimaryFrame(FlushType::Layout)) {
+    return nullptr;
+  }
+
+  OffsetResult thisResult = GetUnretargetedOffsetsFor(*this);
+  aRect = thisResult.mRect;
+
+  Element* parent = thisResult.mParent;
+  while (parent && ShouldBeRetargeted(*this, *parent)) {
+    OffsetResult result = GetUnretargetedOffsetsFor(*parent);
+    aRect += result.mRect.TopLeft();
+    parent = result.mParent;
+  }
+
+  return parent;
 }
 
 bool nsGenericHTMLElement::Spellcheck() {
