@@ -10,7 +10,6 @@
 
 #include "nsComputedDOMStyle.h"
 #include "nsString.h"
-#include "nsSMILParserUtils.h"
 #include "nsSMILValue.h"
 #include "nsCSSProps.h"
 #include "nsCSSValue.h"
@@ -21,6 +20,7 @@
 #include "mozilla/StyleAnimationValue.h"  // For AnimationValue
 #include "mozilla/ServoCSSParser.h"
 #include "mozilla/ServoStyleSet.h"
+#include "mozilla/SMILParserUtils.h"
 #include "mozilla/dom/BaseKeyframeTypesBinding.h"  // For CompositeOperation
 #include "mozilla/dom/Element.h"
 #include "nsDebug.h"

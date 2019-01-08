@@ -394,7 +394,7 @@ static TimingFunction ToTimingFunction(
   }
 
   if (aCTF->HasSpline()) {
-    const nsSMILKeySpline* spline = aCTF->GetFunction();
+    const SMILKeySpline* spline = aCTF->GetFunction();
     return TimingFunction(CubicBezierFunction(spline->X1(), spline->Y1(),
                                               spline->X2(), spline->Y2()));
   }

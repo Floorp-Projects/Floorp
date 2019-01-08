@@ -8,12 +8,12 @@
 #define mozilla_ComputedTimingFunction_h
 
 #include "nsDebug.h"
-#include "nsSMILKeySpline.h"  // nsSMILKeySpline
 #include "nsStringFwd.h"
 #include "nsTimingFunction.h"
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/SMILKeySpline.h"
 
 namespace mozilla {
 
@@ -56,7 +56,7 @@ class ComputedTimingFunction {
   // https://drafts.csswg.org/css-easing/#before-flag
   enum class BeforeFlag { Unset, Set };
   double GetValue(double aPortion, BeforeFlag aBeforeFlag) const;
-  const nsSMILKeySpline* GetFunction() const {
+  const SMILKeySpline* GetFunction() const {
     NS_ASSERTION(HasSpline(), "Type mismatch");
     return &mTimingFunction;
   }
@@ -110,7 +110,7 @@ class ComputedTimingFunction {
       : mType(Type::Step), mSteps{aSteps, aPos} {}
 
   Type mType;
-  nsSMILKeySpline mTimingFunction;
+  SMILKeySpline mTimingFunction;
   StepFunc mSteps;
 };
 
