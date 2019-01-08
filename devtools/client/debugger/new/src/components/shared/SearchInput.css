@@ -1,0 +1,158 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+.search-shadow {
+  border: 1px solid var(--theme-toolbar-background);
+  border-bottom: 1px solid var(--theme-splitter-color);
+}
+
+.search-shadow.focused {
+  border: 1px solid var(--blue-50);
+  transition: border-color 0.2s ease-in-out;
+}
+
+.search-field {
+  position: relative;
+  height: 27px;
+  width: calc(100% - 1px);
+  background-color: var(--theme-toolbar-background);
+  border-bottom: 1px solid var(--theme-splitter-color);
+  padding-right: 10px;
+  display: flex;
+  flex-shrink: 0;
+}
+
+.search-field.big {
+  padding: 5px 10px;
+  height: 40px;
+}
+
+.search-field i {
+  display: block;
+  padding: 0;
+  width: 16px;
+}
+
+.search-field i svg {
+  width: 16px;
+}
+
+.search-field.big i svg {
+  width: 22px;
+}
+
+.search-field i.loader {
+  padding-top: 4px;
+  margin-right: 8px;
+}
+
+.search-field input {
+  border: none;
+  line-height: 30px;
+  background-color: var(--theme-toolbar-background);
+  color: var(--theme-body-color-active);
+  flex-grow: 1;
+  min-width: 40px;
+}
+
+.search-field.big input {
+  position: relative;
+  margin-left: 30px;
+  font-size: 14px;
+  line-height: 40px;
+}
+
+.search-field input:focus {
+  outline: none;
+}
+
+.theme-dark .search-field input {
+  color: var(--theme-body-color-inactive);
+}
+
+.search-field i.magnifying-glass,
+.search-field i.sad-face {
+  padding-top: 5px;
+  padding-bottom: 5px;
+  padding-inline-end: 10px;
+  padding-inline-start: 5px;
+  width: 24px;
+}
+
+.search-field.big i.magnifying-glass,
+.search-field.big i.sad-face {
+  position: absolute;
+  width: 40px;
+}
+
+.search-field.big i.sad-face {
+  padding-top: 4px;
+  padding-inline-start: 4px;
+}
+
+.search-field .magnifying-glass path,
+.search-field .magnifying-glass ellipse {
+  stroke: var(--theme-comment);
+}
+
+.search-field input::placeholder {
+  color: var(--theme-toolbar-color);
+}
+
+.search-field input.empty {
+  color: var(--theme-body-color-inactive);
+}
+
+.search-field .summary {
+  line-height: 27px;
+  text-align: center;
+  padding-inline-start: 5px;
+  padding-inline-end: 5px;
+  color: var(--theme-body-color-inactive);
+  align-self: center;
+  padding-top: 1px;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.search-field .search-nav-buttons {
+  display: flex;
+  user-select: none;
+}
+
+.search-field .search-nav-buttons .nav-btn {
+  display: flex;
+  height: 100%;
+  background: transparent;
+  transition: all 0.25s ease-in-out;
+  justify-content: center;
+  padding-top: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+.search-field .search-nav-buttons .nav-btn:hover {
+  background: var(--theme-toolbar-background-hover);
+}
+
+.search-field .search-nav-buttons .nav-btn:active path {
+  fill: var(--theme-comment-alt);
+}
+
+.search-field .search-nav-buttons .nav-btn path {
+  fill: var(--theme-comment);
+}
+
+.search-field i.loader svg {
+  animation: rotate 0.5s linear infinite;
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

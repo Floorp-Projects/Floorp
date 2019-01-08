@@ -1,0 +1,113 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+.frames ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.frames ul li {
+  padding: 7px 10px 7px 21px;
+  overflow: hidden;
+  display: flex;
+  justify-content: space-between;
+  column-gap: 0.5em;
+  flex-direction: row;
+  align-items: center;
+  margin: 0;
+  max-width: 100%;
+  flex-wrap: wrap;
+}
+
+.frames ul li * {
+  -moz-user-select: none;
+  user-select: none;
+}
+
+.frames .badge {
+  flex-shrink: 0;
+  margin-right: 4px;
+}
+
+.frames .location {
+  font-weight: normal;
+  margin: 0;
+  flex-grow: 1;
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  /* Trick to get the ellipsis at the start of the string */
+  text-overflow: ellipsis;
+  direction: rtl;
+  text-align: right;
+}
+
+.theme-light .frames .location {
+  color: var(--theme-comment);
+}
+
+:root.theme-dark .frames .location {
+  color: var(--theme-body-color);
+  opacity: 0.6;
+}
+
+.frames .title {
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.frames ul li:hover,
+.frames ul li:focus {
+  background-color: var(--theme-toolbar-background-alt);
+}
+
+.theme-dark .frames ul li:focus {
+  background-color: var(--theme-tab-toolbar-background);
+}
+
+.frames ul li.selected {
+  background-color: var(--theme-selection-background);
+  color: white;
+}
+
+.frames ul li.selected i.annotation-logo svg path {
+  fill: white;
+}
+
+:root.theme-light .frames ul li.selected .location,
+:root.theme-dark .frames ul li.selected .location {
+  color: white;
+}
+
+.show-more-container {
+  display: flex;
+  min-height: 24px;
+  padding: 4px 0;
+}
+
+.show-more {
+  text-align: center;
+  padding: 8px 0px;
+  margin: 7px 10px 7px 7px;
+  border: 1px solid var(--theme-splitter-color);
+  background-color: var(--theme-tab-toolbar-background);
+  width: 100%;
+  font-size: inherit;
+  color: inherit;
+}
+
+.show-more:hover {
+  background-color: var(--theme-toolbar-background-hover);
+}
+
+.annotation-logo {
+  display: inline-block;
+  width: 12px;
+  margin-inline-start: 4px;
+}
+
+:root.theme-dark .annotation-logo:not(.angular) svg path {
+  fill: var(--theme-highlight-blue);
+}

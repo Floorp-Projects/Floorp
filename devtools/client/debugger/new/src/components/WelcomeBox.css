@@ -1,0 +1,93 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+.welcomebox {
+  width: calc(100% - 1px);
+
+  /* Offsetting it by 30px for the sources-header area */
+  height: calc(100% - 30px);
+  position: absolute;
+  top: 30px;
+  left: 0;
+  padding: 50px 0 0 0;
+  text-align: center;
+  font-size: 1.25em;
+  background-color: var(--theme-toolbar-background);
+  font-weight: lighter;
+  z-index: 10;
+  user-select: none;
+}
+
+.theme-dark .welcomebox {
+  background-color: var(--theme-body-background);
+}
+
+.welcomebox .command-bar-button {
+  position: absolute;
+  top: auto;
+  offset-inline-end: 0;
+  inset-inline-end: 0;
+  offset-inline-start: auto;
+  inset-inline-start: auto;
+  bottom: 0;
+}
+
+.alignlabel {
+  display: flex;
+  white-space: nowrap;
+}
+
+.shortcutKeys {
+  font-family: Courier;
+}
+
+.shortcutKey,
+.shortcutLabel {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+.welcomebox__searchSources:hover,
+.welcomebox__searchProject:hover,
+.welcomebox__allShortcuts:hover {
+  color: var(--theme-body-color);
+}
+
+.shortcutKey {
+  text-align: right;
+  padding-right: 10px;
+  font-family: var(--monospace-font-family);
+  font-size: 14px;
+  line-height: 18px;
+  color: var(--theme-body-color);
+}
+
+.shortcutLabel {
+  text-align: left;
+  padding-left: 10px;
+  font-size: 14px;
+  line-height: 18px;
+}
+
+.shortcutFunction {
+  margin: 0 auto;
+  color: var(--theme-comment);
+  display: table;
+}
+
+.shortcutFunction p {
+  display: table-row;
+}
+
+.shortcutFunction .shortcutKey,
+.shortcutFunction .shortcutLabel {
+  padding: 10px 5px;
+  display: table-cell;
+}
+
+html .welcomebox .toggle-button-end.collapsed {
+  bottom: 1px;
+}
