@@ -17,13 +17,10 @@ pub trait IdentExt: Sized + private::Sealed {
     /// This is useful when parsing a DSL which allows Rust keywords as
     /// identifiers.
     ///
-    /// ```rust
-    /// #[macro_use]
-    /// extern crate syn;
-    ///
-    /// use syn::Ident;
+    /// ```edition2018
+    /// use syn::{Error, Ident, Result, Token};
     /// use syn::ext::IdentExt;
-    /// use syn::parse::{Error, ParseStream, Result};
+    /// use syn::parse::ParseStream;
     ///
     /// // Parses input that looks like `name = NAME` where `NAME` can be
     /// // any identifier.
@@ -41,8 +38,6 @@ pub trait IdentExt: Sized + private::Sealed {
     ///     let name = input.call(Ident::parse_any)?;
     ///     Ok(name)
     /// }
-    /// #
-    /// # fn main() {}
     /// ```
     fn parse_any(input: ParseStream) -> Result<Self>;
 }

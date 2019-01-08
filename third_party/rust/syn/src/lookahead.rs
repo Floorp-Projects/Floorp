@@ -21,12 +21,9 @@ use token::Token;
 ///
 /// # Example
 ///
-/// ```
-/// #[macro_use]
-/// extern crate syn;
-///
-/// use syn::{ConstParam, Ident, Lifetime, LifetimeDef, TypeParam};
-/// use syn::parse::{Parse, ParseStream, Result};
+/// ```edition2018
+/// use syn::{ConstParam, Ident, Lifetime, LifetimeDef, Result, Token, TypeParam};
+/// use syn::parse::{Parse, ParseStream};
 ///
 /// // A generic parameter, a single one of the comma-separated elements inside
 /// // angle brackets in:
@@ -59,8 +56,6 @@ use token::Token;
 ///         }
 ///     }
 /// }
-/// #
-/// # fn main() {}
 /// ```
 pub struct Lookahead1<'a> {
     scope: Span,
@@ -114,11 +109,13 @@ impl<'a> Lookahead1<'a> {
     pub fn error(self) -> Error {
         let comparisons = self.comparisons.borrow();
         match comparisons.len() {
-            0 => if self.cursor.eof() {
-                Error::new(self.scope, "unexpected end of input")
-            } else {
-                Error::new(self.cursor.span(), "unexpected token")
-            },
+            0 => {
+                if self.cursor.eof() {
+                    Error::new(self.scope, "unexpected end of input")
+                } else {
+                    Error::new(self.cursor.span(), "unexpected token")
+                }
+            }
             1 => {
                 let message = format!("expected {}", comparisons[0]);
                 error::new_at(self.scope, self.cursor, message)
