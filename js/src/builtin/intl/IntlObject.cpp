@@ -24,6 +24,7 @@
 #include "builtin/intl/ScopedICUObject.h"
 #include "js/CharacterEncoding.h"
 #include "js/Class.h"
+#include "js/PropertySpec.h"
 #include "js/StableStringChars.h"
 #include "vm/GlobalObject.h"
 #include "vm/JSContext.h"

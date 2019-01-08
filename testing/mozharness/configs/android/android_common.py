@@ -336,6 +336,7 @@ config = {
                 "--symbols-path=%(symbols_path)s",
                 "--utility-path=%(utility_path)s",
                 "--deviceSerial=%(device_serial)s",
+                "--log-raw=%(raw_log_file)s",
             ],
         },
 

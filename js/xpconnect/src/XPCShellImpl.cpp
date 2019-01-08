@@ -10,6 +10,7 @@
 #include "js/CharacterEncoding.h"
 #include "js/CompilationAndEvaluation.h"
 #include "js/Printf.h"
+#include "js/PropertySpec.h"
 #include "mozilla/ChaosMode.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/Preferences.h"

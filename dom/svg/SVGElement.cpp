@@ -44,9 +44,9 @@
 #include "SVGAnimatedPointList.h"
 #include "SVGAnimatedPathSegList.h"
 #include "SVGAnimatedTransformList.h"
-#include "nsSVGBoolean.h"
+#include "SVGBoolean.h"
 #include "SVGEnum.h"
-#include "nsSVGInteger.h"
+#include "SVGInteger.h"
 #include "SVGIntegerPair.h"
 #include "nsSVGLength2.h"
 #include "SVGMotionSMILAttr.h"
@@ -425,7 +425,7 @@ bool SVGElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
     }
 
     if (!foundMatch) {
-      // Check for nsSVGInteger attribute
+      // Check for SVGInteger attribute
       IntegerAttributesInfo integerInfo = GetIntegerInfo();
       for (i = 0; i < integerInfo.mIntegerCount; i++) {
         if (aAttribute == integerInfo.mIntegerInfo[i].mName) {
@@ -480,7 +480,7 @@ bool SVGElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
     }
 
     if (!foundMatch) {
-      // Check for nsSVGBoolean attribute
+      // Check for SVGBoolean attribute
       BooleanAttributesInfo booleanInfo = GetBooleanInfo();
       for (i = 0; i < booleanInfo.mBooleanCount; i++) {
         if (aAttribute == booleanInfo.mBooleanInfo[i].mName) {
