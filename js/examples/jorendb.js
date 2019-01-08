@@ -864,10 +864,9 @@ for (var task of todo) {
     task['scriptArgs'] = actualScriptArgs;
 }
 
-// If nothing to run, just drop into a repl
-if (todo.length == 0) {
-    todo.push({ 'action': 'repl' });
-}
+// Always drop into a repl at the end. Especially if the main script throws an
+// exception.
+todo.push({ 'action': 'repl' });
 
 while (rerun) {
     print("Top of run loop");
@@ -880,7 +879,12 @@ while (rerun) {
             debuggeeGlobal['scriptArgs'] = task.scriptArgs;
             debuggeeGlobal['scriptPath'] = task.script;
             print("Loading JavaScript file " + task.script);
-            debuggeeGlobal.evaluate(read(task.script), { 'fileName': task.script, 'lineNumber': 1 });
+            try {
+                debuggeeGlobal.evaluate(read(task.script), { 'fileName': task.script, 'lineNumber': 1 });
+            } catch (exc) {
+                print("Caught exception " + exc);
+                print(exc.stack);
+            }
         } else if (task.action == 'repl') {
             repl();
         }
