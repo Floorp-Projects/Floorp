@@ -1,22 +1,21 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-/* import-globals-from head-addons-script.js */
-
 "use strict";
 
 const { adbAddon } = require("devtools/shared/adb/adb-addon");
 
 const ABD_ADDON_NAME = "ADB binary provider";
 
-// Load addons helpers
-Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "head-addons-script.js", this);
+/* import-globals-from helper-adb.js */
+Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "helper-adb.js", this);
 
 // Test that manifest URLs for addon targets show the manifest correctly in a new tab.
 // This test reuses the ADB extension to be sure to have a valid manifest URL to open.
 add_task(async function() {
   await pushPref("devtools.remote.adb.extensionURL",
                  CHROME_URL_ROOT + "resources/test-adb-extension/adb-extension-#OS#.xpi");
+  await checkAdbNotRunning();
 
   const { document, tab, window } = await openAboutDebugging();
   const usbStatusElement = document.querySelector(".js-sidebar-usb-status");

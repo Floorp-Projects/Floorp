@@ -3,6 +3,9 @@
 
 "use strict";
 
+/* import-globals-from helper-collapsibilities.js */
+Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "helper-collapsibilities.js", this);
+
 /**
  * Test for preference of DebugTargetPane collapsibilities.
  */

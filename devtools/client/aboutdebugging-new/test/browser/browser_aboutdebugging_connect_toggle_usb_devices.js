@@ -3,6 +3,9 @@
 
 "use strict";
 
+/* import-globals-from helper-adb.js */
+Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "helper-adb.js", this);
+
 const { AddonManager } = require("resource://gre/modules/AddonManager.jsm");
 
 /**
@@ -11,6 +14,7 @@ const { AddonManager } = require("resource://gre/modules/AddonManager.jsm");
 add_task(async function() {
   await pushPref("devtools.remote.adb.extensionURL",
                  CHROME_URL_ROOT + "resources/test-adb-extension/adb-extension-#OS#.xpi");
+  await checkAdbNotRunning();
 
   const { document, tab } = await openAboutDebugging();
 

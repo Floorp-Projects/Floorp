@@ -3,17 +3,18 @@
 
 "use strict";
 
+/* import-globals-from ../../../shared/test/shared-head.js */
+
 const MOCKS_ROOT = CHROME_URL_ROOT + "mocks/";
+/* import-globals-from mocks/helper-client-wrapper-mock.js */
+Services.scriptloader.loadSubScript(MOCKS_ROOT + "helper-client-wrapper-mock.js", this);
+/* import-globals-from mocks/helper-runtime-client-factory-mock.js */
+Services.scriptloader.loadSubScript(MOCKS_ROOT + "helper-runtime-client-factory-mock.js",
+  this);
+/* import-globals-from mocks/helper-usb-runtimes-mock.js */
+Services.scriptloader.loadSubScript(MOCKS_ROOT + "helper-usb-runtimes-mock.js", this);
 
 const { RUNTIMES } = require("devtools/client/aboutdebugging-new/src/constants");
-
-/* import-globals-from mocks/head-client-wrapper-mock.js */
-Services.scriptloader.loadSubScript(MOCKS_ROOT + "head-client-wrapper-mock.js", this);
-/* import-globals-from mocks/head-runtime-client-factory-mock.js */
-Services.scriptloader.loadSubScript(MOCKS_ROOT + "head-runtime-client-factory-mock.js",
-  this);
-/* import-globals-from mocks/head-usb-runtimes-mock.js */
-Services.scriptloader.loadSubScript(MOCKS_ROOT + "head-usb-runtimes-mock.js", this);
 
 /**
  * This wrapper around the mocks used in about:debugging tests provides helpers to
@@ -160,3 +161,5 @@ class Mocks {
     }
   }
 }
+/* exported Mocks */
+
