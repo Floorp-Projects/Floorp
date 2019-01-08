@@ -12,7 +12,7 @@
 
 [package]
 name = "syn"
-version = "0.15.7"
+version = "0.15.24"
 authors = ["David Tolnay <dtolnay@gmail.com>"]
 include = ["/Cargo.toml", "/src/**/*.rs", "/README.md", "/LICENSE-APACHE", "/LICENSE-MIT"]
 description = "Parser for Rust source code"

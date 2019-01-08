@@ -12,8 +12,9 @@
 
 [package]
 name = "proc-macro2"
-version = "0.4.9"
+version = "0.4.24"
 authors = ["Alex Crichton <alex@alexcrichton.com>"]
+build = "build.rs"
 description = "A stable implementation of the upcoming new `proc_macro` API. Comes with an\noption, off by default, to also reimplement itself in terms of the upstream\nunstable API.\n"
 homepage = "https://github.com/alexcrichton/proc-macro2"
 documentation = "https://docs.rs/proc-macro2"
@@ -22,14 +23,16 @@ keywords = ["macros"]
 license = "MIT/Apache-2.0"
 repository = "https://github.com/alexcrichton/proc-macro2"
 [package.metadata.docs.rs]
+rustc-args = ["--cfg", "procmacro2_semver_exempt"]
 rustdoc-args = ["--cfg", "procmacro2_semver_exempt"]
-
-[lib]
-doctest = false
 [dependencies.unicode-xid]
 version = "0.1"
+[dev-dependencies.quote]
+version = "0.6"
 
 [features]
 default = ["proc-macro"]
 nightly = ["proc-macro"]
 proc-macro = []
+[badges.travis-ci]
+repository = "alexcrichton/proc-macro2"
