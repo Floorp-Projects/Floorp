@@ -1,5 +1,9 @@
 // |reftest| skip-if(!this.ReadableStream||!this.drainJobQueue)
 
+if ("ignoreUnhandledRejections" in this) {
+  ignoreUnhandledRejections();
+}
+
 // Example of a stream that enqueues data asynchronously, whether the reader
 // wants it or not, the "push" model.
 let fbStream = new ReadableStream({

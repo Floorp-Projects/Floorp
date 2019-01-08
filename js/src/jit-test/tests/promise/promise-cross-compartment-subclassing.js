@@ -1,3 +1,5 @@
+ignoreUnhandledRejections();
+
 const global = newGlobal();
 const OtherPromise = global.Promise;
 class SubPromise extends OtherPromise {}

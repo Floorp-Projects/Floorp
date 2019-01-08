@@ -1,5 +1,9 @@
 // |reftest| skip-if(!this.hasOwnProperty("ReadableStream"))
 
+if ("ignoreUnhandledRejections" in this) {
+  ignoreUnhandledRejections();
+}
+
 async function test() {
     if (typeof newGlobal !== 'undefined') {
         otherGlobal = newGlobal();
