@@ -143,6 +143,7 @@ Structure:
         gfx: {
             D2DEnabled: <bool>, // null on failure
             DWriteEnabled: <bool>, // null on failure
+            LowEndMachine: <bool>, // whether we're adjusting to being on low-spec hardware
             //DWriteVersion: <string>, // temporarily removed, pending bug 1154500
             adapters: [
               {
