@@ -3973,6 +3973,7 @@ export DIST
 export MOZ_LINKER
 export ZLIB_IN_MOZGLUE
 export RANLIB
+export AR
 export CPP
 export CC
 export CXX
