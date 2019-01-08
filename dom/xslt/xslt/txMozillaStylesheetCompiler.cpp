@@ -413,14 +413,10 @@ nsresult txCompileObserver::startLoad(nsIURI* aUri,
 
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
   if (httpChannel) {
-    DebugOnly<nsresult> rv;
-    rv = httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Accept"),
-                                       NS_LITERAL_CSTRING("*/*"), false);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
-
     nsCOMPtr<nsIURI> referrerURI;
     aReferrerPrincipal->GetURI(getter_AddRefs(referrerURI));
     if (referrerURI) {
+      DebugOnly<nsresult> rv;
       rv = httpChannel->SetReferrerWithPolicy(referrerURI, aReferrerPolicy);
       MOZ_ASSERT(NS_SUCCEEDED(rv));
     }
