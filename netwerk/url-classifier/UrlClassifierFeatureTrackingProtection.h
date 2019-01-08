@@ -17,6 +17,8 @@ namespace net {
 class UrlClassifierFeatureTrackingProtection final
     : public UrlClassifierFeatureBase {
  public:
+  static const char* Name();
+
   static void MaybeShutdown();
 
   static already_AddRefed<UrlClassifierFeatureTrackingProtection> MaybeCreate(

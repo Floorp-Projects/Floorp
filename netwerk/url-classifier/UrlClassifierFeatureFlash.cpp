@@ -55,6 +55,15 @@ UrlClassifierFeatureFlash::UrlClassifierFeatureFlash(uint32_t aId)
                 "nsIHttpChannel::FlashPluginLastValue is out-of-sync!");
 }
 
+/* static */ void UrlClassifierFeatureFlash::GetFeatureNames(
+    nsTArray<nsCString>& aArray) {
+  uint32_t numFeatures =
+      (sizeof(sFlashFeaturesMap) / sizeof(sFlashFeaturesMap[0]));
+  for (uint32_t i = 0; i < numFeatures; ++i) {
+    aArray.AppendElement(nsDependentCString(sFlashFeaturesMap[i].mName));
+  }
+}
+
 /* static */ void UrlClassifierFeatureFlash::MaybeInitialize() {
   MOZ_ASSERT(XRE_IsParentProcess());
 
