@@ -1,0 +1,104 @@
+body {
+  padding-top: 70px;
+}
+
+/* Tabs */
+
+#tabbar .nav-link {
+  color: #009570;
+  font-size: 18px;
+  padding-bottom: 15px;
+  padding-top: 15px;
+}
+
+#tabbar .nav-link.active {
+  color: #212529;
+}
+
+#tabbar .nav-link:hover {
+  color: #0f5a3a;
+}
+
+/* Sections */
+
+.tab-content button {
+  font-size: 14px;
+  margin-bottom: 5px;
+  margin-top: 10px;
+}
+
+.filter-label {
+  display: block;
+  font-size: 16px;
+  position: relative;
+  padding-left: 15px;
+  padding-right: 15px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  margin-bottom: 0;
+  -moz-user-select: none;
+  user-select: none;
+  vertical-align: middle;
+}
+
+.filter-label span {
+  display: flex;
+  min-height: 34px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.filter-label input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  height: 0;
+  width: 0;
+}
+
+.filter-label input[type="text"] {
+  width: 50px;
+}
+
+.filter-label:hover {
+  background-color: #91a0b0;
+}
+
+.filter-label.is-checked:hover {
+  background-color: #91a0b0;
+}
+
+.filter-label.is-checked {
+  background-color: #404c59;
+  color: white;
+}
+
+/* Preview pane */
+
+#preview {
+  position: fixed;
+  height: 100vh;
+  margin-left: 66%;
+  width: 100%;
+}
+
+#submit-tasks {
+  display: flex;
+  flex-direction: column;
+  height: 80%;
+}
+
+#buttons {
+  display: flex;
+  justify-content: space-between;
+}
+
+#push {
+  background-color: #00e9b7;
+  margin-left: 5px;
+  width: 100%;
+}
+
+#selection {
+  height: 100%;
+  width: 100%;
+}
