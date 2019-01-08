@@ -30,10 +30,6 @@
   margin: 0;
 }
 
-.downloadsPanelFooter {
-  border-top: 1px solid var(--panel-separator-color);
-}
-
 .downloadsPanelFooter toolbarseparator,
 @item@ > toolbarseparator {
   margin: 0;
