@@ -319,7 +319,8 @@ class MediaDataDecoder : public DecoderDoctorLifeLogger<MediaDataDecoder> {
 
   // Set a hint of seek target time to decoder. Decoder will drop any decoded
   // data which pts is smaller than this value. This threshold needs to be clear
-  // after reset decoder.
+  // after reset decoder. To clear it explicitly, call this method with
+  // TimeUnit::Invalid().
   // Decoder may not honor this value. However, it'd be better that
   // video decoder implements this API to improve seek performance.
   // Note: it should be called before Input() or after Flush().

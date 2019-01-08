@@ -221,8 +221,13 @@ class RemoteVideoDecoder : public RemoteDataDecoder {
   void SetSeekThreshold(const TimeUnit& aTime) override {
     RefPtr<RemoteVideoDecoder> self = this;
     nsCOMPtr<nsIRunnable> runnable = NS_NewRunnableFunction(
-        "RemoteVideoDecoder::SetSeekThreshold",
-        [self, aTime]() { self->mSeekTarget = Some(aTime); });
+        "RemoteVideoDecoder::SetSeekThreshold", [self, aTime]() {
+          if (aTime.IsValid()) {
+            self->mSeekTarget = Some(aTime);
+          } else {
+            self->mSeekTarget.reset();
+          }
+        });
     nsresult rv = mTaskQueue->Dispatch(runnable.forget());
     MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
     Unused << rv;
