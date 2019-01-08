@@ -338,9 +338,27 @@ nsresult nsComponentManagerImpl::Init() {
   // used, and before any calls are made into the JS engine.
   nsLayoutModuleInitialize();
 
-  bool loadChromeManifests = (XRE_GetProcessType() != GeckoProcessType_GPU &&
-                              XRE_GetProcessType() != GeckoProcessType_VR &&
-                              XRE_GetProcessType() != GeckoProcessType_RDD);
+  bool loadChromeManifests;
+  switch (XRE_GetProcessType()) {
+    // We are going to assume that only a select few (see below) process types
+    // want to load chrome manifests, and that any new process types will not
+    // want to load them, because they're not going to be executing JS.
+    default:
+      loadChromeManifests = false;
+      break;
+
+    // XXX The check this code replaced implicitly let through all of these
+    // process types, but presumably only the default (parent) and content
+    // processes really need chrome manifests...?
+    case GeckoProcessType_Default:
+    case GeckoProcessType_Plugin:
+    case GeckoProcessType_Content:
+    case GeckoProcessType_IPDLUnitTest:
+    case GeckoProcessType_GMPlugin:
+      loadChromeManifests = true;
+      break;
+  }
+
   if (loadChromeManifests) {
     // The overall order in which chrome.manifests are expected to be treated
     // is the following:
