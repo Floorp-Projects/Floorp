@@ -8,7 +8,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.plus
 import mozilla.appservices.logins.DatabaseLoginsStorage
 import mozilla.appservices.logins.LoginsStorage
@@ -207,7 +207,7 @@ interface AsyncLoginsStorage : AutoCloseable {
  */
 @Suppress("TooManyFunctions")
 open class AsyncLoginsStorageAdapter<T : LoginsStorage>(private val wrapped: T) : AsyncLoginsStorage, AutoCloseable {
-    private val job = Job()
+    private val job = SupervisorJob()
     private val scope = CoroutineScope(Dispatchers.IO) + job
 
     override fun lock(): Deferred<Unit> {

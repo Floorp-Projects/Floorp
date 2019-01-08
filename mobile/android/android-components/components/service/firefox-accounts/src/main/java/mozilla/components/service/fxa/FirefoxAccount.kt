@@ -8,7 +8,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.plus
 import org.mozilla.fxaclient.internal.FirefoxAccount as InternalFxAcct
 import org.mozilla.fxaclient.internal.FxaException.Unauthorized as Unauthorized
@@ -26,7 +26,7 @@ interface FirefoxAccountShaped {
  */
 class FirefoxAccount internal constructor(private val inner: InternalFxAcct) : AutoCloseable, FirefoxAccountShaped {
 
-    private val job = Job()
+    private val job = SupervisorJob()
     private val scope = CoroutineScope(Dispatchers.IO) + job
 
     /**
