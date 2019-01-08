@@ -33,7 +33,8 @@ internal class StorageEngineManager(
      *
      * @param storeName the name of the storage of interest
      * @return a [JSONObject] containing the data collected from all the
-     *         storage engines.
+     *         storage engines or returns a completely empty, zero-length [JSONObject]
+     *         if the store is empty and there are no real metrics to send.
      */
     fun collect(storeName: String): JSONObject {
         val jsonPing = JSONObject()

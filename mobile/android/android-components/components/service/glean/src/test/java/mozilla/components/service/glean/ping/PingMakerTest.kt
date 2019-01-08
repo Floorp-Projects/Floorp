@@ -15,6 +15,7 @@ import org.junit.Test
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.runner.RunWith
 import org.mockito.Mockito.mock
@@ -82,9 +83,10 @@ class PingMakerTest {
             "wontCollect" to MockStorageEngine(JSONObject(), "notThisPing")
         ), applicationContext = mockApplicationContext))
 
-        // Gather the data. We expect an empty ping with the "ping_info" information
+        // Gather the data, this should have everything in the 'test' ping which is the default
+        // storex
         val data = maker.collect("test")
-        assertTrue("We expect a non-empty JSON blob", "{}" != data)
+        assertNotNull("We expect a non-null JSON blob", data)
 
         // Parse the data so that we can easily check the other fields
         val jsonData = JSONObject(data)
@@ -92,5 +94,19 @@ class PingMakerTest {
         assertEquals(engine1Data, metricsData.getJSONArray("engine1"))
         assertEquals(engine2Data, metricsData.getJSONArray("engine2"))
         assertFalse(metricsData.has("wontCollect"))
+    }
+
+    @Test
+    fun `collect() must report an empty string when no data is stored`() {
+        val engine1Data = JSONArray(listOf("1", "2", "3"))
+        val engine2Data = JSONArray(listOf("a", "b", "c"))
+        val maker = PingMaker(StorageEngineManager(storageEngines = mapOf(
+            "engine1" to MockStorageEngine(engine1Data),
+            "engine2" to MockStorageEngine(engine2Data)
+        ), applicationContext = mockApplicationContext))
+
+        // Gather the data. We expect an empty string
+        val data = maker.collect("noSuchData")
+        assertNull("We expect an empty string", data)
     }
 }

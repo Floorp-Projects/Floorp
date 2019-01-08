@@ -31,6 +31,7 @@ import org.mockito.Mockito.spy
 import org.robolectric.RobolectricTestRunner
 import java.io.File
 import java.util.UUID
+import java.util.concurrent.TimeUnit
 
 @ObsoleteCoroutinesApi
 @ExperimentalCoroutinesApi
@@ -287,5 +288,72 @@ class GleanTest {
         doThrow(IllegalStateException("Shouldn't send ping")).`when`(gleanSpy).sendPing(anyString(), anyString())
         gleanSpy.initialized = false
         gleanSpy.handleEvent(Glean.PingEvent.Default)
+    }
+
+    @Test
+    fun `Don't send pings if metrics disabled`() {
+        val server = MockWebServer()
+        server.enqueue(MockResponse().setBody("OK"))
+
+        EventsStorageEngine.clearAllStores()
+
+        val realClient = Glean.httpPingUploader
+        val testConfig = Glean.configuration.copy(
+            serverEndpoint = "http://" + server.hostName + ":" + server.port
+        )
+        Glean.httpPingUploader = HttpPingUploader(testConfig)
+        Glean.setMetricsEnabled(false)
+
+        try {
+            Glean.handleEvent(Glean.PingEvent.Background)
+
+            // Note: this only works because we are faking the dispatchers with the @Rule above,
+            // otherwise this would probably fail due to some async weirdness
+            val request = server.takeRequest(2, TimeUnit.SECONDS)
+
+            // request will be null if no pings were sent
+            assertNull(request)
+        } finally {
+            Glean.httpPingUploader = realClient
+            server.shutdown()
+        }
+    }
+
+    @Test
+    fun `Don't send pings if there is no ping content`() {
+        val server = MockWebServer()
+        server.enqueue(MockResponse().setBody("OK"))
+
+        EventsStorageEngine.clearAllStores()
+
+        val realClient = Glean.httpPingUploader
+        val testConfig = Glean.configuration.copy(
+            serverEndpoint = "http://" + server.hostName + ":" + server.port
+        )
+        Glean.httpPingUploader = HttpPingUploader(testConfig)
+
+        try {
+            Baseline.sessions.add()
+
+            Glean.handleEvent(Glean.PingEvent.Background)
+
+            val requests: MutableMap<String, String> = mutableMapOf()
+            for (i in 0..1) {
+                server.takeRequest(2, TimeUnit.SECONDS)?.let { request ->
+                    val docType = request.path.split("/")[3]
+                    requests[docType] = request.body.readUtf8()
+                }
+            }
+
+            // Make sure the baseline ping is there
+            val baselineJson = JSONObject(requests["baseline"])
+            checkPingSchema(baselineJson)
+
+            // Make sure the events ping is NOT there since no events should have been recorded
+            assertNull("Events request should be null since there was no event data", requests["events"])
+        } finally {
+            Glean.httpPingUploader = realClient
+            server.shutdown()
+        }
     }
 }

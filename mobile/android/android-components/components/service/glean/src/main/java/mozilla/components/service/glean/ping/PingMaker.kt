@@ -108,12 +108,20 @@ internal class PingMaker(
      * Collects the relevant data and assembles the requested ping.
      *
      * @param storage the name of the storage containing the data for the ping.
-     *        This usually matches with the name of the ping
-     * @return a string holding the data for the ping.
+     *        This usually matches with the name of the ping.
+     * @return a string holding the data for the ping, or null if there is no data to send.
      */
-    fun collect(storage: String): String {
+    fun collect(storage: String): String? {
         val jsonPing = storageManager.collect(storage)
+
+        // Return null if there is nothing in the jsonPing object so that this can be used by
+        // consuming functions (i.e. sendPing()) to indicate no ping data is available to send.
+        if (jsonPing.length() == 0) {
+            return null
+        }
+
         jsonPing.put("ping_info", getPingInfo(storage))
+
         return jsonPing.toString()
     }
 }

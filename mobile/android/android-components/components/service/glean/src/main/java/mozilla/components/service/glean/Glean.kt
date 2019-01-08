@@ -146,15 +146,25 @@ open class GleanInternalAPI {
 
     /**
      * Collect and assemble the ping. Asynchronously submits the assembled
-     * payload to the designated server using [httpPingUploader].
+     * payload to the designated server using [httpPingUploader] but only
+     * if metrics are enabled, and there is ping data to send.
      */
     internal fun sendPing(store: String, docType: String) {
-        val pingContent = pingMaker.collect(store)
-        val uuid = UUID.randomUUID()
-        val path = makePath(docType, uuid)
-        // Asynchronously perform the HTTP upload off the main thread.
-        GlobalScope.launch(Dispatchers.IO) {
-            httpPingUploader.upload(path = path, data = pingContent)
+        // Do not send ping if metrics disabled
+        if (!getMetricsEnabled()) {
+            logger.debug("Attempt to send ping \"$store\" but metrics disabled, aborting send.")
+            return
+        }
+
+        // Build and send the ping on an async thread. Since the pingMaker.collect() function
+        // returns null if there is nothing to send we can use this to avoid sending an empty ping
+        pingMaker.collect(store)?.let { pingContent ->
+            val uuid = UUID.randomUUID()
+            val path = makePath(docType, uuid)
+            // Asynchronously perform the HTTP upload off the main thread.
+            GlobalScope.launch(Dispatchers.IO) {
+                httpPingUploader.upload(path = path, data = pingContent)
+            }
         }
     }
 
