@@ -163,7 +163,6 @@
 
 .identity-popup-content-blocking-empty-label,
 #tracking-protection-preferences-button > .toolbarbutton-text,
-.identity-popup-footer,
 .tracking-protection-button,
 #identity-popup-trackersView-strict-info > label,
 .identity-popup-cookiesView-list-header,
@@ -311,11 +310,6 @@
 
 #identity-popup-more-info-footer {
   margin-top: 1em;
-}
-
-.identity-popup-footer > button {
-  margin: 0;
-  padding: 8px 20px;
 }
 
 #identity-popup-content-verifier ~ description {
