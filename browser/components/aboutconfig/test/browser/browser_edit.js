@@ -118,17 +118,21 @@ add_task(async function test_modify() {
     Assert.ok(!row.valueInput);
     Assert.equal(row.value, Preferences.get("test.aboutconfig.modify.string"));
 
-    // Test regex check for Int pref.
-    intRow.valueInput.value += "a";
-    intRow.editColumnButton.click();
-    Assert.ok(!intRow.valueInput.checkValidity());
+    // Test validation of integer values.
+    for (let invalidValue of
+         ["", " ", "a", "1.5", "-2147483649", "2147483648"]) {
+      intRow.valueInput.value = invalidValue;
+      intRow.editColumnButton.click();
+      // We should still be in edit mode.
+      Assert.ok(intRow.valueInput);
+    }
 
     // Test correct saving and DOM-update.
-    for (let prefName of [
-      "test.aboutconfig.modify.string",
-      "test.aboutconfig.modify.number",
-      PREF_NUMBER_DEFAULT_ZERO,
-      PREF_STRING_DEFAULT_EMPTY,
+    for (let [prefName, willDelete] of [
+      ["test.aboutconfig.modify.string", true],
+      ["test.aboutconfig.modify.number", true],
+      [PREF_NUMBER_DEFAULT_ZERO, false],
+      [PREF_STRING_DEFAULT_EMPTY, false],
     ]) {
       row = this.getRow(prefName);
       // Activate edit and check displaying.
@@ -137,10 +141,18 @@ add_task(async function test_modify() {
       row.valueInput.value = "42";
       // Save and check saving.
       row.editColumnButton.click();
-      Assert.equal(row.value, "" + Preferences.get(prefName));
-      let prefHasUserValue = Services.prefs.prefHasUserValue(prefName);
-      Assert.equal(!!row.resetColumnButton, prefHasUserValue);
-      Assert.equal(row.hasClass("has-user-value"), prefHasUserValue);
+      Assert.equal(Preferences.get(prefName), "42");
+      Assert.equal(row.value, "42");
+      Assert.ok(row.hasClass("has-user-value"));
+      // Reset or delete the preference while editing.
+      row.editColumnButton.click();
+      Assert.equal(row.valueInput.value, Preferences.get(prefName));
+      row.resetColumnButton.click();
+      if (willDelete) {
+        Assert.ok(!this.getRow(prefName));
+      } else {
+        Assert.ok(!row.hasClass("has-user-value"));
+      }
     }
   });
 });

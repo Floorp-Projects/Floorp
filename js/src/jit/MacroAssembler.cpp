@@ -1180,10 +1180,10 @@ static void AllocateObjectBufferWithInit(JSContext* cx, TypedArrayObject* obj,
   MOZ_ASSERT((CheckedUint32(nbytes) + sizeof(Value)).isValid());
 
   nbytes = JS_ROUNDUP(nbytes, sizeof(Value));
-  void* buf = cx->nursery().allocateBuffer(obj, nbytes);
+  void* buf = cx->nursery().allocateZeroedBuffer(obj, nbytes,
+                                                 js::ArrayBufferContentsArena);
   if (buf) {
     obj->initPrivate(buf);
-    memset(buf, 0, nbytes);
   }
 }
 

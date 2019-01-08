@@ -1,5 +1,3 @@
-// |jit-test| skip-if: getBuildConfiguration()['arm64']
-// skip arm64 due to bug 1513231
 // Test bounds checking at the end of memory with a constant base pointer.
 // This is intended to verify a bounds check elimination optimization in
 // the baseline compiler.

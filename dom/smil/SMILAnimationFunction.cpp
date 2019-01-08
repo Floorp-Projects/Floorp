@@ -7,11 +7,11 @@
 #include "SMILAnimationFunction.h"
 
 #include "mozilla/dom/SVGAnimationElement.h"
+#include "mozilla/SMILParserUtils.h"
 #include "mozilla/SMILTimedElement.h"
 #include "mozilla/Move.h"
 #include "nsISMILAttr.h"
 #include "SMILCSSValueType.h"
-#include "nsSMILParserUtils.h"
 #include "SMILNullType.h"
 #include "nsAttrValueInlines.h"
 #include "nsGkAtoms.h"
@@ -636,7 +636,7 @@ double SMILAnimationFunction::ScaleIntervalProgress(double aProgress,
 
   MOZ_ASSERT(aIntervalIndex < mKeySplines.Length(), "Invalid interval index");
 
-  nsSMILKeySpline const& spline = mKeySplines[aIntervalIndex];
+  SMILKeySpline const& spline = mKeySplines[aIntervalIndex];
   return spline.GetSplineValue(aProgress);
 }
 
@@ -713,8 +713,8 @@ nsresult SMILAnimationFunction::GetValues(const nsISMILAttr& aSMILAttr,
     nsAutoString attValue;
     GetAttr(nsGkAtoms::values, attValue);
     bool preventCachingOfSandwich = false;
-    if (!nsSMILParserUtils::ParseValues(attValue, mAnimationElement, aSMILAttr,
-                                        result, preventCachingOfSandwich)) {
+    if (!SMILParserUtils::ParseValues(attValue, mAnimationElement, aSMILAttr,
+                                      result, preventCachingOfSandwich)) {
       return NS_ERROR_FAILURE;
     }
 
@@ -940,7 +940,7 @@ nsresult SMILAnimationFunction::SetKeySplines(const nsAString& aKeySplines,
 
   mHasChanged = true;
 
-  if (!nsSMILParserUtils::ParseKeySplines(aKeySplines, mKeySplines)) {
+  if (!SMILParserUtils::ParseKeySplines(aKeySplines, mKeySplines)) {
     mKeySplines.Clear();
     return NS_ERROR_FAILURE;
   }
@@ -961,8 +961,8 @@ nsresult SMILAnimationFunction::SetKeyTimes(const nsAString& aKeyTimes,
 
   mHasChanged = true;
 
-  if (!nsSMILParserUtils::ParseSemicolonDelimitedProgressList(aKeyTimes, true,
-                                                              mKeyTimes)) {
+  if (!SMILParserUtils::ParseSemicolonDelimitedProgressList(aKeyTimes, true,
+                                                            mKeyTimes)) {
     mKeyTimes.Clear();
     return NS_ERROR_FAILURE;
   }

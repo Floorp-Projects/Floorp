@@ -154,6 +154,29 @@ UniquePtr<LayerUserData> LayerManager::RemoveUserData(void* aKey) {
   return d;
 }
 
+void LayerManager::PayloadPresented() {
+  if (mPayload.Length()) {
+    TimeStamp presented = TimeStamp::Now();
+    for (CompositionPayload& payload : mPayload) {
+#if MOZ_GECKO_PROFILER
+      if (profiler_is_active()) {
+        nsPrintfCString marker(
+            "Payload Presented, type: %d latency: %dms\n",
+            int32_t(payload.mType),
+            int32_t((presented - payload.mTimeStamp).ToMilliseconds()));
+        profiler_add_marker(marker.get());
+      }
+#endif
+
+      if (payload.mType == CompositionPayloadType::eKeyPress) {
+        Telemetry::AccumulateTimeDelta(
+            mozilla::Telemetry::KEYPRESS_PRESENT_LATENCY, payload.mTimeStamp,
+            presented);
+      }
+    }
+  }
+}
+
 //--------------------------------------------------
 // Layer
 

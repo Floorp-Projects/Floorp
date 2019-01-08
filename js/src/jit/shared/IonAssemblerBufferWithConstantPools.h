@@ -1053,6 +1053,9 @@ struct AssemblerBufferWithConstantPools
   }
 
   void enterNoPool(size_t maxInst) {
+    if (this->oom()) {
+      return;
+    }
     // Don't allow re-entry.
     MOZ_ASSERT(!canNotPlacePool_);
     insertNopFill();
@@ -1078,6 +1081,10 @@ struct AssemblerBufferWithConstantPools
   }
 
   void leaveNoPool() {
+    if (this->oom()) {
+      canNotPlacePool_ = false;
+      return;
+    }
     MOZ_ASSERT(canNotPlacePool_);
     canNotPlacePool_ = false;
 
