@@ -1,17 +1,11 @@
-// Copyright 2018 Syn Developers
-//
-// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
-// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
-// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
-// option. This file may not be copied, modified, or distributed
-// except according to those terms.
-
 use super::*;
 use punctuated::Punctuated;
 
 use std::iter;
 
-use proc_macro2::{Delimiter, Spacing, TokenStream, TokenTree};
+use proc_macro2::TokenStream;
+#[cfg(not(feature = "parsing"))]
+use proc_macro2::{Delimiter, Spacing, TokenTree};
 
 #[cfg(feature = "parsing")]
 use parse::{ParseStream, Result};
@@ -55,11 +49,11 @@ ast_struct! {
     ///    path  tts                   path         tts
     /// ```
     ///
-    /// Use the [`interpret_meta`] method to try parsing the tokens of an
-    /// attribute into the structured representation that is used by convention
-    /// across most Rust libraries.
+    /// Use the [`parse_meta`] method to try parsing the tokens of an attribute
+    /// into the structured representation that is used by convention across
+    /// most Rust libraries.
     ///
-    /// [`interpret_meta`]: #method.interpret_meta
+    /// [`parse_meta`]: #method.parse_meta
     ///
     /// # Parsing
     ///
@@ -75,12 +69,9 @@ ast_struct! {
     /// [`Attribute::parse_outer`]: #method.parse_outer
     /// [`Attribute::parse_inner`]: #method.parse_inner
     ///
-    /// ```
-    /// #[macro_use]
-    /// extern crate syn;
-    ///
-    /// use syn::{Attribute, Ident};
-    /// use syn::parse::{Parse, ParseStream, Result};
+    /// ```edition2018
+    /// use syn::{Attribute, Ident, Result, Token};
+    /// use syn::parse::{Parse, ParseStream};
     ///
     /// // Parses a unit struct with attributes.
     /// //
@@ -103,8 +94,6 @@ ast_struct! {
     ///         })
     ///     }
     /// }
-    /// #
-    /// # fn main() {}
     /// ```
     pub struct Attribute #manual_extra_traits {
         pub pound_token: Token![#],
@@ -146,32 +135,65 @@ impl Hash for Attribute {
 impl Attribute {
     /// Parses the tokens after the path as a [`Meta`](enum.Meta.html) if
     /// possible.
+    ///
+    /// Deprecated; use `parse_meta` instead.
+    #[doc(hidden)]
     pub fn interpret_meta(&self) -> Option<Meta> {
-        let name = if self.path.segments.len() == 1 {
-            &self.path.segments.first().unwrap().value().ident
-        } else {
-            return None;
-        };
-
-        if self.tts.is_empty() {
-            return Some(Meta::Word(name.clone()));
+        #[cfg(feature = "parsing")]
+        {
+            self.parse_meta().ok()
         }
 
-        let tts = self.tts.clone().into_iter().collect::<Vec<_>>();
+        #[cfg(not(feature = "parsing"))]
+        {
+            let name = if self.path.segments.len() == 1 {
+                &self.path.segments.first().unwrap().value().ident
+            } else {
+                return None;
+            };
 
-        if tts.len() == 1 {
-            if let Some(meta) = Attribute::extract_meta_list(name.clone(), &tts[0]) {
-                return Some(meta);
+            if self.tts.is_empty() {
+                return Some(Meta::Word(name.clone()));
             }
-        }
 
-        if tts.len() == 2 {
-            if let Some(meta) = Attribute::extract_name_value(name.clone(), &tts[0], &tts[1]) {
-                return Some(meta);
+            let tts = self.tts.clone().into_iter().collect::<Vec<_>>();
+
+            if tts.len() == 1 {
+                if let Some(meta) = Attribute::extract_meta_list(name.clone(), &tts[0]) {
+                    return Some(meta);
+                }
             }
+
+            if tts.len() == 2 {
+                if let Some(meta) = Attribute::extract_name_value(name.clone(), &tts[0], &tts[1]) {
+                    return Some(meta);
+                }
+            }
+
+            None
+        }
+    }
+
+    /// Parses the tokens after the path as a [`Meta`](enum.Meta.html) if
+    /// possible.
+    #[cfg(feature = "parsing")]
+    pub fn parse_meta(&self) -> Result<Meta> {
+        if let Some(ref colon) = self.path.leading_colon {
+            return Err(Error::new(colon.spans[0], "expected meta identifier"));
         }
 
-        None
+        let first_segment = self
+            .path
+            .segments
+            .first()
+            .expect("paths have at least one segment");
+        if let Some(colon) = first_segment.punct() {
+            return Err(Error::new(colon.spans[0], "expected meta value"));
+        }
+        let ident = first_segment.value().ident.clone();
+
+        let parser = |input: ParseStream| parsing::parse_meta_after_ident(ident, input);
+        parse::Parser::parse2(parser, self.tts.clone())
     }
 
     /// Parses zero or more outer attributes from the stream.
@@ -200,6 +222,7 @@ impl Attribute {
         Ok(attrs)
     }
 
+    #[cfg(not(feature = "parsing"))]
     fn extract_meta_list(ident: Ident, tt: &TokenTree) -> Option<Meta> {
         let g = match *tt {
             TokenTree::Group(ref g) => g,
@@ -220,6 +243,7 @@ impl Attribute {
         }))
     }
 
+    #[cfg(not(feature = "parsing"))]
     fn extract_name_value(ident: Ident, a: &TokenTree, b: &TokenTree) -> Option<Meta> {
         let a = match *a {
             TokenTree::Punct(ref o) => o,
@@ -256,6 +280,7 @@ impl Attribute {
     }
 }
 
+#[cfg(not(feature = "parsing"))]
 fn nested_meta_item_from_tokens(tts: &[TokenTree]) -> Option<(NestedMeta, &[TokenTree])> {
     assert!(!tts.is_empty());
 
@@ -297,6 +322,7 @@ fn nested_meta_item_from_tokens(tts: &[TokenTree]) -> Option<(NestedMeta, &[Toke
     }
 }
 
+#[cfg(not(feature = "parsing"))]
 fn list_of_nested_meta_items_from_tokens(
     mut tts: &[TokenTree],
 ) -> Option<Punctuated<NestedMeta, Token![,]>> {
@@ -438,6 +464,43 @@ ast_enum_of_structs! {
     }
 }
 
+/// Conventional argument type associated with an invocation of an attribute
+/// macro.
+///
+/// For example if we are developing an attribute macro that is intended to be
+/// invoked on function items as follows:
+///
+/// ```edition2018
+/// # const IGNORE: &str = stringify! {
+/// #[my_attribute(path = "/v1/refresh")]
+/// # };
+/// pub fn refresh() {
+///     /* ... */
+/// }
+/// ```
+///
+/// The implementation of this macro would want to parse its attribute arguments
+/// as type `AttributeArgs`.
+///
+/// ```edition2018
+/// extern crate proc_macro;
+///
+/// use proc_macro::TokenStream;
+/// use syn::{parse_macro_input, AttributeArgs, ItemFn};
+///
+/// # const IGNORE: &str = stringify! {
+/// #[proc_macro_attribute]
+/// # };
+/// pub fn my_attribute(args: TokenStream, input: TokenStream) -> TokenStream {
+///     let args = parse_macro_input!(args as AttributeArgs);
+///     let input = parse_macro_input!(input as ItemFn);
+///
+///     /* ... */
+/// #   "".parse().unwrap()
+/// }
+/// ```
+pub type AttributeArgs = Vec<NestedMeta>;
+
 pub trait FilterAttrs<'a> {
     type Ret: Iterator<Item = &'a Attribute>;
 
@@ -452,6 +515,7 @@ where
     type Ret = iter::Filter<T::IntoIter, fn(&&Attribute) -> bool>;
 
     fn outer(self) -> Self::Ret {
+        #[cfg_attr(feature = "cargo-clippy", allow(trivially_copy_pass_by_ref))]
         fn is_outer(attr: &&Attribute) -> bool {
             match attr.style {
                 AttrStyle::Outer => true,
@@ -462,6 +526,7 @@ where
     }
 
     fn inner(self) -> Self::Ret {
+        #[cfg_attr(feature = "cargo-clippy", allow(trivially_copy_pass_by_ref))]
         fn is_inner(attr: &&Attribute) -> bool {
             match attr.style {
                 AttrStyle::Inner(_) => true,
@@ -476,7 +541,8 @@ where
 pub mod parsing {
     use super::*;
 
-    use parse::{ParseStream, Result};
+    use ext::IdentExt;
+    use parse::{Parse, ParseStream, Result};
     #[cfg(feature = "full")]
     use private;
 
@@ -509,6 +575,71 @@ pub mod parsing {
             attrs.extend(inner);
             attrs
         }
+    }
+
+    impl Parse for Meta {
+        fn parse(input: ParseStream) -> Result<Self> {
+            let ident = input.call(Ident::parse_any)?;
+            parse_meta_after_ident(ident, input)
+        }
+    }
+
+    impl Parse for MetaList {
+        fn parse(input: ParseStream) -> Result<Self> {
+            let ident = input.call(Ident::parse_any)?;
+            parse_meta_list_after_ident(ident, input)
+        }
+    }
+
+    impl Parse for MetaNameValue {
+        fn parse(input: ParseStream) -> Result<Self> {
+            let ident = input.call(Ident::parse_any)?;
+            parse_meta_name_value_after_ident(ident, input)
+        }
+    }
+
+    impl Parse for NestedMeta {
+        fn parse(input: ParseStream) -> Result<Self> {
+            let ahead = input.fork();
+
+            if ahead.peek(Lit) && !(ahead.peek(LitBool) && ahead.peek2(Token![=])) {
+                input.parse().map(NestedMeta::Literal)
+            } else if ahead.call(Ident::parse_any).is_ok() {
+                input.parse().map(NestedMeta::Meta)
+            } else {
+                Err(input.error("expected identifier or literal"))
+            }
+        }
+    }
+
+    pub fn parse_meta_after_ident(ident: Ident, input: ParseStream) -> Result<Meta> {
+        if input.peek(token::Paren) {
+            parse_meta_list_after_ident(ident, input).map(Meta::List)
+        } else if input.peek(Token![=]) {
+            parse_meta_name_value_after_ident(ident, input).map(Meta::NameValue)
+        } else {
+            Ok(Meta::Word(ident))
+        }
+    }
+
+    fn parse_meta_list_after_ident(ident: Ident, input: ParseStream) -> Result<MetaList> {
+        let content;
+        Ok(MetaList {
+            ident: ident,
+            paren_token: parenthesized!(content in input),
+            nested: content.parse_terminated(NestedMeta::parse)?,
+        })
+    }
+
+    fn parse_meta_name_value_after_ident(
+        ident: Ident,
+        input: ParseStream,
+    ) -> Result<MetaNameValue> {
+        Ok(MetaNameValue {
+            ident: ident,
+            eq_token: input.parse()?,
+            lit: input.parse()?,
+        })
     }
 }
 

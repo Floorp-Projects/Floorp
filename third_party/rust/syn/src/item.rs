@@ -1,11 +1,3 @@
-// Copyright 2018 Syn Developers
-//
-// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
-// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
-// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
-// option. This file may not be copied, modified, or distributed
-// except according to those terms.
-
 use super::*;
 use derive::{Data, DeriveInput};
 use proc_macro2::TokenStream;
@@ -770,6 +762,8 @@ pub mod parsing {
 
     use ext::IdentExt;
     use parse::{Parse, ParseStream, Result};
+    use proc_macro2::{Punct, Spacing, TokenTree};
+    use std::iter::FromIterator;
 
     impl Parse for Item {
         fn parse(input: ParseStream) -> Result<Self> {
@@ -807,7 +801,7 @@ pub mod parsing {
             } else if lookahead.peek(Token![const]) {
                 ahead.parse::<Token![const]>()?;
                 let lookahead = ahead.lookahead1();
-                if lookahead.peek(Ident) {
+                if lookahead.peek(Ident) || lookahead.peek(Token![_]) {
                     input.parse().map(Item::Const)
                 } else if lookahead.peek(Token![unsafe])
                     || lookahead.peek(Token![async])
@@ -849,9 +843,9 @@ pub mod parsing {
                 input.parse().map(Item::Enum)
             } else if lookahead.peek(Token![union]) && ahead.peek2(Ident) {
                 input.parse().map(Item::Union)
-            } else if lookahead.peek(Token![trait])
-                || lookahead.peek(Token![auto]) && ahead.peek2(Token![trait])
-            {
+            } else if lookahead.peek(Token![trait]) {
+                input.call(parse_trait_or_trait_alias)
+            } else if lookahead.peek(Token![auto]) && ahead.peek2(Token![trait]) {
                 input.parse().map(Item::Trait)
             } else if lookahead.peek(Token![impl ])
                 || lookahead.peek(Token![default]) && !ahead.peek2(Token![!])
@@ -903,17 +897,54 @@ pub mod parsing {
     // TODO: figure out the actual grammar; is body required to be braced?
     impl Parse for ItemMacro2 {
         fn parse(input: ParseStream) -> Result<Self> {
+            let attrs = input.call(Attribute::parse_outer)?;
+            let vis: Visibility = input.parse()?;
+            let macro_token: Token![macro] = input.parse()?;
+            let ident: Ident = input.parse()?;
+
+            let paren_token;
             let args;
+            let brace_token;
             let body;
+            let lookahead = input.lookahead1();
+            if lookahead.peek(token::Paren) {
+                let paren_content;
+                paren_token = parenthesized!(paren_content in input);
+                args = paren_content.parse()?;
+
+                let brace_content;
+                brace_token = braced!(brace_content in input);
+                body = brace_content.parse()?;
+            } else if lookahead.peek(token::Brace) {
+                // Hack: the ItemMacro2 syntax tree will need to change so that
+                // we can store None for the args.
+                //
+                // https://github.com/dtolnay/syn/issues/548
+                //
+                // For now, store some sentinel tokens that are otherwise
+                // illegal.
+                paren_token = token::Paren::default();
+                args = TokenStream::from_iter(vec![
+                    TokenTree::Punct(Punct::new('$', Spacing::Alone)),
+                    TokenTree::Punct(Punct::new('$', Spacing::Alone)),
+                ]);
+
+                let brace_content;
+                brace_token = braced!(brace_content in input);
+                body = brace_content.parse()?;
+            } else {
+                return Err(lookahead.error());
+            }
+
             Ok(ItemMacro2 {
-                attrs: input.call(Attribute::parse_outer)?,
-                vis: input.parse()?,
-                macro_token: input.parse()?,
-                ident: input.parse()?,
-                paren_token: parenthesized!(args in input),
-                args: args.parse()?,
-                brace_token: braced!(body in input),
-                body: body.parse()?,
+                attrs: attrs,
+                vis: vis,
+                macro_token: macro_token,
+                ident: ident,
+                paren_token: paren_token,
+                args: args,
+                brace_token: brace_token,
+                body: body,
             })
         }
     }
@@ -925,7 +956,13 @@ pub mod parsing {
                 vis: input.parse()?,
                 extern_token: input.parse()?,
                 crate_token: input.parse()?,
-                ident: input.parse()?,
+                ident: {
+                    if input.peek(Token![self]) {
+                        input.call(Ident::parse_any)?
+                    } else {
+                        input.parse()?
+                    }
+                },
                 rename: {
                     if input.peek(Token![as]) {
                         let as_token: Token![as] = input.parse()?;
@@ -1023,7 +1060,14 @@ pub mod parsing {
                 attrs: input.call(Attribute::parse_outer)?,
                 vis: input.parse()?,
                 const_token: input.parse()?,
-                ident: input.parse()?,
+                ident: {
+                    let lookahead = input.lookahead1();
+                    if lookahead.peek(Ident) || lookahead.peek(Token![_]) {
+                        input.call(Ident::parse_any)?
+                    } else {
+                        return Err(lookahead.error());
+                    }
+                },
                 colon_token: input.parse()?,
                 ty: input.parse()?,
                 eq_token: input.parse()?,
@@ -1438,6 +1482,34 @@ pub mod parsing {
         }
     }
 
+    fn parse_trait_or_trait_alias(input: ParseStream) -> Result<Item> {
+        let (attrs, vis, trait_token, ident, generics) = parse_start_of_trait_alias(input)?;
+        let lookahead = input.lookahead1();
+        if lookahead.peek(token::Brace)
+            || lookahead.peek(Token![:])
+            || lookahead.peek(Token![where])
+        {
+            let unsafety = None;
+            let auto_token = None;
+            parse_rest_of_trait(
+                input,
+                attrs,
+                vis,
+                unsafety,
+                auto_token,
+                trait_token,
+                ident,
+                generics,
+            )
+            .map(Item::Trait)
+        } else if lookahead.peek(Token![=]) {
+            parse_rest_of_trait_alias(input, attrs, vis, trait_token, ident, generics)
+                .map(Item::TraitAlias)
+        } else {
+            Err(lookahead.error())
+        }
+    }
+
     impl Parse for ItemTrait {
         fn parse(input: ParseStream) -> Result<Self> {
             let attrs = input.call(Attribute::parse_outer)?;
@@ -1446,83 +1518,123 @@ pub mod parsing {
             let auto_token: Option<Token![auto]> = input.parse()?;
             let trait_token: Token![trait] = input.parse()?;
             let ident: Ident = input.parse()?;
-            let mut generics: Generics = input.parse()?;
-            let colon_token: Option<Token![:]> = input.parse()?;
+            let generics: Generics = input.parse()?;
+            parse_rest_of_trait(
+                input,
+                attrs,
+                vis,
+                unsafety,
+                auto_token,
+                trait_token,
+                ident,
+                generics,
+            )
+        }
+    }
 
-            let mut supertraits = Punctuated::new();
-            if colon_token.is_some() {
-                loop {
-                    supertraits.push_value(input.parse()?);
-                    if input.peek(Token![where]) || input.peek(token::Brace) {
-                        break;
-                    }
-                    supertraits.push_punct(input.parse()?);
-                    if input.peek(Token![where]) || input.peek(token::Brace) {
-                        break;
-                    }
+    fn parse_rest_of_trait(
+        input: ParseStream,
+        attrs: Vec<Attribute>,
+        vis: Visibility,
+        unsafety: Option<Token![unsafe]>,
+        auto_token: Option<Token![auto]>,
+        trait_token: Token![trait],
+        ident: Ident,
+        mut generics: Generics,
+    ) -> Result<ItemTrait> {
+        let colon_token: Option<Token![:]> = input.parse()?;
+
+        let mut supertraits = Punctuated::new();
+        if colon_token.is_some() {
+            loop {
+                supertraits.push_value(input.parse()?);
+                if input.peek(Token![where]) || input.peek(token::Brace) {
+                    break;
+                }
+                supertraits.push_punct(input.parse()?);
+                if input.peek(Token![where]) || input.peek(token::Brace) {
+                    break;
                 }
             }
-
-            generics.where_clause = input.parse()?;
-
-            let content;
-            let brace_token = braced!(content in input);
-            let mut items = Vec::new();
-            while !content.is_empty() {
-                items.push(content.parse()?);
-            }
-
-            Ok(ItemTrait {
-                attrs: attrs,
-                vis: vis,
-                unsafety: unsafety,
-                auto_token: auto_token,
-                trait_token: trait_token,
-                ident: ident,
-                generics: generics,
-                colon_token: colon_token,
-                supertraits: supertraits,
-                brace_token: brace_token,
-                items: items,
-            })
         }
+
+        generics.where_clause = input.parse()?;
+
+        let content;
+        let brace_token = braced!(content in input);
+        let mut items = Vec::new();
+        while !content.is_empty() {
+            items.push(content.parse()?);
+        }
+
+        Ok(ItemTrait {
+            attrs: attrs,
+            vis: vis,
+            unsafety: unsafety,
+            auto_token: auto_token,
+            trait_token: trait_token,
+            ident: ident,
+            generics: generics,
+            colon_token: colon_token,
+            supertraits: supertraits,
+            brace_token: brace_token,
+            items: items,
+        })
     }
 
     impl Parse for ItemTraitAlias {
         fn parse(input: ParseStream) -> Result<Self> {
-            let attrs = input.call(Attribute::parse_outer)?;
-            let vis: Visibility = input.parse()?;
-            let trait_token: Token![trait] = input.parse()?;
-            let ident: Ident = input.parse()?;
-            let mut generics: Generics = input.parse()?;
-            let eq_token: Token![=] = input.parse()?;
-
-            let mut bounds = Punctuated::new();
-            loop {
-                if input.peek(Token![where]) || input.peek(Token![;]) {
-                    break;
-                }
-                bounds.push_value(input.parse()?);
-                if input.peek(Token![where]) || input.peek(Token![;]) {
-                    break;
-                }
-                bounds.push_punct(input.parse()?);
-            }
-
-            generics.where_clause = input.parse()?;
-            let semi_token: Token![;] = input.parse()?;
-
-            Ok(ItemTraitAlias {
-                attrs: attrs,
-                vis: vis,
-                trait_token: trait_token,
-                ident: ident,
-                generics: generics,
-                eq_token: eq_token,
-                bounds: bounds,
-                semi_token: semi_token,
-            })
+            let (attrs, vis, trait_token, ident, generics) = parse_start_of_trait_alias(input)?;
+            parse_rest_of_trait_alias(input, attrs, vis, trait_token, ident, generics)
         }
+    }
+
+    fn parse_start_of_trait_alias(
+        input: ParseStream,
+    ) -> Result<(Vec<Attribute>, Visibility, Token![trait], Ident, Generics)> {
+        let attrs = input.call(Attribute::parse_outer)?;
+        let vis: Visibility = input.parse()?;
+        let trait_token: Token![trait] = input.parse()?;
+        let ident: Ident = input.parse()?;
+        let generics: Generics = input.parse()?;
+        Ok((attrs, vis, trait_token, ident, generics))
+    }
+
+    fn parse_rest_of_trait_alias(
+        input: ParseStream,
+        attrs: Vec<Attribute>,
+        vis: Visibility,
+        trait_token: Token![trait],
+        ident: Ident,
+        mut generics: Generics,
+    ) -> Result<ItemTraitAlias> {
+        let eq_token: Token![=] = input.parse()?;
+
+        let mut bounds = Punctuated::new();
+        loop {
+            if input.peek(Token![where]) || input.peek(Token![;]) {
+                break;
+            }
+            bounds.push_value(input.parse()?);
+            if input.peek(Token![where]) || input.peek(Token![;]) {
+                break;
+            }
+            bounds.push_punct(input.parse()?);
+        }
+
+        generics.where_clause = input.parse()?;
+        let semi_token: Token![;] = input.parse()?;
+
+        Ok(ItemTraitAlias {
+            attrs: attrs,
+            vis: vis,
+            trait_token: trait_token,
+            ident: ident,
+            generics: generics,
+            eq_token: eq_token,
+            bounds: bounds,
+            semi_token: semi_token,
+        })
     }
 
     impl Parse for TraitItem {
@@ -1712,7 +1824,20 @@ pub mod parsing {
             let defaultness: Option<Token![default]> = input.parse()?;
             let unsafety: Option<Token![unsafe]> = input.parse()?;
             let impl_token: Token![impl ] = input.parse()?;
-            let generics: Generics = input.parse()?;
+
+            let has_generics = input.peek(Token![<])
+                && (input.peek2(Token![>])
+                    || input.peek2(Token![#])
+                    || (input.peek2(Ident) || input.peek2(Lifetime))
+                        && (input.peek3(Token![:])
+                            || input.peek3(Token![,])
+                            || input.peek3(Token![>])));
+            let generics: Generics = if has_generics {
+                input.parse()?
+            } else {
+                Generics::default()
+            };
+
             let trait_ = {
                 let ahead = input.fork();
                 if ahead.parse::<Option<Token![!]>>().is_ok()
@@ -2231,9 +2356,14 @@ mod printing {
             self.vis.to_tokens(tokens);
             self.macro_token.to_tokens(tokens);
             self.ident.to_tokens(tokens);
-            self.paren_token.surround(tokens, |tokens| {
-                self.args.to_tokens(tokens);
-            });
+
+            // Hack: see comment in impl Parse for ItemMacro2.
+            if self.args.to_string() != "$ $" {
+                self.paren_token.surround(tokens, |tokens| {
+                    self.args.to_tokens(tokens);
+                });
+            }
+
             self.brace_token.surround(tokens, |tokens| {
                 self.body.to_tokens(tokens);
             });

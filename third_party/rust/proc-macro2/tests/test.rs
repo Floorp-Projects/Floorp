@@ -203,7 +203,7 @@ fn default_span() {
     assert_eq!(end.line, 1);
     assert_eq!(end.column, 0);
     let source_file = Span::call_site().source_file();
-    assert_eq!(source_file.path().to_string(), "<unspecified>");
+    assert_eq!(source_file.path().to_string_lossy(), "<unspecified>");
     assert!(!source_file.is_real());
 }
 

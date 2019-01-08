@@ -1,19 +1,11 @@
-// Copyright 2018 Syn Developers
-//
-// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
-// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
-// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
-// option. This file may not be copied, modified, or distributed
-// except according to those terms.
-
 //! A stably addressed token buffer supporting efficient traversal based on a
 //! cheaply copyable cursor.
 //!
 //! *This module is available if Syn is built with the `"parsing"` feature.*
 
-// This module is heavily commented as it contains the only unsafe code in Syn,
-// and caution should be used when editing it. The public-facing interface is
-// 100% safe but the implementation is fragile internally.
+// This module is heavily commented as it contains most of the unsafe code in
+// Syn, and caution should be used when editing it. The public-facing interface
+// is 100% safe but the implementation is fragile internally.
 
 #[cfg(all(
     not(all(target_arch = "wasm32", target_os = "unknown")),
@@ -25,6 +17,7 @@ use proc_macro2::{Delimiter, Group, Ident, Literal, Punct, Spacing, Span, TokenS
 use std::marker::PhantomData;
 use std::ptr;
 
+use private;
 use Lifetime;
 
 /// Internal type which is used instead of `TokenTree` to represent a token tree
@@ -350,6 +343,24 @@ impl<'a> Cursor<'a> {
             Entry::Ident(ref t) => t.span(),
             Entry::Punct(ref o) => o.span(),
             Entry::End(..) => Span::call_site(),
+        }
+    }
+}
+
+impl private {
+    #[cfg(procmacro2_semver_exempt)]
+    pub fn open_span_of_group(cursor: Cursor) -> Span {
+        match *cursor.entry() {
+            Entry::Group(ref group, _) => group.span_open(),
+            _ => cursor.span(),
+        }
+    }
+
+    #[cfg(procmacro2_semver_exempt)]
+    pub fn close_span_of_group(cursor: Cursor) -> Span {
+        match *cursor.entry() {
+            Entry::Group(ref group, _) => group.span_close(),
+            _ => cursor.span(),
         }
     }
 }

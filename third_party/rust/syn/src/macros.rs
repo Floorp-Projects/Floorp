@@ -1,11 +1,3 @@
-// Copyright 2018 Syn Developers
-//
-// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
-// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
-// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
-// option. This file may not be copied, modified, or distributed
-// except according to those terms.
-
 #[cfg(any(feature = "full", feature = "derive"))]
 macro_rules! ast_struct {
     (
@@ -113,10 +105,7 @@ macro_rules! ast_enum_of_structs {
     )
 }
 
-#[cfg(all(
-    feature = "printing",
-    any(feature = "full", feature = "derive")
-))]
+#[cfg(all(feature = "printing", any(feature = "full", feature = "derive")))]
 macro_rules! generate_to_tokens {
     (do_not_generate_to_tokens $($foo:tt)*) => ();
 
@@ -152,11 +141,7 @@ macro_rules! to_tokens_call {
     };
 }
 
-#[cfg(all(
-    feature = "printing",
-    feature = "derive",
-    not(feature = "full")
-))]
+#[cfg(all(feature = "printing", feature = "derive", not(feature = "full")))]
 macro_rules! to_tokens_call {
     // If the variant is marked as #full, don't auto-generate to-tokens for it.
     ($e:ident, $tokens:ident, #full $($rest:tt)*) => {
