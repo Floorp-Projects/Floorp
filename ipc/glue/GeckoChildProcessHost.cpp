@@ -548,7 +548,10 @@ AddAppDirToCommandLine(std::vector<std::string>& aCmdLine)
 bool GeckoChildProcessHost::PerformAsyncLaunch(
     std::vector<std::string> aExtraOpts) {
 #ifdef MOZ_GECKO_PROFILER
-  AutoSetProfilerEnvVarsForChildProcess profilerEnvironment;
+  GetProfilerEnvVarsForChildProcess([this](const char* key, const char* value) {
+    mLaunchOptions->env_map[ENVIRONMENT_STRING(key)] =
+        ENVIRONMENT_STRING(value);
+  });
 #endif
 
   const auto startTS = TimeStamp::Now();
@@ -564,20 +567,20 @@ bool GeckoChildProcessHost::PerformAsyncLaunch(
     nsAutoCString nsprLogName;
     GetChildLogName(origNSPRLogName, nsprLogName);
     mLaunchOptions->env_map[ENVIRONMENT_LITERAL("NSPR_LOG_FILE")] =
-        ENVIRONMENT_STRING(nsprLogName);
+        ENVIRONMENT_STRING(nsprLogName.get());
   }
   if (origMozLogName) {
     nsAutoCString mozLogName;
     GetChildLogName(origMozLogName, mozLogName);
     mLaunchOptions->env_map[ENVIRONMENT_LITERAL("MOZ_LOG_FILE")] =
-        ENVIRONMENT_STRING(mozLogName);
+        ENVIRONMENT_STRING(mozLogName.get());
   }
 
   // `RUST_LOG_CHILD` is meant for logging child processes only.
   nsAutoCString childRustLog(PR_GetEnv("RUST_LOG_CHILD"));
   if (!childRustLog.IsEmpty()) {
     mLaunchOptions->env_map[ENVIRONMENT_LITERAL("RUST_LOG")] =
-        ENVIRONMENT_STRING(childRustLog);
+        ENVIRONMENT_STRING(childRustLog.get());
   }
 
 #if defined(XP_LINUX) && defined(MOZ_CONTENT_SANDBOX)
@@ -585,10 +588,10 @@ bool GeckoChildProcessHost::PerformAsyncLaunch(
     // Point a bunch of things that might want to write from content to our
     // shiny new content-process specific tmpdir
     mLaunchOptions->env_map[ENVIRONMENT_LITERAL("TMPDIR")] =
-        ENVIRONMENT_STRING(mTmpDirName);
+        ENVIRONMENT_STRING(mTmpDirName.get());
     // Partial fix for bug 1380051 (not persistent - should be)
     mLaunchOptions->env_map[ENVIRONMENT_LITERAL("MESA_GLSL_CACHE_DIR")] =
-        ENVIRONMENT_STRING(mTmpDirName);
+        ENVIRONMENT_STRING(mTmpDirName.get());
   }
 #endif
 
