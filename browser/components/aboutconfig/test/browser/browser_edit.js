@@ -18,7 +18,6 @@ add_task(async function setup() {
 });
 
 add_task(async function test_add_user_pref() {
-  const PREF_NEW = "test.aboutconfig.new";
   Assert.equal(Services.prefs.getPrefType(PREF_NEW),
                Ci.nsIPrefBranch.PREF_INVALID);
 
@@ -58,8 +57,6 @@ add_task(async function test_add_user_pref() {
 });
 
 add_task(async function test_delete_user_pref() {
-  const PREF_NEW = "test.aboutconfig.new";
-
   for (let [radioIndex, testValue] of [
     [0, false],
     [1, -1],
