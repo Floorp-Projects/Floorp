@@ -334,10 +334,6 @@ nsresult nsComponentManagerImpl::Init() {
     RegisterModule((*sExtraStaticModules)[i]);
   }
 
-  // This needs to be called very early, before anything in nsLayoutModule is
-  // used, and before any calls are made into the JS engine.
-  nsLayoutModuleInitialize();
-
   bool loadChromeManifests;
   switch (XRE_GetProcessType()) {
     // We are going to assume that only a select few (see below) process types
@@ -360,6 +356,10 @@ nsresult nsComponentManagerImpl::Init() {
   }
 
   if (loadChromeManifests) {
+    // This needs to be called very early, before anything in nsLayoutModule is
+    // used, and before any calls are made into the JS engine.
+    nsLayoutModuleInitialize();
+
     // The overall order in which chrome.manifests are expected to be treated
     // is the following:
     // - greDir
