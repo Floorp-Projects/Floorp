@@ -4208,12 +4208,15 @@ function convertDwarf(wasm, instance) {
   new Uint8Array(memory.buffer, wasmPtr, wasm.byteLength).set(new Uint8Array(wasm));
   const resultPtr = alloc_mem(12);
   const enableXScopes = true;
-  convert_dwarf(wasmPtr, wasm.byteLength, resultPtr, resultPtr + 4, enableXScopes);
+  const success = convert_dwarf(wasmPtr, wasm.byteLength, resultPtr, resultPtr + 4, enableXScopes);
   free_mem(wasmPtr);
   const resultView = new DataView(memory.buffer, resultPtr, 12);
   const outputPtr = resultView.getUint32(0, true),
         outputLen = resultView.getUint32(4, true);
   free_mem(resultPtr);
+  if (!success) {
+    throw new Error("Unable to convert from DWARF sections");
+  }
   if (!utf8Decoder) {
     utf8Decoder = new TextDecoder("utf-8");
   }
