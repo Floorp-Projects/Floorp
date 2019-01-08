@@ -48,6 +48,8 @@ permalink: /changelog/
   * 🆕 New component that saves the state of sessions (`SessionManager.Snapshot`) in grouped bundles (e.g. by time).
 
 * **service-telemetry**
+  * Added new "pocket event" ping builder ([#1606](https://github.com/mozilla-mobile/android-components/issues/1606))
+  * Added ability to get ping builder by type from `Telemetry` instance.
   * ⚠️ **This is a breaking change!** <br/>
   HttpURLConnectionTelemetryClient was removed. *service-telemetry* is now using [*concept-fetch*](https://github.com/mozilla-mobile/android-components/tree/master/components/concept/fetch) which allows consumers to use a unified http client. There are two options available currently: [lib-fetch-httpurlconnection](https://github.com/mozilla-mobile/android-components/tree/master/components/lib/fetch-httpurlconnection) (Based on [HttpURLConnection](https://developer.android.com/reference/java/net/HttpURLConnection)) and [lib-fetch-okhttp](https://github.com/mozilla-mobile/android-components/tree/master/components/lib/fetch-okhttp) (Based on [OkHttp](https://github.com/square/okhttp)).
 
@@ -61,11 +63,26 @@ permalink: /changelog/
   val telemetry = Telemetry(configuration, storage, client, scheduler)
   ```
 
+* **browser-search**
+  * Updated search plugins ([#1563](https://github.com/mozilla-mobile/android-components/issues/1563))
+
 * **ui-autocomplete**
   * Fixed a bug where pressing backspace could skip a character ([#1489](https://github.com/mozilla-mobile/android-components/issues/1489)).
 
 * **feature-customtabs**
   * Fixed a bug where a third-party app (like Gmail or Slack) could crash when calling warmup().
+
+* **browser-session**
+  * Added ability to notify observers when desktop mode changes (`onDesktopModeChange`)
+
+* **browser-menu**
+  * Added new `BrowserMenuSwitch` for using switch widgets inside the menu.
+
+* **support-ktx**
+  * Added extension method `Bitmap.withRoundedCorners(cornerRadiusPx: Float)`
+
+* **support-base**
+  * Introduced `LifecycleAwareFeature` for writing features that depend on a lifecycle.
 
 
 # 0.36.1
