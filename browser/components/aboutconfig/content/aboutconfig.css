@@ -67,7 +67,8 @@
   word-break: break-all;
 }
 
-td.cell-value > form > input[type="text"] {
+td.cell-value > form > input {
+  -moz-appearance: textfield;
   width: 100%;
   box-sizing: border-box;
 }
