@@ -252,7 +252,7 @@ ParseContext::ParseContext(JSContext* cx, ParseContext*& parent,
 
 bool ParseContext::init() {
   if (scriptId_ == UINT32_MAX) {
-    errorReporter_.reportErrorNoOffset(JSMSG_NEED_DIET, js_script_str);
+    errorReporter_.errorNoOffset(JSMSG_NEED_DIET, js_script_str);
     return false;
   }
 
