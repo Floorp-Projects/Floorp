@@ -1,5 +1,9 @@
 // |reftest| skip-if(!this.ReadableStream||!this.drainJobQueue)
 
+if ("ignoreUnhandledRejections" in this) {
+  ignoreUnhandledRejections();
+}
+
 // Example of a stream that produces data on demand, the "pull" model.
 let fibStream = new ReadableStream({
     start(controller) {

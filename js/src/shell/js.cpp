@@ -67,7 +67,9 @@
 #include "shellmoduleloader.out.h"
 
 #include "builtin/Array.h"
+#include "builtin/MapObject.h"
 #include "builtin/ModuleObject.h"
+#include "builtin/Promise.h"
 #include "builtin/RegExp.h"
 #include "builtin/TestingFunctions.h"
 #if defined(JS_BUILD_BINAST)
@@ -601,14 +603,16 @@ extern MOZ_EXPORT void add_history(char* line);
 
 ShellContext::ShellContext(JSContext* cx)
     : isWorker(false),
+      lastWarningEnabled(false),
+      trackUnhandledRejections(true),
       timeoutInterval(-1.0),
       startTime(PRMJ_Now()),
       serviceInterrupt(false),
       haveInterruptFunc(false),
       interruptFunc(cx, NullValue()),
-      lastWarningEnabled(false),
       lastWarning(cx, NullValue()),
       promiseRejectionTrackerCallback(cx, NullValue()),
+      unhandledRejectedPromises(cx),
       watchdogLock(mutexid::ShellContextWatchdog),
       exitCode(0),
       quitting(false),
@@ -1054,9 +1058,56 @@ static bool GlobalOfFirstJobInQueue(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+static bool TrackUnhandledRejections(JSContext* cx, JS::HandleObject promise,
+                                     JS::PromiseRejectionHandlingState state) {
+  ShellContext* sc = GetShellContext(cx);
+  if (!sc->trackUnhandledRejections) {
+    return true;
+  }
+
+  if (!sc->unhandledRejectedPromises) {
+    sc->unhandledRejectedPromises = SetObject::create(cx);
+    if (!sc->unhandledRejectedPromises) {
+      return false;
+    }
+  }
+
+  RootedValue promiseVal(cx, ObjectValue(*promise));
+
+  Maybe<AutoRealm> ar;
+  if (cx->realm() != sc->unhandledRejectedPromises->realm()) {
+    ar.emplace(cx, sc->unhandledRejectedPromises);
+    if (!cx->compartment()->wrap(cx, &promiseVal)) {
+      return false;
+    }
+  }
+
+  switch (state) {
+    case JS::PromiseRejectionHandlingState::Unhandled:
+      if (!SetObject::add(cx, sc->unhandledRejectedPromises, promiseVal)) {
+        return false;
+      }
+      break;
+    case JS::PromiseRejectionHandlingState::Handled:
+      bool deleted = false;
+      if (!SetObject::delete_(cx, sc->unhandledRejectedPromises, promiseVal,
+                              &deleted)) {
+        return false;
+      }
+      MOZ_ASSERT(deleted);
+      break;
+  }
+
+  return true;
+}
+
 static void ForwardingPromiseRejectionTrackerCallback(
     JSContext* cx, JS::HandleObject promise,
     JS::PromiseRejectionHandlingState state, void* data) {
+  if (!TrackUnhandledRejections(cx, promise, state)) {
+    return;
+  }
+
   RootedValue callback(cx,
                        GetShellContext(cx)->promiseRejectionTrackerCallback);
   if (callback.isNull()) {
@@ -1092,8 +1143,6 @@ static bool SetPromiseRejectionTrackerCallback(JSContext* cx, unsigned argc,
   }
 
   GetShellContext(cx)->promiseRejectionTrackerCallback = args[0];
-  JS::SetPromiseRejectionTrackerCallback(
-      cx, ForwardingPromiseRejectionTrackerCallback);
 
   args.rval().setUndefined();
   return true;
@@ -1546,6 +1595,16 @@ static bool AddPromiseReactions(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   return JS::AddPromiseReactions(cx, promise, onResolve, onReject);
+}
+
+static bool IgnoreUnhandledRejections(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  ShellContext* sc = GetShellContext(cx);
+  sc->trackUnhandledRejections = false;
+
+  args.rval().setUndefined();
+  return true;
 }
 
 static bool Options(JSContext* cx, unsigned argc, Value* vp) {
@@ -8524,6 +8583,12 @@ JS_FN_HELP("parseBin", BinParse, 1, 0,
 "addPromiseReactions(promise, onResolve, onReject)",
 "  Calls the JS::AddPromiseReactions JSAPI function with the given arguments."),
 
+    JS_FN_HELP("ignoreUnhandledRejections", IgnoreUnhandledRejections, 0, 0,
+"ignoreUnhandledRejections()",
+"  By default, js shell tracks unhandled promise rejections and reports\n"
+"  them at the end of the exectuion.  If a testcase isn't interested\n"
+"  in those rejections, call this to stop tracking and reporting."),
+
     JS_FN_HELP("getMaxArgs", GetMaxArgs, 0, 0,
 "getMaxArgs()",
 "  Return the maximum number of supported args for a call."),
@@ -10485,6 +10550,104 @@ static void SetWorkerContextOptions(JSContext* cx) {
   JS_SetNativeStackQuota(cx, gMaxStackSize);
 }
 
+static MOZ_MUST_USE bool PrintUnhandledRejection(
+    JSContext* cx, Handle<PromiseObject*> promise) {
+  RootedValue reason(cx, promise->reason());
+  RootedObject site(cx, promise->resolutionSite());
+
+  RootedString str(cx, JS_ValueToSource(cx, reason));
+  if (!str) {
+    return false;
+  }
+
+  UniqueChars utf8chars = JS_EncodeStringToUTF8(cx, str);
+  if (!utf8chars) {
+    return false;
+  }
+
+  FILE* fp = ErrorFilePointer();
+  fprintf(fp, "Unhandled rejection: %s\n", utf8chars.get());
+
+  if (!site) {
+    fputs("(no stack trace available)\n", stderr);
+    return true;
+  }
+
+  JSPrincipals* principals = cx->realm()->principals();
+  RootedString stackStr(cx);
+  if (!BuildStackString(cx, principals, site, &stackStr, 2)) {
+    return false;
+  }
+
+  UniqueChars stack = JS_EncodeStringToUTF8(cx, stackStr);
+  if (!stack) {
+    return false;
+  }
+
+  fputs("Stack:\n", fp);
+  fputs(stack.get(), fp);
+
+  return true;
+}
+
+static MOZ_MUST_USE bool ReportUnhandledRejections(JSContext* cx) {
+  ShellContext* sc = GetShellContext(cx);
+  if (!sc->trackUnhandledRejections) {
+    return true;
+  }
+
+  if (!sc->unhandledRejectedPromises) {
+    return true;
+  }
+
+  AutoRealm ar(cx, sc->unhandledRejectedPromises);
+
+  if (!SetObject::size(cx, sc->unhandledRejectedPromises)) {
+    return true;
+  }
+
+  sc->exitCode = EXITCODE_RUNTIME_ERROR;
+
+  RootedValue iter(cx);
+  if (!SetObject::iterator(cx, SetObject::IteratorKind::Values,
+                           sc->unhandledRejectedPromises, &iter)) {
+    return false;
+  }
+
+  Rooted<SetIteratorObject*> iterObj(cx,
+                                     &iter.toObject().as<SetIteratorObject>());
+  RootedArrayObject resultObj(
+      cx, &SetIteratorObject::createResult(cx)->as<ArrayObject>());
+  if (!resultObj) {
+    return false;
+  }
+
+  while (true) {
+    bool done = SetIteratorObject::next(iterObj, resultObj, cx);
+    if (done) {
+      break;
+    }
+
+    RootedObject obj(cx, &resultObj->getDenseElement(0).toObject());
+    obj = CheckedUnwrap(obj);
+    if (!obj) {
+      return false;
+    }
+
+    Handle<PromiseObject*> promise = obj.as<PromiseObject>();
+
+    AutoRealm ar2(cx, promise);
+
+    if (!PrintUnhandledRejection(cx, promise)) {
+      return false;
+    }
+  }
+
+  sc->unhandledRejectedPromises = nullptr;
+
+  return true;
+}
+
 static int Shell(JSContext* cx, OptionParser* op, char** envp) {
   if (op->getBoolOption("wasm-compile-and-serialize")) {
     if (!WasmCompileAndSerialize(cx)) {
@@ -10545,6 +10708,14 @@ static int Shell(JSContext* cx, OptionParser* op, char** envp) {
    */
   if (!GetShellContext(cx)->quitting) {
     js::RunJobs(cx);
+  }
+
+  // Only if there's no other error, report unhandled rejections.
+  if (!result && !sc->exitCode) {
+    if (!ReportUnhandledRejections(cx)) {
+      FILE* fp = ErrorFilePointer();
+      fputs("Error while printing unhandled rejection\n", fp);
+    }
   }
 
   if (sc->exitCode) {
@@ -11081,6 +11252,9 @@ int main(int argc, char** argv, char** envp) {
     js_delete(bufferStreamState);
   });
   JS::InitConsumeStreamCallback(cx, ConsumeBufferSource, ReportStreamError);
+
+  JS::SetPromiseRejectionTrackerCallback(
+      cx, ForwardingPromiseRejectionTrackerCallback);
 
   JS_SetNativeStackQuota(cx, gMaxStackSize);
 

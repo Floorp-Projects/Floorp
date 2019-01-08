@@ -14,6 +14,7 @@
 
 #include "jsapi.h"
 
+#include "builtin/MapObject.h"
 #include "js/GCVector.h"
 #include "threading/ConditionVariable.h"
 #include "threading/LockGuard.h"
@@ -131,14 +132,24 @@ struct ShellContext {
   ~ShellContext();
 
   bool isWorker;
+  bool lastWarningEnabled;
+
+  // Track promise rejections and report unhandled rejections.
+  bool trackUnhandledRejections;
+
   double timeoutInterval;
   double startTime;
   mozilla::Atomic<bool> serviceInterrupt;
   mozilla::Atomic<bool> haveInterruptFunc;
   JS::PersistentRootedValue interruptFunc;
-  bool lastWarningEnabled;
   JS::PersistentRootedValue lastWarning;
   JS::PersistentRootedValue promiseRejectionTrackerCallback;
+
+  // Rejected promises that are not yet handled. Added when rejection
+  // happens, and removed when rejection is handled. This uses SetObject to
+  // report unhandled rejections in the rejected order.
+  JS::PersistentRooted<SetObject*> unhandledRejectedPromises;
+
 #ifdef SINGLESTEP_PROFILING
   Vector<StackChars, 0, SystemAllocPolicy> stacks;
 #endif
