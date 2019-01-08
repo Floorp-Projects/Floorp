@@ -3431,9 +3431,12 @@ bool nsStandardURL::Deserialize(const URIParams &aParams) {
       false);
   NS_ENSURE_TRUE(mPath.mLen != -1 && mSpec.CharAt(mPath.mPos) == '/', false);
   NS_ENSURE_TRUE(mPath.mPos == mFilepath.mPos, false);
-  NS_ENSURE_TRUE(mQuery.mLen == -1 || mSpec.CharAt(mQuery.mPos - 1) == '?',
+  NS_ENSURE_TRUE(mQuery.mLen == -1 ||
+                     (mQuery.mPos > 0 && mSpec.CharAt(mQuery.mPos - 1) == '?'),
                  false);
-  NS_ENSURE_TRUE(mRef.mLen == -1 || mSpec.CharAt(mRef.mPos - 1) == '#', false);
+  NS_ENSURE_TRUE(
+      mRef.mLen == -1 || (mRef.mPos > 0 && mSpec.CharAt(mRef.mPos - 1) == '#'),
+      false);
 
   return true;
 }
