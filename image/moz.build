@@ -55,6 +55,7 @@ EXPORTS += [
 
 EXPORTS.mozilla.image += [
     'encoders/jpeg/nsJPEGEncoder.h',
+    'encoders/png/nsPNGEncoder.h',
     'ImageMemoryReporter.h',
     'RecyclingSourceSurface.h',
 ]
