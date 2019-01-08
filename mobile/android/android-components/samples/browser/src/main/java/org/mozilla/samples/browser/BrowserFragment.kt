@@ -67,7 +67,7 @@ class BrowserFragment : Fragment(), BackHandler {
             this.addDomainProvider(components.shippedDomainsProvider)
         }
 
-        tabsToolbarFeature = TabsToolbarFeature(layout.toolbar, components.sessionManager, ::showTabs)
+        tabsToolbarFeature = TabsToolbarFeature(layout.toolbar, components.sessionManager, sessionId, ::showTabs)
 
         AwesomeBarFeature(layout.awesomeBar, layout.toolbar, layout.engineView)
             .addHistoryProvider(components.historyStorage, components.sessionUseCases.loadUrl)
@@ -111,7 +111,7 @@ class BrowserFragment : Fragment(), BackHandler {
             components.sessionManager,
             layout.toolbar,
             sessionId
-        )
+        ) { activity?.finish() }
 
         // Observe the lifecycle for supported features
         lifecycle.addObservers(

@@ -532,3 +532,20 @@ class SessionManager(
         )
     }
 }
+
+/**
+ * Tries to find a session with the provided session ID and runs the block if found.
+ *
+ * @return True if the session was found and run successfully.
+ */
+fun SessionManager.runWithSession(
+    sessionId: String?,
+    block: SessionManager.(Session) -> Boolean
+): Boolean {
+    sessionId?.let {
+        findSessionById(sessionId)?.let { session ->
+            return block(session)
+        }
+    }
+    return false
+}

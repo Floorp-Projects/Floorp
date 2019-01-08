@@ -24,7 +24,6 @@ import mozilla.components.support.base.android.Padding
 import mozilla.components.support.ktx.android.content.res.pxToDp
 import mozilla.components.support.ktx.android.view.forEach
 import mozilla.components.support.ktx.android.view.isVisible
-import mozilla.components.support.ktx.android.view.setPadding
 import mozilla.components.ui.autocomplete.InlineAutocompleteEditText
 
 /**

@@ -65,18 +65,6 @@ class CustomTabConfigTest {
     }
 
     @Test
-    fun createFromIntentWithMaxOversizedCloseButton() {
-        val size = 64
-        val builder = CustomTabsIntent.Builder()
-        val closeButtonIcon = Bitmap.createBitmap(IntArray(size * size), size, size, Bitmap.Config.ARGB_8888)
-        builder.setCloseButtonIcon(closeButtonIcon)
-
-        val customTabConfig = CustomTabConfig.createFromIntent(SafeIntent((builder.build().intent)))
-        assertNull(customTabConfig.closeButtonIcon)
-        assertFalse(customTabConfig.options.contains(CustomTabConfig.CLOSE_BUTTON_OPTION))
-    }
-
-    @Test
     fun createFromIntentWithInvalidCloseButton() {
         val customTabsIntent = CustomTabsIntent.Builder().build()
         // Intent is a parcelable but not a Bitmap

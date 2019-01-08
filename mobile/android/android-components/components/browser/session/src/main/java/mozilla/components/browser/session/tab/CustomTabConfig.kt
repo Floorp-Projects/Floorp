@@ -54,7 +54,6 @@ class CustomTabConfig internal constructor(
         internal const val BOTTOM_TOOLBAR_OPTION = "hasBottomToolbar"
         internal const val EXIT_ANIMATION_OPTION = "hasExitAnimation"
         internal const val PAGE_TITLE_OPTION = "hasPageTitle"
-        private const val MAX_CLOSE_BUTTON_SIZE_DP = 24
 
         /**
          * Checks if the provided intent is a custom tab intent.
@@ -88,7 +87,7 @@ class CustomTabConfig internal constructor(
 
             val closeButtonIcon = run {
                 val icon = intent.getParcelableExtra(EXTRA_CLOSE_BUTTON_ICON) as? Bitmap
-                if (icon != null && icon.width <= MAX_CLOSE_BUTTON_SIZE_DP && icon.height <= MAX_CLOSE_BUTTON_SIZE_DP) {
+                if (icon != null) {
                     options.add(CLOSE_BUTTON_OPTION)
                     icon
                 } else {

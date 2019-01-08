@@ -5,6 +5,7 @@
 package mozilla.components.feature.tabs.toolbar
 
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.session.runWithSession
 import mozilla.components.concept.toolbar.Toolbar
 
 /**
@@ -14,13 +15,21 @@ import mozilla.components.concept.toolbar.Toolbar
 class TabsToolbarFeature(
     toolbar: Toolbar,
     sessionManager: SessionManager,
+    sessionId: String? = null,
     showTabs: () -> Unit
 ) {
     init {
-        val tabsAction = TabCounterToolbarButton(
-            sessionManager,
-            showTabs)
-
-        toolbar.addBrowserAction(tabsAction)
+        run {
+            sessionManager.runWithSession(sessionId) {
+                it.isCustomTabSession()
+            }.also { isCustomTab ->
+                if (isCustomTab) return@run
+            }
+            val tabsAction = TabCounterToolbarButton(
+                sessionManager,
+                showTabs
+            )
+            toolbar.addBrowserAction(tabsAction)
+        }
     }
 }

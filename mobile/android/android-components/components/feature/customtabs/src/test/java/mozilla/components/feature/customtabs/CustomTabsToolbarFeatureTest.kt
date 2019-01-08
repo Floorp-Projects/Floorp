@@ -7,30 +7,36 @@
 package mozilla.components.feature.customtabs
 
 import android.graphics.Color
+import android.graphics.drawable.Drawable
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.anyInt
 import org.mockito.Mockito.anyString
+import org.mockito.Mockito.doNothing
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
+import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
 
 @RunWith(RobolectricTestRunner::class)
 class CustomTabsToolbarFeatureTest {
 
     @Test
-    fun `start with no sessionId invokes nothing`() {
+    fun `start without sessionId invokes nothing`() {
         val sessionManager: SessionManager = spy(SessionManager(mock()))
         val session: Session = mock()
 
-        val feature = spy(CustomTabsToolbarFeature(sessionManager, mock()))
+        val feature = spy(CustomTabsToolbarFeature(sessionManager, mock()) {})
 
         feature.start()
 
@@ -42,22 +48,61 @@ class CustomTabsToolbarFeatureTest {
     fun `start calls initialize with the sessionId`() {
         val sessionManager: SessionManager = mock()
         val session: Session = mock()
-        `when`(sessionManager.findSessionById(anyString())).thenReturn(session)
+        val feature = spy(CustomTabsToolbarFeature(sessionManager, mock(), "") {})
 
-        val feature = spy(CustomTabsToolbarFeature(sessionManager, mock(), ""))
+        `when`(sessionManager.findSessionById(anyString())).thenReturn(session)
+        `when`(session.customTabConfig).thenReturn(mock())
+        doNothing().`when`(feature).addCloseButton(null)
 
         feature.start()
 
         verify(feature).initialize(session)
+
+        // Calling start again should NOT call init again
+
+        feature.start()
+
+        verify(feature, times(1)).initialize(session)
+    }
+
+    @Test
+    fun `initialize returns true if session is a customtab`() {
+        val session: Session = mock()
+        val toolbar = spy(BrowserToolbar(RuntimeEnvironment.application))
+        val feature = spy(CustomTabsToolbarFeature(mock(), toolbar, "") {})
+
+        var initialized = feature.initialize(session)
+
+        assertFalse(initialized)
+
+        `when`(session.customTabConfig).thenReturn(mock())
+
+        initialized = feature.initialize(session)
+
+        assertTrue(initialized)
     }
 
     @Test
     fun `initialize updates toolbar`() {
-        val sessionManager: SessionManager = mock()
         val session: Session = mock()
+        val toolbar = spy(BrowserToolbar(RuntimeEnvironment.application))
         `when`(session.customTabConfig).thenReturn(mock())
 
-        val feature = spy(CustomTabsToolbarFeature(sessionManager, mock(), ""))
+        val feature = spy(CustomTabsToolbarFeature(mock(), toolbar, "") {})
+
+        feature.initialize(session)
+
+        assertFalse(toolbar.onUrlClicked.invoke())
+    }
+
+    @Test
+    fun `initialize calls updateToolbarColor`() {
+        val sessionManager: SessionManager = mock()
+        val session: Session = mock()
+        val toolbar = spy(BrowserToolbar(RuntimeEnvironment.application))
+        `when`(session.customTabConfig).thenReturn(mock())
+
+        val feature = spy(CustomTabsToolbarFeature(sessionManager, toolbar, "") {})
 
         feature.initialize(session)
 
@@ -66,12 +111,11 @@ class CustomTabsToolbarFeatureTest {
 
     @Test
     fun `updateToolbarColor changes background and textColor`() {
-        val sessionManager: SessionManager = mock()
         val session: Session = mock()
         val toolbar: BrowserToolbar = mock()
         `when`(session.customTabConfig).thenReturn(mock())
 
-        val feature = spy(CustomTabsToolbarFeature(sessionManager, toolbar, ""))
+        val feature = spy(CustomTabsToolbarFeature(mock(), toolbar, "") {})
 
         feature.updateToolbarColor(null)
 
@@ -93,5 +137,37 @@ class CustomTabsToolbarFeatureTest {
         // Black text color for a white background
         val black = CustomTabsToolbarFeature.getReadableTextColor(0xFFFFFF)
         assertEquals(Color.BLACK, black)
+    }
+
+    @Test
+    fun `initialize calls addCloseButton`() {
+        val session: Session = mock()
+        val toolbar = BrowserToolbar(RuntimeEnvironment.application)
+        `when`(session.customTabConfig).thenReturn(mock())
+
+        val feature = spy(CustomTabsToolbarFeature(mock(), toolbar, "") {})
+
+        feature.initialize(session)
+
+        verify(feature).addCloseButton(null)
+    }
+
+    @Test
+    fun isSmallerThan() {
+        val toolbar = spy(BrowserToolbar(RuntimeEnvironment.application))
+        val drawable: Drawable = mock()
+        with(CustomTabsToolbarFeature(mock(), toolbar, "") {}) {
+            `when`(drawable.minimumWidth).thenReturn(84)
+            `when`(drawable.minimumHeight).thenReturn(84)
+            assertFalse(drawable.isSmallerThan(CustomTabsToolbarFeature.MAX_CLOSE_BUTTON_SIZE_DP))
+
+            `when`(drawable.minimumWidth).thenReturn(24)
+            `when`(drawable.minimumHeight).thenReturn(24)
+            assertTrue(drawable.isSmallerThan(CustomTabsToolbarFeature.MAX_CLOSE_BUTTON_SIZE_DP))
+
+            `when`(drawable.minimumWidth).thenReturn(24)
+            `when`(drawable.minimumHeight).thenReturn(84)
+            assertFalse(drawable.isSmallerThan(CustomTabsToolbarFeature.MAX_CLOSE_BUTTON_SIZE_DP))
+        }
     }
 }

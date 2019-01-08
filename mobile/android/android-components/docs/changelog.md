@@ -68,7 +68,10 @@ permalink: /changelog/
   * Added support for JavaScript alerts on SystemEngineView.
   * [Improving use of internal Webview](https://github.com/mozilla-mobile/android-components/commit/59240f7a71a9f63fc51c1ff65e604f6735196a0e).
 
-* **feature-prompts**, **browser-engine-gecko***
+* **feature-customtabs**
+  * Added a close button to a custom tab with back button handling.
+
+* **feature-prompts**, **browser-engine-gecko**
   * Added support for Authentication dialogs.
   * Added support for [datetime-local](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/datetime-local) and [time](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/time) pickers.
   * Added support for [input type color fields](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/color).

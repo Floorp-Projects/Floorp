@@ -11,10 +11,12 @@ import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.never
@@ -1069,5 +1071,34 @@ class SessionManagerTest {
         manager.remove(regular1)
         assertEquals(manager.defaultSession?.invoke(), manager.selectedSession)
         assertEquals("http://www.mozilla.com", manager.selectedSession?.url)
+    }
+
+    @Test
+    fun `SessionManager#runWithSession executes the block when session found`() {
+        val sessionManager = spy(SessionManager(mock()))
+
+        `when`(sessionManager.findSessionById(anyString())).thenReturn(mock())
+
+        val executed = sessionManager.runWithSession("123") { true }
+
+        assertTrue(executed)
+    }
+
+    @Test
+    fun `SessionManager#runWithSession with null session ID`() {
+        val sessionManager = spy(SessionManager(mock()))
+
+        val executed = sessionManager.runWithSession(null) { true }
+
+        assertFalse(executed)
+    }
+
+    @Test
+    fun `SessionManager#runWithSession with null session`() {
+        val sessionManager = spy(SessionManager(mock()))
+
+        val executed = sessionManager.runWithSession("123") { true }
+
+        assertFalse(executed)
     }
 }
