@@ -39,7 +39,7 @@ jobs:
                   by-release-type:
                      beta: [32]
                      release: [145]
-                     esr60: [724]
+                     esr60: [806]
                      default: []
       treeherder:
          platform: firefox-release/opt
