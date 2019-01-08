@@ -284,7 +284,7 @@ var RecipeRunner = {
       arguments: recipe.arguments,
     };
     return {
-      environment,
+      env: environment,
       // Backwards compatibility -- see bug 1477255.
       normandy: environment,
     };
