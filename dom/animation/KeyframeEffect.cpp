@@ -70,7 +70,6 @@ KeyframeEffect::KeyframeEffect(Document* aDocument,
     : AnimationEffect(aDocument, std::move(aTiming)),
       mTarget(aTarget),
       mEffectOptions(aOptions),
-      mInEffectOnLastAnimationTimingUpdate(false),
       mCumulativeChangeHint(nsChangeHint(0)) {}
 
 JSObject* KeyframeEffect::WrapObject(JSContext* aCx,

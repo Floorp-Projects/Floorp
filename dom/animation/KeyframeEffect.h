@@ -397,7 +397,12 @@ class KeyframeEffect : public AnimationEffect {
 
   // We need to track when we go to or from being "in effect" since
   // we need to re-evaluate the cascade of animations when that changes.
-  bool mInEffectOnLastAnimationTimingUpdate;
+  bool mInEffectOnLastAnimationTimingUpdate = false;
+
+  // True if this effect is in the EffectSet for its target element. This is
+  // used as an optimization to avoid unnecessary hashmap lookups on the
+  // EffectSet.
+  bool mInEffectSet = false;
 
   // The non-animated values for properties in this effect that contain at
   // least one animation value that is composited with the underlying value
@@ -405,11 +410,6 @@ class KeyframeEffect : public AnimationEffect {
   using BaseValuesHashmap =
       nsRefPtrHashtable<nsUint32HashKey, RawServoAnimationValue>;
   BaseValuesHashmap mBaseValues;
-
-  // True if this effect is in the EffectSet for its target element. This is
-  // used as an optimization to avoid unnecessary hashmap lookups on the
-  // EffectSet.
-  bool mInEffectSet = false;
 
  private:
   nsChangeHint mCumulativeChangeHint;
