@@ -1,0 +1,147 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>ContextMenuCandidate - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.feature.contextmenu</a>&nbsp;/&nbsp;<a href="./index.html">ContextMenuCandidate</a><br/>
+<br/>
+<h1>ContextMenuCandidate</h1>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">ContextMenuCandidate</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/feature/contextmenu/src/main/java/mozilla/components/feature/contextmenu/ContextMenuCandidate.kt#L30">(source)</a>
+<p>A candidate for an item to be displayed in the context menu.</p>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">ContextMenuCandidate</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.feature.contextmenu.ContextMenuCandidate$<init>(kotlin.String, kotlin.String, kotlin.Function2((mozilla.components.browser.session.Session, mozilla.components.concept.engine.HitResult, kotlin.Boolean)), kotlin.Function2((mozilla.components.browser.session.Session, mozilla.components.concept.engine.HitResult, kotlin.Unit)))/id">id</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.feature.contextmenu.ContextMenuCandidate$<init>(kotlin.String, kotlin.String, kotlin.Function2((mozilla.components.browser.session.Session, mozilla.components.concept.engine.HitResult, kotlin.Boolean)), kotlin.Function2((mozilla.components.browser.session.Session, mozilla.components.concept.engine.HitResult, kotlin.Unit)))/label">label</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.feature.contextmenu.ContextMenuCandidate$<init>(kotlin.String, kotlin.String, kotlin.Function2((mozilla.components.browser.session.Session, mozilla.components.concept.engine.HitResult, kotlin.Boolean)), kotlin.Function2((mozilla.components.browser.session.Session, mozilla.components.concept.engine.HitResult, kotlin.Unit)))/showFor">showFor</span><span class="symbol">:</span>&nbsp;<span class="symbol">(</span><a href="../../mozilla.components.browser.session/-session/index.html"><span class="identifier">Session</span></a><span class="symbol">,</span>&nbsp;<a href="../../mozilla.components.concept.engine/-hit-result/index.html"><span class="identifier">HitResult</span></a><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.feature.contextmenu.ContextMenuCandidate$<init>(kotlin.String, kotlin.String, kotlin.Function2((mozilla.components.browser.session.Session, mozilla.components.concept.engine.HitResult, kotlin.Boolean)), kotlin.Function2((mozilla.components.browser.session.Session, mozilla.components.concept.engine.HitResult, kotlin.Unit)))/action">action</span><span class="symbol">:</span>&nbsp;<span class="symbol">(</span><a href="../../mozilla.components.browser.session/-session/index.html"><span class="identifier">Session</span></a><span class="symbol">,</span>&nbsp;<a href="../../mozilla.components.concept.engine/-hit-result/index.html"><span class="identifier">HitResult</span></a><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a><span class="symbol">)</span></code>
+<p>A candidate for an item to be displayed in the context menu.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="action.html">action</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">action</span><span class="symbol">: </span><span class="symbol">(</span><a href="../../mozilla.components.browser.session/-session/index.html"><span class="identifier">Session</span></a><span class="symbol">,</span>&nbsp;<a href="../../mozilla.components.concept.engine/-hit-result/index.html"><span class="identifier">HitResult</span></a><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>The action to be invoked once the user selects this item.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="id.html">id</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">id</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code>
+<p>A unique ID that will be used to uniquely identify the candidate that the user selected.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="label.html">label</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">label</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code>
+<p>The label that will be displayed in the context menu</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="show-for.html">showFor</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">showFor</span><span class="symbol">: </span><span class="symbol">(</span><a href="../../mozilla.components.browser.session/-session/index.html"><span class="identifier">Session</span></a><span class="symbol">,</span>&nbsp;<a href="../../mozilla.components.concept.engine/-hit-result/index.html"><span class="identifier">HitResult</span></a><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>If this lambda returns true for a given <a href="../../mozilla.components.browser.session/-session/index.html">Session</a> and <a href="../../mozilla.components.concept.engine/-hit-result/index.html">HitResult</a> then it will be displayed in the
+context menu.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Companion Object Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="create-copy-image-location-candidate.html">createCopyImageLocationCandidate</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">createCopyImageLocationCandidate</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.feature.contextmenu.ContextMenuCandidate.Companion$createCopyImageLocationCandidate(android.content.Context, android.view.View)/context">context</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/content/Context.html"><span class="identifier">Context</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.feature.contextmenu.ContextMenuCandidate.Companion$createCopyImageLocationCandidate(android.content.Context, android.view.View)/snackBarParentView">snackBarParentView</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">ContextMenuCandidate</span></a></code>
+<p>Context Menu item: "Copy Image Location".</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="create-copy-link-candidate.html">createCopyLinkCandidate</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">createCopyLinkCandidate</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.feature.contextmenu.ContextMenuCandidate.Companion$createCopyLinkCandidate(android.content.Context, android.view.View)/context">context</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/content/Context.html"><span class="identifier">Context</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.feature.contextmenu.ContextMenuCandidate.Companion$createCopyLinkCandidate(android.content.Context, android.view.View)/snackBarParentView">snackBarParentView</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">ContextMenuCandidate</span></a></code>
+<p>Context Menu item: "Copy Link".</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="create-open-image-in-new-tab-candidate.html">createOpenImageInNewTabCandidate</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">createOpenImageInNewTabCandidate</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.feature.contextmenu.ContextMenuCandidate.Companion$createOpenImageInNewTabCandidate(android.content.Context, mozilla.components.feature.tabs.TabsUseCases, android.view.View)/context">context</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/content/Context.html"><span class="identifier">Context</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.feature.contextmenu.ContextMenuCandidate.Companion$createOpenImageInNewTabCandidate(android.content.Context, mozilla.components.feature.tabs.TabsUseCases, android.view.View)/tabsUseCases">tabsUseCases</span><span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.feature.tabs/-tabs-use-cases/index.html"><span class="identifier">TabsUseCases</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.feature.contextmenu.ContextMenuCandidate.Companion$createOpenImageInNewTabCandidate(android.content.Context, mozilla.components.feature.tabs.TabsUseCases, android.view.View)/snackBarParentView">snackBarParentView</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">ContextMenuCandidate</span></a></code>
+<p>Context Menu item: "Open Image in New Tab".</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="create-open-in-new-tab-candidate.html">createOpenInNewTabCandidate</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">createOpenInNewTabCandidate</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.feature.contextmenu.ContextMenuCandidate.Companion$createOpenInNewTabCandidate(android.content.Context, mozilla.components.feature.tabs.TabsUseCases, android.view.View)/context">context</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/content/Context.html"><span class="identifier">Context</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.feature.contextmenu.ContextMenuCandidate.Companion$createOpenInNewTabCandidate(android.content.Context, mozilla.components.feature.tabs.TabsUseCases, android.view.View)/tabsUseCases">tabsUseCases</span><span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.feature.tabs/-tabs-use-cases/index.html"><span class="identifier">TabsUseCases</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.feature.contextmenu.ContextMenuCandidate.Companion$createOpenInNewTabCandidate(android.content.Context, mozilla.components.feature.tabs.TabsUseCases, android.view.View)/snackBarParentView">snackBarParentView</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">ContextMenuCandidate</span></a></code>
+<p>Context Menu item: "Open Link in New Tab".</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="create-open-in-private-tab-candidate.html">createOpenInPrivateTabCandidate</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">createOpenInPrivateTabCandidate</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.feature.contextmenu.ContextMenuCandidate.Companion$createOpenInPrivateTabCandidate(android.content.Context, mozilla.components.feature.tabs.TabsUseCases, android.view.View)/context">context</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/content/Context.html"><span class="identifier">Context</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.feature.contextmenu.ContextMenuCandidate.Companion$createOpenInPrivateTabCandidate(android.content.Context, mozilla.components.feature.tabs.TabsUseCases, android.view.View)/tabsUseCases">tabsUseCases</span><span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.feature.tabs/-tabs-use-cases/index.html"><span class="identifier">TabsUseCases</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.feature.contextmenu.ContextMenuCandidate.Companion$createOpenInPrivateTabCandidate(android.content.Context, mozilla.components.feature.tabs.TabsUseCases, android.view.View)/snackBarParentView">snackBarParentView</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">ContextMenuCandidate</span></a></code>
+<p>Context Menu item: "Open Link in Private Tab".</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="create-save-image-candidate.html">createSaveImageCandidate</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">createSaveImageCandidate</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.feature.contextmenu.ContextMenuCandidate.Companion$createSaveImageCandidate(android.content.Context)/context">context</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/content/Context.html"><span class="identifier">Context</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">ContextMenuCandidate</span></a></code>
+<p>Context Menu item: "Save image".</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="create-share-link-candidate.html">createShareLinkCandidate</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">createShareLinkCandidate</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.feature.contextmenu.ContextMenuCandidate.Companion$createShareLinkCandidate(android.content.Context)/context">context</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/content/Context.html"><span class="identifier">Context</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">ContextMenuCandidate</span></a></code>
+<p>Context Menu item: "Share Link".</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="default-candidates.html">defaultCandidates</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">defaultCandidates</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.feature.contextmenu.ContextMenuCandidate.Companion$defaultCandidates(android.content.Context, mozilla.components.feature.tabs.TabsUseCases, android.view.View)/context">context</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/content/Context.html"><span class="identifier">Context</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.feature.contextmenu.ContextMenuCandidate.Companion$defaultCandidates(android.content.Context, mozilla.components.feature.tabs.TabsUseCases, android.view.View)/tabsUseCases">tabsUseCases</span><span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.feature.tabs/-tabs-use-cases/index.html"><span class="identifier">TabsUseCases</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.feature.contextmenu.ContextMenuCandidate.Companion$defaultCandidates(android.content.Context, mozilla.components.feature.tabs.TabsUseCases, android.view.View)/snackBarParentView">snackBarParentView</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html"><span class="identifier">List</span></a><span class="symbol">&lt;</span><a href="./index.html"><span class="identifier">ContextMenuCandidate</span></a><span class="symbol">&gt;</span></code>
+<p>Returns the default list of context menu candidates.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

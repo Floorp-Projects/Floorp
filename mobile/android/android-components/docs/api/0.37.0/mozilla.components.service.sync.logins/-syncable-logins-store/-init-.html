@@ -1,0 +1,18 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>SyncableLoginsStore.<init> - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.service.sync.logins</a>&nbsp;/&nbsp;<a href="index.html">SyncableLoginsStore</a>&nbsp;/&nbsp;<a href="./-init-.html">&lt;init&gt;</a><br/>
+<br/>
+<h1>&lt;init&gt;</h1>
+<a name="mozilla.components.service.sync.logins.SyncableLoginsStore$&lt;init&gt;(mozilla.components.service.sync.logins.AsyncLoginsStorage, kotlin.Function0((kotlinx.coroutines.Deferred((kotlin.String)))))"></a>
+<code><span class="identifier">SyncableLoginsStore</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.service.sync.logins.SyncableLoginsStore$<init>(mozilla.components.service.sync.logins.AsyncLoginsStorage, kotlin.Function0((kotlinx.coroutines.Deferred((kotlin.String)))))/store">store</span><span class="symbol">:</span>&nbsp;<a href="../-async-logins-storage/index.html"><span class="identifier">AsyncLoginsStorage</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.service.sync.logins.SyncableLoginsStore$<init>(mozilla.components.service.sync.logins.AsyncLoginsStorage, kotlin.Function0((kotlinx.coroutines.Deferred((kotlin.String)))))/key">key</span><span class="symbol">:</span>&nbsp;<span class="symbol">(</span><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<span class="identifier">Deferred</span><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">&gt;</span><span class="symbol">)</span></code>
+<p>Wraps <a href="../-async-logins-storage/index.html">AsyncLoginsStorage</a> instance along with a lazy encryption key.</p>
+<p>This helper class lives here and not alongside <a href="../-async-logins-storage/index.html">AsyncLoginsStorage</a> because we don't want to
+force a <code>service-sync-logins</code> dependency (which has a heavy native library dependency) on
+consumers of <a href="#">FirefoxSyncFeature</a>.</p>
+</BODY>
+</HTML>

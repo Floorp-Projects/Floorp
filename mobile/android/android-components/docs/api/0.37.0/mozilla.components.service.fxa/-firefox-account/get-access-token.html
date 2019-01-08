@@ -1,0 +1,26 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>FirefoxAccount.getAccessToken - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.service.fxa</a>&nbsp;/&nbsp;<a href="index.html">FirefoxAccount</a>&nbsp;/&nbsp;<a href="./get-access-token.html">getAccessToken</a><br/>
+<br/>
+<h1>getAccessToken</h1>
+<a name="mozilla.components.service.fxa.FirefoxAccount$getAccessToken(kotlin.String)"></a>
+<code><span class="keyword">fun </span><span class="identifier">getAccessToken</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.service.fxa.FirefoxAccount$getAccessToken(kotlin.String)/singleScope">singleScope</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><span class="identifier">Deferred</span><span class="symbol">&lt;</span><a href="../-access-token-info/index.html"><span class="identifier">AccessTokenInfo</span></a><span class="symbol">&gt;</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FirefoxAccount.kt#L125">(source)</a>
+<p>Overrides <a href="../-firefox-account-shaped/get-access-token.html">FirefoxAccountShaped.getAccessToken</a></p>
+<p>Tries to fetch an access token for the given scope.</p>
+<h3>Parameters</h3>
+<p><a name="scope"></a>
+<code>scope</code> - Single OAuth scope (no spaces) for which the client wants access</p>
+<h3>Exceptions</h3>
+<p><a name="Unauthorized"></a>
+<code>Unauthorized</code> - We couldn't provide an access token for this scope.
+The caller should then start the OAuth Flow again with the desired scope.</p>
+<p><strong>Return</strong><br/>
+<a href="../-access-token-info/index.html">AccessTokenInfo</a> that stores the token, along with its scope, key and
+    expiration timestamp (in seconds) since epoch when complete</p>
+</BODY>
+</HTML>
