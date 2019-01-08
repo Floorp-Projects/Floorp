@@ -65,18 +65,18 @@ async function performTests() {
   ok(true, "$_ wasn't re-assigned");
 
   info("Check that $_ gets the value of the last resolved await expression");
-  const delays = [1000, 500, 2000, 1500];
+  const delays = [2000, 1000, 4000, 3000];
   const inputs = delays.map(delay => `await new Promise(
     r => setTimeout(() => r("await-concurrent-" + ${delay}), ${delay}))`);
 
-  // Let's wait for the message that sould be displayed last.
-  const onMessage = waitForMessage(hud, "await-concurrent-2000", ".message.result");
+  // Let's wait for the message that should be displayed last.
+  const onMessage = waitForMessage(hud, "await-concurrent-4000", ".message.result");
   for (const input of inputs) {
     jsterm.execute(input);
   }
   await onMessage;
 
   await executeAndWaitForResultMessage(`"result: " + $_`,
-    `"result: await-concurrent-2000"`);
+    `"result: await-concurrent-4000"`);
   ok(true, "$_ was replaced with the last resolving top-level await evaluation result");
 }
