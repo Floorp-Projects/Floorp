@@ -7,16 +7,17 @@ ChromeUtils.import("resource://gre/modules/Preferences.jsm");
 
 let gDefaultBranch = Services.prefs.getDefaultBranch("");
 let gPrefArray;
-let gPrefInEdit;
+let gPrefInEdit = null;
 
 class PrefRow {
   constructor(name) {
     this.name = name;
     this.refreshValue();
 
+    this.editing = false;
     this.element = document.createElement("tr");
     this.element.setAttribute("aria-label", this.name);
-    this.rebuildElement();
+    this._setupElement();
   }
 
   refreshValue() {
@@ -41,7 +42,7 @@ class PrefRow {
     }
   }
 
-  rebuildElement() {
+  _setupElement() {
     this.element.textContent = "";
     let nameCell = document.createElement("td");
     this.element.append(
@@ -72,13 +73,39 @@ class PrefRow {
   refreshElement() {
     this.element.classList.toggle("has-user-value", !!this.hasUserValue);
     this.element.classList.toggle("locked", !!this.isLocked);
-    this.valueCell.textContent = this.value;
-    if (this.value.constructor.name == "Boolean") {
-      document.l10n.setAttributes(this.editButton, "about-config-pref-toggle");
-      this.editButton.className = "button-toggle";
+    if (!this.editing) {
+      this.valueCell.textContent = this.value;
+      if (this.value.constructor.name == "Boolean") {
+        document.l10n.setAttributes(this.editButton, "about-config-pref-toggle");
+        this.editButton.className = "button-toggle";
+      } else {
+        document.l10n.setAttributes(this.editButton, "about-config-pref-edit");
+        this.editButton.className = "button-edit";
+      }
+      this.editButton.removeAttribute("form");
+      delete this.inputField;
     } else {
-      document.l10n.setAttributes(this.editButton, "about-config-pref-edit");
-      this.editButton.className = "button-edit";
+      this.valueCell.textContent = "";
+      // The form is needed for the validation report to appear, but we need to
+      // prevent the associated button from reloading the page.
+      let form = document.createElement("form");
+      form.addEventListener("submit", event => event.preventDefault());
+      form.id = "form-edit";
+      this.inputField = document.createElement("input");
+      this.inputField.value = this.value;
+      if (this.value.constructor.name == "Number") {
+        this.inputField.type = "number";
+        this.inputField.required = true;
+        this.inputField.min = -2147483648;
+        this.inputField.max = 2147483647;
+      } else {
+        this.inputField.type = "text";
+      }
+      form.appendChild(this.inputField);
+      this.valueCell.appendChild(form);
+      document.l10n.setAttributes(this.editButton, "about-config-pref-save");
+      this.editButton.className = "primary button-save";
+      this.editButton.setAttribute("form", "form-edit");
     }
     this.editButton.disabled = this.isLocked;
     if (!this.isLocked && this.hasUserValue) {
@@ -99,6 +126,36 @@ class PrefRow {
       this.resetButton.remove();
       delete this.resetButton;
     }
+  }
+
+  edit() {
+    if (gPrefInEdit) {
+      gPrefInEdit.endEdit();
+    }
+    gPrefInEdit = this;
+    this.editing = true;
+    this.refreshElement();
+    this.inputField.focus();
+  }
+
+  save() {
+    if (this.value.constructor.name == "Number") {
+      if (!this.inputField.reportValidity()) {
+        return;
+      }
+      Services.prefs.setIntPref(this.name, parseInt(this.inputField.value));
+    } else {
+      Services.prefs.setStringPref(this.name, this.inputField.value);
+    }
+    this.refreshValue();
+    this.endEdit();
+    this.editButton.focus();
+  }
+
+  endEdit() {
+    this.editing = false;
+    this.refreshElement();
+    gPrefInEdit = null;
   }
 }
 
@@ -152,7 +209,7 @@ function loadPrefs() {
       // Reset pref and update gPrefArray.
       Services.prefs.clearUserPref(prefName);
       pref.refreshValue();
-      pref.rebuildElement();
+      pref.refreshElement();
       pref.editButton.focus();
     } else if (button.classList.contains("add-true")) {
       addNewPref(prefRow.firstChild.innerHTML, true);
@@ -161,22 +218,16 @@ function loadPrefs() {
     } else if (button.classList.contains("add-Number") ||
       button.classList.contains("add-String")) {
       addNewPref(prefRow.firstChild.innerHTML,
-        button.classList.contains("add-Number") ? 0 : "");
-      prefRow = [...prefs.getElementsByTagName("tr")]
-        .find(row => row.querySelector("td").textContent == prefName);
-      startEditingPref(prefRow, gPrefArray.find(p => p.name == prefName));
-      prefRow.querySelector("td.cell-value").firstChild.firstChild.focus();
+        button.classList.contains("add-Number") ? 0 : "").edit();
     } else if (button.classList.contains("button-toggle")) {
       // Toggle the pref and update gPrefArray.
       Services.prefs.setBoolPref(prefName, !pref.value);
       pref.refreshValue();
       pref.refreshElement();
     } else if (button.classList.contains("button-edit")) {
-      startEditingPref(prefRow, pref);
-      prefRow.querySelector("td.cell-value").firstChild.firstChild.focus();
+      pref.edit();
     } else if (button.classList.contains("button-save")) {
-      endEditingPref(prefRow);
-      prefRow.querySelector("td.cell-edit").firstChild.focus();
+      pref.save();
     } else {
       Services.prefs.clearUserPref(prefName);
       gPrefArray.splice(gPrefArray.findIndex(p => p.name == prefName), 1);
@@ -188,6 +239,10 @@ function loadPrefs() {
 }
 
 function filterPrefs() {
+  if (gPrefInEdit) {
+    gPrefInEdit.endEdit();
+  }
+
   let substring = document.getElementById("search").value.trim();
   document.getElementById("prefs").textContent = "";
   if (substring && !gPrefArray.some(pref => pref.name == substring)) {
@@ -238,60 +293,6 @@ function createNewPrefFragment(name) {
   return fragment;
 }
 
-function startEditingPref(row, arrayEntry) {
-  if (gPrefInEdit) {
-    // Abort editing-process first.
-    gPrefInEdit.rebuildElement();
-  }
-
-  let name = getPrefName(row);
-  gPrefInEdit = arrayEntry;
-
-  let valueCell = row.querySelector("td.cell-value");
-  valueCell.textContent = "";
-  // The form is needed for the invalid-tooltip to appear.
-  let form = document.createElement("form");
-  form.id = "form-edit";
-  let inputField = document.createElement("input");
-  inputField.value = arrayEntry.value;
-  if (arrayEntry.value.constructor.name == "Number") {
-    inputField.type = "number";
-    inputField.required = true;
-    inputField.min = -2147483648;
-    inputField.max = 2147483647;
-  } else {
-    inputField.type = "text";
-  }
-  form.appendChild(inputField);
-  valueCell.appendChild(form);
-
-  let buttonCell = row.querySelector("td.cell-edit");
-  buttonCell.childNodes[0].remove();
-  let button = document.createElement("button");
-  button.classList.add("primary", "button-save");
-  document.l10n.setAttributes(button, "about-config-pref-save");
-  button.setAttribute("form", "form-edit");
-  buttonCell.appendChild(button);
-}
-
-function endEditingPref(row) {
-  let name = gPrefInEdit.name;
-  let input = row.querySelector("td.cell-value").firstChild.firstChild;
-  let newValue = input.value;
-  if (Services.prefs.getPrefType(name) == Services.prefs.PREF_INT) {
-    if (!input.reportValidity()) {
-      return;
-    }
-    Services.prefs.setIntPref(name, parseInt(newValue));
-  } else {
-    Services.prefs.setStringPref(name, newValue);
-  }
-
-  // Update gPrefArray.
-  gPrefInEdit.refreshValue();
-  gPrefInEdit.rebuildElement();
-}
-
 function prefHasDefaultValue(name) {
   try {
     switch (Services.prefs.getPrefType(name)) {
@@ -311,7 +312,9 @@ function prefHasDefaultValue(name) {
 
 function addNewPref(name, value) {
   Preferences.set(name, value);
-  gPrefArray.push(new PrefRow(name));
+  let pref = new PrefRow(name);
+  gPrefArray.push(pref);
   gPrefArray.sort((a, b) => a.name > b.name);
   filterPrefs();
+  return pref;
 }
