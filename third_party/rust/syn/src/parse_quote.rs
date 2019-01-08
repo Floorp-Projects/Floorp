@@ -8,13 +8,9 @@
 ///
 /// [`Parse`]: parse/trait.Parse.html
 ///
-/// ```
-/// #[macro_use]
-/// extern crate quote;
-/// #[macro_use]
-/// extern crate syn;
-///
-/// use syn::Stmt;
+/// ```edition2018
+/// use quote::quote;
+/// use syn::{parse_quote, Stmt};
 ///
 /// fn main() {
 ///     let name = quote!(v);
@@ -37,13 +33,8 @@
 /// The following helper function adds a bound `T: HeapSize` to every type
 /// parameter `T` in the input generics.
 ///
-/// ```
-/// #[macro_use]
-/// extern crate quote;
-/// #[macro_use]
-/// extern crate syn;
-///
-/// use syn::{Generics, GenericParam};
+/// ```edition2018
+/// use syn::{parse_quote, Generics, GenericParam};
 ///
 /// // Add a bound `T: HeapSize` to every type parameter T.
 /// fn add_trait_bounds(mut generics: Generics) -> Generics {
@@ -54,8 +45,6 @@
 ///     }
 ///     generics
 /// }
-/// #
-/// # fn main() {}
 /// ```
 ///
 /// # Special cases
@@ -76,10 +65,29 @@
 /// Panics if the tokens fail to parse as the expected syntax tree type. The
 /// caller is responsible for ensuring that the input tokens are syntactically
 /// valid.
-#[macro_export]
+#[macro_export(local_inner_macros)]
 macro_rules! parse_quote {
     ($($tt:tt)*) => {
-        $crate::parse_quote::parse($crate::export::From::from(quote!($($tt)*)))
+        $crate::parse_quote::parse($crate::export::From::from(quote_impl!($($tt)*)))
+    };
+}
+
+#[cfg(not(syn_can_call_macro_by_path))]
+#[doc(hidden)]
+#[macro_export]
+macro_rules! quote_impl {
+    ($($tt:tt)*) => {
+        // Require caller to have their own `#[macro_use] extern crate quote`.
+        quote!($($tt)*)
+    };
+}
+
+#[cfg(syn_can_call_macro_by_path)]
+#[doc(hidden)]
+#[macro_export]
+macro_rules! quote_impl {
+    ($($tt:tt)*) => {
+        $crate::export::quote::quote!($($tt)*)
     };
 }
 

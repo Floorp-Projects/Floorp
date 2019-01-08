@@ -1,11 +1,3 @@
-// Copyright 2018 Syn Developers
-//
-// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
-// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
-// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
-// option. This file may not be copied, modified, or distributed
-// except according to those terms.
-
 use super::*;
 use proc_macro2::{Span, TokenStream};
 use punctuated::Punctuated;
@@ -27,7 +19,7 @@ ast_enum_of_structs! {
     /// This type is a syntax tree enum. In Syn this and other syntax tree enums
     /// are designed to be traversed using the following rebinding idiom.
     ///
-    /// ```
+    /// ```edition2018
     /// # use syn::Expr;
     /// #
     /// # fn example(expr: Expr) {
@@ -60,7 +52,7 @@ ast_enum_of_structs! {
     ///
     /// The pattern is similar if the input expression is borrowed:
     ///
-    /// ```
+    /// ```edition2018
     /// # use syn::Expr;
     /// #
     /// # fn example(expr: &Expr) {
@@ -74,7 +66,7 @@ ast_enum_of_structs! {
     ///
     /// This approach avoids repeating the variant names twice on every line.
     ///
-    /// ```
+    /// ```edition2018
     /// # use syn::{Expr, ExprMethodCall};
     /// #
     /// # fn example(expr: Expr) {
@@ -89,7 +81,7 @@ ast_enum_of_structs! {
     /// In general, the name to which a syntax tree enum variant is bound should
     /// be a suitable name for the complete syntax tree enum type.
     ///
-    /// ```
+    /// ```edition2018
     /// # use syn::{Expr, ExprField};
     /// #
     /// # fn example(discriminant: &ExprField) {
@@ -768,9 +760,6 @@ ast_enum_of_structs! {
     /// This type is a [syntax tree enum].
     ///
     /// [syntax tree enum]: enum.Expr.html#syntax-tree-enums
-    // Clippy false positive
-    // https://github.com/Manishearth/rust-clippy/issues/1241
-    #[cfg_attr(feature = "cargo-clippy", allow(enum_variant_names))]
     pub enum Pat {
         /// A pattern that matches any value: `_`.
         ///
@@ -922,7 +911,7 @@ ast_struct! {
     ///
     /// As in:
     ///
-    /// ```rust
+    /// ```edition2018
     /// # fn f() -> bool {
     /// #     let n = 0;
     /// match n {
@@ -1897,7 +1886,7 @@ pub mod parsing {
 
         let mut arms = Vec::new();
         while !content.is_empty() {
-            arms.push(content.call(match_arm)?);
+            arms.push(content.call(Arm::parse)?);
         }
 
         Ok(ExprMatch {
@@ -1928,52 +1917,6 @@ pub mod parsing {
                     Some(input.parse()?)
                 } else {
                     None
-                }
-            },
-        })
-    }
-
-    #[cfg(feature = "full")]
-    fn match_arm(input: ParseStream) -> Result<Arm> {
-        let requires_comma;
-        Ok(Arm {
-            attrs: input.call(Attribute::parse_outer)?,
-            leading_vert: input.parse()?,
-            pats: {
-                let mut pats = Punctuated::new();
-                let value: Pat = input.parse()?;
-                pats.push_value(value);
-                loop {
-                    if !input.peek(Token![|]) {
-                        break;
-                    }
-                    let punct = input.parse()?;
-                    pats.push_punct(punct);
-                    let value: Pat = input.parse()?;
-                    pats.push_value(value);
-                }
-                pats
-            },
-            guard: {
-                if input.peek(Token![if]) {
-                    let if_token: Token![if] = input.parse()?;
-                    let guard: Expr = input.parse()?;
-                    Some((if_token, Box::new(guard)))
-                } else {
-                    None
-                }
-            },
-            fat_arrow_token: input.parse()?,
-            body: {
-                let body = input.call(expr_early)?;
-                requires_comma = requires_terminator(&body);
-                Box::new(body)
-            },
-            comma: {
-                if requires_comma && !input.is_empty() {
-                    Some(input.parse()?)
-                } else {
-                    input.parse()?
                 }
             },
         })
@@ -2348,12 +2291,9 @@ pub mod parsing {
         ///
         /// # Example
         ///
-        /// ```
-        /// #[macro_use]
-        /// extern crate syn;
-        ///
-        /// use syn::{token, Attribute, Block, Ident, Stmt};
-        /// use syn::parse::{Parse, ParseStream, Result};
+        /// ```edition2018
+        /// use syn::{braced, token, Attribute, Block, Ident, Result, Stmt, Token};
+        /// use syn::parse::{Parse, ParseStream};
         ///
         /// // Parse a function with no generics or parameter list.
         /// //
@@ -2394,8 +2334,6 @@ pub mod parsing {
         ///         })
         ///     }
         /// }
-        /// #
-        /// # fn main() {}
         /// ```
         pub fn parse_within(input: ParseStream) -> Result<Vec<Stmt>> {
             let mut stmts = Vec::new();
@@ -2570,23 +2508,28 @@ pub mod parsing {
                         || input.peek2(Token![!])
                         || input.peek2(token::Brace)
                         || input.peek2(token::Paren)
-                        || input.peek2(Token![..]) && !{
-                            let ahead = input.fork();
-                            ahead.parse::<Ident>()?;
-                            ahead.parse::<RangeLimits>()?;
-                            ahead.is_empty() || ahead.peek(Token![,])
-                        }
+                        || input.peek2(Token![..])
+                            && !{
+                                let ahead = input.fork();
+                                ahead.parse::<Ident>()?;
+                                ahead.parse::<RangeLimits>()?;
+                                ahead.is_empty() || ahead.peek(Token![,])
+                            }
                 })
+                || input.peek(Token![self]) && input.peek2(Token![::])
                 || input.peek(Token![::])
                 || input.peek(Token![<])
-                || input.peek(Token![self])
                 || input.peek(Token![Self])
                 || input.peek(Token![super])
                 || input.peek(Token![extern])
                 || input.peek(Token![crate])
             {
                 pat_path_or_macro_or_struct_or_range(input)
-            } else if input.peek(Token![ref]) || input.peek(Token![mut]) || input.peek(Ident) {
+            } else if input.peek(Token![ref])
+                || input.peek(Token![mut])
+                || input.peek(Token![self])
+                || input.peek(Ident)
+            {
                 input.call(pat_ident).map(Pat::Ident)
             } else if lookahead.peek(token::Paren) {
                 input.call(pat_tuple).map(Pat::Tuple)
@@ -2779,6 +2722,54 @@ pub mod parsing {
             } else {
                 Err(input.error("expected identifier or integer"))
             }
+        }
+    }
+
+    #[cfg(feature = "full")]
+    impl Parse for Arm {
+        fn parse(input: ParseStream) -> Result<Arm> {
+            let requires_comma;
+            Ok(Arm {
+                attrs: input.call(Attribute::parse_outer)?,
+                leading_vert: input.parse()?,
+                pats: {
+                    let mut pats = Punctuated::new();
+                    let value: Pat = input.parse()?;
+                    pats.push_value(value);
+                    loop {
+                        if !input.peek(Token![|]) {
+                            break;
+                        }
+                        let punct = input.parse()?;
+                        pats.push_punct(punct);
+                        let value: Pat = input.parse()?;
+                        pats.push_value(value);
+                    }
+                    pats
+                },
+                guard: {
+                    if input.peek(Token![if]) {
+                        let if_token: Token![if] = input.parse()?;
+                        let guard: Expr = input.parse()?;
+                        Some((if_token, Box::new(guard)))
+                    } else {
+                        None
+                    }
+                },
+                fat_arrow_token: input.parse()?,
+                body: {
+                    let body = input.call(expr_early)?;
+                    requires_comma = requires_terminator(&body);
+                    Box::new(body)
+                },
+                comma: {
+                    if requires_comma && !input.is_empty() {
+                        Some(input.parse()?)
+                    } else {
+                        input.parse()?
+                    }
+                },
+            })
         }
     }
 

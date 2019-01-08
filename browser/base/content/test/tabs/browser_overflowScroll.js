@@ -8,7 +8,7 @@ requestLongerTimeout(2);
  */
 add_task(async function() {
   let arrowScrollbox = gBrowser.tabContainer.arrowScrollbox;
-  let scrollbox = arrowScrollbox._scrollbox;
+  let scrollbox = arrowScrollbox.scrollbox;
   let originalSmoothScroll = arrowScrollbox.smoothScroll;
   let tabs = gBrowser.tabs;
   let tabMinWidth = parseInt(getComputedStyle(gBrowser.selectedTab, null).minWidth);
