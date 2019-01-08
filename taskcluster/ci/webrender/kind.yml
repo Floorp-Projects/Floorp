@@ -19,7 +19,6 @@ job-defaults:
         kind: other
     worker:
         max-run-time: 1800
-        docker-image: {in-tree: webrender}
         env:
             RUST_BACKTRACE: 'full'
             RUSTFLAGS: '--deny warnings'
@@ -28,6 +27,8 @@ jobs:
     lint-tidy:
         description: Runs linting checks on WebRender code
         worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+        worker:
+            docker-image: {in-tree: webrender}
         run:
             using: run-task
             command: >-
@@ -43,6 +44,8 @@ jobs:
     linux-release:
         description: Runs release-mode WebRender CI tests on a Linux worker
         worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+        worker:
+            docker-image: {in-tree: webrender}
         toolchains:
             - linux64-rust
             - wrench-deps
@@ -66,6 +69,8 @@ jobs:
     linux-debug:
         description: Runs debug-mode WebRender CI tests on a Linux worker
         worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+        worker:
+            docker-image: {in-tree: webrender}
         toolchains:
             - linux64-rust
             - wrench-deps
@@ -85,3 +90,27 @@ jobs:
         when:
             files-changed:
                 - 'gfx/wr/**'
+
+    windows:
+        description: Runs WebRender CI tests on a Windows worker
+        worker-type: aws-provisioner-v1/gecko-t-win10-64
+        worker:
+            max-run-time: 5400
+            env:
+                TOOLTOOL_MANIFEST: 'browser/config/tooltool-manifests/win64/webrender.manifest'
+        toolchains:
+            - win64-rust
+            - wrench-deps
+        run:
+            using: run-task
+            command: '$GECKO_PATH/taskcluster/scripts/misc/wrench-windows-tests.sh'
+        treeherder:
+            platform: windows10-64-qr/release
+            symbol: WR(wrench)
+        when:
+            files-changed:
+                - 'build/win64/mozconfig.vs2017'
+                - 'browser/config/tooltool-manifests/win64/webrender.manifest'
+                - 'gfx/wr/**'
+                - 'taskcluster/scripts/misc/tooltool-download.sh'
+                - 'taskcluster/scripts/misc/wrench-windows-tests.sh'
