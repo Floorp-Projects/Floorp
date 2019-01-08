@@ -74,9 +74,13 @@ impl private {
 fn parse_delimited(input: ParseStream, delimiter: Delimiter) -> Result<(Span, ParseBuffer)> {
     input.step(|cursor| {
         if let Some((content, span, rest)) = cursor.group(delimiter) {
-            let unexpected = private::get_unexpected(input);
+            #[cfg(procmacro2_semver_exempt)]
+            let scope = private::close_span_of_group(*cursor);
+            #[cfg(not(procmacro2_semver_exempt))]
+            let scope = span;
             let nested = private::advance_step_cursor(cursor, content);
-            let content = private::new_parse_buffer(span, nested, unexpected);
+            let unexpected = private::get_unexpected(input);
+            let content = private::new_parse_buffer(scope, nested, unexpected);
             Ok(((span, content), rest))
         } else {
             let message = match delimiter {
@@ -94,15 +98,11 @@ fn parse_delimited(input: ParseStream, delimiter: Delimiter) -> Result<(Span, Pa
 ///
 /// # Example
 ///
-/// ```rust
-/// # #[macro_use]
-/// # extern crate quote;
+/// ```edition2018
+/// # use quote::quote;
 /// #
-/// #[macro_use]
-/// extern crate syn;
-///
-/// use syn::{token, Ident, Type};
-/// use syn::parse::{Parse, ParseStream, Result};
+/// use syn::{parenthesized, token, Ident, Result, Token, Type};
+/// use syn::parse::{Parse, ParseStream};
 /// use syn::punctuated::Punctuated;
 ///
 /// // Parse a simplified tuple struct syntax like:
@@ -155,14 +155,11 @@ macro_rules! parenthesized {
 ///
 /// # Example
 ///
-/// ```rust
-/// # #[macro_use]
-/// # extern crate quote;
+/// ```edition2018
+/// # use quote::quote;
 /// #
-/// #[macro_use]
-/// extern crate syn;
-/// use syn::{token, Ident, Type};
-/// use syn::parse::{Parse, ParseStream, Result};
+/// use syn::{braced, token, Ident, Result, Token, Type};
+/// use syn::parse::{Parse, ParseStream};
 /// use syn::punctuated::Punctuated;
 ///
 /// // Parse a simplified struct syntax like:
@@ -236,18 +233,12 @@ macro_rules! braced {
 ///
 /// # Example
 ///
-/// ```rust
-/// # #[macro_use]
-/// # extern crate quote;
+/// ```edition2018
+/// # use quote::quote;
 /// #
-/// #[macro_use]
-/// extern crate syn;
-///
-/// extern crate proc_macro2;
-///
 /// use proc_macro2::TokenStream;
-/// use syn::token;
-/// use syn::parse::{Parse, ParseStream, Result};
+/// use syn::{bracketed, token, Result, Token};
+/// use syn::parse::{Parse, ParseStream};
 ///
 /// // Parse an outer attribute like:
 /// //

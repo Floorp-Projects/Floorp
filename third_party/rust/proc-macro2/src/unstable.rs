@@ -1,14 +1,16 @@
-#![cfg_attr(not(procmacro2_semver_exempt), allow(dead_code))]
+#![cfg_attr(not(super_unstable), allow(dead_code))]
 
 use std::fmt;
 use std::iter;
-use std::panic;
+use std::panic::{self, PanicInfo};
+#[cfg(super_unstable)]
+use std::path::PathBuf;
 use std::str::FromStr;
 
 use proc_macro;
 use stable;
 
-use {Delimiter, Group, Punct, Spacing, TokenTree};
+use {Delimiter, Punct, Spacing, TokenTree};
 
 #[derive(Clone)]
 pub enum TokenStream {
@@ -23,16 +25,59 @@ pub enum LexError {
 
 fn nightly_works() -> bool {
     use std::sync::atomic::*;
+    use std::sync::Once;
+
     static WORKS: AtomicUsize = ATOMIC_USIZE_INIT;
+    static INIT: Once = Once::new();
 
     match WORKS.load(Ordering::SeqCst) {
         1 => return false,
         2 => return true,
         _ => {}
     }
-    let works = panic::catch_unwind(|| proc_macro::Span::call_site()).is_ok();
-    WORKS.store(works as usize + 1, Ordering::SeqCst);
-    works
+
+    // Swap in a null panic hook to avoid printing "thread panicked" to stderr,
+    // then use catch_unwind to determine whether the compiler's proc_macro is
+    // working. When proc-macro2 is used from outside of a procedural macro all
+    // of the proc_macro crate's APIs currently panic.
+    //
+    // The Once is to prevent the possibility of this ordering:
+    //
+    //     thread 1 calls take_hook, gets the user's original hook
+    //     thread 1 calls set_hook with the null hook
+    //     thread 2 calls take_hook, thinks null hook is the original hook
+    //     thread 2 calls set_hook with the null hook
+    //     thread 1 calls set_hook with the actual original hook
+    //     thread 2 calls set_hook with what it thinks is the original hook
+    //
+    // in which the user's hook has been lost.
+    //
+    // There is still a race condition where a panic in a different thread can
+    // happen during the interval that the user's original panic hook is
+    // unregistered such that their hook is incorrectly not called. This is
+    // sufficiently unlikely and less bad than printing panic messages to stderr
+    // on correct use of this crate. Maybe there is a libstd feature request
+    // here. For now, if a user needs to guarantee that this failure mode does
+    // not occur, they need to call e.g. `proc_macro2::Span::call_site()` from
+    // the main thread before launching any other threads.
+    INIT.call_once(|| {
+        type PanicHook = Fn(&PanicInfo) + Sync + Send + 'static;
+
+        let null_hook: Box<PanicHook> = Box::new(|_panic_info| { /* ignore */ });
+        let sanity_check = &*null_hook as *const PanicHook;
+        let original_hook = panic::take_hook();
+        panic::set_hook(null_hook);
+
+        let works = panic::catch_unwind(|| proc_macro::Span::call_site()).is_ok();
+        WORKS.store(works as usize + 1, Ordering::SeqCst);
+
+        let hopefully_null_hook = panic::take_hook();
+        panic::set_hook(original_hook);
+        if sanity_check != &*hopefully_null_hook {
+            panic!("observed race condition in proc_macro2::nightly_works");
+        }
+    });
+    nightly_works()
 }
 
 fn mismatch() -> ! {
@@ -59,6 +104,13 @@ impl TokenStream {
         match self {
             TokenStream::Nightly(s) => s,
             TokenStream::Stable(_) => mismatch(),
+        }
+    }
+
+    fn unwrap_stable(self) -> stable::TokenStream {
+        match self {
+            TokenStream::Nightly(_) => mismatch(),
+            TokenStream::Stable(s) => s,
         }
     }
 }
@@ -111,18 +163,7 @@ impl From<TokenTree> for TokenStream {
             return TokenStream::Stable(token.into());
         }
         let tt: proc_macro::TokenTree = match token {
-            TokenTree::Group(tt) => {
-                let delim = match tt.delimiter() {
-                    Delimiter::Parenthesis => proc_macro::Delimiter::Parenthesis,
-                    Delimiter::Bracket => proc_macro::Delimiter::Bracket,
-                    Delimiter::Brace => proc_macro::Delimiter::Brace,
-                    Delimiter::None => proc_macro::Delimiter::None,
-                };
-                let span = tt.span();
-                let mut group = proc_macro::Group::new(delim, tt.stream.inner.unwrap_nightly());
-                group.set_span(span.inner.unwrap_nightly());
-                group.into()
-            }
+            TokenTree::Group(tt) => tt.inner.unwrap_nightly().into(),
             TokenTree::Punct(tt) => {
                 let spacing = match tt.spacing() {
                     Spacing::Joint => proc_macro::Spacing::Joint,
@@ -156,25 +197,104 @@ impl iter::FromIterator<TokenTree> for TokenStream {
     }
 }
 
+impl iter::FromIterator<TokenStream> for TokenStream {
+    fn from_iter<I: IntoIterator<Item = TokenStream>>(streams: I) -> Self {
+        let mut streams = streams.into_iter();
+        match streams.next() {
+            #[cfg(slow_extend)]
+            Some(TokenStream::Nightly(first)) => {
+                let stream = iter::once(first).chain(streams.map(|s| {
+                    match s {
+                        TokenStream::Nightly(s) => s,
+                        TokenStream::Stable(_) => mismatch(),
+                    }
+                })).collect();
+                TokenStream::Nightly(stream)
+            }
+            #[cfg(not(slow_extend))]
+            Some(TokenStream::Nightly(mut first)) => {
+                first.extend(streams.map(|s| {
+                    match s {
+                        TokenStream::Nightly(s) => s,
+                        TokenStream::Stable(_) => mismatch(),
+                    }
+                }));
+                TokenStream::Nightly(first)
+            }
+            Some(TokenStream::Stable(mut first)) => {
+                first.extend(streams.map(|s| {
+                    match s {
+                        TokenStream::Stable(s) => s,
+                        TokenStream::Nightly(_) => mismatch(),
+                    }
+                }));
+                TokenStream::Stable(first)
+            }
+            None => TokenStream::new(),
+
+        }
+    }
+}
+
 impl Extend<TokenTree> for TokenStream {
     fn extend<I: IntoIterator<Item = TokenTree>>(&mut self, streams: I) {
         match self {
             TokenStream::Nightly(tts) => {
-                *tts = tts
-                    .clone()
-                    .into_iter()
-                    .chain(
+                #[cfg(not(slow_extend))]
+                {
+                    tts.extend(
                         streams
                             .into_iter()
-                            .map(TokenStream::from)
-                            .flat_map(|t| match t {
-                                TokenStream::Nightly(tts) => tts.into_iter(),
-                                _ => panic!(),
-                            }),
-                    )
-                    .collect();
+                            .map(|t| TokenStream::from(t).unwrap_nightly()),
+                    );
+                }
+                #[cfg(slow_extend)]
+                {
+                    *tts = tts
+                        .clone()
+                        .into_iter()
+                        .chain(
+                            streams
+                                .into_iter()
+                                .map(TokenStream::from)
+                                .flat_map(|t| match t {
+                                    TokenStream::Nightly(tts) => tts.into_iter(),
+                                    _ => mismatch(),
+                                }),
+                        ).collect();
+                }
             }
             TokenStream::Stable(tts) => tts.extend(streams),
+        }
+    }
+}
+
+impl Extend<TokenStream> for TokenStream {
+    fn extend<I: IntoIterator<Item = TokenStream>>(&mut self, streams: I) {
+        match self {
+            TokenStream::Nightly(tts) => {
+                #[cfg(not(slow_extend))]
+                {
+                    tts.extend(streams.into_iter().map(|stream| stream.unwrap_nightly()));
+                }
+                #[cfg(slow_extend)]
+                {
+                    *tts = tts
+                        .clone()
+                        .into_iter()
+                        .chain(
+                            streams
+                                .into_iter()
+                                .flat_map(|t| match t {
+                                    TokenStream::Nightly(tts) => tts.into_iter(),
+                                    _ => mismatch(),
+                                }),
+                        ).collect();
+                }
+            }
+            TokenStream::Stable(tts) => {
+                tts.extend(streams.into_iter().map(|stream| stream.unwrap_stable()))
+            }
         }
     }
 }
@@ -235,18 +355,7 @@ impl Iterator for TokenTreeIter {
             TokenTreeIter::Stable(iter) => return iter.next(),
         };
         Some(match token {
-            proc_macro::TokenTree::Group(tt) => {
-                let delim = match tt.delimiter() {
-                    proc_macro::Delimiter::Parenthesis => Delimiter::Parenthesis,
-                    proc_macro::Delimiter::Bracket => Delimiter::Bracket,
-                    proc_macro::Delimiter::Brace => Delimiter::Brace,
-                    proc_macro::Delimiter::None => Delimiter::None,
-                };
-                let stream = ::TokenStream::_new(TokenStream::Nightly(tt.stream()));
-                let mut g = Group::new(delim, stream);
-                g.set_span(::Span::_new(Span::Nightly(tt.span())));
-                g.into()
-            }
+            proc_macro::TokenTree::Group(tt) => ::Group::_new(Group::Nightly(tt)).into(),
             proc_macro::TokenTree::Punct(tt) => {
                 let spacing = match tt.spacing() {
                     proc_macro::Spacing::Joint => Spacing::Joint,
@@ -275,48 +384,40 @@ impl fmt::Debug for TokenTreeIter {
     }
 }
 
-pub use stable::FileName;
-
-// NOTE: We have to generate our own filename object here because we can't wrap
-// the one provided by proc_macro.
 #[derive(Clone, PartialEq, Eq)]
+#[cfg(super_unstable)]
 pub enum SourceFile {
-    Nightly(proc_macro::SourceFile, FileName),
+    Nightly(proc_macro::SourceFile),
     Stable(stable::SourceFile),
 }
 
+#[cfg(super_unstable)]
 impl SourceFile {
     fn nightly(sf: proc_macro::SourceFile) -> Self {
-        let filename = stable::file_name(sf.path().display().to_string());
-        SourceFile::Nightly(sf, filename)
+        SourceFile::Nightly(sf)
     }
 
     /// Get the path to this source file as a string.
-    pub fn path(&self) -> &FileName {
+    pub fn path(&self) -> PathBuf {
         match self {
-            SourceFile::Nightly(_, f) => f,
+            SourceFile::Nightly(a) => a.path(),
             SourceFile::Stable(a) => a.path(),
         }
     }
 
     pub fn is_real(&self) -> bool {
         match self {
-            SourceFile::Nightly(a, _) => a.is_real(),
+            SourceFile::Nightly(a) => a.is_real(),
             SourceFile::Stable(a) => a.is_real(),
         }
     }
 }
 
-impl AsRef<FileName> for SourceFile {
-    fn as_ref(&self) -> &FileName {
-        self.path()
-    }
-}
-
+#[cfg(super_unstable)]
 impl fmt::Debug for SourceFile {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            SourceFile::Nightly(a, _) => a.fmt(f),
+            SourceFile::Nightly(a) => a.fmt(f),
             SourceFile::Stable(a) => a.fmt(f),
         }
     }
@@ -342,6 +443,7 @@ impl Span {
         }
     }
 
+    #[cfg(super_unstable)]
     pub fn def_site() -> Span {
         if nightly_works() {
             Span::Nightly(proc_macro::Span::def_site())
@@ -350,6 +452,7 @@ impl Span {
         }
     }
 
+    #[cfg(super_unstable)]
     pub fn resolved_at(&self, other: Span) -> Span {
         match (self, other) {
             (Span::Nightly(a), Span::Nightly(b)) => Span::Nightly(a.resolved_at(b)),
@@ -358,6 +461,7 @@ impl Span {
         }
     }
 
+    #[cfg(super_unstable)]
     pub fn located_at(&self, other: Span) -> Span {
         match (self, other) {
             (Span::Nightly(a), Span::Nightly(b)) => Span::Nightly(a.located_at(b)),
@@ -373,7 +477,7 @@ impl Span {
         }
     }
 
-    #[cfg(procmacro2_semver_exempt)]
+    #[cfg(super_unstable)]
     pub fn source_file(&self) -> SourceFile {
         match self {
             Span::Nightly(s) => SourceFile::nightly(s.source_file()),
@@ -381,7 +485,7 @@ impl Span {
         }
     }
 
-    #[cfg(procmacro2_semver_exempt)]
+    #[cfg(super_unstable)]
     pub fn start(&self) -> LineColumn {
         match self {
             Span::Nightly(s) => {
@@ -395,7 +499,7 @@ impl Span {
         }
     }
 
-    #[cfg(procmacro2_semver_exempt)]
+    #[cfg(super_unstable)]
     pub fn end(&self) -> LineColumn {
         match self {
             Span::Nightly(s) => {
@@ -409,7 +513,7 @@ impl Span {
         }
     }
 
-    #[cfg(procmacro2_semver_exempt)]
+    #[cfg(super_unstable)]
     pub fn join(&self, other: Span) -> Option<Span> {
         let ret = match (self, other) {
             (Span::Nightly(a), Span::Nightly(b)) => Span::Nightly(a.join(b)?),
@@ -419,6 +523,7 @@ impl Span {
         Some(ret)
     }
 
+    #[cfg(super_unstable)]
     pub fn eq(&self, other: &Span) -> bool {
         match (self, other) {
             (Span::Nightly(a), Span::Nightly(b)) => a.eq(b),
@@ -457,6 +562,112 @@ impl fmt::Debug for Span {
 }
 
 #[derive(Clone)]
+pub enum Group {
+    Nightly(proc_macro::Group),
+    Stable(stable::Group),
+}
+
+impl Group {
+    pub fn new(delimiter: Delimiter, stream: TokenStream) -> Group {
+        match stream {
+            TokenStream::Nightly(stream) => {
+                let delimiter = match delimiter {
+                    Delimiter::Parenthesis => proc_macro::Delimiter::Parenthesis,
+                    Delimiter::Bracket => proc_macro::Delimiter::Bracket,
+                    Delimiter::Brace => proc_macro::Delimiter::Brace,
+                    Delimiter::None => proc_macro::Delimiter::None,
+                };
+                Group::Nightly(proc_macro::Group::new(delimiter, stream))
+            }
+            TokenStream::Stable(stream) => {
+                Group::Stable(stable::Group::new(delimiter, stream))
+            }
+        }
+    }
+
+    pub fn delimiter(&self) -> Delimiter {
+        match self {
+            Group::Nightly(g) => match g.delimiter() {
+                proc_macro::Delimiter::Parenthesis => Delimiter::Parenthesis,
+                proc_macro::Delimiter::Bracket => Delimiter::Bracket,
+                proc_macro::Delimiter::Brace => Delimiter::Brace,
+                proc_macro::Delimiter::None => Delimiter::None,
+            }
+            Group::Stable(g) => g.delimiter(),
+        }
+    }
+
+    pub fn stream(&self) -> TokenStream {
+        match self {
+            Group::Nightly(g) => TokenStream::Nightly(g.stream()),
+            Group::Stable(g) => TokenStream::Stable(g.stream()),
+        }
+    }
+
+    pub fn span(&self) -> Span {
+        match self {
+            Group::Nightly(g) => Span::Nightly(g.span()),
+            Group::Stable(g) => Span::Stable(g.span()),
+        }
+    }
+
+    #[cfg(super_unstable)]
+    pub fn span_open(&self) -> Span {
+        match self {
+            Group::Nightly(g) => Span::Nightly(g.span_open()),
+            Group::Stable(g) => Span::Stable(g.span_open()),
+        }
+    }
+
+    #[cfg(super_unstable)]
+    pub fn span_close(&self) -> Span {
+        match self {
+            Group::Nightly(g) => Span::Nightly(g.span_close()),
+            Group::Stable(g) => Span::Stable(g.span_close()),
+        }
+    }
+
+    pub fn set_span(&mut self, span: Span) {
+        match (self, span) {
+            (Group::Nightly(g), Span::Nightly(s)) => g.set_span(s),
+            (Group::Stable(g), Span::Stable(s)) => g.set_span(s),
+            _ => mismatch(),
+        }
+    }
+
+    fn unwrap_nightly(self) -> proc_macro::Group {
+        match self {
+            Group::Nightly(g) => g,
+            Group::Stable(_) => mismatch(),
+        }
+    }
+}
+
+impl From<stable::Group> for Group {
+    fn from(g: stable::Group) -> Self {
+        Group::Stable(g)
+    }
+}
+
+impl fmt::Display for Group {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Group::Nightly(group) => group.fmt(formatter),
+            Group::Stable(group) => group.fmt(formatter),
+        }
+    }
+}
+
+impl fmt::Debug for Group {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Group::Nightly(group) => group.fmt(formatter),
+            Group::Stable(group) => group.fmt(formatter),
+        }
+    }
+}
+
+#[derive(Clone)]
 pub enum Ident {
     Nightly(proc_macro::Ident),
     Stable(stable::Ident),
@@ -472,7 +683,17 @@ impl Ident {
 
     pub fn new_raw(string: &str, span: Span) -> Ident {
         match span {
-            Span::Nightly(s) => Ident::Nightly(proc_macro::Ident::new_raw(string, s)),
+            Span::Nightly(s) => {
+                let p: proc_macro::TokenStream = string.parse().unwrap();
+                let ident = match p.into_iter().next() {
+                    Some(proc_macro::TokenTree::Ident(mut i)) => {
+                        i.set_span(s);
+                        i
+                    }
+                    _ => panic!(),
+                };
+                Ident::Nightly(ident)
+            }
             Span::Stable(s) => Ident::Stable(stable::Ident::new_raw(string, s)),
         }
     }
@@ -496,6 +717,29 @@ impl Ident {
         match self {
             Ident::Nightly(s) => s,
             Ident::Stable(_) => mismatch(),
+        }
+    }
+}
+
+impl PartialEq for Ident {
+    fn eq(&self, other: &Ident) -> bool {
+        match (self, other) {
+            (Ident::Nightly(t), Ident::Nightly(o)) => t.to_string() == o.to_string(),
+            (Ident::Stable(t), Ident::Stable(o)) => t == o,
+            _ => mismatch(),
+        }
+    }
+}
+
+impl<T> PartialEq<T> for Ident
+where
+    T: ?Sized + AsRef<str>,
+{
+    fn eq(&self, other: &T) -> bool {
+        let other = other.as_ref();
+        match self {
+            Ident::Nightly(t) => t.to_string() == other,
+            Ident::Stable(t) => t == other,
         }
     }
 }
@@ -565,6 +809,12 @@ impl Literal {
         f64_suffixed => f64,
     }
 
+    #[cfg(u128)]
+    suffixed_numbers! {
+        i128_suffixed => i128,
+        u128_suffixed => u128,
+    }
+
     unsuffixed_integers! {
         u8_unsuffixed => u8,
         u16_unsuffixed => u16,
@@ -576,6 +826,12 @@ impl Literal {
         i32_unsuffixed => i32,
         i64_unsuffixed => i64,
         isize_unsuffixed => isize,
+    }
+
+    #[cfg(u128)]
+    unsuffixed_integers! {
+        i128_unsuffixed => i128,
+        u128_unsuffixed => u128,
     }
 
     pub fn f32_unsuffixed(f: f32) -> Literal {

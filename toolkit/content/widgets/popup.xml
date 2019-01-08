@@ -265,9 +265,10 @@
 
   <binding id="popup-scrollbars" extends="chrome://global/content/bindings/popup.xml#popup">
     <content>
-      <xul:scrollbox class="popup-internal-box" flex="1" orient="vertical" style="overflow: auto;">
+      <xul:arrowscrollbox class="popup-internal-box" flex="1" orient="vertical"
+                          smoothscroll="false">
         <children/>
-      </xul:scrollbox>
+      </xul:arrowscrollbox>
     </content>
     <implementation>
       <field name="AUTOSCROLL_INTERVAL">25</field>
@@ -368,11 +369,11 @@
           if (this._draggingState == this.DRAG_OVER_POPUP &&
               (event.screenY <= popupRect.top || event.screenY >= popupRect.bottom)) {
             let scrollAmount = event.screenY <= popupRect.top ? -1 : 1;
-            this.scrollBox.scrollByIndex(scrollAmount);
+            this.scrollBox.scrollByIndex(scrollAmount, true);
 
             let win = this.ownerGlobal;
             this._scrollTimer = win.setInterval(() => {
-              this.scrollBox.scrollByIndex(scrollAmount);
+              this.scrollBox.scrollByIndex(scrollAmount, true);
             }, this.AUTOSCROLL_INTERVAL);
           }
         }

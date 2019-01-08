@@ -149,7 +149,7 @@ function* testRichListbox(id)
 
 function* testArrowScrollbox(id)
 {
-  var scrollbox = document.getElementById(id)._scrollbox;
+  var scrollbox = document.getElementById(id).scrollbox;
   var orient = scrollbox.getAttribute("orient");
 
   function* helper(aStart, aDelta, aDeltaMode, aExpected)

@@ -6,13 +6,16 @@ use std::cell::RefCell;
 use std::cmp;
 use std::fmt;
 use std::iter;
+#[cfg(procmacro2_semver_exempt)]
+use std::path::Path;
+use std::path::PathBuf;
 use std::str::FromStr;
 use std::vec;
 
 use strnom::{block_comment, skip_whitespace, whitespace, word_break, Cursor, PResult};
 use unicode_xid::UnicodeXID;
 
-use {Delimiter, Group, Punct, Spacing, TokenTree};
+use {Delimiter, Punct, Spacing, TokenTree};
 
 #[derive(Clone)]
 pub struct TokenStream {
@@ -116,7 +119,7 @@ impl fmt::Debug for TokenStream {
     }
 }
 
-#[cfg(feature = "proc-macro")]
+#[cfg(use_proc_macro)]
 impl From<::proc_macro::TokenStream> for TokenStream {
     fn from(inner: ::proc_macro::TokenStream) -> TokenStream {
         inner
@@ -126,7 +129,7 @@ impl From<::proc_macro::TokenStream> for TokenStream {
     }
 }
 
-#[cfg(feature = "proc-macro")]
+#[cfg(use_proc_macro)]
 impl From<TokenStream> for ::proc_macro::TokenStream {
     fn from(inner: TokenStream) -> ::proc_macro::TokenStream {
         inner
@@ -154,9 +157,28 @@ impl iter::FromIterator<TokenTree> for TokenStream {
     }
 }
 
+impl iter::FromIterator<TokenStream> for TokenStream {
+    fn from_iter<I: IntoIterator<Item = TokenStream>>(streams: I) -> Self {
+        let mut v = Vec::new();
+
+        for stream in streams.into_iter() {
+            v.extend(stream.inner);
+        }
+
+        TokenStream { inner: v }
+    }
+}
+
 impl Extend<TokenTree> for TokenStream {
     fn extend<I: IntoIterator<Item = TokenTree>>(&mut self, streams: I) {
         self.inner.extend(streams);
+    }
+}
+
+impl Extend<TokenStream> for TokenStream {
+    fn extend<I: IntoIterator<Item = TokenStream>>(&mut self, streams: I) {
+        self.inner
+            .extend(streams.into_iter().flat_map(|stream| stream));
     }
 }
 
@@ -171,40 +193,20 @@ impl IntoIterator for TokenStream {
     }
 }
 
-#[derive(Clone, PartialEq, Eq, Debug)]
-pub struct FileName(String);
-
-#[allow(dead_code)]
-pub fn file_name(s: String) -> FileName {
-    FileName(s)
-}
-
-impl fmt::Display for FileName {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        self.0.fmt(f)
-    }
-}
-
 #[derive(Clone, PartialEq, Eq)]
 pub struct SourceFile {
-    name: FileName,
+    path: PathBuf,
 }
 
 impl SourceFile {
     /// Get the path to this source file as a string.
-    pub fn path(&self) -> &FileName {
-        &self.name
+    pub fn path(&self) -> PathBuf {
+        self.path.clone()
     }
 
     pub fn is_real(&self) -> bool {
         // XXX(nika): Support real files in the future?
         false
-    }
-}
-
-impl AsRef<FileName> for SourceFile {
-    fn as_ref(&self) -> &FileName {
-        self.path()
     }
 }
 
@@ -363,7 +365,7 @@ impl Span {
             let cm = cm.borrow();
             let fi = cm.fileinfo(*self);
             SourceFile {
-                name: FileName(fi.name.clone()),
+                path: Path::new(&fi.name).to_owned(),
             }
         })
     }
@@ -409,6 +411,75 @@ impl fmt::Debug for Span {
 
         #[cfg(not(procmacro2_semver_exempt))]
         write!(f, "Span")
+    }
+}
+
+#[derive(Clone)]
+pub struct Group {
+    delimiter: Delimiter,
+    stream: TokenStream,
+    span: Span,
+}
+
+impl Group {
+    pub fn new(delimiter: Delimiter, stream: TokenStream) -> Group {
+        Group {
+            delimiter: delimiter,
+            stream: stream,
+            span: Span::call_site(),
+        }
+    }
+
+    pub fn delimiter(&self) -> Delimiter {
+        self.delimiter
+    }
+
+    pub fn stream(&self) -> TokenStream {
+        self.stream.clone()
+    }
+
+    pub fn span(&self) -> Span {
+        self.span
+    }
+
+    pub fn span_open(&self) -> Span {
+        self.span
+    }
+
+    pub fn span_close(&self) -> Span {
+        self.span
+    }
+
+    pub fn set_span(&mut self, span: Span) {
+        self.span = span;
+    }
+}
+
+impl fmt::Display for Group {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let (left, right) = match self.delimiter {
+            Delimiter::Parenthesis => ("(", ")"),
+            Delimiter::Brace => ("{", "}"),
+            Delimiter::Bracket => ("[", "]"),
+            Delimiter::None => ("", ""),
+        };
+
+        f.write_str(left)?;
+        self.stream.fmt(f)?;
+        f.write_str(right)?;
+
+        Ok(())
+    }
+}
+
+impl fmt::Debug for Group {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        let mut debug = fmt.debug_struct("Group");
+        debug.field("delimiter", &self.delimiter);
+        debug.field("stream", &self.stream);
+        #[cfg(procmacro2_semver_exempt)]
+        debug.field("span", &self.span);
+        debug.finish()
     }
 }
 
@@ -493,6 +564,26 @@ fn validate_term(string: &str) {
     }
 }
 
+impl PartialEq for Ident {
+    fn eq(&self, other: &Ident) -> bool {
+        self.sym == other.sym && self.raw == other.raw
+    }
+}
+
+impl<T> PartialEq<T> for Ident
+where
+    T: ?Sized + AsRef<str>,
+{
+    fn eq(&self, other: &T) -> bool {
+        let other = other.as_ref();
+        if self.raw {
+            other.starts_with("r#") && self.sym == other[2..]
+        } else {
+            self.sym == other
+        }
+    }
+}
+
 impl fmt::Display for Ident {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         if self.raw {
@@ -570,6 +661,12 @@ impl Literal {
         f64_suffixed => f64,
     }
 
+    #[cfg(u128)]
+    suffixed_numbers! {
+        u128_suffixed => u128,
+        i128_suffixed => i128,
+    }
+
     unsuffixed_numbers! {
         u8_unsuffixed => u8,
         u16_unsuffixed => u16,
@@ -581,6 +678,12 @@ impl Literal {
         i32_unsuffixed => i32,
         i64_unsuffixed => i64,
         isize_unsuffixed => isize,
+    }
+
+    #[cfg(u128)]
+    unsuffixed_numbers! {
+        u128_unsuffixed => u128,
+        i128_unsuffixed => i128,
     }
 
     pub fn f32_unsuffixed(f: f32) -> Literal {
@@ -708,7 +811,7 @@ fn token_tree(input: Cursor) -> PResult<TokenTree> {
 }
 
 named!(token_kind -> TokenTree, alt!(
-    map!(group, TokenTree::Group)
+    map!(group, |g| TokenTree::Group(::Group::_new_stable(g)))
     |
     map!(literal, |l| TokenTree::Literal(::Literal::_new_stable(l))) // must be before symbol
     |
@@ -722,19 +825,19 @@ named!(group -> Group, alt!(
         punct!("("),
         token_stream,
         punct!(")")
-    ) => { |ts| Group::new(Delimiter::Parenthesis, ::TokenStream::_new_stable(ts)) }
+    ) => { |ts| Group::new(Delimiter::Parenthesis, ts) }
     |
     delimited!(
         punct!("["),
         token_stream,
         punct!("]")
-    ) => { |ts| Group::new(Delimiter::Bracket, ::TokenStream::_new_stable(ts)) }
+    ) => { |ts| Group::new(Delimiter::Bracket, ts) }
     |
     delimited!(
         punct!("{"),
         token_stream,
         punct!("}")
-    ) => { |ts| Group::new(Delimiter::Brace, ::TokenStream::_new_stable(ts)) }
+    ) => { |ts| Group::new(Delimiter::Brace, ts) }
 ));
 
 fn symbol_leading_ws(input: Cursor) -> PResult<TokenTree> {
@@ -1249,7 +1352,8 @@ fn doc_comment(input: Cursor) -> PResult<Vec<TokenTree>> {
     for tt in stream.iter_mut() {
         tt.set_span(span);
     }
-    trees.push(Group::new(Delimiter::Bracket, stream.into_iter().collect()).into());
+    let group = Group::new(Delimiter::Bracket, stream.into_iter().collect());
+    trees.push(::Group::_new_stable(group).into());
     for tt in trees.iter_mut() {
         tt.set_span(span);
     }

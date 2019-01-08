@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head class="reftest-wait"></head>
+<body>
+<div><img src="" alt="ALT"></div>
+<script>
+var img = document.querySelector('img');
+img.remove();
+
+var div = document.querySelector('div');
+div.appendChild(img);
+</script>
+</body>
+</html>
