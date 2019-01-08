@@ -137,7 +137,7 @@ function testSimpleD(anim) {
   checkSample(4, 20);
 }
 
-// Bug 501569 -- nsSMILKeySpline(1, 0, 0, 1) miscalculates values just under 0.5
+// Bug 501569 -- SMILKeySpline(1, 0, 0, 1) miscalculates values just under 0.5
 function testSimpleE(anim) {
   anim.setAttribute('dur','10s');
   anim.setAttribute('values', '0; 10');

@@ -11,6 +11,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/SMILAnimationFunction.h"
+#include "mozilla/SMILParserUtils.h"
 #include "mozilla/SMILTimeContainer.h"
 #include "mozilla/TaskCategory.h"
 #include "mozilla/dom/SVGAnimationElement.h"
@@ -18,7 +19,6 @@
 #include "nsSMILTimeValue.h"
 #include "nsSMILTimeValueSpec.h"
 #include "nsSMILInstanceTime.h"
-#include "nsSMILParserUtils.h"
 #include "nsGkAtoms.h"
 #include "nsReadableUtils.h"
 #include "nsMathUtils.h"
@@ -849,14 +849,14 @@ nsresult SMILTimedElement::SetSimpleDuration(const nsAString& aDurSpec) {
   AutoIntervalUpdater updater(*this);
 
   nsSMILTimeValue duration;
-  const nsAString& dur = nsSMILParserUtils::TrimWhitespace(aDurSpec);
+  const nsAString& dur = SMILParserUtils::TrimWhitespace(aDurSpec);
 
   // SVG-specific: "For SVG's animation elements, if "media" is specified, the
   // attribute will be ignored." (SVG 1.1, section 19.2.6)
   if (dur.EqualsLiteral("media") || dur.EqualsLiteral("indefinite")) {
     duration.SetIndefinite();
   } else {
-    if (!nsSMILParserUtils::ParseClockValue(dur, &duration) ||
+    if (!SMILParserUtils::ParseClockValue(dur, &duration) ||
         duration.GetMillis() == 0L) {
       mSimpleDur.SetIndefinite();
       return NS_ERROR_FAILURE;
@@ -881,12 +881,12 @@ nsresult SMILTimedElement::SetMin(const nsAString& aMinSpec) {
   AutoIntervalUpdater updater(*this);
 
   nsSMILTimeValue duration;
-  const nsAString& min = nsSMILParserUtils::TrimWhitespace(aMinSpec);
+  const nsAString& min = SMILParserUtils::TrimWhitespace(aMinSpec);
 
   if (min.EqualsLiteral("media")) {
     duration.SetMillis(0L);
   } else {
-    if (!nsSMILParserUtils::ParseClockValue(min, &duration)) {
+    if (!SMILParserUtils::ParseClockValue(min, &duration)) {
       mMin.SetMillis(0L);
       return NS_ERROR_FAILURE;
     }
@@ -909,12 +909,12 @@ nsresult SMILTimedElement::SetMax(const nsAString& aMaxSpec) {
   AutoIntervalUpdater updater(*this);
 
   nsSMILTimeValue duration;
-  const nsAString& max = nsSMILParserUtils::TrimWhitespace(aMaxSpec);
+  const nsAString& max = SMILParserUtils::TrimWhitespace(aMaxSpec);
 
   if (max.EqualsLiteral("media") || max.EqualsLiteral("indefinite")) {
     duration.SetIndefinite();
   } else {
-    if (!nsSMILParserUtils::ParseClockValue(max, &duration) ||
+    if (!SMILParserUtils::ParseClockValue(max, &duration) ||
         duration.GetMillis() == 0L) {
       mMax.SetIndefinite();
       return NS_ERROR_FAILURE;
@@ -952,7 +952,7 @@ nsresult SMILTimedElement::SetRepeatCount(const nsAString& aRepeatCountSpec) {
 
   nsSMILRepeatCount newRepeatCount;
 
-  if (nsSMILParserUtils::ParseRepeatCount(aRepeatCountSpec, newRepeatCount)) {
+  if (SMILParserUtils::ParseRepeatCount(aRepeatCountSpec, newRepeatCount)) {
     mRepeatCount = newRepeatCount;
     return NS_OK;
   }
@@ -971,13 +971,12 @@ nsresult SMILTimedElement::SetRepeatDur(const nsAString& aRepeatDurSpec) {
 
   nsSMILTimeValue duration;
 
-  const nsAString& repeatDur =
-      nsSMILParserUtils::TrimWhitespace(aRepeatDurSpec);
+  const nsAString& repeatDur = SMILParserUtils::TrimWhitespace(aRepeatDurSpec);
 
   if (repeatDur.EqualsLiteral("indefinite")) {
     duration.SetIndefinite();
   } else {
-    if (!nsSMILParserUtils::ParseClockValue(repeatDur, &duration)) {
+    if (!SMILParserUtils::ParseClockValue(repeatDur, &duration)) {
       mRepeatDur.SetUnresolved();
       return NS_ERROR_FAILURE;
     }
