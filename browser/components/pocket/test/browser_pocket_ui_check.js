@@ -32,7 +32,19 @@ add_task(async function() {
   }, tab.linkedBrowser);
   await popupShown;
 
-  checkElements(true, ["context-pocket", "context-savelinktopocket"]);
+  checkElements(true, ["context-pocket"]);
+
+  contextMenu.hidePopup();
+  await popupHidden;
+  popupShown = BrowserTestUtils.waitForEvent(contextMenu, "popupshown");
+  popupHidden = BrowserTestUtils.waitForEvent(contextMenu, "popuphidden");
+  await BrowserTestUtils.synthesizeMouseAtCenter("a", {
+    type: "contextmenu",
+    button: 2,
+  }, tab.linkedBrowser);
+  await popupShown;
+
+  checkElements(true, ["context-savelinktopocket"]);
 
   contextMenu.hidePopup();
   await popupHidden;
