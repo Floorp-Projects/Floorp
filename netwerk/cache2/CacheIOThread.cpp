@@ -596,7 +596,6 @@ size_t CacheIOThread::SizeOfExcludingThis(
   MonitorAutoLock lock(const_cast<CacheIOThread*>(this)->mMonitor);
 
   size_t n = 0;
-  n += mallocSizeOf(mThread);
   for (const auto& event : mEventQueue) {
     n += event.ShallowSizeOfExcludingThis(mallocSizeOf);
     // Events referenced by the queues are arbitrary objects we cannot be sure
