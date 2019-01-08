@@ -273,6 +273,8 @@ nsresult MemoryTelemetry::GatherReports(
          UNITS_COUNT);
   RECORD(MEMORY_JS_COMPARTMENTS_USER, JSMainRuntimeCompartmentsUser,
          UNITS_COUNT);
+  RECORD(MEMORY_JS_REALMS_SYSTEM, JSMainRuntimeRealmsSystem, UNITS_COUNT);
+  RECORD(MEMORY_JS_REALMS_USER, JSMainRuntimeRealmsUser, UNITS_COUNT);
   RECORD(MEMORY_IMAGES_CONTENT_USED_UNCOMPRESSED, ImagesContentUsedUncompressed,
          UNITS_BYTES);
   RECORD(MEMORY_STORAGE_SQLITE, StorageSQLite, UNITS_BYTES);
