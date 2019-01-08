@@ -22,6 +22,9 @@
 
 "use strict";
 
+// Needed for slow platforms (See https://bugzilla.mozilla.org/show_bug.cgi?id=1506970)
+requestLongerTimeout(2);
+
 add_task(async function() {
   // Run test with legacy JsTerm
   await pushPref("devtools.webconsole.jsterm.codeMirror", false);
