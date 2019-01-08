@@ -994,7 +994,8 @@ SpdyConnectTransaction::SpdyConnectTransaction(
       mOutputDataOffset(0),
       mForcePlainText(false),
       mIsWebsocket(isWebsocket),
-      mConnRefTaken(false) {
+      mConnRefTaken(false),
+      mCreateShimErrorCalled(false) {
   LOG(("SpdyConnectTransaction ctor %p\n", this));
 
   mTimestampSyn = TimeStamp::Now();
@@ -1202,6 +1203,12 @@ void SpdyConnectTransaction::CreateShimError(nsresult code) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   MOZ_ASSERT(NS_FAILED(code));
 
+  MOZ_ASSERT(!mCreateShimErrorCalled);
+  if (mCreateShimErrorCalled) {
+    return;
+  }
+  mCreateShimErrorCalled = true;
+
   if (mTunnelStreamOut && NS_SUCCEEDED(mTunnelStreamOut->mStatus)) {
     mTunnelStreamOut->mStatus = code;
   }
@@ -1223,6 +1230,7 @@ void SpdyConnectTransaction::CreateShimError(nsresult code) {
       cb->OnOutputStreamReady(mTunnelStreamOut);
     }
   }
+  mCreateShimErrorCalled = false;
 }
 
 nsresult SpdyConnectTransaction::WriteDataToBuffer(nsAHttpSegmentWriter *writer,
