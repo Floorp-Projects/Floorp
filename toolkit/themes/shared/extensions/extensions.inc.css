@@ -955,23 +955,6 @@ button.button-link:not([disabled="true"]):active:hover {
   text-decoration: none;
 }
 
-.addon-control.replacement {
-  background-color: var(--in-content-primary-button-background);
-  border-color: var(--in-content-primary-button-background);
-  color: var(--in-content-selected-text);
-}
-
-.addon-control.replacement:active,
-.addon-control.replacement:hover {
-  background-color: var(--in-content-primary-button-background-hover);
-  border-color: var(--in-content-primary-button-background-hover);
-}
-
-.addon-control.replacement:active:hover {
-  background-color: var(--in-content-primary-button-background-active);
-  border-color: var(--in-content-primary-button-background-active);
-}
-
 /*** telemetry experiments ***/
 
 #detail-experiment-container {
