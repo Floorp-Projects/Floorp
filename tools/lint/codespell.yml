@@ -33,7 +33,6 @@ codespell:
         - toolkit/components/telemetry/docs/
         - toolkit/crashreporter/docs/
         - tools/lint/
-        - tools/tryselect/
     # List of extensions coming from:
     # tools/lint/{flake8,eslint}.yml
     # tools/mach_commands.py (clang-format)
