@@ -67,6 +67,12 @@ function run_test() {
   const dbg = new Debugger();
   const dbgObject = dbg.addDebuggee(sandbox);
   const dbgEnv = dbgObject.asEnvironment();
+  Cu.evalInSandbox(`
+    const hello = Object.create(null, Object.getOwnPropertyDescriptors({world: 1}));
+    String.prototype.hello = hello;
+    Number.prototype.hello = hello;
+    Array.prototype.hello = hello;
+  `, sandbox);
   Cu.evalInSandbox(testArray, sandbox);
   Cu.evalInSandbox(testObject, sandbox);
   Cu.evalInSandbox(testHyphenated, sandbox);
@@ -149,6 +155,12 @@ function runChecks(dbgObject, environment, sandbox) {
   results = propertyProvider("[1,2,3].");
   test_has_result(results, "indexOf");
 
+  results = propertyProvider("[1,2,3].h");
+  test_has_result(results, "hello");
+
+  results = propertyProvider("[1,2,3].hello.w");
+  test_has_result(results, "world");
+
   info("Test that suggestions are given for literal arrays with newlines.");
   results = propertyProvider("[1,2,3,\n4\n].");
   test_has_result(results, "indexOf");
@@ -168,6 +180,10 @@ function runChecks(dbgObject, environment, sandbox) {
   test_has_result(results, "charAt");
   results = propertyProvider("'[1,2,3]'.");
   test_has_result(results, "charAt");
+  results = propertyProvider("'foo'.h");
+  test_has_result(results, "hello");
+  results = propertyProvider("'foo'.hello.w");
+  test_has_result(results, "world");
 
   info("Test that suggestions are not given for syntax errors.");
   results = propertyProvider("'foo\"");
@@ -348,6 +364,12 @@ function runChecks(dbgObject, environment, sandbox) {
 
   results = propertyProvider("(1)['toFixed");
   test_has_exact_results(results, ["'toFixed'"]);
+
+  results = propertyProvider("(1).h");
+  test_has_result(results, "hello");
+
+  results = propertyProvider("(1).hello.w");
+  test_has_result(results, "world");
 
   info("Test access on dot-notation invalid property name");
   results = propertyProvider("testHyphenated.prop");
