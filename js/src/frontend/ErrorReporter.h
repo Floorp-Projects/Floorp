@@ -32,14 +32,14 @@ class ErrorReporter {
   virtual uint32_t columnAt(size_t offset) const = 0;
 
   virtual bool hasTokenizationStarted() const = 0;
-  virtual void reportErrorNoOffsetVA(unsigned errorNumber, va_list args) = 0;
+  virtual void reportErrorNoOffsetVA(unsigned errorNumber, va_list* args) = 0;
   virtual const char* getFilename() const = 0;
 
   void reportErrorNoOffset(unsigned errorNumber, ...) {
     va_list args;
     va_start(args, errorNumber);
 
-    reportErrorNoOffsetVA(errorNumber, args);
+    reportErrorNoOffsetVA(errorNumber, &args);
 
     va_end(args);
   }
