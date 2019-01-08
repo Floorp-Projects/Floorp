@@ -18,6 +18,7 @@
 #include "builtin/intl/SharedIntlData.h"
 #include "gc/FreeOp.h"
 #include "js/CharacterEncoding.h"
+#include "js/PropertySpec.h"
 #include "js/StableStringChars.h"
 #include "js/TypeDecls.h"
 #include "vm/GlobalObject.h"

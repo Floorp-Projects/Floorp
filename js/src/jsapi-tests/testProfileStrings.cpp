@@ -9,6 +9,7 @@
 
 #include "mozilla/Atomics.h"
 
+#include "js/PropertySpec.h"
 #include "jsapi-tests/tests.h"
 #include "vm/JSContext.h"
 

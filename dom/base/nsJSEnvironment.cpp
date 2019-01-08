@@ -46,8 +46,9 @@
 #include "xpcpublic.h"
 
 #include "jsapi.h"
-#include "js/Wrapper.h"
+#include "js/PropertySpec.h"
 #include "js/SliceBudget.h"
+#include "js/Wrapper.h"
 #include "nsIArray.h"
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"

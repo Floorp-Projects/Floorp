@@ -58,7 +58,7 @@ bool js::ReportExceptionClosure::operator()(JSContext* cx) {
 
 bool js::ReportCompileWarning(JSContext* cx, ErrorMetadata&& metadata,
                               UniquePtr<JSErrorNotes> notes, unsigned flags,
-                              unsigned errorNumber, va_list args) {
+                              unsigned errorNumber, va_list* args) {
   // On the main thread, report the error immediately. When compiling off
   // thread, save the error so that the thread finishing the parse can report
   // it later.
@@ -83,7 +83,7 @@ bool js::ReportCompileWarning(JSContext* cx, ErrorMetadata&& metadata,
   }
 
   if (!ExpandErrorArgumentsVA(cx, GetErrorMessage, nullptr, errorNumber,
-                              nullptr, ArgumentsAreLatin1, err, args)) {
+                              nullptr, ArgumentsAreLatin1, err, *args)) {
     return false;
   }
 
@@ -96,7 +96,7 @@ bool js::ReportCompileWarning(JSContext* cx, ErrorMetadata&& metadata,
 
 void js::ReportCompileError(JSContext* cx, ErrorMetadata&& metadata,
                             UniquePtr<JSErrorNotes> notes, unsigned flags,
-                            unsigned errorNumber, va_list args) {
+                            unsigned errorNumber, va_list* args) {
   // On the main thread, report the error immediately. When compiling off
   // thread, save the error so that the thread finishing the parse can report
   // it later.
@@ -121,7 +121,7 @@ void js::ReportCompileError(JSContext* cx, ErrorMetadata&& metadata,
   }
 
   if (!ExpandErrorArgumentsVA(cx, GetErrorMessage, nullptr, errorNumber,
-                              nullptr, ArgumentsAreLatin1, err, args)) {
+                              nullptr, ArgumentsAreLatin1, err, *args)) {
     return;
   }
 
