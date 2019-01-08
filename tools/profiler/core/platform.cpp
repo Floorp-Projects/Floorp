@@ -36,6 +36,7 @@
 #include "PlatformMacros.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Atomics.h"
+#include "mozilla/Printf.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Vector.h"
 #include "GeckoProfiler.h"
@@ -2907,40 +2908,33 @@ void profiler_get_start_params(int* aCapacity, Maybe<double>* aDuration,
   }
 }
 
-AutoSetProfilerEnvVarsForChildProcess::AutoSetProfilerEnvVarsForChildProcess(
-    MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_IN_IMPL)
-    : mSetCapacity(), mSetInterval(), mSetFeaturesBitfield(), mSetFilters() {
-  MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+namespace mozilla {
 
+void GetProfilerEnvVarsForChildProcess(
+    std::function<void(const char* key, const char* value)>&& aSetEnv) {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
   PSAutoLock lock(gPSMutex);
 
   if (!ActivePS::Exists(lock)) {
-    PR_SetEnv("MOZ_PROFILER_STARTUP=");
+    aSetEnv("MOZ_PROFILER_STARTUP", "");
     return;
   }
 
-  PR_SetEnv("MOZ_PROFILER_STARTUP=1");
-  SprintfLiteral(mSetCapacity, "MOZ_PROFILER_STARTUP_ENTRIES=%d",
-                 ActivePS::Capacity(lock));
-  PR_SetEnv(mSetCapacity);
+  aSetEnv("MOZ_PROFILER_STARTUP", "1");
+  auto capacityString = Smprintf("%d", ActivePS::Capacity(lock));
+  aSetEnv("MOZ_PROFILER_STARTUP_ENTRIES", capacityString.get());
 
-  // Use AppendFloat instead of SprintfLiteral with %f because the decimal
+  // Use AppendFloat instead of Smprintf with %f because the decimal
   // separator used by %f is locale-dependent. But the string we produce needs
   // to be parseable by strtod, which only accepts the period character as a
   // decimal separator. AppendFloat always uses the period character.
-  nsCString setInterval;
-  setInterval.AppendLiteral("MOZ_PROFILER_STARTUP_INTERVAL=");
-  setInterval.AppendFloat(ActivePS::Interval(lock));
-  strncpy(mSetInterval, setInterval.get(), MOZ_ARRAY_LENGTH(mSetInterval));
-  mSetInterval[MOZ_ARRAY_LENGTH(mSetInterval) - 1] = '\0';
-  PR_SetEnv(mSetInterval);
+  nsCString intervalString;
+  intervalString.AppendFloat(ActivePS::Interval(lock));
+  aSetEnv("MOZ_PROFILER_STARTUP_INTERVAL", intervalString.get());
 
-  SprintfLiteral(mSetFeaturesBitfield,
-                 "MOZ_PROFILER_STARTUP_FEATURES_BITFIELD=%d",
-                 ActivePS::Features(lock));
-  PR_SetEnv(mSetFeaturesBitfield);
+  auto featuresString = Smprintf("%d", ActivePS::Features(lock));
+  aSetEnv("MOZ_PROFILER_STARTUP_FEATURES_BITFIELD", featuresString.get());
 
   std::string filtersString;
   const Vector<std::string>& filters = ActivePS::Filters(lock);
@@ -2950,23 +2944,10 @@ AutoSetProfilerEnvVarsForChildProcess::AutoSetProfilerEnvVarsForChildProcess(
       filtersString += ",";
     }
   }
-  SprintfLiteral(mSetFilters, "MOZ_PROFILER_STARTUP_FILTERS=%s",
-                 filtersString.c_str());
-  PR_SetEnv(mSetFilters);
+  aSetEnv("MOZ_PROFILER_STARTUP_FILTERS", filtersString.c_str());
 }
 
-AutoSetProfilerEnvVarsForChildProcess::
-    ~AutoSetProfilerEnvVarsForChildProcess() {
-  // Our current process doesn't look at these variables after startup, so we
-  // can just unset all the variables. This allows us to use literal strings,
-  // which will be valid for the whole life time of the program and can be
-  // passed to PR_SetEnv without problems.
-  PR_SetEnv("MOZ_PROFILER_STARTUP=");
-  PR_SetEnv("MOZ_PROFILER_STARTUP_ENTRIES=");
-  PR_SetEnv("MOZ_PROFILER_STARTUP_INTERVAL=");
-  PR_SetEnv("MOZ_PROFILER_STARTUP_FEATURES_BITFIELD=");
-  PR_SetEnv("MOZ_PROFILER_STARTUP_FILTERS=");
-}
+}  // namespace mozilla
 
 static void locked_profiler_save_profile_to_file(PSLockRef aLock,
                                                  const char* aFilename,
