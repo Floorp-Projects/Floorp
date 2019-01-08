@@ -1,11 +1,3 @@
-// Copyright 2018 Syn Developers
-//
-// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
-// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
-// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
-// option. This file may not be copied, modified, or distributed
-// except according to those terms.
-
 use super::*;
 use punctuated::Punctuated;
 
@@ -91,6 +83,13 @@ impl PathArguments {
             PathArguments::None => true,
             PathArguments::AngleBracketed(ref bracketed) => bracketed.args.is_empty(),
             PathArguments::Parenthesized(_) => false,
+        }
+    }
+
+    fn is_none(&self) -> bool {
+        match *self {
+            PathArguments::None => true,
+            PathArguments::AngleBracketed(_) | PathArguments::Parenthesized(_) => false,
         }
     }
 }
@@ -359,12 +358,9 @@ pub mod parsing {
         ///
         /// # Example
         ///
-        /// ```
-        /// #[macro_use]
-        /// extern crate syn;
-        ///
-        /// use syn::Path;
-        /// use syn::parse::{Parse, ParseStream, Result};
+        /// ```edition2018
+        /// use syn::{Path, Result, Token};
+        /// use syn::parse::{Parse, ParseStream};
         ///
         /// // A simplified single `use` statement like:
         /// //
@@ -387,8 +383,6 @@ pub mod parsing {
         ///         })
         ///     }
         /// }
-        /// #
-        /// # fn main() {}
         /// ```
         pub fn parse_mod_style(input: ParseStream) -> Result<Self> {
             Ok(Path {
@@ -421,6 +415,26 @@ pub mod parsing {
                     segments
                 },
             })
+        }
+
+        /// Determines whether this is a path of length 1 equal to the given
+        /// ident.
+        ///
+        /// For them to compare equal, it must be the case that:
+        ///
+        /// - the path has no leading colon,
+        /// - the number of path segments is 1,
+        /// - the first path segment has no angle bracketed or parenthesized
+        ///   path arguments
+        /// - and the ident of the first path segment is equal to the given one.
+        pub fn is_ident<I>(&self, ident: I) -> bool
+        where
+            Ident: PartialEq<I>,
+        {
+            self.leading_colon.is_none()
+                && self.segments.len() == 1
+                && self.segments[0].arguments.is_none()
+                && self.segments[0].ident == ident
         }
 
         fn parse_helper(input: ParseStream, expr_style: bool) -> Result<Self> {

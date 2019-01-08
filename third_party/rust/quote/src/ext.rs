@@ -1,5 +1,7 @@
 use super::ToTokens;
 
+use std::iter;
+
 use proc_macro2::{TokenStream, TokenTree};
 
 /// TokenStream extension trait with methods for appending tokens.
@@ -36,7 +38,7 @@ impl TokenStreamExt for TokenStream {
     where
         U: Into<TokenTree>,
     {
-        self.extend(Some(token.into()));
+        self.extend(iter::once(token.into()));
     }
 
     /// For use by `ToTokens` implementations.
