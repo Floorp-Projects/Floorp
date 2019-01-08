@@ -25,9 +25,9 @@ imply_option('--enable-profiling', jprof)
 @depends(target)
 def gecko_profiler(target):
     if target.os == 'Android':
-        return target.cpu in ('aarch64', 'arm', 'x86')
+        return target.cpu in ('aarch64', 'arm', 'x86', 'x86_64')
     elif target.kernel == 'Linux':
-        return target.cpu in ('x86', 'x86_64', 'mips64', 'arm')
+        return target.cpu in ('aarch64', 'arm', 'x86', 'x86_64', 'mips64')
     return target.os in ('OSX', 'WINNT')
 
 @depends(gecko_profiler)
