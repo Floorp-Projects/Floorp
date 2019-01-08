@@ -819,6 +819,26 @@ JS_PUBLIC_API bool JS::CollectRuntimeStats(JSContext* cx, RuntimeStats* rtStats,
                                    StatsCellCallback<FineGrained>);
 }
 
+JS_PUBLIC_API size_t JS::SystemCompartmentCount(JSContext* cx) {
+  size_t n = 0;
+  for (CompartmentsIter comp(cx->runtime()); !comp.done(); comp.next()) {
+    if (IsSystemCompartment(comp)) {
+      ++n;
+    }
+  }
+  return n;
+}
+
+JS_PUBLIC_API size_t JS::UserCompartmentCount(JSContext* cx) {
+  size_t n = 0;
+  for (CompartmentsIter comp(cx->runtime()); !comp.done(); comp.next()) {
+    if (!IsSystemCompartment(comp)) {
+      ++n;
+    }
+  }
+  return n;
+}
+
 JS_PUBLIC_API size_t JS::SystemRealmCount(JSContext* cx) {
   size_t n = 0;
   for (RealmsIter realm(cx->runtime()); !realm.done(); realm.next()) {
