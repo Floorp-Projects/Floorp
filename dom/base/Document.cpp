@@ -20,6 +20,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/EffectSet.h"
 #include "mozilla/EnumSet.h"
+#include "mozilla/IdentifierMapEntry.h"
 #include "mozilla/IntegerRange.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Likely.h"
@@ -300,6 +301,8 @@
 #define XML_DECLARATION_BITS_STANDALONE_EXISTS (1 << 2)
 #define XML_DECLARATION_BITS_STANDALONE_YES (1 << 3)
 
+extern bool sDisablePrefetchHTTPSPref;
+
 namespace mozilla {
 namespace dom {
 
@@ -336,23 +339,20 @@ static nsresult GetHttpChannelHelper(nsIChannel* aChannel,
 }
 
 }  // namespace dom
-}  // namespace mozilla
-
-extern bool sDisablePrefetchHTTPSPref;
 
 #define NAME_NOT_VALID ((nsSimpleContentList*)1)
 
-nsIdentifierMapEntry::nsIdentifierMapEntry(
-    const nsIdentifierMapEntry::AtomOrString& aKey)
+IdentifierMapEntry::IdentifierMapEntry(
+    const IdentifierMapEntry::AtomOrString& aKey)
     : mKey(aKey) {}
 
-nsIdentifierMapEntry::nsIdentifierMapEntry(
-    const nsIdentifierMapEntry::AtomOrString* aKey)
+IdentifierMapEntry::IdentifierMapEntry(
+    const IdentifierMapEntry::AtomOrString* aKey)
     : mKey(aKey ? *aKey : nullptr) {}
 
-nsIdentifierMapEntry::~nsIdentifierMapEntry() {}
+IdentifierMapEntry::~IdentifierMapEntry() {}
 
-nsIdentifierMapEntry::nsIdentifierMapEntry(nsIdentifierMapEntry&& aOther)
+IdentifierMapEntry::IdentifierMapEntry(IdentifierMapEntry&& aOther)
     : PLDHashEntryHdr(std::move(aOther)),
       mKey(std::move(aOther.mKey)),
       mIdContentList(std::move(aOther.mIdContentList)),
@@ -360,7 +360,7 @@ nsIdentifierMapEntry::nsIdentifierMapEntry(nsIdentifierMapEntry&& aOther)
       mChangeCallbacks(std::move(aOther.mChangeCallbacks)),
       mImageElement(std::move(aOther.mImageElement)) {}
 
-void nsIdentifierMapEntry::Traverse(
+void IdentifierMapEntry::Traverse(
     nsCycleCollectionTraversalCallback* aCallback) {
   NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*aCallback,
                                      "mIdentifierMap mNameContentList");
@@ -374,24 +374,24 @@ void nsIdentifierMapEntry::Traverse(
   }
 }
 
-bool nsIdentifierMapEntry::IsEmpty() {
+bool IdentifierMapEntry::IsEmpty() {
   return mIdContentList.IsEmpty() && !mNameContentList && !mChangeCallbacks &&
          !mImageElement;
 }
 
-bool nsIdentifierMapEntry::HasNameElement() const {
+bool IdentifierMapEntry::HasNameElement() const {
   return mNameContentList && mNameContentList->Length() != 0;
 }
 
-Element* nsIdentifierMapEntry::GetIdElement() {
+Element* IdentifierMapEntry::GetIdElement() {
   return mIdContentList.SafeElementAt(0);
 }
 
-Element* nsIdentifierMapEntry::GetImageIdElement() {
+Element* IdentifierMapEntry::GetImageIdElement() {
   return mImageElement ? mImageElement.get() : GetIdElement();
 }
 
-void nsIdentifierMapEntry::AddContentChangeCallback(
+void IdentifierMapEntry::AddContentChangeCallback(
     Document::IDTargetObserver aCallback, void* aData, bool aForImage) {
   if (!mChangeCallbacks) {
     mChangeCallbacks = new nsTHashtable<ChangeCallbackEntry>;
@@ -401,7 +401,7 @@ void nsIdentifierMapEntry::AddContentChangeCallback(
   mChangeCallbacks->PutEntry(cc);
 }
 
-void nsIdentifierMapEntry::RemoveContentChangeCallback(
+void IdentifierMapEntry::RemoveContentChangeCallback(
     Document::IDTargetObserver aCallback, void* aData, bool aForImage) {
   if (!mChangeCallbacks) return;
   ChangeCallback cc = {aCallback, aData, aForImage};
@@ -411,13 +411,13 @@ void nsIdentifierMapEntry::RemoveContentChangeCallback(
   }
 }
 
-void nsIdentifierMapEntry::FireChangeCallbacks(Element* aOldElement,
-                                               Element* aNewElement,
-                                               bool aImageOnly) {
+void IdentifierMapEntry::FireChangeCallbacks(Element* aOldElement,
+                                             Element* aNewElement,
+                                             bool aImageOnly) {
   if (!mChangeCallbacks) return;
 
   for (auto iter = mChangeCallbacks->ConstIter(); !iter.Done(); iter.Next()) {
-    nsIdentifierMapEntry::ChangeCallbackEntry* entry = iter.Get();
+    IdentifierMapEntry::ChangeCallbackEntry* entry = iter.Get();
     // Don't fire image changes for non-image observers, and don't fire element
     // changes for image observers when an image override is active.
     if (entry->mKey.mForImage ? (mImageElement && !aImageOnly) : aImageOnly) {
@@ -429,8 +429,6 @@ void nsIdentifierMapEntry::FireChangeCallbacks(Element* aOldElement,
     }
   }
 }
-
-namespace {
 
 struct PositionComparator {
   Element* const mElement;
@@ -446,9 +444,7 @@ struct PositionComparator {
   }
 };
 
-}  // namespace
-
-void nsIdentifierMapEntry::AddIdElement(Element* aElement) {
+void IdentifierMapEntry::AddIdElement(Element* aElement) {
   MOZ_ASSERT(aElement, "Must have element");
   MOZ_ASSERT(!mIdContentList.Contains(nullptr), "Why is null in our list?");
 
@@ -479,7 +475,7 @@ void nsIdentifierMapEntry::AddIdElement(Element* aElement) {
   }
 }
 
-void nsIdentifierMapEntry::RemoveIdElement(Element* aElement) {
+void IdentifierMapEntry::RemoveIdElement(Element* aElement) {
   MOZ_ASSERT(aElement, "Missing element");
 
   // This should only be called while the document is in an update.
@@ -501,7 +497,7 @@ void nsIdentifierMapEntry::RemoveIdElement(Element* aElement) {
   }
 }
 
-void nsIdentifierMapEntry::SetImageElement(Element* aElement) {
+void IdentifierMapEntry::SetImageElement(Element* aElement) {
   Element* oldElement = GetImageIdElement();
   mImageElement = aElement;
   Element* newElement = GetImageIdElement();
@@ -510,7 +506,6 @@ void nsIdentifierMapEntry::SetImageElement(Element* aElement) {
   }
 }
 
-namespace mozilla {
 namespace dom {
 
 class SimpleHTMLCollection final : public nsSimpleContentList,
@@ -594,29 +589,28 @@ NS_IMPL_ISUPPORTS_INHERITED(SimpleHTMLCollection, nsSimpleContentList,
                             nsIHTMLCollection)
 
 }  // namespace dom
-}  // namespace mozilla
 
-void nsIdentifierMapEntry::AddNameElement(nsINode* aNode, Element* aElement) {
+void IdentifierMapEntry::AddNameElement(nsINode* aNode, Element* aElement) {
   if (!mNameContentList) {
-    mNameContentList = new SimpleHTMLCollection(aNode);
+    mNameContentList = new dom::SimpleHTMLCollection(aNode);
   }
 
   mNameContentList->AppendElement(aElement);
 }
 
-void nsIdentifierMapEntry::RemoveNameElement(Element* aElement) {
+void IdentifierMapEntry::RemoveNameElement(Element* aElement) {
   if (mNameContentList) {
     mNameContentList->RemoveElement(aElement);
   }
 }
 
-bool nsIdentifierMapEntry::HasIdElementExposedAsHTMLDocumentProperty() {
+bool IdentifierMapEntry::HasIdElementExposedAsHTMLDocumentProperty() {
   Element* idElement = GetIdElement();
   return idElement &&
          nsGenericHTMLElement::ShouldExposeIdAsHTMLDocumentProperty(idElement);
 }
 
-size_t nsIdentifierMapEntry::SizeOfExcludingThis(
+size_t IdentifierMapEntry::SizeOfExcludingThis(
     MallocSizeOf aMallocSizeOf) const {
   return mKey.mString.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
 }
@@ -627,68 +621,67 @@ class SubDocMapEntry : public PLDHashEntryHdr {
  public:
   // Both of these are strong references
   Element* mKey;  // must be first, to look like PLDHashEntryStub
-  Document* mSubDocument;
+  dom::Document* mSubDocument;
 };
 
-class nsOnloadBlocker final : public nsIRequest {
+class OnloadBlocker final : public nsIRequest {
  public:
-  nsOnloadBlocker() {}
+  OnloadBlocker() {}
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIREQUEST
 
  private:
-  ~nsOnloadBlocker() {}
+  ~OnloadBlocker() {}
 };
 
-NS_IMPL_ISUPPORTS(nsOnloadBlocker, nsIRequest)
+NS_IMPL_ISUPPORTS(OnloadBlocker, nsIRequest)
 
 NS_IMETHODIMP
-nsOnloadBlocker::GetName(nsACString& aResult) {
+OnloadBlocker::GetName(nsACString& aResult) {
   aResult.AssignLiteral("about:document-onload-blocker");
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsOnloadBlocker::IsPending(bool* _retval) {
+OnloadBlocker::IsPending(bool* _retval) {
   *_retval = true;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsOnloadBlocker::GetStatus(nsresult* status) {
+OnloadBlocker::GetStatus(nsresult* status) {
   *status = NS_OK;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsOnloadBlocker::Cancel(nsresult status) { return NS_OK; }
+OnloadBlocker::Cancel(nsresult status) { return NS_OK; }
 NS_IMETHODIMP
-nsOnloadBlocker::Suspend(void) { return NS_OK; }
+OnloadBlocker::Suspend(void) { return NS_OK; }
 NS_IMETHODIMP
-nsOnloadBlocker::Resume(void) { return NS_OK; }
+OnloadBlocker::Resume(void) { return NS_OK; }
 
 NS_IMETHODIMP
-nsOnloadBlocker::GetLoadGroup(nsILoadGroup** aLoadGroup) {
+OnloadBlocker::GetLoadGroup(nsILoadGroup** aLoadGroup) {
   *aLoadGroup = nullptr;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsOnloadBlocker::SetLoadGroup(nsILoadGroup* aLoadGroup) { return NS_OK; }
+OnloadBlocker::SetLoadGroup(nsILoadGroup* aLoadGroup) { return NS_OK; }
 
 NS_IMETHODIMP
-nsOnloadBlocker::GetLoadFlags(nsLoadFlags* aLoadFlags) {
+OnloadBlocker::GetLoadFlags(nsLoadFlags* aLoadFlags) {
   *aLoadFlags = nsIRequest::LOAD_NORMAL;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsOnloadBlocker::SetLoadFlags(nsLoadFlags aLoadFlags) { return NS_OK; }
+OnloadBlocker::SetLoadFlags(nsLoadFlags aLoadFlags) { return NS_OK; }
 
 // ==================================================================
 
-namespace mozilla {
 namespace dom {
 
 ExternalResourceMap::ExternalResourceMap() : mHaveShutDown(false) {}
@@ -1917,7 +1910,7 @@ nsresult Document::Init() {
   slots->mMutationObservers.PrependElementUnlessExists(
       static_cast<nsIMutationObserver*>(this));
 
-  mOnloadBlocker = new nsOnloadBlocker();
+  mOnloadBlocker = new OnloadBlocker();
   mCSSLoader = new mozilla::css::Loader(this);
   // Assume we're not quirky, until we know otherwise
   mCSSLoader->SetCompatibilityMode(eCompatibility_FullStandards);
@@ -2901,7 +2894,7 @@ void Document::AddToNameTable(Element* aElement, nsAtom* aName) {
       "Only put elements that need to be exposed as document['name'] in "
       "the named table.");
 
-  nsIdentifierMapEntry* entry = mIdentifierMap.PutEntry(aName);
+  IdentifierMapEntry* entry = mIdentifierMap.PutEntry(aName);
 
   // Null for out-of-memory
   if (entry) {
@@ -2917,7 +2910,7 @@ void Document::RemoveFromNameTable(Element* aElement, nsAtom* aName) {
   // Speed up document teardown
   if (mIdentifierMap.Count() == 0) return;
 
-  nsIdentifierMapEntry* entry = mIdentifierMap.GetEntry(aName);
+  IdentifierMapEntry* entry = mIdentifierMap.GetEntry(aName);
   if (!entry)  // Could be false if the element was anonymous, hence never added
     return;
 
@@ -2929,7 +2922,7 @@ void Document::RemoveFromNameTable(Element* aElement, nsAtom* aName) {
 }
 
 void Document::AddToIdTable(Element* aElement, nsAtom* aId) {
-  nsIdentifierMapEntry* entry = mIdentifierMap.PutEntry(aId);
+  IdentifierMapEntry* entry = mIdentifierMap.PutEntry(aId);
 
   if (entry) { /* True except on OOM */
     if (nsGenericHTMLElement::ShouldExposeIdAsHTMLDocumentProperty(aElement) &&
@@ -2949,7 +2942,7 @@ void Document::RemoveFromIdTable(Element* aElement, nsAtom* aId) {
     return;
   }
 
-  nsIdentifierMapEntry* entry = mIdentifierMap.GetEntry(aId);
+  IdentifierMapEntry* entry = mIdentifierMap.GetEntry(aId);
   if (!entry)  // Can be null for XML elements with changing ids.
     return;
 
@@ -4627,7 +4620,7 @@ void Document::MozSetImageElement(const nsAString& aImageElementId,
   // out to id-observers
   nsAutoScriptBlocker scriptBlocker;
 
-  nsIdentifierMapEntry* entry = mIdentifierMap.PutEntry(aImageElementId);
+  IdentifierMapEntry* entry = mIdentifierMap.PutEntry(aImageElementId);
   if (entry) {
     entry->SetImageElement(aElement);
     if (entry->IsEmpty()) {
@@ -6296,7 +6289,7 @@ void nsDOMAttributeMap::BlastSubtreeToPieces(nsINode* aNode) {
 
         BlastSubtreeToPieces(attr);
 
-        DebugOnly<nsresult> rv =
+        mozilla::DebugOnly<nsresult> rv =
             element->UnsetAttr(attr->NodeInfo()->NamespaceID(),
                                attr->NodeInfo()->NameAtom(), false);
 
@@ -6305,7 +6298,7 @@ void nsDOMAttributeMap::BlastSubtreeToPieces(nsINode* aNode) {
       }
     }
 
-    if (ShadowRoot* shadow = element->GetShadowRoot()) {
+    if (mozilla::dom::ShadowRoot* shadow = element->GetShadowRoot()) {
       BlastSubtreeToPieces(shadow);
       element->UnattachShadow();
     }
