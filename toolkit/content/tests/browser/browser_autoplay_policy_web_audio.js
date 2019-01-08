@@ -3,9 +3,8 @@
  * different scenarios, such as
  * 1) site has existing 'autoplay-media' permission for allowing autoplay
  * 2) site has existing 'autoplay-media' permission for blocking autoplay
- * 3) site doesn't have permission, user clicks 'allow' button on the doorhanger
- * 4) site doesn't have permission, user clicks 'deny' button on the doorhanger
- * 5) site doesn't have permission, user ignores the doorhanger
+ * 3) site doesn't have permission, start audio context by calling resume() or
+ *    AudioScheduledNode.start() after granting user activation.
  */
 "use strict";
 
@@ -14,9 +13,8 @@ const PAGE = "https://example.com/browser/toolkit/content/tests/browser/file_emp
 
 function setup_test_preference() {
   return SpecialPowers.pushPrefEnv({"set": [
-    ["media.autoplay.default", SpecialPowers.Ci.nsIAutoplay.PROMPT],
+    ["media.autoplay.default", SpecialPowers.Ci.nsIAutoplay.BLOCKED],
     ["media.autoplay.enabled.user-gestures-needed", true],
-    ["media.autoplay.ask-permission", true],
     ["media.autoplay.block-webaudio", true],
     ["media.autoplay.block-event.enabled", true],
   ]});
@@ -123,7 +121,7 @@ async function testAutoplayExistingPermission({name, permission}) {
   await BrowserTestUtils.removeTab(tab);
 }
 
-async function testAutoplayUnknownPermission({name, button, method}) {
+async function testAutoplayUnknownPermission({name, method}) {
   info(`- starting \"${name}\" -`);
   const tab = await BrowserTestUtils.openNewForegroundTab(window.gBrowser, PAGE);
   const browser = tab.linkedBrowser;
@@ -134,30 +132,22 @@ async function testAutoplayUnknownPermission({name, button, method}) {
   SitePermissions.set(browser.currentURI, "autoplay-media", SitePermissions.UNKNOWN);
   ok(!promptShow(), `should not be showing permission prompt yet`);
 
-  info(`- create AudioContext which should not start until user approves -`);
+  info(`- create AudioContext which should not start -`);
   loadFrameScript(browser, createAudioContext);
   await ContentTask.spawn(browser, false, checkIfAudioContextIsAllowedToStart);
 
-  info(`- try to start AudioContext and show doorhanger to ask for user's approval -`);
-  const popupShow = BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popupshown");
-  await ContentTask.spawn(browser, method, startAudioContext);
-  await popupShow;
-  ok(promptShow(), `should now be showing permission prompt`);
+  info(`- simulate user activate the page -`);
+  await ContentTask.spawn(browser, null, () => {
+    content.document.notifyUserGestureActivation();
+  });
 
-  info(`- simulate clicking button on doorhanger -`);
-  if (button == "allow") {
-    PopupNotifications.panel.firstElementChild.button.click();
-  } else if (button == "block") {
-    PopupNotifications.panel.firstChild.secondaryButton.click();
-  } else {
-    ok(false, `invalid button field`);
-  }
+  info(`- try to start AudioContext -`);
+  await ContentTask.spawn(browser, method, startAudioContext);
 
   info(`- check AudioContext status -`);
-  const isAllowedToStart = button === "allow";
-  await ContentTask.spawn(browser, isAllowedToStart,
+  await ContentTask.spawn(browser, true /* allow to start */,
                           checkIfAudioContextIsAllowedToStart);
-  await ContentTask.spawn(browser, isAllowedToStart,
+  await ContentTask.spawn(browser, true /* allow to start */,
                           resumeAudioContext);
 
   info(`- remove tab -`);
@@ -181,13 +171,7 @@ add_task(async function start_tests() {
                         "ConstantSourceNode", "OscillatorNode"];
   for (let method of startMethods) {
     await testAutoplayUnknownPermission({
-      name: "Unknown permission and click allow button on doorhanger",
-      button: "allow",
-      method,
-    });
-    await testAutoplayUnknownPermission({
-      name: "Unknown permission and click block button on doorhanger",
-      button: "block",
+      name: "Unknown permission and start AudioContext after granting user activation",
       method,
     });
   }

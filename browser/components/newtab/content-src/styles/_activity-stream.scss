@@ -145,6 +145,14 @@ input {
 @import '../components/MoreRecommendations/MoreRecommendations';
 @import '../components/DiscoveryStreamBase/DiscoveryStreamBase';
 
+// Discovery Stream Components
+@import '../components/DiscoveryStreamComponents/CardGrid/CardGrid';
+@import '../components/DiscoveryStreamComponents/Hero/Hero';
+@import '../components/DiscoveryStreamComponents/HorizontalRule/HorizontalRule';
+@import '../components/DiscoveryStreamComponents/List/List';
+@import '../components/DiscoveryStreamComponents/SectionTitle/SectionTitle';
+@import '../components/DiscoveryStreamComponents/TopSites/TopSites';
+
 // AS Router
 @import '../asrouter/components/Button/Button';
 @import '../asrouter/components/SnippetBase/SnippetBase';

@@ -51,7 +51,7 @@
 
 #include "gfxPrefs.h"
 #include "mozilla/layers/StackingContextHelper.h"
-#include "mozilla/layers/WebRenderLayerManager.h"
+#include "mozilla/layers/RenderRootStateManager.h"
 
 using namespace mozilla;
 using namespace mozilla::image;
@@ -1171,7 +1171,8 @@ class nsDisplayTableBorderCollapse final : public nsDisplayTableItem {
   void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
   bool CreateWebRenderCommands(
       wr::DisplayListBuilder& aBuilder, wr::IpcResourceUpdateQueue& aResources,
-      const StackingContextHelper& aSc, layers::WebRenderLayerManager* aManager,
+      const StackingContextHelper& aSc,
+      layers::RenderRootStateManager* aManager,
       nsDisplayListBuilder* aDisplayListBuilder) override;
   NS_DISPLAY_DECL_NAME("TableBorderCollapse", TYPE_TABLE_BORDER_COLLAPSE)
 };
@@ -1197,7 +1198,7 @@ void nsDisplayTableBorderCollapse::Paint(nsDisplayListBuilder* aBuilder,
 bool nsDisplayTableBorderCollapse::CreateWebRenderCommands(
     wr::DisplayListBuilder& aBuilder, wr::IpcResourceUpdateQueue& aResources,
     const StackingContextHelper& aSc,
-    mozilla::layers::WebRenderLayerManager* aManager,
+    mozilla::layers::RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) {
   static_cast<nsTableFrame*>(mFrame)->CreateWebRenderCommandsForBCBorders(
       aBuilder, aSc, GetPaintRect(), ToReferenceFrame());

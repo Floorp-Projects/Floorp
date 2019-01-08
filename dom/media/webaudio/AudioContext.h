@@ -319,14 +319,14 @@ class AudioContext final : public DOMEventTargetHelper,
 
   nsTArray<MediaStream*> GetAllStreams() const;
 
-  // Request the prompt to ask for user's approval for autoplay.
-  void EnsureAutoplayRequested();
-
   void ResumeInternal();
   void SuspendInternal(void* aPromise);
 
-  // This event is used for testing only.
-  void DispatchBlockedEvent();
+  // Will report error message to console and dispatch testing event if needed
+  // when AudioContext is blocked by autoplay policy.
+  void ReportBlocked();
+
+  void ReportToConsole(uint32_t aErrorFlags, const char* aMsg) const;
 
  private:
   // Each AudioContext has an id, that is passed down the MediaStreams that

@@ -121,6 +121,13 @@ describe("SubmitFormSnippet", () => {
 
       assert.calledOnce(wrapper.props().onDismiss);
     });
+    it("should send a DISMISS event ping", () => {
+      wrapper.setState({expanded: true});
+
+      wrapper.find(".ASRouterButton.secondary").simulate("click");
+
+      assert.equal(wrapper.props().sendUserActionTelemetry.firstCall.args[0].event, "DISMISS");
+    });
     it("should render hidden inputs + email input", () => {
       wrapper.setState({expanded: true});
 
@@ -241,6 +248,15 @@ describe("SubmitFormSnippet", () => {
       await wrapper.instance().handleSubmit({preventDefault: sandbox.stub()});
 
       assert.notCalled(window.fetch);
+    });
+    it("should block the snippet when form_method is GET", () => {
+      wrapper.setProps({form_method: "GET"});
+      wrapper.setState({expanded: true});
+
+      wrapper.instance().handleSubmit({preventDefault: sandbox.stub()});
+
+      assert.calledOnce(onBlockStub);
+      assert.calledWithExactly(onBlockStub, {preventDismiss: true});
     });
   });
 });

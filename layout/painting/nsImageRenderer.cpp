@@ -14,6 +14,7 @@
 #include "gfxDrawable.h"
 #include "ImageOps.h"
 #include "ImageRegion.h"
+#include "mozilla/layers/RenderRootStateManager.h"
 #include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
 #include "nsContentUtils.h"
@@ -522,7 +523,7 @@ ImgDrawResult nsImageRenderer::BuildWebRenderDisplayItems(
     nsPresContext* aPresContext, mozilla::wr::DisplayListBuilder& aBuilder,
     mozilla::wr::IpcResourceUpdateQueue& aResources,
     const mozilla::layers::StackingContextHelper& aSc,
-    mozilla::layers::WebRenderLayerManager* aManager, nsDisplayItem* aItem,
+    mozilla::layers::RenderRootStateManager* aManager, nsDisplayItem* aItem,
     const nsRect& aDirtyRect, const nsRect& aDest, const nsRect& aFill,
     const nsPoint& aAnchor, const nsSize& aRepeatSize, const CSSIntRect& aSrc,
     float aOpacity) {
@@ -573,7 +574,7 @@ ImgDrawResult nsImageRenderer::BuildWebRenderDisplayItems(
 
       RefPtr<layers::ImageContainer> container;
       drawResult = mImageContainer->GetImageContainerAtSize(
-          aManager, decodeSize, svgContext, containerFlags,
+          aManager->LayerManager(), decodeSize, svgContext, containerFlags,
           getter_AddRefs(container));
       if (!container) {
         NS_WARNING("Failed to get image container");
@@ -712,7 +713,7 @@ ImgDrawResult nsImageRenderer::BuildWebRenderDisplayItemsForLayer(
     nsPresContext* aPresContext, mozilla::wr::DisplayListBuilder& aBuilder,
     mozilla::wr::IpcResourceUpdateQueue& aResources,
     const mozilla::layers::StackingContextHelper& aSc,
-    mozilla::layers::WebRenderLayerManager* aManager, nsDisplayItem* aItem,
+    mozilla::layers::RenderRootStateManager* aManager, nsDisplayItem* aItem,
     const nsRect& aDest, const nsRect& aFill, const nsPoint& aAnchor,
     const nsRect& aDirty, const nsSize& aRepeatSize, float aOpacity) {
   if (!IsReady()) {

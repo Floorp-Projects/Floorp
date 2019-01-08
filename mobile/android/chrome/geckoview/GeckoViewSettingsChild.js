@@ -36,6 +36,10 @@ const USER_AGENT_MODE_MOBILE = 0;
 const USER_AGENT_MODE_DESKTOP = 1;
 const USER_AGENT_MODE_VR = 2;
 
+// This needs to match GeckoSessionSettings.java
+const VIEWPORT_MODE_MOBILE = 0;
+const VIEWPORT_MODE_DESKTOP = 1;
+
 // Handles GeckoView content settings including:
 // * tracking protection
 // * user agent mode
@@ -44,6 +48,7 @@ class GeckoViewSettingsChild extends GeckoViewChildModule {
     debug `onInit`;
     this._userAgentMode = USER_AGENT_MODE_MOBILE;
     this._userAgentOverride = null;
+    this._viewportMode = VIEWPORT_MODE_MOBILE;
   }
 
   onSettingsUpdate() {
@@ -53,6 +58,7 @@ class GeckoViewSettingsChild extends GeckoViewChildModule {
     this.useTrackingProtection = !!this.settings.useTrackingProtection;
     this.userAgentMode = this.settings.userAgentMode;
     this.userAgentOverride = this.settings.userAgentOverride;
+    this.viewportMode = this.settings.viewportMode;
     this.allowJavascript = this.settings.allowJavascript;
   }
 
@@ -92,11 +98,6 @@ class GeckoViewSettingsChild extends GeckoViewChildModule {
     } else {
       warn `Failed to set custom user agent. Doc shell not found`;
     }
-    if (this._userAgentOverride !== null) {
-      return;
-    }
-    const utils = content.windowUtils;
-    utils.setDesktopModeViewport(aMode === USER_AGENT_MODE_DESKTOP);
   }
 
   get userAgentOverride() {
@@ -114,12 +115,6 @@ class GeckoViewSettingsChild extends GeckoViewChildModule {
     } else {
       warn `Failed to set custom user agent. Doc shell not found`;
     }
-    const utils = content.windowUtils;
-    if (aUserAgent === null) {
-      utils.setDesktopModeViewport(this._userAgentMode === USER_AGENT_MODE_DESKTOP);
-      return;
-    }
-    utils.setDesktopModeViewport(false);
   }
 
   get displayMode() {
@@ -133,6 +128,19 @@ class GeckoViewSettingsChild extends GeckoViewChildModule {
     if (docShell) {
       docShell.displayMode = aMode;
     }
+  }
+
+  get viewportMode() {
+    return this._viewportMode;
+  }
+
+  set viewportMode(aMode) {
+    if (aMode === this._viewportMode) {
+      return;
+    }
+    this._viewportMode = aMode;
+    const utils = content.windowUtils;
+    utils.setDesktopModeViewport(aMode === VIEWPORT_MODE_DESKTOP);
   }
 
   get allowJavascript() {

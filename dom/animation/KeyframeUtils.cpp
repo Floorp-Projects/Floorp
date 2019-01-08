@@ -17,6 +17,7 @@
 #include "mozilla/StaticPrefs.h"
 #include "mozilla/TimingParams.h"
 #include "mozilla/dom/BaseKeyframeTypesBinding.h"  // For FastBaseKeyframe etc.
+#include "mozilla/dom/Document.h"  // For Document::AreWebAnimationsImplicitKeyframesEnabled
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/KeyframeEffectBinding.h"
 #include "mozilla/dom/KeyframeEffect.h"  // For PropertyValuesPair etc.
@@ -27,7 +28,6 @@
 #include "nsCSSPropertyIDSet.h"
 #include "nsCSSProps.h"
 #include "nsCSSPseudoElements.h"  // For CSSPseudoElementType
-#include "mozilla/dom/Document.h"  // For Document::AreWebAnimationsImplicitKeyframesEnabled
 #include "nsIScriptError.h"
 #include "nsTArray.h"
 #include <algorithm>  // For std::stable_sort, std::min

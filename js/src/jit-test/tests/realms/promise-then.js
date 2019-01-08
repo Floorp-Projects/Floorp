@@ -1,5 +1,7 @@
 load(libdir + "asserts.js");
 
+ignoreUnhandledRejections();
+
 const g = newGlobal({sameCompartmentAs: this});
 
 let resolve, reject;

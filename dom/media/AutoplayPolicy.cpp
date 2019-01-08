@@ -10,7 +10,6 @@
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/AudioContext.h"
-#include "mozilla/AutoplayPermissionManager.h"
 #include "mozilla/dom/FeaturePolicyUtils.h"
 #include "mozilla/dom/HTMLMediaElement.h"
 #include "mozilla/dom/HTMLMediaElementBinding.h"
@@ -87,13 +86,6 @@ static bool IsWindowAllowedToPlay(nsPIDOMWindowInner* aWindow) {
     return false;
   }
 
-  nsCOMPtr<nsPIDOMWindowOuter> topWindow = aWindow->GetScriptableTop();
-  if (topWindow && topWindow->HasTemporaryAutoplayPermission()) {
-    AUTOPLAY_LOG(
-        "Allow autoplay as document has temporary autoplay permission.");
-    return true;
-  }
-
   Document* approver = ApproverDocOf(*aWindow->GetExtantDoc());
   if (!approver) {
     return false;
@@ -119,26 +111,12 @@ static bool IsWindowAllowedToPlay(nsPIDOMWindowInner* aWindow) {
   return false;
 }
 
-/* static */
-already_AddRefed<AutoplayPermissionManager> AutoplayPolicy::RequestFor(
-    const Document& aDocument) {
-  Document* document = ApproverDocOf(aDocument);
-  if (!document) {
-    return nullptr;
-  }
-  nsPIDOMWindowInner* window = document->GetInnerWindow();
-  if (!window) {
-    return nullptr;
-  }
-  return window->GetAutoplayPermissionManager();
-}
-
 static uint32_t DefaultAutoplayBehaviour() {
   int prefValue =
       Preferences::GetInt("media.autoplay.default", nsIAutoplay::ALLOWED);
-  if (prefValue < nsIAutoplay::ALLOWED || prefValue > nsIAutoplay::PROMPT) {
-    // Invalid pref values are just converted to ALLOWED.
-    return nsIAutoplay::ALLOWED;
+  if (prefValue < nsIAutoplay::ALLOWED || prefValue > nsIAutoplay::BLOCKED) {
+    // Invalid pref values are just converted to BLOCKED.
+    return nsIAutoplay::BLOCKED;
   }
   return prefValue;
 }

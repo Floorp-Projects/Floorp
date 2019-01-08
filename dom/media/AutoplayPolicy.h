@@ -10,9 +10,6 @@
 #include "mozilla/NotNull.h"
 
 namespace mozilla {
-
-class AutoplayPermissionManager;
-
 namespace dom {
 
 class HTMLMediaElement;
@@ -46,11 +43,6 @@ class AutoplayPolicy {
   // which enable/disable block autoplay. Do not use for blocking logic!
   static bool WouldBeAllowedToPlayIfAutoplayDisabled(
       const HTMLMediaElement& aElement);
-
-  // Returns the AutoplayPermissionManager that a given document must request on
-  // for autoplay permission.
-  static already_AddRefed<AutoplayPermissionManager> RequestFor(
-      const Document& aDocument);
 };
 
 }  // namespace dom

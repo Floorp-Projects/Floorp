@@ -13,7 +13,7 @@ window.gActivityStreamStrings = {
   "type_label_downloaded": "Đã tải về",
   "menu_action_bookmark": "Đánh dấu",
   "menu_action_remove_bookmark": "Xóa đánh dấu",
-  "menu_action_open_new_window": "Mở trong Cửa Sổ Mới",
+  "menu_action_open_new_window": "Mở trong cửa sổ mới",
   "menu_action_open_private_window": "Mở trong cửa sổ riêng tư mới",
   "menu_action_dismiss": "Bỏ qua",
   "menu_action_delete": "Xóa khỏi lịch sử",
@@ -47,7 +47,7 @@ window.gActivityStreamStrings = {
   "prefs_topstories_options_sponsored_label": "Bài viết quảng cáo",
   "prefs_topstories_sponsored_learn_more": "Tìm hiểu thêm",
   "prefs_highlights_description": "Một lựa chọn các trang web mà bạn đã lưu hoặc truy cập",
-  "prefs_highlights_options_visited_label": "Trang đã xem",
+  "prefs_highlights_options_visited_label": "Trang đã truy cập",
   "prefs_highlights_options_download_label": "Tải xuống gần đây nhất",
   "prefs_highlights_options_pocket_label": "Trang đã được lưu vào Pocket",
   "prefs_snippets_description": "Cập nhật từ Mozilla và Firefox",
@@ -107,6 +107,5 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Thông báo bảo mật",
   "firstrun_continue_to_login": "Tiếp tục",
   "firstrun_skip_login": "Bỏ qua bước này",
-  "context_menu_title": "Mở bảng chọn",
-  "pocket_learn_more": "Tìm hiểu thêm"
+  "context_menu_title": "Mở bảng chọn"
 };

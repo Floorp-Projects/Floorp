@@ -883,10 +883,8 @@ var Cmds = {
     const iframe = document.getElementById("deck-panel-performance");
 
     iframe.addEventListener("DOMContentLoaded", () => {
-      const actorVersion = AppManager.connection.client.mainRoot.traits.perfActorVersion;
       iframe.contentWindow.gInit(AppManager.perfFront,
-                                 AppManager.preferenceFront,
-                                 actorVersion);
+                                 AppManager.preferenceFront);
     }, { once: true });
   },
 

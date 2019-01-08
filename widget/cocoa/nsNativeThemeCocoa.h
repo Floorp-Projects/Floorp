@@ -396,7 +396,7 @@ class nsNativeThemeCocoa : private nsNativeTheme, public nsITheme {
   bool CreateWebRenderCommandsForWidget(mozilla::wr::DisplayListBuilder& aBuilder,
                                         mozilla::wr::IpcResourceUpdateQueue& aResources,
                                         const mozilla::layers::StackingContextHelper& aSc,
-                                        mozilla::layers::WebRenderLayerManager* aManager,
+                                        mozilla::layers::RenderRootStateManager* aManager,
                                         nsIFrame* aFrame, StyleAppearance aAppearance,
                                         const nsRect& aRect) override;
   MOZ_MUST_USE LayoutDeviceIntMargin GetWidgetBorder(nsDeviceContext* aContext, nsIFrame* aFrame,

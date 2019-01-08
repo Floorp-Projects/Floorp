@@ -84,52 +84,59 @@ class Animation : public DOMEventTargetHelper,
   static already_AddRefed<Animation> Constructor(
       const GlobalObject& aGlobal, AnimationEffect* aEffect,
       const Optional<AnimationTimeline*>& aTimeline, ErrorResult& aRv);
+
   void GetId(nsAString& aResult) const { aResult = mId; }
   void SetId(const nsAString& aId);
+
   AnimationEffect* GetEffect() const { return mEffect; }
   void SetEffect(AnimationEffect* aEffect);
+  void SetEffectNoUpdate(AnimationEffect* aEffect);
+
   AnimationTimeline* GetTimeline() const { return mTimeline; }
   void SetTimeline(AnimationTimeline* aTimeline);
+  void SetTimelineNoUpdate(AnimationTimeline* aTimeline);
+
   Nullable<TimeDuration> GetStartTime() const { return mStartTime; }
+  Nullable<double> GetStartTimeAsDouble() const;
   void SetStartTime(const Nullable<TimeDuration>& aNewStartTime);
+  void SetStartTimeAsDouble(const Nullable<double>& aStartTime);
+
   // This is deliberately _not_ called GetCurrentTime since that would clash
   // with a macro defined in winbase.h
   Nullable<TimeDuration> GetCurrentTimeAsDuration() const {
     return GetCurrentTimeForHoldTime(mHoldTime);
   }
+  Nullable<double> GetCurrentTimeAsDouble() const;
   void SetCurrentTime(const TimeDuration& aNewCurrentTime);
+  void SetCurrentTimeAsDouble(const Nullable<double>& aCurrentTime,
+                              ErrorResult& aRv);
+
   double PlaybackRate() const { return mPlaybackRate; }
   void SetPlaybackRate(double aPlaybackRate);
+
   AnimationPlayState PlayState() const;
+  virtual AnimationPlayState PlayStateFromJS() const { return PlayState(); }
+
   bool Pending() const { return mPendingState != PendingState::NotPending; }
+  virtual bool PendingFromJS() const { return Pending(); }
+
   virtual Promise* GetReady(ErrorResult& aRv);
   Promise* GetFinished(ErrorResult& aRv);
-  void Cancel();
-  void Finish(ErrorResult& aRv);
-  virtual void Play(ErrorResult& aRv, LimitBehavior aLimitBehavior);
-  virtual void Pause(ErrorResult& aRv);
-  void Reverse(ErrorResult& aRv);
-  void UpdatePlaybackRate(double aPlaybackRate);
-  bool IsRunningOnCompositor() const;
+
   IMPL_EVENT_HANDLER(finish);
   IMPL_EVENT_HANDLER(cancel);
 
-  // Wrapper functions for Animation DOM methods when called
-  // from script.
-  //
-  // We often use the same methods internally and from script but when called
-  // from script we (or one of our subclasses) perform extra steps such as
-  // flushing style or converting the return type.
-  Nullable<double> GetStartTimeAsDouble() const;
-  void SetStartTimeAsDouble(const Nullable<double>& aStartTime);
-  Nullable<double> GetCurrentTimeAsDouble() const;
-  void SetCurrentTimeAsDouble(const Nullable<double>& aCurrentTime,
-                              ErrorResult& aRv);
-  virtual AnimationPlayState PlayStateFromJS() const { return PlayState(); }
-  virtual bool PendingFromJS() const { return Pending(); }
+  void Cancel();
+  virtual void CancelFromStyle() { CancelNoUpdate(); }
+
+  void Finish(ErrorResult& aRv);
+
+  virtual void Play(ErrorResult& aRv, LimitBehavior aLimitBehavior);
   virtual void PlayFromJS(ErrorResult& aRv) {
     Play(aRv, LimitBehavior::AutoRewind);
   }
+
+  virtual void Pause(ErrorResult& aRv);
   /**
    * PauseFromJS is currently only here for symmetry with PlayFromJS but
    * in future we will likely have to flush style in
@@ -137,11 +144,10 @@ class Animation : public DOMEventTargetHelper,
    */
   void PauseFromJS(ErrorResult& aRv) { Pause(aRv); }
 
-  // Wrapper functions for Animation DOM methods when called from style.
+  void UpdatePlaybackRate(double aPlaybackRate);
+  void Reverse(ErrorResult& aRv);
 
-  virtual void CancelFromStyle() { CancelNoUpdate(); }
-  void SetTimelineNoUpdate(AnimationTimeline* aTimeline);
-  void SetEffectNoUpdate(AnimationEffect* aEffect);
+  bool IsRunningOnCompositor() const;
 
   virtual void Tick();
   bool NeedsTicks() const {
@@ -530,8 +536,6 @@ class Animation : public DOMEventTargetHelper,
   static uint64_t sNextAnimationIndex;
 
   // The relative position of this animation within the global animation list.
-  // This is kNoIndex while the animation is in the idle state and is updated
-  // each time the animation transitions out of the idle state.
   //
   // Note that subclasses such as CSSTransition and CSSAnimation may repurpose
   // this member to implement their own brand of sorting. As a result, it is

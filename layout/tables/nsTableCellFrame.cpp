@@ -60,7 +60,7 @@ class nsDisplayTableCellSelection final : public nsDisplayItem {
       mozilla::wr::DisplayListBuilder& aBuilder,
       mozilla::wr::IpcResourceUpdateQueue& aResources,
       const StackingContextHelper& aSc,
-      mozilla::layers::WebRenderLayerManager* aManager,
+      mozilla::layers::RenderRootStateManager* aManager,
       nsDisplayListBuilder* aDisplayListBuilder) override {
     RefPtr<nsFrameSelection> frameSelection =
         mFrame->PresShell()->FrameSelection();

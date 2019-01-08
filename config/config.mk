@@ -366,10 +366,6 @@ include $(MOZILLA_DIR)/config/AB_rCD.mk
 # Many locales directories want this definition.
 ACDEFINES += -DAB_CD=$(AB_CD)
 
-ifndef L10NBASEDIR
-  L10NBASEDIR = $(error L10NBASEDIR not defined by configure)
-endif
-
 EXPAND_LOCALE_SRCDIR = $(if $(filter en-US,$(AB_CD)),$(LOCALE_TOPDIR)/$(1)/en-US,$(or $(realpath $(L10NBASEDIR)),$(abspath $(L10NBASEDIR)))/$(AB_CD)/$(subst /locales,,$(1)))
 
 ifdef relativesrcdir

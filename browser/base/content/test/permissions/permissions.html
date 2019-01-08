@@ -10,18 +10,11 @@
 var gKeyDowns = 0;
 var gKeyPresses = 0;
 
-function playMedia() {
-  let audio = new Audio();
-  audio.src = "audio.ogg";
-  audio.addEventListener("canplay", () => audio.play(), {once: true});
-}
-
 </script>
   <body onkeydown="gKeyDowns++;" onkeypress="gKeyPresses++">
 	<!-- This page could eventually request permissions from content
 	     and make sure that chrome responds appropriately -->
   <button id="geo" onclick="navigator.geolocation.getCurrentPosition(() => {})">Geolocation</button>
   <button id="camera" onclick="navigator.mediaDevices.getUserMedia({video: true, fake: true})">Camera</button>
-  <button id="autoplay" onclick="playMedia()">Autoplay</button>
   </body>
 </html>

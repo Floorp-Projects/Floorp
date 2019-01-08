@@ -1,3 +1,5 @@
+ignoreUnhandledRejections();
+
 function checkGetOffsetsCoverage() {
     var g = newGlobal();
     var dbg = Debugger(g);

@@ -122,7 +122,6 @@ export class _Search extends React.PureComponent {
             title={this.props.intl.formatMessage({id: "search_web_placeholder"})}>
             <div className="fake-textbox">{this.props.intl.formatMessage({id: "search_web_placeholder"})}</div>
             <div className="fake-caret" />
-            <div className="fake-button" />
           </button>
           {/*
             This dummy and hidden input below is so we can load ContentSearchUIController.

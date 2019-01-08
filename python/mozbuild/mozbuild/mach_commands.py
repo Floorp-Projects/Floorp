@@ -3190,3 +3190,79 @@ class TelemetrySettings():
 Enable submission of build system telemetry.
         """.strip(), False),
     ]
+
+
+@CommandProvider
+class L10NCommands(MachCommandBase):
+    @Command('package-multi-locale', category='post-build',
+             description='Package a multi-locale version of the built product '
+                         'for distribution as an APK, DMG, etc.')
+    @CommandArgument('--locales', metavar='LOCALES', nargs='+',
+                     required=True,
+                     help='List of locales to package, including "en-US"')
+    @CommandArgument('--verbose', action='store_true',
+                     help='Log informative status messages.')
+    def package_l10n(self, verbose=False, locales=[]):
+        backends = self.substs['BUILD_BACKENDS']
+        if 'RecursiveMake' not in backends:
+            self.log(logging.ERROR, 'package-multi-locale', {'backends': backends},
+                     "Multi-locale packaging requires the full (non-artifact) "
+                     "'RecursiveMake' build backend; got {backends}.")
+            return 1
+
+        if 'en-US' not in locales:
+            self.log(logging.WARN, 'package-multi-locale', {'locales': locales},
+                     'List of locales does not include default locale "en-US": '
+                     '{locales}; adding "en-US"')
+            locales.append('en-US')
+        locales = list(sorted(locales))
+
+        append_env = {
+            'MOZ_CHROME_MULTILOCALE': ' '.join(locales),
+        }
+
+        for locale in locales:
+            if locale == 'en-US':
+                self.log(logging.INFO, 'package-multi-locale', {'locale': locale},
+                         'Skipping default locale {locale}')
+                continue
+
+            self.log(logging.INFO, 'package-multi-locale', {'locale': locale},
+                     'Processing chrome Gecko resources for locale {locale}')
+            self.run_process(
+                [mozpath.join(self.topsrcdir, 'mach'), 'build', 'chrome-{}'.format(locale)],
+                append_env=append_env,
+                pass_thru=True,
+                ensure_exit_code=True,
+                cwd=mozpath.join(self.topsrcdir))
+
+        if self.substs['MOZ_BUILD_APP'] == 'mobile/android':
+            self.log(logging.INFO, 'package-multi-locale', {},
+                     'Invoking `mach android assemble-app`')
+            self.run_process(
+                [mozpath.join(self.topsrcdir, 'mach'), 'android', 'assemble-app'],
+                append_env=append_env,
+                pass_thru=True,
+                ensure_exit_code=True,
+                cwd=mozpath.join(self.topsrcdir))
+
+        self.log(logging.INFO, 'package-multi-locale', {},
+                 'Invoking multi-locale `mach package`')
+        self._run_make(
+            directory=self.topobjdir,
+            target=['package', 'AB_CD=multi'],
+            append_env=append_env,
+            pass_thru=True,
+            ensure_exit_code=True)
+
+        if self.substs['MOZ_BUILD_APP'] == 'mobile/android':
+            self.log(logging.INFO, 'package-multi-locale', {},
+                     'Invoking `mach android archive-geckoview`')
+            self.run_process(
+                [mozpath.join(self.topsrcdir, 'mach'), 'android', 'archive-geckoview'.format(locale)],
+                append_env=append_env,
+                pass_thru=True,
+                ensure_exit_code=True,
+                cwd=mozpath.join(self.topsrcdir))
+
+        return 0

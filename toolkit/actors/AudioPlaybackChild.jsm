@@ -69,14 +69,6 @@ class AudioPlaybackChild extends ActorChild {
       case "AudioPlayback":
         this.handleMediaControlMessage(data.type);
         break;
-      case "TemporaryPermissionChanged":
-        if (data.permission !== "autoplay-media") {
-          return;
-        }
-        let utils = this.content.windowUtils;
-        utils.notifyTemporaryAutoplayPermissionChanged(data.state,
-                                                       data.prePath);
-        break;
     }
   }
 }
