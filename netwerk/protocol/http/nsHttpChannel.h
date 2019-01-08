@@ -138,11 +138,10 @@ class nsHttpChannel final : public HttpBaseChannel,
 
   nsHttpChannel();
 
-  virtual MOZ_MUST_USE nsresult Init(nsIURI *aURI, uint32_t aCaps,
-                                     nsProxyInfo *aProxyInfo,
-                                     uint32_t aProxyResolveFlags,
-                                     nsIURI *aProxyURI,
-                                     uint64_t aChannelId) override;
+  virtual MOZ_MUST_USE nsresult
+  Init(nsIURI *aURI, uint32_t aCaps, nsProxyInfo *aProxyInfo,
+       uint32_t aProxyResolveFlags, nsIURI *aProxyURI, uint64_t aChannelId,
+       nsContentPolicyType aContentPolicyType) override;
 
   MOZ_MUST_USE nsresult OnPush(const nsACString &uri,
                                Http2PushedStream *pushedStream);

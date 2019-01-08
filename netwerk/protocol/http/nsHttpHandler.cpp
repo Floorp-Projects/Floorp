@@ -115,6 +115,12 @@
 #define TCP_FAST_OPEN_STALLS_TIMEOUT \
   "network.tcp.tcp_fastopen_http_stalls_timeout"
 
+#define ACCEPT_HEADER_NAVIGATION \
+  "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+#define ACCEPT_HEADER_IMAGE "image/png,image/svg+xml,image/*;q=0.8,*/*;q=0.5"
+#define ACCEPT_HEADER_STYLE "text/css,*/*;q=0.1"
+#define ACCEPT_HEADER_ALL "*/*"
+
 #define UA_PREF(_pref) UA_PREF_PREFIX _pref
 #define HTTP_PREF(_pref) HTTP_PREF_PREFIX _pref
 #define BROWSER_PREF(_pref) BROWSER_PREF_PREFIX _pref
@@ -617,8 +623,9 @@ nsresult nsHttpHandler::InitConnectionMgr() {
   return rv;
 }
 
-nsresult nsHttpHandler::AddStandardRequestHeaders(nsHttpRequestHead *request,
-                                                  bool isSecure) {
+nsresult nsHttpHandler::AddStandardRequestHeaders(
+    nsHttpRequestHead *request, bool isSecure,
+    nsContentPolicyType aContentPolicyType) {
   nsresult rv;
 
   // Add the "User-Agent" header
@@ -630,7 +637,20 @@ nsresult nsHttpHandler::AddStandardRequestHeaders(nsHttpRequestHead *request,
   // Add the "Accept" header.  Note, this is set as an override because the
   // service worker expects to see it.  The other "default" headers are
   // hidden from service worker interception.
-  rv = request->SetHeader(nsHttp::Accept, mAccept, false,
+  nsAutoCString accept;
+  if (aContentPolicyType == nsIContentPolicy::TYPE_DOCUMENT ||
+      aContentPolicyType == nsIContentPolicy::TYPE_SUBDOCUMENT) {
+    accept.Assign(ACCEPT_HEADER_NAVIGATION);
+  } else if (aContentPolicyType == nsIContentPolicy::TYPE_IMAGE ||
+             aContentPolicyType == nsIContentPolicy::TYPE_IMAGESET) {
+    accept.Assign(ACCEPT_HEADER_IMAGE);
+  } else if (aContentPolicyType == nsIContentPolicy::TYPE_STYLESHEET) {
+    accept.Assign(ACCEPT_HEADER_STYLE);
+  } else {
+    accept.Assign(ACCEPT_HEADER_ALL);
+  }
+
+  rv = request->SetHeader(nsHttp::Accept, accept, false,
                           nsHttpHeaderArray::eVarietyRequestOverride);
   if (NS_FAILED(rv)) return rv;
 
@@ -1358,15 +1378,6 @@ void nsHttpHandler::PrefsChanged(const char *pref) {
     if (NS_SUCCEEDED(rv)) mQoSBits = (uint8_t)clamped(val, 0, 0xff);
   }
 
-  if (PREF_CHANGED(HTTP_PREF("accept.default"))) {
-    nsAutoCString accept;
-    rv = Preferences::GetCString(HTTP_PREF("accept.default"), accept);
-    if (NS_SUCCEEDED(rv)) {
-      rv = SetAccept(accept.get());
-      MOZ_ASSERT(NS_SUCCEEDED(rv));
-    }
-  }
-
   if (PREF_CHANGED(HTTP_PREF("accept-encoding"))) {
     nsAutoCString acceptEncodings;
     rv = Preferences::GetCString(HTTP_PREF("accept-encoding"), acceptEncodings);
@@ -1962,11 +1973,6 @@ nsresult nsHttpHandler::SetAcceptLanguages() {
   return rv;
 }
 
-nsresult nsHttpHandler::SetAccept(const char *aAccept) {
-  mAccept = aAccept;
-  return NS_OK;
-}
-
 nsresult nsHttpHandler::SetAcceptEncodings(const char *aAcceptEncodings,
                                            bool isSecure) {
   if (isSecure) {
@@ -2108,8 +2114,12 @@ nsHttpHandler::NewProxiedChannel2(nsIURI *uri, nsIProxyInfo *givenProxyInfo,
   rv = NewChannelId(channelId);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  nsContentPolicyType contentPolicyType =
+      aLoadInfo ? aLoadInfo->GetExternalContentPolicyType()
+                : nsIContentPolicy::TYPE_OTHER;
+
   rv = httpChannel->Init(uri, caps, proxyInfo, proxyResolveFlags, proxyURI,
-                         channelId);
+                         channelId, contentPolicyType);
   if (NS_FAILED(rv)) return rv;
 
   // set the loadInfo on the new channel
