@@ -22,7 +22,6 @@ XPCOMUtils.defineLazyGetter(this, "EventEmitter", function() {
   return require("devtools/shared/event-emitter");
 });
 
-const promise = require("promise");
 const Services = require("Services");
 
 this.EXPORTED_SYMBOLS = ["BrowserToolboxProcess"];
@@ -72,8 +71,6 @@ this.BrowserToolboxProcess = function BrowserToolboxProcess(onClose, onRun, opti
 
   this._telemetry = new Telemetry();
 
-  this._onConnectionChange = this._onConnectionChange.bind(this);
-
   this.close = this.close.bind(this);
   Services.obs.addObserver(this.close, "quit-application");
   this._initServer();
@@ -112,25 +109,6 @@ BrowserToolboxProcess.getBrowserToolboxSessionState = function() {
   return false;
 };
 
-/**
- * Passes a set of options to the AddonTargetActors for the given ID.
- *
- * @param id string
- *        The ID of the add-on to pass the options to
- * @param options object
- *        The options.
- * @return a promise that will be resolved when complete.
- */
-BrowserToolboxProcess.setAddonOptions = function(id, options) {
-  const promises = [];
-
-  for (const process of processes.values()) {
-    promises.push(process.debuggerServer.setAddonOptions(id, options));
-  }
-
-  return promise.all(promises);
-};
-
 BrowserToolboxProcess.prototype = {
   /**
    * Initializes the debugger server.
@@ -154,9 +132,6 @@ BrowserToolboxProcess.prototype = {
     const { SocketListener } = this.loader.require("devtools/shared/security/socket");
     this.debuggerServer = DebuggerServer;
     dumpn("Created a separate loader instance for the DebuggerServer.");
-
-    // Forward interesting events.
-    this.debuggerServer.on("connectionchange", this._onConnectionChange);
 
     this.debuggerServer.init();
     // We mainly need a root actor and target actors for opening a toolbox, even
@@ -332,19 +307,6 @@ BrowserToolboxProcess.prototype = {
   },
 
   /**
-   * Called upon receiving the connectionchange event from a debuggerServer.
-   *
-   * @param {String} what
-   *        Type of connection change (can be either 'opened' or 'closed').
-   * @param {DebuggerServerConnection} connection
-   *        The connection that was opened or closed.
-   */
-  _onConnectionChange: function(what, connection) {
-    const wrappedJSObject = { what, connection };
-    Services.obs.notifyObservers({ wrappedJSObject }, "toolbox-connection-change");
-  },
-
-  /**
    * Closes the remote debugging server and kills the toolbox process.
    */
   close: async function() {
@@ -370,7 +332,6 @@ BrowserToolboxProcess.prototype = {
     }
 
     if (this.debuggerServer) {
-      this.debuggerServer.off("connectionchange", this._onConnectionChange);
       this.debuggerServer.destroy();
       this.debuggerServer = null;
     }
@@ -404,12 +365,5 @@ var wantLogging = Services.prefs.getBoolPref("devtools.debugger.log");
 Services.prefs.addObserver("devtools.debugger.log", {
   observe: (...args) => {
     wantLogging = Services.prefs.getBoolPref(args.pop());
-  },
-});
-
-Services.prefs.addObserver("toolbox-update-addon-options", {
-  observe: (subject) => {
-    const {id, options} = subject.wrappedJSObject;
-    BrowserToolboxProcess.setAddonOptions(id, options);
   },
 });

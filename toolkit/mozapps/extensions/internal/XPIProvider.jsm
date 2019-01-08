@@ -106,8 +106,6 @@ const XPI_SIGNATURE_CHECK_PERIOD      = 24 * 60 * 60;
 
 const DB_SCHEMA = 28;
 
-const NOTIFICATION_TOOLBOX_CONNECTION_CHANGE      = "toolbox-connection-change";
-
 function encoded(strings, ...values) {
   let result = [];
 
@@ -1704,10 +1702,6 @@ class BootstrapScope {
 
       this.scope = loader.loadScope(this.addon, this.file);
     }
-
-    // Notify the BrowserToolboxProcess that a new addon has been loaded.
-    let wrappedJSObject = { id: this.addon.id, options: { global: this.scope }};
-    Services.obs.notifyObservers({ wrappedJSObject }, "toolbox-update-addon-options");
   }
 
   /**
@@ -1721,10 +1715,6 @@ class BootstrapScope {
     this.scope = null;
     this.startupPromise = null;
     this.instanceID = null;
-
-    // Notify the BrowserToolboxProcess that an addon has been unloaded.
-    let wrappedJSObject = { id: this.addon.id, options: { global: null }};
-    Services.obs.notifyObservers({ wrappedJSObject }, "toolbox-update-addon-options");
   }
 
   /**
@@ -2153,7 +2143,6 @@ var XPIProvider = {
       Services.prefs.addObserver(PREF_LANGPACK_SIGNATURES, this);
       Services.prefs.addObserver(PREF_ALLOW_LEGACY, this);
       Services.obs.addObserver(this, NOTIFICATION_FLUSH_PERMISSIONS);
-      Services.obs.addObserver(this, NOTIFICATION_TOOLBOX_CONNECTION_CHANGE);
 
 
       let flushCaches = this.checkForChanges(aAppChanged, aOldAppVersion,
@@ -2719,16 +2708,6 @@ var XPIProvider = {
     return {addons: result, fullData: false};
   },
 
-  onDebugConnectionChange({what, connection}) {
-    if (what != "opened")
-      return;
-
-    for (let [id, val] of this.activeAddons) {
-      connection.setAddonOptions(
-        id, { global: val.scope });
-    }
-  },
-
   /*
    * Notified when a preference we're interested in has changed.
    *
@@ -2740,10 +2719,6 @@ var XPIProvider = {
       if (!aData || aData == XPI_PERMISSION) {
         XPIDatabase.importPermissions();
       }
-      break;
-
-    case NOTIFICATION_TOOLBOX_CONNECTION_CHANGE:
-      this.onDebugConnectionChange(aSubject.wrappedJSObject);
       break;
 
     case "nsPref:changed":
