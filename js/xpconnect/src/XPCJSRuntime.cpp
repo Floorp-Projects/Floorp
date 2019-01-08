@@ -1263,6 +1263,16 @@ static int64_t JSMainRuntimeTemporaryPeakDistinguishedAmount() {
   return JS::PeakSizeOfTemporary(cx);
 }
 
+static int64_t JSMainRuntimeCompartmentsSystemDistinguishedAmount() {
+  JSContext* cx = danger::GetJSContext();
+  return JS::SystemCompartmentCount(cx);
+}
+
+static int64_t JSMainRuntimeCompartmentsUserDistinguishedAmount() {
+  JSContext* cx = XPCJSContext::Get()->Context();
+  return JS::UserCompartmentCount(cx);
+}
+
 static int64_t JSMainRuntimeRealmsSystemDistinguishedAmount() {
   JSContext* cx = danger::GetJSContext();
   return JS::SystemRealmCount(cx);
@@ -3045,6 +3055,10 @@ void XPCJSRuntime::Initialize(JSContext* cx) {
       JSMainRuntimeGCHeapDistinguishedAmount);
   RegisterJSMainRuntimeTemporaryPeakDistinguishedAmount(
       JSMainRuntimeTemporaryPeakDistinguishedAmount);
+  RegisterJSMainRuntimeCompartmentsSystemDistinguishedAmount(
+      JSMainRuntimeCompartmentsSystemDistinguishedAmount);
+  RegisterJSMainRuntimeCompartmentsUserDistinguishedAmount(
+      JSMainRuntimeCompartmentsUserDistinguishedAmount);
   RegisterJSMainRuntimeRealmsSystemDistinguishedAmount(
       JSMainRuntimeRealmsSystemDistinguishedAmount);
   RegisterJSMainRuntimeRealmsUserDistinguishedAmount(
