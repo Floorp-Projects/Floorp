@@ -153,7 +153,7 @@ tasks:
           then:
             $let:
               command_staging_flag:
-                $if: 'is_repo_trusted && tasks_for != "cron"'
+                $if: 'is_repo_trusted'
                 then: ''
                 else: '--staging'
 
@@ -220,8 +220,7 @@ tasks:
                     - {$eval: 'default_task_definition'}
                     - {$eval: 'nightly_or_release_definition'}
                     - scopes:
-                        # TODO Activate production workers on cron
-                        - project:mobile:android-components:releng:beetmover:bucket:maven-snapshot-staging
+                        - project:mobile:android-components:releng:beetmover:bucket:maven-snapshot-production
                       payload:
                         command:
                           - >-
