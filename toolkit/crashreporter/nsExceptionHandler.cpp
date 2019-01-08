@@ -19,6 +19,7 @@
 #include "mozilla/Unused.h"
 #include "mozilla/Printf.h"
 #include "mozilla/Sprintf.h"
+#include "mozilla/StaticMutex.h"
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/ipc/CrashReporterClient.h"
@@ -243,6 +244,7 @@ static bool sIncludeContextHeap = false;
 
 // OOP crash reporting
 static CrashGenerationServer* crashServer;  // chrome process has this
+static StaticMutex processMapLock;
 static std::map<ProcessId, PRFileDesc*> processToCrashFd;
 
 static std::terminate_handler oldTerminateHandler = nullptr;
@@ -2889,6 +2891,7 @@ static bool WriteExtraForMinidump(nsIFile* minidump, uint32_t pid, bool content,
     }
   }
 
+  StaticMutexAutoLock pidMapLock(processMapLock);
   if (pid && processToCrashFd.count(pid)) {
     PRFileDesc* prFd = processToCrashFd[pid];
     processToCrashFd.erase(pid);
@@ -3256,10 +3259,12 @@ int GetAnnotationTimeCrashFd() {
 
 void RegisterChildCrashAnnotationFileDescriptor(ProcessId aProcess,
                                                 PRFileDesc* aFd) {
+  StaticMutexAutoLock pidMapLock(processMapLock);
   processToCrashFd[aProcess] = aFd;
 }
 
 void DeregisterChildCrashAnnotationFileDescriptor(ProcessId aProcess) {
+  StaticMutexAutoLock pidMapLock(processMapLock);
   auto it = processToCrashFd.find(aProcess);
   if (it != processToCrashFd.end()) {
     PR_Close(it->second);
