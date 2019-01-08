@@ -106,9 +106,12 @@ nsContextMenu.prototype = {
         this.hasPageMenu = PageMenuParent.buildAndAddToPopup(this.target, aXulMenu);
       }
 
+      let tab = gBrowser && gBrowser.getTabForBrowser ?
+        gBrowser.getTabForBrowser(this.browser) : undefined;
+
       let subject = {
         menu: aXulMenu,
-        tab: gBrowser ? gBrowser.getTabForBrowser(this.browser) : undefined,
+        tab,
         timeStamp: this.timeStamp,
         isContentSelected: this.isContentSelected,
         inFrame: this.inFrame,
@@ -278,7 +281,7 @@ nsContextMenu.prototype = {
   },  // setContext
 
   hiding: function CM_hiding() {
-    if (this.browser) {
+    if (this.browser && this.browser.messageManager) {
       this.browser.messageManager.sendAsyncMessage("ContextMenu:Hiding");
     }
 
