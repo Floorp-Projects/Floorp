@@ -1458,6 +1458,18 @@
     "description": "Track how many image requests required event dispatching because we were unable to predict the correct scheduler group: true if the request required dispatching. See image/imgRequestProxy.cpp for details.",
     "bug_numbers": [1359833]
   },
+  "KEYPRESS_PRESENT_LATENCY": {
+    "record_in_processes": [ "all" ],
+    "alert_emails": [ "perfteam@mozilla.com", "vchin@mozilla.com" ],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "releaseChannelCollection": "opt-out",
+    "low": 1,
+    "high": 200000,
+    "n_buckets": 50,
+    "description": "Time between receiving a keypress event on the event loop and compositing its result onto the screen (ms)",
+    "bug_numbers": [ 1506537 ]
+  },
   "CANVAS_2D_USED": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "never",

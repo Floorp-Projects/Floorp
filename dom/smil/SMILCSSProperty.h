@@ -20,17 +20,16 @@ class ComputedStyle;
 namespace dom {
 class Element;
 }  // namespace dom
-}  // namespace mozilla
 
 /**
- * nsSMILCSSProperty: Implements the nsISMILAttr interface for SMIL animations
+ * SMILCSSProperty: Implements the nsISMILAttr interface for SMIL animations
  * that target CSS properties.  Represents a particular animation-targeted CSS
  * property on a particular element.
  */
-class nsSMILCSSProperty : public nsISMILAttr {
+class SMILCSSProperty : public nsISMILAttr {
  public:
   /**
-   * Constructs a new nsSMILCSSProperty.
+   * Constructs a new SMILCSSProperty.
    * @param  aPropID   The CSS property we're interested in animating.
    * @param  aElement  The element whose CSS property is being animated.
    * @param  aBaseComputedStyle  The ComputedStyle to use when getting the base
@@ -38,14 +37,13 @@ class nsSMILCSSProperty : public nsISMILAttr {
    *                             called, an empty nsSMILValue initialized with
    *                             the SMILCSSValueType will be returned.
    */
-  nsSMILCSSProperty(nsCSSPropertyID aPropID, mozilla::dom::Element* aElement,
-                    mozilla::ComputedStyle* aBaseComputedStyle);
+  SMILCSSProperty(nsCSSPropertyID aPropID, dom::Element* aElement,
+                  ComputedStyle* aBaseComputedStyle);
 
   // nsISMILAttr methods
   virtual nsresult ValueFromString(
-      const nsAString& aStr,
-      const mozilla::dom::SVGAnimationElement* aSrcElement, nsSMILValue& aValue,
-      bool& aPreventCachingOfSandwich) const override;
+      const nsAString& aStr, const dom::SVGAnimationElement* aSrcElement,
+      nsSMILValue& aValue, bool& aPreventCachingOfSandwich) const override;
   virtual nsSMILValue GetBaseValue() const override;
   virtual nsresult SetAnimValue(const nsSMILValue& aValue) override;
   virtual void ClearAnimValue() override;
@@ -69,14 +67,16 @@ class nsSMILCSSProperty : public nsISMILAttr {
   // alive for my lifetime because a nsISMILAttr (like me) only lives as long
   // as the Compositing step, and DOM elements don't get a chance to die during
   // that time.
-  mozilla::dom::Element* mElement;
+  dom::Element* mElement;
 
   // The style to use when fetching base styles.
   //
   // As with mElement, since an nsISMILAttr only lives as long as the
   // compositing step and since ComposeAttribute holds an owning reference to
   // the base ComputedStyle, we can use a non-owning reference here.
-  mozilla::ComputedStyle* mBaseComputedStyle;
+  ComputedStyle* mBaseComputedStyle;
 };
+
+}  // namespace mozilla
 
 #endif  // NS_SMILCSSPROPERTY_H_
