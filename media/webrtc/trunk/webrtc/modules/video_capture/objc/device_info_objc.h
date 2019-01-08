@@ -15,7 +15,12 @@
 
 #include "modules/video_capture/video_capture_defines.h"
 
-@interface DeviceInfoIosObjC : NSObject
+@interface DeviceInfoIosObjC : NSObject {
+  NSArray* _observers;
+  NSLock* _lock;
+  webrtc::videocapturemodule::DeviceInfoIos* _owner;
+}
+
 + (int)captureDeviceCount;
 + (AVCaptureDevice*)captureDeviceForIndex:(int)index;
 + (AVCaptureDevice*)captureDeviceForUniqueId:(NSString*)uniqueId;
@@ -23,6 +28,9 @@
 + (NSString*)deviceUniqueIdForIndex:(int)index;
 + (NSString*)deviceNameForUniqueId:(NSString*)uniqueId;
 + (webrtc::VideoCaptureCapability)capabilityForPreset:(NSString*)preset;
+
+- (void)registerOwner:(webrtc::videocapturemodule::DeviceInfoIos*)owner;
+- (void)configureObservers;
 
 @end
 

@@ -16,6 +16,8 @@
 #include <map>
 #include <string>
 
+@class DeviceInfoIosObjC;
+
 namespace webrtc {
 namespace videocapturemodule {
 class DeviceInfoIos : public DeviceInfoImpl {
@@ -54,6 +56,7 @@ class DeviceInfoIos : public DeviceInfoImpl {
 
  private:
   std::map<std::string, VideoCaptureCapabilities> _capabilitiesMap;
+  DeviceInfoIosObjC* _captureInfo;
 };
 
 }  // namespace videocapturemodule
