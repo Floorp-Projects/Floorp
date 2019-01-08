@@ -3142,6 +3142,14 @@ void gfxPlatform::NotifyFrameStats(nsTArray<FrameStats>&& aFrameStats) {
   }
 }
 
+/*static*/ uint32_t gfxPlatform::TargetFrameRate() {
+  if (gPlatform && gPlatform->mVsyncSource) {
+    VsyncSource::Display& display = gPlatform->mVsyncSource->GetGlobalDisplay();
+    return round(1000.0 / display.GetVsyncRate().ToMilliseconds());
+  }
+  return 0;
+}
+
 /*static*/ bool gfxPlatform::AsyncPanZoomEnabled() {
 #if !defined(MOZ_WIDGET_ANDROID) && !defined(MOZ_WIDGET_UIKIT)
   // For XUL applications (everything but Firefox on Android)
