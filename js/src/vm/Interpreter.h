@@ -289,16 +289,6 @@ inline void RunState::setReturnValue(const Value& v) {
 
 extern bool RunScript(JSContext* cx, RunState& state);
 
-extern bool StrictlyEqual(JSContext* cx, HandleValue lval, HandleValue rval,
-                          bool* equal);
-
-extern bool LooselyEqual(JSContext* cx, HandleValue lval, HandleValue rval,
-                         bool* equal);
-
-/* === except that NaN is the same as NaN and -0 is not the same as +0. */
-extern bool SameValue(JSContext* cx, HandleValue v1, HandleValue v2,
-                      bool* same);
-
 extern JSType TypeOfObject(JSObject* obj);
 
 extern JSType TypeOfValue(const Value& v);

@@ -290,8 +290,6 @@ void WebRenderLayerManager::EndTransactionWithoutLayer(
     }
   }
 
-  mStateManager.DiscardCompositorAnimations();
-
   mWidget->AddWindowOverlayWebRenderCommands(WrBridge(), builder,
                                              resourceUpdates);
   mWindowOverlayChanged = false;
@@ -363,6 +361,11 @@ void WebRenderLayerManager::EndTransactionWithoutLayer(
                                mTransactionIdAllocator->GetVsyncStart(),
                                refreshStart, mTransactionStart, mURL);
   }
+
+  // Discard animations after calling WrBridge()->EndTransaction().
+  // It updates mWrEpoch in WebRenderBridgeParent. The updated mWrEpoch is
+  // necessary for deleting animations at the correct time.
+  mStateManager.DiscardCompositorAnimations();
 
   mTransactionStart = TimeStamp();
 

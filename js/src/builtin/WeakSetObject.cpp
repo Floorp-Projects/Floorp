@@ -9,6 +9,7 @@
 #include "jsapi.h"
 
 #include "builtin/MapObject.h"
+#include "js/PropertySpec.h"
 #include "vm/GlobalObject.h"
 #include "vm/Iteration.h"
 #include "vm/JSContext.h"

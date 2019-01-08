@@ -52,10 +52,12 @@ class MOZ_NON_TEMPORARY_CLASS StructToStream {
     }
 
     MOZ_SEH_TRY { aEncodeFnPtr(mHandle, &aSrcStruct); }
+#ifdef HAVE_SEH_EXCEPTIONS
     MOZ_SEH_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
       mStatus = ::RpcExceptionCode();
       return;
     }
+#endif
 
     if (!mBuffer || !mEncodedLen) {
       mStatus = RPC_X_NO_MEMORY;
@@ -210,10 +212,12 @@ class MOZ_NON_TEMPORARY_CLASS StructFromStream {
     ZeroMemory(aDestStruct, sizeof(StructT));
 
     MOZ_SEH_TRY { aDecodeFnPtr(mHandle, aDestStruct); }
+#ifdef HAVE_SEH_EXCEPTIONS
     MOZ_SEH_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
       mStatus = ::RpcExceptionCode();
       return false;
     }
+#endif
 
     return true;
   }

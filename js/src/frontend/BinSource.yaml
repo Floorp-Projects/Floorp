@@ -347,7 +347,7 @@ hpp:
 
 Arguments:
     init:
-        BINJS_TRY_DECL(result, factory_.newList(ParseNodeKind::ArgumentsExpr, tokenizer_->pos(start)));
+        BINJS_TRY_DECL(result, factory_.newList(ParseNodeKind::Arguments, tokenizer_->pos(start)));
     append:
         factory_.addList(/* list = */ result, /* kid = */ item);
 
@@ -768,7 +768,7 @@ DataProperty:
 
         ParseNode* result;
         if (name->template is<NameNode>() && name->template as<NameNode>().atom() == cx_->names().proto) {
-            BINJS_TRY_VAR(result, factory_.newUnary(ParseNodeKind::MutateProtoExpr, start, expression));
+            BINJS_TRY_VAR(result, factory_.newUnary(ParseNodeKind::MutateProto, start, expression));
         } else {
             BINJS_TRY_VAR(result, factory_.newObjectMethodOrPropertyDefinition(name, expression, AccessorType::None));
         }
@@ -1172,7 +1172,7 @@ ListOfVariableDeclarator:
     type-ok:
         ListNode*
     init: |
-        BINJS_TRY_DECL(result, factory_.newDeclarationList(ParseNodeKind::ConstStmt /*Placeholder*/,
+        BINJS_TRY_DECL(result, factory_.newDeclarationList(ParseNodeKind::ConstDecl /*Placeholder*/,
             tokenizer_->pos(start)));
 
 LiteralBooleanExpression:
@@ -1286,7 +1286,7 @@ ShorthandProperty:
         BINJS_TRY_DECL(propName, factory_.newObjectLiteralPropertyName(name->template as<NameNode>().name(), tokenizer_->pos(start)));
 
         BINJS_TRY_DECL(result, factory_.newObjectMethodOrPropertyDefinition(propName, name, AccessorType::None));
-        result->setKind(ParseNodeKind::ShorthandExpr);
+        result->setKind(ParseNodeKind::Shorthand);
 
 SwitchCase:
     type-ok:
@@ -1427,6 +1427,8 @@ UnaryExpression:
               case ParseNodeKind::Name:
                 operand->setOp(JSOP_DELNAME);
                 pnk = ParseNodeKind::DeleteNameExpr;
+                BINJS_TRY(this->strictModeError(JSMSG_DEPRECATED_DELETE_OPERAND));
+                parseContext_->sc()->setBindingsAccessedDynamically();
                 break;
               case ParseNodeKind::DotExpr:
                 pnk = ParseNodeKind::DeletePropExpr;

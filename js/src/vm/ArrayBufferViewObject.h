@@ -69,7 +69,7 @@ class ArrayBufferViewObject : public NativeObject {
   static ArrayBufferObjectMaybeShared* bufferObject(
       JSContext* cx, Handle<ArrayBufferViewObject*> obj);
 
-  void notifyBufferDetached(JSContext* cx, void* newData);
+  void notifyBufferDetached(void* newData);
 
   // By construction we only need unshared variants here.  See
   // comments in ArrayBufferObject.cpp.

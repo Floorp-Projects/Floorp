@@ -761,53 +761,21 @@ void BinASTParserPerTokenizer<Tok>::poison() {
 }
 
 template <typename Tok>
-void BinASTParserPerTokenizer<Tok>::reportErrorNoOffsetVA(unsigned errorNumber,
-                                                          va_list args) {
-  ErrorMetadata metadata;
-  metadata.filename = getFilename();
-  metadata.lineNumber = 0;
-  metadata.columnNumber = offset();
-  metadata.isMuted = options().mutedErrors();
-  ReportCompileError(cx_, std::move(metadata), nullptr, JSREPORT_ERROR,
-                     errorNumber, args);
-}
-
-template <typename Tok>
-void BinASTParserPerTokenizer<Tok>::errorAtVA(uint32_t offset,
-                                              unsigned errorNumber,
-                                              va_list* args) {
-  ErrorMetadata metadata;
-  metadata.filename = getFilename();
-  metadata.lineNumber = 0;
-  metadata.columnNumber = offset;
-  metadata.isMuted = options().mutedErrors();
-  ReportCompileError(cx_, std::move(metadata), nullptr, JSREPORT_ERROR,
-                     errorNumber, *args);
-}
-
-template <typename Tok>
-bool BinASTParserPerTokenizer<Tok>::reportExtraWarningErrorNumberVA(
-    UniquePtr<JSErrorNotes> notes, uint32_t offset, unsigned errorNumber,
-    va_list* args) {
-  if (!options().extraWarningsOption) {
-    return true;
+bool BinASTParserPerTokenizer<Tok>::computeErrorMetadata(
+    ErrorMetadata* err, const ErrorOffset& errorOffset) {
+  err->filename = getFilename();
+  err->lineNumber = 0;
+  if (errorOffset.is<uint32_t>()) {
+    err->columnNumber = errorOffset.as<uint32_t>();
+  } else if (errorOffset.is<Current>()) {
+    err->columnNumber = offset();
+  } else {
+    errorOffset.is<NoOffset>();
+    err->columnNumber = 0;
   }
 
-  ErrorMetadata metadata;
-  metadata.filename = getFilename();
-  metadata.lineNumber = 0;
-  metadata.columnNumber = offset;
-  metadata.isMuted = options().mutedErrors();
-
-  if (options().werrorOption) {
-    ReportCompileError(cx_, std::move(metadata), std::move(notes),
-                       JSREPORT_STRICT, errorNumber, *args);
-    return false;
-  }
-
-  return ReportCompileWarning(cx_, std::move(metadata), std::move(notes),
-                              JSREPORT_STRICT | JSREPORT_WARNING, errorNumber,
-                              *args);
+  err->isMuted = options().mutedErrors();
+  return true;
 }
 
 void TraceBinParser(JSTracer* trc, JS::AutoGCRooter* parser) {
