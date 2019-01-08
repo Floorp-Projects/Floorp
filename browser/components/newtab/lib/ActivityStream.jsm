@@ -212,6 +212,8 @@ const PREFS_CONFIG = new Map([
       type: "local",
       localProvider: "OnboardingMessageProvider",
       enabled: true,
+      // Block specific messages from this local provider
+      exclude: ["RETURN_TO_AMO_1"],
     }),
   }],
   // See browser/app/profile/firefox.js for other ASR preferences. They must be defined there to enable roll-outs.
@@ -219,8 +221,8 @@ const PREFS_CONFIG = new Map([
     title: "Configuration for the new pocket new tab",
     value: JSON.stringify({
       enabled: false,
-      // Set this to https://gist.githubusercontent.com/ScottDowne/164995d9535b4203846048bdee29d169/raw/0cf538411e6ee898eb116208d70842c62c8d52f1/spoc.json to test
-      layout_endpoint: "",
+      // This is currently an exmple layout used for dev purposes.
+      layout_endpoint: "https://getpocket.com/v3/newtab/layout?version=1&consumer_key=40249-e88c401e1b1f2242d9e441c4&layout_variant=dev-test-1",
     }),
   }],
 ]);

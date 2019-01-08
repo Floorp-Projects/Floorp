@@ -86,3 +86,8 @@ if (!("setTimeout" in this)) {
 
   this.clearInterval = this.clearTimeout;
 }
+
+// Some tests in web platform tests leave promise rejections unhandled.
+if ("ignoreUnhandledRejections" in this) {
+  ignoreUnhandledRejections();
+}

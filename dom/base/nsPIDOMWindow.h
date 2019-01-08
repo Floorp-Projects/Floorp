@@ -11,11 +11,9 @@
 #include "mozIDOMWindow.h"
 
 #include "nsCOMPtr.h"
-#include "nsDataHashtable.h"
 #include "nsTArray.h"
 #include "mozilla/dom/EventTarget.h"
 #include "mozilla/TaskCategory.h"
-#include "mozilla/TimeStamp.h"
 #include "js/TypeDecls.h"
 #include "nsRefPtrHashtable.h"
 
@@ -46,7 +44,6 @@ class nsXBLPrototypeHandler;
 typedef uint32_t SuspendTypes;
 
 namespace mozilla {
-class AutoplayPermissionManager;
 namespace dom {
 class AudioContext;
 class BrowsingContext;
@@ -566,11 +563,6 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
   virtual nsISerialEventTarget* EventTargetFor(
       mozilla::TaskCategory aCategory) const = 0;
 
-  // Returns the AutoplayPermissionManager that documents in this window should
-  // use to request permission to autoplay.
-  already_AddRefed<mozilla::AutoplayPermissionManager>
-  GetAutoplayPermissionManager();
-
   void RegisterReportingObserver(mozilla::dom::ReportingObserver* aObserver,
                                  bool aBuffered);
 
@@ -668,11 +660,6 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
 
   // The number of open WebSockets.
   uint32_t mNumOfOpenWebSockets;
-
-  // If we're in the process of requesting permission for this window to
-  // play audible media, or we've already been granted permission by the
-  // user, this is non-null, and encapsulates the request.
-  RefPtr<mozilla::AutoplayPermissionManager> mAutoplayPermissionManager;
 
   // The event dispatch code sets and unsets this while keeping
   // the event object alive.
@@ -788,13 +775,6 @@ class nsPIDOMWindowOuter : public mozIDOMWindowProxy {
   virtual nsPIDOMWindowOuter* GetPrivateRoot() = 0;
 
   virtual void ActivateOrDeactivate(bool aActivate) = 0;
-
-  /**
-   * These functions are used to modify and check temporary autoplay permission.
-   */
-  void NotifyTemporaryAutoplayPermissionChanged(int32_t aState,
-                                                const nsAString& aPrePath);
-  bool HasTemporaryAutoplayPermission();
 
   /**
    * |top| gets the root of the window hierarchy.
@@ -1190,9 +1170,6 @@ class nsPIDOMWindowOuter : public mozIDOMWindowProxy {
   mozilla::dom::LargeAllocStatus mLargeAllocStatus;
 
   RefPtr<mozilla::dom::BrowsingContext> mOpenerForInitialContentBrowser;
-
-  using PermissionInfo = std::pair<bool, mozilla::TimeStamp>;
-  nsDataHashtable<nsStringHashKey, PermissionInfo> mAutoplayTemporaryPermission;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsPIDOMWindowOuter, NS_PIDOMWINDOWOUTER_IID)

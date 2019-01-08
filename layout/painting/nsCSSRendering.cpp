@@ -669,7 +669,7 @@ ImgDrawResult nsCSSRendering::CreateWebRenderCommandsForBorder(
     mozilla::wr::DisplayListBuilder& aBuilder,
     mozilla::wr::IpcResourceUpdateQueue& aResources,
     const mozilla::layers::StackingContextHelper& aSc,
-    mozilla::layers::WebRenderLayerManager* aManager,
+    mozilla::layers::RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) {
   const nsStyleBorder* styleBorder = aForFrame->Style()->StyleBorder();
   return nsCSSRendering::CreateWebRenderCommandsForBorderWithStyleBorder(
@@ -682,7 +682,7 @@ ImgDrawResult nsCSSRendering::CreateWebRenderCommandsForBorderWithStyleBorder(
     mozilla::wr::DisplayListBuilder& aBuilder,
     mozilla::wr::IpcResourceUpdateQueue& aResources,
     const mozilla::layers::StackingContextHelper& aSc,
-    mozilla::layers::WebRenderLayerManager* aManager,
+    mozilla::layers::RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder,
     const nsStyleBorder& aStyleBorder) {
   // First try to draw a normal border
@@ -1898,7 +1898,7 @@ ImgDrawResult nsCSSRendering::BuildWebRenderDisplayItemsForStyleImageLayer(
     const PaintBGParams& aParams, mozilla::wr::DisplayListBuilder& aBuilder,
     mozilla::wr::IpcResourceUpdateQueue& aResources,
     const mozilla::layers::StackingContextHelper& aSc,
-    mozilla::layers::WebRenderLayerManager* aManager, nsDisplayItem* aItem) {
+    mozilla::layers::RenderRootStateManager* aManager, nsDisplayItem* aItem) {
   MOZ_ASSERT(aParams.frame,
              "Frame is expected to be provided to "
              "BuildWebRenderDisplayItemsForStyleImageLayer");
@@ -2623,7 +2623,7 @@ nsCSSRendering::BuildWebRenderDisplayItemsForStyleImageLayerWithSC(
     const PaintBGParams& aParams, mozilla::wr::DisplayListBuilder& aBuilder,
     mozilla::wr::IpcResourceUpdateQueue& aResources,
     const mozilla::layers::StackingContextHelper& aSc,
-    mozilla::layers::WebRenderLayerManager* aManager, nsDisplayItem* aItem,
+    mozilla::layers::RenderRootStateManager* aManager, nsDisplayItem* aItem,
     ComputedStyle* aBackgroundSC, const nsStyleBorder& aBorder) {
   MOZ_ASSERT(!(aParams.paintFlags & PAINTBG_MASK_IMAGE));
 

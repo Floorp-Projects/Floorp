@@ -7,11 +7,11 @@
 #ifndef mozilla_dom_DocumentTimeline_h
 #define mozilla_dom_DocumentTimeline_h
 
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/DocumentTimelineBinding.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/TimeStamp.h"
 #include "AnimationTimeline.h"
-#include "mozilla/dom/Document.h"
 #include "nsDOMNavigationTiming.h"  // for DOMHighResTimeStamp
 #include "nsRefreshDriver.h"
 

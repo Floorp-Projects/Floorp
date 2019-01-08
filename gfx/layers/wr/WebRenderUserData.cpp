@@ -9,7 +9,7 @@
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/ImageClient.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
-#include "mozilla/layers/WebRenderLayerManager.h"
+#include "mozilla/layers/RenderRootStateManager.h"
 #include "mozilla/layers/WebRenderMessages.h"
 #include "mozilla/layers/IpcResourceUpdateQueue.h"
 #include "mozilla/layers/SharedSurfacesChild.h"
@@ -65,12 +65,12 @@ void WebRenderBackgroundData::AddWebRenderCommands(
   return false;
 }
 
-WebRenderUserData::WebRenderUserData(WebRenderLayerManager* aWRManager,
+WebRenderUserData::WebRenderUserData(RenderRootStateManager* aManager,
                                      nsDisplayItem* aItem)
-    : mWRManager(aWRManager),
+    : mManager(aManager),
       mFrame(aItem->Frame()),
       mDisplayItemKey(aItem->GetPerFrameKey()),
-      mTable(aWRManager->GetWebRenderUserDataTable()),
+      mTable(aManager->GetWebRenderUserDataTable()),
       mUsed(false) {}
 
 WebRenderUserData::~WebRenderUserData() {}
@@ -78,18 +78,18 @@ WebRenderUserData::~WebRenderUserData() {}
 void WebRenderUserData::RemoveFromTable() { mTable->RemoveEntry(this); }
 
 WebRenderBridgeChild* WebRenderUserData::WrBridge() const {
-  return mWRManager->WrBridge();
+  return mManager->WrBridge();
 }
 
-WebRenderImageData::WebRenderImageData(WebRenderLayerManager* aWRManager,
+WebRenderImageData::WebRenderImageData(RenderRootStateManager* aManager,
                                        nsDisplayItem* aItem)
-    : WebRenderUserData(aWRManager, aItem), mOwnsKey(false) {}
+    : WebRenderUserData(aManager, aItem), mOwnsKey(false) {}
 
 WebRenderImageData::~WebRenderImageData() {
   ClearImageKey();
 
   if (mPipelineId) {
-    WrBridge()->RemovePipelineIdForCompositable(mPipelineId.ref());
+    mManager->RemovePipelineIdForCompositable(mPipelineId.ref());
   }
 }
 
@@ -102,7 +102,7 @@ void WebRenderImageData::ClearImageKey() {
     // If we don't own the key, then the owner is responsible for discarding the
     // key when appropriate.
     if (mOwnsKey) {
-      mWRManager->AddImageKeyForDiscard(mKey.value());
+      mManager->AddImageKeyForDiscard(mKey.value());
       if (mTextureOfImage) {
         WrBridge()->ReleaseTextureOfImage(mKey.value());
         mTextureOfImage = nullptr;
@@ -126,7 +126,7 @@ Maybe<wr::ImageKey> WebRenderImageData::UpdateImageKey(
   wr::WrImageKey key;
   if (!aFallback) {
     nsresult rv =
-        SharedSurfacesChild::Share(aContainer, mWRManager, aResources, key);
+        SharedSurfacesChild::Share(aContainer, mManager, aResources, key);
     if (NS_SUCCEEDED(rv)) {
       // Ensure that any previously owned keys are released before replacing. We
       // don't own this key, the surface itself owns it, so that it can be
@@ -254,9 +254,9 @@ void WebRenderImageData::CreateImageClientIfNeeded() {
   }
 }
 
-WebRenderFallbackData::WebRenderFallbackData(WebRenderLayerManager* aWRManager,
+WebRenderFallbackData::WebRenderFallbackData(RenderRootStateManager* aManager,
                                              nsDisplayItem* aItem)
-    : WebRenderImageData(aWRManager, aItem), mInvalid(false) {}
+    : WebRenderImageData(aManager, aItem), mInvalid(false) {}
 
 WebRenderFallbackData::~WebRenderFallbackData() { ClearImageKey(); }
 
@@ -285,16 +285,16 @@ Maybe<wr::ImageKey> WebRenderFallbackData::GetImageKey() {
 
 void WebRenderFallbackData::ClearImageKey() {
   if (mBlobKey && mOwnsKey) {
-    mWRManager->AddBlobImageKeyForDiscard(mBlobKey.value());
+    mManager->AddBlobImageKeyForDiscard(mBlobKey.value());
   }
   mBlobKey.reset();
 
   WebRenderImageData::ClearImageKey();
 }
 
-WebRenderAnimationData::WebRenderAnimationData(
-    WebRenderLayerManager* aWRManager, nsDisplayItem* aItem)
-    : WebRenderUserData(aWRManager, aItem) {}
+WebRenderAnimationData::WebRenderAnimationData(RenderRootStateManager* aManager,
+                                               nsDisplayItem* aItem)
+    : WebRenderUserData(aManager, aItem) {}
 
 WebRenderAnimationData::~WebRenderAnimationData() {
   // It may be the case that nsDisplayItem that created this WebRenderUserData
@@ -303,13 +303,13 @@ WebRenderAnimationData::~WebRenderAnimationData() {
   uint64_t animationId = mAnimationInfo.GetCompositorAnimationsId();
   // animationId might be 0 if mAnimationInfo never held any active animations.
   if (animationId) {
-    mWRManager->AddCompositorAnimationsIdForDiscard(animationId);
+    mManager->AddCompositorAnimationsIdForDiscard(animationId);
   }
 }
 
-WebRenderCanvasData::WebRenderCanvasData(WebRenderLayerManager* aWRManager,
+WebRenderCanvasData::WebRenderCanvasData(RenderRootStateManager* aManager,
                                          nsDisplayItem* aItem)
-    : WebRenderUserData(aWRManager, aItem) {}
+    : WebRenderUserData(aManager, aItem) {}
 
 WebRenderCanvasData::~WebRenderCanvasData() {
   if (mCanvasRenderer) {
@@ -324,7 +324,7 @@ WebRenderCanvasRendererAsync* WebRenderCanvasData::GetCanvasRenderer() {
 }
 
 WebRenderCanvasRendererAsync* WebRenderCanvasData::CreateCanvasRenderer() {
-  mCanvasRenderer = MakeUnique<WebRenderCanvasRendererAsync>(mWRManager);
+  mCanvasRenderer = MakeUnique<WebRenderCanvasRendererAsync>(mManager);
   return mCanvasRenderer.get();
 }
 

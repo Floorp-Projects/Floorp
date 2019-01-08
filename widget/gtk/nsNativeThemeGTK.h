@@ -34,7 +34,7 @@ class nsNativeThemeGTK final : private nsNativeTheme,
       mozilla::wr::DisplayListBuilder& aBuilder,
       mozilla::wr::IpcResourceUpdateQueue& aResources,
       const mozilla::layers::StackingContextHelper& aSc,
-      mozilla::layers::WebRenderLayerManager* aManager, nsIFrame* aFrame,
+      mozilla::layers::RenderRootStateManager* aManager, nsIFrame* aFrame,
       StyleAppearance aAppearance, const nsRect& aRect) override;
 
   MOZ_MUST_USE LayoutDeviceIntMargin

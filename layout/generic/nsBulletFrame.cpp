@@ -16,7 +16,7 @@
 #include "mozilla/gfx/PathHelpers.h"
 #include "mozilla/layers/LayersMessages.h"
 #include "mozilla/layers/StackingContextHelper.h"
-#include "mozilla/layers/WebRenderLayerManager.h"
+#include "mozilla/layers/RenderRootStateManager.h"
 #include "mozilla/layers/WebRenderMessages.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Move.h"
@@ -216,7 +216,7 @@ class BulletRenderer final {
       nsDisplayItem* aItem, wr::DisplayListBuilder& aBuilder,
       wr::IpcResourceUpdateQueue& aResources,
       const layers::StackingContextHelper& aSc,
-      mozilla::layers::WebRenderLayerManager* aManager,
+      mozilla::layers::RenderRootStateManager* aManager,
       nsDisplayListBuilder* aDisplayListBuilder);
 
   ImgDrawResult Paint(gfxContext& aRenderingContext, nsPoint aPt,
@@ -256,21 +256,21 @@ class BulletRenderer final {
       nsDisplayItem* aItem, wr::DisplayListBuilder& aBuilder,
       wr::IpcResourceUpdateQueue& aResources,
       const layers::StackingContextHelper& aSc,
-      mozilla::layers::WebRenderLayerManager* aManager,
+      mozilla::layers::RenderRootStateManager* aManager,
       nsDisplayListBuilder* aDisplayListBuilder);
 
   bool CreateWebRenderCommandsForPath(
       nsDisplayItem* aItem, wr::DisplayListBuilder& aBuilder,
       wr::IpcResourceUpdateQueue& aResources,
       const layers::StackingContextHelper& aSc,
-      mozilla::layers::WebRenderLayerManager* aManager,
+      mozilla::layers::RenderRootStateManager* aManager,
       nsDisplayListBuilder* aDisplayListBuilder);
 
   bool CreateWebRenderCommandsForText(
       nsDisplayItem* aItem, wr::DisplayListBuilder& aBuilder,
       wr::IpcResourceUpdateQueue& aResources,
       const layers::StackingContextHelper& aSc,
-      mozilla::layers::WebRenderLayerManager* aManager,
+      mozilla::layers::RenderRootStateManager* aManager,
       nsDisplayListBuilder* aDisplayListBuilder);
 
  private:
@@ -313,7 +313,7 @@ ImgDrawResult BulletRenderer::CreateWebRenderCommands(
     nsDisplayItem* aItem, wr::DisplayListBuilder& aBuilder,
     wr::IpcResourceUpdateQueue& aResources,
     const layers::StackingContextHelper& aSc,
-    mozilla::layers::WebRenderLayerManager* aManager,
+    mozilla::layers::RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) {
   if (IsImageType()) {
     return CreateWebRenderCommandsForImage(aItem, aBuilder, aResources, aSc,
@@ -415,7 +415,7 @@ ImgDrawResult BulletRenderer::CreateWebRenderCommandsForImage(
     nsDisplayItem* aItem, wr::DisplayListBuilder& aBuilder,
     wr::IpcResourceUpdateQueue& aResources,
     const layers::StackingContextHelper& aSc,
-    mozilla::layers::WebRenderLayerManager* aManager,
+    mozilla::layers::RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) {
   MOZ_RELEASE_ASSERT(IsImageType());
   MOZ_RELEASE_ASSERT(mImage);
@@ -439,7 +439,8 @@ ImgDrawResult BulletRenderer::CreateWebRenderCommandsForImage(
 
   RefPtr<layers::ImageContainer> container;
   ImgDrawResult drawResult = mImage->GetImageContainerAtSize(
-      aManager, decodeSize, svgContext, flags, getter_AddRefs(container));
+      aManager->LayerManager(), decodeSize, svgContext, flags,
+      getter_AddRefs(container));
   if (!container) {
     return drawResult;
   }
@@ -465,7 +466,7 @@ bool BulletRenderer::CreateWebRenderCommandsForPath(
     nsDisplayItem* aItem, wr::DisplayListBuilder& aBuilder,
     wr::IpcResourceUpdateQueue& aResources,
     const layers::StackingContextHelper& aSc,
-    mozilla::layers::WebRenderLayerManager* aManager,
+    mozilla::layers::RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) {
   MOZ_ASSERT(IsPathType());
   wr::LayoutRect dest = wr::ToRoundedLayoutRect(mPathRect);
@@ -511,7 +512,7 @@ bool BulletRenderer::CreateWebRenderCommandsForText(
     nsDisplayItem* aItem, wr::DisplayListBuilder& aBuilder,
     wr::IpcResourceUpdateQueue& aResources,
     const layers::StackingContextHelper& aSc,
-    mozilla::layers::WebRenderLayerManager* aManager,
+    mozilla::layers::RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) {
   MOZ_ASSERT(IsTextType());
 
@@ -550,7 +551,7 @@ class nsDisplayBullet final : public nsDisplayItem {
   virtual bool CreateWebRenderCommands(
       mozilla::wr::DisplayListBuilder& aBuilder,
       mozilla::wr::IpcResourceUpdateQueue&, const StackingContextHelper& aSc,
-      mozilla::layers::WebRenderLayerManager* aManager,
+      mozilla::layers::RenderRootStateManager* aManager,
       nsDisplayListBuilder* aDisplayListBuilder) override;
 
   virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
@@ -603,7 +604,7 @@ class nsDisplayBullet final : public nsDisplayItem {
 bool nsDisplayBullet::CreateWebRenderCommands(
     wr::DisplayListBuilder& aBuilder, wr::IpcResourceUpdateQueue& aResources,
     const StackingContextHelper& aSc,
-    mozilla::layers::WebRenderLayerManager* aManager,
+    mozilla::layers::RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) {
   // FIXME: avoid needing to make this target if we're drawing text
   // (non-trivial refactor of all this code)

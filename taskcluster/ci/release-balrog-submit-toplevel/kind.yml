@@ -53,7 +53,7 @@ jobs:
                   by-release-type:
                      beta: [32]
                      release(-rc)?: [145]
-                     esr60: [724]
+                     esr60: [806]
                      default: []
          rules-to-update:
             by-release-type:

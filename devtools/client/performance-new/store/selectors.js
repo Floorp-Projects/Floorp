@@ -8,16 +8,13 @@ const getRecordingUnexpectedlyStopped = state => state.recordingUnexpectedlyStop
 const getIsSupportedPlatform = state => state.isSupportedPlatform;
 const getInterval = state => state.interval;
 const getEntries = state => state.entries;
-const getDuration = state => state.duration;
 const getFeatures = state => state.features;
 const getThreads = state => state.threads;
 const getThreadsString = state => getThreads(state).join(",");
-const getActorVersion = state => state.actorVersion;
 
 const getRecordingSettings = state => {
   return {
     entries: getEntries(state),
-    duration: getDuration(state),
     interval: getInterval(state),
     features: getFeatures(state),
     threads: getThreads(state),
@@ -43,7 +40,6 @@ module.exports = {
   getIsSupportedPlatform,
   getInterval,
   getEntries,
-  getDuration,
   getFeatures,
   getThreads,
   getThreadsString,
@@ -52,5 +48,4 @@ module.exports = {
   getPerfFront,
   getReceiveProfileFn,
   getSetRecordingPreferencesFn,
-  getActorVersion,
 };

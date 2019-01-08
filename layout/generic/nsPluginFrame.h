@@ -62,7 +62,7 @@ class nsPluginFrame final : public nsFrame,
   typedef mozilla::layers::LayerManager LayerManager;
   typedef mozilla::layers::ImageContainer ImageContainer;
   typedef mozilla::layers::StackingContextHelper StackingContextHelper;
-  typedef mozilla::layers::WebRenderLayerManager WebRenderLayerManager;
+  typedef mozilla::layers::RenderRootStateManager RenderRootStateManager;
   typedef mozilla::layers::WebRenderParentCommand WebRenderParentCommand;
   typedef mozilla::ContainerLayerParameters ContainerLayerParameters;
 
@@ -223,12 +223,12 @@ class nsPluginFrame final : public nsFrame,
    */
   bool WantsToHandleWheelEventAsDefaultAction() const;
 
-  bool CreateWebRenderCommands(nsDisplayItem* aItem,
-                               mozilla::wr::DisplayListBuilder& aBuilder,
-                               mozilla::wr::IpcResourceUpdateQueue& aResources,
-                               const StackingContextHelper& aSc,
-                               mozilla::layers::WebRenderLayerManager* aManager,
-                               nsDisplayListBuilder* aDisplayListBuilder);
+  bool CreateWebRenderCommands(
+      nsDisplayItem* aItem, mozilla::wr::DisplayListBuilder& aBuilder,
+      mozilla::wr::IpcResourceUpdateQueue& aResources,
+      const StackingContextHelper& aSc,
+      mozilla::layers::RenderRootStateManager* aManager,
+      nsDisplayListBuilder* aDisplayListBuilder);
 
  protected:
   explicit nsPluginFrame(ComputedStyle* aStyle);
@@ -397,7 +397,7 @@ class nsDisplayPlugin final : public nsDisplayItem {
       mozilla::wr::DisplayListBuilder& aBuilder,
       mozilla::wr::IpcResourceUpdateQueue& aResources,
       const StackingContextHelper& aSc,
-      mozilla::layers::WebRenderLayerManager* aManager,
+      mozilla::layers::RenderRootStateManager* aManager,
       nsDisplayListBuilder* aDisplayListBuilder) override;
 };
 

@@ -147,7 +147,7 @@ class WebRenderCommandBuilder {
       if (data) {
         data->RemoveFromTable();
       }
-      data = new T(mManager, aItem);
+      data = new T(GetRenderRootStateManager(), aItem);
       mWebRenderUserDatas.PutEntry(data);
       if (aOutIsRecycled) {
         *aOutIsRecycled = false;
@@ -171,6 +171,8 @@ class WebRenderCommandBuilder {
   WebRenderLayerManager* mManager;
 
  private:
+  RenderRootStateManager* GetRenderRootStateManager();
+
   ClipManager mClipManager;
 
   // We use this as a temporary data structure while building the mScrollData

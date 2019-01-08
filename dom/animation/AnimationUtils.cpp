@@ -6,16 +6,16 @@
 
 #include "AnimationUtils.h"
 
+#include "mozilla/dom/Document.h"
+#include "mozilla/dom/KeyframeEffect.h"
+#include "mozilla/EffectSet.h"
+#include "mozilla/Preferences.h"
 #include "nsDebug.h"
 #include "nsAtom.h"
 #include "nsIContent.h"
-#include "mozilla/dom/Document.h"
 #include "nsGlobalWindow.h"
 #include "nsString.h"
 #include "xpcpublic.h"  // For xpc::NativeGlobal
-#include "mozilla/EffectSet.h"
-#include "mozilla/dom/KeyframeEffect.h"
-#include "mozilla/Preferences.h"
 
 using namespace mozilla::dom;
 

@@ -5,7 +5,7 @@
 const { PureComponent, createFactory } = require("devtools/client/shared/vendor/react");
 const { div, details, summary, label, input, span, h2, section } = require("devtools/client/shared/vendor/react-dom-factories");
 const Range = createFactory(require("devtools/client/performance-new/components/Range"));
-const { makeExponentialScale, formatFileSize, calculateOverhead, INFINITE_WINDOW_LENGTH } = require("devtools/client/performance-new/utils");
+const { makeExponentialScale, formatFileSize, calculateOverhead } = require("devtools/client/performance-new/utils");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const actions = require("devtools/client/performance-new/store/actions");
@@ -164,16 +164,13 @@ class Settings extends PureComponent {
       // StateProps
       interval: PropTypes.number.isRequired,
       entries: PropTypes.number.isRequired,
-      duration: PropTypes.number.isRequired,
       features: PropTypes.array.isRequired,
       threads: PropTypes.array.isRequired,
       threadsString: PropTypes.string.isRequired,
-      actorVersion: PropTypes.string.isRequired,
 
       // DispatchProps
       changeInterval: PropTypes.func.isRequired,
       changeEntries: PropTypes.func.isRequired,
-      changeDuration: PropTypes.func.isRequired,
       changeFeatures: PropTypes.func.isRequired,
       changeThreads: PropTypes.func.isRequired,
     };
@@ -194,7 +191,6 @@ class Settings extends PureComponent {
 
     this._intervalExponentialScale = makeExponentialScale(0.01, 100);
     this._entriesExponentialScale = makeExponentialScale(100000, 100000000);
-    this._durationExponentialScale = makeExponentialScale(1, INFINITE_WINDOW_LENGTH);
   }
 
   _renderNotches() {
@@ -395,20 +391,8 @@ class Settings extends PureComponent {
         display: _intervalTextDisplay,
         onChange: this.props.changeInterval,
       }),
-      // Firefox 65 introduced a duration-based buffer with actorVersion 1.
-      // We are hiding the duration range if the actor is older. Fx65+
-      this.props.actorVersion > 0
-        ? Range({
-          label: "Window length:",
-          value: this.props.duration,
-          id: "perf-range-duration",
-          scale: this._durationExponentialScale,
-          display: _durationTextDisplay,
-          onChange: this.props.changeDuration,
-        })
-        : null,
       Range({
-        label: "Max buffer size:",
+        label: "Buffer size:",
         value: this.props.entries,
         id: "perf-range-entries",
         scale: this._entriesExponentialScale,
@@ -454,31 +438,19 @@ function _entriesTextDisplay(value) {
   return formatFileSize(value * PROFILE_ENTRY_SIZE);
 }
 
-/**
- * Format the duration number for display.
- * @param {number} value
- * @return {string}
- */
-function _durationTextDisplay(value) {
-  return value === INFINITE_WINDOW_LENGTH ? `∞` : `${value} sec`;
-}
-
 function mapStateToProps(state) {
   return {
     interval: selectors.getInterval(state),
     entries: selectors.getEntries(state),
-    duration: selectors.getDuration(state),
     features: selectors.getFeatures(state),
     threads: selectors.getThreads(state),
     threadsString: selectors.getThreadsString(state),
-    actorVersion: selectors.getActorVersion(state),
   };
 }
 
 const mapDispatchToProps = {
   changeInterval: actions.changeInterval,
   changeEntries: actions.changeEntries,
-  changeDuration: actions.changeDuration,
   changeFeatures: actions.changeFeatures,
   changeThreads: actions.changeThreads,
 };

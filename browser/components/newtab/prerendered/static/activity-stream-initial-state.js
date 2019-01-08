@@ -71,7 +71,9 @@ window.gActivityStreamPrerenderedState = {
       "enabled": false,
       "layout_endpoint": ""
     },
-    "layout": []
+    "layout": [],
+    "lastUpdated": null,
+    "feeds": {}
   },
   "Search": {
     "focus": false,

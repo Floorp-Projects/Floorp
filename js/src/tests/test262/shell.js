@@ -590,3 +590,8 @@ function $DONE(failure) {
     else
         reportCompare(0, 0);
 }
+
+// Some tests in test262 leave promise rejections unhandled.
+if ("ignoreUnhandledRejections" in this) {
+  ignoreUnhandledRejections();
+}

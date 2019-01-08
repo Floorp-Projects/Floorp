@@ -4,7 +4,6 @@ function setup_test_preference(enableScript) {
   return SpecialPowers.pushPrefEnv({"set": [
     ["media.autoplay.default", 1],
     ["media.autoplay.enabled.user-gestures-needed", true],
-    ["media.autoplay.ask-permission", true],
     ["media.autoplay.allow-extension-background-pages", enableScript],
   ]});
 }

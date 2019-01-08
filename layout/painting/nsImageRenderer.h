@@ -17,7 +17,7 @@ namespace mozilla {
 namespace layers {
 class StackingContextHelper;
 class WebRenderParentCommand;
-class WebRenderLayerManager;
+class RenderRootStateManager;
 }  // namespace layers
 
 namespace wr {
@@ -200,7 +200,7 @@ class nsImageRenderer {
       nsPresContext* aPresContext, mozilla::wr::DisplayListBuilder& aBuilder,
       mozilla::wr::IpcResourceUpdateQueue& aResource,
       const mozilla::layers::StackingContextHelper& aSc,
-      mozilla::layers::WebRenderLayerManager* aManager, nsDisplayItem* aItem,
+      mozilla::layers::RenderRootStateManager* aManager, nsDisplayItem* aItem,
       const nsRect& aDest, const nsRect& aFill, const nsPoint& aAnchor,
       const nsRect& aDirty, const nsSize& aRepeatSize, float aOpacity);
 
@@ -280,7 +280,7 @@ class nsImageRenderer {
       nsPresContext* aPresContext, mozilla::wr::DisplayListBuilder& aBuilder,
       mozilla::wr::IpcResourceUpdateQueue& aResources,
       const mozilla::layers::StackingContextHelper& aSc,
-      mozilla::layers::WebRenderLayerManager* aManager, nsDisplayItem* aItem,
+      mozilla::layers::RenderRootStateManager* aManager, nsDisplayItem* aItem,
       const nsRect& aDirtyRect, const nsRect& aDest, const nsRect& aFill,
       const nsPoint& aAnchor, const nsSize& aRepeatSize,
       const mozilla::CSSIntRect& aSrc, float aOpacity = 1.0);

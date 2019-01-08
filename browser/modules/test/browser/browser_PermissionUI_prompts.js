@@ -30,14 +30,7 @@ add_task(async function test_midi_permission_prompt() {
   await testPrompt(PermissionUI.MIDIPermissionPrompt);
 });
 
-// Tests that AutoplayPermissionPrompt works as expected
-add_task(async function test_autoplay_permission_prompt() {
-  Services.prefs.setIntPref("media.autoplay.default", Ci.nsIAutoplay.PROMPT);
-  await testPrompt(PermissionUI.AutoplayPermissionPrompt);
-  Services.prefs.clearUserPref("media.autoplay.default");
-});
-
-// Tests that AutoplayPermissionPrompt works as expected
+// Tests that StoragePermissionPrompt works as expected
 add_task(async function test_storage_access_permission_prompt() {
   Services.prefs.setBoolPref("dom.storage_access.auto_grants", false);
   await testPrompt(PermissionUI.StorageAccessPermissionPrompt);
