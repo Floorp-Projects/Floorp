@@ -28,11 +28,6 @@ const Types = exports.__TypesForTests = [
     front: "devtools/shared/fronts/addon/addons",
   },
   {
-    types: ["addonConsole"],
-    spec: "devtools/shared/specs/addon/console",
-    front: null,
-  },
-  {
     types: ["webExtension"],
     spec: "devtools/shared/specs/addon/webextension",
     front: null,
