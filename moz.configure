@@ -119,6 +119,7 @@ def debug_rust():
 set_config('MOZ_DEBUG_RUST', debug_rust)
 set_define('MOZ_DEBUG_RUST', debug_rust)
 
+include('build/moz.configure/pgo.configure')
 include('build/moz.configure/pkg.configure')
 # Make this assignment here rather than in pkg.configure to avoid
 # requiring this file in unit tests.
