@@ -57,12 +57,18 @@
 
 .panel-footer > button {
   -moz-appearance: none;
+  border-top: 1px solid var(--panel-separator-color);
   /* !important overrides :hover and :active colors from button.css: */
   color: inherit !important;
 }
 
 .panel-footer > button[disabled] {
   color: var(--panel-disabled-color) !important;
+}
+
+.panel-footer > button:-moz-focusring {
+  outline: 1px dotted;
+  outline-offset: -3px;
 }
 
 .panel-footer > button:not([disabled]):hover {

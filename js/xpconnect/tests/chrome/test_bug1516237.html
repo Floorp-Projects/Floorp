@@ -30,11 +30,10 @@ function go() {
     // the current chrome compartment - in that case we nuke the CCW to the
     // waiver.
     frame.onload = function() {
-        var sameCompartment =
-            Cu.getClassName(w.Math, /* unwrap = */ false) === "Math";
-        is(sameCompartment,
-           Cu.isDeadWrapper(ccwToWaiver),
-           "Nuked CCW if same-compartment window");
+        is(Cu.getClassName(w.Math, /* unwrap = */ false), "Math",
+           "Window must be in same system compartment");
+        ok(Cu.isDeadWrapper(ccwToWaiver),
+           "Nuked CCW to same-compartment window");
         SimpleTest.finish();
     };
     frame.src = "file_empty.html";

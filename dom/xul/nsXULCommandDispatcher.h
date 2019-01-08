@@ -51,7 +51,7 @@ class nsXULCommandDispatcher : public nsIDOMXULCommandDispatcher,
   mozilla::dom::Element* GetRootFocusedContentAndWindow(
       nsPIDOMWindowOuter** aWindow);
 
-  RefPtr<Document> mDocument;
+  RefPtr<mozilla::dom::Document> mDocument;
 
   class Updater {
    public:

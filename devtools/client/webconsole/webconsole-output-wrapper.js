@@ -156,6 +156,13 @@ WebConsoleOutputWrapper.prototype = {
           }
           return null;
         },
+
+        getJsTermTooltipAnchor: () => {
+          if (jstermCodeMirror) {
+            return hud.jsterm.node.querySelector(".CodeMirror-cursor");
+          }
+          return hud.jsterm.completeNode;
+        },
       };
 
       // Set `openContextMenu` this way so, `serviceContainer` variable
@@ -303,14 +310,16 @@ WebConsoleOutputWrapper.prototype = {
       });
 
       const {prefs} = store.getState();
+      const jstermCodeMirror = prefs.jstermCodeMirror
+        && !Services.appinfo.accessibilityEnabled;
+
       const app = App({
         attachRefToHud,
         serviceContainer,
         hud,
         onFirstMeaningfulPaint: resolve,
         closeSplitConsole: this.closeSplitConsole.bind(this),
-        jstermCodeMirror: prefs.jstermCodeMirror
-          && !Services.appinfo.accessibilityEnabled,
+        jstermCodeMirror,
       });
 
       // Render the root Application component.

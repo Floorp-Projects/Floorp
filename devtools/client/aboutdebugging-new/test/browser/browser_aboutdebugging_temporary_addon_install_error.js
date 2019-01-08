@@ -1,12 +1,10 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-/* import-globals-from head-addons-script.js */
-
 "use strict";
 
-// Load addons helpers
-Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "head-addons-script.js", this);
+/* import-globals-from helper-addons.js */
+Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "helper-addons.js", this);
 
 /**
  * Test that the installation error messages are displayed when installing temporary

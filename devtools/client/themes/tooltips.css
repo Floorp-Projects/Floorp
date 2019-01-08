@@ -655,3 +655,46 @@
   background-image: url("chrome://devtools/skin/images/close.svg");
   margin: -6px 0 0 -6px;
 }
+
+/* Tooltip: Invoke getter confirm Tooltip */
+
+.invoke-confirm {
+  font-family: var(--monospace-font-family);
+  color: var(--theme-popup-color);
+  border: 1px solid rgba(0,0,0, 0.1);
+  max-width: 400px;
+}
+
+.invoke-confirm .tooltip-panel {
+  display: flex;
+  flex-direction: column;
+}
+
+.invoke-confirm .confirm-label {
+  margin: 0;
+  padding: 8px;
+  flex-grow: 1;
+}
+
+.invoke-confirm .emphasized {
+  font-weight: bold;
+  overflow-wrap: break-word;
+}
+
+.invoke-confirm .confirm-button {
+  background-color: var(--theme-selection-background);
+  color: white;
+  border: none;
+  padding: 8px;
+  display: block;
+  width: 100%;
+  text-align: left;
+  font-family: var(--monospace-font-family);
+}
+
+/* The button already has a "selected" style, we can remove the focus rings. */
+.confirm-button:-moz-focusring,
+.confirm-button::-moz-focus-inner {
+  outline: none;
+  border: none;
+}

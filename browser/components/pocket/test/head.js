@@ -46,6 +46,6 @@ function promisePocketReset() {
 function checkElements(expectPresent, l) {
   for (let id of l) {
     let el = document.getElementById(id) || gNavToolbox.palette.querySelector("#" + id);
-    is(!!el, expectPresent, "element " + id + (expectPresent ? " is" : " is not") + " present");
+    is(!!el && !el.hidden, expectPresent, "element " + id + (expectPresent ? " is" : " is not") + " present");
   }
 }
