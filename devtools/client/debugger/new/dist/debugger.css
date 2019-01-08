@@ -2229,6 +2229,10 @@ menuseparator {
   overflow: auto;
 }
 
+.source-outline-panel.has-root > div {
+  height: 100%;
+}
+
 .sources-list .managed-tree .tree .node .img.blackBox {
   mask: url("resource://devtools/client/debugger/new/images/blackBox.svg") no-repeat;
   mask-size: 100%;
