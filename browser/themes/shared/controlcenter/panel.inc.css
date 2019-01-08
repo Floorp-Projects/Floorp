@@ -114,7 +114,7 @@
   background-size: 16px, auto;
   -moz-context-properties: fill;
   fill: currentColor;
-  color: inherit;
+  color: inherit !important; /* !important overrides :hover and :active:hover colors from button.css on Mac and Linux */
 }
 
 .identity-popup-expander:-moz-locale-dir(ltr) {
