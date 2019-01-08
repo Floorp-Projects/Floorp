@@ -96,7 +96,7 @@ void PendingAnimationTracker::TriggerPendingAnimationsNow() {
   mHasPlayPendingGeometricAnimations = CheckState::Absent;
 }
 
-static bool IsTransition(const Animation& aAnimation) {
+static bool IsTransition(const dom::Animation& aAnimation) {
   const dom::CSSTransition* transition = aAnimation.AsCSSTransition();
   return transition && transition->IsTiedToMarkup();
 }
