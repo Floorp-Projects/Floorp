@@ -577,12 +577,13 @@ nsresult MediaEngineWebRTCMicrophoneSource::Start(
   RefPtr<MediaEngineWebRTCMicrophoneSource> that = this;
   NS_DispatchToMainThread(media::NewRunnableFrom(
       [that, deviceID, stream = mStream, track = mTrackID]() {
-        if (MediaStreamGraphImpl* graph = stream->GraphImpl()) {
-          graph->AppendMessage(MakeUnique<StartStopMessage>(
-              that->mInputProcessing, StartStopMessage::Start));
-          stream->SetPullingEnabled(track, true);
+        if (stream->IsDestroyed()) {
+          return NS_OK;
         }
 
+        stream->GraphImpl()->AppendMessage(MakeUnique<StartStopMessage>(
+            that->mInputProcessing, StartStopMessage::Start));
+        stream->SetPullingEnabled(track, true);
         stream->OpenAudioInput(deviceID, that->mInputProcessing);
 
         return NS_OK;
@@ -612,12 +613,13 @@ nsresult MediaEngineWebRTCMicrophoneSource::Stop(
   RefPtr<MediaEngineWebRTCMicrophoneSource> that = this;
   NS_DispatchToMainThread(
       media::NewRunnableFrom([that, stream = mStream, track = mTrackID]() {
-        if (MediaStreamGraphImpl* graph = stream->GraphImpl()) {
-          stream->SetPullingEnabled(track, false);
-          graph->AppendMessage(MakeUnique<StartStopMessage>(
-              that->mInputProcessing, StartStopMessage::Stop));
+        if (stream->IsDestroyed()) {
+          return NS_OK;
         }
 
+        stream->SetPullingEnabled(track, false);
+        stream->GraphImpl()->AppendMessage(MakeUnique<StartStopMessage>(
+            that->mInputProcessing, StartStopMessage::Stop));
         CubebUtils::AudioDeviceID deviceID = that->mDeviceInfo->DeviceID();
         Maybe<CubebUtils::AudioDeviceID> id = Some(deviceID);
         stream->CloseAudioInput(id, that->mInputProcessing);
