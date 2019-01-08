@@ -9,7 +9,7 @@
     </style>
   </head>
   <body onload="start()">
-    <div onfocus="done()" contenteditable>foo<span></span>bar</div>
+    <div onfocus="setTimeout(done, 0)" contenteditable>foo<span></span>bar</div>
     <script>
       var div = document.querySelector("div");
       function start() {
