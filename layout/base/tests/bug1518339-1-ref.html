@@ -1,0 +1,16 @@
+<!doctype html>
+<html class="reftest-wait">
+<title>Test reference</title>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<div contenteditable="true">
+  Can you edit <b>me</b>?
+</div>
+<script>
+SimpleTest.waitForFocus(function() {
+  const editable = document.querySelector('div[contenteditable="true"]');
+  editable.focus();
+  synthesizeMouseAtCenter(editable.querySelector("b"), {});
+  setTimeout(() => document.documentElement.removeAttribute("class"), 0);
+});
+</script>

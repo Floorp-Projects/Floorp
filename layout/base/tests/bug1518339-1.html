@@ -1,0 +1,23 @@
+<!doctype html>
+<html class="reftest-wait">
+<title>contenteditable is selectable by default, even with a user-select: none ancestor</title>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<style>
+  :root {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    user-select: none;
+  }
+</style>
+<div contenteditable="true">
+  Can you edit <b>me</b>?
+</div>
+<script>
+SimpleTest.waitForFocus(function() {
+  const editable = document.querySelector('div[contenteditable="true"]');
+  editable.focus();
+  synthesizeMouseAtCenter(editable.querySelector("b"), {});
+  setTimeout(() => document.documentElement.removeAttribute("class"), 0);
+});
+</script>
