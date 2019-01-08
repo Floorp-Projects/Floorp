@@ -1,0 +1,100 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+version: 1
+policy:
+  pullRequests: public
+tasks:
+  - $if: 'tasks_for == "cron"'
+    then:
+      $let:
+        decision_task_id: {$eval: as_slugid("decision_task")}
+        expires_in: {$fromNow: '1 year'}
+        repository: ${event.repository.clone_url}
+        scheduler_id: focus-nightly-sched
+        is_mozilla_mobile_repo:
+          $eval: event.repository.clone_url == 'https://github.com/mozilla-mobile/fenix'
+        track:
+          $if: event.repository.clone_url == 'https://github.com/mozilla-mobile/fenix'
+          then: 'nightly'
+          else: 'staging-nightly'
+      in:
+        taskId: ${decision_task_id}
+        taskGroupId: ${decision_task_id}  # Must be explicit because of Chain of Trust
+        created: {$fromNow: ''}
+        deadline: {$fromNow: '2 hours'}
+        expires: ${expires_in}
+        schedulerId: ${scheduler_id}    # Must be explicit because of Chain of Trust
+        provisionerId: aws-provisioner-v1
+        workerType: gecko-focus   # This workerType has ChainOfTrust enabled
+        requires: all-completed   # Must be explicit because of Chain of Trust
+        priority: medium
+        retries: 5
+        scopes:
+          $flatten:
+            - queue:scheduler-id:${scheduler_id}
+            - queue:create-task:highest:aws-provisioner-v1/gecko-focus
+            - project:mobile:fenix:releng:signing:format:autograph_fenix
+            - $if: is_mozilla_mobile_repo
+              then:
+                - queue:create-task:highest:scriptworker-prov-v1/mobile-signing-v1
+                - queue:create-task:highest:scriptworker-prov-v1/mobile-pushapk-v1
+                - project:mobile:fenix:releng:signing:cert:release-signing
+                - project:mobile:fenix:releng:googleplay:product:fenix
+                - queue:route:index.project.mobile.fenix.signed-nightly.*
+              else:
+                - queue:create-task:highest:scriptworker-prov-v1/mobile-signing-dep-v1
+                - queue:create-task:highest:scriptworker-prov-v1/mobile-pushapk-dep-v1
+                - project:mobile:fenix:releng:signing:cert:dep-signing
+                - project:mobile:fenix:releng:googleplay:product:fenix:dep
+                - queue:route:index.project.mobile.fenix.staging-signed-nightly.*
+        payload:
+          maxRunTime: 600   # Decision should remain fast enough to schedule a handful of tasks
+          image: mozillamobile/fenix:1.3
+          features:
+            taskclusterProxy: true
+            chainOfTrust: true
+          env:
+            TASK_ID: ${decision_task_id}
+            SCHEDULER_ID: ${scheduler_id}
+            MOBILE_HEAD_REPOSITORY: ${repository}
+            MOBILE_HEAD_BRANCH: ${event.release.target_commitish}
+            MOBILE_HEAD_REV: ${event.release.tag_name}
+            MOBILE_TRIGGERED_BY: ${event.sender.login}
+          command:
+            - /bin/bash
+            - --login
+            - -cx
+            - >-
+              cd ..
+              && git clone ${repository} repository
+              && cd repository
+              && pip install arrow
+              && python tools/taskcluster/decision_task_nightly.py \
+                --track ${track} \
+                --commit \
+                --output /opt/repository/app/build/outputs/apk \
+                --apk arm/release/app-arm-release-unsigned.apk \
+                --apk x86/release/app-x86-release-unsigned.apk \
+                --date ${now}
+          artifacts:
+            public/task-graph.json:
+              type: file
+              path: /opt/repository/task-graph.json
+              expires: ${expires_in}
+            public/actions.json:
+              type: file
+              path: /opt/repository/actions.json
+              expires: ${expires_in}
+            public/parameters.yml:
+              type: file
+              path: /opt/repository/parameters.yml
+              expires: ${expires_in}
+        extra:
+          cron: {$json: {$eval: 'cron'}}
+          tasks_for: ${tasks_for}
+        metadata:
+          name: Fenix Nightly Decision Task
+          description: Decision task scheduled by cron task [${cron.task_id}](https://tools.taskcluster.net/tasks/${cron.task_id})
+          owner: ${event.sender.login}@users.noreply.github.com
+          source: ${repository}/raw/${event.release.tag_name}/.taskcluster.yml
