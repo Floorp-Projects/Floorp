@@ -629,7 +629,7 @@ void Statistics::formatJsonDescription(uint64_t timestamp,
                                        JSONPrinter& json) const {
   // If you change JSON properties here, please update:
   // Telemetry ping code:
-  //   toolkit/components/telemetry/GCTelemetry.jsm
+  //   toolkit/components/telemetry/other/GCTelemetry.jsm
   // Telemetry documentation:
   //   toolkit/components/telemetry/docs/data/main-ping.rst
   // Telemetry tests:
@@ -693,7 +693,7 @@ void Statistics::formatJsonSliceDescription(unsigned i, const SliceData& slice,
                                             JSONPrinter& json) const {
   // If you change JSON properties here, please update:
   // Telemetry ping code:
-  //   toolkit/components/telemetry/GCTelemetry.jsm
+  //   toolkit/components/telemetry/other/GCTelemetry.jsm
   // Telemetry documentation:
   //   toolkit/components/telemetry/docs/data/main-ping.rst
   // Telemetry tests:
