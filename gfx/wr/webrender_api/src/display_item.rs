@@ -606,6 +606,7 @@ pub enum MixBlendMode {
     Luminosity = 15,
 }
 
+#[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Deserialize, Serialize)]
 pub enum FilterOp {
     /// Filter that does no transformation of the colors, needed for
