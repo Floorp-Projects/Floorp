@@ -497,22 +497,21 @@ impl ClipStore {
         &self.clip_node_instances[(node_range.first + index) as usize]
     }
 
-    // Notify the clip store that a new surface has been created.
-    // This means any clips from an earlier root should be collected rather
-    // than applied on the primitive itself.
-    pub fn push_surface(
-        &mut self,
-        spatial_node_index: SpatialNodeIndex,
-    ) {
+    /// Notify the clip store that a new raster root has been created.
+    ///
+    /// This means any clips from an earlier root should be collected rather than
+    /// applied on the primitive itself.
+    ///
+    /// This is sound because raster roots are necessarily reference frames,
+    /// which establish fixed-positioning containing blocks in CSS.
+    pub fn push_raster_root(&mut self, spatial_node_index: SpatialNodeIndex) {
         self.clip_node_collectors.push(
             ClipNodeCollector::new(spatial_node_index),
         );
     }
 
-    // Mark the end of a rendering surface.
-    pub fn pop_surface(
-        &mut self,
-    ) -> ClipNodeCollector {
+    /// Mark the end of a raster root.
+    pub fn pop_raster_root(&mut self) -> ClipNodeCollector {
         self.clip_node_collectors.pop().unwrap()
     }
 
