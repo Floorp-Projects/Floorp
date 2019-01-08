@@ -68,6 +68,7 @@ window.onload = function() {
     // called eval.
     const source = frame.script.source;
     const frame2 = frame.older;
+    const frame3 = frame2.older;
 
     ok(source.introductionType === "eval",
        "top frame's source was introduced by 'eval'");
@@ -78,16 +79,14 @@ window.onload = function() {
     ok(source.introductionScript.source.element === script2DO,
        "eval frame's introducer belongs to script2 element");
 
-    // The frame that called eval, in turn, should have no introduction
-    // information. (In the future, we certainly could point at the call
-    // that inserted the script element into the document; if that happens,
-    // we can update this test.)
+    // The frame that called eval, in turn, was introduced at the call that
+    // inserted the script element into the document.
     ok(frame2.script.source.introductionType === "scriptElement",
        "older frame has no introduction type");
-    ok(frame2.script.source.introductionScript === undefined,
-       "older frame has no introduction script");
-    ok(frame2.script.source.introductionOffset === undefined,
-       "older frame has no introduction offset");
+    ok(frame2.script.source.introductionScript === frame3.script,
+       "older frame has introduction script");
+    ok(frame2.script.source.introductionOffset === frame3.offset,
+       "older frame has introduction offset");
 
     SimpleTest.finish();
   }
