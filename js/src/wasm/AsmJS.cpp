@@ -24,6 +24,7 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Unused.h"
+#include "mozilla/Variant.h"
 
 #include <new>
 
@@ -70,6 +71,7 @@ using JS::SourceOwnership;
 using JS::SourceText;
 using mozilla::Abs;
 using mozilla::ArrayEqual;
+using mozilla::AsVariant;
 using mozilla::CeilingLog2;
 using mozilla::HashGeneric;
 using mozilla::IsNaN;
@@ -1928,7 +1930,7 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidator
 
     auto& ts = tokenStream();
     ErrorMetadata metadata;
-    if (ts.computeErrorMetadata(&metadata, offset)) {
+    if (ts.computeErrorMetadata(&metadata, AsVariant(offset))) {
       if (ts.anyCharsAccess().options().throwOnAsmJSValidationFailureOption) {
         ReportCompileError(cx_, std::move(metadata), nullptr, JSREPORT_ERROR,
                            JSMSG_USE_ASM_TYPE_FAIL, &args);
@@ -1941,9 +1943,9 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidator
         // If warning succeeds, no exception is set.  If warning fails,
         // an exception is set and execution will halt.  Thus it's safe
         // and correct to ignore the return value here.
-        Unused << ts.anyCharsAccess().compileWarning(
-            std::move(metadata), nullptr, JSREPORT_WARNING,
-            JSMSG_USE_ASM_TYPE_FAIL, &args);
+        Unused << ts.compileWarning(std::move(metadata), nullptr,
+                                    JSREPORT_WARNING, JSMSG_USE_ASM_TYPE_FAIL,
+                                    &args);
       }
     }
 
