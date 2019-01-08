@@ -257,21 +257,20 @@ function startEditingPref(row, arrayEntry) {
   gPrefInEdit = arrayEntry;
 
   let valueCell = row.querySelector("td.cell-value");
-  let oldValue = valueCell.textContent;
   valueCell.textContent = "";
   // The form is needed for the invalid-tooltip to appear.
   let form = document.createElement("form");
-  form.id = "form-" + name;
+  form.id = "form-edit";
   let inputField = document.createElement("input");
-  inputField.type = "text";
-  inputField.value = oldValue;
-  if (Services.prefs.getPrefType(name) == Services.prefs.PREF_INT) {
-    inputField.setAttribute("pattern", "-?[0-9]*");
-    document.l10n.setAttributes(inputField, "about-config-pref-input-number");
+  inputField.value = arrayEntry.value;
+  if (arrayEntry.value.constructor.name == "Number") {
+    inputField.type = "number";
+    inputField.required = true;
+    inputField.min = -2147483648;
+    inputField.max = 2147483647;
   } else {
-    document.l10n.setAttributes(inputField, "about-config-pref-input-string");
+    inputField.type = "text";
   }
-  inputField.placeholder = oldValue;
   form.appendChild(inputField);
   valueCell.appendChild(form);
 
@@ -280,7 +279,7 @@ function startEditingPref(row, arrayEntry) {
   let button = document.createElement("button");
   button.classList.add("primary", "button-save");
   document.l10n.setAttributes(button, "about-config-pref-save");
-  button.setAttribute("form", form.id);
+  button.setAttribute("form", "form-edit");
   buttonCell.appendChild(button);
 }
 
@@ -288,15 +287,11 @@ function endEditingPref(row) {
   let name = gPrefInEdit.name;
   let input = row.querySelector("td.cell-value").firstChild.firstChild;
   let newValue = input.value;
-
   if (Services.prefs.getPrefType(name) == Services.prefs.PREF_INT) {
-    let numberValue = parseInt(newValue);
-    if (!/^-?[0-9]*$/.test(newValue) || isNaN(numberValue)) {
-      input.setCustomValidity(input.title);
+    if (!input.reportValidity()) {
       return;
     }
-    newValue = numberValue;
-    Services.prefs.setIntPref(name, newValue);
+    Services.prefs.setIntPref(name, parseInt(newValue));
   } else {
     Services.prefs.setStringPref(name, newValue);
   }

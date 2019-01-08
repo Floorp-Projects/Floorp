@@ -118,10 +118,14 @@ add_task(async function test_modify() {
     Assert.ok(!row.valueInput);
     Assert.equal(row.value, Preferences.get("test.aboutconfig.modify.string"));
 
-    // Test regex check for Int pref.
-    intRow.valueInput.value += "a";
-    intRow.editColumnButton.click();
-    Assert.ok(!intRow.valueInput.checkValidity());
+    // Test validation of integer values.
+    for (let invalidValue of
+         ["", " ", "a", "1.5", "-2147483649", "2147483648"]) {
+      intRow.valueInput.value = invalidValue;
+      intRow.editColumnButton.click();
+      // We should still be in edit mode.
+      Assert.ok(intRow.valueInput);
+    }
 
     // Test correct saving and DOM-update.
     for (let prefName of [
