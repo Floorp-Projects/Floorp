@@ -26,7 +26,7 @@ let gElementToPrefMap = new WeakMap();
 let gPrefInEdit = null;
 
 /**
- * Substring that should be contained in the preference name.
+ * Lowercase substring that should be contained in the preference name.
  */
 let gFilterString = null;
 
@@ -81,7 +81,7 @@ class PrefRow {
   }
 
   get matchesFilter() {
-    return !gFilterString || this.name.includes(gFilterString);
+    return !gFilterString || this.name.toLowerCase().includes(gFilterString);
   }
 
   _setupElement() {
@@ -326,7 +326,7 @@ function filterPrefs() {
   gDeletedPrefs.clear();
 
   let searchName = document.getElementById("search").value.trim();
-  gFilterString = searchName;
+  gFilterString = searchName.toLowerCase();
   let prefArray = [...gExistingPrefs.values()];
   if (gFilterString) {
     prefArray = prefArray.filter(pref => pref.matchesFilter);
