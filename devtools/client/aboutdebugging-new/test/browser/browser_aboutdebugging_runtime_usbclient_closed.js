@@ -3,8 +3,8 @@
 
 "use strict";
 
-/* import-globals-from head-mocks.js */
-Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "head-mocks.js", this);
+/* import-globals-from helper-mocks.js */
+Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "helper-mocks.js", this);
 
 const RUNTIME_DEVICE_ID = "1234";
 const RUNTIME_DEVICE_NAME = "A device";

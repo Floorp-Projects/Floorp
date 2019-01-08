@@ -1,9 +1,9 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
-/* import-globals-from ../../../shared/test/shared-head.js */
-/* import-globals-from head.js */
 
 "use strict";
+
+/* import-globals-from head.js */
 
 /**
  * Temporarily flip all the preferences necessary for service worker testing.
@@ -19,6 +19,7 @@ async function enableServiceWorkerDebugging() {
   await pushPref("dom.ipc.processCount", 1);
   Services.ppmm.releaseCachedProcesses();
 }
+/* exported enableServiceWorkerDebugging */
 
 /**
  * Helper to listen once on a message sent using postMessage from the provided tab.
@@ -37,6 +38,7 @@ function onTabMessage(tab, message) {
     });
   });
 }
+/* exported onTabMessage */
 
 async function waitForServiceWorkerRunning(workerText, document) {
   await waitUntil(() => {
@@ -47,6 +49,7 @@ async function waitForServiceWorkerRunning(workerText, document) {
 
   return findDebugTargetByText(workerText, document);
 }
+/* exported waitForServiceWorkerRunning */
 
 /**
  * Helper to listen once on a message sent using postMessage from the provided tab.
@@ -65,6 +68,7 @@ function forwardServiceWorkerMessage(tab) {
     });
   });
 }
+/* exported forwardServiceWorkerMessage */
 
 /**
  * Unregister the service worker from the content page. The content page should define
@@ -82,3 +86,4 @@ async function unregisterServiceWorker(tab) {
     win.getRegistration().unregister();
   });
 }
+/* exported unregisterServiceWorker */
