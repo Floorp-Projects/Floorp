@@ -573,6 +573,7 @@ xmlns="http://www.w3.org/1999/xhtml"
            position="bottomcenter topright"
            tabspecific="true"
            noautofocus="true"
+           pocket-title="&saveToPocketCmd.label;"
            copyURL-title="&pageAction.copyLink.label;"
            emailLink-title="&emailPageCmd.label;"
            sendToDevice-notReadyTitle="&sendToDevice.syncNotReady.label;"
@@ -1041,9 +1042,11 @@ xmlns="http://www.w3.org/1999/xhtml"
                       onclick="BrowserPageActions.doCommandForAction(PageActions.actionForID('pocket'), event, this);">
                   <image id="pocket-button"
                          class="urlbar-icon"
+                         tooltiptext="&pocketButton.tooltiptext;"
                          role="button"/>
                   <hbox id="pocket-button-animatable-box">
                     <image id="pocket-button-animatable-image"
+                           tooltiptext="&pocketButton.tooltiptext;"
                            role="presentation"/>
                   </hbox>
                 </hbox>
