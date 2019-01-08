@@ -10,8 +10,7 @@
   outline-offset: -5px;
 }
 
-@notKeyfocus@ #downloadsSummary:-moz-focusring,
-@notKeyfocus@ .downloadsPanelFooterButton:-moz-focusring {
+@notKeyfocus@ #downloadsSummary:-moz-focusring {
   outline: none;
 }
 
