@@ -81,12 +81,9 @@ proc-macro = true
 
 ```rust
 extern crate proc_macro;
-extern crate syn;
-
-#[macro_use]
-extern crate quote;
 
 use proc_macro::TokenStream;
+use quote::quote;
 use syn::{parse_macro_input, DeriveInput};
 
 #[proc_macro_derive(MyMacro)]
@@ -105,7 +102,7 @@ pub fn my_macro(input: TokenStream) -> TokenStream {
 ```
 
 The [`heapsize`] example directory shows a complete working Macros 1.1
-implementation of a custom derive. It works on any Rust compiler \>=1.15.0. The
+implementation of a custom derive. It works on any Rust compiler 1.15+. The
 example derives a `HeapSize` trait which computes an estimate of the amount of
 heap memory owned by a value.
 
@@ -133,13 +130,6 @@ struct Demo<'a, T: ?Sized> {
 
 ## Spans and error reporting
 
-The [`heapsize2`] example directory is an extension of the `heapsize` example
-that demonstrates some of the hygiene and error reporting properties of Macros
-2.0. This example currently requires a nightly Rust compiler \>=1.24.0-nightly
-but we are working to stabilize all of the APIs involved.
-
-[`heapsize2`]: examples/heapsize2
-
 The token-based procedural macro API provides great control over where the
 compiler's error messages are displayed in user code. Consider the error the
 user sees if one of their field types does not implement `HeapSize`.
@@ -152,20 +142,8 @@ struct Broken {
 }
 ```
 
-In the Macros 1.1 string-based procedural macro world, the resulting error would
-point unhelpfully to the invocation of the derive macro and not to the actual
-problematic field.
-
-```
-error[E0599]: no method named `heap_size_of_children` found for type `std::thread::Thread` in the current scope
- --> src/main.rs:4:10
-  |
-4 | #[derive(HeapSize)]
-  |          ^^^^^^^^
-```
-
 By tracking span information all the way through the expansion of a procedural
-macro as shown in the `heapsize2` example, token-based macros in Syn are able to
+macro as shown in the `heapsize` example, token-based macros in Syn are able to
 trigger errors that directly pinpoint the source of the problem.
 
 ```
@@ -246,24 +224,21 @@ available.
 - **`proc-macro`** *(enabled by default)* — Runtime dependency on the dynamic
   library libproc_macro from rustc toolchain.
 
-## Nightly features
+## Proc macro shim
 
-By default Syn uses the [`proc-macro2`] crate to emulate the nightly compiler's
-procedural macro API in a stable way that works all the way back to Rust 1.15.0.
-This shim makes it possible to write code without regard for whether the current
-compiler version supports the features we use.
+Syn uses the [proc-macro2] crate to emulate the compiler's procedural macro API
+in a stable way that works all the way back to Rust 1.15.0. This shim makes it
+possible to write code without regard for whether the current compiler version
+supports the features we use.
 
-[`proc-macro2`]: https://github.com/alexcrichton/proc-macro2
+In general all of your code should be written against proc-macro2 rather than
+proc-macro. The one exception is in the signatures of procedural macro entry
+points, which are required by the language to use `proc_macro::TokenStream`.
 
-On a nightly compiler, to eliminate the stable shim and use the compiler's
-`proc-macro` directly, add `proc-macro2` to your Cargo.toml and set its
-`"nightly"` feature which bypasses the stable shim.
+The proc-macro2 crate will automatically detect and use the compiler's data
+structures on sufficiently new compilers.
 
-```toml
-[dependencies]
-syn = "0.15"
-proc-macro2 = { version = "0.4", features = ["nightly"] }
-```
+[proc-macro2]: https://github.com/alexcrichton/proc-macro2
 
 ## License
 
