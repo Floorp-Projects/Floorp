@@ -60,11 +60,6 @@ const WebExtensionActor = protocol.ActorClassWithSpec(webExtensionSpec, {
     }
   },
 
-  setOptions() {
-    // NOTE: not used anymore for webextensions, still used in the legacy addons,
-    // addon manager is currently going to call it automatically on every addon.
-  },
-
   reload() {
     return this.addon.reload().then(() => {
       return {};
