@@ -1,6 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
-/* import-globals-from ../../../../shared/test/shared-head.js */
+
 "use strict";
 
 /**
@@ -16,6 +16,7 @@ function enableRuntimeClientFactoryMock(mock) {
   setMockedModule(mock,
     "devtools/client/aboutdebugging-new/src/modules/runtime-client-factory");
 }
+/* exported enableRuntimeClientFactoryMock */
 
 /**
  * Update the loader to clear the mock entry for the runtime-client-factory module.
@@ -25,6 +26,7 @@ function disableRuntimeClientFactoryMock() {
   removeMockedModule(
     "devtools/client/aboutdebugging-new/src/modules/runtime-client-factory");
 }
+/* exported disableRuntimeClientFactoryMock */
 
 /**
  * Creates a simple mock version for runtime-client-factory, implementing all the expected
@@ -38,3 +40,4 @@ function createRuntimeClientFactoryMock() {
 
   return RuntimeClientFactoryMock;
 }
+/* exported createRuntimeClientFactoryMock */

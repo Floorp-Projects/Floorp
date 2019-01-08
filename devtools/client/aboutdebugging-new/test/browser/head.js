@@ -1,12 +1,11 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 /* eslint-env browser */
 /* eslint no-unused-vars: [2, {"vars": "local"}] */
 /* import-globals-from ../../../shared/test/shared-head.js */
-/* import-globals-from debug-target-pane_collapsibilities_head.js */
-
-"use strict";
 
 // Load the shared-head file first.
 Services.scriptloader.loadSubScript(
@@ -17,10 +16,6 @@ Services.scriptloader.loadSubScript(
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/shared/test/shared-redux-head.js",
   this);
-
-// Load collapsibilities helpers
-Services.scriptloader.loadSubScript(
-  CHROME_URL_ROOT + "debug-target-pane_collapsibilities_head.js", this);
 
 // Make sure the ADB addon is removed and ADB is stopped when the test ends.
 registerCleanupFunction(async function() {
@@ -153,6 +148,24 @@ async function selectConnectPage(doc) {
   await waitUntil(() => doc.querySelector(".js-connect-page"));
 }
 
+function getDebugTargetPane(title, document) {
+  // removes the suffix "(<NUMBER>)" in debug target pane's title, if needed
+  const sanitizeTitle = (x) => {
+    return x.replace(/\s+\(\d+\)$/, "");
+  };
+
+  const targetTitle = sanitizeTitle(title);
+  for (const titleEl of document.querySelectorAll(".js-debug-target-pane-title")) {
+    if (sanitizeTitle(titleEl.textContent) !== targetTitle) {
+      continue;
+    }
+
+    return titleEl.closest(".js-debug-target-pane");
+  }
+
+  return null;
+}
+
 function findDebugTargetByText(text, document) {
   const targets = [...document.querySelectorAll(".js-debug-target-item")];
   return targets.find(target => target.textContent.includes(text));
@@ -191,29 +204,5 @@ async function selectRuntime(deviceName, name, document) {
   await waitUntil(() => {
     const runtimeInfo = document.querySelector(".js-runtime-info");
     return runtimeInfo && runtimeInfo.textContent.includes(name);
-  });
-}
-
-// Returns a promise that resolves when the adb process exists and is running.
-async function waitForAdbStart() {
-  info("Wait for ADB to start");
-  const { adbProcess } = require("devtools/shared/adb/adb-process");
-  const { check } = require("devtools/shared/adb/adb-running-checker");
-  return asyncWaitUntil(async () => {
-    const isProcessReady = adbProcess.ready;
-    const isRunning = await check();
-    return isProcessReady && isRunning;
-  });
-}
-
-// Returns a promise that resolves when the adb process is no longer running.
-async function waitForAdbStop() {
-  info("Wait for ADB to stop");
-  const { adbProcess } = require("devtools/shared/adb/adb-process");
-  const { check } = require("devtools/shared/adb/adb-running-checker");
-  return asyncWaitUntil(async () => {
-    const isProcessReady = adbProcess.ready;
-    const isRunning = await check();
-    return !isProcessReady && !isRunning;
   });
 }

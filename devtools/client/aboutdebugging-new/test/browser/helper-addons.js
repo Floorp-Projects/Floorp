@@ -1,13 +1,13 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
-/* import-globals-from ../../../shared/test/shared-head.js */
-/* import-globals-from head.js */
 
 "use strict";
 
+/* import-globals-from head.js */
+
 const { Management } = ChromeUtils.import("resource://gre/modules/Extension.jsm", {});
 
-function getSupportsFile(path) {
+function _getSupportsFile(path) {
   const cr = Cc["@mozilla.org/chrome/chrome-registry;1"]
     .getService(Ci.nsIChromeRegistry);
   const uri = Services.io.newURI(CHROME_URL_ROOT + path);
@@ -19,7 +19,6 @@ function getSupportsFile(path) {
  * Install a temporary extension at the provided path, with the provided name.
  * Will use a mock file picker to select the file.
  */
-// eslint-disable-next-line no-unused-vars
 async function installTemporaryExtension(path, name, document) {
   // Mock the file picker to select a test addon
   prepareMockFilePicker(path);
@@ -41,6 +40,7 @@ async function installTemporaryExtension(path, name, document) {
   info("Wait for addon to be installed");
   await onAddonInstalled;
 }
+/* exported installTemporaryExtension */
 
 async function removeTemporaryExtension(name, document) {
   info(`Remove the temporary extension with name: '${name}'`);
@@ -50,10 +50,12 @@ async function removeTemporaryExtension(name, document) {
   info("Wait until the debug target item disappears");
   await waitUntil(() => !findDebugTargetByText(name, document));
 }
+/* exported removeTemporaryExtension */
 
 function prepareMockFilePicker(path) {
   // Mock the file picker to select a test addon
   const MockFilePicker = SpecialPowers.MockFilePicker;
   MockFilePicker.init(window);
-  MockFilePicker.setFiles([getSupportsFile(path).file]);
+  MockFilePicker.setFiles([_getSupportsFile(path).file]);
 }
+/* exported prepareMockFilePicker */

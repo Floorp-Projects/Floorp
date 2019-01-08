@@ -1,6 +1,5 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
-/* import-globals-from ../../../../shared/test/shared-head.js */
 
 "use strict";
 
@@ -21,6 +20,7 @@ function enableUsbRuntimesMock(mock) {
   setMockedModule(mock,
     "devtools/client/aboutdebugging-new/src/modules/usb-runtimes");
 }
+/* exported enableUsbRuntimesMock */
 
 /**
  * Update the loader to clear the mock entry for the usb-runtimes module.
@@ -30,6 +30,7 @@ function disableUsbRuntimesMock() {
   removeMockedModule(
     "devtools/client/aboutdebugging-new/src/modules/usb-runtimes");
 }
+/* exported disableUsbRuntimesMock */
 
 /**
  * Creates a simple mock version for usb-runtimes, implementing all the expected methods
@@ -63,6 +64,7 @@ function createUsbRuntimesMock() {
 
   return usbRuntimesMock;
 }
+/* exported createUsbRuntimesMock */
 
 /**
  * The usb-runtimes module allows to observer runtime updates. To simulate this behaviour
@@ -90,3 +92,4 @@ function addObserverMock(usbRuntimesMock) {
 
   return observerMock;
 }
+/* exported addObserverMock */
