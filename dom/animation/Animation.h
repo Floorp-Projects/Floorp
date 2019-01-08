@@ -536,8 +536,6 @@ class Animation : public DOMEventTargetHelper,
   static uint64_t sNextAnimationIndex;
 
   // The relative position of this animation within the global animation list.
-  // This is kNoIndex while the animation is in the idle state and is updated
-  // each time the animation transitions out of the idle state.
   //
   // Note that subclasses such as CSSTransition and CSSAnimation may repurpose
   // this member to implement their own brand of sorting. As a result, it is
