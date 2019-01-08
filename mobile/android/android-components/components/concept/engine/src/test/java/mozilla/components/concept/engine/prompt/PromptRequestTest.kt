@@ -41,6 +41,26 @@ class PromptRequestTest {
         alert.onDismiss()
         alert.onShouldShowNoMoreDialogs(true)
 
+        assertEquals(alert.title, "title")
+        assertEquals(alert.message, "message")
+        assertEquals(alert.hasShownManyDialogs, true)
+        alert.onDismiss()
+        alert.onShouldShowNoMoreDialogs(true)
+
+        val textPrompt = PromptRequest.TextPrompt(
+            "title",
+            "label",
+            "value",
+            true,
+            {}) { _, _ -> }
+
+        assertEquals(textPrompt.title, "title")
+        assertEquals(textPrompt.inputLabel, "label")
+        assertEquals(textPrompt.inputValue, "value")
+        assertEquals(textPrompt.hasShownManyDialogs, true)
+        textPrompt.onDismiss()
+        textPrompt.onConfirm(true, "")
+
         val dateRequest = PromptRequest.TimeSelection(
             "title",
             Date(),

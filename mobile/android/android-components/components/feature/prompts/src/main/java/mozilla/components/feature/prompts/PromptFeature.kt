@@ -19,6 +19,7 @@ import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.prompt.Choice
 import mozilla.components.concept.engine.prompt.PromptRequest
+import mozilla.components.concept.engine.prompt.PromptRequest.TextPrompt
 import mozilla.components.concept.engine.prompt.PromptRequest.Color
 import mozilla.components.concept.engine.prompt.PromptRequest.Authentication
 import mozilla.components.concept.engine.prompt.PromptRequest.Alert
@@ -282,6 +283,7 @@ class PromptFeature(
                 is Alert -> it.onDismiss()
                 is Authentication -> it.onDismiss()
                 is Color -> it.onDismiss()
+                is TextPrompt -> it.onDismiss()
             }
             true
         }
@@ -332,6 +334,7 @@ class PromptFeature(
             when (it) {
                 is PromptRequest.TimeSelection -> it.onSelect(value as Date)
                 is PromptRequest.Color -> it.onConfirm(value as String)
+                is TextPrompt -> it.onConfirm(noShowMoreDialogs, inputValue)
             }
             true
         }
@@ -450,6 +453,12 @@ class PromptFeature(
                         maximumDate,
                         selectionType
                     )
+                }
+            }
+
+            is PromptRequest.TextPrompt -> {
+                with(promptRequest) {
+                    TextPromptDialogFragment.newInstance(session.id, title, inputLabel, inputValue, hasShownManyDialogs)
                 }
             }
 

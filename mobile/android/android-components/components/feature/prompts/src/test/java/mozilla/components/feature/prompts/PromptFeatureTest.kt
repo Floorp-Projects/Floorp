@@ -25,6 +25,7 @@ import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.prompt.PromptRequest
+import mozilla.components.concept.engine.prompt.PromptRequest.TextPrompt
 import mozilla.components.concept.engine.prompt.PromptRequest.Color
 import mozilla.components.concept.engine.prompt.PromptRequest.Alert
 import mozilla.components.concept.engine.prompt.PromptRequest.Authentication
@@ -293,6 +294,90 @@ class PromptFeatureTest {
         var onDismissWasCalled = false
 
         val promptRequest = Alert("title", "message", false, { onDismissWasCalled = true }) {}
+
+        promptFeature.start()
+
+        session.promptRequest = Consumable.from(promptRequest)
+
+        promptFeature.onCancel(session.id)
+
+        assertTrue(session.promptRequest.isConsumed())
+        assertTrue(onDismissWasCalled)
+    }
+
+    @Test
+    fun `Calling onConfirmTextPrompt with unknown sessionId will not consume promptRequest`() {
+        val session = getSelectedSession()
+
+        var onConfirmWasCalled = false
+        var onDismissWasCalled = false
+
+        val promptRequest = TextPrompt(
+            "title",
+            "message",
+            "input",
+            false,
+            { onDismissWasCalled = true }) { _, _ ->
+            onConfirmWasCalled = true
+        }
+        promptFeature.start()
+
+        session.promptRequest = Consumable.from(promptRequest)
+
+        promptFeature.onConfirmTextPrompt("unknown_session_id", false, "")
+
+        assertFalse(session.promptRequest.isConsumed())
+        assertFalse(onConfirmWasCalled)
+
+        session.promptRequest = Consumable.from(promptRequest)
+
+        promptFeature.onCancel("unknown_session_id")
+        assertFalse(onDismissWasCalled)
+    }
+
+    @Test
+    fun `onConfirmTextPrompt will consume promptRequest`() {
+        val session = getSelectedSession()
+
+        var onConfirmWasCalled = false
+        var onDismissWasCalled = false
+
+        val promptRequest = TextPrompt(
+            "title",
+            "message",
+            "input",
+            false,
+            { onDismissWasCalled = true }) { _, _ ->
+            onConfirmWasCalled = true
+        }
+
+        promptFeature.start()
+
+        session.promptRequest = Consumable.from(promptRequest)
+
+        promptFeature.onConfirmTextPrompt(session.id, false, "")
+
+        assertTrue(session.promptRequest.isConsumed())
+        assertTrue(onConfirmWasCalled)
+
+        session.promptRequest = Consumable.from(promptRequest)
+
+        promptFeature.onCancel(session.id)
+        assertTrue(onDismissWasCalled)
+    }
+
+    @Test
+    fun `Calling onCancel with an TextPrompt request will consume promptRequest and call onDismiss`() {
+        val session = getSelectedSession()
+
+        var onDismissWasCalled = false
+
+        val promptRequest = TextPrompt(
+            "title",
+            "message",
+            "value",
+            false,
+            { onDismissWasCalled = true }) { _, _ -> }
 
         promptFeature.start()
 

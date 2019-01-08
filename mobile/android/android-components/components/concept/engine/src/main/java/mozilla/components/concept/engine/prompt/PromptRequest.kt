@@ -50,6 +50,24 @@ sealed class PromptRequest {
     ) : PromptRequest()
 
     /**
+     * Value type that represents a request for an alert prompt to enter a message.
+     * @property title of the dialog.
+     * @property inputLabel the label of the field the user should fill.
+     * @property inputValue the default value of the field.
+     * @property hasShownManyDialogs tells if this page has shown multiple prompts within a short period of time.
+     * @property onDismiss callback to let the page know the user dismissed the dialog.
+     * @property onConfirm tells the web page if it should continue showing alerts or not.
+     */
+    data class TextPrompt(
+        val title: String,
+        val inputLabel: String,
+        val inputValue: String,
+        val hasShownManyDialogs: Boolean = false,
+        val onDismiss: () -> Unit,
+        val onConfirm: (Boolean, String) -> Unit
+    ) : PromptRequest()
+
+    /**
      * Value type that represents a request for a date prompt for picking a year, month, and day.
      * @property title of the dialog.
      * @property initialDate date that dialog should be set by default.

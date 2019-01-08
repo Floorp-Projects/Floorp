@@ -236,7 +236,6 @@ class GeckoPromptDelegateTest {
         val mockSession = GeckoEngineSession(Mockito.mock(GeckoRuntime::class.java))
         val gecko = GeckoPromptDelegate(mockSession)
         gecko.onButtonPrompt(null, "", "", null, null)
-        gecko.onTextPrompt(null, "", "", null, null)
         gecko.onPopupRequest(null, "")
     }
 
@@ -845,6 +844,57 @@ class GeckoPromptDelegateTest {
 
         with(colorRequest) {
             assertEquals(defaultColor, "")
+        }
+    }
+
+    @Test
+    fun `onTextPrompt must provide an TextPrompt PromptRequest`() {
+        val mockSession = GeckoEngineSession(Mockito.mock(GeckoRuntime::class.java))
+        var request: PromptRequest? = null
+        var dismissWasCalled = false
+        var confirmWasCalled = false
+        var setCheckboxValueWasCalled = false
+
+        val callback = object : GeckoSession.PromptDelegate.TextCallback {
+
+            override fun confirm(text: String?) {
+                confirmWasCalled = true
+            }
+
+            override fun setCheckboxValue(value: Boolean) {
+                setCheckboxValueWasCalled = true
+            }
+
+            override fun dismiss() {
+                dismissWasCalled = true
+            }
+
+            override fun getCheckboxValue(): Boolean = false
+            override fun hasCheckbox(): Boolean = false
+            override fun getCheckboxMessage(): String = ""
+        }
+
+        val promptDelegate = GeckoPromptDelegate(mockSession)
+
+        mockSession.register(object : EngineSession.Observer {
+            override fun onPromptRequest(promptRequest: PromptRequest) {
+                request = promptRequest
+            }
+        })
+
+        promptDelegate.onTextPrompt(mock(), "title", "label", "value", callback)
+
+        with(request as PromptRequest.TextPrompt) {
+            assertEquals(title, "title")
+            assertEquals(inputLabel, "label")
+            assertEquals(inputValue, "value")
+
+            onDismiss()
+            assertTrue(dismissWasCalled)
+
+            onConfirm(true, "newInput")
+            assertTrue(setCheckboxValueWasCalled)
+            assertTrue(confirmWasCalled)
         }
     }
 }

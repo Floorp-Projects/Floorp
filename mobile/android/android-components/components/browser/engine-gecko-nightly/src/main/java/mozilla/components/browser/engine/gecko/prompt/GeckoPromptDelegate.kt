@@ -242,6 +242,33 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
         }
     }
 
+    override fun onTextPrompt(
+        session: GeckoSession,
+        title: String?,
+        inputLabel: String?,
+        inputValue: String?,
+        callback: TextCallback
+    ) {
+        val hasShownManyDialogs = callback.hasCheckbox()
+        val onDismiss: () -> Unit = {
+            callback.dismiss()
+        }
+
+        geckoEngineSession.notifyObservers {
+            onPromptRequest(
+                PromptRequest.TextPrompt(
+                    title ?: "",
+                    inputLabel ?: "",
+                    inputValue ?: "",
+                    hasShownManyDialogs,
+                    onDismiss
+                ) { showMoreDialogs, valueInput ->
+                    callback.checkboxValue = showMoreDialogs
+                    callback.confirm(valueInput)
+                })
+        }
+    }
+
     override fun onColorPrompt(
         session: GeckoSession,
         title: String?,
@@ -269,14 +296,6 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
         btnMsg: Array<out String>?,
         callback: ButtonCallback
     ) = Unit
-
-    override fun onTextPrompt(
-        session: GeckoSession,
-        title: String?,
-        msg: String?,
-        value: String?,
-        callback: TextCallback
-    ) = Unit // Related issue: https://github.com/mozilla-mobile/android-components/issues/1471
 
     override fun onPopupRequest(session: GeckoSession, targetUri: String?): GeckoResult<AllowOrDeny> {
         return GeckoResult()
