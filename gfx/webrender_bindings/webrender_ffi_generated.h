@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* Generated with cbindgen:0.6.7 */
+/* Generated with cbindgen:0.6.8 */
 
 /* DO NOT MODIFY THIS MANUALLY! This file was generated using cbindgen.
  * To generate this file:
@@ -11,13 +11,14 @@
  *   2. Run `rustup run nightly cbindgen toolkit/library/rust/ --lockfile Cargo.lock --crate webrender_bindings -o gfx/webrender_bindings/webrender_ffi_generated.h`
  */
 
+#include <cstdarg>
 #include <cstdint>
 #include <cstdlib>
 
 namespace mozilla {
 namespace wr {
 
-// Whether a border should be antialiased.
+/// Whether a border should be antialiased.
 enum class AntialiasBorder {
   No = 0,
   Yes,
@@ -52,8 +53,8 @@ enum class Checkpoint : uint32_t {
   FrameBuilt,
   FrameTexturesUpdated,
   FrameRendered,
-  // NotificationRequests get notified with this if they get dropped without having been
-  // notified. This provides the guarantee that if a request is created it will get notified.
+  /// NotificationRequests get notified with this if they get dropped without having been
+  /// notified. This provides the guarantee that if a request is created it will get notified.
   TransactionDropped,
 
   Sentinel /* this must be last for serialization purposes. */
@@ -66,15 +67,15 @@ enum class ClipMode {
   Sentinel /* this must be last for serialization purposes. */
 };
 
-// Specifies the color depth of an image. Currently only used for YUV images.
+/// Specifies the color depth of an image. Currently only used for YUV images.
 enum class ColorDepth : uint8_t {
-  // 8 bits image (most common)
+  /// 8 bits image (most common)
   Color8,
-  // 10 bits image
+  /// 10 bits image
   Color10,
-  // 12 bits image
+  /// 12 bits image
   Color12,
-  // 16 bits image
+  /// 16 bits image
   Color16,
 
   Sentinel /* this must be last for serialization purposes. */
@@ -118,24 +119,24 @@ enum class FontRenderMode : uint32_t {
   Sentinel /* this must be last for serialization purposes. */
 };
 
-// Specifies the format of a series of pixels, in driver terms.
+/// Specifies the format of a series of pixels, in driver terms.
 enum class ImageFormat : uint32_t {
-  // One-channel, byte storage. The "red" doesn't map to the color
-  // red per se, and is just the way that OpenGL has historically referred
-  // to single-channel buffers.
+  /// One-channel, byte storage. The "red" doesn't map to the color
+  /// red per se, and is just the way that OpenGL has historically referred
+  /// to single-channel buffers.
   R8 = 1,
-  // One-channel, short storage
+  /// One-channel, short storage
   R16 = 2,
-  // Four channels, byte storage.
+  /// Four channels, byte storage.
   BGRA8 = 3,
-  // Four channels, float storage.
+  /// Four channels, float storage.
   RGBAF32 = 4,
-  // Two-channels, byte storage. Similar to `R8`, this just means
-  // "two channels" rather than "red and green".
+  /// Two-channels, byte storage. Similar to `R8`, this just means
+  /// "two channels" rather than "red and green".
   RG8 = 5,
-  // Four channels, signed integer storage.
+  /// Four channels, signed integer storage.
   RGBAI32 = 6,
-  // Four channels, byte storage.
+  /// Four channels, byte storage.
   RGBA8 = 7,
 
   Sentinel /* this must be last for serialization purposes. */
@@ -186,7 +187,7 @@ enum class MixBlendMode : uint32_t {
   Sentinel /* this must be last for serialization purposes. */
 };
 
-// Used to indicate if an image is opaque, or has an alpha channel.
+/// Used to indicate if an image is opaque, or has an alpha channel.
 enum class OpacityType : uint8_t {
   Opaque = 0,
   HasAlphaChannel = 1,
@@ -273,35 +274,34 @@ struct Arc;
 
 struct Device;
 
-// Geometry in the coordinate system of the render target (screen or intermediate
-// surface) in physical pixels.
+/// Geometry in the coordinate system of the render target (screen or intermediate
+/// surface) in physical pixels.
 struct DevicePixel;
 
 struct DocumentHandle;
 
-// Geometry in a stacking context's local coordinate space (logical pixels).
+/// Geometry in a stacking context's local coordinate space (logical pixels).
 struct LayoutPixel;
 
-// The renderer is responsible for submitting to the GPU the work prepared by the
-// RenderBackend.
-//
-// We have a separate `Renderer` instance for each instance of WebRender (generally
-// one per OS window), and all instances share the same thread.
+/// The renderer is responsible for submitting to the GPU the work prepared by the
+/// RenderBackend.
+/// We have a separate `Renderer` instance for each instance of WebRender (generally
+/// one per OS window), and all instances share the same thread.
 struct Renderer;
 
-// Unit for tile coordinates.
+/// Unit for tile coordinates.
 struct TileCoordinate;
 
-// Represents the work associated to a transaction before scene building.
+/// Represents the work associated to a transaction before scene building.
 struct Transaction;
 
-// The default unit.
+/// The default unit.
 struct UnknownUnit;
 
 template<typename T>
 struct Vec;
 
-// Geometry in the document's coordinate space (logical pixels).
+/// Geometry in the document's coordinate space (logical pixels).
 struct WorldPixel;
 
 struct WrProgramCache;
@@ -353,9 +353,8 @@ struct FontKey {
 
 using WrFontKey = FontKey;
 
-// Represents RGBA screen colors with one byte per channel.
-//
-// If the alpha value `a` is 255 the color is opaque.
+/// Represents RGBA screen colors with one byte per channel.
+/// If the alpha value `a` is 255 the color is opaque.
 struct ColorU {
   uint8_t r;
   uint8_t g;
@@ -381,9 +380,9 @@ struct SyntheticItalics {
 struct FontInstanceOptions {
   FontRenderMode render_mode;
   FontInstanceFlags flags;
-  // When bg_color.a is != 0 and render_mode is FontRenderMode::Subpixel,
-  // the text will be rendered with bg_color.r/g/b as an opaque estimated
-  // background color.
+  /// When bg_color.a is != 0 and render_mode is FontRenderMode::Subpixel,
+  /// the text will be rendered with bg_color.r/g/b as an opaque estimated
+  /// background color.
   ColorU bg_color;
   SyntheticItalics synthetic_italics;
 
@@ -459,14 +458,14 @@ struct WrWindowId {
   }
 };
 
-// This type carries no valuable semantics for WR. However, it reflects the fact that
-// clients (Servo) may generate pipelines by different semi-independent sources.
-// These pipelines still belong to the same `IdNamespace` and the same `DocumentId`.
-// Having this extra Id field enables them to generate `PipelineId` without collision.
+/// This type carries no valuable semantics for WR. However, it reflects the fact that
+/// clients (Servo) may generate pipelines by different semi-independent sources.
+/// These pipelines still belong to the same `IdNamespace` and the same `DocumentId`.
+/// Having this extra Id field enables them to generate `PipelineId` without collision.
 using PipelineSourceId = uint32_t;
 
-// From the point of view of WR, `PipelineId` is completely opaque and generic as long as
-// it's clonable, serializable, comparable, and hashable.
+/// From the point of view of WR, `PipelineId` is completely opaque and generic as long as
+/// it's clonable, serializable, comparable, and hashable.
 struct PipelineId {
   PipelineSourceId mNamespace;
   uint32_t mHandle;
@@ -528,7 +527,7 @@ struct WrPipelineInfo {
   }
 };
 
-// Collection of heap sizes, in bytes.
+/// Collection of heap sizes, in bytes.
 struct MemoryReport {
   uintptr_t primitive_stores;
   uintptr_t clip_stores;
@@ -586,20 +585,19 @@ using DeviceIntSize = TypedSize2D<int32_t, DevicePixel>;
 
 using LayoutSize = TypedSize2D<float, LayoutPixel>;
 
-// Describes the memory layout of a display list.
-//
-// A display list consists of some number of display list items, followed by a number of display
-// items.
+/// Describes the memory layout of a display list.
+/// A display list consists of some number of display list items, followed by a number of display
+/// items.
 struct BuiltDisplayListDescriptor {
-  // The first IPC time stamp: before any work has been done
+  /// The first IPC time stamp: before any work has been done
   uint64_t builder_start_time;
-  // The second IPC time stamp: after serialization
+  /// The second IPC time stamp: after serialization
   uint64_t builder_finish_time;
-  // The third IPC time stamp: just before sending
+  /// The third IPC time stamp: just before sending
   uint64_t send_start_time;
-  // The amount of clipping nodes created while building this display list.
+  /// The amount of clipping nodes created while building this display list.
   uintptr_t total_clip_nodes;
-  // The amount of spatial nodes created while building this display list.
+  /// The amount of spatial nodes created while building this display list.
   uintptr_t total_spatial_nodes;
 
   bool operator==(const BuiltDisplayListDescriptor& aOther) const {
@@ -623,7 +621,7 @@ struct WrVecU8 {
   }
 };
 
-// A 2d Point tagged with a unit.
+/// A 2d Point tagged with a unit.
 template<typename T, typename U>
 struct TypedPoint2D {
   T x;
@@ -653,7 +651,7 @@ struct WrClipId {
   }
 };
 
-// A 2d Rectangle optionally tagged with a unit.
+/// A 2d Rectangle optionally tagged with a unit.
 template<typename T, typename U>
 struct TypedRect {
   TypedPoint2D<T, U> origin;
@@ -682,12 +680,12 @@ struct BorderRadius {
 };
 
 struct ComplexClipRegion {
-  // The boundaries of the rectangle.
+  /// The boundaries of the rectangle.
   LayoutRect rect;
-  // Border radii of this rectangle.
+  /// Border radii of this rectangle.
   BorderRadius radii;
-  // Whether we are clipping inside or outside
-  // the region.
+  /// Whether we are clipping inside or outside
+  /// the region.
   ClipMode mode;
 
   bool operator==(const ComplexClipRegion& aOther) const {
@@ -697,9 +695,9 @@ struct ComplexClipRegion {
   }
 };
 
-// An opaque identifier describing an image registered with WebRender.
-// This is used as a handle to reference images, and is used as the
-// hash map key for the actual image storage in the `ResourceCache`.
+/// An opaque identifier describing an image registered with WebRender.
+/// This is used as a handle to reference images, and is used as the
+/// hash map key for the actual image storage in the `ResourceCache`.
 struct ImageKey {
   IdNamespace mNamespace;
   uint32_t mHandle;
@@ -728,15 +726,15 @@ struct WrImageMask {
   }
 };
 
-// The minimum and maximum allowable offset for a sticky frame in a single dimension.
+/// The minimum and maximum allowable offset for a sticky frame in a single dimension.
 struct StickyOffsetBounds {
-  // The minimum offset for this frame, typically a negative value, which specifies how
-  // far in the negative direction the sticky frame can offset its contents in this
-  // dimension.
+  /// The minimum offset for this frame, typically a negative value, which specifies how
+  /// far in the negative direction the sticky frame can offset its contents in this
+  /// dimension.
   float min;
-  // The maximum offset for this frame, typically a positive value, which specifies how
-  // far in the positive direction the sticky frame can offset its contents in this
-  // dimension.
+  /// The maximum offset for this frame, typically a positive value, which specifies how
+  /// far in the positive direction the sticky frame can offset its contents in this
+  /// dimension.
   float max;
 
   bool operator==(const StickyOffsetBounds& aOther) const {
@@ -745,7 +743,7 @@ struct StickyOffsetBounds {
   }
 };
 
-// A 2d Vector tagged with a unit.
+/// A 2d Vector tagged with a unit.
 template<typename T, typename U>
 struct TypedVector2D {
   T x;
@@ -776,10 +774,9 @@ struct TypedSideOffsets2D {
 
 using LayoutSideOffsets = TypedSideOffsets2D<float, LayoutPixel>;
 
-// Represents RGBA screen colors with floating point numbers.
-//
-// All components must be between 0.0 and 1.0.
-// An alpha value of 1.0 is opaque while 0.0 is fully transparent.
+/// Represents RGBA screen colors with floating point numbers.
+/// All components must be between 0.0 and 1.0.
+/// An alpha value of 1.0 is opaque while 0.0 is fully transparent.
 struct ColorF {
   float r;
   float g;
@@ -804,7 +801,7 @@ struct BorderSide {
   }
 };
 
-// The default side offset type with no unit.
+/// The default side offset type with no unit.
 template<typename T>
 using SideOffsets2D = TypedSideOffsets2D<T, UnknownUnit>;
 
@@ -842,17 +839,15 @@ struct WrAnimationProperty {
   }
 };
 
-// A 3d transform stored as a 4 by 4 matrix in row-major order in memory.
-//
-// Transforms can be parametrized over the source and destination units, to describe a
-// transformation from a space to another.
-// For example, `TypedTransform3D<f32, WorldSpace, ScreenSpace>::transform_point3d`
-// takes a `TypedPoint3D<f32, WorldSpace>` and returns a `TypedPoint3D<f32, ScreenSpace>`.
-//
-// Transforms expose a set of convenience methods for pre- and post-transformations.
-// A pre-transformation corresponds to adding an operation that is applied before
-// the rest of the transformation, while a post-transformation adds an operation
-// that is applied after.
+/// A 3d transform stored as a 4 by 4 matrix in row-major order in memory.
+/// Transforms can be parametrized over the source and destination units, to describe a
+/// transformation from a space to another.
+/// For example, `TypedTransform3D<f32, WorldSpace, ScreenSpace>::transform_point3d`
+/// takes a `TypedPoint3D<f32, WorldSpace>` and returns a `TypedPoint3D<f32, ScreenSpace>`.
+/// Transforms expose a set of convenience methods for pre- and post-transformations.
+/// A pre-transformation corresponds to adding an operation that is applied before
+/// the rest of the transformation, while a post-transformation adds an operation
+/// that is applied after.
 template<typename T, typename Src, typename Dst>
 struct TypedTransform3D {
   T m11;
@@ -902,12 +897,12 @@ struct WrFilterOp {
   float matrix[20];
 };
 
-// Configure whether the contents of a stacking context
-// should be rasterized in local space or screen space.
-// Local space rasterized pictures are typically used
-// when we want to cache the output, and performance is
-// important. Note that this is a performance hint only,
-// which WR may choose to ignore.
+/// Configure whether the contents of a stacking context
+/// should be rasterized in local space or screen space.
+/// Local space rasterized pictures are typically used
+/// when we want to cache the output, and performance is
+/// important. Note that this is a performance hint only,
+/// which WR may choose to ignore.
 union RasterSpace {
   enum class Tag : uint32_t {
     Local,
@@ -930,7 +925,7 @@ union RasterSpace {
   };
   Local_Body local;
 
-  static RasterSpace Local(float const& a0) {
+  static RasterSpace Local(const float &a0) {
     RasterSpace result;
     result.local._0 = a0;
     result.tag = Tag::Local;
@@ -1012,11 +1007,10 @@ struct MutByteSlice {
   }
 };
 
-// A C function that takes a pointer to a heap allocation and returns its size.
-//
-// This is borrowed from the malloc_size_of crate, upon which we want to avoid
-// a dependency from WebRender.
-using VoidPtrToSizeFn = uintptr_t(*)(const void*);
+/// A C function that takes a pointer to a heap allocation and returns its size.
+/// This is borrowed from the malloc_size_of crate, upon which we want to avoid
+/// a dependency from WebRender.
+using VoidPtrToSizeFn = uintptr_t(*)(const void *ptr);
 
 struct RendererStats {
   uintptr_t total_draw_calls;
@@ -1082,9 +1076,9 @@ struct WrExternalImageHandler {
   }
 };
 
-// An opaque identifier describing a blob image registered with WebRender.
-// This is used as a handle to reference blob images, and can be used as an
-// image in display items.
+/// An opaque identifier describing a blob image registered with WebRender.
+/// This is used as a handle to reference blob images, and can be used as an
+/// image in display items.
 struct BlobImageKey {
   ImageKey _0;
 
@@ -1575,7 +1569,7 @@ void wr_dp_push_text(WrState *aState,
                      const GlyphOptions *aGlyphOptions)
 WR_FUNC;
 
-// Push a 2 planar NV12 image.
+/// Push a 2 planar NV12 image.
 WR_INLINE
 void wr_dp_push_yuv_NV12_image(WrState *aState,
                                LayoutRect aBounds,
@@ -1588,7 +1582,7 @@ void wr_dp_push_yuv_NV12_image(WrState *aState,
                                ImageRendering aImageRendering)
 WR_FUNC;
 
-// Push a yuv interleaved image.
+/// Push a yuv interleaved image.
 WR_INLINE
 void wr_dp_push_yuv_interleaved_image(WrState *aState,
                                       LayoutRect aBounds,
@@ -1600,7 +1594,7 @@ void wr_dp_push_yuv_interleaved_image(WrState *aState,
                                       ImageRendering aImageRendering)
 WR_FUNC;
 
-// Push a 3 planar yuv image.
+/// Push a 3 planar yuv image.
 WR_INLINE
 void wr_dp_push_yuv_planar_image(WrState *aState,
                                  LayoutRect aBounds,

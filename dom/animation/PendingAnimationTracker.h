@@ -8,9 +8,9 @@
 #define mozilla_dom_PendingAnimationTracker_h
 
 #include "mozilla/dom/Animation.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/TypedEnumBits.h"
 #include "nsCycleCollectionParticipant.h"
-#include "mozilla/dom/Document.h"
 #include "nsTHashtable.h"
 
 class nsIFrame;

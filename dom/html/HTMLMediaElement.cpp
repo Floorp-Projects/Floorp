@@ -49,7 +49,6 @@
 #include "jsapi.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/AsyncEventDispatcher.h"
-#include "mozilla/AutoplayPermissionManager.h"
 #include "mozilla/EMEUtils.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventStateManager.h"
@@ -758,9 +757,15 @@ HTMLMediaElement::MediaLoadListener::GetInterface(const nsIID& aIID,
 void HTMLMediaElement::ReportLoadError(const char* aMsg,
                                        const char16_t** aParams,
                                        uint32_t aParamCount) {
-  nsContentUtils::ReportToConsole(
-      nsIScriptError::warningFlag, NS_LITERAL_CSTRING("Media"), OwnerDoc(),
-      nsContentUtils::eDOM_PROPERTIES, aMsg, aParams, aParamCount);
+  ReportToConsole(nsIScriptError::warningFlag, aMsg, aParams, aParamCount);
+}
+
+void HTMLMediaElement::ReportToConsole(uint32_t aErrorFlags, const char* aMsg,
+                                       const char16_t** aParams,
+                                       uint32_t aParamCount) const {
+  nsContentUtils::ReportToConsole(aErrorFlags, NS_LITERAL_CSTRING("Media"),
+                                  OwnerDoc(), nsContentUtils::eDOM_PROPERTIES,
+                                  aMsg, aParams, aParamCount);
 }
 
 class HTMLMediaElement::AudioChannelAgentCallback final
@@ -1819,10 +1824,6 @@ void HTMLMediaElement::AbortExistingLoads() {
     DispatchAsyncEvent(NS_LITERAL_STRING("emptied"));
     UpdateAudioChannelPlayingState();
   }
-
-  // Disconnect requests for permission to play. We'll make a new request
-  // if required should the new media resource try to play.
-  mAutoplayPermissionRequest.DisconnectIfExists();
 
   // We may have changed mPaused, mAutoplaying, and other
   // things which can affect AddRemoveSelfReference
@@ -3119,10 +3120,8 @@ already_AddRefed<DOMMediaStream> HTMLMediaElement::CaptureStreamInternal(
     if (mSrcStream) {
       // We don't support applying volume and mute to the captured stream, when
       // capturing a MediaStream.
-      nsContentUtils::ReportToConsole(
-          nsIScriptError::errorFlag, NS_LITERAL_CSTRING("Media"), OwnerDoc(),
-          nsContentUtils::eDOM_PROPERTIES,
-          "MediaElementAudioCaptureOfMediaStreamError");
+      ReportToConsole(nsIScriptError::errorFlag,
+                      "MediaElementAudioCaptureOfMediaStreamError");
       return nullptr;
     }
 
@@ -3483,7 +3482,6 @@ HTMLMediaElement::~HTMLMediaElement() {
   UnregisterActivityObserver();
 
   mSetCDMRequest.DisconnectIfExists();
-  mAutoplayPermissionRequest.DisconnectIfExists();
   if (mDecoder) {
     ShutdownDecoder();
   }
@@ -3632,59 +3630,17 @@ already_AddRefed<Promise> HTMLMediaElement::Play(ErrorResult& aRv) {
   UpdateHadAudibleAutoplayState();
 
   const bool handlingUserInput = EventStateManager::IsHandlingUserInput();
+  mPendingPlayPromises.AppendElement(promise);
+
   if (AutoplayPolicy::IsAllowedToPlay(*this)) {
-    mPendingPlayPromises.AppendElement(promise);
+    AUTOPLAY_LOG("allow MediaElement %p to play", this);
     PlayInternal(handlingUserInput);
     UpdateCustomPolicyAfterPlayed();
   } else {
-    // Prompt the user for permission to play.
-    mPendingPlayPromises.AppendElement(promise);
-    EnsureAutoplayRequested(handlingUserInput);
+    AUTOPLAY_LOG("reject MediaElement %p to play", this);
+    AsyncRejectPendingPlayPromises(NS_ERROR_DOM_MEDIA_NOT_ALLOWED_ERR);
   }
   return promise.forget();
-}
-
-void HTMLMediaElement::EnsureAutoplayRequested(bool aHandlingUserInput) {
-  if (mAutoplayPermissionRequest.Exists()) {
-    // Autoplay has already been requested in a previous play() call.
-    // Await for the previous request to be approved or denied. This
-    // play request's promise will be fulfilled with all other pending
-    // promises when the permission prompt is resolved.
-    AUTOPLAY_LOG("%p EnsureAutoplayRequested() existing request, bailing.",
-                 this);
-    return;
-  }
-
-  RefPtr<AutoplayPermissionManager> request =
-      AutoplayPolicy::RequestFor(*OwnerDoc());
-  if (!request) {
-    AsyncRejectPendingPlayPromises(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return;
-  }
-  RefPtr<HTMLMediaElement> self = this;
-  request->RequestWithPrompt()
-      ->Then(mAbstractMainThread, __func__,
-             [self, handlingUserInput = aHandlingUserInput,
-              request](bool aApproved) {
-               self->mAutoplayPermissionRequest.Complete();
-               AUTOPLAY_LOG("%p Autoplay request approved request=%p",
-                            self.get(), request.get());
-               self->PlayInternal(handlingUserInput);
-               self->UpdateCustomPolicyAfterPlayed();
-             },
-             [self, request](nsresult aError) {
-               self->mAutoplayPermissionRequest.Complete();
-               AUTOPLAY_LOG("%p Autoplay request denied request=%p", self.get(),
-                            request.get());
-               LOG(LogLevel::Debug, ("%s rejecting play promises", __func__));
-               self->AsyncRejectPendingPlayPromises(
-                   NS_ERROR_DOM_MEDIA_NOT_ALLOWED_ERR);
-               nsContentUtils::ReportToConsole(
-                   nsIScriptError::warningFlag, NS_LITERAL_CSTRING("Media"),
-                   self->OwnerDoc(), nsContentUtils::eDOM_PROPERTIES,
-                   "BlockAutoplayError");
-             })
-      ->Track(mAutoplayPermissionRequest);
 }
 
 void HTMLMediaElement::DispatchEventsWhenPlayWasNotAllowed() {
@@ -3698,6 +3654,7 @@ void HTMLMediaElement::DispatchEventsWhenPlayWasNotAllowed() {
   asyncDispatcher->PostDOMEvent();
 #endif
   OwnerDoc()->MaybeNotifyAutoplayBlocked();
+  ReportToConsole(nsIScriptError::warningFlag, "BlockAutoplayError");
 }
 
 void HTMLMediaElement::PlayInternal(bool aHandlingUserInput) {
@@ -5597,7 +5554,7 @@ void HTMLMediaElement::CheckAutoplayDataReady() {
 
   UpdateHadAudibleAutoplayState();
   if (!AutoplayPolicy::IsAllowedToPlay(*this)) {
-    EnsureAutoplayRequested(false);
+    DispatchEventsWhenPlayWasNotAllowed();
     return;
   }
 
@@ -6005,9 +5962,6 @@ void HTMLMediaElement::AddRemoveSelfReference() {
 
 void HTMLMediaElement::NotifyShutdownEvent() {
   mShuttingDown = true;
-  // Since target thread had been shutdown, it's no chance to execute the Then()
-  // afterward. Therefore, we should disconnect the request.
-  mAutoplayPermissionRequest.DisconnectIfExists();
   ResetState();
   AddRemoveSelfReference();
 }
@@ -7023,12 +6977,6 @@ already_AddRefed<Promise> HTMLMediaElement::CreateDOMPromise(
 }
 
 void HTMLMediaElement::AsyncResolvePendingPlayPromises() {
-  // Disconnect requests for permission to play. We're playing either way,
-  // so there's no point keeping the promise connected. Note: the front
-  // end permission prompt code will detect that we've started playing, and
-  // hide the permission prompt.
-  mAutoplayPermissionRequest.DisconnectIfExists();
-
   if (mShuttingDown) {
     return;
   }
@@ -7040,8 +6988,6 @@ void HTMLMediaElement::AsyncResolvePendingPlayPromises() {
 }
 
 void HTMLMediaElement::AsyncRejectPendingPlayPromises(nsresult aError) {
-  mAutoplayPermissionRequest.DisconnectIfExists();
-
   if (!mPaused) {
     mPaused = true;
     DispatchAsyncEvent(NS_LITERAL_STRING("pause"));

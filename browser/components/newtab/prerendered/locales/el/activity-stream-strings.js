@@ -77,7 +77,7 @@ window.gActivityStreamStrings = {
   "pocket_more_reccommendations": "Περισσότερες προτάσεις",
   "pocket_how_it_works": "Πώς λειτουργεί",
   "pocket_cta_button": "Αποκτήστε το Pocket",
-  "pocket_cta_text": "Save the stories you love in Pocket, and fuel your mind with fascinating reads.",
+  "pocket_cta_text": "Αποθηκεύστε τις ιστορίες που αγαπάτε στο Pocket και τροφοδοτήστε το μυαλό σας με εκπληκτικά κείμενα.",
   "highlights_empty_state": "Ξεκινήστε την περιήγηση και θα σάς δείξουμε μερικά υπέροχα άρθρα, βίντεο και άλλες σελίδες που έχετε επισκεφθεί πρόσφατα ή έχετε προσθέσει στους σελιδοδείκτες σας.",
   "topstories_empty_state": "Δεν υπάρχει κάτι νεότερο. Ελέγξτε αργότερα για περισσότερες ιστορίες από τον πάροχο {provider}. Δεν μπορείτε να περιμένετε; Διαλέξτε κάποιο από τα δημοφιλή θέματα και ανακαλύψτε ενδιαφέρουσες ιστορίες από όλο τον Ιστό.",
   "manual_migration_explanation2": "Δοκιμάστε το Firefox με τους σελιδοδείκτες, το ιστορικό και τους κωδικούς πρόσβασης από ένα άλλο πρόγραμμα περιήγησης.",
@@ -107,6 +107,5 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Σημείωση Απορρήτου",
   "firstrun_continue_to_login": "Συνέχεια",
   "firstrun_skip_login": "Παράλειψη βήματος",
-  "context_menu_title": "Άνοιγμα μενού",
-  "pocket_learn_more": "Μάθετε περισσότερα"
+  "context_menu_title": "Άνοιγμα μενού"
 };

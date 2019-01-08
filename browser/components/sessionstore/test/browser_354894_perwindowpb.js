@@ -10,7 +10,7 @@
  * @note It is implicitly tested that restoring the last window works when
  * non-browser windows are around. The "Run Tests" window as well as the main
  * browser window (wherein the test code gets executed) won't be considered
- * browser windows. To achiveve this said main browser window has it's windowtype
+ * browser windows. To achiveve this said main browser window has its windowtype
  * attribute modified so that it's not considered a browser window any longer.
  * This is crucial, because otherwise there would be two browser windows around,
  * said main test window and the one opened by the tests, and hence the new
@@ -278,60 +278,6 @@ add_task(async function test_open_close_private_browsing() {
     is(obs["browser-lastwindow-close-requested"], 2,
        "Got expected browser-lastwindow-close-requested notifications");
     is(obs["browser-lastwindow-close-granted"], 2,
-       "Got expected browser-lastwindow-close-granted notifications");
-  });
-});
-
-/**
- * Open some popup windows to check those aren't restored, but the browser
- * window is.
- *
- * @note: Non-Mac only
- *
- * Should do the following:
- *  1. Open a new browser window
- *  2. Add some tabs
- *  3. Open some popups
- *  4. Add another tab to one popup (so that it gets stored) and close it again
- *  5. Close the browser window
- *  6. Open another browser window
- *  7. Make sure that the tabs of the closed browser window, but not the popup,
- *     are restored
- */
-add_task(async function test_open_close_window_and_popup() {
-  if (IS_MAC) {
-    return;
-  }
-
-  await setupTest({}, async function(newWin, obs) {
-    let popupPromise = BrowserTestUtils.waitForNewWindow();
-    openDialog(location, "popup", POPUP_FEATURES, TEST_URLS[0]);
-    let popup = await popupPromise;
-
-    let popup2Promise = BrowserTestUtils.waitForNewWindow();
-    openDialog(location, "popup2", POPUP_FEATURES, TEST_URLS[1]);
-    let popup2 = await popup2Promise;
-
-    BrowserTestUtils.addTab(popup2.gBrowser, TEST_URLS[0]);
-
-    let closed = await closeWindowForRestoration(newWin);
-    ok(closed, "Should be able to close the window");
-
-    await BrowserTestUtils.closeWindow(popup2);
-
-    newWin = await promiseNewWindowLoaded();
-
-    is(newWin.gBrowser.browsers.length, TEST_URLS.length + 2,
-       "Restored window and associated tabs in session");
-
-    await BrowserTestUtils.closeWindow(popup);
-    await BrowserTestUtils.closeWindow(newWin);
-
-    // We closed one window with closeWindowForRestoration, and it should
-    // have been successful.
-    is(obs["browser-lastwindow-close-requested"], 1,
-       "Got expected browser-lastwindow-close-requested notifications");
-    is(obs["browser-lastwindow-close-granted"], 1,
        "Got expected browser-lastwindow-close-granted notifications");
   });
 });

@@ -38,6 +38,7 @@ class ImageContainer;
 class StackingContextHelper;
 class WebRenderParentCommand;
 class LayerManager;
+class RenderRootStateManager;
 }  // namespace layers
 
 namespace wr {
@@ -202,7 +203,7 @@ struct nsCSSRendering {
       mozilla::wr::DisplayListBuilder& aBuilder,
       mozilla::wr::IpcResourceUpdateQueue& aResources,
       const mozilla::layers::StackingContextHelper& aSc,
-      mozilla::layers::WebRenderLayerManager* aManager,
+      mozilla::layers::RenderRootStateManager* aManager,
       nsDisplayListBuilder* aDisplayListBuilder);
 
   static ImgDrawResult CreateWebRenderCommandsForBorderWithStyleBorder(
@@ -210,7 +211,7 @@ struct nsCSSRendering {
       mozilla::wr::DisplayListBuilder& aBuilder,
       mozilla::wr::IpcResourceUpdateQueue& aResources,
       const mozilla::layers::StackingContextHelper& aSc,
-      mozilla::layers::WebRenderLayerManager* aManager,
+      mozilla::layers::RenderRootStateManager* aManager,
       nsDisplayListBuilder* aDisplayListBuilder,
       const nsStyleBorder& aStyleBorder);
 
@@ -483,13 +484,13 @@ struct nsCSSRendering {
       const PaintBGParams& aParams, mozilla::wr::DisplayListBuilder& aBuilder,
       mozilla::wr::IpcResourceUpdateQueue& aResources,
       const mozilla::layers::StackingContextHelper& aSc,
-      mozilla::layers::WebRenderLayerManager* aManager, nsDisplayItem* aItem);
+      mozilla::layers::RenderRootStateManager* aManager, nsDisplayItem* aItem);
 
   static ImgDrawResult BuildWebRenderDisplayItemsForStyleImageLayerWithSC(
       const PaintBGParams& aParams, mozilla::wr::DisplayListBuilder& aBuilder,
       mozilla::wr::IpcResourceUpdateQueue& aResources,
       const mozilla::layers::StackingContextHelper& aSc,
-      mozilla::layers::WebRenderLayerManager* aManager, nsDisplayItem* aItem,
+      mozilla::layers::RenderRootStateManager* aManager, nsDisplayItem* aItem,
       mozilla::ComputedStyle* mBackgroundSC, const nsStyleBorder& aBorder);
 
   /**

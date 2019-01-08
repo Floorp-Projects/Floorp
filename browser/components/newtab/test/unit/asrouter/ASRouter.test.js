@@ -130,6 +130,14 @@ describe("ASRouter", () => {
 
       assert.deepEqual(Router.state.messageBlockList, ["foo"]);
     });
+    it("should set state.messageBlockList to the block list in ASRouterPreferences", async () => {
+      setMessageProviderPref([{id: "onboarding", type: "local", exclude: ["RTAMO"]}]);
+      messageBlockList = ["foo"];
+      Router = new _ASRouter();
+      await Router.init(channel, createFakeStorage(), dispatchStub);
+
+      assert.deepEqual(Router.state.messageBlockList, ["foo", "RTAMO"]);
+    });
     it("should set state.messageImpressions to the messageImpressions object in persistent storage", async () => {
       // Note that messageImpressions are only kept if a message exists in router and has a .frequency property,
       // otherwise they will be cleaned up by .cleanupImpressions()
@@ -796,58 +804,6 @@ describe("ASRouter", () => {
       });
       it("should have previousSessionEnd in the message context", () => {
         assert.propertyVal(Router._getMessagesContext(), "previousSessionEnd", 100);
-      });
-      it("should update parameters of the message if the template is return to amo", async () => {
-        let message = [
-          {id: "foo1", template: "return_to_amo_overlay", trigger: {id: "foo"}, content: {addon_icon: null, primary_button: {action: {data: {url: null}}}, title: "Foo1", body: "Foo123-1"}},
-        ];
-        await Router.setState({messages: message});
-        sandbox.stub(Router, "_fetchAddonInfo").returns({url: "foo.com", iconURL: "url/foo.ico"});
-        await Router.sendNextMessage({sendAsyncMessage: sandbox.stub()}, {id: "foo"});
-        const msg = await Router._findMessage(message, {id: "foo"});
-        assert.calledOnce(Router._fetchAddonInfo);
-        assert.equal(msg.content.addon_icon, message[0].content.addon_icon);
-        assert.equal(msg.content.primary_button.action.data.url, message[0].content.primary_button.action.data.url);
-      });
-      it("should return early and not send a message if we failed to get addon info for return to amo template", async () => {
-        let message = [
-          {id: "foo1", template: "return_to_amo_overlay", trigger: {id: "foo"}, content: {addon_icon: null, primary_button: {action: {data: {url: null}}}, title: "Foo1", body: "Foo123-1"}},
-        ];
-        await Router.setState({messages: message});
-        sandbox.stub(Router, "_fetchAddonInfo").returns({});
-        sandbox.spy(Router, "_sendMessageToTarget");
-        await Router.sendNextMessage({sendAsyncMessage: sandbox.stub()}, {id: "foo"});
-        assert.calledOnce(Router._fetchAddonInfo);
-        assert.notCalled(Router._sendMessageToTarget);
-      });
-    });
-
-    describe("#_fetchAddonInfo", () => {
-      it("should fetch the addon url and the icon for the addon", async () => {
-        fetchStub
-          .withArgs("https://services.addons.mozilla.org/api/v3/addons/addon/addonID")
-          .resolves({ok: true, status: 200, json: () => Promise.resolve({icon_url: "url/foo.ico", current_version: {files: [{url: "foo.com"}]}})});
-        const {url, iconURL} = await Router._fetchAddonInfo();
-        assert.equal(url, "foo.com");
-        assert.equal(iconURL, "url/foo.ico");
-      });
-      it("should return empty object if AttributionCode doesn't return anything", async () => {
-        fakeAttributionCode.getAttrDataAsync = () => (Promise.resolve({content: null}));
-        fetchStub
-          .withArgs("https://services.addons.mozilla.org/api/v3/addons/addon/addonID")
-          .resolves({ok: true, status: 200, json: () => Promise.resolve({icon_url: "url/foo.ico", current_version: {files: [{url: "foo.com"}]}})});
-        const data = await Router._fetchAddonInfo();
-        assert.deepEqual(data, {});
-      });
-      it("should throw if we failed to get the addon version", async () => {
-        fetchStub
-          .withArgs("https://services.addons.mozilla.org/api/v3/addons/addon/addonID")
-          .rejects();
-        sandbox.stub(Cu, "reportError");
-        const data = await Router._fetchAddonInfo();
-
-        assert.calledOnce(Cu.reportError);
-        assert.deepEqual(data, {});
       });
     });
 

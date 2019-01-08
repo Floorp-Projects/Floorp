@@ -2,6 +2,8 @@
 // Tests that wasm module can accept URL and sourceMapURL from response
 // when instantiateStreaming is used.
 
+ignoreUnhandledRejections();
+
 try {
     WebAssembly.compileStreaming();
 } catch (err) {

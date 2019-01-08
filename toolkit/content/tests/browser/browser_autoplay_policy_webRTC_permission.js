@@ -9,7 +9,7 @@ const VIDEO_PAGE = "https://example.com/browser/toolkit/content/tests/browser/fi
 
 add_task(() => {
   return SpecialPowers.pushPrefEnv({"set": [
-    ["media.autoplay.default", SpecialPowers.Ci.nsIAutoplay.PROMPT],
+    ["media.autoplay.default", SpecialPowers.Ci.nsIAutoplay.BLOCKED],
     ["media.autoplay.enabled.user-gestures-needed", true],
     ["media.autoplay.block-event.enabled", true],
   ]});

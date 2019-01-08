@@ -34,7 +34,7 @@ class WebRenderCanvasData;
 class WebRenderCanvasRendererAsync;
 class WebRenderImageData;
 class WebRenderFallbackData;
-class WebRenderLayerManager;
+class RenderRootStateManager;
 class WebRenderGroupData;
 
 class WebRenderBackgroundData {
@@ -60,7 +60,7 @@ class WebRenderUserData {
 
   NS_INLINE_DECL_REFCOUNTING(WebRenderUserData)
 
-  WebRenderUserData(WebRenderLayerManager* aWRManager, nsDisplayItem* aItem);
+  WebRenderUserData(RenderRootStateManager* aManager, nsDisplayItem* aItem);
 
   virtual WebRenderImageData* AsImageData() { return nullptr; }
   virtual WebRenderFallbackData* AsFallbackData() { return nullptr; }
@@ -89,7 +89,7 @@ class WebRenderUserData {
 
   WebRenderBridgeChild* WrBridge() const;
 
-  RefPtr<WebRenderLayerManager> mWRManager;
+  RefPtr<RenderRootStateManager> mManager;
   nsIFrame* mFrame;
   uint32_t mDisplayItemKey;
   WebRenderUserDataRefTable* mTable;
@@ -122,7 +122,7 @@ typedef nsRefPtrHashtable<
 /// process except if used with blob images (watch your step).
 class WebRenderImageData : public WebRenderUserData {
  public:
-  WebRenderImageData(WebRenderLayerManager* aWRManager, nsDisplayItem* aItem);
+  WebRenderImageData(RenderRootStateManager* aManager, nsDisplayItem* aItem);
   virtual ~WebRenderImageData();
 
   virtual WebRenderImageData* AsImageData() override { return this; }
@@ -171,8 +171,7 @@ class WebRenderImageData : public WebRenderUserData {
 /// of the parent code).
 class WebRenderFallbackData : public WebRenderImageData {
  public:
-  WebRenderFallbackData(WebRenderLayerManager* aWRManager,
-                        nsDisplayItem* aItem);
+  WebRenderFallbackData(RenderRootStateManager* aManager, nsDisplayItem* aItem);
   virtual ~WebRenderFallbackData();
 
   virtual WebRenderFallbackData* AsFallbackData() override { return this; }
@@ -209,7 +208,7 @@ class WebRenderFallbackData : public WebRenderImageData {
 
 class WebRenderAnimationData : public WebRenderUserData {
  public:
-  WebRenderAnimationData(WebRenderLayerManager* aWRManager,
+  WebRenderAnimationData(RenderRootStateManager* aManager,
                          nsDisplayItem* aItem);
   virtual ~WebRenderAnimationData();
 
@@ -223,7 +222,7 @@ class WebRenderAnimationData : public WebRenderUserData {
 
 class WebRenderCanvasData : public WebRenderUserData {
  public:
-  WebRenderCanvasData(WebRenderLayerManager* aWRManager, nsDisplayItem* aItem);
+  WebRenderCanvasData(RenderRootStateManager* aManager, nsDisplayItem* aItem);
   virtual ~WebRenderCanvasData();
 
   virtual WebRenderCanvasData* AsCanvasData() override { return this; }

@@ -77,8 +77,6 @@ Preferences.addAll([
 
   // Media
   { id: "media.autoplay.default", type: "int" },
-  { id: "media.autoplay.enabled.ask-permission", type: "bool" },
-  { id: "media.autoplay.enabled.user-gestures-needed", type: "bool" },
 
   // Popups
   { id: "dom.disable_open_during_load", type: "bool" },
@@ -271,8 +269,6 @@ var gPrivacyPane = {
   init() {
     this._updateSanitizeSettingsButton();
     this.initializeHistoryMode();
-    this.initAutoplay();
-    this.updateAutoplayMediaControlsVisibility();
     this.updateHistoryModePane();
     this.updatePrivacyMicroControls();
     this.initAutoStartPrivateBrowsingReverter();
@@ -281,9 +277,13 @@ var gPrivacyPane = {
     /* Initialize Content Blocking */
     this.initContentBlocking();
 
+    this.blockAutoplayReadPrefs();
     this.trackingProtectionReadPrefs();
     this.networkCookieBehaviorReadPrefs();
     this._initTrackingProtectionExtensionControl();
+
+    Preferences.get("media.autoplay.default").on("change",
+      gPrivacyPane.blockAutoplayReadPrefs.bind(gPrivacyPane));
 
     Preferences.get("privacy.trackingprotection.enabled").on("change",
       gPrivacyPane.trackingProtectionReadPrefs.bind(gPrivacyPane));
@@ -305,10 +305,6 @@ var gPrivacyPane = {
       gPrivacyPane._updateSanitizeSettingsButton.bind(gPrivacyPane));
     Preferences.get("browser.privatebrowsing.autostart").on("change",
       gPrivacyPane.updatePrivacyMicroControls.bind(gPrivacyPane));
-    Preferences.get("media.autoplay.enabled.ask-permission").on("change",
-     gPrivacyPane.updateAutoplayMediaControlsVisibility.bind(gPrivacyPane));
-    Preferences.get("media.autoplay.enabled.user-gestures-needed").on("change",
-     gPrivacyPane.updateAutoplayMediaControlsVisibility.bind(gPrivacyPane));
     setEventListener("historyMode", "command", function() {
       gPrivacyPane.updateHistoryModePane();
       gPrivacyPane.updateHistoryModePrefs();
@@ -365,8 +361,6 @@ var gPrivacyPane = {
     setEventListener("autoplayMediaCheckbox", "command",
       gPrivacyPane.toggleAutoplayMedia);
     setEventListener("autoplayMediaPolicyButton", "command",
-      gPrivacyPane.showAutoplayMediaExceptions);
-    setEventListener("autoplayMediaPolicyComboboxButton", "command",
       gPrivacyPane.showAutoplayMediaExceptions);
     setEventListener("notificationsDoNotDisturb", "command",
       gPrivacyPane.toggleDoNotDisturbNotifications);
@@ -1109,10 +1103,10 @@ var gPrivacyPane = {
 
   // MEDIA
 
-  initAutoplay() {
-    let url = Services.urlFormatter.formatURLPref("app.support.baseURL") +
-      "block-autoplay";
-    document.getElementById("autoplayLearnMoreLink").setAttribute("href", url);
+  blockAutoplayReadPrefs() {
+    let blocked =
+      Preferences.get("media.autoplay.default").value == Ci.nsIAutoplay.BLOCKED;
+    document.getElementById("autoplayMediaCheckbox").checked = blocked;
   },
 
   /**
@@ -1121,29 +1115,6 @@ var gPrivacyPane = {
   toggleAutoplayMedia(event) {
     let blocked = event.target.checked ? Ci.nsIAutoplay.BLOCKED : Ci.nsIAutoplay.ALLOWED;
     Services.prefs.setIntPref("media.autoplay.default", blocked);
-  },
-
-  /**
-   * If user-gestures-needed is false we do not show any UI for configuring autoplay,
-   * if user-gestures-needed is false and ask-permission is false we show a checkbox
-   * which only allows the user to block autoplay
-   * if user-gestures-needed and ask-permission are true we show a combobox that
-   * allows the user to block / allow or prompt for autoplay
-   * We will be performing a shield study to determine the behaviour to be
-   * shipped, at which point we can remove these pref switches.
-   * https://bugzilla.mozilla.org/show_bug.cgi?id=1475099
-   */
-  updateAutoplayMediaControlsVisibility() {
-    let askPermission =
-      Services.prefs.getBoolPref("media.autoplay.ask-permission", false);
-    let userGestures =
-        Services.prefs.getBoolPref("media.autoplay.enabled.user-gestures-needed", false);
-    // Hide the combobox if we don't let the user ask for permission.
-    document.getElementById("autoplayMediaComboboxWrapper").hidden =
-      !userGestures || !askPermission;
-    // If the user may ask for permission, hide the checkbox instead.
-    document.getElementById("autoplayMediaCheckboxWrapper").hidden =
-      !userGestures || askPermission;
   },
 
   /**

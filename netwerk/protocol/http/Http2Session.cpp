@@ -3835,6 +3835,37 @@ void Http2Session::Close(nsresult aReason) {
   mStreamIDHash.Clear();
   mStreamTransactionHash.Clear();
 
+  // If we have any websocket transactions waiting for settings frame,
+  // reinitiate them. This can happend if we close a h2 connection before the
+  // settings frame is received.
+  if (mWaitingWebsockets.Length()) {
+    MOZ_ASSERT(!mProcessedWaitingWebsockets);
+    MOZ_ASSERT(mWaitingWebsockets.Length() ==
+               mWaitingWebsocketCallbacks.Length());
+
+    mProcessedWaitingWebsockets = true;
+    for (size_t i = 0; i < mWaitingWebsockets.Length(); ++i) {
+      RefPtr<nsAHttpTransaction> httpTransaction = mWaitingWebsockets[i];
+      LOG3(("Http2Session::Close %p Re-queuing websocket.", this));
+      httpTransaction->SetConnection(nullptr);
+      nsHttpTransaction *trans = httpTransaction->QueryHttpTransaction();
+      if (trans) {
+        nsresult rv =
+            gHttpHandler->InitiateTransaction(trans, trans->Priority());
+        if (NS_FAILED(rv)) {
+          LOG3(
+              ("Http2Session::Close %p failed to reinitiate websocket "
+               "transaction (%08x).\n",
+               this, static_cast<uint32_t>(rv)));
+        }
+      } else {
+        LOG3(("Http2Session::Close %p missing transaction?!", this));
+      }
+    }
+    mWaitingWebsockets.Clear();
+    mWaitingWebsocketCallbacks.Clear();
+  }
+
   uint32_t goAwayReason;
   if (mGoAwayReason != NO_HTTP_ERROR) {
     goAwayReason = mGoAwayReason;

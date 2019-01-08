@@ -670,6 +670,9 @@ package org.mozilla.geckoview {
     field public static final org.mozilla.geckoview.GeckoSessionSettings.Key<java.lang.Boolean> USE_MULTIPROCESS;
     field public static final org.mozilla.geckoview.GeckoSessionSettings.Key<java.lang.Boolean> USE_PRIVATE_MODE;
     field public static final org.mozilla.geckoview.GeckoSessionSettings.Key<java.lang.Boolean> USE_TRACKING_PROTECTION;
+    field public static final org.mozilla.geckoview.GeckoSessionSettings.Key<java.lang.Integer> VIEWPORT_MODE;
+    field public static final int VIEWPORT_MODE_DESKTOP = 1;
+    field public static final int VIEWPORT_MODE_MOBILE = 0;
   }
 
   public static class GeckoSessionSettings.Key<T> {

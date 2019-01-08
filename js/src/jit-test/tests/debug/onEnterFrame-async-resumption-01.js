@@ -1,6 +1,8 @@
 // A Debugger can {return:} from the first onEnterFrame for an async function.
 // (The exact behavior is undocumented; we're testing that it doesn't crash.)
 
+ignoreUnhandledRejections();
+
 let g = newGlobal();
 g.hit2 = false;
 g.eval(`async function f(x) { await x; return "ponies"; }`);
