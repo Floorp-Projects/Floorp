@@ -140,5 +140,12 @@ def test_registrar_dispatch(run_mach):
     assert d['command'] == 'python'
 
 
+def test_zero_microseconds(run_mach):
+    data = run_mach('python', '--exec-file',
+                    os.path.join(os.path.dirname(__file__), 'zero_microseconds.py'))
+    d = data[0]
+    assert d['command'] == 'python'
+
+
 if __name__ == '__main__':
     mozunit.main()

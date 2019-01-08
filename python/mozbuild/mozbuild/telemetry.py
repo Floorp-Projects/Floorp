@@ -256,8 +256,8 @@ def gather_telemetry(command='', success=False, start_time=None, end_time=None,
     '''
     data = {
         'client_id': get_client_id(mach_context.state_dir),
-        # Simplest way to get an rfc3339 datetime string, AFAICT.
-        'time': datetime.utcfromtimestamp(start_time).isoformat(b'T') + 'Z',
+        # Get an rfc3339 datetime string.
+        'time': datetime.utcfromtimestamp(start_time).strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
         'command': command,
         'argv': filter_args(command, sys.argv, paths),
         'success': success,
