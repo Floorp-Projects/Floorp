@@ -220,7 +220,11 @@ tasks:
                     - {$eval: 'default_task_definition'}
                     - {$eval: 'nightly_or_release_definition'}
                     - scopes:
-                        - project:mobile:android-components:releng:beetmover:bucket:maven-snapshot-production
+                        $if: 'is_repo_trusted'
+                        then:
+                          - project:mobile:android-components:releng:beetmover:bucket:maven-snapshot-production
+                        else:
+                          - project:mobile:android-components:releng:beetmover:bucket:maven-snapshot-staging
                       payload:
                         command:
                           - >-
