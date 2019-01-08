@@ -9,6 +9,11 @@ extern crate quote;
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::TokenStreamExt;
 
+mod conditional {
+    #[cfg(integer128)]
+    mod integer128;
+}
+
 struct X;
 
 impl quote::ToTokens for X {

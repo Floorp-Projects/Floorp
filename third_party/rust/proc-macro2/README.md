@@ -5,25 +5,20 @@
 [![Rust Documentation](https://img.shields.io/badge/api-rustdoc-blue.svg)](https://docs.rs/proc-macro2)
 
 A small shim over the `proc_macro` crate in the compiler intended to multiplex
-the current stable interface (as of 2017-07-05) and the [upcoming richer
-interface][upcoming].
+the stable interface as of 1.15.0 and the interface as of 1.30.0.
 
-[upcoming]: https://github.com/rust-lang/rust/pull/40939
-
-The upcoming support has features like:
+New features added in Rust 1.30.0 include:
 
 * Span information on tokens
 * No need to go in/out through strings
 * Structured input/output
 
-The hope is that libraries ported to `proc_macro2` will be trivial to port to
-the real `proc_macro` crate once the support on nightly is stabilized.
+Libraries ported to `proc_macro2` can retain support for older compilers while
+continuing to get all the nice benefits of using a 1.30.0+ compiler.
 
 ## Usage
 
-This crate by default compiles on the stable version of the compiler. It only
-uses the stable surface area of the `proc_macro` crate upstream in the compiler
-itself. Usage is done via:
+This crate compiles on all 1.15.0+ stable compilers and usage looks like:
 
 ```toml
 [dependencies]
@@ -48,23 +43,13 @@ pub fn my_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 }
 ```
 
-If you'd like you can enable the `nightly` feature in this crate. This will
-cause it to compile against the **unstable and nightly-only** features of the
-`proc_macro` crate. This in turn requires a nightly compiler. This should help
-preserve span information, however, coming in from the compiler itself.
-
-You can enable this feature via:
-
-```toml
-[dependencies]
-proc-macro2 = { version = "0.4", features = ["nightly"] }
-```
-
+The 1.30.0 compiler is automatically detected and its interfaces are used when
+available.
 
 ## Unstable Features
 
 `proc-macro2` supports exporting some methods from `proc_macro` which are
-currently highly unstable, and may not be stabilized in the first pass of
+currently highly unstable, and are not stabilized in the first pass of
 `proc_macro` stabilizations. These features are not exported by default. Minor
 versions of `proc-macro2` may make breaking changes to them at any time.
 
@@ -78,7 +63,6 @@ RUSTFLAGS='--cfg procmacro2_semver_exempt' cargo build
 Note that this must not only be done for your crate, but for any crate that
 depends on your crate. This infectious nature is intentional, as it serves as a
 reminder that you are outside of the normal semver guarantees.
-
 
 # License
 

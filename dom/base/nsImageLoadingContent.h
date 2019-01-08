@@ -200,8 +200,6 @@ class nsImageLoadingContent : public nsIImageLoadingContent {
    */
   void DestroyImageLoadingContent();
 
-  void ClearBrokenState() { mBroken = false; }
-
   /**
    * Returns the CORS mode that will be used for all future image loads. The
    * default implementation returns CORS_NONE unconditionally.

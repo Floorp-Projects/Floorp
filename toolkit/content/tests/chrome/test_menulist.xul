@@ -21,7 +21,7 @@
 <richlistbox id="scroller-in-listbox" style="overflow: auto" height="60">
   <richlistitem allowevents="true">
     <menulist id="menulist-in-listbox" onpopupshown="test_menulist_open(this, this.parentNode.parentNode)"
-              onpopuphidden="SimpleTest.executeSoon(checkScrollAndFinish)">
+              onpopuphidden="SimpleTest.executeSoon(() => checkScrollAndFinish().catch(ex => ok(false, ex)));">
       <menupopup id="menulist-in-listbox-popup">
         <menuitem label="One" value="one"/>
         <menuitem label="Two" value="two"/>
@@ -73,6 +73,18 @@
 
 <script class="testbody" type="application/javascript">
 <![CDATA[
+
+function waitForEvent(subject, eventName, checkFn) {
+  return new Promise(resolve => {
+    subject.addEventListener(eventName, function listener(event) {
+      if (checkFn && !checkFn(event)) {
+        return;
+      }
+      subject.removeEventListener(eventName, listener);
+      SimpleTest.executeSoon(() => resolve(event));
+    });
+  });
+}
 
 SimpleTest.waitForExplicitFinish();
 
@@ -225,92 +237,105 @@ function test_menulist_open(element, scroller)
   element.open = false;
 }
 
-function checkScrollAndFinish()
+async function checkScrollAndFinish()
 {
   is($("scroller").scrollTop, 0, "mousewheel on menulist does not scroll vbox parent");
   is($("scroller-in-listbox").scrollTop, 0, "mousewheel on menulist does not scroll listbox parent");
 
   let menulist = $("menulist-size");
-  menulist.addEventListener("popupshown", function testAltClose() {
-    menulist.removeEventListener("popupshown", testAltClose);
-
-    sendKey("ALT");
-    is(menulist.menupopup.state, "open", "alt doesn't close menulist");
-    menulist.open = false;
-
-    dragScroll();
-  });
-
+  let shownPromise = waitForEvent(menulist, "popupshown");
   menulist.open = true;
+  await shownPromise;
+
+  sendKey("ALT");
+  is(menulist.menupopup.state, "open", "alt doesn't close menulist");
+  menulist.open = false;
+
+  await dragScroll();
 }
 
-function dragScroll()
+async function dragScroll()
 {
   let menulist = $("menulist-clipped");
-  menulist.addEventListener("popupshown", function testDragScroll() {
-    menulist.removeEventListener("popupshown", testDragScroll);
 
-    let popup = menulist.menupopup;
-    let scrollPos = popup.scrollBox.scrollTop;
-    let popupRect = popup.getBoundingClientRect();
-
-    // First, check that scrolling does not occur when the mouse is moved over the
-    // anchor button but not the popup yet.
-    synthesizeMouseAtPoint(popupRect.left + 5, popupRect.top - 10, { type: "mousemove" });
-    is(popup.scrollBox.scrollTop, scrollPos, "scroll position after mousemove over button should not change");
-
-    synthesizeMouseAtPoint(popupRect.left + 20, popupRect.top + 10, { type: "mousemove" });
-
-    // Dragging above the popup scrolls it up.
-    synthesizeMouseAtPoint(popupRect.left + 20, popupRect.top - 20, { type: "mousemove" });
-    ok(popup.scrollBox.scrollTop < scrollPos - 5, "scroll position at drag up");
-
-    // Dragging below the popup scrolls it down.
-    scrollPos = popup.scrollBox.scrollTop;
-    synthesizeMouseAtPoint(popupRect.left + 20, popupRect.bottom + 20, { type: "mousemove" });
-    ok(popup.scrollBox.scrollTop > scrollPos + 5, "scroll position at drag down");
-
-    // Releasing the mouse button and moving the mouse does not change the scroll position.
-    scrollPos = popup.scrollBox.scrollTop;
-    synthesizeMouseAtPoint(popupRect.left + 20, popupRect.bottom + 25, { type: "mouseup" });
-    is(popup.scrollBox.scrollTop, scrollPos, "scroll position at mouseup should not change");
-
-    synthesizeMouseAtPoint(popupRect.left + 20, popupRect.bottom + 20, { type: "mousemove" });
-    is(popup.scrollBox.scrollTop, scrollPos, "scroll position at mousemove after mouseup should not change");
-
-    // Now check dragging with a mousedown on an item
-    let menuRect = popup.childNodes[4].getBoundingClientRect();
-    synthesizeMouseAtPoint(menuRect.left + 5, menuRect.top + 5, { type: "mousedown" });
-
-    // Dragging below the popup scrolls it down.
-    synthesizeMouseAtPoint(popupRect.left + 20, popupRect.bottom + 20, { type: "mousemove" });
-    ok(popup.scrollBox.scrollTop > scrollPos + 5, "scroll position at drag down from item");
-
-    // Dragging above the popup scrolls it up.
-    synthesizeMouseAtPoint(popupRect.left + 20, popupRect.top - 20, { type: "mousemove" });
-    is(popup.scrollBox.scrollTop, scrollPos, "scroll position at drag up from item");
-
-    scrollPos = popup.scrollBox.scrollTop;
-    synthesizeMouseAtPoint(popupRect.left + 20, popupRect.bottom + 25, { type: "mouseup" });
-    is(popup.scrollBox.scrollTop, scrollPos, "scroll position at mouseup should not change");
-
-    synthesizeMouseAtPoint(popupRect.left + 20, popupRect.bottom + 20, { type: "mousemove" });
-    is(popup.scrollBox.scrollTop, scrollPos, "scroll position at mousemove after mouseup should not change");
-
-    menulist.open = false;
-
-    let mouseMoveTarget = null;
-    popup.childNodes[4].click();
-    addEventListener("mousemove", function checkMouseMove(event) {
-      mouseMoveTarget = event.target;
-    }, {once: true});
-    synthesizeMouseAtPoint(popupRect.left + 20, popupRect.bottom + 20, { type: "mousemove" });
-    isnot(mouseMoveTarget, popup, "clicking on item when popup closed doesn't start dragging");
-
-    SimpleTest.finish();
-  });
-
+  let shownPromise = waitForEvent(menulist, "popupshown");
   menulist.open = true;
+  await shownPromise;
+
+  let popup = menulist.menupopup;
+  let getScrollPos = () => popup.scrollBox.scrollbox.scrollTop;
+  let scrollPos = getScrollPos();
+  let popupRect = popup.getBoundingClientRect();
+
+  // First, check that scrolling does not occur when the mouse is moved over the
+  // anchor button but not the popup yet.
+  synthesizeMouseAtPoint(popupRect.left + 5, popupRect.top - 10, { type: "mousemove" });
+  is(getScrollPos(), scrollPos, "scroll position after mousemove over button should not change");
+
+  synthesizeMouseAtPoint(popupRect.left + 20, popupRect.top + 10, { type: "mousemove" });
+
+  // Dragging above the popup scrolls it up.
+  let scrolledPromise = waitForEvent(popup, "scroll", false,
+    () => getScrollPos() < scrollPos - 5);
+  synthesizeMouseAtPoint(popupRect.left + 20, popupRect.top - 20, { type: "mousemove" });
+  await scrolledPromise;
+  ok(true, "scroll position at drag up");
+
+  // Dragging below the popup scrolls it down.
+  scrollPos = getScrollPos();
+  scrolledPromise = waitForEvent(popup, "scroll", false,
+    () => getScrollPos() > scrollPos + 5);
+  synthesizeMouseAtPoint(popupRect.left + 20, popupRect.bottom + 20, { type: "mousemove" });
+  await scrolledPromise;
+  ok(true, "scroll position at drag down");
+
+  // Releasing the mouse button and moving the mouse does not change the scroll position.
+  scrollPos = getScrollPos();
+  synthesizeMouseAtPoint(popupRect.left + 20, popupRect.bottom + 25, { type: "mouseup" });
+  is(getScrollPos(), scrollPos, "scroll position at mouseup should not change");
+
+  synthesizeMouseAtPoint(popupRect.left + 20, popupRect.bottom + 20, { type: "mousemove" });
+  is(getScrollPos(), scrollPos, "scroll position at mousemove after mouseup should not change");
+
+  // Now check dragging with a mousedown on an item. Make sure the element is
+  // visible, as the asynchronous scrolling may have moved it out of view.
+  popup.childNodes[4].scrollIntoView({ block: "nearest", behavior: "instant" });
+  let menuRect = popup.childNodes[4].getBoundingClientRect();
+  synthesizeMouseAtPoint(menuRect.left + 5, menuRect.top + 5, { type: "mousedown" });
+
+  // Dragging below the popup scrolls it down.
+  scrolledPromise = waitForEvent(popup, "scroll", false,
+    () => getScrollPos() > scrollPos + 5);
+  synthesizeMouseAtPoint(popupRect.left + 20, popupRect.bottom + 20, { type: "mousemove" });
+  await scrolledPromise;
+  ok(true, "scroll position at drag down from item");
+
+  // Dragging above the popup scrolls it up.
+  scrollPos = getScrollPos();
+  scrolledPromise = waitForEvent(popup, "scroll", false,
+    () => getScrollPos() < scrollPos - 5);
+  synthesizeMouseAtPoint(popupRect.left + 20, popupRect.top - 20, { type: "mousemove" });
+  await scrolledPromise;
+  ok(true, "scroll position at drag up from item");
+
+  scrollPos = getScrollPos();
+  synthesizeMouseAtPoint(popupRect.left + 20, popupRect.bottom + 25, { type: "mouseup" });
+  is(getScrollPos(), scrollPos, "scroll position at mouseup should not change");
+
+  synthesizeMouseAtPoint(popupRect.left + 20, popupRect.bottom + 20, { type: "mousemove" });
+  is(getScrollPos(), scrollPos, "scroll position at mousemove after mouseup should not change");
+
+  menulist.open = false;
+
+  let mouseMoveTarget = null;
+  popup.childNodes[4].click();
+  addEventListener("mousemove", function checkMouseMove(event) {
+    mouseMoveTarget = event.target;
+  }, {once: true});
+  synthesizeMouseAtPoint(popupRect.left + 20, popupRect.bottom + 20, { type: "mousemove" });
+  isnot(mouseMoveTarget, popup, "clicking on item when popup closed doesn't start dragging");
+
+  SimpleTest.finish();
 }
 
 ]]>
