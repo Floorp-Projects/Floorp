@@ -12,6 +12,7 @@
 
 #include "jsapi.h"
 
+#include "js/PropertySpec.h"
 #include "js/StableStringChars.h"
 #include "js/Wrapper.h"
 #include "proxy/DeadObjectProxy.h"

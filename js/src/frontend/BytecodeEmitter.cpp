@@ -17,6 +17,7 @@
 #include "mozilla/PodOperations.h"
 #include "mozilla/ReverseIterator.h"
 #include "mozilla/Sprintf.h"
+#include "mozilla/Variant.h"
 
 #include <string.h>
 
@@ -62,6 +63,7 @@ using namespace js;
 using namespace js::frontend;
 
 using mozilla::AssertedCast;
+using mozilla::AsVariant;
 using mozilla::DebugOnly;
 using mozilla::Maybe;
 using mozilla::Nothing;
@@ -441,7 +443,7 @@ bool BytecodeEmitter::updateLineNumberNotes(uint32_t offset) {
   ErrorReporter* er = &parser->errorReporter();
   bool onThisLine;
   if (!er->isOnThisLine(offset, currentLine(), &onThisLine)) {
-    er->reportErrorNoOffset(JSMSG_OUT_OF_MEMORY);
+    er->errorNoOffset(JSMSG_OUT_OF_MEMORY);
     return false;
   }
 
@@ -1529,7 +1531,8 @@ void BytecodeEmitter::reportError(ParseNode* pn, unsigned errorNumber, ...) {
   va_list args;
   va_start(args, errorNumber);
 
-  parser->errorReporter().errorAtVA(offset, errorNumber, &args);
+  parser->errorReporter().errorWithNotesAtVA(nullptr, AsVariant(offset),
+                                             errorNumber, &args);
 
   va_end(args);
 }
@@ -1542,7 +1545,8 @@ void BytecodeEmitter::reportError(const Maybe<uint32_t>& maybeOffset,
   va_list args;
   va_start(args, errorNumber);
 
-  parser->errorReporter().errorAtVA(offset, errorNumber, &args);
+  parser->errorReporter().errorWithNotesAtVA(nullptr, AsVariant(offset),
+                                             errorNumber, &args);
 
   va_end(args);
 }
@@ -1555,8 +1559,8 @@ bool BytecodeEmitter::reportExtraWarning(ParseNode* pn, unsigned errorNumber,
   va_list args;
   va_start(args, errorNumber);
 
-  bool result = parser->errorReporter().reportExtraWarningErrorNumberVA(
-      nullptr, offset, errorNumber, &args);
+  bool result = parser->errorReporter().extraWarningWithNotesAtVA(
+      nullptr, AsVariant(offset), errorNumber, &args);
 
   va_end(args);
   return result;
@@ -1570,8 +1574,8 @@ bool BytecodeEmitter::reportExtraWarning(const Maybe<uint32_t>& maybeOffset,
   va_list args;
   va_start(args, errorNumber);
 
-  bool result = parser->errorReporter().reportExtraWarningErrorNumberVA(
-      nullptr, offset, errorNumber, &args);
+  bool result = parser->errorReporter().extraWarningWithNotesAtVA(
+      nullptr, AsVariant(offset), errorNumber, &args);
 
   va_end(args);
   return result;

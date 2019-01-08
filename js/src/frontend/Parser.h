@@ -26,7 +26,7 @@
  * template instantiations wherever possible, mean that Parser exhibits much of
  * the same unholy template/inheritance complexity as token streams.
  *
- * == ParserBase → JS::AutoGCRooter, StrictModeGetter ==
+ * == ParserBase → JS::AutoGCRooter, ErrorReportMixin ==
  *
  * ParserBase is the base parser class, shared by all parsers of all character
  * types and parse-handling behavior.  It stores everything character- and
@@ -174,6 +174,7 @@
 
 #include "ds/Nestable.h"
 #include "frontend/BytecodeCompiler.h"
+#include "frontend/ErrorReporter.h"
 #include "frontend/FullParseHandler.h"
 #include "frontend/NameAnalysisTypes.h"
 #include "frontend/NameCollections.h"
@@ -181,6 +182,8 @@
 #include "frontend/SharedContext.h"
 #include "frontend/SyntaxParseHandler.h"
 #include "frontend/TokenStream.h"
+
+#include "vm/ErrorReporting.h"
 
 namespace js {
 
@@ -232,8 +235,10 @@ class AutoAwaitIsKeyword;
 template <class ParseHandler, typename Unit>
 class AutoInParametersOfAsyncFunction;
 
-class MOZ_STACK_CLASS ParserBase : public StrictModeGetter,
-                                   private JS::AutoGCRooter {
+class MOZ_STACK_CLASS ParserBase : private JS::AutoGCRooter,
+                                   public ErrorReportMixin {
+  using Base = ErrorReportMixin;
+
  private:
   ParserBase* thisForCtor() { return this; }
 
@@ -313,20 +318,49 @@ class MOZ_STACK_CLASS ParserBase : public StrictModeGetter,
   // Determine whether |yield| is a valid name in the current context.
   bool yieldExpressionsSupported() const { return pc->isGenerator(); }
 
-  virtual bool strictMode() override { return pc->sc()->strict(); }
   bool setLocalStrictMode(bool strict) {
     MOZ_ASSERT(anyChars.debugHasNoLookahead());
     return pc->sc()->setLocalStrictMode(strict);
   }
 
-  const JS::ReadOnlyCompileOptions& options() const {
+ public:
+  // Implement ErrorReportMixin.
+
+  JSContext* getContext() const override { return context; }
+
+  bool strictMode() const override { return pc->sc()->strict(); }
+
+  const JS::ReadOnlyCompileOptions& options() const override {
     return anyChars.options();
   }
 
-  bool isUnexpectedEOF() const { return isUnexpectedEOF_; }
+  using Base::error;
+  using Base::errorAt;
+  using Base::errorNoOffset;
+  using Base::errorWithNotes;
+  using Base::errorWithNotesAt;
+  using Base::errorWithNotesNoOffset;
+  using Base::extraWarning;
+  using Base::extraWarningAt;
+  using Base::extraWarningNoOffset;
+  using Base::extraWarningWithNotes;
+  using Base::extraWarningWithNotesAt;
+  using Base::extraWarningWithNotesNoOffset;
+  using Base::strictModeError;
+  using Base::strictModeErrorAt;
+  using Base::strictModeErrorNoOffset;
+  using Base::strictModeErrorWithNotes;
+  using Base::strictModeErrorWithNotesAt;
+  using Base::strictModeErrorWithNotesNoOffset;
+  using Base::warning;
+  using Base::warningAt;
+  using Base::warningNoOffset;
+  using Base::warningWithNotes;
+  using Base::warningWithNotesAt;
+  using Base::warningWithNotesNoOffset;
 
-  MOZ_MUST_USE bool warningNoOffset(unsigned errorNumber, ...);
-  void errorNoOffset(unsigned errorNumber, ...);
+ public:
+  bool isUnexpectedEOF() const { return isUnexpectedEOF_; }
 
   bool isValidStrictBinding(PropertyName* name);
 
@@ -411,6 +445,8 @@ enum FunctionCallBehavior {
 
 template <class ParseHandler>
 class MOZ_STACK_CLASS PerHandlerParser : public ParserBase {
+  using Base = ParserBase;
+
  private:
   using Node = typename ParseHandler::Node;
 
@@ -558,6 +594,34 @@ class MOZ_STACK_CLASS PerHandlerParser : public ParserBase {
                               uint32_t toStringStart, Directives directives,
                               GeneratorKind generatorKind,
                               FunctionAsyncKind asyncKind);
+
+ public:
+  // ErrorReportMixin.
+
+  using Base::error;
+  using Base::errorAt;
+  using Base::errorNoOffset;
+  using Base::errorWithNotes;
+  using Base::errorWithNotesAt;
+  using Base::errorWithNotesNoOffset;
+  using Base::extraWarning;
+  using Base::extraWarningAt;
+  using Base::extraWarningNoOffset;
+  using Base::extraWarningWithNotes;
+  using Base::extraWarningWithNotesAt;
+  using Base::extraWarningWithNotesNoOffset;
+  using Base::strictModeError;
+  using Base::strictModeErrorAt;
+  using Base::strictModeErrorNoOffset;
+  using Base::strictModeErrorWithNotes;
+  using Base::strictModeErrorWithNotesAt;
+  using Base::strictModeErrorWithNotesNoOffset;
+  using Base::warning;
+  using Base::warningAt;
+  using Base::warningNoOffset;
+  using Base::warningWithNotes;
+  using Base::warningWithNotesAt;
+  using Base::warningWithNotesNoOffset;
 };
 
 #define ABORTED_SYNTAX_PARSE_SENTINEL reinterpret_cast<void*>(0x1)
@@ -686,6 +750,37 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
   using Base::clearAbortedSyntaxParse;
   using Base::disableSyntaxParser;
   using Base::hadAbortedSyntaxParse;
+
+ public:
+  // Implement ErrorReportMixin.
+
+  MOZ_MUST_USE bool computeErrorMetadata(
+      ErrorMetadata* err, const ErrorReportMixin::ErrorOffset& offset) override;
+
+  using Base::error;
+  using Base::errorAt;
+  using Base::errorNoOffset;
+  using Base::errorWithNotes;
+  using Base::errorWithNotesAt;
+  using Base::errorWithNotesNoOffset;
+  using Base::extraWarning;
+  using Base::extraWarningAt;
+  using Base::extraWarningNoOffset;
+  using Base::extraWarningWithNotes;
+  using Base::extraWarningWithNotesAt;
+  using Base::extraWarningWithNotesNoOffset;
+  using Base::strictModeError;
+  using Base::strictModeErrorAt;
+  using Base::strictModeErrorNoOffset;
+  using Base::strictModeErrorWithNotes;
+  using Base::strictModeErrorWithNotesAt;
+  using Base::strictModeErrorWithNotesNoOffset;
+  using Base::warning;
+  using Base::warningAt;
+  using Base::warningNoOffset;
+  using Base::warningWithNotes;
+  using Base::warningWithNotesAt;
+  using Base::warningWithNotesNoOffset;
 
  public:
   using Base::anyChars;
@@ -934,48 +1029,6 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
                                    ErrorReportT errorReport) {
     return mustMatchToken(expected, TokenStream::None, errorReport);
   }
-
-  /* Report the given error at the current offset. */
-  void error(unsigned errorNumber, ...);
-  void errorWithNotes(UniquePtr<JSErrorNotes> notes, unsigned errorNumber, ...);
-
-  /* Report the given error at the given offset. */
-  void errorAt(uint32_t offset, unsigned errorNumber, ...);
-  void errorWithNotesAt(UniquePtr<JSErrorNotes> notes, uint32_t offset,
-                        unsigned errorNumber, ...);
-
-  /*
-   * Handle a strict mode error at the current offset.  Report an error if in
-   * strict mode code, or warn if not, using the given error number and
-   * arguments.
-   */
-  MOZ_MUST_USE bool strictModeError(unsigned errorNumber, ...);
-
-  /*
-   * Handle a strict mode error at the given offset.  Report an error if in
-   * strict mode code, or warn if not, using the given error number and
-   * arguments.
-   */
-  MOZ_MUST_USE bool strictModeErrorAt(uint32_t offset, unsigned errorNumber,
-                                      ...);
-
-  /* Report the given warning at the current offset. */
-  MOZ_MUST_USE bool warning(unsigned errorNumber, ...);
-
-  /* Report the given warning at the given offset. */
-  MOZ_MUST_USE bool warningAt(uint32_t offset, unsigned errorNumber, ...);
-
-  /*
-   * If extra warnings are enabled, report the given warning at the current
-   * offset.
-   */
-  MOZ_MUST_USE bool extraWarning(unsigned errorNumber, ...);
-
-  /*
-   * If extra warnings are enabled, report the given warning at the given
-   * offset.
-   */
-  MOZ_MUST_USE bool extraWarningAt(uint32_t offset, unsigned errorNumber, ...);
 
  private:
   GeneralParser* thisForCtor() { return this; }
@@ -1403,13 +1456,39 @@ class MOZ_STACK_CLASS Parser<SyntaxParseHandler, Unit> final
   using Base::innerFunctionForFunctionBox;
   using Base::tokenStream;
 
+ public:
+  // ErrorReportMixin.
+
+  using Base::error;
+  using Base::errorAt;
+  using Base::errorNoOffset;
+  using Base::errorWithNotes;
+  using Base::errorWithNotesAt;
+  using Base::errorWithNotesNoOffset;
+  using Base::extraWarning;
+  using Base::extraWarningAt;
+  using Base::extraWarningNoOffset;
+  using Base::extraWarningWithNotes;
+  using Base::extraWarningWithNotesAt;
+  using Base::extraWarningWithNotesNoOffset;
+  using Base::strictModeError;
+  using Base::strictModeErrorAt;
+  using Base::strictModeErrorNoOffset;
+  using Base::strictModeErrorWithNotes;
+  using Base::strictModeErrorWithNotesAt;
+  using Base::strictModeErrorWithNotesNoOffset;
+  using Base::warning;
+  using Base::warningAt;
+  using Base::warningNoOffset;
+  using Base::warningWithNotes;
+  using Base::warningWithNotesAt;
+  using Base::warningWithNotesNoOffset;
+
  private:
   using Base::alloc;
 #if DEBUG
   using Base::checkOptionsCalled;
 #endif
-  using Base::error;
-  using Base::errorAt;
   using Base::finishFunctionScopes;
   using Base::functionFormalParametersAndBody;
   using Base::handler;
@@ -1528,6 +1607,34 @@ class MOZ_STACK_CLASS Parser<FullParseHandler, Unit> final
   using Base::ss;
   using Base::tokenStream;
 
+ public:
+  // ErrorReportMixin.
+
+  using Base::error;
+  using Base::errorAt;
+  using Base::errorNoOffset;
+  using Base::errorWithNotes;
+  using Base::errorWithNotesAt;
+  using Base::errorWithNotesNoOffset;
+  using Base::extraWarning;
+  using Base::extraWarningAt;
+  using Base::extraWarningNoOffset;
+  using Base::extraWarningWithNotes;
+  using Base::extraWarningWithNotesAt;
+  using Base::extraWarningWithNotesNoOffset;
+  using Base::strictModeError;
+  using Base::strictModeErrorAt;
+  using Base::strictModeErrorNoOffset;
+  using Base::strictModeErrorWithNotes;
+  using Base::strictModeErrorWithNotesAt;
+  using Base::strictModeErrorWithNotesNoOffset;
+  using Base::warning;
+  using Base::warningAt;
+  using Base::warningNoOffset;
+  using Base::warningWithNotes;
+  using Base::warningWithNotesAt;
+  using Base::warningWithNotesNoOffset;
+
  private:
   using Base::alloc;
   using Base::checkLabelOrIdentifierReference;
@@ -1535,8 +1642,6 @@ class MOZ_STACK_CLASS Parser<FullParseHandler, Unit> final
   using Base::checkOptionsCalled;
 #endif
   using Base::context;
-  using Base::error;
-  using Base::errorAt;
   using Base::finishFunctionScopes;
   using Base::finishLexicalScope;
   using Base::innerFunction;

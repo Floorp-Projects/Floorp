@@ -27,8 +27,6 @@
 #include "nsStyledElement.h"
 #include "gfxMatrix.h"
 
-class nsSVGBoolean;
-class nsSVGInteger;
 class nsSVGLength2;
 class nsSVGNumber2;
 
@@ -45,8 +43,10 @@ class SVGAnimatedPointList;
 class SVGAnimatedPreserveAspectRatio;
 class SVGAnimatedTransformList;
 class SVGAnimatedLengthList;
+class SVGBoolean;
 class SVGEnum;
 class SVGUserUnitList;
+class SVGInteger;
 class SVGIntegerPair;
 class SVGNumberList;
 class SVGNumberPair;
@@ -409,11 +409,11 @@ class SVGElement : public SVGElementBase  // nsIContent
   };
 
   struct IntegerAttributesInfo {
-    nsSVGInteger* const mIntegers;
+    SVGInteger* const mIntegers;
     const IntegerInfo* const mIntegerInfo;
     const uint32_t mIntegerCount;
 
-    IntegerAttributesInfo(nsSVGInteger* aIntegers, IntegerInfo* aIntegerInfo,
+    IntegerAttributesInfo(SVGInteger* aIntegers, IntegerInfo* aIntegerInfo,
                           uint32_t aIntegerCount)
         : mIntegers(aIntegers),
           mIntegerInfo(aIntegerInfo),
@@ -467,11 +467,11 @@ class SVGElement : public SVGElementBase  // nsIContent
   };
 
   struct BooleanAttributesInfo {
-    nsSVGBoolean* const mBooleans;
+    SVGBoolean* const mBooleans;
     const BooleanInfo* const mBooleanInfo;
     const uint32_t mBooleanCount;
 
-    BooleanAttributesInfo(nsSVGBoolean* aBooleans, BooleanInfo* aBooleanInfo,
+    BooleanAttributesInfo(SVGBoolean* aBooleans, BooleanInfo* aBooleanInfo,
                           uint32_t aBooleanCount)
         : mBooleans(aBooleans),
           mBooleanInfo(aBooleanInfo),

@@ -151,7 +151,8 @@
  * are just functionality, no actual member data.
  *
  * == TokenStreamSpecific<Unit, AnyCharsAccess> →
- *    TokenStreamChars<Unit, AnyCharsAccess>, TokenStreamShared ==
+ *    TokenStreamChars<Unit, AnyCharsAccess>, TokenStreamShared,
+ *    ErrorReporter ==
  *
  * TokenStreamSpecific is operations that are parametrized on character type
  * but implement the *general* idea of tokenizing, without being intrinsically
@@ -454,18 +455,6 @@ extern const char* ReservedWordToCharZ(PropertyName* str);
 
 extern const char* ReservedWordToCharZ(TokenKind tt);
 
-// Ideally, tokenizing would be entirely independent of context.  But the
-// strict mode flag, which is in SharedContext, affects tokenizing, and
-// TokenStream needs to see it.
-//
-// This class is a tiny back-channel from TokenStream to the strict mode flag
-// that avoids exposing the rest of SharedContext to TokenStream.
-//
-class StrictModeGetter {
- public:
-  virtual bool strictMode() = 0;
-};
-
 struct TokenStreamFlags {
   bool isEOF : 1;           // Hit end of file.
   bool isDirtyLine : 1;     // Non-whitespace since start of line.
@@ -496,8 +485,6 @@ class TokenStreamShared {
 
  public:
   static constexpr unsigned maxLookahead = 2;
-
-  static constexpr uint32_t NoOffset = UINT32_MAX;
 
   using Modifier = Token::Modifier;
   static constexpr Modifier None = Token::None;
@@ -943,20 +930,16 @@ class TokenStreamAnyChars : public TokenStreamShared {
   }
 
  public:
-  MOZ_MUST_USE bool compileWarning(ErrorMetadata&& metadata,
-                                   UniquePtr<JSErrorNotes> notes,
-                                   unsigned flags, unsigned errorNumber,
-                                   va_list args);
-
   // Compute error metadata for an error at no offset.
   void computeErrorMetadataNoOffset(ErrorMetadata* err);
 
   // ErrorReporter API Helpers
 
-  // This is just straight up duplicated from TokenStreamSpecific's inheritance
-  // of ErrorReporter's reportErrorNoOffset. varargs delenda est.
+  // Provide minimal set of error reporting API given we cannot use
+  // ErrorReportMixin here. "report" prefix is added to avoid conflict with
+  // ErrorReportMixin methods in TokenStream class.
   void reportErrorNoOffset(unsigned errorNumber, ...);
-  void reportErrorNoOffsetVA(unsigned errorNumber, va_list args);
+  void reportErrorNoOffsetVA(unsigned errorNumber, va_list* args);
 
   const JS::ReadOnlyCompileOptions& options() const { return options_; }
 
@@ -2467,11 +2450,8 @@ class MOZ_STACK_CLASS TokenStreamSpecific
     return false;
   }
 
-  // ErrorReporter API.
-
-  const JS::ReadOnlyCompileOptions& options() const final {
-    return anyCharsAccess().options();
-  }
+ public:
+  // Implement ErrorReporter.
 
   void lineAndColumnAt(size_t offset, uint32_t* line,
                        uint32_t* column) const final {
@@ -2500,50 +2480,30 @@ class MOZ_STACK_CLASS TokenStreamSpecific
 
   bool hasTokenizationStarted() const final;
 
-  void reportErrorNoOffsetVA(unsigned errorNumber, va_list args) final {
-    anyCharsAccess().reportErrorNoOffsetVA(errorNumber, args);
-  }
-
   const char* getFilename() const final {
     return anyCharsAccess().getFilename();
   }
 
-  // TokenStream-specific error reporters.
-  void reportError(unsigned errorNumber, ...);
+ private:
+  // Implement ErrorReportMixin.
 
-  // Report the given error at the current offset.
-  void error(unsigned errorNumber, ...);
+  JSContext* getContext() const override { return anyCharsAccess().cx; }
 
-  // Report the given error at the given offset.
-  void errorAt(uint32_t offset, unsigned errorNumber, ...);
-  void errorAtVA(uint32_t offset, unsigned errorNumber, va_list* args);
-
-  // Warn at the current offset.
-  MOZ_MUST_USE bool warning(unsigned errorNumber, ...);
+  MOZ_MUST_USE bool strictMode() const override {
+    return anyCharsAccess().strictMode();
+  }
 
  public:
-  // Compute error metadata for an error at the given offset.
-  MOZ_MUST_USE bool computeErrorMetadata(ErrorMetadata* err, uint32_t offset);
+  // Implement ErrorReportMixin.
 
-  // General-purpose error reporters.  You should avoid calling these
-  // directly, and instead use the more succinct alternatives (error(),
-  // warning(), &c.) in TokenStream, Parser, and BytecodeEmitter.
-  //
-  // These functions take a |va_list*| parameter, not a |va_list| parameter,
-  // to hack around bug 1363116.  (Longer-term, the right fix is of course to
-  // not use ellipsis functions or |va_list| at all in error reporting.)
-  bool reportStrictModeErrorNumberVA(UniquePtr<JSErrorNotes> notes,
-                                     uint32_t offset, bool strictMode,
-                                     unsigned errorNumber, va_list* args);
-  bool reportExtraWarningErrorNumberVA(UniquePtr<JSErrorNotes> notes,
-                                       uint32_t offset, unsigned errorNumber,
-                                       va_list* args);
+  const JS::ReadOnlyCompileOptions& options() const final {
+    return anyCharsAccess().options();
+  }
+
+  MOZ_MUST_USE bool computeErrorMetadata(
+      ErrorMetadata* err, const ErrorOffset& errorOffset) override;
 
  private:
-  // This is private because it should only be called by the tokenizer while
-  // tokenizing not by, for example, BytecodeEmitter.
-  bool reportStrictModeError(unsigned errorNumber, ...);
-
   void reportInvalidEscapeError(uint32_t offset, InvalidEscapeType type) {
     switch (type) {
       case InvalidEscapeType::None:
@@ -2699,7 +2659,7 @@ class MOZ_STACK_CLASS TokenStreamSpecific
       bool onThisLine;
       if (!anyChars.srcCoords.isOnThisLine(curr.pos.end, anyChars.lineno,
                                            &onThisLine)) {
-        reportError(JSMSG_OUT_OF_MEMORY);
+        error(JSMSG_OUT_OF_MEMORY);
         return false;
       }
 

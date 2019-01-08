@@ -1,4 +1,4 @@
-52956
+52975
 0/nm
 0th/pt
 1/n1
@@ -6890,6 +6890,7 @@ Krystal/M
 Krystyna/M
 Kshatriya/M
 Kuala/M
+Kubernetes/M
 Kublai/M
 Kubrick/M
 Kuhn/M
@@ -14220,6 +14221,7 @@ ajar
 aka
 akimbo
 akin
+al
 alabaster/M
 alack
 alacrity/M
@@ -20451,7 +20453,7 @@ compress's
 compress/CGDS
 compressed/U
 compressible
-compression/CM
+compression/CMS
 compressor/SM
 comprise/GDS
 compromise/MGDS
@@ -22045,6 +22047,9 @@ cysticercoses
 cysticercosis
 cysticercus
 cystitis
+cystoscope
+cystoscopic
+cystoscopy
 cytokine/SM
 cytologist/SM
 cytology/M
@@ -23495,6 +23500,8 @@ divot/SM
 divulge/GDS
 divvy/DSMG
 dixieland/M
+dizygotic
+dizygous
 dizzily
 dizziness/M
 dizzy/DRSPTG
@@ -25243,6 +25250,7 @@ estrogen/M
 estrous
 estrus/MS
 estuary/SM
+et
 eta/SM
 etc
 etch/DRSZGJ
@@ -35591,6 +35599,7 @@ monetarily
 monetarism/M
 monetarist/MS
 monetary
+monetization
 monetize/CGDS
 money/SMD
 moneybag/MS
@@ -35629,6 +35638,7 @@ monocular
 monodic
 monodist/SM
 monody/SM
+monofilament
 monogamist/MS
 monogamous/Y
 monogamy/M
@@ -35672,6 +35682,8 @@ monotonousness/M
 monotony/M
 monounsaturated
 monoxide/MS
+monozygotic
+monozygous
 monseigneur/M
 monsieur/M
 monsignor/SM
@@ -37208,6 +37220,7 @@ nutcase/S
 nutcracker/MS
 nuthatch/MS
 nuthouse/S
+nutjob/S
 nutmeat/SM
 nutmeg/SM
 nutpick/SM
@@ -38663,6 +38676,7 @@ parodist/SM
 parody/GDSM
 parole/MGDS
 parolee/MS
+paronychia
 parotid
 paroxysm/SM
 paroxysmal
@@ -40192,6 +40206,8 @@ polymeric
 polymerization/M
 polymerize/GDS
 polymorphic
+polymorphically
+polymorphism
 polymorphous
 polynomial/MS
 polynucleotide/SM
@@ -48901,6 +48917,7 @@ tho
 thole/SM
 thong/SM
 thoracic
+thoracotomy
 thorax/MS
 thorium/M
 thorn/SM
@@ -50276,6 +50293,7 @@ ukulele/SM
 ulcer/SM
 ulcerate/XDSGN
 ulceration/M
+ulcerative
 ulcerous
 ulna/M
 ulnae
@@ -50903,6 +50921,7 @@ usury/M
 utensil/SM
 uteri
 uterine
+utero
 uterus/M
 utilitarian/MS
 utilitarianism/M

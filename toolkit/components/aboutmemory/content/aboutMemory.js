@@ -1678,124 +1678,53 @@ function appendProcessAboutMemoryElements(aP, aN, aProcess, aTrees,
   appendLink("end", "start", "↑");
 }
 
+// The locale used when formatting a number as a human-readable string in any
+// format.
+const kStyleLocale = "en-US";
+
 // Used for UNITS_BYTES values that are printed as MiB.
-const kMBStyle = {
+const kMBFormat = new Intl.NumberFormat(kStyleLocale, {
   minimumFractionDigits: 2,
   maximumFractionDigits: 2,
-};
+});
 
 // Used for UNITS_PERCENTAGE values.
-const kPercStyle = {
+const kPercFormatter = new Intl.NumberFormat(kStyleLocale, {
   style: "percent",
   minimumFractionDigits: 2,
   maximumFractionDigits: 2,
-};
+});
 
 // Used for fractions within the tree.
-const kFracStyle = {
+const kFracFormatter = new Intl.NumberFormat(kStyleLocale, {
   style: "percent",
   minimumIntegerDigits: 2,
   minimumFractionDigits: 2,
   maximumFractionDigits: 2,
-};
+});
 
 // Used for special-casing 100% fractions within the tree.
-const kFrac1Style = {
+const kFrac1Formatter = new Intl.NumberFormat(kStyleLocale, {
   style: "percent",
   minimumIntegerDigits: 3,
   minimumFractionDigits: 1,
   maximumFractionDigits: 1,
-};
+});
+
+// Used when no custom formatting was requested.
+const kDefaultNumFormatter = new Intl.NumberFormat(kStyleLocale);
 
 /**
  * Formats an int as a human-readable string.
  *
  * @param aN
  *        The integer to format.
- * @param aOptions
- *        Optional options object.
+ * @param aFormatter
+ *        Optional formatter object.
  * @return A human-readable string representing the int.
  */
-function formatNum(aN, aOptions = {}) {
-  // Unfortunately toLocaleString is slow, so we implement a restricted
-  // version of it that just handles the formatting options we need in the
-  // above kFooStyle options objects.  If toLocaleString becomes faster in the
-  // future, this code can be replaced with:
-  //
-  //   return aN.toLocaleString("en-US", aOptions);
-
-  if (Number.isNaN(aN)) {
-    return "NaN";
-  }
-
-  if (aN == Infinity) {
-    return "∞";
-  }
-
-  if (aN == -Infinity) {
-    return "-∞";
-  }
-
-  // Extract options and apply defaults.
-  let style = aOptions.style || "decimal";
-  let percent = style == "percent";
-  let minIntegerDigits = aOptions.minimumIntegerDigits || 1;
-  let minFractionDigits = aOptions.minimumFractionDigits || 0;
-  let maxFractionDigits = aOptions.maximumFractionDigits || (percent ? 1 : 3);
-  assert(style == "decimal" || style == "percent", "unsupported style value");
-
-  // Store the sign and work on the absolute number from here on.
-  let formattedNum = aN < 0 ? "-" : "";
-
-  // Delegate most of the number formatting work to toFixed and then work
-  // on the resulting string.
-  let fixedNum = Math.abs(aN * (percent ? 100 : 1)).toFixed(maxFractionDigits);
-
-  // Split the fixed precision number into its integer and fractional parts.
-  let decimalPointIndex = fixedNum.indexOf(".");
-  let integerPart;
-  let fractionalPart;
-  if (decimalPointIndex == -1) {
-    integerPart = fixedNum;
-    fractionalPart = "";
-  } else {
-    integerPart = fixedNum.substring(0, decimalPointIndex);
-    fractionalPart = fixedNum.substring(decimalPointIndex + 1);
-  }
-
-  // Apply minimum and maximum digit lengths.
-  integerPart = integerPart.padStart(minIntegerDigits, "0");
-  fractionalPart = fractionalPart.padEnd(minFractionDigits, "0");
-
-  let zeroIndex = fractionalPart.length;
-  while (zeroIndex > minFractionDigits &&
-         fractionalPart[zeroIndex - 1] == "0") {
-    --zeroIndex;
-  }
-  fractionalPart = fractionalPart.substring(0, zeroIndex);
-
-  // Insert grouping separators in the integer part.
-  let i = (integerPart.length % 3) || 3;
-  let groupedIntegerPart = integerPart.substring(0, i);
-  while (i < integerPart.length) {
-    groupedIntegerPart += ",";
-    groupedIntegerPart += integerPart.substring(i, i + 3);
-    i += 3;
-  }
-
-  // Construct the formatted number.
-  formattedNum += groupedIntegerPart;
-  if (fractionalPart != "") {
-    formattedNum += ".";
-    formattedNum += fractionalPart;
-  }
-
-  // Add suffix if needed.
-  if (percent) {
-    formattedNum += "%";
-  }
-
-  return formattedNum;
+function formatNum(aN, aFormatter) {
+  return (aFormatter || kDefaultNumFormatter).format(aN);
 }
 
 /**
@@ -1808,7 +1737,7 @@ function formatNum(aN, aOptions = {}) {
 function formatBytes(aBytes) {
   return gVerbose.checked
        ? `${formatNum(aBytes)} B`
-       : `${formatNum(aBytes / (1024 * 1024), kMBStyle)} MB`;
+       : `${formatNum(aBytes / (1024 * 1024), kMBFormat)} MB`;
 }
 
 /**
@@ -1821,7 +1750,7 @@ function formatBytes(aBytes) {
 function formatPercentage(aPerc100x) {
   // A percentage like 12.34% will have an aPerc100x value of 1234, and we need
   // to divide that by 10,000 to get the 0.1234 that toLocaleString() wants.
-  return formatNum(aPerc100x / 10000, kPercStyle);
+  return formatNum(aPerc100x / 10000, kPercFormatter);
 }
 
 /*
@@ -1841,8 +1770,8 @@ function formatTreeFrac(aNum, aDenom) {
   //   but 100.0% needs special handling.
   let num = aDenom === 0 ? 1 : (aNum / aDenom);
   return (0.99995 <= num && num <= 1)
-         ? formatNum(1, kFrac1Style)
-         : formatNum(num, kFracStyle);
+         ? formatNum(1, kFrac1Formatter)
+         : formatNum(num, kFracFormatter);
 }
 
 const kNoKidsSep   = " ── ",
