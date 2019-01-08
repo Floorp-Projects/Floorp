@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsSMILParserUtils.h"
+#include "SMILParserUtils.h"
 #include "mozilla/SVGContentUtils.h"
 #include "mozilla/TextUtils.h"
-#include "nsSMILKeySpline.h"
+#include "SMILKeySpline.h"
 #include "nsISMILAttr.h"
 #include "nsSMILValue.h"
 #include "nsSMILTimeValue.h"
@@ -17,12 +17,13 @@
 #include "nsContentUtils.h"
 #include "nsCharSeparatedTokenizer.h"
 
-using namespace mozilla;
 using namespace mozilla::dom;
 //------------------------------------------------------------------------------
 // Helper functions and Constants
 
 namespace {
+
+using namespace mozilla;
 
 const uint32_t MSEC_PER_SEC = 1000;
 const uint32_t MSEC_PER_MIN = 1000 * 60;
@@ -396,10 +397,12 @@ bool ParseElementBaseTimeValueSpec(const nsAString& aSpec,
 
 }  // namespace
 
+namespace mozilla {
+
 //------------------------------------------------------------------------------
 // Implementation
 
-const nsDependentSubstring nsSMILParserUtils::TrimWhitespace(
+const nsDependentSubstring SMILParserUtils::TrimWhitespace(
     const nsAString& aString) {
   nsAString::const_iterator start, end;
 
@@ -426,8 +429,8 @@ const nsDependentSubstring nsSMILParserUtils::TrimWhitespace(
   return Substring(start, end);
 }
 
-bool nsSMILParserUtils::ParseKeySplines(
-    const nsAString& aSpec, FallibleTArray<nsSMILKeySpline>& aKeySplines) {
+bool SMILParserUtils::ParseKeySplines(
+    const nsAString& aSpec, FallibleTArray<SMILKeySpline>& aKeySplines) {
   nsCharSeparatedTokenizerTemplate<nsContentUtils::IsHTMLWhitespace>
       controlPointTokenizer(aSpec, ';');
   while (controlPointTokenizer.hasMoreTokens()) {
@@ -445,7 +448,7 @@ bool nsSMILParserUtils::ParseKeySplines(
     }
     if (tokenizer.hasMoreTokens() || tokenizer.separatorAfterCurrentToken() ||
         !aKeySplines.AppendElement(
-            nsSMILKeySpline(values[0], values[1], values[2], values[3]),
+            SMILKeySpline(values[0], values[1], values[2], values[3]),
             fallible)) {
       return false;
     }
@@ -454,7 +457,7 @@ bool nsSMILParserUtils::ParseKeySplines(
   return !aKeySplines.IsEmpty();
 }
 
-bool nsSMILParserUtils::ParseSemicolonDelimitedProgressList(
+bool SMILParserUtils::ParseSemicolonDelimitedProgressList(
     const nsAString& aSpec, bool aNonDecreasing,
     FallibleTArray<double>& aArray) {
   nsCharSeparatedTokenizerTemplate<nsContentUtils::IsHTMLWhitespace> tokenizer(
@@ -484,7 +487,7 @@ bool nsSMILParserUtils::ParseSemicolonDelimitedProgressList(
 
 // Helper class for ParseValues
 class MOZ_STACK_CLASS SMILValueParser
-    : public nsSMILParserUtils::GenericValueParser {
+    : public SMILParserUtils::GenericValueParser {
  public:
   SMILValueParser(const SVGAnimationElement* aSrcElement,
                   const nsISMILAttr* aSMILAttr,
@@ -518,11 +521,11 @@ class MOZ_STACK_CLASS SMILValueParser
   bool* mPreventCachingOfSandwich;
 };
 
-bool nsSMILParserUtils::ParseValues(const nsAString& aSpec,
-                                    const SVGAnimationElement* aSrcElement,
-                                    const nsISMILAttr& aAttribute,
-                                    FallibleTArray<nsSMILValue>& aValuesArray,
-                                    bool& aPreventCachingOfSandwich) {
+bool SMILParserUtils::ParseValues(const nsAString& aSpec,
+                                  const SVGAnimationElement* aSrcElement,
+                                  const nsISMILAttr& aAttribute,
+                                  FallibleTArray<nsSMILValue>& aValuesArray,
+                                  bool& aPreventCachingOfSandwich) {
   // Assume all results can be cached, until we find one that can't.
   aPreventCachingOfSandwich = false;
   SMILValueParser valueParser(aSrcElement, &aAttribute, &aValuesArray,
@@ -530,8 +533,8 @@ bool nsSMILParserUtils::ParseValues(const nsAString& aSpec,
   return ParseValuesGeneric(aSpec, valueParser);
 }
 
-bool nsSMILParserUtils::ParseValuesGeneric(const nsAString& aSpec,
-                                           GenericValueParser& aParser) {
+bool SMILParserUtils::ParseValuesGeneric(const nsAString& aSpec,
+                                         GenericValueParser& aParser) {
   nsCharSeparatedTokenizerTemplate<nsContentUtils::IsHTMLWhitespace> tokenizer(
       aSpec, ';');
   if (!tokenizer.hasMoreTokens()) {  // Empty list
@@ -547,9 +550,9 @@ bool nsSMILParserUtils::ParseValuesGeneric(const nsAString& aSpec,
   return true;
 }
 
-bool nsSMILParserUtils::ParseRepeatCount(const nsAString& aSpec,
-                                         nsSMILRepeatCount& aResult) {
-  const nsAString& spec = nsSMILParserUtils::TrimWhitespace(aSpec);
+bool SMILParserUtils::ParseRepeatCount(const nsAString& aSpec,
+                                       nsSMILRepeatCount& aResult) {
+  const nsAString& spec = SMILParserUtils::TrimWhitespace(aSpec);
 
   if (spec.EqualsLiteral("indefinite")) {
     aResult.SetIndefinite();
@@ -564,7 +567,7 @@ bool nsSMILParserUtils::ParseRepeatCount(const nsAString& aSpec,
   return true;
 }
 
-bool nsSMILParserUtils::ParseTimeValueSpecParams(
+bool SMILParserUtils::ParseTimeValueSpecParams(
     const nsAString& aSpec, nsSMILTimeValueSpecParams& aResult) {
   const nsAString& spec = TrimWhitespace(aSpec);
 
@@ -594,15 +597,15 @@ bool nsSMILParserUtils::ParseTimeValueSpecParams(
   return ParseElementBaseTimeValueSpec(spec, aResult);
 }
 
-bool nsSMILParserUtils::ParseClockValue(const nsAString& aSpec,
-                                        nsSMILTimeValue* aResult) {
+bool SMILParserUtils::ParseClockValue(const nsAString& aSpec,
+                                      nsSMILTimeValue* aResult) {
   RangedPtr<const char16_t> iter(SVGContentUtils::GetStartRangedPtr(aSpec));
   RangedPtr<const char16_t> end(SVGContentUtils::GetEndRangedPtr(aSpec));
 
   return ::ParseClockValue(iter, end, aResult) && iter == end;
 }
 
-int32_t nsSMILParserUtils::CheckForNegativeNumber(const nsAString& aStr) {
+int32_t SMILParserUtils::CheckForNegativeNumber(const nsAString& aStr) {
   int32_t absValLocation = -1;
 
   RangedPtr<const char16_t> start(SVGContentUtils::GetStartRangedPtr(aStr));
@@ -624,3 +627,5 @@ int32_t nsSMILParserUtils::CheckForNegativeNumber(const nsAString& aStr) {
   }
   return absValLocation;
 }
+
+}  // namespace mozilla

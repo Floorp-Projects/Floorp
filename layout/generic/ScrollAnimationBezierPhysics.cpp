@@ -90,7 +90,7 @@ void ScrollAnimationBezierPhysics::InitializeHistory(const TimeStamp& aTime) {
 }
 
 void ScrollAnimationBezierPhysics::InitTimingFunction(
-    nsSMILKeySpline& aTimingFunction, nscoord aCurrentPos,
+    SMILKeySpline& aTimingFunction, nscoord aCurrentPos,
     nscoord aCurrentVelocity, nscoord aDestination) {
   if (aDestination == aCurrentPos ||
       gfxPrefs::SmoothScrollCurrentVelocityWeighting() == 0) {
@@ -137,8 +137,8 @@ nsSize ScrollAnimationBezierPhysics::VelocityAt(const TimeStamp& aTime) {
 }
 
 nscoord ScrollAnimationBezierPhysics::VelocityComponent(
-    double aTimeProgress, const nsSMILKeySpline& aTimingFunction,
-    nscoord aStart, nscoord aDestination) const {
+    double aTimeProgress, const SMILKeySpline& aTimingFunction, nscoord aStart,
+    nscoord aDestination) const {
   double dt, dxy;
   aTimingFunction.GetSplineDerivativeValues(aTimeProgress, dt, dxy);
   if (dt == 0) return dxy >= 0 ? nscoord_MAX : nscoord_MIN;
