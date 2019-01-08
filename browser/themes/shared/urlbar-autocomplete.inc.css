@@ -50,6 +50,11 @@
   padding-inline-end: var(--item-padding-end, 7px);
 }
 
+:root[uidensity=touch] .urlbarView-row {
+  padding-top: 17px;
+  padding-bottom: 17px;
+}
+
 .urlbarView-row-inner {
   overflow: hidden;
   display: block;
