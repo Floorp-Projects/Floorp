@@ -128,11 +128,11 @@ add_task(async function test_modify() {
     }
 
     // Test correct saving and DOM-update.
-    for (let prefName of [
-      "test.aboutconfig.modify.string",
-      "test.aboutconfig.modify.number",
-      PREF_NUMBER_DEFAULT_ZERO,
-      PREF_STRING_DEFAULT_EMPTY,
+    for (let [prefName, willDelete] of [
+      ["test.aboutconfig.modify.string", true],
+      ["test.aboutconfig.modify.number", true],
+      [PREF_NUMBER_DEFAULT_ZERO, false],
+      [PREF_STRING_DEFAULT_EMPTY, false],
     ]) {
       row = this.getRow(prefName);
       // Activate edit and check displaying.
@@ -141,10 +141,18 @@ add_task(async function test_modify() {
       row.valueInput.value = "42";
       // Save and check saving.
       row.editColumnButton.click();
-      Assert.equal(row.value, "" + Preferences.get(prefName));
-      let prefHasUserValue = Services.prefs.prefHasUserValue(prefName);
-      Assert.equal(!!row.resetColumnButton, prefHasUserValue);
-      Assert.equal(row.hasClass("has-user-value"), prefHasUserValue);
+      Assert.equal(Preferences.get(prefName), "42");
+      Assert.equal(row.value, "42");
+      Assert.ok(row.hasClass("has-user-value"));
+      // Reset or delete the preference while editing.
+      row.editColumnButton.click();
+      Assert.equal(row.valueInput.value, Preferences.get(prefName));
+      row.resetColumnButton.click();
+      if (willDelete) {
+        Assert.ok(!this.getRow(prefName));
+      } else {
+        Assert.ok(!row.hasClass("has-user-value"));
+      }
     }
   });
 });

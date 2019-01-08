@@ -7,13 +7,16 @@ ChromeUtils.import("resource://gre/modules/Preferences.jsm");
 
 let gDefaultBranch = Services.prefs.getDefaultBranch("");
 let gPrefArray;
-let gPrefRowInEdit;
 let gPrefInEdit;
 
 class PrefRow {
   constructor(name) {
     this.name = name;
     this.refreshValue();
+
+    this.element = document.createElement("tr");
+    this.element.setAttribute("aria-label", this.name);
+    this.rebuildElement();
   }
 
   refreshValue() {
@@ -35,6 +38,66 @@ class PrefRow {
       }
     } catch (ex) {
       this.value = "";
+    }
+  }
+
+  rebuildElement() {
+    this.element.textContent = "";
+    let nameCell = document.createElement("td");
+    this.element.append(
+      nameCell,
+      this.valueCell = document.createElement("td"),
+      this.editCell = document.createElement("td"),
+      this.resetCell = document.createElement("td")
+    );
+    this.editCell.appendChild(
+      this.editButton = document.createElement("button")
+    );
+    delete this.resetButton;
+
+    nameCell.className = "cell-name";
+    this.valueCell.className = "cell-value";
+    this.editCell.className = "cell-edit";
+
+    // Add <wbr> behind dots to prevent line breaking in random mid-word places.
+    let parts = this.name.split(".");
+    for (let i = 0; i < parts.length - 1; i++) {
+      nameCell.append(parts[i] + ".", document.createElement("wbr"));
+    }
+    nameCell.append(parts[parts.length - 1]);
+
+    this.refreshElement();
+  }
+
+  refreshElement() {
+    this.element.classList.toggle("has-user-value", !!this.hasUserValue);
+    this.element.classList.toggle("locked", !!this.isLocked);
+    this.valueCell.textContent = this.value;
+    if (this.value.constructor.name == "Boolean") {
+      document.l10n.setAttributes(this.editButton, "about-config-pref-toggle");
+      this.editButton.className = "button-toggle";
+    } else {
+      document.l10n.setAttributes(this.editButton, "about-config-pref-edit");
+      this.editButton.className = "button-edit";
+    }
+    this.editButton.disabled = this.isLocked;
+    if (!this.isLocked && this.hasUserValue) {
+      if (!this.resetButton) {
+        this.resetButton = document.createElement("button");
+        this.resetCell.appendChild(this.resetButton);
+      }
+      if (!this.hasDefaultValue) {
+        document.l10n.setAttributes(this.resetButton,
+                                    "about-config-pref-delete");
+        this.resetButton.className = "";
+      } else {
+        document.l10n.setAttributes(this.resetButton,
+                                    "about-config-pref-reset");
+        this.resetButton.className = "button-reset";
+      }
+    } else if (this.resetButton) {
+      this.resetButton.remove();
+      delete this.resetButton;
     }
   }
 }
@@ -89,11 +152,8 @@ function loadPrefs() {
       // Reset pref and update gPrefArray.
       Services.prefs.clearUserPref(prefName);
       pref.refreshValue();
-      // Update UI.
-      prefRow.textContent = "";
-      prefRow.classList.remove("has-user-value");
-      prefRow.appendChild(getPrefRow(pref));
-      prefRow.querySelector("td.cell-edit").firstChild.focus();
+      pref.rebuildElement();
+      pref.editButton.focus();
     } else if (button.classList.contains("add-true")) {
       addNewPref(prefRow.firstChild.innerHTML, true);
     } else if (button.classList.contains("add-false")) {
@@ -110,15 +170,7 @@ function loadPrefs() {
       // Toggle the pref and update gPrefArray.
       Services.prefs.setBoolPref(prefName, !pref.value);
       pref.refreshValue();
-      // Update UI.
-      prefRow.textContent = "";
-      if (pref.hasUserValue) {
-        prefRow.classList.add("has-user-value");
-      } else {
-        prefRow.classList.remove("has-user-value");
-      }
-      prefRow.appendChild(getPrefRow(pref));
-      prefRow.querySelector("td.cell-edit").firstChild.focus();
+      pref.refreshElement();
     } else if (button.classList.contains("button-edit")) {
       startEditingPref(prefRow, pref);
       prefRow.querySelector("td.cell-value").firstChild.firstChild.focus();
@@ -148,17 +200,7 @@ function filterPrefs() {
 function createPrefsFragment(prefArray) {
   let fragment = document.createDocumentFragment();
   for (let pref of prefArray) {
-    let row = document.createElement("tr");
-    if (pref.hasUserValue) {
-      row.classList.add("has-user-value");
-    }
-    if (pref.isLocked) {
-      row.classList.add("locked");
-    }
-    row.setAttribute("aria-label", pref.name);
-
-    row.appendChild(getPrefRow(pref));
-    fragment.appendChild(row);
+    fragment.appendChild(pref.element);
   }
   return fragment;
 }
@@ -196,62 +238,11 @@ function createNewPrefFragment(name) {
   return fragment;
 }
 
-function getPrefRow(pref) {
-  let rowFragment = document.createDocumentFragment();
-  let nameCell = document.createElement("td");
-  nameCell.className = "cell-name";
-  // Add <wbr> behind dots to prevent line breaking in random mid-word places.
-  let parts = pref.name.split(".");
-  for (let i = 0; i < parts.length - 1; i++) {
-    nameCell.append(parts[i] + ".", document.createElement("wbr"));
-  }
-  nameCell.append(parts[parts.length - 1]);
-  rowFragment.appendChild(nameCell);
-
-  let valueCell = document.createElement("td");
-  valueCell.classList.add("cell-value");
-  valueCell.textContent = pref.value;
-  rowFragment.appendChild(valueCell);
-
-  let editCell = document.createElement("td");
-  editCell.className = "cell-edit";
-  let button = document.createElement("button");
-  if (Services.prefs.getPrefType(pref.name) == Services.prefs.PREF_BOOL) {
-    document.l10n.setAttributes(button, "about-config-pref-toggle");
-    button.className = "button-toggle";
-  } else {
-    document.l10n.setAttributes(button, "about-config-pref-edit");
-    button.className = "button-edit";
-  }
-  if (pref.isLocked) {
-    button.disabled = true;
-  }
-  editCell.appendChild(button);
-  rowFragment.appendChild(editCell);
-
-  let buttonCell = document.createElement("td");
-  if (!pref.isLocked && pref.hasUserValue) {
-    let resetButton = document.createElement("button");
-    if (!pref.hasDefaultValue) {
-      document.l10n.setAttributes(resetButton, "about-config-pref-delete");
-    } else {
-      document.l10n.setAttributes(resetButton, "about-config-pref-reset");
-      resetButton.className = "button-reset";
-    }
-    buttonCell.appendChild(resetButton);
-  }
-
-  rowFragment.appendChild(buttonCell);
-  return rowFragment;
-}
-
 function startEditingPref(row, arrayEntry) {
-  if (gPrefRowInEdit != undefined) {
+  if (gPrefInEdit) {
     // Abort editing-process first.
-    gPrefRowInEdit.textContent = "";
-    gPrefRowInEdit.appendChild(getPrefRow(gPrefInEdit));
+    gPrefInEdit.rebuildElement();
   }
-  gPrefRowInEdit = row;
 
   let name = getPrefName(row);
   gPrefInEdit = arrayEntry;
@@ -298,14 +289,7 @@ function endEditingPref(row) {
 
   // Update gPrefArray.
   gPrefInEdit.refreshValue();
-  // Update UI.
-  row.textContent = "";
-  if (gPrefInEdit.hasUserValue) {
-    row.classList.add("has-user-value");
-  } else {
-    row.classList.remove("has-user-value");
-  }
-  row.appendChild(getPrefRow(gPrefInEdit));
+  gPrefInEdit.rebuildElement();
 }
 
 function prefHasDefaultValue(name) {
