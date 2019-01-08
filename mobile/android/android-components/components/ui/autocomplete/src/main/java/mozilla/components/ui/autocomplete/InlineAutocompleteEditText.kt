@@ -20,6 +20,7 @@ import android.text.TextUtils
 import android.text.TextWatcher
 import android.text.style.BackgroundColorSpan
 import android.util.AttributeSet
+import android.util.Log
 import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.View
@@ -191,6 +192,9 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
 
     private val isSonyKeyboard: Boolean
         get() = INPUT_METHOD_SONY == getCurrentInputMethod()
+
+    private val isAmazonEchoShowKeyboard: Boolean
+        get() = INPUT_METHOD_AMAZON_ECHO_SHOW == getCurrentInputMethod()
 
     public override fun onAttachedToWindow() {
         super.onAttachedToWindow()
@@ -476,7 +480,13 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
                     // If we have autocomplete text, the cursor is at the boundary between
                     // regular and autocomplete text. So regardless of which direction we
                     // are deleting, we should delete the autocomplete text first.
-                    restartInput()
+                    //
+                    // On Amazon Echo Show devices, restarting input prevents us from backspacing
+                    // the last few characters of autocomplete: #911. However, on non-Echo devices,
+                    // not restarting input will cause the keyboard to desync when backspacing: #1489.
+                    if (!isAmazonEchoShowKeyboard) {
+                        restartInput()
+                    }
                     return false
                 }
                 return super.deleteSurroundingText(beforeLength, afterLength)
@@ -631,6 +641,11 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
     companion object {
         val AUTOCOMPLETE_SPAN = NoCopySpan.Concrete()
         val DEFAULT_AUTOCOMPLETE_BACKGROUND_COLOR = parseColor("#ffb5007f")
+
+        // The Echo Show IME does not conflict with Fire TV: com.amazon.tv.ime/.FireTVIME
+        // However, it may be used by other Amazon keyboards. In theory, if they have the same IME
+        // ID, they should have similar behavior.
+        const val INPUT_METHOD_AMAZON_ECHO_SHOW = "com.amazon.bluestone.keyboard/.DictationIME"
         const val INPUT_METHOD_SONY = "com.sonyericsson.textinput.uxp/.glue.InputMethodServiceGlue"
 
         /**
