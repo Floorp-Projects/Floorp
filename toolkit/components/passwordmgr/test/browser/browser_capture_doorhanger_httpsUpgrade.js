@@ -66,6 +66,45 @@ add_task(async function test_httpsUpgradeCaptureFields_changePW() {
   Services.logins.removeAllLogins();
 });
 
+add_task(async function test_httpsUpgradeCaptureFields_changePWWithBothSchemesSaved() {
+  info("Check that we prompt to change and properly save when capturing an upgraded login with a new PW when an http login also exists for that username");
+  Services.logins.addLogin(login1);
+  Services.logins.addLogin(login1HTTPS);
+
+  let logins = Services.logins.getAllLogins();
+  is(logins.length, 2, "Should have both HTTP and HTTPS logins");
+
+  await testSubmittingLoginForm("subtst_notifications_8.html", async function(fieldValues) {
+    is(fieldValues.username, "notifyu1", "Checking submitted username");
+    is(fieldValues.password, "pass2", "Checking submitted password");
+    let notif = getCaptureDoorhanger("password-change");
+    ok(notif, "checking for a change popup");
+
+    await checkDoorhangerUsernamePassword("notifyu1", "pass2");
+    clickDoorhangerButton(notif, CHANGE_BUTTON);
+
+    ok(!getCaptureDoorhanger("password-change"), "popup should be gone");
+  }, "https://example.com");
+
+  logins = Services.logins.getAllLogins();
+  is(logins.length, 2, "Should have 2 logins still");
+  let loginHTTP = logins[0].QueryInterface(Ci.nsILoginMetaInfo);
+  let loginHTTPS = logins[1].QueryInterface(Ci.nsILoginMetaInfo);
+  ok(LoginHelper.doLoginsMatch(login1, loginHTTP, {ignorePassword: true}), "Check HTTP login is equal");
+  is(loginHTTP.timesUsed, 1, "Check times used stayed the same");
+  is(loginHTTP.timeCreated, loginHTTP.timePasswordChanged, "login.timeCreated == login.timePasswordChanged");
+  is(loginHTTP.timeLastUsed, loginHTTP.timePasswordChanged, "timeLastUsed == timePasswordChanged");
+
+  ok(LoginHelper.doLoginsMatch(login1HTTPS, loginHTTPS, {ignorePassword: true}), "Check HTTPS login is equal");
+  is(loginHTTPS.username, "notifyu1", "Check the username is unchanged");
+  is(loginHTTPS.password, "pass2", "Check the password changed");
+  is(loginHTTPS.timesUsed, 2, "Check times used increased");
+  ok(loginHTTPS.timeCreated < loginHTTPS.timePasswordChanged, "login.timeCreated < login.timePasswordChanged");
+  is(loginHTTPS.timeLastUsed, loginHTTPS.timePasswordChanged, "timeLastUsed == timePasswordChanged");
+
+  Services.logins.removeAllLogins();
+});
+
 add_task(async function test_httpsUpgradeCaptureFields_captureMatchingHTTP() {
   info("Capture a new HTTP login which matches a stored HTTPS one.");
   Services.logins.addLogin(login1HTTPS);
