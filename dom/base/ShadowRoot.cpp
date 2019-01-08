@@ -16,6 +16,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLSlotElement.h"
 #include "mozilla/EventDispatcher.h"
+#include "mozilla/IdentifierMapEntry.h"
 #include "mozilla/ServoStyleRuleMap.h"
 #include "mozilla/StyleSheet.h"
 #include "mozilla/StyleSheetInlines.h"
@@ -430,14 +431,14 @@ void ShadowRoot::RemoveSheet(StyleSheet* aSheet) {
 }
 
 void ShadowRoot::AddToIdTable(Element* aElement, nsAtom* aId) {
-  nsIdentifierMapEntry* entry = mIdentifierMap.PutEntry(aId);
+  IdentifierMapEntry* entry = mIdentifierMap.PutEntry(aId);
   if (entry) {
     entry->AddIdElement(aElement);
   }
 }
 
 void ShadowRoot::RemoveFromIdTable(Element* aElement, nsAtom* aId) {
-  nsIdentifierMapEntry* entry = mIdentifierMap.GetEntry(aId);
+  IdentifierMapEntry* entry = mIdentifierMap.GetEntry(aId);
   if (entry) {
     entry->RemoveIdElement(aElement);
     if (entry->IsEmpty()) {

@@ -8,8 +8,8 @@
  * Base class for all our document implementations.
  */
 
-#ifndef nsIdentifierMapEntry_h
-#define nsIdentifierMapEntry_h
+#ifndef mozilla_IdentifierMapEntry_h
+#define mozilla_IdentifierMapEntry_h
 
 #include "PLDHashTable.h"
 
@@ -29,9 +29,9 @@ class nsBaseContentList;
 
 namespace mozilla {
 namespace dom {
+class Document;
 class Element;
 }
-}  // namespace mozilla
 
 /**
  * Right now our identifier map entries contain information for 'name'
@@ -41,13 +41,14 @@ class Element;
  *
  * We also store the document.all result list here. This is mainly so that
  * when all elements with the given ID are removed and we remove
- * the ID's nsIdentifierMapEntry, the document.all result is released too.
+ * the ID's IdentifierMapEntry, the document.all result is released too.
  * Perhaps the document.all results should have their own hashtable
  * in nsHTMLDocument.
  */
-class nsIdentifierMapEntry : public PLDHashEntryHdr {
-  typedef mozilla::dom::Element Element;
-  typedef mozilla::net::ReferrerPolicy ReferrerPolicy;
+class IdentifierMapEntry : public PLDHashEntryHdr {
+  typedef dom::Document Document;
+  typedef dom::Element Element;
+  typedef net::ReferrerPolicy ReferrerPolicy;
 
   /**
    * @see Document::IDTargetObserver, this is just here to avoid include hell.
@@ -72,10 +73,10 @@ class nsIdentifierMapEntry : public PLDHashEntryHdr {
   typedef const AtomOrString& KeyType;
   typedef const AtomOrString* KeyTypePointer;
 
-  explicit nsIdentifierMapEntry(const AtomOrString& aKey);
-  explicit nsIdentifierMapEntry(const AtomOrString* aKey);
-  nsIdentifierMapEntry(nsIdentifierMapEntry&& aOther);
-  ~nsIdentifierMapEntry();
+  explicit IdentifierMapEntry(const AtomOrString& aKey);
+  explicit IdentifierMapEntry(const AtomOrString* aKey);
+  IdentifierMapEntry(IdentifierMapEntry&& aOther);
+  ~IdentifierMapEntry();
 
   nsString GetKeyAsString() const {
     if (mKey.mAtom) {
@@ -104,8 +105,7 @@ class nsIdentifierMapEntry : public PLDHashEntryHdr {
   static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
 
   static PLDHashNumber HashKey(const KeyTypePointer aKey) {
-    return aKey->mAtom ? aKey->mAtom->hash()
-                       : mozilla::HashString(aKey->mString);
+    return aKey->mAtom ? aKey->mAtom->hash() : HashString(aKey->mString);
   }
 
   enum { ALLOW_MEMMOVE = false };
@@ -175,18 +175,18 @@ class nsIdentifierMapEntry : public PLDHashEntryHdr {
 
     static KeyTypePointer KeyToPointer(KeyType& aKey) { return &aKey; }
     static PLDHashNumber HashKey(KeyTypePointer aKey) {
-      return mozilla::HashGeneric(aKey->mCallback, aKey->mData);
+      return HashGeneric(aKey->mCallback, aKey->mData);
     }
     enum { ALLOW_MEMMOVE = true };
 
     ChangeCallback mKey;
   };
 
-  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const;
 
  private:
-  nsIdentifierMapEntry(const nsIdentifierMapEntry& aOther) = delete;
-  nsIdentifierMapEntry& operator=(const nsIdentifierMapEntry& aOther) = delete;
+  IdentifierMapEntry(const IdentifierMapEntry& aOther) = delete;
+  IdentifierMapEntry& operator=(const IdentifierMapEntry& aOther) = delete;
 
   void FireChangeCallbacks(Element* aOldElement, Element* aNewElement,
                            bool aImageOnly = false);
@@ -200,4 +200,6 @@ class nsIdentifierMapEntry : public PLDHashEntryHdr {
   RefPtr<Element> mImageElement;
 };
 
-#endif  // #ifndef nsIdentifierMapEntry_h
+}  // namespace mozilla
+
+#endif  // #ifndef mozilla_IdentifierMapEntry_h
