@@ -461,6 +461,9 @@ nsresult MediaEngineDefaultAudioSource::Start(
 
   NS_DispatchToMainThread(
       NS_NewRunnableFunction(__func__, [stream = mStream, track = mTrackID]() {
+        if (stream->IsDestroyed()) {
+          return;
+        }
         stream->SetPullingEnabled(track, true);
       }));
 
@@ -484,6 +487,9 @@ nsresult MediaEngineDefaultAudioSource::Stop(
 
   NS_DispatchToMainThread(
       NS_NewRunnableFunction(__func__, [stream = mStream, track = mTrackID]() {
+        if (stream->IsDestroyed()) {
+          return;
+        }
         stream->SetPullingEnabled(track, false);
       }));
   return NS_OK;

@@ -4118,7 +4118,8 @@ SourceListener::InitializeAsync() {
                  state->mTrackEnabled = true;
                  state->mTrackEnabledTime = TimeStamp::Now();
 
-                 if (state == mVideoDeviceState.get()) {
+                 if (state == mVideoDeviceState.get() &&
+                     !mStream->IsDestroyed()) {
                    mStream->SetPullingEnabled(kVideoTrack, true);
                  }
                }

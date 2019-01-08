@@ -1475,16 +1475,22 @@ class GenericReceiveListener : public MediaStreamTrackListener {
   }
 
   void AddSelf() {
-    if (!mListening) {
-      mListening = true;
+    if (mListening) {
+      return;
+    }
+    mListening = true;
+    mMaybeTrackNeedsUnmute = true;
+    if (!mSource->IsDestroyed()) {
       mSource->SetPullingEnabled(mTrackId, true);
-      mMaybeTrackNeedsUnmute = true;
     }
   }
 
   void RemoveSelf() {
-    if (mListening) {
-      mListening = false;
+    if (!mListening) {
+      return;
+    }
+    mListening = false;
+    if (!mSource->IsDestroyed()) {
       mSource->SetPullingEnabled(mTrackId, false);
     }
   }
