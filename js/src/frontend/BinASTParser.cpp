@@ -4119,6 +4119,8 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceUnaryExpression(
         case ParseNodeKind::Name:
           operand->setOp(JSOP_DELNAME);
           pnk = ParseNodeKind::DeleteNameExpr;
+          BINJS_TRY(this->strictModeError(JSMSG_DEPRECATED_DELETE_OPERAND));
+          parseContext_->sc()->setBindingsAccessedDynamically();
           break;
         case ParseNodeKind::DotExpr:
           pnk = ParseNodeKind::DeletePropExpr;

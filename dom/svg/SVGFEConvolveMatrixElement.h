@@ -8,10 +8,10 @@
 #define mozilla_dom_SVGFEConvolveMatrixElement_h
 
 #include "SVGAnimatedNumberList.h"
-#include "nsSVGBoolean.h"
+#include "SVGBoolean.h"
 #include "SVGEnum.h"
 #include "SVGFilters.h"
-#include "nsSVGInteger.h"
+#include "SVGInteger.h"
 #include "SVGIntegerPair.h"
 #include "nsSVGNumber2.h"
 #include "SVGString.h"
@@ -86,7 +86,7 @@ class SVGFEConvolveMatrixElement : public SVGFEConvolveMatrixElementBase {
   static NumberPairInfo sNumberPairInfo[1];
 
   enum { TARGET_X, TARGET_Y };
-  nsSVGInteger mIntegerAttributes[2];
+  SVGInteger mIntegerAttributes[2];
   static IntegerInfo sIntegerInfo[2];
 
   enum { ORDER };
@@ -94,7 +94,7 @@ class SVGFEConvolveMatrixElement : public SVGFEConvolveMatrixElementBase {
   static IntegerPairInfo sIntegerPairInfo[1];
 
   enum { PRESERVEALPHA };
-  nsSVGBoolean mBooleanAttributes[1];
+  SVGBoolean mBooleanAttributes[1];
   static BooleanInfo sBooleanInfo[1];
 
   enum { EDGEMODE };

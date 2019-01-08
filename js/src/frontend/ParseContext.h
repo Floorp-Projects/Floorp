@@ -267,7 +267,7 @@ class ParseContext : public Nestable<ParseContext> {
 
     MOZ_MUST_USE bool init(ParseContext* pc) {
       if (id_ == UINT32_MAX) {
-        pc->errorReporter_.reportErrorNoOffset(JSMSG_NEED_DIET, js_script_str);
+        pc->errorReporter_.errorNoOffset(JSMSG_NEED_DIET, js_script_str);
         return false;
       }
 

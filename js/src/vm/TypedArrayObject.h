@@ -17,11 +17,16 @@
 #include "vm/JSObject.h"
 #include "vm/SharedArrayObject.h"
 
-#define JS_FOR_EACH_TYPED_ARRAY(macro)                                      \
-  macro(int8_t, Int8) macro(uint8_t, Uint8) macro(int16_t, Int16)           \
-      macro(uint16_t, Uint16) macro(int32_t, Int32) macro(uint32_t, Uint32) \
-          macro(float, Float32) macro(double, Float64)                      \
-              macro(uint8_clamped, Uint8Clamped)
+#define JS_FOR_EACH_TYPED_ARRAY(MACRO) \
+  MACRO(int8_t, Int8)                  \
+  MACRO(uint8_t, Uint8)                \
+  MACRO(int16_t, Int16)                \
+  MACRO(uint16_t, Uint16)              \
+  MACRO(int32_t, Int32)                \
+  MACRO(uint32_t, Uint32)              \
+  MACRO(float, Float32)                \
+  MACRO(double, Float64)               \
+  MACRO(uint8_clamped, Uint8Clamped)
 
 namespace js {
 
@@ -35,8 +40,12 @@ namespace js {
 
 class TypedArrayObject : public ArrayBufferViewObject {
  public:
-  static int lengthOffset();
-  static int dataOffset();
+  static constexpr int lengthOffset() {
+    return NativeObject::getFixedSlotOffset(LENGTH_SLOT);
+  }
+  static constexpr int dataOffset() {
+    return NativeObject::getPrivateDataOffset(DATA_SLOT);
+  }
 
   static_assert(js::detail::TypedArrayLengthSlot == LENGTH_SLOT,
                 "bad inlined constant in jsfriendapi.h");
@@ -70,11 +79,11 @@ class TypedArrayObject : public ArrayBufferViewObject {
     return &protoClasses[type];
   }
 
-  static const size_t FIXED_DATA_START = DATA_SLOT + 1;
+  static constexpr size_t FIXED_DATA_START = DATA_SLOT + 1;
 
   // For typed arrays which can store their data inline, the array buffer
   // object is created lazily.
-  static const uint32_t INLINE_BUFFER_LIMIT =
+  static constexpr uint32_t INLINE_BUFFER_LIMIT =
       (NativeObject::MAX_FIXED_SLOTS - FIXED_DATA_START) * sizeof(Value);
 
   static inline gc::AllocKind AllocKindForLazyBuffer(size_t nbytes);
@@ -134,7 +143,7 @@ class TypedArrayObject : public ArrayBufferViewObject {
    * regardless of the context in which they are created. This only applies to
    * typed arrays created with an existing ArrayBuffer.
    */
-  static const uint32_t SINGLETON_BYTE_LENGTH = 1024 * 1024 * 10;
+  static constexpr uint32_t SINGLETON_BYTE_LENGTH = 1024 * 1024 * 10;
 
   static bool isOriginalLengthGetter(Native native);
 

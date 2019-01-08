@@ -35,6 +35,7 @@
 #include "jit/Ion.h"
 #include "js/CallNonGenericMethod.h"
 #include "js/CompileOptions.h"
+#include "js/PropertySpec.h"
 #include "js/Proxy.h"
 #include "js/SourceText.h"
 #include "js/StableStringChars.h"

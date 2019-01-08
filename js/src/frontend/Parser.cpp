@@ -26,6 +26,7 @@
 #include "mozilla/TypeTraits.h"
 #include "mozilla/Unused.h"
 #include "mozilla/Utf8.h"
+#include "mozilla/Variant.h"
 
 #include <memory>
 #include <new>
@@ -57,6 +58,7 @@
 using namespace js;
 
 using mozilla::AssertedCast;
+using mozilla::AsVariant;
 using mozilla::Maybe;
 using mozilla::Nothing;
 using mozilla::PodCopy;
@@ -131,177 +133,6 @@ bool GeneralParser<ParseHandler, Unit>::mustMatchTokenInternal(
     return false;
   }
   return true;
-}
-
-template <class ParseHandler, typename Unit>
-void GeneralParser<ParseHandler, Unit>::error(unsigned errorNumber, ...) {
-  va_list args;
-  va_start(args, errorNumber);
-
-  ErrorMetadata metadata;
-  if (tokenStream.computeErrorMetadata(&metadata, pos().begin)) {
-    ReportCompileError(context, std::move(metadata), nullptr, JSREPORT_ERROR,
-                       errorNumber, args);
-  }
-
-  va_end(args);
-}
-
-template <class ParseHandler, typename Unit>
-void GeneralParser<ParseHandler, Unit>::errorWithNotes(
-    UniquePtr<JSErrorNotes> notes, unsigned errorNumber, ...) {
-  va_list args;
-  va_start(args, errorNumber);
-
-  ErrorMetadata metadata;
-  if (tokenStream.computeErrorMetadata(&metadata, pos().begin)) {
-    ReportCompileError(context, std::move(metadata), std::move(notes),
-                       JSREPORT_ERROR, errorNumber, args);
-  }
-
-  va_end(args);
-}
-
-template <class ParseHandler, typename Unit>
-void GeneralParser<ParseHandler, Unit>::errorAt(uint32_t offset,
-                                                unsigned errorNumber, ...) {
-  va_list args;
-  va_start(args, errorNumber);
-
-  ErrorMetadata metadata;
-  if (tokenStream.computeErrorMetadata(&metadata, offset)) {
-    ReportCompileError(context, std::move(metadata), nullptr, JSREPORT_ERROR,
-                       errorNumber, args);
-  }
-
-  va_end(args);
-}
-
-template <class ParseHandler, typename Unit>
-void GeneralParser<ParseHandler, Unit>::errorWithNotesAt(
-    UniquePtr<JSErrorNotes> notes, uint32_t offset, unsigned errorNumber, ...) {
-  va_list args;
-  va_start(args, errorNumber);
-
-  ErrorMetadata metadata;
-  if (tokenStream.computeErrorMetadata(&metadata, offset)) {
-    ReportCompileError(context, std::move(metadata), std::move(notes),
-                       JSREPORT_ERROR, errorNumber, args);
-  }
-
-  va_end(args);
-}
-
-template <class ParseHandler, typename Unit>
-bool GeneralParser<ParseHandler, Unit>::warning(unsigned errorNumber, ...) {
-  va_list args;
-  va_start(args, errorNumber);
-
-  ErrorMetadata metadata;
-  bool result = tokenStream.computeErrorMetadata(&metadata, pos().begin) &&
-                anyChars.compileWarning(std::move(metadata), nullptr,
-                                        JSREPORT_WARNING, errorNumber, args);
-
-  va_end(args);
-  return result;
-}
-
-template <class ParseHandler, typename Unit>
-bool GeneralParser<ParseHandler, Unit>::warningAt(uint32_t offset,
-                                                  unsigned errorNumber, ...) {
-  va_list args;
-  va_start(args, errorNumber);
-
-  ErrorMetadata metadata;
-  bool result = tokenStream.computeErrorMetadata(&metadata, offset);
-  if (result) {
-    result = anyChars.compileWarning(std::move(metadata), nullptr,
-                                     JSREPORT_WARNING, errorNumber, args);
-  }
-
-  va_end(args);
-  return result;
-}
-
-template <class ParseHandler, typename Unit>
-bool GeneralParser<ParseHandler, Unit>::extraWarning(unsigned errorNumber,
-                                                     ...) {
-  va_list args;
-  va_start(args, errorNumber);
-
-  bool result = tokenStream.reportExtraWarningErrorNumberVA(
-      nullptr, pos().begin, errorNumber, &args);
-
-  va_end(args);
-  return result;
-}
-
-template <class ParseHandler, typename Unit>
-bool GeneralParser<ParseHandler, Unit>::extraWarningAt(uint32_t offset,
-                                                       unsigned errorNumber,
-                                                       ...) {
-  va_list args;
-  va_start(args, errorNumber);
-
-  bool result = tokenStream.reportExtraWarningErrorNumberVA(nullptr, offset,
-                                                            errorNumber, &args);
-
-  va_end(args);
-  return result;
-}
-
-template <class ParseHandler, typename Unit>
-bool GeneralParser<ParseHandler, Unit>::strictModeError(unsigned errorNumber,
-                                                        ...) {
-  va_list args;
-  va_start(args, errorNumber);
-
-  bool res = tokenStream.reportStrictModeErrorNumberVA(
-      nullptr, pos().begin, pc->sc()->strict(), errorNumber, &args);
-
-  va_end(args);
-  return res;
-}
-
-template <class ParseHandler, typename Unit>
-bool GeneralParser<ParseHandler, Unit>::strictModeErrorAt(uint32_t offset,
-                                                          unsigned errorNumber,
-                                                          ...) {
-  va_list args;
-  va_start(args, errorNumber);
-
-  bool res = tokenStream.reportStrictModeErrorNumberVA(
-      nullptr, offset, pc->sc()->strict(), errorNumber, &args);
-
-  va_end(args);
-  return res;
-}
-
-bool ParserBase::warningNoOffset(unsigned errorNumber, ...) {
-  va_list args;
-  va_start(args, errorNumber);
-
-  ErrorMetadata metadata;
-  anyChars.computeErrorMetadataNoOffset(&metadata);
-
-  bool result = anyChars.compileWarning(std::move(metadata), nullptr,
-                                        JSREPORT_WARNING, errorNumber, args);
-
-  va_end(args);
-  return result;
-}
-
-void ParserBase::errorNoOffset(unsigned errorNumber, ...) {
-  va_list args;
-  va_start(args, errorNumber);
-
-  ErrorMetadata metadata;
-  anyChars.computeErrorMetadataNoOffset(&metadata);
-
-  ReportCompileError(context, std::move(metadata), nullptr, JSREPORT_ERROR,
-                     errorNumber, args);
-
-  va_end(args);
 }
 
 ParserBase::ParserBase(JSContext* cx, LifoAlloc& alloc,
@@ -1670,7 +1501,7 @@ CodeNode* Parser<FullParseHandler, Unit>::moduleBody(
         return null();
       }
 
-      errorAt(TokenStream::NoOffset, JSMSG_MISSING_EXPORT, str.get());
+      errorNoOffset(JSMSG_MISSING_EXPORT, str.get());
       return null();
     }
 
@@ -8657,6 +8488,15 @@ bool ParserBase::checkAndMarkSuperScope() {
 
   pc->setSuperScopeNeedsHomeObject();
   return true;
+}
+
+template <class ParseHandler, typename Unit>
+bool GeneralParser<ParseHandler, Unit>::computeErrorMetadata(
+    ErrorMetadata* err, const ErrorReportMixin::ErrorOffset& offset) {
+  if (offset.is<ErrorReportMixin::Current>()) {
+    return tokenStream.computeErrorMetadata(err, AsVariant(pos().begin));
+  }
+  return tokenStream.computeErrorMetadata(err, offset);
 }
 
 template <class ParseHandler, typename Unit>

@@ -5,17 +5,8 @@
 
 package org.mozilla.gecko.home;
 
-import android.content.Context;
-import android.support.v7.widget.RecyclerView;
-import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.TextView;
-
 import org.mozilla.gecko.AboutPages;
 import org.mozilla.gecko.EventDispatcher;
-import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.SessionParser;
@@ -25,6 +16,15 @@ import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.ThreadUtils;
+
+import android.content.Context;
+import android.support.v7.widget.RecyclerView;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.TextView;
+
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -169,14 +169,19 @@ public class RecentTabsAdapter extends RecyclerView.Adapter<CombinedHistoryItem>
                     @Override
                     public void onTabRead(SessionTab tab) {
                         final String url = tab.getUrl();
-
                         // Don't show last tabs for about:home
                         if (AboutPages.isAboutHome(url)) {
                             return;
                         }
 
+                        final JSONObject tabObject = tab.getTabObject();
+                        // The tab ID will be used to remove recently closed tabs that have been re-
+                        // stored again. Because these tabs come from a different source that is
+                        // read-only, we therefore need to remove the stored tab ID.
+                        tabObject.remove("tabId");
+
                         try {
-                            parsedTabs.add(new ClosedTab(url, tab.getTitle(), tab.getTabObject().toString()));
+                            parsedTabs.add(new ClosedTab(url, tab.getTitle(), tabObject.toString()));
                         } catch (OutOfMemoryError oom) {
                             // Stringifying may fail if the tab data is too large - let's hope that
                             // this tab was an exception and that the next one will be smaller and
