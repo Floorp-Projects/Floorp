@@ -48,6 +48,25 @@ function TextProperty(rule, name, value, priority, enabled = true,
 }
 
 TextProperty.prototype = {
+  get computedProperties() {
+    return this.computed.map(computed => {
+      return {
+        name: computed.name,
+        priority: computed.priority,
+        value: computed.value,
+      };
+    });
+  },
+
+  /**
+   * See whether this property's name is known.
+   *
+   * @return {Boolean} true if the property name is known, false otherwise.
+   */
+  get isKnownProperty() {
+    return this.cssProperties.isKnown(this.name);
+  },
+
   /**
    * Update the editor associated with this text property,
    * if any.
@@ -172,15 +191,6 @@ TextProperty.prototype = {
     }
 
     return declaration;
-  },
-
-  /**
-   * See whether this property's name is known.
-   *
-   * @return {Boolean} true if the property name is known, false otherwise.
-   */
-  isKnownProperty: function() {
-    return this.cssProperties.isKnown(this.name);
   },
 
   /**
