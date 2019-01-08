@@ -48,6 +48,10 @@ add_task(async function() {
   ok(true, "Original sources exist");
   const bundleSrc = findSource(dbg, "bundle.js");
 
+  // Check that the original sources appear in the source tree
+  await clickElement(dbg, "sourceDirectoryLabel", 3);
+  await assertSourceCount(dbg, 8);
+
   await selectSource(dbg, bundleSrc);
 
   await clickGutter(dbg, 13);
