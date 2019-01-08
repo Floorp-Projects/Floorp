@@ -18,6 +18,7 @@ const { connect } = require("devtools/client/shared/vendor/react-redux");
 const Accordion = createFactory(require("devtools/client/inspector/layout/components/Accordion"));
 const Rule = createFactory(require("./Rule"));
 const Rules = createFactory(require("./Rules"));
+const Toolbar = createFactory(require("./Toolbar"));
 
 const { getStr } = require("../utils/l10n");
 const Types = require("../types");
@@ -143,6 +144,7 @@ class RulesApp extends PureComponent {
           id: "sidebar-panel-ruleview",
           className: "theme-sidebar inspector-tabpanel",
         },
+        Toolbar({}),
         dom.div(
           {
             id: "ruleview-container",
