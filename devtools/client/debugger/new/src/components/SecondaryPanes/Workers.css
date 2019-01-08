@@ -1,0 +1,50 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+.workers-list * {
+  user-select: none;
+}
+
+.workers-list > .worker {
+  font-size: 1rem;
+  color: var(--theme-content-color1);
+  padding: 0 0.5em;
+  line-height: 25px;
+  position: relative;
+  transition: all 0.25s ease;
+  cursor: pointer;
+  display: flex;
+}
+
+.workers-list .worker:hover {
+  background-color: var(--search-overlays-semitransparent);
+}
+
+.workers-list .worker.selected {
+  background-color: var(--tab-line-selected-color);
+}
+
+.workers-list .icon {
+  align-self: center;
+}
+
+.workers-list .label {
+  display: inline-block;
+  flex-grow: 1;
+}
+
+.workers-list .pause-badge {
+  align-self: center;
+}
+
+.workers-list .worker.selected {
+  background: var(--theme-selection-background);
+  color: white;
+}
+
+.workers-list .selected .img.file,
+.workers-list .selected .img.worker,
+.workers-list .selected .pause-badge .img.pause {
+  background: white;
+}

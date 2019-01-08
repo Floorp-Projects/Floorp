@@ -1,0 +1,34 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+.command-bar-button {
+  appearance: none;
+  background: transparent;
+  border: none;
+  display: inline-block;
+  text-align: center;
+  position: relative;
+  padding: 0px 5px;
+  fill: currentColor;
+}
+
+.command-bar-button:disabled {
+  opacity: 0.8;
+  cursor: default;
+}
+
+.command-bar-button:not(.disabled):hover {
+  background: var(--theme-toolbar-background-hover);
+}
+
+:root.theme-dark .command-bar-button {
+  color: var(--theme-body-color);
+}
+
+.command-bar-button > * {
+  width: 16px;
+  height: 16px;
+  display: inline-block;
+  vertical-align: middle;
+}

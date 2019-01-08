@@ -1,0 +1,209 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+.arrow,
+.worker,
+.refresh,
+.shortcut,
+.add-button {
+  fill: var(--theme-splitter-color);
+}
+
+.img.folder,
+.img.domain,
+.img.file,
+.img.extension,
+.img.worker {
+  background-color: var(--theme-comment);
+}
+
+.worker,
+.file,
+.folder,
+.sources-list .source-icon,
+.extension {
+  position: relative;
+  top: 2px;
+}
+
+.domain,
+.worker,
+.refresh,
+.add-button {
+  position: relative;
+  top: 1px;
+}
+
+.worker svg,
+.refresh svg,
+.shortcut svg,
+.add-button svg {
+  width: 15px;
+}
+
+.img.domain,
+.img.folder {
+  width: 15px;
+  height: 15px;
+}
+
+.img.extension,
+.img.worker {
+  width: 13px;
+  height: 13px;
+  margin-inline-start: 2px;
+}
+
+.img.result-item-icon {
+  height: 18px;
+  width: 18px;
+}
+
+.img.domain {
+  mask: url(/images/domain.svg) no-repeat;
+}
+
+.img.folder {
+  mask: url(/images/folder.svg) no-repeat;
+}
+
+.img.coffeescript {
+  mask: url(/images/coffeescript.svg) no-repeat;
+}
+
+.img.javascript {
+  mask: url(/images/javascript.svg) no-repeat;
+}
+
+.img.tab {
+  mask: url(/images/tab.svg) no-repeat;
+}
+
+.img.react {
+  mask: url(/images/react.svg) no-repeat;
+}
+
+.img.typescript {
+  mask: url(/images/typescript.svg) no-repeat;
+}
+
+.img.extension {
+  mask: url(/images/extension.svg) no-repeat;
+}
+
+.img.file {
+  mask: url(/images/file.svg) no-repeat;
+  width: 13px;
+  height: 13px;
+}
+
+.img.worker {
+  mask: url(/images/worker.svg) no-repeat;
+}
+
+.img.domain,
+.img.folder,
+.img.file,
+.sources-list .img.source-icon,
+.img.extension,
+.img.worker {
+  mask-size: 100%;
+  margin-inline-end: 5px;
+  display: inline-block;
+}
+
+.img.result-item-icon {
+  mask-size: 100%;
+  margin-inline-end: 15px;
+  margin-inline-start: 5px;
+  display: inline-block;
+}
+
+.refresh svg,
+.shortcut svg,
+.worker svg {
+  margin-inline-end: 5px;
+}
+
+.img.arrow {
+  mask: url(/images/arrow.svg);
+  margin-inline-end: 5px;
+  margin-top: 3px;
+  width: 9px;
+  height: 9px;
+  padding-top: 9px;
+  background: var(--disclosure-arrow);
+  mask-size: 100%;
+  display: inline-block;
+  margin-bottom: 1px;
+  transform: rotate(-90deg);
+  transition: transform 0.18s ease;
+}
+
+html[dir="ltr"] .img.arrow {
+  transform: rotate(-90deg);
+}
+
+html[dir="rtl"] .img.arrow {
+  transform: rotate(90deg);
+}
+
+.arrow svg {
+  transition: transform 0.125s ease;
+  width: 10px;
+  margin-inline-end: 5px;
+  transform: rotate(-90deg);
+}
+
+html[dir="rtl"] .arrow svg,
+.arrow svg:dir(rtl),
+.arrow svg:-moz-locale-dir(rtl) {
+  transform: rotate(90deg);
+}
+
+.arrow.expanded.expanded svg {
+  transform: rotate(0deg);
+}
+
+.arrow.hidden {
+  visibility: hidden;
+}
+
+.webpack svg {
+  width: 15px;
+  height: 15px;
+  margin-right: 5px;
+  vertical-align: sub;
+}
+
+.function svg {
+  height: 10px;
+  width: 15px;
+}
+
+.function path {
+  fill: var(--theme-body-color);
+}
+
+.angular svg,
+.source-icon svg {
+  width: 15px;
+  height: 15px;
+  margin-right: 5px;
+  vertical-align: sub;
+}
+
+.angular,
+.webpack {
+  opacity: 0.8;
+}
+
+.theme-dark .angular,
+.theme-dark .webpack {
+  opacity: 0.5;
+}
+
+.source-icon svg {
+  fill: var(--theme-comment);
+}

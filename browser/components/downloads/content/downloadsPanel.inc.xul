@@ -165,7 +165,6 @@
                 class="downloadsPanelFooterButton"
                 command="downloadsCmd_unblockAndOpen"
                 flex="1"/>
-        <toolbarseparator/>
         <button id="downloadsPanel-blockedSubview-deleteButton"
                 class="downloadsPanelFooterButton"
                 oncommand="DownloadsBlockedSubview.confirmBlock();"

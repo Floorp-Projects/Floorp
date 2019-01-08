@@ -214,6 +214,7 @@ void DocAccessibleWrap::CacheFocusPath(AccessibleWrap* aAccessible) {
     for (AccessibleWrap* acc = aAccessible; acc && acc != this->Parent();
          acc = static_cast<AccessibleWrap*>(acc->Parent())) {
       accessibles.AppendElement(acc);
+      mFocusPath.Put(acc->UniqueID(), acc);
     }
 
     sessionAcc->ReplaceFocusPathCache(accessibles);

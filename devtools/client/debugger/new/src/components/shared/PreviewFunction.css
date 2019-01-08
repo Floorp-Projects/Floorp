@@ -1,0 +1,23 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+.function-signature {
+  align-self: center;
+}
+
+.function-signature .function-name {
+  color: var(--theme-highlight-blue);
+}
+
+.function-signature .param {
+  color: var(--theme-highlight-red);
+}
+
+.function-signature .paren {
+  color: var(--object-color);
+}
+
+.function-signature .comma {
+  color: var(--object-color);
+}

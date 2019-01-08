@@ -269,8 +269,12 @@ nsresult MemoryTelemetry::GatherReports(
   // Collect cheap or main-thread only metrics synchronously, on the main
   // thread.
   RECORD(MEMORY_JS_GC_HEAP, JSMainRuntimeGCHeap, UNITS_BYTES);
-  RECORD(MEMORY_JS_COMPARTMENTS_SYSTEM, JSMainRuntimeRealmsSystem, UNITS_COUNT);
-  RECORD(MEMORY_JS_COMPARTMENTS_USER, JSMainRuntimeRealmsUser, UNITS_COUNT);
+  RECORD(MEMORY_JS_COMPARTMENTS_SYSTEM, JSMainRuntimeCompartmentsSystem,
+         UNITS_COUNT);
+  RECORD(MEMORY_JS_COMPARTMENTS_USER, JSMainRuntimeCompartmentsUser,
+         UNITS_COUNT);
+  RECORD(MEMORY_JS_REALMS_SYSTEM, JSMainRuntimeRealmsSystem, UNITS_COUNT);
+  RECORD(MEMORY_JS_REALMS_USER, JSMainRuntimeRealmsUser, UNITS_COUNT);
   RECORD(MEMORY_IMAGES_CONTENT_USED_UNCOMPRESSED, ImagesContentUsedUncompressed,
          UNITS_BYTES);
   RECORD(MEMORY_STORAGE_SQLITE, StorageSQLite, UNITS_BYTES);

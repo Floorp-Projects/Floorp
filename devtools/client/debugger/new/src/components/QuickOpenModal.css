@@ -1,0 +1,28 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+.result-item .title .highlight {
+  font-weight: bold;
+  background-color: transparent;
+}
+
+.selected .highlight {
+  color: white;
+}
+
+.result-item .subtitle .highlight {
+  color: var(--grey-90);
+  font-weight: 500;
+  background-color: transparent;
+}
+
+.theme-dark .result-item .title .highlight,
+.theme-dark .result-item .subtitle .highlight {
+  color: white;
+}
+
+.loading-indicator {
+  padding: 5px 0 5px 0;
+  text-align: center;
+}

@@ -455,7 +455,7 @@ To see more help for a specific command, run:
         def _check_debugger(program):
             """Checks if debugger specified in command line is installed.
 
-            This internal function calls an in-tree library 'which'.
+            Uses mozdebug to locate debuggers.
 
             If the call does not raise any exceptions, mach is permitted
             to continue execution.
@@ -465,10 +465,9 @@ To see more help for a specific command, run:
             Args:
                 program (str): debugger program name.
             """
-            from which import which, WhichError
-            try:
-                which(program)
-            except WhichError:
+            import mozdebug
+            info = mozdebug.get_debugger_info(program)
+            if info is None:
                 print("Specified debugger '{}' is not found.\n".format(program) +
                       "Is it installed? Is it in your PATH?")
                 sys.exit(1)
