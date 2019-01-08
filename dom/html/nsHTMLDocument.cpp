@@ -79,6 +79,7 @@
 #include "mozilla/dom/FallbackEncoding.h"
 #include "mozilla/Encoding.h"
 #include "mozilla/HTMLEditor.h"
+#include "mozilla/IdentifierMapEntry.h"
 #include "mozilla/LoadInfo.h"
 #include "nsIEditingSession.h"
 #include "nsNodeInfoManager.h"
@@ -1839,7 +1840,7 @@ void nsHTMLDocument::ReleaseEvents() {
 bool nsHTMLDocument::ResolveName(JSContext* aCx, const nsAString& aName,
                                  JS::MutableHandle<JS::Value> aRetval,
                                  ErrorResult& aError) {
-  nsIdentifierMapEntry* entry = mIdentifierMap.GetEntry(aName);
+  IdentifierMapEntry* entry = mIdentifierMap.GetEntry(aName);
   if (!entry) {
     return false;
   }
@@ -1882,7 +1883,7 @@ bool nsHTMLDocument::ResolveName(JSContext* aCx, const nsAString& aName,
 
 void nsHTMLDocument::GetSupportedNames(nsTArray<nsString>& aNames) {
   for (auto iter = mIdentifierMap.Iter(); !iter.Done(); iter.Next()) {
-    nsIdentifierMapEntry* entry = iter.Get();
+    IdentifierMapEntry* entry = iter.Get();
     if (entry->HasNameElement() ||
         entry->HasIdElementExposedAsHTMLDocumentProperty()) {
       aNames.AppendElement(entry->GetKeyAsString());

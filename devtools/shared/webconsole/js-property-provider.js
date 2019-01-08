@@ -215,9 +215,9 @@ function analyzeInputString(str) {
  *        Optional offset in the input where the cursor is located. If this is
  *        omitted then the cursor is assumed to be at the end of the input
  *        value.
- * - {Boolean} invokeUnsafeGetter (defaults to false).
- *        Optional boolean to indicate if the function should execute unsafe getter
- *        in order to retrieve its result's properties.
+ * - {Array} authorizedEvaluations (defaults to []).
+ *        Optional array containing all the different properties access that the engine
+ *        can execute in order to retrieve its result's properties.
  *        ⚠️ This should be set to true *ONLY* on user action as it may cause side-effects
  *        in the content page ⚠️
  * - {WebconsoleActor} webconsoleActor
@@ -231,7 +231,8 @@ function analyzeInputString(str) {
  *
  *          {
  *            isUnsafeGetter: true,
- *            getterName: {String} The name of the unsafe getter
+ *            getterPath: {Array<String>} An array of the property chain leading to the
+ *                        getter. Example: ["x", "myGetter"]
  *          }
  *
  *          If no completion valued could be computed, and the input is not an unsafe
@@ -251,7 +252,7 @@ function JSPropertyProvider({
   environment,
   inputValue,
   cursor,
-  invokeUnsafeGetter = false,
+  authorizedEvaluations = [],
   webconsoleActor,
   selectedNodeActor,
 }) {
@@ -290,6 +291,7 @@ function JSPropertyProvider({
     return null;
   }
 
+  const env = environment || dbgObject.asEnvironment();
   const completionPart = lastStatement;
   const lastDotIndex = completionPart.lastIndexOf(".");
   const lastOpeningBracketIndex = isElementAccess ? completionPart.lastIndexOf("[") : -1;
@@ -319,12 +321,12 @@ function JSPropertyProvider({
       let matchingObject;
 
       if (astExpression.type === "ArrayExpression") {
-        matchingObject = Array.prototype;
+        matchingObject = getContentPrototypeObject(env, "Array");
       } else if (
         astExpression.type === "Literal" &&
         typeof astExpression.value === "string"
       ) {
-        matchingObject = String.prototype;
+        matchingObject = getContentPrototypeObject(env, "String");
       } else if (
         astExpression.type === "Literal" &&
         Number.isFinite(astExpression.value)
@@ -338,7 +340,7 @@ function JSPropertyProvider({
           !Number.isInteger(astExpression.value) ||
           /\d[^\.]{0}\.$/.test(completionPart) === false
         ) {
-          matchingObject = Number.prototype;
+          matchingObject = getContentPrototypeObject(env, "Number");
         } else {
           return null;
         }
@@ -353,7 +355,7 @@ function JSPropertyProvider({
           search = matchProp.replace(startQuoteRegex, "");
         }
 
-        let props = getMatchedProps(matchingObject, search);
+        let props = getMatchedPropsInDbgObject(matchingObject, search);
         if (isElementAccess) {
           props = wrapMatchesInQuotes(props, elementAccessQuote);
         }
@@ -398,11 +400,6 @@ function JSPropertyProvider({
   }
 
   let obj = dbgObject;
-
-  // The first property must be found in the environment of the paused debugger
-  // or of the global lexical scope.
-  const env = environment || obj.asEnvironment();
-
   if (properties.length === 0) {
     return {
       isElementAccess,
@@ -452,18 +449,16 @@ function JSPropertyProvider({
       return null;
     }
 
-    if (!invokeUnsafeGetter && DevToolsUtils.isUnsafeGetter(obj, prop)) {
-      // If the unsafe getter is not the last property access of the input, bail out as
-      // things might get complex.
-      if (index !== properties.length - 1) {
-        return null;
-      }
+    const propPath = [firstProp].concat(properties.slice(0, index + 1));
+    const authorized = authorizedEvaluations.some(
+      x => JSON.stringify(x) === JSON.stringify(propPath));
 
+    if (!authorized && DevToolsUtils.isUnsafeGetter(obj, prop)) {
       // If we try to access an unsafe getter, return its name so we can consume that
       // on the frontend.
       return {
         isUnsafeGetter: true,
-        getterName: prop,
+        getterPath: propPath,
       };
     }
 
@@ -472,7 +467,7 @@ function JSPropertyProvider({
       // list[i][j]..[n]. Traverse the array to get the actual element.
       obj = getArrayMemberProperty(obj, null, prop);
     } else {
-      obj = DevToolsUtils.getProperty(obj, prop, invokeUnsafeGetter);
+      obj = DevToolsUtils.getProperty(obj, prop, authorized);
     }
 
     if (!isObjectUsable(obj)) {
@@ -512,6 +507,29 @@ function JSPropertyProvider({
   }
 
   return prepareReturnedObject(getMatchedPropsInDbgObject(obj, search));
+}
+
+/**
+ * For a given environment and constructor name, returns its Debugger.Object wrapped
+ * prototype.
+ *
+ * @param {Environment} env
+ * @param {String} name: Name of the constructor object we want the prototype of.
+ * @returns {Debugger.Object|null} the prototype, or null if it not found.
+ */
+function getContentPrototypeObject(env, name) {
+  // Retrieve the outermost environment to get the global object.
+  let outermostEnv = env;
+  while (outermostEnv && outermostEnv.parent) {
+    outermostEnv = outermostEnv.parent;
+  }
+
+  const constructorObj = DevToolsUtils.getProperty(outermostEnv.object, name);
+  if (!constructorObj) {
+    return null;
+  }
+
+  return DevToolsUtils.getProperty(constructorObj, "prototype");
 }
 
 /**

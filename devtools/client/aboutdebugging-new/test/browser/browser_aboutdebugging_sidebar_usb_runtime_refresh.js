@@ -3,15 +3,15 @@
 
 "use strict";
 
+/* import-globals-from helper-mocks.js */
+Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "helper-mocks.js", this);
+
 const RUNTIME_ID = "test-runtime-id";
 const RUNTIME_DEVICE_NAME = "test device name";
 const RUNTIME_APP_NAME = "TestApp";
 
 const OTHER_RUNTIME_ID = "other-runtime-id";
 const OTHER_RUNTIME_APP_NAME = "OtherApp";
-
-/* import-globals-from head-mocks.js */
-Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "head-mocks.js", this);
 
 // Test that USB runtimes are ot disconnected on refresh.
 add_task(async function() {

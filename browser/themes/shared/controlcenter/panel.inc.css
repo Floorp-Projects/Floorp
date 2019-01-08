@@ -315,7 +315,6 @@
 
 .identity-popup-footer > button {
   margin: 0;
-  border-top: 1px solid var(--panel-separator-color);
   padding: 8px 20px;
 }
 

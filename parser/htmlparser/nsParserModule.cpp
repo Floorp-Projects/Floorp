@@ -7,23 +7,16 @@
 #include "nsParser.h"
 #include "nsParserCIID.h"
 #include "nsHTMLTags.h"
-#include "nsSAXXMLReader.h"
 
 //----------------------------------------------------------------------
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsParser)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsSAXXMLReader)
 
 NS_DEFINE_NAMED_CID(NS_PARSER_CID);
-NS_DEFINE_NAMED_CID(NS_SAXXMLREADER_CID);
 
 static const mozilla::Module::CIDEntry kParserCIDs[] = {
     {&kNS_PARSER_CID, false, nullptr, nsParserConstructor},
-    {&kNS_SAXXMLREADER_CID, false, nullptr, nsSAXXMLReaderConstructor},
     {nullptr}};
-
-static const mozilla::Module::ContractIDEntry kParserContracts[] = {
-    {NS_SAXXMLREADER_CONTRACTID, &kNS_SAXXMLREADER_CID}, {nullptr}};
 
 static nsresult Initialize() {
   nsresult rv = nsHTMLTags::AddRefTable();
@@ -41,7 +34,7 @@ static void Shutdown() { nsHTMLTags::ReleaseTable(); }
 
 static mozilla::Module kParserModule = {mozilla::Module::kVersion,
                                         kParserCIDs,
-                                        kParserContracts,
+                                        nullptr,
                                         nullptr,
                                         nullptr,
                                         Initialize,

@@ -1213,9 +1213,9 @@ WebConsoleActor.prototype =
         environment,
         inputValue: request.text,
         cursor: request.cursor,
-        invokeUnsafeGetter: false,
         webconsoleActor: this,
         selectedNodeActor: request.selectedNodeActor,
+        authorizedEvaluations: request.authorizedEvaluations,
       });
 
       if (!hadDebuggee && dbgObject) {
@@ -1226,6 +1226,14 @@ WebConsoleActor.prototype =
         return {
           from: this.actorID,
           matches: null,
+        };
+      }
+
+      if (result && result.isUnsafeGetter === true) {
+        return {
+          from: this.actorID,
+          isUnsafeGetter: true,
+          getterPath: result.getterPath,
         };
       }
 

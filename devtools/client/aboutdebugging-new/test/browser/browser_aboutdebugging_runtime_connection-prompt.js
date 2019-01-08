@@ -3,9 +3,9 @@
 
 "use strict";
 
-/* import-globals-from head-mocks.js */
+/* import-globals-from helper-mocks.js */
 Services.scriptloader.loadSubScript(
-  CHROME_URL_ROOT + "head-mocks.js", this);
+  CHROME_URL_ROOT + "helper-mocks.js", this);
 
 /**
  * Test that remote runtimes show the connection prompt,
