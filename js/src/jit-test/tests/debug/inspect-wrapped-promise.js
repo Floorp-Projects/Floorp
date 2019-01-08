@@ -1,5 +1,7 @@
 load(libdir + "asserts.js");
 
+ignoreUnhandledRejections();
+
 let g = newGlobal();
 let dbg = new Debugger();
 let gw = dbg.addDebuggee(g);

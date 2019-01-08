@@ -4,6 +4,8 @@
 // 11.4.3.4 AsyncGeneratorReject, step 7.
 // 11.4.3.5 AsyncGeneratorResumeNext, step 10.b.ii.2.
 
+ignoreUnhandledRejections();
+
 var asyncIter = async function*(){ yield; }();
 asyncIter.next();
 

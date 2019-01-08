@@ -1,5 +1,7 @@
 // |jit-test| skip-if: !('oomTest' in this)
 
+ignoreUnhandledRejections();
+
 (function () {
     g = newGlobal();
     g.parent = this;

@@ -2,6 +2,8 @@
 
 load(libdir + "asserts.js");
 
+ignoreUnhandledRejections();
+
 let g = newGlobal();
 let stream = new ReadableStream({
     start(controller) {

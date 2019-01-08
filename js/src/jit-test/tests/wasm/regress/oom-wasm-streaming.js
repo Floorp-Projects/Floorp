@@ -1,4 +1,7 @@
 // |jit-test| skip-if: !('oomAfterAllocations' in this)
+
+ignoreUnhandledRejections();
+
 try {
     WebAssembly.compileStreaming();
 } catch (err) {
