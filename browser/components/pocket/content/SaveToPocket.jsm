@@ -30,10 +30,6 @@ function createElementWithAttrs(document, type, attrs) {
 }
 
 
-function isPocketEnabled() {
-  return PocketPageAction.enabled;
-}
-
 var PocketPageAction = {
   pageAction: null,
   urlbarNode: null,
@@ -191,7 +187,7 @@ var PocketContextMenu = {
   observe(aSubject, aTopic, aData) {
     let subject = aSubject.wrappedJSObject;
     let document = subject.menu.ownerDocument;
-    let pocketEnabled = isPocketEnabled();
+    let pocketEnabled = SaveToPocket.prefEnabled;
 
     let showSaveCurrentPageToPocket = !(subject.onTextInput || subject.onLink ||
                                         subject.isContentSelected || subject.onImage ||
@@ -240,77 +236,9 @@ var PocketContextMenu = {
   },
 };
 
-// PocketReader
-// Listen for reader mode setup and add our button to the reader toolbar
-var PocketReader = {
-  _hidden: true,
-  get hidden() {
-    return this._hidden;
-  },
-  set hidden(hide) {
-    hide = !!hide;
-    if (hide === this._hidden)
-      return;
-    this._hidden = hide;
-    this.update();
-  },
-  startup() {
-    // Setup the listeners, update will be called when the widget is added,
-    // no need to do that now.
-    let mm = Services.mm;
-    mm.addMessageListener("Reader:OnSetup", this);
-    mm.addMessageListener("Reader:Clicked-pocket-button", this);
-  },
-  shutdown() {
-    let mm = Services.mm;
-    mm.removeMessageListener("Reader:OnSetup", this);
-    mm.removeMessageListener("Reader:Clicked-pocket-button", this);
-    this.hidden = true;
-  },
-  update() {
-    if (this.hidden) {
-      Services.mm.broadcastAsyncMessage("Reader:RemoveButton", { id: "pocket-button" });
-    } else {
-      Services.mm.broadcastAsyncMessage("Reader:AddButton", {
-        id: "pocket-button",
-        title: gPocketBundle.GetStringFromName("pocket-button.tooltiptext"),
-        image: "chrome://pocket/content/panels/img/pocket-outline.svg",
-        width: 20,
-        height: 20,
-      });
-    }
-  },
-  receiveMessage(message) {
-    switch (message.name) {
-      case "Reader:OnSetup": {
-        // Tell the reader about our button.
-        if (this.hidden)
-          break;
-        message.target.messageManager.
-          sendAsyncMessage("Reader:AddButton", {
-            id: "pocket-button",
-            title: gPocketBundle.GetStringFromName("pocket-button.tooltiptext"),
-            image: "chrome://pocket/content/panels/img/pocket-outline.svg",
-            width: 20,
-            height: 20,
-          });
-        break;
-      }
-      case "Reader:Clicked-pocket-button": {
-        if (PocketPageAction.pageAction) {
-          PocketPageAction.pageAction.doCommand(message.target.ownerGlobal);
-        }
-        break;
-      }
-    }
-  },
-};
-
-
 var PocketOverlay = {
   startup() {
     Services.obs.addObserver(this, "browser-delayed-startup-finished");
-    PocketReader.startup();
     PocketPageAction.init();
     PocketContextMenu.init();
     for (let win of browserWindows()) {
@@ -332,7 +260,6 @@ var PocketOverlay = {
     }
 
     PocketContextMenu.shutdown();
-    PocketReader.shutdown();
   },
   observe(subject, topic, detail) {
     if (topic == "browser-delayed-startup-finished") {
@@ -343,7 +270,7 @@ var PocketOverlay = {
   updateWindow(window) {
     // insert our three menu items
     let document = window.document;
-    let hidden = !isPocketEnabled();
+    let hidden = !SaveToPocket.prefEnabled;
 
     // Add to library panel
     let sib = document.getElementById("appMenu-library-history-button");
@@ -357,21 +284,8 @@ var PocketOverlay = {
       });
       sib.parentNode.insertBefore(menu, sib);
     }
-
-    // enable or disable reader button
-    PocketReader.hidden = hidden;
   },
 };
-
-// use enabled pref as a way for tests (e.g. test_contextmenu.html) to disable
-// the addon when running.
-function prefObserver(aSubject, aTopic, aData) {
-  let enabled = Services.prefs.getBoolPref("extensions.pocket.enabled");
-  if (enabled)
-    PocketOverlay.startup();
-  else
-    PocketOverlay.shutdown();
-}
 
 function browserWindows() {
   return Services.wm.getEnumerator("navigator:browser");
@@ -384,14 +298,50 @@ var SaveToPocket = {
       Services.prefs.setBoolPref("extensions.pocket.enabled", Services.prefs.getBoolPref("browser.pocket.enabled"));
       Services.prefs.clearUserPref("browser.pocket.enabled");
     }
-    // watch pref change and enable/disable if necessary
-    Services.prefs.addObserver("extensions.pocket.enabled", prefObserver);
-    if (!Services.prefs.getBoolPref("extensions.pocket.enabled"))
-      return;
-    PocketOverlay.startup();
+    // Only define the pref getter now, so we don't get notified for the
+    // migrated pref above.
+    XPCOMUtils.defineLazyPreferenceGetter(
+      this, "prefEnabled", "extensions.pocket.enabled", true, this.onPrefChange.bind(this));
+    if (this.prefEnabled) {
+      PocketOverlay.startup();
+    }
+    Services.mm.addMessageListener("Reader:OnSetup", this);
+    Services.mm.addMessageListener("Reader:Clicked-pocket-button", this);
   },
 
-  uninit() {
-    Services.prefs.removeObserver("extensions.pocket.enabled", prefObserver);
+  _readerButtonData: {
+    id: "pocket-button",
+    title: gPocketBundle.GetStringFromName("pocket-button.tooltiptext"),
+    image: "chrome://pocket/content/panels/img/pocket-outline.svg",
+    width: 20,
+    height: 20,
+  },
+
+  onPrefChange(pref, oldValue, newValue) {
+    if (!newValue) {
+      Services.mm.broadcastAsyncMessage("Reader:RemoveButton", { id: "pocket-button" });
+      PocketOverlay.shutdown();
+    } else {
+      PocketOverlay.startup();
+      Services.mm.broadcastAsyncMessage("Reader:AddButton", this._readerButtonData);
+    }
+  },
+
+  receiveMessage(message) {
+    if (!this.prefEnabled) {
+      return;
+    }
+    switch (message.name) {
+      case "Reader:OnSetup": {
+        // Tell the reader about our button.
+        message.target.messageManager.
+          sendAsyncMessage("Reader:AddButton", this._readerButtonData);
+        break;
+      }
+      case "Reader:Clicked-pocket-button": {
+        PocketPageAction.pageAction.doCommand(message.target.ownerGlobal);
+        break;
+      }
+    }
   },
 };
