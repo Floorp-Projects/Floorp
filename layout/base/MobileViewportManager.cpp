@@ -169,7 +169,7 @@ NS_IMETHODIMP
 MobileViewportManager::Observe(nsISupports* aSubject, const char* aTopic,
                                const char16_t* aData) {
   if (!mDocument) {
-    return;
+    return NS_OK;
   }
 
   if (SameCOMIdentity(aSubject, ToSupports(mDocument)) &&
