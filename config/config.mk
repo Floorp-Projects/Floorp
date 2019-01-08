@@ -302,22 +302,13 @@ endif # WINNT
 
 ifdef _MSC_VER
 ifeq ($(CPU_ARCH),x86_64)
-# Normal operation on 64-bit Windows needs 2 MB of stack. (Bug 582910)
-# ASAN requires 6 MB of stack.
-# Setting the stack to 8 MB to match the capability of other systems
-# to deal with frame construction for unreasonably deep DOM trees
-# with worst-case styling. This uses address space unnecessarily for
-# non-main threads, but that should be tolerable on 64-bit systems.
-# (Bug 256180)
-WIN32_EXE_LDFLAGS      += -STACK:8388608
+ifdef MOZ_ASAN
+# ASan could have 3x stack memory usage of normal builds.
+WIN32_EXE_LDFLAGS	+= -STACK:6291456
 else
-# Since this setting affects the default stack size for non-main
-# threads, too, to avoid burning the address space, increase only
-# 512 KB over the default. Just enough to be able to deal with
-# reasonable styling applied to DOM trees whose depth is near what
-# Blink's HTML parser can output, esp.
-# layout/base/crashtests/507119.html (Bug 256180)
-WIN32_EXE_LDFLAGS      += -STACK:1572864
+# set stack to 2MB on x64 build.  See bug 582910
+WIN32_EXE_LDFLAGS	+= -STACK:2097152
+endif
 endif
 endif
 

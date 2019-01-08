@@ -309,6 +309,7 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState {
   int32_t listPtr;
   nsIContentHandle* formPointer;
   nsIContentHandle* headPointer;
+  nsIContentHandle* deepTreeSurrogateParent;
 
  protected:
   autoJArray<char16_t, int32_t> charBuffer;
@@ -568,11 +569,11 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState {
  private:
   int32_t findInArray(nsHtml5StackNode* node,
                       jArray<nsHtml5StackNode*, int32_t> arr);
-  nsIContentHandle* nodeFromStackWithBlinkCompat(int32_t stackPos);
 
  public:
   nsIContentHandle* getFormPointer() override;
   nsIContentHandle* getHeadPointer() override;
+  nsIContentHandle* getDeepTreeSurrogateParent() override;
   jArray<nsHtml5StackNode*, int32_t> getListOfActiveFormattingElements()
       override;
   jArray<nsHtml5StackNode*, int32_t> getStack() override;
