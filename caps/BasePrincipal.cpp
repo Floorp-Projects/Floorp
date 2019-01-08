@@ -23,6 +23,7 @@
 #include "mozilla/dom/BlobURLProtocolHandler.h"
 #include "mozilla/dom/ChromeUtils.h"
 #include "mozilla/dom/CSPDictionariesBinding.h"
+#include "mozilla/dom/nsCSPContext.h"
 #include "mozilla/dom/ToJSValue.h"
 
 namespace mozilla {
@@ -506,8 +507,20 @@ void BasePrincipal::FinishInit(BasePrincipal* aOther,
 
   mOriginNoSuffix = aOther->mOriginNoSuffix;
   mHasExplicitDomain = aOther->mHasExplicitDomain;
-  mCSP = aOther->mCSP;
-  mPreloadCSP = aOther->mPreloadCSP;
+
+  if (aOther->mPreloadCSP) {
+    mPreloadCSP = do_CreateInstance("@mozilla.org/cspcontext;1");
+    nsCSPContext* preloadCSP = static_cast<nsCSPContext*>(mPreloadCSP.get());
+    preloadCSP->InitFromOther(
+        static_cast<nsCSPContext*>(aOther->mPreloadCSP.get()), nullptr, this);
+  }
+
+  if (aOther->mCSP) {
+    mCSP = do_CreateInstance("@mozilla.org/cspcontext;1");
+    nsCSPContext* csp = static_cast<nsCSPContext*>(mCSP.get());
+    csp->InitFromOther(static_cast<nsCSPContext*>(aOther->mCSP.get()), nullptr,
+                       this);
+  }
 }
 
 bool SiteIdentifier::Equals(const SiteIdentifier& aOther) const {
