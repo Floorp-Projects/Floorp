@@ -144,6 +144,10 @@
   transition: visibility 0.25s;
 }
 
+#ruleview-container .accordion ._content {
+  padding: 0;
+}
+
 .ruleview-code {
   direction: ltr;
 }
