@@ -63,6 +63,7 @@ tasks:
         retries: 5
         scopes:
           - queue:scheduler-id:${scheduler_id}
+          - queue:route:statuses
         routes:
           - statuses  # Automatically added by taskcluster-github. It must be explicit because of Chain of Trust
         payload:
