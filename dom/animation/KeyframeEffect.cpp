@@ -763,7 +763,7 @@ void KeyframeEffect::RequestRestyle(
   }
 }
 
-already_AddRefed<ComputedStyle> KeyframeEffect::GetTargetComputedStyle() {
+already_AddRefed<ComputedStyle> KeyframeEffect::GetTargetComputedStyle() const {
   if (!GetRenderedDocument()) {
     return nullptr;
   }
@@ -995,7 +995,7 @@ void KeyframeEffect::GetProperties(
 }
 
 void KeyframeEffect::GetKeyframes(JSContext*& aCx, nsTArray<JSObject*>& aResult,
-                                  ErrorResult& aRv) {
+                                  ErrorResult& aRv) const {
   MOZ_ASSERT(aResult.IsEmpty());
   MOZ_ASSERT(!aRv.Failed());
 

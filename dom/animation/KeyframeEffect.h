@@ -159,7 +159,7 @@ class KeyframeEffect : public AnimationEffect {
   void SetTarget(const Nullable<ElementOrCSSPseudoElement>& aTarget);
 
   void GetKeyframes(JSContext*& aCx, nsTArray<JSObject*>& aResult,
-                    ErrorResult& aRv);
+                    ErrorResult& aRv) const;
   void GetProperties(nsTArray<AnimationPropertyDetails>& aProperties,
                      ErrorResult& aRv) const;
 
@@ -361,7 +361,7 @@ class KeyframeEffect : public AnimationEffect {
   // context. That's because calling GetComputedStyle when we are in the process
   // of building a ComputedStyle may trigger various forms of infinite
   // recursion.
-  already_AddRefed<ComputedStyle> GetTargetComputedStyle();
+  already_AddRefed<ComputedStyle> GetTargetComputedStyle() const;
 
   // A wrapper for marking cascade update according to the current
   // target and its effectSet.
