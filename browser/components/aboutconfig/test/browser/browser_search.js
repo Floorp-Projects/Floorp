@@ -25,7 +25,7 @@ add_task(async function test_search() {
     // Filter a subset of preferences. The "browser.download." branch is
     // chosen because it is very unlikely that its preferences would be
     // modified by other code during the execution of this test.
-    this.search("wser.down   ");
+    this.search("Wser.down   ");
 
     let filteredPrefArray =
         prefArray.filter(pref => pref.includes("wser.down"));
@@ -49,8 +49,13 @@ add_task(async function test_search() {
     this.search("aJunkValueasdf");
     Assert.equal(this.rows.length, 1);
 
-    // Test added preferences search returns 2 preferences.
+    // Two preferences match this filter, and one of those matches exactly.
     this.search("test.aboutconfig.a");
     Assert.equal(this.rows.length, 2);
+
+    // When searching case insensitively, there is an additional row to add a
+    // new preference with the same name but a different case.
+    this.search("TEST.aboutconfig.a");
+    Assert.equal(this.rows.length, 3);
   });
 });
