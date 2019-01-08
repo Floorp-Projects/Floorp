@@ -16,11 +16,13 @@ import mozilla.components.service.glean.BuildConfig
  * @property readTimeout the timeout, in milliseconds, to use when connecting to
  *           the [serverEndpoint]
  * @property maxEvents the number of events to store before the events ping is sent
+ * @property logPings whether to log ping contents to the console.
  */
 data class Configuration(
     val serverEndpoint: String = "https://incoming.telemetry.mozilla.org",
     val userAgent: String = "Glean/${BuildConfig.LIBRARY_VERSION} (Android)",
     val connectionTimeout: Int = 10000,
     val readTimeout: Int = 30000,
-    val maxEvents: Int = 500
+    val maxEvents: Int = 500,
+    val logPings: Boolean = false
 )

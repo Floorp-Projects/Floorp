@@ -12,6 +12,8 @@ import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.MalformedURLException
 import java.net.URL
+import org.json.JSONException
+import org.json.JSONObject
 
 /**
  * A simple ping Uploader, which implements a "send once" policy, never
@@ -20,6 +22,29 @@ import java.net.URL
 class HttpPingUploader(configuration: Configuration) : PingUploader {
     private val config = configuration
     private val logger = Logger("glean/HttpPingUploader")
+
+    /**
+     * Log the contents of a ping to the console, if configured to do so in
+     * config.logPings.
+     *
+     * @param path the URL path to append to the server address
+     * @param data the serialized text data to send
+     */
+    private fun logPing(path: String, data: String) {
+        if (config.logPings) {
+            // Parse and reserialize the JSON so it has indentation and is human-readable.
+            var indented = try {
+                var json = JSONObject(data)
+                json.toString(2)
+            } catch (e: JSONException) {
+                logger.debug("Exception parsing ping as JSON: $e")
+                null
+            }
+            indented?.let {
+                logger.debug("Glean ping to URL: ${path}\n$it")
+            }
+        }
+    }
 
     /**
      * Synchronously upload a ping to Mozilla servers.
@@ -36,6 +61,8 @@ class HttpPingUploader(configuration: Configuration) : PingUploader {
      */
     @Suppress("ReturnCount", "MagicNumber")
     override fun upload(path: String, data: String): Boolean {
+        logPing(path, data)
+
         var connection: HttpURLConnection? = null
         try {
             connection = openConnection(config.serverEndpoint, path)
