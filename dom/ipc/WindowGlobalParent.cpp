@@ -93,6 +93,11 @@ void WindowGlobalParent::Init(const WindowGlobalInit& aInit) {
   if (flOwner) {
     mFrameLoader = flOwner->GetFrameLoader();
   }
+
+  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+  if (obs) {
+    obs->NotifyObservers(this, "window-global-created", nullptr);
+  }
 }
 
 /* static */ already_AddRefed<WindowGlobalParent>
@@ -131,6 +136,11 @@ void WindowGlobalParent::ActorDestroy(ActorDestroyReason aWhy) {
   mIPCClosed = true;
   gWindowGlobalParentsById->Remove(mInnerWindowId);
   mBrowsingContext->UnregisterWindowGlobal(this);
+
+  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+  if (obs) {
+    obs->NotifyObservers(this, "window-global-destroyed", nullptr);
+  }
 }
 
 WindowGlobalParent::~WindowGlobalParent() {
@@ -147,11 +157,16 @@ nsISupports* WindowGlobalParent::GetParentObject() {
   return xpc::NativeGlobal(xpc::PrivilegedJunkScope());
 }
 
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(WindowGlobalParent)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
+
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(WindowGlobalParent, mFrameLoader,
                                       mBrowsingContext)
 
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(WindowGlobalParent, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(WindowGlobalParent, Release)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(WindowGlobalParent)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(WindowGlobalParent)
 
 }  // namespace dom
 }  // namespace mozilla
