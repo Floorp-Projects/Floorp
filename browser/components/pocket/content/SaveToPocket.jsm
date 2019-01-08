@@ -15,28 +15,12 @@ ChromeUtils.defineModuleGetter(this, "Pocket",
                                "chrome://pocket/content/Pocket.jsm");
 ChromeUtils.defineModuleGetter(this, "ReaderMode",
                                "resource://gre/modules/ReaderMode.jsm");
-XPCOMUtils.defineLazyGetter(this, "gPocketBundle", function() {
-  return Services.strings.createBundle("chrome://pocket/locale/pocket.properties");
-});
 
 var EXPORTED_SYMBOLS = ["SaveToPocket"];
-
-function createElementWithAttrs(document, type, attrs) {
-  let element = document.createXULElement(type);
-  Object.keys(attrs).forEach(function(attr) {
-    element.setAttribute(attr, attrs[attr]);
-  });
-  return element;
-}
-
 
 var PocketPageAction = {
   pageAction: null,
   urlbarNode: null,
-
-  get enabled() {
-    return !!this.pageAction;
-  },
 
   init() {
     let id = "pocket";
@@ -44,7 +28,7 @@ var PocketPageAction = {
     if (!this.pageAction) {
       this.pageAction = PageActions.addAction(new PageActions.Action({
         id,
-        title: gPocketBundle.GetStringFromName("saveToPocketCmd.label"),
+        title: "pocket-title",
         pinnedToUrlbar: true,
         wantsIframe: true,
         urlbarIDOverride: "pocket-button-box",
@@ -52,11 +36,8 @@ var PocketPageAction = {
         _insertBeforeActionID: PageActions.ACTION_ID_BOOKMARK_SEPARATOR,
         _urlbarNodeInMarkup: true,
         onBeforePlacedInWindow(window) {
-          let doc = window.document;
-          let tooltip =
-            gPocketBundle.GetStringFromName("pocket-button.tooltiptext");
-          doc.getElementById("pocket-button").setAttribute("tooltiptext", tooltip);
-          doc.getElementById("pocket-button-animatable-image").setAttribute("tooltiptext", tooltip);
+          let action = PageActions.actionForID("pocket");
+          window.BrowserPageActions.takeActionTitleFromPanel(action);
         },
         onIframeShowing(iframe, panel) {
           Pocket.onShownInPhotonPageActionPanel(panel, iframe);
@@ -173,16 +154,6 @@ var PocketContextMenu = {
   },
   shutdown() {
     Services.obs.removeObserver(this, "on-build-contextmenu");
-    // loop through windows and remove context menus
-    // iterate through all windows and add pocket to them
-    for (let win of browserWindows()) {
-      let document = win.document;
-      for (let id of ["context-pocket", "context-savelinktopocket"]) {
-        let element = document.getElementById(id);
-        if (element)
-          element.remove();
-      }
-    }
   },
   observe(aSubject, aTopic, aData) {
     let subject = aSubject.wrappedJSObject;
@@ -199,91 +170,22 @@ var PocketContextMenu = {
 
     let showSaveLinkToPocket = canPocket && !showSaveCurrentPageToPocket && subject.onLink;
 
-    // create menu entries if necessary
     let menu = document.getElementById("context-pocket");
-    if (!menu) {
-      menu = createElementWithAttrs(document, "menuitem", {
-        "id": "context-pocket",
-        "label": gPocketBundle.GetStringFromName("saveToPocketCmd.label"),
-        "accesskey": gPocketBundle.GetStringFromName("saveToPocketCmd.accesskey"),
-        "oncommand": "Pocket.savePage(gContextMenu.browser, gContextMenu.browser.currentURI.spec, gContextMenu.browser.contentTitle);",
-      });
-      let sibling = document.getElementById("context-savepage");
-      if (sibling.nextSibling) {
-        sibling.parentNode.insertBefore(menu, sibling.nextSibling);
-      } else {
-        sibling.parentNode.appendChild(menu);
-      }
-    }
     menu.hidden = !(canPocket && showSaveCurrentPageToPocket);
 
     menu = document.getElementById("context-savelinktopocket");
-    if (!menu) {
-      menu = createElementWithAttrs(document, "menuitem", {
-        "id": "context-savelinktopocket",
-        "label": gPocketBundle.GetStringFromName("saveLinkToPocketCmd.label"),
-        "accesskey": gPocketBundle.GetStringFromName("saveLinkToPocketCmd.accesskey"),
-        "oncommand": "Pocket.savePage(gContextMenu.browser, gContextMenu.linkURL);",
-      });
-      let sibling = document.getElementById("context-savelink");
-      if (sibling.nextSibling) {
-        sibling.parentNode.insertBefore(menu, sibling.nextSibling);
-      } else {
-        sibling.parentNode.appendChild(menu);
-      }
-    }
     menu.hidden = !showSaveLinkToPocket;
   },
 };
 
 var PocketOverlay = {
   startup() {
-    Services.obs.addObserver(this, "browser-delayed-startup-finished");
     PocketPageAction.init();
     PocketContextMenu.init();
-    for (let win of browserWindows()) {
-      this.updateWindow(win);
-    }
   },
   shutdown() {
-    Services.obs.removeObserver(this, "browser-delayed-startup-finished");
-
     PocketPageAction.shutdown();
-
-    for (let window of browserWindows()) {
-      for (let id of ["appMenu-library-pocket-button"]) {
-        let element = window.document.getElementById(id) ||
-                      window.gNavToolbox.palette.querySelector("#" + id);
-        if (element)
-          element.remove();
-      }
-    }
-
     PocketContextMenu.shutdown();
-  },
-  observe(subject, topic, detail) {
-    if (topic == "browser-delayed-startup-finished") {
-      this.updateWindow(subject);
-    }
-  },
-  // called for each window as it is opened
-  updateWindow(window) {
-    // insert our three menu items
-    let document = window.document;
-    let hidden = !SaveToPocket.prefEnabled;
-
-    // Add to library panel
-    let sib = document.getElementById("appMenu-library-history-button");
-    if (sib && !document.getElementById("appMenu-library-pocket-button")) {
-      let menu = createElementWithAttrs(document, "toolbarbutton", {
-        "id": "appMenu-library-pocket-button",
-        "label": gPocketBundle.GetStringFromName("pocketMenuitem.label"),
-        "class": "subviewbutton subviewbutton-iconic",
-        "oncommand": "Pocket.openList(event)",
-        "hidden": hidden,
-      });
-      sib.parentNode.insertBefore(menu, sib);
-    }
   },
 };
 
@@ -304,6 +206,8 @@ var SaveToPocket = {
       this, "prefEnabled", "extensions.pocket.enabled", true, this.onPrefChange.bind(this));
     if (this.prefEnabled) {
       PocketOverlay.startup();
+    } else {
+      this.updateElements(false);
     }
     Services.mm.addMessageListener("Reader:OnSetup", this);
     Services.mm.addMessageListener("Reader:Clicked-pocket-button", this);
@@ -311,7 +215,6 @@ var SaveToPocket = {
 
   _readerButtonData: {
     id: "pocket-button",
-    title: gPocketBundle.GetStringFromName("pocket-button.tooltiptext"),
     image: "chrome://pocket/content/panels/img/pocket-outline.svg",
     width: 20,
     height: 20,
@@ -323,7 +226,27 @@ var SaveToPocket = {
       PocketOverlay.shutdown();
     } else {
       PocketOverlay.startup();
-      Services.mm.broadcastAsyncMessage("Reader:AddButton", this._readerButtonData);
+      // The title for the button is extracted from browser.xul where it comes from a DTD.
+      // If we don't have this, there's also no possibility of there being a reader
+      // mode tab already loaded. We'll get an Reader:OnSetup message when that happens.
+      if (this._readerButtonData.title) {
+        Services.mm.broadcastAsyncMessage("Reader:AddButton", this._readerButtonData);
+      }
+    }
+    this.updateElements(newValue);
+  },
+
+  updateElements(enabled) {
+    // loop through windows and show/hide all our elements.
+    let elementIds = [
+      "context-pocket", "context-savelinktopocket",
+      "appMenu-library-pocket-button",
+    ];
+    for (let win of browserWindows()) {
+      let document = win.document;
+      for (let id of elementIds) {
+        document.getElementById(id).hidden = !enabled;
+      }
     }
   },
 
@@ -333,6 +256,13 @@ var SaveToPocket = {
     }
     switch (message.name) {
       case "Reader:OnSetup": {
+        // We must have a browser window; get the tooltip for the button if we don't
+        // have it already.
+        if (!this._readerButtonData.title) {
+          let doc = message.target.ownerDocument;
+          let button = doc.getElementById("pocket-button");
+          this._readerButtonData.title = button.getAttribute("tooltiptext");
+        }
         // Tell the reader about our button.
         message.target.messageManager.
           sendAsyncMessage("Reader:AddButton", this._readerButtonData);
