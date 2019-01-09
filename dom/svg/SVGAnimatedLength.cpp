@@ -23,15 +23,11 @@ JSObject* SVGAnimatedLength::WrapObject(JSContext* aCx,
 }
 
 already_AddRefed<DOMSVGLength> SVGAnimatedLength::BaseVal() {
-  RefPtr<DOMSVGLength> angle;
-  mVal->ToDOMBaseVal(getter_AddRefs(angle), mSVGElement);
-  return angle.forget();
+  return mVal->ToDOMBaseVal(mSVGElement);
 }
 
 already_AddRefed<DOMSVGLength> SVGAnimatedLength::AnimVal() {
-  RefPtr<DOMSVGLength> angle;
-  mVal->ToDOMAnimVal(getter_AddRefs(angle), mSVGElement);
-  return angle.forget();
+  return mVal->ToDOMAnimVal(mSVGElement);
 }
 
 }  // namespace dom
