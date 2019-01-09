@@ -1300,8 +1300,7 @@ NS_IMETHODIMP AsyncEncodeAndWriteIcon::Run() {
     }
   }
   nsresult rv = gfxUtils::EncodeSourceSurface(
-      surface, NS_LITERAL_CSTRING("image/vnd.microsoft.icon"), EmptyString(),
-      gfxUtils::eBinaryEncode, file);
+      surface, ImageType::ICO, EmptyString(), gfxUtils::eBinaryEncode, file);
   fclose(file);
   NS_ENSURE_SUCCESS(rv, rv);
 

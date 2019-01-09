@@ -42,7 +42,12 @@ win32-clang-tidy:
         using: toolchain-script
         script: build-clang-tidy32-windows.sh
         resources:
-            - 'build/clang-plugin/**'
+            - 'build/clang-plugin/**/*.cpp'
+            - 'build/clang-plugin/**/*.h'
+            - 'build/clang-plugin/*.inc'
+            - 'build/clang-plugin/*.py'
+            - 'build/clang-plugin/moz.build'
+            - 'build/clang-plugin/Makefile.in'
             - 'build/build-clang/build-clang.py'
             - 'build/build-clang/clang-tidy-win32.json'
             - 'taskcluster/scripts/misc/build-clang-windows-helper32.sh'
@@ -70,7 +75,12 @@ win64-clang-tidy:
         using: toolchain-script
         script: build-clang-tidy64-windows.sh
         resources:
-            - 'build/clang-plugin/**'
+            - 'build/clang-plugin/**/*.cpp'
+            - 'build/clang-plugin/**/*.h'
+            - 'build/clang-plugin/*.inc'
+            - 'build/clang-plugin/*.py'
+            - 'build/clang-plugin/moz.build'
+            - 'build/clang-plugin/Makefile.in'
             - 'build/build-clang/build-clang.py'
             - 'build/build-clang/clang-tidy-win32.json'
             - 'taskcluster/scripts/misc/build-clang-windows-helper64.sh'

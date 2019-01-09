@@ -192,6 +192,7 @@ add_task(function test_cancel_query() {
 
 add_task(function test_receiveResults() {
   const context = createContext();
+  context.results = [];
   controller.receiveResults(context);
 
   Assert.equal(generalListener.onQueryResults.callCount, 1,
@@ -204,6 +205,7 @@ add_task(function test_receiveResults() {
 
 add_task(function test_autocomplete_enabled() {
   const context = createContext();
+  context.results = [];
   controller.receiveResults(context);
 
   Assert.equal(generalListener.onQueryResults.callCount, 1,
@@ -213,4 +215,3 @@ add_task(function test_autocomplete_enabled() {
 
   sandbox.resetHistory();
 });
-

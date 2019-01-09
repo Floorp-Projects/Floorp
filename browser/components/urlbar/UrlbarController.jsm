@@ -14,6 +14,9 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.jsm",
 });
 
+const TELEMETRY_1ST_RESULT = "PLACES_AUTOCOMPLETE_1ST_RESULT_TIME_MS";
+const TELEMETRY_6_FIRST_RESULTS = "PLACES_AUTOCOMPLETE_6_FIRST_RESULTS_TIME_MS";
+
 /**
  * The address bar controller handles queries from the address bar, obtains
  * results and returns them to the UI for display.
@@ -88,6 +91,10 @@ class UrlbarController {
 
     queryContext.autoFill = UrlbarPrefs.get("autoFill");
 
+    queryContext.lastTelemetryResultCount = 0;
+    TelemetryStopwatch.start(TELEMETRY_1ST_RESULT, queryContext);
+    TelemetryStopwatch.start(TELEMETRY_6_FIRST_RESULTS, queryContext);
+
     this._notify("onQueryStarted", queryContext);
     await this.manager.startQuery(queryContext, this);
     this._notify("onQueryFinished", queryContext);
@@ -103,6 +110,10 @@ class UrlbarController {
     if (queryContext === this._lastQueryContext) {
       delete this._lastQueryContext;
     }
+
+    TelemetryStopwatch.cancel(TELEMETRY_1ST_RESULT, queryContext);
+    TelemetryStopwatch.cancel(TELEMETRY_6_FIRST_RESULTS, queryContext);
+
     this.manager.cancelQuery(queryContext);
     this._notify("onQueryCancelled", queryContext);
   }
@@ -113,6 +124,16 @@ class UrlbarController {
    * @param {QueryContext} queryContext The query details.
    */
   receiveResults(queryContext) {
+    if (queryContext.lastTelemetryResultCount < 1 &&
+        queryContext.results.length >= 1) {
+      TelemetryStopwatch.finish(TELEMETRY_1ST_RESULT, queryContext);
+    }
+    if (queryContext.lastTelemetryResultCount < 6 &&
+        queryContext.results.length >= 6) {
+      TelemetryStopwatch.finish(TELEMETRY_6_FIRST_RESULTS, queryContext);
+    }
+    queryContext.lastTelemetryResultCount = queryContext.results.length;
+
     this._notify("onQueryResults", queryContext);
   }
 
