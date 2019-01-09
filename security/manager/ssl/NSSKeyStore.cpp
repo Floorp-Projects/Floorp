@@ -107,6 +107,18 @@ nsresult NSSKeyStore::StoreSecret(const nsACString& aSecret,
     return NS_ERROR_FAILURE;
   }
 
+  // It is possible for multiple keys to have the same nickname in NSS. To
+  // prevent the problem of not knowing which key to use in the future, simply
+  // delete all keys with this nickname before storing a new one (if something
+  // else is using our prefix ("org.mozilla.nss.keystore") with the given label,
+  // it may result in breakage).
+  nsresult rv = DeleteSecret(aLabel);
+  if (NS_FAILED(rv)) {
+    MOZ_LOG(gNSSKeyStoreLog, LogLevel::Debug,
+            ("DeleteSecret before StoreSecret failed"));
+    return rv;
+  }
+
   uint8_t* p = BitwiseCast<uint8_t*, const char*>(aSecret.BeginReading());
   UniqueSECItem key(SECITEM_AllocItem(nullptr, nullptr, aSecret.Length()));
   if (!key) {

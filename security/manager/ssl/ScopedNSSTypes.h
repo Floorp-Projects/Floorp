@@ -238,6 +238,18 @@ inline void VFY_DestroyContext_true(VFYContext* ctx) {
   VFY_DestroyContext(ctx, true);
 }
 
+// If this was created via PK11_ListFixedKeysInSlot, we may have a list of keys,
+// in which case we have to free them all (and if not, this will still free the
+// one key).
+inline void FreeOneOrMoreSymKeys(PK11SymKey* keys) {
+  PK11SymKey* next;
+  while (keys) {
+    next = PK11_GetNextSymKey(keys);
+    PK11_FreeSymKey(keys);
+    keys = next;
+  }
+}
+
 }  // namespace internal
 
 MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniqueCERTCertificate, CERTCertificate,
@@ -281,7 +293,7 @@ MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniquePK11SlotInfo, PK11SlotInfo,
 MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniquePK11SlotList, PK11SlotList,
                                       PK11_FreeSlotList)
 MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniquePK11SymKey, PK11SymKey,
-                                      PK11_FreeSymKey)
+                                      internal::FreeOneOrMoreSymKeys)
 
 MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniquePLArenaPool, PLArenaPool,
                                       internal::PORT_FreeArena_false)
