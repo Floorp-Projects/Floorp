@@ -500,8 +500,9 @@ nsresult HTMLImageElement::BindToTree(Document* aDocument, nsIContent* aParent,
   }
 
   if (HaveSrcsetOrInPicture()) {
-    if (aDocument && !mInDocResponsiveContent) {
-      aDocument->AddResponsiveContent(this);
+    Document* doc = GetComposedDoc();
+    if (doc && !mInDocResponsiveContent) {
+      doc->AddResponsiveContent(this);
       mInDocResponsiveContent = true;
     }
 
