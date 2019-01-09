@@ -46,13 +46,6 @@ interface nsIToolkitProfileService : nsISupports
     nsIToolkitProfile getProfileByName(in AUTF8String aName);
 
     /**
-     * Lock an arbitrary path as a profile. If the path does not exist, it
-     * will be created and the defaults copied from the application directory.
-     */
-    nsIProfileLock lockProfilePath(in nsIFile aDirectory,
-                                   in nsIFile aTempDirectory);
-
-    /**
      * Create a new profile.
      *
      * The profile temporary directory will be chosen based on where the
