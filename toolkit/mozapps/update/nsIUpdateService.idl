@@ -28,12 +28,12 @@ interface nsIUpdatePatch : nsISupports
    * "complete"     A complete patch containing all of the replacement files
    *                to update to the new version
    */
-  attribute AString type;
+  readonly attribute AString type;
 
   /**
    * The URL this patch was being downloaded from
    */
-  attribute AString URL;
+  readonly attribute AString URL;
 
   /**
    * The final URL this patch was being downloaded from
@@ -43,7 +43,7 @@ interface nsIUpdatePatch : nsISupports
   /**
    * The size of this file, in bytes.
    */
-  attribute unsigned long size;
+  readonly attribute unsigned long size;
 
   /**
    * The state of this patch
@@ -92,28 +92,28 @@ interface nsIUpdate : nsISupports
    *   "major"  A major new version of the Application
    *   "minor"  A minor update to the Application (e.g. security update)
    */
-  attribute AString type;
+  readonly attribute AString type;
 
   /**
    * The name of the update, or "<Application Name> <Update Version>"
    */
-  attribute AString name;
+  readonly attribute AString name;
 
   /**
    * The string to display in the user interface for the version. If you want
    * a real version number use appVersion.
    */
-  attribute AString displayVersion;
+  readonly attribute AString displayVersion;
 
   /**
    * The Application version of this update.
    */
-  attribute AString appVersion;
+  readonly attribute AString appVersion;
 
   /**
    * The Application version prior to the application being updated.
    */
-  attribute AString previousAppVersion;
+  readonly attribute AString previousAppVersion;
 
   /**
    * The Build ID of this update. Used to determine a particular build, down
@@ -121,7 +121,7 @@ interface nsIUpdate : nsISupports
    * to differentiate between several nightly builds with the same |version|
    * for example.
    */
-  attribute AString buildID;
+  readonly attribute AString buildID;
 
   /**
    * The URL to a page which offers details about the content of this
@@ -129,22 +129,22 @@ interface nsIUpdate : nsISupports
    * that summarizes the differences between this update and the previous,
    * which also links to the release notes.
    */
-  attribute AString detailsURL;
+  readonly attribute AString detailsURL;
 
   /**
    * The URL to the Update Service that supplied this update.
    */
-  attribute AString serviceURL;
+  readonly attribute AString serviceURL;
 
   /**
    * The channel used to retrieve this update from the Update Service.
    */
-  attribute AString channel;
+  readonly attribute AString channel;
 
   /**
    * Whether the update is no longer supported on this system.
    */
-  attribute boolean unsupported;
+  readonly attribute boolean unsupported;
   
   /**
    * Allows overriding the default amount of time in seconds before prompting the

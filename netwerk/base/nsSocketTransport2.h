@@ -398,6 +398,10 @@ class nsSocketTransport final : public nsASocketHandler,
   // socket timeouts are not protected by any lock.
   uint16_t mTimeouts[2];
 
+  // linger options to use when closing
+  bool mLingerPolarity;
+  int16_t mLingerTimeout;
+
   // QoS setting for socket
   uint8_t mQoSBits;
 
