@@ -3,7 +3,7 @@
     <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
   </head>
   <body onload="start()">
-    <div onfocus="done()" contenteditable>foo<div contenteditable="false"><img src="image_rgrg-256x256.png" width="10" height="10"></div>bar</div>
+    <div onfocus="setTimeout(done, 0)" contenteditable>foo<div contenteditable="false"><img src="image_rgrg-256x256.png" width="10" height="10"></div>bar</div>
     <script>
       var div = document.querySelector("div");
       function start() {

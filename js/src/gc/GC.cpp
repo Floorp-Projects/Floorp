@@ -670,8 +670,7 @@ static inline bool FinalizeTypedArenas(FreeOp* fop, Arena** src,
 }
 
 /*
- * Finalize the list. On return, |al|'s cursor points to the first non-empty
- * arena in the list (which may be null if all arenas are full).
+ * Finalize the list of areans.
  */
 static bool FinalizeArenas(FreeOp* fop, Arena** src, SortedArenaList& dest,
                            AllocKind thingKind, SliceBudget& budget,

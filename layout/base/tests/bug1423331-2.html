@@ -17,11 +17,13 @@
 <div id="editable" contenteditable></div>
 <script>
 SimpleTest.waitForFocus(function() {
-  let div = document.getElementById("editable");
-  synthesizeMouseAtCenter(div, {});
-  synthesizeMouseAtCenter(div, {});
-  sendString("xxx");
-  document.documentElement.className = "";
+  SimpleTest.executeSoon(() => {
+    let div = document.getElementById("editable");
+    synthesizeMouseAtCenter(div, {});
+    synthesizeMouseAtCenter(div, {});
+    sendString("xxx");
+    document.documentElement.className = "";
+  });
 });
 </script>
 </html>

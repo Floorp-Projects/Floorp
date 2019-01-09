@@ -8,7 +8,7 @@
 #define MOZILLA_SMILSTRINGTYPE_H_
 
 #include "mozilla/Attributes.h"
-#include "SMILType.h"
+#include "mozilla/SMILType.h"
 
 namespace mozilla {
 
