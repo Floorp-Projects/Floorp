@@ -133,7 +133,7 @@
             "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
-        "revision": "013edcbe1811"
+        "revision": "fbef98135de5"
     },
     "bg": {
         "platforms": [
@@ -269,7 +269,7 @@
             "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
-        "revision": "c8840dafebbb"
+        "revision": "78cf6966dac9"
     },
     "cy": {
         "platforms": [
@@ -337,7 +337,7 @@
             "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
-        "revision": "b677996895e2"
+        "revision": "2581b1d46298"
     },
     "el": {
         "platforms": [
@@ -456,7 +456,7 @@
             "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
-        "revision": "e18b3930d796"
+        "revision": "6a565c6a11ae"
     },
     "es-ES": {
         "platforms": [
@@ -779,7 +779,7 @@
             "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
-        "revision": "ca442cc9b7d6"
+        "revision": "8f277bab28a0"
     },
     "hy-AM": {
         "platforms": [
@@ -864,7 +864,7 @@
             "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
-        "revision": "35922137fad5"
+        "revision": "127f36dbfeea"
     },
     "ja": {
         "platforms": [
@@ -937,7 +937,7 @@
             "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
-        "revision": "3ae021d6e5c9"
+        "revision": "50b35d6223a5"
     },
     "km": {
         "platforms": [
@@ -1209,7 +1209,7 @@
             "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
-        "revision": "6e2f1bd2c8d1"
+        "revision": "a2c63c7cf516"
     },
     "oc": {
         "platforms": [
@@ -1481,7 +1481,7 @@
             "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
-        "revision": "882ce45b83b7"
+        "revision": "74fc03a07524"
     },
     "ta": {
         "platforms": [
