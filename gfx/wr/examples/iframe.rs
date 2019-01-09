@@ -35,10 +35,12 @@ impl Example for App {
 
         let sub_pipeline_id = PipelineId(pipeline_id.0, 42);
         let mut sub_builder = DisplayListBuilder::new(sub_pipeline_id, sub_bounds.size);
+        let mut space_and_clip = SpaceAndClipInfo::root_scroll(pipeline_id);
 
         let info = LayoutPrimitiveInfo::new(sub_bounds);
         sub_builder.push_stacking_context(
             &info,
+            space_and_clip.spatial_id,
             None,
             TransformStyle::Flat,
             MixBlendMode::Normal,
@@ -47,7 +49,7 @@ impl Example for App {
         );
 
         // green rect visible == success
-        sub_builder.push_rect(&info, ColorF::new(0.0, 1.0, 0.0, 1.0));
+        sub_builder.push_rect(&info, &space_and_clip, ColorF::new(0.0, 1.0, 0.0, 1.0));
         sub_builder.pop_stacking_context();
 
         let mut txn = Transaction::new();
@@ -60,19 +62,19 @@ impl Example for App {
         );
         api.send_transaction(document_id, txn);
 
-        let info = LayoutPrimitiveInfo::new(sub_bounds);
-        let reference_frame_id = builder.push_reference_frame(
+        space_and_clip.spatial_id = builder.push_reference_frame(
             &sub_bounds,
+            space_and_clip.spatial_id,
             TransformStyle::Flat,
             Some(PropertyBinding::Binding(PropertyBindingKey::new(42), LayoutTransform::identity())),
             None,
         );
-        builder.push_clip_id(reference_frame_id);
-
 
         // And this is for the root pipeline
+        let info = LayoutPrimitiveInfo::new(sub_bounds);
         builder.push_stacking_context(
             &info,
+            space_and_clip.spatial_id,
             None,
             TransformStyle::Flat,
             MixBlendMode::Normal,
@@ -80,11 +82,9 @@ impl Example for App {
             RasterSpace::Screen,
         );
         // red rect under the iframe: if this is visible, things have gone wrong
-        builder.push_rect(&info, ColorF::new(1.0, 0.0, 0.0, 1.0));
-        builder.push_iframe(&info, sub_pipeline_id, false);
+        builder.push_rect(&info, &space_and_clip, ColorF::new(1.0, 0.0, 0.0, 1.0));
+        builder.push_iframe(&info, &space_and_clip, sub_pipeline_id, false);
         builder.pop_stacking_context();
-
-        builder.pop_clip_id();
         builder.pop_reference_frame();
     }
 }

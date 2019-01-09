@@ -17,7 +17,7 @@ use rayon::prelude::*;
 use std::collections::HashMap;
 use std::sync::Arc;
 use webrender::api::{self, DisplayListBuilder, DocumentId, PipelineId, RenderApi, Transaction};
-use webrender::api::ColorF;
+use webrender::api::{ColorF, SpaceAndClipInfo};
 use webrender::euclid::size2;
 
 // This example shows how to implement a very basic BlobImageHandler that can only render
@@ -200,7 +200,7 @@ impl Example for App {
         builder: &mut DisplayListBuilder,
         txn: &mut Transaction,
         _framebuffer_size: api::DeviceIntSize,
-        _pipeline_id: PipelineId,
+        pipeline_id: PipelineId,
         _document_id: DocumentId,
     ) {
         let blob_img1 = api.generate_blob_image_key();
@@ -220,9 +220,11 @@ impl Example for App {
         );
 
         let bounds = api::LayoutRect::new(api::LayoutPoint::zero(), builder.content_size());
-        let info = api::LayoutPrimitiveInfo::new(bounds);
+        let space_and_clip = SpaceAndClipInfo::root_scroll(pipeline_id);
+
         builder.push_stacking_context(
-            &info,
+            &api::LayoutPrimitiveInfo::new(bounds),
+            space_and_clip.spatial_id,
             None,
             api::TransformStyle::Flat,
             api::MixBlendMode::Normal,
@@ -230,9 +232,9 @@ impl Example for App {
             api::RasterSpace::Screen,
         );
 
-        let info = api::LayoutPrimitiveInfo::new((30, 30).by(500, 500));
         builder.push_image(
-            &info,
+            &api::LayoutPrimitiveInfo::new((30, 30).by(500, 500)),
+            &space_and_clip,
             api::LayoutSize::new(500.0, 500.0),
             api::LayoutSize::new(0.0, 0.0),
             api::ImageRendering::Auto,
@@ -241,9 +243,9 @@ impl Example for App {
             ColorF::WHITE,
         );
 
-        let info = api::LayoutPrimitiveInfo::new((600, 600).by(200, 200));
         builder.push_image(
-            &info,
+            &api::LayoutPrimitiveInfo::new((600, 600).by(200, 200)),
+            &space_and_clip,
             api::LayoutSize::new(200.0, 200.0),
             api::LayoutSize::new(0.0, 0.0),
             api::ImageRendering::Auto,
