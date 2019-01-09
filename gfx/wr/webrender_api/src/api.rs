@@ -984,6 +984,8 @@ bitflags! {
         const GPU_CACHE_DBG         = 1 << 12;
         const SLOW_FRAME_INDICATOR  = 1 << 13;
         const TEXTURE_CACHE_DBG_CLEAR_EVICTED = 1 << 14;
+        /// Show picture caching debug overlay
+        const PICTURE_CACHING_DBG   = 1 << 15;
     }
 }
 
