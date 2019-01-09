@@ -13,42 +13,22 @@ const {
   stack,
   TimeoutError,
 } = ChromeUtils.import("chrome://marionette/content/error.js", {});
-const {truncate} = ChromeUtils.import("chrome://marionette/content/format.js", {});
 const {Log} = ChromeUtils.import("chrome://marionette/content/log.js", {});
 
 XPCOMUtils.defineLazyGetter(this, "log", Log.get);
 
 this.EXPORTED_SYMBOLS = [
-  "executeSoon",
   "DebounceCallback",
   "IdlePromise",
   "MessageManagerDestroyedPromise",
   "PollPromise",
   "Sleep",
   "TimedPromise",
-  "waitForEvent",
-  "waitForMessage",
-  "waitForObserverTopic",
 ];
 
 const {TYPE_ONE_SHOT, TYPE_REPEATING_SLACK} = Ci.nsITimer;
 
 const PROMISE_TIMEOUT = AppConstants.DEBUG ? 4500 : 1500;
-
-
-/**
- * Dispatch a function to be executed on the main thread.
- *
- * @param {function} func
- *     Function to be executed.
- */
-function executeSoon(func) {
-  if (typeof func != "function") {
-    throw new TypeError();
-  }
-
-  Services.tm.dispatchToMainThread(func);
-}
 
 /**
  * @callback Condition
@@ -92,14 +72,14 @@ function executeSoon(func) {
  *       } else {
  *         reject([]);
  *       }
- *     }, {timeout: 1000});
+ *     });
  *
  * @param {Condition} func
  *     Function to run off the main thread.
- * @param {number=} [timeout] timeout
- *     Desired timeout if wanted.  If 0 or less than the runtime evaluation
+ * @param {number=} [timeout=2000] timeout
+ *     Desired timeout.  If 0 or less than the runtime evaluation
  *     time of ``func``, ``func`` is guaranteed to run at least once.
- *     Defaults to using no timeout.
+ *     The default is 2000 milliseconds.
  * @param {number=} [interval=10] interval
  *     Duration between each poll of ``func`` in milliseconds.
  *     Defaults to 10 milliseconds.
@@ -115,30 +95,23 @@ function executeSoon(func) {
  * @throws {RangeError}
  *     If `timeout` or `interval` are not unsigned integers.
  */
-function PollPromise(func, {timeout = null, interval = 10} = {}) {
+function PollPromise(func, {timeout = 2000, interval = 10} = {}) {
   const timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
 
   if (typeof func != "function") {
     throw new TypeError();
   }
-  if (timeout != null && typeof timeout != "number") {
+  if (!(typeof timeout == "number" && typeof interval == "number")) {
     throw new TypeError();
   }
-  if (typeof interval != "number") {
-    throw new TypeError();
-  }
-  if ((timeout && (!Number.isInteger(timeout) || timeout < 0)) ||
+  if ((!Number.isInteger(timeout) || timeout < 0) ||
       (!Number.isInteger(interval) || interval < 0)) {
     throw new RangeError();
   }
 
   return new Promise((resolve, reject) => {
-    let start, end;
-
-    if (Number.isInteger(timeout)) {
-      start = new Date().getTime();
-      end = start + timeout;
-    }
+    const start = new Date().getTime();
+    const end = start + timeout;
 
     let evalFn = () => {
       new Promise(func).then(resolve, rejected => {
@@ -146,10 +119,9 @@ function PollPromise(func, {timeout = null, interval = 10} = {}) {
           throw rejected;
         }
 
-        // return if there is a timeout and set to 0,
-        // allowing |func| to be evaluated at least once
-        if (typeof end != "undefined" &&
-            (start == end || new Date().getTime() >= end)) {
+        // return if timeout is 0, allowing |func| to be evaluated at
+        // least once
+        if (start == end || new Date().getTime() >= end) {
           resolve(rejected);
         }
       }).catch(reject);
@@ -379,192 +351,3 @@ class DebounceCallback {
   }
 }
 this.DebounceCallback = DebounceCallback;
-
-/**
- * Wait for an event to be fired on a specified element.
- *
- * This method has been duplicated from BrowserTestUtils.jsm.
- *
- * Because this function is intended for testing, any error in checkFn
- * will cause the returned promise to be rejected instead of waiting for
- * the next event, since this is probably a bug in the test.
- *
- * Usage::
- *
- *    let promiseEvent = waitForEvent(element, "eventName");
- *    // Do some processing here that will cause the event to be fired
- *    // ...
- *    // Now wait until the Promise is fulfilled
- *    let receivedEvent = await promiseEvent;
- *
- * The promise resolution/rejection handler for the returned promise is
- * guaranteed not to be called until the next event tick after the event
- * listener gets called, so that all other event listeners for the element
- * are executed before the handler is executed::
- *
- *    let promiseEvent = waitForEvent(element, "eventName");
- *    // Same event tick here.
- *    await promiseEvent;
- *    // Next event tick here.
- *
- * If some code, such like adding yet another event listener, needs to be
- * executed in the same event tick, use raw addEventListener instead and
- * place the code inside the event listener::
- *
- *    element.addEventListener("load", () => {
- *      // Add yet another event listener in the same event tick as the load
- *      // event listener.
- *      p = waitForEvent(element, "ready");
- *    }, { once: true });
- *
- * @param {Element} subject
- *     The element that should receive the event.
- * @param {string} eventName
- *     Name of the event to listen to.
- * @param {Object=} options
- *     Extra options.
- * @param {boolean=} options.capture
- *     True to use a capturing listener.
- * @param {function(Event)=} options.checkFn
- *     Called with the ``Event`` object as argument, should return ``true``
- *     if the event is the expected one, or ``false`` if it should be
- *     ignored and listening should continue. If not specified, the first
- *     event with the specified name resolves the returned promise.
- * @param {boolean=} options.wantsUntrusted
- *     True to receive synthetic events dispatched by web content.
- *
- * @return {Promise.<Event>}
- *     Promise which resolves to the received ``Event`` object, or rejects
- *     in case of a failure.
- */
-function waitForEvent(subject, eventName,
-    {capture = false, checkFn = null, wantsUntrusted = false} = {}) {
-  if (subject == null || !("addEventListener" in subject)) {
-    throw new TypeError();
-  }
-  if (typeof eventName != "string") {
-    throw new TypeError();
-  }
-  if (capture != null && typeof capture != "boolean") {
-    throw new TypeError();
-  }
-  if (checkFn != null && typeof checkFn != "function") {
-    throw new TypeError();
-  }
-  if (wantsUntrusted != null && typeof wantsUntrusted != "boolean") {
-    throw new TypeError();
-  }
-
-  return new Promise((resolve, reject) => {
-    subject.addEventListener(eventName, function listener(event) {
-      log.trace(`Received DOM event ${event.type} for ${event.target}`);
-      try {
-        if (checkFn && !checkFn(event)) {
-          return;
-        }
-        subject.removeEventListener(eventName, listener, capture);
-        executeSoon(() => resolve(event));
-      } catch (ex) {
-        try {
-          subject.removeEventListener(eventName, listener, capture);
-        } catch (ex2) {
-          // Maybe the provided object does not support removeEventListener.
-        }
-        executeSoon(() => reject(ex));
-      }
-    }, capture, wantsUntrusted);
-  });
-}
-
-/**
- * Wait for a message to be fired from a particular message manager.
- *
- * This method has been duplicated from BrowserTestUtils.jsm.
- *
- * @param {nsIMessageManager} messageManager
- *     The message manager that should be used.
- * @param {string} messageName
- *     The message to wait for.
- * @param {Object=} options
- *     Extra options.
- * @param {function(Message)=} options.checkFn
- *     Called with the ``Message`` object as argument, should return ``true``
- *     if the message is the expected one, or ``false`` if it should be
- *     ignored and listening should continue. If not specified, the first
- *     message with the specified name resolves the returned promise.
- *
- * @return {Promise.<Object>}
- *     Promise which resolves to the data property of the received
- *     ``Message``.
- */
-function waitForMessage(messageManager, messageName,
-    {checkFn = undefined} = {}) {
-  if (messageManager == null || !("addMessageListener" in messageManager)) {
-    throw new TypeError();
-  }
-  if (typeof messageName != "string") {
-    throw new TypeError();
-  }
-  if (checkFn && typeof checkFn != "function") {
-    throw new TypeError();
-  }
-
-  return new Promise(resolve => {
-    messageManager.addMessageListener(messageName, function onMessage(msg) {
-      log.trace(`Received ${messageName} for ${msg.target}`);
-      if (checkFn && !checkFn(msg)) {
-        return;
-      }
-      messageManager.removeMessageListener(messageName, onMessage);
-      resolve(msg.data);
-    });
-  });
-}
-
-/**
- * Wait for the specified observer topic to be observed.
- *
- * This method has been duplicated from TestUtils.jsm.
- *
- * Because this function is intended for testing, any error in checkFn
- * will cause the returned promise to be rejected instead of waiting for
- * the next notification, since this is probably a bug in the test.
- *
- * @param {string} topic
- *     The topic to observe.
- * @param {Object=} options
- *     Extra options.
- * @param {function(String,Object)=} options.checkFn
- *     Called with ``subject``, and ``data`` as arguments, should return true
- *     if the notification is the expected one, or false if it should be
- *     ignored and listening should continue. If not specified, the first
- *     notification for the specified topic resolves the returned promise.
- *
- * @return {Promise.<Array<String, Object>>}
- *     Promise which resolves to an array of ``subject``, and ``data`` from
- *     the observed notification.
- */
-function waitForObserverTopic(topic, {checkFn = null} = {}) {
-  if (typeof topic != "string") {
-    throw new TypeError();
-  }
-  if (checkFn != null && typeof checkFn != "function") {
-    throw new TypeError();
-  }
-
-  return new Promise((resolve, reject) => {
-    Services.obs.addObserver(function observer(subject, topic, data) {
-      log.trace(`Received observer notification ${topic}`);
-      try {
-        if (checkFn && !checkFn(subject, data)) {
-          return;
-        }
-        Services.obs.removeObserver(observer, topic);
-        resolve({subject, data});
-      } catch (ex) {
-        Services.obs.removeObserver(observer, topic);
-        reject(ex);
-      }
-    }, topic);
-  });
-}
