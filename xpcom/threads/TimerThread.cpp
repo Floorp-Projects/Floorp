@@ -17,6 +17,7 @@
 #include "mozilla/ArenaAllocator.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/BinarySearch.h"
+#include "mozilla/OperatorNewExtensions.h"
 
 #include <math.h>
 
@@ -714,10 +715,11 @@ already_AddRefed<nsTimerImpl> TimerThread::PostTimerEvent(
   // event, so we can avoid firing a timer that was re-initialized after being
   // canceled.
 
-  RefPtr<nsTimerEvent> event = new nsTimerEvent;
-  if (!event) {
+  void* p = nsTimerEvent::operator new(sizeof(nsTimerEvent));
+  if (!p) {
     return timer.forget();
   }
+  RefPtr<nsTimerEvent> event = ::new (KnownNotNull, p) nsTimerEvent();
 
   if (MOZ_LOG_TEST(GetTimerLog(), LogLevel::Debug)) {
     event->mInitTime = TimeStamp::Now();
