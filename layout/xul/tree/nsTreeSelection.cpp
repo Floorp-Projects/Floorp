@@ -9,7 +9,7 @@
 #include "nsCOMPtr.h"
 #include "nsTreeSelection.h"
 #include "nsIBoxObject.h"
-#include "XULTreeElement.h"
+#include "nsITreeBoxObject.h"
 #include "nsITreeView.h"
 #include "nsString.h"
 #include "nsIContent.h"
@@ -177,10 +177,10 @@ struct nsTreeRange {
     }
   }
 
-  static void InvalidateRanges(XULTreeElement* aTree,
+  static void InvalidateRanges(nsITreeBoxObject* aTree,
                                nsTArray<int32_t>& aRanges) {
     if (aTree) {
-      RefPtr<nsXULElement> tree = aTree;
+      nsCOMPtr<nsITreeBoxObject> tree = aTree;
       for (uint32_t i = 0; i < aRanges.Length(); i += 2) {
         aTree->InvalidateRange(aRanges[i], aRanges[i + 1]);
       }
@@ -226,7 +226,7 @@ struct nsTreeRange {
   }
 };
 
-nsTreeSelection::nsTreeSelection(XULTreeElement* aTree)
+nsTreeSelection::nsTreeSelection(nsITreeBoxObject* aTree)
     : mTree(aTree),
       mSuppressed(false),
       mCurrentIndex(-1),
@@ -249,28 +249,34 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsTreeSelection)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-NS_IMETHODIMP nsTreeSelection::GetTree(XULTreeElement** aTree) {
+NS_IMETHODIMP nsTreeSelection::GetTree(nsITreeBoxObject** aTree) {
   NS_IF_ADDREF(*aTree = mTree);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsTreeSelection::SetTree(XULTreeElement* aTree) {
+NS_IMETHODIMP nsTreeSelection::SetTree(nsITreeBoxObject* aTree) {
   if (mSelectTimer) {
     mSelectTimer->Cancel();
     mSelectTimer = nullptr;
   }
 
-  mTree = aTree;
+  // Make sure aTree really implements nsITreeBoxObject and nsIBoxObject!
+  nsCOMPtr<nsIBoxObject> bo = do_QueryInterface(aTree);
+  mTree = do_QueryInterface(bo);
+  NS_ENSURE_STATE(mTree == aTree);
   return NS_OK;
 }
 
 NS_IMETHODIMP nsTreeSelection::GetSingle(bool* aSingle) {
-  if (!mTree) {
+  nsCOMPtr<nsIContent> content = GetContent();
+  if (!content) {
     return NS_ERROR_NULL_POINTER;
   }
 
-  *aSingle = mTree->AttrValueIs(kNameSpaceID_None, nsGkAtoms::seltype,
-                                NS_LITERAL_STRING("single"), eCaseMatters);
+  *aSingle =
+      content->IsElement() && content->AsElement()->AttrValueIs(
+                                  kNameSpaceID_None, nsGkAtoms::seltype,
+                                  NS_LITERAL_STRING("single"), eCaseMatters);
 
   return NS_OK;
 }
@@ -296,8 +302,10 @@ NS_IMETHODIMP nsTreeSelection::TimedSelect(int32_t aIndex, int32_t aMsec) {
     if (!mSuppressed) {
       if (mSelectTimer) mSelectTimer->Cancel();
 
-      nsIEventTarget* target =
-          mTree->OwnerDoc()->EventTargetFor(TaskCategory::Other);
+      nsIEventTarget* target = nullptr;
+      if (nsCOMPtr<nsIContent> content = GetContent()) {
+        target = content->OwnerDoc()->EventTargetFor(TaskCategory::Other);
+      }
       NS_NewTimerWithFuncCallback(getter_AddRefs(mSelectTimer), SelectCallback,
                                   this, aMsec, nsITimer::TYPE_ONE_SHOT,
                                   "nsTreeSelection::SelectCallback", target);
@@ -466,7 +474,8 @@ NS_IMETHODIMP nsTreeSelection::InvertSelection() {
 NS_IMETHODIMP nsTreeSelection::SelectAll() {
   if (!mTree) return NS_OK;
 
-  nsCOMPtr<nsITreeView> view = mTree->GetView();
+  nsCOMPtr<nsITreeView> view;
+  mTree->GetView(getter_AddRefs(view));
   if (!view) return NS_OK;
 
   int32_t rowCount;
@@ -563,13 +572,19 @@ NS_IMETHODIMP nsTreeSelection::SetCurrentIndex(int32_t aIndex) {
   if (aIndex != -1) mTree->InvalidateRow(aIndex);
 
   // Fire DOMMenuItemActive or DOMMenuItemInactive event for tree.
-  NS_ENSURE_STATE(mTree);
+  nsCOMPtr<nsIBoxObject> boxObject = do_QueryInterface(mTree);
+  NS_ASSERTION(boxObject, "no box object!");
+  if (!boxObject) return NS_ERROR_UNEXPECTED;
+  RefPtr<dom::Element> treeElt;
+  boxObject->GetElement(getter_AddRefs(treeElt));
+
+  NS_ENSURE_STATE(treeElt);
 
   NS_NAMED_LITERAL_STRING(DOMMenuItemActive, "DOMMenuItemActive");
   NS_NAMED_LITERAL_STRING(DOMMenuItemInactive, "DOMMenuItemInactive");
 
   RefPtr<AsyncEventDispatcher> asyncDispatcher = new AsyncEventDispatcher(
-      mTree, (aIndex != -1 ? DOMMenuItemActive : DOMMenuItemInactive),
+      treeElt, (aIndex != -1 ? DOMMenuItemActive : DOMMenuItemInactive),
       CanBubble::eYes, ChromeOnlyDispatch::eNo);
   return asyncDispatcher->PostDOMEvent();
 }
@@ -698,8 +713,15 @@ nsTreeSelection::GetShiftSelectPivot(int32_t* aIndex) {
 nsresult nsTreeSelection::FireOnSelectHandler() {
   if (mSuppressed || !mTree) return NS_OK;
 
+  nsCOMPtr<nsIBoxObject> boxObject = do_QueryInterface(mTree);
+  NS_ASSERTION(boxObject, "no box object!");
+  if (!boxObject) return NS_ERROR_UNEXPECTED;
+  RefPtr<dom::Element> elt;
+  boxObject->GetElement(getter_AddRefs(elt));
+  NS_ENSURE_STATE(elt);
+
   RefPtr<AsyncEventDispatcher> asyncDispatcher =
-      new AsyncEventDispatcher(mTree, NS_LITERAL_STRING("select"),
+      new AsyncEventDispatcher(elt, NS_LITERAL_STRING("select"),
                                CanBubble::eYes, ChromeOnlyDispatch::eNo);
   asyncDispatcher->RunDOMEventWhenSafe();
   return NS_OK;
@@ -714,9 +736,21 @@ void nsTreeSelection::SelectCallback(nsITimer* aTimer, void* aClosure) {
   }
 }
 
+already_AddRefed<nsIContent> nsTreeSelection::GetContent() {
+  if (!mTree) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIBoxObject> boxObject = do_QueryInterface(mTree);
+
+  RefPtr<dom::Element> element;
+  boxObject->GetElement(getter_AddRefs(element));
+  return element.forget();
+}
+
 ///////////////////////////////////////////////////////////////////////////////////
 
-nsresult NS_NewTreeSelection(XULTreeElement* aTree,
+nsresult NS_NewTreeSelection(nsITreeBoxObject* aTree,
                              nsITreeSelection** aResult) {
   *aResult = new nsTreeSelection(aTree);
   if (!*aResult) return NS_ERROR_OUT_OF_MEMORY;

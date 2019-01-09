@@ -129,11 +129,11 @@ add_task(async function test_warnOnOpenLinks() {
 function mouseEventOnCell(aTree, aRowIndex, aColumnIndex, aEventDetails) {
   var selection = aTree.view.selection;
   selection.select(aRowIndex);
-  aTree.ensureRowIsVisible(aRowIndex);
+  aTree.treeBoxObject.ensureRowIsVisible(aRowIndex);
   var column = aTree.columns[aColumnIndex];
 
   // get cell coordinates
-  var rect = aTree.getCoordsForCellItem(aRowIndex, column, "text");
+  var rect = aTree.treeBoxObject.getCoordsForCellItem(aRowIndex, column, "text");
 
   EventUtils.synthesizeMouse(aTree.body, rect.x, rect.y,
     aEventDetails, gLibrary);

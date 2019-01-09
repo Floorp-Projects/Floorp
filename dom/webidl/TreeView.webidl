@@ -140,7 +140,7 @@ interface TreeView
    * Called during initialization to link the view to the front end box object.
    */
   [Throws]
-  void setTree(XULTreeElement? tree);
+  void setTree(TreeBoxObject? tree);
 
   /**
    * Called on the view when an item is opened or closed.

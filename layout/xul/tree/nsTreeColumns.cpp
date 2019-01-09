@@ -13,6 +13,7 @@
 #include "nsContentUtils.h"
 #include "nsTreeBodyFrame.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/TreeBoxObject.h"
 #include "mozilla/dom/TreeColumnBinding.h"
 #include "mozilla/dom/TreeColumnsBinding.h"
 
@@ -259,12 +260,10 @@ nsIContent* nsTreeColumns::GetParentObject() const {
   return dom::TreeColumns_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-XULTreeElement* nsTreeColumns::GetTree() const {
-  if (!mTree) {
-    return nullptr;
-  }
-
-  return XULTreeElement::FromNodeOrNull(mTree->GetBaseElement());
+dom::TreeBoxObject* nsTreeColumns::GetTree() const {
+  return mTree ? static_cast<mozilla::dom::TreeBoxObject*>(
+                     mTree->GetTreeBoxObject())
+               : nullptr;
 }
 
 uint32_t nsTreeColumns::Count() {
@@ -445,8 +444,6 @@ nsTreeColumn* nsTreeColumns::GetPrimaryColumn() {
 void nsTreeColumns::EnsureColumns() {
   if (mTree && !mFirstColumn) {
     nsIContent* treeContent = mTree->GetBaseElement();
-    if (!treeContent) return;
-
     nsIContent* colsContent =
         nsTreeUtils::GetDescendantChild(treeContent, nsGkAtoms::treecols);
     if (!colsContent) return;

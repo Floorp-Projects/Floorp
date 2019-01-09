@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsTreeImageListener.h"
-#include "XULTreeElement.h"
+#include "nsITreeBoxObject.h"
 #include "imgIRequest.h"
 #include "imgIContainer.h"
 #include "nsIContent.h"
@@ -80,8 +80,7 @@ void nsTreeImageListener::Invalidate() {
       // this image.
       for (int32_t i = currArea->GetMin(); i <= currArea->GetMax(); ++i) {
         if (mTreeFrame) {
-          RefPtr<XULTreeElement> tree =
-              XULTreeElement::FromNodeOrNull(mTreeFrame->GetBaseElement());
+          nsITreeBoxObject* tree = mTreeFrame->GetTreeBoxObject();
           if (tree) {
             tree->InvalidateCell(i, currArea->GetCol());
           }

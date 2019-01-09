@@ -48,9 +48,8 @@ class XULTreeGridCellAccessibleWrap : public XULTreeGridCellAccessible,
  public:
   XULTreeGridCellAccessibleWrap(nsIContent* aContent, DocAccessible* aDoc,
                                 XULTreeGridRowAccessible* aRowAcc,
-                                dom::XULTreeElement* aTree,
-                                nsITreeView* aTreeView, int32_t aRow,
-                                nsTreeColumn* aColumn)
+                                nsITreeBoxObject* aTree, nsITreeView* aTreeView,
+                                int32_t aRow, nsTreeColumn* aColumn)
       : XULTreeGridCellAccessible(aContent, aDoc, aRowAcc, aTree, aTreeView,
                                   aRow, aColumn),
         ia2AccessibleTableCell(this) {}

@@ -999,7 +999,7 @@ nsCertTree::GetCellText(int32_t row, nsTreeColumn *col, nsAString &_retval) {
 }
 
 NS_IMETHODIMP
-nsCertTree::SetTree(mozilla::dom::XULTreeElement *tree) {
+nsCertTree::SetTree(nsITreeBoxObject *tree) {
   mTree = tree;
   return NS_OK;
 }

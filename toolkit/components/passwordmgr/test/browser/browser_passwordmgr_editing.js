@@ -22,7 +22,8 @@ function getPassword(row) {
 }
 
 function synthesizeDblClickOnCell(aTree, column, row) {
-  let rect = aTree.getCoordsForCellItem(row, aTree.columns[column], "text");
+  let tbo = aTree.treeBoxObject;
+  let rect = tbo.getCoordsForCellItem(row, aTree.columns[column], "text");
   let x = rect.x + rect.width / 2;
   let y = rect.y + rect.height / 2;
   // Simulate the double click.

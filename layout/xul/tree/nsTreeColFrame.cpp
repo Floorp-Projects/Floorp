@@ -10,7 +10,9 @@
 #include "nsIContent.h"
 #include "mozilla/ComputedStyle.h"
 #include "nsNameSpaceManager.h"
+#include "nsIBoxObject.h"
 #include "mozilla/ErrorResult.h"
+#include "mozilla/dom/TreeBoxObject.h"
 #include "nsTreeColumns.h"
 #include "nsDisplayList.h"
 #include "nsTreeBodyFrame.h"
@@ -137,27 +139,43 @@ void nsTreeColFrame::SetXULBounds(nsBoxLayoutState& aBoxLayoutState,
 
   nsBoxFrame::SetXULBounds(aBoxLayoutState, aRect, aRemoveOverflowArea);
   if (mRect.width != oldWidth) {
-    RefPtr<XULTreeElement> tree = GetTree();
-    if (tree) {
-      tree->Invalidate();
+    nsITreeBoxObject* treeBoxObject = GetTreeBoxObject();
+    if (treeBoxObject) {
+      treeBoxObject->Invalidate();
     }
   }
 }
 
-XULTreeElement* nsTreeColFrame::GetTree() {
+nsITreeBoxObject* nsTreeColFrame::GetTreeBoxObject() {
+  nsITreeBoxObject* result = nullptr;
+
   nsIContent* parent = mContent->GetParent();
-  return parent ? XULTreeElement::FromNodeOrNull(parent->GetParent()) : nullptr;
+  if (parent) {
+    nsIContent* grandParent = parent->GetParent();
+    RefPtr<nsXULElement> treeElement =
+        nsXULElement::FromNodeOrNull(grandParent);
+    if (treeElement) {
+      nsCOMPtr<nsIBoxObject> boxObject =
+          treeElement->GetBoxObject(IgnoreErrors());
+
+      nsCOMPtr<nsITreeBoxObject> treeBoxObject = do_QueryInterface(boxObject);
+      result = treeBoxObject.get();
+    }
+  }
+  return result;
 }
 
 void nsTreeColFrame::InvalidateColumns(bool aCanWalkFrameTree) {
-  RefPtr<XULTreeElement> tree = GetTree();
-  if (tree) {
+  nsITreeBoxObject* treeBoxObject = GetTreeBoxObject();
+  if (treeBoxObject) {
     RefPtr<nsTreeColumns> columns;
 
     if (aCanWalkFrameTree) {
-      columns = tree->GetColumns();
+      treeBoxObject->GetColumns(getter_AddRefs(columns));
     } else {
-      nsTreeBodyFrame* body = tree->GetCachedTreeBodyFrame();
+      nsTreeBodyFrame* body =
+          static_cast<mozilla::dom::TreeBoxObject*>(treeBoxObject)
+              ->GetCachedTreeBodyFrame();
       if (body) {
         columns = body->Columns();
       }
