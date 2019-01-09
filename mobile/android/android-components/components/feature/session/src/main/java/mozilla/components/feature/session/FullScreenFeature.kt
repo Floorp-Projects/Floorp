@@ -9,6 +9,7 @@ package mozilla.components.feature.session
 import mozilla.components.browser.session.SelectionAwareSessionObserver
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.support.base.feature.LifecycleAwareFeature
 
 /**
  * Feature implementation for handling fullscreen mode (exiting and back button presses).
@@ -18,12 +19,12 @@ open class FullScreenFeature(
     private val sessionUseCases: SessionUseCases,
     private val sessionId: String? = null,
     private val fullScreenChanged: (Boolean) -> Unit
-) : SelectionAwareSessionObserver(sessionManager) {
+) : SelectionAwareSessionObserver(sessionManager), LifecycleAwareFeature {
 
     /**
      * Starts the feature and a observer to listen for fullscreen changes.
      */
-    fun start() {
+    override fun start() {
         val session = sessionId?.let { sessionManager.findSessionById(sessionId) }
         session?.let { observeFixed(it) } ?: observeSelected()
     }
