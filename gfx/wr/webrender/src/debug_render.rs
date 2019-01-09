@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{ColorU, ImageFormat, TextureTarget};
+use api::{ColorU, ColorF, ImageFormat, TextureTarget};
 use api::{DeviceIntRect, DeviceRect, DevicePoint, DeviceSize, DeviceIntSize};
 use debug_font_data;
 use device::{Device, Program, Texture, TextureSlot, VertexDescriptor, ShaderError, VAO};
@@ -10,6 +10,20 @@ use device::{TextureFilter, VertexAttribute, VertexAttributeKind, VertexUsageHin
 use euclid::{Point2D, Rect, Size2D, Transform3D};
 use internal_types::{ORTHO_FAR_PLANE, ORTHO_NEAR_PLANE};
 use std::f32;
+
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub enum DebugItem {
+    Text {
+        msg: String,
+        color: ColorF,
+        position: DevicePoint,
+    },
+    Rect {
+        color: ColorF,
+        rect: DeviceRect,
+    },
+}
 
 #[derive(Debug, Copy, Clone)]
 enum DebugSampler {
