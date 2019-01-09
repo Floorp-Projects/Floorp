@@ -11,7 +11,7 @@ add_task(async function test_aboutRestartRequired() {
   Services.telemetry.clearScalars();
 
   let scalars =
-    getParentProcessScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTOUT);
+    TelemetryTestUtils.getParentProcessScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTOUT);
 
   // Check preconditions
   is(scalars[SCALAR_BUILDID_MISMATCH], undefined,
@@ -23,7 +23,7 @@ add_task(async function test_aboutRestartRequired() {
     gBrowser.selectedTab.linkedBrowser);
 
   scalars =
-    getParentProcessScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTOUT);
+    TelemetryTestUtils.getParentProcessScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTOUT);
 
   is(scalars[SCALAR_BUILDID_MISMATCH], 1,
      "Build ID mismatch count should be 1.");
