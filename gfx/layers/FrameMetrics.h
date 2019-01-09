@@ -100,7 +100,7 @@ struct FrameMetrics {
         mRootCompositionSize(0, 0),
         mDisplayPortMargins(0, 0, 0, 0),
         mPresShellId(-1),
-        mViewport(0, 0, 0, 0),
+        mLayoutViewport(0, 0, 0, 0),
         mExtraResolution(),
         mPaintRequestTime(),
         mScrollUpdateType(eNone),
@@ -129,7 +129,7 @@ struct FrameMetrics {
            mRootCompositionSize == aOther.mRootCompositionSize &&
            mDisplayPortMargins == aOther.mDisplayPortMargins &&
            mPresShellId == aOther.mPresShellId &&
-           mViewport.IsEqualEdges(aOther.mViewport) &&
+           mLayoutViewport.IsEqualEdges(aOther.mLayoutViewport) &&
            mExtraResolution == aOther.mExtraResolution &&
            mPaintRequestTime == aOther.mPaintRequestTime &&
            mScrollUpdateType == aOther.mScrollUpdateType &&
@@ -437,9 +437,11 @@ struct FrameMetrics {
 
   void SetPresShellId(uint32_t aPresShellId) { mPresShellId = aPresShellId; }
 
-  void SetViewport(const CSSRect& aViewport) { mViewport = aViewport; }
+  void SetLayoutViewport(const CSSRect& aLayoutViewport) {
+    mLayoutViewport = aLayoutViewport;
+  }
 
-  const CSSRect& GetViewport() const { return mViewport; }
+  const CSSRect& GetLayoutViewport() const { return mLayoutViewport; }
 
   CSSRect GetVisualViewport() const {
     return CSSRect(mScrollOffset, CalculateCompositedSizeInCssPixels());
@@ -479,11 +481,11 @@ struct FrameMetrics {
   bool IsScrollInfoLayer() const { return mIsScrollInfoLayer; }
 
   // Determine if the visual viewport is outside of the layout viewport and
-  // adjust the x,y-offset in mViewport accordingly. This is necessary to
+  // adjust the x,y-offset in mLayoutViewport accordingly. This is necessary to
   // allow APZ to async-scroll the layout viewport.
   //
   // This is a no-op if mIsRootContent is false.
-  void RecalculateViewportOffset();
+  void RecalculateLayoutViewportOffset();
 
   // Helper function for RecalculateViewportOffset(). Exposed so that
   // APZC can perform the operation on other copies of the layout
@@ -625,7 +627,7 @@ struct FrameMetrics {
   //
   // For a scroll frame that is not an RSF, this metric is meaningless and
   // invalid.
-  CSSRect mViewport;
+  CSSRect mLayoutViewport;
 
   // The extra resolution at which content in this scroll frame is drawn beyond
   // that necessary to draw one Layer pixel per Screen pixel.

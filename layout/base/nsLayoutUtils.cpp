@@ -8657,7 +8657,7 @@ static void MaybeReflowForInflationScreenSizeChange(
   nsIPresShell* presShell = presContext->GetPresShell();
   ScrollMetadata metadata;
   FrameMetrics& metrics = metadata.GetMetrics();
-  metrics.SetViewport(CSSRect::FromAppUnits(aViewport));
+  metrics.SetLayoutViewport(CSSRect::FromAppUnits(aViewport));
 
   ViewID scrollId = ScrollableLayerGuid::NULL_SCROLL_ID;
   if (aContent) {
@@ -8707,9 +8707,9 @@ static void MaybeReflowForInflationScreenSizeChange(
     metrics.SetScrollOffset(scrollPosition);
     metrics.SetBaseScrollOffset(apzScrollPosition);
 
-    CSSRect viewport = metrics.GetViewport();
+    CSSRect viewport = metrics.GetLayoutViewport();
     viewport.MoveTo(scrollPosition);
-    metrics.SetViewport(viewport);
+    metrics.SetLayoutViewport(viewport);
 
     nsPoint smoothScrollPosition = scrollableFrame->LastScrollDestination();
     metrics.SetSmoothScrollOffset(CSSPoint::FromAppUnits(smoothScrollPosition));
