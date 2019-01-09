@@ -86,9 +86,10 @@ class NonSVGFrameUserSpaceMetrics : public UserSpaceMetricsWithSize {
 class nsSVGLength2 {
   friend class mozilla::dom::SVGAnimatedLength;
   friend class mozilla::dom::DOMSVGLength;
-  typedef mozilla::dom::UserSpaceMetrics UserSpaceMetrics;
+  typedef mozilla::dom::DOMSVGLength DOMSVGLength;
   typedef mozilla::dom::SVGElement SVGElement;
   typedef mozilla::dom::SVGViewportElement SVGViewportElement;
+  typedef mozilla::dom::UserSpaceMetrics UserSpaceMetrics;
   typedef mozilla::SVGContentUtils SVGContentUtils;
 
  public:
@@ -191,10 +192,8 @@ class nsSVGLength2 {
   nsresult NewValueSpecifiedUnits(uint16_t aUnitType, float aValue,
                                   SVGElement* aSVGElement);
   nsresult ConvertToSpecifiedUnits(uint16_t aUnitType, SVGElement* aSVGElement);
-  nsresult ToDOMBaseVal(mozilla::dom::DOMSVGLength** aResult,
-                        SVGElement* aSVGElement);
-  nsresult ToDOMAnimVal(mozilla::dom::DOMSVGLength** aResult,
-                        SVGElement* aSVGElement);
+  already_AddRefed<DOMSVGLength> ToDOMBaseVal(SVGElement* aSVGElement);
+  already_AddRefed<DOMSVGLength> ToDOMAnimVal(SVGElement* aSVGElement);
 
  public:
   struct SMILLength : public nsISMILAttr {
