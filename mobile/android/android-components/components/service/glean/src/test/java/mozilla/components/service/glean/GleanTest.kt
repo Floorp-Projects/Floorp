@@ -7,7 +7,9 @@ package mozilla.components.service.glean
 import android.arch.lifecycle.Lifecycle
 import android.arch.lifecycle.LifecycleOwner
 import android.arch.lifecycle.LifecycleRegistry
+import android.accessibilityservice.AccessibilityServiceInfo
 import android.content.Context
+import android.view.accessibility.AccessibilityManager
 import androidx.test.core.app.ApplicationProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.ObsoleteCoroutinesApi
@@ -29,10 +31,14 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyString
+import org.mockito.ArgumentMatchers.anyObject
+import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.doThrow
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.spy
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
+import org.robolectric.Shadows.shadowOf
 import java.io.File
 import java.util.UUID
 import java.util.concurrent.TimeUnit
@@ -380,6 +386,30 @@ class GleanTest {
         assertEquals(
             "org-mozilla-test-app",
             Glean.sanitizeApplicationId("org-mozilla-test-app")
+        )
+    }
+
+    fun `Make sure a11y services are collected`() {
+        var applicationContext = RuntimeEnvironment.application.applicationContext
+        var accessibilityManager = applicationContext.getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager
+
+        var shadowAccessibilityManager = shadowOf(accessibilityManager)
+        shadowAccessibilityManager.setEnabled(true)
+
+        val serviceSpy1 = spy<AccessibilityServiceInfo>(AccessibilityServiceInfo::class.java)
+        doReturn("service1").`when`(serviceSpy1).loadDescription(anyObject())
+
+        val serviceSpy2 = spy<AccessibilityServiceInfo>(AccessibilityServiceInfo::class.java)
+        doReturn("service2").`when`(serviceSpy2).loadDescription(anyObject())
+
+        shadowAccessibilityManager.setEnabledAccessibilityServiceList(listOf(serviceSpy1, serviceSpy2))
+
+        assertEquals(
+            listOf("service1", "service2"),
+            Glean.getEnabledAccessibilityServices(
+                accessibilityManager,
+                applicationContext.packageManager
+            )
         )
     }
 }
