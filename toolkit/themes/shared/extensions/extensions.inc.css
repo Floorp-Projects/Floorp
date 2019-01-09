@@ -578,8 +578,8 @@ button.warning {
 
 /*** detail view ***/
 
-#detail-view > .scrollbox-innerbox {
-  margin: 8px 28px;
+#detail-view {
+  padding: 8px 28px;
 }
 
 #detail-view .loading {
