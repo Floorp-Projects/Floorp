@@ -48,9 +48,10 @@ function createClientMock() {
         eventEmitter.off(evt, listener);
       },
     },
-
     // no-op
     close: () => {},
+    // client is not closed
+    isClosed: () => false,
     // no-op
     connect: () => {},
     // no-op
