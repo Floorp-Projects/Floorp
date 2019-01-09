@@ -75,9 +75,7 @@ function getVersionParams(aAppVersion) {
  * Clean up updates list and the updates directory.
  */
 function cleanUpUpdates() {
-  gUpdateManager.activeUpdate = null;
-  gUpdateManager.saveUpdates();
-
+  reloadUpdateManagerData(true);
   removeUpdateDirsAndFiles();
 }
 
@@ -146,6 +144,7 @@ function runUpdateTest(updateParams, checkAttempts, steps) {
 
     gEnv.set("MOZ_TEST_SKIP_UPDATE_STAGE", "1");
     setUpdateTimerPrefs();
+    removeUpdateDirsAndFiles();
     await SpecialPowers.pushPrefEnv({
       set: [
         [PREF_APP_UPDATE_DOWNLOADPROMPTATTEMPTS, 0],
@@ -199,8 +198,9 @@ function runUpdateProcessingTest(updates, steps) {
       cleanUpUpdates();
     });
 
-    setUpdateTimerPrefs();
     gEnv.set("MOZ_TEST_SKIP_UPDATE_STAGE", "1");
+    setUpdateTimerPrefs();
+    removeUpdateDirsAndFiles();
     await SpecialPowers.pushPrefEnv({
       set: [
         [PREF_APP_UPDATE_DOWNLOADPROMPTATTEMPTS, 0],
