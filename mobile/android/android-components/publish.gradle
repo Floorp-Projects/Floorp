@@ -50,7 +50,7 @@ ext.configurePublish = { groupIdArg, artifactIdArg, descriptionArg ->
         }
     }
 
-    version = Config.componentsVersion + (project.hasProperty('snapshot') ? '-SNAPSHOT' : '')
+    version = config.componentsVersion + (project.hasProperty('snapshot') ? '-SNAPSHOT' : '')
 
     task sourcesJar(type: Jar) {
         from android.sourceSets.main.java.srcDirs
@@ -85,7 +85,7 @@ ext.configurePublish = { groupIdArg, artifactIdArg, descriptionArg ->
             mavenDeployer {
                 pom.groupId = groupIdArg
                 pom.artifactId = artifactIdArg
-                pom.version = Config.componentsVersion + (project.hasProperty('snapshot') ? '-SNAPSHOT' : '')
+                pom.version = config.componentsVersion + (project.hasProperty('snapshot') ? '-SNAPSHOT' : '')
 
                 pom.project {
                     licenses {

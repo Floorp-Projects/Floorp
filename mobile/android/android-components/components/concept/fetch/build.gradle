@@ -6,13 +6,13 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
 android {
-    compileSdkVersion Config.compileSdkVersion
+    compileSdkVersion config.compileSdkVersion
 
     defaultConfig {
-        minSdkVersion Config.minSdkVersion
-        targetSdkVersion Config.targetSdkVersion
+        minSdkVersion config.minSdkVersion
+        targetSdkVersion config.targetSdkVersion
 
-        buildConfigField("String", "LIBRARY_VERSION", "\"" + Config.componentsVersion + "\"")
+        buildConfigField("String", "LIBRARY_VERSION", "\"" + config.componentsVersion + "\"")
     }
 
     buildTypes {
@@ -36,4 +36,4 @@ dependencies {
 }
 
 apply from: '../../../publish.gradle'
-ext.configurePublish(Config.componentsGroupId, archivesBaseName, gradle.componentDescriptions[archivesBaseName])
+ext.configurePublish(config.componentsGroupId, archivesBaseName, gradle.componentDescriptions[archivesBaseName])

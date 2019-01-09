@@ -42,6 +42,12 @@ buildconfig.projects.each { project ->
     setupProject(project.key, project.value.path, project.value.description, project.value.shouldPublish)
 }
 
+gradle.projectsLoaded { ->
+    // Wait until root project is "loaded" before we set "config"
+    // Note that since this is set on "rootProject.ext", it will be "in scope" during the evaluation of all projects'
+    // gradle files. This means that they can just access "config.<value>", and it'll function properly
+    gradle.rootProject.ext.config = new Config(buildconfig.componentsVersion)
+}
 //////////////////////////////////////////////////////////////////////////
 // Local Development overrides
 //////////////////////////////////////////////////////////////////////////

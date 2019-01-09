@@ -18,13 +18,13 @@ String GLEAN_PING_SCHEMA_GIT_HASH = "6041aa6"
 String GLEAN_PING_SCHEMA_URL = "https://raw.githubusercontent.com/mozilla-services/mozilla-pipeline-schemas/$GLEAN_PING_SCHEMA_GIT_HASH/schemas/glean/baseline/baseline.1.schema.json"
 
 android {
-    compileSdkVersion Config.compileSdkVersion
+    compileSdkVersion config.compileSdkVersion
 
     defaultConfig {
-        minSdkVersion Config.minSdkVersion
-        targetSdkVersion Config.targetSdkVersion
+        minSdkVersion config.minSdkVersion
+        targetSdkVersion config.targetSdkVersion
 
-        buildConfigField("String", "LIBRARY_VERSION", "\"" + Config.componentsVersion + "\"")
+        buildConfigField("String", "LIBRARY_VERSION", "\"" + config.componentsVersion + "\"")
         buildConfigField("String", "GLEAN_PING_SCHEMA_URL", "\"" + GLEAN_PING_SCHEMA_URL + "\"")
     }
 
@@ -52,6 +52,6 @@ dependencies {
 }
 
 apply from: '../../../publish.gradle'
-ext.configurePublish(Config.componentsGroupId, archivesBaseName, gradle.componentDescriptions[archivesBaseName])
+ext.configurePublish(config.componentsGroupId, archivesBaseName, gradle.componentDescriptions[archivesBaseName])
 
 apply from: './scripts/sdk_generator.gradle'

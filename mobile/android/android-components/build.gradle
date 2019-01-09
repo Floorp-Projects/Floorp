@@ -200,7 +200,7 @@ task printModules {
 
 task printVersion {
     doLast {
-        println("version: " + Config.componentsVersion)
+        println("version: " + config.componentsVersion)
     }
 }
 

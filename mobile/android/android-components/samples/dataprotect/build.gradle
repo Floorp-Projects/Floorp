@@ -2,13 +2,13 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 android {
-    compileSdkVersion Config.compileSdkVersion
+    compileSdkVersion config.compileSdkVersion
 
     defaultConfig {
         applicationId "org.mozilla.samples.dataprotect"
 
-        minSdkVersion Config.minSdkVersion_dataprotect
-        targetSdkVersion Config.targetSdkVersion
+        minSdkVersion config.minSdkVersion_dataprotect
+        targetSdkVersion config.targetSdkVersion
         versionCode 1
         versionName "1.0"
 
