@@ -30,7 +30,7 @@ use glyph_rasterizer::{FontInstance, FontTransform, GlyphKey};
 #[cfg(feature = "pathfinder")]
 use glyph_rasterizer::NativeFontHandleWrapper;
 #[cfg(not(feature = "pathfinder"))]
-use glyph_rasterizer::{GlyphFormat, GlyphRasterResult, RasterizedGlyph};
+use glyph_rasterizer::{GlyphFormat, GlyphRasterError, GlyphRasterResult, RasterizedGlyph};
 use internal_types::{FastHashMap, ResourceCacheError};
 use std::collections::hash_map::Entry;
 use std::sync::Arc;
@@ -500,11 +500,7 @@ impl FontContext {
         let (x_scale, y_scale) = font.transform.compute_scale().unwrap_or((1.0, 1.0));
         let scale = font.oversized_scale_factor(x_scale, y_scale);
         let size = font.size.scale_by((y_scale / scale) as f32);
-        let ct_font = match self.get_ct_font(font.font_key, size, &font.variations) {
-            Some(font) => font,
-            None => return GlyphRasterResult::LoadFailed,
-        };
-
+        let ct_font = self.get_ct_font(font.font_key, size, &font.variations).ok_or(GlyphRasterError::LoadFailed)?;
         let glyph_type = if is_bitmap_font(&ct_font) {
             GlyphType::Bitmap
         } else {
@@ -559,7 +555,7 @@ impl FontContext {
             extra_strikes as f64 * pixel_step,
         );
         if metrics.rasterized_width == 0 || metrics.rasterized_height == 0 {
-            return GlyphRasterResult::LoadFailed
+            return Err(GlyphRasterError::LoadFailed);
         }
 
         let raster_size = Size2D::new(
@@ -724,7 +720,7 @@ impl FontContext {
             }
         }
 
-        GlyphRasterResult::Bitmap(RasterizedGlyph {
+        Ok(RasterizedGlyph {
             left: metrics.rasterized_left as f32,
             top: metrics.rasterized_ascent as f32,
             width: metrics.rasterized_width,

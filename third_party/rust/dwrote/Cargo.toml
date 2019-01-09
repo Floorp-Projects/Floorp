@@ -12,7 +12,7 @@
 
 [package]
 name = "dwrote"
-version = "0.6.3"
+version = "0.7.0"
 authors = ["Vladimir Vukicevic <vladimir@pobox.com>"]
 description = "Lightweight binding to DirectWrite."
 license = "MPL-2.0"
@@ -28,10 +28,16 @@ version = "0.2"
 
 [dependencies.serde]
 version = "1.0"
+optional = true
 
 [dependencies.serde_derive]
 version = "1.0"
+optional = true
 
 [dependencies.winapi]
 version = "0.3.6"
 features = ["dwrite", "dwrite_1", "dwrite_3", "winnt", "unknwnbase", "libloaderapi", "winnls"]
+
+[features]
+default = ["serde_serialization"]
+serde_serialization = ["serde", "serde_derive"]
