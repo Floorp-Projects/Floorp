@@ -49,10 +49,7 @@ function downloadListenerStop() {
   Assert.equal(gStatusResult, Cr.NS_ERROR_UNEXPECTED,
                "the download status result" + MSG_SHOULD_EQUAL);
   gAUS.removeDownloadListener(downloadListener);
-
-  // Cleaning up the active update along with reloading the update manager
-  // in doTestFinish will prevent writing the update xml files during shutdown.
-  gUpdateManager.cleanupActiveUpdate();
+  // There is a pending write to the xml files.
   executeSoon(waitForUpdateXMLFiles);
 }
 
@@ -60,6 +57,5 @@ function downloadListenerStop() {
  * Called after the call to waitForUpdateXMLFiles finishes.
  */
 function waitForUpdateXMLFilesFinished() {
-  // The HttpServer must be stopped before calling do_test_finished
   stop_httpserver(doTestFinish);
 }

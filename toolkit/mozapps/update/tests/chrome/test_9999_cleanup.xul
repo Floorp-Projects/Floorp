@@ -48,8 +48,25 @@ function runTest() {
   Services.prefs.setBoolPref(PREF_APP_UPDATE_STAGING_ENABLED, false);
 
   resetFiles();
+  reloadUpdateManagerData(true);
   removeUpdateDirsAndFiles();
-  reloadUpdateManagerData();
+
+  // The updates directory is located outside of the application directory and
+  // needs to be removed on Windows and Mac OS X.
+  if (IS_WIN || IS_MACOSX) {
+    let updatesDir = getUpdatesRootDir();
+    // Try to remove the directory used to apply updates. Since the test has
+    // already finished this is non-fatal for the test.
+    if (updatesDir.exists()) {
+      debugDump("attempting to remove directory. Path: " + updatesDir.path);
+      try {
+        removeDirRecursive(updatesDir);
+      } catch (e) {
+        logTestInfo("non-fatal error removing directory. Path: " +
+                    updatesDir.path + ", Exception: " + e);
+      }
+    }
+  }
 
   let file = getUpdatesXMLFile(true);
   ok(!file.exists(), file.path + " should not exist");
