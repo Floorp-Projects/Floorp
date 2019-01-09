@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{ColorF, DeviceIntPoint, DevicePixelScale, LayoutPixel, PicturePixel, RasterPixel};
-use api::{DeviceIntRect, DeviceIntSize, DocumentLayer, FontRenderMode};
+use api::{DeviceIntRect, DeviceIntSize, DocumentLayer, FontRenderMode, DebugFlags};
 use api::{LayoutPoint, LayoutRect, LayoutSize, PipelineId, RasterSpace, WorldPoint, WorldRect, WorldPixel};
 use clip::{ClipDataStore, ClipStore};
 use clip_scroll_tree::{ClipScrollTree, ROOT_SPATIAL_NODE_INDEX, SpatialNodeIndex};
@@ -77,6 +77,7 @@ pub struct FrameBuildingContext<'a> {
     pub screen_world_rect: WorldRect,
     pub clip_scroll_tree: &'a ClipScrollTree,
     pub max_local_clip: LayoutRect,
+    pub debug_flags: DebugFlags,
 }
 
 pub struct FrameBuildingState<'a> {
@@ -215,6 +216,7 @@ impl FrameBuilder {
         resources: &mut FrameResources,
         surfaces: &mut Vec<SurfaceInfo>,
         scratch: &mut PrimitiveScratchBuffer,
+        debug_flags: DebugFlags,
     ) -> Option<RenderTaskId> {
         profile_scope!("cull");
 
@@ -240,6 +242,7 @@ impl FrameBuilder {
                 LayoutPoint::new(-MAX_CLIP_COORD, -MAX_CLIP_COORD),
                 LayoutSize::new(2.0 * MAX_CLIP_COORD, 2.0 * MAX_CLIP_COORD),
             ),
+            debug_flags,
         };
 
         // Construct a dummy root surface, that represents the
@@ -289,6 +292,7 @@ impl FrameBuilder {
             &pic_update_state.surfaces,
             gpu_cache,
             &mut retained_tiles,
+            scratch,
         );
 
         let mut frame_state = FrameBuildingState {
@@ -374,6 +378,7 @@ impl FrameBuilder {
         scene_properties: &SceneProperties,
         resources: &mut FrameResources,
         scratch: &mut PrimitiveScratchBuffer,
+        debug_flags: DebugFlags,
     ) -> Frame {
         profile_scope!("build");
         debug_assert!(
@@ -415,6 +420,7 @@ impl FrameBuilder {
             resources,
             &mut surfaces,
             scratch,
+            debug_flags,
         );
 
         resource_cache.block_until_all_resources_added(gpu_cache,
@@ -513,6 +519,8 @@ impl FrameBuilder {
             has_been_rendered: false,
             has_texture_cache_tasks,
             prim_headers,
+            #[cfg(feature = "debug_renderer")]
+            debug_items: mem::replace(&mut scratch.debug_items, Vec::new()),
         }
     }
 
@@ -529,4 +537,3 @@ impl FrameBuilder {
         )
     }
 }
-
