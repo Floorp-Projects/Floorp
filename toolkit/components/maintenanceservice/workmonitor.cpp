@@ -211,6 +211,7 @@ BOOL StartUpdateProcess(int argc, LPWSTR *argv, LPCWSTR installDir,
   // Search in updater.cpp for more info on MOZ_USING_SERVICE.
   putenv(const_cast<char *>("MOZ_USING_SERVICE=1"));
 
+#ifndef DISABLE_USER_IMPERSONATION
   // Add an env var with a pointer to the impersonation token.
   {
     static const char USER_TOKEN_FMT[] = USER_TOKEN_VAR_NAME "=%p";
@@ -220,9 +221,11 @@ BOOL StartUpdateProcess(int argc, LPWSTR *argv, LPCWSTR installDir,
               userToken.get());
     putenv(userTokenEnv.get());
   }
+#endif
 
   // Prepare the attribute list used to inherit the impersonation token handle.
   {
+#ifndef DISABLE_USER_IMPERSONATION
     SIZE_T attributeListSize = 0;
     const DWORD attributeListCount = 1;
     UniquePtr<char[]> attributeListBuf;
@@ -252,6 +255,7 @@ BOOL StartUpdateProcess(int argc, LPWSTR *argv, LPCWSTR installDir,
     }
 
     sie.lpAttributeList = attributeList.get();
+#endif
 
     LOG(("Starting service with cmdline: %ls", cmdLine.get()));
     processStarted =
@@ -359,7 +363,11 @@ static bool UpdaterIsValid(LPWSTR updater, LPWSTR installDir, LPWSTR updateDir,
   if (!IsLocalFile(updater, isLocal) || !isLocal) {
     LOG_WARN(("Filesystem in path %ls is not supported (%d)", updater,
               GetLastError()));
-    if (!WriteStatusFailure(updateDir, SERVICE_UPDATER_NOT_FIXED_DRIVE,
+    if (
+#ifndef DISABLE_USER_IMPERSONATION
+        !userToken ||
+#endif
+        !WriteStatusFailure(updateDir, SERVICE_UPDATER_NOT_FIXED_DRIVE,
                             userToken)) {
       LOG_WARN(("Could not write update.status service update failure.  (%d)",
                 GetLastError()));
@@ -372,7 +380,11 @@ static bool UpdaterIsValid(LPWSTR updater, LPWSTR installDir, LPWSTR updateDir,
   if (INVALID_HANDLE_VALUE == noWriteLock) {
     LOG_WARN(("Could not set no write sharing access on file.  (%d)",
               GetLastError()));
-    if (!WriteStatusFailure(updateDir, SERVICE_COULD_NOT_LOCK_UPDATER,
+    if (
+#ifndef DISABLE_USER_IMPERSONATION
+        !userToken ||
+#endif
+        !WriteStatusFailure(updateDir, SERVICE_COULD_NOT_LOCK_UPDATER,
                             userToken)) {
       LOG_WARN(("Could not write update.status service update failure.  (%d)",
                 GetLastError()));
@@ -404,7 +416,11 @@ static bool UpdaterIsValid(LPWSTR updater, LPWSTR installDir, LPWSTR updateDir,
         ("The updaters do not match, updater will not run.\n"
          "Path 1: %ls\nPath 2: %ls",
          updater, installDirUpdater));
-    if (!WriteStatusFailure(updateDir, SERVICE_UPDATER_COMPARE_ERROR,
+    if (
+#ifndef DISABLE_USER_IMPERSONATION
+        !userToken ||
+#endif
+        !WriteStatusFailure(updateDir, SERVICE_UPDATER_COMPARE_ERROR,
                             userToken)) {
       LOG_WARN(("Could not write update.status updater compare failure."));
     }
@@ -446,7 +462,11 @@ static bool UpdaterIsValid(LPWSTR updater, LPWSTR installDir, LPWSTR updateDir,
         ("The updater.exe application contains the Mozilla"
          " updater identity."));
   } else {
-    if (!WriteStatusFailure(updateDir, SERVICE_UPDATER_IDENTITY_ERROR,
+    if (
+#ifndef DISABLE_USER_IMPERSONATION
+        !userToken ||
+#endif
+        !WriteStatusFailure(updateDir, SERVICE_UPDATER_IDENTITY_ERROR,
                             userToken)) {
       LOG_WARN(("Could not write update.status no updater identity."));
     }
@@ -663,6 +683,10 @@ BOOL ExecuteServiceCommand(int argc, LPWSTR *argv) {
 
   BOOL result = FALSE;
   if (!lstrcmpi(argv[2], L"software-update")) {
+    // Null userToken will be treated as "no impersonation needed" in most
+    // cases, except UpdaterIsValid below.
+    nsAutoHandle userToken;
+
     // This check is also performed in updater.cpp and is performed here
     // as well since the maintenance service can be called directly.
     if (argc < 4 || !IsValidFullPath(argv[4])) {
@@ -696,8 +720,15 @@ BOOL ExecuteServiceCommand(int argc, LPWSTR *argv) {
     if (argc < 5 || !IsValidFullPath(argv[5])) {
       LOG_WARN(
           ("The install directory path is not valid for this application."));
+#ifdef DISABLE_USER_IMPERSONATION
+      if (!WriteStatusFailure(argv[4], SERVICE_INVALID_INSTALL_DIR_PATH_ERROR,
+                              userToken)) {
+        LOG_WARN(("Could not write update.status for previous failure."));
+      }
+#else
       // No user token so we can't call
       // WriteStatusFailure(argv[4], SERVICE_INVALID_INSTALL_DIR_PATH_ERROR)
+#endif
       return FALSE;
     }
 
@@ -707,8 +738,15 @@ BOOL ExecuteServiceCommand(int argc, LPWSTR *argv) {
       if (argc < 6 || !IsValidFullPath(argv[6])) {
         LOG_WARN(
             ("The working directory path is not valid for this application."));
+#ifdef DISABLE_USER_IMPERSONATION
+        if (!WriteStatusFailure(argv[4], SERVICE_INVALID_WORKING_DIR_PATH_ERROR,
+                                userToken)) {
+          LOG_WARN(("Could not write update.status for previous failure."));
+        }
+#else
         // No user token so we can't call
         // WriteStatusFailure(argv[4], SERVICE_INVALID_WORKING_DIR_PATH_ERROR)
+#endif
         return FALSE;
       }
 
@@ -720,8 +758,15 @@ BOOL ExecuteServiceCommand(int argc, LPWSTR *argv) {
           LOG_WARN(
               ("Installation directory and working directory must be the "
                "same for non-staged updates. Exiting."));
+#ifdef DISABLE_USER_IMPERSONATION
+          if (!WriteStatusFailure(argv[4], SERVICE_INVALID_APPLYTO_DIR_ERROR,
+                                  userToken)) {
+            LOG_WARN(("Could not write update.status for previous failure."));
+          }
+#else
           // No user token so we can't call
           // WriteStatusFailure(argv[4], SERVICE_INVALID_APPLYTO_DIR_ERROR)
+#endif
           return FALSE;
         }
 
@@ -734,8 +779,14 @@ BOOL ExecuteServiceCommand(int argc, LPWSTR *argv) {
               ("Couldn't remove file spec when attempting to verify the "
                "working directory path.  (%d)",
                GetLastError()));
+#ifdef DISABLE_USER_IMPERSONATION
+          if (!WriteStatusFailure(argv[4], REMOVE_FILE_SPEC_ERROR, userToken)) {
+            LOG_WARN(("Could not write update.status for previous failure."));
+          }
+#else
           // No user token so we can't call
           // WriteStatusFailure(argv[4], REMOVE_FILE_SPEC_ERROR)
+#endif
           return FALSE;
         }
 
@@ -743,9 +794,17 @@ BOOL ExecuteServiceCommand(int argc, LPWSTR *argv) {
           LOG_WARN(
               ("The apply-to directory must be the same as or "
                "a child of the installation directory! Exiting."));
+#ifdef DISABLE_USER_IMPERSONATION
+          if (!WriteStatusFailure(argv[4],
+                                  SERVICE_INVALID_APPLYTO_DIR_STAGED_ERROR,
+                                  userToken)) {
+            LOG_WARN(("Could not write update.status for previous failure."));
+          }
+#else
           // No user token so we can't call
           // WriteStatusFailure(argv[4],
           // SERVICE_INVALID_APPLYTO_DIR_STAGED_ERROR)
+#endif
           return FALSE;
         }
       }
@@ -760,8 +819,14 @@ BOOL ExecuteServiceCommand(int argc, LPWSTR *argv) {
     WCHAR installDir[MAX_PATH + 1] = {L'\0'};
     if (!GetInstallationDir(argc - 3, argv + 3, installDir)) {
       LOG_WARN(("Could not get the installation directory"));
+#ifdef DISABLE_USER_IMPERSONATION
+      if (!WriteStatusFailure(argv[4], SERVICE_INSTALLDIR_ERROR, userToken)) {
+        LOG_WARN(("Could not write update.status for previous failure."));
+      }
+#else
       // No user token so we can't call
       // WriteStatusFailure(argv[4], SERVICE_INSTALLDIR_ERROR)
+#endif
       return FALSE;
     }
 
@@ -785,14 +850,28 @@ BOOL ExecuteServiceCommand(int argc, LPWSTR *argv) {
                           KEY_READ | KEY_WOW64_64KEY,
                           &baseKey) != ERROR_SUCCESS) {
           LOG_WARN(("The maintenance service registry key does not exist."));
+#ifdef DISABLE_USER_IMPERSONATION
+          if (!WriteStatusFailure(argv[4], SERVICE_INSTALL_DIR_REG_ERROR,
+                                  userToken)) {
+            LOG_WARN(("Could not write update.status for previous failure."));
+          }
+#else
           // No user token so we can't call
           // WriteStatusFailure(argv[4], SERVICE_INSTALL_DIR_REG_ERROR)
+#endif
           return FALSE;
         }
         RegCloseKey(baseKey);
       } else {
+#ifdef DISABLE_USER_IMPERSONATION
+        if (!WriteStatusFailure(argv[4], SERVICE_CALC_REG_PATH_ERROR,
+                                userToken)) {
+          LOG_WARN(("Could not write update.status for previous failure."));
+        }
+#else
         // No user token so we can't call
         // WriteStatusFailure(argv[4], SERVICE_CALC_REG_PATH_ERROR)
+#endif
         return FALSE;
       }
     }
@@ -804,10 +883,11 @@ BOOL ExecuteServiceCommand(int argc, LPWSTR *argv) {
       result = FALSE;
     }
 
-    nsAutoHandle userToken;
-    // Intentionally passing null userToken.
+    // Intentionally passing null userToken so that UpdaterIsValid will not
+    // write status.
     result = UpdaterIsValid(installDirUpdater, installDir, argv[4], userToken);
 
+#ifndef DISABLE_USER_IMPERSONATION
     if (result) {
       userToken.own(GetUserProcessToken(installDirUpdater, argc - 3,
                                         const_cast<LPCWSTR *>(argv + 3)));
@@ -816,6 +896,7 @@ BOOL ExecuteServiceCommand(int argc, LPWSTR *argv) {
         LOG_WARN(("Could not get user process impersonation token"));
       }
     }
+#endif
 
     WCHAR secureUpdaterPath[MAX_PATH + 1] = {L'\0'};
     if (result) {
@@ -834,7 +915,10 @@ BOOL ExecuteServiceCommand(int argc, LPWSTR *argv) {
     if (!result) {
       LOG_WARN(
           ("Could not copy path to secure location.  (%d)", GetLastError()));
-      if (!userToken ||
+      if (
+#ifndef DISABLE_USER_IMPERSONATION
+          !userToken ||
+#endif
           !WriteStatusFailure(argv[4], SERVICE_COULD_NOT_COPY_UPDATER,
                               userToken)) {
         LOG_WARN(

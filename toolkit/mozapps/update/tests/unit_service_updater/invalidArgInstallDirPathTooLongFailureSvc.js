@@ -6,9 +6,12 @@
 /* Too long install directory path failure test */
 
 /* The service cannot safely write update.status for this failure. */
-const STATE_AFTER_RUNUPDATE =
-  IS_SERVICE_TEST ? STATE_PENDING_SVC
-                  : STATE_FAILED_INVALID_INSTALL_DIR_PATH_ERROR;
+const STATE_AFTER_RUNUPDATE_BASE = STATE_FAILED_INVALID_INSTALL_DIR_PATH_ERROR;
+const STATE_AFTER_RUNUPDATE_SERVICE = AppConstants.EARLY_BETA_OR_EARLIER
+    ? STATE_PENDING_SVC
+    : STATE_FAILED_SERVICE_INVALID_INSTALL_DIR_PATH_ERROR;
+const STATE_AFTER_RUNUPDATE = IS_SERVICE_TEST ? STATE_AFTER_RUNUPDATE_SERVICE
+                                              : STATE_AFTER_RUNUPDATE_BASE;
 
 function run_test() {
   if (!setupTestCommon()) {
@@ -52,7 +55,12 @@ function runUpdateFinished() {
  */
 function waitForUpdateXMLFilesFinished() {
   if (IS_SERVICE_TEST) {
-    checkUpdateManager(STATE_NONE, false, STATE_PENDING_SVC, 0, 1);
+    if (AppConstants.EARLY_BETA_OR_EARLIER) {
+      checkUpdateManager(STATE_NONE, false, STATE_PENDING_SVC, 0, 1);
+    } else {
+      checkUpdateManager(STATE_NONE, false, STATE_FAILED,
+                         SERVICE_INVALID_INSTALL_DIR_PATH_ERROR, 1);
+    }
   } else {
     checkUpdateManager(STATE_NONE, false, STATE_FAILED,
                        INVALID_INSTALL_DIR_PATH_ERROR, 1);
