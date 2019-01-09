@@ -44,9 +44,9 @@
 #include <mmsystem.h>
 
 #include "base/basictypes.h"
-#include "base/lock.h"
 #include "base/logging.h"
 #include "mozilla/Casting.h"
+#include "mozilla/StaticMutex.h"
 
 using base::Time;
 using base::TimeDelta;
@@ -216,10 +216,8 @@ DWORD (*tick_function)(void) = &timeGetTimeWrapper;
 // 49 days.
 class NowSingleton {
  public:
-  NowSingleton() : rollover_(TimeDelta::FromMilliseconds(0)), last_seen_(0) {}
-
   TimeDelta Now() {
-    AutoLock locked(lock_);
+    mozilla::StaticMutexAutoLock locked(lock_);
     // We should hold the lock while calling tick_function to make sure that
     // we keep our last_seen_ stay correctly in sync.
     DWORD now = tick_function();
@@ -231,12 +229,28 @@ class NowSingleton {
   }
 
   static NowSingleton& instance() {
-    static NowSingleton now;
+    // This setup is a little gross: the `now` instance lives until libxul is
+    // unloaded, but leak checking runs prior to that, and would see a Mutex
+    // instance contained in NowSingleton as still live.  Said instance would
+    // be reported as a leak...but it's not, really.  To avoid that, we need
+    // to use StaticMutex (which is not leak-checked), but StaticMutex can't
+    // be a member variable.  So we have to have this separate variable and
+    // pass it into the NowSingleton constructor.
+    static mozilla::StaticMutex mutex;
+    static NowSingleton now(mutex);
     return now;
   }
 
  private:
-  Lock lock_;           // To protected last_seen_ and rollover_.
+  explicit NowSingleton(mozilla::StaticMutex& aMutex)
+    : lock_(aMutex)
+    , rollover_(TimeDelta::FromMilliseconds(0))
+    , last_seen_(0)
+  {
+  }
+  ~NowSingleton() = default;
+
+  mozilla::StaticMutex& lock_;  // To protected last_seen_ and rollover_.
   TimeDelta rollover_;  // Accumulation of time lost due to rollover.
   DWORD last_seen_;  // The last timeGetTime value we saw, to detect rollover.
 
