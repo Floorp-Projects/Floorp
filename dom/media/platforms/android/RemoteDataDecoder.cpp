@@ -511,11 +511,13 @@ RefPtr<MediaDataDecoder::FlushPromise> RemoteDataDecoder::Flush() {
 }
 
 RefPtr<MediaDataDecoder::FlushPromise> RemoteDataDecoder::ProcessFlush() {
+  AssertOnTaskQueue();
+
   mDecodedData = DecodedData();
-  mNumPendingInputs = 0;
+  UpdatePendingInputStatus(PendingOp::CLEAR);
   mDecodePromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
   mDrainPromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
-  mDrainStatus = DrainStatus::DRAINED;
+  SetState(State::DRAINED);
   mJavaDecoder->Flush();
   return FlushPromise::CreateAndResolve(true, __func__);
 }
@@ -523,19 +525,19 @@ RefPtr<MediaDataDecoder::FlushPromise> RemoteDataDecoder::ProcessFlush() {
 RefPtr<MediaDataDecoder::DecodePromise> RemoteDataDecoder::Drain() {
   RefPtr<RemoteDataDecoder> self = this;
   return InvokeAsync(mTaskQueue, __func__, [self, this]() {
-    if (mShutdown) {
+    if (GetState() == State::SHUTDOWN) {
       return DecodePromise::CreateAndReject(NS_ERROR_DOM_MEDIA_CANCELED,
                                             __func__);
     }
     RefPtr<DecodePromise> p = mDrainPromise.Ensure(__func__);
-    if (mDrainStatus == DrainStatus::DRAINED) {
+    if (GetState() == State::DRAINED) {
       // There's no operation to perform other than returning any already
       // decoded data.
       ReturnDecodedData();
       return p;
     }
 
-    if (mDrainStatus == DrainStatus::DRAINING) {
+    if (GetState() == State::DRAINING) {
       // Draining operation already pending, let it complete its course.
       return p;
     }
@@ -545,7 +547,7 @@ RefPtr<MediaDataDecoder::DecodePromise> RemoteDataDecoder::Drain() {
     if (NS_FAILED(rv)) {
       return DecodePromise::CreateAndReject(NS_ERROR_OUT_OF_MEMORY, __func__);
     }
-    mDrainStatus = DrainStatus::DRAINING;
+    SetState(State::DRAINING);
     bufferInfo->Set(0, 0, -1, MediaCodec::BUFFER_FLAG_END_OF_STREAM);
     mJavaDecoder->Input(nullptr, bufferInfo, nullptr);
     return p;
@@ -561,7 +563,7 @@ RefPtr<ShutdownPromise> RemoteDataDecoder::Shutdown() {
 
 RefPtr<ShutdownPromise> RemoteDataDecoder::ProcessShutdown() {
   AssertOnTaskQueue();
-  mShutdown = true;
+  SetState(State::SHUTDOWN);
   if (mJavaDecoder) {
     mJavaDecoder->Release();
     mJavaDecoder = nullptr;
@@ -654,13 +656,28 @@ RefPtr<MediaDataDecoder::DecodePromise> RemoteDataDecoder::Decode(
     }
     bufferInfo->Set(0, sample->Size(), sample->mTime.ToMicroseconds(), 0);
 
-    self->mDrainStatus = DrainStatus::DRAINABLE;
+    self->SetState(State::DRAINABLE);
     return self->mJavaDecoder->Input(bytes, bufferInfo,
                                      GetCryptoInfoFromSample(sample))
                ? self->mDecodePromise.Ensure(__func__)
                : DecodePromise::CreateAndReject(
                      MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__), __func__);
   });
+}
+
+void RemoteDataDecoder::UpdatePendingInputStatus(PendingOp aOp) {
+  AssertOnTaskQueue();
+  switch (aOp) {
+    case PendingOp::INCREASE:
+      mNumPendingInputs++;
+      break;
+    case PendingOp::DECREASE:
+      mNumPendingInputs--;
+      break;
+    case PendingOp::CLEAR:
+      mNumPendingInputs = 0;
+      break;
+  }
 }
 
 void RemoteDataDecoder::UpdateInputStatus(int64_t aTimestamp, bool aProcessed) {
@@ -673,18 +690,17 @@ void RemoteDataDecoder::UpdateInputStatus(int64_t aTimestamp, bool aProcessed) {
     return;
   }
   AssertOnTaskQueue();
-  if (mShutdown) {
+  if (GetState() == State::SHUTDOWN) {
     return;
   }
 
   if (!aProcessed) {
-    mNumPendingInputs++;
-  } else if (mNumPendingInputs > 0) {
-    mNumPendingInputs--;
+    UpdatePendingInputStatus(PendingOp::INCREASE);
+  } else if (HasPendingInputs()) {
+    UpdatePendingInputStatus(PendingOp::DECREASE);
   }
 
-  if (mNumPendingInputs ==
-          0 ||  // Input has been processed, request the next one.
+  if (!HasPendingInputs() ||  // Input has been processed, request the next one.
       !mDecodedData.IsEmpty()) {  // Previous output arrived before Decode().
     ReturnDecodedData();
   }
@@ -692,7 +708,7 @@ void RemoteDataDecoder::UpdateInputStatus(int64_t aTimestamp, bool aProcessed) {
 
 void RemoteDataDecoder::UpdateOutputStatus(RefPtr<MediaData>&& aSample) {
   AssertOnTaskQueue();
-  if (mShutdown) {
+  if (GetState() == State::SHUTDOWN) {
     return;
   }
   if (IsUsefulData(aSample)) {
@@ -703,15 +719,14 @@ void RemoteDataDecoder::UpdateOutputStatus(RefPtr<MediaData>&& aSample) {
 
 void RemoteDataDecoder::ReturnDecodedData() {
   AssertOnTaskQueue();
-  MOZ_ASSERT(!mShutdown);
+  MOZ_ASSERT(GetState() != State::SHUTDOWN);
 
   // We only want to clear mDecodedData when we have resolved the promises.
   if (!mDecodePromise.IsEmpty()) {
     mDecodePromise.Resolve(std::move(mDecodedData), __func__);
     mDecodedData = DecodedData();
   } else if (!mDrainPromise.IsEmpty() &&
-             (!mDecodedData.IsEmpty() ||
-              mDrainStatus == DrainStatus::DRAINED)) {
+             (!mDecodedData.IsEmpty() || GetState() == State::DRAINED)) {
     mDrainPromise.Resolve(std::move(mDecodedData), __func__);
     mDecodedData = DecodedData();
   }
@@ -727,10 +742,10 @@ void RemoteDataDecoder::DrainComplete() {
     return;
   }
   AssertOnTaskQueue();
-  if (mShutdown) {
+  if (GetState() == State::SHUTDOWN) {
     return;
   }
-  mDrainStatus = DrainStatus::DRAINED;
+  SetState(State::DRAINED);
   ReturnDecodedData();
   // Make decoder accept input again.
   mJavaDecoder->Flush();
@@ -745,7 +760,7 @@ void RemoteDataDecoder::Error(const MediaResult& aError) {
     return;
   }
   AssertOnTaskQueue();
-  if (mShutdown) {
+  if (GetState() == State::SHUTDOWN) {
     return;
   }
   mDecodePromise.RejectIfExists(aError, __func__);
