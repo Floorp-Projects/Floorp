@@ -108,13 +108,12 @@ const globalMessageManager = Services.mm;
  *
  * @class GeckoDriver
  *
- * @param {string} appId
- *     Unique identifier of the application.
  * @param {MarionetteServer} server
  *     The instance of Marionette server.
  */
-this.GeckoDriver = function(appId, server) {
-  this.appId = appId;
+this.GeckoDriver = function(server) {
+  this.appId = Services.appinfo.ID;
+  this.appName = Services.appinfo.name.toLowerCase();
   this._server = server;
 
   this.sessionID = null;
@@ -1294,6 +1293,7 @@ GeckoDriver.prototype.getIdForBrowser = function(browser) {
   if (browser === null) {
     return null;
   }
+
   let permKey = browser.permanentKey;
   if (this._browserIds.has(permKey)) {
     return this._browserIds.get(permKey);
@@ -2710,6 +2710,66 @@ GeckoDriver.prototype.deleteCookie = async function(cmd) {
 };
 
 /**
+ * Open a new top-level browsing context.
+ *
+ * @param {string=} type
+ *     Optional type of the new top-level browsing context. Can be one of
+ *     `tab` or `window`. Defaults to `tab`.
+ * @param {boolean=} focus
+ *     Optional flag if the new top-level browsing context should be opened
+ *     in foreground (focused) or background (not focused). Defaults to false.
+ *
+ * @return {Object.<string, string>}
+ *     Handle and type of the new browsing context.
+ */
+GeckoDriver.prototype.newWindow = async function(cmd) {
+  assert.open(this.getCurrentWindow(Context.Content));
+  await this._handleUserPrompts();
+
+  let focus = false;
+  if (typeof cmd.parameters.focus != "undefined") {
+    focus = assert.boolean(cmd.parameters.focus,
+        pprint`Expected "focus" to be a boolean, got ${cmd.parameters.focus}`);
+  }
+
+  let type;
+  if (typeof cmd.parameters.type != "undefined") {
+    type = assert.string(cmd.parameters.type,
+        pprint`Expected "type" to be a string, got ${cmd.parameters.type}`);
+  }
+
+  // If an invalid or no type has been specified default to a tab.
+  if (typeof type == "undefined" || !["tab", "window"].includes(type)) {
+    type = "tab";
+  }
+
+  let contentBrowser;
+
+  switch (type) {
+    case "window":
+      let win = await this.curBrowser.openBrowserWindow(focus);
+      contentBrowser = browser.getTabBrowser(win).selectedBrowser;
+      break;
+
+    default:
+      // To not fail if a new type gets added in the future, make opening
+      // a new tab the default action.
+      let tab = await this.curBrowser.openTab(focus);
+      contentBrowser = browser.getBrowserForTab(tab);
+  }
+
+  // Even with the framescript registered, the browser might not be known to
+  // the parent process yet. Wait until it is available.
+  // TODO: Fix by using `Browser:Init` or equivalent on bug 1311041
+  let windowId = await new PollPromise((resolve, reject) => {
+    let id = this.getIdForBrowser(contentBrowser);
+    this.windowHandles.includes(id) ? resolve(id) : reject();
+  });
+
+  return {handle: windowId.toString(), type};
+};
+
+/**
  * Close the currently selected tab/window.
  *
  * With multiple open tabs present the currently selected tab will
@@ -3549,6 +3609,7 @@ GeckoDriver.prototype.commands = {
   "WebDriver:MaximizeWindow": GeckoDriver.prototype.maximizeWindow,
   "WebDriver:Navigate": GeckoDriver.prototype.get,
   "WebDriver:NewSession": GeckoDriver.prototype.newSession,
+  "WebDriver:NewWindow": GeckoDriver.prototype.newWindow,
   "WebDriver:PerformActions": GeckoDriver.prototype.performActions,
   "WebDriver:Refresh":  GeckoDriver.prototype.refresh,
   "WebDriver:ReleaseActions": GeckoDriver.prototype.releaseActions,
