@@ -2,85 +2,68 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-FROM openjdk:8-alpine
+# Inspired by:
+# https://hub.docker.com/r/runmymind/docker-android-sdk/~/dockerfile/
 
-MAINTAINER Colin Lee "colinlee@mozilla.com"
+FROM ubuntu:17.10
 
-#----------------------------------------------------------------------------------------------------------------------
-#-- Configuration -----------------------------------------------------------------------------------------------------
-#----------------------------------------------------------------------------------------------------------------------
+MAINTAINER Sebastian Kaspari "skaspari@mozilla.com"
 
-ENV GLIBC_VERSION "2.27-r0"
-ENV ANDROID_BUILD_TOOLS "27.0.3"
-ENV ANDROID_SDK_VERSION "3859397"
-ENV ANDROID_PLATFORM_VERSION "27"
-ENV PROJECT_REPOSITORY "https://github.com/mozilla-mobile/fenix.git"
+# -- System -----------------------------------------------------------------------------
 
-#----------------------------------------------------------------------------------------------------------------------
-#-- System ------------------------------------------------------------------------------------------------------------
-#----------------------------------------------------------------------------------------------------------------------
+RUN apt-get update -qq
 
-RUN apk add --no-cache --virtual=.build-dependencies \
-	bash \
-	ca-certificates \
-	curl \
-	git \
-	python \
-	py-pip \
-	unzip \
-	wget
+RUN apt-get install -y openjdk-8-jdk \
+					   curl \
+					   git \
+					   python \
+					   python-pip \
+					   locales \
+					   unzip
 
-RUN pip install --upgrade pip
+RUN locale-gen en_US.UTF-8
 
-RUN pip install \
-	taskcluster
+# -- Android SDK ------------------------------------------------------------------------
 
-RUN wget https://raw.githubusercontent.com/sgerrand/alpine-pkg-glibc/master/sgerrand.rsa.pub -O /etc/apk/keys/sgerrand.rsa.pub \
-	&& wget https://github.com/sgerrand/alpine-pkg-glibc/releases/download/${GLIBC_VERSION}/glibc-${GLIBC_VERSION}.apk -O /tmp/glibc.apk \
-	&& wget https://github.com/sgerrand/alpine-pkg-glibc/releases/download/${GLIBC_VERSION}/glibc-bin-${GLIBC_VERSION}.apk -O /tmp/glibc-bin.apk \
-	&& apk add --no-cache /tmp/glibc.apk /tmp/glibc-bin.apk \
-	&& rm -rf /tmp/* \
-	&& rm -rf /var/cache/apk/*
+RUN mkdir -p /opt/android-sdk
+WORKDIR /opt
 
-#----------------------------------------------------------------------------------------------------------------------
-#-- Android -----------------------------------------------------------------------------------------------------------
-#----------------------------------------------------------------------------------------------------------------------
-
-RUN mkdir -p /build/android-sdk
-WORKDIR /build
-
-ENV ANDROID_HOME /build/android-sdk
-ENV ANDROID_SDK_HOME /build/android-sdk
+ENV ANDROID_BUILD_TOOLS "28.0.3"
+ENV ANDROID_HOME /opt/android-sdk
+ENV ANDROID_SDK_HOME /opt/android-sdk
 ENV PATH ${PATH}:${ANDROID_SDK_HOME}/tools:${ANDROID_SDK_HOME}/tools/bin:${ANDROID_SDK_HOME}/platform-tools:/opt/tools:${ANDROID_SDK_HOME}/build-tools/${ANDROID_BUILD_TOOLS}
 
-RUN curl -L https://dl.google.com/android/repository/sdk-tools-linux-${ANDROID_SDK_VERSION}.zip > sdk.zip \
+RUN curl -L https://dl.google.com/android/repository/sdk-tools-linux-4333796.zip > sdk.zip \
 	&& unzip sdk.zip -d ${ANDROID_SDK_HOME} \
 	&& rm sdk.zip
 
-RUN mkdir -p /build/android-sdk/.android/
-RUN touch /build/android-sdk/.android/repositories.cfg
+RUN mkdir -p /opt/android-sdk/.android/
+RUN touch /opt/android-sdk/.android/repositories.cfg
 
 RUN yes | sdkmanager --licenses
 
 RUN sdkmanager --verbose "platform-tools" \
-    "platforms;android-${ANDROID_PLATFORM_VERSION}" \
+    "platforms;android-28" \
     "build-tools;${ANDROID_BUILD_TOOLS}" \
     "extras;android;m2repository" \
-	"extras;google;m2repository"
+    "extras;google;m2repository"
 
-#----------------------------------------------------------------------------------------------------------------------
-#-- Project -----------------------------------------------------------------------------------------------------------
-#----------------------------------------------------------------------------------------------------------------------
+# Checkout source code
+RUN git clone https://github.com/mozilla-mobile/fenix.git
 
-RUN git clone $PROJECT_REPOSITORY
+# Build project and run gradle tasks once to pull all dependencies
+WORKDIR /opt/fenix
+RUN ./gradlew --no-daemon assemble test lint
 
-WORKDIR /build/fenix
+# -- Post setup -------------------------------------------------------------------------
 
-RUN ./gradlew --no-daemon assemble test lint detektCheck ktlint
+# Install taskcluster python library (used by decision tasks)
+# 5.0.0 is still incompatible with taskclusterProxy, meaning no decision task is able
+# to schedule the rest of the Taskcluster tasks. Please upgrade to taskcluster>=5 once
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1460015 is fixed
+RUN pip install 'taskcluster>=4,<5'
+RUN pip install arrow
 
-#----------------------------------------------------------------------------------------------------------------------
-#-- Addendum ----------------------------------------------------------------------------------------------------------
-#----------------------------------------------------------------------------------------------------------------------
+# -- Cleanup ----------------------------------------------------------------------------
 
-# Alphine Linux creates a bash profile that overrides our PATH again. Let's fix that.
-RUN echo "export PATH=$PATH" >> /etc/profile
+RUN apt-get clean
