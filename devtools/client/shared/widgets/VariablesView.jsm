@@ -441,9 +441,8 @@ VariablesView.prototype = {
     const searchbox = this._searchboxNode = document.createXULElement("textbox");
     searchbox.className = "variables-view-searchinput devtools-filterinput";
     searchbox.setAttribute("placeholder", this._searchboxPlaceholder);
-    searchbox.setAttribute("type", "search");
     searchbox.setAttribute("flex", "1");
-    searchbox.addEventListener("command", this._onSearchboxInput);
+    searchbox.addEventListener("input", this._onSearchboxInput);
     searchbox.addEventListener("keydown", this._onSearchboxKeyDown);
 
     container.appendChild(searchbox);
@@ -460,7 +459,7 @@ VariablesView.prototype = {
       return;
     }
     this._searchboxContainer.remove();
-    this._searchboxNode.removeEventListener("command", this._onSearchboxInput);
+    this._searchboxNode.removeEventListener("input", this._onSearchboxInput);
     this._searchboxNode.removeEventListener("keydown", this._onSearchboxKeyDown);
 
     this._searchboxContainer = null;
