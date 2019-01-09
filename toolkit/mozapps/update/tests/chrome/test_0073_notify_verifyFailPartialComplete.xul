@@ -32,7 +32,8 @@ function runTest() {
                     state: STATE_DOWNLOADING};
   let patches = getLocalPatchString(patchProps);
   patchProps = {size: "1234",
-                selected: "false"};
+                selected: "false",
+                state: null};
   patches += getLocalPatchString(patchProps);
   let updateProps = {isCompleteUpdate: "false"};
   let updates = getLocalUpdateString(updateProps, patches);

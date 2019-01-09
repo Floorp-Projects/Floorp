@@ -238,7 +238,14 @@ TabSources.prototype = {
     // script element, or does not have a src attribute.
     const element = source.element ? source.element.unsafeDereference() : null;
     if (element && (element.tagName !== "SCRIPT" || !element.hasAttribute("src"))) {
-      spec.isInlineSource = true;
+      if (source.introductionScript) {
+        // As for other evaluated sources, script elements which were
+        // dynamically generated when another script ran should have
+        // a javascript content-type.
+        spec.contentType = "text/javascript";
+      } else {
+        spec.isInlineSource = true;
+      }
     } else if (source.introductionType === "wasm") {
       // Wasm sources are not JavaScript. Give them their own content-type.
       spec.contentType = "text/wasm";

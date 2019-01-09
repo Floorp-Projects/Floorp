@@ -1392,16 +1392,12 @@ void FetchDriver::SetRequestHeaders(nsIHttpChannel* aChannel) const {
 
   AutoTArray<InternalHeaders::Entry, 5> headers;
   mRequest->Headers()->GetEntries(headers);
-  bool hasAccept = false;
   for (uint32_t i = 0; i < headers.Length(); ++i) {
     bool alreadySet = headersSet.Contains(headers[i].mName);
     if (!alreadySet) {
       headersSet.AppendElement(headers[i].mName);
     }
 
-    if (!hasAccept && headers[i].mName.EqualsIgnoreCase("accept")) {
-      hasAccept = true;
-    }
     if (headers[i].mValue.IsEmpty()) {
       DebugOnly<nsresult> rv =
           aChannel->SetEmptyRequestHeader(headers[i].mName);
@@ -1411,13 +1407,6 @@ void FetchDriver::SetRequestHeaders(nsIHttpChannel* aChannel) const {
           headers[i].mName, headers[i].mValue, alreadySet /* merge */);
       MOZ_ASSERT(NS_SUCCEEDED(rv));
     }
-  }
-
-  if (!hasAccept) {
-    DebugOnly<nsresult> rv = aChannel->SetRequestHeader(
-        NS_LITERAL_CSTRING("accept"), NS_LITERAL_CSTRING("*/*"),
-        false /* merge */);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
 
   nsAutoCString method;

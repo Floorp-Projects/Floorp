@@ -126,13 +126,10 @@ static void Shutdown();
 #include "mozilla/dom/nsContentSecurityManager.h"
 #include "mozilla/dom/nsCSPService.h"
 #include "mozilla/dom/nsCSPContext.h"
-#include "nsIPowerManagerService.h"
 #include "nsIMediaManager.h"
 #include "mozilla/dom/nsMixedContentBlocker.h"
 
 #include "mozilla/net/WebSocketEventService.h"
-
-#include "mozilla/dom/power/PowerManagerService.h"
 
 #include "nsIPresentationService.h"
 
@@ -153,7 +150,6 @@ static void Shutdown();
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::net;
-using mozilla::dom::power::PowerManagerService;
 using mozilla::dom::quota::QuotaManagerService;
 using mozilla::gmp::GeckoMediaPluginService;
 
@@ -209,8 +205,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceSensors)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHapticFeedback)
 #endif
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(ThirdPartyUtil, Init)
-NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIPowerManagerService,
-                                         PowerManagerService::GetInstance)
 
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIMediaManagerService,
                                          MediaManager::GetInstance)
@@ -239,20 +233,6 @@ void nsLayoutModuleInitialize() {
                 "size of a pointer on your platform.");
 
   gInitialized = true;
-
-  if (XRE_GetProcessType() == GeckoProcessType_VR) {
-    // VR process doesn't need the layout module.
-    return;
-  }
-
-  if (XRE_GetProcessType() == GeckoProcessType_GPU ||
-      XRE_GetProcessType() == GeckoProcessType_RDD) {
-    // We mark the layout module as being available in the GPU and RDD
-    // process so that XPCOM's component manager initializes the power
-    // manager service, which is needed for nsAppShell. However, we
-    // don't actually need anything in the layout module itself.
-    return;
-  }
 
   if (NS_FAILED(xpcModuleCtor())) {
     MOZ_CRASH("xpcModuleCtor failed");
@@ -497,7 +477,6 @@ NS_DEFINE_NAMED_CID(NS_DEVICE_SENSORS_CID);
 #if defined(ANDROID)
 NS_DEFINE_NAMED_CID(NS_HAPTICFEEDBACK_CID);
 #endif
-NS_DEFINE_NAMED_CID(NS_POWERMANAGERSERVICE_CID);
 NS_DEFINE_NAMED_CID(OSFILECONSTANTSSERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_MEDIAMANAGERSERVICE_CID);
 #ifdef MOZ_WEBSPEECH_TEST_BACKEND
@@ -596,7 +575,6 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
 #endif
   { &kTHIRDPARTYUTIL_CID, false, nullptr, ThirdPartyUtilConstructor },
   { &kNS_STRUCTUREDCLONECONTAINER_CID, false, nullptr, nsStructuredCloneContainerConstructor },
-  { &kNS_POWERMANAGERSERVICE_CID, false, nullptr, nsIPowerManagerServiceConstructor, Module::ALLOW_IN_GPU_PROCESS },
   { &kOSFILECONSTANTSSERVICE_CID, true, nullptr, OSFileConstantsServiceConstructor },
   { &kGECKO_MEDIA_PLUGIN_SERVICE_CID, true, nullptr, GeckoMediaPluginServiceConstructor },
   { &kNS_MEDIAMANAGERSERVICE_CID, false, nullptr, nsIMediaManagerServiceConstructor },
@@ -669,7 +647,6 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
 #endif
   { THIRDPARTYUTIL_CONTRACTID, &kTHIRDPARTYUTIL_CID },
   { NS_STRUCTUREDCLONECONTAINER_CONTRACTID, &kNS_STRUCTUREDCLONECONTAINER_CID },
-  { POWERMANAGERSERVICE_CONTRACTID, &kNS_POWERMANAGERSERVICE_CID, Module::ALLOW_IN_GPU_PROCESS },
   { OSFILECONSTANTSSERVICE_CONTRACTID, &kOSFILECONSTANTSSERVICE_CID },
   { MEDIAMANAGERSERVICE_CONTRACTID, &kNS_MEDIAMANAGERSERVICE_CID },
 #ifdef ACCESSIBILITY
@@ -711,12 +688,6 @@ static nsresult Initialize() {
 }
 
 static void LayoutModuleDtor() {
-  if (XRE_GetProcessType() == GeckoProcessType_GPU ||
-      XRE_GetProcessType() == GeckoProcessType_VR ||
-      XRE_GetProcessType() == GeckoProcessType_RDD) {
-    return;
-  }
-
   Shutdown();
   nsContentUtils::XPCOMShutdown();
 
@@ -736,7 +707,6 @@ static const mozilla::Module kLayoutModule = {mozilla::Module::kVersion,
                                               kLayoutCategories,
                                               nullptr,
                                               Initialize,
-                                              LayoutModuleDtor,
-                                              Module::ALLOW_IN_GPU_PROCESS};
+                                              LayoutModuleDtor};
 
 NSMODULE_DEFN(nsLayoutModule) = &kLayoutModule;
