@@ -97,6 +97,10 @@ void MobileViewportManager::SetRestoreResolution(float aResolution) {
 }
 
 float MobileViewportManager::ComputeIntrinsicResolution() const {
+  if (!mDocument || !mPresShell) {
+    return 1.f;
+  }
+
   ScreenIntSize displaySize = ViewAs<ScreenPixel>(
       mDisplaySize, PixelCastJustification::LayoutDeviceIsScreenForBounds);
   CSSToScreenScale intrinsicScale =
@@ -124,6 +128,11 @@ void MobileViewportManager::RequestReflow() {
 
 void MobileViewportManager::ResolutionUpdated() {
   MVM_LOG("%p: resolution updated\n", this);
+
+  if (!mPresShell) {
+    return;
+  }
+
   if (!mPainted) {
     // Save the value, so our default zoom calculation
     // can take it into account later on.
@@ -159,6 +168,10 @@ MobileViewportManager::HandleEvent(dom::Event* event) {
 NS_IMETHODIMP
 MobileViewportManager::Observe(nsISupports* aSubject, const char* aTopic,
                                const char16_t* aData) {
+  if (!mDocument) {
+    return NS_OK;
+  }
+
   if (SameCOMIdentity(aSubject, mDocument) &&
       BEFORE_FIRST_PAINT.EqualsASCII(aTopic)) {
     MVM_LOG("%p: got a before-first-paint event\n", this);
@@ -222,6 +235,10 @@ void MobileViewportManager::UpdateResolution(
     const nsViewportInfo& aViewportInfo, const ScreenIntSize& aDisplaySize,
     const CSSSize& aViewportOrContentSize,
     const Maybe<float>& aDisplayWidthChangeRatio, UpdateType aType) {
+  if (!mPresShell || !mDocument) {
+    return;
+  }
+
   CSSToLayoutDeviceScale cssToDev =
       mPresShell->GetPresContext()->CSSToDevPixelScale();
   LayoutDeviceToLayerScale res(mPresShell->GetResolution());
@@ -343,6 +360,10 @@ void MobileViewportManager::UpdateResolution(
 
 ScreenIntSize MobileViewportManager::GetCompositionSize(
     const ScreenIntSize& aDisplaySize) const {
+  if (!mPresShell) {
+    return ScreenIntSize();
+  }
+
   ScreenIntSize compositionSize(aDisplaySize);
   ScreenMargin scrollbars =
       LayoutDeviceMargin::FromAppUnits(
@@ -361,6 +382,10 @@ ScreenIntSize MobileViewportManager::GetCompositionSize(
 
 void MobileViewportManager::UpdateVisualViewportSize(
     const ScreenIntSize& aDisplaySize, const CSSToScreenScale& aZoom) {
+  if (!mPresShell) {
+    return;
+  }
+
   ScreenSize compositionSize = ScreenSize(GetCompositionSize(aDisplaySize));
 
   CSSSize compSize = compositionSize / aZoom;
@@ -369,6 +394,10 @@ void MobileViewportManager::UpdateVisualViewportSize(
 }
 
 void MobileViewportManager::UpdateDisplayPortMargins() {
+  if (!mPresShell) {
+    return;
+  }
+
   if (nsIFrame* root = mPresShell->GetRootScrollFrame()) {
     bool hasDisplayPort = nsLayoutUtils::HasDisplayPort(root->GetContent());
     bool hasResolution =
@@ -396,6 +425,10 @@ void MobileViewportManager::UpdateDisplayPortMargins() {
 void MobileViewportManager::RefreshVisualViewportSize() {
   // This function is a subset of RefreshViewportSize, and only updates the
   // visual viewport size.
+
+  if (!mPresShell) {
+    return;
+  }
 
   if (!gfxPrefs::APZAllowZooming()) {
     return;
@@ -428,6 +461,10 @@ void MobileViewportManager::RefreshViewportSize(bool aForceAdjustResolution) {
   // intended; if this assumption is violated then we will need to add extra
   // complicated logic in UpdateResolution to ensure we only do the resolution
   // update in the right scenarios.
+
+  if (!mPresShell || !mDocument) {
+    return;
+  }
 
   Maybe<float> displayWidthChangeRatio;
   LayoutDeviceIntSize newDisplaySize;
@@ -486,6 +523,8 @@ void MobileViewportManager::RefreshViewportSize(bool aForceAdjustResolution) {
   // Update internal state.
   mMobileViewportSize = viewport;
 
+  RefPtr<MobileViewportManager> strongThis(this);
+
   // Kick off a reflow.
   mPresShell->ResizeReflowIgnoreOverride(
       nsPresContext::CSSPixelsToAppUnits(viewport.width),
@@ -502,6 +541,10 @@ void MobileViewportManager::RefreshViewportSize(bool aForceAdjustResolution) {
 
 void MobileViewportManager::ShrinkToDisplaySizeIfNeeded(
     nsViewportInfo& aViewportInfo, const ScreenIntSize& aDisplaySize) {
+  if (!mPresShell) {
+    return;
+  }
+
   if (!gfxPrefs::APZAllowZooming()) {
     // If the APZ is disabled, we don't scale down wider contents to fit them
     // into device screen because users won't be able to zoom out the tiny
