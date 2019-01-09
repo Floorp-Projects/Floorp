@@ -10,6 +10,7 @@ requestLongerTimeout(4);
 // events (React production version 16.2.0) using JSX.
 
 const TEST_LIB = URL_ROOT + "lib_react_dom_16.2.0_min.js";
+const TEST_LIB_BABEL = URL_ROOT + "lib_babel_6.21.0_min.js";
 const TEST_EXTERNAL_LISTENERS = URL_ROOT + "react_external_listeners.js";
 const TEST_URL = URL_ROOT + "doc_markup_events_react_production_16.2.0_jsx.html";
 
@@ -31,7 +32,7 @@ const TEST_DATA = [
       },
       {
         type: "onClick",
-        filename: TEST_URL + ":26",
+        filename: TEST_LIB_BABEL + ":26",
         attributes: [
           "Bubbling",
           "React"
@@ -95,7 +96,7 @@ const TEST_DATA = [
       },
       {
         type: "onMouseUp",
-        filename: TEST_URL + ":26",
+        filename: TEST_LIB_BABEL + ":26",
         attributes: [
           "Bubbling",
           "React"

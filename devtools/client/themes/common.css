@@ -719,10 +719,12 @@ checkbox:-moz-focusring {
   fill: rgba(255,255,255,.4);
 }
 
+.theme-checkbox.checked,
 .theme-checkbox[checked] {
   stroke: rgba(0,0,0,.6);
 }
 
+.theme-dark .theme-checkbox.checked,
 .theme-dark .theme-checkbox[checked] {
   stroke: rgba(255,255,255,.8);
 }
