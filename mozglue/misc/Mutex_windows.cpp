@@ -22,6 +22,12 @@ void mozilla::detail::MutexImpl::lock() {
   AcquireSRWLockExclusive(&platformData()->lock);
 }
 
+bool mozilla::detail::MutexImpl::tryLock() { return mutexTryLock(); }
+
+bool mozilla::detail::MutexImpl::mutexTryLock() {
+  return !!TryAcquireSRWLockExclusive(&platformData()->lock);
+}
+
 void mozilla::detail::MutexImpl::unlock() {
   ReleaseSRWLockExclusive(&platformData()->lock);
 }
