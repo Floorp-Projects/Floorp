@@ -67,10 +67,7 @@ class ScreenCaptureTestCase(MarionetteTestCase):
 
     @property
     def viewport_dimensions(self):
-        return self.marionette.execute_script("""
-            return [arguments[0].clientWidth,
-                    arguments[0].clientHeight];
-            """, script_args=[self.document_element])
+        return self.marionette.execute_script("return [window.innerWidth, window.innerHeight];")
 
     def assert_png(self, screenshot):
         """Test that screenshot is a Base64 encoded PNG file."""
