@@ -3931,14 +3931,39 @@ nsresult nsFrame::GetDataForTableSelection(
   return NS_OK;
 }
 
+static bool IsEditingHost(const nsIFrame* aFrame) {
+  auto* element = nsGenericHTMLElement::FromNodeOrNull(aFrame->GetContent());
+  return element && element->IsEditableRoot();
+}
+
 static StyleUserSelect UsedUserSelect(const nsIFrame* aFrame) {
   if (aFrame->HasAnyStateBits(NS_FRAME_GENERATED_CONTENT)) {
     return StyleUserSelect::None;
   }
 
+  // Per https://drafts.csswg.org/css-ui-4/#content-selection:
+  //
+  // The computed value is the specified value, except:
+  //
+  //   1 - on editable elements where the computed value is always 'contain'
+  //       regardless of the specified value.
+  //   2 - when the specified value is auto, which computes to one of the other
+  //       values [...]
+  //
+  // See https://github.com/w3c/csswg-drafts/issues/3344 to see why we do this
+  // at used-value time instead of at computed-value time.
+  //
+  // Also, we check for auto first to allow explicitly overriding the value for
+  // the editing host.
   auto style = aFrame->StyleUIReset()->mUserSelect;
   if (style != StyleUserSelect::Auto) {
     return style;
+  }
+
+  if (IsEditingHost(aFrame)) {
+    // We don't implement 'contain' itself, but we make 'text' behave as
+    // 'contain' for contenteditable elements anyway so this is ok.
+    return StyleUserSelect::Text;
   }
 
   auto* parent = nsLayoutUtils::GetParentOrPlaceholderFor(aFrame);

@@ -986,8 +986,10 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvSetDisplayList(
                      mChildLayersObserverEpoch, true));
     }
 
-    txn.Notify(wr::Checkpoint::SceneBuilt, MakeUnique<SceneBuiltNotification>(
-                                               this, wrEpoch, aTxnStartTime));
+    if (!IsRootWebRenderBridgeParent()) {
+      txn.Notify(wr::Checkpoint::SceneBuilt, MakeUnique<SceneBuiltNotification>(
+                                                 this, wrEpoch, aTxnStartTime));
+    }
 
     mApi->SendTransaction(txn);
 

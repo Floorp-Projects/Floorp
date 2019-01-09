@@ -328,6 +328,17 @@ class AudioContext final : public DOMEventTargetHelper,
 
   void ReportToConsole(uint32_t aErrorFlags, const char* aMsg) const;
 
+  // This function should be called everytime we decide whether allow to start
+  // audio context, it's used to update Telemetry related variables.
+  void UpdateAutoplayAssumptionStatus();
+
+  // These functions are used for updating Telemetry.
+  // - MaybeUpdateAutoplayTelemetry: update category 'AllowedAfterBlocked'
+  // - MaybeUpdateAutoplayTelemetryWhenShutdown: update category 'NeverBlocked'
+  //   and 'NeverAllowed', so we need to call it when shutdown AudioContext
+  void MaybeUpdateAutoplayTelemetry();
+  void MaybeUpdateAutoplayTelemetryWhenShutdown();
+
  private:
   // Each AudioContext has an id, that is passed down the MediaStreams that
   // back the AudioNodes, so we can easily compute the set of all the
@@ -368,6 +379,20 @@ class AudioContext final : public DOMEventTargetHelper,
   bool mIsDisconnecting;
   // This flag stores the value of previous status of `allowed-to-start`.
   bool mWasAllowedToStart;
+
+  // These variables are used for telemetry, they're not reflect the actual
+  // status of AudioContext, they are based on the "assumption" of enabling
+  // blocking web audio. Because we want to record Telemetry no matter user
+  // enable blocking autoplay or not.
+  // - 'mWasEverAllowedToStart' would be true when AudioContext had ever been
+  //   allowed to start if we enable blocking web audio.
+  // - 'mWasEverBlockedToStart' would be true when AudioContext had ever been
+  //   blocked to start if we enable blocking web audio.
+  // - 'mWouldBeAllowedToStart' stores the value of previous status of
+  //   `allowed-to-start` if we enable blocking web audio.
+  bool mWasEverAllowedToStart;
+  bool mWasEverBlockedToStart;
+  bool mWouldBeAllowedToStart;
 };
 
 static const dom::AudioContext::AudioContextId NO_AUDIO_CONTEXT = 0;
