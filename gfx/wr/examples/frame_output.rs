@@ -107,6 +107,7 @@ impl App {
         );
 
         let info = LayoutPrimitiveInfo::new(document.content_rect);
+        let space_and_clip = SpaceAndClipInfo::root_scroll(pipeline_id);
         let mut builder = DisplayListBuilder::new(
             document.pipeline_id,
             document.content_rect.size,
@@ -114,6 +115,7 @@ impl App {
 
         builder.push_stacking_context(
             &info,
+            space_and_clip.spatial_id,
             None,
             TransformStyle::Flat,
             MixBlendMode::Normal,
@@ -121,7 +123,7 @@ impl App {
             RasterSpace::Screen,
         );
 
-        builder.push_rect(&info, ColorF::new(1.0, 1.0, 0.0, 1.0));
+        builder.push_rect(&info, &space_and_clip, ColorF::new(1.0, 1.0, 0.0, 1.0));
         builder.pop_stacking_context();
 
         txn.set_root_pipeline(pipeline_id);
@@ -145,7 +147,7 @@ impl Example for App {
         builder: &mut DisplayListBuilder,
         _txn: &mut Transaction,
         framebuffer_size: DeviceIntSize,
-        _pipeline_id: PipelineId,
+        pipeline_id: PipelineId,
         _document_id: DocumentId,
     ) {
         if self.output_document.is_none() {
@@ -155,8 +157,11 @@ impl Example for App {
         }
 
         let info = LayoutPrimitiveInfo::new((100, 100).to(200, 200));
+        let space_and_clip = SpaceAndClipInfo::root_scroll(pipeline_id);
+
         builder.push_stacking_context(
             &info,
+            space_and_clip.spatial_id,
             None,
             TransformStyle::Flat,
             MixBlendMode::Normal,
@@ -166,6 +171,7 @@ impl Example for App {
 
         builder.push_image(
             &info,
+            &space_and_clip,
             info.rect.size,
             LayoutSize::zero(),
             ImageRendering::Auto,
