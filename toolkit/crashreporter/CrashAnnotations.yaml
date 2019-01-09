@@ -479,6 +479,13 @@ JSOutOfMemory:
     to satisfy the allocation.
   type: string
 
+LauncherProcessState:
+  description: >
+    Launcher process enabled state. The integer value of this annotation must
+    match with one of the values in the
+    mozilla::LauncherRegistryInfo::EnableState enum
+  type: integer
+
 LowCommitSpaceEvents:
   description: >
     Number of times the available memory tracker has detected a that
