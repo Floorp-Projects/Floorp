@@ -18,10 +18,6 @@
 namespace mozilla {
 namespace wr {
 
-enum {
-  ROOT_CLIP_CHAIN = ~0,
-};
-
 /// Whether a border should be antialiased.
 enum class AntialiasBorder {
   No = 0,
@@ -1586,7 +1582,7 @@ WR_INLINE
 WrSpatialId wr_dp_push_stacking_context(WrState *aState,
                                         LayoutRect aBounds,
                                         WrSpatialId aSpatialId,
-                                        const WrClipId *aClipId,
+                                        const WrClipId *aClipNodeId,
                                         const WrAnimationProperty *aAnimation,
                                         const float *aOpacity,
                                         const LayoutTransform *aTransform,

@@ -96,6 +96,8 @@ struct Transaction;
 struct WrWindowId;
 struct WrPipelineInfo;
 
+const uint64_t ROOT_CLIP_CHAIN = ~0;
+
 }  // namespace wr
 }  // namespace mozilla
 
