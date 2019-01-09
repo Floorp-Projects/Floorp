@@ -11,7 +11,7 @@
 
 #include "mozilla/gfx/2D.h"
 #include "mozilla/Attributes.h"
-#include "SMILType.h"
+#include "mozilla/SMILType.h"
 
 class nsSMILValue;
 
