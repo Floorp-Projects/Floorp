@@ -103,7 +103,7 @@ class GleanTest {
     fun `test path generation`() {
         val uuid = UUID.randomUUID()
         val path = Glean.makePath("test", uuid)
-        val applicationId = ApplicationProvider.getApplicationContext<Context>().packageName
+        val applicationId = "mozilla-components-service-glean"
         // Make sure that the default applicationId matches the package name.
         assertEquals(applicationId, Glean.applicationId)
         assertEquals(path, "/submit/$applicationId/test/${Glean.SCHEMA_VERSION}/$uuid")
@@ -158,7 +158,7 @@ class GleanTest {
             assertNull(metricsJson.opt("events"))
             assertNotNull(metricsJson.opt("ping_info"))
             assertNotNull(metricsJson.getJSONObject("ping_info").opt("experiments"))
-            val applicationId = ApplicationProvider.getApplicationContext<Context>().packageName
+            val applicationId = "mozilla-components-service-glean"
             assert(
                 request.path.startsWith("/submit/$applicationId/metrics/${Glean.SCHEMA_VERSION}/")
             )
@@ -355,5 +355,23 @@ class GleanTest {
             Glean.httpPingUploader = realClient
             server.shutdown()
         }
+    }
+
+    @Test
+    fun `Application id sanitazer must correctly filter undesired characters`() {
+        assertEquals(
+            "org-mozilla-test-app",
+            Glean.sanitizeApplicationId("org.mozilla.test-app")
+        )
+
+        assertEquals(
+            "org-mozilla-test-app",
+            Glean.sanitizeApplicationId("org.mozilla..test---app")
+        )
+
+        assertEquals(
+            "org-mozilla-test-app",
+            Glean.sanitizeApplicationId("org-mozilla-test-app")
+        )
     }
 }

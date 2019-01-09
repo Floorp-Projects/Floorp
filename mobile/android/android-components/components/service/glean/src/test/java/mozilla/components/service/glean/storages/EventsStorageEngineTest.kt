@@ -3,7 +3,6 @@
 
 package mozilla.components.service.glean.storages
 
-import android.content.Context
 import android.os.SystemClock
 import androidx.test.core.app.ApplicationProvider
 import mozilla.components.service.glean.checkPingSchema
@@ -203,7 +202,7 @@ class EventsStorageEngineTest {
             }
 
             val request = server.takeRequest()
-            val applicationId = ApplicationProvider.getApplicationContext<Context>().packageName
+            val applicationId = "mozilla-components-service-glean"
             assert(request.path.startsWith("/submit/$applicationId/events/${Glean.SCHEMA_VERSION}/"))
             val eventsJsonData = request.body.readUtf8()
             val eventsJson = JSONObject(eventsJsonData)

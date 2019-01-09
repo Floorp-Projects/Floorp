@@ -72,7 +72,7 @@ open class GleanInternalAPI {
         this.configuration = configuration
         httpPingUploader = HttpPingUploader(configuration)
         initialized = true
-        applicationId = applicationContext.packageName
+        applicationId = sanitizeApplicationId(applicationContext.packageName)
 
         initializeCoreMetrics(applicationContext)
 
@@ -214,6 +214,18 @@ open class GleanInternalAPI {
 
         // Set the CPU architecture
         Baseline.architecture.set(Build.SUPPORTED_ABIS[0])
+    }
+
+    /**
+     * Sanitizes the application id, generating a pipeline-friendly string that replaces
+     * non alphanumeric characters with dashes.
+     *
+     * @param applicationId the string representing the application id
+     *
+     * @return the sanitized version of the application id
+     */
+    internal fun sanitizeApplicationId(applicationId: String): String {
+        return applicationId.replace("[^a-zA-Z0-9]+".toRegex(), "-")
     }
 
     /**
