@@ -745,34 +745,34 @@ void OpenVRSession::Shutdown() {
 
 bool OpenVRSession::InitState(VRSystemState& aSystemState) {
   VRDisplayState& state = aSystemState.displayState;
-  strncpy(state.mDisplayName, "OpenVR HMD", kVRDisplayNameMaxLen);
-  state.mEightCC = GFX_VR_EIGHTCC('O', 'p', 'e', 'n', 'V', 'R', ' ', ' ');
-  state.mIsConnected =
+  strncpy(state.displayName, "OpenVR HMD", kVRDisplayNameMaxLen);
+  state.eightCC = GFX_VR_EIGHTCC('O', 'p', 'e', 'n', 'V', 'R', ' ', ' ');
+  state.isConnected =
       mVRSystem->IsTrackedDeviceConnected(::vr::k_unTrackedDeviceIndex_Hmd);
-  state.mIsMounted = false;
-  state.mCapabilityFlags = (VRDisplayCapabilityFlags)(
+  state.isMounted = false;
+  state.capabilityFlags = (VRDisplayCapabilityFlags)(
       (int)VRDisplayCapabilityFlags::Cap_None |
       (int)VRDisplayCapabilityFlags::Cap_Orientation |
       (int)VRDisplayCapabilityFlags::Cap_Position |
       (int)VRDisplayCapabilityFlags::Cap_External |
       (int)VRDisplayCapabilityFlags::Cap_Present |
       (int)VRDisplayCapabilityFlags::Cap_StageParameters);
-  state.mReportsDroppedFrames = true;
+  state.reportsDroppedFrames = true;
 
   ::vr::ETrackedPropertyError err;
   bool bHasProximitySensor = mVRSystem->GetBoolTrackedDeviceProperty(
       ::vr::k_unTrackedDeviceIndex_Hmd, ::vr::Prop_ContainsProximitySensor_Bool,
       &err);
   if (err == ::vr::TrackedProp_Success && bHasProximitySensor) {
-    state.mCapabilityFlags = (VRDisplayCapabilityFlags)(
-        (int)state.mCapabilityFlags |
+    state.capabilityFlags = (VRDisplayCapabilityFlags)(
+        (int)state.capabilityFlags |
         (int)VRDisplayCapabilityFlags::Cap_MountDetection);
   }
 
   uint32_t w, h;
   mVRSystem->GetRecommendedRenderTargetSize(&w, &h);
-  state.mEyeResolution.width = w;
-  state.mEyeResolution.height = h;
+  state.eyeResolution.width = w;
+  state.eyeResolution.height = h;
 
   // default to an identity quaternion
   aSystemState.sensorState.pose.orientation[3] = 1.0f;
@@ -795,53 +795,53 @@ void OpenVRSession::UpdateStageParameters(VRDisplayState& aState) {
   if (mVRChaperone->GetPlayAreaSize(&sizeX, &sizeZ)) {
     ::vr::HmdMatrix34_t t =
         mVRSystem->GetSeatedZeroPoseToStandingAbsoluteTrackingPose();
-    aState.mStageSize.width = sizeX;
-    aState.mStageSize.height = sizeZ;
+    aState.stageSize.width = sizeX;
+    aState.stageSize.height = sizeZ;
 
-    aState.mSittingToStandingTransform[0] = t.m[0][0];
-    aState.mSittingToStandingTransform[1] = t.m[1][0];
-    aState.mSittingToStandingTransform[2] = t.m[2][0];
-    aState.mSittingToStandingTransform[3] = 0.0f;
+    aState.sittingToStandingTransform[0] = t.m[0][0];
+    aState.sittingToStandingTransform[1] = t.m[1][0];
+    aState.sittingToStandingTransform[2] = t.m[2][0];
+    aState.sittingToStandingTransform[3] = 0.0f;
 
-    aState.mSittingToStandingTransform[4] = t.m[0][1];
-    aState.mSittingToStandingTransform[5] = t.m[1][1];
-    aState.mSittingToStandingTransform[6] = t.m[2][1];
-    aState.mSittingToStandingTransform[7] = 0.0f;
+    aState.sittingToStandingTransform[4] = t.m[0][1];
+    aState.sittingToStandingTransform[5] = t.m[1][1];
+    aState.sittingToStandingTransform[6] = t.m[2][1];
+    aState.sittingToStandingTransform[7] = 0.0f;
 
-    aState.mSittingToStandingTransform[8] = t.m[0][2];
-    aState.mSittingToStandingTransform[9] = t.m[1][2];
-    aState.mSittingToStandingTransform[10] = t.m[2][2];
-    aState.mSittingToStandingTransform[11] = 0.0f;
+    aState.sittingToStandingTransform[8] = t.m[0][2];
+    aState.sittingToStandingTransform[9] = t.m[1][2];
+    aState.sittingToStandingTransform[10] = t.m[2][2];
+    aState.sittingToStandingTransform[11] = 0.0f;
 
-    aState.mSittingToStandingTransform[12] = t.m[0][3];
-    aState.mSittingToStandingTransform[13] = t.m[1][3];
-    aState.mSittingToStandingTransform[14] = t.m[2][3];
-    aState.mSittingToStandingTransform[15] = 1.0f;
+    aState.sittingToStandingTransform[12] = t.m[0][3];
+    aState.sittingToStandingTransform[13] = t.m[1][3];
+    aState.sittingToStandingTransform[14] = t.m[2][3];
+    aState.sittingToStandingTransform[15] = 1.0f;
   } else {
     // If we fail, fall back to reasonable defaults.
     // 1m x 1m space, 0.75m high in seated position
-    aState.mStageSize.width = 1.0f;
-    aState.mStageSize.height = 1.0f;
+    aState.stageSize.width = 1.0f;
+    aState.stageSize.height = 1.0f;
 
-    aState.mSittingToStandingTransform[0] = 1.0f;
-    aState.mSittingToStandingTransform[1] = 0.0f;
-    aState.mSittingToStandingTransform[2] = 0.0f;
-    aState.mSittingToStandingTransform[3] = 0.0f;
+    aState.sittingToStandingTransform[0] = 1.0f;
+    aState.sittingToStandingTransform[1] = 0.0f;
+    aState.sittingToStandingTransform[2] = 0.0f;
+    aState.sittingToStandingTransform[3] = 0.0f;
 
-    aState.mSittingToStandingTransform[4] = 0.0f;
-    aState.mSittingToStandingTransform[5] = 1.0f;
-    aState.mSittingToStandingTransform[6] = 0.0f;
-    aState.mSittingToStandingTransform[7] = 0.0f;
+    aState.sittingToStandingTransform[4] = 0.0f;
+    aState.sittingToStandingTransform[5] = 1.0f;
+    aState.sittingToStandingTransform[6] = 0.0f;
+    aState.sittingToStandingTransform[7] = 0.0f;
 
-    aState.mSittingToStandingTransform[8] = 0.0f;
-    aState.mSittingToStandingTransform[9] = 0.0f;
-    aState.mSittingToStandingTransform[10] = 1.0f;
-    aState.mSittingToStandingTransform[11] = 0.0f;
+    aState.sittingToStandingTransform[8] = 0.0f;
+    aState.sittingToStandingTransform[9] = 0.0f;
+    aState.sittingToStandingTransform[10] = 1.0f;
+    aState.sittingToStandingTransform[11] = 0.0f;
 
-    aState.mSittingToStandingTransform[12] = 0.0f;
-    aState.mSittingToStandingTransform[13] = 0.75f;
-    aState.mSittingToStandingTransform[14] = 0.0f;
-    aState.mSittingToStandingTransform[15] = 1.0f;
+    aState.sittingToStandingTransform[12] = 0.0f;
+    aState.sittingToStandingTransform[13] = 0.75f;
+    aState.sittingToStandingTransform[14] = 0.0f;
+    aState.sittingToStandingTransform[15] = 1.0f;
   }
 }
 
@@ -853,17 +853,17 @@ void OpenVRSession::UpdateEyeParameters(VRSystemState& aState) {
   for (uint32_t eye = 0; eye < 2; ++eye) {
     ::vr::HmdMatrix34_t eyeToHead =
         mVRSystem->GetEyeToHeadTransform(static_cast<::vr::Hmd_Eye>(eye));
-    aState.displayState.mEyeTranslation[eye].x = eyeToHead.m[0][3];
-    aState.displayState.mEyeTranslation[eye].y = eyeToHead.m[1][3];
-    aState.displayState.mEyeTranslation[eye].z = eyeToHead.m[2][3];
+    aState.displayState.eyeTranslation[eye].x = eyeToHead.m[0][3];
+    aState.displayState.eyeTranslation[eye].y = eyeToHead.m[1][3];
+    aState.displayState.eyeTranslation[eye].z = eyeToHead.m[2][3];
 
     float left, right, up, down;
     mVRSystem->GetProjectionRaw(static_cast<::vr::Hmd_Eye>(eye), &left, &right,
                                 &up, &down);
-    aState.displayState.mEyeFOV[eye].upDegrees = atan(-up) * 180.0 / M_PI;
-    aState.displayState.mEyeFOV[eye].rightDegrees = atan(right) * 180.0 / M_PI;
-    aState.displayState.mEyeFOV[eye].downDegrees = atan(down) * 180.0 / M_PI;
-    aState.displayState.mEyeFOV[eye].leftDegrees = atan(-left) * 180.0 / M_PI;
+    aState.displayState.eyeFOV[eye].upDegrees = atan(-up) * 180.0 / M_PI;
+    aState.displayState.eyeFOV[eye].rightDegrees = atan(right) * 180.0 / M_PI;
+    aState.displayState.eyeFOV[eye].downDegrees = atan(down) * 180.0 / M_PI;
+    aState.displayState.eyeFOV[eye].leftDegrees = atan(-left) * 180.0 / M_PI;
 
     Matrix4x4 pose;
     // NOTE! eyeToHead.m is a 3x4 matrix, not 4x4.  But
@@ -1893,22 +1893,22 @@ void OpenVRSession::ProcessEvents(mozilla::gfx::VRSystemState& aSystemState) {
     switch (event.eventType) {
       case ::vr::VREvent_TrackedDeviceUserInteractionStarted:
         if (event.trackedDeviceIndex == ::vr::k_unTrackedDeviceIndex_Hmd) {
-          aSystemState.displayState.mIsMounted = true;
+          aSystemState.displayState.isMounted = true;
         }
         break;
       case ::vr::VREvent_TrackedDeviceUserInteractionEnded:
         if (event.trackedDeviceIndex == ::vr::k_unTrackedDeviceIndex_Hmd) {
-          aSystemState.displayState.mIsMounted = false;
+          aSystemState.displayState.isMounted = false;
         }
         break;
       case ::vr::EVREventType::VREvent_TrackedDeviceActivated:
         if (event.trackedDeviceIndex == ::vr::k_unTrackedDeviceIndex_Hmd) {
-          aSystemState.displayState.mIsConnected = true;
+          aSystemState.displayState.isConnected = true;
         }
         break;
       case ::vr::EVREventType::VREvent_TrackedDeviceDeactivated:
         if (event.trackedDeviceIndex == ::vr::k_unTrackedDeviceIndex_Hmd) {
-          aSystemState.displayState.mIsConnected = false;
+          aSystemState.displayState.isConnected = false;
         }
         break;
       case ::vr::EVREventType::VREvent_DriverRequestedQuit:
@@ -1933,14 +1933,14 @@ bool OpenVRSession::SubmitFrame(
     const mozilla::gfx::VRLayer_Stereo_Immersive& aLayer,
     ID3D11Texture2D* aTexture) {
   return SubmitFrame((void*)aTexture, ::vr::ETextureType::TextureType_DirectX,
-                     aLayer.mLeftEyeRect, aLayer.mRightEyeRect);
+                     aLayer.leftEyeRect, aLayer.rightEyeRect);
 }
 #elif defined(XP_MACOSX)
 bool OpenVRSession::SubmitFrame(
     const mozilla::gfx::VRLayer_Stereo_Immersive& aLayer,
     const VRLayerTextureHandle& aTexture) {
   return SubmitFrame(aTexture, ::vr::ETextureType::TextureType_IOSurface,
-                     aLayer.mLeftEyeRect, aLayer.mRightEyeRect);
+                     aLayer.leftEyeRect, aLayer.rightEyeRect);
 }
 #endif
 
@@ -2190,7 +2190,7 @@ void OpenVRSession::UpdateTelemetry(VRSystemState& aSystemState) {
   ::vr::Compositor_CumulativeStats stats;
   mVRCompositor->GetCumulativeStats(&stats,
                                     sizeof(::vr::Compositor_CumulativeStats));
-  aSystemState.displayState.mDroppedFrameCount = stats.m_nNumReprojectedFrames;
+  aSystemState.displayState.droppedFrameCount = stats.m_nNumReprojectedFrames;
 }
 
 }  // namespace gfx

@@ -55,50 +55,50 @@ VRDisplayPuppet::VRDisplayPuppet()
   MOZ_COUNT_CTOR_INHERITED(VRDisplayPuppet, VRDisplayLocal);
 
   VRDisplayState& state = mDisplayInfo.mDisplayState;
-  strncpy(state.mDisplayName, "Puppet HMD", kVRDisplayNameMaxLen);
-  state.mIsConnected = true;
-  state.mIsMounted = false;
-  state.mCapabilityFlags = VRDisplayCapabilityFlags::Cap_None |
-                           VRDisplayCapabilityFlags::Cap_Orientation |
-                           VRDisplayCapabilityFlags::Cap_Position |
-                           VRDisplayCapabilityFlags::Cap_External |
-                           VRDisplayCapabilityFlags::Cap_Present |
-                           VRDisplayCapabilityFlags::Cap_StageParameters;
-  state.mEyeResolution.width = 1836;   // 1080 * 1.7
-  state.mEyeResolution.height = 2040;  // 1200 * 1.7
+  strncpy(state.displayName, "Puppet HMD", kVRDisplayNameMaxLen);
+  state.isConnected = true;
+  state.isMounted = false;
+  state.capabilityFlags = VRDisplayCapabilityFlags::Cap_None |
+                          VRDisplayCapabilityFlags::Cap_Orientation |
+                          VRDisplayCapabilityFlags::Cap_Position |
+                          VRDisplayCapabilityFlags::Cap_External |
+                          VRDisplayCapabilityFlags::Cap_Present |
+                          VRDisplayCapabilityFlags::Cap_StageParameters;
+  state.eyeResolution.width = 1836;   // 1080 * 1.7
+  state.eyeResolution.height = 2040;  // 1200 * 1.7
 
   // SteamVR gives the application a single FOV to use; it's not configurable as
   // with Oculus
   for (uint32_t eye = 0; eye < 2; ++eye) {
-    state.mEyeTranslation[eye].x = 0.0f;
-    state.mEyeTranslation[eye].y = 0.0f;
-    state.mEyeTranslation[eye].z = 0.0f;
-    state.mEyeFOV[eye] = VRFieldOfView(45.0, 45.0, 45.0, 45.0);
+    state.eyeTranslation[eye].x = 0.0f;
+    state.eyeTranslation[eye].y = 0.0f;
+    state.eyeTranslation[eye].z = 0.0f;
+    state.eyeFOV[eye] = VRFieldOfView(45.0, 45.0, 45.0, 45.0);
   }
 
   // default: 1m x 1m space, 0.75m high in seated position
-  state.mStageSize.width = 1.0f;
-  state.mStageSize.height = 1.0f;
+  state.stageSize.width = 1.0f;
+  state.stageSize.height = 1.0f;
 
-  state.mSittingToStandingTransform[0] = 1.0f;
-  state.mSittingToStandingTransform[1] = 0.0f;
-  state.mSittingToStandingTransform[2] = 0.0f;
-  state.mSittingToStandingTransform[3] = 0.0f;
+  state.sittingToStandingTransform[0] = 1.0f;
+  state.sittingToStandingTransform[1] = 0.0f;
+  state.sittingToStandingTransform[2] = 0.0f;
+  state.sittingToStandingTransform[3] = 0.0f;
 
-  state.mSittingToStandingTransform[4] = 0.0f;
-  state.mSittingToStandingTransform[5] = 1.0f;
-  state.mSittingToStandingTransform[6] = 0.0f;
-  state.mSittingToStandingTransform[7] = 0.0f;
+  state.sittingToStandingTransform[4] = 0.0f;
+  state.sittingToStandingTransform[5] = 1.0f;
+  state.sittingToStandingTransform[6] = 0.0f;
+  state.sittingToStandingTransform[7] = 0.0f;
 
-  state.mSittingToStandingTransform[8] = 0.0f;
-  state.mSittingToStandingTransform[9] = 0.0f;
-  state.mSittingToStandingTransform[10] = 1.0f;
-  state.mSittingToStandingTransform[11] = 0.0f;
+  state.sittingToStandingTransform[8] = 0.0f;
+  state.sittingToStandingTransform[9] = 0.0f;
+  state.sittingToStandingTransform[10] = 1.0f;
+  state.sittingToStandingTransform[11] = 0.0f;
 
-  state.mSittingToStandingTransform[12] = 0.0f;
-  state.mSittingToStandingTransform[13] = 0.75f;
-  state.mSittingToStandingTransform[14] = 0.0f;
-  state.mSittingToStandingTransform[15] = 1.0f;
+  state.sittingToStandingTransform[12] = 0.0f;
+  state.sittingToStandingTransform[13] = 0.75f;
+  state.sittingToStandingTransform[14] = 0.0f;
+  state.sittingToStandingTransform[15] = 1.0f;
 
   gfx::Quaternion rot;
 
@@ -127,12 +127,12 @@ VRDisplayPuppet::~VRDisplayPuppet() {
 void VRDisplayPuppet::SetDisplayInfo(const VRDisplayInfo& aDisplayInfo) {
   // We are only interested in the eye and mount info of the display info.
   VRDisplayState& state = mDisplayInfo.mDisplayState;
-  state.mEyeResolution = aDisplayInfo.mDisplayState.mEyeResolution;
-  state.mIsMounted = aDisplayInfo.mDisplayState.mIsMounted;
-  memcpy(&state.mEyeFOV, &aDisplayInfo.mDisplayState.mEyeFOV,
-         sizeof(state.mEyeFOV[0]) * VRDisplayState::NumEyes);
-  memcpy(&state.mEyeTranslation, &aDisplayInfo.mDisplayState.mEyeTranslation,
-         sizeof(state.mEyeTranslation[0]) * VRDisplayState::NumEyes);
+  state.eyeResolution = aDisplayInfo.mDisplayState.eyeResolution;
+  state.isMounted = aDisplayInfo.mDisplayState.isMounted;
+  memcpy(&state.eyeFOV, &aDisplayInfo.mDisplayState.eyeFOV,
+         sizeof(state.eyeFOV[0]) * VRDisplayState::NumEyes);
+  memcpy(&state.eyeTranslation, &aDisplayInfo.mDisplayState.eyeTranslation,
+         sizeof(state.eyeTranslation[0]) * VRDisplayState::NumEyes);
 }
 
 void VRDisplayPuppet::Destroy() { StopPresentation(); }
@@ -552,7 +552,7 @@ bool VRDisplayPuppet::SubmitFrame(
 
 void VRDisplayPuppet::Refresh() {
   // We update mIsConneced once per refresh.
-  mDisplayInfo.mDisplayState.mIsConnected = true;
+  mDisplayInfo.mDisplayState.isConnected = true;
 }
 
 VRControllerPuppet::VRControllerPuppet(dom::GamepadHand aHand,

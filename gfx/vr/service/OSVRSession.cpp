@@ -336,17 +336,17 @@ void OSVRSession::InitializeDisplay() {
 
 bool OSVRSession::InitState(mozilla::gfx::VRSystemState& aSystemState) {
   VRDisplayState& state = aSystemState.displayState;
-  strncpy(state.mDisplayName, "OSVR HMD", kVRDisplayNameMaxLen);
-  state.mEightCC = GFX_VR_EIGHTCC('O', 'S', 'V', 'R', ' ', ' ', ' ', ' ');
-  state.mIsConnected = true;
-  state.mIsMounted = false;
-  state.mCapabilityFlags = (VRDisplayCapabilityFlags)(
+  strncpy(state.displayName, "OSVR HMD", kVRDisplayNameMaxLen);
+  state.eightCC = GFX_VR_EIGHTCC('O', 'S', 'V', 'R', ' ', ' ', ' ', ' ');
+  state.isConnected = true;
+  state.isMounted = false;
+  state.capabilityFlags = (VRDisplayCapabilityFlags)(
       (int)VRDisplayCapabilityFlags::Cap_None |
       (int)VRDisplayCapabilityFlags::Cap_Orientation |
       (int)VRDisplayCapabilityFlags::Cap_Position |
       (int)VRDisplayCapabilityFlags::Cap_External |
       (int)VRDisplayCapabilityFlags::Cap_Present);
-  state.mReportsDroppedFrames = false;
+  state.reportsDroppedFrames = false;
 
   // XXX OSVR display topology allows for more than one viewer
   // will assume only one viewer for now (most likely stay that way)
@@ -359,7 +359,7 @@ bool OSVRSession::InitState(mozilla::gfx::VRSystemState& aSystemState) {
     // XXX for now there is only one surface per eye
     osvr_ClientGetViewerEyeSurfaceProjectionClippingPlanes(
         m_display, 0, eye, 0, &left, &right, &bottom, &top);
-    state.mEyeFOV[eye] = SetFromTanRadians(-left, right, -bottom, top);
+    state.eyeFOV[eye] = SetFromTanRadians(-left, right, -bottom, top);
   }
 
   // XXX Assuming there is only one display input for now
@@ -371,8 +371,8 @@ bool OSVRSession::InitState(mozilla::gfx::VRSystemState& aSystemState) {
     OSVR_ViewportDimension l, b, w, h;
     osvr_ClientGetRelativeViewportForViewerEyeSurface(m_display, 0, eye, 0, &l,
                                                       &b, &w, &h);
-    state.mEyeResolution.width = w;
-    state.mEyeResolution.height = h;
+    state.eyeResolution.width = w;
+    state.eyeResolution.height = h;
     OSVR_Pose3 eyePose;
     // Viewer eye pose may not be immediately available, update client context
     // until we get it
@@ -382,9 +382,9 @@ bool OSVRSession::InitState(mozilla::gfx::VRSystemState& aSystemState) {
       osvr_ClientUpdate(m_ctx);
       ret = osvr_ClientGetViewerEyePose(m_display, 0, eye, &eyePose);
     }
-    state.mEyeTranslation[eye].x = eyePose.translation.data[0];
-    state.mEyeTranslation[eye].y = eyePose.translation.data[1];
-    state.mEyeTranslation[eye].z = eyePose.translation.data[2];
+    state.eyeTranslation[eye].x = eyePose.translation.data[0];
+    state.eyeTranslation[eye].y = eyePose.translation.data[1];
+    state.eyeTranslation[eye].z = eyePose.translation.data[2];
 
     Matrix4x4 pose;
     pose.SetRotationFromQuaternion(gfx::Quaternion(
