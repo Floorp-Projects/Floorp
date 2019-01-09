@@ -42,7 +42,6 @@ class RemoteDataDecoder : public MediaDataDecoder,
                     const nsString& aDrmStubId, TaskQueue* aTaskQueue);
 
   // Methods only called on mTaskQueue.
-  RefPtr<FlushPromise> ProcessFlush();
   RefPtr<ShutdownPromise> ProcessShutdown();
   void UpdateInputStatus(int64_t aTimestamp, bool aProcessed);
   void UpdateOutputStatus(RefPtr<MediaData>&& aSample);
@@ -50,16 +49,6 @@ class RemoteDataDecoder : public MediaDataDecoder,
   void DrainComplete();
   void Error(const MediaResult& aError);
   void AssertOnTaskQueue() { MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn()); }
-
-  enum class State { DRAINED, DRAINABLE, DRAINING, SHUTDOWN };
-  void SetState(State aState) {
-    AssertOnTaskQueue();
-    mState = aState;
-  }
-  State GetState() {
-    AssertOnTaskQueue();
-    return mState;
-  }
 
   // Whether the sample will be used.
   virtual bool IsUsefulData(const RefPtr<MediaData>& aSample) { return true; }
@@ -74,20 +63,17 @@ class RemoteDataDecoder : public MediaDataDecoder,
   nsString mDrmStubId;
 
   RefPtr<TaskQueue> mTaskQueue;
-
- private:
-  enum class PendingOp { INCREASE, DECREASE, CLEAR };
-  void UpdatePendingInputStatus(PendingOp aOp);
-  size_t HasPendingInputs() {
-    AssertOnTaskQueue();
-    return mNumPendingInputs > 0;
-  }
-
-  // The following members must only be accessed on mTaskqueue.
+  // Only ever accessed on mTaskqueue.
+  bool mShutdown = false;
   MozPromiseHolder<DecodePromise> mDecodePromise;
   MozPromiseHolder<DecodePromise> mDrainPromise;
+  enum class DrainStatus {
+    DRAINED,
+    DRAINABLE,
+    DRAINING,
+  };
+  DrainStatus mDrainStatus = DrainStatus::DRAINED;
   DecodedData mDecodedData;
-  State mState = State::DRAINED;
   size_t mNumPendingInputs;
 };
 

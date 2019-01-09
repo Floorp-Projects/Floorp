@@ -32,40 +32,33 @@ using media::TimeUnit;
 
 namespace mozilla {
 
-// Hold a reference to the output buffer until we're ready to release it back to
-// the Java codec (for rendering or not).
-class RenderOrReleaseOutput {
+class RemoteVideoDecoder : public RemoteDataDecoder {
  public:
-    RenderOrReleaseOutput(CodecProxy::Param aCodec, Sample::Param aSample)
+  // Hold an output buffer and render it to the surface when the frame is sent
+  // to compositor, or release it if not presented.
+  class RenderOrReleaseOutput : public VideoData::Listener {
+   public:
+    RenderOrReleaseOutput(java::CodecProxy::Param aCodec,
+                          java::Sample::Param aSample)
         : mCodec(aCodec), mSample(aSample) {}
 
-  virtual ~RenderOrReleaseOutput() { ReleaseOutput(false); }
+    ~RenderOrReleaseOutput() { ReleaseOutput(false); }
 
- protected:
+    void OnSentToCompositor() override {
+      ReleaseOutput(true);
+      mCodec = nullptr;
+      mSample = nullptr;
+    }
+
+   private:
     void ReleaseOutput(bool aToRender) {
       if (mCodec && mSample) {
         mCodec->ReleaseOutput(mSample, aToRender);
-      mCodec = nullptr;
-      mSample = nullptr;
       }
     }
 
- private:
-    CodecProxy::GlobalRef mCodec;
-    Sample::GlobalRef mSample;
-  };
-
-class RemoteVideoDecoder : public RemoteDataDecoder {
- public:
-  // Render the output to the surface when the frame is sent
-  // to compositor, or release it if not presented.
-  class CompositeListener : private RenderOrReleaseOutput,
-                            public VideoData::Listener {
-   public:
-    CompositeListener(CodecProxy::Param aCodec, Sample::Param aSample)
-        : RenderOrReleaseOutput(aCodec, aSample) {}
-
-    void OnSentToCompositor() override { ReleaseOutput(true); }
+    java::CodecProxy::GlobalRef mCodec;
+    java::Sample::GlobalRef mSample;
   };
 
   class InputInfo {
@@ -93,8 +86,56 @@ class RemoteVideoDecoder : public RemoteDataDecoder {
     }
 
     void HandleOutput(Sample::Param aSample) override {
-      // aSample will be implicitly converted into a GlobalRef.
-      mDecoder->ProcessOutput(std::move(aSample));
+      UniquePtr<VideoData::Listener> releaseSample(
+          new RenderOrReleaseOutput(mDecoder->mJavaDecoder, aSample));
+
+      BufferInfo::LocalRef info = aSample->Info();
+
+      int32_t flags;
+      bool ok = NS_SUCCEEDED(info->Flags(&flags));
+
+      int32_t offset;
+      ok &= NS_SUCCEEDED(info->Offset(&offset));
+
+      int32_t size;
+      ok &= NS_SUCCEEDED(info->Size(&size));
+
+      int64_t presentationTimeUs;
+      ok &= NS_SUCCEEDED(info->PresentationTimeUs(&presentationTimeUs));
+
+      if (!ok) {
+        HandleError(MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                                RESULT_DETAIL("VideoCallBack::HandleOutput")));
+        return;
+      }
+
+      InputInfo inputInfo;
+      ok = mDecoder->mInputInfos.Find(presentationTimeUs, inputInfo);
+      bool isEOS = !!(flags & MediaCodec::BUFFER_FLAG_END_OF_STREAM);
+      if (!ok && !isEOS) {
+        // Ignore output with no corresponding input.
+        return;
+      }
+
+      if (ok && (size > 0 || presentationTimeUs >= 0)) {
+        RefPtr<layers::Image> img = new SurfaceTextureImage(
+            mDecoder->mSurfaceHandle, inputInfo.mImageSize,
+            false /* NOT continuous */, gl::OriginPos::BottomLeft);
+
+        RefPtr<VideoData> v = VideoData::CreateFromImage(
+            inputInfo.mDisplaySize, offset,
+            TimeUnit::FromMicroseconds(presentationTimeUs),
+            TimeUnit::FromMicroseconds(inputInfo.mDurationUs), img,
+            !!(flags & MediaCodec::BUFFER_FLAG_SYNC_FRAME),
+            TimeUnit::FromMicroseconds(presentationTimeUs));
+
+        v->SetListener(std::move(releaseSample));
+        mDecoder->UpdateOutputStatus(std::move(v));
+      }
+
+      if (isEOS) {
+        mDecoder->DrainComplete();
+      }
     }
 
     void HandleError(const MediaResult& aError) override {
@@ -151,12 +192,14 @@ class RemoteVideoDecoder : public RemoteDataDecoder {
 
   RefPtr<MediaDataDecoder::FlushPromise> Flush() override {
     RefPtr<RemoteVideoDecoder> self = this;
-    return InvokeAsync(mTaskQueue, __func__, [self, this]() {
-      mInputInfos.Clear();
-      mSeekTarget.reset();
-      mLatestOutputTime.reset();
-      return RemoteDataDecoder::ProcessFlush();
-    });
+    return RemoteDataDecoder::Flush()->Then(
+        mTaskQueue, __func__,
+        [self](const FlushPromise::ResolveOrRejectValue& aValue) {
+          self->mInputInfos.Clear();
+          self->mSeekTarget.reset();
+          self->mLatestOutputTime.reset();
+          return FlushPromise::CreateAndResolveOrReject(aValue, __func__);
+        });
   }
 
   RefPtr<MediaDataDecoder::DecodePromise> Decode(
@@ -178,13 +221,8 @@ class RemoteVideoDecoder : public RemoteDataDecoder {
   void SetSeekThreshold(const TimeUnit& aTime) override {
     RefPtr<RemoteVideoDecoder> self = this;
     nsCOMPtr<nsIRunnable> runnable = NS_NewRunnableFunction(
-        "RemoteVideoDecoder::SetSeekThreshold", [self, aTime]() {
-          if (aTime.IsValid()) {
-            self->mSeekTarget = Some(aTime);
-          } else {
-            self->mSeekTarget.reset();
-          }
-        });
+        "RemoteVideoDecoder::SetSeekThreshold",
+        [self, aTime]() { self->mSeekTarget = Some(aTime); });
     nsresult rv = mTaskQueue->Dispatch(runnable.forget());
     MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
     Unused << rv;
@@ -216,74 +254,6 @@ class RemoteVideoDecoder : public RemoteDataDecoder {
   }
 
  private:
-  // Param and LocalRef are only valid for the duration of a JNI method call.
-  // Use GlobalRef as the parameter type to keep the Java object referenced
-  // until running.
-  void ProcessOutput(Sample::GlobalRef&& aSample) {
-    if (!mTaskQueue->IsCurrentThreadIn()) {
-      nsresult rv = mTaskQueue->Dispatch(NewRunnableMethod<Sample::GlobalRef&&>(
-          "RemoteVideoDecoder::ProcessOutput", this,
-          &RemoteVideoDecoder::ProcessOutput, std::move(aSample)));
-      MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-      Unused << rv;
-      return;
-    }
-
-    AssertOnTaskQueue();
-
-    UniquePtr<VideoData::Listener> releaseSample(
-        new CompositeListener(mJavaDecoder, aSample));
-
-    BufferInfo::LocalRef info = aSample->Info();
-    MOZ_ASSERT(info);
-
-    int32_t flags;
-    bool ok = NS_SUCCEEDED(info->Flags(&flags));
-
-    int32_t offset;
-    ok &= NS_SUCCEEDED(info->Offset(&offset));
-
-    int32_t size;
-    ok &= NS_SUCCEEDED(info->Size(&size));
-
-    int64_t presentationTimeUs;
-    ok &= NS_SUCCEEDED(info->PresentationTimeUs(&presentationTimeUs));
-
-    if (!ok) {
-      Error(MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
-                        RESULT_DETAIL("VideoCallBack::HandleOutput")));
-      return;
-    }
-
-    InputInfo inputInfo;
-    ok = mInputInfos.Find(presentationTimeUs, inputInfo);
-    bool isEOS = !!(flags & MediaCodec::BUFFER_FLAG_END_OF_STREAM);
-    if (!ok && !isEOS) {
-      // Ignore output with no corresponding input.
-      return;
-    }
-
-    if (ok && (size > 0 || presentationTimeUs >= 0)) {
-      RefPtr<layers::Image> img = new SurfaceTextureImage(
-          mSurfaceHandle, inputInfo.mImageSize, false /* NOT continuous */,
-          gl::OriginPos::BottomLeft);
-
-      RefPtr<VideoData> v = VideoData::CreateFromImage(
-          inputInfo.mDisplaySize, offset,
-          TimeUnit::FromMicroseconds(presentationTimeUs),
-          TimeUnit::FromMicroseconds(inputInfo.mDurationUs), img,
-          !!(flags & MediaCodec::BUFFER_FLAG_SYNC_FRAME),
-          TimeUnit::FromMicroseconds(presentationTimeUs));
-
-      v->SetListener(std::move(releaseSample));
-      RemoteDataDecoder::UpdateOutputStatus(std::move(v));
-    }
-
-    if (isEOS) {
-      DrainComplete();
-    }
-  }
-
   const VideoInfo mConfig;
   GeckoSurface::GlobalRef mSurface;
   AndroidSurfaceTextureHandle mSurfaceHandle;
@@ -291,8 +261,8 @@ class RemoteVideoDecoder : public RemoteDataDecoder {
   bool mIsCodecSupportAdaptivePlayback = false;
   // Can be accessed on any thread, but only written on during init.
   bool mIsHardwareAccelerated = false;
-  // Accessed on mTaskQueue and reader's TaskQueue. SimpleMap however is
-  // thread-safe, so it's okay to do so.
+  // Accessed on mTaskQueue, reader's TaskQueue and Java callback tread.
+  // SimpleMap however is thread-safe, so it's okay to do so.
   SimpleMap<InputInfo> mInputInfos;
   // Only accessed on the TaskQueue.
   Maybe<TimeUnit> mSeekTarget;
@@ -304,7 +274,8 @@ class RemoteAudioDecoder : public RemoteDataDecoder {
   RemoteAudioDecoder(const AudioInfo& aConfig, MediaFormat::Param aFormat,
                      const nsString& aDrmStubId, TaskQueue* aTaskQueue)
       : RemoteDataDecoder(MediaData::Type::AUDIO_DATA, aConfig.mMimeType,
-                          aFormat, aDrmStubId, aTaskQueue) {
+                          aFormat, aDrmStubId, aTaskQueue),
+        mConfig(aConfig) {
     JNIEnv* const env = jni::GetEnvForThread();
 
     bool formatHasCSD = false;
@@ -349,27 +320,69 @@ class RemoteAudioDecoder : public RemoteDataDecoder {
     }
 
     void HandleOutput(Sample::Param aSample) override {
-      // aSample will be implicitly converted into a GlobalRef.
-      mDecoder->ProcessOutput(std::move(aSample));
-    }
+      BufferInfo::LocalRef info = aSample->Info();
 
-    void HandleOutputFormatChanged(MediaFormat::Param aFormat) override {
-      int32_t outputChannels = 0;
-      aFormat->GetInteger(NS_LITERAL_STRING("channel-count"), &outputChannels);
-      AudioConfig::ChannelLayout layout(outputChannels);
-      if (!layout.IsValid()) {
-        mDecoder->Error(MediaResult(
-            NS_ERROR_DOM_MEDIA_FATAL_ERR,
-            RESULT_DETAIL("Invalid channel layout:%d", outputChannels)));
+      int32_t flags;
+      bool ok = NS_SUCCEEDED(info->Flags(&flags));
+
+      int32_t offset;
+      ok &= NS_SUCCEEDED(info->Offset(&offset));
+
+      int64_t presentationTimeUs;
+      ok &= NS_SUCCEEDED(info->PresentationTimeUs(&presentationTimeUs));
+
+      int32_t size;
+      ok &= NS_SUCCEEDED(info->Size(&size));
+
+      if (!ok) {
+        HandleError(MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                                RESULT_DETAIL("AudioCallBack::HandleOutput")));
         return;
       }
 
-      int32_t sampleRate = 0;
-      aFormat->GetInteger(NS_LITERAL_STRING("sample-rate"), &sampleRate);
-      LOG("Audio output format changed: channels:%d sample rate:%d",
-          outputChannels, sampleRate);
+      if (size > 0) {
+#ifdef MOZ_SAMPLE_TYPE_S16
+        const int32_t numSamples = size / 2;
+#else
+#error We only support 16-bit integer PCM
+#endif
 
-      mDecoder->ProcessOutputFormatChange(outputChannels, sampleRate);
+        const int32_t numFrames = numSamples / mOutputChannels;
+        AlignedAudioBuffer audio(numSamples);
+        if (!audio) {
+          mDecoder->Error(MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__));
+          return;
+        }
+
+        jni::ByteBuffer::LocalRef dest =
+            jni::ByteBuffer::New(audio.get(), size);
+        aSample->WriteToByteBuffer(dest);
+
+        RefPtr<AudioData> data = new AudioData(
+            0, TimeUnit::FromMicroseconds(presentationTimeUs),
+            FramesToTimeUnit(numFrames, mOutputSampleRate), numFrames,
+            std::move(audio), mOutputChannels, mOutputSampleRate);
+
+        mDecoder->UpdateOutputStatus(std::move(data));
+      }
+
+      if ((flags & MediaCodec::BUFFER_FLAG_END_OF_STREAM) != 0) {
+        mDecoder->DrainComplete();
+      }
+    }
+
+    void HandleOutputFormatChanged(MediaFormat::Param aFormat) override {
+      aFormat->GetInteger(NS_LITERAL_STRING("channel-count"), &mOutputChannels);
+      AudioConfig::ChannelLayout layout(mOutputChannels);
+      if (!layout.IsValid()) {
+        mDecoder->Error(MediaResult(
+            NS_ERROR_DOM_MEDIA_FATAL_ERR,
+            RESULT_DETAIL("Invalid channel layout:%d", mOutputChannels)));
+        return;
+      }
+      aFormat->GetInteger(NS_LITERAL_STRING("sample-rate"), &mOutputSampleRate);
+      LOG("Audio output format changed: channels:%d sample rate:%d",
+          mOutputChannels, mOutputSampleRate);
     }
 
     void HandleError(const MediaResult& aError) override {
@@ -378,94 +391,11 @@ class RemoteAudioDecoder : public RemoteDataDecoder {
 
    private:
     RemoteAudioDecoder* mDecoder;
+    int32_t mOutputChannels;
+    int32_t mOutputSampleRate;
   };
 
-  // Param and LocalRef are only valid for the duration of a JNI method call.
-  // Use GlobalRef as the parameter type to keep the Java object referenced
-  // until running.
-  void ProcessOutput(Sample::GlobalRef&& aSample) {
-    if (!mTaskQueue->IsCurrentThreadIn()) {
-      nsresult rv = mTaskQueue->Dispatch(NewRunnableMethod<Sample::GlobalRef&&>(
-          "RemoteAudioDecoder::ProcessOutput", this,
-          &RemoteAudioDecoder::ProcessOutput, std::move(aSample)));
-      MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-      Unused << rv;
-      return;
-    }
-
-    AssertOnTaskQueue();
-
-    RenderOrReleaseOutput autoRelease(mJavaDecoder, aSample);
-
-    BufferInfo::LocalRef info = aSample->Info();
-    MOZ_ASSERT(info);
-
-    int32_t flags;
-    bool ok = NS_SUCCEEDED(info->Flags(&flags));
-
-    int32_t offset;
-    ok &= NS_SUCCEEDED(info->Offset(&offset));
-
-    int64_t presentationTimeUs;
-    ok &= NS_SUCCEEDED(info->PresentationTimeUs(&presentationTimeUs));
-
-    int32_t size;
-    ok &= NS_SUCCEEDED(info->Size(&size));
-
-    if (!ok) {
-      Error(MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__));
-      return;
-    }
-
-    if (size > 0) {
-#ifdef MOZ_SAMPLE_TYPE_S16
-      const int32_t numSamples = size / 2;
-#else
-#error We only support 16-bit integer PCM
-#endif
-
-      const int32_t numFrames = numSamples / mOutputChannels;
-      AlignedAudioBuffer audio(numSamples);
-      if (!audio) {
-        Error(MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__));
-        return;
-      }
-
-      jni::ByteBuffer::LocalRef dest = jni::ByteBuffer::New(audio.get(), size);
-      aSample->WriteToByteBuffer(dest);
-
-      RefPtr<AudioData> data = new AudioData(
-          0, TimeUnit::FromMicroseconds(presentationTimeUs),
-          FramesToTimeUnit(numFrames, mOutputSampleRate), numFrames,
-          std::move(audio), mOutputChannels, mOutputSampleRate);
-
-      UpdateOutputStatus(std::move(data));
-    }
-
-    if ((flags & MediaCodec::BUFFER_FLAG_END_OF_STREAM) != 0) {
-      DrainComplete();
-    }
-  }
-
-  void ProcessOutputFormatChange(int32_t aChannels, int32_t aSampleRate) {
-    if (!mTaskQueue->IsCurrentThreadIn()) {
-      nsresult rv = mTaskQueue->Dispatch(NewRunnableMethod<int32_t, int32_t>(
-          "RemoteAudioDecoder::ProcessOutputFormatChange", this,
-          &RemoteAudioDecoder::ProcessOutputFormatChange, aChannels,
-          aSampleRate));
-      MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-      Unused << rv;
-      return;
-    }
-
-    AssertOnTaskQueue();
-
-    mOutputChannels = aChannels;
-    mOutputSampleRate = aSampleRate;
-  }
-
-  int32_t mOutputChannels;
-  int32_t mOutputSampleRate;
+  const AudioInfo mConfig;
 };
 
 already_AddRefed<MediaDataDecoder> RemoteDataDecoder::CreateAudioDecoder(
@@ -518,38 +448,33 @@ RemoteDataDecoder::RemoteDataDecoder(MediaData::Type aType,
 
 RefPtr<MediaDataDecoder::FlushPromise> RemoteDataDecoder::Flush() {
   RefPtr<RemoteDataDecoder> self = this;
-  return InvokeAsync(mTaskQueue, this, __func__,
-                     &RemoteDataDecoder::ProcessFlush);
-}
-
-RefPtr<MediaDataDecoder::FlushPromise> RemoteDataDecoder::ProcessFlush() {
-  AssertOnTaskQueue();
-
-  mDecodedData = DecodedData();
-  UpdatePendingInputStatus(PendingOp::CLEAR);
-  mDecodePromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
-  mDrainPromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
-  SetState(State::DRAINED);
-  mJavaDecoder->Flush();
-  return FlushPromise::CreateAndResolve(true, __func__);
+  return InvokeAsync(mTaskQueue, __func__, [self, this]() {
+    mDecodedData = DecodedData();
+    mNumPendingInputs = 0;
+    mDecodePromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
+    mDrainPromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
+    mDrainStatus = DrainStatus::DRAINED;
+    mJavaDecoder->Flush();
+    return FlushPromise::CreateAndResolve(true, __func__);
+  });
 }
 
 RefPtr<MediaDataDecoder::DecodePromise> RemoteDataDecoder::Drain() {
   RefPtr<RemoteDataDecoder> self = this;
   return InvokeAsync(mTaskQueue, __func__, [self, this]() {
-    if (GetState() == State::SHUTDOWN) {
+    if (mShutdown) {
       return DecodePromise::CreateAndReject(NS_ERROR_DOM_MEDIA_CANCELED,
                                             __func__);
     }
     RefPtr<DecodePromise> p = mDrainPromise.Ensure(__func__);
-    if (GetState() == State::DRAINED) {
+    if (mDrainStatus == DrainStatus::DRAINED) {
       // There's no operation to perform other than returning any already
       // decoded data.
       ReturnDecodedData();
       return p;
     }
 
-    if (GetState() == State::DRAINING) {
+    if (mDrainStatus == DrainStatus::DRAINING) {
       // Draining operation already pending, let it complete its course.
       return p;
     }
@@ -559,7 +484,7 @@ RefPtr<MediaDataDecoder::DecodePromise> RemoteDataDecoder::Drain() {
     if (NS_FAILED(rv)) {
       return DecodePromise::CreateAndReject(NS_ERROR_OUT_OF_MEMORY, __func__);
     }
-    SetState(State::DRAINING);
+    mDrainStatus = DrainStatus::DRAINING;
     bufferInfo->Set(0, 0, -1, MediaCodec::BUFFER_FLAG_END_OF_STREAM);
     mJavaDecoder->Input(nullptr, bufferInfo, nullptr);
     return p;
@@ -575,7 +500,7 @@ RefPtr<ShutdownPromise> RemoteDataDecoder::Shutdown() {
 
 RefPtr<ShutdownPromise> RemoteDataDecoder::ProcessShutdown() {
   AssertOnTaskQueue();
-  SetState(State::SHUTDOWN);
+  mShutdown = true;
   if (mJavaDecoder) {
     mJavaDecoder->Release();
     mJavaDecoder = nullptr;
@@ -668,28 +593,13 @@ RefPtr<MediaDataDecoder::DecodePromise> RemoteDataDecoder::Decode(
     }
     bufferInfo->Set(0, sample->Size(), sample->mTime.ToMicroseconds(), 0);
 
-    self->SetState(State::DRAINABLE);
+    self->mDrainStatus = DrainStatus::DRAINABLE;
     return self->mJavaDecoder->Input(bytes, bufferInfo,
                                      GetCryptoInfoFromSample(sample))
                ? self->mDecodePromise.Ensure(__func__)
                : DecodePromise::CreateAndReject(
                      MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__), __func__);
   });
-}
-
-void RemoteDataDecoder::UpdatePendingInputStatus(PendingOp aOp) {
-  AssertOnTaskQueue();
-  switch (aOp) {
-    case PendingOp::INCREASE:
-      mNumPendingInputs++;
-      break;
-    case PendingOp::DECREASE:
-      mNumPendingInputs--;
-      break;
-    case PendingOp::CLEAR:
-      mNumPendingInputs = 0;
-      break;
-  }
 }
 
 void RemoteDataDecoder::UpdateInputStatus(int64_t aTimestamp, bool aProcessed) {
@@ -702,25 +612,35 @@ void RemoteDataDecoder::UpdateInputStatus(int64_t aTimestamp, bool aProcessed) {
     return;
   }
   AssertOnTaskQueue();
-  if (GetState() == State::SHUTDOWN) {
+  if (mShutdown) {
     return;
   }
 
   if (!aProcessed) {
-    UpdatePendingInputStatus(PendingOp::INCREASE);
-  } else if (HasPendingInputs()) {
-    UpdatePendingInputStatus(PendingOp::DECREASE);
+    mNumPendingInputs++;
+  } else if (mNumPendingInputs > 0) {
+    mNumPendingInputs--;
   }
 
-  if (!HasPendingInputs() ||  // Input has been processed, request the next one.
+  if (mNumPendingInputs ==
+          0 ||  // Input has been processed, request the next one.
       !mDecodedData.IsEmpty()) {  // Previous output arrived before Decode().
     ReturnDecodedData();
   }
 }
 
 void RemoteDataDecoder::UpdateOutputStatus(RefPtr<MediaData>&& aSample) {
+  if (!mTaskQueue->IsCurrentThreadIn()) {
+    nsresult rv =
+        mTaskQueue->Dispatch(NewRunnableMethod<const RefPtr<MediaData>>(
+            "RemoteDataDecoder::UpdateOutputStatus", this,
+            &RemoteDataDecoder::UpdateOutputStatus, std::move(aSample)));
+    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+    Unused << rv;
+    return;
+  }
   AssertOnTaskQueue();
-  if (GetState() == State::SHUTDOWN) {
+  if (mShutdown) {
     return;
   }
   if (IsUsefulData(aSample)) {
@@ -731,14 +651,15 @@ void RemoteDataDecoder::UpdateOutputStatus(RefPtr<MediaData>&& aSample) {
 
 void RemoteDataDecoder::ReturnDecodedData() {
   AssertOnTaskQueue();
-  MOZ_ASSERT(GetState() != State::SHUTDOWN);
+  MOZ_ASSERT(!mShutdown);
 
   // We only want to clear mDecodedData when we have resolved the promises.
   if (!mDecodePromise.IsEmpty()) {
     mDecodePromise.Resolve(std::move(mDecodedData), __func__);
     mDecodedData = DecodedData();
   } else if (!mDrainPromise.IsEmpty() &&
-             (!mDecodedData.IsEmpty() || GetState() == State::DRAINED)) {
+             (!mDecodedData.IsEmpty() ||
+              mDrainStatus == DrainStatus::DRAINED)) {
     mDrainPromise.Resolve(std::move(mDecodedData), __func__);
     mDecodedData = DecodedData();
   }
@@ -754,10 +675,10 @@ void RemoteDataDecoder::DrainComplete() {
     return;
   }
   AssertOnTaskQueue();
-  if (GetState() == State::SHUTDOWN) {
+  if (mShutdown) {
     return;
   }
-  SetState(State::DRAINED);
+  mDrainStatus = DrainStatus::DRAINED;
   ReturnDecodedData();
   // Make decoder accept input again.
   mJavaDecoder->Flush();
@@ -772,7 +693,7 @@ void RemoteDataDecoder::Error(const MediaResult& aError) {
     return;
   }
   AssertOnTaskQueue();
-  if (GetState() == State::SHUTDOWN) {
+  if (mShutdown) {
     return;
   }
   mDecodePromise.RejectIfExists(aError, __func__);
