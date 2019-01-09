@@ -164,7 +164,12 @@ linux64-clang-tidy:
         using: toolchain-script
         script: build-clang-tidy-linux.sh
         resources:
-            - 'build/clang-plugin/**'
+            - 'build/clang-plugin/**/*.cpp'
+            - 'build/clang-plugin/**/*.h'
+            - 'build/clang-plugin/*.inc'
+            - 'build/clang-plugin/*.py'
+            - 'build/clang-plugin/moz.build'
+            - 'build/clang-plugin/Makefile.in'
             - 'build/build-clang/build-clang.py'
             - 'build/build-clang/clang-tidy-linux64.json'
             - 'taskcluster/scripts/misc/tooltool-download.sh'

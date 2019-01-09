@@ -96,6 +96,9 @@ class ProviderUnifiedComplete extends UrlbarProvider {
     // This is necessary because we insert matches one by one, thus we don't
     // want UnifiedComplete to reuse results.
     params.push(`insert-method:${UrlbarUtils.INSERTMETHOD.APPEND}`);
+    // The Quantum Bar has its own telemetry measurement, thus disable old
+    // telemetry logged by UnifiedComplete.
+    params.push("disable-telemetry");
     if (queryContext.isPrivate) {
       params.push("private-window");
       if (!PrivateBrowsingUtils.permanentPrivateBrowsing) {
