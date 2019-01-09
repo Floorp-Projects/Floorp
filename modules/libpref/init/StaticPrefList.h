@@ -1784,13 +1784,6 @@ VARCACHE_PREF(
   bool, true
 )
 
-// Block 3rd party fingerprinting resources.
-VARCACHE_PREF(
-  "privacy.trackingprotection.fingerprinting.enabled",
-   privacy_trackingprotection_fingerprinting_enabled,
-  bool, true
-)
-
 // Lower the priority of network loads for resources on the tracking protection
 // list.  Note that this requires the
 // privacy.trackingprotection.annotate_channels pref to be on in order to have
