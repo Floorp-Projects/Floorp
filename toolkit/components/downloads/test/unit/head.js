@@ -11,6 +11,7 @@
 
 // Globals
 
+ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 ChromeUtils.import("resource://gre/modules/Integration.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -716,6 +717,20 @@ add_task(function test_common_initialize() {
     function(aRequest, aResponse) {
       aResponse.setStatusLine(aRequest.httpVersion, 450,
                               "Blocked by Windows Parental Controls");
+    });
+
+  // This URL sends some data followed by an RST packet
+  gHttpServer.registerPathHandler("/netreset.txt",
+    function(aRequest, aResponse) {
+      info("Starting response that will be aborted.");
+      aResponse.processAsync();
+      aResponse.setHeader("Content-Type", "text/plain", false);
+      aResponse.write(TEST_DATA_SHORT);
+      promiseExecuteSoon().then(() => {
+        aResponse.abort(null, true);
+        aResponse.finish();
+        info("Aborting response with network reset.");
+      }).then(null, Cu.reportError);
     });
 
   // During unit tests, most of the functions that require profile access or
