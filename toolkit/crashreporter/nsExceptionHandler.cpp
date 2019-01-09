@@ -1398,11 +1398,9 @@ static nsresult LocateExecutable(nsIFile* aXREDirectory,
 nsresult SetExceptionHandler(nsIFile* aXREDirectory, bool force /*=false*/) {
   if (gExceptionHandler) return NS_ERROR_ALREADY_INITIALIZED;
 
-#if defined(DEBUG) || defined(_M_ARM64)
+#if defined(DEBUG)
   // In debug builds, disable the crash reporter by default, and allow to
   // enable it with the MOZ_CRASHREPORTER environment variable.
-  // Likewise for Windows arm64 builds, where the crashreporter doesn't
-  // work properly yet.
   const char* envvar = PR_GetEnv("MOZ_CRASHREPORTER");
   if ((!envvar || !*envvar) && !force) return NS_OK;
 #else
