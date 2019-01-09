@@ -70,14 +70,6 @@ xul|radio[focused="true"] > .radio-check {
   -moz-outline-radius: 100%;
 }
 
-html|*.numberbox-input::-moz-number-spin-up {
-  border-radius: 4px 4px 0 0;
-}
-
-html|*.numberbox-input::-moz-number-spin-down  {
-  border-radius: 0 0 4px 4px;
-}
-
 textbox[type="search"] {
   -moz-appearance: none;
   padding-inline-start: 8px;

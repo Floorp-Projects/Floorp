@@ -68,10 +68,6 @@
   flex: 1;
 }
 
-.popup-notification-button > .button-box {
-  padding: 0;
-}
-
 .popup-notification-dropmarker {
   flex: none;
   padding: 0 15px;

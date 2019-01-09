@@ -30,7 +30,8 @@ add_task(async function test_privateMode() {
   await BrowserTestUtils.browserLoaded(privateWin.gBrowser.selectedBrowser);
 
   // Check that tab and window count is recorded.
-  const scalars = getParentProcessScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN);
+  const scalars = TelemetryTestUtils.getParentProcessScalars(
+    Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN);
 
   ok(!(TOTAL_URI_COUNT in scalars), "We should not track URIs in private mode.");
   ok(!(UNFILTERED_URI_COUNT in scalars), "We should not track URIs in private mode.");
@@ -79,7 +80,8 @@ add_task(async function test_sessionRestore() {
   await tabRestored;
 
   // Check that the URI is not recorded.
-  const scalars = getParentProcessScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN);
+  const scalars = TelemetryTestUtils.getParentProcessScalars(
+    Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN);
 
   ok(!(TOTAL_URI_COUNT in scalars), "We should not track URIs from restored sessions.");
   ok(!(UNFILTERED_URI_COUNT in scalars), "We should not track URIs from restored sessions.");

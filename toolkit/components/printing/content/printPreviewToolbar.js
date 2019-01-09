@@ -24,7 +24,7 @@ customElements.define("printpreview-toolbar", class PrintPreviewToolbar extends 
       <toolbarbutton id="print-preview-navigateHome" class="print-preview-navigate-button tabbable" oncommand="parentNode.navigate(0, 0, 'home');" tooltiptext="&homearrow.tooltip;"/>
       <toolbarbutton id="print-preview-navigatePrevious" class="print-preview-navigate-button tabbable" oncommand="parentNode.navigate(-1, 0, 0);" tooltiptext="&previousarrow.tooltip;"/>
       <hbox align="center" pack="center">
-        <textbox id="print-preview-pageNumber" value="1" min="1" type="number" hidespinbuttons="true" onchange="navigate(0, this.valueNumber, 0);"/>
+        <html:input id="print-preview-pageNumber" hidespinbuttons="true" type="number" value="1" min="1"/>
         <label value="&of.label;"/>
         <label id="print-preview-totalPages" value="1"/>
       </hbox>
@@ -104,6 +104,11 @@ customElements.define("printpreview-toolbar", class PrintPreviewToolbar extends 
     this.mPPBrowser = null;
 
     this.mMessageManager = null;
+
+    this.mOnPageTextBoxChange = () => {
+      this.navigate(0, Number(this.mPageTextBox.value), 0);
+    };
+    this.mPageTextBox.addEventListener("change", this.mOnPageTextBoxChange);
   }
 
   initialize(aPPBrowser) {
@@ -140,6 +145,7 @@ customElements.define("printpreview-toolbar", class PrintPreviewToolbar extends 
 
   disconnectedCallback() {
     window.removeEventListener("unload", this.disconnectedCallback);
+    this.mPageTextBox.removeEventListener("change", this.mOnPageTextBoxChange);
     this.destroy();
   }
 
@@ -188,9 +194,9 @@ customElements.define("printpreview-toolbar", class PrintPreviewToolbar extends 
     } else if (aDirection) {
       // aDirection is either +1 or -1, and allows us to increment
       // or decrement our currently viewed page.
-      this.mPageTextBox.valueNumber += aDirection;
+      this.mPageTextBox.value = Number(this.mPageTextBox.value) + aDirection;
       navType = nsIWebBrowserPrint.PRINTPREVIEW_GOTO_PAGENUM;
-      pageNum = this.mPageTextBox.value; // TODO: back to valueNumber?
+      pageNum = this.mPageTextBox.value;
     } else {
       // We're going to a specific page (aPageNum)
       navType = nsIWebBrowserPrint.PRINTPREVIEW_GOTO_PAGENUM;
