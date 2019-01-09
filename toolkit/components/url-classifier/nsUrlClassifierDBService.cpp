@@ -2700,6 +2700,12 @@ nsUrlClassifierDBService::GetFeatureByName(const nsACString& aFeatureName,
 }
 
 NS_IMETHODIMP
+nsUrlClassifierDBService::GetFeatureNames(nsTArray<nsCString>& aArray) {
+  mozilla::net::UrlClassifierFeatureFactory::GetFeatureNames(aArray);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsUrlClassifierDBService::CreateFeatureWithTables(
     const nsACString& aName, const nsTArray<nsCString>& aBlacklistTables,
     const nsTArray<nsCString>& aWhitelistTables,

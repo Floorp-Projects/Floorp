@@ -26,8 +26,6 @@ namespace base {
 #define DVLOG(x) CHROMIUM_LOG(ERROR)
 #define CHECK_GT DCHECK_GT
 #define CHECK_LT DCHECK_LT
-typedef ::Lock Lock;
-typedef ::AutoLock AutoLock;
 
 // Static table of checksums for all possible 8 bit bytes.
 const uint32_t Histogram::kCrcTable[256] = {

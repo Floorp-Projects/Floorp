@@ -17,6 +17,8 @@ namespace net {
 class UrlClassifierFeatureTrackingAnnotation final
     : public UrlClassifierFeatureBase {
  public:
+  static const char* Name();
+
   static void MaybeShutdown();
 
   static already_AddRefed<UrlClassifierFeatureTrackingAnnotation> MaybeCreate(

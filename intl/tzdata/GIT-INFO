@@ -1,5 +1,5 @@
-commit 6e82c7c389888603f0de84ffe5c60f43f11ee844
+commit 26eea4948c743417c8aa9d1e7fd900d1fb57fbdc
 Author: Yoshito Umaoka <yoshito_umaoka@us.ibm.com>
-Date:   Wed Nov 7 19:23:35 2018 -0500
+Date:   Wed Jan 2 17:39:20 2019 -0500
 
-    ICU-20260 Fix CR/LF issue
+    ICU time zone data updates for tzdata 2018i (including 2018h changes)

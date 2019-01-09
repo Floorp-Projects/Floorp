@@ -8,7 +8,6 @@
 
 #include "MainThreadUtils.h"
 #include "mozilla/Assertions.h"
-#include "mozilla/BasePrincipal.h"
 #include "mozilla/ContentPrincipal.h"
 #include "mozilla/NullPrincipal.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
@@ -24,6 +23,8 @@
 #include "nsTArray.h"
 #include "mozilla/nsRedirectHistoryEntry.h"
 #include "URIUtils.h"
+#include "mozilla/dom/nsCSPUtils.h"
+#include "mozilla/dom/nsCSPContext.h"
 
 namespace mozilla {
 namespace net {
@@ -103,6 +104,29 @@ already_AddRefed<nsIPrincipal> PrincipalInfoToPrincipal(
         MOZ_CRASH("Origin must be available when deserialized");
       }
 
+      if (info.securityPolicies().Length() > 0) {
+        nsCOMPtr<nsIContentSecurityPolicy> csp =
+            do_CreateInstance(NS_CSPCONTEXT_CONTRACTID, &rv);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return nullptr;
+        }
+
+        rv = csp->SetRequestContext(nullptr, principal);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return nullptr;
+        }
+
+        for (auto policy : info.securityPolicies()) {
+          rv = csp->AppendPolicy(policy.policy(), policy.reportOnlyFlag(),
+                                 policy.deliveredViaMetaTagFlag());
+          if (NS_WARN_IF(NS_FAILED(rv))) {
+            return nullptr;
+          }
+        }
+
+        principal->SetCsp(csp);
+      }
+
       return principal.forget();
     }
 
@@ -138,6 +162,34 @@ already_AddRefed<nsIPrincipal> PrincipalInfoToPrincipal(
   }
 
   MOZ_CRASH("Should never get here!");
+}
+
+nsresult PopulateContentSecurityPolicies(
+    nsIContentSecurityPolicy* aCSP,
+    nsTArray<ContentSecurityPolicy>& aPolicies) {
+  MOZ_ASSERT(aCSP);
+  MOZ_ASSERT(aPolicies.IsEmpty());
+  MOZ_ASSERT(NS_IsMainThread());
+
+  uint32_t count = 0;
+  nsresult rv = aCSP->GetPolicyCount(&count);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  for (uint32_t i = 0; i < count; ++i) {
+    const nsCSPPolicy* policy = aCSP->GetPolicy(i);
+    MOZ_ASSERT(policy);
+
+    nsAutoString policyString;
+    policy->toString(policyString);
+
+    aPolicies.AppendElement(
+        ContentSecurityPolicy(policyString, policy->getReportOnlyFlag(),
+                              policy->getDeliveredViaMetaTagFlag()));
+  }
+
+  return NS_OK;
 }
 
 nsresult PrincipalToPrincipalInfo(nsIPrincipal* aPrincipal,
@@ -231,8 +283,20 @@ nsresult PrincipalToPrincipalInfo(nsIPrincipal* aPrincipal,
     return rv;
   }
 
-  *aPrincipalInfo = ContentPrincipalInfo(aPrincipal->OriginAttributesRef(),
-                                         originNoSuffix, spec);
+  nsCOMPtr<nsIContentSecurityPolicy> csp;
+  rv = aPrincipal->GetCsp(getter_AddRefs(csp));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  nsTArray<ContentSecurityPolicy> policies;
+  if (csp) {
+    PopulateContentSecurityPolicies(csp, policies);
+  }
+
+  *aPrincipalInfo =
+      ContentPrincipalInfo(aPrincipal->OriginAttributesRef(), originNoSuffix,
+                           spec, std::move(policies));
   return NS_OK;
 }
 
