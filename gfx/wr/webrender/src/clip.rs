@@ -204,6 +204,7 @@ pub struct ClipChainId(pub u32);
 // node, a bounds error will occur.
 impl ClipChainId {
     pub const NONE: Self = ClipChainId(u32::MAX);
+    pub const INVALID: Self = ClipChainId(0xDEADBEEF);
 }
 
 // A clip chain node is an id for a range of clip sources,

@@ -6,7 +6,6 @@ root:
       # ensure that offsets within reference frames are handled
       # properly when drawing the mask.
       bounds: [10, 10, 100, 100]
-      scroll-policy: scrollable
       items:
       - type: scroll-frame
         bounds: [0, 0, 100, 100]
@@ -15,15 +14,14 @@ root:
           rect: [0, 0, 100, 100]
           repeat: false
         items:
-          - type: rect
-            bounds: [0, 0, 100, 100]
-            color: green
+        - type: rect
+          bounds: [0, 0, 100, 100]
+          color: green
 
     # The same test, but this time ensure that scroll offsets don't affect the masking.
     -
       type: stacking-context
       bounds: [100, 0, 100, 100]
-      scroll-policy: scrollable
       items:
       - type: scroll-frame
         bounds: [10, 10, 100, 300]

@@ -186,13 +186,17 @@ impl Example for App {
         builder: &mut DisplayListBuilder,
         txn: &mut Transaction,
         _: DeviceIntSize,
-        _pipeline_id: PipelineId,
+        pipeline_id: PipelineId,
         _document_id: DocumentId,
     ) {
         let bounds = LayoutRect::new(LayoutPoint::zero(), builder.content_size());
         let info = LayoutPrimitiveInfo::new(bounds);
+        let root_space_and_clip = SpaceAndClipInfo::root_scroll(pipeline_id);
+        let spatial_id = root_space_and_clip.spatial_id;
+
         builder.push_stacking_context(
             &info,
+            spatial_id,
             None,
             TransformStyle::Flat,
             MixBlendMode::Normal,
@@ -217,14 +221,19 @@ impl Example for App {
             BorderRadius::uniform(20.0),
             ClipMode::Clip
         );
-        let id = builder.define_clip(bounds, vec![complex], Some(mask));
-        builder.push_clip_id(id);
+        let clip_id = builder.define_clip(&root_space_and_clip, bounds, vec![complex], Some(mask));
 
-        let info = LayoutPrimitiveInfo::new((100, 100).to(200, 200));
-        builder.push_rect(&info, ColorF::new(0.0, 1.0, 0.0, 1.0));
+        builder.push_rect(
+            &LayoutPrimitiveInfo::new((100, 100).to(200, 200)),
+            &SpaceAndClipInfo { spatial_id, clip_id },
+            ColorF::new(0.0, 1.0, 0.0, 1.0),
+        );
 
-        let info = LayoutPrimitiveInfo::new((250, 100).to(350, 200));
-        builder.push_rect(&info, ColorF::new(0.0, 1.0, 0.0, 1.0));
+        builder.push_rect(
+            &LayoutPrimitiveInfo::new((250, 100).to(350, 200)),
+            &SpaceAndClipInfo { spatial_id, clip_id },
+            ColorF::new(0.0, 1.0, 0.0, 1.0),
+        );
         let border_side = BorderSide {
             color: ColorF::new(0.0, 0.0, 1.0, 1.0),
             style: BorderStyle::Groove,
@@ -239,9 +248,12 @@ impl Example for App {
             do_aa: true,
         });
 
-        let info = LayoutPrimitiveInfo::new((100, 100).to(200, 200));
-        builder.push_border(&info, border_widths, border_details);
-        builder.pop_clip_id();
+        builder.push_border(
+            &LayoutPrimitiveInfo::new((100, 100).to(200, 200)),
+            &SpaceAndClipInfo { spatial_id, clip_id },
+            border_widths,
+            border_details,
+        );
 
         if false {
             // draw box shadow?
@@ -253,10 +265,10 @@ impl Example for App {
             let spread_radius = 0.0;
             let simple_border_radius = 8.0;
             let box_shadow_type = BoxShadowClipMode::Inset;
-            let info = LayoutPrimitiveInfo::with_clip_rect(rect, bounds);
 
             builder.push_box_shadow(
-                &info,
+                &LayoutPrimitiveInfo::with_clip_rect(rect, bounds),
+                &root_space_and_clip,
                 simple_box_bounds,
                 offset,
                 color,
