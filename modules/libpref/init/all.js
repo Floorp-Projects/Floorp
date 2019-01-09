@@ -1069,6 +1069,8 @@ pref("toolkit.scrollbox.verticalScrollDistance", 3);
 pref("toolkit.scrollbox.horizontalScrollDistance", 5);
 pref("toolkit.scrollbox.clickToScroll.scrollDelay", 150);
 
+pref("toolkit.tabbox.switchByScrolling", false);
+
 // Telemetry settings.
 // Server to submit telemetry pings to.
 pref("toolkit.telemetry.server", "https://incoming.telemetry.mozilla.org");
