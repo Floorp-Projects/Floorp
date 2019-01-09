@@ -127,8 +127,9 @@ inline void mozilla::detail::MutexImpl::mutexLock() {
       "mozilla::detail::MutexImpl::mutexLock: pthread_mutex_lock failed");
 }
 
-#ifdef XP_DARWIN
-inline bool mozilla::detail::MutexImpl::mutexTryLock() {
+bool mozilla::detail::MutexImpl::tryLock() { return mutexTryLock(); }
+
+bool mozilla::detail::MutexImpl::mutexTryLock() {
   int result = pthread_mutex_trylock(&platformData()->ptMutex);
   if (result == 0) {
     return true;
@@ -142,7 +143,6 @@ inline bool mozilla::detail::MutexImpl::mutexTryLock() {
       result,
       "mozilla::detail::MutexImpl::mutexTryLock: pthread_mutex_trylock failed");
 }
-#endif
 
 void mozilla::detail::MutexImpl::lock() {
 #ifndef XP_DARWIN

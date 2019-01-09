@@ -33,6 +33,9 @@ class MutexImpl {
  protected:
   MFBT_API void lock();
   MFBT_API void unlock();
+  // We have a separate, forwarding API so internal uses don't have to go
+  // through the PLT.
+  MFBT_API bool tryLock();
 
  private:
   MutexImpl(const MutexImpl&) = delete;
@@ -42,9 +45,7 @@ class MutexImpl {
   bool operator==(const MutexImpl& rhs) = delete;
 
   void mutexLock();
-#ifdef XP_DARWIN
   bool mutexTryLock();
-#endif
 
   PlatformData* platformData();
 
