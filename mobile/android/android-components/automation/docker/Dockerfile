@@ -66,17 +66,13 @@ RUN curl -L https://dl.google.com/android/repository/sdk-tools-linux-${ANDROID_S
     && rm sdk.zip \
     && mkdir -p /build/android-sdk/.android/ \
     && touch /build/android-sdk/.android/repositories.cfg \
-    && yes | sdkmanager --licenses \
-    && sdkmanager --verbose "platform-tools" \
-        "platforms;android-${ANDROID_PLATFORM_VERSION}" \
-        "build-tools;${ANDROID_BUILD_TOOLS}" \
-        "extras;android;m2repository" \
-        "extras;google;m2repository"
+    && yes | sdkmanager --licenses
+
 #----------------------------------------------------------------------------------------------------------------------
 #-- Project -----------------------------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------------------------------------
 
-RUN git clone $PROJECT_REPOSITORY
+RUN git clone --depth=1 $PROJECT_REPOSITORY
 
 WORKDIR /build/android-components
 
@@ -85,13 +81,9 @@ RUN ./gradlew clean \
     && ./gradlew androidDependencies \
     && ./gradlew --stop \
     && ./gradlew --no-daemon assemble \
-    && ./gradlew --no-daemon test \
+    && ./gradlew --no-daemon -Pcoverage test \
     && ./gradlew --no-daemon detekt \
     && ./gradlew --no-daemon ktlint \
-    && ./gradlew --no-daemon docs
+    && ./gradlew --no-daemon docs \
+    && ./gradlew clean
 
-#----------------------------------------------------------------------------------------------------------------------
-# -- Cleanup ----------------------------------------------------------------------------------------------------------
-#----------------------------------------------------------------------------------------------------------------------
-
-RUN apt-get clean
