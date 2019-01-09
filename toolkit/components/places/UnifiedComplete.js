@@ -614,6 +614,7 @@ function Search(searchString, searchParam, autocompleteListener,
   this._disablePrivateActions = params.has("disable-private-actions");
   this._inPrivateWindow = params.has("private-window");
   this._prohibitAutoFill = params.has("prohibit-autofill");
+  this._disableTelemetry = params.has("disable-telemetry");
 
   // Extract the max-results param.
   let maxResults = searchParam.match(REGEXP_MAX_RESULTS);
@@ -856,8 +857,10 @@ Search.prototype = {
       }
     };
 
-    TelemetryStopwatch.start(TELEMETRY_1ST_RESULT, this);
-    TelemetryStopwatch.start(TELEMETRY_6_FIRST_RESULTS, this);
+    if (!this._disableTelemetry) {
+      TelemetryStopwatch.start(TELEMETRY_1ST_RESULT, this);
+      TelemetryStopwatch.start(TELEMETRY_6_FIRST_RESULTS, this);
+    }
 
     // Since we call the synchronous parseSubmissionURL function later, we must
     // wait for the initialization of PlacesSearchAutocompleteProvider first.
@@ -1934,10 +1937,12 @@ Search.prototype = {
     this._currentMatchCount++;
     this._counts[match.type]++;
 
-    if (this._currentMatchCount == 1)
-      TelemetryStopwatch.finish(TELEMETRY_1ST_RESULT, this);
-    if (this._currentMatchCount == 6)
-      TelemetryStopwatch.finish(TELEMETRY_6_FIRST_RESULTS, this);
+    if (!this._disableTelemetry) {
+      if (this._currentMatchCount == 1)
+        TelemetryStopwatch.finish(TELEMETRY_1ST_RESULT, this);
+      if (this._currentMatchCount == 6)
+        TelemetryStopwatch.finish(TELEMETRY_6_FIRST_RESULTS, this);
+    }
     this.notifyResult(true, match.type == UrlbarUtils.MATCH_GROUP.HEURISTIC);
   },
 
@@ -2685,8 +2690,10 @@ UnifiedComplete.prototype = {
    *        results or not.
    */
   finishSearch(notify = false) {
-    TelemetryStopwatch.cancel(TELEMETRY_1ST_RESULT, this);
-    TelemetryStopwatch.cancel(TELEMETRY_6_FIRST_RESULTS, this);
+    if (!this._disableTelemetry) {
+      TelemetryStopwatch.cancel(TELEMETRY_1ST_RESULT, this);
+      TelemetryStopwatch.cancel(TELEMETRY_6_FIRST_RESULTS, this);
+    }
     // Clear state now to avoid race conditions, see below.
     let search = this._currentSearch;
     if (!search)
