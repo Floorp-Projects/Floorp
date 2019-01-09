@@ -80,13 +80,13 @@ def create_parser(mach_interface=False):
     add_arg("--userReady", action='store_true', dest="userready",
             help="Also report the user ready value in supported tests")
     add_arg('--spsProfile', action="store_true", dest="gecko_profile",
-            help="(Deprecated - Use --geckoProfile instead.) Profile the "
+            help="(Deprecated - Use --gecko-profile instead.) Profile the "
                  "run and output the results in $MOZ_UPLOAD_DIR.")
     add_arg('--spsProfileInterval', dest='gecko_profile_interval', type=float,
-            help="(Deprecated - Use --geckoProfileInterval instead.) How "
+            help="(Deprecated - Use --gecko-profile-interval instead.) How "
                  "frequently to take samples (ms)")
     add_arg('--spsProfileEntries', dest="gecko_profile_entries", type=int,
-            help="(Deprecated - Use --geckoProfileEntries instead.) How "
+            help="(Deprecated - Use --gecko-profile-entries instead.) How "
                  "many samples to take with the profiler")
     add_arg('--geckoProfile', action="store_true", dest="gecko_profile",
             help=argparse.SUPPRESS)
