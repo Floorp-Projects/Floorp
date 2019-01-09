@@ -71,3 +71,5 @@ gen-external-apklibs
 # End of https://www.gitignore.io/api/android
 
 
+# macOS
+.DS_Store
