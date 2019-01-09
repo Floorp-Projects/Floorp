@@ -1126,18 +1126,24 @@ void Grouper::ConstructGroups(nsDisplayListBuilder* aDisplayListBuilder,
       currentGroup->EndGroup(aCommandBuilder->mManager, aDisplayListBuilder,
                              aBuilder, aResources, this, startOfCurrentGroup,
                              item);
-      mClipManager.BeginItem(item, aSc);
-      sIndent++;
-      // Note: this call to CreateWebRenderCommands can recurse back into
-      // this function.
-      RenderRootStateManager* manager =
-          aCommandBuilder->mManager->GetRenderRootStateManager();
-      bool createdWRCommands = item->CreateWebRenderCommands(
-          aBuilder, aResources, aSc, manager, mDisplayListBuilder);
-      sIndent--;
-      MOZ_RELEASE_ASSERT(createdWRCommands,
-                         "active transforms should always succeed at creating "
-                         "WebRender commands");
+
+      {
+        auto spaceAndClipChain = mClipManager.SwitchItem(item, aSc);
+        wr::SpaceAndClipChainHelper saccHelper(aBuilder, spaceAndClipChain);
+
+        sIndent++;
+        // Note: this call to CreateWebRenderCommands can recurse back into
+        // this function.
+        RenderRootStateManager* manager =
+            aCommandBuilder->mManager->GetRenderRootStateManager();
+        bool createdWRCommands = item->CreateWebRenderCommands(
+            aBuilder, aResources, aSc, manager, mDisplayListBuilder);
+        sIndent--;
+        MOZ_RELEASE_ASSERT(
+            createdWRCommands,
+            "active transforms should always succeed at creating "
+            "WebRender commands");
+      }
 
       RefPtr<WebRenderGroupData> groupData =
           aCommandBuilder->CreateOrRecycleWebRenderUserData<WebRenderGroupData>(
@@ -1594,7 +1600,10 @@ void WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(
       }
     }
 
-    mClipManager.BeginItem(item, aSc);
+    // This is where we emulate the clip/scroll stack that was previously
+    // implemented on the WR display list side.
+    auto spaceAndClipChain = mClipManager.SwitchItem(item, aSc);
+    wr::SpaceAndClipChainHelper saccHelper(aBuilder, spaceAndClipChain);
 
     {  // scope restoreDoGrouping
       AutoRestore<bool> restoreDoGrouping(mDoGrouping);
@@ -1705,9 +1714,9 @@ void WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(
   mClipManager.EndList(aSc);
 }
 
-void WebRenderCommandBuilder::PushOverrideForASR(const ActiveScrolledRoot* aASR,
-                                                 const wr::WrClipId& aClipId) {
-  mClipManager.PushOverrideForASR(aASR, aClipId);
+void WebRenderCommandBuilder::PushOverrideForASR(
+    const ActiveScrolledRoot* aASR, const wr::WrSpatialId& aSpatialId) {
+  mClipManager.PushOverrideForASR(aASR, aSpatialId);
 }
 
 void WebRenderCommandBuilder::PopOverrideForASR(

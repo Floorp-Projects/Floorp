@@ -60,7 +60,7 @@ class WebRenderCommandBuilder {
                               const nsTArray<wr::WrFilterOp>& aFilters);
 
   void PushOverrideForASR(const ActiveScrolledRoot* aASR,
-                          const wr::WrClipId& aClipId);
+                          const wr::WrSpatialId& aSpatialId);
   void PopOverrideForASR(const ActiveScrolledRoot* aASR);
 
   Maybe<wr::ImageKey> CreateImageKey(

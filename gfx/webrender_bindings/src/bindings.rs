@@ -44,6 +44,9 @@ extern "C" {
 /// The unique id for WR resource identification.
 static NEXT_NAMESPACE_ID: AtomicUsize = AtomicUsize::new(1);
 
+/// Special value handled in this wrapper layer to signify a redundant clip chain.
+pub const ROOT_CLIP_CHAIN: u64 = !0;
+
 fn next_namespace_id() -> IdNamespace {
     IdNamespace(NEXT_NAMESPACE_ID.fetch_add(1, Ordering::Relaxed) as u32)
 }
@@ -113,6 +116,50 @@ pub type WrFontInstanceKey = FontInstanceKey;
 type WrYuvColorSpace = YuvColorSpace;
 /// cbindgen:field-names=[mNamespace, mHandle]
 type WrColorDepth = ColorDepth;
+
+
+#[repr(C)]
+pub struct WrSpaceAndClip {
+    space: WrSpatialId,
+    clip: WrClipId,
+}
+
+impl WrSpaceAndClip {
+    fn from_webrender(sac: SpaceAndClipInfo) -> Self {
+        WrSpaceAndClip {
+            space: WrSpatialId { id: sac.spatial_id.0 },
+            clip: WrClipId::from_webrender(sac.clip_id),
+        }
+    }
+
+    fn to_webrender(&self, pipeline_id: WrPipelineId) -> SpaceAndClipInfo {
+        SpaceAndClipInfo {
+            spatial_id: self.space.to_webrender(pipeline_id),
+            clip_id: self.clip.to_webrender(pipeline_id),
+        }
+    }
+}
+
+#[repr(C)]
+pub struct WrSpaceAndClipChain {
+    space: WrSpatialId,
+    clip_chain: u64,
+}
+
+impl WrSpaceAndClipChain {
+    fn to_webrender(&self, pipeline_id: WrPipelineId) -> SpaceAndClipInfo {
+        //Warning: special case here to support dummy clip chain
+        SpaceAndClipInfo {
+            spatial_id: self.space.to_webrender(pipeline_id),
+            clip_id: if self.clip_chain == ROOT_CLIP_CHAIN {
+                ClipId::root(pipeline_id)
+            } else {
+                ClipId::ClipChain(ClipChainId(self.clip_chain, pipeline_id))
+            },
+        }
+    }
+}
+
 
 fn make_slice<'a, T>(ptr: *const T, len: usize) -> &'a [T] {
     if ptr.is_null() {
@@ -1859,6 +1906,7 @@ pub extern "C" fn wr_dp_clear_save(state: &mut WrState) {
 #[no_mangle]
 pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
                                               mut bounds: LayoutRect,
+                                              spatial_id: WrSpatialId,
                                               clip_node_id: *const WrClipId,
                                               animation: *const WrAnimationProperty,
                                               opacity: *const f32,
@@ -1870,8 +1918,7 @@ pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
                                               filter_count: usize,
                                               is_backface_visible: bool,
                                               glyph_raster_space: RasterSpace,
-                                              out_is_reference_frame: &mut bool,
-                                              out_reference_frame_id: &mut usize) {
+                                              ) -> WrSpatialId {
     debug_assert!(unsafe { !is_in_render_thread() });
 
     let c_filters = make_slice(filters, filter_count);
@@ -1896,10 +1943,6 @@ pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
     }).collect();
 
     let clip_node_id_ref = unsafe { clip_node_id.as_ref() };
-    let clip_node_id = match clip_node_id_ref {
-        Some(clip_node_id) => Some(unpack_clip_id(*clip_node_id, state.pipeline_id)),
-        None => None,
-    };
 
     let transform_ref = unsafe { transform.as_ref() };
     let mut transform_binding = match transform_ref {
@@ -1944,15 +1987,27 @@ pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
         None => None,
     };
 
-    *out_is_reference_frame = transform_binding.is_some() || perspective.is_some();
-    if *out_is_reference_frame {
-        let ref_frame_id = state.frame_builder
-            .dl_builder
-            .push_reference_frame(&bounds, transform_style, transform_binding, perspective);
-        *out_reference_frame_id = pack_clip_id(ref_frame_id);
+    let mut wr_spatial_id = spatial_id.to_webrender(state.pipeline_id);
+    let wr_clip_id = clip_node_id_ref.map(|id| id.to_webrender(state.pipeline_id));
+
+    let is_reference_frame = transform_binding.is_some() || perspective.is_some();
+    // Note: 0 has special meaning in WR land, standing for ROOT_REFERENCE_FRAME.
+    // However, it is never returned by `push_reference_frame`, and we need to return
+    // an option here across FFI, so we take that 0 value for the None semantics.
+    // This is resolved into proper `Maybe<WrSpatialId>` inside `WebRenderAPI::PushStackingContext`.
+    let mut result = WrSpatialId { id: 0 };
+    if is_reference_frame {
+        wr_spatial_id = state.frame_builder.dl_builder.push_reference_frame(
+            &bounds,
+            wr_spatial_id,
+            transform_style,
+            transform_binding,
+            perspective,
+        );
 
         bounds.origin = LayoutPoint::zero();
-        state.frame_builder.dl_builder.push_clip_id(ref_frame_id);
+        result.id = wr_spatial_id.0;
+        assert_ne!(wr_spatial_id.0, 0);
     }
 
     let prim_info = LayoutPrimitiveInfo {
@@ -1964,11 +2019,14 @@ pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
     state.frame_builder
          .dl_builder
          .push_stacking_context(&prim_info,
-                                clip_node_id,
+                                wr_spatial_id,
+                                wr_clip_id,
                                 transform_style,
                                 mix_blend_mode,
                                 &filters,
                                 glyph_raster_space);
+
+    result
 }
 
 #[no_mangle]
@@ -1977,7 +2035,6 @@ pub extern "C" fn wr_dp_pop_stacking_context(state: &mut WrState,
     debug_assert!(unsafe { !is_in_render_thread() });
     state.frame_builder.dl_builder.pop_stacking_context();
     if is_reference_frame {
-        state.frame_builder.dl_builder.pop_clip_id();
         state.frame_builder.dl_builder.pop_reference_frame();
     }
 }
@@ -1989,11 +2046,13 @@ pub extern "C" fn wr_dp_define_clipchain(state: &mut WrState,
                                          clips_count: usize)
                                          -> u64 {
     debug_assert!(unsafe { is_in_main_thread() });
-    let parent = unsafe { parent_clipchain_id.as_ref() }.map(|id| ClipChainId(*id, state.pipeline_id));
+    let parent = unsafe { parent_clipchain_id.as_ref() }
+        .map(|id| ClipChainId(*id, state.pipeline_id));
+
     let pipeline_id = state.pipeline_id;
     let clips = make_slice(clips, clips_count)
         .iter()
-        .map(|id| unpack_clip_id(*id, pipeline_id));
+        .map(|clip_id| clip_id.to_webrender(pipeline_id));
 
     let clipchain_id = state.frame_builder.dl_builder.define_clip_chain(parent, clips);
     assert!(clipchain_id.1 == state.pipeline_id);
@@ -2001,45 +2060,61 @@ pub extern "C" fn wr_dp_define_clipchain(state: &mut WrState,
 }
 
 #[no_mangle]
-pub extern "C" fn wr_dp_define_clip(state: &mut WrState,
-                                    parent_id: *const WrClipId,
-                                    clip_rect: LayoutRect,
-                                    complex: *const ComplexClipRegion,
-                                    complex_count: usize,
-                                    mask: *const WrImageMask)
-                                    -> usize {
-    debug_assert!(unsafe { is_in_main_thread() });
-
-    let parent_id = unsafe { parent_id.as_ref() };
-    let complex_slice = make_slice(complex, complex_count);
-    let complex_iter = complex_slice.iter().cloned();
-    let mask : Option<ImageMask> = unsafe { mask.as_ref() }.map(|x| x.into());
-
-    let clip_id = if let Some(&pid) = parent_id {
-        state.frame_builder.dl_builder.define_clip_with_parent(
-            unpack_clip_id(pid, state.pipeline_id),
-            clip_rect, complex_iter, mask)
-    } else {
-        state.frame_builder.dl_builder.define_clip(clip_rect, complex_iter, mask)
-    };
-    pack_clip_id(clip_id)
+pub extern "C" fn wr_dp_define_clip_with_parent_clip(
+    state: &mut WrState,
+    parent: &WrSpaceAndClip,
+    clip_rect: LayoutRect,
+    complex: *const ComplexClipRegion,
+    complex_count: usize,
+    mask: *const WrImageMask,
+) -> WrClipId {
+    wr_dp_define_clip_impl(
+        &mut state.frame_builder,
+        parent.to_webrender(state.pipeline_id),
+        clip_rect,
+        make_slice(complex, complex_count),
+        unsafe { mask.as_ref() }.map(|m| m.into()),
+    )
 }
 
 #[no_mangle]
-pub extern "C" fn wr_dp_push_clip(state: &mut WrState,
-                                  clip_id: WrClipId) {
-    debug_assert!(unsafe { is_in_main_thread() });
-    state.frame_builder.dl_builder.push_clip_id(unpack_clip_id(clip_id, state.pipeline_id));
+pub extern "C" fn wr_dp_define_clip_with_parent_clip_chain(
+    state: &mut WrState,
+    parent: &WrSpaceAndClipChain,
+    clip_rect: LayoutRect,
+    complex: *const ComplexClipRegion,
+    complex_count: usize,
+    mask: *const WrImageMask,
+) -> WrClipId {
+    wr_dp_define_clip_impl(
+        &mut state.frame_builder,
+        parent.to_webrender(state.pipeline_id),
+        clip_rect,
+        make_slice(complex, complex_count),
+        unsafe { mask.as_ref() }.map(|m| m.into()),
+    )
 }
 
-#[no_mangle]
-pub extern "C" fn wr_dp_pop_clip(state: &mut WrState) {
-    debug_assert!(unsafe { !is_in_render_thread() });
-    state.frame_builder.dl_builder.pop_clip_id();
+fn wr_dp_define_clip_impl(
+    frame_builder: &mut WebRenderFrameBuilder,
+    parent: SpaceAndClipInfo,
+    clip_rect: LayoutRect,
+    complex_regions: &[ComplexClipRegion],
+    mask: Option<ImageMask>,
+) -> WrClipId {
+    debug_assert!(unsafe { is_in_main_thread() });
+    let clip_id = frame_builder.dl_builder.define_clip(
+        &parent,
+        clip_rect,
+        complex_regions.iter().cloned(),
+        mask,
+    );
+    WrClipId::from_webrender(clip_id)
 }
 
 #[no_mangle]
 pub extern "C" fn wr_dp_define_sticky_frame(state: &mut WrState,
+                                            parent_spatial_id: WrSpatialId,
                                             content_rect: LayoutRect,
                                             top_margin: *const f32,
                                             right_margin: *const f32,
@@ -2048,89 +2123,45 @@ pub extern "C" fn wr_dp_define_sticky_frame(state: &mut WrState,
                                             vertical_bounds: StickyOffsetBounds,
                                             horizontal_bounds: StickyOffsetBounds,
                                             applied_offset: LayoutVector2D)
-                                            -> usize {
+                                            -> WrSpatialId {
     assert!(unsafe { is_in_main_thread() });
-    let clip_id = state.frame_builder.dl_builder.define_sticky_frame(
-        content_rect, SideOffsets2D::new(
+    let spatial_id = state.frame_builder.dl_builder.define_sticky_frame(
+        parent_spatial_id.to_webrender(state.pipeline_id),
+        content_rect,
+        SideOffsets2D::new(
             unsafe { top_margin.as_ref() }.cloned(),
             unsafe { right_margin.as_ref() }.cloned(),
             unsafe { bottom_margin.as_ref() }.cloned(),
             unsafe { left_margin.as_ref() }.cloned()
         ),
-        vertical_bounds, horizontal_bounds, applied_offset);
-    pack_clip_id(clip_id)
+        vertical_bounds,
+        horizontal_bounds,
+        applied_offset,
+    );
+
+    WrSpatialId { id: spatial_id.0 }
 }
 
 #[no_mangle]
 pub extern "C" fn wr_dp_define_scroll_layer(state: &mut WrState,
-                                            scroll_id: u64,
-                                            parent_id: *const WrClipId,
+                                            external_scroll_id: u64,
+                                            parent: &WrSpaceAndClip,
                                             content_rect: LayoutRect,
                                             clip_rect: LayoutRect)
-                                            -> usize {
+                                            -> WrSpaceAndClip {
     assert!(unsafe { is_in_main_thread() });
 
-    let parent_id = unsafe { parent_id.as_ref() };
+    let space_and_clip = state.frame_builder.dl_builder.define_scroll_frame(
+        &parent.to_webrender(state.pipeline_id),
+        Some(ExternalScrollId(external_scroll_id, state.pipeline_id)),
+        content_rect,
+        clip_rect,
+        vec![],
+        None,
+        ScrollSensitivity::Script
+    );
 
-    let new_id = if let Some(&pid) = parent_id {
-        state.frame_builder.dl_builder.define_scroll_frame_with_parent(
-            unpack_clip_id(pid, state.pipeline_id),
-            Some(ExternalScrollId(scroll_id, state.pipeline_id)),
-            content_rect,
-            clip_rect,
-            vec![],
-            None,
-            ScrollSensitivity::Script
-        )
-    } else {
-        state.frame_builder.dl_builder.define_scroll_frame(
-            Some(ExternalScrollId(scroll_id, state.pipeline_id)),
-            content_rect,
-            clip_rect,
-            vec![],
-            None,
-            ScrollSensitivity::Script
-        )
-    };
-
-    pack_clip_id(new_id)
-}
-
-#[no_mangle]
-pub extern "C" fn wr_dp_push_scroll_layer(state: &mut WrState,
-                                          scroll_id: WrClipId) {
-    debug_assert!(unsafe { is_in_main_thread() });
-    let clip_id = unpack_clip_id(scroll_id, state.pipeline_id);
-    state.frame_builder.dl_builder.push_clip_id(clip_id);
-}
-
-#[no_mangle]
-pub extern "C" fn wr_dp_pop_scroll_layer(state: &mut WrState) {
-    debug_assert!(unsafe { is_in_main_thread() });
-    state.frame_builder.dl_builder.pop_clip_id();
-}
-
-#[no_mangle]
-pub extern "C" fn wr_dp_push_clip_and_scroll_info(state: &mut WrState,
-                                                  scroll_id: WrClipId,
-                                                  clip_chain_id: *const u64) {
-    debug_assert!(unsafe { is_in_main_thread() });
-
-    let clip_chain_id = unsafe { clip_chain_id.as_ref() };
-    let info = if let Some(&ccid) = clip_chain_id {
-        ClipAndScrollInfo::new(
-            unpack_clip_id(scroll_id, state.pipeline_id),
-            ClipId::ClipChain(ClipChainId(ccid, state.pipeline_id)))
-    } else {
-        ClipAndScrollInfo::simple(unpack_clip_id(scroll_id, state.pipeline_id))
-    };
-    state.frame_builder.dl_builder.push_clip_and_scroll_info(info);
-}
-
-#[no_mangle]
-pub extern "C" fn wr_dp_pop_clip_and_scroll_info(state: &mut WrState) {
-    debug_assert!(unsafe { is_in_main_thread() });
-    state.frame_builder.dl_builder.pop_clip_id();
+    WrSpaceAndClip::from_webrender(space_and_clip)
 }
 
 #[no_mangle]
@@ -2138,6 +2169,7 @@ pub extern "C" fn wr_dp_push_iframe(state: &mut WrState,
                                     rect: LayoutRect,
                                     clip: LayoutRect,
                                     is_backface_visible: bool,
+                                    parent: &WrSpaceAndClipChain,
                                     pipeline_id: WrPipelineId,
                                     ignore_missing_pipeline: bool) {
     debug_assert!(unsafe { is_in_main_thread() });
@@ -2145,7 +2177,12 @@ pub extern "C" fn wr_dp_push_iframe(state: &mut WrState,
     let mut prim_info = LayoutPrimitiveInfo::with_clip_rect(rect, clip.into());
     prim_info.is_backface_visible = is_backface_visible;
     prim_info.tag = state.current_tag;
-    state.frame_builder.dl_builder.push_iframe(&prim_info, pipeline_id, ignore_missing_pipeline);
+    state.frame_builder.dl_builder.push_iframe(
+        &prim_info,
+        &parent.to_webrender(state.pipeline_id),
+        pipeline_id,
+        ignore_missing_pipeline,
+    );
 }
 
 #[no_mangle]
@@ -2153,24 +2190,69 @@ pub extern "C" fn wr_dp_push_rect(state: &mut WrState,
                                   rect: LayoutRect,
                                   clip: LayoutRect,
                                   is_backface_visible: bool,
+                                  parent: &WrSpaceAndClipChain,
                                   color: ColorF) {
     debug_assert!(unsafe { !is_in_render_thread() });
 
     let mut prim_info = LayoutPrimitiveInfo::with_clip_rect(rect, clip.into());
     prim_info.is_backface_visible = is_backface_visible;
     prim_info.tag = state.current_tag;
-    state.frame_builder.dl_builder.push_rect(&prim_info,
-                                             color);
+    state.frame_builder.dl_builder.push_rect(
+        &prim_info,
+        &parent.to_webrender(state.pipeline_id),
+        color,
+    );
+}
+
+#[no_mangle]
+pub extern "C" fn wr_dp_push_rect_with_parent_clip(
+    state: &mut WrState,
+    rect: LayoutRect,
+    clip: LayoutRect,
+    is_backface_visible: bool,
+    parent: &WrSpaceAndClip,
+    color: ColorF,
+) {
+    debug_assert!(unsafe { !is_in_render_thread() });
+
+    let mut prim_info = LayoutPrimitiveInfo::with_clip_rect(rect, clip.into());
+    prim_info.is_backface_visible = is_backface_visible;
+    prim_info.tag = state.current_tag;
+    state.frame_builder.dl_builder.push_rect(
+        &prim_info,
+        &parent.to_webrender(state.pipeline_id),
+        color,
+    );
 }
 
 #[no_mangle]
 pub extern "C" fn wr_dp_push_clear_rect(state: &mut WrState,
                                         rect: LayoutRect,
-                                        clip: LayoutRect) {
+                                        clip: LayoutRect,
+                                        parent: &WrSpaceAndClipChain) {
     debug_assert!(unsafe { !is_in_render_thread() });
 
     let prim_info = LayoutPrimitiveInfo::with_clip_rect(rect, clip.into());
-    state.frame_builder.dl_builder.push_clear_rect(&prim_info);
+    state.frame_builder.dl_builder.push_clear_rect(
+        &prim_info,
+        &parent.to_webrender(state.pipeline_id),
+    );
+}
+
+#[no_mangle]
+pub extern "C" fn wr_dp_push_clear_rect_with_parent_clip(
+    state: &mut WrState,
+    rect: LayoutRect,
+    clip: LayoutRect,
+    parent: &WrSpaceAndClip,
+) {
+    debug_assert!(unsafe { !is_in_render_thread() });
+
+    let prim_info = LayoutPrimitiveInfo::with_clip_rect(rect, clip.into());
+    state.frame_builder.dl_builder.push_clear_rect(
+        &prim_info,
+        &parent.to_webrender(state.pipeline_id),
+    );
 }
 
 #[no_mangle]
@@ -2178,6 +2260,7 @@ pub extern "C" fn wr_dp_push_image(state: &mut WrState,
                                    bounds: LayoutRect,
                                    clip: LayoutRect,
                                    is_backface_visible: bool,
+                                   parent: &WrSpaceAndClipChain,
                                    stretch_size: LayoutSize,
                                    tile_spacing: LayoutSize,
                                    image_rendering: ImageRendering,
@@ -2197,6 +2280,7 @@ pub extern "C" fn wr_dp_push_image(state: &mut WrState,
     state.frame_builder
          .dl_builder
          .push_image(&prim_info,
+                     &parent.to_webrender(state.pipeline_id),
                      stretch_size,
                      tile_spacing,
                      image_rendering,
@@ -2211,6 +2295,7 @@ pub extern "C" fn wr_dp_push_yuv_planar_image(state: &mut WrState,
                                               bounds: LayoutRect,
                                               clip: LayoutRect,
                                               is_backface_visible: bool,
+                                              parent: &WrSpaceAndClipChain,
                                               image_key_0: WrImageKey,
                                               image_key_1: WrImageKey,
                                               image_key_2: WrImageKey,
@@ -2225,6 +2310,7 @@ pub extern "C" fn wr_dp_push_yuv_planar_image(state: &mut WrState,
     state.frame_builder
          .dl_builder
          .push_yuv_image(&prim_info,
+                         &parent.to_webrender(state.pipeline_id),
                          YuvData::PlanarYCbCr(image_key_0, image_key_1, image_key_2),
                          color_depth,
                          color_space,
@@ -2237,6 +2323,7 @@ pub extern "C" fn wr_dp_push_yuv_NV12_image(state: &mut WrState,
                                             bounds: LayoutRect,
                                             clip: LayoutRect,
                                             is_backface_visible: bool,
+                                            parent: &WrSpaceAndClipChain,
                                             image_key_0: WrImageKey,
                                             image_key_1: WrImageKey,
                                             color_depth: WrColorDepth,
@@ -2250,6 +2337,7 @@ pub extern "C" fn wr_dp_push_yuv_NV12_image(state: &mut WrState,
     state.frame_builder
          .dl_builder
          .push_yuv_image(&prim_info,
+                         &parent.to_webrender(state.pipeline_id),
                          YuvData::NV12(image_key_0, image_key_1),
                          color_depth,
                          color_space,
@@ -2262,6 +2350,7 @@ pub extern "C" fn wr_dp_push_yuv_interleaved_image(state: &mut WrState,
                                                    bounds: LayoutRect,
                                                    clip: LayoutRect,
                                                    is_backface_visible: bool,
+                                                   parent: &WrSpaceAndClipChain,
                                                    image_key_0: WrImageKey,
                                                    color_depth: WrColorDepth,
                                                    color_space: WrYuvColorSpace,
@@ -2274,6 +2363,7 @@ pub extern "C" fn wr_dp_push_yuv_interleaved_image(state: &mut WrState,
     state.frame_builder
          .dl_builder
          .push_yuv_image(&prim_info,
+                         &parent.to_webrender(state.pipeline_id),
                          YuvData::InterleavedYCbCr(image_key_0),
                          color_depth,
                          color_space,
@@ -2285,6 +2375,7 @@ pub extern "C" fn wr_dp_push_text(state: &mut WrState,
                                   bounds: LayoutRect,
                                   clip: LayoutRect,
                                   is_backface_visible: bool,
+                                  parent: &WrSpaceAndClipChain,
                                   color: ColorF,
                                   font_key: WrFontInstanceKey,
                                   glyphs: *const GlyphInstance,
@@ -2300,6 +2391,7 @@ pub extern "C" fn wr_dp_push_text(state: &mut WrState,
     state.frame_builder
          .dl_builder
          .push_text(&prim_info,
+                    &parent.to_webrender(state.pipeline_id),
                     &glyph_slice,
                     font_key,
                     color,
@@ -2311,13 +2403,18 @@ pub extern "C" fn wr_dp_push_shadow(state: &mut WrState,
                                     bounds: LayoutRect,
                                     clip: LayoutRect,
                                     is_backface_visible: bool,
+                                    parent: &WrSpaceAndClipChain,
                                     shadow: Shadow) {
     debug_assert!(unsafe { is_in_main_thread() });
 
     let mut prim_info = LayoutPrimitiveInfo::with_clip_rect(bounds, clip.into());
     prim_info.is_backface_visible = is_backface_visible;
     prim_info.tag = state.current_tag;
-    state.frame_builder.dl_builder.push_shadow(&prim_info, shadow.into());
+    state.frame_builder.dl_builder.push_shadow(
+        &prim_info,
+        &parent.to_webrender(state.pipeline_id),
+        shadow.into(),
+    );
 }
 
 #[no_mangle]
@@ -2331,6 +2428,7 @@ pub extern "C" fn wr_dp_pop_all_shadows(state: &mut WrState) {
 pub extern "C" fn wr_dp_push_line(state: &mut WrState,
                                   clip: &LayoutRect,
                                   is_backface_visible: bool,
+                                  parent: &WrSpaceAndClipChain,
                                   bounds: &LayoutRect,
                                   wavy_line_thickness: f32,
                                   orientation: LineOrientation,
@@ -2344,6 +2442,7 @@ pub extern "C" fn wr_dp_push_line(state: &mut WrState,
     state.frame_builder
          .dl_builder
          .push_line(&prim_info,
+                    &parent.to_webrender(state.pipeline_id),
                     wavy_line_thickness,
                     orientation,
                     color,
@@ -2356,6 +2455,7 @@ pub extern "C" fn wr_dp_push_border(state: &mut WrState,
                                     rect: LayoutRect,
                                     clip: LayoutRect,
                                     is_backface_visible: bool,
+                                    parent: &WrSpaceAndClipChain,
                                     do_aa: AntialiasBorder,
                                     widths: LayoutSideOffsets,
                                     top: BorderSide,
@@ -2380,6 +2480,7 @@ pub extern "C" fn wr_dp_push_border(state: &mut WrState,
     state.frame_builder
          .dl_builder
          .push_border(&prim_info,
+                      &parent.to_webrender(state.pipeline_id),
                       widths,
                       border_details);
 }
@@ -2389,6 +2490,7 @@ pub extern "C" fn wr_dp_push_border_image(state: &mut WrState,
                                           rect: LayoutRect,
                                           clip: LayoutRect,
                                           is_backface_visible: bool,
+                                          parent: &WrSpaceAndClipChain,
                                           widths: LayoutSideOffsets,
                                           image: WrImageKey,
                                           width: i32,
@@ -2411,8 +2513,12 @@ pub extern "C" fn wr_dp_push_border_image(state: &mut WrState,
     let mut prim_info = LayoutPrimitiveInfo::with_clip_rect(rect, clip.into());
     prim_info.is_backface_visible = is_backface_visible;
     prim_info.tag = state.current_tag;
-    state.frame_builder .dl_builder
-         .push_border(&prim_info, widths.into(), border_details);
+    state.frame_builder.dl_builder.push_border(
+        &prim_info,
+        &parent.to_webrender(state.pipeline_id),
+        widths.into(),
+        border_details,
+    );
 }
 
 #[no_mangle]
@@ -2420,6 +2526,7 @@ pub extern "C" fn wr_dp_push_border_gradient(state: &mut WrState,
                                              rect: LayoutRect,
                                              clip: LayoutRect,
                                              is_backface_visible: bool,
+                                             parent: &WrSpaceAndClipChain,
                                              widths: LayoutSideOffsets,
                                              width: i32,
                                              height: i32,
@@ -2456,9 +2563,12 @@ pub extern "C" fn wr_dp_push_border_gradient(state: &mut WrState,
     let mut prim_info = LayoutPrimitiveInfo::with_clip_rect(rect, clip.into());
     prim_info.is_backface_visible = is_backface_visible;
     prim_info.tag = state.current_tag;
-    state.frame_builder
-         .dl_builder
-         .push_border(&prim_info, widths.into(), border_details);
+    state.frame_builder.dl_builder.push_border(
+        &prim_info,
+        &parent.to_webrender(state.pipeline_id),
+        widths.into(),
+        border_details,
+    );
 }
 
 #[no_mangle]
@@ -2466,6 +2576,7 @@ pub extern "C" fn wr_dp_push_border_radial_gradient(state: &mut WrState,
                                                     rect: LayoutRect,
                                                     clip: LayoutRect,
                                                     is_backface_visible: bool,
+                                                    parent: &WrSpaceAndClipChain,
                                                     widths: LayoutSideOffsets,
                                                     center: LayoutPoint,
                                                     radius: LayoutSize,
@@ -2505,9 +2616,12 @@ pub extern "C" fn wr_dp_push_border_radial_gradient(state: &mut WrState,
     let mut prim_info = LayoutPrimitiveInfo::with_clip_rect(rect, clip.into());
     prim_info.is_backface_visible = is_backface_visible;
     prim_info.tag = state.current_tag;
-    state.frame_builder
-         .dl_builder
-         .push_border(&prim_info, widths.into(), border_details);
+    state.frame_builder.dl_builder.push_border(
+        &prim_info,
+        &parent.to_webrender(state.pipeline_id),
+        widths.into(),
+        border_details,
+    );
 }
 
 #[no_mangle]
@@ -2515,6 +2629,7 @@ pub extern "C" fn wr_dp_push_linear_gradient(state: &mut WrState,
                                              rect: LayoutRect,
                                              clip: LayoutRect,
                                              is_backface_visible: bool,
+                                             parent: &WrSpaceAndClipChain,
                                              start_point: LayoutPoint,
                                              end_point: LayoutPoint,
                                              stops: *const GradientStop,
@@ -2536,12 +2651,13 @@ pub extern "C" fn wr_dp_push_linear_gradient(state: &mut WrState,
     let mut prim_info = LayoutPrimitiveInfo::with_clip_rect(rect, clip.into());
     prim_info.is_backface_visible = is_backface_visible;
     prim_info.tag = state.current_tag;
-    state.frame_builder
-         .dl_builder
-         .push_gradient(&prim_info,
-                        gradient,
-                        tile_size.into(),
-                        tile_spacing.into());
+    state.frame_builder.dl_builder.push_gradient(
+        &prim_info,
+        &parent.to_webrender(state.pipeline_id),
+        gradient,
+        tile_size.into(),
+        tile_spacing.into(),
+    );
 }
 
 #[no_mangle]
@@ -2549,6 +2665,7 @@ pub extern "C" fn wr_dp_push_radial_gradient(state: &mut WrState,
                                              rect: LayoutRect,
                                              clip: LayoutRect,
                                              is_backface_visible: bool,
+                                             parent: &WrSpaceAndClipChain,
                                              center: LayoutPoint,
                                              radius: LayoutSize,
                                              stops: *const GradientStop,
@@ -2570,12 +2687,12 @@ pub extern "C" fn wr_dp_push_radial_gradient(state: &mut WrState,
     let mut prim_info = LayoutPrimitiveInfo::with_clip_rect(rect, clip.into());
     prim_info.is_backface_visible = is_backface_visible;
     prim_info.tag = state.current_tag;
-    state.frame_builder
-         .dl_builder
-         .push_radial_gradient(&prim_info,
-                               gradient,
-                               tile_size,
-                               tile_spacing);
+    state.frame_builder.dl_builder.push_radial_gradient(
+        &prim_info,
+        &parent.to_webrender(state.pipeline_id),
+        gradient,
+        tile_size,
+        tile_spacing);
 }
 
 #[no_mangle]
@@ -2583,6 +2700,7 @@ pub extern "C" fn wr_dp_push_box_shadow(state: &mut WrState,
                                         rect: LayoutRect,
                                         clip: LayoutRect,
                                         is_backface_visible: bool,
+                                        parent: &WrSpaceAndClipChain,
                                         box_bounds: LayoutRect,
                                         offset: LayoutVector2D,
                                         color: ColorF,
@@ -2598,6 +2716,7 @@ pub extern "C" fn wr_dp_push_box_shadow(state: &mut WrState,
     state.frame_builder
          .dl_builder
          .push_box_shadow(&prim_info,
+                          &parent.to_webrender(state.pipeline_id),
                           box_bounds,
                           offset,
                           color,
@@ -2714,37 +2833,48 @@ extern "C" {
 }
 
 #[no_mangle]
-pub extern "C" fn wr_root_scroll_node_id() -> usize {
+pub extern "C" fn wr_root_scroll_node_id() -> WrSpatialId {
     // The PipelineId doesn't matter here, since we just want the numeric part of the id
     // produced for any given root reference frame.
-    pack_clip_id(ClipId::root_scroll_node(PipelineId(0, 0)))
+    WrSpatialId { id: SpatialId::root_scroll_node(PipelineId(0, 0)).0 }
 }
 
-fn pack_clip_id(id: ClipId) -> usize {
-    let (id, type_value) = match id {
-        ClipId::Spatial(id, _) => (id, 0),
-        ClipId::Clip(id, _) => (id, 1),
-        ClipId::ClipChain(..) => unreachable!("Tried to pack a clip chain id"),
-    };
+#[no_mangle]
+pub extern "C" fn wr_root_clip_id() -> WrClipId {
+    // The PipelineId doesn't matter here, since we just want the numeric part of the id
+    // produced for any given root reference frame.
+    WrClipId::from_webrender(ClipId::root(PipelineId(0, 0)))
+ }
 
-    assert!(id <= usize::max_value() >> 1);
-    return (id << 1) + type_value;
-}
 
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct WrClipId {
-    id: usize
+    id: usize,
 }
 
-fn unpack_clip_id(id: WrClipId, pipeline_id: PipelineId) -> ClipId {
-    let type_value = id.id & 0b01;
-    let id = id.id >> 1;
+impl WrClipId {
+    fn to_webrender(&self, pipeline_id: WrPipelineId) -> ClipId {
+        ClipId::Clip(self.id, pipeline_id)
+    }
 
-    match type_value {
-        0 => ClipId::Spatial(id, pipeline_id),
-        1 => ClipId::Clip(id, pipeline_id),
-        _ => unreachable!("Got a bizarre value for the clip type"),
+    fn from_webrender(clip_id: ClipId) -> Self {
+        match clip_id {
+            ClipId::Clip(id, _) => WrClipId { id },
+            ClipId::ClipChain(_) => panic!("Unexpected clip chain"),
+        }
+    }
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct WrSpatialId {
+    id: usize,
+}
+
+impl WrSpatialId {
+    fn to_webrender(&self, pipeline_id: WrPipelineId) -> SpatialId {
+        SpatialId::new(self.id, pipeline_id)
     }
 }
 

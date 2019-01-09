@@ -328,7 +328,7 @@ class DisplayListBuilder {
   void Finalize(wr::LayoutSize& aOutContentSize,
                 wr::BuiltDisplayList& aOutDisplayList);
 
-  Maybe<wr::WrClipId> PushStackingContext(
+  Maybe<wr::WrSpatialId> PushStackingContext(
       const wr::LayoutRect&
           aBounds,  // TODO: We should work with strongly typed rects
       const wr::WrClipId* aClipNodeId,
@@ -343,39 +343,37 @@ class DisplayListBuilder {
                                     const nsTArray<wr::WrClipId>& aClips);
 
   wr::WrClipId DefineClip(
-      const Maybe<wr::WrClipId>& aParentId, const wr::LayoutRect& aClipRect,
+      const Maybe<wr::WrSpaceAndClip>& aParent, const wr::LayoutRect& aClipRect,
       const nsTArray<wr::ComplexClipRegion>* aComplex = nullptr,
       const wr::WrImageMask* aMask = nullptr);
-  void PushClip(const wr::WrClipId& aClipId);
-  void PopClip();
 
-  wr::WrClipId DefineStickyFrame(const wr::LayoutRect& aContentRect,
-                                 const float* aTopMargin,
-                                 const float* aRightMargin,
-                                 const float* aBottomMargin,
-                                 const float* aLeftMargin,
-                                 const StickyOffsetBounds& aVerticalBounds,
-                                 const StickyOffsetBounds& aHorizontalBounds,
-                                 const wr::LayoutVector2D& aAppliedOffset);
+  wr::WrSpatialId DefineStickyFrame(const wr::LayoutRect& aContentRect,
+                                    const float* aTopMargin,
+                                    const float* aRightMargin,
+                                    const float* aBottomMargin,
+                                    const float* aLeftMargin,
+                                    const StickyOffsetBounds& aVerticalBounds,
+                                    const StickyOffsetBounds& aHorizontalBounds,
+                                    const wr::LayoutVector2D& aAppliedOffset);
 
-  Maybe<wr::WrClipId> GetScrollIdForDefinedScrollLayer(
+  Maybe<wr::WrSpaceAndClip> GetScrollIdForDefinedScrollLayer(
       layers::ScrollableLayerGuid::ViewID aViewId) const;
-  wr::WrClipId DefineScrollLayer(
+  wr::WrSpaceAndClip DefineScrollLayer(
       const layers::ScrollableLayerGuid::ViewID& aViewId,
-      const Maybe<wr::WrClipId>& aParentId,
+      const Maybe<wr::WrSpaceAndClip>& aParent,
       const wr::LayoutRect&
           aContentRect,  // TODO: We should work with strongly typed rects
       const wr::LayoutRect& aClipRect);
 
-  void PushClipAndScrollInfo(const wr::WrClipId* aScrollId,
-                             const wr::WrClipChainId* aClipChainId,
-                             const Maybe<wr::LayoutRect>& aClipChainLeaf);
-  void PopClipAndScrollInfo(const wr::WrClipId* aScrollId);
-
   void PushRect(const wr::LayoutRect& aBounds, const wr::LayoutRect& aClip,
                 bool aIsBackfaceVisible, const wr::ColorF& aColor);
+  void PushRoundedRect(const wr::LayoutRect& aBounds,
+                       const wr::LayoutRect& aClip, bool aIsBackfaceVisible,
+                       const wr::ColorF& aColor);
 
   void PushClearRect(const wr::LayoutRect& aBounds);
+  void PushClearRectWithComplexRegion(const wr::LayoutRect& aBounds,
+                                      const wr::ComplexClipRegion& aRegion);
 
   void PushLinearGradient(const wr::LayoutRect& aBounds,
                           const wr::LayoutRect& aClip, bool aIsBackfaceVisible,
@@ -510,6 +508,10 @@ class DisplayListBuilder {
   // Try to avoid using this when possible.
   wr::WrState* Raw() { return mWrState; }
 
+  void SetClipChainLeaf(const Maybe<wr::LayoutRect>& aClipRect) {
+    mClipChainLeaf = aClipRect;
+  }
+
   // A chain of RAII objects, each holding a (ASR, ViewID) tuple of data. The
   // topmost object is pointed to by the mActiveFixedPosTracker pointer in
   // the wr::DisplayListBuilder.
@@ -542,8 +544,10 @@ class DisplayListBuilder {
   // Track each scroll id that we encountered. We use this structure to
   // ensure that we don't define a particular scroll layer multiple times,
   // as that results in undefined behaviour in WR.
-  std::unordered_map<layers::ScrollableLayerGuid::ViewID, wr::WrClipId>
+  std::unordered_map<layers::ScrollableLayerGuid::ViewID, wr::WrSpaceAndClip>
       mScrollIds;
+
+  wr::WrSpaceAndClipChain mCurrentSpaceAndClipChain;
 
   // Contains the current leaf of the clip chain to be merged with the
   // display item's clip rect when pushing an item. May be set to Nothing() if
@@ -556,6 +560,40 @@ class DisplayListBuilder {
   FixedPosScrollTargetTracker* mActiveFixedPosTracker;
 
   friend class WebRenderAPI;
+  friend class SpaceAndClipChainHelper;
+};
+
+// This is a RAII class that overrides the current Wr's SpatialId and
+// ClipChainId.
+class MOZ_RAII SpaceAndClipChainHelper {
+ public:
+  SpaceAndClipChainHelper(DisplayListBuilder& aBuilder,
+                          wr::WrSpaceAndClipChain aSpaceAndClipChain
+                              MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : mBuilder(aBuilder),
+        mOldSpaceAndClipChain(aBuilder.mCurrentSpaceAndClipChain) {
+    aBuilder.mCurrentSpaceAndClipChain = aSpaceAndClipChain;
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+  }
+  SpaceAndClipChainHelper(DisplayListBuilder& aBuilder,
+                          wr::WrSpatialId aSpatialId
+                              MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : mBuilder(aBuilder),
+        mOldSpaceAndClipChain(aBuilder.mCurrentSpaceAndClipChain) {
+    aBuilder.mCurrentSpaceAndClipChain.space = aSpatialId;
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+  }
+
+  ~SpaceAndClipChainHelper() {
+    mBuilder.mCurrentSpaceAndClipChain = mOldSpaceAndClipChain;
+  }
+
+ private:
+  SpaceAndClipChainHelper(const SpaceAndClipChainHelper&);
+
+  DisplayListBuilder& mBuilder;
+  wr::WrSpaceAndClipChain mOldSpaceAndClipChain;
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 Maybe<wr::ImageFormat> SurfaceFormatToImageFormat(gfx::SurfaceFormat aFormat);
