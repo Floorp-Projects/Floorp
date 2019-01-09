@@ -9,14 +9,6 @@
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
    xmlns:xbl="http://www.mozilla.org/xbl">
 
-  <binding id="scrollbox" extends="chrome://global/content/bindings/general.xml#basecontrol">
-    <content>
-      <xul:box class="box-inherit scrollbox-innerbox" xbl:inherits="orient,align,pack,dir" flex="1">
-        <children/>
-      </xul:box>
-    </content>
-  </binding>
-
   <binding id="arrowscrollbox" extends="chrome://global/content/bindings/general.xml#basecontrol">
     <content>
       <xul:toolbarbutton class="scrollbutton-up"
