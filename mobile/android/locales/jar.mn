@@ -67,6 +67,9 @@ relativesrcdir dom/locales:
 # Note: All rules must be wildcards, as localized files are optional
 # Only run this if we're not en-US, as en-US is already built
 # by toolkit/locales/jar.mn.
+# If you're including files from a subdirectory, ensure that you're
+# putting them into the corresponding subdirectory in the target.
+# The wildcard ** does that for us in toolkit.
 
 #define EN_US en-US
 #if AB_CD != EN_US
@@ -74,8 +77,10 @@ relativesrcdir dom/locales:
 relativesrcdir toolkit/locales:
 #about:crashes
   crashreporter                                    (%crashreporter/**/*.ftl)
-#endif
 #about:about
-  toolkit                                          (%toolkit/about/*About.ftl)
+  toolkit/about                                    (%toolkit/about/*About.ftl)
 #about:support
-  toolkit                                          (%toolkit/about/*Support.ftl)
+  toolkit/about                                    (%toolkit/about/*Support.ftl)
+#endif
+# Do not add files below the endif. Reviewers, expand more context above
+# for comments.
