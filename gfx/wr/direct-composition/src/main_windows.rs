@@ -142,12 +142,21 @@ impl Rectangle {
             api::BorderRadius::uniform(20.),
             api::ClipMode::Clip
         );
-        let clip_id = builder.define_clip(rect, vec![region], None);
-        builder.push_clip_id(clip_id);
+        let clip_id = builder.define_clip(
+            &api::SpaceAndClipInfo::root_scroll(pipeline_id),
+            rect,
+            vec![region],
+            None,
+        );
 
-        builder.push_rect(&api::PrimitiveInfo::new(rect), self.color);
-
-        builder.pop_clip_id();
+        builder.push_rect(
+            &api::PrimitiveInfo::new(rect),
+            &api::SpaceAndClipInfo {
+                spatial_id: api::SpatialId::root_scroll_node(pipeline_id),
+                clip_id,
+            },
+            self.color,
+        );
 
         let mut transaction = api::Transaction::new();
         transaction.set_display_list(

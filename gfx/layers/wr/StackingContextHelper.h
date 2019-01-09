@@ -66,7 +66,7 @@ class MOZ_RAII StackingContextHelper {
   Maybe<gfx::Matrix4x4> GetDeferredTransformMatrix() const;
 
   bool AffectsClipPositioning() const { return mAffectsClipPositioning; }
-  Maybe<wr::WrClipId> ReferenceFrameId() const { return mReferenceFrameId; }
+  Maybe<wr::WrSpatialId> ReferenceFrameId() const { return mReferenceFrameId; }
 
  private:
   wr::DisplayListBuilder* mBuilder;
@@ -81,7 +81,8 @@ class MOZ_RAII StackingContextHelper {
   // existence of a non-animated identity transform does not affect snapping.
   gfx::Matrix mSnappingSurfaceTransform;
   bool mAffectsClipPositioning;
-  Maybe<wr::WrClipId> mReferenceFrameId;
+  Maybe<wr::WrSpatialId> mReferenceFrameId;
+  Maybe<wr::SpaceAndClipChainHelper> mSpaceAndClipChainHelper;
 
   // The deferred transform item is used when building the WebRenderScrollData
   // structure. The backstory is that APZ needs to know about transforms that

@@ -108,7 +108,7 @@ performance impacts on WebRender.
 # Clipping and Positioning in the Display List
 
 Each non-structural WebRender display list item has
- * A `ClipId` of a `SpatialNode` or `ClipNode` for positioning
+ * A `SpatialId` of a `SpatialNode` for positioning
  * A `ClipId` of a `ClipNode` or a `ClipChain` for clipping
  * An item-specific rectangular clip rectangle
 
@@ -120,28 +120,13 @@ independent of how the node is positioned and items can be clipped by any
 the item-specific clipping rectangle is applied directly to the item and should
 never result in the creation of a clip mask itself.
 
-Perhaps the most inconvenient holdover from the previous single-tree
-hierarchical design is that `SpatialNodes`, `ClipNodes`, and `ClipChains` all
-share a single `ClipId` id type. This means that the client must be a bit
-careful when using the API. For instance, when specifying the parent of
-`ClipNode` one can use the `ClipId` or another `ClipNode` or a `SpatialNode`,
-but not one for a `ClipChain`.
-
-WebRender's internal representation of clipping and positioning is not a perfect
-match to the display list representation of these concepts. This is due, again,
-to the evolutionary nature of the design. The general trend is that the display
-list gradually moves toward the internal representation. The most important of
-these incongruities is that while `ClipNodes`, sticky frames, and scroll frames
-are defined and simply return a `ClipId`, reference frames return a `ClipId` and
-also are pushed and popped like stacking contexts.
-
-## Converting `ClipId` to global `ClipScrollTree` indices
+## Converting user-exposed `ClipId`/`SpatialId` to internal indices
 
 WebRender must access `ClipNodes` and `SpatialNodes` quite a bit when building
-scenes and frames, so it tries to convert `ClipIds`, which are already
+scenes and frames, so it tries to convert `ClipId`/`SpatialId`, which are already
 per-pipeline indices, to global scene-wide indices.  Internally this is a
-conversion from `ClipId` into `SpatialNodeIndex` or
-`ClipChainIndex`. In order to make this conversion cheaper, the
+conversion from `ClipId` into `ClipNodeIndex` or `ClipChainIndex`, and from
+`SpatialId` into `SpatialNodeIndex`. In order to make this conversion cheaper, the
 `DisplayListFlattner` assigns offsets for each pipeline and node type in the
 scene-wide `ClipScrollTree`.
 
@@ -160,8 +145,7 @@ structure copies information necessary for hit testing from the
 new `ClipScrollTree` is under construction.
 
 # Ideas for the Future
-1. Expose the difference between ids for `SpatialNodes`, `ClipNodes`, and
-   `ClipChains` in the API.
+1. Expose the difference between `ClipId` and `ClipChainId` in the API.
 2. Prevent having to duplicate the `ClipScrollTree` for hit testing.
 3. Avoid having to create placeholder nodes in the `ClipScrollTree` while
    processing iframes.

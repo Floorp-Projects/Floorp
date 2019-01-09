@@ -56,13 +56,13 @@ add_task(async function test_returns_entries_where_jexl_is_true() {
     filter_expression: "1 == 2 || 1 == 1",
   }, {
     willMatch: true,
-    filter_expression: 'environment.appID == "xpcshell@tests.mozilla.org"',
+    filter_expression: 'env.appID == "xpcshell@tests.mozilla.org"',
   }, {
     willMatch: false,
-    filter_expression: "environment.version == undefined",
+    filter_expression: "env.version == undefined",
   }, {
     willMatch: true,
-    filter_expression: "environment.unknown == undefined",
+    filter_expression: "env.unknown == undefined",
   }, {
     willMatch: false,
     filter_expression: "1 == 2",
