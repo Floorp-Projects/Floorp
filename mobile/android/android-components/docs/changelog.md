@@ -14,7 +14,7 @@ permalink: /changelog/
   * Android (SDK: 28, Support Libraries: 28.0.0)
   * Kotlin (Stdlib: 1.3.10, Coroutines: 1.0.1)
   * GeckoView (Nightly: **66.0.20190107093040** 🔺, Beta: 65.0.20181211223337, Release: 64.0.20181214004633)
-  * Mozilla App Services (FxA: 0.12.1, Sync Logins: 0.12.1, Places: 0.12.1)
+  * Mozilla App Services (FxA: 0.13.1, Sync Logins: 0.13.1, Places: 0.13.1)
   * Third Party Libs (Sentry: 1.7.14, Okhttp: 3.12.0)
 
 * **browser-engine-system**
@@ -22,6 +22,13 @@ permalink: /changelog/
 
 * **feature-prompts**, **browser-engine-gecko***
   * Added support for Authentication dialogs.
+
+* **sync-logins**
+  * Updated underlying library from 0.12.1 to 0.13.1, see the [release notes for 0.13.0](https://github.com/mozilla/application-services/blob/master/CHANGELOG.md#0130-2019-01-09) for futher details on the most substantial changes. ([#1690](https://github.com/mozilla-mobile/android-components/issues/1690))
+    * Added a new `wipeLocal` method, for clearing all local data.
+    * Removed `reset` because it served a nonexistant use case, callers almost certainly want `wipeLocal` or `wipe` instead.
+    * Added `ensureLocked` and `ensureUnlocked` for cases where checking `isLocked` is inconvenient or requires additional locking.
+    * Allow storage to be unlocked using a `ByteArray` instead of a `String`.
 
 # 0.37.0
 
