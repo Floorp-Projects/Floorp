@@ -25,7 +25,6 @@
 
 #include "base/command_line.h"
 #include "base/eintr_wrapper.h"
-#include "base/lock.h"
 #include "base/logging.h"
 #include "base/process_util.h"
 #include "base/string_util.h"
@@ -33,6 +32,7 @@
 #include "chrome/common/file_descriptor_set_posix.h"
 #include "chrome/common/ipc_message_utils.h"
 #include "mozilla/ipc/ProtocolUtils.h"
+#include "mozilla/StaticMutex.h"
 #include "mozilla/UniquePtr.h"
 
 #ifdef FUZZING
@@ -108,7 +108,7 @@ class PipeMap {
  public:
   // Lookup a given channel id. Return -1 if not found.
   int Lookup(const std::string& channel_id) {
-    AutoLock locked(lock_);
+    mozilla::StaticMutexAutoLock locked(lock_);
 
     ChannelToFDMap::const_iterator i = map_.find(channel_id);
     if (i == map_.end()) return -1;
@@ -118,7 +118,7 @@ class PipeMap {
   // Remove the mapping for the given channel id. No error is signaled if the
   // channel_id doesn't exist
   void Remove(const std::string& channel_id) {
-    AutoLock locked(lock_);
+    mozilla::StaticMutexAutoLock locked(lock_);
 
     ChannelToFDMap::iterator i = map_.find(channel_id);
     if (i != map_.end()) map_.erase(i);
@@ -127,7 +127,7 @@ class PipeMap {
   // Insert a mapping from @channel_id to @fd. It's a fatal error to insert a
   // mapping if one already exists for the given channel_id
   void Insert(const std::string& channel_id, int fd) {
-    AutoLock locked(lock_);
+    mozilla::StaticMutexAutoLock locked(lock_);
     DCHECK(fd != -1);
 
     ChannelToFDMap::const_iterator i = map_.find(channel_id);
@@ -137,15 +137,25 @@ class PipeMap {
   }
 
   static PipeMap& instance() {
-    static PipeMap map;
+    // This setup is a little gross: the `map` instance lives until libxul is
+    // unloaded, but leak checking runs prior to that, and would see a Mutex
+    // instance contained in PipeMap as still live.  Said instance would be
+    // reported as a leak...but it's not, really.  To avoid that, we need to
+    // use StaticMutex (which is not leak-checked), but StaticMutex can't be
+    // a member variable.  So we have to have this separate variable and pass
+    // it into the PipeMap constructor.
+    static mozilla::StaticMutex mutex;
+    static PipeMap map(mutex);
     return map;
   }
 
  private:
-  PipeMap() = default;
+  explicit PipeMap(mozilla::StaticMutex& aMutex)
+    : lock_(aMutex)
+  {}
   ~PipeMap() = default;
 
-  Lock lock_;
+  mozilla::StaticMutex& lock_;
   typedef std::map<std::string, int> ChannelToFDMap;
   ChannelToFDMap map_;
 };

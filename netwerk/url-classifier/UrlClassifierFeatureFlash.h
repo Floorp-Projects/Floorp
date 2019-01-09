@@ -14,6 +14,8 @@ namespace net {
 
 class UrlClassifierFeatureFlash final : public UrlClassifierFeatureBase {
  public:
+  static void GetFeatureNames(nsTArray<nsCString>& aNames);
+
   static void MaybeShutdown();
 
   static void MaybeCreate(

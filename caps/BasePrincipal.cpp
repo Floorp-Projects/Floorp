@@ -23,6 +23,7 @@
 #include "mozilla/dom/BlobURLProtocolHandler.h"
 #include "mozilla/dom/ChromeUtils.h"
 #include "mozilla/dom/CSPDictionariesBinding.h"
+#include "mozilla/dom/nsCSPContext.h"
 #include "mozilla/dom/ToJSValue.h"
 
 namespace mozilla {
@@ -492,6 +493,34 @@ void BasePrincipal::FinishInit(const nsACString& aOriginNoSuffix,
 
   MOZ_ASSERT(!aOriginNoSuffix.IsEmpty());
   mOriginNoSuffix = NS_Atomize(aOriginNoSuffix);
+}
+
+void BasePrincipal::FinishInit(BasePrincipal* aOther,
+                               const OriginAttributes& aOriginAttributes) {
+  mInitialized = true;
+  mOriginAttributes = aOriginAttributes;
+
+  // First compute the origin suffix since it's infallible.
+  nsAutoCString originSuffix;
+  mOriginAttributes.CreateSuffix(originSuffix);
+  mOriginSuffix = NS_Atomize(originSuffix);
+
+  mOriginNoSuffix = aOther->mOriginNoSuffix;
+  mHasExplicitDomain = aOther->mHasExplicitDomain;
+
+  if (aOther->mPreloadCSP) {
+    mPreloadCSP = do_CreateInstance("@mozilla.org/cspcontext;1");
+    nsCSPContext* preloadCSP = static_cast<nsCSPContext*>(mPreloadCSP.get());
+    preloadCSP->InitFromOther(
+        static_cast<nsCSPContext*>(aOther->mPreloadCSP.get()), nullptr, this);
+  }
+
+  if (aOther->mCSP) {
+    mCSP = do_CreateInstance("@mozilla.org/cspcontext;1");
+    nsCSPContext* csp = static_cast<nsCSPContext*>(mCSP.get());
+    csp->InitFromOther(static_cast<nsCSPContext*>(aOther->mCSP.get()), nullptr,
+                       this);
+  }
 }
 
 bool SiteIdentifier::Equals(const SiteIdentifier& aOther) const {

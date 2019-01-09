@@ -38,6 +38,8 @@ class ContentPrincipal final : public BasePrincipal {
   // Init() must be called before the principal is in a usable state.
   nsresult Init(nsIURI* aCodebase, const OriginAttributes& aOriginAttributes,
                 const nsACString& aOriginNoSuffix);
+  nsresult Init(ContentPrincipal* aOther,
+                const OriginAttributes& aOriginAttributes);
 
   virtual nsresult GetScriptLocation(nsACString& aStr) override;
 

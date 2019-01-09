@@ -813,12 +813,7 @@ metaZones:table(nofallback){
             {
                 "Europe_Western",
                 "1985-12-31 23:00",
-                "2018-10-26 23:00",
-            }
-            {
-                "Europe_Central",
-                "2018-10-26 23:00",
-                "9999-12-31 23:59",
+                "2018-10-28 02:00",
             }
         }
         "Africa:Ceuta"{
@@ -867,12 +862,7 @@ metaZones:table(nofallback){
             {
                 "Europe_Western",
                 "1976-04-14 01:00",
-                "2018-10-26 23:00",
-            }
-            {
-                "Europe_Central",
-                "2018-10-26 23:00",
-                "9999-12-31 23:59",
+                "2018-10-28 02:00",
             }
         }
         "Africa:Freetown"{
@@ -1045,6 +1035,11 @@ metaZones:table(nofallback){
             {
                 "Africa_Western",
                 "2018-01-01 01:00",
+                "2019-01-01 01:00",
+            }
+            {
+                "GMT",
+                "2019-01-01 01:00",
                 "9999-12-31 23:59",
             }
         }
@@ -2086,6 +2081,16 @@ metaZones:table(nofallback){
             {
                 "Alaska",
                 "2015-11-01 10:00",
+                "2018-11-04 10:00",
+            }
+            {
+                "America_Pacific",
+                "2018-11-04 10:00",
+                "2019-03-10 11:00",
+            }
+            {
+                "Alaska",
+                "2019-03-10 11:00",
                 "9999-12-31 23:59",
             }
         }
@@ -3162,6 +3167,13 @@ metaZones:table(nofallback){
                 "9999-12-31 23:59",
             }
         }
+        "Asia:Qostanay"{
+            {
+                "Kazakhstan_Eastern",
+                "2004-10-30 21:00",
+                "9999-12-31 23:59",
+            }
+        }
         "Asia:Qyzylorda"{
             {
                 "Kizilorda",
@@ -3176,6 +3188,11 @@ metaZones:table(nofallback){
             {
                 "Kazakhstan_Eastern",
                 "2004-10-30 21:00",
+                "2018-12-20 18:00",
+            }
+            {
+                "Kazakhstan_Western",
+                "2018-12-20 18:00",
                 "9999-12-31 23:59",
             }
         }
@@ -4226,11 +4243,11 @@ metaZones:table(nofallback){
             {
                 "Kwajalein",
                 "1970-01-01 00:00",
-                "1993-08-20 12:00",
+                "1993-08-21 12:00",
             }
             {
                 "Marshall_Islands",
-                "1993-08-20 12:00",
+                "1993-08-21 12:00",
                 "9999-12-31 23:59",
             }
         }

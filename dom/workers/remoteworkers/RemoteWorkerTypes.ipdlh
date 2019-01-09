@@ -11,13 +11,6 @@ using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
 namespace mozilla {
 namespace dom {
 
-struct ContentSecurityPolicy
-{
-  nsString policy;
-  bool reportOnlyFlag;
-  bool deliveredViaMetaTagFlag;
-};
-
 struct RemoteWorkerData
 {
   // This should only be used for devtools.
