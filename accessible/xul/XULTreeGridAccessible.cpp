@@ -23,7 +23,6 @@
 #include "nsComponentManagerUtils.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/TreeColumnBinding.h"
-#include "mozilla/dom/XULTreeElementBinding.h"
 
 using namespace mozilla::a11y;
 using namespace mozilla;
@@ -170,7 +169,8 @@ void XULTreeGridAccessible::UnselectRow(uint32_t aRowIdx) {
 // XULTreeGridAccessible: Accessible implementation
 
 role XULTreeGridAccessible::NativeRole() const {
-  RefPtr<nsTreeColumns> treeColumns = mTree->GetColumns();
+  RefPtr<nsTreeColumns> treeColumns;
+  mTree->GetColumns(getter_AddRefs(treeColumns));
   if (!treeColumns) {
     NS_ERROR("No treecolumns object for tree!");
     return roles::NOTHING;
@@ -199,7 +199,7 @@ already_AddRefed<Accessible> XULTreeGridAccessible::CreateTreeItemAccessible(
 
 XULTreeGridRowAccessible::XULTreeGridRowAccessible(
     nsIContent* aContent, DocAccessible* aDoc, Accessible* aTreeAcc,
-    dom::XULTreeElement* aTree, nsITreeView* aTreeView, int32_t aRow)
+    nsITreeBoxObject* aTree, nsITreeView* aTreeView, int32_t aRow)
     : XULTreeItemAccessibleBase(aContent, aDoc, aTreeAcc, aTree, aTreeView,
                                 aRow),
       mAccessibleCache(kDefaultTreeCacheLength) {
@@ -268,14 +268,16 @@ Accessible* XULTreeGridRowAccessible::ChildAtPoint(
   int32_t clientX = presContext->DevPixelsToIntCSSPixels(aX) - rootRect.X();
   int32_t clientY = presContext->DevPixelsToIntCSSPixels(aY) - rootRect.Y();
 
-  ErrorResult rv;
-  dom::TreeCellInfo cellInfo;
-  mTree->GetCellAt(clientX, clientY, cellInfo, rv);
+  int32_t row = -1;
+  RefPtr<nsTreeColumn> column;
+  nsAutoString childEltUnused;
+  mTree->GetCellAt(clientX, clientY, &row, getter_AddRefs(column),
+                   childEltUnused);
 
   // Return if we failed to find tree cell in the row for the given point.
-  if (cellInfo.mRow != mRow || !cellInfo.mCol) return nullptr;
+  if (row != mRow || !column) return nullptr;
 
-  return GetCellAccessible(cellInfo.mCol);
+  return GetCellAccessible(column);
 }
 
 Accessible* XULTreeGridRowAccessible::GetChildAt(uint32_t aIndex) const {
@@ -312,7 +314,8 @@ XULTreeGridCellAccessible* XULTreeGridRowAccessible::GetCellAccessible(
 
 void XULTreeGridRowAccessible::RowInvalidated(int32_t aStartColIdx,
                                               int32_t aEndColIdx) {
-  RefPtr<nsTreeColumns> treeColumns = mTree->GetColumns();
+  RefPtr<nsTreeColumns> treeColumns;
+  mTree->GetColumns(getter_AddRefs(treeColumns));
   if (!treeColumns) return;
 
   bool nameChanged = false;
@@ -334,7 +337,7 @@ void XULTreeGridRowAccessible::RowInvalidated(int32_t aStartColIdx,
 
 XULTreeGridCellAccessible::XULTreeGridCellAccessible(
     nsIContent* aContent, DocAccessible* aDoc,
-    XULTreeGridRowAccessible* aRowAcc, dom::XULTreeElement* aTree,
+    XULTreeGridRowAccessible* aRowAcc, nsITreeBoxObject* aTree,
     nsITreeView* aTreeView, int32_t aRow, nsTreeColumn* aColumn)
     : LeafAccessible(aContent, aDoc),
       mTree(aTree),
@@ -407,9 +410,9 @@ nsIntRect XULTreeGridCellAccessible::BoundsInCSSPixels() const {
     return nsIntRect();
   }
 
-  nsresult rv;
-  nsIntRect rect =
-      mTree->GetCoordsForCellItem(mRow, mColumn, NS_LITERAL_STRING("cell"), rv);
+  int32_t x = 0, y = 0, width = 0, height = 0;
+  nsresult rv = mTree->GetCoordsForCellItem(
+      mRow, mColumn, NS_LITERAL_STRING("cell"), &x, &y, &width, &height);
   if (NS_FAILED(rv)) {
     return nsIntRect();
   }
@@ -417,7 +420,10 @@ nsIntRect XULTreeGridCellAccessible::BoundsInCSSPixels() const {
   int32_t tcX = 0, tcY = 0;
   boxObj->GetScreenX(&tcX);
   boxObj->GetScreenY(&tcY);
-  return nsIntRect(rect.x + tcX, rect.y + tcY, rect.width, rect.height);
+  x += tcX;
+  y += tcY;
+
+  return nsIntRect(x, y, width, height);
 }
 
 nsRect XULTreeGridCellAccessible::BoundsInAppUnits() const {

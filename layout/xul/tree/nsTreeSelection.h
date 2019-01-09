@@ -11,14 +11,14 @@
 #include "nsITimer.h"
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/Attributes.h"
-#include "XULTreeElement.h"
 
+class nsITreeBoxObject;
 class nsTreeColumn;
 struct nsTreeRange;
 
 class nsTreeSelection final : public nsINativeTreeSelection {
  public:
-  explicit nsTreeSelection(mozilla::dom::XULTreeElement* aTree);
+  explicit nsTreeSelection(nsITreeBoxObject* aTree);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(nsTreeSelection)
@@ -36,8 +36,12 @@ class nsTreeSelection final : public nsINativeTreeSelection {
   static void SelectCallback(nsITimer* aTimer, void* aClosure);
 
  protected:
-  // The tree will hold on to us through the view and let go when it dies.
-  RefPtr<mozilla::dom::XULTreeElement> mTree;
+  // Helper function to get the content node associated with mTree.
+  already_AddRefed<nsIContent> GetContent();
+
+  // Members
+  nsCOMPtr<nsITreeBoxObject> mTree;  // The tree will hold on to us through the
+                                     // view and let go when it dies.
 
   bool mSuppressed;       // Whether or not we should be firing onselect events.
   int32_t mCurrentIndex;  // The item to draw the rect around. The last one
@@ -50,7 +54,7 @@ class nsTreeSelection final : public nsINativeTreeSelection {
   nsCOMPtr<nsITimer> mSelectTimer;
 };
 
-nsresult NS_NewTreeSelection(mozilla::dom::XULTreeElement* aTree,
+nsresult NS_NewTreeSelection(nsITreeBoxObject* aTree,
                              nsITreeSelection** aResult);
 
 #endif

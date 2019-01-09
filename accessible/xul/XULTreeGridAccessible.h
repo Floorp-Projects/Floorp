@@ -70,7 +70,7 @@ class XULTreeGridRowAccessible final : public XULTreeItemAccessibleBase {
   using Accessible::GetChildAt;
 
   XULTreeGridRowAccessible(nsIContent* aContent, DocAccessible* aDoc,
-                           Accessible* aParent, dom::XULTreeElement* aTree,
+                           Accessible* aParent, nsITreeBoxObject* aTree,
                            nsITreeView* aTreeView, int32_t aRow);
 
   // nsISupports and cycle collection
@@ -112,7 +112,7 @@ class XULTreeGridCellAccessible : public LeafAccessible,
  public:
   XULTreeGridCellAccessible(nsIContent* aContent, DocAccessible* aDoc,
                             XULTreeGridRowAccessible* aRowAcc,
-                            dom::XULTreeElement* aTree, nsITreeView* aTreeView,
+                            nsITreeBoxObject* aTree, nsITreeView* aTreeView,
                             int32_t aRow, nsTreeColumn* aColumn);
 
   // nsISupports
@@ -172,7 +172,7 @@ class XULTreeGridCellAccessible : public LeafAccessible,
 
   enum { eAction_Click = 0 };
 
-  RefPtr<dom::XULTreeElement> mTree;
+  nsCOMPtr<nsITreeBoxObject> mTree;
   nsITreeView* mTreeView;
 
   int32_t mRow;

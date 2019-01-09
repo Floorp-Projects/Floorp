@@ -897,6 +897,7 @@ WEBIDL_FILES = [
     'TouchEvent.webidl',
     'TouchList.webidl',
     'TransitionEvent.webidl',
+    'TreeBoxObject.webidl',
     'TreeColumn.webidl',
     'TreeColumns.webidl',
     'TreeContentView.webidl',

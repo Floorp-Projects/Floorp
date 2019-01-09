@@ -30,7 +30,6 @@ if CONFIG['MOZ_XUL']:
         'XULScrollElement.h',
         'XULTextElement.h',
         'XULTooltipElement.h',
-        'XULTreeElement.h',
     ]
 
     UNIFIED_SOURCES += [
@@ -51,7 +50,6 @@ if CONFIG['MOZ_XUL']:
         'XULScrollElement.cpp',
         'XULTextElement.cpp',
         'XULTooltipElement.cpp',
-        'XULTreeElement.cpp',
     ]
 
 XPIDL_SOURCES += [
@@ -75,7 +73,6 @@ LOCAL_INCLUDES += [
     '/layout/generic',
     '/layout/style',
     '/layout/xul',
-    '/layout/xul/tree',
 ]
 
 FINAL_LIBRARY = 'xul'

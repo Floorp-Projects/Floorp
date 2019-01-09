@@ -10,6 +10,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsTArray.h"
 #include "nsStubDocumentObserver.h"
+#include "nsITreeBoxObject.h"
 #include "nsITreeView.h"
 #include "nsITreeSelection.h"
 #include "mozilla/Attributes.h"
@@ -24,7 +25,7 @@ namespace dom {
 class DataTransfer;
 class Document;
 class Element;
-class XULTreeElement;
+class TreeBoxObject;
 }  // namespace dom
 }  // namespace mozilla
 
@@ -75,7 +76,7 @@ class nsTreeContentView final : public nsITreeView,
                     mozilla::ErrorResult& aError);
   void GetCellText(int32_t aRow, nsTreeColumn& aColumn, nsAString& aText,
                    mozilla::ErrorResult& aError);
-  void SetTree(mozilla::dom::XULTreeElement* aTree,
+  void SetTree(mozilla::dom::TreeBoxObject* aTree,
                mozilla::ErrorResult& aError);
   void ToggleOpenState(int32_t aRow, mozilla::ErrorResult& aError);
   void CycleHeader(nsTreeColumn& aColumn, mozilla::ErrorResult& aError);
@@ -155,8 +156,9 @@ class nsTreeContentView final : public nsITreeView,
  private:
   bool IsValidRowIndex(int32_t aRowIndex);
 
-  RefPtr<mozilla::dom::XULTreeElement> mTree;
+  nsCOMPtr<nsITreeBoxObject> mBoxObject;
   nsCOMPtr<nsITreeSelection> mSelection;
+  nsCOMPtr<Element> mRoot;
   nsCOMPtr<nsIContent> mBody;
   mozilla::dom::Document* mDocument;  // WEAK
   nsTArray<mozilla::UniquePtr<Row>> mRows;
