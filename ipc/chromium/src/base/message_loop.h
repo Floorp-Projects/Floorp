@@ -13,9 +13,10 @@
 #include <vector>
 #include <map>
 
-#include "base/lock.h"
 #include "base/message_pump.h"
 #include "base/observer_list.h"
+
+#include "mozilla/Mutex.h"
 
 #if defined(OS_WIN)
 // We need this to declare base::MessagePumpWin::Dispatcher, which we should
@@ -423,7 +424,7 @@ class MessageLoop : public base::MessagePump::Delegate {
   // will be handled by the TimerManager.
   TaskQueue incoming_queue_;
   // Protect access to incoming_queue_.
-  Lock incoming_queue_lock_;
+  mozilla::Mutex incoming_queue_lock_;
 
   RunState* state_;
   int run_depth_base_;
