@@ -9,10 +9,10 @@
 #ifndef NS_SMILCSSVALUETYPE_H_
 #define NS_SMILCSSVALUETYPE_H_
 
-#include "SMILType.h"
+#include "mozilla/Attributes.h"
+#include "mozilla/SMILType.h"
 #include "nsCSSPropertyID.h"
 #include "nsStringFwd.h"
-#include "mozilla/Attributes.h"
 
 namespace mozilla {
 struct AnimationValue;

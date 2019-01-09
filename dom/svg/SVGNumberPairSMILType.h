@@ -8,7 +8,7 @@
 #define MOZILLA_SVGNUMBERPAIRSMILTYPE_H_
 
 #include "mozilla/Attributes.h"
-#include "SMILType.h"
+#include "mozilla/SMILType.h"
 
 class nsSMILValue;
 

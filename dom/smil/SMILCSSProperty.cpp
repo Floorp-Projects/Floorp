@@ -11,9 +11,9 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/Move.h"
 #include "mozilla/ServoBindings.h"
+#include "mozilla/SMILCSSValueType.h"
 #include "mozilla/StyleAnimationValue.h"
 #include "nsDOMCSSAttrDeclaration.h"
-#include "SMILCSSValueType.h"
 #include "nsSMILValue.h"
 #include "nsCSSProps.h"
 
