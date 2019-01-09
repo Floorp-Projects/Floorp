@@ -263,6 +263,7 @@ impl<T, M> FreeList<T, M> {
         slot.value.take().unwrap()
     }
 
+    #[allow(dead_code)]
     pub fn len(&self) -> usize {
         self.active_count
     }
