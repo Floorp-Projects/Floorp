@@ -6,7 +6,7 @@
 set -ex
 
 # Get version number from Gradle
-VERSION=`TERM=dumb ./gradlew printVersion | sed -n 's/.*version: //p'`
+VERSION=`sed -n 's/.*componentsVersion: //p' < .buildconfig.yml`
 echo "API reference for version: $VERSION"
 
 # Generate API reference for the current state

@@ -13,7 +13,7 @@ import os
 import taskcluster
 import sys
 
-import lib.module_definitions
+import lib.build_config
 import lib.tasks
 import lib.util
 
@@ -171,11 +171,11 @@ def generate_and_append_task_to_task_graph(queue, task_graph, generate_function,
 
 
 def release(version, is_snapshot, is_staging):
-    version = lib.module_definitions.get_version_from_gradle() if version is None else version
+    version = lib.build_config.components_version() if version is None else version
 
     queue = taskcluster.Queue({'baseUrl': 'http://taskcluster/queue/v1'})
 
-    artifacts_info = [info for info in lib.module_definitions.from_gradle() if info['shouldPublish']]
+    artifacts_info = [info for info in lib.build_config.module_definitions() if info['shouldPublish']]
     if len(artifacts_info) == 0:
         print("Could not get module names from gradle")
         sys.exit(2)

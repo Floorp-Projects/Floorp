@@ -12,7 +12,7 @@ import os
 import taskcluster
 import sys
 
-import lib.module_definitions
+import lib.build_config
 import lib.tasks
 
 
@@ -219,7 +219,7 @@ if __name__ == "__main__":
 
     queue = taskcluster.Queue({ 'baseUrl': 'http://taskcluster/queue/v1' })
 
-    modules = [':' + artifact['name'] for artifact in lib.module_definitions.from_gradle()]
+    modules = [':' + artifact['name'] for artifact in lib.build_config.module_definitions()]
 
     if len(modules) == 0:
         print("Could not get module names from gradle")

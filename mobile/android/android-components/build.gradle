@@ -198,11 +198,5 @@ task printModules {
     }
 }
 
-task printVersion {
-    doLast {
-        println("version: " + config.componentsVersion)
-    }
-}
-
 apply plugin: GVNightlyVersionVerifierPlugin
 apply plugin: GitHubPlugin
