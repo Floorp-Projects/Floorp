@@ -14,6 +14,13 @@ import pytest
 
 from mozboot.bootstrap import update_or_create_build_telemetry_config
 
+TELEMETRY_LOAD_ERROR = '''
+Error loading telemetry. mach output:
+=========================================================
+%s
+=========================================================
+'''
+
 
 @pytest.fixture
 def run_mach(tmpdir):
@@ -32,15 +39,16 @@ def run_mach(tmpdir):
 
     def run(*args, **kwargs):
         # Run mach with the provided arguments
-        subprocess.check_output([sys.executable, mach] + list(args),
-                                stderr=subprocess.STDOUT,
-                                env=env,
-                                **kwargs)
+        out = subprocess.check_output([sys.executable, mach] + list(args),
+                                      stderr=subprocess.STDOUT,
+                                      env=env,
+                                      **kwargs)
         # Load any telemetry data that was written
         path = tmpdir.join('telemetry', 'outgoing')
         try:
             return [json.load(f.open('rb')) for f in path.listdir()]
         except EnvironmentError:
+            print(TELEMETRY_LOAD_ERROR % out, file=sys.stderr)
             for p in path.parts(reverse=True):
                 if not p.check(dir=1):
                     print('Path does not exist: "%s"' % p, file=sys.stderr)

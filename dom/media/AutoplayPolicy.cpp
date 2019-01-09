@@ -152,9 +152,27 @@ static bool IsMediaElementAllowedToPlay(const HTMLMediaElement& aElement) {
   return false;
 }
 
+static bool IsAudioContextAllowedToPlay(const AudioContext& aContext) {
+  // Offline context won't directly output sound to audio devices.
+  return aContext.IsOffline() ||
+         IsWindowAllowedToPlay(aContext.GetParentObject());
+}
+
+static bool IsEnableBlockingWebAudioByUserGesturePolicy() {
+  return DefaultAutoplayBehaviour() != nsIAutoplay::ALLOWED &&
+         Preferences::GetBool("media.autoplay.block-webaudio", false) &&
+         Preferences::GetBool("media.autoplay.enabled.user-gestures-needed",
+                              false);
+}
+
 /* static */ bool AutoplayPolicy::WouldBeAllowedToPlayIfAutoplayDisabled(
     const HTMLMediaElement& aElement) {
   return IsMediaElementAllowedToPlay(aElement);
+}
+
+/* static */ bool AutoplayPolicy::WouldBeAllowedToPlayIfAutoplayDisabled(
+    const AudioContext& aContext) {
+  return IsAudioContextAllowedToPlay(aContext);
 }
 
 /* static */ bool AutoplayPolicy::IsAllowedToPlay(
@@ -184,29 +202,11 @@ static bool IsMediaElementAllowedToPlay(const HTMLMediaElement& aElement) {
 
 /* static */ bool AutoplayPolicy::IsAllowedToPlay(
     const AudioContext& aContext) {
-  if (!Preferences::GetBool("media.autoplay.block-webaudio", false)) {
+  if (!IsEnableBlockingWebAudioByUserGesturePolicy()) {
     return true;
   }
 
-  if (DefaultAutoplayBehaviour() == nsIAutoplay::ALLOWED) {
-    return true;
-  }
-
-  if (!Preferences::GetBool("media.autoplay.enabled.user-gestures-needed",
-                            false)) {
-    return true;
-  }
-
-  // Offline context won't directly output sound to audio devices.
-  if (aContext.IsOffline()) {
-    return true;
-  }
-
-  if (IsWindowAllowedToPlay(aContext.GetParentObject())) {
-    return true;
-  }
-
-  return false;
+  return IsAudioContextAllowedToPlay(aContext);
 }
 
 }  // namespace dom

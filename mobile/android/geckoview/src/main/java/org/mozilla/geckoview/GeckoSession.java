@@ -12,13 +12,11 @@ import java.lang.ref.WeakReference;
 import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.UUID;
 
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.GeckoEditableChild;
 import org.mozilla.gecko.GeckoThread;
 import org.mozilla.gecko.IGeckoEditableParent;
 import org.mozilla.gecko.mozglue.JNIObject;
@@ -1259,9 +1257,9 @@ public class GeckoSession implements Parcelable {
             throw new IllegalStateException("Session is open");
         }
 
-        final String chromeUri = mSettings.getString(GeckoSessionSettings.CHROME_URI);
-        final int screenId = mSettings.getInt(GeckoSessionSettings.SCREEN_ID);
-        final boolean isPrivate = mSettings.getBoolean(GeckoSessionSettings.USE_PRIVATE_MODE);
+        final String chromeUri = mSettings.getChromeUri();
+        final int screenId = mSettings.getScreenId();
+        final boolean isPrivate = mSettings.getUsePrivateMode();
 
         mWindow = new Window(runtime, this, mNativeQueue);
 

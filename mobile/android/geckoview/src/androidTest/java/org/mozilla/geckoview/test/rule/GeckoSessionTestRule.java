@@ -200,7 +200,8 @@ public class GeckoSessionTestRule implements TestRule {
             Key() {
                 final Field field;
                 try {
-                    field = GeckoSessionSettings.class.getField(name());
+                    field = GeckoSessionSettings.class.getDeclaredField(name());
+                    field.setAccessible(true);
                     mKey = (GeckoSessionSettings.Key<?>) field.get(null);
                 } catch (final NoSuchFieldException | IllegalAccessException e) {
                     throw new RuntimeException(e);
@@ -212,24 +213,45 @@ public class GeckoSessionTestRule implements TestRule {
 
             @SuppressWarnings("unchecked")
             public void set(final GeckoSessionSettings settings, final String value) {
-                if (boolean.class.equals(mType) || Boolean.class.equals(mType)) {
-                    settings.setBoolean((GeckoSessionSettings.Key<Boolean>) mKey,
-                            Boolean.valueOf(value));
-                } else if (int.class.equals(mType) || Integer.class.equals(mType)) {
-                    try {
-                        settings.setInt((GeckoSessionSettings.Key<Integer>) mKey,
-                                (Integer) GeckoSessionSettings.class.getField(value)
-                                        .get(null));
-                    } catch (final NoSuchFieldException | IllegalAccessException |
-                            ClassCastException e) {
-                        settings.setInt((GeckoSessionSettings.Key<Integer>) mKey,
-                                        Integer.valueOf(value));
+                try {
+                    if (boolean.class.equals(mType) || Boolean.class.equals(mType)) {
+                        Method method = GeckoSessionSettings.class
+                                .getDeclaredMethod("setBoolean",
+                                        GeckoSessionSettings.Key.class,
+                                        boolean.class);
+                        method.setAccessible(true);
+                        method.invoke(settings, mKey, Boolean.valueOf(value));
+                    } else if (int.class.equals(mType) || Integer.class.equals(mType)) {
+                        Method method = GeckoSessionSettings.class
+                                .getDeclaredMethod("setInt",
+                                        GeckoSessionSettings.Key.class,
+                                        int.class);
+                        method.setAccessible(true);
+                        try {
+                            method.invoke(settings, mKey,
+                                    (Integer)GeckoSessionSettings.class.getField(value)
+                                            .get(null));
+                        }
+                        catch (final NoSuchFieldException | IllegalAccessException |
+                                ClassCastException e) {
+                            method.invoke(settings, mKey,
+                                    Integer.valueOf(value));
+                        }
+                    } else if (String.class.equals(mType)) {
+                        Method method = GeckoSessionSettings.class
+                                .getDeclaredMethod("setString",
+                                        GeckoSessionSettings.Key.class,
+                                        String.class);
+                        method.setAccessible(true);
+                        method.invoke(settings, mKey, value);
+                    } else {
+                        throw new IllegalArgumentException("Unsupported type: " +
+                                mType.getSimpleName());
                     }
-                } else if (String.class.equals(mType)) {
-                    settings.setString((GeckoSessionSettings.Key<String>) mKey, value);
-                } else {
-                    throw new IllegalArgumentException("Unsupported type: " +
-                            mType.getSimpleName());
+                } catch (NoSuchMethodException
+                        | IllegalAccessException
+                        | InvocationTargetException e) {
+                    throw new RuntimeException(e);
                 }
             }
         }
@@ -837,8 +859,9 @@ public class GeckoSessionTestRule implements TestRule {
     protected boolean mIgnoreCrash;
 
     public GeckoSessionTestRule() {
-        mDefaultSettings = new GeckoSessionSettings();
-        mDefaultSettings.setBoolean(GeckoSessionSettings.USE_MULTIPROCESS, env.isMultiprocess());
+        mDefaultSettings = new GeckoSessionSettings.Builder()
+                .useMultiprocess(env.isMultiprocess())
+                .build();
     }
 
     /**

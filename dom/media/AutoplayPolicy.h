@@ -43,6 +43,14 @@ class AutoplayPolicy {
   // which enable/disable block autoplay. Do not use for blocking logic!
   static bool WouldBeAllowedToPlayIfAutoplayDisabled(
       const HTMLMediaElement& aElement);
+
+  // Returns true if a given AudioContext would be allowed to play
+  // if block autoplay was enabled. If this returns false, it means we would
+  // either block or ask for permission.
+  // Note: this is for telemetry purposes, and doesn't check the prefs
+  // which enable/disable block autoplay. Do not use for blocking logic!
+  static bool WouldBeAllowedToPlayIfAutoplayDisabled(
+      const AudioContext& aContext);
 };
 
 }  // namespace dom

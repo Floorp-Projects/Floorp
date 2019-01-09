@@ -102,7 +102,6 @@ class ParticularProcessPriorityManager;
  * class.
  */
 class ProcessPriorityManagerImpl final : public nsIObserver,
-                                         public WakeLockObserver,
                                          public nsSupportsWeakReference {
  public:
   /**
@@ -139,19 +138,7 @@ class ProcessPriorityManagerImpl final : public nsIObserver,
       ParticularProcessPriorityManager* aParticularManager,
       hal::ProcessPriority aOldPriority);
 
-  /**
-   * Implements WakeLockObserver, used to monitor wake lock changes in the
-   * main process.
-   */
-  virtual void Notify(const WakeLockInformation& aInfo) override;
-
   void TabActivityChanged(TabParent* aTabParent, bool aIsActive);
-
-  /**
-   * Call ShutDown before destroying the ProcessPriorityManager because
-   * WakeLockObserver hols a strong reference to it.
-   */
-  void ShutDown();
 
  private:
   static bool sPrefsEnabled;
@@ -177,9 +164,6 @@ class ProcessPriorityManagerImpl final : public nsIObserver,
 
   nsDataHashtable<nsUint64HashKey, RefPtr<ParticularProcessPriorityManager> >
       mParticularManagers;
-
-  /** True if the main process is holding a high-priority wakelock */
-  bool mHighPriority;
 
   /** Contains the PIDs of child processes holding high-priority wakelocks */
   nsTHashtable<nsUint64HashKey> mHighPriorityChildIDs;
@@ -318,7 +302,6 @@ NS_IMPL_ISUPPORTS(ProcessPriorityManagerImpl, nsIObserver,
     const char* aPref, void* aClosure) {
   StaticInit();
   if (!PrefsEnabled() && sSingleton) {
-    sSingleton->ShutDown();
     sSingleton = nullptr;
     sInitialized = false;
   }
@@ -382,17 +365,11 @@ ProcessPriorityManagerImpl::GetSingleton() {
   return sSingleton;
 }
 
-ProcessPriorityManagerImpl::ProcessPriorityManagerImpl()
-    : mHighPriority(false) {
+ProcessPriorityManagerImpl::ProcessPriorityManagerImpl() {
   MOZ_ASSERT(XRE_IsParentProcess());
-  RegisterWakeLockObserver(this);
 }
 
-ProcessPriorityManagerImpl::~ProcessPriorityManagerImpl() { ShutDown(); }
-
-void ProcessPriorityManagerImpl::ShutDown() {
-  UnregisterWakeLockObserver(this);
-}
+ProcessPriorityManagerImpl::~ProcessPriorityManagerImpl() = default;
 
 void ProcessPriorityManagerImpl::Init() {
   LOG("Starting up.  This is the master process.");
@@ -490,24 +467,6 @@ void ProcessPriorityManagerImpl::NotifyProcessPriorityChanged(
   } else if (newPriority < PROCESS_PRIORITY_FOREGROUND_HIGH &&
              aOldPriority >= PROCESS_PRIORITY_FOREGROUND_HIGH) {
     mHighPriorityChildIDs.RemoveEntry(aParticularManager->ChildID());
-  }
-}
-
-/* virtual */ void ProcessPriorityManagerImpl::Notify(
-    const WakeLockInformation& aInfo) {
-  /* The main process always has an ID of 0, if it is present in the wake-lock
-   * information then we explicitly requested a high-priority wake-lock for the
-   * main process. */
-  if (aInfo.topic().EqualsLiteral("high-priority")) {
-    if (aInfo.lockingProcesses().Contains((uint64_t)0)) {
-      mHighPriority = true;
-    } else {
-      mHighPriority = false;
-    }
-
-    LOG("Got wake lock changed event. "
-        "Now mHighPriorityParent = %d\n",
-        mHighPriority);
   }
 }
 
