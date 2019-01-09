@@ -53,7 +53,6 @@ struct RepaintRequest {
         mPaintRequestTime(),
         mScrollUpdateType(eNone),
         mIsRootContent(false),
-        mUseDisplayPortMargins(false),
         mIsScrollInfoLayer(false) {}
 
   RepaintRequest(const FrameMetrics& aOther,
@@ -73,7 +72,6 @@ struct RepaintRequest {
         mPaintRequestTime(aOther.GetPaintRequestTime()),
         mScrollUpdateType(aScrollUpdateType),
         mIsRootContent(aOther.IsRootContent()),
-        mUseDisplayPortMargins(aOther.GetUseDisplayPortMargins()),
         mIsScrollInfoLayer(aOther.IsScrollInfoLayer()) {}
 
   // Default copy ctor and operator= are fine
@@ -95,7 +93,6 @@ struct RepaintRequest {
            mPaintRequestTime == aOther.mPaintRequestTime &&
            mScrollUpdateType == aOther.mScrollUpdateType &&
            mIsRootContent == aOther.mIsRootContent &&
-           mUseDisplayPortMargins == aOther.mUseDisplayPortMargins &&
            mIsScrollInfoLayer == aOther.mIsScrollInfoLayer;
   }
 
@@ -166,8 +163,6 @@ struct RepaintRequest {
     return mDisplayPortMargins;
   }
 
-  bool GetUseDisplayPortMargins() const { return mUseDisplayPortMargins; }
-
   uint32_t GetPresShellId() const { return mPresShellId; }
 
   const CSSRect& GetViewport() const { return mViewport; }
@@ -183,10 +178,6 @@ struct RepaintRequest {
  protected:
   void SetIsRootContent(bool aIsRootContent) {
     mIsRootContent = aIsRootContent;
-  }
-
-  void SetUseDisplayPortMargins(bool aValue) {
-    mUseDisplayPortMargins = aValue;
   }
 
   void SetIsScrollInfoLayer(bool aIsScrollInfoLayer) {
@@ -282,10 +273,6 @@ struct RepaintRequest {
 
   // Whether or not this is the root scroll frame for the root content document.
   bool mIsRootContent : 1;
-
-  // If this is true then we use the display port margins on this metrics,
-  // otherwise use the display port rect.
-  bool mUseDisplayPortMargins : 1;
 
   // True if this scroll frame is a scroll info layer. A scroll info layer is
   // not layerized and its content cannot be truly async-scrolled, but its
