@@ -4211,7 +4211,7 @@ static nscoord ComputeMissingDimension(
     return NSCoordSaturatingNonnegativeMultiply(knownDimensionSize, ratio);
   }
 
-  // 2. "Otherwise, if the missing dimension is present in the object’s
+  // 2. "Otherwise, if the missing dimension is present in the object's
   //     intrinsic dimensions, [...]"
   // NOTE: *Skipping* this case, because we already know it's not true -- we're
   // in this function because the missing dimension is *not* present in
@@ -8003,8 +8003,8 @@ static nscoord MinimumFontSizeFor(nsPresContext* aPresContext,
     // to determine the point where our mapping function intersects the i=s
     // line. This means that we have an equation of the form:
     //
-    // i = m + s·(P/2)/(1 + P/2), if s <= (1 + P/2)·m
-    // i = s, if s >= (1 + P/2)·m
+    // i = m + s*(P/2)/(1 + P/2), if s <= (1 + P/2)*m
+    // i = s, if s >= (1 + P/2)*m
 
     float intercept = 1 + float(interceptParam) / 2.0f;
     if (ratio >= intercept) {
@@ -9438,12 +9438,12 @@ static nsRect ComputeSVGReferenceRect(nsIFrame* aFrame,
       MOZ_ASSERT(svgElement);
 
       if (svgElement && svgElement->HasViewBoxRect()) {
-        // If a ‘viewBox‘ attribute is specified for the SVG viewport creating
+        // If a `viewBox` attribute is specified for the SVG viewport creating
         // element:
         // 1. The reference box is positioned at the origin of the coordinate
-        //    system established by the ‘viewBox‘ attribute.
+        //    system established by the `viewBox` attribute.
         // 2. The dimension of the reference box is set to the width and height
-        //    values of the ‘viewBox‘ attribute.
+        //    values of the `viewBox` attribute.
         SVGViewBox* viewBox = svgElement->GetViewBox();
         const SVGViewBoxRect& value = viewBox->GetAnimValue();
         r = nsRect(nsPresContext::CSSPixelsToAppUnits(value.x),
