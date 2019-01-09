@@ -8,15 +8,15 @@
 
 #include "nsDOMCSSAttrDeclaration.h"
 
-#include "mozilla/DeclarationBlock.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/MutationEventBinding.h"
+#include "mozilla/DeclarationBlock.h"
 #include "mozilla/InternalMutationEvent.h"
+#include "mozilla/SMILCSSValueType.h"
 #include "mozAutoDocUpdate.h"
-#include "mozilla/dom/Document.h"
 #include "nsIURI.h"
 #include "nsNodeUtils.h"
-#include "SMILCSSValueType.h"
 #include "nsWrapperCacheInlines.h"
 #include "nsIFrame.h"
 #include "ActiveLayerTracker.h"
