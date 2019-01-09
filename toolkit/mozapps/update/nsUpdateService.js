@@ -194,8 +194,13 @@ const APPID_TO_TOPIC = {
   "{3550f703-e582-4d05-9a08-453d09bdfdc6}": "mail-startup-done",
 };
 
-// A var is used for the delay so tests can set a smaller value.
-var gSaveUpdateXMLDelay = 2000;
+// The interval for the update xml write deferred task.
+const XML_SAVER_INTERVAL_MS = 200;
+
+// Object to keep track of the current phase of the update and whether there
+// has been a write failure for the phase so only one telemetry ping is made
+// for the phase.
+var gUpdateFileWriteInfo = {phase: null, failure: false};
 var gUpdateMutexHandle = null;
 // The permissions of the update directory should be fixed no more than once per
 // session
@@ -1098,42 +1103,42 @@ function pingStateAndStatusCodes(aUpdate, aStartup, aStatus) {
  *             value will only be used for logging purposes.
  */
 function handleCriticalWriteFailure(path) {
-  LOG("Unable to write to critical update file: " + path);
-
-  let updateManager = Cc["@mozilla.org/updates/update-manager;1"].
-                      getService(Ci.nsIUpdateManager);
-
-  let update = updateManager.activeUpdate;
-  if (update) {
-    let patch = update.selectedPatch;
+  LOG("handleCriticalWriteFailure - Unable to write to critical update file: " +
+      path);
+  if (!gUpdateFileWriteInfo.failure) {
+    gUpdateFileWriteInfo.failure = true;
     let patchType = AUSTLMY.PATCH_UNKNOWN;
-    if (patch.type == "complete") {
-      patchType = AUSTLMY.PATCH_COMPLETE;
-    } else if (patch.type == "partial") {
-      patchType = AUSTLMY.PATCH_PARTIAL;
-    }
-    if (update.state == STATE_DOWNLOADING) {
-      if (!patch.downloadWriteFailureTelemetrySent) {
-        AUSTLMY.pingDownloadCode(patchType, AUSTLMY.DWNLD_ERR_WRITE_FAILURE);
-        patch.downloadWriteFailureTelemetrySent = true;
+    let update = Cc["@mozilla.org/updates/update-manager;1"].
+                 getService(Ci.nsIUpdateManager).activeUpdate;
+    if (update) {
+      let patch = update.selectedPatch;
+      if (patch.type == "complete") {
+        patchType = AUSTLMY.PATCH_COMPLETE;
+      } else if (patch.type == "partial") {
+        patchType = AUSTLMY.PATCH_PARTIAL;
       }
-    } else if (!patch.applyWriteFailureTelemetrySent) {
-      // It's not ideal to hardcode AUSTLMY.STARTUP below (it could be
-      // AUSTLMY.STAGE). But staging is not used anymore and neither value
-      // really makes sense for this code. For the other codes it indicates when
-      // that code was read from the update status file, but this code was never
-      // read from the update status file.
+    }
+
+    if (gUpdateFileWriteInfo.phase == "check") {
+      let updateServiceInstance = UpdateServiceFactory.createInstance();
+      let pingSuffix = updateServiceInstance._pingSuffix;
+      if (!pingSuffix) {
+        // If pingSuffix isn't defined then this this is a manual check which
+        // isn't recorded at this time.
+        AUSTLMY.pingCheckCode(pingSuffix, AUSTLMY.CHK_ERR_WRITE_FAILURE);
+      }
+    } else if (gUpdateFileWriteInfo.phase == "download") {
+      AUSTLMY.pingDownloadCode(patchType, AUSTLMY.DWNLD_ERR_WRITE_FAILURE);
+    } else if (gUpdateFileWriteInfo.phase == "stage") {
+      let suffix = patchType + "_" + AUSTLMY.STAGE;
+      AUSTLMY.pingStateCode(suffix, AUSTLMY.STATE_WRITE_FAILURE);
+    } else if (gUpdateFileWriteInfo.phase == "startup") {
       let suffix = patchType + "_" + AUSTLMY.STARTUP;
       AUSTLMY.pingStateCode(suffix, AUSTLMY.STATE_WRITE_FAILURE);
-      patch.applyWriteFailureTelemetrySent = true;
-    }
-  } else {
-    let updateServiceInstance = UpdateServiceFactory.createInstance();
-    let request = updateServiceInstance.backgroundChecker._request;
-    if (!request.checkWriteFailureTelemetrySent) {
-      let pingSuffix = updateServiceInstance._pingSuffix;
-      AUSTLMY.pingCheckCode(pingSuffix, AUSTLMY.CHK_ERR_WRITE_FAILURE);
-      request.checkWriteFailureTelemetrySent = true;
+    } else {
+      // Temporary failure code to see if there are failures without an update
+      // phase.
+      AUSTLMY.pingDownloadCode(patchType, AUSTLMY.DWNLD_UNKNOWN_PHASE_ERR_WRITE_FAILURE);
     }
   }
 
@@ -1187,6 +1192,7 @@ function handleCriticalWriteResult(wroteSuccessfully, path) {
 function UpdatePatch(patch) {
   this._properties = {};
   this.errorCode = 0;
+  this.finalURL = null;
   this.state = STATE_NONE;
 
   for (let i = 0; i < patch.attributes.length; ++i) {
@@ -1755,6 +1761,9 @@ UpdateService.prototype = {
         this.pauseDownload();
         // Prevent leaking the downloader (bug 454964)
         this._downloader = null;
+        // In case an update check is in progress.
+        Cc["@mozilla.org/updates/update-checker;1"].
+          createInstance(Ci.nsIUpdateChecker).stopCurrentCheck();
         break;
     }
   },
@@ -1775,6 +1784,7 @@ UpdateService.prototype = {
    * notify the user of install success.
    */
   _postUpdateProcessing: function AUS__postUpdateProcessing() {
+    gUpdateFileWriteInfo = {phase: "startup", failure: false};
     if (!this.canCheckForUpdates) {
       LOG("UpdateService:_postUpdateProcessing - unable to check for " +
           "updates... returning early");
@@ -2627,12 +2637,6 @@ UpdateService.prototype = {
  * @constructor
  */
 function UpdateManager() {
-  if (Services.appinfo.ID == "xpcshell@tests.mozilla.org") {
-    // Use a smaller value for xpcshell tests so they don't have to wait as
-    // long for the files to be saved.
-    gSaveUpdateXMLDelay = 0;
-  }
-
   // Load the active-update.xml file to see if there is an active update.
   let activeUpdates = this._loadXMLFileIntoArray(FILE_ACTIVE_UPDATE_XML);
   if (activeUpdates.length > 0) {
@@ -2676,23 +2680,24 @@ UpdateManager.prototype = {
   observe: function UM_observe(subject, topic, data) {
     // Hack to be able to run and cleanup tests by reloading the update data.
     if (topic == "um-reload-update-data") {
+      if (!Cu.isInAutomation) {
+        return;
+      }
       if (this._updatesXMLSaver) {
         this._updatesXMLSaver.disarm();
-        AsyncShutdown.profileBeforeChange.removeBlocker(this._updatesXMLSaverCallback);
-        this._updatesXMLSaver = null;
-        this._updatesXMLSaverCallback = null;
       }
-      // Set the write delay to 0 for mochitest-chrome and mochitest-browser
-      // tests.
-      gSaveUpdateXMLDelay = 0;
-      this._activeUpdate = null;
-      let activeUpdates = this._loadXMLFileIntoArray(FILE_ACTIVE_UPDATE_XML);
-      if (activeUpdates.length > 0) {
-        this._activeUpdate = activeUpdates[0];
-      }
+
+      let updates = [];
       this._updatesDirty = true;
+      this._activeUpdate = null;
+      if (data != "skip-files") {
+        let activeUpdates = this._loadXMLFileIntoArray(FILE_ACTIVE_UPDATE_XML);
+        if (activeUpdates.length > 0) {
+          this._activeUpdate = activeUpdates[0];
+        }
+        updates = this._loadXMLFileIntoArray(FILE_UPDATES_XML);
+      }
       delete this._updates;
-      let updates = this._loadXMLFileIntoArray(FILE_UPDATES_XML);
       Object.defineProperty(this, "_updates", {
         value: updates,
         writable: true,
@@ -2768,8 +2773,8 @@ UpdateManager.prototype = {
 
   /**
    * Loads the update history from the updates.xml file and then replaces
-   * _updates with an array of all previously downloaded and installed updates
-   * so the file is only read once.
+   * |_updates| with an array of all previous updates so the file is only read
+   * once.
    */
   get _updates() {
     delete this._updates;
@@ -2846,7 +2851,8 @@ UpdateManager.prototype = {
       return true;
     }
 
-    const EMPTY_UPDATES_DOCUMENT_OPEN = "<?xml version=\"1.0\"?><updates xmlns=\"http://www.mozilla.org/2005/app-update\">";
+    const EMPTY_UPDATES_DOCUMENT_OPEN =
+      "<?xml version=\"1.0\"?><updates xmlns=\"" + URI_UPDATE_NS + "\">";
     const EMPTY_UPDATES_DOCUMENT_CLOSE = "</updates>";
     try {
       var parser = new DOMParser();
@@ -2858,6 +2864,9 @@ UpdateManager.prototype = {
 
       var xml = EMPTY_UPDATES_DOCUMENT_OPEN + doc.documentElement.innerHTML +
                 EMPTY_UPDATES_DOCUMENT_CLOSE;
+      // If the destination file existed and is removed while the following is
+      // being performed the copy of the tmp file to the destination file will
+      // fail.
       await OS.File.writeAtomic(file.path, xml, {encoding: "utf-8",
                                                  tmpPath: file.path + ".tmp"});
       await OS.File.setPermissions(file.path, {unixMode: FileUtils.PERMS_FILE});
@@ -2878,7 +2887,7 @@ UpdateManager.prototype = {
       this._updatesXMLSaverCallback = () => this._updatesXMLSaver.finalize();
 
       this._updatesXMLSaver = new DeferredTask(() => this._saveUpdatesXML(),
-                                               gSaveUpdateXMLDelay);
+                                               XML_SAVER_INTERVAL_MS);
       AsyncShutdown.profileBeforeChange.addBlocker(
         "UpdateManager: writing update xml data", this._updatesXMLSaverCallback);
     } else {
@@ -2893,15 +2902,13 @@ UpdateManager.prototype = {
    * been modified files.
    */
   _saveUpdatesXML: function UM__saveUpdatesXML() {
-    AsyncShutdown.profileBeforeChange.removeBlocker(this._updatesXMLSaverCallback);
-    this._updatesXMLSaver = null;
-    this._updatesXMLSaverCallback = null;
-
     // The active update stored in the active-update.xml file will change during
     // the lifetime of an active update and the file should always be updated
     // when saveUpdates is called.
-    this._writeUpdatesToXMLFile(this._activeUpdate ? [this._activeUpdate] : [],
-                                FILE_ACTIVE_UPDATE_XML).then(
+    let updates = this._activeUpdate ? [this._activeUpdate] : [];
+    let promises = [];
+    promises[0] = this._writeUpdatesToXMLFile(updates,
+                                              FILE_ACTIVE_UPDATE_XML).then(
       wroteSuccessfully => handleCriticalWriteResult(wroteSuccessfully,
                                                      FILE_ACTIVE_UPDATE_XML)
     );
@@ -2910,11 +2917,13 @@ UpdateManager.prototype = {
     // |_updatesDirty| will be true.
     if (this._updatesDirty) {
       this._updatesDirty = false;
-      this._writeUpdatesToXMLFile(this._updates, FILE_UPDATES_XML).then(
+      promises[1] = this._writeUpdatesToXMLFile(this._updates,
+                                                FILE_UPDATES_XML).then(
         wroteSuccessfully => handleCriticalWriteResult(wroteSuccessfully,
                                                        FILE_UPDATES_XML)
       );
     }
+    return Promise.all(promises);
   },
 
   /**
@@ -3125,6 +3134,7 @@ Checker.prototype = {
    */
   checkForUpdates: function UC_checkForUpdates(listener, force) {
     LOG("Checker: checkForUpdates, force: " + force);
+    gUpdateFileWriteInfo = {phase: "check", failure: false};
     if (!listener) {
       throw Cr.NS_ERROR_NULL_POINTER;
     }
@@ -3543,6 +3553,7 @@ Downloader.prototype = {
    */
   downloadUpdate: function Downloader_downloadUpdate(update) {
     LOG("UpdateService:_downloadUpdate");
+    gUpdateFileWriteInfo = {phase: "download", failure: false};
     if (!update) {
       AUSTLMY.pingDownloadCode(undefined, AUSTLMY.DWNLD_ERR_NO_UPDATE);
       throw Cr.NS_ERROR_NULL_POINTER;
@@ -3578,11 +3589,11 @@ Downloader.prototype = {
     this._request.start(this, null);
 
     writeStatusFile(updateDir, STATE_DOWNLOADING);
-    this._patch.QueryInterface(Ci.nsIWritablePropertyBag);
-    this._patch.state = STATE_DOWNLOADING;
-    var um = Cc["@mozilla.org/updates/update-manager;1"].
-             getService(Ci.nsIUpdateManager);
-    um.saveUpdates();
+    if (this._patch.state != STATE_DOWNLOADING) {
+      this._patch.state = STATE_DOWNLOADING;
+      Cc["@mozilla.org/updates/update-manager;1"].
+        getService(Ci.nsIUpdateManager).saveUpdates();
+    }
     return STATE_DOWNLOADING;
   },
 
@@ -3612,7 +3623,7 @@ Downloader.prototype = {
    *          The listener to remove.
    */
   removeDownloadListener: function Downloader_removeDownloadListener(listener) {
-    for (var i = 0; i < this._listeners.length; ++i) {
+    for (let i = 0; i < this._listeners.length; ++i) {
       if (this._listeners[i] == listener) {
         this._listeners.splice(i, 1);
         return;
@@ -3631,16 +3642,18 @@ Downloader.prototype = {
     if (request instanceof Ci.nsIIncrementalDownload)
       LOG("Downloader:onStartRequest - original URI spec: " + request.URI.spec +
           ", final URI spec: " + request.finalURI.spec);
-    // Always set finalURL in onStartRequest since it can change.
-    this._patch.finalURL = request.finalURI.spec;
-    var um = Cc["@mozilla.org/updates/update-manager;1"].
-             getService(Ci.nsIUpdateManager);
-    um.saveUpdates();
+    // Set finalURL in onStartRequest if it is different.
+    if (this._patch.finalURL != request.finalURI.spec) {
+      this._patch.finalURL = request.finalURI.spec;
+      Cc["@mozilla.org/updates/update-manager;1"].
+        getService(Ci.nsIUpdateManager).saveUpdates();
+    }
 
-    var listeners = this._listeners.concat();
-    var listenerCount = listeners.length;
-    for (var i = 0; i < listenerCount; ++i)
+    let listeners = this._listeners.concat();
+    let listenerCount = listeners.length;
+    for (let i = 0; i < listenerCount; ++i) {
       listeners[i].onStartRequest(request, context);
+    }
   },
 
   /**
@@ -3848,19 +3861,27 @@ Downloader.prototype = {
 
       deleteActiveUpdate = true;
     }
+    let saveUpdate = false;
     LOG("Downloader:onStopRequest - setting state to: " + state);
-    this._patch.state = state;
+    if (this._patch.state != state) {
+      saveUpdate = true;
+      this._patch.state = state;
+    }
     var um = Cc["@mozilla.org/updates/update-manager;1"].
              getService(Ci.nsIUpdateManager);
     if (deleteActiveUpdate) {
+      saveUpdate = true;
       this._update.installDate = (new Date()).getTime();
       // Setting |activeUpdate| to null will move the active update to the
       // update history.
       um.activeUpdate = null;
-    } else if (um.activeUpdate) {
+    } else if (um.activeUpdate && um.activeUpdate.state != state) {
+      saveUpdate = true;
       um.activeUpdate.state = state;
     }
-    um.saveUpdates();
+    if (saveUpdate) {
+      um.saveUpdates();
+    }
 
     // Only notify listeners about the stopped state if we
     // aren't handling an internal retry.
@@ -3936,8 +3957,8 @@ Downloader.prototype = {
       if (getCanStageUpdates()) {
         LOG("Downloader:onStopRequest - attempting to stage update: " +
             this._update.name);
-
-        // Initiate the update in the background
+        gUpdateFileWriteInfo = {phase: "stage", failure: false};
+        // Stage the update
         try {
           Cc["@mozilla.org/updates/update-processor;1"].
             createInstance(Ci.nsIUpdateProcessor).

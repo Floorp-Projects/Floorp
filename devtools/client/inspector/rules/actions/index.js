@@ -8,7 +8,7 @@ const { createEnum } = require("devtools/client/shared/enum");
 
 createEnum([
 
-  // Update the entire rules state with the new list of rules.
+  // Updates the rules state with the new list of CSS rules for the selected element.
   "UPDATE_RULES",
 
 ], module.exports);
