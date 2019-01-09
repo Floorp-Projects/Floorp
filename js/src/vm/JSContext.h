@@ -164,8 +164,8 @@ struct JSContext : public JS::RootingContext,
     return thing->compartment() == compartment();
   }
 
-  void* onOutOfMemory(js::AllocFunction allocFunc, size_t nbytes,
-                      arena_id_t arena, void* reallocPtr = nullptr) {
+  void* onOutOfMemory(js::AllocFunction allocFunc, arena_id_t arena,
+                      size_t nbytes, void* reallocPtr = nullptr) {
     if (helperThread()) {
       addPendingOutOfMemory();
       return nullptr;

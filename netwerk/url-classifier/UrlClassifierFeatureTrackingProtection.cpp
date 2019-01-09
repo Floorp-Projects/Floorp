@@ -42,6 +42,10 @@ UrlClassifierFeatureTrackingProtection::UrlClassifierFeatureTrackingProtection()
           NS_LITERAL_CSTRING(TABLE_TRACKING_BLACKLIST_PREF),
           NS_LITERAL_CSTRING(TABLE_TRACKING_WHITELIST_PREF), EmptyCString()) {}
 
+/* static */ const char* UrlClassifierFeatureTrackingProtection::Name() {
+  return TRACKING_PROTECTION_FEATURE_NAME;
+}
+
 /* static */ void UrlClassifierFeatureTrackingProtection::MaybeInitialize() {
   MOZ_ASSERT(XRE_IsParentProcess());
   UC_LOG(("UrlClassifierFeatureTrackingProtection: MaybeInitialize"));
@@ -97,7 +101,7 @@ UrlClassifierFeatureTrackingProtection::MaybeCreate(nsIChannel* aChannel) {
     return nullptr;
   }
 
-  if (!UrlClassifierCommon::ShouldEnableTrackingProtectionOrAnnotation(
+  if (!UrlClassifierCommon::ShouldEnableClassifier(
           aChannel, AntiTrackingCommon::eTrackingProtection)) {
     return nullptr;
   }

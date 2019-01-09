@@ -51,6 +51,10 @@ class nsCSPContext : public nsIContentSecurityPolicy {
  public:
   nsCSPContext();
 
+  nsresult InitFromOther(nsCSPContext* otherContext,
+                         mozilla::dom::Document* aDoc,
+                         nsIPrincipal* aPrincipal);
+
   /**
    * SetRequestContext() needs to be called before the innerWindowID
    * is initialized on the document. Use this function to call back to
