@@ -683,8 +683,6 @@ nsresult CacheFileMetadata::OnDataRead(CacheFileHandle *aHandle, char *aBuf,
   if (mFirstRead) {
     Telemetry::AccumulateTimeDelta(
         Telemetry::NETWORK_CACHE_METADATA_FIRST_READ_TIME_MS, mReadStart);
-    Telemetry::Accumulate(Telemetry::NETWORK_CACHE_METADATA_FIRST_READ_SIZE,
-                          mBufSize);
   } else {
     Telemetry::AccumulateTimeDelta(
         Telemetry::NETWORK_CACHE_METADATA_SECOND_READ_TIME_MS, mReadStart);
@@ -777,7 +775,7 @@ nsresult CacheFileMetadata::OnDataRead(CacheFileHandle *aHandle, char *aBuf,
     return NS_OK;
   }
 
-  Telemetry::Accumulate(Telemetry::NETWORK_CACHE_METADATA_SIZE,
+  Telemetry::Accumulate(Telemetry::NETWORK_CACHE_METADATA_SIZE_2,
                         size - realOffset);
 
   // We have all data according to offset information at the end of the entry.
