@@ -139,7 +139,7 @@ struct PointTyped
   constexpr MOZ_IMPLICIT PointTyped(const IntPointTyped<units>& point)
       : Super(F(point.x), F(point.y)) {}
 
-  bool WithinEpsilonOf(const PointTyped<units, F>& aPoint, F aEpsilon) {
+  bool WithinEpsilonOf(const PointTyped<units, F>& aPoint, F aEpsilon) const {
     return fabs(aPoint.x - this->x) < aEpsilon &&
            fabs(aPoint.y - this->y) < aEpsilon;
   }
