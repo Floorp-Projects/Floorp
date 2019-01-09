@@ -187,7 +187,7 @@ class ContentBlockingLog final {
         }
       } else {
         for (auto& item : Get<2>(*Get<1>(*iter))) {
-          if ((item.mType & aType) != 0) {
+          if (((item.mType & aType) != 0) && item.mBlocked) {
             return true;
           }
         }
