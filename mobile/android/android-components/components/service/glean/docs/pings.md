@@ -2,12 +2,12 @@
 
 If data collection is enabled, glean provides a set of pings that are assembled out of the box
 without any developer intervention.
-Every glean ping is in JSON format and contains a [common section](#the-common-information-section)
+Every glean ping is in JSON format and contains a [common section](#the-ping_info-section)
 with shared information data included under the `ping_info` key.
 The following is a list of the pings along with the conditions that triggers them.
 
 - [`baseline` ping](baseline.md)
-- `events` ping (TBD)
+- [`events` ping](events.md)
 - `metrics` ping (TBD)
 
 ## The `ping_info` section
