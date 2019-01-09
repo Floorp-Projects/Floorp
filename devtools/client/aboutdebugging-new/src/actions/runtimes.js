@@ -26,7 +26,6 @@ const {
   DISCONNECT_RUNTIME_FAILURE,
   DISCONNECT_RUNTIME_START,
   DISCONNECT_RUNTIME_SUCCESS,
-  PAGE_TYPES,
   REMOTE_RUNTIMES_UPDATED,
   RUNTIME_PREFERENCE,
   RUNTIMES,
@@ -63,9 +62,11 @@ async function getRuntimeInfo(runtime, clientWrapper) {
   };
 }
 
-function onRemoteDebuggerClientClosed() {
-  window.AboutDebugging.onNetworkLocationsUpdated();
-  window.AboutDebugging.onUSBRuntimesUpdated();
+function onUSBDebuggerClientClosed() {
+  // After scanUSBRuntimes action, updateUSBRuntimes action is called.
+  // The closed runtime will be unwatched and disconnected explicitly in the action
+  // if needed.
+  window.AboutDebugging.store.dispatch(Actions.scanUSBRuntimes());
 }
 
 function onMultiE10sUpdated() {
@@ -98,10 +99,10 @@ function connectRuntime(id) {
         deviceFront.on("multi-e10s-updated", onMultiE10sUpdated);
       }
 
-      if (runtime.type !== RUNTIMES.THIS_FIREFOX) {
+      if (runtime.type === RUNTIMES.USB) {
         // `closed` event will be emitted when disabling remote debugging
-        // on the connected remote runtime.
-        clientWrapper.addOneTimeListener("closed", onRemoteDebuggerClientClosed);
+        // on the connected USB runtime.
+        clientWrapper.addOneTimeListener("closed", onUSBDebuggerClientClosed);
       }
 
       dispatch({
@@ -130,8 +131,8 @@ function disconnectRuntime(id) {
         deviceFront.off("multi-e10s-updated", onMultiE10sUpdated);
       }
 
-      if (runtime.type !== RUNTIMES.THIS_FIREFOX) {
-        clientWrapper.removeListener("closed", onRemoteDebuggerClientClosed);
+      if (runtime.type === RUNTIMES.USB) {
+        clientWrapper.removeListener("closed", onUSBDebuggerClientClosed);
       }
 
       await clientWrapper.close();
@@ -270,56 +271,43 @@ function updateUSBRuntimes(adbRuntimes) {
   return updateRemoteRuntimes(runtimes, RUNTIMES.USB);
 }
 
-/**
- * Check that a given runtime can still be found in the provided array of runtimes, and
- * that the connection of the associated DebuggerClient is still valid.
- * Note that this check is only valid for runtimes which match the type of the runtimes
- * in the array.
- */
-function _isRuntimeValid(runtime, runtimes) {
-  const isRuntimeAvailable = runtimes.some(r => r.id === runtime.id);
-  const isConnectionValid = runtime.runtimeDetails &&
-    !runtime.runtimeDetails.clientWrapper.isClosed();
-  return isRuntimeAvailable && isConnectionValid;
-}
-
 function updateRemoteRuntimes(runtimes, type) {
   return async (dispatch, getState) => {
     const currentRuntime = getCurrentRuntime(getState().runtimes);
 
-    // Check if the updated remote runtimes should trigger a navigation out of the current
-    // runtime page.
-    if (currentRuntime && currentRuntime.type === type &&
-      !_isRuntimeValid(currentRuntime, runtimes)) {
-      // Since current remote runtime is invalid, move to this firefox page.
+    if (currentRuntime &&
+        currentRuntime.type === type &&
+        !runtimes.find(runtime => currentRuntime.id === runtime.id)) {
+      // Since current USB runtime was invalid, move to this firefox page.
       // This case is considered as followings and so on:
       // * Remove ADB addon
       // * (Physically) Disconnect USB runtime
       //
-      // The reason we call selectPage before REMOTE_RUNTIMES_UPDATED is fired is below.
-      // Current runtime can not be retrieved after REMOTE_RUNTIMES_UPDATED action, since
-      // that updates runtime state. So, before that we fire selectPage action to execute
-      // `unwatchRuntime` correctly.
-      await dispatch(Actions.selectPage(PAGE_TYPES.RUNTIME, RUNTIMES.THIS_FIREFOX));
+      // The reason why we call selectPage before USB_RUNTIMES_UPDATED was fired is below.
+      // Current runtime can not be retrieved after USB_RUNTIMES_UPDATED action, since
+      // that updates runtime state. So, before that we fire selectPage action so that to
+      // transact unwatchRuntime correctly.
+
+      await dispatch(Actions.selectPage(RUNTIMES.THIS_FIREFOX, RUNTIMES.THIS_FIREFOX));
     }
 
     // Retrieve runtimeDetails from existing runtimes.
     runtimes.forEach(runtime => {
       const existingRuntime = findRuntimeById(runtime.id, getState().runtimes);
-      const isConnectionValid = existingRuntime && existingRuntime.runtimeDetails &&
-        !existingRuntime.runtimeDetails.clientWrapper.isClosed();
-      runtime.runtimeDetails = isConnectionValid ? existingRuntime.runtimeDetails : null;
+      runtime.runtimeDetails = existingRuntime ? existingRuntime.runtimeDetails : null;
     });
 
+    // Disconnect runtimes that were no longer valid
+    const validIds = runtimes.map(r => r.id);
     const existingRuntimes = getAllRuntimes(getState().runtimes);
-    for (const runtime of existingRuntimes) {
-      // Runtime was connected before.
-      const isConnected = runtime.runtimeDetails;
-      // Runtime is of the same type as the updated runtimes array, so we should check it.
-      const isSameType = runtime.type === type;
-      if (isConnected && isSameType && !_isRuntimeValid(runtime, runtimes)) {
-        // Disconnect runtimes that were no longer valid.
-        await dispatch(disconnectRuntime(runtime.id));
+    const invalidRuntimes = existingRuntimes.filter(r => {
+      return r.type === type && !validIds.includes(r.id);
+    });
+
+    for (const invalidRuntime of invalidRuntimes) {
+      const isConnected = !!invalidRuntime.runtimeDetails;
+      if (isConnected) {
+        await dispatch(disconnectRuntime(invalidRuntime.id));
       }
     }
 
@@ -330,7 +318,6 @@ function updateRemoteRuntimes(runtimes, type) {
         continue;
       }
 
-      // Reconnect clients already available in the RemoteClientManager.
       const isConnected = !!runtime.runtimeDetails;
       const hasConnectedClient = remoteClientManager.hasClient(runtime.id, runtime.type);
       if (!isConnected && hasConnectedClient) {
@@ -347,12 +334,11 @@ function updateRemoteRuntimes(runtimes, type) {
  */
 function removeRuntimeListeners() {
   return (dispatch, getState) => {
-    const allRuntimes = getAllRuntimes(getState().runtimes);
-    const remoteRuntimes = allRuntimes.filter(r => r.type !== RUNTIMES.THIS_FIREFOX);
-    for (const runtime of remoteRuntimes) {
+    const { usbRuntimes } = getState().runtimes;
+    for (const runtime of usbRuntimes) {
       if (runtime.runtimeDetails) {
         const { clientWrapper } = runtime.runtimeDetails;
-        clientWrapper.removeListener("closed", onRemoteDebuggerClientClosed);
+        clientWrapper.removeListener("closed", onUSBDebuggerClientClosed);
       }
     }
   };
