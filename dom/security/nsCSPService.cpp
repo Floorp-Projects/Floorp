@@ -21,6 +21,7 @@
 #include "nsIScriptError.h"
 #include "nsContentUtils.h"
 #include "nsContentPolicyUtils.h"
+#include "nsNetUtil.h"
 
 using namespace mozilla;
 
@@ -249,6 +250,17 @@ CSPService::AsyncOnChannelRedirect(nsIChannel *oldChannel,
                                    nsIChannel *newChannel, uint32_t flags,
                                    nsIAsyncVerifyRedirectCallback *callback) {
   net::nsAsyncRedirectAutoCallback autoCallback(callback);
+
+  if (XRE_IsE10sParentProcess()) {
+    nsCOMPtr<nsIParentChannel> parentChannel;
+    NS_QueryNotificationCallbacks(oldChannel, parentChannel);
+    if (parentChannel) {
+      // This is an IPC'd channel. Don't check it here, because we won't have
+      // access to the request context; we'll check them in the content
+      // process instead. Bug 1509738 covers fixing this.
+      return NS_OK;
+    }
+  }
 
   nsCOMPtr<nsIURI> newUri;
   nsresult rv = newChannel->GetURI(getter_AddRefs(newUri));

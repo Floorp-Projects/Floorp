@@ -29,6 +29,8 @@ class UrlClassifierFeatureFactory final {
   static already_AddRefed<nsIUrlClassifierFeature> GetFeatureByName(
       const nsACString& aFeatureName);
 
+  static void GetFeatureNames(nsTArray<nsCString>& aArray);
+
   static already_AddRefed<nsIUrlClassifierFeature> CreateFeatureWithTables(
       const nsACString& aName, const nsTArray<nsCString>& aBlacklistTables,
       const nsTArray<nsCString>& aWhitelistTables);

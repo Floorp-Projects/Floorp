@@ -1258,6 +1258,35 @@ nsScriptSecurityManager::GetDocShellCodebasePrincipal(
 }
 
 NS_IMETHODIMP
+nsScriptSecurityManager::PrincipalWithOA(
+    nsIPrincipal* aPrincipal, JS::Handle<JS::Value> aOriginAttributes,
+    JSContext* aCx, nsIPrincipal** aReturnPrincipal) {
+  if (!aPrincipal) {
+    return NS_OK;
+  }
+  if (aPrincipal->GetIsCodebasePrincipal()) {
+    OriginAttributes attrs;
+    if (!aOriginAttributes.isObject() || !attrs.Init(aCx, aOriginAttributes)) {
+      return NS_ERROR_INVALID_ARG;
+    }
+    RefPtr<ContentPrincipal> copy = new ContentPrincipal();
+    ContentPrincipal* contentPrincipal =
+        static_cast<ContentPrincipal*>(aPrincipal);
+    nsresult rv = copy->Init(contentPrincipal, attrs);
+    NS_ENSURE_SUCCESS(rv, rv);
+    copy.forget(aReturnPrincipal);
+  } else {
+    // We do this for null principals, system principals (both fine)
+    // ... and expanded principals, where we should probably do something
+    // cleverer, but I also don't think we care too much.
+    nsCOMPtr<nsIPrincipal> prin = aPrincipal;
+    prin.forget(aReturnPrincipal);
+  }
+
+  return *aReturnPrincipal ? NS_OK : NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
 nsScriptSecurityManager::CanCreateWrapper(JSContext* cx, const nsIID& aIID,
                                           nsISupports* aObj,
                                           nsIClassInfo* aClassInfo) {
