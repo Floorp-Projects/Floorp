@@ -141,7 +141,8 @@ const MozElementMixin = Base => class MozElement extends Base {
             `;
         }, "")}
       ]>` : ""}
-      <box xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+      <box xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+           xmlns:html="http://www.w3.org/1999/xhtml">
         ${str}
       </box>
     `, "application/xml");

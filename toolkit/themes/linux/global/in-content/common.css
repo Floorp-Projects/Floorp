@@ -43,11 +43,6 @@ xul|*.radio-label-box {
   -moz-appearance: none;
 }
 
-xul|*.numberbox-input-box {
-  -moz-appearance: none;
-  border-width: 0;
-}
-
 xul|menulist:-moz-focusring > xul|*.menulist-label-box {
   outline: none;
 }

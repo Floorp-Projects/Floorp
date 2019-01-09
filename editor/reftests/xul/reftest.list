@@ -8,16 +8,7 @@ fails-if(Android) fails-if(windowsDefaultTheme&&/^Windows\x20NT\x20(5\.[12]|6\.[
 fails-if(Android) == emptymultiline-2.xul emptymultiline-ref.xul # bug 783658
 fails-if(Android) skip-if(winWidget) == emptytextbox-1.xul emptytextbox-ref.xul # Windows: bug 1239170
 fails-if(Android) skip-if(winWidget) == emptytextbox-2.xul emptytextbox-ref.xul # Windows: bug 1239170
-!= emptytextbox-3.xul emptytextbox-ref.xul
 != emptytextbox-4.xul emptytextbox-ref.xul
-# There is no way to simulate a number textbox in windows XP/Vista/7 default theme using CSS.
-# Therefore, the equlity tests below should be marked as failing.
-!= number-1.xul number-ref.xul
-!= number-2.xul number-ref.xul
-fuzzy-if(webrender,0-205,0-7) fails-if(Android) fails-if(windowsDefaultTheme&&/^Windows\x20NT\x20(5\.[12]|6\.[012]|10\.0)/.test(http.oscpu)) == number-3.xul number-ref.xul # bug 783658
-!= number-4.xul number-ref.xul
-fuzzy-if(webrender,0-205,0-7) fails-if(Android) fails-if(windowsDefaultTheme&&/^Windows\x20NT\x20(5\.[12]|6\.[012]|10\.0)/.test(http.oscpu)) == number-5.xul number-ref.xul # bug 783658
-fuzzy-if(webrender,0-255,0-7) fails-if(Android) fails-if(windowsDefaultTheme&&/^Windows\x20NT\x20(5\.[12]|6\.[012]|10\.0)/.test(http.oscpu)) == numberwithvalue-1.xul numberwithvalue-ref.xul # bug 783658
 fails-if(Android) skip-if(winWidget) == passwd-1.xul passwd-ref.xul # Windows: bug 1239170
 fails-if(Android) skip-if(winWidget) == passwd-2.xul passwd-ref.xul # Windows: bug 1239170
 != passwd-3.xul passwd-ref.xul
