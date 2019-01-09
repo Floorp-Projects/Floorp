@@ -502,7 +502,7 @@ nsresult HTMLImageElement::BindToTree(nsIDocument* aDocument,
   }
 
   if (HaveSrcsetOrInPicture()) {
-    Document* doc = GetComposedDoc();
+    nsIDocument* doc = GetComposedDoc();
     if (doc && !mInDocResponsiveContent) {
       doc->AddResponsiveContent(this);
       mInDocResponsiveContent = true;
