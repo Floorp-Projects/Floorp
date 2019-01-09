@@ -32,12 +32,6 @@ const {
   removeUSBRuntimesObserver,
 } = require("./src/modules/usb-runtimes");
 
-const {
-  addMultiE10sListener,
-  isMultiE10s,
-  removeMultiE10sListener,
-} = require("devtools/client/shared/multi-e10s-helper");
-
 loader.lazyRequireGetter(this, "adbAddon", "devtools/shared/adb/adb-addon", true);
 
 const Router = createFactory(require("devtools/client/shared/vendor/react-router-dom").HashRouter);
@@ -54,7 +48,6 @@ const AboutDebugging = {
     this.onAdbAddonUpdated = this.onAdbAddonUpdated.bind(this);
     this.onNetworkLocationsUpdated = this.onNetworkLocationsUpdated.bind(this);
     this.onUSBRuntimesUpdated = this.onUSBRuntimesUpdated.bind(this);
-    this.onMultiE10sUpdated = this.onMultiE10sUpdated.bind(this);
 
     this.store = configureStore();
     this.actions = bindActionCreators(actions, this.store.dispatch);
@@ -90,12 +83,6 @@ const AboutDebugging = {
 
     // Remove deprecated remote debugging extensions.
     await adbAddon.uninstallUnsupportedExtensions();
-
-    addMultiE10sListener(this.onMultiE10sUpdated);
-  },
-
-  onMultiE10sUpdated() {
-    this.actions.updateMultiE10sStatus(isMultiE10s());
   },
 
   onAdbAddonUpdated() {
@@ -123,7 +110,6 @@ const AboutDebugging = {
     // Remove all client listeners.
     this.actions.removeRuntimeListeners();
 
-    removeMultiE10sListener(this.onMultiE10sUpdated);
     removeNetworkLocationsObserver(this.onNetworkLocationsUpdated);
     removeUSBRuntimesObserver(this.onUSBRuntimesUpdated);
     adbAddon.off("update", this.onAdbAddonUpdated);

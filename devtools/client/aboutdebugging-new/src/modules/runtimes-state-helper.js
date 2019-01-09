@@ -46,3 +46,4 @@ function getCurrentRuntimeDetails(runtimesState) {
   const runtime = getCurrentRuntime(runtimesState);
   return runtime ? runtime.runtimeDetails : null;
 }
+exports.getCurrentRuntimeDetails = getCurrentRuntimeDetails;

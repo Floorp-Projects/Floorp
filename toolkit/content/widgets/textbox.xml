@@ -194,29 +194,27 @@
           if (this.hasAttribute("focused"))
             return;
 
-          let { originalTarget } = event;
-          if (originalTarget == this) {
-            // Forward focus to actual HTML input
-            this.inputField.focus();
-            this.setAttribute("focused", "true");
-            return;
+          switch (event.originalTarget) {
+            case this:
+              // Forward focus to actual HTML input
+              this.inputField.focus();
+              this.setAttribute("focused", "true");
+              break;
+            case this.inputField:
+              if (this.mIgnoreFocus) {
+                this.mIgnoreFocus = false;
+              } else if (this.clickSelectsAll) {
+                try {
+                  if (!this.editor || !this.editor.composing)
+                    this.editor.selectAll();
+                } catch (e) {}
+              }
+              this.setAttribute("focused", "true");
+              break;
+            default:
+              // Otherwise, allow other children (e.g. URL bar buttons) to get focus
+              break;
           }
-
-          // We check for the parent nodes to support input[type=number] where originalTarget may be an
-          // anonymous child input.
-          if (originalTarget == this.inputField ||
-              originalTarget.localName == "input" && originalTarget.parentNode.parentNode == this.inputField) {
-            if (this.mIgnoreFocus) {
-              this.mIgnoreFocus = false;
-            } else if (this.clickSelectsAll) {
-              try {
-                if (!this.editor || !this.editor.composing)
-                  this.editor.selectAll();
-              } catch (e) {}
-            }
-            this.setAttribute("focused", "true");
-          }
-          // Otherwise, allow other children (e.g. URL bar buttons) to get focus
         ]]>
       </handler>
 

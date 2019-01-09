@@ -1,0 +1,35 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* ===== numberinput.css ================================================
+  == Styles used by the input[type="number"] element.
+  ======================================================================= */
+
+@namespace xul url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+@namespace html url("http://www.w3.org/1999/xhtml");
+
+html|input[type="number"] {
+  text-align: right;
+}
+
+html|input[type="number"][hidespinbuttons="true"] {
+  -moz-appearance: textfield !important;
+}
+
+/* input[type=number] uses display: flex; by default which is incompatible with XUL flexbox
+   Forcing XUL flexbox allows changing the size of the input. */
+xul|*:root html|input[type="number"],
+xul|*:root html|input[type="number"]::-moz-number-wrapper {
+  display: -moz-box;
+  -moz-box-align: center;
+}
+
+xul|*:root html|input[type="number"]::-moz-number-wrapper,
+xul|*:root html|input[type="number"]::-moz-number-text {
+  -moz-box-flex: 1;
+}
+
+xul|*:root html|input[type="number"]::-moz-number-wrapper {
+  width: 100%;
+}

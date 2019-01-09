@@ -20,23 +20,24 @@ Services.obs.notifyObservers(null, TELEMETRY_SUBSESSION_TOPIC);
  * Get a snapshot of the scalars and check them against the provided values.
  */
 let checkScalars = (countsObject) => {
-  const scalars = getParentProcessScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN);
+  const scalars = TelemetryTestUtils.getParentProcessScalars(
+    Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN);
 
   // Check the expected values. Scalars that are never set must not be reported.
-  checkScalar(scalars, MAX_CONCURRENT_TABS, countsObject.maxTabs,
-              "The maximum tab count must match the expected value.");
-  checkScalar(scalars, TAB_EVENT_COUNT, countsObject.tabOpenCount,
-              "The number of open tab event count must match the expected value.");
-  checkScalar(scalars, MAX_CONCURRENT_WINDOWS, countsObject.maxWindows,
-              "The maximum window count must match the expected value.");
-  checkScalar(scalars, WINDOW_OPEN_COUNT, countsObject.windowsOpenCount,
-              "The number of window open event count must match the expected value.");
-  checkScalar(scalars, TOTAL_URI_COUNT, countsObject.totalURIs,
-              "The total URI count must match the expected value.");
-  checkScalar(scalars, UNIQUE_DOMAINS_COUNT, countsObject.domainCount,
-              "The unique domains count must match the expected value.");
-  checkScalar(scalars, UNFILTERED_URI_COUNT, countsObject.totalUnfilteredURIs,
-              "The unfiltered URI count must match the expected value.");
+  TelemetryTestUtils.assertScalar(scalars, MAX_CONCURRENT_TABS, countsObject.maxTabs,
+    "The maximum tab count must match the expected value.");
+  TelemetryTestUtils.assertScalar(scalars, TAB_EVENT_COUNT, countsObject.tabOpenCount,
+    "The number of open tab event count must match the expected value.");
+  TelemetryTestUtils.assertScalar(scalars, MAX_CONCURRENT_WINDOWS, countsObject.maxWindows,
+    "The maximum window count must match the expected value.");
+  TelemetryTestUtils.assertScalar(scalars, WINDOW_OPEN_COUNT, countsObject.windowsOpenCount,
+    "The number of window open event count must match the expected value.");
+  TelemetryTestUtils.assertScalar(scalars, TOTAL_URI_COUNT, countsObject.totalURIs,
+    "The total URI count must match the expected value.");
+  TelemetryTestUtils.assertScalar(scalars, UNIQUE_DOMAINS_COUNT, countsObject.domainCount,
+    "The unique domains count must match the expected value.");
+  TelemetryTestUtils.assertScalar(scalars, UNFILTERED_URI_COUNT, countsObject.totalUnfilteredURIs,
+    "The unfiltered URI count must match the expected value.");
 };
 
 add_task(async function test_tabsAndWindows() {
@@ -141,7 +142,7 @@ function checkTabCountHistogram(result, expected, message) {
 
 add_task(async function test_tabsHistogram() {
   let openedTabs = [];
-  let tabCountHist = getAndClearHistogram("TAB_COUNT");
+  let tabCountHist = TelemetryTestUtils.getAndClearHistogram("TAB_COUNT");
 
   checkTabCountHistogram(tabCountHist.snapshot(), {}, "TAB_COUNT telemetry - initial tab counts");
 

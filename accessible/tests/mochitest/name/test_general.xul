@@ -238,7 +238,7 @@
   <checkbox id="rememberHistoryDays"
             label="Remember "
             aria-labelledby="rememberHistoryDays historyDays rememberAfter"/>
-  <textbox id="historyDays" type="number" value="3"
+  <textbox id="historyDays" value="3"
            aria-labelledby="rememberHistoryDays historyDays rememberAfter"/>
   <label id="rememberAfter">days</label>
 
