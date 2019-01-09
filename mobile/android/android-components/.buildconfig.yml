@@ -1,0 +1,253 @@
+projects:
+  concept-awesomebar:
+    path: components/concept/awesomebar
+    description: 'An abstract definition of an awesomebar component.'
+    publish: false
+  concept-fetch:
+    path: components/concept/fetch
+    description: 'An abstract definition of an HTTP client for fetching resources.'
+    publish: false
+  concept-toolbar:
+    path: components/concept/toolbar
+    description: 'An abstract definition of a toolbar component.'
+    publish: false
+  concept-tabstray:
+    path: components/concept/tabstray
+    description: 'An abstract definition of a tabs tray component.'
+    publish: false
+  concept-engine:
+    path: components/concept/engine
+    description: 'An abstract layer hiding the actual browser engine implementation.'
+    publish: false
+  concept-storage:
+    path: components/concept/storage
+    description: 'An abstract definition of a browser storage layer.'
+    publish: false
+  feature-awesomebar:
+    path: components/feature/awesomebar
+    description: 'Component connecting a concept-toolbar with a concept-awesomebar.'
+    publish: false
+  feature-contextmenu:
+    path: components/feature/contextmenu
+    description: 'Component for displaying context menus for web content.'
+    publish: false
+  feature-customtabs:
+    path: components/feature/customtabs
+    description: 'Component for providing custom tabs functionality.'
+    publish: false
+  feature-intent:
+    path: components/feature/intent
+    description: 'Combining various feature components for intent processing.'
+    publish: false
+  feature-search:
+    path: components/feature/search
+    description: 'Feature implementation connecting an engine implementation with the search module.'
+    publish: false
+  feature-session:
+    path: components/feature/session
+    description: 'Feature implementation connecting an engine implementation with the session module.'
+    publish: false
+  feature-session-bundling:
+    path: components/feature/session-bundling
+    description: 'A session storage implementation that saves the state of sessions in grouped bundles (e.g. by time) in a database'
+    publish: false
+  feature-sync:
+    path: components/feature/sync
+    description: 'Feature implementation that enables syncing of syncable components.'
+    publish: false
+  feature-tabs:
+    path: components/feature/tabs
+    description: 'Feature implementation connecting a tabs tray implementation with the session and toolbar modules.'
+    publish: false
+  feature-toolbar:
+    path: components/feature/toolbar
+    description: 'Feature implementation connecting a toolbar implementation with the session module.'
+    publish: false
+  feature-downloads:
+    path: components/feature/downloads
+    description: 'Feature implementation for apps that want to use Android downloads manager.'
+    publish: false
+  feature-prompts:
+    path: components/feature/prompts
+    description: 'Feature that will subscribe to the selected session and will handle all the common prompt dialogs from web content.'
+    publish: false
+  browser-awesomebar:
+    path: components/browser/awesomebar
+    description: 'A customizable awesomebar component for browsers.'
+    publish: false
+  browser-domains:
+    path: components/browser/domains
+    description: 'Localized and customizable domain lists for auto-completion in browsers.'
+    publish: false
+  browser-engine-gecko:
+    path: components/browser/engine-gecko
+    description: 'Engine implementation based on GeckoView.'
+    publish: false
+  browser-engine-gecko-beta:
+    path: components/browser/engine-gecko-beta
+    description: 'Engine implementation based on GeckoView (Beta channel).'
+    publish: false
+  browser-engine-gecko-nightly:
+    path: components/browser/engine-gecko-nightly
+    description: 'Engine implementation based on GeckoView (Nightly).'
+    publish: false
+  browser-engine-system:
+    path: components/browser/engine-system
+    description: 'Engine implementation based on the system WebView.'
+    publish: false
+  browser-engine-servo:
+    path: components/browser/engine-servo
+    description: 'Engine implementation based on the Servo Browser Engine.'
+    publish: false
+  browser-errorpages:
+    path: components/browser/errorpages
+    description: 'Responsive browser error pages for Android apps.'
+    publish: false
+  browser-menu:
+    path: components/browser/menu
+    description: 'A customizable menu for browsers.'
+    publish: false
+  browser-search:
+    path: components/browser/search
+    description: 'Search plugins and companion code to load, parse and use them.'
+    publish: false
+  browser-session:
+    path: components/browser/session
+    description: 'An abstract layer hiding the actual browser engine implementation.'
+    publish: false
+  browser-storage-memory:
+    path: components/browser/storage-memory
+    description: 'A memory-backed implementation of core data storage.'
+    publish: false
+  browser-storage-sync:
+    path: components/browser/storage-sync
+    description: 'A syncable, Rust Places-backed implementation of core data storage.'
+    publish: false
+  browser-tabstray:
+    path: components/browser/tabstray
+    description: 'A tabs tray component for browsers.'
+    publish: false
+  browser-toolbar:
+    path: components/browser/toolbar
+    description: 'A customizable toolbar for browsers.'
+    publish: false
+  ui-autocomplete:
+    path: components/ui/autocomplete
+    description: 'A set of components to provide autocomplete functionality.'
+    publish: false
+  ui-colors:
+    path: components/ui/colors
+    description: 'The standard set of Photon colors.'
+    publish: false
+  ui-fonts:
+    path: components/ui/fonts
+    description: 'Convenience accessor for fonts used by Mozilla.'
+    publish: false
+  ui-icons:
+    path: components/ui/icons
+    description: 'A collection of often used browser icons.'
+    publish: false
+  ui-progress:
+    path: components/ui/progress
+    description: 'An animated progress bar following the Photon Design System.'
+    publish: false
+  ui-tabcounter:
+    path: components/ui/tabcounter
+    description: 'A tab counter for browsers.'
+    publish: false
+  service-firefox-accounts:
+    path: components/service/firefox-accounts
+    description: 'A library for integrating with Firefox Accounts.'
+    publish: false
+  service-sync-logins:
+    path: components/service/sync-logins
+    description: 'A library for integrating with Firefox Sync - Logins.'
+    publish: false
+  service-fretboard:
+    path: components/service/fretboard
+    description: 'An Android framework for segmenting users in order to run A/B tests and rollout features gradually.'
+    publish: false
+  service-glean:
+    path: components/service/glean
+    description: 'A client-side telemetry SDK for collecting metrics and sending them to the Mozilla telemetry service'
+    publish: false
+  service-telemetry:
+    path: components/service/telemetry
+    description: 'A generic library for generating and sending telemetry pings from Android applications to the Mozilla telemetry service.'
+    publish: false
+  support-base:
+    path: components/support/base
+    description: 'Base component containing building blocks for components.'
+    publish: false
+  support-ktx:
+    path: components/support/ktx
+    description: 'A set of Kotlin extensions.'
+    publish: false
+  support-test:
+    path: components/support/test
+    description: 'A collection of helpers for testing components.'
+    publish: false
+  support-utils:
+    path: components/support/utils
+    description: 'A collection of generic helper classes.'
+    publish: false
+  lib-crash:
+    path: components/lib/crash
+    description: 'A generic crash reporter library that can report crashes to multiple services.'
+    publish: false
+  lib-dataprotect:
+    path: components/lib/dataprotect
+    description: 'A component using AndroidKeyStore to protect user data.'
+    publish: false
+  lib-fetch-httpurlconnection:
+    path: components/lib/fetch-httpurlconnection
+    description: 'An implementation of lib-fetch based on HttpUrlConnection.'
+    publish: false
+  lib-fetch-okhttp:
+    path: components/lib/fetch-okhttp
+    description: 'An implementation of lib-fetch based on OkHttp.'
+    publish: false
+  lib-jexl:
+    path: components/lib/jexl
+    description: 'Javascript Expression Language: Powerful context-based expression parser and evaluator.'
+    publish: false
+  tooling-lint:
+    path: components/tooling/lint
+    description: 'Custom Lint checks for using and writing components.'
+    publish: true
+  tooling-fetch-tests:
+    path: components/tooling/fetch-tests
+    description: 'Test cases for concept-fetch implementations.'
+    publish: true
+  samples-browser:
+    path: samples/browser
+    description: 'A simple browser composed from browser components.'
+    publish: true
+  samples-crash:
+    path: samples/crash
+    description: 'An app showing the integration of the lib-crash component.'
+    publish: true
+  samples-firefox-accounts:
+    path: samples/firefox-accounts
+    description: 'A simple app demoing Firefox Accounts integration.'
+    publish: true
+  samples-glean:
+    path: samples/glean
+    description: 'An app demoing how to use the Glean library to collect and send telemetry data.'
+    publish: true
+  samples-sync-history:
+    path: samples/sync-history
+    description: 'A simple app demoing Firefox Sync (History) integration.'
+    publish: true
+  samples-sync-logins:
+    path: samples/sync-logins
+    description: 'A simple app demoing Firefox Sync (Logins) integration.'
+    publish: true
+  samples-toolbar:
+    path: samples/toolbar
+    description: 'An app demoing multiple customized toolbars using the browser-toolbar component.'
+    publish: true
+  samples-dataprotect:
+    path: samples/dataprotect
+    description: 'An app demoing how to use the Dataprotect component to load and store encrypted data in SharedPreferences.'
+    publish: true

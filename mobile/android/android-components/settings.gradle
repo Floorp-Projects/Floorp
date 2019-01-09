@@ -2,135 +2,45 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-def setupProject(name, path, description, shouldPublish = true) {
-    settings.include(name)
+import org.yaml.snakeyaml.Yaml
 
-    project(name).projectDir = new File(rootDir, path)
+buildscript {
+    repositories {
+        jcenter()
+    }
+
+    dependencies {
+        classpath 'org.yaml:snakeyaml:1.23'
+    }
+}
+
+def setupProject(name, path, description, shouldPublish) {
+    settings.include(":$name")
+
+    project(":$name").projectDir = new File(rootDir, path)
 
     if (!gradle.ext.has('componentDescriptions')) {
         gradle.ext.set('componentDescriptions', [:])
     }
 
     // TODO instead of using global "componentDescriptions" map, attach description to "project.ext"
-    gradle.ext.componentDescriptions[name.substring(1)] = description
+    gradle.ext.componentDescriptions[name] = description
 
-    // project(name) gives us a skeleton project that we can't set ext.* on
+    // project(...) gives us a skeleton project that we can't set ext.* on
     gradle.afterProject { project ->
         // However, the "afterProject" listener iterates over every project and gives us the actual project
         // So, once we filter for the project we care about, we can set whatever we want
-        if (project.name == name.substring(1)) {
+        if (project.name == name) {
             project.ext.shouldPublish = shouldPublish
         }
     }
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Concept
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-setupProject(':concept-awesomebar', 'components/concept/awesomebar', 'An abstract definition of an awesomebar component.')
-setupProject(':concept-fetch', 'components/concept/fetch', 'An abstract definition of an HTTP client for fetching resources.')
-setupProject(':concept-toolbar', 'components/concept/toolbar', 'An abstract definition of a toolbar component.')
-setupProject(':concept-tabstray', 'components/concept/tabstray', 'An abstract definition of a tabs tray component.')
-setupProject(':concept-engine', 'components/concept/engine', 'An abstract layer hiding the actual browser engine implementation.')
-setupProject(':concept-storage', 'components/concept/storage', 'An abstract definition of a browser storage layer.')
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Features
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-setupProject(':feature-awesomebar', 'components/feature/awesomebar', 'Component connecting a concept-toolbar with a concept-awesomebar.')
-setupProject(':feature-contextmenu', 'components/feature/contextmenu', 'Component for displaying context menus for web content.')
-setupProject(':feature-customtabs', 'components/feature/customtabs', 'Component for providing custom tabs functionality.')
-setupProject(':feature-intent', 'components/feature/intent', 'Combining various feature components for intent processing.')
-setupProject(':feature-search', 'components/feature/search', 'Feature implementation connecting an engine implementation with the search module.')
-setupProject(':feature-session', 'components/feature/session', 'Feature implementation connecting an engine implementation with the session module.')
-setupProject(':feature-session-bundling', 'components/feature/session-bundling', 'A session storage implementation that saves the state of sessions in grouped bundles (e.g. by time) in a database')
-setupProject(':feature-sync', 'components/feature/sync', 'Feature implementation that enables syncing of syncable components.')
-setupProject(':feature-tabs', 'components/feature/tabs', 'Feature implementation connecting a tabs tray implementation with the session and toolbar modules.')
-setupProject(':feature-toolbar', 'components/feature/toolbar', 'Feature implementation connecting a toolbar implementation with the session module.')
-setupProject(':feature-downloads', 'components/feature/downloads', 'Feature implementation for apps that want to use Android downloads manager.')
-setupProject(':feature-prompts', 'components/feature/prompts', 'Feature that will subscribe to the selected session and will handle all the common prompt dialogs from web content.')
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Browser components
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-setupProject(':browser-awesomebar', 'components/browser/awesomebar', 'A customizable awesomebar component for browsers.')
-setupProject(':browser-domains', 'components/browser/domains', 'Localized and customizable domain lists for auto-completion in browsers.')
-setupProject(':browser-engine-gecko', 'components/browser/engine-gecko', 'Engine implementation based on GeckoView.')
-setupProject(':browser-engine-gecko-beta', 'components/browser/engine-gecko-beta', 'Engine implementation based on GeckoView (Beta channel).')
-setupProject(':browser-engine-gecko-nightly', 'components/browser/engine-gecko-nightly', 'Engine implementation based on GeckoView (Nightly).')
-setupProject(':browser-engine-system', 'components/browser/engine-system', 'Engine implementation based on the system\'s WebView.')
-setupProject(':browser-engine-servo', 'components/browser/engine-servo', 'Engine implementation based on the Servo Browser Engine.')
-setupProject(':browser-errorpages', 'components/browser/errorpages', 'Responsive browser error pages for Android apps.')
-setupProject(':browser-menu', 'components/browser/menu', 'A customizable menu for browsers.')
-setupProject(':browser-search', 'components/browser/search', 'Search plugins and companion code to load, parse and use them.')
-setupProject(':browser-session', 'components/browser/session', 'An abstract layer hiding the actual browser engine implementation.')
-setupProject(':browser-storage-memory', 'components/browser/storage-memory', 'A memory-backed implementation of core data storage.')
-setupProject(':browser-storage-sync', 'components/browser/storage-sync', 'A syncable, Rust Places-backed implementation of core data storage.')
-setupProject(':browser-tabstray', 'components/browser/tabstray', 'A tabs tray component for browsers.')
-setupProject(':browser-toolbar', 'components/browser/toolbar', 'A customizable toolbar for browsers.')
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// UI components
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-setupProject(':ui-autocomplete', 'components/ui/autocomplete', 'A set of components to provide autocomplete functionality.')
-setupProject(':ui-colors', 'components/ui/colors', 'The standard set of Photon colors.')
-setupProject(':ui-fonts', 'components/ui/fonts', 'Convenience accessor for fonts used by Mozilla.')
-setupProject(':ui-icons', 'components/ui/icons', 'A collection of often used browser icons.')
-setupProject(':ui-progress', 'components/ui/progress', 'An animated progress bar following the Photon Design System.')
-setupProject(':ui-tabcounter', 'components/ui/tabcounter', 'A tab counter for browsers.')
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Services
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-setupProject(':service-firefox-accounts', 'components/service/firefox-accounts', 'A library for integrating with Firefox Accounts.')
-setupProject(':service-sync-logins', 'components/service/sync-logins', 'A library for integrating with Firefox Sync - Logins.')
-setupProject(':service-fretboard', 'components/service/fretboard', 'An Android framework for segmenting users in order to run A/B tests and rollout features gradually.')
-setupProject(':service-glean', 'components/service/glean', 'A client-side telemetry SDK for collecting metrics and sending them to Mozilla\'s telemetry service')
-setupProject(':service-telemetry', 'components/service/telemetry', 'A generic library for generating and sending telemetry pings from Android applications to Mozilla\'s telemetry service.')
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Support components
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-setupProject(':support-base', 'components/support/base', 'Base component containing building blocks for components.')
-setupProject(':support-ktx', 'components/support/ktx', 'A set of Kotlin extensions.')
-setupProject(':support-test', 'components/support/test', 'A collection of helpers for testing components.')
-setupProject(':support-utils', 'components/support/utils', 'A collection of generic helper classes.')
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Standalone Libraries
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-setupProject(':lib-crash', 'components/lib/crash', 'A generic crash reporter library that can report crashes to multiple services.')
-setupProject(':lib-dataprotect', 'components/lib/dataprotect', 'A component using AndroidKeyStore to protect user data.')
-setupProject(':lib-fetch-httpurlconnection', 'components/lib/fetch-httpurlconnection', 'An implementation of lib-fetch based on HttpUrlConnection.')
-setupProject(':lib-fetch-okhttp', 'components/lib/fetch-okhttp', 'An implementation of lib-fetch based on OkHttp.')
-setupProject(':lib-jexl', 'components/lib/jexl', 'Javascript Expression Language: Powerful context-based expression parser and evaluator.')
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Tooling
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-setupProject(':tooling-lint', 'components/tooling/lint', 'Custom Lint checks for using and writing components.', false)
-setupProject(':tooling-fetch-tests', 'components/tooling/fetch-tests', 'Test cases for concept-fetch implementations.', false)
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Samples
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-setupProject(':samples-browser', 'samples/browser', 'A simple browser composed from browser components.', false)
-setupProject(':samples-crash', 'samples/crash', 'An app showing the integration of the lib-crash component.', false)
-setupProject(':samples-firefox-accounts', 'samples/firefox-accounts', 'A simple app demoing Firefox Accounts integration.', false)
-setupProject(':samples-glean', 'samples/glean', 'An app demoing how to use the Glean library to collect and send telemetry data.', false)
-setupProject(':samples-sync-history', 'samples/sync-history', 'A simple app demoing Firefox Sync (History) integration.', false)
-setupProject(':samples-sync-logins', 'samples/sync-logins', 'A simple app demoing Firefox Sync (Logins) integration.', false)
-setupProject(':samples-toolbar', 'samples/toolbar', 'An app demoing multiple customized toolbars using the browser-toolbar component.', false)
-setupProject(':samples-dataprotect', 'samples/dataprotect', 'An app demoing how to use the Dataprotect component to load and store encrypted data in SharedPreferences.', false)
+def yaml = new Yaml()
+def buildconfig = yaml.load(new File(rootDir, '.buildconfig.yml').newInputStream())
+buildconfig.projects.each { project ->
+    setupProject(project.key, project.value.path, project.value.description, project.value.shouldPublish)
+}
 
 //////////////////////////////////////////////////////////////////////////
 // Local Development overrides
