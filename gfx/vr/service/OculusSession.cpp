@@ -156,10 +156,10 @@ ovrButton OculusControllerButtons[2][kNumOculusButtons] = {
 };
 
 ovrTouch OculusControllerTouches[2][kNumOculusButtons] = {
-    {ovrTouch_LThumb, ovrTouch_LIndexTrigger, (ovrTouch)0, ovrTouch_X, ovrTouch_Y,
-     ovrTouch_LThumbRest},
-    {ovrTouch_RThumb, ovrTouch_RIndexTrigger, (ovrTouch)0, ovrTouch_A, ovrTouch_B,
-     ovrTouch_RThumbRest},
+    {ovrTouch_LThumb, ovrTouch_LIndexTrigger, (ovrTouch)0, ovrTouch_X,
+     ovrTouch_Y, ovrTouch_LThumbRest},
+    {ovrTouch_RThumb, ovrTouch_RIndexTrigger, (ovrTouch)0, ovrTouch_A,
+     ovrTouch_B, ovrTouch_RThumbRest},
 };
 
 void UpdateButton(const ovrInputState& aInputState, uint32_t aHandIdx,
@@ -227,9 +227,8 @@ bool OculusSession::Initialize(mozilla::gfx::VRSystemState& aSystemState) {
     return false;
   }
 
-  mPresentationSize =
-      IntSize(aSystemState.displayState.mEyeResolution.width * 2,
-              aSystemState.displayState.mEyeResolution.height);
+  mPresentationSize = IntSize(aSystemState.displayState.eyeResolution.width * 2,
+                              aSystemState.displayState.eyeResolution.height);
   return true;
 }
 
@@ -328,13 +327,13 @@ void OculusSession::ProcessEvents(mozilla::gfx::VRSystemState& aSystemState) {
 
   ovrSessionStatus status;
   if (OVR_SUCCESS(ovr_GetSessionStatus(mSession, &status))) {
-    aSystemState.displayState.mIsConnected = status.HmdPresent;
-    aSystemState.displayState.mIsMounted = status.HmdMounted;
+    aSystemState.displayState.isConnected = status.HmdPresent;
+    aSystemState.displayState.isMounted = status.HmdMounted;
     mShouldQuit = status.ShouldQuit;
 
   } else {
-    aSystemState.displayState.mIsConnected = false;
-    aSystemState.displayState.mIsMounted = false;
+    aSystemState.displayState.isConnected = false;
+    aSystemState.displayState.isMounted = false;
   }
   UpdateHaptics();
   UpdateVisibility();
@@ -482,14 +481,14 @@ bool OculusSession::SubmitFrame(
   layer.ColorTexture[1] = nullptr;
   layer.Fov[0] = mFOVPort[0];
   layer.Fov[1] = mFOVPort[1];
-  layer.Viewport[0].Pos.x = textureDesc.Width * aLayer.mLeftEyeRect.x;
-  layer.Viewport[0].Pos.y = textureDesc.Height * aLayer.mLeftEyeRect.y;
-  layer.Viewport[0].Size.w = textureDesc.Width * aLayer.mLeftEyeRect.width;
-  layer.Viewport[0].Size.h = textureDesc.Height * aLayer.mLeftEyeRect.height;
-  layer.Viewport[1].Pos.x = textureDesc.Width * aLayer.mRightEyeRect.x;
-  layer.Viewport[1].Pos.y = textureDesc.Height * aLayer.mRightEyeRect.y;
-  layer.Viewport[1].Size.w = textureDesc.Width * aLayer.mRightEyeRect.width;
-  layer.Viewport[1].Size.h = textureDesc.Height * aLayer.mRightEyeRect.height;
+  layer.Viewport[0].Pos.x = textureDesc.Width * aLayer.leftEyeRect.x;
+  layer.Viewport[0].Pos.y = textureDesc.Height * aLayer.leftEyeRect.y;
+  layer.Viewport[0].Size.w = textureDesc.Width * aLayer.leftEyeRect.width;
+  layer.Viewport[0].Size.h = textureDesc.Height * aLayer.leftEyeRect.height;
+  layer.Viewport[1].Pos.x = textureDesc.Width * aLayer.rightEyeRect.x;
+  layer.Viewport[1].Pos.y = textureDesc.Height * aLayer.rightEyeRect.y;
+  layer.Viewport[1].Size.w = textureDesc.Width * aLayer.rightEyeRect.width;
+  layer.Viewport[1].Size.h = textureDesc.Height * aLayer.rightEyeRect.height;
 
   for (uint32_t i = 0; i < 2; ++i) {
     layer.RenderPose[i].Orientation.x = mFrameStartPose[i].Orientation.x;
@@ -981,33 +980,33 @@ void OculusSession::StopRendering() {
 
 bool OculusSession::InitState(VRSystemState& aSystemState) {
   VRDisplayState& state = aSystemState.displayState;
-  strncpy(state.mDisplayName, "Oculus VR HMD", kVRDisplayNameMaxLen);
-  state.mIsConnected = true;
-  state.mIsMounted = false;
+  strncpy(state.displayName, "Oculus VR HMD", kVRDisplayNameMaxLen);
+  state.isConnected = true;
+  state.isMounted = false;
 
   ovrHmdDesc desc = ovr_GetHmdDesc(mSession);
 
-  state.mCapabilityFlags = VRDisplayCapabilityFlags::Cap_None;
+  state.capabilityFlags = VRDisplayCapabilityFlags::Cap_None;
   if (desc.AvailableTrackingCaps & ovrTrackingCap_Orientation) {
-    state.mCapabilityFlags |= VRDisplayCapabilityFlags::Cap_Orientation;
-    state.mCapabilityFlags |= VRDisplayCapabilityFlags::Cap_AngularAcceleration;
+    state.capabilityFlags |= VRDisplayCapabilityFlags::Cap_Orientation;
+    state.capabilityFlags |= VRDisplayCapabilityFlags::Cap_AngularAcceleration;
   }
   if (desc.AvailableTrackingCaps & ovrTrackingCap_Position) {
-    state.mCapabilityFlags |= VRDisplayCapabilityFlags::Cap_Position;
-    state.mCapabilityFlags |= VRDisplayCapabilityFlags::Cap_LinearAcceleration;
-    state.mCapabilityFlags |= VRDisplayCapabilityFlags::Cap_StageParameters;
+    state.capabilityFlags |= VRDisplayCapabilityFlags::Cap_Position;
+    state.capabilityFlags |= VRDisplayCapabilityFlags::Cap_LinearAcceleration;
+    state.capabilityFlags |= VRDisplayCapabilityFlags::Cap_StageParameters;
   }
-  state.mCapabilityFlags |= VRDisplayCapabilityFlags::Cap_External;
-  state.mCapabilityFlags |= VRDisplayCapabilityFlags::Cap_MountDetection;
-  state.mCapabilityFlags |= VRDisplayCapabilityFlags::Cap_Present;
-  state.mReportsDroppedFrames = true;
+  state.capabilityFlags |= VRDisplayCapabilityFlags::Cap_External;
+  state.capabilityFlags |= VRDisplayCapabilityFlags::Cap_MountDetection;
+  state.capabilityFlags |= VRDisplayCapabilityFlags::Cap_Present;
+  state.reportsDroppedFrames = true;
 
   mFOVPort[VRDisplayState::Eye_Left] = desc.DefaultEyeFov[ovrEye_Left];
   mFOVPort[VRDisplayState::Eye_Right] = desc.DefaultEyeFov[ovrEye_Right];
 
-  state.mEyeFOV[VRDisplayState::Eye_Left] =
+  state.eyeFOV[VRDisplayState::Eye_Left] =
       FromFovPort(mFOVPort[VRDisplayState::Eye_Left]);
-  state.mEyeFOV[VRDisplayState::Eye_Right] =
+  state.eyeFOV[VRDisplayState::Eye_Right] =
       FromFovPort(mFOVPort[VRDisplayState::Eye_Right]);
 
   float pixelsPerDisplayPixel = 1.0;
@@ -1020,10 +1019,10 @@ bool OculusSession::InitState(VRSystemState& aSystemState) {
   }
 
   // take the max of both for eye resolution
-  state.mEyeResolution.width = std::max(texSize[VRDisplayState::Eye_Left].w,
-                                        texSize[VRDisplayState::Eye_Right].w);
-  state.mEyeResolution.height = std::max(texSize[VRDisplayState::Eye_Left].h,
-                                         texSize[VRDisplayState::Eye_Right].h);
+  state.eyeResolution.width = std::max(texSize[VRDisplayState::Eye_Left].w,
+                                       texSize[VRDisplayState::Eye_Right].w);
+  state.eyeResolution.height = std::max(texSize[VRDisplayState::Eye_Left].h,
+                                        texSize[VRDisplayState::Eye_Right].h);
 
   // default to an identity quaternion
   aSystemState.sensorState.pose.orientation[3] = 1.0f;
@@ -1045,37 +1044,37 @@ void OculusSession::UpdateStageParameters(VRDisplayState& aState) {
   ovrResult res =
       ovr_GetBoundaryDimensions(mSession, ovrBoundary_PlayArea, &playArea);
   if (res == ovrSuccess) {
-    aState.mStageSize.width = playArea.x;
-    aState.mStageSize.height = playArea.z;
+    aState.stageSize.width = playArea.x;
+    aState.stageSize.height = playArea.z;
   } else {
     // If we fail, fall back to reasonable defaults.
     // 1m x 1m space
-    aState.mStageSize.width = 1.0f;
-    aState.mStageSize.height = 1.0f;
+    aState.stageSize.width = 1.0f;
+    aState.stageSize.height = 1.0f;
   }
 
   float eyeHeight =
       ovr_GetFloat(mSession, OVR_KEY_EYE_HEIGHT, OVR_DEFAULT_EYE_HEIGHT);
 
-  aState.mSittingToStandingTransform[0] = 1.0f;
-  aState.mSittingToStandingTransform[1] = 0.0f;
-  aState.mSittingToStandingTransform[2] = 0.0f;
-  aState.mSittingToStandingTransform[3] = 0.0f;
+  aState.sittingToStandingTransform[0] = 1.0f;
+  aState.sittingToStandingTransform[1] = 0.0f;
+  aState.sittingToStandingTransform[2] = 0.0f;
+  aState.sittingToStandingTransform[3] = 0.0f;
 
-  aState.mSittingToStandingTransform[4] = 0.0f;
-  aState.mSittingToStandingTransform[5] = 1.0f;
-  aState.mSittingToStandingTransform[6] = 0.0f;
-  aState.mSittingToStandingTransform[7] = 0.0f;
+  aState.sittingToStandingTransform[4] = 0.0f;
+  aState.sittingToStandingTransform[5] = 1.0f;
+  aState.sittingToStandingTransform[6] = 0.0f;
+  aState.sittingToStandingTransform[7] = 0.0f;
 
-  aState.mSittingToStandingTransform[8] = 0.0f;
-  aState.mSittingToStandingTransform[9] = 0.0f;
-  aState.mSittingToStandingTransform[10] = 1.0f;
-  aState.mSittingToStandingTransform[11] = 0.0f;
+  aState.sittingToStandingTransform[8] = 0.0f;
+  aState.sittingToStandingTransform[9] = 0.0f;
+  aState.sittingToStandingTransform[10] = 1.0f;
+  aState.sittingToStandingTransform[11] = 0.0f;
 
-  aState.mSittingToStandingTransform[12] = 0.0f;
-  aState.mSittingToStandingTransform[13] = eyeHeight;
-  aState.mSittingToStandingTransform[14] = 0.0f;
-  aState.mSittingToStandingTransform[15] = 1.0f;
+  aState.sittingToStandingTransform[12] = 0.0f;
+  aState.sittingToStandingTransform[13] = eyeHeight;
+  aState.sittingToStandingTransform[14] = 0.0f;
+  aState.sittingToStandingTransform[15] = 1.0f;
 }
 
 void OculusSession::UpdateEyeParameters(VRSystemState& aState) {
@@ -1092,11 +1091,11 @@ void OculusSession::UpdateEyeParameters(VRSystemState& aState) {
     // loading the Oculus runtime dll directly.
     ovrEyeRenderDesc renderDesc =
         ovr_GetRenderDesc2(mSession, (ovrEyeType)eye, mFOVPort[eye]);
-    aState.displayState.mEyeTranslation[eye].x =
+    aState.displayState.eyeTranslation[eye].x =
         renderDesc.HmdToEyePose.Position.x;
-    aState.displayState.mEyeTranslation[eye].y =
+    aState.displayState.eyeTranslation[eye].y =
         renderDesc.HmdToEyePose.Position.y;
-    aState.displayState.mEyeTranslation[eye].z =
+    aState.displayState.eyeTranslation[eye].z =
         renderDesc.HmdToEyePose.Position.z;
 
     Matrix4x4 pose;
@@ -1372,7 +1371,7 @@ void OculusSession::UpdateTelemetry(VRSystemState& aSystemState) {
   ovrPerfStats perfStats;
   if (ovr_GetPerfStats(mSession, &perfStats) == ovrSuccess) {
     if (perfStats.FrameStatsCount) {
-      aSystemState.displayState.mDroppedFrameCount =
+      aSystemState.displayState.droppedFrameCount =
           perfStats.FrameStats[0].AppDroppedFrameCount;
     }
   }
