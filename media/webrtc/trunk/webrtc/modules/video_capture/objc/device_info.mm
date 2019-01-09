@@ -42,7 +42,9 @@ DeviceInfoIos::DeviceInfoIos() {
   this->Init();
 }
 
-DeviceInfoIos::~DeviceInfoIos() {}
+DeviceInfoIos::~DeviceInfoIos() {
+  [_captureInfo registerOwner:nil];
+}
 
 int32_t DeviceInfoIos::Init() {
   _captureInfo = [[DeviceInfoIosObjC alloc] init];

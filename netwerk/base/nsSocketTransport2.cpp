@@ -717,6 +717,8 @@ nsSocketTransport::nsSocketTransport()
       mSocketTransportService(gSocketTransportService),
       mInput(this),
       mOutput(this),
+      mLingerPolarity(false),
+      mLingerTimeout(0),
       mQoSBits(0x00),
       mKeepaliveEnabled(false),
       mKeepaliveIdleTimeS(-1),
@@ -1978,7 +1980,8 @@ class ThunkPRClose : public Runnable {
   PRFileDesc *mFD;
 };
 
-void STS_PRCloseOnSocketTransport(PRFileDesc *fd) {
+void STS_PRCloseOnSocketTransport(PRFileDesc *fd, bool lingerPolarity,
+                                  int16_t lingerTimeout) {
   if (gSocketTransportService) {
     // Can't PR_Close() a socket off STS thread. Thunk it to STS to die
     gSocketTransportService->Dispatch(new ThunkPRClose(fd), NS_DISPATCH_NORMAL);
@@ -1999,13 +2002,22 @@ void nsSocketTransport::ReleaseFD_Locked(PRFileDesc *fd) {
          gSocketTransportService->MaxTimeForPrClosePref())) {
       // If shutdown last to long, let the socket leak and do not close it.
       SOCKET_LOG(("Intentional leak"));
-    } else if (OnSocketThread()) {
-      SOCKET_LOG(("nsSocketTransport: calling PR_Close [this=%p]\n", this));
-      CloseSocket(
-          mFD, mSocketTransportService->IsTelemetryEnabledAndNotSleepPhase());
     } else {
-      // Can't PR_Close() a socket off STS thread. Thunk it to STS to die
-      STS_PRCloseOnSocketTransport(mFD);
+      if (mLingerPolarity || mLingerTimeout) {
+        PRSocketOptionData socket_linger;
+        socket_linger.option = PR_SockOpt_Linger;
+        socket_linger.value.linger.polarity = mLingerPolarity;
+        socket_linger.value.linger.linger = mLingerTimeout;
+        PR_SetSocketOption(mFD, &socket_linger);
+      }
+      if (OnSocketThread()) {
+        SOCKET_LOG(("nsSocketTransport: calling PR_Close [this=%p]\n", this));
+        CloseSocket(
+            mFD, mSocketTransportService->IsTelemetryEnabledAndNotSleepPhase());
+      } else {
+        // Can't PR_Close() a socket off STS thread. Thunk it to STS to die
+        STS_PRCloseOnSocketTransport(mFD, mLingerPolarity, mLingerTimeout);
+      }
     }
     mFD = nullptr;
   }
@@ -2753,6 +2765,16 @@ nsSocketTransport::SetTimeout(uint32_t type, uint32_t value) {
 NS_IMETHODIMP
 nsSocketTransport::SetReuseAddrPort(bool reuseAddrPort) {
   mReuseAddrPort = reuseAddrPort;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSocketTransport::SetLinger(bool aPolarity, int16_t aTimeout) {
+  MutexAutoLock lock(mLock);
+
+  mLingerPolarity = aPolarity;
+  mLingerTimeout = aTimeout;
+
   return NS_OK;
 }
 
