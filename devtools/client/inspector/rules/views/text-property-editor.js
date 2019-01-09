@@ -613,7 +613,7 @@ TextPropertyEditor.prototype = {
 
     if (!this.editing &&
         (this.prop.overridden || !this.prop.enabled ||
-         !this.prop.isKnownProperty())) {
+         !this.prop.isKnownProperty)) {
       this.element.classList.add("ruleview-overridden");
     } else {
       this.element.classList.remove("ruleview-overridden");

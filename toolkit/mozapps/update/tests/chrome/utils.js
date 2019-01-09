@@ -287,7 +287,7 @@ function finishTestDefault() {
   gEnv.set("MOZ_TEST_SKIP_UPDATE_STAGE", "");
   resetFiles();
   removeUpdateDirsAndFiles();
-  reloadUpdateManagerData();
+  reloadUpdateManagerData(true);
 
   Services.ww.unregisterNotification(gWindowObserver);
   if (gDocElem) {

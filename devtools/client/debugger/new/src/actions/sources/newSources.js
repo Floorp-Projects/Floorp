@@ -88,7 +88,16 @@ function loadSourceMap(sourceId: SourceId) {
 
     let urls = null;
     try {
-      urls = await sourceMaps.getOriginalURLs(source);
+      const urlInfo = { ...source };
+      if (!urlInfo.url) {
+        // If the source was dynamically generated (via eval, dynamically
+        // created script elements, and so forth), it won't have a URL, so that
+        // it is not collapsed into other sources from the same place. The
+        // introduction URL will include the point it was constructed at,
+        // however, so use that for resolving any source maps in the source.
+        urlInfo.url = urlInfo.introductionUrl;
+      }
+      urls = await sourceMaps.getOriginalURLs(urlInfo);
     } catch (e) {
       console.error(e);
     }

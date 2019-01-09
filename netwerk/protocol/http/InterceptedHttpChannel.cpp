@@ -236,10 +236,6 @@ nsresult InterceptedHttpChannel::RedirectForResponseURL(
       mResponseHead, mBodyReader, bodyCallback, mChannelCreationTime,
       mChannelCreationTimestamp, mAsyncOpenTime);
 
-  rv = newChannel->Init(aResponseURI, mCaps,
-                        static_cast<nsProxyInfo*>(mProxyInfo.get()),
-                        mProxyResolveFlags, mProxyURI, mChannelId);
-
   // If the response has been redirected, propagate all the URLs to content.
   // Thus, the exact value of the redirect flag does not matter as long as it's
   // not REDIRECT_INTERNAL.
@@ -248,6 +244,15 @@ nsresult InterceptedHttpChannel::RedirectForResponseURL(
 
   nsCOMPtr<nsILoadInfo> redirectLoadInfo =
       CloneLoadInfoForRedirect(aResponseURI, flags);
+
+  nsContentPolicyType contentPolicyType =
+      redirectLoadInfo ? redirectLoadInfo->GetExternalContentPolicyType()
+                       : nsIContentPolicy::TYPE_OTHER;
+
+  rv = newChannel->Init(
+      aResponseURI, mCaps, static_cast<nsProxyInfo*>(mProxyInfo.get()),
+      mProxyResolveFlags, mProxyURI, mChannelId, contentPolicyType);
+
   newChannel->SetLoadInfo(redirectLoadInfo);
   NS_ENSURE_SUCCESS(rv, rv);
 

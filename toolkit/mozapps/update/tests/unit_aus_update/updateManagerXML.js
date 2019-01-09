@@ -261,16 +261,5 @@ function run_test() {
   Assert.equal(results[1].value, "custom4 patch value",
                "the second property value" + MSG_SHOULD_EQUAL);
 
-  // Cleaning up the active update along with reloading the update manager
-  // in doTestFinish will prevent writing the update xml files during
-  // shutdown.
-  gUpdateManager.cleanupActiveUpdate();
-  executeSoon(waitForUpdateXMLFiles);
-}
-
-/**
- * Called after the call to waitForUpdateXMLFiles finishes.
- */
-function waitForUpdateXMLFilesFinished() {
   executeSoon(doTestFinish);
 }
