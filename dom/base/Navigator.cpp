@@ -1683,6 +1683,19 @@ nsresult Navigator::GetUserAgent(nsPIDOMWindowInner* aWindow,
     }
   }
 
+  // When the caller is content and 'privacy.resistFingerprinting' is true,
+  // return a spoofed userAgent which reveals the platform but not the
+  // specific OS version, etc.
+  if (!aIsCallerChrome && nsContentUtils::ShouldResistFingerprinting()) {
+    nsAutoCString spoofedUA;
+    nsresult rv = nsRFPService::GetSpoofedUserAgent(spoofedUA, false);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+    CopyASCIItoUTF16(spoofedUA, aUserAgent);
+    return NS_OK;
+  }
+
   nsresult rv;
   nsCOMPtr<nsIHttpProtocolHandler> service(
       do_GetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "http", &rv));
