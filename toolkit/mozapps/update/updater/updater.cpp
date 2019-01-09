@@ -2542,6 +2542,8 @@ int NS_main(int argc, NS_tchar **argv) {
 #if XP_WIN
   // Null gUserToken is treated as "no impersonation required".
   gUserToken = nullptr;
+
+#ifndef DISABLE_USER_IMPERSONATION
   if (sUsingService) {
     char *tokenStr = getenv(USER_TOKEN_VAR_NAME);
 
@@ -2569,6 +2571,7 @@ int NS_main(int argc, NS_tchar **argv) {
       // run a new updater.
     }
   }
+#endif  // DISABLE_USER_IMPERSONATION
 #endif
 #endif
 
