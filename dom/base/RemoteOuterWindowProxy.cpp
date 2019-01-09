@@ -102,8 +102,8 @@ bool WrapResult(JSContext* aCx, JS::Handle<JSObject*> aProxy,
   if (!ToJSValue(aCx, WindowProxyHolder(aResult), &v)) {
     return false;
   }
-  aDesc.object().set(aProxy);
   aDesc.setDataDescriptor(v, attrs);
+  aDesc.object().set(aProxy);
   return true;
 }
 
