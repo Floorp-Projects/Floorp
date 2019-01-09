@@ -1890,6 +1890,11 @@ SocketTransportShim::SetReuseAddrPort(bool aReuseAddrPort) {
 }
 
 NS_IMETHODIMP
+SocketTransportShim::SetLinger(bool aPolarity, int16_t aTimeout) {
+  return mWrapped->SetLinger(aPolarity, aTimeout);
+}
+
+NS_IMETHODIMP
 SocketTransportShim::GetQoSBits(uint8_t *aQoSBits) {
   return mWrapped->GetQoSBits(aQoSBits);
 }
