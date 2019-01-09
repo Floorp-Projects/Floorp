@@ -12,6 +12,7 @@ use winapi::um::dwrite::{DWRITE_GLYPH_RUN, DWRITE_TEXTURE_ALIASED_1x1, DWRITE_TE
 use winapi::um::dwrite::DWRITE_TEXTURE_CLEARTYPE_3x1;
 use winapi::shared::windef::RECT;
 use winapi::um::dwrite::IDWriteGlyphRunAnalysis;
+use winapi::um::winnt::HRESULT;
 use std::mem;
 use super::DWriteFactory;
 
@@ -26,7 +27,7 @@ impl GlyphRunAnalysis {
                   rendering_mode: DWRITE_RENDERING_MODE,
                   measuring_mode: DWRITE_MEASURING_MODE,
                   baseline_x: f32,
-                  baseline_y: f32) -> GlyphRunAnalysis
+                  baseline_y: f32) -> Result<GlyphRunAnalysis, HRESULT>
     {
         unsafe {
             let mut native: ComPtr<IDWriteGlyphRunAnalysis> = ComPtr::new();
@@ -36,8 +37,11 @@ impl GlyphRunAnalysis {
                                                                rendering_mode, measuring_mode,
                                                                baseline_x, baseline_y,
                                                                native.getter_addrefs());
-            assert!(hr == 0);
-            GlyphRunAnalysis::take(native)
+            if hr != 0 {
+                Err(hr)
+            } else {
+                Ok(GlyphRunAnalysis::take(native))
+            }
         }
     }
 
@@ -47,18 +51,21 @@ impl GlyphRunAnalysis {
         }
     }
 
-    pub fn get_alpha_texture_bounds(&self, texture_type: DWRITE_TEXTURE_TYPE) -> RECT {
+    pub fn get_alpha_texture_bounds(&self, texture_type: DWRITE_TEXTURE_TYPE) -> Result<RECT, HRESULT> {
         unsafe {
             let mut rect: RECT = mem::zeroed();
             rect.left = 1234;
             rect.top = 1234;
             let hr = (*self.native.get()).GetAlphaTextureBounds(texture_type, &mut rect);
-            assert!(hr == 0);
-            rect
+            if hr != 0 {
+                Err(hr)
+            } else {
+                Ok(rect)
+            }
         }
     }
 
-    pub fn create_alpha_texture(&self, texture_type: DWRITE_TEXTURE_TYPE, rect: RECT) -> Vec<u8> {
+    pub fn create_alpha_texture(&self, texture_type: DWRITE_TEXTURE_TYPE, rect: RECT) -> Result<Vec<u8>, HRESULT> {
         unsafe {
             let rect_pixels = (rect.right - rect.left) * (rect.bottom - rect.top);
             let rect_bytes = rect_pixels * match texture_type {
@@ -69,8 +76,11 @@ impl GlyphRunAnalysis {
 
             let mut out_bytes: Vec<u8> = vec![0; rect_bytes as usize];
             let hr = (*self.native.get()).CreateAlphaTexture(texture_type, &rect, out_bytes.as_mut_ptr(), out_bytes.len() as u32);
-            assert!(hr == 0);
-            out_bytes
+            if hr != 0 {
+                Err(hr)
+            } else {
+                Ok(out_bytes)
+            }
         }
     }
 }
