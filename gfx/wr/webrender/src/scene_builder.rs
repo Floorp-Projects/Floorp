@@ -817,6 +817,7 @@ impl LowPrioritySceneBuilder {
     fn process_transaction(&mut self, mut txn: Box<Transaction>) -> Box<Transaction> {
         let is_low_priority = true;
         txn.rasterize_blobs(is_low_priority);
+        txn.blob_requests = Vec::new();
 
         if self.simulate_slow_ms > 0 {
             thread::sleep(Duration::from_millis(self.simulate_slow_ms as u64));
