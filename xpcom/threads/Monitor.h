@@ -30,6 +30,7 @@ class Monitor {
   ~Monitor() {}
 
   void Lock() { mMutex.Lock(); }
+  bool TryLock() { return mMutex.TryLock(); }
   void Unlock() { mMutex.Unlock(); }
 
   void Wait() { mCondVar.Wait(); }

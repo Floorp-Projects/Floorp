@@ -349,6 +349,16 @@ void OffTheBooksMutex::Lock() {
   Acquire();
 }
 
+bool OffTheBooksMutex::TryLock() {
+  CheckAcquire();
+  bool locked = this->tryLock();
+  if (locked) {
+    mOwningThread = PR_GetCurrentThread();
+    Acquire();
+  }
+  return locked;
+}
+
 void OffTheBooksMutex::Unlock() {
   Release();
   mOwningThread = nullptr;
