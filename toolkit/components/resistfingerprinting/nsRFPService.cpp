@@ -653,7 +653,8 @@ uint32_t nsRFPService::GetSpoofedPresentedFrames(double aTime, uint32_t aWidth,
 }
 
 /* static */
-nsresult nsRFPService::GetSpoofedUserAgent(nsACString& userAgent) {
+nsresult nsRFPService::GetSpoofedUserAgent(nsACString& userAgent,
+                                           bool isForHTTPHeader) {
   // This function generates the spoofed value of User Agent.
   // We spoof the values of the platform and Firefox version, which could be
   // used as fingerprinting sources to identify individuals.
@@ -689,8 +690,9 @@ nsresult nsRFPService::GetSpoofedUserAgent(nsACString& userAgent) {
   // Except we used 60 as an ESR instead of 59.
   // We infer the last and closest ESR version based on this rule.
   uint32_t spoofedVersion = firefoxVersion - ((firefoxVersion - 4) % 7);
+  const char* spoofedOS = isForHTTPHeader ? SPOOFED_HTTP_UA_OS : SPOOFED_UA_OS;
   userAgent.Assign(nsPrintfCString(
-      "Mozilla/5.0 (%s; rv:%d.0) Gecko/%s Firefox/%d.0", SPOOFED_UA_OS,
+      "Mozilla/5.0 (%s; rv:%d.0) Gecko/%s Firefox/%d.0", spoofedOS,
       spoofedVersion, LEGACY_UA_GECKO_TRAIL, spoofedVersion));
 
   return rv;
