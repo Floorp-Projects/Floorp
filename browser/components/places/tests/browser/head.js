@@ -66,15 +66,16 @@ function promiseClipboard(aPopulateClipboardFn, aFlavor) {
 }
 
 function synthesizeClickOnSelectedTreeCell(aTree, aOptions) {
-  if (aTree.view.selection.count < 1)
+  let tbo = aTree.treeBoxObject;
+  if (tbo.view.selection.count < 1)
      throw new Error("The test node should be successfully selected");
   // Get selection rowID.
   let min = {}, max = {};
-  aTree.view.selection.getRangeAt(0, min, max);
+  tbo.view.selection.getRangeAt(0, min, max);
   let rowID = min.value;
-  aTree.ensureRowIsVisible(rowID);
+  tbo.ensureRowIsVisible(rowID);
   // Calculate the click coordinates.
-  var rect = aTree.getCoordsForCellItem(rowID, aTree.columns[0], "text");
+  var rect = tbo.getCoordsForCellItem(rowID, aTree.columns[0], "text");
   var x = rect.x + rect.width / 2;
   var y = rect.y + rect.height / 2;
   // Simulate the click.

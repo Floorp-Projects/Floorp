@@ -400,8 +400,9 @@ var gSearchPane = {
 function onDragEngineStart(event) {
   var selectedIndex = gEngineView.selectedIndex;
   var tree = document.getElementById("engineList");
-  let cell = tree.getCellAt(event.clientX, event.clientY);
-  if (selectedIndex >= 0 && !gEngineView.isCheckBox(cell.row, cell.col)) {
+  var row = { }, col = { }, child = { };
+  tree.treeBoxObject.getCellAt(event.clientX, event.clientY, row, col, child);
+  if (selectedIndex >= 0 && !gEngineView.isCheckBox(row.value, col.value)) {
     event.dataTransfer.setData(ENGINE_FLAVOR, selectedIndex.toString());
     event.dataTransfer.effectAllowed = "move";
   }

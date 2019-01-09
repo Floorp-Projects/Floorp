@@ -71,8 +71,9 @@
         ]
       };
 
+      var treeBoxObject = aTree.treeBoxObject;
       var view = aTree.view;
-      var columnCount = aTree.columns.count;
+      var columnCount = treeBoxObject.columns.count;
 
       for (var idx = 0; idx < columnCount; idx++)
         accTreeForColumns.children.push({ COLUMNHEADER: [ ] });

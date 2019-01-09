@@ -21,13 +21,8 @@ class nsTreeColumn;
 class nsIBoxObject;
 class nsIFrame;
 class nsIDocShell;
+class nsITreeBoxObject;
 class nsIWidget;
-
-namespace mozilla {
-namespace dom {
-class XULTreeElement;
-}
-}  // namespace mozilla
 
 /**
  * Core utils.
@@ -50,13 +45,13 @@ class nsCoreUtils {
   /**
    * Dispatch click event to XUL tree cell.
    *
-   * @param  aTree        [in] tree
+   * @param  aTreeBoxObj  [in] tree box object
    * @param  aRowIndex    [in] row index
    * @param  aColumn      [in] column object
-   * @param  aPseudoElm   [in] pseudo element inside the cell, see
+   * @param  aPseudoElm   [in] pseudo elemenet inside the cell, see
    *                       nsITreeBoxObject for available values
    */
-  static void DispatchClickEvent(mozilla::dom::XULTreeElement *aTree,
+  static void DispatchClickEvent(nsITreeBoxObject *aTreeBoxObj,
                                  int32_t aRowIndex, nsTreeColumn *aColumn,
                                  const nsAString &aPseudoElt = EmptyString());
 
@@ -242,32 +237,33 @@ class nsCoreUtils {
                              nsAString &aLanguage);
 
   /**
-   * Return box object for XUL treechildren element of the given tree.
+   * Return box object for XUL treechildren element by tree box object.
    */
   static already_AddRefed<nsIBoxObject> GetTreeBodyBoxObject(
-      mozilla::dom::XULTreeElement *aTree);
+      nsITreeBoxObject *aTreeBoxObj);
 
   /**
-   * Return tree from any levels DOMNode under the XUL tree.
+   * Return tree box object from any levels DOMNode under the XUL tree.
    */
-  static mozilla::dom::XULTreeElement *GetTree(nsIContent *aContent);
+  static already_AddRefed<nsITreeBoxObject> GetTreeBoxObject(
+      nsIContent *aContent);
 
   /**
    * Return first sensible column for the given tree box object.
    */
   static already_AddRefed<nsTreeColumn> GetFirstSensibleColumn(
-      mozilla::dom::XULTreeElement *aTree);
+      nsITreeBoxObject *aTree);
 
   /**
    * Return sensible columns count for the given tree box object.
    */
-  static uint32_t GetSensibleColumnCount(mozilla::dom::XULTreeElement *aTree);
+  static uint32_t GetSensibleColumnCount(nsITreeBoxObject *aTree);
 
   /**
    * Return sensible column at the given index for the given tree box object.
    */
   static already_AddRefed<nsTreeColumn> GetSensibleColumnAt(
-      mozilla::dom::XULTreeElement *aTree, uint32_t aIndex);
+      nsITreeBoxObject *aTree, uint32_t aIndex);
 
   /**
    * Return next sensible column for the given column.

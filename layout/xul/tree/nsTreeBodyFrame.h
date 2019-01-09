@@ -184,8 +184,10 @@ class nsTreeBodyFrame final : public nsLeafBoxFrame,
                               const nsRect& aDirtyRect, nsPoint aPt,
                               nsDisplayListBuilder* aBuilder);
 
+  nsITreeBoxObject* GetTreeBoxObject() const { return mTreeBoxObject; }
+
   // Get the base element, <tree>
-  mozilla::dom::XULTreeElement* GetBaseElement();
+  mozilla::dom::Element* GetBaseElement();
 
   bool GetVerticalOverflow() const { return mVerticalOverflow; }
   bool GetHorizontalOverflow() const { return mHorizontalOverflow; }
@@ -369,6 +371,9 @@ class nsTreeBodyFrame final : public nsLeafBoxFrame,
   // Convert client pixels into appunits in our coordinate space.
   nsPoint AdjustClientCoordsToBoxCoordSpace(int32_t aX, int32_t aY);
 
+  // Cache the box object
+  void EnsureBoxObject();
+
   void EnsureView();
 
   nsresult GetCellWidth(int32_t aRow, nsTreeColumn* aCol,
@@ -525,8 +530,8 @@ class nsTreeBodyFrame final : public nsLeafBoxFrame,
 
   RefPtr<ScrollbarActivity> mScrollbarActivity;
 
-  // The <tree> element containing this treebody.
-  RefPtr<mozilla::dom::XULTreeElement> mTree;
+  // The cached box object parent.
+  nsCOMPtr<nsITreeBoxObject> mTreeBoxObject;
 
   // Cached column information.
   RefPtr<nsTreeColumns> mColumns;
