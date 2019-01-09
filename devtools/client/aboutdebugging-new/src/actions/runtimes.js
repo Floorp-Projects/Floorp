@@ -35,6 +35,9 @@ const {
   UPDATE_CONNECTION_PROMPT_SETTING_FAILURE,
   UPDATE_CONNECTION_PROMPT_SETTING_START,
   UPDATE_CONNECTION_PROMPT_SETTING_SUCCESS,
+  UPDATE_RUNTIME_MULTIE10S_FAILURE,
+  UPDATE_RUNTIME_MULTIE10S_START,
+  UPDATE_RUNTIME_MULTIE10S_SUCCESS,
   WATCH_RUNTIME_FAILURE,
   WATCH_RUNTIME_START,
   WATCH_RUNTIME_SUCCESS,
@@ -42,7 +45,7 @@ const {
 
 async function getRuntimeInfo(runtime, clientWrapper) {
   const { type } = runtime;
-  const { name, channel, deviceName, version } =
+  const { name, channel, deviceName, isMultiE10s, version } =
     await clientWrapper.getDeviceDescription();
   const icon =
     (channel === "release" || channel === "beta" || channel === "aurora")
@@ -50,8 +53,9 @@ async function getRuntimeInfo(runtime, clientWrapper) {
       : "chrome://devtools/skin/images/aboutdebugging-firefox-nightly.svg";
 
   return {
-    icon,
     deviceName,
+    icon,
+    isMultiE10s,
     name,
     type,
     version,
@@ -65,6 +69,10 @@ function onUSBDebuggerClientClosed() {
   window.AboutDebugging.store.dispatch(Actions.scanUSBRuntimes());
 }
 
+function onMultiE10sUpdated() {
+  window.AboutDebugging.store.dispatch(updateMultiE10s());
+}
+
 function connectRuntime(id) {
   return async (dispatch, getState) => {
     dispatch({ type: CONNECT_RUNTIME_START });
@@ -72,6 +80,8 @@ function connectRuntime(id) {
       const runtime = findRuntimeById(id, getState().runtimes);
       const clientWrapper = await createClientForRuntime(runtime);
       const info = await getRuntimeInfo(runtime, clientWrapper);
+      const { isMultiE10s } = info;
+      delete info.isMultiE10s;
 
       const promptPrefName = RUNTIME_PREFERENCE.CONNECTION_PROMPT;
       const connectionPromptEnabled = await clientWrapper.getPreference(promptPrefName);
@@ -79,7 +89,15 @@ function connectRuntime(id) {
         clientWrapper,
         connectionPromptEnabled,
         info,
+        isMultiE10s,
       };
+
+      clientWrapper.addListener("closed", onUSBDebuggerClientClosed);
+
+      const deviceFront = await clientWrapper.getFront("device");
+      if (deviceFront) {
+        deviceFront.on("multi-e10s-updated", onMultiE10sUpdated);
+      }
 
       if (runtime.type === RUNTIMES.USB) {
         // `closed` event will be emitted when disabling remote debugging
@@ -107,6 +125,11 @@ function disconnectRuntime(id) {
     try {
       const runtime = findRuntimeById(id, getState().runtimes);
       const { clientWrapper } = runtime.runtimeDetails;
+
+      const deviceFront = await clientWrapper.getFront("device");
+      if (deviceFront) {
+        deviceFront.off("multi-e10s-updated", onMultiE10sUpdated);
+      }
 
       if (runtime.type === RUNTIMES.USB) {
         clientWrapper.removeListener("closed", onUSBDebuggerClientClosed);
@@ -142,6 +165,22 @@ function updateConnectionPromptSetting(connectionPromptEnabled) {
                  runtime, connectionPromptEnabled });
     } catch (e) {
       dispatch({ type: UPDATE_CONNECTION_PROMPT_SETTING_FAILURE, error: e });
+    }
+  };
+}
+
+function updateMultiE10s() {
+  return async (dispatch, getState) => {
+    dispatch({ type: UPDATE_RUNTIME_MULTIE10S_START });
+    try {
+      const runtime = getCurrentRuntime(getState().runtimes);
+      const { clientWrapper } = runtime.runtimeDetails;
+      // Re-get actual value from the runtime.
+      const { isMultiE10s } = await clientWrapper.getDeviceDescription();
+
+      dispatch({ type: UPDATE_RUNTIME_MULTIE10S_SUCCESS, runtime, isMultiE10s });
+    } catch (e) {
+      dispatch({ type: UPDATE_RUNTIME_MULTIE10S_FAILURE, error: e });
     }
   };
 }

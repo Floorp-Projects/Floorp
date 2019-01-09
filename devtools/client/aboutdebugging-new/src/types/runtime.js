@@ -31,7 +31,12 @@ const runtimeDetails = {
 
   // runtime information
   info: PropTypes.shape(runtimeInfo).isRequired,
+
+  // True if this runtime supports multiple content processes
+  // This might be undefined when connecting to runtimes older than Fx 66
+  isMultiE10s: PropTypes.bool,
 };
+exports.runtimeDetails = PropTypes.shape(runtimeDetails);
 
 const networkRuntimeConnectionParameter = {
   // host name of debugger server to connect
