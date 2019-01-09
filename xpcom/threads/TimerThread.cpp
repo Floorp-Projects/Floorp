@@ -134,14 +134,18 @@ class nsTimerEvent final : public CancelableRunnable {
   NS_IMETHOD GetName(nsACString& aName) override;
 #endif
 
-  nsTimerEvent()
-      : mozilla::CancelableRunnable("nsTimerEvent"), mTimer(), mGeneration(0) {
+  explicit nsTimerEvent(already_AddRefed<nsTimerImpl> aTimer)
+      : mozilla::CancelableRunnable("nsTimerEvent"),
+        mTimer(aTimer),
+        mGeneration(mTimer->GetGeneration()) {
     // Note: We override operator new for this class, and the override is
     // fallible!
     sAllocatorUsers++;
-  }
 
-  TimeStamp mInitTime;
+    if (MOZ_LOG_TEST(GetTimerLog(), LogLevel::Debug)) {
+      mInitTime = TimeStamp::Now();
+    }
+  }
 
   static void Init();
   static void Shutdown();
@@ -157,11 +161,6 @@ class nsTimerEvent final : public CancelableRunnable {
 
   already_AddRefed<nsTimerImpl> ForgetTimer() { return mTimer.forget(); }
 
-  void SetTimer(already_AddRefed<nsTimerImpl> aTimer) {
-    mTimer = aTimer;
-    mGeneration = mTimer->GetGeneration();
-  }
-
  private:
   nsTimerEvent(const nsTimerEvent&) = delete;
   nsTimerEvent& operator=(const nsTimerEvent&) = delete;
@@ -174,8 +173,9 @@ class nsTimerEvent final : public CancelableRunnable {
     sAllocatorUsers--;
   }
 
+  TimeStamp mInitTime;
   RefPtr<nsTimerImpl> mTimer;
-  int32_t mGeneration;
+  const int32_t mGeneration;
 
   static TimerEventAllocator* sAllocator;
 
@@ -729,13 +729,7 @@ already_AddRefed<nsTimerImpl> TimerThread::PostTimerEvent(
   if (!p) {
     return timer.forget();
   }
-  RefPtr<nsTimerEvent> event = ::new (KnownNotNull, p) nsTimerEvent();
-
-  if (MOZ_LOG_TEST(GetTimerLog(), LogLevel::Debug)) {
-    event->mInitTime = TimeStamp::Now();
-  }
-
-  event->SetTimer(timer.forget());
+  RefPtr<nsTimerEvent> event = ::new (KnownNotNull, p) nsTimerEvent(timer.forget());
 
   nsresult rv;
   {
