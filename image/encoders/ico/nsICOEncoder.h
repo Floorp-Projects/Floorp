@@ -7,11 +7,11 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/ReentrantMonitor.h"
+#include "mozilla/image/ICOFileHeaders.h"
 
 #include "imgIEncoder.h"
 
 #include "nsCOMPtr.h"
-#include "ICOFileHeaders.h"
 
 #define NS_ICOENCODER_CID                            \
   { /*92AE3AB2-8968-41B1-8709-B6123BCEAF21 */        \

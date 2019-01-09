@@ -1400,7 +1400,14 @@ function switchToFrame(msg) {
   if (typeof msg.json.element != "undefined") {
     webEl = WebElement.fromUUID(msg.json.element, "content");
   }
-  if (webEl && seenEls.has(webEl)) {
+
+  if (webEl) {
+    if (!seenEls.has(webEl)) {
+      let err = new NoSuchElementError(`Unable to locate element: ${webEl}`);
+      sendError(err, commandID);
+      return;
+    }
+
     let wantedFrame;
     try {
       wantedFrame = seenEls.get(webEl, curContainer.frame);

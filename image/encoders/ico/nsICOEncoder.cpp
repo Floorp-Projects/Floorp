@@ -5,6 +5,7 @@
 #include "nsCRT.h"
 #include "mozilla/EndianUtils.h"
 #include "nsBMPEncoder.h"
+#include "BMPHeaders.h"
 #include "nsPNGEncoder.h"
 #include "nsICOEncoder.h"
 #include "nsString.h"

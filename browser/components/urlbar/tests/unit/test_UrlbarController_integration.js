@@ -61,12 +61,12 @@ add_task(async function test_basic_search() {
 });
 
 add_task(async function test_cancel_search() {
-  let providerCanceledPromise = PromiseUtils.defer();
-  let providerName = registerBasicTestProvider([match], providerCanceledPromise.resolve);
+  let providerCanceledDeferred = PromiseUtils.defer();
+  let providerName = registerBasicTestProvider([match], providerCanceledDeferred.resolve);
   const context = createContext(TEST_URL, {providers: [providerName]});
 
   let startedPromise = promiseControllerNotification(controller, "onQueryStarted");
-  let cancelPromise = promiseControllerNotification(controller, "onQueryResults");
+  let cancelPromise = promiseControllerNotification(controller, "onQueryCancelled");
 
   await controller.startQuery(context);
 
@@ -77,7 +77,7 @@ add_task(async function test_cancel_search() {
   Assert.equal(params[0], context);
 
   info("Should tell the provider the query is canceled");
-  await providerCanceledPromise;
+  await providerCanceledDeferred.promise;
 
   params = await cancelPromise;
 });
