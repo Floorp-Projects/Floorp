@@ -230,7 +230,8 @@ bool SVGGeometryFrame::IsSVGTransformed(
 void SVGGeometryFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                         const nsDisplayListSet& aLists) {
   if (!static_cast<const SVGElement*>(GetContent())->HasValidDimensions() ||
-      (!IsVisibleForPainting() && aBuilder->IsForPainting())) {
+      ((!IsVisibleForPainting() || StyleEffects()->mOpacity == 0.0f) &&
+       aBuilder->IsForPainting())) {
     return;
   }
   DisplayOutline(aBuilder, aLists);
