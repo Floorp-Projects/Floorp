@@ -58,7 +58,7 @@ def create_raw_task(name, description, full_command, scopes = []):
                 'taskclusterProxy': True
             },
             "maxRunTime": 7200,
-            "image": "mozillamobile/android-components:1.11",
+            "image": "mozillamobile/android-components:1.12",
             "command": [
                 "/bin/bash",
                 "--login",
