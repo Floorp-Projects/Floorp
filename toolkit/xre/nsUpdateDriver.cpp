@@ -26,6 +26,9 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Printf.h"
 #include "mozilla/UniquePtr.h"
+#include "nsIObserverService.h"
+#include "nsNetCID.h"
+#include "mozilla/Services.h"
 
 #ifdef XP_MACOSX
 #include "nsILocalFileMac.h"
@@ -40,6 +43,7 @@
 #include <process.h>
 #include <windows.h>
 #include <shlwapi.h>
+#include <strsafe.h>
 #include "commonupdatedir.h"
 #include "nsWindowsHelpers.h"
 #define getcwd(path, size) _getcwd(path, size)
