@@ -50,7 +50,6 @@
 #include <string>
 
 #include "base/time.h"
-#include "base/lock.h"
 
 #include "nsTArray.h"
 
