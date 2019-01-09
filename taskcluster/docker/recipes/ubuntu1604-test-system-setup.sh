@@ -71,6 +71,7 @@ apt_packages+=('wget')
 apt_packages+=('xvfb')
 apt_packages+=('yasm')
 apt_packages+=('zip')
+apt_packages+=('libsecret-1-0:i386')
 
 # get xvinfo for test-linux.sh to monitor Xvfb startup
 apt_packages+=('x11-utils')

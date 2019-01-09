@@ -113,8 +113,9 @@ add_task(async function() {
   await encrypt_decrypt_test();
   await delete_all_secrets();
 
-  if (AppConstants.platform == "macosx" || AppConstants.platform == "win") {
-    ok(!keystore.isNSSKeyStore, "OS X and Windows should use the non-NSS implementation");
+  if (AppConstants.platform == "macosx" || AppConstants.platform == "win" ||
+      AppConstants.platform == "linux") {
+    ok(!keystore.isNSSKeyStore, "OS X, Windows, and Linux should use the non-NSS implementation");
   }
 
   if (keystore.isNSSKeyStore) {
