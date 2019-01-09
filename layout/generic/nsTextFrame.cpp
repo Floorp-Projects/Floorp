@@ -7814,7 +7814,10 @@ static bool IsAcceptableCaretPosition(const gfxSkipCharsIterator& aIter,
         (NS_IS_LOW_SURROGATE(ch) && offs > 0 &&
          NS_IS_HIGH_SURROGATE(frag->CharAt(offs - 1))) ||
         (!aTextRun->IsLigatureGroupStart(index) &&
-         unicode::GetEmojiPresentation(ch) == unicode::EmojiDefault)) {
+         (unicode::GetEmojiPresentation(ch) == unicode::EmojiDefault ||
+          (unicode::GetEmojiPresentation(ch) == unicode::TextDefault &&
+           offs + 1 < frag->GetLength() &&
+           frag->CharAt(offs + 1) == gfxFontUtils::kUnicodeVS16)))) {
       return false;
     }
 
