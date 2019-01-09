@@ -21,7 +21,7 @@ class APZCPinchTester : public APZCBasicTester {
     fm.SetCompositionBounds(ParentLayerRect(0, 0, 100, 200));
     fm.SetScrollableRect(CSSRect(0, 0, 980, 1000));
     fm.SetScrollOffset(CSSPoint(300, 300));
-    fm.SetViewport(CSSRect(300, 300, 100, 200));
+    fm.SetLayoutViewport(CSSRect(300, 300, 100, 200));
     fm.SetZoom(CSSToParentLayerScale2D(2.0, 2.0));
     // APZC only allows zooming on the root scrollable frame.
     fm.SetIsRootContent(true);
@@ -356,8 +356,8 @@ TEST_F(APZCPinchTester, Panning_Beyond_LayoutViewport) {
   // But the visual viewport is still inside the layout viewport.
   EXPECT_EQ(300, fm.GetScrollOffset().x);
   EXPECT_EQ(325, fm.GetScrollOffset().y);
-  EXPECT_EQ(300, fm.GetViewport().X());
-  EXPECT_EQ(300, fm.GetViewport().Y());
+  EXPECT_EQ(300, fm.GetLayoutViewport().X());
+  EXPECT_EQ(300, fm.GetLayoutViewport().Y());
 
   // Case 2 - visual viewport crosses the bottom boundary of the layout
   // viewport.
@@ -369,8 +369,8 @@ TEST_F(APZCPinchTester, Panning_Beyond_LayoutViewport) {
   // viewport by 25px.
   EXPECT_EQ(300, fm.GetScrollOffset().x);
   EXPECT_EQ(425, fm.GetScrollOffset().y);
-  EXPECT_EQ(300, fm.GetViewport().X());
-  EXPECT_EQ(325, fm.GetViewport().Y());
+  EXPECT_EQ(300, fm.GetLayoutViewport().X());
+  EXPECT_EQ(325, fm.GetLayoutViewport().Y());
 
   // Case 3 - visual viewport crosses the top boundary of the layout viewport.
   Pan(apzc, 425, 775, PanOptions::NoFling);
@@ -381,8 +381,8 @@ TEST_F(APZCPinchTester, Panning_Beyond_LayoutViewport) {
   // 75px.
   EXPECT_EQ(300, fm.GetScrollOffset().x);
   EXPECT_EQ(250, fm.GetScrollOffset().y);
-  EXPECT_EQ(300, fm.GetViewport().X());
-  EXPECT_EQ(250, fm.GetViewport().Y());
+  EXPECT_EQ(300, fm.GetLayoutViewport().X());
+  EXPECT_EQ(250, fm.GetLayoutViewport().Y());
 
   // Case 4 - visual viewport crosses the left boundary of the layout viewport.
   Pan(apzc, ScreenIntPoint(150, 10), ScreenIntPoint(350, 10),
@@ -394,8 +394,8 @@ TEST_F(APZCPinchTester, Panning_Beyond_LayoutViewport) {
   // viewport by 100px.
   EXPECT_EQ(200, fm.GetScrollOffset().x);
   EXPECT_EQ(250, fm.GetScrollOffset().y);
-  EXPECT_EQ(200, fm.GetViewport().X());
-  EXPECT_EQ(250, fm.GetViewport().Y());
+  EXPECT_EQ(200, fm.GetLayoutViewport().X());
+  EXPECT_EQ(250, fm.GetLayoutViewport().Y());
 
   // Case 5 - visual viewport crosses the right boundary of the layout viewport.
   Pan(apzc, ScreenIntPoint(350, 10), ScreenIntPoint(150, 10),
@@ -407,8 +407,8 @@ TEST_F(APZCPinchTester, Panning_Beyond_LayoutViewport) {
   // viewport by 50px.
   EXPECT_EQ(300, fm.GetScrollOffset().x);
   EXPECT_EQ(250, fm.GetScrollOffset().y);
-  EXPECT_EQ(250, fm.GetViewport().X());
-  EXPECT_EQ(250, fm.GetViewport().Y());
+  EXPECT_EQ(250, fm.GetLayoutViewport().X());
+  EXPECT_EQ(250, fm.GetLayoutViewport().Y());
 
   // Case 6 - visual viewport crosses both the vertical and horizontal
   // boundaries of the layout viewport by moving diagonally towards the
@@ -422,8 +422,8 @@ TEST_F(APZCPinchTester, Panning_Beyond_LayoutViewport) {
   // boundary of the layout viewport.
   EXPECT_EQ(400, fm.GetScrollOffset().x);
   EXPECT_EQ(150, fm.GetScrollOffset().y);
-  EXPECT_EQ(350, fm.GetViewport().X());
-  EXPECT_EQ(150, fm.GetViewport().Y());
+  EXPECT_EQ(350, fm.GetLayoutViewport().X());
+  EXPECT_EQ(150, fm.GetLayoutViewport().Y());
 }
 
 TEST_F(APZCPinchGestureDetectorTester, Pinch_APZZoom_Disabled) {
