@@ -187,11 +187,13 @@ impl Window {
         let layout_size = framebuffer_size.to_f32() / euclid::TypedScale::new(device_pixel_ratio);
         let mut txn = Transaction::new();
         let mut builder = DisplayListBuilder::new(self.pipeline_id, layout_size);
+        let space_and_clip = SpaceAndClipInfo::root_scroll(self.pipeline_id);
 
         let bounds = LayoutRect::new(LayoutPoint::zero(), builder.content_size());
         let info = LayoutPrimitiveInfo::new(bounds);
         builder.push_stacking_context(
             &info,
+            space_and_clip.spatial_id,
             None,
             TransformStyle::Flat,
             MixBlendMode::Normal,
@@ -203,7 +205,7 @@ impl Window {
             LayoutPoint::new(100.0, 100.0),
             LayoutSize::new(100.0, 200.0)
         ));
-        builder.push_rect(&info, ColorF::new(0.0, 1.0, 0.0, 1.0));
+        builder.push_rect(&info, &space_and_clip, ColorF::new(0.0, 1.0, 0.0, 1.0));
 
         let text_bounds = LayoutRect::new(
             LayoutPoint::new(100.0, 50.0),
@@ -263,6 +265,7 @@ impl Window {
         let info = LayoutPrimitiveInfo::new(text_bounds);
         builder.push_text(
             &info,
+            &space_and_clip,
             &glyphs,
             self.font_instance_key,
             ColorF::new(1.0, 1.0, 0.0, 1.0),

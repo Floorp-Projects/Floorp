@@ -3891,14 +3891,10 @@ void nsWindow::AddWindowOverlayWebRenderCommands(
     wr::IpcResourceUpdateQueue& aResources) {
   if (mWindowButtonsRect) {
     wr::LayoutRect rect = wr::ToLayoutRect(*mWindowButtonsRect);
-    nsTArray<wr::ComplexClipRegion> roundedClip;
-    roundedClip.AppendElement(wr::ToComplexClipRegion(
+    auto complexRegion = wr::ToComplexClipRegion(
         RoundedRect(IntRectToRect(mWindowButtonsRect->ToUnknownRect()),
-                    RectCornerRadii(0, 0, 3, 3))));
-    wr::WrClipId clipId = aBuilder.DefineClip(Nothing(), rect, &roundedClip);
-    aBuilder.PushClip(clipId);
-    aBuilder.PushClearRect(rect);
-    aBuilder.PopClip();
+                    RectCornerRadii(0, 0, 3, 3)));
+    aBuilder.PushClearRectWithComplexRegion(rect, complexRegion);
   }
 }
 
