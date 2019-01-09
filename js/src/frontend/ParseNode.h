@@ -1545,12 +1545,12 @@ class NumericLiteral : public ParseNode {
 class BigIntLiteral : public ParseNode {
  public:
   BigIntLiteral(BigIntBox* bibox, const TokenPos& pos)
-      : ParseNode(ParseNodeKind::BigInt, JSOP_NOP, pos) {
+      : ParseNode(ParseNodeKind::BigIntExpr, JSOP_NOP, pos) {
     pn_u.bigint.box = bibox;
   }
 
   static bool test(const ParseNode& node) {
-    bool match = node.isKind(ParseNodeKind::BigInt);
+    bool match = node.isKind(ParseNodeKind::BigIntExpr);
     MOZ_ASSERT_IF(match, node.isArity(PN_BIGINT));
     return match;
   }
