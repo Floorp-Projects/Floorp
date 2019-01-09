@@ -16,17 +16,14 @@
 @import url("chrome://global/skin/menu.css");
 @import url("chrome://global/skin/menulist.css");
 @import url("chrome://global/skin/notification.css");
+@import url("chrome://global/skin/numberinput.css");
 @import url("chrome://global/skin/popup.css");
 @import url("chrome://global/skin/radio.css");
 @import url("chrome://global/skin/richlistbox.css");
 @import url("chrome://global/skin/scrollbox.css");
 @import url("chrome://global/skin/splitter.css");
 @import url("chrome://global/skin/tabbox.css");
-
-/* numberbox.css needs to be loaded after textbox.css since it overrides it */
 @import url("chrome://global/skin/textbox.css");
-@import url("chrome://global/skin/numberbox.css");
-
 @import url("chrome://global/skin/toolbar.css");
 @import url("chrome://global/skin/toolbarbutton.css");
 @import url("chrome://global/skin/tree.css");
