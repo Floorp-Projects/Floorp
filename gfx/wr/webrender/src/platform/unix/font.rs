@@ -20,7 +20,8 @@ use freetype::freetype::{FT_LOAD_NO_BITMAP, FT_LOAD_NO_HINTING, FT_LOAD_VERTICAL
 use freetype::freetype::{FT_FACE_FLAG_SCALABLE, FT_FACE_FLAG_FIXED_SIZES};
 use freetype::freetype::{FT_FACE_FLAG_MULTIPLE_MASTERS};
 use freetype::succeeded;
-use glyph_rasterizer::{FontInstance, GlyphFormat, GlyphKey, GlyphRasterResult, RasterizedGlyph};
+use glyph_rasterizer::{FontInstance, GlyphFormat, GlyphKey};
+use glyph_rasterizer::{GlyphRasterError, GlyphRasterResult, RasterizedGlyph};
 #[cfg(feature = "pathfinder")]
 use glyph_rasterizer::NativeFontHandleWrapper;
 use internal_types::{FastHashMap, ResourceCacheError};
@@ -754,23 +755,18 @@ impl FontContext {
 
     #[cfg(not(feature = "pathfinder"))]
     pub fn rasterize_glyph(&mut self, font: &FontInstance, key: &GlyphKey) -> GlyphRasterResult {
-        let (slot, scale) = match self.load_glyph(font, key) {
-            Some(val) => val,
-            None => return GlyphRasterResult::LoadFailed,
-        };
+        let (slot, scale) = self.load_glyph(font, key).ok_or(GlyphRasterError::LoadFailed)?;
 
         // Get dimensions of the glyph, to see if we need to rasterize it.
         // Don't apply scaling to the dimensions, as the glyph cache needs to know the actual
         // footprint of the glyph.
-        let dimensions = match self.get_glyph_dimensions_impl(slot, font, key, scale, false) {
-            Some(val) => val,
-            None => return GlyphRasterResult::LoadFailed,
-        };
+        let dimensions = self.get_glyph_dimensions_impl(slot, font, key, scale, false)
+                             .ok_or(GlyphRasterError::LoadFailed)?;
         let GlyphDimensions { mut left, mut top, width, height, .. } = dimensions;
 
         // For spaces and other non-printable characters, early out.
         if width == 0 || height == 0 {
-            return GlyphRasterResult::LoadFailed;
+            return Err(GlyphRasterError::LoadFailed);
         }
 
         let format = unsafe { (*slot).format };
@@ -778,13 +774,13 @@ impl FontContext {
             FT_Glyph_Format::FT_GLYPH_FORMAT_BITMAP => {}
             FT_Glyph_Format::FT_GLYPH_FORMAT_OUTLINE => {
                 if !self.rasterize_glyph_outline(slot, font, key, scale) {
-                    return GlyphRasterResult::LoadFailed;
+                    return Err(GlyphRasterError::LoadFailed);
                 }
             }
             _ => {
                 error!("Unsupported format");
                 debug!("format={:?}", format);
-                return GlyphRasterResult::LoadFailed;
+                return Err(GlyphRasterError::LoadFailed);
             }
         };
 
@@ -943,7 +939,7 @@ impl FontContext {
             _ => font.get_alpha_glyph_format(),
         };
 
-        GlyphRasterResult::Bitmap(RasterizedGlyph {
+        Ok(RasterizedGlyph {
             left: left as f32,
             top: top as f32,
             width: actual_width as i32,
