@@ -3700,7 +3700,6 @@ void AsyncPanZoomController::RequestContentRepaint(
   ParentLayerPoint velocity = GetVelocityVector();
   Metrics().SetDisplayPortMargins(
       CalculatePendingDisplayPort(Metrics(), velocity));
-  Metrics().SetUseDisplayPortMargins(true);
   Metrics().SetPaintRequestTime(TimeStamp::Now());
   RequestContentRepaint(Metrics(), velocity, aUpdateType);
 }
@@ -4703,7 +4702,6 @@ void AsyncPanZoomController::ZoomToRect(CSSRect aRect, const uint32_t aFlags) {
     ParentLayerPoint velocity(0, 0);
     endZoomToMetrics.SetDisplayPortMargins(
         CalculatePendingDisplayPort(endZoomToMetrics, velocity));
-    endZoomToMetrics.SetUseDisplayPortMargins(true);
     endZoomToMetrics.SetPaintRequestTime(TimeStamp::Now());
 
     RefPtr<GeckoContentController> controller = GetGeckoContentController();
