@@ -329,7 +329,8 @@ void HttpBaseChannel::SetFlashPluginState(
 nsresult HttpBaseChannel::Init(nsIURI* aURI, uint32_t aCaps,
                                nsProxyInfo* aProxyInfo,
                                uint32_t aProxyResolveFlags, nsIURI* aProxyURI,
-                               uint64_t aChannelId) {
+                               uint64_t aChannelId,
+                               nsContentPolicyType aContentPolicyType) {
   LOG1(("HttpBaseChannel::Init [this=%p]\n", this));
 
   MOZ_ASSERT(aURI, "null uri");
@@ -376,7 +377,8 @@ nsresult HttpBaseChannel::Init(nsIURI* aURI, uint32_t aCaps,
   rv = mRequestHead.SetHeader(nsHttp::Host, hostLine);
   if (NS_FAILED(rv)) return rv;
 
-  rv = gHttpHandler->AddStandardRequestHeaders(&mRequestHead, isHTTPS);
+  rv = gHttpHandler->AddStandardRequestHeaders(&mRequestHead, isHTTPS,
+                                               aContentPolicyType);
   if (NS_FAILED(rv)) return rv;
 
   nsAutoCString type;

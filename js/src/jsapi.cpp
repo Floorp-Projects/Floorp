@@ -3547,6 +3547,23 @@ JS::CompileOptions::CompileOptions(JSContext* cx)
       cx->options().throwOnAsmJSValidationFailure();
 }
 
+CompileOptions& CompileOptions::setIntroductionInfoToCaller(
+    JSContext* cx, const char* introductionType) {
+  RootedScript maybeScript(cx);
+  const char* filename;
+  unsigned lineno;
+  uint32_t pcOffset;
+  bool mutedErrors;
+  DescribeScriptedCallerForCompilation(cx, &maybeScript, &filename, &lineno,
+                                       &pcOffset, &mutedErrors);
+  if (filename) {
+    return setIntroductionInfo(filename, introductionType, lineno,
+                               maybeScript, pcOffset);
+  } else {
+    return setIntroductionType(introductionType);
+  }
+}
+
 #if defined(JS_BUILD_BINAST)
 
 JSScript* JS::DecodeBinAST(JSContext* cx, const ReadOnlyCompileOptions& options,

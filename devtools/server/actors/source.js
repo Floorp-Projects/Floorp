@@ -23,6 +23,14 @@ loader.lazyRequireGetter(this, "arrayBufferGrip", "devtools/server/actors/array-
 
 function isEvalSource(source) {
   const introType = source.introductionType;
+
+  // Script elements that are dynamically created are treated as eval sources.
+  // We detect these by looking at whether there was another script on the stack
+  // when the source was created.
+  if (introType == "scriptElement" && source.introductionScript) {
+    return true;
+  }
+
   // These are all the sources that are essentially eval-ed (either
   // by calling eval or passing a string to one of these functions).
   return (introType === "eval" ||

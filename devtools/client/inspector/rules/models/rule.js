@@ -62,6 +62,38 @@ function Rule(elementStyle, options) {
 Rule.prototype = {
   mediaText: "",
 
+  get declarations() {
+    return this.textProps;
+  },
+
+  get inheritance() {
+    if (!this.inherited) {
+      return null;
+    }
+
+    return {
+      inherited: this.inherited,
+      inheritedSource: this.inheritedSource,
+    };
+  },
+
+  get selector() {
+    return {
+      matchedSelectors: this.matchedSelectors,
+      selectors: this.domRule.selectors,
+      selectorText: this.selectorText,
+    };
+  },
+
+  get sourceLink() {
+    return {
+      column: this.ruleColumn,
+      line: this.ruleLine,
+      mediaText: this.mediaText,
+      title: this.title,
+    };
+  },
+
   get title() {
     let title = CssLogic.shortSource(this.sheet);
     if (this.domRule.type !== ELEMENT_STYLE && this.ruleLine > 0) {
@@ -97,6 +129,17 @@ Rule.prototype = {
         STYLE_INSPECTOR_L10N.getFormatStr("rule.keyframe", this.keyframes.name);
     }
     return this._keyframesName;
+  },
+
+  get keyframesRule() {
+    if (!this.keyframes) {
+      return null;
+    }
+
+    return {
+      id: this.keyframes.actorID,
+      keyframesName: this.keyframesName,
+    };
   },
 
   get selectorText() {
