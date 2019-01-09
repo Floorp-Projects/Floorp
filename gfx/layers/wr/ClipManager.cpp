@@ -17,10 +17,10 @@
 #include "UnitTransforms.h"
 
 #define CLIP_LOG(...)
+
 //#define CLIP_LOG(...) printf_stderr("CLIP: " __VA_ARGS__)
-//#define CLIP_LOG(...) if (XRE_IsContentProcess()) {         \
-//                        printf_stderr("CLIP: " __VA_ARGS__);\
-//                      }
+
+//#define CLIP_LOG(...) if (XRE_IsContentProcess()) printf_stderr("CLIP: " __VA_ARGS__)
 
 namespace mozilla {
 namespace layers {
