@@ -40,7 +40,7 @@ async function test_object_grip(debuggee, threadClient) {
       Assert.equal(frame.where.line, 4);
       Assert.equal(frame.where.column, 8);
     }),
-    objClient.getPropertyValue("prop"),
+    objClient.getPropertyValue("prop", null),
   ]);
 }
 
