@@ -798,7 +798,6 @@ static inline wr::WrFilterOpType ToWrFilterOpType(uint32_t type) {
   return wr::WrFilterOpType::Grayscale;
 }
 
-extern WrClipId RootScrollNode();
 
 // Corresponds to a clip id for a clip chain in webrender. Similar to
 // WrClipId but a separate struct so we don't get them mixed up in C++.
@@ -806,7 +805,15 @@ struct WrClipChainId {
   uint64_t id;
 
   bool operator==(const WrClipChainId& other) const { return id == other.id; }
+
+  static WrClipChainId Empty() {
+    WrClipChainId id = {0};
+    return id;
+  }
 };
+
+WrSpaceAndClip RootScrollNode();
+WrSpaceAndClipChain RootScrollNodeWithChain();
 
 enum class WebRenderError : int8_t {
   INITIALIZE = 0,
@@ -857,8 +864,8 @@ static inline wr::SyntheticItalics DegreesToSyntheticItalics(float aDegrees) {
 
 namespace std {
 template <>
-struct hash<mozilla::wr::WrClipId> {
-  std::size_t operator()(mozilla::wr::WrClipId const& aKey) const noexcept {
+struct hash<mozilla::wr::WrSpatialId> {
+  std::size_t operator()(mozilla::wr::WrSpatialId const& aKey) const noexcept {
     return std::hash<size_t>{}(aKey.id);
   }
 };

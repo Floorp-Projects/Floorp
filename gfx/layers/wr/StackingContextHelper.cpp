@@ -74,6 +74,10 @@ StackingContextHelper::StackingContextHelper(
       aPerspectivePtr, wr::ToMixBlendMode(aMixBlendMode), aFilters,
       aBackfaceVisible, rasterSpace);
 
+  if (mReferenceFrameId) {
+    mSpaceAndClipChainHelper.emplace(aBuilder, mReferenceFrameId.ref());
+  }
+
   mAffectsClipPositioning =
       mReferenceFrameId.isSome() || (aBounds.TopLeft() != LayoutDevicePoint());
 
@@ -98,6 +102,7 @@ StackingContextHelper::StackingContextHelper(
 
 StackingContextHelper::~StackingContextHelper() {
   if (mBuilder) {
+    mSpaceAndClipChainHelper.reset();
     mBuilder->PopStackingContext(mReferenceFrameId.isSome());
   }
 }
