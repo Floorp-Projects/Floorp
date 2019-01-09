@@ -15,16 +15,16 @@ use std::ops::Range;
 use std::{io, mem, ptr, slice};
 use time::precise_time_ns;
 use {AlphaType, BorderDetails, BorderDisplayItem, BorderRadius, BoxShadowClipMode, CacheMarkerDisplayItem};
-use {BoxShadowDisplayItem, ClipAndScrollInfo, ClipChainId, ClipChainItem, ClipDisplayItem, ClipId};
+use {BoxShadowDisplayItem, ClipChainId, ClipChainItem, ClipDisplayItem, ClipId};
 use {ColorF, ComplexClipRegion, DisplayItem, ExtendMode, ExternalScrollId, FilterOp};
 use {FontInstanceKey, GlyphInstance, GlyphOptions, RasterSpace, Gradient, GradientBuilder};
 use {GradientDisplayItem, GradientStop, IframeDisplayItem, ImageDisplayItem, ImageKey, ImageMask};
 use {ImageRendering, LayoutPoint, LayoutPrimitiveInfo, LayoutRect, LayoutSideOffsets, LayoutSize};
 use {LayoutTransform, LayoutVector2D, LineDisplayItem, LineOrientation, LineStyle, MixBlendMode};
-use {PipelineId, PropertyBinding, PushReferenceFrameDisplayListItem};
+use {PipelineId, PropertyBinding, ReferenceFrameDisplayListItem};
 use {PushStackingContextDisplayItem, RadialGradient, RadialGradientDisplayItem};
 use {RectangleDisplayItem, ReferenceFrame, ScrollFrameDisplayItem, ScrollSensitivity};
-use {SerializedDisplayItem, Shadow, SpecificDisplayItem};
+use {SerializedDisplayItem, Shadow, SpaceAndClipInfo, SpatialId, SpecificDisplayItem};
 use {StackingContext, StickyFrameDisplayItem, StickyOffsetBounds};
 use {TextDisplayItem, TransformStyle, YuvColorSpace, YuvData, YuvImageDisplayItem, ColorDepth};
 
@@ -32,13 +32,13 @@ use {TextDisplayItem, TransformStyle, YuvColorSpace, YuvData, YuvImageDisplayIte
 // This needs to be set to (renderer::MAX_VERTEX_TEXTURE_WIDTH - VECS_PER_TEXT_RUN) * 2
 pub const MAX_TEXT_RUN_LENGTH: usize = 2040;
 
-// We start at 2, because the root reference is always 0 and the root scroll node is always 1.
+// See ROOT_REFERENCE_FRAME_SPATIAL_ID and ROOT_SCROLL_NODE_SPATIAL_ID
 // TODO(mrobinson): It would be a good idea to eliminate the root scroll frame which is only
 // used by Servo.
 const FIRST_SPATIAL_NODE_INDEX: usize = 2;
 
-// There are no default clips, so we start at the 0 index for clips.
-const FIRST_CLIP_NODE_INDEX: usize = 0;
+// See ROOT_SCROLL_NODE_SPATIAL_ID
+const FIRST_CLIP_NODE_INDEX: usize = 1;
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
@@ -213,9 +213,8 @@ impl<'a> BuiltDisplayListIter<'a> {
             cur_item: DisplayItem {
                 // Dummy data, will be overwritten by `next`
                 item: SpecificDisplayItem::PopStackingContext,
-                clip_and_scroll:
-                    ClipAndScrollInfo::simple(ClipId::root_scroll_node(PipelineId::dummy())),
                 layout: LayoutPrimitiveInfo::new(LayoutRect::zero()),
+                space_and_clip: SpaceAndClipInfo::root_scroll(PipelineId::dummy())
             },
             cur_stops: ItemRange::default(),
             cur_glyphs: ItemRange::default(),
@@ -370,8 +369,8 @@ impl<'a, 'b> DisplayItemRef<'a, 'b> {
         &self.iter.cur_item.layout.clip_rect
     }
 
-    pub fn clip_and_scroll(&self) -> ClipAndScrollInfo {
-        self.iter.cur_item.clip_and_scroll
+    pub fn space_and_clip_info(&self) -> &SpaceAndClipInfo {
+        &self.iter.cur_item.space_and_clip
     }
 
     pub fn item(&self) -> &SpecificDisplayItem {
@@ -490,13 +489,13 @@ impl Serialize for BuiltDisplayList {
                     SpecificDisplayItem::Gradient(v) => Gradient(v),
                     SpecificDisplayItem::RadialGradient(v) => RadialGradient(v),
                     SpecificDisplayItem::Iframe(v) => Iframe(v),
+                    SpecificDisplayItem::PushReferenceFrame(v) => PushReferenceFrame(v),
+                    SpecificDisplayItem::PopReferenceFrame => PopReferenceFrame,
                     SpecificDisplayItem::PushStackingContext(v) => PushStackingContext(
                         v,
                         item.iter.list.get(item.iter.cur_filters).collect()
                     ),
                     SpecificDisplayItem::PopStackingContext => PopStackingContext,
-                    SpecificDisplayItem::PushReferenceFrame(v) => PushReferenceFrame(v),
-                    SpecificDisplayItem::PopReferenceFrame => PopReferenceFrame,
                     SpecificDisplayItem::SetGradientStops => SetGradientStops(
                         item.iter.list.get(item.iter.cur_stops).collect()
                     ),
@@ -505,8 +504,8 @@ impl Serialize for BuiltDisplayList {
                     SpecificDisplayItem::PushCacheMarker(m) => PushCacheMarker(m),
                     SpecificDisplayItem::PopCacheMarker => PopCacheMarker,
                 },
-                clip_and_scroll: display_item.clip_and_scroll,
                 layout: display_item.layout,
+                space_and_clip: display_item.space_and_clip,
             };
             seq.serialize_element(&serial_di)?
         }
@@ -551,7 +550,7 @@ impl<'de> Deserialize<'de> for BuiltDisplayList {
                         total_clip_nodes += 1;
                         DisplayListBuilder::push_iter_impl(&mut temp, complex_clips);
                         SpecificDisplayItem::ScrollFrame(specific_item)
-                    },
+                    }
                     StickyFrame(specific_item) => {
                         total_spatial_nodes += 1;
                         SpecificDisplayItem::StickyFrame(specific_item)
@@ -574,16 +573,16 @@ impl<'de> Deserialize<'de> for BuiltDisplayList {
                         total_clip_nodes += 1;
                         SpecificDisplayItem::Iframe(specific_item)
                     }
+                    PushReferenceFrame(v) => {
+                        total_spatial_nodes += 1;
+                        SpecificDisplayItem::PushReferenceFrame(v)
+                    }
+                    PopReferenceFrame => SpecificDisplayItem::PopReferenceFrame,
                     PushStackingContext(specific_item, filters) => {
                         DisplayListBuilder::push_iter_impl(&mut temp, filters);
                         SpecificDisplayItem::PushStackingContext(specific_item)
                     },
                     PopStackingContext => SpecificDisplayItem::PopStackingContext,
-                    PushReferenceFrame(specific_item) => {
-                        total_spatial_nodes += 1;
-                        SpecificDisplayItem::PushReferenceFrame(specific_item)
-                    }
-                    PopReferenceFrame => SpecificDisplayItem::PopReferenceFrame,
                     SetGradientStops(stops) => {
                         DisplayListBuilder::push_iter_impl(&mut temp, stops);
                         SpecificDisplayItem::SetGradientStops
@@ -593,8 +592,8 @@ impl<'de> Deserialize<'de> for BuiltDisplayList {
                     PushCacheMarker(marker) => SpecificDisplayItem::PushCacheMarker(marker),
                     PopCacheMarker => SpecificDisplayItem::PopCacheMarker,
                 },
-                clip_and_scroll: complete.clip_and_scroll,
                 layout: complete.layout,
+                space_and_clip: complete.space_and_clip,
             };
             serialize_fast(&mut data, &item);
             // the aux data is serialized after the item, hence the temporary
@@ -832,7 +831,6 @@ impl<'a, 'b> Read for UnsafeReader<'a, 'b> {
 #[derive(Clone, Debug)]
 pub struct SaveState {
     dl_len: usize,
-    clip_stack_len: usize,
     next_clip_index: usize,
     next_spatial_index: usize,
     next_clip_chain_id: u64,
@@ -842,7 +840,6 @@ pub struct SaveState {
 pub struct DisplayListBuilder {
     pub data: Vec<u8>,
     pub pipeline_id: PipelineId,
-    clip_stack: Vec<ClipAndScrollInfo>,
     next_clip_index: usize,
     next_spatial_index: usize,
     next_clip_chain_id: u64,
@@ -869,9 +866,6 @@ impl DisplayListBuilder {
         DisplayListBuilder {
             data: Vec::with_capacity(capacity),
             pipeline_id,
-            clip_stack: vec![
-                ClipAndScrollInfo::simple(ClipId::root_scroll_node(pipeline_id)),
-            ],
             next_clip_index: FIRST_CLIP_NODE_INDEX,
             next_spatial_index: FIRST_SPATIAL_NODE_INDEX,
             next_clip_chain_id: 0,
@@ -897,7 +891,6 @@ impl DisplayListBuilder {
         assert!(self.save_state.is_none(), "DisplayListBuilder doesn't support nested saves");
 
         self.save_state = Some(SaveState {
-            clip_stack_len: self.clip_stack.len(),
             dl_len: self.data.len(),
             next_clip_index: self.next_clip_index,
             next_spatial_index: self.next_spatial_index,
@@ -909,7 +902,6 @@ impl DisplayListBuilder {
     pub fn restore(&mut self) {
         let state = self.save_state.take().expect("No save to restore DisplayListBuilder from");
 
-        self.clip_stack.truncate(state.clip_stack_len);
         self.data.truncate(state.dl_len);
         self.next_clip_index = state.next_clip_index;
         self.next_spatial_index = state.next_spatial_index;
@@ -969,36 +961,31 @@ impl DisplayListBuilder {
     /// NOTE: It is usually preferable to use the specialized methods to push
     /// display items. Pushing unexpected or invalid items here may
     /// result in WebRender panicking or behaving in unexpected ways.
-    pub fn push_item(&mut self, item: &SpecificDisplayItem, layout: &LayoutPrimitiveInfo) {
-        serialize_fast(
-            &mut self.data,
-            SerializedDisplayItem {
-                item,
-                clip_and_scroll: self.clip_stack.last().unwrap(),
-                layout,
-            },
-        )
-    }
-
-    fn push_item_with_clip_scroll_info(
+    #[inline]
+    pub fn push_item(
         &mut self,
         item: &SpecificDisplayItem,
         layout: &LayoutPrimitiveInfo,
-        clip_and_scroll: &ClipAndScrollInfo
+        space_and_clip: &SpaceAndClipInfo,
     ) {
         serialize_fast(
             &mut self.data,
             SerializedDisplayItem {
                 item,
-                clip_and_scroll,
                 layout,
+                space_and_clip,
             },
         )
     }
 
+    #[inline]
     fn push_new_empty_item(&mut self, item: &SpecificDisplayItem) {
-        let layout = &LayoutPrimitiveInfo::new(LayoutRect::zero());
-        self.push_item(item, layout)
+        let pipeline_id = self.pipeline_id;
+        self.push_item(
+            item,
+            &LayoutPrimitiveInfo::new(LayoutRect::zero()),
+            &SpaceAndClipInfo::root_scroll(pipeline_id),
+        )
     }
 
     fn push_iter_impl<I>(data: &mut Vec<u8>, iter_source: I)
@@ -1046,18 +1033,28 @@ impl DisplayListBuilder {
         Self::push_iter_impl(&mut self.data, iter);
     }
 
-    pub fn push_rect(&mut self, layout: &LayoutPrimitiveInfo, color: ColorF) {
+    pub fn push_rect(
+        &mut self,
+        layout: &LayoutPrimitiveInfo,
+        space_and_clip: &SpaceAndClipInfo,
+        color: ColorF,
+    ) {
         let item = SpecificDisplayItem::Rectangle(RectangleDisplayItem { color });
-        self.push_item(&item, layout);
+        self.push_item(&item, layout, space_and_clip);
     }
 
-    pub fn push_clear_rect(&mut self, layout: &LayoutPrimitiveInfo) {
-        self.push_item(&SpecificDisplayItem::ClearRectangle, layout);
+    pub fn push_clear_rect(
+        &mut self,
+        layout: &LayoutPrimitiveInfo,
+        space_and_clip: &SpaceAndClipInfo,
+    ) {
+        self.push_item(&SpecificDisplayItem::ClearRectangle, layout, space_and_clip);
     }
 
     pub fn push_line(
         &mut self,
         layout: &LayoutPrimitiveInfo,
+        space_and_clip: &SpaceAndClipInfo,
         wavy_line_thickness: f32,
         orientation: LineOrientation,
         color: &ColorF,
@@ -1070,12 +1067,13 @@ impl DisplayListBuilder {
             style,
         });
 
-        self.push_item(&item, layout);
+        self.push_item(&item, layout, space_and_clip);
     }
 
     pub fn push_image(
         &mut self,
         layout: &LayoutPrimitiveInfo,
+        space_and_clip: &SpaceAndClipInfo,
         stretch_size: LayoutSize,
         tile_spacing: LayoutSize,
         image_rendering: ImageRendering,
@@ -1092,13 +1090,14 @@ impl DisplayListBuilder {
             color,
         });
 
-        self.push_item(&item, layout);
+        self.push_item(&item, layout, space_and_clip);
     }
 
     /// Push a yuv image. All planar data in yuv image should use the same buffer type.
     pub fn push_yuv_image(
         &mut self,
         layout: &LayoutPrimitiveInfo,
+        space_and_clip: &SpaceAndClipInfo,
         yuv_data: YuvData,
         color_depth: ColorDepth,
         color_space: YuvColorSpace,
@@ -1110,12 +1109,13 @@ impl DisplayListBuilder {
             color_space,
             image_rendering,
         });
-        self.push_item(&item, layout);
+        self.push_item(&item, layout, space_and_clip);
     }
 
     pub fn push_text(
         &mut self,
         layout: &LayoutPrimitiveInfo,
+        space_and_clip: &SpaceAndClipInfo,
         glyphs: &[GlyphInstance],
         font_key: FontInstanceKey,
         color: ColorF,
@@ -1128,7 +1128,7 @@ impl DisplayListBuilder {
         });
 
         for split_glyphs in glyphs.chunks(MAX_TEXT_RUN_LENGTH) {
-            self.push_item(&item, layout);
+            self.push_item(&item, layout, space_and_clip);
             self.push_iter(split_glyphs);
         }
     }
@@ -1166,17 +1166,19 @@ impl DisplayListBuilder {
     pub fn push_border(
         &mut self,
         layout: &LayoutPrimitiveInfo,
+        space_and_clip: &SpaceAndClipInfo,
         widths: LayoutSideOffsets,
         details: BorderDetails,
     ) {
         let item = SpecificDisplayItem::Border(BorderDisplayItem { details, widths });
 
-        self.push_item(&item, layout);
+        self.push_item(&item, layout, space_and_clip);
     }
 
     pub fn push_box_shadow(
         &mut self,
         layout: &LayoutPrimitiveInfo,
+        space_and_clip: &SpaceAndClipInfo,
         box_bounds: LayoutRect,
         offset: LayoutVector2D,
         color: ColorF,
@@ -1195,7 +1197,7 @@ impl DisplayListBuilder {
             clip_mode,
         });
 
-        self.push_item(&item, layout);
+        self.push_item(&item, layout, space_and_clip);
     }
 
     /// Pushes a linear gradient to be displayed.
@@ -1215,6 +1217,7 @@ impl DisplayListBuilder {
     pub fn push_gradient(
         &mut self,
         layout: &LayoutPrimitiveInfo,
+        space_and_clip: &SpaceAndClipInfo,
         gradient: Gradient,
         tile_size: LayoutSize,
         tile_spacing: LayoutSize,
@@ -1225,7 +1228,7 @@ impl DisplayListBuilder {
             tile_spacing,
         });
 
-        self.push_item(&item, layout);
+        self.push_item(&item, layout, space_and_clip);
     }
 
     /// Pushes a radial gradient to be displayed.
@@ -1234,6 +1237,7 @@ impl DisplayListBuilder {
     pub fn push_radial_gradient(
         &mut self,
         layout: &LayoutPrimitiveInfo,
+        space_and_clip: &SpaceAndClipInfo,
         gradient: RadialGradient,
         tile_size: LayoutSize,
         tile_spacing: LayoutSize,
@@ -1244,18 +1248,20 @@ impl DisplayListBuilder {
             tile_spacing,
         });
 
-        self.push_item(&item, layout);
+        self.push_item(&item, layout, space_and_clip);
     }
 
     pub fn push_reference_frame(
         &mut self,
         rect: &LayoutRect,
+        parent: SpatialId,
         transform_style: TransformStyle,
         transform: Option<PropertyBinding<LayoutTransform>>,
         perspective: Option<LayoutTransform>,
-    ) -> ClipId {
+    ) -> SpatialId {
         let id = self.generate_spatial_index();
-        let item = SpecificDisplayItem::PushReferenceFrame(PushReferenceFrameDisplayListItem {
+
+        let item = SpecificDisplayItem::PushReferenceFrame(ReferenceFrameDisplayListItem {
             reference_frame: ReferenceFrame {
                 transform_style,
                 transform,
@@ -1263,7 +1269,12 @@ impl DisplayListBuilder {
                 id,
             },
         });
-        self.push_item(&item, &LayoutPrimitiveInfo::new(*rect));
+
+        let layout = LayoutPrimitiveInfo::new(*rect);
+        self.push_item(&item, &layout, &SpaceAndClipInfo {
+            spatial_id: parent,
+            clip_id: ClipId::invalid(),
+        });
         id
     }
 
@@ -1287,7 +1298,8 @@ impl DisplayListBuilder {
     pub fn push_stacking_context(
         &mut self,
         layout: &LayoutPrimitiveInfo,
-        clip_node_id: Option<ClipId>,
+        spatial_id: SpatialId,
+        clip_id: Option<ClipId>,
         transform_style: TransformStyle,
         mix_blend_mode: MixBlendMode,
         filters: &[FilterOp],
@@ -1297,12 +1309,15 @@ impl DisplayListBuilder {
             stacking_context: StackingContext {
                 transform_style,
                 mix_blend_mode,
-                clip_node_id,
+                clip_id,
                 raster_space,
             },
         });
 
-        self.push_item(&item, layout);
+        self.push_item(&item, layout, &SpaceAndClipInfo {
+            spatial_id,
+            clip_id: ClipId::invalid(),
+        });
         self.push_iter(filters);
     }
 
@@ -1323,9 +1338,9 @@ impl DisplayListBuilder {
         ClipId::Clip(self.next_clip_index - 1, self.pipeline_id)
     }
 
-    fn generate_spatial_index(&mut self) -> ClipId {
+    fn generate_spatial_index(&mut self) -> SpatialId {
         self.next_spatial_index += 1;
-        ClipId::Spatial(self.next_spatial_index - 1, self.pipeline_id)
+        SpatialId::new(self.next_spatial_index - 1, self.pipeline_id)
     }
 
     fn generate_clip_chain_id(&mut self) -> ClipChainId {
@@ -1335,38 +1350,14 @@ impl DisplayListBuilder {
 
     pub fn define_scroll_frame<I>(
         &mut self,
+        parent_space_and_clip: &SpaceAndClipInfo,
         external_id: Option<ExternalScrollId>,
         content_rect: LayoutRect,
         clip_rect: LayoutRect,
         complex_clips: I,
         image_mask: Option<ImageMask>,
         scroll_sensitivity: ScrollSensitivity,
-    ) -> ClipId
-    where
-        I: IntoIterator<Item = ComplexClipRegion>,
-        I::IntoIter: ExactSizeIterator + Clone,
-    {
-        let parent = self.clip_stack.last().unwrap().scroll_node_id;
-        self.define_scroll_frame_with_parent(
-            parent,
-            external_id,
-            content_rect,
-            clip_rect,
-            complex_clips,
-            image_mask,
-            scroll_sensitivity)
-    }
-
-    pub fn define_scroll_frame_with_parent<I>(
-        &mut self,
-        parent: ClipId,
-        external_id: Option<ExternalScrollId>,
-        content_rect: LayoutRect,
-        clip_rect: LayoutRect,
-        complex_clips: I,
-        image_mask: Option<ImageMask>,
-        scroll_sensitivity: ScrollSensitivity,
-    ) -> ClipId
+    ) -> SpaceAndClipInfo
     where
         I: IntoIterator<Item = ComplexClipRegion>,
         I::IntoIter: ExactSizeIterator + Clone,
@@ -1381,14 +1372,17 @@ impl DisplayListBuilder {
             scroll_sensitivity,
         });
 
-        self.push_item_with_clip_scroll_info(
+        self.push_item(
             &item,
             &LayoutPrimitiveInfo::with_clip_rect(content_rect, clip_rect),
-            &ClipAndScrollInfo::simple(parent),
+            parent_space_and_clip,
         );
         self.push_iter(complex_clips);
 
-        scroll_frame_id
+        SpaceAndClipInfo {
+            spatial_id: scroll_frame_id,
+            clip_id,
+        }
     }
 
     pub fn define_clip_chain<I>(
@@ -1408,45 +1402,7 @@ impl DisplayListBuilder {
 
     pub fn define_clip<I>(
         &mut self,
-        clip_rect: LayoutRect,
-        complex_clips: I,
-        image_mask: Option<ImageMask>,
-    ) -> ClipId
-    where
-        I: IntoIterator<Item = ComplexClipRegion>,
-        I::IntoIter: ExactSizeIterator + Clone,
-    {
-        let clip_and_scroll = self.clip_stack.last().unwrap().clone();
-        self.define_clip_impl(
-            clip_and_scroll,
-            clip_rect,
-            complex_clips,
-            image_mask,
-        )
-    }
-
-    pub fn define_clip_with_parent<I>(
-        &mut self,
-        parent: ClipId,
-        clip_rect: LayoutRect,
-        complex_clips: I,
-        image_mask: Option<ImageMask>,
-    ) -> ClipId
-    where
-        I: IntoIterator<Item = ComplexClipRegion>,
-        I::IntoIter: ExactSizeIterator + Clone,
-    {
-        self.define_clip_impl(
-            ClipAndScrollInfo::simple(parent),
-            clip_rect,
-            complex_clips,
-            image_mask,
-        )
-    }
-
-    fn define_clip_impl<I>(
-        &mut self,
-        scrollinfo: ClipAndScrollInfo,
+        parent_space_and_clip: &SpaceAndClipInfo,
         clip_rect: LayoutRect,
         complex_clips: I,
         image_mask: Option<ImageMask>,
@@ -1461,21 +1417,24 @@ impl DisplayListBuilder {
             image_mask,
         });
 
-        let layout = LayoutPrimitiveInfo::new(clip_rect);
-
-        self.push_item_with_clip_scroll_info(&item, &layout, &scrollinfo);
+        self.push_item(
+            &item,
+            &LayoutPrimitiveInfo::new(clip_rect),
+            parent_space_and_clip,
+        );
         self.push_iter(complex_clips);
         id
     }
 
     pub fn define_sticky_frame(
         &mut self,
+        parent_spatial_id: SpatialId,
         frame_rect: LayoutRect,
         margins: SideOffsets2D<Option<f32>>,
         vertical_offset_bounds: StickyOffsetBounds,
         horizontal_offset_bounds: StickyOffsetBounds,
         previously_applied_offset: LayoutVector2D,
-    ) -> ClipId {
+    ) -> SpatialId {
         let id = self.generate_spatial_index();
         let item = SpecificDisplayItem::StickyFrame(StickyFrameDisplayItem {
             id,
@@ -1485,44 +1444,38 @@ impl DisplayListBuilder {
             previously_applied_offset,
         });
 
-        let layout = LayoutPrimitiveInfo::new(frame_rect);
-        self.push_item(&item, &layout);
+        self.push_item(
+            &item,
+            &LayoutPrimitiveInfo::new(frame_rect),
+            &SpaceAndClipInfo {
+                spatial_id: parent_spatial_id,
+                clip_id: ClipId::invalid(),
+            },
+        );
         id
-    }
-
-    pub fn push_clip_id(&mut self, id: ClipId) {
-        self.clip_stack.push(ClipAndScrollInfo::simple(id));
-    }
-
-    pub fn push_clip_and_scroll_info(&mut self, layout: ClipAndScrollInfo) {
-        self.clip_stack.push(layout);
-    }
-
-    pub fn pop_clip_id(&mut self) {
-        self.clip_stack.pop();
-        if let Some(save_state) = self.save_state.as_ref() {
-            assert!(self.clip_stack.len() >= save_state.clip_stack_len,
-                    "Cannot pop clips that were pushed before the DisplayListBuilder save.");
-        }
-        assert!(!self.clip_stack.is_empty());
     }
 
     pub fn push_iframe(
         &mut self,
         layout: &LayoutPrimitiveInfo,
+        space_and_clip: &SpaceAndClipInfo,
         pipeline_id: PipelineId,
         ignore_missing_pipeline: bool
     ) {
         let item = SpecificDisplayItem::Iframe(IframeDisplayItem {
-            clip_id: self.generate_clip_index(),
             pipeline_id,
             ignore_missing_pipeline,
         });
-        self.push_item(&item, layout);
+        self.push_item(&item, layout, space_and_clip);
     }
 
-    pub fn push_shadow(&mut self, layout: &LayoutPrimitiveInfo, shadow: Shadow) {
-        self.push_item(&SpecificDisplayItem::PushShadow(shadow), layout);
+    pub fn push_shadow(
+        &mut self,
+        layout: &LayoutPrimitiveInfo,
+        space_and_clip: &SpaceAndClipInfo,
+        shadow: Shadow,
+    ) {
+        self.push_item(&SpecificDisplayItem::PushShadow(shadow), layout, space_and_clip);
     }
 
     pub fn pop_all_shadows(&mut self) {
@@ -1533,6 +1486,7 @@ impl DisplayListBuilder {
         assert!(self.save_state.is_none(), "Finalized DisplayListBuilder with a pending save");
 
         let end_time = precise_time_ns();
+
         (
             self.pipeline_id,
             self.content_size,

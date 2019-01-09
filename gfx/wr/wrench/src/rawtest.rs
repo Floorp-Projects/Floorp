@@ -109,6 +109,7 @@ impl<'a> RawtestHarness<'a> {
         // setup some malicious image size parameters
         builder.push_image(
             &info,
+            &SpaceAndClipInfo::root_scroll(self.wrench.root_pipeline_id),
             size(151., 56.0),
             size(151.0, 56.0),
             ImageRendering::Auto,
@@ -170,12 +171,18 @@ impl<'a> RawtestHarness<'a> {
 
         let image_size = size(1510., 111256.);
 
-        let clip_id = builder.define_clip(rect(40., 41., 200., 201.), vec![], None);
+        let root_space_and_clip = SpaceAndClipInfo::root_scroll(self.wrench.root_pipeline_id);
+        let clip_id = builder.define_clip(
+            &root_space_and_clip,
+            rect(40., 41., 200., 201.),
+            vec![],
+            None,
+        );
 
-        builder.push_clip_id(clip_id);
         // setup some malicious image size parameters
         builder.push_image(
             &info,
+            &SpaceAndClipInfo { clip_id, spatial_id: root_space_and_clip.spatial_id },
             image_size * 2.,
             image_size,
             ImageRendering::Auto,
@@ -190,8 +197,6 @@ impl<'a> RawtestHarness<'a> {
                 size: size2(1510, 111256 / 30),
             }
         );
-
-        builder.pop_clip_id();
 
         let mut epoch = Epoch(0);
 
@@ -242,7 +247,7 @@ impl<'a> RawtestHarness<'a> {
     }
 
     fn test_insufficient_blob_visible_area(&mut self) {
-        println!("\tinsufficient blob visible area.");
+        println!("\tinsufficient blob visible area...");
 
         // This test compares two almost identical display lists containing the a blob
         // image. The only difference is that one of the display lists specifies a visible
@@ -261,6 +266,7 @@ impl<'a> RawtestHarness<'a> {
         let layout_size = LayoutSize::new(800.0, 800.0);
         let image_size = size(800.0, 800.0);
         let info = LayoutPrimitiveInfo::new(rect(0.0, 0.0, 800.0, 800.0));
+        let space_and_clip = SpaceAndClipInfo::root_scroll(self.wrench.root_pipeline_id);
 
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id, layout_size);
         let mut txn = Transaction::new();
@@ -281,6 +287,7 @@ impl<'a> RawtestHarness<'a> {
 
         builder.push_image(
             &info,
+            &space_and_clip,
             image_size,
             image_size,
             ImageRendering::Auto,
@@ -317,6 +324,7 @@ impl<'a> RawtestHarness<'a> {
 
         builder.push_image(
             &info,
+            &space_and_clip,
             image_size,
             image_size,
             ImageRendering::Auto,
@@ -349,6 +357,7 @@ impl<'a> RawtestHarness<'a> {
             DeviceIntPoint::new(0, window_size.height - test_size.height),
             test_size,
         );
+        let space_and_clip = SpaceAndClipInfo::root_scroll(self.wrench.root_pipeline_id);
 
         // This exposes a crash in tile decomposition
         let mut txn = Transaction::new();
@@ -371,6 +380,7 @@ impl<'a> RawtestHarness<'a> {
         // setup some malicious image size parameters
         builder.push_image(
             &info,
+            &space_and_clip,
             image_size,
             image_size,
             ImageRendering::Auto,
@@ -396,6 +406,7 @@ impl<'a> RawtestHarness<'a> {
         // setup some malicious image size parameters
         builder.push_image(
             &info,
+            &space_and_clip,
             image_size,
             image_size,
             ImageRendering::Auto,
@@ -426,6 +437,7 @@ impl<'a> RawtestHarness<'a> {
         // setup some malicious image size parameters
         builder.push_image(
             &info,
+            &space_and_clip,
             image_size,
             image_size,
             ImageRendering::Auto,
@@ -461,6 +473,8 @@ impl<'a> RawtestHarness<'a> {
             test_size,
         );
         let layout_size = LayoutSize::new(400., 400.);
+        let space_and_clip = SpaceAndClipInfo::root_scroll(self.wrench.root_pipeline_id);
+
         let mut txn = Transaction::new();
         {
             let api = &self.wrench.api;
@@ -487,6 +501,7 @@ impl<'a> RawtestHarness<'a> {
 
         builder.push_image(
             &info,
+            &space_and_clip,
             size(200.0, 200.0),
             size(0.0, 0.0),
             ImageRendering::Auto,
@@ -510,6 +525,7 @@ impl<'a> RawtestHarness<'a> {
         let info = LayoutPrimitiveInfo::new(rect(1.0, 60.0, 200.0, 200.0));
         builder.push_image(
             &info,
+            &space_and_clip,
             size(200.0, 200.0),
             size(0.0, 0.0),
             ImageRendering::Auto,
@@ -534,10 +550,6 @@ impl<'a> RawtestHarness<'a> {
         assert!(pixels_first != pixels_second);
 
         // cleanup
-        txn = Transaction::new();
-        txn.delete_blob_image(blob_img);
-        self.wrench.api.update_resources(txn.resource_updates);
-
         *self.wrench.callbacks.lock().unwrap() = blob::BlobCallbacks::new();
     }
 
@@ -553,6 +565,8 @@ impl<'a> RawtestHarness<'a> {
             test_size,
         );
         let layout_size = LayoutSize::new(400., 400.);
+        let space_and_clip = SpaceAndClipInfo::root_scroll(self.wrench.root_pipeline_id);
+
         let mut txn = Transaction::new();
         let (blob_img, blob_img2) = {
             let api = &self.wrench.api;
@@ -599,6 +613,7 @@ impl<'a> RawtestHarness<'a> {
         let push_images = |builder: &mut DisplayListBuilder| {
             builder.push_image(
                 &info,
+                &space_and_clip,
                 size(200.0, 200.0),
                 size(0.0, 0.0),
                 ImageRendering::Auto,
@@ -608,6 +623,7 @@ impl<'a> RawtestHarness<'a> {
             );
             builder.push_image(
                 &info2,
+                &space_and_clip,
                 size(200.0, 200.0),
                 size(0.0, 0.0),
                 ImageRendering::Auto,
@@ -666,11 +682,6 @@ impl<'a> RawtestHarness<'a> {
         assert_eq!(img2_requested.load(Ordering::SeqCst), 2);
 
         // cleanup
-        txn = Transaction::new();
-        txn.delete_blob_image(blob_img);
-        txn.delete_blob_image(blob_img2);
-        self.wrench.api.update_resources(txn.resource_updates);
-
         *self.wrench.callbacks.lock().unwrap() = blob::BlobCallbacks::new();
     }
 
@@ -685,6 +696,7 @@ impl<'a> RawtestHarness<'a> {
             test_size,
         );
         let layout_size = LayoutSize::new(400., 400.);
+        let space_and_clip = SpaceAndClipInfo::root_scroll(self.wrench.root_pipeline_id);
         let mut txn = Transaction::new();
 
         let blob_img = {
@@ -704,6 +716,7 @@ impl<'a> RawtestHarness<'a> {
 
         builder.push_image(
             &info,
+            &space_and_clip,
             size(200.0, 200.0),
             size(0.0, 0.0),
             ImageRendering::Auto,
@@ -731,6 +744,7 @@ impl<'a> RawtestHarness<'a> {
         let info = LayoutPrimitiveInfo::new(rect(0.0, 60.0, 200.0, 200.0));
         builder.push_image(
             &info,
+            &space_and_clip,
             size(200.0, 200.0),
             size(0.0, 0.0),
             ImageRendering::Auto,
@@ -756,6 +770,7 @@ impl<'a> RawtestHarness<'a> {
         let info = LayoutPrimitiveInfo::new(rect(0.0, 60.0, 200.0, 200.0));
         builder.push_image(
             &info,
+            &space_and_clip,
             size(200.0, 200.0),
             size(0.0, 0.0),
             ImageRendering::Auto,
@@ -769,11 +784,6 @@ impl<'a> RawtestHarness<'a> {
 
         assert!(pixels_first == pixels_second);
         assert!(pixels_first != pixels_third);
-
-        // cleanup
-        txn = Transaction::new();
-        txn.delete_blob_image(blob_img);
-        self.wrench.api.update_resources(txn.resource_updates);
     }
 
     // Ensures that content doing a save-restore produces the same results as not
@@ -792,53 +802,70 @@ impl<'a> RawtestHarness<'a> {
         let mut do_test = |should_try_and_fail| {
             let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id, layout_size);
 
-            let clip = builder.define_clip(
+            let spatial_id = SpatialId::root_scroll_node(self.wrench.root_pipeline_id);
+            let clip_id = builder.define_clip(
+                &SpaceAndClipInfo::root_scroll(self.wrench.root_pipeline_id),
                 rect(110., 120., 200., 200.),
                 None::<ComplexClipRegion>,
                 None
             );
-            builder.push_clip_id(clip);
-            builder.push_rect(&PrimitiveInfo::new(rect(100., 100., 100., 100.)),
-                              ColorF::new(0.0, 0.0, 1.0, 1.0));
+            builder.push_rect(
+                &PrimitiveInfo::new(rect(100., 100., 100., 100.)),
+                &SpaceAndClipInfo { spatial_id, clip_id },
+                ColorF::new(0.0, 0.0, 1.0, 1.0),
+            );
 
             if should_try_and_fail {
                 builder.save();
-                let clip = builder.define_clip(
+                let clip_id = builder.define_clip(
+                    &SpaceAndClipInfo { spatial_id, clip_id },
                     rect(80., 80., 90., 90.),
                     None::<ComplexClipRegion>,
                     None
                 );
-                builder.push_clip_id(clip);
-                builder.push_rect(&PrimitiveInfo::new(rect(110., 110., 50., 50.)),
-                                  ColorF::new(0.0, 1.0, 0.0, 1.0));
-                builder.push_shadow(&PrimitiveInfo::new(rect(100., 100., 100., 100.)),
-                                    Shadow {
-                                        offset: LayoutVector2D::new(1.0, 1.0),
-                                        blur_radius: 1.0,
-                                        color: ColorF::new(0.0, 0.0, 0.0, 1.0),
-                                    });
-                builder.push_line(&PrimitiveInfo::new(rect(110., 110., 50., 2.)),
-                                  0.0, LineOrientation::Horizontal,
-                                  &ColorF::new(0.0, 0.0, 0.0, 1.0), LineStyle::Solid);
+                let space_and_clip = SpaceAndClipInfo {
+                    spatial_id,
+                    clip_id
+                };
+                builder.push_rect(
+                    &PrimitiveInfo::new(rect(110., 110., 50., 50.)),
+                    &space_and_clip,
+                    ColorF::new(0.0, 1.0, 0.0, 1.0),
+                );
+                builder.push_shadow(
+                    &PrimitiveInfo::new(rect(100., 100., 100., 100.)),
+                    &space_and_clip,
+                    Shadow {
+                        offset: LayoutVector2D::new(1.0, 1.0),
+                        blur_radius: 1.0,
+                        color: ColorF::new(0.0, 0.0, 0.0, 1.0),
+                    },
+                );
+                builder.push_line(
+                    &PrimitiveInfo::new(rect(110., 110., 50., 2.)),
+                    &space_and_clip,
+                    0.0, LineOrientation::Horizontal,
+                    &ColorF::new(0.0, 0.0, 0.0, 1.0),
+                    LineStyle::Solid,
+                );
                 builder.restore();
             }
 
             {
                 builder.save();
-                let clip = builder.define_clip(
+                let clip_id = builder.define_clip(
+                    &SpaceAndClipInfo { spatial_id, clip_id },
                     rect(80., 80., 100., 100.),
                     None::<ComplexClipRegion>,
                     None
                 );
-                builder.push_clip_id(clip);
-                builder.push_rect(&PrimitiveInfo::new(rect(150., 150., 100., 100.)),
-                                  ColorF::new(0.0, 0.0, 1.0, 1.0));
-
-                builder.pop_clip_id();
+                builder.push_rect(
+                    &PrimitiveInfo::new(rect(150., 150., 100., 100.)),
+                    &SpaceAndClipInfo { spatial_id, clip_id },
+                    ColorF::new(0.0, 0.0, 1.0, 1.0),
+                );
                 builder.clear_save();
             }
-
-            builder.pop_clip_id();
 
             let txn = Transaction::new();
 
@@ -866,6 +893,7 @@ impl<'a> RawtestHarness<'a> {
             test_size,
         );
         let layout_size = LayoutSize::new(400., 400.);
+        let space_and_clip = SpaceAndClipInfo::root_scroll(self.wrench.root_pipeline_id);
 
         let mut do_test = |shadow_is_red| {
             let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id, layout_size);
@@ -875,15 +903,22 @@ impl<'a> RawtestHarness<'a> {
                 ColorF::new(0.0, 1.0, 0.0, 1.0)
             };
 
-            builder.push_shadow(&PrimitiveInfo::new(rect(100., 100., 100., 100.)),
+            builder.push_shadow(
+                &PrimitiveInfo::new(rect(100., 100., 100., 100.)),
+                &space_and_clip,
                 Shadow {
                     offset: LayoutVector2D::new(1.0, 1.0),
                     blur_radius: 1.0,
                     color: shadow_color,
-                });
-            builder.push_line(&PrimitiveInfo::new(rect(110., 110., 50., 2.)),
-                              0.0, LineOrientation::Horizontal,
-                              &ColorF::new(0.0, 0.0, 0.0, 1.0), LineStyle::Solid);
+                },
+            );
+            builder.push_line(
+                &PrimitiveInfo::new(rect(110., 110., 50., 2.)),
+                &space_and_clip,
+                0.0, LineOrientation::Horizontal,
+                &ColorF::new(0.0, 0.0, 0.0, 1.0),
+                LineStyle::Solid,
+            );
             builder.pop_all_shadows();
 
             let txn = Transaction::new();
@@ -923,6 +958,7 @@ impl<'a> RawtestHarness<'a> {
 
         builder.push_image(
             &LayoutPrimitiveInfo::new(rect(300.0, 70.0, 150.0, 50.0)),
+            &SpaceAndClipInfo::root_scroll(self.wrench.root_pipeline_id),
             size(150.0, 50.0),
             size(0.0, 0.0),
             ImageRendering::Auto,
@@ -991,7 +1027,11 @@ impl<'a> RawtestHarness<'a> {
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id, layout_size);
         let info = LayoutPrimitiveInfo::new(LayoutRect::new(LayoutPoint::zero(),
                                                             LayoutSize::new(100.0, 100.0)));
-        builder.push_rect(&info, ColorF::new(0.0, 1.0, 0.0, 1.0));
+        builder.push_rect(
+            &info,
+            &SpaceAndClipInfo::root_scroll(self.wrench.root_pipeline_id),
+            ColorF::new(0.0, 1.0, 0.0, 1.0),
+        );
 
         let mut txn = Transaction::new();
         txn.set_root_pipeline(self.wrench.root_pipeline_id);
@@ -1017,11 +1057,12 @@ impl<'a> RawtestHarness<'a> {
         let layout_size = LayoutSize::new(400., 400.);
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id, layout_size);
 
+        let space_and_clip = SpaceAndClipInfo::root_scroll(self.wrench.root_pipeline_id);
+
         // Add a rectangle that covers the entire scene.
         let mut info = LayoutPrimitiveInfo::new(LayoutRect::new(LayoutPoint::zero(), layout_size));
         info.tag = Some((0, 1));
-        builder.push_rect(&info, ColorF::new(1.0, 1.0, 1.0, 1.0));
-
+        builder.push_rect(&info, &space_and_clip, ColorF::new(1.0, 1.0, 1.0, 1.0));
 
         // Add a simple 100x100 rectangle at 100,0.
         let mut info = LayoutPrimitiveInfo::new(LayoutRect::new(
@@ -1029,7 +1070,7 @@ impl<'a> RawtestHarness<'a> {
             LayoutSize::new(100., 100.)
         ));
         info.tag = Some((0, 2));
-        builder.push_rect(&info, ColorF::new(1.0, 1.0, 1.0, 1.0));
+        builder.push_rect(&info, &space_and_clip, ColorF::new(1.0, 1.0, 1.0, 1.0));
 
         let make_rounded_complex_clip = |rect: &LayoutRect, radius: f32| -> ComplexClipRegion {
             ComplexClipRegion::new(
@@ -1039,30 +1080,46 @@ impl<'a> RawtestHarness<'a> {
             )
         };
 
-
         // Add a rectangle that is clipped by a rounded rect clip item.
         let rect = LayoutRect::new(LayoutPoint::new(100., 100.), LayoutSize::new(100., 100.));
-        let clip_id = builder.define_clip(rect, vec![make_rounded_complex_clip(&rect, 20.)], None);
-        builder.push_clip_id(clip_id);
-        let mut info = LayoutPrimitiveInfo::new(rect);
-        info.tag = Some((0, 4));
-        builder.push_rect(&info, ColorF::new(1.0, 1.0, 1.0, 1.0));
-        builder.pop_clip_id();
-
+        let temp_clip_id = builder.define_clip(
+            &space_and_clip,
+            rect,
+            vec![make_rounded_complex_clip(&rect, 20.)],
+            None,
+        );
+        builder.push_rect(
+            &LayoutPrimitiveInfo {
+                tag: Some((0, 4)),
+                .. LayoutPrimitiveInfo::new(rect)
+            },
+            &SpaceAndClipInfo {
+                clip_id: temp_clip_id,
+                spatial_id: space_and_clip.spatial_id,
+            },
+            ColorF::new(1.0, 1.0, 1.0, 1.0),
+        );
 
         // Add a rectangle that is clipped by a ClipChain containing a rounded rect.
         let rect = LayoutRect::new(LayoutPoint::new(200., 100.), LayoutSize::new(100., 100.));
-        let clip_id = builder.define_clip(rect, vec![make_rounded_complex_clip(&rect, 20.)], None);
+        let clip_id = builder.define_clip(
+            &space_and_clip,
+            rect,
+            vec![make_rounded_complex_clip(&rect, 20.)],
+            None,
+        );
         let clip_chain_id = builder.define_clip_chain(None, vec![clip_id]);
-        builder.push_clip_and_scroll_info(ClipAndScrollInfo::new(
-            ClipId::root_scroll_node(self.wrench.root_pipeline_id),
-            ClipId::ClipChain(clip_chain_id),
-        ));
-        let mut info = LayoutPrimitiveInfo::new(rect);
-        info.tag = Some((0, 5));
-        builder.push_rect(&info, ColorF::new(1.0, 1.0, 1.0, 1.0));
-        builder.pop_clip_id();
-
+        builder.push_rect(
+            &LayoutPrimitiveInfo {
+                tag: Some((0, 5)),
+                .. LayoutPrimitiveInfo::new(rect)
+            },
+            &SpaceAndClipInfo {
+                clip_id: ClipId::ClipChain(clip_chain_id),
+                spatial_id: space_and_clip.spatial_id,
+            },
+            ColorF::new(1.0, 1.0, 1.0, 1.0),
+        );
 
         let mut epoch = Epoch(0);
         let txn = Transaction::new();

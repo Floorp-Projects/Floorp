@@ -66,7 +66,7 @@ async function jexlFilterFunc(entry, environment) {
   let result;
   try {
     const context = {
-      environment,
+      env: environment,
     };
     result = await FilterExpressions.eval(filter_expression, context);
   } catch (e) {

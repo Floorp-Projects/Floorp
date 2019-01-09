@@ -3,8 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{ExternalScrollId, LayoutPoint, LayoutRect, LayoutVector2D};
-use api::{PipelineId, ScrollClamping, ScrollNodeState, ScrollLocation};
-use api::{TransformStyle, LayoutSize, LayoutTransform, PropertyBinding, ScrollSensitivity, WorldPoint};
+use api::{PipelineId, ScrollClamping, ScrollNodeState, ScrollLocation, ScrollSensitivity};
+use api::{LayoutSize, LayoutTransform, PropertyBinding, TransformStyle, WorldPoint};
 use gpu_types::TransformPalette;
 use internal_types::{FastHashMap, FastHashSet};
 use print_tree::{PrintTree, PrintTreePrinter};
@@ -46,6 +46,7 @@ impl CoordinateSystem {
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct SpatialNodeIndex(pub u32);
 
+//Note: these have to match ROOT_REFERENCE_FRAME_SPATIAL_ID and ROOT_SCROLL_NODE_SPATIAL_ID
 pub const ROOT_SPATIAL_NODE_INDEX: SpatialNodeIndex = SpatialNodeIndex(0);
 const TOPMOST_SCROLL_NODE_INDEX: SpatialNodeIndex = SpatialNodeIndex(1);
 
