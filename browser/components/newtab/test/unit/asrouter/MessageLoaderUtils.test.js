@@ -36,6 +36,14 @@ describe("MessageLoaderUtils", () => {
       assert.propertyVal(message, "id", "foo");
       assert.propertyVal(message, "provider", "provider123");
     });
+    it("should filter out local messages listed in the `exclude` field", async () => {
+      const sourceMessage = {id: "foo"};
+      const provider = {id: "provider123", type: "local", messages: [sourceMessage], exclude: ["foo"]};
+
+      const result = await MessageLoaderUtils.loadMessagesForProvider(provider, FAKE_STORAGE);
+
+      assert.lengthOf(result.messages, 0);
+    });
     it("should return messages for remote provider", async () => {
       const sourceMessage = {id: "foo"};
       fetchStub.resolves({ok: true, status: 200, json: () => Promise.resolve({messages: [sourceMessage]}), headers: FAKE_RESPONSE_HEADERS});

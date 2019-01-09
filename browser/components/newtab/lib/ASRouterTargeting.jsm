@@ -153,6 +153,24 @@ function sortMessagesByWeightedRank(messages) {
     .map(({message}) => message);
 }
 
+/**
+ * Messages with targeting should get evaluated first, this way we can have
+ * fallback messages (no targeting at all) that will show up if nothing else
+ * matched
+ */
+function sortMessagesByTargeting(messages) {
+  return messages.sort((a, b) => {
+    if (a.targeting && !b.targeting) {
+      return -1;
+    }
+    if (!a.targeting && b.targeting) {
+      return 1;
+    }
+
+    return 0;
+  });
+}
+
 const TargetingGetters = {
   get locale() {
     return Services.locale.appLocaleAsLangTag;
@@ -347,7 +365,8 @@ this.ASRouterTargeting = {
    * @returns {obj} an AS router message
    */
   async findMatchingMessage({messages, trigger, context, onError}) {
-    const sortedMessages = sortMessagesByWeightedRank([...messages]);
+    const weightSortedMessages = sortMessagesByWeightedRank([...messages]);
+    const sortedMessages = sortMessagesByTargeting(weightSortedMessages);
 
     for (const candidate of sortedMessages) {
       if (

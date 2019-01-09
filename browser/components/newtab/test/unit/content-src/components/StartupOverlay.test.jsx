@@ -8,17 +8,33 @@ describe("<StartupOverlay>", () => {
   let dispatch;
   let onReady;
   let onBlock;
+  let sandbox;
   beforeEach(() => {
-    dispatch = sinon.stub();
-    onReady = sinon.stub();
-    onBlock = sinon.stub();
+    sandbox = sinon.sandbox.create();
+    dispatch = sandbox.stub();
+    onReady = sandbox.stub();
+    onBlock = sandbox.stub();
 
     wrapper = mountWithIntl(<StartupOverlay onBlock={onBlock} onReady={onReady} dispatch={dispatch} />);
+  });
+
+  afterEach(() => {
+    sandbox.restore();
   });
 
   it("should not render if state.show is false", () => {
     wrapper.setState({overlayRemoved: true});
     assert.isTrue(wrapper.isEmptyRender());
+  });
+
+  it("should call prop.onReady after mount + timeout", async () => {
+    const clock = sandbox.useFakeTimers();
+    wrapper = mountWithIntl(<StartupOverlay onBlock={onBlock} onReady={onReady} dispatch={dispatch} />);
+    wrapper.setState({overlayRemoved: false});
+
+    clock.tick(10);
+
+    assert.calledOnce(onReady);
   });
 
   it("should emit UserEvent SKIPPED_SIGNIN when you click the skip button", () => {

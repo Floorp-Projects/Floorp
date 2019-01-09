@@ -265,7 +265,16 @@ const TEST_GLOBAL = {
       on() {},
     };
   },
-  Localization: class {},
+  Localization: class {
+    async formatMessages(stringsIds) {
+      return Promise.resolve(stringsIds.map(({id, args}) => ({value: {string_id: id, args}})));
+    }
+  },
+  FxAccountsConfig: {
+    promiseEmailFirstURI(id) {
+      return Promise.resolve(id);
+    },
+  },
 };
 overrider.set(TEST_GLOBAL);
 

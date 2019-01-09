@@ -207,6 +207,10 @@ const MessageLoaderUtils = {
       messages = [];
       Cu.reportError(new Error(`Tried to load messages for ${provider.id} but the result was not an Array.`));
     }
+    // Filter out messages we temporarily want to exclude
+    if (provider.exclude && provider.exclude.length) {
+      messages = messages.filter(message => !provider.exclude.includes(message.id));
+    }
     const lastUpdated = Date.now();
     return {
       messages: messages.map(msg => ({weight: 100, ...msg, provider: provider.id}))
