@@ -1666,12 +1666,7 @@ ImgDrawResult nsImageFrame::DisplayAltFeedbackWithoutLayer(
           rect, PresContext()->AppUnitsPerDevPixel());
       dest = wr::ToRoundedLayoutRect(devPxRect);
 
-      AutoTArray<wr::ComplexClipRegion, 1> clips;
-      clips.AppendElement(wr::SimpleRadii(dest, dest.size.width / 2));
-      auto clipId = aBuilder.DefineClip(Nothing(), dest, &clips, nullptr);
-      aBuilder.PushClip(clipId);
-      aBuilder.PushRect(dest, wrBounds, isBackfaceVisible, color);
-      aBuilder.PopClip();
+      aBuilder.PushRoundedRect(dest, wrBounds, isBackfaceVisible, color);
     }
 
     // Reduce the inner rect by the width of the icon, and leave an

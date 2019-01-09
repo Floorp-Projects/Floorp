@@ -6880,6 +6880,8 @@ bool nsDisplayStickyPosition::CreateWebRenderCommands(
     }
   }
 
+  Maybe<wr::SpaceAndClipChainHelper> saccHelper;
+
   if (stickyScrollContainer) {
     float auPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
 
@@ -6997,13 +6999,13 @@ bool nsDisplayStickyPosition::CreateWebRenderCommands(
     wr::LayoutVector2D applied = {
         NSAppUnitsToFloatPixels(appliedOffset.x, auPerDevPixel),
         NSAppUnitsToFloatPixels(appliedOffset.y, auPerDevPixel)};
-    wr::WrClipId id = aBuilder.DefineStickyFrame(
+    wr::WrSpatialId spatialId = aBuilder.DefineStickyFrame(
         wr::ToRoundedLayoutRect(bounds), topMargin.ptrOr(nullptr),
         rightMargin.ptrOr(nullptr), bottomMargin.ptrOr(nullptr),
         leftMargin.ptrOr(nullptr), vBounds, hBounds, applied);
 
-    aBuilder.PushClip(id);
-    aManager->CommandBuilder().PushOverrideForASR(mContainerASR, id);
+    saccHelper.emplace(aBuilder, spatialId);
+    aManager->CommandBuilder().PushOverrideForASR(mContainerASR, spatialId);
   }
 
   {
@@ -7015,7 +7017,6 @@ bool nsDisplayStickyPosition::CreateWebRenderCommands(
 
   if (stickyScrollContainer) {
     aManager->CommandBuilder().PopOverrideForASR(mContainerASR);
-    aBuilder.PopClip();
   }
 
   return true;

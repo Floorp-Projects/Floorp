@@ -18,6 +18,10 @@
 namespace mozilla {
 namespace wr {
 
+enum {
+  ROOT_CLIP_CHAIN = ~0,
+};
+
 /// Whether a border should be antialiased.
 enum class AntialiasBorder {
   No = 0,
@@ -651,6 +655,24 @@ struct WrClipId {
   }
 };
 
+struct WrSpatialId {
+  uintptr_t id;
+
+  bool operator==(const WrSpatialId& aOther) const {
+    return id == aOther.id;
+  }
+};
+
+struct WrSpaceAndClip {
+  WrSpatialId space;
+  WrClipId clip;
+
+  bool operator==(const WrSpaceAndClip& aOther) const {
+    return space == aOther.space &&
+           clip == aOther.clip;
+  }
+};
+
 /// A 2d Rectangle optionally tagged with a unit.
 template<typename T, typename U>
 struct TypedRect {
@@ -723,6 +745,16 @@ struct WrImageMask {
     return image == aOther.image &&
            rect == aOther.rect &&
            repeat == aOther.repeat;
+  }
+};
+
+struct WrSpaceAndClipChain {
+  WrSpatialId space;
+  uint64_t clip_chain;
+
+  bool operator==(const WrSpaceAndClipChain& aOther) const {
+    return space == aOther.space &&
+           clip_chain == aOther.clip_chain;
   }
 };
 
@@ -1310,12 +1342,21 @@ void wr_dp_clear_save(WrState *aState)
 WR_FUNC;
 
 WR_INLINE
-uintptr_t wr_dp_define_clip(WrState *aState,
-                            const WrClipId *aParentId,
-                            LayoutRect aClipRect,
-                            const ComplexClipRegion *aComplex,
-                            uintptr_t aComplexCount,
-                            const WrImageMask *aMask)
+WrClipId wr_dp_define_clip_with_parent_clip(WrState *aState,
+                                            const WrSpaceAndClip *aParent,
+                                            LayoutRect aClipRect,
+                                            const ComplexClipRegion *aComplex,
+                                            uintptr_t aComplexCount,
+                                            const WrImageMask *aMask)
+WR_FUNC;
+
+WR_INLINE
+WrClipId wr_dp_define_clip_with_parent_clip_chain(WrState *aState,
+                                                  const WrSpaceAndClipChain *aParent,
+                                                  LayoutRect aClipRect,
+                                                  const ComplexClipRegion *aComplex,
+                                                  uintptr_t aComplexCount,
+                                                  const WrImageMask *aMask)
 WR_FUNC;
 
 WR_INLINE
@@ -1326,39 +1367,28 @@ uint64_t wr_dp_define_clipchain(WrState *aState,
 WR_FUNC;
 
 WR_INLINE
-uintptr_t wr_dp_define_scroll_layer(WrState *aState,
-                                    uint64_t aScrollId,
-                                    const WrClipId *aParentId,
-                                    LayoutRect aContentRect,
-                                    LayoutRect aClipRect)
+WrSpaceAndClip wr_dp_define_scroll_layer(WrState *aState,
+                                         uint64_t aExternalScrollId,
+                                         const WrSpaceAndClip *aParent,
+                                         LayoutRect aContentRect,
+                                         LayoutRect aClipRect)
 WR_FUNC;
 
 WR_INLINE
-uintptr_t wr_dp_define_sticky_frame(WrState *aState,
-                                    LayoutRect aContentRect,
-                                    const float *aTopMargin,
-                                    const float *aRightMargin,
-                                    const float *aBottomMargin,
-                                    const float *aLeftMargin,
-                                    StickyOffsetBounds aVerticalBounds,
-                                    StickyOffsetBounds aHorizontalBounds,
-                                    LayoutVector2D aAppliedOffset)
+WrSpatialId wr_dp_define_sticky_frame(WrState *aState,
+                                      WrSpatialId aParentSpatialId,
+                                      LayoutRect aContentRect,
+                                      const float *aTopMargin,
+                                      const float *aRightMargin,
+                                      const float *aBottomMargin,
+                                      const float *aLeftMargin,
+                                      StickyOffsetBounds aVerticalBounds,
+                                      StickyOffsetBounds aHorizontalBounds,
+                                      LayoutVector2D aAppliedOffset)
 WR_FUNC;
 
 WR_INLINE
 void wr_dp_pop_all_shadows(WrState *aState)
-WR_FUNC;
-
-WR_INLINE
-void wr_dp_pop_clip(WrState *aState)
-WR_FUNC;
-
-WR_INLINE
-void wr_dp_pop_clip_and_scroll_info(WrState *aState)
-WR_FUNC;
-
-WR_INLINE
-void wr_dp_pop_scroll_layer(WrState *aState)
 WR_FUNC;
 
 WR_INLINE
@@ -1371,6 +1401,7 @@ void wr_dp_push_border(WrState *aState,
                        LayoutRect aRect,
                        LayoutRect aClip,
                        bool aIsBackfaceVisible,
+                       const WrSpaceAndClipChain *aParent,
                        AntialiasBorder aDoAa,
                        LayoutSideOffsets aWidths,
                        BorderSide aTop,
@@ -1385,6 +1416,7 @@ void wr_dp_push_border_gradient(WrState *aState,
                                 LayoutRect aRect,
                                 LayoutRect aClip,
                                 bool aIsBackfaceVisible,
+                                const WrSpaceAndClipChain *aParent,
                                 LayoutSideOffsets aWidths,
                                 int32_t aWidth,
                                 int32_t aHeight,
@@ -1402,6 +1434,7 @@ void wr_dp_push_border_image(WrState *aState,
                              LayoutRect aRect,
                              LayoutRect aClip,
                              bool aIsBackfaceVisible,
+                             const WrSpaceAndClipChain *aParent,
                              LayoutSideOffsets aWidths,
                              WrImageKey aImage,
                              int32_t aWidth,
@@ -1417,6 +1450,7 @@ void wr_dp_push_border_radial_gradient(WrState *aState,
                                        LayoutRect aRect,
                                        LayoutRect aClip,
                                        bool aIsBackfaceVisible,
+                                       const WrSpaceAndClipChain *aParent,
                                        LayoutSideOffsets aWidths,
                                        LayoutPoint aCenter,
                                        LayoutSize aRadius,
@@ -1431,6 +1465,7 @@ void wr_dp_push_box_shadow(WrState *aState,
                            LayoutRect aRect,
                            LayoutRect aClip,
                            bool aIsBackfaceVisible,
+                           const WrSpaceAndClipChain *aParent,
                            LayoutRect aBoxBounds,
                            LayoutVector2D aOffset,
                            ColorF aColor,
@@ -1443,18 +1478,15 @@ WR_FUNC;
 WR_INLINE
 void wr_dp_push_clear_rect(WrState *aState,
                            LayoutRect aRect,
-                           LayoutRect aClip)
+                           LayoutRect aClip,
+                           const WrSpaceAndClipChain *aParent)
 WR_FUNC;
 
 WR_INLINE
-void wr_dp_push_clip(WrState *aState,
-                     WrClipId aClipId)
-WR_FUNC;
-
-WR_INLINE
-void wr_dp_push_clip_and_scroll_info(WrState *aState,
-                                     WrClipId aScrollId,
-                                     const uint64_t *aClipChainId)
+void wr_dp_push_clear_rect_with_parent_clip(WrState *aState,
+                                            LayoutRect aRect,
+                                            LayoutRect aClip,
+                                            const WrSpaceAndClip *aParent)
 WR_FUNC;
 
 WR_INLINE
@@ -1462,6 +1494,7 @@ void wr_dp_push_iframe(WrState *aState,
                        LayoutRect aRect,
                        LayoutRect aClip,
                        bool aIsBackfaceVisible,
+                       const WrSpaceAndClipChain *aParent,
                        WrPipelineId aPipelineId,
                        bool aIgnoreMissingPipeline)
 WR_FUNC;
@@ -1471,6 +1504,7 @@ void wr_dp_push_image(WrState *aState,
                       LayoutRect aBounds,
                       LayoutRect aClip,
                       bool aIsBackfaceVisible,
+                      const WrSpaceAndClipChain *aParent,
                       LayoutSize aStretchSize,
                       LayoutSize aTileSpacing,
                       ImageRendering aImageRendering,
@@ -1483,6 +1517,7 @@ WR_INLINE
 void wr_dp_push_line(WrState *aState,
                      const LayoutRect *aClip,
                      bool aIsBackfaceVisible,
+                     const WrSpaceAndClipChain *aParent,
                      const LayoutRect *aBounds,
                      float aWavyLineThickness,
                      LineOrientation aOrientation,
@@ -1495,6 +1530,7 @@ void wr_dp_push_linear_gradient(WrState *aState,
                                 LayoutRect aRect,
                                 LayoutRect aClip,
                                 bool aIsBackfaceVisible,
+                                const WrSpaceAndClipChain *aParent,
                                 LayoutPoint aStartPoint,
                                 LayoutPoint aEndPoint,
                                 const GradientStop *aStops,
@@ -1509,6 +1545,7 @@ void wr_dp_push_radial_gradient(WrState *aState,
                                 LayoutRect aRect,
                                 LayoutRect aClip,
                                 bool aIsBackfaceVisible,
+                                const WrSpaceAndClipChain *aParent,
                                 LayoutPoint aCenter,
                                 LayoutSize aRadius,
                                 const GradientStop *aStops,
@@ -1523,12 +1560,17 @@ void wr_dp_push_rect(WrState *aState,
                      LayoutRect aRect,
                      LayoutRect aClip,
                      bool aIsBackfaceVisible,
+                     const WrSpaceAndClipChain *aParent,
                      ColorF aColor)
 WR_FUNC;
 
 WR_INLINE
-void wr_dp_push_scroll_layer(WrState *aState,
-                             WrClipId aScrollId)
+void wr_dp_push_rect_with_parent_clip(WrState *aState,
+                                      LayoutRect aRect,
+                                      LayoutRect aClip,
+                                      bool aIsBackfaceVisible,
+                                      const WrSpaceAndClip *aParent,
+                                      ColorF aColor)
 WR_FUNC;
 
 WR_INLINE
@@ -1536,25 +1578,25 @@ void wr_dp_push_shadow(WrState *aState,
                        LayoutRect aBounds,
                        LayoutRect aClip,
                        bool aIsBackfaceVisible,
+                       const WrSpaceAndClipChain *aParent,
                        Shadow aShadow)
 WR_FUNC;
 
 WR_INLINE
-void wr_dp_push_stacking_context(WrState *aState,
-                                 LayoutRect aBounds,
-                                 const WrClipId *aClipNodeId,
-                                 const WrAnimationProperty *aAnimation,
-                                 const float *aOpacity,
-                                 const LayoutTransform *aTransform,
-                                 TransformStyle aTransformStyle,
-                                 const LayoutTransform *aPerspective,
-                                 MixBlendMode aMixBlendMode,
-                                 const WrFilterOp *aFilters,
-                                 uintptr_t aFilterCount,
-                                 bool aIsBackfaceVisible,
-                                 RasterSpace aGlyphRasterSpace,
-                                 bool *aOutIsReferenceFrame,
-                                 uintptr_t *aOutReferenceFrameId)
+WrSpatialId wr_dp_push_stacking_context(WrState *aState,
+                                        LayoutRect aBounds,
+                                        WrSpatialId aSpatialId,
+                                        const WrClipId *aClipId,
+                                        const WrAnimationProperty *aAnimation,
+                                        const float *aOpacity,
+                                        const LayoutTransform *aTransform,
+                                        TransformStyle aTransformStyle,
+                                        const LayoutTransform *aPerspective,
+                                        MixBlendMode aMixBlendMode,
+                                        const WrFilterOp *aFilters,
+                                        uintptr_t aFilterCount,
+                                        bool aIsBackfaceVisible,
+                                        RasterSpace aGlyphRasterSpace)
 WR_FUNC;
 
 WR_INLINE
@@ -1562,6 +1604,7 @@ void wr_dp_push_text(WrState *aState,
                      LayoutRect aBounds,
                      LayoutRect aClip,
                      bool aIsBackfaceVisible,
+                     const WrSpaceAndClipChain *aParent,
                      ColorF aColor,
                      WrFontInstanceKey aFontKey,
                      const GlyphInstance *aGlyphs,
@@ -1575,6 +1618,7 @@ void wr_dp_push_yuv_NV12_image(WrState *aState,
                                LayoutRect aBounds,
                                LayoutRect aClip,
                                bool aIsBackfaceVisible,
+                               const WrSpaceAndClipChain *aParent,
                                WrImageKey aImageKey0,
                                WrImageKey aImageKey1,
                                WrColorDepth aColorDepth,
@@ -1588,6 +1632,7 @@ void wr_dp_push_yuv_interleaved_image(WrState *aState,
                                       LayoutRect aBounds,
                                       LayoutRect aClip,
                                       bool aIsBackfaceVisible,
+                                      const WrSpaceAndClipChain *aParent,
                                       WrImageKey aImageKey0,
                                       WrColorDepth aColorDepth,
                                       WrYuvColorSpace aColorSpace,
@@ -1600,6 +1645,7 @@ void wr_dp_push_yuv_planar_image(WrState *aState,
                                  LayoutRect aBounds,
                                  LayoutRect aClip,
                                  bool aIsBackfaceVisible,
+                                 const WrSpaceAndClipChain *aParent,
                                  WrImageKey aImageKey0,
                                  WrImageKey aImageKey1,
                                  WrImageKey aImageKey2,
@@ -1823,7 +1869,11 @@ void wr_resource_updates_update_image(Transaction *aTxn,
 WR_FUNC;
 
 WR_INLINE
-uintptr_t wr_root_scroll_node_id()
+WrClipId wr_root_clip_id()
+WR_FUNC;
+
+WR_INLINE
+WrSpatialId wr_root_scroll_node_id()
 WR_FUNC;
 
 extern void wr_schedule_render(WrWindowId aWindowId);
