@@ -681,10 +681,12 @@ pub(in glyph_rasterizer) struct GlyphRasterJob {
 }
 
 #[allow(dead_code)]
-pub enum GlyphRasterResult {
+pub enum GlyphRasterError {
     LoadFailed,
-    Bitmap(RasterizedGlyph),
 }
+
+#[allow(dead_code)]
+pub type GlyphRasterResult = Result<RasterizedGlyph, GlyphRasterError>;
 
 #[derive(Debug, Copy, Clone, Eq, Hash, PartialEq)]
 #[cfg_attr(feature = "capture", derive(Serialize))]

@@ -13,7 +13,7 @@ use rayon::prelude::*;
 use std::sync::{Arc, MutexGuard};
 use platform::font::FontContext;
 use glyph_rasterizer::{FontInstance, FontContexts, GlyphKey};
-use glyph_rasterizer::{GlyphRasterizer, GlyphRasterJob, GlyphRasterJobs, GlyphRasterResult};
+use glyph_rasterizer::{GlyphRasterizer, GlyphRasterJob, GlyphRasterJobs};
 use glyph_cache::{GlyphCache, CachedGlyphInfo, GlyphCacheEntry};
 use resource_cache::CachedImageData;
 use texture_cache::{TextureCache, TextureCacheHandle, Eviction};
@@ -113,7 +113,7 @@ impl GlyphRasterizer {
                     };
 
                     // Sanity check.
-                    if let GlyphRasterResult::Bitmap(ref glyph) = job.result {
+                    if let Ok(ref glyph) = job.result {
                         let bpp = 4; // We always render glyphs in 32 bits RGBA format.
                         assert_eq!(
                             glyph.bytes.len(),
@@ -161,12 +161,11 @@ impl GlyphRasterizer {
 
             for GlyphRasterJob { key, result } in jobs {
                 let glyph_info = match result {
-                    GlyphRasterResult::LoadFailed => GlyphCacheEntry::Blank,
-                    GlyphRasterResult::Bitmap(ref glyph) if glyph.width == 0 ||
-                                                            glyph.height == 0 => {
+                    Err(_) => GlyphCacheEntry::Blank,
+                    Ok(ref glyph) if glyph.width == 0 || glyph.height == 0 => {
                         GlyphCacheEntry::Blank
                     }
-                    GlyphRasterResult::Bitmap(glyph) => {
+                    Ok(glyph) => {
                         assert_eq!((glyph.left.fract(), glyph.top.fract()), (0.0, 0.0));
                         let mut texture_cache_handle = TextureCacheHandle::invalid();
                         texture_cache.request(&texture_cache_handle, gpu_cache);
