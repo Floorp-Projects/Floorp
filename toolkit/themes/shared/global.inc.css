@@ -96,3 +96,7 @@
 .panel-footer > button:not([disabled])[default]:hover:active {
   background-color: #002275;
 }
+
+.panel-footer > button > .button-box {
+  padding: 0;
+}
