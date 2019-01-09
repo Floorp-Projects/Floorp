@@ -131,3 +131,37 @@ setupProject(':samples-sync-history', 'samples/sync-history', 'A simple app demo
 setupProject(':samples-sync-logins', 'samples/sync-logins', 'A simple app demoing Firefox Sync (Logins) integration.', false)
 setupProject(':samples-toolbar', 'samples/toolbar', 'An app demoing multiple customized toolbars using the browser-toolbar component.', false)
 setupProject(':samples-dataprotect', 'samples/dataprotect', 'An app demoing how to use the Dataprotect component to load and store encrypted data in SharedPreferences.', false)
+
+//////////////////////////////////////////////////////////////////////////
+// Local Development overrides
+//////////////////////////////////////////////////////////////////////////
+
+Properties localProperties = null;
+String settingAppServicesPath = "substitutions.application-services.dir";
+
+if (file('local.properties').canRead()) {
+    localProperties = new Properties()
+    localProperties.load(file('local.properties').newDataInputStream())
+    logger.lifecycle('Local configuration: loaded local.properties')
+} else {
+    logger.lifecycle('Local configuration: absent local.properties; proceeding as normal.')
+}
+
+if (localProperties != null) {
+    String appServicesLocalPath = localProperties.getProperty(settingAppServicesPath);
+
+    if (appServicesLocalPath != null) {
+        logger.lifecycle("Local configuration: substituting application-services modules from path: $appServicesLocalPath")
+
+        includeBuild(appServicesLocalPath) {
+            dependencySubstitution {
+                substitute module('org.mozilla.fxaclient:fxaclient') with project(':fxa-client-library')
+                substitute module('org.mozilla.sync15:logins') with project(':logins-library')
+                substitute module('org.mozilla.places:places') with project(':places-library')
+            }
+        }
+
+    } else {
+        logger.lifecycle("Local configuration: application-services substitution path missing. Specify it via '$settingAppServicesPath' setting.")
+    }
+}
