@@ -41,6 +41,13 @@ class DisplayListBuilder;
 }  // namespace wr
 }  // namespace mozilla
 
+enum class ImageType {
+  BMP,
+  ICO,
+  JPEG,
+  PNG,
+};
+
 class gfxUtils {
  public:
   typedef mozilla::gfx::DataSourceSurface DataSourceSurface;
@@ -225,9 +232,8 @@ class gfxUtils {
    * If both aFile and aString are null, the encoded data is copied to the
    * clipboard.
    *
-   * @param aMimeType The MIME-type of the image type that the surface is to
-   *   be encoded to. Used to create an appropriate imgIEncoder instance to
-   *   do the encoding.
+   * @param aImageType The image type that the surface is to be encoded to.
+   *   Used to create an appropriate imgIEncoder instance to do the encoding.
    *
    * @param aOutputOptions Passed directly to imgIEncoder::InitFromData as
    *   the value of the |outputOptions| parameter. Callers are responsible
@@ -246,7 +252,7 @@ class gfxUtils {
    * supported.
    */
   static nsresult EncodeSourceSurface(SourceSurface* aSurface,
-                                      const nsACString& aMimeType,
+                                      const ImageType aImageType,
                                       const nsAString& aOutputOptions,
                                       BinaryOrData aBinaryOrData, FILE* aFile,
                                       nsACString* aString = nullptr);

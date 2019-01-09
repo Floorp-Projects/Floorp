@@ -87,7 +87,7 @@ class TestProvider extends UrlbarProvider {
   constructor(matches, cancelCallback) {
     super();
     this._name = "TestProvider" + Math.floor(Math.random() * 100000);
-    this._cancel = cancelCallback;
+    this._cancelCallback = cancelCallback;
     this._matches = matches;
   }
   get name() {
