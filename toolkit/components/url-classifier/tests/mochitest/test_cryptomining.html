@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-  <title>Test the fingerprinting classifier</title>
+  <title>Test the cryptomining classifier</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
@@ -31,14 +31,14 @@ function prefValue(value, what) {
 
 async function runTest(test) {
   await SpecialPowers.pushPrefEnv({set: [
-    [ "urlclassifier.features.fingerprinting.blacklistHosts", prefValue(test.config[0], "example.com") ],
-    [ "urlclassifier.features.fingerprinting.whitelistHosts", prefValue(test.config[1], "mochi.test") ],
-    [ "urlclassifier.features.fingerprinting.blacklistTables", prefValue(test.config[0], "mochitest1-track-simple") ],
-    [ "urlclassifier.features.fingerprinting.whitelistTables", "" ],
+    [ "urlclassifier.features.cryptomining.blacklistHosts", prefValue(test.config[0], "example.com") ],
+    [ "urlclassifier.features.cryptomining.whitelistHosts", prefValue(test.config[1], "mochi.test") ],
+    [ "urlclassifier.features.cryptomining.blacklistTables", prefValue(test.config[0], "mochitest1-track-simple") ],
+    [ "urlclassifier.features.cryptomining.whitelistTables", "" ],
     [ "privacy.trackingprotection.enabled", false ],
     [ "privacy.trackingprotection.annotate_channels", false ],
-    [ "privacy.trackingprotection.cryptomining.enabled", false ],
-    [ "privacy.trackingprotection.fingerprinting.enabled", true ],
+    [ "privacy.trackingprotection.cryptomining.enabled", true ],
+    [ "privacy.trackingprotection.fingerprinting.enabled", false ],
   ]});
 
   info("Testing: " + test.config.toSource() + "\n");
