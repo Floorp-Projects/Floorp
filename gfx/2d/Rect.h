@@ -68,6 +68,13 @@ struct MarginTyped : public BaseMargin<F, MarginTyped<units, F> >,
   explicit MarginTyped(const IntMarginTyped<units>& aMargin)
       : Super(F(aMargin.top), F(aMargin.right), F(aMargin.bottom),
               F(aMargin.left)) {}
+
+  bool WithinEpsilonOf(const MarginTyped& aOther, F aEpsilon) const {
+    return fabs(this->left - aOther.left) < aEpsilon &&
+           fabs(this->top - aOther.top) < aEpsilon &&
+           fabs(this->right - aOther.right) < aEpsilon &&
+           fabs(this->bottom - aOther.bottom) < aEpsilon;
+  }
 };
 typedef MarginTyped<UnknownUnits> Margin;
 typedef MarginTyped<UnknownUnits, double> MarginDouble;
@@ -280,6 +287,13 @@ struct RectTyped : public BaseRect<F, RectTyped<units, F>, PointTyped<units, F>,
   // This is here only to keep IPDL-generated code happy. DO NOT USE.
   bool operator==(const RectTyped<units, F>& aRect) const {
     return RectTyped<units, F>::IsEqualEdges(aRect);
+  }
+
+  bool WithinEpsilonOf(const RectTyped& aOther, F aEpsilon) const {
+    return fabs(this->x - aOther.x) < aEpsilon &&
+           fabs(this->y - aOther.y) < aEpsilon &&
+           fabs(this->width - aOther.width) < aEpsilon &&
+           fabs(this->height - aOther.height) < aEpsilon;
   }
 };
 typedef RectTyped<UnknownUnits> Rect;
