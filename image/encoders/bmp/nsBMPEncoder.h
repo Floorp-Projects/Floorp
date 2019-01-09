@@ -11,7 +11,6 @@
 #include "mozilla/UniquePtr.h"
 
 #include "imgIEncoder.h"
-#include "BMPHeaders.h"
 
 #include "nsCOMPtr.h"
 

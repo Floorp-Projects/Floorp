@@ -1407,12 +1407,11 @@ bool nsImageLoadingContent::HaveSize(imgIRequest* aImage) {
 
 void nsImageLoadingContent::BindToTree(Document* aDocument, nsIContent* aParent,
                                        nsIContent* aBindingParent) {
-  // We may be entering the document, so if our image should be tracked,
-  // track it.
-  if (!aDocument) return;
-
-  TrackImage(mCurrentRequest);
-  TrackImage(mPendingRequest);
+  // We may be getting connected, if so our image should be tracked,
+  if (GetOurCurrentDoc()) {
+    TrackImage(mCurrentRequest);
+    TrackImage(mPendingRequest);
+  }
 }
 
 void nsImageLoadingContent::UnbindFromTree(bool aDeep, bool aNullParent) {

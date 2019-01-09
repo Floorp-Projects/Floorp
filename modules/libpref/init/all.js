@@ -957,7 +957,8 @@ pref("gfx.webrender.debug.show-overdraw", false);
 pref("gfx.webrender.debug.slow-frame-indicator", false);
 pref("gfx.webrender.dl.dump-parent", false);
 pref("gfx.webrender.dl.dump-content", false);
-pref("gfx.webrender.picture-caching", false);
+
+pref("gfx.webrender.picture-caching", true);
 
 #ifdef EARLY_BETA_OR_EARLIER
 pref("performance.adjust_to_machine", true);
@@ -1079,6 +1080,8 @@ pref("toolkit.scrollbox.scrollIncrement", 20);
 pref("toolkit.scrollbox.verticalScrollDistance", 3);
 pref("toolkit.scrollbox.horizontalScrollDistance", 5);
 pref("toolkit.scrollbox.clickToScroll.scrollDelay", 150);
+
+pref("toolkit.tabbox.switchByScrolling", false);
 
 // Telemetry settings.
 // Server to submit telemetry pings to.

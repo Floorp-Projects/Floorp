@@ -98,9 +98,8 @@ void ProfilerScreenshots::SubmitScreenshot(
           // Encode surf to a JPEG data URL.
           nsCString dataURL;
           nsresult rv = gfxUtils::EncodeSourceSurface(
-              surf, NS_LITERAL_CSTRING("image/jpeg"),
-              NS_LITERAL_STRING("quality=85"), gfxUtils::eDataURIEncode,
-              nullptr, &dataURL);
+              surf, ImageType::JPEG, NS_LITERAL_STRING("quality=85"),
+              gfxUtils::eDataURIEncode, nullptr, &dataURL);
           if (NS_SUCCEEDED(rv)) {
             // Add a marker with the data URL.
             profiler_add_marker_for_thread(
