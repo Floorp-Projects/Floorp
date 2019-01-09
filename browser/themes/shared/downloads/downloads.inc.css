@@ -47,10 +47,6 @@
   outline: 1px solid var(--arrowpanel-dimmed-further);
 }
 
-.downloadsPanelFooterButton > .button-box {
-  padding: 0;
-}
-
 @notKeyfocus@ .downloadsPanelFooterButton:-moz-focusring {
   outline: none;
 }

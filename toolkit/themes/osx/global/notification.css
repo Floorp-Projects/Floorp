@@ -8,11 +8,6 @@
 %include ../../shared/notification.inc.css
 %include ../../shared/popupnotification.inc.css
 
-.popup-notification-button:-moz-focusring {
-  outline: 2px -moz-mac-focusring solid;
-  outline-offset: -2px;
-}
-
 .popup-notification-warning {
   color: #aa1b08;
 }

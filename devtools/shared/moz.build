@@ -65,6 +65,7 @@ DevToolsModules(
     'l10n.js',
     'loader-plugin-raw.jsm',
     'Loader.jsm',
+    'multi-e10s-helper.js',
     'Parser.jsm',
     'path.js',
     'plural-form.js',

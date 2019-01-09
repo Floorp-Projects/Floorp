@@ -20,7 +20,10 @@ const CONTAINER_WIDTH = 270;
 class SettingOnboardingTooltip {
   constructor(doc) {
     this.doc = doc;
-    this.tooltip = new HTMLTooltip(this.doc, { type: "arrow" });
+    this.tooltip = new HTMLTooltip(this.doc, {
+      consumeOutsideClicks: false,
+      type: "arrow",
+    });
 
     this.onCloseButtonClick = this.onCloseButtonClick.bind(this);
 

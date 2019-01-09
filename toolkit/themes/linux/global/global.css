@@ -11,6 +11,7 @@
 @import url("chrome://global/content/widgets.css");
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+@namespace html url("http://www.w3.org/1999/xhtml");
 
 %include ../../shared/global.inc.css
 
@@ -121,9 +122,10 @@ toolbar[mode="text"] .toolbarbutton-text {
   list-style-image: url("moz-icon://stock/gtk-orientation-landscape?size=button");
 }
 
-#print-preview-pageNumber {
-  /* 3 chars + 4px padding left + 2px padding right + 2*6px border */
-  width: calc(18px + 3ch);
+html|*#print-preview-pageNumber {
+  /* 3 chars + (3px border + 1px padding) on both sides */
+  width: calc(8px + 3ch);
+  margin: 0 4px;
 }
 
 /* ::::: miscellaneous formatting ::::: */
@@ -257,4 +259,3 @@ popupnotificationcontent {
 }
 
 %include ../../shared/notification-popup.inc.css
-

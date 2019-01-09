@@ -10,6 +10,7 @@ const {
   RUNTIMES,
   UNWATCH_RUNTIME_SUCCESS,
   UPDATE_CONNECTION_PROMPT_SETTING_SUCCESS,
+  UPDATE_RUNTIME_MULTIE10S_SUCCESS,
   REMOTE_RUNTIMES_UPDATED,
   WATCH_RUNTIME_SUCCESS,
 } = require("../constants");
@@ -94,6 +95,15 @@ function runtimesReducer(state = RuntimesState(), action) {
       const runtime = findRuntimeById(runtimeId, state);
       const runtimeDetails =
         Object.assign({}, runtime.runtimeDetails, { connectionPromptEnabled });
+      return _updateRuntimeById(runtimeId, { runtimeDetails }, state);
+    }
+
+    case UPDATE_RUNTIME_MULTIE10S_SUCCESS: {
+      const { isMultiE10s } = action;
+      const { id: runtimeId } = action.runtime;
+      const runtime = findRuntimeById(runtimeId, state);
+      const runtimeDetails =
+        Object.assign({}, runtime.runtimeDetails, { isMultiE10s });
       return _updateRuntimeById(runtimeId, { runtimeDetails }, state);
     }
 

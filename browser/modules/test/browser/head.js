@@ -1,6 +1,8 @@
 
 ChromeUtils.defineModuleGetter(this, "PlacesTestUtils",
                                "resource://testing-common/PlacesTestUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "TelemetryTestUtils",
+                               "resource://testing-common/TelemetryTestUtils.jsm");
 
 const SINGLE_TRY_TIMEOUT = 100;
 const NUMBER_OF_TRIES = 30;
@@ -36,49 +38,6 @@ function waitForCondition(condition, nextTest, errorMsg) {
 }
 
 /**
- * Checks if the snapshotted keyed scalars contain the expected
- * data.
- *
- * @param {Object} scalars
- *        The snapshot of the keyed scalars.
- * @param {String} scalarName
- *        The name of the keyed scalar to check.
- * @param {String} key
- *        The key that must be within the keyed scalar.
- * @param {String|Boolean|Number} expectedValue
- *        The expected value for the provided key in the scalar.
- */
-function checkKeyedScalar(scalars, scalarName, key, expectedValue) {
-  Assert.ok(scalarName in scalars,
-            scalarName + " must be recorded.");
-  Assert.ok(key in scalars[scalarName],
-            scalarName + " must contain the '" + key + "' key.");
-  Assert.equal(scalars[scalarName][key], expectedValue,
-            scalarName + "['" + key + "'] must contain the expected value");
-}
-
-/**
- * An helper that checks the value of a scalar if it's expected to be > 0,
- * otherwise makes sure that the scalar it's not reported.
- *
- * @param {Object} scalars
- *        The snapshot of the scalars.
- * @param {String} scalarName
- *        The name of the scalar to check.
- * @param {Number} value
- *        The expected value for the provided scalar.
- * @param {String} msg
- *        The message to print when checking the value.
- */
-let checkScalar = (scalars, scalarName, value, msg) => {
-  if (value > 0) {
-    is(scalars[scalarName], value, msg);
-    return;
-  }
-  ok(!(scalarName in scalars), scalarName + " must not be reported.");
-};
-
-/**
  * An utility function to write some text in the search input box
  * in a content page.
  * @param {Object} browser
@@ -96,74 +55,6 @@ let typeInSearchField = async function(browser, text, fieldName) {
     searchInput.value = contentText;
   });
 };
-
-
-/**
- * Clear and get the named histogram
- * @param {String} name
- *        The name of the histogram
- */
-function getAndClearHistogram(name) {
-  let histogram = Services.telemetry.getHistogramById(name);
-  histogram.clear();
-  return histogram;
-}
-
-
-/**
- * Clear and get the named keyed histogram
- * @param {String} name
- *        The name of the keyed histogram
- */
-function getAndClearKeyedHistogram(name) {
-  let histogram = Services.telemetry.getKeyedHistogramById(name);
-  histogram.clear();
-  return histogram;
-}
-
-
-/**
- * Check that the keyed histogram contains the right value.
- */
-function checkKeyedHistogram(h, key, expectedValue) {
-  const snapshot = h.snapshot();
-  if (expectedValue === undefined) {
-    Assert.ok(!(key in snapshot), `The histogram must not contain ${key}.`);
-    return;
-  }
-  Assert.ok(key in snapshot, `The histogram must contain ${key}.`);
-  Assert.equal(snapshot[key].sum, expectedValue, `The key ${key} must contain ${expectedValue}.`);
-}
-
-/**
- * Return the scalars from the parent-process.
- */
-function getParentProcessScalars(aChannel, aKeyed = false, aClear = false) {
-  const extended = aChannel == Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN;
-  const currentExtended = Services.telemetry.canRecordExtended;
-  Services.telemetry.canRecordExtended = extended;
-  const scalars = aKeyed ?
-    Services.telemetry.getSnapshotForKeyedScalars("main", aClear).parent :
-    Services.telemetry.getSnapshotForScalars("main", aClear).parent;
-  Services.telemetry.canRecordExtended = currentExtended;
-  return scalars || {};
-}
-
-function checkEvents(events, expectedEvents) {
-  if (!Services.telemetry.canRecordExtended) {
-    // Currently we only collect the tested events when extended Telemetry is enabled.
-    return;
-  }
-
-  Assert.equal(events.length, expectedEvents.length, "Should have matching amount of events.");
-
-  // Strip timestamps from the events for easier comparison.
-  events = events.map(e => e.slice(1));
-
-  for (let i = 0; i < events.length; ++i) {
-    Assert.deepEqual(events[i], expectedEvents[i], "Events should match.");
-  }
-}
 
 /**
  * Given a <xul:browser> at some non-internal web page,
