@@ -162,7 +162,10 @@ static SystemClass ClassifySystem() {
 }
 
 // Code sizes in machine code bytes per bytecode byte, again empirical except
-// where marked as "Guess".
+// where marked.
+//
+// The Ion estimate for ARM64 is the measured Baseline value scaled by a
+// plausible factor for optimized code.
 
 static const double x64Tox86Inflation = 1.25;
 
@@ -170,15 +173,14 @@ static const double x64IonBytesPerBytecode = 2.45;
 static const double x86IonBytesPerBytecode =
     x64IonBytesPerBytecode * x64Tox86Inflation;
 static const double arm32IonBytesPerBytecode = 3.3;
-static const double arm64IonBytesPerBytecode = 3.0;  // Guess
+static const double arm64IonBytesPerBytecode = 3.0 / 1.4;  // Estimate
 
 static const double x64BaselineBytesPerBytecode = x64IonBytesPerBytecode * 1.43;
 static const double x86BaselineBytesPerBytecode =
     x64BaselineBytesPerBytecode * x64Tox86Inflation;
 static const double arm32BaselineBytesPerBytecode =
     arm32IonBytesPerBytecode * 1.39;
-static const double arm64BaselineBytesPerBytecode =
-    arm64IonBytesPerBytecode * 1.39;  // Guess
+static const double arm64BaselineBytesPerBytecode = 3.0;
 
 static double OptimizedBytesPerBytecode(SystemClass cls) {
   switch (cls) {
@@ -239,25 +241,32 @@ static const double tierCutoffMs = 250;
 // Compilation rate values are empirical except when noted, the reference
 // systems are:
 //
-// Late-2013 MacBook Pro (2.6GHz quad hyperthreaded Haswell)
-// Late-2015 Nexus 5X (1.4GHz quad Cortex-A53 + 1.8GHz dual Cortex-A57)
+// Late-2013 MacBook Pro (2.6GHz 4 x hyperthreaded Haswell, Mac OS X)
+// Late-2015 Nexus 5X (1.4GHz 4 x Cortex-A53 + 1.8GHz 2 x Cortex-A57, Android)
+// Ca-2016 SoftIron Overdrive 1000 (1.7GHz 4 x Cortex-A57, Fedora)
+//
+// The rates are always per core.
+//
+// The estimate for ARM64 is the Baseline compilation rate on the SoftIron
+// (because we have no Ion yet), divided by 5 to estimate Ion compile rate and
+// then divided by 2 to make it more reasonable for consumer ARM64 systems.
 
-static const double x64BytecodesPerMs = 2100;
-static const double x86BytecodesPerMs = 1500;
-static const double arm32BytecodesPerMs = 450;
-static const double arm64BytecodesPerMs = 650;  // Guess
+static const double x64IonBytecodesPerMs = 2100;
+static const double x86IonBytecodesPerMs = 1500;
+static const double arm32IonBytecodesPerMs = 450;
+static const double arm64IonBytecodesPerMs = 750;  // Estimate
 
 // Tiering cutoff values: if code section sizes are below these values (when
 // divided by the effective number of cores) we do not tier, because we guess
 // that parallel Ion compilation will be fast enough.
 
-static const double x64DesktopTierCutoff = x64BytecodesPerMs * tierCutoffMs;
-static const double x86DesktopTierCutoff = x86BytecodesPerMs * tierCutoffMs;
+static const double x64DesktopTierCutoff = x64IonBytecodesPerMs * tierCutoffMs;
+static const double x86DesktopTierCutoff = x86IonBytecodesPerMs * tierCutoffMs;
 static const double x86MobileTierCutoff = x86DesktopTierCutoff / 2;  // Guess
-static const double arm32MobileTierCutoff = arm32BytecodesPerMs * tierCutoffMs;
-static const double arm64MobileTierCutoff = arm64BytecodesPerMs * tierCutoffMs;
+static const double arm32MobileTierCutoff = arm32IonBytecodesPerMs * tierCutoffMs;
+static const double arm64MobileTierCutoff = arm64IonBytecodesPerMs * tierCutoffMs;
 
-static double CodesizeCutoff(SystemClass cls, uint32_t codeSize) {
+static double CodesizeCutoff(SystemClass cls) {
   switch (cls) {
     case SystemClass::DesktopX86:
     case SystemClass::DesktopUnknown32:
@@ -335,7 +344,7 @@ static bool TieringBeneficial(uint32_t codeSize) {
   // Ion compilation on available cores must take long enough to be worth the
   // bother.
 
-  double cutoffSize = CodesizeCutoff(cls, codeSize);
+  double cutoffSize = CodesizeCutoff(cls);
   double effectiveCores = EffectiveCores(cls, cores);
 
   if ((codeSize / effectiveCores) < cutoffSize) {

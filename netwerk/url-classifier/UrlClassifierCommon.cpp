@@ -87,13 +87,14 @@ LazyLogModule UrlClassifierCommon::sLog("nsChannelClassifier");
   pwin->NotifyContentBlockingState(aBlockedReason, aChannel, true, uri);
 }
 
-/* static */ bool
-UrlClassifierCommon::ShouldEnableTrackingProtectionOrAnnotation(
+/* static */ bool UrlClassifierCommon::ShouldEnableClassifier(
     nsIChannel* aChannel,
     AntiTrackingCommon::ContentBlockingAllowListPurpose aBlockingPurpose) {
   MOZ_ASSERT(aChannel);
   MOZ_ASSERT(aBlockingPurpose == AntiTrackingCommon::eTrackingProtection ||
-             aBlockingPurpose == AntiTrackingCommon::eTrackingAnnotations);
+             aBlockingPurpose == AntiTrackingCommon::eTrackingAnnotations ||
+             aBlockingPurpose == AntiTrackingCommon::eFingerprinting ||
+             aBlockingPurpose == AntiTrackingCommon::eCryptomining);
 
   nsCOMPtr<nsIHttpChannelInternal> channel = do_QueryInterface(aChannel);
   if (!channel) {

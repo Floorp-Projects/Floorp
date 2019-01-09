@@ -17,10 +17,6 @@
 
 /* ::::: XBL bindings ::::: */
 
-menulist > menupopup {
-  -moz-binding: url("chrome://global/content/bindings/popup.xml#popup-scrollbars");
-}
-
 @media (-moz-menubar-drag) {
   toolbar[type="menubar"] {
     -moz-binding: url("chrome://global/content/bindings/toolbar.xml#toolbar-drag");

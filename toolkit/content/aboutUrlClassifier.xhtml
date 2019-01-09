@@ -18,6 +18,49 @@
 
 <body onload="onLoad()" class="wide-container">
   <h1 data-l10n-id="url-classifier-title"></h1>
+  <div id="search">
+    <h2 class="major-section" data-l10n-id="url-classifier-search-title"></h2>
+    <div class="options">
+      <table id="search-table">
+        <tbody>
+        <tr>
+          <th class="column" data-l10n-id="url-classifier-search-input"></th>
+          <td>
+            <input id="search-input" type="text" value=""/>
+          </td>
+        </tr>
+        <tr>
+          <th class="column" data-l10n-id="url-classifier-search-listType"></th>
+          <td>
+            <select id="search-listtype">
+              <option value="0">Blacklist</option>
+              <option value="1">Whitelist</option>
+            </select>
+          </td>
+        </tr>
+        <tr>
+          <th class="column" data-l10n-id="url-classifier-search-features"></th>
+          <td id="search-features"></td>
+        </tr>
+        <tr>
+          <th></th>
+          <td>
+            <button id="search-button" data-l10n-id="url-classifier-search-btn"></button>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+      <p id="search-error-message"></p>
+      <h2 class="major-section" id="result-title" data-l10n-id="url-classifier-search-result-title"></h2>
+      <table id="result-table">
+        <tr>
+          <td>
+            <input id="search-input" type="text" value=""/>
+          </td>
+        </tr>
+      </table>
+    </div>
+  </div>
   <div id="provider">
     <h2 class="major-section" data-l10n-id="url-classifier-provider-title"></h2>
     <table id="provider-table">

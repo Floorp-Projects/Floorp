@@ -81,6 +81,18 @@ nsresult ContentPrincipal::Init(nsIURI* aCodebase,
   return NS_OK;
 }
 
+nsresult ContentPrincipal::Init(ContentPrincipal* aOther,
+                                const OriginAttributes& aOriginAttributes) {
+  NS_ENSURE_ARG(aOther);
+
+  mCodebase = aOther->mCodebase;
+  FinishInit(aOther, aOriginAttributes);
+
+  mDomain = aOther->mDomain;
+  mAddon = aOther->mAddon;
+  return NS_OK;
+}
+
 nsresult ContentPrincipal::GetScriptLocation(nsACString& aStr) {
   return mCodebase->GetSpec(aStr);
 }

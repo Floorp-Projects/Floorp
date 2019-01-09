@@ -7,6 +7,8 @@
 #include "mozilla/net/UrlClassifierFeatureFactory.h"
 
 // List of Features
+#include "UrlClassifierFeatureCryptomining.h"
+#include "UrlClassifierFeatureFingerprinting.h"
 #include "UrlClassifierFeatureFlash.h"
 #include "UrlClassifierFeatureLoginReputation.h"
 #include "UrlClassifierFeatureTrackingProtection.h"
@@ -24,6 +26,8 @@ namespace net {
     return;
   }
 
+  UrlClassifierFeatureCryptomining::MaybeShutdown();
+  UrlClassifierFeatureFingerprinting::MaybeShutdown();
   UrlClassifierFeatureFlash::MaybeShutdown();
   UrlClassifierFeatureLoginReputation::MaybeShutdown();
   UrlClassifierFeatureTrackingAnnotation::MaybeShutdown();
@@ -42,6 +46,18 @@ namespace net {
   // 1 feature classifies the channel, we call ::ProcessChannel() following this
   // feature order, and this could produce different results with a different
   // feature ordering.
+
+  // Cryptomining
+  feature = UrlClassifierFeatureCryptomining::MaybeCreate(aChannel);
+  if (feature) {
+    aFeatures.AppendElement(feature);
+  }
+
+  // Fingerprinting
+  feature = UrlClassifierFeatureFingerprinting::MaybeCreate(aChannel);
+  if (feature) {
+    aFeatures.AppendElement(feature);
+  }
 
   // Tracking Protection
   feature = UrlClassifierFeatureTrackingProtection::MaybeCreate(aChannel);
@@ -75,6 +91,18 @@ UrlClassifierFeatureFactory::GetFeatureByName(const nsACString& aName) {
 
   nsCOMPtr<nsIUrlClassifierFeature> feature;
 
+  // Cryptomining
+  feature = UrlClassifierFeatureCryptomining::GetIfNameMatches(aName);
+  if (feature) {
+    return feature.forget();
+  }
+
+  // Fingerprinting
+  feature = UrlClassifierFeatureFingerprinting::GetIfNameMatches(aName);
+  if (feature) {
+    return feature.forget();
+  }
+
   // Tracking Protection
   feature = UrlClassifierFeatureTrackingProtection::GetIfNameMatches(aName);
   if (feature) {
@@ -100,6 +128,49 @@ UrlClassifierFeatureFactory::GetFeatureByName(const nsACString& aName) {
   }
 
   return nullptr;
+}
+
+/* static */ void UrlClassifierFeatureFactory::GetFeatureNames(
+    nsTArray<nsCString>& aArray) {
+  if (!XRE_IsParentProcess()) {
+    return;
+  }
+
+  // Cryptomining
+  nsAutoCString name;
+  name.Assign(UrlClassifierFeatureCryptomining::Name());
+  if (!name.IsEmpty()) {
+    aArray.AppendElement(name);
+  }
+
+  // Fingerprinting
+  name.Assign(UrlClassifierFeatureFingerprinting::Name());
+  if (!name.IsEmpty()) {
+    aArray.AppendElement(name);
+  }
+
+  // Tracking Protection
+  name.Assign(UrlClassifierFeatureTrackingProtection::Name());
+  if (!name.IsEmpty()) {
+    aArray.AppendElement(name);
+  }
+
+  // Tracking Annotation
+  name.Assign(UrlClassifierFeatureTrackingAnnotation::Name());
+  if (!name.IsEmpty()) {
+    aArray.AppendElement(name);
+  }
+
+  // Login reputation
+  name.Assign(UrlClassifierFeatureLoginReputation::Name());
+  if (!name.IsEmpty()) {
+    aArray.AppendElement(name);
+  }
+
+  // Flash features
+  nsTArray<nsCString> features;
+  UrlClassifierFeatureFlash::GetFeatureNames(features);
+  aArray.AppendElements(features);
 }
 
 /* static */ already_AddRefed<nsIUrlClassifierFeature>

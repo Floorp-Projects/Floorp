@@ -398,7 +398,7 @@ nsHttpServer.prototype =
 
     try {
       var conn = new Connection(input, output, this, socket.port, trans.port,
-                                connectionNumber);
+                                connectionNumber, trans);
       var reader = new RequestReader(conn);
 
       // XXX add request timeout functionality here!
@@ -1067,7 +1067,8 @@ ServerIdentity.prototype =
  * @param number : uint
  *   a serial number used to uniquely identify this connection
  */
-function Connection(input, output, server, port, outgoingPort, number) {
+function Connection(input, output, server, port, outgoingPort, number,
+                    transport) {
   dumpn("*** opening new connection " + number + " on port " + outgoingPort);
 
   /** Stream of incoming data. */
@@ -1087,6 +1088,9 @@ function Connection(input, output, server, port, outgoingPort, number) {
 
   /** The serial number of this connection. */
   this.number = number;
+
+  /** Reference to the underlying transport. */
+  this.transport = transport;
 
   /**
    * The request for which a response is being generated, null if the
@@ -3559,9 +3563,18 @@ Response.prototype =
    * @param e : Error
    *   the exception which precipitated this abort, or null if no such exception
    *   was generated
+   * @param truncateConnection : Boolean
+   *   ensures that we truncate the connection using an RST packet, so the
+   *   client testing code is aware that an error occurred, otherwise it may
+   *   consider the response as valid.
    */
-  abort(e) {
+  abort(e, truncateConnection = false) {
     dumpn("*** abort(<" + e + ">)");
+
+    if (truncateConnection) {
+      dumpn("*** truncate connection");
+      this._connection.transport.setLinger(true, 0);
+    }
 
     // This response will be ended by the processor if one was created.
     var copier = this._asyncCopier;

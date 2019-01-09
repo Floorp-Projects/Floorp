@@ -55,6 +55,7 @@ class RedirectHistoryEntryInfo;
 
 namespace ipc {
 
+class ContentSecurityPolicy;
 class PrincipalInfo;
 
 /**
@@ -64,6 +65,14 @@ class PrincipalInfo;
  */
 already_AddRefed<nsIPrincipal> PrincipalInfoToPrincipal(
     const PrincipalInfo& aPrincipalInfo, nsresult* aOptionalResult = nullptr);
+
+/**
+ * Populate an array of ContentSecurityPolicy objects from a CSP object.
+ *
+ * MUST be called on the main thread only.
+ */
+nsresult PopulateContentSecurityPolicies(
+    nsIContentSecurityPolicy* aCSP, nsTArray<ContentSecurityPolicy>& aPolicies);
 
 /**
  * Convert an nsIPrincipal to a PrincipalInfo.

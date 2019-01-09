@@ -33,11 +33,10 @@
 #include "ReverbInputBuffer.h"
 #include "nsAutoPtr.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/Monitor.h"
 #ifdef LOG
 #undef LOG
 #endif
-#include "base/condition_variable.h"
-#include "base/lock.h"
 #include "base/thread.h"
 
 namespace WebCore {
@@ -80,8 +79,7 @@ class ReverbConvolver {
 
   // Background thread and synchronization
   base::Thread m_backgroundThread;
-  Lock m_backgroundThreadLock;
-  ConditionVariable m_backgroundThreadCondition;
+  mozilla::Monitor m_backgroundThreadMonitor;
   bool m_useBackgroundThreads;
   bool m_wantsToExit;
   bool m_moreInputBuffered;

@@ -171,6 +171,7 @@ MessageLoop::MessageLoop(Type type, nsIEventTarget* aEventTarget)
       id_(++message_loop_id_seq),
       nestable_tasks_allowed_(true),
       exception_restoration_(false),
+      incoming_queue_lock_("MessageLoop Incoming Queue Lock"),
       state_(NULL),
       run_depth_base_(1),
       shutting_down_(false),
@@ -400,7 +401,7 @@ void MessageLoop::PostTask_Helper(already_AddRefed<nsIRunnable> task,
 
   RefPtr<base::MessagePump> pump;
   {
-    AutoLock locked(incoming_queue_lock_);
+    mozilla::MutexAutoLock locked(incoming_queue_lock_);
     incoming_queue_.push(std::move(pending_task));
     pump = pump_;
   }
@@ -478,7 +479,7 @@ void MessageLoop::ReloadWorkQueue() {
 
   // Acquire all we can from the inter-thread queue with one lock acquisition.
   {
-    AutoLock lock(incoming_queue_lock_);
+    mozilla::MutexAutoLock lock(incoming_queue_lock_);
     if (incoming_queue_.empty()) return;
     std::swap(incoming_queue_, work_queue_);
     DCHECK(incoming_queue_.empty());

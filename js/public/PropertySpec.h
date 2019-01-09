@@ -106,11 +106,9 @@ struct JSPropertySpec {
 
  private:
   void checkAccessorsAreNative() const {
-    MOZ_ASSERT(accessors.getter.native.op);
-    // We may not have a setter at all.  So all we can assert here, for the
-    // native case is that if we have a jitinfo for the setter then we have
-    // a setter op too.  This is good enough to make sure we don't have a
-    // SelfHostedWrapper for the setter.
+    // We may have a getter or a setter or both.  And whichever ones we have
+    // should not have a SelfHostedWrapper for the accessor.
+    MOZ_ASSERT_IF(accessors.getter.native.info, accessors.getter.native.op);
     MOZ_ASSERT_IF(accessors.setter.native.info, accessors.setter.native.op);
   }
 

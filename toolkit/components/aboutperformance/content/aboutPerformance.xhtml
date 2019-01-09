@@ -17,98 +17,11 @@
       @import url("chrome://global/skin/in-content/common.css");
 
       html {
-        --aboutSupport-table-background: #ebebeb;
         background-color: var(--in-content-page-background);
       }
       body {
-        margin: 40px 48px;
-      }
-      .hidden {
-        display: none;
-      }
-      .summary .title {
-        font-weight: bold;
-      }
-      a {
-        text-decoration: none;
-      }
-      a.more {
-        margin-left: 2ch;
-      }
-      ul.hidden_additional_items {
-        padding-top: 0;
-        margin-top: 0;
-      }
-      ul.visible_items {
-        padding-bottom: 0;
-        margin-bottom: 0;
-      }
-      li.delta {
-        margin-top: .5em;
-      }
-      h2 {
-        font-size: 1.46em;
-        font-weight: 300;
-        line-height: 1.3em;
-        margin: 16px 0;
-        -moz-user-select: none;
-      }
-      button.show_all_items {
-        margin-top: .5cm;
-        margin-left: 1cm;
-      }
-      body {
-        margin-left: 1cm;
         overflow-x: hidden;
       }
-      div.measuring {
-         background: url(chrome://global/skin/media/throbber.png) no-repeat center;
-         min-width: 36px;
-         min-height: 36px;
-      }
-      li.delta {
-        border-left-width: 5px;
-        border-left-style: solid;
-        padding-left: 1em;
-        list-style: none;
-      }
-      li.delta[impact="0"] {
-        border-left-color: rgb(0, 255, 0);
-      }
-      li.delta[impact="1"] {
-        border-left-color: rgb(24, 231, 0);
-      }
-      li.delta[impact="2"] {
-        border-left-color: rgb(48, 207, 0);
-      }
-      li.delta[impact="3"] {
-        border-left-color: rgb(72, 183, 0);
-      }
-      li.delta[impact="4"] {
-        border-left-color: rgb(96, 159, 0);
-      }
-      li.delta[impact="5"] {
-        border-left-color: rgb(120, 135, 0);
-      }
-      li.delta[impact="6"] {
-        border-left-color: rgb(144, 111, 0);
-      }
-      li.delta[impact="7"] {
-        border-left-color: rgb(168, 87, 0);
-      }
-      li.delta[impact="8"] {
-        border-left-color: rgb(192, 63, 0);
-      }
-      li.delta[impact="9"] {
-        border-left-color: rgb(216, 39, 0);
-      }
-      li.delta[impact="10"] {
-        border-left-color: rgb(240, 15, 0);
-      }
-      li.delta[impact="11"] {
-        border-left-color: rgb(255, 0, 0);
-      }
-
       #dispatch-table {
         -moz-user-select: none;
         font-size: 1em;
@@ -135,24 +48,24 @@
         border-bottom: 1px solid var(--in-content-border-color);
         min-width: 40em;
       }
-      #dispatch-thead, #dispatch-tbody tr {
+      tr {
         display: table;
         table-layout: fixed;
         width: 100%;
       }
-      #dispatch-table td:nth-child(2) {
+      td:nth-child(2) {
         width: 8em;
       }
-      #dispatch-table td:nth-child(3) {
+      td:nth-child(3) {
         width: 9em;
       }
-      #dispatch-table td:nth-child(4) {
+      td:nth-child(4) {
         width: 5em;
       }
       #dispatch-tbody td:nth-child(4) {
         text-align: end;
       }
-      #dispatch-table td:nth-child(5) {
+      td:nth-child(5) {
         width: 20px;
       }
 
@@ -219,12 +132,12 @@
         transform: scale(1.2);
       }
 
-      #dispatch-table > thead > tr > td {
+      #dispatch-thead > tr > td {
         border: none;
         background-color: var(--in-content-box-background-hover);
         padding: 5px 10px;
       }
-      #dispatch-table > thead > tr > td:not(:first-child) {
+      #dispatch-thead > tr > td:not(:first-child) {
         border-inline-start-width: 1px;
         border-inline-start-style: solid;
         border-image: linear-gradient(transparent 0%, transparent 20%, #c1c1c1 20%, #c1c1c1 80%, transparent 80%, transparent 100%) 1 1;
@@ -304,47 +217,20 @@
       #dispatch-tbody > tr:hover {
         background-color: var(--in-content-item-hover);
       }
-
-      .options {
-        width: 100%;
-      }
-      .options > .toggle-container-with-text {
-        display: inline-flex;
-      }
-      .options > .toggle-container-with-text:not(:first-child) {
-        margin-inline-start: 2ch;
-      }
     </style>
   </head>
   <body onload="go()">
-    <div class="options">
-      <div class="toggle-container-with-text">
-        <input type="checkbox" checked="false" id="check-display-recent" role="checkbox"></input>
-        <label for="check-display-recent" id="label-display-recent">Display only the last few seconds.</label>
-      </div>
-      <div class="toggle-container-with-text">
-        <input type="checkbox" checked="true" id="check-autorefresh" role="checkbox"></input>
-        <label for="check-autorefresh">Refresh automatically</label>
-      </div>
-    </div>
-    <div>
-      <h2>Performance of Web pages</h2>
-      <div id="webpages" class="measuring">
-      </div>
-    </div>
-    <div>
-      <table id="dispatch-table">
-        <thead id="dispatch-thead">
-          <tr>
-            <td data-l10n-id="column-name"/>
-            <td data-l10n-id="column-type"/>
-            <td data-l10n-id="column-energy-impact"/>
-            <td data-l10n-id="column-memory"/>
-            <td></td><!-- actions -->
-          </tr>
-        </thead>
-        <tbody id="dispatch-tbody"></tbody>
-      </table>
-    </div>
+    <table id="dispatch-table">
+      <thead id="dispatch-thead">
+        <tr>
+          <td data-l10n-id="column-name"/>
+          <td data-l10n-id="column-type"/>
+          <td data-l10n-id="column-energy-impact"/>
+          <td data-l10n-id="column-memory"/>
+          <td></td><!-- actions -->
+        </tr>
+      </thead>
+      <tbody id="dispatch-tbody"></tbody>
+    </table>
   </body>
 </html>
