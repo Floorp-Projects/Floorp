@@ -111,6 +111,10 @@ class FakeSocketTransportProvider : public nsISocketTransport {
     MOZ_ASSERT(false);
     return NS_OK;
   }
+  NS_IMETHOD SetLinger(bool aPolarity, int16_t aTimeout) override {
+    MOZ_ASSERT(false);
+    return NS_OK;
+  }
   NS_IMETHOD SetReuseAddrPort(bool reuseAddrPort) override {
     MOZ_ASSERT(false);
     return NS_OK;

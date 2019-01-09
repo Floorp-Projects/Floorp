@@ -1452,6 +1452,51 @@ add_task(async function test_error_source_partial() {
 });
 
 /**
+ * Ensures a download error is reported when an RST packet is received.
+ */
+add_task(async function test_error_source_netreset() {
+  if (AppConstants.platform == "win") {
+    return;
+  }
+
+  let download;
+  try {
+    if (!gUseLegacySaver) {
+      // When testing DownloadCopySaver, we want to check that the promise
+      // returned by the "start" method is rejected.
+      download = await promiseNewDownload(httpUrl("netreset.txt"));
+
+      Assert.ok(download.error === null);
+
+      await download.start();
+    } else {
+      // When testing DownloadLegacySaver, we cannot be sure whether we are
+      // testing the promise returned by the "start" method or we are testing
+      // the "error" property checked by promiseDownloadStopped.  This happens
+      // because we don't have control over when the download is started.
+      download = await promiseStartLegacyDownload(httpUrl("netreset.txt"));
+      await promiseDownloadStopped(download);
+    }
+    do_throw("The download should have failed.");
+  } catch (ex) {
+    if (!(ex instanceof Downloads.Error) || !ex.becauseSourceFailed) {
+      throw ex;
+    }
+    // A specific error object is thrown when reading from the source fails.
+  }
+
+  // Check the properties now that the download stopped.
+  Assert.ok(download.stopped);
+  Assert.ok(!download.canceled);
+  Assert.ok(download.error !== null);
+  Assert.ok(download.error.becauseSourceFailed);
+  Assert.ok(!download.error.becauseTargetFailed);
+  Assert.equal(download.error.result, Cr.NS_ERROR_NET_RESET);
+
+  Assert.equal(false, await OS.File.exists(download.target.path));
+});
+
+/**
  * Ensures download error details are reported on local writing failures.
  */
 add_task(async function test_error_target() {

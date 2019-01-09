@@ -1293,6 +1293,7 @@ set_config('MOZ_LAYOUT_DEBUGGER', depends_if('--enable-layout-debugger')(lambda 
 with only_when(compile_environment):
     fxc = check_prog('FXC', ('fxc.exe', 'fxc2.exe'), when=depends(target)
                      (lambda t: t.kernel == 'WINNT'))
+    add_old_configure_assignment('FXC', fxc)
     wine = check_prog('WINE', ['wine'], when=depends(target, host)
                       (lambda t, h: t.kernel == 'WINNT' and h.kernel == 'Linux'))
 

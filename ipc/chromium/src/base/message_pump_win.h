@@ -11,7 +11,6 @@
 
 #include <list>
 
-#include "base/lock.h"
 #include "base/message_pump.h"
 #include "base/observer_list.h"
 #include "base/scoped_handle.h"

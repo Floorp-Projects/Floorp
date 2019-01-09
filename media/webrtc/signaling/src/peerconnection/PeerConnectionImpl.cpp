@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "CSFLog.h"
+#include "base/histogram.h"
 #include "timecard.h"
 
 #include "jsapi.h"
