@@ -197,11 +197,14 @@ const char nsXPLookAndFeel::sColorPrefs[][41] = {
     "ui.-moz-mac-source-list-selection",
     "ui.-moz-mac-active-source-list-selection",
     "ui.-moz-mac-tooltip",
+    "ui.-moz-win-accentcolor",
+    "ui.-moz-win-accentcolortext",
     "ui.-moz-win-mediatext",
     "ui.-moz-win-communicationstext",
     "ui.-moz-nativehyperlinktext",
     "ui.-moz-comboboxtext",
-    "ui.-moz-combobox"};
+    "ui.-moz-combobox",
+    "ui.-moz-gtk-info-bar-text"};
 
 int32_t nsXPLookAndFeel::sCachedColors[LookAndFeel::eColorID_LAST_COLOR] = {0};
 int32_t nsXPLookAndFeel::sCachedColorBits[COLOR_CACHE_SIZE] = {0};
