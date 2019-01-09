@@ -190,25 +190,25 @@ void VRHMDSensorState::CalcViewMatrices(
 }
 
 const IntSize VRDisplayInfo::SuggestedEyeResolution() const {
-  return IntSize(mDisplayState.mEyeResolution.width,
-                 mDisplayState.mEyeResolution.height);
+  return IntSize(mDisplayState.eyeResolution.width,
+                 mDisplayState.eyeResolution.height);
 }
 
 const Point3D VRDisplayInfo::GetEyeTranslation(uint32_t whichEye) const {
-  return Point3D(mDisplayState.mEyeTranslation[whichEye].x,
-                 mDisplayState.mEyeTranslation[whichEye].y,
-                 mDisplayState.mEyeTranslation[whichEye].z);
+  return Point3D(mDisplayState.eyeTranslation[whichEye].x,
+                 mDisplayState.eyeTranslation[whichEye].y,
+                 mDisplayState.eyeTranslation[whichEye].z);
 }
 
 const Size VRDisplayInfo::GetStageSize() const {
-  return Size(mDisplayState.mStageSize.width, mDisplayState.mStageSize.height);
+  return Size(mDisplayState.stageSize.width, mDisplayState.stageSize.height);
 }
 
 const Matrix4x4 VRDisplayInfo::GetSittingToStandingTransform() const {
   Matrix4x4 m;
   // If we could replace Matrix4x4 with a pod type, we could
   // use it directly from the VRDisplayInfo struct.
-  memcpy(m.components, mDisplayState.mSittingToStandingTransform,
+  memcpy(m.components, mDisplayState.sittingToStandingTransform,
          sizeof(float) * 16);
   return m;
 }
