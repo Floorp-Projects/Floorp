@@ -54,7 +54,11 @@ EXPORTS += [
 ]
 
 EXPORTS.mozilla.image += [
+    'encoders/bmp/nsBMPEncoder.h',
+    'encoders/ico/nsICOEncoder.h',
     'encoders/jpeg/nsJPEGEncoder.h',
+    'encoders/png/nsPNGEncoder.h',
+    'ICOFileHeaders.h',
     'ImageMemoryReporter.h',
     'RecyclingSourceSurface.h',
 ]

@@ -1559,25 +1559,6 @@ nsresult HTMLFormElement::GetActionURL(nsIURI** aActionURL,
       NodePrincipal(), actionURL, nsIScriptSecurityManager::STANDARD);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Check if CSP allows this form-action
-  nsCOMPtr<nsIContentSecurityPolicy> csp;
-  rv = NodePrincipal()->GetCsp(getter_AddRefs(csp));
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (csp) {
-    bool permitsFormAction = true;
-
-    // form-action is only enforced if explicitly defined in the
-    // policy - do *not* consult default-src, see:
-    // http://www.w3.org/TR/CSP2/#directive-default-src
-    rv = csp->Permits(this, nullptr /* nsICSPEventListener */, actionURL,
-                      nsIContentSecurityPolicy::FORM_ACTION_DIRECTIVE, true,
-                      &permitsFormAction);
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (!permitsFormAction) {
-      return NS_ERROR_CSP_FORM_ACTION_VIOLATION;
-    }
-  }
-
   // Potentially the page uses the CSP directive 'upgrade-insecure-requests'. In
   // such a case we have to upgrade the action url from http:// to https://.
   // If the actionURL is not http, then there is nothing to do.

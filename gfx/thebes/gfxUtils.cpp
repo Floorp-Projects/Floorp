@@ -23,6 +23,10 @@
 #include "mozilla/gfx/PathHelpers.h"
 #include "mozilla/gfx/Swizzle.h"
 #include "mozilla/gfx/gfxVars.h"
+#include "mozilla/image/nsBMPEncoder.h"
+#include "mozilla/image/nsICOEncoder.h"
+#include "mozilla/image/nsJPEGEncoder.h"
+#include "mozilla/image/nsPNGEncoder.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtrExtensions.h"
@@ -35,6 +39,7 @@
 #include "nsIFile.h"
 #include "nsIGfxInfo.h"
 #include "nsIPresShell.h"
+#include "nsMimeTypes.h"
 #include "nsPresContext.h"
 #include "nsRegion.h"
 #include "nsServiceManagerUtils.h"
@@ -896,7 +901,7 @@ const uint32_t gfxUtils::sNumFrameColors = 8;
 }
 
 /* static */ nsresult gfxUtils::EncodeSourceSurface(
-    SourceSurface* aSurface, const nsACString& aMimeType,
+    SourceSurface* aSurface, const ImageType aImageType,
     const nsAString& aOutputOptions, BinaryOrData aBinaryOrData, FILE* aFile,
     nsACString* aStrOut) {
   MOZ_ASSERT(aBinaryOrData == gfxUtils::eDataURIEncode || aFile || aStrOut,
@@ -925,24 +930,30 @@ const uint32_t gfxUtils::sNumFrameColors = 8;
     return NS_ERROR_FAILURE;
   }
 
-  nsAutoCString encoderCID(
-      NS_LITERAL_CSTRING("@mozilla.org/image/encoder;2?type=") + aMimeType);
-  nsCOMPtr<imgIEncoder> encoder = do_CreateInstance(encoderCID.get());
-  if (!encoder) {
-#ifdef DEBUG
-    int32_t w = std::min(size.width, 8);
-    int32_t h = std::min(size.height, 8);
-    printf("Could not create encoder. Top-left %dx%d pixels contain:\n", w, h);
-    for (int32_t y = 0; y < h; ++y) {
-      for (int32_t x = 0; x < w; ++x) {
-        printf("%x ",
-               reinterpret_cast<uint32_t*>(map.mData)[y * map.mStride + x]);
-      }
-    }
-#endif
-    dataSurface->Unmap();
-    return NS_ERROR_FAILURE;
+  RefPtr<imgIEncoder> encoder = nullptr;
+
+  switch (aImageType) {
+    case ImageType::BMP:
+      encoder = MakeRefPtr<nsBMPEncoder>();
+      break;
+
+    case ImageType::ICO:
+      encoder = MakeRefPtr<nsICOEncoder>();
+      break;
+
+    case ImageType::JPEG:
+      encoder = MakeRefPtr<nsJPEGEncoder>();
+      break;
+
+    case ImageType::PNG:
+      encoder = MakeRefPtr<nsPNGEncoder>();
+      break;
+
+    default:
+      break;
   }
+
+  MOZ_RELEASE_ASSERT(encoder != nullptr);
 
   nsresult rv = encoder->InitFromData(
       map.mData, BufferSizeFromStrideAndHeight(map.mStride, size.height),
@@ -1006,17 +1017,37 @@ const uint32_t gfxUtils::sNumFrameColors = 8;
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCString stringBuf;
-  nsACString& string = aStrOut ? *aStrOut : stringBuf;
-  string.AppendLiteral("data:");
-  string.Append(aMimeType);
-  string.AppendLiteral(";base64,");
-  string.Append(encodedImg);
+  nsACString& dataURI = aStrOut ? *aStrOut : stringBuf;
+  dataURI.AppendLiteral("data:");
+
+  switch (aImageType) {
+    case ImageType::BMP:
+      dataURI.AppendLiteral(IMAGE_BMP);
+      break;
+
+    case ImageType::ICO:
+      dataURI.AppendLiteral(IMAGE_ICO_MS);
+      break;
+    case ImageType::JPEG:
+      dataURI.AppendLiteral(IMAGE_JPEG);
+      break;
+
+    case ImageType::PNG:
+      dataURI.AppendLiteral(IMAGE_PNG);
+      break;
+
+    default:
+      break;
+  }
+
+  dataURI.AppendLiteral(";base64,");
+  dataURI.Append(encodedImg);
 
   if (aFile) {
 #ifdef ANDROID
     if (aFile == stdout || aFile == stderr) {
       // ADB logcat cuts off long strings so we will break it down
-      const char* cStr = string.BeginReading();
+      const char* cStr = dataURI.BeginReading();
       size_t len = strlen(cStr);
       while (true) {
         printf_stderr("IMG: %.140s\n", cStr);
@@ -1026,12 +1057,12 @@ const uint32_t gfxUtils::sNumFrameColors = 8;
       }
     }
 #endif
-    fprintf(aFile, "%s", string.BeginReading());
+    fprintf(aFile, "%s", dataURI.BeginReading());
   } else if (!aStrOut) {
     nsCOMPtr<nsIClipboardHelper> clipboard(
         do_GetService("@mozilla.org/widget/clipboardhelper;1", &rv));
     if (clipboard) {
-      clipboard->CopyString(NS_ConvertASCIItoUTF16(string));
+      clipboard->CopyString(NS_ConvertASCIItoUTF16(dataURI));
     }
   }
   return NS_OK;
@@ -1039,9 +1070,8 @@ const uint32_t gfxUtils::sNumFrameColors = 8;
 
 static nsCString EncodeSourceSurfaceAsPNGURI(SourceSurface* aSurface) {
   nsCString string;
-  gfxUtils::EncodeSourceSurface(aSurface, NS_LITERAL_CSTRING("image/png"),
-                                EmptyString(), gfxUtils::eDataURIEncode,
-                                nullptr, &string);
+  gfxUtils::EncodeSourceSurface(aSurface, ImageType::PNG, EmptyString(),
+                                gfxUtils::eDataURIEncode, nullptr, &string);
   return string;
 }
 
@@ -1154,8 +1184,8 @@ const float kBT709NarrowYCbCrToRGB_RowMajor[16] = {
     }
   }
 
-  EncodeSourceSurface(aSurface, NS_LITERAL_CSTRING("image/png"), EmptyString(),
-                      eBinaryEncode, file);
+  EncodeSourceSurface(aSurface, ImageType::PNG, EmptyString(), eBinaryEncode,
+                      file);
   fclose(file);
 }
 
@@ -1192,8 +1222,8 @@ const float kBT709NarrowYCbCrToRGB_RowMajor[16] = {
 
 /* static */ void gfxUtils::DumpAsDataURI(SourceSurface* aSurface,
                                           FILE* aFile) {
-  EncodeSourceSurface(aSurface, NS_LITERAL_CSTRING("image/png"), EmptyString(),
-                      eDataURIEncode, aFile);
+  EncodeSourceSurface(aSurface, ImageType::PNG, EmptyString(), eDataURIEncode,
+                      aFile);
 }
 
 /* static */ nsCString gfxUtils::GetAsDataURI(SourceSurface* aSurface) {
@@ -1245,8 +1275,8 @@ const float kBT709NarrowYCbCrToRGB_RowMajor[16] = {
 }
 
 /* static */ void gfxUtils::CopyAsDataURI(SourceSurface* aSurface) {
-  EncodeSourceSurface(aSurface, NS_LITERAL_CSTRING("image/png"), EmptyString(),
-                      eDataURIEncode, nullptr);
+  EncodeSourceSurface(aSurface, ImageType::PNG, EmptyString(), eDataURIEncode,
+                      nullptr);
 }
 
 /* static */ void gfxUtils::CopyAsDataURI(DrawTarget* aDT) {

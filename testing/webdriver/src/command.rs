@@ -989,7 +989,7 @@ mod tests {
 
     #[test]
     fn test_json_switch_to_frame_parameters_with_invalid_id_field() {
-        let json = r#"{"id":"3""#;
+        let json = r#"{"id":"3"}"#;
 
         assert!(serde_json::from_str::<SwitchToFrameParameters>(&json).is_err());
     }
