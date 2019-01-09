@@ -120,6 +120,10 @@ UrlClassifierFeatureTrackingAnnotation::UrlClassifierFeatureTrackingAnnotation()
           NS_LITERAL_CSTRING(TABLE_ANNOTATION_WHITELIST_PREF),
           NS_LITERAL_CSTRING(URLCLASSIFIER_TRACKING_ANNOTATION_SKIP_URLS)) {}
 
+/* static */ const char* UrlClassifierFeatureTrackingAnnotation::Name() {
+  return TRACKING_ANNOTATION_FEATURE_NAME;
+}
+
 /* static */ void UrlClassifierFeatureTrackingAnnotation::MaybeInitialize() {
   MOZ_ASSERT(XRE_IsParentProcess());
   UC_LOG(("UrlClassifierFeatureTrackingAnnotation: MaybeInitialize"));
@@ -150,7 +154,7 @@ UrlClassifierFeatureTrackingAnnotation::MaybeCreate(nsIChannel* aChannel) {
     return nullptr;
   }
 
-  if (!UrlClassifierCommon::ShouldEnableTrackingProtectionOrAnnotation(
+  if (!UrlClassifierCommon::ShouldEnableClassifier(
           aChannel, AntiTrackingCommon::eTrackingAnnotations)) {
     return nullptr;
   }

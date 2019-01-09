@@ -11,6 +11,7 @@ const JSLOG_PREF = "browser.safebrowsing.debug";
 function unLoad() {
   window.removeEventListener("unload", unLoad);
 
+  Search.uninit();
   Provider.uninit();
   Cache.uninit();
   Debug.uninit();
@@ -20,10 +21,159 @@ function onLoad() {
   window.removeEventListener("load", onLoad);
   window.addEventListener("unload", unLoad);
 
+  Search.init();
   Provider.init();
   Cache.init();
   Debug.init();
 }
+
+/*
+ * Search
+ */
+var Search = {
+  init() {
+    let classifier = Cc["@mozilla.org/url-classifier/dbservice;1"]
+                       .getService(Ci.nsIURIClassifier);
+    let featureNames = classifier.getFeatureNames();
+
+    let fragment = document.createDocumentFragment();
+    featureNames.forEach(featureName => {
+      let div = document.createElement("div");
+      fragment.appendChild(div);
+
+      let checkbox = document.createElement("input");
+      checkbox.id = "feature_" + featureName;
+      checkbox.type = "checkbox";
+      checkbox.checked = true;
+      div.appendChild(checkbox);
+
+      let label = document.createElement("label");
+      label.for = checkbox.id;
+      div.appendChild(label);
+
+      let text = document.createTextNode(featureName);
+      label.appendChild(text);
+    });
+
+    let list = document.getElementById("search-features");
+    list.appendChild(fragment);
+
+    let btn = document.getElementById("search-button");
+    btn.addEventListener("click", this.search);
+
+    this.hideError();
+    this.hideResults();
+  },
+
+  uninit() {
+    let list = document.getElementById("search-features");
+    while (list.firstChild) {
+      list.firstChild.remove();
+    }
+
+    let btn = document.getElementById("search-button");
+    btn.removeEventListener("click", this.search);
+  },
+
+  search() {
+    Search.hideError();
+    Search.hideResults();
+
+    let input = document.getElementById("search-input").value;
+
+    let uri;
+    try {
+      uri = Services.io.newURI(input);
+      if (!uri) {
+        Search.reportError("url-classifier-search-error-invalid-url");
+        return;
+      }
+    } catch (ex) {
+      Search.reportError("url-classifier-search-error-invalid-url");
+      return;
+    }
+
+    let classifier = Cc["@mozilla.org/url-classifier/dbservice;1"]
+                       .getService(Ci.nsIURIClassifier);
+
+    let featureNames = classifier.getFeatureNames();
+    let features = [];
+    featureNames.forEach(featureName => {
+      if (document.getElementById("feature_" + featureName).checked) {
+        let feature = classifier.getFeatureByName(featureName);
+        if (feature) {
+          features.push(feature);
+        }
+      }
+    });
+
+    if (!features.length) {
+      Search.reportError("url-classifier-search-error-no-features");
+      return;
+    }
+
+    let listType = document.getElementById("search-listtype").value == 0
+                     ? Ci.nsIUrlClassifierFeature.blacklist
+                     : Ci.nsIUrlClassifierFeature.whitelist;
+    classifier.asyncClassifyLocalWithFeatures(uri, features, listType,
+                                              list => Search.showResults(list));
+
+    Search.hideError();
+  },
+
+  hideError() {
+    let errorMessage = document.getElementById("search-error-message");
+    errorMessage.style.display = "none";
+  },
+
+  reportError(msg) {
+    let errorMessage = document.getElementById("search-error-message");
+    document.l10n.setAttributes(errorMessage, msg);
+    errorMessage.style.display = "";
+  },
+
+  hideResults() {
+    let resultTitle = document.getElementById("result-title");
+    resultTitle.style.display = "none";
+
+    let resultTable = document.getElementById("result-table");
+    resultTable.style.display = "none";
+  },
+
+  showResults(results) {
+    let fragment = document.createDocumentFragment();
+    results.forEach(result => {
+      let tr = document.createElement("tr");
+      fragment.appendChild(tr);
+
+      let th = document.createElement("th");
+      tr.appendChild(th);
+      th.appendChild(document.createTextNode(result.feature.name));
+
+      let td = document.createElement("td");
+      tr.appendChild(td);
+
+      let featureName = document.createElement("div");
+      document.l10n.setAttributes(featureName, "url-classifier-search-result-uri", {uri: result.uri.spec});
+      td.appendChild(featureName);
+
+      let list = document.createElement("div");
+      document.l10n.setAttributes(list, "url-classifier-search-result-list", {list: result.list});
+      td.appendChild(list);
+    });
+
+    let resultTable = document.getElementById("result-table");
+    while (resultTable.firstChild) {
+      resultTable.firstChild.remove();
+    }
+
+    resultTable.appendChild(fragment);
+    resultTable.style.display = "";
+
+    let resultTitle = document.getElementById("result-title");
+    resultTitle.style.display = "";
+  },
+};
 
 /*
  * Provider

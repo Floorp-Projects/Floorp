@@ -2490,8 +2490,11 @@ nsresult ReadResponse(mozIStorageConnection* aConn, EntryId aEntryId,
     nsCString origin;
     url->Origin(origin);
 
+    // CSP is recovered from the headers, no need to initialise it here.
+    nsTArray<mozilla::ipc::ContentSecurityPolicy> policies;
     aSavedResponseOut->mValue.principalInfo() =
-        mozilla::ipc::ContentPrincipalInfo(attrs, origin, specNoSuffix);
+        mozilla::ipc::ContentPrincipalInfo(attrs, origin, specNoSuffix,
+                                           std::move(policies));
   }
 
   bool nullPadding = false;

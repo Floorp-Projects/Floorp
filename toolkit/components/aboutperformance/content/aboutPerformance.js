@@ -6,9 +6,7 @@
 
 "use strict";
 
-const { PerformanceStats } = ChromeUtils.import("resource://gre/modules/PerformanceStats.jsm", {});
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
-const { ObjectUtils } = ChromeUtils.import("resource://gre/modules/ObjectUtils.jsm", {});
 const { AddonManager } = ChromeUtils.import("resource://gre/modules/AddonManager.jsm", {});
 const { ExtensionParent } = ChromeUtils.import("resource://gre/modules/ExtensionParent.jsm", {});
 
@@ -17,15 +15,6 @@ const {WebExtensionPolicy} = Cu.getGlobalForObject(Services);
 // Time in ms before we start changing the sort order again after receiving a
 // mousemove event.
 const TIME_BEFORE_SORTING_AGAIN = 5000;
-
-// about:performance observes notifications on this topic.
-// if a notification is sent, this causes the page to be updated immediately,
-// regardless of whether the page is on pause.
-const TEST_DRIVER_TOPIC = "test-about:performance-test-driver";
-
-// about:performance posts notifications on this topic whenever the page
-// is updated.
-const UPDATE_COMPLETE_TOPIC = "about:performance-update-complete";
 
 // How often we should add a sample to our buffer.
 const BUFFER_SAMPLING_RATE_MS = 1000;
@@ -40,43 +29,6 @@ const UPDATE_INTERVAL_MS = 2000;
 const BRAND_BUNDLE = Services.strings.createBundle(
   "chrome://branding/locale/brand.properties");
 const BRAND_NAME = BRAND_BUNDLE.GetStringFromName("brandShortName");
-
-// The maximal number of items to display before showing a "Show All"
-// button.
-const MAX_NUMBER_OF_ITEMS_TO_DISPLAY = 3;
-
-// If the frequency of alerts is below this value,
-// we consider that the feature has no impact.
-const MAX_FREQUENCY_FOR_NO_IMPACT = .05;
-// If the frequency of alerts is above `MAX_FREQUENCY_FOR_NO_IMPACT`
-// and below this value, we consider that the feature impacts the
-// user rarely.
-const MAX_FREQUENCY_FOR_RARE = .1;
-// If the frequency of alerts is above `MAX_FREQUENCY_FOR_FREQUENT`
-// and below this value, we consider that the feature impacts the
-// user frequently. Anything above is consider permanent.
-const MAX_FREQUENCY_FOR_FREQUENT = .5;
-
-// If the number of high-impact alerts among all alerts is above
-// this value, we consider that the feature has a major impact
-// on user experience.
-const MIN_PROPORTION_FOR_MAJOR_IMPACT = .05;
-// Otherwise and if the number of medium-impact alerts among all
-// alerts is above this value, we consider that the feature has
-// a noticeable impact on user experience.
-const MIN_PROPORTION_FOR_NOTICEABLE_IMPACT = .1;
-
-// The current mode. Either `MODE_GLOBAL` to display a summary of results
-// since we opened about:performance or `MODE_RECENT` to display the latest
-// BUFFER_DURATION_MS ms.
-const MODE_GLOBAL = "global";
-const MODE_RECENT = "recent";
-
-// Decide if we show the old style about:performance or if we can show data
-// based on the new performance counters.
-function performanceCountersEnabled() {
-  return Services.prefs.getBoolPref("dom.performance.enable_scheduler_timing", false);
-}
 
 function extensionCountersEnabled() {
   return Services.prefs.getBoolPref("extensions.webextensions.enablePerformanceCounters", false);
@@ -167,206 +119,9 @@ function wait(ms = 0) {
 }
 
 /**
- * The performance of a webpage between two instants.
- *
- * Clients should call `promiseInit()` before using the methods of this object.
- *
- * @param {PerformanceDiff} The underlying performance data.
- * @param {"webpages"} The kind of delta represented by this object.
- * @param {Map<groupId, timestamp>} ageMap A map containing the oldest known
- *  appearance of each groupId, used to determine how long we have been monitoring
- *  this item.
- * @param {Map<Delta key, Array>} alertMap A map containing the alerts that each
- *  item has already triggered in the past.
- */
-function Delta(diff, kind, snapshotDate, ageMap, alertMap) {
-  if (kind != "webpages") {
-    throw new TypeError(`Unknown kind: ${kind}`);
-  }
-
-  /**
-   * We only understand "webpages" right now.
-   */
-  this.kind = kind;
-
-  /**
-   * The underlying PerformanceDiff.
-   * @type {PerformanceDiff}
-   */
-  this.diff = diff;
-
-  /**
-   * A key unique to the item (webpage), shared by successive
-   * instances of `Delta`.
-   * @type{string}
-   */
-  this.key = kind + diff.key;
-
-  // Find the oldest occurrence of this item.
-  let creationDate = snapshotDate;
-  for (let groupId of diff.groupIds) {
-    let date = ageMap.get(groupId);
-    if (date && date <= creationDate) {
-      creationDate = date;
-    }
-  }
-
-  /**
-   * The timestamp at which the data was measured.
-   */
-  this.creationDate = creationDate;
-
-  /**
-   * Number of milliseconds since the start of the measure.
-   */
-  this.age = snapshotDate - creationDate;
-
-  /**
-   * A UX-friendly, human-readable name for this item.
-   */
-  this.readableName = null;
-
-  /**
-   * A complete name, possibly useful for power users or debugging.
-   */
-  this.fullName = null;
-
-
-  // `true` once initialization is complete.
-  this._initialized = false;
-  // `true` if this item should be displayed
-  this._show = false;
-
-  /**
-   * All the alerts that this item has caused since about:performance
-   * was opened.
-   */
-  this.alerts = (alertMap.get(this.key) || []).slice();
-  switch (this.slowness) {
-    case 0: break;
-    case 1: this.alerts[0] = (this.alerts[0] || 0) + 1; break;
-    case 2: this.alerts[1] = (this.alerts[1] || 0) + 1; break;
-    default: throw new Error();
-  }
-}
-Delta.prototype = {
-  /**
-   * `true` if this item should be displayed, `false` otherwise.
-   */
-  get show() {
-    this._ensureInitialized();
-    return this._show;
-  },
-
-  /**
-   * Estimate the slowness of this item.
-   *
-   * @return 0 if the item has good performance.
-   * @return 1 if the item has average performance.
-   * @return 2 if the item has poor performance.
-   */
-  get slowness() {
-    if (Delta.compare(this, Delta.MAX_DELTA_FOR_GOOD_RECENT_PERFORMANCE) <= 0) {
-      return 0;
-    }
-    if (Delta.compare(this, Delta.MAX_DELTA_FOR_AVERAGE_RECENT_PERFORMANCE) <= 0) {
-      return 1;
-    }
-    return 2;
-  },
-  _ensureInitialized() {
-    if (!this._initialized) {
-      throw new Error();
-    }
-  },
-
-  /**
-   * Initialize, asynchronously.
-   */
-  promiseInit() {
-    if (this.kind == "webpages") {
-      return this._initWebpage();
-    }
-    throw new TypeError();
-  },
-  _initWebpage() {
-    this._initialized = true;
-    let found = tabFinder.getAny(this.diff.windowIds);
-    if (!found || found.tab.linkedBrowser.contentTitle == null) {
-      // Either this is not a real page or the page isn't restored yet.
-      return;
-    }
-
-    this.readableName = found.tab.linkedBrowser.contentTitle;
-    this.fullName = this.diff.names.join(", ");
-    this._show = true;
-  },
-  toString() {
-    return `[Delta] ${this.diff.key} => ${this.readableName}, ${this.fullName}`;
-  },
-};
-
-Delta.compare = function(a, b) {
-  return (
-    (a.diff.jank.longestDuration - b.diff.jank.longestDuration) ||
-    (a.diff.jank.totalUserTime - b.diff.jank.totalUserTime) ||
-    (a.diff.jank.totalSystemTime - b.diff.jank.totalSystemTime) ||
-    (a.diff.cpow.totalCPOWTime - b.diff.cpow.totalCPOWTime) ||
-    (a.diff.ticks.ticks - b.diff.ticks.ticks) ||
-    0
-  );
-};
-
-Delta.revCompare = function(a, b) {
-  return -Delta.compare(a, b);
-};
-
-/**
- * The highest value considered "good performance".
- */
-Delta.MAX_DELTA_FOR_GOOD_RECENT_PERFORMANCE = {
-  diff: {
-    cpow: {
-      totalCPOWTime: 0,
-    },
-    jank: {
-      longestDuration: 3,
-      totalUserTime: Number.POSITIVE_INFINITY,
-      totalSystemTime: Number.POSITIVE_INFINITY,
-    },
-    ticks: {
-      ticks: Number.POSITIVE_INFINITY,
-    },
-  },
-};
-
-/**
- * The highest value considered "average performance".
- */
-Delta.MAX_DELTA_FOR_AVERAGE_RECENT_PERFORMANCE = {
-  diff: {
-    cpow: {
-      totalCPOWTime: Number.POSITIVE_INFINITY,
-    },
-    jank: {
-      longestDuration: 7,
-      totalUserTime: Number.POSITIVE_INFINITY,
-      totalSystemTime: Number.POSITIVE_INFINITY,
-    },
-    ticks: {
-      ticks: Number.POSITIVE_INFINITY,
-    },
-  },
-};
-
-/**
  * Utilities for dealing with state
  */
 var State = {
-  _monitor: PerformanceStats.getMonitor([
-    "jank", "cpow", "ticks",
-  ]),
-
   /**
    * Indexed by the number of minutes since the snapshot was taken.
    *
@@ -374,49 +129,13 @@ var State = {
    */
   _buffer: [],
   /**
-   * The first snapshot since opening the page.
-   *
-   * @type ApplicationSnapshot
-   */
-  _oldest: null,
-
-  /**
    * The latest snapshot.
    *
    * @type ApplicationSnapshot
    */
   _latest: null,
 
-  /**
-   * The performance alerts for each group.
-   *
-   * This map is cleaned up during each update to avoid leaking references
-   * to groups that have been gc-ed.
-   *
-   * @type{Map<Delta key, Array<number>} A map in which the keys are provided
-   * by property `key` of instances of `Delta` and the values are arrays
-   * [number of moderate-impact alerts, number of high-impact alerts]
-   */
-  _alerts: new Map(),
-
-  /**
-   * The date at which each group was first seen.
-   *
-   * This map is cleaned up during each update to avoid leaking references
-   * to groups that have been gc-ed.
-   *
-   * @type{Map<string, timestamp} A map in which keys are
-   * values for `delta.groupId` and values are approximate
-   * dates at which the group was first encountered, as provided
-   * by `Cu.now()``.
-   */
-  _firstSeen: new Map(),
-
   async _promiseSnapshot() {
-    if (!performanceCountersEnabled()) {
-      return this._monitor.promiseSnapshot();
-    }
-
     let addons = WebExtensionPolicy.getActiveExtensions();
     let addonHosts = new Map();
     for (let addon of addons)
@@ -499,14 +218,10 @@ var State = {
   async update() {
     // If the buffer is empty, add one value for bootstraping purposes.
     if (this._buffer.length == 0) {
-      if (this._oldest) {
-        throw new Error("Internal Error, we shouldn't have a `_oldest` value yet.");
-      }
-      this._latest = this._oldest = await this._promiseSnapshot();
-      this._buffer.push(this._oldest);
+      this._latest = await this._promiseSnapshot();
+      this._buffer.push(this._latest);
       await wait(BUFFER_SAMPLING_RATE_MS * 1.1);
     }
-
 
     let now = Cu.now();
 
@@ -523,76 +238,6 @@ var State = {
     if (oldestInBuffer.date + BUFFER_DURATION_MS < this._latest.date) {
       this._buffer.shift();
     }
-  },
-
-  /**
-   * @return {Promise}
-   */
-  promiseDeltaSinceStartOfTime() {
-    return this._promiseDeltaSince(this._oldest);
-  },
-
-  /**
-   * @return {Promise}
-   */
-  promiseDeltaSinceStartOfBuffer() {
-    return this._promiseDeltaSince(this._buffer[0]);
-  },
-
-  /**
-   * @return {Promise}
-   * @resolve {{
-   *  webpages: Array<Delta>,
-   *  deltas: Set<Delta key>,
-   *  duration: number of milliseconds
-   * }}
-   */
-  async _promiseDeltaSince(oldest) {
-    let current = this._latest;
-    if (!oldest) {
-      throw new TypeError();
-    }
-    if (!current) {
-      throw new TypeError();
-    }
-
-    tabFinder.update();
-    // We rebuild the maps during each iteration to make sure that
-    // we do not maintain references to groups that has been removed
-    // (e.g. pages that have been closed).
-    let oldFirstSeen = this._firstSeen;
-    let cleanedUpFirstSeen = new Map();
-
-    let oldAlerts = this._alerts;
-    let cleanedUpAlerts = new Map();
-
-    let result = {
-      webpages: [],
-      deltas: new Set(),
-      duration: current.date - oldest.date,
-    };
-
-    for (let kind of ["webpages"]) {
-      for (let [key, value] of current[kind]) {
-        let item = ObjectUtils.strict(new Delta(value.subtract(oldest[kind].get(key)), kind, current.date, oldFirstSeen, oldAlerts));
-        await item.promiseInit();
-
-        if (!item.show) {
-          continue;
-        }
-        result[kind].push(item);
-        result.deltas.add(item.key);
-
-        for (let groupId of item.diff.groupIds) {
-          cleanedUpFirstSeen.set(groupId, item.creationDate);
-        }
-        cleanedUpAlerts.set(item.key, item.alerts);
-      }
-    }
-
-    this._firstSeen = cleanedUpFirstSeen;
-    this._alerts = cleanedUpAlerts;
-    return result;
   },
 
   // We can only know asynchronously if an origin is matched by the tracking
@@ -658,6 +303,9 @@ var State = {
         type = "browser";
       } else if (/^[a-f0-9]{8}(-[a-f0-9]{4}){3}-[a-f0-9]{12}$/.test(host)) {
         let addon = WebExtensionPolicy.getByHostname(host);
+        if (!addon) {
+          continue;
+        }
         name = `${addon.name} (${addon.id})`;
         image = "chrome://mozapps/skin/extensions/extensionGeneric-16.svg";
         type = gSystemAddonIds.has(addon.id) ? "system-addon" : "addon";
@@ -736,292 +384,6 @@ var State = {
 };
 
 var View = {
-  /**
-   * A cache for all the per-item DOM elements that are reused across refreshes.
-   *
-   * Reusing the same elements means that elements that were hidden (respectively
-   * visible) in an iteration remain hidden (resp visible) in the next iteration.
-   */
-  DOMCache: {
-    _map: new Map(),
-    /**
-     * @param {string} deltaKey The key for the item that we are displaying.
-     * @return {null} If the `deltaKey` doesn't have a component cached yet.
-     * Otherwise, the value stored with `set`.
-     */
-    get(deltaKey) {
-      return this._map.get(deltaKey);
-    },
-    set(deltaKey, value) {
-      this._map.set(deltaKey, value);
-    },
-    /**
-     * Remove all the elements whose key does not appear in `set`.
-     *
-     * @param {Set} set a set of deltaKey.
-     */
-    trimTo(set) {
-      let remove = [];
-      for (let key of this._map.keys()) {
-        if (!set.has(key)) {
-          remove.push(key);
-        }
-      }
-      for (let key of remove) {
-        this._map.delete(key);
-      }
-    },
-  },
-  /**
-   * Display the items in a category.
-   *
-   * @param {Array<PerformanceDiff>} subset The items to display. They will
-   * be displayed in the order of `subset`.
-   * @param {string} id The id of the DOM element that will contain the items.
-   * @param {string} nature The nature of the subset. One of "webpages" or "system".
-   * @param {string} currentMode The current display mode. One of MODE_GLOBAL or MODE_RECENT.
-   */
-  updateCategory(subset, id, nature, currentMode) {
-    subset = subset.slice().sort(Delta.revCompare);
-
-
-    // Grab everything from the DOM before cleaning up
-    this._setupStructure(id);
-
-    // An array of `cachedElements` that need to be added
-    let toAdd = [];
-    for (let delta of subset) {
-      if (!(delta instanceof Delta)) {
-        throw new TypeError();
-      }
-      let cachedElements = this._grabOrCreateElements(delta, nature);
-      toAdd.push(cachedElements);
-      cachedElements.eltTitle.textContent = delta.readableName;
-      cachedElements.eltName.textContent = `Full name: ${delta.fullName}.`;
-      cachedElements.eltLoaded.textContent = `Measure start: ${Math.round(delta.age / 1000)} seconds ago.`;
-
-      let processes = delta.diff.processes.map(proc => `${proc.processId} (${proc.isChildProcess ? "child" : "parent"})`);
-      cachedElements.eltProcess.textContent = `Processes: ${processes.join(", ")}`;
-
-      let eltImpact = cachedElements.eltImpact;
-      if (currentMode == MODE_RECENT) {
-        cachedElements.eltRoot.setAttribute("impact", delta.diff.jank.longestDuration + 1);
-        if (Delta.compare(delta, Delta.MAX_DELTA_FOR_GOOD_RECENT_PERFORMANCE) <= 0) {
-          eltImpact.textContent = ` currently performs well.`;
-        } else if (Delta.compare(delta, Delta.MAX_DELTA_FOR_AVERAGE_RECENT_PERFORMANCE)) {
-          eltImpact.textContent = ` may currently be slowing down ${BRAND_NAME}.`;
-        } else {
-          eltImpact.textContent = ` is currently considerably slowing down ${BRAND_NAME}.`;
-        }
-
-        cachedElements.eltFPS.textContent = `Impact on framerate: ${delta.diff.jank.longestDuration + 1}/${delta.diff.jank.durations.length}`;
-        cachedElements.eltCPU.textContent = `CPU usage: ${Math.ceil(delta.diff.jank.totalCPUTime / delta.diff.deltaT / 10)}%.`;
-        cachedElements.eltSystem.textContent = `System usage: ${Math.ceil(delta.diff.jank.totalSystemTime / delta.diff.deltaT / 10)}%.`;
-        cachedElements.eltCPOW.textContent = `Blocking process calls: ${Math.ceil(delta.diff.cpow.totalCPOWTime / delta.diff.deltaT / 10)}%.`;
-      } else {
-        if (delta.alerts.length == 0) {
-          eltImpact.textContent = " has performed well so far.";
-          cachedElements.eltFPS.textContent = `Impact on framerate: no impact.`;
-          cachedElements.eltRoot.setAttribute("impact", 0);
-        } else {
-          let impact = 0;
-          let sum = /* medium impact */ delta.alerts[0] + /* high impact */ delta.alerts[1];
-          let frequency = sum * 1000 / delta.diff.deltaT;
-
-          let describeFrequency;
-          if (frequency <= MAX_FREQUENCY_FOR_NO_IMPACT) {
-            describeFrequency = `has no impact on the performance of ${BRAND_NAME}.`;
-          } else {
-            let describeImpact;
-            if (frequency <= MAX_FREQUENCY_FOR_RARE) {
-              describeFrequency = `rarely slows down ${BRAND_NAME}.`;
-              impact += 1;
-            } else if (frequency <= MAX_FREQUENCY_FOR_FREQUENT) {
-              describeFrequency = `has slown down ${BRAND_NAME} frequently.`;
-              impact += 2.5;
-            } else {
-              describeFrequency = `seems to have slown down ${BRAND_NAME} very often.`;
-              impact += 5;
-            }
-            // At this stage, `sum != 0`
-            if (delta.alerts[1] / sum > MIN_PROPORTION_FOR_MAJOR_IMPACT) {
-              describeImpact = "When this happens, the slowdown is generally important.";
-              impact *= 2;
-            } else {
-              describeImpact = "When this happens, the slowdown is generally noticeable.";
-            }
-
-            eltImpact.textContent = ` ${describeFrequency} ${describeImpact}`;
-            cachedElements.eltFPS.textContent = `Impact on framerate: ${delta.alerts[1] || 0} high-impacts, ${delta.alerts[0] || 0} medium-impact.`;
-          }
-          cachedElements.eltRoot.setAttribute("impact", Math.round(impact));
-        }
-
-        cachedElements.eltCPU.textContent = `CPU usage: ${Math.ceil(delta.diff.jank.totalCPUTime / delta.diff.deltaT / 10)}% (total ${delta.diff.jank.totalUserTime}ms).`;
-        cachedElements.eltSystem.textContent = `System usage: ${Math.ceil(delta.diff.jank.totalSystemTime / delta.diff.deltaT / 10)}% (total ${delta.diff.jank.totalSystemTime}ms).`;
-        cachedElements.eltCPOW.textContent = `Blocking process calls: ${Math.ceil(delta.diff.cpow.totalCPOWTime / delta.diff.deltaT / 10)}% (total ${delta.diff.cpow.totalCPOWTime}ms).`;
-      }
-    }
-    this._insertElements(toAdd, id);
-  },
-
-  _insertElements(elements, id) {
-    let eltContainer = document.getElementById(id);
-    eltContainer.classList.remove("measuring");
-    eltContainer.eltVisibleContent.innerHTML = "";
-    eltContainer.eltHiddenContent.innerHTML = "";
-    eltContainer.appendChild(eltContainer.eltShowMore);
-
-    for (let i = 0; i < elements.length && i < MAX_NUMBER_OF_ITEMS_TO_DISPLAY; ++i) {
-      let cachedElements = elements[i];
-      eltContainer.eltVisibleContent.appendChild(cachedElements.eltRoot);
-    }
-    for (let i = MAX_NUMBER_OF_ITEMS_TO_DISPLAY; i < elements.length; ++i) {
-      let cachedElements = elements[i];
-      eltContainer.eltHiddenContent.appendChild(cachedElements.eltRoot);
-    }
-    if (elements.length <= MAX_NUMBER_OF_ITEMS_TO_DISPLAY) {
-      eltContainer.eltShowMore.classList.add("hidden");
-    } else {
-      eltContainer.eltShowMore.classList.remove("hidden");
-    }
-    if (elements.length == 0) {
-      eltContainer.textContent = "Nothing";
-    }
-  },
-  _setupStructure(id) {
-    let eltContainer = document.getElementById(id);
-    if (!eltContainer.eltVisibleContent) {
-      eltContainer.eltVisibleContent = document.createElement("ul");
-      eltContainer.eltVisibleContent.classList.add("visible_items");
-      eltContainer.appendChild(eltContainer.eltVisibleContent);
-    }
-    if (!eltContainer.eltHiddenContent) {
-      eltContainer.eltHiddenContent = document.createElement("ul");
-      eltContainer.eltHiddenContent.classList.add("hidden");
-      eltContainer.eltHiddenContent.classList.add("hidden_additional_items");
-      eltContainer.appendChild(eltContainer.eltHiddenContent);
-    }
-    if (!eltContainer.eltShowMore) {
-      eltContainer.eltShowMore = document.createElement("button");
-      eltContainer.eltShowMore.textContent = "Show all";
-      eltContainer.eltShowMore.classList.add("show_all_items");
-      eltContainer.appendChild(eltContainer.eltShowMore);
-      eltContainer.eltShowMore.addEventListener("click", function() {
-        if (eltContainer.eltHiddenContent.classList.contains("hidden")) {
-          eltContainer.eltHiddenContent.classList.remove("hidden");
-          eltContainer.eltShowMore.textContent = "Hide";
-        } else {
-          eltContainer.eltHiddenContent.classList.add("hidden");
-          eltContainer.eltShowMore.textContent = "Show all";
-        }
-      });
-    }
-    return eltContainer;
-  },
-
-  _grabOrCreateElements(delta, nature) {
-    let cachedElements = this.DOMCache.get(delta.key);
-    if (cachedElements) {
-      if (cachedElements.eltRoot.parentElement) {
-        cachedElements.eltRoot.parentElement.removeChild(cachedElements.eltRoot);
-      }
-    } else {
-      this.DOMCache.set(delta.key, cachedElements = {});
-
-      let eltDelta = document.createElement("li");
-      eltDelta.classList.add("delta");
-      cachedElements.eltRoot = eltDelta;
-
-      let eltSpan = document.createElement("span");
-      eltDelta.appendChild(eltSpan);
-
-      let eltSummary = document.createElement("span");
-      eltSummary.classList.add("summary");
-      eltSpan.appendChild(eltSummary);
-
-      let eltTitle = document.createElement("span");
-      eltTitle.classList.add("title");
-      eltSummary.appendChild(eltTitle);
-      cachedElements.eltTitle = eltTitle;
-
-      let eltImpact = document.createElement("span");
-      eltImpact.classList.add("impact");
-      eltSummary.appendChild(eltImpact);
-      cachedElements.eltImpact = eltImpact;
-
-      let eltShowMore = document.createElement("a");
-      eltShowMore.classList.add("more");
-      eltSpan.appendChild(eltShowMore);
-      eltShowMore.textContent = "more";
-      eltShowMore.href = "";
-      eltShowMore.addEventListener("click", () => {
-        if (eltDetails.classList.contains("hidden")) {
-          eltDetails.classList.remove("hidden");
-          eltShowMore.textContent = "less";
-        } else {
-          eltDetails.classList.add("hidden");
-          eltShowMore.textContent = "more";
-        }
-      });
-
-      // Add buttons
-      if (nature == "webpages") {
-        eltSpan.appendChild(document.createElement("br"));
-
-        let eltCloseTab = document.createElement("button");
-        eltCloseTab.textContent = "Close tab";
-        eltSpan.appendChild(eltCloseTab);
-        let windowIds = delta.diff.windowIds;
-        eltCloseTab.addEventListener("click", () => {
-          let found = tabFinder.getAny(windowIds);
-          if (!found) {
-            // Cannot find the tab. Maybe it is closed already?
-            return;
-          }
-          let {tabbrowser, tab} = found;
-          tabbrowser.removeTab(tab);
-        });
-
-        let eltReloadTab = document.createElement("button");
-        eltReloadTab.textContent = "Reload tab";
-        eltSpan.appendChild(eltReloadTab);
-        eltReloadTab.addEventListener("click", () => {
-          let found = tabFinder.getAny(windowIds);
-          if (!found) {
-            // Cannot find the tab. Maybe it is closed already?
-            return;
-          }
-          let {tabbrowser, tab} = found;
-          tabbrowser.reloadTab(tab);
-        });
-      }
-
-      // Prepare details
-      let eltDetails = document.createElement("ul");
-      eltDetails.classList.add("details");
-      eltDetails.classList.add("hidden");
-      eltSpan.appendChild(eltDetails);
-
-      for (let [name, className] of [
-        ["eltName", "name"],
-        ["eltFPS", "fps"],
-        ["eltCPU", "cpu"],
-        ["eltSystem", "system"],
-        ["eltCPOW", "cpow"],
-        ["eltLoaded", "loaded"],
-        ["eltProcess", "process"],
-      ]) {
-        let elt = document.createElement("li");
-        elt.classList.add(className);
-        eltDetails.appendChild(elt);
-        cachedElements[name] = elt;
-      }
-    }
-
-    return cachedElements;
-  },
-
   _fragment: document.createDocumentFragment(),
   async commit() {
     let tbody = document.getElementById("dispatch-tbody");
@@ -1133,8 +495,6 @@ var Control = {
     }
   },
   init() {
-    this._initAutorefresh();
-    this._initDisplayMode();
     let tbody = document.getElementById("dispatch-tbody");
     tbody.addEventListener("click", event => {
       this._updateLastMouseEvent();
@@ -1218,129 +578,107 @@ var Control = {
     this._lastMouseEvent = Date.now();
   },
   async update() {
-    if (this._autoRefreshInterval || !State._buffer[0]) {
-      // Update the state only if we are not on pause.
-      await State.update();
-      if (document.hidden)
-        return;
-    }
+    await State.update();
+
+    if (document.hidden)
+      return;
+
     await wait(0);
 
     await this._updateDisplay();
-
-    // Inform watchers
-    Services.obs.notifyObservers(null, UPDATE_COMPLETE_TOPIC, this._displayMode);
   },
   // The force parameter can force a full update even when the mouse has been
   // moved recently.
   async _updateDisplay(force = false) {
-    if (!performanceCountersEnabled()) {
-      let mode = this._displayMode;
-      let state = await (mode == MODE_GLOBAL ?
-        State.promiseDeltaSinceStartOfTime() :
-        State.promiseDeltaSinceStartOfBuffer());
-
-      for (let category of ["webpages"]) {
-        await wait(0);
-        await View.updateCategory(state[category], category, category, mode);
-      }
-      await wait(0);
-
-      // Make sure that we do not keep obsolete stuff around.
-      View.DOMCache.trimTo(state.deltas);
-
-      await wait(0);
-    } else {
-      // If the mouse has been moved recently, update the data displayed
-      // without moving any item to avoid the risk of users clicking an action
-      // button for the wrong item.
-      // Memory use is unlikely to change dramatically within a few seconds, so
-      // it's probably fine to not update the Memory column in this case.
-      if (!force && Date.now() - this._lastMouseEvent < TIME_BEFORE_SORTING_AGAIN) {
-        let energyImpactPerId = new Map();
-        for (let {id, dispatchesSincePrevious,
-                  durationSincePrevious} of State.getCounters()) {
-          let energyImpact = this._computeEnergyImpact(dispatchesSincePrevious,
-                                                       durationSincePrevious);
-          energyImpactPerId.set(id, energyImpact);
-        }
-
-        let row = document.getElementById("dispatch-tbody").firstChild;
-        while (row) {
-          if (row.windowId && energyImpactPerId.has(row.windowId)) {
-            // We update the value in the Energy Impact column, but don't
-            // update the children, as if the child count changes there's a
-            // risk of making other rows move up or down.
-            const kEnergyImpactColumn = 2;
-            let elt = row.childNodes[kEnergyImpactColumn];
-            View.displayEnergyImpact(elt, energyImpactPerId.get(row.windowId));
-          }
-          row = row.nextSibling;
-        }
-        return;
+    // If the mouse has been moved recently, update the data displayed
+    // without moving any item to avoid the risk of users clicking an action
+    // button for the wrong item.
+    // Memory use is unlikely to change dramatically within a few seconds, so
+    // it's probably fine to not update the Memory column in this case.
+    if (!force && Date.now() - this._lastMouseEvent < TIME_BEFORE_SORTING_AGAIN) {
+      let energyImpactPerId = new Map();
+      for (let {id, dispatchesSincePrevious,
+                durationSincePrevious} of State.getCounters()) {
+        let energyImpact = this._computeEnergyImpact(dispatchesSincePrevious,
+                                                     durationSincePrevious);
+        energyImpactPerId.set(id, energyImpact);
       }
 
-      let selectedId = -1;
-      // Reset the selectedRow field and the _openItems set each time we redraw
-      // to avoid keeping forever references to closed window ids.
-      if (this.selectedRow) {
-        selectedId = this.selectedRow.windowId;
-        this.selectedRow = null;
+      let row = document.getElementById("dispatch-tbody").firstChild;
+      while (row) {
+        if (row.windowId && energyImpactPerId.has(row.windowId)) {
+          // We update the value in the Energy Impact column, but don't
+          // update the children, as if the child count changes there's a
+          // risk of making other rows move up or down.
+          const kEnergyImpactColumn = 2;
+          let elt = row.childNodes[kEnergyImpactColumn];
+          View.displayEnergyImpact(elt, energyImpactPerId.get(row.windowId));
+        }
+        row = row.nextSibling;
       }
-      let openItems = this._openItems;
-      this._openItems = new Set();
-
-      let counters = this._sortCounters(State.getCounters());
-      for (let {id, name, image, type, totalDispatches, dispatchesSincePrevious,
-                memory, totalDuration, durationSincePrevious, children} of counters) {
-        let row =
-          View.appendRow(name,
-                         this._computeEnergyImpact(dispatchesSincePrevious,
-                                                   durationSincePrevious),
-                         memory,
-                         {totalDispatches, totalDuration: Math.ceil(totalDuration / 1000),
-                          dispatchesSincePrevious,
-                          durationSincePrevious: Math.ceil(durationSincePrevious / 1000)},
-                         type, image);
-        row.windowId = id;
-        if (id == selectedId) {
-          row.setAttribute("selected", "true");
-          this.selectedRow = row;
-        }
-
-        if (!children.length)
-          continue;
-
-        // Show the twisty image.
-        let elt = row.firstChild;
-        let img = document.createElement("span");
-        img.className = "twisty";
-        let open = openItems.has(id);
-        if (open) {
-          img.classList.add("open");
-          this._openItems.add(id);
-        }
-
-        // If there's an l10n id on our <td> node, any image we add will be
-        // removed during localization, so move the l10n id to a <span>
-        let l10nAttrs = document.l10n.getAttributes(elt);
-        if (l10nAttrs.id) {
-          let span = document.createElement("span");
-          document.l10n.setAttributes(span, l10nAttrs.id, l10nAttrs.args);
-          elt.removeAttribute("data-l10n-id");
-          elt.removeAttribute("data-l10n-args");
-          elt.insertBefore(span, elt.firstChild);
-        }
-
-        elt.insertBefore(img, elt.firstChild);
-
-        row._children = children;
-        if (open)
-          this._showChildren(row);
-      }
-
-      await View.commit();
+      return;
     }
+
+    let selectedId = -1;
+    // Reset the selectedRow field and the _openItems set each time we redraw
+    // to avoid keeping forever references to closed window ids.
+    if (this.selectedRow) {
+      selectedId = this.selectedRow.windowId;
+      this.selectedRow = null;
+    }
+    let openItems = this._openItems;
+    this._openItems = new Set();
+
+    let counters = this._sortCounters(State.getCounters());
+    for (let {id, name, image, type, totalDispatches, dispatchesSincePrevious,
+              memory, totalDuration, durationSincePrevious, children} of counters) {
+      let row =
+        View.appendRow(name,
+                       this._computeEnergyImpact(dispatchesSincePrevious,
+                                                 durationSincePrevious),
+                       memory,
+                       {totalDispatches, totalDuration: Math.ceil(totalDuration / 1000),
+                        dispatchesSincePrevious,
+                        durationSincePrevious: Math.ceil(durationSincePrevious / 1000)},
+                       type, image);
+      row.windowId = id;
+      if (id == selectedId) {
+        row.setAttribute("selected", "true");
+        this.selectedRow = row;
+      }
+
+      if (!children.length)
+        continue;
+
+      // Show the twisty image.
+      let elt = row.firstChild;
+      let img = document.createElement("span");
+      img.className = "twisty";
+      let open = openItems.has(id);
+      if (open) {
+        img.classList.add("open");
+        this._openItems.add(id);
+      }
+
+      // If there's an l10n id on our <td> node, any image we add will be
+      // removed during localization, so move the l10n id to a <span>
+      let l10nAttrs = document.l10n.getAttributes(elt);
+      if (l10nAttrs.id) {
+        let span = document.createElement("span");
+        document.l10n.setAttributes(span, l10nAttrs.id, l10nAttrs.args);
+        elt.removeAttribute("data-l10n-id");
+        elt.removeAttribute("data-l10n-args");
+        elt.insertBefore(span, elt.firstChild);
+      }
+
+      elt.insertBefore(img, elt.firstChild);
+
+      row._children = children;
+      if (open)
+        this._showChildren(row);
+    }
+
+    await View.commit();
   },
   _showChildren(row) {
     let children = row._children;
@@ -1399,92 +737,19 @@ var Control = {
       return String.prototype.localeCompare.call(a.name, b.name);
     });
   },
-  _setOptions(options) {
-    dump(`about:performance _setOptions ${JSON.stringify(options)}\n`);
-    let eltRefresh = document.getElementById("check-autorefresh");
-    if ((options.autoRefresh > 0) != eltRefresh.checked) {
-      eltRefresh.click();
-    }
-    let eltCheckRecent = document.getElementById("check-display-recent");
-    if (!!options.displayRecent != eltCheckRecent.checked) {
-      eltCheckRecent.click();
-    }
-  },
-  _initAutorefresh() {
-    let onRefreshChange = (shouldUpdateNow = false) => {
-      if (eltRefresh.checked == !!this._autoRefreshInterval) {
-        // Nothing to change.
-        return;
-      }
-      if (eltRefresh.checked) {
-        this._autoRefreshInterval = window.setInterval(() => Control.update(), UPDATE_INTERVAL_MS);
-        if (shouldUpdateNow) {
-          Control.update();
-        }
-      } else {
-        window.clearInterval(this._autoRefreshInterval);
-        this._autoRefreshInterval = null;
-      }
-    };
-
-    let eltRefresh = document.getElementById("check-autorefresh");
-    eltRefresh.addEventListener("change", () => onRefreshChange(true));
-
-    onRefreshChange(false);
-  },
-  _autoRefreshInterval: null,
-  _initDisplayMode() {
-    let onModeChange = (shouldUpdateNow) => {
-      if (eltCheckRecent.checked) {
-        this._displayMode = MODE_RECENT;
-      } else {
-        this._displayMode = MODE_GLOBAL;
-      }
-      if (shouldUpdateNow) {
-        Control.update();
-      }
-    };
-
-    let eltCheckRecent = document.getElementById("check-display-recent");
-    let eltLabelRecent = document.getElementById("label-display-recent");
-    eltCheckRecent.addEventListener("click", () => onModeChange(true));
-    eltLabelRecent.textContent = `Display only the latest ${Math.round(BUFFER_DURATION_MS / 1000)}s`;
-
-    onModeChange(false);
-  },
-  // The display mode. One of `MODE_GLOBAL` or `MODE_RECENT`.
-  _displayMode: MODE_GLOBAL,
 };
 
 var go = async function() {
 
   Control.init();
 
-  if (performanceCountersEnabled()) {
-    let opt = document.querySelector(".options");
-    opt.style.display = "none";
-    opt.nextElementSibling.style.display = "none";
-
-    let addons = await AddonManager.getAddonsByTypes(["extension"]);
-    for (let addon of addons) {
-      if (addon.isSystem) {
-        gSystemAddonIds.add(addon.id);
-      }
+  let addons = await AddonManager.getAddonsByTypes(["extension"]);
+  for (let addon of addons) {
+    if (addon.isSystem) {
+      gSystemAddonIds.add(addon.id);
     }
-  } else {
-    document.getElementById("dispatch-table").parentNode.style.display = "none";
   }
 
-  // Setup a hook to allow tests to configure and control this page
-  let testUpdate = function(subject, topic, value) {
-    let options = JSON.parse(value);
-    Control._setOptions(options);
-    Control.update();
-  };
-  Services.obs.addObserver(testUpdate, TEST_DRIVER_TOPIC);
-  window.addEventListener("unload", () => Services.obs.removeObserver(testUpdate, TEST_DRIVER_TOPIC));
-
   await Control.update();
-  await wait(BUFFER_SAMPLING_RATE_MS * 1.1);
-  await Control.update();
+  window.setInterval(() => Control.update(), UPDATE_INTERVAL_MS);
 };
