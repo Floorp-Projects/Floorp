@@ -10,6 +10,7 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/dom/PWindowGlobalParent.h"
 #include "nsWrapperCache.h"
+#include "nsISupports.h"
 
 class nsIPrincipal;
 class nsIURI;
@@ -24,11 +25,12 @@ class WindowGlobalChild;
 /**
  * A handle in the parent process to a specific nsGlobalWindowInner object.
  */
-class WindowGlobalParent final : public nsWrapperCache,
+class WindowGlobalParent final : public nsISupports,
+                                 public nsWrapperCache,
                                  public PWindowGlobalParent {
  public:
-  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WindowGlobalParent)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WindowGlobalParent)
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(WindowGlobalParent)
 
   static already_AddRefed<WindowGlobalParent> GetByInnerWindowId(
       uint64_t aInnerWindowId);

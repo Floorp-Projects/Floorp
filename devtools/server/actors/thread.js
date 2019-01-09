@@ -2062,34 +2062,6 @@ Object.assign(ChromeDebuggerActor.prototype, {
 
 exports.ChromeDebuggerActor = ChromeDebuggerActor;
 
-/**
- * Creates an actor for handling add-on debugging. AddonThreadActor is
- * a thin wrapper over ThreadActor.
- *
- * @param connection object
- *        The DebuggerServerConnection with which this AddonThreadActor
- *        is associated. (Currently unused, but required to make this
- *        constructor usable with addGlobalActor.)
- *
- * @param parent object
- *        This actor's parent actor. See ThreadActor for a list of expected
- *        properties.
- */
-function AddonThreadActor(connection, parent) {
-  ThreadActor.prototype.initialize.call(this, parent);
-}
-
-AddonThreadActor.prototype = Object.create(ThreadActor.prototype);
-
-Object.assign(AddonThreadActor.prototype, {
-  constructor: AddonThreadActor,
-
-  // A constant prefix that will be used to form the actor ID by the server.
-  actorPrefix: "addonThread",
-});
-
-exports.AddonThreadActor = AddonThreadActor;
-
 // Utility functions.
 
 /**

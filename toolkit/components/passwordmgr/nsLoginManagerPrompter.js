@@ -921,6 +921,11 @@ LoginManagerPrompter.prototype = {
       });
 
       let logins = this._filterUpdatableLogins(login, foundLogins);
+      let resolveBy = [
+        "scheme",
+        "timePasswordChanged",
+      ];
+      logins = LoginHelper.dedupeLogins(logins, ["username"], resolveBy, login.hostname);
 
       if (logins.length == 0) {
         // The original login we have been provided with might have its own

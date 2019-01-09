@@ -849,6 +849,7 @@ class nsGenericHTMLElement : public nsGenericHTMLElementBase {
   // Used by A, AREA, LINK, and STYLE.
   already_AddRefed<nsIURI> GetHrefURIForAnchors() const;
 
+ public:
   /**
    * Returns whether this element is an editable root. There are two types of
    * editable roots:

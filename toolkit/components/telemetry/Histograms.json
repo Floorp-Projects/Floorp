@@ -14462,6 +14462,21 @@
     "description": "How long the AudioContext would become audible since it was created, time unit is seconds.",
     "releaseChannelCollection": "opt-out"
   },
+  "WEB_AUDIO_AUTOPLAY": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": [
+      "alwu@mozilla.com",
+      "cpearce@mozilla.com",
+      "padenot@mozilla.com",
+      "ktomlinson@mozilla.com"
+    ],
+    "expires_in_version": "70",
+    "kind": "categorical",
+    "labels": ["NeverBlocked", "AllowedAfterBlocked", "NeverAllowed"],
+    "bug_numbers": [1512277],
+    "description": "The number of times an AudioContext is allowed to start after being blocked, or the number of AudioContexts attempting to start which were never blocked or never allowed.",
+    "releaseChannelCollection": "opt-out"
+  },
   "QM_REPOSITORIES_INITIALIZATION_TIME": {
     "record_in_processes": ["main"],
     "expires_in_version": "68",

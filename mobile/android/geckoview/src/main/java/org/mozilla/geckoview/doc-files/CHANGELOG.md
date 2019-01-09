@@ -10,6 +10,10 @@ layout: geckoview
 [66.1]: https://developer.android.com/reference/android/support/annotation/NonNull
 [66.2]: https://developer.android.com/reference/android/support/annotation/Nullable
 
+- Added methods for each setting in [`GeckoSessionSettings`][66.3]
+
+[66.3]: ../GeckoSessionSettings.html
+
 - Added GeckoRuntimeSetting for enabling desktop viewport. Desktop viewport is
   no longer set by `USER_AGENT_MODE_DESKTOP` and must be set separately.
 
@@ -101,4 +105,4 @@ layout: geckoview
 [65.24]: ../CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: ../GeckoResult.html
 
-[api-version]: a0f14e2c654491c9f12b3e1ce46e5e59705ef917
+[api-version]: 5957a5943b39ae0e56b7e892bd824a16bb71e811

@@ -152,7 +152,10 @@ AudioContext::AudioContext(nsPIDOMWindowInner* aWindow, bool aIsOffline,
       mCloseCalled(false),
       mSuspendCalled(false),
       mIsDisconnecting(false),
-      mWasAllowedToStart(true) {
+      mWasAllowedToStart(true),
+      mWasEverAllowedToStart(false),
+      mWasEverBlockedToStart(false),
+      mWouldBeAllowedToStart(true) {
   bool mute = aWindow->AddAudioContext(this);
 
   // Note: AudioDestinationNode needs an AudioContext that must already be
@@ -175,11 +178,14 @@ AudioContext::AudioContext(nsPIDOMWindowInner* aWindow, bool aIsOffline,
     ReportBlocked();
   }
 
+  UpdateAutoplayAssumptionStatus();
+
   FFTBlock::MainThreadInit();
 }
 
 void AudioContext::NotifyScheduledSourceNodeStarted() {
   MOZ_ASSERT(NS_IsMainThread());
+  MaybeUpdateAutoplayTelemetry();
   // Only try to start AudioContext when AudioContext was not allowed to start.
   if (mWasAllowedToStart) {
     return;
@@ -673,6 +679,10 @@ void AudioContext::BindToOwner(nsIGlobalObject* aNew) {
 }
 
 void AudioContext::Shutdown() {
+  // Avoid resend the Telemetry data.
+  if (!mIsShutDown) {
+    MaybeUpdateAutoplayTelemetryWhenShutdown();
+  }
   mIsShutDown = true;
 
   // We don't want to touch promises if the global is going away soon.
@@ -944,6 +954,8 @@ already_AddRefed<Promise> AudioContext::Resume(ErrorResult& aRv) {
     ReportBlocked();
   }
 
+  MaybeUpdateAutoplayTelemetry();
+
   return promise.forget();
 }
 
@@ -964,6 +976,45 @@ void AudioContext::ResumeInternal() {
   Graph()->ApplyAudioContextOperation(DestinationStream(), streams,
                                       AudioContextOperation::Resume, nullptr);
   mSuspendCalled = false;
+}
+
+void AudioContext::UpdateAutoplayAssumptionStatus() {
+  if (AutoplayPolicy::WouldBeAllowedToPlayIfAutoplayDisabled(*this)) {
+    mWasEverAllowedToStart |= true;
+    mWouldBeAllowedToStart = true;
+  } else {
+    mWasEverBlockedToStart |= true;
+    mWouldBeAllowedToStart = false;
+  }
+}
+
+void AudioContext::MaybeUpdateAutoplayTelemetry() {
+  // Exclude offline AudioContext because it's always allowed to start.
+  if (mIsOffline) {
+    return;
+  }
+
+  if (AutoplayPolicy::WouldBeAllowedToPlayIfAutoplayDisabled(*this) &&
+      !mWouldBeAllowedToStart) {
+    AccumulateCategorical(
+        mozilla::Telemetry::LABELS_WEB_AUDIO_AUTOPLAY::AllowedAfterBlocked);
+  }
+  UpdateAutoplayAssumptionStatus();
+}
+
+void AudioContext::MaybeUpdateAutoplayTelemetryWhenShutdown() {
+  // Exclude offline AudioContext because it's always allowed to start.
+  if (mIsOffline) {
+    return;
+  }
+
+  if (mWasEverAllowedToStart && !mWasEverBlockedToStart) {
+    AccumulateCategorical(
+        mozilla::Telemetry::LABELS_WEB_AUDIO_AUTOPLAY::NeverBlocked);
+  } else if (!mWasEverAllowedToStart && mWasEverBlockedToStart) {
+    AccumulateCategorical(
+        mozilla::Telemetry::LABELS_WEB_AUDIO_AUTOPLAY::NeverAllowed);
+  }
 }
 
 void AudioContext::ReportBlocked() {

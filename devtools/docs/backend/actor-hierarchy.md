@@ -95,10 +95,6 @@ RootActor (root.js)
    |   Returned by "getProcess" request with a id argument, matching the
    |   targeted process.
    |
-   |-- AddonTargetActor (addon.js)
-   |   Targets a legacy (non-WebExtension) add-on.
-   |   Returned by "listAddons" request.
-   |
    \-- WebExtensionActor (addon/webextension.js)
        Represents a WebExtension add-on in the parent process. This gives some
        metadata about the add-on and watches for uninstall events. This uses a
