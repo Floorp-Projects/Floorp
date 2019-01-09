@@ -125,7 +125,6 @@ const ONBOARDING_MESSAGES = async () => ([
   {
     id: "FXA_1",
     template: "fxa_overlay",
-    targeting: "attributionData.campaign != 'non-fx-button' && attributionData.source != 'addons.mozilla.org'",
     trigger: {id: "firstRun"},
   },
   {
