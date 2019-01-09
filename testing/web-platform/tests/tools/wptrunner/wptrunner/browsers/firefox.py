@@ -358,10 +358,13 @@ class FirefoxBrowser(Browser):
         if self.lsan_handler:
             self.lsan_handler.process()
         if self.leak_report_file is not None:
+            # We have to ignore missing leaks in the tab because it can happen that the
+            # content process crashed and in that case we don't want the test to fail.
+            # Ideally we would record which content process crashed and just skip those.
             mozleak.process_leak_log(
                 self.leak_report_file,
                 leak_thresholds=self.mozleak_thresholds,
-                ignore_missing_leaks=["gmplugin"],
+                ignore_missing_leaks=["tab", "gmplugin"],
                 log=self.logger,
                 stack_fixer=self.stack_fixer,
                 scope=self.group_metadata.get("scope"),
