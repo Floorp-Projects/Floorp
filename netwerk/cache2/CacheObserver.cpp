@@ -37,7 +37,7 @@ uint32_t CacheObserver::sMetadataMemoryLimit = kDefaultMetadataMemoryLimit;
 
 static int32_t const kDefaultMemoryCacheCapacity = -1;  // autodetect
 int32_t CacheObserver::sMemoryCacheCapacity = kDefaultMemoryCacheCapacity;
-// Cache of the calculated memory capacity based on the system memory size
+// Cache of the calculated memory capacity based on the system memory size in KB
 int32_t CacheObserver::sAutoMemoryCacheCapacity = -1;
 
 static uint32_t const kDefaultDiskCacheCapacity = 250 * 1024;  // 250 MB
@@ -211,7 +211,7 @@ void CacheObserver::AttachToPreferences() {
 
 // static
 uint32_t CacheObserver::MemoryCacheCapacity() {
-  if (sMemoryCacheCapacity >= 0) return sMemoryCacheCapacity << 10;
+  if (sMemoryCacheCapacity >= 0) return sMemoryCacheCapacity;
 
   if (sAutoMemoryCacheCapacity != -1) return sAutoMemoryCacheCapacity;
 
@@ -234,16 +234,16 @@ uint32_t CacheObserver::MemoryCacheCapacity() {
   if (x > 0) {
     capacity = (int32_t)(x * x / 3.0 + x + 2.0 / 3 + 0.1);  // 0.1 for rounding
     if (capacity > 32) capacity = 32;
-    capacity <<= 20;
+    capacity <<= 10;
   }
 
-  // Result is in bytes.
+  // Result is in kilobytes.
   return sAutoMemoryCacheCapacity = capacity;
 }
 
 // static
 void CacheObserver::SetDiskCacheCapacity(uint32_t aCapacity) {
-  sDiskCacheCapacity = aCapacity >> 10;
+  sDiskCacheCapacity = aCapacity;
 
   if (!sSelf) {
     return;
@@ -383,10 +383,10 @@ bool CacheObserver::EntryIsTooBig(int64_t aSize, bool aUsingDisk) {
   if (preferredLimit != -1 && aSize > preferredLimit) return true;
 
   // Otherwise (or when in the custom limit), check limit based on the global
-  // limit.  It's 1/8 (>> 3) of the respective capacity.
+  // limit. It's 1/8 of the respective capacity.
   int64_t derivedLimit =
-      aUsingDisk ? (static_cast<int64_t>(DiskCacheCapacity() >> 3))
-                 : (static_cast<int64_t>(MemoryCacheCapacity() >> 3));
+      aUsingDisk ? DiskCacheCapacity() : MemoryCacheCapacity();
+  derivedLimit <<= (10 - 3);
 
   if (aSize > derivedLimit) return true;
 

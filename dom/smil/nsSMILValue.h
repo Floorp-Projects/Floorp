@@ -7,8 +7,8 @@
 #ifndef NS_SMILVALUE_H_
 #define NS_SMILVALUE_H_
 
-#include "SMILType.h"
-#include "SMILNullType.h"
+#include "mozilla/SMILNullType.h"
+#include "mozilla/SMILType.h"
 
 /**
  * Although objects of this type are generally only created on the stack and

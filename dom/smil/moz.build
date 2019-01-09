@@ -19,22 +19,22 @@ EXPORTS += [
     'nsSMILTimeValueSpecParams.h',
     'nsSMILTypes.h',
     'nsSMILValue.h',
-    'SMILCSSValueType.h',
-    'SMILNullType.h',
-    'SMILType.h',
 ]
 
 EXPORTS.mozilla += [
     'SMILAnimationController.h',
     'SMILAnimationFunction.h',
     'SMILCompositorTable.h',
+    'SMILCSSValueType.h',
     'SMILKeySpline.h',
     'SMILMilestone.h',
+    'SMILNullType.h',
     'SMILParserUtils.h',
     'SMILSetAnimationFunction.h',
     'SMILTargetIdentifier.h',
     'SMILTimeContainer.h',
     'SMILTimedElement.h',
+    'SMILType.h',
 ]
 
 EXPORTS.mozilla.dom += [
