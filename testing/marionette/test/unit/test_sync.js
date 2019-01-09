@@ -15,8 +15,6 @@ const {
   waitForObserverTopic,
 } = ChromeUtils.import("chrome://marionette/content/sync.js", {});
 
-const DEFAULT_TIMEOUT = 2000;
-
 /**
  * Mimic a DOM node for listening for events.
  */
@@ -140,13 +138,15 @@ add_test(function test_PollPromise_funcTypes() {
 });
 
 add_test(function test_PollPromise_timeoutTypes() {
-  for (let timeout of ["foo", null, true, [], {}]) {
+  for (let timeout of ["foo", true, [], {}]) {
     Assert.throws(() => new PollPromise(() => {}, {timeout}), /TypeError/);
   }
   for (let timeout of [1.2, -1]) {
     Assert.throws(() => new PollPromise(() => {}, {timeout}), /RangeError/);
   }
-  new PollPromise(() => {}, {timeout: 42});
+  for (let timeout of [null, undefined, 42]) {
+    new PollPromise(resolve => resolve(1), {timeout});
+  }
 
   run_next_test();
 });
@@ -169,18 +169,6 @@ add_task(async function test_PollPromise_retvalTypes() {
   }
 });
 
-add_task(async function test_PollPromise_timeoutElapse() {
-  let nevals = 0;
-  let start = new Date().getTime();
-  await new PollPromise((resolve, reject) => {
-    ++nevals;
-    reject();
-  });
-  let end = new Date().getTime();
-  greaterOrEqual((end - start), DEFAULT_TIMEOUT);
-  greaterOrEqual(nevals, 15);
-});
-
 add_task(async function test_PollPromise_rethrowError() {
   let nevals = 0;
   let err;
@@ -197,6 +185,15 @@ add_task(async function test_PollPromise_rethrowError() {
 });
 
 add_task(async function test_PollPromise_noTimeout() {
+  let nevals = 0;
+  await new PollPromise((resolve, reject) => {
+    ++nevals;
+    nevals < 100 ? reject() : resolve();
+  });
+  equal(100, nevals);
+});
+
+add_task(async function test_PollPromise_zeroTimeout() {
   // run at least once when timeout is 0
   let nevals = 0;
   let start = new Date().getTime();
@@ -206,10 +203,10 @@ add_task(async function test_PollPromise_noTimeout() {
   }, {timeout: 0});
   let end = new Date().getTime();
   equal(1, nevals);
-  less((end - start), DEFAULT_TIMEOUT);
+  less((end - start), 500);
 });
 
-add_task(async function test_PollPromise_timeout() {
+add_task(async function test_PollPromise_timeoutElapse() {
   let nevals = 0;
   let start = new Date().getTime();
   await new PollPromise((resolve, reject) => {
@@ -217,7 +214,7 @@ add_task(async function test_PollPromise_timeout() {
     reject();
   }, {timeout: 100});
   let end = new Date().getTime();
-  greater(nevals, 1);
+  lessOrEqual(nevals, 10);
   greaterOrEqual((end - start), 100);
 });
 

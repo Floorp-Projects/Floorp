@@ -3584,5 +3584,5 @@ function restoreWindow(window) {
     } else {
       reject();
     }
-  });
+  }, {timeout: 2000});
 }
