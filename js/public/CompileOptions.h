@@ -508,6 +508,10 @@ class MOZ_STACK_CLASS JS_PUBLIC_API CompileOptions final
     return *this;
   }
 
+  // Set introduction information according to any currently executing script.
+  CompileOptions& setIntroductionInfoToCaller(JSContext* cx,
+                                              const char* introductionType);
+
   CompileOptions& maybeMakeStrictMode(bool strict) {
     strictOption = strictOption || strict;
     return *this;

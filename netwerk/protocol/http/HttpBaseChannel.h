@@ -128,7 +128,8 @@ class HttpBaseChannel : public nsHashPropertyBag,
   virtual MOZ_MUST_USE nsresult Init(nsIURI *aURI, uint32_t aCaps,
                                      nsProxyInfo *aProxyInfo,
                                      uint32_t aProxyResolveFlags,
-                                     nsIURI *aProxyURI, uint64_t aChannelId);
+                                     nsIURI *aProxyURI, uint64_t aChannelId,
+                                     nsContentPolicyType aContentPolicyType);
 
   // nsIRequest
   NS_IMETHOD GetName(nsACString &aName) override;
