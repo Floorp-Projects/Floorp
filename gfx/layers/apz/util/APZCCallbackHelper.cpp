@@ -288,8 +288,6 @@ void APZCCallbackHelper::UpdateRootFrame(const RepaintRequest& aRequest) {
     return;
   }
 
-  MOZ_ASSERT(aRequest.GetUseDisplayPortMargins());
-
   if (gfxPrefs::APZAllowZooming() && aRequest.GetScrollOffsetUpdated()) {
     // If zooming is disabled then we don't really want to let APZ fiddle
     // with these things. In theory setting the resolution here should be a
@@ -339,8 +337,6 @@ void APZCCallbackHelper::UpdateSubFrame(const RepaintRequest& aRequest) {
   if (!content) {
     return;
   }
-
-  MOZ_ASSERT(aRequest.GetUseDisplayPortMargins());
 
   // We don't currently support zooming for subframes, so nothing extra
   // needs to be done beyond the tasks common to this and UpdateRootFrame.

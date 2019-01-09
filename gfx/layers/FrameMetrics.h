@@ -107,7 +107,6 @@ struct FrameMetrics {
         mIsRootContent(false),
         mIsRelative(false),
         mDoSmoothScroll(false),
-        mUseDisplayPortMargins(false),
         mIsScrollInfoLayer(false) {}
 
   // Default copy ctor and operator= are fine
@@ -137,7 +136,6 @@ struct FrameMetrics {
            mIsRootContent == aOther.mIsRootContent &&
            mIsRelative == aOther.mIsRelative &&
            mDoSmoothScroll == aOther.mDoSmoothScroll &&
-           mUseDisplayPortMargins == aOther.mUseDisplayPortMargins &&
            mIsScrollInfoLayer == aOther.mIsScrollInfoLayer;
   }
 
@@ -435,12 +433,6 @@ struct FrameMetrics {
     return mDisplayPortMargins;
   }
 
-  void SetUseDisplayPortMargins(bool aValue) {
-    mUseDisplayPortMargins = aValue;
-  }
-
-  bool GetUseDisplayPortMargins() const { return mUseDisplayPortMargins; }
-
   uint32_t GetPresShellId() const { return mPresShellId; }
 
   void SetPresShellId(uint32_t aPresShellId) { mPresShellId = aPresShellId; }
@@ -656,10 +648,6 @@ struct FrameMetrics {
   // When mDoSmoothScroll, the scroll offset should be animated to
   // smoothly transition to mScrollOffset rather than be updated instantly.
   bool mDoSmoothScroll : 1;
-
-  // If this is true then we use the display port margins on this metrics,
-  // otherwise use the display port rect.
-  bool mUseDisplayPortMargins : 1;
 
   // True if this scroll frame is a scroll info layer. A scroll info layer is
   // not layerized and its content cannot be truly async-scrolled, but its
