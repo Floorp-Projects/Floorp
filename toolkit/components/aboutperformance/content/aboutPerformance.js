@@ -303,6 +303,9 @@ var State = {
         type = "browser";
       } else if (/^[a-f0-9]{8}(-[a-f0-9]{4}){3}-[a-f0-9]{12}$/.test(host)) {
         let addon = WebExtensionPolicy.getByHostname(host);
+        if (!addon) {
+          continue;
+        }
         name = `${addon.name} (${addon.id})`;
         image = "chrome://mozapps/skin/extensions/extensionGeneric-16.svg";
         type = gSystemAddonIds.has(addon.id) ? "system-addon" : "addon";
