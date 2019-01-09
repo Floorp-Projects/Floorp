@@ -87,23 +87,6 @@
   padding: 8px;
 }
 
-#newsletter-form input {
-  border-color: var(--grey-90-alpha-30);
-}
-
-#newsletter-form input:hover {
-  border-color: var(--grey-90-alpha-50);
-}
-
-#newsletter-form input:focus {
-  border-color: var(--blue-50);
-  box-shadow: 0 0 0px 3px var(--blue-50-alpha20);
-}
-
-#newsletter-form::placeholder {
-  color: var(--grey-90-alpha-40);
-}
-
 #newsletter-submit {
   display: block;
   padding: 8px 20px;
