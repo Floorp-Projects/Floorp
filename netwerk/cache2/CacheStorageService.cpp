@@ -83,15 +83,27 @@ CacheStorageService::MemoryPool::~MemoryPool() {
 }
 
 uint32_t CacheStorageService::MemoryPool::Limit() const {
+  uint32_t limit = 0;
+
   switch (mType) {
     case DISK:
-      return CacheObserver::MetadataMemoryLimit();
+      limit = CacheObserver::MetadataMemoryLimit();
+      break;
     case MEMORY:
-      return CacheObserver::MemoryCacheCapacity();
+      limit = CacheObserver::MemoryCacheCapacity();
+      break;
+    default:
+      MOZ_CRASH("Bad pool type");
   }
 
-  MOZ_CRASH("Bad pool type");
-  return 0;
+  static const uint32_t kMaxLimit = 0x3FFFFF;
+  if (limit > kMaxLimit) {
+    LOG(("  a memory limit (%u) is unexpectedly high, clipping to %u", limit,
+         kMaxLimit));
+    limit = kMaxLimit;
+  }
+
+  return limit << 10;
 }
 
 NS_IMPL_ISUPPORTS(CacheStorageService, nsICacheStorageService,
@@ -258,9 +270,11 @@ class WalkMemoryCacheRunnable : public WalkCacheRunnable {
       if (mNotifyStorage) {
         LOG(("  storage"));
 
+        uint64_t capacity = CacheObserver::MemoryCacheCapacity();
+        capacity <<= 10;  // kilobytes to bytes
+
         // Second, notify overall storage info
-        mCallback->OnCacheStorageInfo(mEntryArray.Length(), mSize,
-                                      CacheObserver::MemoryCacheCapacity(),
+        mCallback->OnCacheStorageInfo(mEntryArray.Length(), mSize, capacity,
                                       nullptr);
         if (!mVisitEntries) return NS_OK;  // done
 
@@ -458,8 +472,9 @@ class WalkDiskCacheRunnable : public WalkCacheRunnable {
       if (mNotifyStorage) {
         nsCOMPtr<nsIFile> dir;
         CacheFileIOManager::GetCacheDirectory(getter_AddRefs(dir));
-        mCallback->OnCacheStorageInfo(mCount, mSize,
-                                      CacheObserver::DiskCacheCapacity(), dir);
+        uint64_t capacity = CacheObserver::DiskCacheCapacity();
+        capacity <<= 10;  // kilobytes to bytes
+        mCallback->OnCacheStorageInfo(mCount, mSize, capacity, dir);
         mNotifyStorage = false;
       } else {
         mCallback->OnCacheEntryVisitCompleted();
