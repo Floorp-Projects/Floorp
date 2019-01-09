@@ -1177,7 +1177,8 @@ static void AllocateObjectBufferWithInit(JSContext* cx, TypedArrayObject* obj,
   obj->setFixedSlot(TypedArrayObject::LENGTH_SLOT, Int32Value(count));
 
   size_t nbytes = count * obj->bytesPerElement();
-  MOZ_ASSERT((CheckedUint32(nbytes) + sizeof(Value)).isValid());
+  MOZ_ASSERT((CheckedUint32(nbytes) + sizeof(Value)).isValid(),
+             "JS_ROUNDUP must not overflow");
 
   nbytes = JS_ROUNDUP(nbytes, sizeof(Value));
   void* buf = cx->nursery().allocateZeroedBuffer(obj, nbytes,
