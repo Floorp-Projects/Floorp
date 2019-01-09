@@ -792,12 +792,17 @@ bool CacheFileChunk::CanAllocate(uint32_t aSize) const {
 
   LOG(("CacheFileChunk::CanAllocate() [this=%p, size=%u]", this, aSize));
 
-  uint32_t limit = CacheObserver::MaxDiskChunksMemoryUsage(mIsPriority);
+  int64_t limit = CacheObserver::MaxDiskChunksMemoryUsage(mIsPriority);
   if (limit == 0) {
     return true;
   }
 
-  uint32_t usage = ChunksMemoryUsage();
+  limit <<= 10;
+  if (limit > UINT32_MAX) {
+    limit = UINT32_MAX;
+  }
+
+  int64_t usage = ChunksMemoryUsage();
   if (usage + aSize > limit) {
     LOG(("CacheFileChunk::CanAllocate() - Returning false. [this=%p]", this));
     return false;

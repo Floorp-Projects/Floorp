@@ -17,6 +17,7 @@
 #include "mozilla/ArenaAllocator.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/BinarySearch.h"
+#include "mozilla/OperatorNewExtensions.h"
 
 #include <math.h>
 
@@ -133,14 +134,18 @@ class nsTimerEvent final : public CancelableRunnable {
   NS_IMETHOD GetName(nsACString& aName) override;
 #endif
 
-  nsTimerEvent()
-      : mozilla::CancelableRunnable("nsTimerEvent"), mTimer(), mGeneration(0) {
+  explicit nsTimerEvent(already_AddRefed<nsTimerImpl> aTimer)
+      : mozilla::CancelableRunnable("nsTimerEvent"),
+        mTimer(aTimer),
+        mGeneration(mTimer->GetGeneration()) {
     // Note: We override operator new for this class, and the override is
     // fallible!
     sAllocatorUsers++;
-  }
 
-  TimeStamp mInitTime;
+    if (MOZ_LOG_TEST(GetTimerLog(), LogLevel::Debug)) {
+      mInitTime = TimeStamp::Now();
+    }
+  }
 
   static void Init();
   static void Shutdown();
@@ -156,11 +161,6 @@ class nsTimerEvent final : public CancelableRunnable {
 
   already_AddRefed<nsTimerImpl> ForgetTimer() { return mTimer.forget(); }
 
-  void SetTimer(already_AddRefed<nsTimerImpl> aTimer) {
-    mTimer = aTimer;
-    mGeneration = mTimer->GetGeneration();
-  }
-
  private:
   nsTimerEvent(const nsTimerEvent&) = delete;
   nsTimerEvent& operator=(const nsTimerEvent&) = delete;
@@ -173,8 +173,9 @@ class nsTimerEvent final : public CancelableRunnable {
     sAllocatorUsers--;
   }
 
+  TimeStamp mInitTime;
   RefPtr<nsTimerImpl> mTimer;
-  int32_t mGeneration;
+  const int32_t mGeneration;
 
   static TimerEventAllocator* sAllocator;
 
@@ -714,15 +715,6 @@ already_AddRefed<nsTimerImpl> TimerThread::PostTimerEvent(
   // event, so we can avoid firing a timer that was re-initialized after being
   // canceled.
 
-  RefPtr<nsTimerEvent> event = new nsTimerEvent;
-  if (!event) {
-    return timer.forget();
-  }
-
-  if (MOZ_LOG_TEST(GetTimerLog(), LogLevel::Debug)) {
-    event->mInitTime = TimeStamp::Now();
-  }
-
 #ifdef MOZ_TASK_TRACER
   // During the dispatch of TimerEvent, we overwrite the current TraceInfo
   // partially with the info saved in timer earlier, and restore it back by
@@ -732,7 +724,12 @@ already_AddRefed<nsTimerImpl> TimerThread::PostTimerEvent(
 #endif
 
   nsCOMPtr<nsIEventTarget> target = timer->mEventTarget;
-  event->SetTimer(timer.forget());
+
+  void* p = nsTimerEvent::operator new(sizeof(nsTimerEvent));
+  if (!p) {
+    return timer.forget();
+  }
+  RefPtr<nsTimerEvent> event = ::new (KnownNotNull, p) nsTimerEvent(timer.forget());
 
   nsresult rv;
   {

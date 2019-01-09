@@ -24,7 +24,7 @@
 </head>
 <body>
 
-<div id="test1" contenteditable="true" spellcheck="false" onfocus="test()">This text is NOT selectable.</div>
+<div id="test1" contenteditable="true" spellcheck="false" onfocus="setTimeout(test, 0)">This text is NOT selectable.</div>
 
 <script>
 SimpleTest.waitForFocus(runTests);
