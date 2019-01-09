@@ -109,7 +109,6 @@
             <textbox id="calls-searchbox"
                      class="devtools-filterinput"
                      placeholder="&canvasDebuggerUI.searchboxPlaceholder;"
-                     type="search"
                      flex="1"/>
           </toolbar>
           <vbox id="calls-list" flex="1"/>

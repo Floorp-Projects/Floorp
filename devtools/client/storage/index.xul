@@ -52,8 +52,6 @@
         <spacer flex="1"/>
         <textbox id="storage-searchbox"
                  class="devtools-filterinput"
-                 type="search"
-                 timeout="200"
                  placeholder="&searchBox.placeholder;"/>
         <button class="devtools-button sidebar-toggle" hidden="true"></button>
       </hbox>
