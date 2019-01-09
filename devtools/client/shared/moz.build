@@ -37,7 +37,6 @@ DevToolsModules(
     'key-shortcuts.js',
     'keycodes.js',
     'link.js',
-    'multi-e10s-helper.js',
     'natural-sort.js',
     'node-attribute-parser.js',
     'options-view.js',

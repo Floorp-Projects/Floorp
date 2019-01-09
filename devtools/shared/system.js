@@ -35,7 +35,7 @@ const APP_MAP = {
 
 var CACHED_INFO = null;
 
-async function getSystemInfo() {
+function getSystemInfo() {
   if (CACHED_INFO) {
     return CACHED_INFO;
   }
