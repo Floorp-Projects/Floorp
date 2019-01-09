@@ -122,6 +122,11 @@ static void TestPrintfFormats() {
   // failure caused by printing a very long floating point value.
   print_one("ignore", "%lf", DBL_MAX);
 
+  // Regression test for bug#1517433.  The bug was an assertion
+  // failure caused by printing a floating point value with a large
+  // precision and/or width.
+  print_one("ignore", "%500.500lf", DBL_MAX);
+
   MOZ_RELEASE_ASSERT(print_one("2727", "%" PRIu32, (uint32_t)2727));
   MOZ_RELEASE_ASSERT(print_one("aa7", "%" PRIx32, (uint32_t)2727));
   MOZ_RELEASE_ASSERT(print_one("2727", "%" PRIu64, (uint64_t)2727));
