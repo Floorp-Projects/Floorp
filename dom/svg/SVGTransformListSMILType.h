@@ -8,7 +8,7 @@
 #define SVGTRANSFORMLISTSMILTYPE_H_
 
 #include "mozilla/Attributes.h"
-#include "SMILType.h"
+#include "mozilla/SMILType.h"
 #include "nsTArray.h"
 
 class nsSMILValue;

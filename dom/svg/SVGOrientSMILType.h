@@ -8,7 +8,7 @@
 #define MOZILLA_SVGORIENTSMILTYPE_H_
 
 #include "mozilla/Attributes.h"
-#include "SMILType.h"
+#include "mozilla/SMILType.h"
 
 class nsSMILValue;
 
