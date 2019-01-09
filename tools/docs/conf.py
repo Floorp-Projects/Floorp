@@ -49,7 +49,6 @@ js_source_path = [
     'testing/marionette',
     'toolkit/components/extensions',
     'toolkit/components/extensions/parent',
-    'toolkit/components/featuregates',
     'toolkit/mozapps/extensions',
 ]
 root_for_relative_js_paths = '.'
