@@ -3727,26 +3727,15 @@ void AsyncPanZoomController::RequestContentRepaint(
 
   // If we're trying to paint what we already think is painted, discard this
   // request since it's a pointless paint.
-  ScreenMargin marginDelta = (mLastPaintRequestMetrics.GetDisplayPortMargins() -
-                              request.GetDisplayPortMargins());
-  if (fabsf(marginDelta.left) < EPSILON && fabsf(marginDelta.top) < EPSILON &&
-      fabsf(marginDelta.right) < EPSILON &&
-      fabsf(marginDelta.bottom) < EPSILON &&
-      fabsf(mLastPaintRequestMetrics.GetScrollOffset().x -
-            request.GetScrollOffset().x) < EPSILON &&
-      fabsf(mLastPaintRequestMetrics.GetScrollOffset().y -
-            request.GetScrollOffset().y) < EPSILON &&
+  if (request.GetDisplayPortMargins().WithinEpsilonOf(
+          mLastPaintRequestMetrics.GetDisplayPortMargins(), EPSILON) &&
+      request.GetScrollOffset().WithinEpsilonOf(
+          mLastPaintRequestMetrics.GetScrollOffset(), EPSILON) &&
       request.GetPresShellResolution() ==
           mLastPaintRequestMetrics.GetPresShellResolution() &&
       request.GetZoom() == mLastPaintRequestMetrics.GetZoom() &&
-      fabsf(request.GetLayoutViewport().Width() -
-            mLastPaintRequestMetrics.GetLayoutViewport().Width()) < EPSILON &&
-      fabsf(request.GetLayoutViewport().Height() -
-            mLastPaintRequestMetrics.GetLayoutViewport().Height()) < EPSILON &&
-      fabsf(request.GetLayoutViewport().X() -
-            mLastPaintRequestMetrics.GetLayoutViewport().X()) < EPSILON &&
-      fabsf(request.GetLayoutViewport().Y() -
-            mLastPaintRequestMetrics.GetLayoutViewport().Y()) < EPSILON &&
+      request.GetLayoutViewport().WithinEpsilonOf(
+          mLastPaintRequestMetrics.GetLayoutViewport(), EPSILON) &&
       request.GetScrollGeneration() ==
           mLastPaintRequestMetrics.GetScrollGeneration() &&
       request.GetScrollUpdateType() ==
