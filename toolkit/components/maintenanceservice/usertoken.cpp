@@ -568,8 +568,8 @@ GetUserProcessToken(LPCWSTR updaterPath, int updaterArgc,
   if (!rv) {
     LOG_WARN(("Found no matching updater process to impersonate."));
   } else {
-    LOG_WARN(("Successfully matched pid %lu and got impersonation token.",
-              matchedPid));
+    LOG(("Successfully matched pid %lu and got impersonation token.",
+         matchedPid));
   }
 
   return rv.disown();
