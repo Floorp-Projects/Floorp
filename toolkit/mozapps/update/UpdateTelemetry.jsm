@@ -176,6 +176,8 @@ var AUSTLMY = {
   DWNLD_ERR_VERIFY_NO_REQUEST: 13,
   DWNLD_ERR_VERIFY_PATCH_SIZE_NOT_EQUAL: 14,
   DWNLD_ERR_WRITE_FAILURE: 15,
+  // Temporary failure code to see if there are failures without an update phase
+  DWNLD_UNKNOWN_PHASE_ERR_WRITE_FAILURE: 40,
 
   /**
    * Submit a telemetry ping for the update download result code.

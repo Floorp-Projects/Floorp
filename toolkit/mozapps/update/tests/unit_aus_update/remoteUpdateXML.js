@@ -287,5 +287,5 @@ function check_test_pt11() {
                "the update appVersion attribute" + MSG_SHOULD_EQUAL);
   Assert.equal(bestUpdate.displayVersion, "1.0",
                "the update displayVersion attribute" + MSG_SHOULD_EQUAL);
-  doTestFinish();
+  stop_httpserver(doTestFinish);
 }
