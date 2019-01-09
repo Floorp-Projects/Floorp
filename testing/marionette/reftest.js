@@ -408,6 +408,14 @@ max-width: ${REFTEST_WIDTH}px; max-height: ${REFTEST_HEIGHT}px`;
              pixelsDifferent <= allowedPixels[1]));
   }
 
+  ensureFocus(win) {
+    const focusManager = Services.focus;
+    if (focusManager.activeWindow != win) {
+      focusManager.activeWindow = win;
+    }
+    this.driver.curBrowser.contentBrowser.focus();
+  }
+
   async screenshot(win, url, timeout) {
     win.innerWidth = REFTEST_WIDTH;
     win.innerHeight = REFTEST_HEIGHT;
@@ -466,7 +474,7 @@ max-width: ${REFTEST_WIDTH}px; max-height: ${REFTEST_HEIGHT}px`;
         this.lastURL = url;
       }
 
-      this.driver.curBrowser.contentBrowser.focus();
+      this.ensureFocus(win);
       await this.driver.listener.reftestWait(url, this.remote);
 
       canvas = capture.canvas(
