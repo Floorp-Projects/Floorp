@@ -33,6 +33,7 @@ DIRS += [
     'downloads',
     'enterprisepolicies',
     'extensions',
+    'featuregates',
     'filewatcher',
     'finalizationwitness',
     'find',

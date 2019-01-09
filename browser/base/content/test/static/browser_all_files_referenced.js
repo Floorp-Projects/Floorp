@@ -177,6 +177,10 @@ var whitelist = [
   {file: "chrome://devtools/skin/images/aboutdebugging-firefox-release.svg",
    isFromDevTools: true},
   {file: "chrome://devtools/skin/images/next.svg", isFromDevTools: true},
+   // Feature gates are available but not used yet - Bug 1479127
+   {file: "resource://gre-resources/featuregates/FeatureGate.jsm"},
+   {file: "resource://gre-resources/featuregates/FeatureGateImplementation.jsm"},
+   {file: "resource://gre-resources/featuregates/feature_definitions.json"},
 ];
 
 whitelist = new Set(whitelist.filter(item =>
