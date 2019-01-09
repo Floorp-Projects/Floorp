@@ -105,9 +105,12 @@ bool BasicLayerManager::PushGroupForLayer(gfxContext* aContext, Layer* aLayer,
     ToRect(rect).ToIntRect(&surfRect);
 
     if (!surfRect.IsEmpty()) {
-      RefPtr<DrawTarget> dt =
-          aContext->GetDrawTarget()->CreateSimilarDrawTarget(
-              surfRect.Size(), SurfaceFormat::B8G8R8A8);
+      RefPtr<DrawTarget> dt;
+      if (aContext->GetDrawTarget()->CanCreateSimilarDrawTarget(
+              surfRect.Size(), SurfaceFormat::B8G8R8A8)) {
+        dt = aContext->GetDrawTarget()->CreateSimilarDrawTarget(
+            surfRect.Size(), SurfaceFormat::B8G8R8A8);
+      }
 
       RefPtr<gfxContext> ctx =
           gfxContext::CreateOrNull(dt, ToRect(rect).TopLeft());
