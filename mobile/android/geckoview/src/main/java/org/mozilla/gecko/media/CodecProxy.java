@@ -94,17 +94,8 @@ public final class CodecProxy {
             if (mOutputSurface != null) {
                 // Don't render to surface just yet. Callback will make that happen when it's time.
                 mSurfaceOutputs.offer(sample);
-                mCallbacks.onOutput(sample);
-            } else {
-                // Non-surface output needs no rendering.
-                try {
-                    mCallbacks.onOutput(sample);
-                    mRemote.releaseOutput(sample, false);
-                    sample.dispose();
-                } catch (Exception e) {
-                    reportError(true);
-                }
             }
+            mCallbacks.onOutput(sample);
         }
 
         @Override
