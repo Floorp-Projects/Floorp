@@ -980,7 +980,45 @@ function processBodies(functionName)
 
     var missingExpectedHazard = annotations.has("Expect Hazards");
 
-    for (var variable of functionBodies[0].DefineVariable) {
+    // Awful special case, hopefully temporary:
+    //
+    // The DOM bindings code generator uses "holders" to externally root
+    // variables. So for example:
+    //
+    //       StringObjectRecordOrLong arg0;
+    //       StringObjectRecordOrLongArgument arg0_holder(arg0);
+    //       arg0_holder.TrySetToStringObjectRecord(cx, args[0]);
+    //       GC();
+    //       self->PassUnion22(cx, arg0);
+    //
+    // This appears to be a rooting hazard on arg0, but it is rooted by
+    // arg0_holder if you set it to any of its union types that requires
+    // rooting.
+    //
+    // Additionally, the holder may be reported as a hazard because it's not
+    // itself a Rooted or a subclass of AutoRooter; it contains a
+    // Maybe<RecordRooter<T>> that will get emplaced if rooting is required.
+    //
+    // Hopefully these will be simplified at some point (see bug 1517829), but
+    // for now we special-case functions in the mozilla::dom namespace that
+    // contain locals with types ending in "Argument". Or
+    // Maybe<SomethingArgument>. It's a harsh world.
+    const ignoreVars = new Set();
+    if (functionName.match(/mozilla::dom::/)) {
+        const vars = functionBodies[0].DefineVariable.filter(
+            v => v.Type.Kind == 'CSU' && v.Variable.Kind == 'Local'
+        ).map(
+            v => [ v.Variable.Name[0], v.Type.Name ]
+        );
+
+        const holders = vars.filter(([n, t]) => n.match(/^arg\d+_holder$/) && t.match(/Argument\b/));
+        for (const [holder,] of holders) {
+            ignoreVars.add(holder); // Ignore the older.
+            ignoreVars.add(holder.replace("_holder", "")); // Ignore the "managed" arg.
+        }
+    }
+
+    for (const variable of functionBodies[0].DefineVariable) {
         var name;
         if (variable.Variable.Kind == "This")
             name = "this";
@@ -988,6 +1026,9 @@ function processBodies(functionName)
             name = "<returnvalue>";
         else
             name = variable.Variable.Name[0];
+
+        if (ignoreVars.has(name))
+            continue;
 
         if (isRootedType(variable.Type)) {
             if (!variableLiveAcrossGC(suppressed, variable.Variable)) {
