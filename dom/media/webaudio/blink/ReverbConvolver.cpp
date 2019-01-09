@@ -64,7 +64,7 @@ ReverbConvolver::ReverbConvolver(const float* impulseResponseData,
       m_accumulationBuffer(impulseResponseLength + WEBAUDIO_BLOCK_SIZE),
       m_inputBuffer(InputBufferSize),
       m_backgroundThread("ConvolverWorker"),
-      m_backgroundThreadCondition(&m_backgroundThreadLock),
+      m_backgroundThreadMonitor("ConvolverMonitor"),
       m_useBackgroundThreads(useBackgroundThreads),
       m_wantsToExit(false),
       m_moreInputBuffered(false) {
@@ -166,9 +166,9 @@ ReverbConvolver::~ReverbConvolver() {
 
     // Wake up thread so it can return
     {
-      AutoLock locker(m_backgroundThreadLock);
+      MonitorAutoLock locker(m_backgroundThreadMonitor);
       m_moreInputBuffered = true;
-      m_backgroundThreadCondition.Signal();
+      m_backgroundThreadMonitor.Notify();
     }
 
     m_backgroundThread.Stop();
@@ -199,8 +199,7 @@ size_t ReverbConvolver::sizeOfIncludingThis(
 
   // Possible future measurements:
   // - m_backgroundThread
-  // - m_backgroundThreadLock
-  // - m_backgroundThreadCondition
+  // - m_backgroundThreadMonitor
   return amount;
 }
 
@@ -209,9 +208,9 @@ void ReverbConvolver::backgroundThreadEntry() {
     // Wait for realtime thread to give us more input
     m_moreInputBuffered = false;
     {
-      AutoLock locker(m_backgroundThreadLock);
+      MonitorAutoLock locker(m_backgroundThreadMonitor);
       while (!m_moreInputBuffered && !m_wantsToExit)
-        m_backgroundThreadCondition.Wait();
+        m_backgroundThreadMonitor.Wait();
     }
 
     // Process all of the stages until their read indices reach the input
@@ -251,17 +250,17 @@ void ReverbConvolver::process(const float* sourceChannelData,
 
   // Now that we've buffered more input, wake up our background thread.
 
-  // Not using a MutexLocker looks strange, but we use a tryLock() instead
+  // Not using a MonitorAutoLock looks strange, but we use a TryLock() instead
   // because this is run on the real-time thread where it is a disaster for the
   // lock to be contended (causes audio glitching).  It's OK if we fail to
   // signal from time to time, since we'll get to it the next time we're called.
   // We're called repeatedly and frequently (around every 3ms).  The background
   // thread is processing well into the future and has a considerable amount of
   // leeway here...
-  if (m_backgroundThreadLock.Try()) {
+  if (m_backgroundThreadMonitor.TryLock()) {
     m_moreInputBuffered = true;
-    m_backgroundThreadCondition.Signal();
-    m_backgroundThreadLock.Release();
+    m_backgroundThreadMonitor.Notify();
+    m_backgroundThreadMonitor.Unlock();
   }
 }
 
