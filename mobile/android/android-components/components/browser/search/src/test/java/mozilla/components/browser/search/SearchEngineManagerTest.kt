@@ -14,6 +14,7 @@ import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.search.provider.SearchEngineProvider
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.mock
@@ -112,6 +113,7 @@ class SearchEngineManagerTest {
         }
     }
 
+    @Ignore
     @Test
     fun `locale update broadcast will trigger reload`() {
         runBlocking {
