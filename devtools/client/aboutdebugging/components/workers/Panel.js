@@ -15,7 +15,7 @@ const {
   addMultiE10sListener,
   isMultiE10s,
   removeMultiE10sListener,
-} = require("devtools/client/shared/multi-e10s-helper");
+} = require("devtools/shared/multi-e10s-helper");
 
 const PanelHeader = createFactory(require("../PanelHeader"));
 const TargetList = createFactory(require("../TargetList"));

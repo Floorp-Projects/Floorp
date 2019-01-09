@@ -8,6 +8,12 @@ const {Ci, Cc} = require("chrome");
 const Services = require("Services");
 const protocol = require("devtools/shared/protocol");
 const {LongStringActor} = require("devtools/server/actors/string");
+const {
+  addMultiE10sListener,
+  isMultiE10s,
+  removeMultiE10sListener,
+} = require("devtools/shared/multi-e10s-helper");
+
 const {DebuggerServer} = require("devtools/server/main");
 const {getSystemInfo} = require("devtools/shared/system");
 const {deviceSpec} = require("devtools/shared/specs/device");
@@ -23,6 +29,9 @@ exports.DeviceActor = protocol.ActorClassWithSpec(deviceSpec, {
       this._window.addEventListener("pageshow", this._onPageShow, true);
     }
     this._acquireWakeLock();
+
+    this._onMultiE10sUpdated = this._onMultiE10sUpdated.bind(this);
+    addMultiE10sListener(this._onMultiE10sUpdated);
   },
 
   destroy: function() {
@@ -31,10 +40,15 @@ exports.DeviceActor = protocol.ActorClassWithSpec(deviceSpec, {
     if (this._window) {
       this._window.removeEventListener("pageshow", this._onPageShow, true);
     }
+    removeMultiE10sListener(this._onMultiE10sUpdated);
+  },
+
+  _onMultiE10sUpdated: function() {
+    this.emit("multi-e10s-updated", isMultiE10s());
   },
 
   getDescription: function() {
-    return getSystemInfo();
+    return Object.assign({}, getSystemInfo(), { isMultiE10s: isMultiE10s() });
   },
 
   screenshotToDataURL: function() {
