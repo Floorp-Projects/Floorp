@@ -1098,18 +1098,31 @@ void KeymapWrapper::OnDirectionChanged(GdkKeymap* aGdkKeymap,
   // If the key isn't printable, let's look at the key pairs.
   uint32_t charCode = GetCharCodeFor(aGdkKeyEvent);
   if (!charCode) {
-    // Always use unshifted keycode for the non-printable key.
-    // XXX It might be better to decide DOM keycode from all keyvals of
-    //     the hardware keycode.  However, I think that it's too excessive.
-    guint keyvalWithoutModifier = GetGDKKeyvalWithoutModifier(aGdkKeyEvent);
-    uint32_t DOMKeyCode = GetDOMKeyCodeFromKeyPairs(keyvalWithoutModifier);
-    if (!DOMKeyCode) {
-      // If the unshifted keyval couldn't be mapped to a DOM keycode,
-      // we should fallback to legacy logic, so, we should recompute with
-      // the keyval with aGdkKeyEvent.
-      DOMKeyCode = GetDOMKeyCodeFromKeyPairs(keyval);
+    // Note that any key may be a function key because of some unusual keyboard
+    // layouts.  I.e., even if the pressed key is a printable key of en-US
+    // keyboard layout, we should expose the function key's keyCode value to
+    // web apps because web apps should handle the keydown/keyup events as
+    // inputted by usual keyboard layout.  For example, Hatchak keyboard
+    // maps Tab key to "Digit3" key and Level3 Shift makes it "Backspace".
+    // In this case, we should expose DOM_VK_BACK_SPACE (8).
+    uint32_t DOMKeyCode = GetDOMKeyCodeFromKeyPairs(keyval);
+    if (DOMKeyCode) {
+      // XXX If DOMKeyCode is a function key's keyCode value, it might be
+      //     better to consume necessary modifiers.  For example, if there is
+      //     no Control Pad section on keyboard like notebook, Delete key is
+      //     available only with Level3 Shift+"Backspace" key if using Hatchak.
+      //     If web apps accept Delete key operation only when no modifiers are
+      //     active, such users cannot use Delete key to do it.  However,
+      //     Chromium doesn't consume such necessary modifiers.  So, our default
+      //     behavior should keep not touching modifiers for compatibility, but
+      //     it might be better to add a pref to consume necessary modifiers.
+      return DOMKeyCode;
     }
-    return DOMKeyCode;
+    // If aGdkKeyEvent cannot be mapped to a DOM keyCode value, we should
+    // refer keyCode value without modifiers because web apps should be
+    // able to identify the key as far as possible.
+    guint keyvalWithoutModifier = GetGDKKeyvalWithoutModifier(aGdkKeyEvent);
+    return GetDOMKeyCodeFromKeyPairs(keyvalWithoutModifier);
   }
 
   // printable numpad keys should be resolved here.
