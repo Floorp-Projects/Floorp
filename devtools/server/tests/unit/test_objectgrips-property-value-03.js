@@ -10,7 +10,7 @@ registerCleanupFunction(() => {
 });
 
 add_task(threadClientTest(async ({ threadClient, debuggee, client }) => {
-  debuggee.eval(function stopMe(arg1) {
+  debuggee.eval(function stopMe() {
     debugger;
   }.toString());
 
@@ -18,34 +18,30 @@ add_task(threadClientTest(async ({ threadClient, debuggee, client }) => {
 }));
 
 async function test_object_grip(debuggee, threadClient) {
-  const code = `
-    stopMe({
-      method(){
-        debugger;
-      },
-    });
-  `;
-  const obj = await eval_and_resume(debuggee, threadClient, code, async frame => {
-    const arg1 = frame.arguments[0];
-    Assert.equal(arg1.class, "Object");
-
-    await threadClient.pauseGrip(arg1).threadGrip();
-    return arg1;
-  });
-  const objClient = threadClient.pauseGrip(obj);
-
-  const method = threadClient.pauseGrip(
-    (await objClient.getPropertyValue("method", null)).value.return,
+  eval_and_resume(
+    debuggee,
+    threadClient,
+    `
+      var obj = {
+        get getter() {
+          return objects.indexOf(this);
+        },
+      };
+      var objects = [obj, {}, [], new Boolean(), new Number(), new String()];
+      stopMe(...objects);
+    `,
+    async frame => {
+      const grips = frame.arguments;
+      const objClient = threadClient.pauseGrip(grips[0]);
+      const classes = ["Object", "Object", "Array", "Boolean", "Number", "String"];
+      for (const [i, grip] of grips.entries()) {
+        Assert.equal(grip.class, classes[i]);
+        await check_getter(objClient, grip.actor, i);
+      }
+      await check_getter(objClient, null, 0);
+      await check_getter(objClient, "invalid receiver actorId", 0);
+    }
   );
-
-  // Ensure that we actually paused at the `debugger;` line.
-  await Promise.all([
-    wait_for_pause(threadClient, frame => {
-      Assert.equal(frame.where.line, 4);
-      Assert.equal(frame.where.column, 8);
-    }),
-    method.apply(obj, []),
-  ]);
 }
 
 function eval_and_resume(debuggee, threadClient, code, callback) {
@@ -70,4 +66,9 @@ function wait_for_pause(threadClient, callback = () => {}) {
       })().then(resolve, reject);
     });
   });
+}
+
+async function check_getter(objClient, receiverId, expected) {
+  const {value} = await objClient.getPropertyValue("getter", receiverId);
+  Assert.equal(value.return, expected);
 }
