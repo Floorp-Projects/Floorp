@@ -7,7 +7,6 @@
 #include "mozilla/net/UrlClassifierFeatureFactory.h"
 
 // List of Features
-#include "UrlClassifierFeatureFingerprinting.h"
 #include "UrlClassifierFeatureFlash.h"
 #include "UrlClassifierFeatureLoginReputation.h"
 #include "UrlClassifierFeatureTrackingProtection.h"
@@ -25,7 +24,6 @@ namespace net {
     return;
   }
 
-  UrlClassifierFeatureFingerprinting::MaybeShutdown();
   UrlClassifierFeatureFlash::MaybeShutdown();
   UrlClassifierFeatureLoginReputation::MaybeShutdown();
   UrlClassifierFeatureTrackingAnnotation::MaybeShutdown();
@@ -44,12 +42,6 @@ namespace net {
   // 1 feature classifies the channel, we call ::ProcessChannel() following this
   // feature order, and this could produce different results with a different
   // feature ordering.
-
-  // Fingerprinting
-  feature = UrlClassifierFeatureFingerprinting::MaybeCreate(aChannel);
-  if (feature) {
-    aFeatures.AppendElement(feature);
-  }
 
   // Tracking Protection
   feature = UrlClassifierFeatureTrackingProtection::MaybeCreate(aChannel);
@@ -82,12 +74,6 @@ UrlClassifierFeatureFactory::GetFeatureByName(const nsACString& aName) {
   }
 
   nsCOMPtr<nsIUrlClassifierFeature> feature;
-
-  // Fingerprinting
-  feature = UrlClassifierFeatureFingerprinting::GetIfNameMatches(aName);
-  if (feature) {
-    return feature.forget();
-  }
 
   // Tracking Protection
   feature = UrlClassifierFeatureTrackingProtection::GetIfNameMatches(aName);
@@ -122,14 +108,8 @@ UrlClassifierFeatureFactory::GetFeatureByName(const nsACString& aName) {
     return;
   }
 
-  // Fingerprinting
-  nsAutoCString name;
-  name.Assign(UrlClassifierFeatureFingerprinting::Name());
-  if (!name.IsEmpty()) {
-    aArray.AppendElement(name);
-  }
-
   // Tracking Protection
+  nsAutoCString name;
   name.Assign(UrlClassifierFeatureTrackingProtection::Name());
   if (!name.IsEmpty()) {
     aArray.AppendElement(name);
