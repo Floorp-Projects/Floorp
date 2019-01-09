@@ -1443,6 +1443,49 @@ class FoldVisitor : public ParseNodeVisitor<FoldVisitor> {
 
     return Base::visitFunction(pn);
   }
+
+  bool visitArrayExpr(ParseNode*& pn) {
+    if (!Base::visitArrayExpr(pn)) {
+      return false;
+    }
+
+    ListNode* list = &pn->as<ListNode>();
+    // Empty arrays are non-constant, since we cannot easily determine their
+    // type.
+    if (list->hasNonConstInitializer() && list->count() > 0) {
+      for (ParseNode* node : list->contents()) {
+        if (!node->isConstant()) {
+          return true;
+        }
+      }
+      list->unsetHasNonConstInitializer();
+    }
+    return true;
+  }
+
+  bool visitObjectExpr(ParseNode*& pn) {
+    if (!Base::visitObjectExpr(pn)) {
+      return false;
+    }
+
+    ListNode* list = &pn->as<ListNode>();
+    if (list->hasNonConstInitializer()) {
+      for (ParseNode* node : list->contents()) {
+        if (node->getKind() != ParseNodeKind::Colon) {
+          return true;
+        }
+        BinaryNode* binary = &node->as<BinaryNode>();
+        if (binary->left()->isKind(ParseNodeKind::ComputedName)) {
+          return true;
+        }
+        if (!binary->right()->isConstant()) {
+          return true;
+        }
+      }
+      list->unsetHasNonConstInitializer();
+    }
+    return true;
+  }
 };
 
 bool Fold(JSContext* cx, ParseNode** pnp) {

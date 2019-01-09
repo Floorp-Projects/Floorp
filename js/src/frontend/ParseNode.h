@@ -1234,8 +1234,7 @@ class ListNode : public ParseNode {
 
   MOZ_MUST_USE bool hasNonConstInitializer() const {
     MOZ_ASSERT(isKind(ParseNodeKind::ArrayExpr) ||
-               isKind(ParseNodeKind::ObjectExpr) ||
-               isKind(ParseNodeKind::ClassMemberList));
+               isKind(ParseNodeKind::ObjectExpr));
     return pn_u.list.xflags & hasNonConstInitializerBit;
   }
 
@@ -1251,9 +1250,14 @@ class ListNode : public ParseNode {
 
   void setHasNonConstInitializer() {
     MOZ_ASSERT(isKind(ParseNodeKind::ArrayExpr) ||
-               isKind(ParseNodeKind::ObjectExpr) ||
-               isKind(ParseNodeKind::ClassMemberList));
+               isKind(ParseNodeKind::ObjectExpr));
     pn_u.list.xflags |= hasNonConstInitializerBit;
+  }
+
+  void unsetHasNonConstInitializer() {
+    MOZ_ASSERT(isKind(ParseNodeKind::ArrayExpr) ||
+               isKind(ParseNodeKind::ObjectExpr));
+    pn_u.list.xflags &= ~hasNonConstInitializerBit;
   }
 
   /*

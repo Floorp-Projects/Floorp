@@ -3765,14 +3765,6 @@ GeneralParser<ParseHandler, Unit>::bindingInitializer(
     return null();
   }
 
-  if (foldConstants) {
-    Node node = assign;
-    if (!FoldConstants(context, &node, this)) {
-      return null();
-    }
-    assign = handler.asBinary(node);
-  }
-
   return assign;
 }
 
@@ -9267,9 +9259,6 @@ GeneralParser<ParseHandler, Unit>::arrayInitializer(
                 element, elementPos, &possibleErrorInner, possibleError)) {
           return null();
         }
-        if (foldConstants && !FoldConstants(context, &element, this)) {
-          return null();
-        }
         handler.addArrayElement(literal, element);
       }
 
@@ -9388,7 +9377,8 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::propertyName(
     }
 
     case TokenKind::LeftBracket:
-      propName = computedPropertyName(yieldHandling, maybeDecl, propList);
+      propName = computedPropertyName(yieldHandling, maybeDecl,
+                                      propertyNameContext, propList);
       if (!propName) {
         return null();
       }
@@ -9453,7 +9443,8 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::propertyName(
       if (tt == TokenKind::LeftBracket) {
         tokenStream.consumeKnownToken(TokenKind::LeftBracket);
 
-        return computedPropertyName(yieldHandling, maybeDecl, propList);
+        return computedPropertyName(yieldHandling, maybeDecl,
+                                    propertyNameContext, propList);
       }
 
       // Not an accessor property after all.
@@ -9528,7 +9519,7 @@ template <class ParseHandler, typename Unit>
 typename ParseHandler::UnaryNodeType
 GeneralParser<ParseHandler, Unit>::computedPropertyName(
     YieldHandling yieldHandling, const Maybe<DeclarationKind>& maybeDecl,
-    ListNodeType literal) {
+    PropertyNameContext propertyNameContext, ListNodeType literal) {
   MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::LeftBracket));
 
   uint32_t begin = pos().begin;
@@ -9537,7 +9528,8 @@ GeneralParser<ParseHandler, Unit>::computedPropertyName(
     if (*maybeDecl == DeclarationKind::FormalParameter) {
       pc->functionBox()->hasParameterExprs = true;
     }
-  } else {
+  } else if (propertyNameContext ==
+             PropertyNameContext::PropertyNameInLiteral) {
     handler.setListHasNonConstInitializer(literal);
   }
 
@@ -9647,10 +9639,6 @@ GeneralParser<ParseHandler, Unit>::objectLiteral(YieldHandling yieldHandling,
           }
           seenPrototypeMutation = true;
 
-          if (foldConstants && !FoldConstants(context, &propExpr, this)) {
-            return null();
-          }
-
           // This occurs *only* if we observe PropertyType::Normal!
           // Only |__proto__: v| mutates [[Prototype]]. Getters,
           // setters, method/generator definitions, computed
@@ -9660,18 +9648,13 @@ GeneralParser<ParseHandler, Unit>::objectLiteral(YieldHandling yieldHandling,
             return null();
           }
         } else {
-          // Use Node instead of BinaryNodeType to pass it to
-          // FoldConstants.
-          Node propDef = handler.newPropertyDefinition(propName, propExpr);
+          BinaryNodeType propDef =
+              handler.newPropertyDefinition(propName, propExpr);
           if (!propDef) {
             return null();
           }
 
-          if (foldConstants && !FoldConstants(context, &propDef, this)) {
-            return null();
-          }
-
-          handler.addPropertyDefinition(literal, handler.asBinary(propDef));
+          handler.addPropertyDefinition(literal, propDef);
         }
       } else if (propType == PropertyType::Shorthand) {
         /*
