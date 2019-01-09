@@ -4627,9 +4627,12 @@ void HTMLMediaElement::UpdateSrcMediaStreamPlaying(uint32_t aFlags) {
 
 void HTMLMediaElement::UpdateSrcStreamTime() {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mSrcStreamPausedGraphTime == GRAPH_TIME_MAX);
-  MOZ_ASSERT(!mPaused);
-  MOZ_ASSERT(!mSrcStreamPlaybackEnded);
+
+  if (mSrcStreamPlaybackEnded) {
+    // We do a separate FireTimeUpdate() when this is set.
+    return;
+  }
+
   FireTimeUpdate(true);
 }
 
