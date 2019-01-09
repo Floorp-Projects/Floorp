@@ -121,6 +121,7 @@ class AntiTrackingCommon final {
     eTrackingProtection,
     eTrackingAnnotations,
     eFingerprinting,
+    eCryptomining,
   };
 
   // Check whether a top window URI is on the content blocking allow list.
