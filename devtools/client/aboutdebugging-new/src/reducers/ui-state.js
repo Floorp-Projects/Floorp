@@ -8,7 +8,7 @@ const {
   ADB_ADDON_STATUS_UPDATED,
   DEBUG_TARGET_COLLAPSIBILITY_UPDATED,
   NETWORK_LOCATIONS_UPDATED,
-  PAGE_SELECTED,
+  SELECT_PAGE_SUCCESS,
   TEMPORARY_EXTENSION_INSTALL_FAILURE,
   TEMPORARY_EXTENSION_INSTALL_SUCCESS,
   USB_RUNTIMES_SCAN_START,
@@ -51,7 +51,7 @@ function uiReducer(state = UiState(), action) {
       return Object.assign({}, state, { networkLocations: locations });
     }
 
-    case PAGE_SELECTED: {
+    case SELECT_PAGE_SUCCESS: {
       const { page, runtimeId } = action;
       return Object.assign({}, state,
         { selectedPage: page, selectedRuntime: runtimeId });
