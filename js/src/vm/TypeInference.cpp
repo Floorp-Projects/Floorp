@@ -4771,7 +4771,7 @@ void TypeZone::beginSweep() {
 }
 
 void TypeZone::endSweep(JSRuntime* rt) {
-  rt->gc.freeAllLifoBlocksAfterSweeping(&sweepTypeLifoAlloc.ref());
+  rt->gc.queueAllLifoBlocksForFree(&sweepTypeLifoAlloc.ref());
 }
 
 void TypeZone::clearAllNewScriptsOnOOM() {

@@ -928,7 +928,8 @@ GCRuntime::GCRuntime(JSRuntime* rt)
       lastMarkSlice(false),
       safeToYield(true),
       sweepOnBackgroundThread(false),
-      blocksToFreeAfterSweeping(
+      lifoBlocksToFree((size_t)JSContext::TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
+      lifoBlocksToFreeAfterMinorGC(
           (size_t)JSContext::TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
       sweepGroupIndex(0),
       sweepGroups(nullptr),
@@ -964,9 +965,7 @@ GCRuntime::GCRuntime(JSRuntime* rt)
       freeTask(rt),
       decommitTask(rt),
       nursery_(rt),
-      storeBuffer_(rt, nursery()),
-      blocksToFreeAfterMinorGC(
-          (size_t)JSContext::TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE) {
+      storeBuffer_(rt, nursery()) {
   setGCMode(JSGC_MODE_GLOBAL);
 }
 
@@ -2906,7 +2905,7 @@ void GCRuntime::updateRuntimePointersToRelocatedCells(AutoGCSession& session) {
   // Type inference may put more blocks here to free.
   {
     AutoLockHelperThreadState lock;
-    blocksToFreeAfterSweeping.ref().freeAll();
+    lifoBlocksToFree.ref().freeAll();
   }
 
   // Call callbacks to get the rest of the system to fixup other untraced
@@ -3542,8 +3541,6 @@ void GCRuntime::assertBackgroundSweepingFinished() {
   {
     AutoLockHelperThreadState lock;
     MOZ_ASSERT(backgroundSweepZones.ref().isEmpty());
-    MOZ_ASSERT(blocksToFreeAfterSweeping.ref().computedSizeOfExcludingThis() ==
-               0);
   }
 
   for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
@@ -3587,7 +3584,7 @@ void GCRuntime::sweepFromBackgroundThread(AutoLockHelperThreadState& lock) {
     ZoneList zones;
     zones.transferFrom(backgroundSweepZones.ref());
     LifoAlloc freeLifoAlloc(JSContext::TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
-    freeLifoAlloc.transferFrom(&blocksToFreeAfterSweeping.ref());
+    freeLifoAlloc.transferFrom(&lifoBlocksToFree.ref());
 
     AutoUnlockHelperThreadState unlock(lock);
     sweepBackgroundThings(zones, freeLifoAlloc);
@@ -3607,20 +3604,20 @@ void GCRuntime::waitBackgroundSweepEnd() {
   }
 }
 
-void GCRuntime::freeUnusedLifoBlocksAfterSweeping(LifoAlloc* lifo) {
+void GCRuntime::queueUnusedLifoBlocksForFree(LifoAlloc* lifo) {
   MOZ_ASSERT(JS::RuntimeHeapIsBusy());
   AutoLockHelperThreadState lock;
-  blocksToFreeAfterSweeping.ref().transferUnusedFrom(lifo);
+  lifoBlocksToFree.ref().transferUnusedFrom(lifo);
 }
 
-void GCRuntime::freeAllLifoBlocksAfterSweeping(LifoAlloc* lifo) {
+void GCRuntime::queueAllLifoBlocksForFree(LifoAlloc* lifo) {
   MOZ_ASSERT(JS::RuntimeHeapIsBusy());
   AutoLockHelperThreadState lock;
-  blocksToFreeAfterSweeping.ref().transferFrom(lifo);
+  lifoBlocksToFree.ref().transferFrom(lifo);
 }
 
-void GCRuntime::freeAllLifoBlocksAfterMinorGC(LifoAlloc* lifo) {
-  blocksToFreeAfterMinorGC.ref().transferFrom(lifo);
+void GCRuntime::queueAllLifoBlocksForFreeAfterMinorGC(LifoAlloc* lifo) {
+  lifoBlocksToFreeAfterMinorGC.ref().transferFrom(lifo);
 }
 
 void GCRuntime::startBackgroundFree() {
@@ -3648,12 +3645,12 @@ void BackgroundFreeTask::run() {
 void GCRuntime::freeFromBackgroundThread(AutoLockHelperThreadState& lock) {
   do {
     LifoAlloc lifoBlocks(JSContext::TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
-    lifoBlocks.transferFrom(&blocksToFreeAfterSweeping.ref());
+    lifoBlocks.transferFrom(&lifoBlocksToFree.ref());
 
     AutoUnlockHelperThreadState unlock(lock);
 
     lifoBlocks.freeAll();
-  } while (!blocksToFreeAfterSweeping.ref().isEmpty());
+  } while (!lifoBlocksToFree.ref().isEmpty());
 }
 
 struct IsAboutToBeFinalizedFunctor {
@@ -3921,7 +3918,7 @@ void GCRuntime::purgeRuntime() {
   }
 
   JSContext* cx = rt->mainContextFromOwnThread();
-  freeUnusedLifoBlocksAfterSweeping(&cx->tempLifoAlloc());
+  queueUnusedLifoBlocksForFree(&cx->tempLifoAlloc());
   cx->interpreterStack().purge(rt);
   cx->frontendCollectionPool().purge();
 
@@ -4309,6 +4306,7 @@ bool GCRuntime::beginMarkPhase(JS::gcreason::Reason reason,
     // Discard JIT code. For incremental collections, the sweep phase will
     // also discard JIT code.
     DiscardJITCodeForGC(rt);
+    freeQueuedLifoBlocksAfterMinorGC();
 
     /*
      * Relazify functions after discarding JIT code (we can't relazify
@@ -5810,9 +5808,6 @@ void GCRuntime::beginSweepPhase(JS::gcreason::Reason reason,
 
   gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::SWEEP);
 
-  sweepOnBackgroundThread = reason != JS::gcreason::DESTROY_RUNTIME &&
-                            !gcTracer.traceEnabled() && CanUseExtraThreads();
-
   hasMarkedGrayRoots = false;
 
   AssertNoWrappersInGrayList(rt);
@@ -6624,6 +6619,7 @@ void GCRuntime::endSweepPhase(bool destroyingRuntime) {
 
 void GCRuntime::beginCompactPhase() {
   MOZ_ASSERT(!isBackgroundSweeping());
+  assertBackgroundSweepingFinished();
 
   gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::COMPACT);
 
@@ -6802,7 +6798,7 @@ GCRuntime::IncrementalResult GCRuntime::resetIncrementalGC(
 
       {
         AutoLockHelperThreadState lock;
-        blocksToFreeAfterSweeping.ref().freeAll();
+        lifoBlocksToFree.ref().freeAll();
       }
 
       lastMarkSlice = false;
@@ -6914,6 +6910,11 @@ static bool ShouldCleanUpEverything(JS::gcreason::Reason reason,
   return IsShutdownGC(reason) || gckind == GC_SHRINK;
 }
 
+static bool ShouldSweepOnBackgroundThread(JS::gcreason::Reason reason) {
+  return reason != JS::gcreason::DESTROY_RUNTIME &&
+         !gcTracer.traceEnabled() && CanUseExtraThreads();
+}
+
 void GCRuntime::incrementalSlice(SliceBudget& budget,
                                  JS::gcreason::Reason reason,
                                  AutoGCSession& session) {
@@ -6971,6 +6972,7 @@ void GCRuntime::incrementalSlice(SliceBudget& budget,
       incMajorGcNumber();
       initialReason = reason;
       cleanUpEverything = ShouldCleanUpEverything(reason, invocationKind);
+      sweepOnBackgroundThread = ShouldSweepOnBackgroundThread(reason);
       isCompacting = shouldCompact();
       MOZ_ASSERT(!lastMarkSlice);
       rootsRemoved = false;
@@ -7784,7 +7786,7 @@ void GCRuntime::minorGC(JS::gcreason::Reason reason, gcstats::PhaseKind phase) {
   nursery().collect(reason);
   MOZ_ASSERT(nursery().isEmpty());
 
-  blocksToFreeAfterMinorGC.ref().freeAll();
+  freeQueuedLifoBlocksAfterMinorGC();
 
 #ifdef JS_GC_ZEAL
   if (hasZealMode(ZealMode::CheckHeapAfterGC)) {
@@ -7798,6 +7800,20 @@ void GCRuntime::minorGC(JS::gcreason::Reason reason, gcstats::PhaseKind phase) {
       maybeAllocTriggerZoneGC(zone, lock);
     }
   }
+}
+
+void GCRuntime::freeQueuedLifoBlocksAfterMinorGC() {
+  MOZ_ASSERT(nursery().isEmpty());
+  if (lifoBlocksToFreeAfterMinorGC.ref().isEmpty()) {
+    return;
+  }
+
+  {
+    AutoLockHelperThreadState lock;
+    lifoBlocksToFree.ref().transferFrom(&lifoBlocksToFreeAfterMinorGC.ref());
+  }
+
+  startBackgroundFree();
 }
 
 JS::AutoDisableGenerationalGC::AutoDisableGenerationalGC(JSContext* cx)
