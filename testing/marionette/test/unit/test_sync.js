@@ -9,6 +9,7 @@ const {
   Sleep,
   TimedPromise,
   waitForEvent,
+  waitForMessage,
 } = ChromeUtils.import("chrome://marionette/content/sync.js", {});
 
 const DEFAULT_TIMEOUT = 2000;
@@ -52,6 +53,36 @@ class MockElement {
     this.func = null;
     this.eventName = null;
     this.untrusted = false;
+  }
+}
+
+/**
+ * Mimic a message manager for sending messages.
+ */
+class MessageManager {
+  constructor() {
+    this.func = null;
+    this.message = null;
+  }
+
+  addMessageListener(message, func) {
+    this.func = func;
+    this.message = message;
+  }
+
+  removeMessageListener(message) {
+    this.func = null;
+    this.message = null;
+  }
+
+  send(message, data) {
+    if (this.func) {
+      this.func({
+        data,
+        message,
+        target: this,
+      });
+    }
   }
 }
 
@@ -351,5 +382,44 @@ add_task(async function test_waitForEvent_wantsUntrustedTypes() {
     let event = await clicked;
     equal(element, event.target);
     equal(expected_untrusted, event.untrusted);
+  }
+});
+
+add_task(async function test_waitForMessage_messageManagerAndMessageTypes() {
+  let messageManager = new MessageManager();
+
+  for (let manager of ["foo", 42, null, undefined, true, [], {}]) {
+    Assert.throws(() => waitForMessage(manager, "message"), /TypeError/);
+  }
+
+  for (let message of [42, null, undefined, true, [], {}]) {
+    Assert.throws(() => waitForEvent(messageManager, message), /TypeError/);
+  }
+
+  let data = {"foo": "bar"};
+  let sent = waitForMessage(messageManager, "message");
+  messageManager.send("message", data);
+  equal(data, await sent);
+});
+
+add_task(async function test_waitForMessage_checkFnTypes() {
+  let messageManager = new MessageManager();
+
+  for (let checkFn of ["foo", 42, true, [], {}]) {
+    Assert.throws(() => waitForMessage(
+        messageManager, "message", {checkFn}), /TypeError/);
+  }
+
+  let data1 = {"fo": "bar"};
+  let data2 = {"foo": "bar"};
+
+  for (let checkFn of [null, undefined, msg => "foo" in msg.data]) {
+    let expected_data = (checkFn == null) ? data1 : data2;
+
+    messageManager = new MessageManager();
+    let sent = waitForMessage(messageManager, "message", {checkFn});
+    messageManager.send("message", data1);
+    messageManager.send("message", data2);
+    equal(expected_data, await sent);
   }
 });
