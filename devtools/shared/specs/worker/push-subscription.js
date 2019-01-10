@@ -5,9 +5,8 @@
 
 const { generateActorSpec } = require("devtools/shared/protocol");
 
-const serviceWorkerSpec = generateActorSpec({
-  typeName: "serviceWorker",
+const pushSubscriptionSpec = generateActorSpec({
+  typeName: "pushSubscription",
 });
 
-exports.serviceWorkerSpec = serviceWorkerSpec;
-
+exports.pushSubscriptionSpec = pushSubscriptionSpec;

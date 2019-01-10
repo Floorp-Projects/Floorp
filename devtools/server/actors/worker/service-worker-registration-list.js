@@ -6,7 +6,8 @@
 
 const { Ci } = require("chrome");
 const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
-loader.lazyRequireGetter(this, "ServiceWorkerRegistrationActor", "devtools/server/actors/worker/service-worker", true);
+loader.lazyRequireGetter(this, "ServiceWorkerRegistrationActor",
+  "devtools/server/actors/worker/service-worker-registration", true);
 
 XPCOMUtils.defineLazyServiceGetter(
   this, "swm",

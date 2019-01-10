@@ -3,20 +3,25 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { serviceWorkerSpec } = require("devtools/shared/specs/worker/service-worker");
+const { pushSubscriptionSpec } =
+  require("devtools/shared/specs/worker/push-subscription");
 const { FrontClassWithSpec, registerFront } = require("devtools/shared/protocol");
 
-class ServiceWorkerFront extends FrontClassWithSpec(serviceWorkerSpec) {
-  get fetch() {
-    return this._form.fetch;
+class PushSubscriptionFront extends FrontClassWithSpec(pushSubscriptionSpec) {
+  get endpoint() {
+    return this._form.endpoint;
   }
 
-  get url() {
-    return this._form.url;
+  get pushCount() {
+    return this._form.pushCount;
   }
 
-  get state() {
-    return this._form.state;
+  get lastPush() {
+    return this._form.lastPush;
+  }
+
+  get quota() {
+    return this._form.quota;
   }
 
   form(form, detail) {
@@ -30,5 +35,5 @@ class ServiceWorkerFront extends FrontClassWithSpec(serviceWorkerSpec) {
   }
 }
 
-exports.ServiceWorkerFront = ServiceWorkerFront;
-registerFront(ServiceWorkerFront);
+exports.PushSubscriptionFront = PushSubscriptionFront;
+registerFront(PushSubscriptionFront);
