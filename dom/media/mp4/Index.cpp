@@ -111,156 +111,81 @@ already_AddRefed<MediaRawData> SampleIterator::GetNext() {
     return nullptr;
   }
 
-  MoofParser* moofParser = mIndex->mMoofParser.get();
-  if (!moofParser) {
-    // File is not fragmented, we can't have crypto, just early return.
-    Next();
-    return sample.forget();
-  }
-
-  SampleDescriptionEntry* sampleDescriptionEntry = GetSampleDescriptionEntry();
-  if (!sampleDescriptionEntry) {
-    // For the file to be valid the tfhd must reference a sample description
-    // entry.
-    return nullptr;
-  }
-
-  // Match scheme type box to enum representation.
-  CryptoScheme cryptoScheme = CryptoScheme::None;
-  // If a fragment references a sample description without crypto info them we
-  // treat it as unencrypted, even if other fragments may be encrypted.
-  if (sampleDescriptionEntry->mIsEncryptedEntry) {
-    if (!moofParser->mSinf.IsValid()) {
-      MOZ_ASSERT_UNREACHABLE(
-          "Sample description entry reports sample is encrypted, but no "
-          "sinf was parsed!");
-      return nullptr;
-    }
-    if (moofParser->mSinf.mDefaultEncryptionType == AtomType("cenc")) {
-      cryptoScheme = CryptoScheme::Cenc;
-      writer->mCrypto.mCryptoScheme = CryptoScheme::Cenc;
-      writer->mCrypto.mInitDataType = NS_LITERAL_STRING("cenc");
-    } else if (moofParser->mSinf.mDefaultEncryptionType == AtomType("cbcs")) {
-      cryptoScheme = CryptoScheme::Cbcs;
-      writer->mCrypto.mCryptoScheme = CryptoScheme::Cbcs;
-      writer->mCrypto.mInitDataType = NS_LITERAL_STRING("cbcs");
-    } else {
-      MOZ_ASSERT_UNREACHABLE(
-          "Sample description entry reports sample is encrypted, but no "
-          "scheme, or an unsupported shceme is in use!");
-      return nullptr;
-    }
-  }
-
-  if (mCurrentSample == 0) {
-    const nsTArray<Moof>& moofs = moofParser->Moofs();
+  if (mCurrentSample == 0 && mIndex->mMoofParser) {
+    const nsTArray<Moof>& moofs = mIndex->mMoofParser->Moofs();
+    MOZ_ASSERT(mCurrentMoof < moofs.Length());
     const Moof* currentMoof = &moofs[mCurrentMoof];
     if (!currentMoof->mPsshes.IsEmpty()) {
-      MOZ_ASSERT(sampleDescriptionEntry->mIsEncryptedEntry,
-                 "Unencrypted fragments should not contain pssh boxes");
-      MOZ_ASSERT(cryptoScheme != CryptoScheme::None);
       // This Moof contained crypto init data. Report that. We only report
       // the init data on the Moof's first sample, to avoid reporting it more
       // than once per Moof.
+      writer->mCrypto.mValid = true;
       writer->mCrypto.mInitDatas.AppendElements(currentMoof->mPsshes);
+      writer->mCrypto.mInitDataType = NS_LITERAL_STRING("cenc");
     }
   }
 
-  if (sampleDescriptionEntry->mIsEncryptedEntry) {
-    writer->mCrypto.mCryptoScheme = cryptoScheme;
+  if (!s->mCencRange.IsEmpty()) {
+    MoofParser* parser = mIndex->mMoofParser.get();
 
-    MOZ_ASSERT(writer->mCrypto.mKeyId.IsEmpty(),
-               "Sample should not already have a key ID");
-    MOZ_ASSERT(writer->mCrypto.mConstantIV.IsEmpty(),
-               "Sample should not already have a constant IV");
+    if (!parser || !parser->mSinf.IsValid()) {
+      return nullptr;
+    }
+
+    uint8_t ivSize = parser->mSinf.mDefaultIVSize;
+
+    // The size comes from an 8 bit field
+    AutoTArray<uint8_t, 256> cenc;
+    cenc.SetLength(s->mCencRange.Length());
+    if (!mIndex->mSource->ReadAt(s->mCencRange.mStart, cenc.Elements(),
+                                 cenc.Length(), &bytesRead) ||
+        bytesRead != cenc.Length()) {
+      return nullptr;
+    }
+    BufferReader reader(cenc);
+    writer->mCrypto.mValid = true;
+
     CencSampleEncryptionInfoEntry* sampleInfo = GetSampleEncryptionEntry();
     if (sampleInfo) {
       // Use sample group information if present, this supersedes track level
       // information.
       writer->mCrypto.mKeyId.AppendElements(sampleInfo->mKeyId);
-      writer->mCrypto.mIVSize = sampleInfo->mIVSize;
-      writer->mCrypto.mCryptByteBlock = sampleInfo->mCryptByteBlock;
-      writer->mCrypto.mSkipByteBlock = sampleInfo->mSkipByteBlock;
-      writer->mCrypto.mConstantIV.AppendElements(sampleInfo->mConsantIV);
-    } else {
-      // Use the crypto info from track metadata
-      writer->mCrypto.mKeyId.AppendElements(moofParser->mSinf.mDefaultKeyID,
-                                            16);
-      writer->mCrypto.mIVSize = moofParser->mSinf.mDefaultIVSize;
-      writer->mCrypto.mCryptByteBlock =
-          moofParser->mSinf.mDefaultCryptByteBlock;
-      writer->mCrypto.mSkipByteBlock = moofParser->mSinf.mDefaultSkipByteBlock;
-      writer->mCrypto.mConstantIV.AppendElements(
-          moofParser->mSinf.mDefaultConstantIV);
+      ivSize = sampleInfo->mIVSize;
     }
 
-    MOZ_ASSERT((writer->mCrypto.mIVSize == 0 &&
-                !writer->mCrypto.mConstantIV.IsEmpty()) ||
-                   !s->mCencRange.IsEmpty(),
-               "Crypto information should contain either a constant IV, or "
-               "have auxiliary information that will contain an IV");
-    // Parse auxiliary information if present
-    if (!s->mCencRange.IsEmpty()) {
-      // The size comes from an 8 bit field
-      AutoTArray<uint8_t, 256> cencAuxInfo;
-      cencAuxInfo.SetLength(s->mCencRange.Length());
-      if (!mIndex->mSource->ReadAt(s->mCencRange.mStart, cencAuxInfo.Elements(),
-                                   cencAuxInfo.Length(), &bytesRead) ||
-          bytesRead != cencAuxInfo.Length()) {
-        return nullptr;
-      }
-      BufferReader reader(cencAuxInfo);
-      if (!reader.ReadArray(writer->mCrypto.mIV, writer->mCrypto.mIVSize)) {
+    writer->mCrypto.mIVSize = ivSize;
+
+    if (!reader.ReadArray(writer->mCrypto.mIV, ivSize)) {
+      return nullptr;
+    }
+
+    auto res = reader.ReadU16();
+    if (res.isOk() && res.unwrap() > 0) {
+      uint16_t count = res.unwrap();
+
+      if (reader.Remaining() < count * 6) {
         return nullptr;
       }
 
-      // Parse the auxiliary information for subsample information
-      auto res = reader.ReadU16();
-      if (res.isOk() && res.unwrap() > 0) {
-        uint16_t count = res.unwrap();
-
-        if (reader.Remaining() < count * 6) {
+      for (size_t i = 0; i < count; i++) {
+        auto res_16 = reader.ReadU16();
+        auto res_32 = reader.ReadU32();
+        if (res_16.isErr() || res_32.isErr()) {
           return nullptr;
         }
-
-        for (size_t i = 0; i < count; i++) {
-          auto res_16 = reader.ReadU16();
-          auto res_32 = reader.ReadU32();
-          if (res_16.isErr() || res_32.isErr()) {
-            return nullptr;
-          }
-          writer->mCrypto.mPlainSizes.AppendElement(res_16.unwrap());
-          writer->mCrypto.mEncryptedSizes.AppendElement(res_32.unwrap());
-        }
-      } else {
-        // No subsample information means the entire sample is encrypted.
-        writer->mCrypto.mPlainSizes.AppendElement(0);
-        writer->mCrypto.mEncryptedSizes.AppendElement(sample->Size());
+        writer->mCrypto.mPlainSizes.AppendElement(res_16.unwrap());
+        writer->mCrypto.mEncryptedSizes.AppendElement(res_32.unwrap());
       }
+    } else {
+      // No subsample information means the entire sample is encrypted.
+      writer->mCrypto.mPlainSizes.AppendElement(0);
+      writer->mCrypto.mEncryptedSizes.AppendElement(sample->Size());
     }
   }
 
   Next();
 
   return sample.forget();
-}
-
-SampleDescriptionEntry* SampleIterator::GetSampleDescriptionEntry() {
-  nsTArray<Moof>& moofs = mIndex->mMoofParser->Moofs();
-  Moof& currentMoof = moofs[mCurrentMoof];
-  uint32_t sampleDescriptionIndex =
-      currentMoof.mTfhd.mDefaultSampleDescriptionIndex;
-  // Mp4 indices start at 1, shift down 1 so we index our array correctly.
-  sampleDescriptionIndex--;
-  FallibleTArray<SampleDescriptionEntry>& sampleDescriptions =
-      mIndex->mMoofParser->mSampleDescriptions;
-  if (sampleDescriptionIndex >= sampleDescriptions.Length()) {
-    MOZ_ASSERT_UNREACHABLE(
-        "Should always be able to find the appropriate sample description! "
-        "Malformed mp4?");
-    return nullptr;
-  }
-  return &sampleDescriptions[sampleDescriptionIndex];
 }
 
 CencSampleEncryptionInfoEntry* SampleIterator::GetSampleEncryptionEntry() {

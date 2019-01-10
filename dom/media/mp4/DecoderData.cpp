@@ -47,29 +47,14 @@ bool MP4AudioInfo::IsValid() const {
           mExtendedProfile > 0);
 }
 
-static MediaResult UpdateTrackProtectedInfo(mozilla::TrackInfo& aConfig,
-                                            const Mp4parseSinfInfo& aSinf) {
+static void UpdateTrackProtectedInfo(mozilla::TrackInfo& aConfig,
+                                     const Mp4parseSinfInfo& aSinf) {
   if (aSinf.is_encrypted != 0) {
-    if (aSinf.scheme_type == MP4_PARSE_ENCRYPTION_SCHEME_TYPE_CENC) {
-      aConfig.mCrypto.mCryptoScheme = CryptoScheme::Cenc;
-    } else if (aSinf.scheme_type == MP4_PARSE_ENCRYPTION_SCHEME_TYPE_CBCS) {
-      aConfig.mCrypto.mCryptoScheme = CryptoScheme::Cbcs;
-    } else {
-      // Unsupported encryption type;
-      return MediaResult(
-          NS_ERROR_DOM_MEDIA_METADATA_ERR,
-          RESULT_DETAIL(
-              "Unsupported encryption scheme encountered aSinf.scheme_type=%d",
-              static_cast<int>(aSinf.scheme_type)));
-    }
+    aConfig.mCrypto.mValid = true;
+    aConfig.mCrypto.mMode = aSinf.is_encrypted;
     aConfig.mCrypto.mIVSize = aSinf.iv_size;
     aConfig.mCrypto.mKeyId.AppendElements(aSinf.kid.data, aSinf.kid.length);
-    aConfig.mCrypto.mCryptByteBlock = aSinf.crypt_byte_block;
-    aConfig.mCrypto.mSkipByteBlock = aSinf.skip_byte_block;
-    aConfig.mCrypto.mConstantIV.AppendElements(aSinf.constant_iv.data,
-                                               aSinf.constant_iv.length);
   }
-  return NS_OK;
 }
 
 MediaResult MP4AudioInfo::Update(const Mp4parseTrackInfo* track,
@@ -102,9 +87,7 @@ MediaResult MP4AudioInfo::Update(const Mp4parseTrackInfo* track,
             RESULT_DETAIL(
                 "Multiple crypto info encountered while updating audio track"));
       }
-      auto rv =
-          UpdateTrackProtectedInfo(*this, audio->sample_info[i].protected_data);
-      NS_ENSURE_SUCCESS(rv, rv);
+      UpdateTrackProtectedInfo(*this, audio->sample_info[i].protected_data);
       hasCrypto = true;
     }
   }
@@ -188,9 +171,7 @@ MediaResult MP4VideoInfo::Update(const Mp4parseTrackInfo* track,
             RESULT_DETAIL(
                 "Multiple crypto info encountered while updating video track"));
       }
-      auto rv =
-          UpdateTrackProtectedInfo(*this, video->sample_info[i].protected_data);
-      NS_ENSURE_SUCCESS(rv, rv);
+      UpdateTrackProtectedInfo(*this, video->sample_info[i].protected_data);
       hasCrypto = true;
     }
   }

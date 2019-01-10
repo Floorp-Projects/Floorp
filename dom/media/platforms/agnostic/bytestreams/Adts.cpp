@@ -53,7 +53,7 @@ bool Adts::ConvertSample(uint16_t aChannelCount, int8_t aFrequencyIndex,
     return false;
   }
 
-  if (aSample->mCrypto.IsEncrypted()) {
+  if (aSample->mCrypto.mValid) {
     if (aSample->mCrypto.mPlainSizes.Length() == 0) {
       writer->mCrypto.mPlainSizes.AppendElement(kADTSHeaderSize);
       writer->mCrypto.mEncryptedSizes.AppendElement(aSample->Size() -
@@ -82,7 +82,7 @@ bool Adts::RevertSample(MediaRawData* aSample) {
   UniquePtr<MediaRawDataWriter> writer(aSample->CreateWriter());
   writer->PopFront(kADTSHeaderSize);
 
-  if (aSample->mCrypto.IsEncrypted()) {
+  if (aSample->mCrypto.mValid) {
     if (aSample->mCrypto.mPlainSizes.Length() > 0 &&
         writer->mCrypto.mPlainSizes[0] >= kADTSHeaderSize) {
       writer->mCrypto.mPlainSizes[0] -= kADTSHeaderSize;

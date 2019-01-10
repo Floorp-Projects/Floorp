@@ -36,9 +36,6 @@ class SampleIterator {
  private:
   Sample* Get();
 
-  // Gets the sample description entry for the current moof, or nullptr if
-  // called without a valid current moof.
-  SampleDescriptionEntry* GetSampleDescriptionEntry();
   CencSampleEncryptionInfoEntry* GetSampleEncryptionEntry();
 
   void Next();
