@@ -268,14 +268,14 @@ int PluginInstanceChild::GetQuirks() {
 NPError PluginInstanceChild::InternalGetNPObjectForValue(NPNVariable aValue,
                                                          NPObject** aObject) {
   PluginScriptableObjectChild* actor = nullptr;
-  NPError result = NPERR_GENERIC_ERROR;
+  NPError result = NPERR_NO_ERROR;
 
   switch (aValue) {
     case NPNVWindowNPObject:
       if (!(actor = mCachedWindowActor)) {
         PPluginScriptableObjectChild* actorProtocol;
-        if (CallNPN_GetValue_NPNVWindowNPObject(&actorProtocol, &result) &&
-            (result == NPERR_NO_ERROR)) {
+        CallNPN_GetValue_NPNVWindowNPObject(&actorProtocol, &result);
+        if (result == NPERR_NO_ERROR) {
           actor = mCachedWindowActor =
               static_cast<PluginScriptableObjectChild*>(actorProtocol);
           NS_ASSERTION(actor, "Null actor!");
@@ -288,8 +288,8 @@ NPError PluginInstanceChild::InternalGetNPObjectForValue(NPNVariable aValue,
     case NPNVPluginElementNPObject:
       if (!(actor = mCachedElementActor)) {
         PPluginScriptableObjectChild* actorProtocol;
-        if (CallNPN_GetValue_NPNVPluginElementNPObject(&actorProtocol, &result) &&
-            (result == NPERR_NO_ERROR)) {
+        CallNPN_GetValue_NPNVPluginElementNPObject(&actorProtocol, &result);
+        if (result == NPERR_NO_ERROR) {
           actor = mCachedElementActor =
               static_cast<PluginScriptableObjectChild*>(actorProtocol);
           NS_ASSERTION(actor, "Null actor!");
