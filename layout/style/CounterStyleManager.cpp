@@ -909,7 +909,7 @@ class DependentBuiltinCounterStyle final : public BuiltinCounterStyle {
       // only case fallback is accessed is that they are extended.
       // Since extending styles will cache the data themselves, we need
       // not cache it here.
-      return mManager->BuildCounterStyle(nsGkAtoms::cjkDecimal);
+      return mManager->BuildCounterStyle(nsGkAtoms::cjk_decimal);
     default:
       MOZ_ASSERT_UNREACHABLE("Not a valid dependent builtin style");
       return BuiltinCounterStyle::GetFallback();
