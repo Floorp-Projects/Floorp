@@ -568,6 +568,12 @@ var LoginHelper = {
     if (ChromeUtils.getClassName(element) !== "HTMLInputElement")
       return false;
 
+    if (!element.isConnected) {
+      // If the element isn't connected then it isn't visible to the user so
+      // shouldn't be considered. It must have been connected in the past.
+      return false;
+    }
+
     let fieldType = (element.hasAttribute("type") ?
                      element.getAttribute("type").toLowerCase() :
                      element.type);
