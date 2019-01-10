@@ -903,7 +903,7 @@ child:
     /**
      * Requests the content blocking log, which is sent back in response.
      */
-    async GetContentBlockingLog() returns(nsString log, bool success);
+    async GetContentBlockingLog() returns(nsCString log, bool success);
 
 parent:
     /** Records a history visit. */

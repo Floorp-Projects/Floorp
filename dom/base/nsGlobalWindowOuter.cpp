@@ -5037,8 +5037,8 @@ void nsGlobalWindowOuter::NotifyContentBlockingState(unsigned aState,
     return;
   }
   securityUI->GetState(&state);
-  nsAutoString origin;
-  nsContentUtils::GetUTFOrigin(aURIHint, origin);
+  nsAutoCString origin;
+  nsContentUtils::GetASCIIOrigin(aURIHint, origin);
 
   bool blockedValue = aBlocked;
   bool unblocked = false;
