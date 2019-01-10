@@ -72,8 +72,8 @@ inline void js::NurseryChunk::poisonAndInit(JSRuntime* rt, size_t extent) {
   MOZ_ASSERT(extent <= ChunkSize);
   MOZ_MAKE_MEM_UNDEFINED(this, extent);
 
-  JS_POISON(this, JS_FRESH_NURSERY_PATTERN, extent,
-            MemCheckKind::MakeUndefined);
+  Poison(this, JS_FRESH_NURSERY_PATTERN, extent,
+         MemCheckKind::MakeUndefined);
 
   new (&trailer) gc::ChunkTrailer(rt, &rt->gc.storeBuffer());
 }
@@ -84,7 +84,7 @@ inline void js::NurseryChunk::poisonAfterSweep(size_t extent) {
   // sanitizers will let us poison it.
   MOZ_MAKE_MEM_UNDEFINED(this, extent);
 
-  JS_POISON(this, JS_SWEPT_NURSERY_PATTERN, extent, MemCheckKind::MakeNoAccess);
+  Poison(this, JS_SWEPT_NURSERY_PATTERN, extent, MemCheckKind::MakeNoAccess);
 }
 
 /* static */ inline js::NurseryChunk* js::NurseryChunk::fromChunk(
@@ -374,7 +374,7 @@ void* js::Nursery::allocate(size_t size) {
   // to count it.
   stats().noteNurseryAlloc();
 
-  JS_EXTRA_POISON(thing, JS_ALLOCATED_NURSERY_PATTERN, size,
+  DebugOnlyPoison(thing, JS_ALLOCATED_NURSERY_PATTERN, size,
                   MemCheckKind::MakeUndefined);
 
 #ifdef JS_GC_ZEAL
