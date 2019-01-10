@@ -407,6 +407,12 @@
         "format": "strictRelativeUrl"
       },
       {
+        "id": "ExtensionFileUrl",
+        "type": "string",
+        "format": "strictRelativeUrl",
+        "pattern": "^\\w"
+      },
+      {
         "id": "ImageDataOrExtensionURL",
         "type": "string",
         "format": "imageDataOrStrictRelativeUrl"
@@ -545,11 +551,11 @@
           {
             "type": "object",
             "patternProperties": {
-              "^[1-9]\\d*$": { "$ref": "ExtensionURL" }
+              "^[1-9]\\d*$": { "$ref": "ExtensionFileUrl" }
             },
             "additionalProperties": false
           },
-          { "$ref": "ExtensionURL" }
+          { "$ref": "ExtensionFileUrl" }
         ]
       },
       {
