@@ -482,7 +482,20 @@ promise_test(async t => {
       'Animation with fill:backwards in delay phase reports ' +
       'that it is running on the compositor after delay phase');
 }, 'animation with fill:backwards in delay phase is running on the ' +
-   ' main-thread while it is in delay phase');
+   ' compositor while it is in delay phase');
+
+promise_test(async t => {
+  const animation = addDiv(t).animate({ opacity: [ 0, 1 ] }, 100 * MS_PER_SEC);
+  animation.playbackRate = -1;
+  animation.currentTime = 200 * MS_PER_SEC;
+
+  await waitForPaints();
+
+  assert_animation_is_running_on_compositor(animation,
+                'Animation with negative playback rate is runnning on the'
+                + ' compositor even before it reaches the active interval');
+}, 'animation with negative playback rate is sent to the compositor even in'
+   + ' after phase');
 
 promise_test(async t => {
   var div = addDiv(t);
@@ -1006,7 +1019,7 @@ promise_test(async t => {
       'background-color animation is not yet able to run on the compositor ' +
       'on WebRender');
   }
-}, 'backgound-color animation runs on the compositor');
+}, 'background-color animation runs on the compositor');
 
 promise_test(async t => {
   await SpecialPowers.pushPrefEnv({
@@ -1023,7 +1036,7 @@ promise_test(async t => {
   assert_animation_is_not_running_on_compositor(animation,
     'background-color animation should NOT be running on the compositor ' +
     'if the pref is disabled');
-}, 'backgound-color animation does not run on the compositor if the pref ' +
+}, 'background-color animation does not run on the compositor if the pref ' +
    'is disabled');
 
 </script>
