@@ -215,6 +215,17 @@ bool APZEventState::FireContextmenuEvents(
     const nsCOMPtr<nsIPresShell>& aPresShell, const CSSPoint& aPoint,
     const CSSToLayoutDeviceScale& aScale, Modifiers aModifiers,
     const nsCOMPtr<nsIWidget>& aWidget) {
+  // Synthesize mousemove event for allowing users to emulate to move mouse
+  // cursor over the element.  As a result, users can open submenu UI which
+  // is opened when mouse cursor is moved over a link (i.e., it's a case that
+  // users cannot stay in the page after tapping it).  So, this improves
+  // accessibility in websites which are designed for desktop.
+  // Note that we don't need to check whether mousemove event is consumed or
+  // not because Chrome also ignores the result.
+  APZCCallbackHelper::DispatchSynthesizedMouseEvent(
+      eMouseMove, 0 /* time */, aPoint * aScale, aModifiers, 0 /* clickCount */,
+      aWidget);
+
   // Converting the modifiers to DOM format for the DispatchMouseEvent call
   // is the most useless thing ever because nsDOMWindowUtils::SendMouseEvent
   // just converts them back to widget format, but that API has many callers,
