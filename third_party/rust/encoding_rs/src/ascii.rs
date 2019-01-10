@@ -31,7 +31,7 @@
 ))]
 use simd_funcs::*;
 
-cfg_if!{
+cfg_if! {
     if #[cfg(feature = "simd-accel")] {
         #[allow(unused_imports)]
         use ::std::intrinsics::unlikely;
@@ -90,10 +90,7 @@ macro_rules! ascii_alu {
      $src_unit:ty,
      $dst_unit:ty,
      $stride_fn:ident) => {
-        #[cfg_attr(
-            feature = "cargo-clippy",
-            allow(never_loop, cast_ptr_alignment)
-        )]
+        #[cfg_attr(feature = "cargo-clippy", allow(never_loop, cast_ptr_alignment))]
         #[inline(always)]
         pub unsafe fn $name(
             src: *const $src_unit,
@@ -186,11 +183,7 @@ macro_rules! basic_latin_alu {
      $stride_fn:ident) => {
         #[cfg_attr(
             feature = "cargo-clippy",
-            allow(
-                never_loop,
-                cast_ptr_alignment,
-                cast_lossless
-            )
+            allow(never_loop, cast_ptr_alignment, cast_lossless)
         )]
         #[inline(always)]
         pub unsafe fn $name(
@@ -285,11 +278,7 @@ macro_rules! latin1_alu {
     ($name:ident, $src_unit:ty, $dst_unit:ty, $stride_fn:ident) => {
         #[cfg_attr(
             feature = "cargo-clippy",
-            allow(
-                never_loop,
-                cast_ptr_alignment,
-                cast_lossless
-            )
+            allow(never_loop, cast_ptr_alignment, cast_lossless)
         )]
         #[inline(always)]
         pub unsafe fn $name(src: *const $src_unit, dst: *mut $dst_unit, len: usize) {

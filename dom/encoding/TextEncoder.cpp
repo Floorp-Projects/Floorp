@@ -24,8 +24,7 @@ void TextEncoder::Encode(JSContext* aCx, JS::Handle<JSObject*> aObj,
   // in the future.
   // Uint8Array::Create takes uint32_t as the length.
   CheckedInt<uint32_t> bufLen(aString.Length());
-  bufLen *= 3;
-  bufLen += 1;  // plus one is part of the contract for ConvertUTF16toUTF8
+  bufLen *= 3;  // from the contract for ConvertUTF16toUTF8
   if (!bufLen.isValid()) {
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return;
