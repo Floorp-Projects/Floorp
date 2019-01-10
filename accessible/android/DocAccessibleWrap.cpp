@@ -251,8 +251,13 @@ void DocAccessibleWrap::UpdateFocusPathBounds() {
                  SessionAccessibility::GetInstanceFor(this)) {
     nsTArray<AccessibleWrap*> accessibles(mFocusPath.Count());
     for (auto iter = mFocusPath.Iter(); !iter.Done(); iter.Next()) {
-      accessibles.AppendElement(
-          static_cast<AccessibleWrap*>(iter.Data().get()));
+      Accessible* accessible = iter.Data();
+      if (!accessible || accessible->IsDefunct()) {
+        MOZ_ASSERT_UNREACHABLE("Focus path cached accessible is gone.");
+        continue;
+      }
+
+      accessibles.AppendElement(static_cast<AccessibleWrap*>(accessible));
     }
 
     sessionAcc->UpdateCachedBounds(accessibles);

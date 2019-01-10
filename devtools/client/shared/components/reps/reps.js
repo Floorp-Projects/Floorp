@@ -3688,13 +3688,26 @@ function getClosestNonBucketNode(item) {
   return getClosestNonBucketNode(parent);
 }
 
-function getNonPrototypeParentGripValue(item) {
+function getParentGripNode(item) {
   const parentNode = getParent(item);
   if (!parentNode) {
     return null;
   }
 
-  const parentGripNode = getClosestGripNode(parentNode);
+  return getClosestGripNode(parentNode);
+}
+
+function getParentGripValue(item) {
+  const parentGripNode = getParentGripNode(item);
+  if (!parentGripNode) {
+    return null;
+  }
+
+  return getValue(parentGripNode);
+}
+
+function getNonPrototypeParentGripValue(item) {
+  const parentGripNode = getParentGripNode(item);
   if (!parentGripNode) {
     return null;
   }
@@ -3716,6 +3729,7 @@ module.exports = {
   getClosestGripNode,
   getClosestNonBucketNode,
   getParent,
+  getParentGripValue,
   getNonPrototypeParentGripValue,
   getNumericalPropertiesCount,
   getValue,
@@ -6406,11 +6420,11 @@ function releaseActors(state, client) {
   }
 }
 
-function invokeGetter(node, grip, getterName) {
+function invokeGetter(node, targetGrip, receiverId, getterName) {
   return async ({ dispatch, client, getState }) => {
     try {
-      const objectClient = client.createObjectClient(grip);
-      const result = await objectClient.getPropertyValue(getterName);
+      const objectClient = client.createObjectClient(targetGrip);
+      const result = await objectClient.getPropertyValue(getterName, receiverId);
       dispatch({
         type: "GETTER_INVOKED",
         data: {
@@ -7004,6 +7018,7 @@ const {
   nodeIsLongString,
   nodeHasFullText,
   nodeHasGetter,
+  getParentGripValue,
   getNonPrototypeParentGripValue
 } = Utils.node;
 
@@ -7078,10 +7093,11 @@ class ObjectInspectorItem extends Component {
       }
 
       if (nodeHasGetter(item)) {
-        const parentGrip = getNonPrototypeParentGripValue(item);
-        if (parentGrip) {
+        const targetGrip = getParentGripValue(item);
+        const receiverGrip = getNonPrototypeParentGripValue(item);
+        if (targetGrip && receiverGrip) {
           Object.assign(repProps, {
-            onInvokeGetterButtonClick: () => this.props.invokeGetter(item, parentGrip, item.name)
+            onInvokeGetterButtonClick: () => this.props.invokeGetter(item, targetGrip, receiverGrip.actor, item.name)
           });
         }
       }

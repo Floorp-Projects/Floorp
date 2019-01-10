@@ -29498,10 +29498,7 @@ pub static JIS0208_RANGE_TRIPLES: [u16; 54] = [
     0x29DC, 0x000A, 0x2170, 0x29E6, 0x000A, 0x2160,
 ];
 
-#[cfg(all(
-    feature = "less-slow-kanji-encode",
-    not(feature = "fast-kanji-encode")
-))]
+#[cfg(all(feature = "less-slow-kanji-encode", not(feature = "fast-kanji-encode")))]
 static JIS0208_LEVEL1_KANJI_CODE_POINTS: [u16; 2965] = [
     0x4E00, 0x4E01, 0x4E03, 0x4E07, 0x4E08, 0x4E09, 0x4E0A, 0x4E0B, 0x4E0D, 0x4E0E, 0x4E11, 0x4E14,
     0x4E16, 0x4E18, 0x4E19, 0x4E1E, 0x4E21, 0x4E26, 0x4E2D, 0x4E32, 0x4E38, 0x4E39, 0x4E3B, 0x4E43,
@@ -29753,10 +29750,7 @@ static JIS0208_LEVEL1_KANJI_CODE_POINTS: [u16; 2965] = [
     0x9F8D,
 ];
 
-#[cfg(all(
-    feature = "less-slow-kanji-encode",
-    not(feature = "fast-kanji-encode")
-))]
+#[cfg(all(feature = "less-slow-kanji-encode", not(feature = "fast-kanji-encode")))]
 static JIS0208_LEVEL1_KANJI_SHIFT_JIS_BYTES: [[u8; 2]; 2965] = [
     [0x88, 0xEA],
     [0x92, 0x9A],
@@ -113967,10 +113961,7 @@ pub fn jis0208_kanji_shift_jis_encode(bmp: u16) -> Option<(u8, u8)> {
     Some((lead | 0x80, trail))
 }
 
-#[cfg(any(
-    feature = "less-slow-kanji-encode",
-    feature = "fast-kanji-encode"
-))]
+#[cfg(any(feature = "less-slow-kanji-encode", feature = "fast-kanji-encode"))]
 #[inline(always)]
 fn shift_jis_to_euc_jp(tuple: (u8, u8)) -> (u8, u8) {
     let (shift_jis_lead, shift_jis_trail) = tuple;
@@ -114012,10 +114003,7 @@ pub fn jis0208_kanji_euc_jp_encode(bmp: u16) -> Option<(u8, u8)> {
     Some(shift_jis_to_euc_jp((lead, trail)))
 }
 
-#[cfg(any(
-    feature = "less-slow-kanji-encode",
-    feature = "fast-kanji-encode"
-))]
+#[cfg(any(feature = "less-slow-kanji-encode", feature = "fast-kanji-encode"))]
 #[inline(always)]
 fn shift_jis_to_iso_2022_jp(tuple: (u8, u8)) -> (u8, u8) {
     let (shift_jis_lead, shift_jis_trail) = tuple;
@@ -114057,10 +114045,7 @@ pub fn jis0208_kanji_iso_2022_jp_encode(bmp: u16) -> Option<(u8, u8)> {
     Some(shift_jis_to_iso_2022_jp((lead, trail)))
 }
 
-#[cfg(not(any(
-    feature = "less-slow-kanji-encode",
-    feature = "fast-kanji-encode"
-)))]
+#[cfg(not(any(feature = "less-slow-kanji-encode", feature = "fast-kanji-encode")))]
 #[inline(always)]
 pub fn jis0208_level1_kanji_shift_jis_encode(bmp: u16) -> Option<(u8, u8)> {
     position(&JIS0208_LEVEL1_KANJI[..], bmp).map(|kanji_pointer| {
@@ -114073,10 +114058,7 @@ pub fn jis0208_level1_kanji_shift_jis_encode(bmp: u16) -> Option<(u8, u8)> {
     })
 }
 
-#[cfg(all(
-    feature = "less-slow-kanji-encode",
-    not(feature = "fast-kanji-encode")
-))]
+#[cfg(all(feature = "less-slow-kanji-encode", not(feature = "fast-kanji-encode")))]
 #[inline(always)]
 pub fn jis0208_level1_kanji_shift_jis_encode(bmp: u16) -> Option<(u8, u8)> {
     match JIS0208_LEVEL1_KANJI_CODE_POINTS.binary_search(&bmp) {
@@ -114088,10 +114070,7 @@ pub fn jis0208_level1_kanji_shift_jis_encode(bmp: u16) -> Option<(u8, u8)> {
     }
 }
 
-#[cfg(not(any(
-    feature = "less-slow-kanji-encode",
-    feature = "fast-kanji-encode"
-)))]
+#[cfg(not(any(feature = "less-slow-kanji-encode", feature = "fast-kanji-encode")))]
 #[inline(always)]
 pub fn jis0208_level1_kanji_euc_jp_encode(bmp: u16) -> Option<(u8, u8)> {
     position(&JIS0208_LEVEL1_KANJI[..], bmp).map(|kanji_pointer| {
@@ -114101,19 +114080,13 @@ pub fn jis0208_level1_kanji_euc_jp_encode(bmp: u16) -> Option<(u8, u8)> {
     })
 }
 
-#[cfg(all(
-    feature = "less-slow-kanji-encode",
-    not(feature = "fast-kanji-encode")
-))]
+#[cfg(all(feature = "less-slow-kanji-encode", not(feature = "fast-kanji-encode")))]
 #[inline(always)]
 pub fn jis0208_level1_kanji_euc_jp_encode(bmp: u16) -> Option<(u8, u8)> {
     jis0208_level1_kanji_shift_jis_encode(bmp).map(shift_jis_to_euc_jp)
 }
 
-#[cfg(not(any(
-    feature = "less-slow-kanji-encode",
-    feature = "fast-kanji-encode"
-)))]
+#[cfg(not(any(feature = "less-slow-kanji-encode", feature = "fast-kanji-encode")))]
 #[inline(always)]
 pub fn jis0208_level1_kanji_iso_2022_jp_encode(bmp: u16) -> Option<(u8, u8)> {
     position(&JIS0208_LEVEL1_KANJI[..], bmp).map(|kanji_pointer| {
@@ -114123,10 +114096,7 @@ pub fn jis0208_level1_kanji_iso_2022_jp_encode(bmp: u16) -> Option<(u8, u8)> {
     })
 }
 
-#[cfg(all(
-    feature = "less-slow-kanji-encode",
-    not(feature = "fast-kanji-encode")
-))]
+#[cfg(all(feature = "less-slow-kanji-encode", not(feature = "fast-kanji-encode")))]
 #[inline(always)]
 pub fn jis0208_level1_kanji_iso_2022_jp_encode(bmp: u16) -> Option<(u8, u8)> {
     jis0208_level1_kanji_shift_jis_encode(bmp).map(shift_jis_to_iso_2022_jp)
