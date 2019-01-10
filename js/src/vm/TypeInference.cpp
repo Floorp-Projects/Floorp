@@ -4469,9 +4469,9 @@ void ConstraintTypeSet::sweep(const AutoSweepBase& sweep, Zone* zone) {
     }
     setBaseObjectCount(objectCount);
     // Note: -1/+1 to also poison the capacity field.
-    Poison(oldArray - 1, JS_SWEPT_TI_PATTERN,
-           (oldCapacity + 1) * sizeof(oldArray[0]),
-           MemCheckKind::MakeUndefined);
+    AlwaysPoison(oldArray - 1, JS_SWEPT_TI_PATTERN,
+                 (oldCapacity + 1) * sizeof(oldArray[0]),
+                 MemCheckKind::MakeUndefined);
   } else if (objectCount == 1) {
     ObjectKey* key = (ObjectKey*)objectSet;
     if (!IsObjectKeyAboutToBeFinalized(&key)) {
@@ -4507,8 +4507,8 @@ void ConstraintTypeSet::sweep(const AutoSweepBase& sweep, Zone* zone) {
       }
     }
     TypeConstraint* next = constraint->next();
-    Poison(constraint, JS_SWEPT_TI_PATTERN, sizeof(TypeConstraint),
-           MemCheckKind::MakeUndefined);
+    AlwaysPoison(constraint, JS_SWEPT_TI_PATTERN, sizeof(TypeConstraint),
+                 MemCheckKind::MakeUndefined);
     constraint = next;
   }
 }
@@ -4585,8 +4585,8 @@ void ObjectGroup::sweep(const AutoSweepObjectGroup& sweep) {
 
     auto poisonArray = mozilla::MakeScopeExit([oldArray, oldCapacity] {
       size_t size = sizeof(Property*) * (oldCapacity + 1);
-      Poison(oldArray - 1, JS_SWEPT_TI_PATTERN, size,
-             MemCheckKind::MakeUndefined);
+      AlwaysPoison(oldArray - 1, JS_SWEPT_TI_PATTERN, size,
+                   MemCheckKind::MakeUndefined);
     });
 
     unsigned oldPropertyCount = propertyCount;
@@ -4607,14 +4607,14 @@ void ObjectGroup::sweep(const AutoSweepObjectGroup& sweep) {
            * (i.e. for the definite properties analysis). The contents of
            * these type sets will be regenerated as necessary.
            */
-          Poison(prop, JS_SWEPT_TI_PATTERN, sizeof(Property),
-                 MemCheckKind::MakeUndefined);
+          AlwaysPoison(prop, JS_SWEPT_TI_PATTERN, sizeof(Property),
+                       MemCheckKind::MakeUndefined);
           continue;
         }
 
         Property* newProp = typeLifoAlloc.new_<Property>(*prop);
-        Poison(prop, JS_SWEPT_TI_PATTERN, sizeof(Property),
-               MemCheckKind::MakeUndefined);
+        AlwaysPoison(prop, JS_SWEPT_TI_PATTERN, sizeof(Property),
+                     MemCheckKind::MakeUndefined);
         if (newProp) {
           Property** pentry = TypeHashSet::Insert<jsid, Property, Property>(
               typeLifoAlloc, propertySet, propertyCount, newProp->id);
@@ -4640,13 +4640,13 @@ void ObjectGroup::sweep(const AutoSweepObjectGroup& sweep) {
     if (singleton() && !prop->types.constraintList(sweep) &&
         !zone()->isPreservingCode()) {
       // Skip, as above.
-      Poison(prop, JS_SWEPT_TI_PATTERN, sizeof(Property),
-             MemCheckKind::MakeUndefined);
+      AlwaysPoison(prop, JS_SWEPT_TI_PATTERN, sizeof(Property),
+                   MemCheckKind::MakeUndefined);
       clearProperties(sweep);
     } else {
       Property* newProp = typeLifoAlloc.new_<Property>(*prop);
-      Poison(prop, JS_SWEPT_TI_PATTERN, sizeof(Property),
-             MemCheckKind::MakeUndefined);
+      AlwaysPoison(prop, JS_SWEPT_TI_PATTERN, sizeof(Property),
+                   MemCheckKind::MakeUndefined);
       if (newProp) {
         propertySet = (Property**)newProp;
         newProp->types.sweep(sweep, zone());
