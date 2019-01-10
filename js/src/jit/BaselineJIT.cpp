@@ -55,8 +55,8 @@ void ICStubSpace::freeAllAfterMinorGC(Zone* zone) {
   if (zone->isAtomsZone()) {
     MOZ_ASSERT(allocator_.isEmpty());
   } else {
-    zone->runtimeFromMainThread()->gc.freeAllLifoBlocksAfterMinorGC(
-        &allocator_);
+    JSRuntime* rt = zone->runtimeFromMainThread();
+    rt->gc.queueAllLifoBlocksForFreeAfterMinorGC(&allocator_);
   }
 }
 
