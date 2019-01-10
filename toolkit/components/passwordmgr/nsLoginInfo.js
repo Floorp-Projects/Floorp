@@ -28,8 +28,8 @@ nsLoginInfo.prototype = {
   passwordField: null,
 
   init(aHostname, aFormSubmitURL, aHttpRealm,
-                  aUsername, aPassword,
-                  aUsernameField, aPasswordField) {
+       aUsername, aPassword,
+       aUsernameField, aPasswordField) {
     this.hostname      = aHostname;
     this.formSubmitURL = aFormSubmitURL;
     this.httpRealm     = aHttpRealm;

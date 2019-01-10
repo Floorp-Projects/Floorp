@@ -46,7 +46,7 @@ function LoginManagerStorage_mozStorage() { }
 LoginManagerStorage_mozStorage.prototype = {
   classID: Components.ID("{8c2023b9-175c-477e-9761-44ae7b549756}"),
   QueryInterface: ChromeUtils.generateQI([Ci.nsILoginManagerStorage,
-                                           Ci.nsIInterfaceRequestor]),
+                                          Ci.nsIInterfaceRequestor]),
 
   _xpcom_factory: XPCOMUtils.generateSingletonFactory(this.LoginManagerStorage_mozStorage),
 
@@ -124,16 +124,16 @@ LoginManagerStorage_mozStorage.prototype = {
         columns: ["hostname", "formSubmitURL"],
       },
       moz_logins_hostname_httpRealm_index: {
-          table: "moz_logins",
-          columns: ["hostname", "httpRealm"],
+        table: "moz_logins",
+        columns: ["hostname", "httpRealm"],
       },
       moz_logins_guid_index: {
-          table: "moz_logins",
-          columns: ["guid"],
+        table: "moz_logins",
+        columns: ["guid"],
       },
       moz_logins_encType_index: {
-          table: "moz_logins",
-          columns: ["encType"],
+        table: "moz_logins",
+        columns: ["encType"],
       },
     },
   },
@@ -853,7 +853,7 @@ LoginManagerStorage_mozStorage.prototype = {
       case "profile-before-change":
         Services.obs.removeObserver(this, "profile-before-change");
         this._dbClose();
-      break;
+        break;
     }
   },
 

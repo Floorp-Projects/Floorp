@@ -72,12 +72,12 @@ add_task(async function test_edit_username() {
                                                        "popupshown",
                                                        (event) => event.target == PopupNotifications.panel);
       await ContentTask.spawn(browser, testCase.usernameInPage,
-        async function(usernameInPage) {
-          let doc = content.document;
-          doc.getElementById("form-basic-username").value = usernameInPage;
-          doc.getElementById("form-basic-password").value = "password";
-          doc.getElementById("form-basic").submit();
-        });
+                              async function(usernameInPage) {
+                                let doc = content.document;
+                                doc.getElementById("form-basic-username").value = usernameInPage;
+                                doc.getElementById("form-basic-password").value = "password";
+                                doc.getElementById("form-basic").submit();
+                              });
       await promiseShown;
       let notificationElement = PopupNotifications.panel.childNodes[0];
       // Style flush to make sure binding is attached
@@ -100,7 +100,7 @@ add_task(async function test_edit_username() {
       // of operation we expect.
       let expectedNotification = expectModifyLogin ? "modifyLogin" : "addLogin";
       let promiseLogin = TestUtils.topicObserved("passwordmgr-storage-changed",
-                         (_, data) => data == expectedNotification);
+                                                 (_, data) => data == expectedNotification);
       notificationElement.button.doCommand();
       let [result] = await promiseLogin;
 
