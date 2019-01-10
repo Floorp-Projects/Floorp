@@ -58,7 +58,6 @@ def replace_malloc(value, jemalloc, milestone, build_project):
 
 set_config('MOZ_REPLACE_MALLOC', replace_malloc)
 set_define('MOZ_REPLACE_MALLOC', replace_malloc)
-add_old_configure_assignment('MOZ_REPLACE_MALLOC', replace_malloc)
 
 
 @depends(replace_malloc, build_project)
