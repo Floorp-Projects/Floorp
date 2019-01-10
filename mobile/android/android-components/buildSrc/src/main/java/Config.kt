@@ -6,14 +6,16 @@
 // This "componentsVersion" number is defined in ".buildconfig.yml" and should follow
 // semantic versioning (MAJOR.MINOR.PATCH). See https://semver.org/
 class Config(val componentsVersion: String) {
-    // Maven group ID used for all components
-    val componentsGroupId = "org.mozilla.components"
+    companion object {
+        // Maven group ID used for all components
+        const val componentsGroupId = "org.mozilla.components"
 
-    // Synchronized build configuration for all modules
-    val compileSdkVersion = 28
-    val minSdkVersion = 21
-    val targetSdkVersion = 28
+        // Synchronized build configuration for all modules
+        const val compileSdkVersion = 28
+        const val minSdkVersion = 21
+        const val targetSdkVersion = 28
 
-    // Component lib-dataprotect requires functionality from API 23.
-    val minSdkVersion_dataprotect = 23
+        // Component lib-dataprotect requires functionality from API 23.
+        const val minSdkVersion_dataprotect = 23
+    }
 }
