@@ -4695,7 +4695,7 @@ void js::PromiseLookup::initialize(JSContext* cx) {
 }
 
 void js::PromiseLookup::reset() {
-  JS_POISON(this, 0xBB, sizeof(*this), MemCheckKind::MakeUndefined);
+  AlwaysPoison(this, 0xBB, sizeof(*this), MemCheckKind::MakeUndefined);
   state_ = State::Uninitialized;
 }
 
