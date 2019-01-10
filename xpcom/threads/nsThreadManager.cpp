@@ -585,6 +585,16 @@ void nsThreadManager::ResumeInputEventPrioritization() {
   mMainThread->ResumeInputEventPrioritization();
 }
 
+// static
+bool nsThreadManager::MainThreadHasPendingHighPriorityEvents() {
+  MOZ_ASSERT(NS_IsMainThread());
+  bool retVal = false;
+  if (get().mMainThread) {
+    get().mMainThread->HasPendingHighPriorityEvents(&retVal);
+  }
+  return retVal;
+}
+
 NS_IMETHODIMP
 nsThreadManager::IdleDispatchToMainThread(nsIRunnable* aEvent,
                                           uint32_t aTimeout) {

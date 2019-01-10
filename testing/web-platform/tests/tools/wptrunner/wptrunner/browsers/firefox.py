@@ -358,7 +358,7 @@ class FirefoxBrowser(Browser):
             mozleak.process_leak_log(
                 self.leak_report_file,
                 leak_thresholds=self.mozleak_thresholds,
-                ignore_missing_leaks=["geckomediaplugin"],
+                ignore_missing_leaks=["gmplugin"],
                 log=self.logger,
                 stack_fixer=self.stack_fixer,
                 scope=self.group_metadata.get("scope"),

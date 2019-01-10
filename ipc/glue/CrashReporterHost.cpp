@@ -13,6 +13,34 @@
 #include "mozilla/Telemetry.h"
 #include "nsIAsyncShutdown.h"
 #include "nsICrashService.h"
+#include "nsXULAppAPI.h"
+
+// Consistency checking for nsICrashService constants.  We depend on the
+// equivalence between nsICrashService values and GeckoProcessType values
+// in the code below.  Making them equal also ensures that if new process
+// types are added, people will know they may need to add crash reporting
+// support in various places because compilation errors will be triggered here.
+static_assert(nsICrashService::PROCESS_TYPE_MAIN == (int)GeckoProcessType_Default,
+              "GeckoProcessType enum is out of sync with nsICrashService!");
+static_assert(nsICrashService::PROCESS_TYPE_PLUGIN == (int)GeckoProcessType_Plugin,
+              "GeckoProcessType enum is out of sync with nsICrashService!");
+static_assert(nsICrashService::PROCESS_TYPE_CONTENT == (int)GeckoProcessType_Content,
+              "GeckoProcessType enum is out of sync with nsICrashService!");
+static_assert(nsICrashService::PROCESS_TYPE_IPDLUNITTEST == (int)GeckoProcessType_IPDLUnitTest,
+              "GeckoProcessType enum is out of sync with nsICrashService!");
+static_assert(nsICrashService::PROCESS_TYPE_GMPLUGIN == (int)GeckoProcessType_GMPlugin,
+              "GeckoProcessType enum is out of sync with nsICrashService!");
+static_assert(nsICrashService::PROCESS_TYPE_GPU == (int)GeckoProcessType_GPU,
+              "GeckoProcessType enum is out of sync with nsICrashService!");
+static_assert(nsICrashService::PROCESS_TYPE_VR == (int)GeckoProcessType_VR,
+              "GeckoProcessType enum is out of sync with nsICrashService!");
+static_assert(nsICrashService::PROCESS_TYPE_RDD == (int)GeckoProcessType_RDD,
+              "GeckoProcessType enum is out of sync with nsICrashService!");
+// Add new static asserts here if you add more process types.
+// Update this static assert as well.
+static_assert(nsICrashService::PROCESS_TYPE_RDD + 1 == (int)GeckoProcessType_End,
+              "GeckoProcessType enum is out of sync with nsICrashService!");
+
 
 namespace mozilla {
 namespace ipc {
@@ -77,23 +105,24 @@ bool CrashReporterHost::FinalizeCrashReport() {
   CrashReporter::AnnotationTable annotations;
 
   nsAutoCString type;
-  switch (mProcessType) {
-    case GeckoProcessType_Content:
-      type = NS_LITERAL_CSTRING("content");
-      break;
-    case GeckoProcessType_Plugin:
-    case GeckoProcessType_GMPlugin:
-      type = NS_LITERAL_CSTRING("plugin");
-      break;
-    case GeckoProcessType_GPU:
-      type = NS_LITERAL_CSTRING("gpu");
-      break;
-    case GeckoProcessType_RDD:
-      type = NS_LITERAL_CSTRING("rdd");
-      break;
+  // The gecko media plugin and normal plugin processes are lumped together
+  // as a historical artifact.
+  if (mProcessType == GeckoProcessType_GMPlugin) {
+    type.AssignLiteral("plugin");
+  } else {
+    // This check will pick up some cases that will never happen (e.g. IPDL
+    // unit tests), but that's OK.
+    switch (mProcessType) {
+#define GECKO_PROCESS_TYPE(enum_name, string_name, xre_name) \
+      case GeckoProcessType_##enum_name: \
+        type.AssignLiteral(string_name); \
+        break;
+#include "mozilla/GeckoProcessTypes.h"
+#undef GECKO_PROCESS_TYPE
     default:
       NS_ERROR("unknown process type");
       break;
+    }
   }
   annotations[CrashReporter::Annotation::ProcessType] = type;
 
@@ -142,33 +171,32 @@ bool CrashReporterHost::FinalizeCrashReport() {
   nsCString telemetryKey;
 
   switch (aProcessType) {
-    case GeckoProcessType_Content:
-      processType = nsICrashService::PROCESS_TYPE_CONTENT;
-      telemetryKey.AssignLiteral("content");
-      break;
-    case GeckoProcessType_Plugin:
-      processType = nsICrashService::PROCESS_TYPE_PLUGIN;
-      if (aCrashType == nsICrashService::CRASH_TYPE_HANG) {
-        telemetryKey.AssignLiteral("pluginhang");
-      } else {
-        telemetryKey.AssignLiteral("plugin");
-      }
-      break;
-    case GeckoProcessType_GMPlugin:
-      processType = nsICrashService::PROCESS_TYPE_GMPLUGIN;
-      telemetryKey.AssignLiteral("gmplugin");
-      break;
-    case GeckoProcessType_GPU:
-      processType = nsICrashService::PROCESS_TYPE_GPU;
-      telemetryKey.AssignLiteral("gpu");
-      break;
-    case GeckoProcessType_RDD:
-      processType = nsICrashService::PROCESS_TYPE_RDD;
-      telemetryKey.AssignLiteral("rdd");
-      break;
-    default:
+    case GeckoProcessType_IPDLUnitTest:
+    case GeckoProcessType_Default:
       NS_ERROR("unknown process type");
       return;
+    default:
+      processType = (int)aProcessType;
+      break;
+  }
+
+  if (aProcessType == GeckoProcessType_Plugin &&
+      aCrashType == nsICrashService::CRASH_TYPE_HANG) {
+    telemetryKey.AssignLiteral("pluginhang");
+  } else {
+    switch (aProcessType) {
+#define GECKO_PROCESS_TYPE(enum_name, string_name, xre_name) \
+      case GeckoProcessType_##enum_name:                     \
+        telemetryKey.AssignLiteral(string_name);             \
+        break;
+#include "mozilla/GeckoProcessTypes.h"
+#undef GECKO_PROCESS_TYPE
+      // We can't really hit this, thanks to the above switch, but having it here
+      // will placate the compiler.
+      default:
+        NS_ERROR("unknown process type");
+        return;
+    }
   }
 
   RefPtr<Promise> promise;

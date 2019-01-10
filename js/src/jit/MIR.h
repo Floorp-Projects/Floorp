@@ -10727,20 +10727,15 @@ class MGuardToClass : public MUnaryInstruction,
                       public SingleObjectPolicy::Data {
   const Class* class_;
 
-  MGuardToClass(MDefinition* object, const Class* clasp, MIRType resultType)
+  MGuardToClass(MDefinition* object, const Class* clasp)
       : MUnaryInstruction(classOpcode, object), class_(clasp) {
-    MOZ_ASSERT(object->type() == MIRType::Object ||
-               (object->type() == MIRType::Value &&
-                object->mightBeType(MIRType::Object)));
-    MOZ_ASSERT(resultType == MIRType::Object ||
-               resultType == MIRType::ObjectOrNull);
-    setResultType(resultType);
+    MOZ_ASSERT(object->type() == MIRType::Object);
+    setResultType(MIRType::Object);
     setMovable();
-    if (resultType == MIRType::Object) {
-      // We will bail out if the class type is incorrect,
-      // so we need to ensure we don't eliminate this instruction
-      setGuard();
-    }
+
+    // We will bail out if the class type is incorrect, so we need to ensure we
+    // don't eliminate this instruction
+    setGuard();
   }
 
  public:

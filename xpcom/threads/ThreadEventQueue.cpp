@@ -164,6 +164,19 @@ bool ThreadEventQueue<InnerQueueT>::HasPendingEvent() {
 }
 
 template <class InnerQueueT>
+bool ThreadEventQueue<InnerQueueT>::HasPendingHighPriorityEvents() {
+  MutexAutoLock lock(mLock);
+
+  // We always get events from the topmost queue when there are nested queues.
+  if (mNestedQueues.IsEmpty()) {
+    return mBaseQueue->HasPendingHighPriorityEvents(lock);
+  } else {
+    return mNestedQueues.LastElement().mQueue->HasPendingHighPriorityEvents(
+        lock);
+  }
+}
+
+template <class InnerQueueT>
 bool ThreadEventQueue<InnerQueueT>::ShutdownIfNoPendingEvents() {
   MutexAutoLock lock(mLock);
   if (mNestedQueues.IsEmpty() && mBaseQueue->IsEmpty(lock)) {

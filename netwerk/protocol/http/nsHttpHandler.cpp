@@ -498,7 +498,7 @@ nsresult nsHttpHandler::Init() {
   }
 
   // Generating the spoofed User Agent for fingerprinting resistance.
-  rv = nsRFPService::GetSpoofedUserAgent(mSpoofedUserAgent);
+  rv = nsRFPService::GetSpoofedUserAgent(mSpoofedUserAgent, true);
   if (NS_FAILED(rv)) {
     // Empty mSpoofedUserAgent to make sure the unsuccessful spoofed UA string
     // will not be used anywhere.
