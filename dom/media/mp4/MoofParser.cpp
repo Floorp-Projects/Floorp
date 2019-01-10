@@ -1068,28 +1068,47 @@ Result<Ok, nsresult> CencSampleEncryptionInfoEntry::Init(BoxReader& aReader) {
   // Skip a reserved byte.
   MOZ_TRY(aReader->ReadU8());
 
-  uint8_t possiblePatternInfo;
-  MOZ_TRY_VAR(possiblePatternInfo, aReader->ReadU8());
-  uint8_t flag;
-  MOZ_TRY_VAR(flag, aReader->ReadU8());
+  uint8_t pattern;
+  MOZ_TRY_VAR(pattern, aReader->ReadU8());
+  mCryptByteBlock = pattern >> 4;
+  mSkipByteBlock = pattern & 0x0f;
+
+  uint8_t isEncrypted;
+  MOZ_TRY_VAR(isEncrypted, aReader->ReadU8());
+  mIsEncrypted = isEncrypted != 0;
 
   MOZ_TRY_VAR(mIVSize, aReader->ReadU8());
 
   // Read the key id.
-  uint8_t key;
-  for (uint32_t i = 0; i < kKeyIdSize; ++i) {
-    MOZ_TRY_VAR(key, aReader->ReadU8());
-    mKeyId.AppendElement(key);
+  if (!mKeyId.SetLength(kKeyIdSize, fallible)) {
+    LOG(CencSampleEncryptionInfoEntry, "OOM");
+    return Err(NS_ERROR_FAILURE);
   }
-
-  mIsEncrypted = flag != 0;
+  for (uint32_t i = 0; i < kKeyIdSize; ++i) {
+    MOZ_TRY_VAR(mKeyId.ElementAt(i), aReader->ReadU8());
+  }
 
   if (mIsEncrypted) {
     if (mIVSize != 8 && mIVSize != 16) {
       return Err(NS_ERROR_FAILURE);
     }
   } else if (mIVSize != 0) {
-    return Err(NS_ERROR_FAILURE);
+    // Protected content with 0 sized IV indicates a constant IV is present.
+    // This is used for the cbcs scheme.
+    uint8_t constantIVSize;
+    MOZ_TRY_VAR(constantIVSize, aReader->ReadU8());
+    if (constantIVSize != 8 && constantIVSize != 16) {
+      LOG(CencSampleEncryptionInfoEntry, "Unexpected constantIVSize: %" PRIu8,
+          constantIVSize);
+      return Err(NS_ERROR_FAILURE);
+    }
+    if (!mConsantIV.SetLength(constantIVSize, mozilla::fallible)) {
+      LOG(CencSampleEncryptionInfoEntry, "OOM");
+      return Err(NS_ERROR_FAILURE);
+    }
+    for (uint32_t i = 0; i < constantIVSize; ++i) {
+      MOZ_TRY_VAR(mConsantIV.ElementAt(i), aReader->ReadU8());
+    }
   }
 
   return Ok();
