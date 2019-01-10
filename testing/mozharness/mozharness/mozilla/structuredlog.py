@@ -179,13 +179,19 @@ class StructuredOutputParser(OutputParser):
 
         # These are warning/orange statuses.
         failure_conditions = [
-            sum(summary.unexpected_statuses.values()) > 0,
-            summary.action_counts.get('crash', 0) > summary.expected_statuses.get('CRASH', 0),
-            summary.action_counts.get('valgrind_error', 0) > 0
+            (sum(summary.unexpected_statuses.values()), 0, "statuses"),
+            (summary.action_counts.get('crash', 0),
+             summary.expected_statuses.get('CRASH', 0), "crashes"),
+            (summary.action_counts.get('valgrind_error', 0), 0,
+             "valgrind errors")
         ]
-        for condition in failure_conditions:
-            if condition:
+        for value, limit, type_name in failure_conditions:
+            if value > limit:
                 self.update_levels(*fail_pair)
+                msg = "Got %d unexpected %s" % (value, type_name)
+                if limit != 0:
+                    msg += " expected at most %d" % (limit)
+                self.error(msg)
 
         # These are error/red statuses. A message is output here every time something
         # wouldn't otherwise be highlighted in the UI.
