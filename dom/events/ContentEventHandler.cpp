@@ -199,7 +199,7 @@ nsresult ContentEventHandler::RawRange::SelectNodeContents(
 //        When before an element node (meaning before the open tag of the
 //        element) is end of a range, end node is previous node causing text.
 //        Note that this case shouldn't be handled directly.  If rule 2.1 and
-//        2.3 are handled correctly, the loop with nsContentIterator shouldn't
+//        2.3 are handled correctly, the loop with ContentIterator shouldn't
 //        reach the element node since the loop should've finished already at
 //        handling the last node which caused some text.
 //   2.3. Case: <element>]
@@ -2653,7 +2653,7 @@ nsresult ContentEventHandler::OnQueryDOMWidgetHittest(
     return NS_OK;
   }
 
-  // Don't create nsContentIterator instance until it's really necessary since
+  // Don't create ContentIterator instance until it's really necessary since
   // destroying without initializing causes unexpected NS_ASSERTION() call.
   nsCOMPtr<nsIContentIterator> iter;
 
@@ -2792,7 +2792,7 @@ nsresult ContentEventHandler::OnQueryDOMWidgetHittest(
 nsresult ContentEventHandler::GetStartOffset(const RawRange& aRawRange,
                                              uint32_t* aOffset,
                                              LineBreakType aLineBreakType) {
-  // To match the "no skip start" hack in nsContentIterator::Init, when range
+  // To match the "no skip start" hack in ContentIterator::Init, when range
   // offset is 0 and the range node is not a container, we have to assume the
   // range _includes_ the node, which means the start offset should _not_
   // include the node.
