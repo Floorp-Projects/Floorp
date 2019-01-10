@@ -17,5 +17,5 @@
 }
 
 .network-monitor .tree-container .treeTable tr:not(:hover) .learn-more-link {
-  opacity: 0.1;
+  opacity: 0.4;
 }
