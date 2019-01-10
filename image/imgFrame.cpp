@@ -305,7 +305,12 @@ nsresult imgFrame::InitForDecoderRecycle(const AnimationParams& aAnimParams) {
   MOZ_ASSERT(mIsFullFrame);
   MOZ_ASSERT(mLockCount > 0);
   MOZ_ASSERT(mLockedSurface);
-  MOZ_ASSERT(mShouldRecycle);
+
+  if (!mShouldRecycle) {
+    // This frame either was never marked as recyclable, or the flag was cleared
+    // for a caller which does not support recycling.
+    return NS_ERROR_NOT_AVAILABLE;
+  }
 
   if (mRecycleLockCount > 0) {
     if (NS_IsMainThread()) {
@@ -624,8 +629,8 @@ bool imgFrame::Draw(gfxContext* aContext, const ImageRegion& aRegion,
     // this frame is the current frame of the animation. Since we can only
     // advance on the main thread, we know nothing else will try to use it.
     DrawTarget* drawTarget = aContext->GetDrawTarget();
-    bool temporary = !drawTarget->IsCaptureDT() &&
-                     drawTarget->GetBackendType() != BackendType::RECORDING;
+    bool recording = drawTarget->GetBackendType() == BackendType::RECORDING;
+    bool temporary = !drawTarget->IsCaptureDT() && !recording;
     RefPtr<SourceSurface> surf = GetSourceSurfaceInternal(temporary);
     if (!surf) {
       return false;
@@ -635,6 +640,14 @@ bool imgFrame::Draw(gfxContext* aContext, const ImageRegion& aRegion,
                   !(aImageFlags & imgIContainer::FLAG_CLAMP);
 
     surfaceResult = SurfaceForDrawing(doPartialDecode, doTile, region, surf);
+
+    // If we are recording, then we cannot recycle the surface. The blob
+    // rasterizer is not properly synchronized for recycling in the compositor
+    // process. The easiest thing to do is just mark the frames it consumes as
+    // non-recyclable.
+    if (recording && surfaceResult.IsValid()) {
+      mShouldRecycle = false;
+    }
   }
 
   if (surfaceResult.IsValid()) {

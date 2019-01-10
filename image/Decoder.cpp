@@ -350,8 +350,7 @@ RawAccessFrameRef Decoder::AllocateFrameInternal(
       // animation parameters elsewhere. For now we just drop it.
       bool blocked = ref.get() == mRestoreFrame.get();
       if (!blocked) {
-        nsresult rv = ref->InitForDecoderRecycle(aAnimParams.ref());
-        blocked = NS_WARN_IF(NS_FAILED(rv));
+        blocked = NS_FAILED(ref->InitForDecoderRecycle(aAnimParams.ref()));
       }
 
       if (blocked) {
