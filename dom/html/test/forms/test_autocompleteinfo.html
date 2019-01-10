@@ -30,12 +30,15 @@ var values = [
   // One token
   ["on", {fieldName: "on" }, "on"],
   ["On", {fieldName: "on" }, "on"],
-  ["off", {fieldName: "off" }, "off" ],
+  ["off", {fieldName: "off", canAutomaticallyPersist: false}, "off" ],
   ["name", {fieldName: "name" }, "name"],
   [" name ", {fieldName: "name" }, "name"],
   ["username", {fieldName: "username"}, ""],
   [" username ", {fieldName: "username"}, ""],
-  ["cc-csc", {fieldName: "cc-csc"}, ""],
+  ["current-password", {fieldName: "current-password", canAutomaticallyPersist: false}, ""],
+  ["new-password", {fieldName: "new-password", canAutomaticallyPersist: false}, ""],
+  ["cc-number", {fieldName: "cc-number", canAutomaticallyPersist: false}, "cc-number"],
+  ["cc-csc", {fieldName: "cc-csc", canAutomaticallyPersist: false}, ""],
   ["language", {fieldName: "language"}, ""],
   ["tel-extension", {fieldName: "tel-extension"}, ""],
   ["foobar", {}, ""],
@@ -139,6 +142,8 @@ function testAutocompleteInfoValue(aEnabled) {
         "Checking autocompleteInfo.contactType for " + field + ": " + test[0]);
       is(info.fieldName, "fieldName" in test[1] ? test[1].fieldName : "",
         "Checking autocompleteInfo.fieldName for " + field + ": " + test[0]);
+      is(info.canAutomaticallyPersist, "canAutomaticallyPersist" in test[1] ? test[1].canAutomaticallyPersist : true,
+        "Checking autocompleteInfo.canAutomaticallyPersist for " + field + ": " + test[0]);
     }
   }
 }

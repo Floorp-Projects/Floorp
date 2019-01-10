@@ -362,6 +362,13 @@ enum AutocompleteUnsupportedFieldName : uint8_t {
 #undef AUTOCOMPLETE_UNSUPPORTED_FIELD_NAME
 };
 
+enum AutocompleteNoPersistFieldName : uint8_t {
+#define AUTOCOMPLETE_NO_PERSIST_FIELD_NAME(name_, value_) \
+  eAutocompleteNoPersistFieldName_##name_,
+#include "AutocompleteFieldList.h"
+#undef AUTOCOMPLETE_NO_PERSIST_FIELD_NAME
+};
+
 enum AutocompleteUnsupportFieldContactHint : uint8_t {
 #define AUTOCOMPLETE_UNSUPPORTED_FIELD_CONTACT_HINT(name_, value_) \
   eAutocompleteUnsupportedFieldContactHint_##name_,
@@ -402,6 +409,13 @@ static const nsAttrValue::EnumTable kAutocompleteUnsupportedFieldNameTable[] = {
   {value_, eAutocompleteUnsupportedFieldName_##name_},
 #include "AutocompleteFieldList.h"
 #undef AUTOCOMPLETE_UNSUPPORTED_FIELD_NAME
+    {nullptr, 0}};
+
+static const nsAttrValue::EnumTable kAutocompleteNoPersistFieldNameTable[] = {
+#define AUTOCOMPLETE_NO_PERSIST_FIELD_NAME(name_, value_) \
+  {value_, eAutocompleteNoPersistFieldName_##name_},
+#include "AutocompleteFieldList.h"
+#undef AUTOCOMPLETE_NO_PERSIST_FIELD_NAME
     {nullptr, 0}};
 
 static const nsAttrValue::EnumTable
@@ -1132,6 +1146,8 @@ nsContentUtils::InternalSerializeAutocompleteAttribute(
       enumValue.ToString(str);
       ASCIIToLower(str);
       aInfo.mFieldName.Assign(str);
+      aInfo.mCanAutomaticallyPersist =
+          !enumValue.Equals(NS_LITERAL_STRING("off"), eIgnoreCase);
       return eAutocompleteAttrState_Valid;
     }
 
@@ -1165,6 +1181,9 @@ nsContentUtils::InternalSerializeAutocompleteAttribute(
   enumValue.ToString(str);
   ASCIIToLower(str);
   aInfo.mFieldName.Assign(str);
+
+  aInfo.mCanAutomaticallyPersist = !enumValue.ParseEnumValue(
+      tokenString, kAutocompleteNoPersistFieldNameTable, false);
 
   // We are done if this was the only token.
   if (numTokens == 1) {
