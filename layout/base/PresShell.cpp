@@ -6793,7 +6793,7 @@ nsresult PresShell::HandleEvent(nsIFrame* aFrame, WidgetGUIEvent* aEvent,
       // features to continue receiving mouse events even when the devtools
       // debugger has paused execution in a page.
       RefPtr<EventListener> suppressedListener =
-        frame->PresContext()->Document()->GetSuppressedEventListener();
+          frame->PresContext()->Document()->GetSuppressedEventListener();
       if (suppressedListener &&
           aEvent->AsMouseEvent()->mReason != WidgetMouseEvent::eSynthesized) {
         nsCOMPtr<nsIContent> targetContent;
@@ -6804,7 +6804,7 @@ nsresult PresShell::HandleEvent(nsIFrame* aFrame, WidgetGUIEvent* aEvent,
 
         nsCOMPtr<EventTarget> et = aEvent->mTarget;
         RefPtr<Event> event = EventDispatcher::CreateEvent(
-                et, frame->PresContext(), aEvent, EmptyString());
+            et, frame->PresContext(), aEvent, EmptyString());
 
         suppressedListener->HandleEvent(*event);
       }

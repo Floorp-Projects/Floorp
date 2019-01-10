@@ -195,6 +195,8 @@ struct ParamTraits<mozilla::layers::FrameMetrics>
     WriteParam(aMsg, aParam.mExtraResolution);
     WriteParam(aMsg, aParam.mPaintRequestTime);
     WriteParam(aMsg, aParam.mScrollUpdateType);
+    WriteParam(aMsg, aParam.mVisualViewportOffset);
+    WriteParam(aMsg, aParam.mVisualScrollUpdateType);
     WriteParam(aMsg, aParam.mIsRootContent);
     WriteParam(aMsg, aParam.mIsRelative);
     WriteParam(aMsg, aParam.mDoSmoothScroll);
@@ -224,6 +226,8 @@ struct ParamTraits<mozilla::layers::FrameMetrics>
         ReadParam(aMsg, aIter, &aResult->mExtraResolution) &&
         ReadParam(aMsg, aIter, &aResult->mPaintRequestTime) &&
         ReadParam(aMsg, aIter, &aResult->mScrollUpdateType) &&
+        ReadParam(aMsg, aIter, &aResult->mVisualViewportOffset) &&
+        ReadParam(aMsg, aIter, &aResult->mVisualScrollUpdateType) &&
         ReadBoolForBitfield(aMsg, aIter, aResult,
                             &paramType::SetIsRootContent) &&
         ReadBoolForBitfield(aMsg, aIter, aResult, &paramType::SetIsRelative) &&

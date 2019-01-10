@@ -104,6 +104,8 @@ struct FrameMetrics {
         mExtraResolution(),
         mPaintRequestTime(),
         mScrollUpdateType(eNone),
+        mVisualViewportOffset(0, 0),
+        mVisualScrollUpdateType(eNone),
         mIsRootContent(false),
         mIsRelative(false),
         mDoSmoothScroll(false),
@@ -133,6 +135,8 @@ struct FrameMetrics {
            mExtraResolution == aOther.mExtraResolution &&
            mPaintRequestTime == aOther.mPaintRequestTime &&
            mScrollUpdateType == aOther.mScrollUpdateType &&
+           mVisualViewportOffset == aOther.mVisualViewportOffset &&
+           mVisualScrollUpdateType == aOther.mVisualScrollUpdateType &&
            mIsRootContent == aOther.mIsRootContent &&
            mIsRelative == aOther.mIsRelative &&
            mDoSmoothScroll == aOther.mDoSmoothScroll &&
@@ -480,6 +484,20 @@ struct FrameMetrics {
   }
   bool IsScrollInfoLayer() const { return mIsScrollInfoLayer; }
 
+  void SetVisualViewportOffset(const CSSPoint& aVisualViewportOffset) {
+    mVisualViewportOffset = aVisualViewportOffset;
+  }
+  const CSSPoint& GetVisualViewportOffset() const {
+    return mVisualViewportOffset;
+  }
+
+  void SetVisualScrollUpdateType(ScrollOffsetUpdateType aUpdateType) {
+    mVisualScrollUpdateType = aUpdateType;
+  }
+  ScrollOffsetUpdateType GetVisualScrollUpdateType() const {
+    return mVisualScrollUpdateType;
+  }
+
   // Determine if the visual viewport is outside of the layout viewport and
   // adjust the x,y-offset in mLayoutViewport accordingly. This is necessary to
   // allow APZ to async-scroll the layout viewport.
@@ -639,6 +657,18 @@ struct FrameMetrics {
   // Whether mScrollOffset was updated by something other than the APZ code, and
   // if the APZC receiving this metrics should update its local copy.
   ScrollOffsetUpdateType mScrollUpdateType;
+
+  // These fields are used when the main thread wants to set a visual viewport
+  // offset that's distinct from the layout viewport offset.
+  // In this case, mVisualScrollUpdateType is set to eMainThread, and
+  // mVisualViewportOffset is set to desired visual viewport offset (relative
+  // to the document, like mScrollOffset).
+  // TODO: Get rid of mVisualViewportOffset: between mViewport.TopLeft() and
+  //       mScrollOffset, we have enough storage for the two scroll offsets.
+  //       However, to avoid confusion, that first requires refactoring
+  //       existing to consistently use the two fields for those two purposes.
+  CSSPoint mVisualViewportOffset;
+  ScrollOffsetUpdateType mVisualScrollUpdateType;
 
   // Whether or not this is the root scroll frame for the root content document.
   bool mIsRootContent : 1;

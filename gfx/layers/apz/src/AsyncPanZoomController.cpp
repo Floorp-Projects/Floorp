@@ -4296,7 +4296,7 @@ void AsyncPanZoomController::NotifyLayersUpdated(
 #endif
   if (entertainViewportUpdates) {
     if (Metrics().GetLayoutViewport().Size() !=
-            aLayerMetrics.GetLayoutViewport().Size()) {
+        aLayerMetrics.GetLayoutViewport().Size()) {
       needContentRepaint = true;
       viewportUpdated = true;
     }
@@ -4498,6 +4498,33 @@ void AsyncPanZoomController::NotifyLayersUpdated(
     mExpectedGeckoMetrics = aLayerMetrics;
 
     SmoothScrollTo(Metrics().GetSmoothScrollOffset());
+  }
+
+  // If the main thread asked us to scroll the visual viewport to a particular
+  // location, do so. This is different from a layout viewport offset update
+  // in that the layout viewport offset is limited to the layout scroll range
+  // (this will be enforced by the main thread once bug 1516056 is fixed),
+  // while the visual viewport offset is not. The main thread can also ask
+  // us to scroll both the layout and visual viewports to distinct (but
+  // compatible) locations.
+  FrameMetrics::ScrollOffsetUpdateType visualUpdateType =
+      aLayerMetrics.GetVisualScrollUpdateType();
+  MOZ_ASSERT(visualUpdateType == FrameMetrics::eNone ||
+             visualUpdateType == FrameMetrics::eMainThread);
+  if (visualUpdateType == FrameMetrics::eMainThread) {
+    Metrics().ClampAndSetScrollOffset(aLayerMetrics.GetVisualViewportOffset());
+
+    // The rest of this branch largely follows the code in the
+    // |if (scrollOffsetUpdated)| branch above.
+    Metrics().RecalculateLayoutViewportOffset();
+    mCompositedLayoutViewport = Metrics().GetLayoutViewport();
+    mCompositedScrollOffset = Metrics().GetScrollOffset();
+    mExpectedGeckoMetrics = aLayerMetrics;
+    if (!mAnimation || !mAnimation->HandleScrollOffsetUpdate(Nothing())) {
+      CancelAnimation();
+    }
+    needContentRepaint = true;
+    ScheduleComposite();
   }
 
   if (viewportUpdated) {
