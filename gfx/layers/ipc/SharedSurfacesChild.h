@@ -72,6 +72,16 @@ class SharedSurfacesChild final {
                         wr::ImageKey& aKey);
 
   /**
+   * Request that the surface be mapped into the compositor thread's memory
+   * space, and a valid ImageKey be generated for it for use with WebRender.
+   * This must be called from the main thread.
+   */
+  static nsresult Share(gfx::SourceSurface* aSurface,
+                        RenderRootStateManager* aManager,
+                        wr::IpcResourceUpdateQueue& aResources,
+                        wr::ImageKey& aKey);
+
+  /**
    * Request that the first surface in the image container's current images be
    * mapped into the compositor thread's memory space, and a valid ImageKey be
    * generated for it for use with WebRender. If a different method should be
