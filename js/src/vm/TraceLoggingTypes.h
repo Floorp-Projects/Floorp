@@ -20,6 +20,7 @@
   _(GC)                                        \
   _(GCAllocation)                              \
   _(GCSweeping)                                \
+  _(GCFree)                                    \
   _(Interpreter)                               \
   _(InlinedScripts)                            \
   _(IonAnalysis)                               \
