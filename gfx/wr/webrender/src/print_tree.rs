@@ -99,3 +99,7 @@ where
         self.flush_queued_item("\u{9492}\u{9472}");
     }
 }
+
+pub trait PrintableTree {
+    fn print_with<T: PrintTreePrinter>(&self, pt: &mut T);
+}
