@@ -1904,8 +1904,33 @@ class IntegerType extends Type {
 }
 
 class BooleanType extends Type {
+  static get EXTRA_PROPERTIES() {
+    return ["enum", ...super.EXTRA_PROPERTIES];
+  }
+
+  static parseSchema(root, schema, path, extraProperties = []) {
+    this.checkSchemaProperties(schema, path, extraProperties);
+    let enumeration = schema.enum || null;
+    return new this(schema, enumeration);
+  }
+
+  constructor(schema, enumeration) {
+    super(schema);
+    this.enumeration = enumeration;
+  }
+
   normalize(value, context) {
-    return this.normalizeBase("boolean", value, context);
+    if (!this.checkBaseType(getValueBaseType(value))) {
+      return context.error(() => `Expected boolean instead of ${JSON.stringify(value)}`,
+                           `be a boolean`);
+    }
+    value = this.preprocess(value, context);
+    if (this.enumeration && !this.enumeration.includes(value)) {
+      return context.error(() => `Invalid value ${JSON.stringify(value)}`,
+                           `be ${this.enumeration}`);
+    }
+    this.checkDeprecated(context, value);
+    return {value};
   }
 
   checkBaseType(baseType) {
