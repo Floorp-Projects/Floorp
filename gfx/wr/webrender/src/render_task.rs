@@ -1113,7 +1113,7 @@ pub struct RenderTaskCacheEntry {
     pub handle: TextureCacheHandle,
 }
 
-#[derive(Debug)]
+#[derive(Debug, MallocSizeOf)]
 pub enum RenderTaskCacheMarker {}
 
 // A cache of render tasks that are stored in the texture

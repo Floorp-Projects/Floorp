@@ -12,7 +12,7 @@ use prim_store::{ScrollNodeAndClipChain, PrimitiveKeyKind};
 use render_task::RenderTaskCacheEntryHandle;
 use util::RectHelpers;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, MallocSizeOf)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct BoxShadowClipSource {
@@ -51,7 +51,7 @@ pub const BLUR_SAMPLE_SCALE: f32 = 3.0;
 // A cache key that uniquely identifies a minimally sized
 // and blurred box-shadow rect that can be stored in the
 // texture cache and applied to clip-masks.
-#[derive(Debug, Clone, Eq, Hash, PartialEq)]
+#[derive(Debug, Clone, Eq, Hash, MallocSizeOf, PartialEq)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct BoxShadowCacheKey {
