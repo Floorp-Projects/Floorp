@@ -598,9 +598,9 @@ class MochitestArguments(ArgumentContainer):
     ]
 
     defaults = {
-        # Bug 1065098 - The geckomediaplugin process fails to produce a leak
+        # Bug 1065098 - The gmplugin process fails to produce a leak
         # log for some reason.
-        'ignoreMissingLeaks': ["geckomediaplugin"],
+        'ignoreMissingLeaks': ["gmplugin"],
         'extensionsToExclude': ['specialpowers'],
         # Set server information on the args object
         'webServer': '127.0.0.1',
@@ -825,7 +825,7 @@ class MochitestArguments(ArgumentContainer):
             "default": options.defaultLeakThreshold,
             "tab": options.defaultLeakThreshold,
             # GMP rarely gets a log, but when it does, it leaks a little.
-            "geckomediaplugin": 20000,
+            "gmplugin": 20000,
             "rdd": 400,
         }
 

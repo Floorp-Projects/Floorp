@@ -58,6 +58,7 @@
 
 #include "gc/PrivateIterators-inl.h"
 #include "vm/BooleanObject-inl.h"
+#include "vm/Compartment-inl.h"
 #include "vm/JSAtom-inl.h"
 #include "vm/JSFunction-inl.h"
 #include "vm/JSObject-inl.h"
@@ -2107,9 +2108,10 @@ static bool intrinsic_ConstructorForTypedArray(JSContext* cx, unsigned argc,
   MOZ_ASSERT(args.length() == 1);
   MOZ_ASSERT(args[0].isObject());
 
-  RootedObject object(cx, &args[0].toObject());
-  object = CheckedUnwrap(object);
-  MOZ_ASSERT(object->is<TypedArrayObject>());
+  auto* object = UnwrapAndDowncastValue<TypedArrayObject>(cx, args[0]);
+  if (!object) {
+    return false;
+  }
 
   JSProtoKey protoKey = StandardProtoKeyOrNull(object);
   MOZ_ASSERT(protoKey);
