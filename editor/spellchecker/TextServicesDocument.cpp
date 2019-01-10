@@ -5,7 +5,6 @@
 
 #include "TextServicesDocument.h"
 
-#include "FilteredContentIterator.h"  // for FilteredContentIterator
 #include "mozilla/Assertions.h"   // for MOZ_ASSERT, etc
 #include "mozilla/EditorUtils.h"  // for AutoTransactionBatchExternal
 #include "mozilla/dom/Element.h"
@@ -18,8 +17,10 @@
 #include "nsDebug.h"                    // for NS_ENSURE_TRUE, etc
 #include "nsDependentSubstring.h"       // for Substring
 #include "nsError.h"                    // for NS_OK, NS_ERROR_FAILURE, etc
+#include "nsFilteredContentIterator.h"  // for nsFilteredContentIterator
 #include "nsGenericHTMLElement.h"       // for nsGenericHTMLElement
 #include "nsIContent.h"                 // for nsIContent, etc
+#include "nsIContentIterator.h"         // for nsIContentIterator
 #include "nsID.h"                       // for NS_GET_IID
 #include "nsIEditor.h"                  // for nsIEditor, etc
 #include "nsINode.h"                    // for nsINode
@@ -85,7 +86,7 @@ NS_INTERFACE_MAP_BEGIN(TextServicesDocument)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTION(TextServicesDocument, mDocument, mSelCon, mTextEditor,
-                         mFilteredIter, mPrevTextBlock, mNextTextBlock, mExtent)
+                         mIterator, mPrevTextBlock, mNextTextBlock, mExtent)
 
 nsresult TextServicesDocument::InitWithEditor(nsIEditor* aEditor) {
   nsCOMPtr<nsISelectionController> selCon;
@@ -120,7 +121,7 @@ nsresult TextServicesDocument::InitWithEditor(nsIEditor* aEditor) {
   if (!mDocument) {
     mDocument = doc;
 
-    rv = CreateDocumentContentIterator(getter_AddRefs(mFilteredIter));
+    rv = CreateDocumentContentIterator(getter_AddRefs(mIterator));
 
     if (NS_FAILED(rv)) {
       return rv;
@@ -153,8 +154,7 @@ nsresult TextServicesDocument::SetExtent(nsRange* aRange) {
 
   // Create a new iterator based on our new extent range.
 
-  nsresult rv =
-      CreateFilteredContentIterator(mExtent, getter_AddRefs(mFilteredIter));
+  nsresult rv = CreateContentIterator(mExtent, getter_AddRefs(mIterator));
 
   if (NS_FAILED(rv)) {
     return rv;
@@ -186,8 +186,8 @@ nsresult TextServicesDocument::ExpandRangeToWordBoundaries(nsRange* aRange) {
 
   // Create a content iterator based on the range.
 
-  RefPtr<FilteredContentIterator> filteredIter;
-  rv = CreateFilteredContentIterator(aRange, getter_AddRefs(filteredIter));
+  nsCOMPtr<nsIContentIterator> iter;
+  rv = CreateContentIterator(aRange, getter_AddRefs(iter));
 
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -195,7 +195,7 @@ nsresult TextServicesDocument::ExpandRangeToWordBoundaries(nsRange* aRange) {
 
   IteratorStatus iterStatus = IteratorStatus::eDone;
 
-  rv = FirstTextNode(filteredIter, &iterStatus);
+  rv = FirstTextNode(iter, &iterStatus);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (iterStatus == IteratorStatus::eDone) {
@@ -203,12 +203,12 @@ nsresult TextServicesDocument::ExpandRangeToWordBoundaries(nsRange* aRange) {
     return NS_OK;
   }
 
-  nsINode* firstText = filteredIter->GetCurrentNode();
+  nsINode* firstText = iter->GetCurrentNode();
   NS_ENSURE_TRUE(firstText, NS_ERROR_FAILURE);
 
   // Find the last text node in the range.
 
-  rv = LastTextNode(filteredIter, &iterStatus);
+  rv = LastTextNode(iter, &iterStatus);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (iterStatus == IteratorStatus::eDone) {
@@ -218,7 +218,7 @@ nsresult TextServicesDocument::ExpandRangeToWordBoundaries(nsRange* aRange) {
     return NS_ERROR_FAILURE;
   }
 
-  nsINode* lastText = filteredIter->GetCurrentNode();
+  nsINode* lastText = iter->GetCurrentNode();
   NS_ENSURE_TRUE(lastText, NS_ERROR_FAILURE);
 
   // Now make sure our end points are in terms of text nodes in the range!
@@ -238,14 +238,14 @@ nsresult TextServicesDocument::ExpandRangeToWordBoundaries(nsRange* aRange) {
   // Create a doc iterator so that we can scan beyond
   // the bounds of the extent range.
 
-  RefPtr<FilteredContentIterator> docFilteredIter;
-  rv = CreateDocumentContentIterator(getter_AddRefs(docFilteredIter));
+  nsCOMPtr<nsIContentIterator> docIter;
+  rv = CreateDocumentContentIterator(getter_AddRefs(docIter));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Grab all the text in the block containing our
   // first text node.
 
-  rv = docFilteredIter->PositionAt(firstText);
+  rv = docIter->PositionAt(firstText);
   NS_ENSURE_SUCCESS(rv, rv);
 
   iterStatus = IteratorStatus::eValid;
@@ -253,8 +253,8 @@ nsresult TextServicesDocument::ExpandRangeToWordBoundaries(nsRange* aRange) {
   nsTArray<OffsetEntry*> offsetTable;
   nsAutoString blockStr;
 
-  rv = CreateOffsetTable(&offsetTable, docFilteredIter, &iterStatus, nullptr,
-                         &blockStr);
+  rv =
+      CreateOffsetTable(&offsetTable, docIter, &iterStatus, nullptr, &blockStr);
   if (NS_FAILED(rv)) {
     ClearOffsetTable(&offsetTable);
     return rv;
@@ -277,13 +277,13 @@ nsresult TextServicesDocument::ExpandRangeToWordBoundaries(nsRange* aRange) {
   // Grab all the text in the block containing our
   // last text node.
 
-  rv = docFilteredIter->PositionAt(lastText);
+  rv = docIter->PositionAt(lastText);
   NS_ENSURE_SUCCESS(rv, rv);
 
   iterStatus = IteratorStatus::eValid;
 
-  rv = CreateOffsetTable(&offsetTable, docFilteredIter, &iterStatus, nullptr,
-                         &blockStr);
+  rv =
+      CreateOffsetTable(&offsetTable, docIter, &iterStatus, nullptr, &blockStr);
   if (NS_FAILED(rv)) {
     ClearOffsetTable(&offsetTable);
     return rv;
@@ -328,10 +328,10 @@ nsresult TextServicesDocument::GetCurrentTextBlock(nsString* aStr) {
 
   aStr->Truncate();
 
-  NS_ENSURE_TRUE(mFilteredIter, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(mIterator, NS_ERROR_FAILURE);
 
-  nsresult rv = CreateOffsetTable(&mOffsetTable, mFilteredIter,
-                                  &mIteratorStatus, mExtent, aStr);
+  nsresult rv = CreateOffsetTable(&mOffsetTable, mIterator, &mIteratorStatus,
+                                  mExtent, aStr);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -339,9 +339,9 @@ nsresult TextServicesDocument::GetCurrentTextBlock(nsString* aStr) {
 }
 
 nsresult TextServicesDocument::FirstBlock() {
-  NS_ENSURE_TRUE(mFilteredIter, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(mIterator, NS_ERROR_FAILURE);
 
-  nsresult rv = FirstTextNode(mFilteredIter, &mIteratorStatus);
+  nsresult rv = FirstTextNode(mIterator, &mIteratorStatus);
 
   if (NS_FAILED(rv)) {
     return rv;
@@ -374,7 +374,7 @@ nsresult TextServicesDocument::LastSelectedBlock(
   *aSelStatus = BlockSelectionStatus::eBlockNotFound;
   *aSelOffset = *aSelLength = -1;
 
-  if (!mSelCon || !mFilteredIter) {
+  if (!mSelCon || !mIterator) {
     return NS_ERROR_FAILURE;
   }
 
@@ -384,6 +384,7 @@ nsresult TextServicesDocument::LastSelectedBlock(
     return NS_ERROR_FAILURE;
   }
 
+  nsCOMPtr<nsIContentIterator> iter;
   RefPtr<nsRange> range;
   nsCOMPtr<nsINode> parent;
 
@@ -410,13 +411,13 @@ nsresult TextServicesDocument::LastSelectedBlock(
       // of the text block containing this text node and
       // return.
 
-      rv = mFilteredIter->PositionAt(parent);
+      rv = mIterator->PositionAt(parent);
 
       if (NS_FAILED(rv)) {
         return rv;
       }
 
-      rv = FirstTextNodeInCurrentBlock(mFilteredIter);
+      rv = FirstTextNodeInCurrentBlock(mIterator);
 
       if (NS_FAILED(rv)) {
         return rv;
@@ -424,7 +425,7 @@ nsresult TextServicesDocument::LastSelectedBlock(
 
       mIteratorStatus = IteratorStatus::eValid;
 
-      rv = CreateOffsetTable(&mOffsetTable, mFilteredIter, &mIteratorStatus,
+      rv = CreateOffsetTable(&mOffsetTable, mIterator, &mIteratorStatus,
                              mExtent, nullptr);
 
       if (NS_FAILED(rv)) {
@@ -459,35 +460,35 @@ nsresult TextServicesDocument::LastSelectedBlock(
         return NS_OK;
       }
 
-      RefPtr<FilteredContentIterator> filteredIter;
-      rv = CreateFilteredContentIterator(range, getter_AddRefs(filteredIter));
+      rv = CreateContentIterator(range, getter_AddRefs(iter));
 
       if (NS_FAILED(rv)) {
         return rv;
       }
 
-      filteredIter->First();
+      iter->First();
 
       nsIContent* content = nullptr;
-      for (; !filteredIter->IsDone(); filteredIter->Next()) {
-        nsINode* currentNode = filteredIter->GetCurrentNode();
+      while (!iter->IsDone()) {
+        nsINode* currentNode = iter->GetCurrentNode();
         if (currentNode->IsText()) {
           content = currentNode->AsContent();
           break;
         }
+        iter->Next();
       }
 
       if (!content) {
         return NS_OK;
       }
 
-      rv = mFilteredIter->PositionAt(content);
+      rv = mIterator->PositionAt(content);
 
       if (NS_FAILED(rv)) {
         return rv;
       }
 
-      rv = FirstTextNodeInCurrentBlock(mFilteredIter);
+      rv = FirstTextNodeInCurrentBlock(mIterator);
 
       if (NS_FAILED(rv)) {
         return rv;
@@ -495,7 +496,7 @@ nsresult TextServicesDocument::LastSelectedBlock(
 
       mIteratorStatus = IteratorStatus::eValid;
 
-      rv = CreateOffsetTable(&mOffsetTable, mFilteredIter, &mIteratorStatus,
+      rv = CreateOffsetTable(&mOffsetTable, mIterator, &mIteratorStatus,
                              mExtent, nullptr);
 
       if (NS_FAILED(rv)) {
@@ -540,31 +541,29 @@ nsresult TextServicesDocument::LastSelectedBlock(
 
     // Create an iterator for the range.
 
-    RefPtr<FilteredContentIterator> filteredIter;
-    nsresult rv =
-        CreateFilteredContentIterator(range, getter_AddRefs(filteredIter));
+    nsresult rv = CreateContentIterator(range, getter_AddRefs(iter));
 
     if (NS_FAILED(rv)) {
       return rv;
     }
 
-    filteredIter->Last();
+    iter->Last();
 
     // Now walk through the range till we find a text node.
 
-    for (; !filteredIter->IsDone(); filteredIter->Prev()) {
-      if (filteredIter->GetCurrentNode()->NodeType() == nsINode::TEXT_NODE) {
+    while (!iter->IsDone()) {
+      if (iter->GetCurrentNode()->NodeType() == nsINode::TEXT_NODE) {
         // We found a text node, so position the document's
         // iterator at the beginning of the block, then get
         // the selection in terms of the string offset.
 
-        rv = mFilteredIter->PositionAt(filteredIter->GetCurrentNode());
+        rv = mIterator->PositionAt(iter->GetCurrentNode());
 
         if (NS_FAILED(rv)) {
           return rv;
         }
 
-        rv = FirstTextNodeInCurrentBlock(mFilteredIter);
+        rv = FirstTextNodeInCurrentBlock(mIterator);
 
         if (NS_FAILED(rv)) {
           return rv;
@@ -572,7 +571,7 @@ nsresult TextServicesDocument::LastSelectedBlock(
 
         mIteratorStatus = IteratorStatus::eValid;
 
-        rv = CreateOffsetTable(&mOffsetTable, mFilteredIter, &mIteratorStatus,
+        rv = CreateOffsetTable(&mOffsetTable, mIterator, &mIteratorStatus,
                                mExtent, nullptr);
 
         if (NS_FAILED(rv)) {
@@ -583,6 +582,8 @@ nsresult TextServicesDocument::LastSelectedBlock(
 
         return rv;
       }
+
+      iter->Prev();
     }
   }
 
@@ -615,27 +616,25 @@ nsresult TextServicesDocument::LastSelectedBlock(
     return NS_OK;
   }
 
-  RefPtr<FilteredContentIterator> filteredIter;
-  nsresult rv =
-      CreateFilteredContentIterator(range, getter_AddRefs(filteredIter));
+  nsresult rv = CreateContentIterator(range, getter_AddRefs(iter));
 
   if (NS_FAILED(rv)) {
     return rv;
   }
 
-  filteredIter->First();
+  iter->First();
 
-  for (; !filteredIter->IsDone(); filteredIter->Next()) {
-    if (filteredIter->GetCurrentNode()->NodeType() == nsINode::TEXT_NODE) {
+  while (!iter->IsDone()) {
+    if (iter->GetCurrentNode()->NodeType() == nsINode::TEXT_NODE) {
       // We found a text node! Adjust the document's iterator to point
       // to the beginning of its text block, then get the current selection.
-      rv = mFilteredIter->PositionAt(filteredIter->GetCurrentNode());
+      rv = mIterator->PositionAt(iter->GetCurrentNode());
 
       if (NS_FAILED(rv)) {
         return rv;
       }
 
-      rv = FirstTextNodeInCurrentBlock(mFilteredIter);
+      rv = FirstTextNodeInCurrentBlock(mIterator);
 
       if (NS_FAILED(rv)) {
         return rv;
@@ -643,7 +642,7 @@ nsresult TextServicesDocument::LastSelectedBlock(
 
       mIteratorStatus = IteratorStatus::eValid;
 
-      rv = CreateOffsetTable(&mOffsetTable, mFilteredIter, &mIteratorStatus,
+      rv = CreateOffsetTable(&mOffsetTable, mIterator, &mIteratorStatus,
                              mExtent, nullptr);
 
       if (NS_FAILED(rv)) {
@@ -656,6 +655,8 @@ nsresult TextServicesDocument::LastSelectedBlock(
       }
       return NS_OK;
     }
+
+    iter->Next();
   }
 
   // If we get here, we didn't find any block before or inside
@@ -664,7 +665,7 @@ nsresult TextServicesDocument::LastSelectedBlock(
 }
 
 nsresult TextServicesDocument::PrevBlock() {
-  NS_ENSURE_TRUE(mFilteredIter, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(mIterator, NS_ERROR_FAILURE);
 
   if (mIteratorStatus == IteratorStatus::eDone) {
     return NS_OK;
@@ -673,14 +674,14 @@ nsresult TextServicesDocument::PrevBlock() {
   switch (mIteratorStatus) {
     case IteratorStatus::eValid:
     case IteratorStatus::eNext: {
-      nsresult rv = FirstTextNodeInPrevBlock(mFilteredIter);
+      nsresult rv = FirstTextNodeInPrevBlock(mIterator);
 
       if (NS_FAILED(rv)) {
         mIteratorStatus = IteratorStatus::eDone;
         return rv;
       }
 
-      if (mFilteredIter->IsDone()) {
+      if (mIterator->IsDone()) {
         mIteratorStatus = IteratorStatus::eDone;
         return NS_OK;
       }
@@ -719,7 +720,7 @@ nsresult TextServicesDocument::PrevBlock() {
 }
 
 nsresult TextServicesDocument::NextBlock() {
-  NS_ENSURE_TRUE(mFilteredIter, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(mIterator, NS_ERROR_FAILURE);
 
   if (mIteratorStatus == IteratorStatus::eDone) {
     return NS_OK;
@@ -729,14 +730,14 @@ nsresult TextServicesDocument::NextBlock() {
     case IteratorStatus::eValid: {
       // Advance the iterator to the next text block.
 
-      nsresult rv = FirstTextNodeInNextBlock(mFilteredIter);
+      nsresult rv = FirstTextNodeInNextBlock(mIterator);
 
       if (NS_FAILED(rv)) {
         mIteratorStatus = IteratorStatus::eDone;
         return rv;
       }
 
-      if (mFilteredIter->IsDone()) {
+      if (mIterator->IsDone()) {
         mIteratorStatus = IteratorStatus::eDone;
         return NS_OK;
       }
@@ -785,7 +786,7 @@ nsresult TextServicesDocument::IsDone(bool* aIsDone) {
 
   *aIsDone = false;
 
-  NS_ENSURE_TRUE(mFilteredIter, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(mIterator, NS_ERROR_FAILURE);
 
   *aIsDone = mIteratorStatus == IteratorStatus::eDone;
 
@@ -942,7 +943,7 @@ nsresult TextServicesDocument::DeleteSelection() {
     }
   }
 
-  // Make sure mFilteredIter always points to something valid!
+  // Make sure mIterator always points to something valid!
 
   AdjustContentIterator();
 
@@ -981,15 +982,14 @@ nsresult TextServicesDocument::DeleteSelection() {
         // so get its current node so we can restore it after we
         // create the new iterator!
 
-        curContent = mFilteredIter->GetCurrentNode()
-                         ? mFilteredIter->GetCurrentNode()->AsContent()
+        curContent = mIterator->GetCurrentNode()
+                         ? mIterator->GetCurrentNode()->AsContent()
                          : nullptr;
       }
 
       // Create the new iterator.
 
-      rv =
-          CreateFilteredContentIterator(mExtent, getter_AddRefs(mFilteredIter));
+      rv = CreateContentIterator(mExtent, getter_AddRefs(mIterator));
 
       if (NS_FAILED(rv)) {
         return rv;
@@ -999,7 +999,7 @@ nsresult TextServicesDocument::DeleteSelection() {
       // the old one was pointing at.
 
       if (curContent) {
-        rv = mFilteredIter->PositionAt(curContent);
+        rv = mIterator->PositionAt(curContent);
 
         if (NS_FAILED(rv)) {
           mIteratorStatus = IteratorStatus::eDone;
@@ -1240,7 +1240,7 @@ nsresult TextServicesDocument::InsertText(const nsString* aText) {
 }
 
 void TextServicesDocument::DidDeleteNode(nsINode* aChild) {
-  if (NS_WARN_IF(!mFilteredIter)) {
+  if (NS_WARN_IF(!mIterator)) {
     return;
   }
 
@@ -1260,7 +1260,7 @@ void TextServicesDocument::DidDeleteNode(nsINode* aChild) {
     return;
   }
 
-  nsINode* node = mFilteredIter->GetCurrentNode();
+  nsINode* node = mIterator->GetCurrentNode();
   if (node && node == aChild && mIteratorStatus != IteratorStatus::eDone) {
     // XXX: This should never really happen because
     // AdjustContentIterator() should have been called prior
@@ -1365,16 +1365,16 @@ void TextServicesDocument::DidJoinNodes(nsINode& aLeftNode,
   // Now check to see if the iterator is pointing to the
   // left node. If it is, make it point to the right node!
 
-  if (mFilteredIter->GetCurrentNode() == &aLeftNode) {
-    mFilteredIter->PositionAt(&aRightNode);
+  if (mIterator->GetCurrentNode() == &aLeftNode) {
+    mIterator->PositionAt(&aRightNode);
   }
 }
 
-nsresult TextServicesDocument::CreateFilteredContentIterator(
-    nsRange* aRange, FilteredContentIterator** aFilteredIter) {
-  NS_ENSURE_TRUE(aRange && aFilteredIter, NS_ERROR_NULL_POINTER);
+nsresult TextServicesDocument::CreateContentIterator(
+    nsRange* aRange, nsIContentIterator** aIterator) {
+  NS_ENSURE_TRUE(aRange && aIterator, NS_ERROR_NULL_POINTER);
 
-  *aFilteredIter = nullptr;
+  *aIterator = nullptr;
 
   UniquePtr<nsComposeTxtSrvFilter> composeFilter;
   switch (mTxtSvcFilterType) {
@@ -1386,18 +1386,18 @@ nsresult TextServicesDocument::CreateFilteredContentIterator(
       break;
   }
 
-  // Create a FilteredContentIterator
+  // Create a nsFilteredContentIterator
   // This class wraps the ContentIterator in order to give itself a chance
   // to filter out certain content nodes
-  RefPtr<FilteredContentIterator> filter =
-      new FilteredContentIterator(std::move(composeFilter));
+  RefPtr<nsFilteredContentIterator> filter =
+      new nsFilteredContentIterator(std::move(composeFilter));
 
   nsresult rv = filter->Init(aRange);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
-  filter.forget(aFilteredIter);
+  filter.forget(aIterator);
   return NS_OK;
 }
 
@@ -1476,22 +1476,22 @@ TextServicesDocument::CreateDocumentContentRootToNodeOffsetRange(
 }
 
 nsresult TextServicesDocument::CreateDocumentContentIterator(
-    FilteredContentIterator** aFilteredIter) {
-  NS_ENSURE_TRUE(aFilteredIter, NS_ERROR_NULL_POINTER);
+    nsIContentIterator** aIterator) {
+  NS_ENSURE_TRUE(aIterator, NS_ERROR_NULL_POINTER);
 
   RefPtr<nsRange> range = CreateDocumentContentRange();
   if (NS_WARN_IF(!range)) {
-    *aFilteredIter = nullptr;
+    *aIterator = nullptr;
     return NS_ERROR_FAILURE;
   }
 
-  return CreateFilteredContentIterator(range, aFilteredIter);
+  return CreateContentIterator(range, aIterator);
 }
 
 nsresult TextServicesDocument::AdjustContentIterator() {
-  NS_ENSURE_TRUE(mFilteredIter, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(mIterator, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsINode> node = mFilteredIter->GetCurrentNode();
+  nsCOMPtr<nsINode> node = mIterator->GetCurrentNode();
   NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
 
   size_t tcount = mOffsetTable.Length();
@@ -1540,7 +1540,7 @@ nsresult TextServicesDocument::AdjustContentIterator() {
   }
 
   if (content) {
-    nsresult rv = mFilteredIter->PositionAt(content);
+    nsresult rv = mIterator->PositionAt(content);
 
     if (NS_FAILED(rv)) {
       mIteratorStatus = IteratorStatus::eDone;
@@ -1556,7 +1556,7 @@ nsresult TextServicesDocument::AdjustContentIterator() {
   // one doesn't exist!
 
   if (mNextTextBlock) {
-    nsresult rv = mFilteredIter->PositionAt(mNextTextBlock);
+    nsresult rv = mIterator->PositionAt(mNextTextBlock);
 
     if (NS_FAILED(rv)) {
       mIteratorStatus = IteratorStatus::eDone;
@@ -1565,7 +1565,7 @@ nsresult TextServicesDocument::AdjustContentIterator() {
 
     mIteratorStatus = IteratorStatus::eNext;
   } else if (mPrevTextBlock) {
-    nsresult rv = mFilteredIter->PositionAt(mPrevTextBlock);
+    nsresult rv = mIterator->PositionAt(mPrevTextBlock);
 
     if (NS_FAILED(rv)) {
       mIteratorStatus = IteratorStatus::eDone;
@@ -1580,16 +1580,29 @@ nsresult TextServicesDocument::AdjustContentIterator() {
 }
 
 // static
-bool TextServicesDocument::DidSkip(FilteredContentIterator* aFilteredIter) {
-  return aFilteredIter && aFilteredIter->DidSkip();
+bool TextServicesDocument::DidSkip(nsIContentIterator* aFilteredIter) {
+  // We can assume here that the Iterator is a nsFilteredContentIterator because
+  // all the iterator are created in CreateContentIterator which create a
+  // nsFilteredContentIterator
+  // So if the iterator bailed on one of the "filtered" content nodes then we
+  // consider that to be a block and bail with true
+  if (aFilteredIter) {
+    nsFilteredContentIterator* filter =
+        static_cast<nsFilteredContentIterator*>(aFilteredIter);
+    if (filter && filter->DidSkip()) {
+      return true;
+    }
+  }
+  return false;
 }
 
 // static
-void TextServicesDocument::ClearDidSkip(
-    FilteredContentIterator* aFilteredIter) {
+void TextServicesDocument::ClearDidSkip(nsIContentIterator* aFilteredIter) {
   // Clear filter's skip flag
   if (aFilteredIter) {
-    aFilteredIter->ClearDidSkip();
+    nsFilteredContentIterator* filter =
+        static_cast<nsFilteredContentIterator*>(aFilteredIter);
+    filter->ClearDidSkip();
   }
 }
 
@@ -1911,8 +1924,8 @@ nsresult TextServicesDocument::GetCollapsedSelection(
                                      eEndOffset, getter_AddRefs(range));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  RefPtr<FilteredContentIterator> filteredIter;
-  rv = CreateFilteredContentIterator(range, getter_AddRefs(filteredIter));
+  nsCOMPtr<nsIContentIterator> iter;
+  rv = CreateContentIterator(range, getter_AddRefs(iter));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsIContent* saveNode;
@@ -1929,7 +1942,7 @@ nsresult TextServicesDocument::GetCollapsedSelection(
     }
     NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
 
-    rv = filteredIter->PositionAt(content);
+    rv = iter->PositionAt(content);
     NS_ENSURE_SUCCESS(rv, rv);
 
     saveNode = content;
@@ -1939,7 +1952,7 @@ nsresult TextServicesDocument::GetCollapsedSelection(
     NS_ENSURE_TRUE(parent->IsContent(), NS_ERROR_FAILURE);
     nsCOMPtr<nsIContent> content = parent->AsContent();
 
-    rv = filteredIter->PositionAt(content);
+    rv = iter->PositionAt(content);
     NS_ENSURE_SUCCESS(rv, rv);
 
     saveNode = content;
@@ -1950,12 +1963,14 @@ nsresult TextServicesDocument::GetCollapsedSelection(
   // come across.
 
   nsIContent* node = nullptr;
-  for (; !filteredIter->IsDone(); filteredIter->Prev()) {
-    nsINode* current = filteredIter->GetCurrentNode();
+  while (!iter->IsDone()) {
+    nsINode* current = iter->GetCurrentNode();
     if (current->NodeType() == nsINode::TEXT_NODE) {
       node = current->AsContent();
       break;
     }
+
+    iter->Prev();
   }
 
   if (node) {
@@ -1969,17 +1984,19 @@ nsresult TextServicesDocument::GetCollapsedSelection(
     // the right, towards the end of the text block, looking
     // for a text node.
 
-    rv = filteredIter->PositionAt(saveNode);
+    rv = iter->PositionAt(saveNode);
     NS_ENSURE_SUCCESS(rv, rv);
 
     node = nullptr;
-    for (; !filteredIter->IsDone(); filteredIter->Next()) {
-      nsINode* current = filteredIter->GetCurrentNode();
+    while (!iter->IsDone()) {
+      nsINode* current = iter->GetCurrentNode();
 
       if (current->NodeType() == nsINode::TEXT_NODE) {
         node = current->AsContent();
         break;
       }
+
+      iter->Next();
     }
 
     NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
@@ -2147,8 +2164,9 @@ nsresult TextServicesDocument::GetUncollapsedSelection(
   // Now iterate over this range to figure out the selection's
   // block offset and length.
 
-  RefPtr<FilteredContentIterator> filteredIter;
-  rv = CreateFilteredContentIterator(range, getter_AddRefs(filteredIter));
+  nsCOMPtr<nsIContentIterator> iter;
+
+  rv = CreateContentIterator(range, getter_AddRefs(iter));
 
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -2157,13 +2175,13 @@ nsresult TextServicesDocument::GetUncollapsedSelection(
   bool found;
   nsCOMPtr<nsIContent> content;
 
-  filteredIter->First();
+  iter->First();
 
   if (!p1->IsText()) {
     found = false;
 
-    for (; !filteredIter->IsDone(); filteredIter->Next()) {
-      nsINode* node = filteredIter->GetCurrentNode();
+    while (!iter->IsDone()) {
+      nsINode* node = iter->GetCurrentNode();
 
       if (node->IsText()) {
         p1 = node;
@@ -2172,6 +2190,8 @@ nsresult TextServicesDocument::GetUncollapsedSelection(
 
         break;
       }
+
+      iter->Next();
     }
 
     NS_ENSURE_TRUE(found, NS_ERROR_FAILURE);
@@ -2179,12 +2199,12 @@ nsresult TextServicesDocument::GetUncollapsedSelection(
 
   // Find the last text node in the range.
 
-  filteredIter->Last();
+  iter->Last();
 
   if (!p2->IsText()) {
     found = false;
-    for (; !filteredIter->IsDone(); filteredIter->Prev()) {
-      nsINode* node = filteredIter->GetCurrentNode();
+    while (!iter->IsDone()) {
+      nsINode* node = iter->GetCurrentNode();
       if (node->IsText()) {
         p2 = node;
         o2 = p2->Length();
@@ -2192,6 +2212,8 @@ nsresult TextServicesDocument::GetUncollapsedSelection(
 
         break;
       }
+
+      iter->Prev();
     }
 
     NS_ENSURE_TRUE(found, NS_ERROR_FAILURE);
@@ -2264,39 +2286,44 @@ nsresult TextServicesDocument::GetRangeEndPoints(nsRange* aRange,
 }
 
 // static
-nsresult TextServicesDocument::FirstTextNode(
-    FilteredContentIterator* aFilteredIter, IteratorStatus* aIteratorStatus) {
+nsresult TextServicesDocument::FirstTextNode(nsIContentIterator* aIterator,
+                                             IteratorStatus* aIteratorStatus) {
   if (aIteratorStatus) {
     *aIteratorStatus = IteratorStatus::eDone;
   }
 
-  for (aFilteredIter->First(); !aFilteredIter->IsDone();
-       aFilteredIter->Next()) {
-    if (aFilteredIter->GetCurrentNode()->NodeType() == nsINode::TEXT_NODE) {
+  aIterator->First();
+
+  while (!aIterator->IsDone()) {
+    if (aIterator->GetCurrentNode()->NodeType() == nsINode::TEXT_NODE) {
       if (aIteratorStatus) {
         *aIteratorStatus = IteratorStatus::eValid;
       }
       break;
     }
+    aIterator->Next();
   }
 
   return NS_OK;
 }
 
 // static
-nsresult TextServicesDocument::LastTextNode(
-    FilteredContentIterator* aFilteredIter, IteratorStatus* aIteratorStatus) {
+nsresult TextServicesDocument::LastTextNode(nsIContentIterator* aIterator,
+                                            IteratorStatus* aIteratorStatus) {
   if (aIteratorStatus) {
     *aIteratorStatus = IteratorStatus::eDone;
   }
 
-  for (aFilteredIter->Last(); !aFilteredIter->IsDone(); aFilteredIter->Prev()) {
-    if (aFilteredIter->GetCurrentNode()->NodeType() == nsINode::TEXT_NODE) {
+  aIterator->Last();
+
+  while (!aIterator->IsDone()) {
+    if (aIterator->GetCurrentNode()->NodeType() == nsINode::TEXT_NODE) {
       if (aIteratorStatus) {
         *aIteratorStatus = IteratorStatus::eValid;
       }
       break;
     }
+    aIterator->Prev();
   }
 
   return NS_OK;
@@ -2304,21 +2331,20 @@ nsresult TextServicesDocument::LastTextNode(
 
 // static
 nsresult TextServicesDocument::FirstTextNodeInCurrentBlock(
-    FilteredContentIterator* aFilteredIter) {
-  NS_ENSURE_TRUE(aFilteredIter, NS_ERROR_NULL_POINTER);
+    nsIContentIterator* aIter) {
+  NS_ENSURE_TRUE(aIter, NS_ERROR_NULL_POINTER);
 
-  ClearDidSkip(aFilteredIter);
+  ClearDidSkip(aIter);
 
   nsCOMPtr<nsIContent> last;
 
   // Walk backwards over adjacent text nodes until
   // we hit a block boundary:
 
-  while (!aFilteredIter->IsDone()) {
-    nsCOMPtr<nsIContent> content =
-        aFilteredIter->GetCurrentNode()->IsContent()
-            ? aFilteredIter->GetCurrentNode()->AsContent()
-            : nullptr;
+  while (!aIter->IsDone()) {
+    nsCOMPtr<nsIContent> content = aIter->GetCurrentNode()->IsContent()
+                                       ? aIter->GetCurrentNode()->AsContent()
+                                       : nullptr;
     if (last && IsBlockNode(content)) {
       break;
     }
@@ -2331,15 +2357,15 @@ nsresult TextServicesDocument::FirstTextNodeInCurrentBlock(
       last = content;
     }
 
-    aFilteredIter->Prev();
+    aIter->Prev();
 
-    if (DidSkip(aFilteredIter)) {
+    if (DidSkip(aIter)) {
       break;
     }
   }
 
   if (last) {
-    aFilteredIter->PositionAt(last);
+    aIter->PositionAt(last);
   }
 
   // XXX: What should we return if last is null?
@@ -2349,45 +2375,45 @@ nsresult TextServicesDocument::FirstTextNodeInCurrentBlock(
 
 // static
 nsresult TextServicesDocument::FirstTextNodeInPrevBlock(
-    FilteredContentIterator* aFilteredIter) {
-  NS_ENSURE_TRUE(aFilteredIter, NS_ERROR_NULL_POINTER);
+    nsIContentIterator* aIterator) {
+  NS_ENSURE_TRUE(aIterator, NS_ERROR_NULL_POINTER);
 
-  // XXX: What if mFilteredIter is not currently on a text node?
+  // XXX: What if mIterator is not currently on a text node?
 
-  // Make sure mFilteredIter is pointing to the first text node in the
+  // Make sure mIterator is pointing to the first text node in the
   // current block:
 
-  nsresult rv = FirstTextNodeInCurrentBlock(aFilteredIter);
+  nsresult rv = FirstTextNodeInCurrentBlock(aIterator);
 
   NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
-  // Point mFilteredIter to the first node before the first text node:
+  // Point mIterator to the first node before the first text node:
 
-  aFilteredIter->Prev();
+  aIterator->Prev();
 
-  if (aFilteredIter->IsDone()) {
+  if (aIterator->IsDone()) {
     return NS_ERROR_FAILURE;
   }
 
   // Now find the first text node of the next block:
 
-  return FirstTextNodeInCurrentBlock(aFilteredIter);
+  return FirstTextNodeInCurrentBlock(aIterator);
 }
 
 // static
 nsresult TextServicesDocument::FirstTextNodeInNextBlock(
-    FilteredContentIterator* aFilteredIter) {
+    nsIContentIterator* aIterator) {
   nsCOMPtr<nsIContent> prev;
   bool crossedBlockBoundary = false;
 
-  NS_ENSURE_TRUE(aFilteredIter, NS_ERROR_NULL_POINTER);
+  NS_ENSURE_TRUE(aIterator, NS_ERROR_NULL_POINTER);
 
-  ClearDidSkip(aFilteredIter);
+  ClearDidSkip(aIterator);
 
-  while (!aFilteredIter->IsDone()) {
+  while (!aIterator->IsDone()) {
     nsCOMPtr<nsIContent> content =
-        aFilteredIter->GetCurrentNode()->IsContent()
-            ? aFilteredIter->GetCurrentNode()->AsContent()
+        aIterator->GetCurrentNode()->IsContent()
+            ? aIterator->GetCurrentNode()->AsContent()
             : nullptr;
 
     if (IsTextNode(content)) {
@@ -2400,9 +2426,9 @@ nsresult TextServicesDocument::FirstTextNodeInNextBlock(
       crossedBlockBoundary = true;
     }
 
-    aFilteredIter->Next();
+    aIterator->Next();
 
-    if (!crossedBlockBoundary && DidSkip(aFilteredIter)) {
+    if (!crossedBlockBoundary && DidSkip(aIterator)) {
       crossedBlockBoundary = true;
     }
   }
@@ -2419,27 +2445,27 @@ nsresult TextServicesDocument::GetFirstTextNodeInPrevBlock(
   // Save the iterator's current content node so we can restore
   // it when we are done:
 
-  nsINode* node = mFilteredIter->GetCurrentNode();
+  nsINode* node = mIterator->GetCurrentNode();
 
-  nsresult rv = FirstTextNodeInPrevBlock(mFilteredIter);
+  nsresult rv = FirstTextNodeInPrevBlock(mIterator);
 
   if (NS_FAILED(rv)) {
     // Try to restore the iterator before returning.
-    mFilteredIter->PositionAt(node);
+    mIterator->PositionAt(node);
     return rv;
   }
 
-  if (!mFilteredIter->IsDone()) {
+  if (!mIterator->IsDone()) {
     nsCOMPtr<nsIContent> current =
-        mFilteredIter->GetCurrentNode()->IsContent()
-            ? mFilteredIter->GetCurrentNode()->AsContent()
+        mIterator->GetCurrentNode()->IsContent()
+            ? mIterator->GetCurrentNode()->AsContent()
             : nullptr;
     current.forget(aContent);
   }
 
   // Restore the iterator:
 
-  return mFilteredIter->PositionAt(node);
+  return mIterator->PositionAt(node);
 }
 
 nsresult TextServicesDocument::GetFirstTextNodeInNextBlock(
@@ -2451,36 +2477,35 @@ nsresult TextServicesDocument::GetFirstTextNodeInNextBlock(
   // Save the iterator's current content node so we can restore
   // it when we are done:
 
-  nsINode* node = mFilteredIter->GetCurrentNode();
+  nsINode* node = mIterator->GetCurrentNode();
 
-  nsresult rv = FirstTextNodeInNextBlock(mFilteredIter);
+  nsresult rv = FirstTextNodeInNextBlock(mIterator);
 
   if (NS_FAILED(rv)) {
     // Try to restore the iterator before returning.
-    mFilteredIter->PositionAt(node);
+    mIterator->PositionAt(node);
     return rv;
   }
 
-  if (!mFilteredIter->IsDone()) {
+  if (!mIterator->IsDone()) {
     nsCOMPtr<nsIContent> current =
-        mFilteredIter->GetCurrentNode()->IsContent()
-            ? mFilteredIter->GetCurrentNode()->AsContent()
+        mIterator->GetCurrentNode()->IsContent()
+            ? mIterator->GetCurrentNode()->AsContent()
             : nullptr;
     current.forget(aContent);
   }
 
   // Restore the iterator:
-  return mFilteredIter->PositionAt(node);
+  return mIterator->PositionAt(node);
 }
 
 nsresult TextServicesDocument::CreateOffsetTable(
-    nsTArray<OffsetEntry*>* aOffsetTable,
-    FilteredContentIterator* aFilteredIter, IteratorStatus* aIteratorStatus,
-    nsRange* aIterRange, nsString* aStr) {
+    nsTArray<OffsetEntry*>* aOffsetTable, nsIContentIterator* aIterator,
+    IteratorStatus* aIteratorStatus, nsRange* aIterRange, nsString* aStr) {
   nsCOMPtr<nsIContent> first;
   nsCOMPtr<nsIContent> prev;
 
-  NS_ENSURE_TRUE(aFilteredIter, NS_ERROR_NULL_POINTER);
+  NS_ENSURE_TRUE(aIterator, NS_ERROR_NULL_POINTER);
 
   ClearOffsetTable(aOffsetTable);
 
@@ -2511,18 +2536,18 @@ nsresult TextServicesDocument::CreateOffsetTable(
   // of the current block and called this method again. Make sure
   // we really are at the beginning of the current block:
 
-  nsresult rv = FirstTextNodeInCurrentBlock(aFilteredIter);
+  nsresult rv = FirstTextNodeInCurrentBlock(aIterator);
 
   NS_ENSURE_SUCCESS(rv, rv);
 
   int32_t offset = 0;
 
-  ClearDidSkip(aFilteredIter);
+  ClearDidSkip(aIterator);
 
-  while (!aFilteredIter->IsDone()) {
+  while (!aIterator->IsDone()) {
     nsCOMPtr<nsIContent> content =
-        aFilteredIter->GetCurrentNode()->IsContent()
-            ? aFilteredIter->GetCurrentNode()->AsContent()
+        aIterator->GetCurrentNode()->IsContent()
+            ? aIterator->GetCurrentNode()->AsContent()
             : nullptr;
     if (IsTextNode(content)) {
       if (prev && !HasSameBlockNodeParent(prev, content)) {
@@ -2584,9 +2609,9 @@ nsresult TextServicesDocument::CreateOffsetTable(
       break;
     }
 
-    aFilteredIter->Next();
+    aIterator->Next();
 
-    if (DidSkip(aFilteredIter)) {
+    if (DidSkip(aIterator)) {
       break;
     }
   }
@@ -2594,7 +2619,7 @@ nsresult TextServicesDocument::CreateOffsetTable(
   if (first) {
     // Always leave the iterator pointing at the first
     // text node of the current block!
-    aFilteredIter->PositionAt(first);
+    aIterator->PositionAt(first);
   } else {
     // If we never ran across a text node, the iterator
     // might have been pointing to something invalid to

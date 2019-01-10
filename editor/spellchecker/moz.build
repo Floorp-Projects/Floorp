@@ -19,8 +19,8 @@ EXPORTS.mozilla += [
 
 UNIFIED_SOURCES += [
     'EditorSpellCheck.cpp',
-    'FilteredContentIterator.cpp',
     'nsComposeTxtSrvFilter.cpp',
+    'nsFilteredContentIterator.cpp',
     'TextServicesDocument.cpp',
 ]
 

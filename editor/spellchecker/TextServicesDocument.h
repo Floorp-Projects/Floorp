@@ -15,6 +15,7 @@
 #include "nscore.h"
 
 class nsIContent;
+class nsIContentIterator;
 class nsIEditor;
 class nsINode;
 class nsISelectionController;
@@ -22,7 +23,6 @@ class nsRange;
 
 namespace mozilla {
 
-class FilteredContentIterator;
 class OffsetEntry;
 class TextEditor;
 
@@ -51,7 +51,7 @@ class TextServicesDocument final : public nsIEditActionListener {
   RefPtr<dom::Document> mDocument;
   nsCOMPtr<nsISelectionController> mSelCon;
   RefPtr<TextEditor> mTextEditor;
-  RefPtr<FilteredContentIterator> mFilteredIter;
+  nsCOMPtr<nsIContentIterator> mIterator;
   nsCOMPtr<nsIContent> mPrevTextBlock;
   nsCOMPtr<nsIContent> mNextTextBlock;
   nsTArray<OffsetEntry*> mOffsetTable;
@@ -231,29 +231,25 @@ class TextServicesDocument final : public nsIEditActionListener {
                                     int32_t* aEndOffset);
 
  private:
-  nsresult CreateFilteredContentIterator(
-      nsRange* aRange, FilteredContentIterator** aFilteredIter);
+  nsresult CreateContentIterator(nsRange* aRange,
+                                 nsIContentIterator** aIterator);
 
   dom::Element* GetDocumentContentRootNode() const;
   already_AddRefed<nsRange> CreateDocumentContentRange();
   already_AddRefed<nsRange> CreateDocumentContentRootToNodeOffsetRange(
       nsINode* aParent, uint32_t aOffset, bool aToStart);
-  nsresult CreateDocumentContentIterator(
-      FilteredContentIterator** aFilteredIter);
+  nsresult CreateDocumentContentIterator(nsIContentIterator** aIterator);
 
   nsresult AdjustContentIterator();
 
-  static nsresult FirstTextNode(FilteredContentIterator* aFilteredIter,
+  static nsresult FirstTextNode(nsIContentIterator* aIterator,
                                 IteratorStatus* aIteratorStatus);
-  static nsresult LastTextNode(FilteredContentIterator* aFilteredIter,
+  static nsresult LastTextNode(nsIContentIterator* aIterator,
                                IteratorStatus* aIteratorStatus);
 
-  static nsresult FirstTextNodeInCurrentBlock(
-      FilteredContentIterator* aFilteredIter);
-  static nsresult FirstTextNodeInPrevBlock(
-      FilteredContentIterator* aFilteredIter);
-  static nsresult FirstTextNodeInNextBlock(
-      FilteredContentIterator* aFilteredIter);
+  static nsresult FirstTextNodeInCurrentBlock(nsIContentIterator* aIterator);
+  static nsresult FirstTextNodeInPrevBlock(nsIContentIterator* aIterator);
+  static nsresult FirstTextNodeInNextBlock(nsIContentIterator* aIterator);
 
   nsresult GetFirstTextNodeInPrevBlock(nsIContent** aContent);
   nsresult GetFirstTextNodeInNextBlock(nsIContent** aContent);
@@ -261,8 +257,8 @@ class TextServicesDocument final : public nsIEditActionListener {
   static bool IsBlockNode(nsIContent* aContent);
   static bool IsTextNode(nsIContent* aContent);
 
-  static bool DidSkip(FilteredContentIterator* aFilteredIter);
-  static void ClearDidSkip(FilteredContentIterator* aFilteredIter);
+  static bool DidSkip(nsIContentIterator* aFilteredIter);
+  static void ClearDidSkip(nsIContentIterator* aFilteredIter);
 
   static bool HasSameBlockNodeParent(nsIContent* aContent1,
                                      nsIContent* aContent2);
@@ -280,7 +276,7 @@ class TextServicesDocument final : public nsIEditActionListener {
   bool SelectionIsValid();
 
   static nsresult CreateOffsetTable(nsTArray<OffsetEntry*>* aOffsetTable,
-                                    FilteredContentIterator* aFilteredIter,
+                                    nsIContentIterator* aIterator,
                                     IteratorStatus* aIteratorStatus,
                                     nsRange* aIterRange, nsString* aStr);
   static nsresult ClearOffsetTable(nsTArray<OffsetEntry*>* aOffsetTable);

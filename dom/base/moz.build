@@ -74,6 +74,7 @@ EXPORTS += [
     'nsIAnimationObserver.h',
     'nsIContent.h',
     'nsIContentInlines.h',
+    'nsIContentIterator.h',
     'nsIContentSerializer.h',
     'nsIDocumentObserver.h',
     'nsIGlobalObject.h',
@@ -124,7 +125,6 @@ if CONFIG['MOZ_WEBRTC']:
     ]
 
 EXPORTS.mozilla += [
-    'ContentIterator.h',
     'CORSMode.h',
     'FlushType.h',
     'FullscreenChange.h',
@@ -261,7 +261,6 @@ UNIFIED_SOURCES += [
     'ChromeUtils.cpp',
     'Comment.cpp',
     'ContentFrameMessageManager.cpp',
-    'ContentIterator.cpp',
     'ContentProcessMessageManager.cpp',
     'Crypto.cpp',
     'CustomElementRegistry.cpp',
@@ -311,6 +310,7 @@ UNIFIED_SOURCES += [
     'nsAttrValueOrString.cpp',
     'nsCCUncollectableMarker.cpp',
     'nsContentAreaDragDrop.cpp',
+    'nsContentIterator.cpp',
     'nsContentList.cpp',
     'nsContentPermissionHelper.cpp',
     'nsContentPolicy.cpp',
