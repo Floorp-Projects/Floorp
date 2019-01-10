@@ -46,6 +46,7 @@ class StructuredOutputParser(OutputParser):
         self.worst_log_level = INFO
         self.tbpl_status = TBPL_SUCCESS
         self.harness_retry_re = TinderBoxPrintRe['harness_error']['retry_regex']
+        self.prev_was_unstructured = False
 
     def _get_mozlog_module(self):
         try:
@@ -78,12 +79,18 @@ class StructuredOutputParser(OutputParser):
 
         if data is None:
             if self.strict:
-                self.critical(("Test harness output was not a valid structured log message: "
-                              "\n%s") % line)
+                if not self.prev_was_unstructured:
+                    self.critical(("Test harness output was not a valid structured log message: "
+                                   "\n%s") % line)
+                else:
+                    self.critical(line)
                 self.update_levels(TBPL_FAILURE, log.CRITICAL)
+                self.prev_was_unstructured = True
             else:
                 self._handle_unstructured_output(line)
             return
+
+        self.prev_was_unstructured = False
 
         self.handler(data)
 
