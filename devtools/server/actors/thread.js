@@ -1939,7 +1939,11 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       sourceActor = this.sources.createSourceActor(source);
     }
 
-    const bpActors = [...this.breakpointActorMap.findActors()];
+    const bpActors = [...this.breakpointActorMap.findActors()]
+    .filter((actor) => {
+      const bpSource = actor.generatedLocation.generatedSourceActor;
+      return bpSource.source ? bpSource.source === source : bpSource.url === source.url;
+    });
 
     // Bug 1225160: If addSource is called in response to a new script
     // notification, and this notification was triggered by loading a JSM from
