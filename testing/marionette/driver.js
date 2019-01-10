@@ -29,6 +29,9 @@ const {
 } = ChromeUtils.import("chrome://marionette/content/cert.js", {});
 ChromeUtils.import("chrome://marionette/content/cookie.js");
 const {
+  WebElementEventTarget,
+} = ChromeUtils.import("chrome://marionette/content/dom.js", {});
+const {
   ChromeWebElement,
   element,
   WebElement,
@@ -2995,10 +2998,15 @@ GeckoDriver.prototype.minimizeWindow = async function() {
       await exitFullscreen(win);
     }
 
+    let cb;
+    let observer = new WebElementEventTarget(this.curBrowser.messageManager);
     await new TimedPromise(resolve => {
-      win.addEventListener("visibilitychange", resolve, {once: true});
+      cb = new DebounceCallback(resolve);
+      observer.addEventListener("visibilitychange", cb);
       win.minimize();
     }, {throws: null});
+    observer.removeEventListener("visibilitychange", cb);
+
     await new IdlePromise(win);
   }
 
