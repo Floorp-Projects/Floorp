@@ -1432,7 +1432,7 @@ void WebRenderCommandBuilder::BuildWebRenderCommands(
     wr::DisplayListBuilder& aBuilder,
     wr::IpcResourceUpdateQueue& aResourceUpdates, nsDisplayList* aDisplayList,
     nsDisplayListBuilder* aDisplayListBuilder, WebRenderScrollData& aScrollData,
-    wr::LayoutSize& aContentSize, const nsTArray<wr::WrFilterOp>& aFilters) {
+    wr::LayoutSize& aContentSize, const nsTArray<wr::FilterOp>& aFilters) {
   StackingContextHelper sc;
   aScrollData = WebRenderScrollData(mManager);
   MOZ_ASSERT(mLayerScrollData.empty());
