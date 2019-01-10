@@ -382,8 +382,8 @@ enum GeckoProcessType {
 };
 
 static const char* const kGeckoProcessTypeString[] = {
-    "default",          "plugin", "tab", "ipdlunittest",
-    "geckomediaplugin", "gpu",    "vr",  "rdd"};
+    "default",  "plugin", "tab", "ipdlunittest",
+    "gmplugin", "gpu",    "vr",  "rdd"};
 
 static_assert(MOZ_ARRAY_LENGTH(kGeckoProcessTypeString) == GeckoProcessType_End,
               "Array length mismatch");
