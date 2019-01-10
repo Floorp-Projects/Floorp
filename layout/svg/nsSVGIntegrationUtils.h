@@ -198,7 +198,7 @@ class nsSVGIntegrationUtils final {
   static bool BuildWebRenderFilters(
       nsIFrame* aFilteredFrame,
       const mozilla::LayoutDeviceIntRect& aPreFilterBounds,
-      nsTArray<mozilla::wr::FilterOp>& aWrFilters,
+      nsTArray<mozilla::wr::WrFilterOp>& aWrFilters,
       mozilla::LayoutDeviceIntRect& aPostFilterBounds);
 
   /**

@@ -79,7 +79,7 @@ class WebRenderLayerManager final : public LayerManager {
       EndTransactionFlags aFlags = END_DEFAULT) override;
   void EndTransactionWithoutLayer(
       nsDisplayList* aDisplayList, nsDisplayListBuilder* aDisplayListBuilder,
-      const nsTArray<wr::FilterOp>& aFilters = nsTArray<wr::FilterOp>(),
+      const nsTArray<wr::WrFilterOp>& aFilters = nsTArray<wr::WrFilterOp>(),
       WebRenderBackgroundData* aBackground = nullptr);
   virtual void EndTransaction(
       DrawPaintedLayerCallback aCallback, void* aCallbackData,
