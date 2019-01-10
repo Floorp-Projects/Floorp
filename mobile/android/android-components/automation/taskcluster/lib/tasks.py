@@ -42,7 +42,7 @@ class TaskBuilder(object):
             "payload": {
                 "features": features,
                 "maxRunTime": 7200,
-                "image": "mozillamobile/android-components:1.14",
+                "image": "mozillamobile/android-components:1.15",
                 "command": [
                     "/bin/bash",
                     "--login",
@@ -90,7 +90,7 @@ class TaskBuilder(object):
             "payload": {
                 "features": features,
                 "maxRunTime": 7200,
-                "image": "mozillamobile/android-components:1.14",
+                "image": "mozillamobile/android-components:1.15",
                 "command": [
                     "/bin/bash",
                     "--login",
