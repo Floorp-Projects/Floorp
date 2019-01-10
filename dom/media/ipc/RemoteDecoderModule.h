@@ -17,8 +17,6 @@ class RemoteDecoderModule : public PlatformDecoderModule {
  public:
   RemoteDecoderModule() = default;
 
-  nsresult Startup() override;
-
   bool SupportsMimeType(const nsACString& aMimeType,
                         DecoderDoctorDiagnostics* aDiagnostics) const override;
 
