@@ -17,16 +17,16 @@ runInParent(function setup() {
 
   let jslogin = Cc["@mozilla.org/login-manager/loginInfo;1"].createInstance(Ci.nsILoginInfo);
   jslogin.init("http://mochi.test:8888", "javascript:", null,
-              "jsuser", "jspass123", "uname", "pword");
+               "jsuser", "jspass123", "uname", "pword");
   Services.logins.addLogin(jslogin);
 });
 
 /** Test for Login Manager: JS action URL **/
 
 function startTest() {
-    checkForm(1, "jsuser", "jspass123");
+  checkForm(1, "jsuser", "jspass123");
 
-    SimpleTest.finish();
+  SimpleTest.finish();
 }
 </script>
 

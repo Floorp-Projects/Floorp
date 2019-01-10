@@ -422,7 +422,7 @@ if (this.addMessageListener) {
                                      ["signon.autofillForms.http", true],
                                      ["security.insecure_field_warning.contextual.enabled", false],
                                      ["network.auth.non-web-content-triggered-resources-http-auth-allow", true]],
-                           });
+  });
   SimpleTest.registerCleanupFunction(() => {
     SpecialPowers.popPrefEnv();
     runInParent(function cleanupParent() {

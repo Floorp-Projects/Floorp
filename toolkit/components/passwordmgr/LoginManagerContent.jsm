@@ -46,9 +46,9 @@ var gLastRightClickTimeStamp = Number.NEGATIVE_INFINITY;
 
 var observer = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver,
-                                           Ci.nsIFormSubmitObserver,
-                                           Ci.nsIWebProgressListener,
-                                           Ci.nsISupportsWeakReference]),
+                                          Ci.nsIFormSubmitObserver,
+                                          Ci.nsIWebProgressListener,
+                                          Ci.nsISupportsWeakReference]),
 
   // nsIFormSubmitObserver
   notify(formElement, aWindow, actionURI) {
@@ -222,7 +222,7 @@ var LoginManagerContent = {
   },
 
   _sendRequest(messageManager, requestData,
-                         name, messageData) {
+               name, messageData) {
     let count;
     if (!(count = this._managers.get(messageManager))) {
       this._managers.set(messageManager, 1);
@@ -309,7 +309,7 @@ var LoginManagerContent = {
   },
 
   _autoCompleteSearchAsync(aSearchString, aPreviousResult,
-                                     aElement, aRect) {
+                           aElement, aRect) {
     let doc = aElement.ownerDocument;
     let form = LoginFormFactory.createFromField(aElement);
     let win = doc.defaultView;
@@ -332,7 +332,7 @@ var LoginManagerContent = {
                         rect: aRect,
                         isSecure: InsecurePasswordUtils.isFormSecure(form),
                         isPasswordField: aElement.type == "password",
-                      };
+    };
 
     return this._sendRequest(messageManager, requestData,
                              "RemoteLogins:autoCompleteLogins",
@@ -694,9 +694,9 @@ var LoginManagerContent = {
       }
 
       pwFields[pwFields.length] = {
-                                    index: i,
-                                    element,
-                                  };
+        index: i,
+        element,
+      };
     }
 
     // If too few or too many fields, bail out.
@@ -1167,7 +1167,7 @@ var LoginManagerContent = {
         var username = usernameField.value.toLowerCase();
 
         let matchingLogins = logins.filter(l =>
-                                           l.username.toLowerCase() == username);
+          l.username.toLowerCase() == username);
         if (matchingLogins.length == 0) {
           log("Password not filled. None of the stored logins match the username already present.");
           autofillResult = AUTOFILL_RESULT.EXISTING_USERNAME;
@@ -1486,7 +1486,7 @@ function UserAutoCompleteResult(aSearchString, matchingLogins, {isSecure, messag
 
 UserAutoCompleteResult.prototype = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsIAutoCompleteResult,
-                                           Ci.nsISupportsWeakReference]),
+                                          Ci.nsISupportsWeakReference]),
 
   // private
   logins: null,
