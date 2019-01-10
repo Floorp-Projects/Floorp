@@ -990,6 +990,7 @@ bitflags! {
         const TEXTURE_CACHE_DBG_CLEAR_EVICTED = 1 << 14;
         /// Show picture caching debug overlay
         const PICTURE_CACHING_DBG   = 1 << 15;
+        const TEXTURE_CACHE_DBG_DISABLE_SHRINK = 1 << 16;
     }
 }
 
