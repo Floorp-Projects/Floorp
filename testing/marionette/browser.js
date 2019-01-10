@@ -14,6 +14,7 @@ const {
 const {
   MessageManagerDestroyedPromise,
   waitForEvent,
+  waitForObserverTopic,
 } = ChromeUtils.import("chrome://marionette/content/sync.js", {});
 
 this.EXPORTED_SYMBOLS = ["browser", "Context", "WindowState"];
@@ -71,11 +72,11 @@ this.Context = Context;
  */
 browser.getBrowserForTab = function(tab) {
   // Fennec
-  if ("browser" in tab) {
+  if (tab && "browser" in tab) {
     return tab.browser;
 
   // Firefox
-  } else if ("linkedBrowser" in tab) {
+  } else if (tab && "linkedBrowser" in tab) {
     return tab.linkedBrowser;
   }
 
@@ -298,6 +299,51 @@ browser.Context = class {
   }
 
   /**
+   * Open a new browser window.
+   *
+   * @return {Promise}
+   *     A promise resolving to the newly created chrome window.
+   */
+  async openBrowserWindow(focus = false) {
+    switch (this.driver.appName) {
+      case "firefox":
+        // Open new browser window, and wait until it is fully loaded.
+        // Also wait for the window to be focused and activated to prevent a
+        // race condition when promptly focusing to the original window again.
+        let win = this.window.OpenBrowserWindow();
+
+        let activated = waitForEvent(win, "activate");
+        let focused = waitForEvent(win, "focus", {capture: true});
+        let startup = waitForObserverTopic("browser-delayed-startup-finished",
+            subject => subject == win);
+
+        // Bug 1509380 - Missing focus/activate event when Firefox is not
+        // the top-most application. As such wait for the next tick, and
+        // manually focus the newly opened window.
+        win.setTimeout(() => win.focus(), 0);
+
+        await Promise.all([activated, focused, startup]);
+
+        if (!focus) {
+          // The new window shouldn't get focused. As such set the
+          // focus back to the currently selected window.
+          activated = waitForEvent(this.window, "activate");
+          focused = waitForEvent(this.window, "focus", {capture: true});
+
+          this.window.focus();
+
+          await Promise.all([activated, focused]);
+        }
+
+        return win;
+
+      default:
+        throw new UnsupportedOperationError(
+            `openWindow() not supported in ${this.driver.appName}`);
+    }
+  }
+
+  /**
    * Close the current tab.
    *
    * @return {Promise}
@@ -319,32 +365,58 @@ browser.Context = class {
     let destroyed = new MessageManagerDestroyedPromise(this.messageManager);
     let tabClosed;
 
-    if (this.tabBrowser.closeTab) {
-      // Fennec
-      tabClosed = waitForEvent(this.tabBrowser.deck, "TabClose");
-      this.tabBrowser.closeTab(this.tab);
+    switch (this.driver.appName) {
+      case "fennec":
+        // Fennec
+        tabClosed = waitForEvent(this.tabBrowser.deck, "TabClose");
+        this.tabBrowser.closeTab(this.tab);
+        break;
 
-    } else if (this.tabBrowser.removeTab) {
-      // Firefox
-      tabClosed = waitForEvent(this.tab, "TabClose");
-      this.tabBrowser.removeTab(this.tab);
+      case "firefox":
+        tabClosed = waitForEvent(this.tab, "TabClose");
+        this.tabBrowser.removeTab(this.tab);
+        break;
 
-    } else {
-      throw new UnsupportedOperationError(
-        `closeTab() not supported in ${this.driver.appName}`);
+      default:
+        throw new UnsupportedOperationError(
+          `closeTab() not supported in ${this.driver.appName}`);
     }
 
     return Promise.all([destroyed, tabClosed]);
   }
 
   /**
-   * Opens a tab with given URI.
-   *
-   * @param {string} uri
-   *      URI to open.
+   * Open a new tab in the currently selected chrome window.
    */
-  addTab(uri) {
-    return this.tabBrowser.addTab(uri, true);
+  async openTab(focus = false) {
+    let tab = null;
+    let tabOpened = waitForEvent(this.window, "TabOpen");
+
+    switch (this.driver.appName) {
+      case "fennec":
+        tab = this.tabBrowser.addTab(null, {selected: focus});
+        break;
+
+      case "firefox":
+        this.window.BrowserOpenTab();
+        tab = this.tabBrowser.selectedTab;
+
+        // The new tab is always selected by default. If focus is not wanted,
+        // the previously tab needs to be selected again.
+        if (!focus) {
+          this.tabBrowser.selectedTab = this.tab;
+        }
+
+        break;
+
+      default:
+        throw new UnsupportedOperationError(
+          `openTab() not supported in ${this.driver.appName}`);
+    }
+
+    await tabOpened;
+
+    return tab;
   }
 
   /**
@@ -378,16 +450,18 @@ browser.Context = class {
       this.tab = this.tabBrowser.tabs[index];
 
       if (focus) {
-        if (this.tabBrowser.selectTab) {
-          // Fennec
-          this.tabBrowser.selectTab(this.tab);
+        switch (this.driver.appName) {
+          case "fennec":
+            this.tabBrowser.selectTab(this.tab);
+            break;
 
-        } else if ("selectedTab" in this.tabBrowser) {
-          // Firefox
-          this.tabBrowser.selectedTab = this.tab;
+          case "firefox":
+            this.tabBrowser.selectedTab = this.tab;
+            break;
 
-        } else {
-          throw new UnsupportedOperationError("switchToTab() not supported");
+          default:
+            throw new UnsupportedOperationError(
+              `switchToTab() not supported in ${this.driver.appName}`);
         }
       }
     }
