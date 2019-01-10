@@ -829,6 +829,19 @@ interface nsIDOMWindowUtils : nsISupports {
   DOMRect getBoundsWithoutFlushing(in Element aElement);
 
   /**
+   * Scroll the visual viewport to the given coordinates, relative to the
+   * document origin.
+   * Only applicable to the window associated with the root content document.
+   * Note: this does not take effect right away. Rather, the visual scroll
+   *       request is sent to APZ with the next transaction, and will be
+   *       reflected in the main thread with the subsequent APZ repaint request.
+   * Please see the caveats mentioned at nsIPresShell::
+   * SetPendingVisualViewportOffset(), and request APZ review if adding a new
+   * call to this.
+   */
+  void scrollToVisual(in float aOffsetX, in float aOffsetY);
+ 
+  /**
    * Returns the offset of the window's visual viewport relative to the
    * layout viewport.
    */
