@@ -4583,6 +4583,12 @@ void ObjectGroup::sweep(const AutoSweepObjectGroup& sweep) {
 
     MOZ_RELEASE_ASSERT(uintptr_t(oldArray[-1]) == oldCapacity);
 
+    auto poisonArray = mozilla::MakeScopeExit([oldArray, oldCapacity] {
+      size_t size = sizeof(Property*) * (oldCapacity + 1);
+      JS_POISON(oldArray - 1, JS_SWEPT_TI_PATTERN, size,
+                MemCheckKind::MakeUndefined);
+    });
+
     unsigned oldPropertyCount = propertyCount;
     unsigned oldPropertiesFound = 0;
 
