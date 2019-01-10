@@ -8,9 +8,9 @@
 
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsIContentIterator.h"
 #include "nsISupportsImpl.h"
 #include "nscore.h"
+#include "mozilla/ContentIterator.h"
 #include "mozilla/UniquePtr.h"
 
 class nsAtom;
@@ -65,7 +65,7 @@ class nsFilteredContentIterator final : public nsIContentIterator {
 
   nsCOMPtr<nsIContentIterator> mCurrentIterator;
   nsCOMPtr<nsIContentIterator> mIterator;
-  nsCOMPtr<nsIContentIterator> mPreIterator;
+  RefPtr<mozilla::PreContentIterator> mPreIterator;
 
   RefPtr<nsAtom> mBlockQuoteAtom;
   RefPtr<nsAtom> mScriptAtom;
