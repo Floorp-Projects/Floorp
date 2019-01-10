@@ -124,7 +124,7 @@ if CONFIG['PGO_PROFILE_PATH']:
     ]
     GENERATED_FILES[profdata_gen].script = 'build/merge_profdata.py'
     GENERATED_FILES[profdata_gen].inputs = [
-        CONFIG['PGO_PROFILE_PATH'],
+        '/' + CONFIG['PGO_PROFILE_PATH'],
     ]
 
 DIRS += [
