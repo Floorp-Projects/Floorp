@@ -307,22 +307,14 @@ nsresult nsSVGLength2::NewValueSpecifiedUnits(uint16_t unitType,
   return NS_OK;
 }
 
-nsresult nsSVGLength2::ToDOMBaseVal(DOMSVGLength** aResult,
-                                    SVGElement* aSVGElement) {
-  RefPtr<DOMSVGLength> domBaseVal =
-      DOMSVGLength::GetTearOff(this, aSVGElement, false);
-
-  domBaseVal.forget(aResult);
-  return NS_OK;
+already_AddRefed<DOMSVGLength> nsSVGLength2::ToDOMBaseVal(
+    SVGElement* aSVGElement) {
+  return DOMSVGLength::GetTearOff(this, aSVGElement, false);
 }
 
-nsresult nsSVGLength2::ToDOMAnimVal(DOMSVGLength** aResult,
-                                    SVGElement* aSVGElement) {
-  RefPtr<DOMSVGLength> domAnimVal =
-      DOMSVGLength::GetTearOff(this, aSVGElement, true);
-
-  domAnimVal.forget(aResult);
-  return NS_OK;
+already_AddRefed<DOMSVGLength> nsSVGLength2::ToDOMAnimVal(
+    SVGElement* aSVGElement) {
+  return DOMSVGLength::GetTearOff(this, aSVGElement, true);
 }
 
 /* Implementation */
