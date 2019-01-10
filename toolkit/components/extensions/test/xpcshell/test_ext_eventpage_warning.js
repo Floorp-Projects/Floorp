@@ -44,6 +44,20 @@ add_task(async function test_eventpages() {
         "nonExistentProp": true,
       },
     },
+    {
+      message: "testing persistent background page",
+      eventPage: {
+        "page": "event-page.html",
+        "persistent": true,
+      },
+    },
+    {
+      message: "testing scripts with persistent background running as a background page",
+      eventPage: {
+        "scripts": ["event_page_script.js"],
+        "persistent": true,
+      },
+    },
   ];
 
   let {messages} = await promiseConsoleOutput(async () => {
@@ -61,5 +75,5 @@ add_task(async function test_eventpages() {
     {message: /Event pages are not currently supported./},
     {message: /Event pages are not currently supported./},
     {message: /Reading manifest: Error processing background.nonExistentProp: An unexpected property was found/},
-  ]});
+  ]}, true);
 });

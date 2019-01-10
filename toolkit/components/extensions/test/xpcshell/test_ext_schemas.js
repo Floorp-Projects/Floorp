@@ -1739,3 +1739,42 @@ add_task(async function testReturns() {
               "Doesn't throw for invalid result value in release builds");
   }
 });
+
+let booleanEnumJson = [{
+  namespace: "booleanEnum",
+
+  types: [
+    {
+      "id": "enumTrue",
+      "type": "boolean",
+      "enum": [true],
+    },
+  ],
+  functions: [
+    {
+      name: "paramMustBeTrue",
+      type: "function",
+      parameters: [
+        {name: "arg", "$ref": "enumTrue"},
+      ],
+    },
+  ],
+}];
+
+add_task(async function testBooleanEnum() {
+  let url = "data:," + JSON.stringify(booleanEnumJson);
+  Schemas._rootSchema = null;
+  await Schemas.load(url);
+
+  let root = {};
+  tallied = null;
+  Schemas.inject(root, wrapper);
+  Assert.equal(tallied, null);
+
+  ok(root.booleanEnum, "namespace exists");
+  root.booleanEnum.paramMustBeTrue(true);
+  verify("call", "booleanEnum", "paramMustBeTrue", [true]);
+  Assert.throws(() => root.booleanEnum.paramMustBeTrue(false),
+                /Type error for parameter arg \(Invalid value false\) for booleanEnum\.paramMustBeTrue\./,
+                "should throw because enum of the type restricts parameter to true");
+});
