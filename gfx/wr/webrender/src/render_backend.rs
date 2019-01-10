@@ -30,6 +30,7 @@ use frame_builder::{FrameBuilder, FrameBuilderConfig};
 use gpu_cache::GpuCache;
 use hit_test::{HitTest, HitTester};
 use internal_types::{DebugOutput, FastHashMap, FastHashSet, RenderedDocument, ResultMsg};
+use malloc_size_of::{MallocSizeOf, MallocSizeOfOps};
 use picture::RetainedTiles;
 use prim_store::{PrimitiveDataStore, PrimitiveScratchBuffer, PrimitiveInstance};
 use prim_store::{PrimitiveInstanceKind, PrimTemplateCommonData};
@@ -88,7 +89,7 @@ impl DocumentView {
     }
 }
 
-#[derive(Copy, Clone, Hash, PartialEq, PartialOrd, Debug, Eq, Ord)]
+#[derive(Copy, Clone, Hash, MallocSizeOf, PartialEq, PartialOrd, Debug, Eq, Ord)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct FrameId(usize);
@@ -142,7 +143,7 @@ impl ::std::ops::Sub<usize> for FrameId {
 /// decisions. As such, we use the `FrameId` for equality and comparison, since
 /// we should never have two `FrameStamps` with the same id but different
 /// timestamps.
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, MallocSizeOf)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct FrameStamp {
@@ -679,7 +680,7 @@ pub struct RenderBackend {
     notifier: Box<RenderNotifier>,
     recorder: Option<Box<ApiRecordingReceiver>>,
     sampler: Option<Box<AsyncPropertySampler + Send>>,
-    size_of_op: Option<VoidPtrToSizeFn>,
+    size_of_ops: Option<MallocSizeOfOps>,
     debug_flags: DebugFlags,
     namespace_alloc_by_client: bool,
 }
@@ -698,7 +699,7 @@ impl RenderBackend {
         frame_config: FrameBuilderConfig,
         recorder: Option<Box<ApiRecordingReceiver>>,
         sampler: Option<Box<AsyncPropertySampler + Send>>,
-        size_of_op: Option<VoidPtrToSizeFn>,
+        size_of_ops: Option<MallocSizeOfOps>,
         debug_flags: DebugFlags,
         namespace_alloc_by_client: bool,
     ) -> RenderBackend {
@@ -718,7 +719,7 @@ impl RenderBackend {
             notifier,
             recorder,
             sampler,
-            size_of_op,
+            size_of_ops,
             debug_flags,
             namespace_alloc_by_client,
         }
@@ -1552,16 +1553,16 @@ impl RenderBackend {
         serde_json::to_string(&debug_root).unwrap()
     }
 
-    fn report_memory(&self, tx: MsgSender<MemoryReport>) {
+    fn report_memory(&mut self, tx: MsgSender<MemoryReport>) {
         let mut report = MemoryReport::default();
-        let op = self.size_of_op.unwrap();
-        report.gpu_cache_metadata = self.gpu_cache.malloc_size_of(op);
+        let ops = self.size_of_ops.as_mut().unwrap();
+        let op = ops.size_of_op;
+        report.gpu_cache_metadata = self.gpu_cache.size_of(ops);
         for (_id, doc) in &self.documents {
             if let Some(ref fb) = doc.frame_builder {
-                report.clip_stores += fb.clip_store.malloc_size_of(op);
+                report.clip_stores += fb.clip_store.size_of(ops);
             }
-            report.hit_testers +=
-                doc.hit_tester.as_ref().map_or(0, |ht| ht.malloc_size_of(op));
+            report.hit_testers += doc.hit_tester.size_of(ops);
 
             doc.resources.report_memory(op, &mut report)
         }
