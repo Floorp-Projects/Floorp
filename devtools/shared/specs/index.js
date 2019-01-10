@@ -295,14 +295,14 @@ const Types = exports.__TypesForTests = [
     front: "devtools/shared/fronts/worker/push-subscription",
   },
   {
-    types: ["serviceWorkerRegistration"],
-    spec: "devtools/shared/specs/worker/service-worker-registration",
-    front: "devtools/shared/fronts/worker/service-worker-registration",
-  },
-  {
     types: ["serviceWorker"],
     spec: "devtools/shared/specs/worker/service-worker",
     front: "devtools/shared/fronts/worker/service-worker",
+  },
+  {
+    types: ["serviceWorkerRegistration"],
+    spec: "devtools/shared/specs/worker/service-worker-registration",
+    front: "devtools/shared/fronts/worker/service-worker-registration",
   },
 ];
 
