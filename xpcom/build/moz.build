@@ -17,6 +17,7 @@ EXPORTS += [
 EXPORTS.mozilla += [
     '!Services.h',
     'FileLocation.h',
+    'GeckoProcessTypes.h',
     'IOInterposer.h',
     'LateWriteChecks.h',
     'Omnijar.h',
