@@ -8,11 +8,6 @@ import kotlinx.coroutines.launch
 import mozilla.components.service.glean.storages.EventsStorageEngine
 import mozilla.components.support.base.log.logger.Logger
 
-// Maximum length of any string value in the extra dictionary, in UTF8 byte sequence length.
-internal const val MAX_LENGTH_EXTRA_KEY_VALUE = 80
-// Maximum length of any passed value string, in UTF8 byte sequence length.
-internal const val MAX_LENGTH_EVENT_VALUE = 80
-
 /**
  * This implements the developer facing API for recording events.
  *
@@ -37,10 +32,10 @@ data class EventMetricType(
     private val logger = Logger("glean/EventMetricType")
 
     companion object {
-        // Maximum length of any string value in the extra dictionary, in UTF8 byte sequence length.
-        private const val MAX_LENGTH_EXTRA_KEY_VALUE = 80
-        // Maximum length of any passed value string, in UTF8 byte sequence length.
-        private const val MAX_LENGTH_VALUE = 80
+        // Maximum length of any string value in the extra dictionary, in characters
+        internal const val MAX_LENGTH_EXTRA_KEY_VALUE = 80
+        // Maximum length of any passed value string, in characters
+        internal const val MAX_LENGTH_VALUE = 80
     }
 
     /**

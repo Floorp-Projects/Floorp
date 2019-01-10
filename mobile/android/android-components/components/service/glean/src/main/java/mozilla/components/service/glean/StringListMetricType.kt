@@ -30,7 +30,7 @@ data class StringListMetricType(
     private val logger = Logger("glean/StringListMetricType")
 
     companion object {
-        // Maximum length of any passed value string, in UTF8 byte sequence length.
+        // Maximum length of any passed value string, in characters.
         const val MAX_STRING_LENGTH = 50
     }
 

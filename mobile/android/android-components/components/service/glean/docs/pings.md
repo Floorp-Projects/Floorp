@@ -72,3 +72,11 @@ additional metadata without the need of unpacking the ping payload. A typical su
 - `<doc-type>`: the name of the ping; this can be one of the pings available out of the box with glean, or a custom ping;
 - `<glean-schema-version>`: the version of the glean ping schema;
 - `<ping-uuid>`: a unique identifier for this ping.
+
+## A note about string length
+In order to ensure that pings don't become accidentally large, most string
+values are automatically truncated. The current implementation truncates based
+on a maximum number of Unicode characters (defined in the API docs), since is
+the most expedient implementation-wise. Other or future implementations may
+perform this truncation based on the number of UTF8 bytes instead, which is
+ultimately what matters for ping size.

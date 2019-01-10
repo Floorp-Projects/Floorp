@@ -24,8 +24,7 @@ internal object ExperimentsStorageEngine : StorageEngine {
 
     private val logger = Logger("glean/ExperimentsStorageEngine")
 
-    // Maximum length of the experiment and branch names, in UTF8 byte
-    // sequence length
+    // Maximum length of the experiment and branch names, in characters.
     private const val MAX_ID_LENGTH = 30
 
     data class RecordedExperimentData(

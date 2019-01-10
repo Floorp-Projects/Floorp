@@ -30,15 +30,15 @@ data class StringMetricType(
     private val logger = Logger("glean/StringMetricType")
 
     companion object {
-        // Maximum length of any passed value string, in UTF8 byte sequence length.
+        // Maximum length of any passed value string, in characters.
         private const val MAX_LENGTH_VALUE = 50
     }
 
     /**
      * Set a string value.
      *
-     * @param value This is a user defined string value. The maximum length of
-     * this string is defined the metrics.yaml file by max_length.
+     * @param value This is a user defined string value. If the length of the string
+     * exceeds [MAX_LENGTH_VALUE] characters, it will be truncated.
      */
     fun set(value: String) {
         // TODO report errors through other special metrics handled by the SDK. See bug 1499761.

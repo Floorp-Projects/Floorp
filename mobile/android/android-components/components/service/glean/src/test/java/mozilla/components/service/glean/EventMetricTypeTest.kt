@@ -169,7 +169,7 @@ class EventMetricTypeTest {
         val secondEvent = snapshot.filter { e -> e.objectId == "buttonB" }.single()
         assertEquals("ui", secondEvent.category)
         assertEquals("click", secondEvent.name)
-        assertEquals(testValue.repeat(10).substring(0, MAX_LENGTH_EVENT_VALUE), secondEvent.value)
+        assertEquals(testValue.repeat(10).substring(0, EventMetricType.MAX_LENGTH_VALUE), secondEvent.value)
     }
 
     @Test
@@ -237,7 +237,7 @@ class EventMetricTypeTest {
             "'extra' keys must be correctly recorded and truncated",
             mapOf(
                 "extra1" to testValue,
-                "truncatedExtra" to (testValue.repeat(10)).substring(0, MAX_LENGTH_EXTRA_KEY_VALUE)
+                "truncatedExtra" to (testValue.repeat(10)).substring(0, EventMetricType.MAX_LENGTH_EXTRA_KEY_VALUE)
             ).equals(snapshot.first().extra))
     }
 }
