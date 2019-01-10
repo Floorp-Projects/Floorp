@@ -1043,12 +1043,14 @@ void js::Nursery::freeMallocedBuffers() {
     return;
   }
 
-  bool started;
+  bool started = false;
   {
     AutoLockHelperThreadState lock;
     freeMallocedBuffersTask->joinWithLockHeld(lock);
     freeMallocedBuffersTask->transferBuffersToFree(mallocedBuffers, lock);
-    started = freeMallocedBuffersTask->startWithLockHeld(lock);
+    if (CanUseExtraThreads()) {
+      started = freeMallocedBuffersTask->startWithLockHeld(lock);
+    }
   }
 
   if (!started) {
