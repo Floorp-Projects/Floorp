@@ -173,7 +173,7 @@ DataTransferItem* DataTransferItemList::Add(File& aData,
   }
 
   nsCOMPtr<nsISupports> supports = do_QueryObject(&aData);
-  nsCOMPtr<nsIWritableVariant> data = new nsVariant();
+  nsCOMPtr<nsIWritableVariant> data = new nsVariantCC();
   data->SetAsISupports(supports);
 
   nsAutoString type;
