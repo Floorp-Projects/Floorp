@@ -45,3 +45,10 @@ if [ -d "${VSPATH}" ]; then
 fi
 
 . $topsrcdir/build/mozconfig.vs-common
+
+mk_export_correct_style WINDOWSSDKDIR
+mk_export_correct_style WIN32_REDIST_DIR
+mk_export_correct_style WIN_DIA_SDK_BIN_DIR
+mk_export_correct_style PATH
+mk_export_correct_style INCLUDE
+mk_export_correct_style LIB
