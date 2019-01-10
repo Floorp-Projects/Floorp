@@ -81,15 +81,23 @@ For decoding character encodings that occur in email, use the
 [`charset`](https://crates.io/crates/charset) crate instead of using this
 one directly. (It wraps this crate and adds UTF-7 decoding.)
 
+## Windows Code Page Identifier Mappings
+
+For mappings to and from Windows code page identifiers, use the
+[`codepage`](https://crates.io/crates/codepage) crate.
+
 ## Licensing
 
 Please see the file named
 [COPYRIGHT](https://github.com/hsivonen/encoding_rs/blob/master/COPYRIGHT).
 
-## API Documentation
+## Documentation
 
 Generated [API documentation](https://docs.rs/encoding_rs/) is available
 online.
+
+There is a [long-form write-up](https://hsivonen.fi/encoding_rs/) about the
+design and internals of the crate.
 
 ## C and C++ bindings
 
@@ -102,6 +110,9 @@ For the Gecko context, there's a
 [C++ wrapper using the MFBT/XPCOM types](https://searchfox.org/mozilla-central/source/intl/Encoding.h#100).
 
 These bindings do not cover the `mem` module.
+
+There's a [write-up](https://hsivonen.fi/modern-cpp-in-rust/) about the C++
+wrappers.
 
 ## Sample programs
 
@@ -326,6 +337,8 @@ To regenerate the generated code:
  * Have Python 2 installed.
  * Clone [`https://github.com/hsivonen/encoding_c`](https://github.com/hsivonen/encoding_c)
    next to the `encoding_rs` directory.
+ * Clone [`https://github.com/hsivonen/codepage`](https://github.com/hsivonen/codepage)
+   next to the `encoding_rs` directory.
  * Clone [`https://github.com/whatwg/encoding`](https://github.com/whatwg/encoding)
    next to the `encoding_rs` directory.
  * Checkout revision `f381389` of the `encoding` repo.
@@ -365,15 +378,20 @@ To regenerate the generated code:
 - [ ] ~Investigate Björn Höhrmann's lookup table acceleration for UTF-8 as
       adapted to Rust in rust-encoding.~
 - [x] Add actually fast CJK encode options.
-- [ ] Investigate [Bob Steagall's lookup table acceleration for UTF-8](https://github.com/BobSteagall/CppNow2018/blob/master/FastConversionFromUTF-8/Fast%20Conversion%20From%20UTF-8%20with%20C%2B%2B%2C%20DFAs%2C%20and%20SSE%20Intrinsics%20-%20Bob%20Steagall%20-%20C%2B%2BNow%202018.pdf).
+- [ ] ~Investigate [Bob Steagall's lookup table acceleration for UTF-8](https://github.com/BobSteagall/CppNow2018/blob/master/FastConversionFromUTF-8/Fast%20Conversion%20From%20UTF-8%20with%20C%2B%2B%2C%20DFAs%2C%20and%20SSE%20Intrinsics%20-%20Bob%20Steagall%20-%20C%2B%2BNow%202018.pdf).~
 
 ## Release Notes
 
+### 0.8.14
+
+* Made UTF-16 to UTF-8 encode conversion fill the output buffer as
+  closely as possible.
+
 ### 0.8.13
 
-* Made the UTF-8 to UTF-16 compare the number of code units written with the
-  length of the right slice (the output slice) to fix a panic introduced in
-  0.8.11.
+* Made the UTF-8 to UTF-16 decoder compare the number of code units written
+  with the length of the right slice (the output slice) to fix a panic
+  introduced in 0.8.11.
 
 ### 0.8.12
 

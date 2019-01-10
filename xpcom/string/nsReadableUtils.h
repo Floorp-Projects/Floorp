@@ -129,8 +129,7 @@ inline void ConvertLatin1toUTF16(mozilla::Span<const char> aSource,
 /**
  * Lone surrogates are replaced with the REPLACEMENT CHARACTER.
  *
- * The length of aDest must be at least the length of aSource times three
- * _plus one_.
+ * The length of aDest must be at least the length of aSource times three.
  *
  * Returns the number of code units written.
  */

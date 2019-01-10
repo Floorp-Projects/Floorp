@@ -282,7 +282,7 @@ fn convert_unaligned_utf16_to_utf8<E: Endian>(
                 unit
             }
             CopyAsciiResult::Stop(read_written) => {
-                return (src_pos + read_written, dst_pos + read_written, false)
+                return (src_pos + read_written, dst_pos + read_written, false);
             }
         };
         if dst_pos >= dst_len_minus_three {
