@@ -28,6 +28,7 @@ this.EXPORTED_SYMBOLS = [
   "TimedPromise",
   "waitForEvent",
   "waitForMessage",
+  "waitForObserverTopic",
 ];
 
 const {TYPE_ONE_SHOT, TYPE_REPEATING_SLACK} = Ci.nsITimer;
@@ -509,5 +510,53 @@ function waitForMessage(messageManager, messageName,
       messageManager.removeMessageListener(messageName, onMessage);
       resolve(msg.data);
     });
+  });
+}
+
+/**
+ * Wait for the specified observer topic to be observed.
+ *
+ * This method has been duplicated from TestUtils.jsm.
+ *
+ * Because this function is intended for testing, any error in checkFn
+ * will cause the returned promise to be rejected instead of waiting for
+ * the next notification, since this is probably a bug in the test.
+ *
+ * @param {string} topic
+ *     The topic to observe.
+ * @param {Object=} options
+ *     Extra options.
+ * @param {function(String,Object)=} options.checkFn
+ *     Called with ``subject``, and ``data`` as arguments, should return true
+ *     if the notification is the expected one, or false if it should be
+ *     ignored and listening should continue. If not specified, the first
+ *     notification for the specified topic resolves the returned promise.
+ *
+ * @return {Promise.<Array<String, Object>>}
+ *     Promise which resolves to an array of ``subject``, and ``data`` from
+ *     the observed notification.
+ */
+function waitForObserverTopic(topic, {checkFn = null} = {}) {
+  if (typeof topic != "string") {
+    throw new TypeError();
+  }
+  if (checkFn != null && typeof checkFn != "function") {
+    throw new TypeError();
+  }
+
+  return new Promise((resolve, reject) => {
+    Services.obs.addObserver(function observer(subject, topic, data) {
+      log.trace(`Received observer notification ${topic}`);
+      try {
+        if (checkFn && !checkFn(subject, data)) {
+          return;
+        }
+        Services.obs.removeObserver(observer, topic);
+        resolve({subject, data});
+      } catch (ex) {
+        Services.obs.removeObserver(observer, topic);
+        reject(ex);
+      }
+    }, topic);
   });
 }
