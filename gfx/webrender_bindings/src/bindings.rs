@@ -1699,8 +1699,6 @@ pub extern "C" fn wr_api_capture(
     let _ = create_dir_all(&path);
     match File::create(path.join("wr.txt")) {
         Ok(mut file) => {
-            let revision = include_bytes!("../revision.txt");
-            file.write(revision).unwrap();
             // The Gecko HG revision is available at compile time
             if let Some(moz_revision) = option_env!("GECKO_HEAD_REV") {
                 writeln!(file, "mozilla-central {}", moz_revision).unwrap();

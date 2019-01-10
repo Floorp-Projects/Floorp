@@ -22,6 +22,10 @@ if not os.path.isfile("../encoding_c/src/lib.rs"):
   sys.stderr.write("This script also writes the generated parts of the encoding_c crate and needs a clone of https://github.com/hsivonen/encoding_c next to the encoding_rs directory.\n");
   sys.exit(-1)
 
+if not os.path.isfile("../codepage/src/lib.rs"):
+  sys.stderr.write("This script also writes the generated parts of the codepage crate and needs a clone of https://github.com/hsivonen/codepage next to the encoding_rs directory.\n");
+  sys.exit(-1)
+
 def cmp_from_end(one, other):
   c = cmp(len(one), len(other))
   if c != 0:
@@ -119,8 +123,6 @@ single_byte = []
 
 multi_byte = []
 
-code_pages = []
-
 def to_camel_name(name):
   if name == u"iso-8859-8-i":
     return u"Iso8I"
@@ -136,6 +138,52 @@ def to_snake_name(name):
 
 def to_dom_name(name):
   return name
+
+# Guestimate based on
+# https://w3techs.com/technologies/overview/character_encoding/all
+# whose methodology is known to be bogus, but the results are credible for
+# this purpose. UTF-16LE lifted up due to prevalence on Windows and
+# "ANSI codepages" prioritized.
+encodings_by_code_page_frequency = [
+  "UTF-8",    
+  "UTF-16LE",
+  "windows-1252",
+  "windows-1251",
+  "GBK",
+  "Shift_JIS",
+  "EUC-KR",
+  "windows-1250",
+  "windows-1256",
+  "windows-1254",
+  "Big5",
+  "windows-874",
+  "windows-1255",
+  "windows-1253",
+  "windows-1257",
+  "windows-1258",
+  "EUC-JP",
+  "ISO-8859-2",
+  "ISO-8859-15",
+  "ISO-8859-7",
+  "KOI8-R",
+  "gb18030",
+  "ISO-8859-5",
+  "ISO-8859-8-I",
+  "ISO-8859-4",
+  "ISO-8859-6",
+  "ISO-2022-JP",
+  "KOI8-U",
+  "ISO-8859-13",
+  "ISO-8859-3",
+  "UTF-16BE",
+  "IBM866",
+  "ISO-8859-10",
+  "ISO-8859-8",
+  "macintosh",
+  "x-mac-cyrillic",
+  "ISO-8859-14",
+  "ISO-8859-16",
+]
 
 encodings_by_code_page = {
   932: "Shift_JIS",
@@ -185,17 +233,35 @@ for code_page, encoding in encodings_by_code_page.iteritems():
 
 encoding_by_alias_code_page = {
   951: "Big5",
+  10007: "x-mac-cyrillic",
   20936: "GBK",
   20949: "EUC-KR",
+  21010: "UTF-16LE", # Undocumented; needed by calamine for Excel compat
   28591: "windows-1252",
   28599: "windows-1254",
-  28601: "windows-847",
+  28601: "windows-874",
   50220: "ISO-2022-JP",
   50222: "ISO-2022-JP",
+  50225: "replacement", # ISO-2022-KR
+  50227: "replacement", # ISO-2022-CN
   51949: "EUC-JP",
   51936: "GBK",
   51949: "EUC-KR",
+  52936: "replacement", # HZ
 }
+
+code_pages = []
+
+for name in encodings_by_code_page_frequency:
+  code_pages.append(code_pages_by_encoding[name])
+
+encodings_by_code_page.update(encoding_by_alias_code_page)
+
+temp_keys = encodings_by_code_page.keys()
+temp_keys.sort()
+for code_page in temp_keys:
+  if not code_page in code_pages:
+    code_pages.append(code_page)
 
 # The position in the index (0 is the first index entry,
 # i.e. byte value 0x80) that starts the longest run of
@@ -1805,5 +1871,72 @@ for pointer in range(0, len(index)):
   else:
     jis0212_in_ref_file.write(u"\uFFFD\n".encode("utf-8"))
 jis0212_in_ref_file.close()
+
+(codepage_begin, codepage_end) = read_non_generated("../codepage/src/lib.rs")
+
+codepage_file = open("../codepage/src/lib.rs", "w")
+
+codepage_file.write(codepage_begin)
+codepage_file.write("""
+// Instead, please regenerate using generate-encoding-data.py
+
+/// Supported code page numbers in estimated order of usage frequency
+static CODE_PAGES: [u16; %d] = [
+""" % len(code_pages))
+
+for code_page in code_pages:
+  codepage_file.write("    %d,\n" % code_page)
+
+codepage_file.write("""];
+
+/// Encodings corresponding to the code page numbers in the same order
+static ENCODINGS: [&'static Encoding; %d] = [
+""" % len(code_pages))
+
+for code_page in code_pages:
+  name = encodings_by_code_page[code_page]
+  codepage_file.write("    &%s_INIT,\n" % to_constant_name(name))
+
+codepage_file.write("""];
+
+""")
+
+codepage_file.write(codepage_end)
+codepage_file.close()
+
+(codepage_test_begin, codepage_test_end) = read_non_generated("../codepage/src/tests.rs")
+
+codepage_test_file = open("../codepage/src/tests.rs", "w")
+
+codepage_test_file.write(codepage_test_begin)
+codepage_test_file.write("""
+// Instead, please regenerate using generate-encoding-data.py
+
+#[test]
+fn test_to_encoding() {
+    assert_eq!(to_encoding(0), None);
+
+""")
+
+for code_page in code_pages:
+  codepage_test_file.write("    assert_eq!(to_encoding(%d), Some(%s));\n" % (code_page, to_constant_name(encodings_by_code_page[code_page])))  
+
+codepage_test_file.write("""}
+
+#[test]
+fn test_from_encoding() {
+""")
+
+for name in preferred:
+  if code_pages_by_encoding.has_key(name):
+    codepage_test_file.write("    assert_eq!(from_encoding(%s), Some(%d));\n" % (to_constant_name(name), code_pages_by_encoding[name]))
+  else:
+    codepage_test_file.write("    assert_eq!(from_encoding(%s), None);\n" % to_constant_name(name))
+
+codepage_test_file.write("""}
+""")
+
+codepage_test_file.write(codepage_test_end)
+codepage_test_file.close()
 
 subprocess.call(["cargo", "fmt"])

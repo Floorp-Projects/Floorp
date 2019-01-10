@@ -51,13 +51,13 @@ char* ToNewUTF8String(const nsAString& aSource, uint32_t* aUTF8Count) {
   // The uses of this function seem temporary enough that it's not
   // worthwhile to be fancy about the allocation size. Let's just use
   // the worst case.
-  // Times 3 plus 2, because ConvertUTF16toUTF8 requires times 3 plus 1 and
+  // Times 3 plus 1, because ConvertUTF16toUTF8 requires times 3 and
   // then we have the terminator.
   // Using CheckedInt<uint32_t>, because aUTF8Count is uint32_t* for
   // historical reasons.
   mozilla::CheckedInt<uint32_t> destLen(len);
   destLen *= 3;
-  destLen += 2;
+  destLen += 1;
   if (!destLen.isValid()) {
     return nullptr;
   }
