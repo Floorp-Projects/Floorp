@@ -10,6 +10,8 @@ private object Versions {
     const val androidx_appcompat = "1.0.2"
     const val androidx_constraint_layout = "1.1.3"
 
+    const val mozilla_android_components = "0.37.0"
+
     const val junit = "4.12"
     const val test_tools = "1.0.2"
     const val espresso_core = "2.2.2"
@@ -26,6 +28,9 @@ object Deps {
 
     const val androidx_appcompat = "androidx.appcompat:appcompat:${Versions.androidx_appcompat}"
     const val androidx_constraintlayout = "androidx.constraintlayout:constraintlayout:${Versions.androidx_constraint_layout}"
+
+    const val mozilla_browser_awesomebar = "org.mozilla.components:browser-awesomebar:${Versions.mozilla_android_components}"
+    const val mozilla_browser_toolbar = "org.mozilla.components:browser-toolbar:${Versions.mozilla_android_components}"
 
     const val junit = "junit:junit:${Versions.junit}"
     const val tools_test_runner = "com.android.support.test:runner:${Versions.test_tools}"

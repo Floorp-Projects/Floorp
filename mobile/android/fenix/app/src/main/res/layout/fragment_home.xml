@@ -2,11 +2,14 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                                                   xmlns:app="http://schemas.android.com/apk/res-auto" xmlns:tools="http://schemas.android.com/tools"
-             android:layout_width="match_parent"
-             android:layout_height="match_parent"
-             tools:context=".home.HomeFragment">
+<androidx.constraintlayout.widget.ConstraintLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context=".home.HomeFragment"
+        android:clipToPadding="false">
 
 
     <ImageButton
@@ -28,7 +31,7 @@
             app:layout_constraintTop_toTopOf="@id/menuButton" />
 
     <ImageView
-            android:id="@+id/imageView"
+            android:id="@+id/wordmark"
             android:src="@drawable/ic_logo_wordmark"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -36,5 +39,29 @@
             android:layout_marginTop="42dp"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintTop_toBottomOf="@id/menuButton" />
+
+    <FrameLayout
+            android:id="@+id/toolbar_wrapper"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="64dp"
+            android:layout_marginLeft="16dp"
+            android:layout_marginRight="16dp"
+            android:background="@drawable/home_search_background"
+            app:layout_constraintTop_toBottomOf="@id/wordmark"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            android:outlineProvider="paddedBounds"
+            android:clipToPadding="false"
+            android:elevation="5dp">
+
+        <mozilla.components.browser.toolbar.BrowserToolbar
+                android:id="@+id/toolbar"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:layout_margin="8dp"
+                android:background="@android:color/white" />
+
+    </FrameLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

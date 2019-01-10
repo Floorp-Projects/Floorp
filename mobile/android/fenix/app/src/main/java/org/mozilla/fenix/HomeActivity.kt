@@ -9,7 +9,6 @@ import androidx.appcompat.app.AppCompatActivity
 import org.mozilla.fenix.home.HomeFragment
 
 class HomeActivity : AppCompatActivity() {
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home)
@@ -18,6 +17,5 @@ class HomeActivity : AppCompatActivity() {
             replace(R.id.container, HomeFragment.create())
             commit()
         }
-
     }
 }
