@@ -3557,7 +3557,7 @@ void GCRuntime::queueZonesForBackgroundSweep(ZoneList& zones) {
   AutoLockHelperThreadState lock;
   backgroundSweepZones.ref().transferFrom(zones);
   if (sweepOnBackgroundThread) {
-    sweepTask.startIfIdle(lock);
+    sweepTask.startOrRunIfIdle(lock);
   }
 }
 
@@ -3577,49 +3577,6 @@ void GCRuntime::freeAllLifoBlocksAfterMinorGC(LifoAlloc* lifo) {
   blocksToFreeAfterMinorGC.ref().transferFrom(lifo);
 }
 
-BackgroundSweepTask::BackgroundSweepTask(JSRuntime* rt)
-    : GCParallelTaskHelper(rt), done(false) {}
-
-bool BackgroundSweepTask::isRunning() const {
-  AutoLockHelperThreadState lock;
-  return isRunningWithLockHeld(lock);
-}
-
-bool BackgroundSweepTask::isRunningWithLockHeld(
-    const AutoLockHelperThreadState& lock) const {
-  return Base::isRunningWithLockHeld(lock) && !done;
-}
-
-void BackgroundSweepTask::startIfIdle(AutoLockHelperThreadState& lock) {
-  MOZ_ASSERT(CanUseExtraThreads());
-
-  if (isRunningWithLockHeld(lock)) {
-    return;
-  }
-
-  // Join the previous invocation of the task. This will return immediately
-  // if the thread has never been started.
-  joinWithLockHeld(lock);
-
-  done = false;
-
-  if (!startWithLockHeld(lock)) {
-    AutoUnlockHelperThreadState unlock(lock);
-    runFromMainThread(runtime());
-  }
-}
-
-void BackgroundSweepTask::runFromMainThread(JSRuntime* rt) {
-  {
-    AutoLockHelperThreadState lock;
-    MOZ_ASSERT(!isRunningWithLockHeld(lock));
-    joinWithLockHeld(lock);
-    done = false;
-  }
-
-  Base::runFromMainThread(rt);
-}
-
 void BackgroundSweepTask::run() {
   AutoTraceLog logSweeping(TraceLoggerForCurrentThread(),
                            TraceLogger_GCSweeping);
@@ -3627,13 +3584,11 @@ void BackgroundSweepTask::run() {
   AutoLockHelperThreadState lock;
   AutoSetThreadIsSweeping threadIsSweeping;
 
-  MOZ_ASSERT(!done);
-
   runtime()->gc.sweepFromBackgroundThread(lock);
 
-  // Signal to the main thread that we're finished, because we release the
-  // lock again before GCParallelTask's state is changed to finished.
-  done = true;
+  // Signal to the main thread that we're about to finish, because we release
+  // the lock again before GCParallelTask's state is changed to finished.
+  setFinishing(lock);
 }
 
 void GCRuntime::sweepFromBackgroundThread(AutoLockHelperThreadState& lock) {
@@ -5452,7 +5407,7 @@ static void SweepUniqueIds(GCParallelTask* task) {
 
 void GCRuntime::startTask(GCParallelTask& task, gcstats::PhaseKind phase,
                           AutoLockHelperThreadState& locked) {
-  if (!task.startWithLockHeld(locked)) {
+  if (!CanUseExtraThreads() || !task.startWithLockHeld(locked)) {
     AutoUnlockHelperThreadState unlock(locked);
     gcstats::AutoPhase ap(stats(), phase);
     task.runFromMainThread(rt);
@@ -5790,7 +5745,7 @@ IncrementalProgress GCRuntime::endSweepingSweepGroup(FreeOp* fop,
   queueZonesForBackgroundSweep(zones);
 
   if (!sweepOnBackgroundThread) {
-    sweepTask.runFromMainThread(rt);
+    sweepTask.joinAndRunFromMainThread(rt);
   }
 
   return Finished;
