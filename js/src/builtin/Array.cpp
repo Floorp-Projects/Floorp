@@ -4424,7 +4424,7 @@ void js::ArraySpeciesLookup::initialize(JSContext* cx) {
 }
 
 void js::ArraySpeciesLookup::reset() {
-  JS_POISON(this, 0xBB, sizeof(*this), MemCheckKind::MakeUndefined);
+  AlwaysPoison(this, 0xBB, sizeof(*this), MemCheckKind::MakeUndefined);
   state_ = State::Uninitialized;
 }
 

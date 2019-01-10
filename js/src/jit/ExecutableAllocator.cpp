@@ -293,9 +293,9 @@ void ExecutableAllocator::addSizeOfCode(JS::CodeSizes* sizes) const {
       pool->mark();
     }
 
-    // Note: we use memset instead of JS_POISON because we want to poison
+    // Note: we use memset instead of js::Poison because we want to poison
     // JIT code in release builds too. Furthermore, we don't want the
-    // invalid-ObjectValue poisoning JS_POISON does in debug builds.
+    // invalid-ObjectValue poisoning js::Poison does in debug builds.
     memset(ranges[i].start, JS_SWEPT_CODE_PATTERN, ranges[i].size);
     MOZ_MAKE_MEM_NOACCESS(ranges[i].start, ranges[i].size);
   }

@@ -195,7 +195,7 @@ inline void InterpreterFrame::unsetIsDebuggee() {
 /*****************************************************************************/
 
 inline void InterpreterStack::purge(JSRuntime* rt) {
-  rt->gc.freeUnusedLifoBlocksAfterSweeping(&allocator_);
+  rt->gc.queueUnusedLifoBlocksForFree(&allocator_);
 }
 
 uint8_t* InterpreterStack::allocateFrame(JSContext* cx, size_t size) {

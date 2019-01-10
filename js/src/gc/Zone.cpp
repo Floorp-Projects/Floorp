@@ -538,6 +538,10 @@ void ZoneList::append(Zone* zone) {
 void ZoneList::transferFrom(ZoneList& other) {
   check();
   other.check();
+  if (!other.head) {
+    return;
+  }
+
   MOZ_ASSERT(tail != other.tail);
 
   if (tail) {
