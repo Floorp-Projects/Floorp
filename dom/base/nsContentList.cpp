@@ -13,6 +13,7 @@
 #include "nsContentList.h"
 #include "nsIContent.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/ContentIterator.h"
 #include "mozilla/dom/Element.h"
 #include "nsWrapperCacheInlines.h"
 #include "nsContentUtils.h"
@@ -30,7 +31,6 @@
 #include "PLDHashTable.h"
 
 #ifdef DEBUG_CONTENT_LIST
-#include "nsIContentIterator.h"
 #define ASSERT_IN_SYNC AssertInSync()
 #else
 #define ASSERT_IN_SYNC PR_BEGIN_MACRO PR_END_MACRO
@@ -890,11 +890,11 @@ void nsContentList::AssertInSync() {
                          ? mRootNode->AsDocument()->GetRootElement()
                          : mRootNode->AsContent();
 
-  nsCOMPtr<nsIContentIterator> iter;
+  RefPtr<PreContentIterator> preOrderIter;
   if (mDeep) {
-    iter = NS_NewPreContentIterator();
-    iter->Init(root);
-    iter->First();
+    preOrderIter = new PreContentIterator();
+    preOrderIter->Init(root);
+    preOrderIter->First();
   }
 
   uint32_t cnt = 0, index = 0;
@@ -904,7 +904,7 @@ void nsContentList::AssertInSync() {
     }
 
     nsIContent* cur =
-        mDeep ? iter->GetCurrentNode() : mRootNode->GetChildAt(index++);
+        mDeep ? preOrderIter->GetCurrentNode() : mRootNode->GetChildAt(index++);
     if (!cur) {
       break;
     }
@@ -916,7 +916,7 @@ void nsContentList::AssertInSync() {
     }
 
     if (mDeep) {
-      iter->Next();
+      preOrderIter->Next();
     }
   }
 
