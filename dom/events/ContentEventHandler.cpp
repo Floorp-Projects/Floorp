@@ -2110,8 +2110,8 @@ nsresult ContentEventHandler::OnQueryTextRect(WidgetQueryContentEvent* aEvent) {
   NS_ENSURE_SUCCESS(rv, rv);
 
   // used to iterate over all contents and their frames
-  nsCOMPtr<nsIContentIterator> iter = NS_NewContentIterator();
-  rv = iter->Init(rawRange.Start().AsRaw(), rawRange.End().AsRaw());
+  RefPtr<PostContentIterator> postOrderIter = new PostContentIterator();
+  rv = postOrderIter->Init(rawRange.Start().AsRaw(), rawRange.End().AsRaw());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return NS_ERROR_FAILURE;
   }
@@ -2298,8 +2298,8 @@ nsresult ContentEventHandler::OnQueryTextRect(WidgetQueryContentEvent* aEvent) {
     frame = frame->GetNextContinuation();
     if (!frame) {
       do {
-        iter->Next();
-        nsINode* node = iter->GetCurrentNode();
+        postOrderIter->Next();
+        nsINode* node = postOrderIter->GetCurrentNode();
         if (!node) {
           break;
         }
@@ -2319,7 +2319,7 @@ nsresult ContentEventHandler::OnQueryTextRect(WidgetQueryContentEvent* aEvent) {
         if (primaryFrame->IsTextFrame() || primaryFrame->IsBrFrame()) {
           frame = primaryFrame;
         }
-      } while (!frame && !iter->IsDone());
+      } while (!frame && !postOrderIter->IsDone());
       if (!frame) {
         break;
       }

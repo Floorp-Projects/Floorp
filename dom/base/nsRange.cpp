@@ -2616,8 +2616,8 @@ void nsRange::ToString(nsAString& aReturn, ErrorResult& aErr) {
      tradeoffs.
   */
 
-  nsCOMPtr<nsIContentIterator> iter = NS_NewContentIterator();
-  nsresult rv = iter->Init(this);
+  RefPtr<PostContentIterator> postOrderIter = new PostContentIterator();
+  nsresult rv = postOrderIter->Init(this);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aErr.Throw(rv);
     return;
@@ -2627,8 +2627,8 @@ void nsRange::ToString(nsAString& aReturn, ErrorResult& aErr) {
 
   // loop through the content iterator, which returns nodes in the range in
   // close tag order, and grab the text from any text node
-  while (!iter->IsDone()) {
-    nsINode* n = iter->GetCurrentNode();
+  for (; !postOrderIter->IsDone(); postOrderIter->Next()) {
+    nsINode* n = postOrderIter->GetCurrentNode();
 
 #ifdef DEBUG_range
     // If debug, dump it:
@@ -2651,8 +2651,6 @@ void nsRange::ToString(nsAString& aReturn, ErrorResult& aErr) {
         aReturn += tempString;
       }
     }
-
-    iter->Next();
   }
 
 #ifdef DEBUG_range
