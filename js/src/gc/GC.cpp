@@ -590,7 +590,7 @@ inline size_t Arena::finalize(FreeOp* fop, AllocKind thingKind,
       nmarked++;
     } else {
       t->finalize(fop);
-      Poison(t, JS_SWEPT_TENURED_PATTERN, thingSize,
+      AlwaysPoison(t, JS_SWEPT_TENURED_PATTERN, thingSize,
              MemCheckKind::MakeUndefined);
       gcTracer.traceTenuredFinalize(t);
     }
@@ -2952,11 +2952,9 @@ void GCRuntime::releaseRelocatedArenasWithoutUnlocking(Arena* arenaList,
     // Mark arena as empty
     arena->setAsFullyUnused();
 
-#if defined(JS_CRASH_DIAGNOSTICS) || defined(JS_GC_ZEAL)
-    Poison(reinterpret_cast<void*>(arena->thingsStart()),
-           JS_MOVED_TENURED_PATTERN, arena->getThingsSpan(),
-           MemCheckKind::MakeNoAccess);
-#endif
+    AlwaysPoison(reinterpret_cast<void*>(arena->thingsStart()),
+                 JS_MOVED_TENURED_PATTERN, arena->getThingsSpan(),
+                 MemCheckKind::MakeNoAccess);
 
     releaseArena(arena, lock);
     ++count;
