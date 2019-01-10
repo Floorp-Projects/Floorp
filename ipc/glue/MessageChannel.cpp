@@ -10,6 +10,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/ipc/ProcessChild.h"
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Move.h"
@@ -2524,7 +2525,16 @@ void MessageChannel::OnChannelErrorFromLink() {
 
   if (ChannelClosing != mChannelState) {
     if (mAbortOnError) {
-      MOZ_CRASH("Aborting on channel error.");
+      // mAbortOnError is set by main actors (e.g., ContentChild) to ensure
+      // that the process terminates even if normal shutdown is prevented.
+      // A MOZ_CRASH() here is not helpful because crash reporting relies
+      // on the parent process which we know is dead or otherwise unusable.
+      //
+      // Additionally, the parent process can (and often is) killed on Android
+      // when apps are backgrounded. We don't need to report a crash for
+      // normal behavior in that case.
+      printf_stderr("Exiting due to channel error.\n");
+      ProcessChild::QuickExit();
     }
     mChannelState = ChannelError;
     mMonitor->Notify();
