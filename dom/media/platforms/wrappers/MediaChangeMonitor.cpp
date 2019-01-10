@@ -146,7 +146,7 @@ class VPXChangeMonitor : public MediaChangeMonitor::CodecChangeMonitor {
 
   MediaResult CheckForChange(MediaRawData* aSample) override {
     // Don't look at encrypted content.
-    if (aSample->mCrypto.IsEncrypted()) {
+    if (aSample->mCrypto.mValid) {
       return NS_OK;
     }
     // For both VP8 and VP9, we only look for resolution changes
