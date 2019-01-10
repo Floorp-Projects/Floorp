@@ -3506,13 +3506,13 @@ GeckoDriver.prototype.setupReftest = async function(cmd) {
   }
 
   this._reftest = new reftest.Runner(this);
-  this._reftest.setup(urlCount, screenshot);
+  await this._reftest.setup(urlCount, screenshot);
 };
 
 
 /** Run a reftest. */
 GeckoDriver.prototype.runReftest = async function(cmd) {
-  let {test, references, expected, timeout, width, height} = cmd.parameters;
+  let {test, references, expected, timeout} = cmd.parameters;
 
   if (!this._reftest) {
     throw new UnsupportedOperationError(
@@ -3524,7 +3524,7 @@ GeckoDriver.prototype.runReftest = async function(cmd) {
   assert.array(references);
 
   return {value: await this._reftest.run(
-      test, references, expected, timeout, width, height)};
+      test, references, expected, timeout)};
 };
 
 /**

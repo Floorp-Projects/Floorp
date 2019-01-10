@@ -1620,8 +1620,6 @@ async function reftestWait(url, remote) {
 
   let reftestWait = false;
 
-  url = new URL(url).href;
-
   if (document.location.href !== url || document.readyState != "complete") {
     logger.debug(truncate`Waiting for page load of ${url}`);
     await new Promise(resolve => {
