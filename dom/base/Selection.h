@@ -592,7 +592,7 @@ class Selection final : public nsSupportsWeakReference,
    */
   void SetAnchorFocusRange(int32_t aIndex);
   void SelectFramesForContent(nsIContent* aContent, bool aSelected);
-  nsresult SelectAllFramesForContent(PostContentIterator* aPostOrderIter,
+  nsresult SelectAllFramesForContent(PostContentIterator& aPostOrderIter,
                                      nsIContent* aContent, bool aSelected);
   nsresult SelectFrames(nsPresContext* aPresContext, nsRange* aRange,
                         bool aSelect);

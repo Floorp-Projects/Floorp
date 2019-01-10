@@ -214,13 +214,12 @@ nsresult DeleteRangeTransaction::CreateTxnsToDeleteNodesBetween(
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  RefPtr<ContentSubtreeIterator> subtreeIter = new ContentSubtreeIterator();
-
-  nsresult rv = subtreeIter->Init(aRangeToDelete);
+  ContentSubtreeIterator subtreeIter;
+  nsresult rv = subtreeIter.Init(aRangeToDelete);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  while (!subtreeIter->IsDone()) {
-    nsCOMPtr<nsINode> node = subtreeIter->GetCurrentNode();
+  while (!subtreeIter.IsDone()) {
+    nsCOMPtr<nsINode> node = subtreeIter.GetCurrentNode();
     if (NS_WARN_IF(!node)) {
       return NS_ERROR_NULL_POINTER;
     }
@@ -236,7 +235,7 @@ nsresult DeleteRangeTransaction::CreateTxnsToDeleteNodesBetween(
     }
     AppendChild(deleteNodeTransaction);
 
-    subtreeIter->Next();
+    subtreeIter.Next();
   }
   return NS_OK;
 }
