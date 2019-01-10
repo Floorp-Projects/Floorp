@@ -2926,7 +2926,20 @@ void nsIFrame::BuildDisplayListForStackingContext(
 
   nsDisplayListBuilder::AutoContainerASRTracker contASRTracker(aBuilder);
 
-  DisplayListClipState::AutoSaveRestore clipState(aBuilder);
+  DisplayListClipState::AutoSaveRestore cssClip(aBuilder);
+  {
+    // The clip property clips everything, including filters and what not.
+    if (auto contentClip = GetClipPropClipRect(disp, effects, GetSize())) {
+      nsPoint offset = isTransformed
+                           ? GetOffsetToCrossDoc(
+                                 aBuilder->FindReferenceFrameFor(GetParent()))
+                           : aBuilder->GetCurrentFrameOffsetToReferenceFrame();
+
+      aBuilder->IntersectDirtyRect(*contentClip);
+      aBuilder->IntersectVisibleRect(*contentClip);
+      cssClip.ClipContentDescendants(*contentClip + offset);
+    }
+  }
 
   // If there is a current clip, then depending on the container items we
   // create, different things can happen to it. Some container items simply
@@ -2959,18 +2972,15 @@ void nsIFrame::BuildDisplayListForStackingContext(
     clipCapturedBy = ContainerItemType::eFilter;
   }
 
+  DisplayListClipState::AutoSaveRestore clipState(aBuilder);
   if (clipCapturedBy != ContainerItemType::eNone) {
     clipState.Clear();
-  }
-
-  Maybe<nsRect> clipForMask;
-  if (usingMask) {
-    clipForMask = ComputeClipForMaskItem(aBuilder, this);
   }
 
   mozilla::UniquePtr<HitTestInfo> hitTestInfo;
 
   nsDisplayListCollection set(aBuilder);
+  Maybe<nsRect> clipForMask;
   {
     DisplayListClipState::AutoSaveRestore nestedClipState(aBuilder);
     nsDisplayListBuilder::AutoInTransformSetter inTransformSetter(aBuilder,
@@ -2980,17 +2990,14 @@ void nsIFrame::BuildDisplayListForStackingContext(
 
     CheckForApzAwareEventHandlers(aBuilder, this);
 
-    Maybe<nsRect> contentClip = GetClipPropClipRect(disp, effects, GetSize());
-
     if (usingMask) {
-      contentClip = IntersectMaybeRects(contentClip, clipForMask);
-    }
-
-    if (contentClip) {
-      aBuilder->IntersectDirtyRect(*contentClip);
-      aBuilder->IntersectVisibleRect(*contentClip);
-      nestedClipState.ClipContentDescendants(*contentClip +
-                                             aBuilder->ToReferenceFrame(this));
+      clipForMask = ComputeClipForMaskItem(aBuilder, this);
+      if (clipForMask) {
+        aBuilder->IntersectDirtyRect(*clipForMask);
+        aBuilder->IntersectVisibleRect(*clipForMask);
+        nestedClipState.ClipContentDescendants(
+            *clipForMask + aBuilder->GetCurrentFrameOffsetToReferenceFrame());
+      }
     }
 
     // extend3DContext also guarantees that applyAbsPosClipping and
