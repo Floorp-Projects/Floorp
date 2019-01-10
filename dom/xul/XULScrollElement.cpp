@@ -36,22 +36,16 @@ void XULScrollElement::ScrollByIndex(int32_t aIndex, ErrorResult& aRv) {
     return;
   }
 
-  nsIFrame* scrolledBox = nsBox::GetChildXULBox(scrolledFrame);
-  if (!scrolledBox) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return;
-  }
-
   nsRect rect;
 
   // now get the element's first child
-  nsIFrame* child = nsBox::GetChildXULBox(scrolledBox);
+  nsIFrame* child = nsBox::GetChildXULBox(scrolledFrame);
 
-  bool horiz = scrolledBox->IsXULHorizontal();
+  bool horiz = scrolledFrame->IsXULHorizontal();
   nsPoint cp = sf->GetScrollPosition();
   nscoord diff = 0;
   int32_t curIndex = 0;
-  bool isLTR = scrolledBox->IsXULNormalDirection();
+  bool isLTR = scrolledFrame->IsXULNormalDirection();
 
   nscoord frameWidth = 0;
   if (!isLTR && horiz) {
@@ -110,7 +104,7 @@ void XULScrollElement::ScrollByIndex(int32_t aIndex, ErrorResult& aRv) {
     }
 
   } else if (aIndex < 0) {
-    child = nsBox::GetChildXULBox(scrolledBox);
+    child = nsBox::GetChildXULBox(scrolledFrame);
     while (child) {
       rect = child->GetRect();
       if (count >= curIndex + aIndex) {

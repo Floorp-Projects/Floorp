@@ -2150,8 +2150,11 @@ void Accessible::MoveChild(uint32_t aNewIndex, Accessible* aChild) {
 
   for (uint32_t idx = startIdx; idx <= endIdx; idx++) {
     mChildren[idx]->mIndexInParent = idx;
-    mChildren[idx]->mStateFlags |= eGroupInfoDirty;
     mChildren[idx]->mInt.mIndexOfEmbeddedChild = -1;
+  }
+
+  for (uint32_t idx = 0; idx < mChildren.Length(); idx++) {
+    mChildren[idx]->mStateFlags |= eGroupInfoDirty;
   }
 
   RefPtr<AccShowEvent> showEvent = new AccShowEvent(aChild);

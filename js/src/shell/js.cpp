@@ -1107,6 +1107,8 @@ static bool TrackUnhandledRejections(JSContext* cx, JS::HandleObject promise,
 static void ForwardingPromiseRejectionTrackerCallback(
     JSContext* cx, JS::HandleObject promise,
     JS::PromiseRejectionHandlingState state, void* data) {
+  AutoReportException are(cx);
+
   if (!TrackUnhandledRejections(cx, promise, state)) {
     return;
   }
@@ -1128,9 +1130,7 @@ static void ForwardingPromiseRejectionTrackerCallback(
   }
 
   RootedValue rval(cx);
-  if (!Call(cx, callback, UndefinedHandleValue, args, &rval)) {
-    JS_ClearPendingException(cx);
-  }
+  (void) Call(cx, callback, UndefinedHandleValue, args, &rval);
 }
 
 static bool SetPromiseRejectionTrackerCallback(JSContext* cx, unsigned argc,

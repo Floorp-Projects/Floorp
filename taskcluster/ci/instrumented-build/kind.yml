@@ -1,0 +1,54 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+loader: taskgraph.loader.transform:loader
+
+kind-dependencies:
+    - toolchain
+    - fetch
+
+transforms:
+    - taskgraph.transforms.build:transforms
+    - taskgraph.transforms.build_attrs:transforms
+    - taskgraph.transforms.build_lints:transforms
+    - taskgraph.transforms.use_toolchains:transforms
+    - taskgraph.transforms.job:transforms
+    - taskgraph.transforms.task:transforms
+
+job-defaults:
+    treeherder:
+        symbol: Bpgo(instr)
+        tier: 1
+
+jobs:
+    linux64/pgo:
+        description: "Linux64 Instrumented"
+        shipping-phase: build
+        shipping-product: firefox
+        treeherder:
+            platform: linux64/pgo
+        worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+        worker:
+            max-run-time: 7200
+            env:
+                PERFHERDER_EXTRA_OPTIONS: instrumented
+        run:
+            using: mozharness
+            actions: [get-secrets, build]
+            config:
+                - builds/releng_base_firefox.py
+                - builds/releng_base_linux_64_builds.py
+            script: "mozharness/scripts/fx_desktop_build.py"
+            secrets: true
+            mozconfig-variant: profile-generate
+            tooltool-downloads: public
+            need-xvfb: true
+        toolchains:
+            - linux64-binutils
+            - linux64-clang
+            - linux64-rust
+            - linux64-rust-size
+            - linux64-cbindgen
+            - linux64-sccache
+            - linux64-node

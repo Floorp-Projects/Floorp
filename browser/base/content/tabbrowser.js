@@ -113,7 +113,7 @@ window._gBrowser = {
 
   /**
    * `_createLazyBrowser` will define properties on the unbound lazy browser
-   * which correspond to properties defined in XBL which will be bound to
+   * which correspond to properties defined in MozBrowser which will be bound to
    * the browser when it is inserted into the document.  If any of these
    * properties are accessed by consumers, `_insertBrowser` is called and
    * the browser is inserted to ensure that things don't break.  This list
@@ -3093,14 +3093,14 @@ window._gBrowser = {
     if (aTab.linkedPanel) {
       this._outerWindowIDBrowserMap.delete(browser.outerWindowID);
 
-      // Because of the way XBL works (fields just set JS
-      // properties on the element) and the code we have in place
+      // Because of the fact that we are setting JS properties on
+      // the browser elements, and we have code in place
       // to preserve the JS objects for any elements that have
       // JS properties set on them, the browser element won't be
       // destroyed until the document goes away.  So we force a
       // cleanup ourselves.
-      // This has to happen before we remove the child so that the
-      // XBL implementation of nsIObserver still works.
+      // This has to happen before we remove the child since functions
+      // like `getBrowserContainer` expect the browser to be parented.
       browser.destroy();
     }
 

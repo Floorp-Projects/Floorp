@@ -47,8 +47,14 @@ bool AnimationEffect::IsCurrent() const {
   }
 
   ComputedTiming computedTiming = GetComputedTiming();
-  return computedTiming.mPhase == ComputedTiming::AnimationPhase::Before ||
-         computedTiming.mPhase == ComputedTiming::AnimationPhase::Active;
+  if (computedTiming.mPhase == ComputedTiming::AnimationPhase::Active) {
+    return true;
+  }
+
+  return (mAnimation->PlaybackRate() > 0 &&
+          computedTiming.mPhase == ComputedTiming::AnimationPhase::Before) ||
+         (mAnimation->PlaybackRate() < 0 &&
+          computedTiming.mPhase == ComputedTiming::AnimationPhase::After);
 }
 
 // https://drafts.csswg.org/web-animations/#in-effect

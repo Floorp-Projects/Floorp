@@ -62,7 +62,6 @@ toolkit.jar:
 #endif
    content/global/widgets.css
    content/global/bindings/autocomplete.xml    (widgets/autocomplete.xml)
-   content/global/bindings/browser.xml         (widgets/browser.xml)
    content/global/bindings/button.xml          (widgets/button.xml)
    content/global/bindings/calendar.js         (widgets/calendar.js)
    content/global/bindings/checkbox.xml        (widgets/checkbox.xml)
@@ -90,6 +89,7 @@ toolkit.jar:
    content/global/bindings/tree.xml            (widgets/tree.xml)
    content/global/bindings/videocontrols.xml   (widgets/videocontrols.xml)
 *  content/global/bindings/wizard.xml          (widgets/wizard.xml)
+   content/global/elements/browser-custom-element.js          (widgets/browser-custom-element.js)
    content/global/elements/datetimebox.js      (widgets/datetimebox.js)
    content/global/elements/findbar.js          (widgets/findbar.js)
    content/global/elements/editor.js           (widgets/editor.js)
