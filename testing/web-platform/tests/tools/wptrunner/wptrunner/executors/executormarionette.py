@@ -615,12 +615,15 @@ class ExecuteAsyncScriptRun(object):
             self.logger.info("NoSuchWindowException on command, setting status to CRASH")
             self.result = False, ("CRASH", None)
         except Exception as e:
-            message = getattr(e, "message", "")
-            if message:
-                message += "\n"
-            message += traceback.format_exc(e)
-            self.logger.warning(traceback.format_exc())
-            self.result = False, ("INTERNAL-ERROR", e)
+            if isinstance(e, errors.JavascriptException) and e.message.startswith("Document was unloaded"):
+                message = "Document unloaded; maybe test navigated the top-level-browsing context?"
+            else:
+                message = getattr(e, "message", "")
+                if message:
+                    message += "\n"
+                message += traceback.format_exc(e)
+                self.logger.warning(traceback.format_exc())
+            self.result = False, ("INTERNAL-ERROR", message)
         finally:
             self.result_flag.set()
 
