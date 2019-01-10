@@ -16,11 +16,11 @@
 #include "nsIContent.h"
 #include "mozilla/dom/Document.h"
 #include "nsError.h"
+#include "nsIContentIterator.h"
 #include "nsINodeList.h"
 #include "nsGkAtoms.h"
 #include "nsContentUtils.h"
 #include "nsTextFrame.h"
-#include "mozilla/ContentIterator.h"
 #include "mozilla/dom/CharacterData.h"
 #include "mozilla/dom/DocumentFragment.h"
 #include "mozilla/dom/DocumentType.h"
@@ -31,7 +31,6 @@
 #include "mozilla/dom/Selection.h"
 #include "mozilla/dom/Text.h"
 #include "mozilla/Telemetry.h"
-#include "mozilla/UniquePtr.h"
 #include "mozilla/Likely.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsStyleStruct.h"
@@ -1492,7 +1491,7 @@ void nsRange::SelectNodeContents(nsINode& aNode, ErrorResult& aRv) {
 // so that our methods/algorithms aren't cluttered with special
 // case code that tries to include these points while iterating.
 //
-// The RangeSubtreeIterator class mimics the ContentSubtreeIterator
+// The RangeSubtreeIterator class mimics the nsIContentIterator
 // methods we need, so should the Content Iterator support the
 // start/end points in the future, we can switchover relatively
 // easy.
@@ -1501,7 +1500,7 @@ class MOZ_STACK_CLASS RangeSubtreeIterator {
  private:
   enum RangeSubtreeIterState { eDone = 0, eUseStart, eUseIterator, eUseEnd };
 
-  UniquePtr<ContentSubtreeIterator> mSubtreeIter;
+  nsCOMPtr<nsIContentIterator> mIter;
   RangeSubtreeIterState mIterState;
 
   nsCOMPtr<nsINode> mStart;
@@ -1563,17 +1562,17 @@ nsresult RangeSubtreeIterator::Init(nsRange* aRange) {
     // Now create a Content Subtree Iterator to be used
     // for the subtrees between the end points!
 
-    mSubtreeIter = MakeUnique<ContentSubtreeIterator>();
+    mIter = NS_NewContentSubtreeIterator();
 
-    nsresult res = mSubtreeIter->Init(aRange);
+    nsresult res = mIter->Init(aRange);
     if (NS_FAILED(res)) return res;
 
-    if (mSubtreeIter->IsDone()) {
+    if (mIter->IsDone()) {
       // The subtree iterator thinks there's nothing
       // to iterate over, so just free it up so we
       // don't accidentally call into it.
 
-      mSubtreeIter = nullptr;
+      mIter = nullptr;
     }
   }
 
@@ -1592,8 +1591,8 @@ already_AddRefed<nsINode> RangeSubtreeIterator::GetCurrentNode() {
     node = mStart;
   } else if (mIterState == eUseEnd && mEnd) {
     node = mEnd;
-  } else if (mIterState == eUseIterator && mSubtreeIter) {
-    node = mSubtreeIter->GetCurrentNode();
+  } else if (mIterState == eUseIterator && mIter) {
+    node = mIter->GetCurrentNode();
   }
 
   return node.forget();
@@ -1602,8 +1601,8 @@ already_AddRefed<nsINode> RangeSubtreeIterator::GetCurrentNode() {
 void RangeSubtreeIterator::First() {
   if (mStart)
     mIterState = eUseStart;
-  else if (mSubtreeIter) {
-    mSubtreeIter->First();
+  else if (mIter) {
+    mIter->First();
 
     mIterState = eUseIterator;
   } else if (mEnd)
@@ -1615,8 +1614,8 @@ void RangeSubtreeIterator::First() {
 void RangeSubtreeIterator::Last() {
   if (mEnd)
     mIterState = eUseEnd;
-  else if (mSubtreeIter) {
-    mSubtreeIter->Last();
+  else if (mIter) {
+    mIter->Last();
 
     mIterState = eUseIterator;
   } else if (mStart)
@@ -1627,8 +1626,8 @@ void RangeSubtreeIterator::Last() {
 
 void RangeSubtreeIterator::Next() {
   if (mIterState == eUseStart) {
-    if (mSubtreeIter) {
-      mSubtreeIter->First();
+    if (mIter) {
+      mIter->First();
 
       mIterState = eUseIterator;
     } else if (mEnd)
@@ -1636,9 +1635,9 @@ void RangeSubtreeIterator::Next() {
     else
       mIterState = eDone;
   } else if (mIterState == eUseIterator) {
-    mSubtreeIter->Next();
+    mIter->Next();
 
-    if (mSubtreeIter->IsDone()) {
+    if (mIter->IsDone()) {
       if (mEnd)
         mIterState = eUseEnd;
       else
@@ -1650,8 +1649,8 @@ void RangeSubtreeIterator::Next() {
 
 void RangeSubtreeIterator::Prev() {
   if (mIterState == eUseEnd) {
-    if (mSubtreeIter) {
-      mSubtreeIter->Last();
+    if (mIter) {
+      mIter->Last();
 
       mIterState = eUseIterator;
     } else if (mStart)
@@ -1659,9 +1658,9 @@ void RangeSubtreeIterator::Prev() {
     else
       mIterState = eDone;
   } else if (mIterState == eUseIterator) {
-    mSubtreeIter->Prev();
+    mIter->Prev();
 
-    if (mSubtreeIter->IsDone()) {
+    if (mIter->IsDone()) {
       if (mStart)
         mIterState = eUseStart;
       else
@@ -2617,8 +2616,8 @@ void nsRange::ToString(nsAString& aReturn, ErrorResult& aErr) {
      tradeoffs.
   */
 
-  PostContentIterator postOrderIter;
-  nsresult rv = postOrderIter.Init(this);
+  nsCOMPtr<nsIContentIterator> iter = NS_NewContentIterator();
+  nsresult rv = iter->Init(this);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aErr.Throw(rv);
     return;
@@ -2628,8 +2627,8 @@ void nsRange::ToString(nsAString& aReturn, ErrorResult& aErr) {
 
   // loop through the content iterator, which returns nodes in the range in
   // close tag order, and grab the text from any text node
-  for (; !postOrderIter.IsDone(); postOrderIter.Next()) {
-    nsINode* n = postOrderIter.GetCurrentNode();
+  while (!iter->IsDone()) {
+    nsINode* n = iter->GetCurrentNode();
 
 #ifdef DEBUG_range
     // If debug, dump it:
@@ -2652,6 +2651,8 @@ void nsRange::ToString(nsAString& aReturn, ErrorResult& aErr) {
         aReturn += tempString;
       }
     }
+
+    iter->Next();
   }
 
 #ifdef DEBUG_range
@@ -3058,8 +3059,8 @@ void nsRange::ExcludeNonSelectableNodes(nsTArray<RefPtr<nsRange>>* aOutRanges) {
   nsRange* range = this;
   RefPtr<nsRange> newRange;
   while (range) {
-    PreContentIterator preOrderIter;
-    nsresult rv = preOrderIter.Init(range);
+    nsCOMPtr<nsIContentIterator> iter = NS_NewPreContentIterator();
+    nsresult rv = iter->Init(range);
     if (NS_FAILED(rv)) {
       return;
     }
@@ -3073,8 +3074,8 @@ void nsRange::ExcludeNonSelectableNodes(nsTArray<RefPtr<nsRange>>* aOutRanges) {
     nsIContent* firstNonSelectableContent = nullptr;
     while (true) {
       ErrorResult err;
-      nsINode* node = preOrderIter.GetCurrentNode();
-      preOrderIter.Next();
+      nsINode* node = iter->GetCurrentNode();
+      iter->Next();
       bool selectable = true;
       nsIContent* content =
           node && node->IsContent() ? node->AsContent() : nullptr;
@@ -3100,7 +3101,7 @@ void nsRange::ExcludeNonSelectableNodes(nsTArray<RefPtr<nsRange>>* aOutRanges) {
         if (!firstNonSelectableContent) {
           firstNonSelectableContent = content;
         }
-        if (preOrderIter.IsDone() && seenSelectable) {
+        if (iter->IsDone() && seenSelectable) {
           // The tail end of the initial range is non-selectable - truncate the
           // current range before the first non-selectable node.
           range->SetEndBefore(*firstNonSelectableContent, err);
@@ -3156,7 +3157,7 @@ void nsRange::ExcludeNonSelectableNodes(nsTArray<RefPtr<nsRange>>* aOutRanges) {
           aOutRanges->AppendElement(range);
         }
       }
-      if (preOrderIter.IsDone()) {
+      if (iter->IsDone()) {
         return;
       }
     }

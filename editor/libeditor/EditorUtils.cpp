@@ -5,13 +5,13 @@
 
 #include "mozilla/EditorUtils.h"
 
-#include "mozilla/ContentIterator.h"
 #include "mozilla/EditorDOMPoint.h"
 #include "mozilla/OwningNonNull.h"
 #include "mozilla/dom/Selection.h"
 #include "nsComponentManagerUtils.h"
 #include "nsError.h"
 #include "nsIContent.h"
+#include "nsIContentIterator.h"
 #include "nsIDocShell.h"
 #include "mozilla/dom/Document.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -28,21 +28,24 @@ using namespace dom;
  * some helper classes for iterating the dom tree
  *****************************************************************************/
 
-DOMIterator::DOMIterator(nsINode& aNode MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
-    : mIter(&mPostOrderIter) {
+DOMIterator::DOMIterator(
+    nsINode& aNode MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL) {
   MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+  mIter = NS_NewContentIterator();
   DebugOnly<nsresult> rv = mIter->Init(&aNode);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 }
 
 nsresult DOMIterator::Init(nsRange& aRange) {
+  mIter = NS_NewContentIterator();
   return mIter->Init(&aRange);
 }
 
-DOMIterator::DOMIterator(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_IN_IMPL)
-    : mIter(&mPostOrderIter) {
+DOMIterator::DOMIterator(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_IN_IMPL) {
   MOZ_GUARD_OBJECT_NOTIFIER_INIT;
 }
+
+DOMIterator::~DOMIterator() {}
 
 void DOMIterator::AppendList(
     const BoolDomIterFunctor& functor,
@@ -59,13 +62,14 @@ void DOMIterator::AppendList(
 
 DOMSubtreeIterator::DOMSubtreeIterator(
     MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_IN_IMPL)
-    : DOMIterator(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_TO_PARENT) {
-  mIter = &mSubtreeIter;
-}
+    : DOMIterator(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_TO_PARENT) {}
 
 nsresult DOMSubtreeIterator::Init(nsRange& aRange) {
+  mIter = NS_NewContentSubtreeIterator();
   return mIter->Init(&aRange);
 }
+
+DOMSubtreeIterator::~DOMSubtreeIterator() {}
 
 /******************************************************************************
  * some general purpose editor utils

@@ -3,57 +3,69 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "FilteredContentIterator.h"
-
-#include "mozilla/ContentIterator.h"
-#include "mozilla/Move.h"
 #include "mozilla/mozalloc.h"
-
+#include "mozilla/Move.h"
 #include "nsComponentManagerUtils.h"
 #include "nsComposeTxtSrvFilter.h"
 #include "nsContentUtils.h"
 #include "nsDebug.h"
 #include "nsError.h"
+#include "nsFilteredContentIterator.h"
 #include "nsAtom.h"
 #include "nsIContent.h"
+#include "nsIContentIterator.h"
 #include "nsINode.h"
 #include "nsISupportsBase.h"
 #include "nsISupportsUtils.h"
 #include "nsRange.h"
 
-namespace mozilla {
+using namespace mozilla;
 
-FilteredContentIterator::FilteredContentIterator(
+//------------------------------------------------------------
+nsFilteredContentIterator::nsFilteredContentIterator(
     UniquePtr<nsComposeTxtSrvFilter> aFilter)
-    : mCurrentIterator(nullptr),
+    : mIterator(NS_NewContentIterator()),
+      mPreIterator(NS_NewPreContentIterator()),
       mFilter(std::move(aFilter)),
       mDidSkip(false),
       mIsOutOfRange(false),
       mDirection(eDirNotSet) {}
 
-FilteredContentIterator::~FilteredContentIterator() {}
+//------------------------------------------------------------
+nsFilteredContentIterator::~nsFilteredContentIterator() {}
 
-NS_IMPL_CYCLE_COLLECTION(FilteredContentIterator, mPostIterator, mPreIterator,
-                         mRange)
+//------------------------------------------------------------
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsFilteredContentIterator)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsFilteredContentIterator)
 
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(FilteredContentIterator, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(FilteredContentIterator, Release)
+NS_INTERFACE_MAP_BEGIN(nsFilteredContentIterator)
+  NS_INTERFACE_MAP_ENTRY(nsIContentIterator)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIContentIterator)
+  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsFilteredContentIterator)
+NS_INTERFACE_MAP_END
 
-nsresult FilteredContentIterator::Init(nsINode* aRoot) {
+NS_IMPL_CYCLE_COLLECTION(nsFilteredContentIterator, mCurrentIterator, mIterator,
+                         mPreIterator, mRange)
+
+//------------------------------------------------------------
+nsresult nsFilteredContentIterator::Init(nsINode* aRoot) {
   NS_ENSURE_ARG_POINTER(aRoot);
+  NS_ENSURE_TRUE(mPreIterator, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(mIterator, NS_ERROR_FAILURE);
   mIsOutOfRange = false;
   mDirection = eForward;
-  mCurrentIterator = &mPreIterator;
+  mCurrentIterator = mPreIterator;
 
   mRange = new nsRange(aRoot);
   mRange->SelectNode(*aRoot, IgnoreErrors());
 
-  nsresult rv = mPreIterator.Init(mRange);
+  nsresult rv = mPreIterator->Init(mRange);
   NS_ENSURE_SUCCESS(rv, rv);
-  return mPostIterator.Init(mRange);
+  return mIterator->Init(mRange);
 }
 
-nsresult FilteredContentIterator::Init(nsRange* aRange) {
+//------------------------------------------------------------
+nsresult nsFilteredContentIterator::Init(nsRange* aRange) {
   if (NS_WARN_IF(!aRange)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -67,16 +79,17 @@ nsresult FilteredContentIterator::Init(nsRange* aRange) {
   return InitWithRange();
 }
 
-nsresult FilteredContentIterator::Init(nsINode* aStartContainer,
-                                       uint32_t aStartOffset,
-                                       nsINode* aEndContainer,
-                                       uint32_t aEndOffset) {
+//------------------------------------------------------------
+nsresult nsFilteredContentIterator::Init(nsINode* aStartContainer,
+                                         uint32_t aStartOffset,
+                                         nsINode* aEndContainer,
+                                         uint32_t aEndOffset) {
   return Init(RawRangeBoundary(aStartContainer, aStartOffset),
               RawRangeBoundary(aEndContainer, aEndOffset));
 }
 
-nsresult FilteredContentIterator::Init(const RawRangeBoundary& aStart,
-                                       const RawRangeBoundary& aEnd) {
+nsresult nsFilteredContentIterator::Init(const RawRangeBoundary& aStart,
+                                         const RawRangeBoundary& aEnd) {
   RefPtr<nsRange> range;
   nsresult rv = nsRange::CreateRange(aStart, aEnd, getter_AddRefs(range));
   if (NS_WARN_IF(NS_FAILED(rv)) || NS_WARN_IF(!range) ||
@@ -92,29 +105,34 @@ nsresult FilteredContentIterator::Init(const RawRangeBoundary& aStart,
   return InitWithRange();
 }
 
-nsresult FilteredContentIterator::InitWithRange() {
+nsresult nsFilteredContentIterator::InitWithRange() {
   MOZ_ASSERT(mRange);
   MOZ_ASSERT(mRange->IsPositioned());
 
+  if (NS_WARN_IF(!mPreIterator) || NS_WARN_IF(!mIterator)) {
+    return NS_ERROR_FAILURE;
+  }
+
   mIsOutOfRange = false;
   mDirection = eForward;
-  mCurrentIterator = &mPreIterator;
+  mCurrentIterator = mPreIterator;
 
-  nsresult rv = mPreIterator.Init(mRange);
+  nsresult rv = mPreIterator->Init(mRange);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
-  return mPostIterator.Init(mRange);
+  return mIterator->Init(mRange);
 }
 
-nsresult FilteredContentIterator::SwitchDirections(bool aChangeToForward) {
+//------------------------------------------------------------
+nsresult nsFilteredContentIterator::SwitchDirections(bool aChangeToForward) {
   nsINode* node = mCurrentIterator->GetCurrentNode();
 
   if (aChangeToForward) {
-    mCurrentIterator = &mPreIterator;
+    mCurrentIterator = mPreIterator;
     mDirection = eForward;
   } else {
-    mCurrentIterator = &mPostIterator;
+    mCurrentIterator = mIterator;
     mDirection = eBackward;
   }
 
@@ -128,7 +146,8 @@ nsresult FilteredContentIterator::SwitchDirections(bool aChangeToForward) {
   return NS_OK;
 }
 
-void FilteredContentIterator::First() {
+//------------------------------------------------------------
+void nsFilteredContentIterator::First() {
   if (!mCurrentIterator) {
     NS_ERROR("Missing iterator!");
 
@@ -138,7 +157,7 @@ void FilteredContentIterator::First() {
   // If we are switching directions then
   // we need to switch how we process the nodes
   if (mDirection != eForward) {
-    mCurrentIterator = &mPreIterator;
+    mCurrentIterator = mPreIterator;
     mDirection = eForward;
     mIsOutOfRange = false;
   }
@@ -155,7 +174,8 @@ void FilteredContentIterator::First() {
   CheckAdvNode(currentNode, didCross, eForward);
 }
 
-void FilteredContentIterator::Last() {
+//------------------------------------------------------------
+void nsFilteredContentIterator::Last() {
   if (!mCurrentIterator) {
     NS_ERROR("Missing iterator!");
 
@@ -165,7 +185,7 @@ void FilteredContentIterator::Last() {
   // If we are switching directions then
   // we need to switch how we process the nodes
   if (mDirection != eBackward) {
-    mCurrentIterator = &mPostIterator;
+    mCurrentIterator = mIterator;
     mDirection = eBackward;
     mIsOutOfRange = false;
   }
@@ -240,10 +260,11 @@ static bool ContentIsInTraversalRange(nsRange* aRange, nsIContent* aNextContent,
       static_cast<int32_t>(aRange->EndOffset()));
 }
 
+//------------------------------------------------------------
 // Helper function to advance to the next or previous node
-nsresult FilteredContentIterator::AdvanceNode(nsINode* aNode,
-                                              nsINode*& aNewNode,
-                                              eDirectionType aDir) {
+nsresult nsFilteredContentIterator::AdvanceNode(nsINode* aNode,
+                                                nsINode*& aNewNode,
+                                                eDirectionType aDir) {
   nsCOMPtr<nsIContent> nextNode;
   if (aDir == eForward) {
     nextNode = aNode->GetNextSibling();
@@ -287,9 +308,10 @@ nsresult FilteredContentIterator::AdvanceNode(nsINode* aNode,
   return NS_ERROR_FAILURE;
 }
 
+//------------------------------------------------------------
 // Helper function to see if the next/prev node should be skipped
-void FilteredContentIterator::CheckAdvNode(nsINode* aNode, bool& aDidSkip,
-                                           eDirectionType aDir) {
+void nsFilteredContentIterator::CheckAdvNode(nsINode* aNode, bool& aDidSkip,
+                                             eDirectionType aDir) {
   aDidSkip = false;
   mIsOutOfRange = false;
 
@@ -318,7 +340,7 @@ void FilteredContentIterator::CheckAdvNode(nsINode* aNode, bool& aDidSkip,
   }
 }
 
-void FilteredContentIterator::Next() {
+void nsFilteredContentIterator::Next() {
   if (mIsOutOfRange || !mCurrentIterator) {
     NS_ASSERTION(mCurrentIterator, "Missing iterator!");
 
@@ -347,7 +369,7 @@ void FilteredContentIterator::Next() {
   CheckAdvNode(currentNode, mDidSkip, eForward);
 }
 
-void FilteredContentIterator::Prev() {
+void nsFilteredContentIterator::Prev() {
   if (mIsOutOfRange || !mCurrentIterator) {
     NS_ASSERTION(mCurrentIterator, "Missing iterator!");
 
@@ -376,7 +398,7 @@ void FilteredContentIterator::Prev() {
   CheckAdvNode(currentNode, mDidSkip, eBackward);
 }
 
-nsINode* FilteredContentIterator::GetCurrentNode() {
+nsINode* nsFilteredContentIterator::GetCurrentNode() {
   if (mIsOutOfRange || !mCurrentIterator) {
     return nullptr;
   }
@@ -384,7 +406,7 @@ nsINode* FilteredContentIterator::GetCurrentNode() {
   return mCurrentIterator->GetCurrentNode();
 }
 
-bool FilteredContentIterator::IsDone() {
+bool nsFilteredContentIterator::IsDone() {
   if (mIsOutOfRange || !mCurrentIterator) {
     return true;
   }
@@ -392,10 +414,8 @@ bool FilteredContentIterator::IsDone() {
   return mCurrentIterator->IsDone();
 }
 
-nsresult FilteredContentIterator::PositionAt(nsINode* aCurNode) {
+nsresult nsFilteredContentIterator::PositionAt(nsINode* aCurNode) {
   NS_ENSURE_TRUE(mCurrentIterator, NS_ERROR_FAILURE);
   mIsOutOfRange = false;
   return mCurrentIterator->PositionAt(aCurNode);
 }
-
-}  // namespace mozilla
