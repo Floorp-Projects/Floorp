@@ -246,7 +246,7 @@ void WebRenderLayerManager::EndTransaction(DrawPaintedLayerCallback aCallback,
 
 void WebRenderLayerManager::EndTransactionWithoutLayer(
     nsDisplayList* aDisplayList, nsDisplayListBuilder* aDisplayListBuilder,
-    const nsTArray<wr::FilterOp>& aFilters,
+    const nsTArray<wr::WrFilterOp>& aFilters,
     WebRenderBackgroundData* aBackground) {
   AUTO_PROFILER_TRACING("Paint", "RenderLayers");
 

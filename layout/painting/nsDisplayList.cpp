@@ -2616,12 +2616,14 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(
       auto* wrManager = static_cast<WebRenderLayerManager*>(layerManager.get());
 
       nsIDocShell* docShell = presContext->GetDocShell();
-      nsTArray<wr::FilterOp> wrFilters;
+      nsTArray<wr::WrFilterOp> wrFilters;
       gfx::Matrix5x4* colorMatrix =
           nsDocShell::Cast(docShell)->GetColorMatrix();
       if (colorMatrix) {
-        wrFilters.AppendElement(
-            wr::FilterOp::ColorMatrix(colorMatrix->components));
+        wr::WrFilterOp gs = {wr::WrFilterOpType::ColorMatrix};
+        MOZ_ASSERT(sizeof(gs.matrix) == sizeof(colorMatrix->components));
+        memcpy(&(gs.matrix), colorMatrix->components, sizeof(gs.matrix));
+        wrFilters.AppendElement(gs);
       }
 
       wrManager->EndTransactionWithoutLayer(this, aBuilder, wrFilters);
@@ -6068,7 +6070,7 @@ bool nsDisplayOpacity::CreateWebRenderCommands(
       animationsId,
   };
 
-  nsTArray<mozilla::wr::FilterOp> filters;
+  nsTArray<mozilla::wr::WrFilterOp> filters;
   StackingContextHelper sc(aSc, GetActiveScrolledRoot(), mFrame, this, aBuilder,
                            filters, LayoutDeviceRect(), nullptr,
                            animationsId ? &prop : nullptr, opacityForSC);
@@ -6107,7 +6109,7 @@ bool nsDisplayBlendMode::CreateWebRenderCommands(
     const StackingContextHelper& aSc,
     mozilla::layers::RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) {
-  nsTArray<mozilla::wr::FilterOp> filters;
+  nsTArray<mozilla::wr::WrFilterOp> filters;
   StackingContextHelper sc(aSc, GetActiveScrolledRoot(), mFrame, this, aBuilder,
                            filters, LayoutDeviceRect(), nullptr, nullptr,
                            nullptr, nullptr, nullptr,
@@ -6339,7 +6341,7 @@ bool nsDisplayOwnLayer::CreateWebRenderCommands(
   prop.effect_type = wr::WrAnimationType::Transform;
 
   StackingContextHelper sc(aSc, GetActiveScrolledRoot(), mFrame, this, aBuilder,
-                           nsTArray<wr::FilterOp>(), LayoutDeviceRect(),
+                           nsTArray<wr::WrFilterOp>(), LayoutDeviceRect(),
                            nullptr, &prop);
 
   nsDisplayWrapList::CreateWebRenderCommands(aBuilder, aResources, sc, aManager,
@@ -7856,7 +7858,7 @@ bool nsDisplayTransform::CreateWebRenderCommands(
       animationsId,
   };
 
-  nsTArray<mozilla::wr::FilterOp> filters;
+  nsTArray<mozilla::wr::WrFilterOp> filters;
   Maybe<nsDisplayTransform*> deferredTransformItem;
   if (!mFrame->ChildrenHavePerspective()) {
     // If it has perspective, we create a new scroll data via the
@@ -8463,7 +8465,7 @@ bool nsDisplayPerspective::CreateWebRenderCommands(
   nsIFrame* perspectiveFrame =
       mFrame->GetContainingBlock(nsIFrame::SKIP_SCROLLED_FRAME);
 
-  nsTArray<mozilla::wr::FilterOp> filters;
+  nsTArray<mozilla::wr::WrFilterOp> filters;
   StackingContextHelper sc(aSc, GetActiveScrolledRoot(), mFrame, this, aBuilder,
                            filters, LayoutDeviceRect(), nullptr, nullptr,
                            nullptr, &transformForSC, &perspectiveMatrix,
@@ -9060,7 +9062,7 @@ bool nsDisplayMasksAndClipPaths::CreateWebRenderCommands(
                                : Nothing();
 
     layer.emplace(aSc, GetActiveScrolledRoot(), mFrame, this, aBuilder,
-                  /*aFilters: */ nsTArray<wr::FilterOp>(),
+                  /*aFilters: */ nsTArray<wr::WrFilterOp>(),
                   /*aBounds: */ bounds,
                   /*aBoundTransform: */ nullptr,
                   /*aAnimation: */ nullptr,
@@ -9239,54 +9241,44 @@ static float ClampStdDeviation(float aStdDeviation) {
 }
 
 bool nsDisplayFilters::CreateWebRenderCSSFilters(
-    nsTArray<mozilla::wr::FilterOp>& wrFilters) {
+    nsTArray<mozilla::wr::WrFilterOp>& wrFilters) {
   // All CSS filters are supported by WebRender. SVG filters are not fully
   // supported, those use NS_STYLE_FILTER_URL and are handled separately.
   const nsTArray<nsStyleFilter>& filters = mFrame->StyleEffects()->mFilters;
   for (const nsStyleFilter& filter : filters) {
     switch (filter.GetType()) {
       case NS_STYLE_FILTER_BRIGHTNESS:
-        wrFilters.AppendElement(wr::FilterOp::Brightness(
-            filter.GetFilterParameter().GetFactorOrPercentValue()));
-        break;
       case NS_STYLE_FILTER_CONTRAST:
-        wrFilters.AppendElement(wr::FilterOp::Contrast(
-            filter.GetFilterParameter().GetFactorOrPercentValue()));
-        break;
       case NS_STYLE_FILTER_GRAYSCALE:
-        wrFilters.AppendElement(wr::FilterOp::Grayscale(
-            filter.GetFilterParameter().GetFactorOrPercentValue()));
-        break;
       case NS_STYLE_FILTER_INVERT:
-        wrFilters.AppendElement(wr::FilterOp::Invert(
-            filter.GetFilterParameter().GetFactorOrPercentValue()));
-        break;
-      case NS_STYLE_FILTER_OPACITY: {
-        float opacity = filter.GetFilterParameter().GetFactorOrPercentValue();
-        wrFilters.AppendElement(wr::FilterOp::Opacity(
-            wr::PropertyBinding<float>::Value(opacity), opacity));
-        break;
-      }
+      case NS_STYLE_FILTER_OPACITY:
       case NS_STYLE_FILTER_SATURATE:
-        wrFilters.AppendElement(wr::FilterOp::Saturate(
-            filter.GetFilterParameter().GetFactorOrPercentValue()));
-        break;
       case NS_STYLE_FILTER_SEPIA: {
-        wrFilters.AppendElement(wr::FilterOp::Sepia(
-            filter.GetFilterParameter().GetFactorOrPercentValue()));
+        mozilla::wr::WrFilterOp filterOp = {
+            wr::ToWrFilterOpType(filter.GetType()),
+            filter.GetFilterParameter().GetFactorOrPercentValue(),
+        };
+        wrFilters.AppendElement(filterOp);
         break;
       }
       case NS_STYLE_FILTER_HUE_ROTATE: {
-        wrFilters.AppendElement(wr::FilterOp::HueRotate(
-            (float)filter.GetFilterParameter().GetAngleValueInDegrees()));
+        mozilla::wr::WrFilterOp filterOp = {
+            wr::ToWrFilterOpType(filter.GetType()),
+            (float)filter.GetFilterParameter().GetAngleValueInDegrees(),
+        };
+        wrFilters.AppendElement(filterOp);
         break;
       }
       case NS_STYLE_FILTER_BLUR: {
         float appUnitsPerDevPixel =
             mFrame->PresContext()->AppUnitsPerDevPixel();
-        wrFilters.AppendElement(mozilla::wr::FilterOp::Blur(ClampStdDeviation(
-            NSAppUnitsToFloatPixels(filter.GetFilterParameter().GetCoordValue(),
-                                    appUnitsPerDevPixel))));
+        mozilla::wr::WrFilterOp filterOp = {
+            wr::ToWrFilterOpType(filter.GetType()),
+            ClampStdDeviation(NSAppUnitsToFloatPixels(
+                filter.GetFilterParameter().GetCoordValue(),
+                appUnitsPerDevPixel)),
+        };
+        wrFilters.AppendElement(filterOp);
         break;
       }
       case NS_STYLE_FILTER_DROP_SHADOW: {
@@ -9303,18 +9295,19 @@ bool nsDisplayFilters::CreateWebRenderCSSFilters(
         nsCSSShadowItem* shadow = shadows->ShadowAt(0);
         nscolor color = shadow->mColor.CalcColor(mFrame);
 
-        auto filterOp = wr::FilterOp::DropShadow(
+        mozilla::wr::WrFilterOp filterOp = {
+            wr::ToWrFilterOpType(filter.GetType()),
+            NSAppUnitsToFloatPixels(shadow->mRadius, appUnitsPerDevPixel),
             {
                 NSAppUnitsToFloatPixels(shadow->mXOffset, appUnitsPerDevPixel),
                 NSAppUnitsToFloatPixels(shadow->mYOffset, appUnitsPerDevPixel),
             },
-            NSAppUnitsToFloatPixels(shadow->mRadius, appUnitsPerDevPixel),
             {
                 NS_GET_R(color) / 255.0f,
                 NS_GET_G(color) / 255.0f,
                 NS_GET_B(color) / 255.0f,
                 NS_GET_A(color) / 255.0f,
-            });
+            }};
 
         wrFilters.AppendElement(filterOp);
         break;
@@ -9341,7 +9334,7 @@ bool nsDisplayFilters::CreateWebRenderCommands(
   auto preFilterBounds = LayoutDeviceIntRect::Round(
       LayoutDeviceRect::FromAppUnits(mBounds, auPerDevPixel));
 
-  nsTArray<mozilla::wr::FilterOp> wrFilters;
+  nsTArray<mozilla::wr::WrFilterOp> wrFilters;
   if (!CreateWebRenderCSSFilters(wrFilters) &&
       !nsSVGIntegrationUtils::BuildWebRenderFilters(
           mFrame, preFilterBounds, wrFilters, postFilterBounds)) {
