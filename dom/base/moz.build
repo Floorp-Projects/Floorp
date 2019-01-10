@@ -74,7 +74,6 @@ EXPORTS += [
     'nsIAnimationObserver.h',
     'nsIContent.h',
     'nsIContentInlines.h',
-    'nsIContentIterator.h',
     'nsIContentSerializer.h',
     'nsIDocumentObserver.h',
     'nsIGlobalObject.h',
