@@ -1124,13 +1124,13 @@ nsresult HTMLEditor::TabInTable(bool inIsShift, bool* outHandled) {
 
   // advance to next cell
   // first create an iterator over the table
-  nsCOMPtr<nsIContentIterator> iter = NS_NewContentIterator();
-  nsresult rv = iter->Init(table);
+  RefPtr<PostContentIterator> postOrderIter = new PostContentIterator();
+  nsresult rv = postOrderIter->Init(table);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
-  // position iter at block
-  rv = iter->PositionAt(cellElement);
+  // position postOrderIter at block
+  rv = postOrderIter->PositionAt(cellElement);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1138,12 +1138,12 @@ nsresult HTMLEditor::TabInTable(bool inIsShift, bool* outHandled) {
   nsCOMPtr<nsINode> node;
   do {
     if (inIsShift) {
-      iter->Prev();
+      postOrderIter->Prev();
     } else {
-      iter->Next();
+      postOrderIter->Next();
     }
 
-    node = iter->GetCurrentNode();
+    node = postOrderIter->GetCurrentNode();
 
     if (node && HTMLEditUtils::IsTableCell(node) &&
         GetEnclosingTable(node) == table) {
@@ -1151,7 +1151,7 @@ nsresult HTMLEditor::TabInTable(bool inIsShift, bool* outHandled) {
       *outHandled = true;
       return NS_OK;
     }
-  } while (!iter->IsDone());
+  } while (!postOrderIter->IsDone());
 
   if (!(*outHandled) && !inIsShift) {
     // If we haven't handled it yet, then we must have run off the end of the
@@ -2786,11 +2786,12 @@ already_AddRefed<Element> HTMLEditor::GetSelectedElement(const nsAtom* aTagName,
     return nullptr;
   }
 
-  nsCOMPtr<nsIContentIterator> iter = NS_NewContentIterator();
-  iter->Init(firstRange);
+  RefPtr<PostContentIterator> postOrderIter = new PostContentIterator();
+  postOrderIter->Init(firstRange);
 
   RefPtr<Element> lastElementInRange;
-  for (nsINode* lastNodeInRange = nullptr; !iter->IsDone(); iter->Next()) {
+  for (nsINode* lastNodeInRange = nullptr; !postOrderIter->IsDone();
+       postOrderIter->Next()) {
     if (lastElementInRange) {
       // When any node follows an element node, not only one element is
       // selected so that return nullptr.
@@ -2808,7 +2809,7 @@ already_AddRefed<Element> HTMLEditor::GetSelectedElement(const nsAtom* aTagName,
     // it means that the range across element boundary (open tag in HTML
     // source).  So, in this case, we should not say only the following
     // element is selected.
-    nsINode* currentNode = iter->GetCurrentNode();
+    nsINode* currentNode = postOrderIter->GetCurrentNode();
     MOZ_ASSERT(currentNode);
     if (lastNodeInRange && lastNodeInRange->GetParentNode() != currentNode &&
         lastNodeInRange->GetNextSibling() != currentNode) {
@@ -3061,15 +3062,15 @@ HTMLEditor::GetLinkedObjects(nsIArray** aNodeList) {
     return rv;
   }
 
-  nsCOMPtr<nsIContentIterator> iter = NS_NewContentIterator();
+  RefPtr<PostContentIterator> postOrderIter = new PostContentIterator();
   RefPtr<Document> doc = GetDocument();
   NS_ENSURE_TRUE(doc, NS_ERROR_UNEXPECTED);
 
-  iter->Init(doc->GetRootElement());
+  postOrderIter->Init(doc->GetRootElement());
 
   // loop through the content iterator for each content node
-  while (!iter->IsDone()) {
-    nsCOMPtr<nsINode> node = iter->GetCurrentNode();
+  for (; !postOrderIter->IsDone(); postOrderIter->Next()) {
+    nsCOMPtr<nsINode> node = postOrderIter->GetCurrentNode();
     if (node) {
       // Let nsURIRefObject make the hard decisions:
       nsCOMPtr<nsIURIRefObject> refObject;
@@ -3078,7 +3079,6 @@ HTMLEditor::GetLinkedObjects(nsIArray** aNodeList) {
         nodes->AppendElement(refObject);
       }
     }
-    iter->Next();
   }
 
   nodes.forget(aNodeList);

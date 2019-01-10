@@ -63,8 +63,8 @@ class nsFilteredContentIterator final : public nsIContentIterator {
   void CheckAdvNode(nsINode* aNode, bool& aDidSkip, eDirectionType aDir);
   nsresult SwitchDirections(bool aChangeToForward);
 
-  nsCOMPtr<nsIContentIterator> mCurrentIterator;
-  nsCOMPtr<nsIContentIterator> mIterator;
+  RefPtr<mozilla::ContentIteratorBase> mCurrentIterator;
+  RefPtr<mozilla::PostContentIterator> mPostIterator;
   RefPtr<mozilla::PreContentIterator> mPreIterator;
 
   RefPtr<nsAtom> mBlockQuoteAtom;

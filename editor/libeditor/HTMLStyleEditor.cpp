@@ -1041,18 +1041,20 @@ nsresult HTMLEditor::GetInlinePropertyBase(nsAtom& aProperty,
     }
 
     // Non-collapsed selection
-    nsCOMPtr<nsIContentIterator> iter = NS_NewContentIterator();
+    RefPtr<PostContentIterator> postOrderIter = new PostContentIterator();
 
     nsAutoString firstValue, theValue;
 
     nsCOMPtr<nsINode> endNode = range->GetEndContainer();
     int32_t endOffset = range->EndOffset();
 
-    for (iter->Init(range); !iter->IsDone(); iter->Next()) {
-      if (!iter->GetCurrentNode()->IsContent()) {
+    for (postOrderIter->Init(range); !postOrderIter->IsDone();
+         postOrderIter->Next()) {
+      if (!postOrderIter->GetCurrentNode()->IsContent()) {
         continue;
       }
-      nsCOMPtr<nsIContent> content = iter->GetCurrentNode()->AsContent();
+      nsCOMPtr<nsIContent> content =
+          postOrderIter->GetCurrentNode()->AsContent();
 
       if (content->IsHTMLElement(nsGkAtoms::body)) {
         break;

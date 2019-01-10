@@ -5,13 +5,13 @@
 
 #include "mozilla/EditorUtils.h"
 
+#include "mozilla/ContentIterator.h"
 #include "mozilla/EditorDOMPoint.h"
 #include "mozilla/OwningNonNull.h"
 #include "mozilla/dom/Selection.h"
 #include "nsComponentManagerUtils.h"
 #include "nsError.h"
 #include "nsIContent.h"
-#include "nsIContentIterator.h"
 #include "nsIDocShell.h"
 #include "mozilla/dom/Document.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -31,13 +31,13 @@ using namespace dom;
 DOMIterator::DOMIterator(
     nsINode& aNode MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL) {
   MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-  mIter = NS_NewContentIterator();
+  mIter = new PostContentIterator();
   DebugOnly<nsresult> rv = mIter->Init(&aNode);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 }
 
 nsresult DOMIterator::Init(nsRange& aRange) {
-  mIter = NS_NewContentIterator();
+  mIter = new PostContentIterator();
   return mIter->Init(&aRange);
 }
 

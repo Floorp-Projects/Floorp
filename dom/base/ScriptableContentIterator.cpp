@@ -32,7 +32,7 @@ void ScriptableContentIterator::EnsureContentIterator() {
   switch (mIteratorType) {
     case POST_ORDER_ITERATOR:
     default:
-      mContentIterator = NS_NewContentIterator();
+      mContentIterator = new PostContentIterator();
       break;
     case PRE_ORDER_ITERATOR:
       mContentIterator = new PreContentIterator();
