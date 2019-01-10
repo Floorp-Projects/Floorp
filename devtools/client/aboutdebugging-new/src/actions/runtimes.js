@@ -62,11 +62,9 @@ async function getRuntimeInfo(runtime, clientWrapper) {
   };
 }
 
-function onUSBDebuggerClientClosed() {
-  // After scanUSBRuntimes action, updateUSBRuntimes action is called.
-  // The closed runtime will be unwatched and disconnected explicitly in the action
-  // if needed.
-  window.AboutDebugging.store.dispatch(Actions.scanUSBRuntimes());
+function onRemoteDebuggerClientClosed() {
+  window.AboutDebugging.onNetworkLocationsUpdated();
+  window.AboutDebugging.onUSBRuntimesUpdated();
 }
 
 function onMultiE10sUpdated() {
@@ -97,10 +95,10 @@ function connectRuntime(id) {
         deviceFront.on("multi-e10s-updated", onMultiE10sUpdated);
       }
 
-      if (runtime.type === RUNTIMES.USB) {
+      if (runtime.type !== RUNTIMES.THIS_FIREFOX) {
         // `closed` event will be emitted when disabling remote debugging
-        // on the connected USB runtime.
-        clientWrapper.addOneTimeListener("closed", onUSBDebuggerClientClosed);
+        // on the connected remote runtime.
+        clientWrapper.addOneTimeListener("closed", onRemoteDebuggerClientClosed);
       }
 
       dispatch({
@@ -129,8 +127,8 @@ function disconnectRuntime(id) {
         deviceFront.off("multi-e10s-updated", onMultiE10sUpdated);
       }
 
-      if (runtime.type === RUNTIMES.USB) {
-        clientWrapper.removeListener("closed", onUSBDebuggerClientClosed);
+      if (runtime.type !== RUNTIMES.THIS_FIREFOX) {
+        clientWrapper.removeListener("closed", onRemoteDebuggerClientClosed);
       }
 
       await clientWrapper.close();
@@ -332,11 +330,12 @@ function updateRemoteRuntimes(runtimes, type) {
  */
 function removeRuntimeListeners() {
   return (dispatch, getState) => {
-    const { usbRuntimes } = getState().runtimes;
-    for (const runtime of usbRuntimes) {
+    const allRuntimes = getAllRuntimes(getState().runtimes);
+    const remoteRuntimes = allRuntimes.filter(r => r.type !== RUNTIMES.THIS_FIREFOX);
+    for (const runtime of remoteRuntimes) {
       if (runtime.runtimeDetails) {
         const { clientWrapper } = runtime.runtimeDetails;
-        clientWrapper.removeListener("closed", onUSBDebuggerClientClosed);
+        clientWrapper.removeListener("closed", onRemoteDebuggerClientClosed);
       }
     }
   };
