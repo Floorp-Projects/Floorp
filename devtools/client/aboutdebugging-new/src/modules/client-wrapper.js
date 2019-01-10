@@ -138,6 +138,10 @@ class ClientWrapper {
   async close() {
     return this.client.close();
   }
+
+  isClosed() {
+    return this.client._closed;
+  }
 }
 
 exports.ClientWrapper = ClientWrapper;

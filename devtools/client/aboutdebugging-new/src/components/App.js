@@ -71,7 +71,7 @@ class App extends PureComponent {
     // - If the runtimepage for a device is the first page shown (since we can't
     //   keep connections open between page reloads).
     // - If no runtimeId is given.
-    // - If runtime is not found in the runtimes list (this is handled later)
+    // - If runtime is not in the runtimes list or disconnected (this is handled later)
     const isDeviceFirstPage =
       !this.props.selectedPage &&
       match.params.runtimeId !== RUNTIMES.THIS_FIREFOX;
@@ -84,7 +84,8 @@ class App extends PureComponent {
         ...this.props.networkRuntimes,
         ...this.props.usbRuntimes,
       ];
-      return !!runtimes.find(x => x.id === id);
+      const runtime = runtimes.find(x => x.id === id);
+      return runtime && runtime.runtimeDetails;
     };
 
     const { dispatch } = this.props;
