@@ -471,6 +471,18 @@ var PlacesUtils = {
    },
 
   /**
+   * Generates a random GUID and replace its beginning with the given
+   * prefix. We do this instead of just prepending the prefix to keep
+   * the correct character length.
+   *
+   * @param prefix: (String)
+   * @return (String)
+   */
+  generateGuidWithPrefix(prefix) {
+    return prefix + this.history.makeGuid().substring(prefix.length);
+  },
+
+  /**
    * Converts a string or n URL object to an nsIURI.
    *
    * @param url (URL) or (String)
