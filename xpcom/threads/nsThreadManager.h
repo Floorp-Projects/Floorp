@@ -66,6 +66,8 @@ class nsThreadManager : public nsIThreadManager {
   void SuspendInputEventPrioritization();
   void ResumeInputEventPrioritization();
 
+  static bool MainThreadHasPendingHighPriorityEvents();
+
  private:
   nsThreadManager()
       : mCurThreadIndex(0), mMainPRThread(nullptr), mInitialized(false) {}

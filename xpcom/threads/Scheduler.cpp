@@ -51,6 +51,9 @@ class SchedulerEventQueue final : public SynchronizedEventQueue {
   bool HasPendingEvent() final;
   bool HasPendingEvent(const MutexAutoLock& aProofOfLock);
 
+  bool HasPendingHighPriorityEvents() final;
+  bool HasPendingHighPriorityEvents(const MutexAutoLock& aProofOfLock);
+
   bool ShutdownIfNoPendingEvents() final;
 
   already_AddRefed<nsIThreadObserver> GetObserver() final;
@@ -302,6 +305,16 @@ bool SchedulerEventQueue::HasPendingEvent() {
 
 bool SchedulerEventQueue::HasPendingEvent(const MutexAutoLock& aProofOfLock) {
   return mQueue->HasReadyEvent(aProofOfLock);
+}
+
+bool SchedulerEventQueue::HasPendingHighPriorityEvents() {
+  MutexAutoLock lock(mLock);
+  return HasPendingHighPriorityEvents(lock);
+}
+
+bool SchedulerEventQueue::HasPendingHighPriorityEvents(
+    const MutexAutoLock& aProofOfLock) {
+  return mQueue->HasPendingHighPriorityEvents(aProofOfLock);
 }
 
 bool SchedulerEventQueue::ShutdownIfNoPendingEvents() {
