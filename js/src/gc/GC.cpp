@@ -961,6 +961,7 @@ GCRuntime::GCRuntime(JSRuntime* rt)
       lock(mutexid::GCLock),
       allocTask(rt, emptyChunks_.ref()),
       sweepTask(rt),
+      freeTask(rt),
       decommitTask(rt),
       nursery_(rt),
       storeBuffer_(rt, nursery()),
@@ -1312,6 +1313,7 @@ void GCRuntime::finish() {
   // helper thread shuts down before we forcefully release any remaining GC
   // memory.
   sweepTask.join();
+  freeTask.join();
   allocTask.cancelAndWait();
   decommitTask.cancelAndWait();
 
@@ -3553,28 +3555,17 @@ void GCRuntime::assertBackgroundSweepingFinished() {
 #endif
 }
 
-void GCRuntime::queueZonesForBackgroundSweep(ZoneList& zones) {
-  AutoLockHelperThreadState lock;
-  backgroundSweepZones.ref().transferFrom(zones);
-  if (sweepOnBackgroundThread) {
-    sweepTask.startOrRunIfIdle(lock);
+void GCRuntime::queueZonesAndStartBackgroundSweep(ZoneList& zones) {
+  {
+    AutoLockHelperThreadState lock;
+    backgroundSweepZones.ref().transferFrom(zones);
+    if (sweepOnBackgroundThread) {
+      sweepTask.startOrRunIfIdle(lock);
+    }
   }
-}
-
-void GCRuntime::freeUnusedLifoBlocksAfterSweeping(LifoAlloc* lifo) {
-  MOZ_ASSERT(JS::RuntimeHeapIsBusy());
-  AutoLockHelperThreadState lock;
-  blocksToFreeAfterSweeping.ref().transferUnusedFrom(lifo);
-}
-
-void GCRuntime::freeAllLifoBlocksAfterSweeping(LifoAlloc* lifo) {
-  MOZ_ASSERT(JS::RuntimeHeapIsBusy());
-  AutoLockHelperThreadState lock;
-  blocksToFreeAfterSweeping.ref().transferFrom(lifo);
-}
-
-void GCRuntime::freeAllLifoBlocksAfterMinorGC(LifoAlloc* lifo) {
-  blocksToFreeAfterMinorGC.ref().transferFrom(lifo);
+  if (!sweepOnBackgroundThread) {
+    sweepTask.joinAndRunFromMainThread(rt);
+  }
 }
 
 void BackgroundSweepTask::run() {
@@ -3601,7 +3592,7 @@ void GCRuntime::sweepFromBackgroundThread(AutoLockHelperThreadState& lock) {
     AutoUnlockHelperThreadState unlock(lock);
     sweepBackgroundThings(zones, freeLifoAlloc);
 
-    // The main thread may call queueZonesForBackgroundSweep() while this is
+    // The main thread may call queueZonesAndStartBackgroundSweep() while this is
     // running so we must check there is no more work after releasing the
     // lock.
   } while (!backgroundSweepZones.ref().isEmpty());
@@ -3614,6 +3605,55 @@ void GCRuntime::waitBackgroundSweepEnd() {
   if (!isIncrementalGCInProgress()) {
     assertBackgroundSweepingFinished();
   }
+}
+
+void GCRuntime::freeUnusedLifoBlocksAfterSweeping(LifoAlloc* lifo) {
+  MOZ_ASSERT(JS::RuntimeHeapIsBusy());
+  AutoLockHelperThreadState lock;
+  blocksToFreeAfterSweeping.ref().transferUnusedFrom(lifo);
+}
+
+void GCRuntime::freeAllLifoBlocksAfterSweeping(LifoAlloc* lifo) {
+  MOZ_ASSERT(JS::RuntimeHeapIsBusy());
+  AutoLockHelperThreadState lock;
+  blocksToFreeAfterSweeping.ref().transferFrom(lifo);
+}
+
+void GCRuntime::freeAllLifoBlocksAfterMinorGC(LifoAlloc* lifo) {
+  blocksToFreeAfterMinorGC.ref().transferFrom(lifo);
+}
+
+void GCRuntime::startBackgroundFree() {
+  if (CanUseExtraThreads()) {
+    AutoLockHelperThreadState lock;
+    freeTask.startOrRunIfIdle(lock);
+  } else {
+    freeTask.joinAndRunFromMainThread(rt);
+  }
+}
+
+void BackgroundFreeTask::run() {
+  AutoTraceLog logFreeing(TraceLoggerForCurrentThread(),
+                           TraceLogger_GCFree);
+
+  AutoLockHelperThreadState lock;
+
+  runtime()->gc.freeFromBackgroundThread(lock);
+
+  // Signal to the main thread that we're about to finish, because we release
+  // the lock again before GCParallelTask's state is changed to finished.
+  setFinishing(lock);
+}
+
+void GCRuntime::freeFromBackgroundThread(AutoLockHelperThreadState& lock) {
+  do {
+    LifoAlloc lifoBlocks(JSContext::TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
+    lifoBlocks.transferFrom(&blocksToFreeAfterSweeping.ref());
+
+    AutoUnlockHelperThreadState unlock(lock);
+
+    lifoBlocks.freeAll();
+  } while (!blocksToFreeAfterSweeping.ref().isEmpty());
 }
 
 struct IsAboutToBeFinalizedFunctor {
@@ -5715,6 +5755,9 @@ IncrementalProgress GCRuntime::endSweepingSweepGroup(FreeOp* fop,
     callFinalizeCallbacks(&fop, JSFINALIZE_GROUP_END);
   }
 
+  /* Free LIFO blocks on a background thread if possible. */
+  startBackgroundFree();
+
   /* Update the GC state for zones we have swept. */
   for (SweepGroupZonesIter zone(rt); !zone.done(); zone.next()) {
     AutoLockGC lock(rt);
@@ -5742,11 +5785,7 @@ IncrementalProgress GCRuntime::endSweepingSweepGroup(FreeOp* fop,
     zones.append(atomsZone);
   }
 
-  queueZonesForBackgroundSweep(zones);
-
-  if (!sweepOnBackgroundThread) {
-    sweepTask.joinAndRunFromMainThread(rt);
-  }
+  queueZonesAndStartBackgroundSweep(zones);
 
   return Finished;
 }
