@@ -25,7 +25,7 @@ SamplesWaitingForKey::~SamplesWaitingForKey() { Flush(); }
 
 RefPtr<SamplesWaitingForKey::WaitForKeyPromise>
 SamplesWaitingForKey::WaitIfKeyNotUsable(MediaRawData* aSample) {
-  if (!aSample || !aSample->mCrypto.IsEncrypted() || !mProxy) {
+  if (!aSample || !aSample->mCrypto.mValid || !mProxy) {
     return WaitForKeyPromise::CreateAndResolve(aSample, __func__);
   }
   auto caps = mProxy->Capabilites().Lock();

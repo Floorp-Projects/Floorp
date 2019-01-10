@@ -55,40 +55,12 @@ Result<Ok, nsresult> SinfParser::ParseTenc(Box& aBox) {
     return Err(NS_ERROR_FAILURE);
   }
 
-  uint32_t flags;
-  MOZ_TRY_VAR(flags, reader->ReadU32());
-  uint8_t version = flags >> 24;
+  MOZ_TRY(reader->ReadU32());  // flags -- ignore
 
-  // Skip reserved byte
-  MOZ_TRY(reader->ReadU8());
-  if (version >= 1) {
-    uint8_t pattern;
-    MOZ_TRY_VAR(pattern, reader->ReadU8());
-    mSinf.mDefaultCryptByteBlock = pattern >> 4;
-    mSinf.mDefaultSkipByteBlock = pattern & 0x0f;
-  } else {
-    // Reserved if version is less than 1
-    MOZ_TRY(reader->ReadU8());
-    mSinf.mDefaultCryptByteBlock = 0;
-    mSinf.mDefaultSkipByteBlock = 0;
-  }
-
-  uint8_t isEncrypted;
-  MOZ_TRY_VAR(isEncrypted, reader->ReadU8());
+  uint32_t isEncrypted;
+  MOZ_TRY_VAR(isEncrypted, reader->ReadU24());
   MOZ_TRY_VAR(mSinf.mDefaultIVSize, reader->ReadU8());
   memcpy(mSinf.mDefaultKeyID, reader->Read(16), 16);
-
-  if (isEncrypted && mSinf.mDefaultIVSize == 0) {
-    uint8_t defaultConstantIVSize;
-    MOZ_TRY_VAR(defaultConstantIVSize, reader->ReadU8());
-    if (!mSinf.mDefaultConstantIV.SetLength(defaultConstantIVSize,
-                                            mozilla::fallible)) {
-      return Err(NS_ERROR_FAILURE);
-    }
-    for (uint8_t i = 0; i < defaultConstantIVSize; i++) {
-      MOZ_TRY_VAR(mSinf.mDefaultConstantIV.ElementAt(i), reader->ReadU8());
-    }
-  }
   return Ok();
 }
 
