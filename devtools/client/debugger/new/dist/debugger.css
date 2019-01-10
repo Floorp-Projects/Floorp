@@ -1296,9 +1296,12 @@ html[dir="rtl"] .managed-tree .tree .node > div {
   background-color: var(--theme-comment);
   width: 8px;
   height: 8px;
-  transition: all 0.15s ease-in-out;
   padding: 0;
   margin-top: 0;
+}
+
+.close-btn .close:hover {
+  background-color: var(--theme-comment);
 }
 
 .close-btn:hover .img.close {
@@ -1340,6 +1343,7 @@ img.close::before {
   position: relative;
   padding: 0px 5px;
   fill: currentColor;
+  min-width: 30px;
 }
 
 .command-bar-button:disabled {
@@ -1369,10 +1373,10 @@ img.close::before {
   transform: translate(0, 0px);
   transition: transform 0.25s ease-in-out;
   padding: 5px;
-}
-
-.toggle-button .togglePanes {
-  vertical-align: -2px;
+  -webkit-border-start: 1px solid;
+  border-inline-start: 1px solid;
+  border-image: var(--separator-border-image) 1 1;
+  height: inherit;
 }
 
 .toggle-button svg {
@@ -2227,6 +2231,10 @@ menuseparator {
 .source-outline-panel {
   flex: 1;
   overflow: auto;
+}
+
+.source-outline-panel.has-root > div {
+  height: 100%;
 }
 
 .sources-list .managed-tree .tree .node .img.blackBox {
@@ -4363,12 +4371,9 @@ html .welcomebox .toggle-button-end.collapsed {
 }
 
 .source-tab {
-  border-left: 1px solid transparent;
-  border-right: 1px solid transparent;
   display: inline-flex;
   align-items: center;
   position: relative;
-  transition: all 0.15s ease;
   min-width: 40px;
   max-width: 100%;
   overflow: hidden;
@@ -4376,6 +4381,7 @@ html .welcomebox .toggle-button-end.collapsed {
   cursor: default;
   height: 30px;
   font-size: 12px;
+  background-color: transparent;
 }
 
 .source-tab::before {
@@ -4408,9 +4414,6 @@ html .welcomebox .toggle-button-end.collapsed {
 .source-tab.active {
   color: var(--theme-toolbar-selected-color);
   border-bottom-color: transparent;
-  border-left: 1px solid var(--theme-splitter-color);
-  border-right: 1px solid var(--theme-splitter-color);
-  background-color: var(--theme-body-background);
 }
 
 .source-tab.active::before {
@@ -4460,21 +4463,6 @@ html .welcomebox .toggle-button-end.collapsed {
   fill: var(--theme-body-color);
 }
 
-img.moreTabs {
-  mask: url("resource://devtools/client/debugger/new/images/command-chevron.svg") no-repeat;
-  mask-size: 100%;
-  width: 12px;
-  height: 12px;
-  display: block;
-  background: var(--theme-body-color);
-  margin-left: 6px;
-}
-
-html[dir="rtl"] .img.moreTabs {
-  transform: rotate(180deg);
-  margin-right: 6px;
-}
-
 .source-tab .filename {
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -4496,6 +4484,11 @@ html[dir="rtl"] .img.moreTabs {
 
 .source-tab.active .close-btn {
   visibility: visible;
+}
+
+.source-tab.active .close {
+  visibility: visible;
+  background-color: var(--theme-toolbar-selected-color);
 }
 
 .source-tab:hover .close-btn {
@@ -4540,6 +4533,20 @@ html[dir="rtl"] .dropdown {
   font-size: 14px;
   height: 100%;
   width: 24px;
+}
+
+.more-tabs {
+  mask: url("resource://devtools/client/debugger/new/images/command-chevron.svg") no-repeat;
+  mask-size: 100%;
+  width: 12px;
+  display: block;
+  background: var(--theme-body-color);
+  margin-left: 6px;
+}
+
+html[dir="rtl"] .img.more-tabs {
+  transform: rotate(180deg);
+  margin-right: 6px;
 }
 
 .dropdown li {

@@ -54,6 +54,14 @@ export class HighlightLine extends Component<Props> {
     return this.shouldSetHighlightLine(selectedLocation, selectedSource);
   }
 
+  componentDidUpdate(prevProps: Props) {
+    this.completeHighlightLine(prevProps);
+  }
+
+  componentDidMount() {
+    this.completeHighlightLine(null);
+  }
+
   shouldSetHighlightLine(
     selectedLocation: SourceLocation,
     selectedSource: Source
@@ -72,7 +80,7 @@ export class HighlightLine extends Component<Props> {
     return true;
   }
 
-  componentDidUpdate(prevProps: Props) {
+  completeHighlightLine(prevProps: Props | null) {
     const {
       pauseCommand,
       selectedLocation,
@@ -84,10 +92,12 @@ export class HighlightLine extends Component<Props> {
     }
 
     startOperation();
-    this.clearHighlightLine(
-      prevProps.selectedLocation,
-      prevProps.selectedSource
-    );
+    if (prevProps) {
+      this.clearHighlightLine(
+        prevProps.selectedLocation,
+        prevProps.selectedSource
+      );
+    }
     this.setHighlightLine(selectedLocation, selectedFrame, selectedSource);
     endOperation();
   }
@@ -101,6 +111,7 @@ export class HighlightLine extends Component<Props> {
     if (!this.shouldSetHighlightLine(selectedLocation, selectedSource)) {
       return;
     }
+
     this.isStepping = false;
     const editorLine = toEditorLine(sourceId, line);
     this.previousEditorLine = editorLine;

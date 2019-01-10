@@ -576,7 +576,7 @@ class Editor extends PureComponent<Props, State> {
     const { horizontal, selectedSource, conditionalPanelLocation } = this.props;
     const { editor } = this.state;
 
-    if (!editor || !selectedSource) {
+    if (!selectedSource || !editor || !getDocument(selectedSource.id)) {
       return null;
     }
 

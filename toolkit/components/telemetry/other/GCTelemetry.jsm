@@ -54,7 +54,7 @@ class GCData {
     for (let i = 0; i < data.slices_list.length; i++) {
       let slice = data.slices_list[i];
       slice.start_timestamp = fixup(slice.start_timestamp);
-      slice.end_timestamp = fixup(slice.end_timestamp);
+      // Slices have no end_timestamp, instead they have a duration.
     }
   }
 
