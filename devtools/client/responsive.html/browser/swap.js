@@ -40,7 +40,7 @@ function swapToInnerBrowser({ tab, containerURL, getInnerBrowser }) {
 
   // Dispatch a custom event each time the _viewport content_ is swapped from one browser
   // to another.  DevTools server code uses this to follow the content if there is an
-  // active DevTools connection.  While browser.xml does dispatch it's own SwapDocShells
+  // active DevTools connection.  While browser.js does dispatch it's own SwapDocShells
   // event, this one is easier for DevTools to follow because it's only emitted once per
   // transition, instead of twice like SwapDocShells.
   const dispatchDevToolsBrowserSwap = (from, to) => {
@@ -421,7 +421,7 @@ function addXULBrowserDecorations(browser) {
   }
 
   // It's not necessary for these to actually do anything.  These properties are
-  // swapped between browsers in browser.xml's `swapDocShells`, and then their
+  // swapped between browsers in browser.js's `swapDocShells`, and then their
   // `swapBrowser` methods are called, so we define them here for that to work
   // without errors.  During the swap process above, these will move from the
   // the new inner browser to the original tab's browser (step 4) and then to

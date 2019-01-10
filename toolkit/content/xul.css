@@ -172,10 +172,6 @@ iframe {
   }
 }
 
-browser {
-  -moz-binding: url("chrome://global/content/bindings/browser.xml#browser");
-}
-
 /*********** popup notification ************/
 popupnotification {
   -moz-binding: url("chrome://global/content/bindings/notification.xml#popup-notification");
