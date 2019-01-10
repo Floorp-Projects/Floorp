@@ -38,6 +38,7 @@ dependencies {
     testImplementation Dependencies.testing_junit
     testImplementation Dependencies.testing_robolectric
     testImplementation Dependencies.testing_mockito
+    testImplementation Dependencies.testing_robolectric
 }
 
 apply from: '../../../publish.gradle'

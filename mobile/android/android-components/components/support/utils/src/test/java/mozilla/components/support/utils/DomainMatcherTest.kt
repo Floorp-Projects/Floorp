@@ -7,7 +7,10 @@ package mozilla.components.support.utils
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 
+@RunWith(RobolectricTestRunner::class)
 class DomainMatcherTest {
     @Test
     fun `should perform basic domain matching for a given query`() {
@@ -18,7 +21,7 @@ class DomainMatcherTest {
                 "https://mobile.twitter.com", "https://m.youtube.com",
                 "https://en.Wikipedia.org/Wiki/Mozilla",
                 "http://192.168.254.254:8000", "http://192.168.254.254:8000/admin",
-                "about:config"
+                "about:config", "about:crashes"
         )
         // Full url matching.
         assertEquals(
@@ -64,6 +67,20 @@ class DomainMatcherTest {
         assertEquals(
                 DomainMatch("http://192.168.254.254:8000/admin", "192.168.254.254:8000/admin"),
                 segmentAwareDomainMatch("192.168.254.254:8000/a", urls)
+        )
+
+        // About urls.
+        assertEquals(
+                DomainMatch("about:config", "about:config"),
+                segmentAwareDomainMatch("abo", urls)
+        )
+        assertEquals(
+                DomainMatch("about:config", "about:config"),
+                segmentAwareDomainMatch("about:", urls)
+        )
+        assertEquals(
+                DomainMatch("about:crashes", "about:crashes"),
+                segmentAwareDomainMatch("about:cr", urls)
         )
 
         assertNull(segmentAwareDomainMatch("nomatch", urls))

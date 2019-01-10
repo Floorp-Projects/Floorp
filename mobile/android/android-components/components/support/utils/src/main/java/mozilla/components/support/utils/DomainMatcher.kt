@@ -5,8 +5,8 @@
 
 package mozilla.components.support.utils
 
+import android.net.Uri
 import java.net.MalformedURLException
-import java.net.URL
 
 data class DomainMatch(val url: String, val matchedSegment: String)
 
@@ -31,7 +31,7 @@ private fun basicMatch(query: String, urls: Sequence<String>): String? {
         }
 
         val url = try {
-            URL(rawUrl)
+            Uri.parse(rawUrl)
         } catch (e: MalformedURLException) {
             null
         }
@@ -62,17 +62,19 @@ private fun matchSegment(query: String, rawUrl: String): String? {
         return rawUrl
     }
 
-    val url = URL(rawUrl)
-    if (url.host.startsWith(query)) {
-        return url.host + url.path + url.port.orEmpty()
-    }
+    val url = Uri.parse(rawUrl)
+    url.host?.let { host ->
+        if (host.startsWith(query)) {
+            return host + url.path + url.port.orEmpty()
+        }
 
-    val strippedHost = url.host.noCommonSubdomains()
+        val strippedHost = host.noCommonSubdomains()
 
-    return if (strippedHost != url.host) {
-        strippedHost + url.port.orEmpty() + url.path
-    } else {
-        url.host + url.port.orEmpty() + url.path
+        return if (strippedHost != url.host) {
+            strippedHost + url.port.orEmpty() + url.path
+        } else {
+            host + url.port.orEmpty() + url.path
+        }
     }
 }
 

@@ -24,7 +24,10 @@ import org.mockito.Mockito.reset
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import kotlinx.coroutines.runBlocking
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 
+@RunWith(RobolectricTestRunner::class)
 class ToolbarAutocompleteFeatureTest {
     class TestToolbar : Toolbar {
         override var url: String = ""
