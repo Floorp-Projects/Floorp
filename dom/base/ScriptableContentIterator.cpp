@@ -20,7 +20,49 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ScriptableContentIterator)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTION(ScriptableContentIterator, mContentIterator)
+NS_IMPL_CYCLE_COLLECTION_CLASS(ScriptableContentIterator)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(ScriptableContentIterator)
+  if (tmp->mContentIterator) {
+    switch (tmp->mIteratorType) {
+      case POST_ORDER_ITERATOR:
+      default:
+        ImplCycleCollectionUnlink(
+            static_cast<PostContentIterator&>(*tmp->mContentIterator));
+        break;
+      case PRE_ORDER_ITERATOR:
+        ImplCycleCollectionUnlink(
+            static_cast<PreContentIterator&>(*tmp->mContentIterator));
+        break;
+      case SUBTREE_ITERATOR:
+        ImplCycleCollectionUnlink(
+            static_cast<ContentSubtreeIterator&>(*tmp->mContentIterator));
+        break;
+    }
+  }
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(ScriptableContentIterator)
+  if (tmp->mContentIterator) {
+    switch (tmp->mIteratorType) {
+      case POST_ORDER_ITERATOR:
+      default:
+        ImplCycleCollectionTraverse(
+            cb, static_cast<PostContentIterator&>(*tmp->mContentIterator),
+            "mContentIterator");
+        break;
+      case PRE_ORDER_ITERATOR:
+        ImplCycleCollectionTraverse(
+            cb, static_cast<PreContentIterator&>(*tmp->mContentIterator),
+            "mContentIterator");
+        break;
+      case SUBTREE_ITERATOR:
+        ImplCycleCollectionTraverse(
+            cb, static_cast<ContentSubtreeIterator&>(*tmp->mContentIterator),
+            "mContentIterator");
+        break;
+    }
+  }
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 ScriptableContentIterator::ScriptableContentIterator()
     : mIteratorType(NOT_INITIALIZED) {}
@@ -32,13 +74,13 @@ void ScriptableContentIterator::EnsureContentIterator() {
   switch (mIteratorType) {
     case POST_ORDER_ITERATOR:
     default:
-      mContentIterator = new PostContentIterator();
+      mContentIterator = MakeUnique<PostContentIterator>();
       break;
     case PRE_ORDER_ITERATOR:
-      mContentIterator = new PreContentIterator();
+      mContentIterator = MakeUnique<PreContentIterator>();
       break;
     case SUBTREE_ITERATOR:
-      mContentIterator = new ContentSubtreeIterator();
+      mContentIterator = MakeUnique<ContentSubtreeIterator>();
       break;
   }
 }
