@@ -26,11 +26,9 @@ const serviceWorkerRegistrationSpec = generateActorSpec({
   methods: {
     start: {
       request: {},
-      response: RetVal("json"),
     },
     unregister: {
       request: {},
-      response: RetVal("json"),
     },
     getPushSubscription: {
       request: {},
