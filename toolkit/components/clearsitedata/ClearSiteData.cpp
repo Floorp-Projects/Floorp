@@ -174,8 +174,21 @@ ClearSiteData::Observe(nsISupports* aSubject, const char* aTopic,
 }
 
 void ClearSiteData::ClearDataFromChannel(nsIHttpChannel* aChannel) {
+  MOZ_ASSERT(aChannel);
+
   nsresult rv;
   nsCOMPtr<nsIURI> uri;
+
+  uint32_t status;
+  rv = aChannel->GetResponseStatus(&status);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  // We just care about 2xx response status.
+  if (status < 200 || status >= 300) {
+    return;
+  }
 
   nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
   if (NS_WARN_IF(!ssm)) {
