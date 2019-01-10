@@ -3,6 +3,8 @@ sync module
 
 Provides an assortment of synchronisation primitives.
 
+.. js:autofunction:: executeSoon
+
 .. js:autoclass:: MessageManagerDestroyedPromise
   :members:
 
