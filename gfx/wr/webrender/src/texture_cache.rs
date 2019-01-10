@@ -555,6 +555,13 @@ impl TextureCache {
     /// Clear all standalone textures in the cache.
     pub fn clear_standalone(&mut self) {
         debug_assert!(!self.now.is_valid());
+        // This pref just helps us avoid crashes when we begin using multiple documents.
+        // What we need to do for clear to work correctly with multiple documents is
+        // to ensure that we generate frames for all documents whenever we do this.
+        if self.debug_flags.contains(DebugFlags::TEXTURE_CACHE_DBG_DISABLE_SHRINK) {
+            return;
+        }
+
         let mut per_doc_data = mem::replace(&mut self.per_doc_data, FastHashMap::default());
         for (&_, doc_data) in per_doc_data.iter_mut() {
             let standalone_entry_handles = mem::replace(
@@ -573,6 +580,13 @@ impl TextureCache {
 
     /// Clear all shared textures in the cache.
     pub fn clear_shared(&mut self) {
+        // This pref just helps us avoid crashes when we begin using multiple documents.
+        // What we need to do for clear to work correctly with multiple documents is
+        // to ensure that we generate frames for all documents whenever we do this.
+        if self.debug_flags.contains(DebugFlags::TEXTURE_CACHE_DBG_DISABLE_SHRINK) {
+            return;
+        }
+
         self.unset_doc_data();
         let mut per_doc_data = mem::replace(&mut self.per_doc_data, FastHashMap::default());
         for (&_, doc_data) in per_doc_data.iter_mut() {
