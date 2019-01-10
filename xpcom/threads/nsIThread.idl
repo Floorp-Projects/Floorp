@@ -84,6 +84,11 @@ interface nsIThread : nsISerialEventTarget
   boolean hasPendingEvents();
 
   /**
+   * Similar to above, but checks only possible high priority queue.
+   */
+  boolean hasPendingHighPriorityEvents();
+
+  /**
    * Process the next event.  If there are no pending events, then this method
    * may wait -- depending on the value of the mayWait parameter -- until an
    * event is dispatched to this thread.  This method is re-entrant but may

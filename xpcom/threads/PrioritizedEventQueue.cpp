@@ -285,6 +285,12 @@ bool PrioritizedEventQueue<InnerQueueT>::HasReadyEvent(
 }
 
 template <class InnerQueueT>
+bool PrioritizedEventQueue<InnerQueueT>::HasPendingHighPriorityEvents(
+    const MutexAutoLock& aProofOfLock) {
+  return !mHighQueue->IsEmpty(aProofOfLock);
+}
+
+template <class InnerQueueT>
 size_t PrioritizedEventQueue<InnerQueueT>::Count(
     const MutexAutoLock& aProofOfLock) const {
   MOZ_CRASH("unimplemented");
