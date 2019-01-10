@@ -244,6 +244,24 @@ enum class WrExternalImageType : uint32_t {
   Sentinel /* this must be last for serialization purposes. */
 };
 
+enum class WrFilterOpType : uint32_t {
+  Blur = 0,
+  Brightness = 1,
+  Contrast = 2,
+  Grayscale = 3,
+  HueRotate = 4,
+  Invert = 5,
+  Opacity = 6,
+  Saturate = 7,
+  Sepia = 8,
+  DropShadow = 9,
+  ColorMatrix = 10,
+  SrgbToLinear = 11,
+  LinearToSrgb = 12,
+
+  Sentinel /* this must be last for serialization purposes. */
+};
+
 enum class YuvColorSpace : uint32_t {
   Rec601 = 0,
   Rec709 = 1,
@@ -899,385 +917,12 @@ struct TypedTransform3D {
 
 using LayoutTransform = TypedTransform3D<float, LayoutPixel, LayoutPixel>;
 
-struct PropertyBindingId {
-  IdNamespace namespace_;
-  uint32_t uid;
-
-  bool operator==(const PropertyBindingId& aOther) const {
-    return namespace_ == aOther.namespace_ &&
-           uid == aOther.uid;
-  }
-};
-
-/// A unique key that is used for connecting animated property
-/// values to bindings in the display list.
-template<typename T>
-struct PropertyBindingKey {
-  PropertyBindingId id;
-
-  bool operator==(const PropertyBindingKey& aOther) const {
-    return id == aOther.id;
-  }
-};
-
-/// A binding property can either be a specific value
-/// (the normal, non-animated case) or point to a binding location
-/// to fetch the current value from.
-/// Note that Binding has also a non-animated value, the value is
-/// used for the case where the animation is still in-delay phase
-/// (i.e. the animation doesn't produce any animation values).
-template<typename T>
-struct PropertyBinding {
-  enum class Tag {
-    Value,
-    Binding,
-
-    Sentinel /* this must be last for serialization purposes. */
-  };
-
-  struct Value_Body {
-    T _0;
-
-    bool operator==(const Value_Body& aOther) const {
-      return _0 == aOther._0;
-    }
-  };
-
-  struct Binding_Body {
-    PropertyBindingKey<T> _0;
-    T _1;
-
-    bool operator==(const Binding_Body& aOther) const {
-      return _0 == aOther._0 &&
-             _1 == aOther._1;
-    }
-  };
-
-  Tag tag;
-  union {
-    Value_Body value;
-    Binding_Body binding;
-  };
-
-  static PropertyBinding Value(const T &a0) {
-    PropertyBinding result;
-    result.value._0 = a0;
-    result.tag = Tag::Value;
-    return result;
-  }
-
-  static PropertyBinding Binding(const PropertyBindingKey<T> &a0,
-                                 const T &a1) {
-    PropertyBinding result;
-    result.binding._0 = a0;
-    result.binding._1 = a1;
-    result.tag = Tag::Binding;
-    return result;
-  }
-
-  bool IsValue() const {
-    return tag == Tag::Value;
-  }
-
-  bool IsBinding() const {
-    return tag == Tag::Binding;
-  }
-
-  bool operator==(const PropertyBinding& aOther) const {
-    if (tag != aOther.tag) {
-      return false;
-    }
-    switch (tag) {
-      case Tag::Value: return value == aOther.value;
-      case Tag::Binding: return binding == aOther.binding;
-      default: return true;
-    }
-  }
-};
-
-struct FilterOp {
-  enum class Tag {
-    /// Filter that does no transformation of the colors, needed for
-    /// debug purposes only.
-    Identity,
-    Blur,
-    Brightness,
-    Contrast,
-    Grayscale,
-    HueRotate,
-    Invert,
-    Opacity,
-    Saturate,
-    Sepia,
-    DropShadow,
-    ColorMatrix,
-    SrgbToLinear,
-    LinearToSrgb,
-
-    Sentinel /* this must be last for serialization purposes. */
-  };
-
-  struct Blur_Body {
-    float _0;
-
-    bool operator==(const Blur_Body& aOther) const {
-      return _0 == aOther._0;
-    }
-  };
-
-  struct Brightness_Body {
-    float _0;
-
-    bool operator==(const Brightness_Body& aOther) const {
-      return _0 == aOther._0;
-    }
-  };
-
-  struct Contrast_Body {
-    float _0;
-
-    bool operator==(const Contrast_Body& aOther) const {
-      return _0 == aOther._0;
-    }
-  };
-
-  struct Grayscale_Body {
-    float _0;
-
-    bool operator==(const Grayscale_Body& aOther) const {
-      return _0 == aOther._0;
-    }
-  };
-
-  struct HueRotate_Body {
-    float _0;
-
-    bool operator==(const HueRotate_Body& aOther) const {
-      return _0 == aOther._0;
-    }
-  };
-
-  struct Invert_Body {
-    float _0;
-
-    bool operator==(const Invert_Body& aOther) const {
-      return _0 == aOther._0;
-    }
-  };
-
-  struct Opacity_Body {
-    PropertyBinding<float> _0;
-    float _1;
-
-    bool operator==(const Opacity_Body& aOther) const {
-      return _0 == aOther._0 &&
-             _1 == aOther._1;
-    }
-  };
-
-  struct Saturate_Body {
-    float _0;
-
-    bool operator==(const Saturate_Body& aOther) const {
-      return _0 == aOther._0;
-    }
-  };
-
-  struct Sepia_Body {
-    float _0;
-
-    bool operator==(const Sepia_Body& aOther) const {
-      return _0 == aOther._0;
-    }
-  };
-
-  struct DropShadow_Body {
-    LayoutVector2D _0;
-    float _1;
-    ColorF _2;
-
-    bool operator==(const DropShadow_Body& aOther) const {
-      return _0 == aOther._0 &&
-             _1 == aOther._1 &&
-             _2 == aOther._2;
-    }
-  };
-
-  struct ColorMatrix_Body {
-    float _0[20];
-  };
-
-  Tag tag;
-  union {
-    Blur_Body blur;
-    Brightness_Body brightness;
-    Contrast_Body contrast;
-    Grayscale_Body grayscale;
-    HueRotate_Body hue_rotate;
-    Invert_Body invert;
-    Opacity_Body opacity;
-    Saturate_Body saturate;
-    Sepia_Body sepia;
-    DropShadow_Body drop_shadow;
-    ColorMatrix_Body color_matrix;
-  };
-
-  static FilterOp Identity() {
-    FilterOp result;
-    result.tag = Tag::Identity;
-    return result;
-  }
-
-  static FilterOp Blur(const float &a0) {
-    FilterOp result;
-    result.blur._0 = a0;
-    result.tag = Tag::Blur;
-    return result;
-  }
-
-  static FilterOp Brightness(const float &a0) {
-    FilterOp result;
-    result.brightness._0 = a0;
-    result.tag = Tag::Brightness;
-    return result;
-  }
-
-  static FilterOp Contrast(const float &a0) {
-    FilterOp result;
-    result.contrast._0 = a0;
-    result.tag = Tag::Contrast;
-    return result;
-  }
-
-  static FilterOp Grayscale(const float &a0) {
-    FilterOp result;
-    result.grayscale._0 = a0;
-    result.tag = Tag::Grayscale;
-    return result;
-  }
-
-  static FilterOp HueRotate(const float &a0) {
-    FilterOp result;
-    result.hue_rotate._0 = a0;
-    result.tag = Tag::HueRotate;
-    return result;
-  }
-
-  static FilterOp Invert(const float &a0) {
-    FilterOp result;
-    result.invert._0 = a0;
-    result.tag = Tag::Invert;
-    return result;
-  }
-
-  static FilterOp Opacity(const PropertyBinding<float> &a0,
-                          const float &a1) {
-    FilterOp result;
-    result.opacity._0 = a0;
-    result.opacity._1 = a1;
-    result.tag = Tag::Opacity;
-    return result;
-  }
-
-  static FilterOp Saturate(const float &a0) {
-    FilterOp result;
-    result.saturate._0 = a0;
-    result.tag = Tag::Saturate;
-    return result;
-  }
-
-  static FilterOp Sepia(const float &a0) {
-    FilterOp result;
-    result.sepia._0 = a0;
-    result.tag = Tag::Sepia;
-    return result;
-  }
-
-  static FilterOp DropShadow(const LayoutVector2D &a0,
-                             const float &a1,
-                             const ColorF &a2) {
-    FilterOp result;
-    result.drop_shadow._0 = a0;
-    result.drop_shadow._1 = a1;
-    result.drop_shadow._2 = a2;
-    result.tag = Tag::DropShadow;
-    return result;
-  }
-
-  static FilterOp ColorMatrix(const float (&a0)[20]) {
-    FilterOp result;
-    for (int i = 0; i < 20; i++) {result.color_matrix._0[i] = a0[i];}
-    result.tag = Tag::ColorMatrix;
-    return result;
-  }
-
-  static FilterOp SrgbToLinear() {
-    FilterOp result;
-    result.tag = Tag::SrgbToLinear;
-    return result;
-  }
-
-  static FilterOp LinearToSrgb() {
-    FilterOp result;
-    result.tag = Tag::LinearToSrgb;
-    return result;
-  }
-
-  bool IsIdentity() const {
-    return tag == Tag::Identity;
-  }
-
-  bool IsBlur() const {
-    return tag == Tag::Blur;
-  }
-
-  bool IsBrightness() const {
-    return tag == Tag::Brightness;
-  }
-
-  bool IsContrast() const {
-    return tag == Tag::Contrast;
-  }
-
-  bool IsGrayscale() const {
-    return tag == Tag::Grayscale;
-  }
-
-  bool IsHueRotate() const {
-    return tag == Tag::HueRotate;
-  }
-
-  bool IsInvert() const {
-    return tag == Tag::Invert;
-  }
-
-  bool IsOpacity() const {
-    return tag == Tag::Opacity;
-  }
-
-  bool IsSaturate() const {
-    return tag == Tag::Saturate;
-  }
-
-  bool IsSepia() const {
-    return tag == Tag::Sepia;
-  }
-
-  bool IsDropShadow() const {
-    return tag == Tag::DropShadow;
-  }
-
-  bool IsColorMatrix() const {
-    return tag == Tag::ColorMatrix;
-  }
-
-  bool IsSrgbToLinear() const {
-    return tag == Tag::SrgbToLinear;
-  }
-
-  bool IsLinearToSrgb() const {
-    return tag == Tag::LinearToSrgb;
-  }
+struct WrFilterOp {
+  WrFilterOpType filter_type;
+  float argument;
+  LayoutVector2D offset;
+  ColorF color;
+  float matrix[20];
 };
 
 /// Configure whether the contents of a stacking context
@@ -1944,7 +1589,7 @@ WrSpatialId wr_dp_push_stacking_context(WrState *aState,
                                         TransformStyle aTransformStyle,
                                         const LayoutTransform *aPerspective,
                                         MixBlendMode aMixBlendMode,
-                                        const FilterOp *aFilters,
+                                        const WrFilterOp *aFilters,
                                         uintptr_t aFilterCount,
                                         bool aIsBackfaceVisible,
                                         RasterSpace aGlyphRasterSpace)
