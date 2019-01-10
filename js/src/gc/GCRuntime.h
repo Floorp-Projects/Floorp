@@ -106,19 +106,8 @@ class ChunkPool {
 };
 
 class BackgroundSweepTask : public GCParallelTaskHelper<BackgroundSweepTask> {
-  using Base = GCParallelTaskHelper<BackgroundSweepTask>;
-
-  HelperThreadLockData<bool> done;
-
  public:
-  explicit BackgroundSweepTask(JSRuntime* rt);
-
-  bool isRunning() const;
-  bool isRunningWithLockHeld(const AutoLockHelperThreadState& lock) const;
-
-  void startIfIdle(AutoLockHelperThreadState& lock);
-  void runFromMainThread(JSRuntime* rt);
-
+  explicit BackgroundSweepTask(JSRuntime* rt) : GCParallelTaskHelper(rt) {}
   void run();
 };
 
