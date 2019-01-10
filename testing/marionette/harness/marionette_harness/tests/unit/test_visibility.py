@@ -74,36 +74,41 @@ class TestVisibility(MarionetteTestCase):
 
         self.assertFalse(shown.is_displayed())
 
-    def testShouldSayElementsWithNegativeTransformAreNotDisplayed(self):
-        test_html = self.marionette.absolute_url("cssTransform.html")
-        self.marionette.navigate(test_html)
+    def test_elements_not_displayed_with_negative_transform(self):
+        self.marionette.navigate(inline("""
+            <div id="y" style="transform: translateY(-200%);">hidden</div>
+            <div id="x" style="transform: translateX(-200%);">hidden</div>
+        """))
 
-        elementX = self.marionette.find_element(By.ID, 'parentX')
-        self.assertFalse(elementX.is_displayed())
-        elementY = self.marionette.find_element(By.ID, 'parentY')
-        self.assertFalse(elementY.is_displayed())
+        element_x = self.marionette.find_element(By.ID, 'x')
+        self.assertFalse(element_x.is_displayed())
+        element_y = self.marionette.find_element(By.ID, 'y')
+        self.assertFalse(element_y.is_displayed())
 
-    def testShouldSayElementsWithParentWithNegativeTransformAreNotDisplayed(self):
-        test_html = self.marionette.absolute_url("cssTransform.html")
-        self.marionette.navigate(test_html)
+    def test_elements_not_displayed_with_parents_having_negative_transform(self):
+        self.marionette.navigate(inline("""
+            <div style="transform: translateY(-200%);"><p id="y">hidden</p></div>
+            <div style="transform: translateX(-200%);"><p id="x">hidden</p></div>
+        """))
 
-        elementX = self.marionette.find_element(By.ID, 'childX')
-        self.assertFalse(elementX.is_displayed())
-        elementY = self.marionette.find_element(By.ID, 'childY')
-        self.assertFalse(elementY.is_displayed())
+        element_x = self.marionette.find_element(By.ID, 'x')
+        self.assertFalse(element_x.is_displayed())
+        element_y = self.marionette.find_element(By.ID, 'y')
+        self.assertFalse(element_y.is_displayed())
 
-    def testShouldSayElementWithZeroTransformIsVisible(self):
-        test_html = self.marionette.absolute_url("cssTransform.html")
-        self.marionette.navigate(test_html)
+    def test_element_displayed_with_zero_transform(self):
+        self.marionette.navigate(inline("""
+            <div style="transform: translate(0px, 0px);">not hidden</div>
+        """))
+        element = self.marionette.find_element(By.TAG_NAME, 'div')
+        self.assertTrue(element.is_displayed())
 
-        zero_tranform = self.marionette.find_element(By.ID, 'zero-tranform')
-        self.assertTrue(zero_tranform.is_displayed())
-
-    def testShouldSayElementIsVisibleWhenItHasNegativeTransformButElementisntInANegativeSpace(self):
-        test_html = self.marionette.absolute_url("cssTransform2.html")
-        self.marionette.navigate(test_html)
-        negative_percent__tranform = self.marionette.find_element(By.ID, 'negative-percentage-transformY')
-        self.assertTrue(negative_percent__tranform.is_displayed())
+    def test_element_displayed_with_negative_transform_but_in_viewport(self):
+        self.marionette.navigate(inline("""
+            <div style="margin-top: 1em; transform: translateY(-75%);">not hidden</div>
+            """))
+        element = self.marionette.find_element(By.TAG_NAME, "div")
+        self.assertTrue(element.is_displayed())
 
     def testShouldSayElementIsInvisibleWhenOverflowXIsHiddenAndOutOfViewport(self):
         test_html = self.marionette.absolute_url("bug814037.html")
