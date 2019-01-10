@@ -1476,12 +1476,43 @@ with only_when(compile_environment):
     set_config('LIBJPEG_TURBO_ASFLAGS', in_tree_jpeg.flags)
 
 
-@depends(yasm_version, in_tree_vpx.need_yasm, in_tree_jpeg.use_yasm)
+# Libav-fft Support
+# ==============================================================
+with only_when(compile_environment):
+    @depends(target)
+    def libav_fft(target):
+        flags = None
+        if target.kernel == 'WINNT' and target.cpu == 'x86':
+            flags = ['-DPIC', '-DWIN32']
+        elif target.cpu == 'x86_64':
+            if target.kernel == 'Darwin':
+                flags = ['-D__x86_64__', '-DPIC', '-DMACHO']
+            elif target.kernel == 'WINNT':
+                flags = ['-D__x86_64__', '-DPIC', '-DWIN64', '-DMSVC']
+            else:
+                flags = ['-D__x86_64__', '-DPIC', '-DELF']
+        if flags:
+            if target.kernel == 'Linux' and target.os == 'GNU':
+                need_yasm = Version('1.0.1')
+            else:
+                need_yasm = Version('1.1')
+            return namespace(flags=flags, need_yasm=need_yasm)
+
+
+    set_config('MOZ_LIBAV_FFT', depends(when=libav_fft)(lambda: True))
+    set_define('MOZ_LIBAV_FFT', depends(when=libav_fft)(lambda: True))
+    set_config('LIBAV_FFT_ASFLAGS', libav_fft.flags)
+    add_old_configure_assignment('LIBAV_FFT_ASFLAGS', libav_fft.flags)
+
+
+@depends(yasm_version, in_tree_vpx.need_yasm, in_tree_jpeg.use_yasm,
+         libav_fft.need_yasm)
 @imports(_from='__builtin__', _import='sorted')
-def valid_yasm_version(yasm_version, for_vpx, for_jpeg):
+def valid_yasm_version(yasm_version, for_vpx, for_jpeg, for_libav):
     requires = {
         'vpx': for_vpx,
         'jpeg': for_jpeg,
+        'libav': for_libav,
     }
     requires = {k: v for (k, v) in requires.items() if v}
     if requires and not yasm_version:
