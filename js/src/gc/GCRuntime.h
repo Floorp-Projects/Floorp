@@ -111,6 +111,12 @@ class BackgroundSweepTask : public GCParallelTaskHelper<BackgroundSweepTask> {
   void run();
 };
 
+class BackgroundFreeTask : public GCParallelTaskHelper<BackgroundFreeTask> {
+ public:
+  explicit BackgroundFreeTask(JSRuntime* rt) : GCParallelTaskHelper(rt) {}
+  void run();
+};
+
 // Performs extra allocation off thread so that when memory is required on the
 // main thread it will already be available and waiting.
 class BackgroundAllocTask : public GCParallelTaskHelper<BackgroundAllocTask> {
@@ -637,9 +643,10 @@ class GCRuntime {
   void sweepZones(FreeOp* fop, bool destroyingRuntime);
   void decommitAllWithoutUnlocking(const AutoLockGC& lock);
   void startDecommit();
-  void queueZonesForBackgroundSweep(ZoneList& zones);
-  void maybeStartBackgroundSweep(AutoLockHelperThreadState& lock);
+  void queueZonesAndStartBackgroundSweep(ZoneList& zones);
   void sweepFromBackgroundThread(AutoLockHelperThreadState& lock);
+  void startBackgroundFree();
+  void freeFromBackgroundThread(AutoLockHelperThreadState& lock);
   void sweepBackgroundThings(ZoneList& zones, LifoAlloc& freeBlocks);
   void assertBackgroundSweepingFinished();
   bool shouldCompact();
@@ -994,9 +1001,11 @@ class GCRuntime {
   js::Mutex lock;
 
   friend class BackgroundSweepTask;
+  friend class BackgroundFreeTask;
 
   BackgroundAllocTask allocTask;
   BackgroundSweepTask sweepTask;
+  BackgroundFreeTask freeTask;
   BackgroundDecommitTask decommitTask;
 
   /*
