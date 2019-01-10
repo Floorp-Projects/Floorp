@@ -18,14 +18,19 @@
 namespace mozilla {
 
 /**
- * A simple iterator class for traversing the content in "close tag" order.
+ * ContentIteratorBase is a base class of PostContentIterator,
+ * PreContentIterator and ContentSubtreeIterator.  Making each concrete
+ * classes "final", compiler can avoid virtual calls if they are treated
+ * by the users directly.
  */
-class ContentIterator : public nsIContentIterator {
+class ContentIteratorBase : public nsIContentIterator {
  public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS(ContentIterator)
+  ContentIteratorBase() = delete;
+  ContentIteratorBase(const ContentIteratorBase&) = delete;
+  ContentIteratorBase& operator=(const ContentIteratorBase&) = delete;
 
-  explicit ContentIterator(bool aPre);
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS(ContentIteratorBase)
 
   virtual nsresult Init(nsINode* aRoot) override;
   virtual nsresult Init(nsRange* aRange) override;
@@ -46,7 +51,8 @@ class ContentIterator : public nsIContentIterator {
   virtual nsresult PositionAt(nsINode* aCurNode) override;
 
  protected:
-  virtual ~ContentIterator() = default;
+  explicit ContentIteratorBase(bool aPre);
+  virtual ~ContentIteratorBase() = default;
 
   /**
    * Callers must guarantee that:
@@ -84,22 +90,54 @@ class ContentIterator : public nsIContentIterator {
 
   bool mIsDone;
   bool mPre;
+};
 
- private:
-  ContentIterator(const ContentIterator&) = delete;
-  ContentIterator& operator=(const ContentIterator&) = delete;
+/**
+ * A simple iterator class for traversing the content in "close tag" order.
+ */
+class PostContentIterator final : public ContentIteratorBase {
+ public:
+  PostContentIterator() : ContentIteratorBase(false) {}
+  PostContentIterator(const PostContentIterator&) = delete;
+  PostContentIterator& operator=(const PostContentIterator&) = delete;
+
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(PostContentIterator,
+                                           ContentIteratorBase)
+
+ protected:
+  virtual ~PostContentIterator() = default;
+};
+
+/**
+ * A simple iterator class for traversing the content in "start tag" order.
+ */
+class PreContentIterator final : public ContentIteratorBase {
+ public:
+  PreContentIterator() : ContentIteratorBase(true) {}
+  PreContentIterator(const PreContentIterator&) = delete;
+  PreContentIterator& operator=(const PreContentIterator&) = delete;
+
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(PreContentIterator,
+                                           ContentIteratorBase)
+
+ protected:
+  virtual ~PreContentIterator() = default;
 };
 
 /**
  *  A simple iterator class for traversing the content in "top subtree" order.
  */
-class ContentSubtreeIterator final : public ContentIterator {
+class ContentSubtreeIterator final : public ContentIteratorBase {
  public:
-  ContentSubtreeIterator() : ContentIterator(false) {}
+  ContentSubtreeIterator() : ContentIteratorBase(true) {}
+  ContentSubtreeIterator(const ContentSubtreeIterator&) = delete;
+  ContentSubtreeIterator& operator=(const ContentSubtreeIterator&) = delete;
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ContentSubtreeIterator,
-                                           ContentIterator)
+                                           ContentIteratorBase)
 
   virtual nsresult Init(nsINode* aRoot) override;
   virtual nsresult Init(nsRange* aRange) override;
@@ -131,10 +169,6 @@ class ContentSubtreeIterator final : public ContentIterator {
   // the range endpoint, and (node, node.length) comes strictly before it, so
   // the range's start and end nodes will never be considered "in" it.
   nsIContent* GetTopAncestorInRange(nsINode* aNode);
-
-  // no copy's or assigns  FIX ME
-  ContentSubtreeIterator(const ContentSubtreeIterator&) = delete;
-  ContentSubtreeIterator& operator=(const ContentSubtreeIterator&) = delete;
 
   virtual void LastRelease() override;
 
