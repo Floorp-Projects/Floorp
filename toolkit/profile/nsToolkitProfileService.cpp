@@ -46,6 +46,7 @@
 using namespace mozilla;
 
 #define DEV_EDITION_NAME "dev-edition-default"
+#define DEFAULT_NAME "default"
 
 nsToolkitProfile::nsToolkitProfile(const nsACString& aName, nsIFile* aRootDir,
                                    nsIFile* aLocalDir, nsToolkitProfile* aPrev)
@@ -717,11 +718,19 @@ nsresult nsToolkitProfileService::SelectStartupProfile(
 #ifdef MOZ_DEV_EDITION
                                 NS_LITERAL_CSTRING(DEV_EDITION_NAME),
 #else
-                                NS_LITERAL_CSTRING("default"),
+                                NS_LITERAL_CSTRING(DEFAULT_NAME),
 #endif
                                 getter_AddRefs(mChosen));
     if (NS_SUCCEEDED(rv)) {
-#ifndef MOZ_DEV_EDITION
+#ifdef MOZ_DEV_EDITION
+      // If the only profile is the new dev-edition-profile then older versions
+      // may try to auto-select it. Create a default profile for them to use
+      // instead.
+      if (mFirst && !mFirst->mNext) {
+        CreateProfile(nullptr, NS_LITERAL_CSTRING(DEFAULT_NAME),
+                      getter_AddRefs(mDefault));
+      }
+#else
       SetDefaultProfile(mChosen);
 #endif
       Flush();
