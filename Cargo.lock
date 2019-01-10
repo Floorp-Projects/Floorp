@@ -2425,6 +2425,7 @@ dependencies = [
  "fallible 0.0.1",
  "fxhash 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "hashglobe 0.1.0",
+ "indexmap 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "itertools 0.7.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "itoa 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "lazy_static 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
