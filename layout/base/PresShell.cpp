@@ -6045,7 +6045,7 @@ void PresShell::Paint(nsView* aViewToPaint, const nsRegion& aDirtyRegion,
     bgcolor = NS_ComposeColors(bgcolor, mCanvasBackgroundColor);
     WebRenderBackgroundData data(wr::ToLayoutRect(bounds),
                                  wr::ToColorF(ToDeviceColor(bgcolor)));
-    nsTArray<wr::WrFilterOp> wrFilters;
+    nsTArray<wr::FilterOp> wrFilters;
 
     MaybeSetupTransactionIdAllocator(layerManager, presContext);
     layerManager->AsWebRenderLayerManager()->EndTransactionWithoutLayer(

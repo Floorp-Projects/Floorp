@@ -403,7 +403,7 @@ void AsyncImagePipelineManager::ApplyAsyncImageForPipeline(
       wr::ToRoundedLayoutRect(aPipeline->mScBounds), nullptr, nullptr, &opacity,
       aPipeline->mScTransform.IsIdentity() ? nullptr : &aPipeline->mScTransform,
       wr::TransformStyle::Flat, nullptr, aPipeline->mMixBlendMode,
-      nsTArray<wr::WrFilterOp>(), true,
+      nsTArray<wr::FilterOp>(), true,
       // This is fine to do unconditionally because we only push images here.
       wr::RasterSpace::Screen());
 
