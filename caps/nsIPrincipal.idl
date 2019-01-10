@@ -75,7 +75,7 @@ interface nsIPrincipal : nsISerializable
      * The codebase URI to which this principal pertains.  This is
      * generally the document URI.
      */
-    readonly attribute nsIURI URI;
+    [infallible] readonly attribute nsIURI URI;
 
     /**
      * The domain URI to which this principal pertains.

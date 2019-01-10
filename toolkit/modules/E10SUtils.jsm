@@ -107,7 +107,7 @@ var E10SUtils = {
       return NOT_REMOTE;
     }
 
-    // loadURI in browser.xml treats null as about:blank
+    // loadURI in browser.js treats null as about:blank
     if (!aURL) {
       aURL = "about:blank";
     }

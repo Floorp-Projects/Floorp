@@ -76,7 +76,7 @@ bool AutoscrollAnimation::DoSample(FrameMetrics& aFrameMetrics,
 }
 
 void AutoscrollAnimation::Cancel(CancelAnimationFlags aFlags) {
-  // The cancellation was initiated by browser.xml, so there's no need to
+  // The cancellation was initiated by browser.js, so there's no need to
   // notify it.
   if (aFlags & TriggeredExternally) {
     return;

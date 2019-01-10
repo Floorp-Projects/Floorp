@@ -21,6 +21,7 @@
       "aarch64-vastart-checking.patch",
       "downgrade-mangling-error.patch",
       "r346300-compiler-rt-windows-mmap.patch",
-      "loosen-msvc-detection.patch"
+      "loosen-msvc-detection.patch",
+      "r350774.patch"
     ]
 }
