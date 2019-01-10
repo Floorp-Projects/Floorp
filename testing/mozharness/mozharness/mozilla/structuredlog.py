@@ -37,6 +37,7 @@ class StructuredOutputParser(OutputParser):
 
         tbpl_compact = kwargs.pop("log_compact", False)
         super(StructuredOutputParser, self).__init__(**kwargs)
+        self.allow_crashes = kwargs.pop("allow_crashes", False)
 
         mozlog = self._get_mozlog_module()
         self.formatter = mozlog.formatters.TbplFormatter(compact=tbpl_compact)
@@ -179,19 +180,24 @@ class StructuredOutputParser(OutputParser):
 
         # These are warning/orange statuses.
         failure_conditions = [
-            (sum(summary.unexpected_statuses.values()), 0, "statuses"),
+            (sum(summary.unexpected_statuses.values()), 0, "statuses", False),
             (summary.action_counts.get('crash', 0),
-             summary.expected_statuses.get('CRASH', 0), "crashes"),
+             summary.expected_statuses.get('CRASH', 0), "crashes", self.allow_crashes),
             (summary.action_counts.get('valgrind_error', 0), 0,
-             "valgrind errors")
+             "valgrind errors", False)
         ]
-        for value, limit, type_name in failure_conditions:
+        for value, limit, type_name, allow in failure_conditions:
             if value > limit:
-                self.update_levels(*fail_pair)
-                msg = "Got %d unexpected %s" % (value, type_name)
+                msg = "%d unexpected %s" % (value, type_name)
                 if limit != 0:
                     msg += " expected at most %d" % (limit)
-                self.error(msg)
+                if not allow:
+                    self.update_levels(*fail_pair)
+                    msg = "Got " + msg
+                    self.error(msg)
+                else:
+                    msg = "Ignored " + msg
+                    self.warning(msg)
 
         # These are error/red statuses. A message is output here every time something
         # wouldn't otherwise be highlighted in the UI.
