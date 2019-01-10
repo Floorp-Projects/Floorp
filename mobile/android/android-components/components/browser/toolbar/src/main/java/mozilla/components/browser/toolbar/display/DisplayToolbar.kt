@@ -60,7 +60,7 @@ import mozilla.components.ui.icons.R.drawable.mozac_ic_lock
  *
  */
 @SuppressLint("ViewConstructor") // This view is only instantiated in code
-@Suppress("LargeClass", "TooManyFunctions")
+@Suppress("LargeClass")
 internal class DisplayToolbar(
     context: Context,
     val toolbar: BrowserToolbar

@@ -137,12 +137,17 @@ class BrowserFragment : Fragment(), BackHandler {
         }
     }
 
+    @Suppress("ReturnCount")
     override fun onBackPressed(): Boolean {
         if (toolbarFeature.handleBackPressed()) {
             return true
         }
 
         if (sessionFeature.handleBackPressed()) {
+            return true
+        }
+
+        if (customTabsToolbarFeature.onBackPressed()) {
             return true
         }
 

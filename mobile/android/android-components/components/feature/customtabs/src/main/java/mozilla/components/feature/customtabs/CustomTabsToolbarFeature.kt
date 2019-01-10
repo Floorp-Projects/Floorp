@@ -75,6 +75,19 @@ class CustomTabsToolbarFeature(
 
     override fun stop() {}
 
+    /**
+     * Removes the current Custom Tabs session when the back button is pressed and returns true.
+     * Should be called when the back button is pressed.
+     */
+    fun onBackPressed(): Boolean {
+        val result = sessionManager.runWithSession(sessionId) {
+            remove(it)
+            true
+        }
+        closeListener.invoke()
+        return result
+    }
+
     internal fun Drawable.isSmallerThan(maxSize: Int): Boolean = with(context.resources) {
         pxToDp(minimumWidth) <= maxSize && pxToDp(minimumHeight) <= maxSize
     }

@@ -153,6 +153,24 @@ class CustomTabsToolbarFeatureTest {
     }
 
     @Test
+    fun `onBackPressed removes session`() {
+        val sessionId = "123"
+        val session: Session = mock()
+        val toolbar = BrowserToolbar(RuntimeEnvironment.application)
+        val sessionManager: SessionManager = mock()
+        var closeExecuted = false
+        `when`(session.customTabConfig).thenReturn(mock())
+        `when`(sessionManager.findSessionById(anyString())).thenReturn(session)
+
+        val feature = spy(CustomTabsToolbarFeature(sessionManager, toolbar, sessionId) { closeExecuted = true })
+
+        val result = feature.onBackPressed()
+
+        assertTrue(result)
+        assertTrue(closeExecuted)
+    }
+
+    @Test
     fun isSmallerThan() {
         val toolbar = spy(BrowserToolbar(RuntimeEnvironment.application))
         val drawable: Drawable = mock()
