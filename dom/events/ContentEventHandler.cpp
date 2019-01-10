@@ -731,14 +731,14 @@ nsresult ContentEventHandler::GenerateFlatTextContent(
     return NS_OK;
   }
 
-  RefPtr<PreContentIterator> preOrderIter = new PreContentIterator();
+  PreContentIterator preOrderIter;
   nsresult rv =
-      preOrderIter->Init(aRawRange.Start().AsRaw(), aRawRange.End().AsRaw());
+      preOrderIter.Init(aRawRange.Start().AsRaw(), aRawRange.End().AsRaw());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
-  for (; !preOrderIter->IsDone(); preOrderIter->Next()) {
-    nsINode* node = preOrderIter->GetCurrentNode();
+  for (; !preOrderIter.IsDone(); preOrderIter.Next()) {
+    nsINode* node = preOrderIter.GetCurrentNode();
     if (NS_WARN_IF(!node)) {
       break;
     }
@@ -892,14 +892,14 @@ nsresult ContentEventHandler::GenerateFlatFontRanges(
 
   // baseOffset is the flattened offset of each content node.
   int32_t baseOffset = 0;
-  RefPtr<PreContentIterator> preOrderIter = new PreContentIterator();
+  PreContentIterator preOrderIter;
   nsresult rv =
-      preOrderIter->Init(aRawRange.Start().AsRaw(), aRawRange.End().AsRaw());
+      preOrderIter.Init(aRawRange.Start().AsRaw(), aRawRange.End().AsRaw());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
-  for (; !preOrderIter->IsDone(); preOrderIter->Next()) {
-    nsINode* node = preOrderIter->GetCurrentNode();
+  for (; !preOrderIter.IsDone(); preOrderIter.Next()) {
+    nsINode* node = preOrderIter.GetCurrentNode();
     if (NS_WARN_IF(!node)) {
       break;
     }
@@ -1018,8 +1018,8 @@ nsresult ContentEventHandler::SetRawRangeFromFlatTextOffset(
     }
   }
 
-  RefPtr<PreContentIterator> preOrderIter = new PreContentIterator();
-  nsresult rv = preOrderIter->Init(mRootContent);
+  PreContentIterator preOrderIter;
+  nsresult rv = preOrderIter.Init(mRootContent);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1027,8 +1027,8 @@ nsresult ContentEventHandler::SetRawRangeFromFlatTextOffset(
   uint32_t offset = 0;
   uint32_t endOffset = aOffset + aLength;
   bool startSet = false;
-  for (; !preOrderIter->IsDone(); preOrderIter->Next()) {
-    nsINode* node = preOrderIter->GetCurrentNode();
+  for (; !preOrderIter.IsDone(); preOrderIter.Next()) {
+    nsINode* node = preOrderIter.GetCurrentNode();
     if (NS_WARN_IF(!node)) {
       break;
     }
@@ -1450,14 +1450,14 @@ ContentEventHandler::FrameAndNodeOffset
 ContentEventHandler::GetFirstFrameInRangeForTextRect(
     const RawRange& aRawRange) {
   NodePosition nodePosition;
-  RefPtr<PreContentIterator> preOrderIter = new PreContentIterator();
+  PreContentIterator preOrderIter;
   nsresult rv =
-      preOrderIter->Init(aRawRange.Start().AsRaw(), aRawRange.End().AsRaw());
+      preOrderIter.Init(aRawRange.Start().AsRaw(), aRawRange.End().AsRaw());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return FrameAndNodeOffset();
   }
-  for (; !preOrderIter->IsDone(); preOrderIter->Next()) {
-    nsINode* node = preOrderIter->GetCurrentNode();
+  for (; !preOrderIter.IsDone(); preOrderIter.Next()) {
+    nsINode* node = preOrderIter.GetCurrentNode();
     if (NS_WARN_IF(!node)) {
       break;
     }
@@ -1499,9 +1499,9 @@ ContentEventHandler::GetFirstFrameInRangeForTextRect(
 ContentEventHandler::FrameAndNodeOffset
 ContentEventHandler::GetLastFrameInRangeForTextRect(const RawRange& aRawRange) {
   NodePosition nodePosition;
-  RefPtr<PreContentIterator> preOrderIter = new PreContentIterator();
+  PreContentIterator preOrderIter;
   nsresult rv =
-      preOrderIter->Init(aRawRange.Start().AsRaw(), aRawRange.End().AsRaw());
+      preOrderIter.Init(aRawRange.Start().AsRaw(), aRawRange.End().AsRaw());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return FrameAndNodeOffset();
   }
@@ -1538,8 +1538,8 @@ ContentEventHandler::GetLastFrameInRangeForTextRect(const RawRange& aRawRange) {
     nextNodeOfRangeEnd = endPoint.GetChildAtOffset();
   }
 
-  for (preOrderIter->Last(); !preOrderIter->IsDone(); preOrderIter->Prev()) {
-    nsINode* node = preOrderIter->GetCurrentNode();
+  for (preOrderIter.Last(); !preOrderIter.IsDone(); preOrderIter.Prev()) {
+    nsINode* node = preOrderIter.GetCurrentNode();
     if (NS_WARN_IF(!node)) {
       break;
     }
@@ -2110,8 +2110,8 @@ nsresult ContentEventHandler::OnQueryTextRect(WidgetQueryContentEvent* aEvent) {
   NS_ENSURE_SUCCESS(rv, rv);
 
   // used to iterate over all contents and their frames
-  RefPtr<PostContentIterator> postOrderIter = new PostContentIterator();
-  rv = postOrderIter->Init(rawRange.Start().AsRaw(), rawRange.End().AsRaw());
+  PostContentIterator postOrderIter;
+  rv = postOrderIter.Init(rawRange.Start().AsRaw(), rawRange.End().AsRaw());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return NS_ERROR_FAILURE;
   }
@@ -2298,8 +2298,8 @@ nsresult ContentEventHandler::OnQueryTextRect(WidgetQueryContentEvent* aEvent) {
     frame = frame->GetNextContinuation();
     if (!frame) {
       do {
-        postOrderIter->Next();
-        nsINode* node = postOrderIter->GetCurrentNode();
+        postOrderIter.Next();
+        nsINode* node = postOrderIter.GetCurrentNode();
         if (!node) {
           break;
         }
@@ -2319,7 +2319,7 @@ nsresult ContentEventHandler::OnQueryTextRect(WidgetQueryContentEvent* aEvent) {
         if (primaryFrame->IsTextFrame() || primaryFrame->IsBrFrame()) {
           frame = primaryFrame;
         }
-      } while (!frame && !postOrderIter->IsDone());
+      } while (!frame && !postOrderIter.IsDone());
       if (!frame) {
         break;
       }
@@ -2658,9 +2658,7 @@ nsresult ContentEventHandler::OnQueryDOMWidgetHittest(
     return NS_OK;
   }
 
-  // Don't create ContentIterator instance until it's really necessary since
-  // destroying without initializing causes unexpected NS_ASSERTION() call.
-  RefPtr<PreContentIterator> preOrderIter;
+  PreContentIterator preOrderIter;
 
   // Working with ContentIterator, we may need to adjust the end position for
   // including it forcibly.
@@ -2684,8 +2682,7 @@ nsresult ContentEventHandler::OnQueryDOMWidgetHittest(
         static_cast<uint32_t>(endPosition.Offset()) ==
             endPosition.Container()->GetChildCount(),
         "When the node is being removed, the end offset should be child count");
-    preOrderIter = new PreContentIterator();
-    nsresult rv = preOrderIter->Init(aStartPosition.Container());
+    nsresult rv = preOrderIter.Init(aStartPosition.Container());
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -2729,9 +2726,8 @@ nsresult ContentEventHandler::OnQueryDOMWidgetHittest(
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
-      preOrderIter = new PreContentIterator();
-      rv = preOrderIter->Init(prevRawRange.Start().AsRaw(),
-                              prevRawRange.End().AsRaw());
+      rv = preOrderIter.Init(prevRawRange.Start().AsRaw(),
+                             prevRawRange.End().AsRaw());
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -2741,16 +2737,14 @@ nsresult ContentEventHandler::OnQueryDOMWidgetHittest(
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
-      preOrderIter = new PreContentIterator();
-      rv = preOrderIter->Init(prevRawRange.Start().AsRaw(),
-                              prevRawRange.End().AsRaw());
+      rv = preOrderIter.Init(prevRawRange.Start().AsRaw(),
+                             prevRawRange.End().AsRaw());
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
     } else {
       // Offset is past the root node; set end of range to end of root node
-      preOrderIter = new PreContentIterator();
-      rv = preOrderIter->Init(aRootContent);
+      rv = preOrderIter.Init(aRootContent);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -2758,8 +2752,8 @@ nsresult ContentEventHandler::OnQueryDOMWidgetHittest(
   }
 
   *aLength = 0;
-  for (; !preOrderIter->IsDone(); preOrderIter->Next()) {
-    nsINode* node = preOrderIter->GetCurrentNode();
+  for (; !preOrderIter.IsDone(); preOrderIter.Next()) {
+    nsINode* node = preOrderIter.GetCurrentNode();
     if (NS_WARN_IF(!node)) {
       break;
     }

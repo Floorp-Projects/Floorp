@@ -25,8 +25,7 @@ namespace mozilla {
 
 FilteredContentIterator::FilteredContentIterator(
     UniquePtr<nsComposeTxtSrvFilter> aFilter)
-    : mPostIterator(new PostContentIterator()),
-      mPreIterator(new PreContentIterator()),
+    : mCurrentIterator(nullptr),
       mFilter(std::move(aFilter)),
       mDidSkip(false),
       mIsOutOfRange(false),
@@ -34,26 +33,24 @@ FilteredContentIterator::FilteredContentIterator(
 
 FilteredContentIterator::~FilteredContentIterator() {}
 
-NS_IMPL_CYCLE_COLLECTION(FilteredContentIterator, mCurrentIterator,
-                         mPostIterator, mPreIterator, mRange)
+NS_IMPL_CYCLE_COLLECTION(FilteredContentIterator, mPostIterator, mPreIterator,
+                         mRange)
 
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(FilteredContentIterator, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(FilteredContentIterator, Release)
 
 nsresult FilteredContentIterator::Init(nsINode* aRoot) {
   NS_ENSURE_ARG_POINTER(aRoot);
-  NS_ENSURE_TRUE(mPreIterator, NS_ERROR_FAILURE);
-  NS_ENSURE_TRUE(mPostIterator, NS_ERROR_FAILURE);
   mIsOutOfRange = false;
   mDirection = eForward;
-  mCurrentIterator = mPreIterator;
+  mCurrentIterator = &mPreIterator;
 
   mRange = new nsRange(aRoot);
   mRange->SelectNode(*aRoot, IgnoreErrors());
 
-  nsresult rv = mPreIterator->Init(mRange);
+  nsresult rv = mPreIterator.Init(mRange);
   NS_ENSURE_SUCCESS(rv, rv);
-  return mPostIterator->Init(mRange);
+  return mPostIterator.Init(mRange);
 }
 
 nsresult FilteredContentIterator::Init(nsRange* aRange) {
@@ -99,29 +96,25 @@ nsresult FilteredContentIterator::InitWithRange() {
   MOZ_ASSERT(mRange);
   MOZ_ASSERT(mRange->IsPositioned());
 
-  if (NS_WARN_IF(!mPreIterator) || NS_WARN_IF(!mPostIterator)) {
-    return NS_ERROR_FAILURE;
-  }
-
   mIsOutOfRange = false;
   mDirection = eForward;
-  mCurrentIterator = mPreIterator;
+  mCurrentIterator = &mPreIterator;
 
-  nsresult rv = mPreIterator->Init(mRange);
+  nsresult rv = mPreIterator.Init(mRange);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
-  return mPostIterator->Init(mRange);
+  return mPostIterator.Init(mRange);
 }
 
 nsresult FilteredContentIterator::SwitchDirections(bool aChangeToForward) {
   nsINode* node = mCurrentIterator->GetCurrentNode();
 
   if (aChangeToForward) {
-    mCurrentIterator = mPreIterator;
+    mCurrentIterator = &mPreIterator;
     mDirection = eForward;
   } else {
-    mCurrentIterator = mPostIterator;
+    mCurrentIterator = &mPostIterator;
     mDirection = eBackward;
   }
 
@@ -145,7 +138,7 @@ void FilteredContentIterator::First() {
   // If we are switching directions then
   // we need to switch how we process the nodes
   if (mDirection != eForward) {
-    mCurrentIterator = mPreIterator;
+    mCurrentIterator = &mPreIterator;
     mDirection = eForward;
     mIsOutOfRange = false;
   }
@@ -172,7 +165,7 @@ void FilteredContentIterator::Last() {
   // If we are switching directions then
   // we need to switch how we process the nodes
   if (mDirection != eBackward) {
-    mCurrentIterator = mPostIterator;
+    mCurrentIterator = &mPostIterator;
     mDirection = eBackward;
     mIsOutOfRange = false;
   }

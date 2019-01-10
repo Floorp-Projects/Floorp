@@ -68,19 +68,6 @@ static bool NodeIsInTraversalRange(nsINode* aNode, bool aIsPreMode,
          nsContentUtils::ComparePoints(aEnd, beforeNode) > 0;
 }
 
-NS_IMPL_CYCLE_COLLECTION(ContentIteratorBase, mCurNode, mFirst, mLast,
-                         mCommonParent, mRange)
-
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(ContentIteratorBase, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(ContentIteratorBase, Release)
-
-void ContentIteratorBase::LastRelease() {
-  mCurNode = nullptr;
-  mFirst = nullptr;
-  mLast = nullptr;
-  mCommonParent = nullptr;
-}
-
 ContentIteratorBase::ContentIteratorBase(bool aPre)
     : mIsDone(false), mPre(aPre) {}
 
@@ -627,36 +614,7 @@ nsINode* ContentIteratorBase::GetCurrentNode() {
 }
 
 /******************************************************
- * PostContentIterator
- ******************************************************/
-
-NS_IMPL_CYCLE_COLLECTING_NATIVE_ADDREF(PostContentIterator)
-NS_IMPL_CYCLE_COLLECTING_NATIVE_RELEASE_WITH_LAST_RELEASE(PostContentIterator,
-                                                          LastRelease())
-
-/******************************************************
- * PreContentIterator
- ******************************************************/
-
-NS_IMPL_CYCLE_COLLECTING_NATIVE_ADDREF(PreContentIterator)
-NS_IMPL_CYCLE_COLLECTING_NATIVE_RELEASE_WITH_LAST_RELEASE(PreContentIterator,
-                                                          LastRelease())
-
-/******************************************************
- * ContentSubtreeIterator
- ******************************************************/
-
-void ContentSubtreeIterator::LastRelease() {
-  mRange = nullptr;
-  ContentIteratorBase::LastRelease();
-}
-
-NS_IMPL_CYCLE_COLLECTING_NATIVE_ADDREF(ContentSubtreeIterator)
-NS_IMPL_CYCLE_COLLECTING_NATIVE_RELEASE_WITH_LAST_RELEASE(
-    ContentSubtreeIterator, LastRelease())
-
-/******************************************************
- * Init routines
+ * ContentSubtreeIterator init routines
  ******************************************************/
 
 nsresult ContentSubtreeIterator::Init(nsINode* aRoot) {

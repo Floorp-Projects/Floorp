@@ -23,17 +23,12 @@ namespace mozilla {
  * by the users directly.
  */
 class ContentIteratorBase {
- protected:
-  nsCycleCollectingAutoRefCnt mRefCnt;
-  NS_DECL_OWNINGTHREAD
-
  public:
   ContentIteratorBase() = delete;
   ContentIteratorBase(const ContentIteratorBase&) = delete;
   ContentIteratorBase& operator=(const ContentIteratorBase&) = delete;
+  virtual ~ContentIteratorBase() = default;
 
-  NS_IMETHOD_(MozExternalRefCountType) AddRef() = 0;
-  NS_IMETHOD_(MozExternalRefCountType) Release() = 0;
   NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(ContentIteratorBase)
 
   virtual nsresult Init(nsINode* aRoot);
@@ -56,7 +51,6 @@ class ContentIteratorBase {
 
  protected:
   explicit ContentIteratorBase(bool aPre);
-  virtual ~ContentIteratorBase() = default;
 
   /**
    * Callers must guarantee that:
@@ -85,21 +79,38 @@ class ContentIteratorBase {
 
   void MakeEmpty();
 
-  virtual void LastRelease();
-
   nsCOMPtr<nsINode> mCurNode;
   nsCOMPtr<nsINode> mFirst;
   nsCOMPtr<nsINode> mLast;
   nsCOMPtr<nsINode> mCommonParent;
 
-  // Used only by ContentSubtreeIterator class but we need to put this here
-  // for cycle collection because macros to implement classes in cycle
-  // collection do not support inherited classes without nsISupports interface.
-  RefPtr<nsRange> mRange;
-
   bool mIsDone;
   bool mPre;
+  friend void ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback&,
+                                          ContentIteratorBase&, const char*,
+                                          uint32_t);
+  friend void ImplCycleCollectionUnlink(ContentIteratorBase&);
 };
+
+// Each concreate class of ContentIteratorBase may be owned by another class
+// which may be owned by JS.  Therefore, all of them should be in the cycle
+// collection.  However, we cannot make non-refcountable classes only with the
+// macros.  So, we need to make them cycle collectable without the macros.
+inline void ImplCycleCollectionTraverse(
+    nsCycleCollectionTraversalCallback& aCallback, ContentIteratorBase& aField,
+    const char* aName, uint32_t aFlags = 0) {
+  ImplCycleCollectionTraverse(aCallback, aField.mCurNode, aName, aFlags);
+  ImplCycleCollectionTraverse(aCallback, aField.mFirst, aName, aFlags);
+  ImplCycleCollectionTraverse(aCallback, aField.mLast, aName, aFlags);
+  ImplCycleCollectionTraverse(aCallback, aField.mCommonParent, aName, aFlags);
+}
+
+inline void ImplCycleCollectionUnlink(ContentIteratorBase& aField) {
+  ImplCycleCollectionUnlink(aField.mCurNode);
+  ImplCycleCollectionUnlink(aField.mFirst);
+  ImplCycleCollectionUnlink(aField.mLast);
+  ImplCycleCollectionUnlink(aField.mCommonParent);
+}
 
 /**
  * A simple iterator class for traversing the content in "close tag" order.
@@ -109,13 +120,23 @@ class PostContentIterator final : public ContentIteratorBase {
   PostContentIterator() : ContentIteratorBase(false) {}
   PostContentIterator(const PostContentIterator&) = delete;
   PostContentIterator& operator=(const PostContentIterator&) = delete;
-
-  NS_IMETHOD_(MozExternalRefCountType) AddRef() override;
-  NS_IMETHOD_(MozExternalRefCountType) Release() override;
-
- protected:
   virtual ~PostContentIterator() = default;
+  friend void ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback&,
+                                          PostContentIterator&, const char*,
+                                          uint32_t);
+  friend void ImplCycleCollectionUnlink(PostContentIterator&);
 };
+
+inline void ImplCycleCollectionTraverse(
+    nsCycleCollectionTraversalCallback& aCallback, PostContentIterator& aField,
+    const char* aName, uint32_t aFlags = 0) {
+  ImplCycleCollectionTraverse(
+      aCallback, static_cast<ContentIteratorBase&>(aField), aName, aFlags);
+}
+
+inline void ImplCycleCollectionUnlink(PostContentIterator& aField) {
+  ImplCycleCollectionUnlink(static_cast<ContentIteratorBase&>(aField));
+}
 
 /**
  * A simple iterator class for traversing the content in "start tag" order.
@@ -125,13 +146,23 @@ class PreContentIterator final : public ContentIteratorBase {
   PreContentIterator() : ContentIteratorBase(true) {}
   PreContentIterator(const PreContentIterator&) = delete;
   PreContentIterator& operator=(const PreContentIterator&) = delete;
-
-  NS_IMETHOD_(MozExternalRefCountType) AddRef() override;
-  NS_IMETHOD_(MozExternalRefCountType) Release() override;
-
- protected:
   virtual ~PreContentIterator() = default;
+  friend void ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback&,
+                                          PreContentIterator&, const char*,
+                                          uint32_t);
+  friend void ImplCycleCollectionUnlink(PreContentIterator&);
 };
+
+inline void ImplCycleCollectionTraverse(
+    nsCycleCollectionTraversalCallback& aCallback, PreContentIterator& aField,
+    const char* aName, uint32_t aFlags = 0) {
+  ImplCycleCollectionTraverse(
+      aCallback, static_cast<ContentIteratorBase&>(aField), aName, aFlags);
+}
+
+inline void ImplCycleCollectionUnlink(PreContentIterator& aField) {
+  ImplCycleCollectionUnlink(static_cast<ContentIteratorBase&>(aField));
+}
 
 /**
  *  A simple iterator class for traversing the content in "top subtree" order.
@@ -141,9 +172,7 @@ class ContentSubtreeIterator final : public ContentIteratorBase {
   ContentSubtreeIterator() : ContentIteratorBase(true) {}
   ContentSubtreeIterator(const ContentSubtreeIterator&) = delete;
   ContentSubtreeIterator& operator=(const ContentSubtreeIterator&) = delete;
-
-  NS_IMETHOD_(MozExternalRefCountType) AddRef() override;
-  NS_IMETHOD_(MozExternalRefCountType) Release() override;
+  virtual ~ContentSubtreeIterator() = default;
 
   virtual nsresult Init(nsINode* aRoot) override;
   virtual nsresult Init(nsRange* aRange) override;
@@ -161,9 +190,12 @@ class ContentSubtreeIterator final : public ContentIteratorBase {
 
   virtual nsresult PositionAt(nsINode* aCurNode) override;
 
- protected:
-  virtual ~ContentSubtreeIterator() = default;
+  friend void ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback&,
+                                          ContentSubtreeIterator&, const char*,
+                                          uint32_t);
+  friend void ImplCycleCollectionUnlink(ContentSubtreeIterator&);
 
+ protected:
   /**
    * Callers must guarantee that mRange isn't nullptr and is positioned.
    */
@@ -176,10 +208,23 @@ class ContentSubtreeIterator final : public ContentIteratorBase {
   // the range's start and end nodes will never be considered "in" it.
   nsIContent* GetTopAncestorInRange(nsINode* aNode);
 
-  virtual void LastRelease() override;
+  RefPtr<nsRange> mRange;
 
   AutoTArray<nsIContent*, 8> mEndNodes;
 };
+
+inline void ImplCycleCollectionTraverse(
+    nsCycleCollectionTraversalCallback& aCallback,
+    ContentSubtreeIterator& aField, const char* aName, uint32_t aFlags = 0) {
+  ImplCycleCollectionTraverse(aCallback, aField.mRange, aName, aFlags);
+  ImplCycleCollectionTraverse(
+      aCallback, static_cast<ContentIteratorBase&>(aField), aName, aFlags);
+}
+
+inline void ImplCycleCollectionUnlink(ContentSubtreeIterator& aField) {
+  ImplCycleCollectionUnlink(aField.mRange);
+  ImplCycleCollectionUnlink(static_cast<ContentIteratorBase&>(aField));
+}
 
 }  // namespace mozilla
 

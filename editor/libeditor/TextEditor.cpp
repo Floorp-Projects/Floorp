@@ -1455,12 +1455,11 @@ TextEditor::GetTextLength(int32_t* aCount) {
     return NS_ERROR_FAILURE;
   }
 
-  RefPtr<PostContentIterator> postOrderIter = new PostContentIterator();
-
   uint32_t totalLength = 0;
-  postOrderIter->Init(rootElement);
-  for (; !postOrderIter->IsDone(); postOrderIter->Next()) {
-    nsCOMPtr<nsINode> currentNode = postOrderIter->GetCurrentNode();
+  PostContentIterator postOrderIter;
+  postOrderIter.Init(rootElement);
+  for (; !postOrderIter.IsDone(); postOrderIter.Next()) {
+    nsCOMPtr<nsINode> currentNode = postOrderIter.GetCurrentNode();
     if (IsTextNode(currentNode) && IsEditable(currentNode)) {
       totalLength += currentNode->Length();
     }
