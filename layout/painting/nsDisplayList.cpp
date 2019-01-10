@@ -7878,7 +7878,7 @@ bool nsDisplayTransform::CreateWebRenderCommands(
       animationsId ? &prop : nullptr, nullptr, transformForSC, nullptr,
       gfx::CompositionOp::OP_OVER, !BackfaceIsHidden(),
       mFrame->Extend3DContext() && !mNoExtendContext, deferredTransformItem,
-      nullptr, animated);
+      wr::WrStackingContextClip::None(), animated);
 
   return mStoredList.CreateWebRenderCommands(aBuilder, aResources, sc, aManager,
                                              aDisplayListBuilder);
@@ -9071,7 +9071,7 @@ bool nsDisplayMasksAndClipPaths::CreateWebRenderCommands(
                   /*aBackfaceVisible: */ true,
                   /*aIsPreserve3D: */ false,
                   /*aTransformForScrollData: */ Nothing(),
-                  /*aClipNodeId: */ &clipId);
+                  /*aClip: */ wr::WrStackingContextClip::ClipId(clipId));
     sc = layer.ptr();
   }
 
@@ -9348,15 +9348,13 @@ bool nsDisplayFilters::CreateWebRenderCommands(
     return false;
   }
 
-  wr::WrClipId clipId =
-      aBuilder.DefineClip(Nothing(), wr::ToLayoutRect(postFilterBounds));
-
   float opacity = mFrame->StyleEffects()->mOpacity;
   StackingContextHelper sc(
       aSc, GetActiveScrolledRoot(), mFrame, this, aBuilder, wrFilters,
       LayoutDeviceRect(), nullptr, nullptr,
       opacity != 1.0f && mHandleOpacity ? &opacity : nullptr, nullptr, nullptr,
-      gfx::CompositionOp::OP_OVER, true, false, Nothing(), &clipId);
+      gfx::CompositionOp::OP_OVER, true, false, Nothing(),
+      wr::WrStackingContextClip::ClipChain(aBuilder.CurrentClipChainId()));
 
   nsDisplayEffectsBase::CreateWebRenderCommands(aBuilder, aResources, sc,
                                                 aManager, aDisplayListBuilder);

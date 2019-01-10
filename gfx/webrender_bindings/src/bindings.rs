@@ -140,6 +140,15 @@ impl WrSpaceAndClip {
     }
 }
 
+#[inline]
+fn clip_chain_id_to_webrender(id: u64, pipeline_id: WrPipelineId) -> ClipId {
+    if id == ROOT_CLIP_CHAIN {
+        ClipId::root(pipeline_id)
+    } else {
+        ClipId::ClipChain(ClipChainId(id, pipeline_id))
+    }
+}
+
 #[repr(C)]
 pub struct WrSpaceAndClipChain {
     space: WrSpatialId,
@@ -151,15 +160,27 @@ impl WrSpaceAndClipChain {
         //Warning: special case here to support dummy clip chain
         SpaceAndClipInfo {
             spatial_id: self.space.to_webrender(pipeline_id),
-            clip_id: if self.clip_chain == ROOT_CLIP_CHAIN {
-                ClipId::root(pipeline_id)
-            } else {
-                ClipId::ClipChain(ClipChainId(self.clip_chain, pipeline_id))
-            },
+            clip_id: clip_chain_id_to_webrender(self.clip_chain, pipeline_id),
         }
     }
 }
 
+#[repr(C)]
+pub enum WrStackingContextClip {
+    None,
+    ClipId(WrClipId),
+    ClipChain(u64),
+}
+
+impl WrStackingContextClip {
+    fn to_webrender(&self, pipeline_id: WrPipelineId) -> Option<ClipId> {
+        match *self {
+            WrStackingContextClip::None => None,
+            WrStackingContextClip::ClipChain(id) => Some(clip_chain_id_to_webrender(id, pipeline_id)),
+            WrStackingContextClip::ClipId(id) => Some(id.to_webrender(pipeline_id)),
+        }
+    }
+}
 
 fn make_slice<'a, T>(ptr: *const T, len: usize) -> &'a [T] {
     if ptr.is_null() {
@@ -1874,29 +1895,28 @@ pub extern "C" fn wr_dp_clear_save(state: &mut WrState) {
 }
 
 #[no_mangle]
-pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
-                                              mut bounds: LayoutRect,
-                                              spatial_id: WrSpatialId,
-                                              clip_node_id: *const WrClipId,
-                                              animation: *const WrAnimationProperty,
-                                              opacity: *const f32,
-                                              transform: *const LayoutTransform,
-                                              transform_style: TransformStyle,
-                                              perspective: *const LayoutTransform,
-                                              mix_blend_mode: MixBlendMode,
-                                              filters: *const FilterOp,
-                                              filter_count: usize,
-                                              is_backface_visible: bool,
-                                              glyph_raster_space: RasterSpace,
-                                              ) -> WrSpatialId {
+pub extern "C" fn wr_dp_push_stacking_context(
+    state: &mut WrState,
+    mut bounds: LayoutRect,
+    spatial_id: WrSpatialId,
+    clip: &WrStackingContextClip,
+    animation: *const WrAnimationProperty,
+    opacity: *const f32,
+    transform: *const LayoutTransform,
+    transform_style: TransformStyle,
+    perspective: *const LayoutTransform,
+    mix_blend_mode: MixBlendMode,
+    filters: *const FilterOp,
+    filter_count: usize,
+    is_backface_visible: bool,
+    glyph_raster_space: RasterSpace,
+) -> WrSpatialId {
     debug_assert!(unsafe { !is_in_render_thread() });
 
     let c_filters = make_slice(filters, filter_count);
     let mut filters : Vec<FilterOp> = c_filters.iter().map(|c_filter| {
                                                            *c_filter
     }).collect();
-
-    let clip_node_id_ref = unsafe { clip_node_id.as_ref() };
 
     let transform_ref = unsafe { transform.as_ref() };
     let mut transform_binding = match transform_ref {
@@ -1942,7 +1962,7 @@ pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
     };
 
     let mut wr_spatial_id = spatial_id.to_webrender(state.pipeline_id);
-    let wr_clip_id = clip_node_id_ref.map(|id| id.to_webrender(state.pipeline_id));
+    let wr_clip_id = clip.to_webrender(state.pipeline_id);
 
     let is_reference_frame = transform_binding.is_some() || perspective.is_some();
     // Note: 0 has special meaning in WR land, standing for ROOT_REFERENCE_FRAME.

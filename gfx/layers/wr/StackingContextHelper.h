@@ -41,7 +41,8 @@ class MOZ_RAII StackingContextHelper {
       const gfx::CompositionOp& aMixBlendMode = gfx::CompositionOp::OP_OVER,
       bool aBackfaceVisible = true, bool aIsPreserve3D = false,
       const Maybe<nsDisplayTransform*>& aDeferredTransformItem = Nothing(),
-      const wr::WrClipId* aClipNodeId = nullptr, bool aAnimated = false);
+      const wr::WrStackingContextClip& = wr::WrStackingContextClip::None(),
+      bool aAnimated = false);
   // This version of the constructor should only be used at the root level
   // of the tree, so that we have a StackingContextHelper to pass down into
   // the RenderLayer traversal, but don't actually want it to push a stacking
