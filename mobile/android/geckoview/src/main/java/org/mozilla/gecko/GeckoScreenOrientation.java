@@ -168,6 +168,10 @@ public class GeckoScreenOrientation {
                 aScreenOrientation = ScreenOrientation.PORTRAIT_PRIMARY;
             } else if (aScreenOrientation == ScreenOrientation.LANDSCAPE) {
                 aScreenOrientation = ScreenOrientation.LANDSCAPE_PRIMARY;
+            } else if (aScreenOrientation == ScreenOrientation.DEFAULT) {
+                aScreenOrientation = ScreenOrientation.PORTRAIT_PRIMARY;
+            } else if (aScreenOrientation == ScreenOrientation.NONE) {
+                return false;
             }
 
             if (GeckoThread.isRunning()) {
