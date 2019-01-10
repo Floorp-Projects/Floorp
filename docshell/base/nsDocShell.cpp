@@ -3667,7 +3667,8 @@ nsDocShell::GetContentBlockingLog(Promise** aPromise) {
   if (NS_WARN_IF(rv.Failed())) {
     return rv.StealNSResult();
   }
-  promise->MaybeResolve(doc->GetContentBlockingLog()->Stringify());
+  promise->MaybeResolve(
+      NS_ConvertUTF8toUTF16(doc->GetContentBlockingLog()->Stringify()));
   promise.forget(aPromise);
   return NS_OK;
 }
