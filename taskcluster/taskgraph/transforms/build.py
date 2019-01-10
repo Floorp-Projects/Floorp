@@ -83,6 +83,19 @@ def mozconfig(config, jobs):
 
 
 @transforms.add
+def use_profile_data(config, jobs):
+    for job in jobs:
+        if not job.pop('use-pgo', False):
+            yield job
+            continue
+
+        dependencies = 'generate-profile-{}'.format(job['name'])
+        job.setdefault('dependencies', {})['generate-profile'] = dependencies
+        job.setdefault('fetches', {})['generate-profile'] = ['profdata.tar.xz']
+        yield job
+
+
+@transforms.add
 def set_env(config, jobs):
     """Set extra environment variables from try command line."""
     env = []
