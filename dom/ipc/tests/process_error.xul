@@ -31,7 +31,11 @@
 
     Services.obs.addObserver(crashObserver, 'ipc:content-shutdown');
 
-    BrowserTestUtils.crashBrowser(document.getElementById('thebrowser'), true, false);
+    // Allow the browser to get connected before using the messageManager to cause
+    // a crash:
+    addEventListener("DOMContentLoaded", () => {
+      BrowserTestUtils.crashBrowser(document.getElementById('thebrowser'), true, false);
+    });
   ]]></script>
 
 </window>

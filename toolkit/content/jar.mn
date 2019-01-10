@@ -90,6 +90,7 @@ toolkit.jar:
    content/global/bindings/tree.xml            (widgets/tree.xml)
    content/global/bindings/videocontrols.xml   (widgets/videocontrols.xml)
 *  content/global/bindings/wizard.xml          (widgets/wizard.xml)
+   content/global/elements/browser-custom-element.js          (widgets/browser-custom-element.js)
    content/global/elements/datetimebox.js      (widgets/datetimebox.js)
    content/global/elements/findbar.js          (widgets/findbar.js)
    content/global/elements/editor.js           (widgets/editor.js)
