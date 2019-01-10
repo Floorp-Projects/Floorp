@@ -67,6 +67,7 @@ const ServiceWorkerActor = protocol.ActorClassWithSpec(serviceWorkerSpec, {
     }
 
     return {
+      actor: this.actorID,
       url: this._worker.scriptSpec,
       state: this._worker.state,
       fetch: this._worker.handlesFetchEvents,
@@ -98,24 +99,14 @@ protocol.ActorClassWithSpec(serviceWorkerRegistrationSpec, {
     this._pushSubscriptionActor = null;
     this._registration.addListener(this);
 
-    const {installingWorker, waitingWorker, activeWorker} = registration;
-    this._installingWorker = new ServiceWorkerActor(conn, installingWorker);
-    this._waitingWorker = new ServiceWorkerActor(conn, waitingWorker);
-    this._activeWorker = new ServiceWorkerActor(conn, activeWorker);
+    this._createServiceWorkerActors();
 
     Services.obs.addObserver(this, PushService.subscriptionModifiedTopic);
   },
 
   onChange() {
-    this._installingWorker.destroy();
-    this._waitingWorker.destroy();
-    this._activeWorker.destroy();
-
-    const {installingWorker, waitingWorker, activeWorker} = this._registration;
-    this._installingWorker = new ServiceWorkerActor(this._conn, installingWorker);
-    this._waitingWorker = new ServiceWorkerActor(this._conn, waitingWorker);
-    this._activeWorker = new ServiceWorkerActor(this._conn, activeWorker);
-
+    this._destroyServiceWorkerActors();
+    this._createServiceWorkerActors();
     this.emit("registration-changed");
   },
 
@@ -157,9 +148,7 @@ protocol.ActorClassWithSpec(serviceWorkerRegistrationSpec, {
     }
     this._pushSubscriptionActor = null;
 
-    this._installingWorker.destroy();
-    this._waitingWorker.destroy();
-    this._activeWorker.destroy();
+    this._destroyServiceWorkerActors();
 
     this._installingWorker = null;
     this._waitingWorker = null;
@@ -247,6 +236,26 @@ protocol.ActorClassWithSpec(serviceWorkerRegistrationSpec, {
         }
       );
     });
+  },
+
+  _destroyServiceWorkerActors() {
+    this._installingWorker.destroy();
+    this._waitingWorker.destroy();
+    this._activeWorker.destroy();
+  },
+
+  _createServiceWorkerActors() {
+    const {installingWorker, waitingWorker, activeWorker} = this._registration;
+
+    this._installingWorker = new ServiceWorkerActor(this._conn, installingWorker);
+    this._waitingWorker = new ServiceWorkerActor(this._conn, waitingWorker);
+    this._activeWorker = new ServiceWorkerActor(this._conn, activeWorker);
+
+    // Add the ServiceWorker actors as children of this ServiceWorkerRegistration actor,
+    // assigning them valid actorIDs.
+    this.manage(this._installingWorker);
+    this.manage(this._waitingWorker);
+    this.manage(this._activeWorker);
   },
 });
 
