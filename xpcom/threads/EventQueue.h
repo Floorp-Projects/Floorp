@@ -29,6 +29,10 @@ class EventQueue final : public AbstractEventQueue {
 
   bool IsEmpty(const MutexAutoLock& aProofOfLock) final;
   bool HasReadyEvent(const MutexAutoLock& aProofOfLock) final;
+  bool HasPendingHighPriorityEvents(const MutexAutoLock& aProofOfLock) final {
+    // EventQueue doesn't support any prioritization.
+    return false;
+  }
 
   size_t Count(const MutexAutoLock& aProofOfLock) const final;
   already_AddRefed<nsIRunnable> PeekEvent(const MutexAutoLock& aProofOfLock);

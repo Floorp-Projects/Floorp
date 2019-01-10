@@ -12687,18 +12687,8 @@ void CodeGenerator::visitGuardToClass(LGuardToClass* ins) {
                           temp, output, &notEqual);
   masm.mov(lhs, output);
 
-  if (ins->mir()->type() == MIRType::Object) {
-    // Can't return null-return here, so bail
-    bailoutFrom(&notEqual, ins->snapshot());
-  } else {
-    Label done;
-    masm.jump(&done);
-
-    masm.bind(&notEqual);
-    masm.mov(ImmPtr(0), output);
-
-    masm.bind(&done);
-  }
+  // Can't return null-return here, so bail.
+  bailoutFrom(&notEqual, ins->snapshot());
 }
 
 typedef JSString* (*ObjectClassToStringFn)(JSContext*, HandleObject);
