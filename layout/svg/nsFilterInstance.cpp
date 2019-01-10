@@ -95,7 +95,7 @@ void nsFilterInstance::PaintFilteredFrame(
 
 bool nsFilterInstance::BuildWebRenderFilters(
     nsIFrame* aFilteredFrame, const LayoutDeviceIntRect& aPreFilterBounds,
-    nsTArray<wr::WrFilterOp>& aWrFilters,
+    nsTArray<wr::FilterOp>& aWrFilters,
     LayoutDeviceIntRect& aPostFilterBounds) {
   aWrFilters.Clear();
 
@@ -145,12 +145,10 @@ bool nsFilterInstance::BuildWebRenderFilters(
 
     bool primIsSrgb = primitive.OutputColorSpace() == gfx::ColorSpace::SRGB;
     if (srgb && !primIsSrgb) {
-      wr::WrFilterOp filterOp = {wr::WrFilterOpType::SrgbToLinear};
-      aWrFilters.AppendElement(filterOp);
+      aWrFilters.AppendElement(wr::FilterOp::SrgbToLinear());
       srgb = false;
     } else if (!srgb && primIsSrgb) {
-      wr::WrFilterOp filterOp = {wr::WrFilterOpType::LinearToSrgb};
-      aWrFilters.AppendElement(filterOp);
+      aWrFilters.AppendElement(wr::FilterOp::LinearToSrgb());
       srgb = true;
     }
 
@@ -180,8 +178,8 @@ bool nsFilterInstance::BuildWebRenderFilters(
 
     if (attr.is<OpacityAttributes>()) {
       float opacity = attr.as<OpacityAttributes>().mOpacity;
-      wr::WrFilterOp filterOp = {wr::WrFilterOpType::Opacity, opacity};
-      aWrFilters.AppendElement(filterOp);
+      aWrFilters.AppendElement(wr::FilterOp::Opacity(
+          wr::PropertyBinding<float>::Value(opacity), opacity));
     } else if (attr.is<ColorMatrixAttributes>()) {
       const ColorMatrixAttributes& attributes =
           attr.as<ColorMatrixAttributes>();
@@ -213,9 +211,7 @@ bool nsFilterInstance::BuildWebRenderFilters(
           transposed[3], transposed[8], transposed[13], transposed[18],
           transposed[4], transposed[9], transposed[14], transposed[19]};
 
-      wr::WrFilterOp filterOp = {wr::WrFilterOpType::ColorMatrix};
-      PodCopy(filterOp.matrix, matrix, 20);
-      aWrFilters.AppendElement(filterOp);
+      aWrFilters.AppendElement(wr::FilterOp::ColorMatrix(matrix));
     } else if (attr.is<GaussianBlurAttributes>()) {
       if (chainIsAffectedByPrimSubregion) {
         // There's a clip that needs to apply before the blur filter, but
@@ -234,8 +230,7 @@ bool nsFilterInstance::BuildWebRenderFilters(
 
       float radius = stdDev.width;
       if (radius != 0.0) {
-        wr::WrFilterOp filterOp = {wr::WrFilterOpType::Blur, radius};
-        aWrFilters.AppendElement(filterOp);
+        aWrFilters.AppendElement(wr::FilterOp::Blur(radius));
       } else {
         filterIsNoop = true;
       }
@@ -252,12 +247,11 @@ bool nsFilterInstance::BuildWebRenderFilters(
         return false;
       }
 
+      wr::LayoutVector2D offset = {(float)shadow.mOffset.x,
+                                   (float)shadow.mOffset.y};
       float radius = stdDev.width;
-      wr::WrFilterOp filterOp = {
-          wr::WrFilterOpType::DropShadow,
-          radius,
-          {(float)shadow.mOffset.x, (float)shadow.mOffset.y},
-          wr::ToColorF(shadow.mColor)};
+      wr::FilterOp filterOp =
+          wr::FilterOp::DropShadow(offset, radius, wr::ToColorF(shadow.mColor));
 
       aWrFilters.AppendElement(filterOp);
     } else {
@@ -265,10 +259,8 @@ bool nsFilterInstance::BuildWebRenderFilters(
     }
 
     if (filterIsNoop && aWrFilters.Length() > 0 &&
-        (aWrFilters.LastElement().filter_type ==
-             wr::WrFilterOpType::SrgbToLinear ||
-         aWrFilters.LastElement().filter_type ==
-             wr::WrFilterOpType::LinearToSrgb)) {
+        (aWrFilters.LastElement().tag == wr::FilterOp::Tag::SrgbToLinear ||
+         aWrFilters.LastElement().tag == wr::FilterOp::Tag::LinearToSrgb)) {
       // We pushed a color space conversion filter in prevision of applying
       // another filter which turned out to be a no-op, so the conversion is
       // unnecessary. Remove it from the filter list.
@@ -282,8 +274,7 @@ bool nsFilterInstance::BuildWebRenderFilters(
   }
 
   if (!srgb) {
-    wr::WrFilterOp filterOp = {wr::WrFilterOpType::LinearToSrgb};
-    aWrFilters.AppendElement(filterOp);
+    aWrFilters.AppendElement(wr::FilterOp::LinearToSrgb());
   }
 
   // Only adjust the post filter clip if we are able to render this without
