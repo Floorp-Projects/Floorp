@@ -107,7 +107,6 @@ exports.ANIMATION_TYPE_FOR_LONGHANDS = [
     "-moz-orient",
     "-moz-osx-font-smoothing",
     "outline-style",
-    "overflow-anchor",
     "overflow-clip-box-block",
     "overflow-clip-box-inline",
     "overflow-wrap",

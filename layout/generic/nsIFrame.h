@@ -115,10 +115,6 @@ class Layer;
 class LayerManager;
 }  // namespace layers
 
-namespace layout {
-class ScrollAnchorContainer;
-}  // namespace layout
-
 namespace dom {
 class Selection;
 }  // namespace dom
@@ -570,8 +566,7 @@ class nsIFrame : public nsQueryFrame {
         mIsPrimaryFrame(false),
         mMayHaveTransformAnimation(false),
         mMayHaveOpacityAnimation(false),
-        mAllDescendantsAreInvisible(false),
-        mInScrollAnchorChain(false) {
+        mAllDescendantsAreInvisible(false) {
     mozilla::PodZero(&mOverflow);
   }
 
@@ -1850,24 +1845,6 @@ class nsIFrame : public nsQueryFrame {
   void ComputePreserve3DChildrenOverflow(nsOverflowAreas& aOverflowAreas);
 
   void RecomputePerspectiveChildrenOverflow(const nsIFrame* aStartFrame);
-
-  /**
-   * Returns whether this frame is the anchor of some ancestor scroll frame. As
-   * this frame is moved, the scroll frame will apply adjustments to keep this
-   * scroll frame in the same relative position.
-   *
-   * aOutContainer will optionally be set to the scroll anchor container for
-   * this frame if this frame is an anchor.
-   */
-  bool IsScrollAnchor(
-      mozilla::layout::ScrollAnchorContainer** aOutContainer = nullptr);
-
-  /**
-   * Returns whether this frame is the anchor of some ancestor scroll frame, or
-   * has a descendant which is the scroll anchor.
-   */
-  bool IsInScrollAnchorChain() const;
-  void SetInScrollAnchorChain(bool aInChain);
 
   /**
    * Returns the number of ancestors between this and the root of our frame tree
@@ -3871,7 +3848,6 @@ class nsIFrame : public nsQueryFrame {
   inline bool IsAbsPosContainingBlock() const;
   inline bool IsFixedPosContainingBlock() const;
   inline bool IsRelativelyPositioned() const;
-  inline bool IsStickyPositioned() const;
   inline bool IsAbsolutelyPositioned(
       const nsStyleDisplay* aStyleDisplay = nullptr) const;
 
@@ -4316,12 +4292,9 @@ class nsIFrame : public nsQueryFrame {
    */
   bool mAllDescendantsAreInvisible : 1;
 
-  /**
-   * True if we are or contain the scroll anchor for a scrollable frame.
-   */
-  bool mInScrollAnchorChain : 1;
-
  protected:
+  // There is a 1-bit gap left here.
+
   // Helpers
   /**
    * Can we stop inside this frame when we're skipping non-rendered whitespace?

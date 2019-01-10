@@ -428,26 +428,6 @@ pub enum OverscrollBehavior {
     ToCss,
 )]
 #[repr(u8)]
-pub enum OverflowAnchor {
-    Auto,
-    None,
-}
-
-#[allow(missing_docs)]
-#[cfg_attr(feature = "servo", derive(Deserialize, Serialize))]
-#[derive(
-    Clone,
-    Copy,
-    Debug,
-    Eq,
-    MallocSizeOf,
-    Parse,
-    PartialEq,
-    SpecifiedValueInfo,
-    ToComputedValue,
-    ToCss,
-)]
-#[repr(u8)]
 pub enum OverflowClipBox {
     PaddingBox,
     ContentBox,
