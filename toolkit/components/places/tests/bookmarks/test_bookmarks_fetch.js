@@ -194,21 +194,17 @@ add_task(async function fetch_separator() {
 });
 
 add_task(async function fetch_byguid_prefix() {
-  function generateGuidWithPrefix(prefix) {
-    return prefix + PlacesUtils.history.makeGuid().substring(prefix.length);
-  }
-
   const PREFIX = "PREFIX-";
 
   let bm1 = await PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-                                                 guid: generateGuidWithPrefix(PREFIX),
+                                                 guid: PlacesUtils.generateGuidWithPrefix(PREFIX),
                                                  url: "http://bm1.example.com/",
                                                  title: "bookmark 1" });
   checkBookmarkObject(bm1);
   Assert.ok(bm1.guid.startsWith(PREFIX));
 
   let bm2 = await PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-                                                 guid: generateGuidWithPrefix(PREFIX),
+                                                 guid: PlacesUtils.generateGuidWithPrefix(PREFIX),
                                                  url: "http://bm2.example.com/",
                                                  title: "bookmark 2" });
   checkBookmarkObject(bm2);
@@ -216,7 +212,7 @@ add_task(async function fetch_byguid_prefix() {
 
   let bm3 = await PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
                                                  type: PlacesUtils.bookmarks.TYPE_FOLDER,
-                                                 guid: generateGuidWithPrefix(PREFIX),
+                                                 guid: PlacesUtils.generateGuidWithPrefix(PREFIX),
                                                  title: "a folder" });
   checkBookmarkObject(bm3);
   Assert.ok(bm3.guid.startsWith(PREFIX));
