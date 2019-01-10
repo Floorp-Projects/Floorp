@@ -45,9 +45,10 @@ add_task(async function test() {
     ];
     let nsLoginInfo = new Components.Constructor("@mozilla.org/login-manager/loginInfo;1",
                                                  Ci.nsILoginInfo, "init");
-    for (let i = 0; i < 10; i++)
+    for (let i = 0; i < 10; i++) {
       Services.logins.addLogin(new nsLoginInfo(urls[i], urls[i], null, users[i], pwds[i],
                                                "u" + (i + 1), "p" + (i + 1)));
+    }
 
     // Open the password manager dialog
     const PWMGR_DLG = "chrome://passwordmgr/content/passwordManager.xul";
@@ -72,9 +73,9 @@ add_task(async function test() {
         // only watch for a confirmation dialog every other time being called
         if (showMode) {
           Services.ww.registerNotification(function notification(aSubject, aTopic, aData) {
-            if (aTopic == "domwindowclosed")
+            if (aTopic == "domwindowclosed") {
               Services.ww.unregisterNotification(notification);
-            else if (aTopic == "domwindowopened") {
+            } else if (aTopic == "domwindowopened") {
               let targetWin = aSubject;
               SimpleTest.waitForFocus(function() {
                 EventUtils.sendKey("RETURN", targetWin);
@@ -111,8 +112,9 @@ add_task(async function test() {
         let treecols = activeCol.parentNode;
         for (let i = 0; i < treecols.childNodes.length; i++) {
           col = treecols.childNodes[i];
-          if (col.nodeName != "treecol")
+          if (col.nodeName != "treecol") {
             continue;
+          }
           hasAttr = col.hasAttribute("sortDirection");
           isOk &= col == activeCol ? hasAttr : !hasAttr;
         }
@@ -129,16 +131,18 @@ add_task(async function test() {
       function checkColumnEntries(aCol, expectedValues) {
         let actualValues = getColumnEntries(aCol);
         is(actualValues.length, expectedValues.length, "Checking length of expected column");
-        for (let i = 0; i < expectedValues.length; i++)
+        for (let i = 0; i < expectedValues.length; i++) {
           is(actualValues[i], expectedValues[i], "Checking column entry #" + i);
+        }
       }
 
       function getColumnEntries(aCol) {
         let entries = [];
         let column = sTree.columns[aCol];
         let numRows = sTree.view.rowCount;
-        for (let i = 0; i < numRows; i++)
+        for (let i = 0; i < numRows; i++) {
           entries.push(sTree.view.getCellText(i, column));
+        }
         return entries;
       }
 

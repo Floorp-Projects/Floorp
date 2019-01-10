@@ -13,8 +13,7 @@ var crypto = new OSCrypto();
 
 // Tests
 
-add_task(function test_getIELoginHash()
-{
+add_task(function test_getIELoginHash() {
   Assert.equal(crypto.getIELoginHash("https://bugzilla.mozilla.org/page.cgi"),
                "4A66FE96607885790F8E67B56EEE52AB539BAFB47D");
 
@@ -36,8 +35,7 @@ add_task(function test_getIELoginHash()
 
 });
 
-add_task(function test_decryptData_encryptData()
-{
+add_task(function test_decryptData_encryptData() {
   function decryptEncryptTest(key) {
     Assert.equal(crypto.decryptData(crypto.encryptData("", key), key),
                  "");

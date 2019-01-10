@@ -97,10 +97,11 @@ function handleDialog(doc, testNum) {
     clickOK = false;
   }
 
-  if (clickOK)
+  if (clickOK) {
     dialog.acceptDialog();
-  else
+  } else {
     dialog.cancelDialog();
+  }
 
   ok(true, "handleDialog done");
   didDialog = true;

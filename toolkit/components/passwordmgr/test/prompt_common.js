@@ -31,17 +31,21 @@ var observer = SpecialPowers.wrapCallbackObject({
     const interfaces = [Ci.nsIObserver,
                         Ci.nsISupports, Ci.nsISupportsWeakReference];
 
-    if (!interfaces.some( function(v) { return iid.equals(v); } ))
+    if (!interfaces.some( function(v) {
+      return iid.equals(v);
+    } )) {
       throw SpecialPowers.Components.results.NS_ERROR_NO_INTERFACE;
+    }
     return this;
   },
 
   observe(subject, topic, data) {
     var doc = getDialogDoc();
-    if (doc)
+    if (doc) {
       handleDialog(doc, testNum);
-    else
-      startCallbackTimer(); // try again in a bit
+    } else {
+      startCallbackTimer();
+    } // try again in a bit
   },
 });
 
@@ -55,13 +59,15 @@ function getDialogDoc() {
       docShell.ENUMERATE_FORWARDS);
     for (let childDocShell of containedDocShells) {
       // We don't want it if it's not done loading.
-      if (childDocShell.busyFlags != Ci.nsIDocShell.BUSY_FLAGS_NONE)
+      if (childDocShell.busyFlags != Ci.nsIDocShell.BUSY_FLAGS_NONE) {
         continue;
+      }
       var childDoc = childDocShell.contentViewer.DOMDocument;
 
       // ok(true, "Got window: " + childDoc.location.href);
-      if (childDoc.location.href == "chrome://global/content/commonDialog.xul")
+      if (childDoc.location.href == "chrome://global/content/commonDialog.xul") {
         return childDoc;
+      }
     }
   }
 

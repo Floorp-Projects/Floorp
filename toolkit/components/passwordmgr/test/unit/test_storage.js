@@ -13,8 +13,7 @@
 
 // Globals
 
-async function reloadAndCheckLoginsGen(aExpectedLogins)
-{
+async function reloadAndCheckLoginsGen(aExpectedLogins) {
   await LoginTestUtils.reloadData();
   LoginTestUtils.checkLogins(aExpectedLogins);
   LoginTestUtils.clearData();
@@ -25,8 +24,7 @@ async function reloadAndCheckLoginsGen(aExpectedLogins)
 /**
  * Tests addLogin with valid non-ASCII characters.
  */
-add_task(async function test_storage_addLogin_nonascii()
-{
+add_task(async function test_storage_addLogin_nonascii() {
   let hostname = "http://" + String.fromCharCode(355) + ".example.com";
 
   // Store the strings "user" and "pass" using similarly looking glyphs.
@@ -52,8 +50,7 @@ add_task(async function test_storage_addLogin_nonascii()
 /**
  * Tests addLogin with newline characters in the username and password.
  */
-add_task(async function test_storage_addLogin_newlines()
-{
+add_task(async function test_storage_addLogin_newlines() {
   let loginInfo = TestData.formLogin({
     username: "user\r\nname",
     password: "password\r\n",
@@ -67,8 +64,7 @@ add_task(async function test_storage_addLogin_newlines()
  *
  * These tests exist to verify the legacy "signons.txt" storage format.
  */
-add_task(async function test_storage_addLogin_dot()
-{
+add_task(async function test_storage_addLogin_dot() {
   let loginInfo = TestData.formLogin({ hostname: ".", passwordField: "." });
   Services.logins.addLogin(loginInfo);
   await reloadAndCheckLoginsGen([loginInfo]);
@@ -83,8 +79,7 @@ add_task(async function test_storage_addLogin_dot()
  *
  * These tests exist to verify the legacy "signons.txt" storage format.
  */
-add_task(async function test_storage_addLogin_parentheses()
-{
+add_task(async function test_storage_addLogin_parentheses() {
   let loginList = [
     TestData.authLogin({ httpRealm: "(realm" }),
     TestData.authLogin({ httpRealm: "realm)" }),

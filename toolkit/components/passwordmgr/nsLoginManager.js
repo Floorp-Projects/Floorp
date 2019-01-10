@@ -395,8 +395,9 @@ LoginManager.prototype = {
       }
     }
 
-    if (count)
-      count.value = disabledHosts.length; // needed for XPCOM
+    if (count) {
+      count.value = disabledHosts.length;
+    } // needed for XPCOM
 
     log.debug("getAllDisabledHosts: returning", disabledHosts.length, "disabled hosts.");
     return disabledHosts;
