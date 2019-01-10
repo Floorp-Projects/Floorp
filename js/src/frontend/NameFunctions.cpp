@@ -468,7 +468,7 @@ class NameResolver {
         break;
 
 #ifdef ENABLE_BIGINT
-      case ParseNodeKind::BigInt:
+      case ParseNodeKind::BigIntExpr:
         MOZ_ASSERT(cur->is<BigIntLiteral>());
         break;
 #endif

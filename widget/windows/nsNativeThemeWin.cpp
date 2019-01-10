@@ -3026,40 +3026,40 @@ nsresult nsNativeThemeWin::ClassicGetMinimumWidgetSize(
         (*aResult).width = (*aResult).height = 15;
       *aIsOverridable = false;
       break;
-      case StyleAppearance::ScrollbarthumbVertical:
-        (*aResult).width = ::GetSystemMetrics(SM_CXVSCROLL);
-        (*aResult).height = ::GetSystemMetrics(SM_CYVTHUMB);
-        // Without theming, divide the thumb size by two in order to look more
-        // native
-        if (!GetTheme(aAppearance)) {
-          (*aResult).height >>= 1;
-        }
-        // If scrollbar-width is thin, divide the thickness by two to make
-        // it look more compact.
-        if (IsScrollbarWidthThin(aFrame)) {
-          aResult->width >>= 1;
-        }
-        *aIsOverridable = false;
-        break;
-      case StyleAppearance::ScrollbarthumbHorizontal:
-        (*aResult).width = ::GetSystemMetrics(SM_CXHTHUMB);
-        (*aResult).height = ::GetSystemMetrics(SM_CYHSCROLL);
-        // Without theming, divide the thumb size by two in order to look more
-        // native
-        if (!GetTheme(aAppearance)) {
-          (*aResult).width >>= 1;
-        }
-        // If scrollbar-width is thin, divide the thickness by two to make
-        // it look more compact.
-        if (IsScrollbarWidthThin(aFrame)) {
-          aResult->height >>= 1;
-        }
-        *aIsOverridable = false;
-        break;
-      case StyleAppearance::ScrollbarHorizontal:
-        (*aResult).width = ::GetSystemMetrics(SM_CXHTHUMB) << 1;
-        break;
     }
+    case StyleAppearance::ScrollbarthumbVertical:
+      (*aResult).width = ::GetSystemMetrics(SM_CXVSCROLL);
+      (*aResult).height = ::GetSystemMetrics(SM_CYVTHUMB);
+      // Without theming, divide the thumb size by two in order to look more
+      // native
+      if (!GetTheme(aAppearance)) {
+        (*aResult).height >>= 1;
+      }
+      // If scrollbar-width is thin, divide the thickness by two to make
+      // it look more compact.
+      if (IsScrollbarWidthThin(aFrame)) {
+        aResult->width >>= 1;
+      }
+      *aIsOverridable = false;
+      break;
+    case StyleAppearance::ScrollbarthumbHorizontal:
+      (*aResult).width = ::GetSystemMetrics(SM_CXHTHUMB);
+      (*aResult).height = ::GetSystemMetrics(SM_CYHSCROLL);
+      // Without theming, divide the thumb size by two in order to look more
+      // native
+      if (!GetTheme(aAppearance)) {
+        (*aResult).width >>= 1;
+      }
+      // If scrollbar-width is thin, divide the thickness by two to make
+      // it look more compact.
+      if (IsScrollbarWidthThin(aFrame)) {
+        aResult->height >>= 1;
+      }
+      *aIsOverridable = false;
+      break;
+    case StyleAppearance::ScrollbarHorizontal:
+      (*aResult).width = ::GetSystemMetrics(SM_CXHTHUMB) << 1;
+      break;
     case StyleAppearance::Menuseparator: {
       aResult->width = 0;
       aResult->height = 10;

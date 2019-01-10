@@ -43,6 +43,8 @@ public final class HardwareCodecCapabilityUtils {
   {
     "GT-I9300",         // S3 (I9300 / I9300I)
     "SCH-I535",         // S3
+    "SGH-T999",         // S3 (T-Mobile)
+    "SAMSUNG-SGH-T999", // S3 (T-Mobile)
     "SGH-M919",         // S4
     "GT-I9505",         // S4
     "GT-I9515",         // S4

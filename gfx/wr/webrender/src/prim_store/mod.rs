@@ -10,11 +10,15 @@ use api::{PremultipliedColorF, PropertyBinding, Shadow};
 use api::{WorldPixel, BoxShadowClipMode, WorldRect, LayoutToWorldScale};
 use api::{PicturePixel, RasterPixel, LineStyle, LineOrientation, AuHelpers};
 use api::LayoutPrimitiveInfo;
+#[cfg(feature = "debug_renderer")]
+use api::DevicePoint;
 use border::{get_max_scale_for_border, build_border_instances};
 use border::BorderSegmentCacheKey;
 use clip::{ClipStore};
 use clip_scroll_tree::{ClipScrollTree, SpatialNodeIndex};
 use clip::{ClipDataStore, ClipNodeFlags, ClipChainId, ClipChainInstance, ClipItem, ClipNodeCollector};
+#[cfg(feature = "debug_renderer")]
+use debug_render::DebugItem;
 use display_list_flattener::{AsInstanceKind, CreateShadow, IsVisible};
 use euclid::{SideOffsets2D, TypedTransform3D, TypedRect, TypedScale, TypedSize2D};
 use frame_builder::{FrameBuildingContext, FrameBuildingState, PictureContext, PictureState};
@@ -1492,6 +1496,9 @@ pub struct PrimitiveScratchBuffer {
     /// A list of visible tiles that tiled gradients use to store
     /// per-tile information.
     pub gradient_tiles: GradientTileStorage,
+
+    #[cfg(feature = "debug_renderer")]
+    pub debug_items: Vec<DebugItem>,
 }
 
 impl PrimitiveScratchBuffer {
@@ -1503,6 +1510,8 @@ impl PrimitiveScratchBuffer {
             segments: SegmentStorage::new(0),
             segment_instances: SegmentInstanceStorage::new(0),
             gradient_tiles: GradientTileStorage::new(0),
+            #[cfg(feature = "debug_renderer")]
+            debug_items: Vec::new(),
         }
     }
 
@@ -1513,6 +1522,8 @@ impl PrimitiveScratchBuffer {
         self.segments.recycle();
         self.segment_instances.recycle();
         self.gradient_tiles.recycle();
+        #[cfg(feature = "debug_renderer")]
+        recycle_vec(&mut self.debug_items);
     }
 
     pub fn begin_frame(&mut self) {
@@ -1529,6 +1540,37 @@ impl PrimitiveScratchBuffer {
         //           every frame. This maintains the existing behavior, but we
         //           should fix this in the future to retain handles.
         self.gradient_tiles.clear();
+
+        #[cfg(feature = "debug_renderer")]
+        self.debug_items.clear();
+    }
+
+    #[allow(dead_code)]
+    #[cfg(feature = "debug_renderer")]
+    pub fn push_debug_rect(
+        &mut self,
+        rect: DeviceRect,
+        color: ColorF,
+    ) {
+        self.debug_items.push(DebugItem::Rect {
+            rect,
+            color: color.into(),
+        });
+    }
+
+    #[allow(dead_code)]
+    #[cfg(feature = "debug_renderer")]
+    pub fn push_debug_string(
+        &mut self,
+        position: DevicePoint,
+        color: ColorF,
+        msg: String,
+    ) {
+        self.debug_items.push(DebugItem::Text {
+            position,
+            color: color.into(),
+            msg,
+        });
     }
 }
 
@@ -1663,6 +1705,7 @@ impl PrimitiveStore {
         surfaces: &[SurfaceInfo],
         gpu_cache: &mut GpuCache,
         retained_tiles: &mut RetainedTiles,
+        scratch: &mut PrimitiveScratchBuffer,
     ) {
         let children = {
             let pic = &mut self.pictures[pic_index.0];
@@ -1714,6 +1757,7 @@ impl PrimitiveStore {
                 surfaces,
                 gpu_cache,
                 retained_tiles,
+                scratch,
             );
         }
 
@@ -1726,6 +1770,7 @@ impl PrimitiveStore {
                 resource_cache,
                 gpu_cache,
                 frame_context,
+                scratch,
             );
 
             pic.tile_cache = Some(tile_cache);

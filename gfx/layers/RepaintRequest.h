@@ -48,12 +48,11 @@ struct RepaintRequest {
         mScrollGeneration(0),
         mDisplayPortMargins(0, 0, 0, 0),
         mPresShellId(-1),
-        mViewport(0, 0, 0, 0),
+        mLayoutViewport(0, 0, 0, 0),
         mExtraResolution(),
         mPaintRequestTime(),
         mScrollUpdateType(eNone),
         mIsRootContent(false),
-        mUseDisplayPortMargins(false),
         mIsScrollInfoLayer(false) {}
 
   RepaintRequest(const FrameMetrics& aOther,
@@ -68,12 +67,11 @@ struct RepaintRequest {
         mScrollGeneration(aOther.GetScrollGeneration()),
         mDisplayPortMargins(aOther.GetDisplayPortMargins()),
         mPresShellId(aOther.GetPresShellId()),
-        mViewport(aOther.GetViewport()),
+        mLayoutViewport(aOther.GetLayoutViewport()),
         mExtraResolution(aOther.GetExtraResolution()),
         mPaintRequestTime(aOther.GetPaintRequestTime()),
         mScrollUpdateType(aScrollUpdateType),
         mIsRootContent(aOther.IsRootContent()),
-        mUseDisplayPortMargins(aOther.GetUseDisplayPortMargins()),
         mIsScrollInfoLayer(aOther.IsScrollInfoLayer()) {}
 
   // Default copy ctor and operator= are fine
@@ -90,12 +88,11 @@ struct RepaintRequest {
            mScrollGeneration == aOther.mScrollGeneration &&
            mDisplayPortMargins == aOther.mDisplayPortMargins &&
            mPresShellId == aOther.mPresShellId &&
-           mViewport.IsEqualEdges(aOther.mViewport) &&
+           mLayoutViewport.IsEqualEdges(aOther.mLayoutViewport) &&
            mExtraResolution == aOther.mExtraResolution &&
            mPaintRequestTime == aOther.mPaintRequestTime &&
            mScrollUpdateType == aOther.mScrollUpdateType &&
            mIsRootContent == aOther.mIsRootContent &&
-           mUseDisplayPortMargins == aOther.mUseDisplayPortMargins &&
            mIsScrollInfoLayer == aOther.mIsScrollInfoLayer;
   }
 
@@ -166,11 +163,9 @@ struct RepaintRequest {
     return mDisplayPortMargins;
   }
 
-  bool GetUseDisplayPortMargins() const { return mUseDisplayPortMargins; }
-
   uint32_t GetPresShellId() const { return mPresShellId; }
 
-  const CSSRect& GetViewport() const { return mViewport; }
+  const CSSRect& GetLayoutViewport() const { return mLayoutViewport; }
 
   const ScreenToLayerScale2D& GetExtraResolution() const {
     return mExtraResolution;
@@ -185,42 +180,35 @@ struct RepaintRequest {
     mIsRootContent = aIsRootContent;
   }
 
-  void SetUseDisplayPortMargins(bool aValue) {
-    mUseDisplayPortMargins = aValue;
-  }
-
   void SetIsScrollInfoLayer(bool aIsScrollInfoLayer) {
     mIsScrollInfoLayer = aIsScrollInfoLayer;
   }
 
  private:
-  // A unique ID assigned to each scrollable frame.
+  // A ID assigned to each scrollable frame, unique within each LayersId..
   ScrollableLayerGuid::ViewID mScrollId;
 
   // The pres-shell resolution that has been induced on the document containing
   // this scroll frame as a result of zooming this scroll frame (whether via
   // user action, or choosing an initial zoom level on page load). This can
   // only be different from 1.0 for frames that are zoomable, which currently
-  // is just the root content document's root scroll frame (mIsRoot = true).
+  // is just the root content document's root scroll frame
+  // (mIsRootContent = true).
   // This is a plain float rather than a ScaleFactor because in and of itself
   // it does not convert between any coordinate spaces for which we have names.
   float mPresShellResolution;
 
   // This is the area within the widget that we're compositing to. It is in the
-  // same coordinate space as the reference frame for the scrolled frame.
+  // layer coordinates of the scrollable content's parent layer.
   //
-  // This is useful because, on mobile, the viewport and composition dimensions
-  // are not always the same. In this case, we calculate the displayport using
-  // an area bigger than the region we're compositing to. If we used the
-  // viewport dimensions to calculate the displayport, we'd run into situations
-  // where we're prerendering the wrong regions and the content may be clipped,
-  // or too much of it prerendered. If the composition dimensions are the same
-  // as the viewport dimensions, there is no need for this and we can just use
-  // the viewport instead.
+  // The size of the composition bounds corresponds to the size of the scroll
+  // frame's scroll port (but in a coordinate system where the size does not
+  // change during zooming).
   //
-  // This value is valid for nested scrollable layers as well, and is still
-  // relative to the layer tree origin. This value is provided by Gecko at
-  // layout/paint time.
+  // The origin of the composition bounds is relative to the layer tree origin.
+  // Unlike the scroll port's origin, it does not change during scrolling.
+  //
+  // This value is provided by Gecko at layout/paint time.
   ParentLayerRect mCompositionBounds;
 
   // The cumulative resolution that the current frame has been painted at.
@@ -228,34 +216,19 @@ struct RepaintRequest {
   // containing this scroll frame and its ancestors, and any css-driven
   // resolution. This information is provided by Gecko at layout/paint time.
   // Note that this is allowed to have different x- and y-scales, but only
-  // for subframes (mIsRoot = false). (The same applies to other scales that
-  // "inherit" the 2D-ness of this one, such as mZoom.)
+  // for subframes (mIsRootContent = false). (The same applies to other scales
+  // that "inherit" the 2D-ness of this one, such as mZoom.)
   LayoutDeviceToLayerScale2D mCumulativeResolution;
 
   // The conversion factor between CSS pixels and device pixels for this frame.
-  // This can vary based on a variety of things, such as reflowing-zoom. The
-  // conversion factor for device pixels to layers pixels is just the
-  // resolution.
+  // This can vary based on a variety of things, such as reflowing-zoom.
   CSSToLayoutDeviceScale mDevPixelsPerCSSPixel;
 
-  // The position of the top-left of the CSS viewport, relative to the document
-  // (or the document relative to the viewport, if that helps understand it).
-  //
-  // Thus it is relative to the document. It is in the same coordinate space as
-  // |mScrollableRect|, but a different coordinate space than |mViewport| and
-  // |mDisplayPort|.
-  //
-  // It is required that the rect:
-  // { x = mScrollOffset.x, y = mScrollOffset.y,
-  //   width = mCompositionBounds.x / mResolution.scale,
-  //   height = mCompositionBounds.y / mResolution.scale }
-  // Be within |mScrollableRect|.
-  //
-  // This is valid for any layer, but is always relative to this frame and
-  // not any parents, regardless of parent transforms.
+  // The position of the top-left of the scroll frame's scroll port, relative
+  // to the scrollable content's origin.
   CSSPoint mScrollOffset;
 
-  // The "user zoom". Content is painted by gecko at mResolution *
+  // The "user zoom". Content is painted by gecko at mCumulativeResolution *
   // mDevPixelsPerCSSPixel, but will be drawn to the screen at mZoom. In the
   // steady state, the two will be the same, but during an async zoom action the
   // two may diverge. This information is initialized in Gecko but updated in
@@ -271,22 +244,28 @@ struct RepaintRequest {
 
   uint32_t mPresShellId;
 
-  // The CSS viewport, which is the dimensions we're using to constrain the
-  // <html> element of this frame, relative to the top-left of the layer. Note
-  // that its offset is structured in such a way that it doesn't depend on the
-  // method layout uses to scroll content.
+  // For a root scroll frame (RSF), the document's layout viewport
+  // (sometimes called "CSS viewport" in older code).
   //
-  // This is mainly useful on the root layer, however nested iframes can have
-  // their own viewport, which will just be the size of the window of the
-  // iframe. For layers that don't correspond to a document, this metric is
-  // meaningless and invalid.
-  CSSRect mViewport;
+  // Its size is the dimensions we're using to constrain the <html> element
+  // of the document (i.e. the initial containing block (ICB) size).
+  //
+  // Its origin is the RSF's layout scroll position, i.e. the scroll position
+  // exposed to web content via window.scrollX/Y.
+  //
+  // Note that only the root content document's RSF has a layout viewport
+  // that's distinct from the visual viewport. For an iframe RSF, the two
+  // are the same.
+  //
+  // For a scroll frame that is not an RSF, this metric is meaningless and
+  // invalid.
+  CSSRect mLayoutViewport;
 
   // The extra resolution at which content in this scroll frame is drawn beyond
   // that necessary to draw one Layer pixel per Screen pixel.
   ScreenToLayerScale2D mExtraResolution;
 
-  // The time at which the APZC last requested a repaint for this scrollframe.
+  // The time at which the APZC last requested a repaint for this scroll frame.
   TimeStamp mPaintRequestTime;
 
   // The type of repaint request this represents.
@@ -295,11 +274,10 @@ struct RepaintRequest {
   // Whether or not this is the root scroll frame for the root content document.
   bool mIsRootContent : 1;
 
-  // If this is true then we use the display port margins on this metrics,
-  // otherwise use the display port rect.
-  bool mUseDisplayPortMargins : 1;
-
-  // Whether or not this frame has a "scroll info layer" to capture events.
+  // True if this scroll frame is a scroll info layer. A scroll info layer is
+  // not layerized and its content cannot be truly async-scrolled, but its
+  // metrics are still sent to and updated by the compositor, with the updates
+  // being reflected on the next paint rather than the next composite.
   bool mIsScrollInfoLayer : 1;
 };
 

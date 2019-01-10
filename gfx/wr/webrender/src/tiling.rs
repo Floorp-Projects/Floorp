@@ -8,6 +8,8 @@ use api::{MixBlendMode, PipelineId, DeviceRect, LayoutSize};
 use batch::{AlphaBatchBuilder, AlphaBatchContainer, ClipBatcher, resolve_image};
 use clip::ClipStore;
 use clip_scroll_tree::{ClipScrollTree};
+#[cfg(feature = "debug_renderer")]
+use debug_render::DebugItem;
 use device::{Texture};
 #[cfg(feature = "pathfinder")]
 use euclid::{TypedPoint2D, TypedVector2D};
@@ -1114,6 +1116,10 @@ pub struct Frame {
     /// True if this frame has been drawn by the
     /// renderer.
     pub has_been_rendered: bool,
+
+    /// Debugging information to overlay for this frame.
+    #[cfg(feature = "debug_renderer")]
+    pub debug_items: Vec<DebugItem>,
 }
 
 impl Frame {

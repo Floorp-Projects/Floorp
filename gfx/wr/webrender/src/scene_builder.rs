@@ -34,7 +34,7 @@ use prim_store::line_dec::{
 };
 use prim_store::picture::{PictureDataInterner, Picture, PictureDataUpdateList};
 use prim_store::text_run::{TextRunDataInterner, TextRun, TextRunDataUpdateList};
-use resource_cache::{BlobImageRasterizerEpoch, FontInstanceMap};
+use resource_cache::{AsyncBlobImageInfo, FontInstanceMap};
 use render_backend::DocumentView;
 use renderer::{PipelineInfo, SceneBuilderHooks};
 use scene::Scene;
@@ -67,7 +67,7 @@ pub struct Transaction {
     pub epoch_updates: Vec<(PipelineId, Epoch)>,
     pub request_scene_build: Option<SceneRequest>,
     pub blob_requests: Vec<BlobImageParams>,
-    pub blob_rasterizer: Option<(Box<AsyncBlobImageRasterizer>, BlobImageRasterizerEpoch)>,
+    pub blob_rasterizer: Option<(Box<AsyncBlobImageRasterizer>, AsyncBlobImageInfo)>,
     pub rasterized_blobs: Vec<(BlobImageRequest, BlobImageResult)>,
     pub resource_updates: Vec<ResourceUpdate>,
     pub frame_ops: Vec<FrameMsg>,
@@ -112,7 +112,7 @@ pub struct BuiltTransaction {
     pub built_scene: Option<BuiltScene>,
     pub resource_updates: Vec<ResourceUpdate>,
     pub rasterized_blobs: Vec<(BlobImageRequest, BlobImageResult)>,
-    pub blob_rasterizer: Option<(Box<AsyncBlobImageRasterizer>, BlobImageRasterizerEpoch)>,
+    pub blob_rasterizer: Option<(Box<AsyncBlobImageRasterizer>, AsyncBlobImageInfo)>,
     pub frame_ops: Vec<FrameMsg>,
     pub removed_pipelines: Vec<PipelineId>,
     pub notifications: Vec<NotificationRequest>,

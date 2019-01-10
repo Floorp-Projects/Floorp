@@ -46,29 +46,29 @@ struct ParamTraits<mozilla::gfx::VRDisplayState> {
     //        this code can be refactored out if we use
     //        shmem between the VR and content process.
     nsCString displayName;
-    displayName.Assign(aParam.mDisplayName);
+    displayName.Assign(aParam.displayName);
     WriteParam(aMsg, displayName);
-    WriteParam(aMsg, aParam.mCapabilityFlags);
-    WriteParam(aMsg, aParam.mEyeResolution.width);
-    WriteParam(aMsg, aParam.mEyeResolution.height);
-    WriteParam(aMsg, aParam.mSuppressFrames);
-    WriteParam(aMsg, aParam.mIsConnected);
-    WriteParam(aMsg, aParam.mIsMounted);
-    WriteParam(aMsg, aParam.mStageSize.width);
-    WriteParam(aMsg, aParam.mStageSize.height);
-    WriteParam(aMsg, aParam.mLastSubmittedFrameId);
-    WriteParam(aMsg, aParam.mPresentingGeneration);
+    WriteParam(aMsg, aParam.capabilityFlags);
+    WriteParam(aMsg, aParam.eyeResolution.width);
+    WriteParam(aMsg, aParam.eyeResolution.height);
+    WriteParam(aMsg, aParam.suppressFrames);
+    WriteParam(aMsg, aParam.isConnected);
+    WriteParam(aMsg, aParam.isMounted);
+    WriteParam(aMsg, aParam.stageSize.width);
+    WriteParam(aMsg, aParam.stageSize.height);
+    WriteParam(aMsg, aParam.lastSubmittedFrameId);
+    WriteParam(aMsg, aParam.presentingGeneration);
     for (int i = 0; i < 16; i++) {
       // TODO - Should probably memcpy the whole array or
       // convert Maxtrix4x4 to a POD type and use it
       // instead
-      WriteParam(aMsg, aParam.mSittingToStandingTransform[i]);
+      WriteParam(aMsg, aParam.sittingToStandingTransform[i]);
     }
     for (int i = 0; i < mozilla::gfx::VRDisplayState::NumEyes; i++) {
-      WriteParam(aMsg, aParam.mEyeFOV[i]);
-      WriteParam(aMsg, aParam.mEyeTranslation[i].x);
-      WriteParam(aMsg, aParam.mEyeTranslation[i].y);
-      WriteParam(aMsg, aParam.mEyeTranslation[i].z);
+      WriteParam(aMsg, aParam.eyeFOV[i]);
+      WriteParam(aMsg, aParam.eyeTranslation[i].x);
+      WriteParam(aMsg, aParam.eyeTranslation[i].y);
+      WriteParam(aMsg, aParam.eyeTranslation[i].z);
     }
   }
 
@@ -76,30 +76,30 @@ struct ParamTraits<mozilla::gfx::VRDisplayState> {
                    paramType* aResult) {
     nsCString displayName;
     if (!ReadParam(aMsg, aIter, &(displayName)) ||
-        !ReadParam(aMsg, aIter, &(aResult->mCapabilityFlags)) ||
-        !ReadParam(aMsg, aIter, &(aResult->mEyeResolution.width)) ||
-        !ReadParam(aMsg, aIter, &(aResult->mEyeResolution.height)) ||
-        !ReadParam(aMsg, aIter, &(aResult->mSuppressFrames)) ||
-        !ReadParam(aMsg, aIter, &(aResult->mIsConnected)) ||
-        !ReadParam(aMsg, aIter, &(aResult->mIsMounted)) ||
-        !ReadParam(aMsg, aIter, &(aResult->mStageSize.width)) ||
-        !ReadParam(aMsg, aIter, &(aResult->mStageSize.height)) ||
-        !ReadParam(aMsg, aIter, &(aResult->mLastSubmittedFrameId)) ||
-        !ReadParam(aMsg, aIter, &(aResult->mPresentingGeneration))) {
+        !ReadParam(aMsg, aIter, &(aResult->capabilityFlags)) ||
+        !ReadParam(aMsg, aIter, &(aResult->eyeResolution.width)) ||
+        !ReadParam(aMsg, aIter, &(aResult->eyeResolution.height)) ||
+        !ReadParam(aMsg, aIter, &(aResult->suppressFrames)) ||
+        !ReadParam(aMsg, aIter, &(aResult->isConnected)) ||
+        !ReadParam(aMsg, aIter, &(aResult->isMounted)) ||
+        !ReadParam(aMsg, aIter, &(aResult->stageSize.width)) ||
+        !ReadParam(aMsg, aIter, &(aResult->stageSize.height)) ||
+        !ReadParam(aMsg, aIter, &(aResult->lastSubmittedFrameId)) ||
+        !ReadParam(aMsg, aIter, &(aResult->presentingGeneration))) {
       return false;
     }
     for (int i = 0; i < 16; i++) {
-      if (!ReadParam(aMsg, aIter, &(aResult->mSittingToStandingTransform[i]))) {
+      if (!ReadParam(aMsg, aIter, &(aResult->sittingToStandingTransform[i]))) {
         return false;
       }
     }
-    strncpy(aResult->mDisplayName, displayName.BeginReading(),
+    strncpy(aResult->displayName, displayName.BeginReading(),
             mozilla::gfx::kVRDisplayNameMaxLen);
     for (int i = 0; i < mozilla::gfx::VRDisplayState::NumEyes; i++) {
-      if (!ReadParam(aMsg, aIter, &(aResult->mEyeFOV[i])) ||
-          !ReadParam(aMsg, aIter, &(aResult->mEyeTranslation[i].x)) ||
-          !ReadParam(aMsg, aIter, &(aResult->mEyeTranslation[i].y)) ||
-          !ReadParam(aMsg, aIter, &(aResult->mEyeTranslation[i].z))) {
+      if (!ReadParam(aMsg, aIter, &(aResult->eyeFOV[i])) ||
+          !ReadParam(aMsg, aIter, &(aResult->eyeTranslation[i].x)) ||
+          !ReadParam(aMsg, aIter, &(aResult->eyeTranslation[i].y)) ||
+          !ReadParam(aMsg, aIter, &(aResult->eyeTranslation[i].z))) {
         return false;
       }
     }

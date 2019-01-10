@@ -890,7 +890,7 @@ wrench-deps:
         kind: build
         platform: toolchains/opt
         symbol: WR(wrench-deps)
-        tier: 2
+        tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         docker-image: {in-tree: webrender}

@@ -3126,7 +3126,7 @@ bool ASTSerializer::literal(ParseNode* pn, MutableHandleValue dst) {
       break;
 
 #ifdef ENABLE_BIGINT
-    case ParseNodeKind::BigInt: {
+    case ParseNodeKind::BigIntExpr: {
       BigInt* x = pn->as<BigIntLiteral>().box()->value();
       cx->check(x);
       val.setBigInt(x);
