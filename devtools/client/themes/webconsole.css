@@ -806,7 +806,6 @@ a.learn-more-link.webconsole-learn-more-link {
 .webconsole-output {
   direction: ltr;
   overflow: auto;
-  overflow-anchor: none;
   -moz-user-select: text;
   position: relative;
 }

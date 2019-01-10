@@ -47,10 +47,6 @@ bool nsIFrame::IsRelativelyPositioned() const {
   return StyleDisplay()->IsRelativelyPositioned(this);
 }
 
-bool nsIFrame::IsStickyPositioned() const {
-  return StyleDisplay()->IsStickyPositioned(this);
-}
-
 bool nsIFrame::IsAbsolutelyPositioned(
     const nsStyleDisplay* aStyleDisplay) const {
   const nsStyleDisplay* disp = StyleDisplayWithOptionalParam(aStyleDisplay);

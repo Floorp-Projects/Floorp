@@ -454,9 +454,6 @@ class nsIPresShell : public nsStubDocumentObserver {
    */
   virtual nsCanvasFrame* GetCanvasFrame() const = 0;
 
-  virtual void PostDirtyScrollAnchorContainer(nsIScrollableFrame* aFrame) = 0;
-  virtual void FlushDirtyScrollAnchorContainers() = 0;
-
   /**
    * Tell the pres shell that a frame needs to be marked dirty and needs
    * Reflow.  It's OK if this is an ancestor of the frame needing reflow as

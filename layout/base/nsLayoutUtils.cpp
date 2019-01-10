@@ -1490,11 +1490,11 @@ bool nsLayoutUtils::IsAncestorFrameCrossDoc(const nsIFrame* aAncestorFrame,
 }
 
 // static
-bool nsLayoutUtils::IsProperAncestorFrame(const nsIFrame* aAncestorFrame,
-                                          const nsIFrame* aFrame,
-                                          const nsIFrame* aCommonAncestor) {
+bool nsLayoutUtils::IsProperAncestorFrame(nsIFrame* aAncestorFrame,
+                                          nsIFrame* aFrame,
+                                          nsIFrame* aCommonAncestor) {
   if (aFrame == aAncestorFrame) return false;
-  for (const nsIFrame* f = aFrame; f != aCommonAncestor; f = f->GetParent()) {
+  for (nsIFrame* f = aFrame; f != aCommonAncestor; f = f->GetParent()) {
     if (f == aAncestorFrame) return true;
   }
   return aCommonAncestor == aAncestorFrame;

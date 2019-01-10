@@ -7268,17 +7268,6 @@ if (IsCSSPropertyPrefEnabled("layout.css.osx-font-smoothing.enabled")) {
   };
 }
 
-if (IsCSSPropertyPrefEnabled("layout.css.scroll-anchoring.enabled")) {
-  gCSSProperties["overflow-anchor"] = {
-    domProp: "overflowAnchor",
-    inherited: false,
-    type: CSS_TYPE_LONGHAND,
-    initial_values: [ "auto" ],
-    other_values: [ "none" ],
-    invalid_values: []
-  };
-}
-
 if (IsCSSPropertyPrefEnabled("layout.css.overflow-clip-box.enabled")) {
   gCSSProperties["overflow-clip-box-block"] = {
     domProp: "overflowClipBoxBlock",
