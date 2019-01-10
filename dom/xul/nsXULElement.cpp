@@ -77,7 +77,6 @@
 #include "XULFrameElement.h"
 #include "XULMenuElement.h"
 #include "XULPopupElement.h"
-#include "XULScrollElement.h"
 #include "XULTreeElement.h"
 
 #include "mozilla/dom/XULElementBinding.h"
@@ -165,10 +164,6 @@ nsXULElement* nsXULElement::Construct(
   if (nodeInfo->Equals(nsGkAtoms::menu) ||
       nodeInfo->Equals(nsGkAtoms::menulist)) {
     return new XULMenuElement(nodeInfo.forget());
-  }
-
-  if (nodeInfo->Equals(nsGkAtoms::scrollbox)) {
-    return new XULScrollElement(nodeInfo.forget());
   }
 
   if (nodeInfo->Equals(nsGkAtoms::tree)) {
