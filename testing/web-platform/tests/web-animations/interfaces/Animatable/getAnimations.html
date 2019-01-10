@@ -94,6 +94,24 @@ test(t => {
 
 test(t => {
   const div = createDiv(t);
+  const animation = div.animate(null, {
+    duration: 100 * MS_PER_SEC,
+    delay: 100 * MS_PER_SEC,
+  });
+  animation.playbackRate = 0;
+  assert_array_equals(div.getAnimations(), []);
+}, 'Does not return animations with zero playback rate in before phase');
+
+test(t => {
+  const div = createDiv(t);
+  const animation = div.animate(null, 100 * MS_PER_SEC);
+  animation.finish();
+  animation.playbackRate = 0;
+  animation.currentTime = 200 * MS_PER_SEC;
+}, 'Does not return animations with zero playback rate in after phase');
+
+test(t => {
+  const div = createDiv(t);
   const animation = div.animate(null, 100 * MS_PER_SEC);
 
   animation.finish();
