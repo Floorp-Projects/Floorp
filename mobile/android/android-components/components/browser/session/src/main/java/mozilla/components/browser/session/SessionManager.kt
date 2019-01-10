@@ -279,7 +279,12 @@ class SessionManager(
 
         unlink(session)
 
-        val selectionUpdated = recalculateSelectionIndex(indexToRemove, selectParentIfExists, session.parentId)
+        val selectionUpdated = recalculateSelectionIndex(
+                indexToRemove,
+                selectParentIfExists,
+                session.private,
+                session.parentId
+        )
 
         values.filter { it.parentId == session.id }
             .forEach { child -> child.parentId = session.parentId }
@@ -306,6 +311,7 @@ class SessionManager(
     private fun recalculateSelectionIndex(
         indexToRemove: Int,
         selectParentIfExists: Boolean,
+        private: Boolean,
         parentId: String?
     ): Boolean {
         // Recalculate selection
@@ -313,17 +319,13 @@ class SessionManager(
             // All items have been removed
             values.size == 0 -> NO_SELECTION
 
-            // The selected session was removed and it has a parent
-            selectParentIfExists && indexToRemove == selectedIndex && parentId != null -> {
-                val parent = findSessionById(parentId)
-                    ?: throw java.lang.IllegalStateException("Parent session referenced by id does not exist")
-                values.indexOf(parent)
-            }
+            // The selected session has been removed. We need a new selection.
+            indexToRemove == selectedIndex -> newSelection(indexToRemove, selectParentIfExists, private, parentId)
 
-            // Something on the left of our selection has been removed, we need to move the index to the left
+            // Something on the left of our selection has been removed. We need to move the index to the left.
             indexToRemove < selectedIndex -> selectedIndex - 1
 
-            // The selection is out of bounds. Let's selected the previous item.
+            // The selection is out of bounds. Let's select the previous item.
             selectedIndex == values.size -> selectedIndex - 1
 
             // We can keep the selected index.
@@ -348,11 +350,40 @@ class SessionManager(
         return selectionUpdated
     }
 
+    private fun newSelection(
+        index: Int,
+        selectParentIfExists: Boolean,
+        private: Boolean,
+        parentId: String?
+    ): Int {
+        return if (selectParentIfExists && parentId != null) {
+            // Select parent session
+            val parent = findSessionById(parentId)
+                ?: throw java.lang.IllegalStateException("Parent session referenced by id does not exist")
+
+            values.indexOf(parent)
+        } else {
+            // Find session of same type (private|regular)
+            if (index <= values.lastIndex && values[index].private == private) {
+                return index
+            }
+
+            val nearbyMatch = findNearbySession(index) { it.private == private }
+
+            // If there's no other private session to select we use the newest non-private one
+            if (nearbyMatch == NO_SELECTION && private) values.lastIndex else nearbyMatch
+        }
+    }
+
     /**
      * @return Index of a new session that is not a custom tab and as close as possible to the given index. Returns
      * [NO_SELECTION] if no session to select could be found.
      */
     private fun findNearbyNonCustomTabSession(index: Int): Int {
+        return findNearbySession(index) { !it.isCustomTabSession() }
+    }
+
+    private fun findNearbySession(index: Int, predicate: (Session) -> Boolean): Int {
         val maxSteps = max(values.lastIndex - index, index)
 
         if (maxSteps <= 0) {
@@ -364,7 +395,7 @@ class SessionManager(
             listOf(index - steps, index + steps).forEach { current ->
                 if (current >= 0 &&
                     current <= values.lastIndex &&
-                    !values[current].isCustomTabSession()) {
+                    predicate(values[current])) {
                     return current
                 }
             }

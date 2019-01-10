@@ -972,4 +972,102 @@ class SessionManagerTest {
 
         manager.remove(session, selectParentIfExists = true)
     }
+
+    @Test
+    fun `SessionManager will select nearby private session if selected private session gets removed`() {
+        val manager = SessionManager(mock())
+        assertNull(manager.selectedSession)
+
+        val private1 = Session("https://example.org/private1", private = true)
+        manager.add(private1)
+
+        val regular1 = Session("https://www.mozilla.org", private = false)
+        manager.add(regular1)
+
+        val regular2 = Session("https://www.firefox.com", private = false)
+        manager.add(regular2)
+
+        val private2 = Session("https://example.org/private2", private = true)
+        manager.add(private2)
+
+        val private3 = Session("https://example.org/private3", private = true)
+        manager.add(private3)
+
+        manager.select(private2)
+        manager.remove(private2)
+        assertEquals(private3, manager.selectedSession)
+
+        manager.remove(private3)
+        assertEquals(private1, manager.selectedSession)
+
+        // Removing the last private session should cause a regular session to be selected
+        manager.remove(private1)
+        assertEquals(regular2, manager.selectedSession)
+    }
+
+    @Test
+    fun `SessionManager will select nearby regular session if selected regular session gets removed`() {
+        val manager = SessionManager(mock())
+        assertNull(manager.selectedSession)
+
+        val regular1 = Session("https://www.mozilla.org", private = false)
+        manager.add(regular1)
+
+        val private1 = Session("https://example.org/private1", private = true)
+        manager.add(private1)
+
+        val private2 = Session("https://example.org/private2", private = true)
+        manager.add(private2)
+
+        val regular2 = Session("https://www.firefox.com", private = false)
+        manager.add(regular2)
+
+        val regular3 = Session("https://www.firefox.org", private = false)
+        manager.add(regular3)
+
+        manager.select(regular2)
+        manager.remove(regular2)
+        assertEquals(regular3, manager.selectedSession)
+
+        manager.remove(regular3)
+        assertEquals(regular1, manager.selectedSession)
+
+        // Removing the last regular session should NOT cause a private session to be selected
+        manager.remove(regular1)
+        assertNull(manager.selectedSession)
+    }
+
+    @Test
+    fun `SessionManager will select default if regular session is removed an no other regular session is left`() {
+        val defaultSession = Session("http://www.mozilla.com")
+        val manager = SessionManager(mock(), defaultSession = { defaultSession })
+        assertNull(manager.selectedSession)
+
+        val regular1 = Session("https://www.getpocket.com", private = false)
+        manager.add(regular1)
+
+        val private1 = Session("https://example.org/private1", private = true)
+        manager.add(private1)
+
+        val private2 = Session("https://example.org/private2", private = true)
+        manager.add(private2)
+
+        val regular2 = Session("https://www.firefox.com", private = false)
+        manager.add(regular2)
+
+        val regular3 = Session("https://www.firefox.org", private = false)
+        manager.add(regular3, selected = true)
+
+        manager.remove(regular3)
+        assertEquals(regular2, manager.selectedSession)
+
+        manager.remove(regular2)
+        assertEquals(regular1, manager.selectedSession)
+
+        // Removing the last regular session should NOT cause a private session to be selected,
+        // but a default session was provided, so it should be selected now.
+        manager.remove(regular1)
+        assertEquals(manager.defaultSession?.invoke(), manager.selectedSession)
+        assertEquals("http://www.mozilla.com", manager.selectedSession?.url)
+    }
 }
