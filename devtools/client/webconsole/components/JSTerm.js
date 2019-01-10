@@ -177,6 +177,18 @@ class JSTerm extends Component {
           return "CodeMirror.Pass";
         };
 
+        const onArrowRight = () => {
+          // We only want to complete on Right arrow if the completion text is
+          // displayed.
+          if (this.getAutoCompletionText()) {
+            this.acceptProposedCompletion();
+            return null;
+          }
+
+          this.clearCompletion();
+          return "CodeMirror.Pass";
+        };
+
         this.editor = new Editor({
           autofocus: true,
           enableCodeFolding: false,
@@ -239,17 +251,9 @@ class JSTerm extends Component {
             "Ctrl-Left": onArrowLeft,
             "Cmd-Left": onArrowLeft,
 
-            "Right": () => {
-              // We only want to complete on Right arrow if the completion text is
-              // displayed.
-              if (this.getAutoCompletionText()) {
-                this.acceptProposedCompletion();
-                return null;
-              }
-
-              this.clearCompletion();
-              return "CodeMirror.Pass";
-            },
+            "Right": onArrowRight,
+            "Ctrl-Right": onArrowRight,
+            "Cmd-Right": onArrowRight,
 
             "Ctrl-N": () => {
               // Control-N differs from down arrow: it ignores autocomplete state.
@@ -843,6 +847,15 @@ class JSTerm extends Component {
         (this.autocompletePopup.isOpen || this.getAutoCompletionText())
       ) {
         this.clearCompletion();
+      }
+
+      // We only want to complete on Right arrow if the completion text is displayed.
+      if (event.keyCode === KeyCodes.DOM_VK_RIGHT) {
+        if (this.getAutoCompletionText()) {
+          this.acceptProposedCompletion();
+        }
+        this.clearCompletion();
+        event.preventDefault();
       }
 
       return;
