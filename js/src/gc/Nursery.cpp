@@ -45,21 +45,6 @@ using mozilla::TimeStamp;
 
 constexpr uintptr_t CanaryMagicValue = 0xDEADB15D;
 
-struct js::Nursery::FreeMallocedBuffersTask
-    : public GCParallelTaskHelper<FreeMallocedBuffersTask> {
-  explicit FreeMallocedBuffersTask(FreeOp* fop)
-      : GCParallelTaskHelper(fop->runtime()), fop_(fop) {}
-  void transferBuffersToFree(MallocedBuffersSet& buffersToFree,
-                             const AutoLockHelperThreadState& lock);
-  ~FreeMallocedBuffersTask() { join(); }
-
-  void run();
-
- private:
-  FreeOp* fop_;
-  MallocedBuffersSet buffers_;
-};
-
 #ifdef JS_GC_ZEAL
 struct js::Nursery::Canary {
   uintptr_t magicValue;
@@ -128,8 +113,7 @@ js::Nursery::Nursery(JSRuntime* rt)
       enableProfiling_(false),
       canAllocateStrings_(false),
       reportTenurings_(0),
-      minorGCTriggerReason_(JS::gcreason::NO_REASON),
-      freeMallocedBuffersTask(nullptr)
+      minorGCTriggerReason_(JS::gcreason::NO_REASON)
 #ifdef JS_GC_ZEAL
       ,
       lastCanary_(nullptr)
@@ -142,12 +126,6 @@ js::Nursery::Nursery(JSRuntime* rt)
 }
 
 bool js::Nursery::init(uint32_t maxNurseryBytes, AutoLockGCBgAlloc& lock) {
-  freeMallocedBuffersTask =
-      js_new<FreeMallocedBuffersTask>(runtime()->defaultFreeOp());
-  if (!freeMallocedBuffersTask) {
-    return false;
-  }
-
   // The nursery is permanently disabled when recording or replaying. Nursery
   // collections may occur at non-deterministic points in execution.
   if (mozilla::recordreplay::IsRecordingOrReplaying()) {
@@ -206,7 +184,6 @@ bool js::Nursery::init(uint32_t maxNurseryBytes, AutoLockGCBgAlloc& lock) {
 
 js::Nursery::~Nursery() {
   disable();
-  js_delete(freeMallocedBuffersTask);
 }
 
 void js::Nursery::enable() {
@@ -989,7 +966,7 @@ void js::Nursery::doCollection(JS::gcreason::Reason reason,
 
   // Sweep.
   startProfile(ProfileKey::FreeMallocedBuffers);
-  freeMallocedBuffers();
+  rt->gc.queueBuffersForFreeAfterMinorGC(mallocedBuffers);
   endProfile(ProfileKey::FreeMallocedBuffers);
 
   startProfile(ProfileKey::ClearNursery);
@@ -1017,57 +994,9 @@ void js::Nursery::doCollection(JS::gcreason::Reason reason,
   previousGC.tenuredCells = mover.tenuredCells;
 }
 
-void js::Nursery::FreeMallocedBuffersTask::transferBuffersToFree(
-    MallocedBuffersSet& buffersToFree, const AutoLockHelperThreadState& lock) {
-  // Transfer the contents of the source set to the task's buffers_ member by
-  // swapping the sets, which also clears the source.
-  MOZ_ASSERT(!isRunningWithLockHeld(lock));
-  MOZ_ASSERT(buffers_.empty());
-  mozilla::Swap(buffers_, buffersToFree);
-}
-
-void js::Nursery::FreeMallocedBuffersTask::run() {
-  for (MallocedBuffersSet::Range r = buffers_.all(); !r.empty(); r.popFront()) {
-    fop_->free_(r.front());
-  }
-  buffers_.clear();
-}
-
 bool js::Nursery::registerMallocedBuffer(void* buffer) {
   MOZ_ASSERT(buffer);
   return mallocedBuffers.putNew(buffer);
-}
-
-void js::Nursery::freeMallocedBuffers() {
-  if (mallocedBuffers.empty()) {
-    return;
-  }
-
-  bool started = false;
-  {
-    AutoLockHelperThreadState lock;
-    freeMallocedBuffersTask->joinWithLockHeld(lock);
-    freeMallocedBuffersTask->transferBuffersToFree(mallocedBuffers, lock);
-    if (CanUseExtraThreads()) {
-      started = freeMallocedBuffersTask->startWithLockHeld(lock);
-    }
-  }
-
-  if (!started) {
-    freeMallocedBuffersTask->runFromMainThread(runtime());
-  }
-
-  MOZ_ASSERT(mallocedBuffers.empty());
-}
-
-void js::Nursery::waitBackgroundFreeEnd() {
-  // We may finishRoots before nursery init if runtime init fails.
-  if (!isEnabled()) {
-    return;
-  }
-
-  MOZ_ASSERT(freeMallocedBuffersTask);
-  freeMallocedBuffersTask->join();
 }
 
 void js::Nursery::sweep(JSTracer* trc) {
