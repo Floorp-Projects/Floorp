@@ -197,7 +197,7 @@ already_AddRefed<MediaDataDecoder> PDMFactory::CreateDecoder(
   }
 
   const TrackInfo& config = aParams.mConfig;
-  bool isEncrypted = mEMEPDM && config.mCrypto.mValid;
+  bool isEncrypted = mEMEPDM && config.mCrypto.IsEncrypted();
 
   if (isEncrypted) {
     return CreateDecoderWithPDM(mEMEPDM, aParams);
