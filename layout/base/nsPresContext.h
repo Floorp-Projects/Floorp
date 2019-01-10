@@ -476,12 +476,6 @@ class nsPresContext : public nsISupports,
     }
   }
 
-  bool ShouldFireResizeEvent() const {
-    return !mLastResizeEventVisibleArea.IsEqualEdges(mVisibleArea);
-  }
-
-  void WillFireResizeEvent() { mLastResizeEventVisibleArea = mVisibleArea; }
-
   /**
    * Return true if this presentation context is a paginated
    * context.
@@ -1312,7 +1306,6 @@ class nsPresContext : public nsISupports,
   mozilla::UniquePtr<gfxMissingFontRecorder> mMissingFonts;
 
   nsRect mVisibleArea;
-  nsRect mLastResizeEventVisibleArea;
   nsSize mPageSize;
   float mPageScale;
   float mPPScale;
