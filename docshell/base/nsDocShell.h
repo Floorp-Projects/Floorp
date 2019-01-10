@@ -284,6 +284,8 @@ class nsDocShell final : public nsDocLoader,
   void SetInFrameSwap(bool aInSwap) { mInFrameSwap = aInSwap; }
   bool InFrameSwap();
 
+  void SetIsFrame() { mIsFrame = true; };
+
   const mozilla::Encoding* GetForcedCharset() { return mForcedCharset; }
 
   mozilla::HTMLEditor* GetHTMLEditorInternal();
@@ -1154,6 +1156,8 @@ class nsDocShell final : public nsDocLoader,
 
   // This flag indicates when the title is valid for the current URI.
   bool mTitleValidForCurrentURI : 1;
+
+  bool mIsFrame : 1;
 };
 
 #endif /* nsDocShell_h__ */
