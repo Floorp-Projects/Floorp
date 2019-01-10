@@ -319,11 +319,7 @@ class Assembler : public vixl::Assembler {
   static uint32_t NopSize() { return 4; }
 
   static void PatchWrite_NearCall(CodeLocationLabel start,
-                                  CodeLocationLabel toCall) {
-    Instruction* dest = (Instruction*)start.raw();
-    // printf("patching %p with call to %p\n", start.raw(), toCall.raw());
-    bl(dest, ((Instruction*)toCall.raw() - dest) >> 2);
-  }
+                                  CodeLocationLabel toCall);
   static void PatchDataWithValueCheck(CodeLocationLabel label,
                                       PatchedImmPtr newValue,
                                       PatchedImmPtr expected);
