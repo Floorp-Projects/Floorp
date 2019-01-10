@@ -18,3 +18,5 @@ Provides an assortment of synchronisation primitives.
   :members:
 
 .. js:autofunction:: waitForEvent
+
+.. js:autofunction:: waitForMessage
