@@ -43,9 +43,9 @@ add_task(function test_logins_decrypt_failure()
   Assert.equal(Services.logins.findLogins({}, "", "", "").length, 0);
   Assert.equal(Services.logins.searchLogins({}, newPropertyBag()).length, 0);
   Assert.throws(() => Services.logins.modifyLogin(logins[0], newPropertyBag()),
-                      /No matching logins/);
+                /No matching logins/);
   Assert.throws(() => Services.logins.removeLogin(logins[0]),
-                      /No matching logins/);
+                /No matching logins/);
 
   // The function that counts logins sees the non-decryptable entries also.
   Assert.equal(Services.logins.countLogins("", "", ""), logins.length);
@@ -91,8 +91,8 @@ add_task(function test_add_logins_with_decrypt_failure()
 
   // A different login but with the same GUID.
   let loginDupeGuid = new LoginInfo("http://www.example3.com", "http://www.example3.com", null,
-                                   "the username", "the password",
-                                   "form_field_username", "form_field_password");
+                                    "the username", "the password",
+                                    "form_field_username", "form_field_password");
   loginDupeGuid.QueryInterface(Ci.nsILoginMetaInfo);
   loginDupeGuid.guid = login.guid;
 

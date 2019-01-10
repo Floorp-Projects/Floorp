@@ -241,8 +241,8 @@ LoginManagerPrompter.prototype = {
 
   classID: Components.ID("{8aa66d77-1bbb-45a6-991e-b8f47751c291}"),
   QueryInterface: ChromeUtils.generateQI([Ci.nsIAuthPrompt,
-                                           Ci.nsIAuthPrompt2,
-                                           Ci.nsILoginManagerPrompter]),
+                                          Ci.nsIAuthPrompt2,
+                                          Ci.nsILoginManagerPrompter]),
 
   _factory: null,
   _chromeWindow: null,
@@ -253,7 +253,7 @@ LoginManagerPrompter.prototype = {
   get _strBundle() {
     if (!this.__strBundle) {
       this.__strBundle = Services.strings.createBundle(
-                  "chrome://passwordmgr/locale/passwordmgr.properties");
+        "chrome://passwordmgr/locale/passwordmgr.properties");
       if (!this.__strBundle)
         throw new Error("String bundle for Login Manager not present!");
     }
@@ -268,7 +268,7 @@ LoginManagerPrompter.prototype = {
       this.__ellipsis = "\u2026";
       try {
         this.__ellipsis = Services.prefs.getComplexValue(
-                            "intl.ellipsis", Ci.nsIPrefLocalizedString).data;
+          "intl.ellipsis", Ci.nsIPrefLocalizedString).data;
       } catch (e) { }
     }
     return this.__ellipsis;
@@ -300,7 +300,7 @@ LoginManagerPrompter.prototype = {
    * doesn't really make sense and therefore isn't implemented.
    */
   prompt(aDialogTitle, aText, aPasswordRealm,
-                    aSavePassword, aDefaultText, aResult) {
+         aSavePassword, aDefaultText, aResult) {
     if (aSavePassword != Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER)
       throw new Components.Exception("prompt only supports SAVE_PASSWORD_NEVER",
                                      Cr.NS_ERROR_NOT_IMPLEMENTED);
@@ -312,7 +312,7 @@ LoginManagerPrompter.prototype = {
     }
 
     return Services.prompt.prompt(this._chromeWindow,
-           aDialogTitle, aText, aResult, null, {});
+                                  aDialogTitle, aText, aResult, null, {});
   },
 
 
@@ -321,7 +321,7 @@ LoginManagerPrompter.prototype = {
    * with a dialog, even if a username and password are found.
    */
   promptUsernameAndPassword(aDialogTitle, aText, aPasswordRealm,
-                                       aSavePassword, aUsername, aPassword) {
+                            aSavePassword, aUsername, aPassword) {
     this.log("===== promptUsernameAndPassword() called =====");
 
     if (aSavePassword == Ci.nsIAuthPrompt.SAVE_PASSWORD_FOR_SESSION)
@@ -374,8 +374,8 @@ LoginManagerPrompter.prototype = {
     }
 
     var ok = Services.prompt.promptUsernameAndPassword(this._chromeWindow,
-                aDialogTitle, aText, aUsername, aPassword,
-                checkBoxLabel, checkBox);
+                                                       aDialogTitle, aText, aUsername, aPassword,
+                                                       checkBoxLabel, checkBox);
 
     if (!ok || !checkBox.value || !hostname)
       return ok;
@@ -422,7 +422,7 @@ LoginManagerPrompter.prototype = {
    * allows it, then the password will be saved in the database.
    */
   promptPassword(aDialogTitle, aText, aPasswordRealm,
-                            aSavePassword, aPassword) {
+                 aSavePassword, aPassword) {
     this.log("===== promptPassword called() =====");
 
     if (aSavePassword == Ci.nsIAuthPrompt.SAVE_PASSWORD_FOR_SESSION)
@@ -562,7 +562,7 @@ LoginManagerPrompter.prototype = {
       if (foundLogins.length > 0) {
         selectedLogin = foundLogins[0];
         this._SetAuthInfo(aAuthInfo, selectedLogin.username,
-                                     selectedLogin.password);
+                          selectedLogin.password);
 
         // Allow automatic proxy login
         if (aAuthInfo.flags & Ci.nsIAuthInformation.AUTH_PROXY &&
@@ -756,8 +756,8 @@ LoginManagerPrompter.prototype = {
 
     this.log("Adding new " + aName + " notification bar");
     var newBar = aNotifyBox.appendNotification(
-                            aText, aName, "",
-                            priority, aButtons);
+      aText, aName, "",
+      priority, aButtons);
 
     // The page we're going to hasn't loaded yet, so we want to persist
     // across the first location change.
@@ -1078,9 +1078,8 @@ LoginManagerPrompter.prototype = {
           this._getLocalizedString("notifyBarRememberPasswordButtonAccessKey");
 
     var displayHost = this._getShortDisplayHost(aLogin.hostname);
-    var notificationText = this._getLocalizedString(
-                                  "rememberPasswordMsgNoUsername",
-                                  [displayHost]);
+    var notificationText = this._getLocalizedString("rememberPasswordMsgNoUsername",
+                                                    [displayHost]);
 
     // Notification is a PopupNotification
     if (aNotifyObj == this._getPopupNote()) {
@@ -1166,23 +1165,17 @@ LoginManagerPrompter.prototype = {
     var dialogText;
     if (aLogin.username) {
       var displayUser = this._sanitizeUsername(aLogin.username);
-      dialogText = this._getLocalizedString(
-                           "rememberPasswordMsg",
-                           [displayUser, displayHost]);
+      dialogText = this._getLocalizedString("rememberPasswordMsg",
+                                            [displayUser, displayHost]);
     } else {
-      dialogText = this._getLocalizedString(
-                           "rememberPasswordMsgNoUsername",
-                           [displayHost]);
+      dialogText = this._getLocalizedString("rememberPasswordMsgNoUsername",
+                                            [displayHost]);
 
     }
-    var dialogTitle        = this._getLocalizedString(
-                                    "savePasswordTitle");
-    var neverButtonText    = this._getLocalizedString(
-                                    "neverForSiteButtonText");
-    var rememberButtonText = this._getLocalizedString(
-                                    "rememberButtonText");
-    var notNowButtonText   = this._getLocalizedString(
-                                    "notNowButtonText");
+    var dialogTitle        = this._getLocalizedString("savePasswordTitle");
+    var neverButtonText    = this._getLocalizedString("neverForSiteButtonText");
+    var rememberButtonText = this._getLocalizedString("rememberButtonText");
+    var notNowButtonText   = this._getLocalizedString("notNowButtonText");
 
     this.log("Prompting user to save/ignore login");
     var userChoice = Services.prompt.confirmEx(this._chromeWindow,
@@ -1306,15 +1299,12 @@ LoginManagerPrompter.prototype = {
 
     var dialogText;
     if (aOldLogin.username)
-      dialogText  = this._getLocalizedString(
-                              "updatePasswordMsg",
-                              [aOldLogin.username]);
+      dialogText  = this._getLocalizedString("updatePasswordMsg",
+                                             [aOldLogin.username]);
     else
-      dialogText  = this._getLocalizedString(
-                              "updatePasswordMsgNoUser");
+      dialogText  = this._getLocalizedString("updatePasswordMsgNoUser");
 
-    var dialogTitle = this._getLocalizedString(
-                                "passwordChangeTitle");
+    var dialogTitle = this._getLocalizedString("passwordChangeTitle");
 
     // returns 0 for yes, 1 for no.
     var ok = !Services.prompt.confirmEx(this._chromeWindow,
@@ -1509,7 +1499,7 @@ LoginManagerPrompter.prototype = {
   _getLocalizedString(key, formatArgs) {
     if (formatArgs)
       return this._strBundle.formatStringFromName(
-                                  key, formatArgs, formatArgs.length);
+        key, formatArgs, formatArgs.length);
     return this._strBundle.GetStringFromName(key);
   },
 

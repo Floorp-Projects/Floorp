@@ -59,10 +59,10 @@ let signonReloadDisplay = {
 
 // Formatter for localization.
 let dateFormatter = new Services.intl.DateTimeFormat(undefined,
-                      { dateStyle: "medium" });
+                                                     { dateStyle: "medium" });
 let dateAndTimeFormatter = new Services.intl.DateTimeFormat(undefined,
-                             { dateStyle: "medium",
-                               timeStyle: "short" });
+                                                            { dateStyle: "medium",
+                                                              timeStyle: "short" });
 
 function Startup() {
   // be prepared to reload the display if anything changes
@@ -195,7 +195,7 @@ let signonsTreeView = {
     }
 
     if (col.id == "userCol") {
-     _editLogin("username");
+      _editLogin("username");
 
     } else if (col.id == "passwordCol") {
       if (!value) {
@@ -380,10 +380,10 @@ function DeleteAllSignons() {
   // Confirm the user wants to remove all passwords
   let dummy = { value: false };
   if (Services.prompt.confirmEx(window,
-    kSignonBundle.getString("removeAllPasswordsTitle"),
-    kSignonBundle.getString("removeAllPasswordsPrompt"),
-    Services.prompt.STD_YES_NO_BUTTONS + Services.prompt.BUTTON_POS_1_DEFAULT,
-    null, null, null, null, dummy) == 1) // 1 == "No" button
+                                kSignonBundle.getString("removeAllPasswordsTitle"),
+                                kSignonBundle.getString("removeAllPasswordsPrompt"),
+                                Services.prompt.STD_YES_NO_BUTTONS + Services.prompt.BUTTON_POS_1_DEFAULT,
+                                null, null, null, null, dummy) == 1) // 1 == "No" button
     return;
 
   let syncNeeded = signonsTreeView._filterSet.length != 0;
@@ -435,9 +435,9 @@ function AskUserShowPasswords() {
 
   // Confirm the user wants to display passwords
   return Services.prompt.confirmEx(window,
-          null,
-          kSignonBundle.getString("noMasterPasswordPrompt"), Services.prompt.STD_YES_NO_BUTTONS,
-          null, null, null, null, dummy) == 0; // 0=="Yes" button
+                                   null,
+                                   kSignonBundle.getString("noMasterPasswordPrompt"), Services.prompt.STD_YES_NO_BUTTONS,
+                                   null, null, null, null, dummy) == 0; // 0=="Yes" button
 }
 
 function FinalizeSignonDeletions(syncNeeded) {
@@ -714,7 +714,7 @@ function masterPasswordLogin(noPasswordCallback) {
   try {
     // Relogin and ask for the master password.
     token.login(true); // 'true' means always prompt for token password. User will be prompted until
-                        // clicking 'Cancel' or entering the correct password.
+    // clicking 'Cancel' or entering the correct password.
   } catch (e) {
     // An exception will be thrown if the user cancels the login prompt dialog.
     // User is also logged out of Software Security Device.

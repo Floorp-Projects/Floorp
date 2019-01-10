@@ -183,25 +183,25 @@ password-only, the other is username+password)
 /** Test for Login Manager: password-only logins **/
 function startTest() {
 
-    checkForm(1, "1234");
-    checkForm(2, "1234", "");
-    checkForm(3, "1234", "", "");
-    checkUnmodifiedForm(4);
+  checkForm(1, "1234");
+  checkForm(2, "1234", "");
+  checkForm(3, "1234", "", "");
+  checkUnmodifiedForm(4);
 
-    checkForm(5, "", "1234");
-    checkForm(6, "someuser", "");
+  checkForm(5, "", "1234");
+  checkForm(6, "someuser", "");
 
-    checkForm(7, "testuser", "testpass");
-    checkForm(8, "someuser", "");
+  checkForm(7, "testuser", "testpass");
+  checkForm(8, "someuser", "");
 
-    checkForm(9, "", "1234");
-    checkForm(10, "", "1234");
-    checkForm(11, "", "1234");
+  checkForm(9, "", "1234");
+  checkForm(10, "", "1234");
+  checkForm(11, "", "1234");
 
-    checkUnmodifiedForm(12);
-    checkUnmodifiedForm(13);
+  checkUnmodifiedForm(12);
+  checkUnmodifiedForm(13);
 
-    SimpleTest.finish();
+  SimpleTest.finish();
 }
 </script>
 </pre>

@@ -180,7 +180,7 @@ add_task(function test_searchLogins()
 add_task(function test_searchLogins_invalid()
 {
   Assert.throws(() => Services.logins.searchLogins({},
-                                      newPropertyBag({ username: "value" })),
+                                                   newPropertyBag({ username: "value" })),
                 /Unexpected field/);
 });
 

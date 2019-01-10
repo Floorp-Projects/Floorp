@@ -25,7 +25,7 @@ matchingLogins.push(new nsLoginInfo("http://mochi.test:8888", "http://autocomple
 
 let meta = matchingLogins[0].QueryInterface(Ci.nsILoginMetaInfo);
 let dateAndTimeFormatter = new Services.intl.DateTimeFormat(undefined,
-                            { dateStyle: "medium" });
+                                                            { dateStyle: "medium" });
 let time = dateAndTimeFormatter.format(new Date(meta.timePasswordChanged));
 const LABEL_NO_USERNAME = "No username (" + time + ")";
 
@@ -476,13 +476,13 @@ add_task(async function test_all_patterns() {
 
     if (pattern.items.length != 0) {
       Assert.throws(() => actual.getValueAt(pattern.items.length),
-        /Index out of range\./);
+                    /Index out of range\./);
 
       Assert.throws(() => actual.getLabelAt(pattern.items.length),
-        /Index out of range\./);
+                    /Index out of range\./);
 
       Assert.throws(() => actual.removeValueAt(pattern.items.length, true),
-        /Index out of range\./);
+                    /Index out of range\./);
     }
   });
 });
