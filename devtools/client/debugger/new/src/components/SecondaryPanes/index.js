@@ -186,7 +186,7 @@ class SecondaryPanes extends Component<Props, State> {
     buttons.push(
       debugBtn(
         evt => {
-          if (prefs.expressionsVisible) {
+          if (prefs.xhrBreakpointsVisible) {
             evt.stopPropagation();
           }
           this.setState({ showXHRInput: true });

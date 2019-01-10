@@ -8,7 +8,6 @@ import Breakpoint from "./Breakpoint";
 
 import { getSelectedSource, getFirstVisibleBreakpoints } from "../../selectors";
 import { makeLocationId } from "../../utils/breakpoint";
-import { isLoaded } from "../../utils/source";
 import { connect } from "../../utils/connect";
 
 import type { Breakpoint as BreakpointType, Source } from "../../types";
@@ -20,18 +19,10 @@ type Props = {
 };
 
 class Breakpoints extends Component<Props> {
-  shouldComponentUpdate(nextProps: Props) {
-    if (nextProps.selectedSource && !isLoaded(nextProps.selectedSource)) {
-      return false;
-    }
-
-    return true;
-  }
-
   render() {
     const { breakpoints, selectedSource, editor } = this.props;
 
-    if (!selectedSource || !breakpoints || selectedSource.isBlackBoxed) {
+    if (!breakpoints || selectedSource.isBlackBoxed) {
       return null;
     }
 

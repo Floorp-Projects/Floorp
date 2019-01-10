@@ -17,6 +17,12 @@ function do_register_cleanup() {
  */
 
 function run_test() {
+  // The limit on the number of fields in a GCMajor object.
+  const limit = 24;
+
+  // The number of fields that the make_gc() test function generates.
+  const make_gc_fields = 19;
+
   // Test initialisation
   Assert.ok(GCTelemetry.init(), "Initialize success");
   Assert.ok(!GCTelemetry.init(), "Wont initialize twice");
@@ -30,7 +36,7 @@ function run_test() {
   GCTelemetry.observeRaw(make_gc());
   // Get it back.
   assert_num_entries(1, false);
-  Assert.equal(19, Object.keys(get_entry()).length);
+  Assert.equal(make_gc_fields, Object.keys(get_entry()).length);
   // "true" will cause the entry to be clared.
   assert_num_entries(1, true);
   // There are currently no entries.
@@ -47,23 +53,24 @@ function run_test() {
   assert_num_entries(1, true);
   assert_num_entries(0, false);
 
-  // Exactly the limit of fields.
-  let my_gc_24 = make_gc();
-  for (let i = 0; i < 5; i++) {
-      my_gc_24["new_property_" + i] = "Data";
+  let my_gc_exact = make_gc();
+  Assert.equal(make_gc_fields, Object.keys(my_gc_exact).length);
+
+  for (let i = 0; i < limit - make_gc_fields; i++) {
+      my_gc_exact["new_property_" + i] = "Data";
   }
-  GCTelemetry.observeRaw(my_gc_24);
-  // Assert that it was recorded has all 24 fields.
-  Assert.equal(24, Object.keys(get_entry()).length);
+  GCTelemetry.observeRaw(my_gc_exact);
+  // Assert that it was recorded has all the fields.
+  Assert.equal(limit, Object.keys(get_entry()).length);
   assert_num_entries(1, true);
   assert_num_entries(0, false);
 
   // Exactly too many fields.
-  let my_gc_25 = make_gc();
-  for (let i = 0; i < 6; i++) {
-      my_gc_25["new_property_" + i] = "Data";
+  let my_gc_too_many = make_gc();
+  for (let i = 0; i < limit - make_gc_fields + 1; i++) {
+      my_gc_too_many["new_property_" + i] = "Data";
   }
-  GCTelemetry.observeRaw(my_gc_25);
+  GCTelemetry.observeRaw(my_gc_too_many);
   // Assert that it was recorded but has only 7 fields.
   Assert.equal(7, Object.keys(get_entry()).length);
   assert_num_entries(1, true);
