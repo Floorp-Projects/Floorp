@@ -106,19 +106,14 @@ class ChunkPool {
 };
 
 class BackgroundSweepTask : public GCParallelTaskHelper<BackgroundSweepTask> {
-  using Base = GCParallelTaskHelper<BackgroundSweepTask>;
-
-  HelperThreadLockData<bool> done;
-
  public:
-  explicit BackgroundSweepTask(JSRuntime* rt);
+  explicit BackgroundSweepTask(JSRuntime* rt) : GCParallelTaskHelper(rt) {}
+  void run();
+};
 
-  bool isRunning() const;
-  bool isRunningWithLockHeld(const AutoLockHelperThreadState& lock) const;
-
-  void startIfIdle(AutoLockHelperThreadState& lock);
-  void runFromMainThread(JSRuntime* rt);
-
+class BackgroundFreeTask : public GCParallelTaskHelper<BackgroundFreeTask> {
+ public:
+  explicit BackgroundFreeTask(JSRuntime* rt) : GCParallelTaskHelper(rt) {}
   void run();
 };
 
@@ -319,6 +314,7 @@ class GCRuntime {
     waitBackgroundSweepEnd();
     allocTask.cancelAndWait();
   }
+  void waitBackgroundFreeEnd();
 
   void lockGC() { lock.lock(); }
 
@@ -475,9 +471,11 @@ class GCRuntime {
   bool isVerifyPreBarriersEnabled() const { return false; }
 #endif
 
-  // Free certain LifoAlloc blocks when it is safe to do so.
-  void freeUnusedLifoBlocksAfterSweeping(LifoAlloc* lifo);
-  void freeAllLifoBlocksAfterSweeping(LifoAlloc* lifo);
+  // Queue memory memory to be freed on a background thread if possible.
+  void queueUnusedLifoBlocksForFree(LifoAlloc* lifo);
+  void queueAllLifoBlocksForFree(LifoAlloc* lifo);
+  void queueAllLifoBlocksForFreeAfterMinorGC(LifoAlloc* lifo);
+  void queueBuffersForFreeAfterMinorGC(Nursery::BufferSet& buffers);
 
   // Public here for ReleaseArenaLists and FinalizeTypedArenas.
   void releaseArena(Arena* arena, const AutoLockGC& lock);
@@ -601,6 +599,7 @@ class GCRuntime {
                              const mozilla::TimeStamp& currentTime,
                              JS::gcreason::Reason reason,
                              bool canAllocateMoreCode);
+  void startBackgroundFreeAfterMinorGC();
   void traceRuntimeForMajorGC(JSTracer* trc, AutoGCSession& session);
   void traceRuntimeAtoms(JSTracer* trc, const AutoAccessAtomsZone& atomsAccess);
   void traceKeptAtoms(JSTracer* trc);
@@ -648,9 +647,10 @@ class GCRuntime {
   void sweepZones(FreeOp* fop, bool destroyingRuntime);
   void decommitAllWithoutUnlocking(const AutoLockGC& lock);
   void startDecommit();
-  void queueZonesForBackgroundSweep(ZoneList& zones);
-  void maybeStartBackgroundSweep(AutoLockHelperThreadState& lock);
+  void queueZonesAndStartBackgroundSweep(ZoneList& zones);
   void sweepFromBackgroundThread(AutoLockHelperThreadState& lock);
+  void startBackgroundFree();
+  void freeFromBackgroundThread(AutoLockHelperThreadState& lock);
   void sweepBackgroundThings(ZoneList& zones, LifoAlloc& freeBlocks);
   void assertBackgroundSweepingFinished();
   bool shouldCompact();
@@ -863,10 +863,12 @@ class GCRuntime {
   HelperThreadLockData<ZoneList> backgroundSweepZones;
 
   /*
-   * Free LIFO blocks are transferred to this allocator before being freed on
-   * the background GC thread after sweeping.
+   * Free LIFO blocks are transferred to these allocators before being freed on
+   * a background thread.
    */
-  HelperThreadLockData<LifoAlloc> blocksToFreeAfterSweeping;
+  HelperThreadLockData<LifoAlloc> lifoBlocksToFree;
+  MainThreadData<LifoAlloc> lifoBlocksToFreeAfterMinorGC;
+  HelperThreadLockData<Nursery::BufferSet> buffersToFreeAfterMinorGC;
 
   /* Index of current sweep group (for stats). */
   MainThreadData<unsigned> sweepGroupIndex;
@@ -1005,9 +1007,11 @@ class GCRuntime {
   js::Mutex lock;
 
   friend class BackgroundSweepTask;
+  friend class BackgroundFreeTask;
 
   BackgroundAllocTask allocTask;
   BackgroundSweepTask sweepTask;
+  BackgroundFreeTask freeTask;
   BackgroundDecommitTask decommitTask;
 
   /*
@@ -1023,10 +1027,6 @@ class GCRuntime {
  public:
   Nursery& nursery() { return nursery_.ref(); }
   gc::StoreBuffer& storeBuffer() { return storeBuffer_.ref(); }
-
-  // Free LIFO blocks are transferred to this allocator before being freed
-  // after minor GC.
-  MainThreadData<LifoAlloc> blocksToFreeAfterMinorGC;
 
   void* addressOfNurseryPosition() {
     return nursery_.refNoCheck().addressOfPosition();
@@ -1047,7 +1047,6 @@ class GCRuntime {
   void evictNursery(JS::gcreason::Reason reason = JS::gcreason::EVICT_NURSERY) {
     minorGC(reason, gcstats::PhaseKind::EVICT_NURSERY);
   }
-  void freeAllLifoBlocksAfterMinorGC(LifoAlloc* lifo);
 
   friend class MarkingValidator;
   friend class AutoEnterIteration;
