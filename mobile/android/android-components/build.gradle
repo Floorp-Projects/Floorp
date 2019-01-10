@@ -187,16 +187,5 @@ task ktlint(type: JavaExec, group: "verification") {
     args "components/**/*.kt" , "samples/**/*.kt", "!**/build", "buildSrc/**/*.kt"
 }
 
-task printModules {
-    doLast {
-        def modules = subprojects.collect { p -> [
-            name: p.path.toString(),
-            buildPath: p.buildDir.toString(),
-            shouldPublish: p.ext.shouldPublish
-        ] }
-        println "modules: " + groovy.json.JsonOutput.toJson(modules)
-    }
-}
-
 apply plugin: GVNightlyVersionVerifierPlugin
 apply plugin: GitHubPlugin

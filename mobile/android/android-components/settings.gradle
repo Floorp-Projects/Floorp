@@ -14,24 +14,17 @@ buildscript {
     }
 }
 
-def setupProject(name, path, description, shouldPublish) {
+def setupProject(name, path, description) {
     settings.include(":$name")
 
     project(":$name").projectDir = new File(rootDir, path)
 
-    if (!gradle.ext.has('componentDescriptions')) {
-        gradle.ext.set('componentDescriptions', [:])
-    }
-
-    // TODO instead of using global "componentDescriptions" map, attach description to "project.ext"
-    gradle.ext.componentDescriptions[name] = description
-
     // project(...) gives us a skeleton project that we can't set ext.* on
-    gradle.afterProject { project ->
+    gradle.beforeProject { project ->
         // However, the "afterProject" listener iterates over every project and gives us the actual project
         // So, once we filter for the project we care about, we can set whatever we want
         if (project.name == name) {
-            project.ext.shouldPublish = shouldPublish
+            project.ext.description = description
         }
     }
 }
@@ -39,7 +32,7 @@ def setupProject(name, path, description, shouldPublish) {
 def yaml = new Yaml()
 def buildconfig = yaml.load(new File(rootDir, '.buildconfig.yml').newInputStream())
 buildconfig.projects.each { project ->
-    setupProject(project.key, project.value.path, project.value.description, project.value.shouldPublish)
+    setupProject(project.key, project.value.path, project.value.description)
 }
 
 gradle.projectsLoaded { ->
