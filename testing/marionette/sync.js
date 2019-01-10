@@ -92,14 +92,14 @@ function executeSoon(func) {
  *       } else {
  *         reject([]);
  *       }
- *     });
+ *     }, {timeout: 1000});
  *
  * @param {Condition} func
  *     Function to run off the main thread.
- * @param {number=} [timeout=2000] timeout
- *     Desired timeout.  If 0 or less than the runtime evaluation
+ * @param {number=} [timeout] timeout
+ *     Desired timeout if wanted.  If 0 or less than the runtime evaluation
  *     time of ``func``, ``func`` is guaranteed to run at least once.
- *     The default is 2000 milliseconds.
+ *     Defaults to using no timeout.
  * @param {number=} [interval=10] interval
  *     Duration between each poll of ``func`` in milliseconds.
  *     Defaults to 10 milliseconds.
@@ -115,23 +115,30 @@ function executeSoon(func) {
  * @throws {RangeError}
  *     If `timeout` or `interval` are not unsigned integers.
  */
-function PollPromise(func, {timeout = 2000, interval = 10} = {}) {
+function PollPromise(func, {timeout = null, interval = 10} = {}) {
   const timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
 
   if (typeof func != "function") {
     throw new TypeError();
   }
-  if (!(typeof timeout == "number" && typeof interval == "number")) {
+  if (timeout != null && typeof timeout != "number") {
     throw new TypeError();
   }
-  if ((!Number.isInteger(timeout) || timeout < 0) ||
+  if (typeof interval != "number") {
+    throw new TypeError();
+  }
+  if ((timeout && (!Number.isInteger(timeout) || timeout < 0)) ||
       (!Number.isInteger(interval) || interval < 0)) {
     throw new RangeError();
   }
 
   return new Promise((resolve, reject) => {
-    const start = new Date().getTime();
-    const end = start + timeout;
+    let start, end;
+
+    if (Number.isInteger(timeout)) {
+      start = new Date().getTime();
+      end = start + timeout;
+    }
 
     let evalFn = () => {
       new Promise(func).then(resolve, rejected => {
@@ -139,9 +146,10 @@ function PollPromise(func, {timeout = 2000, interval = 10} = {}) {
           throw rejected;
         }
 
-        // return if timeout is 0, allowing |func| to be evaluated at
-        // least once
-        if (start == end || new Date().getTime() >= end) {
+        // return if there is a timeout and set to 0,
+        // allowing |func| to be evaluated at least once
+        if (typeof end != "undefined" &&
+            (start == end || new Date().getTime() >= end)) {
           resolve(rejected);
         }
       }).catch(reject);
