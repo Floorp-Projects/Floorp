@@ -268,14 +268,14 @@ CSPService::AsyncOnChannelRedirect(nsIChannel *oldChannel,
 
   nsCOMPtr<nsILoadInfo> loadInfo = oldChannel->GetLoadInfo();
 
-  nsCOMPtr<nsICSPEventListener> cspEventListener;
-  rv = loadInfo->GetCspEventListener(getter_AddRefs(cspEventListener));
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // if no loadInfo on the channel, nothing for us to do
   if (!loadInfo) {
     return NS_OK;
   }
+
+  nsCOMPtr<nsICSPEventListener> cspEventListener;
+  rv = loadInfo->GetCspEventListener(getter_AddRefs(cspEventListener));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // No need to continue processing if CSP is disabled or if the protocol
   // is *not* subject to CSP.
