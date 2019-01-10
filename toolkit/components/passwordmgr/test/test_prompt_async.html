@@ -39,8 +39,9 @@
           QueryInterface(iid) {
             const interfaces = [Ci.nsIObserver, Ci.nsISupports];
 
-            if (!interfaces.some( function(v) { return iid.equals(v); } ))
+            if (!interfaces.some((v) => iid.equals(v))) {
               throw SpecialPowers.Cr.NS_ERROR_NO_INTERFACE;
+            }
             return this;
           },
 
@@ -108,8 +109,9 @@
 
         function finishTest() {
           ok(true, "finishTest removing testing logins...");
-          for (i in logins)
+          for (i in logins) {
             pwmgr.removeLogin(logins[i]);
+          }
 
           var authMgr = SpecialPowers.Cc["@mozilla.org/network/http-auth-manager;1"]
                                      .getService(Ci.nsIHttpAuthManager);
@@ -123,8 +125,9 @@
           QueryInterface(iid) {
             const interfaces = [Ci.nsIProtocolProxyCallback, Ci.nsISupports];
 
-            if (!interfaces.some( function(v) { return iid.equals(v); } ))
+            if (!interfaces.some(v => iid.equals(v))) {
               throw SpecialPowers.Cr.NS_ERROR_NO_INTERFACE;
+            }
             return this;
           },
 
@@ -165,8 +168,7 @@
 
         var expectedLoads;
         var expectedDialogs;
-        function onFrameLoad()
-        {
+        function onFrameLoad() {
           if (--expectedLoads == 0) {
             // All pages expected to load has loaded, continue with the next test
             ok(true, "Expected frames loaded");
@@ -179,8 +181,7 @@
           }
         }
 
-        function doTest(testNumber)
-        {
+        function doTest(testNumber) {
           /*
              * These contentDocument variables are located here,
              * rather than in the global scope, because SpecialPowers threw
@@ -193,8 +194,7 @@
           var exampleCom = "http://example.com/tests/toolkit/components/passwordmgr/test/";
           var exampleOrg = "http://example.org/tests/toolkit/components/passwordmgr/test/";
 
-          switch (testNumber)
-          {
+          switch (testNumber) {
             case 1:
               // Load through a single proxy with authentication required 3 different
               // pages, first with one login, other two with their own different login.
@@ -346,12 +346,10 @@
           startCallbackTimer();
         }
 
-        function handleDialog(doc, testNumber)
-        {
+        function handleDialog(doc, testNumber) {
           var dialog        = doc.getElementById("commonDialog");
 
-          switch (testNumber)
-          {
+          switch (testNumber) {
             case 1:
             case 2:
               dialog.acceptDialog();
@@ -363,10 +361,11 @@
               break;
 
             case 4:
-              if (expectedDialogs == 2)
+              if (expectedDialogs == 2) {
                 dialog.acceptDialog();
-              else
+              } else {
                 dialog.cancelDialog();
+              }
               break;
 
             case 5:
@@ -375,10 +374,11 @@
               break;
 
             case 6:
-              if (expectedDialogs == 2)
+              if (expectedDialogs == 2) {
                 dialog.acceptDialog();
-              else
+              } else {
                 dialog.cancelDialog();
+              }
               break;
 
             case 7:
@@ -386,30 +386,30 @@
               break;
 
             case 8:
-              if (expectedDialogs == 3 || expectedDialogs == 1)
+              if (expectedDialogs == 3 || expectedDialogs == 1) {
                 dialog.acceptDialog();
-              else
+              } else {
                 dialog.cancelDialog();
+              }
               break;
 
             default:
               ok(false, "Unhandled testNum " + testNumber + " in handleDialog");
           }
 
-          if (--expectedDialogs > 0)
+          if (--expectedDialogs > 0) {
             startCallbackTimer();
+          }
         }
 
-        function doCheck(testNumber)
-        {
+        function doCheck(testNumber) {
           var iframe1Doc = SpecialPowers.wrap(iframe1).contentDocument;
           var iframe2aDoc = SpecialPowers.wrap(iframe2a).contentDocument;
           var iframe2bDoc = SpecialPowers.wrap(iframe2b).contentDocument;
           var authok1;
           var proxyok1;
           var footnote;
-          switch (testNumber)
-          {
+          switch (testNumber) {
             case 1:
               ok(true, "doCheck testNum 1");
               is(monitor.windowsRegistered, 3, "Registered 3 open dialogs");

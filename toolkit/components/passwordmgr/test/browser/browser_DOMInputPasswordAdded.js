@@ -10,7 +10,9 @@ const consts = {
 
 function task(contentConsts) {
   let resolve;
-  let promise = new Promise(r => { resolve = r; });
+  let promise = new Promise(r => {
+    resolve = r;
+  });
 
   function unexpectedContentEvent(evt) {
     Assert.ok(false, "Received a " + evt.type + " event on content");

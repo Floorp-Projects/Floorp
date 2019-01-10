@@ -101,5 +101,7 @@ function dumpNotifications() {
     for (let i = 0; i < notes.length; i++) {
       ok(true, "#" + i + ": " + notes[i].getAttribute("value"));
     }
-  } catch (e) { todo(false, "WOAH! " + e); }
+  } catch (e) {
+    todo(false, "WOAH! " + e);
+  }
 }

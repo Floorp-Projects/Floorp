@@ -72,8 +72,9 @@ LoginManagerPromptFactory.prototype = {
 
     // Find the first prompt key we have in the queue
     var hashKey = null;
-    for (hashKey in this._asyncPrompts)
+    for (hashKey in this._asyncPrompts) {
       break;
+    }
 
     if (!hashKey) {
       this.log("_doAsyncPrompt:run bypassed, no prompts in the queue");
@@ -146,10 +147,11 @@ LoginManagerPromptFactory.prototype = {
         }
 
         for (var consumer of prompt.consumers) {
-          if (!consumer.callback)
-            // Not having a callback means that consumer didn't provide it
-            // or canceled the notification
+          if (!consumer.callback) {
+          // Not having a callback means that consumer didn't provide it
+          // or canceled the notification
             continue;
+          }
 
           self.log("Calling back to " + consumer.callback + " ok=" + ok);
           try {
@@ -199,8 +201,9 @@ LoginManagerPromptFactory.prototype = {
       }
 
       for (var consumer of prompt.consumers) {
-        if (!consumer.callback)
+        if (!consumer.callback) {
           continue;
+        }
 
         this.log("Canceling async auth prompt callback " + consumer.callback);
         try {
@@ -254,8 +257,9 @@ LoginManagerPrompter.prototype = {
     if (!this.__strBundle) {
       this.__strBundle = Services.strings.createBundle(
         "chrome://passwordmgr/locale/passwordmgr.properties");
-      if (!this.__strBundle)
+      if (!this.__strBundle) {
         throw new Error("String bundle for Login Manager not present!");
+      }
     }
 
     return this.__strBundle;
@@ -301,9 +305,10 @@ LoginManagerPrompter.prototype = {
    */
   prompt(aDialogTitle, aText, aPasswordRealm,
          aSavePassword, aDefaultText, aResult) {
-    if (aSavePassword != Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER)
+    if (aSavePassword != Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER) {
       throw new Components.Exception("prompt only supports SAVE_PASSWORD_NEVER",
                                      Cr.NS_ERROR_NOT_IMPLEMENTED);
+    }
 
     this.log("===== prompt() called =====");
 
@@ -324,9 +329,10 @@ LoginManagerPrompter.prototype = {
                             aSavePassword, aUsername, aPassword) {
     this.log("===== promptUsernameAndPassword() called =====");
 
-    if (aSavePassword == Ci.nsIAuthPrompt.SAVE_PASSWORD_FOR_SESSION)
+    if (aSavePassword == Ci.nsIAuthPrompt.SAVE_PASSWORD_FOR_SESSION) {
       throw new Components.Exception("promptUsernameAndPassword doesn't support SAVE_PASSWORD_FOR_SESSION",
                                      Cr.NS_ERROR_NOT_IMPLEMENTED);
+    }
 
     var selectedLogin = null;
     var checkBox = { value: false };
@@ -336,16 +342,18 @@ LoginManagerPrompter.prototype = {
     // If hostname is null, we can't save this login.
     if (hostname) {
       var canRememberLogin;
-      if (this._inPrivateBrowsing)
+      if (this._inPrivateBrowsing) {
         canRememberLogin = false;
-      else
+      } else {
         canRememberLogin = (aSavePassword ==
                             Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY) &&
                            Services.logins.getLoginSavingEnabled(hostname);
+      }
 
       // if checkBoxLabel is null, the checkbox won't be shown at all.
-      if (canRememberLogin)
+      if (canRememberLogin) {
         checkBoxLabel = this._getLocalizedString("rememberPassword");
+      }
 
       // Look for existing logins.
       var foundLogins = Services.logins.findLogins({}, hostname, null,
@@ -359,16 +367,18 @@ LoginManagerPrompter.prototype = {
         // If the caller provided a username, try to use it. If they
         // provided only a password, this will try to find a password-only
         // login (or return null if none exists).
-        if (aUsername.value)
+        if (aUsername.value) {
           selectedLogin = this._repickSelectedLogin(foundLogins,
                                                     aUsername.value);
+        }
 
         if (selectedLogin) {
           checkBox.value = true;
           aUsername.value = selectedLogin.username;
           // If the caller provided a password, prefer it.
-          if (!aPassword.value)
+          if (!aPassword.value) {
             aPassword.value = selectedLogin.password;
+          }
         }
       }
     }
@@ -377,8 +387,9 @@ LoginManagerPrompter.prototype = {
                                                        aDialogTitle, aText, aUsername, aPassword,
                                                        checkBoxLabel, checkBox);
 
-    if (!ok || !checkBox.value || !hostname)
+    if (!ok || !checkBox.value || !hostname) {
       return ok;
+    }
 
     if (!aPassword.value) {
       this.log("No password entered, so won't offer to save.");
@@ -425,9 +436,10 @@ LoginManagerPrompter.prototype = {
                  aSavePassword, aPassword) {
     this.log("===== promptPassword called() =====");
 
-    if (aSavePassword == Ci.nsIAuthPrompt.SAVE_PASSWORD_FOR_SESSION)
+    if (aSavePassword == Ci.nsIAuthPrompt.SAVE_PASSWORD_FOR_SESSION) {
       throw new Components.Exception("promptPassword doesn't support SAVE_PASSWORD_FOR_SESSION",
                                      Cr.NS_ERROR_NOT_IMPLEMENTED);
+    }
 
     var checkBox = { value: false };
     var checkBoxLabel = null;
@@ -442,8 +454,9 @@ LoginManagerPrompter.prototype = {
                              Services.logins.getLoginSavingEnabled(hostname);
 
       // if checkBoxLabel is null, the checkbox won't be shown at all.
-      if (canRememberLogin)
+      if (canRememberLogin) {
         checkBoxLabel = this._getLocalizedString("rememberPassword");
+      }
 
       if (!aPassword.value) {
         // Look for existing logins.
@@ -499,14 +512,16 @@ LoginManagerPrompter.prototype = {
    */
   _getRealmInfo(aRealmString) {
     var httpRealm = /^.+ \(.+\)$/;
-    if (httpRealm.test(aRealmString))
+    if (httpRealm.test(aRealmString)) {
       return [null, null, null];
+    }
 
     var uri = Services.io.newURI(aRealmString);
     var pathname = "";
 
-    if (uri.pathQueryRef != "/")
+    if (uri.pathQueryRef != "/") {
       pathname = uri.pathQueryRef;
+    }
 
     var formattedHostname = this._getFormattedHostname(uri);
 
@@ -578,13 +593,15 @@ LoginManagerPrompter.prototype = {
       }
 
       var canRememberLogin = Services.logins.getLoginSavingEnabled(hostname);
-      if (this._inPrivateBrowsing)
+      if (this._inPrivateBrowsing) {
         canRememberLogin = false;
+      }
 
       // if checkboxLabel is null, the checkbox won't be shown at all.
       notifyObj = this._getPopupNote() || this._getNotifyBox();
-      if (canRememberLogin && !notifyObj)
+      if (canRememberLogin && !notifyObj) {
         checkboxLabel = this._getLocalizedString("rememberPassword");
+      }
     } catch (e) {
       // Ignore any errors and display the prompt anyway.
       epicfail = true;
@@ -594,8 +611,9 @@ LoginManagerPrompter.prototype = {
 
     var ok = canAutologin;
     if (!ok) {
-      if (this._chromeWindow)
+      if (this._chromeWindow) {
         PromptUtils.fireDialogEvent(this._chromeWindow, "DOMWillOpenModalDialog", this._browser);
+      }
       ok = Services.prompt.promptAuth(this._chromeWindow,
                                       aChannel, aLevel, aAuthInfo,
                                       checkboxLabel, checkbox);
@@ -606,8 +624,9 @@ LoginManagerPrompter.prototype = {
     // notification box, only save the login if the user set the
     // checkbox to do so.
     var rememberLogin = notifyObj ? canRememberLogin : checkbox.value;
-    if (!ok || !rememberLogin || epicfail)
+    if (!ok || !rememberLogin || epicfail) {
       return ok;
+    }
 
     try {
       var [username, password] = this._GetAuthInfo(aAuthInfo);
@@ -632,18 +651,20 @@ LoginManagerPrompter.prototype = {
         this.log("New login seen for " + username +
                  " @ " + hostname + " (" + httpRealm + ")");
 
-        if (notifyObj)
+        if (notifyObj) {
           this._showSaveLoginNotification(notifyObj, newLogin);
-        else
+        } else {
           Services.logins.addLogin(newLogin);
+        }
       } else if (password != selectedLogin.password) {
         this.log("Updating password for " + username +
                  " @ " + hostname + " (" + httpRealm + ")");
-        if (notifyObj)
+        if (notifyObj) {
           this._showChangeLoginNotification(notifyObj,
                                             selectedLogin, newLogin);
-        else
+        } else {
           this._updateLogin(selectedLogin, newLogin);
+        }
       } else {
         this.log("Login unchanged, no further action needed.");
         this._updateLogin(selectedLogin);
@@ -1128,10 +1149,12 @@ LoginManagerPrompter.prototype = {
 
   _removeLoginNotifications() {
     var popupNote = this._getPopupNote();
-    if (popupNote)
+    if (popupNote) {
       popupNote = popupNote.getNotification("password");
-    if (popupNote)
+    }
+    if (popupNote) {
       popupNote.remove();
+    }
 
     var notifyBox = this._getNotifyBox();
     if (notifyBox) {
@@ -1298,11 +1321,12 @@ LoginManagerPrompter.prototype = {
     const buttonFlags = Ci.nsIPrompt.STD_YES_NO_BUTTONS;
 
     var dialogText;
-    if (aOldLogin.username)
+    if (aOldLogin.username) {
       dialogText  = this._getLocalizedString("updatePasswordMsg",
                                              [aOldLogin.username]);
-    else
+    } else {
       dialogText  = this._getLocalizedString("updatePasswordMsgNoUser");
+    }
 
     var dialogTitle = this._getLocalizedString("passwordChangeTitle");
 
@@ -1478,9 +1502,11 @@ LoginManagerPrompter.prototype = {
    * matching username, or return null.
    */
   _repickSelectedLogin(foundLogins, username) {
-    for (var i = 0; i < foundLogins.length; i++)
-      if (foundLogins[i].username == username)
+    for (var i = 0; i < foundLogins.length; i++) {
+      if (foundLogins[i].username == username) {
         return foundLogins[i];
+      }
+    }
     return null;
   },
 
@@ -1497,9 +1523,10 @@ LoginManagerPrompter.prototype = {
    *
    */
   _getLocalizedString(key, formatArgs) {
-    if (formatArgs)
+    if (formatArgs) {
       return this._strBundle.formatStringFromName(
         key, formatArgs, formatArgs.length);
+    }
     return this._strBundle.GetStringFromName(key);
   },
 
@@ -1554,8 +1581,9 @@ LoginManagerPrompter.prototype = {
       this.log("_getShortDisplayHost couldn't process " + aURIString);
     }
 
-    if (!displayHost)
+    if (!displayHost) {
       displayHost = aURIString;
+    }
 
     return displayHost;
   },
@@ -1572,12 +1600,14 @@ LoginManagerPrompter.prototype = {
     // channel's actual destination.
     if (aAuthInfo.flags & Ci.nsIAuthInformation.AUTH_PROXY) {
       this.log("getAuthTarget is for proxy auth");
-      if (!(aChannel instanceof Ci.nsIProxiedChannel))
+      if (!(aChannel instanceof Ci.nsIProxiedChannel)) {
         throw new Error("proxy auth needs nsIProxiedChannel");
+      }
 
       var info = aChannel.proxyInfo;
-      if (!info)
+      if (!info) {
         throw new Error("proxy auth needs nsIProxyInfo");
+      }
 
       // Proxies don't have a scheme, but we'll use "moz-proxy://"
       // so that it's more obvious what the login is for.
@@ -1587,8 +1617,9 @@ LoginManagerPrompter.prototype = {
                   idnService.convertUTF8toACE(info.host) +
                   ":" + info.port;
       realm = aAuthInfo.realm;
-      if (!realm)
+      if (!realm) {
         realm = hostname;
+      }
 
       return [hostname, realm];
     }
@@ -1599,8 +1630,9 @@ LoginManagerPrompter.prototype = {
     // will be available here. If it wasn't set or wasn't HTTP, we'll use
     // the formatted hostname instead.
     realm = aAuthInfo.realm;
-    if (!realm)
+    if (!realm) {
       realm = hostname;
+    }
 
     return [hostname, realm];
   },
@@ -1617,10 +1649,11 @@ LoginManagerPrompter.prototype = {
     var username, password;
 
     var flags = aAuthInfo.flags;
-    if (flags & Ci.nsIAuthInformation.NEED_DOMAIN && aAuthInfo.domain)
+    if (flags & Ci.nsIAuthInformation.NEED_DOMAIN && aAuthInfo.domain) {
       username = aAuthInfo.domain + "\\" + aAuthInfo.username;
-    else
+    } else {
       username = aAuthInfo.username;
+    }
 
     password = aAuthInfo.password;
 

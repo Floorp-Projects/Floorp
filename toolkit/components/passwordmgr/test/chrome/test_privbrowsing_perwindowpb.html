@@ -99,7 +99,9 @@ function loadNextTest() {
 
   if (testNum === 7) {
     observer = SpecialPowers.wrapCallback(function(subject, topic, data) {
-      SimpleTest.executeSoon(() => { iframe.contentWindow.postMessage("go", "*"); });
+      SimpleTest.executeSoon(() => {
+        iframe.contentWindow.postMessage("go", "*");
+      });
     });
     SpecialPowers.addObserver(observer, "passwordmgr-processed-form");
   }
@@ -221,10 +223,14 @@ function testOnWindow(aIsPrivate, aCallback) {
         win.content.addEventListener("load", function innerLoad2() {
           win.content.removeEventListener("load", innerLoad2);
           testWindows.push(win);
-          SimpleTest.executeSoon(function() { aCallback(win); });
+          SimpleTest.executeSoon(function() {
+            aCallback(win);
+          });
         }, false, true);
       }, true);
-      SimpleTest.executeSoon(function() { BrowserTestUtils.loadURI(win.gBrowser, contentPage); });
+      SimpleTest.executeSoon(function() {
+        BrowserTestUtils.loadURI(win.gBrowser, contentPage);
+      });
     });
   }, {capture: true, once: true});
 }

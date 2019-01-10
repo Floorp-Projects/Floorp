@@ -12,22 +12,19 @@ const PERMISSION_SAVE_LOGINS = "login-saving";
 // kept in sync with the version there (or else the tests fail).
 const CURRENT_SCHEMA = 6;
 
-async function copyFile(aLeafName)
-{
+async function copyFile(aLeafName) {
   await OS.File.copy(OS.Path.join(do_get_file("data").path, aLeafName),
                      OS.Path.join(OS.Constants.Path.profileDir, aLeafName));
 }
 
-function openDB(aLeafName)
-{
+function openDB(aLeafName) {
   var dbFile = new FileUtils.File(OS.Constants.Path.profileDir);
   dbFile.append(aLeafName);
 
   return Services.storage.openDatabase(dbFile);
 }
 
-function deleteFile(pathname, filename)
-{
+function deleteFile(pathname, filename) {
   var file = new FileUtils.File(pathname);
   file.append(filename);
 
@@ -35,13 +32,13 @@ function deleteFile(pathname, filename)
   // because the module may still be holding onto the DB. (We don't
   // have a way to explicitly shutdown/GC the module).
   try {
-    if (file.exists())
+    if (file.exists()) {
       file.remove(false);
+    }
   } catch (e) {}
 }
 
-function reloadStorage(aInputPathName, aInputFileName)
-{
+function reloadStorage(aInputPathName, aInputFileName) {
   var inputFile = null;
   if (aInputFileName) {
     inputFile = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
@@ -58,8 +55,7 @@ function reloadStorage(aInputPathName, aInputFileName)
   return storage;
 }
 
-function checkStorageData(storage, ref_disabledHosts, ref_logins)
-{
+function checkStorageData(storage, ref_disabledHosts, ref_logins) {
   LoginTestUtils.assertLoginListsEqual(storage.getAllLogins(), ref_logins);
   LoginTestUtils.assertDisabledHostsEqual(getAllDisabledHostsFromPermissionManager(),
                                           ref_disabledHosts);
@@ -86,8 +82,7 @@ function setLoginSavingEnabled(origin, enabled) {
   }
 }
 
-add_task(async function test_execute()
-{
+add_task(async function test_execute() {
 
   const OUTDIR = OS.Constants.Path.profileDir;
 
@@ -265,8 +260,9 @@ add_task(async function test_execute()
     // Check to see that we added the correct encType to the logins.
     Assert.equal(CURRENT_SCHEMA, dbConnection.schemaVersion);
     var encTypes = [ENCTYPE_BASE64, ENCTYPE_SDR, ENCTYPE_BASE64, ENCTYPE_BASE64];
-    for (let i = 0; i < encTypes.length; i++)
+    for (let i = 0; i < encTypes.length; i++) {
       Assert.equal(encTypes[i], getEncTypeForID(dbConnection, i + 1));
+    }
     dbConnection.close();
 
     // There are 4 logins, but 3 will be invalid because we can no longer decrypt
@@ -288,24 +284,27 @@ add_task(async function test_execute()
     dbConnection = openDB("signons-v2v3.sqlite");
     Assert.equal(2, dbConnection.schemaVersion);
     encTypes = [ENCTYPE_BASE64, ENCTYPE_SDR, ENCTYPE_BASE64, ENCTYPE_BASE64, null];
-    for (let i = 0; i < encTypes.length; i++)
+    for (let i = 0; i < encTypes.length; i++) {
       Assert.equal(encTypes[i], getEncTypeForID(dbConnection, i + 1));
+    }
 
     // Reload storage, check that the new login now has encType=1, others untouched
     storage = reloadStorage(OUTDIR, "signons-v2v3.sqlite");
     Assert.equal(CURRENT_SCHEMA, dbConnection.schemaVersion);
 
     encTypes = [ENCTYPE_BASE64, ENCTYPE_SDR, ENCTYPE_BASE64, ENCTYPE_BASE64, ENCTYPE_SDR];
-    for (let i = 0; i < encTypes.length; i++)
+    for (let i = 0; i < encTypes.length; i++) {
       Assert.equal(encTypes[i], getEncTypeForID(dbConnection, i + 1));
+    }
 
     // Sanity check that the data gets migrated
     // There are 5 logins, but 3 will be invalid because we can no longer decrypt
     // base64-encoded items. (testuser1/4/5). We no longer reencrypt with SDR.
     checkStorageData(storage, ["https://disabled.net"], [testuser2, testuser3]);
     encTypes = [ENCTYPE_BASE64, ENCTYPE_SDR, ENCTYPE_BASE64, ENCTYPE_BASE64, ENCTYPE_SDR];
-    for (let i = 0; i < encTypes.length; i++)
+    for (let i = 0; i < encTypes.length; i++) {
       Assert.equal(encTypes[i], getEncTypeForID(dbConnection, i + 1));
+    }
     dbConnection.close();
 
     deleteFile(OUTDIR, "signons-v2v3.sqlite");
