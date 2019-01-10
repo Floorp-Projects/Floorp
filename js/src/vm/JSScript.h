@@ -93,19 +93,38 @@ bool CopyScript(JSContext* cx, HandleScript src, HandleScript dst,
 }  // namespace js
 
 /*
- * Type of try note associated with each catch or finally block, and also with
- * for-in and other kinds of loops. Non-for-in loops do not need these notes
- * for exception unwinding, but storing their boundaries here is helpful for
- * heuristics that need to know whether a given op is inside a loop.
+ * [SMDOC] Try Notes
+ *
+ * Trynotes are attached to regions that are involved with
+ * exception unwinding. They can be broken up into four categories:
+ *
+ * 1. CATCH and FINALLY: Basic exception handling. A CATCH trynote
+ *    covers the range of the associated try. A FINALLY trynote covers
+ *    the try and the catch.
+
+ * 2. FOR_IN and DESTRUCTURING: These operations create an iterator
+ *    which must be cleaned up (by calling IteratorClose) during
+ *    exception unwinding.
+ *
+ * 3. FOR_OF and FOR_OF_ITERCLOSE: For-of loops handle unwinding using
+ *    catch blocks. These trynotes are used for for-of breaks/returns,
+ *    which create regions that are lexically within a for-of block,
+ *    but logically outside of it. See TryNoteIter::settle for more
+ *    details.
+ *
+ * 4. LOOP: This represents normal for/while/do-while loops. It is
+ *    unnecessary for exception unwinding, but storing the boundaries
+ *    of loops here is helpful for heuristics that need to know
+ *    whether a given op is inside a loop.
  */
 enum JSTryNoteKind {
   JSTRY_CATCH,
   JSTRY_FINALLY,
   JSTRY_FOR_IN,
+  JSTRY_DESTRUCTURING,
   JSTRY_FOR_OF,
-  JSTRY_LOOP,
   JSTRY_FOR_OF_ITERCLOSE,
-  JSTRY_DESTRUCTURING
+  JSTRY_LOOP
 };
 
 /*
