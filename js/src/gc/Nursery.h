@@ -150,6 +150,8 @@ class Nursery {
     CellAlignedByte cell;
   };
 
+  using BufferSet = HashSet<void*, PointerHasher<void*>, SystemAllocPolicy>;
+
   explicit Nursery(JSRuntime* rt);
   ~Nursery();
 
@@ -297,8 +299,6 @@ class Nursery {
   /* Mark a malloced buffer as no longer needing to be freed. */
   void removeMallocedBuffer(void* buffer) { mallocedBuffers.remove(buffer); }
 
-  void waitBackgroundFreeEnd();
-
   MOZ_MUST_USE bool addedUniqueIdToCell(gc::Cell* cell) {
     MOZ_ASSERT(IsInsideNursery(cell));
     MOZ_ASSERT(isEnabled());
@@ -312,7 +312,7 @@ class Nursery {
   }
   size_t sizeOfMallocedBuffers(mozilla::MallocSizeOf mallocSizeOf) const {
     size_t total = 0;
-    for (MallocedBuffersSet::Range r = mallocedBuffers.all(); !r.empty();
+    for (BufferSet::Range r = mallocedBuffers.all(); !r.empty();
          r.popFront()) {
       total += mallocSizeOf(r.front());
     }
@@ -489,13 +489,7 @@ class Nursery {
    * stored in the nursery. Any external buffers that do not belong to a
    * tenured thing at the end of a minor GC must be freed.
    */
-  typedef HashSet<void*, PointerHasher<void*>, SystemAllocPolicy>
-      MallocedBuffersSet;
-  MallocedBuffersSet mallocedBuffers;
-
-  // A task structure used to free the malloced bufers on a background thread.
-  struct FreeMallocedBuffersTask;
-  FreeMallocedBuffersTask* freeMallocedBuffersTask;
+  BufferSet mallocedBuffers;
 
   /*
    * During a collection most hoisted slot and element buffers indicate their
@@ -590,9 +584,6 @@ class Nursery {
   inline void setElementsForwardingPointer(ObjectElements* oldHeader,
                                            ObjectElements* newHeader,
                                            uint32_t capacity);
-
-  /* Free malloced pointers owned by freed things in the nursery. */
-  void freeMallocedBuffers();
 
   /*
    * Updates pointers to nursery objects that have been tenured and discards
