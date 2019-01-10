@@ -9,7 +9,6 @@
 #include "TextEditUtils.h"
 #include "TypeInState.h"
 #include "mozilla/Assertions.h"
-#include "mozilla/ContentIterator.h"
 #include "mozilla/EditAction.h"
 #include "mozilla/EditorUtils.h"
 #include "mozilla/SelectionState.h"
@@ -27,6 +26,7 @@
 #include "nsGkAtoms.h"
 #include "nsAtom.h"
 #include "nsIContent.h"
+#include "nsIContentIterator.h"
 #include "nsNameSpaceManager.h"
 #include "nsINode.h"
 #include "nsISupportsImpl.h"
@@ -175,17 +175,18 @@ nsresult HTMLEditor::SetInlinePropertyInternal(nsAtom& aProperty,
       // (since doing operations on the document during iteration would perturb
       // the iterator).
 
+      OwningNonNull<nsIContentIterator> iter = NS_NewContentSubtreeIterator();
+
       nsTArray<OwningNonNull<nsIContent>> arrayOfNodes;
 
       // Iterate range and build up array
-      ContentSubtreeIterator subtreeIter;
-      rv = subtreeIter.Init(range);
+      rv = iter->Init(range);
       // Init returns an error if there are no nodes in range.  This can easily
       // happen with the subtree iterator if the selection doesn't contain any
       // *whole* nodes.
       if (NS_SUCCEEDED(rv)) {
-        for (; !subtreeIter.IsDone(); subtreeIter.Next()) {
-          OwningNonNull<nsINode> node = *subtreeIter.GetCurrentNode();
+        for (; !iter->IsDone(); iter->Next()) {
+          OwningNonNull<nsINode> node = *iter->GetCurrentNode();
 
           if (node->IsContent() && IsEditable(node)) {
             arrayOfNodes.AppendElement(*node->AsContent());
@@ -1040,22 +1041,18 @@ nsresult HTMLEditor::GetInlinePropertyBase(nsAtom& aProperty,
     }
 
     // Non-collapsed selection
+    nsCOMPtr<nsIContentIterator> iter = NS_NewContentIterator();
 
     nsAutoString firstValue, theValue;
 
     nsCOMPtr<nsINode> endNode = range->GetEndContainer();
     int32_t endOffset = range->EndOffset();
 
-    PostContentIterator postOrderIter;
-    DebugOnly<nsresult> rvIgnored = postOrderIter.Init(range);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
-                         "Failed to initialize post-order content iterator");
-    for (; !postOrderIter.IsDone(); postOrderIter.Next()) {
-      if (!postOrderIter.GetCurrentNode()->IsContent()) {
+    for (iter->Init(range); !iter->IsDone(); iter->Next()) {
+      if (!iter->GetCurrentNode()->IsContent()) {
         continue;
       }
-      nsCOMPtr<nsIContent> content =
-          postOrderIter.GetCurrentNode()->AsContent();
+      nsCOMPtr<nsIContent> content = iter->GetCurrentNode()->AsContent();
 
       if (content->IsHTMLElement(nsGkAtoms::body)) {
         break;
@@ -1344,16 +1341,13 @@ nsresult HTMLEditor::RemoveInlinePropertyInternal(nsAtom* aProperty,
         }
       } else {
         // Not the easy case.  Range not contained in single text node.
+        nsCOMPtr<nsIContentIterator> iter = NS_NewContentSubtreeIterator();
 
         nsTArray<OwningNonNull<nsIContent>> arrayOfNodes;
 
         // Iterate range and build up array
-        ContentSubtreeIterator subtreeIter;
-        DebugOnly<nsresult> rvIgnored = subtreeIter.Init(range);
-        NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
-                             "Failed to initialize subtree iterator");
-        for (; !subtreeIter.IsDone(); subtreeIter.Next()) {
-          nsCOMPtr<nsINode> node = subtreeIter.GetCurrentNode();
+        for (iter->Init(range); !iter->IsDone(); iter->Next()) {
+          nsCOMPtr<nsINode> node = iter->GetCurrentNode();
           if (NS_WARN_IF(!node)) {
             return NS_ERROR_FAILURE;
           }
@@ -1494,17 +1488,17 @@ nsresult HTMLEditor::RelativeFontChange(FontSize aDir) {
       // (since doing operations on the document during iteration would perturb
       // the iterator).
 
+      OwningNonNull<nsIContentIterator> iter = NS_NewContentSubtreeIterator();
+
       // Iterate range and build up array
-      ContentSubtreeIterator subtreeIter;
-      rv = subtreeIter.Init(range);
+      rv = iter->Init(range);
       if (NS_SUCCEEDED(rv)) {
         nsTArray<OwningNonNull<nsIContent>> arrayOfNodes;
-        for (; !subtreeIter.IsDone(); subtreeIter.Next()) {
-          if (NS_WARN_IF(!subtreeIter.GetCurrentNode()->IsContent())) {
+        for (; !iter->IsDone(); iter->Next()) {
+          if (NS_WARN_IF(!iter->GetCurrentNode()->IsContent())) {
             return NS_ERROR_FAILURE;
           }
-          OwningNonNull<nsIContent> node =
-              *subtreeIter.GetCurrentNode()->AsContent();
+          OwningNonNull<nsIContent> node = *iter->GetCurrentNode()->AsContent();
 
           if (IsEditable(node)) {
             arrayOfNodes.AppendElement(node);

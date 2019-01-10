@@ -14,7 +14,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/AutoCopyListener.h"
 #include "mozilla/AutoRestore.h"
-#include "mozilla/ContentIterator.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/SelectionBinding.h"
 #include "mozilla/dom/ShadowRoot.h"
@@ -38,6 +37,7 @@
 #include "nsTableCellFrame.h"
 #include "nsIScrollableFrame.h"
 #include "nsCCUncollectableMarker.h"
+#include "nsIContentIterator.h"
 #include "nsIDocumentEncoder.h"
 #include "nsTextFragment.h"
 #include <algorithm>
@@ -1481,8 +1481,9 @@ void Selection::SelectFramesForContent(nsIContent* aContent, bool aSelected) {
 }
 
 // select all content children of aContent
-nsresult Selection::SelectAllFramesForContent(
-    PostContentIterator& aPostOrderIter, nsIContent* aContent, bool aSelected) {
+nsresult Selection::SelectAllFramesForContent(nsIContentIterator* aInnerIter,
+                                              nsIContent* aContent,
+                                              bool aSelected) {
   // If aContent doesn't have children, we should avoid to use the content
   // iterator for performance reason.
   if (!aContent->HasChildren()) {
@@ -1490,12 +1491,12 @@ nsresult Selection::SelectAllFramesForContent(
     return NS_OK;
   }
 
-  if (NS_WARN_IF(NS_FAILED(aPostOrderIter.Init(aContent)))) {
+  if (NS_WARN_IF(NS_FAILED(aInnerIter->Init(aContent)))) {
     return NS_ERROR_FAILURE;
   }
 
-  for (; !aPostOrderIter.IsDone(); aPostOrderIter.Next()) {
-    nsINode* node = aPostOrderIter.GetCurrentNode();
+  for (; !aInnerIter->IsDone(); aInnerIter->Next()) {
+    nsINode* node = aInnerIter->GetCurrentNode();
     MOZ_ASSERT(node);
     nsIContent* innercontent = node->IsContent() ? node->AsContent() : nullptr;
     SelectFramesForContent(innercontent, aSelected);
@@ -1575,18 +1576,18 @@ nsresult Selection::SelectFrames(nsPresContext* aPresContext, nsRange* aRange,
     return NS_OK;
   }
 
-  ContentSubtreeIterator subtreeIter;
-  subtreeIter.Init(aRange);
-  if (isFirstContentTextNode && !subtreeIter.IsDone() &&
-      subtreeIter.GetCurrentNode() == startNode) {
-    subtreeIter.Next();  // first content has already been handled.
+  nsCOMPtr<nsIContentIterator> iter = NS_NewContentSubtreeIterator();
+  iter->Init(aRange);
+  if (isFirstContentTextNode && !iter->IsDone() &&
+      iter->GetCurrentNode() == startNode) {
+    iter->Next();  // first content has already been handled.
   }
-  PostContentIterator postOrderIter;
-  for (; !subtreeIter.IsDone(); subtreeIter.Next()) {
-    nsINode* node = subtreeIter.GetCurrentNode();
+  nsCOMPtr<nsIContentIterator> inneriter = NS_NewContentIterator();
+  for (; !iter->IsDone(); iter->Next()) {
+    nsINode* node = iter->GetCurrentNode();
     MOZ_ASSERT(node);
     nsIContent* content = node->IsContent() ? node->AsContent() : nullptr;
-    SelectAllFramesForContent(postOrderIter, content, aSelect);
+    SelectAllFramesForContent(inneriter, content, aSelect);
   }
 
   // We must now do the last one if it is not the same as the first

@@ -12,6 +12,7 @@
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsINode.h"
+#include "nsIContentIterator.h"
 #include "mozilla/intl/WordBreaker.h"
 
 class nsIContent;

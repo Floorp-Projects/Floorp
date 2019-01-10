@@ -35,6 +35,9 @@ using namespace mozilla::dom;
 // Yikes!  Casting a char to unichar can fill with ones!
 #define CHAR_TO_UNICHAR(c) ((char16_t)(unsigned char)c)
 
+static NS_DEFINE_CID(kCContentIteratorCID, NS_CONTENTITERATOR_CID);
+static NS_DEFINE_CID(kCPreContentIteratorCID, NS_PRECONTENTITERATOR_CID);
+
 #define CH_QUOTE ((char16_t)0x22)
 #define CH_APOSTROPHE ((char16_t)0x27)
 #define CH_LEFT_SINGLE_QUOTE ((char16_t)0x2018)
