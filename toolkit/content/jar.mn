@@ -62,7 +62,6 @@ toolkit.jar:
 #endif
    content/global/widgets.css
    content/global/bindings/autocomplete.xml    (widgets/autocomplete.xml)
-   content/global/bindings/browser.xml         (widgets/browser.xml)
    content/global/bindings/button.xml          (widgets/button.xml)
    content/global/bindings/calendar.js         (widgets/calendar.js)
    content/global/bindings/checkbox.xml        (widgets/checkbox.xml)
