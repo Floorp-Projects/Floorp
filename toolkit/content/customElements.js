@@ -290,6 +290,10 @@ window.MozElementMixin = MozElementMixin;
 window.MozXULElement = MozXULElement;
 window.MozElements = MozElements;
 
+customElements.setElementCreationCallback("browser", () => {
+  Services.scriptloader.loadSubScript("chrome://global/content/elements/browser-custom-element.js", window);
+});
+
 // For now, don't load any elements in the extension dummy document.
 // We will want to load <browser> when that's migrated (bug 1441935).
 const isDummyDocument = document.documentURI == "chrome://extensions/content/dummy.xul";

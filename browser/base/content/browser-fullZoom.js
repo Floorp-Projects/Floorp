@@ -346,7 +346,7 @@ var FullZoom = {
     // The browser is sometimes half-destroyed because this method is called
     // by content pref service callbacks, which themselves can be called at any
     // time, even after browsers are closed.
-    if (!aBrowser.parentNode || aBrowser.isSyntheticDocument) {
+    if (!aBrowser.mInitialized || aBrowser.isSyntheticDocument) {
       this._executeSoon(aCallback);
       return;
     }
@@ -434,7 +434,7 @@ var FullZoom = {
         // hasn't been received yet.  In that case, the browser is unusable, it
         // has no properties, so return false.  Check for this case by getting a
         // property, say, docShell.
-        return map.get(browser) === this.token && browser.parentNode;
+        return map.get(browser) === this.token && browser.mInitialized;
       },
     };
   },

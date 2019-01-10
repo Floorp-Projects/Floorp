@@ -578,8 +578,17 @@
       },
       {
         "id": "PersistentBackgroundProperty",
-        "type": "boolean",
-        "deprecated": "Event pages are not currently supported. This will run as a persistent background page."
+        "choices": [
+          {
+            "type": "boolean",
+            "enum": [true]
+          },
+          {
+            "type": "boolean",
+            "enum": [false],
+            "deprecated": "Event pages are not currently supported. This will run as a persistent background page."
+          }
+        ]
       }
     ]
   }

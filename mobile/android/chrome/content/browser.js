@@ -5378,7 +5378,7 @@ var XPInstallObserver = {
 };
 
 /**
- * Handler for blocked popups, triggered by DOMUpdateBlockedPopups events in browser.xml
+ * Handler for blocked popups, triggered by DOMUpdateBlockedPopups events in browser.js
  */
 var PopupBlockerObserver = {
   onUpdateBlockedPopups: function onUpdateBlockedPopups(aEvent) {

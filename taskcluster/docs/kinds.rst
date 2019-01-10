@@ -531,3 +531,15 @@ webrender
 ---------
 Tasks used to do testing of WebRender standalone (without gecko). The
 WebRender code lives in gfx/wr and has its own testing infrastructure.
+
+instrumented-build
+------------------
+Tasks that generate builds with PGO instrumentation enabled. This is an
+intermediate build that can be used to generate profiling information for a
+final PGO build. This is the 1st stage of the full 3-step PGO process.
+
+generate-profile
+----------------
+Tasks that take a build configured for PGO and run the binary against a sample
+set to generate profile data. This is the 2nd stage of the full 3-step PGO
+process.
