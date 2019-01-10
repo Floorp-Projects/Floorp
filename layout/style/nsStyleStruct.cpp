@@ -2990,7 +2990,6 @@ nsStyleDisplay::nsStyleDisplay(const nsPresContext* aContext)
       mScrollBehavior(NS_STYLE_SCROLL_BEHAVIOR_AUTO),
       mOverscrollBehaviorX(StyleOverscrollBehavior::Auto),
       mOverscrollBehaviorY(StyleOverscrollBehavior::Auto),
-      mOverflowAnchor(StyleOverflowAnchor::Auto),
       mScrollSnapTypeX(StyleScrollSnapType::None),
       mScrollSnapTypeY(StyleScrollSnapType::None),
       mScrollSnapPointsX(eStyleUnit_None),
@@ -3145,12 +3144,6 @@ void nsStyleDisplay::FinishStyle(nsPresContext* aPresContext,
   mShapeOutside.FinishStyle(aPresContext,
                             aOldStyle ? &aOldStyle->mShapeOutside : nullptr);
   GenerateCombinedIndividualTransform();
-}
-
-static inline bool TransformListChanged(
-    const RefPtr<nsCSSValueSharedList>& aList,
-    const RefPtr<nsCSSValueSharedList>& aNewList) {
-  return !aList != !aNewList || (aList && *aList != *aNewList);
 }
 
 static inline nsChangeHint CompareTransformValues(
@@ -3429,11 +3422,6 @@ nsChangeHint nsStyleDisplay::CalcDifference(
   }
 
   return hint;
-}
-
-bool nsStyleDisplay::TransformChanged(const nsStyleDisplay& aNewData) const {
-  return TransformListChanged(mSpecifiedTransform,
-                              aNewData.mSpecifiedTransform);
 }
 
 void nsStyleDisplay::GenerateCombinedIndividualTransform() {

@@ -211,13 +211,6 @@ bool nsStyleDisplay::IsRelativelyPositioned(
          !nsSVGUtils::IsInSVGTextSubtree(aContextFrame);
 }
 
-bool nsStyleDisplay::IsStickyPositioned(const nsIFrame* aContextFrame) const {
-  NS_ASSERTION(aContextFrame->StyleDisplay() == this,
-               "unexpected aContextFrame");
-  return IsStickyPositionedStyle() &&
-         !nsSVGUtils::IsInSVGTextSubtree(aContextFrame);
-}
-
 bool nsStyleDisplay::IsAbsolutelyPositioned(
     const nsIFrame* aContextFrame) const {
   NS_ASSERTION(aContextFrame->StyleDisplay() == this,

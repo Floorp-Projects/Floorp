@@ -1121,12 +1121,6 @@ void nsHTMLScrollFrame::Reflow(nsPresContext* aPresContext,
   mHelper.PostOverflowEvent();
 }
 
-void nsHTMLScrollFrame::DidReflow(nsPresContext* aPresContext,
-                                  const ReflowInput* aReflowInput) {
-  nsContainerFrame::DidReflow(aPresContext, aReflowInput);
-  mHelper.mAnchor.ApplyAdjustments();
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 
 #ifdef DEBUG_FRAME_DUMP
@@ -1966,7 +1960,6 @@ ScrollFrameHelper::ScrollFrameHelper(nsContainerFrame* aOuter, bool aIsRoot)
       mLastUpdateFramesPos(-1, -1),
       mDisplayPortAtLastFrameUpdate(),
       mScrollParentID(mozilla::layers::ScrollableLayerGuid::NULL_SCROLL_ID),
-      mAnchor(this),
       mAllowScrollOriginDowngrade(false),
       mHadDisplayPortAtLastFrameUpdate(false),
       mNeverHasVerticalScrollbar(false),
@@ -2747,7 +2740,6 @@ void ScrollFrameHelper::ScrollToImpl(nsPoint aPt, const nsRect& aRange,
   }
 
   ScrollVisual();
-  mAnchor.UserScrolled();
 
   bool schedulePaint = true;
   if (nsLayoutUtils::AsyncPanZoomEnabled(mOuter) &&
@@ -4718,8 +4710,6 @@ void ScrollFrameHelper::AppendAnonymousContentTo(
 }
 
 void ScrollFrameHelper::Destroy(PostDestroyData& aPostDestroyData) {
-  mAnchor.Destroy();
-
   if (mScrollbarActivity) {
     mScrollbarActivity->Destroy();
     mScrollbarActivity = nullptr;

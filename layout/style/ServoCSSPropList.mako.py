@@ -131,7 +131,6 @@ SERIALIZED_PREDEFINED_TYPES = [
     "url::ImageUrlOrNone",
     "Appearance",
     "OverscrollBehavior",
-    "OverflowAnchor",
     "OverflowClipBox",
     "ScrollSnapType",
     "Float",
