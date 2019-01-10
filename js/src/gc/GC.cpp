@@ -1304,7 +1304,6 @@ bool GCRuntime::init(uint32_t maxbytes, uint32_t maxNurseryBytes) {
 void GCRuntime::finish() {
   // Wait for nursery background free to end and disable it to release memory.
   if (nursery().isEnabled()) {
-    nursery().waitBackgroundFreeEnd();
     nursery().disable();
   }
 
@@ -3620,6 +3619,20 @@ void GCRuntime::queueAllLifoBlocksForFreeAfterMinorGC(LifoAlloc* lifo) {
   lifoBlocksToFreeAfterMinorGC.ref().transferFrom(lifo);
 }
 
+void GCRuntime::queueBuffersForFreeAfterMinorGC(Nursery::BufferSet& buffers) {
+  AutoLockHelperThreadState lock;
+
+  if (!buffersToFreeAfterMinorGC.ref().empty()) {
+    // In the rare case that this hasn't processed the buffers from a previous
+    // minor GC we have to wait here.
+    MOZ_ASSERT(freeTask.isRunningWithLockHeld(lock));
+    freeTask.joinWithLockHeld(lock);
+  }
+
+  MOZ_ASSERT(buffersToFreeAfterMinorGC.ref().empty());
+  mozilla::Swap(buffersToFreeAfterMinorGC.ref(), buffers);
+}
+
 void GCRuntime::startBackgroundFree() {
   if (CanUseExtraThreads()) {
     AutoLockHelperThreadState lock;
@@ -3647,10 +3660,22 @@ void GCRuntime::freeFromBackgroundThread(AutoLockHelperThreadState& lock) {
     LifoAlloc lifoBlocks(JSContext::TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
     lifoBlocks.transferFrom(&lifoBlocksToFree.ref());
 
+    Nursery::BufferSet buffers;
+    mozilla::Swap(buffers, buffersToFreeAfterMinorGC.ref());
+
     AutoUnlockHelperThreadState unlock(lock);
 
     lifoBlocks.freeAll();
-  } while (!lifoBlocksToFree.ref().isEmpty());
+
+    for (Nursery::BufferSet::Range r = buffers.all(); !r.empty(); r.popFront()) {
+      rt->defaultFreeOp()->free_(r.front());
+    }
+  } while (!lifoBlocksToFree.ref().isEmpty() ||
+           !buffersToFreeAfterMinorGC.ref().empty());
+}
+
+void GCRuntime::waitBackgroundFreeEnd() {
+  freeTask.join();
 }
 
 struct IsAboutToBeFinalizedFunctor {
@@ -4306,7 +4331,7 @@ bool GCRuntime::beginMarkPhase(JS::gcreason::Reason reason,
     // Discard JIT code. For incremental collections, the sweep phase will
     // also discard JIT code.
     DiscardJITCodeForGC(rt);
-    freeQueuedLifoBlocksAfterMinorGC();
+    startBackgroundFreeAfterMinorGC();
 
     /*
      * Relazify functions after discarding JIT code (we can't relazify
@@ -7739,7 +7764,7 @@ void GCRuntime::onOutOfMallocMemory() {
   decommitTask.join();
 
   // Wait for background free of nursery huge slots to finish.
-  nursery().waitBackgroundFreeEnd();
+  sweepTask.join();
 
   AutoLockGC lock(rt);
   onOutOfMallocMemory(lock);
@@ -7786,7 +7811,7 @@ void GCRuntime::minorGC(JS::gcreason::Reason reason, gcstats::PhaseKind phase) {
   nursery().collect(reason);
   MOZ_ASSERT(nursery().isEmpty());
 
-  freeQueuedLifoBlocksAfterMinorGC();
+  startBackgroundFreeAfterMinorGC();
 
 #ifdef JS_GC_ZEAL
   if (hasZealMode(ZealMode::CheckHeapAfterGC)) {
@@ -7802,15 +7827,18 @@ void GCRuntime::minorGC(JS::gcreason::Reason reason, gcstats::PhaseKind phase) {
   }
 }
 
-void GCRuntime::freeQueuedLifoBlocksAfterMinorGC() {
+void GCRuntime::startBackgroundFreeAfterMinorGC() {
   MOZ_ASSERT(nursery().isEmpty());
-  if (lifoBlocksToFreeAfterMinorGC.ref().isEmpty()) {
-    return;
-  }
 
   {
     AutoLockHelperThreadState lock;
+
     lifoBlocksToFree.ref().transferFrom(&lifoBlocksToFreeAfterMinorGC.ref());
+
+    if (lifoBlocksToFree.ref().isEmpty() &&
+        buffersToFreeAfterMinorGC.ref().empty()) {
+      return;
+    }
   }
 
   startBackgroundFree();
@@ -7868,7 +7896,7 @@ void js::gc::FinishGC(JSContext* cx) {
     JS::FinishIncrementalGC(cx, JS::gcreason::API);
   }
 
-  cx->nursery().waitBackgroundFreeEnd();
+  cx->runtime()->gc.waitBackgroundFreeEnd();
 }
 
 Realm* js::NewRealm(JSContext* cx, JSPrincipals* principals,
