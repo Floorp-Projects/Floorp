@@ -58,3 +58,27 @@ class TestReftest(MarionetteTestCase):
                                             "timeout": 10 * 1000})
         self.marionette._send_message("reftest:teardown", {})
         self.assertEqual(u"PASS", rv[u"value"][u"status"])
+
+    def test_cache_multiple_sizes(self):
+        teal = self.fixtures.where_is("reftest/teal-700x700.html")
+        mostly_teal = self.fixtures.where_is("reftest/mostly-teal-700x700.html")
+
+        self.marionette._send_message("reftest:setup", {"screenshot": "unexpected"})
+        rv = self.marionette._send_message("reftest:run",
+                                           {"test": teal,
+                                            "references": [[mostly_teal, [], "=="]],
+                                            "expected": "PASS",
+                                            "timeout": 1 * 1000,
+                                            "width": 600,
+                                            "height": 600})
+        self.assertEqual(u"PASS", rv[u"value"][u"status"])
+
+        rv = self.marionette._send_message("reftest:run",
+                                           {"test": teal,
+                                            "references": [[mostly_teal, [], "=="]],
+                                            "expected": "PASS",
+                                            "timeout": 1 * 1000,
+                                            "width": 700,
+                                            "height": 700})
+        self.assertEqual(u"FAIL", rv[u"value"][u"status"])
+        self.marionette._send_message("reftest:teardown", {})
