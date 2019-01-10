@@ -1,6 +1,17 @@
 # WebRender
 GPU renderer for the Web content, used by Servo.
 
+Note that the canonical home for this code is in gfx/wr folder of the
+mozilla-central repository at https://hg.mozilla.org/mozilla-central. The
+Github repository at https://github.com/servo/webrender should be considered
+a downstream mirror, although it contains additional metadata (such as Github
+wiki pages) that do not exist in mozilla-central. Pull requests against the
+Github repository are still being accepted, although once reviewed, they will
+be landed on mozilla-central first and then mirrored back. If you are familiar
+with the mozilla-central contribution workflow, filing bugs in
+[Bugzilla](https://bugzilla.mozilla.org/enter_bug.cgi?product=Core&component=Graphics%3A%20WebRender)
+and submitting patches there would be preferred.
+
 ## Update as a Dependency
 After updating shaders in WebRender, go to servo and:
 
