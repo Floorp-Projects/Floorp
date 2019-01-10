@@ -63,6 +63,7 @@ const {
   PollPromise,
   TimedPromise,
   waitForEvent,
+  waitForObserverTopic,
 } = ChromeUtils.import("chrome://marionette/content/sync.js", {});
 
 XPCOMUtils.defineLazyGetter(this, "logger", Log.get);
@@ -3283,15 +3284,10 @@ GeckoDriver.prototype.quit = async function(cmd) {
   this.deleteSession();
 
   // delay response until the application is about to quit
-  let quitApplication = new Promise(resolve => {
-    Services.obs.addObserver(
-        (subject, topic, data) => resolve(data),
-        "quit-application");
-  });
-
+  let quitApplication = waitForObserverTopic("quit-application");
   Services.startup.quit(mode);
 
-  return {cause: await quitApplication};
+  return {cause: (await quitApplication).data};
 };
 
 GeckoDriver.prototype.installAddon = function(cmd) {
