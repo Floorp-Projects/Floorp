@@ -8,7 +8,7 @@ const {
   serviceWorkerRegistrationSpec,
   serviceWorkerSpec,
 } = require("devtools/shared/specs/worker/service-worker");
-const { FrontClassWithSpec, registerFront } = require("devtools/shared/protocol");
+const { FrontClassWithSpec, registerFront, types } = require("devtools/shared/protocol");
 
 class PushSubscriptionFront extends FrontClassWithSpec(pushSubscriptionSpec) {
   get endpoint() {
@@ -66,6 +66,26 @@ class ServiceWorkerRegistrationFront extends
     return this._form.url;
   }
 
+  get activeWorker() {
+    return this._getServiceWorker("activeWorker");
+  }
+
+  get installingWorker() {
+    return this._getServiceWorker("installingWorker");
+  }
+
+  get waitingWorker() {
+    return this._getServiceWorker("waitingWorker");
+  }
+
+  _getServiceWorker(type) {
+    const workerForm = this._form[type];
+    if (!workerForm) {
+      return null;
+    }
+    return types.getType("serviceWorker").read(workerForm, this);
+  }
+
   form(form, detail) {
     if (detail === "actorid") {
       this.actorID = form;
@@ -79,6 +99,28 @@ class ServiceWorkerRegistrationFront extends
 exports.ServiceWorkerRegistrationFront = ServiceWorkerRegistrationFront;
 registerFront(ServiceWorkerRegistrationFront);
 
-class ServiceWorkerFront extends FrontClassWithSpec(serviceWorkerSpec) {}
+class ServiceWorkerFront extends FrontClassWithSpec(serviceWorkerSpec) {
+  get fetch() {
+    return this._form.fetch;
+  }
+
+  get url() {
+    return this._form.url;
+  }
+
+  get state() {
+    return this._form.state;
+  }
+
+  form(form, detail) {
+    if (detail === "actorid") {
+      this.actorID = form;
+      return;
+    }
+
+    this.actorID = form.actor;
+    this._form = form;
+  }
+}
 exports.ServiceWorkerFront = ServiceWorkerFront;
 registerFront(ServiceWorkerFront);
