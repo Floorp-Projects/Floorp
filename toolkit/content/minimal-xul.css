@@ -115,6 +115,11 @@ thumb {
   display: -moz-box !important;
 }
 
+/* Don't collapse thumb when scrollbar is disabled. */
+thumb[collapsed="true"] {
+  visibility: hidden;
+}
+
 scrollbar, scrollbarbutton, scrollcorner, slider, thumb {
   -moz-user-select: none;
 }
