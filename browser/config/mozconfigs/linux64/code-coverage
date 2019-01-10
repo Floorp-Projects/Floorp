@@ -14,6 +14,6 @@ ac_add_options --enable-coverage
 
 export CFLAGS="--coverage"
 export CXXFLAGS="--coverage"
-export LDFLAGS="--coverage -L$topsrcdir/clang/lib/clang/7.0.0/lib/linux/"
+export LDFLAGS="--coverage -L$topsrcdir/clang/lib/clang/7.0.1/lib/linux/"
 export LIBS="-lclang_rt.profile-x86_64"
 export RUSTFLAGS="-Ccodegen-units=1 -Zprofile -Zno-landing-pads"

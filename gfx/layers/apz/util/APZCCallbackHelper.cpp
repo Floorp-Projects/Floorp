@@ -83,7 +83,7 @@ static CSSPoint ScrollFrameTo(nsIScrollableFrame* aFrame,
                               bool& aSuccessOut) {
   aSuccessOut = false;
   CSSPoint targetScrollPosition = aRequest.IsRootContent()
-                                      ? aRequest.GetViewport().TopLeft()
+                                      ? aRequest.GetLayoutViewport().TopLeft()
                                       : aRequest.GetScrollOffset();
 
   if (!aFrame) {
@@ -203,7 +203,7 @@ static ScreenMargin ScrollFrame(nsIContent* aContent,
           aRequest, actualScrollOffset);
     }
   } else if (aRequest.IsRootContent() &&
-             aRequest.GetScrollOffset() != aRequest.GetViewport().TopLeft()) {
+             aRequest.GetScrollOffset() != aRequest.GetLayoutViewport().TopLeft()) {
     // APZ uses the visual viewport's offset to calculate where to place the
     // display port, so the display port is misplaced when a pinch zoom occurs.
     //
@@ -288,8 +288,6 @@ void APZCCallbackHelper::UpdateRootFrame(const RepaintRequest& aRequest) {
     return;
   }
 
-  MOZ_ASSERT(aRequest.GetUseDisplayPortMargins());
-
   if (gfxPrefs::APZAllowZooming() && aRequest.GetScrollOffsetUpdated()) {
     // If zooming is disabled then we don't really want to let APZ fiddle
     // with these things. In theory setting the resolution here should be a
@@ -339,8 +337,6 @@ void APZCCallbackHelper::UpdateSubFrame(const RepaintRequest& aRequest) {
   if (!content) {
     return;
   }
-
-  MOZ_ASSERT(aRequest.GetUseDisplayPortMargins());
 
   // We don't currently support zooming for subframes, so nothing extra
   // needs to be done beyond the tasks common to this and UpdateRootFrame.

@@ -60,11 +60,11 @@ bool VRSession::SubmitFrame(
     const mozilla::gfx::VRLayer_Stereo_Immersive& aLayer) {
 #if defined(XP_WIN)
 
-  if (aLayer.mTextureType ==
+  if (aLayer.textureType ==
       VRLayerTextureType::LayerTextureType_D3D10SurfaceDescriptor) {
     RefPtr<ID3D11Texture2D> dxTexture;
     HRESULT hr = mDevice->OpenSharedResource(
-        (HANDLE)aLayer.mTextureHandle, __uuidof(ID3D11Texture2D),
+        (HANDLE)aLayer.textureHandle, __uuidof(ID3D11Texture2D),
         (void**)(ID3D11Texture2D**)getter_AddRefs(dxTexture));
     if (FAILED(hr) || !dxTexture) {
       NS_WARNING("Failed to open shared texture");
@@ -101,9 +101,8 @@ bool VRSession::SubmitFrame(
 
 #elif defined(XP_MACOSX)
 
-  if (aLayer.mTextureType ==
-      VRLayerTextureType::LayerTextureType_MacIOSurface) {
-    return SubmitFrame(aLayer, aLayer.mTextureHandle);
+  if (aLayer.textureType == VRLayerTextureType::LayerTextureType_MacIOSurface) {
+    return SubmitFrame(aLayer, aLayer.textureHandle);
   }
 
 #endif

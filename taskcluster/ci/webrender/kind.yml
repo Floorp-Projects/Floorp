@@ -15,7 +15,7 @@ transforms:
 job-defaults:
     run-on-projects: ['mozilla-beta', 'trunk', 'try']
     treeherder:
-        tier: 2
+        tier: 1
         kind: other
     worker:
         max-run-time: 1800

@@ -6,9 +6,13 @@ use api::{DeviceRect, FilterOp, MixBlendMode, PipelineId, PremultipliedColorF, P
 use api::{DeviceIntRect, DevicePoint, LayoutRect, PictureToRasterTransform, LayoutPixel, PropertyBinding, PropertyBindingId};
 use api::{DevicePixelScale, RasterRect, RasterSpace, ColorF, ImageKey, DirtyRect, WorldSize, ClipMode};
 use api::{PicturePixel, RasterPixel, WorldPixel, WorldRect, ImageFormat, ImageDescriptor, WorldVector2D, LayoutPoint};
+#[cfg(feature = "debug_renderer")]
+use api::{DebugFlags, DeviceVector2D};
 use box_shadow::{BLUR_SAMPLE_SCALE};
 use clip::{ClipNodeCollector, ClipStore, ClipChainId, ClipChainNode, ClipItem};
 use clip_scroll_tree::{ROOT_SPATIAL_NODE_INDEX, ClipScrollTree, SpatialNodeIndex, CoordinateSystemId};
+#[cfg(feature = "debug_renderer")]
+use debug_colors;
 use device::TextureFilter;
 use euclid::{TypedScale, vec3, TypedRect, TypedPoint2D, TypedSize2D};
 use euclid::approxeq::ApproxEq;
@@ -19,7 +23,7 @@ use gpu_cache::{GpuCache, GpuCacheAddress, GpuCacheHandle};
 use gpu_types::{TransformPalette, TransformPaletteId, UvRectKind};
 use plane_split::{Clipper, Polygon, Splitter};
 use prim_store::{PictureIndex, PrimitiveInstance, SpaceMapper, VisibleFace, PrimitiveInstanceKind};
-use prim_store::{get_raster_rects, CoordinateSpaceMapping};
+use prim_store::{get_raster_rects, CoordinateSpaceMapping, PrimitiveScratchBuffer};
 use prim_store::{OpacityBindingStorage, ImageInstanceStorage, OpacityBindingIndex};
 use print_tree::PrintTreePrinter;
 use render_backend::FrameResources;
@@ -981,6 +985,7 @@ impl TileCache {
         resource_cache: &mut ResourceCache,
         gpu_cache: &mut GpuCache,
         frame_context: &FrameBuildingContext,
+        _scratch: &mut PrimitiveScratchBuffer,
     ) -> LayoutRect {
         let mut dirty_world_rect = WorldRect::zero();
 
@@ -1061,6 +1066,29 @@ impl TileCache {
             // Decide how to handle this tile when drawing this frame.
             if tile.is_valid {
                 self.tiles_to_draw.push(TileIndex(i));
+
+                #[cfg(feature = "debug_renderer")]
+                {
+                    if frame_context.debug_flags.contains(DebugFlags::PICTURE_CACHING_DBG) {
+                        let tile_device_rect = tile.world_rect * frame_context.device_pixel_scale;
+                        let mut label_pos = tile_device_rect.origin + DeviceVector2D::new(20.0, 30.0);
+                        _scratch.push_debug_rect(
+                            tile_device_rect,
+                            debug_colors::GREEN,
+                        );
+                        _scratch.push_debug_string(
+                            label_pos,
+                            debug_colors::WHITE,
+                            format!("{:?}", tile.id),
+                        );
+                        label_pos.y += 20.0;
+                        _scratch.push_debug_string(
+                            label_pos,
+                            debug_colors::WHITE,
+                            format!("same: {} frames", tile.same_frames),
+                        );
+                    }
+                }
             } else {
                 // Add the tile rect to the dirty rect.
                 dirty_world_rect = dirty_world_rect.union(&visible_rect);
@@ -1113,10 +1141,21 @@ impl TileCache {
         self.dirty_region = if dirty_world_rect.is_empty() {
             None
         } else {
-            let dirty_device_rect = (dirty_world_rect * frame_context.device_pixel_scale).round().to_i32();
+            let dirty_device_rect = dirty_world_rect * frame_context.device_pixel_scale;
+
+            #[cfg(feature = "debug_renderer")]
+            {
+                if frame_context.debug_flags.contains(DebugFlags::PICTURE_CACHING_DBG) {
+                    _scratch.push_debug_rect(
+                        dirty_device_rect,
+                        debug_colors::RED,
+                    );
+                }
+            }
+
             Some(DirtyRegion {
                 dirty_world_rect,
-                dirty_device_rect,
+                dirty_device_rect: dirty_device_rect.round().to_i32(),
             })
         };
 

@@ -61,7 +61,7 @@ void VRLayerChild::SubmitFrame(const VRDisplayInfo& aDisplayInfo) {
    * in the WebGLContext GLScreenBuffer producer. Not doing so causes some
    * freezes, crashes or other undefined behaviour.
    */
-  if (!mThisFrameTexture || aDisplayInfo.mDisplayState.mLastSubmittedFrameId ==
+  if (!mThisFrameTexture || aDisplayInfo.mDisplayState.lastSubmittedFrameId ==
                                 mLastSubmittedFrameId) {
     mThisFrameTexture = mCanvasElement->GetVRFrame();
   }

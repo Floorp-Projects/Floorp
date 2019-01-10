@@ -73,8 +73,8 @@ VRDisplayHost::VRDisplayHost(VRDeviceType aType)
   mDisplayInfo.mPresentingGroups = 0;
   mDisplayInfo.mGroupMask = kVRGroupContent;
   mDisplayInfo.mFrameId = 0;
-  mDisplayInfo.mDisplayState.mPresentingGeneration = 0;
-  mDisplayInfo.mDisplayState.mDisplayName[0] = '\0';
+  mDisplayInfo.mDisplayState.presentingGeneration = 0;
+  mDisplayInfo.mDisplayState.displayName[0] = '\0';
 
 #if defined(MOZ_WIDGET_ANDROID)
   mLastSubmittedFrameId = 0;
@@ -144,7 +144,7 @@ void VRDisplayHost::SetGroupMask(uint32_t aGroupMask) {
 }
 
 bool VRDisplayHost::GetIsConnected() {
-  return mDisplayInfo.mDisplayState.mIsConnected;
+  return mDisplayInfo.mDisplayState.isConnected;
 }
 
 void VRDisplayHost::AddLayer(VRLayerParent* aLayer) {
@@ -189,7 +189,7 @@ void VRDisplayHost::StartFrame() {
    * processed.
    */
   if (isPresenting && mLastStartedFrame > 0 &&
-      mDisplayInfo.mDisplayState.mLastSubmittedFrameId < mLastStartedFrame &&
+      mDisplayInfo.mDisplayState.lastSubmittedFrameId < mLastStartedFrame &&
       duration < (double)ANDROID_MAX_FRAME_DURATION) {
     return;
   }
@@ -332,7 +332,7 @@ void VRDisplayHost::SubmitFrame(VRLayerParent* aLayer,
    */
   if (mLastSubmittedFrameId > 0 &&
       mLastSubmittedFrameId !=
-          mDisplayInfo.mDisplayState.mLastSubmittedFrameId) {
+          mDisplayInfo.mDisplayState.lastSubmittedFrameId) {
     mLastStartedFrame = 0;
     return;
   }

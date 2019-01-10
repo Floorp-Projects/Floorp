@@ -213,10 +213,8 @@ void main(void) {
     vClipParams1 = aClipParams1;
     vClipParams2 = aClipParams2;
 
-    // For the case of dot clips, optimize the number of pixels that
+    // For the case of dot and dash clips, optimize the number of pixels that
     // are hit to just include the dot itself.
-    // TODO(gw): We should do something similar in the future for
-    //           dash clips!
     if (clip_mode == CLIP_DOT) {
         float radius = aClipParams1.z;
 
@@ -227,6 +225,17 @@ void main(void) {
 
         vPos = vClipParams1.xy + radius * (2.0 * aPosition.xy - 1.0);
         vPos = clamp(vPos, vec2(0.0), aRect.zw);
+    } else if (clip_mode == CLIP_DASH_CORNER) {
+        vec2 center = (aClipParams1.xy + aClipParams2.xy) * 0.5;
+        // This is a gross approximation which works out because dashes don't have
+        // a strong curvature and we will overshoot by inflating the geometry by
+        // this amount on each side (sqrt(2) * length(dash) would be enough and we
+        // compute 2 * approx_length(dash)).
+        float dash_length = length(aClipParams1.xy - aClipParams2.xy);
+        float width = max(aWidths.x, aWidths.y);
+        // expand by a small amout for AA just like we do for dots.
+        vec2 r = vec2(max(dash_length, width)) + 2.0;
+        vPos = clamp(vPos, center - r, center + r);
     }
 
     gl_Position = uTransform * vec4(aTaskOrigin + aRect.xy + vPos, 0.0, 1.0);
