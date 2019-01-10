@@ -11,7 +11,7 @@ use super::*;
 use handles::*;
 use variant::*;
 
-cfg_if!{
+cfg_if! {
     if #[cfg(feature = "simd-accel")] {
         use simd_funcs::*;
         use simd::u16x8;

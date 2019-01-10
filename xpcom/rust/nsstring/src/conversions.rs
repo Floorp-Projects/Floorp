@@ -19,8 +19,8 @@ use conversions::encoding_rs::Encoding;
 /// Required math stated in the docs of
 /// `convert_utf16_to_utf8()`.
 #[inline(always)]
-fn times_three_plus_one(a: usize) -> Option<usize> {
-    a.checked_mul(3)?.checked_add(1)
+fn times_three(a: usize) -> Option<usize> {
+    a.checked_mul(3)
 }
 
 #[inline(always)]
@@ -321,7 +321,7 @@ impl nsACString {
         // point. BUT if the worst case fits inside the inline capacity of an autostring, we skip
         // the ASCII stuff.
         let worst_case_needed = if let Some(inline_capacity) = self.inline_capacity() {
-            let worst_case = times_three_plus_one(other.len()).ok_or(())?;
+            let worst_case = times_three(other.len()).ok_or(())?;
             if worst_case <= inline_capacity {
                 Some(worst_case)
             } else {
@@ -340,7 +340,7 @@ impl nsACString {
                 return Ok(handle.finish(old_len + written, true));
             }
             let filled = old_len + written;
-            let needed = times_three_plus_one(left).ok_or(())?;
+            let needed = times_three(left).ok_or(())?;
             let new_len = filled.checked_add(needed).ok_or(())?;
             unsafe {
                 handle.restart_bulk_write(new_len, filled, false)?;
@@ -351,7 +351,7 @@ impl nsACString {
             let needed = if let Some(n) = worst_case_needed {
                 n
             } else {
-                times_three_plus_one(other.len()).ok_or(())?
+                times_three(other.len()).ok_or(())?
             };
             let new_len = old_len.checked_add(needed).ok_or(())?;
             let mut handle = unsafe { self.bulk_write(new_len, old_len, false)? };
