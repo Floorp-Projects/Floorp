@@ -125,7 +125,7 @@ class nsFilterInstance {
   static bool BuildWebRenderFilters(
       nsIFrame* aFilteredFrame,
       const mozilla::LayoutDeviceIntRect& aPreFilterBounds,
-      nsTArray<mozilla::wr::WrFilterOp>& aWrFilters,
+      nsTArray<mozilla::wr::FilterOp>& aWrFilters,
       mozilla::LayoutDeviceIntRect& aPostFilterBounds);
 
  private:
