@@ -1551,7 +1551,7 @@ void IMEContentObserver::FlushMergeableNotifications() {
            this));
 
   // If contents in selection range is modified, the selection range still
-  // has removed node from the tree.  In such case, nsContentIterator won't
+  // has removed node from the tree.  In such case, ContentIterator won't
   // work well.  Therefore, we shouldn't use AddScriptRunnder() here since
   // it may kick runnable event immediately after DOM tree is changed but
   // the selection range isn't modified yet.
