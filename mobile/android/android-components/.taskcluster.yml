@@ -207,7 +207,6 @@ tasks:
                               git fetch ${repository} --tags
                               && git config advice.detachedHead false
                               && git checkout ${tag}
-                              && pip install pyyaml
                               && ./gradlew --no-daemon --version
                               && python automation/taskcluster/decision_task_publish.py --version "${tag}"
                               ${command_staging_flag}
