@@ -19,7 +19,7 @@ function debug(msg) {
 }
 
 /**
- * Properties swapped between browsers by browser.xml's `swapDocShells`.
+ * Properties swapped between browsers by browser.js's `swapDocShells`.
  */
 const SWAPPED_BROWSER_STATE = [
   "_remoteFinder",
@@ -64,8 +64,8 @@ const PROPERTIES_FROM_BROWSER_WINDOW = [
  *
  * The inner <iframe mozbrowser> element is _just_ the page content.  It is not
  * enough to to replace <xul:browser> on its own.  <xul:browser> comes along
- * with lots of associated functionality via XBL binding defined for such
- * elements in browser.xml, and the Firefox UI depends on these various things
+ * with lots of associated functionality via a Custom Element defined for such
+ * elements in browser.js, and the Firefox UI depends on these various things
  * to make the UI function.
  *
  * By mapping various methods, properties, and messages from the outer browser
@@ -103,9 +103,9 @@ function tunnelToInnerBrowser(outer, inner) {
 
       // Various browser methods access the `frameLoader` property, including:
       //   * `saveBrowser` from contentAreaUtils.js
-      //   * `docShellIsActive` from browser.xml
-      //   * `hasContentOpener` from browser.xml
-      //   * `preserveLayers` from browser.xml
+      //   * `docShellIsActive` from browser.js
+      //   * `hasContentOpener` from browser.js
+      //   * `preserveLayers` from browser.js
       //   * `receiveMessage` from SessionStore.jsm
       // In general, these methods are interested in the `frameLoader` for the content,
       // so we redirect them to the inner browser's `frameLoader`.
@@ -153,12 +153,12 @@ function tunnelToInnerBrowser(outer, inner) {
       // which we can use to route messages of interest to the inner browser instead.
       // Note: The _actual_ messageManager accessible from
       // `browser.frameLoader.messageManager` is not overridable and is left unchanged.
-      // Only the XBL getter `browser.messageManager` is overridden.  Browser UI code
-      // always uses this getter instead of `browser.frameLoader.messageManager` directly,
+      // Only the Custom Element getter `browser.messageManager` is overridden. This
+      // getter is always used instead of `browser.frameLoader.messageManager` directly,
       // so this has the effect of overriding the message manager for browser UI code.
       mmTunnel = new MessageManagerTunnel(outer, inner);
 
-      // Clear out any cached state that references the XBL binding's non-remote state,
+      // Clear out any cached state that references the Custom Element's non-remote state,
       // such as form fill controllers.  Otherwise they will remain in place and leak the
       // outer docshell.
       outer.destroy();
@@ -193,9 +193,9 @@ function tunnelToInnerBrowser(outer, inner) {
       outer._remoteWebNavigation = webNavigation;
       outer._remoteWebNavigationImpl = webNavigation;
 
-      // Now that we've flipped to the remote browser XBL binding, add `progressListener`
+      // Now that we've flipped to the remote browser mode, add `progressListener`
       // onto the remote version of `webProgress`.  Normally tabbrowser.xml does this step
-      // when it creates a new browser, etc.  Since we manually changed the XBL binding
+      // when it creates a new browser, etc.  Since we manually changed the mode
       // above, it caused a fresh webProgress object to be created which does not have any
       // listeners added.  So, we get the listener that gBrowser is using for the tab and
       // reattach it here.
@@ -305,7 +305,7 @@ function tunnelToInnerBrowser(outer, inner) {
       // Remove the progress listener we added manually.
       outer.webProgress.removeProgressListener(filteredProgressListener);
 
-      // Reset the XBL binding back to the original state.
+      // Reset the Custom Element back to the original state.
       outer.destroy();
 
       // Reset @remote since this is now back to a regular, non-remote browser
@@ -388,7 +388,7 @@ MessageManagerTunnel.prototype = {
   ],
 
   OUTER_TO_INNER_MESSAGES: [
-    // Messages sent from remote-browser.xml
+    // Messages sent from browser.js
     "Browser:PurgeSessionHistory",
     "InPermitUnload",
     "PermitUnload",
@@ -422,7 +422,7 @@ MessageManagerTunnel.prototype = {
     "Content:SecurityChange",
     "Content:StateChange",
     "Content:StatusChange",
-    // Messages sent to remote-browser.xml
+    // Messages sent to browser.js
     "DOMTitleChanged",
     "ImageDocumentLoaded",
     "Forms:ShowDropDown",
@@ -440,7 +440,7 @@ MessageManagerTunnel.prototype = {
   ],
 
   OUTER_TO_INNER_MESSAGE_PREFIXES: [
-    // Messages sent from browser.xml
+    // Messages sent from browser.js
     "Autoscroll:",
     // Messages sent from nsContextMenu.js
     "ContextMenu:",
@@ -463,7 +463,7 @@ MessageManagerTunnel.prototype = {
   ],
 
   INNER_TO_OUTER_MESSAGE_PREFIXES: [
-    // Messages sent to browser.xml
+    // Messages sent to browser.js
     "Autoscroll:",
     // Messages sent to nsContextMenu.js
     "ContextMenu:",
