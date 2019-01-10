@@ -107,7 +107,11 @@ class WebElementEventTarget {
 
     let stack = this.listeners[event.type].slice(0);
     stack.forEach(listener => {
-      listener.call(this, event);
+      if (typeof listener.handleEvent == "function") {
+        listener.handleEvent(event);
+      } else {
+        listener(event);
+      }
 
       if (listener.once) {
         this.removeEventListener(event.type, listener);
