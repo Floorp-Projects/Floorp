@@ -48,8 +48,7 @@ var TestObserver = {
   },
 };
 
-add_task(function test_notifications()
-{
+add_task(function test_notifications() {
 
   try {
 

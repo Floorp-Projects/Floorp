@@ -19,9 +19,10 @@ LoginManagerCrypto_SDR.prototype = {
 
   __decoderRing: null,  // nsSecretDecoderRing service
   get _decoderRing() {
-    if (!this.__decoderRing)
+    if (!this.__decoderRing) {
       this.__decoderRing = Cc["@mozilla.org/security/sdr;1"].
                            getService(Ci.nsISecretDecoderRing);
+    }
     return this.__decoderRing;
   },
 
@@ -88,10 +89,11 @@ LoginManagerCrypto_SDR.prototype = {
     } finally {
       this._uiBusy = false;
       // If we triggered a master password prompt, notify observers.
-      if (!wasLoggedIn && this.isLoggedIn)
+      if (!wasLoggedIn && this.isLoggedIn) {
         this._notifyObservers("passwordmgr-crypto-login");
-      else if (canceledMP)
+      } else if (canceledMP) {
         this._notifyObservers("passwordmgr-crypto-loginCanceled");
+      }
     }
     return cipherText;
   },
@@ -181,10 +183,11 @@ LoginManagerCrypto_SDR.prototype = {
     } finally {
       this._uiBusy = false;
       // If we triggered a master password prompt, notify observers.
-      if (!wasLoggedIn && this.isLoggedIn)
+      if (!wasLoggedIn && this.isLoggedIn) {
         this._notifyObservers("passwordmgr-crypto-login");
-      else if (canceledMP)
+      } else if (canceledMP) {
         this._notifyObservers("passwordmgr-crypto-loginCanceled");
+      }
     }
 
     return plainText;

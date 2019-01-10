@@ -169,15 +169,26 @@ let signonsTreeView = {
     }
     return false;
   },
-  isSeparator(index) { return false; },
-  isSorted() { return false; },
-  isContainer(index) { return false; },
+  isSeparator(index) {
+    return false;
+  },
+  isSorted() {
+    return false;
+  },
+  isContainer(index) {
+    return false;
+  },
   cycleHeader(column) {},
-  getRowProperties(row) { return ""; },
-  getColumnProperties(column) { return ""; },
+  getRowProperties(row) {
+    return "";
+  },
+  getColumnProperties(column) {
+    return "";
+  },
   getCellProperties(row, column) {
-    if (column.element.getAttribute("id") == "siteCol")
+    if (column.element.getAttribute("id") == "siteCol") {
       return "ltr";
+    }
 
     return "";
   },
@@ -235,10 +246,12 @@ function SortTree(column, ascending) {
         valB = b[column];
     }
 
-    if (valA < valB)
+    if (valA < valB) {
       return -1;
-    if (valA > valB)
+    }
+    if (valA > valB) {
       return 1;
+    }
     return 0;
   }
 
@@ -383,8 +396,9 @@ function DeleteAllSignons() {
                                 kSignonBundle.getString("removeAllPasswordsTitle"),
                                 kSignonBundle.getString("removeAllPasswordsPrompt"),
                                 Services.prompt.STD_YES_NO_BUTTONS + Services.prompt.BUTTON_POS_1_DEFAULT,
-                                null, null, null, null, dummy) == 1) // 1 == "No" button
+                                null, null, null, null, dummy) == 1) { // 1 == "No" button
     return;
+  }
 
   let syncNeeded = signonsTreeView._filterSet.length != 0;
   let view = signonsTreeView;
@@ -546,17 +560,21 @@ function FocusFilterBox() {
 }
 
 function SignonMatchesFilter(aSignon, aFilterValue) {
-  if (aSignon.hostname.toLowerCase().includes(aFilterValue))
+  if (aSignon.hostname.toLowerCase().includes(aFilterValue)) {
     return true;
+  }
   if (aSignon.username &&
-      aSignon.username.toLowerCase().includes(aFilterValue))
+      aSignon.username.toLowerCase().includes(aFilterValue)) {
     return true;
+  }
   if (aSignon.httpRealm &&
-      aSignon.httpRealm.toLowerCase().includes(aFilterValue))
+      aSignon.httpRealm.toLowerCase().includes(aFilterValue)) {
     return true;
+  }
   if (showingPasswords && aSignon.password &&
-      aSignon.password.toLowerCase().includes(aFilterValue))
+      aSignon.password.toLowerCase().includes(aFilterValue)) {
     return true;
+  }
 
   return false;
 }
@@ -601,8 +619,9 @@ function FilterPasswords() {
   signonsTree.treeBoxObject.rowCountChanged(0, signonsTreeView.rowCount);
 
   // if the view is not empty then select the first item
-  if (signonsTreeView.rowCount > 0)
+  if (signonsTreeView.rowCount > 0) {
     signonsTreeView.selection.select(0);
+  }
 
   signonsIntro.textContent = kSignonBundle.getString("loginsDescriptionFiltered");
   removeAllButton.setAttribute("label", kSignonBundle.getString("removeAllShown.label"));
@@ -621,8 +640,9 @@ function CopySiteUrl() {
 function CopyPassword() {
   // Don't copy passwords if we aren't already showing the passwords & a master
   // password hasn't been entered.
-  if (!showingPasswords && !masterPasswordLogin())
+  if (!showingPasswords && !masterPasswordLogin()) {
     return;
+  }
   // Copy selected signon's password to clipboard
   let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].
                   getService(Ci.nsIClipboardHelper);
@@ -707,8 +727,9 @@ function masterPasswordLogin(noPasswordCallback) {
   let token = tokendb.getInternalKeyToken();
 
   // If there is no master password, still give the user a chance to opt-out of displaying passwords
-  if (token.checkPassword(""))
+  if (token.checkPassword("")) {
     return noPasswordCallback ? noPasswordCallback() : true;
+  }
 
   // So there's a master password. But since checkPassword didn't succeed, we're logged out (per nsIPK11Token.idl).
   try {

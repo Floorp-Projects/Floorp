@@ -52,8 +52,9 @@ nsLoginInfo.prototype = {
         this.username != aLogin.username ||
         this.password != aLogin.password ||
         this.usernameField != aLogin.usernameField ||
-        this.passwordField != aLogin.passwordField)
+        this.passwordField != aLogin.passwordField) {
       return false;
+    }
 
     return true;
   },

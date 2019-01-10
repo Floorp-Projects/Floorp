@@ -83,9 +83,9 @@ add_task(async function test() {
         // only watch for a confirmation dialog every other time being called
         if (showMode) {
           Services.ww.registerNotification(function notification(aSubject, aTopic, aData) {
-            if (aTopic == "domwindowclosed")
+            if (aTopic == "domwindowclosed") {
               Services.ww.unregisterNotification(notification);
-            else if (aTopic == "domwindowopened") {
+            } else if (aTopic == "domwindowopened") {
               let targetWin = aSubject;
               SimpleTest.waitForFocus(function() {
                 EventUtils.sendKey("RETURN", targetWin);
@@ -141,10 +141,11 @@ add_task(async function test() {
 
         function proceed() {
           // run the next test if necessary or proceed with the tests
-          if (testCounter != tests.length)
+          if (testCounter != tests.length) {
             runNextTest();
-          else
+          } else {
             endFunction();
+          }
         }
 
         function runNextTest() {
