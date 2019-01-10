@@ -187,7 +187,9 @@ nsresult AudioSink::InitializeAudioStream(const PlaybackParams& aParams) {
 
   // Set playback params before calling Start() so they can take effect
   // as soon as the 1st DataCallback of the AudioStream fires.
-  mAudioStream->SetVolume(aParams.mVolume);
+  if (aParams.mVolume) {
+    mAudioStream->SetVolume(*aParams.mVolume);
+  }
   mAudioStream->SetPlaybackRate(aParams.mPlaybackRate);
   mAudioStream->SetPreservesPitch(aParams.mPreservesPitch);
   return mAudioStream->Start();

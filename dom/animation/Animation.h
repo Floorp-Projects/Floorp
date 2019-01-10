@@ -151,7 +151,17 @@ class Animation : public DOMEventTargetHelper,
 
   virtual void Tick();
   bool NeedsTicks() const {
-    return Pending() || PlayState() == AnimationPlayState::Running;
+    return Pending() ||
+           (PlayState() == AnimationPlayState::Running &&
+            // An animation with a zero playback rate doesn't need ticks even if
+            // it is running since it effectively behaves as if it is paused.
+            //
+            // It's important we return false in this case since a zero playback
+            // rate animation in the before or after phase that doesn't fill
+            // won't be relevant and hence won't be returned by GetAnimations().
+            // We don't want its timeline to keep it alive (which would happen
+            // if we return true) since otherwise it will effectively be leaked.
+            PlaybackRate() != 0.0);
   }
 
   /**
