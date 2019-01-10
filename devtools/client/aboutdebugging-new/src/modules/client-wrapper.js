@@ -132,10 +132,6 @@ class ClientWrapper {
     };
   }
 
-  async request(options) {
-    return this.client.request(options);
-  }
-
   async close() {
     return this.client.close();
   }
