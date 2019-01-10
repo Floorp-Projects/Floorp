@@ -676,7 +676,8 @@ var LoginManagerContent = {
     for (let i = 0; i < form.elements.length; i++) {
       let element = form.elements[i];
       if (ChromeUtils.getClassName(element) !== "HTMLInputElement" ||
-          element.type != "password") {
+          element.type != "password" ||
+          !element.isConnected) {
         continue;
       }
 
