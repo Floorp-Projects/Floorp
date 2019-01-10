@@ -891,6 +891,16 @@ nsThread::HasPendingEvents(bool* aResult) {
 }
 
 NS_IMETHODIMP
+nsThread::HasPendingHighPriorityEvents(bool* aResult) {
+  if (NS_WARN_IF(PR_GetCurrentThread() != mThread)) {
+    return NS_ERROR_NOT_SAME_THREAD;
+  }
+
+  *aResult = mEvents->HasPendingHighPriorityEvents();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsThread::IdleDispatch(already_AddRefed<nsIRunnable> aEvent) {
   nsCOMPtr<nsIRunnable> event = aEvent;
 

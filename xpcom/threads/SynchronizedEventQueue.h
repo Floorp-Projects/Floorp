@@ -58,6 +58,8 @@ class SynchronizedEventQueue : public ThreadTargetSink {
                                                  EventPriority* aPriority) = 0;
   virtual bool HasPendingEvent() = 0;
 
+  virtual bool HasPendingHighPriorityEvents() = 0;
+
   // This method atomically checks if there are pending events and, if there are
   // none, forbids future events from being posted. It returns true if there
   // were no pending events.
