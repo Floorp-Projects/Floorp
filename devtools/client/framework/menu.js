@@ -97,7 +97,7 @@ Menu.prototype.popup = function(screenX, screenY, toolbox) {
 
   popup = doc.createXULElement("menupopup");
   popup.setAttribute("menu-api", "true");
-  popup.setAttribute("consumeoutsideclicks", "true");
+  popup.setAttribute("consumeoutsideclicks", "false");
 
   if (this.id) {
     popup.id = this.id;
