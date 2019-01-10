@@ -676,7 +676,7 @@ Maybe<wr::WrSpatialId> DisplayListBuilder::PushStackingContext(
     const WrAnimationProperty* aAnimation, const float* aOpacity,
     const gfx::Matrix4x4* aTransform, wr::TransformStyle aTransformStyle,
     const gfx::Matrix4x4* aPerspective, const wr::MixBlendMode& aMixBlendMode,
-    const nsTArray<wr::WrFilterOp>& aFilters, bool aIsBackfaceVisible,
+    const nsTArray<wr::FilterOp>& aFilters, bool aIsBackfaceVisible,
     const wr::RasterSpace& aRasterSpace) {
   MOZ_ASSERT(mClipChainLeaf.isNothing(),
              "Non-empty leaf from clip chain given, but not used with SC!");
