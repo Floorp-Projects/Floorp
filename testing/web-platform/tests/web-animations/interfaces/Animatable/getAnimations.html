@@ -65,7 +65,32 @@ test(t => {
     delay: 100 * MS_PER_SEC,
   });
   assert_array_equals(div.getAnimations(), [animation]);
-}, 'Returns animations in their delay phase');
+}, 'Returns animations yet to reach their active phase');
+
+test(t => {
+  const div = createDiv(t);
+  const animation = div.animate(null, 100 * MS_PER_SEC);
+  animation.playbackRate = -1;
+  assert_array_equals(div.getAnimations(), []);
+}, 'Does not return reversed finished animations that do not fill backwards');
+
+test(t => {
+  const div = createDiv(t);
+  const animation = div.animate(null, {
+    duration: 100 * MS_PER_SEC,
+    fill: 'backwards',
+  });
+  animation.playbackRate = -1;
+  assert_array_equals(div.getAnimations(), [animation]);
+}, 'Returns reversed finished animations that fill backwards');
+
+test(t => {
+  const div = createDiv(t);
+  const animation = div.animate(null, 100 * MS_PER_SEC);
+  animation.playbackRate = -1;
+  animation.currentTime = 200 * MS_PER_SEC;
+  assert_array_equals(div.getAnimations(), [animation]);
+}, 'Returns reversed animations yet to reach their active phase');
 
 test(t => {
   const div = createDiv(t);
