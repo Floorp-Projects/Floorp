@@ -8,5 +8,5 @@ DevToolsModules(
     'service-worker-process.js',
     'service-worker-registration-list.js',
     'service-worker.js',
-    'worker-list.js',
+    'worker-target-actor-list.js',
 )
