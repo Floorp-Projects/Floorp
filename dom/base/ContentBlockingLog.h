@@ -30,16 +30,14 @@ class ContentBlockingLog final {
   // come from the blocking types defined in nsIWebProgressListener.
   typedef nsTArray<LogEntry> OriginLog;
   typedef Tuple<bool, Maybe<bool>, OriginLog> OriginData;
-  typedef nsTArray<Tuple<nsString, UniquePtr<OriginData>>> OriginDataTable;
+  typedef nsTArray<Tuple<nsCString, UniquePtr<OriginData>>> OriginDataTable;
 
   struct StringWriteFunc : public JSONWriteFunc {
-    nsAString&
+    nsACString&
         mBuffer;  // The lifetime of the struct must be bound to the buffer
-    explicit StringWriteFunc(nsAString& aBuffer) : mBuffer(aBuffer) {}
+    explicit StringWriteFunc(nsACString& aBuffer) : mBuffer(aBuffer) {}
 
-    void Write(const char* aStr) override {
-      mBuffer.Append(NS_ConvertUTF8toUTF16(aStr));
-    }
+    void Write(const char* aStr) override { mBuffer.Append(aStr); }
   };
 
   struct Comparator {
@@ -50,7 +48,7 @@ class ContentBlockingLog final {
     }
 
     bool Equals(const OriginDataTable::elem_type& aLeft,
-                const nsAString& aRight) const {
+                const nsACString& aRight) const {
       return Get<0>(aLeft).Equals(aRight);
     }
   };
@@ -59,7 +57,7 @@ class ContentBlockingLog final {
   ContentBlockingLog() = default;
   ~ContentBlockingLog() = default;
 
-  void RecordLog(const nsAString& aOrigin, uint32_t aType, bool aBlocked) {
+  void RecordLog(const nsACString& aOrigin, uint32_t aType, bool aBlocked) {
     if (aOrigin.IsVoid()) {
       return;
     }
@@ -107,14 +105,14 @@ class ContentBlockingLog final {
       } else {
         Get<2>(*data).AppendElement(LogEntry{aType, 1u, aBlocked});
       }
-      nsAutoString origin(aOrigin);
-      mLog.AppendElement(Tuple<nsString, UniquePtr<OriginData>>(
+      nsAutoCString origin(aOrigin);
+      mLog.AppendElement(Tuple<nsCString, UniquePtr<OriginData>>(
           std::move(origin), std::move(data)));
     }
   }
 
-  nsAutoString Stringify() {
-    nsAutoString buffer;
+  nsAutoCString Stringify() {
+    nsAutoCString buffer;
 
     JSONWriter w(MakeUnique<StringWriteFunc>(buffer));
     w.Start();
@@ -122,14 +120,12 @@ class ContentBlockingLog final {
     const auto end = mLog.end();
     for (auto iter = mLog.begin(); iter != end; ++iter) {
       if (!Get<1>(*iter)) {
-        w.StartArrayProperty(NS_ConvertUTF16toUTF8(Get<0>(*iter)).get(),
-                             w.SingleLineStyle);
+        w.StartArrayProperty(Get<0>(*iter).get(), w.SingleLineStyle);
         w.EndArray();
         continue;
       }
 
-      w.StartArrayProperty(NS_ConvertUTF16toUTF8(Get<0>(*iter)).get(),
-                           w.SingleLineStyle);
+      w.StartArrayProperty(Get<0>(*iter).get(), w.SingleLineStyle);
       auto& data = Get<1>(*iter);
       if (Get<0>(*data)) {
         w.StartArrayElement(w.SingleLineStyle);
