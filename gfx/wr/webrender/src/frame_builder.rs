@@ -392,7 +392,7 @@ impl FrameBuilder {
             .set(self.prim_store.prim_count());
 
         resource_cache.begin_frame(stamp);
-        gpu_cache.begin_frame(stamp.frame_id());
+        gpu_cache.begin_frame(stamp);
 
         let mut transform_palette = TransformPalette::new();
         clip_scroll_tree.update_tree(
@@ -498,7 +498,7 @@ impl FrameBuilder {
             }
         }
 
-        let gpu_cache_frame_id = gpu_cache.end_frame(gpu_cache_profile);
+        let gpu_cache_frame_id = gpu_cache.end_frame(gpu_cache_profile).frame_id();
 
         render_tasks.write_task_data(device_pixel_scale);
 
