@@ -95,7 +95,8 @@ static bool DepthFirstSearchUse(MIRGenerator* mir,
       }
 
       MPhi* cphi = cdef->toPhi();
-      if (cphi->getUsageAnalysis() == PhiUsage::Used || cphi->isUseRemoved()) {
+      if (cphi->getUsageAnalysis() == PhiUsage::Used || cphi->isUseRemoved() ||
+          cphi->isImplicitlyUsed()) {
         // The information got cached on the Phi the last time it
         // got visited, or when flagging operands of removed
         // instructions.
@@ -225,7 +226,8 @@ static bool FlagPhiInputsAsHavingRemovedUses(MIRGenerator* mir,
 
     // If the Phi is either Used or Unused, set the UseRemoved flag
     // accordingly.
-    if (phi->getUsageAnalysis() == PhiUsage::Used || phi->isUseRemoved()) {
+    if (phi->getUsageAnalysis() == PhiUsage::Used || phi->isUseRemoved() ||
+        phi->isImplicitlyUsed()) {
       def->setUseRemoved();
       continue;
     } else if (phi->getUsageAnalysis() == PhiUsage::Unused) {
