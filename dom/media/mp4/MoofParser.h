@@ -253,7 +253,13 @@ class Moof final : public Atom {
   Result<Ok, nsresult> ParseTrun(Box& aBox, Mvhd& aMvhd, Mdhd& aMdhd,
                                  Edts& aEdts, uint64_t* aDecodeTime,
                                  bool aIsAudio);
-  bool ProcessCenc();
+  // Process the sample auxiliary information used by common encryption.
+  // aScheme is used to select the appropriate auxiliary information and should
+  // be set based on the encryption scheme used by the track being processed.
+  // Note, the term cenc here refers to the standard, not the specific scheme
+  // from that standard. I.e. this function is used to handle up auxiliary
+  // information from the cenc and cbcs schemes.
+  bool ProcessCencAuxInfo(AtomType aScheme);
   uint64_t mMaxRoundingError;
 };
 
