@@ -33,16 +33,12 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsIFile.h"
 #include "nsPrintfCString.h"
-#include "nsIObserverService.h"
 
+#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/ipc/BrowserProcessSubThread.h"
 #include "mozilla/ipc/EnvironmentMap.h"
 #include "mozilla/Omnijar.h"
-#include "mozilla/RecordReplay.h"
 #include "mozilla/Scoped.h"
-#include "mozilla/Services.h"
-#include "mozilla/SharedThreadPool.h"
-#include "mozilla/StaticMutex.h"
 #include "mozilla/Telemetry.h"
 #include "ProtocolUtils.h"
 #include <sys/stat.h>
@@ -71,7 +67,6 @@
 #include "private/pprio.h"
 
 using mozilla::MonitorAutoLock;
-using mozilla::StaticMutexAutoLock;
 using mozilla::ipc::GeckoChildProcessHost;
 
 namespace mozilla {
@@ -470,130 +465,26 @@ void GeckoChildProcessHost::GetChildLogName(const char* origLogName,
   buffer.AppendInt(mChildCounter);
 }
 
-namespace {
-// Windows needs a single dedicated thread for process launching,
-// because of thread-safety restrictions/assertions in the sandbox
-// code.  (This implementation isn't itself Windows-specific, so
-// the ifdef can be changed to test on other platforms.)
-#ifdef XP_WIN
-
-static mozilla::StaticMutex gIPCLaunchThreadMutex;
-static mozilla::StaticRefPtr<nsIThread> gIPCLaunchThread;
-
-class IPCLaunchThreadObserver final : public nsIObserver {
- public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIOBSERVER
- protected:
-  virtual ~IPCLaunchThreadObserver() = default;
-};
-
-NS_IMPL_ISUPPORTS(IPCLaunchThreadObserver, nsIObserver, nsISupports)
-
-NS_IMETHODIMP
-IPCLaunchThreadObserver::Observe(nsISupports* aSubject, const char* aTopic,
-                                 const char16_t* aData) {
-  MOZ_RELEASE_ASSERT(strcmp(aTopic, "xpcom-shutdown-threads") == 0);
-  StaticMutexAutoLock lock(gIPCLaunchThreadMutex);
-
-  nsresult rv = NS_OK;
-  if (gIPCLaunchThread) {
-    rv = gIPCLaunchThread->Shutdown();
-    gIPCLaunchThread = nullptr;
-  }
-  mozilla::Unused << NS_WARN_IF(NS_FAILED(rv));
-  return rv;
-}
-
-static nsCOMPtr<nsIEventTarget> GetIPCLauncher() {
-  StaticMutexAutoLock lock(gIPCLaunchThreadMutex);
-  if (!gIPCLaunchThread) {
-    nsCOMPtr<nsIThread> thread;
-    nsresult rv = NS_NewNamedThread(NS_LITERAL_CSTRING("IPC Launch"),
-                                    getter_AddRefs(thread));
-    if (!NS_WARN_IF(NS_FAILED(rv))) {
-      NS_DispatchToMainThread(
-          NS_NewRunnableFunction("GeckoChildProcessHost::GetIPCLauncher", [] {
-            nsCOMPtr<nsIObserverService> obsService =
-                mozilla::services::GetObserverService();
-            nsCOMPtr<nsIObserver> obs = new IPCLaunchThreadObserver();
-            obsService->AddObserver(obs, "xpcom-shutdown-threads", false);
-          }));
-      gIPCLaunchThread = thread.forget();
-    }
-  }
-
-  nsCOMPtr<nsIEventTarget> thread = gIPCLaunchThread.get();
-  return thread;
-}
-
-#else  // XP_WIN
-
-// Non-Windows platforms can use an on-demand thread pool.
-
-static nsCOMPtr<nsIEventTarget> GetIPCLauncher() {
-  nsCOMPtr<nsIEventTarget> pool =
-      mozilla::SharedThreadPool::Get(NS_LITERAL_CSTRING("IPC Launch"));
-  return pool;
-}
-
-#endif  // XP_WIN
-}  // anonymous namespace
-
-void GeckoChildProcessHost::RunPerformAsyncLaunch(
+bool GeckoChildProcessHost::RunPerformAsyncLaunch(
     std::vector<std::string> aExtraOpts) {
-  auto fail = [this] {
+  InitializeChannel();
+
+  bool ok = PerformAsyncLaunch(aExtraOpts);
+  if (!ok) {
+    // WaitUntilConnected might be waiting for us to signal.
+    // If something failed let's set the error state and notify.
     MonitorAutoLock lock(mMonitor);
     mProcessState = PROCESS_ERROR;
     mHandlePromise->Reject(LaunchError{}, __func__);
     lock.Notify();
-  };
-
-  // This (probably?) needs to happen on the I/O thread.
-  InitializeChannel();
-
-  // But the rest of this doesn't, and shouldn't block IPC messages:
-  auto launchWrapper = [this, fail, aExtraOpts = std::move(aExtraOpts)]() {
-    bool ok = PerformAsyncLaunch(aExtraOpts);
-
-    if (!ok) {
-      // WaitUntilConnected might be waiting for us to signal.
-      // If something failed let's set the error state and notify.
-      fail();
-      CHROMIUM_LOG(ERROR) << "Failed to launch "
-                          << XRE_ChildProcessTypeToString(mProcessType)
-                          << " subprocess";
-      Telemetry::Accumulate(
-          Telemetry::SUBPROCESS_LAUNCH_FAILURE,
-          nsDependentCString(XRE_ChildProcessTypeToString(mProcessType)));
-    }
-  };
-
-  // The Web Replay middleman process launches the actual content
-  // processes, and doesn't initialize enough of XPCOM to use thread
-  // pools.
-  if (!mozilla::recordreplay::IsMiddleman()) {
-    auto launcher = GetIPCLauncher();
-    MOZ_DIAGNOSTIC_ASSERT(launcher != nullptr);
-    // Creating a thread pool shouldn't normally fail, but in case it
-    // does, use the fallback we already have for the middleman case.
-    if (launcher != nullptr) {
-      nsresult rv = launcher->Dispatch(
-          NS_NewRunnableFunction(
-              "ipc::GeckoChildProcessHost::PerformAsyncLaunch", launchWrapper),
-          NS_DISPATCH_NORMAL);
-      if (NS_FAILED(rv)) {
-        fail();
-        CHROMIUM_LOG(ERROR) << "Failed to dispatch launch task for "
-                            << XRE_ChildProcessTypeToString(mProcessType)
-                            << " process; launching during shutdown?";
-      }
-      return;
-    }
+    CHROMIUM_LOG(ERROR) << "Failed to launch "
+                        << XRE_ChildProcessTypeToString(mProcessType)
+                        << " subprocess";
+    Telemetry::Accumulate(
+        Telemetry::SUBPROCESS_LAUNCH_FAILURE,
+        nsDependentCString(XRE_ChildProcessTypeToString(mProcessType)));
   }
-
-  // Fall back to launching on the I/O thread.
-  launchWrapper();
+  return ok;
 }
 
 void
@@ -1224,12 +1115,7 @@ bool GeckoChildProcessHost::PerformAsyncLaunch(
       base::GetProcId(process), crashAnnotationReadPipe.forget());
 
   MonitorAutoLock lock(mMonitor);
-  // This runs on a launch thread, but the OnChannel{Connected,Error} callbacks
-  // run on the I/O thread, so it's possible that the state already advanced
-  // beyond PROCESS_CREATED.
-  if (mProcessState < PROCESS_CREATED) {
-    mProcessState = PROCESS_CREATED;
-  }
+  mProcessState = PROCESS_CREATED;
   mHandlePromise->Resolve(process, __func__);
   lock.Notify();
 
@@ -1254,6 +1140,7 @@ void GeckoChildProcessHost::OnChannelConnected(int32_t peer_pid) {
     MOZ_CRASH("can't open handle to child process");
   }
   MonitorAutoLock lock(mMonitor);
+  MOZ_DIAGNOSTIC_ASSERT(mProcessState == PROCESS_CREATED);
   mProcessState = PROCESS_CONNECTED;
   lock.Notify();
 }
@@ -1271,6 +1158,7 @@ void GeckoChildProcessHost::OnChannelError() {
   // in the FIXME comment below.
   MonitorAutoLock lock(mMonitor);
   if (mProcessState < PROCESS_CONNECTED) {
+    MOZ_DIAGNOSTIC_ASSERT(mProcessState == PROCESS_CREATED);
     mProcessState = PROCESS_ERROR;
     lock.Notify();
   }
