@@ -103,13 +103,6 @@ impl MallocSizeOf for String {
     }
 }
 
-impl<'a, T: ?Sized> MallocSizeOf for &'a T {
-    fn size_of(&self, _ops: &mut MallocSizeOfOps) -> usize {
-        // Zero makes sense for a non-owning reference.
-        0
-    }
-}
-
 impl<T: ?Sized> MallocShallowSizeOf for Box<T> {
     fn shallow_size_of(&self, ops: &mut MallocSizeOfOps) -> usize {
         unsafe { ops.malloc_size_of(&**self) }
