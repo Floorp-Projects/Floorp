@@ -20,6 +20,9 @@ internal class GleanLifecycleObserver : LifecycleObserver {
      */
     @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
     fun onEnterBackground() {
+        // We're going to background, so store how much time we spent
+        // on foreground.
+        Baseline.duration.stopAndSum()
         Glean.handleEvent(Glean.PingEvent.Background)
     }
 
@@ -34,5 +37,9 @@ internal class GleanLifecycleObserver : LifecycleObserver {
     @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
     fun onEnterForeground() {
         Baseline.sessions.add()
+        // Note that this is sending the length of the last foreground session
+        // because it belongs to the baseline ping and that ping is sent every
+        // time the app goes to background.
+        Baseline.duration.start()
     }
 }

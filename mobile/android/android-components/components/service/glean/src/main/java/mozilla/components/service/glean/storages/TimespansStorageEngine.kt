@@ -12,6 +12,7 @@ import mozilla.components.service.glean.TimeUnit
 
 import mozilla.components.support.base.log.logger.Logger
 import org.json.JSONArray
+import org.json.JSONObject
 import java.util.concurrent.TimeUnit as AndroidTimeUnit
 
 /**
@@ -202,16 +203,17 @@ internal open class TimespansStorageEngineImplementation(
      * @return the [Long] recorded in the requested store
      */
     @Synchronized
-    override fun getSnapshot(storeName: String, clearStore: Boolean): GenericDataStorage<Long>? {
-        val adjustedData = super.getSnapshot(storeName, clearStore)?.mapValues {
+    internal fun getSnapshotWithTimeUnit(storeName: String, clearStore: Boolean): Map<String, Pair<String, Long>>? {
+        val adjustedData = super.getSnapshot(storeName, clearStore)
+            ?.mapValuesTo(mutableMapOf<String, Pair<String, Long>>()) {
             // Convert to the expected time unit.
             if (it.key !in timeUnitsMap) {
                 logger.error("Can't find the time unit for ${it.key}. Reporting raw value.")
             }
 
             timeUnitsMap[it.key]?.let { timeUnit ->
-                getAdjustedTime(timeUnit, it.value)
-            } ?: it.value
+                Pair(timeUnit.name.toLowerCase(), getAdjustedTime(timeUnit, it.value))
+            } ?: Pair("unknown", it.value)
         }
 
         // Clear the time unit map if needed: we need to check all the stores
@@ -225,7 +227,27 @@ internal open class TimespansStorageEngineImplementation(
             timeUnitsMap.keys.retainAll { it in unclearedMetricNames }
         }
 
-        return adjustedData?.toMutableMap()
+        return adjustedData
+    }
+
+    /**
+     * Get a snapshot of the stored data as a JSON object, including
+     * the time_unit for each field.
+     *
+     * @param storeName the name of the desired store
+     * @param clearStore whether or not to clearStore the requested store
+     *
+     * @return the [JSONObject] containing the recorded data.
+     */
+    override fun getSnapshotAsJSON(storeName: String, clearStore: Boolean): Any? {
+        return getSnapshotWithTimeUnit(storeName, clearStore)?.let { dataMap ->
+            return JSONObject(dataMap.mapValuesTo(mutableMapOf<String, JSONObject>()) {
+                JSONObject(mapOf(
+                    "time_unit" to it.value.first,
+                    "value" to it.value.second
+                ))
+            })
+        }
     }
 
     /**

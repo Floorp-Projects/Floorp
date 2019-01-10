@@ -21,16 +21,19 @@ baseline:
     notification_emails:
       - telemetry-client-dev@mozilla.com
 
-  # durations:
-  #   type: timespan
-  #   description: |
-  #     The combined duration of all the foreground sessions since the last upload.
-  #   send_in_pings:
-  #     - baseline
-  #   bugs:
-  #     - 1497894
-  #   notification_emails:
-  #     - telemetry-client-dev@mozilla.com
+  duration:
+    type: timespan
+    description: |
+      The duration of the last foreground session.
+    time_unit: second
+    send_in_pings:
+      - baseline
+    bugs:
+      - 1497894, 1519120
+    reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1512938#c3
+    notification_emails:
+      - telemetry-client-dev@mozilla.com
 
   os:
     type: string

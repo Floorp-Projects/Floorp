@@ -4,6 +4,9 @@
 
 package mozilla.components.service.glean
 
+import android.arch.lifecycle.Lifecycle
+import android.arch.lifecycle.LifecycleOwner
+import android.arch.lifecycle.LifecycleRegistry
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -13,6 +16,7 @@ import mozilla.components.service.glean.storages.EventsStorageEngine
 import mozilla.components.service.glean.storages.ExperimentsStorageEngine
 import mozilla.components.service.glean.storages.StringsStorageEngine
 import mozilla.components.service.glean.metrics.Baseline
+import mozilla.components.service.glean.scheduler.GleanLifecycleObserver
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.json.JSONObject
@@ -27,6 +31,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito.doThrow
+import org.mockito.Mockito.mock
 import org.mockito.Mockito.spy
 import org.robolectric.RobolectricTestRunner
 import java.io.File
@@ -189,11 +194,18 @@ class GleanTest {
         )
         Glean.httpPingUploader = HttpPingUploader(testConfig)
 
-        try {
-            click.record("buttonA")
-            Baseline.sessions.add()
+        // Fake calling the lifecycle observer.
+        val lifecycleRegistry = LifecycleRegistry(mock(LifecycleOwner::class.java))
+        val gleanLifecycleObserver = GleanLifecycleObserver()
+        lifecycleRegistry.addObserver(gleanLifecycleObserver)
 
-            Glean.handleEvent(Glean.PingEvent.Background)
+        try {
+            // Simulate the first foreground event after the application starts.
+            lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
+            click.record("buttonA")
+
+            // Simulate going to background.
+            lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_STOP)
 
             val requests: MutableMap<String, String> = mutableMapOf()
             for (i in 0..1) {
@@ -215,7 +227,8 @@ class GleanTest {
                 "baseline.device",
                 "baseline.architecture"
             )
-            val baselineStringMetrics = baselineJson.getJSONObject("metrics")!!.getJSONObject("string")!!
+            val baselineMetricsObject = baselineJson.getJSONObject("metrics")!!
+            val baselineStringMetrics = baselineMetricsObject.getJSONObject("string")!!
             assertEquals(expectedBaselineStringMetrics.size, baselineStringMetrics.length())
             for (metric in expectedBaselineStringMetrics) {
                 assertNotNull(baselineStringMetrics.get(metric))
@@ -224,14 +237,19 @@ class GleanTest {
             val expectedBaselineCounterMetrics = arrayOf(
                 "baseline.sessions"
             )
-            val baselineCounterMetrics = baselineJson.getJSONObject("metrics")!!.getJSONObject("counter")!!
+            val baselineCounterMetrics = baselineMetricsObject.getJSONObject("counter")!!
             assertEquals(expectedBaselineCounterMetrics.size, baselineCounterMetrics.length())
             for (metric in expectedBaselineCounterMetrics) {
                 assertNotNull(baselineCounterMetrics.get(metric))
             }
+
+            val baselineTimespanMetrics = baselineMetricsObject.getJSONObject("timespan")!!
+            assertEquals(1, baselineTimespanMetrics.length())
+            assertNotNull(baselineTimespanMetrics.get("baseline.duration"))
         } finally {
             Glean.httpPingUploader = realClient
             server.shutdown()
+            lifecycleRegistry.removeObserver(gleanLifecycleObserver)
         }
     }
 

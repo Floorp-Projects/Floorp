@@ -80,9 +80,9 @@ class TimespansStorageEngineTest {
         )).thenReturn(sharedPreferences)
 
         storageEngine.applicationContext = context
-        val snapshot = storageEngine.getSnapshot(storeName = "store1", clearStore = true)
+        val snapshot = storageEngine.getSnapshotWithTimeUnit(storeName = "store1", clearStore = true)
         assertEquals(1, snapshot!!.size)
-        assertEquals(expectedValue, snapshot["telemetry.valid"])
+        assertEquals(Pair("nanosecond", expectedValue), snapshot["telemetry.valid"])
     }
 
     @Test
@@ -107,9 +107,9 @@ class TimespansStorageEngineTest {
         doReturn(expectedTimespanNanos).`when`(spiedEngine).getElapsedNanos()
         spiedEngine.stopAndSum(metric, TimeUnit.Nanosecond)
 
-        val snapshot = spiedEngine.getSnapshot(storeName = "store1", clearStore = false)
+        val snapshot = spiedEngine.getSnapshotWithTimeUnit(storeName = "store1", clearStore = false)
         assertEquals(1, snapshot!!.size)
-        assertEquals(expectedTimespanNanos, snapshot["telemetry.single_elapsed_test"])
+        assertEquals(Pair("nanosecond", expectedTimespanNanos), snapshot["telemetry.single_elapsed_test"])
     }
 
     @Test
@@ -137,9 +137,9 @@ class TimespansStorageEngineTest {
         doReturn(expectedChunkNanos * 2).`when`(spiedEngine).getElapsedNanos()
         spiedEngine.stopAndSum(metric, TimeUnit.Nanosecond)
 
-        val snapshot = spiedEngine.getSnapshot(storeName = "store1", clearStore = false)
+        val snapshot = spiedEngine.getSnapshotWithTimeUnit(storeName = "store1", clearStore = false)
         assertEquals(1, snapshot!!.size)
-        assertEquals(expectedChunkNanos * 2, snapshot["telemetry.single_elapsed_test"])
+        assertEquals(Pair("nanosecond", expectedChunkNanos * 2), snapshot["telemetry.single_elapsed_test"])
     }
 
     @Test
@@ -186,9 +186,12 @@ class TimespansStorageEngineTest {
         doReturn(expectedChunkNanos).`when`(spiedEngine).getElapsedNanos()
         spiedEngine.stopAndSum(metric, TimeUnit.Nanosecond)
 
-        val snapshot = spiedEngine.getSnapshot(storeName = "store1", clearStore = false)
+        val snapshot = spiedEngine.getSnapshotWithTimeUnit(storeName = "store1", clearStore = false)
         assertEquals(1, snapshot!!.size)
-        assertEquals(expectedChunkNanos, snapshot["telemetry.single_elapsed_test"])
+        assertEquals(
+            Pair("nanosecond", expectedChunkNanos),
+            snapshot["telemetry.single_elapsed_test"]
+        )
     }
 
     @Test
@@ -214,7 +217,7 @@ class TimespansStorageEngineTest {
         doReturn(20.toLong()).`when`(spiedEngine).getElapsedNanos()
         spiedEngine.stopAndSum(metric, TimeUnit.Nanosecond)
 
-        val snapshot = spiedEngine.getSnapshot(storeName = "store1", clearStore = false)
+        val snapshot = spiedEngine.getSnapshotWithTimeUnit(storeName = "store1", clearStore = false)
         assertNull(snapshot)
     }
 
@@ -247,9 +250,9 @@ class TimespansStorageEngineTest {
             doReturn(expectedLengthInNanos).`when`(spiedEngine).getElapsedNanos()
             spiedEngine.stopAndSum(metric, res)
 
-            val snapshot = spiedEngine.getSnapshot(storeName = "store1", clearStore = true)
+            val snapshot = spiedEngine.getSnapshotWithTimeUnit(storeName = "store1", clearStore = true)
             assertEquals(1, snapshot!!.size)
-            assertEquals(expectedTimespan, snapshot["telemetry.resolution_test"])
+            assertEquals(Pair(res.name.toLowerCase(), expectedTimespan), snapshot["telemetry.resolution_test"])
         }
     }
 
@@ -284,8 +287,11 @@ class TimespansStorageEngineTest {
 
         // Since the sum of the short-lived timespans is >= our resolution, we
         // expect the accumulated value to be in the snapshot.
-        val snapshot = spiedEngine.getSnapshot(storeName = "store1", clearStore = true)
+        val snapshot = spiedEngine.getSnapshotWithTimeUnit(storeName = "store1", clearStore = true)
         assertEquals(1, snapshot!!.size)
-        assertEquals(expectedTimespanSeconds, snapshot["telemetry.many_short_lived_test"])
+        assertEquals(
+            Pair("second", expectedTimespanSeconds),
+            snapshot["telemetry.many_short_lived_test"]
+        )
     }
 }

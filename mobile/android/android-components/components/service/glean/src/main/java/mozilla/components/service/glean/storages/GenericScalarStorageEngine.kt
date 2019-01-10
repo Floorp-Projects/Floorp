@@ -64,7 +64,7 @@ abstract class GenericScalarStorageEngine<ScalarType> : StorageEngine {
     /**
      * Implementor's provided function to serialize 'user' lifetime data as needed by the data type.
      *
-     * @param userPreferences [SharedPreference.Editor] for writing preferences as needed by type.
+     * @param userPreferences [SharedPreferences.Editor] for writing preferences as needed by type.
      * @param storeName The metric store name where the data is stored in [SharedPreferences].
      * @param value The value to be stored, passed as a [ScalarType] to be handled correctly by the
      *              implementor.
@@ -149,7 +149,7 @@ abstract class GenericScalarStorageEngine<ScalarType> : StorageEngine {
      * @return the [ScalarType] recorded in the requested store
      */
     @Synchronized
-    open fun getSnapshot(storeName: String, clearStore: Boolean): GenericDataStorage<ScalarType>? {
+    fun getSnapshot(storeName: String, clearStore: Boolean): GenericDataStorage<ScalarType>? {
         val allLifetimes: GenericDataStorage<ScalarType> = mutableMapOf()
 
         // Make sure data with "user" lifetime is loaded before getting the snapshot.
