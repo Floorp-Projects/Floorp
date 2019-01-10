@@ -58,11 +58,16 @@ extern crate cfg_if;
 extern crate lazy_static;
 #[macro_use]
 extern crate log;
+#[macro_use]
+extern crate malloc_size_of_derive;
 #[cfg(any(feature = "serde"))]
 #[macro_use]
 extern crate serde;
 #[macro_use]
 extern crate thread_profiler;
+
+extern crate wr_malloc_size_of;
+use wr_malloc_size_of as malloc_size_of;
 
 mod batch;
 mod border;

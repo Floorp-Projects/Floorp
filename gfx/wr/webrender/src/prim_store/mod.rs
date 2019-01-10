@@ -79,7 +79,7 @@ pub fn register_prim_chase_id(_: PrimitiveDebugId) {
 const MIN_BRUSH_SPLIT_AREA: f32 = 256.0 * 256.0;
 pub const VECS_PER_SEGMENT: usize = 2;
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, MallocSizeOf, PartialEq)]
 pub struct ScrollNodeAndClipChain {
     pub spatial_node_index: SpatialNodeIndex,
     pub clip_chain_id: ClipChainId,
@@ -846,7 +846,7 @@ impl OpacityBinding {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, MallocSizeOf)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct VisibleMaskImageTile {
