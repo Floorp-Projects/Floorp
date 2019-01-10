@@ -167,8 +167,6 @@ bool AppendExtraData(nsIFile* extraFile, const AnnotationTable& data) {
 
 void OOPInit() {}
 
-void GetChildProcessTmpDir(nsIFile** aOutTmpDir) {}
-
 #if defined(XP_WIN) || defined(XP_MACOSX)
 const char* GetChildNotificationPipe() { return nullptr; }
 #endif

@@ -247,10 +247,6 @@ bool CreateAdditionalChildMinidump(ProcessHandle childPid,
                                    nsIFile* parentMinidump,
                                    const nsACString& name);
 
-// Parent-side API, returns the tmp dir for child processes to use, accounting
-// for sandbox considerations.
-void GetChildProcessTmpDir(nsIFile** aOutTmpDir);
-
 #if defined(XP_WIN32) || defined(XP_MACOSX)
 // Parent-side API for children
 const char* GetChildNotificationPipe();
