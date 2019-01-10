@@ -730,21 +730,6 @@ bool GeckoChildProcessHost::PerformAsyncLaunch(
   // Add the application directory path (-appdir path)
   AddAppDirToCommandLine(childArgv);
 
-  // Tmp dir that the GPU or RDD process should use for crash reports.
-  // This arg is always populated (but possibly with an empty value) for
-  // a GPU or RDD child process.
-  if (mProcessType == GeckoProcessType_GPU ||
-      mProcessType == GeckoProcessType_RDD ||
-      mProcessType == GeckoProcessType_VR) {
-    nsCOMPtr<nsIFile> file;
-    CrashReporter::GetChildProcessTmpDir(getter_AddRefs(file));
-    nsAutoCString path;
-    if (file) {
-      file->GetNativePath(path);
-    }
-    childArgv.push_back(path.get());
-  }
-
   childArgv.push_back(pidstring);
 
   if (!CrashReporter::IsDummy()) {
@@ -1014,21 +999,6 @@ bool GeckoChildProcessHost::PerformAsyncLaunch(
 
   // Win app model id
   cmdLine.AppendLooseValue(mGroupId.get());
-
-  // Tmp dir that the GPU or RDD process should use for crash reports.
-  // This arg is always populated (but possibly with an empty value) for
-  // a GPU or RDD child process.
-  if (mProcessType == GeckoProcessType_GPU ||
-      mProcessType == GeckoProcessType_RDD) {
-    nsCOMPtr<nsIFile> file;
-    CrashReporter::GetChildProcessTmpDir(getter_AddRefs(file));
-    nsString path;
-    if (file) {
-      MOZ_ALWAYS_SUCCEEDS(file->GetPath(path));
-    }
-    std::wstring wpath(path.get());
-    cmdLine.AppendLooseValue(wpath);
-  }
 
   // Process id
   cmdLine.AppendLooseValue(UTF8ToWide(pidstring));
