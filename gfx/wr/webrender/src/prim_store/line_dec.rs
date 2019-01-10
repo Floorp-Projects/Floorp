@@ -17,7 +17,7 @@ use prim_store::{
 };
 use prim_store::PrimitiveInstanceKind;
 
-#[derive(Clone, Debug, Hash, PartialEq, Eq)]
+#[derive(Clone, Debug, Hash, MallocSizeOf, PartialEq, Eq)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct LineDecorationCacheKey {
@@ -28,7 +28,7 @@ pub struct LineDecorationCacheKey {
 }
 
 /// Identifying key for a line decoration.
-#[derive(Clone, Debug, Hash, PartialEq, Eq)]
+#[derive(Clone, Debug, Hash, MallocSizeOf, PartialEq, Eq)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct LineDecoration {
@@ -77,6 +77,7 @@ impl AsInstanceKind<LineDecorationDataHandle> for LineDecorationKey {
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
+#[derive(MallocSizeOf)]
 pub struct LineDecorationData {
     pub cache_key: Option<LineDecorationCacheKey>,
     pub color: ColorF,
@@ -136,7 +137,7 @@ impl From<LineDecorationKey> for LineDecorationTemplate {
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-#[derive(Clone, Copy, Debug, Hash, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Hash, Eq, MallocSizeOf, PartialEq)]
 pub struct LineDecorationDataMarker;
 
 pub type LineDecorationDataStore = intern::DataStore<LineDecorationKey, LineDecorationTemplate, LineDecorationDataMarker>;

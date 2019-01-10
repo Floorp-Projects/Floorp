@@ -133,6 +133,7 @@ enum ClipResult {
 #[derive(Debug)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
+#[derive(MallocSizeOf)]
 pub struct ClipNode {
     pub item: ClipItem,
     pub gpu_cache_handle: GpuCacheHandle,
@@ -781,7 +782,7 @@ impl ClipRegion<Option<ComplexClipRegion>> {
 // the uploaded GPU cache handle to be retained between display lists.
 // TODO(gw): Maybe we should consider constructing these directly
 //           in the DL builder?
-#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Eq, MallocSizeOf, PartialEq, Hash)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub enum ClipItemKey {
@@ -844,7 +845,7 @@ impl ClipItemKey {
 
 impl intern::InternDebug for ClipItemKey {}
 
-#[derive(Debug)]
+#[derive(Debug, MallocSizeOf)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub enum ClipItem {

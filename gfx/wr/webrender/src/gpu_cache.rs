@@ -64,7 +64,7 @@ impl Epoch {
     }
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, MallocSizeOf)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 struct CacheLocation {
@@ -129,7 +129,7 @@ pub trait ToGpuBlocks {
 }
 
 // A handle to a GPU resource.
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, MallocSizeOf)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct GpuCacheHandle {

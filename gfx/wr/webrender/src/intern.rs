@@ -5,6 +5,7 @@
 use api::{LayoutPrimitiveInfo, LayoutRect};
 use api::VoidPtrToSizeFn;
 use internal_types::FastHashMap;
+use malloc_size_of::MallocSizeOf;
 use profiler::ResourceProfileCounter;
 use std::fmt::Debug;
 use std::hash::Hash;
@@ -106,6 +107,7 @@ impl <M> Handle<M> where M: Copy {
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
+#[derive(MallocSizeOf)]
 pub enum UpdateKind {
     Insert,
     Remove,
@@ -114,6 +116,7 @@ pub enum UpdateKind {
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
+#[derive(MallocSizeOf)]
 pub struct Update {
     index: usize,
     kind: UpdateKind,
@@ -123,7 +126,8 @@ pub struct Update {
 /// correct access patterns.
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-struct Item<T> {
+#[derive(MallocSizeOf)]
+struct Item<T: MallocSizeOf> {
     epoch: Epoch,
     data: T,
 }
@@ -136,13 +140,18 @@ pub trait InternDebug {
 /// contains a free-list of items for fast access.
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-pub struct DataStore<S, T, M> {
+#[derive(MallocSizeOf)]
+pub struct DataStore<S, T: MallocSizeOf, M> {
     items: Vec<Item<T>>,
     _source: PhantomData<S>,
     _marker: PhantomData<M>,
 }
 
-impl<S, T, M> ::std::default::Default for DataStore<S, T, M> where S: Debug, T: From<S>, M: Debug
+impl<S, T, M> ::std::default::Default for DataStore<S, T, M>
+where
+    S: Debug + MallocSizeOf,
+    T: From<S> + MallocSizeOf,
+    M: Debug
 {
     fn default() -> Self {
         DataStore {
@@ -153,7 +162,11 @@ impl<S, T, M> ::std::default::Default for DataStore<S, T, M> where S: Debug, T: 
     }
 }
 
-impl<S, T, M> DataStore<S, T, M> where S: Debug, T: From<S>, M: Debug
+impl<S, T, M> DataStore<S, T, M>
+where
+    S: Debug + MallocSizeOf,
+    T: From<S> + MallocSizeOf,
+    M: Debug
 {
     /// Apply any updates from the scene builder thread to
     /// this data store.
@@ -194,7 +207,10 @@ impl<S, T, M> DataStore<S, T, M> where S: Debug, T: From<S>, M: Debug
 
 /// Retrieve an item from the store via handle
 impl<S, T, M> ops::Index<Handle<M>> for DataStore<S, T, M>
-where M: Copy
+where
+    S: MallocSizeOf,
+    T: MallocSizeOf,
+    M: Copy
 {
     type Output = T;
     fn index(&self, handle: Handle<M>) -> &T {
@@ -208,6 +224,8 @@ where M: Copy
 /// Retrieve an item from the store via handle
 impl<S, T, M> ops::IndexMut<Handle<M>> for DataStore<S, T, M>
 where
+    S: MallocSizeOf,
+    T: MallocSizeOf,
     M: Copy
 {
     fn index_mut(&mut self, handle: Handle<M>) -> &mut T {
@@ -224,10 +242,12 @@ where
 /// an update list of additions / removals.
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
+#[derive(MallocSizeOf)]
 pub struct Interner<S, D, M>
 where
-    S: Eq + Hash + Clone + Debug,
-    M: Copy
+    S: Eq + Hash + Clone + Debug + MallocSizeOf,
+    D: MallocSizeOf,
+    M: Copy + MallocSizeOf,
 {
     /// Uniquely map an interning key to a handle
     map: FastHashMap<S, Handle<M>>,
@@ -246,8 +266,9 @@ where
 
 impl<S, D, M> ::std::default::Default for Interner<S, D, M>
 where
-    S: Eq + Hash + Clone + Debug,
-    M: Copy + Debug
+    S: Eq + Hash + Clone + Debug + MallocSizeOf,
+    D: MallocSizeOf,
+    M: Copy + Debug + MallocSizeOf,
 {
     fn default() -> Self {
         Interner {
@@ -263,8 +284,9 @@ where
 
 impl<S, D, M> Interner<S, D, M>
 where
-    S: Eq + Hash + Clone + Debug + InternDebug,
-    M: Copy + Debug
+    S: Eq + Hash + Clone + Debug + InternDebug + MallocSizeOf,
+    D: MallocSizeOf,
+    M: Copy + Debug + MallocSizeOf
 {
     /// Intern a data structure, and return a handle to
     /// that data. The handle can then be stored in the
@@ -398,8 +420,9 @@ where
 /// Retrieve the local data for an item from the interner via handle
 impl<S, D, M> ops::Index<Handle<M>> for Interner<S, D, M>
 where
-    S: Eq + Clone + Hash + Debug,
-    M: Copy + Debug
+    S: Eq + Clone + Hash + Debug + MallocSizeOf,
+    D: MallocSizeOf,
+    M: Copy + Debug + MallocSizeOf
 {
     type Output = D;
     fn index(&self, handle: Handle<M>) -> &D {
@@ -413,10 +436,10 @@ where
 ///
 /// see DisplayListFlattener::add_interned_primitive<P>
 pub trait Internable {
-    type Marker: Copy + Debug;
-    type Source: Eq + Hash + Clone + Debug;
-    type StoreData: From<Self::Source>;
-    type InternData;
+    type Marker: Copy + Debug + MallocSizeOf;
+    type Source: Eq + Hash + Clone + Debug + MallocSizeOf;
+    type StoreData: From<Self::Source> + MallocSizeOf;
+    type InternData: MallocSizeOf;
 
     /// Build a new key from self with `info`.
     fn build_key(

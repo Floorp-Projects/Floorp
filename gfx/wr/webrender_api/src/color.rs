@@ -39,7 +39,7 @@ impl PremultipliedColorF {
 /// All components must be between 0.0 and 1.0.
 /// An alpha value of 1.0 is opaque while 0.0 is fully transparent.
 #[repr(C)]
-#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
+#[derive(Clone, Copy, Debug, Deserialize, MallocSizeOf, PartialEq, Serialize)]
 pub struct ColorF {
     pub r: f32,
     pub g: f32,
@@ -112,7 +112,7 @@ impl Hash for PremultipliedColorF {
 ///
 /// If the alpha value `a` is 255 the color is opaque.
 #[repr(C)]
-#[derive(Clone, Copy, Hash, Eq, Debug, Deserialize, PartialEq, PartialOrd, Ord, Serialize)]
+#[derive(Clone, Copy, Hash, Eq, Debug, Deserialize, MallocSizeOf, PartialEq, PartialOrd, Ord, Serialize)]
 pub struct ColorU {
     pub r: u8,
     pub g: u8,

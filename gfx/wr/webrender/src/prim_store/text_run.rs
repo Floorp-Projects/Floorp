@@ -23,7 +23,7 @@ use storage;
 /// A run of glyphs, with associated font information.
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Eq, MallocSizeOf, PartialEq, Hash)]
 pub struct TextRunKey {
     pub common: PrimKeyCommonData,
     pub font: FontInstance,
@@ -73,6 +73,7 @@ impl AsInstanceKind<TextRunDataHandle> for TextRunKey {
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
+#[derive(MallocSizeOf)]
 pub struct TextRunTemplate {
     pub common: PrimTemplateCommonData,
     pub font: FontInstance,
@@ -161,7 +162,7 @@ impl TextRunTemplate {
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-#[derive(Clone, Copy, Debug, Hash, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Hash, Eq, MallocSizeOf, PartialEq)]
 pub struct TextRunDataMarker;
 
 pub type TextRunDataStore = intern::DataStore<TextRunKey, TextRunTemplate, TextRunDataMarker>;
