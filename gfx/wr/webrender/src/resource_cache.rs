@@ -1610,7 +1610,6 @@ impl ResourceCache {
             &mut self.texture_cache,
             render_tasks,
         );
-        self.texture_cache.end_frame(texture_cache_profile);
     }
 
     fn rasterize_missing_blob_images(&mut self) {
@@ -1767,9 +1766,10 @@ impl ResourceCache {
         }
     }
 
-    pub fn end_frame(&mut self) {
+    pub fn end_frame(&mut self, texture_cache_profile: &mut TextureCacheProfileCounters) {
         debug_assert_eq!(self.state, State::QueryResources);
         self.state = State::Idle;
+        self.texture_cache.end_frame(texture_cache_profile);
     }
 
     pub fn set_debug_flags(&mut self, flags: DebugFlags) {

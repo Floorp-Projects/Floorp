@@ -148,12 +148,15 @@ impl ::std::ops::Sub<usize> for FrameId {
 pub struct FrameStamp {
     id: FrameId,
     time: SystemTime,
+    document_id: DocumentId,
 }
 
 impl Eq for FrameStamp {}
 
 impl PartialEq for FrameStamp {
     fn eq(&self, other: &Self) -> bool {
+        // We should not be checking equality unless the documents are the same
+        debug_assert!(self.document_id == other.document_id);
         self.id == other.id
     }
 }
@@ -175,11 +178,24 @@ impl FrameStamp {
         self.time
     }
 
+    /// Gets the DocumentId in this stamp.
+    pub fn document_id(&self) -> DocumentId {
+        self.document_id
+    }
+
+    pub fn is_valid(&self) -> bool {
+        // If any fields are their default values, the whole struct should equal INVALID
+        debug_assert!((self.time != UNIX_EPOCH && self.id != FrameId(0) && self.document_id != DocumentId::INVALID) ||
+                      *self == Self::INVALID);
+        self.document_id != DocumentId::INVALID
+    }
+
     /// Returns a FrameStamp corresponding to the first frame.
-    pub fn first() -> Self {
+    pub fn first(document_id: DocumentId) -> Self {
         FrameStamp {
             id: FrameId::first(),
             time: SystemTime::now(),
+            document_id: document_id,
         }
     }
 
@@ -193,6 +209,7 @@ impl FrameStamp {
     pub const INVALID: FrameStamp = FrameStamp {
         id: FrameId(0),
         time: UNIX_EPOCH,
+        document_id: DocumentId::INVALID,
     };
 }
 
@@ -332,6 +349,7 @@ struct Document {
 
 impl Document {
     pub fn new(
+        id: DocumentId,
         window_size: DeviceIntSize,
         layer: DocumentLayer,
         default_device_pixel_ratio: f32,
@@ -349,7 +367,7 @@ impl Document {
                 device_pixel_ratio: default_device_pixel_ratio,
             },
             clip_scroll_tree: ClipScrollTree::new(),
-            stamp: FrameStamp::first(),
+            stamp: FrameStamp::first(id),
             frame_builder: None,
             output_pipelines: FastHashSet::default(),
             hit_tester: None,
@@ -982,6 +1000,7 @@ impl RenderBackend {
             }
             ApiMsg::AddDocument(document_id, initial_size, layer) => {
                 let document = Document::new(
+                    document_id,
                     initial_size,
                     layer,
                     self.default_device_pixel_ratio,
@@ -1747,7 +1766,7 @@ impl RenderBackend {
                 removed_pipelines: Vec::new(),
                 view: view.clone(),
                 clip_scroll_tree: ClipScrollTree::new(),
-                stamp: FrameStamp::first(),
+                stamp: FrameStamp::first(id),
                 frame_builder: Some(FrameBuilder::empty()),
                 output_pipelines: FastHashSet::default(),
                 dynamic_properties: SceneProperties::new(),
