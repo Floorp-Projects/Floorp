@@ -376,9 +376,6 @@ def compiler_wrapper(wrapper, ccache):
         return tuple(wrapper)
 
 
-add_old_configure_assignment('COMPILER_WRAPPER', compiler_wrapper)
-
-
 @depends_if(compiler_wrapper)
 def using_compiler_wrapper(compiler_wrapper):
     return True
@@ -1485,9 +1482,6 @@ include('windows.configure', when=is_windows)
 # ==============================================================
 llvm_profdata = check_prog('LLVM_PROFDATA', ['llvm-profdata'],
                            allow_missing=True)
-
-add_old_configure_assignment('LLVM_PROFDATA', llvm_profdata)
-
 
 js_option('--enable-profile-generate',
           help='Build a PGO instrumented binary')
