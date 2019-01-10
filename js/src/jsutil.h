@@ -23,6 +23,16 @@
 #include "js/Utility.h"
 #include "js/Value.h"
 
+/* Crash diagnostics by default in debug and on nightly channel. */
+#if defined(DEBUG) || defined(NIGHTLY_BUILD)
+#define JS_CRASH_DIAGNOSTICS 1
+#endif
+
+/* Enable poisoning in crash-diagnostics and zeal builds. */
+#if defined(JS_CRASH_DIAGNOSTICS) || defined(JS_GC_ZEAL)
+#define JS_GC_POISONING 1
+#endif
+
 #if defined(JS_DEBUG)
 #define JS_DIAGNOSTICS_ASSERT(expr) MOZ_ASSERT(expr)
 #elif defined(JS_CRASH_DIAGNOSTICS)
@@ -287,6 +297,7 @@ static MOZ_ALWAYS_INLINE void SetMemCheckKind(void* ptr, size_t bytes,
 
 namespace js {
 
+// Unconditionally poison a region on memory.
 static inline void AlwaysPoison(void* ptr, uint8_t value, size_t num,
                                 MemCheckKind kind) {
   // Without a valid Value tag, a poisoned Value may look like a valid
@@ -320,33 +331,27 @@ static inline void AlwaysPoison(void* ptr, uint8_t value, size_t num,
 // JSGC_DISABLE_POISONING environment variable
 extern bool gDisablePoisoning;
 
+// Poison a region of memory in debug and nightly builds (plus builds where GC
+// zeal is configured). Can be disabled by setting the JSGC_DISABLE_POISONING
+// environment variable.
 static inline void Poison(void* ptr, uint8_t value, size_t num,
                           MemCheckKind kind) {
+#if defined(JS_CRASH_DIAGNOSTICS) || defined(JS_GC_ZEAL)
   if (!js::gDisablePoisoning) {
     AlwaysPoison(ptr, value, num, kind);
   }
+#endif
+}
+
+// Poison a region of memory in debug builds. Can be disabled by setting the
+// JSGC_DISABLE_POISONING environment variable.
+static inline void DebugOnlyPoison(void* ptr, uint8_t value, size_t num,
+                                   MemCheckKind kind) {
+#if defined(DEBUG)
+  Poison(ptr, value, num, kind);
+#endif
 }
 
 }  // namespace js
-
-/* Crash diagnostics by default in debug and on nightly channel. */
-#if defined(DEBUG) || defined(NIGHTLY_BUILD)
-#define JS_CRASH_DIAGNOSTICS 1
-#endif
-
-/* Enable poisoning in crash-diagnostics and zeal builds. */
-#if defined(JS_CRASH_DIAGNOSTICS) || defined(JS_GC_ZEAL)
-#define JS_POISON(p, val, size, kind) js::Poison(p, val, size, kind)
-#define JS_GC_POISONING 1
-#else
-#define JS_POISON(p, val, size, kind) ((void)0)
-#endif
-
-/* Enable even more poisoning in purely debug builds. */
-#if defined(DEBUG)
-#define JS_EXTRA_POISON(p, val, size, kind) js::Poison(p, val, size, kind)
-#else
-#define JS_EXTRA_POISON(p, val, size, kind) ((void)0)
-#endif
 
 #endif /* jsutil_h */
