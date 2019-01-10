@@ -19,6 +19,7 @@
 #include "mozilla/Unused.h"
 #include "mozilla/Printf.h"
 #include "mozilla/Sprintf.h"
+#include "mozilla/StaticMutex.h"
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/ipc/CrashReporterClient.h"
@@ -243,6 +244,7 @@ static bool sIncludeContextHeap = false;
 
 // OOP crash reporting
 static CrashGenerationServer* crashServer;  // chrome process has this
+static StaticMutex processMapLock;
 static std::map<ProcessId, PRFileDesc*> processToCrashFd;
 
 static std::terminate_handler oldTerminateHandler = nullptr;
@@ -1398,11 +1400,9 @@ static nsresult LocateExecutable(nsIFile* aXREDirectory,
 nsresult SetExceptionHandler(nsIFile* aXREDirectory, bool force /*=false*/) {
   if (gExceptionHandler) return NS_ERROR_ALREADY_INITIALIZED;
 
-#if defined(DEBUG) || defined(_M_ARM64)
+#if defined(DEBUG)
   // In debug builds, disable the crash reporter by default, and allow to
   // enable it with the MOZ_CRASHREPORTER environment variable.
-  // Likewise for Windows arm64 builds, where the crashreporter doesn't
-  // work properly yet.
   const char* envvar = PR_GetEnv("MOZ_CRASHREPORTER");
   if ((!envvar || !*envvar) && !force) return NS_OK;
 #else
@@ -2891,6 +2891,7 @@ static bool WriteExtraForMinidump(nsIFile* minidump, uint32_t pid, bool content,
     }
   }
 
+  StaticMutexAutoLock pidMapLock(processMapLock);
   if (pid && processToCrashFd.count(pid)) {
     PRFileDesc* prFd = processToCrashFd[pid];
     processToCrashFd.erase(pid);
@@ -3258,10 +3259,12 @@ int GetAnnotationTimeCrashFd() {
 
 void RegisterChildCrashAnnotationFileDescriptor(ProcessId aProcess,
                                                 PRFileDesc* aFd) {
+  StaticMutexAutoLock pidMapLock(processMapLock);
   processToCrashFd[aProcess] = aFd;
 }
 
 void DeregisterChildCrashAnnotationFileDescriptor(ProcessId aProcess) {
+  StaticMutexAutoLock pidMapLock(processMapLock);
   auto it = processToCrashFd.find(aProcess);
   if (it != processToCrashFd.end()) {
     PR_Close(it->second);

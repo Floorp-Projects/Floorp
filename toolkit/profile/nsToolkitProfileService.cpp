@@ -595,13 +595,6 @@ nsToolkitProfileService::GetProfileByName(const nsACString& aName,
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP
-nsToolkitProfileService::LockProfilePath(nsIFile* aDirectory,
-                                         nsIFile* aLocalDirectory,
-                                         nsIProfileLock** aResult) {
-  return NS_LockProfilePath(aDirectory, aLocalDirectory, nullptr, aResult);
-}
-
 nsresult NS_LockProfilePath(nsIFile* aPath, nsIFile* aTempPath,
                             nsIProfileUnlocker** aUnlocker,
                             nsIProfileLock** aResult) {

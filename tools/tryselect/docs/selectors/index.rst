@@ -3,6 +3,7 @@ Selectors
 
 These are the currently implemented try selectors:
 
+* :doc:`chooser <chooser>`: Select tasks using a web interface.
 * :doc:`fuzzy <fuzzy>`: Select tasks using a fuzzy finding algorithm and
   a terminal interface.
 * :doc:`again <again>`: Re-run a previous ``try_task_config.json`` based
@@ -30,6 +31,7 @@ See selector specific options by running:
   :maxdepth: 1
   :hidden:
 
+  Chooser <chooser>
   Fuzzy <fuzzy>
   Again <again>
   Empty <empty>

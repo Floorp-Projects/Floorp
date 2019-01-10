@@ -475,6 +475,7 @@ impl Document {
         resource_cache: &mut ResourceCache,
         gpu_cache: &mut GpuCache,
         resource_profile: &mut ResourceProfileCounters,
+        debug_flags: DebugFlags,
     ) -> RenderedDocument {
         let accumulated_scale_factor = self.view.accumulated_scale_factor();
         let pan = self.view.pan.to_f32() / accumulated_scale_factor;
@@ -501,6 +502,7 @@ impl Document {
                 &self.dynamic_properties,
                 &mut self.resources,
                 &mut self.scratch,
+                debug_flags,
             );
             self.hit_tester = Some(frame_builder.create_hit_tester(
                 &self.clip_scroll_tree,
@@ -859,8 +861,8 @@ impl RenderBackend {
                         self.resource_cache.add_rasterized_blob_images(
                             replace(&mut txn.rasterized_blobs, Vec::new())
                         );
-                        if let Some((rasterizer, epoch)) = txn.blob_rasterizer.take() {
-                            self.resource_cache.set_blob_rasterizer(rasterizer, epoch);
+                        if let Some((rasterizer, info)) = txn.blob_rasterizer.take() {
+                            self.resource_cache.set_blob_rasterizer(rasterizer, info);
                         }
 
                         self.update_document(
@@ -1380,6 +1382,7 @@ impl RenderBackend {
                     &mut self.resource_cache,
                     &mut self.gpu_cache,
                     &mut profile_counters.resources,
+                    self.debug_flags,
                 );
 
                 debug!("generated frame for document {:?} with {} passes",
@@ -1637,6 +1640,7 @@ impl RenderBackend {
                     &mut self.resource_cache,
                     &mut self.gpu_cache,
                     &mut profile_counters.resources,
+                    self.debug_flags,
                 );
                 //TODO: write down doc's pipeline info?
                 // it has `pipeline_epoch_map`,

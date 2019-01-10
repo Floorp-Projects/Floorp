@@ -61,7 +61,7 @@ add_task(async function sidebar_panel_viewType() {
 
     // Create menus and change their viewTypes using menus.update.
     browser.menus.create({id: "sidebaronly", title: "sidebaronly", viewTypes: ["tab"]});
-    browser.menus.create({id: "tabonly", title: "sidebaronly", viewTypes: ["sidebar"]});
+    browser.menus.create({id: "tabonly", title: "tabonly", viewTypes: ["sidebar"]});
     await browser.menus.update("sidebaronly", {viewTypes: ["sidebar"]});
     await browser.menus.update("tabonly", {viewTypes: ["tab"]});
     browser.test.sendMessage("ready");

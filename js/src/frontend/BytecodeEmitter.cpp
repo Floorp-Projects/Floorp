@@ -967,7 +967,7 @@ restart:
       return true;
 
 #ifdef ENABLE_BIGINT
-    case ParseNodeKind::BigInt:
+    case ParseNodeKind::BigIntExpr:
       MOZ_ASSERT(pn->is<BigIntLiteral>());
       *answer = false;
       return true;
@@ -4242,7 +4242,7 @@ bool ParseNode::getConstantValue(JSContext* cx,
       vp.setNumber(as<NumericLiteral>().value());
       return true;
 #ifdef ENABLE_BIGINT
-    case ParseNodeKind::BigInt:
+    case ParseNodeKind::BigIntExpr:
       vp.setBigInt(as<BigIntLiteral>().box()->value());
       return true;
 #endif
@@ -9167,7 +9167,7 @@ bool BytecodeEmitter::emitTree(
       break;
 
 #ifdef ENABLE_BIGINT
-    case ParseNodeKind::BigInt:
+    case ParseNodeKind::BigIntExpr:
       if (!emitBigIntOp(pn->as<BigIntLiteral>().box()->value())) {
         return false;
       }

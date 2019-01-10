@@ -33,7 +33,7 @@ class VRMockDisplay final : public DOMEventTargetHelper {
                const Nullable<Float32Array>& aAngularVelocity,
                const Nullable<Float32Array>& aAngularAcceleration);
   void SetMountState(bool aIsMounted) {
-    mDisplayInfo.mDisplayState.mIsMounted = aIsMounted;
+    mDisplayInfo.mDisplayState.isMounted = aIsMounted;
   }
   void Update();
   virtual JSObject* WrapObject(JSContext* aCx,

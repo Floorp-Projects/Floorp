@@ -45,10 +45,21 @@ struct ScrollUpdateInfo {
 };
 
 /**
- * The viewport and displayport metrics for the painted frame at the
- * time of a layer-tree transaction.  These metrics are especially
- * useful for shadow layers, because the metrics values are updated
- * atomically with new pixels.
+ * Metrics about a scroll frame that are sent to the compositor and used
+ * by APZ.
+ *
+ * This is used for two main purposes:
+ *
+ *   (1) Sending information about a scroll frame to the compositor and APZ
+ *       as part of a layers or WebRender transaction.
+ *   (2) Storing information about a scroll frame in APZ that persists
+ *       between transactions.
+ *
+ * TODO: Separate these two uses into two distinct structures.
+ *
+ * A related class, RepaintRequest, is used for sending information about a
+ * scroll frame back from the compositor to the main thread when requesting
+ * a repaint of the scroll frame's contents.
  */
 struct FrameMetrics {
   friend struct IPC::ParamTraits<mozilla::layers::FrameMetrics>;
@@ -89,14 +100,13 @@ struct FrameMetrics {
         mRootCompositionSize(0, 0),
         mDisplayPortMargins(0, 0, 0, 0),
         mPresShellId(-1),
-        mViewport(0, 0, 0, 0),
+        mLayoutViewport(0, 0, 0, 0),
         mExtraResolution(),
         mPaintRequestTime(),
         mScrollUpdateType(eNone),
         mIsRootContent(false),
         mIsRelative(false),
         mDoSmoothScroll(false),
-        mUseDisplayPortMargins(false),
         mIsScrollInfoLayer(false) {}
 
   // Default copy ctor and operator= are fine
@@ -119,14 +129,13 @@ struct FrameMetrics {
            mRootCompositionSize == aOther.mRootCompositionSize &&
            mDisplayPortMargins == aOther.mDisplayPortMargins &&
            mPresShellId == aOther.mPresShellId &&
-           mViewport.IsEqualEdges(aOther.mViewport) &&
+           mLayoutViewport.IsEqualEdges(aOther.mLayoutViewport) &&
            mExtraResolution == aOther.mExtraResolution &&
            mPaintRequestTime == aOther.mPaintRequestTime &&
            mScrollUpdateType == aOther.mScrollUpdateType &&
            mIsRootContent == aOther.mIsRootContent &&
            mIsRelative == aOther.mIsRelative &&
            mDoSmoothScroll == aOther.mDoSmoothScroll &&
-           mUseDisplayPortMargins == aOther.mUseDisplayPortMargins &&
            mIsScrollInfoLayer == aOther.mIsScrollInfoLayer;
   }
 
@@ -424,19 +433,15 @@ struct FrameMetrics {
     return mDisplayPortMargins;
   }
 
-  void SetUseDisplayPortMargins(bool aValue) {
-    mUseDisplayPortMargins = aValue;
-  }
-
-  bool GetUseDisplayPortMargins() const { return mUseDisplayPortMargins; }
-
   uint32_t GetPresShellId() const { return mPresShellId; }
 
   void SetPresShellId(uint32_t aPresShellId) { mPresShellId = aPresShellId; }
 
-  void SetViewport(const CSSRect& aViewport) { mViewport = aViewport; }
+  void SetLayoutViewport(const CSSRect& aLayoutViewport) {
+    mLayoutViewport = aLayoutViewport;
+  }
 
-  const CSSRect& GetViewport() const { return mViewport; }
+  const CSSRect& GetLayoutViewport() const { return mLayoutViewport; }
 
   CSSRect GetVisualViewport() const {
     return CSSRect(mScrollOffset, CalculateCompositedSizeInCssPixels());
@@ -476,11 +481,11 @@ struct FrameMetrics {
   bool IsScrollInfoLayer() const { return mIsScrollInfoLayer; }
 
   // Determine if the visual viewport is outside of the layout viewport and
-  // adjust the x,y-offset in mViewport accordingly. This is necessary to
+  // adjust the x,y-offset in mLayoutViewport accordingly. This is necessary to
   // allow APZ to async-scroll the layout viewport.
   //
   // This is a no-op if mIsRootContent is false.
-  void RecalculateViewportOffset();
+  void RecalculateLayoutViewportOffset();
 
   // Helper function for RecalculateViewportOffset(). Exposed so that
   // APZC can perform the operation on other copies of the layout
@@ -492,46 +497,41 @@ struct FrameMetrics {
       const CSSRect& aVisualViewport, CSSRect& aLayoutViewport);
 
  private:
-  // A unique ID assigned to each scrollable frame.
+  // A ID assigned to each scrollable frame, unique within each LayersId..
   ViewID mScrollId;
 
   // The pres-shell resolution that has been induced on the document containing
   // this scroll frame as a result of zooming this scroll frame (whether via
   // user action, or choosing an initial zoom level on page load). This can
   // only be different from 1.0 for frames that are zoomable, which currently
-  // is just the root content document's root scroll frame (mIsRoot = true).
+  // is just the root content document's root scroll frame
+  // (mIsRootContent = true).
   // This is a plain float rather than a ScaleFactor because in and of itself
   // it does not convert between any coordinate spaces for which we have names.
   float mPresShellResolution;
 
   // This is the area within the widget that we're compositing to. It is in the
-  // same coordinate space as the reference frame for the scrolled frame.
+  // layer coordinates of the scrollable content's parent layer.
   //
-  // This is useful because, on mobile, the viewport and composition dimensions
-  // are not always the same. In this case, we calculate the displayport using
-  // an area bigger than the region we're compositing to. If we used the
-  // viewport dimensions to calculate the displayport, we'd run into situations
-  // where we're prerendering the wrong regions and the content may be clipped,
-  // or too much of it prerendered. If the composition dimensions are the same
-  // as the viewport dimensions, there is no need for this and we can just use
-  // the viewport instead.
+  // The size of the composition bounds corresponds to the size of the scroll
+  // frame's scroll port (but in a coordinate system where the size does not
+  // change during zooming).
   //
-  // This value is valid for nested scrollable layers as well, and is still
-  // relative to the layer tree origin. This value is provided by Gecko at
-  // layout/paint time.
+  // The origin of the composition bounds is relative to the layer tree origin.
+  // Unlike the scroll port's origin, it does not change during scrolling.
+  //
+  // This value is provided by Gecko at layout/paint time.
   ParentLayerRect mCompositionBounds;
 
-  // The area of a frame's contents that has been painted, relative to
-  // mCompositionBounds.
+  // The area of a scroll frame's contents that has been painted, relative to
+  // mScrollOffset.
   //
-  // Note that this is structured in such a way that it doesn't depend on the
-  // method layout uses to scroll content.
+  // Should not be larger than GetExpandedScrollableRect().
   //
-  // May be larger or smaller than |mScrollableRect|.
-  //
-  // To pre-render a margin of 100 CSS pixels around the window,
+  // To pre-render a margin of 100 CSS pixels around the scroll port,
   // { x = -100, y = - 100,
-  //   width = window.innerWidth + 200, height = window.innerHeight + 200 }
+  //   width = scrollPort.width + 200, height = scrollPort.height + 200 }
+  // where scrollPort = CalculateCompositedSizeInCssPixels().
   CSSRect mDisplayPort;
 
   // If non-empty, the area of a frame's contents that is considered critical
@@ -553,10 +553,8 @@ struct FrameMetrics {
   // the scrollable range to 0.
   //
   // This is in the same coordinate space as |mScrollOffset|, but a different
-  // coordinate space than |mViewport| and |mDisplayPort|. Note also that this
-  // coordinate system is understood by window.scrollTo().
-  //
-  // This is valid on any layer unless it has no content.
+  // coordinate space than |mDisplayPort|. Note also that this coordinate
+  // system is understood by window.scrollTo().
   CSSRect mScrollableRect;
 
   // The cumulative resolution that the current frame has been painted at.
@@ -564,41 +562,33 @@ struct FrameMetrics {
   // containing this scroll frame and its ancestors, and any css-driven
   // resolution. This information is provided by Gecko at layout/paint time.
   // Note that this is allowed to have different x- and y-scales, but only
-  // for subframes (mIsRoot = false). (The same applies to other scales that
-  // "inherit" the 2D-ness of this one, such as mZoom.)
+  // for subframes (mIsRootContent = false). (The same applies to other scales
+  // that "inherit" the 2D-ness of this one, such as mZoom.)
   LayoutDeviceToLayerScale2D mCumulativeResolution;
 
-  // New fields from now on should be made private and old fields should
-  // be refactored to be private.
-
   // The conversion factor between CSS pixels and device pixels for this frame.
-  // This can vary based on a variety of things, such as reflowing-zoom. The
-  // conversion factor for device pixels to layers pixels is just the
-  // resolution.
+  // This can vary based on a variety of things, such as reflowing-zoom.
   CSSToLayoutDeviceScale mDevPixelsPerCSSPixel;
 
-  // The position of the top-left of the CSS viewport, relative to the document
-  // (or the document relative to the viewport, if that helps understand it).
+  // The position of the top-left of the scroll frame's scroll port, relative
+  // to the scrollable content's origin.
   //
-  // Thus it is relative to the document. It is in the same coordinate space as
-  // |mScrollableRect|, but a different coordinate space than |mViewport| and
-  // |mDisplayPort|.
+  // This is in the same coordinate space as |mScrollableRect|, but a different
+  // coordinate space than |mDisplayPort|.
   //
   // It is required that the rect:
   // { x = mScrollOffset.x, y = mScrollOffset.y,
-  //   width = mCompositionBounds.x / mResolution.scale,
-  //   height = mCompositionBounds.y / mResolution.scale }
-  // Be within |mScrollableRect|.
-  //
-  // This is valid for any layer, but is always relative to this frame and
-  // not any parents, regardless of parent transforms.
+  //   width = scrollPort.width,
+  //   height = scrollPort.height }
+  // (where scrollPort = CalculateCompositedSizeInCssPixels())
+  // be within |mScrollableRect|.
   CSSPoint mScrollOffset;
 
   // The base scroll offset to use for calculating a relative update to a
   // scroll offset.
   CSSPoint mBaseScrollOffset;
 
-  // The "user zoom". Content is painted by gecko at mResolution *
+  // The "user zoom". Content is painted by gecko at mCumulativeResolution *
   // mDevPixelsPerCSSPixel, but will be drawn to the screen at mZoom. In the
   // steady state, the two will be the same, but during an async zoom action the
   // two may diverge. This information is initialized in Gecko but updated in
@@ -622,22 +612,28 @@ struct FrameMetrics {
 
   uint32_t mPresShellId;
 
-  // The CSS viewport, which is the dimensions we're using to constrain the
-  // <html> element of this frame, relative to the top-left of the layer. Note
-  // that its offset is structured in such a way that it doesn't depend on the
-  // method layout uses to scroll content.
+  // For a root scroll frame (RSF), the document's layout viewport
+  // (sometimes called "CSS viewport" in older code).
   //
-  // This is mainly useful on the root layer, however nested iframes can have
-  // their own viewport, which will just be the size of the window of the
-  // iframe. For layers that don't correspond to a document, this metric is
-  // meaningless and invalid.
-  CSSRect mViewport;
+  // Its size is the dimensions we're using to constrain the <html> element
+  // of the document (i.e. the initial containing block (ICB) size).
+  //
+  // Its origin is the RSF's layout scroll position, i.e. the scroll position
+  // exposed to web content via window.scrollX/Y.
+  //
+  // Note that only the root content document's RSF has a layout viewport
+  // that's distinct from the visual viewport. For an iframe RSF, the two
+  // are the same.
+  //
+  // For a scroll frame that is not an RSF, this metric is meaningless and
+  // invalid.
+  CSSRect mLayoutViewport;
 
   // The extra resolution at which content in this scroll frame is drawn beyond
   // that necessary to draw one Layer pixel per Screen pixel.
   ScreenToLayerScale2D mExtraResolution;
 
-  // The time at which the APZC last requested a repaint for this scrollframe.
+  // The time at which the APZC last requested a repaint for this scroll frame.
   TimeStamp mPaintRequestTime;
 
   // Whether mScrollOffset was updated by something other than the APZ code, and
@@ -655,11 +651,10 @@ struct FrameMetrics {
   // smoothly transition to mScrollOffset rather than be updated instantly.
   bool mDoSmoothScroll : 1;
 
-  // If this is true then we use the display port margins on this metrics,
-  // otherwise use the display port rect.
-  bool mUseDisplayPortMargins : 1;
-
-  // Whether or not this frame has a "scroll info layer" to capture events.
+  // True if this scroll frame is a scroll info layer. A scroll info layer is
+  // not layerized and its content cannot be truly async-scrolled, but its
+  // metrics are still sent to and updated by the compositor, with the updates
+  // being reflected on the next paint rather than the next composite.
   bool mIsScrollInfoLayer : 1;
 
   // WARNING!!!!
@@ -673,7 +668,7 @@ struct FrameMetrics {
   //    (as needed):
   //      FrameMetrics::operator ==
   //      AsyncPanZoomController::NotifyLayersUpdated
-  //      The ParamTraits specialization in GfxMessageUtils.h
+  //      The ParamTraits specialization in LayersMessageUtils.h
   //
   // Please add new fields above this comment.
 
@@ -782,11 +777,12 @@ struct LayerClip {
 typedef Maybe<LayerClip> MaybeLayerClip;  // for passing over IPDL
 
 /**
- * Metadata about a scroll frame that's stored in the layer tree for use by
- * the compositor (including APZ). This includes the scroll frame's
- * FrameMetrics, as well as other metadata. We don't put the other metadata into
- * FrameMetrics to avoid FrameMetrics becoming too bloated (as a FrameMetrics is
- * e.g. sent over IPC for every repaint request for every active scroll frame).
+ * Metadata about a scroll frame that's sent to the compositor during a layers
+ * or WebRender transaction, and also stored by APZ between transactions.
+ * This includes the scroll frame's FrameMetrics, as well as other metadata.
+ * We don't put the other metadata into FrameMetrics to avoid FrameMetrics
+ * becoming too bloated (as a FrameMetrics is e.g. stored in memory shared
+ * with the content process).
  */
 struct ScrollMetadata {
   friend struct IPC::ParamTraits<mozilla::layers::ScrollMetadata>;
@@ -1007,8 +1003,7 @@ struct ScrollMetadata {
   // updated to include them (as needed):
   //    1. ScrollMetadata::operator ==
   //    2. AsyncPanZoomController::NotifyLayersUpdated
-  //    3. The ParamTraits specialization in GfxMessageUtils.h and/or
-  //       LayersMessageUtils.h
+  //    3. The ParamTraits specialization in LayersMessageUtils.h
   //
   // Please add new fields above this comment.
 };

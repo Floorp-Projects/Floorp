@@ -3098,6 +3098,30 @@ var gDetailView = {
       browser.setAttribute("remote", "true");
       browser.setAttribute("remoteType", E10SUtils.EXTENSION_REMOTE_TYPE);
       readyPromise = promiseEvent("XULFrameLoaderCreated", browser);
+
+      readyPromise.then(() => {
+        if (!browser.messageManager) {
+          // Early exit if the the extension page's XUL browser has been destroyed in the meantime
+          // (e.g. because the extension has been reloaded while the options page was still loading).
+          return;
+        }
+        const parentChromeWindow = window.docShell.parent.domWindow;
+        const parentContextMenuPopup = parentChromeWindow.document.getElementById("contentAreaContextMenu");
+
+        // Override openPopupAtScreen on the dummy menupopup element, so that we can forward
+        // "nsContextMenu.js openContextMenu"'s calls related to the extensions "options page"
+        // context menu events.
+        document.getElementById("contentAreaContextMenu").openPopupAtScreen = (...args) => {
+          return parentContextMenuPopup.openPopupAtScreen(...args);
+        };
+
+        // Subscribe a "contextmenu" listener to handle the context menus for the extension option page
+        // running in the extension process (the context menu will be handled only for extension running
+        // in OOP mode, but that's ok as it is the default on any platform that uses these extensions
+        // options pages).
+        browser.messageManager.addMessageListener(
+          "contextmenu", message => parentChromeWindow.openContextMenu(message));
+      });
     } else {
       readyPromise = promiseEvent("load", browser, true);
     }

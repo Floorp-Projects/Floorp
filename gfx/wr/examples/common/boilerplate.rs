@@ -233,6 +233,7 @@ pub fn main_wrapper<E: Example>(
                 winit::VirtualKeyCode::O => debug_flags.toggle(DebugFlags::RENDER_TARGET_DBG),
                 winit::VirtualKeyCode::I => debug_flags.toggle(DebugFlags::TEXTURE_CACHE_DBG),
                 winit::VirtualKeyCode::S => debug_flags.toggle(DebugFlags::COMPACT_PROFILER),
+                winit::VirtualKeyCode::T => debug_flags.toggle(DebugFlags::PICTURE_CACHING_DBG),
                 winit::VirtualKeyCode::Q => debug_flags.toggle(
                     DebugFlags::GPU_TIME_QUERIES | DebugFlags::GPU_SAMPLE_QUERIES
                 ),

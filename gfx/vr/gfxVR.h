@@ -76,18 +76,18 @@ struct VRDisplayInfo {
 
   VRDeviceType GetType() const { return mType; }
   uint32_t GetDisplayID() const { return mDisplayID; }
-  const char* GetDisplayName() const { return mDisplayState.mDisplayName; }
+  const char* GetDisplayName() const { return mDisplayState.displayName; }
   VRDisplayCapabilityFlags GetCapabilities() const {
-    return mDisplayState.mCapabilityFlags;
+    return mDisplayState.capabilityFlags;
   }
 
   const IntSize SuggestedEyeResolution() const;
   const Point3D GetEyeTranslation(uint32_t whichEye) const;
   const VRFieldOfView& GetEyeFOV(uint32_t whichEye) const {
-    return mDisplayState.mEyeFOV[whichEye];
+    return mDisplayState.eyeFOV[whichEye];
   }
-  bool GetIsConnected() const { return mDisplayState.mIsConnected; }
-  bool GetIsMounted() const { return mDisplayState.mIsMounted; }
+  bool GetIsConnected() const { return mDisplayState.isConnected; }
+  bool GetIsMounted() const { return mDisplayState.isMounted; }
   uint32_t GetPresentingGroups() const { return mPresentingGroups; }
   uint32_t GetGroupMask() const { return mGroupMask; }
   const Size GetStageSize() const;

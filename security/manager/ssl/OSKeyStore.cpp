@@ -152,6 +152,9 @@ nsresult OSKeyStore::RecoverSecret(const nsACString& aLabel,
   if (NS_FAILED(rv)) {
     return rv;
   }
+  if (secret.Length() != mKs->GetKeyByteLength()) {
+    return NS_ERROR_INVALID_ARG;
+  }
   nsAutoCString label = mLabelPrefix + aLabel;
   rv = mKs->StoreSecret(secret, label);
   if (NS_FAILED(rv)) {

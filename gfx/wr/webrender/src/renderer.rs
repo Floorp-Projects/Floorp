@@ -36,6 +36,8 @@ use batch::{BatchKind, BatchTextures, BrushBatchKind};
 #[cfg(any(feature = "capture", feature = "replay"))]
 use capture::{CaptureConfig, ExternalCaptureImage, PlainExternalImage};
 use debug_colors;
+#[cfg(feature = "debug_renderer")]
+use debug_render::DebugItem;
 use device::{DepthFunction, Device, GpuFrameId, Program, UploadMethod, Texture, PBO};
 use device::{DrawTarget, ExternalTexture, FBOId, ReadTarget, TextureSlot};
 use device::{ShaderError, TextureFilter, TextureFlags,
@@ -4194,6 +4196,7 @@ impl Renderer {
         #[cfg(feature = "debug_renderer")]
         {
             if let Some(framebuffer_size) = framebuffer_size {
+                self.draw_frame_debug_items(&frame.debug_items);
                 self.draw_render_target_debug(framebuffer_size);
                 self.draw_texture_cache_debug(framebuffer_size);
                 self.draw_gpu_cache_debug(framebuffer_size);
@@ -4244,6 +4247,46 @@ impl Renderer {
 
     pub fn save_cpu_profile(&self, filename: &str) {
         write_profile(filename);
+    }
+
+    #[cfg(feature = "debug_renderer")]
+    fn draw_frame_debug_items(&mut self, items: &[DebugItem]) {
+        let debug_renderer = match self.debug.get_mut(&mut self.device) {
+            Some(render) => render,
+            None => return,
+        };
+
+        for item in items {
+            match item {
+                DebugItem::Rect { rect, color } => {
+                    let inner_color = color.scale_alpha(0.2).into();
+                    let outer_color = (*color).into();
+
+                    debug_renderer.add_quad(
+                        rect.origin.x,
+                        rect.origin.y,
+                        rect.origin.x + rect.size.width,
+                        rect.origin.y + rect.size.height,
+                        inner_color,
+                        inner_color,
+                    );
+
+                    debug_renderer.add_rect(
+                        &rect.to_i32(),
+                        outer_color,
+                    );
+                }
+                DebugItem::Text { ref msg, position, color } => {
+                    debug_renderer.add_text(
+                        position.x,
+                        position.y,
+                        msg,
+                        (*color).into(),
+                        None,
+                    );
+                }
+            }
+        }
     }
 
     #[cfg(feature = "debug_renderer")]
