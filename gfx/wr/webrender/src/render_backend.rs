@@ -1536,6 +1536,8 @@ impl RenderBackend {
 
     #[cfg(feature = "debugger")]
     fn get_clip_scroll_tree_for_debugger(&self) -> String {
+        use print_tree::PrintableTree;
+
         let mut debug_root = debug_server::ClipScrollTreeList::new();
 
         for (_, doc) in &self.documents {
@@ -1666,6 +1668,8 @@ impl RenderBackend {
                 // which may capture necessary details for some cases.
                 let file_name = format!("frame-{}-{}", (id.0).0, id.1);
                 config.serialize(&rendered_document.frame, file_name);
+                let file_name = format!("clip-scroll-{}-{}", (id.0).0, id.1);
+                config.serialize_tree(&doc.clip_scroll_tree, file_name);
             }
 
             let frame_resources_name = format!("frame-resources-{}-{}", (id.0).0, id.1);
