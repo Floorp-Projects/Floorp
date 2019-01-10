@@ -612,12 +612,11 @@ nsresult MediaEngineWebRTCMicrophoneSource::Stop(
 
   RefPtr<MediaEngineWebRTCMicrophoneSource> that = this;
   NS_DispatchToMainThread(
-      media::NewRunnableFrom([that, stream = mStream, track = mTrackID]() {
+      media::NewRunnableFrom([that, stream = mStream]() {
         if (stream->IsDestroyed()) {
           return NS_OK;
         }
 
-        stream->SetPullingEnabled(track, false);
         stream->GraphImpl()->AppendMessage(MakeUnique<StartStopMessage>(
             that->mInputProcessing, StartStopMessage::Stop));
         CubebUtils::AudioDeviceID deviceID = that->mDeviceInfo->DeviceID();
