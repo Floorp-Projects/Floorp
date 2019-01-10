@@ -562,8 +562,8 @@ PluginVersion:
 
 ProcessType:
   description: >
-    Type of the process that crashed, can hold the values "content", "plugin",
-    "gpu" or "rdd" currently.
+    Type of the process that crashed, the possible values are defined in
+    GeckoProcessTypes.h.
   type: string
 
 ProductName:
