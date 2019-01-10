@@ -3565,7 +3565,7 @@ void JSScript::finalize(FreeOp* fop) {
 #endif
 
   if (data_) {
-    JS_POISON(data_, 0xdb, computedSizeOfData(), MemCheckKind::MakeNoAccess);
+    AlwaysPoison(data_, 0xdb, computedSizeOfData(), MemCheckKind::MakeNoAccess);
     fop->free_(data_);
   }
 

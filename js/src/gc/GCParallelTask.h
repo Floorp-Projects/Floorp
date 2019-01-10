@@ -31,7 +31,7 @@ class GCParallelTask {
   TaskFunc func_;
 
   // The state of the parallel computation.
-  enum class State { NotStarted, Dispatched, Finished };
+  enum class State { NotStarted, Dispatched, Finishing, Finished };
   UnprotectedData<State> state_;
 
   // Amount of time this task took to execute.
@@ -79,6 +79,11 @@ class GCParallelTask {
 
   // Instead of dispatching to a helper, run the task on the current thread.
   void runFromMainThread(JSRuntime* rt);
+  void joinAndRunFromMainThread(JSRuntime* rt);
+
+  // If the task is not already running, either start it or run it on the main
+  // thread if that fails.
+  void startOrRunIfIdle(AutoLockHelperThreadState& lock);
 
   // Dispatch a cancelation request.
   void cancelAndWait() {
@@ -86,7 +91,7 @@ class GCParallelTask {
     join();
   }
 
-  // Check if a task is actively running.
+  // Check if a task is running and has not called setFinishing().
   bool isRunningWithLockHeld(const AutoLockHelperThreadState& lock) const {
     return isDispatched(lock);
   }
@@ -112,7 +117,7 @@ class GCParallelTask {
     state_ = State::Dispatched;
   }
   void setFinished(const AutoLockHelperThreadState& lock) {
-    MOZ_ASSERT(state_ == State::Dispatched);
+    MOZ_ASSERT(state_ == State::Dispatched || state_ == State::Finishing);
     state_ = State::Finished;
   }
   void setNotStarted(const AutoLockHelperThreadState& lock) {
@@ -121,6 +126,16 @@ class GCParallelTask {
   }
 
   void runTask() { func_(this); }
+
+ protected:
+  // Can be called to indicate that although the task is still
+  // running, it is about to finish.
+  void setFinishing(const AutoLockHelperThreadState& lock) {
+    MOZ_ASSERT(state_ == State::NotStarted || state_ == State::Dispatched);
+    if (state_ == State::Dispatched) {
+      state_ = State::Finishing;
+    }
+  }
 
   // This should be friended to HelperThread, but cannot be because it
   // would introduce several circular dependencies.

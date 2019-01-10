@@ -734,8 +734,8 @@ void Chunk::init(JSRuntime* rt) {
    * Poison the chunk. Note that decommitAllArenas() below will mark the
    * arenas as inaccessible (for memory sanitizers).
    */
-  JS_POISON(this, JS_FRESH_TENURED_PATTERN, ChunkSize,
-            MemCheckKind::MakeUndefined);
+  Poison(this, JS_FRESH_TENURED_PATTERN, ChunkSize,
+         MemCheckKind::MakeUndefined);
 
   /*
    * We clear the bitmap to guard against JS::GCThingIsMarkedGray being called

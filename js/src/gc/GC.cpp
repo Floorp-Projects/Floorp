@@ -590,8 +590,8 @@ inline size_t Arena::finalize(FreeOp* fop, AllocKind thingKind,
       nmarked++;
     } else {
       t->finalize(fop);
-      JS_POISON(t, JS_SWEPT_TENURED_PATTERN, thingSize,
-                MemCheckKind::MakeUndefined);
+      AlwaysPoison(t, JS_SWEPT_TENURED_PATTERN, thingSize,
+             MemCheckKind::MakeUndefined);
       gcTracer.traceTenuredFinalize(t);
     }
   }
@@ -599,7 +599,7 @@ inline size_t Arena::finalize(FreeOp* fop, AllocKind thingKind,
   if (nmarked == 0) {
     // Do nothing. The caller will update the arena appropriately.
     MOZ_ASSERT(newListTail == &newListHead);
-    JS_EXTRA_POISON(data, JS_SWEPT_TENURED_PATTERN, sizeof(data),
+    DebugOnlyPoison(data, JS_SWEPT_TENURED_PATTERN, sizeof(data),
                     MemCheckKind::MakeUndefined);
     return nmarked;
   }
@@ -928,7 +928,8 @@ GCRuntime::GCRuntime(JSRuntime* rt)
       lastMarkSlice(false),
       safeToYield(true),
       sweepOnBackgroundThread(false),
-      blocksToFreeAfterSweeping(
+      lifoBlocksToFree((size_t)JSContext::TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
+      lifoBlocksToFreeAfterMinorGC(
           (size_t)JSContext::TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
       sweepGroupIndex(0),
       sweepGroups(nullptr),
@@ -961,11 +962,10 @@ GCRuntime::GCRuntime(JSRuntime* rt)
       lock(mutexid::GCLock),
       allocTask(rt, emptyChunks_.ref()),
       sweepTask(rt),
+      freeTask(rt),
       decommitTask(rt),
       nursery_(rt),
-      storeBuffer_(rt, nursery()),
-      blocksToFreeAfterMinorGC(
-          (size_t)JSContext::TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE) {
+      storeBuffer_(rt, nursery()) {
   setGCMode(JSGC_MODE_GLOBAL);
 }
 
@@ -1304,7 +1304,6 @@ bool GCRuntime::init(uint32_t maxbytes, uint32_t maxNurseryBytes) {
 void GCRuntime::finish() {
   // Wait for nursery background free to end and disable it to release memory.
   if (nursery().isEnabled()) {
-    nursery().waitBackgroundFreeEnd();
     nursery().disable();
   }
 
@@ -1312,6 +1311,7 @@ void GCRuntime::finish() {
   // helper thread shuts down before we forcefully release any remaining GC
   // memory.
   sweepTask.join();
+  freeTask.join();
   allocTask.cancelAndWait();
   decommitTask.cancelAndWait();
 
@@ -2904,7 +2904,7 @@ void GCRuntime::updateRuntimePointersToRelocatedCells(AutoGCSession& session) {
   // Type inference may put more blocks here to free.
   {
     AutoLockHelperThreadState lock;
-    blocksToFreeAfterSweeping.ref().freeAll();
+    lifoBlocksToFree.ref().freeAll();
   }
 
   // Call callbacks to get the rest of the system to fixup other untraced
@@ -2952,11 +2952,9 @@ void GCRuntime::releaseRelocatedArenasWithoutUnlocking(Arena* arenaList,
     // Mark arena as empty
     arena->setAsFullyUnused();
 
-#if defined(JS_CRASH_DIAGNOSTICS) || defined(JS_GC_ZEAL)
-    JS_POISON(reinterpret_cast<void*>(arena->thingsStart()),
-              JS_MOVED_TENURED_PATTERN, arena->getThingsSpan(),
-              MemCheckKind::MakeNoAccess);
-#endif
+    AlwaysPoison(reinterpret_cast<void*>(arena->thingsStart()),
+                 JS_MOVED_TENURED_PATTERN, arena->getThingsSpan(),
+                 MemCheckKind::MakeNoAccess);
 
     releaseArena(arena, lock);
     ++count;
@@ -3540,8 +3538,6 @@ void GCRuntime::assertBackgroundSweepingFinished() {
   {
     AutoLockHelperThreadState lock;
     MOZ_ASSERT(backgroundSweepZones.ref().isEmpty());
-    MOZ_ASSERT(blocksToFreeAfterSweeping.ref().computedSizeOfExcludingThis() ==
-               0);
   }
 
   for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
@@ -3553,71 +3549,17 @@ void GCRuntime::assertBackgroundSweepingFinished() {
 #endif
 }
 
-void GCRuntime::queueZonesForBackgroundSweep(ZoneList& zones) {
-  AutoLockHelperThreadState lock;
-  backgroundSweepZones.ref().transferFrom(zones);
-  if (sweepOnBackgroundThread) {
-    sweepTask.startIfIdle(lock);
-  }
-}
-
-void GCRuntime::freeUnusedLifoBlocksAfterSweeping(LifoAlloc* lifo) {
-  MOZ_ASSERT(JS::RuntimeHeapIsBusy());
-  AutoLockHelperThreadState lock;
-  blocksToFreeAfterSweeping.ref().transferUnusedFrom(lifo);
-}
-
-void GCRuntime::freeAllLifoBlocksAfterSweeping(LifoAlloc* lifo) {
-  MOZ_ASSERT(JS::RuntimeHeapIsBusy());
-  AutoLockHelperThreadState lock;
-  blocksToFreeAfterSweeping.ref().transferFrom(lifo);
-}
-
-void GCRuntime::freeAllLifoBlocksAfterMinorGC(LifoAlloc* lifo) {
-  blocksToFreeAfterMinorGC.ref().transferFrom(lifo);
-}
-
-BackgroundSweepTask::BackgroundSweepTask(JSRuntime* rt)
-    : GCParallelTaskHelper(rt), done(false) {}
-
-bool BackgroundSweepTask::isRunning() const {
-  AutoLockHelperThreadState lock;
-  return isRunningWithLockHeld(lock);
-}
-
-bool BackgroundSweepTask::isRunningWithLockHeld(
-    const AutoLockHelperThreadState& lock) const {
-  return Base::isRunningWithLockHeld(lock) && !done;
-}
-
-void BackgroundSweepTask::startIfIdle(AutoLockHelperThreadState& lock) {
-  MOZ_ASSERT(CanUseExtraThreads());
-
-  if (isRunningWithLockHeld(lock)) {
-    return;
-  }
-
-  // Join the previous invocation of the task. This will return immediately
-  // if the thread has never been started.
-  joinWithLockHeld(lock);
-
-  done = false;
-
-  if (!startWithLockHeld(lock)) {
-    AutoUnlockHelperThreadState unlock(lock);
-    runFromMainThread(runtime());
-  }
-}
-
-void BackgroundSweepTask::runFromMainThread(JSRuntime* rt) {
+void GCRuntime::queueZonesAndStartBackgroundSweep(ZoneList& zones) {
   {
     AutoLockHelperThreadState lock;
-    MOZ_ASSERT(!isRunningWithLockHeld(lock));
-    joinWithLockHeld(lock);
-    done = false;
+    backgroundSweepZones.ref().transferFrom(zones);
+    if (sweepOnBackgroundThread) {
+      sweepTask.startOrRunIfIdle(lock);
+    }
   }
-
-  Base::runFromMainThread(rt);
+  if (!sweepOnBackgroundThread) {
+    sweepTask.joinAndRunFromMainThread(rt);
+  }
 }
 
 void BackgroundSweepTask::run() {
@@ -3627,13 +3569,11 @@ void BackgroundSweepTask::run() {
   AutoLockHelperThreadState lock;
   AutoSetThreadIsSweeping threadIsSweeping;
 
-  MOZ_ASSERT(!done);
-
   runtime()->gc.sweepFromBackgroundThread(lock);
 
-  // Signal to the main thread that we're finished, because we release the
-  // lock again before GCParallelTask's state is changed to finished.
-  done = true;
+  // Signal to the main thread that we're about to finish, because we release
+  // the lock again before GCParallelTask's state is changed to finished.
+  setFinishing(lock);
 }
 
 void GCRuntime::sweepFromBackgroundThread(AutoLockHelperThreadState& lock) {
@@ -3641,12 +3581,12 @@ void GCRuntime::sweepFromBackgroundThread(AutoLockHelperThreadState& lock) {
     ZoneList zones;
     zones.transferFrom(backgroundSweepZones.ref());
     LifoAlloc freeLifoAlloc(JSContext::TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
-    freeLifoAlloc.transferFrom(&blocksToFreeAfterSweeping.ref());
+    freeLifoAlloc.transferFrom(&lifoBlocksToFree.ref());
 
     AutoUnlockHelperThreadState unlock(lock);
     sweepBackgroundThings(zones, freeLifoAlloc);
 
-    // The main thread may call queueZonesForBackgroundSweep() while this is
+    // The main thread may call queueZonesAndStartBackgroundSweep() while this is
     // running so we must check there is no more work after releasing the
     // lock.
   } while (!backgroundSweepZones.ref().isEmpty());
@@ -3659,6 +3599,81 @@ void GCRuntime::waitBackgroundSweepEnd() {
   if (!isIncrementalGCInProgress()) {
     assertBackgroundSweepingFinished();
   }
+}
+
+void GCRuntime::queueUnusedLifoBlocksForFree(LifoAlloc* lifo) {
+  MOZ_ASSERT(JS::RuntimeHeapIsBusy());
+  AutoLockHelperThreadState lock;
+  lifoBlocksToFree.ref().transferUnusedFrom(lifo);
+}
+
+void GCRuntime::queueAllLifoBlocksForFree(LifoAlloc* lifo) {
+  MOZ_ASSERT(JS::RuntimeHeapIsBusy());
+  AutoLockHelperThreadState lock;
+  lifoBlocksToFree.ref().transferFrom(lifo);
+}
+
+void GCRuntime::queueAllLifoBlocksForFreeAfterMinorGC(LifoAlloc* lifo) {
+  lifoBlocksToFreeAfterMinorGC.ref().transferFrom(lifo);
+}
+
+void GCRuntime::queueBuffersForFreeAfterMinorGC(Nursery::BufferSet& buffers) {
+  AutoLockHelperThreadState lock;
+
+  if (!buffersToFreeAfterMinorGC.ref().empty()) {
+    // In the rare case that this hasn't processed the buffers from a previous
+    // minor GC we have to wait here.
+    MOZ_ASSERT(freeTask.isRunningWithLockHeld(lock));
+    freeTask.joinWithLockHeld(lock);
+  }
+
+  MOZ_ASSERT(buffersToFreeAfterMinorGC.ref().empty());
+  mozilla::Swap(buffersToFreeAfterMinorGC.ref(), buffers);
+}
+
+void GCRuntime::startBackgroundFree() {
+  if (CanUseExtraThreads()) {
+    AutoLockHelperThreadState lock;
+    freeTask.startOrRunIfIdle(lock);
+  } else {
+    freeTask.joinAndRunFromMainThread(rt);
+  }
+}
+
+void BackgroundFreeTask::run() {
+  AutoTraceLog logFreeing(TraceLoggerForCurrentThread(),
+                           TraceLogger_GCFree);
+
+  AutoLockHelperThreadState lock;
+
+  runtime()->gc.freeFromBackgroundThread(lock);
+
+  // Signal to the main thread that we're about to finish, because we release
+  // the lock again before GCParallelTask's state is changed to finished.
+  setFinishing(lock);
+}
+
+void GCRuntime::freeFromBackgroundThread(AutoLockHelperThreadState& lock) {
+  do {
+    LifoAlloc lifoBlocks(JSContext::TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
+    lifoBlocks.transferFrom(&lifoBlocksToFree.ref());
+
+    Nursery::BufferSet buffers;
+    mozilla::Swap(buffers, buffersToFreeAfterMinorGC.ref());
+
+    AutoUnlockHelperThreadState unlock(lock);
+
+    lifoBlocks.freeAll();
+
+    for (Nursery::BufferSet::Range r = buffers.all(); !r.empty(); r.popFront()) {
+      rt->defaultFreeOp()->free_(r.front());
+    }
+  } while (!lifoBlocksToFree.ref().isEmpty() ||
+           !buffersToFreeAfterMinorGC.ref().empty());
+}
+
+void GCRuntime::waitBackgroundFreeEnd() {
+  freeTask.join();
 }
 
 struct IsAboutToBeFinalizedFunctor {
@@ -3926,7 +3941,7 @@ void GCRuntime::purgeRuntime() {
   }
 
   JSContext* cx = rt->mainContextFromOwnThread();
-  freeUnusedLifoBlocksAfterSweeping(&cx->tempLifoAlloc());
+  queueUnusedLifoBlocksForFree(&cx->tempLifoAlloc());
   cx->interpreterStack().purge(rt);
   cx->frontendCollectionPool().purge();
 
@@ -4314,6 +4329,7 @@ bool GCRuntime::beginMarkPhase(JS::gcreason::Reason reason,
     // Discard JIT code. For incremental collections, the sweep phase will
     // also discard JIT code.
     DiscardJITCodeForGC(rt);
+    startBackgroundFreeAfterMinorGC();
 
     /*
      * Relazify functions after discarding JIT code (we can't relazify
@@ -5452,7 +5468,7 @@ static void SweepUniqueIds(GCParallelTask* task) {
 
 void GCRuntime::startTask(GCParallelTask& task, gcstats::PhaseKind phase,
                           AutoLockHelperThreadState& locked) {
-  if (!task.startWithLockHeld(locked)) {
+  if (!CanUseExtraThreads() || !task.startWithLockHeld(locked)) {
     AutoUnlockHelperThreadState unlock(locked);
     gcstats::AutoPhase ap(stats(), phase);
     task.runFromMainThread(rt);
@@ -5760,6 +5776,9 @@ IncrementalProgress GCRuntime::endSweepingSweepGroup(FreeOp* fop,
     callFinalizeCallbacks(&fop, JSFINALIZE_GROUP_END);
   }
 
+  /* Free LIFO blocks on a background thread if possible. */
+  startBackgroundFree();
+
   /* Update the GC state for zones we have swept. */
   for (SweepGroupZonesIter zone(rt); !zone.done(); zone.next()) {
     AutoLockGC lock(rt);
@@ -5787,11 +5806,7 @@ IncrementalProgress GCRuntime::endSweepingSweepGroup(FreeOp* fop,
     zones.append(atomsZone);
   }
 
-  queueZonesForBackgroundSweep(zones);
-
-  if (!sweepOnBackgroundThread) {
-    sweepTask.runFromMainThread(rt);
-  }
+  queueZonesAndStartBackgroundSweep(zones);
 
   return Finished;
 }
@@ -5815,9 +5830,6 @@ void GCRuntime::beginSweepPhase(JS::gcreason::Reason reason,
   computeNonIncrementalMarkingForValidation(session);
 
   gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::SWEEP);
-
-  sweepOnBackgroundThread = reason != JS::gcreason::DESTROY_RUNTIME &&
-                            !gcTracer.traceEnabled() && CanUseExtraThreads();
 
   hasMarkedGrayRoots = false;
 
@@ -6630,6 +6642,7 @@ void GCRuntime::endSweepPhase(bool destroyingRuntime) {
 
 void GCRuntime::beginCompactPhase() {
   MOZ_ASSERT(!isBackgroundSweeping());
+  assertBackgroundSweepingFinished();
 
   gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::COMPACT);
 
@@ -6808,7 +6821,7 @@ GCRuntime::IncrementalResult GCRuntime::resetIncrementalGC(
 
       {
         AutoLockHelperThreadState lock;
-        blocksToFreeAfterSweeping.ref().freeAll();
+        lifoBlocksToFree.ref().freeAll();
       }
 
       lastMarkSlice = false;
@@ -6920,6 +6933,11 @@ static bool ShouldCleanUpEverything(JS::gcreason::Reason reason,
   return IsShutdownGC(reason) || gckind == GC_SHRINK;
 }
 
+static bool ShouldSweepOnBackgroundThread(JS::gcreason::Reason reason) {
+  return reason != JS::gcreason::DESTROY_RUNTIME &&
+         !gcTracer.traceEnabled() && CanUseExtraThreads();
+}
+
 void GCRuntime::incrementalSlice(SliceBudget& budget,
                                  JS::gcreason::Reason reason,
                                  AutoGCSession& session) {
@@ -6977,6 +6995,7 @@ void GCRuntime::incrementalSlice(SliceBudget& budget,
       incMajorGcNumber();
       initialReason = reason;
       cleanUpEverything = ShouldCleanUpEverything(reason, invocationKind);
+      sweepOnBackgroundThread = ShouldSweepOnBackgroundThread(reason);
       isCompacting = shouldCompact();
       MOZ_ASSERT(!lastMarkSlice);
       rootsRemoved = false;
@@ -7743,7 +7762,7 @@ void GCRuntime::onOutOfMallocMemory() {
   decommitTask.join();
 
   // Wait for background free of nursery huge slots to finish.
-  nursery().waitBackgroundFreeEnd();
+  sweepTask.join();
 
   AutoLockGC lock(rt);
   onOutOfMallocMemory(lock);
@@ -7790,7 +7809,7 @@ void GCRuntime::minorGC(JS::gcreason::Reason reason, gcstats::PhaseKind phase) {
   nursery().collect(reason);
   MOZ_ASSERT(nursery().isEmpty());
 
-  blocksToFreeAfterMinorGC.ref().freeAll();
+  startBackgroundFreeAfterMinorGC();
 
 #ifdef JS_GC_ZEAL
   if (hasZealMode(ZealMode::CheckHeapAfterGC)) {
@@ -7804,6 +7823,23 @@ void GCRuntime::minorGC(JS::gcreason::Reason reason, gcstats::PhaseKind phase) {
       maybeAllocTriggerZoneGC(zone, lock);
     }
   }
+}
+
+void GCRuntime::startBackgroundFreeAfterMinorGC() {
+  MOZ_ASSERT(nursery().isEmpty());
+
+  {
+    AutoLockHelperThreadState lock;
+
+    lifoBlocksToFree.ref().transferFrom(&lifoBlocksToFreeAfterMinorGC.ref());
+
+    if (lifoBlocksToFree.ref().isEmpty() &&
+        buffersToFreeAfterMinorGC.ref().empty()) {
+      return;
+    }
+  }
+
+  startBackgroundFree();
 }
 
 JS::AutoDisableGenerationalGC::AutoDisableGenerationalGC(JSContext* cx)
@@ -7858,7 +7894,7 @@ void js::gc::FinishGC(JSContext* cx) {
     JS::FinishIncrementalGC(cx, JS::gcreason::API);
   }
 
-  cx->nursery().waitBackgroundFreeEnd();
+  cx->runtime()->gc.waitBackgroundFreeEnd();
 }
 
 Realm* js::NewRealm(JSContext* cx, JSPrincipals* principals,
