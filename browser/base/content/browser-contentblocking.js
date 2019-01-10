@@ -601,16 +601,6 @@ var ContentBlocking = {
         Services.prefs.getBoolPref(this.PREF_ANIMATIONS_ENABLED, false));
     };
 
-    for (let blocker of this.blockers) {
-      if (blocker.init) {
-        blocker.init();
-      }
-    }
-
-    this.updateAnimationsEnabled();
-
-    Services.prefs.addObserver(this.PREF_ANIMATIONS_ENABLED, this.updateAnimationsEnabled);
-
     XPCOMUtils.defineLazyPreferenceGetter(this, "showBlockedLabels",
       this.PREF_SHOW_BLOCKED_LABELS, false, () => {
         for (let blocker of this.blockers) {
@@ -625,6 +615,16 @@ var ContentBlocking = {
     });
     XPCOMUtils.defineLazyPreferenceGetter(this, "reportBreakageEnabled",
       this.PREF_REPORT_BREAKAGE_ENABLED, false);
+
+    for (let blocker of this.blockers) {
+      if (blocker.init) {
+        blocker.init();
+      }
+    }
+
+    this.updateAnimationsEnabled();
+
+    Services.prefs.addObserver(this.PREF_ANIMATIONS_ENABLED, this.updateAnimationsEnabled);
 
     this.appMenuLabel.setAttribute("value", this.strings.appMenuTitle);
     this.appMenuLabel.setAttribute("tooltiptext", this.strings.appMenuTooltip);
