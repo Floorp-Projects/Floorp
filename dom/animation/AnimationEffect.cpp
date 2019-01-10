@@ -51,9 +51,10 @@ bool AnimationEffect::IsCurrent() const {
     return true;
   }
 
-  return mAnimation->PlaybackRate() >= 0
-             ? computedTiming.mPhase == ComputedTiming::AnimationPhase::Before
-             : computedTiming.mPhase == ComputedTiming::AnimationPhase::After;
+  return (mAnimation->PlaybackRate() > 0 &&
+          computedTiming.mPhase == ComputedTiming::AnimationPhase::Before) ||
+         (mAnimation->PlaybackRate() < 0 &&
+          computedTiming.mPhase == ComputedTiming::AnimationPhase::After);
 }
 
 // https://drafts.csswg.org/web-animations/#in-effect
