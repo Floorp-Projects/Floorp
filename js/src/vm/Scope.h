@@ -176,8 +176,8 @@ class TrailingNamesArray {
 
   explicit TrailingNamesArray(size_t nameCount) {
     if (nameCount) {
-      JS_POISON(&data_, 0xCC, sizeof(BindingName) * nameCount,
-                MemCheckKind::MakeUndefined);
+      Poison(&data_, 0xCC, sizeof(BindingName) * nameCount,
+             MemCheckKind::MakeUndefined);
     }
   }
 
