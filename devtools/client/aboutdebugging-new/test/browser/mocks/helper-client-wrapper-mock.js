@@ -27,6 +27,7 @@ function createClientMock() {
     _eventEmitter: eventEmitter,
     _preferences: {},
     contentProcessFronts: [],
+    serviceWorkerRegistrationFronts: [],
     addOneTimeListener: (evt, listener) => {
       eventEmitter.once(evt, listener);
     },

@@ -31,8 +31,8 @@ class ServiceWorkerTarget extends Component {
         name: PropTypes.string.isRequired,
         url: PropTypes.string,
         scope: PropTypes.string.isRequired,
-        // registrationActor can be missing in e10s.
-        registrationActor: PropTypes.string,
+        // registrationFront can be missing in e10s.
+        registrationFront: PropTypes.object,
         workerTargetFront: PropTypes.object,
       }).isRequired,
     };
@@ -49,7 +49,6 @@ class ServiceWorkerTarget extends Component {
     this.push = this.push.bind(this);
     this.start = this.start.bind(this);
     this.unregister = this.unregister.bind(this);
-    this.onPushSubscriptionModified = this.onPushSubscriptionModified.bind(this);
     this.updatePushSubscription = this.updatePushSubscription.bind(this);
     this.isRunning = this.isRunning.bind(this);
     this.isActive = this.isActive.bind(this);
@@ -59,24 +58,13 @@ class ServiceWorkerTarget extends Component {
   }
 
   componentDidMount() {
-    const { client } = this.props;
-    client.addListener("push-subscription-modified", this.onPushSubscriptionModified);
     this.updatePushSubscription();
   }
 
   componentDidUpdate(oldProps, oldState) {
-    const wasActive = oldProps.target.active;
-    if (!wasActive && this.isActive()) {
-      // While the service worker isn't active, any calls to `updatePushSubscription`
-      // won't succeed. If we just became active, make sure we didn't miss a push
-      // subscription change by updating it now.
-      this.updatePushSubscription();
-    }
-  }
-
-  componentWillUnmount() {
-    const { client } = this.props;
-    client.removeListener("push-subscription-modified", this.onPushSubscriptionModified);
+    // The parent component listens to "push-subscription-modified" events,
+    // so we should update the push subscription after each update.
+    this.updatePushSubscription();
   }
 
   debug() {
@@ -107,41 +95,28 @@ class ServiceWorkerTarget extends Component {
       return;
     }
 
-    const { client, target } = this.props;
-    client.request({
-      to: target.registrationActor,
-      type: "start",
-    });
+    const { registrationFront } = this.props.target;
+    registrationFront.start();
   }
 
   unregister() {
-    const { client, target } = this.props;
-    client.request({
-      to: target.registrationActor,
-      type: "unregister",
-    });
+    const { registrationFront } = this.props.target;
+    registrationFront.unregister();
   }
 
-  onPushSubscriptionModified(type, data) {
-    const { target } = this.props;
-    if (data.from === target.registrationActor) {
-      this.updatePushSubscription();
-    }
-  }
-
-  updatePushSubscription() {
-    if (!this.props.target.registrationActor) {
-      // A valid registrationActor is needed to retrieve the push subscription.
+  async updatePushSubscription() {
+    const { registrationFront } = this.props.target;
+    if (!registrationFront) {
+      // A valid registrationFront is needed to retrieve the push subscription.
       return;
     }
 
-    const { client, target } = this.props;
-    client.request({
-      to: target.registrationActor,
-      type: "getPushSubscription",
-    }, ({ subscription }) => {
+    try {
+      const subscription = await registrationFront.getPushSubscription();
       this.setState({ pushSubscription: subscription });
-    });
+    } catch (e) {
+      // The registration might be destroyed before the request reaches the server.
+    }
   }
 
   isRunning() {
@@ -196,7 +171,7 @@ class ServiceWorkerTarget extends Component {
 
   renderUnregisterLink() {
     if (!this.isActive()) {
-      // If not active, there might be no registrationActor available.
+      // If not active, there might be no registrationFront available.
       return null;
     }
 

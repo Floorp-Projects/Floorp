@@ -33,6 +33,7 @@ class ClientWrapper {
     this.client = client;
     // Array of contentProcessTarget fronts on which we will listen for worker events.
     this.contentProcessFronts = [];
+    this.serviceWorkerRegistrationFronts = [];
   }
 
   addOneTimeListener(evt, listener) {
