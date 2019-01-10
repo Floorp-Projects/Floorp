@@ -794,6 +794,10 @@ pub struct IdNamespace(pub u32);
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
 pub struct DocumentId(pub IdNamespace, pub u32);
 
+impl DocumentId {
+    pub const INVALID: DocumentId = DocumentId(IdNamespace(0), 0);
+}
+
 /// This type carries no valuable semantics for WR. However, it reflects the fact that
 /// clients (Servo) may generate pipelines by different semi-independent sources.
 /// These pipelines still belong to the same `IdNamespace` and the same `DocumentId`.

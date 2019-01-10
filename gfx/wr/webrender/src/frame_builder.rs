@@ -502,7 +502,7 @@ impl FrameBuilder {
 
         render_tasks.write_task_data(device_pixel_scale);
 
-        resource_cache.end_frame();
+        resource_cache.end_frame(texture_cache_profile);
 
         Frame {
             window_size: self.window_size,
