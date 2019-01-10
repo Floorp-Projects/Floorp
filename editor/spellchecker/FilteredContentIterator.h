@@ -3,9 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsFilteredContentIterator_h__
-#define nsFilteredContentIterator_h__
+#ifndef FilteredContentIterator_h
+#define FilteredContentIterator_h
 
+#include "nsComposeTxtSrvFilter.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsISupportsImpl.h"
@@ -14,43 +15,40 @@
 #include "mozilla/UniquePtr.h"
 
 class nsAtom;
-class nsComposeTxtSrvFilter;
 class nsINode;
 class nsRange;
 
-class nsFilteredContentIterator final : public nsIContentIterator {
+namespace mozilla {
+
+class FilteredContentIterator final {
  public:
-  // nsISupports interface...
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS(nsFilteredContentIterator)
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(FilteredContentIterator)
+  NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(FilteredContentIterator)
 
-  explicit nsFilteredContentIterator(
-      mozilla::UniquePtr<nsComposeTxtSrvFilter> aFilter);
+  explicit FilteredContentIterator(UniquePtr<nsComposeTxtSrvFilter> aFilter);
 
-  /* nsIContentIterator */
-  virtual nsresult Init(nsINode* aRoot) override;
-  virtual nsresult Init(nsRange* aRange) override;
-  virtual nsresult Init(nsINode* aStartContainer, uint32_t aStartOffset,
-                        nsINode* aEndContainer, uint32_t aEndOffset) override;
-  virtual nsresult Init(const mozilla::RawRangeBoundary& aStart,
-                        const mozilla::RawRangeBoundary& aEnd) override;
-  virtual void First() override;
-  virtual void Last() override;
-  virtual void Next() override;
-  virtual void Prev() override;
-  virtual nsINode* GetCurrentNode() override;
-  virtual bool IsDone() override;
-  virtual nsresult PositionAt(nsINode* aCurNode) override;
+  nsresult Init(nsINode* aRoot);
+  nsresult Init(nsRange* aRange);
+  nsresult Init(nsINode* aStartContainer, uint32_t aStartOffset,
+                nsINode* aEndContainer, uint32_t aEndOffset);
+  nsresult Init(const RawRangeBoundary& aStart, const RawRangeBoundary& aEnd);
+  void First();
+  void Last();
+  void Next();
+  void Prev();
+  nsINode* GetCurrentNode();
+  bool IsDone();
+  nsresult PositionAt(nsINode* aCurNode);
 
   /* Helpers */
   bool DidSkip() { return mDidSkip; }
   void ClearDidSkip() { mDidSkip = false; }
 
  protected:
-  nsFilteredContentIterator()
+  FilteredContentIterator()
       : mDidSkip(false), mIsOutOfRange(false), mDirection{eDirNotSet} {}
 
-  virtual ~nsFilteredContentIterator();
+  virtual ~FilteredContentIterator();
 
   /**
    * Callers must guarantee that mRange isn't nullptr and it's positioned.
@@ -63,9 +61,9 @@ class nsFilteredContentIterator final : public nsIContentIterator {
   void CheckAdvNode(nsINode* aNode, bool& aDidSkip, eDirectionType aDir);
   nsresult SwitchDirections(bool aChangeToForward);
 
-  RefPtr<mozilla::ContentIteratorBase> mCurrentIterator;
-  RefPtr<mozilla::PostContentIterator> mPostIterator;
-  RefPtr<mozilla::PreContentIterator> mPreIterator;
+  RefPtr<ContentIteratorBase> mCurrentIterator;
+  RefPtr<PostContentIterator> mPostIterator;
+  RefPtr<PreContentIterator> mPreIterator;
 
   RefPtr<nsAtom> mBlockQuoteAtom;
   RefPtr<nsAtom> mScriptAtom;
@@ -73,11 +71,13 @@ class nsFilteredContentIterator final : public nsIContentIterator {
   RefPtr<nsAtom> mSelectAreaAtom;
   RefPtr<nsAtom> mMapAtom;
 
-  mozilla::UniquePtr<nsComposeTxtSrvFilter> mFilter;
+  UniquePtr<nsComposeTxtSrvFilter> mFilter;
   RefPtr<nsRange> mRange;
   bool mDidSkip;
   bool mIsOutOfRange;
   eDirectionType mDirection;
 };
 
-#endif
+}  // namespace mozilla
+
+#endif  // #ifndef FilteredContentIterator_h
