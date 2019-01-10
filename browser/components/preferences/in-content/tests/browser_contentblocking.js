@@ -252,6 +252,10 @@ add_task(async function testContentBlockingCustomCategory() {
   await TestUtils.waitForCondition(() => Services.prefs.prefHasUserValue(NCB_PREF));
   is(Services.prefs.getStringPref(CAT_PREF), "custom", `${CAT_PREF} has been set to custom`);
 
+  for (let pref of prefs) {
+    SpecialPowers.clearUserPref(pref);
+  }
+
   gBrowser.removeCurrentTab();
 });
 
