@@ -4,7 +4,7 @@
 
 // @flow
 /**
- * This file maps the SVG React Components in the assets/images directory.
+ * This file maps the SVG React Components in the images directory.
  */
 
 import Svg from "../../../images/Svg";

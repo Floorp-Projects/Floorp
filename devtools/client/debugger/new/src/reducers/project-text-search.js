@@ -38,7 +38,7 @@ export const statusType = {
 export type ResultList = Search[];
 export type ProjectTextSearchState = {
   +query: string,
-  +ongoingSearch?: SearchOperation,
+  +ongoingSearch: ?SearchOperation,
   +results: ResultList,
   +status: string
 };
@@ -47,6 +47,7 @@ export function initialProjectTextSearchState(): ProjectTextSearchState {
   return {
     query: "",
     results: [],
+    ongoingSearch: null,
     status: statusType.initial
   };
 }
@@ -80,7 +81,9 @@ function update(
       return { ...state, results: [...results, result] };
 
     case "UPDATE_STATUS":
-      return { ...state, status: action.status };
+      const ongoingSearch =
+        action.status == statusType.fetching ? state.ongoingSearch : null;
+      return { ...state, status: action.status, ongoingSearch };
 
     case "CLEAR_SEARCH_RESULTS":
       return { ...state, results: [] };

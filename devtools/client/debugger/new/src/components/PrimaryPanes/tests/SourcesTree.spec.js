@@ -393,7 +393,7 @@ function generateDefaults(overrides) {
     autoExpandAll: true,
     selectSource: jest.fn(),
     setExpandedState: jest.fn(),
-    sources: defaultSources,
+    sources: { FakeThread: defaultSources },
     debuggeeUrl: "http://mdn.com",
     clearProjectDirectoryRoot: jest.fn(),
     setProjectDirectoryRoot: jest.fn(),
