@@ -477,34 +477,6 @@ pub struct WrAnimationProperty {
     id: u64,
 }
 
-#[repr(u32)]
-#[derive(Copy, Clone)]
-pub enum WrFilterOpType {
-  Blur = 0,
-  Brightness = 1,
-  Contrast = 2,
-  Grayscale = 3,
-  HueRotate = 4,
-  Invert = 5,
-  Opacity = 6,
-  Saturate = 7,
-  Sepia = 8,
-  DropShadow = 9,
-  ColorMatrix = 10,
-  SrgbToLinear = 11,
-  LinearToSrgb = 12,
-}
-
-#[repr(C)]
-#[derive(Copy, Clone)]
-pub struct WrFilterOp {
-    filter_type: WrFilterOpType,
-    argument: c_float, // holds radius for DropShadow; value for other filters
-    offset: LayoutVector2D, // only used for DropShadow
-    color: ColorF, // only used for DropShadow
-    matrix: [f32;20], // only used in ColorMatrix
-}
-
 /// cbindgen:derive-eq=false
 #[repr(C)]
 #[derive(Debug)]
@@ -1912,7 +1884,7 @@ pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
                                               transform_style: TransformStyle,
                                               perspective: *const LayoutTransform,
                                               mix_blend_mode: MixBlendMode,
-                                              filters: *const WrFilterOp,
+                                              filters: *const FilterOp,
                                               filter_count: usize,
                                               is_backface_visible: bool,
                                               glyph_raster_space: RasterSpace,
@@ -1921,23 +1893,7 @@ pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
 
     let c_filters = make_slice(filters, filter_count);
     let mut filters : Vec<FilterOp> = c_filters.iter().map(|c_filter| {
-        match c_filter.filter_type {
-            WrFilterOpType::Blur => FilterOp::Blur(c_filter.argument),
-            WrFilterOpType::Brightness => FilterOp::Brightness(c_filter.argument),
-            WrFilterOpType::Contrast => FilterOp::Contrast(c_filter.argument),
-            WrFilterOpType::Grayscale => FilterOp::Grayscale(c_filter.argument),
-            WrFilterOpType::HueRotate => FilterOp::HueRotate(c_filter.argument),
-            WrFilterOpType::Invert => FilterOp::Invert(c_filter.argument),
-            WrFilterOpType::Opacity => FilterOp::Opacity(PropertyBinding::Value(c_filter.argument), c_filter.argument),
-            WrFilterOpType::Saturate => FilterOp::Saturate(c_filter.argument),
-            WrFilterOpType::Sepia => FilterOp::Sepia(c_filter.argument),
-            WrFilterOpType::DropShadow => FilterOp::DropShadow(c_filter.offset,
-                                                               c_filter.argument,
-                                                               c_filter.color),
-            WrFilterOpType::ColorMatrix => FilterOp::ColorMatrix(c_filter.matrix),
-            WrFilterOpType::SrgbToLinear => FilterOp::SrgbToLinear,
-            WrFilterOpType::LinearToSrgb => FilterOp::LinearToSrgb,
-        }
+                                                           *c_filter
     }).collect();
 
     let clip_node_id_ref = unsafe { clip_node_id.as_ref() };

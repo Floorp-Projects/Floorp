@@ -24,7 +24,7 @@ StackingContextHelper::StackingContextHelper()
 StackingContextHelper::StackingContextHelper(
     const StackingContextHelper& aParentSC, const ActiveScrolledRoot* aAsr,
     nsIFrame* aContainerFrame, nsDisplayItem* aContainerItem,
-    wr::DisplayListBuilder& aBuilder, const nsTArray<wr::WrFilterOp>& aFilters,
+    wr::DisplayListBuilder& aBuilder, const nsTArray<wr::FilterOp>& aFilters,
     const LayoutDeviceRect& aBounds, const gfx::Matrix4x4* aBoundTransform,
     const wr::WrAnimationProperty* aAnimation, const float* aOpacityPtr,
     const gfx::Matrix4x4* aTransformPtr, const gfx::Matrix4x4* aPerspectivePtr,
