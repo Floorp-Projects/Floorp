@@ -31,3 +31,10 @@
 
 <!ENTITY contentBlocking.title                           "Content Blocking">
 <!ENTITY contentBlocking.description                     "Some websites use trackers that can monitor your activity across the Internet. In private windows, Firefox Content Blocking automatically blocks many trackers that can collect information about your browsing behavior.">
+
+<!-- Strings for new Private Browsing with Search -->
+<!ENTITY aboutPrivateBrowsing.info.title                 "You’re in a Private Window">
+<!ENTITY aboutPrivateBrowsing.info.description           "&brandShortName; clears your search and browsing history when you quit the app or close all Private Browsing tabs and windows. While this doesn’t make you anonymous to websites or your internet service provider, it makes it easier to keep what you do online private from anyone else who uses this computer.">
+<!-- LOCALIZATION NOTE (aboutPrivateBrowsing.info.myths): This is a link to a SUMO article
+                       about private browsing myths.   -->
+<!ENTITY aboutPrivateBrowsing.info.myths                 "Common myths about private browsing">
