@@ -92,8 +92,6 @@ function connectRuntime(id) {
         isMultiE10s,
       };
 
-      clientWrapper.addListener("closed", onUSBDebuggerClientClosed);
-
       const deviceFront = await clientWrapper.getFront("device");
       if (deviceFront) {
         deviceFront.on("multi-e10s-updated", onMultiE10sUpdated);
