@@ -543,7 +543,7 @@ class MediaFormatReader final
     // Typically for audio, the number of channels and/or sampling rate can vary
     // between what was found in the metadata and what the decoder returned.
     const TrackInfo* GetWorkingInfo() const { return mWorkingInfo.get(); }
-    bool IsEncrypted() const { return GetCurrentInfo()->mCrypto.mValid; }
+    bool IsEncrypted() const { return GetCurrentInfo()->mCrypto.IsEncrypted(); }
 
     // Used by the MDSM for logging purposes.
     Atomic<size_t> mSizeOfQueue;
