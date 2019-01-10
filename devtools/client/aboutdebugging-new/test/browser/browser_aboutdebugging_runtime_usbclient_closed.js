@@ -6,36 +6,97 @@
 /* import-globals-from helper-mocks.js */
 Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "helper-mocks.js", this);
 
-const RUNTIME_DEVICE_ID = "1234";
-const RUNTIME_DEVICE_NAME = "A device";
-const RUNTIME_NAME = "Test application";
+const NETWORK_RUNTIME_HOST = "localhost:6080";
+const NETWORK_RUNTIME_APP_NAME = "TestNetworkApp";
+const USB_RUNTIME_ID = "test-runtime-id";
+const USB_DEVICE_NAME = "test device name";
+const USB_APP_NAME = "TestApp";
 
-// Test that about:debugging navigates back to the default page when the server for the
-// current USB runtime is closed.
-add_task(async function() {
+// Test that about:debugging navigates back to the default page when a USB device is
+// unplugged.
+add_task(async function testUsbDeviceUnplugged() {
   const mocks = new Mocks();
-
   const { document, tab } = await openAboutDebugging();
 
-  const usbClient = mocks.createUSBRuntime(RUNTIME_DEVICE_ID, {
-    deviceName: RUNTIME_DEVICE_NAME,
-    name: RUNTIME_NAME,
+  mocks.createUSBRuntime(USB_RUNTIME_ID, {
+    deviceName: USB_DEVICE_NAME,
+    name: USB_APP_NAME,
   });
   mocks.emitUSBUpdate();
 
   info("Connect to and select the USB device");
-  await connectToRuntime(RUNTIME_DEVICE_NAME, document);
-  await selectRuntime(RUNTIME_DEVICE_NAME, RUNTIME_NAME, document);
+  await connectToRuntime(USB_DEVICE_NAME, document);
+  await selectRuntime(USB_DEVICE_NAME, USB_APP_NAME, document);
 
-  info("Simulate a client disconnection");
-  mocks.removeUSBRuntime(RUNTIME_DEVICE_ID);
-  usbClient._eventEmitter.emit("closed");
+  info("Simulate a device unplugged");
+  mocks.removeUSBRuntime(USB_RUNTIME_ID);
+  mocks.emitUSBUpdate();
 
   info("Wait until the sidebar item for this runtime disappears");
-  await waitUntil(() => !findSidebarItemByText(RUNTIME_DEVICE_NAME, document));
+  await waitUntil(() => !findSidebarItemByText(USB_DEVICE_NAME, document));
 
   is(document.location.hash, `#/runtime/this-firefox`,
     "Redirection to the default page (this-firefox)");
 
+  await removeTab(tab);
+});
+
+// Test that about:debugging navigates back to the default page when the server for the
+// current USB runtime is closed.
+add_task(async function testUsbClientDisconnected() {
+  const mocks = new Mocks();
+  const { document, tab } = await openAboutDebugging();
+
+  const usbClient = mocks.createUSBRuntime(USB_RUNTIME_ID, {
+    deviceName: USB_DEVICE_NAME,
+    name: USB_APP_NAME,
+  });
+  mocks.emitUSBUpdate();
+
+  info("Connect to and select the USB device");
+  await connectToRuntime(USB_DEVICE_NAME, document);
+  await selectRuntime(USB_DEVICE_NAME, USB_APP_NAME, document);
+
+  info("Simulate a client disconnection");
+  usbClient.isClosed = () => true;
+  usbClient._eventEmitter.emit("closed");
+
+  info("Wait until the connect button for this runtime appears");
+  await waitUntil(() => {
+    const item = findSidebarItemByText(USB_DEVICE_NAME, document);
+    return item && item.querySelector(".js-connect-button");
+  });
+
+  is(document.location.hash, `#/runtime/this-firefox`,
+    "Redirection to the default page (this-firefox)");
+  await removeTab(tab);
+});
+
+// Test that about:debugging navigates back to the default page when the server for the
+// current network runtime is closed.
+add_task(async function testNetworkClientDisconnected() {
+  const mocks = new Mocks();
+  const { document, tab } = await openAboutDebugging();
+
+  const networkClient = mocks.createNetworkRuntime(NETWORK_RUNTIME_HOST, {
+    name: NETWORK_RUNTIME_APP_NAME,
+  });
+
+  info("Connect to and select the network runtime");
+  await connectToRuntime(NETWORK_RUNTIME_HOST, document);
+  await selectRuntime(NETWORK_RUNTIME_HOST, NETWORK_RUNTIME_APP_NAME, document);
+
+  info("Simulate a client disconnection");
+  networkClient.isClosed = () => true;
+  networkClient._eventEmitter.emit("closed");
+
+  info("Wait until the connect button for this runtime appears");
+  await waitUntil(() => {
+    const item = findSidebarItemByText(NETWORK_RUNTIME_HOST, document);
+    return item && item.querySelector(".js-connect-button");
+  });
+
+  is(document.location.hash, `#/runtime/this-firefox`,
+    "Redirection to the default page (this-firefox)");
   await removeTab(tab);
 });
