@@ -19,6 +19,7 @@ import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.prompt.Choice
 import mozilla.components.concept.engine.prompt.PromptRequest
+import mozilla.components.concept.engine.prompt.PromptRequest.Authentication
 import mozilla.components.concept.engine.prompt.PromptRequest.Alert
 import mozilla.components.concept.engine.prompt.PromptRequest.MultipleChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.SingleChoice
@@ -74,8 +75,10 @@ class PromptFeature(
 
     init {
         if (activity == null && fragment == null) {
-            throw IllegalStateException("activity and fragment references " +
-                "must not be both null, at least one must be initialized.")
+            throw IllegalStateException(
+                "activity and fragment references " +
+                    "must not be both null, at least one must be initialized."
+            )
         }
     }
 
@@ -276,6 +279,7 @@ class PromptFeature(
         session.promptRequest.consume {
             when (it) {
                 is Alert -> it.onDismiss()
+                is Authentication -> it.onDismiss()
             }
             true
         }
@@ -284,7 +288,7 @@ class PromptFeature(
     /**
      * Invoked when the user requested no more dialogs to be shown from this [sessionId].
      * This consumes the [PromptFeature] value from the [Session] indicated by [sessionId].
-     * @param sessionId the id for which session the user doesn't want to show more dialogs.
+     * @param sessionId the id of the session that requested the dialog.
      * @param isChecked tells if the user want to show more dialogs from this [sessionId].
      */
     internal fun onShouldMoreDialogsChecked(sessionId: String, isChecked: Boolean) {
@@ -292,6 +296,23 @@ class PromptFeature(
         session.promptRequest.consume {
             when (it) {
                 is Alert -> it.onShouldShowNoMoreDialogs(isChecked)
+            }
+            true
+        }
+    }
+
+    /**
+     * Invoked when the user requested to start the authentication flow.
+     * This consumes the [PromptFeature] value from the [Session] indicated by [sessionId].
+     * @param sessionId the id for which session the user doesn't want to show more dialogs.
+     * @param username the value provided by the user.
+     * @param password the value provided by the user.
+     */
+    internal fun onConfirmAuthentication(sessionId: String, username: String, password: String) {
+        val session = sessionManager.findSessionById(sessionId) ?: return
+        session.promptRequest.consume {
+            when (it) {
+                is Authentication -> it.onConfirm(username, password)
             }
             true
         }
@@ -379,6 +400,7 @@ class PromptFeature(
         }
     }
 
+    @Suppress("ComplexMethod")
     private fun handleDialogsRequest(
         promptRequest: PromptRequest,
         session: Session
@@ -410,6 +432,19 @@ class PromptFeature(
             is PromptRequest.Date -> {
                 with(promptRequest) {
                     DatePickerDialogFragment.newInstance(session.id, title, initialDate, minimumDate, maximumDate)
+                }
+            }
+
+            is PromptRequest.Authentication -> {
+                with(promptRequest) {
+                    AuthenticationDialogFragment.newInstance(
+                        session.id,
+                        title,
+                        message,
+                        userName,
+                        password,
+                        onlyShowPassword
+                    )
                 }
             }
 

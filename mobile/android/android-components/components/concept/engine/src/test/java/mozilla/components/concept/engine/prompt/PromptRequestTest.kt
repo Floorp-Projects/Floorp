@@ -11,6 +11,7 @@ import mozilla.components.concept.engine.prompt.PromptRequest.Alert
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.util.Date
@@ -53,5 +54,28 @@ class PromptRequestTest {
         filePickerRequest.onSingleFileSelected(mock(), mock())
         filePickerRequest.onMultipleFilesSelected(mock(), emptyArray())
         filePickerRequest.onDismiss()
+
+        val promptRequest = PromptRequest.Authentication(
+            "title",
+            "message",
+            "username",
+            "password",
+            PromptRequest.Authentication.Method.HOST,
+            PromptRequest.Authentication.Level.NONE,
+            false,
+            false,
+            false,
+            { _, _ -> }) {
+        }
+
+        assertEquals(promptRequest.title, "title")
+        assertEquals(promptRequest.message, "message")
+        assertEquals(promptRequest.userName, "username")
+        assertEquals(promptRequest.password, "password")
+        assertFalse(promptRequest.onlyShowPassword)
+        assertFalse(promptRequest.previousFailed)
+        assertFalse(promptRequest.isCrossOrigin)
+        promptRequest.onConfirm("", "")
+        promptRequest.onDismiss()
     }
 }

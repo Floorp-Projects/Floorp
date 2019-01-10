@@ -31,6 +31,15 @@ import java.util.Date
 import java.util.Locale
 import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.support.ktx.kotlin.toDate
+import mozilla.components.concept.engine.prompt.PromptRequest.Authentication.Level
+import mozilla.components.concept.engine.prompt.PromptRequest.Authentication.Method
+import org.mozilla.geckoview.GeckoSession.PromptDelegate.AuthOptions.AUTH_FLAG_CROSS_ORIGIN_SUB_RESOURCE
+import org.mozilla.geckoview.GeckoSession.PromptDelegate.AuthOptions.AUTH_FLAG_HOST
+import org.mozilla.geckoview.GeckoSession.PromptDelegate.AuthOptions.AUTH_FLAG_ONLY_PASSWORD
+import org.mozilla.geckoview.GeckoSession.PromptDelegate.AuthOptions.AUTH_FLAG_PREVIOUS_FAILED
+import org.mozilla.geckoview.GeckoSession.PromptDelegate.AuthOptions.AUTH_LEVEL_NONE
+import org.mozilla.geckoview.GeckoSession.PromptDelegate.AuthOptions.AUTH_LEVEL_PW_ENCRYPTED
+import org.mozilla.geckoview.GeckoSession.PromptDelegate.AuthOptions.AUTH_LEVEL_SECURE
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.DATETIME_TYPE_DATE
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.DATETIME_TYPE_DATETIME_LOCAL
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.DATETIME_TYPE_MONTH
@@ -200,6 +209,56 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
         }
     }
 
+    override fun onAuthPrompt(
+        session: GeckoSession,
+        title: String?,
+        message: String?,
+        options: AuthOptions,
+        geckoCallback: AuthCallback
+    ) {
+
+        val flags = options.flags
+        val userName = options.username ?: ""
+        val password = options.password ?: ""
+        val method = if (flags in AUTH_FLAG_HOST) Method.HOST else Method.PROXY
+
+        val level = getAuthLevel(options)
+
+        val onlyShowPassword = flags in AUTH_FLAG_ONLY_PASSWORD
+        val previousFailed = flags in AUTH_FLAG_PREVIOUS_FAILED
+        val isCrossOrigin = flags in AUTH_FLAG_CROSS_ORIGIN_SUB_RESOURCE
+
+        val onConfirm: (String, String) -> Unit = { user, pass ->
+            if (onlyShowPassword) {
+                geckoCallback.confirm(pass)
+            } else {
+                geckoCallback.confirm(user, pass)
+            }
+        }
+
+        val onDismiss: () -> Unit = {
+            geckoCallback.dismiss()
+        }
+
+        geckoEngineSession.notifyObservers {
+            onPromptRequest(
+                PromptRequest.Authentication(
+                    title ?: "",
+                    message ?: "",
+                    userName,
+                    password,
+                    method,
+                    level,
+                    onlyShowPassword,
+                    previousFailed,
+                    isCrossOrigin,
+                    onConfirm,
+                    onDismiss
+                )
+            )
+        }
+    }
+
     override fun onButtonPrompt(
         session: GeckoSession,
         title: String?,
@@ -214,14 +273,6 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
         value: String?,
         callback: TextCallback
     ) = Unit // Related issue: https://github.com/mozilla-mobile/android-components/issues/1469
-
-    override fun onAuthPrompt(
-        session: GeckoSession,
-        title: String?,
-        msg: String?,
-        options: AuthOptions,
-        callback: AuthCallback
-    ) = Unit // Related issue: https://github.com/mozilla-mobile/android-components/issues/1378
 
     override fun onTextPrompt(
         session: GeckoSession,
@@ -284,6 +335,21 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
                 PromptRequest.Date(title, initialDate, minDate, maxDate, onSelect, onClear)
             )
         }
+    }
+
+    private fun getAuthLevel(options: AuthOptions): Level {
+        return when (options.level) {
+            AUTH_LEVEL_NONE -> Level.NONE
+            AUTH_LEVEL_PW_ENCRYPTED -> Level.PASSWORD_ENCRYPTED
+            AUTH_LEVEL_SECURE -> Level.SECURED
+            else -> {
+                Level.NONE
+            }
+        }
+    }
+
+    private operator fun Int.contains(mask: Int): Boolean {
+        return (this and mask) != 0
     }
 }
 

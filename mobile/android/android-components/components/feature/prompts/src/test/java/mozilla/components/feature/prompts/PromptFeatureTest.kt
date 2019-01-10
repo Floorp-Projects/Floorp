@@ -26,6 +26,9 @@ import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.prompt.PromptRequest.Alert
+import mozilla.components.concept.engine.prompt.PromptRequest.Authentication
+import mozilla.components.concept.engine.prompt.PromptRequest.Authentication.Level.NONE
+import mozilla.components.concept.engine.prompt.PromptRequest.Authentication.Method.HOST
 import mozilla.components.concept.engine.prompt.PromptRequest.MenuChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.MultipleChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.SingleChoice
@@ -601,6 +604,107 @@ class PromptFeatureTest {
 
         verify(promptFeature, never()).onPermissionsGranted()
         verify(promptFeature, never()).onPermissionsDeny()
+    }
+
+    @Test
+    fun `Calling onConfirmAuthentication will consume promptRequest`() {
+        val session = getSelectedSession()
+
+        var onConfirmWasCalled = false
+        var onDismissWasCalled = false
+
+        val promptRequest = Authentication(
+            "title",
+            "message",
+            "username",
+            "password",
+            HOST,
+            NONE,
+            false,
+            false,
+            false,
+            { _, _ -> onConfirmWasCalled = true }) {
+            onDismissWasCalled = true
+        }
+
+        promptFeature.start()
+
+        session.promptRequest = Consumable.from(promptRequest)
+
+        promptFeature.onConfirmAuthentication(session.id, "", "")
+
+        assertTrue(session.promptRequest.isConsumed())
+        assertTrue(onConfirmWasCalled)
+
+        session.promptRequest = Consumable.from(promptRequest)
+
+        promptFeature.onCancel(session.id)
+        assertTrue(onDismissWasCalled)
+    }
+
+    @Test
+    fun `Calling onConfirmAuthentication with unknown sessionId will not consume promptRequest`() {
+        val session = getSelectedSession()
+
+        var onConfirmWasCalled = false
+        var onDismissWasCalled = false
+
+        val promptRequest = Authentication(
+            "title",
+            "message",
+            "username",
+            "password",
+            HOST,
+            NONE,
+            false,
+            false,
+            false,
+            { _, _ -> onConfirmWasCalled = true }) {
+            onDismissWasCalled = true
+        }
+
+        promptFeature.start()
+
+        session.promptRequest = Consumable.from(promptRequest)
+
+        promptFeature.onConfirmAuthentication("unknown_session_id", "", "")
+
+        assertFalse(session.promptRequest.isConsumed())
+        assertFalse(onConfirmWasCalled)
+
+        session.promptRequest = Consumable.from(promptRequest)
+
+        promptFeature.onCancel("unknown_session_id")
+        assertFalse(onDismissWasCalled)
+    }
+
+    @Test
+    fun `Calling onCancel with an Authentication request will consume promptRequest and call onDismiss`() {
+        val session = getSelectedSession()
+        var onDismissWasCalled = false
+
+        val promptRequest = Authentication(
+            "title",
+            "message",
+            "username",
+            "password",
+            HOST,
+            NONE,
+            false,
+            false,
+            false,
+            { _, _ -> }) {
+            onDismissWasCalled = true
+        }
+
+        promptFeature.start()
+
+        session.promptRequest = Consumable.from(promptRequest)
+
+        promptFeature.onCancel(session.id)
+
+        assertTrue(session.promptRequest.isConsumed())
+        assertTrue(onDismissWasCalled)
     }
 
     private fun getSelectedSession(): Session {

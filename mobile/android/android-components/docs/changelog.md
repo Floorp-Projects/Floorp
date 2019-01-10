@@ -20,6 +20,9 @@ permalink: /changelog/
 * **browser-engine-system**
   * Added support for JavaScript alerts on SystemEngineView.
 
+* **feature-prompts**, **browser-engine-gecko***
+  * Added support for Authentication dialogs.
+
 # 0.37.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.36.0...v0.37.0),

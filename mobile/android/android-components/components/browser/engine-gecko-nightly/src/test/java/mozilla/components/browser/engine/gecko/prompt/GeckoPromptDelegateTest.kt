@@ -11,6 +11,16 @@ import mozilla.components.browser.engine.gecko.GeckoEngineSession
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.prompt.Choice
 import mozilla.components.concept.engine.prompt.PromptRequest
+import mozilla.components.concept.engine.prompt.PromptRequest.Authentication.Level.NONE
+import mozilla.components.concept.engine.prompt.PromptRequest.Authentication.Level.PASSWORD_ENCRYPTED
+import mozilla.components.concept.engine.prompt.PromptRequest.Authentication.Level.SECURED
+import mozilla.components.concept.engine.prompt.PromptRequest.Authentication.Method.HOST
+import org.mozilla.geckoview.GeckoSession.PromptDelegate.AuthOptions.AUTH_LEVEL_SECURE
+import org.mozilla.geckoview.GeckoSession.PromptDelegate.AuthOptions.AUTH_LEVEL_PW_ENCRYPTED
+import org.mozilla.geckoview.GeckoSession.PromptDelegate.AuthOptions.AUTH_FLAG_ONLY_PASSWORD
+import org.mozilla.geckoview.GeckoSession.PromptDelegate.AuthOptions.AUTH_FLAG_PREVIOUS_FAILED
+import org.mozilla.geckoview.GeckoSession.PromptDelegate.AuthOptions.AUTH_FLAG_CROSS_ORIGIN_SUB_RESOURCE
+import org.mozilla.geckoview.GeckoSession.PromptDelegate.AuthOptions.AUTH_FLAG_HOST
 import mozilla.components.concept.engine.prompt.PromptRequest.MultipleChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.SingleChoice
 import mozilla.components.support.test.mock
@@ -229,7 +239,6 @@ class GeckoPromptDelegateTest {
         gecko.onButtonPrompt(mock(), "", "", null, mock())
         gecko.onDateTimePrompt(mock(), "", 0, null, null, null, mock())
         gecko.onColorPrompt(mock(), "", "", mock())
-        gecko.onAuthPrompt(mock(), "", "", mock(), mock())
         gecko.onTextPrompt(mock(), "", "", null, mock())
         gecko.onPopupRequest(mock(), "")
         gecko.onDateTimePrompt(mock(), "", DATETIME_TYPE_TIME, null, "", "", mock())
@@ -544,6 +553,91 @@ class GeckoPromptDelegateTest {
         promptDelegate.onFilePrompt(mock(), "title",
             GeckoSession.PromptDelegate.FILE_TYPE_MULTIPLE, emptyArray(), callback)
 
-        assertTrue((request as PromptRequest.File) .isMultipleFilesSelection)
+        assertTrue((request as PromptRequest.File).isMultipleFilesSelection)
+    }
+
+    @Test
+    fun `Calling onAuthPrompt must provide an Authentication PromptRequest`() {
+        val mockSession = GeckoEngineSession(Mockito.mock(GeckoRuntime::class.java))
+        var request: PromptRequest? = null
+        var onConfirmWasCalled = false
+        var onConfirmOnlyPasswordWasCalled = false
+        var onDismissWasCalled = false
+        val authOptions = mock<GeckoSession.PromptDelegate.AuthOptions>()
+
+        val geckoCallback = object : GeckoSession.PromptDelegate.AuthCallback {
+
+            override fun confirm(username: String, password: String) {
+                onConfirmWasCalled = true
+            }
+
+            override fun dismiss() {
+                onDismissWasCalled = true
+            }
+
+            override fun confirm(password: String?) {
+                onConfirmOnlyPasswordWasCalled = true
+            }
+
+            override fun getCheckboxValue() = false
+            override fun setCheckboxValue(value: Boolean) = Unit
+            override fun hasCheckbox() = false
+            override fun getCheckboxMessage() = ""
+        }
+
+        val promptDelegate = GeckoPromptDelegate(mockSession)
+        mockSession.register(object : EngineSession.Observer {
+            override fun onPromptRequest(promptRequest: PromptRequest) {
+                request = promptRequest
+            }
+        })
+
+        promptDelegate.onAuthPrompt(mock(), "title", "message", authOptions, geckoCallback)
+        assertTrue(request is PromptRequest.Authentication)
+
+        var authRequest = request as PromptRequest.Authentication
+
+        authRequest.onConfirm("", "")
+        assertTrue(onConfirmWasCalled)
+
+        authRequest.onDismiss()
+        assertTrue(onDismissWasCalled)
+
+        authOptions.level = AUTH_LEVEL_SECURE
+
+        authOptions.flags = authOptions.flags.or(AUTH_FLAG_ONLY_PASSWORD)
+        authOptions.flags = authOptions.flags.or(AUTH_FLAG_PREVIOUS_FAILED)
+        authOptions.flags = authOptions.flags.or(AUTH_FLAG_CROSS_ORIGIN_SUB_RESOURCE)
+        authOptions.flags = authOptions.flags.or(AUTH_FLAG_HOST)
+
+        promptDelegate.onAuthPrompt(mock(), "title", "message", authOptions, geckoCallback)
+
+        authRequest = request as PromptRequest.Authentication
+
+        authRequest.onConfirm("", "")
+
+        with(authRequest) {
+            assertTrue(onlyShowPassword)
+            assertTrue(previousFailed)
+            assertTrue(isCrossOrigin)
+
+            assertEquals(method, HOST)
+            assertEquals(level, SECURED)
+            assertTrue(onConfirmOnlyPasswordWasCalled)
+        }
+
+        authOptions.level = AUTH_LEVEL_PW_ENCRYPTED
+
+        promptDelegate.onAuthPrompt(mock(), "title", "message", authOptions, geckoCallback)
+        authRequest = request as PromptRequest.Authentication
+
+        assertEquals(authRequest.level, PASSWORD_ENCRYPTED)
+
+        authOptions.level = -2423
+
+        promptDelegate.onAuthPrompt(mock(), "title", "message", authOptions, geckoCallback)
+        authRequest = request as PromptRequest.Authentication
+
+        assertEquals(authRequest.level, NONE)
     }
 }
