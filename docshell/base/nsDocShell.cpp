@@ -5623,29 +5623,12 @@ nsDocShell::SetTitle(const nsAString& aTitle) {
   return NS_OK;
 }
 
-nsresult nsDocShell::GetCurScrollPos(int32_t aScrollOrientation,
-                                     int32_t* aCurPos) {
-  NS_ENSURE_ARG_POINTER(aCurPos);
-
-  nsIScrollableFrame* sf = GetRootScrollFrame();
-  if (!sf) {
-    return NS_ERROR_FAILURE;
+nsPoint nsDocShell::GetCurScrollPos() {
+  nsPoint scrollPos;
+  if (nsIScrollableFrame* sf = GetRootScrollFrame()) {
+    scrollPos = sf->GetScrollPosition();
   }
-
-  nsPoint pt = sf->GetScrollPosition();
-
-  switch (aScrollOrientation) {
-    case ScrollOrientation_X:
-      *aCurPos = pt.x;
-      return NS_OK;
-
-    case ScrollOrientation_Y:
-      *aCurPos = pt.y;
-      return NS_OK;
-
-    default:
-      NS_ENSURE_TRUE(false, NS_ERROR_INVALID_ARG);
-  }
+  return scrollPos;
 }
 
 nsresult nsDocShell::SetCurScrollPosEx(int32_t aCurHorizontalPos,
@@ -9155,9 +9138,7 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
 
     if (doShortCircuitedLoad) {
       // Save the position of the scrollers.
-      nscoord cx = 0, cy = 0;
-      GetCurScrollPos(ScrollOrientation_X, &cx);
-      GetCurScrollPos(ScrollOrientation_Y, &cy);
+      nsPoint scrollPos = GetCurScrollPos();
 
       // Reset mLoadType to its original value once we exit this block,
       // because this short-circuited load might have started after a
@@ -9220,7 +9201,7 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
       bool scrollRestorationIsManual = false;
       if (mOSHE) {
         /* save current position of scroller(s) (bug 59774) */
-        mOSHE->SetScrollPosition(cx, cy);
+        mOSHE->SetScrollPosition(scrollPos.x, scrollPos.y);
         scrollRestorationIsManual = mOSHE->GetScrollRestorationIsManual();
         // Get the postdata and page ident from the current page, if
         // the new load is being done via normal means.  Note that
@@ -11057,10 +11038,8 @@ nsDocShell::AddState(JS::Handle<JS::Value> aData, const nsAString& aTitle,
   nsCOMPtr<nsISHEntry> newSHEntry;
   if (!aReplace) {
     // Save the current scroll position (bug 590573).
-    nscoord cx = 0, cy = 0;
-    GetCurScrollPos(ScrollOrientation_X, &cx);
-    GetCurScrollPos(ScrollOrientation_Y, &cy);
-    mOSHE->SetScrollPosition(cx, cy);
+    nsPoint scrollPos = GetCurScrollPos();
+    mOSHE->SetScrollPosition(scrollPos.x, scrollPos.y);
 
     bool scrollRestorationIsManual = mOSHE->GetScrollRestorationIsManual();
 
