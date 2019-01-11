@@ -57,7 +57,7 @@ class JsepTransceiver {
 
   void Rollback(JsepTransceiver& oldTransceiver) {
     MOZ_ASSERT(oldTransceiver.GetMediaType() == GetMediaType());
-    MOZ_ASSERT(!oldTransceiver.HasLevel() ||
+    MOZ_ASSERT(!oldTransceiver.HasLevel() || !HasLevel() ||
                oldTransceiver.GetLevel() == GetLevel());
     mTransport = oldTransceiver.mTransport;
     mLevel = oldTransceiver.mLevel;
