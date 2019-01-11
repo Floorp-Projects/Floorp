@@ -37,7 +37,7 @@ parent:
   async Flush();
   async Drain();
   async Shutdown();
-
+  // To clear the threshold, call with INT64_MIN.
   async SetSeekThreshold(int64_t time);
 
   async __delete__();

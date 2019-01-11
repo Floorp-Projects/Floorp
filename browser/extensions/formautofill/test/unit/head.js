@@ -23,6 +23,36 @@ ChromeUtils.defineModuleGetter(this, "FileUtils",
 ChromeUtils.defineModuleGetter(this, "ExtensionParent",
                                "resource://gre/modules/ExtensionParent.jsm");
 
+{
+  // We're going to register a mock file source
+  // with region names based on en-US. This is
+  // necessary for tests that expect to match
+  // on region code display names.
+  const {L10nRegistry, FileSource} = ChromeUtils.import("resource://gre/modules/L10nRegistry.jsm", {});
+
+  const fs = {
+    "toolkit/intl/regionNames.ftl": `
+region-name-us = United States
+region-name-nz = New Zeland
+region-name-au = Australia
+region-name-ca = Canada
+region-name-tw = Taiwan
+    `,
+  };
+
+  L10nRegistry.loadSync = function(url) {
+    if (!fs.hasOwnProperty(url)) {
+      return false;
+    }
+    return fs[url];
+  };
+
+  let locales = Services.locale.packagedLocales;
+  const mockSource = new FileSource("mock", locales, "");
+  L10nRegistry.registerSource(mockSource);
+}
+
+
 do_get_profile();
 
 // ================================================

@@ -30,27 +30,6 @@
     }                                                \
   }
 
-#define NS_CONTENTITERATOR_CID                       \
-  { /* {a6cf90e3-15b3-11d2-932e-00805f8add32}*/      \
-    0xa6cf90e3, 0x15b3, 0x11d2, {                    \
-      0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 \
-    }                                                \
-  }
-
-#define NS_PRECONTENTITERATOR_CID                    \
-  { /* {80D7E247-D4B8-45d7-BB59-6F1DD56F384C} */     \
-    0x80d7e247, 0xd4b8, 0x45d7, {                    \
-      0xbb, 0x59, 0x6f, 0x1d, 0xd5, 0x6f, 0x38, 0x4c \
-    }                                                \
-  }
-
-#define NS_SUBTREEITERATOR_CID                       \
-  { /* {a6cf90e5-15b3-11d2-932e-00805f8add32}*/      \
-    0xa6cf90e5, 0x15b3, 0x11d2, {                    \
-      0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 \
-    }                                                \
-  }
-
 // {09F689E0-B4DA-11d2-A68B-00104BDE6048}
 #define NS_EVENTLISTENERMANAGER_CID                 \
   {                                                 \

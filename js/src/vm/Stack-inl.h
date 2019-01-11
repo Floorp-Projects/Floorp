@@ -36,11 +36,7 @@ inline GlobalObject& InterpreterFrame::global() const {
 }
 
 inline JSObject& InterpreterFrame::varObj() const {
-  JSObject* obj = environmentChain();
-  while (!obj->isQualifiedVarObj()) {
-    obj = obj->enclosingEnvironment();
-  }
-  return *obj;
+  return GetVariablesObject(environmentChain());
 }
 
 inline LexicalEnvironmentObject&

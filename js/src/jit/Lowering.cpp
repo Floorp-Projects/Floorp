@@ -141,7 +141,8 @@ void LIRGenerator::visitDefVar(MDefVar* ins) {
 }
 
 void LIRGenerator::visitDefLexical(MDefLexical* ins) {
-  LDefLexical* lir = new (alloc()) LDefLexical();
+  LDefLexical* lir =
+      new (alloc()) LDefLexical(useRegisterAtStart(ins->environmentChain()));
   add(lir, ins);
   assignSafepoint(lir, ins);
 }

@@ -588,7 +588,7 @@ public final class GeckoSessionSettings implements Parcelable {
     /**
      * Specify the user agent override string.
      * Set value to null to use the user agent specified by USER_AGENT_MODE.
-     * @param value
+     * @param value The string to override the user agent with.
      */
     public void setUserAgentOverride(final @Nullable String value) {
         setString(USER_AGENT_OVERRIDE, value);

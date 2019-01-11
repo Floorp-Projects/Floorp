@@ -58,7 +58,11 @@ class MFTManager {
   virtual nsCString GetDescriptionName() const = 0;
 
   virtual void SetSeekThreshold(const media::TimeUnit& aTime) {
-    mSeekTargetThreshold = Some(aTime);
+    if (aTime.IsValid()) {
+      mSeekTargetThreshold = Some(aTime);
+    } else {
+      mSeekTargetThreshold.reset();
+    }
   }
 
   virtual MediaDataDecoder::ConversionRequired NeedsConversion() const {

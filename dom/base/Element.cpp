@@ -27,7 +27,6 @@
 #include "nsIContentInlines.h"
 #include "mozilla/dom/NodeInfo.h"
 #include "mozilla/dom/DocumentTimeline.h"
-#include "nsIContentIterator.h"
 #include "nsFlexContainerFrame.h"
 #include "nsFocusManager.h"
 #include "nsILinkHandler.h"

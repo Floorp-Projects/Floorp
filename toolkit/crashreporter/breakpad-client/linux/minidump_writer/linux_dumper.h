@@ -250,8 +250,10 @@ class LinuxDumper {
   // Info from /proc/<pid>/auxv
   wasteful_vector<elf_aux_val_t> auxv_;
 
+private:
+  bool IsIPCSharedMemorySegment(const char* name);
+
 #if defined(__ANDROID__)
- private:
   // Android M and later support packed ELF relocations in shared libraries.
   // Packing relocations changes the vaddr of the LOAD segments, such that
   // the effective load bias is no longer the same as the start address of

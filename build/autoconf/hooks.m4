@@ -12,7 +12,6 @@ test "x$prefix" = xNONE && prefix=$ac_default_prefix
 test "x$exec_prefix" = xNONE && exec_prefix='${prefix}'
 
 > subconfigures
-> skip_subconfigures
 ])
 
 define([AC_OUTPUT_SUBDIRS],
@@ -54,15 +53,6 @@ define([AC_OUTPUT_SUBDIRS],
 done
 ])
 
-define([AC_OUTPUT_SUBDIRS_NOW],
-[
-for moz_config_dir_ in $1; do
-  AC_OUTPUT_SUBDIRS($moz_config_dir_,$2)
-  tail -1 subconfigures >> skip_subconfigures
-  MOZ_RUN_SUBCONFIGURES(`tail -1 skip_subconfigures`)
-done
-])
-
 define([MOZ_RUN_SUBCONFIGURES],
 [dnl Execute subconfigure, unless --no-recursion was passed to configure.
 if test "$no_recursion" != yes; then
@@ -74,7 +64,7 @@ fi
 ])
 
 define([MOZ_RUN_ALL_SUBCONFIGURES],[
-MOZ_RUN_SUBCONFIGURES([--list subconfigures --skip skip_subconfigures])
+MOZ_RUN_SUBCONFIGURES([--list subconfigures])
 ])
 
 dnl Print error messages in config.log as well as stderr

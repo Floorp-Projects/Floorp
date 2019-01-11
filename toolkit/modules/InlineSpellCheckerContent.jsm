@@ -56,13 +56,6 @@ var InlineSpellCheckerContent = {
     let realSpellChecker = spellChecker.mInlineSpellChecker.spellChecker;
     realSpellChecker.GetDictionaryList(dictionaryList, {});
 
-    // The original list we get is in random order. We need our list to be
-    // sorted by display names.
-    dictionaryList = spellChecker.sortDictionaryList(dictionaryList.value).map((obj) => {
-      return obj.id;
-    });
-    spellChecker.mDictionaryNames = dictionaryList;
-
     return { canSpellCheck: spellChecker.canSpellCheck,
              initialSpellCheckPending: spellChecker.initialSpellCheckPending,
              enableRealTimeSpell: spellChecker.enabled,
@@ -70,7 +63,7 @@ var InlineSpellCheckerContent = {
              misspelling: spellChecker.mMisspelling,
              spellSuggestions: this._generateSpellSuggestions(),
              currentDictionary: spellChecker.mInlineSpellChecker.spellChecker.GetCurrentDictionary(),
-             dictionaryList };
+             dictionaryList: dictionaryList.value };
   },
 
   uninitContextMenu() {
@@ -120,7 +113,7 @@ var InlineSpellCheckerContent = {
   receiveMessage(msg) {
     switch (msg.name) {
       case "InlineSpellChecker:selectDictionary":
-        this._spellChecker.selectDictionary(msg.data.index);
+        this._spellChecker.selectDictionary(msg.data.localeCode);
         break;
 
       case "InlineSpellChecker:replaceMisspelling":
