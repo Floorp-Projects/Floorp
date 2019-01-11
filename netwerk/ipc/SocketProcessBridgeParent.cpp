@@ -6,6 +6,7 @@
 #include "SocketProcessBridgeParent.h"
 #include "SocketProcessLogging.h"
 
+#include "mozilla/ipc/BackgroundParent.h"
 #include "SocketProcessChild.h"
 
 namespace mozilla {
@@ -30,6 +31,16 @@ SocketProcessBridgeParent::~SocketProcessBridgeParent() {
 mozilla::ipc::IPCResult SocketProcessBridgeParent::RecvTest() {
   LOG(("SocketProcessBridgeParent::RecvTest\n"));
   Unused << SendTest();
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult SocketProcessBridgeParent::RecvInitBackground(
+    Endpoint<PBackgroundParent>&& aEndpoint) {
+  LOG(("SocketProcessBridgeParent::RecvInitBackground mId=%d\n", mId));
+  if (!ipc::BackgroundParent::Alloc(nullptr, std::move(aEndpoint))) {
+    return IPC_FAIL(this, "BackgroundParent::Alloc failed");
+  }
+
   return IPC_OK();
 }
 
