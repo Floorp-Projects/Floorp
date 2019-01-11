@@ -121,6 +121,13 @@ class nsIOService final : public nsIIOService,
   bool SocketProcessReady();
   void NotifySocketProcessPrefsChanged(const char* aName);
 
+  bool IsSocketProcessLaunchComplete();
+
+  // Call func immediately if socket process is launched completely. Otherwise,
+  // |func| will be queued and then executed in the *main thread* once socket
+  // process is launced.
+  void CallOrWaitForSocketProcess(const std::function<void()>& aFunc);
+
   friend SocketProcessMemoryReporter;
   RefPtr<MemoryReportingProcess> GetSocketProcessMemoryReporter();
 
@@ -190,6 +197,8 @@ class nsIOService final : public nsIIOService,
   bool mSettingOffline;
   bool mSetOfflineValue;
 
+  bool mSocketProcessLaunchComplete;
+
   mozilla::Atomic<bool, mozilla::Relaxed> mShutdown;
   mozilla::Atomic<bool, mozilla::Relaxed> mHttpHandlerAlreadyShutingDown;
 
@@ -229,7 +238,11 @@ class nsIOService final : public nsIIOService,
   mozilla::Atomic<PRIntervalTime> mNetTearingDownStarted;
 
   SocketProcessHost* mSocketProcess;
-  nsTArray<const char*> mQueuedPrefNames;
+
+  // Events should be executed after the socket process is launched. Will
+  // dispatch these events while socket process fires OnProcessLaunchComplete.
+  // Note: this array is accessed only on the main thread.
+  nsTArray<std::function<void()>> mPendingEvents;
 
  public:
   // Used for all default buffer sizes that necko allocates.
