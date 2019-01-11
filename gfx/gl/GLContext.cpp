@@ -1923,6 +1923,8 @@ bool GLContext::AssembleOffscreenFBs(const GLuint colorMSRB,
 void GLContext::MarkDestroyed() {
   if (IsDestroyed()) return;
 
+  OnMarkDestroyed();
+
   // Null these before they're naturally nulled after dtor, as we want GLContext
   // to still be alive in *their* dtors.
   mScreen = nullptr;
