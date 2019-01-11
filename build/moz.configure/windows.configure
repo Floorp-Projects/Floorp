@@ -343,57 +343,73 @@ def include_path(vc_path, windows_sdk_dir, ucrt_sdk_dir, dia_sdk_dir):
 set_config('INCLUDE', include_path)
 
 
-@depends(target, c_compiler, vc_path, valid_windows_sdk_dir, valid_ucrt_sdk_dir, dia_sdk_dir)
+@template
+def lib_path_for(host_or_target):
+    compiler = {
+        host: host_c_compiler,
+        target: c_compiler,
+    }[host_or_target]
+
+    @depends(host_or_target, dependable(host_or_target is host), compiler, vc_path,
+             valid_windows_sdk_dir, valid_ucrt_sdk_dir, dia_sdk_dir)
+    @imports('os')
+    def lib_path(target, is_host, c_compiler, vc_path, windows_sdk_dir, ucrt_sdk_dir, dia_sdk_dir):
+        if not vc_path:
+            return
+        sdk_target = {
+            'x86': 'x86',
+            'x86_64': 'x64',
+            'arm': 'arm',
+            'aarch64': 'arm64',
+        }.get(target.cpu)
+
+        old_target = {
+            'x86': '',
+            'x86_64': 'amd64',
+            'arm': 'arm',
+            'aarch64': 'arm64'
+        }.get(target.cpu)
+        if old_target is None:
+            return
+        # As old_target can be '', and os.path.join will happily use the empty
+        # string, leading to a string ending with a backslash, that Make will
+        # interpret as a "string continues on next line" indicator, use variable
+        # args.
+        old_target = (old_target,) if old_target else ()
+        if c_compiler.version < '19.10':
+            # MSVC2015
+            vc_target = old_target
+        else:
+            # MSVC2017 switched to use the same target naming as the sdk.
+            vc_target = (sdk_target,)
+
+        atlmfc_dir = os.path.join(vc_path, 'atlmfc', 'lib', *vc_target)
+        if not os.path.isdir(atlmfc_dir):
+            die('Cannot find the ATL/MFC libraries in the Visual C++ directory '
+                '(%s). Please install them.' % vc_path)
+
+        libs = []
+        lib_env = os.environ.get('LIB')
+        if lib_env and not is_host:
+            libs.extend(lib_env.split(os.pathsep))
+        libs.extend((
+            os.path.join(vc_path, 'lib', *vc_target),
+            atlmfc_dir,
+            os.path.join(windows_sdk_dir.lib, 'um', sdk_target),
+            os.path.join(ucrt_sdk_dir.lib, 'ucrt', sdk_target),
+        ))
+        if dia_sdk_dir:
+            # For some reason the DIA SDK still uses the old-style targets
+            # even in a newer MSVC.
+            libs.append(os.path.join(dia_sdk_dir, 'lib', *old_target))
+        return libs
+
+    return lib_path
+
+
+@depends(lib_path_for(target))
 @imports('os')
-def lib_path(target, c_compiler, vc_path, windows_sdk_dir, ucrt_sdk_dir, dia_sdk_dir):
-    if not vc_path:
-        return
-    sdk_target = {
-        'x86': 'x86',
-        'x86_64': 'x64',
-        'arm': 'arm',
-        'aarch64': 'arm64',
-    }.get(target.cpu)
-
-    old_target = {
-        'x86': '',
-        'x86_64': 'amd64',
-        'arm': 'arm',
-        'aarch64': 'arm64'
-    }.get(target.cpu)
-    if old_target is None:
-        return
-    # As old_target can be '', and os.path.join will happily use the empty
-    # string, leading to a string ending with a backslash, that Make will
-    # interpret as a "string continues on next line" indicator, use variable
-    # args.
-    old_target = (old_target,) if old_target else ()
-    if c_compiler.version < '19.10':
-        # MSVC2015
-        vc_target = old_target
-    else:
-        # MSVC2017 switched to use the same target naming as the sdk.
-        vc_target = (sdk_target,)
-
-    atlmfc_dir = os.path.join(vc_path, 'atlmfc', 'lib', *vc_target)
-    if not os.path.isdir(atlmfc_dir):
-        die('Cannot find the ATL/MFC libraries in the Visual C++ directory '
-            '(%s). Please install them.' % vc_path)
-
-    libs = []
-    lib_env = os.environ.get('LIB')
-    if lib_env:
-        libs.append(lib_env)
-    libs.extend((
-        os.path.join(vc_path, 'lib', *vc_target),
-        atlmfc_dir,
-        os.path.join(windows_sdk_dir.lib, 'um', sdk_target),
-        os.path.join(ucrt_sdk_dir.lib, 'ucrt', sdk_target),
-    ))
-    if dia_sdk_dir:
-        # For some reason the DIA SDK still uses the old-style targets
-        # even in a newer MSVC.
-        libs.append(os.path.join(dia_sdk_dir, 'lib', *old_target))
+def lib_path(libs):
     # Set in the environment for old-configure
     libs = os.pathsep.join(libs)
     os.environ['LIB'] = libs
@@ -401,6 +417,15 @@ def lib_path(target, c_compiler, vc_path, windows_sdk_dir, ucrt_sdk_dir, dia_sdk
 
 
 set_config('LIB', lib_path)
+
+
+@depends(lib_path_for(host))
+@imports(_from='mozbuild.shellutil', _import='quote')
+def host_linker_libpaths(libs):
+    return ['-LIBPATH:%s' % quote(l) for l in libs]
+
+
+set_config('HOST_LINKER_LIBPATHS', host_linker_libpaths)
 
 
 option(env='MT', nargs=1, help='Path to the Microsoft Manifest Tool')
@@ -475,7 +500,7 @@ link = check_prog('LINKER', linker_progs_for(target),
                   paths=toolchain_search_path)
 
 host_link = check_prog('HOST_LINKER', linker_progs_for(host),
-                       paths=toolchain_search_path)
+                       paths=host_toolchain_search_path)
 
 add_old_configure_assignment('LINKER', link)
 

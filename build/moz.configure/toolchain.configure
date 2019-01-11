@@ -713,38 +713,46 @@ def vs_major_version(value):
         return {'2017': 15}[value[0]]
 
 
-@depends(host, target, vs_major_version, check_build_environment, '--with-visual-studio-version')
-@imports(_from='__builtin__', _import='sorted')
-@imports(_from='operator', _import='itemgetter')
-@imports('platform')
-def vc_compiler_path(host, target, vs_major_version, env, vs_release_name):
-    if host.kernel != 'WINNT':
-        return
-    vc_target = {
-        'x86': 'x86',
-        'x86_64': 'x64',
-        'arm': 'arm',
-        'aarch64': 'arm64'
-    }.get(target.cpu)
-    if vc_target is None:
-        return
+@template
+def vc_compiler_path_for(host_or_target):
+    @depends(host, host_or_target, vs_major_version, check_build_environment,
+             '--with-visual-studio-version')
+    @imports(_from='__builtin__', _import='sorted')
+    @imports(_from='operator', _import='itemgetter')
+    @imports('platform')
+    def vc_compiler_path(host, target, vs_major_version, env, vs_release_name):
+        if host.kernel != 'WINNT':
+            return
+        vc_target = {
+            'x86': 'x86',
+            'x86_64': 'x64',
+            'arm': 'arm',
+            'aarch64': 'arm64'
+        }.get(target.cpu)
+        if vc_target is None:
+            return
 
-    all_versions = sorted(get_vc_paths(env.topsrcdir), key=itemgetter(0))
-    if not all_versions:
-        return
-    if vs_major_version:
-        versions = [d for (v, d) in all_versions if v.major ==
-                    vs_major_version]
-        if not versions:
-            die('Visual Studio %s could not be found!' % vs_release_name)
-        data = versions[0]
-    else:
-        # Choose the newest version.
-        data = all_versions[-1][1]
-    paths = data.get(vc_target)
-    if not paths:
-        return
-    return paths
+        all_versions = sorted(get_vc_paths(env.topsrcdir), key=itemgetter(0))
+        if not all_versions:
+            return
+        if vs_major_version:
+            versions = [d for (v, d) in all_versions if v.major ==
+                        vs_major_version]
+            if not versions:
+                die('Visual Studio %s could not be found!' % vs_release_name)
+            data = versions[0]
+        else:
+            # Choose the newest version.
+            data = all_versions[-1][1]
+        paths = data.get(vc_target)
+        if not paths:
+            return
+        return paths
+    return vc_compiler_path
+
+
+vc_compiler_path = vc_compiler_path_for(target)
+host_vc_compiler_path = vc_compiler_path_for(host)
 
 
 @dependable
@@ -754,42 +762,57 @@ def original_path():
     return environ['PATH'].split(os.pathsep)
 
 
-@depends(vc_compiler_path, original_path)
-@imports('os')
-@imports(_from='os', _import='environ')
-def toolchain_search_path(vc_compiler_path, original_path):
-    result = list(original_path)
+@template
+def toolchain_search_path_for(host_or_target):
+    vc_path = {
+        host: host_vc_compiler_path,
+        target: vc_compiler_path,
+    }[host_or_target]
 
-    if vc_compiler_path:
-        # The second item, if there is one, is necessary to have in $PATH for
-        # Windows to load the required DLLs from there.
-        if len(vc_compiler_path) > 1:
-            environ['PATH'] = os.pathsep.join(result + vc_compiler_path[1:])
+    @depends(vc_path, original_path)
+    @imports('os')
+    @imports(_from='os', _import='environ')
+    def toolchain_search_path(vc_compiler_path, original_path):
+        result = list(original_path)
 
-        # The first item is where the programs are going to be
-        result.append(vc_compiler_path[0])
+        if vc_compiler_path:
+            # The second item, if there is one, is necessary to have in $PATH for
+            # Windows to load the required DLLs from there.
+            if len(vc_compiler_path) > 1:
+                environ['PATH'] = os.pathsep.join(result + vc_compiler_path[1:])
 
-    # Also add in the location to which `mach bootstrap` or
-    # `mach artifact toolchain` installs clang.
-    mozbuild_state_dir = environ.get('MOZBUILD_STATE_PATH',
-                                     os.path.expanduser(os.path.join('~', '.mozbuild')))
-    bootstrap_clang_path = os.path.join(mozbuild_state_dir, 'clang', 'bin')
-    result.append(bootstrap_clang_path)
+            # The first item is where the programs are going to be
+            result.append(vc_compiler_path[0])
 
-    bootstrap_cbindgen_path = os.path.join(mozbuild_state_dir, 'cbindgen')
-    result.append(bootstrap_cbindgen_path)
+        # Also add in the location to which `mach bootstrap` or
+        # `mach artifact toolchain` installs clang.
+        mozbuild_state_dir = environ.get('MOZBUILD_STATE_PATH',
+                                         os.path.expanduser(os.path.join('~', '.mozbuild')))
+        bootstrap_clang_path = os.path.join(mozbuild_state_dir, 'clang', 'bin')
+        result.append(bootstrap_clang_path)
 
-    return result
+        bootstrap_cbindgen_path = os.path.join(mozbuild_state_dir, 'cbindgen')
+        result.append(bootstrap_cbindgen_path)
+
+        return result
+    return toolchain_search_path
+
+
+toolchain_search_path = toolchain_search_path_for(target)
+host_toolchain_search_path = toolchain_search_path_for(host)
 
 
 # As a workaround until bug 1516228 and bug 1516253 are fixed, set the PATH
 # variable for the build to contain the toolchain search path.
-@depends(toolchain_search_path)
+@depends(toolchain_search_path, host_toolchain_search_path)
 @imports('os')
 @imports(_from='os', _import='environ')
-def altered_path(toolchain_search_path):
+def altered_path(toolchain_search_path, host_toolchain_search_path):
     path = environ['PATH'].split(os.pathsep)
     altered_path = list(toolchain_search_path)
+    for p in host_toolchain_search_path:
+        if p not in altered_path:
+            altered_path.append(p)
     for p in path:
         if p not in altered_path:
             altered_path.append(p)
@@ -841,6 +864,10 @@ def default_c_compilers(host_or_target, other_c_compiler=None):
                 # Android NDK clangs do not function as host compiler, so
                 # prioritize a raw 'clang' instead.
                 prioritized = info.type
+            elif info.type == 'msvc' and target.cpu != host_or_target.cpu:
+                # MSVC compilers only support one architecture, so we'll
+                # want a cl in another (detected) path.
+                prioritized = 'cl'
 
             types = [prioritized] + [t for t in types if t != info.type]
 
@@ -984,13 +1011,18 @@ def compiler(language, host_or_target, c_compiler=None, other_compiler=None,
     # HOST_CXX variables.
     provided_compiler = provided_program(var)
 
+    search_path = {
+        host: host_toolchain_search_path,
+        target: toolchain_search_path,
+    }[host_or_target]
+
     # Normally, we'd use `var` instead of `_var`, but the interaction with
     # old-configure complicates things, and for now, we a) can't take the plain
     # result from check_prog as CC/CXX/HOST_CC/HOST_CXX and b) have to let
     # old-configure AC_SUBST it (because it's autoconf doing it, not us)
     compiler = check_prog('_%s' % var, what=what, progs=default_compilers,
                           input=provided_compiler.program,
-                          paths=toolchain_search_path)
+                          paths=search_path)
 
     @depends(compiler, provided_compiler, compiler_wrapper, host_or_target, macos_sdk)
     @checking('whether %s can be used' % what, lambda x: bool(x))
