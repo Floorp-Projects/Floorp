@@ -116,8 +116,8 @@ nsSessionStoreUtils::ForEachNonDynamicChildFrame(
 NS_IMETHODIMP
 nsSessionStoreUtils::AddDynamicFrameFilteredListener(
     EventTarget* aTarget, const nsAString& aType,
-    JS::Handle<JS::Value> aListener, bool aUseCapture, JSContext* aCx,
-    nsISupports** aResult) {
+    JS::Handle<JS::Value> aListener, bool aUseCapture, bool aMozSystemGroup,
+    JSContext* aCx, nsISupports** aResult) {
   if (NS_WARN_IF(!aListener.isObject())) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -131,7 +131,12 @@ nsSessionStoreUtils::AddDynamicFrameFilteredListener(
 
   nsCOMPtr<nsIDOMEventListener> filter(new DynamicFrameEventFilter(listener));
 
-  nsresult rv = aTarget->AddEventListener(aType, filter, aUseCapture);
+  nsresult rv;
+  if (aMozSystemGroup) {
+    rv = aTarget->AddSystemEventListener(aType, filter, aUseCapture);
+  } else {
+    rv = aTarget->AddEventListener(aType, filter, aUseCapture);
+  }
   NS_ENSURE_SUCCESS(rv, rv);
 
   filter.forget(aResult);
@@ -142,13 +147,18 @@ NS_IMETHODIMP
 nsSessionStoreUtils::RemoveDynamicFrameFilteredListener(EventTarget* aTarget,
                                                         const nsAString& aType,
                                                         nsISupports* aListener,
-                                                        bool aUseCapture) {
+                                                        bool aUseCapture,
+                                                        bool aMozSystemGroup) {
   NS_ENSURE_TRUE(aTarget, NS_ERROR_NO_INTERFACE);
 
   nsCOMPtr<nsIDOMEventListener> listener = do_QueryInterface(aListener);
   NS_ENSURE_TRUE(listener, NS_ERROR_NO_INTERFACE);
 
-  aTarget->RemoveEventListener(aType, listener, aUseCapture);
+  if (aMozSystemGroup) {
+    aTarget->RemoveSystemEventListener(aType, listener, aUseCapture);
+  } else {
+    aTarget->RemoveEventListener(aType, listener, aUseCapture);
+  }
   return NS_OK;
 }
 
