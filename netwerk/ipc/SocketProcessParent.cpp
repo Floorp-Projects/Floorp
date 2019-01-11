@@ -11,15 +11,28 @@
 namespace mozilla {
 namespace net {
 
+static SocketProcessParent* sSocketProcessParent;
+
 SocketProcessParent::SocketProcessParent(SocketProcessHost* aHost)
     : mHost(aHost) {
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mHost);
 
   MOZ_COUNT_CTOR(SocketProcessParent);
+  sSocketProcessParent = this;
 }
 
 SocketProcessParent::~SocketProcessParent() {
+  MOZ_ASSERT(NS_IsMainThread());
+
   MOZ_COUNT_DTOR(SocketProcessParent);
+  sSocketProcessParent = nullptr;
+}
+
+/* static */ SocketProcessParent* SocketProcessParent::GetSingleton() {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  return sSocketProcessParent;
 }
 
 mozilla::ipc::IPCResult SocketProcessParent::RecvInitCrashReporter(
