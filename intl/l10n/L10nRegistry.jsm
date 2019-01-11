@@ -78,6 +78,12 @@ const isParentProcess = appinfo.processType === appinfo.PROCESS_TYPE_DEFAULT;
  * If during the life-cycle of the app a new source is added, the generator can be called again
  * and will produce a new set of permutations placing the language pack provided resources
  * at the top.
+ *
+ * Notice: L10nRegistry is primarily an asynchronous API, but
+ * it does provide a synchronous version of it's main method
+ * for use by the `LocalizationSync` class.
+ * This API should be only used in very specialized cases and
+ * the uses should be reviewed by the toolkit owner/peer.
  */
 class L10nRegistryService {
   constructor() {
@@ -101,6 +107,9 @@ class L10nRegistryService {
    * Based on the list of requested languages and resource Ids,
    * this function returns an lazy iterator over message context permutations.
    *
+   * Notice: Any changes to this method should be copied
+   * to the `generateBundlesSync` equivalent below.
+   *
    * @param {Array} requestedLangs
    * @param {Array} resourceIds
    * @returns {AsyncIterator<FluentBundle>}
@@ -110,6 +119,38 @@ class L10nRegistryService {
     const pseudoNameFromPref = Services.prefs.getStringPref("intl.l10n.pseudo", "");
     for (const locale of requestedLangs) {
       for await (const dataSets of generateResourceSetsForLocale(locale, sourcesOrder, resourceIds)) {
+        const bundle = new FluentBundle(locale, {
+          ...MSG_CONTEXT_OPTIONS,
+          transform: PSEUDO_STRATEGIES[pseudoNameFromPref],
+        });
+        for (const data of dataSets) {
+          if (data === null) {
+            return;
+          }
+          bundle.addResource(data);
+        }
+        yield bundle;
+      }
+    }
+  }
+
+  /**
+   * This is a synchronous version of the `generateBundles`
+   * method and should stay completely in sync with it at all
+   * times except of the async/await changes.
+   *
+   * Notice: This method should be avoided at all costs
+   * You can think of it similarly to a synchronous XMLHttpRequest.
+   *
+   * @param {Array} requestedLangs
+   * @param {Array} resourceIds
+   * @returns {Iterator<FluentBundle>}
+   */
+  * generateBundlesSync(requestedLangs, resourceIds) {
+    const sourcesOrder = Array.from(this.sources.keys()).reverse();
+    const pseudoNameFromPref = Services.prefs.getStringPref("intl.l10n.pseudo", "");
+    for (const locale of requestedLangs) {
+      for (const dataSets of generateResourceSetsForLocaleSync(locale, sourcesOrder, resourceIds)) {
         const bundle = new FluentBundle(locale, {
           ...MSG_CONTEXT_OPTIONS,
           transform: PSEUDO_STRATEGIES[pseudoNameFromPref],
@@ -230,6 +271,9 @@ class L10nRegistryService {
  * and uses the last, optional parameter, to pass the already resolved
  * sources order.
  *
+ * Notice: Any changes to this method should be copied
+ * to the `generateResourceSetsForLocaleSync` equivalent below.
+ *
  * @param {String} locale
  * @param {Array} sourcesOrder
  * @param {Array} resourceIds
@@ -280,6 +324,65 @@ async function* generateResourceSetsForLocale(locale, sourcesOrder, resourceIds,
       // otherwise recursively load another generator that walks over the
       // partially resolved list of sources.
       yield * generateResourceSetsForLocale(locale, sourcesOrder, resourceIds, order);
+    }
+  }
+}
+
+/**
+ * This is a synchronous version of the `generateResourceSetsForLocale`
+ * method and should stay completely in sync with it at all
+ * times except of the async/await changes.
+ *
+ * @param {String} locale
+ * @param {Array} sourcesOrder
+ * @param {Array} resourceIds
+ * @param {Array} [resolvedOrder]
+ * @returns {Iterator<FluentBundle>}
+ */
+function* generateResourceSetsForLocaleSync(locale, sourcesOrder, resourceIds, resolvedOrder = []) {
+  const resolvedLength = resolvedOrder.length;
+  const resourcesLength = resourceIds.length;
+
+  // Inside that loop we have a list of resources and the sources for them, like this:
+  //   ['test.ftl', 'menu.ftl', 'foo.ftl']
+  //   ['app', 'platform', 'app']
+  for (const sourceName of sourcesOrder) {
+    const order = resolvedOrder.concat(sourceName);
+
+    // We want to bail out early if we know that any of
+    // the (res)x(source) combinations in the permutation
+    // are unavailable.
+    // The combination may have been `undefined` when we
+    // stepped into this branch, and now is resolved to
+    // `false`.
+    //
+    // If the combination resolved to `false` is the last
+    // in the resolvedOrder, we want to continue in this
+    // loop, but if it's somewhere in the middle, we can
+    // safely bail from the whole branch.
+    for (let [idx, sourceName] of order.entries()) {
+      if (L10nRegistry.sources.get(sourceName).hasFile(locale, resourceIds[idx]) === false) {
+        if (idx === order.length - 1) {
+          continue;
+        } else {
+          return;
+        }
+      }
+    }
+
+    // If the number of resolved sources equals the number of resources,
+    // create the right context and return it if it loads.
+    if (resolvedLength + 1 === resourcesLength) {
+      let dataSet = generateResourceSetSync(locale, order, resourceIds);
+      // Here we check again to see if the newly resolved
+      // resources returned `false` on any position.
+      if (!dataSet.includes(false)) {
+        yield dataSet;
+      }
+    } else if (resolvedLength < resourcesLength) {
+      // otherwise recursively load another generator that walks over the
+      // partially resolved list of sources.
+      yield * generateResourceSetsForLocaleSync(locale, sourcesOrder, resourceIds, order);
     }
   }
 }
@@ -405,6 +508,9 @@ const PSEUDO_STRATEGIES = {
  * This allows the caller to be an async generator without using
  * try/catch clauses.
  *
+ * Notice: Any changes to this method should be copied
+ * to the `generateResourceSetSync` equivalent below.
+ *
  * @param {String} locale
  * @param {Array} sourcesOrder
  * @param {Array} resourceIds
@@ -414,6 +520,22 @@ async function generateResourceSet(locale, sourcesOrder, resourceIds) {
   return Promise.all(resourceIds.map((resourceId, i) => {
     return L10nRegistry.sources.get(sourcesOrder[i]).fetchFile(locale, resourceId);
   }));
+}
+
+/**
+ * This is a synchronous version of the `generateResourceSet`
+ * method and should stay completely in sync with it at all
+ * times except of the async/await changes.
+ *
+ * @param {String} locale
+ * @param {Array} sourcesOrder
+ * @param {Array} resourceIds
+ * @returns {FluentBundle}
+ */
+function generateResourceSetSync(locale, sourcesOrder, resourceIds) {
+  return resourceIds.map((resourceId, i) => {
+    return L10nRegistry.sources.get(sourcesOrder[i]).fetchFile(locale, resourceId, {sync: true});
+  });
 }
 
 /**
@@ -430,7 +552,7 @@ class FileSource {
    * @param {Array<string>}  locales
    * @param {string}         prePath
    *
-   * @returns {IndexedFileSource}
+   * @returns {FileSource}
    */
   constructor(name, locales, prePath) {
     this.name = name;
@@ -482,7 +604,7 @@ class FileSource {
     return true;
   }
 
-  fetchFile(locale, path) {
+  fetchFile(locale, path, options = {sync: false}) {
     if (!this.locales.includes(locale)) {
       return false;
     }
@@ -499,8 +621,21 @@ class FileSource {
         return this.cache[fullPath];
       }
     } else if (this.indexed) {
-        return false;
+      return false;
+    }
+    if (options.sync) {
+      let data = L10nRegistry.loadSync(fullPath);
+
+      if (data === false) {
+        this.cache[fullPath] = false;
+      } else {
+        this.cache[fullPath] = FluentResource.fromString(data);
       }
+
+      return this.cache[fullPath];
+    }
+
+    // async
     return this.cache[fullPath] = L10nRegistry.load(fullPath).then(
       data => {
         return this.cache[fullPath] = FluentResource.fromString(data);
@@ -557,6 +692,28 @@ this.L10nRegistry.load = function(url) {
     }
     return response.text();
   });
+};
+
+/**
+ * This is a synchronous version of the `load`
+ * function and should stay completely in sync with it at all
+ * times except of the async/await changes.
+ *
+ * Notice: Any changes to this method should be copied
+ * to the `generateResourceSetSync` equivalent below.
+ *
+ * @param {string} url
+ *
+ * @returns {string}
+ */
+this.L10nRegistry.loadSync = function(uri) {
+  try {
+    let url = Services.io.newURI(uri);
+    let data = Cu.readUTF8URI(url);
+    return data;
+  } catch (e) {
+    return false;
+  }
 };
 
 this.FileSource = FileSource;
