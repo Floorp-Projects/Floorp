@@ -921,8 +921,6 @@ bool InvokeFromInterpreterStub(JSContext* cx,
 bool CheckOverRecursed(JSContext* cx);
 bool CheckOverRecursedBaseline(JSContext* cx, BaselineFrame* frame);
 
-MOZ_MUST_USE bool DefVar(JSContext* cx, HandlePropertyName dn, unsigned attrs,
-                         HandleObject scopeChain);
 MOZ_MUST_USE bool DefLexical(JSContext* cx, HandlePropertyName dn,
                              unsigned attrs, HandleObject scopeChain);
 MOZ_MUST_USE bool DefGlobalLexical(JSContext* cx, HandlePropertyName dn,

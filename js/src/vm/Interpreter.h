@@ -446,8 +446,8 @@ bool DeleteElementJit(JSContext* cx, HandleValue val, HandleValue index,
 
 JSObject* BindVarOperation(JSContext* cx, JSObject* envChain);
 
-bool DefVarOperation(JSContext* cx, HandleObject varobj, HandlePropertyName dn,
-                     unsigned attrs);
+bool DefVarOperation(JSContext* cx, HandleObject envChain, HandleScript script,
+                     jsbytecode* pc);
 
 bool DefFunOperation(JSContext* cx, HandleScript script, HandleObject envChain,
                      HandleFunction funArg);

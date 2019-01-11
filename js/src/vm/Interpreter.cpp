@@ -3618,17 +3618,8 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     END_CASE(JSOP_SETLOCAL)
 
     CASE(JSOP_DEFVAR) {
-      /* ES5 10.5 step 8 (with subsequent errata). */
-      unsigned attrs = JSPROP_ENUMERATE;
-      if (!REGS.fp()->isEvalFrame()) {
-        attrs |= JSPROP_PERMANENT;
-      }
-
-      /* Step 8b. */
-      ReservedRooted<JSObject*> obj(&rootObject0, &REGS.fp()->varObj());
-      ReservedRooted<PropertyName*> name(&rootName0, script->getName(REGS.pc));
-
-      if (!DefVarOperation(cx, obj, name, attrs)) {
+      HandleObject env = REGS.fp()->environmentChain();
+      if (!DefVarOperation(cx, env, script, REGS.pc)) {
         goto error;
       }
     }
@@ -4592,9 +4583,19 @@ JSObject* js::BindVarOperation(JSContext* cx, JSObject* envChain) {
   return &GetVariablesObject(envChain);
 }
 
-bool js::DefVarOperation(JSContext* cx, HandleObject varobj,
-                         HandlePropertyName dn, unsigned attrs) {
+bool js::DefVarOperation(JSContext* cx, HandleObject envChain,
+                         HandleScript script, jsbytecode* pc) {
+  MOZ_ASSERT(JSOp(*pc) == JSOP_DEFVAR);
+
+  RootedObject varobj(cx, &GetVariablesObject(envChain));
   MOZ_ASSERT(varobj->isQualifiedVarObj());
+
+  RootedPropertyName name(cx, script->getName(pc));
+
+  unsigned attrs = JSPROP_ENUMERATE;
+  if (!script->isForEval()) {
+    attrs |= JSPROP_PERMANENT;
+  }
 
 #ifdef DEBUG
   // Per spec, it is an error to redeclare a lexical binding. This should
@@ -4603,25 +4604,25 @@ bool js::DefVarOperation(JSContext* cx, HandleObject varobj,
     Rooted<LexicalEnvironmentObject*> lexicalEnv(cx);
     lexicalEnv = &JS_ExtensibleLexicalEnvironment(varobj)
                       ->as<LexicalEnvironmentObject>();
-    MOZ_ASSERT(CheckVarNameConflict(cx, lexicalEnv, dn));
+    MOZ_ASSERT(CheckVarNameConflict(cx, lexicalEnv, name));
   }
 #endif
 
   Rooted<PropertyResult> prop(cx);
   RootedObject obj2(cx);
-  if (!LookupProperty(cx, varobj, dn, &obj2, &prop)) {
+  if (!LookupProperty(cx, varobj, name, &obj2, &prop)) {
     return false;
   }
 
   /* Steps 8c, 8d. */
   if (!prop || (obj2 != varobj && varobj->is<GlobalObject>())) {
-    if (!DefineDataProperty(cx, varobj, dn, UndefinedHandleValue, attrs)) {
+    if (!DefineDataProperty(cx, varobj, name, UndefinedHandleValue, attrs)) {
       return false;
     }
   }
 
   if (varobj->is<GlobalObject>()) {
-    if (!varobj->as<GlobalObject>().realm()->addToVarNames(cx, dn)) {
+    if (!varobj->as<GlobalObject>().realm()->addToVarNames(cx, name)) {
       return false;
     }
   }
