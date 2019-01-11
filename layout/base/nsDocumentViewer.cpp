@@ -2299,12 +2299,9 @@ UniquePtr<ServoStyleSet> nsDocumentViewer::CreateStyleSet(Document* aDocument) {
   auto cache = nsLayoutStylesheetCache::Singleton();
 
   // Handle the user sheets.
-  StyleSheet* sheet = nullptr;
-  if (nsContentUtils::IsInChromeDocshell(aDocument)) {
-    sheet = cache->UserChromeSheet();
-  } else {
-    sheet = cache->UserContentSheet();
-  }
+  StyleSheet* sheet = nsContentUtils::IsInChromeDocshell(aDocument)
+                          ? cache->GetUserChromeSheet()
+                          : cache->GetUserContentSheet();
 
   if (sheet) {
     styleSet->AppendStyleSheet(SheetType::User, sheet);
