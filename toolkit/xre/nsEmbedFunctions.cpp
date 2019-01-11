@@ -226,8 +226,8 @@ GeckoProcessType sChildProcessType = GeckoProcessType_Default;
 #if defined(MOZ_WIDGET_ANDROID)
 void XRE_SetAndroidChildFds(JNIEnv* env, const XRE_AndroidChildFds& fds) {
   mozilla::jni::SetGeckoThreadEnv(env);
-  mozilla::dom::SetPrefsFd(fds.mPrefsFd);
-  mozilla::dom::SetPrefMapFd(fds.mPrefMapFd);
+  mozilla::ipc::SetPrefsFd(fds.mPrefsFd);
+  mozilla::ipc::SetPrefMapFd(fds.mPrefMapFd);
   IPC::Channel::SetClientChannelFd(fds.mIpcFd);
   CrashReporter::SetNotificationPipeForChild(fds.mCrashFd);
   CrashReporter::SetCrashAnnotationPipeForChild(fds.mCrashAnnotationFd);
