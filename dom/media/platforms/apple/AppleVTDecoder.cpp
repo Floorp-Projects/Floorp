@@ -246,7 +246,11 @@ AppleVTDecoder::AppleFrameRef* AppleVTDecoder::CreateAppleFrameRef(
 
 void AppleVTDecoder::SetSeekThreshold(const media::TimeUnit& aTime) {
   LOG("SetSeekThreshold %lld", aTime.ToMicroseconds());
-  mSeekTargetThreshold = Some(aTime);
+  if (aTime.IsValid()) {
+    mSeekTargetThreshold = Some(aTime);
+  } else {
+    mSeekTargetThreshold.reset();
+  }
 }
 
 //

@@ -2890,10 +2890,9 @@ void MediaFormatReader::SetVideoDecodeThreshold() {
 
     // If the key frame is invalid/infinite, it means the target position is
     // closing to end of stream. We don't want to skip any frame at this point.
-    if (!keyframe.IsValid() || keyframe.IsInfinite()) {
-      return;
-    }
-    threshold = mOriginalSeekTarget.GetTime();
+    threshold = keyframe.IsValid() && !keyframe.IsInfinite()
+                    ? mOriginalSeekTarget.GetTime()
+                    : TimeUnit::Invalid();
   } else {
     return;
   }
