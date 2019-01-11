@@ -28,8 +28,6 @@
 #include "mozilla/net/IPCTransportProvider.h"
 #include "mozilla/net/RequestContextService.h"
 #include "mozilla/net/TrackingDummyChannelParent.h"
-#include "mozilla/net/SocketProcessParent.h"
-#include "mozilla/net/PSocketProcessBridgeParent.h"
 #ifdef MOZ_WEBRTC
 #include "mozilla/net/StunAddrsRequestParent.h"
 #include "mozilla/net/WebrtcProxyChannelParent.h"
@@ -76,7 +74,7 @@ namespace mozilla {
 namespace net {
 
 // C++ file contents
-NeckoParent::NeckoParent() : mSocketProcessBridgeInited(false) {
+NeckoParent::NeckoParent() {
   // Init HTTP protocol handler now since we need atomTable up and running very
   // early (IPDL argument handling for PHttpChannel constructor needs it) so
   // normal init (during 1st Http channel request) isn't early enough.
@@ -954,42 +952,6 @@ bool NeckoParent::DeallocPTrackingDummyChannelParent(
       dont_AddRef(static_cast<TrackingDummyChannelParent*>(aActor));
   MOZ_ASSERT(c);
   return true;
-}
-
-mozilla::ipc::IPCResult NeckoParent::RecvInitSocketProcessBridge(
-    InitSocketProcessBridgeResolver&& aResolver) {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  Endpoint<PSocketProcessBridgeChild> invalidEndpoint;
-  if (NS_WARN_IF(mSocketProcessBridgeInited)) {
-    aResolver(std::move(invalidEndpoint));
-    return IPC_OK();
-  }
-
-  SocketProcessParent* parent = SocketProcessParent::GetSingleton();
-  if (NS_WARN_IF(!parent)) {
-    aResolver(std::move(invalidEndpoint));
-    return IPC_OK();
-  }
-
-  Endpoint<PSocketProcessBridgeParent> parentEndpoint;
-  Endpoint<PSocketProcessBridgeChild> childEndpoint;
-  if (NS_WARN_IF(NS_FAILED(PSocketProcessBridge::CreateEndpoints(
-          parent->OtherPid(), Manager()->OtherPid(), &parentEndpoint,
-          &childEndpoint)))) {
-    aResolver(std::move(invalidEndpoint));
-    return IPC_OK();
-  }
-
-  if (NS_WARN_IF(!parent->SendInitSocketProcessBridgeParent(
-          Manager()->OtherPid(), std::move(parentEndpoint)))) {
-    aResolver(std::move(invalidEndpoint));
-    return IPC_OK();
-  }
-
-  aResolver(std::move(childEndpoint));
-  mSocketProcessBridgeInited = true;
-  return IPC_OK();
 }
 
 }  // namespace net

@@ -11,7 +11,6 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/gfx/GPUParent.h"
 #include "mozilla/gfx/GPUProcessManager.h"
-#include "mozilla/net/SocketProcessChild.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/SystemGroup.h"
@@ -327,9 +326,6 @@ void TelemetryIPCAccumulator::IPCTimerFired(nsITimer* aTimer, void* aClosure) {
       break;
     case GeckoProcessType_GPU:
       SendAccumulatedData(mozilla::gfx::GPUParent::GetSingleton());
-      break;
-    case GeckoProcessType_Socket:
-      SendAccumulatedData(mozilla::net::SocketProcessChild::GetSingleton());
       break;
     default:
       MOZ_ASSERT_UNREACHABLE("Unsupported process type");

@@ -16,7 +16,6 @@
 #include "nsThreadUtils.h"
 #include "nsPIDOMWindow.h"
 #include "nsIObserverService.h"
-#include "nsIOService.h"
 #include "nsIGlobalObject.h"
 #include "nsIXPConnect.h"
 #ifdef MOZ_GECKO_PROFILER
@@ -1810,13 +1809,6 @@ nsresult nsMemoryReporterManager::StartGettingReports() {
 
   if (RDDProcessManager* rdd = RDDProcessManager::Get()) {
     if (RefPtr<MemoryReportingProcess> proc = rdd->GetProcessMemoryReporter()) {
-      s->mChildrenPending.AppendElement(proc.forget());
-    }
-  }
-
-  if (net::gIOService) {
-    if (RefPtr<MemoryReportingProcess> proc =
-            net::gIOService->GetSocketProcessMemoryReporter()) {
       s->mChildrenPending.AppendElement(proc.forget());
     }
   }

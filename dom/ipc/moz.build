@@ -115,7 +115,6 @@ IPDL_SOURCES += [
     'PLoginReputation.ipdl',
     'PPluginWidget.ipdl',
     'PProcessHangMonitor.ipdl',
-    'PrefsTypes.ipdlh',
     'PTabContext.ipdlh',
     'PURLClassifier.ipdl',
     'PURLClassifierInfo.ipdlh',

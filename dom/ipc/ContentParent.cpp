@@ -10,7 +10,6 @@
 #include "base/shared_memory.h"
 
 #include "ContentParent.h"
-#include "ProcessUtils.h"
 #include "TabParent.h"
 
 #if defined(ANDROID) || defined(LINUX)
@@ -2112,12 +2111,31 @@ void ContentParent::LaunchSubprocessInternal(
   // Prefs information is passed via anonymous shared memory to avoid bloating
   // the command line.
 
-  SharedPreferenceSerializer prefSerializer;
-  if (!prefSerializer.SerializeToSharedMemory()) {
+  size_t prefMapSize;
+  auto prefMapHandle =
+      Preferences::EnsureSnapshot(&prefMapSize).ClonePlatformHandle();
+
+  // Serialize the early prefs.
+  nsAutoCStringN<1024> prefs;
+  Preferences::SerializePreferences(prefs);
+
+  // Set up the shared memory.
+  base::SharedMemory shm;
+  if (!shm.Create(prefs.Length())) {
+    NS_ERROR("failed to create shared memory in the parent");
     MarkAsDead();
     earlyReject();
     return;
   }
+  if (!shm.Map(prefs.Length())) {
+    NS_ERROR("failed to map shared memory in the parent");
+    MarkAsDead();
+    earlyReject();
+    return;
+  }
+
+  // Copy the serialized prefs into the shared memory.
+  memcpy(static_cast<char*>(shm.memory()), prefs.get(), prefs.Length());
 
   // Register ContentParent as an observer for changes to any pref
   // whose prefix matches the empty string, i.e. all of them.  The
@@ -2134,14 +2152,13 @@ void ContentParent::LaunchSubprocessInternal(
 #if defined(XP_WIN)
   // Record the handle as to-be-shared, and pass it via a command flag. This
   // works because Windows handles are system-wide.
-  HANDLE prefsHandle = prefSerializer.GetSharedMemoryHandle();
+  HANDLE prefsHandle = shm.handle();
   mSubprocess->AddHandleToShare(prefsHandle);
-  mSubprocess->AddHandleToShare(prefSerializer.GetPrefMapHandle().get());
+  mSubprocess->AddHandleToShare(prefMapHandle.get());
   extraArgs.push_back("-prefsHandle");
   extraArgs.push_back(formatPtrArg(prefsHandle).get());
   extraArgs.push_back("-prefMapHandle");
-  extraArgs.push_back(
-      formatPtrArg(prefSerializer.GetPrefMapHandle().get()).get());
+  extraArgs.push_back(formatPtrArg(prefMapHandle.get()).get());
 #else
   // In contrast, Unix fds are per-process. So remap the fd to a fixed one that
   // will be used in the child.
@@ -2150,17 +2167,16 @@ void ContentParent::LaunchSubprocessInternal(
   // Note: on Android, AddFdToRemap() sets up the fd to be passed via a Parcel,
   // and the fixed fd isn't used. However, we still need to mark it for
   // remapping so it doesn't get closed in the child.
-  mSubprocess->AddFdToRemap(prefSerializer.GetSharedMemoryHandle().fd,
-                            kPrefsFileDescriptor);
-  mSubprocess->AddFdToRemap(prefSerializer.GetPrefMapHandle().get(),
-                            kPrefMapFileDescriptor);
+  mSubprocess->AddFdToRemap(shm.handle().fd, kPrefsFileDescriptor);
+  mSubprocess->AddFdToRemap(prefMapHandle.get(), kPrefMapFileDescriptor);
 #endif
 
   // Pass the lengths via command line flags.
   extraArgs.push_back("-prefsLen");
-  extraArgs.push_back(formatPtrArg(prefSerializer.GetPrefLength()).get());
+  extraArgs.push_back(formatPtrArg(prefs.Length()).get());
+
   extraArgs.push_back("-prefMapSize");
-  extraArgs.push_back(formatPtrArg(prefSerializer.GetPrefMapSize()).get());
+  extraArgs.push_back(formatPtrArg(prefMapSize).get());
 
   // Scheduler prefs need to be handled differently because the scheduler needs
   // to start up in the content process before the normal preferences service.
@@ -2220,8 +2236,9 @@ void ContentParent::LaunchSubprocessInternal(
                   // Transfer ownership of RAII file descriptor/handle
                   // holders so that they won't be closed before the
                   // child can inherit them.
-                  prefSerializer =
-                      std::move(prefSerializer)](base::ProcessHandle handle) {
+                  shm = std::move(shm),
+                  prefMapHandle =
+                      std::move(prefMapHandle)](base::ProcessHandle handle) {
     AUTO_PROFILER_LABEL("ContentParent::LaunchSubprocess::resolve", OTHER);
     const auto launchResumeTS = TimeStamp::Now();
 

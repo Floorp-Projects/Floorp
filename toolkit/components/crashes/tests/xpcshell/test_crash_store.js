@@ -23,7 +23,6 @@ const {
   PROCESS_TYPE_GMPLUGIN,
   PROCESS_TYPE_GPU,
   PROCESS_TYPE_RDD,
-  PROCESS_TYPE_SOCKET,
   CRASH_TYPE_CRASH,
   CRASH_TYPE_HANG,
   SUBMISSION_RESULT_OK,
@@ -382,33 +381,6 @@ add_task(async function test_add_rdd_crash() {
   Assert.equal(crashes.length, 2);
 });
 
-add_task(async function test_add_socket_crash() {
-  let s = await getStore();
-
-  Assert.ok(
-    s.addCrash(PROCESS_TYPE_SOCKET, CRASH_TYPE_CRASH, "id1", new Date())
-  );
-  Assert.equal(s.crashesCount, 1);
-
-  let c = s.crashes[0];
-  Assert.ok(c.crashDate);
-  Assert.equal(c.type, PROCESS_TYPE_SOCKET + "-" + CRASH_TYPE_CRASH);
-  Assert.ok(c.isOfType(PROCESS_TYPE_SOCKET, CRASH_TYPE_CRASH));
-
-  Assert.ok(
-    s.addCrash(PROCESS_TYPE_SOCKET, CRASH_TYPE_CRASH, "id2", new Date())
-  );
-  Assert.equal(s.crashesCount, 2);
-
-  Assert.ok(
-    s.addCrash(PROCESS_TYPE_SOCKET, CRASH_TYPE_CRASH, "id1", new Date())
-  );
-  Assert.equal(s.crashesCount, 2);
-
-  let crashes = s.getCrashesOfType(PROCESS_TYPE_SOCKET, CRASH_TYPE_CRASH);
-  Assert.equal(crashes.length, 2);
-});
-
 add_task(async function test_add_mixed_types() {
   let s = await getStore();
 
@@ -421,11 +393,10 @@ add_task(async function test_add_mixed_types() {
     s.addCrash(PROCESS_TYPE_PLUGIN, CRASH_TYPE_HANG, "phang", new Date()) &&
     s.addCrash(PROCESS_TYPE_GMPLUGIN, CRASH_TYPE_CRASH, "gmpcrash", new Date()) &&
     s.addCrash(PROCESS_TYPE_GPU, CRASH_TYPE_CRASH, "gpucrash", new Date()) &&
-    s.addCrash(PROCESS_TYPE_RDD, CRASH_TYPE_CRASH, "rddcrash", new Date()) &&
-    s.addCrash(PROCESS_TYPE_SOCKET, CRASH_TYPE_CRASH, "socketcrash", new Date())
+    s.addCrash(PROCESS_TYPE_RDD, CRASH_TYPE_CRASH, "rddcrash", new Date())
   );
 
-  Assert.equal(s.crashesCount, 10);
+  Assert.equal(s.crashesCount, 9);
 
   await s.save();
 
@@ -434,7 +405,7 @@ add_task(async function test_add_mixed_types() {
 
   await s.load();
 
-  Assert.equal(s.crashesCount, 10);
+  Assert.equal(s.crashesCount, 9);
 
   let crashes = s.getCrashesOfType(PROCESS_TYPE_MAIN, CRASH_TYPE_CRASH);
   Assert.equal(crashes.length, 1);
@@ -453,8 +424,6 @@ add_task(async function test_add_mixed_types() {
   crashes = s.getCrashesOfType(PROCESS_TYPE_GPU, CRASH_TYPE_CRASH);
   Assert.equal(crashes.length, 1);
   crashes = s.getCrashesOfType(PROCESS_TYPE_RDD, CRASH_TYPE_CRASH);
-  Assert.equal(crashes.length, 1);
-  crashes = s.getCrashesOfType(PROCESS_TYPE_SOCKET, CRASH_TYPE_CRASH);
   Assert.equal(crashes.length, 1);
 });
 

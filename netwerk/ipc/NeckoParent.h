@@ -87,8 +87,6 @@ class NeckoParent : public PNeckoParent {
   };
 
  protected:
-  bool mSocketProcessBridgeInited;
-
   virtual PHttpChannelParent* AllocPHttpChannelParent(
       const PBrowserOrId&, const SerializedLoadContext&,
       const HttpChannelCreationArgs& aOpenArgs) override;
@@ -248,9 +246,6 @@ class NeckoParent : public PNeckoParent {
       PTrackingDummyChannelParent* aActor, nsIURI* aURI, nsIURI* aTopWindowURI,
       const nsresult& aTopWindowURIResult,
       const OptionalLoadInfoArgs& aLoadInfo) override;
-
-  virtual mozilla::ipc::IPCResult RecvInitSocketProcessBridge(
-      InitSocketProcessBridgeResolver&& aResolver) override;
 };
 
 }  // namespace net

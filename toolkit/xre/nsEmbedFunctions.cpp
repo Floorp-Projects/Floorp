@@ -81,7 +81,6 @@
 
 #include "GMPProcessChild.h"
 #include "mozilla/gfx/GPUProcessImpl.h"
-#include "mozilla/net/SocketProcessImpl.h"
 
 #include "GeckoProfiler.h"
 
@@ -226,8 +225,8 @@ GeckoProcessType sChildProcessType = GeckoProcessType_Default;
 #if defined(MOZ_WIDGET_ANDROID)
 void XRE_SetAndroidChildFds(JNIEnv* env, const XRE_AndroidChildFds& fds) {
   mozilla::jni::SetGeckoThreadEnv(env);
-  mozilla::ipc::SetPrefsFd(fds.mPrefsFd);
-  mozilla::ipc::SetPrefMapFd(fds.mPrefMapFd);
+  mozilla::dom::SetPrefsFd(fds.mPrefsFd);
+  mozilla::dom::SetPrefMapFd(fds.mPrefMapFd);
   IPC::Channel::SetClientChannelFd(fds.mIpcFd);
   CrashReporter::SetNotificationPipeForChild(fds.mCrashFd);
   CrashReporter::SetCrashAnnotationPipeForChild(fds.mCrashAnnotationFd);
@@ -635,7 +634,6 @@ nsresult XRE_InitChildProcess(int aArgc, char* aArgv[],
     case GeckoProcessType_GPU:
     case GeckoProcessType_VR:
     case GeckoProcessType_RDD:
-    case GeckoProcessType_Socket:
       // Content processes need the XPCOM/chromium frankenventloop
       uiLoopType = MessageLoop::TYPE_MOZILLA_CHILD;
       break;
@@ -703,10 +701,6 @@ nsresult XRE_InitChildProcess(int aArgc, char* aArgv[],
 
         case GeckoProcessType_RDD:
           process = new RDDProcessImpl(parentPID);
-          break;
-
-        case GeckoProcessType_Socket:
-          process = new net::SocketProcessImpl(parentPID);
           break;
 
         default:
