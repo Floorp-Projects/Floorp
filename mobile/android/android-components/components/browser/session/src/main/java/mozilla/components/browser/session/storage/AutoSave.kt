@@ -11,7 +11,6 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.session.SelectionAwareSessionObserver
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
@@ -171,11 +170,7 @@ private class AutoSaveBackground(
     fun stop() {
         autoSave.logger.info("Save: Background")
 
-        runBlocking {
-            // Since the app is going to the background and can get killed at any time, we do not want to delay saving
-            // the state to disk.
-            autoSave.triggerSave(delaySave = false).join()
-        }
+        autoSave.triggerSave(delaySave = false)
     }
 }
 
