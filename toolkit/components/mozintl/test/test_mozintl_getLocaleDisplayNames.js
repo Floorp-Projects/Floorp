@@ -5,7 +5,7 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 
 const gLangDN = Services.intl.getLanguageDisplayNames.bind(Services.intl, undefined);
-const gReg = Services.intl.getRegions.bind(Services.intl, undefined);
+const gAvLocDN = Services.intl.getAvailableLocaleDisplayNames.bind(Services.intl);
 const gRegDN = Services.intl.getRegionDisplayNames.bind(Services.intl, undefined);
 const gLocDN = Services.intl.getLocaleDisplayNames.bind(Services.intl, undefined);
 
