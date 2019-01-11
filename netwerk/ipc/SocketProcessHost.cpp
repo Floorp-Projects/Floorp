@@ -4,11 +4,66 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "SocketProcessHost.h"
-#include "SocketProcessParent.h"
+
 #include "nsAppRunner.h"
+#include "nsIObserverService.h"
+#include "SocketProcessParent.h"
 
 namespace mozilla {
 namespace net {
+
+#define NS_IPC_IOSERVICE_SET_OFFLINE_TOPIC "ipc:network:set-offline"
+
+class OfflineObserver final : public nsIObserver {
+ public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+  explicit OfflineObserver(SocketProcessHost* aProcessHost)
+      : mProcessHost(aProcessHost) {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+    if (obs) {
+      obs->AddObserver(this, NS_IPC_IOSERVICE_SET_OFFLINE_TOPIC, false);
+    }
+  }
+
+  void Destroy() {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+    if (obs) {
+      obs->RemoveObserver(this, NS_IPC_IOSERVICE_SET_OFFLINE_TOPIC);
+    }
+    mProcessHost = nullptr;
+  }
+
+ private:
+  // nsIObserver implementation.
+  NS_IMETHOD
+  Observe(nsISupports* aSubject, const char* aTopic,
+          const char16_t* aData) override {
+    if (!mProcessHost) {
+      return NS_OK;
+    }
+
+    if (!strcmp(aTopic, NS_IPC_IOSERVICE_SET_OFFLINE_TOPIC)) {
+      NS_ConvertUTF16toUTF8 dataStr(aData);
+      const char* offline = dataStr.get();
+      if (!mProcessHost->IsConnected() ||
+          mProcessHost->GetActor()->SendSetOffline(
+              !strcmp(offline, "true") ? true : false)) {
+        return NS_ERROR_NOT_AVAILABLE;
+      }
+    }
+
+    return NS_OK;
+  }
+  virtual ~OfflineObserver() = default;
+
+  SocketProcessHost* mProcessHost;
+};
+
+NS_IMPL_ISUPPORTS(OfflineObserver, nsIObserver)
 
 SocketProcessHost::SocketProcessHost(Listener* aListener)
     : GeckoChildProcessHost(GeckoProcessType_Socket),
@@ -21,7 +76,15 @@ SocketProcessHost::SocketProcessHost(Listener* aListener)
   MOZ_COUNT_CTOR(SocketProcessHost);
 }
 
-SocketProcessHost::~SocketProcessHost() { MOZ_COUNT_DTOR(SocketProcessHost); }
+SocketProcessHost::~SocketProcessHost() {
+  MOZ_COUNT_DTOR(SocketProcessHost);
+  if (mOfflineObserver) {
+    RefPtr<OfflineObserver> observer = mOfflineObserver;
+    NS_DispatchToMainThread(
+        NS_NewRunnableFunction("SocketProcessHost::DestroyOfflineObserver",
+                               [observer]() { observer->Destroy(); }));
+  }
+}
 
 bool SocketProcessHost::Launch() {
   MOZ_ASSERT(mLaunchPhase == LaunchPhase::Unlaunched);
@@ -143,6 +206,16 @@ void SocketProcessHost::InitAfterConnect(bool aSucceeded) {
     DebugOnly<bool> rv = mSocketProcessParent->Open(
         GetChannel(), base::GetProcId(GetChildProcessHandle()));
     MOZ_ASSERT(rv);
+
+    nsCOMPtr<nsIIOService> ioService(do_GetIOService());
+    MOZ_ASSERT(ioService, "No IO service?");
+    bool offline = false;
+    DebugOnly<nsresult> result = ioService->GetOffline(&offline);
+    MOZ_ASSERT(NS_SUCCEEDED(result), "Failed getting offline?");
+
+    Unused << GetActor()->SendSetOffline(offline);
+
+    mOfflineObserver = new OfflineObserver(this);
   }
 
   if (mListener) {
@@ -155,6 +228,10 @@ void SocketProcessHost::Shutdown() {
   MOZ_ASSERT(NS_IsMainThread());
 
   mListener = nullptr;
+  if (mOfflineObserver) {
+    mOfflineObserver->Destroy();
+    mOfflineObserver = nullptr;
+  }
 
   if (mSocketProcessParent) {
     // OnChannelClosed uses this to check if the shutdown was expected or
