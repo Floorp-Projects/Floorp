@@ -612,9 +612,7 @@ case "$target" in
     if test "$ac_cv_ios_target" = "yes" -a -z $MOZ_IOS; then
        AC_MSG_ERROR([targeting iOS but not using an iOS SDK?])
     fi
-    if test -n "$MOZ_IOS"; then
-        direct_nspr_config=1
-    else
+    if test -z "$MOZ_IOS"; then
         # The ExceptionHandling framework is needed for Objective-C exception
         # logging code in nsObjCExceptions.h. Currently we only use that in debug
         # builds.
@@ -3828,23 +3826,6 @@ NSS_DISABLE_LIBPKIX=1
 AC_SUBST(NSS_DISABLE_LIBPKIX)
 
 MOZ_CREATE_CONFIG_STATUS()
-
-if test -z "$direct_nspr_config"; then
-    dnl ========================================================
-    dnl = Setup a nice relatively clean build environment for
-    dnl = sub-configures.
-    dnl ========================================================
-    CC="$_SUBDIR_CC"
-    CXX="$_SUBDIR_CXX"
-    CFLAGS="$_SUBDIR_CFLAGS"
-    CPPFLAGS="$_SUBDIR_CPPFLAGS"
-    CXXFLAGS="$_SUBDIR_CXXFLAGS"
-    LDFLAGS="$_SUBDIR_LDFLAGS"
-    HOST_CC="$_SUBDIR_HOST_CC"
-    HOST_CFLAGS="$_SUBDIR_HOST_CFLAGS"
-    HOST_CXXFLAGS="$_SUBDIR_HOST_CXXFLAGS"
-    HOST_LDFLAGS="$_SUBDIR_HOST_LDFLAGS"
-fi
 
 unset MAKEFILES
 unset CONFIG_FILES
