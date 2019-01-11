@@ -217,7 +217,7 @@ async function test_webaudio_with_user_gesture(gesture) {
 async function test_webaudio_with_gum(testParameters) {
   info("- open new tab -");
   let tab = await BrowserTestUtils.openNewForegroundTab(window.gBrowser,
-                                                        "about:blank");
+                                                        "https://example.com");
   info("- create audio context -");
   // We want the same audio context be used between different content
   // tasks, so it *must* be loaded by frame script.
