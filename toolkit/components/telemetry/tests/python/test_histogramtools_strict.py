@@ -21,7 +21,7 @@ class TestParser(unittest.TestCase):
     def test_valid_histogram(self):
         SAMPLE_HISTOGRAM = {
             "TEST_VALID_HISTOGRAM": {
-                "record_in_processes": ["main", "content"],
+                "record_in_processes": ["main", "content", "socket"],
                 "alert_emails": ["team@mozilla.xyz"],
                 "bug_numbers": [1383793],
                 "expires_in_version": "never",
