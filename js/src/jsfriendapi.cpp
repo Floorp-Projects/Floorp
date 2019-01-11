@@ -1415,5 +1415,5 @@ JS_FRIEND_API JS::Value js::MaybeGetScriptPrivate(JSObject* object) {
 }
 
 JS_FRIEND_API uint64_t js::GetGCHeapUsageForObjectZone(JSObject* obj) {
-  return obj->zone()->usage.gcBytes();
+  return obj->zone()->zoneSize.gcBytes();
 }
