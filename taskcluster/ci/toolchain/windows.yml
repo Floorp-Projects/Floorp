@@ -336,3 +336,26 @@ win32-gn:
     run-on-projects:
         - trunk
         - try
+
+win32-minidump-stackwalk:
+    description: "minidump_stackwalk toolchain build"
+    treeherder:
+        kind: build
+        platform: toolchains/opt
+        symbol: TW32(stackwalk)
+        tier: 1
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        docker-image: {in-tree: mingw32-build}
+        max-run-time: 1800
+    run:
+        using: toolchain-script
+        script: build-minidump-stackwalk.sh
+        sparse-profile: null
+        arguments: ['mingw32']
+        resources:
+            - 'taskcluster/scripts/misc/tooltool-download.sh'
+        toolchain-artifact: public/build/minidump_stackwalk.tar.xz
+    toolchains:
+        - linux64-clang-trunk-mingw-x86
+        - mingw32-rust-1.31
