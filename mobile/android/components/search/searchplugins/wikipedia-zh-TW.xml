@@ -15,6 +15,5 @@
   <Param name="sourceid" value="Mozilla-search"/>
   <Param name="variant" value="zh-tw"/>
 </Url>
-</Url>
 <SearchForm>https://zh.wikipedia.org/wiki/Special:搜索</SearchForm>
 </SearchPlugin>
