@@ -677,6 +677,10 @@ void GCMarker::markImplicitEdges(T* thing) {
   markImplicitEdgesHelper<typename ImplicitEdgeHolderType<T*>::Type>(thing);
 }
 
+template void GCMarker::markImplicitEdges(JSObject*);
+template void GCMarker::markImplicitEdges(JSScript*);
+template void GCMarker::markImplicitEdges(LazyScript*);
+
 }  // namespace js
 
 template <typename T>
@@ -866,7 +870,6 @@ void js::GCMarker::markAndPush(T* thing) {
     return;
   }
   pushTaggedPtr(thing);
-  markImplicitEdges(thing);
 }
 namespace js {
 template <>
@@ -1026,6 +1029,10 @@ void LazyScript::traceChildren(JSTracer* trc) {
   GCPtrFunction* innerFunctions = this->innerFunctions();
   for (auto i : IntegerRange(numInnerFunctions())) {
     TraceEdge(trc, &innerFunctions[i], "lazyScriptInnerFunction");
+  }
+
+  if (trc->isMarkingTracer()) {
+    return GCMarker::fromTracer(trc)->markImplicitEdges(this);
   }
 }
 inline void js::GCMarker::eagerlyMarkChildren(LazyScript* thing) {
