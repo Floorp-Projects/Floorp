@@ -53,7 +53,6 @@ InlineSpellChecker.prototype = {
     this.mSpellSuggestions = [];
     this.mSuggestionItems = [];
     this.mDictionaryMenu = null;
-    this.mDictionaryNames = [];
     this.mDictionaryItems = [];
     this.mWordNode = null;
   },
@@ -170,17 +169,11 @@ InlineSpellChecker.prototype = {
     var sortedList = [];
     var names = Services.intl.getLocaleDisplayNames(undefined, list);
     for (var i = 0; i < list.length; i++) {
-      sortedList.push({"id": list[i],
-                       "label": names[i]});
+      sortedList.push({"localeCode": list[i],
+                       "displayName": names[i]});
     }
-    sortedList.sort(function(a, b) {
-      if (a.label < b.label)
-        return -1;
-      if (a.label > b.label)
-        return 1;
-      return 0;
-    });
-
+    let comparer = (new Services.intl.Collator()).compare;
+    sortedList.sort((a, b) => comparer(a.displayName, b.displayName));
     return sortedList;
   },
 
@@ -188,7 +181,6 @@ InlineSpellChecker.prototype = {
   // does an append to the given menu
   addDictionaryListToMenu(menu, insertBefore) {
     this.mDictionaryMenu = menu;
-    this.mDictionaryNames = [];
     this.mDictionaryItems = [];
 
     if (!this.enabled)
@@ -212,27 +204,29 @@ InlineSpellChecker.prototype = {
     var sortedList = this.sortDictionaryList(list);
 
     for (var i = 0; i < sortedList.length; i++) {
-      this.mDictionaryNames.push(sortedList[i].id);
       var item = menu.ownerDocument.createXULElement("menuitem");
-      item.setAttribute("id", "spell-check-dictionary-" + sortedList[i].id);
-      item.setAttribute("label", sortedList[i].label);
+      item.setAttribute("id", "spell-check-dictionary-" + sortedList[i].localeCode);
+      // XXX: Once Fluent has dynamic references, we could also lazily
+      //      inject regionNames/languageNames FTL and localize using
+      //      `l10n-id` here.
+      item.setAttribute("label", sortedList[i].displayName);
       item.setAttribute("type", "radio");
       this.mDictionaryItems.push(item);
-      if (curlang == sortedList[i].id) {
+      if (curlang == sortedList[i].localeCode) {
         item.setAttribute("checked", "true");
       } else {
-        var callback = function(me, val, dictName) {
+        var callback = function(me, localeCode) {
           return function(evt) {
-            me.selectDictionary(val);
+            me.selectDictionary(localeCode);
             // Notify change of dictionary, especially for Thunderbird,
             // which is otherwise not notified any more.
             var view = menu.ownerGlobal;
             var spellcheckChangeEvent = new view.CustomEvent(
-                  "spellcheck-changed", {detail: { dictionary: dictName}});
+                  "spellcheck-changed", {detail: { dictionary: localeCode}});
             menu.ownerDocument.dispatchEvent(spellcheckChangeEvent);
           };
         };
-        item.addEventListener("command", callback(this, i, sortedList[i].id), true);
+        item.addEventListener("command", callback(this, sortedList[i].localeCode), true);
       }
       if (insertBefore)
         menu.insertBefore(item, insertBefore);
@@ -252,15 +246,15 @@ InlineSpellChecker.prototype = {
   },
 
   // callback for selecting a dictionary
-  selectDictionary(index) {
+  selectDictionary(localeCode) {
     if (this.mRemote) {
-      this.mRemote.selectDictionary(index);
+      this.mRemote.selectDictionary(localeCode);
       return;
     }
-    if (!this.mInlineSpellChecker || index < 0 || index >= this.mDictionaryNames.length)
+    if (!this.mInlineSpellChecker)
       return;
     var spellchecker = this.mInlineSpellChecker.spellChecker;
-    spellchecker.SetCurrentDictionary(this.mDictionaryNames[index]);
+    spellchecker.SetCurrentDictionary(localeCode);
     this.mInlineSpellChecker.spellCheckRange(null); // causes recheck
   },
 
@@ -467,9 +461,9 @@ RemoteSpellChecker.prototype = {
   get currentDictionary() { return this._spellInfo.currentDictionary; },
   get dictionaryList() { return this._spellInfo.dictionaryList.slice(); },
 
-  selectDictionary(index) {
+  selectDictionary(localeCode) {
     this._spellInfo.target.sendAsyncMessage("InlineSpellChecker:selectDictionary",
-                                            { index });
+                                            { localeCode });
   },
 
   replaceMisspelling(index) {
