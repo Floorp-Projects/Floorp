@@ -5,6 +5,7 @@
 
 include MemoryReportTypes;
 include protocol PSocketProcessBridge;
+include protocol PProfiler;
 include PrefsTypes;
 
 using mozilla::dom::NativeThreadId from "mozilla/dom/TabMessageUtils.h";
@@ -28,6 +29,7 @@ child:
                             MaybeFileDesc DMDFile);
   async SetOffline(bool offline);
   async InitSocketProcessBridgeParent(ProcessId processId, Endpoint<PSocketProcessBridgeParent> endpoint);
+  async InitProfiler(Endpoint<PProfilerChild> aEndpoint);
 };
 
 } // namespace net
