@@ -389,6 +389,8 @@ void CrossProcessCompositorBridgeParent::ShadowLayersUpdated(
       static_cast<uint32_t>(
           (endTime - aInfo.transactionStart()).ToMilliseconds()));
 
+  RegisterPayload(aLayerTree, aInfo.payload());
+
   aLayerTree->SetPendingTransactionId(
       aInfo.id(), aInfo.vsyncId(), aInfo.vsyncStart(), aInfo.refreshStart(),
       aInfo.transactionStart(), endTime, aInfo.url(), aInfo.fwdTime());

@@ -3322,6 +3322,9 @@ class GLContext : public GLLibraryLoader,
   // the GL function pointers!
   void MarkDestroyed();
 
+ protected:
+  virtual void OnMarkDestroyed() {}
+
   // -----------------------------------------------------------------------------
   // Everything that isn't standard GL APIs
  protected:
