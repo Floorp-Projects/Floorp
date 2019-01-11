@@ -24,7 +24,7 @@ import java.text.SimpleDateFormat
 ext {
     def today = new Date()
 
-    // We use the current year (double digit) and subtract 18. We first released Reference Browser in
+    // We use the current year (double digit) and subtract 18. We first released Fenix in
     // 2018 so this value will start counting at 0 and increment by one every year.
     def year = String.valueOf((new SimpleDateFormat("yy").format(today) as int) - 18)
 

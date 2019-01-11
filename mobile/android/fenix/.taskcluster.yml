@@ -10,14 +10,22 @@ tasks:
       $let:
         decision_task_id: {$eval: as_slugid("decision_task")}
         expires_in: {$fromNow: '1 year'}
-        repository: ${event.repository.clone_url}
+        repository: ${event.repository.html_url}
         scheduler_id: focus-nightly-sched
         is_mozilla_mobile_repo:
-          $eval: event.repository.clone_url == 'https://github.com/mozilla-mobile/fenix'
+          $eval: event.repository.html_url == 'https://github.com/mozilla-mobile/fenix'
         track:
-          $if: event.repository.clone_url == 'https://github.com/mozilla-mobile/fenix'
+          $if: event.repository.html_url == 'https://github.com/mozilla-mobile/fenix'
           then: 'nightly'
           else: 'staging-nightly'
+        decision_worker_type:
+          $if: event.repository.html_url == 'https://github.com/mozilla-mobile/fenix'
+          then: mobile-3-decision
+          else: mobile-1-decision
+        build_worker_type:
+          $if: event.repository.html_url == 'https://github.com/mozilla-mobile/fenix'
+          then: gecko-focus
+          else: android-components-g
       in:
         taskId: ${decision_task_id}
         taskGroupId: ${decision_task_id}  # Must be explicit because of Chain of Trust
@@ -26,14 +34,14 @@ tasks:
         expires: ${expires_in}
         schedulerId: ${scheduler_id}    # Must be explicit because of Chain of Trust
         provisionerId: aws-provisioner-v1
-        workerType: gecko-focus   # This workerType has ChainOfTrust enabled
+        workerType: ${decision_worker_type}
         requires: all-completed   # Must be explicit because of Chain of Trust
         priority: medium
         retries: 5
         scopes:
           $flatten:
             - queue:scheduler-id:${scheduler_id}
-            - queue:create-task:highest:aws-provisioner-v1/gecko-focus
+            - queue:create-task:highest:aws-provisioner-v1/${build_worker_type}
             - project:mobile:fenix:releng:signing:format:autograph_apk
             - $if: is_mozilla_mobile_repo
               then:

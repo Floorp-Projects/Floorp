@@ -14,18 +14,13 @@ class TaskBuilder(object):
         self.source = source
         self.scheduler_id = scheduler_id
 
-    def build_task(self, name, description, command, artifacts, features):
+    def build_task(self, name, description, command, artifacts, features, worker_type):
         created = datetime.datetime.now()
         expires = taskcluster.fromNow('1 year')
         deadline = taskcluster.fromNow('1 day')
 
-        features = features.copy()
-        features.update({
-            "taskclusterProxy": True
-        })
-
         return {
-            "workerType": 'gecko-focus',
+            "workerType": worker_type,
             "taskGroupId": self.task_id,
             "schedulerId": self.scheduler_id,
             "expires": taskcluster.stringDate(expires),
@@ -60,7 +55,7 @@ class TaskBuilder(object):
             }
         }
 
-    def build_signing_task(self, build_task_id, name, description, signing_format, is_staging, apks, scopes, routes):
+    def craft_signing_task(self, build_task_id, name, description, signing_format, is_staging, apks, scopes, routes):
         created = datetime.datetime.now()
         expires = taskcluster.fromNow('1 year')
         deadline = taskcluster.fromNow('1 day')
@@ -99,7 +94,7 @@ class TaskBuilder(object):
             }
         }
 
-    def build_push_task(self, signing_task_id, name, description, is_staging, apks, scopes, commit):
+    def craft_push_task(self, signing_task_id, name, description, is_staging, apks, scopes, commit):
         created = datetime.datetime.now()
         expires = taskcluster.fromNow('1 year')
         deadline = taskcluster.fromNow('1 day')

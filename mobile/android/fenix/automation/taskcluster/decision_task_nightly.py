@@ -22,13 +22,13 @@ HEAD_REV = os.environ.get('MOBILE_HEAD_REV')
 
 BUILDER = lib.tasks.TaskBuilder(
     task_id=TASK_ID,
-    owner="android-components-team@mozilla.com",
+    owner="fenix-eng-notifications@mozilla.com",
     source='{}/raw/{}/.taskcluster.yml'.format(GITHUB_HTTP_REPOSITORY, HEAD_REV),
     scheduler_id=SCHEDULER_ID
 )
 
 
-def generate_build_task(apks):
+def generate_build_task(apks, is_staging):
     artifacts = {'public/{}'.format(os.path.basename(apk)): {
         "type": 'file',
         "path": apk,
@@ -42,10 +42,10 @@ def generate_build_task(apks):
         description="Build Fenix from source code.",
         command='cd .. && {} && ./gradlew --no-daemon clean test assembleRelease'.format(checkout),
         features={
-            "chainOfTrust": True,
-            "taskClusterProxy": True
+            "chainOfTrust": True
         },
-        artifacts=artifacts
+        artifacts=artifacts,
+        worker_type='android-components-g' if is_staging else 'gecko-focus',
     )
 
 
@@ -64,7 +64,7 @@ def generate_signing_task(build_task_id, apks, date, is_staging):
         "project:mobile:fenix:releng:signing:cert:{}".format('dep-signing' if is_staging else 'release-signing')
     ]
 
-    return taskcluster.slugId(), BUILDER.build_signing_task(
+    return taskcluster.slugId(), BUILDER.craft_signing_task(
         build_task_id,
         name="(Fenix) Signing task",
         description="Sign release builds of Fenix",
@@ -79,7 +79,7 @@ def generate_signing_task(build_task_id, apks, date, is_staging):
 def generate_push_task(signing_task_id, apks, commit, is_staging):
     artifacts = ["public/{}".format(os.path.basename(apk)) for apk in apks]
 
-    return taskcluster.slugId(), BUILDER.build_push_task(
+    return taskcluster.slugId(), BUILDER.craft_push_task(
         signing_task_id,
         name="(Fenix) Push task",
         description="Upload signed release builds of Fenix to Google Play",
@@ -93,7 +93,7 @@ def generate_push_task(signing_task_id, apks, commit, is_staging):
 
 
 def populate_chain_of_trust_required_but_unused_files():
-    # These files are needed to keep chainOfTrust happy. However, they have no need for Reference Browser
+    # These files are needed to keep chainOfTrust happy. However, they have no need for Fenix
     # at the moment. For more details, see: https://github.com/mozilla-releng/scriptworker/pull/209/files#r184180585
 
     for file_name in ('actions.json', 'parameters.yml'):
@@ -108,7 +108,7 @@ def nightly(apks, track, commit, date_string):
 
     task_graph = {}
 
-    build_task_id, build_task = generate_build_task(apks)
+    build_task_id, build_task = generate_build_task(apks, is_staging)
     lib.tasks.schedule_task(queue, build_task_id, build_task)
 
     task_graph[build_task_id] = {}
