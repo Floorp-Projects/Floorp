@@ -20,6 +20,13 @@ function getPermissionWarnings(manifestPermissions) {
   return msgs;
 }
 
+async function getPermissionWarningsForUpdate(oldExtensionData, newExtensionData) {
+  let oldPerms = await getManifestPermissions(oldExtensionData);
+  let newPerms = await getManifestPermissions(newExtensionData);
+  let difference = Extension.comparePermissions(oldPerms, newPerms);
+  return getPermissionWarnings(difference);
+}
+
 // Tests that the expected permission warnings are generated for various
 // combinations of host permissions.
 add_task(async function host_permissions() {
@@ -225,3 +232,62 @@ add_task(async function unprivileged_with_mozillaAddons() {
   ], "Expected warnings for unprivileged add-on with mozillaAddons permission.");
 });
 
+// Tests that an update with less permissions has no warning.
+add_task(async function update_drop_permission() {
+  let warnings = await getPermissionWarningsForUpdate({
+    manifest: {
+      permissions: ["<all_urls>", "https://a/", "http://b/"],
+    },
+  }, {
+    manifest: {
+      permissions: ["https://a/", "http://b/", "ftp://host_matching_all_urls/"],
+    },
+  });
+  deepEqual(warnings, [], "An update with fewer permissions should not have any warnings");
+});
+
+// Tests that an update that switches from "*://*/*" to "<all_urls>" does not
+// result in additional permission warnings.
+add_task(async function update_all_urls_permission() {
+  let warnings = await getPermissionWarningsForUpdate({
+    manifest: {
+      permissions: ["*://*/*"],
+    },
+  }, {
+    manifest: {
+      permissions: ["<all_urls>"],
+    },
+  });
+  deepEqual(warnings, [], "An update from a wildcard host to <all_urls> should not have any warnings");
+});
+
+// Tests that an update where a new permission whose domain overlaps with
+// an existing permission does not result in additional permission warnings.
+add_task(async function update_change_permissions() {
+  let warnings = await getPermissionWarningsForUpdate({
+    manifest: {
+      permissions: ["https://a/", "http://*.b/", "http://c/", "http://f/"],
+    },
+  }, {
+    manifest: {
+      permissions: [
+        // (no new warning) Unchanged permission from old extension.
+        "https://a/",
+        // (no new warning) Different schemes, host should match "*.b" wildcard.
+        "ftp://ftp.b/", "ws://ws.b/", "wss://wss.b",
+        "https://https.b/", "http://http.b/", "*://*.b/", "http://b/",
+
+        // (expect warning) Wildcard was added.
+        "http://*.c/",
+        // (no new warning) file:-scheme, but host "f" is same as "http://f/".
+        "file://f/",
+        // (expect warning) New permission was added.
+        "proxy",
+      ],
+    },
+  });
+  deepEqual(warnings, [
+    bundle.formatStringFromName("webextPerms.hostDescription.wildcard", ["c"], 1),
+    bundle.formatStringFromName("webextPerms.description.proxy", [DUMMY_APP_NAME], 1),
+  ], "Expected permission warnings for new permissions only");
+});

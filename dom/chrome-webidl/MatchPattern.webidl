@@ -57,6 +57,12 @@ interface MatchPattern {
   boolean subsumes(MatchPattern pattern);
 
   /**
+   * Returns true if this pattern will match any host which would be matched
+   * by the given pattern, ignoring the scheme.
+   */
+  boolean subsumesDomain(MatchPattern pattern);
+
+  /**
    * Returns true if there is any host which would be matched by both this
    * pattern and the given pattern.
    */
@@ -97,6 +103,12 @@ interface MatchPatternSet {
    * Returns true if any sub-pattern subsumes the given pattern.
    */
   boolean subsumes(MatchPattern pattern);
+
+  /**
+   * Returns true if any sub-pattern subsumes the given pattern,
+   * ignoring any of the schemes in the patterns.
+   */
+  boolean subsumesDomain(MatchPattern pattern);
 
   /**
    * Returns true if any sub-pattern overlaps the given pattern.

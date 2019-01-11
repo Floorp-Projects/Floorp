@@ -538,6 +538,15 @@ bool MatchPatternSet::Subsumes(const MatchPattern& aPattern) const {
   return false;
 }
 
+bool MatchPatternSet::SubsumesDomain(const MatchPattern& aPattern) const {
+  for (const auto& pattern : mPatterns) {
+    if (pattern->SubsumesDomain(aPattern)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 bool MatchPatternSet::Overlaps(const MatchPatternSet& aPatternSet) const {
   for (const auto& pattern : aPatternSet.mPatterns) {
     if (Overlaps(*pattern)) {
