@@ -970,7 +970,7 @@ void Statistics::beginGC(JSGCInvocationKind kind) {
   gckind = kind;
   nonincrementalReason_ = gc::AbortReason::None;
 
-  preBytes = runtime->gc.usage.gcBytes();
+  preBytes = runtime->gc.heapSize.gcBytes();
   startingMajorGCNumber = runtime->gc.majorGCCount();
   startingSliceNumber = runtime->gc.gcNumber();
 }

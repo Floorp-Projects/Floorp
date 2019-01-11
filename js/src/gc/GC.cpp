@@ -892,7 +892,7 @@ void Chunk::updateChunkListAfterFree(JSRuntime* rt, const AutoLockGC& lock) {
 }
 
 void GCRuntime::releaseArena(Arena* arena, const AutoLockGC& lock) {
-  arena->zone->usage.removeGCArena();
+  arena->zone->zoneSize.removeGCArena();
   arena->chunk()->releaseArena(rt, arena, lock);
 }
 
@@ -902,7 +902,7 @@ GCRuntime::GCRuntime(JSRuntime* rt)
       atomsZone(nullptr),
       stats_(rt),
       marker(rt),
-      usage(nullptr),
+      heapSize(nullptr),
       rootsHash(256),
       nextCellUniqueId_(LargestTaggedNullCellPointer +
                         1),  // Ensure disjoint from null tagged pointers.
@@ -1379,7 +1379,7 @@ bool GCRuntime::setParameter(JSGCParamKey key, uint32_t value,
         return false;
       }
       for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
-        zone->threshold.updateAfterGC(zone->usage.gcBytes(), GC_NORMAL,
+        zone->threshold.updateAfterGC(zone->zoneSize.gcBytes(), GC_NORMAL,
                                       tunables, schedulingState, lock);
       }
   }
@@ -1607,7 +1607,7 @@ void GCRuntime::resetParameter(JSGCParamKey key, AutoLockGC& lock) {
     default:
       tunables.resetParameter(key, lock);
       for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
-        zone->threshold.updateAfterGC(zone->usage.gcBytes(), GC_NORMAL,
+        zone->threshold.updateAfterGC(zone->zoneSize.gcBytes(), GC_NORMAL,
                                       tunables, schedulingState, lock);
       }
   }
@@ -1685,7 +1685,7 @@ uint32_t GCRuntime::getParameter(JSGCParamKey key, const AutoLockGC& lock) {
     case JSGC_MAX_MALLOC_BYTES:
       return mallocCounter.maxBytes();
     case JSGC_BYTES:
-      return uint32_t(usage.gcBytes());
+      return uint32_t(heapSize.gcBytes());
     case JSGC_MODE:
       return uint32_t(mode);
     case JSGC_UNUSED_CHUNKS:
@@ -3280,7 +3280,7 @@ void GCRuntime::maybeAllocTriggerZoneGC(Zone* zone, const AutoLockGC& lock) {
 
   MOZ_ASSERT(!JS::RuntimeHeapIsCollecting());
 
-  size_t usedBytes = zone->usage.gcBytes();
+  size_t usedBytes = zone->zoneSize.gcBytes();
   size_t thresholdBytes = zone->threshold.gcTriggerBytes();
 
   if (usedBytes >= thresholdBytes) {
@@ -3378,7 +3378,7 @@ void GCRuntime::maybeGC(Zone* zone) {
 
   float threshold = zone->threshold.eagerAllocTrigger(
       schedulingState.inHighFrequencyGCMode());
-  float usedBytes = zone->usage.gcBytes();
+  float usedBytes = zone->zoneSize.gcBytes();
   if (usedBytes > 1024 * 1024 && usedBytes >= threshold &&
       !isIncrementalGCInProgress() && !isBackgroundSweeping()) {
     stats().recordTrigger(usedBytes, threshold);
@@ -5782,7 +5782,7 @@ IncrementalProgress GCRuntime::endSweepingSweepGroup(FreeOp* fop,
   for (SweepGroupZonesIter zone(rt); !zone.done(); zone.next()) {
     AutoLockGC lock(rt);
     zone->changeGCState(Zone::Sweep, Zone::Finished);
-    zone->threshold.updateAfterGC(zone->usage.gcBytes(), invocationKind,
+    zone->threshold.updateAfterGC(zone->zoneSize.gcBytes(), invocationKind,
                                   tunables, schedulingState, lock);
     zone->updateAllGCMallocCountersOnGCEnd(lock);
     zone->arenas.unmarkPreMarkedFreeCells();
@@ -7258,7 +7258,7 @@ GCRuntime::IncrementalResult GCRuntime::budgetIncrementalGC(
       continue;
     }
 
-    if (zone->usage.gcBytes() >= zone->threshold.gcTriggerBytes()) {
+    if (zone->zoneSize.gcBytes() >= zone->threshold.gcTriggerBytes()) {
       CheckZoneIsScheduled(zone, reason, "GC bytes");
       budget.makeUnlimited();
       stats().nonincremental(AbortReason::GCBytesTrigger);
@@ -7314,7 +7314,7 @@ class AutoScheduleZonesForGC {
 
       // This is a heuristic to reduce the total number of collections.
       bool inHighFrequencyMode = gc->schedulingState.inHighFrequencyGCMode();
-      if (zone->usage.gcBytes() >=
+      if (zone->zoneSize.gcBytes() >=
           zone->threshold.eagerAllocTrigger(inHighFrequencyMode)) {
         zone->scheduleGC();
       }
@@ -8136,7 +8136,7 @@ void GCRuntime::mergeRealms(Realm* source, Realm* target) {
                                      targetZoneIsCollecting);
   target->zone()->addTenuredAllocsSinceMinorGC(
       source->zone()->getAndResetTenuredAllocsSinceMinorGC());
-  target->zone()->usage.adopt(source->zone()->usage);
+  target->zone()->zoneSize.adopt(source->zone()->zoneSize);
   target->zone()->adoptUniqueIds(source->zone());
   target->zone()->adoptMallocBytes(source->zone());
 
@@ -8723,7 +8723,7 @@ namespace MemInfo {
 
 static bool GCBytesGetter(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  args.rval().setNumber(double(cx->runtime()->gc.usage.gcBytes()));
+  args.rval().setNumber(double(cx->runtime()->gc.heapSize.gcBytes()));
   return true;
 }
 
@@ -8772,7 +8772,7 @@ static bool MinorGCCountGetter(JSContext* cx, unsigned argc, Value* vp) {
 
 static bool ZoneGCBytesGetter(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  args.rval().setNumber(double(cx->zone()->usage.gcBytes()));
+  args.rval().setNumber(double(cx->zone()->zoneSize.gcBytes()));
   return true;
 }
 
