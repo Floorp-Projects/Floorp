@@ -42,6 +42,16 @@ interface mozIMozIntl : nsISupports
   jsval getLocaleInfo([optional] in jsval locales);
 
   /**
+   * Returns a list of locale codes for a given type.
+   * At the moment only type="region" is supported.
+   *
+   * Example:
+   *   let codes = getAvailableLocaleDisplayNames("region");
+   *   codes === ["ar", "ae", "af", ...]
+   */
+  jsval getAvailableLocaleDisplayNames(in jsval type);
+
+  /**
    * Returns a list of language names formatted for display.
    *
    * Example:
@@ -49,15 +59,6 @@ interface mozIMozIntl : nsISupports
    *   langs === ["Francuski", "Niemiecki", "Angielski"]
    */
   jsval getLanguageDisplayNames(in jsval locales, in jsval langCodes);
-
-  /**
-   * Returns a list of region codes.
-   *
-   * Example:
-   *   let regs = getRegions(undefined);
-   *   regs === new Map([["US", "United States"], ["CA", "Canada"], ["MX", "Mexico"]])
-   */
-  jsval getRegions(in jsval locales);
 
   /**
    * Returns a list of region names formatted for display.

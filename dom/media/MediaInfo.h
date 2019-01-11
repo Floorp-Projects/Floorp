@@ -394,8 +394,8 @@ class MediaInfo {
   }
 
   bool IsEncrypted() const {
-    return (HasAudio() && mAudio.mCrypto.mValid) ||
-           (HasVideo() && mVideo.mCrypto.mValid);
+    return (HasAudio() && mAudio.mCrypto.IsEncrypted()) ||
+           (HasVideo() && mVideo.mCrypto.IsEncrypted());
   }
 
   bool HasValidMedia() const { return HasVideo() || HasAudio(); }

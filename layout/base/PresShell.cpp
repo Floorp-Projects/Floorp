@@ -12,6 +12,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/AutoRestore.h"
+#include "mozilla/ContentIterator.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/EventStates.h"
@@ -40,7 +41,6 @@
 #include "nsContentList.h"
 #include "nsPresContext.h"
 #include "nsIContent.h"
-#include "nsIContentIterator.h"
 #include "nsIPresShellInlines.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/PointerEventHandler.h"
@@ -4684,8 +4684,8 @@ UniquePtr<RangePaintInfo> PresShell::CreateRangePaintInfo(
   }
   info->mBuilder.EnterPresShell(ancestorFrame);
 
-  nsCOMPtr<nsIContentIterator> iter = NS_NewContentSubtreeIterator();
-  nsresult rv = iter->Init(aRange);
+  ContentSubtreeIterator subtreeIter;
+  nsresult rv = subtreeIter.Init(aRange);
   if (NS_FAILED(rv)) {
     return nullptr;
   }
@@ -4706,8 +4706,8 @@ UniquePtr<RangePaintInfo> PresShell::CreateRangePaintInfo(
   if (startContainer->NodeType() == nsINode::TEXT_NODE) {
     BuildDisplayListForNode(startContainer);
   }
-  for (; !iter->IsDone(); iter->Next()) {
-    nsCOMPtr<nsINode> node = iter->GetCurrentNode();
+  for (; !subtreeIter.IsDone(); subtreeIter.Next()) {
+    nsCOMPtr<nsINode> node = subtreeIter.GetCurrentNode();
     BuildDisplayListForNode(node);
   }
   if (endContainer != startContainer &&

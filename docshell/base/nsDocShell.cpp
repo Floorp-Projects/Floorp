@@ -386,7 +386,8 @@ nsDocShell::nsDocShell(BrowsingContext* aBrowsingContext)
       mInvisible(false),
       mHasLoadedNonBlankURI(false),
       mBlankTiming(false),
-      mTitleValidForCurrentURI(false) {
+      mTitleValidForCurrentURI(false),
+      mIsFrame(false) {
   mHistoryID.m0 = 0;
   mHistoryID.m1 = 0;
   mHistoryID.m2 = 0;
@@ -12098,11 +12099,7 @@ nsresult nsDocShell::EnsureFind() {
   return NS_OK;
 }
 
-bool nsDocShell::IsFrame() {
-  nsCOMPtr<nsIDocShellTreeItem> parent;
-  GetSameTypeParent(getter_AddRefs(parent));
-  return !!parent;
-}
+bool nsDocShell::IsFrame() { return mIsFrame; }
 
 NS_IMETHODIMP
 nsDocShell::IsBeingDestroyed(bool* aDoomed) {

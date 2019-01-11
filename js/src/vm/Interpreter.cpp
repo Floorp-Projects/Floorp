@@ -2406,7 +2406,10 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     }
     END_CASE(JSOP_BINDNAME)
 
-    CASE(JSOP_BINDVAR) { PUSH_OBJECT(REGS.fp()->varObj()); }
+    CASE(JSOP_BINDVAR) {
+      JSObject* varObj = BindVarOperation(cx, REGS.fp()->environmentChain());
+      PUSH_OBJECT(*varObj);
+    }
     END_CASE(JSOP_BINDVAR)
 
     CASE(JSOP_BITOR) {
@@ -3615,17 +3618,8 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     END_CASE(JSOP_SETLOCAL)
 
     CASE(JSOP_DEFVAR) {
-      /* ES5 10.5 step 8 (with subsequent errata). */
-      unsigned attrs = JSPROP_ENUMERATE;
-      if (!REGS.fp()->isEvalFrame()) {
-        attrs |= JSPROP_PERMANENT;
-      }
-
-      /* Step 8b. */
-      ReservedRooted<JSObject*> obj(&rootObject0, &REGS.fp()->varObj());
-      ReservedRooted<PropertyName*> name(&rootName0, script->getName(REGS.pc));
-
-      if (!DefVarOperation(cx, obj, name, attrs)) {
+      HandleObject env = REGS.fp()->environmentChain();
+      if (!DefVarOperation(cx, env, script, REGS.pc)) {
         goto error;
       }
     }
@@ -3633,16 +3627,8 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
 
     CASE(JSOP_DEFCONST)
     CASE(JSOP_DEFLET) {
-      LexicalEnvironmentObject* lexicalEnv;
-      JSObject* varObj;
-      if (script->hasNonSyntacticScope()) {
-        lexicalEnv = &REGS.fp()->extensibleLexicalEnvironment();
-        varObj = &REGS.fp()->varObj();
-      } else {
-        lexicalEnv = &cx->global()->lexicalEnvironment();
-        varObj = cx->global();
-      }
-      if (!DefLexicalOperation(cx, lexicalEnv, varObj, script, REGS.pc)) {
+      HandleObject env = REGS.fp()->environmentChain();
+      if (!DefLexicalOperation(cx, env, script, REGS.pc)) {
         goto error;
       }
     }
@@ -4581,6 +4567,97 @@ JSObject* js::LambdaArrow(JSContext* cx, HandleFunction fun,
 
   MOZ_ASSERT(fun->global() == clone->global());
   return clone;
+}
+
+JSObject* js::BindVarOperation(JSContext* cx, JSObject* envChain) {
+  // Note: BindVarOperation has an unused cx argument because the JIT callVM
+  // machinery requires this.
+  return &GetVariablesObject(envChain);
+}
+
+bool js::DefVarOperation(JSContext* cx, HandleObject envChain,
+                         HandleScript script, jsbytecode* pc) {
+  MOZ_ASSERT(JSOp(*pc) == JSOP_DEFVAR);
+
+  RootedObject varobj(cx, &GetVariablesObject(envChain));
+  MOZ_ASSERT(varobj->isQualifiedVarObj());
+
+  RootedPropertyName name(cx, script->getName(pc));
+
+  unsigned attrs = JSPROP_ENUMERATE;
+  if (!script->isForEval()) {
+    attrs |= JSPROP_PERMANENT;
+  }
+
+#ifdef DEBUG
+  // Per spec, it is an error to redeclare a lexical binding. This should
+  // have already been checked.
+  if (JS_HasExtensibleLexicalEnvironment(varobj)) {
+    Rooted<LexicalEnvironmentObject*> lexicalEnv(cx);
+    lexicalEnv = &JS_ExtensibleLexicalEnvironment(varobj)
+                      ->as<LexicalEnvironmentObject>();
+    MOZ_ASSERT(CheckVarNameConflict(cx, lexicalEnv, name));
+  }
+#endif
+
+  Rooted<PropertyResult> prop(cx);
+  RootedObject obj2(cx);
+  if (!LookupProperty(cx, varobj, name, &obj2, &prop)) {
+    return false;
+  }
+
+  /* Steps 8c, 8d. */
+  if (!prop || (obj2 != varobj && varobj->is<GlobalObject>())) {
+    if (!DefineDataProperty(cx, varobj, name, UndefinedHandleValue, attrs)) {
+      return false;
+    }
+  }
+
+  if (varobj->is<GlobalObject>()) {
+    if (!varobj->as<GlobalObject>().realm()->addToVarNames(cx, name)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+bool js::DefLexicalOperation(JSContext* cx, HandleObject envChain,
+                             HandleScript script, jsbytecode* pc) {
+  MOZ_ASSERT(*pc == JSOP_DEFLET || *pc == JSOP_DEFCONST);
+
+  unsigned attrs = JSPROP_ENUMERATE | JSPROP_PERMANENT;
+  if (*pc == JSOP_DEFCONST) {
+    attrs |= JSPROP_READONLY;
+  }
+
+  Rooted<LexicalEnvironmentObject*> lexicalEnv(cx);
+  if (script->hasNonSyntacticScope()) {
+    lexicalEnv = &NearestEnclosingExtensibleLexicalEnvironment(envChain);
+  } else {
+    lexicalEnv = &cx->global()->lexicalEnvironment();
+  }
+
+#ifdef DEBUG
+  RootedObject varObj(cx);
+  if (script->hasNonSyntacticScope()) {
+    varObj = &GetVariablesObject(envChain);
+  } else {
+    varObj = cx->global();
+  }
+
+  MOZ_ASSERT_IF(!script->hasNonSyntacticScope(),
+                lexicalEnv == &cx->global()->lexicalEnvironment() &&
+                    varObj == cx->global());
+
+  // Redeclaration checks should have already been done.
+  RootedPropertyName name(cx, script->getName(pc));
+  MOZ_ASSERT(CheckLexicalNameConflict(cx, lexicalEnv, varObj, name));
+#endif
+
+  RootedId id(cx, NameToId(script->getName(pc)));
+  RootedValue uninitialized(cx, MagicValue(JS_UNINITIALIZED_LEXICAL));
+  return NativeDefineDataProperty(cx, lexicalEnv, id, uninitialized, attrs);
 }
 
 bool js::DefFunOperation(JSContext* cx, HandleScript script,

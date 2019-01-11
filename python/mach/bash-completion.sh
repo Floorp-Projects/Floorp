@@ -1,29 +1,18 @@
 function _mach()
 {
-  local cur cmds c subcommand
+  local cur targets
   COMPREPLY=()
 
-  # Load the list of commands
-  cmds=`"${COMP_WORDS[0]}" mach-commands`
-
-  # Look for the subcommand.
-  cur="${COMP_WORDS[COMP_CWORD]}"
-  subcommand=""
-  c=1
-  while [ $c -lt $COMP_CWORD ]; do
-    word="${COMP_WORDS[c]}"
-    for cmd in $cmds; do
-      if [ "$cmd" = "$word" ]; then
-        subcommand="$word"
-      fi
-    done
-    c=$((++c))
-  done
-
-  if [[ "$subcommand" == "help" || -z "$subcommand" ]]; then
-      COMPREPLY=( $(compgen -W "$cmds" -- ${cur}) )
+  # Calling `mach-completion` with -h/--help would result in the
+  # help text being used as the completion targets.
+  if [[ $COMP_LINE == *"-h"* || $COMP_LINE == *"--help"* ]]; then
+    return 0
   fi
 
+  # Load the list of targets
+  targets=`"${COMP_WORDS[0]}" mach-completion ${COMP_LINE}`
+  cur="${COMP_WORDS[COMP_CWORD]}"
+  COMPREPLY=( $(compgen -W "$targets" -- ${cur}) )
   return 0
 }
 complete -o default -F _mach mach

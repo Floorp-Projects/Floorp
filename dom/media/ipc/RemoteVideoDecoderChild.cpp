@@ -289,7 +289,7 @@ nsCString RemoteVideoDecoderChild::GetDescriptionName() const {
 void RemoteVideoDecoderChild::SetSeekThreshold(const media::TimeUnit& aTime) {
   AssertOnManagerThread();
   if (mCanSend) {
-    SendSetSeekThreshold(aTime.ToMicroseconds());
+    SendSetSeekThreshold(aTime.IsValid() ? aTime.ToMicroseconds() : INT64_MIN);
   }
 }
 

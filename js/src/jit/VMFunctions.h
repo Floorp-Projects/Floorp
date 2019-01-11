@@ -921,13 +921,6 @@ bool InvokeFromInterpreterStub(JSContext* cx,
 bool CheckOverRecursed(JSContext* cx);
 bool CheckOverRecursedBaseline(JSContext* cx, BaselineFrame* frame);
 
-JSObject* BindVar(JSContext* cx, HandleObject scopeChain);
-MOZ_MUST_USE bool DefVar(JSContext* cx, HandlePropertyName dn, unsigned attrs,
-                         HandleObject scopeChain);
-MOZ_MUST_USE bool DefLexical(JSContext* cx, HandlePropertyName dn,
-                             unsigned attrs, HandleObject scopeChain);
-MOZ_MUST_USE bool DefGlobalLexical(JSContext* cx, HandlePropertyName dn,
-                                   unsigned attrs);
 MOZ_MUST_USE bool MutatePrototype(JSContext* cx, HandlePlainObject obj,
                                   HandleValue value);
 MOZ_MUST_USE bool InitProp(JSContext* cx, HandleObject obj,
@@ -1038,8 +1031,6 @@ MOZ_MUST_USE bool GeneratorThrowOrReturn(JSContext* cx, BaselineFrame* frame,
 
 MOZ_MUST_USE bool GlobalNameConflictsCheckFromIon(JSContext* cx,
                                                   HandleScript script);
-MOZ_MUST_USE bool CheckGlobalOrEvalDeclarationConflicts(JSContext* cx,
-                                                        BaselineFrame* frame);
 MOZ_MUST_USE bool InitFunctionEnvironmentObjects(JSContext* cx,
                                                  BaselineFrame* frame);
 

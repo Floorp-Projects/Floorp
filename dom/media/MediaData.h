@@ -490,13 +490,27 @@ class VideoData : public MediaData {
   media::TimeUnit mNextKeyFrameTime;
 };
 
+enum class CryptoScheme : uint8_t {
+  None,
+  Cenc,
+  Cbcs,
+};
+
 class CryptoTrack {
  public:
-  CryptoTrack() : mValid(false), mMode(0), mIVSize(0) {}
-  bool mValid;
-  int32_t mMode;
+  CryptoTrack()
+      : mCryptoScheme(CryptoScheme::None),
+        mIVSize(0),
+        mCryptByteBlock(0),
+        mSkipByteBlock(0) {}
+  CryptoScheme mCryptoScheme;
   int32_t mIVSize;
   nsTArray<uint8_t> mKeyId;
+  uint8_t mCryptByteBlock;
+  uint8_t mSkipByteBlock;
+  nsTArray<uint8_t> mConstantIV;
+
+  bool IsEncrypted() const { return mCryptoScheme != CryptoScheme::None; }
 };
 
 class CryptoSample : public CryptoTrack {

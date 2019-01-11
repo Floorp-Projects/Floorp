@@ -11,6 +11,7 @@
 #include "nsIObserver.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/NotNull.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/css/Loader.h"
 
@@ -39,12 +40,12 @@ class nsLayoutStylesheetCache final : public nsIObserver,
   static nsLayoutStylesheetCache* Singleton();
 
 #define STYLE_SHEET(identifier_, url_, lazy_) \
-  mozilla::StyleSheet* identifier_##Sheet();
+  mozilla::NotNull<mozilla::StyleSheet*> identifier_##Sheet();
 #include "mozilla/UserAgentStyleSheetList.h"
 #undef STYLE_SHEET
 
-  mozilla::StyleSheet* UserContentSheet();
-  mozilla::StyleSheet* UserChromeSheet();
+  mozilla::StyleSheet* GetUserContentSheet();
+  mozilla::StyleSheet* GetUserChromeSheet();
   mozilla::StyleSheet* ChromePreferenceSheet(nsPresContext* aPresContext);
   mozilla::StyleSheet* ContentPreferenceSheet(nsPresContext* aPresContext);
 

@@ -394,13 +394,20 @@ CryptoSample HLSTrackDemuxer::ExtractCryptoSample(
   char const* msg = "";
   do {
     HLS_DEBUG("HLSTrackDemuxer", "Sample has Crypto Info");
-    crypto.mValid = true;
+
     int32_t mode = 0;
     if (NS_FAILED(aCryptoInfo->Mode(&mode))) {
       msg = "Error when extracting encryption mode.";
       break;
     }
-    crypto.mMode = mode;
+    // We currently only handle ctr mode.
+    if (mode != java::sdk::MediaCodec::CRYPTO_MODE_AES_CTR) {
+      msg = "Error: unexpected encryption mode.";
+      break;
+    }
+
+    crypto.mCryptoScheme = CryptoScheme::Cenc;
+
     mozilla::jni::ByteArray::LocalRef ivData;
     if (NS_FAILED(aCryptoInfo->Iv(&ivData))) {
       msg = "Error when extracting encryption IV.";
