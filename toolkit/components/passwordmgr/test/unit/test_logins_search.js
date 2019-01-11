@@ -18,8 +18,7 @@
  *        Each property and value of this object restricts the search to those
  *        entries from the test data that match the property exactly.
  */
-function buildExpectedLogins(aQuery)
-{
+function buildExpectedLogins(aQuery) {
   return TestData.loginList().filter(
     entry => Object.keys(aQuery).every(name => entry[name] === aQuery[name]));
 }
@@ -36,8 +35,7 @@ function buildExpectedLogins(aQuery)
  *        this value is just used to verify that modifications to the test data
  *        don't make the current test meaningless.
  */
-function checkSearchLogins(aQuery, aExpectedCount)
-{
+function checkSearchLogins(aQuery, aExpectedCount) {
   info("Testing searchLogins for " + JSON.stringify(aQuery));
 
   let expectedLogins = buildExpectedLogins(aQuery);
@@ -62,8 +60,7 @@ function checkSearchLogins(aQuery, aExpectedCount)
  *        this value is just used to verify that modifications to the test data
  *        don't make the current test meaningless.
  */
-function checkAllSearches(aQuery, aExpectedCount)
-{
+function checkAllSearches(aQuery, aExpectedCount) {
   info("Testing all search functions for " + JSON.stringify(aQuery));
 
   let expectedLogins = buildExpectedLogins(aQuery);
@@ -96,8 +93,7 @@ function checkAllSearches(aQuery, aExpectedCount)
 /**
  * Prepare data for the following tests.
  */
-add_task(function test_initialize()
-{
+add_task(function test_initialize() {
   for (let login of TestData.loginList()) {
     Services.logins.addLogin(login);
   }
@@ -106,8 +102,7 @@ add_task(function test_initialize()
 /**
  * Tests findLogins, searchLogins, and countLogins with basic queries.
  */
-add_task(function test_search_all_basic()
-{
+add_task(function test_search_all_basic() {
   // Find all logins, using no filters in the search functions.
   checkAllSearches({}, 23);
 
@@ -157,8 +152,7 @@ add_task(function test_search_all_basic()
 /**
  * Tests searchLogins with advanced queries.
  */
-add_task(function test_searchLogins()
-{
+add_task(function test_searchLogins() {
   checkSearchLogins({ usernameField: "form_field_username" }, 12);
   checkSearchLogins({ passwordField: "form_field_password" }, 13);
 
@@ -177,10 +171,9 @@ add_task(function test_searchLogins()
 /**
  * Tests searchLogins with invalid arguments.
  */
-add_task(function test_searchLogins_invalid()
-{
+add_task(function test_searchLogins_invalid() {
   Assert.throws(() => Services.logins.searchLogins({},
-                                      newPropertyBag({ username: "value" })),
+                                                   newPropertyBag({ username: "value" })),
                 /Unexpected field/);
 });
 
@@ -188,8 +181,7 @@ add_task(function test_searchLogins_invalid()
  * Tests that matches are case-sensitive, compare the full field value, and are
  * strict when interpreting the prePath of URIs.
  */
-add_task(function test_search_all_full_case_sensitive()
-{
+add_task(function test_search_all_full_case_sensitive() {
   checkAllSearches({ hostname: "http://www.example.com" }, 1);
   checkAllSearches({ hostname: "http://www.example.com/" }, 0);
   checkAllSearches({ hostname: "example.com" }, 0);
@@ -209,8 +201,7 @@ add_task(function test_search_all_full_case_sensitive()
  * Tests findLogins, searchLogins, and countLogins with queries that should
  * return no values.
  */
-add_task(function test_search_all_empty()
-{
+add_task(function test_search_all_empty() {
   checkAllSearches({ hostname: "http://nonexistent.example.com" }, 0);
   checkAllSearches({ formSubmitURL: "http://www.example.com",
                      httpRealm: "The HTTP Realm" }, 0);

@@ -24,11 +24,12 @@
 //! address in the GPU cache of a given resource slot
 //! for this frame.
 
-use api::{DebugFlags, PremultipliedColorF, TexelRect};
+use api::{DebugFlags, DocumentId, PremultipliedColorF, IdNamespace, TexelRect};
 use api::{VoidPtrToSizeFn};
 use euclid::TypedRect;
+use internal_types::{FastHashMap};
 use profiler::GpuCacheProfileCounters;
-use render_backend::FrameId;
+use render_backend::{FrameStamp, FrameId};
 use renderer::MAX_VERTEX_TEXTURE_WIDTH;
 use std::{mem, u16, u32};
 use std::num::NonZeroU32;
@@ -411,7 +412,7 @@ struct Texture {
     // Linked list of currently occupied blocks. This
     // makes it faster to iterate blocks looking for
     // candidates to be evicted from the cache.
-    occupied_list_head: Option<BlockIndex>,
+    occupied_list_heads: FastHashMap<DocumentId, BlockIndex>,
     // Pending blocks that have been written this frame
     // and will need to be sent to the GPU.
     pending_blocks: Vec<GpuBlockData>,
@@ -447,7 +448,7 @@ impl Texture {
             free_lists: FreeBlockLists::new(),
             pending_blocks: Vec::new(),
             updates: Vec::new(),
-            occupied_list_head: None,
+            occupied_list_heads: FastHashMap::default(),
             allocated_block_count: 0,
             reached_reclaim_threshold: None,
             debug_commands: Vec::new(),
@@ -474,8 +475,9 @@ impl Texture {
         &mut self,
         pending_block_index: Option<usize>,
         block_count: usize,
-        frame_id: FrameId,
+        frame_stamp: FrameStamp
     ) -> CacheLocation {
+        debug_assert!(frame_stamp.is_valid());
         // Find the appropriate free list to use based on the block size.
         let (alloc_size, free_list) = self.free_lists
             .get_actual_block_count_and_free_list(block_count);
@@ -498,7 +500,7 @@ impl Texture {
             for i in 0 .. items_per_row {
                 let address = GpuCacheAddress::new(i * alloc_size, row_index);
                 let block_index = BlockIndex::new(self.blocks.len());
-                let block = Block::new(address, prev_block_index, frame_id, self.base_epoch);
+                let block = Block::new(address, prev_block_index, frame_stamp.frame_id(), self.base_epoch);
                 self.blocks.push(block);
                 prev_block_index = Some(block_index);
             }
@@ -514,9 +516,9 @@ impl Texture {
         *free_list = block.next;
 
         // Add the block to the occupied linked list.
-        block.next = self.occupied_list_head;
-        block.last_access_time = frame_id;
-        self.occupied_list_head = Some(free_block_index);
+        block.next = self.occupied_list_heads.get(&frame_stamp.document_id()).cloned();
+        block.last_access_time = frame_stamp.frame_id();
+        self.occupied_list_heads.insert(frame_stamp.document_id(), free_block_index);
         self.allocated_block_count += alloc_size;
 
         if let Some(pending_block_index) = pending_block_index {
@@ -549,11 +551,12 @@ impl Texture {
 
     // Run through the list of occupied cache blocks and evict
     // any old blocks that haven't been referenced for a while.
-    fn evict_old_blocks(&mut self, frame_id: FrameId) {
+    fn evict_old_blocks(&mut self, frame_stamp: FrameStamp) {
+        debug_assert!(frame_stamp.is_valid());
         // Prune any old items from the list to make room.
         // Traverse the occupied linked list and see
         // which items have not been used for a long time.
-        let mut current_block = self.occupied_list_head;
+        let mut current_block = self.occupied_list_heads.get(&frame_stamp.document_id()).map(|x| *x);
         let mut prev_block: Option<BlockIndex> = None;
 
         while let Some(index) = current_block {
@@ -566,7 +569,7 @@ impl Texture {
                 // If this resource has not been used in the last
                 // few frames, free it from the texture and mark
                 // as empty.
-                if block.last_access_time + FRAMES_BEFORE_EVICTION < frame_id {
+                if block.last_access_time + FRAMES_BEFORE_EVICTION < frame_stamp.frame_id() {
                     should_unlink = true;
 
                     // Get the row metadata from the address.
@@ -600,7 +603,14 @@ impl Texture {
                         self.blocks[prev_block.get()].next = next_block;
                     }
                     None => {
-                        self.occupied_list_head = next_block;
+                        match next_block {
+                            Some(next_block) => {
+                                self.occupied_list_heads.insert(frame_stamp.document_id(), next_block);
+                            }
+                            None => {
+                                self.occupied_list_heads.remove(&frame_stamp.document_id());
+                            }
+                        }
                     }
                 }
             } else {
@@ -627,7 +637,7 @@ impl Texture {
 #[must_use]
 pub struct GpuDataRequest<'a> {
     handle: &'a mut GpuCacheHandle,
-    frame_id: FrameId,
+    frame_stamp: FrameStamp,
     start_index: usize,
     max_block_count: usize,
     texture: &'a mut Texture,
@@ -653,7 +663,7 @@ impl<'a> Drop for GpuDataRequest<'a> {
         debug_assert!(block_count <= self.max_block_count);
 
         let location = self.texture
-            .push_data(Some(self.start_index), block_count, self.frame_id);
+            .push_data(Some(self.start_index), block_count, self.frame_stamp);
         self.handle.location = Some(location);
     }
 }
@@ -663,8 +673,8 @@ impl<'a> Drop for GpuDataRequest<'a> {
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct GpuCache {
-    /// Current frame ID.
-    frame_id: FrameId,
+    /// Current FrameId.
+    now: FrameStamp,
     /// CPU-side texture allocator.
     texture: Texture,
     /// Number of blocks requested this frame that don't
@@ -681,12 +691,24 @@ impl GpuCache {
     pub fn new() -> Self {
         let debug_flags = DebugFlags::empty();
         GpuCache {
-            frame_id: FrameId::INVALID,
+            now: FrameStamp::INVALID,
             texture: Texture::new(Epoch(0), debug_flags),
             saved_block_count: 0,
             debug_flags,
             pending_clear: false,
         }
+    }
+
+    /// Creates a GpuCache and sets it up with a valid `FrameStamp`, which
+    /// is useful for avoiding panics when instantiating the `GpuCache`
+    /// directly from unit test code.
+    #[allow(dead_code)]
+    pub fn new_for_testing() -> Self {
+        let mut cache = Self::new();
+        let mut now = FrameStamp::first(DocumentId(IdNamespace(1), 1));
+        now.advance();
+        cache.begin_frame(now);
+        cache
     }
 
     /// Drops everything in the GPU cache. Must not be called once gpu cache entries
@@ -701,10 +723,10 @@ impl GpuCache {
     }
 
     /// Begin a new frame.
-    pub fn begin_frame(&mut self, frame_id: FrameId) {
+    pub fn begin_frame(&mut self, stamp: FrameStamp) {
         debug_assert!(self.texture.pending_blocks.is_empty());
-        self.frame_id = frame_id;
-        self.texture.evict_old_blocks(self.frame_id);
+        self.now = stamp;
+        self.texture.evict_old_blocks(self.now);
         self.saved_block_count = 0;
     }
 
@@ -731,9 +753,9 @@ impl GpuCache {
             if let Some(block) = self.texture.blocks.get_mut(location.block_index.get()) {
                 if block.epoch == location.epoch {
                     max_block_count = self.texture.rows[block.address.v as usize].block_count_per_item;
-                    if block.last_access_time != self.frame_id {
+                    if block.last_access_time != self.now.frame_id() {
                         // Mark last access time to avoid evicting this block.
-                        block.last_access_time = self.frame_id;
+                        block.last_access_time = self.now.frame_id();
                         self.saved_block_count += max_block_count;
                     }
                     return None;
@@ -741,9 +763,10 @@ impl GpuCache {
             }
         }
 
+        debug_assert!(self.now.is_valid());
         Some(GpuDataRequest {
             handle,
-            frame_id: self.frame_id,
+            frame_stamp: self.now,
             start_index: self.texture.pending_blocks.len(),
             texture: &mut self.texture,
             max_block_count,
@@ -760,7 +783,7 @@ impl GpuCache {
         let start_index = self.texture.pending_blocks.len();
         self.texture.pending_blocks.extend_from_slice(blocks);
         let location = self.texture
-            .push_data(Some(start_index), blocks.len(), self.frame_id);
+            .push_data(Some(start_index), blocks.len(), self.now);
         GpuCacheHandle {
             location: Some(location),
         }
@@ -770,7 +793,7 @@ impl GpuCache {
     // will be resolved by the render thread via the
     // external image callback.
     pub fn push_deferred_per_frame_blocks(&mut self, block_count: usize) -> GpuCacheHandle {
-        let location = self.texture.push_data(None, block_count, self.frame_id);
+        let location = self.texture.push_data(None, block_count, self.now);
         GpuCacheHandle {
             location: Some(location),
         }
@@ -781,7 +804,7 @@ impl GpuCache {
     pub fn end_frame(
         &mut self,
         profile_counters: &mut GpuCacheProfileCounters,
-    ) -> FrameId {
+    ) -> FrameStamp {
         profile_counters
             .allocated_rows
             .set(self.texture.rows.len());
@@ -801,7 +824,7 @@ impl GpuCache {
             self.texture.reached_reclaim_threshold = None;
         }
 
-        self.frame_id
+        self.now
     }
 
     /// Returns true if utilization has been low enough for long enough that we
@@ -816,7 +839,7 @@ impl GpuCache {
         let clear = self.pending_clear;
         self.pending_clear = false;
         GpuCacheUpdateList {
-            frame_id: self.frame_id,
+            frame_id: self.now.frame_id(),
             clear,
             height: self.texture.height,
             debug_commands: mem::replace(&mut self.texture.debug_commands, Vec::new()),
@@ -839,7 +862,7 @@ impl GpuCache {
         let location = id.location.expect("handle not requested or allocated!");
         let block = &self.texture.blocks[location.block_index.get()];
         debug_assert_eq!(block.epoch, location.epoch);
-        debug_assert_eq!(block.last_access_time, self.frame_id);
+        debug_assert_eq!(block.last_access_time, self.now.frame_id());
         block.address
     }
 

@@ -101,11 +101,7 @@ testing/talos/talos/tests/dromaeo/
 testing/talos/talos/tests/kraken/
 testing/talos/talos/tests/v8_7/
 testing/web-platform/tests/resources/webidl2/
-third_party/aom/
-third_party/msgpack/
-third_party/prio/
-third_party/python/
-third_party/rust/
+third_party/
 toolkit/components/jsoncpp/
 toolkit/components/protobuf/
 toolkit/components/url-classifier/chromium/

@@ -13,31 +13,29 @@ var crypto = new OSCrypto();
 
 // Tests
 
-add_task(function test_getIELoginHash()
-{
+add_task(function test_getIELoginHash() {
   Assert.equal(crypto.getIELoginHash("https://bugzilla.mozilla.org/page.cgi"),
-                                     "4A66FE96607885790F8E67B56EEE52AB539BAFB47D");
+               "4A66FE96607885790F8E67B56EEE52AB539BAFB47D");
 
   Assert.equal(crypto.getIELoginHash("https://github.com/login"),
-                                     "0112F7DCE67B8579EA01367678AA44AB9868B5A143");
+               "0112F7DCE67B8579EA01367678AA44AB9868B5A143");
 
   Assert.equal(crypto.getIELoginHash("https://login.live.com/login.srf"),
-                                     "FBF92E5D804C82717A57856533B779676D92903688");
+               "FBF92E5D804C82717A57856533B779676D92903688");
 
   Assert.equal(crypto.getIELoginHash("https://preview.c9.io/riadh/w1/pass.1.html"),
-                                     "6935CF27628830605927F86AB53831016FC8973D1A");
+               "6935CF27628830605927F86AB53831016FC8973D1A");
 
 
   Assert.equal(crypto.getIELoginHash("https://reviewboard.mozilla.org/account/login/"),
-                                     "09141FD287E2E59A8B1D3BB5671537FD3D6B61337A");
+               "09141FD287E2E59A8B1D3BB5671537FD3D6B61337A");
 
   Assert.equal(crypto.getIELoginHash("https://www.facebook.com/"),
-                                     "EF44D3E034009CB0FD1B1D81A1FF3F3335213BD796");
+               "EF44D3E034009CB0FD1B1D81A1FF3F3335213BD796");
 
 });
 
-add_task(function test_decryptData_encryptData()
-{
+add_task(function test_decryptData_encryptData() {
   function decryptEncryptTest(key) {
     Assert.equal(crypto.decryptData(crypto.encryptData("", key), key),
                  "");

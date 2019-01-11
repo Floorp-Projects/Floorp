@@ -31,7 +31,7 @@ class MOZ_RAII StackingContextHelper {
       const StackingContextHelper& aParentSC, const ActiveScrolledRoot* aAsr,
       nsIFrame* aContainerFrame, nsDisplayItem* aContainerItem,
       wr::DisplayListBuilder& aBuilder,
-      const nsTArray<wr::WrFilterOp>& aFilters = nsTArray<wr::WrFilterOp>(),
+      const nsTArray<wr::FilterOp>& aFilters = nsTArray<wr::FilterOp>(),
       const LayoutDeviceRect& aBounds = LayoutDeviceRect(),
       const gfx::Matrix4x4* aBoundTransform = nullptr,
       const wr::WrAnimationProperty* aAnimation = nullptr,

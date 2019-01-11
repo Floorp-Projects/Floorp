@@ -2657,7 +2657,8 @@ static bool RemoveComponentRegistries(nsIFile* aProfileDir,
 
   file->SetNativeLeafName(NS_LITERAL_CSTRING("startupCache"));
   nsresult rv = file->Remove(true);
-  return NS_SUCCEEDED(rv) || rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST;
+  return NS_SUCCEEDED(rv) || rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST ||
+         rv == NS_ERROR_FILE_NOT_FOUND;
 }
 
 // To support application initiated restart via nsIAppStartup.quit, we

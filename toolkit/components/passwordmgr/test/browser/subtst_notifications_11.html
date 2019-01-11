@@ -16,8 +16,9 @@ var popupWin = window.open(url, "subtst_11", features);
 
 // Popup window will call this function on form submission.
 function formSubmitted() {
-  if (autoClose)
+  if (autoClose) {
     popupWin.close();
+  }
 }
 
 </script>

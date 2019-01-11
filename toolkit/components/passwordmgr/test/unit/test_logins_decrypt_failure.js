@@ -15,8 +15,7 @@
  * Resets the token used to decrypt logins.  This is equivalent to resetting the
  * master password when it is not known.
  */
-function resetMasterPassword()
-{
+function resetMasterPassword() {
   let token = Cc["@mozilla.org/security/pk11tokendb;1"]
                 .getService(Ci.nsIPK11TokenDB).getInternalKeyToken();
   token.reset();
@@ -28,8 +27,7 @@ function resetMasterPassword()
 /**
  * Resets the master password after some logins were added to the database.
  */
-add_task(function test_logins_decrypt_failure()
-{
+add_task(function test_logins_decrypt_failure() {
   let logins = TestData.loginList();
   for (let loginInfo of logins) {
     Services.logins.addLogin(loginInfo);
@@ -43,9 +41,9 @@ add_task(function test_logins_decrypt_failure()
   Assert.equal(Services.logins.findLogins({}, "", "", "").length, 0);
   Assert.equal(Services.logins.searchLogins({}, newPropertyBag()).length, 0);
   Assert.throws(() => Services.logins.modifyLogin(logins[0], newPropertyBag()),
-                      /No matching logins/);
+                /No matching logins/);
   Assert.throws(() => Services.logins.removeLogin(logins[0]),
-                      /No matching logins/);
+                /No matching logins/);
 
   // The function that counts logins sees the non-decryptable entries also.
   Assert.equal(Services.logins.countLogins("", "", ""), logins.length);
@@ -79,8 +77,7 @@ add_task(function test_logins_decrypt_failure()
 // Bug 621846 - If a login has a GUID but can't be decrypted, a search for
 // that GUID will (correctly) fail. Ensure we can add a new login with that
 // same GUID.
-add_task(function test_add_logins_with_decrypt_failure()
-{
+add_task(function test_add_logins_with_decrypt_failure() {
   // a login with a GUID.
   let login = new LoginInfo("http://www.example2.com", "http://www.example2.com", null,
                             "the username", "the password for www.example.com",
@@ -91,8 +88,8 @@ add_task(function test_add_logins_with_decrypt_failure()
 
   // A different login but with the same GUID.
   let loginDupeGuid = new LoginInfo("http://www.example3.com", "http://www.example3.com", null,
-                                   "the username", "the password",
-                                   "form_field_username", "form_field_password");
+                                    "the username", "the password",
+                                    "form_field_username", "form_field_password");
   loginDupeGuid.QueryInterface(Ci.nsILoginMetaInfo);
   loginDupeGuid.guid = login.guid;
 

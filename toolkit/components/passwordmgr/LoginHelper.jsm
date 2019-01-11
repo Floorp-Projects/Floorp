@@ -250,17 +250,20 @@ var LoginHelper = {
     ignoreSchemes = false,
   }) {
     if (aLogin1.httpRealm != aLogin2.httpRealm ||
-        aLogin1.username != aLogin2.username)
+        aLogin1.username != aLogin2.username) {
       return false;
+    }
 
-    if (!ignorePassword && aLogin1.password != aLogin2.password)
+    if (!ignorePassword && aLogin1.password != aLogin2.password) {
       return false;
+    }
 
     if (ignoreSchemes) {
       let login1HostPort = this.maybeGetHostPortForURL(aLogin1.hostname);
       let login2HostPort = this.maybeGetHostPortForURL(aLogin2.hostname);
-      if (login1HostPort != login2HostPort)
+      if (login1HostPort != login2HostPort) {
         return false;
+      }
 
       if (aLogin1.formSubmitURL != "" && aLogin2.formSubmitURL != "" &&
           this.maybeGetHostPortForURL(aLogin1.formSubmitURL) !=
@@ -268,13 +271,15 @@ var LoginHelper = {
         return false;
       }
     } else {
-      if (aLogin1.hostname != aLogin2.hostname)
+      if (aLogin1.hostname != aLogin2.hostname) {
         return false;
+      }
 
       // If either formSubmitURL is blank (but not null), then match.
       if (aLogin1.formSubmitURL != "" && aLogin2.formSubmitURL != "" &&
-          aLogin1.formSubmitURL != aLogin2.formSubmitURL)
+          aLogin1.formSubmitURL != aLogin2.formSubmitURL) {
         return false;
+      }
     }
 
     // The .usernameField and .passwordField values are ignored.
@@ -565,8 +570,15 @@ var LoginHelper = {
    *                    of the username types.
    */
   isUsernameFieldType(element) {
-    if (ChromeUtils.getClassName(element) !== "HTMLInputElement")
+    if (ChromeUtils.getClassName(element) !== "HTMLInputElement") {
       return false;
+    }
+
+    if (!element.isConnected) {
+      // If the element isn't connected then it isn't visible to the user so
+      // shouldn't be considered. It must have been connected in the past.
+      return false;
+    }
 
     let fieldType = (element.hasAttribute("type") ?
                      element.getAttribute("type").toLowerCase() :

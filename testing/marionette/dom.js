@@ -4,6 +4,12 @@
 
 "use strict";
 
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+
+const {Log} = ChromeUtils.import("chrome://marionette/content/log.js", {});
+
+XPCOMUtils.defineLazyGetter(this, "logger", Log.get);
+
 this.EXPORTED_SYMBOLS = [
   "ContentEventObserverService",
   "WebElementEventTarget",
@@ -101,7 +107,11 @@ class WebElementEventTarget {
 
     let stack = this.listeners[event.type].slice(0);
     stack.forEach(listener => {
-      listener.call(this, event);
+      if (typeof listener.handleEvent == "function") {
+        listener.handleEvent(event);
+      } else {
+        listener(event);
+      }
 
       if (listener.once) {
         this.removeEventListener(event.type, listener);
@@ -193,6 +203,7 @@ class ContentEventObserverService {
   }
 
   handleEvent({type, target}) {
+    logger.trace(`Received DOM event ${type}`);
     this.sendAsyncMessage("Marionette:DOM:OnEvent", {type}, {target});
   }
 }

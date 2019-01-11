@@ -14,4 +14,5 @@ dictionary AutocompleteInfo {
   DOMString addressType = "";
   DOMString contactType = "";
   DOMString fieldName = "";
+  boolean canAutomaticallyPersist = true;
 };

@@ -34,9 +34,10 @@ this.LoginManagerStorage_json.prototype = {
 
   __crypto: null,  // nsILoginManagerCrypto service
   get _crypto() {
-    if (!this.__crypto)
+    if (!this.__crypto) {
       this.__crypto = Cc["@mozilla.org/login-manager/crypto/SDR;1"].
                       getService(Ci.nsILoginManagerCrypto);
+    }
     return this.__crypto;
   },
 
@@ -138,14 +139,18 @@ this.LoginManagerStorage_json.prototype = {
 
     // Set timestamps
     let currentTime = Date.now();
-    if (!loginClone.timeCreated)
+    if (!loginClone.timeCreated) {
       loginClone.timeCreated = currentTime;
-    if (!loginClone.timeLastUsed)
+    }
+    if (!loginClone.timeLastUsed) {
       loginClone.timeLastUsed = currentTime;
-    if (!loginClone.timePasswordChanged)
+    }
+    if (!loginClone.timePasswordChanged) {
       loginClone.timePasswordChanged = currentTime;
-    if (!loginClone.timesUsed)
+    }
+    if (!loginClone.timesUsed) {
       loginClone.timesUsed = 1;
+    }
 
     this._store.data.logins.push({
       id:                  this._store.data.nextId++,
@@ -174,8 +179,9 @@ this.LoginManagerStorage_json.prototype = {
     this._store.ensureDataReady();
 
     let [idToDelete, storedLogin] = this._getIdForLogin(login);
-    if (!idToDelete)
+    if (!idToDelete) {
       throw new Error("No matching logins");
+    }
 
     let foundIndex = this._store.data.logins.findIndex(l => l.id == idToDelete);
     if (foundIndex != -1) {
@@ -190,8 +196,9 @@ this.LoginManagerStorage_json.prototype = {
     this._store.ensureDataReady();
 
     let [idToModify, oldStoredLogin] = this._getIdForLogin(oldLogin);
-    if (!idToModify)
+    if (!idToModify) {
       throw new Error("No matching logins");
+    }
 
     let newLogin = LoginHelper.buildModifiedLogin(oldStoredLogin, newLoginData);
 
@@ -207,8 +214,9 @@ this.LoginManagerStorage_json.prototype = {
                                    newLogin.formSubmitURL,
                                    newLogin.httpRealm);
 
-      if (logins.some(login => newLogin.matches(login, true)))
+      if (logins.some(login => newLogin.matches(login, true))) {
         throw new Error("This login already exists.");
+      }
     }
 
     // Get the encrypted value of the username and password.
@@ -247,8 +255,9 @@ this.LoginManagerStorage_json.prototype = {
     logins = this._decryptLogins(logins);
 
     this.log("_getAllLogins: returning", logins.length, "logins.");
-    if (count)
-      count.value = logins.length; // needed for XPCOM
+    if (count) {
+      count.value = logins.length;
+    } // needed for XPCOM
     return logins;
   },
 
@@ -396,9 +405,11 @@ this.LoginManagerStorage_json.prototype = {
       httpRealm,
     };
     let matchData = { };
-    for (let field of ["hostname", "formSubmitURL", "httpRealm"])
-      if (loginData[field] != "")
+    for (let field of ["hostname", "formSubmitURL", "httpRealm"]) {
+      if (loginData[field] != "") {
         matchData[field] = loginData[field];
+      }
+    }
     let [logins, ids] = this._searchLogins(matchData);
 
     // Decrypt entries found for the caller.
@@ -416,9 +427,11 @@ this.LoginManagerStorage_json.prototype = {
       httpRealm,
     };
     let matchData = { };
-    for (let field of ["hostname", "formSubmitURL", "httpRealm"])
-      if (loginData[field] != "")
+    for (let field of ["hostname", "formSubmitURL", "httpRealm"]) {
+      if (loginData[field] != "") {
         matchData[field] = loginData[field];
+      }
+    }
     let [logins, ids] = this._searchLogins(matchData);
 
     this.log("_countLogins: counted logins:", logins.length);
@@ -440,9 +453,11 @@ this.LoginManagerStorage_json.prototype = {
    */
   _getIdForLogin(login) {
     let matchData = { };
-    for (let field of ["hostname", "formSubmitURL", "httpRealm"])
-      if (login[field] != "")
+    for (let field of ["hostname", "formSubmitURL", "httpRealm"]) {
+      if (login[field] != "") {
         matchData[field] = login[field];
+      }
+    }
     let [logins, ids] = this._searchLogins(matchData);
 
     let id = null;
@@ -455,8 +470,9 @@ this.LoginManagerStorage_json.prototype = {
     for (let i = 0; i < logins.length; i++) {
       let [decryptedLogin] = this._decryptLogins([logins[i]]);
 
-      if (!decryptedLogin || !decryptedLogin.equals(login))
+      if (!decryptedLogin || !decryptedLogin.equals(login)) {
         continue;
+      }
 
       // We've found a match, set id and break
       foundLogin = decryptedLogin;
@@ -509,8 +525,9 @@ this.LoginManagerStorage_json.prototype = {
       } catch (e) {
         // If decryption failed (corrupt entry?), just skip it.
         // Rethrow other errors (like canceling entry of a master pw)
-        if (e.result == Cr.NS_ERROR_FAILURE)
+        if (e.result == Cr.NS_ERROR_FAILURE) {
           continue;
+        }
         throw e;
       }
       result.push(login);
