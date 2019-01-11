@@ -1051,7 +1051,7 @@ ContentPrefService2.prototype = {
     let path = OS.Path.join(OS.Constants.Path.profileDir, "content-prefs.sqlite");
     let conn;
     let resetAndRetry = async e => {
-      if (e.status != Cr.NS_ERROR_FILE_CORRUPTED) {
+      if (e.result != Cr.NS_ERROR_FILE_CORRUPTED) {
         throw e;
       }
 
