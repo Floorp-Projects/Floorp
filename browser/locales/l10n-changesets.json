@@ -864,7 +864,7 @@
             "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
-        "revision": "127f36dbfeea"
+        "revision": "fb6dedfbf8d3"
     },
     "ja": {
         "platforms": [
