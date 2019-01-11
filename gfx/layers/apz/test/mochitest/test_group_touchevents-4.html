@@ -9,9 +9,13 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="application/javascript">
 
+var basic_pan_prefs = getPrefs("TOUCH_EVENTS:PAN");
+
 var subtests = [
   // clicking on element with :active::after CSS property
   {"file": "helper_bug1473108.html"},
+  // Resetting isFirstPaint shouldn't clobber the visual viewport
+  {"file": "helper_bug1509575.html", "prefs": [...basic_pan_prefs, ["dom.meta-viewport.enabled", true]]},
   // Add new subtests here. If this starts timing out because it's taking too
   // long, create a test_group_touchevents-5.html file. Refer to 1423011#c57
   // for more details.
