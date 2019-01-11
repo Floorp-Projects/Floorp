@@ -114,6 +114,64 @@ class CachedAsyncIterable extends CachedIterable {
   }
 }
 
+/*
+ * CachedSyncIterable caches the elements yielded by an iterable.
+ *
+ * It can be used to iterate over an iterable many times without depleting the
+ * iterable.
+ */
+class CachedSyncIterable extends CachedIterable {
+    /**
+     * Create an `CachedSyncIterable` instance.
+     *
+     * @param {Iterable} iterable
+     * @returns {CachedSyncIterable}
+     */
+    constructor(iterable) {
+        super();
+
+        if (Symbol.iterator in Object(iterable)) {
+            this.iterator = iterable[Symbol.iterator]();
+        } else {
+            throw new TypeError("Argument must implement the iteration protocol.");
+        }
+    }
+
+    [Symbol.iterator]() {
+        const cached = this;
+        let cur = 0;
+
+        return {
+            next() {
+                if (cached.length <= cur) {
+                    cached.push(cached.iterator.next());
+                }
+                return cached[cur++];
+            },
+        };
+    }
+
+    /**
+     * This method allows user to consume the next element from the iterator
+     * into the cache.
+     *
+     * @param {number} count - number of elements to consume
+     */
+    touchNext(count = 1) {
+        let idx = 0;
+        while (idx++ < count) {
+            const last = this[this.length - 1];
+            if (last && last.done) {
+                break;
+            }
+            this.push(this.iterator.next());
+        }
+        // Return the last cached {value, done} object to allow the calling
+        // code to decide if it needs to call touchNext again.
+        return this[this.length - 1];
+    }
+}
+
 /**
  * The default localization strategy for Gecko. It comabines locales
  * available in L10nRegistry, with locales requested by the user to
@@ -126,6 +184,11 @@ class CachedAsyncIterable extends CachedIterable {
 function defaultGenerateBundles(resourceIds) {
   const appLocales = Services.locale.appLocalesAsBCP47;
   return L10nRegistry.generateBundles(appLocales, resourceIds);
+}
+
+function defaultGenerateBundlesSync(resourceIds) {
+  const appLocales = Services.locale.appLocalesAsBCP47;
+  return L10nRegistry.generateBundlesSync(appLocales, resourceIds);
 }
 
 /**
@@ -145,8 +208,12 @@ class Localization {
   constructor(resourceIds = [], generateBundles = defaultGenerateBundles) {
     this.resourceIds = resourceIds;
     this.generateBundles = generateBundles;
-    this.bundles = CachedAsyncIterable.from(
+    this.bundles = this.cached(
       this.generateBundles(this.resourceIds));
+  }
+
+  cached(iterable) {
+    return CachedAsyncIterable.from(iterable);
   }
 
   /**
@@ -319,7 +386,7 @@ class Localization {
    * @param {bool} eager - whether the I/O for new context should begin eagerly
    */
   onChange(eager = false) {
-    this.bundles = CachedAsyncIterable.from(
+    this.bundles = this.cached(
       this.generateBundles(this.resourceIds));
     if (eager) {
       // If the first app locale is the same as last fallback
@@ -338,6 +405,44 @@ class Localization {
 Localization.prototype.QueryInterface = ChromeUtils.generateQI([
   Ci.nsISupportsWeakReference,
 ]);
+
+class LocalizationSync extends Localization {
+  constructor(resourceIds = [], generateBundles = defaultGenerateBundlesSync) {
+    super(resourceIds, generateBundles);
+  }
+
+  cached(iterable) {
+    return CachedSyncIterable.from(iterable);
+  }
+
+  formatWithFallback(keys, method) {
+    const translations = [];
+
+    for (const bundle of this.bundles) {
+      const missingIds = keysFromBundle(method, bundle, keys, translations);
+
+      if (missingIds.size === 0) {
+        break;
+      }
+
+      if (AppConstants.NIGHTLY_BUILD || Cu.isInAutomation) {
+        const locale = bundle.locales[0];
+        const ids = Array.from(missingIds).join(", ");
+        if (Cu.isInAutomation) {
+          throw new Error(`Missing translations in ${locale}: ${ids}`);
+        }
+        console.warn(`Missing translations in ${locale}: ${ids}`);
+      }
+    }
+
+    return translations;
+  }
+
+  formatValue(id, args) {
+    const [val] = this.formatValues([{id, args}]);
+    return val;
+  }
+}
 
 /**
  * Format the value of a message into a string.
@@ -459,4 +564,5 @@ function keysFromBundle(method, bundle, keys, translations) {
 }
 
 this.Localization = Localization;
-var EXPORTED_SYMBOLS = ["Localization"];
+this.LocalizationSync = LocalizationSync;
+var EXPORTED_SYMBOLS = ["Localization", "LocalizationSync"];

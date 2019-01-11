@@ -60,7 +60,6 @@
 #include "nsIBaseWindow.h"
 #include "nsICategoryManager.h"
 #include "nsIContentInlines.h"
-#include "nsIContentIterator.h"
 #include "nsIControllers.h"
 #include "mozilla/dom/Document.h"
 #include "nsIDOMEventListener.h"

@@ -8,8 +8,9 @@
 #define mozilla_scriptablecontentiterator_h
 
 #include "mozilla/Attributes.h"
+#include "mozilla/ContentIterator.h"
+#include "mozilla/UniquePtr.h"
 #include "nsCOMPtr.h"
-#include "nsIContentIterator.h"
 #include "nsIScriptableContentIterator.h"
 
 namespace mozilla {
@@ -26,7 +27,7 @@ class ScriptableContentIterator final : public nsIScriptableContentIterator {
   void EnsureContentIterator();
 
   IteratorType mIteratorType;
-  nsCOMPtr<nsIContentIterator> mContentIterator;
+  UniquePtr<ContentIteratorBase> mContentIterator;
 };
 
 }  // namespace mozilla

@@ -6,6 +6,7 @@
 #ifndef mozilla_EditorUtils_h
 #define mozilla_EditorUtils_h
 
+#include "mozilla/ContentIterator.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/EditAction.h"
 #include "mozilla/EditorBase.h"
@@ -17,7 +18,6 @@
 #include "nscore.h"
 
 class nsAtom;
-class nsIContentIterator;
 class nsISimpleEnumerator;
 class nsITransferable;
 class nsRange;
@@ -450,7 +450,7 @@ class MOZ_RAII DOMIterator {
   explicit DOMIterator(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM);
 
   explicit DOMIterator(nsINode& aNode MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
-  virtual ~DOMIterator();
+  virtual ~DOMIterator() = default;
 
   nsresult Init(nsRange& aRange);
 
@@ -459,16 +459,22 @@ class MOZ_RAII DOMIterator {
       nsTArray<mozilla::OwningNonNull<nsINode>>& arrayOfNodes) const;
 
  protected:
-  nsCOMPtr<nsIContentIterator> mIter;
+  ContentIteratorBase* mIter;
+  PostContentIterator mPostOrderIter;
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 class MOZ_RAII DOMSubtreeIterator final : public DOMIterator {
  public:
   explicit DOMSubtreeIterator(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM);
-  virtual ~DOMSubtreeIterator();
+  virtual ~DOMSubtreeIterator() = default;
 
   nsresult Init(nsRange& aRange);
+
+ private:
+  ContentSubtreeIterator mSubtreeIter;
+  explicit DOMSubtreeIterator(nsINode& aNode MOZ_GUARD_OBJECT_NOTIFIER_PARAM) =
+      delete;
 };
 
 class TrivialFunctor final : public BoolDomIterFunctor {

@@ -712,12 +712,16 @@ class LDefVar : public LCallInstructionHelper<0, 1, 0> {
   MDefVar* mir() const { return mir_->toDefVar(); }
 };
 
-class LDefLexical : public LCallInstructionHelper<0, 0, 0> {
+class LDefLexical : public LCallInstructionHelper<0, 1, 0> {
  public:
   LIR_HEADER(DefLexical)
 
-  LDefLexical() : LCallInstructionHelper(classOpcode) {}
+  explicit LDefLexical(const LAllocation& envChain)
+      : LCallInstructionHelper(classOpcode) {
+    setOperand(0, envChain);
+  }
 
+  const LAllocation* environmentChain() { return getOperand(0); }
   MDefLexical* mir() const { return mir_->toDefLexical(); }
 };
 

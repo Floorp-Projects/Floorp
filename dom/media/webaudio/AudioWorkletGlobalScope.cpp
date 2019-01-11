@@ -10,6 +10,9 @@
 #include "jsapi.h"
 #include "mozilla/dom/AudioWorkletGlobalScopeBinding.h"
 #include "mozilla/dom/WorkletPrincipal.h"
+#include "mozilla/dom/AudioParamDescriptorBinding.h"
+#include "nsPrintfCString.h"
+#include "nsTHashtable.h"
 
 namespace mozilla {
 namespace dom {
@@ -178,6 +181,10 @@ void AudioWorkletGlobalScope::RegisterProcessor(JSContext* aCx,
    *     (name - descriptors) to the node name to parameter descriptor
    *     map of the associated BaseAudioContext.
    */
+  AudioParamDescriptorMap map = DescriptorsFromJS(aCx, descriptors, aRv);
+  if (aRv.Failed()) {
+    return;
+  }
   // TODO: we don't have a proper mechanism to communicate with the
   // control thread currently. See
   // https://bugzilla.mozilla.org/show_bug.cgi?id=1473467#c3
@@ -191,6 +198,84 @@ uint64_t AudioWorkletGlobalScope::CurrentFrame() const { return mCurrentFrame; }
 double AudioWorkletGlobalScope::CurrentTime() const { return mCurrentTime; }
 
 float AudioWorkletGlobalScope::SampleRate() const { return mSampleRate; }
+
+AudioParamDescriptorMap AudioWorkletGlobalScope::DescriptorsFromJS(
+    JSContext* aCx, const JS::Rooted<JS::Value>& aDescriptors,
+    ErrorResult& aRv) {
+  // We already checked if aDescriptors is an array or undefined in step 8 of
+  // registerProcessor, so we should be confident aDescriptors if valid here
+  if (aDescriptors.isUndefined()) {
+    return AudioParamDescriptorMap();
+  }
+  MOZ_ASSERT(aDescriptors.isObject());
+
+  AudioParamDescriptorMap res;
+  // To check for duplicates
+  nsTHashtable<nsStringHashKey> namesSet;
+
+  JS::Rooted<JSObject*> aDescriptorsArray(aCx, &aDescriptors.toObject());
+  uint32_t length = 0;
+  if (!JS_GetArrayLength(aCx, aDescriptorsArray, &length)) {
+    aRv.NoteJSContextException(aCx);
+    return AudioParamDescriptorMap();
+  }
+
+  for (uint32_t i = 0; i < length; ++i) {
+    JS::Rooted<JS::Value> descriptorElement(aCx);
+    if (!JS_GetElement(aCx, aDescriptorsArray, i, &descriptorElement)) {
+      aRv.NoteJSContextException(aCx);
+      return AudioParamDescriptorMap();
+    }
+
+    AudioParamDescriptor descriptor;
+    nsPrintfCString sourceDescription("Element %u in parameterDescriptors", i);
+    if (!descriptor.Init(aCx, descriptorElement, sourceDescription.get())) {
+      aRv.NoteJSContextException(aCx);
+      return AudioParamDescriptorMap();
+    }
+
+    if (namesSet.Contains(descriptor.mName)) {
+      aRv.ThrowDOMException(
+          NS_ERROR_DOM_NOT_SUPPORTED_ERR,
+          NS_LITERAL_CSTRING("Duplicated name \"") +
+              NS_ConvertUTF16toUTF8(descriptor.mName) +
+              NS_LITERAL_CSTRING("\" in parameterDescriptors."));
+      return AudioParamDescriptorMap();
+    }
+
+    if (descriptor.mMinValue > descriptor.mMaxValue) {
+      aRv.ThrowDOMException(
+          NS_ERROR_DOM_NOT_SUPPORTED_ERR,
+          NS_LITERAL_CSTRING("In parameterDescriptors, ") +
+              NS_ConvertUTF16toUTF8(descriptor.mName) +
+              NS_LITERAL_CSTRING(" minValue should be smaller than maxValue."));
+      return AudioParamDescriptorMap();
+    }
+
+    if (descriptor.mDefaultValue < descriptor.mMinValue ||
+        descriptor.mDefaultValue > descriptor.mMaxValue) {
+      aRv.ThrowDOMException(
+          NS_ERROR_DOM_NOT_SUPPORTED_ERR,
+          NS_LITERAL_CSTRING("In parameterDescriptors, ") +
+              NS_ConvertUTF16toUTF8(descriptor.mName) +
+              NS_LITERAL_CSTRING(" defaultValue is out of the range defined by "
+                                 "minValue and maxValue."));
+      return AudioParamDescriptorMap();
+    }
+
+    if (!res.AppendElement(descriptor)) {
+      aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+      return AudioParamDescriptorMap();
+    }
+
+    if (!namesSet.PutEntry(descriptor.mName, fallible)) {
+      aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+      return AudioParamDescriptorMap();
+    }
+  }
+
+  return res;
+}
 
 }  // namespace dom
 }  // namespace mozilla

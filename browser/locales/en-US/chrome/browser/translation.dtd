@@ -9,7 +9,7 @@
   -  In en-US it looks like this:
   -    This page is in [detected language] Translate this page?
   -  "detected language" here is a language name coming from the
-  -  global/languageNames.properties file; for some locales it may not be in
+  -  toolkit/intl/languageNames.ftl file; for some locales it may not be in
   -  the correct grammar case to keep the same structure of the original
   -  sentence. -->
 <!ENTITY translation.thisPageIsIn.label         "This page is in">
@@ -27,7 +27,7 @@
   -  In en-US it looks like this:
   -    This page has been translated from [from language] to [to language]
   -  "from language" and "to language" here are language names coming from the
-  -  global/languageNames.properties file; for some locales they may not be in
+  -  toolkit/intl/languageNames.ftl file; for some locales they may not be in
   -  the correct grammar case to keep the same structure of the original
   -  sentence.
   -
