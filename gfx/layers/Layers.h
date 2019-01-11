@@ -610,6 +610,7 @@ class LayerManager : public FrameRecorder {
    * Flag the next paint as the first for a document.
    */
   virtual void SetIsFirstPaint() {}
+  virtual bool GetIsFirstPaint() const { return false; }
 
   /**
    * Set the current focus target to be sent with the next paint.
