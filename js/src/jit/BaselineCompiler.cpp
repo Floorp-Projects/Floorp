@@ -3092,10 +3092,10 @@ bool BaselineCodeGen<Handler>::emit_JSOP_DEFVAR() {
   return callVM(DefVarInfo);
 }
 
-typedef bool (*DefLexicalFn)(JSContext*, HandlePropertyName, unsigned,
-                             HandleObject);
+typedef bool (*DefLexicalFn)(JSContext*, HandleObject, HandleScript,
+                             jsbytecode*);
 static const VMFunction DefLexicalInfo =
-    FunctionInfo<DefLexicalFn>(DefLexical, "DefLexical");
+    FunctionInfo<DefLexicalFn>(DefLexicalOperation, "DefLexicalOperation");
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emitDefLexical(JSOp op) {
@@ -3103,19 +3103,13 @@ bool BaselineCodeGen<Handler>::emitDefLexical(JSOp op) {
 
   frame.syncStack(0);
 
-  unsigned attrs = JSPROP_ENUMERATE | JSPROP_PERMANENT;
-  if (op == JSOP_DEFCONST) {
-    attrs |= JSPROP_READONLY;
-  }
-  MOZ_ASSERT(attrs <= UINT32_MAX);
-
   masm.loadPtr(frame.addressOfEnvironmentChain(), R0.scratchReg());
 
   prepareVMCall();
 
+  pushArg(ImmPtr(pc));
+  pushArg(ImmGCPtr(script));
   pushArg(R0.scratchReg());
-  pushArg(Imm32(attrs));
-  pushArg(ImmGCPtr(script->getName(pc)));
 
   return callVM(DefLexicalInfo);
 }

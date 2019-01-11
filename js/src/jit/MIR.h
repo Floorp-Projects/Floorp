@@ -6318,23 +6318,17 @@ class MDefVar : public MUnaryInstruction, public NoTypePolicy::Data {
   bool possiblyCalls() const override { return true; }
 };
 
-class MDefLexical : public MNullaryInstruction {
-  CompilerPropertyName name_;  // Target name to be defined.
-  unsigned attrs_;             // Attributes to be set.
-
+class MDefLexical : public MUnaryInstruction, public NoTypePolicy::Data {
  private:
-  MDefLexical(PropertyName* name, unsigned attrs)
-      : MNullaryInstruction(classOpcode), name_(name), attrs_(attrs) {}
+  explicit MDefLexical(MDefinition* envChain)
+      : MUnaryInstruction(classOpcode, envChain) {}
 
  public:
   INSTRUCTION_HEADER(DefLexical)
   TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, environmentChain))
 
-  PropertyName* name() const { return name_; }
-  unsigned attrs() const { return attrs_; }
-  bool appendRoots(MRootList& roots) const override {
-    return roots.append(name_);
-  }
+  bool possiblyCalls() const override { return true; }
 };
 
 class MDefFun : public MBinaryInstruction, public ObjectPolicy<0>::Data {
