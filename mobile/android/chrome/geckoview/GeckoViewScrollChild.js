@@ -8,27 +8,29 @@ ChromeUtils.import("resource://gre/modules/GeckoViewChildModule.jsm");
 class GeckoViewScrollChild extends GeckoViewChildModule {
   onEnable() {
     debug `onEnable`;
-    addEventListener("scroll", this, false);
+    addEventListener("mozvisualscroll", this, { mozSystemGroup: true });
   }
 
   onDisable() {
     debug `onDisable`;
-    removeEventListener("scroll", this);
+    removeEventListener("mozvisualscroll", { mozSystemGroup: true });
   }
 
   handleEvent(aEvent) {
-    if (aEvent.originalTarget.defaultView != content) {
+    if (aEvent.originalTarget.ownerGlobal != content) {
       return;
     }
 
     debug `handleEvent: ${aEvent.type}`;
 
     switch (aEvent.type) {
-      case "scroll":
+      case "mozvisualscroll":
+        let x = {}, y = {};
+        content.windowUtils.getVisualViewportOffset(x, y);
         this.eventDispatcher.sendRequest({
           type: "GeckoView:ScrollChanged",
-          scrollX: Math.round(content.scrollX),
-          scrollY: Math.round(content.scrollY),
+          scrollX: x.value,
+          scrollY: y.value,
         });
         break;
     }
