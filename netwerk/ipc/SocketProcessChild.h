@@ -10,6 +10,10 @@
 #include "nsRefPtrHashtable.h"
 
 namespace mozilla {
+class ChildProfilerController;
+}
+
+namespace mozilla {
 namespace net {
 
 class SocketProcessBridgeParent;
@@ -36,6 +40,8 @@ class SocketProcessChild final : public PSocketProcessChild {
   mozilla::ipc::IPCResult RecvInitSocketProcessBridgeParent(
       const ProcessId& aContentProcessId,
       Endpoint<mozilla::net::PSocketProcessBridgeParent>&& aEndpoint) override;
+  mozilla::ipc::IPCResult RecvInitProfiler(
+      Endpoint<mozilla::PProfilerChild>&& aEndpoint) override;
 
   void CleanUp();
   void DestroySocketProcessBridgeParent(ProcessId aId);
@@ -45,6 +51,10 @@ class SocketProcessChild final : public PSocketProcessChild {
   // This table keeps SocketProcessBridgeParent alive in socket process.
   nsRefPtrHashtable<nsUint32HashKey, SocketProcessBridgeParent>
       mSocketProcessBridgeParentMap;
+
+#ifdef MOZ_GECKO_PROFILER
+  RefPtr<ChildProfilerController> mProfilerController;
+#endif
 };
 
 }  // namespace net
