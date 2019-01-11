@@ -866,9 +866,9 @@ class nsDocShell final : public nsDocLoader,
   nsresult ConfirmRepost(bool* aRepost);
   nsresult GetPromptAndStringBundle(nsIPrompt** aPrompt,
                                     nsIStringBundle** aStringBundle);
-  nsresult GetCurScrollPos(int32_t aScrollOrientation, int32_t* aCurPos);
   nsresult SetCurScrollPosEx(int32_t aCurHorizontalPos,
                              int32_t aCurVerticalPos);
+  nsPoint GetCurScrollPos();
 
   already_AddRefed<mozilla::dom::ChildSHistory> GetRootSessionHistory();
 
