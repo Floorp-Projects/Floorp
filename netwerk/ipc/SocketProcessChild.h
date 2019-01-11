@@ -18,12 +18,18 @@ class SocketProcessChild final : public PSocketProcessChild {
   SocketProcessChild();
   ~SocketProcessChild();
 
+  static SocketProcessChild* GetSingleton();
+
   bool Init(base::ProcessId aParentPid, const char* aParentBuildID,
             MessageLoop* aIOLoop, IPC::Channel* aChannel);
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
   mozilla::ipc::IPCResult RecvPreferenceUpdate(const Pref& aPref) override;
+  mozilla::ipc::IPCResult RecvRequestMemoryReport(
+      const uint32_t& generation, const bool& anonymize,
+      const bool& minimizeMemoryUsage, const MaybeFileDesc& DMDFile) override;
+
   void CleanUp();
 
  private:

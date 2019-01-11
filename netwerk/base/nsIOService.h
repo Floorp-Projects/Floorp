@@ -45,10 +45,12 @@ class nsIProxyInfo;
 class nsPISocketTransportService;
 
 namespace mozilla {
+class MemoryReportingProcess;
 namespace net {
 class NeckoChild;
 class nsAsyncRedirectVerifyHelper;
 class SocketProcessHost;
+class SocketProcessMemoryReporter;
 
 class nsIOService final : public nsIIOService,
                           public nsIObserver,
@@ -118,6 +120,9 @@ class nsIOService final : public nsIIOService,
   void OnProcessUnexpectedShutdown(SocketProcessHost* aHost);
   bool SocketProcessReady();
   void NotifySocketProcessPrefsChanged(const char* aName);
+
+  friend SocketProcessMemoryReporter;
+  RefPtr<MemoryReportingProcess> GetSocketProcessMemoryReporter();
 
  private:
   // These shouldn't be called directly:

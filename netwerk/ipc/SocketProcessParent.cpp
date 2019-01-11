@@ -43,6 +43,32 @@ void SocketProcessParent::ActorDestroy(ActorDestroyReason aWhy) {
   }
 }
 
+bool SocketProcessParent::SendRequestMemoryReport(
+    const uint32_t& aGeneration, const bool& aAnonymize,
+    const bool& aMinimizeMemoryUsage, const MaybeFileDesc& aDMDFile) {
+  mMemoryReportRequest = MakeUnique<dom::MemoryReportRequestHost>(aGeneration);
+  Unused << PSocketProcessParent::SendRequestMemoryReport(
+      aGeneration, aAnonymize, aMinimizeMemoryUsage, aDMDFile);
+  return true;
+}
+
+mozilla::ipc::IPCResult SocketProcessParent::RecvAddMemoryReport(
+    const MemoryReport& aReport) {
+  if (mMemoryReportRequest) {
+    mMemoryReportRequest->RecvReport(aReport);
+  }
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult SocketProcessParent::RecvFinishMemoryReport(
+    const uint32_t& aGeneration) {
+  if (mMemoryReportRequest) {
+    mMemoryReportRequest->Finish(aGeneration);
+    mMemoryReportRequest = nullptr;
+  }
+  return IPC_OK();
+}
+
 // To ensure that IPDL is finished before SocketParent gets deleted.
 class DeferredDeleteSocketProcessParent : public Runnable {
  public:
