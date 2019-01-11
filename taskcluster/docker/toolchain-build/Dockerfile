@@ -15,6 +15,7 @@ RUN /usr/local/sbin/setup_packages.sh $TASKCLUSTER_ROOT_URL $DOCKER_IMAGE_PACKAG
 RUN apt-get update && \
     apt-get install \
       autoconf \
+      autoconf2.13 \
       automake \
       bison \
       build-essential \
@@ -25,6 +26,7 @@ RUN apt-get update && \
       gcc-multilib \
       gnupg \
       libbz2-dev \
+      libcurl4-openssl-dev \
       libssl-dev \
       libtool \
       ninja-build \
