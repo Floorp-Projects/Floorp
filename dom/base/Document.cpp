@@ -3547,21 +3547,21 @@ void Document::TryChannelCharset(nsIChannel* aChannel, int32_t& aCharsetSource,
   }
 }
 
-static inline void AssertNoStaleServoDataIn(const nsINode& aSubtreeRoot) {
+static inline void AssertNoStaleServoDataIn(nsINode& aSubtreeRoot) {
 #ifdef DEBUG
-  for (const nsINode* node = &aSubtreeRoot; node;
-       node = node->GetNextNode(&aSubtreeRoot)) {
+  for (nsINode* node : ShadowIncludingTreeIterator(aSubtreeRoot)) {
     const Element* element = Element::FromNode(node);
     if (!element) {
       continue;
     }
     MOZ_ASSERT(!element->HasServoData());
-    if (auto* shadow = element->GetShadowRoot()) {
-      AssertNoStaleServoDataIn(*shadow);
-    }
     if (nsXBLBinding* binding = element->GetXBLBinding()) {
       if (nsXBLBinding* bindingWithContent = binding->GetBindingWithContent()) {
         nsIContent* content = bindingWithContent->GetAnonymousContent();
+        // Need to do this instead of just AssertNoStaleServoDataIn(*content),
+        // because the parent of the children of the <content> element isn't the
+        // <content> element, but the bound element, and that confuses
+        // GetNextNode a lot.
         MOZ_ASSERT(!content->AsElement()->HasServoData());
         for (nsINode* child = content->GetFirstChild(); child;
              child = child->GetNextSibling()) {
@@ -3581,7 +3581,7 @@ already_AddRefed<nsIPresShell> Document::CreateShell(
   NS_ENSURE_FALSE(GetBFCacheEntry(), nullptr);
 
   FillStyleSet(aStyleSet.get());
-  AssertNoStaleServoDataIn(static_cast<nsINode&>(*this));
+  AssertNoStaleServoDataIn(*this);
 
   RefPtr<PresShell> shell = new PresShell;
   // Note: we don't hold a ref to the shell (it holds a ref to us)
@@ -3704,7 +3704,7 @@ void Document::DeleteShell() {
   mStyleSetFilled = false;
 
   ClearStaleServoData();
-  AssertNoStaleServoDataIn(static_cast<nsINode&>(*this));
+  AssertNoStaleServoDataIn(*this);
 }
 
 void Document::SetBFCacheEntry(nsIBFCacheEntry* aEntry) {
