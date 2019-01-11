@@ -455,10 +455,26 @@ def valid_mt(path):
 set_config('MSMANIFEST_TOOL', depends(valid_mt)(lambda x: bool(x)))
 
 
-link = check_prog('LINKER', ('lld-link.exe', 'link.exe'),
+@template
+def linker_progs_for(host_or_target):
+    compiler = {
+        host: host_c_compiler,
+        target: c_compiler,
+    }[host_or_target]
+
+    @depends(compiler)
+    def linker_progs(compiler):
+        if compiler.type == 'msvc':
+            return ('link', 'lld-link')
+        if compiler.type == 'clang-cl':
+            return ('lld-link', 'link')
+    return linker_progs
+
+
+link = check_prog('LINKER', linker_progs_for(target),
                   paths=toolchain_search_path)
 
-host_link = check_prog('HOST_LINKER', ('lld-link.exe', 'link.exe'),
+host_link = check_prog('HOST_LINKER', linker_progs_for(host),
                        paths=toolchain_search_path)
 
 add_old_configure_assignment('LINKER', link)
