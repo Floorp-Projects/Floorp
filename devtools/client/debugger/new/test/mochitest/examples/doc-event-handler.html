@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<meta charset=UTF-8>
+<script>
+function synthesizeClick() {
+const elem = document.getElementById("clicky");
+const event = new MouseEvent("click", {});
+elem.dispatchEvent(event);
+}
+</script>
+<span onclick="debugger" id="clicky">click me</span>

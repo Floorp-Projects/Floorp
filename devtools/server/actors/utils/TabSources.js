@@ -93,7 +93,7 @@ TabSources.prototype = {
     // HTML page. The actor representing this fake HTML source is
     // stored in this array, which always has a URL, so check it
     // first.
-    if (source.url in this._htmlDocumentSourceActors) {
+    if (isInlineSource && source.url in this._htmlDocumentSourceActors) {
       return this._htmlDocumentSourceActors[source.url];
     }
 
@@ -234,10 +234,10 @@ TabSources.prototype = {
     // sources. Otherwise, use the `originalUrl` property to treat it
     // as an HTML source that manages multiple inline sources.
 
-    // Assume the source is inline if the element that introduced it is not a
-    // script element, or does not have a src attribute.
+    // Assume the source is inline if the element that introduced it is a
+    // script element and does not have a src attribute.
     const element = source.element ? source.element.unsafeDereference() : null;
-    if (element && (element.tagName !== "SCRIPT" || !element.hasAttribute("src"))) {
+    if (element && element.tagName === "SCRIPT" && !element.hasAttribute("src")) {
       if (source.introductionScript) {
         // As for other evaluated sources, script elements which were
         // dynamically generated when another script ran should have

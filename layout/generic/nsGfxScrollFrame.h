@@ -25,6 +25,7 @@
 #include "TextOverflow.h"
 #include "ScrollVelocityQueue.h"
 #include "mozilla/PresState.h"
+#include "mozilla/layout/ScrollAnchorContainer.h"
 
 class nsPresContext;
 class nsIPresShell;
@@ -52,6 +53,7 @@ class ScrollFrameHelper : public nsIReflowCallback {
   typedef mozilla::layers::ScrollSnapInfo ScrollSnapInfo;
   typedef mozilla::layers::Layer Layer;
   typedef mozilla::layers::LayerManager LayerManager;
+  typedef mozilla::layout::ScrollAnchorContainer ScrollAnchorContainer;
 
   class AsyncScroll;
   class AsyncSmoothMSDScroll;
@@ -566,6 +568,8 @@ class ScrollFrameHelper : public nsIReflowCallback {
   // Timer to remove the displayport some time after scrolling has stopped
   nsCOMPtr<nsITimer> mDisplayPortExpiryTimer;
 
+  ScrollAnchorContainer mAnchor;
+
   bool mAllowScrollOriginDowngrade : 1;
   bool mHadDisplayPortAtLastFrameUpdate : 1;
   bool mNeverHasVerticalScrollbar : 1;
@@ -723,6 +727,7 @@ class nsHTMLScrollFrame : public nsContainerFrame,
   typedef mozilla::ScrollFrameHelper ScrollFrameHelper;
   typedef mozilla::CSSIntPoint CSSIntPoint;
   typedef mozilla::ScrollReflowInput ScrollReflowInput;
+  typedef mozilla::layout::ScrollAnchorContainer ScrollAnchorContainer;
   friend nsHTMLScrollFrame* NS_NewHTMLScrollFrame(nsIPresShell* aPresShell,
                                                   ComputedStyle* aStyle,
                                                   bool aIsRoot);
@@ -760,6 +765,8 @@ class nsHTMLScrollFrame : public nsContainerFrame,
   virtual void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
                       const ReflowInput& aReflowInput,
                       nsReflowStatus& aStatus) override;
+  virtual void DidReflow(nsPresContext* aPresContext,
+                         const ReflowInput* aReflowInput) override;
 
   virtual bool ComputeCustomOverflow(nsOverflowAreas& aOverflowAreas) override {
     return mHelper.ComputeCustomOverflow(aOverflowAreas);
@@ -1112,6 +1119,14 @@ class nsHTMLScrollFrame : public nsContainerFrame,
     return mHelper.IsRootScrollFrameOfDocument();
   }
 
+  virtual const ScrollAnchorContainer* GetAnchor() const override {
+    return &mHelper.mAnchor;
+  }
+
+  virtual ScrollAnchorContainer* GetAnchor() override {
+    return &mHelper.mAnchor;
+  }
+
   // Return the scrolled frame.
   void AppendDirectlyOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult) override {
     aResult.AppendElement(OwnedAnonBox(mHelper.GetScrolledFrame()));
@@ -1174,6 +1189,7 @@ class nsXULScrollFrame final : public nsBoxFrame,
  public:
   typedef mozilla::ScrollFrameHelper ScrollFrameHelper;
   typedef mozilla::CSSIntPoint CSSIntPoint;
+  typedef mozilla::layout::ScrollAnchorContainer ScrollAnchorContainer;
 
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS(nsXULScrollFrame)
@@ -1575,6 +1591,14 @@ class nsXULScrollFrame final : public nsBoxFrame,
 
   virtual bool IsRootScrollFrameOfDocument() const override {
     return mHelper.IsRootScrollFrameOfDocument();
+  }
+
+  virtual const ScrollAnchorContainer* GetAnchor() const override {
+    return &mHelper.mAnchor;
+  }
+
+  virtual ScrollAnchorContainer* GetAnchor() override {
+    return &mHelper.mAnchor;
   }
 
   // Return the scrolled frame.

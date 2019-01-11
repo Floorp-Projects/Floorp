@@ -178,6 +178,7 @@
 #include "mozilla/layers/FocusTarget.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
 #include "mozilla/layers/WebRenderUserData.h"
+#include "mozilla/layout/ScrollAnchorContainer.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/StyleSheet.h"
@@ -1311,6 +1312,7 @@ void PresShell::Destroy() {
   }
 
   mFramesToDirty.Clear();
+  mDirtyScrollAnchorContainers.Clear();
 
   if (mViewManager) {
     // Clear the view manager's weak pointer back to |this| in case it
@@ -2138,6 +2140,11 @@ void PresShell::NotifyDestroyingFrame(nsIFrame* aFrame) {
     }
 
     mFramesToDirty.RemoveEntry(aFrame);
+
+    nsIScrollableFrame* scrollableFrame = do_QueryFrame(aFrame);
+    if (scrollableFrame) {
+      mDirtyScrollAnchorContainers.RemoveEntry(scrollableFrame);
+    }
   }
 }
 
@@ -2558,6 +2565,19 @@ void PresShell::VerifyHasDirtyRootAncestor(nsIFrame* aFrame) {
       "reflowed?");
 }
 #endif
+
+void PresShell::PostDirtyScrollAnchorContainer(nsIScrollableFrame* aFrame) {
+  mDirtyScrollAnchorContainers.PutEntry(aFrame);
+}
+
+void PresShell::FlushDirtyScrollAnchorContainers() {
+  for (auto iter = mDirtyScrollAnchorContainers.Iter(); !iter.Done();
+       iter.Next()) {
+    nsIScrollableFrame* scroll = iter.Get()->GetKey();
+    scroll->GetAnchor()->SelectAnchor();
+  }
+  mDirtyScrollAnchorContainers.Clear();
+}
 
 void PresShell::FrameNeedsReflow(nsIFrame* aFrame,
                                  IntrinsicDirty aIntrinsicDirty,
@@ -8478,6 +8498,8 @@ bool PresShell::DoReflow(nsIFrame* target, bool aInterruptible,
   mReflowCause = nullptr;
 #endif
 
+  FlushDirtyScrollAnchorContainers();
+
   if (mReflowContinueTimer) {
     mReflowContinueTimer->Cancel();
     mReflowContinueTimer = nullptr;
@@ -8597,6 +8619,10 @@ bool PresShell::DoReflow(nsIFrame* target, bool aInterruptible,
                                          nsContainerFrame::SET_ASYNC);
 
   target->DidReflow(mPresContext, nullptr);
+  if (target->IsInScrollAnchorChain()) {
+    ScrollAnchorContainer* container = ScrollAnchorContainer::FindFor(target);
+    container->ApplyAdjustments();
+  }
   if (isRoot && size.BSize(wm) == NS_UNCONSTRAINEDSIZE) {
     mPresContext->SetVisibleArea(boundsRelativeToTarget);
   }
@@ -10007,7 +10033,8 @@ void PresShell::AddSizeOfIncludingThis(nsWindowSizes& aSizes) const {
   }
   aSizes.mLayoutPresShellSize +=
       mApproximatelyVisibleFrames.ShallowSizeOfExcludingThis(mallocSizeOf) +
-      mFramesToDirty.ShallowSizeOfExcludingThis(mallocSizeOf);
+      mFramesToDirty.ShallowSizeOfExcludingThis(mallocSizeOf) +
+      mDirtyScrollAnchorContainers.ShallowSizeOfExcludingThis(mallocSizeOf);
 
   StyleSet()->AddSizeOfIncludingThis(aSizes);
 
