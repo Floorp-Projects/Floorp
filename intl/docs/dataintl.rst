@@ -320,7 +320,7 @@ mozIntl.getAvailableLocaleDisplayNames(type)
 
 API which returns a list of locale display name codes available for a
 given type.
-Available types are: "region".
+Available types are: "language", "region".
 
 Example:
 
