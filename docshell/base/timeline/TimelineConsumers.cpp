@@ -34,7 +34,10 @@ already_AddRefed<TimelineConsumers> TimelineConsumers::Get() {
   // parent or content. To avoid accidental checks to methods like `IsEmpty`,
   // which would probably always be true in those cases, assert here.
   // Remember, there will be different singletons available to each process.
-  MOZ_ASSERT(XRE_IsContentProcess() || XRE_IsParentProcess());
+
+  // TODO: we have to avoid calling this function in socket process.
+  MOZ_ASSERT(XRE_IsContentProcess() || XRE_IsParentProcess() ||
+             XRE_IsSocketProcess());
 
   // If we are shutting down, don't bother doing anything. Note: we can only
   // know whether or not we're in shutdown if we're instantiated.
