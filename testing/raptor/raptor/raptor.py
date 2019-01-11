@@ -313,6 +313,14 @@ class Raptor(object):
                     raise
             else:
                 # launch fennec
+
+                # when running locally the 'binary' is provided on the mach raptor-test cmd line,
+                # i.e. `org.mozilla.fennec_aurora` for fennec nightly
+                # in production the default `.fennec_aurora` comes form the tc config;
+                # if we're running in production but on beta that needs to be changed to `.fennec`
+                if not self.config['run_local'] and self.config['is_release_build']:
+                    self.config['binary'] = 'org.mozilla.fennec'
+
                 try:
                     # if fennec is already running, shut it down first
                     self.device.stop_application(self.config['binary'])
