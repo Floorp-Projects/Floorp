@@ -49,13 +49,16 @@ function TextProperty(rule, name, value, priority, enabled = true,
 
 TextProperty.prototype = {
   get computedProperties() {
-    return this.computed.map(computed => {
-      return {
-        name: computed.name,
-        priority: computed.priority,
-        value: computed.value,
-      };
-    });
+    return this.computed
+      .filter(computed => computed.name !== this.name)
+      .map(computed => {
+        return {
+          isOverridden: computed.overridden,
+          name: computed.name,
+          priority: computed.priority,
+          value: computed.value,
+        };
+      });
   },
 
   /**
