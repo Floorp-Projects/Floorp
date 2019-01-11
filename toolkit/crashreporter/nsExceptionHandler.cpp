@@ -249,11 +249,6 @@ static std::map<ProcessId, PRFileDesc*> processToCrashFd;
 
 static std::terminate_handler oldTerminateHandler = nullptr;
 
-#if (defined(XP_MACOSX) || defined(XP_WIN))
-// This field is valid in both chrome and content processes.
-static xpstring* childProcessTmpDir = nullptr;
-#endif
-
 #if defined(XP_WIN) || defined(XP_MACOSX)
 // If crash reporting is disabled, we hand out this "null" pipe to the
 // child process and don't attempt to connect to a parent server.
@@ -3067,26 +3062,6 @@ void OOPInit() {
              "attempt to initialize OOP crash reporter before in-process "
              "crashreporter!");
 
-#if (defined(XP_WIN) || defined(XP_MACOSX))
-  nsCOMPtr<nsIFile> tmpDir;
-#if defined(MOZ_CONTENT_SANDBOX)
-  nsresult rv = NS_GetSpecialDirectory(NS_APP_CONTENT_PROCESS_TEMP_DIR,
-                                       getter_AddRefs(tmpDir));
-  if (NS_FAILED(rv) && PR_GetEnv("XPCSHELL_TEST_PROFILE_DIR")) {
-    // Temporary hack for xpcshell, will be fixed in bug 1257098
-    rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(tmpDir));
-  }
-  if (NS_SUCCEEDED(rv)) {
-    childProcessTmpDir = CreatePathFromFile(tmpDir);
-  }
-#else
-  if (NS_SUCCEEDED(
-          NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(tmpDir)))) {
-    childProcessTmpDir = CreatePathFromFile(tmpDir);
-  }
-#endif  // defined(MOZ_CONTENT_SANDBOX)
-#endif  // (defined(XP_WIN) || defined(XP_MACOSX))
-
 #if defined(XP_WIN)
   childCrashNotifyPipe =
       mozilla::Smprintf("\\\\.\\pipe\\gecko-crash-server-pipe.%i",
@@ -3172,15 +3147,6 @@ static void OOPDeinit() {
 #if defined(XP_WIN) || defined(XP_MACOSX)
   free(childCrashNotifyPipe);
   childCrashNotifyPipe = nullptr;
-#endif
-}
-
-void GetChildProcessTmpDir(nsIFile** aOutTmpDir) {
-  MOZ_ASSERT(XRE_IsParentProcess());
-#if (defined(XP_MACOSX) || defined(XP_WIN))
-  if (childProcessTmpDir) {
-    CreateFileFromPath(*childProcessTmpDir, aOutTmpDir);
-  }
 #endif
 }
 

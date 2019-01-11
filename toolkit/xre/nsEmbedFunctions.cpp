@@ -594,22 +594,6 @@ nsresult XRE_InitChildProcess(int aArgc, char* aArgv[],
   base::ProcessId parentPID = strtol(parentPIDString, &end, 10);
   MOZ_ASSERT(!*end, "invalid parent PID");
 
-  nsCOMPtr<nsIFile> crashReportTmpDir;
-  if (XRE_GetProcessType() == GeckoProcessType_GPU ||
-      XRE_GetProcessType() == GeckoProcessType_RDD) {
-    aArgc--;
-    if (strlen(aArgv[aArgc])) {  // if it's empty, ignore it
-      nsresult rv =
-          XRE_GetFileFromPath(aArgv[aArgc], getter_AddRefs(crashReportTmpDir));
-      if (NS_FAILED(rv)) {
-        // If we don't have a valid tmp dir we can probably still run ok, but
-        // crash report .extra files might not get picked up by the parent
-        // process. Debug-assert because this shouldn't happen in practice.
-        MOZ_ASSERT(false, "GPU process started without valid tmp dir!");
-      }
-    }
-  }
-
   // While replaying, use the parent PID that existed while recording.
   parentPID = recordreplay::RecordReplayValue(parentPID);
 

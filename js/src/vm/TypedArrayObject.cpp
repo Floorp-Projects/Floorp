@@ -8,6 +8,7 @@
 #include "vm/TypedArrayObject.h"
 
 #include "mozilla/Alignment.h"
+#include "mozilla/CheckedInt.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/TextUtils.h"
@@ -55,6 +56,7 @@ using namespace js;
 using JS::CanonicalizeNaN;
 using JS::ToInt32;
 using JS::ToUint32;
+using mozilla::CheckedUint32;
 using mozilla::IsAsciiDigit;
 
 /*
@@ -159,9 +161,15 @@ void TypedArrayObject::finalize(FreeOp* fop, JSObject* obj) {
     return 0;
   }
 
-  Nursery& nursery = obj->runtimeFromMainThread()->gc.nursery();
   void* buf = oldObj->elements();
 
+  // Discarded objects (which didn't have enough room for inner elements) don't
+  // have any data to move.
+  if (!buf) {
+    return 0;
+  }
+
+  Nursery& nursery = obj->runtimeFromMainThread()->gc.nursery();
   if (!nursery.isInside(buf)) {
     nursery.removeMallocedBuffer(buf);
     return 0;
@@ -190,6 +198,9 @@ void TypedArrayObject::finalize(FreeOp* fop, JSObject* obj) {
     newObj->setInlineElements();
   } else {
     MOZ_ASSERT(!oldObj->hasInlineElements());
+    MOZ_ASSERT((CheckedUint32(nbytes) + sizeof(Value)).isValid(),
+               "JS_ROUNDUP must not overflow");
+
     AutoEnterOOMUnsafeRegion oomUnsafe;
     nbytes = JS_ROUNDUP(nbytes, sizeof(Value));
     void* data = newObj->zone()->pod_malloc<uint8_t>(
@@ -482,15 +493,9 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
 #endif
   }
 
-  static void initTypedArrayData(JSContext* cx, TypedArrayObject* tarray,
-                                 int32_t len, void* buf,
-                                 gc::AllocKind allocKind) {
+  static void initTypedArrayData(TypedArrayObject* tarray, int32_t len,
+                                 void* buf, gc::AllocKind allocKind) {
     if (buf) {
-#ifdef DEBUG
-      Nursery& nursery = cx->nursery();
-      MOZ_ASSERT_IF(!nursery.isInside(buf) && !tarray->hasInlineElements(),
-                    tarray->isTenured());
-#endif
       tarray->initPrivate(buf);
     } else {
       size_t nbytes = len * BYTES_PER_ELEMENT;
@@ -524,25 +529,30 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
     RootedObjectGroup group(cx, templateObj->group());
     MOZ_ASSERT(group->clasp() == instanceClass());
 
-    NewObjectKind newKind = TenuredObject;
-
-    UniquePtr<void, JS::FreePolicy> buf;
-    if (!fitsInline) {
-      MOZ_ASSERT(len > 0);
-      buf.reset(cx->pod_calloc<uint8_t>(nbytes, js::ArrayBufferContentsArena));
-      if (!buf) {
-        return nullptr;
-      }
-    }
-
     TypedArrayObject* obj =
-        NewObjectWithGroup<TypedArrayObject>(cx, group, allocKind, newKind);
+        NewObjectWithGroup<TypedArrayObject>(cx, group, allocKind);
     if (!obj) {
       return nullptr;
     }
 
     initTypedArraySlots(obj, len);
-    initTypedArrayData(cx, obj, len, buf.release(), allocKind);
+
+    void* buf = nullptr;
+    if (!fitsInline) {
+      MOZ_ASSERT(len > 0);
+      MOZ_ASSERT((CheckedUint32(nbytes) + sizeof(Value)).isValid(),
+                 "JS_ROUNDUP must not overflow");
+
+      nbytes = JS_ROUNDUP(nbytes, sizeof(Value));
+      buf = cx->nursery().allocateZeroedBuffer(obj, nbytes,
+                                               js::ArrayBufferContentsArena);
+      if (!buf) {
+        ReportOutOfMemory(cx);
+        return nullptr;
+      }
+    }
+
+    initTypedArrayData(obj, len, buf, allocKind);
 
     return obj;
   }

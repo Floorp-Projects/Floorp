@@ -5792,8 +5792,8 @@ pub extern "C" fn Servo_GetCustomPropertyNameAt(
         None => return false,
     };
 
-    let property_name = match custom_properties.get_key_at(index) {
-        Some(n) => n,
+    let property_name = match custom_properties.get_index(index as usize) {
+        Some((key, _value)) => key,
         None => return false,
     };
 
