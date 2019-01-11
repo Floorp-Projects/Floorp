@@ -11,6 +11,7 @@
 #include "TextEditUtils.h"
 #include "gfxFontUtils.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/ContentIterator.h"
 #include "mozilla/EditAction.h"
 #include "mozilla/EditorDOMPoint.h"
 #include "mozilla/HTMLEditor.h"
@@ -39,7 +40,6 @@
 #include "nsIAbsorbingTransaction.h"
 #include "nsIClipboard.h"
 #include "nsIContent.h"
-#include "nsIContentIterator.h"
 #include "nsIDocumentEncoder.h"
 #include "nsINode.h"
 #include "nsIPresShell.h"
@@ -1455,12 +1455,11 @@ TextEditor::GetTextLength(int32_t* aCount) {
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIContentIterator> iter = NS_NewContentIterator();
-
   uint32_t totalLength = 0;
-  iter->Init(rootElement);
-  for (; !iter->IsDone(); iter->Next()) {
-    nsCOMPtr<nsINode> currentNode = iter->GetCurrentNode();
+  PostContentIterator postOrderIter;
+  postOrderIter.Init(rootElement);
+  for (; !postOrderIter.IsDone(); postOrderIter.Next()) {
+    nsCOMPtr<nsINode> currentNode = postOrderIter.GetCurrentNode();
     if (IsTextNode(currentNode) && IsEditable(currentNode)) {
       totalLength += currentNode->Length();
     }

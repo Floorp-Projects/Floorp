@@ -162,6 +162,8 @@ nsFilePicker::nsFilePicker()
       mFileChooserDelegate(nullptr)
 #endif
 {
+  nsCOMPtr<nsIGIOService> giovfs = do_GetService(NS_GIOSERVICE_CONTRACTID);
+  giovfs->ShouldUseFlatpakPortal(&mUseNativeFileChooser);
 }
 
 nsFilePicker::~nsFilePicker() {}
@@ -575,7 +577,6 @@ void nsFilePicker::Done(void *file_chooser, gint response) {
 }
 
 // All below functions available as of GTK 3.20+
-
 void *nsFilePicker::GtkFileChooserNew(const gchar *title, GtkWindow *parent,
                                       GtkFileChooserAction action,
                                       const gchar *accept_label) {
@@ -584,7 +585,7 @@ void *nsFilePicker::GtkFileChooserNew(const gchar *title, GtkWindow *parent,
                  const gchar *,
                  const gchar *))dlsym(RTLD_DEFAULT,
                                       "gtk_file_chooser_native_new");
-  if (sGtkFileChooserNativeNewPtr != nullptr) {
+  if (mUseNativeFileChooser && sGtkFileChooserNativeNewPtr != nullptr) {
     return (*sGtkFileChooserNativeNewPtr)(title, parent, action, accept_label,
                                           nullptr);
   }
@@ -603,7 +604,7 @@ void *nsFilePicker::GtkFileChooserNew(const gchar *title, GtkWindow *parent,
 void nsFilePicker::GtkFileChooserShow(void *file_chooser) {
   static auto sGtkNativeDialogShowPtr =
       (void (*)(void *))dlsym(RTLD_DEFAULT, "gtk_native_dialog_show");
-  if (sGtkNativeDialogShowPtr != nullptr) {
+  if (mUseNativeFileChooser && sGtkNativeDialogShowPtr != nullptr) {
     (*sGtkNativeDialogShowPtr)(file_chooser);
   } else {
     g_signal_connect(file_chooser, "destroy", G_CALLBACK(OnDestroy), this);
@@ -614,7 +615,7 @@ void nsFilePicker::GtkFileChooserShow(void *file_chooser) {
 void nsFilePicker::GtkFileChooserDestroy(void *file_chooser) {
   static auto sGtkNativeDialogDestroyPtr =
       (void (*)(void *))dlsym(RTLD_DEFAULT, "gtk_native_dialog_destroy");
-  if (sGtkNativeDialogDestroyPtr != nullptr) {
+  if (mUseNativeFileChooser && sGtkNativeDialogDestroyPtr != nullptr) {
     (*sGtkNativeDialogDestroyPtr)(file_chooser);
   } else {
     gtk_widget_destroy(GTK_WIDGET(file_chooser));
@@ -626,7 +627,7 @@ void nsFilePicker::GtkFileChooserSetModal(void *file_chooser,
                                           gboolean modal) {
   static auto sGtkNativeDialogSetModalPtr = (void (*)(void *, gboolean))dlsym(
       RTLD_DEFAULT, "gtk_native_dialog_set_modal");
-  if (sGtkNativeDialogSetModalPtr != nullptr) {
+  if (mUseNativeFileChooser && sGtkNativeDialogSetModalPtr != nullptr) {
     (*sGtkNativeDialogSetModalPtr)(file_chooser, modal);
   } else {
     GtkWindow *window = GTK_WINDOW(file_chooser);

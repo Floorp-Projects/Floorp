@@ -382,17 +382,12 @@ def subconfigure(args):
     parser = argparse.ArgumentParser()
     parser.add_argument('--list', type=str,
                         help='File containing a list of subconfigures to run')
-    parser.add_argument('--skip', type=str,
-                        help='File containing a list of Subconfigures to skip')
     parser.add_argument('subconfigures', type=str, nargs='*',
                         help='Subconfigures to run if no list file is given')
     args, others = parser.parse_known_args(args)
     subconfigures = args.subconfigures
     if args.list:
         subconfigures.extend(open(args.list, 'rb').read().splitlines())
-    if args.skip:
-        skips = set(open(args.skip, 'rb').read().splitlines())
-        subconfigures = [s for s in subconfigures if s not in skips]
 
     if not subconfigures:
         return 0

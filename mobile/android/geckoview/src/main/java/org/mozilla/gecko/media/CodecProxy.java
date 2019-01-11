@@ -94,17 +94,8 @@ public final class CodecProxy {
             if (mOutputSurface != null) {
                 // Don't render to surface just yet. Callback will make that happen when it's time.
                 mSurfaceOutputs.offer(sample);
-                mCallbacks.onOutput(sample);
-            } else {
-                // Non-surface output needs no rendering.
-                try {
-                    mCallbacks.onOutput(sample);
-                    mRemote.releaseOutput(sample, false);
-                    sample.dispose();
-                } catch (Exception e) {
-                    reportError(true);
-                }
             }
+            mCallbacks.onOutput(sample);
         }
 
         @Override
@@ -347,9 +338,15 @@ public final class CodecProxy {
 
     @WrapForJNI
     public synchronized boolean releaseOutput(Sample sample, boolean render) {
-        if (!mSurfaceOutputs.remove(sample)) {
-            if (mRemote != null) Log.w(LOGTAG, "already released: " + sample);
-            return true;
+        if (mOutputSurface != null) {
+            if (!mSurfaceOutputs.remove(sample)) {
+                if (mRemote != null) Log.w(LOGTAG, "already released: " + sample);
+                return true;
+            }
+
+            if (DEBUG && !render) {
+                Log.d(LOGTAG, "drop output:" + sample.info.presentationTimeUs);
+            }
         }
 
         if (mRemote == null) {
@@ -358,12 +355,10 @@ public final class CodecProxy {
             return true;
         }
 
-        if (DEBUG && !render) { Log.d(LOGTAG, "drop output:" + sample.info.presentationTimeUs); }
-
         try {
             mRemote.releaseOutput(sample, render);
         } catch (RemoteException e) {
-            Log.e(LOGTAG, "remote fail to render output:" + sample.info.presentationTimeUs);
+            Log.e(LOGTAG, "remote fail to release output:" + sample.info.presentationTimeUs);
             e.printStackTrace();
         }
         sample.dispose();

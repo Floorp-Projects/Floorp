@@ -2,10 +2,31 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { L10nRegistry, FileSource } = ChromeUtils.import("resource://gre/modules/L10nRegistry.jsm", {});
 
+const fs = {
+  "toolkit/intl/languageNames.ftl": `
+language-name-en = English
+  `,
+  "toolkit/intl/regionNames.ftl": `
+region-name-us = United States
+region-name-ru = Russia
+  `,
+};
+
+L10nRegistry.loadSync = function(url) {
+  if (!fs.hasOwnProperty(url)) {
+    return false;
+  }
+  return fs[url];
+};
+
+let locales = Services.locale.packagedLocales;
+const mockSource = new FileSource("mock", locales, "");
+L10nRegistry.registerSource(mockSource);
 
 const gLangDN = Services.intl.getLanguageDisplayNames.bind(Services.intl, undefined);
-const gReg = Services.intl.getRegions.bind(Services.intl, undefined);
+const gAvLocDN = Services.intl.getAvailableLocaleDisplayNames.bind(Services.intl);
 const gRegDN = Services.intl.getRegionDisplayNames.bind(Services.intl, undefined);
 const gLocDN = Services.intl.getLocaleDisplayNames.bind(Services.intl, undefined);
 
@@ -83,9 +104,10 @@ add_test(function test_invalid_regions() {
   run_next_test();
 });
 
-add_test(function test_region() {
-  let regions = gReg(undefined);
-  equal(regions[Symbol.toStringTag], "Map", "Check type is Map");
-  equal(regions.get("US"), "United States", "Check US name");
+add_test(function test_availableLocaleDisplayNames() {
+  let langCodes = gAvLocDN("language");
+  equal(langCodes.length > 0, true, "There should be some language codes available");
+  let regCodes = gAvLocDN("region");
+  equal(regCodes.length > 0, true, "There should be some region codes available");
   run_next_test();
 });

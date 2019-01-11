@@ -304,7 +304,7 @@ nsCString VideoDecoderChild::GetDescriptionName() const {
 void VideoDecoderChild::SetSeekThreshold(const media::TimeUnit& aTime) {
   AssertOnManagerThread();
   if (mCanSend) {
-    SendSetSeekThreshold(aTime.ToMicroseconds());
+    SendSetSeekThreshold(aTime.IsValid() ? aTime.ToMicroseconds() : INT64_MIN);
   }
 }
 

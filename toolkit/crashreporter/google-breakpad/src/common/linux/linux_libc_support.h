@@ -67,6 +67,8 @@ extern const char* my_strchr(const char* haystack, char needle);
 
 extern const char* my_strrchr(const char* haystack, char needle);
 
+extern const char *my_strstr(const char *haystack, const char *needle);
+
 // Read a hex value
 //   result: (output) the resulting value
 //   s: a string

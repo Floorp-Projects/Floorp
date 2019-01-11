@@ -3849,17 +3849,6 @@ fi
 unset MAKEFILES
 unset CONFIG_FILES
 
-# Run all configure scripts specified by a subconfigure
-if test -n "$_subconfigure_subdir"; then
-  _save_srcdir="$srcdir"
-  srcdir="$srcdir/.."
-  _save_ac_configure_args="$ac_configure_args"
-  ac_configure_args="$_subconfigure_config_args"
-  AC_OUTPUT_SUBDIRS_NOW("$_subconfigure_subdir",$cache_file)
-  ac_configure_args="$_save_ac_configure_args"
-  srcdir="$_save_srcdir"
-fi
-
 if test "$COMPILE_ENVIRONMENT" -a "$MOZ_WIDGET_TOOLKIT"; then
 
 

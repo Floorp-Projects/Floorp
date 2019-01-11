@@ -537,8 +537,8 @@ class IonBuilder : public MIRGenerator,
   AbortReasonOr<Ok> jsop_neg();
   AbortReasonOr<Ok> jsop_tostring();
   AbortReasonOr<Ok> jsop_setarg(uint32_t arg);
-  AbortReasonOr<Ok> jsop_defvar(uint32_t index);
-  AbortReasonOr<Ok> jsop_deflexical(uint32_t index);
+  AbortReasonOr<Ok> jsop_defvar();
+  AbortReasonOr<Ok> jsop_deflexical();
   AbortReasonOr<Ok> jsop_deffun();
   AbortReasonOr<Ok> jsop_notearg();
   AbortReasonOr<Ok> jsop_throwsetconst();
