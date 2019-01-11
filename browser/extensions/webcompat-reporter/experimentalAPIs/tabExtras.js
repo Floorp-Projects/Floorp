@@ -130,9 +130,12 @@ this.tabExtras = class extends ExtensionAPI {
               },
             };
             windowTracker.addListener("progress", listener);
-            let triggeringPrincipal = Services.scriptSecurityManager.createNullPrincipal({});
-            tab.browser.webNavigation.loadURIWithOptions(url, null, null, null,
-                                                         post, null, null, triggeringPrincipal);
+
+            let loadURIOptions = {
+              triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({}),
+              postData: post,
+            };
+            tab.browser.webNavigation.loadURI(url, loadURIOptions);
           });
         },
         async getWebcompatInfo(tabId) {

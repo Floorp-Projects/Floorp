@@ -15,6 +15,7 @@
 #include "nsNetUtil.h"
 #include "nsQueryObject.h"
 #include "mozilla/dom/nsCSPUtils.h"
+#include "mozilla/dom/LoadURIOptionsBinding.h"
 #include "mozilla/NullPrincipal.h"
 
 using namespace mozilla;
@@ -257,8 +258,10 @@ static bool ShouldIgnoreFrameOptions(nsIChannel* aChannel,
           RefPtr<NullPrincipal> principal =
               NullPrincipal::CreateWithInheritedAttributes(
                   loadInfo->TriggeringPrincipal());
-          webNav->LoadURI(NS_LITERAL_STRING("about:blank"), 0, nullptr, nullptr,
-                          nullptr, principal);
+
+          LoadURIOptions loadURIOptions;
+          loadURIOptions.mTriggeringPrincipal = principal;
+          webNav->LoadURI(NS_LITERAL_STRING("about:blank"), loadURIOptions);
         }
       }
       return false;

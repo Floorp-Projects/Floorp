@@ -398,7 +398,7 @@ class JS_PUBLIC_API ContextOptions {
 #ifdef ENABLE_WASM_CRANELIFT
         wasmForceCranelift_(false),
 #endif
-#ifdef ENABLE_WASM_GC
+#ifdef ENABLE_WASM_REFTYPES
         wasmGc_(false),
 #endif
         testWasmAwaitTier2_(false),
@@ -489,7 +489,7 @@ class JS_PUBLIC_API ContextOptions {
     return *this;
   }
 
-#ifdef ENABLE_WASM_GC
+#ifdef ENABLE_WASM_REFTYPES
   bool wasmGc() const { return wasmGc_; }
   ContextOptions& setWasmGc(bool flag) {
     wasmGc_ = flag;
@@ -580,7 +580,7 @@ class JS_PUBLIC_API ContextOptions {
     setWasm(false);
     setWasmBaseline(false);
     setWasmIon(false);
-#ifdef ENABLE_WASM_GC
+#ifdef ENABLE_WASM_REFTYPES
     setWasmGc(false);
 #endif
     setNativeRegExp(false);
@@ -597,7 +597,7 @@ class JS_PUBLIC_API ContextOptions {
 #ifdef ENABLE_WASM_CRANELIFT
   bool wasmForceCranelift_ : 1;
 #endif
-#ifdef ENABLE_WASM_GC
+#ifdef ENABLE_WASM_REFTYPES
   bool wasmGc_ : 1;
 #endif
   bool testWasmAwaitTier2_ : 1;

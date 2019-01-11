@@ -14,11 +14,10 @@ const gfxFrameScript = {
 
     this.domUtils = content.windowUtils;
 
-    let triggeringPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
-    webNav.loadURI("chrome://gfxsanity/content/sanitytest.html",
-                   Ci.nsIWebNavigation.LOAD_FLAGS_NONE,
-                   null, null, null, triggeringPrincipal);
-
+    let loadURIOptions = {
+      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+    };
+    webNav.loadURI("chrome://gfxsanity/content/sanitytest.html", loadURIOptions);
   },
 
   handleEvent(aEvent) {

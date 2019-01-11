@@ -11454,6 +11454,8 @@ bool BaseCompiler::emitBody() {
         }
         CHECK_NEXT(
             emitComparison(emitCompareRef, ValType::AnyRef, Assembler::Equal));
+#endif
+#ifdef ENABLE_WASM_REFTYPES
       case uint16_t(Op::RefNull):
         if (env_.gcTypesEnabled() == HasGcTypes::False) {
           return iter_.unrecognizedOpcode(&op);

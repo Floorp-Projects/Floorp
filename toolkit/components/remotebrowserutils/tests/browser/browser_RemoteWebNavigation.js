@@ -2,6 +2,7 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 const SYSTEMPRINCIPAL = Services.scriptSecurityManager.getSystemPrincipal();
 const DUMMY1 = "http://example.com/browser/toolkit/modules/tests/browser/dummy_page.html";
 const DUMMY2 = "http://example.org/browser/toolkit/modules/tests/browser/dummy_page.html";
+const LOAD_URI_OPTIONS = {triggeringPrincipal: SYSTEMPRINCIPAL};
 
 function waitForLoad(uri) {
   return BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser, false, uri);
@@ -15,11 +16,11 @@ function waitForPageShow(browser = gBrowser.selectedBrowser) {
 add_task(async function test_referrer() {
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
   let browser = gBrowser.selectedBrowser;
-
-  browser.webNavigation.loadURI(DUMMY1,
-                                Ci.nsIWebNavigation.LOAD_FLAGS_NONE,
-                                Services.io.newURI(DUMMY2), null, null,
-                                SYSTEMPRINCIPAL);
+  let loadURIOptionsWithReferrer = {
+    triggeringPrincipal: SYSTEMPRINCIPAL,
+    referrerURI: Services.io.newURI(DUMMY2),
+  };
+  browser.webNavigation.loadURI(DUMMY1, loadURIOptionsWithReferrer);
   await waitForLoad(DUMMY1);
 
   await ContentTask.spawn(browser, [ DUMMY1, DUMMY2 ], function([dummy1, dummy2]) {
@@ -42,16 +43,10 @@ add_task(async function test_history() {
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
   let browser = gBrowser.selectedBrowser;
 
-  browser.webNavigation.loadURI(DUMMY1,
-                                Ci.nsIWebNavigation.LOAD_FLAGS_NONE,
-                                null, null, null,
-                                SYSTEMPRINCIPAL);
+  browser.webNavigation.loadURI(DUMMY1, LOAD_URI_OPTIONS);
   await waitForLoad(DUMMY1);
 
-  browser.webNavigation.loadURI(DUMMY2,
-                                Ci.nsIWebNavigation.LOAD_FLAGS_NONE,
-                                null, null, null,
-                                SYSTEMPRINCIPAL);
+  browser.webNavigation.loadURI(DUMMY2, LOAD_URI_OPTIONS);
   await waitForLoad(DUMMY2);
 
   await ContentTask.spawn(browser, [DUMMY1, DUMMY2], function([dummy1, dummy2]) {
@@ -100,23 +95,20 @@ add_task(async function test_flags() {
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
   let browser = gBrowser.selectedBrowser;
 
-  browser.webNavigation.loadURI(DUMMY1,
-                                Ci.nsIWebNavigation.LOAD_FLAGS_NONE,
-                                null, null, null,
-                                SYSTEMPRINCIPAL);
+  browser.webNavigation.loadURI(DUMMY1, LOAD_URI_OPTIONS);
   await waitForLoad(DUMMY1);
-
-  browser.webNavigation.loadURI(DUMMY2,
-                                Ci.nsIWebNavigation.LOAD_FLAGS_REPLACE_HISTORY,
-                                null, null, null,
-                                SYSTEMPRINCIPAL);
+  let loadURIOptionsReplaceHistory = {
+    triggeringPrincipal: SYSTEMPRINCIPAL,
+    loadFlags: Ci.nsIWebNavigation.LOAD_FLAGS_REPLACE_HISTORY,
+  };
+  browser.webNavigation.loadURI(DUMMY2, loadURIOptionsReplaceHistory);
   await waitForLoad(DUMMY2);
   await checkHistory(browser, { count: 1, index: 0 });
-
-  browser.webNavigation.loadURI(DUMMY1,
-                                Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_HISTORY,
-                                null, null, null,
-                                SYSTEMPRINCIPAL);
+  let loadURIOptionsBypassHistory = {
+    triggeringPrincipal: SYSTEMPRINCIPAL,
+    loadFlags: Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_HISTORY,
+  };
+  browser.webNavigation.loadURI(DUMMY1, loadURIOptionsBypassHistory);
   await waitForLoad(DUMMY1);
   await checkHistory(browser, { count: 1, index: 0 });
 
@@ -132,20 +124,22 @@ add_task(async function test_badarguments() {
   let browser = gBrowser.selectedBrowser;
 
   try {
-    browser.webNavigation.loadURI(DUMMY1,
-                                  Ci.nsIWebNavigation.LOAD_FLAGS_NONE,
-                                  null, {}, null,
-                                  SYSTEMPRINCIPAL);
+    let loadURIOptionsBadPostData = {
+      triggeringPrincipal: SYSTEMPRINCIPAL,
+      postData: {},
+    };
+    browser.webNavigation.loadURI(DUMMY1, loadURIOptionsBadPostData);
     ok(false, "Should have seen an exception from trying to pass some postdata");
   } catch (e) {
     ok(true, "Should have seen an exception from trying to pass some postdata");
   }
 
   try {
-    browser.webNavigation.loadURI(DUMMY1,
-                                  Ci.nsIWebNavigation.LOAD_FLAGS_NONE,
-                                  null, null, {},
-                                  SYSTEMPRINCIPAL);
+    let loadURIOptionsBadHeader = {
+      triggeringPrincipal: SYSTEMPRINCIPAL,
+      headers: {},
+    };
+    browser.webNavigation.loadURI(DUMMY1, loadURIOptionsBadHeader);
     ok(false, "Should have seen an exception from trying to pass some headers");
   } catch (e) {
     ok(true, "Should have seen an exception from trying to pass some headers");

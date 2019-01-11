@@ -63,9 +63,10 @@ function clear_history() {
 var waitForLoad = async function(uri) {
   info("Loading " + uri);
   // Longwinded but this ensures we don't just shortcut to LoadInNewProcess
-  gBrowser.selectedBrowser.webNavigation.loadURI(uri, Ci.nsIWebNavigation.LOAD_FLAGS_NONE,
-                                                 null, null, null,
-                                                 Services.scriptSecurityManager.getSystemPrincipal());
+  let loadURIOptions = {
+    triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+  };
+  gBrowser.selectedBrowser.webNavigation.loadURI(uri, loadURIOptions);
 
   await BrowserTestUtils.browserStopped(gBrowser);
   gExpectedHistory.index++;
