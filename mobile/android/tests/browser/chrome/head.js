@@ -1,10 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-function fuzzyEquals(a, b) {
-  return (Math.abs(a - b) < 1e-6);
-}
-
 function promiseBrowserEvent(browserOrFrame, eventType, options) {
   return new Promise((resolve) => {
     function handle(event) {
