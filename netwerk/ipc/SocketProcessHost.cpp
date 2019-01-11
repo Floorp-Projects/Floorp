@@ -204,5 +204,50 @@ void SocketProcessHost::DestroyProcess() {
       "DestroySocketProcessRunnable", DelayedDeleteSubprocess, this));
 }
 
+//-----------------------------------------------------------------------------
+// SocketProcessMemoryReporter
+//-----------------------------------------------------------------------------
+
+bool SocketProcessMemoryReporter::IsAlive() const {
+  MOZ_ASSERT(gIOService);
+
+  if (!gIOService->mSocketProcess) {
+    return false;
+  }
+
+  return gIOService->mSocketProcess->IsConnected();
+}
+
+bool SocketProcessMemoryReporter::SendRequestMemoryReport(
+    const uint32_t& aGeneration, const bool& aAnonymize,
+    const bool& aMinimizeMemoryUsage, const dom::MaybeFileDesc& aDMDFile) {
+  MOZ_ASSERT(gIOService);
+
+  if (!gIOService->mSocketProcess) {
+    return false;
+  }
+
+  SocketProcessParent* actor = gIOService->mSocketProcess->GetActor();
+  if (!actor) {
+    return false;
+  }
+
+  return actor->SendRequestMemoryReport(aGeneration, aAnonymize,
+                                        aMinimizeMemoryUsage, aDMDFile);
+}
+
+int32_t SocketProcessMemoryReporter::Pid() const {
+  MOZ_ASSERT(gIOService);
+
+  if (!gIOService->mSocketProcess) {
+    return 0;
+  }
+
+  if (SocketProcessParent* actor = gIOService->mSocketProcess->GetActor()) {
+    return (int32_t)actor->OtherPid();
+  }
+  return 0;
+}
+
 }  // namespace net
 }  // namespace mozilla
