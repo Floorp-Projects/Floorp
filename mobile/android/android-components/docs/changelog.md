@@ -23,13 +23,14 @@ permalink: /changelog/
 * **feature-prompts**, **browser-engine-gecko***
   * Added support for Authentication dialogs.
 
-* **service-sync-logins**, **service-firefox-accounts**
+* **service-sync-logins**, **service-firefox-accounts**, **concept-storage**
   * Updated underlying library from 0.12.1 to 0.13.3, see the [release notes for 0.13.0](https://github.com/mozilla/application-services/blob/master/CHANGELOG.md#0130-2019-01-09) for futher details on the most substantial changes. ([#1690](https://github.com/mozilla-mobile/android-components/issues/1690))
     * sync-logins: Added a new `wipeLocal` method, for clearing all local data.
     * sync-logins: Removed `reset` because it served a nonexistant use case, callers almost certainly want `wipeLocal` or `wipe` instead.
     * sync-logins: Added `ensureLocked` and `ensureUnlocked` for cases where checking `isLocked` is inconvenient or requires additional locking.
     * sync-logins: Allow storage to be unlocked using a `ByteArray` instead of a `String`.
     * firefox-accounts: Network errors will now be reported as instances of FxaException.Network, instead of `FxaException.Unspecified`.
+    * history (concept-storage): PII is no longer logged during syncing (or any other time).
 
 # 0.37.0
 
