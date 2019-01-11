@@ -1030,7 +1030,14 @@ WebConsoleActor.prototype =
     };
     const {mapped} = request;
 
+    // Set a flag on the thread actor which indicates an evaluation is being
+    // done for the client. This can affect how debugger handlers behave.
+    this.parentActor.threadActor.insideClientEvaluation = true;
+
     const evalInfo = evalWithDebugger(input, evalOptions, this);
+
+    this.parentActor.threadActor.insideClientEvaluation = false;
+
     const evalResult = evalInfo.result;
     const helperResult = evalInfo.helperResult;
 

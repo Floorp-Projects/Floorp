@@ -28,8 +28,7 @@ function runTests() {
   doc.getElementById("b").style.display = "none";
   // flush layout
   doc.documentElement.offsetLeft;
-  // click in middle of iframe document to give it focus
-  synthesizeMouseAtCenter(i, {}, win);
+  // focus on the iframe
   win.focus();
   // record scrolltop
   scrollTopBefore = doc.body.scrollTop;

@@ -132,6 +132,7 @@ rusty-enums = [
     "mozilla::StyleRuleInclusion",
     "mozilla::StyleGridTrackBreadth",
     "mozilla::StyleOverscrollBehavior",
+    "mozilla::StyleOverflowAnchor",
     "mozilla::StyleScrollbarWidth",
     "mozilla::StyleWhiteSpace",
     "mozilla::StyleTextRendering",
@@ -410,6 +411,7 @@ cbindgen-types = [
     { gecko = "StyleOverscrollBehavior", servo = "values::computed::OverscrollBehavior" },
     { gecko = "StyleTextAlign", servo = "values::computed::TextAlign" },
     { gecko = "StyleOverflow", servo = "values::computed::Overflow" },
+    { gecko = "StyleOverflowAnchor", servo = "values::computed::OverflowAnchor" },
 ]
 
 mapped-generic-types = [

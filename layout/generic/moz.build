@@ -145,6 +145,7 @@ EXPORTS.mozilla += [
 
 EXPORTS.mozilla.layout += [
     'FrameChildList.h',
+    'ScrollAnchorContainer.h',
 ]
 
 UNIFIED_SOURCES += [
@@ -202,6 +203,7 @@ UNIFIED_SOURCES += [
     'ReflowInput.cpp',
     'ReflowOutput.cpp',
     'RubyUtils.cpp',
+    'ScrollAnchorContainer.cpp',
     'ScrollAnimationBezierPhysics.cpp',
     'ScrollAnimationMSDPhysics.cpp',
     'ScrollbarActivity.cpp',

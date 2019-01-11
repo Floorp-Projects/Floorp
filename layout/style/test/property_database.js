@@ -227,6 +227,13 @@ var validGradientAndElementValues = [
   "repeating-radial-gradient(50px 60px at 15% 20%, red, blue)",
   "repeating-radial-gradient(7em 8em at 45px, red, blue)",
 
+  // FIXME(emilio): We should not be allowing 3-value positions anywhere else
+  // than on `background-position`, see
+  // https://github.com/w3c/csswg-drafts/issues/2140.
+  //
+  // When that happens this should be moved to the `invalid` list.
+  "repeating-radial-gradient(circle closest-side at left bottom 7in, hsl(2,2%,5%), rgb(1,6,0))",
+
   "-moz-image-rect(url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==), 2, 10, 10, 2)",
   "-moz-image-rect(url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==), 10%, 50%, 30%, 0%)",
   "-moz-image-rect(url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==), 10, 50%, 30%, 0)",
@@ -7265,6 +7272,17 @@ if (IsCSSPropertyPrefEnabled("layout.css.osx-font-smoothing.enabled")) {
     initial_values: [ "auto" ],
     other_values: [ "grayscale" ],
     invalid_values: [ "none", "subpixel-antialiased", "antialiased" ]
+  };
+}
+
+if (IsCSSPropertyPrefEnabled("layout.css.scroll-anchoring.enabled")) {
+  gCSSProperties["overflow-anchor"] = {
+    domProp: "overflowAnchor",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "auto" ],
+    other_values: [ "none" ],
+    invalid_values: []
   };
 }
 
