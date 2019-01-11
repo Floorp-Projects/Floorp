@@ -1025,6 +1025,10 @@ Darwin)
   ;;
 esac
 
+if test "$MOZ_BUILD_APP" = "tools/crashreporter"; then
+    WRAP_STL_INCLUDES=
+fi
+
 dnl Checks for header files.
 dnl ========================================================
 AC_HEADER_DIRENT
@@ -1843,7 +1847,7 @@ dnl ========================================================
 case "$MOZ_WIDGET_TOOLKIT" in
 
 cocoa)
-    LDFLAGS="$LDFLAGS -framework Cocoa -lobjc"
+    LDFLAGS="$LDFLAGS -framework Cocoa"
     # Use -Wl as a trick to avoid -framework and framework names from
     # being separated by AC_SUBST_LIST.
     TK_LIBS='-Wl,-framework,Foundation -Wl,-framework,CoreFoundation -Wl,-framework,CoreLocation -Wl,-framework,QuartzCore -Wl,-framework,Carbon -Wl,-framework,CoreAudio -Wl,-framework,CoreVideo -Wl,-framework,AudioToolbox -Wl,-framework,AudioUnit -Wl,-framework,AddressBook -Wl,-framework,OpenGL -Wl,-framework,Security -Wl,-framework,ServiceManagement -Wl,-framework,CoreServices -Wl,-framework,ApplicationServices -Wl,-framework,AppKit'
@@ -1855,7 +1859,7 @@ cocoa)
     ;;
 
 uikit)
-    LDFLAGS="$LDFLAGS -framework UIKit -lobjc"
+    LDFLAGS="$LDFLAGS -framework UIKit"
     TK_CFLAGS=""
     TK_LIBS='-Wl,-framework,Foundation -Wl,-framework,CoreFoundation -Wl,-framework,CoreGraphics -Wl,-framework,CoreText -Wl,-framework,AVFoundation -Wl,-framework,AudioToolbox -Wl,-framework,CoreMedia -Wl,-framework,CoreVideo -Wl,-framework,OpenGLES -Wl,-framework,QuartzCore'
     CFLAGS="$CFLAGS $TK_CFLAGS"
@@ -1865,6 +1869,10 @@ uikit)
     ;;
 
 esac
+
+if test "$OS_TARGET" = Darwin; then
+    LDFLAGS="$LDFLAGS -lobjc"
+fi
 
 dnl there are a lot of tests on MOZ_ENABLE_GTK below, that are more convenient
 dnl to keep that way than testing against MOZ_WIDGET_TOOLKIT
