@@ -6,6 +6,7 @@
 #ifndef mozilla_EditorUtils_h
 #define mozilla_EditorUtils_h
 
+#include "mozilla/ContentIterator.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/EditAction.h"
 #include "mozilla/EditorBase.h"
@@ -17,7 +18,6 @@
 #include "nscore.h"
 
 class nsAtom;
-class nsIContentIterator;
 class nsISimpleEnumerator;
 class nsITransferable;
 class nsRange;
@@ -459,7 +459,7 @@ class MOZ_RAII DOMIterator {
       nsTArray<mozilla::OwningNonNull<nsINode>>& arrayOfNodes) const;
 
  protected:
-  nsCOMPtr<nsIContentIterator> mIter;
+  RefPtr<ContentIteratorBase> mIter;
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 

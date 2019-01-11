@@ -14,11 +14,6 @@
 #include "nsIContent.h"
 #include "nsRange.h"
 
-already_AddRefed<nsIContentIterator> NS_NewContentIterator() {
-  nsCOMPtr<nsIContentIterator> iter = new mozilla::PostContentIterator();
-  return iter.forget();
-}
-
 namespace mozilla {
 
 ///////////////////////////////////////////////////////////////////////////
