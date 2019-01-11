@@ -26,5 +26,3 @@ GECKO_PROCESS_TYPE(GPU, "gpu", GPU)
 GECKO_PROCESS_TYPE(VR, "vr", VR)
 // Remote Data Decoder process.
 GECKO_PROCESS_TYPE(RDD, "rdd", RDD)
-// Socket process
-GECKO_PROCESS_TYPE(Socket, "socket", Socket)

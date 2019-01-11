@@ -2521,17 +2521,6 @@ telemetry.test:
     record_in_processes:
       - 'content'
 
-  socket_only_uint:
-    bug_numbers:
-      - 1486033
-    description: A testing uint scalar; not meant to be touched.
-    expires: never
-    kind: uint
-    notification_emails:
-      - telemetry-client-dev@mozilla.com
-    record_in_processes:
-      - 'socket'
-
   all_processes_uint:
     bug_numbers:
       - 1278556
