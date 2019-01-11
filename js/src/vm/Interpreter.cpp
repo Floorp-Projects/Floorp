@@ -1099,21 +1099,23 @@ static void SettleOnTryNote(JSContext* cx, const JSTryNote* tn,
   regs.sp = regs.spForStackDepth(tn->stackDepth);
 }
 
-class InterpreterFrameStackDepthOp {
+class InterpreterTryNoteFilter {
   const InterpreterRegs& regs_;
 
  public:
-  explicit InterpreterFrameStackDepthOp(const InterpreterRegs& regs)
+  explicit InterpreterTryNoteFilter(const InterpreterRegs& regs)
       : regs_(regs) {}
-  uint32_t operator()() { return regs_.stackDepth(); }
+  bool operator()(const JSTryNote* note) {
+    return note->stackDepth <= regs_.stackDepth();
+  }
 };
 
 class TryNoteIterInterpreter
-    : public TryNoteIter<InterpreterFrameStackDepthOp> {
+    : public TryNoteIter<InterpreterTryNoteFilter> {
  public:
   TryNoteIterInterpreter(JSContext* cx, const InterpreterRegs& regs)
       : TryNoteIter(cx, regs.fp()->script(), regs.pc,
-                    InterpreterFrameStackDepthOp(regs)) {}
+                    InterpreterTryNoteFilter(regs)) {}
 };
 
 static void UnwindIteratorsForUncatchableException(
