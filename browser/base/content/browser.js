@@ -1063,6 +1063,13 @@ function _loadURI(browser, uri, params = {}) {
   if (!requiredRemoteType) {
     browser.inLoadURI = true;
   }
+  let loadURIOptions = {
+    triggeringPrincipal,
+    loadFlags: flags,
+    referrerURI,
+    referrerPolicy,
+    postData,
+  };
   try {
     if (!mustChangeProcess) {
       if (userContextId) {
@@ -1071,10 +1078,7 @@ function _loadURI(browser, uri, params = {}) {
           privateBrowsingId: PrivateBrowsingUtils.isBrowserPrivate(browser) ? 1 : 0,
         });
       }
-
-      browser.webNavigation.loadURIWithOptions(uri, flags,
-                                               referrerURI, referrerPolicy,
-                                               postData, null, null, triggeringPrincipal);
+      browser.webNavigation.loadURI(uri, loadURIOptions);
     } else {
       // Check if the current browser is allowed to unload.
       let {permitUnload, timedOut} = browser.permitUnload();
@@ -1121,9 +1125,7 @@ function _loadURI(browser, uri, params = {}) {
           privateBrowsingId: PrivateBrowsingUtils.isBrowserPrivate(browser) ? 1 : 0,
         });
       }
-
-      browser.webNavigation.loadURIWithOptions(uri, flags, referrerURI, referrerPolicy,
-                                               postData, null, null, triggeringPrincipal);
+      browser.webNavigation.loadURI(uri, loadURIOptions);
     } else {
       throw e;
     }

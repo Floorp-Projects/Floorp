@@ -281,7 +281,11 @@ var ViewSourceContent = {
   loadSourceFromURL(URL) {
     let loadFlags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
     let webNav = docShell.QueryInterface(Ci.nsIWebNavigation);
-    webNav.loadURI(URL, loadFlags, null, null, null, Services.scriptSecurityManager.getSystemPrincipal());
+    let loadURIOptions = {
+      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+      loadFlags,
+    };
+    webNav.loadURI(URL, loadURIOptions);
   },
 
   /**
@@ -601,11 +605,13 @@ var ViewSourceContent = {
     let loadFlags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
     let referrerPolicy = Ci.nsIHttpChannel.REFERRER_POLICY_UNSET;
     let webNav = docShell.QueryInterface(Ci.nsIWebNavigation);
-    webNav.loadURIWithOptions(uri, loadFlags,
-                              null, referrerPolicy, // referrer
-                              null, null, // postData, headers
-                              Services.io.newURI(baseURI),
-                              Services.scriptSecurityManager.getSystemPrincipal());
+    let loadURIOptions = {
+      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+      loadFlags,
+      referrerPolicy,
+      baseURI: Services.io.newURI(baseURI),
+    };
+    webNav.loadURI(uri, loadURIOptions);
   },
 
   /**

@@ -20,7 +20,10 @@ const progressListeners = new Map();
 
 function loadContentWindow(windowlessBrowser, uri) {
   return new Promise((resolve, reject) => {
-    windowlessBrowser.loadURI(uri, Ci.nsIWebNavigation.LOAD_FLAGS_NONE, null, null, null, Services.scriptSecurityManager.getSystemPrincipal());
+    let loadURIOptions = {
+      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+    };
+    windowlessBrowser.loadURI(uri, loadURIOptions);
     let docShell = windowlessBrowser.docShell;
     let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
                       .getInterface(Ci.nsIWebProgress);

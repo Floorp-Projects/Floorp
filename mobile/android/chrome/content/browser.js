@@ -3904,8 +3904,11 @@ Tab.prototype = {
       // We were redirected; reload the original URL
       url = this.originalURI.spec;
     }
-
-    this.browser.docShell.loadURI(url, flags, null, null, null, this.browser.contentPrincipal);
+    let loadURIOptions = {
+      triggeringPrincipal: this.browser.contentPrincipal,
+      loadFlags: flags,
+    };
+    this.browser.docShell.loadURI(url, loadURIOptions);
   },
 
   destroy: function() {
@@ -5079,8 +5082,11 @@ var ErrorPageEventHandler = {
               attrs["privateBrowsingId"] = 1;
             }
 
-            let triggeringPrincipal = nullServices.scriptSecurityManager.createNullPrincipal(attrs);
-            webNav.loadURI(location, Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CLASSIFIER, null, null, triggeringPrincipal);
+            let loadURIOptions = {
+              triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal(attrs),
+              loadFlags: Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CLASSIFIER,
+            };
+            webNav.loadURI(location, loadURIOptions);
 
             // ....but add a notify bar as a reminder, so that they don't lose
             // track after, e.g., tab switching.
