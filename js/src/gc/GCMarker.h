@@ -303,6 +303,9 @@ class GCMarker : public JSTracer {
     return static_cast<GCMarker*>(trc);
   }
 
+  template <typename T>
+  void markImplicitEdges(T* oldThing);
+
  private:
 #ifdef DEBUG
   void checkZone(void* p);
@@ -322,8 +325,6 @@ class GCMarker : public JSTracer {
   void markAndScan(T* thing);
   template <typename T>
   void markImplicitEdgesHelper(T oldThing);
-  template <typename T>
-  void markImplicitEdges(T* oldThing);
   void eagerlyMarkChildren(JSLinearString* str);
   void eagerlyMarkChildren(JSRope* rope);
   void eagerlyMarkChildren(JSString* str);
