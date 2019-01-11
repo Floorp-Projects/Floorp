@@ -458,16 +458,6 @@ already_AddRefed<MediaRawData> MP4TrackDemuxer::GetNextSample() {
     }
   }
 
-  if (sample->mCrypto.IsEncrypted()) {
-    UniquePtr<MediaRawDataWriter> writer(sample->CreateWriter());
-
-    // Only use the default key parsed from the moov if we haven't already got
-    // one from the sample group description.
-    if (writer->mCrypto.mKeyId.Length() == 0) {
-      writer->mCrypto.mIVSize = mInfo->mCrypto.mIVSize;
-      writer->mCrypto.mKeyId.AppendElements(mInfo->mCrypto.mKeyId);
-    }
-  }
   return sample.forget();
 }
 
