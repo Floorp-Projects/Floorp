@@ -828,7 +828,7 @@ void js::Nursery::collect(JS::gcreason::Reason reason) {
   // We ignore gcMaxBytes when allocating for minor collection. However, if we
   // overflowed, we disable the nursery. The next time we allocate, we'll fail
   // because gcBytes >= gcMaxBytes.
-  if (rt->gc.usage.gcBytes() >= tunables().gcMaxBytes()) {
+  if (rt->gc.heapSize.gcBytes() >= tunables().gcMaxBytes()) {
     disable();
   }
   // Disable the nursery if the user changed the configuration setting.  The
