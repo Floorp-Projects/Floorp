@@ -183,7 +183,7 @@ AudioContext::AudioContext(nsPIDOMWindowInner* aWindow, bool aIsOffline,
   FFTBlock::MainThreadInit();
 }
 
-void AudioContext::NotifyScheduledSourceNodeStarted() {
+void AudioContext::StartBlockedAudioContextIfAllowed() {
   MOZ_ASSERT(NS_IsMainThread());
   MaybeUpdateAutoplayTelemetry();
   // Only try to start AudioContext when AudioContext was not allowed to start.

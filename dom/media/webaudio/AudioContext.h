@@ -185,7 +185,7 @@ class AudioContext final : public DOMEventTargetHelper,
 
   // Called when an AudioScheduledSourceNode started, this method might resume
   // the AudioContext if it was not allowed to start.
-  void NotifyScheduledSourceNodeStarted();
+  void StartBlockedAudioContextIfAllowed();
 
   // Those three methods return a promise to content, that is resolved when an
   // (possibly long) operation is completed on the MSG (and possibly other)
