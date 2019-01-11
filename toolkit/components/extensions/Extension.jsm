@@ -127,6 +127,7 @@ const CHILD_SHUTDOWN_TIMEOUT_MS = 8000;
  *          "api" to indicate this is an api permission
  *                (as used for webextensions experiments).
  *          "permission" to indicate this is a regular permission.
+ *          "invalid" to indicate that the given permission cannot be used.
  */
 function classifyPermission(perm, restrictSchemes) {
   let match = /^(\w+)(?:\.(\w+)(?:\.\w+)*)?$/.exec(perm);
@@ -135,10 +136,12 @@ function classifyPermission(perm, restrictSchemes) {
       let {pattern} = new MatchPattern(perm, {restrictSchemes, ignorePath: true});
       return {origin: pattern};
     } catch (e) {
-      return {originInvalid: perm};
+      return {invalid: perm};
     }
   } else if (match[1] == "experiments" && match[2]) {
     return {api: match[2]};
+  } else if (perm === "mozillaAddons" && restrictSchemes) {
+    return {invalid: perm};
   }
   return {permission: perm};
 }
@@ -653,8 +656,8 @@ class ExtensionData {
           originPermissions.add(perm);
         } else if (type.api) {
           apiNames.add(type.api);
-        } else if (type.originInvalid) {
-          this.manifestWarning(`Invalid host permission: ${perm}`);
+        } else if (type.invalid) {
+          this.manifestWarning(`Invalid extension permission: ${perm}`);
           continue;
         }
 
@@ -1545,24 +1548,8 @@ class Extension extends ExtensionData {
     XPIProvider.setStartupData(this.id, this.startupData);
   }
 
-  async _parseManifest() {
-    let manifest = await super.parseManifest();
-    if (manifest && manifest.permissions.has("mozillaAddons") &&
-        !this.isPrivileged) {
-      Cu.reportError(`Stripping mozillaAddons permission from ${this.id}`);
-      manifest.permissions.delete("mozillaAddons");
-      let i = manifest.manifest.permissions.indexOf("mozillaAddons");
-      if (i >= 0) {
-        manifest.manifest.permissions.splice(i, 1);
-      } else {
-        throw new Error("Could not find mozilaAddons in original permissions array");
-      }
-    }
-    return manifest;
-  }
-
   parseManifest() {
-    return StartupCache.manifests.get(this.manifestCacheKey, () => this._parseManifest());
+    return StartupCache.manifests.get(this.manifestCacheKey, () => super.parseManifest());
   }
 
   async cachePermissions() {
