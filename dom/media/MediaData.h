@@ -498,10 +498,17 @@ enum class CryptoScheme : uint8_t {
 
 class CryptoTrack {
  public:
-  CryptoTrack() : mCryptoScheme(CryptoScheme::None), mIVSize(0) {}
+  CryptoTrack()
+      : mCryptoScheme(CryptoScheme::None),
+        mIVSize(0),
+        mCryptByteBlock(0),
+        mSkipByteBlock(0) {}
   CryptoScheme mCryptoScheme;
   int32_t mIVSize;
   nsTArray<uint8_t> mKeyId;
+  uint8_t mCryptByteBlock;
+  uint8_t mSkipByteBlock;
+  nsTArray<uint8_t> mConstantIV;
 
   bool IsEncrypted() const { return mCryptoScheme != CryptoScheme::None; }
 };
