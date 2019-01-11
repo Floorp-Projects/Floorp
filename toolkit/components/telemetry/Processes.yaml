@@ -24,3 +24,6 @@ dynamic:
   description: >
     This is not a real process, it is used to logically group add-on probes.
     It contains data of any probes registered at runtime by add-ons.
+socket:
+  gecko_enum: GeckoProcessType_Socket
+  description: This is the process that handles networking requests.

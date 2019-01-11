@@ -41,6 +41,18 @@ class SocketProcessParent final : public PSocketProcessParent {
       const MemoryReport& aReport) override;
   mozilla::ipc::IPCResult RecvFinishMemoryReport(
       const uint32_t& aGeneration) override;
+  mozilla::ipc::IPCResult RecvAccumulateChildHistograms(
+      InfallibleTArray<HistogramAccumulation>&& aAccumulations) override;
+  mozilla::ipc::IPCResult RecvAccumulateChildKeyedHistograms(
+      InfallibleTArray<KeyedHistogramAccumulation>&& aAccumulations) override;
+  mozilla::ipc::IPCResult RecvUpdateChildScalars(
+      InfallibleTArray<ScalarAction>&& aScalarActions) override;
+  mozilla::ipc::IPCResult RecvUpdateChildKeyedScalars(
+      InfallibleTArray<KeyedScalarAction>&& aScalarActions) override;
+  mozilla::ipc::IPCResult RecvRecordChildEvents(
+      nsTArray<ChildEventData>&& events) override;
+  mozilla::ipc::IPCResult RecvRecordDiscardedData(
+      const DiscardedData& aDiscardedData) override;
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
   bool SendRequestMemoryReport(const uint32_t& aGeneration,
