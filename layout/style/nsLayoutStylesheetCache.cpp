@@ -59,11 +59,11 @@ nsresult nsLayoutStylesheetCache::Observe(nsISupports* aSubject,
 #include "mozilla/UserAgentStyleSheetList.h"
 #undef STYLE_SHEET
 
-StyleSheet* nsLayoutStylesheetCache::UserContentSheet() {
+StyleSheet* nsLayoutStylesheetCache::GetUserContentSheet() {
   return mUserContentSheet;
 }
 
-StyleSheet* nsLayoutStylesheetCache::UserChromeSheet() {
+StyleSheet* nsLayoutStylesheetCache::GetUserChromeSheet() {
   return mUserChromeSheet;
 }
 

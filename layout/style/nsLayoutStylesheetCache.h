@@ -43,8 +43,8 @@ class nsLayoutStylesheetCache final : public nsIObserver,
 #include "mozilla/UserAgentStyleSheetList.h"
 #undef STYLE_SHEET
 
-  mozilla::StyleSheet* UserContentSheet();
-  mozilla::StyleSheet* UserChromeSheet();
+  mozilla::StyleSheet* GetUserContentSheet();
+  mozilla::StyleSheet* GetUserChromeSheet();
   mozilla::StyleSheet* ChromePreferenceSheet(nsPresContext* aPresContext);
   mozilla::StyleSheet* ContentPreferenceSheet(nsPresContext* aPresContext);
 
