@@ -814,6 +814,10 @@ def toolchain_search_path_for(host_or_target):
         bootstrap_cbindgen_path = os.path.join(mozbuild_state_dir, 'cbindgen')
         result.append(bootstrap_cbindgen_path)
 
+        # Also add the rustup install directory for cargo/rustc.
+        rustup_path = os.path.expanduser(os.path.join('~', '.cargo', 'bin'))
+        result.append(rustup_path)
+
         return result
     return toolchain_search_path
 

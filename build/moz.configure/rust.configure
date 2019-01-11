@@ -5,21 +5,14 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-@imports(_from='os.path', _import='expanduser')
-def add_rustup_path(what):
-    # rustup installs rustc/cargo into ~/.cargo/bin by default,
-    # so look there if the binaries aren't in $PATH.
-    return [what, os.path.join(expanduser('~/.cargo/bin'), what)]
-
-
 # Rust is required by `rust_compiler` below. We allow_missing here
 # to propagate failures to the better error message there.
 js_option(env='RUSTC', nargs=1, help='Path to the rust compiler')
 js_option(env='CARGO', nargs=1, help='Path to the Cargo package manager')
 
-rustc = check_prog('RUSTC', add_rustup_path('rustc'),
+rustc = check_prog('RUSTC', ['rustc'], paths=toolchain_search_path,
                    input='RUSTC', allow_missing=True)
-cargo = check_prog('CARGO', add_rustup_path('cargo'),
+cargo = check_prog('CARGO', ['cargo'], paths=toolchain_search_path,
                    input='CARGO', allow_missing=True)
 
 
@@ -265,7 +258,7 @@ add_old_configure_assignment('RUSTC', rustc)
 # Rustdoc is required by Rust tests below.
 js_option(env='RUSTDOC', nargs=1, help='Path to the rustdoc program')
 
-rustdoc = check_prog('RUSTDOC', add_rustup_path('rustdoc'),
+rustdoc = check_prog('RUSTDOC', ['rustdoc'], paths=toolchain_search_path,
                      input='RUSTDOC', allow_missing=True)
 
 # This option is separate from --enable-tests because Rust tests are particularly
@@ -284,7 +277,7 @@ def rust_tests(enable_rust_tests, rustdoc):
 set_config('MOZ_RUST_TESTS', rust_tests)
 
 # cbindgen is needed by the style system build.
-cbindgen = check_prog('CBINDGEN', add_rustup_path('cbindgen'), paths=toolchain_search_path,
+cbindgen = check_prog('CBINDGEN', ['cbindgen'], paths=toolchain_search_path,
                       when=depends(build_project)
                       (lambda build_project: build_project != 'js'))
 
@@ -313,7 +306,7 @@ def cbindgen_version(cbindgen):
 # Bindgen can use rustfmt to format Rust file, but it's not required.
 js_option(env='RUSTFMT', nargs=1, help='Path to the rustfmt program')
 
-rustfmt = check_prog('RUSTFMT', add_rustup_path('rustfmt'),
+rustfmt = check_prog('RUSTFMT', ['rustfmt'], paths=toolchain_search_path,
                      input='RUSTFMT', allow_missing=True)
 
 js_option(env='WIN64_LINK', nargs=1, help='Path to link.exe that targets win64')
