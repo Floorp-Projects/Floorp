@@ -28,6 +28,7 @@ class OfflineObserver final : public nsIObserver {
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
     if (obs) {
       obs->AddObserver(this, NS_IPC_IOSERVICE_SET_OFFLINE_TOPIC, false);
+      obs->AddObserver(this, NS_XPCOM_WILL_SHUTDOWN_OBSERVER_ID, false);
     }
   }
 
@@ -58,6 +59,11 @@ class OfflineObserver final : public nsIObserver {
               !strcmp(offline, "true") ? true : false)) {
         return NS_ERROR_NOT_AVAILABLE;
       }
+    } else if (!strcmp(aTopic, NS_XPCOM_WILL_SHUTDOWN_OBSERVER_ID)) {
+      nsCOMPtr<nsIObserverService> obs =
+          mozilla::services::GetObserverService();
+        obs->RemoveObserver(this, NS_IPC_IOSERVICE_SET_OFFLINE_TOPIC);
+        obs->RemoveObserver(this, NS_XPCOM_WILL_SHUTDOWN_OBSERVER_ID);
     }
 
     return NS_OK;
