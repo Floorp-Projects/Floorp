@@ -1574,7 +1574,7 @@ function TypedArrayToStringTag() {
     var O = this;
 
     // Steps 2-3.
-    if (!IsObject(O) || !IsTypedArray(O))
+    if (!IsObject(O) || !IsPossiblyWrappedTypedArray(O))
         return undefined;
 
     // Steps 4-6.
