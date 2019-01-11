@@ -409,43 +409,6 @@ inline bool InitPropertyOperation(JSContext* cx, JSOp op, HandleObject obj,
   return PutProperty(cx, obj, id, rhs, false);
 }
 
-inline bool DefVarOperation(JSContext* cx, HandleObject varobj,
-                            HandlePropertyName dn, unsigned attrs) {
-  MOZ_ASSERT(varobj->isQualifiedVarObj());
-
-#ifdef DEBUG
-  // Per spec, it is an error to redeclare a lexical binding. This should
-  // have already been checked.
-  if (JS_HasExtensibleLexicalEnvironment(varobj)) {
-    Rooted<LexicalEnvironmentObject*> lexicalEnv(cx);
-    lexicalEnv = &JS_ExtensibleLexicalEnvironment(varobj)
-                      ->as<LexicalEnvironmentObject>();
-    MOZ_ASSERT(CheckVarNameConflict(cx, lexicalEnv, dn));
-  }
-#endif
-
-  Rooted<PropertyResult> prop(cx);
-  RootedObject obj2(cx);
-  if (!LookupProperty(cx, varobj, dn, &obj2, &prop)) {
-    return false;
-  }
-
-  /* Steps 8c, 8d. */
-  if (!prop || (obj2 != varobj && varobj->is<GlobalObject>())) {
-    if (!DefineDataProperty(cx, varobj, dn, UndefinedHandleValue, attrs)) {
-      return false;
-    }
-  }
-
-  if (varobj->is<GlobalObject>()) {
-    if (!varobj->as<GlobalObject>().realm()->addToVarNames(cx, dn)) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
 static MOZ_ALWAYS_INLINE bool NegOperation(JSContext* cx,
                                            MutableHandleValue val,
                                            MutableHandleValue res) {
