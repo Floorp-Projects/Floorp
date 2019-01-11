@@ -4336,6 +4336,10 @@ void JSScript::traceChildren(JSTracer* trc) {
   }
 
   jit::TraceJitScripts(trc, this);
+
+  if (trc->isMarkingTracer()) {
+    return GCMarker::fromTracer(trc)->markImplicitEdges(this);
+  }
 }
 
 void LazyScript::finalize(FreeOp* fop) { fop->free_(table_); }
