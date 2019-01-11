@@ -9437,10 +9437,8 @@ nsresult HTMLEditRules::RemoveEmptyNodesInChangedRange() {
   // include some children of a node while excluding others.  Thus I could find
   // all the _examined_ children empty, but still not have an empty parent.
 
-  // need an iterator
-  RefPtr<PostContentIterator> postOrderIter = new PostContentIterator();
-
-  nsresult rv = postOrderIter->Init(mDocChangeRange);
+  PostContentIterator postOrderIter;
+  nsresult rv = postOrderIter.Init(mDocChangeRange);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -9449,8 +9447,8 @@ nsresult HTMLEditRules::RemoveEmptyNodesInChangedRange() {
       skipList;
 
   // Check for empty nodes
-  for (; !postOrderIter->IsDone(); postOrderIter->Next()) {
-    OwningNonNull<nsINode> node = *postOrderIter->GetCurrentNode();
+  for (; !postOrderIter.IsDone(); postOrderIter.Next()) {
+    OwningNonNull<nsINode> node = *postOrderIter.GetCurrentNode();
 
     nsCOMPtr<nsINode> parent = node->GetParentNode();
 

@@ -1482,7 +1482,7 @@ void Selection::SelectFramesForContent(nsIContent* aContent, bool aSelected) {
 
 // select all content children of aContent
 nsresult Selection::SelectAllFramesForContent(
-    PostContentIterator* aPostOrderIter, nsIContent* aContent, bool aSelected) {
+    PostContentIterator& aPostOrderIter, nsIContent* aContent, bool aSelected) {
   // If aContent doesn't have children, we should avoid to use the content
   // iterator for performance reason.
   if (!aContent->HasChildren()) {
@@ -1490,12 +1490,12 @@ nsresult Selection::SelectAllFramesForContent(
     return NS_OK;
   }
 
-  if (NS_WARN_IF(NS_FAILED(aPostOrderIter->Init(aContent)))) {
+  if (NS_WARN_IF(NS_FAILED(aPostOrderIter.Init(aContent)))) {
     return NS_ERROR_FAILURE;
   }
 
-  for (; !aPostOrderIter->IsDone(); aPostOrderIter->Next()) {
-    nsINode* node = aPostOrderIter->GetCurrentNode();
+  for (; !aPostOrderIter.IsDone(); aPostOrderIter.Next()) {
+    nsINode* node = aPostOrderIter.GetCurrentNode();
     MOZ_ASSERT(node);
     nsIContent* innercontent = node->IsContent() ? node->AsContent() : nullptr;
     SelectFramesForContent(innercontent, aSelected);
@@ -1575,15 +1575,15 @@ nsresult Selection::SelectFrames(nsPresContext* aPresContext, nsRange* aRange,
     return NS_OK;
   }
 
-  RefPtr<ContentSubtreeIterator> subtreeIter = new ContentSubtreeIterator();
-  subtreeIter->Init(aRange);
-  if (isFirstContentTextNode && !subtreeIter->IsDone() &&
-      subtreeIter->GetCurrentNode() == startNode) {
-    subtreeIter->Next();  // first content has already been handled.
+  ContentSubtreeIterator subtreeIter;
+  subtreeIter.Init(aRange);
+  if (isFirstContentTextNode && !subtreeIter.IsDone() &&
+      subtreeIter.GetCurrentNode() == startNode) {
+    subtreeIter.Next();  // first content has already been handled.
   }
-  RefPtr<PostContentIterator> postOrderIter = new PostContentIterator();
-  for (; !subtreeIter->IsDone(); subtreeIter->Next()) {
-    nsINode* node = subtreeIter->GetCurrentNode();
+  PostContentIterator postOrderIter;
+  for (; !subtreeIter.IsDone(); subtreeIter.Next()) {
+    nsINode* node = subtreeIter.GetCurrentNode();
     MOZ_ASSERT(node);
     nsIContent* content = node->IsContent() ? node->AsContent() : nullptr;
     SelectAllFramesForContent(postOrderIter, content, aSelect);
