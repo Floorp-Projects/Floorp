@@ -15,12 +15,12 @@
 #include "nsRange.h"
 
 already_AddRefed<nsIContentIterator> NS_NewContentIterator() {
-  nsCOMPtr<nsIContentIterator> iter = new mozilla::ContentIterator(false);
+  nsCOMPtr<nsIContentIterator> iter = new mozilla::PostContentIterator();
   return iter.forget();
 }
 
 already_AddRefed<nsIContentIterator> NS_NewPreContentIterator() {
-  nsCOMPtr<nsIContentIterator> iter = new mozilla::ContentIterator(true);
+  nsCOMPtr<nsIContentIterator> iter = new mozilla::PreContentIterator();
   return iter.forget();
 }
 
@@ -83,33 +83,34 @@ static bool NodeIsInTraversalRange(nsINode* aNode, bool aIsPreMode,
          nsContentUtils::ComparePoints(aEnd, beforeNode) > 0;
 }
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(ContentIterator)
-NS_IMPL_CYCLE_COLLECTING_RELEASE_WITH_LAST_RELEASE(ContentIterator,
+NS_IMPL_CYCLE_COLLECTING_ADDREF(ContentIteratorBase)
+NS_IMPL_CYCLE_COLLECTING_RELEASE_WITH_LAST_RELEASE(ContentIteratorBase,
                                                    LastRelease())
 
-NS_INTERFACE_MAP_BEGIN(ContentIterator)
+NS_INTERFACE_MAP_BEGIN(ContentIteratorBase)
   NS_INTERFACE_MAP_ENTRY(nsIContentIterator)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIContentIterator)
-  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(ContentIterator)
+  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(ContentIteratorBase)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTION(ContentIterator, mCurNode, mFirst, mLast,
+NS_IMPL_CYCLE_COLLECTION(ContentIteratorBase, mCurNode, mFirst, mLast,
                          mCommonParent)
 
-void ContentIterator::LastRelease() {
+void ContentIteratorBase::LastRelease() {
   mCurNode = nullptr;
   mFirst = nullptr;
   mLast = nullptr;
   mCommonParent = nullptr;
 }
 
-ContentIterator::ContentIterator(bool aPre) : mIsDone(false), mPre(aPre) {}
+ContentIteratorBase::ContentIteratorBase(bool aPre)
+    : mIsDone(false), mPre(aPre) {}
 
 /******************************************************
  * Init routines
  ******************************************************/
 
-nsresult ContentIterator::Init(nsINode* aRoot) {
+nsresult ContentIteratorBase::Init(nsINode* aRoot) {
   if (NS_WARN_IF(!aRoot)) {
     return NS_ERROR_NULL_POINTER;
   }
@@ -131,7 +132,7 @@ nsresult ContentIterator::Init(nsINode* aRoot) {
   return NS_OK;
 }
 
-nsresult ContentIterator::Init(nsRange* aRange) {
+nsresult ContentIteratorBase::Init(nsRange* aRange) {
   mIsDone = false;
 
   if (NS_WARN_IF(!aRange)) {
@@ -145,8 +146,10 @@ nsresult ContentIterator::Init(nsRange* aRange) {
   return InitInternal(aRange->StartRef().AsRaw(), aRange->EndRef().AsRaw());
 }
 
-nsresult ContentIterator::Init(nsINode* aStartContainer, uint32_t aStartOffset,
-                               nsINode* aEndContainer, uint32_t aEndOffset) {
+nsresult ContentIteratorBase::Init(nsINode* aStartContainer,
+                                   uint32_t aStartOffset,
+                                   nsINode* aEndContainer,
+                                   uint32_t aEndOffset) {
   mIsDone = false;
 
   if (NS_WARN_IF(!nsRange::IsValidPoints(aStartContainer, aStartOffset,
@@ -158,8 +161,8 @@ nsresult ContentIterator::Init(nsINode* aStartContainer, uint32_t aStartOffset,
                       RawRangeBoundary(aEndContainer, aEndOffset));
 }
 
-nsresult ContentIterator::Init(const RawRangeBoundary& aStart,
-                               const RawRangeBoundary& aEnd) {
+nsresult ContentIteratorBase::Init(const RawRangeBoundary& aStart,
+                                   const RawRangeBoundary& aEnd) {
   mIsDone = false;
 
   if (NS_WARN_IF(!nsRange::IsValidPoints(aStart.Container(), aStart.Offset(),
@@ -170,8 +173,8 @@ nsresult ContentIterator::Init(const RawRangeBoundary& aStart,
   return InitInternal(aStart, aEnd);
 }
 
-nsresult ContentIterator::InitInternal(const RawRangeBoundary& aStart,
-                                       const RawRangeBoundary& aEnd) {
+nsresult ContentIteratorBase::InitInternal(const RawRangeBoundary& aStart,
+                                           const RawRangeBoundary& aEnd) {
   // get common content parent
   mCommonParent =
       nsContentUtils::GetCommonAncestor(aStart.Container(), aEnd.Container());
@@ -353,7 +356,7 @@ nsresult ContentIterator::InitInternal(const RawRangeBoundary& aStart,
   return NS_OK;
 }
 
-void ContentIterator::MakeEmpty() {
+void ContentIteratorBase::MakeEmpty() {
   mCurNode = nullptr;
   mFirst = nullptr;
   mLast = nullptr;
@@ -361,7 +364,7 @@ void ContentIterator::MakeEmpty() {
   mIsDone = true;
 }
 
-nsINode* ContentIterator::GetDeepFirstChild(nsINode* aRoot) {
+nsINode* ContentIteratorBase::GetDeepFirstChild(nsINode* aRoot) {
   if (NS_WARN_IF(!aRoot) || !aRoot->HasChildren()) {
     return aRoot;
   }
@@ -369,7 +372,7 @@ nsINode* ContentIterator::GetDeepFirstChild(nsINode* aRoot) {
   return GetDeepFirstChild(aRoot->GetFirstChild());
 }
 
-nsIContent* ContentIterator::GetDeepFirstChild(nsIContent* aRoot) {
+nsIContent* ContentIteratorBase::GetDeepFirstChild(nsIContent* aRoot) {
   if (NS_WARN_IF(!aRoot)) {
     return nullptr;
   }
@@ -385,7 +388,7 @@ nsIContent* ContentIterator::GetDeepFirstChild(nsIContent* aRoot) {
   return node;
 }
 
-nsINode* ContentIterator::GetDeepLastChild(nsINode* aRoot) {
+nsINode* ContentIteratorBase::GetDeepLastChild(nsINode* aRoot) {
   if (NS_WARN_IF(!aRoot) || !aRoot->HasChildren()) {
     return aRoot;
   }
@@ -393,7 +396,7 @@ nsINode* ContentIterator::GetDeepLastChild(nsINode* aRoot) {
   return GetDeepLastChild(aRoot->GetLastChild());
 }
 
-nsIContent* ContentIterator::GetDeepLastChild(nsIContent* aRoot) {
+nsIContent* ContentIteratorBase::GetDeepLastChild(nsIContent* aRoot) {
   if (NS_WARN_IF(!aRoot)) {
     return nullptr;
   }
@@ -407,7 +410,7 @@ nsIContent* ContentIterator::GetDeepLastChild(nsIContent* aRoot) {
 }
 
 // Get the next sibling, or parent's next sibling, or grandpa's next sibling...
-nsIContent* ContentIterator::GetNextSibling(nsINode* aNode) {
+nsIContent* ContentIteratorBase::GetNextSibling(nsINode* aNode) {
   if (NS_WARN_IF(!aNode)) {
     return nullptr;
   }
@@ -432,7 +435,7 @@ nsIContent* ContentIterator::GetNextSibling(nsINode* aNode) {
 }
 
 // Get the prev sibling, or parent's prev sibling, or grandpa's prev sibling...
-nsIContent* ContentIterator::GetPrevSibling(nsINode* aNode) {
+nsIContent* ContentIteratorBase::GetPrevSibling(nsINode* aNode) {
   if (NS_WARN_IF(!aNode)) {
     return nullptr;
   }
@@ -456,7 +459,7 @@ nsIContent* ContentIterator::GetPrevSibling(nsINode* aNode) {
   return GetPrevSibling(parent);
 }
 
-nsINode* ContentIterator::NextNode(nsINode* aNode) {
+nsINode* ContentIteratorBase::NextNode(nsINode* aNode) {
   nsINode* node = aNode;
 
   // if we are a Pre-order iterator, use pre-order
@@ -490,7 +493,7 @@ nsINode* ContentIterator::NextNode(nsINode* aNode) {
   return parent;
 }
 
-nsINode* ContentIterator::PrevNode(nsINode* aNode) {
+nsINode* ContentIteratorBase::PrevNode(nsINode* aNode) {
   nsINode* node = aNode;
 
   // if we are a Pre-order iterator, use pre-order
@@ -520,10 +523,10 @@ nsINode* ContentIterator::PrevNode(nsINode* aNode) {
 }
 
 /******************************************************
- * ContentIterator routines
+ * ContentIteratorBase routines
  ******************************************************/
 
-void ContentIterator::First() {
+void ContentIteratorBase::First() {
   if (mFirst) {
     mozilla::DebugOnly<nsresult> rv = PositionAt(mFirst);
     NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to position iterator!");
@@ -532,7 +535,7 @@ void ContentIterator::First() {
   mIsDone = mFirst == nullptr;
 }
 
-void ContentIterator::Last() {
+void ContentIteratorBase::Last() {
   // Note that mLast can be nullptr if MakeEmpty() is called in Init() since
   // at that time, Init() returns NS_OK.
   if (!mLast) {
@@ -546,7 +549,7 @@ void ContentIterator::Last() {
   mIsDone = mLast == nullptr;
 }
 
-void ContentIterator::Next() {
+void ContentIteratorBase::Next() {
   if (mIsDone || NS_WARN_IF(!mCurNode)) {
     return;
   }
@@ -559,7 +562,7 @@ void ContentIterator::Next() {
   mCurNode = NextNode(mCurNode);
 }
 
-void ContentIterator::Prev() {
+void ContentIteratorBase::Prev() {
   if (NS_WARN_IF(mIsDone) || NS_WARN_IF(!mCurNode)) {
     return;
   }
@@ -572,11 +575,11 @@ void ContentIterator::Prev() {
   mCurNode = PrevNode(mCurNode);
 }
 
-bool ContentIterator::IsDone() { return mIsDone; }
+bool ContentIteratorBase::IsDone() { return mIsDone; }
 
 // Keeping arrays of indexes for the stack of nodes makes PositionAt
 // interesting...
-nsresult ContentIterator::PositionAt(nsINode* aCurNode) {
+nsresult ContentIteratorBase::PositionAt(nsINode* aCurNode) {
   if (NS_WARN_IF(!aCurNode)) {
     return NS_ERROR_NULL_POINTER;
   }
@@ -635,7 +638,7 @@ nsresult ContentIterator::PositionAt(nsINode* aCurNode) {
   return NS_OK;
 }
 
-nsINode* ContentIterator::GetCurrentNode() {
+nsINode* ContentIteratorBase::GetCurrentNode() {
   if (mIsDone) {
     return nullptr;
   }
@@ -646,21 +649,33 @@ nsINode* ContentIterator::GetCurrentNode() {
 }
 
 /******************************************************
+ * PostContentIterator
+ ******************************************************/
+
+NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(PostContentIterator,
+                                               ContentIteratorBase)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(PostContentIterator, ContentIteratorBase)
+
+/******************************************************
+ * PreContentIterator
+ ******************************************************/
+
+NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(PreContentIterator,
+                                               ContentIteratorBase)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(PreContentIterator, ContentIteratorBase)
+
+/******************************************************
  * ContentSubtreeIterator
  ******************************************************/
 
-NS_IMPL_ADDREF_INHERITED(ContentSubtreeIterator, ContentIterator)
-NS_IMPL_RELEASE_INHERITED(ContentSubtreeIterator, ContentIterator)
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ContentSubtreeIterator)
-NS_INTERFACE_MAP_END_INHERITING(ContentIterator)
-
-NS_IMPL_CYCLE_COLLECTION_INHERITED(ContentSubtreeIterator, ContentIterator,
+NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(ContentSubtreeIterator,
+                                               ContentIteratorBase)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(ContentSubtreeIterator, ContentIteratorBase,
                                    mRange)
 
 void ContentSubtreeIterator::LastRelease() {
   mRange = nullptr;
-  ContentIterator::LastRelease();
+  ContentIteratorBase::LastRelease();
 }
 
 /******************************************************
