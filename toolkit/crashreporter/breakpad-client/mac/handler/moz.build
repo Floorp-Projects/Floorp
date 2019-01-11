@@ -11,7 +11,7 @@ UNIFIED_SOURCES += [
     'minidump_generator.cc',
 ]
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = 'breakpad_client'
 
 LOCAL_INCLUDES += [
     '/toolkit/crashreporter/breakpad-client',
