@@ -14,6 +14,7 @@
 #include "mozilla/GeckoBindings.h"
 #include "mozilla/LayerAnimationInfo.h"
 #include "mozilla/layers/AnimationInfo.h"
+#include "mozilla/layout/ScrollAnchorContainer.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/ServoStyleSetInlines.h"
 #include "mozilla/Unused.h"
@@ -773,6 +774,10 @@ static bool RecomputePosition(nsIFrame* aFrame) {
       }
     }
 
+    if (aFrame->IsInScrollAnchorChain()) {
+      ScrollAnchorContainer* container = ScrollAnchorContainer::FindFor(aFrame);
+      container->ApplyAdjustments();
+    }
     return true;
   }
 
@@ -878,6 +883,10 @@ static bool RecomputePosition(nsIFrame* aFrame) {
                     reflowInput.ComputedPhysicalMargin().top);
     aFrame->SetPosition(pos);
 
+    if (aFrame->IsInScrollAnchorChain()) {
+      ScrollAnchorContainer* container = ScrollAnchorContainer::FindFor(aFrame);
+      container->ApplyAdjustments();
+    }
     return true;
   }
 
@@ -1490,6 +1499,23 @@ void RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList) {
     }
 
     if (hint & nsChangeHint_ReconstructFrame) {
+      // Record whether this frame was absolutely positioned before and after
+      // frame construction, to detect changes for scroll anchor adjustment
+      // suppression.
+      bool wasAbsPosStyle = false;
+      ScrollAnchorContainer* previousAnchorContainer = nullptr;
+      AutoWeakFrame previousAnchorContainerFrame;
+      if (frame) {
+        wasAbsPosStyle = frame->StyleDisplay()->IsAbsolutelyPositionedStyle();
+        previousAnchorContainer = ScrollAnchorContainer::FindFor(frame);
+
+        // It's possible for the scroll anchor container to be destroyed by
+        // frame construction, so use a weak frame to detect this.
+        if (previousAnchorContainer) {
+          previousAnchorContainerFrame = previousAnchorContainer->Frame();
+        }
+      }
+
       // If we ever start passing true here, be careful of restyles
       // that involve a reframe and animations.  In particular, if the
       // restyle we're processing here is an animation restyle, but
@@ -1501,6 +1527,34 @@ void RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList) {
       // the reconstruction happening synchronously.
       frameConstructor->RecreateFramesForContent(
           content, nsCSSFrameConstructor::InsertionKind::Sync);
+      frame = content->GetPrimaryFrame();
+
+      // See the check above for absolutely positioned style.
+      bool isAbsPosStyle = false;
+      ScrollAnchorContainer* newAnchorContainer = nullptr;
+      if (frame) {
+        isAbsPosStyle = frame->StyleDisplay()->IsAbsolutelyPositionedStyle();
+        newAnchorContainer = ScrollAnchorContainer::FindFor(frame);
+      }
+
+      // If this frame construction was due to a change in absolute
+      // positioning, then suppress scroll anchor adjustments in the scroll
+      // anchor container the frame was in, and the one it moved into.
+      //
+      // This isn't entirely accurate to the specification, which requires us
+      // to do this for all frames that change being absolutely positioned. It's
+      // possible for multiple style changes to cause frame reconstruction and
+      // coalesce, which could cause a suppression trigger to be missed. It's
+      // unclear whether this will be an issue as suppression triggers are just
+      // heuristics.
+      if (wasAbsPosStyle != isAbsPosStyle) {
+        if (previousAnchorContainerFrame) {
+          previousAnchorContainer->SuppressAdjustments();
+        }
+        if (newAnchorContainer) {
+          newAnchorContainer->SuppressAdjustments();
+        }
+      }
     } else {
       NS_ASSERTION(frame, "This shouldn't happen");
 
@@ -2914,6 +2968,11 @@ void RestyleManager::DoProcessPendingRestyles(ServoTraversalFlags aFlags) {
     // handle it for now.
     return;
   }
+
+  // Select scroll anchors for frames that have been scrolled. Do this
+  // before restyling so that anchor nodes are correctly marked for
+  // scroll anchor update suppressions.
+  presContext->PresShell()->FlushDirtyScrollAnchorContainers();
 
   // Create a AnimationsWithDestroyedFrame during restyling process to
   // stop animations and transitions on elements that have no frame at the end
