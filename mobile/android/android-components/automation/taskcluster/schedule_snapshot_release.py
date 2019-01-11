@@ -27,8 +27,8 @@ def calculate_git_references(root):
     if not remote.url.startswith('https://github.com'):
         raise InvalidGithubRepositoryError('expected remote to be a GitHub repository (accessed via HTTPs)')
 
-    url = remote.url[:-4] if remote.url.endswith('.git') else remote.url
-    return url, str(branch), str(branch.commit)
+    html_url = remote.url[:-4] if remote.url.endswith('.git') else remote.url
+    return html_url, str(branch), str(branch.commit)
 
 
 def make_decision_task(params):
@@ -53,7 +53,7 @@ def make_decision_task(params):
         'as_slugid': as_slugid,
         'event': {
             'repository': {
-                'html_url': params['repository_github_http_url']
+                'html_url': params['repository_github_html_url']
             },
             'release': {
                 'tag_name': params['head_rev'],
@@ -77,9 +77,9 @@ def make_decision_task(params):
 def schedule():
     queue = taskcluster.Queue({'baseUrl': 'http://taskcluster/queue/v1'})
 
-    repository_github_http_url, branch, head_rev = calculate_git_references(ROOT)
+    repository_github_html_url, branch, head_rev = calculate_git_references(ROOT)
     params = {
-        'repository_github_http_url': repository_github_http_url,
+        'repository_github_html_url': repository_github_html_url,
         'head_rev': head_rev,
         'branch': branch,
         'cron_task_id': os.environ.get('CRON_TASK_ID', '<cron_task_id>')
