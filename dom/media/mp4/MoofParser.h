@@ -185,6 +185,10 @@ class Sbgp final : public Atom  // SampleToGroup box.
   Result<Ok, nsresult> Parse(Box& aBox);
 };
 
+// Stores information form CencSampleEncryptionInformationGroupEntry (seig).
+// Cenc here refers to the common encryption standard, rather than the specific
+// cenc scheme from that standard. This structure is used for all encryption
+// schemes. I.e. it is used for both cenc and cbcs, not just cenc.
 struct CencSampleEncryptionInfoEntry final {
  public:
   CencSampleEncryptionInfoEntry() {}
@@ -194,6 +198,9 @@ struct CencSampleEncryptionInfoEntry final {
   bool mIsEncrypted = false;
   uint8_t mIVSize = 0;
   nsTArray<uint8_t> mKeyId;
+  uint8_t mCryptByteBlock = 0;
+  uint8_t mSkipByteBlock = 0;
+  nsTArray<uint8_t> mConsantIV;
 };
 
 class Sgpd final : public Atom  // SampleGroupDescription box.
