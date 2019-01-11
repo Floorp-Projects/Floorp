@@ -696,9 +696,9 @@ def get_vc_paths(topsrcdir):
             path, r'VC\Tools\MSVC', tools_version, r'bin\HostX64')
         yield (Version(install['installationVersion']), {
             'x64': [os.path.join(tools_path, 'x64')],
-            # The x64->x86 cross toolchain requires DLLs from the native x64 toolchain.
+            # The cross toolchains require DLLs from the native x64 toolchain.
             'x86': [os.path.join(tools_path, 'x86'), os.path.join(tools_path, 'x64')],
-            'arm64': [os.path.join(tools_path, 'x64')],
+            'arm64': [os.path.join(tools_path, 'arm64'), os.path.join(tools_path, 'x64')],
         })
 
 
