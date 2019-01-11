@@ -45,7 +45,7 @@ def get_commits(logger, repo_root):
         return git_commits(repo_root)
 
     logger.warning("No VCS found")
-    return False
+    return []
 
 
 def should_download(logger, manifest_paths, rebuild_time=timedelta(days=5)):
@@ -118,8 +118,6 @@ def download_manifest(logger, test_paths, commits_func, url_func, force=False):
         return True
 
     commits = commits_func()
-    if not commits:
-        return False
 
     url = url_func(logger, commits)
     if not url:
