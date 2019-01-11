@@ -309,11 +309,11 @@ extern void UnwindAllEnvironmentsInFrame(JSContext* cx, EnvironmentIter& ei);
 extern jsbytecode* UnwindEnvironmentToTryPc(JSScript* script,
                                             const JSTryNote* tn);
 
-template <class StackDepthOp>
+template <class TryNoteFilter>
 class MOZ_STACK_CLASS TryNoteIter {
   RootedScript script_;
   uint32_t pcOffset_;
-  StackDepthOp getStackDepth_;
+  TryNoteFilter isTryNoteValid_;
 
   const JSTryNote* tn_;
   const JSTryNote* tnEnd_;
@@ -379,7 +379,7 @@ class MOZ_STACK_CLASS TryNoteIter {
        * depth exceeding the current one and this condition is what we use to
        * filter them out.
        */
-      if (tn_ == tnEnd_ || tn_->stackDepth <= getStackDepth_()) {
+      if (tn_ == tnEnd_ || isTryNoteValid_(tn_)) {
         return;
       }
     }
@@ -387,10 +387,10 @@ class MOZ_STACK_CLASS TryNoteIter {
 
  public:
   TryNoteIter(JSContext* cx, JSScript* script, jsbytecode* pc,
-              StackDepthOp getStackDepth)
+              TryNoteFilter isTryNoteValid)
       : script_(cx, script),
         pcOffset_(script->pcToOffset(pc)),
-        getStackDepth_(getStackDepth) {
+        isTryNoteValid_(isTryNoteValid) {
     if (script->hasTrynotes()) {
       // NOTE: The Span is a temporary so we can't use begin()/end()
       // here or the iterator will outlive the span.

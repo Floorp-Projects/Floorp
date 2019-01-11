@@ -133,25 +133,25 @@ static void CloseLiveIteratorIon(JSContext* cx,
   }
 }
 
-class IonFrameStackDepthOp {
+class IonTryNoteFilter {
   uint32_t depth_;
 
  public:
-  explicit IonFrameStackDepthOp(const InlineFrameIterator& frame) {
+  explicit IonTryNoteFilter(const InlineFrameIterator& frame) {
     uint32_t base = NumArgAndLocalSlots(frame);
     SnapshotIterator si = frame.snapshotIterator();
     MOZ_ASSERT(si.numAllocations() >= base);
     depth_ = si.numAllocations() - base;
   }
 
-  uint32_t operator()() { return depth_; }
+  bool operator()(const JSTryNote* note) { return note->stackDepth <= depth_; }
 };
 
-class TryNoteIterIon : public TryNoteIter<IonFrameStackDepthOp> {
+class TryNoteIterIon : public TryNoteIter<IonTryNoteFilter> {
  public:
   TryNoteIterIon(JSContext* cx, const InlineFrameIterator& frame)
       : TryNoteIter(cx, frame.script(), frame.pc(),
-                    IonFrameStackDepthOp(frame)) {}
+                    IonTryNoteFilter(frame)) {}
 };
 
 static void HandleExceptionIon(JSContext* cx, const InlineFrameIterator& frame,
@@ -308,21 +308,22 @@ struct AutoBaselineHandlingException {
   }
 };
 
-class BaselineFrameStackDepthOp {
+class BaselineTryNoteFilter {
   BaselineFrame* frame_;
 
  public:
-  explicit BaselineFrameStackDepthOp(BaselineFrame* frame) : frame_(frame) {}
-  uint32_t operator()() {
+  explicit BaselineTryNoteFilter(BaselineFrame* frame) : frame_(frame) {}
+  bool operator()(const JSTryNote* note) {
     MOZ_ASSERT(frame_->numValueSlots() >= frame_->script()->nfixed());
-    return frame_->numValueSlots() - frame_->script()->nfixed();
+    uint32_t currDepth = frame_->numValueSlots() - frame_->script()->nfixed();
+    return note->stackDepth <= currDepth;
   }
 };
 
-class TryNoteIterBaseline : public TryNoteIter<BaselineFrameStackDepthOp> {
+class TryNoteIterBaseline : public TryNoteIter<BaselineTryNoteFilter> {
  public:
   TryNoteIterBaseline(JSContext* cx, BaselineFrame* frame, jsbytecode* pc)
-      : TryNoteIter(cx, frame->script(), pc, BaselineFrameStackDepthOp(frame)) {
+      : TryNoteIter(cx, frame->script(), pc, BaselineTryNoteFilter(frame)) {
   }
 };
 
