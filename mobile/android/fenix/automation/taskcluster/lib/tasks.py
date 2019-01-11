@@ -4,7 +4,6 @@
 
 import datetime
 import json
-import os
 import taskcluster
 
 
@@ -134,8 +133,8 @@ class TaskBuilder(object):
             "metadata": {
                 "name": name,
                 "description": description,
-                "owner": "android-components-team@mozilla.com",
-                "source": "https://github.com/mozilla-mobile/fenix/tree/master/automation/taskcluster"
+                "owner": self.owner,
+                "source": self.source
             }
         }
 

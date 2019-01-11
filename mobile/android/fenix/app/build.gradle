@@ -47,7 +47,7 @@ android.applicationVariants.all { variant ->
         // Our x86 builds need a higher version code to avoid installing ARM builds on an x86 device
         // with ARM compatibility mode.
 
-        if (variant.flavorName.contains("X86")) {
+        if (variant.flavorName.contains("x86")) {
             versionCode = versionCode + 1
         }// else variant.flavorName.contains("Arm")) use generated version code
 
