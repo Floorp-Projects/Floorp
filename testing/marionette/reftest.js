@@ -33,8 +33,8 @@ const STATUS = {
   TIMEOUT: "TIMEOUT",
 };
 
-const REFTEST_WIDTH = 600;
-const REFTEST_HEIGHT = 600;
+const DEFAULT_REFTEST_WIDTH = 600;
+const DEFAULT_REFTEST_HEIGHT = 600;
 
 /**
  * Implements an fast runner for web-platform-tests format reftests
@@ -51,7 +51,7 @@ this.reftest = {};
 reftest.Runner = class {
   constructor(driver) {
     this.driver = driver;
-    this.canvasCache = new Map([[null, []]]);
+    this.canvasCache = new DefaultMap(undefined, () => new Map([[null, []]]));
     this.windowUtils = null;
     this.lastURL = null;
     this.remote = Preferences.get(PREF_E10S);
@@ -70,7 +70,7 @@ reftest.Runner = class {
    * @param {string} screenshotMode
    *     String enum representing when screenshots should be taken
    */
-  async setup(urlCount, screenshotMode) {
+  setup(urlCount, screenshotMode) {
     this.parentWindow =  assert.open(this.driver.getCurrentWindow());
 
     this.screenshotMode = SCREENSHOT_MODE[screenshotMode] ||
@@ -78,13 +78,17 @@ reftest.Runner = class {
 
     this.urlCount = Object.keys(urlCount || {})
         .reduce((map, key) => map.set(key, urlCount[key]), new Map());
-
-    await this.ensureWindow();
   }
 
-  async ensureWindow(timeout) {
+  async ensureWindow(timeout, width, height) {
+    logger.debug(`ensuring we have a window ${width}x${height}`);
+
     if (this.reftestWin && !this.reftestWin.closed) {
-      return this.reftestWin;
+      let browserRect = this.reftestWin.gBrowser.getBoundingClientRect();
+      if (browserRect.width === width && browserRect.height === height) {
+        return this.reftestWin;
+      }
+      logger.debug(`current: ${browserRect.width}x${browserRect.height}`);
     }
 
     let reftestWin;
@@ -96,27 +100,35 @@ reftest.Runner = class {
         pageTimeout: timeout,
         url: "about:blank",
         loadEventExpected: false});
-
     } else {
       logger.debug("Using separate window");
-      reftestWin = await this.openWindow();
+      if (this.reftestWin && !this.reftestWin.closed) {
+        this.reftestWin.close();
+      }
+      reftestWin = await this.openWindow(width, height);
     }
 
-    this.setupWindow(reftestWin);
+    this.setupWindow(reftestWin, width, height);
     this.windowUtils = reftestWin.windowUtils;
     this.reftestWin = reftestWin;
 
     let found = this.driver.findWindow([reftestWin], () => true);
     await this.driver.setWindowHandle(found, true);
 
+    let browserRect = reftestWin.gBrowser.getBoundingClientRect();
+    logger.debug(`new: ${browserRect.width}x${browserRect.height}`);
+
     return reftestWin;
   }
 
-  async openWindow() {
+  async openWindow(width, height) {
+    assert.positiveInteger(width);
+    assert.positiveInteger(height);
+
     let reftestWin = this.parentWindow.open(
         "chrome://marionette/content/reftest.xul",
         "reftest",
-        `chrome,height=${REFTEST_WIDTH},width=${REFTEST_HEIGHT}`);
+        `chrome,height=${width},width=${height}`);
 
     await new Promise(resolve => {
       reftestWin.addEventListener("load", resolve, {once: true});
@@ -124,7 +136,7 @@ reftest.Runner = class {
     return reftestWin;
   }
 
-  setupWindow(reftestWin) {
+  setupWindow(reftestWin, width, height) {
     let browser;
     if (Services.appinfo.OS === "Android") {
       browser = reftestWin.document.getElementsByTagName("browser")[0];
@@ -143,11 +155,11 @@ reftest.Runner = class {
         browser.setAttribute("remote", "false");
       }
     }
-    // Make sure the browser element is exactly 600x600, no matter
+    // Make sure the browser element is exactly the right size, no matter
     // what size our window is
     const windowStyle = `padding: 0px; margin: 0px; border:none;
-min-width: ${REFTEST_WIDTH}px; min-height: ${REFTEST_HEIGHT}px;
-max-width: ${REFTEST_WIDTH}px; max-height: ${REFTEST_HEIGHT}px`;
+min-width: ${width}px; min-height: ${height}px;
+max-width: ${width}px; max-height: ${height}px`;
     browser.setAttribute("style", windowStyle);
 
     if (Services.appinfo.OS !== "Android") {
@@ -213,7 +225,9 @@ max-width: ${REFTEST_WIDTH}px; max-height: ${REFTEST_HEIGHT}px`;
    * @return {Object}
    *     Result object with fields status, message and extra.
    */
-  async run(testUrl, references, expected, timeout) {
+  async run(testUrl, references, expected, timeout,
+      width = DEFAULT_REFTEST_WIDTH,
+      height = DEFAULT_REFTEST_HEIGHT) {
 
     let timeoutHandle;
 
@@ -226,7 +240,8 @@ max-width: ${REFTEST_WIDTH}px; max-height: ${REFTEST_HEIGHT}px`;
     let testRunner = (async () => {
       let result;
       try {
-        result = await this.runTest(testUrl, references, expected, timeout);
+        result = await this.runTest(testUrl, references, expected, timeout,
+            width, height);
       } catch (e) {
         result = {
           status: STATUS.ERROR,
@@ -247,8 +262,8 @@ max-width: ${REFTEST_WIDTH}px; max-height: ${REFTEST_HEIGHT}px`;
     return result;
   }
 
-  async runTest(testUrl, references, expected, timeout) {
-    let win = await this.ensureWindow(timeout);
+  async runTest(testUrl, references, expected, timeout, width, height) {
+    let win = await this.ensureWindow(timeout, width, height);
 
     function toBase64(screenshot) {
       let dataURL = screenshot.canvas.toDataURL();
@@ -327,13 +342,14 @@ max-width: ${REFTEST_WIDTH}px; max-height: ${REFTEST_HEIGHT}px`;
       }
 
       // Return any reusable canvases to the pool
-      let canvasPool = this.canvasCache.get(null);
+      let cacheKey = width + "x" + height;
+      let canvasPool = this.canvasCache.get(cacheKey).get(null);
       [comparison.lhs, comparison.rhs].map(screenshot => {
         if (screenshot !== null && screenshot.reuseCanvas) {
           canvasPool.push(screenshot.canvas);
         }
       });
-      logger.debug(`Canvas pool is of length ${canvasPool.length}`);
+      logger.debug(`Canvas pool (${cacheKey}) is of length ${canvasPool.length}`);
 
     }
 
@@ -417,9 +433,6 @@ max-width: ${REFTEST_WIDTH}px; max-height: ${REFTEST_HEIGHT}px`;
   }
 
   async screenshot(win, url, timeout) {
-    win.innerWidth = REFTEST_WIDTH;
-    win.innerHeight = REFTEST_HEIGHT;
-
     // On windows the above doesn't *actually* set the window to be the
     // reftest size; but *does* set the content area to be the right size;
     // the window is given some extra borders that aren't explicable from CSS
@@ -427,20 +440,24 @@ max-width: ${REFTEST_WIDTH}px; max-height: ${REFTEST_HEIGHT}px`;
     let canvas = null;
     let remainingCount = this.urlCount.get(url) || 1;
     let cache = remainingCount > 1;
+    let cacheKey = browserRect.width + "x" + browserRect.height;
     logger.debug(`screenshot ${url} remainingCount: ` +
-        `${remainingCount} cache: ${cache}`);
+        `${remainingCount} cache: ${cache} cacheKey: ${cacheKey}`);
     let reuseCanvas = false;
-    if (this.canvasCache.has(url)) {
+    let sizedCache = this.canvasCache.get(cacheKey);
+    if (sizedCache.has(url)) {
       logger.debug(`screenshot ${url} taken from cache`);
-      canvas = this.canvasCache.get(url);
+      canvas = sizedCache.get(url);
       if (!cache) {
-        this.canvasCache.delete(url);
+        sizedCache.delete(url);
       }
     } else {
-      let canvases = this.canvasCache.get(null);
-      if (canvases.length) {
-        canvas = canvases.pop();
+      let canvasPool = sizedCache.get(null);
+      if (canvasPool.length) {
+        logger.debug("reusing canvas from canvas pool");
+        canvas = canvasPool.pop();
       } else {
+        logger.debug("using new canvas");
         canvas = null;
       }
       reuseCanvas = !cache;
@@ -486,15 +503,33 @@ max-width: ${REFTEST_WIDTH}px; max-height: ${REFTEST_HEIGHT}px`;
           browserRect.height,
           {canvas, flags});
     }
-    if (canvas.width !== REFTEST_WIDTH || canvas.height !== REFTEST_HEIGHT) {
+    if (canvas.width !== browserRect.width ||
+        canvas.height !== browserRect.height) {
       logger.warn(`Canvas dimensions changed to ${canvas.width}x${canvas.height}`);
       reuseCanvas = false;
       cache = false;
     }
     if (cache) {
-      this.canvasCache.set(url, canvas);
+      sizedCache.set(url, canvas);
     }
     this.urlCount.set(url, remainingCount - 1);
     return {canvas, reuseCanvas};
   }
 };
+
+class DefaultMap extends Map {
+  constructor(iterable, defaultFactory) {
+    super(iterable);
+    this.defaultFactory = defaultFactory;
+  }
+
+  get(key) {
+    if (this.has(key)) {
+      return super.get(key);
+    }
+
+    let v = this.defaultFactory();
+    this.set(key, v);
+    return v;
+  }
+}
