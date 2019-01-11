@@ -10,6 +10,11 @@
 #include "mozilla/net/PSocketProcessParent.h"
 
 namespace mozilla {
+
+namespace ipc {
+class CrashReporterHost;
+}  // namespace ipc
+
 namespace net {
 
 class SocketProcessHost;
@@ -23,10 +28,14 @@ class SocketProcessParent final : public PSocketProcessParent {
   explicit SocketProcessParent(SocketProcessHost* aHost);
   ~SocketProcessParent();
 
+  mozilla::ipc::IPCResult RecvInitCrashReporter(
+      Shmem&& aShmem, const NativeThreadId& aThreadId) override;
+
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
  private:
   SocketProcessHost* mHost;
+  UniquePtr<ipc::CrashReporterHost> mCrashReporter;
 
   static void Destroy(UniquePtr<SocketProcessParent>&& aParent);
 };
