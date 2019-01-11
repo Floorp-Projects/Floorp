@@ -1530,7 +1530,7 @@ nsIOService::GetManageOfflineStatus(bool *aManage) {
 
 // input argument 'data' is already UTF8'ed
 nsresult nsIOService::OnNetworkLinkEvent(const char *data) {
-  if (IsNeckoChild()) {
+  if (IsNeckoChild() || IsSocketProcessChild()) {
     // There is nothing IO service could do on the child process
     // with this at the moment.  Feel free to add functionality
     // here at will, though.

@@ -106,5 +106,17 @@ mozilla::ipc::IPCResult SocketProcessChild::RecvRequestMemoryReport(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult SocketProcessChild::RecvSetOffline(
+    const bool& aOffline) {
+  LOG(("SocketProcessChild::RecvSetOffline aOffline=%d\n", aOffline));
+
+  nsCOMPtr<nsIIOService> io(do_GetIOService());
+  NS_ASSERTION(io, "IO Service can not be null");
+
+  io->SetOffline(aOffline);
+
+  return IPC_OK();
+}
+
 }  // namespace net
 }  // namespace mozilla
