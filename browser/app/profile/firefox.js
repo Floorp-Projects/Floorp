@@ -1746,11 +1746,12 @@ pref("app.shield.optoutstudies.enabled", false);
 #endif
 
 // Multi-lingual preferences
-pref("intl.multilingual.enabled", false);
-// AMO only serves language packs for release and beta versions.
 #ifdef RELEASE_OR_BETA
+pref("intl.multilingual.enabled", true);
 pref("intl.multilingual.downloadEnabled", true);
 #else
+pref("intl.multilingual.enabled", false);
+// AMO only serves language packs for release and beta versions.
 pref("intl.multilingual.downloadEnabled", false);
 #endif
 
