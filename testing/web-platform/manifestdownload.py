@@ -12,6 +12,13 @@ import logging
 HEADERS = {'User-Agent': "wpt manifest download"}
 
 
+def get(logger, url, **kwargs):
+    logger.debug(url)
+    if "headers" not in kwargs:
+        kwargs["headers"] = HEADERS
+    return requests.get(url, **kwargs)
+
+
 def abs_path(path):
     return os.path.abspath(os.path.expanduser(path))
 
@@ -71,8 +78,8 @@ def taskcluster_url(logger, commits):
         try:
             req_headers = HEADERS.copy()
             req_headers.update({'Accept': 'application/json'})
-            req = requests.get(cset_url.format(changeset=revision),
-                               headers=req_headers)
+            req = get(logger, cset_url.format(changeset=revision),
+                      headers=req_headers)
             req.raise_for_status()
         except requests.exceptions.RequestException:
             if req and req.status_code == 404:
@@ -89,15 +96,14 @@ def taskcluster_url(logger, commits):
         [cset] = pushes.values()[0]['changesets']
 
         try:
-            req = requests.get(tc_url.format(changeset=cset),
-                               headers=HEADERS)
+            req = get(logger, tc_url.format(changeset=cset))
         except requests.exceptions.RequestException:
             return False
 
         if req.status_code == 200:
             return tc_url.format(changeset=cset) + artifact_path
 
-    logger.info("Can't find a commit-specific manifest so just using the most"
+    logger.info("Can't find a commit-specific manifest so just using the most "
                 "recent one")
 
     return ("https://index.taskcluster.net/v1/task/gecko.v2.mozilla-central."
@@ -122,7 +128,7 @@ def download_manifest(logger, test_paths, commits_func, url_func, force=False):
 
     logger.info("Downloading manifest from %s" % url)
     try:
-        req = requests.get(url, headers=HEADERS)
+        req = get(logger, url)
     except Exception:
         logger.warning("Downloading pregenerated manifest failed")
         return False
