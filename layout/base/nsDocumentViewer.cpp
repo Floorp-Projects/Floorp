@@ -2308,56 +2308,32 @@ UniquePtr<ServoStyleSet> nsDocumentViewer::CreateStyleSet(Document* aDocument) {
   }
 
   // Append chrome sheets (scrollbars + forms).
-  sheet = cache->ScrollbarsSheet();
-  if (sheet) {
-    styleSet->PrependStyleSheet(SheetType::Agent, sheet);
-  }
+  styleSet->PrependStyleSheet(SheetType::Agent, cache->ScrollbarsSheet());
+  styleSet->PrependStyleSheet(SheetType::Agent, cache->FormsSheet());
 
-  sheet = cache->FormsSheet();
-  if (sheet) {
-    styleSet->PrependStyleSheet(SheetType::Agent, sheet);
-  }
-
+  // Only load the full XUL sheet if we'll need it.
   if (aDocument->LoadsFullXULStyleSheetUpFront()) {
-    sheet = cache->XULSheet();
-    if (sheet) {
-      styleSet->PrependStyleSheet(SheetType::Agent, sheet);
-    }
+    styleSet->PrependStyleSheet(SheetType::Agent, cache->XULSheet());
   }
 
-  sheet = cache->MinimalXULSheet();
-  if (sheet) {
-    // Load the minimal XUL rules for scrollbars and a few other XUL things
-    // that non-XUL (typically HTML) documents commonly use.
-    styleSet->PrependStyleSheet(SheetType::Agent, sheet);
-  }
+  // Load the minimal XUL rules for scrollbars and a few other XUL things
+  // that non-XUL (typically HTML) documents commonly use.
+  styleSet->PrependStyleSheet(SheetType::Agent, cache->MinimalXULSheet());
 
-  sheet = cache->CounterStylesSheet();
-  if (sheet) {
-    styleSet->PrependStyleSheet(SheetType::Agent, sheet);
-  }
+  styleSet->PrependStyleSheet(SheetType::Agent, cache->CounterStylesSheet());
 
   if (nsLayoutUtils::ShouldUseNoScriptSheet(aDocument)) {
-    sheet = cache->NoScriptSheet();
-    if (sheet) {
-      styleSet->PrependStyleSheet(SheetType::Agent, sheet);
-    }
+    styleSet->PrependStyleSheet(SheetType::Agent, cache->NoScriptSheet());
   }
 
   if (nsLayoutUtils::ShouldUseNoFramesSheet(aDocument)) {
-    sheet = cache->NoFramesSheet();
-    if (sheet) {
-      styleSet->PrependStyleSheet(SheetType::Agent, sheet);
-    }
+    styleSet->PrependStyleSheet(SheetType::Agent, cache->NoFramesSheet());
   }
 
   // We don't add quirk.css here; nsPresContext::CompatibilityModeChanged will
   // append it if needed.
 
-  sheet = cache->HTMLSheet();
-  if (sheet) {
-    styleSet->PrependStyleSheet(SheetType::Agent, sheet);
-  }
+  styleSet->PrependStyleSheet(SheetType::Agent, cache->HTMLSheet());
 
   if (MOZ_LIKELY(mDocument->NodeInfoManager()->SVGEnabled())) {
     styleSet->PrependStyleSheet(SheetType::Agent, cache->SVGSheet());
