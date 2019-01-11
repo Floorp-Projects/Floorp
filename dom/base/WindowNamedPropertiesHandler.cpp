@@ -7,6 +7,7 @@
 #include "WindowNamedPropertiesHandler.h"
 #include "mozilla/dom/EventTargetBinding.h"
 #include "mozilla/dom/WindowBinding.h"
+#include "mozilla/dom/WindowProxyHolder.h"
 #include "nsContentUtils.h"
 #include "nsDOMWindowList.h"
 #include "nsGlobalWindow.h"
