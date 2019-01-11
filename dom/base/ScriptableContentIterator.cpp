@@ -35,7 +35,7 @@ void ScriptableContentIterator::EnsureContentIterator() {
       mContentIterator = NS_NewContentIterator();
       break;
     case PRE_ORDER_ITERATOR:
-      mContentIterator = NS_NewPreContentIterator();
+      mContentIterator = new PreContentIterator();
       break;
     case SUBTREE_ITERATOR:
       mContentIterator = new ContentSubtreeIterator();

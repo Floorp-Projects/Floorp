@@ -84,6 +84,5 @@ class nsIContentIterator : public nsISupports {
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIContentIterator, NS_ICONTENTITERATOR_IID)
 
 already_AddRefed<nsIContentIterator> NS_NewContentIterator();
-already_AddRefed<nsIContentIterator> NS_NewPreContentIterator();
 
 #endif  // __nsIContentIterator_h___
