@@ -50,8 +50,9 @@ bool MP4AudioInfo::IsValid() const {
 static void UpdateTrackProtectedInfo(mozilla::TrackInfo& aConfig,
                                      const Mp4parseSinfInfo& aSinf) {
   if (aSinf.is_encrypted != 0) {
-    aConfig.mCrypto.mValid = true;
-    aConfig.mCrypto.mMode = aSinf.is_encrypted;
+    // We currently only handle cenc, but this should be updated once we parse
+    // cbcs encryption data.
+    aConfig.mCrypto.mCryptoScheme = CryptoScheme::Cenc;
     aConfig.mCrypto.mIVSize = aSinf.iv_size;
     aConfig.mCrypto.mKeyId.AppendElements(aSinf.kid.data, aSinf.kid.length);
   }

@@ -804,7 +804,7 @@ static int32_t ConditionDimension(float aValue) {
   int nalLenSize = ((*aSample->mExtraData)[4] & 3) + 1;
 
   size_t sampleSize = aSample->Size();
-  if (aSample->mCrypto.mValid) {
+  if (aSample->mCrypto.IsEncrypted()) {
     // The content is encrypted, we can only parse the non-encrypted data.
     MOZ_ASSERT(aSample->mCrypto.mPlainSizes.Length() > 0);
     if (aSample->mCrypto.mPlainSizes.Length() == 0 ||

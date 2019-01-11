@@ -521,7 +521,7 @@ static CryptoInfo::LocalRef GetCryptoInfoFromSample(
     const MediaRawData* aSample) {
   auto& cryptoObj = aSample->mCrypto;
 
-  if (!cryptoObj.mValid) {
+  if (!cryptoObj.IsEncrypted()) {
     return nullptr;
   }
 
