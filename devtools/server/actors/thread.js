@@ -1825,9 +1825,13 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     const { generatedSourceActor } = this.sources.getFrameLocation(youngestFrame);
     const url = generatedSourceActor ? generatedSourceActor.url : null;
 
-    // We ignore sources without a url because we do not
-    // want to pause at console evaluations or watch expressions.
-    if (!url || this.skipBreakpoints || this.sources.isBlackBoxed(url)) {
+    // Don't pause on exceptions thrown while inside an evaluation being done on
+    // behalf of the client.
+    if (this.insideClientEvaluation) {
+      return undefined;
+    }
+
+    if (this.skipBreakpoints || this.sources.isBlackBoxed(url)) {
       return undefined;
     }
 
