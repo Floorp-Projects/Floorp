@@ -66,9 +66,6 @@ class ProgressDelegateTest : BaseSessionTest() {
                 assertThat("Security info should not be null", securityInfo, notNullValue())
 
                 assertThat("Should not be secure", securityInfo.isSecure, equalTo(false))
-                assertThat("Tracking mode should match",
-                           securityInfo.trackingMode,
-                           equalTo(GeckoSession.ProgressDelegate.SecurityInformation.CONTENT_UNKNOWN))
             }
 
             @AssertCalled(count = 1, order = [3])
@@ -215,9 +212,6 @@ class ProgressDelegateTest : BaseSessionTest() {
                 assertThat("Passive mixed mode should match",
                            securityInfo.mixedModePassive,
                            equalTo(GeckoSession.ProgressDelegate.SecurityInformation.CONTENT_UNKNOWN))
-                assertThat("Tracking mode should match",
-                           securityInfo.trackingMode,
-                           equalTo(GeckoSession.ProgressDelegate.SecurityInformation.CONTENT_UNKNOWN))
             }
         })
     }
@@ -263,9 +257,6 @@ class ProgressDelegateTest : BaseSessionTest() {
                            equalTo(GeckoSession.ProgressDelegate.SecurityInformation.CONTENT_UNKNOWN))
                 assertThat("Passive mixed mode should match",
                            securityInfo.mixedModePassive,
-                           equalTo(GeckoSession.ProgressDelegate.SecurityInformation.CONTENT_UNKNOWN))
-                assertThat("Tracking mode should match",
-                           securityInfo.trackingMode,
                            equalTo(GeckoSession.ProgressDelegate.SecurityInformation.CONTENT_UNKNOWN))
             }
         })
