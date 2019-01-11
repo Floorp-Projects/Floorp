@@ -12,6 +12,8 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const declaration = exports.declaration = {
   // Array of the computed properties for a CSS declaration.
   computedProperties: PropTypes.arrayOf(PropTypes.shape({
+    // Whether or not the computed property is overridden.
+    isOverridden: PropTypes.bool,
     // The computed property name.
     name: PropTypes.string,
     // The computed priority (either "important" or an empty string).
