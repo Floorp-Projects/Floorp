@@ -352,7 +352,9 @@ void AnimationFrameRecyclingQueue::AdvanceInternal() {
 
   // If we are allowed to recycle the frame, then we should save it before the
   // base class's AdvanceInternal discards it.
-  newEntry.mFrame = std::move(front);
+  if (front->ShouldRecycle()) {
+    newEntry.mFrame = std::move(front);
+  }
 
   // Even if the frame itself isn't saved, we want the dirty rect to calculate
   // the recycle rect for future recycled frames.
@@ -391,9 +393,11 @@ bool AnimationFrameRecyclingQueue::ResetInternal() {
   // existing mRecycle entries, because that will happen in RecycleFrame when
   // we try to pull out a frame to redecode the first frame.
   for (RefPtr<imgFrame>& frame : mDisplay) {
-    RecycleEntry newEntry(mFirstFrameRefreshArea);
-    newEntry.mFrame = std::move(frame);
-    mRecycle.push_back(std::move(newEntry));
+    if (frame->ShouldRecycle()) {
+      RecycleEntry newEntry(mFirstFrameRefreshArea);
+      newEntry.mFrame = std::move(frame);
+      mRecycle.push_back(std::move(newEntry));
+    }
   }
 
   return AnimationFrameDiscardingQueue::ResetInternal();
