@@ -819,7 +819,7 @@ typedef bool (*CheckGlobalOrEvalDeclarationConflictsFn)(JSContext*,
                                                         HandleScript);
 static const VMFunction CheckGlobalOrEvalDeclarationConflictsInfo =
     FunctionInfo<CheckGlobalOrEvalDeclarationConflictsFn>(
-        jit::CheckGlobalOrEvalDeclarationConflicts,
+        js::CheckGlobalOrEvalDeclarationConflicts,
         "CheckGlobalOrEvalDeclarationConflicts");
 
 typedef bool (*InitFunctionEnvironmentObjectsFn)(JSContext*, BaselineFrame*);
