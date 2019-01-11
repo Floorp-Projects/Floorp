@@ -24,11 +24,6 @@ already_AddRefed<nsIContentIterator> NS_NewPreContentIterator() {
   return iter.forget();
 }
 
-already_AddRefed<nsIContentIterator> NS_NewContentSubtreeIterator() {
-  nsCOMPtr<nsIContentIterator> iter = new mozilla::ContentSubtreeIterator();
-  return iter.forget();
-}
-
 namespace mozilla {
 
 ///////////////////////////////////////////////////////////////////////////
