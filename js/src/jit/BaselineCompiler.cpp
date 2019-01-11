@@ -815,7 +815,8 @@ bool BaselineCompiler::emitDebugPrologue() {
 }
 
 typedef bool (*CheckGlobalOrEvalDeclarationConflictsFn)(JSContext*,
-                                                        BaselineFrame*);
+                                                        HandleObject,
+                                                        HandleScript);
 static const VMFunction CheckGlobalOrEvalDeclarationConflictsInfo =
     FunctionInfo<CheckGlobalOrEvalDeclarationConflictsFn>(
         jit::CheckGlobalOrEvalDeclarationConflicts,
@@ -864,7 +865,9 @@ bool BaselineCompiler::initEnvironmentChain() {
     // in prologue, but we need to check for redeclaration errors.
 
     prepareVMCall();
-    masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
+
+    pushArg(ImmGCPtr(script));
+    masm.loadPtr(frame.addressOfEnvironmentChain(), R0.scratchReg());
     pushArg(R0.scratchReg());
 
     if (!callVMNonOp(CheckGlobalOrEvalDeclarationConflictsInfo, phase)) {
