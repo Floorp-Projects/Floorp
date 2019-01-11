@@ -201,11 +201,11 @@ add_task(async function privileged_with_mozillaAddons() {
   let manifestPermissions = await getManifestPermissions({
     isPrivileged: true,
     manifest: {
-      permissions: ["mozillaAddons", "mozillaAddons", "mozillaAddons", "resource://*/*", "http://a/"],
+      permissions: ["mozillaAddons", "mozillaAddons", "mozillaAddons", "resource://x/*", "http://a/", "about:reader*"],
     },
   });
   deepEqual(manifestPermissions, {
-    origins: ["resource://*/*", "http://a/"],
+    origins: ["resource://x/*", "http://a/", "about:reader*"],
     permissions: ["mozillaAddons"],
   }, "Expected origins and permissions for privileged add-on with mozillaAddons");
 
@@ -219,7 +219,7 @@ add_task(async function privileged_with_mozillaAddons() {
 add_task(async function unprivileged_with_mozillaAddons() {
   let manifestPermissions = await getManifestPermissions({
     manifest: {
-      permissions: ["mozillaAddons", "mozillaAddons", "mozillaAddons", "resource://*/*", "http://a/"],
+      permissions: ["mozillaAddons", "mozillaAddons", "mozillaAddons", "resource://x/*", "http://a/", "about:reader*"],
     },
   });
   deepEqual(manifestPermissions, {
@@ -290,4 +290,39 @@ add_task(async function update_change_permissions() {
     bundle.formatStringFromName("webextPerms.hostDescription.wildcard", ["c"], 1),
     bundle.formatStringFromName("webextPerms.description.proxy", [DUMMY_APP_NAME], 1),
   ], "Expected permission warnings for new permissions only");
+});
+
+// Tests that a privileged extension with the mozillaAddons permission can be
+// updated without errors.
+add_task(async function update_privileged_with_mozillaAddons() {
+  let warnings = await getPermissionWarningsForUpdate({
+    isPrivileged: true,
+    manifest: {
+      permissions: ["mozillaAddons", "resource://a/"],
+    },
+  }, {
+    isPrivileged: true,
+    manifest: {
+      permissions: ["mozillaAddons", "resource://a/", "resource://b/"],
+    },
+  });
+  deepEqual(warnings, [
+    bundle.formatStringFromName("webextPerms.hostDescription.oneSite", ["b"], 1),
+  ], "Expected permission warnings for new host only");
+});
+
+// Tests that an unprivileged extension cannot get privileged permissions
+// through an update.
+add_task(async function update_unprivileged_with_mozillaAddons() {
+  // Unprivileged
+  let warnings = await getPermissionWarningsForUpdate({
+    manifest: {
+      permissions: ["mozillaAddons", "resource://a/"],
+    },
+  }, {
+    manifest: {
+      permissions: ["mozillaAddons", "resource://a/", "resource://b/"],
+    },
+  });
+  deepEqual(warnings, [], "resource:-scheme is unsupported for unprivileged extensions");
 });
