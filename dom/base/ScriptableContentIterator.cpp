@@ -5,6 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ScriptableContentIterator.h"
+
+#include "mozilla/ContentIterator.h"
 #include "nsINode.h"
 #include "nsRange.h"
 
@@ -36,7 +38,7 @@ void ScriptableContentIterator::EnsureContentIterator() {
       mContentIterator = NS_NewPreContentIterator();
       break;
     case SUBTREE_ITERATOR:
-      mContentIterator = NS_NewContentSubtreeIterator();
+      mContentIterator = new ContentSubtreeIterator();
       break;
   }
 }

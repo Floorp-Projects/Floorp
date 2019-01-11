@@ -16,11 +16,11 @@
 #include "nsIContent.h"
 #include "mozilla/dom/Document.h"
 #include "nsError.h"
-#include "nsIContentIterator.h"
 #include "nsINodeList.h"
 #include "nsGkAtoms.h"
 #include "nsContentUtils.h"
 #include "nsTextFrame.h"
+#include "mozilla/ContentIterator.h"
 #include "mozilla/dom/CharacterData.h"
 #include "mozilla/dom/DocumentFragment.h"
 #include "mozilla/dom/DocumentType.h"
@@ -1491,7 +1491,7 @@ void nsRange::SelectNodeContents(nsINode& aNode, ErrorResult& aRv) {
 // so that our methods/algorithms aren't cluttered with special
 // case code that tries to include these points while iterating.
 //
-// The RangeSubtreeIterator class mimics the nsIContentIterator
+// The RangeSubtreeIterator class mimics the ContentSubtreeIterator
 // methods we need, so should the Content Iterator support the
 // start/end points in the future, we can switchover relatively
 // easy.
@@ -1500,7 +1500,7 @@ class MOZ_STACK_CLASS RangeSubtreeIterator {
  private:
   enum RangeSubtreeIterState { eDone = 0, eUseStart, eUseIterator, eUseEnd };
 
-  nsCOMPtr<nsIContentIterator> mIter;
+  RefPtr<ContentSubtreeIterator> mSubtreeIter;
   RangeSubtreeIterState mIterState;
 
   nsCOMPtr<nsINode> mStart;
@@ -1562,17 +1562,17 @@ nsresult RangeSubtreeIterator::Init(nsRange* aRange) {
     // Now create a Content Subtree Iterator to be used
     // for the subtrees between the end points!
 
-    mIter = NS_NewContentSubtreeIterator();
+    mSubtreeIter = new ContentSubtreeIterator();
 
-    nsresult res = mIter->Init(aRange);
+    nsresult res = mSubtreeIter->Init(aRange);
     if (NS_FAILED(res)) return res;
 
-    if (mIter->IsDone()) {
+    if (mSubtreeIter->IsDone()) {
       // The subtree iterator thinks there's nothing
       // to iterate over, so just free it up so we
       // don't accidentally call into it.
 
-      mIter = nullptr;
+      mSubtreeIter = nullptr;
     }
   }
 
@@ -1591,8 +1591,8 @@ already_AddRefed<nsINode> RangeSubtreeIterator::GetCurrentNode() {
     node = mStart;
   } else if (mIterState == eUseEnd && mEnd) {
     node = mEnd;
-  } else if (mIterState == eUseIterator && mIter) {
-    node = mIter->GetCurrentNode();
+  } else if (mIterState == eUseIterator && mSubtreeIter) {
+    node = mSubtreeIter->GetCurrentNode();
   }
 
   return node.forget();
@@ -1601,8 +1601,8 @@ already_AddRefed<nsINode> RangeSubtreeIterator::GetCurrentNode() {
 void RangeSubtreeIterator::First() {
   if (mStart)
     mIterState = eUseStart;
-  else if (mIter) {
-    mIter->First();
+  else if (mSubtreeIter) {
+    mSubtreeIter->First();
 
     mIterState = eUseIterator;
   } else if (mEnd)
@@ -1614,8 +1614,8 @@ void RangeSubtreeIterator::First() {
 void RangeSubtreeIterator::Last() {
   if (mEnd)
     mIterState = eUseEnd;
-  else if (mIter) {
-    mIter->Last();
+  else if (mSubtreeIter) {
+    mSubtreeIter->Last();
 
     mIterState = eUseIterator;
   } else if (mStart)
@@ -1626,8 +1626,8 @@ void RangeSubtreeIterator::Last() {
 
 void RangeSubtreeIterator::Next() {
   if (mIterState == eUseStart) {
-    if (mIter) {
-      mIter->First();
+    if (mSubtreeIter) {
+      mSubtreeIter->First();
 
       mIterState = eUseIterator;
     } else if (mEnd)
@@ -1635,9 +1635,9 @@ void RangeSubtreeIterator::Next() {
     else
       mIterState = eDone;
   } else if (mIterState == eUseIterator) {
-    mIter->Next();
+    mSubtreeIter->Next();
 
-    if (mIter->IsDone()) {
+    if (mSubtreeIter->IsDone()) {
       if (mEnd)
         mIterState = eUseEnd;
       else
@@ -1649,8 +1649,8 @@ void RangeSubtreeIterator::Next() {
 
 void RangeSubtreeIterator::Prev() {
   if (mIterState == eUseEnd) {
-    if (mIter) {
-      mIter->Last();
+    if (mSubtreeIter) {
+      mSubtreeIter->Last();
 
       mIterState = eUseIterator;
     } else if (mStart)
@@ -1658,9 +1658,9 @@ void RangeSubtreeIterator::Prev() {
     else
       mIterState = eDone;
   } else if (mIterState == eUseIterator) {
-    mIter->Prev();
+    mSubtreeIter->Prev();
 
-    if (mIter->IsDone()) {
+    if (mSubtreeIter->IsDone()) {
       if (mStart)
         mIterState = eUseStart;
       else
