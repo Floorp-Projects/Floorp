@@ -1833,12 +1833,13 @@ gfx.omtp:
   paint_wait_ratio:
     bug_numbers:
       - 1386968
+      - 1518669
     description: >
       Ratio (in units of 1/100th of a percent) of how many times OMTP waited
       for a paint for more than 200us, versus the total number of paints.
     keyed: false
     kind: uint
-    expires: "66"
+    expires: "never"
     notification_emails:
       - gfx-telemetry-alerts@mozilla.com
       - rhunt@mozilla.com
