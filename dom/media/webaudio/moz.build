@@ -120,12 +120,14 @@ UNIFIED_SOURCES += [
     'WebAudioUtils.cpp',
 ]
 
-if CONFIG['CPU_ARCH'] == 'arm' and CONFIG['BUILD_ARM_NEON']:
+if CONFIG['CPU_ARCH'] == 'aarch64' or CONFIG['BUILD_ARM_NEON']:
+    DEFINES['USE_NEON'] = True
     SOURCES += ['AudioNodeEngineNEON.cpp']
     SOURCES['AudioNodeEngineNEON.cpp'].flags += CONFIG['NEON_FLAGS']
-    LOCAL_INCLUDES += [
-        '/media/openmax_dl/dl/api/'
-    ]
+    if CONFIG['BUILD_ARM_NEON']:
+        LOCAL_INCLUDES += [
+            '/media/openmax_dl/dl/api/'
+        ]
 
 # Are we targeting x86 or x64?  If so, build SSE2 files.
 if CONFIG['INTEL_ARCHITECTURE']:
