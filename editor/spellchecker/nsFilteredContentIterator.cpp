@@ -3,17 +3,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/mozalloc.h"
+#include "nsFilteredContentIterator.h"
+
+#include "mozilla/ContentIterator.h"
 #include "mozilla/Move.h"
+#include "mozilla/mozalloc.h"
+
 #include "nsComponentManagerUtils.h"
 #include "nsComposeTxtSrvFilter.h"
 #include "nsContentUtils.h"
 #include "nsDebug.h"
 #include "nsError.h"
-#include "nsFilteredContentIterator.h"
 #include "nsAtom.h"
 #include "nsIContent.h"
-#include "nsIContentIterator.h"
 #include "nsINode.h"
 #include "nsISupportsBase.h"
 #include "nsISupportsUtils.h"
@@ -25,7 +27,7 @@ using namespace mozilla;
 nsFilteredContentIterator::nsFilteredContentIterator(
     UniquePtr<nsComposeTxtSrvFilter> aFilter)
     : mIterator(NS_NewContentIterator()),
-      mPreIterator(NS_NewPreContentIterator()),
+      mPreIterator(new PreContentIterator()),
       mFilter(std::move(aFilter)),
       mDidSkip(false),
       mIsOutOfRange(false),

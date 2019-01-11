@@ -3059,8 +3059,8 @@ void nsRange::ExcludeNonSelectableNodes(nsTArray<RefPtr<nsRange>>* aOutRanges) {
   nsRange* range = this;
   RefPtr<nsRange> newRange;
   while (range) {
-    nsCOMPtr<nsIContentIterator> iter = NS_NewPreContentIterator();
-    nsresult rv = iter->Init(range);
+    RefPtr<PreContentIterator> preOrderIter = new PreContentIterator();
+    nsresult rv = preOrderIter->Init(range);
     if (NS_FAILED(rv)) {
       return;
     }
@@ -3074,8 +3074,8 @@ void nsRange::ExcludeNonSelectableNodes(nsTArray<RefPtr<nsRange>>* aOutRanges) {
     nsIContent* firstNonSelectableContent = nullptr;
     while (true) {
       ErrorResult err;
-      nsINode* node = iter->GetCurrentNode();
-      iter->Next();
+      nsINode* node = preOrderIter->GetCurrentNode();
+      preOrderIter->Next();
       bool selectable = true;
       nsIContent* content =
           node && node->IsContent() ? node->AsContent() : nullptr;
@@ -3101,7 +3101,7 @@ void nsRange::ExcludeNonSelectableNodes(nsTArray<RefPtr<nsRange>>* aOutRanges) {
         if (!firstNonSelectableContent) {
           firstNonSelectableContent = content;
         }
-        if (iter->IsDone() && seenSelectable) {
+        if (preOrderIter->IsDone() && seenSelectable) {
           // The tail end of the initial range is non-selectable - truncate the
           // current range before the first non-selectable node.
           range->SetEndBefore(*firstNonSelectableContent, err);
@@ -3157,7 +3157,7 @@ void nsRange::ExcludeNonSelectableNodes(nsTArray<RefPtr<nsRange>>* aOutRanges) {
           aOutRanges->AppendElement(range);
         }
       }
-      if (iter->IsDone()) {
+      if (preOrderIter->IsDone()) {
         return;
       }
     }
