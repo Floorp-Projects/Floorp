@@ -8,6 +8,7 @@
 
 #include "base/task.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/dom/MemoryReportRequest.h"
 #include "mozilla/ipc/CrashReporterClient.h"
 #include "mozilla/ipc/ProcessChild.h"
 #include "mozilla/Preferences.h"
@@ -20,16 +21,24 @@ namespace net {
 
 using namespace ipc;
 
+static SocketProcessChild* sSocketProcessChild;
+
 SocketProcessChild::SocketProcessChild() {
   LOG(("CONSTRUCT SocketProcessChild::SocketProcessChild\n"));
   nsDebugImpl::SetMultiprocessMode("Socket");
 
   MOZ_COUNT_CTOR(SocketProcessChild);
+  sSocketProcessChild = this;
 }
 
 SocketProcessChild::~SocketProcessChild() {
   LOG(("DESTRUCT SocketProcessChild::SocketProcessChild\n"));
   MOZ_COUNT_DTOR(SocketProcessChild);
+  sSocketProcessChild = nullptr;
+}
+
+/* static */ SocketProcessChild* SocketProcessChild::GetSingleton() {
+  return sSocketProcessChild;
 }
 
 bool SocketProcessChild::Init(base::ProcessId aParentPid,
@@ -78,6 +87,22 @@ void SocketProcessChild::CleanUp() {
 
 IPCResult SocketProcessChild::RecvPreferenceUpdate(const Pref& aPref) {
   Preferences::SetPreference(aPref);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult SocketProcessChild::RecvRequestMemoryReport(
+    const uint32_t& aGeneration, const bool& aAnonymize,
+    const bool& aMinimizeMemoryUsage, const MaybeFileDesc& aDMDFile) {
+  nsPrintfCString processName("SocketProcess");
+
+  mozilla::dom::MemoryReportRequestClient::Start(
+      aGeneration, aAnonymize, aMinimizeMemoryUsage, aDMDFile, processName,
+      [&](const MemoryReport& aReport) {
+        Unused << GetSingleton()->SendAddMemoryReport(aReport);
+      },
+      [&](const uint32_t& aGeneration) {
+        return GetSingleton()->SendFinishMemoryReport(aGeneration);
+      });
   return IPC_OK();
 }
 

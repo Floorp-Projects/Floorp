@@ -11,6 +11,11 @@
 
 namespace mozilla {
 
+namespace dom {
+class MemoryReport;
+class MemoryReportRequestHost;
+}  // namespace dom
+
 namespace ipc {
 class CrashReporterHost;
 }  // namespace ipc
@@ -30,12 +35,21 @@ class SocketProcessParent final : public PSocketProcessParent {
 
   mozilla::ipc::IPCResult RecvInitCrashReporter(
       Shmem&& aShmem, const NativeThreadId& aThreadId) override;
+  mozilla::ipc::IPCResult RecvAddMemoryReport(
+      const MemoryReport& aReport) override;
+  mozilla::ipc::IPCResult RecvFinishMemoryReport(
+      const uint32_t& aGeneration) override;
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
+  bool SendRequestMemoryReport(const uint32_t& aGeneration,
+                               const bool& aAnonymize,
+                               const bool& aMinimizeMemoryUsage,
+                               const MaybeFileDesc& aDMDFile);
 
  private:
   SocketProcessHost* mHost;
   UniquePtr<ipc::CrashReporterHost> mCrashReporter;
+  UniquePtr<dom::MemoryReportRequestHost> mMemoryReportRequest;
 
   static void Destroy(UniquePtr<SocketProcessParent>&& aParent);
 };
