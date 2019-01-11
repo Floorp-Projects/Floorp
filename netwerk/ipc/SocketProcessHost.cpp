@@ -9,6 +9,10 @@
 #include "nsIObserverService.h"
 #include "SocketProcessParent.h"
 
+#ifdef MOZ_GECKO_PROFILER
+#include "ProfilerParent.h"
+#endif
+
 namespace mozilla {
 namespace net {
 
@@ -212,6 +216,11 @@ void SocketProcessHost::InitAfterConnect(bool aSucceeded) {
     bool offline = false;
     DebugOnly<nsresult> result = ioService->GetOffline(&offline);
     MOZ_ASSERT(NS_SUCCEEDED(result), "Failed getting offline?");
+
+#ifdef MOZ_GECKO_PROFILER
+    Unused << GetActor()->SendInitProfiler(
+        ProfilerParent::CreateForProcess(GetActor()->OtherPid()));
+#endif
 
     Unused << GetActor()->SendSetOffline(offline);
 

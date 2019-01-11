@@ -17,6 +17,10 @@
 #include "ProcessUtils.h"
 #include "SocketProcessBridgeParent.h"
 
+#ifdef MOZ_GECKO_PROFILER
+#include "ChildProfilerController.h"
+#endif
+
 namespace mozilla {
 namespace net {
 
@@ -76,6 +80,13 @@ void SocketProcessChild::ActorDestroy(ActorDestroyReason aWhy) {
     ProcessChild::QuickExit();
   }
 
+#ifdef MOZ_GECKO_PROFILER
+  if (mProfilerController) {
+    mProfilerController->Shutdown();
+    mProfilerController = nullptr;
+  }
+#endif
+
   CrashReporterClient::DestroySingleton();
   XRE_ShutdownChildProcess();
 }
@@ -128,6 +139,15 @@ mozilla::ipc::IPCResult SocketProcessChild::RecvInitSocketProcessBridgeParent(
   mSocketProcessBridgeParentMap.Put(
       aContentProcessId,
       new SocketProcessBridgeParent(aContentProcessId, std::move(aEndpoint)));
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult SocketProcessChild::RecvInitProfiler(
+    Endpoint<PProfilerChild>&& aEndpoint) {
+#ifdef MOZ_GECKO_PROFILER
+  mProfilerController =
+      mozilla::ChildProfilerController::Create(std::move(aEndpoint));
+#endif
   return IPC_OK();
 }
 
