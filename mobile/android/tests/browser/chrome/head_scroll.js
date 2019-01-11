@@ -41,17 +41,12 @@ function checkScroll(browser, data) {
 
 function getScrollPosition(browser, data = {}) {
   let utils = getFrame(browser, data).windowUtils;
-  let visualScrollPos = data.visualScrollPos === true;
   let x = {}, y = {};
 
   let zoom = utils.getResolution();
-  if (visualScrollPos) {
-    utils.getVisualViewportOffset(x, y);
-  } else {
-    utils.getScrollXY(false, x, y);
-  }
+  utils.getVisualViewportOffset(x, y);
 
-  return { x: x.value, y: y.value, zoom, visualScrollPos };
+  return { x: x.value, y: y.value, zoom };
 }
 
 function getScrollString({ x = 0, y = 0 }) {

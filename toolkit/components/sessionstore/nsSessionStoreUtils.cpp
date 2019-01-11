@@ -254,12 +254,7 @@ nsSessionStoreUtils::CollectScrollPosition(Document* aDocument,
     return NS_OK;
   }
 
-  nsIScrollableFrame* frame = presShell->GetRootScrollFrameAsScrollable();
-  if (!frame) {
-    return NS_OK;
-  }
-
-  nsPoint scrollPos = frame->GetScrollPosition();
+  nsPoint scrollPos = presShell->GetVisualViewportOffset();
   int scrollX = nsPresContext::AppUnitsToIntCSSPixels(scrollPos.x);
   int scrollY = nsPresContext::AppUnitsToIntCSSPixels(scrollPos.y);
 

@@ -9,9 +9,10 @@ function promiseBrowserEvent(browserOrFrame, eventType, options = {}) {
   return new Promise((resolve) => {
     function handle(event) {
       // Since we'll be redirecting, don't make assumptions about the given URL and the loaded URL
-      if (event.target != (browserOrFrame.contentDocument || browserOrFrame.document) ||
-                          event.target.location.href == "about:blank") {
-        info("Skipping spurious '" + eventType + "' event" + " for " + event.target.location.href);
+      let document = browserOrFrame.contentDocument || browserOrFrame.document;
+      if (event.target != document && event.target != document.ownerGlobal.visualViewport ||
+          document.location.href == "about:blank") {
+        info("Skipping spurious '" + eventType + "' event" + " for " + document.location.href);
         return;
       }
       info("Received event " + eventType + " from browser");
