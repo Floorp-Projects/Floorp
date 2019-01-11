@@ -3627,16 +3627,8 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
 
     CASE(JSOP_DEFCONST)
     CASE(JSOP_DEFLET) {
-      LexicalEnvironmentObject* lexicalEnv;
-      JSObject* varObj;
-      if (script->hasNonSyntacticScope()) {
-        lexicalEnv = &REGS.fp()->extensibleLexicalEnvironment();
-        varObj = &REGS.fp()->varObj();
-      } else {
-        lexicalEnv = &cx->global()->lexicalEnvironment();
-        varObj = cx->global();
-      }
-      if (!DefLexicalOperation(cx, lexicalEnv, varObj, script, REGS.pc)) {
+      HandleObject env = REGS.fp()->environmentChain();
+      if (!DefLexicalOperation(cx, env, script, REGS.pc)) {
         goto error;
       }
     }
@@ -4641,11 +4633,10 @@ bool js::DefLexicalOperation(JSContext* cx,
   return NativeDefineDataProperty(cx, lexicalEnv, id, uninitialized, attrs);
 }
 
-bool js::DefLexicalOperation(JSContext* cx,
-                             LexicalEnvironmentObject* lexicalEnvArg,
-                             JSObject* varObjArg, JSScript* script,
-                             jsbytecode* pc) {
+bool js::DefLexicalOperation(JSContext* cx, HandleObject envChain,
+                             HandleScript script, jsbytecode* pc) {
   MOZ_ASSERT(*pc == JSOP_DEFLET || *pc == JSOP_DEFCONST);
+
   RootedPropertyName name(cx, script->getName(pc));
 
   unsigned attrs = JSPROP_ENUMERATE | JSPROP_PERMANENT;
@@ -4653,8 +4644,16 @@ bool js::DefLexicalOperation(JSContext* cx,
     attrs |= JSPROP_READONLY;
   }
 
-  Rooted<LexicalEnvironmentObject*> lexicalEnv(cx, lexicalEnvArg);
-  RootedObject varObj(cx, varObjArg);
+  Rooted<LexicalEnvironmentObject*> lexicalEnv(cx);
+  RootedObject varObj(cx);
+  if (script->hasNonSyntacticScope()) {
+    lexicalEnv = &NearestEnclosingExtensibleLexicalEnvironment(envChain);
+    varObj = &GetVariablesObject(envChain);
+  } else {
+    lexicalEnv = &cx->global()->lexicalEnvironment();
+    varObj = cx->global();
+  }
+
   MOZ_ASSERT_IF(!script->hasNonSyntacticScope(),
                 lexicalEnv == &cx->global()->lexicalEnvironment() &&
                     varObj == cx->global());
