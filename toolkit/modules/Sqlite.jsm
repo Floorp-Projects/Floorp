@@ -989,8 +989,8 @@ function openConnection(options) {
     Services.storage.openAsyncDatabase(file, dbOptions, (status, connection) => {
       if (!connection) {
         log.warn(`Could not open connection to ${path}: ${status}`);
-        let error = new Error(`Could not open connection to ${path}: ${status}`);
-        error.status = status;
+        let error = new Components.Exception(`Could not open connection to ${path}: ${status}`,
+                                              status);
         reject(error);
         return;
       }
