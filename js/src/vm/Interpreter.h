@@ -320,9 +320,44 @@ class MOZ_STACK_CLASS TryNoteIter {
 
   void settle() {
     for (; tn_ != tnEnd_; ++tn_) {
-      /* If pc is out of range, try the next one. */
-      if (pcOffset_ - tn_->start >= tn_->length) {
+      if (!pcInRange()) {
         continue;
+      }
+
+      /*  Try notes cannot be disjoint. That is, we can't have
+       *  multiple notes with disjoint pc ranges jumping to the same
+       *  catch block. This interacts awkwardly with for-of loops, in
+       *  which calls to IteratorClose emitted due to abnormal
+       *  completion (break, throw, return) are emitted inline, at the
+       *  source location of the break, throw, or return
+       *  statement. For example:
+       *
+       *      for (x of iter) {
+       *        try { return; } catch (e) { }
+       *      }
+       *
+       *  From the try-note nesting's perspective, the IteratorClose
+       *  resulting from |return| is covered by the inner try, when it
+       *  should not be. If IteratorClose throws, we don't want to
+       *  catch it here.
+       *
+       *  To make this work, we use JSTRY_FOR_OF_ITERCLOSE try-notes,
+       *  which cover the range of the abnormal completion. When
+       *  looking up trynotes, a for-of iterclose note indicates that
+       *  the enclosing for-of has just been terminated. As a result,
+       *  trynotes within that for-of are no longer active. When we
+       *  see a for-of-iterclose, we skip ahead in the trynotes list
+       *  until we see the matching for-of.
+       */
+      if (tn_->kind == JSTRY_FOR_OF_ITERCLOSE) {
+        do {
+          ++tn_;
+          MOZ_ASSERT(tn_ != tnEnd_);
+          MOZ_ASSERT_IF(pcInRange(), tn_->kind != JSTRY_FOR_OF_ITERCLOSE);
+        } while (!(pcInRange() && tn_->kind == JSTRY_FOR_OF));
+
+        // Advance to trynote following the enclosing for-of.
+        ++tn_;
       }
 
       /*
@@ -344,8 +379,8 @@ class MOZ_STACK_CLASS TryNoteIter {
        * depth exceeding the current one and this condition is what we use to
        * filter them out.
        */
-      if (tn_->stackDepth <= getStackDepth_()) {
-        break;
+      if (tn_ == tnEnd_ || tn_->stackDepth <= getStackDepth_()) {
+        return;
       }
     }
   }
@@ -373,6 +408,15 @@ class MOZ_STACK_CLASS TryNoteIter {
     settle();
   }
 
+  bool pcInRange() const {
+    // This checks both ends of the range at once
+    // because unsigned integers wrap on underflow.
+    uint32_t offset = pcOffset_;
+    uint32_t start = tn_->start;
+    uint32_t length = tn_->length;
+    return offset - start < length;
+
+  }
   bool done() const { return tn_ == tnEnd_; }
   const JSTryNote* operator*() const { return tn_; }
 };
