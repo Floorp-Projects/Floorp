@@ -4664,8 +4664,8 @@ UniquePtr<RangePaintInfo> PresShell::CreateRangePaintInfo(
   }
   info->mBuilder.EnterPresShell(ancestorFrame);
 
-  RefPtr<ContentSubtreeIterator> subtreeIter = new ContentSubtreeIterator();
-  nsresult rv = subtreeIter->Init(aRange);
+  ContentSubtreeIterator subtreeIter;
+  nsresult rv = subtreeIter.Init(aRange);
   if (NS_FAILED(rv)) {
     return nullptr;
   }
@@ -4686,8 +4686,8 @@ UniquePtr<RangePaintInfo> PresShell::CreateRangePaintInfo(
   if (startContainer->NodeType() == nsINode::TEXT_NODE) {
     BuildDisplayListForNode(startContainer);
   }
-  for (; !subtreeIter->IsDone(); subtreeIter->Next()) {
-    nsCOMPtr<nsINode> node = subtreeIter->GetCurrentNode();
+  for (; !subtreeIter.IsDone(); subtreeIter.Next()) {
+    nsCOMPtr<nsINode> node = subtreeIter.GetCurrentNode();
     BuildDisplayListForNode(node);
   }
   if (endContainer != startContainer &&
