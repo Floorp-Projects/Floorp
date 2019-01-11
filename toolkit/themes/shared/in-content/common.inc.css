@@ -402,6 +402,13 @@ xul|textbox {
   background-color: var(--in-content-box-background) !important;
 }
 
+/* The focus/border styles for nested textareas inside textbox[multiline] will
+ * be provided by the textbox */
+xul|textbox[multiline] html|textarea {
+  border: none !important;
+  box-shadow: none !important;
+}
+
 xul|textbox {
   min-height: 30px;
   padding-right: 8px;
