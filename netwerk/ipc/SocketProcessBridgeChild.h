@@ -23,14 +23,16 @@ class SocketProcessBridgeChild final : public PSocketProcessBridgeChild,
   NS_DECL_NSIOBSERVER
 
   static bool Create(Endpoint<PSocketProcessBridgeChild>&& aEndpoint);
-  static already_AddRefed<SocketProcessBridgeChild> GetSinglton();
+  static already_AddRefed<SocketProcessBridgeChild> GetSingleton();
   static void EnsureSocketProcessBridge(std::function<void()>&& aOnSuccess,
                                         std::function<void()>&& aOnFailure);
 
   mozilla::ipc::IPCResult RecvTest() override;
   void ActorDestroy(ActorDestroyReason aWhy) override;
   void DeferredDestroy();
+  bool IsShuttingDown() const { return mShuttingDown; };
   bool Inited() const { return mInited; };
+  ProcessId SocketProcessPid() const { return mSocketProcessPid; };
 
  private:
   DISALLOW_COPY_AND_ASSIGN(SocketProcessBridgeChild);
@@ -39,7 +41,9 @@ class SocketProcessBridgeChild final : public PSocketProcessBridgeChild,
   virtual ~SocketProcessBridgeChild();
 
   static StaticRefPtr<SocketProcessBridgeChild> sSocketProcessBridgeChild;
+  bool mShuttingDown;
   bool mInited = false;
+  ProcessId mSocketProcessPid;
 };
 
 }  // namespace net

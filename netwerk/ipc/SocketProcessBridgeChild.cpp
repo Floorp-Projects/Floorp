@@ -35,7 +35,7 @@ bool SocketProcessBridgeChild::Create(
 
 // static
 already_AddRefed<SocketProcessBridgeChild>
-SocketProcessBridgeChild::GetSinglton() {
+SocketProcessBridgeChild::GetSingleton() {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!sSocketProcessBridgeChild) {
@@ -79,7 +79,8 @@ void SocketProcessBridgeChild::EnsureSocketProcessBridge(
 }
 
 SocketProcessBridgeChild::SocketProcessBridgeChild(
-    Endpoint<PSocketProcessBridgeChild>&& aEndpoint) {
+    Endpoint<PSocketProcessBridgeChild>&& aEndpoint)
+    : mShuttingDown(false) {
   LOG(("CONSTRUCT SocketProcessBridgeChild::SocketProcessBridgeChild\n"));
 
   mInited = aEndpoint.Bind(this);
@@ -92,6 +93,8 @@ SocketProcessBridgeChild::SocketProcessBridgeChild(
   if (os) {
     os->AddObserver(this, "content-child-shutdown", false);
   }
+
+  mSocketProcessPid = aEndpoint.OtherPid();
 }
 
 SocketProcessBridgeChild::~SocketProcessBridgeChild() {
@@ -112,6 +115,7 @@ void SocketProcessBridgeChild::ActorDestroy(ActorDestroyReason aWhy) {
   MessageLoop::current()->PostTask(
       NewRunnableMethod("net::SocketProcessBridgeChild::DeferredDestroy", this,
                         &SocketProcessBridgeChild::DeferredDestroy));
+  mShuttingDown = true;
 }
 
 NS_IMETHODIMP
