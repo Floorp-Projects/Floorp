@@ -18,6 +18,7 @@
             android:id="@+id/menuButton"
             android:src="@drawable/ic_menu"
             android:layout_width="48dp"
+
             android:layout_height="48dp"
             android:layout_marginTop="16dp"
             android:background="?android:attr/selectableItemBackgroundBorderless"
