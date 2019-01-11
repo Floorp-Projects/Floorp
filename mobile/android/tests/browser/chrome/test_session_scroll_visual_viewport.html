@@ -138,13 +138,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1498812
     index -= 1; // session history uses 1-based index
     let {entries} = tabData;
     let prevPage = entries[index - 1];
-    todo(prevPage.presState, "presState exists");
+    ok(prevPage.presState, "presState exists");
     if (prevPage.presState) {
       let presState = prevPage.presState[0];
       // The presState operates in app units, while all other scroll positions
       // in JS-land use CSS pixels.
       presState = presStateToCSSPx(presState);
-      todo_is(presState.scroll, getScrollString(scrollPos1), "stored scroll position for previous page is correct");
+      is(presState.scroll, getScrollString(scrollPos1), "stored scroll position for previous page is correct");
       ok(fuzzyEquals(presState.res, scrollPos1.zoom), "stored zoom level for previous page is correct");
     }
 
@@ -159,6 +159,18 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1498812
 
     // Check the scroll position and zoom level.
     checkScroll(browser, scrollPos2);
+
+    // Now go back in history and check that the scroll position
+    // is restored there as well.
+    is(browser.canGoBack, true, "can go back");
+    pageshow = promiseBrowserEvent(browser, "pageshow");
+    scroll = promiseBrowserEvent(browser, "mozvisualscroll",
+                                 { mozSystemGroup: true });
+    browser.goBack();
+    await pageshow;
+    await scroll;
+
+    checkScroll(browser, scrollPos1);
 
     // Remove the tab.
     cleanupTabs();
