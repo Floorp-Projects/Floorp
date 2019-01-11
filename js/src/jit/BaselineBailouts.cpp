@@ -473,21 +473,26 @@ static inline jsbytecode* GetNextNonLoopEntryPc(jsbytecode* pc,
   return pc;
 }
 
-static bool HasLiveStackValueAtDepth(JSScript* script, jsbytecode* pc,
-                                     uint32_t stackDepth) {
+class NoOpTryNoteFilter {
+ public:
+  explicit NoOpTryNoteFilter() = default;
+  bool operator()(const JSTryNote*) { return true; }
+};
+
+class TryNoteIterAll : public TryNoteIter<NoOpTryNoteFilter> {
+ public:
+  TryNoteIterAll(JSContext* cx, JSScript* script, jsbytecode* pc)
+      : TryNoteIter(cx, script, pc, NoOpTryNoteFilter()) {}
+};
+
+static bool HasLiveStackValueAtDepth(JSContext* cx, HandleScript script,
+                                     jsbytecode* pc, uint32_t stackDepth) {
   if (!script->hasTrynotes()) {
     return false;
   }
 
-  uint32_t pcOffset = script->pcToOffset(pc);
-
-  for (const JSTryNote& tn : script->trynotes()) {
-    if (pcOffset < tn.start) {
-      continue;
-    }
-    if (pcOffset >= tn.start + tn.length) {
-      continue;
-    }
+  for (TryNoteIterAll tni(cx, script, pc); !tni.done(); ++tni) {
+    const JSTryNote& tn = **tni;
 
     switch (tn.kind) {
       case JSTRY_FOR_IN:
@@ -1012,7 +1017,8 @@ static bool InitFromBailout(JSContext* cx, size_t frameNo, HandleFunction fun,
       // iterators, however, so read them out. They will be closed by
       // HandleExceptionBaseline.
       MOZ_ASSERT(cx->realm()->isDebuggee());
-      if (iter.moreFrames() || HasLiveStackValueAtDepth(script, pc, i + 1)) {
+      if (iter.moreFrames() ||
+          HasLiveStackValueAtDepth(cx, script, pc, i + 1)) {
         v = iter.read();
       } else {
         iter.skip();
