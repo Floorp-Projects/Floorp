@@ -540,10 +540,10 @@ class ExtensionData {
   // Compute the difference between two sets of permissions, suitable
   // for presenting to the user.
   static comparePermissions(oldPermissions, newPermissions) {
-    let oldMatcher = new MatchPatternSet(oldPermissions.origins);
+    let oldMatcher = new MatchPatternSet(oldPermissions.origins, {restrictSchemes: false});
     return {
       // formatPermissionStrings ignores any scheme, so only look at the domain.
-      origins: newPermissions.origins.filter(perm => !oldMatcher.subsumesDomain(new MatchPattern(perm))),
+      origins: newPermissions.origins.filter(perm => !oldMatcher.subsumesDomain(new MatchPattern(perm, {restrictSchemes: false}))),
       permissions: newPermissions.permissions.filter(perm => !oldPermissions.permissions.includes(perm)),
     };
   }
@@ -1105,7 +1105,10 @@ class ExtensionData {
         allUrls = true;
         break;
       }
-      let match = /^[a-z*]+:\/\/([^/]*)\//.exec(permission);
+
+      // Privileged extensions may request access to "about:"-URLs, such as
+      // about:reader.
+      let match = /^[a-z*]+:\/\/([^/]*)\/|^about:/.exec(permission);
       if (!match) {
         throw new Error(`Unparseable host permission ${permission}`);
       }
