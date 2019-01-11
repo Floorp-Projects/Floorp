@@ -2406,7 +2406,10 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     }
     END_CASE(JSOP_BINDNAME)
 
-    CASE(JSOP_BINDVAR) { PUSH_OBJECT(REGS.fp()->varObj()); }
+    CASE(JSOP_BINDVAR) {
+      JSObject* varObj = BindVarOperation(cx, REGS.fp()->environmentChain());
+      PUSH_OBJECT(*varObj);
+    }
     END_CASE(JSOP_BINDVAR)
 
     CASE(JSOP_BITOR) {
@@ -4581,6 +4584,12 @@ JSObject* js::LambdaArrow(JSContext* cx, HandleFunction fun,
 
   MOZ_ASSERT(fun->global() == clone->global());
   return clone;
+}
+
+JSObject* js::BindVarOperation(JSContext* cx, JSObject* envChain) {
+  // Note: BindVarOperation has an unused cx argument because the JIT callVM
+  // machinery requires this.
+  return &GetVariablesObject(envChain);
 }
 
 bool js::DefFunOperation(JSContext* cx, HandleScript script,
