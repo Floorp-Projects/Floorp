@@ -23,6 +23,7 @@
 #include "mozilla/dom/DataTransfer.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/indexedDB/PIndexedDBPermissionRequestChild.h"
+#include "mozilla/dom/LoadURIOptionsBinding.h"
 #include "mozilla/dom/MessageManagerBinding.h"
 #include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/dom/Nullable.h"
@@ -1007,11 +1008,14 @@ mozilla::ipc::IPCResult TabChild::RecvLoadURL(const nsCString& aURI,
     ApplyShowInfo(aInfo);
   }
 
-  nsresult rv = WebNavigation()->LoadURI(
-      NS_ConvertUTF8toUTF16(aURI),
+  LoadURIOptions loadURIOptions;
+  loadURIOptions.mTriggeringPrincipal = nsContentUtils::GetSystemPrincipal();
+  loadURIOptions.mLoadFlags =
       nsIWebNavigation::LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP |
-          nsIWebNavigation::LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL,
-      nullptr, nullptr, nullptr, nsContentUtils::GetSystemPrincipal());
+      nsIWebNavigation::LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL;
+
+  nsresult rv =
+      WebNavigation()->LoadURI(NS_ConvertUTF8toUTF16(aURI), loadURIOptions);
   if (NS_FAILED(rv)) {
     NS_WARNING(
         "WebNavigation()->LoadURI failed. Eating exception, what else can I "
