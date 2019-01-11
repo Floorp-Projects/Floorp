@@ -7,6 +7,8 @@
 
 #include "SocketProcessHost.h"
 #include "mozilla/ipc/CrashReporterHost.h"
+#include "mozilla/Telemetry.h"
+#include "mozilla/TelemetryIPC.h"
 
 namespace mozilla {
 namespace net {
@@ -79,6 +81,47 @@ mozilla::ipc::IPCResult SocketProcessParent::RecvFinishMemoryReport(
     mMemoryReportRequest->Finish(aGeneration);
     mMemoryReportRequest = nullptr;
   }
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult SocketProcessParent::RecvAccumulateChildHistograms(
+    InfallibleTArray<HistogramAccumulation>&& aAccumulations) {
+  TelemetryIPC::AccumulateChildHistograms(Telemetry::ProcessID::Socket,
+                                          aAccumulations);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult SocketProcessParent::RecvAccumulateChildKeyedHistograms(
+    InfallibleTArray<KeyedHistogramAccumulation>&& aAccumulations) {
+  TelemetryIPC::AccumulateChildKeyedHistograms(Telemetry::ProcessID::Socket,
+                                               aAccumulations);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult SocketProcessParent::RecvUpdateChildScalars(
+    InfallibleTArray<ScalarAction>&& aScalarActions) {
+  TelemetryIPC::UpdateChildScalars(Telemetry::ProcessID::Socket,
+                                   aScalarActions);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult SocketProcessParent::RecvUpdateChildKeyedScalars(
+    InfallibleTArray<KeyedScalarAction>&& aScalarActions) {
+  TelemetryIPC::UpdateChildKeyedScalars(Telemetry::ProcessID::Socket,
+                                        aScalarActions);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult SocketProcessParent::RecvRecordChildEvents(
+    nsTArray<mozilla::Telemetry::ChildEventData>&& aEvents) {
+  TelemetryIPC::RecordChildEvents(Telemetry::ProcessID::Socket, aEvents);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult SocketProcessParent::RecvRecordDiscardedData(
+    const mozilla::Telemetry::DiscardedData& aDiscardedData) {
+  TelemetryIPC::RecordDiscardedData(Telemetry::ProcessID::Socket,
+                                    aDiscardedData);
   return IPC_OK();
 }
 

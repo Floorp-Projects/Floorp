@@ -1162,7 +1162,8 @@ already_AddRefed<nsITelemetry> TelemetryImpl::CreateTelemetryInstance() {
       "CreateTelemetryInstance may only be called once, via GetService()");
 
   bool useTelemetry = false;
-  if ((XRE_IsParentProcess() || XRE_IsContentProcess() || XRE_IsGPUProcess()) &&
+  if ((XRE_IsParentProcess() || XRE_IsContentProcess() || XRE_IsGPUProcess() ||
+       XRE_IsSocketProcess()) &&
       // Telemetry is never accumulated when recording or replaying, both
       // because the resulting measurements might be biased and because
       // measurements might occur at non-deterministic points in execution
