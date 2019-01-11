@@ -901,10 +901,8 @@ bool GeneratorThrowOrReturn(JSContext* cx, BaselineFrame* frame,
   return false;
 }
 
-bool CheckGlobalOrEvalDeclarationConflicts(JSContext* cx,
-                                           BaselineFrame* frame) {
-  RootedScript script(cx, frame->script());
-  RootedObject envChain(cx, frame->environmentChain());
+bool CheckGlobalOrEvalDeclarationConflicts(JSContext* cx, HandleObject envChain,
+                                           HandleScript script) {
   RootedObject varObj(cx, &GetVariablesObject(envChain));
 
   if (script->isForEval()) {
