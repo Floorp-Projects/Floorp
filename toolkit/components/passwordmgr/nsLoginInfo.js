@@ -28,8 +28,8 @@ nsLoginInfo.prototype = {
   passwordField: null,
 
   init(aHostname, aFormSubmitURL, aHttpRealm,
-                  aUsername, aPassword,
-                  aUsernameField, aPasswordField) {
+       aUsername, aPassword,
+       aUsernameField, aPasswordField) {
     this.hostname      = aHostname;
     this.formSubmitURL = aFormSubmitURL;
     this.httpRealm     = aHttpRealm;
@@ -52,8 +52,9 @@ nsLoginInfo.prototype = {
         this.username != aLogin.username ||
         this.password != aLogin.password ||
         this.usernameField != aLogin.usernameField ||
-        this.passwordField != aLogin.passwordField)
+        this.passwordField != aLogin.passwordField) {
       return false;
+    }
 
     return true;
   },

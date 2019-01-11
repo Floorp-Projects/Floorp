@@ -6352,7 +6352,7 @@ class nsDisplayFilters : public nsDisplayEffectsBase {
       mozilla::layers::RenderRootStateManager* aManager,
       nsDisplayListBuilder* aDisplayListBuilder) override;
 
-  bool CreateWebRenderCSSFilters(nsTArray<mozilla::wr::WrFilterOp>& wrFilters);
+  bool CreateWebRenderCSSFilters(nsTArray<mozilla::wr::FilterOp>& wrFilters);
 
  private:
   // relative to mFrame

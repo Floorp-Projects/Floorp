@@ -4794,14 +4794,14 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery : public Debugger::QueryBase {
     if (!realms.has(realm)) {
       return;
     }
+    if (!commonFilter(script, nogc)) {
+      return;
+    }
     if (hasLine) {
       if (line < script->lineno() ||
           script->lineno() + GetScriptLineExtent(script) < line) {
         return;
       }
-    }
-    if (!commonFilter(script, nogc)) {
-      return;
     }
 
     if (innermost) {

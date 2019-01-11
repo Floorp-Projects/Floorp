@@ -142,7 +142,7 @@ add_task(async function test_context_menu_password_fill() {
             .spawn(browser, {inputId}, async function({inputId}) {
               let input = content.document.getElementById(inputId);
               return input.disabled || input.readOnly;
-          });
+            });
 
           // If the password field is disabled or read-only, we want to see
           // the disabled Fill Password popup header.
@@ -196,7 +196,7 @@ add_task(async function test_context_menu_username_login_fill() {
           let formElement = content.document.querySelector(`[description="${description}"]`);
           let inputs = Array.from(formElement.querySelectorAll("input[type='text']"));
           return inputs.map((p) => p.id);
-      });
+        });
 
       for (let inputId of usernameInputIds) {
         info("Testing username field: " + inputId);
@@ -245,7 +245,7 @@ add_task(async function test_context_menu_username_login_fill() {
           .spawn(browser, {description}, async function({description}) {
             let formElement = content.document.querySelector(`[description="${description}"]`);
             return formElement.querySelector("input[type='password']").id;
-        });
+          });
 
         // We shouldn't change any field that's not the target username field or the first password field
         await assertContextMenuFill(browser, description, inputId, passwordFieldId, 1);

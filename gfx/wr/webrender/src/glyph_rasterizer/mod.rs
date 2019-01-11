@@ -731,7 +731,7 @@ mod test_glyph_rasterizer {
         let workers = Arc::new(worker.unwrap());
         let mut glyph_rasterizer = GlyphRasterizer::new(workers).unwrap();
         let mut glyph_cache = GlyphCache::new();
-        let mut gpu_cache = GpuCache::new();
+        let mut gpu_cache = GpuCache::new_for_testing();
         let mut texture_cache = TextureCache::new_for_testing(2048, 1024);
         let mut render_task_cache = RenderTaskCache::new();
         let mut render_task_tree = RenderTaskTree::new(FrameId::INVALID);

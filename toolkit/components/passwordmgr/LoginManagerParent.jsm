@@ -150,7 +150,7 @@ var LoginManagerParent = {
    * Send relevant data (e.g. logins and recipes) to the child process (LoginManagerContent).
    */
   async sendLoginDataToChild(showMasterPassword, formOrigin, actionOrigin,
-                                             requestId, target) {
+                             requestId, target) {
     let recipes = [];
     if (formOrigin) {
       let formHost;
@@ -230,7 +230,7 @@ var LoginManagerParent = {
   doAutocompleteSearch({ formOrigin, actionOrigin,
                          searchString, previousResult,
                          rect, requestId, isSecure, isPasswordField,
-                       }, target) {
+  }, target) {
     // Note: previousResult is a regular object, not an
     // nsIAutoCompleteResult.
 
@@ -287,9 +287,9 @@ var LoginManagerParent = {
   },
 
   onFormSubmit(hostname, formSubmitURL,
-                         usernameField, newPasswordField,
-                         oldPasswordField, openerTopWindowID,
-                         target) {
+               usernameField, newPasswordField,
+               oldPasswordField, openerTopWindowID,
+               target) {
     function getPrompter() {
       var prompterSvc = Cc["@mozilla.org/login-manager/prompter;1"].
                         createInstance(Ci.nsILoginManagerPrompter);
@@ -366,7 +366,7 @@ var LoginManagerParent = {
         // changing a second account to the new password so we ask anyways.
 
         prompter.promptToChangePasswordWithUsernames(
-                            logins, logins.length, formLogin);
+          logins, logins.length, formLogin);
       }
 
       return;
@@ -500,4 +500,4 @@ XPCOMUtils.defineLazyGetter(LoginManagerParent, "recipeParentPromise", function(
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(LoginManagerParent, "_repromptTimeout",
-  "signon.masterPasswordReprompt.timeout_ms", 900000); // 15 Minutes
+                                      "signon.masterPasswordReprompt.timeout_ms", 900000); // 15 Minutes

@@ -168,6 +168,15 @@ var FormDataInternal = {
         }
       }
 
+      // We don't want to collect values from sensitive fields (indicated by the 'autocomplete'
+      // attribute on relevant elements e.g. autocomplete=off).
+      if (node.getAutocompleteInfo) {
+        let autocompleteInfo = node.getAutocompleteInfo();
+        if (autocompleteInfo && !autocompleteInfo.canAutomaticallyPersist) {
+          continue;
+        }
+      }
+
       if (ChromeUtils.getClassName(node) === "HTMLInputElement" ||
           ChromeUtils.getClassName(node) === "HTMLTextAreaElement" ||
           (node.namespaceURI == this.namespaceURIs.xul && node.localName == "textbox")) {

@@ -23,8 +23,7 @@ var gLooksLikeUUIDRegex = /^\{\w{8}-\w{4}-\w{4}-\w{4}-\w{12}\}$/;
  * the given nsILoginInfo.  In case there is more than one login for the
  * hostname, the test fails.
  */
-function retrieveLoginMatching(aLoginInfo)
-{
+function retrieveLoginMatching(aLoginInfo) {
   let logins = Services.logins.findLogins({}, aLoginInfo.hostname, "", "");
   Assert.equal(logins.length, 1);
   return logins[0].QueryInterface(Ci.nsILoginMetaInfo);
@@ -34,8 +33,7 @@ function retrieveLoginMatching(aLoginInfo)
  * Checks that the nsILoginInfo and nsILoginMetaInfo properties of two different
  * login instances are equal.
  */
-function assertMetaInfoEqual(aActual, aExpected)
-{
+function assertMetaInfoEqual(aActual, aExpected) {
   Assert.notEqual(aActual, aExpected);
 
   // Check the nsILoginInfo properties.
@@ -69,8 +67,7 @@ var gLoginMetaInfo3;
 /**
  * Prepare the test objects that will be used by the following tests.
  */
-add_task(function test_initialize()
-{
+add_task(function test_initialize() {
   // Use a reference time from ten minutes ago to initialize one instance of
   // nsILoginMetaInfo, to test that reference times are updated when needed.
   let baseTimeMs = Date.now() - 600000;
@@ -91,8 +88,7 @@ add_task(function test_initialize()
  * Tests the behavior of addLogin with regard to metadata.  The logins added
  * here are also used by the following tests.
  */
-add_task(function test_addLogin_metainfo()
-{
+add_task(function test_addLogin_metainfo() {
   // Add a login without metadata to the database.
   Services.logins.addLogin(gLoginInfo1);
 
@@ -132,8 +128,7 @@ add_task(function test_addLogin_metainfo()
 /**
  * Tests that adding a login with a duplicate GUID throws an exception.
  */
-add_task(function test_addLogin_metainfo_duplicate()
-{
+add_task(function test_addLogin_metainfo_duplicate() {
   let loginInfo = TestData.formLogin({
     hostname: "http://duplicate.example.com",
     guid: gLoginMetaInfo2.guid,
@@ -149,8 +144,7 @@ add_task(function test_addLogin_metainfo_duplicate()
  * Tests that the existing metadata is not changed when modifyLogin is called
  * with an nsILoginInfo argument.
  */
-add_task(function test_modifyLogin_nsILoginInfo_metainfo_ignored()
-{
+add_task(function test_modifyLogin_nsILoginInfo_metainfo_ignored() {
   let newLoginInfo = gLoginInfo1.clone().QueryInterface(Ci.nsILoginMetaInfo);
   newLoginInfo.guid = gUUIDGenerator.generateUUID().toString();
   newLoginInfo.timeCreated = Date.now();
@@ -166,8 +160,7 @@ add_task(function test_modifyLogin_nsILoginInfo_metainfo_ignored()
 /**
  * Tests the modifyLogin function with an nsIProperyBag argument.
  */
-add_task(function test_modifyLogin_nsIProperyBag_metainfo()
-{
+add_task(function test_modifyLogin_nsIProperyBag_metainfo() {
   // Use a new reference time that is two minutes from now.
   let newTimeMs = Date.now() + 120000;
   let newUUIDValue = gUUIDGenerator.generateUUID().toString();
@@ -230,8 +223,7 @@ add_task(function test_modifyLogin_nsIProperyBag_metainfo()
 /**
  * Tests that modifying a login to a duplicate GUID throws an exception.
  */
-add_task(function test_modifyLogin_nsIProperyBag_metainfo_duplicate()
-{
+add_task(function test_modifyLogin_nsIProperyBag_metainfo_duplicate() {
   Assert.throws(() => Services.logins.modifyLogin(gLoginInfo1, newPropertyBag({
     guid: gLoginInfo2.guid,
   })), /specified GUID already exists/);
@@ -241,8 +233,7 @@ add_task(function test_modifyLogin_nsIProperyBag_metainfo_duplicate()
 /**
  * Tests searching logins using nsILoginMetaInfo properties.
  */
-add_task(function test_searchLogins_metainfo()
-{
+add_task(function test_searchLogins_metainfo() {
   // Find by GUID.
   let logins = Services.logins.searchLogins({}, newPropertyBag({
     guid: gLoginMetaInfo1.guid,
@@ -273,8 +264,7 @@ add_task(function test_searchLogins_metainfo()
  * Tests that the default nsILoginManagerStorage module attached to the Login
  * Manager service is able to save and reload nsILoginMetaInfo properties.
  */
-add_task(async function test_storage_metainfo()
-{
+add_task(async function test_storage_metainfo() {
   await LoginTestUtils.reloadData();
   LoginTestUtils.checkLogins([gLoginInfo1, gLoginInfo2, gLoginInfo3]);
 

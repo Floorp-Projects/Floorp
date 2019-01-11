@@ -6,7 +6,7 @@ module.exports = {
     "plugin:mozilla/chrome-test"
   ],
   "rules": {
-    "brace-style": "off",
+    "brace-style": ["error", "1tbs", {"allowSingleLine": false}],
     "no-undef": "off",
     "no-unused-vars": "off",
   },

@@ -30,17 +30,17 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 var testpath = "/chrome/toolkit/components/passwordmgr/test/chrome/";
 var prefix = "http://test2.example.com" + testpath;
 var subtests = [
-                   "subtst_privbrowsing_1.html", // 1
-                   "subtst_privbrowsing_1.html", // 2
-                   "subtst_privbrowsing_1.html", // 3
-                   "subtst_privbrowsing_2.html", // 4
-                   "subtst_privbrowsing_2.html", // 5
-                   "subtst_privbrowsing_2.html", // 6
-                   "subtst_privbrowsing_3.html", // 7
-                   "subtst_privbrowsing_3.html", // 8
-                   "subtst_privbrowsing_4.html", // 9
-                   "subtst_privbrowsing_3.html", // 10
-               ];
+  "subtst_privbrowsing_1.html", // 1
+  "subtst_privbrowsing_1.html", // 2
+  "subtst_privbrowsing_1.html", // 3
+  "subtst_privbrowsing_2.html", // 4
+  "subtst_privbrowsing_2.html", // 5
+  "subtst_privbrowsing_2.html", // 6
+  "subtst_privbrowsing_3.html", // 7
+  "subtst_privbrowsing_3.html", // 8
+  "subtst_privbrowsing_4.html", // 9
+  "subtst_privbrowsing_3.html", // 10
+];
 var observer;
 
 var testNum = 0;
@@ -99,7 +99,9 @@ function loadNextTest() {
 
   if (testNum === 7) {
     observer = SpecialPowers.wrapCallback(function(subject, topic, data) {
-      SimpleTest.executeSoon(() => { iframe.contentWindow.postMessage("go", "*"); });
+      SimpleTest.executeSoon(() => {
+        iframe.contentWindow.postMessage("go", "*");
+      });
     });
     SpecialPowers.addObserver(observer, "passwordmgr-processed-form");
   }
@@ -221,10 +223,14 @@ function testOnWindow(aIsPrivate, aCallback) {
         win.content.addEventListener("load", function innerLoad2() {
           win.content.removeEventListener("load", innerLoad2);
           testWindows.push(win);
-          SimpleTest.executeSoon(function() { aCallback(win); });
+          SimpleTest.executeSoon(function() {
+            aCallback(win);
+          });
         }, false, true);
       }, true);
-      SimpleTest.executeSoon(function() { BrowserTestUtils.loadURI(win.gBrowser, contentPage); });
+      SimpleTest.executeSoon(function() {
+        BrowserTestUtils.loadURI(win.gBrowser, contentPage);
+      });
     });
   }, {capture: true, once: true});
 }
@@ -264,7 +270,7 @@ var url = "http://test2.example.com";
 is(Services.logins.countLogins(url, "", null), 0, "No logins should be stored for " + url);
 
 var nsLoginInfo = new SpecialPowers.wrap(SpecialPowers.Components).Constructor("@mozilla.org/login-manager/loginInfo;1",
-                                             Ci.nsILoginInfo, "init");
+                                                                               Ci.nsILoginInfo, "init");
 var login = new nsLoginInfo(url, url, null, "notifyu1", "notifyp1", "user", "pass");
 
 var normalWindow;

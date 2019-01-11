@@ -319,15 +319,6 @@ EXTRA_DSO_LDOPTS	+= -dynamiclib -install_name $(_LOADER_PATH)/$(SHARED_LIBRARY) 
 endif
 endif
 
-ifeq ($(OS_ARCH),NetBSD)
-ifneq (,$(filter arc cobalt hpcmips mipsco newsmips pmax sgimips,$(OS_TEST)))
-ifneq (,$(filter layout/%,$(relativesrcdir)))
-OS_CFLAGS += -Wa,-xgot
-OS_CXXFLAGS += -Wa,-xgot
-endif
-endif
-endif
-
 ifdef SYMBOLS_FILE
 ifeq ($(OS_TARGET),WINNT)
 ifndef GNU_CC

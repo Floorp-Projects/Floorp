@@ -104,7 +104,7 @@ function checkLoginItems(logins, items) {
   let duplicates = findDuplicates(logins);
 
   let dateAndTimeFormatter = new Services.intl.DateTimeFormat(undefined,
-                             { dateStyle: "medium" });
+                                                              { dateStyle: "medium" });
   for (let login of logins) {
     if (login.username && !duplicates.has(login.username)) {
       // If login is not duplicate and we can't find an item for it, fail.
@@ -138,29 +138,29 @@ function getExpectedLogins(hostname) {
 
 function loginList() {
   return [
-      new LoginInfo("http://www.example.com", "http://www.example.com", null,
-                    "username1", "password",
-                    "form_field_username", "form_field_password"),
+    new LoginInfo("http://www.example.com", "http://www.example.com", null,
+                  "username1", "password",
+                  "form_field_username", "form_field_password"),
 
-      new LoginInfo("http://www.example.com", "http://www.example.com", null,
-                    "username2", "password",
-                    "form_field_username", "form_field_password"),
+    new LoginInfo("http://www.example.com", "http://www.example.com", null,
+                  "username2", "password",
+                  "form_field_username", "form_field_password"),
 
-      new LoginInfo("http://www2.example.com", "http://www.example.com", null,
-                    "username", "password",
-                    "form_field_username", "form_field_password"),
-      new LoginInfo("http://www2.example.com", "http://www2.example.com", null,
-                    "username", "password2",
-                    "form_field_username", "form_field_password"),
-      new LoginInfo("http://www2.example.com", "http://www2.example.com", null,
-                    "username2", "password2",
-                    "form_field_username", "form_field_password"),
+    new LoginInfo("http://www2.example.com", "http://www.example.com", null,
+                  "username", "password",
+                  "form_field_username", "form_field_password"),
+    new LoginInfo("http://www2.example.com", "http://www2.example.com", null,
+                  "username", "password2",
+                  "form_field_username", "form_field_password"),
+    new LoginInfo("http://www2.example.com", "http://www2.example.com", null,
+                  "username2", "password2",
+                  "form_field_username", "form_field_password"),
 
-      new LoginInfo("http://www3.example.com", "http://www.example.com", null,
-                    "", "password",
-                    "form_field_username", "form_field_password"),
-      new LoginInfo("http://www3.example.com", "http://www3.example.com", null,
-                    "", "password2",
-                    "form_field_username", "form_field_password"),
+    new LoginInfo("http://www3.example.com", "http://www.example.com", null,
+                  "", "password",
+                  "form_field_username", "form_field_password"),
+    new LoginInfo("http://www3.example.com", "http://www3.example.com", null,
+                  "", "password2",
+                  "form_field_username", "form_field_password"),
   ];
 }

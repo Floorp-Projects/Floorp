@@ -9,7 +9,7 @@ types.addDictType("root.listWorkers", {
   workers: "array:workerTarget",
 });
 types.addDictType("root.listServiceWorkerRegistrations", {
-  registrations: "array:json",
+  registrations: "array:serviceWorkerRegistration",
 });
 types.addDictType("root.listProcesses", {
   processes: "array:json",

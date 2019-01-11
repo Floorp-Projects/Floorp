@@ -579,6 +579,7 @@ void WebRenderDebugPrefChangeCallback(const char* aPrefName, void*) {
   GFX_WEBRENDER_DEBUG(".gpu-cache", 1 << 12)
   GFX_WEBRENDER_DEBUG(".slow-frame-indicator", 1 << 13)
   GFX_WEBRENDER_DEBUG(".texture-cache.clear-evicted", 1 << 14)
+  GFX_WEBRENDER_DEBUG(".texture-cache.disable-shrink", 1 << 16)
 #undef GFX_WEBRENDER_DEBUG
 
   gfx::gfxVars::SetWebRenderDebugFlags(flags);

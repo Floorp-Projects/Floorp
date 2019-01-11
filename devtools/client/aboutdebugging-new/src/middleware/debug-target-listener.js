@@ -45,11 +45,16 @@ function debugTargetListenerMiddleware(store) {
             clientWrapper.contentProcessFronts.push(front);
             front.on("workerListChanged", onWorkersUpdated);
           });
+
+          clientWrapper.onFront("serviceWorkerRegistration", front => {
+            clientWrapper.serviceWorkerRegistrationFronts.push(front);
+            front.on("push-subscription-modified", onWorkersUpdated);
+            front.on("registration-changed", onWorkersUpdated);
+          });
+
           clientWrapper.addListener("serviceWorkerRegistrationListChanged",
             onWorkersUpdated);
           clientWrapper.addListener("processListChanged", onWorkersUpdated);
-          clientWrapper.addListener("registration-changed", onWorkersUpdated);
-          clientWrapper.addListener("push-subscription-modified", onWorkersUpdated);
         }
         break;
       }
@@ -75,9 +80,13 @@ function debugTargetListenerMiddleware(store) {
           }
           clientWrapper.contentProcessFronts = [];
 
+          for (const front of clientWrapper.serviceWorkerRegistrationFronts) {
+            front.off("push-subscription-modified", onWorkersUpdated);
+            front.off("registration-changed", onWorkersUpdated);
+          }
+          clientWrapper.serviceWorkerRegistrationFronts = [];
+
           clientWrapper.removeListener("processListChanged", onWorkersUpdated);
-          clientWrapper.removeListener("registration-changed", onWorkersUpdated);
-          clientWrapper.removeListener("push-subscription-modified", onWorkersUpdated);
         }
         break;
       }

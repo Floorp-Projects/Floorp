@@ -29,9 +29,9 @@ function initLogins() {
                         .createInstance(Ci.nsILoginInfo);
 
   login1.init("http://mochi.test:8888", null, "xml",
-               "xmluser1", "xmlpass1", "", "");
+              "xmluser1", "xmlpass1", "", "");
   login2.init("http://mochi.test:8888", null, "xml2",
-               "xmluser2", "xmlpass2", "", "");
+              "xmluser2", "xmlpass2", "", "");
 
   SpecialPowers.Services.logins.addLogin(login1);
   SpecialPowers.Services.logins.addLogin(login2);
@@ -49,58 +49,59 @@ function handleDialog(doc, testNum) {
 
   switch (testNum) {
     case 1:
-        is(username, "xmluser1", "Checking provided username");
-        is(password, "xmlpass1", "Checking provided password");
-        break;
+      is(username, "xmluser1", "Checking provided username");
+      is(password, "xmlpass1", "Checking provided password");
+      break;
 
     case 2:
-        is(username, "xmluser2", "Checking provided username");
-        is(password, "xmlpass2", "Checking provided password");
+      is(username, "xmluser2", "Checking provided username");
+      is(password, "xmlpass2", "Checking provided password");
 
-        // Check that the dialog is modal, chrome and dependent;
-        // We can't just check window.opener because that'll be
-        // a content window, which therefore isn't exposed (it'll lie and
-        // be null).
-        var win = doc.defaultView;
-        var Ci = SpecialPowers.Ci;
-        var treeOwner = win.docShell.treeOwner;
-        treeOwner.QueryInterface(Ci.nsIInterfaceRequestor);
-        var flags = treeOwner.getInterface(Ci.nsIXULWindow).chromeFlags;
-        var wbc = treeOwner.getInterface(Ci.nsIWebBrowserChrome);
-        info("Flags: " + flags);
-        ok((flags & Ci.nsIWebBrowserChrome.CHROME_OPENAS_CHROME) != 0,
-           "Dialog should be opened as chrome");
-        ok((flags & Ci.nsIWebBrowserChrome.CHROME_OPENAS_DIALOG) != 0,
-           "Dialog should be opened as a dialog");
-        ok((flags & Ci.nsIWebBrowserChrome.CHROME_DEPENDENT) != 0,
-           "Dialog should be opened as dependent.");
-        ok(wbc.isWindowModal(), "Dialog should be modal");
+      // Check that the dialog is modal, chrome and dependent;
+      // We can't just check window.opener because that'll be
+      // a content window, which therefore isn't exposed (it'll lie and
+      // be null).
+      var win = doc.defaultView;
+      var Ci = SpecialPowers.Ci;
+      var treeOwner = win.docShell.treeOwner;
+      treeOwner.QueryInterface(Ci.nsIInterfaceRequestor);
+      var flags = treeOwner.getInterface(Ci.nsIXULWindow).chromeFlags;
+      var wbc = treeOwner.getInterface(Ci.nsIWebBrowserChrome);
+      info("Flags: " + flags);
+      ok((flags & Ci.nsIWebBrowserChrome.CHROME_OPENAS_CHROME) != 0,
+         "Dialog should be opened as chrome");
+      ok((flags & Ci.nsIWebBrowserChrome.CHROME_OPENAS_DIALOG) != 0,
+         "Dialog should be opened as a dialog");
+      ok((flags & Ci.nsIWebBrowserChrome.CHROME_DEPENDENT) != 0,
+         "Dialog should be opened as dependent.");
+      ok(wbc.isWindowModal(), "Dialog should be modal");
 
-        // Check that the right tab is focused:
-        var browserWin = SpecialPowers.Services.wm.getMostRecentWindow("navigator:browser");
-        var spec = browserWin.gBrowser.selectedBrowser.currentURI.spec;
-        ok(spec.startsWith("http://mochi.test:8888"),
-           "Tab with remote URI (rather than about:blank) should be focused (" + spec + ")");
+      // Check that the right tab is focused:
+      var browserWin = SpecialPowers.Services.wm.getMostRecentWindow("navigator:browser");
+      var spec = browserWin.gBrowser.selectedBrowser.currentURI.spec;
+      ok(spec.startsWith("http://mochi.test:8888"),
+         "Tab with remote URI (rather than about:blank) should be focused (" + spec + ")");
 
-        break;
+      break;
 
     default:
-        ok(false, "Uhh, unhandled switch for testNum #" + testNum);
-        break;
+      ok(false, "Uhh, unhandled switch for testNum #" + testNum);
+      break;
   }
 
   // Explicitly cancel the dialog and report a fail in this failure
   // case, rather than letting the dialog get stuck due to an auth
   // failure and having the test timeout.
   if (!username && !password) {
-      ok(false, "No values prefilled");
-      clickOK = false;
+    ok(false, "No values prefilled");
+    clickOK = false;
   }
 
-  if (clickOK)
+  if (clickOK) {
     dialog.acceptDialog();
-  else
+  } else {
     dialog.cancelDialog();
+  }
 
   ok(true, "handleDialog done");
   didDialog = true;
@@ -117,20 +118,20 @@ function xmlLoad(responseDoc) {
 
   switch (testNum) {
     case 1:
-        is(username, "xmluser1", "Checking provided username");
-        is(password, "xmlpass1", "Checking provided password");
-        break;
+      is(username, "xmluser1", "Checking provided username");
+      is(password, "xmlpass1", "Checking provided password");
+      break;
 
     case 2:
-        is(username, "xmluser2", "Checking provided username");
-        is(password, "xmlpass2", "Checking provided password");
+      is(username, "xmluser2", "Checking provided username");
+      is(password, "xmlpass2", "Checking provided password");
 
-        newWin.close();
-        break;
+      newWin.close();
+      break;
 
     default:
-        ok(false, "Uhh, unhandled switch for testNum #" + testNum);
-        break;
+      ok(false, "Uhh, unhandled switch for testNum #" + testNum);
+      break;
   }
 
   doTest();
@@ -139,21 +140,21 @@ function xmlLoad(responseDoc) {
 function doTest() {
   switch (++testNum) {
     case 1:
-        startCallbackTimer();
-        makeRequest("authenticate.sjs?user=xmluser1&pass=xmlpass1&realm=xml");
-        break;
+      startCallbackTimer();
+      makeRequest("authenticate.sjs?user=xmluser1&pass=xmlpass1&realm=xml");
+      break;
 
     case 2:
-        // Test correct parenting, by opening another tab in the foreground,
-        // and making sure the prompt re-focuses the original tab when shown:
-        newWin = window.open();
-        newWin.focus();
-        startCallbackTimer();
-        makeRequest("authenticate.sjs?user=xmluser2&pass=xmlpass2&realm=xml2");
-        break;
+      // Test correct parenting, by opening another tab in the foreground,
+      // and making sure the prompt re-focuses the original tab when shown:
+      newWin = window.open();
+      newWin.focus();
+      startCallbackTimer();
+      makeRequest("authenticate.sjs?user=xmluser2&pass=xmlpass2&realm=xml2");
+      break;
 
     default:
-        SimpleTest.finish();
+      SimpleTest.finish();
   }
 }
 
@@ -161,7 +162,7 @@ function makeRequest(uri) {
   var xmlDoc = document.implementation.createDocument("", "test", null);
 
   function documentLoaded(e) {
-      xmlLoad(xmlDoc);
+    xmlLoad(xmlDoc);
   }
   xmlDoc.addEventListener("load", documentLoaded);
   xmlDoc.load(uri);

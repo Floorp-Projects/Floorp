@@ -7,7 +7,9 @@ const ids = {
 
 function task(contentIds) {
   let resolve;
-  let promise = new Promise(r => { resolve = r; });
+  let promise = new Promise(r => {
+    resolve = r;
+  });
 
   function unexpectedContentEvent(evt) {
     ok(false, "Received a " + evt.type + " event on content");
@@ -18,8 +20,9 @@ function task(contentIds) {
   addEventListener("load", tabLoad, true);
 
   function tabLoad() {
-    if (content.location.href == "about:blank")
+    if (content.location.href == "about:blank") {
       return;
+    }
     removeEventListener("load", tabLoad, true);
 
     gDoc = content.document;

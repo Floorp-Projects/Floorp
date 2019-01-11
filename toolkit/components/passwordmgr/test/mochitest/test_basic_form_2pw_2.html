@@ -79,7 +79,9 @@ function getFormSubmitButton(formNum) {
   // we can't just call form.submit(), because that doesn't seem to
   // invoke the form onsubmit handler.
   var button = form.firstChild;
-  while (button && button.type != "submit") { button = button.nextSibling; }
+  while (button && button.type != "submit") {
+    button = button.nextSibling;
+  }
   ok(button != null, "getting form submit button");
 
   return button;

@@ -104,7 +104,7 @@
           let login2 = parentCc["@mozilla.org/login-manager/loginInfo;1"].
                        createInstance(parentCi.nsILoginInfo);
           login2.init("http://mochi.test:8888", null, "mochirealm", "user1name",
-                       "user1pass", "", "");
+                      "user1pass", "", "");
           Services.logins.addLogin(login2);
 
           sendAsyncMessage("setupDone");

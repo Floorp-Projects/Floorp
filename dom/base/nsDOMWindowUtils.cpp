@@ -1397,6 +1397,23 @@ nsDOMWindowUtils::GetScrollXYFloat(bool aFlushLayout, float* aScrollX,
 }
 
 NS_IMETHODIMP
+nsDOMWindowUtils::ScrollToVisual(float aOffsetX, float aOffsetY) {
+  nsCOMPtr<Document> doc = GetDocument();
+  NS_ENSURE_STATE(doc);
+
+  nsPresContext* presContext = doc->GetPresContext();
+  NS_ENSURE_TRUE(presContext, NS_ERROR_NOT_AVAILABLE);
+
+  // This should only be called on the root content document.
+  NS_ENSURE_TRUE(presContext->IsRootContentDocument(), NS_ERROR_INVALID_ARG);
+
+  presContext->PresShell()->SetPendingVisualViewportOffset(
+      Some(CSSPoint::ToAppUnits(CSSPoint(aOffsetX, aOffsetY))));
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDOMWindowUtils::GetVisualViewportOffsetRelativeToLayoutViewport(
     float* aOffsetX, float* aOffsetY) {
   *aOffsetX = 0;
