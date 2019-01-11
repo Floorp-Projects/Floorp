@@ -204,19 +204,24 @@ ContentRestoreInternal.prototype = {
         if (loadArguments.userContextId) {
           webNavigation.setOriginAttributesBeforeLoading({ userContextId: loadArguments.userContextId });
         }
-
-        webNavigation.loadURIWithOptions(loadArguments.uri, loadArguments.flags,
-                                         referrer, referrerPolicy, postData,
-                                         null, null, triggeringPrincipal);
+        let loadURIOptions = {
+          triggeringPrincipal,
+          loadFlags: loadArguments.flags,
+          referrerURI: referrer,
+          referrerPolicy,
+          postData,
+        };
+        webNavigation.loadURI(loadArguments.uri, loadURIOptions);
       } else if (tabData.userTypedValue && tabData.userTypedClear) {
         // If the user typed a URL into the URL bar and hit enter right before
         // we crashed, we want to start loading that page again. A non-zero
         // userTypedClear value means that the load had started.
         // Load userTypedValue and fix up the URL if it's partial/broken.
-        webNavigation.loadURI(tabData.userTypedValue,
-                              Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP,
-                              null, null, null,
-                              Services.scriptSecurityManager.getSystemPrincipal());
+        let loadURIOptions = {
+          triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+          loadFlags: Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP,
+        };
+        webNavigation.loadURI(tabData.userTypedValue, loadURIOptions);
       } else if (tabData.entries.length) {
         // Stash away the data we need for restoreDocument.
         let activeIndex = tabData.index - 1;
@@ -230,10 +235,11 @@ ContentRestoreInternal.prototype = {
         history.reloadCurrentEntry();
       } else {
         // If there's nothing to restore, we should still blank the page.
-        webNavigation.loadURI("about:blank",
-                              Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_HISTORY,
-                              null, null, null,
-                              Services.scriptSecurityManager.getSystemPrincipal());
+        let loadURIOptions = {
+          triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+          loadFlags: Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_HISTORY,
+        };
+        webNavigation.loadURI("about:blank", loadURIOptions);
       }
 
       return true;
@@ -377,9 +383,11 @@ HistoryListener.prototype = {
     // STATE_START notification to be sent and the ProgressListener will then
     // notify the parent and do the rest.
     let flags = Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
-    this.webNavigation.loadURI(newURI.spec, flags,
-                               null, null, null,
-                               Services.scriptSecurityManager.getSystemPrincipal());
+    let loadURIOptions = {
+      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+      loadFlags: flags,
+    };
+    this.webNavigation.loadURI(newURI.spec, loadURIOptions);
   },
 
   OnHistoryReload(reloadURI, reloadFlags) {

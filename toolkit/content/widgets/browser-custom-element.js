@@ -798,11 +798,15 @@ class MozBrowser extends MozElementMixin(XULFrameElement) {
         triggeringPrincipal,
         postData,
     } = aParams || {};
-
+    let loadURIOptions = {
+      triggeringPrincipal,
+      referrerURI,
+      loadFlags: flags,
+      referrerPolicy,
+      postData,
+    };
     this._wrapURIChangeCall(() =>
-      this.webNavigation.loadURIWithOptions(
-        aURI, flags, referrerURI, referrerPolicy,
-        postData, null, null, triggeringPrincipal));
+      this.webNavigation.loadURI(aURI, loadURIOptions));
   }
 
   gotoIndex(aIndex) {
