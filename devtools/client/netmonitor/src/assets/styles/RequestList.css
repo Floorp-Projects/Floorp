@@ -152,11 +152,11 @@
 }
 
 .requests-list-header-button[data-sorted=ascending] > .button-icon {
-  background-image: var(--sort-ascending-image);
+  background-image: url("chrome://devtools/skin/images/sort-ascending-arrow.svg");
 }
 
 .requests-list-header-button[data-sorted=descending] > .button-icon {
-  background-image: var(--sort-descending-image);
+  background-image: url("chrome://devtools/skin/images/sort-descending-arrow.svg");
 }
 
 .requests-list-header-button[data-sorted],

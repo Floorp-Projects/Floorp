@@ -14,9 +14,6 @@
   --timing-send-color: rgba(70, 175, 227, 0.8); /* light blue */
   --timing-wait-color: rgba(94, 136, 176, 0.8); /* blue grey */
   --timing-receive-color: rgba(112, 191, 83, 0.8); /* green */
-
-  --sort-ascending-image: url(chrome://devtools/skin/images/sort-ascending-arrow.svg);
-  --sort-descending-image: url(chrome://devtools/skin/images/sort-descending-arrow.svg);
 }
 
 :root.theme-light {
@@ -33,18 +30,10 @@
   --timing-send-color: rgba(0, 136, 204, 0.8); /* blue */
   --timing-wait-color: rgba(95, 136, 176, 0.8); /* blue grey */
   --timing-receive-color: rgba(44, 187, 15, 0.8); /* green */
-
-  --sort-ascending-image: url(chrome://devtools/skin/images/sort-ascending-arrow.svg);
-  --sort-descending-image: url(chrome://devtools/skin/images/sort-descending-arrow.svg);
 }
 
 :root {
   --primary-toolbar-height: 29px;
-
-  /* Icons */
-  --play-icon-url: url("chrome://devtools/content/netmonitor/src/assets/icons/play.svg");
-  --pause-icon-url: url("chrome://devtools/skin/images/pause.svg");
-
   /* HTTP status codes */
   --status-code-color-1xx: var(--theme-highlight-blue);
   --status-code-color-2xx: var(--theme-highlight-green);
