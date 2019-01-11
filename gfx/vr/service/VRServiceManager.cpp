@@ -40,7 +40,9 @@ void VRServiceManager::ShutdownVRProcess() {
   if (VRGPUChild::IsCreated()) {
     VRGPUChild* vrGPUChild = VRGPUChild::Get();
     vrGPUChild->SendStopVRService();
-    vrGPUChild->Close();
+    if (!vrGPUChild->IsClosed()) {
+      vrGPUChild->Close();
+    }
     VRGPUChild::Shutdown();
   }
   if (gfxPrefs::VRProcessEnabled()) {
