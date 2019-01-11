@@ -77,7 +77,7 @@ private class SessionsAdapter(val context: Context) : RecyclerView.Adapter<Sessi
         return ViewHolder(textView)
     }
 
-    override fun getItemCount(): Int = 0
+    override fun getItemCount(): Int = 100
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         holder.textView.text = "Cell: ${position}"
