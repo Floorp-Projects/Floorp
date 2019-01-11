@@ -1915,11 +1915,11 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op) {
       return jsop_tostring();
 
     case JSOP_DEFVAR:
-      return jsop_defvar(GET_UINT32_INDEX(pc));
+      return jsop_defvar();
 
     case JSOP_DEFLET:
     case JSOP_DEFCONST:
-      return jsop_deflexical(GET_UINT32_INDEX(pc));
+      return jsop_deflexical();
 
     case JSOP_DEFFUN:
       return jsop_deffun();
@@ -12775,7 +12775,7 @@ AbortReasonOr<Ok> IonBuilder::jsop_setarg(uint32_t arg) {
   return Ok();
 }
 
-AbortReasonOr<Ok> IonBuilder::jsop_defvar(uint32_t index) {
+AbortReasonOr<Ok> IonBuilder::jsop_defvar() {
   MOZ_ASSERT(JSOp(*pc) == JSOP_DEFVAR);
 
   // Pass the EnvironmentChain.
@@ -12787,20 +12787,15 @@ AbortReasonOr<Ok> IonBuilder::jsop_defvar(uint32_t index) {
   return resumeAfter(defvar);
 }
 
-AbortReasonOr<Ok> IonBuilder::jsop_deflexical(uint32_t index) {
-  MOZ_ASSERT(!script()->hasNonSyntacticScope());
+AbortReasonOr<Ok> IonBuilder::jsop_deflexical() {
   MOZ_ASSERT(JSOp(*pc) == JSOP_DEFLET || JSOp(*pc) == JSOP_DEFCONST);
+  MOZ_ASSERT(usesEnvironmentChain());
 
-  PropertyName* name = script()->getName(index);
-  unsigned attrs = JSPROP_ENUMERATE | JSPROP_PERMANENT;
-  if (JSOp(*pc) == JSOP_DEFCONST) {
-    attrs |= JSPROP_READONLY;
-  }
+  MDefinition* env = current->environmentChain();
+  MDefLexical* defLexical = MDefLexical::New(alloc(), env);
+  current->add(defLexical);
 
-  MDefLexical* deflex = MDefLexical::New(alloc(), name, attrs);
-  current->add(deflex);
-
-  return resumeAfter(deflex);
+  return resumeAfter(defLexical);
 }
 
 AbortReasonOr<Ok> IonBuilder::jsop_deffun() {
