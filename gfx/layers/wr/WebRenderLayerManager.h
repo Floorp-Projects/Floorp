@@ -139,6 +139,7 @@ class WebRenderLayerManager final : public LayerManager {
   }
   virtual bool NeedsComposite() const override { return mNeedsComposite; }
   virtual void SetIsFirstPaint() override { mIsFirstPaint = true; }
+  virtual bool GetIsFirstPaint() const override { return mIsFirstPaint; }
   virtual void SetFocusTarget(const FocusTarget& aFocusTarget) override;
 
   virtual already_AddRefed<PersistentBufferProvider>
