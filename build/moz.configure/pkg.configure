@@ -5,10 +5,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-@depends('--enable-compile-environment')
-def pkg_config(compile_env):
-    if compile_env:
-        return ('pkg-config',)
+@depends(toolchain_prefix, when=compile_environment)
+def pkg_config(prefixes):
+    return tuple('{}pkg-config'.format(p)
+                 for p in (prefixes or ()) + ('',))
 
 
 pkg_config = check_prog('PKG_CONFIG', pkg_config, allow_missing=True)
