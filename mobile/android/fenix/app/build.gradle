@@ -43,7 +43,7 @@ android.applicationVariants.all { variant ->
         // same version code. Therefore we need to have different version codes for our ARM and x86
         // builds.
 
-        // Our generated version code now has a length of 9 (See tools/gradle/versionCode.gradle).
+        // Our generated version code now has a length of 9 (See automation/gradle/versionCode.gradle).
         // Our x86 builds need a higher version code to avoid installing ARM builds on an x86 device
         // with ARM compatibility mode.
 

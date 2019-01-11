@@ -52,7 +52,7 @@ def generate_build_task(apks):
 def generate_signing_task(build_task_id, apks, date, is_staging):
     artifacts = ["public/{}".format(os.path.basename(apk)) for apk in apks]
 
-    signing_format = 'autograph_fenix'
+    signing_format = 'autograph_apk'
     index_release = 'staging-signed-nightly' if is_staging else 'signed-nightly'
     routes = [
         "index.project.mobile.fenix.{}.nightly.{}.{}.{}.latest".format(index_release, date.year, date.month, date.day),
@@ -139,12 +139,12 @@ if __name__ == "__main__":
         description='Create a release pipeline (build, sign, publish) on taskcluster.')
 
     parser.add_argument('--track', dest="track", action="store", choices=['nightly', 'staging-nightly'], required=True)
-    parser.add_argument('--commit', dest="commit", action="store_true", help="commit the google play transaction")
+    parser.add_argument('--commit', action="store_true", help="commit the google play transaction")
     parser.add_argument('--apk', dest="apks", metavar="path", action="append", help="Path to APKs to sign and upload",
                         required=True)
-    parser.add_argument('--output', dest="track", metavar="path", action="store", help="Path to the build output",
+    parser.add_argument('--output', metavar="path", action="store", help="Path to the build output",
                         required=True)
-    parser.add_argument('--date', dest="date", action="store", help="ISO8601 timestamp for build")
+    parser.add_argument('--date', action="store", help="ISO8601 timestamp for build")
 
     result = parser.parse_args()
     apks = ["{}/{}".format(result.output, apk) for apk in result.apks]

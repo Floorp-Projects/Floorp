@@ -9,11 +9,8 @@ import taskcluster
 
 
 class TaskBuilder(object):
-    def __init__(self, task_id, repo_url, branch, commit, owner, source, scheduler_id):
+    def __init__(self, task_id, owner, source, scheduler_id):
         self.task_id = task_id
-        self.repo_url = repo_url
-        self.branch = branch
-        self.commit = commit
         self.owner = owner
         self.source = source
         self.scheduler_id = scheduler_id
@@ -29,7 +26,7 @@ class TaskBuilder(object):
         })
 
         return {
-            "workerType": 'github-worker',
+            "workerType": 'gecko-focus',
             "taskGroupId": self.task_id,
             "schedulerId": self.scheduler_id,
             "expires": taskcluster.stringDate(expires),
