@@ -101,14 +101,22 @@ var wrapper = {
     // Set the iframe's location with loadURI/LOAD_FLAGS_BYPASS_HISTORY to
     // avoid having a new history entry being added.
     let webNav = iframe.frameLoader.docShell.QueryInterface(Ci.nsIWebNavigation);
-    webNav.loadURI(url, Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_HISTORY, null, null, null);
+    let loadURIOptions = {
+      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+      loadFlags: Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_HISTORY,
+    };
+    webNav.loadURI(url, loadURIOptions);
   },
 
   retry: function() {
     deferTransitionToRemoteAfterLoaded();
 
     let webNav = this.iframe.frameLoader.docShell.QueryInterface(Ci.nsIWebNavigation);
-    webNav.loadURI(this.url, Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_HISTORY, null, null, null);
+    let loadURIOptions = {
+      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+      loadFlags: Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_HISTORY,
+    };
+    webNav.loadURI(this.url, loadURIOptions);
   },
 
   iframeListener: {

@@ -15,7 +15,10 @@ const progressListeners = new Map();
 
 function loadContentWindow(webNavigation, uri, principal) {
   return new Promise((resolve, reject) => {
-    webNavigation.loadURI(uri, Ci.nsIWebNavigation.LOAD_FLAGS_NONE, null, null, null, principal);
+    let loadURIOptions = {
+      triggeringPrincipal: principal,
+    };
+    webNavigation.loadURI(uri, loadURIOptions);
     let docShell = webNavigation.QueryInterface(Ci.nsIInterfaceRequestor)
                                 .getInterface(Ci.nsIDocShell);
     let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)

@@ -108,6 +108,9 @@ HiddenFrame.prototype = {
     let systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
     docShell.createAboutBlankContentViewer(systemPrincipal);
     docShell.useGlobalHistory = false;
-    this._browser.loadURI(XUL_PAGE, 0, null, null, null, systemPrincipal);
+    let loadURIOptions = {
+      triggeringPrincipal: systemPrincipal,
+    };
+    this._browser.loadURI(XUL_PAGE, loadURIOptions);
   },
 };

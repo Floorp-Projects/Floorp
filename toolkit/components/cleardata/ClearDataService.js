@@ -293,8 +293,7 @@ const QuotaCleaner = {
   deleteByPrincipal(aPrincipal) {
     // localStorage: The legacy LocalStorage implementation that will
     // eventually be removed depends on this observer notification to clear by
-    // principal.  Some other subsystems like Reporting headers depend on this
-    // too.
+    // principal.
     Services.obs.notifyObservers(null, "browser:purge-domain-data",
                                  aPrincipal.URI.host);
 
@@ -422,7 +421,7 @@ const QuotaCleaner = {
   },
 
   deleteAll() {
-    // localStorage, Reporting headers, etc.
+    // localStorage
     Services.obs.notifyObservers(null, "extension:purge-localStorage");
 
     // ServiceWorkers
@@ -712,6 +711,22 @@ const EMECleaner = {
   },
 };
 
+const ReportsCleaner = {
+  deleteByHost(aHost, aOriginAttributes) {
+    return new Promise(aResolve => {
+      Services.obs.notifyObservers(null, "reporting:purge-host", aHost);
+      aResolve();
+    });
+  },
+
+  deleteAll() {
+    return new Promise(aResolve => {
+      Services.obs.notifyObservers(null, "reporting:purge-all");
+      aResolve();
+    });
+  },
+};
+
 // Here the map of Flags-Cleaner.
 const FLAGS_MAP = [
  { flag: Ci.nsIClearDataService.CLEAR_COOKIES,
@@ -770,6 +785,9 @@ const FLAGS_MAP = [
 
  { flag: Ci.nsIClearDataService.CLEAR_EME,
    cleaner: EMECleaner },
+
+ { flag: Ci.nsIClearDataService.CLEAR_REPORTS,
+   cleaner: ReportsCleaner },
 ];
 
 this.ClearDataService = function() {};

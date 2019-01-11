@@ -43,8 +43,10 @@ add_task(async function contentToChromeNavigate() {
   await ContentTask.spawn(tab.linkedBrowser, null, function() {
     const CHROME_URL = "about:config";
     let webnav = content.window.getInterface(Ci.nsIWebNavigation);
-    let systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
-    webnav.loadURI(CHROME_URL, Ci.nsIWebNavigation.LOAD_FLAGS_NONE, null, null, null, systemPrincipal);
+    let loadURIOptions = {
+      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+    };
+    webnav.loadURI(CHROME_URL, loadURIOptions);
   });
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 

@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !wasmGcEnabled()
+// |jit-test| skip-if: !wasmReftypesEnabled()
 
 enableShellAllocationMetadataBuilder();
 gczeal(9, 1);

@@ -164,8 +164,11 @@ this.tabExtras = class extends ExtensionAPI {
               },
             };
             windowTracker.addListener("progress", listener);
-            tab.browser.webNavigation.loadURIWithOptions(url, null, null, null,
-                                                         post, null, null, null);
+            let loadURIOptions = {
+              triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+              postData: post,
+            };
+            tab.browser.webNavigation.loadURI(url, loadURIOptions);
           });
         },
         async getWebcompatInfo(tabId) {

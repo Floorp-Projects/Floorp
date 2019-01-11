@@ -1467,7 +1467,7 @@ pref("javascript.options.wasm_baselinejit", true);
 #ifdef ENABLE_WASM_CRANELIFT
 pref("javascript.options.wasm_cranelift",   false);
 #endif
-#ifdef ENABLE_WASM_GC
+#ifdef ENABLE_WASM_REFTYPES
 pref("javascript.options.wasm_gc",          false);
 #endif
 pref("javascript.options.native_regexp",    true);

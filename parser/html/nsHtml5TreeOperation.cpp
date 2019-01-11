@@ -975,6 +975,11 @@ nsresult nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       doc->EnableEncodingMenu();
       return NS_OK;
     }
+    case eTreeOpMaybeComplainAboutDeepTree: {
+      int32_t lineNumber = mOne.integer;
+      aBuilder->MaybeComplainAboutDeepTree((uint32_t)lineNumber);
+      return NS_OK;
+    }
     case eTreeOpAddClass: {
       Element* element = (*(mOne.node))->AsElement();
       char16_t* str = mTwo.unicharPtr;
