@@ -18,7 +18,7 @@ add_task(async function() {
 });
 
 /**
- * Test that the routes in about:debugging show the proper views
+ * Test that the routes in about:debugging show the proper views and document.title
  */
 add_task(async function() {
   // enable USB devices mocks
@@ -33,11 +33,21 @@ add_task(async function() {
   // NOTE: when using USB Mocks, we see only "Firefox" as the device name
   ok(infoLabel.includes("Firefox"), "Runtime is displayed as Firefox");
   ok(!infoLabel.includes(" on "), "Runtime is not associated to any device");
+  is(
+      document.title,
+      "Debugging - Runtime / this-firefox",
+      "Checking title for 'runtime' page"
+    );
 
   info("Check 'Connect' page");
   document.location.hash = "#/connect";
   await waitUntil(() => document.querySelector(".js-connect-page"));
   ok(true, "Connect page has been shown");
+  is(
+      document.title,
+      "Debugging - Connect",
+      "Checking title for 'connect' page"
+    );
 
   info("Check 'USB device runtime' page");
   // connect to a mocked USB runtime
@@ -51,6 +61,11 @@ add_task(async function() {
   document.location.hash = "#/runtime/1337id";
   await waitUntil(() => document.querySelector(".js-runtime-page"));
   const runtimeLabel = document.querySelector(".js-runtime-info").textContent;
+  is(
+      document.title,
+      "Debugging - Runtime / 1337id",
+      "Checking title for 'runtime' page with USB device"
+    );
   ok(runtimeLabel.includes("Lorem ipsum"), "Runtime is displayed with the mocked name");
 
   await removeTab(tab);
@@ -70,6 +85,11 @@ add_task(async function() {
   info("Update hash & wait for a redirect to root ('This Firefox')");
   document.location.hash = "#/lorem-ipsum";
   await waitUntil(() => document.querySelector(".js-runtime-page"));
+  is(
+      document.title,
+      "Debugging - Runtime / this-firefox",
+      "Checking title for 'runtime' page after redirect to root"
+    );
   is(document.location.hash, "#/runtime/this-firefox", "Redirected to root");
 
   await removeTab(tab);

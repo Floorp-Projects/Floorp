@@ -13,6 +13,9 @@ const { render, unmountComponentAtNode } =
 const Provider =
   createFactory(require("devtools/client/shared/vendor/react-redux").Provider);
 
+const FluentReact = require("devtools/client/shared/vendor/fluent-react");
+const LocalizationProvider = createFactory(FluentReact.LocalizationProvider);
+
 const actions = require("./src/actions/index");
 const { configureStore } = require("./src/create-store");
 const {
@@ -59,12 +62,13 @@ const AboutDebugging = {
         {
           store: this.store,
         },
-        Router(
-          {},
-          App(
-            {
-              fluentBundles: l10n.getBundles(),
-            }
+        LocalizationProvider(
+          { messages: l10n.getBundles() },
+          Router(
+            {},
+            App(
+              {}
+            )
           )
         )
       ),
