@@ -277,7 +277,6 @@ class TestNavigate(BaseNavigationTestCase):
         self.marionette.navigate("about:robots")
         self.assertFalse(self.is_remote_tab)
 
-    @skip_if_mobile("Bug 1334095 - Timeout: No new tab has been opened")
     def test_about_blank_for_new_docshell(self):
         self.assertEqual(self.marionette.get_url(), "about:blank")
 
