@@ -741,18 +741,6 @@ class GeckoEngineSessionTest {
     }
 
     @Test
-    fun settingPrivateMode() {
-        val runtime = mock(GeckoRuntime::class.java)
-        `when`(runtime.settings).thenReturn(mock(GeckoRuntimeSettings::class.java))
-
-        GeckoEngineSession(runtime, geckoSessionProvider = geckoSessionProvider)
-        verify(geckoSession.settings).setBoolean(GeckoSessionSettings.USE_PRIVATE_MODE, false)
-
-        GeckoEngineSession(runtime, geckoSessionProvider = geckoSessionProvider, privateMode = true)
-        verify(geckoSession.settings).setBoolean(GeckoSessionSettings.USE_PRIVATE_MODE, true)
-    }
-
-    @Test
     fun settingTestingMode() {
         val runtime = mock(GeckoRuntime::class.java)
         `when`(runtime.settings).thenReturn(mock(GeckoRuntimeSettings::class.java))
@@ -760,12 +748,12 @@ class GeckoEngineSessionTest {
         GeckoEngineSession(runtime,
                 geckoSessionProvider = geckoSessionProvider,
                 defaultSettings = DefaultSettings())
-        verify(geckoSession.settings).setBoolean(GeckoSessionSettings.FULL_ACCESSIBILITY_TREE, false)
+        verify(geckoSession.settings).fullAccessibilityTree = false
 
         GeckoEngineSession(runtime,
             geckoSessionProvider = geckoSessionProvider,
             defaultSettings = DefaultSettings(testingModeEnabled = true))
-        verify(geckoSession.settings).setBoolean(GeckoSessionSettings.FULL_ACCESSIBILITY_TREE, true)
+        verify(geckoSession.settings).fullAccessibilityTree = true
     }
 
     @Test
@@ -775,10 +763,12 @@ class GeckoEngineSessionTest {
 
         val engineSession = GeckoEngineSession(runtime, geckoSessionProvider = geckoSessionProvider)
         engineSession.settings.userAgentString
-        verify(geckoSession.settings).getString(GeckoSessionSettings.USER_AGENT_OVERRIDE)
+
+        verify(geckoSession.settings).userAgentOverride
 
         engineSession.settings.userAgentString = "test-ua"
-        verify(geckoSession.settings).setString(GeckoSessionSettings.USER_AGENT_OVERRIDE, "test-ua")
+
+        verify(geckoSession.settings).userAgentOverride = "test-ua"
     }
 
     @Test
@@ -789,7 +779,8 @@ class GeckoEngineSessionTest {
         GeckoEngineSession(runtime,
                 geckoSessionProvider = geckoSessionProvider,
                 defaultSettings = DefaultSettings(userAgentString = "test-ua"))
-        verify(geckoSession.settings).setString(GeckoSessionSettings.USER_AGENT_OVERRIDE, "test-ua")
+
+        verify(geckoSession.settings).userAgentOverride = "test-ua"
     }
 
     @Test
@@ -1107,7 +1098,8 @@ class GeckoEngineSessionTest {
         GeckoEngineSession(runtime, geckoSessionProvider = geckoSessionProvider,
                 privateMode = false, defaultSettings = defaultSettings)
 
-        verify(geckoSession.settings).setBoolean(GeckoSessionSettings.USE_TRACKING_PROTECTION, true)
+        assertFalse(geckoSession.settings.usePrivateMode)
+        verify(geckoSession.settings).useTrackingProtection = true
     }
 
     @Test
@@ -1210,8 +1202,9 @@ class GeckoEngineSessionTest {
         assertTrue(desktopModeEnabled)
 
         desktopModeEnabled = false
-        `when`(geckoSession.settings.getInt(GeckoSessionSettings.USER_AGENT_MODE))
-                .thenReturn(GeckoSessionSettings.USER_AGENT_MODE_DESKTOP)
+        `when`(geckoSession.settings.userAgentMode)
+            .thenReturn(GeckoSessionSettings.USER_AGENT_MODE_DESKTOP)
+
         engineSession.toggleDesktopMode(true)
         assertFalse(desktopModeEnabled)
 

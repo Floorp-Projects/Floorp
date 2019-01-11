@@ -46,11 +46,16 @@ class GeckoEngineSession(
     private val runtime: GeckoRuntime,
     private val privateMode: Boolean = false,
     private val defaultSettings: Settings? = null,
-    private val geckoSessionProvider: () -> GeckoSession = { GeckoSession() },
+    private val geckoSessionProvider: () -> GeckoSession = {
+        val settings = GeckoSessionSettings.Builder()
+            .usePrivateMode(privateMode)
+            .build()
+        GeckoSession(settings)
+    },
     private val context: CoroutineContext = Dispatchers.IO
 ) : CoroutineScope, EngineSession() {
 
-    internal var geckoSession: GeckoSession = geckoSessionProvider()
+    internal lateinit var geckoSession: GeckoSession
     internal var currentUrl: String? = null
     internal var job: Job = Job()
 
@@ -61,8 +66,8 @@ class GeckoEngineSession(
         override var requestInterceptor: RequestInterceptor? = null
         override var historyTrackingDelegate: HistoryTrackingDelegate? = null
         override var userAgentString: String?
-            get() = geckoSession.settings.getString(GeckoSessionSettings.USER_AGENT_OVERRIDE)
-            set(value) = geckoSession.settings.setString(GeckoSessionSettings.USER_AGENT_OVERRIDE, value)
+            get() = geckoSession.settings.userAgentOverride
+            set(value) { geckoSession.settings.userAgentOverride = value }
     }
 
     private var initialLoad = true
@@ -71,7 +76,7 @@ class GeckoEngineSession(
         get() = context + job
 
     init {
-        initGeckoSession()
+        createGeckoSession()
     }
 
     /**
@@ -164,7 +169,7 @@ class GeckoEngineSession(
      * See [EngineSession.enableTrackingProtection]
      */
     override fun enableTrackingProtection(policy: TrackingProtectionPolicy) {
-        geckoSession.settings.setBoolean(GeckoSessionSettings.USE_TRACKING_PROTECTION, true)
+        geckoSession.settings.useTrackingProtection = true
         notifyObservers { onTrackerBlockingEnabledChange(true) }
     }
 
@@ -172,7 +177,7 @@ class GeckoEngineSession(
      * See [EngineSession.disableTrackingProtection]
      */
     override fun disableTrackingProtection() {
-        geckoSession.settings.setBoolean(GeckoSessionSettings.USE_TRACKING_PROTECTION, false)
+        geckoSession.settings.useTrackingProtection = false
         notifyObservers { onTrackerBlockingEnabledChange(false) }
     }
 
@@ -180,7 +185,7 @@ class GeckoEngineSession(
      * See [EngineSession.settings]
      */
     override fun toggleDesktopMode(enable: Boolean, reload: Boolean) {
-        val currentMode = geckoSession.settings.getInt(GeckoSessionSettings.USER_AGENT_MODE)
+        val currentMode = geckoSession.settings.userAgentMode
         val newMode = if (enable) {
             GeckoSessionSettings.USER_AGENT_MODE_DESKTOP
         } else {
@@ -188,7 +193,7 @@ class GeckoEngineSession(
         }
 
         if (newMode != currentMode) {
-            geckoSession.settings.setInt(GeckoSessionSettings.USER_AGENT_MODE, newMode)
+            geckoSession.settings.userAgentMode = newMode
             notifyObservers { onDesktopModeChange(enable) }
         }
 
@@ -431,7 +436,7 @@ class GeckoEngineSession(
 
         override fun onCrash(session: GeckoSession) {
             geckoSession.close()
-            initGeckoSession()
+            createGeckoSession()
         }
 
         override fun onFullScreen(session: GeckoSession, fullScreen: Boolean) {
@@ -553,19 +558,19 @@ class GeckoEngineSession(
         return null
     }
 
-    private fun initGeckoSession() {
+    private fun createGeckoSession() {
         this.geckoSession = geckoSessionProvider()
+
         defaultSettings?.trackingProtectionPolicy?.let { enableTrackingProtection(it) }
         defaultSettings?.requestInterceptor?.let { settings.requestInterceptor = it }
         defaultSettings?.historyTrackingDelegate?.let { settings.historyTrackingDelegate = it }
         defaultSettings?.testingModeEnabled?.let {
-            geckoSession.settings.setBoolean(GeckoSessionSettings.FULL_ACCESSIBILITY_TREE, it)
+            geckoSession.settings.fullAccessibilityTree = it
         }
         defaultSettings?.userAgentString?.let {
-            geckoSession.settings.setString(GeckoSessionSettings.USER_AGENT_OVERRIDE, it)
+            geckoSession.settings.userAgentOverride = it
         }
 
-        geckoSession.settings.setBoolean(GeckoSessionSettings.USE_PRIVATE_MODE, privateMode)
         geckoSession.open(runtime)
 
         geckoSession.navigationDelegate = createNavigationDelegate()
