@@ -4,8 +4,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "SocketProcessParent.h"
+
 #include "SocketProcessHost.h"
-#include "mozilla/Move.h"
+#include "mozilla/ipc/CrashReporterHost.h"
 
 namespace mozilla {
 namespace net {
@@ -21,7 +22,22 @@ SocketProcessParent::~SocketProcessParent() {
   MOZ_COUNT_DTOR(SocketProcessParent);
 }
 
+mozilla::ipc::IPCResult SocketProcessParent::RecvInitCrashReporter(
+    Shmem&& aShmem, const NativeThreadId& aThreadId) {
+  mCrashReporter = MakeUnique<CrashReporterHost>(GeckoProcessType_Content,
+                                                 aShmem, aThreadId);
+
+  return IPC_OK();
+}
+
 void SocketProcessParent::ActorDestroy(ActorDestroyReason aWhy) {
+  if (aWhy == AbnormalShutdown) {
+    if (mCrashReporter) {
+      mCrashReporter->GenerateCrashReport(OtherPid());
+      mCrashReporter = nullptr;
+    }
+  }
+
   if (mHost) {
     mHost->OnChannelClosed();
   }
