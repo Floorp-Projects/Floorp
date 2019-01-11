@@ -56,6 +56,8 @@ def should_download(logger, manifest_paths, rebuild_time=timedelta(days=5)):
         mtime = datetime.fromtimestamp(os.path.getmtime(manifest_path))
         if mtime < datetime.now() - rebuild_time:
             return True
+        if os.path.getsize(manifest_path) == 0:
+            return True
 
     logger.info("Skipping manifest download because existing file is recent")
     return False
