@@ -7,7 +7,7 @@
 #include "AudioNodeEngine.h"
 
 #include "mozilla/AbstractThread.h"
-#ifdef BUILD_ARM_NEON
+#ifdef USE_NEON
 #include "mozilla/arm.h"
 #include "AudioNodeEngineNEON.h"
 #endif
@@ -62,7 +62,7 @@ void AudioBufferCopyWithScale(const float* aInput, float aScale, float* aOutput,
 
 void AudioBufferAddWithScale(const float* aInput, float aScale, float* aOutput,
                              uint32_t aSize) {
-#ifdef BUILD_ARM_NEON
+#ifdef USE_NEON
   if (mozilla::supports_neon()) {
     AudioBufferAddWithScale_NEON(aInput, aScale, aOutput, aSize);
     return;
@@ -122,7 +122,7 @@ void AudioBlockCopyChannelWithScale(const float* aInput, float aScale,
   if (aScale == 1.0f) {
     memcpy(aOutput, aInput, WEBAUDIO_BLOCK_SIZE * sizeof(float));
   } else {
-#ifdef BUILD_ARM_NEON
+#ifdef USE_NEON
     if (mozilla::supports_neon()) {
       AudioBlockCopyChannelWithScale_NEON(aInput, aScale, aOutput);
       return;
@@ -177,7 +177,7 @@ float AudioBufferPeakValue(const float* aInput, uint32_t aSize) {
 void AudioBlockCopyChannelWithScale(const float aInput[WEBAUDIO_BLOCK_SIZE],
                                     const float aScale[WEBAUDIO_BLOCK_SIZE],
                                     float aOutput[WEBAUDIO_BLOCK_SIZE]) {
-#ifdef BUILD_ARM_NEON
+#ifdef USE_NEON
   if (mozilla::supports_neon()) {
     AudioBlockCopyChannelWithScale_NEON(aInput, aScale, aOutput);
     return;
@@ -209,7 +209,7 @@ void AudioBufferInPlaceScale(float* aBlock, float aScale, uint32_t aSize) {
   if (aScale == 1.0f) {
     return;
   }
-#ifdef BUILD_ARM_NEON
+#ifdef USE_NEON
   if (mozilla::supports_neon()) {
     AudioBufferInPlaceScale_NEON(aBlock, aScale, aSize);
     return;
@@ -229,7 +229,7 @@ void AudioBufferInPlaceScale(float* aBlock, float aScale, uint32_t aSize) {
 }
 
 void AudioBufferInPlaceScale(float* aBlock, float* aScale, uint32_t aSize) {
-#ifdef BUILD_ARM_NEON
+#ifdef USE_NEON
   if (mozilla::supports_neon()) {
     AudioBufferInPlaceScale_NEON(aBlock, aScale, aSize);
     return;
@@ -270,7 +270,7 @@ void AudioBlockPanStereoToStereo(const float aInputL[WEBAUDIO_BLOCK_SIZE],
                                  float aGainL, float aGainR, bool aIsOnTheLeft,
                                  float aOutputL[WEBAUDIO_BLOCK_SIZE],
                                  float aOutputR[WEBAUDIO_BLOCK_SIZE]) {
-#ifdef BUILD_ARM_NEON
+#ifdef USE_NEON
   if (mozilla::supports_neon()) {
     AudioBlockPanStereoToStereo_NEON(aInputL, aInputR, aGainL, aGainR,
                                      aIsOnTheLeft, aOutputL, aOutputR);
@@ -308,7 +308,7 @@ void AudioBlockPanStereoToStereo(const float aInputL[WEBAUDIO_BLOCK_SIZE],
                                  bool aIsOnTheLeft[WEBAUDIO_BLOCK_SIZE],
                                  float aOutputL[WEBAUDIO_BLOCK_SIZE],
                                  float aOutputR[WEBAUDIO_BLOCK_SIZE]) {
-#ifdef BUILD_ARM_NEON
+#ifdef USE_NEON
   if (mozilla::supports_neon()) {
     AudioBlockPanStereoToStereo_NEON(aInputL, aInputR, aGainL, aGainR,
                                      aIsOnTheLeft, aOutputL, aOutputR);
