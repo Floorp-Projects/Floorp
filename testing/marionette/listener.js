@@ -1638,6 +1638,7 @@ async function reftestWait(url, remote) {
   } else {
     // Ensure that the event loop has spun at least once since load,
     // so that setTimeout(fn, 0) in the load event has run
+    logger.debug("Waiting for event loop to spin");
     reftestWait = document.documentElement.classList.contains("reftest-wait");
     await new Promise(resolve => win.setTimeout(resolve, 0));
   }

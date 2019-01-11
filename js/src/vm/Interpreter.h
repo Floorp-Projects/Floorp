@@ -444,6 +444,14 @@ template <bool strict>
 bool DeleteElementJit(JSContext* cx, HandleValue val, HandleValue index,
                       bool* bv);
 
+JSObject* BindVarOperation(JSContext* cx, JSObject* envChain);
+
+bool DefVarOperation(JSContext* cx, HandleObject envChain, HandleScript script,
+                     jsbytecode* pc);
+
+bool DefLexicalOperation(JSContext* cx, HandleObject envChain,
+                         HandleScript script, jsbytecode* pc);
+
 bool DefFunOperation(JSContext* cx, HandleScript script, HandleObject envChain,
                      HandleFunction funArg);
 

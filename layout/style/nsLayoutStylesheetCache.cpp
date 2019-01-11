@@ -50,20 +50,20 @@ nsresult nsLayoutStylesheetCache::Observe(nsISupports* aSubject,
 }
 
 #define STYLE_SHEET(identifier_, url_, lazy_)                                  \
-  StyleSheet* nsLayoutStylesheetCache::identifier_##Sheet() {                  \
+  NotNull<StyleSheet*> nsLayoutStylesheetCache::identifier_##Sheet() {         \
     if (lazy_ && !m##identifier_##Sheet) {                                     \
       LoadSheetURL(url_, &m##identifier_##Sheet, eAgentSheetFeatures, eCrash); \
     }                                                                          \
-    return m##identifier_##Sheet;                                              \
+    return WrapNotNull(m##identifier_##Sheet);                                 \
   }
 #include "mozilla/UserAgentStyleSheetList.h"
 #undef STYLE_SHEET
 
-StyleSheet* nsLayoutStylesheetCache::UserContentSheet() {
+StyleSheet* nsLayoutStylesheetCache::GetUserContentSheet() {
   return mUserContentSheet;
 }
 
-StyleSheet* nsLayoutStylesheetCache::UserChromeSheet() {
+StyleSheet* nsLayoutStylesheetCache::GetUserChromeSheet() {
   return mUserChromeSheet;
 }
 

@@ -479,7 +479,7 @@ void DecodedStream::SetPlaying(bool aPlaying) {
 
 void DecodedStream::SetVolume(double aVolume) {
   AssertOwnerThread();
-  mParams.mVolume = Some(aVolume);
+  mParams.mVolume = aVolume;
 }
 
 void DecodedStream::SetPlaybackRate(double aPlaybackRate) {
@@ -730,8 +730,7 @@ void DecodedStream::SendData() {
     return;
   }
 
-  MOZ_ASSERT(mParams.mVolume.isSome(), "Volume should exist at that point");
-  SendAudio(mParams.mVolume.value(), mSameOrigin, mPrincipalHandle);
+  SendAudio(mParams.mVolume, mSameOrigin, mPrincipalHandle);
   SendVideo(mSameOrigin, mPrincipalHandle);
 }
 

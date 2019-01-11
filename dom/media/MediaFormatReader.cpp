@@ -1397,8 +1397,8 @@ void MediaFormatReader::MaybeResolveMetadataPromise() {
 }
 
 bool MediaFormatReader::IsEncrypted() const {
-  return (HasAudio() && mAudio.GetCurrentInfo()->mCrypto.mValid) ||
-         (HasVideo() && mVideo.GetCurrentInfo()->mCrypto.mValid);
+  return (HasAudio() && mAudio.GetCurrentInfo()->mCrypto.IsEncrypted()) ||
+         (HasVideo() && mVideo.GetCurrentInfo()->mCrypto.IsEncrypted());
 }
 
 void MediaFormatReader::OnDemuxerInitFailed(const MediaResult& aError) {
@@ -2006,7 +2006,8 @@ void MediaFormatReader::HandleDemuxedSamples(
       bool recyclable =
           StaticPrefs::MediaDecoderRecycleEnabled() &&
           decoder.mDecoder->SupportDecoderRecycling() &&
-          (*info)->mCrypto.mValid == decoder.GetCurrentInfo()->mCrypto.mValid &&
+          (*info)->mCrypto.mCryptoScheme ==
+              decoder.GetCurrentInfo()->mCrypto.mCryptoScheme &&
           (*info)->mMimeType == decoder.GetCurrentInfo()->mMimeType;
       if (!recyclable && decoder.mTimeThreshold.isNothing() &&
           (decoder.mNextStreamSourceID.isNothing() ||
@@ -2889,10 +2890,9 @@ void MediaFormatReader::SetVideoDecodeThreshold() {
 
     // If the key frame is invalid/infinite, it means the target position is
     // closing to end of stream. We don't want to skip any frame at this point.
-    if (!keyframe.IsValid() || keyframe.IsInfinite()) {
-      return;
-    }
-    threshold = mOriginalSeekTarget.GetTime();
+    threshold = keyframe.IsValid() && !keyframe.IsInfinite()
+                    ? mOriginalSeekTarget.GetTime()
+                    : TimeUnit::Invalid();
   } else {
     return;
   }

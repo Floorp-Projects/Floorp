@@ -72,6 +72,8 @@ static const int DT_ANDROID_RELA = DT_LOOS + 4;
 static const char kMappedFileUnsafePrefix[] = "/dev/";
 static const char kDeletedSuffix[] = " (deleted)";
 static const char kReservedFlags[] = " ---p";
+static const char kMozillaIpcPrefix[] = "org.mozilla.ipc.";
+static const char kChromiumPrefix[] = "org.chromium.";
 
 inline static bool IsMappedFileOpenUnsafe(
     const google_breakpad::MappingInfo& mapping) {
@@ -572,6 +574,16 @@ bool LinuxDumper::ReadAuxv() {
   return res;
 }
 
+bool LinuxDumper::IsIPCSharedMemorySegment(const char* name) {
+  if ((my_strstr(name, kMozillaIpcPrefix) ||
+       my_strstr(name, kChromiumPrefix)) &&
+      my_strstr(name, kDeletedSuffix)) {
+    return true;
+  }
+
+  return false;
+}
+
 bool LinuxDumper::EnumerateMappings() {
   char maps_path[NAME_MAX];
   if (!BuildProcPath(maps_path, pid_, "maps"))
@@ -616,6 +628,11 @@ bool LinuxDumper::EnumerateMappings() {
               reinterpret_cast<void*>(start_addr) == linux_gate_loc) {
             name = kLinuxGateLibraryName;
             offset = 0;
+          }
+          // Skip shared memory segments used for IPC
+          if (name && IsIPCSharedMemorySegment(name)) {
+            line_reader->PopLine(line_len);
+            continue;
           }
           // Merge adjacent mappings into one module, assuming they're a single
           // library mapped by the dynamic linker.

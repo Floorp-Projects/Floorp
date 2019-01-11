@@ -20,6 +20,15 @@ function configureTest() {
     "TypeError: Argument 2 of AudioWorkletGlobalScope.registerProcessor constructor.process is not callable.",
     "TypeError: Argument 2 of AudioWorkletGlobalScope.registerProcessor constructor.parameterDescriptors is neither an array nor undefined.",
     "NotSupportedError: Argument 1 of AudioWorkletGlobalScope.registerProcessor is invalid: a class with the same name is already registered.",
+    "TypeError: Missing required 'name' member of AudioParamDescriptor.",
+    "TypeError: 'defaultValue' member of AudioParamDescriptor is not a finite floating-point value.",
+    "TypeError: 'minValue' member of AudioParamDescriptor is not a finite floating-point value.",
+    "TypeError: 'maxValue' member of AudioParamDescriptor is not a finite floating-point value.",
+    "NotSupportedError: Duplicated name \"test\" in parameterDescriptors.",
+    "TypeError: Element 0 in parameterDescriptors can't be converted to a dictionary.",
+    "NotSupportedError: In parameterDescriptors, test defaultValue is out of the range defined by minValue and maxValue.",
+    "NotSupportedError: In parameterDescriptors, test defaultValue is out of the range defined by minValue and maxValue.",
+    "NotSupportedError: In parameterDescriptors, test minValue should be smaller than maxValue.",
     ];
 
   var expected_errors_i = 0;

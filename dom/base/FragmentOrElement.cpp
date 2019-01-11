@@ -36,7 +36,6 @@
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/DocumentInlines.h"
 #include "nsIDocumentEncoder.h"
-#include "nsIContentIterator.h"
 #include "nsFocusManager.h"
 #include "nsILinkHandler.h"
 #include "nsIScriptGlobalObject.h"
@@ -1749,11 +1748,6 @@ NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_BEGIN(FragmentOrElement)
   return FragmentOrElement::CanSkipThis(tmp);
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_END
 
-static const char* kNSURIs[] = {" ([none])", " (xmlns)",  " (xml)",
-                                " (xhtml)",  " (XLink)",  " (XSLT)",
-                                " (XBL)",    " (MathML)", " (RDF)",
-                                " (XUL)",    " (SVG)",    " (XML Events)"};
-
 // We purposefully don't TRAVERSE_BEGIN_INHERITED here.  All the bits
 // we should traverse should be added here or in nsINode::Traverse.
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(FragmentOrElement)
@@ -1794,6 +1788,10 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(FragmentOrElement)
       orphan.AppendLiteral(" (orphan)");
     }
 
+    static const char* kNSURIs[] = {" ([none])", " (xmlns)",  " (xml)",
+                                    " (xhtml)",  " (XLink)",  " (XSLT)",
+                                    " (XBL)",    " (MathML)", " (RDF)",
+                                    " (XUL)",    " (SVG)",    " (XML Events)"};
     const char* nsuri = nsid < ArrayLength(kNSURIs) ? kNSURIs[nsid] : "";
     SprintfLiteral(name, "FragmentOrElement%s %s%s%s%s %s", nsuri,
                    localName.get(), NS_ConvertUTF16toUTF8(id).get(),

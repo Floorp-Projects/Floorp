@@ -10,7 +10,7 @@ webidl Range;
 
 /**
  * nsIScriptableContentIterator is designed to testing concrete classes of
- * nsIContentIterator.
+ * ContentIteratorBase.
  */
 [scriptable, builtinclass, uuid(9f25fb2a-265f-44f9-a122-62bbf443239e)]
 interface nsIScriptableContentIterator : nsISupports
@@ -30,38 +30,38 @@ interface nsIScriptableContentIterator : nsISupports
    * exception.
    */
 
-  // See nsIContentIterator::Init(nsINode*)
+  // See ContentIteratorBase::Init(nsINode*)
   void initWithRootNode(in nsIScriptableContentIterator_IteratorType aType,
                         in Node aRoot);
 
-  // See nsIContentIterator::Init(nsRange*)
+  // See ContentIteratorBase::Init(nsRange*)
   void initWithRange(in nsIScriptableContentIterator_IteratorType aType,
                      in Range aRange);
 
-  // See nsIContentIterator::Init(nsINode*, uint32_t, nsINode*, uint32_t)
+  // See ContentIteratorBase::Init(nsINode*, uint32_t, nsINode*, uint32_t)
   void initWithPositions(in nsIScriptableContentIterator_IteratorType aType,
                          in Node aStartContainer, in unsigned long aStartOffset,
                          in Node aEndContainer, in unsigned long aEndOffset);
 
-  // See nsIContentIterator::First()
+  // See ContentIteratorBase::First()
   void first();
 
-  // See nsIContentIterator::Last()
+  // See ContentIteratorBase::Last()
   void last();
 
-  // See nsIContentIterator::Next()
+  // See ContentIteratorBase::Next()
   void next();
 
-  // See nsIContentIterator::Prev()
+  // See ContentIteratorBase::Prev()
   void prev();
 
-  // See nsIContentIterator::GetCurrentNode()
+  // See ContentIteratorBase::GetCurrentNode()
   readonly attribute Node currentNode;
 
-  // See nsIContentIterator::IsDone()
+  // See ContentIteratorBase::IsDone()
   readonly attribute bool isDone;
 
-  // See nsIContentIterator::PositionAt(nsINode*)
+  // See ContentIteratorBase::PositionAt(nsINode*)
   void positionAt(in Node aNode);
 };
 

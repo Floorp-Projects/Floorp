@@ -2426,6 +2426,13 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
         __func__);
   }
 
+  // Disallow access to null principal pages.
+  if (principal->GetIsNullPrincipal()) {
+    return StreamPromise::CreateAndReject(
+        MakeRefPtr<MediaMgrError>(MediaMgrError::Name::NotAllowedError),
+        __func__);
+  }
+
   // This principal needs to be sent to different threads and so via IPC.
   // For this reason it's better to convert it to PrincipalInfo right now.
   ipc::PrincipalInfo principalInfo;
