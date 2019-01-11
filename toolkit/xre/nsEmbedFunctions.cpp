@@ -81,6 +81,7 @@
 
 #include "GMPProcessChild.h"
 #include "mozilla/gfx/GPUProcessImpl.h"
+#include "mozilla/net/SocketProcessImpl.h"
 
 #include "GeckoProfiler.h"
 
@@ -634,6 +635,7 @@ nsresult XRE_InitChildProcess(int aArgc, char* aArgv[],
     case GeckoProcessType_GPU:
     case GeckoProcessType_VR:
     case GeckoProcessType_RDD:
+    case GeckoProcessType_Socket:
       // Content processes need the XPCOM/chromium frankenventloop
       uiLoopType = MessageLoop::TYPE_MOZILLA_CHILD;
       break;
@@ -701,6 +703,10 @@ nsresult XRE_InitChildProcess(int aArgc, char* aArgv[],
 
         case GeckoProcessType_RDD:
           process = new RDDProcessImpl(parentPID);
+          break;
+
+        case GeckoProcessType_Socket:
+          process = new net::SocketProcessImpl(parentPID);
           break;
 
         default:
