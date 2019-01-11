@@ -28,7 +28,6 @@ include protocol PStunAddrsRequest;
 include protocol PFileChannel;
 include protocol PTrackingDummyChannel;
 include protocol PWebrtcProxyChannel;
-include protocol PSocketProcessBridge;
 
 include IPCStream;
 include URIParams;
@@ -143,9 +142,6 @@ parent:
    */
   async GetExtensionStream(URIParams uri) returns (nsIInputStream stream);
   async GetExtensionFD(URIParams uri) returns (FileDescriptor fd);
-
-  async InitSocketProcessBridge()
-    returns (Endpoint<PSocketProcessBridgeChild> endpoint);
 
 child:
   /*

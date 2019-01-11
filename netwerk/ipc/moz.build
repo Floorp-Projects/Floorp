@@ -11,12 +11,6 @@ EXPORTS.mozilla.net += [
     'NeckoMessageUtils.h',
     'NeckoParent.h',
     'NeckoTargetHolder.h',
-    'SocketProcessBridgeChild.h',
-    'SocketProcessBridgeParent.h',
-    'SocketProcessChild.h',
-    'SocketProcessHost.h',
-    'SocketProcessImpl.h',
-    'SocketProcessParent.h',
 ]
 
 UNIFIED_SOURCES += [
@@ -25,12 +19,6 @@ UNIFIED_SOURCES += [
     'NeckoCommon.cpp',
     'NeckoParent.cpp',
     'NeckoTargetHolder.cpp',
-    'SocketProcessBridgeChild.cpp',
-    'SocketProcessBridgeParent.cpp',
-    'SocketProcessChild.cpp',
-    'SocketProcessHost.cpp',
-    'SocketProcessImpl.cpp',
-    'SocketProcessParent.cpp',
 ]
 
 IPDL_SOURCES = [
@@ -40,8 +28,6 @@ IPDL_SOURCES = [
     'PFileChannel.ipdl',
     'PNecko.ipdl',
     'PSimpleChannel.ipdl',
-    'PSocketProcess.ipdl',
-    'PSocketProcessBridge.ipdl'
 ]
 
 # needed so --disable-webrtc builds work (yes, a bit messy)
@@ -65,7 +51,6 @@ LOCAL_INCLUDES += [
     '/modules/libjar',
     '/netwerk/base',
     '/netwerk/protocol/http',
-    '/xpcom/threads'
 ]
 
 # Add libFuzzer configuration directives

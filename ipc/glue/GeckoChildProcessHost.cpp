@@ -154,8 +154,7 @@ auto GeckoChildProcessHost::GetPathToBinary(FilePath& exePath,
   if (sRunSelfAsContentProc && (processType == GeckoProcessType_Content ||
                                 processType == GeckoProcessType_GPU ||
                                 processType == GeckoProcessType_VR ||
-                                processType == GeckoProcessType_RDD ||
-                                processType == GeckoProcessType_Socket)) {
+                                processType == GeckoProcessType_RDD)) {
 #if defined(OS_WIN)
     wchar_t exePathBuf[MAXPATHLEN];
     if (!::GetModuleFileNameW(nullptr, exePathBuf, MAXPATHLEN)) {
@@ -976,9 +975,6 @@ bool GeckoChildProcessHost::PerformAsyncLaunch(
         }
         shouldSandboxCurrentProcess = true;
       }
-      break;
-    case GeckoProcessType_Socket:
-      // TODO - setup sandboxing for the socket process.
       break;
     case GeckoProcessType_Default:
     default:

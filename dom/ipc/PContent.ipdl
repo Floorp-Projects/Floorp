@@ -60,7 +60,6 @@ include GraphicsMessages;
 include MemoryReportTypes;
 include ClientIPCTypes;
 include HangTypes;
-include PrefsTypes;
 
 // Workaround to prevent error if PContentChild.cpp & PContentBridgeParent.cpp
 // are put into different UnifiedProtocolsXX.cpp files.
@@ -76,6 +75,7 @@ using struct OverrideMapping from "mozilla/chrome/RegistryMessageUtils.h";
 using base::ProcessId from "base/process.h";
 using struct IPC::Permission from "mozilla/net/NeckoMessageUtils.h";
 using class IPC::Principal from "mozilla/dom/PermissionMessageUtils.h";
+using struct mozilla::null_t from "ipc/IPCMessageUtils.h";
 using mozilla::a11y::IHandlerControlHolder from "mozilla/a11y/IPCTypes.h";
 using mozilla::dom::NativeThreadId from "mozilla/dom/TabMessageUtils.h";
 using mozilla::hal::ProcessPriority from "mozilla/HalTypes.h";
@@ -144,6 +144,30 @@ struct FontPatternListEntry {
 union SystemFontListEntry {
     FontFamilyListEntry;
     FontPatternListEntry;
+};
+
+union PrefValue {
+  nsCString;
+  int32_t;
+  bool;
+};
+
+union MaybePrefValue {
+  PrefValue;
+  null_t;
+};
+
+// This serialization form mirrors that used in mozilla::Pref in
+// Preferences.cpp. The two should be kept in sync, e.g. if something is added
+// to one it should also be added to the other.
+//
+// Note: there is no need to pass the isSticky attribute because that's an
+// immutable attribute obtained from file at startup.
+struct Pref {
+  nsCString name;
+  bool isLocked;
+  MaybePrefValue defaultValue;
+  MaybePrefValue userValue;
 };
 
 struct DataStorageItem {

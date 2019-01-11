@@ -21,12 +21,6 @@ class ContentParent;
 
 }  // namespace dom
 
-namespace net {
-
-class SocketProcessImpl;
-
-}  // namespace net
-
 namespace ipc {
 
 class PBackgroundChild;
@@ -42,10 +36,6 @@ class PBackgroundChild;
 // create the actor if it doesn't exist yet. Thereafter (assuming success)
 // GetForCurrentThread() will return the same actor every time.
 //
-// GetOrCreateSocketActorForCurrentThread, which is like
-// GetOrCreateForCurrentThread, is used to get or create PBackground actor
-// between child process and socket process.
-//
 // CloseForCurrentThread() will close the current PBackground actor.  Subsequent
 // calls to GetForCurrentThread will return null.  CloseForCurrentThread() may
 // only be called exactly once for each thread-specific actor.  Currently it is
@@ -56,7 +46,6 @@ class PBackgroundChild;
 class BackgroundChild final {
   friend class mozilla::dom::ContentChild;
   friend class mozilla::dom::ContentParent;
-  friend class mozilla::net::SocketProcessImpl;
 
   typedef mozilla::ipc::Transport Transport;
 
@@ -70,10 +59,6 @@ class BackgroundChild final {
 
   // See above.
   static void CloseForCurrentThread();
-
-  // See above.
-  static PBackgroundChild* GetOrCreateSocketActorForCurrentThread(
-      nsIEventTarget* aMainEventTarget = nullptr);
 
  private:
   // Only called by ContentChild or ContentParent.

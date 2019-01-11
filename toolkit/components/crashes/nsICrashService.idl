@@ -29,7 +29,6 @@ interface nsICrashService : nsISupports
   const long PROCESS_TYPE_GPU = 5;
   const long PROCESS_TYPE_VR = 6;
   const long PROCESS_TYPE_RDD = 7;
-  const long PROCESS_TYPE_SOCKET = 8;
   // New process types should be added at the end of the above list.
 
   const long CRASH_TYPE_CRASH = 0;
