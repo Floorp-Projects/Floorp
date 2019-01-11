@@ -29,6 +29,11 @@ class NonBlockingAsyncInputStream::AsyncWaitRunnable final
     mStream->RunAsyncWaitCallback(this, mCallback.forget());
     return NS_OK;
   }
+
+  nsresult Cancel() override {
+    mStream = nullptr;
+    return NS_OK;
+  }
 };
 
 NS_IMPL_ADDREF(NonBlockingAsyncInputStream);

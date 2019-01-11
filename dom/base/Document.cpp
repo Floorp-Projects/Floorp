@@ -1646,10 +1646,6 @@ NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_BEGIN(Document)
   return Element::CanSkipThis(tmp);
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_END
 
-static const char* kNSURIs[] = {"([none])", "(xmlns)", "(xml)", "(xhtml)",
-                                "(XLink)",  "(XSLT)",  "(XBL)", "(MathML)",
-                                "(RDF)",    "(XUL)"};
-
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(Document)
   if (MOZ_UNLIKELY(cb.WantDebugInfo())) {
     char name[512];
@@ -1662,6 +1658,9 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(Document)
     uint32_t nsid = tmp->GetDefaultNamespaceID();
     nsAutoCString uri;
     if (tmp->mDocumentURI) uri = tmp->mDocumentURI->GetSpecOrDefault();
+    static const char* kNSURIs[] = {"([none])", "(xmlns)", "(xml)", "(xhtml)",
+                                    "(XLink)",  "(XSLT)",  "(XBL)", "(MathML)",
+                                    "(RDF)",    "(XUL)"};
     if (nsid < ArrayLength(kNSURIs)) {
       SprintfLiteral(name, "Document %s %s %s", loadedAsData.get(),
                      kNSURIs[nsid], uri.get());

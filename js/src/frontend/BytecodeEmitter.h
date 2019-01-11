@@ -478,9 +478,6 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   MOZ_MUST_USE bool setSrcNoteOffset(unsigned index, unsigned which,
                                      ptrdiff_t offset);
 
-  // NB: this function can add at most one extra extended delta note.
-  MOZ_MUST_USE bool addToSrcNoteDelta(jssrcnote* sn, ptrdiff_t delta);
-
   // Finish taking source notes in cx's notePool. If successful, the final
   // source note count is stored in the out outparam.
   MOZ_MUST_USE bool finishTakingSrcNotes(uint32_t* out);

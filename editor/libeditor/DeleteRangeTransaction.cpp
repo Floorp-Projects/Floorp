@@ -8,15 +8,15 @@
 #include "DeleteNodeTransaction.h"
 #include "DeleteTextTransaction.h"
 #include "mozilla/Assertions.h"
-#include "mozilla/EditorBase.h"
+#include "mozilla/ContentIterator.h"
 #include "mozilla/dom/Selection.h"
+#include "mozilla/EditorBase.h"
 #include "mozilla/mozalloc.h"
 #include "mozilla/RangeBoundary.h"
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
 #include "nsError.h"
 #include "nsIContent.h"
-#include "nsIContentIterator.h"
 #include "nsINode.h"
 #include "nsAString.h"
 
@@ -214,13 +214,12 @@ nsresult DeleteRangeTransaction::CreateTxnsToDeleteNodesBetween(
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  nsCOMPtr<nsIContentIterator> iter = NS_NewContentSubtreeIterator();
-
-  nsresult rv = iter->Init(aRangeToDelete);
+  ContentSubtreeIterator subtreeIter;
+  nsresult rv = subtreeIter.Init(aRangeToDelete);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  while (!iter->IsDone()) {
-    nsCOMPtr<nsINode> node = iter->GetCurrentNode();
+  while (!subtreeIter.IsDone()) {
+    nsCOMPtr<nsINode> node = subtreeIter.GetCurrentNode();
     if (NS_WARN_IF(!node)) {
       return NS_ERROR_NULL_POINTER;
     }
@@ -236,7 +235,7 @@ nsresult DeleteRangeTransaction::CreateTxnsToDeleteNodesBetween(
     }
     AppendChild(deleteNodeTransaction);
 
-    iter->Next();
+    subtreeIter.Next();
   }
   return NS_OK;
 }

@@ -242,3 +242,20 @@ about-debugging-connection-prompt-enable-button = Enable connection prompt
 # Text of the connection prompt button displayed in Runtime pages, when the preference
 # "devtools.debugger.prompt-connection" is true on the target runtime.
 about-debugging-connection-prompt-disable-button = Disable connection prompt
+
+# Title of the application displayed in the tab
+-application-title = Debugging
+
+# Page title of connect / runtime page
+# Part of "about-debugging-page-title" string defined below
+about-debugging-page-title-selected-page = 
+  { $selectedPage -> 
+     [connect] Connect
+     *[runtime] Runtime
+  }
+
+# Page title with the runtime displayed in the tab
+about-debugging-page-title-with-runtime = { -application-title } - { about-debugging-page-title-selected-page } / { $selectedRuntime }
+
+# Page title without the runtime displayed in the tab
+about-debugging-page-title = { -application-title } - { about-debugging-page-title-selected-page }

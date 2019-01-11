@@ -168,6 +168,9 @@ int WaylandShmPool::CreateTemporaryFile(int aSize) {
   } while (ret == EINTR);
   if (ret != 0) {
     close(fd);
+    MOZ_CRASH_UNSAFE_PRINTF(
+        "posix_fallocate() fails on %s size %d error code %d\n", filename,
+        aSize, ret);
   }
 #else
   do {
@@ -175,9 +178,10 @@ int WaylandShmPool::CreateTemporaryFile(int aSize) {
   } while (ret < 0 && errno == EINTR);
   if (ret < 0) {
     close(fd);
+    MOZ_CRASH_UNSAFE_PRINTF("ftruncate() fails on %s size %d error code %d\n",
+                            filename, aSize, ret);
   }
 #endif
-  MOZ_RELEASE_ASSERT(ret == 0, "Mapping file allocation failed.");
 
   return fd;
 }

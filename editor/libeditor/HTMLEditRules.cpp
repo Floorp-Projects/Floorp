@@ -12,6 +12,7 @@
 #include "TextEditUtils.h"
 #include "WSRunObject.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/ContentIterator.h"
 #include "mozilla/CSSEditUtils.h"
 #include "mozilla/EditAction.h"
 #include "mozilla/EditorDOMPoint.h"
@@ -39,7 +40,6 @@
 #include "nsAtom.h"
 #include "nsHTMLDocument.h"
 #include "nsIContent.h"
-#include "nsIContentIterator.h"
 #include "nsID.h"
 #include "nsIFrame.h"
 #include "nsIHTMLAbsPosEditor.h"
@@ -9437,10 +9437,8 @@ nsresult HTMLEditRules::RemoveEmptyNodesInChangedRange() {
   // include some children of a node while excluding others.  Thus I could find
   // all the _examined_ children empty, but still not have an empty parent.
 
-  // need an iterator
-  nsCOMPtr<nsIContentIterator> iter = NS_NewContentIterator();
-
-  nsresult rv = iter->Init(mDocChangeRange);
+  PostContentIterator postOrderIter;
+  nsresult rv = postOrderIter.Init(mDocChangeRange);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -9449,8 +9447,8 @@ nsresult HTMLEditRules::RemoveEmptyNodesInChangedRange() {
       skipList;
 
   // Check for empty nodes
-  while (!iter->IsDone()) {
-    OwningNonNull<nsINode> node = *iter->GetCurrentNode();
+  for (; !postOrderIter.IsDone(); postOrderIter.Next()) {
+    OwningNonNull<nsINode> node = *postOrderIter.GetCurrentNode();
 
     nsCOMPtr<nsINode> parent = node->GetParentNode();
 
@@ -9515,8 +9513,6 @@ nsresult HTMLEditRules::RemoveEmptyNodesInChangedRange() {
         skipList.AppendElement(*parent);
       }
     }
-
-    iter->Next();
   }
 
   // now delete the empty nodes

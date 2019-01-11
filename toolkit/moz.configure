@@ -1131,9 +1131,17 @@ set_config('MIDL_FLAGS', midl_flags)
 # Accessibility
 # ==============================================================
 
-option('--disable-accessibility', help='Disable accessibility support')
+@depends(target)
+def a11y_default(target):
+    # Accessibility doesn't work on aarch64-windows yet.
+    if target.kernel == 'WINNT' and target.cpu == 'aarch64':
+        return False
+    return True
 
-@depends('--disable-accessibility', check_for_midl, midl, c_compiler)
+option('--enable-accessibility',
+       default=a11y_default, help='{Enable|Disable} accessibility support')
+
+@depends('--enable-accessibility', check_for_midl, midl, c_compiler)
 def accessibility(value, check_for_midl, midl, c_compiler):
     enabled = bool(value)
 

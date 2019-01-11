@@ -24,6 +24,16 @@ inline LexicalEnvironmentObject& NearestEnclosingExtensibleLexicalEnvironment(
   return env->as<LexicalEnvironmentObject>();
 }
 
+// Returns the innermost "qualified var object" on the environment chain.
+// See the JSObject::isQualifiedVarObj comment for more info.
+inline JSObject& GetVariablesObject(JSObject* envChain) {
+  while (!envChain->isQualifiedVarObj()) {
+    envChain = envChain->enclosingEnvironment();
+  }
+  MOZ_ASSERT(envChain);
+  return *envChain;
+}
+
 inline void EnvironmentObject::setAliasedBinding(JSContext* cx, uint32_t slot,
                                                  PropertyName* name,
                                                  const Value& v) {
