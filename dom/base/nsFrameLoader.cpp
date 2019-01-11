@@ -1735,8 +1735,15 @@ void nsFrameLoader::SetOwnerContent(Element* aContent) {
     Unused << NS_WARN_IF(rv.Failed());
   }
 
-  if (RenderFrame* rfp = GetCurrentRenderFrame()) {
-    rfp->OwnerContentChanged(aContent);
+  // If we have reached here from StartDestroy, then there's no need to update
+  // the layers attached by the render frame, as it will be going away soon
+  if (mDestroyCalled) {
+    MOZ_ASSERT(!aContent);
+    return;
+  }
+
+  if (RenderFrame* rf = GetCurrentRenderFrame()) {
+    rf->OwnerContentChanged(aContent);
   }
 }
 
