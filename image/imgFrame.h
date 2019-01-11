@@ -202,6 +202,8 @@ class imgFrame {
   bool GetCompositingFailed() const;
   void SetCompositingFailed(bool val);
 
+  bool ShouldRecycle() const { return mShouldRecycle; }
+
   void SetOptimizable();
 
   void FinalizeSurface();

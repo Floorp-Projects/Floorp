@@ -309,21 +309,6 @@ SharedSurfacesChild::AsSourceSurfaceSharedData(SourceSurface* aSurface) {
 }
 
 /* static */ nsresult SharedSurfacesChild::Share(
-    SourceSurface* aSurface, RenderRootStateManager* aManager,
-    wr::IpcResourceUpdateQueue& aResources, wr::ImageKey& aKey) {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aSurface);
-  MOZ_ASSERT(aManager);
-
-  auto sharedSurface = AsSourceSurfaceSharedData(aSurface);
-  if (!sharedSurface) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-
-  return Share(sharedSurface, aManager, aResources, aKey);
-}
-
-/* static */ nsresult SharedSurfacesChild::Share(
     ImageContainer* aContainer, RenderRootStateManager* aManager,
     wr::IpcResourceUpdateQueue& aResources, wr::ImageKey& aKey) {
   MOZ_ASSERT(NS_IsMainThread());

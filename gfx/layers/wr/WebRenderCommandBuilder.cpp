@@ -8,7 +8,6 @@
 
 #include "BasicLayers.h"
 #include "mozilla/AutoRestore.h"
-#include "mozilla/DebugOnly.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/gfx/Types.h"
@@ -185,14 +184,18 @@ static void TakeExternalSurfaces(
   aRecorder->TakeExternalSurfaces(aExternalSurfaces);
 
   for (auto& surface : aExternalSurfaces) {
+    if (surface->GetType() != SurfaceType::DATA_SHARED) {
+      MOZ_ASSERT_UNREACHABLE("External surface that is not a shared surface!");
+      continue;
+    }
+
     // While we don't use the image key with the surface, because the blob image
     // renderer doesn't have easy access to the resource set, we still want to
     // ensure one is generated. That will ensure the surface remains alive until
     // at least the last epoch which the blob image could be used in.
     wr::ImageKey key;
-    DebugOnly<nsresult> rv =
-        SharedSurfacesChild::Share(surface, aManager, aResources, key);
-    MOZ_ASSERT(rv != NS_ERROR_NOT_IMPLEMENTED);
+    auto sharedSurface = static_cast<SourceSurfaceSharedData*>(surface.get());
+    SharedSurfacesChild::Share(sharedSurface, aManager, aResources, key);
   }
 }
 
