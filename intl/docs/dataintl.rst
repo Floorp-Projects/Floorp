@@ -315,6 +315,20 @@ Example:
   let locs = getLanguageDisplayNames(["pl"], ["sr-RU", "es-MX", "fr-CA"]);
   locs === ["Serbski (Rosja)", "Hiszpański (Meksyk)", "Francuski (Kanada)"];
 
+mozIntl.getAvailableLocaleDisplayNames(type)
+---------------------------------------------------
+
+API which returns a list of locale display name codes available for a
+given type.
+Available types are: "region".
+
+Example:
+
+.. code-block:: javascript
+
+  let codes = getAvailableLocaleDisplayNames("region");
+  codes === ["au", "ae", "af", ...];
+
 Best Practices
 ==============
 

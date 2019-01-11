@@ -75,6 +75,14 @@ XPCOMUtils.defineLazyPreferenceGetter(FormAutofill,
                                       "supportedCountries", SUPPORTED_COUNTRIES_PREF, null, null,
                                       val => val.split(","));
 
+// XXX: This should be invalidated on intl:app-locales-changed.
 XPCOMUtils.defineLazyGetter(FormAutofill, "countries", () => {
-  return Services.intl.getRegions(undefined);
+  let availableRegionCodes = Services.intl.getAvailableLocaleDisplayNames("region");
+  let displayNames = Services.intl.getRegionDisplayNames(undefined, availableRegionCodes);
+  let result = new Map();
+  for (let i = 0; i < availableRegionCodes.length; i++) {
+    result.set(availableRegionCodes[i].toUpperCase(), displayNames[i]);
+  }
+  return result;
 });
+

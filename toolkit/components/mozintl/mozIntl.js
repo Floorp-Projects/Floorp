@@ -151,8 +151,83 @@ const threshold = {
   second: 59, // at least 59 seconds before using minute.
 };
 
+/**
+ * Notice: If you're updating this list, you should also
+ *         update the list in
+ *         languageNames.ftl and regionNames.ftl.
+ */
+const availableLocaleDisplayNames = {
+  region: new Set([
+    "ad", "ae", "af", "ag", "ai", "al", "am", "ao",
+    "aq", "ar", "as", "at", "au", "aw", "az", "ba",
+    "bb", "bd", "be", "bf", "bg", "bh", "bi", "bj",
+    "bl", "bm", "bn", "bo", "bq", "br", "bs", "bt",
+    "bv", "bw", "by", "bz", "ca", "cc", "cd", "cf",
+    "cg", "ch", "ci", "ck", "cl", "cm", "cn", "co",
+    "cp", "cr", "cu", "cv", "cw", "cx", "cy", "cz",
+    "de", "dg", "dj", "dk", "dm", "do", "dz", "ec",
+    "ee", "eg", "eh", "er", "es", "et", "fi", "fj",
+    "fk", "fm", "fo", "fr", "ga", "gb", "gd", "ge",
+    "gf", "gg", "gh", "gi", "gl", "gm", "gn", "gp",
+    "gq", "gr", "gs", "gt", "gu", "gw", "gy", "hk",
+    "hm", "hn", "hr", "ht", "hu", "id", "ie", "il",
+    "im", "in", "io", "iq", "ir", "is", "it", "je",
+    "jm", "jo", "jp", "ke", "kg", "kh", "ki", "km",
+    "kn", "kp", "kr", "kw", "ky", "kz", "la", "lb",
+    "lc", "li", "lk", "lr", "ls", "lt", "lu", "lv",
+    "ly", "ma", "mc", "md", "me", "mf", "mg", "mh",
+    "mk", "ml", "mm", "mn", "mo", "mp", "mq", "mr",
+    "ms", "mt", "mu", "mv", "mw", "mx", "my", "mz",
+    "na", "nc", "ne", "nf", "ng", "ni", "nl", "no",
+    "np", "nr", "nu", "nz", "om", "pa", "pe", "pf",
+    "pg", "ph", "pk", "pl", "pm", "pn", "pr", "pt",
+    "pw", "py", "qa", "qm", "qs", "qu", "qw", "qx",
+    "qz", "re", "ro", "rs", "ru", "rw", "sa", "sb",
+    "sc", "sd", "se", "sg", "sh", "si", "sk", "sl",
+    "sm", "sn", "so", "sr", "ss", "st", "sv", "sx",
+    "sy", "sz", "tc", "td", "tf", "tg", "th", "tj",
+    "tk", "tl", "tm", "tn", "to", "tr", "tt", "tv",
+    "tw", "tz", "ua", "ug", "us", "uy", "uz", "va",
+    "vc", "ve", "vg", "vi", "vn", "vu", "wf", "ws",
+    "xa", "xb", "xc", "xd", "xe", "xg", "xh", "xj",
+    "xk", "xl", "xm", "xp", "xq", "xr", "xs", "xt",
+    "xu", "xv", "xw", "ye", "yt", "za", "zm", "zw",
+  ]),
+  "language": new Set([
+    "aa", "ab", "ach", "ae", "af", "ak", "am", "an",
+    "ar", "as", "ast", "av", "ay", "az", "ba", "be",
+    "bg", "bh", "bi", "bm", "bn", "bo", "br", "bs",
+    "ca", "cak", "ce", "ch", "co", "cr", "crh", "cs",
+    "csb", "cu", "cv", "cy", "da", "de", "dsb", "dv",
+    "dz", "ee", "el", "en", "eo", "es", "et", "eu",
+    "fa", "ff", "fi", "fj", "fo", "fr", "fur", "fy",
+    "ga", "gd", "gl", "gn", "gu", "gv", "ha", "haw",
+    "he", "hi", "hil", "ho", "hr", "hsb", "ht", "hu",
+    "hy", "hz", "ia", "id", "ie", "ig", "ii", "ik",
+    "io", "is", "it", "iu", "ja", "jv", "ka", "kab",
+    "kg", "ki", "kj", "kk", "kl", "km", "kn", "ko",
+    "kok", "kr", "ks", "ku", "kv", "kw", "ky", "la",
+    "lb", "lg", "li", "lij", "ln", "lo", "lt", "ltg",
+    "lu", "lv", "mai", "meh", "mg", "mh", "mi", "mix",
+    "mk", "ml", "mn", "mr", "ms", "mt", "my", "na",
+    "nb", "nd", "ne", "ng", "nl", "nn", "no", "nr",
+    "nso", "nv", "ny", "oc", "oj", "om", "or", "os",
+    "pa", "pi", "pl", "ps", "pt", "qu", "rm", "rn",
+    "ro", "ru", "rw", "sa", "sc", "sd", "se", "sg",
+    "si", "sk", "sl", "sm", "sn", "so", "son", "sq",
+    "sr", "ss", "st", "su", "sv", "sw", "ta", "te",
+    "tg", "th", "ti", "tig", "tk", "tl", "tlh", "tn",
+    "to", "tr", "ts", "tt", "tw", "ty", "ug", "uk",
+    "ur", "uz", "ve", "vi", "vo", "wa", "wen", "wo",
+    "xh", "yi", "yo", "za", "zam", "zh", "zu",
+  ]),
+};
+
 class MozIntl {
   constructor() {
+    // XXX: We should add an observer on
+    //      intl:app-locales-changed to invalidate
+    //      the cache.
     this._cache = {};
   }
 
@@ -180,6 +255,14 @@ class MozIntl {
     return this._cache.getLocaleInfo(getLocales(locales), ...args);
   }
 
+  getAvailableLocaleDisplayNames(type) {
+    if (availableLocaleDisplayNames.hasOwnProperty(type)) {
+      return Array.from(availableLocaleDisplayNames[type]);
+    }
+
+    return new Error("Unimplemented!");
+  }
+
   getLanguageDisplayNames(locales, langCodes) {
     if (locales !== undefined) {
       throw new Error("First argument support not implemented yet");
@@ -197,27 +280,6 @@ class MozIntl {
         return langCode.toLowerCase(); // Fall back to raw language subtag.
       }
     });
-  }
-
-  getRegions(locales) {
-    if (locales !== undefined) {
-      throw new Error("First argument support not implemented yet");
-    }
-
-    if (!this._cache.hasOwnProperty("regionBundle")) {
-      const regionBundle = Services.strings.createBundle(
-        "chrome://global/locale/regionNames.properties");
-      this._cache.regionBundle = regionBundle;
-    }
-
-    if (!this._cache.hasOwnProperty("regionMap")) {
-      this._cache.regionMap = new Map([...this._cache.regionBundle.getSimpleEnumeration()].map(prop => {
-        prop.QueryInterface(Ci.nsIPropertyElement);
-        return [prop.key.toUpperCase(), prop.value];
-      }));
-    }
-
-    return this._cache.regionMap;
   }
 
   getRegionDisplayNames(locales, regionCodes) {
