@@ -11,7 +11,6 @@
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIContent.h"
-#include "nsIContentIterator.h"
 #include "nsRange.h"
 #include "nsTArray.h"
 
@@ -23,32 +22,37 @@ namespace mozilla {
  * classes "final", compiler can avoid virtual calls if they are treated
  * by the users directly.
  */
-class ContentIteratorBase : public nsIContentIterator {
+class ContentIteratorBase {
+ protected:
+  nsCycleCollectingAutoRefCnt mRefCnt;
+  NS_DECL_OWNINGTHREAD
+
  public:
   ContentIteratorBase() = delete;
   ContentIteratorBase(const ContentIteratorBase&) = delete;
   ContentIteratorBase& operator=(const ContentIteratorBase&) = delete;
 
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS(ContentIteratorBase)
+  NS_IMETHOD_(MozExternalRefCountType) AddRef() = 0;
+  NS_IMETHOD_(MozExternalRefCountType) Release() = 0;
+  NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(ContentIteratorBase)
 
-  virtual nsresult Init(nsINode* aRoot) override;
-  virtual nsresult Init(nsRange* aRange) override;
+  virtual nsresult Init(nsINode* aRoot);
+  virtual nsresult Init(nsRange* aRange);
   virtual nsresult Init(nsINode* aStartContainer, uint32_t aStartOffset,
-                        nsINode* aEndContainer, uint32_t aEndOffset) override;
+                        nsINode* aEndContainer, uint32_t aEndOffset);
   virtual nsresult Init(const RawRangeBoundary& aStart,
-                        const RawRangeBoundary& aEnd) override;
+                        const RawRangeBoundary& aEnd);
 
-  virtual void First() override;
-  virtual void Last() override;
-  virtual void Next() override;
-  virtual void Prev() override;
+  virtual void First();
+  virtual void Last();
+  virtual void Next();
+  virtual void Prev();
 
-  virtual nsINode* GetCurrentNode() override;
+  virtual nsINode* GetCurrentNode();
 
-  virtual bool IsDone() override;
+  virtual bool IsDone();
 
-  virtual nsresult PositionAt(nsINode* aCurNode) override;
+  virtual nsresult PositionAt(nsINode* aCurNode);
 
  protected:
   explicit ContentIteratorBase(bool aPre);
@@ -88,6 +92,11 @@ class ContentIteratorBase : public nsIContentIterator {
   nsCOMPtr<nsINode> mLast;
   nsCOMPtr<nsINode> mCommonParent;
 
+  // Used only by ContentSubtreeIterator class but we need to put this here
+  // for cycle collection because macros to implement classes in cycle
+  // collection do not support inherited classes without nsISupports interface.
+  RefPtr<nsRange> mRange;
+
   bool mIsDone;
   bool mPre;
 };
@@ -101,9 +110,8 @@ class PostContentIterator final : public ContentIteratorBase {
   PostContentIterator(const PostContentIterator&) = delete;
   PostContentIterator& operator=(const PostContentIterator&) = delete;
 
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(PostContentIterator,
-                                           ContentIteratorBase)
+  NS_IMETHOD_(MozExternalRefCountType) AddRef() override;
+  NS_IMETHOD_(MozExternalRefCountType) Release() override;
 
  protected:
   virtual ~PostContentIterator() = default;
@@ -118,9 +126,8 @@ class PreContentIterator final : public ContentIteratorBase {
   PreContentIterator(const PreContentIterator&) = delete;
   PreContentIterator& operator=(const PreContentIterator&) = delete;
 
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(PreContentIterator,
-                                           ContentIteratorBase)
+  NS_IMETHOD_(MozExternalRefCountType) AddRef() override;
+  NS_IMETHOD_(MozExternalRefCountType) Release() override;
 
  protected:
   virtual ~PreContentIterator() = default;
@@ -135,9 +142,8 @@ class ContentSubtreeIterator final : public ContentIteratorBase {
   ContentSubtreeIterator(const ContentSubtreeIterator&) = delete;
   ContentSubtreeIterator& operator=(const ContentSubtreeIterator&) = delete;
 
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ContentSubtreeIterator,
-                                           ContentIteratorBase)
+  NS_IMETHOD_(MozExternalRefCountType) AddRef() override;
+  NS_IMETHOD_(MozExternalRefCountType) Release() override;
 
   virtual nsresult Init(nsINode* aRoot) override;
   virtual nsresult Init(nsRange* aRange) override;
@@ -171,8 +177,6 @@ class ContentSubtreeIterator final : public ContentIteratorBase {
   nsIContent* GetTopAncestorInRange(nsINode* aNode);
 
   virtual void LastRelease() override;
-
-  RefPtr<nsRange> mRange;
 
   AutoTArray<nsIContent*, 8> mEndNodes;
 };
