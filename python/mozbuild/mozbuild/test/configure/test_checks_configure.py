@@ -648,6 +648,8 @@ class TestChecksConfigure(unittest.TestCase):
         def get_result(cmd, args=[], extra_paths=None):
             return self.get_result(textwrap.dedent('''\
                 option('--disable-compile-environment', help='compile env')
+                compile_environment = depends(when='--enable-compile-environment')(lambda: True)
+                toolchain_prefix = depends(when=True)(lambda: None)
                 include('%(topsrcdir)s/build/moz.configure/util.configure')
                 include('%(topsrcdir)s/build/moz.configure/checks.configure')
                 include('%(topsrcdir)s/build/moz.configure/pkg.configure')
