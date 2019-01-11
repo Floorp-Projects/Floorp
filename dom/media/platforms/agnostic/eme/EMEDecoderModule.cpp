@@ -376,7 +376,7 @@ static already_AddRefed<MediaDataDecoderProxy> CreateDecoderWrapper(
 
 already_AddRefed<MediaDataDecoder> EMEDecoderModule::CreateVideoDecoder(
     const CreateDecoderParams& aParams) {
-  MOZ_ASSERT(aParams.mConfig.mCrypto.mValid);
+  MOZ_ASSERT(aParams.mConfig.mCrypto.IsEncrypted());
 
   if (StaticPrefs::MediaEmeVideoBlank()) {
     EME_LOG("EMEDecoderModule::CreateVideoDecoder() creating a blank decoder.");
@@ -407,7 +407,7 @@ already_AddRefed<MediaDataDecoder> EMEDecoderModule::CreateVideoDecoder(
 
 already_AddRefed<MediaDataDecoder> EMEDecoderModule::CreateAudioDecoder(
     const CreateDecoderParams& aParams) {
-  MOZ_ASSERT(aParams.mConfig.mCrypto.mValid);
+  MOZ_ASSERT(aParams.mConfig.mCrypto.IsEncrypted());
 
   // We don't support using the GMP to decode audio.
   MOZ_ASSERT(!SupportsMimeType(aParams.mConfig.mMimeType, nullptr));

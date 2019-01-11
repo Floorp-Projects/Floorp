@@ -119,7 +119,8 @@ already_AddRefed<MediaRawData> SampleIterator::GetNext() {
       // This Moof contained crypto init data. Report that. We only report
       // the init data on the Moof's first sample, to avoid reporting it more
       // than once per Moof.
-      writer->mCrypto.mValid = true;
+      // We only handle cenc for now, but update this once we're handling cbcs
+      writer->mCrypto.mCryptoScheme = CryptoScheme::Cenc;
       writer->mCrypto.mInitDatas.AppendElements(currentMoof->mPsshes);
       writer->mCrypto.mInitDataType = NS_LITERAL_STRING("cenc");
     }
@@ -143,7 +144,7 @@ already_AddRefed<MediaRawData> SampleIterator::GetNext() {
       return nullptr;
     }
     BufferReader reader(cenc);
-    writer->mCrypto.mValid = true;
+    writer->mCrypto.mCryptoScheme = CryptoScheme::Cenc;
 
     CencSampleEncryptionInfoEntry* sampleInfo = GetSampleEncryptionEntry();
     if (sampleInfo) {
