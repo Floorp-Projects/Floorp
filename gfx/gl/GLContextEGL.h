@@ -95,6 +95,8 @@ class GLContextEGL : public GLContext {
   friend class GLContextProviderEGL;
   friend class GLContextEGLFactory;
 
+  virtual void OnMarkDestroyed() override;
+
  public:
   const EGLConfig mConfig;
 
