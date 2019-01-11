@@ -189,13 +189,6 @@ bool CheckOverRecursedBaseline(JSContext* cx, BaselineFrame* frame) {
   return CheckOverRecursed(cx);
 }
 
-bool DefVar(JSContext* cx, HandlePropertyName dn, unsigned attrs,
-            HandleObject envChain) {
-  // Given the ScopeChain, extract the VarObj.
-  RootedObject obj(cx, &GetVariablesObject(envChain));
-  return DefVarOperation(cx, obj, dn, attrs);
-}
-
 bool DefLexical(JSContext* cx, HandlePropertyName dn, unsigned attrs,
                 HandleObject envChain) {
   // Find the extensible lexical scope.

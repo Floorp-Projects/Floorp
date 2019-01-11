@@ -3073,27 +3073,21 @@ bool BaselineCodeGen<Handler>::emit_JSOP_GETINTRINSIC() {
   return true;
 }
 
-typedef bool (*DefVarFn)(JSContext*, HandlePropertyName, unsigned,
-                         HandleObject);
-static const VMFunction DefVarInfo = FunctionInfo<DefVarFn>(DefVar, "DefVar");
+typedef bool (*DefVarFn)(JSContext*, HandleObject, HandleScript, jsbytecode*);
+static const VMFunction DefVarInfo =
+    FunctionInfo<DefVarFn>(DefVarOperation, "DefVarOperation");
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_DEFVAR() {
   frame.syncStack(0);
 
-  unsigned attrs = JSPROP_ENUMERATE;
-  if (!script->isForEval()) {
-    attrs |= JSPROP_PERMANENT;
-  }
-  MOZ_ASSERT(attrs <= UINT32_MAX);
-
   masm.loadPtr(frame.addressOfEnvironmentChain(), R0.scratchReg());
 
   prepareVMCall();
 
+  pushArg(ImmPtr(pc));
+  pushArg(ImmGCPtr(script));
   pushArg(R0.scratchReg());
-  pushArg(Imm32(attrs));
-  pushArg(ImmGCPtr(script->getName(pc)));
 
   return callVM(DefVarInfo);
 }

@@ -12778,18 +12778,10 @@ AbortReasonOr<Ok> IonBuilder::jsop_setarg(uint32_t arg) {
 AbortReasonOr<Ok> IonBuilder::jsop_defvar(uint32_t index) {
   MOZ_ASSERT(JSOp(*pc) == JSOP_DEFVAR);
 
-  PropertyName* name = script()->getName(index);
-
-  // Bake in attrs.
-  unsigned attrs = JSPROP_ENUMERATE | JSPROP_PERMANENT;
-  MOZ_ASSERT(!script()->isForEval());
-
   // Pass the EnvironmentChain.
   MOZ_ASSERT(usesEnvironmentChain());
 
-  // Bake the name pointer into the MDefVar.
-  MDefVar* defvar =
-      MDefVar::New(alloc(), name, attrs, current->environmentChain());
+  MDefVar* defvar = MDefVar::New(alloc(), current->environmentChain());
   current->add(defvar);
 
   return resumeAfter(defvar);
