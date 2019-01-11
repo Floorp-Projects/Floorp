@@ -4,9 +4,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include MemoryReportTypes;
+include protocol PSocketProcessBridge;
 include PrefsTypes;
 
 using mozilla::dom::NativeThreadId from "mozilla/dom/TabMessageUtils.h";
+using base::ProcessId from "base/process.h";
 
 namespace mozilla {
 namespace net {
@@ -25,6 +27,7 @@ child:
                             bool minimizeMemoryUsage,
                             MaybeFileDesc DMDFile);
   async SetOffline(bool offline);
+  async InitSocketProcessBridgeParent(ProcessId processId, Endpoint<PSocketProcessBridgeParent> endpoint);
 };
 
 } // namespace net
