@@ -11691,6 +11691,16 @@ void Document::MaybeNotifyAutoplayBlocked() {
   asyncDispatcher->PostDOMEvent();
 }
 
+void Document::ClearUserGestureActivation() {
+  Document* doc = this;
+  while (doc) {
+    MOZ_LOG(gUserInteractionPRLog, LogLevel::Debug,
+          ("Reset user activation flag for document %p.", this));
+    doc->mUserGestureActivated = false;
+    doc = doc->GetSameTypeParentDocument();
+  }
+}
+
 void Document::SetDocTreeHadAudibleMedia() {
   Document* topLevelDoc = GetTopLevelContentDocument();
   if (!topLevelDoc) {
