@@ -26,23 +26,50 @@ function setScrollPosition(browser,
 
 function checkScroll(browser, data) {
   let {x, y, zoom} = data;
-  let utils = getFrame(browser, data).windowUtils;
-
-  let actualX = {}, actualY = {};
-  let actualZoom = utils.getResolution();
-  utils.getScrollXY(false, actualX, actualY);
+  let scrollPos = getScrollPosition(browser, data);
 
   if (data.hasOwnProperty("x")) {
-    is(actualX.value, x, "scrollX set correctly");
+    is(scrollPos.x, x, "scrollX set correctly");
   }
   if (data.hasOwnProperty("y")) {
-    is(actualY.value, y, "scrollY set correctly");
+    is(scrollPos.y, y, "scrollY set correctly");
   }
   if (zoom) {
-    ok(fuzzyEquals(actualZoom, zoom), "zoom set correctly");
+    ok(fuzzyEquals(scrollPos.zoom, zoom), "zoom set correctly");
   }
+}
+
+function getScrollPosition(browser, data = {}) {
+  let utils = getFrame(browser, data).windowUtils;
+  let visualScrollPos = data.visualScrollPos === true;
+  let x = {}, y = {};
+
+  let zoom = utils.getResolution();
+  if (visualScrollPos) {
+    utils.getVisualViewportOffset(x, y);
+  } else {
+    utils.getScrollXY(false, x, y);
+  }
+
+  return { x: x.value, y: y.value, zoom, visualScrollPos };
 }
 
 function getScrollString({ x = 0, y = 0 }) {
   return x + "," + y;
+}
+
+function presStateToCSSPx(presState) {
+  // App units aren't commonly exposed to JS, so we can't just call a helper function
+  // and have to convert them ourselves instead.
+  // Conversion factor taken from gfx/src/AppUnits.h.
+  const APP_UNITS_PER_CSS_PX = 60;
+
+  let state = {...presState};
+  if (state.scroll) {
+    let scroll = state.scroll.split(",").map(pos => parseInt(pos, 10) || 0);
+    scroll = scroll.map(appUnits => Math.round(appUnits / APP_UNITS_PER_CSS_PX));
+    state.scroll = getScrollString({ x: scroll[0], y: scroll[1] });
+  }
+
+  return state;
 }
