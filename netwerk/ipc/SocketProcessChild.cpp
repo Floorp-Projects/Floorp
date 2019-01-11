@@ -8,6 +8,7 @@
 
 #include "base/task.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/ipc/CrashReporterClient.h"
 #include "mozilla/ipc/ProcessChild.h"
 #include "mozilla/Preferences.h"
 #include "nsDebugImpl.h"
@@ -50,6 +51,9 @@ bool SocketProcessChild::Init(base::ProcessId aParentPid,
     ProcessChild::QuickExit();
   }
 
+  // Init crash reporter support.
+  CrashReporterClient::InitSingleton(this);
+
   SetThisProcessName("Socket Process");
   return true;
 }
@@ -62,6 +66,7 @@ void SocketProcessChild::ActorDestroy(ActorDestroyReason aWhy) {
     ProcessChild::QuickExit();
   }
 
+  CrashReporterClient::DestroySingleton();
   XRE_ShutdownChildProcess();
 }
 
