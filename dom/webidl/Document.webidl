@@ -503,6 +503,9 @@ partial interface Document {
 partial interface Document {
   [ChromeOnly]
   void notifyUserGestureActivation();
+  // For testing only.
+  [ChromeOnly]
+  void clearUserGestureActivation();
 };
 
 // Extension to give chrome JS the ability to set an event handler which is
