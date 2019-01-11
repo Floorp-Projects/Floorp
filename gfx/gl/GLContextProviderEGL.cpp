@@ -310,6 +310,13 @@ GLContextEGL::GLContextEGL(CreateContextFlags flags, const SurfaceCaps& caps,
 #endif
 }
 
+void
+GLContextEGL::OnMarkDestroyed() {
+  if (mSurfaceOverride != EGL_NO_SURFACE) {
+    SetEGLSurfaceOverride(EGL_NO_SURFACE);
+  }
+}
+
 GLContextEGL::~GLContextEGL() {
   MarkDestroyed();
 
