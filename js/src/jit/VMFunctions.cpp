@@ -189,23 +189,6 @@ bool CheckOverRecursedBaseline(JSContext* cx, BaselineFrame* frame) {
   return CheckOverRecursed(cx);
 }
 
-bool DefLexical(JSContext* cx, HandlePropertyName dn, unsigned attrs,
-                HandleObject envChain) {
-  // Find the extensible lexical scope.
-  Rooted<LexicalEnvironmentObject*> lexicalEnv(
-      cx, &NearestEnclosingExtensibleLexicalEnvironment(envChain));
-
-  // Find the variables object.
-  RootedObject varObj(cx, &GetVariablesObject(envChain));
-  return DefLexicalOperation(cx, lexicalEnv, varObj, dn, attrs);
-}
-
-bool DefGlobalLexical(JSContext* cx, HandlePropertyName dn, unsigned attrs) {
-  Rooted<LexicalEnvironmentObject*> globalLexical(
-      cx, &cx->global()->lexicalEnvironment());
-  return DefLexicalOperation(cx, globalLexical, cx->global(), dn, attrs);
-}
-
 bool MutatePrototype(JSContext* cx, HandlePlainObject obj, HandleValue value) {
   if (!value.isObjectOrNull()) {
     return true;
