@@ -261,5 +261,56 @@ function run_test() {
   Assert.equal(results[1].value, "custom4 patch value",
                "the second property value" + MSG_SHOULD_EQUAL);
 
+  let attrNames = [
+    "appVersion", "buildID", "channel", "detailsURL", "displayVersion",
+    "elevationFailure", "errorCode", "installDate", "isCompleteUpdate", "name",
+    "previousAppVersion", "promptWaitTime", "serviceURL", "state", "statusText",
+    "type", "unsupported",
+  ];
+  checkIllegalProperties(update, attrNames);
+
+  attrNames = [
+    "errorCode", "finalURL", "selected", "size", "state", "type", "URL",
+  ];
+  checkIllegalProperties(patch, attrNames);
+
   executeSoon(doTestFinish);
+}
+
+function checkIllegalProperties(object, propertyNames) {
+  let objectName =
+    object instanceof Ci.nsIUpdate ? "nsIUpdate" : "nsIUpdatePatch";
+  propertyNames.forEach(function(name) {
+    // Check that calling getProperty, setProperty, and deleteProperty on an
+    // nsIUpdate attribute throws NS_ERROR_ILLEGAL_VALUE
+    let result = 0;
+    try {
+      object.getProperty(name);
+    } catch (e) {
+      result = e.result;
+    }
+    Assert.equal(result, Cr.NS_ERROR_ILLEGAL_VALUE,
+                 "calling getProperty using an " + objectName + " attribute " +
+                 "name should throw NS_ERROR_ILLEGAL_VALUE");
+
+    result = 0;
+    try {
+      object.setProperty(name, "value");
+    } catch (e) {
+      result = e.result;
+    }
+    Assert.equal(result, Cr.NS_ERROR_ILLEGAL_VALUE,
+                 "calling setProperty using an " + objectName + " attribute " +
+                 "name should throw NS_ERROR_ILLEGAL_VALUE");
+
+    result = 0;
+    try {
+      object.deleteProperty(name);
+    } catch (e) {
+      result = e.result;
+    }
+    Assert.equal(result, Cr.NS_ERROR_ILLEGAL_VALUE,
+                 "calling deleteProperty using an " + objectName + " attribute " +
+                 "name should throw NS_ERROR_ILLEGAL_VALUE");
+  });
 }
