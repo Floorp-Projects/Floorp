@@ -220,12 +220,32 @@ with only_when(target_is_osx):
 
     @depends_if('--with-macos-sdk')
     @imports(_from='os.path', _import='isdir')
+    @imports(_from='plistlib', _import='readPlist')
     def macos_sdk(value):
+        sdk_min_version = Version('10.11')
+        sdk_max_version = Version('10.13')
+
         if not isdir(value[0]):
             die('SDK not found in %s. When using --with-macos-sdk, you must specify a '
                 'valid SDK. SDKs are installed when the optional cross-development '
                 'tools are selected during the Xcode/Developer Tools installation.'
                 % value[0])
+        obj = readPlist(os.path.join(value[0], 'SDKSettings.plist'))
+        if not obj:
+            die('Error parsing SDKSettings.plist in the SDK directory: %s' % value[0])
+        if 'Version' not in obj:
+            die('Error finding Version information in SDKSettings.plist from the SDK: %s' % value[0])
+        version = Version(obj['Version'])
+        if version < sdk_min_version:
+            die('SDK version "%s" is too old. Please upgrade to at least %s. '
+                'You may need to point to it using --with-macos-sdk=<path> in your '
+                'mozconfig. Various SDK versions are available from '
+                'https://github.com/phracker/MacOSX-SDKs' % (version, sdk_min_version))
+        if version > sdk_max_version:
+            die('SDK version "%s" is unsupported. Please downgrade to version '
+                '%s. You may need to point to it using --with-macos-sdk=<path> in '
+                'your mozconfig. Various SDK versions are available from '
+                'https://github.com/phracker/MacOSX-SDKs' % (version, sdk_max_version))
         return value[0]
 
     set_config('MACOS_SDK_DIR', macos_sdk)
