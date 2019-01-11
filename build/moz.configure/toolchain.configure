@@ -839,7 +839,11 @@ def default_c_compilers(host_or_target, other_c_compiler=None):
     def default_c_compilers(host_or_target, target, toolchain_prefix,
                             android_clang_compiler, *other_c_compiler):
         if host_or_target.kernel == 'WINNT':
-            supported = types = ('clang-cl', 'msvc', 'gcc', 'clang')
+            # Prefer MSVC for aarch64 for now.
+            if host_or_target.cpu == 'aarch64':
+                supported = types = ('msvc', 'clang-cl', 'gcc', 'clang')
+            else:
+                supported = types = ('clang-cl', 'msvc', 'gcc', 'clang')
         elif host_or_target.kernel == 'Darwin':
             types = ('clang',)
             supported = ('clang', 'gcc')
