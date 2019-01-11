@@ -16,6 +16,14 @@ XPCOMUtils.defineLazyServiceGetter(this, "resProto",
                                    "@mozilla.org/network/protocol;1?name=resource",
                                    "nsISubstitutingProtocolHandler");
 
+// To support the 'new TextEncoder()' call inside of 'profilerFinish()' here,
+// we have to import TextEncoder.  It's not automagically defined for us,
+// because we are in a child process, because we are an extension. See second
+// category in https://bugzilla.mozilla.org/show_bug.cgi?id=1501127#c2
+//
+// eslint-disable-next-line mozilla/reject-importGlobalProperties
+Cu.importGlobalProperties(["TextEncoder"]);
+
 const Cm = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
 
 let frameScriptURL;
