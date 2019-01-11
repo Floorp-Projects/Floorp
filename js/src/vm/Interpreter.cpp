@@ -1120,29 +1120,14 @@ static void UnwindIteratorsForUncatchableException(
     JSContext* cx, const InterpreterRegs& regs) {
   // c.f. the regular (catchable) TryNoteIterInterpreter loop in
   // ProcessTryNotes.
-  bool inForOfIterClose = false;
   for (TryNoteIterInterpreter tni(cx, regs); !tni.done(); ++tni) {
     const JSTryNote* tn = *tni;
     switch (tn->kind) {
       case JSTRY_FOR_IN: {
-        // See corresponding comment in ProcessTryNotes.
-        if (inForOfIterClose) {
-          break;
-        }
-
         Value* sp = regs.spForStackDepth(tn->stackDepth);
         UnwindIteratorForUncatchableException(&sp[-1].toObject());
         break;
       }
-
-      case JSTRY_FOR_OF_ITERCLOSE:
-        inForOfIterClose = true;
-        break;
-
-      case JSTRY_FOR_OF:
-        inForOfIterClose = false;
-        break;
-
       default:
         break;
     }
@@ -1159,7 +1144,6 @@ enum HandleErrorContinuation {
 static HandleErrorContinuation ProcessTryNotes(JSContext* cx,
                                                EnvironmentIter& ei,
                                                InterpreterRegs& regs) {
-  bool inForOfIterClose = false;
   for (TryNoteIterInterpreter tni(cx, regs); !tni.done(); ++tni) {
     const JSTryNote* tn = *tni;
 
@@ -1170,50 +1154,14 @@ static HandleErrorContinuation ProcessTryNotes(JSContext* cx,
           break;
         }
 
-        // If IteratorClose due to abnormal completion threw inside a
-        // for-of loop, it is not catchable by try statements inside of
-        // the for-of loop.
-        //
-        // This is handled by this weirdness in the exception handler
-        // instead of in bytecode because it is hard to do so in bytecode:
-        //
-        //   1. IteratorClose emitted due to abnormal completion (break,
-        //   throw, return) are emitted inline, at the source location of
-        //   the break, throw, or return statement. For example:
-        //
-        //     for (x of iter) {
-        //       try { return; } catch (e) { }
-        //     }
-        //
-        //   From the try-note nesting's perspective, the IteratorClose
-        //   resulting from |return| is covered by the inner try, when it
-        //   should not be.
-        //
-        //   2. Try-catch notes cannot be disjoint. That is, we can't have
-        //   multiple notes with disjoint pc ranges jumping to the same
-        //   catch block.
-        if (inForOfIterClose) {
-          break;
-        }
         SettleOnTryNote(cx, tn, ei, regs);
         return CatchContinuation;
 
       case JSTRY_FINALLY:
-        // See note above.
-        if (inForOfIterClose) {
-          break;
-        }
         SettleOnTryNote(cx, tn, ei, regs);
         return FinallyContinuation;
 
       case JSTRY_FOR_IN: {
-        // Don't let (extra) values pushed on the stack while closing a
-        // for-of iterator confuse us into thinking we still have to close
-        // an inner for-in iterator.
-        if (inForOfIterClose) {
-          break;
-        }
-
         /* This is similar to JSOP_ENDITER in the interpreter loop. */
         DebugOnly<jsbytecode*> pc =
             regs.fp()->script()->offsetToPC(tn->start + tn->length);
@@ -1225,11 +1173,6 @@ static HandleErrorContinuation ProcessTryNotes(JSContext* cx,
       }
 
       case JSTRY_DESTRUCTURING: {
-        // See note above.
-        if (inForOfIterClose) {
-          break;
-        }
-
         // Whether the destructuring iterator is done is at the top of the
         // stack. The iterator object is second from the top.
         MOZ_ASSERT(tn->stackDepth > 1);
@@ -1246,17 +1189,11 @@ static HandleErrorContinuation ProcessTryNotes(JSContext* cx,
         break;
       }
 
-      case JSTRY_FOR_OF_ITERCLOSE:
-        inForOfIterClose = true;
-        break;
-
       case JSTRY_FOR_OF:
-        inForOfIterClose = false;
-        break;
-
       case JSTRY_LOOP:
         break;
 
+      // JSTRY_FOR_OF_ITERCLOSE is handled internally by the try note iterator.
       default:
         MOZ_CRASH("Invalid try note");
     }
