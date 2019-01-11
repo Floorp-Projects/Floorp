@@ -4,6 +4,9 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import argparse
+from itertools import chain
+
 from mach.decorators import (
     CommandProvider,
     Command,
@@ -50,3 +53,38 @@ class BuiltinCommands(object):
             print('Class: %s' % cls.__name__)
             print('Method: %s' % handler.method)
             print('')
+
+    @Command('mach-completion', category='misc',
+             description='Prints a list of completion strings for the specified command.')
+    @CommandArgument('args', default=None, nargs=argparse.REMAINDER,
+                     help="Command to complete.")
+    def completion(self, args):
+        all_commands = sorted(self.command_keys)
+        if not args:
+            print("\n".join(all_commands))
+            return
+
+        is_help = 'help' in args
+        command = None
+        for i, arg in enumerate(args):
+            if arg in all_commands:
+                command = arg
+                args = args[i+1:]
+                break
+
+        if not command:
+            print("\n".join(all_commands))
+            return
+
+        handler = self.context.commands.command_handlers[command]
+        for arg in args:
+            if arg in handler.subcommand_handlers:
+                handler = handler.subcommand_handlers[arg]
+                break
+
+        parser = handler.parser
+        targets = sorted(handler.subcommand_handlers.keys())
+        if not is_help:
+            targets.append('help')
+            targets.extend(chain(*[action.option_strings for action in parser._actions]))
+        print("\n".join(targets))
