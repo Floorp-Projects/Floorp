@@ -2243,48 +2243,6 @@ if test -n "$MOZ_CRASHREPORTER"; then
 fi
 
 dnl ========================================================
-dnl = FFmpeg's ffvpx configuration
-dnl ========================================================
-
-MOZ_FFVPX=
-MOZ_FFVPX_FLACONLY=
-case "$CPU_ARCH" in
-  x86|x86_64)
-      MOZ_FFVPX=1
-      dnl Use same conditional as MOZ_LIBAV_FFT to enable FFmpeg's ffvpx assembly decoder.
-      if test -n "$LIBAV_FFT_ASFLAGS"; then
-          FFVPX_ASFLAGS=$LIBAV_FFT_ASFLAGS
-      else
-          dnl On x86 system with assembly optimizations disabled, the ffvp9 and
-          dnl ffvp8 decoders give worse performance than libvpx ones. So we only
-          dnl enable the FFmpeg FLAC decoder on those machines.
-          MOZ_FFVPX_FLACONLY=1
-      fi
-  ;;
-  arm*|aarch64)
-      case "$OS_TARGET" in
-        WINNT)
-          dnl don't set up anything special
-          ;;
-        *)
-          MOZ_FFVPX=1
-          MOZ_FFVPX_FLACONLY=1
-          dnl Use same conditional as MOZ_LIBVPX to enable FFmpeg's ffvpx assembly decoder.
-          dnl aarch 64 FLAC decoder for now will be C only.
-          FFVPX_ASFLAGS=$VPX_ASFLAGS
-          ;;
-      esac
-  ;;
-esac
-
-if test -n "$MOZ_FFVPX"; then
-  AC_DEFINE(MOZ_FFVPX)
-fi
-if test -n "$MOZ_FFVPX_FLACONLY"; then
-  AC_DEFINE(MOZ_FFVPX_FLACONLY)
-fi
-
-dnl ========================================================
 dnl = Enable compilation of specific extension modules
 dnl ========================================================
 
@@ -3612,9 +3570,6 @@ AC_SUBST(NS_ENABLE_TSF)
 AC_SUBST(WIN32_CONSOLE_EXE_LDFLAGS)
 AC_SUBST(WIN32_GUI_EXE_LDFLAGS)
 
-AC_SUBST(MOZ_FFVPX)
-AC_SUBST(MOZ_FFVPX_FLACONLY)
-AC_SUBST_LIST(FFVPX_ASFLAGS)
 AC_SUBST(MOZ_DEVTOOLS)
 
 AC_SUBST(MOZ_PACKAGE_JSSHELL)
