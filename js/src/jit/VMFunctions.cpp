@@ -189,19 +189,10 @@ bool CheckOverRecursedBaseline(JSContext* cx, BaselineFrame* frame) {
   return CheckOverRecursed(cx);
 }
 
-JSObject* BindVar(JSContext* cx, HandleObject envChain) {
-  JSObject* obj = envChain;
-  while (!obj->isQualifiedVarObj()) {
-    obj = obj->enclosingEnvironment();
-  }
-  MOZ_ASSERT(obj);
-  return obj;
-}
-
 bool DefVar(JSContext* cx, HandlePropertyName dn, unsigned attrs,
             HandleObject envChain) {
   // Given the ScopeChain, extract the VarObj.
-  RootedObject obj(cx, BindVar(cx, envChain));
+  RootedObject obj(cx, &GetVariablesObject(envChain));
   return DefVarOperation(cx, obj, dn, attrs);
 }
 
@@ -212,7 +203,7 @@ bool DefLexical(JSContext* cx, HandlePropertyName dn, unsigned attrs,
       cx, &NearestEnclosingExtensibleLexicalEnvironment(envChain));
 
   // Find the variables object.
-  RootedObject varObj(cx, BindVar(cx, envChain));
+  RootedObject varObj(cx, &GetVariablesObject(envChain));
   return DefLexicalOperation(cx, lexicalEnv, varObj, dn, attrs);
 }
 
@@ -938,7 +929,7 @@ bool CheckGlobalOrEvalDeclarationConflicts(JSContext* cx,
                                            BaselineFrame* frame) {
   RootedScript script(cx, frame->script());
   RootedObject envChain(cx, frame->environmentChain());
-  RootedObject varObj(cx, BindVar(cx, envChain));
+  RootedObject varObj(cx, &GetVariablesObject(envChain));
 
   if (script->isForEval()) {
     // Strict eval and eval in parameter default expressions have their

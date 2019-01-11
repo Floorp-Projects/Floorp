@@ -10682,9 +10682,9 @@ void CodeGenerator::visitOutOfLineUnboxFloatingPoint(
   masm.jump(ool->rejoin());
 }
 
-typedef JSObject* (*BindVarFn)(JSContext*, HandleObject);
+typedef JSObject* (*BindVarFn)(JSContext*, JSObject*);
 static const VMFunction BindVarInfo =
-    FunctionInfo<BindVarFn>(jit::BindVar, "BindVar");
+    FunctionInfo<BindVarFn>(BindVarOperation, "BindVarOperation");
 
 void CodeGenerator::visitCallBindVar(LCallBindVar* lir) {
   pushArg(ToRegister(lir->environmentChain()));

@@ -2659,9 +2659,9 @@ bool BaselineCodeGen<Handler>::emit_JSOP_BINDGNAME() {
   return emitBindName(JSOP_BINDGNAME);
 }
 
-typedef JSObject* (*BindVarFn)(JSContext*, HandleObject);
+typedef JSObject* (*BindVarFn)(JSContext*, JSObject*);
 static const VMFunction BindVarInfo =
-    FunctionInfo<BindVarFn>(jit::BindVar, "BindVar");
+    FunctionInfo<BindVarFn>(BindVarOperation, "BindVarOperation");
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_BINDVAR() {
