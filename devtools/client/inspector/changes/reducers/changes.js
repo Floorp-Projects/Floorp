@@ -86,7 +86,7 @@ function createRule(ruleData, rules) {
       const nextRuleId = array[index + 1];
 
       // Copy or create an entry for this rule.
-      const defaults = { selector, add: [], remove: [], children: [] };
+      const defaults = { selector, ruleId, add: [], remove: [], children: [] };
       rules[ruleId] = Object.assign(defaults, rules[ruleId]);
 
       // The next ruleId is lower in the rule tree, therefore it's a child of this rule.
@@ -133,6 +133,7 @@ function removeRule(ruleId, rules) {
  *      href: // {String|null} Stylesheet or document URL; null for inline stylesheets
  *      rules: {
  *        <ruleId>: {
+ *          ruleId:      // {String} <ruleId> of this rule
  *          selector:    // {String} CSS selector or CSS at-rule text
  *          changeType:  // {String} Optional; one of: "rule-add" or "rule-remove"
  *          children: [] // {Array} of <ruleId> for child rules of this rule
