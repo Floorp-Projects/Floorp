@@ -124,8 +124,9 @@ addMessageListener("ss-test:getScrollPosition", function(msg) {
   if (msg.data.hasOwnProperty("frame")) {
     frame = content.frames[msg.data.frame];
   }
-  let {scrollX: x, scrollY: y} = frame;
-  sendAsyncMessage("ss-test:getScrollPosition", {x, y});
+  let x = {}, y = {};
+  frame.windowUtils.getVisualViewportOffset(x, y);
+  sendAsyncMessage("ss-test:getScrollPosition", {x: x.value, y: y.value});
 });
 
 addMessageListener("ss-test:setScrollPosition", function(msg) {
@@ -136,12 +137,13 @@ addMessageListener("ss-test:setScrollPosition", function(msg) {
   }
   frame.scrollTo(x, y);
 
-  frame.addEventListener("scroll", function onScroll(event) {
-    if (frame.document == event.target) {
-      frame.removeEventListener("scroll", onScroll);
+  frame.addEventListener("mozvisualscroll", function onScroll(event) {
+    if (frame.document.ownerGlobal.visualViewport == event.target) {
+      frame.removeEventListener("mozvisualscroll", onScroll,
+                                { mozSystemGroup: true });
       sendAsyncMessage("ss-test:setScrollPosition");
     }
-  });
+  }, { mozSystemGroup: true });
 });
 
 addMessageListener("ss-test:click", function({data}) {

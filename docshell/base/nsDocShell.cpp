@@ -5626,7 +5626,7 @@ nsDocShell::SetTitle(const nsAString& aTitle) {
 nsPoint nsDocShell::GetCurScrollPos() {
   nsPoint scrollPos;
   if (nsIScrollableFrame* sf = GetRootScrollFrame()) {
-    scrollPos = sf->GetScrollPosition();
+    scrollPos = sf->GetVisualViewportOffset();
   }
   return scrollPos;
 }
