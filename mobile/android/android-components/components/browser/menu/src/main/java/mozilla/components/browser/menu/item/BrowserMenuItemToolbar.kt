@@ -20,7 +20,7 @@ import mozilla.components.support.ktx.android.content.res.pxToDp
 class BrowserMenuItemToolbar(
     private val items: List<Button>
 ) : BrowserMenuItem {
-    override val visible: () -> Boolean = { true }
+    override var visible: () -> Boolean = { true }
 
     override fun getLayoutResource() = R.layout.mozac_browser_menu_item_toolbar
 
