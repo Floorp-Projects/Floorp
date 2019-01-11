@@ -494,7 +494,7 @@ static bool enableWasmIon = false;
 #ifdef ENABLE_WASM_CRANELIFT
 static bool wasmForceCranelift = false;
 #endif
-#ifdef ENABLE_WASM_GC
+#ifdef ENABLE_WASM_REFTYPES
 static bool enableWasmGc = false;
 #endif
 static bool enableWasmVerbose = false;
@@ -10173,7 +10173,7 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
 #ifdef ENABLE_WASM_CRANELIFT
   wasmForceCranelift = op.getBoolOption("wasm-force-cranelift");
 #endif
-#ifdef ENABLE_WASM_GC
+#ifdef ENABLE_WASM_REFTYPES
   enableWasmGc = op.getBoolOption("wasm-gc");
 #ifdef ENABLE_WASM_CRANELIFT
   if (enableWasmGc && wasmForceCranelift) {
@@ -10202,7 +10202,7 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
 #ifdef ENABLE_WASM_CRANELIFT
       .setWasmForceCranelift(wasmForceCranelift)
 #endif
-#ifdef ENABLE_WASM_GC
+#ifdef ENABLE_WASM_REFTYPES
       .setWasmGc(enableWasmGc)
 #endif
       .setWasmVerbose(enableWasmVerbose)
@@ -10529,7 +10529,7 @@ static void SetWorkerContextOptions(JSContext* cx) {
 #ifdef ENABLE_WASM_CRANELIFT
       .setWasmForceCranelift(wasmForceCranelift)
 #endif
-#ifdef ENABLE_WASM_GC
+#ifdef ENABLE_WASM_REFTYPES
       .setWasmGc(enableWasmGc)
 #endif
       .setWasmVerbose(enableWasmVerbose)
@@ -10932,7 +10932,7 @@ int main(int argc, char** argv, char** envp) {
       !op.addBoolOption('\0', "test-wasm-await-tier2",
                         "Forcibly activate tiering and block "
                         "instantiation on completion of tier2")
-#ifdef ENABLE_WASM_GC
+#ifdef ENABLE_WASM_REFTYPES
       || !op.addBoolOption('\0', "wasm-gc", "Enable wasm GC features")
 #else
       || !op.addBoolOption('\0', "wasm-gc", "No-op")

@@ -100,7 +100,12 @@ var ReaderMode = {
       return;
     }
     let flags = webNav.LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL;
-    webNav.loadURI(originalURL, flags, referrerURI, null, null, principal);
+    let loadURIOptions = {
+      triggeringPrincipal: principal,
+      loadFlags: flags,
+      referrerURI,
+    };
+    webNav.loadURI(originalURL, loadURIOptions);
   },
 
   /**

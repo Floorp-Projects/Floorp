@@ -18,8 +18,10 @@ add_task(async function test_windowlessBrowserTroubleshootCrash() {
     };
     Services.obs.addObserver(listener, "content-document-global-created");
   });
-  let triggeringPrincipal = Services.scriptSecurityManager.createNullPrincipal({});
-  webNav.loadURI("about:blank", 0, null, null, null, triggeringPrincipal);
+  let loadURIOptions = {
+    triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({}),
+  };
+  webNav.loadURI("about:blank", loadURIOptions);
 
   await onLoaded;
 

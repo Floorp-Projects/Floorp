@@ -110,9 +110,17 @@ class WebNavigationChild extends ActorChild {
     if (!triggeringPrincipal) {
       triggeringPrincipal = Services.scriptSecurityManager.getSystemPrincipal({});
     }
+    let loadURIOptions = {
+      triggeringPrincipal,
+      loadFlags: flags,
+      referrerURI: referrer,
+      referrerPolicy,
+      postData,
+      headers,
+      baseURI,
+    };
     this._wrapURIChangeCall(() => {
-      return this.webNavigation.loadURIWithOptions(uri, flags, referrer, referrerPolicy,
-                                                   postData, headers, baseURI, triggeringPrincipal);
+      return this.webNavigation.loadURI(uri, loadURIOptions);
     });
   }
 

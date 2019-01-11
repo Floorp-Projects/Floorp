@@ -25,6 +25,9 @@
 #include "nsNetUtil.h"
 #include "nsXULAppAPI.h"
 
+#define REPORTING_PURGE_ALL "reporting:purge-all"
+#define REPORTING_PURGE_HOST "reporting:purge-host"
+
 namespace mozilla {
 namespace dom {
 
@@ -51,9 +54,9 @@ StaticRefPtr<ReportingHeader> gReporting;
 
   obs->AddObserver(service, NS_HTTP_ON_EXAMINE_RESPONSE_TOPIC, false);
   obs->AddObserver(service, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
-  obs->AddObserver(service, "browser:purge-domain-data", false);
   obs->AddObserver(service, "clear-origin-attributes-data", false);
-  obs->AddObserver(service, "extension:purge-localStorage", false);
+  obs->AddObserver(service, REPORTING_PURGE_HOST, false);
+  obs->AddObserver(service, REPORTING_PURGE_ALL, false);
 
   gReporting = service;
 }
@@ -80,9 +83,9 @@ StaticRefPtr<ReportingHeader> gReporting;
 
   obs->RemoveObserver(service, NS_HTTP_ON_EXAMINE_RESPONSE_TOPIC);
   obs->RemoveObserver(service, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
-  obs->RemoveObserver(service, "browser:purge-domain-data");
   obs->RemoveObserver(service, "clear-origin-attributes-data");
-  obs->RemoveObserver(service, "extension:purge-localStorage");
+  obs->RemoveObserver(service, REPORTING_PURGE_HOST);
+  obs->RemoveObserver(service, REPORTING_PURGE_ALL);
 }
 
 ReportingHeader::ReportingHeader() = default;
@@ -111,7 +114,7 @@ ReportingHeader::Observe(nsISupports* aSubject, const char* aTopic,
     return NS_OK;
   }
 
-  if (!strcmp(aTopic, "browser:purge-domain-data")) {
+  if (!strcmp(aTopic, REPORTING_PURGE_HOST)) {
     RemoveOriginsFromHost(nsDependentString(aData));
     return NS_OK;
   }
@@ -127,7 +130,7 @@ ReportingHeader::Observe(nsISupports* aSubject, const char* aTopic,
     return NS_OK;
   }
 
-  if (!strcmp(aTopic, "extension:purge-localStorage")) {
+  if (!strcmp(aTopic, REPORTING_PURGE_ALL)) {
     RemoveOrigins();
     return NS_OK;
   }

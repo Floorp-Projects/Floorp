@@ -65,15 +65,7 @@ RemoteWebNavigation.prototype = {
   gotoIndex(aIndex) {
     this._sendMessage("WebNavigation:GotoIndex", {index: aIndex});
   },
-  loadURI(aURI, aLoadFlags, aReferrer, aPostData, aHeaders,
-          aTriggeringPrincipal) {
-    this.loadURIWithOptions(aURI, aLoadFlags, aReferrer,
-                            Ci.nsIHttpChannel.REFERRER_POLICY_UNSET,
-                            aPostData, aHeaders, null,
-                            aTriggeringPrincipal);
-  },
-  loadURIWithOptions(aURI, aLoadFlags, aReferrer, aReferrerPolicy,
-                     aPostData, aHeaders, aBaseURI, aTriggeringPrincipal) {
+  loadURI(aURI, aLoadURIOptions) {
     // We know the url is going to be loaded, let's start requesting network
     // connection before the content process asks.
     // Note that we might have already setup the speculative connection in some
@@ -81,8 +73,8 @@ RemoteWebNavigation.prototype = {
     if (aURI.startsWith("http:") || aURI.startsWith("https:")) {
       try {
         let uri = makeURI(aURI);
-        let principal = aTriggeringPrincipal;
-        // We usually have a aTriggeringPrincipal assigned, but in case we
+        let principal = aLoadURIOptions.triggeringPrincipal;
+        // We usually have a triggeringPrincipal assigned, but in case we
         // don't have one or if it's a SystemPrincipal, let's create it with OA
         // inferred from the current context.
         if (!principal || principal.isSystemPrincipal) {
@@ -101,14 +93,14 @@ RemoteWebNavigation.prototype = {
 
     this._sendMessage("WebNavigation:LoadURI", {
       uri: aURI,
-      flags: aLoadFlags,
-      referrer: aReferrer ? aReferrer.spec : null,
-      referrerPolicy: aReferrerPolicy,
-      postData: aPostData ? Utils.serializeInputStream(aPostData) : null,
-      headers: aHeaders ? Utils.serializeInputStream(aHeaders) : null,
-      baseURI: aBaseURI ? aBaseURI.spec : null,
+      flags: aLoadURIOptions.loadFlags,
+      referrer: aLoadURIOptions.referrerURI ? aLoadURIOptions.referrerURI.spec : null,
+      referrerPolicy: aLoadURIOptions.referrerPolicy,
+      postData: aLoadURIOptions.postData ? Utils.serializeInputStream(aLoadURIOptions.postData) : null,
+      headers: aLoadURIOptions.headers ? Utils.serializeInputStream(aLoadURIOptions.headers) : null,
+      baseURI: aLoadURIOptions.baseURI ? aLoadURIOptions.baseURI.spec : null,
       triggeringPrincipal: Utils.serializePrincipal(
-          aTriggeringPrincipal || Services.scriptSecurityManager.createNullPrincipal({})),
+          aLoadURIOptions.triggeringPrincipal || Services.scriptSecurityManager.createNullPrincipal({})),
       requestTime: Services.telemetry.msSystemNow(),
     });
   },
@@ -138,8 +130,10 @@ RemoteWebNavigation.prototype = {
   },
   set currentURI(aURI) {
     // Bug 1498600 verify usages of systemPrincipal here
-    let systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
-    this.loadURI(aURI.spec, null, null, null, systemPrincipal);
+    let loadURIOptions = {
+      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+    };
+    this.loadURI(aURI.spec, loadURIOptions);
   },
 
   referringURI: null,

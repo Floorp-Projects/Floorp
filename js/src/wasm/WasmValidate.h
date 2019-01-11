@@ -144,7 +144,7 @@ struct ModuleEnvironment {
 
   // Module fields decoded from the module environment (or initialized while
   // validating an asm.js module) and immutable during compilation:
-#ifdef ENABLE_WASM_GC
+#ifdef ENABLE_WASM_REFTYPES
   // `gcFeatureOptIn` reflects the presence in a module of a GcFeatureOptIn
   // section.  This variable will be removed eventually, allowing it to be
   // replaced everywhere by the value HasGcTypes::True.
@@ -185,7 +185,7 @@ struct ModuleEnvironment {
         sharedMemoryEnabled(sharedMemoryEnabled),
         gcTypesConfigured(gcTypesConfigured),
         compilerEnv(compilerEnv),
-#ifdef ENABLE_WASM_GC
+#ifdef ENABLE_WASM_REFTYPES
         gcFeatureOptIn(HasGcTypes::False),
 #endif
         memoryUsage(MemoryUsage::None),

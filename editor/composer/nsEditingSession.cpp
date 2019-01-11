@@ -50,6 +50,7 @@
 #include "mozilla/dom/Selection.h"       // for AutoHideSelectionChanges, etc
 #include "nsFrameSelection.h"            // for nsFrameSelection
 #include "nsBaseCommandController.h"     // for nsBaseCommandController
+#include "mozilla/dom/LoadURIOptionsBinding.h"
 
 class nsISupports;
 class nsIURI;
@@ -940,8 +941,10 @@ void nsEditingSession::TimerCallback(nsITimer* aTimer, void* aClosure) {
   if (docShell) {
     nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(docShell));
     if (webNav) {
-      webNav->LoadURI(NS_LITERAL_STRING("about:blank"), 0, nullptr, nullptr,
-                      nullptr, nsContentUtils::GetSystemPrincipal());
+      LoadURIOptions loadURIOptions;
+      loadURIOptions.mTriggeringPrincipal =
+          nsContentUtils::GetSystemPrincipal();
+      webNav->LoadURI(NS_LITERAL_STRING("about:blank"), loadURIOptions);
     }
   }
 }

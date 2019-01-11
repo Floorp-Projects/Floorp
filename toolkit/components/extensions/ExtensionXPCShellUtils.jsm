@@ -138,7 +138,10 @@ class ContentPage {
 
     chromeShell.createAboutBlankContentViewer(system);
     chromeShell.useGlobalHistory = false;
-    chromeShell.loadURI("chrome://extensions/content/dummy.xul", 0, null, null, null, system);
+    let loadURIOptions = {
+      triggeringPrincipal: system,
+    };
+    chromeShell.loadURI("chrome://extensions/content/dummy.xul", loadURIOptions);
 
     await promiseObserved("chrome-document-global-created",
                           win => win.document == chromeShell.document);

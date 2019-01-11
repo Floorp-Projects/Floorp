@@ -58,15 +58,13 @@ nsHtml5StateSnapshot::nsHtml5StateSnapshot(
     jArray<nsHtml5StackNode*, int32_t> stack,
     jArray<nsHtml5StackNode*, int32_t> listOfActiveFormattingElements,
     jArray<int32_t, int32_t> templateModeStack, nsIContentHandle* formPointer,
-    nsIContentHandle* headPointer, nsIContentHandle* deepTreeSurrogateParent,
-    int32_t mode, int32_t originalMode, bool framesetOk, bool needToDropLF,
-    bool quirks)
+    nsIContentHandle* headPointer, int32_t mode, int32_t originalMode,
+    bool framesetOk, bool needToDropLF, bool quirks)
     : stack(stack),
       listOfActiveFormattingElements(listOfActiveFormattingElements),
       templateModeStack(templateModeStack),
       formPointer(formPointer),
       headPointer(headPointer),
-      deepTreeSurrogateParent(deepTreeSurrogateParent),
       mode(mode),
       originalMode(originalMode),
       framesetOk(framesetOk),
@@ -91,10 +89,6 @@ nsHtml5StateSnapshot::getListOfActiveFormattingElements() {
 nsIContentHandle* nsHtml5StateSnapshot::getFormPointer() { return formPointer; }
 
 nsIContentHandle* nsHtml5StateSnapshot::getHeadPointer() { return headPointer; }
-
-nsIContentHandle* nsHtml5StateSnapshot::getDeepTreeSurrogateParent() {
-  return deepTreeSurrogateParent;
-}
 
 int32_t nsHtml5StateSnapshot::getMode() { return mode; }
 

@@ -1,4 +1,6 @@
-// |jit-test| skip-if: !wasmGcEnabled()
+// |jit-test| skip-if: !wasmReftypesEnabled()
+//
+// Also see gc-feature-opt-in-struct.js for tests that use the struct feature.
 
 // Version numbers
 
@@ -43,19 +45,6 @@ assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
       (gc_feature_opt_in ${FUTURE_VERSION}))`)),
                    WebAssembly.CompileError,
                    /GC feature version is unknown/);
-
-// Struct types are only available if we opt in.
-
-new WebAssembly.Module(wasmTextToBinary(
-    `(module
-      (gc_feature_opt_in ${CURRENT_VERSION})
-      (type (struct (field i32))))`));
-
-assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
-    `(module
-      (type (struct (field i32))))`)),
-                   WebAssembly.CompileError,
-                   /Structure types not enabled/);
 
 // Parameters of ref type are only available if we opt in.
 
@@ -137,26 +126,3 @@ assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
                    WebAssembly.CompileError,
                    /unrecognized opcode/);
 
-assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
-    `(module
-      (func (struct.new 0)))`)),
-                   WebAssembly.CompileError,
-                   /unrecognized opcode/);
-
-assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
-    `(module
-      (func (struct.get 0 0)))`)),
-                   WebAssembly.CompileError,
-                   /unrecognized opcode/);
-
-assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
-    `(module
-      (func (struct.set 0 0)))`)),
-                   WebAssembly.CompileError,
-                   /unrecognized opcode/);
-
-assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
-    `(module
-      (func (struct.narrow anyref anyref)))`)),
-                   WebAssembly.CompileError,
-                   /unrecognized opcode/);
