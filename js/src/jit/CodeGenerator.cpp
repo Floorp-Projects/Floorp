@@ -12678,14 +12678,16 @@ void CodeGenerator::visitHasClass(LHasClass* ins) {
 
 void CodeGenerator::visitGuardToClass(LGuardToClass* ins) {
   Register lhs = ToRegister(ins->lhs());
-  Register output = ToRegister(ins->output());
   Register temp = ToRegister(ins->temp());
+
+  // branchTestObjClass may zero the object register on speculative paths
+  // (we should have a defineReuseInput allocation in this case).
+  Register spectreRegToZero = lhs;
 
   Label notEqual;
 
   masm.branchTestObjClass(Assembler::NotEqual, lhs, ins->mir()->getClass(),
-                          temp, output, &notEqual);
-  masm.mov(lhs, output);
+                          temp, spectreRegToZero, &notEqual);
 
   // Can't return null-return here, so bail.
   bailoutFrom(&notEqual, ins->snapshot());

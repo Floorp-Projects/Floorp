@@ -1285,18 +1285,6 @@ void CodeGenerator::visitTruncF(LTruncF* lir) {
   bailoutFrom(&bail, lir->snapshot());
 }
 
-void CodeGeneratorARM::emitRoundDouble(FloatRegister src, Register dest,
-                                       Label* fail) {
-  ScratchDoubleScope scratch(masm);
-  ScratchRegisterScope scratchReg(masm);
-
-  masm.ma_vcvt_F64_I32(src, scratch);
-  masm.ma_vxfer(scratch, dest);
-  masm.ma_cmp(dest, Imm32(0x7fffffff), scratchReg);
-  masm.ma_cmp(dest, Imm32(0x80000000), scratchReg, Assembler::NotEqual);
-  masm.ma_b(fail, Assembler::Equal);
-}
-
 void CodeGenerator::visitTruncateDToInt32(LTruncateDToInt32* ins) {
   emitTruncateDouble(ToFloatRegister(ins->input()), ToRegister(ins->output()),
                      ins->mir());
