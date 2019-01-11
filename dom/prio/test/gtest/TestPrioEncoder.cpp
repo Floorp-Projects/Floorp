@@ -113,7 +113,7 @@ TEST(PrioEncoder, VerifyFull) {
   snprintf((char*)batchIDStr, sizeof batchIDStr, "%d", rand());
 
   bool dataItems[ndata];
-  unsigned long output[ndata];
+  unsigned long long output[ndata];
 
   // The client's data submission is an arbitrary boolean vector.
   for (int i = 0; i < ndata; i++) {
@@ -133,12 +133,13 @@ TEST(PrioEncoder, VerifyFull) {
   ASSERT_TRUE(prioRv == SECSuccess);
 
   // Export public keys to hex and print to stdout
-  unsigned char pkHexA[CURVE25519_KEY_LEN_HEX + 1];
-  unsigned char pkHexB[CURVE25519_KEY_LEN_HEX + 1];
-  prioRv = PublicKey_export_hex(pkA, pkHexA);
+  const int keyLength = CURVE25519_KEY_LEN_HEX + 1;
+  unsigned char pkHexA[keyLength];
+  unsigned char pkHexB[keyLength];
+  prioRv = PublicKey_export_hex(pkA, pkHexA, keyLength);
   ASSERT_TRUE(prioRv == SECSuccess);
 
-  prioRv = PublicKey_export_hex(pkB, pkHexB);
+  prioRv = PublicKey_export_hex(pkB, pkHexB, keyLength);
   ASSERT_TRUE(prioRv == SECSuccess);
 
   // Use the default configuration parameters.
