@@ -338,7 +338,6 @@ class ShadowLayerForwarder final : public LayersIPCActor,
    * Flag the next paint as the first for a document.
    */
   void SetIsFirstPaint() { mIsFirstPaint = true; }
-  bool GetIsFirstPaint() const { return mIsFirstPaint; }
 
   /**
    * Set the current focus target to be sent with the next paint.
