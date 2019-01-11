@@ -737,9 +737,10 @@ SYNC_ENUMS(GMPLUGIN, GMPlugin)
 SYNC_ENUMS(GPU, GPU)
 SYNC_ENUMS(VR, VR)
 SYNC_ENUMS(RDD, RDD)
+SYNC_ENUMS(SOCKET, Socket)
 
 // .. and ensure that that is all of them:
-static_assert(GeckoProcessType_RDD + 1 == GeckoProcessType_End,
+static_assert(GeckoProcessType_Socket + 1 == GeckoProcessType_End,
               "Did not find the final GeckoProcessType");
 
 NS_IMETHODIMP
