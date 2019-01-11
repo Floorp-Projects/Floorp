@@ -1124,13 +1124,13 @@ nsresult HTMLEditor::TabInTable(bool inIsShift, bool* outHandled) {
 
   // advance to next cell
   // first create an iterator over the table
-  RefPtr<PostContentIterator> postOrderIter = new PostContentIterator();
-  nsresult rv = postOrderIter->Init(table);
+  PostContentIterator postOrderIter;
+  nsresult rv = postOrderIter.Init(table);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
   // position postOrderIter at block
-  rv = postOrderIter->PositionAt(cellElement);
+  rv = postOrderIter.PositionAt(cellElement);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1138,12 +1138,12 @@ nsresult HTMLEditor::TabInTable(bool inIsShift, bool* outHandled) {
   nsCOMPtr<nsINode> node;
   do {
     if (inIsShift) {
-      postOrderIter->Prev();
+      postOrderIter.Prev();
     } else {
-      postOrderIter->Next();
+      postOrderIter.Next();
     }
 
-    node = postOrderIter->GetCurrentNode();
+    node = postOrderIter.GetCurrentNode();
 
     if (node && HTMLEditUtils::IsTableCell(node) &&
         GetEnclosingTable(node) == table) {
@@ -1151,7 +1151,7 @@ nsresult HTMLEditor::TabInTable(bool inIsShift, bool* outHandled) {
       *outHandled = true;
       return NS_OK;
     }
-  } while (!postOrderIter->IsDone());
+  } while (!postOrderIter.IsDone());
 
   if (!(*outHandled) && !inIsShift) {
     // If we haven't handled it yet, then we must have run off the end of the
@@ -2786,12 +2786,12 @@ already_AddRefed<Element> HTMLEditor::GetSelectedElement(const nsAtom* aTagName,
     return nullptr;
   }
 
-  RefPtr<PostContentIterator> postOrderIter = new PostContentIterator();
-  postOrderIter->Init(firstRange);
+  PostContentIterator postOrderIter;
+  postOrderIter.Init(firstRange);
 
   RefPtr<Element> lastElementInRange;
-  for (nsINode* lastNodeInRange = nullptr; !postOrderIter->IsDone();
-       postOrderIter->Next()) {
+  for (nsINode* lastNodeInRange = nullptr; !postOrderIter.IsDone();
+       postOrderIter.Next()) {
     if (lastElementInRange) {
       // When any node follows an element node, not only one element is
       // selected so that return nullptr.
@@ -2809,7 +2809,7 @@ already_AddRefed<Element> HTMLEditor::GetSelectedElement(const nsAtom* aTagName,
     // it means that the range across element boundary (open tag in HTML
     // source).  So, in this case, we should not say only the following
     // element is selected.
-    nsINode* currentNode = postOrderIter->GetCurrentNode();
+    nsINode* currentNode = postOrderIter.GetCurrentNode();
     MOZ_ASSERT(currentNode);
     if (lastNodeInRange && lastNodeInRange->GetParentNode() != currentNode &&
         lastNodeInRange->GetNextSibling() != currentNode) {
@@ -3062,15 +3062,15 @@ HTMLEditor::GetLinkedObjects(nsIArray** aNodeList) {
     return rv;
   }
 
-  RefPtr<PostContentIterator> postOrderIter = new PostContentIterator();
   RefPtr<Document> doc = GetDocument();
   NS_ENSURE_TRUE(doc, NS_ERROR_UNEXPECTED);
 
-  postOrderIter->Init(doc->GetRootElement());
+  PostContentIterator postOrderIter;
+  postOrderIter.Init(doc->GetRootElement());
 
   // loop through the content iterator for each content node
-  for (; !postOrderIter->IsDone(); postOrderIter->Next()) {
-    nsCOMPtr<nsINode> node = postOrderIter->GetCurrentNode();
+  for (; !postOrderIter.IsDone(); postOrderIter.Next()) {
+    nsCOMPtr<nsINode> node = postOrderIter.GetCurrentNode();
     if (node) {
       // Let nsURIRefObject make the hard decisions:
       nsCOMPtr<nsIURIRefObject> refObject;
@@ -3778,18 +3778,14 @@ nsresult HTMLEditor::CollapseAdjacentTextNodes(nsRange* aInRange) {
   // for the lifetime of this method
 
   // build a list of editable text nodes
-  RefPtr<ContentSubtreeIterator> subtreeIter = new ContentSubtreeIterator();
-
-  subtreeIter->Init(aInRange);
-
-  while (!subtreeIter->IsDone()) {
-    nsINode* node = subtreeIter->GetCurrentNode();
+  ContentSubtreeIterator subtreeIter;
+  subtreeIter.Init(aInRange);
+  for (; !subtreeIter.IsDone(); subtreeIter.Next()) {
+    nsINode* node = subtreeIter.GetCurrentNode();
     if (node->NodeType() == nsINode::TEXT_NODE &&
         IsEditable(node->AsContent())) {
       textNodes.AppendElement(node);
     }
-
-    subtreeIter->Next();
   }
 
   // now that I have a list of text nodes, collapse adjacent text nodes
@@ -4440,20 +4436,18 @@ nsresult HTMLEditor::SetCSSBackgroundColorWithTransaction(
         // them (since doing operations on the document during iteration would
         // perturb the iterator).
 
-        RefPtr<ContentSubtreeIterator> subtreeIter =
-            new ContentSubtreeIterator();
-
         nsTArray<OwningNonNull<nsINode>> arrayOfNodes;
         nsCOMPtr<nsINode> node;
 
         // Iterate range and build up array
-        rv = subtreeIter->Init(range);
+        ContentSubtreeIterator subtreeIter;
+        rv = subtreeIter.Init(range);
         // Init returns an error if no nodes in range.  This can easily happen
         // with the subtree iterator if the selection doesn't contain any
         // *whole* nodes.
         if (NS_SUCCEEDED(rv)) {
-          for (; !subtreeIter->IsDone(); subtreeIter->Next()) {
-            node = subtreeIter->GetCurrentNode();
+          for (; !subtreeIter.IsDone(); subtreeIter.Next()) {
+            node = subtreeIter.GetCurrentNode();
             NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
 
             if (IsEditable(node)) {

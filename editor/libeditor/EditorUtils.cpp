@@ -28,24 +28,21 @@ using namespace dom;
  * some helper classes for iterating the dom tree
  *****************************************************************************/
 
-DOMIterator::DOMIterator(
-    nsINode& aNode MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL) {
+DOMIterator::DOMIterator(nsINode& aNode MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
+    : mIter(&mPostOrderIter) {
   MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-  mIter = new PostContentIterator();
   DebugOnly<nsresult> rv = mIter->Init(&aNode);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 }
 
 nsresult DOMIterator::Init(nsRange& aRange) {
-  mIter = new PostContentIterator();
   return mIter->Init(&aRange);
 }
 
-DOMIterator::DOMIterator(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_IN_IMPL) {
+DOMIterator::DOMIterator(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_IN_IMPL)
+    : mIter(&mPostOrderIter) {
   MOZ_GUARD_OBJECT_NOTIFIER_INIT;
 }
-
-DOMIterator::~DOMIterator() {}
 
 void DOMIterator::AppendList(
     const BoolDomIterFunctor& functor,
@@ -62,14 +59,13 @@ void DOMIterator::AppendList(
 
 DOMSubtreeIterator::DOMSubtreeIterator(
     MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_IN_IMPL)
-    : DOMIterator(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_TO_PARENT) {}
-
-nsresult DOMSubtreeIterator::Init(nsRange& aRange) {
-  mIter = new ContentSubtreeIterator();
-  return mIter->Init(&aRange);
+    : DOMIterator(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_TO_PARENT) {
+  mIter = &mSubtreeIter;
 }
 
-DOMSubtreeIterator::~DOMSubtreeIterator() {}
+nsresult DOMSubtreeIterator::Init(nsRange& aRange) {
+  return mIter->Init(&aRange);
+}
 
 /******************************************************************************
  * some general purpose editor utils

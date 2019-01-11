@@ -890,11 +890,10 @@ void nsContentList::AssertInSync() {
                          ? mRootNode->AsDocument()->GetRootElement()
                          : mRootNode->AsContent();
 
-  RefPtr<PreContentIterator> preOrderIter;
+  PreContentIterator preOrderIter;
   if (mDeep) {
-    preOrderIter = new PreContentIterator();
-    preOrderIter->Init(root);
-    preOrderIter->First();
+    preOrderIter.Init(root);
+    preOrderIter.First();
   }
 
   uint32_t cnt = 0, index = 0;
@@ -904,7 +903,7 @@ void nsContentList::AssertInSync() {
     }
 
     nsIContent* cur =
-        mDeep ? preOrderIter->GetCurrentNode() : mRootNode->GetChildAt(index++);
+        mDeep ? preOrderIter.GetCurrentNode() : mRootNode->GetChildAt(index++);
     if (!cur) {
       break;
     }
@@ -916,7 +915,7 @@ void nsContentList::AssertInSync() {
     }
 
     if (mDeep) {
-      preOrderIter->Next();
+      preOrderIter.Next();
     }
   }
 
