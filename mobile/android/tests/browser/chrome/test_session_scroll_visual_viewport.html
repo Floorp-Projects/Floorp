@@ -96,15 +96,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1498812
 
         scrolled = promiseTabEvent(browser, "SSTabScrollCaptured");
         await scrollRight(browser.contentWindow);
-
-        // The above scroll only scrolled the visual viewport, not the layout
-        // viewport. As long as we don't have a scroll event for the visual
-        // viewport, we need to fake a scroll event here in order to induce
-        // the session store to record the scroll position again (bug 1500554).
-        browser.dispatchEvent(new browser.contentWindow.UIEvent("scroll"));
         await scrolled;
 
-        scrollPos1 = getScrollPosition(browser, {visualScrollPos: true});
+        scrollPos1 = getScrollPosition(browser);
         isnot(scrollPos1.x, 0, "we should be scrolled to the right");
         is(scrollPos1.y, 0, "we scrolled horizontally");
 
@@ -119,12 +113,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1498812
 
         scrolled = promiseTabEvent(browser, "SSTabScrollCaptured");
         await scrollRight(browser.contentWindow);
-
-        // Fake a scroll event (see above).
-        browser.dispatchEvent(new browser.contentWindow.UIEvent("scroll"));
         await scrolled;
 
-        scrollPos2 = getScrollPosition(browser, {visualScrollPos: true});
+        scrollPos2 = getScrollPosition(browser);
         isnot(scrollPos2.x, 0, "we should be scrolled to the right");
         is(scrollPos2.y, 0, "we scrolled horizontally");
 
@@ -139,7 +130,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1498812
     // Check the live scroll data for the current history entry...
     let tabData = ss.getClosedTabs(chromeWin)[0];
     let {scrolldata} = tabData;
-    todo_is(scrolldata.scroll, getScrollString(scrollPos2), "stored scroll position is correct");
+    is(scrolldata.scroll, getScrollString(scrollPos2), "stored scroll position is correct");
     ok(fuzzyEquals(scrolldata.zoom.resolution, scrollPos2.zoom), "stored zoom level is correct");
 
     // ... and the presState from the previous history entry.
@@ -156,6 +147,21 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1498812
       todo_is(presState.scroll, getScrollString(scrollPos1), "stored scroll position for previous page is correct");
       ok(fuzzyEquals(presState.res, scrollPos1.zoom), "stored zoom level for previous page is correct");
     }
+
+    // Restore the closed tab.
+    let browser = ss.undoCloseTab(chromeWin, tabData);
+    tabScroll = BrowserApp.getTabForBrowser(browser);
+    let pageshow = promiseBrowserEvent(browser, "pageshow");
+    let scroll = promiseBrowserEvent(browser, "mozvisualscroll",
+                                     { mozSystemGroup: true });
+    await pageshow;
+    await scroll;
+
+    // Check the scroll position and zoom level.
+    checkScroll(browser, scrollPos2);
+
+    // Remove the tab.
+    cleanupTabs();
   });
 
   </script>
