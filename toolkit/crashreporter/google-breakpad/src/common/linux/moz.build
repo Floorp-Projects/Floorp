@@ -46,8 +46,6 @@ if CONFIG['OS_TARGET'] == 'Android':
 
 Library('breakpad_linux_common_s')
 
-FINAL_LIBRARY = 'xul'
-
 HOST_DEFINES['NO_STABS_SUPPORT'] = True
 
 include('/toolkit/crashreporter/crashreporter.mozbuild')

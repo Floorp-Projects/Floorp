@@ -42,8 +42,6 @@ SOURCES += [
 
 Library('breakpad_mac_common_s')
 
-FINAL_LIBRARY = 'xul'
-
 CMFLAGS += ['-std=c99']
 
 include('/toolkit/crashreporter/crashreporter.mozbuild')
