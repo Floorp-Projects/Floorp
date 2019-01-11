@@ -198,34 +198,14 @@ bool InterpreterFrame::prologue(JSContext* cx) {
   MOZ_ASSERT(cx->interpreterRegs().pc == script->code());
   MOZ_ASSERT(cx->realm() == script->realm());
 
-  if (isEvalFrame()) {
-    if (!script->bodyScope()->hasEnvironment()) {
-      MOZ_ASSERT(!script->strict());
-      // Non-strict eval may introduce var bindings that conflict with
-      // lexical bindings in an enclosing lexical scope.
-      RootedObject varObjRoot(cx, &varObj());
-      if (!CheckEvalDeclarationConflicts(cx, script, environmentChain(),
-                                         varObjRoot)) {
-        return false;
-      }
-    }
-    return probes::EnterScript(cx, script, nullptr, this);
-  }
-
-  if (isGlobalFrame()) {
-    Rooted<LexicalEnvironmentObject*> lexicalEnv(cx);
-    RootedObject varObjRoot(cx);
-    if (script->hasNonSyntacticScope()) {
-      lexicalEnv = &extensibleLexicalEnvironment();
-      varObjRoot = &varObj();
-    } else {
-      lexicalEnv = &cx->global()->lexicalEnvironment();
-      varObjRoot = cx->global();
-    }
-    if (!CheckGlobalDeclarationConflicts(cx, script, lexicalEnv, varObjRoot)) {
-      // Treat this as a script entry, for consistency with Ion.
-      if (script->trackRecordReplayProgress()) {
-        mozilla::recordreplay::AdvanceExecutionProgressCounter();
+  if (isEvalFrame() || isGlobalFrame()) {
+    HandleObject env = environmentChain();
+    if (!CheckGlobalOrEvalDeclarationConflicts(cx, env, script)) {
+      if (isGlobalFrame()) {
+        // Treat this as a script entry, for consistency with Ion.
+        if (script->trackRecordReplayProgress()) {
+          mozilla::recordreplay::AdvanceExecutionProgressCounter();
+        }
       }
       return false;
     }
@@ -236,11 +216,12 @@ bool InterpreterFrame::prologue(JSContext* cx) {
     return probes::EnterScript(cx, script, nullptr, this);
   }
 
+  MOZ_ASSERT(isFunctionFrame());
+
   // At this point, we've yet to push any environments. Check that they
   // match the enclosing scope.
   AssertScopeMatchesEnvironment(script->enclosingScope(), environmentChain());
 
-  MOZ_ASSERT(isFunctionFrame());
   if (callee().needsFunctionEnvironmentObjects() &&
       !initFunctionEnvironmentObjects(cx)) {
     return false;

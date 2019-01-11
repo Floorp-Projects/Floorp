@@ -1031,9 +1031,6 @@ MOZ_MUST_USE bool GeneratorThrowOrReturn(JSContext* cx, BaselineFrame* frame,
 
 MOZ_MUST_USE bool GlobalNameConflictsCheckFromIon(JSContext* cx,
                                                   HandleScript script);
-MOZ_MUST_USE bool CheckGlobalOrEvalDeclarationConflicts(JSContext* cx,
-                                                        HandleObject envChain,
-                                                        HandleScript script);
 MOZ_MUST_USE bool InitFunctionEnvironmentObjects(JSContext* cx,
                                                  BaselineFrame* frame);
 
