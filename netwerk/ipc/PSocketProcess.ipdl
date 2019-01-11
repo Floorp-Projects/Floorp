@@ -5,11 +5,16 @@
 
 include PrefsTypes;
 
+using mozilla::dom::NativeThreadId from "mozilla/dom/TabMessageUtils.h";
+
 namespace mozilla {
 namespace net {
 
 protocol PSocketProcess
 {
+parent:
+  async InitCrashReporter(Shmem shmem, NativeThreadId threadId);
+
 child:
   async PreferenceUpdate(Pref pref);
 };
