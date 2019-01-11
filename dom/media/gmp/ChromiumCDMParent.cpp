@@ -245,20 +245,35 @@ bool ChromiumCDMParent::InitCDMInputBuffer(gmp::CDMInputBuffer& aBuffer,
     return false;
   }
   memcpy(shmem.get<uint8_t>(), aSample->Data(), aSample->Size());
-
+  GMPEncryptionScheme encryptionScheme =
+      GMPEncryptionScheme::kGMPEncryptionNone;
+  switch (crypto.mCryptoScheme) {
+    case CryptoScheme::None:
+      break;  // Default to none
+    case CryptoScheme::Cenc:
+      encryptionScheme = GMPEncryptionScheme::kGMPEncryptionCenc;
+      break;
+    case CryptoScheme::Cbcs:
+      encryptionScheme = GMPEncryptionScheme::kGMPEncryptionCbcs;
+      break;
+    default:
+      GMP_LOG(
+          "InitCDMInputBuffer got unexpected encryption scheme with "
+          "value of %" PRIu8 ". Treating as no encryption.",
+          static_cast<uint8_t>(crypto.mCryptoScheme));
+      MOZ_ASSERT_UNREACHABLE("Should not have unrecognized encryption type");
+      break;
+  }
   aBuffer = gmp::CDMInputBuffer(
       shmem, crypto.mKeyId, crypto.mIV, aSample->mTime.ToMicroseconds(),
       aSample->mDuration.ToMicroseconds(), crypto.mPlainSizes,
-      crypto.mEncryptedSizes,
-      crypto.mValid ? GMPEncryptionScheme::kGMPEncryptionCenc
-                    : GMPEncryptionScheme::kGMPEncryptionNone);
+      crypto.mEncryptedSizes, encryptionScheme);
   MOZ_ASSERT(
       aBuffer.mEncryptionScheme() == GMPEncryptionScheme::kGMPEncryptionNone ||
           aBuffer.mEncryptionScheme() ==
               GMPEncryptionScheme::kGMPEncryptionCenc,
       "aBuffer should use either no encryption or cenc, other kinds are not "
-      "yet "
-      "supported");
+      "yet supported");
   return true;
 }
 

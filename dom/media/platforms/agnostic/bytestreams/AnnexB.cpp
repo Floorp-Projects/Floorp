@@ -70,7 +70,7 @@ Result<Ok, nsresult> AnnexB::ConvertSampleToAnnexB(
     // offsets. So we need to account for the extra bytes by increasing
     // the length of the first clear data subsample. Otherwise decryption
     // will fail.
-    if (aSample->mCrypto.mValid) {
+    if (aSample->mCrypto.IsEncrypted()) {
       if (aSample->mCrypto.mPlainSizes.Length() == 0) {
         samplewriter->mCrypto.mPlainSizes.AppendElement(annexB->Length());
         samplewriter->mCrypto.mEncryptedSizes.AppendElement(
