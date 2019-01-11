@@ -34,9 +34,35 @@ void gecko_profiler_unregister_thread();
 void gecko_profiler_start_marker(const char* name);
 void gecko_profiler_end_marker(const char* name);
 
+// IMPORTANT: Keep this synchronized with enumerate_interners in
+// gfx/wr/webrender_api
+#define WEBRENDER_FOR_EACH_INTERNER(macro) \
+  macro(clip);                             \
+  macro(prim);                             \
+  macro(normal_border);                    \
+  macro(image_border);                     \
+  macro(image);                            \
+  macro(yuv_image);                        \
+  macro(line_decoration);                  \
+  macro(linear_grad);                      \
+  macro(radial_grad);                      \
+  macro(picture);                          \
+  macro(text_run);
+
 // Prelude of types necessary before including webrender_ffi_generated.h
 namespace mozilla {
 namespace wr {
+
+// Because this struct is macro-generated on the Rust side, cbindgen can't see
+// it for some reason. Work around that by re-declaring it here.
+#define DECLARE_MEMBERS(id) \
+  uintptr_t id##_interner;  \
+  uintptr_t id##_data_store;
+struct InterningMemoryReport {
+  WEBRENDER_FOR_EACH_INTERNER(DECLARE_MEMBERS)
+};
+
+#undef DECLARE_MEMBERS
 
 struct FontInstanceFlags {
   uint32_t bits;
