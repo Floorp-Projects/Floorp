@@ -81,7 +81,7 @@ Rule.prototype = {
     return {
       matchedSelectors: this.matchedSelectors,
       selectors: this.domRule.selectors,
-      selectorText: this.selectorText,
+      selectorText: this.keyframes ? this.domRule.keyText : this.selectorText,
     };
   },
 
