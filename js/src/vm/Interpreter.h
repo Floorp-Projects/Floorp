@@ -449,6 +449,16 @@ JSObject* BindVarOperation(JSContext* cx, JSObject* envChain);
 bool DefVarOperation(JSContext* cx, HandleObject envChain, HandleScript script,
                      jsbytecode* pc);
 
+bool DefLexicalOperation(JSContext* cx,
+                         Handle<LexicalEnvironmentObject*> lexicalEnv,
+                         HandleObject varObj, HandlePropertyName name,
+                         unsigned attrs);
+
+bool DefLexicalOperation(JSContext* cx,
+                         LexicalEnvironmentObject* lexicalEnvArg,
+                         JSObject* varObjArg, JSScript* script,
+                         jsbytecode* pc);
+
 bool DefFunOperation(JSContext* cx, HandleScript script, HandleObject envChain,
                      HandleFunction funArg);
 
