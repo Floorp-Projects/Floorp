@@ -185,6 +185,11 @@ interface nsIClearDataService : nsISupports
   const uint32_t CLEAR_EME = 1 << 18;
 
   /**
+   * Reporting API reports.
+   */
+  const uint32_t CLEAR_REPORTS = 1 << 19;
+
+  /**
    * Use this value to delete all the data.
    */
   const uint32_t CLEAR_ALL = 0xFFFFFF;
@@ -202,7 +207,8 @@ interface nsIClearDataService : nsISupports
   /**
    * Delete all DOM storages
    */
-  const uint32_t CLEAR_DOM_STORAGES = CLEAR_APPCACHE | CLEAR_DOM_QUOTA | CLEAR_DOM_PUSH_NOTIFICATIONS;
+  const uint32_t CLEAR_DOM_STORAGES = CLEAR_APPCACHE | CLEAR_DOM_QUOTA |
+    CLEAR_DOM_PUSH_NOTIFICATIONS | CLEAR_REPORTS;
 
   /**
    * Helper flag for forget about site
@@ -212,7 +218,7 @@ interface nsIClearDataService : nsISupports
     CLEAR_EME | CLEAR_PLUGIN_DATA | CLEAR_DOWNLOADS | CLEAR_PASSWORDS |
     CLEAR_PERMISSIONS | CLEAR_DOM_STORAGES | CLEAR_CONTENT_PREFERENCES |
     CLEAR_PREDICTOR_NETWORK_DATA | CLEAR_DOM_PUSH_NOTIFICATIONS |
-    CLEAR_SECURITY_SETTINGS;
+    CLEAR_SECURITY_SETTINGS | CLEAR_REPORTS;
 };
 
 /**
