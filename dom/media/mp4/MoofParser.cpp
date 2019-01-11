@@ -423,7 +423,7 @@ Moof::Moof(Box& aBox, Trex& aTrex, Mvhd& aMvhd, Mdhd& aMdhd, Edts& aEdts,
           ctsOrder[0]->mCompositionRange.start,
           ctsOrder.LastElement()->mCompositionRange.end);
     }
-    ProcessCenc();
+    ProcessCencAuxInfo(aSinf.mDefaultEncryptionType);
   }
 }
 
@@ -492,9 +492,9 @@ bool Moof::GetAuxInfo(AtomType aType,
   return false;
 }
 
-bool Moof::ProcessCenc() {
+bool Moof::ProcessCencAuxInfo(AtomType aScheme) {
   FallibleTArray<MediaByteRange> cencRanges;
-  if (!GetAuxInfo(AtomType("cenc"), &cencRanges) ||
+  if (!GetAuxInfo(aScheme, &cencRanges) ||
       cencRanges.Length() != mIndex.Length()) {
     return false;
   }
