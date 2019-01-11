@@ -15,6 +15,7 @@
 #include "nsDebugImpl.h"
 #include "nsThreadManager.h"
 #include "ProcessUtils.h"
+#include "SocketProcessBridgeParent.h"
 
 namespace mozilla {
 namespace net {
@@ -116,6 +117,24 @@ mozilla::ipc::IPCResult SocketProcessChild::RecvSetOffline(
   io->SetOffline(aOffline);
 
   return IPC_OK();
+}
+
+mozilla::ipc::IPCResult SocketProcessChild::RecvInitSocketProcessBridgeParent(
+    const ProcessId& aContentProcessId,
+    Endpoint<mozilla::net::PSocketProcessBridgeParent>&& aEndpoint) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!mSocketProcessBridgeParentMap.Get(aContentProcessId, nullptr));
+
+  mSocketProcessBridgeParentMap.Put(
+      aContentProcessId,
+      new SocketProcessBridgeParent(aContentProcessId, std::move(aEndpoint)));
+  return IPC_OK();
+}
+
+void SocketProcessChild::DestroySocketProcessBridgeParent(ProcessId aId) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  mSocketProcessBridgeParentMap.Remove(aId);
 }
 
 }  // namespace net

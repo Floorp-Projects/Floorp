@@ -11,6 +11,8 @@ EXPORTS.mozilla.net += [
     'NeckoMessageUtils.h',
     'NeckoParent.h',
     'NeckoTargetHolder.h',
+    'SocketProcessBridgeChild.h',
+    'SocketProcessBridgeParent.h',
     'SocketProcessChild.h',
     'SocketProcessHost.h',
     'SocketProcessImpl.h',
@@ -23,6 +25,8 @@ UNIFIED_SOURCES += [
     'NeckoCommon.cpp',
     'NeckoParent.cpp',
     'NeckoTargetHolder.cpp',
+    'SocketProcessBridgeChild.cpp',
+    'SocketProcessBridgeParent.cpp',
     'SocketProcessChild.cpp',
     'SocketProcessHost.cpp',
     'SocketProcessImpl.cpp',
@@ -36,7 +40,8 @@ IPDL_SOURCES = [
     'PFileChannel.ipdl',
     'PNecko.ipdl',
     'PSimpleChannel.ipdl',
-    'PSocketProcess.ipdl'
+    'PSocketProcess.ipdl',
+    'PSocketProcessBridge.ipdl'
 ]
 
 # needed so --disable-webrtc builds work (yes, a bit messy)

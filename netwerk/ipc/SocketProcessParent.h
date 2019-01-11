@@ -33,6 +33,8 @@ class SocketProcessParent final : public PSocketProcessParent {
   explicit SocketProcessParent(SocketProcessHost* aHost);
   ~SocketProcessParent();
 
+  static SocketProcessParent* GetSingleton();
+
   mozilla::ipc::IPCResult RecvInitCrashReporter(
       Shmem&& aShmem, const NativeThreadId& aThreadId) override;
   mozilla::ipc::IPCResult RecvAddMemoryReport(
