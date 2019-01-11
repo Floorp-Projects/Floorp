@@ -3188,6 +3188,18 @@ already_AddRefed<DOMMediaStream> HTMLMediaElement::CaptureAudio(
   return stream.forget();
 }
 
+RefPtr<GenericNonExclusivePromise> HTMLMediaElement::GetAllowedToPlayPromise() {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!mOutputStreams.IsEmpty(),
+             "This method should only be called during stream capturing!");
+  if (AutoplayPolicy::IsAllowedToPlay(*this)) {
+    AUTOPLAY_LOG("MediaElement %p has allowed to play, resolve promise", this);
+    return GenericNonExclusivePromise::CreateAndResolve(true, __func__);
+  }
+  AUTOPLAY_LOG("create allow-to-play promise for MediaElement %p", this);
+  return mAllowedToPlayPromise.Ensure(__func__);
+}
+
 already_AddRefed<DOMMediaStream> HTMLMediaElement::MozCaptureStream(
     ErrorResult& aRv) {
   MediaStreamGraph::GraphDriverType graphDriverType =
@@ -3482,6 +3494,8 @@ HTMLMediaElement::~HTMLMediaElement() {
   UnregisterActivityObserver();
 
   mSetCDMRequest.DisconnectIfExists();
+  mAllowedToPlayPromise.RejectIfExists(NS_ERROR_FAILURE, __func__);
+
   if (mDecoder) {
     ShutdownDecoder();
   }
@@ -3634,6 +3648,7 @@ already_AddRefed<Promise> HTMLMediaElement::Play(ErrorResult& aRv) {
 
   if (AutoplayPolicy::IsAllowedToPlay(*this)) {
     AUTOPLAY_LOG("allow MediaElement %p to play", this);
+    mAllowedToPlayPromise.ResolveIfExists(true, __func__);
     PlayInternal(handlingUserInput);
     UpdateCustomPolicyAfterPlayed();
   } else {
@@ -5561,6 +5576,7 @@ void HTMLMediaElement::CheckAutoplayDataReady() {
     return;
   }
 
+  mAllowedToPlayPromise.ResolveIfExists(true, __func__);
   mPaused = false;
   // We changed mPaused which can affect AddRemoveSelfReference
   AddRemoveSelfReference();
