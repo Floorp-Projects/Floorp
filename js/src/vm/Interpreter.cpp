@@ -4630,6 +4630,38 @@ bool js::DefVarOperation(JSContext* cx, HandleObject envChain,
   return true;
 }
 
+bool js::DefLexicalOperation(JSContext* cx,
+                             Handle<LexicalEnvironmentObject*> lexicalEnv,
+                             HandleObject varObj, HandlePropertyName name,
+                             unsigned attrs) {
+  // Redeclaration checks should have already been done.
+  MOZ_ASSERT(CheckLexicalNameConflict(cx, lexicalEnv, varObj, name));
+  RootedId id(cx, NameToId(name));
+  RootedValue uninitialized(cx, MagicValue(JS_UNINITIALIZED_LEXICAL));
+  return NativeDefineDataProperty(cx, lexicalEnv, id, uninitialized, attrs);
+}
+
+bool js::DefLexicalOperation(JSContext* cx,
+                             LexicalEnvironmentObject* lexicalEnvArg,
+                             JSObject* varObjArg, JSScript* script,
+                             jsbytecode* pc) {
+  MOZ_ASSERT(*pc == JSOP_DEFLET || *pc == JSOP_DEFCONST);
+  RootedPropertyName name(cx, script->getName(pc));
+
+  unsigned attrs = JSPROP_ENUMERATE | JSPROP_PERMANENT;
+  if (*pc == JSOP_DEFCONST) {
+    attrs |= JSPROP_READONLY;
+  }
+
+  Rooted<LexicalEnvironmentObject*> lexicalEnv(cx, lexicalEnvArg);
+  RootedObject varObj(cx, varObjArg);
+  MOZ_ASSERT_IF(!script->hasNonSyntacticScope(),
+                lexicalEnv == &cx->global()->lexicalEnvironment() &&
+                    varObj == cx->global());
+
+  return DefLexicalOperation(cx, lexicalEnv, varObj, name, attrs);
+}
+
 bool js::DefFunOperation(JSContext* cx, HandleScript script,
                          HandleObject envChain, HandleFunction fun) {
   /*
