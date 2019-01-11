@@ -39,8 +39,8 @@ class MediaSink {
 
   struct PlaybackParams {
     PlaybackParams()
-        : mVolume(Some(1.0)), mPlaybackRate(1.0), mPreservesPitch(true) {}
-    Maybe<double> mVolume;
+        : mVolume(1.0), mPlaybackRate(1.0), mPreservesPitch(true) {}
+    double mVolume;
     double mPlaybackRate;
     bool mPreservesPitch;
     RefPtr<AudioDeviceInfo> mSink;
