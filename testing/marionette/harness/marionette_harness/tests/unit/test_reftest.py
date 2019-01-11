@@ -45,3 +45,16 @@ class TestReftest(MarionetteTestCase):
                                u'stack': None,
                                u'status': u'PASS'}}
         self.assertEqual(expected, rv)
+
+    def test_url_comparison(self):
+        test_page = self.fixtures.where_is("test.html")
+        test_page_2 = self.fixtures.where_is("foo/../test.html")
+
+        self.marionette._send_message("reftest:setup", {"screenshot": "unexpected"})
+        rv = self.marionette._send_message("reftest:run",
+                                           {"test": test_page,
+                                            "references": [[test_page_2, [], "=="]],
+                                            "expected": "PASS",
+                                            "timeout": 10 * 1000})
+        self.marionette._send_message("reftest:teardown", {})
+        self.assertEqual(u"PASS", rv[u"value"][u"status"])

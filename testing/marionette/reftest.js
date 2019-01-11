@@ -459,6 +459,7 @@ max-width: ${REFTEST_WIDTH}px; max-height: ${REFTEST_HEIGHT}px`;
         logger.debug("Not using DRAWWINDOW_USE_WIDGET_LAYERS");
       }
 
+      url = new URL(url).href; // normalize the URL
       logger.debug(`Starting load of ${url}`);
       let navigateOpts = {
         commandId: this.driver.listener.activeMessageId,
