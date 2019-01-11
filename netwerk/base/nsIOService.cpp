@@ -469,6 +469,17 @@ void nsIOService::OnProcessUnexpectedShutdown(SocketProcessHost *aHost) {
   DestroySocketProcess();
 }
 
+RefPtr<MemoryReportingProcess> nsIOService::GetSocketProcessMemoryReporter() {
+  // Check the prefs here again, since we don't want to create
+  // SocketProcessMemoryReporter for some tests.
+  if (!Preferences::GetBool("network.process.enabled") || !SocketProcessReady()) {
+    return nullptr;
+
+  }
+
+  return new SocketProcessMemoryReporter();
+}
+
 NS_IMPL_ISUPPORTS(nsIOService, nsIIOService, nsINetUtil, nsISpeculativeConnect,
                   nsIObserver, nsIIOServiceInternal, nsISupportsWeakReference)
 

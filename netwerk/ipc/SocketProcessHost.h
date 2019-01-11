@@ -8,6 +8,7 @@
 
 #include "mozilla/UniquePtr.h"
 #include "mozilla/ipc/GeckoChildProcessHost.h"
+#include "mozilla/MemoryReportingProcess.h"
 #include "mozilla/ipc/TaskFactory.h"
 
 namespace mozilla {
@@ -100,6 +101,25 @@ class SocketProcessHost final : public mozilla::ipc::GeckoChildProcessHost {
   // OnProcessUnexpectedShutdown will be invoked.
   bool mShutdownRequested;
   bool mChannelClosed;
+};
+
+class SocketProcessMemoryReporter : public MemoryReportingProcess {
+ public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SocketProcessMemoryReporter, override)
+
+  SocketProcessMemoryReporter() = default;
+
+  bool IsAlive() const override;
+
+  bool SendRequestMemoryReport(const uint32_t& aGeneration,
+                               const bool& aAnonymize,
+                               const bool& aMinimizeMemoryUsage,
+                               const dom::MaybeFileDesc& aDMDFile) override;
+
+  int32_t Pid() const override;
+
+ protected:
+  virtual ~SocketProcessMemoryReporter() = default;
 };
 
 }  // namespace net
