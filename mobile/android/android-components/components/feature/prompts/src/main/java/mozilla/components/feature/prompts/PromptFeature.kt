@@ -19,6 +19,7 @@ import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.prompt.Choice
 import mozilla.components.concept.engine.prompt.PromptRequest
+import mozilla.components.concept.engine.prompt.PromptRequest.Color
 import mozilla.components.concept.engine.prompt.PromptRequest.Authentication
 import mozilla.components.concept.engine.prompt.PromptRequest.Alert
 import mozilla.components.concept.engine.prompt.PromptRequest.MultipleChoice
@@ -75,10 +76,8 @@ class PromptFeature(
 
     init {
         if (activity == null && fragment == null) {
-            throw IllegalStateException(
-                "activity and fragment references " +
-                    "must not be both null, at least one must be initialized."
-            )
+            throw IllegalStateException("activity and fragment references " +
+                "must not be both null, at least one must be initialized.")
         }
     }
 
@@ -280,6 +279,7 @@ class PromptFeature(
             when (it) {
                 is Alert -> it.onDismiss()
                 is Authentication -> it.onDismiss()
+                is Color -> it.onDismiss()
             }
             true
         }
@@ -319,16 +319,17 @@ class PromptFeature(
     }
 
     /**
-     * Event that is called when the user is requesting to select a date from the date picker dialog.
+     * Event that is called when the user confirm the action on the dialog.
      * This consumes the [PromptFeature] value from the [Session] indicated by [sessionId].
      * @param sessionId that requested to show the dialog.
-     * @param selectedDate the selected date from the dialog.
+     * @param value an optional value provided by the dialog as a result of confirming the action.
      */
-    internal fun onSelect(sessionId: String, selectedDate: Date) {
+    internal fun onConfirm(sessionId: String, value: Any? = null) {
         val session = sessionManager.findSessionById(sessionId) ?: return
         session.promptRequest.consume {
             when (it) {
-                is PromptRequest.Date -> it.onSelect(selectedDate)
+                is PromptRequest.Date -> it.onSelect(value as Date)
+                is PromptRequest.Color -> it.onConfirm(value as String)
             }
             true
         }
@@ -445,6 +446,12 @@ class PromptFeature(
                         password,
                         onlyShowPassword
                     )
+                }
+            }
+
+            is PromptRequest.Color -> {
+                with(promptRequest) {
+                    ColorPickerDialogFragment.newInstance(session.id, defaultColor)
                 }
             }
 

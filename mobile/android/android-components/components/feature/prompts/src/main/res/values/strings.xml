@@ -21,7 +21,7 @@
     <!-- Text for a button that clears the selected input in the date/time picker. -->
     <string name="mozac_feature_prompts_clear">Clear</string>
 
-    <!-- Text for for title of an authentication dialog. -->
+    <!-- Text for the title of an authentication dialog. -->
     <string name="mozac_feature_prompt_sign_in">Sign In</string>
 
     <!-- Text for username field in an authentication dialog. -->
@@ -29,4 +29,8 @@
 
     <!-- Text for password field in an authentication dialog. -->
     <string name="mozac_feature_prompt_password_hint">Password</string>
+
+    <!-- Title of a color picker dialog, this text is shown above a color picker. -->
+    <string name="mozac_feature_prompts_choose_a_color">Choose a color</string>
+
 </resources>

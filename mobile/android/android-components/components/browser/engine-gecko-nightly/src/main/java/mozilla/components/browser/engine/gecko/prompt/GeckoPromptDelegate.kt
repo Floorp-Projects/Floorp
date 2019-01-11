@@ -259,6 +259,26 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
         }
     }
 
+    override fun onColorPrompt(
+        session: GeckoSession,
+        title: String?,
+        defaultColor: String?,
+        callback: TextCallback
+    ) {
+
+        val onConfirm: (String) -> Unit = {
+            callback.confirm(it)
+        }
+        val onDismiss: () -> Unit = {
+            callback.dismiss()
+        }
+        geckoEngineSession.notifyObservers {
+            onPromptRequest(
+                PromptRequest.Color(defaultColor ?: "", onConfirm, onDismiss)
+            )
+        }
+    }
+
     override fun onButtonPrompt(
         session: GeckoSession,
         title: String?,
@@ -266,13 +286,6 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
         btnMsg: Array<out String>?,
         callback: ButtonCallback
     ) = Unit
-
-    override fun onColorPrompt(
-        session: GeckoSession,
-        title: String?,
-        value: String?,
-        callback: TextCallback
-    ) = Unit // Related issue: https://github.com/mozilla-mobile/android-components/issues/1469
 
     override fun onTextPrompt(
         session: GeckoSession,

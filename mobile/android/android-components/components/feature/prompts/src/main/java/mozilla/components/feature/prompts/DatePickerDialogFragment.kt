@@ -84,7 +84,7 @@ internal class DatePickerDialogFragment : PromptDialogFragment(), DatePicker.OnD
     }
 
     private fun onPositiveClickAction() {
-        feature?.onSelect(sessionId, selectedDate)
+        feature?.onConfirm(sessionId, selectedDate)
     }
 
     companion object {

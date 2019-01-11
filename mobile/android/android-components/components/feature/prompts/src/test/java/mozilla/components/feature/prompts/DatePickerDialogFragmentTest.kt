@@ -85,7 +85,7 @@ class DatePickerDialogFragmentTest {
 
         val positiveButton = (dialog as AlertDialog).getButton(BUTTON_POSITIVE)
         positiveButton.performClick()
-        verify(mockFeature).onSelect("sessionId", initialDate)
+        verify(mockFeature).onConfirm("sessionId", initialDate)
 
         val neutralButton = dialog.getButton(BUTTON_NEUTRAL)
         neutralButton.performClick()

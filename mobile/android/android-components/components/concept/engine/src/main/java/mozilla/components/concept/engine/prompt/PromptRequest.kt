@@ -122,4 +122,16 @@ sealed class PromptRequest {
             HOST, PROXY
         }
     }
+
+    /**
+     * Value type that represents a request for a selecting one or multiple files.
+     * @property defaultColor true if the user can select more that one file false otherwise.
+     * @property onConfirm callback to notify that the user has selected a single file.
+     * @property onDismiss callback to notify that the user has canceled the file selection.
+     */
+    data class Color(
+        val defaultColor: String,
+        val onConfirm: (String) -> Unit,
+        val onDismiss: () -> Unit
+    ) : PromptRequest()
 }

@@ -25,6 +25,7 @@ import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.prompt.PromptRequest
+import mozilla.components.concept.engine.prompt.PromptRequest.Color
 import mozilla.components.concept.engine.prompt.PromptRequest.Alert
 import mozilla.components.concept.engine.prompt.PromptRequest.Authentication
 import mozilla.components.concept.engine.prompt.PromptRequest.Authentication.Level.NONE
@@ -315,7 +316,7 @@ class PromptFeatureTest {
 
         session.promptRequest = Consumable.from(promptRequest)
 
-        promptFeature.onSelect("unknown_sessionId", Date())
+        promptFeature.onConfirm("unknown_sessionId", Date())
 
         assertFalse(session.promptRequest.isConsumed())
         assertNull(selectedDate)
@@ -338,7 +339,7 @@ class PromptFeatureTest {
         session.promptRequest = Consumable.from(promptRequest)
 
         val date = Date()
-        promptFeature.onSelect(session.id, Date())
+        promptFeature.onConfirm(session.id, Date())
 
         assertTrue(session.promptRequest.isConsumed())
         assertEquals(selectedDate, date)
@@ -704,6 +705,36 @@ class PromptFeatureTest {
         promptFeature.onCancel(session.id)
 
         assertTrue(session.promptRequest.isConsumed())
+        assertTrue(onDismissWasCalled)
+    }
+
+    @Test
+    fun `Calling onConfirm with a Color request will consume promptRequest`() {
+        val session = getSelectedSession()
+
+        var onConfirmWasCalled = false
+        var onDismissWasCalled = false
+
+        val promptRequest = Color(
+            "#e66465",
+            {
+                onConfirmWasCalled = true
+            }) {
+            onDismissWasCalled = true
+        }
+
+        promptFeature.start()
+
+        session.promptRequest = Consumable.from(promptRequest)
+
+        promptFeature.onConfirm(session.id, "#f6b73c")
+
+        assertTrue(session.promptRequest.isConsumed())
+        assertTrue(onConfirmWasCalled)
+
+        session.promptRequest = Consumable.from(promptRequest)
+
+        promptFeature.onCancel(session.id)
         assertTrue(onDismissWasCalled)
     }
 

@@ -77,5 +77,16 @@ class PromptRequestTest {
         assertFalse(promptRequest.isCrossOrigin)
         promptRequest.onConfirm("", "")
         promptRequest.onDismiss()
+
+        val onConfirm: (String) -> Unit = {
+        }
+        val onDismiss: () -> Unit = {
+        }
+
+        val colorRequest = PromptRequest.Color("defaultColor", onConfirm, onDismiss)
+        assertEquals(colorRequest.defaultColor, "defaultColor")
+
+        colorRequest.onConfirm("")
+        colorRequest.onDismiss()
     }
 }

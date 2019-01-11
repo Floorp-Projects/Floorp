@@ -236,7 +236,6 @@ class GeckoPromptDelegateTest {
         val gecko = GeckoPromptDelegate(mockSession)
         gecko.onButtonPrompt(null, "", "", null, null)
         gecko.onDateTimePrompt(null, "", 0, null, null, null, mock())
-        gecko.onColorPrompt(null, "", "", null)
         gecko.onTextPrompt(null, "", "", null, null)
         gecko.onPopupRequest(null, "")
         gecko.onDateTimePrompt(null, "", DATETIME_TYPE_TIME, null, "", "", mock())
@@ -636,5 +635,60 @@ class GeckoPromptDelegateTest {
         authRequest = request as PromptRequest.Authentication
 
         assertEquals(authRequest.level, NONE)
+    }
+
+    @Test
+    fun `Calling onColorPrompt must provide a Color PromptRequest`() {
+
+        val mockSession = GeckoEngineSession(Mockito.mock(GeckoRuntime::class.java))
+        var request: PromptRequest? = null
+        var onConfirmWasCalled = false
+        var onDismissWasCalled = false
+
+        val geckoCallback = object : GeckoSession.PromptDelegate.TextCallback {
+
+            override fun confirm(text: String?) {
+                onConfirmWasCalled = true
+            }
+
+            override fun dismiss() {
+                onDismissWasCalled = true
+            }
+
+            override fun getCheckboxValue() = false
+            override fun setCheckboxValue(value: Boolean) = Unit
+            override fun hasCheckbox() = false
+            override fun getCheckboxMessage() = ""
+        }
+
+        val promptDelegate = GeckoPromptDelegate(mockSession)
+        mockSession.register(object : EngineSession.Observer {
+            override fun onPromptRequest(promptRequest: PromptRequest) {
+                request = promptRequest
+            }
+        })
+
+        promptDelegate.onColorPrompt(mock(), "title", "#e66465", geckoCallback)
+        assertTrue(request is PromptRequest.Color)
+
+        var colorRequest = request as PromptRequest.Color
+
+        with(colorRequest) {
+
+            assertEquals(defaultColor, "#e66465")
+
+            onConfirm("#f6b73c")
+            assertTrue(onConfirmWasCalled)
+
+            onDismiss()
+            assertTrue(onDismissWasCalled)
+        }
+
+        promptDelegate.onColorPrompt(mock(), null, null, geckoCallback)
+        colorRequest = request as PromptRequest.Color
+
+        with(colorRequest) {
+            assertEquals(defaultColor, "")
+        }
     }
 }
