@@ -632,6 +632,7 @@ WEBIDL_FILES = [
     'L10nUtils.webidl',
     'LegacyQueryInterface.webidl',
     'LinkStyle.webidl',
+    'LoadURIOptions.webidl',
     'Location.webidl',
     'MediaCapabilities.webidl',
     'MediaDeviceInfo.webidl',
