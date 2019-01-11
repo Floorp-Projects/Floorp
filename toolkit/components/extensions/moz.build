@@ -20,6 +20,7 @@ EXTRA_JS_MODULES += [
     'ExtensionPreferencesManager.jsm',
     'ExtensionProcessScript.jsm',
     'ExtensionSettingsStore.jsm',
+    'ExtensionShortcuts.jsm',
     'ExtensionStorage.jsm',
     'ExtensionStorageIDB.jsm',
     'ExtensionStorageSync.jsm',
