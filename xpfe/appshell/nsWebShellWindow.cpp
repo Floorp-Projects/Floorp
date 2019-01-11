@@ -64,6 +64,7 @@
 #include "mozilla/MouseEvents.h"
 
 #include "mozilla/dom/BrowsingContext.h"
+#include "mozilla/dom/LoadURIOptionsBinding.h"
 
 #include "nsPIWindowRoot.h"
 
@@ -245,9 +246,11 @@ nsresult nsWebShellWindow::Initialize(
     NS_ConvertUTF8toUTF16 urlString(tmpStr);
     nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
     NS_ENSURE_TRUE(webNav, NS_ERROR_FAILURE);
-    rv =
-        webNav->LoadURI(urlString, nsIWebNavigation::LOAD_FLAGS_NONE, nullptr,
-                        nullptr, nullptr, nsContentUtils::GetSystemPrincipal());
+
+    LoadURIOptions loadURIOptions;
+    loadURIOptions.mTriggeringPrincipal = nsContentUtils::GetSystemPrincipal();
+
+    rv = webNav->LoadURI(urlString, loadURIOptions);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
