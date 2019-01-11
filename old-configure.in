@@ -2165,122 +2165,10 @@ MOZ_ARG_DISABLE_BOOL(universalchardet,
   MOZ_UNIVERSALCHARDET=1 )
 
 dnl ========================================================
-dnl = ANGLE OpenGL->D3D translator for WebGL
-dnl = * only applies to win32 (and then, not MINGW)
-dnl ========================================================
-
-MOZ_ANGLE_RENDERER=
-MOZ_D3D_CPU_SUFFIX=
-MOZ_HAS_WINSDK_WITH_D3D=
-MOZ_D3DCOMPILER_VISTA_DLL=
-MOZ_D3DCOMPILER_VISTA_DLL_PATH=
-
-if test "$COMPILE_ENVIRONMENT" ; then
-case "$target_os" in
-*mingw*)
-    MOZ_ANGLE_RENDERER=1
-    ;;
-esac
-
-# The DirectX SDK libraries are split into x86 and x64 sub-directories
-case "${target_cpu}" in
-i*86)
-  MOZ_D3D_CPU_SUFFIX=x86
-  ;;
-x86_64)
-  MOZ_D3D_CPU_SUFFIX=x64
-  ;;
-aarch64)
-  MOZ_D3D_CPU_SUFFIX=arm
-  ;;
-esac
-
-dnl ========================================================
-dnl D3D compiler DLL
-dnl ========================================================
-MOZ_FOUND_D3D_COMPILERS=
-
-if test -n "$MOZ_ANGLE_RENDERER"; then
-  if test -z "$MOZ_D3D_CPU_SUFFIX"; then
-    AC_MSG_ERROR([Couldn't determine MOZ_D3D_CPU_SUFFIX.])
-  fi
-
-  ######################################
-  # Find _46+ for use by Vista+.
-
-  # Find a D3D compiler DLL in a Windows SDK.
-  MOZ_D3DCOMPILER_VISTA_DLL=
-  if test "$OS_ARCH" != "$HOST_OS_ARCH"; then
-    MOZ_D3DCOMPILER_VISTA_DLL=d3dcompiler_47.dll
-    AC_MSG_RESULT([Assuming D3D compiler will be in fxc2.])
-  else
-    case "$MOZ_WINSDK_MAXVER" in
-    0x0603*|0x0A00*)
-      MOZ_D3DCOMPILER_VISTA_DLL=d3dcompiler_47.dll
-      AC_MSG_RESULT([Found D3D compiler in Windows SDK.])
-    ;;
-    esac
-  fi
-
-  if test -n "$MOZ_D3DCOMPILER_VISTA_DLL"; then
-    # We have a name, now track down the path.
-    if test -n "$WINDOWSSDKDIR"; then
-      MOZ_D3DCOMPILER_VISTA_DLL_PATH="$WINDOWSSDKDIR/Redist/D3D/$MOZ_D3D_CPU_SUFFIX/$MOZ_D3DCOMPILER_VISTA_DLL"
-      if test -f "$MOZ_D3DCOMPILER_VISTA_DLL_PATH"; then
-        AC_MSG_RESULT([Found MOZ_D3DCOMPILER_VISTA_DLL_PATH: $MOZ_D3DCOMPILER_VISTA_DLL_PATH])
-        MOZ_HAS_WINSDK_WITH_D3D=1
-      elif test "$target_cpu" = "aarch64" -a "$MOZ_D3DCOMPILER_VISTA_DLL" = "d3dcompiler_47.dll"; then
-        AC_MSG_RESULT([AArch64 Windows includes d3dcompiler DLLs])
-        MOZ_D3DCOMPILER_VISTA_DLL_PATH=
-      else
-        AC_MSG_RESULT([MOZ_D3DCOMPILER_VISTA_DLL_PATH doesn't exist: $MOZ_D3DCOMPILER_VISTA_DLL_PATH])
-        AC_MSG_ERROR([Windows SDK at "$WINDOWSSDKDIR" appears broken. Try updating to MozillaBuild 1.9 final or higher.])
-        MOZ_D3DCOMPILER_VISTA_DLL_PATH=
-      fi
-    else
-      MOZ_D3DCOMPILER_VISTA_DLL_PATH="$(dirname $FXC)/$MOZ_D3DCOMPILER_VISTA_DLL"
-      if test -f "$MOZ_D3DCOMPILER_VISTA_DLL_PATH"; then
-        AC_MSG_RESULT([Found MOZ_D3DCOMPILER_VISTA_DLL_PATH: $MOZ_D3DCOMPILER_VISTA_DLL_PATH])
-      else
-        AC_MSG_RESULT([MOZ_D3DCOMPILER_VISTA_DLL_PATH doesn't exist: $MOZ_D3DCOMPILER_VISTA_DLL_PATH])
-        AC_MSG_ERROR([fxc2 or "$MOZ_D3DCOMPILER_VISTA_DLL" seem to be missing from the expected location.])
-        MOZ_D3DCOMPILER_VISTA_DLL_PATH=
-      fi
-    fi
-  else
-    if test "$OS_ARCH" = "$HOST_OS_ARCH"; then
-      AC_MSG_ERROR([Couldn't find Windows SDK 8.1 or higher needed for ANGLE.])
-    else
-      AC_MSG_ERROR([We should need "$MOZ_D3DCOMPILER_VISTA_DLL" for ANGLE in Linux MinGW build, but we didn't look for it.])
-    fi
-  fi
-
-  if test -z "$MOZ_D3DCOMPILER_VISTA_DLL_PATH"; then
-    MOZ_D3DCOMPILER_VISTA_DLL=
-  fi
-
-  # On mingw, check if headers are provided by toolchain.
-  if test -n "$GNU_CC"; then
-    MOZ_CHECK_HEADER(d3d10.h, MOZ_HAS_WINSDK_WITH_D3D=1)
-  fi
-
-  ######################################
-  # Check that we found what we needed.
-  MOZ_FOUND_A_D3D_COMPILER=
-
-  if test -n "$MOZ_D3DCOMPILER_VISTA_DLL"; then
-    MOZ_FOUND_A_D3D_COMPILER=1
-    AC_MSG_RESULT([Found d3dcompiler DLL for Vista+: $MOZ_D3DCOMPILER_VISTA_DLL])
-  fi
-
-  if test -z "MOZ_FOUND_A_D3D_COMPILER"; then
-    AC_MSG_ERROR([Couldn't find an acceptable D3D compiler DLL.])
-  fi
-fi # MOZ_ANGLE_RENDERER
-
-dnl ========================================================
 dnl Gamepad support
 dnl ========================================================
+
+if test "$COMPILE_ENVIRONMENT" ; then
 
 dnl Moved gamepad platform check to moz.build, linux header check still needed here.
 if test "$OS_TARGET" = "Linux"; then
@@ -3383,12 +3271,6 @@ AC_SUBST(MOZ_CRASHREPORTER_INJECTOR)
 AC_SUBST(MOZ_STUB_INSTALLER)
 AC_SUBST(MOZ_ENABLE_SIGNMAR)
 AC_SUBST(MOZ_UPDATER)
-
-AC_SUBST(MOZ_ANGLE_RENDERER)
-AC_SUBST(MOZ_D3D_CPU_SUFFIX)
-AC_SUBST(MOZ_HAS_WINSDK_WITH_D3D)
-AC_SUBST(MOZ_D3DCOMPILER_VISTA_DLL)
-AC_SUBST(MOZ_D3DCOMPILER_VISTA_DLL_PATH)
 
 AC_SUBST(MOZ_ANDROID_APPLICATION_CLASS)
 AC_SUBST(MOZ_ANDROID_BROWSER_INTENT_CLASS)
