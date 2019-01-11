@@ -4,6 +4,7 @@
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { LocalizationSync } = ChromeUtils.import("resource://gre/modules/Localization.jsm", {});
 
 const mozIntlHelper =
   Cc["@mozilla.org/mozintlhelper;1"].getService(Ci.mozIMozIntlHelper);
@@ -267,18 +268,26 @@ class MozIntl {
     if (locales !== undefined) {
       throw new Error("First argument support not implemented yet");
     }
-    const languageBundle = Services.strings.createBundle(
-          "chrome://global/locale/languageNames.properties");
+
+    if (!this._cache.hasOwnProperty("languageLocalization")) {
+      const loc = new LocalizationSync(["toolkit/intl/languageNames.ftl"]);
+      this._cache.languageLocalization = loc;
+    }
+
+    const loc = this._cache.languageLocalization;
 
     return langCodes.map(langCode => {
       if (typeof langCode !== "string") {
         throw new TypeError("All language codes must be strings.");
       }
-      try {
-        return languageBundle.GetStringFromName(langCode.toLowerCase());
-      } catch (e) {
-        return langCode.toLowerCase(); // Fall back to raw language subtag.
+      let lcLangCode = langCode.toLowerCase();
+      if (availableLocaleDisplayNames.language.has(lcLangCode)) {
+        const value = loc.formatValue(`language-name-${lcLangCode}`);
+        if (value !== undefined) {
+          return value;
+        }
       }
+      return lcLangCode;
     });
   }
 
@@ -287,21 +296,25 @@ class MozIntl {
       throw new Error("First argument support not implemented yet");
     }
 
-    if (!this._cache.hasOwnProperty("regionBundle")) {
-      const regionBundle = Services.strings.createBundle(
-        "chrome://global/locale/regionNames.properties");
-      this._cache.regionBundle = regionBundle;
+    if (!this._cache.hasOwnProperty("regionLocalization")) {
+      const loc = new LocalizationSync(["toolkit/intl/regionNames.ftl"]);
+      this._cache.regionLocalization = loc;
     }
+
+    const loc = this._cache.regionLocalization;
 
     return regionCodes.map(regionCode => {
       if (typeof regionCode !== "string") {
         throw new TypeError("All region codes must be strings.");
       }
-      try {
-        return this._cache.regionBundle.GetStringFromName(regionCode.toLowerCase());
-      } catch (e) {
-        return regionCode.toUpperCase(); // Fall back to raw region subtag.
+      let lcRegionCode = regionCode.toLowerCase();
+      if (availableLocaleDisplayNames.region.has(lcRegionCode)) {
+        const value = loc.formatValue(`region-name-${lcRegionCode}`);
+        if (value !== undefined) {
+          return value;
+        }
       }
+      return regionCode.toUpperCase();
     });
   }
 
