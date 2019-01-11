@@ -6,6 +6,7 @@
 #include "mozilla/HTMLEditor.h"
 
 #include "mozilla/ComposerCommandsUpdater.h"
+#include "mozilla/ContentIterator.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/EditAction.h"
 #include "mozilla/EditorDOMPoint.h"
@@ -34,7 +35,6 @@
 #include "mozilla/css/Loader.h"
 
 #include "nsIContent.h"
-#include "nsIContentIterator.h"
 #include "nsIMutableArray.h"
 #include "nsContentUtils.h"
 #include "nsIDocumentEncoder.h"
@@ -3778,18 +3778,18 @@ nsresult HTMLEditor::CollapseAdjacentTextNodes(nsRange* aInRange) {
   // for the lifetime of this method
 
   // build a list of editable text nodes
-  nsCOMPtr<nsIContentIterator> iter = NS_NewContentSubtreeIterator();
+  RefPtr<ContentSubtreeIterator> subtreeIter = new ContentSubtreeIterator();
 
-  iter->Init(aInRange);
+  subtreeIter->Init(aInRange);
 
-  while (!iter->IsDone()) {
-    nsINode* node = iter->GetCurrentNode();
+  while (!subtreeIter->IsDone()) {
+    nsINode* node = subtreeIter->GetCurrentNode();
     if (node->NodeType() == nsINode::TEXT_NODE &&
         IsEditable(node->AsContent())) {
       textNodes.AppendElement(node);
     }
 
-    iter->Next();
+    subtreeIter->Next();
   }
 
   // now that I have a list of text nodes, collapse adjacent text nodes
@@ -4440,19 +4440,20 @@ nsresult HTMLEditor::SetCSSBackgroundColorWithTransaction(
         // them (since doing operations on the document during iteration would
         // perturb the iterator).
 
-        OwningNonNull<nsIContentIterator> iter = NS_NewContentSubtreeIterator();
+        RefPtr<ContentSubtreeIterator> subtreeIter =
+            new ContentSubtreeIterator();
 
         nsTArray<OwningNonNull<nsINode>> arrayOfNodes;
         nsCOMPtr<nsINode> node;
 
         // Iterate range and build up array
-        rv = iter->Init(range);
+        rv = subtreeIter->Init(range);
         // Init returns an error if no nodes in range.  This can easily happen
         // with the subtree iterator if the selection doesn't contain any
         // *whole* nodes.
         if (NS_SUCCEEDED(rv)) {
-          for (; !iter->IsDone(); iter->Next()) {
-            node = iter->GetCurrentNode();
+          for (; !subtreeIter->IsDone(); subtreeIter->Next()) {
+            node = subtreeIter->GetCurrentNode();
             NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
 
             if (IsEditable(node)) {

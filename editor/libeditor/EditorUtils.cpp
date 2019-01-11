@@ -65,7 +65,7 @@ DOMSubtreeIterator::DOMSubtreeIterator(
     : DOMIterator(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_TO_PARENT) {}
 
 nsresult DOMSubtreeIterator::Init(nsRange& aRange) {
-  mIter = NS_NewContentSubtreeIterator();
+  mIter = new ContentSubtreeIterator();
   return mIter->Init(&aRange);
 }
 
