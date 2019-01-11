@@ -224,7 +224,7 @@ void ConstantSourceNode::Start(double aWhen, ErrorResult& aRv) {
                                   aWhen);
 
   MarkActive();
-  Context()->NotifyScheduledSourceNodeStarted();
+  Context()->StartBlockedAudioContextIfAllowed();
 }
 
 void ConstantSourceNode::Stop(double aWhen, ErrorResult& aRv) {
