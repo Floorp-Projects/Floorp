@@ -18,8 +18,8 @@ const CROSS_ORIGIN_SECURE_PATH = TESTS_DIR + "mochitest/form_cross_origin_secure
 const chromeScript = runChecksAfterCommonInit(false);
 
 let nsLoginInfo = SpecialPowers.wrap(SpecialPowers.Components).Constructor("@mozilla.org/login-manager/loginInfo;1",
-SpecialPowers.Ci.nsILoginInfo,
-"init");
+                                                                           SpecialPowers.Ci.nsILoginInfo,
+                                                                           "init");
 </script>
 <p id="display"></p>
 

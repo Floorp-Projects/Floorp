@@ -23,8 +23,7 @@
  *        This argument is passed to the "Assert.throws" test to determine which
  *        error is expected from the modification functions.
  */
-function checkLoginInvalid(aLoginInfo, aExpectedError)
-{
+function checkLoginInvalid(aLoginInfo, aExpectedError) {
   // Try to add the new login, and verify that no data is stored.
   Assert.throws(() => Services.logins.addLogin(aLoginInfo), aExpectedError);
   LoginTestUtils.checkLogins([]);
@@ -79,8 +78,7 @@ function compareAttributes(objectA, objectB, attributes) {
 /**
  * Tests that adding logins to the database works.
  */
-add_task(function test_addLogin_removeLogin()
-{
+add_task(function test_addLogin_removeLogin() {
   // Each login from the test data should be valid and added to the list.
   for (let loginInfo of TestData.loginList()) {
     Services.logins.addLogin(loginInfo);
@@ -109,8 +107,7 @@ add_task(function test_addLogin_removeLogin()
  * The legacy case of an empty string in formSubmitURL and a null value in
  * httpRealm is also supported for storage at the moment.
  */
-add_task(function test_invalid_httpRealm_formSubmitURL()
-{
+add_task(function test_invalid_httpRealm_formSubmitURL() {
   // httpRealm === null, formSubmitURL === null
   checkLoginInvalid(TestData.formLogin({ formSubmitURL: null }),
                     /without a httpRealm or formSubmitURL/);
@@ -144,8 +141,7 @@ add_task(function test_invalid_httpRealm_formSubmitURL()
 /**
  * Tests null or empty values in required login properties.
  */
-add_task(function test_missing_properties()
-{
+add_task(function test_missing_properties() {
   checkLoginInvalid(TestData.formLogin({ hostname: null }),
                     /null or empty hostname/);
 
@@ -165,8 +161,7 @@ add_task(function test_missing_properties()
 /**
  * Tests invalid NUL characters in nsILoginInfo properties.
  */
-add_task(function test_invalid_characters()
-{
+add_task(function test_invalid_characters() {
   let loginList = [
     TestData.authLogin({ hostname: "http://null\0X.example.com" }),
     TestData.authLogin({ httpRealm: "realm\0" }),
@@ -185,8 +180,7 @@ add_task(function test_invalid_characters()
 /**
  * Tests removing a login that does not exists.
  */
-add_task(function test_removeLogin_nonexisting()
-{
+add_task(function test_removeLogin_nonexisting() {
   Assert.throws(() => Services.logins.removeLogin(TestData.formLogin()),
                 /No matching logins/);
 });
@@ -194,8 +188,7 @@ add_task(function test_removeLogin_nonexisting()
 /**
  * Tests removing all logins at once.
  */
-add_task(function test_removeAllLogins()
-{
+add_task(function test_removeAllLogins() {
   for (let loginInfo of TestData.loginList()) {
     Services.logins.addLogin(loginInfo);
   }
@@ -209,8 +202,7 @@ add_task(function test_removeAllLogins()
 /**
  * Tests the modifyLogin function with an nsILoginInfo argument.
  */
-add_task(function test_modifyLogin_nsILoginInfo()
-{
+add_task(function test_modifyLogin_nsILoginInfo() {
   let loginInfo = TestData.formLogin();
   let updatedLoginInfo = TestData.formLogin({
     username: "new username",
@@ -243,8 +235,8 @@ add_task(function test_modifyLogin_nsILoginInfo()
 
   // Modifying a login to match an existing one should not be possible.
   Assert.throws(
-         () => Services.logins.modifyLogin(loginInfo, differentLoginInfo),
-         /already exists/);
+    () => Services.logins.modifyLogin(loginInfo, differentLoginInfo),
+    /already exists/);
   LoginTestUtils.checkLogins([loginInfo, differentLoginInfo]);
 
   LoginTestUtils.clearData();
@@ -253,8 +245,7 @@ add_task(function test_modifyLogin_nsILoginInfo()
 /**
  * Tests the modifyLogin function with an nsIPropertyBag argument.
  */
-add_task(function test_modifyLogin_nsIProperyBag()
-{
+add_task(function test_modifyLogin_nsIProperyBag() {
   let loginInfo = TestData.formLogin();
   let updatedLoginInfo = TestData.formLogin({
     username: "new username",
@@ -310,8 +301,8 @@ add_task(function test_modifyLogin_nsIProperyBag()
 
   // Modifying a login to match an existing one should not be possible.
   Assert.throws(
-         () => Services.logins.modifyLogin(loginInfo, differentLoginProperties),
-         /already exists/);
+    () => Services.logins.modifyLogin(loginInfo, differentLoginProperties),
+    /already exists/);
   LoginTestUtils.checkLogins([loginInfo, differentLoginInfo]);
 
   LoginTestUtils.clearData();

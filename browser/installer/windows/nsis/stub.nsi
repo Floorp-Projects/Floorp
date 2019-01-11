@@ -31,7 +31,6 @@ Var CheckboxSetAsDefault
 Var CheckboxShortcuts
 Var CheckboxSendPing
 Var CheckboxInstallMaintSvc
-Var DroplistArch
 Var LabelBlurb
 Var BgBitmapImage
 Var HwndBgBitmapControl
@@ -87,11 +86,15 @@ Var OpenedDownloadPage
 Var DownloadServerIP
 Var PostSigningData
 Var PreviousInstallDir
-Var PreviousInstallArch
 Var ProfileCleanupPromptType
 Var ProfileCleanupHeaderString
 Var ProfileCleanupButtonString
 Var AppLaunchWaitTickCount
+
+!define ARCH_X86 1
+!define ARCH_AMD64 2
+!define ARCH_AARCH64 3
+Var ArchToInstall
 
 ; Uncomment the following to prevent pinging the metrics server when testing
 ; the stub installer
@@ -241,10 +244,12 @@ Var AppLaunchWaitTickCount
 ; set the update channel to beta.
 !ifdef OFFICIAL
 !ifdef BETA_UPDATE_CHANNEL
-!undef URLStubDownload32
-!undef URLStubDownload64
-!define URLStubDownload32 "https://download.mozilla.org/?os=win&lang=${AB_CD}&product=firefox-beta-latest"
-!define URLStubDownload64 "https://download.mozilla.org/?os=win64&lang=${AB_CD}&product=firefox-beta-latest"
+!undef URLStubDownloadX86
+!undef URLStubDownloadAMD64
+!undef URLStubDownloadAArch64
+!define URLStubDownloadX86 "https://download.mozilla.org/?os=win&lang=${AB_CD}&product=firefox-beta-latest"
+!define URLStubDownloadAMD64 "https://download.mozilla.org/?os=win64&lang=${AB_CD}&product=firefox-beta-latest"
+!define URLStubDownloadAArch64 "https://download.mozilla.org/?os=win64-aarch64&lang=${AB_CD}&product=firefox-beta-latest"
 !undef URLManualDownload
 !define URLManualDownload "https://www.mozilla.org/${AB_CD}/firefox/installer-help/?channel=beta&installer_lang=${AB_CD}"
 !undef Channel
@@ -326,12 +331,11 @@ Function .onInit
     Quit
   ${EndIf}
 
-  Call ShouldInstall64Bit
-  ${If} $0 == 1
-    StrCpy $DroplistArch "$(VERSION_64BIT)"
+  Call GetArchToInstall
+  ${If} $ArchToInstall == ${ARCH_AARCH64}
+  ${OrIf} $ArchToInstall == ${ARCH_AMD64}
     StrCpy $INSTDIR "${DefaultInstDir64bit}"
   ${Else}
-    StrCpy $DroplistArch "$(VERSION_32BIT)"
     StrCpy $INSTDIR "${DefaultInstDir32bit}"
   ${EndIf}
 
@@ -345,16 +349,19 @@ Function .onInit
   ${GetSingleInstallPath} "Software\Mozilla\${BrandFullNameInternal}" $R9
 
   ${If} "$R9" == "false"
-  ${AndIf} ${RunningX64}
-    SetRegView 64
-    ${GetSingleInstallPath} "Software\Mozilla\${BrandFullNameInternal}" $R9
+    ${If} ${IsNativeAMD64}
+    ${OrIf} ${IsNativeARM64}
+      SetRegView 64
+      ${GetSingleInstallPath} "Software\Mozilla\${BrandFullNameInternal}" $R9
+    ${EndIf}
   ${EndIf}
 
   ${If} "$R9" == "false"
     SetShellVarContext current ; Set SHCTX to HKCU
     ${GetSingleInstallPath} "Software\Mozilla\${BrandFullNameInternal}" $R9
 
-    ${If} ${RunningX64}
+    ${If} ${IsNativeAMD64}
+    ${OrIf} ${IsNativeARM64}
       ; In HKCU there is no WOW64 redirection, which means we may have gotten
       ; the path to a 32-bit install even though we're 64-bit.
       ; In that case, just use the default path instead of offering an upgrade.
@@ -373,25 +380,23 @@ Function .onInit
   ${EndIf}
 
   StrCpy $PreviousInstallDir ""
-  StrCpy $PreviousInstallArch ""
   ${If} "$R9" != "false"
     ; Don't override the default install path with an existing installation
     ; of a different architecture.
-    System::Call "*(i)p.r0"
-    StrCpy $1 "$R9\${FileMainEXE}"
-    System::Call "Kernel32::GetBinaryTypeW(w r1, p r0)i"
-    System::Call "*$0(i.r2)"
-    System::Free $0
+    StrCpy $0 $R9
+    Call GetExistingInstallArch
 
-    ${If} $2 == "6" ; 6 == SCS_64BIT_BINARY
-    ${AndIf} ${RunningX64}
+    ${If} $0 == ${ARCH_X86}
+    ${AndIf} $ArchToInstall == ${ARCH_X86}
       StrCpy $PreviousInstallDir "$R9"
-      StrCpy $PreviousInstallArch "64"
       StrCpy $INSTDIR "$PreviousInstallDir"
-    ${ElseIf} $2 == "0" ; 0 == SCS_32BIT_BINARY
-    ${AndIfNot} ${RunningX64}
+    ${ElseIf} $0 == ${ARCH_AMD64}
+    ${AndIf} $ArchToInstall == ${ARCH_AMD64}
       StrCpy $PreviousInstallDir "$R9"
-      StrCpy $PreviousInstallArch "32"
+      StrCpy $INSTDIR "$PreviousInstallDir"
+    ${ElseIf} $0 == ${ARCH_AARCH64}
+    ${AndIf} $ArchToInstall == ${ARCH_AARCH64}
+      StrCpy $PreviousInstallDir "$R9"
       StrCpy $INSTDIR "$PreviousInstallDir"
     ${EndIf}
   ${EndIf}
@@ -902,12 +907,16 @@ FunctionEnd
 
 Function StartDownload
   ${NSD_KillTimer} StartDownload
-  ${If} $DroplistArch == "$(VERSION_64BIT)"
-    InetBgDL::Get "${URLStubDownload64}${URLStubDownloadAppend}" \
+  ${If} $ArchToInstall == ${ARCH_AMD64}
+    InetBgDL::Get "${URLStubDownloadAMD64}${URLStubDownloadAppend}" \
+                  "$PLUGINSDIR\download.exe" \
+                  /CONNECTTIMEOUT 120 /RECEIVETIMEOUT 120 /END
+  ${ElseIf} $ArchToInstall == ${ARCH_AARCH64}
+    InetBgDL::Get "${URLStubDownloadAArch64}${URLStubDownloadAppend}" \
                   "$PLUGINSDIR\download.exe" \
                   /CONNECTTIMEOUT 120 /RECEIVETIMEOUT 120 /END
   ${Else}
-    InetBgDL::Get "${URLStubDownload32}${URLStubDownloadAppend}" \
+    InetBgDL::Get "${URLStubDownloadX86}${URLStubDownloadAppend}" \
                   "$PLUGINSDIR\download.exe" \
                   /CONNECTTIMEOUT 120 /RECEIVETIMEOUT 120 /END
   ${EndIf}
@@ -1293,13 +1302,15 @@ Function SendPing
     ; completion of all phases.
     ${GetSecondsElapsed} "$EndInstallPhaseTickCount" "$EndFinishPhaseTickCount" $4
 
-    ${If} $DroplistArch == "$(VERSION_64BIT)"
+    ${If} $ArchToInstall == ${ARCH_AMD64}
+    ${OrIf} $ArchToInstall == ${ARCH_AARCH64}
       StrCpy $R0 "1"
     ${Else}
       StrCpy $R0 "0"
     ${EndIf}
 
-    ${If} ${RunningX64}
+    ${If} ${IsNativeAMD64}
+    ${OrIf} ${IsNativeARM64}
       StrCpy $R1 "1"
     ${Else}
       StrCpy $R1 "0"
@@ -1759,7 +1770,8 @@ Function ShouldPromptForProfileCleanup
   StrCpy $ProfileCleanupPromptType 0
 
   ; Only consider installations of the same architecture we're installing.
-  ${If} $DroplistArch == "$(VERSION_64BIT)"
+  ${If} $ArchToInstall == ${ARCH_AMD64}
+  ${OrIf} $ArchToInstall == ${ARCH_AARCH64}
     SetRegView 64
   ${Else}
     SetRegView 32
@@ -1910,16 +1922,59 @@ Function GetLatestReleasedVersion
   end:
 FunctionEnd
 
-; Returns 1 in $0 if we should install the 64-bit build, or 0 if not.
-; The requirements for selecting the 64-bit build to install are:
+Function GetExistingInstallArch
+  StrCpy $0 "unknown"
+
+  ClearErrors
+  FileOpen $R1 "$0\install.log" r
+  ${If} ${Errors}
+    Return
+  ${EndIf}
+
+  ${Do}
+    ClearErrors
+    FileReadUTF16LE $R1 $R2
+    ${If} ${Errors}
+      ${Break}
+    ${EndIf}
+
+    ClearErrors
+    ${WordFind} "$R2" "Target CPU : " "E+1}" $R3
+    ${If} ${Errors}
+      ${Continue}
+    ${EndIf}
+
+    ${TrimNewLines} "$R3" $R3
+    ${If} $R3 == "x86"
+      StrCpy $0 ${ARCH_X86}
+    ${ElseIf} $R3 == "x64"
+      StrCpy $0 ${ARCH_AMD64}
+    ${ElseIf} $R3 == "AArch64"
+      StrCpy $0 ${ARCH_AARCH64}
+    ${EndIf}
+    ${Break}
+  ${Loop}
+
+  FileClose $R1
+FunctionEnd
+
+; Determine which architecture build we should download and install.
+; AArch64 is always selected if it's the native architecture of the machine.
+; Otherwise, we check a few things to determine if AMD64 is appropriate:
 ; 1) Running a 64-bit OS (we've already checked the OS version).
 ; 2) An amount of RAM strictly greater than RAM_NEEDED_FOR_64BIT
 ; 3) No third-party products installed that cause issues with the 64-bit build.
 ;    Currently this includes Lenovo OneKey Theater and Lenovo Energy Management.
-Function ShouldInstall64Bit
-  StrCpy $0 0
+; If any of those checks fail, the 32-bit x86 build is selected.
+Function GetArchToInstall
+  StrCpy $ArchToInstall ${ARCH_X86}
 
-  ${IfNot} ${RunningX64}
+  ${If} ${IsNativeARM64}
+    StrCpy $ArchToInstall ${ARCH_AARCH64}
+    Return
+  ${EndIf}
+
+  ${IfNot} ${IsNativeAMD64}
     Return
   ${EndIf}
 
@@ -1941,7 +1996,7 @@ Function ShouldInstall64Bit
     Return
   ${EndIf}
 
-  StrCpy $0 1
+  StrCpy $ArchToInstall ${ARCH_AMD64}
 FunctionEnd
 
 Section

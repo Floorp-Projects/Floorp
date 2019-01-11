@@ -63,11 +63,15 @@ class WorkersPanel extends Component {
       front.on("workerListChanged", this.updateWorkers);
       this.state.contentProcessFronts.push(front);
     });
+    client.mainRoot.onFront("serviceWorkerRegistration", front => {
+      this.state.serviceWorkerRegistrationFronts.push(front);
+      front.on("push-subscription-modified", this.updateWorkers);
+      front.on("registration-changed", this.updateWorkers);
+    });
     client.mainRoot.on("workerListChanged", this.updateWorkers);
 
     client.mainRoot.on("serviceWorkerRegistrationListChanged", this.updateWorkers);
     client.mainRoot.on("processListChanged", this.updateWorkers);
-    client.addListener("registration-changed", this.updateWorkers);
 
     addMultiE10sListener(this.updateMultiE10S);
 
@@ -83,7 +87,10 @@ class WorkersPanel extends Component {
     for (const front of this.state.contentProcessFronts) {
       front.off("workerListChanged", this.updateWorkers);
     }
-    client.removeListener("registration-changed", this.updateWorkers);
+    for (const front of this.state.serviceWorkerRegistrationFronts) {
+      front.off("push-subscription-modified", this.updateWorkers);
+      front.off("registration-changed", this.updateWorkers);
+    }
 
     removeMultiE10sListener(this.updateMultiE10S);
   }
@@ -100,6 +107,7 @@ class WorkersPanel extends Component {
       // List of ContentProcessTargetFront registered from componentWillMount
       // from which we listen for worker list changes
       contentProcessFronts: [],
+      serviceWorkerRegistrationFronts: [],
     };
   }
 

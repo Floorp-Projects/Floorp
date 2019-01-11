@@ -48,7 +48,7 @@ function toComponentData(workers, isServiceWorker) {
     let { fetch } = worker;
     const {
       name,
-      registrationActor,
+      registrationFront,
       scope,
       subscription,
       workerTargetFront,
@@ -57,7 +57,7 @@ function toComponentData(workers, isServiceWorker) {
     // For registering service workers, workerTargetFront will not be available.
     // The only valid identifier we can use at that point is the actorID for the
     // service worker registration.
-    const id = workerTargetFront ? workerTargetFront.actorID : registrationActor;
+    const id = workerTargetFront ? workerTargetFront.actorID : registrationFront.actorID;
 
     let isActive = false;
     let isRunning = false;
@@ -79,7 +79,7 @@ function toComponentData(workers, isServiceWorker) {
         isActive,
         isRunning,
         pushServiceEndpoint,
-        registrationActor,
+        registrationFront,
         scope,
         status,
       },

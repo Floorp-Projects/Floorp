@@ -22,7 +22,6 @@ def developer_options(value):
 add_old_configure_assignment('DEVELOPER_OPTIONS', developer_options)
 set_config('DEVELOPER_OPTIONS', developer_options)
 
-
 # Code optimization
 # ==============================================================
 
@@ -375,9 +374,6 @@ def compiler_wrapper(wrapper, ccache):
             return (ccache,)
     elif wrapper:
         return tuple(wrapper)
-
-
-add_old_configure_assignment('COMPILER_WRAPPER', compiler_wrapper)
 
 
 @depends_if(compiler_wrapper)
@@ -751,14 +747,27 @@ def vc_compiler_path(host, target, vs_major_version, env, vs_release_name):
     return paths
 
 
-@depends(vc_compiler_path)
+@dependable
 @imports('os')
 @imports(_from='os', _import='environ')
-def toolchain_search_path(vc_compiler_path):
-    result = [environ.get('PATH')]
+def original_path():
+    return environ['PATH'].split(os.pathsep)
+
+
+@depends(vc_compiler_path, original_path)
+@imports('os')
+@imports(_from='os', _import='environ')
+def toolchain_search_path(vc_compiler_path, original_path):
+    result = list(original_path)
 
     if vc_compiler_path:
-        result.extend(vc_compiler_path)
+        # The second item, if there is one, is necessary to have in $PATH for
+        # Windows to load the required DLLs from there.
+        if len(vc_compiler_path) > 1:
+            environ['PATH'] = os.pathsep.join(result + vc_compiler_path[1:])
+
+        # The first item is where the programs are going to be
+        result.append(vc_compiler_path[0])
 
     # Also add in the location to which `mach bootstrap` or
     # `mach artifact toolchain` installs clang.
@@ -770,13 +779,24 @@ def toolchain_search_path(vc_compiler_path):
     bootstrap_cbindgen_path = os.path.join(mozbuild_state_dir, 'cbindgen')
     result.append(bootstrap_cbindgen_path)
 
-    if vc_compiler_path:
-        # We're going to alter PATH for good in windows.configure, but we also
-        # need to do it for the valid_compiler() check below. This is only needed
-        # on Windows, where MSVC needs PATH set to find dlls.
-        environ['PATH'] = os.pathsep.join(result)
-
     return result
+
+
+# As a workaround until bug 1516228 and bug 1516253 are fixed, set the PATH
+# variable for the build to contain the toolchain search path.
+@depends(toolchain_search_path)
+@imports('os')
+@imports(_from='os', _import='environ')
+def altered_path(toolchain_search_path):
+    path = environ['PATH'].split(os.pathsep)
+    altered_path = list(toolchain_search_path)
+    for p in path:
+        if p not in altered_path:
+            altered_path.append(p)
+    return os.pathsep.join(altered_path)
+
+
+set_config('PATH', altered_path)
 
 
 @template
@@ -992,26 +1012,6 @@ def compiler(language, host_or_target, c_compiler=None, other_compiler=None,
 
         if not flags and macos_sdk and host_or_target.os == 'OSX':
             flags = ['-isysroot', macos_sdk]
-
-        # Ideally, we'd always use the absolute path, but unfortunately, on
-        # Windows, the compiler is very often in a directory containing spaces.
-        # Unfortunately, due to the way autoconf does its compiler tests with
-        # eval, that doesn't work out. So in that case, check that the
-        # compiler can still be found in $PATH, and use the file name instead
-        # of the full path.
-        if quote(compiler) != compiler:
-            full_path = os.path.abspath(compiler)
-            compiler = os.path.basename(compiler)
-            found_compiler = find_program(compiler)
-            if not found_compiler:
-                die('%s is not in your $PATH'
-                    % quote(os.path.dirname(full_path)))
-            if os.path.normcase(find_program(compiler)) != os.path.normcase(
-                    full_path):
-                die('Found `%s` before `%s` in your $PATH. '
-                    'Please reorder your $PATH.',
-                    quote(os.path.dirname(found_compiler)),
-                    quote(os.path.dirname(full_path)))
 
         info = check_compiler(wrapper + [compiler] + flags, language,
                               host_or_target)
@@ -1482,6 +1482,55 @@ def is_windows(target, host):
 
 include('windows.configure', when=is_windows)
 
+# PGO
+# ==============================================================
+llvm_profdata = check_prog('LLVM_PROFDATA', ['llvm-profdata'],
+                           allow_missing=True,
+                           paths=toolchain_search_path)
+
+js_option('--enable-profile-generate',
+          help='Build a PGO instrumented binary')
+
+imply_option('MOZ_PGO',
+             depends_if('--enable-profile-generate')(lambda _: True))
+
+set_config('MOZ_PROFILE_GENERATE',
+           depends_if('--enable-profile-generate')(lambda _: True))
+
+js_option('--enable-profile-use',
+          help='Use a generated profile during the build')
+
+js_option('--with-pgo-profile-path',
+          help='Path to the (unmerged) profile path to use during the build',
+          nargs=1)
+
+imply_option('MOZ_PGO',
+             depends_if('--enable-profile-use')(lambda _: True))
+
+set_config('MOZ_PROFILE_USE',
+           depends_if('--enable-profile-use')(lambda _: True))
+
+
+@depends('--with-pgo-profile-path', '--enable-profile-use', 'LLVM_PROFDATA')
+def pgo_profile_path(path, pgo_use, profdata):
+    if not path:
+        return
+    if path and not pgo_use:
+        die('Pass --enable-profile-use to use --with-pgo-profile-path.')
+    if path and not profdata:
+        die('LLVM_PROFDATA must be set to process the pgo profile.')
+    return path[0]
+
+
+set_config('PGO_PROFILE_PATH', pgo_profile_path)
+
+option('--with-pgo-jarlog',
+       help='Use the provided jarlog file when packaging during a profile-use '
+            'build',
+       nargs=1)
+
+set_config('PGO_JARLOG_PATH', depends_if('--with-pgo-jarlog')(lambda p: p))
+
 # LTO
 # ==============================================================
 
@@ -1946,7 +1995,8 @@ def as_info(target, c_compiler):
 # `provided_compiler`.
 provided_assembler = provided_program('AS')
 assembler = check_prog('_AS', input=provided_assembler.program,
-                       what='the assembler', progs=as_info.names)
+                       what='the assembler', progs=as_info.names,
+                       paths=toolchain_search_path)
 
 @depends(as_info, assembler, provided_assembler, c_compiler)
 def as_with_flags(as_info, assembler, provided_assembler, c_compiler):

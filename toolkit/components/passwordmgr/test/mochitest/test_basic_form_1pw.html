@@ -137,29 +137,29 @@ runChecksAfterCommonInit(() => startTest());
 /** Test for Login Manager: simple form fill **/
 
 function startTest() {
-    var f = 1;
+  var f = 1;
 
-    // 1-3
-    checkForm(f++, "testpass");
-    checkForm(f++, "testpass");
-    checkForm(f++, "xxxxxxxx");
+  // 1-3
+  checkForm(f++, "testpass");
+  checkForm(f++, "testpass");
+  checkForm(f++, "xxxxxxxx");
 
-    // 4-8
-    checkForm(f++, "testuser", "testpass");
-    checkForm(f++, "testuser", "testpass");
-    checkForm(f++, "xxxxxxxx", "");
-    checkForm(f++, "", "testpass");
-    checkForm(f++, "", "xxxxxxxx");
+  // 4-8
+  checkForm(f++, "testuser", "testpass");
+  checkForm(f++, "testuser", "testpass");
+  checkForm(f++, "xxxxxxxx", "");
+  checkForm(f++, "", "testpass");
+  checkForm(f++, "", "xxxxxxxx");
 
-    // 9-14
-    checkForm(f++, "testpass", "");
-    checkForm(f++, "", "testuser", "testpass");
-    checkForm(f++, "testuser", "testpass", "");
-    checkForm(f++, "testpass", "xxxxxxxx");
-    checkForm(f++, "xxxxxxxx", "testuser", "testpass");
-    checkForm(f++, "testuser", "testpass", "xxxxxxxx");
+  // 9-14
+  checkForm(f++, "testpass", "");
+  checkForm(f++, "", "testuser", "testpass");
+  checkForm(f++, "testuser", "testpass", "");
+  checkForm(f++, "testpass", "xxxxxxxx");
+  checkForm(f++, "xxxxxxxx", "testuser", "testpass");
+  checkForm(f++, "testuser", "testpass", "xxxxxxxx");
 
-    SimpleTest.finish();
+  SimpleTest.finish();
 }
 </script>
 </pre>

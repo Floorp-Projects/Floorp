@@ -203,16 +203,12 @@ function requestWorkers() {
       } = await clientWrapper.listWorkers();
 
       for (const serviceWorker of serviceWorkers) {
-        const { registrationActor } = serviceWorker;
-        if (!registrationActor) {
+        const { registrationFront } = serviceWorker;
+        if (!registrationFront) {
           continue;
         }
 
-        const { subscription } = await clientWrapper.request({
-          to: registrationActor,
-          type: "getPushSubscription",
-        });
-
+        const subscription = await registrationFront.getPushSubscription();
         serviceWorker.subscription = subscription;
       }
 
@@ -228,12 +224,10 @@ function requestWorkers() {
   };
 }
 
-function startServiceWorker(actor) {
+function startServiceWorker(registrationFront) {
   return async (_, getState) => {
-    const clientWrapper = getCurrentClient(getState().runtimes);
-
     try {
-      await clientWrapper.request({ to: actor, type: "start" });
+      await registrationFront.start();
     } catch (e) {
       console.error(e);
     }

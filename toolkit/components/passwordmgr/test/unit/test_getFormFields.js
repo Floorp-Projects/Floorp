@@ -31,6 +31,18 @@ const TESTCASES = [
     skipEmptyFields: undefined,
   },
   {
+    beforeGetFunction(doc, formLike) {
+      // Access the formLike.elements lazy getter to have it cached.
+      Assert.equal(formLike.elements.length, 2, "Check initial elements length");
+      doc.getElementById("un1").remove();
+    },
+    description: "1 username & password field outside of a <form>, un1 removed",
+    document: `<input id="un1">
+      <input id="pw1" type=password>`,
+    returnedFieldIDs: [null, "pw1", null],
+    skipEmptyFields: undefined,
+  },
+  {
     description: "1 username & password field in a <form>",
     document: `<form>
       <input id="un1">
@@ -118,12 +130,16 @@ for (let tc of TESTCASES) {
     add_task(async function() {
       info("Starting testcase: " + testcase.description);
       let document = MockDocument.createTestDocument("http://localhost:8080/test/",
-                                                      testcase.document);
+                                                     testcase.document);
 
       let input = document.querySelector("input");
       MockDocument.mockOwnerDocumentProperty(input, document, "http://localhost:8080/test/");
 
       let formLike = LoginFormFactory.createFromField(input);
+
+      if (testcase.beforeGetFunction) {
+        await testcase.beforeGetFunction(document, formLike);
+      }
 
       let actual = LoginManagerContent._getFormFields(formLike,
                                                       testcase.skipEmptyFields,

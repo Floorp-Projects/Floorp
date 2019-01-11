@@ -29,10 +29,11 @@ SimpleTest.waitForExplicitFinish();
 
 function doxhr(URL, user, pass, next) {
   var xhr = new XMLHttpRequest();
-  if (user && pass)
+  if (user && pass) {
     xhr.open("POST", URL, true, user, pass);
-  else
+  } else {
     xhr.open("POST", URL, true);
+  }
   xhr.onload = function() {
     is(xhr.status, 200, "Got status 200");
     next();

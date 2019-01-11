@@ -22,7 +22,7 @@ const { Pool } = require("devtools/shared/protocol");
 const { assert } = require("devtools/shared/DevToolsUtils");
 const { TabSources } = require("devtools/server/actors/utils/TabSources");
 
-loader.lazyRequireGetter(this, "WorkerTargetActorList", "devtools/server/actors/worker/worker-list", true);
+loader.lazyRequireGetter(this, "WorkerTargetActorList", "devtools/server/actors/worker/worker-target-actor-list", true);
 loader.lazyRequireGetter(this, "MemoryActor", "devtools/server/actors/memory", true);
 loader.lazyRequireGetter(this, "PromisesActor", "devtools/server/actors/promises", true);
 

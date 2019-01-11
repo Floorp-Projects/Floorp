@@ -10,6 +10,8 @@ use api::{CaptureBits, ExternalImageData, ImageDescriptor, TexelRect};
 use device::ReadPixelsFormat;
 #[cfg(feature = "png")]
 use api::DeviceIntSize;
+#[cfg(feature = "capture")]
+use print_tree::{PrintableTree, PrintTree};
 use ron;
 use serde;
 
@@ -53,6 +55,21 @@ impl CaptureConfig {
             .unwrap();
         write!(file, "{}\n", ron)
             .unwrap();
+    }
+
+    #[cfg(feature = "capture")]
+    pub fn serialize_tree<T, P>(&self, data: &T, name: P)
+    where
+        T: PrintableTree,
+        P: AsRef<Path>
+    {
+        let path = self.root
+            .join(name)
+            .with_extension("tree");
+        let file = File::create(path)
+            .unwrap();
+        let mut pt = PrintTree::new_with_sink("", file);
+        data.print_with(&mut pt);
     }
 
     #[cfg(feature = "replay")]

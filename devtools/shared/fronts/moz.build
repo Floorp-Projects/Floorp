@@ -8,6 +8,7 @@ DIRS += [
     'addon',
     'inspector',
     'targets',
+    'worker',
 ]
 
 DevToolsModules(

@@ -7,7 +7,7 @@ use api::{PipelineId, ScrollClamping, ScrollNodeState, ScrollLocation, ScrollSen
 use api::{LayoutSize, LayoutTransform, PropertyBinding, TransformStyle, WorldPoint};
 use gpu_types::TransformPalette;
 use internal_types::{FastHashMap, FastHashSet};
-use print_tree::{PrintTree, PrintTreePrinter};
+use print_tree::{PrintableTree, PrintTree, PrintTreePrinter};
 use scene::SceneProperties;
 use smallvec::SmallVec;
 use spatial_node::{ScrollFrameInfo, SpatialNode, SpatialNodeType, StickyFrameInfo, ScrollFrameKind};
@@ -442,12 +442,6 @@ impl ClipScrollTree {
         }
     }
 
-    pub fn print_with<T: PrintTreePrinter>(&self, pt: &mut T) {
-        if !self.spatial_nodes.is_empty() {
-            self.print_node(self.root_reference_frame_index(), pt);
-        }
-    }
-
     /// Return true if this is a guaranteed identity transform. This
     /// is conservative, it assumes not identity if a property
     /// binding animation, or scroll frame is found, for example.
@@ -493,6 +487,14 @@ impl ClipScrollTree {
         }
 
         true
+    }
+}
+
+impl PrintableTree for ClipScrollTree {
+    fn print_with<T: PrintTreePrinter>(&self, pt: &mut T) {
+        if !self.spatial_nodes.is_empty() {
+            self.print_node(self.root_reference_frame_index(), pt);
+        }
     }
 }
 

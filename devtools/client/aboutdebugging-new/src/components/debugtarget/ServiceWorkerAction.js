@@ -40,7 +40,7 @@ class ServiceWorkerAction extends PureComponent {
 
   start() {
     const { dispatch, target } = this.props;
-    dispatch(Actions.startServiceWorker(target.details.registrationActor));
+    dispatch(Actions.startServiceWorker(target.details.registrationFront));
   }
 
   _renderAction() {

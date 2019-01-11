@@ -43,8 +43,7 @@
  * Adds a login with an empty formSubmitURL, then it verifies that no other
  * form logins can be added for the same host.
  */
-add_task(function test_addLogin_wildcard()
-{
+add_task(function test_addLogin_wildcard() {
   let loginInfo = TestData.formLogin({ hostname: "http://any.example.com",
                                        formSubmitURL: "" });
   Services.logins.addLogin(loginInfo);
@@ -67,8 +66,7 @@ add_task(function test_addLogin_wildcard()
  * that have an empty formSubmitURL in the store, even when a formSubmitURL is
  * specified.
  */
-add_task(function test_search_all_wildcard()
-{
+add_task(function test_search_all_wildcard() {
   // Search a given formSubmitURL on any host.
   let matchData = newPropertyBag({ formSubmitURL: "http://www.example.com" });
   Assert.equal(Services.logins.searchLogins({}, matchData).length, 2);
@@ -84,8 +82,8 @@ add_task(function test_search_all_wildcard()
   Assert.equal(Services.logins.searchLogins({}, matchData).length, 1);
 
   Assert.equal(Services.logins.findLogins({}, "http://any.example.com",
-                                              "http://www.example.com",
-                                              null).length, 1);
+                                          "http://www.example.com",
+                                          null).length, 1);
 
   Assert.equal(Services.logins.countLogins("http://any.example.com",
                                            "http://www.example.com",
@@ -96,10 +94,9 @@ add_task(function test_search_all_wildcard()
  * Verifies that specifying an empty string for formSubmitURL in searchLogins
  * includes only logins that have an empty formSubmitURL in the store.
  */
-add_task(function test_searchLogins_wildcard()
-{
+add_task(function test_searchLogins_wildcard() {
   let logins = Services.logins.searchLogins({},
-                               newPropertyBag({ formSubmitURL: "" }));
+                                            newPropertyBag({ formSubmitURL: "" }));
 
   let loginInfo = TestData.formLogin({ hostname: "http://any.example.com",
                                        formSubmitURL: "" });

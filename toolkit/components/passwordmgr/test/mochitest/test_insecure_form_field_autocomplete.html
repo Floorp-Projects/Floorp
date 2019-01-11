@@ -766,7 +766,7 @@ add_task(async function test_form9_filtering() {
 
   checkACForm("form9userAAB", "");
   checkArrayValues(results, ["This connection is not secure. Logins entered here could be compromised. Learn More", "form9userAAB"],
-                            "Check dropdown is updated after inserting 'A'");
+                   "Check dropdown is updated after inserting 'A'");
   synthesizeKey("KEY_ArrowDown"); // skip insecure warning
   synthesizeKey("KEY_ArrowDown");
   synthesizeKey("KEY_Enter");

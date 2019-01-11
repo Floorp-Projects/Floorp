@@ -1348,7 +1348,8 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
                     MutableHandleAtom propAtom);
   UnaryNodeType computedPropertyName(
       YieldHandling yieldHandling,
-      const mozilla::Maybe<DeclarationKind>& maybeDecl, ListNodeType literal);
+      const mozilla::Maybe<DeclarationKind>& maybeDecl,
+      PropertyNameContext propertyNameContext, ListNodeType literal);
   ListNodeType arrayInitializer(YieldHandling yieldHandling,
                                 PossibleError* possibleError);
   inline RegExpLiteralType newRegExp();

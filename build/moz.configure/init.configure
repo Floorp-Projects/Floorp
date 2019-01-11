@@ -851,15 +851,9 @@ def target_variables(target):
         os_target = target.os
         os_arch = target.kernel
 
-    if target.kernel == 'Darwin' and target.cpu == 'x86':
-        os_test = 'i386'
-    else:
-        os_test = target.raw_cpu
-
     return namespace(
         OS_TARGET=os_target,
         OS_ARCH=os_arch,
-        OS_TEST=os_test,
         INTEL_ARCHITECTURE=target.cpu in ('x86', 'x86_64') or None,
     )
 
@@ -870,9 +864,6 @@ add_old_configure_assignment('OS_TARGET',
 set_config('OS_ARCH', target_variables.OS_ARCH)
 add_old_configure_assignment('OS_ARCH',
                              target_variables.OS_ARCH)
-set_config('OS_TEST', target_variables.OS_TEST)
-add_old_configure_assignment('OS_TEST',
-                             target_variables.OS_TEST)
 set_config('CPU_ARCH', target.cpu)
 add_old_configure_assignment('CPU_ARCH', target.cpu)
 set_config('INTEL_ARCHITECTURE', target_variables.INTEL_ARCHITECTURE)
@@ -1142,7 +1133,6 @@ def milestone(build_env, build_project, _):
 set_config('GRE_MILESTONE', milestone.version)
 set_config('NIGHTLY_BUILD', milestone.is_nightly)
 set_define('NIGHTLY_BUILD', milestone.is_nightly)
-add_old_configure_assignment('NIGHTLY_BUILD', milestone.is_nightly)
 set_config('RELEASE_OR_BETA', milestone.is_release_or_beta)
 set_define('RELEASE_OR_BETA', milestone.is_release_or_beta)
 add_old_configure_assignment('RELEASE_OR_BETA',

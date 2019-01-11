@@ -87,20 +87,22 @@ runChecksAfterCommonInit(() => startTest());
 /** Test for Login Manager: simple form fill, part 2 **/
 
 function startTest() {
-    var f;
+  var f;
 
-    // Test various combinations of disabled/readonly inputs
-    checkForm(1, "testpass"); // control
-    checkUnmodifiedForm(2);
-    checkUnmodifiedForm(3);
-    checkForm(4, "testuser", "testpass"); // control
-    for (f = 5; f <= 8; f++) { checkUnmodifiedForm(f); }
-    // Test case-insensitive comparison of username field
-    checkForm(9, "testuser", "testpass");
-    checkForm(10, "TESTUSER", "testpass");
-    checkForm(11, "TESTUSER", "testpass");
+  // Test various combinations of disabled/readonly inputs
+  checkForm(1, "testpass"); // control
+  checkUnmodifiedForm(2);
+  checkUnmodifiedForm(3);
+  checkForm(4, "testuser", "testpass"); // control
+  for (f = 5; f <= 8; f++) {
+    checkUnmodifiedForm(f);
+  }
+  // Test case-insensitive comparison of username field
+  checkForm(9, "testuser", "testpass");
+  checkForm(10, "TESTUSER", "testpass");
+  checkForm(11, "TESTUSER", "testpass");
 
-    SimpleTest.finish();
+  SimpleTest.finish();
 }
 </script>
 </pre>
