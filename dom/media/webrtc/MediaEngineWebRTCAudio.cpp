@@ -520,9 +520,6 @@ void MediaEngineWebRTCMicrophoneSource::SetTrack(
   aStream->AddAudioTrack(aTrackID, aStream->GraphRate(), segment,
                          SourceMediaStream::ADDTRACK_QUEUED);
 
-  mInputProcessing = new AudioInputProcessing(mDeviceMaxChannelCount, mStream,
-                                              mTrackID, mPrincipal);
-
   LOG("Stream %p registered for microphone capture", aStream.get());
 }
 
@@ -568,6 +565,9 @@ nsresult MediaEngineWebRTCMicrophoneSource::Start(
     // because we can only have one MSG per document.
     return NS_ERROR_FAILURE;
   }
+
+  mInputProcessing = new AudioInputProcessing(mDeviceMaxChannelCount, mStream,
+                                              mTrackID, mPrincipal);
 
   RefPtr<MediaEngineWebRTCMicrophoneSource> that = this;
   NS_DispatchToMainThread(media::NewRunnableFrom(
