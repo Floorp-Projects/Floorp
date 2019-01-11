@@ -351,7 +351,7 @@ MP4Metadata::ResultAndTrackInfo MP4Metadata::GetTrackInfo(
       }
       auto track = mozilla::MakeUnique<MP4AudioInfo>();
       MediaResult updateStatus = track->Update(&info, &audio);
-      if (updateStatus != NS_OK) {
+      if (NS_FAILED(updateStatus)) {
         MOZ_LOG(gMP4MetadataLog, LogLevel::Warning,
                 ("Updating audio track failed with %s",
                  updateStatus.Message().get()));
@@ -378,7 +378,7 @@ MP4Metadata::ResultAndTrackInfo MP4Metadata::GetTrackInfo(
       }
       auto track = mozilla::MakeUnique<MP4VideoInfo>();
       MediaResult updateStatus = track->Update(&info, &video);
-      if (updateStatus != NS_OK) {
+      if (NS_FAILED(updateStatus)) {
         MOZ_LOG(gMP4MetadataLog, LogLevel::Warning,
                 ("Updating video track failed with %s",
                  updateStatus.Message().get()));
