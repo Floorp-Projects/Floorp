@@ -1303,7 +1303,6 @@ with only_when(compile_environment):
     fxc = check_prog('FXC', ('fxc.exe', 'fxc2.exe'), when=depends(target)
                      (lambda t: t.kernel == 'WINNT'),
                      paths=sdk_bin_path)
-    add_old_configure_assignment('FXC', fxc)
     wine = check_prog('WINE', ['wine'], when=depends(target, host)
                       (lambda t, h: t.kernel == 'WINNT' and h.kernel == 'Linux'))
 
@@ -1541,3 +1540,44 @@ def valid_yasm_version(yasm_version, for_vpx, for_jpeg, for_libav):
         if yasm_version < version:
             die('Yasm version %s or greater is required to build with %s.'
                 % (version, what))
+
+
+# ANGLE OpenGL->D3D translator for WebGL
+# ==============================================================
+
+with only_when(compile_environment & target_is_windows):
+    def d3d_compiler_dll_result(value):
+        if not value.path:
+            return 'provided by the OS'
+        return value.path
+
+    @depends(target, valid_windows_sdk_dir, fxc)
+    @checking('for D3D compiler DLL', d3d_compiler_dll_result)
+    @imports('os.path')
+    def d3d_compiler_dll(target, windows_sdk_dir, fxc):
+        suffix = {
+            'x86_64': 'x64',
+        }.get(target.cpu, target.cpu)
+
+        name = 'd3dcompiler_47.dll'
+
+        if target.cpu == 'aarch64':
+            # AArch64 Windows comes with d3dcompiler_47.dll installed
+            return namespace(name=name, path=None)
+
+        if windows_sdk_dir:
+            path = os.path.join(windows_sdk_dir.path, 'Redist', 'D3D', suffix, name)
+            error_extra = 'in Windows SDK at {}'.format(windows_sdk_dir.path)
+        else:
+            path = os.path.join(os.path.dirname(fxc), name)
+            error_extra = 'alongside FXC at {}'.format(fxc)
+
+        if os.path.exists(path):
+            return namespace(name=name, path=path)
+        die('Could not find {} {}'.format(name, error_extra))
+
+
+    set_config('MOZ_ANGLE_RENDERER', True)
+    set_config('MOZ_D3DCOMPILER_VISTA_DLL', d3d_compiler_dll.name,
+               when=d3d_compiler_dll.path)
+    set_config('MOZ_D3DCOMPILER_VISTA_DLL_PATH', d3d_compiler_dll.path)

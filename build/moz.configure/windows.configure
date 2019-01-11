@@ -156,15 +156,6 @@ def valid_windows_sdk_dir(compiler, windows_sdk_dir, target_version,
     )
 
 
-add_old_configure_assignment(
-    'WINDOWSSDKDIR',
-    valid_windows_sdk_dir.path)
-add_old_configure_assignment(
-    'MOZ_WINSDK_MAXVER',
-    depends(valid_windows_sdk_dir)(
-        lambda x: '0x%04X0000' % x.version if x else None))
-
-
 @imports(_from='mozbuild.shellutil', _import='quote')
 def valid_ucrt_sdk_dir_result(value):
     if value:
