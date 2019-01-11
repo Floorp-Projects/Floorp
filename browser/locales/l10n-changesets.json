@@ -1345,7 +1345,7 @@
             "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
-        "revision": "dce23c0d4083"
+        "revision": "f84f2e89352f"
     },
     "ru": {
         "platforms": [
