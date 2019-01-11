@@ -8,6 +8,7 @@
 #include "VRGPUParent.h"
 #include "VRManager.h"
 #include "gfxConfig.h"
+#include "nsDebugImpl.h"
 
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/ipc/ProcessChild.h"
@@ -96,6 +97,9 @@ void VRParent::ActorDestroy(ActorDestroyReason aWhy) {
     NS_WARNING("Shutting down VR process early due to a crash!");
     ProcessChild::QuickExit();
   }
+  if (!mVRGPUParent->IsClosed()) {
+    mVRGPUParent->Close();
+  }
 
   mVRGPUParent = nullptr;
 #if defined(XP_WIN)
@@ -122,6 +126,8 @@ bool VRParent::Init(base::ProcessId aParentPid, const char* aParentBuildID,
   if (NS_WARN_IF(!Open(aChannel, aParentPid, aIOLoop))) {
     return false;
   }
+
+  nsDebugImpl::SetMultiprocessMode("VR");
 
   // This must be checked before any IPDL message, which may hit sentinel
   // errors due to parent and content processes having different

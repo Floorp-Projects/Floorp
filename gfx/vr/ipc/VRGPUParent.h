@@ -19,6 +19,7 @@ class VRGPUParent final : public PVRGPUParent {
  public:
   static RefPtr<VRGPUParent> CreateForGPU(Endpoint<PVRGPUParent>&& aEndpoint);
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
+  bool IsClosed();
 
  protected:
 
@@ -36,6 +37,8 @@ class VRGPUParent final : public PVRGPUParent {
 #if !defined(MOZ_WIDGET_ANDROID)
   RefPtr<VRService> mVRService;
 #endif
+  bool mClosed;
+
   DISALLOW_COPY_AND_ASSIGN(VRGPUParent);
 };
 

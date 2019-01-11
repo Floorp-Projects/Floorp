@@ -13,7 +13,8 @@ namespace gfx {
 
 using namespace ipc;
 
-VRGPUParent::VRGPUParent(ProcessId aChildProcessId) {
+VRGPUParent::VRGPUParent(ProcessId aChildProcessId)
+ : mClosed(false) {
   MOZ_COUNT_CTOR(VRGPUParent);
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -32,6 +33,7 @@ void VRGPUParent::ActorDestroy(ActorDestroyReason aWhy) {
   }
 #endif
 
+  mClosed = true;
   MessageLoop::current()->PostTask(
       NewRunnableMethod("gfx::VRGPUParent::DeferredDestroy", this,
                         &VRGPUParent::DeferredDestroy));
@@ -45,7 +47,7 @@ void VRGPUParent::DeferredDestroy() { mSelfRef = nullptr; }
   MessageLoop::current()->PostTask(NewRunnableMethod<Endpoint<PVRGPUParent>&&>(
       "gfx::VRGPUParent::Bind", vcp, &VRGPUParent::Bind, std::move(aEndpoint)));
 
-  return vcp;
+  return vcp.forget();
 }
 
 void VRGPUParent::Bind(Endpoint<PVRGPUParent>&& aEndpoint) {
@@ -76,6 +78,10 @@ mozilla::ipc::IPCResult VRGPUParent::RecvStopVRService() {
 #endif
 
   return IPC_OK();
+}
+
+bool VRGPUParent::IsClosed() {
+  return mClosed;
 }
 
 }  // namespace gfx
