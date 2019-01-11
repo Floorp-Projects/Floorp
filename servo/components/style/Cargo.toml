@@ -38,6 +38,7 @@ fallible = { path = "../fallible" }
 fxhash = "0.2"
 hashglobe = { path = "../hashglobe" }
 html5ever = {version = "0.22", optional = true}
+indexmap = "1.0"
 itertools = "0.7.6"
 itoa = "0.4"
 lazy_static = "1"

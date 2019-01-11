@@ -48,6 +48,7 @@ extern crate hashglobe;
 #[cfg(feature = "servo")]
 #[macro_use]
 extern crate html5ever;
+extern crate indexmap;
 extern crate itertools;
 extern crate itoa;
 #[macro_use]
