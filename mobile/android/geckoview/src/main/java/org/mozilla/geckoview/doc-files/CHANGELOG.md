@@ -5,6 +5,10 @@ layout: geckoview
 <h1> GeckoView API Changelog. </h1>
 
 ## v66
+- Removed redundant field `GeckoSession.ProgressDelegate.SecurityInformation.trackingMode`.
+  Use `GeckoSession.TrackingProtectionDelegate.onTrackerBlocked` for
+  notification of blocked elements during page load.
+
 - Added [`@NonNull`][66.1] or [`@Nullable`][66.2] to all APIs.
 
 [66.1]: https://developer.android.com/reference/android/support/annotation/NonNull
@@ -105,4 +109,4 @@ layout: geckoview
 [65.24]: ../CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: ../GeckoResult.html
 
-[api-version]: 5957a5943b39ae0e56b7e892bd824a16bb71e811
+[api-version]: 9fb5334f4d7d0c79f963ef9c8e14795e4965e852
