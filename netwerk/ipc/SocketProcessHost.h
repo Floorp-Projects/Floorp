@@ -14,6 +14,7 @@
 namespace mozilla {
 namespace net {
 
+class OfflineObserver;
 class SocketProcessParent;
 
 // SocketProcessHost is the "parent process" container for a subprocess handle
@@ -101,6 +102,8 @@ class SocketProcessHost final : public mozilla::ipc::GeckoChildProcessHost {
   // OnProcessUnexpectedShutdown will be invoked.
   bool mShutdownRequested;
   bool mChannelClosed;
+
+  RefPtr<OfflineObserver> mOfflineObserver;
 };
 
 class SocketProcessMemoryReporter : public MemoryReportingProcess {
