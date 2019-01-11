@@ -8,7 +8,7 @@ private object Versions {
     const val geckoNightly = "66.0.20181217093726"
 
     const val androidx_appcompat = "1.0.2"
-    const val androidx_constraint_layout = "1.1.3"
+    const val androidx_constraint_layout = "2.0.0-alpha3"
 
     const val mozilla_android_components = "0.37.0"
 
