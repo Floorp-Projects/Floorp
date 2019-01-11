@@ -25,7 +25,7 @@ use glyph_rasterizer::{GlyphRasterError, GlyphRasterResult, RasterizedGlyph};
 #[cfg(feature = "pathfinder")]
 use glyph_rasterizer::NativeFontHandleWrapper;
 use internal_types::{FastHashMap, ResourceCacheError};
-#[cfg(not(target_os = "android"))]
+#[cfg(any(not(target_os = "android"), feature = "no_static_freetype"))]
 use libc::{dlsym, RTLD_DEFAULT};
 use libc::free;
 #[cfg(feature = "pathfinder")]
@@ -77,7 +77,7 @@ pub fn unimplemented(error: FT_Error) -> bool {
 }
 
 // Use dlsym to check for symbols. If not available. just return an unimplemented error.
-#[cfg(not(target_os = "android"))]
+#[cfg(any(not(target_os = "android"), feature = "no_static_freetype"))]
 macro_rules! ft_dyn_fn {
     ($func_name:ident($($arg_name:ident:$arg_type:ty),*) -> FT_Error) => {
         #[allow(non_snake_case)]
@@ -100,7 +100,7 @@ macro_rules! ft_dyn_fn {
 }
 
 // On Android, just statically link in the symbols...
-#[cfg(target_os = "android")]
+#[cfg(all(target_os = "android", not(feature = "no_static_freetype")))]
 macro_rules! ft_dyn_fn {
     ($($proto:tt)+) => { extern "C" { fn $($proto)+; } }
 }
