@@ -2204,6 +2204,7 @@ nsresult nsStandardURL::EqualsInternal(
 
 NS_IMETHODIMP
 nsStandardURL::SchemeIs(const char *scheme, bool *result) {
+  MOZ_ASSERT(scheme);
   MOZ_ASSERT(result, "null pointer");
 
   *result = SegmentIs(mScheme, scheme);

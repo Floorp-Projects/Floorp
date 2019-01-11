@@ -475,14 +475,10 @@ nsJARURI::EqualsExceptRef(nsIURI *other, bool *result) {
 
 NS_IMETHODIMP
 nsJARURI::SchemeIs(const char *i_Scheme, bool *o_Equals) {
-  NS_ENSURE_ARG_POINTER(o_Equals);
-  if (!i_Scheme) return NS_ERROR_INVALID_ARG;
+  MOZ_ASSERT(i_Scheme);
+  MOZ_ASSERT(o_Equals);
 
-  if (*i_Scheme == 'j' || *i_Scheme == 'J') {
-    *o_Equals = PL_strcasecmp("jar", i_Scheme) ? false : true;
-  } else {
-    *o_Equals = false;
-  }
+  *o_Equals = PL_strcasecmp("jar", i_Scheme) ? false : true;
   return NS_OK;
 }
 
