@@ -68,6 +68,7 @@ class nsIDOMXULContainerItemElement;
 class nsIDOMXULControlElement;
 class nsIDOMXULMenuListElement;
 class nsIDOMXULMultiSelectControlElement;
+class nsIDOMXULRadioGroupElement;
 class nsIDOMXULRelatedElement;
 class nsIDOMXULSelectControlElement;
 class nsIDOMXULSelectControlItemElement;
@@ -1603,6 +1604,7 @@ class Element : public FragmentOrElement {
   already_AddRefed<nsIDOMXULMenuListElement> AsXULMenuList();
   already_AddRefed<nsIDOMXULMultiSelectControlElement>
   AsXULMultiSelectControl();
+  already_AddRefed<nsIDOMXULRadioGroupElement> AsXULRadioGroup();
   already_AddRefed<nsIDOMXULRelatedElement> AsXULRelated();
   already_AddRefed<nsIDOMXULSelectControlElement> AsXULSelectControl();
   already_AddRefed<nsIDOMXULSelectControlItemElement> AsXULSelectControlItem();
