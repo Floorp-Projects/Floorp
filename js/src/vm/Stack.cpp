@@ -201,11 +201,9 @@ bool InterpreterFrame::prologue(JSContext* cx) {
   if (isEvalFrame() || isGlobalFrame()) {
     HandleObject env = environmentChain();
     if (!CheckGlobalOrEvalDeclarationConflicts(cx, env, script)) {
-      if (isGlobalFrame()) {
-        // Treat this as a script entry, for consistency with Ion.
-        if (script->trackRecordReplayProgress()) {
-          mozilla::recordreplay::AdvanceExecutionProgressCounter();
-        }
+      // Treat this as a script entry, for consistency with Ion.
+      if (script->trackRecordReplayProgress()) {
+        mozilla::recordreplay::AdvanceExecutionProgressCounter();
       }
       return false;
     }
