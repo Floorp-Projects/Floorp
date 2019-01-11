@@ -29,6 +29,7 @@ class SocketProcessChild final : public PSocketProcessChild {
   mozilla::ipc::IPCResult RecvRequestMemoryReport(
       const uint32_t& generation, const bool& anonymize,
       const bool& minimizeMemoryUsage, const MaybeFileDesc& DMDFile) override;
+  mozilla::ipc::IPCResult RecvSetOffline(const bool& aOffline) override;
 
   void CleanUp();
 
