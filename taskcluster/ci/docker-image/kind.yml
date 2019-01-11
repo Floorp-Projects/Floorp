@@ -52,7 +52,7 @@ jobs:
   debian7-amd64-build-base:
     symbol: I(deb7-bb)
     parent: debian7-base
-    definition: debian7-build
+    definition: debian-build
     packages:
       - deb7-nasm
       - deb7-valgrind
@@ -61,7 +61,7 @@ jobs:
   debian7-amd64-build:
     symbol: I(deb7)
     parent: debian7-base
-    definition: debian7-build
+    definition: debian-build
     packages:
       - deb7-atk
       - deb7-glib
@@ -79,7 +79,7 @@ jobs:
   debian7-i386-build:
     symbol: I(deb7-32)
     parent: debian7-base
-    definition: debian7-build
+    definition: debian-build
     packages:
       - deb7-32-atk
       - deb7-32-glib
@@ -121,6 +121,12 @@ jobs:
     packages:
       - deb9-mercurial
       - deb9-python-zstandard
+  debian9-amd64-build:
+    symbol: I(deb9)
+    parent: debian9-base
+    definition: debian-build
+    args:
+      ARCH: amd64
   android-build:
     symbol: I(agb)
     parent: debian9-base
