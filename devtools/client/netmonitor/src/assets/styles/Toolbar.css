@@ -51,11 +51,11 @@
 }
 
 .devtools-button.devtools-pause-icon::before {
-  background-image: var(--pause-icon-url);
+  background-image: url("chrome://devtools/skin/images/pause.svg");
 }
 
 .devtools-button.devtools-play-icon::before {
-  background-image: var(--play-icon-url);
+  background-image: url("chrome://devtools/content/netmonitor/src/assets/icons/play.svg");
 }
 
 /* HAR button */

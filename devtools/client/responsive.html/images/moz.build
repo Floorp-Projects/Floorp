@@ -7,6 +7,5 @@
 DevToolsModules(
     'grippers.svg',
     'rotate-viewport.svg',
-    'screenshot.svg',
     'touch-events.svg',
 )
