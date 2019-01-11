@@ -138,6 +138,17 @@ const char* my_strrchr(const char* haystack, char needle) {
   return ret;
 }
 
+const char* my_strstr(const char* haystack, const char* needle) {
+  while (*haystack != 0) {
+    if((*haystack == *needle) &&
+       (my_strncmp(haystack, needle, my_strlen(needle)) == 0)) {
+      return haystack;
+    }
+    haystack++;
+  }
+  return nullptr;
+}
+
 void* my_memchr(const void* src, int needle, size_t src_len) {
   const unsigned char* p = (const unsigned char*)src;
   const unsigned char* p_end = p + src_len;
