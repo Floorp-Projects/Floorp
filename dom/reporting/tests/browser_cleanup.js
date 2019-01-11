@@ -67,10 +67,10 @@ add_task(async function() {
   ok(ChromeUtils.hasReportingHeaderForOrigin(TEST_DOMAIN), "We have data");
 
   await new Promise(resolve => {
-    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_DOM_QUOTA, value => resolve());
+    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_REPORTS, value => resolve());
   });
 
-  ok(!ChromeUtils.hasReportingHeaderForOrigin(TEST_DOMAIN), "No data before a quota cleanup");
+  ok(!ChromeUtils.hasReportingHeaderForOrigin(TEST_DOMAIN), "No data before a reports cleanup");
 
   info("Removing the tab");
   BrowserTestUtils.removeTab(tab);
@@ -91,10 +91,10 @@ add_task(async function() {
   ok(ChromeUtils.hasReportingHeaderForOrigin(TEST_DOMAIN), "We have data");
 
   await new Promise(resolve => {
-    Services.clearData.deleteDataFromHost(TEST_HOST, true, Ci.nsIClearDataService.CLEAR_DOM_QUOTA, value => resolve());
+    Services.clearData.deleteDataFromHost(TEST_HOST, true, Ci.nsIClearDataService.CLEAR_REPORTS, value => resolve());
   });
 
-  ok(!ChromeUtils.hasReportingHeaderForOrigin(TEST_DOMAIN), "No data before a quota cleanup");
+  ok(!ChromeUtils.hasReportingHeaderForOrigin(TEST_DOMAIN), "No data before a reports cleanup");
 
   info("Removing the tab");
   BrowserTestUtils.removeTab(tab);
