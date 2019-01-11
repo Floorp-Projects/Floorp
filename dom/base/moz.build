@@ -220,7 +220,6 @@ EXPORTS.mozilla.dom += [
     'ScreenLuminance.h',
     'ScreenOrientation.h',
     'Selection.h',
-    'ShadowIncludingTreeIterator.h',
     'ShadowRoot.h',
     'StructuredCloneBlob.h',
     'StructuredCloneHolder.h',
