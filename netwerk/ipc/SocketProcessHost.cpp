@@ -3,8 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "base/shared_memory.h"
-
 #include "SocketProcessHost.h"
 #include "SocketProcessParent.h"
 #include "nsAppRunner.h"
@@ -32,30 +30,14 @@ bool SocketProcessHost::Launch() {
 
   std::vector<std::string> extraArgs;
 
-  // TODO: reduce duplicate code about preference below. See bug 1484774.
-  // Prefs information is passed via anonymous shared memory to avoid bloating
-  // the command line.
-  size_t prefMapSize;
-  auto prefMapHandle =
-      Preferences::EnsureSnapshot(&prefMapSize).ClonePlatformHandle();
+  nsAutoCString parentBuildID(mozilla::PlatformBuildID());
+  extraArgs.push_back("-parentBuildID");
+  extraArgs.push_back(parentBuildID.get());
 
-  // Serialize the early prefs.
-  nsAutoCStringN<1024> prefs;
-  Preferences::SerializePreferences(prefs);
-
-  // Set up the shared memory.
-  base::SharedMemory shm;
-  if (!shm.Create(prefs.Length())) {
-    NS_ERROR("failed to create shared memory in the parent");
+  SharedPreferenceSerializer prefSerializer;
+  if (!prefSerializer.SerializeToSharedMemory()) {
     return false;
   }
-  if (!shm.Map(prefs.Length())) {
-    NS_ERROR("failed to map shared memory in the parent");
-    return false;
-  }
-
-  // Copy the serialized prefs into the shared memory.
-  memcpy(static_cast<char*>(shm.memory()), prefs.get(), prefs.Length());
 
   // Formats a pointer or pointer-sized-integer as a string suitable for passing
   // in an arguments list.
@@ -66,13 +48,14 @@ bool SocketProcessHost::Launch() {
 #if defined(XP_WIN)
   // Record the handle as to-be-shared, and pass it via a command flag. This
   // works because Windows handles are system-wide.
-  HANDLE prefsHandle = shm.handle();
+  HANDLE prefsHandle = prefSerializer.GetSharedMemoryHandle();
   AddHandleToShare(prefsHandle);
-  AddHandleToShare(prefMapHandle.get());
+  AddHandleToShare(prefSerializer.GetPrefMapHandle().get());
   extraArgs.push_back("-prefsHandle");
   extraArgs.push_back(formatPtrArg(prefsHandle).get());
   extraArgs.push_back("-prefMapHandle");
-  extraArgs.push_back(formatPtrArg(prefMapHandle.get()).get());
+  extraArgs.push_back(
+      formatPtrArg(prefSerializer.GetPrefMapHandle().get()).get());
 #else
   // In contrast, Unix fds are per-process. So remap the fd to a fixed one that
   // will be used in the child.
@@ -81,20 +64,15 @@ bool SocketProcessHost::Launch() {
   // Note: on Android, AddFdToRemap() sets up the fd to be passed via a Parcel,
   // and the fixed fd isn't used. However, we still need to mark it for
   // remapping so it doesn't get closed in the child.
-  AddFdToRemap(shm.handle().fd, kPrefsFileDescriptor);
-  AddFdToRemap(prefMapHandle.get(), kPrefMapFileDescriptor);
+  AddFdToRemap(prefSerializer.GetSharedMemoryHandle().fd, kPrefsFileDescriptor);
+  AddFdToRemap(prefSerializer.GetPrefMapHandle().get(), kPrefMapFileDescriptor);
 #endif
 
   // Pass the lengths via command line flags.
   extraArgs.push_back("-prefsLen");
-  extraArgs.push_back(formatPtrArg(prefs.Length()).get());
-
+  extraArgs.push_back(formatPtrArg(prefSerializer.GetPrefLength()).get());
   extraArgs.push_back("-prefMapSize");
-  extraArgs.push_back(formatPtrArg(prefMapSize).get());
-
-  nsAutoCString parentBuildID(mozilla::PlatformBuildID());
-  extraArgs.push_back("-parentBuildID");
-  extraArgs.push_back(parentBuildID.get());
+  extraArgs.push_back(formatPtrArg(prefSerializer.GetPrefMapSize()).get());
 
   mLaunchPhase = LaunchPhase::Waiting;
   if (!GeckoChildProcessHost::LaunchAndWaitForProcessHandle(extraArgs)) {
