@@ -15,6 +15,22 @@ add_task(async function() {
     Services.search.defaultEngine = engine;
     await p;
 
+    // Clear any search history results
+    await new Promise((resolve, reject) => {
+      FormHistory.update({op: "remove"}, {
+        handleError(error) {
+          reject(error);
+        },
+        handleCompletion(reason) {
+          if (!reason) {
+            resolve();
+          } else {
+            reject();
+          }
+        },
+      });
+    });
+
     await ContentTask.spawn(browser, null, async function() {
       // Start composition and type "x"
       let input = content.document.querySelector(["#searchText", "#newtab-search-text"]);
