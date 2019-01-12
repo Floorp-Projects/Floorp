@@ -1593,7 +1593,7 @@ void BaseShape::finalize(FreeOp* fop) {
 inline InitialShapeEntry::InitialShapeEntry() : shape(nullptr), proto() {}
 
 inline InitialShapeEntry::InitialShapeEntry(Shape* shape,
-                                            const Lookup::ShapeProto& proto)
+                                            const TaggedProto& proto)
     : shape(shape), proto(proto) {}
 
 #ifdef JSGC_HASH_TABLE_CHECKS
@@ -1606,8 +1606,7 @@ void Zone::checkInitialShapesTableAfterMovingGC() {
    */
   for (auto r = initialShapes().all(); !r.empty(); r.popFront()) {
     InitialShapeEntry entry = r.front();
-    JSProtoKey protoKey = entry.proto.key();
-    TaggedProto proto = entry.proto.proto().unbarrieredGet();
+    TaggedProto proto = entry.proto.unbarrieredGet();
     Shape* shape = entry.shape.unbarrieredGet();
 
     CheckGCThingAfterMovingGC(shape);
@@ -1616,8 +1615,8 @@ void Zone::checkInitialShapesTableAfterMovingGC() {
     }
 
     using Lookup = InitialShapeEntry::Lookup;
-    Lookup lookup(shape->getObjectClass(), Lookup::ShapeProto(protoKey, proto),
-                  shape->numFixedSlots(), shape->getObjectFlags());
+    Lookup lookup(shape->getObjectClass(), proto, shape->numFixedSlots(),
+                  shape->getObjectFlags());
     InitialShapeSet::Ptr ptr = initialShapes().lookup(lookup);
     MOZ_RELEASE_ASSERT(ptr.found() && &*ptr == &r.front());
   }
@@ -2053,59 +2052,6 @@ void Shape::dumpSubtree(int level, js::GenericPrinter& out) const {
 
 #endif
 
-static bool IsOriginalProto(GlobalObject* global, JSProtoKey key,
-                            NativeObject& proto) {
-  if (global->getPrototype(key) != ObjectValue(proto)) {
-    return false;
-  }
-
-  MOZ_ASSERT(&proto.global() == global);
-
-  if (key == JSProto_Object) {
-    MOZ_ASSERT(proto.staticPrototypeIsImmutable(),
-               "proto should be Object.prototype, whose prototype is "
-               "immutable");
-    MOZ_ASSERT(proto.staticPrototype() == nullptr,
-               "Object.prototype must have null prototype");
-    return true;
-  }
-
-  // Check that other prototypes still have Object.prototype as proto.
-  JSObject* protoProto = proto.staticPrototype();
-  if (!protoProto ||
-      global->getPrototype(JSProto_Object) != ObjectValue(*protoProto)) {
-    return false;
-  }
-
-  MOZ_ASSERT(protoProto->staticPrototypeIsImmutable(),
-             "protoProto should be Object.prototype, whose prototype is "
-             "immutable");
-  MOZ_ASSERT(protoProto->staticPrototype() == nullptr,
-             "Object.prototype must have null prototype");
-  return true;
-}
-
-static JSProtoKey GetInitialShapeProtoKey(TaggedProto proto, JSContext* cx) {
-  if (proto.isObject() && proto.toObject()->isNative()) {
-    GlobalObject* global = cx->global();
-    NativeObject& obj = proto.toObject()->as<NativeObject>();
-
-    if (IsOriginalProto(global, JSProto_Object, obj)) {
-      return JSProto_Object;
-    }
-    if (IsOriginalProto(global, JSProto_Function, obj)) {
-      return JSProto_Function;
-    }
-    if (IsOriginalProto(global, JSProto_Array, obj)) {
-      return JSProto_Array;
-    }
-    if (IsOriginalProto(global, JSProto_RegExp, obj)) {
-      return JSProto_RegExp;
-    }
-  }
-  return JSProto_LIMIT;
-}
-
 /* static */ Shape* EmptyShape::getInitialShape(JSContext* cx,
                                                 const Class* clasp,
                                                 TaggedProto proto,
@@ -2117,61 +2063,28 @@ static JSProtoKey GetInitialShapeProtoKey(TaggedProto proto, JSContext* cx) {
   auto& table = cx->zone()->initialShapes();
 
   using Lookup = InitialShapeEntry::Lookup;
-  auto protoPointer = MakeDependentAddPtr(
-      cx, table, Lookup(clasp, Lookup::ShapeProto(proto), nfixed, objectFlags));
+  auto protoPointer =
+      MakeDependentAddPtr(cx, table, Lookup(clasp, proto, nfixed, objectFlags));
   if (protoPointer) {
     return protoPointer->shape;
   }
 
-  // No entry for this proto. If the proto is one of a few common builtin
-  // prototypes, try to do a lookup based on the JSProtoKey, so we can share
-  // shapes across globals.
   Rooted<TaggedProto> protoRoot(cx, proto);
-  Shape* shape = nullptr;
-  bool insertKey = false;
-  mozilla::Maybe<DependentAddPtr<InitialShapeSet>> keyPointer;
-
-  JSProtoKey key = GetInitialShapeProtoKey(protoRoot, cx);
-  if (key != JSProto_LIMIT) {
-    keyPointer.emplace(MakeDependentAddPtr(
-        cx, table,
-        Lookup(clasp, Lookup::ShapeProto(key), nfixed, objectFlags)));
-    if (keyPointer.ref()) {
-      shape = keyPointer.ref()->shape;
-      MOZ_ASSERT(shape);
-    } else {
-      insertKey = true;
-    }
-  }
-
-  if (!shape) {
-    StackBaseShape base(clasp, objectFlags);
-    Rooted<UnownedBaseShape*> nbase(cx, BaseShape::getUnowned(cx, base));
-    if (!nbase) {
-      return nullptr;
-    }
-
-    shape = EmptyShape::new_(cx, nbase, nfixed);
-    if (!shape) {
-      return nullptr;
-    }
-  }
-
-  Lookup::ShapeProto shapeProto(protoRoot);
-  Lookup lookup(clasp, shapeProto, nfixed, objectFlags);
-  if (!protoPointer.add(cx, table, lookup,
-                        InitialShapeEntry(shape, shapeProto))) {
+  StackBaseShape base(clasp, objectFlags);
+  Rooted<UnownedBaseShape*> nbase(cx, BaseShape::getUnowned(cx, base));
+  if (!nbase) {
     return nullptr;
   }
 
-  // Also add an entry based on the JSProtoKey, if needed.
-  if (insertKey) {
-    Lookup::ShapeProto shapeProto(key);
-    Lookup lookup(clasp, shapeProto, nfixed, objectFlags);
-    if (!keyPointer->add(cx, table, lookup,
-                         InitialShapeEntry(shape, shapeProto))) {
-      return nullptr;
-    }
+  RootedShape shape(cx, EmptyShape::new_(cx, nbase, nfixed));
+  if (!shape) {
+    return nullptr;
+  }
+
+  Lookup lookup(clasp, protoRoot, nfixed, objectFlags);
+  if (!protoPointer.add(cx, table, lookup,
+                        InitialShapeEntry(shape, protoRoot))) {
+    return nullptr;
   }
 
   return shape;
@@ -2223,7 +2136,7 @@ void NewObjectCache::invalidateEntriesForShape(JSContext* cx, HandleShape shape,
                                                  HandleShape shape,
                                                  HandleObject proto) {
   using Lookup = InitialShapeEntry::Lookup;
-  Lookup lookup(shape->getObjectClass(), Lookup::ShapeProto(TaggedProto(proto)),
+  Lookup lookup(shape->getObjectClass(), TaggedProto(proto),
                 shape->numFixedSlots(), shape->getObjectFlags());
 
   InitialShapeSet::Ptr p = cx->zone()->initialShapes().lookup(lookup);
@@ -2247,22 +2160,6 @@ void NewObjectCache::invalidateEntriesForShape(JSContext* cx, HandleShape shape,
 #endif
 
   entry.shape = ReadBarrieredShape(shape);
-
-  // For certain prototypes -- namely, those of various builtin classes,
-  // keyed by JSProtoKey |key| -- there are two entries: one for a lookup
-  // via |proto|, and one for a lookup via |key|.  If this is such a
-  // prototype, also update the alternate |key|-keyed shape.
-  JSProtoKey key = GetInitialShapeProtoKey(TaggedProto(proto), cx);
-  if (key != JSProto_LIMIT) {
-    Lookup lookup(shape->getObjectClass(), Lookup::ShapeProto(key),
-                  shape->numFixedSlots(), shape->getObjectFlags());
-    if (InitialShapeSet::Ptr p = cx->zone()->initialShapes().lookup(lookup)) {
-      InitialShapeEntry& entry = const_cast<InitialShapeEntry&>(*p);
-      if (entry.shape != shape) {
-        entry.shape = ReadBarrieredShape(shape);
-      }
-    }
-  }
 
   /*
    * This affects the shape that will be produced by the various NewObject
@@ -2292,12 +2189,12 @@ void Zone::fixupInitialShapeTable() {
     // If the prototype has moved we have to rekey the entry.
     InitialShapeEntry entry = e.front();
     // Use unbarrieredGet() to prevent triggering read barrier while collecting.
-    const TaggedProto& proto = entry.proto.proto().unbarrieredGet();
+    const TaggedProto& proto = entry.proto.unbarrieredGet();
     if (proto.isObject() && IsForwarded(proto.toObject())) {
-      entry.proto.setProto(TaggedProto(Forwarded(proto.toObject())));
+      entry.proto = TaggedProto(Forwarded(proto.toObject()));
       using Lookup = InitialShapeEntry::Lookup;
-      Lookup relookup(shape->getObjectClass(), Lookup::ShapeProto(proto),
-                      shape->numFixedSlots(), shape->getObjectFlags());
+      Lookup relookup(shape->getObjectClass(), proto, shape->numFixedSlots(),
+                      shape->getObjectFlags());
       e.rekeyFront(relookup, entry);
     }
   }
