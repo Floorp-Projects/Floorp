@@ -14,7 +14,7 @@ use api::{BuiltDisplayListIter, SpecificDisplayItem};
 use api::{DevicePixelScale, DeviceIntPoint, DeviceIntRect, DeviceIntSize};
 use api::{DocumentId, DocumentLayer, ExternalScrollId, FrameMsg, HitTestFlags, HitTestResult};
 use api::{IdNamespace, LayoutPoint, PipelineId, RenderNotifier, SceneMsg, ScrollClamping};
-use api::{MemoryReport, VoidPtrToSizeFn};
+use api::{MemoryReport};
 use api::{ScrollLocation, ScrollNodeState, TransactionMsg, ResourceUpdate, BlobImageKey};
 use api::{NotificationRequest, Checkpoint};
 use api::channel::{MsgReceiver, MsgSender, Payload};
@@ -214,29 +214,31 @@ impl FrameStamp {
     };
 }
 
-// A collection of resources that are shared by clips, primitives
-// between display lists.
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
-#[derive(Default)]
-pub struct FrameResources {
-    /// The store of currently active / available clip nodes. This is kept
-    /// in sync with the clip interner in the scene builder for each document.
-    pub clip_data_store: ClipDataStore,
+macro_rules! declare_frame_resources {
+    ( $( { $x: ident, $y: ty, $datastore_ident: ident, $datastore_type: ty } )+ ) => {
+        /// A collection of resources that are shared by clips, primitives
+        /// between display lists.
+        #[cfg_attr(feature = "capture", derive(Serialize))]
+        #[cfg_attr(feature = "replay", derive(Deserialize))]
+        #[derive(Default)]
+        pub struct FrameResources {
+            $(
+                pub $datastore_ident: $datastore_type,
+            )+
+        }
 
-    /// Currently active / available primitives. Kept in sync with the
-    /// primitive interner in the scene builder, per document.
-    pub prim_data_store: PrimitiveDataStore,
-    pub image_data_store: ImageDataStore,
-    pub image_border_data_store: ImageBorderDataStore,
-    pub line_decoration_data_store: LineDecorationDataStore,
-    pub linear_grad_data_store: LinearGradientDataStore,
-    pub normal_border_data_store: NormalBorderDataStore,
-    pub picture_data_store: PictureDataStore,
-    pub radial_grad_data_store: RadialGradientDataStore,
-    pub text_run_data_store: TextRunDataStore,
-    pub yuv_image_data_store: YuvImageDataStore,
+        impl FrameResources {
+            /// Reports CPU heap usage.
+            fn report_memory(&self, ops: &mut MallocSizeOfOps, r: &mut MemoryReport) {
+                $(
+                    r.interning.$datastore_ident += self.$datastore_ident.size_of(ops);
+                )+
+            }
+        }
+    }
 }
+
+enumerate_interners!(declare_frame_resources);
 
 impl FrameResources {
     pub fn as_common_data(
@@ -286,15 +288,6 @@ impl FrameResources {
                 &prim_data.common
             }
         }
-    }
-
-    /// Reports CPU heap usage.
-    fn report_memory(&self, op: VoidPtrToSizeFn, r: &mut MemoryReport) {
-        r.data_stores += self.clip_data_store.malloc_size_of(op);
-        r.data_stores += self.prim_data_store.malloc_size_of(op);
-        r.data_stores += self.linear_grad_data_store.malloc_size_of(op);
-        r.data_stores += self.radial_grad_data_store.malloc_size_of(op);
-        r.data_stores += self.text_run_data_store.malloc_size_of(op);
     }
 }
 
@@ -1564,7 +1557,7 @@ impl RenderBackend {
             }
             report.hit_testers += doc.hit_tester.size_of(ops);
 
-            doc.resources.report_memory(op, &mut report)
+            doc.resources.report_memory(ops, &mut report)
         }
 
         report += self.resource_cache.report_memory(op);
