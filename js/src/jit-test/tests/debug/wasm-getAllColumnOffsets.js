@@ -8,7 +8,7 @@ load(libdir + "asserts.js");
 // Checking if experimental format generates internal source map to binary file
 // by querying debugger scripts getAllColumnOffsets.
 function getAllOffsets(wast) {
-  var sandbox = newGlobal('');
+  var sandbox = newGlobal({newCompartment: true});
   var dbg = new Debugger();
   dbg.addDebuggee(sandbox);
   dbg.allowWasmBinarySource = true;

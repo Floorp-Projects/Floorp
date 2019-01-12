@@ -1,6 +1,6 @@
 // Source.prototype.elementAttributeName can be a string or undefined.
 
-var g = newGlobal('new-compartment');
+var g = newGlobal({newCompartment: true});
 var dbg = new Debugger;
 var gw = dbg.addDebuggee(g);
 g.evaluate("function f(x) { return 2*x; }", {elementAttributeName: "src"});
