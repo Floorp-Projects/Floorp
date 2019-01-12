@@ -15,6 +15,23 @@ namespace navigation {
 typedef js::BreakpointPosition BreakpointPosition;
 typedef js::ExecutionPoint ExecutionPoint;
 
+static void BreakpointPositionToString(const BreakpointPosition& aPos,
+                                       nsAutoCString& aStr) {
+  aStr.AppendPrintf("{ Kind: %s, Script: %d, Offset: %d, Frame: %d }",
+                    aPos.KindString(), (int)aPos.mScript, (int)aPos.mOffset,
+                    (int)aPos.mFrameIndex);
+}
+
+static void ExecutionPointToString(const ExecutionPoint& aPoint,
+                                   nsAutoCString& aStr) {
+  aStr.AppendPrintf("{ Checkpoint %d", (int)aPoint.mCheckpoint);
+  if (aPoint.HasPosition()) {
+    aStr.AppendPrintf(" Progress %llu Position ", aPoint.mProgress);
+    BreakpointPositionToString(aPoint.mPosition, aStr);
+  }
+  aStr.AppendPrintf(" }");
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // Navigation State
 ///////////////////////////////////////////////////////////////////////////////
@@ -215,10 +232,10 @@ class ReachBreakpointPhase final : public NavigationPhase {
 
   void ToString(nsAutoCString& aStr) override {
     aStr.AppendPrintf("ReachBreakpoint: ");
-    mPoint.ToString(aStr);
+    ExecutionPointToString(mPoint, aStr);
     if (mTemporaryCheckpoint.isSome()) {
       aStr.AppendPrintf(" TemporaryCheckpoint: ");
-      mTemporaryCheckpoint.ref().ToString(aStr);
+      ExecutionPointToString(mTemporaryCheckpoint.ref(), aStr);
     }
   }
 
@@ -477,7 +494,11 @@ void PausedPhase::Enter(const ExecutionPoint& aPoint, bool aRewind,
     Unreachable();
   }
 
-  child::HitExecutionPoint(aPoint, aRecordingEndpoint);
+  if (aPoint.HasPosition()) {
+    child::HitBreakpoint(aRecordingEndpoint);
+  } else {
+    child::HitCheckpoint(aPoint.mCheckpoint, aRecordingEndpoint);
+  }
 }
 
 void PausedPhase::AfterCheckpoint(const CheckpointId& aCheckpoint) {
@@ -486,7 +507,7 @@ void PausedPhase::AfterCheckpoint(const CheckpointId& aCheckpoint) {
     // We just rewound here, and are now where we should pause.
     MOZ_RELEASE_ASSERT(
         mPoint == gNavigation->CheckpointExecutionPoint(aCheckpoint.mNormal));
-    child::HitExecutionPoint(mPoint, mRecordingEndpoint);
+    child::HitCheckpoint(mPoint.mCheckpoint, mRecordingEndpoint);
   } else {
     // We just saved or restored the temporary checkpoint taken while
     // processing debugger requests here.
@@ -764,7 +785,7 @@ void ForwardPhase::PositionHit(const ExecutionPoint& aPoint) {
 
 void ForwardPhase::HitRecordingEndpoint(const ExecutionPoint& aPoint) {
   nsAutoCString str;
-  aPoint.ToString(str);
+  ExecutionPointToString(aPoint, str);
 
   gNavigation->mPausedPhase.Enter(aPoint, /* aRewind = */ false,
                                   /* aRecordingEndpoint = */ true);

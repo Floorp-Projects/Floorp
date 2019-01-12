@@ -11,7 +11,6 @@
 
 #include "mozilla/gfx/Types.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/UniquePtr.h"
 
 #include "File.h"
 #include "JSControl.h"
@@ -77,8 +76,8 @@ namespace recordreplay {
                                                                \
   /* Add a breakpoint position to stop at. Because a single entry point is used for */ \
   /* calling into the ReplayDebugger after pausing, the set of breakpoints is simply */ \
-  /* a set of positions at which the child process should pause and send a */ \
-  /* HitExecutionPoint message. */                             \
+  /* a set of positions at which the child process should pause and send a HitBreakpoint */ \
+  /* message. */                                               \
   _Macro(AddBreakpoint)                                        \
                                                                \
   /* Clear all installed breakpoints. */                       \
@@ -127,8 +126,10 @@ namespace recordreplay {
   /* The child's graphics were repainted. */                   \
   _Macro(Paint)                                                \
                                                                \
-  /* Notify the middleman that the child has hit an execution point and paused. */ \
-  _Macro(HitExecutionPoint)                                    \
+  /* Notify the middleman that a checkpoint or breakpoint was hit. */ \
+  /* The child will pause after sending these messages. */     \
+  _Macro(HitCheckpoint)                                        \
+  _Macro(HitBreakpoint)                                        \
                                                                \
   /* Send a response to a DebuggerRequest message. */          \
   _Macro(DebuggerResponse)                                     \
@@ -161,13 +162,10 @@ struct Message {
   }
 
  public:
-  struct FreePolicy { void operator()(Message* msg) { /*free(msg);*/ } };
-  typedef UniquePtr<Message, FreePolicy> UniquePtr;
-
-  UniquePtr Clone() const {
-    Message* res = static_cast<Message*>(malloc(mSize));
+  Message* Clone() const {
+    char* res = (char*)malloc(mSize);
     memcpy(res, this, mSize);
-    return UniquePtr(res);
+    return (Message*)res;
   }
 
   const char* TypeString() const {
@@ -383,24 +381,28 @@ struct PaintMessage : public Message {
         mHeight(aHeight) {}
 };
 
-struct HitExecutionPointMessage : public Message {
-  // The point the child paused at.
-  js::ExecutionPoint mPoint;
-
-  // Whether the pause occurred due to hitting the end of the recording.
+struct HitCheckpointMessage : public Message {
+  uint32_t mCheckpointId;
   bool mRecordingEndpoint;
 
-  // The amount of non-idle time taken to get to this pause from the last time
-  // the child paused.
+  // When recording, the amount of non-idle time taken to get to this
+  // checkpoint from the previous one.
   double mDurationMicroseconds;
 
-  HitExecutionPointMessage(const js::ExecutionPoint& aPoint,
-                           bool aRecordingEndpoint,
-                           double aDurationMicroseconds)
-      : Message(MessageType::HitExecutionPoint, sizeof(*this)),
-        mPoint(aPoint),
+  HitCheckpointMessage(uint32_t aCheckpointId, bool aRecordingEndpoint,
+                       double aDurationMicroseconds)
+      : Message(MessageType::HitCheckpoint, sizeof(*this)),
+        mCheckpointId(aCheckpointId),
         mRecordingEndpoint(aRecordingEndpoint),
         mDurationMicroseconds(aDurationMicroseconds) {}
+};
+
+struct HitBreakpointMessage : public Message {
+  bool mRecordingEndpoint;
+
+  explicit HitBreakpointMessage(bool aRecordingEndpoint)
+      : Message(MessageType::HitBreakpoint, sizeof(*this)),
+        mRecordingEndpoint(aRecordingEndpoint) {}
 };
 
 typedef EmptyMessage<MessageType::AlwaysMarkMajorCheckpoints>
@@ -431,11 +433,19 @@ typedef BinaryMessage<MessageType::MiddlemanCallResponse>
 typedef EmptyMessage<MessageType::ResetMiddlemanCalls>
     ResetMiddlemanCallsMessage;
 
+static inline MiddlemanCallResponseMessage* ProcessMiddlemanCallMessage(
+    const MiddlemanCallRequestMessage& aMsg) {
+  InfallibleVector<char> outputData;
+  ProcessMiddlemanCall(aMsg.BinaryData(), aMsg.BinaryDataSize(), &outputData);
+  return MiddlemanCallResponseMessage::New(outputData.begin(),
+                                           outputData.length());
+}
+
 class Channel {
  public:
   // Note: the handler is responsible for freeing its input message. It will be
   // called on the channel's message thread.
-  typedef std::function<void(Message::UniquePtr)> MessageHandler;
+  typedef std::function<void(Message*)> MessageHandler;
 
  private:
   // ID for this channel, unique for the middleman.
@@ -469,7 +479,7 @@ class Channel {
 
   // Block until a complete message is received from the other side of the
   // channel.
-  Message::UniquePtr WaitForMessage();
+  Message* WaitForMessage();
 
   // Main routine for the channel's thread.
   static void ThreadMain(void* aChannel);
