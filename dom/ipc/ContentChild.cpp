@@ -71,6 +71,7 @@
 #include "mozilla/layers/CompositorManagerChild.h"
 #include "mozilla/layers/ContentProcessController.h"
 #include "mozilla/layers/ImageBridgeChild.h"
+#include "mozilla/layers/SynchronousTask.h"  // for LaunchRDDProcess
 #include "mozilla/loader/ScriptCacheActors.h"
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/net/CookieServiceChild.h"
@@ -1113,6 +1114,22 @@ void ContentChild::GetProcessName(nsAString& aName) const {
   aName.Assign(mProcessName);
 }
 
+void ContentChild::LaunchRDDProcess() {
+  SynchronousTask task("LaunchRDDProcess");
+  SystemGroup::Dispatch(
+      TaskCategory::Other,
+      NS_NewRunnableFunction("LaunchRDDProcess", [&task, this] {
+        AutoCompleteTask complete(&task);
+        nsresult rv;
+        Endpoint<PRemoteDecoderManagerChild> endpoint;
+        Unused << SendLaunchRDDProcess(&rv, &endpoint);
+        if (rv == NS_OK) {
+          RemoteDecoderManagerChild::InitForContent(std::move(endpoint));
+        }
+      }));
+  task.Wait();
+}
+
 bool ContentChild::IsAlive() const { return mIsAlive; }
 
 bool ContentChild::IsShuttingDown() const { return mShuttingDown; }
@@ -1428,12 +1445,6 @@ mozilla::ipc::IPCResult ContentChild::RecvReinitRenderingForDeviceReset() {
       tabChild->ReinitRenderingForDeviceReset();
     }
   }
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult ContentChild::RecvInitRemoteDecoder(
-    Endpoint<PRemoteDecoderManagerChild>&& aRemoteManager) {
-  RemoteDecoderManagerChild::InitForContent(std::move(aRemoteManager));
   return IPC_OK();
 }
 

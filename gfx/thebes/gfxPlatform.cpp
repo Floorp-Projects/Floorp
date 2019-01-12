@@ -918,15 +918,6 @@ void gfxPlatform::Init() {
     gpu->LaunchGPUProcess();
   }
 
-  if (XRE_IsParentProcess() &&
-      BrowserTabsRemoteAutostart() &&  // only do rdd process if e10s on
-      Preferences::GetBool("media.rdd-process.enabled", false)) {
-    RDDProcessManager* rdd = RDDProcessManager::Get();
-    if (rdd) {
-      rdd->LaunchRDDProcess();
-    }
-  }
-
   if (XRE_IsParentProcess() || recordreplay::IsRecordingOrReplaying()) {
     if (gfxPlatform::ForceSoftwareVsync()) {
       gPlatform->mVsyncSource =
