@@ -11,7 +11,8 @@ function evalWithCache(code, ctx) {
 
   // We create a new global ...
   if (!("global" in ctx))
-    ctx.global = newGlobal({ cloneSingletons: !incremental });
+      ctx.global = newGlobal({cloneSingletons: !incremental,
+                              newCompartment: ctx.newCompartment});
 
   if (!("isRunOnce" in ctx))
     ctx.isRunOnce = true;

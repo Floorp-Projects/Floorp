@@ -15,7 +15,7 @@ test = `
 `;
 evalWithCache(test, {
   checkAfter: function (ctx) {
-    gc(ctx.global.f, "shrinking"); // relazify f, if possible.
+    relazifyFunctions(); // relazify f, if possible.
     evaluate("assertEq(isLazyFunction(f), expect);", ctx);
   }
 });
@@ -23,7 +23,7 @@ evalWithCache(test, {
 evalWithCache(test, {
   incremental: true,
   checkAfter: function (ctx) {
-    gc(ctx.global.f, "shrinking"); // relazify f, if possible.
+    relazifyFunctions(); // relazify f, if possible.
     evaluate("assertEq(isLazyFunction(f), expect);", ctx);
   }
 });
