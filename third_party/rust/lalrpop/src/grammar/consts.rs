@@ -13,6 +13,9 @@ pub const INPUT_PARAMETER: &'static str = "input";
 /// The annotation to request inlining.
 pub const INLINE: &'static str = "inline";
 
+/// The annotation to request conditional compilation.
+pub const CFG: &'static str = "cfg";
+
 /// Annotation to request LALR.
 pub const LALR: &'static str = "LALR";
 

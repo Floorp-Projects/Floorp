@@ -1,11 +1,11 @@
 //! Simple Rust AST. This is what the various code generators create,
 //! which then gets serialized.
 
-use grammar::repr::Grammar;
 use grammar::parse_tree::Visibility;
-use tls::Tls;
+use grammar::repr::Grammar;
 use std::fmt;
 use std::io::{self, Write};
+use tls::Tls;
 
 macro_rules! rust {
     ($w:expr, $($args:tt)*) => {
@@ -53,11 +53,15 @@ impl<W: Write> RustWrite<W> {
     }
 
     fn write_indentation(&mut self) -> io::Result<()> {
-        write!(self.write, "{0:1$}", "", self.indent)
+        if Tls::session().emit_whitespace {
+            write!(self.write, "{0:1$}", "", self.indent)?;
+        }
+        Ok(())
     }
 
     fn write_indented(&mut self, out: &str) -> io::Result<()> {
-        writeln!(self.write, "{0:1$}{2}", "", self.indent, out)
+        self.write_indentation()?;
+        writeln!(self.write, "{}", out)
     }
 
     pub fn write_table_row<I, C>(&mut self, iterable: I) -> io::Result<()>
@@ -65,7 +69,8 @@ impl<W: Write> RustWrite<W> {
         I: IntoIterator<Item = (i32, C)>,
         C: fmt::Display,
     {
-        if Tls::session().emit_comments {
+        let session = Tls::session();
+        if session.emit_comments {
             for (i, comment) in iterable {
                 try!(self.write_indentation());
                 try!(writeln!(self.write, "{}, {}", i, comment));
@@ -74,7 +79,7 @@ impl<W: Write> RustWrite<W> {
             try!(self.write_indentation());
             let mut first = true;
             for (i, _comment) in iterable {
-                if !first {
+                if !first && session.emit_whitespace {
                     try!(write!(self.write, " "));
                 }
                 try!(write!(self.write, "{},", i));

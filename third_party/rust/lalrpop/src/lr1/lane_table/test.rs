@@ -1,12 +1,12 @@
-use string_cache::DefaultAtom as Atom;
 use grammar::repr::*;
-use test_util::{expect_debug, normalized_grammar};
 use lr1::build;
 use lr1::core::*;
 use lr1::first::FirstSets;
 use lr1::interpret;
 use lr1::state_graph::StateGraph;
 use lr1::tls::Lr1Tls;
+use string_cache::DefaultAtom as Atom;
+use test_util::{expect_debug, normalized_grammar};
 use tls::Tls;
 
 use super::construct::*;
@@ -163,7 +163,8 @@ fn g0_conflict_1() {
 | State | C0    | C1    | C2    | Successors |
 | S0    |       | ["c"] | ["d"] | {S3}       |
 | S3    | ["e"] | []    | []    | {S3}       |
-"#.trim_left(),
+"#
+        .trim_left(),
     );
 }
 
@@ -186,7 +187,8 @@ fn paper_example_g1_conflict_1() {
 | S1    |       | ["d"] | ["c"] | {S5}       |
 | S2    |       | ["c"] | ["d"] | {S5}       |
 | S5    | ["e"] | []    | []    | {S5}       |
-"#.trim_left(),
+"#
+        .trim_left(),
     );
 }
 
@@ -323,7 +325,8 @@ fn large_conflict_1() {
 | S16   |       |       |            |       | {S27}      |
 | S27   | ["s"] | ["k"] |            |       | {S32}      |
 | S32   |       |       | ["z"]      | ["u"] | {S16}      |
-"#.trim_left(),
+"#
+        .trim_left(),
     );
 
     // ^^ This differs in some particulars from what appears in the

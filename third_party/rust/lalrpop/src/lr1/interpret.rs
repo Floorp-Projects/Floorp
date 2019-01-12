@@ -1,11 +1,11 @@
 //! LR(1) interpeter. Just builds up parse trees. Intended for testing.
 
-use lr1::core::*;
-use lr1::lookahead::*;
 use generate::ParseTree;
 use grammar::repr::*;
-use std::iter::IntoIterator;
+use lr1::core::*;
+use lr1::lookahead::*;
 use std::fmt::{Debug, Display, Error, Formatter};
+use std::iter::IntoIterator;
 use util::Sep;
 
 pub type InterpretError<'grammar, L> = (&'grammar State<'grammar, L>, Token);

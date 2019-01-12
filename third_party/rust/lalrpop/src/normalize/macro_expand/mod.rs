@@ -1,15 +1,16 @@
-use std::collections::{HashMap, HashSet};
-use string_cache::DefaultAtom as Atom;
 use grammar::consts::INLINE;
-use grammar::parse_tree::{ActionKind, Alternative, Annotation, Condition, ConditionOp, ExprSymbol,
-                          Grammar, GrammarItem, MacroSymbol, NonterminalData, NonterminalString,
-                          Path, RepeatOp, RepeatSymbol, Span, Symbol, SymbolKind, TerminalLiteral,
-                          TerminalString, TypeRef, Visibility};
+use grammar::parse_tree::{
+    ActionKind, Alternative, Annotation, Condition, ConditionOp, ExprSymbol, Grammar, GrammarItem,
+    MacroSymbol, NonterminalData, NonterminalString, Path, RepeatOp, RepeatSymbol, Span, Symbol,
+    SymbolKind, TerminalLiteral, TerminalString, TypeRef, Visibility,
+};
+use normalize::norm_util::{self, Symbols};
 use normalize::resolve;
 use normalize::{NormError, NormResult};
-use normalize::norm_util::{self, Symbols};
 use regex::Regex;
+use std::collections::{HashMap, HashSet};
 use std::mem;
+use string_cache::DefaultAtom as Atom;
 
 #[cfg(test)]
 mod test;
@@ -126,9 +127,11 @@ impl MacroExpander {
             SymbolKind::AmbiguousId(ref id) => {
                 panic!("ambiguous id `{}` encountered after name resolution", id)
             }
-            SymbolKind::Macro(ref mut m) => for sym in &mut m.args {
-                self.replace_symbol(sym);
-            },
+            SymbolKind::Macro(ref mut m) => {
+                for sym in &mut m.args {
+                    self.replace_symbol(sym);
+                }
+            }
             SymbolKind::Expr(ref mut expr) => {
                 self.replace_symbols(&mut expr.symbols);
             }
@@ -179,13 +182,15 @@ impl MacroExpander {
             );
         }
 
-        let args: HashMap<NonterminalString, SymbolKind> = mdef.args
+        let args: HashMap<NonterminalString, SymbolKind> = mdef
+            .args
             .iter()
             .cloned()
             .zip(msym.args.into_iter().map(|s| s.kind))
             .collect();
 
-        let type_decl = mdef.type_decl
+        let type_decl = mdef
+            .type_decl
             .as_ref()
             .map(|tr| self.macro_expand_type_ref(&args, tr));
 
@@ -389,14 +394,12 @@ impl MacroExpander {
             annotations: inline(span),
             args: vec![],
             type_decl: Some(ty_ref),
-            alternatives: vec![
-                Alternative {
-                    span: span,
-                    expr: expr,
-                    condition: None,
-                    action: action("(<>)"),
-                },
-            ],
+            alternatives: vec![Alternative {
+                span: span,
+                expr: expr,
+                condition: None,
+                action: action("(<>)"),
+            }],
         }))
     }
 
@@ -446,18 +449,16 @@ impl MacroExpander {
                         Alternative {
                             span: span,
                             expr: ExprSymbol {
-                                symbols: vec![
-                                    Symbol::new(
-                                        span,
-                                        SymbolKind::Name(
-                                            v,
-                                            Box::new(Symbol::new(
-                                                span,
-                                                SymbolKind::Repeat(plus_repeat),
-                                            )),
-                                        ),
+                                symbols: vec![Symbol::new(
+                                    span,
+                                    SymbolKind::Name(
+                                        v,
+                                        Box::new(Symbol::new(
+                                            span,
+                                            SymbolKind::Repeat(plus_repeat),
+                                        )),
                                     ),
-                                ],
+                                )],
                             },
                             condition: None,
                             action: action("v"),
@@ -569,14 +570,12 @@ impl MacroExpander {
             annotations: inline(span),
             args: vec![],
             type_decl: None,
-            alternatives: vec![
-                Alternative {
-                    span: span,
-                    expr: ExprSymbol { symbols: vec![] },
-                    condition: None,
-                    action: Some(action),
-                },
-            ],
+            alternatives: vec![Alternative {
+                span: span,
+                expr: ExprSymbol { symbols: vec![] },
+                condition: None,
+                action: Some(action),
+            }],
         }))
     }
 }
@@ -594,10 +593,9 @@ fn action(s: &str) -> Option<ActionKind> {
 }
 
 fn inline(span: Span) -> Vec<Annotation> {
-    vec![
-        Annotation {
-            id_span: span,
-            id: Atom::from(INLINE),
-        },
-    ]
+    vec![Annotation {
+        id_span: span,
+        id: Atom::from(INLINE),
+        arg: None,
+    }]
 }
