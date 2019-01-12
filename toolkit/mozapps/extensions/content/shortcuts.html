@@ -1,0 +1,51 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" href="chrome://global/skin/in-content/common.css" type="text/css"/>
+    <link rel="stylesheet" href="chrome://mozapps/content/extensions/shortcuts.css"  type="text/css"/>
+
+    <link rel="localization" href="branding/brand.ftl"/>
+    <link rel="localization" href="toolkit/about/aboutAddons.ftl"/>
+
+    <script type="application/javascript" src="chrome://mozapps/content/extensions/shortcuts.js"></script>
+  </head>
+  <body id="body">
+    <div class="body">
+      <div class="error-message">
+        <img class="error-message-icon" src="chrome://global/skin/arrow/panelarrow-vertical.svg"/>
+        <div class="error-message-label"></div>
+      </div>
+
+      <div id="addon-shortcuts"></div>
+
+      <template id="card-template">
+        <div class="card shortcut">
+          <div class="card-heading">
+            <img class="card-heading-icon addon-icon"/>
+            <span class="addon-name"></span>
+          </div>
+        </div>
+      </template>
+
+      <template id="shortcut-row-template">
+        <div class="shortcut-row">
+          <label class="shortcut-label"></label>
+          <input class="shortcut-input" data-l10n-id="shortcuts-input" type="text" readonly/>
+        </div>
+      </template>
+
+      <template id="shortcuts-empty-template">
+        <div class="shortcuts-empty-label" data-l10n-id="shortcuts-empty-message"></div>
+      </template>
+
+      <template id="shortcuts-no-addons">
+        <div data-l10n-id="shortcuts-no-addons"></div>
+      </template>
+
+    </div>
+  </body>
+</html>

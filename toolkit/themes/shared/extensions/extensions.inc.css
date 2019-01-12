@@ -250,11 +250,17 @@ button.warning {
   }
 }
 
+#manage-shortcuts {
+  margin: 0 4px;
+  min-height: 30px;
+}
+
 #header-utils-btn {
   -moz-appearance: none;
   border: 1px solid var(--in-content-box-border-color);
   border-radius: 2px;
   line-height: 20px;
+  min-height: 30px;
   background-color: var(--in-content-page-background);
   padding-right: 10px;
   padding-left: 10px;
