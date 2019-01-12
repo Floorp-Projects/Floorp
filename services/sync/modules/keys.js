@@ -9,7 +9,6 @@ var EXPORTED_SYMBOLS = [
 ];
 
 ChromeUtils.import("resource://services-common/utils.js");
-ChromeUtils.import("resource://services-sync/constants.js");
 ChromeUtils.import("resource://gre/modules/Log.jsm");
 ChromeUtils.import("resource://services-sync/main.js");
 ChromeUtils.import("resource://services-sync/util.js");

@@ -24,7 +24,6 @@ const kDownloadAutoHidePref = "browser.download.autohideButton";
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource:///modules/CustomizableUI.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["CSS"]);

@@ -5,10 +5,8 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 ChromeUtils.import("resource://gre/modules/Preferences.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/Timer.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const {PushDB} = ChromeUtils.import("resource://gre/modules/PushDB.jsm");

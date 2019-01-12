@@ -11,7 +11,6 @@ const PREF_CACHED_FILE_EXISTENCE  = "distribution.iniFile.exists.value";
 const PREF_CACHED_FILE_APPVERSION = "distribution.iniFile.exists.appversion";
 
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.defineModuleGetter(this, "Preferences",
                                "resource://gre/modules/Preferences.jsm");

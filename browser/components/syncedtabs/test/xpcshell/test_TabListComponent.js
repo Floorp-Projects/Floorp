@@ -3,7 +3,6 @@
 let { SyncedTabs } = ChromeUtils.import("resource://services-sync/SyncedTabs.jsm", {});
 let { TabListComponent } = ChromeUtils.import("resource:///modules/syncedtabs/TabListComponent.js", {});
 let { SyncedTabsListStore } = ChromeUtils.import("resource:///modules/syncedtabs/SyncedTabsListStore.js", {});
-let { View } = ChromeUtils.import("resource:///modules/syncedtabs/TabListView.js", {});
 let { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
 
 const ACTION_METHODS = [

@@ -14,7 +14,6 @@ if (DEBUG) {
 
 var EXPORTED_SYMBOLS = ["IndexedDBHelper"];
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.importGlobalProperties(["indexedDB"]);
 
 ChromeUtils.defineModuleGetter(this, 'Services',

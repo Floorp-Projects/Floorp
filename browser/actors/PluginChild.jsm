@@ -10,7 +10,6 @@ ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/Timer.jsm");
 ChromeUtils.import("resource://gre/modules/BrowserUtils.jsm");
 
 ChromeUtils.defineModuleGetter(this, "ContextMenuChild",

@@ -11,10 +11,6 @@ ChromeUtils.import("resource://gre/modules/accessibility/Utils.jsm");
 ChromeUtils.defineModuleGetter(this, "Rect",
                                "resource://gre/modules/Geometry.jsm");
 
-if (Utils.MozBuildApp === "mobile/android") {
-  ChromeUtils.import("resource://gre/modules/Messaging.jsm");
-}
-
 const GECKOVIEW_MESSAGE = {
   ACTIVATE: "GeckoView:AccessibilityActivate",
   BY_GRANULARITY: "GeckoView:AccessibilityByGranularity",

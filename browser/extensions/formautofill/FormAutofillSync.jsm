@@ -11,7 +11,6 @@ ChromeUtils.import("resource://services-sync/engines.js");
 ChromeUtils.import("resource://services-sync/record.js");
 ChromeUtils.import("resource://services-sync/util.js");
 ChromeUtils.import("resource://services-sync/constants.js");
-ChromeUtils.import("resource://formautofill/FormAutofillUtils.jsm");
 
 ChromeUtils.defineModuleGetter(this, "Log",
                                "resource://gre/modules/Log.jsm");
