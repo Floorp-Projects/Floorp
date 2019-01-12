@@ -36,9 +36,11 @@ static_assert(nsICrashService::PROCESS_TYPE_VR == (int)GeckoProcessType_VR,
               "GeckoProcessType enum is out of sync with nsICrashService!");
 static_assert(nsICrashService::PROCESS_TYPE_RDD == (int)GeckoProcessType_RDD,
               "GeckoProcessType enum is out of sync with nsICrashService!");
+static_assert(nsICrashService::PROCESS_TYPE_SOCKET == (int)GeckoProcessType_Socket,
+              "GeckoProcessType enum is out of sync with nsICrashService!");
 // Add new static asserts here if you add more process types.
 // Update this static assert as well.
-static_assert(nsICrashService::PROCESS_TYPE_RDD + 1 == (int)GeckoProcessType_End,
+static_assert(nsICrashService::PROCESS_TYPE_SOCKET + 1 == (int)GeckoProcessType_End,
               "GeckoProcessType enum is out of sync with nsICrashService!");
 
 

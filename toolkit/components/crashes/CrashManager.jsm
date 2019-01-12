@@ -180,6 +180,9 @@ this.CrashManager.prototype = Object.freeze({
   // A crash in the RDD process.
   PROCESS_TYPE_RDD: "rdd",
 
+  // A crash in the socket process.
+  PROCESS_TYPE_SOCKET: "socket",
+
   // A real crash.
   CRASH_TYPE_CRASH: "crash",
 
@@ -464,7 +467,8 @@ this.CrashManager.prototype = Object.freeze({
       // Send a telemetry ping for each non-main process crash
       if (processType === this.PROCESS_TYPE_CONTENT ||
           processType === this.PROCESS_TYPE_GPU ||
-          processType === this.PROCESS_TYPE_RDD) {
+          processType === this.PROCESS_TYPE_RDD ||
+          processType === this.PROCESS_TYPE_SOCKET) {
         this._sendCrashPing(id, processType, date, metadata);
       }
     })();

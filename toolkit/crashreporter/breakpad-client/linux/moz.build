@@ -30,6 +30,6 @@ if CONFIG['OS_TARGET'] == 'Android':
         '/toolkit/crashreporter/google-breakpad/src/common/android/include',
     ]
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = 'breakpad_client'
 
 include('/toolkit/crashreporter/crashreporter.mozbuild')

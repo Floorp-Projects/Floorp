@@ -133,25 +133,25 @@ static void CloseLiveIteratorIon(JSContext* cx,
   }
 }
 
-class IonFrameStackDepthOp {
+class IonTryNoteFilter {
   uint32_t depth_;
 
  public:
-  explicit IonFrameStackDepthOp(const InlineFrameIterator& frame) {
+  explicit IonTryNoteFilter(const InlineFrameIterator& frame) {
     uint32_t base = NumArgAndLocalSlots(frame);
     SnapshotIterator si = frame.snapshotIterator();
     MOZ_ASSERT(si.numAllocations() >= base);
     depth_ = si.numAllocations() - base;
   }
 
-  uint32_t operator()() { return depth_; }
+  bool operator()(const JSTryNote* note) { return note->stackDepth <= depth_; }
 };
 
-class TryNoteIterIon : public TryNoteIter<IonFrameStackDepthOp> {
+class TryNoteIterIon : public TryNoteIter<IonTryNoteFilter> {
  public:
   TryNoteIterIon(JSContext* cx, const InlineFrameIterator& frame)
       : TryNoteIter(cx, frame.script(), frame.pc(),
-                    IonFrameStackDepthOp(frame)) {}
+                    IonTryNoteFilter(frame)) {}
 };
 
 static void HandleExceptionIon(JSContext* cx, const InlineFrameIterator& frame,
@@ -200,43 +200,19 @@ static void HandleExceptionIon(JSContext* cx, const InlineFrameIterator& frame,
     return;
   }
 
-  bool inForOfIterClose = false;
-
   for (TryNoteIterIon tni(cx, frame); !tni.done(); ++tni) {
     const JSTryNote* tn = *tni;
-
     switch (tn->kind) {
       case JSTRY_FOR_IN:
       case JSTRY_DESTRUCTURING:
-        // See corresponding comment in ProcessTryNotes.
-        if (inForOfIterClose) {
-          break;
-        }
-
         MOZ_ASSERT_IF(tn->kind == JSTRY_FOR_IN,
                       JSOp(*(script->offsetToPC(tn->start + tn->length))) ==
                           JSOP_ENDITER);
         CloseLiveIteratorIon(cx, frame, tn);
         break;
 
-      case JSTRY_FOR_OF_ITERCLOSE:
-        inForOfIterClose = true;
-        break;
-
-      case JSTRY_FOR_OF:
-        inForOfIterClose = false;
-        break;
-
-      case JSTRY_LOOP:
-        break;
-
       case JSTRY_CATCH:
         if (cx->isExceptionPending()) {
-          // See corresponding comment in ProcessTryNotes.
-          if (inForOfIterClose) {
-            break;
-          }
-
           // Ion can compile try-catch, but bailing out to catch
           // exceptions is slow. Reset the warm-up counter so that if we
           // catch many exceptions we won't Ion-compile the script.
@@ -265,6 +241,11 @@ static void HandleExceptionIon(JSContext* cx, const InlineFrameIterator& frame,
         }
         break;
 
+      case JSTRY_FOR_OF:
+      case JSTRY_LOOP:
+        break;
+
+      // JSTRY_FOR_OF_ITERCLOSE is handled internally by the try note iterator.
       default:
         MOZ_CRASH("Unexpected try note");
     }
@@ -327,21 +308,22 @@ struct AutoBaselineHandlingException {
   }
 };
 
-class BaselineFrameStackDepthOp {
+class BaselineTryNoteFilter {
   BaselineFrame* frame_;
 
  public:
-  explicit BaselineFrameStackDepthOp(BaselineFrame* frame) : frame_(frame) {}
-  uint32_t operator()() {
+  explicit BaselineTryNoteFilter(BaselineFrame* frame) : frame_(frame) {}
+  bool operator()(const JSTryNote* note) {
     MOZ_ASSERT(frame_->numValueSlots() >= frame_->script()->nfixed());
-    return frame_->numValueSlots() - frame_->script()->nfixed();
+    uint32_t currDepth = frame_->numValueSlots() - frame_->script()->nfixed();
+    return note->stackDepth <= currDepth;
   }
 };
 
-class TryNoteIterBaseline : public TryNoteIter<BaselineFrameStackDepthOp> {
+class TryNoteIterBaseline : public TryNoteIter<BaselineTryNoteFilter> {
  public:
   TryNoteIterBaseline(JSContext* cx, BaselineFrame* frame, jsbytecode* pc)
-      : TryNoteIter(cx, frame->script(), pc, BaselineFrameStackDepthOp(frame)) {
+      : TryNoteIter(cx, frame->script(), pc, BaselineTryNoteFilter(frame)) {
   }
 };
 
@@ -349,17 +331,11 @@ class TryNoteIterBaseline : public TryNoteIter<BaselineFrameStackDepthOp> {
 // pc parameter is updated to where the envs have been unwound to.
 static void CloseLiveIteratorsBaselineForUncatchableException(
     JSContext* cx, const JSJitFrameIter& frame, jsbytecode* pc) {
-  bool inForOfIterClose = false;
   for (TryNoteIterBaseline tni(cx, frame.baselineFrame(), pc); !tni.done();
        ++tni) {
     const JSTryNote* tn = *tni;
     switch (tn->kind) {
       case JSTRY_FOR_IN: {
-        // See corresponding comment in ProcessTryNotes.
-        if (inForOfIterClose) {
-          break;
-        }
-
         uint8_t* framePointer;
         uint8_t* stackPointer;
         BaselineFrameAndStackPointersFromTryNote(tn, frame, &framePointer,
@@ -369,14 +345,6 @@ static void CloseLiveIteratorsBaselineForUncatchableException(
         UnwindIteratorForUncatchableException(iterObject);
         break;
       }
-
-      case JSTRY_FOR_OF_ITERCLOSE:
-        inForOfIterClose = true;
-        break;
-
-      case JSTRY_FOR_OF:
-        inForOfIterClose = false;
-        break;
 
       default:
         break;
@@ -388,7 +356,6 @@ static bool ProcessTryNotesBaseline(JSContext* cx, const JSJitFrameIter& frame,
                                     EnvironmentIter& ei,
                                     ResumeFromException* rfe, jsbytecode** pc) {
   RootedScript script(cx, frame.baselineFrame()->script());
-  bool inForOfIterClose = false;
 
   for (TryNoteIterBaseline tni(cx, frame.baselineFrame(), *pc); !tni.done();
        ++tni) {
@@ -400,11 +367,6 @@ static bool ProcessTryNotesBaseline(JSContext* cx, const JSJitFrameIter& frame,
         // If we're closing a legacy generator, we have to skip catch
         // blocks.
         if (cx->isClosingGenerator()) {
-          break;
-        }
-
-        // See corresponding comment in ProcessTryNotes.
-        if (inForOfIterClose) {
           break;
         }
 
@@ -425,11 +387,6 @@ static bool ProcessTryNotesBaseline(JSContext* cx, const JSJitFrameIter& frame,
       }
 
       case JSTRY_FINALLY: {
-        // See corresponding comment in ProcessTryNotes.
-        if (inForOfIterClose) {
-          break;
-        }
-
         PCMappingSlotInfo slotInfo;
         SettleOnTryNote(cx, tn, frame, ei, rfe, pc);
         rfe->kind = ResumeFromException::RESUME_FINALLY;
@@ -446,11 +403,6 @@ static bool ProcessTryNotesBaseline(JSContext* cx, const JSJitFrameIter& frame,
       }
 
       case JSTRY_FOR_IN: {
-        // See corresponding comment in ProcessTryNotes.
-        if (inForOfIterClose) {
-          break;
-        }
-
         uint8_t* framePointer;
         uint8_t* stackPointer;
         BaselineFrameAndStackPointersFromTryNote(tn, frame, &framePointer,
@@ -462,11 +414,6 @@ static bool ProcessTryNotesBaseline(JSContext* cx, const JSJitFrameIter& frame,
       }
 
       case JSTRY_DESTRUCTURING: {
-        // See corresponding comment in ProcessTryNotes.
-        if (inForOfIterClose) {
-          break;
-        }
-
         uint8_t* framePointer;
         uint8_t* stackPointer;
         BaselineFrameAndStackPointersFromTryNote(tn, frame, &framePointer,
@@ -484,17 +431,11 @@ static bool ProcessTryNotesBaseline(JSContext* cx, const JSJitFrameIter& frame,
         break;
       }
 
-      case JSTRY_FOR_OF_ITERCLOSE:
-        inForOfIterClose = true;
-        break;
-
       case JSTRY_FOR_OF:
-        inForOfIterClose = false;
-        break;
-
       case JSTRY_LOOP:
         break;
 
+      // JSTRY_FOR_OF_ITERCLOSE is handled internally by the try note iterator.
       default:
         MOZ_CRASH("Invalid try note");
     }

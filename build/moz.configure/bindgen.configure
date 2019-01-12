@@ -4,6 +4,40 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+# cbindgen is needed by the style system build.
+cbindgen = check_prog('CBINDGEN', ['cbindgen'], paths=toolchain_search_path,
+                      when=depends(build_project)
+                      (lambda build_project: build_project != 'js'))
+
+
+@depends_if(cbindgen)
+@checking('cbindgen version')
+@imports(_from='textwrap', _import='dedent')
+def cbindgen_version(cbindgen):
+    cbindgen_min_version = Version('0.6.7')
+
+    # cbindgen x.y.z
+    version = Version(check_cmd_output(cbindgen, '--version').strip().split(" ")[1])
+
+    if version < cbindgen_min_version:
+        die(dedent('''\
+        cbindgen version {} is too old. At least version {} is required.
+
+        Please update using 'cargo install cbindgen --force' or running
+        './mach bootstrap', after removing the existing executable located at
+        {}.
+        '''.format(version, cbindgen_min_version, cbindgen)))
+
+    return version
+
+
+# Bindgen can use rustfmt to format Rust file, but it's not required.
+js_option(env='RUSTFMT', nargs=1, help='Path to the rustfmt program')
+
+rustfmt = check_prog('RUSTFMT', ['rustfmt'], paths=toolchain_search_path,
+                     input='RUSTFMT', allow_missing=True)
+
+
 # We support setting up the appropriate options for bindgen via setting
 # LLVM_CONFIG or by providing explicit configure options.  The Windows
 # installer of LLVM/Clang doesn't provide llvm-config, so we need both

@@ -1,29 +1,30 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-function fuzzyEquals(a, b) {
-  return (Math.abs(a - b) < 1e-6);
-}
-
-function promiseBrowserEvent(browserOrFrame, eventType, options) {
+function promiseBrowserEvent(browserOrFrame, eventType, options = {}) {
+  let listenerOptions = { capture: true };
+  if (options.mozSystemGroup) {
+    listenerOptions.mozSystemGroup = true;
+  }
   return new Promise((resolve) => {
     function handle(event) {
       // Since we'll be redirecting, don't make assumptions about the given URL and the loaded URL
-      if (event.target != (browserOrFrame.contentDocument || browserOrFrame.document) ||
-                          event.target.location.href == "about:blank") {
-        info("Skipping spurious '" + eventType + "' event" + " for " + event.target.location.href);
+      let document = browserOrFrame.contentDocument || browserOrFrame.document;
+      if (event.target != document && event.target != document.ownerGlobal.visualViewport ||
+          document.location.href == "about:blank") {
+        info("Skipping spurious '" + eventType + "' event" + " for " + document.location.href);
         return;
       }
       info("Received event " + eventType + " from browser");
-      browserOrFrame.removeEventListener(eventType, handle, true);
-      if (options && options.resolveAtNextTick) {
+      browserOrFrame.removeEventListener(eventType, handle, listenerOptions);
+      if (options.resolveAtNextTick) {
         Services.tm.dispatchToMainThread(() => resolve(event));
       } else {
         resolve(event);
       }
     }
 
-    browserOrFrame.addEventListener(eventType, handle, true);
+    browserOrFrame.addEventListener(eventType, handle, listenerOptions);
     info("Now waiting for " + eventType + " event from browser");
   });
 }

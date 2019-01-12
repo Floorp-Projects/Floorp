@@ -174,7 +174,8 @@ class ContentDelegateTest : BaseSessionTest() {
         mainSession.loadUri(startUri)
         sessionRule.waitForPageStop()
 
-        mainSession.evaluateJS("$('#name').value = 'the name'; window.scrollBy(0, 100);")
+        mainSession.evaluateJS("$('#name').value = 'the name'; window.setTimeout(() => window.scrollBy(0, 100),0);")
+        sessionRule.waitUntilCalled(Callbacks.ScrollDelegate::class, "onScrollChanged")
 
         val state = sessionRule.waitForResult(mainSession.saveState())
         assertThat("State should not be null", state, notNullValue())
@@ -197,7 +198,7 @@ class ContentDelegateTest : BaseSessionTest() {
                 equalTo("the name"))
 
         assertThat("Scroll position should match",
-                mainSession.evaluateJS("window.scrollY") as Double,
+                mainSession.evaluateJS("window.visualViewport.pageTop") as Double,
                 closeTo(100.0, .5))
     }
 

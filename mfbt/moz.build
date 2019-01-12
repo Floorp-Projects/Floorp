@@ -7,8 +7,6 @@
 with Files("**"):
     BUG_COMPONENT = ("Core", "MFBT")
 
-TEST_DIRS += ['tests']
-
 Library('mfbt')
 
 EXPORTS.mozilla = [
@@ -150,12 +148,21 @@ UNIFIED_SOURCES += [
     'JSONWriter.cpp',
     'Poison.cpp',
     'RandomNum.cpp',
-    'RecordReplay.cpp',
     'SHA1.cpp',
     'TaggedAnonymousMemory.cpp',
     'Unused.cpp',
     'Utf8.cpp',
 ]
+
+if CONFIG['MOZ_BUILD_APP'] != 'tools/crashreporter':
+    # RecordReplay.cpp uses files from js/
+    UNIFIED_SOURCES += [
+        'RecordReplay.cpp',
+    ]
+
+    # Building MFBT tests adds a large overhead when building
+    # tools/crashreporter.
+    TEST_DIRS += ['tests']
 
 DEFINES['IMPL_MFBT'] = True
 

@@ -55,7 +55,7 @@ linux64-clang-trunk-mingw-x86:
         kind: build
         platform: toolchains/opt
         symbol: TMW(clang-x86)
-        tier: 2
+        tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux-xlarge
     worker:
         max-run-time: 7200
@@ -905,3 +905,25 @@ wrench-deps:
         toolchain-artifact: public/build/wrench-deps.tar.bz2
     toolchains:
         - linux64-rust-1.31  # whatever m-c is built with
+
+linux64-minidump-stackwalk:
+    description: "minidump_stackwalk toolchain build"
+    treeherder:
+        kind: build
+        platform: toolchains/opt
+        symbol: TL(stackwalk)
+        tier: 1
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        max-run-time: 1800
+    run:
+        using: toolchain-script
+        script: build-minidump-stackwalk.sh
+        sparse-profile: null
+        resources:
+            - 'taskcluster/scripts/misc/tooltool-download.sh'
+        toolchain-artifact: public/build/minidump_stackwalk.tar.xz
+    toolchains:
+        - linux64-clang-7
+        - linux64-binutils
+        - linux64-rust-1.31

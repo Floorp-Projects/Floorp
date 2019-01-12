@@ -2824,5 +2824,65 @@ nsresult GetParameterHTTP(const nsACString &aHeaderVal, const char *aParamName,
                                                  aResult);
 }
 
+bool SchemeIsHTTP(nsIURI *aURI) {
+  MOZ_ASSERT(aURI);
+  return aURI->SchemeIs("http");
+}
+
+bool SchemeIsHTTPS(nsIURI *aURI) {
+  MOZ_ASSERT(aURI);
+  return aURI->SchemeIs("https");
+}
+
+bool SchemeIsJavascript(nsIURI *aURI) {
+  MOZ_ASSERT(aURI);
+  return aURI->SchemeIs("javascript");
+}
+
+bool SchemeIsChrome(nsIURI *aURI) {
+  MOZ_ASSERT(aURI);
+  return aURI->SchemeIs("chrome");
+}
+
+bool SchemeIsAbout(nsIURI *aURI) {
+  MOZ_ASSERT(aURI);
+  return aURI->SchemeIs("about");
+}
+
+bool SchemeIsBlob(nsIURI *aURI) {
+  MOZ_ASSERT(aURI);
+  return aURI->SchemeIs("blob");
+}
+
+bool SchemeIsFile(nsIURI *aURI) {
+  MOZ_ASSERT(aURI);
+  return aURI->SchemeIs("file");
+}
+
+bool SchemeIsData(nsIURI *aURI) {
+  MOZ_ASSERT(aURI);
+  return aURI->SchemeIs("data");
+}
+
+bool SchemeIsWYCIWYG(nsIURI *aURI) {
+  MOZ_ASSERT(aURI);
+  return aURI->SchemeIs("wyciwyg");
+}
+
+bool SchemeIsViewSource(nsIURI *aURI) {
+  MOZ_ASSERT(aURI);
+  return aURI->SchemeIs("view-source");
+}
+
+bool SchemeIsResource(nsIURI *aURI) {
+  MOZ_ASSERT(aURI);
+  return aURI->SchemeIs("resource");
+}
+
+bool SchemeIsFTP(nsIURI *aURI) {
+  MOZ_ASSERT(aURI);
+  return aURI->SchemeIs("ftp");
+}
+
 }  // namespace net
 }  // namespace mozilla

@@ -327,6 +327,13 @@ if (IsCSSPropertyPrefEnabled("layout.css.scrollbar-color.enabled")) {
   ];
 }
 
+// For properties which are well-tested by web-platform-tests, we don't need to
+// test animations/transitions again on them.
+var skipped_transitionable_properties = [
+  "grid-template-columns",
+  "grid-template-rows",
+]
+
 // Logical properties.
 for (const logical_side of ["inline-start", "inline-end", "block-start", "block-end"]) {
   supported_properties["border-" + logical_side + "-color"] = supported_properties["border-top-color"];
@@ -1091,6 +1098,7 @@ function sample_array(array, count) {
 for (prop in gCSSProperties) {
   var info = gCSSProperties[prop];
   if (!(prop in supported_properties) &&
+      !skipped_transitionable_properties.includes(prop) &&
       info.type != CSS_TYPE_TRUE_SHORTHAND &&
       !("alias_for" in info) &&
       !prop.match(/^transition-/) &&
