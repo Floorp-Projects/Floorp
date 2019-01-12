@@ -1,6 +1,6 @@
 // Basic getOwnPropertSymbols tests.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = Debugger();
 var gobj = dbg.addDebuggee(g);
 

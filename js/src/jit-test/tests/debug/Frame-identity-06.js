@@ -1,7 +1,7 @@
 // Debugger.Frames for async functions are not GC'd while they're suspended.
 // The awaited promise keeps the generator alive, via its reaction lists.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 g.eval(`
     // Create a few promises.
     var promises = [], resolvers = [];

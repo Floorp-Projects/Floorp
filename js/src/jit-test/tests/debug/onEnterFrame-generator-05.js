@@ -1,7 +1,7 @@
 // When resuming a generator triggers one Debugger's onEnterFrame handler,
 // all Debuggers' Debugger.Frames become usable at once.
 
-let g = newGlobal();
+let g = newGlobal({newCompartment: true});
 g.eval(`
     function* f() {
        yield 1;

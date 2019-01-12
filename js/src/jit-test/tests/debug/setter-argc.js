@@ -19,7 +19,7 @@ function check(obj) {
 }
 
 var dbg = new Debugger;
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var gw = dbg.addDebuggee(g);
 
 // Debugger

@@ -1,7 +1,7 @@
 // Errors in onNewPromise handlers are reported correctly, and don't mess up the
 // promise creation.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = new Debugger(g);
 
 let e;

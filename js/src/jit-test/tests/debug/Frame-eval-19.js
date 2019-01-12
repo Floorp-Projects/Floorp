@@ -6,7 +6,7 @@ if (!jitTogglesMatch(Opts_IonEagerNoOffthreadCompilation))
   quit(0);
 
 withJitOptions(Opts_IonEagerNoOffthreadCompilation, function () {
-  var g = newGlobal();
+  var g = newGlobal({newCompartment: true});
   var dbg = new Debugger;
 
   g.eval("" + function f(d) { g(d); });

@@ -1,6 +1,6 @@
 // obj.defineProperty redefining an existing property leaves unspecified attributes unchanged.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 g.p = 1;
 var dbg = new Debugger;
 var gw = dbg.addDebuggee(g);

@@ -5,7 +5,7 @@
 load(libdir + "asserts.js");
 load(libdir + "array-compare.js");
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = new Debugger(g);
 
 var s;

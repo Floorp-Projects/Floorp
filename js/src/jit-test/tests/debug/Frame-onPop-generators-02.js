@@ -3,7 +3,7 @@
 // Throwing an exception from an onPop handler when yielding terminates the debuggee
 // but does not close the generator-iterator.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = new Debugger;
 var gw = dbg.addDebuggee(g);
 dbg.onDebuggerStatement = function handleDebugger(frame) {

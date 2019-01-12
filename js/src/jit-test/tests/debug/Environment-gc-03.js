@@ -1,6 +1,6 @@
 // Test that block scopes cannot be resurrected by onStep.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = new Debugger(g);
 dbg.onDebuggerStatement = function(frame) {
     frame.onStep = (function() {

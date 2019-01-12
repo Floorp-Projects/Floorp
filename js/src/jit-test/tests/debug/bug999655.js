@@ -1,5 +1,5 @@
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = new Debugger(g);
 dbg.onNewScript = function(script) {
     fscript = script.getChildScripts()[0];

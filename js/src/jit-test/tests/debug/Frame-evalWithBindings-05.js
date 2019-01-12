@@ -1,5 +1,5 @@
 // evalWithBindings code can assign to the bindings.
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = new Debugger(g);
 var hits = 0;
 dbg.onDebuggerStatement = function (frame) {

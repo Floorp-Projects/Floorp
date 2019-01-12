@@ -1,5 +1,5 @@
 const dbg = new Debugger();
-const g = newGlobal();
+const g = newGlobal({newCompartment: true});
 dbg.addDebuggee(g);
 dbg.memory.trackingAllocationSites = true;
 g.eval("this.alloc = {}");

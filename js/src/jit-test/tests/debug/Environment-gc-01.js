@@ -1,6 +1,6 @@
 // An Environment keeps its referent alive.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 g.eval("function f(x) { return 2 * x; }");
 var dbg = Debugger(g);
 var env;

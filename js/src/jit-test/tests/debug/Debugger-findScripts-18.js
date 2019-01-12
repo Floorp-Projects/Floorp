@@ -1,7 +1,7 @@
 // In a debuggee with multiple scripts with varying displayURLs (aka //#
 // sourceURL), findScripts can filter by displayURL.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 
 g.eval("function f(){} //# sourceURL=f.js");
 g.eval("function g(){} //# sourceURL=g.js");

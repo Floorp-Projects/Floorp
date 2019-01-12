@@ -1,7 +1,7 @@
 // Check whether we respect resumption values when toggling debug mode on->off
 // from various points with live scripts on the stack.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = new Debugger;
 
 function reset() {

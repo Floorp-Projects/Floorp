@@ -3,7 +3,7 @@
 load(libdir + "/asserts.js");
 
 function test(when, what) {
-    let g = newGlobal();
+    let g = newGlobal({newCompartment: true});
     g.eval("function* f(x) { yield x; }");
 
     let dbg = new Debugger;

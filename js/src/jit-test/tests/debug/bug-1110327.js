@@ -1,5 +1,5 @@
 // Randomly chosen test: js/src/jit-test/tests/debug/Debugger-debuggees-10.js
-x = newGlobal()
+x = newGlobal({newCompartment: true})
 x.t = this
 // Randomly chosen test: js/src/jit-test/tests/debug/Debugger-findObjects-06.js
 Debugger(x).findObjects()

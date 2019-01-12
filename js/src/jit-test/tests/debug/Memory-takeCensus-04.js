@@ -1,7 +1,7 @@
 // Test that Debugger.Memory.prototype.takeCensus finds GC roots that are on the
 // stack.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = new Debugger(g);
 
 g.eval(`

@@ -3,11 +3,11 @@
 
 const dbg = new Debugger();
 
-const root1 = newGlobal();
+const root1 = newGlobal({newCompartment: true});
 dbg.addDebuggee(root1);
-const root2 = newGlobal();
+const root2 = newGlobal({newCompartment: true});
 dbg.addDebuggee(root2);
-const root3 = newGlobal();
+const root3 = newGlobal({newCompartment: true});
 dbg.addDebuggee(root3);
 
 dbg.memory.trackingAllocationSites = true;

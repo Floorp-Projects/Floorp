@@ -1,6 +1,6 @@
 // An onStep handler on a suspended async function frame keeps a Debugger alive.
 
-let g = newGlobal();
+let g = newGlobal({newCompartment: true});
 g.eval(`
   async function f() {
     debugger;

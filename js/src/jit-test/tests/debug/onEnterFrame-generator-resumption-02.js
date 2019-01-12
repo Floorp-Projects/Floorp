@@ -3,7 +3,7 @@
 
 load(libdir + "asserts.js");
 
-let g = newGlobal();
+let g = newGlobal({newCompartment: true});
 g.values = [1, 2, 3];
 g.eval(`function* f() { yield* values; }`);
 

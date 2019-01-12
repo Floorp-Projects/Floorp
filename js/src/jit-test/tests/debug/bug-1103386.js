@@ -7,4 +7,4 @@ if (globalPrototypeChainIsMutable()) {
 }
 
 // Random chosen test: js/src/jit-test/tests/debug/Memory-takeCensus-05.js
-Debugger(newGlobal()).memory.takeCensus();
+Debugger(newGlobal({newCompartment: true})).memory.takeCensus();

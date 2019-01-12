@@ -7,7 +7,7 @@ var logA = '';
 var dbgB = new Debugger;
 var logB = '';
 
-var g1 = newGlobal();
+var g1 = newGlobal({newCompartment: true});
 g1.eval('function g1f() { print("Weltuntergang"); }');
 var DOAg1 = dbgA.addDebuggee(g1);
 var DOAg1f = DOAg1.getOwnPropertyDescriptor('g1f').value;
@@ -18,7 +18,7 @@ var DOBg1f = DOBg1.getOwnPropertyDescriptor('g1f').value;
 DOBg1f.script.setBreakpoint(0, { hit: () => { logB += '1'; } });
 
 
-var g2 = newGlobal();
+var g2 = newGlobal({newCompartment: true});
 g2.eval('function g2f() { print("Mokushi"); }');
 
 var DOAg2 = dbgA.addDebuggee(g2);

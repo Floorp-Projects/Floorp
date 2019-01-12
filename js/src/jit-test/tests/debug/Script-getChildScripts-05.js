@@ -1,7 +1,7 @@
 // Test that lazy inner functions inside eval are tagged properly so we don't
 // incorrectly do NAME -> GNAME optimization.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = new Debugger(g);
 dbg.onNewScript = function delazify(script, global) {
   // Force delazification of inner functions.

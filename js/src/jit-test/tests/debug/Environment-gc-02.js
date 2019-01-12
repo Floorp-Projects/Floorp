@@ -1,7 +1,7 @@
 // A closure's .environment keeps the lexical environment alive even if the closure is destroyed.
 
 var N = 4;
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 g.eval("function add(a) { return function (b) { return eval('a + b'); }; }");
 var dbg = new Debugger;
 var gw = dbg.addDebuggee(g);

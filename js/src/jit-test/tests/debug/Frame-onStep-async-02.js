@@ -13,7 +13,7 @@
 // stack. Real debuggers would have to maintain multiple async stacks.
 
 // Set up debuggee.
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 g.eval(`\
 async function outer() {                                // line 1
     return (await inner()) + (await inner()) + "!";     // 2

@@ -1,7 +1,7 @@
 // Test that we only sample about allocationSamplingProbability * 100 percent of
 // allocations.
 
-const root = newGlobal();
+const root = newGlobal({newCompartment: true});
 
 const dbg = new Debugger();
 const wrappedRoot = dbg.addDebuggee(root);

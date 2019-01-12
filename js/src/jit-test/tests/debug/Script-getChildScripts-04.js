@@ -1,7 +1,7 @@
 // script.getChildScripts() works correctly during the newScript hook.
 // (A bug had it including the script for the calling function.)
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 g.eval("function h(a) { eval(a); }");
 
 var dbg = Debugger(g);

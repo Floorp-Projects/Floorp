@@ -1,6 +1,6 @@
 // Test drainAllocationsLog() and byte sizes.
 
-const root = newGlobal();
+const root = newGlobal({newCompartment: true});
 const dbg = new Debugger();
 const wrappedRoot = dbg.addDebuggee(root);
 

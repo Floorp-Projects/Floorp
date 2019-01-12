@@ -24,7 +24,7 @@ function onStep2() {
 }
 
 function setup() {
-    let g1 = newGlobal();
+    let g1 = newGlobal({newCompartment: true});
     g1.eval(`
         function* gf1() {
              debugger;
@@ -34,7 +34,7 @@ function setup() {
     `);
     gen0 = g1.gf1();
 
-    let g2 = newGlobal();
+    let g2 = newGlobal({newCompartment: true});
     g2.eval(`
         function* gf2() { debugger; yield 1; return 'done'; }
 

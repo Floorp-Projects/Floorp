@@ -1,7 +1,7 @@
 // Returning {throw:} from onEnterFrame when resuming inside a try block in an
 // async function causes control to jump to the catch block.
 
-let g = newGlobal();
+let g = newGlobal({newCompartment: true});
 g.eval(`
     async function af() {
         try {

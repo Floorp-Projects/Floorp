@@ -1,7 +1,7 @@
 // tests calling script functions via Debugger.Object.prototype.getProperty
 "use strict";
 
-var global = newGlobal();
+var global = newGlobal({newCompartment: true});
 var dbg = new Debugger(global);
 dbg.onDebuggerStatement = onDebuggerStatement;
 

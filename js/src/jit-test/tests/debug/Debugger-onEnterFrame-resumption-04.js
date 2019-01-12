@@ -1,6 +1,6 @@
 // If debugger.onEnterFrame returns undefined, the frame should continue execution.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = Debugger(g);
 var hits = 0;
 var savedFrame;

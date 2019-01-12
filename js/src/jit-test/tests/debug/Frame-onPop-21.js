@@ -1,5 +1,5 @@
 // frame.eval works from an onPop handler.
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 g.eval('function f(a,b) { var x = "entablature", y; debugger; return x+y+a+b; }');
 
 var dbg = new Debugger(g);

@@ -1,6 +1,6 @@
 // Test how stepping interacts with for(;;) statements.
 
-let g = newGlobal();
+let g = newGlobal({newCompartment: true});
 
 // We want a for(;;) loop whose body is evaluated at least once, to
 // see whether the loop head is hit a second time.

@@ -5,7 +5,7 @@ for (var i = 0; gczeal(4,10); g(buffer))
 //corefuzz-dcd-endofdata
 //corefuzz-dcd-endofdata
 //corefuzz-dcd-endofdata
-g = newGlobal();
+g = newGlobal({newCompartment: true});
 g.parent = this
 g.eval("Debugger(parent).onExceptionUnwind=(function(){})")
 `;

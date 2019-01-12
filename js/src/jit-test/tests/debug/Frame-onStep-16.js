@@ -1,7 +1,7 @@
 // Stepping through a function with a return statement should pause on
 // the closing brace of the function.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = Debugger(g);
 var log;
 
