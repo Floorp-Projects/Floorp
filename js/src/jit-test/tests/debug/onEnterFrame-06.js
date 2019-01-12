@@ -1,8 +1,8 @@
 // The tracejit does not prevent onEnterFrame from being called after entering
 // a debuggee compartment from a non-debuggee compartment.
 
-var g1 = newGlobal();
-var g2 = newGlobal();
+var g1 = newGlobal({newCompartment: true});
+var g2 = newGlobal({newCompartment: true});
 var dbg = Debugger(g1, g2);
 dbg.removeDebuggee(g2); // turn off debug mode in g2
 

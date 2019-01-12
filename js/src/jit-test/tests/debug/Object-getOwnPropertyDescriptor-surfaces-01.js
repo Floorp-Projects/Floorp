@@ -1,6 +1,6 @@
 // The argument to Debugger.Object.prototype.getOwnPropertyDescriptor can be omitted.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 g.eval("var obj = {};");
 
 var dbg = Debugger(g);

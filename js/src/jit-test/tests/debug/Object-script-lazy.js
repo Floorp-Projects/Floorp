@@ -10,13 +10,13 @@
 // that everything becomes available.
 
 // Create functions f, g in a non-debuggee compartment.
-var g1 = newGlobal();
+var g1 = newGlobal({newCompartment: true});
 g1.eval('function f() { return "from f"; }');
 g1.eval('function g() { return "from g"; }');
 g1.eval('this.h = f.bind(g, 42, "foo");');
 
 // Create a debuggee compartment with CCWs referring to f and g.
-var g2 = newGlobal();
+var g2 = newGlobal({newCompartment: true});
 var dbg = new Debugger;
 var g2w = dbg.addDebuggee(g2);
 g2.f = g1.f;

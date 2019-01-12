@@ -2,7 +2,7 @@ function foo() {
   (function() {
     Object.preventExtensions(this);
     setJitCompilerOption("ion.warmup.trigger", 4);
-    var g = newGlobal();
+    var g = newGlobal({newCompartment: true});
     g.debuggeeGlobal = this;
     g.eval("(" + function () {
         dbg = new Debugger(debuggeeGlobal);

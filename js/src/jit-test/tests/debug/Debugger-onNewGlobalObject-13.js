@@ -8,7 +8,7 @@ dbg.onNewGlobalObject = function (global) {
   assertEq(this, dbg);
   gw = global;
 };
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 assertEq(typeof gw, 'object');
 assertEq(dbg.addDebuggee(g), gw);
 

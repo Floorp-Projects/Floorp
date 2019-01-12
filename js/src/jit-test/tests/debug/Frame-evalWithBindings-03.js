@@ -1,5 +1,5 @@
 // arguments works in evalWithBindings (it does not interpose a function scope)
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = new Debugger;
 var global = dbg.addDebuggee(g);
 var hits = 0;

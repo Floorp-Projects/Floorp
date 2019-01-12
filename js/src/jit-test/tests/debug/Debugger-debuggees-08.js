@@ -1,7 +1,7 @@
 // Adding a debuggee more than once is redundant.
 
 var dbg = new Debugger;
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var w = dbg.addDebuggee(g);
 assertEq(w instanceof Debugger.Object, true);
 

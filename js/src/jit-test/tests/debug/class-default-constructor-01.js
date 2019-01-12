@@ -1,6 +1,6 @@
 // We should be able to retrieve the script of a class's default constructor.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = new Debugger;
 var gDO = dbg.addDebuggee(g);
 

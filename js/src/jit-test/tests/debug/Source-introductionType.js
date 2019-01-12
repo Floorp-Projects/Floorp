@@ -2,7 +2,7 @@
 
 // Check that scripts' introduction types are properly marked.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = new Debugger();
 var gDO = dbg.addDebuggee(g);
 var log;

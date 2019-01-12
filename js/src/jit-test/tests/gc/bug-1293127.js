@@ -1,7 +1,7 @@
 // Test that we can create 1000 cross compartment wrappers to nursery objects
 // without trigger a minor GC.
 gczeal(0);
-let g = newGlobal();
+let g = newGlobal({newCompartment: true});
 evalcx("function f(x) { return {x: x}; }", g);
 gc();
 let initial = gcparam("gcNumber");

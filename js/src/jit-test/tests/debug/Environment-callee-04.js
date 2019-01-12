@@ -2,7 +2,7 @@
 // internal function object, not the live function object. (We should never
 // create Debugger.Object instances referring to internal function objects.)
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = new Debugger(g);
 
 dbg.onDebuggerStatement = function (frame) {

@@ -6,7 +6,7 @@ var hits = 0;
 setInterruptCallback(function() {
   print("Interrupt!");
   hits++;
-  var g = newGlobal();
+  var g = newGlobal({newCompartment: true});
   g.parent = global;
   g.eval("var dbg = new Debugger(parent); dbg.onEnterFrame = function(frame) {};");
   g.eval("dbg.removeDebuggee(parent);");

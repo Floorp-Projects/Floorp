@@ -1,6 +1,6 @@
 // The onExceptionUnwind hook is called multiple times as the stack unwinds.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 g.debuggeeGlobal = this;
 g.dbg = null;
 g.eval("(" + function () {

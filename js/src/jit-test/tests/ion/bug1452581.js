@@ -1,5 +1,5 @@
 // |jit-test| error:7
-var g = newGlobal()
+var g = newGlobal({newCompartment: true})
 g.parent = this
 g.eval("(" + function() {
     Debugger(parent).onExceptionUnwind = function(frame) {

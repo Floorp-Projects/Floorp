@@ -1,7 +1,7 @@
 // Returning {throw:} from onEnterFrame when resuming inside a try block in a
 // generator causes control to jump to the finally block.
 
-let g = newGlobal();
+let g = newGlobal({newCompartment: true});
 g.eval(`
     function* gen() {
         try {

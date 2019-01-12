@@ -1,6 +1,6 @@
 // Basic breakpoint test.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 g.s = '';
 var handler = {
     hit: function (frame) {

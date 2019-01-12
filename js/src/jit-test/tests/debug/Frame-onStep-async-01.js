@@ -1,7 +1,7 @@
 // Stepping works across `await` in async functions.
 
 // Set up debuggee.
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 g.log = "";
 g.eval(`                              // line 1
 async function aloop() {              // 2

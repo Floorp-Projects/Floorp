@@ -1,7 +1,7 @@
 // Debugger.prototype.makeGlobalObjectReference returns a D.O for a global
 // without adding it as a debuggee.
 
-let g1 = newGlobal();
+let g1 = newGlobal({newCompartment: true});
 let dbg = new Debugger;
 assertEq(dbg.hasDebuggee(g1), false);
 
@@ -17,7 +17,7 @@ assertEq(g1w.unsafeDereference(), g1);
 assertEq(g1w, g1w.makeDebuggeeValue(g1));
 
 // makeGlobalObjectReference dereferences CCWs.
-let g2 = newGlobal();
+let g2 = newGlobal({newCompartment: true});
 g2.g1 = g1;
 let g2w = dbg.addDebuggee(g2);
 let g2g1w = g2w.getOwnPropertyDescriptor('g1').value;

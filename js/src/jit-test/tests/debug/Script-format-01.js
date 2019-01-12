@@ -3,7 +3,7 @@
 // Tests that JavaScript scripts have a "js" format and wasm scripts have a
 // "wasm" format.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = new Debugger(g);
 
 var gotScript;

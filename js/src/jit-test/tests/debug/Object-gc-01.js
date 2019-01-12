@@ -1,6 +1,6 @@
 // Debugger.Objects keep their referents alive.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = Debugger(g);
 var arr = [];
 dbg.onDebuggerStatement = function (frame) { arr.push(frame.eval("[]").return); };

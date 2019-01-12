@@ -1,5 +1,5 @@
 // Frame.this and evalInFrame with missing this, strict and non-strict.
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = new Debugger(g);
 var evalThis, frameThis;
 dbg.onEnterFrame = function (frame) {

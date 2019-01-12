@@ -1,6 +1,6 @@
 // async functions fire onEnterFrame each time they resume, like generators
 
-let g = newGlobal();
+let g = newGlobal({newCompartment: true});
 g.eval(`
     async function timeout(n) {
         for (let i = 0; i < n; i++) {

@@ -1,5 +1,5 @@
 // Debugger.prototype.findScripts can filter scripts by line number.
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = new Debugger();
 var gw = dbg.addDebuggee(g);
 

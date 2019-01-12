@@ -1,6 +1,6 @@
 // frame.onStep can coexist with breakpoints.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = Debugger(g);
 var log = '';
 dbg.onEnterFrame = function (frame) {

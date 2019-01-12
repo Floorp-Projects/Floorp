@@ -1,7 +1,7 @@
 // Debugger.prototype.findScripts can filter scripts by URL.
-var g1 = newGlobal();
-var g2 = newGlobal();
-var g3 = newGlobal();
+var g1 = newGlobal({newCompartment: true});
+var g2 = newGlobal({newCompartment: true});
+var g3 = newGlobal({newCompartment: true});
 
 // Define some functions whose url will be this test file.
 g1.eval('function g1f() {}');

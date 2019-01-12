@@ -1,4 +1,4 @@
-var dbgGlobal = newGlobal();
+var dbgGlobal = newGlobal({newCompartment: true});
 var dbg = new dbgGlobal.Debugger();
 dbg.addDebuggee(this);
 function evalInFrame() {

@@ -3,13 +3,13 @@
 gczeal(0);
 
 let lfPreamble = `
-  var lfOffThreadGlobal = newGlobal();
+  var lfOffThreadGlobal = newGlobal({newCompartment: true});
   for (lfLocal in this)
     try {} catch(lfVare5) {}
 `;
 evaluate(lfPreamble);
 evaluate(`
-  var g = newGlobal();
+  var g = newGlobal({newCompartment: true});
   var dbg = new Debugger;
   var gw = dbg.addDebuggee(g);
   for (lfLocal in this)
@@ -17,7 +17,7 @@ evaluate(`
       try {
         lfOffThreadGlobal[lfLocal] = this[lfLocal];
       } catch(lfVare5) {}
-  var g = newGlobal();
+  var g = newGlobal({newCompartment: true});
   var gw = dbg.addDebuggee(g);
 `);
 lfOffThreadGlobal.offThreadCompileScript(`
@@ -26,7 +26,7 @@ lfOffThreadGlobal.offThreadCompileScript(`
 `);
 lfOffThreadGlobal.runOffThreadScript();
 eval(`
-  var lfOffThreadGlobal = newGlobal();
+  var lfOffThreadGlobal = newGlobal({newCompartment: true});
   try { evaluate(\`
     gczeal(18, 1);
     grayRoot()[0] = "foo";

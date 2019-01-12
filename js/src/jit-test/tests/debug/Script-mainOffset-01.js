@@ -1,7 +1,7 @@
 /* -*- indent-tabs-mode: nil; js-indent-level: 2; js-indent-level: 2 -*- */
 // The main offset of a script should be hit before it performs any actions.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 g.eval("var n = 0; function foo() { n = 1; }");
 var dbg = Debugger(g);
 

@@ -2,7 +2,7 @@
 //
 // Modified copy of Frame-older-generators-01.js.
 
-let g = newGlobal();
+let g = newGlobal({newCompartment: true});
 g.eval(`
     function* gen() {
         try { throw new Error("bad"); } catch { }

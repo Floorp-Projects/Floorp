@@ -1,6 +1,6 @@
 // Debugger hooks fire based on debuggees.
 
-var g1 = newGlobal();
+var g1 = newGlobal({newCompartment: true});
 g1.eval("var g2 = newGlobal('same-compartment')");
 var g2 = g1.g2;
 g1.eval("function f() { debugger; g2.g(); }");

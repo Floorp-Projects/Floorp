@@ -1,7 +1,7 @@
 // Test that Ion->Baseline in-place debug mode bailout can recover the iterator
 // from the snapshot in a for-of loop.
 
-g = newGlobal();
+g = newGlobal({newCompartment: true});
 g.parent = this;
 g.eval("Debugger(parent).onExceptionUnwind=(function() {})");
 function* throwInNext() {

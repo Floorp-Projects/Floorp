@@ -2,7 +2,7 @@
 
 var N = 12;
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = Debugger(g);
 var wrappers = [];
 

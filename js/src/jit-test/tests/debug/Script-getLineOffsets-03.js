@@ -1,7 +1,7 @@
 // getLineOffsets treats one-line compound statements as having only one entry-point.
 // (A breakpoint on a line that only executes once will only hit once.)
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 g.line0 = null;
 var dbg = Debugger(g);
 var log;

@@ -2,7 +2,7 @@
 
 load(libdir + 'asserts.js');
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 g.evaluate(`function f() { print("earth/heart/hater"); }`,
            { lineNumber: 1800 });
 

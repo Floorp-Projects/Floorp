@@ -1,6 +1,6 @@
 // Source.prototype.element can be an object or undefined.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = new Debugger;
 var gw = dbg.addDebuggee(g);
 g.evaluate("function f(x) { return 2*x; }", {element: { foo: "bar" }});

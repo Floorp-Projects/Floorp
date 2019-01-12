@@ -2,7 +2,7 @@
 // We don't assert that the breakpoint actually hits because that depends on
 // the eval cache, an implementation detail.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = Debugger(g);
 g.eval("function f() { return eval('2+2'); }");
 var s;

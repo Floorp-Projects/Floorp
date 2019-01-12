@@ -1,6 +1,6 @@
 // A debugger statement in an onDebuggerStatement hook should not reenter.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var calls = 0;
 
 var dbg = Debugger(g);

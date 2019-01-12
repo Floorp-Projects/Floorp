@@ -1,4 +1,4 @@
-g = newGlobal();
+g = newGlobal({newCompartment: true});
 g.parent = this;
 g.eval("(" + function() {
     let calledTimes = 0;

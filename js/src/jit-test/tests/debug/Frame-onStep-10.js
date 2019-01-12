@@ -1,7 +1,7 @@
 // Throwing and catching an error in an onStep handler shouldn't interfere
 // with throwing and catching in the debuggee.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 g.eval("function f() { debugger; throw 'mud'; }");
 
 var dbg = Debugger(g);

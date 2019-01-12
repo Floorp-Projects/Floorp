@@ -1,4 +1,4 @@
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 
 g.evaluate(`
     function testInnerFun(defaultArg = 1) {

@@ -1,6 +1,6 @@
 // Debugger.Object.prototype.makeDebuggeeValue returns the object wrapped
 // the same way as Debugger.Frame.prototype.eval, etc.
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 g.eval("function f() { debugger; }");
 var dbg = Debugger();
 var gw = dbg.addDebuggee(g);

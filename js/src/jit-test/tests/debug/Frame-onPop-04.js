@@ -1,7 +1,7 @@
 // When a termination is propagated out of multiple frames, their onPop
 // handlers are called in the correct order, and no onExceptionUnwind
 // handlers are called.
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 g.eval("function f() { terminate(); }");
 g.eval("function g() { f(); }");
 g.eval("function h() { g(); }");

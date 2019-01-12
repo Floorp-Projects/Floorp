@@ -5,7 +5,7 @@
 // (The purpose is to test OOM-handling in the code that creates the
 // Debugger.Frame object and associates it with the generator object.)
 
-let g = newGlobal();
+let g = newGlobal({newCompartment: true});
 g.eval(`\
     function* gen(x) {  // line 1
         x++;            // 2

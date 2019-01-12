@@ -1,7 +1,7 @@
 // |jit-test| allow-oom; skip-if: !('oomAfterAllocations' in this)
 
 (function() {
-    g = newGlobal()
+    g = newGlobal({newCompartment: true})
     dbg = new Debugger
     g.toggle = function(d) {
         if (d) {

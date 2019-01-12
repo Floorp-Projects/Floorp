@@ -1,6 +1,6 @@
 // We get the same Debugger.Script object instance each time we ask.
 
-var global = newGlobal();
+var global = newGlobal({newCompartment: true});
 global.eval('function f() { debugger; }');
 global.eval('function g() { debugger; }');
 

@@ -1,7 +1,7 @@
 // Test that inspecting a bound function that was bound again does the right
 // thing.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = new Debugger();
 var gw = dbg.addDebuggee(g);
 var expr = "function f() { return this; }; var bf = f.bind(1, 2).bind(3, 4); bf";

@@ -1,6 +1,6 @@
 // Ensure nuking happens on a single target realm instead of compartment.
 
-var g1 = newGlobal();
+var g1 = newGlobal({newCompartment: true});
 var g2 = newGlobal({sameCompartmentAs: g1});
 g2.other = g1;
 
@@ -41,7 +41,7 @@ g2.evaluate("(" + function() {
     nukeAllCCWs();
     var ex = null;
     try {
-        newGlobal().Array();
+        newGlobal({newCompartment: true}).Array();
     } catch (e) {
         ex = e;
     }

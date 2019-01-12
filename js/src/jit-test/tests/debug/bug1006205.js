@@ -1,7 +1,7 @@
 var lfcode = new Array();
 lfcode.push = loadFile;
 lfcode.push("\
-var g = newGlobal();\
+var g = newGlobal({newCompartment: true});\
 g.debuggeeGlobal = this;\
 g.eval(\"(\" + function () {\
         dbg = new Debugger(debuggeeGlobal);\
@@ -9,7 +9,7 @@ g.eval(\"(\" + function () {\
 ");
 lfcode.push("gc();");
 lfcode.push("\
-var g = newGlobal();\
+var g = newGlobal({newCompartment: true});\
 g.debuggeeGlobal = this;\
 g.eval(\"(\" + function () {\
   dbg = new Debugger(debuggeeGlobal);\
