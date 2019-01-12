@@ -656,31 +656,6 @@ nsresult ServoStyleSet::AppendStyleSheet(SheetType aType, StyleSheet* aSheet) {
   return NS_OK;
 }
 
-nsresult ServoStyleSet::PrependStyleSheet(SheetType aType, StyleSheet* aSheet) {
-  MOZ_ASSERT(aSheet);
-  MOZ_ASSERT(aSheet->IsApplicable());
-  MOZ_ASSERT(IsCSSSheetType(aType));
-  MOZ_ASSERT(aSheet->RawContents(),
-             "Raw sheet should be in place before insertion.");
-
-  RemoveSheetOfType(aType, aSheet);
-  PrependSheetOfType(aType, aSheet);
-
-  if (mRawSet) {
-    // Maintain a mirrored list of sheets on the servo side.
-    // Servo will remove aSheet from its original position as part of the call
-    // to Servo_StyleSet_PrependStyleSheet.
-    Servo_StyleSet_PrependStyleSheet(mRawSet.get(), aSheet);
-    SetStylistStyleSheetsDirty();
-  }
-
-  if (mStyleRuleMap) {
-    mStyleRuleMap->SheetAdded(*aSheet);
-  }
-
-  return NS_OK;
-}
-
 nsresult ServoStyleSet::RemoveStyleSheet(SheetType aType, StyleSheet* aSheet) {
   MOZ_ASSERT(aSheet);
   MOZ_ASSERT(IsCSSSheetType(aType));

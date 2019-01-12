@@ -450,7 +450,6 @@ package org.mozilla.geckoview {
     field public final java.lang.String origin;
     field public final int securityMode;
     field public final java.lang.String subjectName;
-    field public final int trackingMode;
   }
 
   public static interface GeckoSession.PromptDelegate {

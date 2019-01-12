@@ -1077,12 +1077,9 @@ static bool TrackUnhandledRejections(JSContext* cx, JS::HandleObject promise,
 
   RootedValue promiseVal(cx, ObjectValue(*promise));
 
-  Maybe<AutoRealm> ar;
-  if (cx->realm() != sc->unhandledRejectedPromises->realm()) {
-    ar.emplace(cx, sc->unhandledRejectedPromises);
-    if (!cx->compartment()->wrap(cx, &promiseVal)) {
-      return false;
-    }
+  AutoRealm ar(cx, sc->unhandledRejectedPromises);
+  if (!cx->compartment()->wrap(cx, &promiseVal)) {
+    return false;
   }
 
   switch (state) {
@@ -1130,7 +1127,7 @@ static void ForwardingPromiseRejectionTrackerCallback(
   }
 
   RootedValue rval(cx);
-  (void) Call(cx, callback, UndefinedHandleValue, args, &rval);
+  (void)Call(cx, callback, UndefinedHandleValue, args, &rval);
 }
 
 static bool SetPromiseRejectionTrackerCallback(JSContext* cx, unsigned argc,

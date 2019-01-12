@@ -220,6 +220,18 @@ class ScrollFrameHelper : public nsIReflowCallback {
   nsRect GetScrollRange(nscoord aWidth, nscoord aHeight) const;
   nsSize GetVisualViewportSize() const;
   nsPoint GetVisualViewportOffset() const;
+  /**
+   * For LTR frames, this is the same as GetVisualViewportOffset().
+   * For RTL frames, we take the offset from the top right corner of the frame
+   * to the top right corner of the visual viewport.
+   */
+  nsPoint GetLogicalVisualViewportOffset() const {
+    nsPoint pt = GetVisualViewportOffset();
+    if (!IsPhysicalLTR()) {
+      pt.x += GetVisualViewportSize().width - mScrolledFrame->GetRect().width;
+    }
+    return pt;
+  }
   void ScrollSnap(
       nsIScrollableFrame::ScrollMode aMode = nsIScrollableFrame::SMOOTH_MSD);
   void ScrollSnap(
@@ -410,6 +422,7 @@ class ScrollFrameHelper : public nsIReflowCallback {
   bool ShouldClampScrollPosition() const;
 
   bool IsAlwaysActive() const;
+  void MarkEverScrolled();
   void MarkRecentlyScrolled();
   void MarkNotRecentlyScrolled();
   nsExpirationState* GetExpirationState() { return &mActivityExpirationState; }
@@ -541,10 +554,15 @@ class ScrollFrameHelper : public nsIReflowCallback {
   // matches the current logical scroll position, we try to scroll to
   // mRestorePos after every reflow --- because after each time content is
   // loaded/added to the scrollable element, there will be a reflow.
+  // Note that for frames where layout and visual viewport aren't one and the
+  // same thing, this scroll position will be the logical scroll position of
+  // the *visual* viewport, as its position will be more relevant to the user.
   nsPoint mRestorePos;
   // The last logical position we scrolled to while trying to restore
   // mRestorePos, or 0,0 when this is a new frame. Set to -1,-1 once we've
   // scrolled for any reason other than trying to restore mRestorePos.
+  // Just as with mRestorePos, this position will be the logical position of
+  // the *visual* viewport where available.
   nsPoint mLastPos;
 
   // The latest scroll position we've sent or received from APZ. This
@@ -966,6 +984,7 @@ class nsHTMLScrollFrame : public nsContainerFrame,
   virtual void ClearDidHistoryRestore() override {
     mHelper.mDidHistoryRestore = false;
   }
+  virtual void MarkEverScrolled() override { mHelper.MarkEverScrolled(); }
   virtual bool IsRectNearlyVisible(const nsRect& aRect) override {
     return mHelper.IsRectNearlyVisible(aRect);
   }
@@ -1433,6 +1452,7 @@ class nsXULScrollFrame final : public nsBoxFrame,
   virtual void ClearDidHistoryRestore() override {
     mHelper.mDidHistoryRestore = false;
   }
+  virtual void MarkEverScrolled() override { mHelper.MarkEverScrolled(); }
   virtual bool IsRectNearlyVisible(const nsRect& aRect) override {
     return mHelper.IsRectNearlyVisible(aRect);
   }

@@ -9,7 +9,7 @@ UNIFIED_SOURCES += [
     'crash_generation_server.cc',
 ]
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = 'breakpad_client'
 
 LOCAL_INCLUDES += [
     '/ipc/chromium/src',

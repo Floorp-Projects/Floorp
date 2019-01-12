@@ -10,6 +10,7 @@
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/dom/CustomElementRegistryBinding.h"
 #include "mozilla/dom/HTMLElementBinding.h"
+#include "mozilla/dom/ShadowIncludingTreeIterator.h"
 #include "mozilla/dom/XULElementBinding.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/WebComponentsBinding.h"
@@ -557,8 +558,6 @@ class CandidateFinder {
   nsTArray<nsCOMPtr<Element>> OrderedCandidates();
 
  private:
-  bool Traverse(Element* aRoot, nsTArray<nsCOMPtr<Element>>& aOrderedElements);
-
   nsCOMPtr<Document> mDoc;
   nsInterfaceHashtable<nsPtrHashKey<Element>, Element> mCandidates;
 };
@@ -590,45 +589,22 @@ nsTArray<nsCOMPtr<Element>> CandidateFinder::OrderedCandidates() {
   }
 
   nsTArray<nsCOMPtr<Element>> orderedElements(mCandidates.Count());
-  for (Element* child = mDoc->GetFirstElementChild(); child;
-       child = child->GetNextElementSibling()) {
-    if (!Traverse(child, orderedElements)) {
-      break;
+  for (nsINode* node : ShadowIncludingTreeIterator(*mDoc)) {
+    Element* element = Element::FromNode(node);
+    if (!element) {
+      continue;
     }
-  }
 
-  return orderedElements;
-}
-
-bool CandidateFinder::Traverse(Element* aRoot,
-                               nsTArray<nsCOMPtr<Element>>& aOrderedElements) {
-  nsCOMPtr<Element> elem;
-  if (mCandidates.Remove(aRoot, getter_AddRefs(elem))) {
-    aOrderedElements.AppendElement(std::move(elem));
-    if (mCandidates.Count() == 0) {
-      return false;
-    }
-  }
-
-  if (ShadowRoot* root = aRoot->GetShadowRoot()) {
-    // First iterate the children of the shadow root if aRoot is a shadow host.
-    for (Element* child = root->GetFirstElementChild(); child;
-         child = child->GetNextElementSibling()) {
-      if (!Traverse(child, aOrderedElements)) {
-        return false;
+    nsCOMPtr<Element> elem;
+    if (mCandidates.Remove(element, getter_AddRefs(elem))) {
+      orderedElements.AppendElement(std::move(elem));
+      if (mCandidates.Count() == 0) {
+        break;
       }
     }
   }
 
-  // Iterate the explicit children of aRoot.
-  for (Element* child = aRoot->GetFirstElementChild(); child;
-       child = child->GetNextElementSibling()) {
-    if (!Traverse(child, aOrderedElements)) {
-      return false;
-    }
-  }
-
-  return true;
+  return orderedElements;
 }
 
 }  // namespace
@@ -1005,9 +981,13 @@ void CustomElementRegistry::SetElementCreationCallback(
   return;
 }
 
-static void TryUpgrade(nsINode& aNode) {
-  Element* element = aNode.IsElement() ? aNode.AsElement() : nullptr;
-  if (element) {
+void CustomElementRegistry::Upgrade(nsINode& aRoot) {
+  for (nsINode* node : ShadowIncludingTreeIterator(aRoot)) {
+    Element* element = Element::FromNode(node);
+    if (!element) {
+      continue;
+    }
+
     CustomElementData* ceData = element->GetCustomElementData();
     if (ceData) {
       NodeInfo* nodeInfo = element->NodeInfo();
@@ -1020,22 +1000,8 @@ static void TryUpgrade(nsINode& aNode) {
         nsContentUtils::EnqueueUpgradeReaction(element, definition);
       }
     }
-
-    if (ShadowRoot* root = element->GetShadowRoot()) {
-      for (Element* child = root->GetFirstElementChild(); child;
-           child = child->GetNextElementSibling()) {
-        TryUpgrade(*child);
-      }
-    }
-  }
-
-  for (Element* child = aNode.GetFirstElementChild(); child;
-       child = child->GetNextElementSibling()) {
-    TryUpgrade(*child);
   }
 }
-
-void CustomElementRegistry::Upgrade(nsINode& aRoot) { TryUpgrade(aRoot); }
 
 void CustomElementRegistry::Get(JSContext* aCx, const nsAString& aName,
                                 JS::MutableHandle<JS::Value> aRetVal) {

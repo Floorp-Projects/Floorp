@@ -1,0 +1,32 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DIRS += [
+    '/config/external/zlib',
+    '/testing/tools/fileid',
+    '/toolkit/crashreporter/google-breakpad/src/common',
+    '/toolkit/crashreporter/google-breakpad/src/processor',
+    '/toolkit/crashreporter/rust',
+    '/tools/crashreporter/minidump_stackwalk',
+]
+
+if CONFIG['OS_ARCH'] == 'Linux':
+    DIRS += [
+        '/toolkit/crashreporter/google-breakpad/src/common/linux',
+        '/toolkit/crashreporter/google-breakpad/src/tools/linux/dump_syms',
+    ]
+
+if CONFIG['OS_ARCH'] == 'Darwin':
+    DIRS += [
+        '/toolkit/crashreporter/google-breakpad/src/common/mac',
+        '/toolkit/crashreporter/google-breakpad/src/tools/mac/dump_syms',
+    ]
+
+# While the Linux and Mac dump_syms can be cross-built, the Windows one can't,
+# and at the moment, it's a host tool, so only build it when the host is
+# Windows.
+if CONFIG['HOST_OS_ARCH'] == 'WINNT':
+    DIRS += [
+        '/toolkit/crashreporter/google-breakpad/src/tools/windows/dump_syms',
+    ]

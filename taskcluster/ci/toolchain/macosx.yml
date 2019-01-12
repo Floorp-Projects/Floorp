@@ -183,3 +183,29 @@ macosx64-cbindgen:
         - linux64-clang-7
         - linux64-llvm-dsymutil
         - linux64-rust-macos-1.31
+
+macosx64-minidump-stackwalk:
+    description: "minidump_stackwalk toolchain build"
+    treeherder:
+        kind: build
+        platform: toolchains/opt
+        symbol: TM(stackwalk)
+        tier: 1
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        max-run-time: 1800
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-clang.manifest"
+    run:
+        using: toolchain-script
+        script: build-minidump-stackwalk.sh
+        sparse-profile: null
+        arguments: ['macosx64']
+        tooltool-downloads: internal
+        resources:
+            - 'taskcluster/scripts/misc/tooltool-download.sh'
+        toolchain-artifact: public/build/minidump_stackwalk.tar.xz
+    toolchains:
+        - linux64-cctools-port
+        - linux64-clang-7
+        - linux64-rust-macos-1.31

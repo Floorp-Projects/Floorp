@@ -2496,18 +2496,12 @@ public class GeckoSession implements Parcelable {
              * CONTENT_UNKNOWN, CONTENT_BLOCKED, and CONTENT_LOADED.
              */
             public final @ContentType int mixedModeActive;
-            /**
-             * Indicates the status of tracking protection; possible values are
-             * CONTENT_UNKNOWN, CONTENT_BLOCKED, and CONTENT_LOADED.
-             */
-            public final @ContentType int trackingMode;
 
             /* package */ SecurityInformation(GeckoBundle identityData) {
                 final GeckoBundle mode = identityData.getBundle("mode");
 
                 mixedModePassive = mode.getInt("mixed_display");
                 mixedModeActive = mode.getInt("mixed_active");
-                trackingMode = mode.getInt("tracking");
 
                 securityMode = mode.getInt("identity");
 
@@ -2527,7 +2521,6 @@ public class GeckoSession implements Parcelable {
             protected SecurityInformation() {
                 mixedModePassive = 0;
                 mixedModeActive = 0;
-                trackingMode = 0;
                 securityMode = 0;
                 isSecure = false;
                 isException = false;

@@ -51,7 +51,8 @@ interface nsISessionStoreUtils : nsISupports
   nsISupports addDynamicFrameFilteredListener(in EventTarget target,
                                               in AString type,
                                               in jsval listener,
-                                              in boolean useCapture);
+                                              in boolean useCapture,
+                                              [optional] in boolean mozSystemGroup);
 
   /**
    * Remove the passed-in filtered listener from the given event target, if it's
@@ -66,7 +67,8 @@ interface nsISessionStoreUtils : nsISupports
   void removeDynamicFrameFilteredListener(in EventTarget target,
                                           in AString type,
                                           in nsISupports listener,
-                                          in boolean useCapture);
+                                          in boolean useCapture,
+                                          [optional] in boolean mozSystemGroup);
 
   /*
    * Save the docShell.allow* properties

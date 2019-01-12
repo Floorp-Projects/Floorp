@@ -10,6 +10,7 @@
 #include "base/shared_memory.h"
 
 #include "ContentParent.h"
+#include "ProcessUtils.h"
 #include "TabParent.h"
 
 #if defined(ANDROID) || defined(LINUX)
@@ -1119,6 +1120,31 @@ mozilla::ipc::IPCResult ContentParent::RecvConnectPluginBridge(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult ContentParent::RecvLaunchRDDProcess(
+    nsresult* aRv, Endpoint<PRemoteDecoderManagerChild>* aEndpoint) {
+  *aRv = NS_OK;
+
+  if (XRE_IsParentProcess() &&
+      BrowserTabsRemoteAutostart() &&  // only do rdd process if e10s on
+      Preferences::GetBool("media.rdd-process.enabled", false)) {
+    RDDProcessManager* rdd = RDDProcessManager::Get();
+    if (rdd) {
+      rdd->LaunchRDDProcess();
+
+      bool rddOpened = rdd->CreateContentBridge(OtherPid(), aEndpoint);
+      MOZ_ASSERT(rddOpened);
+
+      if (!rddOpened) {
+        *aRv = NS_ERROR_NOT_AVAILABLE;
+      }
+    } else {
+      *aRv = NS_ERROR_NOT_AVAILABLE;
+    }
+  }
+
+  return IPC_OK();
+}
+
 /*static*/ TabParent* ContentParent::CreateBrowser(
     const TabContext& aContext, Element* aFrameElement,
     ContentParent* aOpenerContentParent, TabParent* aSameTabGroupAs,
@@ -2111,31 +2137,12 @@ void ContentParent::LaunchSubprocessInternal(
   // Prefs information is passed via anonymous shared memory to avoid bloating
   // the command line.
 
-  size_t prefMapSize;
-  auto prefMapHandle =
-      Preferences::EnsureSnapshot(&prefMapSize).ClonePlatformHandle();
-
-  // Serialize the early prefs.
-  nsAutoCStringN<1024> prefs;
-  Preferences::SerializePreferences(prefs);
-
-  // Set up the shared memory.
-  base::SharedMemory shm;
-  if (!shm.Create(prefs.Length())) {
-    NS_ERROR("failed to create shared memory in the parent");
+  SharedPreferenceSerializer prefSerializer;
+  if (!prefSerializer.SerializeToSharedMemory()) {
     MarkAsDead();
     earlyReject();
     return;
   }
-  if (!shm.Map(prefs.Length())) {
-    NS_ERROR("failed to map shared memory in the parent");
-    MarkAsDead();
-    earlyReject();
-    return;
-  }
-
-  // Copy the serialized prefs into the shared memory.
-  memcpy(static_cast<char*>(shm.memory()), prefs.get(), prefs.Length());
 
   // Register ContentParent as an observer for changes to any pref
   // whose prefix matches the empty string, i.e. all of them.  The
@@ -2152,13 +2159,14 @@ void ContentParent::LaunchSubprocessInternal(
 #if defined(XP_WIN)
   // Record the handle as to-be-shared, and pass it via a command flag. This
   // works because Windows handles are system-wide.
-  HANDLE prefsHandle = shm.handle();
+  HANDLE prefsHandle = prefSerializer.GetSharedMemoryHandle();
   mSubprocess->AddHandleToShare(prefsHandle);
-  mSubprocess->AddHandleToShare(prefMapHandle.get());
+  mSubprocess->AddHandleToShare(prefSerializer.GetPrefMapHandle().get());
   extraArgs.push_back("-prefsHandle");
   extraArgs.push_back(formatPtrArg(prefsHandle).get());
   extraArgs.push_back("-prefMapHandle");
-  extraArgs.push_back(formatPtrArg(prefMapHandle.get()).get());
+  extraArgs.push_back(
+      formatPtrArg(prefSerializer.GetPrefMapHandle().get()).get());
 #else
   // In contrast, Unix fds are per-process. So remap the fd to a fixed one that
   // will be used in the child.
@@ -2167,16 +2175,17 @@ void ContentParent::LaunchSubprocessInternal(
   // Note: on Android, AddFdToRemap() sets up the fd to be passed via a Parcel,
   // and the fixed fd isn't used. However, we still need to mark it for
   // remapping so it doesn't get closed in the child.
-  mSubprocess->AddFdToRemap(shm.handle().fd, kPrefsFileDescriptor);
-  mSubprocess->AddFdToRemap(prefMapHandle.get(), kPrefMapFileDescriptor);
+  mSubprocess->AddFdToRemap(prefSerializer.GetSharedMemoryHandle().fd,
+                            kPrefsFileDescriptor);
+  mSubprocess->AddFdToRemap(prefSerializer.GetPrefMapHandle().get(),
+                            kPrefMapFileDescriptor);
 #endif
 
   // Pass the lengths via command line flags.
   extraArgs.push_back("-prefsLen");
-  extraArgs.push_back(formatPtrArg(prefs.Length()).get());
-
+  extraArgs.push_back(formatPtrArg(prefSerializer.GetPrefLength()).get());
   extraArgs.push_back("-prefMapSize");
-  extraArgs.push_back(formatPtrArg(prefMapSize).get());
+  extraArgs.push_back(formatPtrArg(prefSerializer.GetPrefMapSize()).get());
 
   // Scheduler prefs need to be handled differently because the scheduler needs
   // to start up in the content process before the normal preferences service.
@@ -2236,9 +2245,8 @@ void ContentParent::LaunchSubprocessInternal(
                   // Transfer ownership of RAII file descriptor/handle
                   // holders so that they won't be closed before the
                   // child can inherit them.
-                  shm = std::move(shm),
-                  prefMapHandle =
-                      std::move(prefMapHandle)](base::ProcessHandle handle) {
+                  prefSerializer =
+                      std::move(prefSerializer)](base::ProcessHandle handle) {
     AUTO_PROFILER_LABEL("ContentParent::LaunchSubprocess::resolve", OTHER);
     const auto launchResumeTS = TimeStamp::Now();
 
@@ -2611,22 +2619,6 @@ void ContentParent::InitInternal(ProcessPriority aInitialPriority) {
                               namespaces);
 
   gpm->AddListener(this);
-
-  if (StaticPrefs::MediaRddProcessEnabled() && BrowserTabsRemoteAutostart()) {
-    RDDProcessManager* rdd = RDDProcessManager::Get();
-
-    Endpoint<PRemoteDecoderManagerChild> remoteManager;
-    bool rddOpened = rdd->CreateContentBridge(OtherPid(), &remoteManager);
-    MOZ_ASSERT(rddOpened);
-
-    if (rddOpened) {
-      // not using std::move here (like in SendInitRendering above) because
-      // clang-tidy says:
-      // Warning: Passing result of std::move() as a const reference
-      // argument; no move will actually happen
-      Unused << SendInitRemoteDecoder(remoteManager);
-    }
-  }
 
   nsStyleSheetService* sheetService = nsStyleSheetService::GetInstance();
   if (sheetService) {

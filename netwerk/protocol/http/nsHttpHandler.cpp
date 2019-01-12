@@ -1117,6 +1117,10 @@ void nsHttpHandler::PrefsChanged(const char *pref) {
 
   LOG(("nsHttpHandler::PrefsChanged [pref=%s]\n", pref));
 
+  if (pref) {
+    gIOService->NotifySocketProcessPrefsChanged(pref);
+  }
+
 #define PREF_CHANGED(p) ((pref == nullptr) || !PL_strcmp(pref, p))
 #define MULTI_PREF_CHANGED(p) \
   ((pref == nullptr) || !PL_strncmp(pref, p, sizeof(p) - 1))

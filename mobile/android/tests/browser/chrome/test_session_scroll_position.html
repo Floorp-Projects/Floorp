@@ -15,6 +15,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1498892
   <link rel="stylesheet" type="text/css" href="chrome://global/skin"/>
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
   <script type="application/javascript" src="head.js"></script>
+  <script type="application/javascript" src="head_scroll.js"></script>
   <script type="application/javascript">
 
   /** Tests for Bug 810981, 1282902, 1301016, 1265818, 1498892 **/
@@ -48,51 +49,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1498892
   const SCROLL2_X = Math.round(300 * (1 + Math.random()));
   const SCROLL2_Y = Math.round(400 * (1 + Math.random()));
   const ZOOM2 = 1.5 + 0.5 * Math.random();
-
-  function getFrame(browser, data) {
-    let frame = browser.contentWindow;
-    if (data.hasOwnProperty("frame")) {
-      frame = browser.contentWindow.frames[data.frame];
-    }
-    return frame;
-  }
-
-  function setScrollPosition(browser, data) {
-    let {x, y, zoom} = data;
-    x = x || 0;
-    y = y || 0;
-    let frame = getFrame(browser, data);
-    if (data.hasOwnProperty("zoom")) {
-      browser.contentWindow.windowUtils.setResolutionAndScaleTo(zoom);
-    }
-    frame.scrollTo(x, y);
-  }
-
-  function checkScroll(browser, data) {
-    let {x, y, zoom} = data;
-    let utils = getFrame(browser, data).windowUtils;
-
-    let actualX = {}, actualY = {};
-    let actualZoom = utils.getResolution();
-    utils.getScrollXY(false, actualX, actualY);
-
-    if (data.hasOwnProperty("x")) {
-      is(actualX.value, x, "scrollX set correctly");
-    }
-    if (data.hasOwnProperty("y")) {
-      is(actualY.value, y, "scrollY set correctly");
-    }
-    if (data.hasOwnProperty("zoom")) {
-      ok(fuzzyEquals(actualZoom, zoom), "zoom set correctly");
-    }
-  }
-
-  function getScrollString(data) {
-    let {x, y} = data;
-    x = x || 0;
-    y = y || 0;
-    return x + "," + y;
-  }
 
   // Track the tabs where the tests are happening.
   let tabScroll;
@@ -193,7 +149,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1498892
     let closedTabData = ss.getClosedTabs(chromeWin)[0];
     let browser = ss.undoCloseTab(chromeWin, closedTabData);
     let pageshow = promiseBrowserEvent(browser, "pageshow");
-    let scroll = promiseBrowserEvent(browser, "scroll");
+    let scroll = promiseBrowserEvent(browser, "mozvisualscroll",
+                                     { mozSystemGroup: true });
     await pageshow;
     await scroll;
 
@@ -204,7 +161,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1498892
     // is restored there as well.
     is(browser.canGoBack, true, "can go back");
     pageshow = promiseBrowserEvent(browser, "pageshow");
-    scroll = promiseBrowserEvent(browser, "scroll");
+    scroll = promiseBrowserEvent(browser, "mozvisualscroll",
+                                 { mozSystemGroup: true });
     browser.goBack();
     await pageshow;
     await scroll;
@@ -310,9 +268,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1498892
     // We can't add event listeners for the frames until we're sure that they've actually loaded.
     let load = promiseBrowserEvent(browser, "load");
     await load;
-    let scrollParent = promiseBrowserEvent(getFrame(browser, testDataParent), "scroll");
-    let scroll1 = promiseBrowserEvent(getFrame(browser, testData1), "scroll");
-    let scroll2 = promiseBrowserEvent(getFrame(browser, testData2), "scroll");
+    let scrollParent = promiseBrowserEvent(getFrame(browser, testDataParent),
+                                           "mozvisualscroll",
+                                           { mozSystemGroup: true });
+    let scroll1 = promiseBrowserEvent(getFrame(browser, testData1),
+                                      "mozvisualscroll",
+                                      { mozSystemGroup: true });
+    let scroll2 = promiseBrowserEvent(getFrame(browser, testData2),
+                                      "mozvisualscroll",
+                                      { mozSystemGroup: true });
     await pageshow;
     await scrollParent;
     await scroll1;
