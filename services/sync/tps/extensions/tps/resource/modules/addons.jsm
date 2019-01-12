@@ -7,7 +7,6 @@ var EXPORTED_SYMBOLS = ["Addon", "STATE_ENABLED", "STATE_DISABLED"];
 
 ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
 ChromeUtils.import("resource://services-sync/addonutils.js");
-ChromeUtils.import("resource://services-sync/util.js");
 ChromeUtils.import("resource://tps/logger.jsm");
 
 const STATE_ENABLED = 1;

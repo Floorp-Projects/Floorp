@@ -4,7 +4,6 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://services-sync/SyncedTabs.jsm");
 ChromeUtils.import("resource:///modules/syncedtabs/SyncedTabsDeckComponent.js");
 ChromeUtils.import("resource:///actors/LightweightThemeChild.jsm");

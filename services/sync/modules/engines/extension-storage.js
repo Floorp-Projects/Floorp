@@ -6,7 +6,6 @@
 
 var EXPORTED_SYMBOLS = ["ExtensionStorageEngine"];
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://services-sync/constants.js");
 ChromeUtils.import("resource://services-sync/engines.js");
 ChromeUtils.import("resource://services-sync/util.js");

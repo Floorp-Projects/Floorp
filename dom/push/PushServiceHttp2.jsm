@@ -10,7 +10,6 @@ const {PushRecord} = ChromeUtils.import("resource://gre/modules/PushRecord.jsm")
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-ChromeUtils.import("resource://gre/modules/IndexedDBHelper.jsm");
 ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
 const {

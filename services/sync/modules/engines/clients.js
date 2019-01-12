@@ -25,7 +25,6 @@ var EXPORTED_SYMBOLS = [
   "ClientsRec",
 ];
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://services-common/async.js");
 ChromeUtils.import("resource://services-sync/constants.js");

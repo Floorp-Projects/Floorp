@@ -10,8 +10,6 @@ var manifests = [
 ];
 registerManifests(manifests);
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-
 function ProtocolHandler(aScheme, aFlags) {
   this.scheme = aScheme;
   this.protocolFlags = aFlags;
