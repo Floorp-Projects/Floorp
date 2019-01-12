@@ -26,7 +26,7 @@ function testCrossRealmProto() {
 testCrossRealmProto();
 
 function testSystemNonSystemRealms() {
-    var systemRealm = newGlobal({systemPrincipal: true});
+    var systemRealm = newGlobal({newCompartment: true, systemPrincipal: true});
     var ex;
     try {
         var nonSystemRealm = newGlobal({sameCompartmentAs: systemRealm, principal: 10});

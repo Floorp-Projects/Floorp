@@ -3,7 +3,7 @@
 // `expected` is the array of line numbers where stepping is expected to stop
 // when we call the function.
 function testStepping(script, expected) {
-    let g = newGlobal();
+    let g = newGlobal({newCompartment: true});
     let f = g.eval(script);
 
     let log = [];
