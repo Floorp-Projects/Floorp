@@ -17,9 +17,102 @@ class Declaration extends PureComponent {
     };
   }
 
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      // Whether or not the computed property list is expanded.
+      isComputedListExpanded: false,
+    };
+
+    this.onComputedExpanderClick = this.onComputedExpanderClick.bind(this);
+  }
+
+  onComputedExpanderClick(event) {
+    event.stopPropagation();
+
+    this.setState(prevState => {
+      return { isComputedListExpanded: !prevState.isComputedListExpanded };
+    });
+  }
+
+  renderComputedPropertyList() {
+    const { computedProperties } = this.props.declaration;
+
+    if (!computedProperties.length) {
+      return null;
+    }
+
+    return (
+      dom.ul(
+        {
+          className: "ruleview-computedlist",
+          style: {
+            display: this.state.isComputedListExpanded ? "block" : "",
+          },
+        },
+        computedProperties.map(({ name, value, isOverridden }) => {
+          return (
+            dom.li(
+              {
+                key: `${name}${value}`,
+                className: "ruleview-computed" +
+                           (isOverridden ? " ruleview-overridden" : ""),
+              },
+              dom.span({ className: "ruleview-namecontainer" },
+                dom.span({ className: "ruleview-propertyname theme-fg-color5" }, name),
+                ": "
+              ),
+              dom.span({ className: "ruleview-propertyvaluecontainer" },
+                dom.span({ className: "ruleview-propertyvalue theme-fg-color1" }, value),
+                ";"
+              )
+            )
+          );
+        })
+      )
+    );
+  }
+
+  renderShorthandOverriddenList() {
+    const { declaration } = this.props;
+
+    if (this.state.isComputedListExpanded || declaration.isOverridden) {
+      return null;
+    }
+
+    return (
+      dom.ul({ className: "ruleview-overridden-items" },
+        declaration.computedProperties.map(({ name, value, isOverridden }) => {
+          if (!isOverridden) {
+            return null;
+          }
+
+          return (
+            dom.li(
+              {
+                key: `${name}${value}`,
+                className: "ruleview-overridden-item ruleview-overridden",
+              },
+              dom.span({ className: "ruleview-namecontainer" },
+                dom.span({ className: "ruleview-propertyname theme-fg-color5" }, name),
+                ": "
+              ),
+              dom.span({ className: "ruleview-propertyvaluecontainer" },
+                dom.span({ className: "ruleview-propertyvalue theme-fg-color1" }, value),
+                ";"
+              )
+            )
+          );
+        })
+      )
+    );
+  }
+
   render() {
     const { declaration } = this.props;
     const {
+      computedProperties,
       isEnabled,
       isKnownProperty,
       isOverridden,
@@ -44,11 +137,19 @@ class Declaration extends PureComponent {
             dom.span({ className: "ruleview-propertyname theme-fg-color5" }, name),
             ": "
           ),
+          dom.span({
+            className: "ruleview-expander theme-twisty" +
+                       (this.state.isComputedListExpanded ? " open" : ""),
+            onClick: this.onComputedExpanderClick,
+            style: { display: computedProperties.length ? "inline-block" : "none" },
+          }),
           dom.span({ className: "ruleview-propertyvaluecontainer" },
             dom.span({ className: "ruleview-propertyvalue theme-fg-color1" }, value),
             ";"
           )
-        )
+        ),
+        this.renderComputedPropertyList(),
+        this.renderShorthandOverriddenList()
       )
     );
   }
