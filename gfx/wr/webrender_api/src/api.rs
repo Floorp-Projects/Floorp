@@ -561,7 +561,7 @@ pub struct HitTestResult {
 }
 
 bitflags! {
-    #[derive(Deserialize, MallocSizeOf, Serialize)]
+    #[derive(Deserialize, Serialize)]
     pub struct HitTestFlags: u8 {
         const FIND_ALL = 0b00000001;
         const POINT_RELATIVE_TO_PIPELINE_VIEWPORT = 0b00000010;
@@ -787,11 +787,11 @@ impl Epoch {
 }
 
 #[repr(C)]
-#[derive(Clone, Copy, Debug, Eq, MallocSizeOf, PartialEq, Hash, Ord, PartialOrd, Deserialize, Serialize)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Hash, Ord, PartialOrd, Deserialize, Serialize)]
 pub struct IdNamespace(pub u32);
 
 #[repr(C)]
-#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, MallocSizeOf, PartialEq, Serialize)]
+#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
 pub struct DocumentId(pub IdNamespace, pub u32);
 
 impl DocumentId {
@@ -807,7 +807,7 @@ pub type PipelineSourceId = u32;
 /// From the point of view of WR, `PipelineId` is completely opaque and generic as long as
 /// it's clonable, serializable, comparable, and hashable.
 #[repr(C)]
-#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, MallocSizeOf, PartialEq, Serialize)]
+#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
 pub struct PipelineId(pub PipelineSourceId, pub u32);
 
 impl PipelineId {
@@ -816,63 +816,14 @@ impl PipelineId {
     }
 }
 
-/// Meta-macro to enumerate the various interner identifiers and types.
-///
-/// IMPORTANT: Keep this synchronized with the list in mozilla-central located at
-/// gfx/webrender_bindings/webrender_ffi.h
-///
-/// Note that this could be a lot less verbose if concat_idents! were stable. :-(
-#[macro_export]
-macro_rules! enumerate_interners {
-    ($macro_name: ident) => {
-        $macro_name! {
-            { clip_interner, ClipDataInterner, clip_data_store, ClipDataStore }
-            { prim_interner, PrimitiveDataInterner, prim_data_store, PrimitiveDataStore }
-            { normal_border_interner, NormalBorderDataInterner, normal_border_data_store, NormalBorderDataStore }
-            { image_border_interner, ImageBorderDataInterner, image_border_data_store, ImageBorderDataStore }
-            { image_interner, ImageDataInterner, image_data_store, ImageDataStore }
-            { yuv_image_interner, YuvImageDataInterner, yuv_image_data_store, YuvImageDataStore }
-            { line_decoration_interner, LineDecorationDataInterner, line_decoration_data_store, LineDecorationDataStore }
-            { linear_grad_interner, LinearGradientDataInterner, linear_grad_data_store, LinearGradientDataStore }
-            { radial_grad_interner, RadialGradientDataInterner, radial_grad_data_store, RadialGradientDataStore }
-            { picture_interner, PictureDataInterner, picture_data_store, PictureDataStore }
-            { text_run_interner, TextRunDataInterner, text_run_data_store, TextRunDataStore }
-        }
-    }
-}
-
-macro_rules! declare_interning_memory_report {
-    ( $( { $interner_ident: ident, $x: ty, $datastore_ident: ident, $y: ty } )+ ) => {
-        #[repr(C)]
-        #[derive(Clone, Debug, Default, Deserialize, Serialize)]
-        pub struct InterningMemoryReport {
-            $(
-                pub $interner_ident: usize,
-                pub $datastore_ident: usize,
-            )+
-        }
-
-        impl ::std::ops::AddAssign for InterningMemoryReport {
-            fn add_assign(&mut self, other: InterningMemoryReport) {
-                $(
-                    self.$interner_ident += other.$interner_ident;
-                    self.$datastore_ident += other.$datastore_ident;
-                )+
-            }
-        }
-    }
-}
-
-enumerate_interners!(declare_interning_memory_report);
-
 /// Collection of heap sizes, in bytes.
-/// cbindgen:derive-eq=false
 #[repr(C)]
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct MemoryReport {
     //
     // CPU Memory.
     //
+    pub primitive_stores: usize,
     pub clip_stores: usize,
     pub gpu_cache_metadata: usize,
     pub gpu_cache_cpu_mirror: usize,
@@ -882,7 +833,8 @@ pub struct MemoryReport {
     pub images: usize,
     pub rasterized_blobs: usize,
     pub shader_cache: usize,
-    pub interning: InterningMemoryReport,
+    pub data_stores: usize,
+    pub interners: usize,
 
     //
     // GPU memory.
@@ -897,6 +849,7 @@ pub struct MemoryReport {
 
 impl ::std::ops::AddAssign for MemoryReport {
     fn add_assign(&mut self, other: MemoryReport) {
+        self.primitive_stores += other.primitive_stores;
         self.clip_stores += other.clip_stores;
         self.gpu_cache_metadata += other.gpu_cache_metadata;
         self.gpu_cache_cpu_mirror += other.gpu_cache_cpu_mirror;
@@ -906,8 +859,8 @@ impl ::std::ops::AddAssign for MemoryReport {
         self.images += other.images;
         self.rasterized_blobs += other.rasterized_blobs;
         self.shader_cache += other.shader_cache;
-        self.interning += other.interning;
-
+        self.data_stores += other.data_stores;
+        self.interners += other.interners;
         self.gpu_cache_textures += other.gpu_cache_textures;
         self.vertex_data_textures += other.vertex_data_textures;
         self.render_target_textures += other.render_target_textures;
@@ -1010,7 +963,7 @@ impl RenderApiSender {
 }
 
 bitflags! {
-    #[derive(Default, Deserialize, MallocSizeOf, Serialize)]
+    #[derive(Default, Deserialize, Serialize)]
     pub struct DebugFlags: u32 {
         /// Display the frame profiler on screen.
         const PROFILER_DBG          = 1 << 0;
@@ -1336,7 +1289,7 @@ impl ZoomFactor {
 }
 
 #[repr(C)]
-#[derive(Clone, Copy, Debug, Deserialize, MallocSizeOf, PartialEq, Serialize, Eq, Hash)]
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize, Eq, Hash)]
 pub struct PropertyBindingId {
     namespace: IdNamespace,
     uid: u32,

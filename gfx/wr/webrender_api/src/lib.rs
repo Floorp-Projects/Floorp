@@ -30,15 +30,11 @@ extern crate dwrote;
 pub extern crate euclid;
 #[cfg(feature = "ipc")]
 extern crate ipc_channel;
-#[macro_use]
-extern crate malloc_size_of_derive;
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
 extern crate time;
 
-extern crate wr_malloc_size_of;
-use wr_malloc_size_of as malloc_size_of;
 
 mod api;
 pub mod channel;
