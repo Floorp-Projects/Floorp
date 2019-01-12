@@ -65,7 +65,7 @@ pub type RasterVector2D = TypedVector2D<f32, RasterPixel>;
 pub type RasterVector3D = TypedVector3D<f32, RasterPixel>;
 
 /// Geometry in a stacking context's local coordinate space (logical pixels).
-#[derive(Hash, Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Deserialize, Serialize)]
+#[derive(Hash, Clone, Copy, Debug, Eq, MallocSizeOf, PartialEq, Ord, PartialOrd, Deserialize, Serialize)]
 pub struct LayoutPixel;
 
 pub type LayoutRect = TypedRect<f32, LayoutPixel>;
@@ -81,7 +81,7 @@ pub type LayoutIntPoint = TypedPoint2D<i32, LayoutPixel>;
 pub type LayoutIntSize = TypedSize2D<i32, LayoutPixel>;
 
 /// Geometry in the document's coordinate space (logical pixels).
-#[derive(Hash, Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd)]
+#[derive(Hash, Clone, Copy, Debug, Eq, MallocSizeOf, PartialEq, Ord, PartialOrd)]
 pub struct WorldPixel;
 
 pub type WorldRect = TypedRect<f32, WorldPixel>;
