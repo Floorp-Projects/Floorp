@@ -5,7 +5,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    'control.js',
     'debugger.js',
     'graphics.js',
     'replay.js',
@@ -14,7 +13,6 @@ DevToolsModules(
 XPIDL_MODULE = 'devtools_rr'
 
 XPIDL_SOURCES = [
-    'rrIControl.idl',
     'rrIGraphics.idl',
     'rrIReplay.idl',
 ]

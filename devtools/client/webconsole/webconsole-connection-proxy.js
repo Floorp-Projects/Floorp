@@ -30,7 +30,6 @@ function WebConsoleConnectionProxy(webConsoleFrame, target) {
   this._onPageError = this._onPageError.bind(this);
   this._onLogMessage = this._onLogMessage.bind(this);
   this._onConsoleAPICall = this._onConsoleAPICall.bind(this);
-  this._onVirtualConsoleLog = this._onVirtualConsoleLog.bind(this);
   this._onNetworkEvent = this._onNetworkEvent.bind(this);
   this._onNetworkEventUpdate = this._onNetworkEventUpdate.bind(this);
   this._onTabNavigated = this._onTabNavigated.bind(this);
@@ -122,8 +121,6 @@ WebConsoleConnectionProxy.prototype = {
     client.addListener("consoleAPICall", this._onConsoleAPICall);
     client.addListener("lastPrivateContextExited",
                        this._onLastPrivateContextExited);
-    client.addListener("virtualConsoleLog",
-                       this._onVirtualConsoleLog);
 
     this.target.on("will-navigate", this._onTabWillNavigate);
     this.target.on("navigate", this._onTabNavigated);
@@ -305,20 +302,6 @@ WebConsoleConnectionProxy.prototype = {
     }
     this.dispatchMessageAdd(packet);
   },
-
-  _onVirtualConsoleLog: function(type, packet) {
-    if (!this.webConsoleFrame) {
-      return;
-    }
-    this.dispatchMessageAdd({
-      type: "consoleAPICall",
-      message: {
-        executionPoint: packet.executionPoint,
-        "arguments": [packet.url + ":" + packet.line, packet.message],
-      },
-    });
-  },
-
   /**
    * The "networkEvent" message type handler. We redirect any message to
    * the UI for displaying.
