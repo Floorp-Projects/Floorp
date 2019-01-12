@@ -8259,7 +8259,7 @@ nsresult PresShell::SetAgentStyleSheets(
 }
 
 nsresult PresShell::AddOverrideStyleSheet(StyleSheet* aSheet) {
-  return mStyleSet->PrependStyleSheet(SheetType::Override, aSheet);
+  return mStyleSet->AppendStyleSheet(SheetType::Override, aSheet);
 }
 
 nsresult PresShell::RemoveOverrideStyleSheet(StyleSheet* aSheet) {
