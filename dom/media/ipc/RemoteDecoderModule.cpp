@@ -6,6 +6,7 @@
 #include "RemoteDecoderModule.h"
 
 #include "base/thread.h"
+#include "mozilla/dom/ContentChild.h"  // for launching RDD w/ ContentChild
 #include "mozilla/layers/SynchronousTask.h"
 #include "mozilla/StaticPrefs.h"
 
@@ -19,15 +20,9 @@
 namespace mozilla {
 
 using base::Thread;
+using dom::ContentChild;
 using namespace ipc;
 using namespace layers;
-
-nsresult RemoteDecoderModule::Startup() {
-  if (!RemoteDecoderManagerChild::GetManagerThread()) {
-    return NS_ERROR_FAILURE;
-  }
-  return NS_OK;
-}
 
 bool RemoteDecoderModule::SupportsMimeType(
     const nsACString& aMimeType, DecoderDoctorDiagnostics* aDiagnostics) const {
@@ -46,6 +41,15 @@ bool RemoteDecoderModule::SupportsMimeType(
 
 already_AddRefed<MediaDataDecoder> RemoteDecoderModule::CreateVideoDecoder(
     const CreateDecoderParams& aParams) {
+  if (XRE_IsContentProcess()) {
+    ContentChild* contentChild = ContentChild::GetSingleton();
+    contentChild->LaunchRDDProcess();
+  }
+
+  if (!RemoteDecoderManagerChild::GetManagerThread()) {
+    return nullptr;
+  }
+
   RemoteVideoDecoderChild* child = new RemoteVideoDecoderChild();
   RefPtr<RemoteMediaDataDecoder> object = new RemoteMediaDataDecoder(
       child, RemoteDecoderManagerChild::GetManagerThread(),

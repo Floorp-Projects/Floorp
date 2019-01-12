@@ -133,6 +133,8 @@ class ContentChild final : public PContentChild,
 
   void GetProcessName(nsACString& aName) const;
 
+  void LaunchRDDProcess();
+
 #if defined(XP_MACOSX) && defined(MOZ_CONTENT_SANDBOX)
   void GetProfileDir(nsIFile** aProfileDir) const {
     *aProfileDir = mProfileDir;
@@ -187,9 +189,6 @@ class ContentChild final : public PContentChild,
   virtual mozilla::ipc::IPCResult RecvAudioDefaultDeviceChange() override;
 
   mozilla::ipc::IPCResult RecvReinitRenderingForDeviceReset() override;
-
-  virtual mozilla::ipc::IPCResult RecvInitRemoteDecoder(
-      Endpoint<PRemoteDecoderManagerChild>&& aRemoteManager) override;
 
   virtual mozilla::ipc::IPCResult RecvSetProcessSandbox(
       const MaybeFileDesc& aBroker) override;
