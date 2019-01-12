@@ -329,9 +329,8 @@ class DisplayListBuilder {
                 wr::BuiltDisplayList& aOutDisplayList);
 
   Maybe<wr::WrSpatialId> PushStackingContext(
-      const wr::LayoutRect&
-          aBounds,  // TODO: We should work with strongly typed rects
-      const wr::WrClipId* aClipNodeId,
+      // TODO: We should work with strongly typed rects
+      const wr::LayoutRect& aBounds, const wr::WrStackingContextClip& aClip,
       const wr::WrAnimationProperty* aAnimation, const float* aOpacity,
       const gfx::Matrix4x4* aTransform, wr::TransformStyle aTransformStyle,
       const gfx::Matrix4x4* aPerspective, const wr::MixBlendMode& aMixBlendMode,
@@ -485,6 +484,10 @@ class DisplayListBuilder {
                      const float& aSpreadRadius,
                      const wr::BorderRadius& aBorderRadius,
                      const wr::BoxShadowClipMode& aClipMode);
+
+  uint64_t CurrentClipChainId() const {
+    return mCurrentSpaceAndClipChain.clip_chain;
+  }
 
   // Checks to see if the innermost enclosing fixed pos item has the same
   // ASR. If so, it returns the scroll target for that fixed-pos item.

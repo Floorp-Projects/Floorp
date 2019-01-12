@@ -839,6 +839,81 @@ struct Shadow {
   }
 };
 
+struct WrStackingContextClip {
+  enum class Tag {
+    None,
+    ClipId,
+    ClipChain,
+
+    Sentinel /* this must be last for serialization purposes. */
+  };
+
+  struct ClipId_Body {
+    WrClipId _0;
+
+    bool operator==(const ClipId_Body& aOther) const {
+      return _0 == aOther._0;
+    }
+  };
+
+  struct ClipChain_Body {
+    uint64_t _0;
+
+    bool operator==(const ClipChain_Body& aOther) const {
+      return _0 == aOther._0;
+    }
+  };
+
+  Tag tag;
+  union {
+    ClipId_Body clip_id;
+    ClipChain_Body clip_chain;
+  };
+
+  static WrStackingContextClip None() {
+    WrStackingContextClip result;
+    result.tag = Tag::None;
+    return result;
+  }
+
+  static WrStackingContextClip ClipId(const WrClipId &a0) {
+    WrStackingContextClip result;
+    result.clip_id._0 = a0;
+    result.tag = Tag::ClipId;
+    return result;
+  }
+
+  static WrStackingContextClip ClipChain(const uint64_t &a0) {
+    WrStackingContextClip result;
+    result.clip_chain._0 = a0;
+    result.tag = Tag::ClipChain;
+    return result;
+  }
+
+  bool IsNone() const {
+    return tag == Tag::None;
+  }
+
+  bool IsClipId() const {
+    return tag == Tag::ClipId;
+  }
+
+  bool IsClipChain() const {
+    return tag == Tag::ClipChain;
+  }
+
+  bool operator==(const WrStackingContextClip& aOther) const {
+    if (tag != aOther.tag) {
+      return false;
+    }
+    switch (tag) {
+      case Tag::ClipId: return clip_id == aOther.clip_id;
+      case Tag::ClipChain: return clip_chain == aOther.clip_chain;
+      default: return true;
+    }
+  }
+};
+
 struct WrAnimationProperty {
   WrAnimationType effect_type;
   uint64_t id;
@@ -1937,7 +2012,7 @@ WR_INLINE
 WrSpatialId wr_dp_push_stacking_context(WrState *aState,
                                         LayoutRect aBounds,
                                         WrSpatialId aSpatialId,
-                                        const WrClipId *aClipNodeId,
+                                        const WrStackingContextClip *aClip,
                                         const WrAnimationProperty *aAnimation,
                                         const float *aOpacity,
                                         const LayoutTransform *aTransform,

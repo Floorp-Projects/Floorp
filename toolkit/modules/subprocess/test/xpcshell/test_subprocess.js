@@ -182,7 +182,7 @@ add_task(async function test_subprocess_huge() {
 });
 
 
-add_task(async function test_subprocess_round_trip_perf() {
+add_task({skip_if: () => mozinfo.ccov}, async function test_subprocess_round_trip_perf() {
   let roundTripTime = Infinity;
   for (let i = 0; i < MAX_RETRIES && roundTripTime > MAX_ROUND_TRIP_TIME_MS; i++) {
     let proc = await Subprocess.call({

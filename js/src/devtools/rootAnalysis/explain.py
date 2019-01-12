@@ -1,7 +1,9 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
-import re
+from __future__ import print_function
+
 import argparse
+import re
 
 from collections import defaultdict
 
@@ -34,20 +36,20 @@ try:
             m = re.match(r'^Time: (.*)', line)
             mm = re.match(r'^Run on:', line)
             if m or mm:
-                print >>hazards, line
-                print >>extra, line
-                print >>refs, line
+                print(line, file=hazards)
+                print(line, file=extra)
+                print(line, file=refs)
                 continue
 
             m = re.match(r'^Function.*has unnecessary root', line)
             if m:
-                print >>extra, line
+                print(line, file=extra)
                 continue
 
             m = re.match(r'^Function.*takes unsafe address of unrooted', line)
             if m:
                 num_refs += 1
-                print >>refs, line
+                print(line, file=refs)
                 continue
 
             m = re.match(
@@ -92,9 +94,9 @@ try:
             gcHazards = hazardousGCFunctions[gcFunction]
 
             if gcFunction in gcExplanations:
-                print >>hazards, (gcHazards[index] + gcExplanations[gcFunction])
+                print(gcHazards[index] + gcExplanations[gcFunction], file=hazards)
             else:
-                print >>hazards, gcHazards[index]
+                print(gcHazards[index], file=hazards)
 
 except IOError as e:
     print('Failed: %s' % str(e))

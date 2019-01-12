@@ -373,6 +373,7 @@ bool IndirectBindingMap::lookup(jsid name, ModuleEnvironmentObject** envOut,
   ProxyOptions options;
   options.setLazyProto(true);
   options.setSingleton(true);
+  Rooted<UniquePtr<IndirectBindingMap>> rootedBindings(cx, std::move(bindings));
   RootedObject object(
       cx, NewProxyObject(cx, &proxyHandler, priv, nullptr, options));
   if (!object) {
@@ -380,7 +381,7 @@ bool IndirectBindingMap::lookup(jsid name, ModuleEnvironmentObject** envOut,
   }
 
   SetProxyReservedSlot(object, ExportsSlot, ObjectValue(*exports));
-  SetProxyReservedSlot(object, BindingsSlot, PrivateValue(bindings.release()));
+  SetProxyReservedSlot(object, BindingsSlot, PrivateValue(rootedBindings.release()));
 
   return &object->as<ModuleNamespaceObject>();
 }

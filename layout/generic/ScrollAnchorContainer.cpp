@@ -6,6 +6,7 @@
 
 #include "ScrollAnchorContainer.h"
 
+#include "mozilla/dom/Text.h"
 #include "mozilla/StaticPrefs.h"
 #include "nsGfxScrollFrame.h"
 #include "nsLayoutUtils.h"
@@ -87,7 +88,7 @@ static void SetAnchorFlags(const nsIFrame* aScrolledFrame,
 static nsRect FindScrollAnchoringBoundingRect(const nsIFrame* aScrollFrame,
                                               nsIFrame* aCandidate) {
   MOZ_ASSERT(nsLayoutUtils::IsProperAncestorFrame(aScrollFrame, aCandidate));
-  if (aCandidate->GetContent()->IsText()) {
+  if (!!Text::FromNodeOrNull(aCandidate->GetContent())) {
     nsRect bounding;
     for (nsIFrame* continuation = aCandidate->FirstContinuation(); continuation;
          continuation = continuation->GetNextContinuation()) {
@@ -346,7 +347,7 @@ ScrollAnchorContainer::ExamineAnchorCandidate(nsIFrame* aFrame) const {
 
   // Check what kind of frame this is
   bool isBlockOutside = aFrame->IsBlockOutside();
-  bool isText = aFrame->GetContent()->IsText();
+  bool isText = !!Text::FromNodeOrNull(aFrame->GetContent());
   bool isAnonBox = aFrame->Style()->IsAnonBox() && !isText;
   bool isInlineOutside = aFrame->IsInlineOutside() && !isText;
   bool isContinuation = !!aFrame->GetPrevContinuation();
