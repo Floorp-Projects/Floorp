@@ -62,6 +62,8 @@ extern crate serde;
 
 #[cfg(feature = "mint")]
 pub extern crate mint;
+#[macro_use]
+extern crate euclid_macros;
 extern crate num_traits;
 #[cfg(test)]
 extern crate rand;

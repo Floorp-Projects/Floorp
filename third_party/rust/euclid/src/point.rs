@@ -21,13 +21,16 @@ use core::fmt;
 use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};
 use core::marker::PhantomData;
 
-define_matrix! {
-    /// A 2d Point tagged with a unit.
-    pub struct TypedPoint2D<T, U> {
-        pub x: T,
-        pub y: T,
-    }
+/// A 2d Point tagged with a unit.
+#[derive(EuclidMatrix)]
+#[repr(C)]
+pub struct TypedPoint2D<T, U> {
+    pub x: T,
+    pub y: T,
+    #[doc(hidden)]
+    pub _unit: PhantomData<U>,
 }
+
 mint_vec!(TypedPoint2D[x, y] = Point2);
 
 /// Default 2d point type with no unit.
@@ -408,14 +411,17 @@ impl<T: Copy, U> From<[T; 2]> for TypedPoint2D<T, U> {
     }
 }
 
-define_matrix! {
-    /// A 3d Point tagged with a unit.
-    pub struct TypedPoint3D<T, U> {
-        pub x: T,
-        pub y: T,
-        pub z: T,
-    }
+/// A 3d Point tagged with a unit.
+#[derive(EuclidMatrix)]
+#[repr(C)]
+pub struct TypedPoint3D<T, U> {
+    pub x: T,
+    pub y: T,
+    pub z: T,
+    #[doc(hidden)]
+    pub _unit: PhantomData<U>,
 }
+
 mint_vec!(TypedPoint3D[x, y, z] = Point3);
 
 /// Default 3d point type with no unit.
