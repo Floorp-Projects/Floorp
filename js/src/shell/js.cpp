@@ -517,6 +517,7 @@ static bool reportWarnings = true;
 static bool compileOnly = false;
 static bool fuzzingSafe = false;
 static bool disableOOMFunctions = false;
+static bool defaultToSameCompartment = true;
 
 #ifdef DEBUG
 static bool dumpEntrainedVariables = false;
@@ -6177,7 +6178,14 @@ static bool NewGlobal(JSContext* cx, unsigned argc, Value* vp) {
   JS::RealmBehaviors& behaviors = options.behaviors();
 
   SetStandardRealmOptions(options);
-  options.creationOptions().setNewCompartmentAndZone();
+
+  // Default to creating the global in the current compartment unless
+  // --more-compartments is used.
+  if (defaultToSameCompartment) {
+    creationOptions.setExistingCompartment(cx->global());
+  } else {
+    creationOptions.setNewCompartmentAndZone();
+  }
 
   CallArgs args = CallArgsFromVp(argc, vp);
   if (args.length() == 1 && args[0].isObject()) {
@@ -6211,6 +6219,13 @@ static bool NewGlobal(JSContext* cx, unsigned argc, Value* vp) {
     }
     if (v.isObject()) {
       creationOptions.setExistingCompartment(UncheckedUnwrap(&v.toObject()));
+    }
+
+    if (!JS_GetProperty(cx, opts, "newCompartment", &v)) {
+      return false;
+    }
+    if (v.isBoolean() && v.toBoolean()) {
+      creationOptions.setNewCompartmentAndZone();
     }
 
     if (!JS_GetProperty(cx, opts, "disableLazyParsing", &v)) {
@@ -8537,7 +8552,10 @@ JS_FN_HELP("parseBin", BinParse, 1, 0,
 "      sameZoneAs: The compartment will be in the same zone as the given\n"
 "         object (defaults to a new zone).\n"
 "      sameCompartmentAs: The global will be in the same compartment and\n"
-"         zone as the given object (defaults to a new compartment).\n"
+"         zone as the given object (defaults to the current compartment,\n"
+"         unless the --more-compartments option is used).\n"
+"      newCompartment: If true, the global will always be created in a new\n"
+"         compartment, even without --more-compartments.\n"
 "      cloneSingletons: If true, always clone the objects baked into\n"
 "         scripts, even if it's a top-level script that will only run once\n"
 "         (defaults to using them directly in scripts that will only run\n"
@@ -10683,6 +10701,10 @@ static int Shell(JSContext* cx, OptionParser* op, char** envp) {
     disableOOMFunctions = true;
   }
 
+  if (op->getBoolOption("more-compartments")) {
+    defaultToSameCompartment = false;
+  }
+
   JS::RealmOptions options;
   SetStandardRealmOptions(options);
   RootedObject glob(cx, NewGlobalObject(cx, options, nullptr));
@@ -11053,6 +11075,9 @@ int main(int argc, char** argv, char** envp) {
                         "(no-op on platforms other than x86 and x64).") ||
       !op.addBoolOption('\0', "no-avx",
                         "No-op. AVX is currently disabled by default.") ||
+      !op.addBoolOption('\0', "more-compartments",
+                        "Make newGlobal default to creating a new "
+                        "compartment.") ||
       !op.addBoolOption('\0', "fuzzing-safe",
                         "Don't expose functions that aren't safe for "
                         "fuzzers to call") ||
