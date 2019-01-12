@@ -8,6 +8,7 @@ use docopt::Docopt;
 use lalrpop::Configuration;
 use std::env;
 use std::io::{self, Write};
+use std::path::PathBuf;
 use std::process;
 
 static VERSION: &'static str = env!("CARGO_PKG_VERSION");
@@ -50,6 +51,10 @@ fn main1() -> io::Result<()> {
         config.emit_comments(true);
     }
 
+    if args.flag_no_whitespace {
+        config.emit_whitespace(false);
+    }
+
     if args.flag_report {
         config.emit_report(true);
     }
@@ -60,6 +65,14 @@ fn main1() -> io::Result<()> {
             "Error: no input files specified! Try --help for help."
         ));
         process::exit(1);
+    }
+
+    if let Some(ref out_dir) = args.flag_out_dir {
+        config.set_out_dir(out_dir);
+    }
+
+    if let Some(ref flag_features) = args.flag_features {
+        config.set_features(flag_features.split(',').map(String::from));
     }
 
     for arg in args.arg_inputs {
@@ -88,8 +101,11 @@ Options:
     -V, --version        Print version.
     -l, --level LEVEL    Set the debug level. (Default: info)
                          Valid values: quiet, info, verbose, debug.
+    -o, --out-dir DIR    Sets the directory in which to output the .rs file(s).
+    --features FEATURES  Comma separated list of features for conditional compilation.
     -f, --force          Force execution, even if the .lalrpop file is older than the .rs file.
     -c, --color          Force colorful output, even if this is not a TTY.
+    --no-whitespace      Removes redundant whitespace from the generated file. (Default: false)
     --comments           Enable comments in the generated code.
     --report             Generate report files.
 ";
@@ -97,10 +113,13 @@ Options:
 #[derive(Debug, Deserialize)]
 struct Args {
     arg_inputs: Vec<String>,
+    flag_out_dir: Option<PathBuf>,
+    flag_features: Option<String>,
     flag_level: Option<LevelFlag>,
     flag_force: bool,
     flag_color: bool,
     flag_comments: bool,
+    flag_no_whitespace: bool,
     flag_report: bool,
     flag_version: bool,
 }
@@ -115,9 +134,9 @@ enum LevelFlag {
 
 #[cfg(test)]
 mod test {
-    use docopt::Docopt;
-    use super::USAGE;
     use super::Args;
+    use super::USAGE;
+    use docopt::Docopt;
 
     #[test]
     fn test_usage_help() {
@@ -149,5 +168,32 @@ mod test {
         let _: Args = Docopt::new(USAGE)
             .and_then(|d| d.argv(argv().into_iter()).deserialize())
             .unwrap();
+    }
+
+    #[test]
+    fn out_dir() {
+        let argv = || vec!["lalrpop", "--out-dir", "abc", "file.lalrpop"];
+        let args: Args = Docopt::new(USAGE)
+            .and_then(|d| d.argv(argv().into_iter()).deserialize())
+            .unwrap();
+        assert_eq!(args.flag_out_dir, Some("abc".into()));
+    }
+
+    #[test]
+    fn features() {
+        let argv = || vec!["lalrpop", "--features", "test,abc", "file.lalrpop"];
+        let args: Args = Docopt::new(USAGE)
+            .and_then(|d| d.argv(argv().into_iter()).deserialize())
+            .unwrap();
+        assert_eq!(args.flag_features, Some("test,abc".to_string()));
+    }
+
+    #[test]
+    fn emit_whitespace() {
+        let argv = || vec!["lalrpop", "--no-whitespace", "file.lalrpop"];
+        let args: Args = Docopt::new(USAGE)
+            .and_then(|d| d.argv(argv().into_iter()).deserialize())
+            .unwrap();
+        assert!(args.flag_no_whitespace, true);
     }
 }

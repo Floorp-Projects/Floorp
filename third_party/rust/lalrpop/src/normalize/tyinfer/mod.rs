@@ -1,11 +1,13 @@
-use super::{NormError, NormResult};
 use super::norm_util::{self, AlternativeAction, Symbols};
+use super::{NormError, NormResult};
 
-use std::collections::{HashMap, HashSet};
 use grammar::consts::{ERROR, INPUT_LIFETIME, LOCATION};
-use grammar::parse_tree::{ActionKind, Alternative, Grammar, NonterminalData, NonterminalString,
-                          Path, Span, SymbolKind, TypeParameter, TypeRef};
+use grammar::parse_tree::{
+    ActionKind, Alternative, Grammar, NonterminalData, NonterminalString, Path, Span, SymbolKind,
+    TypeParameter, TypeRef,
+};
 use grammar::repr::{NominalTypeRepr, TypeRepr, Types};
+use std::collections::{HashMap, HashSet};
 use string_cache::DefaultAtom as Atom;
 
 #[cfg(test)]

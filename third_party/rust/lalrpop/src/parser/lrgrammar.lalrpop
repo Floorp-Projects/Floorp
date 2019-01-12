@@ -4,10 +4,21 @@ use grammar::pattern::*;
 use std::iter::once;
 use tok::{self, Tok};
 use util::strip;
+use lalrpop_util::ParseError;
+
+use super::Top;
 
 grammar<'input>(text: &'input str);
 
-pub Grammar: Grammar =
+pub Top: Top = {
+    "StartGrammar" <Grammar> => Top::Grammar(<>),
+    "StartPattern" <Pattern> => Top::Pattern(<>),
+    "StartMatchMapping" <MatchMapping> => Top::MatchMapping(<>),
+    "StartTypeRef" <TypeRef> => Top::TypeRef(<>),
+    "StartGrammarWhereClauses" <GrammarWhereClauses> => Top::GrammarWhereClauses(<>),
+};
+
+Grammar: Grammar =
     <module_attributes:ShebangAttribute*>
     <uses:Use*>
     <annotations:Annotation*>
@@ -35,7 +46,7 @@ TypeParameter: TypeParameter = {
     <l:Id> => TypeParameter::Id(l)
 };
 
-pub GrammarWhereClauses: Vec<WhereClause<TypeRef>> =
+GrammarWhereClauses: Vec<WhereClause<TypeRef>> =
     "where" <Comma<GrammarWhereClause>>;
 
 GrammarWhereClause: WhereClause<TypeRef> = {
@@ -112,9 +123,12 @@ Nonterminal: GrammarItem =
                                                    alternatives: a })
     };
 
+AnnotationArg: (Atom, String) =
+    "(" <name:Id> "=" <value:"StringLiteral"> ")" => (name, value.into());
+
 Annotation: Annotation =
-    "#" "[" <lo:@L> <id:Id> <hi:@R> "]" => {
-        Annotation { id_span: Span(lo, hi), id: id }
+    "#" "[" <lo:@L> <id:Id> <arg: AnnotationArg?> <hi:@R> "]" => {
+        Annotation { id_span: Span(lo, hi), id, arg }
     };
 
 NonterminalName: (NonterminalString, Vec<NonterminalString>) = {
@@ -222,7 +236,7 @@ SymbolKind1: SymbolKind = {
         SymbolKind::Error,
 };
 
-pub TypeRef: TypeRef = {
+TypeRef: TypeRef = {
     "(" <Comma<TypeRef>> ")" =>
         TypeRef::Tuple(<>),
 
@@ -295,7 +309,7 @@ MatchItem: MatchItem = {
 
 MatchSymbol = QuotedLiteral;
 
-pub MatchMapping = Terminal;
+MatchMapping = Terminal;
 
 EnumToken: EnumToken =
     "enum" <lo:@L> <t:TypeRef> <hi:@R> "{"
@@ -323,7 +337,7 @@ Conversion: Conversion =
                         to: pattern })
     };
 
-pub Pattern: Pattern<TypeRef> =
+Pattern: Pattern<TypeRef> =
     <lo:@L> <k:PatternKind> <hi:@R> => Pattern { span: Span(lo, hi), kind: k };
 
 PatternKind: PatternKind<TypeRef> = {
@@ -394,7 +408,11 @@ QuotedLiteral: TerminalLiteral = {
 };
 
 StringLiteral: Atom =
-    <s:"StringLiteral"> => Atom::from(s);
+    <lo:@L> <s:"StringLiteral"> =>? {
+        let text = tok::apply_string_escapes(s, lo + 1)
+            .map_err(|e| ParseError::User { error: e })?;
+        Ok(Atom::from(text))
+    };
 
 RegexLiteral: Atom =
     <s:"RegexLiteral"> => Atom::from(s);
@@ -464,5 +482,11 @@ extern {
         "*" => Tok::Star,
         "~~" => Tok::TildeTilde,
         "_" => Tok::Underscore,
+
+        "StartGrammar" => Tok::StartGrammar,
+        "StartPattern" => Tok::StartPattern,
+        "StartMatchMapping" => Tok::StartMatchMapping,
+        "StartTypeRef" => Tok::StartTypeRef,
+        "StartGrammarWhereClauses" => Tok::StartGrammarWhereClauses,
     }
 }

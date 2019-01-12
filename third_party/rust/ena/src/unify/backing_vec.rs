@@ -7,17 +7,18 @@ use std::marker::PhantomData;
 use super::{VarValue, UnifyKey, UnifyValue};
 
 #[allow(dead_code)] // rustc BUG
-type Key<S> = <S as UnificationStore>::Key;
+#[allow(type_alias_bounds)]
+type Key<S: UnificationStore> = <S as UnificationStore>::Key;
 
 /// Largely internal trait implemented by the unification table
 /// backing store types. The most common such type is `InPlace`,
 /// which indicates a standard, mutable unification table.
-pub trait UnificationStore: ops::Index<usize, Output = VarValue<Key<Self>>> + Clone {
+pub trait UnificationStore:
+    ops::Index<usize, Output = VarValue<Key<Self>>> + Clone + Default
+{
     type Key: UnifyKey<Value = Self::Value>;
     type Value: UnifyValue;
     type Snapshot;
-
-    fn new() -> Self;
 
     fn start_snapshot(&mut self) -> Self::Snapshot;
 
@@ -51,15 +52,17 @@ pub struct InPlace<K: UnifyKey> {
     values: sv::SnapshotVec<Delegate<K>>
 }
 
+// HACK(eddyb) manual impl avoids `Default` bound on `K`.
+impl<K: UnifyKey> Default for InPlace<K> {
+    fn default() -> Self {
+        InPlace { values: sv::SnapshotVec::new() }
+    }
+}
+
 impl<K: UnifyKey> UnificationStore for InPlace<K> {
     type Key = K;
     type Value = K::Value;
     type Snapshot = sv::Snapshot;
-
-    #[inline]
-    fn new() -> Self {
-        InPlace { values: sv::SnapshotVec::new() }
-    }
 
     #[inline]
     fn start_snapshot(&mut self) -> Self::Snapshot {
@@ -132,16 +135,19 @@ pub struct Persistent<K: UnifyKey> {
     values: DVec<VarValue<K>>
 }
 
+// HACK(eddyb) manual impl avoids `Default` bound on `K`.
+#[cfg(feature = "persistent")]
+impl<K: UnifyKey> Default for Persistent<K> {
+    fn default() -> Self {
+        Persistent { values: DVec::new() }
+    }
+}
+
 #[cfg(feature = "persistent")]
 impl<K: UnifyKey> UnificationStore for Persistent<K> {
     type Key = K;
     type Value = K::Value;
     type Snapshot = Self;
-
-    #[inline]
-    fn new() -> Self {
-        Persistent { values: DVec::new() }
-    }
 
     #[inline]
     fn start_snapshot(&mut self) -> Self::Snapshot {

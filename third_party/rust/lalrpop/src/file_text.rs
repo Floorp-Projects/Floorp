@@ -1,8 +1,8 @@
 use grammar::parse_tree as pt;
 use std::fmt::{Display, Error, Formatter};
 use std::fs::File;
-use std::path::PathBuf;
 use std::io::{self, Read, Write};
+use std::path::PathBuf;
 
 pub struct FileText {
     path: PathBuf,
