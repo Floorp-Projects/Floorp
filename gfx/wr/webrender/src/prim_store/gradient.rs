@@ -20,7 +20,7 @@ use util::pack_as_float;
 /// A hashable gradient stop that can be used in primitive keys.
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, MallocSizeOf, PartialEq)]
 pub struct GradientStopKey {
     pub offset: f32,
     pub color: ColorU,
@@ -38,7 +38,7 @@ impl hash::Hash for GradientStopKey {
 /// Identifying key for a line decoration.
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash, MallocSizeOf)]
 pub struct LinearGradientKey {
     pub common: PrimKeyCommonData,
     pub extend_mode: ExtendMode,
@@ -95,6 +95,7 @@ impl AsInstanceKind<LinearGradientDataHandle> for LinearGradientKey {
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
+#[derive(MallocSizeOf)]
 pub struct LinearGradientTemplate {
     pub common: PrimTemplateCommonData,
     pub extend_mode: ExtendMode,
@@ -228,7 +229,7 @@ impl LinearGradientTemplate {
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-#[derive(Clone, Copy, Debug, Hash, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Hash, Eq, MallocSizeOf, PartialEq)]
 pub struct LinearGradientDataMarker;
 
 pub type LinearGradientDataStore = DataStore<LinearGradientKey, LinearGradientTemplate, LinearGradientDataMarker>;
@@ -279,7 +280,7 @@ impl IsVisible for LinearGradient {
 /// Hashable radial gradient parameters, for use during prim interning.
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, MallocSizeOf, PartialEq)]
 pub struct RadialGradientParams {
     pub start_radius: f32,
     pub end_radius: f32,
@@ -299,7 +300,7 @@ impl hash::Hash for RadialGradientParams {
 /// Identifying key for a line decoration.
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash, MallocSizeOf)]
 pub struct RadialGradientKey {
     pub common: PrimKeyCommonData,
     pub extend_mode: ExtendMode,
@@ -354,6 +355,7 @@ impl AsInstanceKind<RadialGradientDataHandle> for RadialGradientKey {
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
+#[derive(MallocSizeOf)]
 pub struct RadialGradientTemplate {
     pub common: PrimTemplateCommonData,
     pub extend_mode: ExtendMode,
@@ -458,7 +460,7 @@ impl RadialGradientTemplate {
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-#[derive(Clone, Copy, Debug, Hash, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Hash, Eq, MallocSizeOf, PartialEq)]
 pub struct RadialGradientDataMarker;
 
 pub type RadialGradientDataStore = DataStore<RadialGradientKey, RadialGradientTemplate, RadialGradientDataMarker>;

@@ -34,7 +34,7 @@ pub const MAX_DASH_COUNT: u32 = 2048;
 //           all the border structs with hashable
 //           variants...
 
-#[derive(Clone, Debug, Hash, PartialEq, Eq)]
+#[derive(Clone, Debug, Hash, MallocSizeOf, PartialEq, Eq)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct BorderRadiusAu {
@@ -66,7 +66,7 @@ impl From<BorderRadiusAu> for BorderRadius {
     }
 }
 
-#[derive(Clone, Debug, Hash, PartialEq, Eq)]
+#[derive(Clone, Debug, Hash, MallocSizeOf, PartialEq, Eq)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct BorderSideAu {
@@ -94,7 +94,7 @@ impl From<BorderSideAu> for BorderSide {
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-#[derive(Debug, Clone, Hash, Eq, PartialEq)]
+#[derive(Debug, Clone, Hash, Eq, MallocSizeOf, PartialEq)]
 pub struct NormalBorderAu {
     pub left: BorderSideAu,
     pub right: BorderSideAu,
@@ -148,7 +148,7 @@ impl From<NormalBorderAu> for ApiNormalBorder {
 
 /// Cache key that uniquely identifies a border
 /// segment in the render task cache.
-#[derive(Clone, Debug, Hash, PartialEq, Eq)]
+#[derive(Clone, Debug, Hash, MallocSizeOf, PartialEq, Eq)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct BorderSegmentCacheKey {
