@@ -1,8 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-/* This test records which services, JS components and JS modules are loaded
- * when creating a new content process.
+/* This test records which services, JS components, process scripts, and JS
+ * modules are loaded when creating a new content process.
  *
  * If you made changes that cause this test to fail, it's likely because you
  * are loading more JS code during content process startup.
@@ -68,6 +68,15 @@ const whitelist = {
     "resource://gre/modules/ExtensionUtils.jsm",
     "resource://gre/modules/MessageChannel.jsm",
   ]),
+  processScripts: new Set([
+    "chrome://global/content/process-content.js",
+    "resource:///modules/ContentObservers.js",
+    "data:,ChromeUtils.import('resource://gre/modules/ExtensionProcessScript.jsm')",
+    "chrome://satchel/content/formSubmitListener.js",
+    "resource://devtools/client/jsonview/converter-observer.js",
+    "resource://gre/modules/WebRequestContent.js",
+    "data:,new function() {\n      ChromeUtils.import(\"resource://formautofill/FormAutofillContent.jsm\");\n    }",
+  ]),
 };
 
 // Items on this list are allowed to be loaded but not
@@ -80,6 +89,7 @@ const intermittently_loaded_whitelist = {
   modules: new Set([
     "resource://gre/modules/sessionstore/Utils.jsm",
   ]),
+  processScripts: new Set([]),
 };
 
 const blacklist = {
@@ -129,6 +139,13 @@ add_task(async function() {
   } + ")()", false);
 
   let loadedInfo = await promise;
+
+  // Gather loaded process scripts.
+  loadedInfo.processScripts = {};
+  for (let [uri] of Services.ppmm.getDelayedProcessScripts()) {
+    loadedInfo.processScripts[uri] = "";
+  }
+
   let loadedList = {};
 
   for (let scriptType in whitelist) {
