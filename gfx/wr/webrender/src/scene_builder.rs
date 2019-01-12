@@ -194,45 +194,39 @@ pub enum SceneSwapResult {
     Aborted,
 }
 
-// This struct contains all items that can be shared between
-// display lists. We want to intern and share the same clips,
-// primitives and other things between display lists so that:
-// - GPU cache handles remain valid, reducing GPU cache updates.
-// - Comparison of primitives and pictures between two
-//   display lists is (a) fast (b) done during scene building.
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
-#[derive(Default)]
-pub struct DocumentResources {
-    pub clip_interner: ClipDataInterner,
-    pub prim_interner: PrimitiveDataInterner,
-    pub image_interner: ImageDataInterner,
-    pub image_border_interner: ImageBorderDataInterner,
-    pub line_decoration_interner: LineDecorationDataInterner,
-    pub linear_grad_interner: LinearGradientDataInterner,
-    pub normal_border_interner: NormalBorderDataInterner,
-    pub picture_interner: PictureDataInterner,
-    pub radial_grad_interner: RadialGradientDataInterner,
-    pub text_run_interner: TextRunDataInterner,
-    pub yuv_image_interner: YuvImageDataInterner,
-}
+macro_rules! declare_document_resources {
+    ( $( { $interner_ident: ident, $interner_type: ty, $x: ident, $y: ty } )+ ) => {
+        /// This struct contains all items that can be shared between
+        /// display lists. We want to intern and share the same clips,
+        /// primitives and other things between display lists so that:
+        /// - GPU cache handles remain valid, reducing GPU cache updates.
+        /// - Comparison of primitives and pictures between two
+        ///   display lists is (a) fast (b) done during scene building.
+        #[cfg_attr(feature = "capture", derive(Serialize))]
+        #[cfg_attr(feature = "replay", derive(Deserialize))]
+        #[derive(Default)]
+        pub struct DocumentResources {
+            $(
+                pub $interner_ident: $interner_type,
+            )+
+        }
 
-impl DocumentResources {
-    /// Reports CPU heap memory used by the interners.
-    fn report_memory(
-        &self,
-        ops: &mut MallocSizeOfOps,
-        r: &mut MemoryReport,
-    ) {
-        let op = ops.size_of_op;
-        let eop = ops.enclosing_size_of_op.unwrap();
-        r.interners += self.clip_interner.malloc_size_of(op, eop);
-        r.interners += self.prim_interner.malloc_size_of(op, eop);
-        r.interners += self.linear_grad_interner.malloc_size_of(op, eop);
-        r.interners += self.radial_grad_interner.malloc_size_of(op, eop);
-        r.interners += self.text_run_interner.malloc_size_of(op, eop);
+        impl DocumentResources {
+            /// Reports CPU heap memory used by the interners.
+            fn report_memory(
+                &self,
+                ops: &mut MallocSizeOfOps,
+                r: &mut MemoryReport,
+            ) {
+                $(
+                    r.interning.$interner_ident += self.$interner_ident.size_of(ops);
+                )+
+            }
+        }
     }
 }
+
+enumerate_interners!(declare_document_resources);
 
 // Access to `DocumentResources` interners by `Internable`
 pub trait InternerMut<I: Internable>
