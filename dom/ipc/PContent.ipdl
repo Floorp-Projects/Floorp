@@ -398,8 +398,6 @@ child:
     // Re-create the rendering stack for a device reset.
     async ReinitRenderingForDeviceReset();
 
-    async InitRemoteDecoder(Endpoint<PRemoteDecoderManagerChild> decoder);
-
     /**
      * Enable system-level sandboxing features, if available.  Can
      * usually only be performed zero or one times.  The child may
@@ -765,6 +763,10 @@ parent:
      */
     sync ConnectPluginBridge(uint32_t aPluginId)
         returns (nsresult rv, Endpoint<PPluginModuleParent> aEndpoint);
+
+    // See Bug 1518344 - Investigate using async for PContent::LaunchRDDProcess
+    sync LaunchRDDProcess()
+        returns (nsresult rv, Endpoint<PRemoteDecoderManagerChild> aEndpoint);
 
     async PJavaScript();
 

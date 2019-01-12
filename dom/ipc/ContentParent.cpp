@@ -1118,6 +1118,31 @@ mozilla::ipc::IPCResult ContentParent::RecvConnectPluginBridge(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult ContentParent::RecvLaunchRDDProcess(
+    nsresult* aRv, Endpoint<PRemoteDecoderManagerChild>* aEndpoint) {
+  *aRv = NS_OK;
+
+  if (XRE_IsParentProcess() &&
+      BrowserTabsRemoteAutostart() &&  // only do rdd process if e10s on
+      Preferences::GetBool("media.rdd-process.enabled", false)) {
+    RDDProcessManager* rdd = RDDProcessManager::Get();
+    if (rdd) {
+      rdd->LaunchRDDProcess();
+
+      bool rddOpened = rdd->CreateContentBridge(OtherPid(), aEndpoint);
+      MOZ_ASSERT(rddOpened);
+
+      if (!rddOpened) {
+        *aRv = NS_ERROR_NOT_AVAILABLE;
+      }
+    } else {
+      *aRv = NS_ERROR_NOT_AVAILABLE;
+    }
+  }
+
+  return IPC_OK();
+}
+
 /*static*/ TabParent* ContentParent::CreateBrowser(
     const TabContext& aContext, Element* aFrameElement,
     ContentParent* aOpenerContentParent, TabParent* aSameTabGroupAs,
@@ -2610,22 +2635,6 @@ void ContentParent::InitInternal(ProcessPriority aInitialPriority) {
                               namespaces);
 
   gpm->AddListener(this);
-
-  if (StaticPrefs::MediaRddProcessEnabled() && BrowserTabsRemoteAutostart()) {
-    RDDProcessManager* rdd = RDDProcessManager::Get();
-
-    Endpoint<PRemoteDecoderManagerChild> remoteManager;
-    bool rddOpened = rdd->CreateContentBridge(OtherPid(), &remoteManager);
-    MOZ_ASSERT(rddOpened);
-
-    if (rddOpened) {
-      // not using std::move here (like in SendInitRendering above) because
-      // clang-tidy says:
-      // Warning: Passing result of std::move() as a const reference
-      // argument; no move will actually happen
-      Unused << SendInitRemoteDecoder(remoteManager);
-    }
-  }
 
   nsStyleSheetService* sheetService = nsStyleSheetService::GetInstance();
   if (sheetService) {
