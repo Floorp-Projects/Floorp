@@ -59,7 +59,6 @@ use internal_types::{TextureSource, ORTHO_FAR_PLANE, ORTHO_NEAR_PLANE, ResourceC
 use internal_types::{CacheTextureId, DebugOutput, FastHashMap, LayerIndex, RenderedDocument, ResultMsg};
 use internal_types::{TextureCacheAllocationKind, TextureCacheUpdate, TextureUpdateList, TextureUpdateSource};
 use internal_types::{RenderTargetInfo, SavedTargetIndex};
-use malloc_size_of::MallocSizeOfOps;
 use prim_store::DeferredResolve;
 use profiler::{BackendProfileCounters, FrameProfileCounters, TimeProfileCounter,
                GpuProfileTag, RendererProfileCounters, RendererProfileTimers};
@@ -1557,9 +1556,17 @@ pub struct Renderer {
     /// copy the WR output to.
     output_image_handler: Option<Box<OutputImageHandler>>,
 
-    /// Optional function pointers for measuring memory used by a given
+    /// Optional function pointer for measuring memory used by a given
     /// heap-allocated pointer.
-    size_of_ops: Option<MallocSizeOfOps>,
+    size_of_op: Option<VoidPtrToSizeFn>,
+
+    /// Optional function pointer for measuring memory used by a given
+    /// heap-allocated region of memory. Unlike the above, pointers passed
+    /// to this function do not need to point to the start of the allocation,
+    /// and can be anywhere in the allocated region. This is useful for measuring
+    /// structures like hashmaps that don't expose pointers to the start of the
+    /// allocation, but do expose pointers to elements within the allocation.
+    _enclosing_size_of_op: Option<VoidPtrToSizeFn>,
 
     // Currently allocated FBOs for output frames.
     output_targets: FastHashMap<u32, FrameOutput>,
@@ -1825,10 +1832,6 @@ impl Renderer {
         let device_pixel_ratio = options.device_pixel_ratio;
         let debug_flags = options.debug_flags;
         let payload_rx_for_backend = payload_rx.to_mpsc_receiver();
-        let size_of_op = options.size_of_op;
-        let enclosing_size_of_op = options.enclosing_size_of_op;
-        let make_size_of_ops =
-            move || size_of_op.map(|o| MallocSizeOfOps::new(o, enclosing_size_of_op));
         let recorder = options.recorder;
         let thread_listener = Arc::new(options.thread_listener);
         let thread_listener_for_rayon_start = thread_listener.clone();
@@ -1854,6 +1857,8 @@ impl Renderer {
                 Arc::new(worker.unwrap())
             });
         let sampler = options.sampler;
+        let size_of_op = options.size_of_op;
+        let enclosing_size_of_op = options.enclosing_size_of_op;
         let namespace_alloc_by_client = options.namespace_alloc_by_client;
 
         let blob_image_handler = options.blob_image_handler.take();
@@ -1870,7 +1875,8 @@ impl Renderer {
             config,
             api_tx.clone(),
             scene_builder_hooks,
-            make_size_of_ops(),
+            size_of_op,
+            enclosing_size_of_op,
         );
         thread::Builder::new().name(scene_thread_name.clone()).spawn(move || {
             register_thread_with_profiler(scene_thread_name.clone());
@@ -1943,7 +1949,7 @@ impl Renderer {
                 config,
                 recorder,
                 sampler,
-                make_size_of_ops(),
+                size_of_op,
                 debug_flags,
                 namespace_alloc_by_client,
             );
@@ -2005,7 +2011,8 @@ impl Renderer {
             dither_matrix_texture,
             external_image_handler: None,
             output_image_handler: None,
-            size_of_ops: make_size_of_ops(),
+            size_of_op: options.size_of_op,
+            _enclosing_size_of_op: options.enclosing_size_of_op,
             output_targets: FastHashMap::default(),
             cpu_profiles: VecDeque::new(),
             gpu_profiles: VecDeque::new(),
@@ -4565,7 +4572,7 @@ impl Renderer {
     }
 
     fn size_of<T>(&self, ptr: *const T) -> usize {
-        let op = self.size_of_ops.as_ref().unwrap().size_of_op;
+        let op = self.size_of_op.as_ref().unwrap();
         unsafe { op(ptr as *const c_void) }
     }
 

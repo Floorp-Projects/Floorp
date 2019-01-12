@@ -92,7 +92,7 @@ impl<T> VecHelper<T> for Vec<T> {
 // TODO(gw): We should try and incorporate F <-> T units here,
 //           but it's a bit tricky to do that now with the
 //           way the current clip-scroll tree works.
-#[derive(Debug, Clone, Copy, MallocSizeOf)]
+#[derive(Debug, Clone, Copy)]
 pub struct ScaleOffset {
     pub scale: Vector2D<f32>,
     pub offset: Vector2D<f32>,
@@ -556,7 +556,7 @@ impl<U> MaxRect for TypedRect<f32, U> {
 
 /// An enum that tries to avoid expensive transformation matrix calculations
 /// when possible when dealing with non-perspective axis-aligned transformations.
-#[derive(Debug, MallocSizeOf)]
+#[derive(Debug)]
 pub enum FastTransform<Src, Dst> {
     /// A simple offset, which can be used without doing any matrix math.
     Offset(TypedVector2D<f32, Src>),

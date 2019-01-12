@@ -19,7 +19,7 @@ use prim_store::{
 /// will be composited into its parent.
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-#[derive(Debug, Clone, MallocSizeOf, PartialEq, Hash, Eq)]
+#[derive(Debug, Clone, PartialEq, Hash, Eq)]
 pub enum PictureCompositeKey {
     // No visual compositing effect
     Identity,
@@ -127,7 +127,7 @@ impl From<Option<PictureCompositeMode>> for PictureCompositeKey {
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-#[derive(Debug, Clone, Eq, MallocSizeOf, PartialEq, Hash)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct Picture {
     pub composite_mode_key: PictureCompositeKey,
 }
@@ -171,7 +171,6 @@ impl AsInstanceKind<PictureDataHandle> for PictureKey {
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-#[derive(MallocSizeOf)]
 pub struct PictureData;
 
 pub type PictureTemplate = PrimTemplate<PictureData>;
@@ -189,7 +188,7 @@ impl From<PictureKey> for PictureTemplate {
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-#[derive(Clone, Copy, Debug, Hash, Eq, MallocSizeOf, PartialEq)]
+#[derive(Clone, Copy, Debug, Hash, Eq, PartialEq)]
 pub struct PictureDataMarker;
 
 pub type PictureDataStore = DataStore<PictureKey, PictureTemplate, PictureDataMarker>;

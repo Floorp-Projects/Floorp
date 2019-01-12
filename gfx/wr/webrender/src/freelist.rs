@@ -23,7 +23,7 @@
 use std::{fmt, u32};
 use std::marker::PhantomData;
 
-#[derive(Debug, Copy, Clone, MallocSizeOf, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 struct Epoch(u32);
@@ -96,7 +96,6 @@ impl<M> PartialEq for WeakFreeListHandle<M> {
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-#[derive(MallocSizeOf)]
 pub struct WeakFreeListHandle<M> {
     index: u32,
     epoch: Epoch,

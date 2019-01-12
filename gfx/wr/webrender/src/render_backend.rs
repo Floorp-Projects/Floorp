@@ -14,7 +14,7 @@ use api::{BuiltDisplayListIter, SpecificDisplayItem};
 use api::{DevicePixelScale, DeviceIntPoint, DeviceIntRect, DeviceIntSize};
 use api::{DocumentId, DocumentLayer, ExternalScrollId, FrameMsg, HitTestFlags, HitTestResult};
 use api::{IdNamespace, LayoutPoint, PipelineId, RenderNotifier, SceneMsg, ScrollClamping};
-use api::{MemoryReport};
+use api::{MemoryReport, VoidPtrToSizeFn};
 use api::{ScrollLocation, ScrollNodeState, TransactionMsg, ResourceUpdate, BlobImageKey};
 use api::{NotificationRequest, Checkpoint};
 use api::channel::{MsgReceiver, MsgSender, Payload};
@@ -30,7 +30,6 @@ use frame_builder::{FrameBuilder, FrameBuilderConfig};
 use gpu_cache::GpuCache;
 use hit_test::{HitTest, HitTester};
 use internal_types::{DebugOutput, FastHashMap, FastHashSet, RenderedDocument, ResultMsg};
-use malloc_size_of::{MallocSizeOf, MallocSizeOfOps};
 use picture::RetainedTiles;
 use prim_store::{PrimitiveDataStore, PrimitiveScratchBuffer, PrimitiveInstance};
 use prim_store::{PrimitiveInstanceKind, PrimTemplateCommonData};
@@ -89,7 +88,7 @@ impl DocumentView {
     }
 }
 
-#[derive(Copy, Clone, Hash, MallocSizeOf, PartialEq, PartialOrd, Debug, Eq, Ord)]
+#[derive(Copy, Clone, Hash, PartialEq, PartialOrd, Debug, Eq, Ord)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct FrameId(usize);
@@ -143,7 +142,7 @@ impl ::std::ops::Sub<usize> for FrameId {
 /// decisions. As such, we use the `FrameId` for equality and comparison, since
 /// we should never have two `FrameStamps` with the same id but different
 /// timestamps.
-#[derive(Copy, Clone, Debug, MallocSizeOf)]
+#[derive(Copy, Clone, Debug)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct FrameStamp {
@@ -214,31 +213,29 @@ impl FrameStamp {
     };
 }
 
-macro_rules! declare_frame_resources {
-    ( $( { $x: ident, $y: ty, $datastore_ident: ident, $datastore_type: ty } )+ ) => {
-        /// A collection of resources that are shared by clips, primitives
-        /// between display lists.
-        #[cfg_attr(feature = "capture", derive(Serialize))]
-        #[cfg_attr(feature = "replay", derive(Deserialize))]
-        #[derive(Default)]
-        pub struct FrameResources {
-            $(
-                pub $datastore_ident: $datastore_type,
-            )+
-        }
+// A collection of resources that are shared by clips, primitives
+// between display lists.
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+#[derive(Default)]
+pub struct FrameResources {
+    /// The store of currently active / available clip nodes. This is kept
+    /// in sync with the clip interner in the scene builder for each document.
+    pub clip_data_store: ClipDataStore,
 
-        impl FrameResources {
-            /// Reports CPU heap usage.
-            fn report_memory(&self, ops: &mut MallocSizeOfOps, r: &mut MemoryReport) {
-                $(
-                    r.interning.$datastore_ident += self.$datastore_ident.size_of(ops);
-                )+
-            }
-        }
-    }
+    /// Currently active / available primitives. Kept in sync with the
+    /// primitive interner in the scene builder, per document.
+    pub prim_data_store: PrimitiveDataStore,
+    pub image_data_store: ImageDataStore,
+    pub image_border_data_store: ImageBorderDataStore,
+    pub line_decoration_data_store: LineDecorationDataStore,
+    pub linear_grad_data_store: LinearGradientDataStore,
+    pub normal_border_data_store: NormalBorderDataStore,
+    pub picture_data_store: PictureDataStore,
+    pub radial_grad_data_store: RadialGradientDataStore,
+    pub text_run_data_store: TextRunDataStore,
+    pub yuv_image_data_store: YuvImageDataStore,
 }
-
-enumerate_interners!(declare_frame_resources);
 
 impl FrameResources {
     pub fn as_common_data(
@@ -288,6 +285,15 @@ impl FrameResources {
                 &prim_data.common
             }
         }
+    }
+
+    /// Reports CPU heap usage.
+    fn report_memory(&self, op: VoidPtrToSizeFn, r: &mut MemoryReport) {
+        r.data_stores += self.clip_data_store.malloc_size_of(op);
+        r.data_stores += self.prim_data_store.malloc_size_of(op);
+        r.data_stores += self.linear_grad_data_store.malloc_size_of(op);
+        r.data_stores += self.radial_grad_data_store.malloc_size_of(op);
+        r.data_stores += self.text_run_data_store.malloc_size_of(op);
     }
 }
 
@@ -673,7 +679,7 @@ pub struct RenderBackend {
     notifier: Box<RenderNotifier>,
     recorder: Option<Box<ApiRecordingReceiver>>,
     sampler: Option<Box<AsyncPropertySampler + Send>>,
-    size_of_ops: Option<MallocSizeOfOps>,
+    size_of_op: Option<VoidPtrToSizeFn>,
     debug_flags: DebugFlags,
     namespace_alloc_by_client: bool,
 }
@@ -692,7 +698,7 @@ impl RenderBackend {
         frame_config: FrameBuilderConfig,
         recorder: Option<Box<ApiRecordingReceiver>>,
         sampler: Option<Box<AsyncPropertySampler + Send>>,
-        size_of_ops: Option<MallocSizeOfOps>,
+        size_of_op: Option<VoidPtrToSizeFn>,
         debug_flags: DebugFlags,
         namespace_alloc_by_client: bool,
     ) -> RenderBackend {
@@ -712,7 +718,7 @@ impl RenderBackend {
             notifier,
             recorder,
             sampler,
-            size_of_ops,
+            size_of_op,
             debug_flags,
             namespace_alloc_by_client,
         }
@@ -1546,18 +1552,18 @@ impl RenderBackend {
         serde_json::to_string(&debug_root).unwrap()
     }
 
-    fn report_memory(&mut self, tx: MsgSender<MemoryReport>) {
+    fn report_memory(&self, tx: MsgSender<MemoryReport>) {
         let mut report = MemoryReport::default();
-        let ops = self.size_of_ops.as_mut().unwrap();
-        let op = ops.size_of_op;
-        report.gpu_cache_metadata = self.gpu_cache.size_of(ops);
+        let op = self.size_of_op.unwrap();
+        report.gpu_cache_metadata = self.gpu_cache.malloc_size_of(op);
         for (_id, doc) in &self.documents {
             if let Some(ref fb) = doc.frame_builder {
-                report.clip_stores += fb.clip_store.size_of(ops);
+                report.clip_stores += fb.clip_store.malloc_size_of(op);
             }
-            report.hit_testers += doc.hit_tester.size_of(ops);
+            report.hit_testers +=
+                doc.hit_tester.as_ref().map_or(0, |ht| ht.malloc_size_of(op));
 
-            doc.resources.report_memory(ops, &mut report)
+            doc.resources.report_memory(op, &mut report)
         }
 
         report += self.resource_cache.report_memory(op);
