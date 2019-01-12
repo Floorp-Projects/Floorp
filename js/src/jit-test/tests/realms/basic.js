@@ -68,3 +68,13 @@ function testCCWs() {
     assertEq(g2.o3.x, 3);
 }
 testCCWs();
+
+function testTypedArrayLazyBuffer(global) {
+    var arr1 = new global.Int32Array(1);
+    var arr2 = new Int32Array(arr1);
+    assertEq(objectGlobal(arr2.buffer), this);
+    global.buf = arr1.buffer;
+    global.eval("assertEq(objectGlobal(buf), this);");
+}
+testTypedArrayLazyBuffer(newGlobal());
+testTypedArrayLazyBuffer(newGlobal({sameCompartmentAs: this}));
