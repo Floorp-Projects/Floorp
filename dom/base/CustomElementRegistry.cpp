@@ -981,9 +981,13 @@ void CustomElementRegistry::SetElementCreationCallback(
   return;
 }
 
-static void TryUpgrade(nsINode& aNode) {
-  Element* element = aNode.IsElement() ? aNode.AsElement() : nullptr;
-  if (element) {
+void CustomElementRegistry::Upgrade(nsINode& aRoot) {
+  for (nsINode* node : ShadowIncludingTreeIterator(aRoot)) {
+    Element* element = Element::FromNode(node);
+    if (!element) {
+      continue;
+    }
+
     CustomElementData* ceData = element->GetCustomElementData();
     if (ceData) {
       NodeInfo* nodeInfo = element->NodeInfo();
@@ -996,22 +1000,8 @@ static void TryUpgrade(nsINode& aNode) {
         nsContentUtils::EnqueueUpgradeReaction(element, definition);
       }
     }
-
-    if (ShadowRoot* root = element->GetShadowRoot()) {
-      for (Element* child = root->GetFirstElementChild(); child;
-           child = child->GetNextElementSibling()) {
-        TryUpgrade(*child);
-      }
-    }
-  }
-
-  for (Element* child = aNode.GetFirstElementChild(); child;
-       child = child->GetNextElementSibling()) {
-    TryUpgrade(*child);
   }
 }
-
-void CustomElementRegistry::Upgrade(nsINode& aRoot) { TryUpgrade(aRoot); }
 
 void CustomElementRegistry::Get(JSContext* aCx, const nsAString& aName,
                                 JS::MutableHandle<JS::Value> aRetVal) {
