@@ -1,8 +1,8 @@
-use lr1::core::*;
 use grammar::repr::*;
+use lr1::core::*;
 
-use super::Tracer;
 use super::trace_graph::*;
+use super::Tracer;
 
 #[cfg(test)]
 mod test;

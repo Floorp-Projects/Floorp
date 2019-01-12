@@ -1,13 +1,13 @@
-use string_cache::DefaultAtom as Atom;
 use grammar::repr::*;
 use lr1::core::*;
+use string_cache::DefaultAtom as Atom;
 use test_util::expect_debug;
 use tls::Tls;
 
 macro_rules! nt {
     ($x:ident) => {
         NonterminalString(Atom::from(stringify!($x)))
-    }
+    };
 }
 
 macro_rules! syms {
@@ -83,7 +83,8 @@ fn enumerator() {
         "  └─Y───────┘"
     ]
 ]
-"#.trim(),
+"#
+        .trim(),
     );
 }
 
@@ -157,6 +158,7 @@ fn enumerator1() {
         "  └─Y─────────────┘"
     ]
 ]
-"#.trim(),
+"#
+        .trim(),
     );
 }

@@ -233,7 +233,8 @@ impl<'grammar, L: Lookahead> State<'grammar, L> {
     pub fn max_prefix(&self) -> &'grammar [Symbol] {
         // Each state fn takes as argument the longest prefix of any
         // item. Note that all items must have compatible prefixes.
-        let prefix = self.items
+        let prefix = self
+            .items
             .vec
             .iter()
             .map(|item| item.prefix())
@@ -263,7 +264,8 @@ impl<'grammar, L: Lookahead> State<'grammar, L> {
     /// start state, this will return a list of length at least 1.
     /// For the start state, returns `[]`.
     pub fn will_pop(&self) -> &'grammar [Symbol] {
-        let prefix = self.items
+        let prefix = self
+            .items
             .vec
             .iter()
             .filter(|item| item.index > 0)
@@ -299,7 +301,8 @@ impl<'grammar, L: Lookahead> State<'grammar, L> {
     /// FIXME -- currently, the start state returns `None` instead of
     /// the goal symbol.
     pub fn will_produce(&self) -> Option<NonterminalString> {
-        let mut returnable_nonterminals: Vec<_> = self.items
+        let mut returnable_nonterminals: Vec<_> = self
+            .items
             .vec
             .iter()
             .filter(|item| item.index > 0)

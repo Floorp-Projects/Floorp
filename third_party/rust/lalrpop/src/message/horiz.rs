@@ -1,6 +1,6 @@
+use super::*;
 use ascii_canvas::AsciiView;
 use itertools::Itertools;
-use super::*;
 
 #[derive(Debug)]
 pub struct Horiz {

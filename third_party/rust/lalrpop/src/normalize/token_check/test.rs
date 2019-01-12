@@ -1,8 +1,8 @@
-use parser;
+use grammar::parse_tree::Grammar;
+use lexer::dfa::interpret;
 use normalize::resolve::resolve;
 use normalize::NormResult;
-use lexer::dfa::interpret;
-use grammar::parse_tree::Grammar;
+use parser;
 use test_util;
 
 fn validate_grammar(grammar: &str) -> NormResult<Grammar> {
