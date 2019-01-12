@@ -2,8 +2,8 @@
 set -x -e -v
 
 # If you update this, make sure to update the minimum version in
-# build/moz.configure/rust.configure as well.
-CBINDGEN_VERSION=v0.6.7
+# build/moz.configure/bindgen.configure as well.
+CBINDGEN_VERSION=v0.6.8
 TARGET="$1"
 
 case "$(uname -s)" in
