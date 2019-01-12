@@ -1,0 +1,13 @@
+<script>
+window.requestIdleCallback(function(){SpecialPowers.forceCC()});
+var limit = 0;
+function go() {
+limit++; if(limit > 2) { return; }
+  var b = document.createElement("blockquote").attachShadow({mode: "open"});
+  b.innerHTML = a.innerHTML;
+}
+</script>
+<data id="a">
+<audio>
+<source onerror="go()">
+<link>
