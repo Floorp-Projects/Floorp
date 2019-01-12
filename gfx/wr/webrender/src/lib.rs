@@ -198,6 +198,7 @@ extern crate png;
 #[cfg(test)]
 extern crate rand;
 
+#[macro_use]
 pub extern crate webrender_api;
 extern crate webrender_build;
 
