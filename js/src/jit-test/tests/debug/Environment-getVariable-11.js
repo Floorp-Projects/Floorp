@@ -1,6 +1,6 @@
 // The value returned by getVariable can be a Debugger.Object.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = new Debugger;
 var gw = dbg.addDebuggee(g);
 var hits = 0;

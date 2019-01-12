@@ -1,7 +1,7 @@
 // Environments of different instances of the same generator have the same
 // callee. I love this job.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = new Debugger;
 var gw = dbg.addDebuggee(g);
 

@@ -1,6 +1,6 @@
 // Tests that hooks work if set while the Debugger is disabled.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = new Debugger(g);
 var log = "";
 

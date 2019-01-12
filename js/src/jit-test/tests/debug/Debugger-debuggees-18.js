@@ -14,8 +14,8 @@ function assertDebuggees(...expected) {
     assertEq(debuggees.indexOf(g) != -1, true);
 }
 
-var g1 = newGlobal(); g1.toSource = function () { return "[global g1]"; };
-var g2 = newGlobal(); g2.toSource = function () { return "[global g2]"; };
+var g1 = newGlobal({newCompartment: true}); g1.toSource = function () { return "[global g1]"; };
+var g2 = newGlobal({newCompartment: true}); g2.toSource = function () { return "[global g2]"; };
 
 assertDebuggees();
 

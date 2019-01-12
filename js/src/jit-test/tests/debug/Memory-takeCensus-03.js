@@ -7,12 +7,12 @@ var dbg = new Debugger;
 var census0 = dbg.memory.takeCensus();
 Census.walkCensus(census0, "census0", Census.assertAllZeros);
 
-var g1 = newGlobal();
+var g1 = newGlobal({newCompartment: true});
 dbg.addDebuggee(g1);
 var census1 = dbg.memory.takeCensus();
 Census.walkCensus(census1, "census1", Census.assertAllNotLessThan(census0));
 
-var g2 = newGlobal();
+var g2 = newGlobal({newCompartment: true});
 dbg.addDebuggee(g2);
 var census2 = dbg.memory.takeCensus();
 Census.walkCensus(census2, "census2", Census.assertAllNotLessThan(census1), new Set(["bytes"]));

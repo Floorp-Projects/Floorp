@@ -1,6 +1,6 @@
 // obj.getOwnPropertyDescriptor works on global objects.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 g.eval("var v;");
 this.eval("var v;");
 

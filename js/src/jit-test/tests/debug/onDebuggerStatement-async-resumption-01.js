@@ -3,7 +3,7 @@
 
 load(libdir + "asserts.js");
 
-let g = newGlobal();
+let g = newGlobal({newCompartment: true});
 g.eval(`
     async function f(x) {
         debugger;  // when==0 to force return here

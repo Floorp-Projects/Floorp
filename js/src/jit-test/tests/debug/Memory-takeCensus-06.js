@@ -3,7 +3,7 @@
 load(libdir + 'match.js');
 var Pattern = Match.Pattern;
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = new Debugger(g);
 
 Pattern({ count: Pattern.NATURAL,

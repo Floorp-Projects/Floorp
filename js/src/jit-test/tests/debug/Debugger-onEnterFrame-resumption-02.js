@@ -2,7 +2,7 @@
 
 load(libdir + "asserts.js");
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 g.set = false;
 g.eval("function f() {\n" +
        "    set = true;\n" +

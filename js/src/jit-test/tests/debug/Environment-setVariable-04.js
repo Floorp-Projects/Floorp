@@ -1,6 +1,6 @@
 // setVariable can set variables and arguments in functions.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = new Debugger(g);
 dbg.onDebuggerStatement = function (frame) {
     frame.environment.setVariable("a", 100);

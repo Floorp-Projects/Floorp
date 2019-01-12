@@ -1,7 +1,7 @@
 // |jit-test| error: TestComplete
 // onPop fires when frames are terminated.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = new Debugger(g);
 
 // We use Debugger.Frame.prototype.eval and ignore the outer 'eval' frame so we 

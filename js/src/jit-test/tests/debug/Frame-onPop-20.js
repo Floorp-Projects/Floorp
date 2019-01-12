@@ -1,5 +1,5 @@
 // A global garbage collection does not disturb onPop handlers.
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = new Debugger(g);
 var log;
 

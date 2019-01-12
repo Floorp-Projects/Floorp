@@ -1,6 +1,6 @@
 // Referents of Debugger.Scripts in other compartments always survive per-compartment GC.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = Debugger(g);
 var arr = [];
 dbg.onDebuggerStatement = function (frame) { arr.push(frame.script); };

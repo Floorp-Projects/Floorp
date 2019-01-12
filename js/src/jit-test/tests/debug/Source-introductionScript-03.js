@@ -3,11 +3,11 @@
 
 var dbg = new Debugger;
 
-var g1 = newGlobal();
+var g1 = newGlobal({newCompartment: true});
 g1.g1 = g1;
 var g1DO = dbg.addDebuggee(g1);
 
-var g2 = newGlobal();
+var g2 = newGlobal({newCompartment: true});
 g2.g1 = g1;
 
 var log = '';

@@ -1,6 +1,6 @@
 // Hooks and Debugger.prototype.getNewestFrame produce the same Frame object.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = Debugger(g);
 var hits = 0;
 var savedFrame, savedCallee;

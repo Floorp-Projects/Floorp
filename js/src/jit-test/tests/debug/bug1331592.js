@@ -14,7 +14,7 @@ var module = new WebAssembly.Module(wasmTextToBinary(`
 
 var dbg;
 (function (global) {
-    var dbgGlobal = newGlobal();
+    var dbgGlobal = newGlobal({newCompartment: true});
     dbg = new dbgGlobal.Debugger();
     dbg.addDebuggee(global);
 })(this);

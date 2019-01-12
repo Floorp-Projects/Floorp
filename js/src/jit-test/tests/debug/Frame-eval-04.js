@@ -1,6 +1,6 @@
 // frame.eval SyntaxErrors are reflected, not thrown
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = new Debugger(g);
 var exc, SEp;
 dbg.onDebuggerStatement = function (frame) {

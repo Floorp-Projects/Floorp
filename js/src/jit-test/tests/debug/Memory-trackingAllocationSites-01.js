@@ -2,7 +2,7 @@
 // Debugger.Memory.prototype.trackingAllocationSites to true and then get the
 // allocation site via Debugger.Object.prototype.allocationSite.
 
-const root = newGlobal();
+const root = newGlobal({newCompartment: true});
 
 const dbg = new Debugger();
 const wrappedRoot = dbg.addDebuggee(root);

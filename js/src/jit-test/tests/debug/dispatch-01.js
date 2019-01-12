@@ -1,6 +1,6 @@
 // Test removing hooks during dispatch.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var log = '';
 
 function addDebug(n) {

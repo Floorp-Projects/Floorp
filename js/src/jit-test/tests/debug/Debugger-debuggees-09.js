@@ -15,7 +15,7 @@ var g1 = newGlobal('same-compartment');
 check(g1);
 
 // objects in a compartment that is already debugging us
-var g2 = newGlobal();
+var g2 = newGlobal({newCompartment: true});
 g2.parent = this;
 g2.eval("var dbg = new Debugger(parent);");
 check(g2);

@@ -3,7 +3,7 @@
 load(libdir + "asserts.js");
 load(libdir + "debuggerNXHelper.js");
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = new Debugger(g);
 
 // Attempts to call g.f without going through an invocation function should

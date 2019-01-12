@@ -1,5 +1,5 @@
 // Basic tests for Debugger.Object.prototype.class.
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = new Debugger(g);
 var hits = 0;
 g.eval('function f() { debugger; }');

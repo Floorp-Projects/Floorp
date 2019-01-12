@@ -17,7 +17,7 @@ function removeAdd(dbg, g) {
 }
 
 function newGlobalDebuggerPair(toggleSeq) {
-  var g = newGlobal();
+  var g = newGlobal({newCompartment: true});
   var dbg = new Debugger;
 
   if (toggleSeq == removeAdd)

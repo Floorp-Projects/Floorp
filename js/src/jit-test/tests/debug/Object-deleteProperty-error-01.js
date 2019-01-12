@@ -1,6 +1,6 @@
 // Don't crash when a scripted proxy handler throws Error.prototype.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = Debugger(g);
 dbg.onDebuggerStatement = function (frame) {
     try {

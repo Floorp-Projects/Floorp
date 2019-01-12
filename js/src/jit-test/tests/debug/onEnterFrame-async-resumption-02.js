@@ -3,7 +3,7 @@
 
 load(libdir + "asserts.js");
 
-let g = newGlobal();
+let g = newGlobal({newCompartment: true});
 g.eval(`
     async function f() { await 1; }
     var err = new TypeError("object too hairy");

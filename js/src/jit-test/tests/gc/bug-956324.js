@@ -1,4 +1,4 @@
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 g.eval("function f() {\n" +
        "    debugger;\n" +
        "}\n")

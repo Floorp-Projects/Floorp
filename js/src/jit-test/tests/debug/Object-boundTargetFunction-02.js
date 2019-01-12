@@ -3,7 +3,7 @@
 // - a native function;
 // - and an object that isn't a function at all.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = new Debugger;
 var gw = dbg.addDebuggee(g);
 var fw = gw.executeInGlobal("function f() {}; f").return;

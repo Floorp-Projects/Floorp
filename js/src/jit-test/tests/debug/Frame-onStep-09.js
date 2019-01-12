@@ -1,7 +1,7 @@
 // After an implicit toString call throws an exception, the calling frame's
 // onStep hook fires.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 g.eval("var x = {toString: function () { debugger; log += 'x'; throw 'mud'; }};");
 
 var dbg = Debugger(g);

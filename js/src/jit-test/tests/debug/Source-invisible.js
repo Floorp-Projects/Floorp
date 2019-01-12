@@ -3,7 +3,7 @@
 var gi = newGlobal({ newCompartment: true, invisibleToDebugger: true });
 gi.eval('function f() {}');
 
-var gv = newGlobal();
+var gv = newGlobal({newCompartment: true});
 gv.f = gi.f;
 gv.eval('f = clone(f);');
 

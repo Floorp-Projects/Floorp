@@ -9,7 +9,7 @@ function removeAdd(dbg, g) {
     dbg.removeDebuggee(g);
 }
 function newGlobalDebuggerPair(toggleSeq) {
-    var g = newGlobal();
+    var g = newGlobal({newCompartment: true});
     var dbg = new Debugger;
     dbg.addDebuggee(g);
     g.eval("" + function f() {return 100});

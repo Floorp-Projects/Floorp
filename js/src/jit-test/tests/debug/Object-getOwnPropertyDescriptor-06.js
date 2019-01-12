@@ -1,7 +1,7 @@
 // obj.getOwnPropertyDescriptor works when obj is a transparent cross-compartment wrapper.
 
-var g1 = newGlobal();
-var g2 = newGlobal();
+var g1 = newGlobal({newCompartment: true});
+var g2 = newGlobal({newCompartment: true});
 g1.next = g2;
 
 // This test is a little hard to follow, especially the !== assertions.

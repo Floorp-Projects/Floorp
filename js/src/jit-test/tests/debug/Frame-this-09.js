@@ -1,7 +1,7 @@
 // Ensure |Frame.this| returns the right value even if we're still in the
 // script's prologue, before JSOP_FUNCTIONTHIS.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = new Debugger(g);
 var hits = 0;
 dbg.onEnterFrame = function (frame) {

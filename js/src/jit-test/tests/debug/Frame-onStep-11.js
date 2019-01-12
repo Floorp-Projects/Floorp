@@ -1,7 +1,7 @@
 // Stepping out of a finally should not appear to
 // step backward to some earlier statement.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 g.eval(`function f() {
          debugger;              // +0
          var x = 0;             // +1

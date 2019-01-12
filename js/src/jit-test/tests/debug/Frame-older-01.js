@@ -1,6 +1,6 @@
 // Basic call chain.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var result = null;
 var dbg = new Debugger(g);
 dbg.onDebuggerStatement = function (frame) {

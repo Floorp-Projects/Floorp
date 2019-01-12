@@ -5,7 +5,7 @@ var xarr = []; // debuggee objects
 
 var N = 4, M = 4;
 for (var i = 0; i < N; i++) {
-    var g1 = newGlobal();
+    var g1 = newGlobal({newCompartment: true});
     g1.M = M;
     var dbg = new Debugger(g1);
     var g2 = g1.eval("newGlobal('same-compartment')");

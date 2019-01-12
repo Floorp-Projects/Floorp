@@ -5,7 +5,7 @@
 
 load(libdir + "asserts.js");
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 g.parent = this;
 g.onEnterFrameCalled = false;
 g.eval(`

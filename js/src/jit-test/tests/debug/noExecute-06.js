@@ -4,8 +4,8 @@
 load(libdir + "asserts.js");
 load(libdir + "debuggerNXHelper.js");
 
-var g1 = newGlobal();
-var g2 = newGlobal();
+var g1 = newGlobal({newCompartment: true});
+var g2 = newGlobal({newCompartment: true});
 var dbg1 = new Debugger;
 var dbg2 = new Debugger;
 

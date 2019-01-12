@@ -1,9 +1,9 @@
-newGlobal();
-g = newGlobal();
+newGlobal({newCompartment: true});
+g = newGlobal({newCompartment: true});
 var dbg = Debugger(g);
 gczeal(2, 100);
 function f(x, initFunc) {
-    newGlobal();
+    newGlobal({newCompartment: true});
     g.eval(`
         var {
             binary,

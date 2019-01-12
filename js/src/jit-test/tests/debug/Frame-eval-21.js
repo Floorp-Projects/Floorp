@@ -6,7 +6,7 @@ if (!jitTogglesMatch(Opts_BaselineEager))
   quit(0);
 
 withJitOptions(Opts_BaselineEager, function () {
-  var g = newGlobal();
+  var g = newGlobal({newCompartment: true});
   var dbg = new Debugger;
 
   g.h = function h(d) {

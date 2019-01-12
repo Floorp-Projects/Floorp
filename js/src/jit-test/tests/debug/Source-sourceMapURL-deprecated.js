@@ -1,6 +1,6 @@
 // Source.prototype.sourceMapURL can be a string or null.
 
-let g = newGlobal();
+let g = newGlobal({newCompartment: true});
 let dbg = new Debugger;
 let gw = dbg.addDebuggee(g);
 

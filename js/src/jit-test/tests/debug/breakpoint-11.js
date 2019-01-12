@@ -2,7 +2,7 @@
 // traverse the stack and evaluate expressions in the context of older
 // generator frames.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = Debugger(g);
 dbg.onDebuggerStatement = function (frame) {
     function hit(frame) {

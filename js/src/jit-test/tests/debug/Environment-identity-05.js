@@ -1,6 +1,6 @@
 // Tests that freshened blocks behave correctly in Debugger.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = Debugger(g);
 var log = '';
 var oldEnv = null;

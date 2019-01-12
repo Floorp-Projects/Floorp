@@ -1,4 +1,4 @@
-g = newGlobal();
+g = newGlobal({newCompartment: true});
 g.log = "";
 Debugger(g).onDebuggerStatement = frame => frame.eval("log += this.Math.toString();");
 g.eval("(function() { with ({}) debugger })()");

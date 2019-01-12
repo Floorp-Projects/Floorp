@@ -4,7 +4,7 @@
 // See BlockOnPromise when called from PerformPromiseRace for when this dummy
 // reaction is created.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = new Debugger();
 var gw = dbg.addDebuggee(g);
 

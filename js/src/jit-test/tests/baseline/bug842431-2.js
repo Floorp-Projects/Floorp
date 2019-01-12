@@ -2,7 +2,7 @@
 
 // If a frame's onPop handler throws, we should not call the
 // onExceptionUnwind hook for that frame.
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = new Debugger(g);
 
 g.eval('function f() { var y; debugger; }');

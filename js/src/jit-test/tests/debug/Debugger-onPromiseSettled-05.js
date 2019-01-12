@@ -1,7 +1,7 @@
 // Settling a promise within an onPromiseSettled handler causes a recursive
 // handler invocation.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = new Debugger();
 var gw = dbg.addDebuggee(g);
 var log;

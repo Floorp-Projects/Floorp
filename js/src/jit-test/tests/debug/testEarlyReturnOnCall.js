@@ -1,4 +1,4 @@
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 g.eval("var success = false");
 g.eval("function ponies() {}");
 g.eval("function foo() { ponies(); success = false }");

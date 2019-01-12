@@ -1,7 +1,7 @@
 // In a debugger with multiple debuggees, findSources finds script sources across all debuggees.
 
-const g1 = newGlobal();
-const g2 = newGlobal();
+const g1 = newGlobal({newCompartment: true});
+const g2 = newGlobal({newCompartment: true});
 // Declare a function in order to keep the script source alive across GC.
 g1.evaluate(`function fa() {}`, { fileName: "a.js" });
 g1.evaluate(`function fb() {}`, { fileName: "b.js" });

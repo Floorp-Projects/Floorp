@@ -12,7 +12,7 @@ if ('gczeal' in this)
     gczeal(0);
 
 withJitOptions(Opts_Ion2NoOffthreadCompilation, function () {
-  var g = newGlobal();
+  var g = newGlobal({newCompartment: true});
   var dbg = new Debugger;
 
   g.toggle = function toggle(d) {

@@ -1,5 +1,5 @@
 // When multiple frames have onPop handlers, they are called in the correct order.
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 g.eval("function f() { debugger; }");
 g.eval("function g() { f(); }");
 g.eval("function h() { g(); }");

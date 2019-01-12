@@ -1,6 +1,6 @@
 // Debugger.Environment can reflect optimized out function scopes
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = new Debugger;
 dbg.addDebuggee(g);
 
