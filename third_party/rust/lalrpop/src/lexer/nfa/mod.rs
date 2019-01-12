@@ -3,10 +3,8 @@
 //! edges.
 
 use lexer::re::Regex;
-use regex_syntax::hir::{
-    Anchor, Class, ClassUnicodeRange, GroupKind, Hir, HirKind, Literal, RepetitionKind,
-    RepetitionRange,
-};
+use regex_syntax::hir::{Anchor, Class, ClassUnicodeRange, GroupKind, Hir, HirKind, Literal,
+                        RepetitionKind, RepetitionRange};
 use std::char;
 use std::fmt::{Debug, Error as FmtError, Formatter};
 use std::usize;
@@ -230,17 +228,19 @@ impl NFA {
                     //  | |            |
                     //  | +---cn-------+
                     //  +---------------> [reject]
-                    {
-                        let s0 = self.new_state(StateKind::Neither);
-                        for &range in uc.iter() {
-                            let test: Test = range.into();
-                            self.push_edge(s0, test, accept);
-                        }
-                        self.push_edge(s0, Other, reject);
-                        Ok(s0)
-                    }
+                        {
+                            let s0 = self.new_state(StateKind::Neither);
+                            for &range in uc.iter()
+                                {
+                                    let test: Test = range.into();
+                                    self.push_edge(s0, test, accept);
+                                }
+                            self.push_edge(s0, Other, reject);
+                            Ok(s0)
+                        },
                     //Bytes are not supported
                     Class::Bytes(_) => Err(NFAConstructionError::ByteRegex),
+
                 }
             }
 
@@ -537,8 +537,7 @@ impl Test {
     }
 
     pub fn intersects(self, r: Test) -> bool {
-        !self.is_empty()
-            && !r.is_empty()
+        !self.is_empty() && !r.is_empty()
             && (self.contains_u32(r.start) || r.contains_u32(self.start))
     }
 
