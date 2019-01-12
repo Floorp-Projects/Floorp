@@ -23,13 +23,16 @@ use core::fmt;
 use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 use core::marker::PhantomData;
 
-define_matrix! {
-    /// A 2d Vector tagged with a unit.
-    pub struct TypedVector2D<T, U> {
-        pub x: T,
-        pub y: T,
-    }
+/// A 2d Vector tagged with a unit.
+#[derive(EuclidMatrix)]
+#[repr(C)]
+pub struct TypedVector2D<T, U> {
+    pub x: T,
+    pub y: T,
+    #[doc(hidden)]
+    pub _unit: PhantomData<U>,
 }
+
 mint_vec!(TypedVector2D[x, y] = Vector2);
 
 /// Default 2d vector type with no unit.
@@ -468,14 +471,17 @@ where
     }
 }
 
-define_matrix! {
-    /// A 3d Vector tagged with a unit.
-    pub struct TypedVector3D<T, U> {
-        pub x: T,
-        pub y: T,
-        pub z: T,
-    }
+/// A 3d Vector tagged with a unit.
+#[derive(EuclidMatrix)]
+#[repr(C)]
+pub struct TypedVector3D<T, U> {
+    pub x: T,
+    pub y: T,
+    pub z: T,
+    #[doc(hidden)]
+    pub _unit: PhantomData<U>,
 }
+
 mint_vec!(TypedVector3D[x, y, z] = Vector3);
 
 /// Default 3d vector type with no unit.
