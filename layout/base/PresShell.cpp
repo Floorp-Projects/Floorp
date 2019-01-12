@@ -76,6 +76,7 @@
 #include "mozilla/dom/Touch.h"
 #include "mozilla/dom/TouchEvent.h"
 #include "mozilla/dom/PointerEventBinding.h"
+#include "mozilla/dom/ShadowIncludingTreeIterator.h"
 #include "nsIObserverService.h"
 #include "nsDocShell.h"  // for reflow observation
 #include "nsIBaseWindow.h"
@@ -2879,11 +2880,9 @@ void nsIPresShell::SlotAssignmentWillChange(Element& aElement,
 
 #ifdef DEBUG
 static void AssertNoFramesInSubtree(nsIContent* aContent) {
-  for (nsIContent* c = aContent; c; c = c->GetNextNode(aContent)) {
+  for (nsINode* node : ShadowIncludingTreeIterator(*aContent)) {
+    nsIContent* c = nsIContent::FromNode(node);
     MOZ_ASSERT(!c->GetPrimaryFrame());
-    if (auto* shadowRoot = c->GetShadowRoot()) {
-      AssertNoFramesInSubtree(shadowRoot);
-    }
     if (auto* binding = c->GetXBLBinding()) {
       if (auto* bindingWithContent = binding->GetBindingWithContent()) {
         nsIContent* anonContent = bindingWithContent->GetAnonymousContent();
