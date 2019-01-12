@@ -30,7 +30,7 @@ assertEq(marks[2], 'black', 'global');
 assertEq(marks[3], 'dead', 'dead object should have been collected');
 
 var wm = new WeakMap();
-var global = newGlobal();
+var global = newGlobal({newCompartment: true});
 
 var wrapper1 = global.eval("Object.create(null)");
 wrapper1.name = "wrapper1";
