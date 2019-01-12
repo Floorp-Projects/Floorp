@@ -189,11 +189,13 @@ ObjectClient.prototype = {
    * Request the value of the object's specified property.
    *
    * @param name string The name of the requested property.
+   * @param receiverId string|null The actorId of the receiver to be used for getters.
    * @param onResponse function Called with the request's response.
    */
   getPropertyValue: DebuggerClient.requester({
     type: "propertyValue",
     name: arg(0),
+    receiverId: arg(1),
   }),
 
   /**

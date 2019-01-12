@@ -181,6 +181,7 @@ const objectSpec = generateActorSpec({
     propertyValue: {
       request: {
         name: Arg(0, "string"),
+        receiverId: Arg(1, "nullable:string"),
       },
       response: RetVal("object.propertyValue"),
     },

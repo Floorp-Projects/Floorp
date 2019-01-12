@@ -37,17 +37,17 @@ async function test_object_grip(debuggee, threadClient) {
       });
     `,
     async objClient => {
-      const obj1 = (await objClient.getPropertyValue("obj1")).value.return;
-      const obj2 = (await objClient.getPropertyValue("obj2")).value.return;
+      const obj1 = (await objClient.getPropertyValue("obj1", null)).value.return;
+      const obj2 = (await objClient.getPropertyValue("obj2", null)).value.return;
 
       const context = threadClient.pauseGrip(
-        (await objClient.getPropertyValue("context")).value.return,
+        (await objClient.getPropertyValue("context", null)).value.return,
       );
       const sum = threadClient.pauseGrip(
-        (await objClient.getPropertyValue("sum")).value.return,
+        (await objClient.getPropertyValue("sum", null)).value.return,
       );
       const error = threadClient.pauseGrip(
-        (await objClient.getPropertyValue("error")).value.return,
+        (await objClient.getPropertyValue("error", null)).value.return,
       );
 
       assert_response(await context.apply(obj1, [obj1]), {

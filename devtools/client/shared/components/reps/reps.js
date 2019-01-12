@@ -6874,7 +6874,7 @@ function invokeGetter(node, grip, getterName) {
   return async ({ dispatch, client, getState }) => {
     try {
       const objectClient = client.createObjectClient(grip);
-      const result = await objectClient.getPropertyValue(getterName);
+      const result = await objectClient.getPropertyValue(getterName, null);
       dispatch({
         type: "GETTER_INVOKED",
         data: {
