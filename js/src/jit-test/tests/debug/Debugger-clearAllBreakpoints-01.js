@@ -1,6 +1,6 @@
 // clearAllBreakpoints clears breakpoints for the current Debugger object only.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 
 var hits = 0;
 function attach(i) {

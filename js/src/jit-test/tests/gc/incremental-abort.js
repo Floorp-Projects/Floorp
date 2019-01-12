@@ -12,7 +12,7 @@ function testAbort(zoneCount, objectCount, sliceCount, abortState)
 
     var zones = [];
     for (var i = 0; i < zoneCount; i++) {
-        var zone = newGlobal();
+        var zone = newGlobal({newCompartment: true});
         evaluate("var objects; " +
                  "function makeObjectGraph(objectCount) { " +
                  "    objects = []; " +

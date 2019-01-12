@@ -1,7 +1,7 @@
 // Storing a property on a Debugger.Object protects it from GC as long as the
 // referent is alive.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var N = g.N = 3;
 var dbg = Debugger(g);
 

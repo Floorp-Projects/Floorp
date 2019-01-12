@@ -6,7 +6,7 @@
 
 load(libdir + "asserts.js");
 
-let g = newGlobal();
+let g = newGlobal({newCompartment: true});
 g.eval('function* f() { yield 1; yield 2; }');
 let dbg = Debugger(g);
 let genObj = null;

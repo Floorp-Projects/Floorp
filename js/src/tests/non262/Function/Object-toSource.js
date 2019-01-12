@@ -250,7 +250,7 @@ assertEq(obj.toSource(),
          "({set foo() {}})");
 
 // Methods from other global.
-// Treated as normal property.
+// Treated as normal property in the cross-compartment case.
 
 let g = newGlobal();
 
@@ -258,8 +258,9 @@ method = g.eval("({ foo() {} }).foo");
 
 obj = {};
 Object.defineProperty(obj, "foo", {value: method, enumerable: true});
-assertEq(obj.toSource(),
-         "({foo:foo() {}})");
+assertEq((obj.toSource() === "({foo:foo() {}})" ||
+          obj.toSource() === "({foo() {}})"),
+         true);
 
 // Accessors from other global.
 // Accessor syntax is composed.

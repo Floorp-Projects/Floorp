@@ -3,7 +3,7 @@
 
 ignoreUnhandledRejections();
 
-let g = newGlobal();
+let g = newGlobal({newCompartment: true});
 g.hit2 = false;
 g.eval(`async function f(x) { await x; return "ponies"; }`);
 

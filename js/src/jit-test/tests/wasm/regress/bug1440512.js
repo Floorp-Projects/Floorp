@@ -1,4 +1,4 @@
-var g = newGlobal(() => newGlobal(verifyprebarriers, "rem_s", [7, -3]));
+var g = newGlobal({newCompartment: true});
 var dbg = new g.Debugger(this);
 var dbg = new Debugger;
 var kWasmH0 = 0;

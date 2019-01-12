@@ -1,6 +1,6 @@
 // Redundant non-global Debugger() arguments are ignored.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 g.eval("var a = {}, b = {};");
 var dbg = Debugger(g.a, g.b);
 var arr = dbg.getDebuggees();

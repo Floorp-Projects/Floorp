@@ -10,7 +10,7 @@ dbg.onEnterFrame = function (frame) {
   log += frame.environment.parent.object.label;
 };
 
-var g1 = newGlobal();
+var g1 = newGlobal({newCompartment: true});
 log = '';
 g1.eval('Math');
 assertEq(log, '');              // not yet a debuggee
@@ -22,7 +22,7 @@ log = '';
 g1.eval('Math');                // now a debuggee
 assertEq(log, 'eg1');
 
-var g2 = newGlobal();
+var g2 = newGlobal({newCompartment: true});
 log = '';
 g1.eval('Math');                // debuggee
 g2.eval('Math');                // not a debuggee

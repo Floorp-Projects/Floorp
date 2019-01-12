@@ -1,6 +1,6 @@
 // Debugger.Script.prototype.script returns the global the script runs in.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = new Debugger;
 var gw = dbg.addDebuggee(g);
 

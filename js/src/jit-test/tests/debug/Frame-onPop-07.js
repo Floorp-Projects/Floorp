@@ -1,5 +1,5 @@
 // Trying to set an onPop handler on a dead frame throws an exception.
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 g.eval("function f() { }");
 g.eval("function g() { f(); }");
 g.eval("function h() { g(); }");

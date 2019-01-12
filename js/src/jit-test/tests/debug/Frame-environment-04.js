@@ -1,6 +1,6 @@
 // frame.environment can be called from the onEnterFrame hook.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 g.eval("function f(x) { return 2 * x; }");
 var dbg = Debugger(g);
 var hits = 0;

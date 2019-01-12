@@ -1,7 +1,7 @@
 // Test uncatchable error when a stream's queuing strategy's size() method is called.
 
 // Make `debugger;` raise an uncatchable exception.
-let g = newGlobal();
+let g = newGlobal({newCompartment: true});
 g.parent = this;
 g.hit = false;
 g.eval(`

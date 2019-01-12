@@ -1,6 +1,6 @@
 // A garbage collection in the debuggee compartment does not disturb onPop
 // handlers.
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = new Debugger(g);
 var log;
 

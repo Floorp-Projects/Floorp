@@ -1,5 +1,5 @@
 // evalWithBindings correctly handles optional custom url option
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = new Debugger(g);
 var count = 0;
 

@@ -1,5 +1,5 @@
 // Within a series of evals and calls, all their frames' scripts appear in findScripts' result.
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = new Debugger(g);
 var log;
 

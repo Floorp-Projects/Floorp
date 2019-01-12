@@ -1,6 +1,6 @@
 // LiveSavedFrameCache should not be confused by eval-in-frame-prev links.
 
-const g = newGlobal();
+const g = newGlobal({newCompartment: true});
 const dbg = new Debugger();
 const gDO = dbg.addDebuggee(g);
 

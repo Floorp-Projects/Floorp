@@ -1,7 +1,7 @@
 // Check that the line number reported at an onPop stop makes sense,
 // even when it happens on an "artificial" instruction.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 
 // This bit of code arranges for the line number of the "artificial"
 // instruction to be something nonsensical -- the middle of a loop

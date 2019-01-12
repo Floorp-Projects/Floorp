@@ -1,7 +1,7 @@
 // Test that invoking the interrupt callback counts as a step.
 
 function testResumptionVal(resumptionVal, turnOffDebugMode) {
-  var g = newGlobal();
+  var g = newGlobal({newCompartment: true});
   var dbg = new Debugger;
   g.log = "";
   g.resumptionVal = resumptionVal;

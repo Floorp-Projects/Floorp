@@ -12,21 +12,23 @@ from contextlib import contextmanager
 JITFLAGS = {
     'all': [
         [],  # no flags, normal baseline and ion
-        ['--ion-eager', '--ion-offthread-compile=off'],  # implies --baseline-eager
+        ['--ion-eager', '--ion-offthread-compile=off',  # implies --baseline-eager
+         '--more-compartments'],
         ['--ion-eager', '--ion-offthread-compile=off',
          '--ion-check-range-analysis', '--ion-extra-checks', '--no-sse3', '--no-threads'],
         ['--baseline-eager'],
-        ['--no-baseline', '--no-ion'],
+        ['--no-baseline', '--no-ion', '--more-compartments'],
     ],
     # used by jit_test.py
     'ion': [
         ['--baseline-eager'],
-        ['--ion-eager', '--ion-offthread-compile=off']
+        ['--ion-eager', '--ion-offthread-compile=off', '--more-compartments']
     ],
     # Run reduced variants on debug builds, since they take longer time.
     'debug': [
         [],  # no flags, normal baseline and ion
-        ['--ion-eager', '--ion-offthread-compile=off'],  # implies --baseline-eager
+        ['--ion-eager', '--ion-offthread-compile=off',  # implies --baseline-eager
+         '--more-compartments'],
         ['--baseline-eager'],
     ],
     # Cover cases useful for tsan. Note that we test --ion-eager without

@@ -7,7 +7,7 @@ if (!jitTogglesMatch(Opts_Ion2NoOffthreadCompilation))
 
 withJitOptions(Opts_Ion2NoOffthreadCompilation, function () {
   function test(shadow) {
-    var g = newGlobal();
+    var g = newGlobal({newCompartment: true});
     var dbg = new Debugger;
 
     // Note that we depend on CCW scripted functions being opaque to Ion

@@ -1,6 +1,6 @@
 // Test that we don't get allocation sites when nobody has asked for them.
 
-const root = newGlobal();
+const root = newGlobal({newCompartment: true});
 
 const dbg = new Debugger();
 const wrappedRoot = dbg.addDebuggee(root);

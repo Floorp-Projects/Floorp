@@ -3,7 +3,7 @@
 // (That is, check that it works even if the debugger never received
 // onNewGenerator for the generator, because it wasn't attached at the time.)
 
-let g = newGlobal();
+let g = newGlobal({newCompartment: true});
 g.eval(`
     function f() {
         attach();

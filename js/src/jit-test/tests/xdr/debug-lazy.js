@@ -16,4 +16,4 @@ test = `
   f();
   `
 evalWithCache(test, { assertEqBytecode: true, assertEqResult: true,
-		      checkAfter: checkAfter });
+		      checkAfter: checkAfter, newCompartment: true});

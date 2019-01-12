@@ -10,7 +10,7 @@ function montConvert(x) {
 var ba = new Array();
 a = new BigInteger(ba);
 g = montConvert(a);
-var lfGlobal = newGlobal();
+var lfGlobal = newGlobal({newCompartment: true});
 for (lfLocal in this) {
     if (!(lfLocal in lfGlobal)) {
         lfGlobal[lfLocal] = this[lfLocal];

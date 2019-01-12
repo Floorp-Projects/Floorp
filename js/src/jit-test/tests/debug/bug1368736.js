@@ -1,4 +1,4 @@
-g = newGlobal();
+g = newGlobal({newCompartment: true});
 hits = 0;
 Debugger(g).onDebuggerStatement = function(frame) {
     // Set a breakpoint at the JSOP_DEBUGAFTERYIELD op.

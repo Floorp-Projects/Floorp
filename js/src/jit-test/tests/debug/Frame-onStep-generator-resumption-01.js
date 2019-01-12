@@ -1,6 +1,6 @@
 // The debugger can force an early return from any instruction before the initial yield.
 
-let g = newGlobal();
+let g = newGlobal({newCompartment: true});
 g.eval(`
   function* f() {
     yield 1;

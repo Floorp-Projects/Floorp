@@ -1,7 +1,7 @@
 // Each resumption of a generator gets the same Frame; its onPop handler
 // fires each time the generator yields.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = new Debugger(g);
 var log;
 

@@ -1,6 +1,6 @@
 // Optimized out scopes should have working names().
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = new Debugger;
 dbg.addDebuggee(g);
 

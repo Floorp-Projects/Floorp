@@ -11,7 +11,7 @@ var scripts = [
   "switch (n) { case 4: break; case 5: return 0; }",
 ];
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 for (var n in scripts) {
   g.eval("function f" + n + "() { " + scripts[n] + " }");
 }

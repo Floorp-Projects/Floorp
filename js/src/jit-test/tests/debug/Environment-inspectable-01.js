@@ -2,8 +2,8 @@
 
 load(libdir + 'asserts.js');
 
-var g1 = newGlobal();
-var g2 = newGlobal();
+var g1 = newGlobal({newCompartment: true});
+var g2 = newGlobal({newCompartment: true});
 g2.g1 = g1;
 g1.g2 = g2;
 

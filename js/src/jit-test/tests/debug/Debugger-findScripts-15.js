@@ -1,6 +1,6 @@
 // findScripts finds non-compile-and-go scripts
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 g.evaluate("function f(x) { return x + 1; }");
 var dbg = new Debugger;
 var gw = dbg.addDebuggee(g);

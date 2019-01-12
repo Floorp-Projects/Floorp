@@ -3,7 +3,7 @@
 load(libdir + "asserts.js");
 
 function test(code) {
-    var g = newGlobal();
+    var g = newGlobal({newCompartment: true});
     var dbg = new Debugger(g);
     var hits = 0;
     dbg.onDebuggerStatement = function (frame) {

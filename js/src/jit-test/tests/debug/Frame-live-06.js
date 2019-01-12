@@ -1,6 +1,6 @@
 // frame.live is false for generator frames after they return.
 
-let g = newGlobal();
+let g = newGlobal({newCompartment: true});
 g.eval("function* f() { debugger; }");
 
 let dbg = Debugger(g);

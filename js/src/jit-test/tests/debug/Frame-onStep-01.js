@@ -1,7 +1,7 @@
 // Simple Debugger.Frame.prototype.onStep test.
 // Test that onStep fires often enough to see all four values of a.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 g.a = 0;
 g.eval("function f() {\n" +
        "    a += 2;\n" +

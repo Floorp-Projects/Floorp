@@ -2,7 +2,7 @@
 
 load(libdir + "asserts.js");
 
-let g = newGlobal();
+let g = newGlobal({newCompartment: true});
 let stream = new g.ReadableStream({});
 let reader = ReadableStream.prototype.getReader.call(stream);
 nukeCCW(stream);

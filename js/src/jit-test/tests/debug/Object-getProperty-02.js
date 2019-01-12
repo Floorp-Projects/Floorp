@@ -2,7 +2,7 @@
 // to see if they trigger debugger traps
 "use strict";
 
-var global = newGlobal();
+var global = newGlobal({newCompartment: true});
 var dbg = new Debugger(global);
 dbg.onDebuggerStatement = onDebuggerStatement;
 

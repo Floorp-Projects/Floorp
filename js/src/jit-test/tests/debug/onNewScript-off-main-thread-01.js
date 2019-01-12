@@ -2,7 +2,7 @@
 
 // We still get onNewScript notifications for code compiled off the main thread.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = new Debugger(g);
 
 var log;

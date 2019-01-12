@@ -1,5 +1,5 @@
 // Clearing a frame's onPop handler works.
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 g.eval("function f() { debugger; }");
 var dbg = new Debugger(g);
 

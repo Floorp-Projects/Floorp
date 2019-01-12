@@ -1,7 +1,7 @@
 // onPop surfaces.
 load(libdir + "asserts.js");
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = new Debugger(g);
 
 // Assigning a bogus value to Debugger.Frame.prototype.onPop raises a TypeError.

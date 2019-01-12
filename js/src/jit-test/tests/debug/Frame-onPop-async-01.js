@@ -3,7 +3,7 @@
 //
 // This is a reentrancy test, like Frame-onPop-generators-03.
 
-let g = newGlobal();
+let g = newGlobal({newCompartment: true});
 g.log = "";
 g.eval(`
     async function f() {

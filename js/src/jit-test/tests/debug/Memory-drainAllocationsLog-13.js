@@ -4,7 +4,7 @@
 // off-main-thread compilation. OMT compilation will allocate functions and
 // regexps, but we just punt on measuring that accurately.
 
-const root = newGlobal();
+const root = newGlobal({newCompartment: true});
 root.eval("this.dbg = new Debugger()");
 root.dbg.addDebuggee(this);
 root.dbg.memory.trackingAllocationSites = true;

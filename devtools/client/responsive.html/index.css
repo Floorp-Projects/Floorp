@@ -135,7 +135,7 @@ body,
 }
 
 #screenshot-button::before {
-  background-image: url("./images/screenshot.svg");
+  background-image: url("chrome://devtools/skin/images/command-screenshot.svg");
 }
 
 #settings-button::before {

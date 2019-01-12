@@ -1,5 +1,6 @@
 function testNuke() {
-    var wrapper = evaluate("({a: 15, b: {c: 42}})", {global: newGlobal({sameZoneAs: this})});
+    var wrapper = evaluate("({a: 15, b: {c: 42}})",
+                           {global: newGlobal({newCompartment: true, sameZoneAs: this})});
 
     var i, error;
     try {
@@ -21,7 +22,8 @@ function testNuke() {
 }
 
 function testSweep() {
-    var wrapper = evaluate("({a: 15, b: {c: 42}})", {global: newGlobal({})});
+    var wrapper = evaluate("({a: 15, b: {c: 42}})",
+                           {global: newGlobal({newCompartment: true})});
     var error;
     nukeCCW(wrapper);
     gczeal(8, 1); // Sweep zones separately

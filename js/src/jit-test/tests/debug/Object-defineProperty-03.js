@@ -1,6 +1,6 @@
 // defineProperty can set array elements
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 g.a = g.Array(0, 1, 2);
 var dbg = new Debugger;
 var gw = dbg.addDebuggee(g);

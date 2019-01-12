@@ -5,15 +5,15 @@ var url1 = scriptdir + 'Debugger-findScripts-12-script1';
 var url2 = scriptdir + 'Debugger-findScripts-12-script2';
 
 // Three globals: two with code, one with nothing.
-var g1 = newGlobal();
+var g1 = newGlobal({newCompartment: true});
 g1.toSource = () => "[global g1]";
 g1.load(url1);
 g1.load(url2);
-var g2 = newGlobal();
+var g2 = newGlobal({newCompartment: true});
 g2.toSource = () => "[global g2]";
 g2.load(url1);
 g2.load(url2);
-var g3 = newGlobal();
+var g3 = newGlobal({newCompartment: true});
 
 var dbg = new Debugger(g1, g2, g3);
 

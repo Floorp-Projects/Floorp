@@ -1,6 +1,6 @@
 // Stepping into the `.next()` method of a generator works as expected.
 
-let g = newGlobal();
+let g = newGlobal({newCompartment: true});
 g.eval(`\
 function* nums() {      // line 1
     yield 1;            //  2

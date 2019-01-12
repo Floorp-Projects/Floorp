@@ -3,7 +3,7 @@
  * Script.prototype.sourceLength should comprise the entire script (excluding
  * arguments in the case of Function constructors)
  */
-let g = newGlobal();
+let g = newGlobal({newCompartment: true});
 let dbg = new Debugger(g);
 
 var count = 0;
