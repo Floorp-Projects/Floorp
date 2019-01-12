@@ -4,8 +4,17 @@
 
 add_task(async function() {
   let extension = ExtensionTestUtils.loadExtension({
+    files: {
+      "_locales/en/messages.json": {
+        "with_translation": {
+          "message": "The description",
+          "description": "A description",
+        },
+      },
+    },
     manifest: {
       "name": "Commands Extension",
+      "default_locale": "en",
       "commands": {
         "with-desciption": {
           "suggested_key": {
@@ -26,6 +35,9 @@ add_task(async function() {
             "android": "Ctrl+Shift+A",
           },
         },
+        "with-translation": {
+          "description": "__MSG_with_translation__",
+        },
         "without-suggested-key": {
           "description": "has no suggested_key",
         },
@@ -38,7 +50,7 @@ add_task(async function() {
       browser.test.onMessage.addListener((message, additionalScope) => {
         browser.commands.getAll((commands) => {
           let errorMessage = "getAll should return an array of commands";
-          browser.test.assertEq(commands.length, 5, errorMessage);
+          browser.test.assertEq(commands.length, 6, errorMessage);
 
           let command = commands.find(c => c.name == "with-desciption");
 
@@ -68,6 +80,9 @@ add_task(async function() {
           let shortcut = `Ctrl+Shift+${platformKey}`;
           errorMessage = `The shortcut should match the one provided in the manifest for OS='${additionalScope.platform}'`;
           browser.test.assertEq(shortcut, command.shortcut, errorMessage);
+
+          command = commands.find(c => c.name == "with-translation");
+          browser.test.assertEq(command.description, "The description", "The description can be localized");
 
           command = commands.find(c => c.name == "without-suggested-key");
 
