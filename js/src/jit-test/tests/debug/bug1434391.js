@@ -1,6 +1,6 @@
 // |jit-test| skip-if: !('oomTest' in this)
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = new Debugger();
 var gw = dbg.addDebuggee(g);
 oomTest(function () {

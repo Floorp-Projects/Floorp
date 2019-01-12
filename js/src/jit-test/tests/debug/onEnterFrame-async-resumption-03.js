@@ -1,7 +1,7 @@
 // A Debugger can {return:} from onEnterFrame at any resume point in an async function.
 // The async function's promise is resolved with the returned value.
 
-let g = newGlobal();
+let g = newGlobal({newCompartment: true});
 g.eval(`async function f(x) { await x; }`);
 
 let dbg = new Debugger(g);

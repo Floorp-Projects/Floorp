@@ -1,6 +1,6 @@
 // We can find into and from optimized out scopes.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = new Debugger;
 dbg.addDebuggee(g);
 

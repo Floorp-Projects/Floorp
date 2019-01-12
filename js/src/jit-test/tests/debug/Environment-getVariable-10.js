@@ -1,6 +1,6 @@
 // getVariable works on a heavyweight environment after control leaves its scope.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = Debugger(g);
 var envs = [];
 dbg.onDebuggerStatement = function (frame) {

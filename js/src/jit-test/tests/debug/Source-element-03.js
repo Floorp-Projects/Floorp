@@ -3,7 +3,7 @@
 // Owning elements and attribute names are attached to scripts compiled
 // off-thread.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = new Debugger;
 var gDO = dbg.addDebuggee(g);
 

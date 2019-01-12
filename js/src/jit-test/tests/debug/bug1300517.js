@@ -1,5 +1,5 @@
 // |jit-test| error: ReferenceError
-g = newGlobal();
+g = newGlobal({newCompartment: true});
 g.log *= "";
 Debugger(g).onDebuggerStatement = frame => frame.eval("log += this.Math.toString();");
 let forceException = g.eval(`

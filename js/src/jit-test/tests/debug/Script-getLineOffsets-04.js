@@ -1,6 +1,6 @@
 // getLineOffsets works with instructions reachable only by breaking out of a loop or switch.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 g.line0 = null;
 var dbg = Debugger(g);
 var where;

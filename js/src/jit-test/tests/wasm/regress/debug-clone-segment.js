@@ -6,7 +6,7 @@ var mod = new WebAssembly.Module(wasmTextToBinary(`
     )
 `));
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 g.parent = this;
 g.eval("(" + function() {
     var dbg = Debugger(parent);

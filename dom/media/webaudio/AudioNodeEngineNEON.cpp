@@ -4,7 +4,11 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "AudioNodeEngineNEON.h"
+#if defined(_MSC_VER) && defined(_M_ARM64)
+#include <arm64_neon.h>
+#else
 #include <arm_neon.h>
+#endif
 
 //#ifdef DEBUG
 #if 0  // see bug 921099
@@ -271,8 +275,14 @@ void AudioBlockPanStereoToStereo_NEON(
   float32x4_t vscaleR0, vscaleR1;
   float32x4_t onleft0, onleft1, notonleft0, notonleft1;
 
-  float32x4_t zero = {0, 0, 0, 0};
+  float32x4_t zero = vmovq_n_f32(0);
   uint8x8_t isOnTheLeft;
+
+  // Although MSVC throws uninitialized value warning for voutL0 and voutL1,
+  // since we fill all lanes by vsetq_lane_f32, we can ignore it. But to avoid
+  // compiler warning, set zero.
+  voutL0 = zero;
+  voutL1 = zero;
 
   for (uint32_t i = 0; i < WEBAUDIO_BLOCK_SIZE; i += 8) {
     vinL0 = vld1q_f32(ADDRESS_OF(aInputL, i));

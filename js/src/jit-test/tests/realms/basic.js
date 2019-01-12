@@ -7,7 +7,7 @@ assertEq(objectGlobal(g1.print), g1);
 assertEq(objectGlobal(g2.x), g1);
 
 // Different-compartment realms have wrappers.
-assertEq(objectGlobal(newGlobal().Math), null);
+assertEq(objectGlobal(newGlobal({newCompartment: true}).Math), null);
 
 function testCrossRealmProto() {
     var g = newGlobal({sameCompartmentAs:this});
@@ -26,7 +26,7 @@ function testCrossRealmProto() {
 testCrossRealmProto();
 
 function testSystemNonSystemRealms() {
-    var systemRealm = newGlobal({systemPrincipal: true});
+    var systemRealm = newGlobal({newCompartment: true, systemPrincipal: true});
     var ex;
     try {
         var nonSystemRealm = newGlobal({sameCompartmentAs: systemRealm, principal: 10});
@@ -57,7 +57,7 @@ testNewObjectCache();
 
 function testCCWs() {
     // CCWs are allocated in the first realm.
-    var g1 = newGlobal();
+    var g1 = newGlobal({newCompartment: true});
     var g2 = newGlobal({sameCompartmentAs: g1});
     g1.o1 = {x: 1};
     g2.o2 = {x: 2};
@@ -68,3 +68,13 @@ function testCCWs() {
     assertEq(g2.o3.x, 3);
 }
 testCCWs();
+
+function testTypedArrayLazyBuffer(global) {
+    var arr1 = new global.Int32Array(1);
+    var arr2 = new Int32Array(arr1);
+    assertEq(objectGlobal(arr2.buffer), this);
+    global.buf = arr1.buffer;
+    global.eval("assertEq(objectGlobal(buf), this);");
+}
+testTypedArrayLazyBuffer(newGlobal());
+testTypedArrayLazyBuffer(newGlobal({sameCompartmentAs: this}));

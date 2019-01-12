@@ -2,7 +2,7 @@
 // Flags:
 //
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = Debugger(g);
 dbg.onDebuggerStatement = function (frame) {
     var s = frame.eval("f").return.script;
@@ -21,6 +21,6 @@ dbg.onNewScript = function (s) {
 assertEq(g.eval("eval('2 + 3')"), 5);
 this.gczeal(hits, 2);
 var fn = g.evaluate("(function (a) { return 5 + a; })");
-var g2 = newGlobal();
+var g2 = newGlobal({newCompartment: true});
 dbg.addDebuggee(g2, dbg);
 g2.clone(fn);

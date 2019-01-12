@@ -6,7 +6,7 @@
 // environment that contains it. setVariable does not currently detect this
 // flat closure case.)
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 g.eval("function d() { debugger; }\n" +
        "var i = 'FAIL';\n" +
        "function a() {\n" +

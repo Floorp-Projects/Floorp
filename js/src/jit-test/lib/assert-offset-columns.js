@@ -15,7 +15,7 @@ function assertOffsetColumns(code, expectedBpts, expectedOrdering = null) {
     }
 
     // Define the function `f` in a new global.
-    const global = newGlobal();
+    const global = newGlobal({newCompartment: true});
 
     const lines = code.split(/\r?\n|\r]/g);
     const initCode = lines.slice(0, -1).join("\n");

@@ -1,6 +1,6 @@
 // Breakpoints should be hit on scripts gotten not via Debugger.Frame.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 g.eval("function f(x) { return x + 1; }");
 g.eval("function g(x) { f(x); }");
 // Warm up so f gets OSRed into the jits and g inlines f.

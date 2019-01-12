@@ -1,4 +1,4 @@
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = new Debugger(g);
 dbg.onDebuggerStatement = function (frame) {
     var code = "assertEq(c, 'ok');\n";

@@ -1,7 +1,7 @@
 // Test uncatchable error when a stream source's pull() method is called.
 
 // Make `debugger;` raise an uncatchable error.
-let g = newGlobal();
+let g = newGlobal({newCompartment: true});
 g.parent = this;
 g.hit = false;
 g.eval(`

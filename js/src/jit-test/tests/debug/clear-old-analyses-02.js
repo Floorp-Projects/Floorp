@@ -4,7 +4,7 @@
 // analysis, so they become out of date). We cannot skip this step when
 // there are debuggee frames on the stack.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = new Debugger();
 var gw = dbg.addDebuggee(g);
 

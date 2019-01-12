@@ -1,6 +1,6 @@
 // Frame.script/offset and Script.getOffsetLocation work in non-top frames.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = Debugger(g);
 var hits = 0;
 dbg.onDebuggerStatement = function (frame) {

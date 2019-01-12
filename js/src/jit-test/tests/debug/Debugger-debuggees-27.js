@@ -1,6 +1,6 @@
 // Test that we can OSR with the same script on the stack multiple times.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = new Debugger;
 
 g.toggle = function toggle() {

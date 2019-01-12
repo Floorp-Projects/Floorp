@@ -13,12 +13,13 @@ assertEq(typeof newGlobal({invisibleToDebugger: false}), "object");
 assertEq(log, 'nn');
 
 log = '';
-assertEq(typeof newGlobal({invisibleToDebugger: true}), "object");
+assertEq(typeof newGlobal({newCompartment: true, invisibleToDebugger: true}), "object");
 assertEq(log, '');
 
-assertThrowsInstanceOf(() => dbg.addDebuggee(newGlobal({invisibleToDebugger: true})), Error);
+assertThrowsInstanceOf(() => dbg.addDebuggee(newGlobal({newCompartment: true, invisibleToDebugger: true})),
+                       Error);
 
-var glob = newGlobal({invisibleToDebugger: true});
+var glob = newGlobal({newCompartment: true, invisibleToDebugger: true});
 dbg.addAllGlobalsAsDebuggees();
 dbg.onDebuggerStatement = function (frame) { assertEq(true, false); };
 glob.eval('debugger');

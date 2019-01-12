@@ -1,7 +1,7 @@
 // Debugger.Script.prototype.isAsyncFunction, Debugger.Object.prototype.isAsyncFunction,
 // Debugger.Script.prototype.isGeneratorFunction, Debugger.Object.prototype.isGeneratorFunction
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = new Debugger();
 var gDO = dbg.addDebuggee(g);
 g.non_debuggee = function non_debuggee () {}

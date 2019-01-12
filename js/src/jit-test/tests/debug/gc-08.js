@@ -3,7 +3,7 @@
 
 load(libdir + "asserts.js");
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var actual = 0;
 var expected = 0;
 

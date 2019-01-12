@@ -1,4 +1,4 @@
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 g.f = function() {};
 g.eval('f = clone(f);');
 var dbg = new Debugger;

@@ -1,6 +1,6 @@
 // Setting an onPop handler from an onPop handler doesn't throw, but the
 // new handler doesn't fire.
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = new Debugger(g);
 var log;
 

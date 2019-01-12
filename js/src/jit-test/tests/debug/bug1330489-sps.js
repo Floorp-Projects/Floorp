@@ -12,7 +12,7 @@ if (!getBuildConfiguration()["arm-simulator"])
 enableGeckoProfiling();
 enableSingleStepProfiling();
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 g.parent = this;
 g.eval("Debugger(parent).onExceptionUnwind = function () {};");
 

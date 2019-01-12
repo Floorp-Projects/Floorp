@@ -1,4 +1,4 @@
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 g.parent = this;
 g.count = 0;
 g.eval("(" + function() {

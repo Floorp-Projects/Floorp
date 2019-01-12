@@ -2,7 +2,7 @@
 
 load(libdir + "asserts.js");
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var f;
 Debugger(g).onDebuggerStatement = function (frame) {
     assertEq(frame.live, true);

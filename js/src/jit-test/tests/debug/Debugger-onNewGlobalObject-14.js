@@ -12,6 +12,6 @@ dbg.onNewGlobalObject = function (global) {
   assertEq(gw.executeInGlobalWithBindings('x.toString()', { x: gw }).return, "[object global]");
 };
 
-newGlobal();
+newGlobal({newCompartment: true});
 
 assertEq(log, 'n');

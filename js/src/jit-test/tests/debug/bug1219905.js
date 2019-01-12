@@ -4,7 +4,7 @@
 // it hits OOM calling the exception unwind hook. This causes the shell to exit
 // with the OOM reason.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 g.parent = this;
 g.eval("new Debugger(parent).onExceptionUnwind = function() {}");
 let finished = false;

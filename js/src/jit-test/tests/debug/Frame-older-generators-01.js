@@ -4,7 +4,7 @@
 // at some time other than when firing onEnterFrame. Here they're created after
 // the initial yield.
 
-let g = newGlobal();
+let g = newGlobal({newCompartment: true});
 g.eval(`
     function f() {
         debugger;

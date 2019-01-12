@@ -1,7 +1,7 @@
 // Bug 1026477: Defining functions with D.F.p.eval works, even if there's
 // already a var binding for the identifier.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = new Debugger(g);
 dbg.onDebuggerStatement = function (frame) {
   frame.eval('function f() { }');

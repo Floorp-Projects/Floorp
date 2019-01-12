@@ -1,7 +1,7 @@
 // Debugger.Object.prototype.getErrorMessageName returns the error message name
 // associated with some error object.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = new Debugger();
 var gw = dbg.addDebuggee(g);
 
@@ -11,7 +11,7 @@ assertEq(gw.executeInGlobal("(42).toString(0)").throw.errorMessageName, "JSMSG_B
 assertEq(gw.executeInGlobal("throw new Error()").throw.errorMessageName, undefined);
 
 // Ensure that the method works across globals.
-g.eval(`var g = newGlobal();
+g.eval(`var g = newGlobal({newCompartment: true});
         g.eval('var err; try { (42).toString(0); } catch (e) { err = e; }');
         var err2 = g.err;`);
 assertEq(gw.executeInGlobal("throw err2").throw.errorMessageName, "JSMSG_BAD_RADIX");

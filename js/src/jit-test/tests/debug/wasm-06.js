@@ -4,7 +4,7 @@
 load(libdir + "asserts.js");
 
 function runWasmWithDebugger(wast, lib, init, done) {
-    let g = newGlobal('');
+    let g = newGlobal({newCompartment: true});
     let dbg = new Debugger(g);
 
     g.eval(`

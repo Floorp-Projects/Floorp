@@ -1,6 +1,6 @@
 // In a debugger with scripts, findSources finds the script source.
 
-const g = newGlobal();
+const g = newGlobal({newCompartment: true});
 // Declare a function in order to keep the script source alive across GC.
 g.evaluate(`function fa() {}`, { fileName: "a.js" });
 g.evaluate(`function fb() {}`, { fileName: "b.js" });

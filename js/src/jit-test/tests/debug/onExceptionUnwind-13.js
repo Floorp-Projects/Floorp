@@ -3,7 +3,7 @@
 // Test that we can handle doing debug mode OSR from onExceptionUnwind when
 // settling on a pc without a Baseline ICEntry.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = new Debugger(g);
 dbg.onExceptionUnwind = function () {};
 

@@ -9,7 +9,7 @@ assertEq(desc.enumerable, false);
 
 var loc;
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 g.debuggeeGlobal = this;
 g.eval("var hits = 0;");
 g.eval("(" + function () {

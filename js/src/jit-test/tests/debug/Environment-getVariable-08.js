@@ -1,6 +1,6 @@
 // getVariable sees properties inherited from a with-object's prototype chain.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = Debugger(g);
 var v;
 dbg.onDebuggerStatement = function (frame) {

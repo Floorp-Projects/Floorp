@@ -1,6 +1,6 @@
 // A generator is left closed after frame.onPop returns a {return:} resumption value.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = new Debugger;
 var gw = dbg.addDebuggee(g);
 dbg.onDebuggerStatement = frame => {

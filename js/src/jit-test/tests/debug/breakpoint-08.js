@@ -1,7 +1,7 @@
 // Breakpoints are dropped from eval scripts when they finish executing.
 // (The eval cache doesn't cache breakpoints.)
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 
 g.line0 = undefined;
 g.eval("function f() {\n" +

@@ -1,7 +1,7 @@
 // Uncaught exceptions in the debugger itself are delivered to the
 // uncaughtExceptionHook.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = new Debugger(g);
 var log;
 dbg.onDebuggerStatement = function () {

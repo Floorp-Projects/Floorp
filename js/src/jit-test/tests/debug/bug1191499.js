@@ -1,7 +1,7 @@
 
 setJitCompilerOption('ion.warmup.trigger', 2);
 setJitCompilerOption('offthread-compilation.enable', 0);
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg2 = new Debugger;
 g.toggle = function toggle(x, d) {
   if (d) {

@@ -1,13 +1,13 @@
 // |jit-test| skip-if: !wasmReftypesEnabled() || !wasmDebuggingIsSupported()
 
 (function() {
-    let g = newGlobal();
+    let g = newGlobal({newCompartment: true});
     let dbg = new Debugger(g);
     g.eval(`o = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary('(module (gc_feature_opt_in 2) (func (result anyref) (param anyref) get_local 0) (export "" 0))')));`);
 })();
 
 (function() {
-    var g = newGlobal();
+    var g = newGlobal({newCompartment: true});
     g.parent = this;
 
     let src = `

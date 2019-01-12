@@ -1,6 +1,6 @@
 // Breakpoints work in non-compile-and-go code. Bug 738479.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 g.s = '';
 var dbg = new Debugger;
 var gw = dbg.addDebuggee(g);

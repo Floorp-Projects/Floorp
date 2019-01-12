@@ -1,6 +1,6 @@
 // getOwnPropertyDescriptor works with simple data properties.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = Debugger(g);
 var hits;
 var expected;

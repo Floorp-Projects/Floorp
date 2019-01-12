@@ -3,7 +3,7 @@
 // This script check that when we enable / disable the code coverage collection,
 // then we have different results for the getOffsetsCoverage methods.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = Debugger(g);
 var coverageInfo = [];
 var num = 20;

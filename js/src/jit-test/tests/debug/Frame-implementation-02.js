@@ -8,7 +8,7 @@ if (!jitTogglesMatch(Opts_Ion2NoOffthreadCompilation))
   quit();
 
 withJitOptions(Opts_Ion2NoOffthreadCompilation, function () {
-  var g = newGlobal();
+  var g = newGlobal({newCompartment: true});
   var dbg = new Debugger;
   var onPopExecuted = false;
   var breakpointHit = false;

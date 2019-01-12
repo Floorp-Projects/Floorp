@@ -1,6 +1,6 @@
 // Suspended generators keep their associated Debugger.Frames gc-alive.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 g.eval("function* f() { debugger; yield 1; debugger; }");
 var dbg = new Debugger(g);
 var hits = 0;

@@ -1,6 +1,6 @@
 // Test when there are more allocations than the maximum log length.
 
-const root = newGlobal();
+const root = newGlobal({newCompartment: true});
 const dbg = new Debugger();
 dbg.addDebuggee(root)
 

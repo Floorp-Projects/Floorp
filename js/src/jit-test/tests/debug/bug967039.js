@@ -1,4 +1,4 @@
-var g1 = newGlobal();
+var g1 = newGlobal({newCompartment: true});
 var dbg = Debugger(g1);
 g1.dbg = dbg;
 g1.eval("function foo() { dbg.removeDebuggee(this); }");

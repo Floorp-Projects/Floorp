@@ -1,5 +1,5 @@
 // executeInGlobal correctly handles optional custom url option
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = new Debugger(g);
 var debuggee = dbg.getDebuggees()[0];
 var count = 0;

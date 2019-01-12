@@ -1,5 +1,5 @@
 // Frame.this and evalInFrame in the global scope.
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 g.eval("x = 4; this['.this'] = 222;");
 var dbg = new Debugger(g);
 var res;

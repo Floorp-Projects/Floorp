@@ -1,7 +1,7 @@
 // Calls to 'eval', etc. by JS primitives get attributed to the point of
 // the primitive's call.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = new Debugger;
 var gDO = dbg.addDebuggee(g);
 var log = '';
