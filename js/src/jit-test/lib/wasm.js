@@ -129,7 +129,7 @@ function wasmFullPassI64(text, expected, maybeImports, ...args) {
 }
 
 function wasmRunWithDebugger(wast, lib, init, done) {
-    let g = newGlobal('');
+    let g = newGlobal({newCompartment: true});
     let dbg = new Debugger(g);
 
     g.eval(`

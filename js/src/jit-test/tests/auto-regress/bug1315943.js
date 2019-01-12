@@ -1,6 +1,6 @@
 var s = "{}";
 for (var i = 0; i < 21; i++) s += s;
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = Debugger(g);
 dbg.onDebuggerStatement = function(frame) {
     var s = frame.eval("f").return.script;

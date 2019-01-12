@@ -1,4 +1,4 @@
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = new Debugger(g);
 // We're going to need to eval with a thrown exception from inside
 // onExceptionUnwind, so guard against infinite recursion.

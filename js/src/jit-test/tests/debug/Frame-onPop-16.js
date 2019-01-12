@@ -1,5 +1,5 @@
 // onPop handlers fire even on frames that make tail calls.
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = new Debugger(g);
 var log;
 

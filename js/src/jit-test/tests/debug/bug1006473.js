@@ -4,7 +4,7 @@ var lfcode = new Array();
 lfcode.push("gczeal(4);");
 lfcode.push("setJitCompilerOption('ion.warmup.trigger', 30);");
 lfcode.push("\
-var g = newGlobal();\
+var g = newGlobal({newCompartment: true});\
 g.parent = this;\
 g.eval('function f(frame, exc) { f2 = function () { return exc; }; exc = 123; }');\
 g.eval('new Debugger(parent).onExceptionUnwind = f;');\

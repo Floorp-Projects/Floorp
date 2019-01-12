@@ -13,7 +13,7 @@ try {
 
 load(libdir + "asserts.js");
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 
 var source = new g.Uint8Array(wasmTextToBinary('(module (func unreachable))'));
 source.url = "http://example.org/test.wasm";

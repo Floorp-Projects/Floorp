@@ -1,6 +1,6 @@
 // A live Environment can observe the new variables introduced by ES5 non-strict direct eval.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 g.eval("var x = 'global'; function f(s) { h(); eval(s); h(); }");
 g.eval("function h() { debugger; }");
 var dbg = Debugger(g);

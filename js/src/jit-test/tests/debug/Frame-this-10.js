@@ -1,7 +1,7 @@
 // Check the Frame.this getter always returns the same object for a given frame.
 // Primitive this-values should not be boxed multiple times.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = new Debugger(g);
 var framesEntered = 0;
 var framesPopped = 0;

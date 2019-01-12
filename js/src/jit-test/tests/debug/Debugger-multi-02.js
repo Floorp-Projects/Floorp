@@ -2,7 +2,7 @@
 // but mainly what we are checking here is that we do not crash due to
 // modifying a data structure while we're iterating over it.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var n = 0;
 var hits;
 

@@ -1,6 +1,6 @@
 // If frame.onStep returns null, debuggee catch and finally blocks are skipped.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 g.eval("function h() { debugger; }");
 
 var dbg = Debugger(g);

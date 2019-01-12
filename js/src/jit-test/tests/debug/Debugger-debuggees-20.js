@@ -1,12 +1,12 @@
 // addAllGlobalsAsDebuggees adds all the globals as debuggees.
 
-var g1 = newGlobal();           // Created before the Debugger; debuggee.
-var g2 = newGlobal();           // Created before the Debugger; not debuggee.
+var g1 = newGlobal({newCompartment: true});           // Created before the Debugger; debuggee.
+var g2 = newGlobal({newCompartment: true});           // Created before the Debugger; not debuggee.
 
 var dbg = new Debugger;
 
-var g3 = newGlobal();           // Created after the Debugger; debuggee.
-var g4 = newGlobal();           // Created after the Debugger; not debuggee.
+var g3 = newGlobal({newCompartment: true});           // Created after the Debugger; debuggee.
+var g4 = newGlobal({newCompartment: true});           // Created after the Debugger; not debuggee.
 
 var g1w = dbg.addDebuggee(g1);
 var g3w = dbg.addDebuggee(g3);

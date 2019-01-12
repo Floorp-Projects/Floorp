@@ -1,7 +1,7 @@
 // When the debugger is triggered from different stack frames that happen to
 // occupy the same memory, it delivers different Debugger.Frame objects.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = Debugger(g);
 var hits;
 var a = [];

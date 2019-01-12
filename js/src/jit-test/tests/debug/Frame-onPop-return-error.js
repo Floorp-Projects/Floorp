@@ -1,7 +1,7 @@
 // |jit-test| error: TestComplete
 // onPop can change a normal return into a termination.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = new Debugger(g);
 
 // We use Debugger.Frame.prototype.eval and ignore the outer 'eval' frame so we 

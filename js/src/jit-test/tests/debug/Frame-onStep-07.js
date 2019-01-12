@@ -4,7 +4,7 @@
 // write an 's' each time frame.onStep is called, any two Ls should have at
 // least one 's' between them.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 g.N = 11;
 g.log = '';
 g.eval("function f() {\n" +

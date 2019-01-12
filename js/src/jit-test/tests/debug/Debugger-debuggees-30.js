@@ -19,9 +19,9 @@ testAddDebuggee();
 
 function testAddAllGlobalsAsDebuggees() {
     var g1 = newGlobal({sameCompartmentAs: this});
-    var g2 = newGlobal();
+    var g2 = newGlobal({newCompartment: true});
     var g3 = newGlobal({sameCompartmentAs: g2});
-    var g4 = newGlobal({sameZoneAs: this});
+    var g4 = newGlobal({newCompartment: true, sameZoneAs: this});
     var dbg = new Debugger();
     dbg.addAllGlobalsAsDebuggees();
     assertEq(dbg.hasDebuggee(g1), false);

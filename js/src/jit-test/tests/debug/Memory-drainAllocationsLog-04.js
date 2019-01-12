@@ -1,7 +1,7 @@
 // Test that when we shorten the maximum log length, we won't get a longer log
 // than that new maximum afterwards.
 
-const root = newGlobal();
+const root = newGlobal({newCompartment: true});
 const dbg = new Debugger();
 dbg.addDebuggee(root)
 

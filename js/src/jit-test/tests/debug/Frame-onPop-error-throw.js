@@ -2,7 +2,7 @@
 // onPop can change a termination into a throw.
 
 load(libdir + "asserts.js");
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = new Debugger(g);
 
 function test(type, provocation) {

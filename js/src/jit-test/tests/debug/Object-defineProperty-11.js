@@ -1,7 +1,7 @@
 // obj.defineProperty works when obj's referent is a wrapper.
 
 var x = {};
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 g.x = x;
 var dbg = new Debugger;
 var gw = dbg.addDebuggee(g);

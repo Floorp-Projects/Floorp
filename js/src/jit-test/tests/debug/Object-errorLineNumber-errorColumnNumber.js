@@ -1,7 +1,7 @@
 // Debugger.Object.prototype.{errorLineNumber,errorColumnNumber} return the
 // line number and column number associated with some error object.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = new Debugger();
 var gw = dbg.addDebuggee(g);
 
@@ -27,7 +27,7 @@ assertEq(customError.errorLineNumber, undefined);
 assertEq(customError.errorColumnNumber, undefined);
 
 // Ensure that the method works across globals.
-g.eval(`var g = newGlobal();
+g.eval(`var g = newGlobal({newCompartment: true});
         g.eval('var err; \\n' +
                'try {\\n' +
                '  f();\\n' +

@@ -2,7 +2,7 @@
 
 options('werror');
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 g.parent = this;
 g.eval("(" + function() {
 var dbg = Debugger(parent);
@@ -13,7 +13,7 @@ dbg.onEnterFrame = function(frame) {
 }
 } + ")()");
 
-g = newGlobal();
+g = newGlobal({newCompartment: true});
 g.parent = this;
 g.eval("Debugger(parent).onExceptionUnwind = function () {};");
 

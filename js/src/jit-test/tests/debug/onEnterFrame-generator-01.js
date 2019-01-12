@@ -1,7 +1,7 @@
 // Frame properties and methods work in generator-resuming onEnterFrame events.
 // Also tests onPop events, for good measure.
 
-let g = newGlobal();
+let g = newGlobal({newCompartment: true});
 g.eval(`\
     function* gen(lo, hi) {
         var a = 1/2;

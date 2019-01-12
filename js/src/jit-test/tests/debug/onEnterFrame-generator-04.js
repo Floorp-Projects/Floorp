@@ -1,7 +1,7 @@
 // When a generator frame is resumed, the onEnterFrame fires again.
 // The same Frame object is passed.
 
-let g = newGlobal();
+let g = newGlobal({newCompartment: true});
 g.eval(`
     function* easyMode() {}
 

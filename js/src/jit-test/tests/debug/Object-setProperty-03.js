@@ -3,7 +3,7 @@
 "use strict";
 load(libdir + "/asserts.js");
 
-var global = newGlobal();
+var global = newGlobal({newCompartment: true});
 var dbg = new Debugger();
 var globalDO = dbg.addDebuggee(global);
 dbg.onDebuggerStatement = onDebuggerStatement;

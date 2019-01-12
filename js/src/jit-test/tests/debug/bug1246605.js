@@ -1,4 +1,4 @@
-g = newGlobal();
+g = newGlobal({newCompartment: true});
 dbg = Debugger(g);
 dbg.onNewScript = function(script) { fscript = script.getChildScripts()[0]; }
 g.eval("function f() { arguments[0]; }");

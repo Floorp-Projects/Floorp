@@ -1,6 +1,6 @@
 // |jit-test| error: ReferenceError
 
-g = newGlobal();
+g = newGlobal({newCompartment: true});
 dbg = Debugger(g);
 hits = 0;
 dbg.onNewScript = function () { return hits++; };

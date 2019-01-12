@@ -1,7 +1,7 @@
 // After an onExceptionUnwind hook throws, if uncaughtExceptionHook returns
 // undefined, the original exception continues to propagate.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = new Debugger(g);
 var log = '';
 dbg.onExceptionUnwind = function () { log += "1"; throw new Error("oops"); };

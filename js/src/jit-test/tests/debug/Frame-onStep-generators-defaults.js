@@ -3,7 +3,7 @@
 // (They're evaluated at a weird time in the generator life cycle, before the
 // generator object is created.)
 
-let g = newGlobal();
+let g = newGlobal({newCompartment: true});
 g.eval(`\
     function f1() {}        // line 1
     function f2() {}        //  2

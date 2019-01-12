@@ -1,7 +1,7 @@
 // frame.eval works in the enterFrame hook.
 // It triggers the enterFrame hook again, recursively. (!)
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 g.a = ".";
 
 var dbg = Debugger(g);

@@ -1,6 +1,6 @@
 // evalWithBindings to call a method of a debuggee value
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = new Debugger;
 var global = dbg.addDebuggee(g);
 var hits = 0;

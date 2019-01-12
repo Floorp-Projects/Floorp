@@ -1,6 +1,6 @@
 // Test basic usage of `Debugger.Memory.prototype.allocationsLogOverflowed`.
 
-const root = newGlobal();
+const root = newGlobal({newCompartment: true});
 const dbg = new Debugger(root);
 dbg.memory.trackingAllocationSites = true;
 dbg.memory.maxAllocationsLogLength = 1;

@@ -1,6 +1,6 @@
 // Don't assert when pausing for onStep at JSOP_EXCEPTION.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = new Debugger(g);
 let f = g.Function(`try { throw new Error; } catch (e) { return 'natural'; }`);
 

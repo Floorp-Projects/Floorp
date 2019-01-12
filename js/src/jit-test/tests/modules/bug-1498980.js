@@ -1,4 +1,4 @@
-dbgGlobal = newGlobal();
+dbgGlobal = newGlobal({newCompartment: true});
 dbg = new dbgGlobal.Debugger;
 dbg.addDebuggee(this);
 

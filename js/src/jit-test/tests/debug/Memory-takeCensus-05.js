@@ -1,7 +1,7 @@
 // Test that Debugger.Memory.prototype.takeCensus finds cross compartment
 // wrapper GC roots.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = new Debugger(g);
 
 assertEq("AllocationMarker" in dbg.memory.takeCensus().objects, false,

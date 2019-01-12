@@ -1,7 +1,7 @@
 // Debugger.prototype.getNewestFrame() ignores dummy frames.
 // See bug 678086.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 g.f = function () { return dbg.getNewestFrame(); };
 var dbg = new Debugger;
 var gw = dbg.addDebuggee(g);

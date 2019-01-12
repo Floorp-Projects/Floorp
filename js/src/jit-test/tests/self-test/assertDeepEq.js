@@ -105,7 +105,7 @@ var y = [x];
 assertDeepEq([y], [y]);
 
 // cross-compartment
-var g1 = newGlobal(), g2 = newGlobal();
+var g1 = newGlobal({newCompartment: true}), g2 = newGlobal({newCompartment: true});
 assertDeepEq(g1, g2);
 assertDeepEq(g1, g2, {strictEquivalence: true});
 Object.preventExtensions(g2.Math.abs);  // make some miniscule change

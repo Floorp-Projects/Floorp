@@ -4,7 +4,7 @@ if (!wasmDebuggingIsSupported())
      throw "TestComplete";
 
 (function createShortLivedDebugger() {
-    var g = newGlobal();
+    var g = newGlobal({newCompartment: true});
     g.debuggeeGlobal = this;
     g.eval("(" + function () {
         dbg = new Debugger(debuggeeGlobal);

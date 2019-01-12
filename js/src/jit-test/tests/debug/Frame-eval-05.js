@@ -1,6 +1,6 @@
 // var declarations in strict frame.eval do not modify the frame
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg = new Debugger(g);
 var cv;
 dbg.onDebuggerStatement = function (frame) {

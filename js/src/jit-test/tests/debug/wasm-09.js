@@ -6,7 +6,7 @@ load(libdir + "asserts.js");
 // Checking that there are no offsets are present in a wasm instance script for
 // which debug mode was not enabled.
 function getWasmScriptWithoutAllowUnobservedAsmJS(wast) {
-    var sandbox = newGlobal('');
+    var sandbox = newGlobal({newCompartment: true});
     var dbg = new Debugger();
     dbg.allowUnobservedAsmJS = true;
     dbg.addDebuggee(sandbox);

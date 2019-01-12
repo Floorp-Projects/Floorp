@@ -1,6 +1,6 @@
 // frame.environment is a Debugger.Environment object
 
-var g = newGlobal()
+var g = newGlobal({newCompartment: true})
 var dbg = Debugger(g);
 g.h = function () {
     assertEq(dbg.getNewestFrame().environment instanceof Debugger.Environment, true);

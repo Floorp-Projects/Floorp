@@ -1,5 +1,5 @@
 // Ensure the correct frame is passed to exception unwind hooks.
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 g.debuggeeGlobal = this;
 g.eval("(" + function () {
     frames = [];

@@ -20,7 +20,7 @@ check("ok");
 check(Symbol("ok"));
 
 // A Debugger.Object that belongs to a different Debugger object is invalid.
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 var dbg2 = new Debugger;
 var w = dbg2.addDebuggee(g);
 assertEq(w instanceof Debugger.Object, true);

@@ -37,6 +37,12 @@
       "description": "Gogo In-Flight uses a password field for credit card numbers on the same page as login",
       "hosts": ["buy.gogoinflight.com"],
       "notPasswordSelector": "#cardNumber"
+    },
+    {
+      "description": "The Fortuneo bank uses a different form for each input, defeating the password manager (Bug 1433754)",
+      "hosts": ["mabanque.fortuneo.fr"],
+      "pathRegex": "\\/identification\\.jsp$",
+      "usernameSelector": "input[name='LOGIN']"
     }
   ]
 }

@@ -1,6 +1,6 @@
 // Test that getting a function's environment can unlazify scripts.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 g.eval('function f() { }');
 var dbg = new Debugger;
 var gw = dbg.makeGlobalObjectReference(g);

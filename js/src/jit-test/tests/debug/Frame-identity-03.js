@@ -1,6 +1,6 @@
 // Test that we create new Debugger.Frames and reuse old ones correctly with recursion.
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 g.debuggeeGlobal = this;
 g.eval("(" + function () {
         function id(f) {

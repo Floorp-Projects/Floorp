@@ -1,6 +1,6 @@
 // null resumption value means terminate the debuggee
 
-var g = newGlobal();
+var g = newGlobal({newCompartment: true});
 g.debuggeeGlobal = this;
 g.eval("(" + function () { 
         var dbg = new Debugger(debuggeeGlobal);

@@ -9,7 +9,7 @@
 
 gczeal(0);
 
-var g2 = newGlobal();
+var g2 = newGlobal({newCompartment: true});
 g2.eval('function genObj(name) { return {"name": name} }');
 
 function basicSweeping() {
@@ -70,9 +70,9 @@ basicSweeping2();
 // Scatter the weakmap, the keys, and the values among different compartments.
 
 function tripleZoneMarking() {
-  var g1 = newGlobal();
-  var g2 = newGlobal();
-  var g3 = newGlobal();
+  var g1 = newGlobal({newCompartment: true});
+  var g2 = newGlobal({newCompartment: true});
+  var g3 = newGlobal({newCompartment: true});
 
   var wm = g1.eval("new WeakMap()");
   var key = g2.eval("({'name': 'obj1'})");
@@ -103,7 +103,7 @@ function tripleZoneMarking() {
 tripleZoneMarking();
 
 function enbugger() {
-  var g = newGlobal();
+  var g = newGlobal({newCompartment: true});
   var dbg = new Debugger;
   g.eval("function debuggee_f() { return 1; }");
   g.eval("function debuggee_g() { return 1; }");

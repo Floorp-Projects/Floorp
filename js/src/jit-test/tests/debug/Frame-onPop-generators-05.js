@@ -1,7 +1,7 @@
 // In .onPop for the "initial yield" of a generator, while the generator frame
 // is on the stack, the generator object's .next() method throws.
 
-let g = newGlobal();
+let g = newGlobal({newCompartment: true});
 g.eval(`
     function* f() {
         return "ok";
