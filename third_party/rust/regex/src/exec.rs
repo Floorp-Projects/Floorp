@@ -29,7 +29,7 @@ use prog::Program;
 use re_builder::RegexOptions;
 use re_bytes;
 use re_set;
-use re_trait::{RegularExpression, Slot, Locations};
+use re_trait::{RegularExpression, Slot, Locations, as_slots};
 use re_unicode;
 use utf8::next_utf8;
 
@@ -359,13 +359,13 @@ impl<'c> RegularExpression for ExecNoSyncStr<'c> {
     }
 
     #[inline(always)] // reduces constant overhead
-    fn captures_read_at(
+    fn read_captures_at(
         &self,
         locs: &mut Locations,
         text: &str,
         start: usize,
     ) -> Option<(usize, usize)> {
-        self.0.captures_read_at(locs, text.as_bytes(), start)
+        self.0.read_captures_at(locs, text.as_bytes(), start)
     }
 }
 
@@ -528,13 +528,13 @@ impl<'c> RegularExpression for ExecNoSync<'c> {
     ///
     /// Note that the first two slots always correspond to the start and end
     /// locations of the overall match.
-    fn captures_read_at(
+    fn read_captures_at(
         &self,
         locs: &mut Locations,
         text: &[u8],
         start: usize,
     ) -> Option<(usize, usize)> {
-        let slots = locs.as_slots();
+        let slots = as_slots(locs);
         for slot in slots.iter_mut() {
             *slot = None;
         }

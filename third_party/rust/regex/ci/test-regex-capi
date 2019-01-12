@@ -1,7 +1,0 @@
-#!/bin/sh
-
-set -e
-
-cargo build --verbose --manifest-path regex-capi/Cargo.toml
-(cd regex-capi/ctest && ./compile && LD_LIBRARY_PATH=../../target/debug ./test)
-(cd regex-capi/examples && ./compile && LD_LIBRARY_PATH=../../target/debug ./iter)
