@@ -1512,24 +1512,33 @@ void PresShell::RemovePreferenceStyles() {
 void PresShell::AddUserSheet(StyleSheet* aSheet) {
   // Make sure this does what nsDocumentViewer::CreateStyleSet does wrt
   // ordering. We want this new sheet to come after all the existing stylesheet
-  // service sheets, but before other user sheets; see nsIStyleSheetService.idl
-  // for the ordering.  Just remove and readd all the nsStyleSheetService
-  // sheets.
-  nsCOMPtr<nsIStyleSheetService> dummy =
-      do_GetService(NS_STYLESHEETSERVICE_CONTRACTID);
+  // service sheets (which are at the start), but before other user sheets; see
+  // nsIStyleSheetService.idl for the ordering.
 
-  nsStyleSheetService* sheetService = nsStyleSheetService::gInstance;
+  nsStyleSheetService* sheetService = nsStyleSheetService::GetInstance();
   nsTArray<RefPtr<StyleSheet>>& userSheets = *sheetService->UserStyleSheets();
-  // Iterate forwards when removing so the searches for RemoveStyleSheet are as
-  // short as possible.
-  for (StyleSheet* sheet : userSheets) {
-    mStyleSet->RemoveStyleSheet(SheetType::User, sheet);
+
+  // Search for the place to insert the new user sheet. Since all of the
+  // stylesheet service provided user sheets should be at the start of the style
+  // set's list, and aSheet should be at the end of userSheets. Given that, we
+  // can find the right place to insert the new sheet based on the length of
+  // userSheets.
+  MOZ_ASSERT(aSheet);
+  MOZ_ASSERT(userSheets.LastElement() == aSheet);
+
+  size_t index = userSheets.Length() - 1;
+
+  // Assert that all of userSheets (except for the last, new element) matches up
+  // with what's in the style set.
+  for (size_t i = 0; i < index; ++i) {
+    MOZ_ASSERT(mStyleSet->StyleSheetAt(SheetType::User, i) == userSheets[i]);
   }
 
-  // Now iterate backwards, so that the order of userSheets will be the same as
-  // the order of sheets from it in the style set.
-  for (StyleSheet* sheet : Reversed(userSheets)) {
-    mStyleSet->PrependStyleSheet(SheetType::User, sheet);
+  if (index == static_cast<size_t>(mStyleSet->SheetCount(SheetType::User))) {
+    mStyleSet->AppendStyleSheet(SheetType::User, aSheet);
+  } else {
+    StyleSheet* ref = mStyleSet->StyleSheetAt(SheetType::User, index);
+    mStyleSet->InsertStyleSheetBefore(SheetType::User, aSheet, ref);
   }
 
   ApplicableStylesChanged();
