@@ -4,7 +4,7 @@
 
 // Summary: Ensure typed array validation is called for TypedArray.prototype.subarray.
 
-const otherGlobal = typeof newGlobal === "function" ? newGlobal() : undefined;
+const otherGlobal = typeof newGlobal === "function" ? newGlobal({newCompartment: true}) : undefined;
 const typedArrayLengths = [0, 1, 1024];
 
 function createTestCases(TAConstructor, constructor, constructorCrossRealm) {
@@ -24,7 +24,8 @@ function createTestCases(TAConstructor, constructor, constructorCrossRealm) {
             species: constructor,
             method: otherGlobal[TAConstructor.name].prototype.subarray,
             // Note: subarray uses CallTypedArrayMethodIfWrapped, which results
-            //       in throwing a TypeError from the wrong Realm.
+            //       in throwing a TypeError from the wrong Realm if
+            //       cross-compartment.
             error: TypeError,
         });
     }
