@@ -1,7 +1,5 @@
 "use strict";
 
-ChromeUtils.import("resource:///modules/SitePermissions.jsm");
-
 const URL = "http://www.example.com";
 const PRINCIPAL = Services.scriptSecurityManager
   .createCodebasePrincipal(Services.io.newURI(URL), {});

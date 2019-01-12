@@ -16,8 +16,6 @@ var gIterator;
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/accessibility/Utils.jsm");
-ChromeUtils.import("resource://gre/modules/accessibility/EventManager.jsm");
-ChromeUtils.import("resource://gre/modules/accessibility/Constants.jsm");
 
 const MovementGranularity = {
   CHARACTER: 1,

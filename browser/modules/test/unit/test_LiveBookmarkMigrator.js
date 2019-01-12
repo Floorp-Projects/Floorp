@@ -5,8 +5,6 @@
 /* globals ChromeUtils, Assert, add_task */
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 // Ensure we initialize places:
 do_get_profile();
 

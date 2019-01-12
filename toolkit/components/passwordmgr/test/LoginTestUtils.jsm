@@ -12,7 +12,6 @@ var EXPORTED_SYMBOLS = [
 ];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 ChromeUtils.import("resource://testing-common/Assert.jsm");
 ChromeUtils.import("resource://testing-common/TestUtils.jsm");

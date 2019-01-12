@@ -6,7 +6,6 @@ let { TabListComponent } = ChromeUtils.import("resource:///modules/syncedtabs/Ta
 let { SyncedTabsListStore } = ChromeUtils.import("resource:///modules/syncedtabs/SyncedTabsListStore.js", {});
 let { SyncedTabsDeckStore } = ChromeUtils.import("resource:///modules/syncedtabs/SyncedTabsDeckStore.js", {});
 let { TabListView } = ChromeUtils.import("resource:///modules/syncedtabs/TabListView.js", {});
-let { DeckView } = ChromeUtils.import("resource:///modules/syncedtabs/SyncedTabsDeckView.js", {});
 
 
 add_task(async function testInitUninit() {

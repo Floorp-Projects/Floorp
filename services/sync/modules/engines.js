@@ -15,7 +15,6 @@ ChromeUtils.import("resource://gre/modules/JSONFile.jsm");
 ChromeUtils.import("resource://gre/modules/Log.jsm");
 ChromeUtils.import("resource://services-common/async.js");
 ChromeUtils.import("resource://services-common/observers.js");
-ChromeUtils.import("resource://services-common/utils.js");
 ChromeUtils.import("resource://services-sync/constants.js");
 ChromeUtils.import("resource://services-sync/record.js");
 ChromeUtils.import("resource://services-sync/resource.js");

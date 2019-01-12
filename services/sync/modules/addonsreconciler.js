@@ -18,7 +18,6 @@
 "use strict";
 
 ChromeUtils.import("resource://gre/modules/Log.jsm");
-ChromeUtils.import("resource://services-common/async.js");
 ChromeUtils.import("resource://services-sync/util.js");
 ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
 

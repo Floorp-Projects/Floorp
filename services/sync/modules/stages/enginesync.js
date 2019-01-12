@@ -8,7 +8,6 @@
 
 var EXPORTED_SYMBOLS = ["EngineSynchronizer"];
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Log.jsm");
 ChromeUtils.import("resource://services-sync/constants.js");
 ChromeUtils.import("resource://services-sync/util.js");
