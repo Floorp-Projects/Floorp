@@ -144,9 +144,6 @@ void Servo_StyleSet_CompatModeChanged(RawServoStyleSetBorrowed raw_data);
 void Servo_StyleSet_AppendStyleSheet(RawServoStyleSetBorrowed set,
                                      const mozilla::StyleSheet* gecko_sheet);
 
-void Servo_StyleSet_PrependStyleSheet(RawServoStyleSetBorrowed set,
-                                      const mozilla::StyleSheet* gecko_sheet);
-
 void Servo_StyleSet_RemoveStyleSheet(RawServoStyleSetBorrowed set,
                                      const mozilla::StyleSheet* gecko_sheet);
 
