@@ -20,8 +20,7 @@ item_types = ["globals", "enums", "structs", "unions", "typedefs", "opaque", "fu
 
 [parse]
 parse_deps = true
-include = ["log", "webrender", "webrender_api"]
-expand = ["euclid"]
+include = ["log", "euclid", "webrender", "webrender_api"]
 
 [fn]
 prefix = "WR_INLINE"
