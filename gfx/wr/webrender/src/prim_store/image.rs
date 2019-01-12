@@ -67,7 +67,7 @@ pub struct ImageInstance {
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-#[derive(Debug, Clone, Eq, PartialEq, MallocSizeOf, Hash)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct Image {
     pub key: ApiImageKey,
     pub stretch_size: SizeKey,
@@ -127,7 +127,7 @@ impl AsInstanceKind<ImageDataHandle> for ImageKey {
 // Where to find the texture data for an image primitive.
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-#[derive(Debug, MallocSizeOf)]
+#[derive(Debug)]
 pub enum ImageSource {
     // A normal image - just reference the texture cache.
     Default,
@@ -141,7 +141,6 @@ pub enum ImageSource {
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-#[derive(MallocSizeOf)]
 pub struct ImageData {
     pub key: ApiImageKey,
     pub stretch_size: LayoutSize,
@@ -337,7 +336,7 @@ impl From<ImageKey> for ImageTemplate {
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-#[derive(Clone, Copy, Debug, Hash, Eq, MallocSizeOf, PartialEq)]
+#[derive(Clone, Copy, Debug, Hash, Eq, PartialEq)]
 pub struct ImageDataMarker;
 
 pub type ImageDataStore = DataStore<ImageKey, ImageTemplate, ImageDataMarker>;
@@ -390,7 +389,7 @@ impl IsVisible for Image {
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-#[derive(Debug, Clone, Eq, MallocSizeOf, PartialEq, Hash)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct YuvImage {
     pub color_depth: ColorDepth,
     pub yuv_key: [ApiImageKey; 3],
@@ -439,7 +438,6 @@ impl AsInstanceKind<YuvImageDataHandle> for YuvImageKey {
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-#[derive(MallocSizeOf)]
 pub struct YuvImageData {
     pub color_depth: ColorDepth,
     pub yuv_key: [ApiImageKey; 3],
@@ -515,7 +513,7 @@ impl From<YuvImageKey> for YuvImageTemplate {
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-#[derive(Clone, Copy, Debug, Hash, Eq, MallocSizeOf, PartialEq)]
+#[derive(Clone, Copy, Debug, Hash, Eq, PartialEq)]
 pub struct YuvImageDataMarker;
 
 pub type YuvImageDataStore = DataStore<YuvImageKey, YuvImageTemplate, YuvImageDataMarker>;

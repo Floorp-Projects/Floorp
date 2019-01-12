@@ -247,14 +247,14 @@ pub struct LineDisplayItem {
 }
 
 #[repr(u8)]
-#[derive(Clone, Copy, Debug, Deserialize, MallocSizeOf, PartialEq, Serialize, Eq, Hash)]
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize, Eq, Hash)]
 pub enum LineOrientation {
     Vertical,
     Horizontal,
 }
 
 #[repr(u8)]
-#[derive(Clone, Copy, Debug, Deserialize, MallocSizeOf, PartialEq, Serialize, Eq, Hash)]
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize, Eq, Hash)]
 pub enum LineStyle {
     Solid,
     Dotted,
@@ -269,7 +269,7 @@ pub struct TextDisplayItem {
     pub glyph_options: Option<GlyphOptions>,
 } // IMPLICIT: glyphs: Vec<GlyphInstance>
 
-#[derive(Clone, Copy, Debug, Deserialize, MallocSizeOf, PartialEq, Serialize)]
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub struct NormalBorder {
     pub left: BorderSide,
     pub right: BorderSide,
@@ -328,7 +328,7 @@ impl NormalBorder {
 }
 
 #[repr(u32)]
-#[derive(Debug, Copy, Clone, MallocSizeOf, PartialEq, Serialize, Deserialize, Eq, Hash)]
+#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize, Eq, Hash)]
 pub enum RepeatMode {
     Stretch,
     Repeat,
@@ -401,7 +401,7 @@ pub enum BorderRadiusKind {
 }
 
 #[repr(C)]
-#[derive(Clone, Copy, Debug, Deserialize, MallocSizeOf, PartialEq, Serialize)]
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub struct BorderRadius {
     pub top_left: LayoutSize,
     pub top_right: LayoutSize,
@@ -410,14 +410,14 @@ pub struct BorderRadius {
 }
 
 #[repr(C)]
-#[derive(Clone, Copy, Debug, Deserialize, MallocSizeOf, PartialEq, Serialize)]
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub struct BorderSide {
     pub color: ColorF,
     pub style: BorderStyle,
 }
 
 #[repr(u32)]
-#[derive(Clone, Copy, Debug, Deserialize, MallocSizeOf, PartialEq, Serialize, Hash, Eq)]
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize, Hash, Eq)]
 pub enum BorderStyle {
     None = 0,
     Solid = 1,
@@ -438,7 +438,7 @@ impl BorderStyle {
 }
 
 #[repr(u32)]
-#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, MallocSizeOf, PartialEq, Serialize)]
+#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
 pub enum BoxShadowClipMode {
     Outset = 0,
     Inset = 1,
@@ -464,7 +464,7 @@ pub struct Shadow {
 }
 
 #[repr(u8)]
-#[derive(Debug, Copy, Clone, Hash, Eq, MallocSizeOf, PartialEq, Serialize, Deserialize, Ord, PartialOrd)]
+#[derive(Debug, Copy, Clone, Hash, Eq, PartialEq, Serialize, Deserialize, Ord, PartialOrd)]
 pub enum ExtendMode {
     Clamp,
     Repeat,
@@ -485,7 +485,7 @@ pub struct GradientDisplayItem {
 }
 
 #[repr(C)]
-#[derive(Clone, Copy, Debug, Deserialize, MallocSizeOf, PartialEq, Serialize)]
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub struct GradientStop {
     pub offset: f32,
     pub color: ColorF,
@@ -659,14 +659,14 @@ pub struct ImageDisplayItem {
 }
 
 #[repr(u32)]
-#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, MallocSizeOf, PartialEq, Serialize)]
+#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
 pub enum ImageRendering {
     Auto = 0,
     CrispEdges = 1,
     Pixelated = 2,
 }
 
-#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, MallocSizeOf, PartialEq, Serialize)]
+#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
 pub enum AlphaType {
     Alpha = 0,
     PremultipliedAlpha = 1,
@@ -681,7 +681,7 @@ pub struct YuvImageDisplayItem {
 }
 
 #[repr(u32)]
-#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, MallocSizeOf, PartialEq, Serialize)]
+#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
 pub enum YuvColorSpace {
     Rec601 = 0,
     Rec709 = 1,
@@ -704,7 +704,7 @@ impl YuvData {
     }
 }
 
-#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, MallocSizeOf, PartialEq, Serialize)]
+#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
 pub enum YuvFormat {
     NV12 = 0,
     PlanarYCbCr = 1,
@@ -741,7 +741,7 @@ impl ImageMask {
 }
 
 #[repr(C)]
-#[derive(Copy, Clone, Debug, MallocSizeOf, PartialEq, Serialize, Deserialize, Eq, Hash)]
+#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize, Eq, Hash)]
 pub enum ClipMode {
     Clip,    // Pixels inside the region are visible.
     ClipOut, // Pixels outside the region are visible.

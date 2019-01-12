@@ -511,6 +511,7 @@ struct WrPipelineInfo {
 
 /// Collection of heap sizes, in bytes.
 struct MemoryReport {
+  uintptr_t primitive_stores;
   uintptr_t clip_stores;
   uintptr_t gpu_cache_metadata;
   uintptr_t gpu_cache_cpu_mirror;
@@ -520,13 +521,35 @@ struct MemoryReport {
   uintptr_t images;
   uintptr_t rasterized_blobs;
   uintptr_t shader_cache;
-  InterningMemoryReport interning;
+  uintptr_t data_stores;
+  uintptr_t interners;
   uintptr_t gpu_cache_textures;
   uintptr_t vertex_data_textures;
   uintptr_t render_target_textures;
   uintptr_t texture_cache_textures;
   uintptr_t depth_target_textures;
   uintptr_t swap_chain;
+
+  bool operator==(const MemoryReport& aOther) const {
+    return primitive_stores == aOther.primitive_stores &&
+           clip_stores == aOther.clip_stores &&
+           gpu_cache_metadata == aOther.gpu_cache_metadata &&
+           gpu_cache_cpu_mirror == aOther.gpu_cache_cpu_mirror &&
+           render_tasks == aOther.render_tasks &&
+           hit_testers == aOther.hit_testers &&
+           fonts == aOther.fonts &&
+           images == aOther.images &&
+           rasterized_blobs == aOther.rasterized_blobs &&
+           shader_cache == aOther.shader_cache &&
+           data_stores == aOther.data_stores &&
+           interners == aOther.interners &&
+           gpu_cache_textures == aOther.gpu_cache_textures &&
+           vertex_data_textures == aOther.vertex_data_textures &&
+           render_target_textures == aOther.render_target_textures &&
+           texture_cache_textures == aOther.texture_cache_textures &&
+           depth_target_textures == aOther.depth_target_textures &&
+           swap_chain == aOther.swap_chain;
+  }
 };
 
 template<typename T, typename U>

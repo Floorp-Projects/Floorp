@@ -3,13 +3,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{LayoutPrimitiveInfo, LayoutRect};
+use api::VoidPtrToSizeFn;
 use internal_types::FastHashMap;
-use malloc_size_of::MallocSizeOf;
 use profiler::ResourceProfileCounter;
 use std::fmt::Debug;
 use std::hash::Hash;
 use std::marker::PhantomData;
 use std::{mem, ops, u64};
+use std::os::raw::c_void;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use util::VecHelper;
 
@@ -50,7 +51,7 @@ use util::VecHelper;
 /// correctness validation (handle).
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-#[derive(Debug, Copy, Clone, MallocSizeOf, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 struct Epoch(u64);
 
 impl Epoch {
@@ -75,7 +76,7 @@ lazy_static! {
 /// A globally, unique identifier
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-#[derive(Debug, Copy, Clone, Eq, Hash, MallocSizeOf, PartialEq)]
+#[derive(Debug, Copy, Clone, Eq, Hash, PartialEq)]
 pub struct ItemUid {
     uid: usize,
 }
@@ -89,7 +90,7 @@ impl ItemUid {
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-#[derive(Debug, Copy, Clone, MallocSizeOf)]
+#[derive(Debug, Copy, Clone)]
 pub struct Handle<M: Copy> {
     index: u32,
     epoch: Epoch,
@@ -105,7 +106,6 @@ impl <M> Handle<M> where M: Copy {
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-#[derive(MallocSizeOf)]
 pub enum UpdateKind {
     Insert,
     Remove,
@@ -114,7 +114,6 @@ pub enum UpdateKind {
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-#[derive(MallocSizeOf)]
 pub struct Update {
     index: usize,
     kind: UpdateKind,
@@ -124,8 +123,7 @@ pub struct Update {
 /// correct access patterns.
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-#[derive(MallocSizeOf)]
-struct Item<T: MallocSizeOf> {
+struct Item<T> {
     epoch: Epoch,
     data: T,
 }
@@ -138,18 +136,13 @@ pub trait InternDebug {
 /// contains a free-list of items for fast access.
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-#[derive(MallocSizeOf)]
-pub struct DataStore<S, T: MallocSizeOf, M> {
+pub struct DataStore<S, T, M> {
     items: Vec<Item<T>>,
     _source: PhantomData<S>,
     _marker: PhantomData<M>,
 }
 
-impl<S, T, M> ::std::default::Default for DataStore<S, T, M>
-where
-    S: Debug + MallocSizeOf,
-    T: From<S> + MallocSizeOf,
-    M: Debug
+impl<S, T, M> ::std::default::Default for DataStore<S, T, M> where S: Debug, T: From<S>, M: Debug
 {
     fn default() -> Self {
         DataStore {
@@ -160,11 +153,7 @@ where
     }
 }
 
-impl<S, T, M> DataStore<S, T, M>
-where
-    S: Debug + MallocSizeOf,
-    T: From<S> + MallocSizeOf,
-    M: Debug
+impl<S, T, M> DataStore<S, T, M> where S: Debug, T: From<S>, M: Debug
 {
     /// Apply any updates from the scene builder thread to
     /// this data store.
@@ -196,14 +185,16 @@ where
 
         debug_assert!(data_iter.next().is_none());
     }
+
+    /// Reports CPU heap usage.
+    pub fn malloc_size_of(&self, op: VoidPtrToSizeFn) -> usize {
+        unsafe { op(self.items.as_ptr() as *const c_void) }
+    }
 }
 
 /// Retrieve an item from the store via handle
 impl<S, T, M> ops::Index<Handle<M>> for DataStore<S, T, M>
-where
-    S: MallocSizeOf,
-    T: MallocSizeOf,
-    M: Copy
+where M: Copy
 {
     type Output = T;
     fn index(&self, handle: Handle<M>) -> &T {
@@ -217,8 +208,6 @@ where
 /// Retrieve an item from the store via handle
 impl<S, T, M> ops::IndexMut<Handle<M>> for DataStore<S, T, M>
 where
-    S: MallocSizeOf,
-    T: MallocSizeOf,
     M: Copy
 {
     fn index_mut(&mut self, handle: Handle<M>) -> &mut T {
@@ -235,12 +224,10 @@ where
 /// an update list of additions / removals.
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-#[derive(MallocSizeOf)]
 pub struct Interner<S, D, M>
 where
-    S: Eq + Hash + Clone + Debug + MallocSizeOf,
-    D: MallocSizeOf,
-    M: Copy + MallocSizeOf,
+    S: Eq + Hash + Clone + Debug,
+    M: Copy
 {
     /// Uniquely map an interning key to a handle
     map: FastHashMap<S, Handle<M>>,
@@ -259,9 +246,8 @@ where
 
 impl<S, D, M> ::std::default::Default for Interner<S, D, M>
 where
-    S: Eq + Hash + Clone + Debug + MallocSizeOf,
-    D: MallocSizeOf,
-    M: Copy + Debug + MallocSizeOf,
+    S: Eq + Hash + Clone + Debug,
+    M: Copy + Debug
 {
     fn default() -> Self {
         Interner {
@@ -277,9 +263,8 @@ where
 
 impl<S, D, M> Interner<S, D, M>
 where
-    S: Eq + Hash + Clone + Debug + InternDebug + MallocSizeOf,
-    D: MallocSizeOf,
-    M: Copy + Debug + MallocSizeOf
+    S: Eq + Hash + Clone + Debug + InternDebug,
+    M: Copy + Debug
 {
     /// Intern a data structure, and return a handle to
     /// that data. The handle can then be stored in the
@@ -397,14 +382,24 @@ where
 
         updates
     }
+
+    /// Reports CPU heap usage.
+    pub fn malloc_size_of(&self, op: VoidPtrToSizeFn, eop: VoidPtrToSizeFn) -> usize {
+        let mut bytes = 0;
+        unsafe {
+            bytes += op(self.local_data.as_ptr() as *const c_void);
+            bytes += self.map.values().next()
+                .map_or(0, |v| eop(v as *const _ as *const c_void));
+        }
+        bytes
+    }
 }
 
 /// Retrieve the local data for an item from the interner via handle
 impl<S, D, M> ops::Index<Handle<M>> for Interner<S, D, M>
 where
-    S: Eq + Clone + Hash + Debug + MallocSizeOf,
-    D: MallocSizeOf,
-    M: Copy + Debug + MallocSizeOf
+    S: Eq + Clone + Hash + Debug,
+    M: Copy + Debug
 {
     type Output = D;
     fn index(&self, handle: Handle<M>) -> &D {
@@ -418,10 +413,10 @@ where
 ///
 /// see DisplayListFlattener::add_interned_primitive<P>
 pub trait Internable {
-    type Marker: Copy + Debug + MallocSizeOf;
-    type Source: Eq + Hash + Clone + Debug + MallocSizeOf;
-    type StoreData: From<Self::Source> + MallocSizeOf;
-    type InternData: MallocSizeOf;
+    type Marker: Copy + Debug;
+    type Source: Eq + Hash + Clone + Debug;
+    type StoreData: From<Self::Source>;
+    type InternData;
 
     /// Build a new key from self with `info`.
     fn build_key(
