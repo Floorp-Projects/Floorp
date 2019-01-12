@@ -24,7 +24,7 @@ use storage;
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Eq, MallocSizeOf, PartialEq, Hash)]
 pub struct NormalBorderPrim {
     pub border: NormalBorderAu,
     pub widths: LayoutSideOffsetsAu,
@@ -67,6 +67,7 @@ impl AsInstanceKind<NormalBorderDataHandle> for NormalBorderKey {
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
+#[derive(MallocSizeOf)]
 pub struct NormalBorderData {
     pub brush_segments: Vec<BrushSegment>,
     pub border_segments: Vec<BorderSegmentInfo>,
@@ -161,7 +162,7 @@ impl From<NormalBorderKey> for NormalBorderTemplate {
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-#[derive(Clone, Copy, Debug, Hash, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Hash, Eq, MallocSizeOf, PartialEq)]
 pub struct NormalBorderDataMarker;
 
 pub type NormalBorderDataStore = intern::DataStore<NormalBorderKey, NormalBorderTemplate, NormalBorderDataMarker>;
@@ -209,8 +210,9 @@ impl IsVisible for NormalBorderPrim {
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Eq, MallocSizeOf, PartialEq, Hash)]
 pub struct ImageBorder {
+    #[ignore_malloc_size_of = "Arc"]
     pub request: ImageRequest,
     pub nine_patch: NinePatchDescriptor,
 }
@@ -251,7 +253,9 @@ impl AsInstanceKind<ImageBorderDataHandle> for ImageBorderKey {
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
+#[derive(MallocSizeOf)]
 pub struct ImageBorderData {
+    #[ignore_malloc_size_of = "Arc"]
     pub request: ImageRequest,
     pub brush_segments: Vec<BrushSegment>,
 }
@@ -339,7 +343,7 @@ impl From<ImageBorderKey> for ImageBorderTemplate {
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-#[derive(Clone, Copy, Debug, Hash, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Hash, Eq, MallocSizeOf, PartialEq)]
 pub struct ImageBorderDataMarker;
 
 pub type ImageBorderDataStore = intern::DataStore<ImageBorderKey, ImageBorderTemplate, ImageBorderDataMarker>;

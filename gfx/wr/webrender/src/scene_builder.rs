@@ -15,7 +15,7 @@ use clip_scroll_tree::ClipScrollTree;
 use display_list_flattener::DisplayListFlattener;
 use intern::{Internable, Interner};
 use internal_types::{FastHashMap, FastHashSet};
-use malloc_size_of::MallocSizeOfOps;
+use malloc_size_of::{MallocSizeOf, MallocSizeOfOps};
 use prim_store::{PrimitiveDataInterner, PrimitiveDataUpdateList, PrimitiveKeyKind};
 use prim_store::PrimitiveStoreStats;
 use prim_store::borders::{
