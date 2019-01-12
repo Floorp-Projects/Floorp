@@ -27,6 +27,7 @@ class Rule extends PureComponent {
       declarations,
       selector,
       sourceLink,
+      type,
     } = rule;
 
     return (
@@ -35,7 +36,10 @@ class Rule extends PureComponent {
         SourceLink({ sourceLink }),
         dom.div({ className: "ruleview-code" },
           dom.div({},
-            Selector({ selector }),
+            Selector({
+              selector,
+              type,
+            }),
             dom.span({ className: "ruleview-ruleopen" }, " {")
           ),
           Declarations({ declarations }),
