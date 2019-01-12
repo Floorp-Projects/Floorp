@@ -8,19 +8,19 @@ import mozpack.path as mozpath
 import os
 import subprocess
 
-STYLE = mozpath.join(buildconfig.topsrcdir, "servo", "components", "style")
 CARGO_LOCK = mozpath.join(buildconfig.topsrcdir, "Cargo.lock")
 
-def generate(output, cbindgen_toml_path):
+def generate(output, cbindgen_crate_path, *in_tree_dependencies):
     env = os.environ.copy()
     env['CARGO'] = str(buildconfig.substs['CARGO'])
+
     p = subprocess.Popen([
         buildconfig.substs['CBINDGEN'],
         mozpath.join(buildconfig.topsrcdir, "toolkit", "library", "rust"),
         "--lockfile",
         CARGO_LOCK,
         "--crate",
-        "style"
+        mozpath.basename(cbindgen_crate_path),
     ], env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     stdout, stderr = p.communicate()
@@ -31,9 +31,11 @@ def generate(output, cbindgen_toml_path):
 
     deps = set()
     deps.add(CARGO_LOCK)
-    for path, dirs, files in os.walk(STYLE):
-        for file in files:
-            if os.path.splitext(file)[1] == ".rs":
-                deps.add(mozpath.join(path, file))
+    deps.add(mozpath.join(cbindgen_crate_path, "cbindgen.toml"))
+    for directory in in_tree_dependencies + (cbindgen_crate_path,):
+        for path, dirs, files in os.walk(directory):
+            for file in files:
+                if os.path.splitext(file)[1] == ".rs":
+                    deps.add(mozpath.join(path, file))
 
     return deps
