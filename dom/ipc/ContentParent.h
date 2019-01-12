@@ -302,6 +302,9 @@ class ContentParent final : public PContentParent,
       const uint32_t& aPluginId, nsresult* aRv,
       Endpoint<PPluginModuleParent>* aEndpoint) override;
 
+  virtual mozilla::ipc::IPCResult RecvLaunchRDDProcess(
+      nsresult* aRv, Endpoint<PRemoteDecoderManagerChild>* aEndpoint) override;
+
   virtual mozilla::ipc::IPCResult RecvUngrabPointer(
       const uint32_t& aTime) override;
 

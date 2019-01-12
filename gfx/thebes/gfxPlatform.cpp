@@ -931,15 +931,6 @@ void gfxPlatform::Init() {
     gpu->LaunchGPUProcess();
   }
 
-  if (XRE_IsParentProcess() &&
-      BrowserTabsRemoteAutostart() &&  // only do rdd process if e10s on
-      Preferences::GetBool("media.rdd-process.enabled", false)) {
-    RDDProcessManager* rdd = RDDProcessManager::Get();
-    if (rdd) {
-      rdd->LaunchRDDProcess();
-    }
-  }
-
   gLastUsedFrameRate = ForceSoftwareVsync() ? GetSoftwareVsyncRate() : -1;
   auto updateFrameRateCallback = [](const GfxPrefValue& aValue) -> void {
     int32_t newRate = ForceSoftwareVsync() ? GetSoftwareVsyncRate() : -1;
