@@ -52,7 +52,7 @@ AR=llvm-ar
 RANLIB=llvm-ranlib
 
 # For Stylo
-BINDGEN_CFLAGS="-I$TOOLTOOL_DIR/clang/i686-w64-mingw32/include/c++/v1 -I$TOOLTOOL_DIR/clang/lib/clang/8.0.0/include -I$TOOLTOOL_DIR/clang/i686-w64-mingw32/include"
+BINDGEN_CFLAGS="-I$TOOLTOOL_DIR/clang/i686-w64-mingw32/include/c++/v1 -I$TOOLTOOL_DIR/clang/i686-w64-mingw32/include"
 
 # Bug 1471698 - Work around binutils corrupting mingw clang binaries.
 LDFLAGS="-Wl,-S"
