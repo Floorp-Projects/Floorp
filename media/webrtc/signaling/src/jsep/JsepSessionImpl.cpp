@@ -908,12 +908,12 @@ nsresult JsepSessionImpl::SetRemoteDescription(JsepSdpType type,
   if (type == kJsepSdpOffer) {
     mOldTransceivers.clear();
     for (const auto& transceiver : mTransceivers) {
+      mOldTransceivers.push_back(new JsepTransceiver(*transceiver));
       if (!transceiver->IsNegotiated()) {
         // We chose a level for this transceiver, but never negotiated it.
         // Discard this state.
         transceiver->ClearLevel();
       }
-      mOldTransceivers.push_back(new JsepTransceiver(*transceiver));
     }
   }
 

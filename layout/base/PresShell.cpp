@@ -76,6 +76,7 @@
 #include "mozilla/dom/Touch.h"
 #include "mozilla/dom/TouchEvent.h"
 #include "mozilla/dom/PointerEventBinding.h"
+#include "mozilla/dom/ShadowIncludingTreeIterator.h"
 #include "nsIObserverService.h"
 #include "nsDocShell.h"  // for reflow observation
 #include "nsIBaseWindow.h"
@@ -1511,24 +1512,33 @@ void PresShell::RemovePreferenceStyles() {
 void PresShell::AddUserSheet(StyleSheet* aSheet) {
   // Make sure this does what nsDocumentViewer::CreateStyleSet does wrt
   // ordering. We want this new sheet to come after all the existing stylesheet
-  // service sheets, but before other user sheets; see nsIStyleSheetService.idl
-  // for the ordering.  Just remove and readd all the nsStyleSheetService
-  // sheets.
-  nsCOMPtr<nsIStyleSheetService> dummy =
-      do_GetService(NS_STYLESHEETSERVICE_CONTRACTID);
+  // service sheets (which are at the start), but before other user sheets; see
+  // nsIStyleSheetService.idl for the ordering.
 
-  nsStyleSheetService* sheetService = nsStyleSheetService::gInstance;
+  nsStyleSheetService* sheetService = nsStyleSheetService::GetInstance();
   nsTArray<RefPtr<StyleSheet>>& userSheets = *sheetService->UserStyleSheets();
-  // Iterate forwards when removing so the searches for RemoveStyleSheet are as
-  // short as possible.
-  for (StyleSheet* sheet : userSheets) {
-    mStyleSet->RemoveStyleSheet(SheetType::User, sheet);
+
+  // Search for the place to insert the new user sheet. Since all of the
+  // stylesheet service provided user sheets should be at the start of the style
+  // set's list, and aSheet should be at the end of userSheets. Given that, we
+  // can find the right place to insert the new sheet based on the length of
+  // userSheets.
+  MOZ_ASSERT(aSheet);
+  MOZ_ASSERT(userSheets.LastElement() == aSheet);
+
+  size_t index = userSheets.Length() - 1;
+
+  // Assert that all of userSheets (except for the last, new element) matches up
+  // with what's in the style set.
+  for (size_t i = 0; i < index; ++i) {
+    MOZ_ASSERT(mStyleSet->StyleSheetAt(SheetType::User, i) == userSheets[i]);
   }
 
-  // Now iterate backwards, so that the order of userSheets will be the same as
-  // the order of sheets from it in the style set.
-  for (StyleSheet* sheet : Reversed(userSheets)) {
-    mStyleSet->PrependStyleSheet(SheetType::User, sheet);
+  if (index == static_cast<size_t>(mStyleSet->SheetCount(SheetType::User))) {
+    mStyleSet->AppendStyleSheet(SheetType::User, aSheet);
+  } else {
+    StyleSheet* ref = mStyleSet->StyleSheetAt(SheetType::User, index);
+    mStyleSet->InsertStyleSheetBefore(SheetType::User, aSheet, ref);
   }
 
   ApplicableStylesChanged();
@@ -2879,11 +2889,9 @@ void nsIPresShell::SlotAssignmentWillChange(Element& aElement,
 
 #ifdef DEBUG
 static void AssertNoFramesInSubtree(nsIContent* aContent) {
-  for (nsIContent* c = aContent; c; c = c->GetNextNode(aContent)) {
+  for (nsINode* node : ShadowIncludingTreeIterator(*aContent)) {
+    nsIContent* c = nsIContent::FromNode(node);
     MOZ_ASSERT(!c->GetPrimaryFrame());
-    if (auto* shadowRoot = c->GetShadowRoot()) {
-      AssertNoFramesInSubtree(shadowRoot);
-    }
     if (auto* binding = c->GetXBLBinding()) {
       if (auto* bindingWithContent = binding->GetBindingWithContent()) {
         nsIContent* anonContent = bindingWithContent->GetAnonymousContent();
@@ -8251,7 +8259,7 @@ nsresult PresShell::SetAgentStyleSheets(
 }
 
 nsresult PresShell::AddOverrideStyleSheet(StyleSheet* aSheet) {
-  return mStyleSet->PrependStyleSheet(SheetType::Override, aSheet);
+  return mStyleSet->AppendStyleSheet(SheetType::Override, aSheet);
 }
 
 nsresult PresShell::RemoveOverrideStyleSheet(StyleSheet* aSheet) {
@@ -10091,17 +10099,20 @@ void nsIPresShell::SetVisualViewportSize(nscoord aWidth, nscoord aHeight) {
   }
 }
 
-void nsIPresShell::SetVisualViewportOffset(
+bool nsIPresShell::SetVisualViewportOffset(
     const nsPoint& aScrollOffset, const nsPoint& aPrevLayoutScrollPos) {
+  bool didChange = false;
   if (mVisualViewportOffset != aScrollOffset) {
     nsPoint prevOffset = mVisualViewportOffset;
     mVisualViewportOffset = aScrollOffset;
+    didChange = true;
 
     if (auto* window = nsGlobalWindowInner::Cast(mDocument->GetInnerWindow())) {
       window->VisualViewport()->PostScrollEvent(prevOffset,
                                                 aPrevLayoutScrollPos);
     }
   }
+  return didChange;
 }
 
 nsPoint nsIPresShell::GetVisualViewportOffsetRelativeToLayoutViewport() const {

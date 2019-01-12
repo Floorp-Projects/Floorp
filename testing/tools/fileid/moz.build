@@ -10,6 +10,8 @@ if CONFIG['OS_ARCH'] == 'WINNT':
     SOURCES += ['win_fileid.cpp']
     OS_LIBS += ['dbghelp']
     NO_PGO = True
+elif CONFIG['MOZ_BUILD_APP'] == 'tools/crashreporter':
+    Program('fileid')
 else:
     # Technically, it's not a GeckoProgram (thus linkage=None), but it needs
     # mozglue because of the breakpad code it uses being compiled for gecko
@@ -28,6 +30,9 @@ if CONFIG['OS_ARCH'] == 'Darwin':
         'breakpad_mac_common_s',
     ]
     SOURCES += ['mac_fileid.cpp']
+    OS_LIBS += [
+        '-framework Foundation'
+    ]
 
 
 if CONFIG['OS_ARCH'] == 'Linux' or CONFIG['OS_ARCH'] == 'Darwin':

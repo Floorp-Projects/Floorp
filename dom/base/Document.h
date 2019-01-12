@@ -3295,6 +3295,9 @@ class Document : public nsINode,
   // content documents in this tab.
   void NotifyUserGestureActivation();
 
+  // This function is used for mochitest only.
+  void ClearUserGestureActivation();
+
   // Return true if NotifyUserGestureActivation() has been called on any
   // document in the document tree.
   bool HasBeenUserGestureActivated();

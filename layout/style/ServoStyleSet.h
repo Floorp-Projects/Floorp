@@ -208,7 +208,6 @@ class ServoStyleSet {
 
   // manage the set of style sheets in the style set
   nsresult AppendStyleSheet(SheetType aType, StyleSheet* aSheet);
-  nsresult PrependStyleSheet(SheetType aType, StyleSheet* aSheet);
   nsresult RemoveStyleSheet(SheetType aType, StyleSheet* aSheet);
   nsresult ReplaceSheets(SheetType aType,
                          const nsTArray<RefPtr<StyleSheet>>& aNewSheets);

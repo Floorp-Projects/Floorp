@@ -1,0 +1,29 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+Program('minidump_stackwalk')
+
+SOURCES += [
+    '/toolkit/crashreporter/google-breakpad/src/common/path_helper.cc',
+    '/toolkit/crashreporter/google-breakpad/src/processor/minidump_stackwalk.cc',
+    '/toolkit/crashreporter/google-breakpad/src/processor/simple_symbol_supplier.cc',
+]
+
+USE_LIBS += [
+    'breakpad_processor',
+    'zlib',
+]
+
+if CONFIG['OS_TARGET'] == 'WINNT':
+    if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+        DEFINES['__USE_MINGW_ANSI_STDIO'] = True
+
+        LDFLAGS += [
+            '-static-libgcc',
+            '-static-libstdc++',
+        ]
+
+DisableStlWrapping()
+
+include('/toolkit/crashreporter/crashreporter.mozbuild')

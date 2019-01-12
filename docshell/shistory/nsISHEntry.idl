@@ -226,7 +226,10 @@ interface nsISHEntry : nsISupports
      */
     [infallible] attribute boolean persist;
 
-    /** Set/Get scrollers' position in anchored pages */
+    /**
+     * Set/Get the visual viewport scroll position if session history is
+     * changed through anchor navigation or pushState.
+     */
     void setScrollPosition(in long x, in long y);
     void getScrollPosition(out long x, out long y);
 

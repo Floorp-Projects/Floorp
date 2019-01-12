@@ -70,6 +70,4 @@ if CONFIG['OS_TARGET'] == 'Android':
 
 Library('breakpad_common_s')
 
-FINAL_LIBRARY = 'xul'
-
 include('/toolkit/crashreporter/crashreporter.mozbuild')

@@ -898,6 +898,23 @@ bool InScriptableRange(uint64_t val);
 nsresult GetParameterHTTP(const nsACString &aHeaderVal, const char *aParamName,
                           nsAString &aResult);
 
+/**
+ * Convenience functions for verifying nsIURI schemes. These functions simply
+ * wrap aURI->SchemeIs(), but specify the protocol as part of the function name.
+ */
+
+bool SchemeIsHTTP(nsIURI *aURI);
+bool SchemeIsHTTPS(nsIURI *aURI);
+bool SchemeIsJavascript(nsIURI *aURI);
+bool SchemeIsChrome(nsIURI *aURI);
+bool SchemeIsAbout(nsIURI *aURI);
+bool SchemeIsBlob(nsIURI *aURI);
+bool SchemeIsFile(nsIURI *aURI);
+bool SchemeIsData(nsIURI *aURI);
+bool SchemeIsWYCIWYG(nsIURI *aURI);
+bool SchemeIsViewSource(nsIURI *aURI);
+bool SchemeIsResource(nsIURI *aURI);
+bool SchemeIsFTP(nsIURI *aURI);
 }  // namespace net
 }  // namespace mozilla
 

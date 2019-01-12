@@ -546,8 +546,8 @@ SessionStore.prototype = {
         }
         break;
       }
-      case "resize":
-      case "scroll": {
+      case "mozvisualresize":
+      case "mozvisualscroll": {
         let browser = aEvent.currentTarget;
         // Duplicated logging check to avoid calling getTabForBrowser on each scroll event.
         if (loggingEnabled) {
@@ -650,8 +650,10 @@ SessionStore.prototype = {
     aBrowser.addEventListener("DOMAutoComplete", this, true);
 
     // Record the current scroll position and zoom level.
-    aBrowser.addEventListener("scroll", this, true);
-    aBrowser.addEventListener("resize", this, true);
+    aBrowser.addEventListener("mozvisualscroll", this,
+                              { capture: true, mozSystemGroup: true });
+    aBrowser.addEventListener("mozvisualresize", this,
+                              { capture: true, mozSystemGroup: true });
 
     log("onTabAdd() ran for tab " + aWindow.BrowserApp.getTabForBrowser(aBrowser).id +
         ", aNoNotification = " + aNoNotification);
@@ -676,8 +678,10 @@ SessionStore.prototype = {
     aBrowser.removeEventListener("AboutReaderContentReady", this, true);
     aBrowser.removeEventListener("input", this, true);
     aBrowser.removeEventListener("DOMAutoComplete", this, true);
-    aBrowser.removeEventListener("scroll", this, true);
-    aBrowser.removeEventListener("resize", this, true);
+    aBrowser.removeEventListener("mozvisualscroll", this,
+                                 { capture: true, mozSystemGroup: true });
+    aBrowser.removeEventListener("mozvisualresize", this,
+                                 { capture: true, mozSystemGroup: true });
 
     if (aBrowser.__SS_historyChange) {
       aWindow.clearTimeout(aBrowser.__SS_historyChange);
