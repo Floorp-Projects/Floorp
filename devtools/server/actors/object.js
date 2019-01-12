@@ -518,13 +518,26 @@ const proto = {
    *
    * @param {string} name
    *        The property we want the value of.
+   * @param {string|null} receiverId
+   *        The actorId of the receiver to be used if the property is a getter.
+   *        If null or invalid, the receiver will be the referent.
    */
-  propertyValue: function(name) {
+  propertyValue: function(name, receiverId) {
     if (!name) {
       return this.throwError("missingParameter", "no property name was specified");
     }
 
-    const value = this.obj.getProperty(name);
+    let receiver;
+    if (receiverId) {
+      const receiverActor = this.conn.getActor(receiverId);
+      if (receiverActor) {
+        receiver = receiverActor.obj;
+      }
+    }
+
+    const value = receiver
+      ? this.obj.getProperty(name, receiver)
+      : this.obj.getProperty(name);
 
     return { value: this._buildCompletion(value) };
   },

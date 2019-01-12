@@ -99,7 +99,7 @@ async function test_object_grip(debuggee, threadClient) {
       };
 
       for (const [key, expected] of Object.entries(expectedValues)) {
-        const { value } = await objClient.getPropertyValue(key);
+        const { value } = await objClient.getPropertyValue(key, null);
 
         assert_completion(value, expected);
       }

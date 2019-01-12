@@ -33,7 +33,7 @@ async function test_object_grip(debuggee, threadClient) {
   const objClient = threadClient.pauseGrip(obj);
 
   const method = threadClient.pauseGrip(
-    (await objClient.getPropertyValue("method")).value.return,
+    (await objClient.getPropertyValue("method", null)).value.return,
   );
 
   try {
