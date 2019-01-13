@@ -479,13 +479,14 @@
 .variables-view-delete:hover,
 .variables-view-edit:hover,
 .variables-view-open-inspector:hover {
-  filter: var(--theme-icon-checked-filter);
+  fill: var(--theme-toolbar-checked-color);
 }
 
 .variables-view-delete:active,
 .variables-view-edit:active,
 .variables-view-open-inspector:active {
-  filter: var(--theme-icon-checked-filter) brightness(0.9);
+  fill: var(--theme-toolbar-checked-color);
+  filter: brightness(0.9);
 }
 
 .variable-or-property:focus > .title > .variables-view-delete,
