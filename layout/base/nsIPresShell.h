@@ -103,6 +103,10 @@ class Selection;
 class ShadowRoot;
 }  // namespace dom
 
+namespace layout {
+class ScrollAnchorContainer;
+}  // namespace layout
+
 namespace layers {
 class LayerManager;
 }  // namespace layers
@@ -456,8 +460,11 @@ class nsIPresShell : public nsStubDocumentObserver {
    */
   virtual nsCanvasFrame* GetCanvasFrame() const = 0;
 
-  virtual void PostDirtyScrollAnchorContainer(nsIScrollableFrame* aFrame) = 0;
-  virtual void FlushDirtyScrollAnchorContainers() = 0;
+  virtual void PostPendingScrollAnchorSelection(
+      mozilla::layout::ScrollAnchorContainer* aContainer) = 0;
+  virtual void FlushPendingScrollAnchorSelections() = 0;
+  virtual void PostPendingScrollAnchorAdjustment(
+      mozilla::layout::ScrollAnchorContainer* aContainer) = 0;
 
   /**
    * Tell the pres shell that a frame needs to be marked dirty and needs
