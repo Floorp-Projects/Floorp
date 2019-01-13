@@ -21,11 +21,13 @@ use core::ops::{Add, Div, Mul, Sub};
 use core::marker::PhantomData;
 
 /// A 2d size tagged with a unit.
-define_matrix! {
-    pub struct TypedSize2D<T, U> {
-        pub width: T,
-        pub height: T,
-    }
+#[derive(EuclidMatrix)]
+#[repr(C)]
+pub struct TypedSize2D<T, U> {
+    pub width: T,
+    pub height: T,
+    #[doc(hidden)]
+    pub _unit: PhantomData<U>,
 }
 
 /// Default 2d size type with no unit.

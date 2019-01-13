@@ -185,11 +185,13 @@ impl<T: Neg<Output = T>> Neg for Angle<T> {
     }
 }
 
-define_matrix! {
-    /// A transform that can represent rotations in 2d, represented as an angle in radians.
-    pub struct TypedRotation2D<T, Src, Dst> {
-        pub angle : T,
-    }
+/// A transform that can represent rotations in 2d, represented as an angle in radians.
+#[derive(EuclidMatrix)]
+#[repr(C)]
+pub struct TypedRotation2D<T, Src, Dst> {
+    pub angle : T,
+    #[doc(hidden)]
+    pub _unit: PhantomData<(Src, Dst)>,
 }
 
 /// The default 2d rotation type with no units.
@@ -311,26 +313,28 @@ where
     }
 }
 
-define_matrix! {
-    /// A transform that can represent rotations in 3d, represented as a quaternion.
-    ///
-    /// Most methods expect the quaternion to be normalized.
-    /// When in doubt, use `unit_quaternion` instead of `quaternion` to create
-    /// a rotation as the former will ensure that its result is normalized.
-    ///
-    /// Some people use the `x, y, z, w` (or `w, x, y, z`) notations. The equivalence is
-    /// as follows: `x -> i`, `y -> j`, `z -> k`, `w -> r`.
-    /// The memory layout of this type corresponds to the `x, y, z, w` notation
-    pub struct TypedRotation3D<T, Src, Dst> {
-        // Component multiplied by the imaginary number `i`.
-        pub i: T,
-        // Component multiplied by the imaginary number `j`.
-        pub j: T,
-        // Component multiplied by the imaginary number `k`.
-        pub k: T,
-        // The real part.
-        pub r: T,
-    }
+/// A transform that can represent rotations in 3d, represented as a quaternion.
+///
+/// Most methods expect the quaternion to be normalized.
+/// When in doubt, use `unit_quaternion` instead of `quaternion` to create
+/// a rotation as the former will ensure that its result is normalized.
+///
+/// Some people use the `x, y, z, w` (or `w, x, y, z`) notations. The equivalence is
+/// as follows: `x -> i`, `y -> j`, `z -> k`, `w -> r`.
+/// The memory layout of this type corresponds to the `x, y, z, w` notation
+#[derive(EuclidMatrix)]
+#[repr(C)]
+pub struct TypedRotation3D<T, Src, Dst> {
+    /// Component multiplied by the imaginary number `i`.
+    pub i: T,
+    /// Component multiplied by the imaginary number `j`.
+    pub j: T,
+    /// Component multiplied by the imaginary number `k`.
+    pub k: T,
+    /// The real part.
+    pub r: T,
+    #[doc(hidden)]
+    pub _unit: PhantomData<(Src, Dst)>,
 }
 
 /// The default 3d rotation type with no units.

@@ -26,24 +26,26 @@ use core::marker::PhantomData;
 use core::fmt;
 use num_traits::NumCast;
 
-define_matrix! {
-    /// A 3d transform stored as a 4 by 4 matrix in row-major order in memory.
-    ///
-    /// Transforms can be parametrized over the source and destination units, to describe a
-    /// transformation from a space to another.
-    /// For example, `TypedTransform3D<f32, WorldSpace, ScreenSpace>::transform_point3d`
-    /// takes a `TypedPoint3D<f32, WorldSpace>` and returns a `TypedPoint3D<f32, ScreenSpace>`.
-    ///
-    /// Transforms expose a set of convenience methods for pre- and post-transformations.
-    /// A pre-transformation corresponds to adding an operation that is applied before
-    /// the rest of the transformation, while a post-transformation adds an operation
-    /// that is applied after.
-    pub struct TypedTransform3D<T, Src, Dst> {
-        pub m11: T, pub m12: T, pub m13: T, pub m14: T,
-        pub m21: T, pub m22: T, pub m23: T, pub m24: T,
-        pub m31: T, pub m32: T, pub m33: T, pub m34: T,
-        pub m41: T, pub m42: T, pub m43: T, pub m44: T,
-    }
+/// A 3d transform stored as a 4 by 4 matrix in row-major order in memory.
+///
+/// Transforms can be parametrized over the source and destination units, to describe a
+/// transformation from a space to another.
+/// For example, `TypedTransform3D<f32, WorldSpace, ScreenSpace>::transform_point3d`
+/// takes a `TypedPoint3D<f32, WorldSpace>` and returns a `TypedPoint3D<f32, ScreenSpace>`.
+///
+/// Transforms expose a set of convenience methods for pre- and post-transformations.
+/// A pre-transformation corresponds to adding an operation that is applied before
+/// the rest of the transformation, while a post-transformation adds an operation
+/// that is applied after.
+#[derive(EuclidMatrix)]
+#[repr(C)]
+pub struct TypedTransform3D<T, Src, Dst> {
+    pub m11: T, pub m12: T, pub m13: T, pub m14: T,
+    pub m21: T, pub m22: T, pub m23: T, pub m24: T,
+    pub m31: T, pub m32: T, pub m33: T, pub m34: T,
+    pub m41: T, pub m42: T, pub m43: T, pub m44: T,
+    #[doc(hidden)]
+    pub _unit: PhantomData<(Src, Dst)>,
 }
 
 /// The default 3d transform type with no units.

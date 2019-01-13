@@ -24,23 +24,25 @@ use trig::Trig;
 use core::fmt;
 use num_traits::NumCast;
 
-define_matrix! {
-    /// A 2d transform stored as a 3 by 2 matrix in row-major order in memory.
-    ///
-    /// Transforms can be parametrized over the source and destination units, to describe a
-    /// transformation from a space to another.
-    /// For example, `TypedTransform2D<f32, WorldSpace, ScreenSpace>::transform_point4d`
-    /// takes a `TypedPoint2D<f32, WorldSpace>` and returns a `TypedPoint2D<f32, ScreenSpace>`.
-    ///
-    /// Transforms expose a set of convenience methods for pre- and post-transformations.
-    /// A pre-transformation corresponds to adding an operation that is applied before
-    /// the rest of the transformation, while a post-transformation adds an operation
-    /// that is applied after.
-    pub struct TypedTransform2D<T, Src, Dst> {
-        pub m11: T, pub m12: T,
-        pub m21: T, pub m22: T,
-        pub m31: T, pub m32: T,
-    }
+/// A 2d transform stored as a 3 by 2 matrix in row-major order in memory.
+///
+/// Transforms can be parametrized over the source and destination units, to describe a
+/// transformation from a space to another.
+/// For example, `TypedTransform2D<f32, WorldSpace, ScreenSpace>::transform_point4d`
+/// takes a `TypedPoint2D<f32, WorldSpace>` and returns a `TypedPoint2D<f32, ScreenSpace>`.
+///
+/// Transforms expose a set of convenience methods for pre- and post-transformations.
+/// A pre-transformation corresponds to adding an operation that is applied before
+/// the rest of the transformation, while a post-transformation adds an operation
+/// that is applied after.
+#[repr(C)]
+#[derive(EuclidMatrix)]
+pub struct TypedTransform2D<T, Src, Dst> {
+    pub m11: T, pub m12: T,
+    pub m21: T, pub m22: T,
+    pub m31: T, pub m32: T,
+    #[doc(hidden)]
+    pub _unit: PhantomData<(Src, Dst)>,
 }
 
 /// The default 2d transform type with no units.
