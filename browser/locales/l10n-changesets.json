@@ -133,7 +133,7 @@
             "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
-        "revision": "0ba2c1eb092b"
+        "revision": "269bdaeb7eda"
     },
     "bg": {
         "platforms": [
@@ -1022,7 +1022,7 @@
             "win64-aarch64-msvc-devedition",
             "win64-devedition"
         ],
-        "revision": "53caedae6290"
+        "revision": "c7f673f25362"
     },
     "lv": {
         "platforms": [
